@@ -32,6 +32,7 @@ jmethodID bcJavaStubsAndProxies::loadComponentID = 0;
 
 jclass bcJavaStubsAndProxies::proxyFactory = 0;
 jmethodID bcJavaStubsAndProxies::getProxyID = 0;
+jmethodID bcJavaStubsAndProxies::getInterfaceID = 0;
 
 NS_DEFINE_CID(kORBCIID,BC_ORB_CID);
 NS_GENERIC_FACTORY_CONSTRUCTOR(bcJavaStubsAndProxies);
@@ -60,7 +61,7 @@ bcJavaStubsAndProxies::~bcJavaStubsAndProxies() {
 
 NS_IMETHODIMP bcJavaStubsAndProxies::GetStub(jobject obj, bcIStub **stub) {
     if (!stub) {
-	return NS_ERROR_NULL_POINTER;
+        return NS_ERROR_NULL_POINTER;
     }
     *stub = new bcJavaStub(obj);
     return NS_OK;
@@ -69,7 +70,7 @@ NS_IMETHODIMP bcJavaStubsAndProxies::GetStub(jobject obj, bcIStub **stub) {
 NS_IMETHODIMP bcJavaStubsAndProxies::GetProxy(bcOID oid, const nsIID &iid, bcIORB *orb,  jobject *proxy) {
     printf("--[c++] bcJavaStubsAndProxies::GetProxy\n");
     if (!componentLoader) {
-	Init();
+        Init();
     }
 
     JNIEnv * env = bcJavaGlobal::GetJNIEnv();
@@ -78,6 +79,23 @@ NS_IMETHODIMP bcJavaStubsAndProxies::GetProxy(bcOID oid, const nsIID &iid, bcIOR
     return NS_OK;
 }
 
+NS_IMETHODIMP bcJavaStubsAndProxies::GetInterface(const nsIID &iid,  jclass *clazz) {
+    printf("--[c++] bcJavaStubsAndProxies::GetInterface\n");
+    if (!componentLoader) {
+        Init();
+    }
+
+    JNIEnv * env = bcJavaGlobal::GetJNIEnv();
+    jobject jiid = bcIIDJava::GetObject((nsIID*)&iid);
+    *clazz = (jclass)env->CallStaticObjectMethod(proxyFactory,getInterfaceID, jiid);
+    return NS_OK;
+}
+
+NS_IMETHODIMP  bcJavaStubsAndProxies::GetOID(jobject object, bcIORB *orb, bcOID *oid) {
+    bcIStub *stub = new bcJavaStub(object);
+    *oid = orb->RegisterStub(stub);
+    return NS_OK;
+}
 
 NS_IMETHODIMP bcJavaStubsAndProxies::GetOID(char *location, bcOID *oid) { 
     printf("--bcJavaStubsAndProxies::GetOID %s\n",location);
@@ -85,7 +103,7 @@ NS_IMETHODIMP bcJavaStubsAndProxies::GetOID(char *location, bcOID *oid) {
     nsresult result;
     
     if (!componentLoader) {
-	Init();
+        Init();
     }
     //location[strlen(location)-5] = 0; //nb dirty hack. location is xyz.jar.info
     strcpy(location + strlen(location)-4,"comp");
@@ -94,8 +112,8 @@ NS_IMETHODIMP bcJavaStubsAndProxies::GetOID(char *location, bcOID *oid) {
     bcIStub *stub = new bcJavaStub(object);
     NS_WITH_SERVICE(bcORB,_orb,kORBCIID,&result);
     if (NS_FAILED(result)) {
-	printf("--bcJavaStubsAndProxies::GetOID failed\n");
-	return result;
+        printf("--bcJavaStubsAndProxies::GetOID failed\n");
+        return result;
     }
     bcIORB *orb;
     _orb->GetORB(&orb);
@@ -108,40 +126,47 @@ void bcJavaStubsAndProxies::Init(void) {
     JNIEnv * env = bcJavaGlobal::GetJNIEnv();
     componentLoader = env->FindClass("org/mozilla/xpcom/ComponentLoader");
     if (env->ExceptionOccurred()) {
-	 env->ExceptionDescribe();
-	 componentLoader = 0;
-	 return;
+        env->ExceptionDescribe();
+        componentLoader = 0;
+        return;
     }
     componentLoader = (jclass)env->NewGlobalRef(componentLoader);
     if (env->ExceptionOccurred()) {
-	 env->ExceptionDescribe();
-	 componentLoader = 0;
-	 return;
+        env->ExceptionDescribe();
+        componentLoader = 0;
+        return;
     }
     loadComponentID = env->GetStaticMethodID(componentLoader,"loadComponent","(Ljava/lang/String;)Ljava/lang/Object;");
     if (env->ExceptionOccurred()) {
-	env->ExceptionDescribe();
-	componentLoader = 0;
-	return;
+        env->ExceptionDescribe();
+        componentLoader = 0;
+        return;
     }
     proxyFactory = env->FindClass("org/mozilla/xpcom/ProxyFactory");
     if (env->ExceptionOccurred()) {
-	env->ExceptionDescribe();
-	componentLoader = 0;
-	return;
+        env->ExceptionDescribe();
+        componentLoader = 0;
+        return;
     }
     proxyFactory = (jclass)env->NewGlobalRef(proxyFactory);
     if (env->ExceptionOccurred()) {
-	env->ExceptionDescribe();
-	componentLoader = 0;
-	return;
+        env->ExceptionDescribe();
+        componentLoader = 0;
+        return;
     }
     getProxyID = env->GetStaticMethodID(proxyFactory, "getProxy","(JLorg/mozilla/xpcom/IID;J)Ljava/lang/Object;");
     if (env->ExceptionOccurred()) {
-	env->ExceptionDescribe();
-	componentLoader = 0;
-	return;
+        env->ExceptionDescribe();
+        componentLoader = 0;
+        return;
     }
+    getInterfaceID = env->GetStaticMethodID(proxyFactory, "getInterface","(Lorg/mozilla/xpcom/IID;)Ljava/lang/Class;");
+    if (env->ExceptionOccurred()) {
+        env->ExceptionDescribe();
+        componentLoader = 0;
+        return;
+    }
+
 
 
 }

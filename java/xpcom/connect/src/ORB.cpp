@@ -24,9 +24,9 @@
 #include "Call.h"
 
 ORB::ORB() {
-    currentID = 0;
+    currentID = 1;
     for (int i = 0; i < STUBS_COUNT; i++) {
-	stubs[i] = 0;
+        stubs[i] = 0;
     }
 }
 
@@ -50,10 +50,10 @@ int ORB::SendReceive(bcICall *call) {
     call->GetParams(&iid,&oid,&mid);
     bcIStub *stub = GetStub(&oid);
     if (stub) {
-	stub->Dispatch(call);
-	return 0;
+        stub->Dispatch(call);
+        return 0;
     } else {
-	return 1;  //nb need to think about error values
+        return 1;  //nb need to think about error values
     }
 }
 

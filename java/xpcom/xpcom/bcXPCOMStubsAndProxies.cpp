@@ -58,12 +58,13 @@ NS_IMETHODIMP bcXPCOMStubsAndProxies::GetStub(nsISupports *obj, bcIStub **stub) 
 }
 
 NS_IMETHODIMP bcXPCOMStubsAndProxies::GetProxy(bcOID oid, const nsIID &iid, bcIORB *orb, nsISupports **proxy) {
-    printf("--bcXPCOMStubsAndProxies::GetProxy\n");
+    printf("--bcXPCOMStubsAndProxies::GetProxy iid=%s\n",iid.ToString());
     if (!proxy) {
-	printf("--bcXPCOMStubsAndProxies::GetProxy failed\n");
-	return NS_ERROR_NULL_POINTER;
+        printf("--bcXPCOMStubsAndProxies::GetProxy failed\n");
+        return NS_ERROR_NULL_POINTER;
     }
     *proxy = new bcXPCOMProxy(oid,iid,orb);
+    NS_IF_ADDREF(*proxy);
     return NS_OK;
 }
 

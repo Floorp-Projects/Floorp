@@ -51,17 +51,18 @@ CPPSRCS =  \
 CXXFLAGS        += -I$(JDKHOME)/include -I$(JDKHOME)/include/linux $(MOZ_TOOLKIT_REGISTRY_CFLAGS) -D_REENTRANT -DOJI_DISABLE -I$(CONNECT_SRC)/public
 
 
+DSO_LDOPTS += \
+      -L$(JDKHOME)/jre/lib/$(HOSTTYPE)/ \
+      -L$(JDKHOME)/jre/lib/$(HOSTTYPE)/classic \
+      -L$(JDKHOME)/jre/lib/$(HOSTTYPE)/native_threads \
+      -ljvm  -lhpi -ljava\
+      $(NULL)
+
 #DSO_LDOPTS += \
-#      -L$(JDKHOME)/jre/lib/$(HOSTTYPE)/ \
-#      -L$(JDKHOME)/jre/lib/$(HOSTTYPE)/classic \
+#      -L$(JDKHOME)/jre/bin \
+#      -L$(JDKHOME)/jre/bin/classic \
 #      -ljvm  \
 #      $(NULL)
-
-DSO_LDOPTS += \
-      -L$(JDKHOME)/jre/bin \
-      -L$(JDKHOME)/jre/bin/classic \
-      -ljvm  \
-      $(NULL)
       
 ifneq ($(OS_ARCH), Linux)
 DSO_LDOPTS      += \

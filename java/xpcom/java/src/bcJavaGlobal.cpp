@@ -38,7 +38,6 @@ JavaVM *bcJavaGlobal::jvm = NULL;
 #endif
 
 JNIEnv * bcJavaGlobal::GetJNIEnv(void) {
-    printf("--bcJavaGlobal::GetJNIEnv begin\n");
     JNIEnv * env;
     int res;
     if (!jvm) {
@@ -47,7 +46,6 @@ JNIEnv * bcJavaGlobal::GetJNIEnv(void) {
     if (jvm) {
         res = jvm->AttachCurrentThread(JNIENV &env,NULL);
     }
-    printf("--bcJavaGlobal::GetJNIEnv %d\n",res);
     return env;
 }
 
@@ -62,6 +60,7 @@ void bcJavaGlobal::StartJVM() {
     if (jvmCount) {
         return;
     }
+#if 0
     JDK1_1InitArgs vm_args;
     char classpath[1024];
     JNI_GetDefaultJavaVMInitArgs(&vm_args);
@@ -78,16 +77,18 @@ void bcJavaGlobal::StartJVM() {
     vm_args.classpath = classpath;
     /* Create the Java VM */
     res = JNI_CreateJavaVM(&jvm, JNIENV &env, &vm_args);
-#if 0
+#endif
+#if 1
     char classpath[1024];
     JavaVMInitArgs vm_args;
     JavaVMOption options[2];
-    sprintf(classpath, "-Djava.class.path=%s",PR_GetEnv("CLASSPATH"));
+    sprintf(classpath, "-Djava.class.path=%s:/ws/mozilla/dist/classes",PR_GetEnv("CLASSPATH"));
+    printf("--[c++] classpath %s\n",classpath);
     options[0].optionString = classpath;
-    options[1].optionString="-Djava.compiler=NONE";
+    options[1].optionString=""; //-Djava.compiler=NONE";
     vm_args.version = 0x00010002;
     vm_args.options = options;
-    vm_args.nOptions = 1;
+    vm_args.nOptions = 2;
     vm_args.ignoreUnrecognized = JNI_TRUE;
     /* Create the Java VM */
     res = JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);

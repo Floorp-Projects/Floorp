@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -24,26 +24,29 @@ package org.mozilla.xpcom;
 import java.lang.reflect.*;
 
 public class Utilities {
+    
     static Object callMethodByIndex(Object obj, IID iid, int mid, Object[] args) {
-	System.out.println("--[java]org.mozilla.xpcom.Utilities.callMethodByIndex "+args.length+" "+mid);
-	for (int i = 0; i < args.length; i++) {
-	    System.out.println("--[java]callMethodByIndex args["+i+"] = "+args[i]);
-	}
-	Method method = getMethodByIndex(mid,iid);
-	System.out.println("--callMethodByIndex method "+method);
-	try {
-	    if (method != null) {
-            method.invoke(obj,args); 
-	    }
-	} catch (Exception e) {
-	    e.printStackTrace();
-	}
-	return null; //nb for testing
+        System.out.println("--[java]org.mozilla.xpcom.Utilities.callMethodByIndex "+args.length+" "+mid);
+        for (int i = 0; i < args.length; i++) {
+            System.out.println("--[java]callMethodByIndex args["+i+"] = "+args[i]);
+        }
+        Method method = getMethodByIndex(mid,iid);
+        System.out.println("--[java] org.mozilla.xpcom.Utilities.callMethodByIndex method "+method);
+        try {
+            if (method != null) {
+                method.invoke(obj,args); 
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("--callMethodByIndex method finished"+method);
+        return null; //nb for testing
     }
     static Object callMethod(long oid, Method method, IID iid, long orb , Object[] args) {
         System.out.println("--[java]Utilities.callMethod "+method);
         int mid = getIndexByMethod(method, iid);
         if (mid <= 0) {
+            System.out.println("--[java]Utilities.callMethod we do not have implementation for "+method);
             return null;
         }
         System.out.println("--[java]Utilities.callMethod "+mid);

@@ -57,7 +57,7 @@ void bcJavaStub::Dispatch(bcICall *call) {
     call->GetParams(&iid, &oid, &mid);
     nsIInterfaceInfo *interfaceInfo;
     nsIInterfaceInfoManager* iimgr;
-    if(iimgr = XPTI_GetInterfaceInfoManager()) {
+    if((iimgr = XPTI_GetInterfaceInfoManager()) != NULL) {
         if (NS_FAILED(iimgr->GetInfoForIID(&iid, &interfaceInfo))) {
             return;  //nb exception handling
         }
@@ -81,8 +81,10 @@ void bcJavaStub::Dispatch(bcICall *call) {
     jobject jiid = bcIIDJava::GetObject(&iid);
     bcJavaGlobal::GetJNIEnv()->CallStaticObjectMethod(utilitiesClass, callMethodByIndexMID, object, jiid, (jint)mid, args);
     //nb return value; excepion handling
-    bcIMarshaler * m = call->GetMarshaler();     //nb **  to do
+    bcIMarshaler * m = call->GetMarshaler();  
     mt->Marshal(m);
+    //nb memory deallocation
+    delete m; delete um; delete mt;
     return;
 }
 

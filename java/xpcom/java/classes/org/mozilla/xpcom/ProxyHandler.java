@@ -32,10 +32,14 @@ class ProxyHandler implements InvocationHandler {
     public Object invoke(Object proxy,
 			 Method method,
 			 Object[] args) throws Throwable {
-	return Utilities.callMethod(oid, method, iid, orb, args);
-	
+        System.out.println("--[java]ProxyHandler.invoke "+method);
+        if ("toString".equals(method.getName())) {
+            return "ProxyObject@{oid = "+oid+" iid = "+iid+"}";
+        }
+        return Utilities.callMethod(oid, method, iid, orb, args);
     }
     private long oid;
     private IID iid;
     private long orb;
 }
+

@@ -60,17 +60,42 @@ NS_IMETHODIMP bcJavaSample::Test0()
 /* void test1 (in long l); */
 NS_IMETHODIMP bcJavaSample::Test1(PRInt32 l)
 {
-    printf("--[c++] bcJavaSample.test1\n");
+    printf("--[c++] bcJavaSample.test1 l=%d\n",l);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* void test2 (in bcIJavaSample o); */
 NS_IMETHODIMP bcJavaSample::Test2(bcIJavaSample *o)
-{   printf("--[c++] bcJavaSample.test2\n");
-    return NS_ERROR_NOT_IMPLEMENTED;
+{ 
+    printf("--[c++] bcJavaSample.test2\n");
+    o->Test0();
+    return NS_OK;
 }
 
 
+/* void test3 (in PRUint32 count, [array, size_is (count)] in long valueArray); */
+NS_IMETHODIMP bcJavaSample::Test3(PRUint32 count, PRInt32 *valueArray) {
+    printf("--[c++] bcJavaSample.test3 coutn %d\n",count);
+    for(unsigned int i = 0; i < count; i++) {
+        printf("--[c++] valueArray[%d]=%d\n",i,valueArray[i]);
+    }
+    return NS_OK;
+}
+
+/* void test4 (in PRUint32 count, [array, size_is (count)] inout string valueArray); */
+NS_IMETHODIMP bcJavaSample::Test4(PRUint32 count, char ***valueArray) {
+    printf("--[c++] bcJavaSample.test4 coutn %d\n",count);
+    for(unsigned int i = 0; i < count; i++) {
+        printf("--[c++] valueArray[%d]=%s\n",i,(*valueArray)[i]);
+    }
+    char ** array = (char **)malloc(sizeof(char*)*4);
+    array[0] = "1";
+    array[1] = "2";
+    array[2] = "hello";
+    array[3] = "world";
+    *valueArray = array;
+    return NS_OK;
+}
 void test() {
     printf("--BlackConnect test start\n");
     nsresult r;
@@ -82,11 +107,29 @@ void test() {
 					   (void**)&test);
     //sigsend(P_PID, getpid(),SIGINT);
     //test->Test1(2000);
-    //test->Test1(1000);
+#if 0
+    test->Test1(1000);
+    bcIJavaSample *test1;
     if (NS_FAILED(r)) {
-	printf("failed to get component. try to restart test\n");
+        printf("failed to get component. try to restart test\n");
     } else {
         test->Test2(a);
+    }
+    test->QueryInterface(NS_GET_IID(bcIJavaSample),(void**)&test1);
+    int intArray[] = {1,2,3};
+    test->Test3(3, intArray);
+#endif
+    {
+        char ** valueArray = (char **)malloc(sizeof(char*)*4);
+        valueArray[0] = "hi";
+        valueArray[1] = "there";
+        valueArray[2] = "a";
+        valueArray[3] = "b";
+        char *** valueArray2 = &valueArray;
+        test->Test4(4,valueArray2);
+        for (int i = 0; i < 4; i++) {
+            printf("valueArray2[%d]=%s\n",i,(*valueArray2)[i]);
+        }
     }
     printf("--BlackConnect test end\n");
 }

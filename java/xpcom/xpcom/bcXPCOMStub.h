@@ -28,7 +28,7 @@
 class bcXPCOMStub : public bcIStub {
 public:
     bcXPCOMStub(nsISupports *obj);
-    ~bcXPCOMStub();
+    virtual ~bcXPCOMStub();
     virtual void Dispatch(bcICall *call) ;
 private:
     nsISupports *object;

@@ -31,6 +31,7 @@ DIRS=   \
         connect \
 	xpcom   \
 	java    \
+	xpcom/test/ \
         $(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -28,7 +28,6 @@ class bcIUnMarshaler {
  public:
     virtual int ReadSimple(void *ptr, bcXPType type) = 0;
     virtual int ReadString(void *ptr, size_t *size, bcIAllocator * allocator = 0) = 0;
-    virtual int ReadArray(void *ptr, size_t *length, bcXPType type, bcIAllocator * allocator) = 0;
 };
 
 #endif

@@ -32,7 +32,6 @@ public:
     virtual ~Marshaler();
     virtual int WriteSimple(void *ptr, bcXPType type);
     virtual int WriteString(void *ptr, size_t size);
-    virtual int WriteArray(void *ptr, size_t length, bcXPType type);
 private:
     ostream * out;
 };

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -23,33 +23,36 @@ package org.mozilla.xpcom;
 
 public class IID {
     public IID(String iid) {
-	this.iid = (iid == null) ? "" : iid;
+        this.iid = (iid == null) ? "" : iid;
     }
     public boolean equals(Object obj) {
-	if (! (obj instanceof IID)) { 
-	    return false;
-	}
-	boolean res = iid.equals(((IID)obj).iid);
-	return res;
+        if (! (obj instanceof IID)) { 
+            return false;
+        }
+        boolean res = iid.equals(((IID)obj).iid);
+        return res;
     }
     public String toString() {
-	return "org.mozilla.xpcom.IID@"+iid;
+        return "org.mozilla.xpcom.IID@"+iid;
     }
     public int hashCode() {
-	int h = iid.hashCode(); 
-	return h;
+        int h = iid.hashCode(); 
+        return h;
     }
     public String getString() {
-	return iid;
+        return iid;
     }
     private String iid;
     public static Class TYPE;
     static {
-	try {
-	    TYPE = Class.forName("org.mozilla.xpcom.Proxy");
-	} catch (Exception e) {  //it could not happen
-	    TYPE = null;
-	}
+        try {
+            TYPE = Class.forName("org.mozilla.xpcom.Proxy");
+        } catch (Exception e) {  //it could not happen
+            TYPE = null;
+        }
     }
-
+    
 }
+
+
+

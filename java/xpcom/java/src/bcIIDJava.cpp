@@ -70,7 +70,7 @@ jobject  bcIIDJava::GetObject(nsIID *iid) {
     char *str = iid->ToString(); //nb free ?
     jstring jstr = NULL;
     if (str) {
-	char *siid = str+1; //we do need to have {_fdsf_}
+	char *siid = str+1; //we do need to have it. The format is {_xxx-xxx-xxx_}
 	siid[strlen(siid)-1] = 0;
 	jstr = env->NewStringUTF((const char *)siid);
     }
@@ -90,7 +90,7 @@ nsIID bcIIDJava::GetIID(jobject obj) {
 	}
 	jstring jstr = (jstring)env->CallObjectMethod(obj, getStringMID);  
 	const char * str = NULL;
-        str = env->GetStringUTFChars(jstr,NULL);
+    str = env->GetStringUTFChars(jstr,NULL);
 	iid.Parse(str);
 	env->ReleaseStringUTFChars(jstr,str);
 

@@ -29,8 +29,11 @@ class bcIMarshaler {
 public:
     virtual int WriteSimple(void *ptr, bcXPType type) = 0;
     virtual int WriteString(void *ptr, size_t size) = 0;
-    virtual int WriteArray(void *ptr,  size_t length, bcXPType type) = 0;
 };
 
 #endif
+
+
+
+
 

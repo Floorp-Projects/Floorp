@@ -55,7 +55,7 @@ NS_IMETHODIMP bcJavaModule::GetClassObject(nsIComponentManager *aCompMgr, const 
 
 /* void registerSelf (in nsIComponentManager aCompMgr, in nsIFile location, in string registryLocation, in string componentType); */
 NS_IMETHODIMP bcJavaModule::RegisterSelf(nsIComponentManager *aCompMgr, nsIFile *_location, const char *registryLocation, const char *componentType) {
-    nsresult result;
+    nsresult result = NS_OK;
     printf("--JavaModule::RegisterSelf\n");
     ifstream in(location);
     char cidStr[500], progid[1000], desc[1000];
@@ -66,7 +66,7 @@ NS_IMETHODIMP bcJavaModule::RegisterSelf(nsIComponentManager *aCompMgr, nsIFile 
     nsCID  cid;
     cid.Parse((const char *)cidStr);
     aCompMgr->RegisterComponentWithType(cid, desc, progid, _location, registryLocation, PR_TRUE, PR_TRUE, componentType);
-    return NS_OK;
+    return result;
 }
 
 /* void unregisterSelf (in nsIComponentManager aCompMgr, in nsIFile location, in string registryLocation); */

@@ -41,7 +41,7 @@ void bcXPCOMStub::Dispatch(bcICall *call) {
     call->GetParams(&iid, &oid, &mid);
     nsIInterfaceInfo *interfaceInfo;
     nsIInterfaceInfoManager* iimgr;
-    if(iimgr = XPTI_GetInterfaceInfoManager()) {
+    if( (iimgr = XPTI_GetInterfaceInfoManager()) ) {
         if (NS_FAILED(iimgr->GetInfoForIID(&iid, &interfaceInfo))) {
             return;  //nb exception handling
         }
@@ -53,18 +53,21 @@ void bcXPCOMStub::Dispatch(bcICall *call) {
     nsXPTMethodInfo* info;
     interfaceInfo->GetMethodInfo(mid,(const nsXPTMethodInfo **)&info);
     int paramCount = info->GetParamCount();
-    bcXPCOMMarshalToolkit * mt;
+    bcXPCOMMarshalToolkit * mt = NULL;
     if (paramCount > 0) {
         printf("--[c++]bcXPCOMStub paramCount %d\n",paramCount);
-        params = (nsXPTCVariant *)  malloc(sizeof(nsXPTCVariant)*paramCount);
+        params = (nsXPTCVariant *)  PR_Malloc(sizeof(nsXPTCVariant)*paramCount);
         mt = new bcXPCOMMarshalToolkit(mid, interfaceInfo, params);
-        bcIUnMarshaler * um = call->GetUnMarshaler();     //nb **  to do
+        bcIUnMarshaler * um = call->GetUnMarshaler();
         mt->UnMarshal(um);
     }
     //nb return value; excepion handling
     XPTC_InvokeByIndex(object, mid, paramCount, params);
-    //bcIMarshaler * m = call->GetMarshaler();     //nb **  to do
-    //mt->Marshal(m);
+    if (mt != NULL) { //nb to do what about nsresult ?
+        bcIMarshaler * m = call->GetMarshaler();    
+        mt->Marshal(m);
+    }
+    //nb memory deallocation
     return;
 }
 

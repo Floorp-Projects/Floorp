@@ -18,20 +18,35 @@
 # Rights Reserved.
 #
 # Contributor(s):
-# Igor Kushnirskiy <idk@eng.sun.com>
 #
-DEPTH   = ../..
-topsrcdir       = @top_srcdir@
-VPATH           = @srcdir@
-srcdir          = @srcdir@
+# Igor Kushnirskiy <idk@eng.sun.com>
+
+DEPTH           = ../../../../
+topsrcdir	= ../../../../
+srcdir		= .
+VPATH		= .
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS=   \
-        connect \
-	xpcom   \
-	java    \
-	xpcom/test/ \
-        $(NULL)
+include $(topsrcdir)/config/config.mk
+
+LIBRARY_NAME = bcTest
+MODULE = bcTest
+IS_COMPONENT = 1
+XPIDLSRCS =  bcITest.idl
+
+CPPSRCS  =   \
+	 bcTestImpl.cpp \
+	 $(NULL)
+
+EXTRA_DSO_LDOPTS += \
+      -L$(DIST)/bin/components/ \
+      -lbcorb  -lbcxpcomstubs  \
+      $(NULL)
+
 
 include $(topsrcdir)/config/rules.mk
+
+
+
+

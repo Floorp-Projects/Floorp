@@ -17,37 +17,21 @@
  * Rights Reserved.
  *
  * Contributor(s):
+ * Leila.Garin@eng.sun.com
  * Igor Kushnirskiy <idk@eng.sun.com>
  */
 
-#include "UnMarshaler.h"
-#include "util.h"
+#include "nsISupports.idl"
 
-UnMarshaler::UnMarshaler(istream *_in) {
-    in = _in;
-}
+[scriptable, uuid(2ba8e928-1dd2-11b2-b025-a6cc9bfac7e7)]
+interface bcITest : nsISupports
+{
+    void test1(inout long l);
+    void test2(in long l1,inout long l2);
+    void test3(in string s1,inout string s2);
+    void test4(in PRUint32 count,[array, size_is(count)] in string valueArray);
+    void test5(in PRUint32 count,[array, size_is(count)] inout string valueArray);
+    void test6(in bcITest o);
+    void test7(out bcITest o);
+};
 
-UnMarshaler::~UnMarshaler() {
-}
-
-int UnMarshaler::ReadSimple(void *ptr, bcXPType type) {
-    char *p = (char *)ptr;
-    int size = type2size(type);
-    in->read(p,size );
-    return 0;
-}
-int UnMarshaler::ReadString(void *ptr, size_t *size, bcIAllocator * allocator) {
-    size_t length;
-    in->read((char*)size,sizeof(size_t));
-    *(char**)ptr = (char *)allocator->Alloc(*size * type2size(bc_T_CHAR));
-    if (*size) {
-        in->read(*(char**)ptr,*size * type2size(bc_T_CHAR));
-    }
-
-    if (*size == 1) {
-        if (!(*(char**)ptr)[0]) {
-            *size = 0;
-        }
-    }
-    return 0;
-}

@@ -6,4 +6,7 @@ interface bcIJavaSample : nsISupports
     void test0();
     void test1(in long l);
     void test2(in bcIJavaSample o);
+    void test3(in PRUint32 count,[array, size_is(count)] in long valueArray);
+    void test4(in PRUint32 count,[array, size_is(count)] inout string valueArray);
+    
 };

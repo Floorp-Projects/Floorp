@@ -45,7 +45,9 @@ class bcJavaStubsAndProxies : public nsISupports {
     NS_DEFINE_STATIC_IID_ACCESSOR(BC_JAVASTUBSANDPROXIES_IID)  
     NS_IMETHOD GetStub(jobject obj, bcIStub **stub);
     NS_IMETHOD GetOID(char *location, bcOID *); //load component by location
+    NS_IMETHOD GetOID(jobject object, bcIORB *orb, bcOID *oid); 
     NS_IMETHOD GetProxy(bcOID oid, const nsIID &iid, bcIORB *orb,  jobject *proxy);
+    NS_IMETHOD GetInterface(const nsIID &iid,  jclass *clazz);
     bcJavaStubsAndProxies();
     virtual ~bcJavaStubsAndProxies();
  protected:
@@ -54,6 +56,7 @@ class bcJavaStubsAndProxies : public nsISupports {
     static jmethodID loadComponentID;
     static jclass proxyFactory;
     static jmethodID getProxyID;
+    static jmethodID getInterfaceID;
 };
 
 #endif  /*  __bcJavaStubsAndProxies_h */

@@ -43,38 +43,10 @@ int Marshaler::WriteString(void *ptr, size_t size) {
         && ptr) {
         size = 1;
     }
-    WriteArray(ptr,size, bc_T_CHAR);
+    out->write((const char*)&size, sizeof(size_t));
+    if (size) {
+        out->write((const char*)ptr,type2size(bc_T_CHAR)*size);
+    }
+    
     return 0;
 }
-
-int Marshaler::WriteArray(void *ptr, size_t length, bcXPType type) {
-    if (!ptr) {
-        length = 0;
-    }
-    cout<<"Marshaler::WriteArray("<<length<<")\n";
-    out->write((const char*)&length, sizeof(size_t));
-    switch (type) {
-        case bc_T_CHAR_STR:
-        case bc_T_WCHAR_STR:
-            {
-                for (unsigned int i = 0; i < length; i++) {
-                    char *str = ((char**)ptr)[i];
-                    size_t size = (!str) ? 0 : strlen(str)+1; //we want to store \0
-                    WriteString((void *)str, size);
-                }
-                break;
-            }
-        default:
-            if (length) {
-                out->write((const char*)ptr,type2size(type)*length);
-            }
-    }
-    return 0;
-}
-
-
-
-
-
-
-

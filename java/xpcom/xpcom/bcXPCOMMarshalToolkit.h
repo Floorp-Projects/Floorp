@@ -54,6 +54,10 @@ private:
                            SizeMode mode,
                            PRUint32* result);
     bcXPType XPTType2bcXPType(uint8 type); //conversion from xpcom to our own types system
+    nsresult MarshalElement(bcIMarshaler *m, void *data, nsXPTParamInfo * param, uint8 type, uint8 ind);
+    nsresult UnMarshalElement(void *data, bcIUnMarshaler *um, nsXPTParamInfo * param, uint8 type, 
+                              bcIAllocator * allocator);
+    PRInt16 GetSimpleSize(uint8 type);
 };
 
 #endif /*  __XPCOMMarshalToolkit_h */

@@ -298,7 +298,7 @@ nsresult bcJavaComponentLoader::SetRegistryInfo(const char *registryLocation,
         NS_FAILED(rv = mRegistry->SetLongLong(key, fileSizeValueName, &fileSize)))
         return rv;
     printf("SetRegistryInfo(%s) => (%d,%d)\n", registryLocation,
-            modDate, fileSize);
+            (int)modDate, (int)fileSize);
     return NS_OK;
 }
 

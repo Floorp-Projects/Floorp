@@ -25,47 +25,78 @@ public class bcJavaSample implements bcIJavaSample {
     public bcJavaSample() {
         System.out.println("--[java]bcJavaSample constructor");
     }
+    public void queryInterface(IID iid, Object[] result) {
+        System.out.println("--[java]bcJavaSample::queryInterface iid="+iid);
+        if ( iid.equals(nsISupportsIID)
+             || iid.equals(bcIJavaSampleIID)) {
+            result[0] = this;
+        } else {
+            result = null;
+        }
+    }
     public void test0() {
-	System.out.println("--[java]bcJavaSample.test0 ");
+        System.out.println("--[java]bcJavaSample.test0 ");
     }
     public void test1(int l) {
-	try {
-	    System.out.println("--[java]bcJavaSample.test1 "+l);
-	    System.out.println("--[java]bcJavaSample.test1\n :)))) Hey Hong"+l);
-	    Object obj = ProxyFactory.getProxy(0,iid,0);
-	    if (obj instanceof bcIJavaSample) {
-		bcIJavaSample proxy = (bcIJavaSample)obj;
-		proxy.test2(null);
-	    } 
-	} catch (Exception e) {
-	    e.printStackTrace();
-	}
+        System.out.println("--[java]bcJavaSample.test1 "+l+"\n");
     }
     public void test2(bcIJavaSample o) {
         System.out.println("--[java]bcJavaSample.test2");
         System.out.println("--[java]bcJavaSample.test2 :)))) Hi there");
         if (o != null) {
             System.out.println("--[java]bcJavaSample.test2 o!= null");
-	    o.test0();
+            o.test0();
+            o.test1(1000);
+            o.test2(this);
+            int[] array={3,2,1};
+            o.test3(3,array);
         } else {
-            System.out.println("--[java]bcJavaSample.test2 o== null");
+            System.out.println("--[java]bcJavaSample.test2 o = null");
         }
     }
-    static IID iid;
+    public void test3(int count, int[] valueArray) {
+        System.out.println("--[java]bcJavaSample.test3");
+        System.out.println(valueArray.length);
+        for (int i = 0; i < valueArray.length; i++) {
+            System.out.println("--[java]callMethodByIndex args["+i+"] = "+valueArray[i]);
+        }
+
+    }
+    public void test4(int count, String[][] valueArray) {
+        System.out.println("--[java]bcJavaSample.test4");
+        String[] array = valueArray[0];
+        for (int i = 0; i < array.length; i++) {
+            System.out.println("--[java]callMethodByIndex args["+i+"] = "+array[i]);
+        }
+        String[] returnArray = {"4","3","2","1"};
+        valueArray[0] = returnArray;
+    }
+    static IID bcIJavaSampleIID;
+    static IID nsISupportsIID;
     static { 
         try {
             Method[] methods = null;
             Class bcIJavaSampleClass = Class.forName("bcIJavaSample");
-            methods = new Method[3];
-            methods[0] = bcIJavaSampleClass.getDeclaredMethod("test0",new Class[]{});
-            methods[1] = bcIJavaSampleClass.getDeclaredMethod("test1",new Class[]{Integer.TYPE});
-            methods[2] = bcIJavaSampleClass.getDeclaredMethod("test2",new Class[]{bcIJavaSampleClass});
-            System.out.println(methods[0]+" "+methods[1]+" "+methods[2]);
-            iid = new IID(bcIJavaSample.BC_IJAVASAMPLE_IID_STRING);
-            ProxyFactory.registerInterfaceForIID(bcIJavaSampleClass,iid);
-            new ProxyClass(iid, methods); 
+            Class IIDClass = Class.forName("org.mozilla.xpcom.IID");
+            methods = new Method[100];
+            Class ObjectArrayClass = (new Object[1]).getClass();
+            Class IntArrayClass = (new int[1]).getClass();
+            Class StringArrayArrayClass = (new String[1][1]).getClass();
+            methods[0] = bcIJavaSampleClass.getDeclaredMethod("queryInterface",new Class[]{IIDClass,ObjectArrayClass});
+            methods[3] = bcIJavaSampleClass.getDeclaredMethod("test0",new Class[]{});
+            methods[4] = bcIJavaSampleClass.getDeclaredMethod("test1",new Class[]{Integer.TYPE});
+            methods[5] = bcIJavaSampleClass.getDeclaredMethod("test2",new Class[]{bcIJavaSampleClass});
+            methods[6] = bcIJavaSampleClass.getDeclaredMethod("test3",new Class[]{Integer.TYPE,IntArrayClass});
+            methods[7] = bcIJavaSampleClass.getDeclaredMethod("test4",new Class[]{Integer.TYPE,StringArrayArrayClass});
+            System.out.println(methods[0]+" "+methods[3]+" "+methods[4]+" "+methods[5]+" "+methods[6]+" "+methods[7]);
+            bcIJavaSampleIID = new IID(bcIJavaSample.BC_IJAVASAMPLE_IID_STRING);
+            nsISupportsIID = new IID("00000000-0000-0000-c000-000000000046");
+            ProxyFactory.registerInterfaceForIID(bcIJavaSampleClass,bcIJavaSampleIID);
+            new ProxyClass(bcIJavaSampleIID, methods); 
+            //new ProxyClass(nsISupportsIID, methods); 
         } catch (Exception e) {
-            
+            System.out.println(e);
         }
     }
 };
+

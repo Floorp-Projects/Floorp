@@ -31,7 +31,6 @@ public:
     virtual ~UnMarshaler();
     virtual int ReadSimple(void *ptr, bcXPType type);
     virtual int ReadString(void *ptr, size_t *size, bcIAllocator * allocator);
-    virtual int ReadArray(void *ptr, size_t *length, bcXPType type, bcIAllocator * allocator);
 private:
     istream *in;
 };

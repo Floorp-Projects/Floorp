@@ -63,6 +63,8 @@ How To Build:
    
 $MOZILLA_FIVE_HOME:$JDKHOME/jre/bin:$JDKHOME/jre/bin/classic:
 
+* remove jni* jri* from MOZILLA_FIVE_HOME/dist/include
+
 * type "gmake"
 
 ==============================================

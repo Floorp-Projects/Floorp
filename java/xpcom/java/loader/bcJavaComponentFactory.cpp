@@ -49,18 +49,18 @@ NS_IMETHODIMP bcJavaComponentFactory::CreateInstance(nsISupports *aOuter, const 
     nsresult r;
     NS_WITH_SERVICE(bcJavaStubsAndProxies, javaStubsAndProxies, kJavaStubsAndProxies, &r);
     if (NS_FAILED(r)) {
-	printf("--bcJavaComponentFactory::CreateInstance javaStubsAndProxies failed \n");
-	return r;
+        printf("--bcJavaComponentFactory::CreateInstance javaStubsAndProxies failed \n");
+        return r;
     }
     NS_WITH_SERVICE(bcXPCOMStubsAndProxies, xpcomStubsAndProxies, kXPCOMStubsAndProxies, &r);
     if (NS_FAILED(r)) {
-	printf("--bcJavaComponentFactory::CreateInstance xpcomStubsAndProxies failed \n");
-	return r;
+        printf("--bcJavaComponentFactory::CreateInstance xpcomStubsAndProxies failed \n");
+        return r;
     }
     NS_WITH_SERVICE(bcORB, _orb, kORBCIID, &r);
     if (NS_FAILED(r)) {
-	printf("--bcJavaComponentFactory::CreateInstance bcORB failed \n");
-	return r;
+        printf("--bcJavaComponentFactory::CreateInstance bcORB failed \n");
+        return r;
     }
     bcIORB *orb;
     _orb->GetORB(&orb);
@@ -68,6 +68,7 @@ NS_IMETHODIMP bcJavaComponentFactory::CreateInstance(nsISupports *aOuter, const 
     r = javaStubsAndProxies->GetOID(location, &oid);
     printf("--bcJavaComponentFactory::CreateInstance after GetOID");
     nsISupports *proxy;
+    printf("--[c++]bcJavaComponentFactory::CreateInstance iid:%s\n",iid.ToString());
     xpcomStubsAndProxies->GetProxy(oid, iid, orb, &proxy);
     *result = proxy;
     printf("--bcJavaComponentFactory::CreateInstance end");
