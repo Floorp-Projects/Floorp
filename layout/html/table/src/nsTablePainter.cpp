@@ -44,9 +44,9 @@
 #include "nsTablePainter.h"
 #include "nsCSSRendering.h"
 
-/* ~*~ Standards Mode Painting ~*~
+/* ~*~ Table Background Painting ~*~
 
-   Background painting in Standards mode follows CSS2.1:17.5.1
+   Mozilla's Table Background painting follows CSS2.1:17.5.1
    That section does not, however, describe the effect of
    borders on background image positioning. What we do is:
 
@@ -93,12 +93,6 @@
        This makes it easier to line up backgrounds across elements
        despite varying border widths, but it does not give much
        flexibility in aligning /to/ those border widths.
-*/
-
-/* ~*~ Quirks Table Background Painting ~*~
-
-   Quirks inherits all backgrounds below the table level into the
-   cells; we don't paint intermediate backgrounds.
 */
 
 
@@ -360,62 +354,10 @@ TableBackgroundPainter::TranslateContext(nscoord aDX,
 }
 
 nsresult
-TableBackgroundPainter::QuirksPaintTable(nsTableFrame* aTableFrame,
-                                         nsMargin&     aDeflate)
+TableBackgroundPainter::PaintTable(nsTableFrame* aTableFrame,
+                                   nsMargin*     aDeflate)
 {
   NS_PRECONDITION(aTableFrame, "null table frame");
-  NS_PRECONDITION(eCompatibility_NavQuirks == mCompatMode,
-                  "QuirksPaintTable called for non-Quirks");
-
-  nsVoidArray rowGroups;
-  PRUint32 numRowGroups;
-  aTableFrame->OrderRowGroups(rowGroups, numRowGroups);
-
-  if (numRowGroups < 1) { //degenerate case
-    PaintTableFrame(aTableFrame,nsnull, nsnull, &aDeflate);
-    /* No cells; nothing else to paint */
-    return NS_OK;
-  }
-
-  PaintTableFrame(aTableFrame,
-                  aTableFrame->GetRowGroupFrame(NS_STATIC_CAST(nsIFrame*, rowGroups.ElementAt(0))),
-                  aTableFrame->GetRowGroupFrame(NS_STATIC_CAST(nsIFrame*, rowGroups.ElementAt(numRowGroups - 1))),
-                  &aDeflate);
-
-  if (mIsBorderCollapse) {
-    /* This is a simple pass, so we'll just keep with the table coord system. */
-
-    for (PRUint32 i = 0; i < numRowGroups; i++) {
-      nsTableRowGroupFrame* rg = aTableFrame->GetRowGroupFrame(NS_STATIC_CAST(nsIFrame*, rowGroups.ElementAt(i)));
-      nsRect rgRect = rg->GetRect();
-      if (rgRect.Intersects(mDirtyRect) && !rg->HasView()) {
-        for (nsTableRowFrame* row = rg->GetFirstRow(); row; row = row->GetNextRow()) {
-          nsRect rowRect = row->GetRect();
-          rowRect.MoveBy(rgRect.x, rgRect.y);
-          if (mDirtyRect.YMost() > rowRect.y && //Intersect won't handle rowspans
-              !row->HasView()) {
-            for (nsTableCellFrame* cell = row->GetFirstCell(); cell; cell = cell->GetNextCell()) {
-              mCellRect = cell->GetRect();
-              mCellRect.MoveBy(rowRect.x, rowRect.y);
-              if (mCellRect.Intersects(mDirtyRect) && !cell->HasView()) {
-                nsresult rv = PaintCell(cell, PR_FALSE);
-                if (NS_FAILED(rv)) return rv;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  return NS_OK;
-}
-
-nsresult
-TableBackgroundPainter::PaintTable(nsTableFrame* aTableFrame)
-{
-  NS_PRECONDITION(aTableFrame, "null table frame");
-  NS_PRECONDITION(eCompatibility_NavQuirks != mCompatMode,
-                  "must call QuirksPaintTable in Quirks mode, not PaintTable");
 
   nsVoidArray rowGroups;
   PRUint32 numRowGroups;
@@ -430,7 +372,7 @@ TableBackgroundPainter::PaintTable(nsTableFrame* aTableFrame)
   PaintTableFrame(aTableFrame,
                   aTableFrame->GetRowGroupFrame(NS_STATIC_CAST(nsIFrame*, rowGroups.ElementAt(0))),
                   aTableFrame->GetRowGroupFrame(NS_STATIC_CAST(nsIFrame*, rowGroups.ElementAt(numRowGroups - 1))),
-                  nsnull);
+                  aDeflate);
 
   /*Set up column background/border data*/
   if (mNumCols > 0) {
@@ -475,6 +417,9 @@ TableBackgroundPainter::PaintTable(nsTableFrame* aTableFrame)
              col = NS_STATIC_CAST(nsTableColFrame*, col->GetNextSibling())) {
           /*Create data struct for column*/
           PRUint32 colIndex = col->GetColIndex();
+          NS_ASSERTION(colIndex < mNumCols, "prevent array boundary violation");
+          if (mNumCols <= colIndex)
+            break;
           mCols[colIndex].mCol.SetFull(mPresContext, mRenderingContext, col);
           //Bring column mRect into table's coord system
           mCols[colIndex].mCol.mRect.MoveBy(cgData->mRect.x, cgData->mRect.y);
@@ -510,8 +455,6 @@ TableBackgroundPainter::PaintRowGroup(nsTableRowGroupFrame* aFrame,
                                       PRBool                aPassThrough)
 {
   NS_PRECONDITION(aFrame, "null frame");
-  NS_PRECONDITION(eCompatibility_NavQuirks != mCompatMode,
-                  "must not call PaintRowGroup in Quirks mode");
 
   nsTableRowFrame* firstRow = aFrame->GetFirstRow();
 
@@ -570,8 +513,7 @@ TableBackgroundPainter::PaintRow(nsTableRowFrame* aFrame,
                                  PRBool           aPassThrough)
 {
   NS_PRECONDITION(aFrame, "null frame");
-  NS_PRECONDITION(eCompatibility_NavQuirks != mCompatMode,
-                  "must not call PaintRow in Quirks mode");
+
   /* Load row data */
   if (!aPassThrough) {
     mRow.SetFull(mPresContext, mRenderingContext, aFrame);

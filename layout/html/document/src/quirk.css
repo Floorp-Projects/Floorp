@@ -110,10 +110,6 @@ table {
   font-variant: -moz-initial;
 }
 
-/* make sure backgrounds are inherited in tables  -- see bug 4510*/
-td, th, tr {
-  background: inherit;
-}
 
 /* Quirk: collapse top margin of BODY and TD and bottom margin of TD */
 

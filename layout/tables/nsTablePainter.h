@@ -94,15 +94,13 @@ class TableBackgroundPainter
        In border-collapse, the *table* paints the cells' borders,
        so we need to make sure the backgrounds get painted first
        (underneath) by doing a cell-background-only painting pass.
-       This happens in both Standards and Quirks mode PaintTable
-       calls.
        The table must then do a no-cell-background pass that
        continues as a normal background paint call in the cell
-       descendants.) This method doesn't handle views very well, but
-       then, nothing about BC table painting really does.
+       descendants.) This method doesn't handle views very well,
+       but then, nothing about BC table painting really does.
     */
 
-    /* ~*~ Using Standards Mode Painting ~*~
+    /* ~*~ Using nsTablePainter Background Painting ~*~
 
        A call to PaintTable will normally paint all of the table's
        elements (except the cells in non-BC). Elements with views
@@ -113,12 +111,13 @@ class TableBackgroundPainter
 
     /** Paint background for the table frame and its children down through cells
       * (Cells themselves will only be painted in border collapse)
-      * Standards mode only
       * Table must do a flagged TABLE_BG_PAINT ::Paint call on its
       * children afterwards
       * @param aTableFrame - the table frame
+      * @param aDeflate    - deflation needed to bring table's mRect
+      *                      to the outer grid lines in border-collapse
       */
-    nsresult PaintTable(nsTableFrame* aTableFrame);
+    nsresult PaintTable(nsTableFrame* aTableFrame, nsMargin* aDeflate);
 
     /** Paint background for the row group and its children down through cells
       * (Cells themselves will only be painted in border collapse)
@@ -139,18 +138,6 @@ class TableBackgroundPainter
       */
     nsresult PaintRow(nsTableRowFrame* aFrame)
     { return PaintRow(aFrame, PR_FALSE); }
-
-
-    /** Paint table's background, Quirks mode only
-      * Cell backgrounds will also be painted in border collapse:
-      * Table must do a flagged TABLE_BG_PAINT on its children
-      * afterwards.
-      * @param aTableFrame - the table frame
-      * @param aDeflate    - deflation needed to bring table's mRect
-      *                      to the outer grid lines in border-collapse
-      */
-    nsresult QuirksPaintTable(nsTableFrame* aTableFrame,
-                              nsMargin&     aDeflate);
 
   private:
 
