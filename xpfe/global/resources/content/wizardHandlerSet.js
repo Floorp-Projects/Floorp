@@ -64,9 +64,14 @@ function DEF_onNext()
       return;
   
 	oParent.SM.SavePageData( this.currentPageTag, null, null, null );      // persist data
-  var nextPageTag = this.wizardMap[this.currentPageTag].next;
-	this.LoadPage( nextPageTag, false );     // load the next page
-  this.ProgressUpdate( ++this.currentPageNumber );
+  if (this.wizardMap[this.currentPageTag]) {
+    var nextPageTag = this.wizardMap[this.currentPageTag].next;
+    this.LoadPage( nextPageTag, false );     // load the next page
+    this.ProgressUpdate( ++this.currentPageNumber );
+  } else {
+    dump("Error: Missing an entry in the wizard map for " +
+         this.currentPageTag + "\n");
+  }
 }
 // default handler for previous page in sequence
 function DEF_onBack()
@@ -143,8 +148,19 @@ function DEF_onPageLoad( tag )
 	this.currentPageTag = tag;
   if( this.DoButtonEnabling )              // if provided, call user-defined button
     this.DoButtonEnabling();               // enabling function
-  if( this.content_frame )
+  if( this.content_frame ) {
     oParent.SM.SetPageData( tag, false );  // set page data in content frame
+
+    // set the focus to the first focusable element
+    var doc = window.frames[this.content_frame.name].document;
+    var controls = doc.controls;
+    for (i=0; i< controls.length; i++) {
+      if (controls[i].focus) {
+        controls[i].focus();
+        break;                  // stop when focus has been set
+      }
+    }
+  }
   else {
     dump("Widget Data Manager Error:\n"); 
     dump("==========================\n");
