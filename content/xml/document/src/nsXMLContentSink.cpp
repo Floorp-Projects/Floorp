@@ -322,19 +322,19 @@ nsXMLContentSink::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const 
       NS_ADDREF(mDocument);
       mDocument->SetRootContent(content);
 
-      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
-      nsCOMPtr<nsIContentViewer> contentViewer;
-      rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
-      if (NS_SUCCEEDED(rv) && (contentViewer != nsnull)) {
-        contentViewer->SetDOMDocument(resultDOMDoc);
-      }
-
       // Reset the observer on the transform mediator
       mXSLTransformMediator->SetTransformObserver(nsnull);
 
       // Start the layout process
       StartLayout();
       sourceDoc->EndLoad();
+
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+      nsCOMPtr<nsIContentViewer> contentViewer;
+      rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
+      if (NS_SUCCEEDED(rv) && contentViewer) {
+        contentViewer->LoadComplete(NS_OK);
+      }
     }
     else
     {
@@ -342,8 +342,8 @@ nsXMLContentSink::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const 
       nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
       nsCOMPtr<nsIContentViewer> contentViewer;
       rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
-      if (NS_SUCCEEDED(rv) && (contentViewer != nsnull)) {
-        nsCOMPtr<nsIDocumentViewer> documentViewer;
+      nsCOMPtr<nsIDocumentViewer> documentViewer(do_QueryInterface(contentViewer));
+      if (documentViewer) {
         documentViewer->SetTransformMediator(nsnull);
       }
 
@@ -386,6 +386,13 @@ nsXMLContentSink::SetupTransformMediator()
 
   nsCOMPtr<nsIXMLDocument> resultXMLDoc(do_QueryInterface(resultDOMDoc));
   resultXMLDoc->SetDefaultStylesheets(url);
+
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
+  if (NS_SUCCEEDED(rv) && contentViewer) {
+    contentViewer->SetDOMDocument(resultDOMDoc);
+  }
 
   mXSLTransformMediator->SetResultDocument(resultDOMDoc);
   mXSLTransformMediator->SetTransformObserver(this);
@@ -950,8 +957,8 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl, const nsString& aType)
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
   nsCOMPtr<nsIContentViewer> contentViewer;
   rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
-  if (NS_SUCCEEDED(rv) && (contentViewer != nsnull)) {
-    nsCOMPtr<nsIDocumentViewer> documentViewer = do_QueryInterface(contentViewer);
+  nsCOMPtr<nsIDocumentViewer> documentViewer(do_QueryInterface(contentViewer));
+  if (documentViewer) {
     documentViewer->SetTransformMediator(mXSLTransformMediator);
   }
 
@@ -1010,6 +1017,9 @@ nsXMLContentSink::ProcessXSLStyleLink(nsIContent* aElement,
 {
   nsresult rv = NS_OK;
   nsIURI* url;
+
+  // LoadXSLStyleSheet needs a mWebShell.
+  if (!mWebShell) return rv;
 
   rv = CreateStyleSheetURL(&url, aHref);
   if (NS_SUCCEEDED(rv)) {
@@ -1816,7 +1826,7 @@ nsXMLContentSink::RefreshIfEnabled(nsIViewManager* vm)
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
     nsCOMPtr<nsIContentViewer> contentViewer;
     nsresult rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
-    if (NS_SUCCEEDED(rv) && (contentViewer != nsnull)) {
+    if (NS_SUCCEEDED(rv) && contentViewer) {
       PRBool enabled;
       contentViewer->GetEnableRendering(&enabled);
       if (enabled) {
