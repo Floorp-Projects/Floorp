@@ -20,6 +20,12 @@
  * Contributor(s): 
  *   Steve Clark <buster@netscape.com>
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 #ifndef nsLineLayout_h___
 #define nsLineLayout_h___
@@ -394,7 +400,7 @@ protected:
   PerFrameData* mFrameFreeList;
   PRInt32 mInitialFramesFreed;
 
-#ifdef AIX
+#if defined(AIX) || defined(XP_OS2_VACPP)
 public:
 #endif
   struct PerSpanData {
@@ -432,7 +438,7 @@ public:
       mLastFrame = pfd;
     }
   };
-#ifdef AIX
+#if defined(AIX) || defined(XP_OS2_VACPP)
 protected:
 #endif
   PerSpanData mSpanDataBuf[NS_LINELAYOUT_NUM_SPANS];

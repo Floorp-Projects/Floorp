@@ -30,6 +30,7 @@
  *
  * Date         Modified by     Description of modification
  * 03/20/2000   IBM Corp.       BiDi - ability to change the default direction of the browser
+ * 04/20/2000   IBM Corp.       OS/2 VisualAge build.
  *
  */
 #ifndef nsPresContext_h___
@@ -184,7 +185,7 @@ protected:
   void   GetFontPreferences();
 
 private:
-  friend int PrefChangedCallback(const char*, void*);
+  friend int PR_CALLBACK PrefChangedCallback(const char*, void*);
   void   PreferenceChanged(const char* aPrefName);
 };
 

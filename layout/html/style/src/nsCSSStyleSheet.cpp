@@ -19,6 +19,13 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ * 
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 
 #include "nsICSSStyleSheet.h"
@@ -182,7 +189,7 @@ RuleHash::RuleHash(void)
 {
 }
 
-static PRBool DeleteValue(nsHashKey* aKey, void* aValue, void* closure)
+static PRBool PR_CALLBACK DeleteValue(nsHashKey* aKey, void* aValue, void* closure)
 {
   delete ((RuleValue*)aValue);
   return PR_TRUE;
@@ -2168,7 +2175,7 @@ void CSSStyleSheetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize
   }
 }
 
-static PRBool
+static PRBool PR_CALLBACK
 EnumClearRuleCascades(void* aProcessor, void* aData)
 {
   nsICSSStyleRuleProcessor* processor = (nsICSSStyleRuleProcessor*)aProcessor;
@@ -2647,7 +2654,7 @@ static PRBool IsLinkPseudo(nsIAtom* aAtom)
                  (nsCSSAtoms::visitedPseudo == aAtom));
 }
 
-static PRBool IsEventSensitive(nsIAtom *aPseudo, nsIAtom *aContentTag, PRBool aSelectorIsGlobal)
+static PRBool PR_CALLBACK IsEventSensitive(nsIAtom *aPseudo, nsIAtom *aContentTag, PRBool aSelectorIsGlobal)
 {
   // if the selector is global, meaning it is not tied to a tag, then
   // we restrict the application of the event pseudo to the following tags
@@ -3303,7 +3310,7 @@ struct StateEnumData
 };
 
 static 
-PRBool StateEnumFunc(void* aSelector, void* aData)
+PRBool PR_CALLBACK StateEnumFunc(void* aSelector, void* aData)
 {
   StateEnumData* data = (StateEnumData*)aData;
 
@@ -3354,7 +3361,7 @@ struct CascadeSizeEnumData {
 };
 
 static 
-PRBool StateSelectorsSizeEnumFunc( void *aSelector, void *aData )
+PRBool PR_CALLBACK StateSelectorsSizeEnumFunc( void *aSelector, void *aData )
 {
   nsCSSSelector* selector = (nsCSSSelector*)aSelector;
   CascadeSizeEnumData *pData = (CascadeSizeEnumData *)aData;
@@ -3372,7 +3379,7 @@ PRBool StateSelectorsSizeEnumFunc( void *aSelector, void *aData )
 }
 
 static 
-PRBool WeightedRulesSizeEnumFunc( nsISupports *aRule, void *aData )
+PRBool PR_CALLBACK WeightedRulesSizeEnumFunc( nsISupports *aRule, void *aData )
 {
   nsICSSStyleRule* rule = (nsICSSStyleRule*)aRule;
   CascadeSizeEnumData *pData = (CascadeSizeEnumData *)aData;
@@ -3391,7 +3398,7 @@ PRBool WeightedRulesSizeEnumFunc( nsISupports *aRule, void *aData )
 }
 
 static 
-PRBool CascadeSizeEnumFunc(nsHashKey* aKey, void *aCascade, void *aData)
+PRBool PR_CALLBACK CascadeSizeEnumFunc(nsHashKey* aKey, void *aCascade, void *aData)
 {
   RuleCascadeData* cascade = (RuleCascadeData *)  aCascade;
   CascadeSizeEnumData *pData = (CascadeSizeEnumData *)aData;
@@ -3488,7 +3495,7 @@ void CSSRuleProcessor::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   aSizeOfHandler->AddSize(tag,aSize);
 }
 
-static PRBool DeleteRuleCascade(nsHashKey* aKey, void* aValue, void* closure)
+static PRBool PR_CALLBACK DeleteRuleCascade(nsHashKey* aKey, void* aValue, void* closure)
 {
   delete ((RuleCascadeData*)aValue);
   return PR_TRUE;

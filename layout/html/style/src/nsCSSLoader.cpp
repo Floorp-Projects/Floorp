@@ -18,6 +18,12 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 #include "nsICSSLoader.h"
 #include "nsICSSLoaderObserver.h"
@@ -464,35 +470,35 @@ CSSLoaderImpl::CSSLoaderImpl(void)
   SetCharset(nsAutoString());
 }
 
-static PRBool ReleaseSheet(nsHashKey* aKey, void* aData, void* aClosure)
+static PRBool PR_CALLBACK ReleaseSheet(nsHashKey* aKey, void* aData, void* aClosure)
 {
   nsICSSStyleSheet* sheet = (nsICSSStyleSheet*)aData;
   NS_RELEASE(sheet);
   return PR_TRUE;
 }
 
-static PRBool DeleteHashLoadData(nsHashKey* aKey, void* aData, void* aClosure)
+static PRBool PR_CALLBACK DeleteHashLoadData(nsHashKey* aKey, void* aData, void* aClosure)
 {
   SheetLoadData* data = (SheetLoadData*)aData;
   NS_RELEASE(data);
   return PR_TRUE;
 }
 
-static PRBool DeletePendingData(void* aData, void* aClosure)
+static PRBool PR_CALLBACK DeletePendingData(void* aData, void* aClosure)
 {
   PendingSheetData* data = (PendingSheetData*)aData;
   delete data;
   return PR_TRUE;
 }
 
-static PRBool DeleteLoadData(void* aData, void* aClosure)
+static PRBool PR_CALLBACK DeleteLoadData(void* aData, void* aClosure)
 {
   SheetLoadData* data = (SheetLoadData*)aData;
   NS_RELEASE(data);
   return PR_TRUE;
 }
 
-static PRBool DeleteSheetMap(nsHashKey* aKey, void* aData, void* aClosure)
+static PRBool PR_CALLBACK DeleteSheetMap(nsHashKey* aKey, void* aData, void* aClosure)
 {
   nsVoidArray* map = (nsVoidArray*)aData;
   delete map;
@@ -681,7 +687,7 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
   return result;
 }
 
-static PRBool
+static PRBool PR_CALLBACK
 InsertPendingSheet(void* aPendingData, void* aLoader)
 {
   PendingSheetData* data = (PendingSheetData*)aPendingData;
@@ -693,7 +699,7 @@ InsertPendingSheet(void* aPendingData, void* aLoader)
   return PR_TRUE;
 }
 
-static PRBool
+static PRBool PR_CALLBACK
 AreAllPendingAlternateSheets(void* aPendingData, void* aLoader)
 {
   PendingSheetData* data = (PendingSheetData*)aPendingData;
