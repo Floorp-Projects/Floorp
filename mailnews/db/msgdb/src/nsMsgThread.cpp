@@ -748,7 +748,11 @@ nsresult nsMsgThread::ChangeChildCount(PRInt32 delta)
 	nsresult ret = NS_OK;
 	PRUint32 childCount = 0;
 	m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadChildrenColumnToken, childCount);
+
+	NS_ASSERTION(childCount != 0 || delta > 0, "child count gone negative");
 	childCount += delta;
+
+	NS_ASSERTION((PRInt32) childCount >= 0, "child count gone to 0 or below");
 
 	ret = m_mdbDB->UInt32ToRowCellColumn(m_metaRow, m_mdbDB->m_threadChildrenColumnToken, childCount);
 	return ret;

@@ -336,6 +336,12 @@ nsMsgDatabase::~nsMsgDatabase()
 		NS_RELEASE(m_HeaderParser);
 		m_HeaderParser = nsnull;
 	}
+	if (m_mdbAllMsgHeadersTable)
+		m_mdbAllMsgHeadersTable->Release();
+
+	if (m_mdbAllThreadsTable)
+		m_mdbAllThreadsTable->Release();
+
 	if (m_mdbEnv)
 	{
 		m_mdbEnv->CutStrongRef(m_mdbEnv); //??? is this right?
@@ -1574,6 +1580,8 @@ nsMsgDBEnumerator::nsMsgDBEnumerator(nsMsgDatabase* db,
 
 nsMsgDBEnumerator::~nsMsgDBEnumerator()
 {
+	if (mRowCursor)
+		mRowCursor->CutStrongRef(mDB->GetEnv());
     NS_RELEASE(mDB);
 	NS_IF_RELEASE(mResultHdr);
 }
@@ -1702,6 +1710,7 @@ NS_IMETHODIMP nsMsgDatabase::ListAllKeys(nsMsgKeyArray &outputKeys)
 			if (err == NS_OK)
 				outputKeys.Add(outOid.mOid_Id);
 		}
+		rowCursor->Release();
 	}
 	return err;
 }

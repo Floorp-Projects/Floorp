@@ -197,7 +197,7 @@ nsresult nsDBFolderInfo::InitFromExistingDB()
 					if (ret == NS_OK)
 					{
 						ret = rowCursor->NextRow(m_mdb->GetEnv(), &m_mdbRow, &rowPos);
-						rowCursor->Release();
+						rowCursor->CutStrongRef(m_mdb->GetEnv());
 						if (ret == NS_OK && m_mdbRow)
 						{
 							LoadMemberVariables();
