@@ -1427,7 +1427,7 @@ nsWSRunObject::PrepareToDeleteRangePriv(nsWSRunObject* aEndObject)
       aEndObject->GetCharAfter(aEndObject->mNode, aEndObject->mOffset, &point);
       if (point.mTextNode && nsCRT::IsAsciiSpace(point.mChar))
       {
-        res = ConvertToNBSP(point);
+        res = aEndObject->ConvertToNBSP(point);
         NS_ENSURE_SUCCESS(res, res);
       }
     }
