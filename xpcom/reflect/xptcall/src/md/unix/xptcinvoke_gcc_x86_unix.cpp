@@ -44,7 +44,10 @@
 #include "xptc_gcc_x86_unix.h"
 
 extern "C" {
-static void ATTRIBUTE_USED ATTRIBUTE_STDCALL
+#ifndef XP_WIN32
+static
+#endif
+void ATTRIBUTE_USED ATTRIBUTE_STDCALL
 invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d)
 {
     for(PRUint32 i = paramCount; i >0; i--, d++, s++)
@@ -111,9 +114,9 @@ xptc_invoke_copy_to_stack_keeper (void)
 __asm__ (
 	".text\n\t"
 	".align 16\n\t"
-	".globl XPTC_InvokeByIndex\n\t"
-	".type  XPTC_InvokeByIndex,@function\n"
-	"XPTC_InvokeByIndex:\n\t"
+	".globl " SYMBOL_UNDERSCORE "XPTC_InvokeByIndex\n\t"
+	".type  " SYMBOL_UNDERSCORE "XPTC_InvokeByIndex,@function\n"
+	SYMBOL_UNDERSCORE "XPTC_InvokeByIndex:\n\t"
 	"pushl %ebp\n\t"
 	"movl  %esp, %ebp\n\t"
 #ifdef MOZ_PRESERVE_PIC 
@@ -132,7 +135,7 @@ __asm__ (
 	"pushl %esp\n\t"
 	"pushl 0x14(%ebp)\n\t"
 	"pushl %eax\n\t"
-	"call  invoke_copy_to_stack\n\t"
+	"call  " SYMBOL_UNDERSCORE "invoke_copy_to_stack\n\t"
 #ifndef MOZ_USE_STDCALL
 	"addl  $0x0c, %esp\n\t"		/* done with param stuff */
 #endif
@@ -164,7 +167,7 @@ __asm__ (
 	"movl  %ebp, %esp\n\t"
 	"popl  %ebp\n\t"
 	"ret\n"
-	".size XPTC_InvokeByIndex, . - XPTC_InvokeByIndex\n\t"
+	".size " SYMBOL_UNDERSCORE "XPTC_InvokeByIndex, . -" SYMBOL_UNDERSCORE "XPTC_InvokeByIndex\n\t"
 );
 
 #else

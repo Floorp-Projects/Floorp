@@ -52,19 +52,19 @@ NS_IMETHODIMP bar::ignored(){return 0;}
 NS_IMETHODIMP bar::callme1(int i, int j)
 {
   printf("called bar::callme1 with: %d %d\n", i, j);
-  return 5;
+  return 15;
 }
 
 NS_IMETHODIMP bar::callme2(int i, int j)
 {
   printf("called bar::callme2 with: %d %d\n", i, j);
-  return 5;
+  return 25;
 }
 
 NS_IMETHODIMP bar::callme3(int i, int j)
 {
   printf("called bar::callme3 with: %d %d\n", i, j);
-  return 5;
+  return 35;
 }
 
 void docall(foo* f, int i, int j){
@@ -78,19 +78,23 @@ static int __stdcall
 PrepareAndDispatch(baz* self, PRUint32 methodIndex,
                    PRUint32* args, PRUint32* stackBytesToPop)
 {
+    fprintf(stdout, "PrepareAndDispatch (%p, %d, %p)\n",
+        (void*)self, methodIndex, (void*)args);
     foo* a = self->other;
     int p1 = (int) *args;
     int p2 = (int) *(args+1);
+    int out = 0;
     switch(methodIndex)
     {
-    case 1: a->callme1(p1, p2); break;
-    case 2: a->callme2(p1, p2); break;
-    case 3: a->callme3(p1, p2); break;
+    case 1: out = a->callme1(p1, p2); break;
+    case 2: out = a->callme2(p1, p2); break;
+    case 3: out = a->callme3(p1, p2); break;
     }
     *stackBytesToPop = 2*4;
-    return 1;
+    return out;
 }
 
+#ifndef __GNUC__
 static __declspec(naked) void SharedStub(void)
 {
     __asm {
@@ -121,6 +125,26 @@ static __declspec(naked) void SharedStub(void)
 __declspec(naked) nsresult __stdcall baz::callme##n() \
 { __asm push n __asm jmp SharedStub }
 
+#else /* __GNUC__ */
+
+#define STUB_ENTRY(n) \
+nsresult __stdcall baz::callme##n() \
+{ \
+  PRUint32 *args, stackBytesToPop; \
+  int result = 0; \
+  baz *obj; \
+  __asm__ __volatile__ ( \
+    "leal   0x0c(%%ebp), %0\n\t"    /* args */ \
+    "movl   0x08(%%ebp), %1\n\t"    /* this */ \
+    : "=r" (args), \
+      "=r" (obj)); \
+  result = PrepareAndDispatch(obj, n, args,&stackBytesToPop); \
+    fprintf(stdout, "stub returning: %d\n", result); \
+    fprintf(stdout, "bytes to pop:  %d\n", stackBytesToPop); \
+    return result; \
+}
+
+#endif /* ! __GNUC__ */
 
 #else
 /***************************************************************************/
@@ -141,8 +165,6 @@ PrepareAndDispatch(baz* self, PRUint32 methodIndex, PRUint32* args)
     return 1;
 }
 
-//nsresult nsXPCWrappedJS::Stub##n() \
-
 #define STUB_ENTRY(n) \
 nsresult baz::callme##n() \
 { \
@@ -157,7 +179,7 @@ nsresult baz::callme##n() \
     "call   *%%edx"                    /* PrepareAndDispatch */ \
     : "=a" (result)     /* %0 */ \
     : "d" (method)      /* %1 */ \
-    : "ax", "dx", "cx", "memory" ); \
+    : "memory" ); \
     return result; \
 }
 

@@ -43,6 +43,8 @@
 #error "This code is for Win32 only"
 #endif
 
+extern "C" {
+
 static nsresult __stdcall
 PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
                    PRUint32* args, PRUint32* stackBytesToPop)
@@ -122,7 +124,13 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
     return result;
 }
 
-static __declspec(naked) void SharedStub(void)
+} // extern "C"
+
+// declspec(naked) is broken in gcc
+#ifndef __GNUC__
+static 
+__declspec(naked)
+void SharedStub(void)
 {
     __asm {
         push ebp            // set up simple stack frame
@@ -151,6 +159,25 @@ static __declspec(naked) void SharedStub(void)
 __declspec(naked) nsresult __stdcall nsXPTCStubBase::Stub##n() \
 { __asm mov ecx, n __asm jmp SharedStub }
 
+#else
+
+#define STUB_ENTRY(n) \
+nsresult __stdcall nsXPTCStubBase::Stub##n() \
+{ \
+  PRUint32 *args, stackBytesToPop = 0; \
+  nsresult result = 0; \
+  nsXPTCStubBase *obj; \
+  __asm__ __volatile__ ( \
+    "leal   0x0c(%%ebp), %%ecx\n\t"    /* args */ \
+    "movl   0x08(%%ebp), %%edx\n\t"    /* this */ \
+    : "=c" (args), \
+      "=d" (obj)); \
+  result = PrepareAndDispatch(obj, n, args, &stackBytesToPop); \
+  return result; \
+}   
+
+#endif /* __GNUC__ */
+
 #define SENTINEL_ENTRY(n) \
 nsresult __stdcall nsXPTCStubBase::Sentinel##n() \
 { \
@@ -158,11 +185,18 @@ nsresult __stdcall nsXPTCStubBase::Sentinel##n() \
     return NS_ERROR_NOT_IMPLEMENTED; \
 }
 
+#ifdef _MSC_VER
 #pragma warning(disable : 4035) // OK to have no return value
+#endif
 #include "xptcstubsdef.inc"
+#ifdef _MSC_VER
 #pragma warning(default : 4035) // restore default
+#endif
 
 void
+#ifdef __GNUC__
+__cdecl
+#endif
 xptc_dummy()
 {
 }

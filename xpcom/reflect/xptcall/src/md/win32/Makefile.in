@@ -32,7 +32,17 @@ LIBRARY_NAME	= xptcmd
 #
 # The default is this buildable, but non-functioning code.
 #
-CPPSRCS		:= xptcinvoke.cpp xptcstubs.cpp
+ifdef GNU_CXX
+CPPSRCS		= \
+		../unix/xptcinvoke_gcc_x86_unix.cpp \
+		xptcstubs.cpp \
+		$(NULL)
+LOCAL_INCLUDES	= -I$(srcdir)/../unix
+DEFINES		+= -DMOZ_USE_STDCALL -DMOZ_NEED_LEADING_UNDERSCORE
+else
+CPPSRCS		= xptcinvoke.cpp xptcstubs.cpp
+endif
+
 
 # Force use of PIC
 FORCE_USE_PIC	= 1
@@ -53,4 +63,4 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DEXPORT_XPTC_API -D_IMPL_NS_COM -D_IMPL_NS_BASE
 
-LOCAL_INCLUDES	= -I$(srcdir)/../..
+LOCAL_INCLUDES	+= -I$(srcdir)/../..

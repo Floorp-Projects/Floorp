@@ -133,6 +133,9 @@
 #elif defined(__sun__) || defined(__sun)
 #define CFRONT_STYLE_THIS_ADJUST
 
+#elif defined(_WIN32)
+#define THUNK_BASED_THIS_ADJUST
+
 #else
 #error "need a platform define if using unixish x86 code"
 #endif
