@@ -62,8 +62,10 @@
 #include "iostream.h"
 #include "nsIIOService.h"
 
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
+//
 // Common CIDs
+//
 
 // {82776710-5690-11d3-BE36-00104BDE6048}
 #define NS_DIRECTORYVIEWERFACTORY_CID \
@@ -77,8 +79,10 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 
 #define HTTPINDEX_NAMESPACE_URI "urn:http-index-format:"
 
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
+//
 // nsHTTPIndex
+//
 
 class nsHTTPIndex : public nsIHTTPIndex
 {
@@ -112,7 +116,8 @@ public:
 };
 
 
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
+//
 // nsHTTPIndexParser
 //
 
@@ -146,7 +151,7 @@ protected:
   nsCOMPtr<nsIRDFResource> mDirectory;
   nsCOMPtr<nsIRDFContainer> mDirectoryContainer;
 
-  nsCAutoString mLine;
+  nsCString mBuf;
   nsresult ProcessData();
   nsresult ParseFormat(const char* aFormatStr);
   nsresult ParseData(const char* aDataStr);
@@ -184,6 +189,8 @@ nsIRDFResource* nsHTTPIndexParser::kHTTPIndex_Filename;
 nsIRDFResource* nsHTTPIndexParser::kHTTPIndex_Loading;
 nsIRDFLiteral*  nsHTTPIndexParser::kTrueLiteral;
 
+// This table tells us how to parse the fields in the HTTP-index
+// stream into an RDF graph.
 nsHTTPIndexParser::Field
 nsHTTPIndexParser::gFieldTable[] = {
   { "Filename",       nsHTTPIndexParser::ParseLiteral, nsnull },
@@ -292,33 +299,7 @@ nsHTTPIndexParser::Create(nsHTTPIndex* aHTTPIndex,
   return NS_OK;
 }
 
-
-
-NS_IMPL_ADDREF(nsHTTPIndexParser);
-NS_IMPL_RELEASE(nsHTTPIndexParser);
-
-
-
-NS_IMETHODIMP
-nsHTTPIndexParser::QueryInterface(REFNSIID aIID, void** aResult)
-{
-  NS_PRECONDITION(aResult != nsnull, "null ptr");
-  if (! aResult)
-    return NS_OK;
-
-  if (aIID.Equals(NS_GET_IID(nsIStreamListener)) ||
-      aIID.Equals(NS_GET_IID(nsIStreamObserver)) ||
-      aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aResult = NS_STATIC_CAST(nsIStreamListener*, this);
-    NS_ADDREF(this);
-    return NS_OK;
-  }
-  else {
-    *aResult = nsnull;
-    return NS_NOINTERFACE;
-  }
-}
-
+NS_IMPL_ISUPPORTS2(nsHTTPIndexParser, nsIStreamListener, nsIStreamObserver);
 
 
 NS_IMETHODIMP
@@ -419,7 +400,8 @@ nsHTTPIndexParser::OnStopRequest(nsIChannel* aChannel,
 
   // XXX Should we do anything different if aStatus != NS_OK?
 
-  if (mLine.Length() > 0)
+  // Clean up any remaining data
+  if (mBuf.Length() > 0)
     ProcessData();
 
   nsresult rv;
@@ -446,36 +428,33 @@ nsHTTPIndexParser::OnDataAvailable(nsIChannel* aChannel,
                                    PRUint32 aSourceOffset,
                                    PRUint32 aCount)
 {
-	nsresult	rv;
+  // Make sure there's some data to process...
+  if (aCount < 1)
+    return NS_OK;
 
-	if (aCount < 1)	return(NS_OK);
+  PRInt32 len = mBuf.Length();
 
-	char		*buffer = new char[ aCount ];
-	if (!buffer)	return(NS_ERROR_OUT_OF_MEMORY);
+  // Ensure that our mBuf has capacity to hold the data we're about to
+  // read.
+  mBuf.SetCapacity(len + aCount + 1);
+  if (! mBuf.mStr)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-	PRUint32	count;
-	if (NS_FAILED(rv = aStream->Read(buffer, aCount, &count)) || (count == 0))
-	{
-#ifdef	DEBUG
-		printf("nsHTTPIndexParser: OnDataAvailable read failure.\n");
-#endif
-		delete []buffer;
-		return(rv);
-	}
-	if (count != aCount)
-	{
-#ifdef	DEBUG
-		printf("nsHTTPIndexParser: OnDataAvailable read # of bytes failure.\n");
-#endif
-		delete []buffer;
-		return(NS_ERROR_UNEXPECTED);
-	}
+  // Now read the data into our buffer.
+  nsresult rv;
+  PRUint32 count;
+  rv = aStream->Read(mBuf.mStr + len, aCount, &count);
+  if (NS_FAILED(rv)) return rv;
 
-	mLine.Append(buffer, aCount);
-	delete [] buffer;
+  // Set the string's length according to the amount of data we've read.
+  //
+  // XXX You'd think that mBuf.SetLength() would do this, but it
+  // doesn't. It calls Truncate(), so you can't set the length to
+  // something longer.
+  mBuf.mLength = len + count;
+  AddNullTerminator(mBuf);
 
-        rv = ProcessData();
-	return(rv);
+  return ProcessData();
 }
 
 
@@ -485,17 +464,17 @@ nsHTTPIndexParser::ProcessData()
 {
 	while(PR_TRUE)
 	{
-		PRInt32		eol = mLine.FindCharInSet("\n\r");
+		PRInt32		eol = mBuf.FindCharInSet("\n\r");
 		if (eol < 0)	break;
 		
-		nsCString	aLine;
-		mLine.Left(aLine, eol);
-		mLine.Cut(0, eol + 1);
+		nsCAutoString	line;
+		mBuf.Left(line, eol);
+		mBuf.Cut(0, eol + 1);
 
-		if (aLine.Length() >= 4)
+		if (line.Length() >= 4)
 		{
 			nsresult	rv;
-			const char	*buf = aLine;
+			const char	*buf = line;
 
 			if (buf[0] == '1')
 			{
@@ -593,10 +572,6 @@ nsHTTPIndexParser::ParseFormat(const char* aFormatStr)
 
 
 
-#define MAX_AUTO_VALUES 8
-
-
-
 nsresult
 nsHTTPIndexParser::ParseData(const char* aDataStr)
 {
@@ -633,10 +608,15 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
   // an array of autostrings allocated on the stack, if possible). We
   // have to do this, because we don't know up-front the filename for
   // which this 201 refers.
+#define MAX_AUTO_VALUES 8
+
   nsAutoString autovalues[MAX_AUTO_VALUES];
   nsAutoString* values = autovalues;
 
   if (mFormat.Count() > MAX_AUTO_VALUES) {
+    // Yeah, we really -do- want to create nsAutoStrings in the heap
+    // here, because most of the fields will be l.t. 32 characters:
+    // this avoids an extra allocation for the nsString's buffer.
     values = new nsAutoString[mFormat.Count()];
     if (! values)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -804,8 +784,10 @@ nsHTTPIndexParser::ParseInt(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** 
 
 
 
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
+//
 // nsHTTPIndex implementation
+//
 
 nsHTTPIndex::nsHTTPIndex(nsISupports* aContainer)
   : mContainer(aContainer)
@@ -866,31 +848,7 @@ nsHTTPIndex::~nsHTTPIndex()
 }
 
 
-
-NS_IMPL_ADDREF(nsHTTPIndex);
-NS_IMPL_RELEASE(nsHTTPIndex);
-
-
-
-NS_IMETHODIMP
-nsHTTPIndex::QueryInterface(REFNSIID aIID, void** aResult)
-{
-  NS_PRECONDITION(aResult != nsnull, "null ptr");
-  if (! aResult)
-    return NS_OK;
-
-  if (aIID.Equals(NS_GET_IID(nsIHTTPIndex)) ||
-      aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aResult = NS_STATIC_CAST(nsIHTTPIndex*, this);
-    NS_ADDREF(this);
-    return NS_OK;
-  }
-  else {
-    *aResult = nsnull;
-    return NS_NOINTERFACE;
-  }
-}
-
+NS_IMPL_ISUPPORTS1(nsHTTPIndex, nsIHTTPIndex);
 
 
 NS_IMETHODIMP
@@ -929,7 +887,8 @@ nsHTTPIndex::CreateListener(nsIStreamListener** _result)
 }
 
 
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
+//
 // nsDirectoryViewerFactory
 //
 
@@ -998,33 +957,7 @@ nsDirectoryViewerFactory::Create(nsISupports* aOuter, REFNSIID aIID, void** aRes
   return rv;
 }
 
-
-
-NS_IMPL_ADDREF(nsDirectoryViewerFactory);
-NS_IMPL_RELEASE(nsDirectoryViewerFactory);
-
-
-
-NS_IMETHODIMP
-nsDirectoryViewerFactory::QueryInterface(REFNSIID aIID, void** aResult)
-{
-  NS_PRECONDITION(aResult != nsnull, "null ptr");
-  if (! aResult)
-    return NS_ERROR_NULL_POINTER;
-
-  if (aIID.Equals(NS_GET_IID(nsIDocumentLoaderFactory)) ||
-      aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aResult = NS_STATIC_CAST(nsIDocumentLoaderFactory*, this);
-  }
-  else {
-    *aResult = nsnull;
-    return NS_ERROR_NO_INTERFACE;
-  }
-
-  NS_ADDREF(this);
-  return NS_OK;
-}
-
+NS_IMPL_ISUPPORTS1(nsDirectoryViewerFactory, nsIDocumentLoaderFactory);
 
 
 NS_IMETHODIMP
