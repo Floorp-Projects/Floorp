@@ -415,9 +415,10 @@ nsGfxCheckboxControlFrame::Paint(nsIPresContext* aPresContext,
       PaintCheckBox(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
     }
   }
-  return NS_OK;
+  
+  // Call to the base class to draw selection borders when appropriate
+  return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }
-
 
 //------------------------------------------------------------
 nsGfxCheckboxControlFrame::CheckState 

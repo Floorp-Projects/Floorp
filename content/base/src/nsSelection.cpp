@@ -148,6 +148,7 @@ public:
   NS_IMETHOD    GetEnumerator(nsIEnumerator **aIterator);
 
   NS_IMETHOD    ToString(const nsString& aFormatType, PRUint32 aFlags, PRInt32 aWrapCount, nsString& aReturn);
+
   NS_IMETHOD    SetHint(PRBool aHintRight);
   NS_IMETHOD    GetHint(PRBool *aHintRight);
 
@@ -288,6 +289,10 @@ public:
   NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion);
   NS_IMETHOD RepaintSelection(nsIPresContext* aPresContext, SelectionType aType);
   NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHint, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset);
+
+  NS_IMETHOD AdjustOffsetsFromStyle(nsIFrame *aFrame, PRBool *changeSelection,
+        nsIContent** outContent, PRInt32* outStartOffset, PRInt32* outEndOffset);
+  
   NS_IMETHOD SetHint(HINT aHintRight);
   NS_IMETHOD GetHint(HINT *aHintRight);
   NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend);
@@ -345,6 +350,8 @@ private:
 
   nsresult     NotifySelectionListeners(SelectionType aType);			// add parameters to say collapsed etc?
 
+  // utility method to lookup frame style
+  nsresult      FrameOrParentHasSpecialSelectionStyle(nsIFrame* aFrame, PRUint8 aSelectionStyle, nsIFrame* *foundFrame);
 
   nsDOMSelection *mDomSelections[nsISelectionController::NUM_SELECTIONTYPES];
   nsIScrollableView *GetScrollView(){return mScrollView;}
@@ -1631,7 +1638,21 @@ nsSelection::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint&
 
   result = newFrame->GetContentAndOffsetsFromPoint(aPresContext, newPoint,
                                                    getter_AddRefs(newContent), 
-                                                   startPos, contentOffsetEnd,beginOfContent);
+                                                   startPos, contentOffsetEnd, beginOfContent);
+
+  // do we have CSS that changes selection behaviour?
+  {
+    PRBool    changeSelection;
+    nsCOMPtr<nsIContent>  selectContent;
+    PRInt32   newStart, newEnd;
+    if (NS_SUCCEEDED(AdjustOffsetsFromStyle(newFrame, &changeSelection, getter_AddRefs(selectContent), &newStart, &newEnd))
+      && changeSelection)
+    {
+      newContent = selectContent;
+      startPos = newStart;
+      contentOffsetEnd = newEnd;
+    }
+  }
 
   if (NS_SUCCEEDED(result))
   {
@@ -2046,7 +2067,6 @@ nsSelection::StartBatchChanges()
   return result;
 }
 
-
  
 NS_IMETHODIMP
 nsSelection::EndBatchChanges()
@@ -2061,8 +2081,7 @@ nsSelection::EndBatchChanges()
   return result;
 }
 
-  
-  
+
 nsresult
 nsSelection::NotifySelectionListeners(SelectionType aType)
 {
@@ -2073,6 +2092,30 @@ nsSelection::NotifySelectionListeners(SelectionType aType)
   }
   return NS_ERROR_FAILURE;
 }
+
+nsresult
+nsSelection::FrameOrParentHasSpecialSelectionStyle(nsIFrame* aFrame, PRUint8 aSelectionStyle, nsIFrame* *foundFrame)
+{
+  nsIFrame* thisFrame = aFrame;
+  
+  while (thisFrame)
+  {
+	  const nsStyleUserInterface* userinterface;
+	  thisFrame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
+  
+    if (userinterface->mUserSelect == aSelectionStyle)
+    {
+      *foundFrame = thisFrame;
+      return NS_OK;
+    }
+  
+    thisFrame->GetParent(&thisFrame);
+  }
+  
+  *foundFrame = nsnull;
+  return NS_OK;
+}
+
 
 // Start of Table Selection methods
 
@@ -2887,6 +2930,65 @@ nsSelection::CreateAndAddRange(nsIDOMNode *aParentNode, PRInt32 aOffset)
 }
 
 // End of Table Selection
+
+NS_IMETHODIMP
+nsSelection::AdjustOffsetsFromStyle(nsIFrame *aFrame, PRBool *changeSelection,
+      nsIContent** outContent, PRInt32* outStartOffset, PRInt32* outEndOffset)
+{
+  
+  *changeSelection = PR_FALSE;
+  *outContent = nsnull;
+  
+  nsresult  rv;  
+  nsIFrame*   selectAllFrame;
+  rv = FrameOrParentHasSpecialSelectionStyle(aFrame, NS_STYLE_USER_SELECT_ALL, &selectAllFrame);
+  if (NS_FAILED(rv)) return rv;
+  
+  if (!selectAllFrame)
+    return NS_OK;
+  
+  nsCOMPtr<nsIContent> selectAllContent;
+  selectAllFrame->GetContent(getter_AddRefs(selectAllContent));
+  if (selectAllContent)
+  {
+    nsCOMPtr<nsIContent>  parentContent;
+    rv = selectAllContent->GetParent(*getter_AddRefs(parentContent));
+    if (parentContent)
+    {
+      PRInt32 startOffset;
+      rv = parentContent->IndexOf(selectAllContent, startOffset);
+      if (NS_FAILED(rv)) return rv;
+      if (startOffset < 0)
+      {
+        // hrmm, this is probably anonymous content. Let's go up another level
+        // do we need to do this if we get the right frameSelection to start with?
+        nsCOMPtr<nsIContent> superParent;
+        parentContent->GetParent(*getter_AddRefs(superParent));
+        if (superParent)
+        {
+          PRInt32 superStartOffset;
+          rv = superParent->IndexOf(parentContent, superStartOffset);
+          if (NS_FAILED(rv)) return rv;
+          if (superStartOffset < 0)
+            return NS_ERROR_FAILURE;    // give up
+        
+          parentContent = superParent;
+          startOffset = superStartOffset;
+        }
+      }
+      
+      NS_IF_ADDREF(*outContent = parentContent);
+
+      *outStartOffset = startOffset;
+      *outEndOffset = startOffset + 1;
+
+      *changeSelection = PR_TRUE;
+    }    
+  }
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsSelection::SetHint(HINT aHintRight)

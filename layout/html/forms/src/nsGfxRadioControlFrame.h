@@ -63,11 +63,9 @@ public:
   NS_IMETHOD SetAdditionalStyleContext(PRInt32 aIndex, 
                                        nsIStyleContext* aStyleContext);
 
-  // overrides base class HandleEvent to do nothing
-  // events are handled by the DOM
   NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
-                         nsEventStatus* aEventStatus) { return NS_OK; }
+                         nsEventStatus* aEventStatus);
   //
   // XXX: The following paint methods are TEMPORARY. It is being used to get printing working
   // under windows. Later it may be used to GFX-render the controls to the display. 

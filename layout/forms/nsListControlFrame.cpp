@@ -1340,6 +1340,13 @@ nsListControlFrame::HandleEvent(nsIPresContext* aPresContext,
   if (nsEventStatus_eConsumeNoDefault == *aEventStatus)
     return NS_OK;
 
+  // do we have style that affects how we are selected?
+  // do we have user-input style?
+  const nsStyleUserInterface* uiStyle;
+  GetStyleData(eStyleStruct_UserInterface,  (const nsStyleUserInterface *&)uiStyle);
+  if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE || uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
+    return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+
   if (nsFormFrame::GetDisabled(this))
     return NS_OK;
 
@@ -1359,8 +1366,7 @@ nsListControlFrame::HandleEvent(nsIPresContext* aPresContext,
       break;
   }
 
-  return(nsScrollFrame::HandleEvent(aPresContext, aEvent, aEventStatus));
-
+  return nsScrollFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 

@@ -70,6 +70,7 @@ static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID); 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
+static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 #ifdef ENDER_LITE
 typedef nsIGfxTextControlFrame2 textControlPlace;
@@ -817,6 +818,21 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   if (NS_FAILED(rv) || disabled) {
     return rv;
   }
+  
+  nsIFormControlFrame* formControlFrame = nsnull;
+  rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame, PR_FALSE);
+  nsIFrame* formFrame = nsnull;
+
+  if (formControlFrame && NS_SUCCEEDED(formControlFrame->QueryInterface(kIFrameIID, (void **)&formFrame) && formFrame))
+  {
+    const nsStyleUserInterface* uiStyle;
+    formFrame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleUserInterface *&)uiStyle);
+    if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
+        uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
+    {
+      return NS_OK;
+    }
+  }
 
   // If we're a file input we have anonymous content underneath
   // that we need to hide.  We need to set the event target now
@@ -866,8 +882,6 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   // That way if the event is cancelled then the checkbox will not flash.
   //
   // So get the Frame for the checkbox and tell it we are processing an onclick event
-  nsIFormControlFrame* formControlFrame = nsnull;
-  rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame, PR_FALSE);
   nsCOMPtr<nsICheckboxControlFrame> chkBx;
   nsCOMPtr<nsIRadioControlFrame> radio;
   if (NS_SUCCEEDED(rv)) {
