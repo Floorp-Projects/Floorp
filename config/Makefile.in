@@ -87,7 +87,8 @@ export:: $(TARGETS) $(HEADERS)
 	-rm -f $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES)
 	-rm -f $(DIST)/bin/chrome/chromelist.txt
 
-GARBAGE += build_number nsBuildID.h
+GARBAGE += build_number nsBuildID \
+	$(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES)
 
 ifneq ($(origin BUILD_OFFICIAL)_$(origin MOZILLA_OFFICIAL),undefined_undefined)
 _BN_OFFICIAL=1
