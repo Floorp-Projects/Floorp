@@ -173,7 +173,7 @@ if ($action eq 'new') {
 #
 
 if ($action eq 'edit') {
-    my $id = trim(cgi->param('id'));
+    my $id = trim($cgi->param('id'));
     detaint_natural($id);
 
     # get data of keyword
