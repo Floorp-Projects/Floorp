@@ -62,12 +62,12 @@ interface nsIBookmarksService : nsISupports
                                            in long aIndex);
 
     nsIRDFResource createBookmark(in wstring aName,
-                                  in string aURL,
+                                  in wstring aURL,
                                   in wstring aShortcutURL,
                                   in wstring aDescription,
                                   in wstring aDocCharSet);
     nsIRDFResource createBookmarkInContainer(in wstring aName,
-                                             in string aURL,
+                                             in wstring aURL,
                                              in wstring aShortcutURL,
                                              in wstring aDescription,
                                              in wstring aDocCharSet, 
@@ -95,7 +95,7 @@ interface nsIBookmarksService : nsISupports
     readonly attribute nsITransactionManager transactionManager;
 
     //XXXpch: to be removed.
-    void addBookmarkImmediately(in string aURI, in wstring aTitle, in long bmType, in wstring docCharset);
+    void addBookmarkImmediately(in wstring aURI, in wstring aTitle, in long bmType, in wstring docCharset);
     boolean isBookmarked(in string aURL);
 
 };
