@@ -76,6 +76,11 @@
  */
 #define NS_XPCOM_COMPONENT_DIR                  "ComsD"
 
+/* Property will return a list of components directories that will
+ * will be registered after the application components directory.
+ */
+#define NS_XPCOM_COMPONENT_DIR_LIST             "ComsDL"
+
 /* Property will return the location of the application components
  * registry file.
  */

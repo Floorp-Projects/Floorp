@@ -269,6 +269,7 @@ PRBool xptiInterfaceInfoManager::BuildFileSearchPath(nsISupportsArray** aPath)
             searchPath->AppendElement(greComponentDirectory);
     }
 
+    (void)AppendFromDirServiceList(NS_XPCOM_COMPONENT_DIR_LIST, searchPath);
     (void)AppendFromDirServiceList(NS_APP_PLUGINS_DIR_LIST, searchPath);
 
     NS_ADDREF(*aPath = searchPath);
