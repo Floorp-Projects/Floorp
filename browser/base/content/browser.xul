@@ -247,7 +247,6 @@
     <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key                          key="&textZoomEnlargeCmd.commandkey2;" command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key id="key_openDownloadsSidebar" key="&openDownloadsSidebar.commandkey;" command="viewDownloadsSidebar" modifiers="accel"/>
-    <keyset id="navigationKeys"/>  
   </keyset>
   
   <popupset id="mainPopupSet">
@@ -328,7 +327,7 @@
                 accesskey="&setWallpaperCmd.accesskey;"
                 oncommand="gContextMenu.setWallpaper();"/>
 
-<!--XXXBlake XUL sucks ass! We need autocheck for menuitems. -->
+<!--XXXBlake XUL sucks! We need autocheck for menuitems. -->
       <menuitem id="context-blockimage"
                 label="&blockImageCmd.label;" class="menuitem-iconic"
                 oncommand="gContextMenu.toggleImageBlocking(this.getAttribute('checked') != 'true');"/>
