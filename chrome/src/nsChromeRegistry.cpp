@@ -100,7 +100,8 @@
 #include "nsIDirectoryService.h"
 #include "nsILocalFile.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsIObserverService.h"
 #include "nsIDOMElement.h"
 #include "nsIChromeEventHandler.h"
@@ -121,7 +122,6 @@ static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,      NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 class nsChromeRegistry;
 
@@ -256,9 +256,9 @@ nsChromeRegistry::nsChromeRegistry() : mRDFService(nsnull),
 {
   NS_INIT_ISUPPORTS();
 
-  nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID));
-  if (prefService)
-    prefService->GetBoolPref(kUseXBLFormsPref, &mUseXBLForms);
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefBranch)
+    prefBranch->GetBoolPref(kUseXBLFormsPref, &mUseXBLForms);
 
   mDataSourceTable = nsnull;
 }
@@ -3142,14 +3142,14 @@ nsresult nsChromeRegistry::LoadProfileDataSource()
     // XXX this sucks ASS. This is a temporary hack until we get
     // around to fixing the skin switching bugs.
     // Select and Remove skins based on a pref set in a previous session.
-    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
-    if (pref) {
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefBranch) {
       nsXPIDLCString skinToSelect;
-      rv = pref->CopyCharPref("general.skins.selectedSkin", getter_Copies(skinToSelect));
+      rv = prefBranch->GetCharPref("general.skins.selectedSkin", getter_Copies(skinToSelect));
       if (NS_SUCCEEDED(rv)) {
         rv = SelectSkin(skinToSelect, PR_TRUE);
         if (NS_SUCCEEDED(rv))
-          pref->DeleteBranch("general.skins.selectedSkin");
+          prefBranch->DeleteBranch("general.skins.selectedSkin");
       }
     }
 
@@ -3487,9 +3487,9 @@ NS_IMETHODIMP nsChromeRegistry::Observe(nsISupports *aSubject, const char *aTopi
   }
   else if (!nsCRT::strcmp("profile-after-change", aTopic)) {
     if (!mProfileInitialized) {
-      nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID));
-      if (prefService)
-        prefService->GetBoolPref(kUseXBLFormsPref, &mUseXBLForms);
+      nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+      if (prefBranch)
+        prefBranch->GetBoolPref(kUseXBLFormsPref, &mUseXBLForms);
 
       rv = LoadProfileDataSource();
     }
