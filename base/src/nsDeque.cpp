@@ -18,6 +18,7 @@
 
 
 #include "nsDeque.h"
+#include "nsCRT.h"
 
 /**
  * Standard constructor
@@ -65,8 +66,7 @@ PRInt32 nsDeque::GetSize(void) const {
  * @return
  */
 nsDeque& nsDeque::Empty() {
-  for(int i=0;i<mCapacity;i++)
-    mData[i]=0;
+  nsCRT::zero(mData,mCapacity*sizeof(mData));
   mSize=0;
   mOrigin=0;
   return *this;
@@ -103,14 +103,16 @@ nsDeque& nsDeque::Push(void* anItem) {
   if(mSize==mCapacity) {
     void** temp=new void*[mCapacity+eGrowthDelta];
 
-    //so here's the problem. You can't just move the elements
+    //Here's the interesting part: You can't just move the elements
     //directy (in situ) from the old buffer to the new one.
     //Since capacity has changed, the old origin doesn't make
     //sense anymore. It's better to resequence the elements now.
     
     int tempi=0;
-    for(int i=mOrigin;i<mCapacity;i++) temp[tempi++]=mData[i]; //copy the leading elements...
-    for(int j=0;j<mOrigin;j++) temp[tempi++]=mData[j];         //copy the trailing elements...
+    int i=0;
+    int j=0;
+    for(i=mOrigin;i<mCapacity;i++) temp[tempi++]=mData[i]; //copy the leading elements...
+    for(j=0;j<mOrigin;j++) temp[tempi++]=mData[j];         //copy the trailing elements...
     mCapacity+=eGrowthDelta;
     mOrigin=0;       //now realign the origin...
     delete[]mData;
@@ -138,6 +140,28 @@ void* nsDeque::Pop() {
   if(mSize>0) {
     result=mData[mOrigin];
     mData[mOrigin++]=0;     //zero it out for debugging purposes.
+    mSize--;
+    if(0==mSize)
+      mOrigin=0;
+  }
+  return result;
+}
+
+/**
+ * Remove and return the last item in the container.
+ * 
+ * @update	gess4/18/98
+ * @param   none
+ * @return  ptr to last item in container
+ */
+void* nsDeque::PopBack(void) {
+  void* result=0;
+  if(mSize>0) {
+    int offset=mOrigin+mSize;
+    if(offset>=mCapacity) 
+      offset-=mCapacity;
+    result=mData[offset];
+    mData[offset]=0;
     mSize--;
     if(0==mSize)
       mOrigin=0;
@@ -204,7 +228,8 @@ nsDequeIterator nsDeque::End(void) const{
  * @return  *this
  */
 const nsDeque& nsDeque::ForEach(nsDequeFunctor& aFunctor) const{
-  for(int i=0;i<mSize;i++){
+  int i=0;
+  for(i=0;i<mSize;i++){
     void* obj=ObjectAt(i);
     aFunctor(obj);
   }
@@ -386,7 +411,8 @@ void nsDeque::SelfTest(void) {
     int ints[10]={100,200,300,400,500,600,700,800,900,1000};
     int count=sizeof(ints)/sizeof(int);
 
-    for(int i=0;i<count;i++){
+    int i=0;
+    for(i=0;i<count;i++){
       theDeque.Push(&ints[i]);
     }
 
