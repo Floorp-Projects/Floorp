@@ -201,7 +201,7 @@ jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval)
             if(jsdval->string)
             {
                 if(!JS_AddRoot(cx, &jsdval->string))
-                jsdval->string = NULL;
+                    jsdval->string = NULL;
             }
         }
     }
