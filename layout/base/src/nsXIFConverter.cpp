@@ -141,7 +141,7 @@ nsXIFConverter::BeginStartTag(const nsString& aTag)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   // Make all element names lowercase
-  nsString tag(aTag);
+  nsAutoString tag(aTag);
   tag.ToLowerCase();
 
   for (PRInt32 i = mIndent; --i >= 0; ) 
@@ -293,7 +293,7 @@ nsXIFConverter::AddEndTag(const nsString& aTag, PRBool aDoIndent, PRBool aDoRetu
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   // A convention in XML DTD's is that ELEMENT
   // names are UPPERCASE.
-  nsString tag(aTag);
+  nsAutoString tag(aTag);
   tag.ToLowerCase();
 
 //  mIndent--;
@@ -376,7 +376,7 @@ NS_IMETHODIMP
 nsXIFConverter::AddContent(const nsString& aContent)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
-  nsString  tag(mContent);
+  nsAutoString  tag(mContent);
 
   AddStartTag(tag,PR_FALSE);
 
@@ -435,7 +435,7 @@ NS_IMETHODIMP
 nsXIFConverter::AddContentComment(const nsString& aContent)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
-  nsString tag(mComment);
+  nsAutoString tag(mComment);
   AddStartTag(tag, PR_FALSE);
   AddContent(aContent);
   AddEndTag(tag, PR_FALSE);
@@ -450,7 +450,7 @@ NS_IMETHODIMP
 nsXIFConverter::AddMarkupDeclaration(const nsString& aContent)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
-  nsString tag(mMarkupDeclarationOpen);
+  nsAutoString tag(mMarkupDeclarationOpen);
   AddStartTag(tag, PR_FALSE);
   AddContent(aContent);
   AddEndTag(tag, PR_FALSE);
@@ -462,7 +462,7 @@ NS_IMETHODIMP
 nsXIFConverter::BeginContainer(nsIAtom* aTag)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
-  nsString  container(mContainer);
+  nsAutoString container(mContainer);
 
   BeginStartTag(container);
     AddAttribute(mIsa,aTag);
@@ -474,7 +474,7 @@ NS_IMETHODIMP
 nsXIFConverter::EndContainer(nsIAtom* aTag)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
-  nsString  container(mContainer);
+  nsAutoString  container(mContainer);
 
   AddEndTag(container,PR_TRUE,PR_FALSE);
 
@@ -493,7 +493,7 @@ NS_IMETHODIMP
 nsXIFConverter::BeginContainer(const nsString& aTag)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
-  nsString  container(mContainer);
+  nsAutoString  container(mContainer);
 
   BeginStartTag(container);
     AddAttribute(mIsa,aTag);
@@ -510,7 +510,7 @@ NS_IMETHODIMP
 nsXIFConverter::EndContainer(const nsString& aTag)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
-  nsString  container(mContainer);
+  nsAutoString  container(mContainer);
 
   AddEndTag(container,PR_TRUE,PR_FALSE);
   AddComment(aTag);
