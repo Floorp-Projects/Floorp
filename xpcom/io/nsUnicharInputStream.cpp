@@ -35,15 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef XPCOM_STANDALONE
 
-#define NS_IMPL_IDS
 #include "nsIUnicharInputStream.h"
 #include "nsIByteBuffer.h"
 #include "nsIUnicharBuffer.h"
 #include "nsIServiceManager.h"
-#include "nsICharsetConverterManager.h"
-#include "nsIUnicodeDecoder.h"
 #include "nsString.h"
 #include "nsCRT.h"
 #include <fcntl.h>
@@ -52,8 +48,6 @@
 #else
 #include <unistd.h>
 #endif
-
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 class StringUnicharInputStream : public nsIUnicharInputStream {
 public:
@@ -142,44 +136,11 @@ NS_NewStringUnicharInputStream(nsIUnicharInputStream** aInstancePtrResult,
 
 //----------------------------------------------------------------------
 
-/**
- * This function used to be public, with the NS_COM declaration. I am 
- * changing it right now into a module private visibility because there are
- * better and more xpcom-like ways to get a Converter.
- */
-
-nsresult NS_NewB2UConverter(nsIUnicodeDecoder** aInstancePtrResult, nsISupports* aOuter, nsString* aCharSet);
-nsresult
-NS_NewB2UConverter(nsIUnicodeDecoder** aInstancePtrResult,
-                   nsISupports* aOuter,
-                   nsString* aCharSet)
-{
-  if (nsnull != aOuter) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-
-  // Create converter
-  nsresult res;
-  nsAutoString defaultCharset;
-  defaultCharset.AssignWithConversion("ISO-8859-1");
-
-  if (aCharSet == nsnull) aCharSet = &defaultCharset;
-
-  nsCOMPtr<nsICharsetConverterManager> ccm = 
-           do_GetService(kCharsetConverterManagerCID, &res);
-  if (NS_FAILED(res)) return res;
-
-  return ccm->GetUnicodeDecoder(aCharSet, aInstancePtrResult);
-}
-
-//----------------------------------------------------------------------
-
-class ConverterInputStream : public nsIUnicharInputStream {
+class UTF8InputStream : public nsIUnicharInputStream {
 public:
-  ConverterInputStream(nsIInputStream* aStream,
-                       nsIUnicodeDecoder* aConverter,
-                       PRUint32 aBufSize);
-  virtual ~ConverterInputStream();
+  UTF8InputStream(nsIInputStream* aStream,
+                  PRUint32 aBufSize);
+  virtual ~UTF8InputStream();
 
   NS_DECL_ISUPPORTS
   NS_IMETHOD Read(PRUnichar* aBuf,
@@ -191,70 +152,55 @@ public:
 protected:
   PRInt32 Fill(nsresult * aErrorCode);
 
-  nsIInputStream* mInput;
-  nsIUnicodeDecoder* mConverter;
-  nsIByteBuffer* mByteData;
+  static PRInt32 CountValidUTF8Bytes(const char *aBuf, PRInt32 aMaxBytes);
+
+  nsCOMPtr<nsIInputStream> mInput;
+  nsCOMPtr<nsIByteBuffer> mByteData;
+  nsCOMPtr<nsIUnicharBuffer> mUnicharData;
+  
   PRUint32 mByteDataOffset;
-  nsIUnicharBuffer* mUnicharData;
   PRUint32 mUnicharDataOffset;
   PRUint32 mUnicharDataLength;
 };
 
-ConverterInputStream::ConverterInputStream(nsIInputStream* aStream,
-                                           nsIUnicodeDecoder* aConverter,
-                                           PRUint32 aBufferSize)
+UTF8InputStream::UTF8InputStream(nsIInputStream* aStream,
+                                 PRUint32 aBufferSize) :
+  mInput(aStream)
 {
   NS_INIT_REFCNT();
-  mInput = aStream;
-  NS_ADDREF(aStream);
-  mConverter = aConverter;
-  NS_ADDREF(aConverter);
   if (aBufferSize == 0) {
     aBufferSize = 8192;
   }
 
   // XXX what if these fail?
-  NS_NewByteBuffer(&mByteData, nsnull, aBufferSize);
-  NS_NewUnicharBuffer(&mUnicharData, nsnull, aBufferSize);
+  NS_NewByteBuffer(getter_AddRefs(mByteData), nsnull, aBufferSize);
+  NS_NewUnicharBuffer(getter_AddRefs(mUnicharData), nsnull, aBufferSize);
 
   mByteDataOffset = 0;
   mUnicharDataOffset = 0;
   mUnicharDataLength = 0;
 }
 
-NS_IMPL_ISUPPORTS1(ConverterInputStream,nsIUnicharInputStream)
+NS_IMPL_ISUPPORTS1(UTF8InputStream,nsIUnicharInputStream)
 
-ConverterInputStream::~ConverterInputStream()
+UTF8InputStream::~UTF8InputStream()
 {
   Close();
 }
 
-nsresult ConverterInputStream::Close()
+nsresult UTF8InputStream::Close()
 {
-  if (nsnull != mInput) {
-    NS_RELEASE(mInput);
-    mInput = nsnull;
-  }
-  if (nsnull != mConverter) {
-    NS_RELEASE(mConverter);
-    mConverter = nsnull;
-  }
-  if (nsnull != mByteData) {
-    NS_RELEASE(mByteData);
-    mByteData = nsnull;
-  }
-  if (nsnull != mUnicharData) {
-    NS_RELEASE(mUnicharData);
-    mUnicharData = nsnull;
-  }
+  mInput = nsnull;
+  mByteData = nsnull;
+  mUnicharData = nsnull;
 
   return NS_OK;
 }
 
-nsresult ConverterInputStream::Read(PRUnichar* aBuf,
-                                    PRUint32 aOffset,
-                                    PRUint32 aCount,
-                                    PRUint32 *aReadCount)
+nsresult UTF8InputStream::Read(PRUnichar* aBuf,
+                               PRUint32 aOffset,
+                               PRUint32 aCount,
+                               PRUint32 *aReadCount)
 {
   NS_ASSERTION(mUnicharDataLength >= mUnicharDataOffset, "unsigned madness");
   PRUint32 rv = mUnicharDataLength - mUnicharDataOffset;
@@ -277,7 +223,7 @@ nsresult ConverterInputStream::Read(PRUnichar* aBuf,
   return NS_OK;
 }
 
-PRInt32 ConverterInputStream::Fill(nsresult * aErrorCode)
+PRInt32 UTF8InputStream::Fill(nsresult * aErrorCode)
 {
   if (nsnull == mInput) {
     // We already closed the stream!
@@ -300,43 +246,92 @@ PRInt32 ConverterInputStream::Fill(nsresult * aErrorCode)
   NS_ASSERTION(remainder + nb == mByteData->GetLength(), "bad nb");
 
   // Now convert as much of the byte buffer to unicode as possible
-  PRInt32 dstLen = mUnicharData->GetBufferSize();
-  PRInt32 srcLen = remainder + nb;
-  *aErrorCode = mConverter->Convert(mByteData->GetBuffer(), &srcLen,
-                                    mUnicharData->GetBuffer(), &dstLen);
+  PRInt32 srcLen = CountValidUTF8Bytes(mByteData->GetBuffer(),remainder + nb);
+
+  NS_ConvertUTF8toUCS2
+    unicodeValue(Substring(mByteData->GetBuffer(),
+                           mByteData->GetBuffer() + srcLen));
+  PRInt32 dstLen = unicodeValue.Length();
+  
+  // the number of UCS2 characters should always be <= the number of
+  // UTF8 chars
+  NS_ASSERTION(dstLen <= mUnicharData->GetBufferSize(),
+               "Ouch. I would overflow my buffer if I wasn't so careful.");
+  if (dstLen > mUnicharData->GetBufferSize()) return 0;
+  
+  nsCRT::memcpy((void *)mUnicharData->GetBuffer(),
+                (void *)unicodeValue.get(), dstLen*sizeof(PRUnichar));
+
   mUnicharDataOffset = 0;
   mUnicharDataLength = dstLen;
   mByteDataOffset += srcLen;
+  
   return dstLen;
 }
 
-// XXX hook up auto-detect here (do we need more info, like the url?)
-NS_COM nsresult
-NS_NewConverterStream(nsIUnicharInputStream** aInstancePtrResult,
-                      nsISupports* aOuter,
-                      nsIInputStream* aStreamToWrap,
-                      PRInt32 aBufferSize,
-                      nsString* aCharSet)
+PRInt32
+UTF8InputStream::CountValidUTF8Bytes(const char* aBuffer, PRInt32 aMaxBytes)
 {
-  if (nsnull != aOuter) {
-    return NS_ERROR_NO_AGGREGATION;
+  const char *c = aBuffer;
+  const char *lastchar = aBuffer;
+  
+  PRInt32 bytes = 0;
+  while (*c && bytes <= aMaxBytes) {
+    lastchar = c;
+    if (UTF8traits::isASCII(*c)) {
+      c++;
+      bytes++;
+    }
+    
+    else if (UTF8traits::is2byte(*c)) {
+      c += 2;
+      bytes += 2;
+    }
+      
+    else if (UTF8traits::is3byte(*c)) {
+      c += 3;
+      bytes += 3;
+    }
+    
+    else if (UTF8traits::is4byte(*c)) {
+      c += 4;
+      bytes += 4;
+    }
+    
+    else if (UTF8traits::is5byte(*c)) {
+      c += 5;
+      bytes += 5;
+    }
+    else if (UTF8traits::is6byte(*c)) {
+      c+=6;
+      bytes +=6;
+    }
+    
+    else
+      NS_WARNING("Unrecognized UTF8 string in UTF8InputStream::CountValidUTF8Bytes()");
   }
 
-  // Create converter
-  nsIUnicodeDecoder* converter;
-  nsresult rv = NS_NewB2UConverter(&converter, nsnull, aCharSet);
-  if (NS_OK != rv) {
-    return rv;
+  // if we skipped pas the end of the buffer, back up to the last character
+  if (bytes > aMaxBytes) {
+    c = lastchar;
+    bytes = (c-aBuffer);
   }
+  
+  return bytes;
+}
 
+NS_COM nsresult
+NS_NewUTF8ConverterStream(nsIUnicharInputStream** aInstancePtrResult,
+                          nsIInputStream* aStreamToWrap,
+                          PRInt32 aBufferSize)
+{
   // Create converter input stream
-  ConverterInputStream* it =
-    new ConverterInputStream(aStreamToWrap, converter, aBufferSize);
-  NS_RELEASE(converter);
+  UTF8InputStream* it =
+    new UTF8InputStream(aStreamToWrap, aBufferSize);
+  
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return it->QueryInterface(NS_GET_IID(nsIUnicharInputStream), 
                             (void **) aInstancePtrResult);
 }
-#endif /* XPCOM_STANDALONE */

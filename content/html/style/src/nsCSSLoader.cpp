@@ -1244,7 +1244,7 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
         if (NS_SUCCEEDED(result)) {
           // Translate the input using the argument character set id into unicode
           nsIUnicharInputStream* uin;
-          result = NS_NewConverterStream(&uin, nsnull, in);
+          result = NS_NewUTF8ConverterStream(&uin, in, 0);
           if (NS_SUCCEEDED(result)) {
             mLoadingSheets.Put(&aKey, aData);
             PRBool completed;

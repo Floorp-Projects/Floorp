@@ -76,10 +76,8 @@ extern NS_COM nsresult
  * NS_INPUTSTREAM_NO_CONVERTER.
  */
 extern NS_COM nsresult
-  NS_NewConverterStream(nsIUnicharInputStream** aInstancePtrResult,
-                        nsISupports* aOuter,
-                        nsIInputStream* aStreamToWrap,
-                        PRInt32 aBufferSize = 0,
-                        nsString* aCharSet = nsnull);
+  NS_NewUTF8ConverterStream(nsIUnicharInputStream** aInstancePtrResult,
+                            nsIInputStream* aStreamToWrap,
+                            PRInt32 aBufferSize = 0);
 
 #endif /* nsUnicharInputStream_h___ */

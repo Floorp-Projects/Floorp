@@ -74,6 +74,8 @@ public:
 
 protected:
   nsIUnicharInputStream* mIn;
+  PRUint32 mBufferPos;
+  PRUint32 mBufferLength;
   nsIPersistentProperties* mSubclass;
   struct PLHashTable*    mTable;
 };
@@ -81,8 +83,10 @@ protected:
 class nsPropertyElement : public nsIPropertyElement 
 {
 public:
-  nsPropertyElement();
-  virtual ~nsPropertyElement();
+  nsPropertyElement() {};
+  nsPropertyElement(const PRUnichar *aKey,
+                    const PRUnichar *aValue): mKey(aKey), mValue(aValue) {}
+  virtual ~nsPropertyElement() {};
 
   NS_DECL_ISUPPORTS
 
@@ -92,12 +96,12 @@ public:
   // nsIPropertyElement methods:
   NS_IMETHOD GetKey(PRUnichar **aReturnKey);
   NS_IMETHOD GetValue(PRUnichar **aReturnValue);
-  NS_IMETHOD SetKey(nsString* aKey);
-  NS_IMETHOD SetValue(nsString* aValue);
+  NS_IMETHOD SetKey(const PRUnichar* aKey);
+  NS_IMETHOD SetValue(const PRUnichar* aValue);
 
 protected:
-  nsString* mKey;
-  nsString* mValue;
+  nsString mKey;
+  nsString mValue;
 };
 
 #endif /* nsPersistentProperties_h___ */

@@ -111,14 +111,8 @@ NS_IMETHODIMP
 nsPersistentProperties::Load(nsIInputStream *aIn)
 {
   PRInt32  c;
-  nsresult ret = NS_ERROR_FAILURE;
-
-  nsAutoString uesc;
-  uesc.AssignWithConversion("UTF-8");
-
-#ifndef XPCOM_STANDALONE
-  ret = NS_NewConverterStream(&mIn, nsnull, aIn, 0, &uesc);
-#endif /* XPCOM_STANDALONE */
+  nsresult ret = NS_NewUTF8ConverterStream(&mIn, aIn, 0);
+  
   if (ret != NS_OK) {
 #ifdef NS_DEBUG
       printf("NS_NewConverterStream failed\n");
@@ -298,17 +292,14 @@ PR_STATIC_CALLBACK(PRIntn)
 AddElemToArray(PLHashEntry* he, PRIntn i, void* arg)
 {
   nsISupportsArray	*propArray = (nsISupportsArray *) arg;
-
-  nsString* keyStr = new nsString((PRUnichar*) he->key);
-  nsString* valueStr = new nsString((PRUnichar*) he->value);
-
-  nsPropertyElement *element = new nsPropertyElement();
+  
+  nsPropertyElement *element =
+      new nsPropertyElement((PRUnichar*)he->key,
+                            (PRUnichar*)he->value);
   if (!element)
      return HT_ENUMERATE_STOP;
 
   NS_ADDREF(element);
-  element->SetKey(keyStr);
-  element->SetValue(valueStr);
   propArray->InsertElementAt(element, i);
 
   return HT_ENUMERATE_NEXT;
@@ -450,20 +441,7 @@ nsPersistentProperties::Has(const char* prop, PRBool *result)
 // PropertyElement
 ////////////////////////////////////////////////////////////////////////////////
 
-nsPropertyElement::nsPropertyElement()
-{
-    NS_INIT_REFCNT();
-    mKey = nsnull;
-    mValue = nsnull;
-}
 
-nsPropertyElement::~nsPropertyElement()
-{
-	if (mKey)
-		delete mKey;
-	if (mValue)
-		delete mValue;
-}
 NS_METHOD
 nsPropertyElement::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
@@ -485,7 +463,7 @@ nsPropertyElement::GetKey(PRUnichar **aReturnKey)
 {
   if (aReturnKey)
   {
-    *aReturnKey = ToNewUnicode(*mKey);
+    *aReturnKey = ToNewUnicode(mKey);
     return NS_OK;
   }
 
@@ -497,7 +475,7 @@ nsPropertyElement::GetValue(PRUnichar **aReturnValue)
 {
   if (aReturnValue)
   {
-    *aReturnValue = ToNewUnicode(*mValue);
+    *aReturnValue = ToNewUnicode(mValue);
     return NS_OK;
   }
 
@@ -505,18 +483,16 @@ nsPropertyElement::GetValue(PRUnichar **aReturnValue)
 }
 
 NS_IMETHODIMP
-nsPropertyElement::SetKey(nsString* aKey)
+nsPropertyElement::SetKey(const PRUnichar* aKey)
 {
   mKey = aKey;
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPropertyElement::SetValue(nsString* aValue)
+nsPropertyElement::SetValue(const PRUnichar* aValue)
 {
   mValue = aValue;
-
   return NS_OK;
 }
 
