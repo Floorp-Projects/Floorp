@@ -88,10 +88,10 @@ class nsHTMLStyleSheet;
 class nsIHTMLCSSStyleSheet;
 
 // IID for the nsIDocument interface
-// c76fbc2d-2dca-4ce1-b6e9-7f7030b01e17
+// 0924a06c-29df-4f3d-b053-4ebf099327c6
 #define NS_IDOCUMENT_IID      \
-{ 0xc76fbc2d, 0x2dca, 0x4ce1, \
-  { 0xb6, 0xe9, 0x7f, 0x70, 0x30, 0xb0, 0x1e, 0x17 } }
+{ 0x0924a06c, 0x29df, 0x4f3d, \
+  { 0xb0, 0x53, 0x4e, 0xbf, 0x09, 0x93, 0x27, 0xc6 } }
 
 // The base value for the content ID counter.
 // This counter is used by the document to 
