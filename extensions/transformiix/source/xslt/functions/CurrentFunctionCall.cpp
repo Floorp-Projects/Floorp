@@ -28,6 +28,6 @@ ExprResult* CurrentFunctionCall::evaluate(txIEvalContext* aContext)
 nsresult CurrentFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     *aAtom = txXSLTAtoms::current;
-    TX_ADDREF_ATOM(*aAtom);
+    NS_ADDREF(*aAtom);
     return NS_OK;
 }

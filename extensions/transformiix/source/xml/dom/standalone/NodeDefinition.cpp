@@ -309,7 +309,7 @@ PRInt32 NodeDefinition::lookupNamespaceID(nsIAtom* aPrefix)
   if (aPrefix && (aPrefix != txXMLAtoms::_empty)) {
       //  We have a prefix, search for xmlns:prefix attributes.
       nsAutoString prefixString;
-      TX_GET_ATOM_STRING(aPrefix, prefixString);
+      aPrefix->ToString(prefixString);
       name.Append(prefixString);
   }
   else {

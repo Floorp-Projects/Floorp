@@ -333,8 +333,8 @@ txXSLTProcessor::processAction(Node* aAction,
     }
 
     Expr* expr = 0;
-    nsIAtom* localName;
-    aAction->getLocalName(&localName);
+    nsCOMPtr<nsIAtom> localName;
+    aAction->getLocalName(getter_AddRefs(localName));
     // xsl:apply-imports
     if (localName == txXSLTAtoms::applyImports) {
         ProcessorState::TemplateRule* curr;
@@ -345,7 +345,6 @@ txXSLTProcessor::processAction(Node* aAction,
         if (!curr) {
             aPs->receiveError(NS_LITERAL_STRING("apply-imports not allowed here"),
                               NS_ERROR_FAILURE);
-            TX_RELEASE_ATOM(localName);
             return;
         }
 
@@ -365,13 +364,11 @@ txXSLTProcessor::processAction(Node* aAction,
             expr = gNodeExpr;
 
         if (!expr) {
-            TX_RELEASE_ATOM(localName);
             return;
         }
 
         ExprResult* exprResult = expr->evaluate(aPs->getEvalContext());
         if (!exprResult) {
-            TX_RELEASE_ATOM(localName);
             return;
         }
 
@@ -379,7 +376,6 @@ txXSLTProcessor::processAction(Node* aAction,
             NodeSet* nodeSet = (NodeSet*)exprResult;
             if (nodeSet->isEmpty()) {
                 delete nodeSet;
-                TX_RELEASE_ATOM(localName);
                 return;
             }
 
@@ -389,12 +385,11 @@ txXSLTProcessor::processAction(Node* aAction,
             while (child) {
                 if (child->getNodeType() == Node::ELEMENT_NODE &&
                     child->getNamespaceID() == kNameSpaceID_XSLT) {
-                    nsIAtom* childLocalName;
-                    child->getLocalName(&childLocalName);
+                    nsCOMPtr<nsIAtom> childLocalName;
+                    child->getLocalName(getter_AddRefs(childLocalName));
                     if (childLocalName == txXSLTAtoms::sort) {
                         sorter.addSortElement((Element*)child);
                     }
-                    TX_IF_RELEASE_ATOM(childLocalName);
                 }
                 child = child->getNextSibling();
             }
@@ -412,7 +407,6 @@ txXSLTProcessor::processAction(Node* aAction,
                 rv = mode.init(modeStr, actionElement, MB_FALSE);
                 if (NS_FAILED(rv)) {
                     aPs->receiveError(NS_LITERAL_STRING("malformed mode-name in xsl:apply-templates"));
-                    TX_IF_RELEASE_ATOM(localName);
                     return;
                 }
             }
@@ -444,7 +438,6 @@ txXSLTProcessor::processAction(Node* aAction,
         if (!actionElement->getAttr(txXSLTAtoms::name,
                                     kNameSpaceID_None, nameAttr)) {
             aPs->receiveError(NS_LITERAL_STRING("missing required name attribute for xsl:attribute"), NS_ERROR_FAILURE);
-            TX_RELEASE_ATOM(localName);
             return;
         }
 
@@ -457,18 +450,13 @@ txXSLTProcessor::processAction(Node* aAction,
             aPs->receiveError(NS_LITERAL_STRING("error processing xsl:attribute, ") +
                               name + NS_LITERAL_STRING(" is not a valid QName."),
                               NS_ERROR_FAILURE);
-            TX_RELEASE_ATOM(localName);
             return;
         }
 
-        nsIAtom* nameAtom = TX_GET_ATOM(name);
-        if (nameAtom == txXMLAtoms::xmlns) {
-            TX_RELEASE_ATOM(nameAtom);
+        if (TX_StringEqualsAtom(name, txXMLAtoms::xmlns)) {
             aPs->receiveError(NS_LITERAL_STRING("error processing xsl:attribute, name is xmlns."), NS_ERROR_FAILURE);
-            TX_RELEASE_ATOM(localName);
             return;
         }
-        TX_IF_RELEASE_ATOM(nameAtom);
 
         // Determine namespace URI from the namespace attribute or
         // from the prefix of the name (using the xslt action element).
@@ -495,7 +483,6 @@ txXSLTProcessor::processAction(Node* aAction,
 
         // XXX Should verify that this is correct behaviour. Signal error too?
         if (resultNsID == kNameSpaceID_Unknown) {
-            TX_RELEASE_ATOM(localName);
             return;
         }
 
@@ -546,13 +533,12 @@ txXSLTProcessor::processAction(Node* aAction,
             }
 
             Element* xslTemplate = (Element*)condition;
-            nsIAtom* conditionLocalName;
-            condition->getLocalName(&conditionLocalName);
+            nsCOMPtr<nsIAtom> conditionLocalName;
+            condition->getLocalName(getter_AddRefs(conditionLocalName));
             if (conditionLocalName == txXSLTAtoms::when) {
                 expr = aPs->getExpr(xslTemplate,
                                     ProcessorState::TestAttr);
                 if (!expr) {
-                    TX_RELEASE_ATOM(conditionLocalName);
                     condition = condition->getNextSibling();
                     continue;
                 }
@@ -569,7 +555,6 @@ txXSLTProcessor::processAction(Node* aAction,
                 processChildren(xslTemplate, aPs);
                 caseFound = MB_TRUE;
             }
-            TX_IF_RELEASE_ATOM(conditionLocalName);
             condition = condition->getNextSibling();
         } // end for-each child of xsl:choose
     }
@@ -597,7 +582,6 @@ txXSLTProcessor::processAction(Node* aAction,
     else if (localName == txXSLTAtoms::copyOf) {
         expr = aPs->getExpr(actionElement, ProcessorState::SelectAttr);
         if (!expr) {
-            TX_RELEASE_ATOM(localName);
             return;
         }
 
@@ -611,7 +595,6 @@ txXSLTProcessor::processAction(Node* aAction,
         if (!actionElement->getAttr(txXSLTAtoms::name,
                                     kNameSpaceID_None, nameAttr)) {
             aPs->receiveError(NS_LITERAL_STRING("missing required name attribute for xsl:element"), NS_ERROR_FAILURE);
-            TX_RELEASE_ATOM(localName);
             return;
         }
 
@@ -626,7 +609,6 @@ txXSLTProcessor::processAction(Node* aAction,
                               NS_ERROR_FAILURE);
             // XXX We should processChildren without creating attributes or
             //     namespace nodes.
-            TX_RELEASE_ATOM(localName);
             return;
         }
 
@@ -654,7 +636,6 @@ txXSLTProcessor::processAction(Node* aAction,
                               NS_ERROR_FAILURE);
             // XXX We should processChildren without creating attributes or
             //     namespace nodes.
-            TX_RELEASE_ATOM(localName);
             return;
         }
 
@@ -669,13 +650,11 @@ txXSLTProcessor::processAction(Node* aAction,
     else if (localName == txXSLTAtoms::forEach) {
         expr = aPs->getExpr(actionElement, ProcessorState::SelectAttr);
         if (!expr) {
-            TX_RELEASE_ATOM(localName);
             return;
         }
 
         ExprResult* exprResult = expr->evaluate(aPs->getEvalContext());
         if (!exprResult) {
-            TX_RELEASE_ATOM(localName);
             return;
         }
 
@@ -683,7 +662,6 @@ txXSLTProcessor::processAction(Node* aAction,
             NodeSet* nodeSet = (NodeSet*)exprResult;
             if (nodeSet->isEmpty()) {
                 delete nodeSet;
-                TX_RELEASE_ATOM(localName);
                 return;
             }
             txNodeSetContext evalContext(nodeSet, aPs);
@@ -696,16 +674,14 @@ txXSLTProcessor::processAction(Node* aAction,
             while (child) {
                 unsigned short nodeType = child->getNodeType();
                 if (nodeType == Node::ELEMENT_NODE) {
-                    nsIAtom* childLocalName;
-                    child->getLocalName(&childLocalName);
+                    nsCOMPtr<nsIAtom> childLocalName;
+                    child->getLocalName(getter_AddRefs(childLocalName));
                     if (child->getNamespaceID() != kNameSpaceID_XSLT ||
                         childLocalName != txXSLTAtoms::sort) {
                         // xsl:sort must occur first
-                        TX_IF_RELEASE_ATOM(childLocalName);
                         break;
                     }
                     sorter.addSortElement((Element*)child);
-                    TX_RELEASE_ATOM(childLocalName);
                 }
                 else if ((nodeType == Node::TEXT_NODE ||
                           nodeType == Node::CDATA_SECTION_NODE) &&
@@ -741,13 +717,11 @@ txXSLTProcessor::processAction(Node* aAction,
     else if (localName == txXSLTAtoms::_if) {
         expr = aPs->getExpr(actionElement, ProcessorState::TestAttr);
         if (!expr) {
-            TX_RELEASE_ATOM(localName);
             return;
         }
 
         ExprResult* exprResult = expr->evaluate(aPs->getEvalContext());
         if (!exprResult) {
-            TX_RELEASE_ATOM(localName);
             return;
         }
 
@@ -782,7 +756,6 @@ txXSLTProcessor::processAction(Node* aAction,
         if (!actionElement->getAttr(txXSLTAtoms::name,
                                     kNameSpaceID_None, nameAttr)) {
             aPs->receiveError(NS_LITERAL_STRING("missing required name attribute for xsl:processing-instruction"), NS_ERROR_FAILURE);
-            TX_RELEASE_ATOM(localName);
             return;
         }
 
@@ -834,7 +807,6 @@ txXSLTProcessor::processAction(Node* aAction,
     else if (localName == txXSLTAtoms::valueOf) {
         expr = aPs->getExpr(actionElement, ProcessorState::SelectAttr);
         if (!expr) {
-            TX_RELEASE_ATOM(localName);
             return;
         }
 
@@ -843,7 +815,6 @@ txXSLTProcessor::processAction(Node* aAction,
         if (!exprResult) {
             aPs->receiveError(NS_LITERAL_STRING("null ExprResult"),
                               NS_ERROR_FAILURE);
-            TX_RELEASE_ATOM(localName);
             return;
         }
         exprResult->stringValue(value);
@@ -875,12 +846,10 @@ txXSLTProcessor::processAction(Node* aAction,
         if (NS_FAILED(rv)) {
             aPs->receiveError(NS_LITERAL_STRING("bad name for xsl:variable"),
                               NS_ERROR_FAILURE);
-            TX_RELEASE_ATOM(localName);
             return;
         }
         ExprResult* exprResult = processVariable(actionElement, aPs);
         if (!exprResult) {
-            TX_RELEASE_ATOM(localName);
             return;
         }
 
@@ -892,7 +861,6 @@ txXSLTProcessor::processAction(Node* aAction,
                               NS_ERROR_FAILURE);
         }
     }
-    TX_IF_RELEASE_ATOM(localName);
 }
 
 void
@@ -1125,10 +1093,9 @@ txXSLTProcessor::processParameters(Element* aAction,
     while (tmpNode) {
         if (tmpNode->getNodeType() == Node::ELEMENT_NODE &&
             tmpNode->getNamespaceID() == kNameSpaceID_XSLT) {
-            nsIAtom* localName;
-            tmpNode->getLocalName(&localName);
+            nsCOMPtr<nsIAtom> localName;
+            tmpNode->getLocalName(getter_AddRefs(localName));
             if (localName != txXSLTAtoms::withParam) {
-                TX_IF_RELEASE_ATOM(localName);
                 tmpNode = tmpNode->getNextSibling();
                 continue;
             }
@@ -1156,7 +1123,6 @@ txXSLTProcessor::processParameters(Element* aAction,
                                   NS_ERROR_FAILURE);
                 return rv;
             }
-            TX_RELEASE_ATOM(localName);
         }
         tmpNode = tmpNode->getNextSibling();
     }
@@ -1189,9 +1155,9 @@ txXSLTProcessor::processStylesheet(Document* aStylesheet,
 
     Element* elem = aStylesheet->getDocumentElement();
 
-    nsIAtom* localName;
+    nsCOMPtr<nsIAtom> localName;
     PRInt32 namespaceID = elem->getNamespaceID();
-    elem->getLocalName(&localName);
+    elem->getLocalName(getter_AddRefs(localName));
 
     if (((localName == txXSLTAtoms::stylesheet) ||
          (localName == txXSLTAtoms::transform)) &&
@@ -1201,13 +1167,11 @@ txXSLTProcessor::processStylesheet(Document* aStylesheet,
     else {
         NS_ASSERTION(aImportFrame->current(), "no current importframe");
         if (!aImportFrame->current()) {
-            TX_IF_RELEASE_ATOM(localName);
             return;
         }
         aPs->addLREStylesheet(aStylesheet,
             (ProcessorState::ImportFrame*)aImportFrame->current());
     }
-    TX_IF_RELEASE_ATOM(localName);
 }
 
 void
@@ -1228,14 +1192,12 @@ txXSLTProcessor::processTemplate(Node* aTemplate,
     while (tmpNode) {
         int nodeType = tmpNode->getNodeType();
         if (nodeType == Node::ELEMENT_NODE) {
-            nsIAtom* localName;
-            tmpNode->getLocalName(&localName);
+            nsCOMPtr<nsIAtom> localName;
+            tmpNode->getLocalName(getter_AddRefs(localName));
             if (tmpNode->getNamespaceID() != kNameSpaceID_XSLT ||
                 localName != txXSLTAtoms::param) {
-                TX_RELEASE_ATOM(localName);
                 break;
             }
-            TX_RELEASE_ATOM(localName);
 
             Element* action = (Element*)tmpNode;
             txExpandedName paramName;
@@ -1319,8 +1281,8 @@ txXSLTProcessor::processTopLevel(Element* aStylesheet,
     Node* node = aStylesheet->getFirstChild();
     while (node && !importsDone) {
         if (node->getNodeType() == Node::ELEMENT_NODE) {
-            nsIAtom* localName;
-            node->getLocalName(&localName);
+            nsCOMPtr<nsIAtom> localName;
+            node->getLocalName(getter_AddRefs(localName));
             if (node->getNamespaceID() == kNameSpaceID_XSLT &&
                 localName == txXSLTAtoms::import) {
                 Element* element = (Element*)node;
@@ -1352,7 +1314,6 @@ txXSLTProcessor::processTopLevel(Element* aStylesheet,
             else {
                 importsDone = MB_TRUE;
             }
-            TX_IF_RELEASE_ATOM(localName);
         }
         if (!importsDone)
             node = node->getNextSibling();
@@ -1365,8 +1326,8 @@ txXSLTProcessor::processTopLevel(Element* aStylesheet,
             continue;
         }
 
-        nsIAtom* localName;
-        node->getLocalName(&localName);
+        nsCOMPtr<nsIAtom> localName;
+        node->getLocalName(getter_AddRefs(localName));
         Element* element = (Element*)node;
         // xsl:attribute-set
         if (localName == txXSLTAtoms::attributeSet) {
@@ -1585,7 +1546,6 @@ txXSLTProcessor::processTopLevel(Element* aStylesheet,
                                       currentFrame);
             }
         }
-        TX_IF_RELEASE_ATOM(localName);
         node = node->getNextSibling();
     }
 }

@@ -154,12 +154,11 @@ void ProcessorState::addAttributeSet(Element* aAttributeSet,
             PRInt32 nsID = node->getNamespaceID();
             if (nsID != kNameSpaceID_XSLT)
                 continue;
-            nsIAtom* nodeName;
-            if (!node->getLocalName(&nodeName) || !nodeName)
+            nsCOMPtr<nsIAtom> nodeName;
+            if (!node->getLocalName(getter_AddRefs(nodeName)) || !nodeName)
                 continue;
             if (nodeName == txXSLTAtoms::attribute)
                 attSet->append(node);
-            TX_RELEASE_ATOM(nodeName);
         }
         node = node->getNextSibling();
     }
@@ -485,7 +484,7 @@ Node* ProcessorState::findTemplate(Node* aNode,
 #ifdef PR_LOGGING
     nsAutoString mode, nodeName;
     if (aMode.mLocalName) {
-        TX_GET_ATOM_STRING(aMode.mLocalName, mode);
+        aMode.mLocalName->ToString(mode);
     }
     aNode->getNodeName(nodeName);
     if (matchTemplate) {

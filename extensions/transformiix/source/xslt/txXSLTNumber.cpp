@@ -150,12 +150,11 @@ nsresult txXSLTNumber::getValueList(Element* aNumberElement,
         switch (currNode->getNodeType()) {
             case Node::ELEMENT_NODE:
             {
-                nsIAtom* localName = 0;
-                currNode->getLocalName(&localName);
+                nsCOMPtr<nsIAtom> localName;
+                currNode->getLocalName(getter_AddRefs(localName));
                 nodeTest = new txNameTest(0, localName,
                                           currNode->getNamespaceID(),
                                           Node::ELEMENT_NODE);
-                TX_IF_RELEASE_ATOM(localName);
                 break;
             }
             case Node::TEXT_NODE:
@@ -218,9 +217,9 @@ nsresult txXSLTNumber::getValueList(Element* aNumberElement,
     // Generate list of values depending on the value of the level-attribute
 
     nsAutoString levelStr;
-    nsIAtom* level = 0;
+    nsCOMPtr<nsIAtom> level;
     if (aNumberElement->getAttr(txXSLTAtoms::level, kNameSpaceID_None, levelStr)) {
-        level = TX_GET_ATOM(levelStr);
+        level = do_GetAtom(levelStr);
     }
 
     // level = "single"
@@ -325,7 +324,6 @@ nsresult txXSLTNumber::getValueList(Element* aNumberElement,
     if (ownsCountPattern) {
         delete countPattern;
     }
-    TX_IF_RELEASE_ATOM(level);
     
     return NS_OK;
 }

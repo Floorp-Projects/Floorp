@@ -40,7 +40,7 @@
 #define __TX_I_XPATH_CONTEXT
 
 #include "baseutils.h"
-#include "txAtom.h"
+#include "nsIAtom.h"
 #include "txError.h"
 
 class ExprResult;

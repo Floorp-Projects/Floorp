@@ -392,7 +392,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
 nsresult txFormatNumberFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     *aAtom = txXSLTAtoms::formatNumber;
-    TX_ADDREF_ATOM(*aAtom);
+    NS_ADDREF(*aAtom);
     return NS_OK;
 }
 

@@ -456,11 +456,11 @@ void txKeyPattern::toString(nsAString& aDest)
     aDest.Append(NS_LITERAL_STRING("key('"));
     nsAutoString tmp;
     if (mPrefix) {
-        TX_GET_ATOM_STRING(mPrefix, tmp);
+        mPrefix->ToString(tmp);
         aDest.Append(tmp);
         aDest.Append(PRUnichar(':'));
     }
-    TX_GET_ATOM_STRING(mName.mLocalName, tmp);
+    mName.mLocalName->ToString(tmp);
     aDest.Append(tmp);
     aDest.Append(NS_LITERAL_STRING(", "));
     aDest.Append(mValue);

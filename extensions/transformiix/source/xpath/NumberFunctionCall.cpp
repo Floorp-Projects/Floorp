@@ -172,6 +172,6 @@ nsresult NumberFunctionCall::getNameAtom(nsIAtom** aAtom)
             return NS_ERROR_FAILURE;
         }
     }
-    TX_ADDREF_ATOM(*aAtom);
+    NS_ADDREF(*aAtom);
     return NS_OK;
 }
