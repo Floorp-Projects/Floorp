@@ -50,12 +50,13 @@ sub InitVars {
     $BuildConfigDir = 'mozilla/config';
     $ClobberStr = 'realclean';
     $ConfigureEnvArgs = 'CFLAGS=-pipe CXXFLAGS=-pipe';
-    $ConfigureArgs = '--with-nspr=/builds/tinderbox/SeaMonkey/nspr --cache-file=/dev/null --enable-editor';
+    $ConfigureArgs = '--with-nspr=/builds/tinderbox/SeaMonkey/nspr --cache-file=/dev/null --enable-editor ';
     $ConfigGuess = './build/autoconf/config.guess';
     $Logfile = '${BuildDir}.log';
     $NSPRArgs = 'DIST=/builds/tinderbox/SeaMonkey/nspr MOZILLA_CLIENT=1 NSDISTMODE=copy NO_MDUPDATE=1 ';
     $Compiler = 'gcc';
-} #EndSub-InitVars
+    $ShellOverride = ''; # Only used if the default shell is too stupid
+}
 
 sub ConditionalArgs {
     if ( $BuildClassic ) {
@@ -71,12 +72,13 @@ sub ConditionalArgs {
     }
     $CVSCO .= " -r $BuildTag" if ( $BuildTag ne '');
 }
+
 sub SetupEnv {
     umask(0);
     $ENV{"CVSROOT"} = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
     $ENV{"LD_LIBRARY_PATH"} = '/builds/tinderbox/SeaMonkey/nspr/lib:/builds/tinderbox/SeaMonkey/' . $DirName . '/mozilla/' . $ObjDir . '/dist/bin:/usr/lib/png:/usr/local/lib';
     $ENV{"DISPLAY"} = 'crucible.mcom.com:0.0';
-} #EndSub-SetupEnv
+}
 
 sub SetupPath {
     my($Path, $comptmp);
@@ -135,7 +137,18 @@ sub SetupPath {
 	$ENV{'LD_LIBRARY_PATH'} .= ':/usr/gnu/lib';
 	$ConfigureEnvArgs = 'CC="cc -readonly_strings" CXX="cxx"';
 	$Compiler = 'cc/cxx';
+	$MakeOverrides = 'SHELL=/usr/bin/ksh';
 	$NSPRArgs .= 'NS_USE_NATIVE=1 USE_PTHREADS=1';
+	$ShellOverride = '/usr/bin/ksh';
+    }
+
+    if ( $OS eq 'QNX' ) {
+	$ENV{'PATH'} = '/usr/local/bin:' . $ENV{'PATH'};
+	$ENV{'LD_LIBRARY_PATH'} .= ':/usr/X11/lib';
+	$ConfigureArgs .= '--disable-shared --x-includes=/usr/X11/include --x-libraries=/usr/X11/lib';
+	$ConfigureEnvArgs = 'CC=cc CXX=cc';
+	$Compiler = 'cc/cc';
+	$mail = '/usr/bin/sendmail';
     }
 
     if ( $OS eq 'SunOS' ) {
@@ -178,7 +191,7 @@ sub SetupPath {
 
     $Path = $ENV{PATH};
     print "Path After: $Path\n";
-} #EndSub-SetupPath
+}
 
 ##########################################################################
 # NO USER CONFIGURABLE PIECES BEYOND THIS POINT                          #
@@ -210,6 +223,12 @@ sub GetSystemInfo {
 
     if ( $OS eq 'IRIX64' ) {
 	$OS = 'IRIX';
+    }
+
+    if ( $OS eq 'QNX' ) {
+	$OSVer = `uname -v`;
+	chop($OSVer);
+	$OSVer =~ s/^([0-9])([0-9]*)$/$1.$2/;
     }
 
     if ( $OS eq 'SCO_SV' ) {
@@ -250,7 +269,7 @@ sub GetSystemInfo {
     }
 
     if ( $OS eq 'Linux' ) {
-	if ( $CPU eq 'alpha' ) {
+	if ( $CPU eq 'alpha' || $CPU eq 'sparc' ) {
 	    $ObjDir = 'obj-' . $CPU . '-unknown-linux-gnu';
 	    $BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
 	} elsif ( $CPU eq 'armv4l' || $CPU eq 'sa110' ) {
@@ -279,6 +298,10 @@ sub GetSystemInfo {
 	$ObjDir = 'obj-alpha-dec-osf4.0d';
     }
 
+    if ( $OS eq 'QNX' ) {
+	$ObjDir = 'obj-i386-pc-qnx4';
+    }
+
     if ( $OS eq 'SunOS' ) {
 	if ( $CPU eq 'i86pc' ) {
 	    $ObjDir = 'obj-i386-pc-solaris' . $OSVer;
@@ -302,10 +325,10 @@ sub GetSystemInfo {
     } else {
 	$logfile = "${DirName}.log";
     }
-} #EndSub-GetSystemInfo
+}
 
 sub BuildIt {
-    my ($fe, @felist, $EarlyExit, $LastTime, $StartTimeStr, $comptmp);
+    my($fe, @felist, $EarlyExit, $LastTime, $StartTimeStr, $comptmp);
     $comptmp = '';
 
     mkdir("$DirName", 0777);
@@ -379,7 +402,7 @@ sub BuildIt {
 	close(PULL);
 
 	# Do a separate checkout with toplevel makefile
-	if (! $BuildClassic) {
+	if ($BuildClassic == 0) {
 	    print LOG "$Make -f mozilla/client.mk checkout CVSCO='$CVS $CVSCO'|\n";
 	    open (PULLALL, "$Make -f mozilla/client.mk checkout CVSCO='$CVS $CVSCO' |\n");
 	    while (<PULLALL>) {
@@ -411,7 +434,7 @@ sub BuildIt {
 	chdir($BuildObjName) || die "chdir($BuildObjName): $!\n";
 
 	print LOG "$ConfigureEnvArgs ../configure $ConfigureArgs\n";
-	open (CONFIGURE, "$ConfigureEnvArgs ../configure $ConfigureArgs 2>&1 |") || die "../configure: $!\n";
+	open (CONFIGURE, "$ConfigureEnvArgs $ShellOverride ../configure $ConfigureArgs 2>&1 |") || die "../configure: $!\n";
 	while (<CONFIGURE>) {
 	    print $_;
 	    print LOG $_;
@@ -567,7 +590,7 @@ sub BuildIt {
 	#This mean one loop of execution
 	$EarlyExit++ if ($BuildOnce);
     }
-} #EndSub-BuildIt
+}
 
 sub CVSTime {
     my($StartTimeArg) = @_;
@@ -694,19 +717,19 @@ sub ParseArgs {
     }
 
     &PrintUsage if (! $manArg );
-} #EndSub-ParseArgs
+}
 
 sub PrintUsage {
     die "usage: $0 [--depend | --clobber] [-v | --version ] [--once --classic --noreport -tag TREETAG -t TREENAME ]\n";
 }
 
 sub PrintEnv {
-    my ($key);
-    foreach $key (keys %ENV) {
-	print LOG "$key = $ENV{$key}\n";
-	print "$key = $ENV{$key}\n";
+    my($key);
+    foreach $key (sort(keys %ENV)) {
+	print LOG $key, '=', $ENV{$key}, "\n";
+	print $key, '=', $ENV{$key}, "\n";
     }
-} #EndSub-PrintEnv
+}
 
 sub RunSmokeTest {
     my($fe) = @_;
@@ -739,7 +762,7 @@ sub RunSmokeTest {
 	last if ($status != 0);
     }
     return 0;
-} #EndSub-RunSmokeTest
+}
 
 # Main function
 &InitVars;
