@@ -22,8 +22,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= apprunner
 MODULE		= apprunner
+PROGRAM		= apprunner
 
 CPPSRCS		= \
 		nsAppRunner.cpp \
@@ -32,10 +32,6 @@ CPPSRCS		= \
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 BEOS_PROGRAM_RESOURCE = $(srcdir)/apprunner-beos.rsrc
-endif
-
-ifdef MOZ_MONOLITHIC_TOOLKIT
-MONOLITHIC_TK_FLAGS = $(TK_LIBS)
 endif
 
 ifdef MOZ_OJI
@@ -50,18 +46,23 @@ XP_DIST_LIBS	= \
 		$(OJI_LIBS) \
 		$(NULL)
 
-# cls/shaver are responsible for this amazingness
-EXTRA_DEPS	= $(addprefix $(DIST)/,$(patsubst -l%,bin/lib%.$(DLL_SUFFIX),$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a)))
-
 XP_LIBS		= \
 		$(XP_DIST_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
-LIBS		= \
-		$(XP_LIBS) \
-		$(MONOLITHIC_TK_FLAGS) \
-		$(NULL)
+ifdef MOZ_FULLCIRCLE
+XP_LIBS		+= $(FULLCIRCLE_LIBS)
+endif
+
+ifdef MOZ_MONOLITHIC_TOOLKIT
+XP_LIBS		+= $(TK_LIBS)
+endif
+
+LIBS		= $(XP_LIBS)
+
+# cls/shaver are responsible for this amazingness
+EXTRA_DEPS	= $(addprefix $(DIST)/,$(patsubst -l%,bin/lib%.$(DLL_SUFFIX),$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a)))
 
 include $(topsrcdir)/config/rules.mk
 
