@@ -170,7 +170,7 @@ function processCreateProfileData( aProfName, aProfDir, langcode)
         fileSpec = fileSpec.QueryInterface( Components.interfaces.nsILocalFile );
 
     if (aProfDir == null)
-        fileSpec.initWithUnicodePath(profile.defaultProfileParentDir.path);
+        fileSpec.initWithUnicodePath(profile.defaultProfileParentDir.unicodePath);
     else
         fileSpec.initWithUnicodePath(aProfDir);
 
