@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=raptor 
+MODULE		= layout
 LIBRARY_NAME=gkxuloutliner_s
 REQUIRES= xpcom dom locale js widget view caps timer docshell uriloader necko editor htmlparser webshell pref rdf intl
 
