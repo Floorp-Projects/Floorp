@@ -21,7 +21,6 @@
  *    Stuart Parmenter <pavlov@netscape.com>
  *    Tim Rowley <tor@cs.brown.edu> -- 8bit alpha compositing
  */
-
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 
@@ -1099,8 +1098,36 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
 #endif
 
   nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
+  PRBool partial = PR_FALSE;
 
-  if ((drawing->GetDepth() == 8) || (mAlphaDepth == 8)) {
+  PRInt32
+    validX = 0,
+    validY = 0,
+    validWidth  = mWidth,
+    validHeight = mHeight;
+  
+  // limit the image rectangle to the size of the image data which
+  // has been validated.
+  if ((mDecodedY2 < mHeight)) {
+    validHeight = mDecodedY2 - mDecodedY1;
+    partial = PR_TRUE;
+  }
+  if ((mDecodedX2 < mWidth)) {
+    validWidth = mDecodedX2 - mDecodedX1;
+    partial = PR_TRUE;
+  }
+  if ((mDecodedY1 > 0)) {   
+    validHeight -= mDecodedY1;
+    validY = mDecodedY1;
+    partial = PR_TRUE;
+  }
+  if ((mDecodedX1 > 0)) {
+    validWidth -= mDecodedX1;
+    validX = mDecodedX1; 
+    partial = PR_TRUE;
+  }
+
+  if ((partial) || (drawing->GetDepth() == 8) || (mAlphaDepth == 8)) {
 #ifdef DEBUG_TILING
     printf("Warning: using slow tiling\n");
 #endif
@@ -1116,29 +1143,6 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
                      PR_MIN(aSrcRect.height, aY1-y));
    
     return NS_OK;
-  }
-
-  PRInt32
-    validX = 0,
-    validY = 0,
-    validWidth  = mWidth,
-    validHeight = mHeight;
-  
-  // limit the image rectangle to the size of the image data which
-  // has been validated.
-  if ((mDecodedY2 < mHeight)) {
-    validHeight = mDecodedY2 - mDecodedY1;
-  }
-  if ((mDecodedX2 < mWidth)) {
-    validWidth = mDecodedX2 - mDecodedX1;
-  }
-  if ((mDecodedY1 > 0)) {   
-    validHeight -= mDecodedY1;
-    validY = mDecodedY1;
-  }
-  if ((mDecodedX1 > 0)) {
-    validWidth -= mDecodedX1;
-    validX = mDecodedX1; 
   }
 
   // draw the tile offscreen
@@ -1204,6 +1208,7 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
 #endif
 
   nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
+  PRBool partial = PR_FALSE;
 
   PRInt32
     validX = 0,
@@ -1215,20 +1220,24 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
   // has been validated.
   if ((mDecodedY2 < mHeight)) {
     validHeight = mDecodedY2 - mDecodedY1;
+    partial = PR_TRUE;
   }
   if ((mDecodedX2 < mWidth)) {
     validWidth = mDecodedX2 - mDecodedX1;
+    partial = PR_TRUE;
   }
   if ((mDecodedY1 > 0)) {   
     validHeight -= mDecodedY1;
     validY = mDecodedY1;
+    partial = PR_TRUE;
   }
   if ((mDecodedX1 > 0)) {
     validWidth -= mDecodedX1;
     validX = mDecodedX1; 
+    partial = PR_TRUE;
   }
 
-  if (mAlphaDepth == 8) {
+  if ((partial) || (mAlphaDepth == 8)) {
 #ifdef DEBUG_TILING
     printf("Warning: using slow tiling\n");
 #endif
@@ -1243,9 +1252,10 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
     aContext.SetClipRect(aTileRect, nsClipCombine_kIntersect,
                          clipState);
 
-    for (PRInt32 y = aY0; y < aY1; y+=validHeight)
-      for (PRInt32 x = aX0; x < aX1; x+=validWidth)
-        Draw(aContext,aSurface,x,y, PR_MIN(validWidth, aX1-x),
+    for (PRInt32 y = aY0; y < aY1; y += mHeight)
+      for (PRInt32 x = aX0; x < aX1; x += mWidth)
+        Draw(aContext,aSurface, x,y,
+             PR_MIN(validWidth, aX1-x),
              PR_MIN(validHeight, aY1-y));
 
     aContext.PopState(clipState);
