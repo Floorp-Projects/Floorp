@@ -2914,7 +2914,9 @@ PRBool nsDocument::IsInSelection(nsIDOMSelection* aSelection, const nsIContent* 
         nsIDOMRange* range = nsnull;
         if (NS_SUCCEEDED(enumerator->CurrentItem((nsISupports**)&range)))
         {
-          return IsNodeIntersectsRange(aContent, range);
+          // VC build won't cast away const automatically:
+          nsIContent* nonConstContent = (nsIContent*)aContent;
+          return IsNodeIntersectsRange(nonConstContent, range);
           NS_RELEASE(range);
         }
         if (result) break;
