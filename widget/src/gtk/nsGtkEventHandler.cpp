@@ -70,47 +70,13 @@ struct nsKeyConverter nsKeycodes[] = {
   NS_VK_INSERT,     GDK_Insert,
   NS_VK_DELETE,     GDK_Delete,
 
-  NS_VK_NUMPAD0,    GDK_KP_0,
-  NS_VK_NUMPAD1,    GDK_KP_1,
-  NS_VK_NUMPAD2,    GDK_KP_2,
-  NS_VK_NUMPAD3,    GDK_KP_3,
-  NS_VK_NUMPAD4,    GDK_KP_4,
-  NS_VK_NUMPAD5,    GDK_KP_5,
-  NS_VK_NUMPAD6,    GDK_KP_6,
-  NS_VK_NUMPAD7,    GDK_KP_7,
-  NS_VK_NUMPAD8,    GDK_KP_8,
-  NS_VK_NUMPAD9,    GDK_KP_9,
-
   NS_VK_MULTIPLY,   GDK_KP_Multiply,
   NS_VK_ADD,        GDK_KP_Add,
   NS_VK_SEPARATOR,  GDK_KP_Separator,
   NS_VK_SUBTRACT,   GDK_KP_Subtract,
   NS_VK_DECIMAL,    GDK_KP_Decimal,
   NS_VK_DIVIDE,     GDK_KP_Divide,
-  NS_VK_F1,         GDK_F1,
-  NS_VK_F2,         GDK_F2,
-  NS_VK_F3,         GDK_F3,
-  NS_VK_F4,         GDK_F4,
-  NS_VK_F5,         GDK_F5,
-  NS_VK_F6,         GDK_F6,
-  NS_VK_F7,         GDK_F7,
-  NS_VK_F8,         GDK_F8,
-  NS_VK_F9,         GDK_F9,
-  NS_VK_F10,        GDK_F10,
-  NS_VK_F11,        GDK_F11,
-  NS_VK_F12,        GDK_F12,
-  NS_VK_F13,        GDK_F13,
-  NS_VK_F14,        GDK_F14,
-  NS_VK_F15,        GDK_F15,
-  NS_VK_F16,        GDK_F16,
-  NS_VK_F17,        GDK_F17,
-  NS_VK_F18,        GDK_F18,
-  NS_VK_F19,        GDK_F19,
-  NS_VK_F20,        GDK_F20,
-  NS_VK_F21,        GDK_F21,
-  NS_VK_F22,        GDK_F22,
-  NS_VK_F23,        GDK_F23,
-  NS_VK_F24,        GDK_F24,
+  NS_VK_RETURN,      GDK_KP_Enter,
 
   NS_VK_COMMA,      GDK_comma,
   NS_VK_PERIOD,     GDK_period,
@@ -137,6 +103,12 @@ int nsConvertKey(int keysym)
 
   if (keysym >= GDK_0 && keysym <= GDK_9)
     return keysym - GDK_0 + NS_VK_0;
+
+  if (keysym >= GDK_KP_0 && keysym <= GDK_KP_9)
+    return keysym - GDK_KP_0 + NS_VK_NUMPAD0;
+
+  if (keysym >= GDK_F1 && keysym <= GDK_F24)
+    return keysym - GDK_F1 + NS_VK_F1;
 
   int i;
   int length = sizeof(nsKeycodes) / sizeof(struct nsKeyConverter);
