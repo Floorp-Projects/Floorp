@@ -2338,21 +2338,43 @@ CDoctypeDeclToken::CDoctypeDeclToken(const nsAReadableString& aString,eHTMLTags 
  */
 nsresult CDoctypeDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag) {
     
-  nsresult result =NS_OK;
- 
-  nsReadingIterator<PRUnichar>  theCurrOffset, endPos;
-  aScanner.CurrentPosition(theCurrOffset);
-  aScanner.EndReading(endPos);
-  FindCharInReadable(PRUnichar(kLessThan), theCurrOffset, endPos);
+  static const PRUnichar terminalChars[] = 
+  { PRUnichar('>'), PRUnichar('<'),
+    PRUnichar(0) 
+  };
 
-  mTextValue.AssignWithConversion("<!");
-    
-  if(theCurrOffset != endPos) {
-    result=aScanner.ReadUntil(mTextValue,'<',PR_FALSE);
+  const nsDependentString terminals(terminalChars,
+    sizeof(terminalChars)/sizeof(terminalChars[0]) - 1);
+
+  nsReadingIterator<PRUnichar> start, end;
+  
+  aScanner.CurrentPosition(start);
+  aScanner.EndReading(end);
+
+  nsresult result=aScanner.ReadUntil(start, end, terminals,PR_FALSE);
+
+  if (NS_SUCCEEDED(result)) {
+    PRUnichar ch;
+    aScanner.Peek(ch);
+    if (ch == kGreaterThan) {
+      // Include '>' but not '<' since '<' 
+      // could belong to another tag.
+      aScanner.GetChar(ch);
+      end.advance(1); 
+    }
   }
-  else {
-    result=aScanner.ReadUntil(mTextValue,'>',PR_TRUE);
+  else if (!aScanner.IsIncremental()) {
+    // We have reached the document end but haven't
+    // found either a '<' or a '>'. Therefore use
+    // whatever we have.
+    result = NS_OK; 
   }
+  
+  if (NS_SUCCEEDED(result)) {
+    start.advance(-2); // Make sure to consume <!
+    CopyUnicodeTo(start,end,mTextValue);
+  }
+  
   return result;
 }
 
