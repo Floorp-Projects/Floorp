@@ -698,6 +698,10 @@ nsTreeContentView::GetIndexOfItem(nsIDOMElement* aItem, PRInt32* _retval)
   return NS_OK;
 }
 
+NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsTreeContentView)
+NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsTreeContentView)
+NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsTreeContentView)
+
 NS_IMETHODIMP
 nsTreeContentView::BeginUpdate(nsIDocument *aDocument)
 {
@@ -706,30 +710,6 @@ nsTreeContentView::BeginUpdate(nsIDocument *aDocument)
 
 NS_IMETHODIMP
 nsTreeContentView::EndUpdate(nsIDocument *aDocument)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTreeContentView::BeginLoad(nsIDocument *aDocument)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTreeContentView::EndLoad(nsIDocument *aDocument)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTreeContentView::BeginReflow(nsIDocument *aDocument, nsIPresShell* aShell)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTreeContentView::EndReflow(nsIDocument *aDocument, nsIPresShell* aShell)
 {
   return NS_OK;
 }
@@ -1121,53 +1101,6 @@ nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
     }
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTreeContentView::StyleSheetAdded(nsIDocument *aDocument,
-                                      nsIStyleSheet* aStyleSheet)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTreeContentView::StyleSheetRemoved(nsIDocument *aDocument,
-                                        nsIStyleSheet* aStyleSheet)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTreeContentView::StyleSheetDisabledStateChanged(nsIDocument *aDocument,
-                                                     nsIStyleSheet* aStyleSheet,
-                                                     PRBool aDisabled)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTreeContentView::StyleRuleChanged(nsIDocument *aDocument,
-                                    nsIStyleSheet* aStyleSheet,
-                                    nsIStyleRule* aStyleRule,
-                                    nsChangeHint aHint)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTreeContentView::StyleRuleAdded(nsIDocument *aDocument,
-                                     nsIStyleSheet* aStyleSheet,
-                                     nsIStyleRule* aStyleRule)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTreeContentView::StyleRuleRemoved(nsIDocument *aDocument,
-                                       nsIStyleSheet* aStyleSheet,
-                                       nsIStyleRule* aStyleRule)
-{
   return NS_OK;
 }
 

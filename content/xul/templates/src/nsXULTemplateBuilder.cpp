@@ -290,6 +290,11 @@ nsXULTemplateBuilder::CreateContents(nsIContent* aElement)
 // nsIDocumentOberver interface
 //
 
+NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsXULTemplateBuilder)
+NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsXULTemplateBuilder)
+NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsXULTemplateBuilder)
+NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsXULTemplateBuilder)
+
 NS_IMETHODIMP
 nsXULTemplateBuilder::BeginUpdate(nsIDocument *aDocument)
 {
@@ -303,42 +308,9 @@ nsXULTemplateBuilder::EndUpdate(nsIDocument *aDocument)
 }
 
 NS_IMETHODIMP
-nsXULTemplateBuilder::BeginLoad(nsIDocument *aDocument)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULTemplateBuilder::EndLoad(nsIDocument *aDocument)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULTemplateBuilder::BeginReflow(nsIDocument *aDocument, nsIPresShell* aShell)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULTemplateBuilder::EndReflow(nsIDocument *aDocument, nsIPresShell* aShell)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXULTemplateBuilder::ContentChanged(nsIDocument *aDocument,
                                      nsIContent* aContent,
                                      nsISupports* aSubContent)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULTemplateBuilder::ContentStatesChanged(nsIDocument* aDocument,
-                                           nsIContent* aContent1,
-                                           nsIContent* aContent2,
-                                           PRInt32 aStateMask)
 {
     return NS_OK;
 }
@@ -392,53 +364,6 @@ nsXULTemplateBuilder::ContentRemoved(nsIDocument *aDocument,
                                      nsIContent* aContainer,
                                      nsIContent* aChild,
                                      PRInt32 aIndexInContainer)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULTemplateBuilder::StyleSheetAdded(nsIDocument *aDocument,
-                                      nsIStyleSheet* aStyleSheet)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULTemplateBuilder::StyleSheetRemoved(nsIDocument *aDocument,
-                                        nsIStyleSheet* aStyleSheet)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULTemplateBuilder::StyleSheetDisabledStateChanged(nsIDocument *aDocument,
-                                                     nsIStyleSheet* aStyleSheet,
-                                                     PRBool aDisabled)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULTemplateBuilder::StyleRuleChanged(nsIDocument *aDocument,
-                                       nsIStyleSheet* aStyleSheet,
-                                       nsIStyleRule* aStyleRule,
-                                       nsChangeHint aHint)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULTemplateBuilder::StyleRuleAdded(nsIDocument *aDocument,
-                                     nsIStyleSheet* aStyleSheet,
-                                     nsIStyleRule* aStyleRule)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULTemplateBuilder::StyleRuleRemoved(nsIDocument *aDocument,
-                                       nsIStyleSheet* aStyleSheet,
-                                       nsIStyleRule* aStyleRule)
 {
     return NS_OK;
 }

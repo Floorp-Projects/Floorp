@@ -734,6 +734,10 @@ NS_METHOD nsMenuBarX::Paint()
 // this is needed for menubar changes
 //
 
+NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsMenuBarX)
+NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsMenuBarX)
+NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsMenuBarX)
+NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsMenuBarX)
 
 NS_IMETHODIMP
 nsMenuBarX::BeginUpdate( nsIDocument * aDocument )
@@ -748,38 +752,7 @@ nsMenuBarX::EndUpdate( nsIDocument * aDocument )
 }
 
 NS_IMETHODIMP
-nsMenuBarX::BeginLoad( nsIDocument * aDocument )
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuBarX::EndLoad( nsIDocument * aDocument )
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuBarX::BeginReflow(  nsIDocument * aDocument, nsIPresShell * aShell)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuBarX::EndReflow( nsIDocument * aDocument, nsIPresShell * aShell)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsMenuBarX::ContentChanged( nsIDocument * aDocument, nsIContent * aContent, nsISupports * aSubContent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuBarX::ContentStatesChanged( nsIDocument * aDocument, nsIContent  * aContent1,
-                                  nsIContent  * aContent2, PRInt32 aStateMask)
 {
   return NS_OK;
 }
@@ -813,46 +786,6 @@ nsMenuBarX::ContentAppended( nsIDocument * aDocument, nsIContent  * aContainer,
 NS_IMETHODIMP
 nsMenuBarX::ContentReplaced( nsIDocument * aDocument, nsIContent * aContainer, nsIContent * aOldChild,
                           nsIContent * aNewChild, PRInt32 aIndexInContainer)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuBarX::StyleSheetAdded( nsIDocument * aDocument, nsIStyleSheet * aStyleSheet)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuBarX::StyleSheetRemoved(nsIDocument * aDocument, nsIStyleSheet * aStyleSheet)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuBarX::StyleSheetDisabledStateChanged(nsIDocument * aDocument, nsIStyleSheet * aStyleSheet,
-                                            PRBool aDisabled)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuBarX::StyleRuleChanged( nsIDocument * aDocument, nsIStyleSheet * aStyleSheet,
-                              nsIStyleRule * aStyleRule, nsChangeHint aHint)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuBarX::StyleRuleAdded( nsIDocument * aDocument, nsIStyleSheet * aStyleSheet,
-                            nsIStyleRule * aStyleRule)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuBarX::StyleRuleRemoved(nsIDocument * aDocument, nsIStyleSheet * aStyleSheet,
-                              nsIStyleRule  * aStyleRule)
 {
   return NS_OK;
 }

@@ -216,6 +216,11 @@ nsXMLPrettyPrinter::MaybeUnhook(nsIContent* aContent)
 }
 
 // nsIDocumentObserver implementation
+NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsXMLPrettyPrinter)
+NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsXMLPrettyPrinter)
+NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsXMLPrettyPrinter)
+NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsXMLPrettyPrinter)
+
 NS_IMETHODIMP
 nsXMLPrettyPrinter::BeginUpdate(nsIDocument* aDocument)
 {
@@ -247,45 +252,12 @@ nsXMLPrettyPrinter::EndUpdate(nsIDocument* aDocument)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXMLPrettyPrinter::BeginLoad(nsIDocument* aDocument)
-{
-    return NS_OK;
-}
 
-NS_IMETHODIMP
-nsXMLPrettyPrinter::EndLoad(nsIDocument* aDocument)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLPrettyPrinter::BeginReflow(nsIDocument* aDocument,
-                                nsIPresShell* aShell)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLPrettyPrinter::EndReflow(nsIDocument* aDocument,
-                              nsIPresShell* aShell)
-{
-    return NS_OK;
-}
 
 NS_IMETHODIMP
 nsXMLPrettyPrinter::ContentChanged(nsIDocument* aDocument,
                                    nsIContent *aContent,
                                    nsISupports *aSubContent)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLPrettyPrinter::ContentStatesChanged(nsIDocument* aDocument,
-                                         nsIContent* aContent1,
-                                         nsIContent* aContent2,
-                                         PRInt32 aStateMask)
 {
     return NS_OK;
 }
@@ -339,53 +311,6 @@ nsXMLPrettyPrinter::ContentRemoved(nsIDocument* aDocument,
                                    PRInt32 aIndexInContainer)
 {
     MaybeUnhook(aContainer);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLPrettyPrinter::StyleSheetAdded(nsIDocument* aDocument,
-                                    nsIStyleSheet* aStyleSheet)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLPrettyPrinter::StyleSheetRemoved(nsIDocument* aDocument,
-                                      nsIStyleSheet* aStyleSheet)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLPrettyPrinter::StyleSheetDisabledStateChanged(nsIDocument* aDocument,
-                                                   nsIStyleSheet* aStyleSheet,
-                                                   PRBool aDisabled)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLPrettyPrinter::StyleRuleChanged(nsIDocument* aDocument,
-                                     nsIStyleSheet* aStyleSheet,
-                                     nsIStyleRule* aStyleRule,
-                                     nsChangeHint aHint)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLPrettyPrinter::StyleRuleAdded(nsIDocument* aDocument,
-                                   nsIStyleSheet* aStyleSheet,
-                                   nsIStyleRule* aStyleRule)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLPrettyPrinter::StyleRuleRemoved(nsIDocument* aDocument,
-                                     nsIStyleSheet* aStyleSheet,
-                                     nsIStyleRule* aStyleRule)
-{
     return NS_OK;
 }
 

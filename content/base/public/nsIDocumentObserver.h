@@ -389,4 +389,151 @@ public:
     NS_IMETHOD DocumentWillBeDestroyed(nsIDocument* aDocument);           \
 
 
+#define NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(_class)                     \
+NS_IMETHODIMP                                                             \
+_class::BeginUpdate(nsIDocument* aDocument)                               \
+{                                                                         \
+  return NS_OK;                                                           \
+}                                                                         \
+NS_IMETHODIMP                                                             \
+_class::EndUpdate(nsIDocument* aDocument)                                 \
+{                                                                         \
+  return NS_OK;                                                           \
+}                                                                         \
+NS_IMETHODIMP                                                             \
+_class::DocumentWillBeDestroyed(nsIDocument* aDocument)                   \
+{                                                                         \
+  return NS_OK;                                                           \
+}
+
+#define NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(_class)                     \
+NS_IMETHODIMP                                                             \
+_class::BeginLoad(nsIDocument* aDocument)                                 \
+{                                                                         \
+  return NS_OK;                                                           \
+}                                                                         \
+NS_IMETHODIMP                                                             \
+_class::EndLoad(nsIDocument* aDocument)                                   \
+{                                                                         \
+  return NS_OK;                                                           \
+}
+
+#define NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(_class)                   \
+NS_IMETHODIMP                                                             \
+_class::BeginReflow(nsIDocument* aDocument,                               \
+                                  nsIPresShell* aShell)                   \
+{                                                                         \
+  return NS_OK;                                                           \
+}                                                                         \
+NS_IMETHODIMP                                                             \
+_class::EndReflow(nsIDocument* aDocument,                                 \
+                                nsIPresShell* aShell)                     \
+{                                                                         \
+  return NS_OK;                                                           \
+}
+
+#define NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(_class)                    \
+NS_IMETHODIMP                                                             \
+_class::ContentStatesChanged(nsIDocument* aDocument,                      \
+                                           nsIContent* aContent1,         \
+                                           nsIContent* aContent2,         \
+                                           PRInt32 aStateMask)            \
+{                                                                         \
+  return NS_OK;                                                           \
+}
+
+#define NS_IMPL_NSIDOCUMENTOBSERVER_CONTENT(_class)                       \
+NS_IMETHODIMP                                                             \
+_class::ContentChanged(nsIDocument* aDocument,                            \
+                                     nsIContent* aContent,                \
+                                     nsISupports* aSubContent)            \
+{                                                                         \
+  return NS_OK;                                                           \
+}                                                                         \
+NS_IMETHODIMP                                                             \
+_class::AttributeChanged(nsIDocument* aDocument,                          \
+                                       nsIContent* aContent,              \
+                                       PRInt32 aNameSpaceID,              \
+                                       nsIAtom* aAttribute,               \
+                                       PRInt32 aModType,                  \
+                                       nsChangeHint aHint)                \
+{                                                                         \
+  return NS_OK;                                                           \
+}                                                                         \
+NS_IMETHODIMP                                                             \
+_class::ContentAppended(nsIDocument* aDocument,                           \
+                                      nsIContent* aContainer,             \
+                                      PRInt32 aNewIndexInContainer)       \
+{                                                                         \
+  return NS_OK;                                                           \
+}                                                                         \
+NS_IMETHODIMP                                                             \
+_class::ContentInserted(nsIDocument* aDocument,                           \
+                                      nsIContent* aContainer,             \
+                                      nsIContent* aChild,                 \
+                                      PRInt32 aIndexInContainer)          \
+{                                                                         \
+  return NS_OK;                                                           \
+}                                                                         \
+NS_IMETHODIMP                                                             \
+_class::ContentReplaced(nsIDocument* aDocument,                           \
+                                      nsIContent* aContainer,             \
+                                      nsIContent* aOldChild,              \
+                                      nsIContent* aNewChild,              \
+                                      PRInt32 aIndexInContainer)          \
+{                                                                         \
+  return NS_OK;                                                           \
+}                                                                         \
+NS_IMETHODIMP                                                             \
+_class::ContentRemoved(nsIDocument* aDocument,                            \
+                                     nsIContent* aContainer,              \
+                                     nsIContent* aChild,                  \
+                                     PRInt32 aIndexInContainer)           \
+{                                                                         \
+  return NS_OK;                                                           \
+}
+
+#define NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(_class)                    \
+NS_IMETHODIMP                                                             \
+_class::StyleSheetAdded(nsIDocument* aDocument,                           \
+                                      nsIStyleSheet* aStyleSheet)         \
+{                                                                         \
+  return NS_OK;                                                           \
+}                                                                         \
+NS_IMETHODIMP                                                             \
+_class::StyleSheetRemoved(nsIDocument* aDocument,                         \
+                                        nsIStyleSheet* aStyleSheet)       \
+{                                                                         \
+  return NS_OK;                                                           \
+}                                                                         \
+NS_IMETHODIMP                                                             \                                                             \
+_class::StyleSheetDisabledStateChanged(nsIDocument* aDocument,            \
+                                       nsIStyleSheet* aStyleSheet,        \
+                                       PRBool aDisabled)                  \
+{                                                                         \
+  return NS_OK;                                                           \
+}                                                                         \
+NS_IMETHODIMP                                                             \
+_class::StyleRuleChanged(nsIDocument* aDocument,                          \
+                                       nsIStyleSheet* aStyleSheet,        \
+                                       nsIStyleRule* aStyleRule,          \
+                                       nsChangeHint aHint)                \
+{                                                                         \
+  return NS_OK;                                                           \
+}                                                                         \
+NS_IMETHODIMP                                                             \
+_class::StyleRuleAdded(nsIDocument* aDocument,                            \
+                                     nsIStyleSheet* aStyleSheet,          \
+                                     nsIStyleRule* aStyleRule)            \
+{                                                                         \
+  return NS_OK;                                                           \
+}                                                                         \
+NS_IMETHODIMP                                                             \
+_class::StyleRuleRemoved(nsIDocument* aDocument,                          \
+                                       nsIStyleSheet* aStyleSheet,        \
+                                       nsIStyleRule* aStyleRule)          \
+{                                                                         \
+  return NS_OK;                                                           \
+}
+
 #endif /* nsIDocumentObserver_h___ */
