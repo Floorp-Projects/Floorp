@@ -19,7 +19,7 @@ Rights Reserved.
 --> 
 
 <!ENTITY downloadMsgsWindow.title  "Work Offline">
-<!ENTITY downloadMessages.label  "Do  you want to download messages for offline use before you go offline?">
+<!ENTITY downloadMessages.label  "Do you want to download messages for offline use before you go offline?">
 <!ENTITY alwaysAsk.check.label  "Always ask me when I go offline">
 <!ENTITY yesButton.label  "Download">
 <!ENTITY noButton.label  "Don't Download">
