@@ -494,6 +494,13 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
     
     ret = mIn->Read(buf, 0, PROP_BUFFER_SIZE, &nRead);
   }
+  
+  // We may have an unprocessed value at this point
+  // if the last line did not have a proper line ending.
+  if (parserState.GetState() == eParserState_Value) {
+    nsAutoString oldValue;  
+    parserState.FinishValueState(oldValue);
+  }
 
   return NS_OK;
 }
