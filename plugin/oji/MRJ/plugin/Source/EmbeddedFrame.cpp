@@ -27,12 +27,13 @@
 #include <Controls.h>
 #include <Events.h>
 
+#include "EmbeddedFrame.h"
+#include "EmbeddedFramePluginInstance.h"
 #include "MRJPlugin.h"
 #include "MRJSession.h"
 
 #include "nsIPluginInstancePeer.h"
 #include "nsIOutputStream.h"
-#include "EmbeddedFrame.h"
 #include "JSEvaluator.h"
 #include "LocalPort.h"
 #include "StringUtils.h"
@@ -43,7 +44,7 @@ static short getModifiers();
 EmbeddedFrame::EmbeddedFrame(MRJPluginInstance* pluginInstance, JMFrameRef frameRef, JMFrameKind kind,
 							const Rect* initialBounds, Boolean resizeable)
 	:	MRJFrame(frameRef),
-		mPluginInstance(pluginInstance), mEvaluator(NULL), mWindow(NULL), mBounds(*initialBounds)
+		mPluginInstance(NULL), mEvaluator(NULL), mWindow(NULL), mBounds(*initialBounds)
 {
 	Boolean hasGoAway = true;
 	SInt16 windowProc = documentProc;
@@ -117,9 +118,14 @@ EmbeddedFrame::EmbeddedFrame(MRJPluginInstance* pluginInstance, JMFrameRef frame
 #else
 
 	// Use JavaScript to create a window with an <EMBED TYPE="application/x-java-frame"> tag.
-	const char* kEmbeddedFrameScript = "javascript:var w = window.open('', '', 'resizable=yes,status=no,width=400,height=400'); "
-	                                   "var d = w.document; d.write('<HTML><HEAD></HEAD><BODY><EMBED TYPE=\"application/x-java-frame\""
-	                                   "BORDER=5 WIDTH=400 HEIGHT=400 FRAME=XXXXXXXX></EMBED></BODY></HTML>'); d.close();";
+	const char* kEmbeddedFrameScript = "var w = window.open('','_new','resizable=no,status=no,width=200,height=200');"
+	                                   "var d = w.document; d.write('"
+	                                   // "<BODY MARGINWIDTH=0 MARGINHEIGHT=0>"	// this doesn't work, don't know why
+	                                   "<HTML><BODY>"
+	                                   "<EMBED TYPE=\"application/x-java-frame\""
+	                                   "WIDTH=200 HEIGHT=200 FRAME=XXXXXXXX></EMBED>"
+	                                   "</BODY></HTML>'); d.close();";
+	
 	char* script = strdup(kEmbeddedFrameScript);
 	char* address = strchr(script, 'X');
 	sprintf(address, "%08X", this);
@@ -132,6 +138,7 @@ EmbeddedFrame::EmbeddedFrame(MRJPluginInstance* pluginInstance, JMFrameRef frame
 	const char* result = evaluator->eval(script);
 	
 	delete[] script;
+
 #endif
 
 #endif
@@ -144,6 +151,9 @@ EmbeddedFrame::EmbeddedFrame(MRJPluginInstance* pluginInstance, JMFrameRef frame
 
 EmbeddedFrame::~EmbeddedFrame()
 {
+	if (mPluginInstance != NULL)
+		mPluginInstance->setFrame(NULL);
+
 	// make sure the window is hidden (and unregistered with the browser).
 	showHide(false);
 
@@ -281,6 +291,11 @@ void EmbeddedFrame::click(const EventRecord* event)
 	case inCollapseBox:
 		break;
 	}
+}
+
+void EmbeddedFrame::setPluginInstance(EmbeddedFramePluginInstance* embeddedInstance)
+{
+	mPluginInstance = embeddedInstance;
 }
 
 void EmbeddedFrame::setWindow(WindowRef window)
