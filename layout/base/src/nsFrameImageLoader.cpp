@@ -128,6 +128,25 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+nsresult
+nsFrameImageLoader::StopImageLoad()
+{
+  if (nsnull != mImageRequest) {
+    mImageRequest->RemoveObserver(this);
+    NS_RELEASE(mImageRequest);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsFrameImageLoader::AbortImageLoad()
+{
+  if (nsnull != mImageRequest) {
+    mImageRequest->Interrupt();
+  }
+  return NS_OK;
+}
+
 void
 nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
                            nsIImage *aImage,
