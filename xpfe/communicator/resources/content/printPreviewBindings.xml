@@ -184,6 +184,9 @@
           // hide print button
           this.mPrintButton.setAttribute("hidden", "true");
 
+          // hide page setup button
+          document.getAnonymousNodes(this)[1].setAttribute("hidden", "true");
+
           // hide scale widgets (indices: 8, 9, 10, 11)
           // hide orient widgets (indices: 12, 13)
           var i;
