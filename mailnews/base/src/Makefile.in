@@ -56,6 +56,7 @@ CPPSRCS		= \
 		nsMessengerMigrator.cpp \
 		nsMsgViewNavigationService.cpp \
 		nsMsgServiceProvider.cpp	\
+		nsSubscribeDataSource.cpp	\
 		nsMsgPrintEngine.cpp	\
 		$(NULL)
 
@@ -84,6 +85,7 @@ EXPORTS		= \
 		nsMessengerMigrator.h \
 		nsMsgViewNavigationService.h \
 		nsMsgServiceProvider.h \
+		nsSubscribeDataSource.h \
 		nsMsgPrintEngine.h \
 		$(NULL)
 
