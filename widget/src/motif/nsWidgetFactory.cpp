@@ -40,6 +40,8 @@ static NS_DEFINE_IID(kCVertScrollbarCID, NS_VERTSCROLLBAR_CID);
 static NS_DEFINE_IID(kCCheckButtonCID, NS_CHECKBUTTON_CID);
 static NS_DEFINE_IID(kCTextWidgetCID, NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
+static NS_DEFINE_IID(kCButtonCID,     NS_BUTTON_CID);
+static NS_DEFINE_IID(kCListBoxCID,    NS_LISTBOX_CID);
 
 
 static NS_DEFINE_IID(kIWidget,        NS_IWIDGET_IID);
@@ -125,15 +127,14 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         return NS_ERROR_ILLEGAL_VALUE;
     }
 
-
     nsWindow *inst = nsnull;
     if (aIID.Equals(kCWindow)) {
         inst = new nsWindow(aOuter);
     }
-    else if (aIID.Equals(kICheckButton)) {
+    else if ( mClassID.Equals(kCCheckButtonCID)) {
         inst = new nsCheckButton(aOuter);
     }
-    else if (aIID.Equals(kIButton)) {
+    else if ( mClassID.Equals(kCButtonCID)) {
         inst = new nsButton(aOuter);
     }
     else if (mClassID.Equals(kCVertScrollbarCID)) {
@@ -149,10 +150,10 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCTextWidgetCID)) {
         inst = new nsTextWidget(aOuter);
     }
-    else if (aIID.Equals(kIListBox)) {
+    else if (mClassID.Equals(kCListBoxCID)) {
         //inst = new nsListBox(aOuter);
     }
-    else if (aIID.Equals(kIFileWidget)) {
+    else if (mClassID.Equals(kCFileWidgetCID)) {
         inst = new nsFileWidget(aOuter);
     }
     else if (aIID.Equals(kIWidget)) {
