@@ -238,7 +238,7 @@
     <menubar id="compose-menubar">
       <menu id="menu_File">
         <menupopup id="menu_FilePopup">
-          <menuitem value="&newMessage.label;" accesskey="&newMessage.accesskey;" key="key_newMessage" observes="cmd_new"/>
+          <menuitem value="&newMessage.label;" accesskey="&newMessage.accesskey;" key="key_newMessage" oncommand="goOpenNewMessage();"/>
           <menu id="menu_New">
             <menupopup id="menu_NewPopup">
               <menuitem id="menu_newNavigator"/>
