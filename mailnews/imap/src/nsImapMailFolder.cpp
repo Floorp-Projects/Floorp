@@ -440,8 +440,7 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
                                                    &messageEnumerator);
         *result = messageEnumerator;
     }
-    else
-        return rv;
+    return rv;
 }
 
 
