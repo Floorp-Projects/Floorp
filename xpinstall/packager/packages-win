@@ -62,6 +62,7 @@ bin\components\editor.dll
 bin\components\evntloop.dll
 bin\components\gfx.xpt
 bin\components\gkhtml.dll
+bin\components\raptor.xpt
 bin\components\gkparser.dll
 bin\components\gkview.dll
 bin\components\history.dll
