@@ -51,6 +51,9 @@ EXPORTS		= \
 		nsPostScriptObj.h \
 		$(NULL)
 
+EXPORT_RESOURCE	= \
+		$(srcdir)/sample.unixpsfonts.properties
+
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
@@ -66,4 +69,7 @@ DEFINES         += -D_BSD_SOURCE
 endif
 CFLAGS		+= $(TK_CFLAGS)
 CXXFLAGS	+= $(TK_CFLAGS)
+
+install::
+	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res
 
