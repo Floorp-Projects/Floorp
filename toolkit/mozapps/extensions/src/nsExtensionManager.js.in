@@ -4253,7 +4253,7 @@ nsExtensionsDataSource.prototype = {
           var extensionStrings = sbs.createBundle("chrome://mozapps/locale/extensions/extensions.properties");
           var brandStrings = sbs.createBundle("chrome://global/locale/brand.properties");
           var brandShortName = brandStrings.GetStringFromName("brandShortName");
-          var appVersion = gPref.getCharPref(PREF_EM_APP_VERSION);
+          var appVersion = gApp.version;
           var incompatibleMessage = extensionStrings.formatStringFromName("incompatibleExtension", 
                                                                           [brandShortName, appVersion], 2);
           return this._emL(incompatibleMessage);
