@@ -59,7 +59,9 @@
       <row align="center">
         <label value="&name.label;" accesskey="&name.accesskey;" control="name"/>
         <textbox id="name" oninput="onFieldInput();"/>
-        <button id="expander" class="down" oncommand="expandTree();"/>
+        <button id="expander" class="down" oncommand="expandTree();"
+                tooltiptextdown="&expanderdown.tooltip;"
+                tooltiptextup="&expanderup.tooltip;"/>
       </row>
       <row align="center">
         <label id="createinlabel" value="&createin.label;"/>
