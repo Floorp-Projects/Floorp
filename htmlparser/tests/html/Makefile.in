@@ -46,3 +46,4 @@ LIBS		= \
 
 include $(topsrcdir)/config/rules.mk
 
+LOCAL_INCLUDES = -I$(srcdir)/../../public
