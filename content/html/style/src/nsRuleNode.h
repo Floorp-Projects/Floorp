@@ -56,7 +56,7 @@ private:
                        // walk backwards from the most specific rule matched to the least
                        // specific rule (which is the optimal order to use for lookups
                        // of style properties.
-  nsIStyleRule* mRule; // A pointer to our specific rule.  This can be weak, since the sheet owns it.
+  nsCOMPtr<nsIStyleRule> mRule; // A pointer to our specific rule.
 
   nsSupportsHashtable* mChildren; // A hashtable that maps from rules to our RuleNode children.
                                   // When matching rules, we use this table to transition from

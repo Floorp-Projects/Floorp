@@ -203,6 +203,7 @@ nsStyleFont::operator new(size_t sz, nsIPresContext* aContext) {
   
 void 
 nsStyleFont::Destroy(nsIPresContext* aContext) {
+  this->~nsStyleFont();
   aContext->FreeToShell(sizeof(nsStyleFont), this);
 }
 
@@ -286,6 +287,7 @@ nsStyleMargin::operator new(size_t sz, nsIPresContext* aContext) {
   
 void 
 nsStyleMargin::Destroy(nsIPresContext* aContext) {
+  this->~nsStyleMargin();
   aContext->FreeToShell(sizeof(nsStyleMargin), this);
 }
 
@@ -344,6 +346,7 @@ nsStylePadding::operator new(size_t sz, nsIPresContext* aContext) {
   
 void 
 nsStylePadding::Destroy(nsIPresContext* aContext) {
+  this->~nsStylePadding();
   aContext->FreeToShell(sizeof(nsStylePadding), this);
 }
 
@@ -432,6 +435,7 @@ nsStyleBorder::operator new(size_t sz, nsIPresContext* aContext) {
   
 void 
 nsStyleBorder::Destroy(nsIPresContext* aContext) {
+  this->~nsStyleBorder();
   aContext->FreeToShell(sizeof(nsStyleBorder), this);
 }
 
