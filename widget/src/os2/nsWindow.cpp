@@ -1489,28 +1489,19 @@ nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
 {
   nsresult rv = NS_OK;
   if (mWnd) {
-    HRGN nativeRegion;
-    rv = aRegion->GetNativeRegion((void *&)nativeRegion);
-    if (nativeRegion) {
-      if (NS_SUCCEEDED(rv)) {
-        RECTL rcl;
-        HPS hps = WinGetScreenPS( HWND_DESKTOP);
-        /* LONG lComplexity = */ GpiQueryRegionBox( hps, nativeRegion, &rcl);
-        WinReleasePS( hps);
-        NS2PM( rcl);
+    PRInt32 aX, aY, aWidth, aHeight;
+    ((nsIRegion*)aRegion)->GetBoundingBox (&aX, &aY, &aWidth, &aHeight);
 
-        WinInvalidateRect( mWnd, &rcl, FALSE);
+    RECTL rcl = { aX, aY, aX + aWidth, aY + aHeight };
+    NS2PM (rcl);
+    WinInvalidateRect (mWnd, &rcl, FALSE);
 
-//        WinInvalidateRegion( mWnd, nativeRegion, TRUE);
 #if 0
         if( PR_TRUE == aIsSynchronous) {
           Update();
         }
 #endif
-      }
-    } else {
-      rv = NS_ERROR_FAILURE;
-    }
+
   }
   return rv;  
 }
