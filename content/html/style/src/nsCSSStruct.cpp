@@ -482,6 +482,7 @@ nsCSSDisplay::nsCSSDisplay(const nsCSSDisplay& aCopy)
   : mDirection(aCopy.mDirection),
     mDisplay(aCopy.mDisplay),
     mBinding(aCopy.mBinding),
+    mAppearance(aCopy.mAppearance),
     mPosition(aCopy.mPosition),
     mFloat(aCopy.mFloat),
     mClear(aCopy.mClear),
