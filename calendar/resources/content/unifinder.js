@@ -326,18 +326,39 @@ function unifinderDeleteCommand( DoNotConfirm )
 /**
 *  This is called from the unifinder when a key is pressed in the search field
 */
+var gSearchTimeout = null;
 
 function unifinderSearchKeyPress( searchTextItem, event )
 {
+   // always clear the old one first
+    
+   clearSearchTimer();
+   
+   // make a new timer
+   
+   gSearchTimeout = setTimeout( "doSearch()", 400 );
+}
+
+function clearSearchTimer( )
+{
+   if( gSearchTimeout )
+   {
+      clearTimeout( gSearchTimeout );
+      gSearchTimeout = null;
+   }
+}
+
+function doSearch( )
+{
    var eventTable = new Array();
 
-   var searchText = searchTextItem.value;
+   var searchText = document.getElementById( "unifinder-search-field" ).value;
    
-   if ( searchTextItem.value == '' ) 
+   if ( searchText == '' ) 
    {
       eventTable = gEventSource.getCurrentEvents();
    }
-   else if ( searchTextItem.value == " " ) 
+   else if ( searchText == " " ) 
    {
       searchTextItem.value = '';
    }
