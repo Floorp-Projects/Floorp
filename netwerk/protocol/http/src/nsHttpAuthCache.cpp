@@ -281,14 +281,17 @@ nsHttpAuthNode::GetAuthEntryForPath(const char *path,
     // directory of an existing entry.
     for (PRInt32 i=0; i<mList.Count(); ++i) {
         nsHttpAuthEntry *entry = (nsHttpAuthEntry *) mList[i];
-        // path's can be NULL
-        if (!path || !entry->Path()) {
-            if (path == entry->Path()) {
+        const char *entryPath = entry->Path();
+        // path's can be empty (even NULL)
+        if (!path || !*path) {
+            if (!entryPath || !*entryPath) {
                 *result = entry;
                 break;
             }
         }
-        else if (!nsCRT::strncmp(path, entry->Path(), (unsigned int)strlen(entry->Path()))) {
+        else if (!entryPath || !*entryPath)
+            continue;
+        else if (!nsCRT::strncmp(path, entryPath, (unsigned int)strlen(entryPath))) {
             *result = entry;
             break;
         }
