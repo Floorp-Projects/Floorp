@@ -1041,7 +1041,7 @@ void nsDocLoaderImpl::FireOnProgressChange(nsDocLoaderImpl *aLoadInitiator,
     nsListenerInfo *info;
 
     info = NS_STATIC_CAST(nsListenerInfo*,mListenerInfoList.ElementAt(count));
-    if (!(info->mNotifyMask & nsIWebProgress::NOTIFY_PROGRESS)) {
+    if (!info || !(info->mNotifyMask & nsIWebProgress::NOTIFY_PROGRESS)) {
       continue;
     }
 
@@ -1113,7 +1113,7 @@ void nsDocLoaderImpl::FireOnStateChange(nsIWebProgress *aProgress,
     nsListenerInfo *info;
 
     info = NS_STATIC_CAST(nsListenerInfo*,mListenerInfoList.ElementAt(count));
-    if (!(info->mNotifyMask & (aStateFlags >>16))) {
+    if (!info || !(info->mNotifyMask & (aStateFlags >>16))) {
       continue;
     }
 
@@ -1156,7 +1156,7 @@ nsDocLoaderImpl::FireOnLocationChange(nsIWebProgress* aWebProgress,
     nsListenerInfo *info;
 
     info = NS_STATIC_CAST(nsListenerInfo*,mListenerInfoList.ElementAt(count));
-    if (!(info->mNotifyMask & nsIWebProgress::NOTIFY_LOCATION)) {
+    if (!info || !(info->mNotifyMask & nsIWebProgress::NOTIFY_LOCATION)) {
       continue;
     }
 
@@ -1200,7 +1200,7 @@ nsDocLoaderImpl::FireOnStatusChange(nsIWebProgress* aWebProgress,
     nsListenerInfo *info;
 
     info = NS_STATIC_CAST(nsListenerInfo*,mListenerInfoList.ElementAt(count));
-    if (!(info->mNotifyMask & nsIWebProgress::NOTIFY_STATUS)) {
+    if (!info || !(info->mNotifyMask & nsIWebProgress::NOTIFY_STATUS)) {
       continue;
     }
 
@@ -1234,7 +1234,9 @@ nsDocLoaderImpl::GetListenerInfo(nsIWeakReference *aListener)
   count = mListenerInfoList.Count();
   for (i=0; i<count; i++) {
     info = NS_STATIC_CAST(nsListenerInfo* ,mListenerInfoList.ElementAt(i));
-    if (aListener == info->mWeakListener) {
+
+    NS_ASSERTION(info, "There should NEVER be a null listener in the list");
+    if (info && (aListener == info->mWeakListener)) {
       return info;
     }
   }
@@ -1386,7 +1388,7 @@ NS_IMETHODIMP nsDocLoaderImpl::OnSecurityChange(nsISupports * aContext,
     nsListenerInfo *info;
 
     info = NS_STATIC_CAST(nsListenerInfo*,mListenerInfoList.ElementAt(count));
-    if (!(info->mNotifyMask & nsIWebProgress::NOTIFY_SECURITY)) {
+    if (!info || !(info->mNotifyMask & nsIWebProgress::NOTIFY_SECURITY)) {
       continue;
     }
 
