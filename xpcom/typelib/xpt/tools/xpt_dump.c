@@ -73,8 +73,8 @@ static char *ptype_array[32] =
              "float *",     "double *",    "boolean *",   "char *",
              "wchar_t *",   "void *",      "nsIID *",     "DOMString *",
              "string",      "wstring",     "Interface *", "InterfaceIs *",
-             "array",       "string_s",    "wstring_s",   "reserved",
-             "reserved",    "reserved",    "reserved",    "reserved",
+             "array",       "string_s",    "wstring_s",   "UTF8String *",
+             "CString *",   "AString *",    "reserved",    "reserved",
              "reserved",    "reserved",    "reserved",    "reserved"};
 
 static char *rtype_array[32] = 
@@ -83,8 +83,8 @@ static char *rtype_array[32] =
              "float &",     "double &",    "boolean &",   "char &",
              "wchar_t &",   "void &",      "nsIID &",     "DOMString &",
              "string &",    "wstring &",   "Interface &", "InterfaceIs &",
-             "array &",     "string_s &",  "wstring_s &", "reserved",
-             "reserved",    "reserved",    "reserved",    "reserved",
+             "array &",     "string_s &",  "wstring_s &", "UTF8String &",
+             "CString &",   "AString &",    "reserved",    "reserved",
              "reserved",    "reserved",    "reserved",    "reserved"};
 
 PRBool param_problems = PR_FALSE;

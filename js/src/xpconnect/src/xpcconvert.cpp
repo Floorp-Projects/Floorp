@@ -99,9 +99,9 @@ static uint8 xpc_reflectable_flags[XPC_FLAG_COUNT] = {
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_ARRAY             */
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_PSTRING_SIZE_IS   */
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_PWSTRING_SIZE_IS  */
-    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* 23 - reserved       */
-    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* 24 - reserved       */
-    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* 25 - reserved       */
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  0 ), /* T_UTF8STRING        */
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  0 ), /* T_CSTRING           */
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  0 ), /* T_ASTRING           */
     XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* 26 - reserved       */
     XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* 27 - reserved       */
     XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* 28 - reserved       */
@@ -109,6 +109,8 @@ static uint8 xpc_reflectable_flags[XPC_FLAG_COUNT] = {
     XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* 30 - reserved       */
     XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 )  /* 31 - reserved       */
     };
+
+static intN sXPCOMUCStringFinalizerIndex = -1;
 
 /***********************************************************/
 
@@ -199,6 +201,40 @@ JAM_DOUBLE(JSContext *cx, double v, jsdouble *dbl)
 #define FIT_U32(cx,i,d) ((i) <= JSVAL_INT_MAX ? \
                          INT_TO_JSVAL(i) : JAM_DOUBLE(cx,i,d))
 
+JS_STATIC_DLL_CALLBACK(void)
+FinalizeXPCOMUCString(JSContext *cx, JSString *str)
+{
+    NS_ASSERTION(sXPCOMUCStringFinalizerIndex != -1,
+                 "XPCConvert: XPCOM Unicode string finalizer called uninitialized!");
+
+    PRUnichar* buffer = JS_GetStringChars(str);
+    nsMemory::Free(buffer);
+}
+
+
+static JSBool
+AddXPCOMUCStringFinalizer()
+{
+
+    sXPCOMUCStringFinalizerIndex =
+        JS_AddExternalStringFinalizer(FinalizeXPCOMUCString);
+
+    if (sXPCOMUCStringFinalizerIndex == -1)
+    {        
+        return JS_FALSE;
+    }
+
+    return JS_TRUE;
+}
+
+//static
+void
+XPCConvert::RemoveXPCOMUCStringFinalizer()
+{
+    JS_RemoveExternalStringFinalizer(FinalizeXPCOMUCString);
+    sXPCOMUCStringFinalizerIndex = -1;
+}
+
 // static
 JSBool
 XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
@@ -283,6 +319,9 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                 break;
             }
 
+        case nsXPTType::T_ASTRING:
+            // Fall through to T_DOMSTRING case
+
         case nsXPTType::T_DOMSTRING:
             {
                 const nsAReadableString* p = *((const nsAReadableString**)s);
@@ -337,6 +376,69 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                 *d = STRING_TO_JSVAL(str);
                 break;
             }
+        case nsXPTType::T_UTF8STRING:
+            {                          
+                const nsAReadableCString* cString = *((const nsAReadableCString**)s);
+
+                if(!cString)
+                    break;
+                
+                if(!cString->IsVoid()) 
+                {
+                    // XXX There is an extra copy happening here.  When the
+                    // UTF8String implementation lands, it should contain
+                    // a mechanism to avoid this extra copy.  Jag will change
+                    // this code to use that new mechanism when he lands the
+                    // UTF8String changes.
+                    NS_ConvertUTF8toUCS2 unicodeString(*cString);
+
+                    JSString* jsString = JS_NewUCStringCopyN(cx,
+                                         NS_CONST_CAST(jschar*, 
+                                         unicodeString.get()), 
+                                         unicodeString.Length());
+
+                    if(!jsString)
+                        return JS_FALSE; 
+
+                    *d = STRING_TO_JSVAL(jsString);
+                }
+
+                break;
+
+            }
+        case nsXPTType::T_CSTRING:
+            {                          
+                const nsAReadableCString* cString = *((const nsAReadableCString**)s);
+
+                if(!cString)
+                    break;
+                
+                if(!cString->IsVoid()) 
+                {
+                    PRUnichar* unicodeString = ToNewUnicode(*cString);
+                    if(!unicodeString)
+                        return JS_FALSE;
+
+                    if(sXPCOMUCStringFinalizerIndex == -1 && 
+                       !AddXPCOMUCStringFinalizer())
+                        return JS_FALSE;
+
+                    JSString* jsString = JS_NewExternalString(cx,
+                                             unicodeString,
+                                             cString->Length(),
+                                             sXPCOMUCStringFinalizerIndex);
+
+                    if(!jsString)
+                    {
+                        nsMemory::Free(unicodeString);
+                        return JS_FALSE;
+                    }
+
+                    *d = STRING_TO_JSVAL(jsString);
+                }
+
+                break;
+            }
 
         case nsXPTType::T_INTERFACE:
         case nsXPTType::T_INTERFACE_IS:
@@ -379,6 +481,7 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
 }
 
 /***************************************************************************/
+
 // static
 JSBool
 XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
@@ -393,6 +496,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
     int32    ti;
     uint32   tu;
     jsdouble td;
+    JSBool isDOMString = JS_TRUE;
 
     if(pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_JS;
@@ -549,6 +653,11 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             return JS_TRUE;
         }
 
+        case nsXPTType::T_ASTRING:        
+        {            
+            isDOMString = JS_FALSE;
+            // Fall through to T_DOMSTRING case.
+        }
         case nsXPTType::T_DOMSTRING:
         {
             static const NS_NAMED_LITERAL_STRING(sEmptyString, "");
@@ -561,8 +670,16 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
 
             if(JSVAL_IS_VOID(s))
             {
-               chars  = sVoidString.get();
-               length = sVoidString.Length();
+                if(isDOMString) 
+                {
+                    chars  = sVoidString.get();
+                    length = sVoidString.Length();
+                }
+                else
+                {
+                    chars = sEmptyString.get();
+                    length = 0;
+                }
             }
             else if(!JSVAL_IS_NULL(s))
             {
@@ -623,7 +740,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             {
                 nsAWritableString* ws = *((nsAWritableString**)d);
 
-                if(JSVAL_IS_NULL(s))
+                if(JSVAL_IS_NULL(s) || (!isDOMString && JSVAL_IS_VOID(s)))
                 {
                     ws->Truncate();
                     ws->SetIsVoid(PR_TRUE);
@@ -723,6 +840,116 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             else
                 *((jschar**)d) = chars;
 
+            return JS_TRUE;
+        }
+
+        case nsXPTType::T_UTF8STRING:            
+        {
+            jschar* chars;
+            PRUint32 length;
+            JSString* str;
+
+            if(JSVAL_IS_NULL(s) || JSVAL_IS_VOID(s))
+            {
+                if(useAllocator) 
+                {
+                    nsACString *rs = new nsCString();
+                    if(!rs) 
+                        return JS_FALSE;
+
+                    rs->SetIsVoid(PR_TRUE);
+                    *((nsACString**)d) = rs;
+                }
+                else
+                {
+                    nsCString* rs = *((nsCString**)d);
+                    rs->Truncate();
+                    rs->SetIsVoid(PR_TRUE);
+                }
+                return JS_TRUE;
+            }
+
+            // The JS val is neither null nor void...
+
+            if(!(str = JS_ValueToString(cx, s))||
+               !(chars = JS_GetStringChars(str)))
+            {
+                return JS_FALSE;
+            }
+
+            length = JS_GetStringLength(str);
+
+            if(useAllocator)
+            {                
+                nsAReadableCString *rs = new NS_ConvertUCS2toUTF8(chars, length);
+                if(!rs)
+                    return JS_FALSE;
+
+                *((nsAReadableCString**)d) = rs;
+            }
+            else
+            {
+                nsCString* rs = *((nsCString**)d);
+
+                // XXX This code needs to change when Jag lands the new
+                // UTF8String implementation.  Adopt() is a method that 
+                // shouldn't be used by string consumers.
+                rs->Adopt(ToNewUTF8String(nsDependentString(chars, length)));
+            }
+            return JS_TRUE;
+        }
+
+        case nsXPTType::T_CSTRING:
+        {
+            const char* chars;            
+            PRUint32 length;
+            JSString* str;
+
+            if(JSVAL_IS_NULL(s) || JSVAL_IS_VOID(s))
+            {
+                if(useAllocator)
+                {
+                    nsACString *rs = new nsCString();
+                    if(!rs) 
+                        return JS_FALSE;
+
+                    rs->SetIsVoid(PR_TRUE);
+                    *((nsACString**)d) = rs;
+                }
+                else
+                {
+                    nsACString* rs = *((nsACString**)d);
+                    rs->Truncate();
+                    rs->SetIsVoid(PR_TRUE);
+                }
+                return JS_TRUE;
+            }
+
+            // The JS val is neither null nor void...
+
+            if(!(str = JS_ValueToString(cx, s)) ||
+               !(chars = JS_GetStringBytes(str)))
+            {
+                return JS_FALSE;
+            }
+
+            length = JS_GetStringLength(str);
+
+            if(useAllocator)
+            {
+                nsAReadableCString *rs = new nsCString(chars, length);
+
+                if(!rs)
+                    return JS_FALSE;
+
+                *((nsAReadableCString**)d) = rs;
+            }
+            else
+            {
+                nsACString* rs = *((nsACString**)d);
+
+                rs->Assign(nsDependentCString(chars, length));
+            }
             return JS_TRUE;
         }
 
@@ -1372,6 +1599,9 @@ XPCConvert::NativeArray2JS(XPCCallContext& ccx,
     case nsXPTType::T_WCHAR_STR     : POPULATE(jschar*);        break;
     case nsXPTType::T_INTERFACE     : POPULATE(nsISupports*);   break;
     case nsXPTType::T_INTERFACE_IS  : POPULATE(nsISupports*);   break;
+    case nsXPTType::T_UTF8STRING    : NS_ASSERTION(0,"bad type"); goto failure;
+    case nsXPTType::T_CSTRING       : NS_ASSERTION(0,"bad type"); goto failure;
+    case nsXPTType::T_ASTRING       : NS_ASSERTION(0,"bad type"); goto failure;
     default                         : NS_ASSERTION(0,"bad type"); goto failure;
     }
 
@@ -1501,6 +1731,9 @@ fill_array:
     case nsXPTType::T_WCHAR_STR     : POPULATE(fr, jschar*);        break;
     case nsXPTType::T_INTERFACE     : POPULATE(re, nsISupports*);   break;
     case nsXPTType::T_INTERFACE_IS  : POPULATE(re, nsISupports*);   break;
+    case nsXPTType::T_UTF8STRING    : NS_ASSERTION(0,"bad type"); goto failure;
+    case nsXPTType::T_CSTRING       : NS_ASSERTION(0,"bad type"); goto failure;
+    case nsXPTType::T_ASTRING       : NS_ASSERTION(0,"bad type"); goto failure;
     default                         : NS_ASSERTION(0,"bad type"); goto failure;
     }
 

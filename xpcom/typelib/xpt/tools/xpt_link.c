@@ -95,6 +95,10 @@ PRUint16 trueNumberOfInterfaces = 0;
 PRUint16 totalNumberOfInterfaces = 0;
 PRUint16 oldTotalNumberOfInterfaces = 0;
 
+/* The following globals are explained in xpt_struct.h */
+PRUint8 major_version     = XPT_MAJOR_VERSION;
+PRUint8 minor_version     = XPT_MINOR_VERSION;
+
 #if defined(XP_MAC) && defined(XPIDL_PLUGIN)
 
 #define main xptlink_main
@@ -132,6 +136,7 @@ main(int argc, char **argv)
     PRUint32 newOffset;
     size_t flen = 0;
     char *head, *data, *whole;
+    const char *outFileName;
     FILE *in, *out;
     fixElement *fix_array = NULL;
     int i,j;
@@ -150,7 +155,54 @@ main(int argc, char **argv)
 
     first_ann = XPT_NewAnnotation(arena, XPT_ANN_LAST, NULL, NULL);
 
-    for (i=2; i<argc; i++) {
+    /* Check if the "-t version numnber" cmd line arg is present */
+    i = 1;
+    if (argv[i][0] == '-' && argv[i][1] == 't') {
+        /* Parse for "-t version number" */
+
+        /* If -t is the last argument on the command line, we have a problem */
+        if (i + 1 == argc) {
+            fprintf(stderr, "ERROR: missing version number after -t\n");
+            xpt_link_usage(argv);
+            return 1;
+        }
+
+        /*
+         * Assume that the argument after "-t" is the version number string
+         * and search for it in our internal list of acceptable version
+         * numbers.
+         */
+
+        switch (XPT_ParseVersionString(argv[++i], &major_version, 
+                                       &minor_version)) {
+          case XPT_VERSION_CURRENT:            
+          case XPT_VERSION_OLD: 
+            break; 
+          case XPT_VERSION_UNSUPPORTED: 
+            fprintf(stderr, "ERROR: version \"%s\" not supported.\n", 
+                    argv[i]);
+            xpt_link_usage(argv);
+            return 1;          
+          case XPT_VERSION_UNKNOWN: 
+          default:
+            fprintf(stderr, "ERROR: version \"%s\" not recognised.\n", 
+                    argv[i]);
+            xpt_link_usage(argv);
+            return 1;          
+        }
+            
+        /* Hang onto the output file name. It's needed later. */
+        outFileName = argv[++i];
+
+        /* Increment i to the cmd line arg after outFileName */
+        i++;
+    }
+    else {        
+        outFileName = argv[1];
+        i = 2;
+    }
+
+    for ( /* use i from earlier */ ; i < argc; i++) {
         char *name = argv[i];
 
         flen = get_file_length(name);
@@ -192,7 +244,24 @@ main(int argc, char **argv)
                         "DoHeader failed for %s.  Is %s a valid .xpt file?\n",
                         name, name);
                 return 1;
-            }                                        
+            }
+            
+            /*
+             * Make sure that the version of the typelib file is less than or
+             * equal to the version specified in the -t cmd line arg.
+             */
+
+            if (header &&
+                (header->major_version > major_version ||
+                (header->major_version == major_version &&
+                 header->minor_version > minor_version))) { 
+                fprintf(stderr, "FAILED: %s's version, %d.%d, is newer than "
+                                "the version (%d.%d) specified in the -t "
+                                "command line argument.\n", 
+                                name, header->major_version, header->minor_version,
+                                major_version, minor_version);
+                return 1;
+            }
             
             oldTotalNumberOfInterfaces = totalNumberOfInterfaces;
             totalNumberOfInterfaces += header->num_interfaces;
@@ -492,7 +561,9 @@ main(int argc, char **argv)
         }
     }
 
-    header = XPT_NewHeader(arena, (PRUint16)trueNumberOfInterfaces);
+    header = XPT_NewHeader(arena, (PRUint16)trueNumberOfInterfaces, 
+                           major_version, minor_version);
+
     header->annotations = first_ann;
     for (i=0; i<trueNumberOfInterfaces; i++) {
         if (!copy_IDE(&IDE_array[i], &header->interface_directory[i])) {
@@ -531,7 +602,7 @@ main(int argc, char **argv)
         return 1;
     }
     XPT_SeekTo(cursor, newOffset);
-    out = fopen(argv[1], "wb");
+    out = fopen(outFileName, "wb");
     if (!out) {
         perror("FAILED: fopen");
         return 1;
@@ -805,7 +876,8 @@ print_IID(struct nsID *iid, FILE *file)
 static void
 xpt_link_usage(char *argv[]) 
 {
-    fprintf(stdout, "Usage: %s outfile file1.xpt file2.xpt ...\n"
-            "       Links multiple typelib files into one outfile\n", argv[0]);
+    fprintf(stdout, "Usage: %s [-t version number] outfile file1.xpt file2.xpt ...\n"
+            "       Links multiple typelib files into one outfile\n"
+            "       -t create a typelib of an older version number\n", argv[0]);
 }
 

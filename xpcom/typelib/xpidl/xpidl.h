@@ -55,6 +55,8 @@
 #include <IDL.h>
 #endif
 
+#include <xpt_struct.h>
+
 /*
  * IDL_tree_warning bombs on libIDL version 6.5, and I don't want to not write
  * warnings... so I define a versioned one here.  Thanks to Mike Shaver for the
@@ -83,6 +85,9 @@ extern gboolean enable_warnings;
 extern gboolean verbose_mode;
 extern gboolean emit_typelib_annotations;
 extern gboolean explicit_output_filename;
+
+extern PRUint8  major_version;
+extern PRUint8  minor_version;
 
 typedef struct TreeState TreeState;
 
@@ -178,7 +183,6 @@ xpidl_write_comment(TreeState *state, int indent);
 /*
  * Functions for parsing and printing UUIDs.
  */
-#include <xpt_struct.h>
 
 /*
  * How large should the buffer supplied to xpidl_sprint_IID be?
@@ -219,7 +223,10 @@ xpidl_parse_iid(nsID *id, const char *str);
                              UP_IS_AGGREGATE(node)))
 
 #define DIPPER_TYPE(node)                                                     \
-    (NULL != IDL_tree_property_get(node, "domstring"))
+    (NULL != IDL_tree_property_get(node, "domstring")  ||                     \
+     NULL != IDL_tree_property_get(node, "utf8string") ||                     \
+     NULL != IDL_tree_property_get(node, "cstring")    ||                     \
+     NULL != IDL_tree_property_get(node, "astring"))
 
 /*
  * Find the underlying type of an identifier typedef.  Returns NULL

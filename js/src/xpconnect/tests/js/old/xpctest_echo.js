@@ -76,6 +76,24 @@ receiver.EchoIn2OutOneDOMString = function(input)
         return input;        
     };
 
+receiver.EchoIn2OutOneAString = function(input)
+    {
+        // print("EchoIn2OutOneAString called with: "+input);
+        return input;        
+    };
+
+receiver.EchoIn2OutOneUTF8String = function(input)
+    {
+	    // print("EchoIn2OutOneUTF8String called with: "+input);
+	    return input;
+    }
+
+receiver.EchoIn2OutOneCString = function(input)
+    {
+		// print("EchoIn2OutOneCString called with: "+input);
+		return input;
+	}
+
 echo.SetReceiver(receiver);
 
 ////////////////////
@@ -224,6 +242,7 @@ if(all_ok)
     print("SendInOutManyTypes - passed");
 
 ////////////////////
+// Test DOMString
 
 var test_string3 = "And this is yet again some other string 3";
 var test_string4 = "And this is yet again some other string 4";
@@ -246,6 +265,78 @@ print("EchoIn2OutOneDOMString of null - "+(
 
 print("EchoIn2OutOneDOMString of undefined - "+(
        echo.EchoIn2OutOneDOMString(this.propertyThatDoesNotExist) == "undefined"
+       ? "passed" : "failed"));
+
+/////////////////////
+// Test AString
+
+print("In2OutOneAString - "+(
+       echo.In2OutOneAString(test_string3) == test_string3
+       ? "passed" : "failed"));
+
+print("EchoIn2OutOneAString - "+(
+       echo.EchoIn2OutOneAString(test_string4) == test_string4
+       ? "passed" : "failed"));
+
+print("EchoIn2OutOneAString of empty string - "+(
+       echo.EchoIn2OutOneAString("") == ""
+       ? "passed" : "failed"));
+
+print("EchoIn2OutOneAString of null - "+(
+       echo.EchoIn2OutOneAString(null) == null
+       ? "passed" : "failed"));
+
+print("EchoIn2OutOneAString of undefined - "+(
+       echo.EchoIn2OutOneAString(this.propertyThatDoesNotExist) == ""
+       ? "passed" : "failed"));
+
+/////////////////////
+// Test AUTF8String
+
+var test_utf8String = 
+  "Non-Ascii 1 byte chars: יגהאוח, 2 byte chars: \u1234 \u1235 \u1236";
+
+print("In2OutOneUTF8String - "+(
+       echo.In2OutOneUTF8String(test_utf8String) == test_utf8String
+       ? "passed" : "failed"));
+
+print("EchoIn2OutOneUTF8String - "+(
+       echo.EchoIn2OutOneUTF8String(test_utf8String) == test_utf8String
+       ? "passed" : "failed"));
+
+print("EchoIn2OutOneUTF8String of empty string - "+(
+       echo.EchoIn2OutOneUTF8String("") == ""
+       ? "passed" : "failed"));
+
+print("EchoIn2OutOneUTF8String of null - "+(
+       echo.EchoIn2OutOneUTF8String(null) == null
+       ? "passed" : "failed"));
+
+print("EchoIn2OutOneUTF8String of undefined - "+(
+       echo.EchoIn2OutOneUTF8String(this.propertyThatDoesNotExist) == ""
+       ? "passed" : "failed"));
+
+/////////////////////
+// Test ACString
+
+print("In2OutOneCString - "+(
+       echo.In2OutOneCString(test_string3) == test_string3
+       ? "passed" : "failed"));
+
+print("EchoIn2OutOneCString - "+(
+       echo.EchoIn2OutOneCString(test_string4) == test_string4
+       ? "passed" : "failed"));
+
+print("EchoIn2OutOneCString of empty string - "+(
+       echo.EchoIn2OutOneCString("") == ""
+       ? "passed" : "failed"));
+
+print("EchoIn2OutOneCString of null - "+(
+       echo.EchoIn2OutOneCString(null) == null
+       ? "passed" : "failed"));
+
+print("EchoIn2OutOneCString of undefined - "+(
+       echo.EchoIn2OutOneCString(this.propertyThatDoesNotExist) == ""
        ? "passed" : "failed"));
 
 ////////////////////

@@ -682,8 +682,13 @@ write_type(IDL_tree type_tree, gboolean is_out, FILE *outfile)
         break;
       case IDLN_IDENT:
         if (UP_IS_NATIVE(type_tree)) {
-            if (IDL_tree_property_get(type_tree, "domstring")) {
+            if (IDL_tree_property_get(type_tree, "domstring") ||
+                IDL_tree_property_get(type_tree, "astring")) {
                 fputs("nsAString", outfile);
+            } else if (IDL_tree_property_get(type_tree, "utf8string")) {
+                fputs("nsACString", outfile);
+            } else if (IDL_tree_property_get(type_tree, "cstring")) {
+                fputs("nsACString", outfile);
             } else {
                 fputs(IDL_NATIVE(IDL_NODE_UP(type_tree)).user_type, outfile);
             }
@@ -740,13 +745,17 @@ write_attr_accessor(IDL_tree attr_tree, FILE * outfile,
             getter ? 'G' : 'S',
             toupper(*attrname), attrname + 1);
     if (mode == AS_DECL || mode == AS_IMPL) {
-        /* Setters for string, wstring, nsid, and domstring get const. 
+        /* Setters for string, wstring, nsid, domstring, utf8string, 
+         * cstring and astring get const. 
          */
         if (!getter &&
             (IDL_NODE_TYPE(ATTR_TYPE_DECL(attr_tree)) == IDLN_TYPE_STRING ||
              IDL_NODE_TYPE(ATTR_TYPE_DECL(attr_tree)) == IDLN_TYPE_WIDE_STRING ||
              IDL_tree_property_get(ATTR_TYPE_DECL(attr_tree), "nsid") ||
-             IDL_tree_property_get(ATTR_TYPE_DECL(attr_tree), "domstring")))
+             IDL_tree_property_get(ATTR_TYPE_DECL(attr_tree), "domstring")  ||
+             IDL_tree_property_get(ATTR_TYPE_DECL(attr_tree), "utf8string") ||
+             IDL_tree_property_get(ATTR_TYPE_DECL(attr_tree), "cstring")    ||
+             IDL_tree_property_get(ATTR_TYPE_DECL(attr_tree), "astring")))
         {
             fputs("const ", outfile);
         }
@@ -911,8 +920,8 @@ write_param(IDL_tree param_tree, FILE *outfile)
 {
     IDL_tree param_type_spec = IDL_PARAM_DCL(param_tree).param_type_spec;
     gboolean is_in = IDL_PARAM_DCL(param_tree).attr == IDL_PARAM_IN;
-    /* in string, wstring, nsid, domstring, and any 
-     * explicitly marked [const] are const 
+    /* in string, wstring, nsid, domstring, utf8string, cstring and 
+     * astring any explicitly marked [const] are const 
      */
 
     if (is_in &&
@@ -921,7 +930,10 @@ write_param(IDL_tree param_tree, FILE *outfile)
          IDL_tree_property_get(IDL_PARAM_DCL(param_tree).simple_declarator,
                                "const") ||
          IDL_tree_property_get(param_type_spec, "nsid") ||
-         IDL_tree_property_get(param_type_spec, "domstring"))) {
+         IDL_tree_property_get(param_type_spec, "domstring")  ||
+         IDL_tree_property_get(param_type_spec, "utf8string") ||
+         IDL_tree_property_get(param_type_spec, "cstring")    ||
+         IDL_tree_property_get(param_type_spec, "astring"))) {
         fputs("const ", outfile);
     }
     else if (IDL_PARAM_DCL(param_tree).attr == IDL_PARAM_OUT &&

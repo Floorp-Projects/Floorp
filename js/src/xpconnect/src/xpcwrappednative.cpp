@@ -1789,6 +1789,9 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                     useAllocator = JS_TRUE;
                     break;
 
+                case nsXPTType::T_ASTRING:
+                    // Fall through to the T_DOMSTRING case
+
                 case nsXPTType::T_DOMSTRING:
                     if(paramInfo.IsDipper())
                     {
@@ -1821,6 +1824,25 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                     // that JSData2Native should allocate a new
                     // nsAReadableString.
                     dp->SetValIsDOMString();
+                    useAllocator = JS_TRUE;
+                    break;
+
+                case nsXPTType::T_UTF8STRING:                    
+                    // Fall through to the C string case for now...                    
+                case nsXPTType::T_CSTRING:                    
+                    dp->SetValIsCString();
+                    if(paramInfo.IsDipper())
+                    {
+                        // Is an 'out' CString.
+                        if(!(dp->val.p = new nsCString()))
+                        {
+                            JS_ReportOutOfMemory(ccx);
+                            goto done;
+                        }
+                        continue;
+                    }
+                    // else ...
+                    // Is an 'in' CString.
                     useAllocator = JS_TRUE;
                     break;
                 }
@@ -2167,7 +2189,11 @@ done:
                 ((nsISupports*)p)->Release();
             else if(dp->IsValDOMString())
                 delete (nsAString*)p;
-        }
+            else if(dp->IsValUTF8String())
+                delete (nsCString*) p;
+            else if(dp->IsValCString())
+                delete (nsCString*) p;
+        }   
     }
 
     if(dispatchParams && dispatchParams != paramBuffer)
@@ -2411,7 +2437,7 @@ XPCWrappedNative::ToString(XPCCallContext& ccx,
         return nsnull;
     }
     const char* fmt = "[xpconnect wrapped %s" FMT_ADDR "]";
-    if (si)
+    if(si)
     {
         fmt = "[object %s" FMT_ADDR "]";
     }

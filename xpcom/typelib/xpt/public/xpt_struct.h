@@ -116,7 +116,7 @@ struct XPTHeader {
 /* For error messages. */
 #define XPT_MAGIC_STRING "XPCOM\\nTypeLib\\r\\n\\032"
 #define XPT_MAJOR_VERSION 0x01
-#define XPT_MINOR_VERSION 0x01
+#define XPT_MINOR_VERSION 0x02
 
 /* Any file with a major version number of XPT_MAJOR_INCOMPATIBLE_VERSION 
  * or higher is to be considered incompatible by this version of xpt and
@@ -130,9 +130,66 @@ struct XPTHeader {
  */
 #define XPT_MAJOR_INCOMPATIBLE_VERSION 0x02
 
+/*
+ * The "[-t version number]" cmd line parameter to the XPIDL compiler and XPT
+ * linker specifies the major and minor version number of the output 
+ * type library.
+ * 
+ * The goal is for the compiler to check that the input IDL file only uses 
+ * constructs that are supported in the version specified. The linker will
+ * check that all typelib files it reads are of the version specified or
+ * below.
+ * 
+ * Both the compiler and the linker will report errors and abort if these
+ * checks fail.
+ * 
+ * When you rev up major or minor versions of the type library in the future,
+ * think about the new stuff that you added to the type library and add checks
+ * to make sure that occurrences of that new "stuff" will get caught when [-t
+ * version number] is used with the compiler. Here's what you'll probably
+ * have to do each time you rev up major/minor versions:
+ * 
+ *   1) Add the current version number string (before your change) to the
+ *   XPT_TYPELIB_VERSIONS list.
+ * 
+ *   2) Do your changes add new features to XPIDL? Ensure that those new
+ *   features are rejected by the XPIDL compiler when any version number in
+ *   the XPT_TYPELIB_VERSIONS list is specified on the command line. The
+ *   one place that currently does this kind of error checking is the function
+ *   verify_type_fits_version() in xpidl_util.c. It currently checks
+ *   attribute types, parameter types, and return types. You'll probably have
+ *   to add to it or generalize it further based on what kind of changes you
+ *   are making.
+ *
+ *   3) You will probably NOT need to make any changes to the error checking
+ *   in the linker.
+ */
+  
+#define XPT_VERSION_UNKNOWN     0
+#define XPT_VERSION_UNSUPPORTED 1
+#define XPT_VERSION_OLD         2
+#define XPT_VERSION_CURRENT     3
+
+typedef struct {
+    const char* str;
+    PRUint8     major;
+    PRUint8     minor;
+    PRUint16    code;
+} XPT_TYPELIB_VERSIONS_STRUCT; 
+
+/* Currently accepted list of versions for typelibs */
+#define XPT_TYPELIB_VERSIONS {                                                \
+    {"1.0", 1, 0, XPT_VERSION_UNSUPPORTED},                                   \
+    {"1.1", 1, 1, XPT_VERSION_OLD},                                           \
+    {"1.2", 1, 2, XPT_VERSION_CURRENT}                                        \
+};
+
+extern XPT_PUBLIC_API(PRUint16)
+XPT_ParseVersionString(const char* str, PRUint8* major, PRUint8* minor);
 
 extern XPT_PUBLIC_API(XPTHeader *)
-XPT_NewHeader(XPTArena *arena, PRUint16 num_interfaces);
+XPT_NewHeader(XPTArena *arena, PRUint16 num_interfaces, 
+              PRUint8 major_version, PRUint8 minor_version);
 
 extern XPT_PUBLIC_API(void)
 XPT_FreeHeader(XPTArena *arena, XPTHeader* aHeader);
@@ -315,7 +372,10 @@ enum XPTTypeDescriptorTags {
     TD_INTERFACE_IS_TYPE = 19,
     TD_ARRAY             = 20,
     TD_PSTRING_SIZE_IS   = 21,
-    TD_PWSTRING_SIZE_IS  = 22
+    TD_PWSTRING_SIZE_IS  = 22,
+    TD_UTF8STRING        = 23,
+    TD_CSTRING           = 24,
+    TD_ASTRING           = 25,
 };
 
 struct XPTTypeDescriptor {

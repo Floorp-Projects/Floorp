@@ -113,25 +113,31 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
     enum
     {
         // these are bitflags!
-        PTR_IS_DATA  = 0x1, // ptr points to 'real' data in val
-        VAL_IS_ALLOCD= 0x2, // val.p holds alloc'd ptr that must be freed
-        VAL_IS_IFACE = 0x4, // val.p holds interface ptr that must be released
-        VAL_IS_ARRAY = 0x8, // val.p holds a pointer to an array needing cleanup
-        VAL_IS_DOMSTR= 0x10 // val.p holds a pointer to domstring needing cleanup
+        PTR_IS_DATA    = 0x1,  // ptr points to 'real' data in val
+        VAL_IS_ALLOCD  = 0x2,  // val.p holds alloc'd ptr that must be freed
+        VAL_IS_IFACE   = 0x4,  // val.p holds interface ptr that must be released
+        VAL_IS_ARRAY   = 0x8,  // val.p holds a pointer to an array needing cleanup
+        VAL_IS_DOMSTR  = 0x10, // val.p holds a pointer to domstring needing cleanup
+        VAL_IS_UTF8STR = 0x20, // val.p holds a pointer to utf8string needing cleanup
+        VAL_IS_CSTR    = 0x40  // val.p holds a pointer to cstring needing cleanup        
     };
 
-    void ClearFlags()        {flags = 0;}
-    void SetPtrIsData()      {flags |= PTR_IS_DATA;}
-    void SetValIsAllocated() {flags |= VAL_IS_ALLOCD;}
-    void SetValIsInterface() {flags |= VAL_IS_IFACE;}
-    void SetValIsArray()     {flags |= VAL_IS_ARRAY;}
-    void SetValIsDOMString() {flags |= VAL_IS_DOMSTR;}
+    void ClearFlags()         {flags = 0;}
+    void SetPtrIsData()       {flags |= PTR_IS_DATA;}
+    void SetValIsAllocated()  {flags |= VAL_IS_ALLOCD;}
+    void SetValIsInterface()  {flags |= VAL_IS_IFACE;}
+    void SetValIsArray()      {flags |= VAL_IS_ARRAY;}
+    void SetValIsDOMString()  {flags |= VAL_IS_DOMSTR;}
+    void SetValIsUTF8String() {flags |= VAL_IS_UTF8STR;}
+    void SetValIsCString()    {flags |= VAL_IS_CSTR;}    
 
-    PRBool IsPtrData()      const {return 0 != (flags & PTR_IS_DATA);}
-    PRBool IsValAllocated() const {return 0 != (flags & VAL_IS_ALLOCD);}
-    PRBool IsValInterface() const {return 0 != (flags & VAL_IS_IFACE);}
-    PRBool IsValArray()     const {return 0 != (flags & VAL_IS_ARRAY);}
-    PRBool IsValDOMString() const {return 0 != (flags & VAL_IS_DOMSTR);}
+    PRBool IsPtrData()       const  {return 0 != (flags & PTR_IS_DATA);}
+    PRBool IsValAllocated()  const  {return 0 != (flags & VAL_IS_ALLOCD);}
+    PRBool IsValInterface()  const  {return 0 != (flags & VAL_IS_IFACE);}
+    PRBool IsValArray()      const  {return 0 != (flags & VAL_IS_ARRAY);}
+    PRBool IsValDOMString()  const  {return 0 != (flags & VAL_IS_DOMSTR);}
+    PRBool IsValUTF8String() const  {return 0 != (flags & VAL_IS_UTF8STR);}
+    PRBool IsValCString()    const  {return 0 != (flags & VAL_IS_CSTR);}    
 
     void Init(const nsXPTCMiniVariant& mv, const nsXPTType& t, PRUint8 f)
     {
@@ -170,6 +176,8 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
               case nsXPTType::T_ARRAY:             /* fall through */
               case nsXPTType::T_PSTRING_SIZE_IS:   /* fall through */
               case nsXPTType::T_PWSTRING_SIZE_IS:  /* fall through */
+              case nsXPTType::T_UTF8STRING:        /* fall through */
+              case nsXPTType::T_CSTRING:           /* fall through */              
               default:                             val.p   = mv.val.p;   break;
             }
         }

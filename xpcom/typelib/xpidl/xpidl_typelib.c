@@ -371,7 +371,8 @@ typelib_prolog(TreeState *state)
     /* find all interfaces, top-level and referenced by others */
     IDL_tree_walk_in_order(state->tree, find_interfaces, state);
     ARENA(state) = XPT_NewArena(1024, sizeof(double), "main xpidl arena");
-    HEADER(state) = XPT_NewHeader(ARENA(state), IFACES(state));
+    HEADER(state) = XPT_NewHeader(ARENA(state), IFACES(state), 
+                                  major_version, minor_version);
 
     /* fill IDEs from hash table */
     IFACES(state) = 0;
@@ -859,6 +860,18 @@ handle_iid_is:
                           td->prefix.flags |= XPT_TDP_POINTER;
                   } else if (IDL_tree_property_get(type, "domstring")) {
                       td->prefix.flags = TD_DOMSTRING | XPT_TDP_POINTER;
+                      if (IDL_tree_property_get(type, "ref"))
+                          td->prefix.flags |= XPT_TDP_REFERENCE;
+                  } else if (IDL_tree_property_get(type, "astring")) {
+                      td->prefix.flags = TD_ASTRING | XPT_TDP_POINTER;
+                      if (IDL_tree_property_get(type, "ref"))
+                          td->prefix.flags |= XPT_TDP_REFERENCE;
+                  } else if (IDL_tree_property_get(type, "utf8string")) {
+                      td->prefix.flags = TD_UTF8STRING | XPT_TDP_POINTER;
+                      if (IDL_tree_property_get(type, "ref"))
+                          td->prefix.flags |= XPT_TDP_REFERENCE;
+                  } else if (IDL_tree_property_get(type, "cstring")) {
+                      td->prefix.flags = TD_CSTRING | XPT_TDP_POINTER;
                       if (IDL_tree_property_get(type, "ref"))
                           td->prefix.flags |= XPT_TDP_REFERENCE;
                   } else {
