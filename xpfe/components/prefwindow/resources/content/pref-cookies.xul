@@ -33,6 +33,18 @@
   <html:script language="JavaScript">
     function viewCookies() 
     {
+      pref = Components.classes['component://netscape/preferences'];
+      pref = pref.getService();
+      pref = pref.QueryInterface(Components.interfaces.nsIPref);
+      pref.SetBoolPref("cookieviewer.cookieTab", true);
+      window.openDialog("chrome://wallet/content/CookieViewer.xul","","modal=yes,chrome,resizable=no");
+    }
+    function viewImages() 
+    {
+      pref = Components.classes['component://netscape/preferences'];
+      pref = pref.getService();
+      pref = pref.QueryInterface(Components.interfaces.nsIPref);
+      pref.SetBoolPref("cookieviewer.cookieTab", false);
       window.openDialog("chrome://wallet/content/CookieViewer.xul","","modal=yes,chrome,resizable=no");
     }
   </html:script>
@@ -131,7 +143,7 @@
 
     <box align="horizontal" flex="1">
       <spring flex="1"/>
-      <titledbutton value="&viewImages.label;" class="dialog push" onclick="viewCookies();"/>
+      <titledbutton value="&viewImages.label;" class="dialog push" onclick="viewImages();"/>
     </box>
 	</titledbox> 
   

@@ -76,6 +76,20 @@ function Startup()
     pref = pref.getService();
     pref = pref.QueryInterface(Components.interfaces.nsIPref);
     try {
+      if (pref.GetBoolPref("cookieviewer.cookieTab")) {
+        element = document.getElementById("cookiesTab");
+        element.setAttribute("selected","true" );
+        element = document.getElementById("panel");
+        element.setAttribute("index","0" );
+      } else {
+        element = document.getElementById("imagesTab");
+        element.setAttribute("selected","true" );
+        element = document.getElementById("panel");
+        element.setAttribute("index","2" );
+      }
+    } catch(e) {
+    }
+    try {
       if (pref.GetBoolPref("imageblocker.enabled")) {
         var element;
         element = document.getElementById("imagesTab");
