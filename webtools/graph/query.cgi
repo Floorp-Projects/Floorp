@@ -14,7 +14,9 @@ my $SIZE      = lc($req->param('size'));
 my $DAYS      = lc($req->param('days'));
 my $LTYPE     = lc($req->param('ltype'));
 my $POINTS    = lc($req->param('points'));
-#
+my $AVG       = lc($req->param('avg'));
+
+
 # Testing only:
 #
 #$TESTNAME  = "testname";
@@ -43,12 +45,14 @@ sub make_filenames_list {
 
 # Print out a list of testnames in db directory
 sub print_testnames {
-  my ($tbox, $autoscale, $days, $units, $ltype, $points) = @_;
+  my ($tbox, $autoscale, $days, $units, $ltype, $points, $avg) = @_;
 
   # HTTP header
   print "Content-type: text/html\n\n<HTML>\n";
+
   print "<title>testnames</title>";
   print "<center><h2><b>testnames</b></h2></center>";
+
   print "<p><table width=\"100%\">";
   print "<tr><td align=center>Select one of the following tests:</td></tr>";
   print "<tr><td align=center>\n";
@@ -58,7 +62,7 @@ sub print_testnames {
   my $machines_string = join(" ", @machines);
 
   foreach (@machines) {
-	print "<li><a href=query.cgi?&testname=$_$testname&tbox=$tbox&autoscale=$autoscale&size=$SIZE&days=$days&units=$units&ltype=$ltype&points=$points>$_</a>\n";
+	print "<li><a href=query.cgi?&testname=$_$testname&tbox=$tbox&autoscale=$autoscale&size=$SIZE&days=$days&units=$units&ltype=$ltype&points=$points&avg=$avg>$_</a>\n";
   }
   print "</ul></td></tr></table></td></tr></table>";
 
@@ -67,7 +71,7 @@ sub print_testnames {
 
 # Print out a list of machines in db/<testname> directory, with links.
 sub print_machines {
-  my ($testname, $autoscale, $days, $units, $ltype, $points) = @_;
+  my ($testname, $autoscale, $days, $units, $ltype, $points, $avg) = @_;
 
   # HTTP header
   print "Content-type: text/html\n\n<HTML>\n";
@@ -82,7 +86,7 @@ sub print_machines {
   my $machines_string = join(" ", @machines);
 
   foreach (@machines) {
-	print "<li><a href=query.cgi?tbox=$_&testname=$testname&autoscale=$autoscale&size=$SIZE&days=$days&units=$units&ltype=$ltype&points=$points>$_</a>\n";
+	print "<li><a href=query.cgi?tbox=$_&testname=$testname&autoscale=$autoscale&size=$SIZE&days=$days&units=$units&ltype=$ltype&points=$points&avg=$avg>$_</a>\n";
   }
   print "</ul></td></tr></table></td></tr></table>";
 
@@ -96,6 +100,9 @@ sub show_graph {
 
   print "<body>\n";
 
+  # JS refresh every 30min
+  print "<script>setTimeout('location.reload()',1800000);</script>\n";
+
   print "<table cellspacing=8>\n";
   print "<tr>\n";
 
@@ -104,11 +111,11 @@ sub show_graph {
   print "<font size=\"-1\">\n";
   if($AUTOSCALE) {
 	print "Y-axis: (<b>zoom</b>|";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=0&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS\">100%</a>";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=0&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">100%</a>";
 	print ") \n";
   } else {
 	print "Y-axis: (";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=1&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS\">zoom</a>";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=1&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">zoom</a>";
 	print "|<b>100%</b>) \n";
   }
   print "</font>\n";
@@ -116,7 +123,7 @@ sub show_graph {
 
   # Days, Time-axis
   print "<td valign=bottom>\n";
-  print "<form method=\"get\" action=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&units=$UNITS&ltype=$LTYPE&points=$POINTS\">\n";
+  print "<form method=\"get\" action=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">\n";
   print "<font size=\"-1\">\n";
   print "<input type=hidden name=\"tbox\" value=\"$TBOX\">";
   print "<input type=hidden name=\"testname\" value=\"$TESTNAME\">";
@@ -125,10 +132,11 @@ sub show_graph {
   print "<input type=hidden name=\"units\" value=\"$UNITS\">";
   print "<input type=hidden name=\"ltype\" value=\"$LTYPE\">";
   print "<input type=hidden name=\"points\" value=\"$POINTS\">";
+  print "<input type=hidden name=\"avg\" value=\"$AVG\">";
 
   print "Days:";
   if($DAYS) {
-	print "(<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=0&units=$UNITS&ltype=$LTYPE&points=$POINTS\">all data</a>|";
+	print "(<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=0&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">all data</a>|";
     print "<input type=text value=$DAYS name=\"days\" size=3 maxlength=10>";
 	print ")\n";
   } else {
@@ -146,12 +154,12 @@ sub show_graph {
   print "Style:";
   if($LTYPE eq "steps") {
 	print "(";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=lines&points=$POINTS\">lines</a>";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=lines&points=$POINTS&avg=$AVG\">lines</a>";
 	print "|<b>steps</b>";
 	print ")";
   } else {
 	print "(<b>lines</b>|";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=steps&points=$POINTS\">steps</a>";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=steps&points=$POINTS&avg=$AVG\">steps</a>";
 	print ")";
   }
   print "</font>\n";
@@ -163,22 +171,42 @@ sub show_graph {
   print "Points:";
   if($POINTS) {
 	print "(<b>on</b>|";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=0\">off</a>";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=0&avg=$AVG\">off</a>";
 	print ")\n";
   } else {
 	print "(";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=1\">on</a>";	
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=1&avg=$AVG\">on</a>";	
     print "|<b>off</b>)\n";
   }
   print "</font>\n";
   print "</td>\n";
 
+
+  # Average (on|off)
+  print "<td valign=bottom>\n";
+  print "<font size=\"-1\">\n";
+  print "<A title=\"Moving average of last 10 points\">Average:</a>";
+  if($AVG) {
+	print "(<b>on</b>|";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$points&avg=0\">off</a>";
+	print ")\n";
+  } else {
+	print "(";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$points&avg=1\">on</a>";	
+    print "|<b>off</b>)\n";
+  }
+  print "</font>\n";
+  print "</td>\n";
+
+
   print "</tr>\n";
+
   print "</table>\n";
   print "<br>\n";
 
+
   # graph
-  print "<img src=\"graph.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS\" alt=\"$TBOX $TESTNAME graph\">";
+  print "<img src=\"graph.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\" alt=\"$TBOX $TESTNAME graph\">";
 
   print "<br>\n";
   print "<br>\n";
@@ -192,11 +220,11 @@ sub show_graph {
   # Other machines
   print "<font size=\"-1\">";
   print "<li>\n";
-  print "<a href=\"query.cgi?tbox=&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS\">Other machines running the $TESTNAME test</a>";
+  print "<a href=\"query.cgi?tbox=&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">Other machines running the $TESTNAME test</a>";
   print "</li>\n";
 
   print "<li>\n";
-  print "<a href=\"query.cgi?tbox=$TBOX&testname=&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS\">Other tests that $TBOX is running</a>";
+  print "<a href=\"query.cgi?tbox=$TBOX&testname=&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">Other tests that $TBOX is running</a>";
   print "</li>\n";
 
   print "<li>\n";
@@ -219,7 +247,7 @@ sub show_graph {
 
   # Graph size
   print "<td valign=\"top\">\n";
-  print "<form method=\"get\" action=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS\">\n";
+  print "<form method=\"get\" action=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">\n";
   print "<font size=\"-1\">\n";
   print "<input type=hidden name=\"tbox\" value=\"$TBOX\">";
   print "<input type=hidden name=\"testname\" value=\"$TESTNAME\">";
@@ -251,9 +279,9 @@ sub show_graph {
 # main
 {
   if(!$TESTNAME) {
-    print_testnames($TBOX, $AUTOSCALE, $DAYS, $UNITS, $LTYPE, $POINTS);
+    print_testnames($TBOX, $AUTOSCALE, $DAYS, $UNITS, $LTYPE, $POINTS, $AVG);
   } elsif(!$TBOX) {
-    print_machines($TESTNAME, $AUTOSCALE, $DAYS, $UNITS, $LTYPE, $POINTS);
+    print_machines($TESTNAME, $AUTOSCALE, $DAYS, $UNITS, $LTYPE, $POINTS, $AVG);
   } else {
     show_graph();
   }
