@@ -17,6 +17,7 @@
   # Rights Reserved.
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Vaskin Kissoyan <vkissoyan@yahoo.com> 
   #%]
 
 [% filtered_desc = bug.short_desc FILTER html %]
@@ -25,6 +26,7 @@
     title = "Bug $bug.bug_id - $bug.short_desc"
     h1 = "Bugzilla Bug $bug.bug_id"
     h2 = filtered_desc
+    h3 = "Last modified: $bug.calc_disp_date"
     header_html = navigation_links
    %]
 [% END %]

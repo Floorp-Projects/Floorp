@@ -19,6 +19,7 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dave Miller <justdave@syndicomm.com>
+#                 Vaskin Kissoyan <vkissoyan@yahoo.com>
 
 use diagnostics;
 use strict;
@@ -83,7 +84,7 @@ sub show_bug {
         bug_file_loc, short_desc, target_milestone, 
         qa_contact, status_whiteboard, 
         date_format(creation_ts,'%Y-%m-%d %H:%i'),
-        groupset, delta_ts, sum(votes.count)
+        groupset, delta_ts, sum(votes.count), delta_ts calc_disp_date
     FROM bugs LEFT JOIN votes USING(bug_id), products, components
     WHERE bugs.bug_id = $id
         AND bugs.product_id = products.id
@@ -99,15 +100,25 @@ sub show_bug {
     }
 
     my $value;
+    my $disp_date;
     my @row = FetchSQLData();
     foreach my $field ("bug_id", "alias", "product", "version", "rep_platform",
                        "op_sys", "bug_status", "resolution", "priority",
                        "bug_severity", "component", "assigned_to", "reporter",
                        "bug_file_loc", "short_desc", "target_milestone",
                        "qa_contact", "status_whiteboard", "creation_ts",
-                       "groupset", "delta_ts", "votes") 
+                       "groupset", "delta_ts", "votes","calc_disp_date") 
     {
         $value = shift(@row);
+        if ($field eq "calc_disp_date") {
+            # Convert MySQL timestamp (_ts) to datetime format(%Y-%m-%d %H:%i)
+            $disp_date = substr($value,0,4) . '-';
+            $disp_date .= substr($value,4,2) . '-';
+            $disp_date .= substr($value,6,2) . ' ';
+            $disp_date .= substr($value,8,2) . ':';
+            $disp_date .= substr($value,10,2);
+            $value = $disp_date; 
+        }
         $bug{$field} = defined($value) ? $value : "";
     }
 

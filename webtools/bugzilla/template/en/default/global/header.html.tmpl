@@ -17,6 +17,7 @@
   # Rights Reserved.
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Vaskin Kissoyan <vkissoyan@yahoo.com>
   #%]
 
 [%# INTERFACE:
@@ -24,6 +25,7 @@
   # title: string. Page title.
   # h1: string. Main page header.
   # h2: string. Page subheader.
+  # h3: string. Right-aligned subheader.
   # bgcolor: string. the page's background color ("#rrggbb").
   # onload: string. JavaScript code to run when the page finishes loading.
   # header_html: string. Any other HTML to go inside the <head> tags.
@@ -40,6 +42,7 @@
 [% DEFAULT
   h1 = title
   h2 = ""
+  h3 = "" 
   bgcolor = "#ffffff"
   onload = ""
 %]
@@ -85,7 +88,7 @@
 [% INCLUDE global/banner.html.tmpl %]
     
 [% IF h1 || h2 %]
-    <table border="0" cellspacing="0">
+    <table border="0" cellspacing="0" width="100%">
       <tr>
         <td valign="top" align="left">
           <table border="0" cellpadding="0" cellspacing="2">
@@ -96,8 +99,11 @@
             </tr>
           </table>
         </td>
-        <td valign="middle">&nbsp;</td>
+        <td valign="middle" align="left">&nbsp;</td>
         <td valign="middle" align="left">[% h2 %]</td>
+        [% IF h3 %]
+          <td valign="middle" align="right">[% h3 %]</td>
+        [% END %]
       </tr>
     </table>
 [% END %]
