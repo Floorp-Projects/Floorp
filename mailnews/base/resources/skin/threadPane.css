@@ -23,28 +23,6 @@ window {
  background-color: white;
 }
 
-tree {
- background-color: white;
- border: none;
- border-spacing: 0px;
- //border-collapse: collapse;
- width: 100%;
- table-layout: fixed;
-}
-
-treerow { 
- color: black;
-} 
-
-treecell { 
- white-space: nowrap;
-} 
-
-treerow[selectedrow="true"] { 
- background-color: #666699; 
- color: white;
-} 
-
 treeitem[Status=""] > treerow {
 	font-weight: bold;
 }
@@ -74,13 +52,4 @@ treeitem[Status=""] treerow > treecell > titledbutton.unreadcol {
 treeitem[Status="new"] treerow > treecell > titledbutton.unreadcol {
   list-style-image: url("chrome://messenger/skin/unreadmail.gif");
 }
-
-treehead treerow treecell { 
- font-size: 9pt;
- background-color: #666699; 
- border: thin darkgray solid; 
- color: white;
-} 
-
-
 

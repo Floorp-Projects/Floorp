@@ -89,7 +89,7 @@ Rights Reserved.
 		<treecell onclick="return top.SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject');">&subjectColumn.label;</treecell>
 		<treecell onclick="return top.SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Sender');">&senderColumn.label;</treecell>
 		<treecell> 
-				<html:img  src="&readcol.img;"/>
+				<html:img style="height:9px" src="&readcol.img;"/>
 		</treecell>
 		<treecell onclick="return top.SortThreadPane('DateColumn', 'http://home.netscape.com/NC-rdf#Date');">&dateColumn.label;</treecell>
 		<treecell onclick="return top.SortThreadPane('StatusColumn', 'http://home.netscape.com/NC-rdf#Status');">&statusColumn.label;</treecell>

@@ -682,10 +682,13 @@ treecell {
 } 
 
 treehead treerow treecell { 
- font-size: 10pt;
- background-color: #a0a0a0; 
- border: 1px white transparent;
- color: black;
+ background-color: #666699; 
+ border: thin darkgray solid; 
+ color: white;
+ padding-left: 3px;
+ padding-right: 3px;
+ padding-top: 2px;
+ padding-bottom: 2px;
 } 
 
 treeitem > treechildren {

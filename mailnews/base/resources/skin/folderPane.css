@@ -23,36 +23,6 @@ window {
  background-color:white;
 } 
 
-tree { 
- background-color:white;
- border: none; 
- border-spacing: 0px; 
- //border-collapse: collapse; 
- width: 100%
-
-} 
-
-treerow { 
- color: black;
-} 
-
-treecell { 
- white-space: nowrap;
-} 
-
-
-treerow[selectedrow="true"] { 
- background-color: #666699; 
- color: white;
-} 
-
-treehead treerow treecell { 
- font-size: 9pt;
- background-color: #666699; 
- border: thin darkgray solid; 
- color: white;
-} 
-
 treerow > treecell > titledbutton{
  height: 16px;
  width: 16px;
