@@ -714,8 +714,7 @@ nsXULTreeGroupFrame :: PaintDropFeedback ( nsIPresContext* aPresContext, nsIRend
                                              PRBool aPaintSorted )
 {
   // lookup the drop marker color. default to black if not found.
-  nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-drop-marker")) );
-  nscolor color = GetColorFromStyleContext ( aPresContext, atom, NS_RGB(0,0,0) ) ;
+  nscolor color = GetColorFromStyleContext ( aPresContext, nsXULAtoms::ddDropMarker, NS_RGB(0,0,0) );
   
   // find the twips-to-pixels conversion. We have decided not to cache this for
   // space reasons.
@@ -769,50 +768,25 @@ nsXULTreeGroupFrame :: PaintSortedDropFeedback ( nscolor inColor, nsIRenderingCo
 //
 // PaintOnContainerDropFeedback
 //
-// Draws the drop feedback for when the tree is sorted, so line-item drop feedback is
-// not appliable.
+// Draws the drop feedback for when the row is a container and it is open. We let
+// CSS handle the operation of painting the row bg so it's skinnable.
 //
 void
 nsXULTreeGroupFrame :: PaintOnContainerDropFeedback ( nscolor inColor, nsIRenderingContext& inRenderingContext,
                                                          nsIPresContext* inPresContext, float & inPixelsToTwips )
 {
-  // lookup the color for the bg of the selected cell. default to gray if not found.
-  nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-drop-container-bg")) );
-  nscolor bgColor = GetColorFromStyleContext ( inPresContext, atom, NS_RGB(0xDD, 0xDD, 0xDD) ) ;
-
-  // paint the cell's bg...we really want to muck with the titled buttons, but a) there
-  // isn't any support for that yet, and b) we don't really know what's going
-  // to be there in the cell as far as anonymous content goes...
-  nsRect cellBounds;
-  nsIFrame* treeRow;
-  FirstChild ( inPresContext, nsnull, &treeRow );
-  if ( !treeRow ) return;
-  nsIFrame* treeCell;
-  treeRow->FirstChild ( inPresContext, nsnull, &treeCell );
-  if ( !treeCell ) return;
-  treeCell->GetRect ( cellBounds );
-  inRenderingContext.SetColor ( bgColor );
-  inRenderingContext.FillRect ( cellBounds );
-
-  PRInt32 horizIndent = 0;
   if ( IsOpenContainer() ) {
+    PRInt32 horizIndent = 0;
     nsIFrame* firstChild = nsnull;
     FindFirstChildTreeItemFrame ( inPresContext, &firstChild );
     if ( firstChild )
       horizIndent = FindIndentation(inPresContext, firstChild);
+
+    inRenderingContext.SetColor(inColor);
+    nsRect dividingLine ( horizIndent, mRect.height - NSToIntRound(2 * inPixelsToTwips), 
+                            NSToIntRound(50 * inPixelsToTwips), NSToIntRound(2 * inPixelsToTwips) );
+    inRenderingContext.DrawRect ( dividingLine );
   }
-  else {
-    // for the case where the container is closed (it doesn't have any children)
-    // all we can do is get our own indentation and add the hardcoded indent level
-    // since we don't really know...The indent level is currently hardcoded in
-    // the treeIndentation frame to 16..
-    horizIndent = FindIndentation(inPresContext, this) + NSToIntRound(16 * inPixelsToTwips);
-  }
-  
-  inRenderingContext.SetColor(inColor);
-  nsRect dividingLine ( horizIndent, mRect.height - NSToIntRound(2 * inPixelsToTwips), 
-                          NSToIntRound(50 * inPixelsToTwips), NSToIntRound(2 * inPixelsToTwips) );
-  inRenderingContext.DrawRect ( dividingLine );
 
 } // PaintOnContainerDropFeedback
 
@@ -820,30 +794,33 @@ nsXULTreeGroupFrame :: PaintOnContainerDropFeedback ( nscolor inColor, nsIRender
 //
 // PaintInBetweenDropFeedback
 //
-// Draw the feedback for when the drop is to go in between two nodes
+// Draw the feedback for when the drop is to go in between two nodes, but only if the tree
+// allows that.
 //
 void
 nsXULTreeGroupFrame :: PaintInBetweenDropFeedback ( nscolor inColor, nsIRenderingContext& inRenderingContext,
                                                       nsIPresContext* inPresContext, float & inPixelsToTwips )
 {
-  // the normal case is that we can just look at this frame to find the indentation we need. However,
-  // when we're an _open container_ and are being asked to draw the line _after_, we need to use the
-  // indentation of our first child instead. ick.
-  PRInt32 horizIndent = 0;
-  if ( IsOpenContainer() && mYDropLoc > 0 ) {
-    nsIFrame* firstChild = nsnull;
-    FindFirstChildTreeItemFrame ( inPresContext, &firstChild );
-    if ( firstChild )
-      horizIndent = FindIndentation(inPresContext, firstChild);
-  } // if open container and drop after
-  else
-    horizIndent = FindIndentation(inPresContext, this);
+  if ( mOuterFrame->CanDropBetweenRows() ) {
+    // the normal case is that we can just look at this frame to find the indentation we need. However,
+    // when we're an _open container_ and are being asked to draw the line _after_, we need to use the
+    // indentation of our first child instead. ick.
+    PRInt32 horizIndent = 0;
+    if ( IsOpenContainer() && mYDropLoc > 0 ) {
+      nsIFrame* firstChild = nsnull;
+      FindFirstChildTreeItemFrame ( inPresContext, &firstChild );
+      if ( firstChild )
+        horizIndent = FindIndentation(inPresContext, firstChild);
+    } // if open container and drop after
+    else
+      horizIndent = FindIndentation(inPresContext, this);
+    
+    inRenderingContext.SetColor(inColor);
+    nsRect dividingLine ( horizIndent, mYDropLoc, 
+                            NSToIntRound(50 * inPixelsToTwips), NSToIntRound(2 * inPixelsToTwips) );
+    inRenderingContext.FillRect(dividingLine);
+  }
   
-  inRenderingContext.SetColor(inColor);
-  nsRect dividingLine ( horizIndent, mYDropLoc, 
-                          NSToIntRound(50 * inPixelsToTwips), NSToIntRound(2 * inPixelsToTwips) );
-  inRenderingContext.FillRect(dividingLine);
-
 } // PaintInBetweenDropFeedback
 
 
