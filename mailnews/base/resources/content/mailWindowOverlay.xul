@@ -1294,7 +1294,7 @@ Rights Reserved.
     <box id="component-bar" class="component-bar-box"/>
     <statusbarpanel id="offline-status" class="statusbarpanel-icononly"/> 
     <statusbarpanel id="statusText" label="&statusText.label;" crop="right" flex="1"/> 
-    <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" hidden="true" mode="normal" value="0" oncommand="dumpProgress()"/> 
+    <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0" oncommand="dumpProgress()"/> 
   </box>
   <box insertafter="totalMessageCount">
       <statusbarpanel id="security-button" class="statusbarpanel-icononly"/>
