@@ -564,10 +564,17 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
 
     if (NS_SUCCEEDED(rv)) {
         // EvaluateScript() succeeded, that means there's data to
-        // parse as a result of evaluating the script. Stop all
-        // pending network loads.
+        // parse as a result of evaluating the script.
 
-        rv = StopAll();
+        nsLoadFlags loadFlags;
+        mStreamChannel->GetLoadFlags(&loadFlags);
+
+        if (loadFlags & LOAD_DOCUMENT_URI) {
+            // We're loaded as the document channel. Stop all pending
+            // network loads.
+
+            rv = StopAll();
+        }
 
         if (NS_SUCCEEDED(rv)) {
             // This will add mStreamChannel to the load group.
