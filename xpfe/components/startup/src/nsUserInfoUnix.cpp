@@ -63,7 +63,26 @@ nsUserInfo::GetFullname(PRUnichar **aFullname)
     printf("fullname = %s\n", pw->PW_GECOS);
 #endif
 
-    nsAutoString fullname(NS_ConvertASCIItoUCS2(pw->PW_GECOS));
+    nsCAutoString fullname(pw->PW_GECOS);
+
+    // now try to parse the GECOS information, which will be in the form
+    // Full Name, <other stuff> - eliminate the ", <other stuff>
+    // also, sometimes GECOS uses "&" to mean "the user name" so do
+    // the appropriate substitution
+    
+    // truncate at first comma (field delimiter)
+    PRInt32 index;
+    if ((index = fullname.Find(",")) != kNotFound)
+        fullname.Truncate(index);
+
+    // replace ampersand with username
+    if (pw->pw_name) {
+        nsCAutoString username(pw->pw_name);
+        if (username.Length() > 0 && nsCRT::IsLower(username.CharAt(0)))
+            username.SetCharAt(nsCRT::ToUpper(username.CharAt(0)), 0);
+            
+        fullname.ReplaceSubstring("&", (const char *) username);
+    }
 
     *aFullname = fullname.ToNewUnicode();
 
