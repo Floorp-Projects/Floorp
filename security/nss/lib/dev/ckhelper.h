@@ -41,7 +41,7 @@
 #define CKHELPER_H
 
 #ifdef DEBUG
-static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.6 $ $Date: 2001/10/11 17:05:08 $ $Name:  $";
+static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.7 $ $Date: 2001/10/11 18:40:31 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifdef NSS_3_4_CODE
@@ -63,13 +63,21 @@ PR_BEGIN_EXTERN_C
  */
 
 /* Boolean values */
-NSS_EXTERN_DATA /* const */ NSSItem g_ck_true;
-NSS_EXTERN_DATA /* const */ NSSItem g_ck_false;
+NSS_EXTERN_DATA const NSSItem g_ck_true;
+NSS_EXTERN_DATA const NSSItem g_ck_false;
 
 /* Object classes */
-NSS_EXTERN_DATA /* const */ NSSItem g_ck_class_cert;
-NSS_EXTERN_DATA /* const */ NSSItem g_ck_class_pubkey;
-NSS_EXTERN_DATA /* const */ NSSItem g_ck_class_privkey;
+NSS_EXTERN_DATA const NSSItem g_ck_class_cert;
+NSS_EXTERN_DATA const NSSItem g_ck_class_pubkey;
+NSS_EXTERN_DATA const NSSItem g_ck_class_privkey;
+
+#define NSS_CK_SET_ATTRIBUTE_VAR(cktemplate, index, var)  \
+    (cktemplate)[index].pValue = (CK_VOID_PTR)&var;       \
+    (cktemplate)[index].ulValueLen = (CK_ULONG)sizeof(var)
+
+#define NSS_CK_SET_ATTRIBUTE_ITEM(cktemplate, index, item)  \
+    (cktemplate)[index].pValue = (CK_VOID_PTR)(item)->data; \
+    (cktemplate)[index].ulValueLen = (CK_ULONG)(item)->size;
 
 /* NSS_CK_ATTRIBUTE_TO_ITEM(attrib, item)
  *

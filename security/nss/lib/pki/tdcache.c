@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.2 $ $Date: 2001/10/11 17:41:44 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.3 $ $Date: 2001/10/11 18:40:34 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
@@ -279,7 +279,9 @@ nssTrustDomain_RemoveCertFromCache
     nssList *subjects;
     NSSItem *ias;
     unsigned char buf[128];
-    NSSItem s_ias = { (void *)buf, sizeof(buf) };
+    NSSItem s_ias;
+    s_ias.data = (void *)buf;
+    s_ias.size = sizeof(buf);
     ias = get_static_ias(&s_ias, &cert->issuer, &cert->serial);
     PZ_Lock(td->cache->lock);
     if (nssHash_Exists(td->cache->issuerAndSN, &ias)) {
@@ -504,7 +506,9 @@ nssTrustDomain_GetCertForIssuerAndSNFromCache
     NSSCertificate *rvCert;
     NSSItem *ias;
     unsigned char buf[128];
-    NSSItem s_ias = { (void *)buf, sizeof(buf) };
+    NSSItem s_ias;
+    s_ias.data = (void *)buf;
+    s_ias.size = sizeof(buf);
     ias = get_static_ias(&s_ias, issuer, serial);
 #ifdef DEBUG
     debug_cache(td);

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.6 $ $Date: 2001/10/11 16:34:49 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.7 $ $Date: 2001/10/11 18:40:34 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -373,12 +373,13 @@ NSSTrustDomain_FindBestCertificateByNickname
     NSSToken *tok;
     CK_ATTRIBUTE cert_template[] =
     {
-	{ CKA_CLASS, g_ck_class_cert.data, g_ck_class_cert.size },
-	{ CKA_LABEL, NULL,                 0                    }
+	{ CKA_CLASS, NULL, 0 },
+	{ CKA_LABEL, NULL, 0 }
     };
     struct get_best_cert_arg_str best;
     CK_ULONG ctsize;
     ctsize = (CK_ULONG)(sizeof(cert_template) / sizeof(cert_template[0]));
+    NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 0, &g_ck_class_cert);
     cert_template[1].pValue = (CK_VOID_PTR)name;
     cert_template[1].ulValueLen = (CK_ULONG)nssUTF8_Length(name, &nssrv);
     best.td = td;
@@ -448,12 +449,13 @@ NSSTrustDomain_FindCertificatesByNickname
     nssList *foundCerts;
     CK_ATTRIBUTE cert_template[] =
     {
-	{ CKA_CLASS, g_ck_class_cert.data, g_ck_class_cert.size },
-	{ CKA_LABEL, NULL,                 0                    }
+	{ CKA_CLASS, NULL, 0 },
+	{ CKA_LABEL, NULL, 0 }
     };
     struct collect_arg_str ca;
     CK_ULONG ctsize;
     ctsize = (CK_ULONG)(sizeof(cert_template) / sizeof(cert_template[0]));
+    NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 0, &g_ck_class_cert);
     cert_template[1].pValue = (CK_VOID_PTR)name;
     cert_template[1].ulValueLen = (CK_ULONG)nssUTF8_Length(name, &nssrv);
     foundCerts = nssList_Create(NULL, PR_FALSE);

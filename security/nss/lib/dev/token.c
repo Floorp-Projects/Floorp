@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.8 $ $Date: 2001/10/11 16:33:38 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.9 $ $Date: 2001/10/11 18:40:31 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -451,9 +451,10 @@ nssToken_TraverseCertificates
     PRStatus nssrv;
     /* this is really traversal - the template is all certs */
     CK_ATTRIBUTE cert_template[] = {
-	{ CKA_CLASS, g_ck_class_cert.data, g_ck_class_cert.size }
+	{ CKA_CLASS, NULL, 0 }
     };
     CK_ULONG ctsize = sizeof(cert_template) / sizeof(cert_template[0]);
+    NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 0, &g_ck_class_cert);
     nssrv = nssToken_FindCertificatesByTemplate(tok, sessionOpt, 
                                                 cert_template, ctsize,
                                                 callback, arg);
