@@ -64,7 +64,7 @@ function initOutliners()
 console._sourceOutlinerView = new BasicOView();
 
 console._sourceOutlinerView.setCurrentLine =
-function bov_setcl (line)
+function sov_setcl (line)
 {
     if (this.currentLine)
     {
@@ -122,7 +122,7 @@ function sov_rowprops (row, properties)
 console._sourceOutlinerView.getCellProperties =
 function sov_cellprops (row, colID, properties)
 {
-    if (!this.sourceArray[row])
+    if (!this.sourceArray || !this.sourceArray[row])
         return;
     
     if (colID == "breakpoint-col" && this.sourceArray[row].isBreakpoint)
