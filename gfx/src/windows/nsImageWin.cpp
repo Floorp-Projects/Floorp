@@ -805,8 +805,10 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
 
   // if alpha is less than 8,not printing, and not 8 bit palette image then we can do
   // a progressive tile and the tile is at least 8 times smaller than the area to update
+  // if the number of tiles are less than 32 the progressive doubling can slow down
+  // because of the creation of the offscreens, DC's etc.
   if ( (mAlphaDepth < 8) && (canRaster!=DT_RASPRINTER) && (256!=mNumPaletteColors) && 
-          (numTiles > 7) ) {
+          (numTiles > 32) ) {
     result = ProgressiveDoubleBlit(aSurface,aDestRect.width, aDestRect.height,
                              ScaledTileWidth,ScaledTileHeight, x0,y0,x1,y1);  
     if (result ) {
