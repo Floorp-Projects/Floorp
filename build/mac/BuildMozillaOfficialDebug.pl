@@ -33,6 +33,10 @@ Moz::StopForErrors();
 
 chdir("::::");
 
+SetBuildNumber();
+
+SetTimeBomb(0, 30);
+
 # Make and popuplate the dist directory
 DistMozilla();
 
@@ -40,15 +44,8 @@ Delay(10);
 
 # Set the build number in about-all.html.  Commented out for now
 # until ckid/mcvs resource problem is resolved.
-SetBuildNumber();
 
 # SetAgentString();
-
-Delay(10);
-
-SetTimeBomb(0, 30);
-
-Delay(10);
 
 # Now build the projects
 BuildMozilla();
