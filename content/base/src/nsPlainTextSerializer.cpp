@@ -1014,8 +1014,7 @@ nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag,
     // we want to preserve whitespace.
     if (mFlags & nsIDocumentEncoder::OutputPreformatted ||
         (mPreFormatted && !mWrapColumn) ||
-        ((mFlags & nsIDocumentEncoder::OutputFormatted)
-         && IsInPre())) {
+        IsInPre()) {
       Write(aText);
     }
     else if(!mInWhitespace ||
