@@ -503,7 +503,7 @@ function SearchNewFolderOkCallback(name,uri)
   
   if (!imapFolder)
   {
-    var curFolder = uri+"/"+name;
+    var curFolder = uri+"/"+escape(name);
     SetFolderPicker(curFolder, gActionTargetElement.id);
   }
 }
