@@ -8,8 +8,8 @@
 # The only external interface to this library is summary_pages() and
 # create_global_index() these functions are only called by tinder.cgi.
 
-# $Revision: 1.13 $ 
-# $Date: 2003/04/20 00:52:44 $ 
+# $Revision: 1.14 $ 
+# $Date: 2003/04/20 19:33:33 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Summaries.pm,v $ 
 # $Name:  $ 
@@ -78,7 +78,7 @@ sub summary_pages {
     # ugly and nearly all of these are used by every summary function.
 
     @LATEST_STATUS = TinderDB::Build::latest_status($tree);
-    @LATEST_ERRS = TinderDB::Build::latest_errors($tree);
+    @LATEST_ERRORS = TinderDB::Build::latest_errors($tree);
     @BUILD_NAMES = TinderDB::Build::build_names($tree);
 
     @HTML_COLORS = BuildStatus::status2html_colors(@LATEST_STATUS);
@@ -402,8 +402,8 @@ EOF
     my ($color) = $HTML_COLORS[$i];
     $body .= "\t\t<TD BGCOLOR='$color'>$buildname\n";
     if ($DISPLAY_BUILD_ERRORS) {
-      my ($errs) = $LATEST_ERRS[$i];
-      $body .= "&nbsp;errs:&nbsp;$errs";
+      my ($errors) = $LATEST_ERRORS[$i];
+      $body .= "&nbsp;errors:&nbsp;$errors";
     }
     $body .= "</TD>\n";
 
@@ -450,8 +450,8 @@ sub panel {
     my ($color) = $HTML_COLORS[$i];
     $body .= "\t\t<TR><TD BGCOLOR='$color'>$buildname";
     if ($DISPLAY_BUILD_ERRORS) {
-      my ($errs) = $LATEST_ERRS[$i];
-      $body .= "errs:&nbsp;$errs";
+      my ($errors) = $LATEST_ERRORS[$i];
+      $body .= "&nbsp;errors:&nbsp;$errors";
     }
     $body .= "</TD></TR>\n";
   }
@@ -479,21 +479,21 @@ sub jspanel {
                                      "/$FileStructure::DEFAULT_HTML_PAGE"),
                      );
   $temp =~ s/\"/\'/g;
-  $body .= $temp;
+  $body .= $temp."\n";
 
-  $body .= "<TABLE BPRDER=0 CELLPADDING=1 CELLSPACING=1>";
+  $body .= "\t<TABLE BPRDER=0 CELLPADDING=1 CELLSPACING=1>\n";
   for ($i=0; $i <= $#BUILD_NAMES; $i++) {
     my ($buildname) = $BUILD_NAMES[$i];
     my ($color) = $HTML_COLORS[$i];
     $body .= "\t\t<TR><TD CLASS='tinderbuild' BGCOLOR='$color'>$buildname";
     if ($DISPLAY_BUILD_ERRORS) {
-      my ($errs) = $LATEST_ERRS[$i];
-      $body .= "errs:&nbsp;$errs";
+      my ($errors) = $LATEST_ERRORS[$i];
+      $body .= "&nbsp;errors:&nbsp;$errors";
     }
-    $body .= "</TD></TR>";
+    $body .= "</TD></TR>\n";
   }
 
-  $body .= "</TABLE>";
+  $body .= "\t</TABLE>\n";
 
   ## end the js
   $body .= '";';
@@ -512,7 +512,7 @@ sub quickparse {
 
   $body .= "State|$TREE|$TREE|$TREE_STATE";
   if ($DISPLAY_BUILD_ERRORS) {
-    $body .= "|Errs";
+    $body .= "|Errors";
   }
   $body .= "\n";
   
@@ -521,8 +521,8 @@ sub quickparse {
     my ($status) = $LATEST_STATUS[$i];
     $body .= "Build|$TREE|$buildname|$status";
     if ($DISPLAY_BUILD_ERRORS) {
-      my ($errs) = $LATEST_ERRS[$i];
-      $body .= "|" . $errs;
+      my ($errors) = $LATEST_ERRORS[$i];
+      $body .= "|" . $errors;
     }
     $body .= "\n";
   }
@@ -685,7 +685,12 @@ sub hdml {
   for ($i=0; $i <= $#BUILD_NAMES; $i++) {
     my ($buildname) = $BUILD_NAMES[$i];
     my ($hdml_char) = $HDML_CHARS[$i];
-    $body .= "\t<LINE>$hdml_char $buildname\n";
+    $body .= "\t<LINE>$hdml_char $buildname";
+    if ($DISPLAY_BUILD_ERRORS) {
+      my ($errors) = $LATEST_ERRORS[$i];
+      $body .= " $errors";
+    }
+    $body .= "\n";
   }
 
   $body .= "</DISPLAY>\n";
