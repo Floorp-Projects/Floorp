@@ -115,8 +115,8 @@ public:
   NS_IMETHOD SaveState();
   NS_IMETHOD RestoreState(nsIPresState* aState);
 
-  // nsITextControlElemet
-  NS_IMETHOD TakeTextFrameValue(const nsAString& aValue);
+  // nsITextControlElement
+  NS_IMETHOD SetValueGuaranteed(const nsAString& aValue, nsITextControlFrame* aFrame);
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
 
   // nsIContent
@@ -162,9 +162,6 @@ protected:
    *        wrap=hard.
    */
   void GetValueInternal(nsAString& aValue, PRBool aIgnoreWrap);
-
-  nsresult SetValueInternal(const nsAString& aValue,
-                            nsITextControlFrame* aFrame);
 };
 
 nsresult
@@ -456,19 +453,10 @@ nsHTMLTextAreaElement::GetValueInternal(nsAString& aValue, PRBool aIgnoreWrap)
   }
 }
 
-NS_IMETHODIMP
-nsHTMLTextAreaElement::TakeTextFrameValue(const nsAString& aValue)
-{
-  if (mValue) {
-    nsMemory::Free(mValue);
-  }
-  mValue = ToNewUTF8String(aValue);
-  return SetValueChanged(PR_TRUE);
-}
 
-nsresult
-nsHTMLTextAreaElement::SetValueInternal(const nsAString& aValue,
-                                        nsITextControlFrame* aFrame)
+NS_IMETHODIMP
+nsHTMLTextAreaElement::SetValueGuaranteed(const nsAString& aValue,
+                                          nsITextControlFrame* aFrame)
 {
   nsITextControlFrame* textControlFrame = aFrame;
   nsIFormControlFrame* formControlFrame = textControlFrame;
@@ -508,7 +496,7 @@ nsHTMLTextAreaElement::SetValueInternal(const nsAString& aValue,
 NS_IMETHODIMP 
 nsHTMLTextAreaElement::SetValue(const nsAString& aValue)
 {
-  return SetValueInternal(aValue, nsnull);
+  return SetValueGuaranteed(aValue, nsnull);
 }
 
 
