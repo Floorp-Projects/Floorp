@@ -199,8 +199,6 @@ function doSearch()
 
 	for (var x = 0; x<numEngines; x++)
 	{
-		dump("Engine: #" + x + "\n");
-
 		var treeItem = treeChildrenNode.childNodes[x];
 		if (!treeItem)
 		{

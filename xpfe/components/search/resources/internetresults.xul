@@ -136,5 +136,5 @@
 		</treehead>
 	</tree>
 
-	<html:iframe id="content-frame" type="content-primary" width="100%" height="25%" flex="100%" src="about:blank" />
+	<html:iframe id="content" type="content-primary" width="100%" height="25%" flex="100%" src="about:blank" />
 </window>
