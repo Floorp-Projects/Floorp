@@ -210,25 +210,12 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     // block to use as the basis for the percentage computation.
     if ((eStyleUnit_Percent == widthUnit) ||
         (eStyleUnit_Percent == heightUnit)) {
-      // Find the containing block for this frame
-      nsIFrame* containingBlock = nsnull;
-      const nsReflowState* rs = parentReflowState;
-      while (nsnull != rs) {
-        if (nsnull != rs->frame) {
-          PRBool isContainingBlock;
-          if (NS_OK == rs->frame->IsPercentageBase(isContainingBlock)) {
-            if (isContainingBlock) {
-              containingBlock = rs->frame;
-              break;
-            }
-          }
-        }
-        rs = rs->parentReflowState;
-      }
+      const nsHTMLReflowState* cbrs =
+        GetContainingBlockReflowState(parentReflowState);
 
       // If there is no containing block then pretend the width or
       // height units are auto.
-      if (nsnull == containingBlock) {
+      if (nsnull == cbrs) {
         if (eStyleUnit_Percent == widthUnit) {
           widthUnit = eStyleUnit_Auto;
         }
@@ -238,26 +225,17 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
       }
       else {
         if (eStyleUnit_Percent == widthUnit) {
-          if (NS_UNCONSTRAINEDSIZE == rs->maxSize.width) {
-            // When we don't know the width (yet) of the containing
-            // block we use a dummy value, assuming that the frame
-            // depending on the percentage value will be reflowed a
-            // second time.
-            containingBlockWidth = 1;
-          }
-          else {
-            containingBlockWidth = rs->maxSize.width;
-          }
+          containingBlockWidth = cbrs->GetContentWidth();
         }
         if (eStyleUnit_Percent == heightUnit) {
-          if (NS_UNCONSTRAINEDSIZE == rs->maxSize.height) {
+          if (NS_UNCONSTRAINEDSIZE == cbrs->maxSize.height) {
             // CSS2 spec, 10.5: if the height of the containing block
             // is not specified explicitly then the value is
             // interpreted like auto.
             heightUnit = eStyleUnit_Auto;
           }
           else {
-            containingBlockHeight = rs->maxSize.height;
+            containingBlockHeight = cbrs->maxSize.height;
           }
         }
       }
