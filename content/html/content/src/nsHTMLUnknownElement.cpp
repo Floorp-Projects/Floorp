@@ -122,6 +122,8 @@ public:
   }
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                           const nsString& aValue, PRBool aNotify);
+  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
+                          const nsString& aValue, PRBool aNotify);
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                           nsString& aResult) const {
     return mInner.GetAttribute(aNameSpaceID, aName, aResult);
@@ -424,6 +426,24 @@ nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
   }
 
   return result;
+}
+
+NS_IMETHODIMP
+nsHTMLUnknownElement::SetAttribute(nsINodeInfo *aNodeInfo,
+                                   const nsString& aValue,
+                                   PRBool aNotify)
+{
+  NS_ENSURE_ARG_POINTER(aNodeInfo);  
+
+  nsCOMPtr<nsIAtom> atom;  
+  PRInt32 nsid;  
+
+  aNodeInfo->GetNameAtom(*getter_AddRefs(atom));  
+  aNodeInfo->GetNamespaceID(nsid);  
+
+  // We still rely on the old way of setting the attribute.  
+  
+  return SetAttribute(nsid, atom, aValue, aNotify);  
 }
 
 NS_IMETHODIMP

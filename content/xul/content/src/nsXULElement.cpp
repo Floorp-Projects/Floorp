@@ -2867,6 +2867,24 @@ nsXULElement::SetAttribute(PRInt32 aNameSpaceID,
     return rv;
 }
 
+NS_IMETHODIMP 
+nsXULElement::SetAttribute(nsINodeInfo* aNodeInfo, 
+                           const nsString& aValue,
+                           PRBool aNotify)
+{
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  nsCOMPtr<nsIAtom> atom;
+  PRInt32 nsid;
+
+  aNodeInfo->GetNameAtom(*getter_AddRefs(atom));
+  aNodeInfo->GetNamespaceID(nsid);
+
+  // We still rely on the old way of setting the attribute.
+
+  return SetAttribute(nsid, atom, aValue, aNotify);
+}
+
 NS_IMETHODIMP
 nsXULElement::GetAttribute(PRInt32 aNameSpaceID,
                            nsIAtom* aName,

@@ -62,6 +62,12 @@ public:
     return nsGenericContainerElement::SetAttribute(aNameSpaceID, aName,
                                                    aValue, aNotify);
   }
+  nsresult SetAttribute(nsINodeInfo *aNodeInfo,
+                        const nsString& aValue,
+                        PRBool aNotify)
+  {
+    return nsGenericContainerElement::SetAttribute(aNodeInfo, aValue, aNotify);
+  }
   nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
                         nsString& aResult) const
   {

@@ -40,6 +40,7 @@ class nsIContent;
 class nsISupportsArray;
 class nsIDOMRange;
 class nsISizeOfHandler;
+class nsINodeInfo;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
@@ -134,6 +135,23 @@ public:
    */
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                           const nsString& aValue,
+                          PRBool aNotify) = 0;
+
+  /**
+   * Set attribute values. All attribute values are assumed to have a
+   * canonical string representation that can be used for these
+   * methods. The setAttribute method is assumed to perform a translation
+   * of the canonical form into the underlying content specific
+   * form.
+   *
+   * @param aNodeInfo the node info (name, prefix, namespace id) of the
+   * attribute
+   * @param aValue may legitimately be the empty string.
+   *
+   * @param aNotify specifies whether or not the document should be
+   * notified of the attribute change.
+   */
+  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo, const nsString& aValue,
                           PRBool aNotify) = 0;
 
   /**

@@ -312,6 +312,8 @@ public:
   nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
                         const nsString& aValue,
                         PRBool aNotify);
+  nsresult SetAttribute(nsINodeInfo* aNodeInfo, const nsString& aValue,
+                        PRBool aNotify);
   nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
                         nsString& aResult) const;
   nsresult UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
@@ -555,6 +557,10 @@ public:
                           const nsString& aValue, PRBool aNotify) {        \
     return _g.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          \
   }                                                                        \
+  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,                          \
+                          const nsString& aValue, PRBool aNotify) {        \
+    return _g.SetAttribute(aNodeInfo, aValue, aNotify);                    \
+  }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
                           nsString& aResult) const {                       \
     return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
@@ -669,6 +675,10 @@ public:
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
                           const nsString& aValue, PRBool aNotify) {        \
     return _g.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          \
+  }                                                                        \
+  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,                          \
+                          const nsString& aValue, PRBool aNotify) {        \
+    return _g.SetAttribute(aNodeInfo, aValue, aNotify);                    \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
                           nsString& aResult) const {                       \
@@ -785,6 +795,10 @@ public:
                           const nsString& aValue, PRBool aNotify) {        \
     return _g.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          \
   }                                                                        \
+  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,                          \
+                          const nsString& aValue, PRBool aNotify) {        \
+    return _g.SetAttribute(aNodeInfo, aValue, aNotify);                    \
+  }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
                           nsString& aResult) const {                       \
     return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
@@ -897,6 +911,10 @@ public:
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
                           const nsString& aValue, PRBool aNotify) {        \
     return _g.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          \
+  }                                                                        \
+  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,                          \
+                          const nsString& aValue, PRBool aNotify) {        \
+    return _g.SetAttribute(aNodeInfo, aValue, aNotify);                    \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
                           nsString& aResult) const {                       \
@@ -1015,6 +1033,10 @@ public:
                           const nsString& aValue, PRBool aNotify) {        \
     return _g.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          \
   }                                                                        \
+  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,                          \
+                          const nsString& aValue, PRBool aNotify) {        \
+    return _g.SetAttribute(aNodeInfo, aValue, aNotify);                    \
+  }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
                           nsString& aResult) const {                       \
     return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
@@ -1123,6 +1145,10 @@ public:
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
                           const nsString& aValue, PRBool aNotify) {        \
     return _g.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          \
+  }                                                                        \
+  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,                          \
+                          const nsString& aValue, PRBool aNotify) {        \
+    return _g.SetAttribute(aNodeInfo, aValue, aNotify);                    \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
                           nsString& aResult) const {                       \

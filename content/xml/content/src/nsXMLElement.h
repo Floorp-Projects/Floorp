@@ -118,6 +118,8 @@ public:
   }
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue,
                           PRBool aNotify);
+  NS_IMETHOD SetAttribute(nsINodeInfo *aNodeInfo, const nsString& aValue,
+                          PRBool aNotify);
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                           nsString& aResult) const {
     return mInner.GetAttribute(aNameSpaceID, aName, aResult);
