@@ -524,10 +524,10 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
     
     // nsINodeInfo table
     nsCOMArray<nsINodeInfo> nodeInfos;
-    rv |= GetNodeInfos(mRoot, nodeInfos);
-    NS_ENSURE_SUCCESS(rv, rv);
-    PRInt32 nodeInfoCount = nodeInfos.Count();
+    if (mRoot)
+        rv |= GetNodeInfos(mRoot, nodeInfos);
 
+    PRInt32 nodeInfoCount = nodeInfos.Count();
     rv |= aStream->Write32(nodeInfoCount);
     for (PRInt32 j = 0; j < nodeInfoCount; ++j) {
         nsINodeInfo *nodeInfo = nodeInfos[j];
