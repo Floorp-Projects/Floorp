@@ -622,33 +622,6 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
     rv = GetContainingNameSpace(aElement, getter_AddRefs(containingNameSpace));
     if (NS_FAILED(rv)) return rv;
 
-    // Iterate through all of the element's children, and construct
-    // appropriate children for each arc.
-    nsCOMPtr<nsISimpleEnumerator> children;
-    rv = NS_NewContainerEnumerator(mDB, resource, getter_AddRefs(children));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create cursor for children");
-    if (NS_FAILED(rv)) return rv;
-
-    while (1) {
-        PRBool hasMore;
-        rv = children->HasMoreElements(&hasMore);
-        if (NS_FAILED(rv)) return rv;
-
-        if (! hasMore)
-            break;
-
-        nsCOMPtr<nsISupports> isupports;
-        rv = children->GetNext(getter_AddRefs(isupports));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "error reading cursor");
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIRDFNode> child = do_QueryInterface(isupports);
-
-        rv = AppendChild(containingNameSpace, aElement, child);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "problem appending child to content model");
-        if (NS_FAILED(rv)) return rv;
-    }
-
     // If we're the root content, then prepend a special hidden form
     // element.
     if (aElement == mRoot.get()) {
@@ -679,6 +652,33 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
           mRoot->InsertChildAt(content, 0, PR_FALSE);
         }
       }
+    }
+
+    // Iterate through all of the element's children, and construct
+    // appropriate children for each arc.
+    nsCOMPtr<nsISimpleEnumerator> children;
+    rv = NS_NewContainerEnumerator(mDB, resource, getter_AddRefs(children));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create cursor for children");
+    if (NS_FAILED(rv)) return rv;
+
+    while (1) {
+        PRBool hasMore;
+        rv = children->HasMoreElements(&hasMore);
+        if (NS_FAILED(rv)) return rv;
+
+        if (! hasMore)
+            break;
+
+        nsCOMPtr<nsISupports> isupports;
+        rv = children->GetNext(getter_AddRefs(isupports));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "error reading cursor");
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIRDFNode> child = do_QueryInterface(isupports);
+
+        rv = AppendChild(containingNameSpace, aElement, child);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "problem appending child to content model");
+        if (NS_FAILED(rv)) return rv;
     }
 
     // Now that we've built the children, check to see if the includesrc attribute

@@ -3060,13 +3060,18 @@ XULDocumentImpl::CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aR
       return rv;
     }
     // Now we need to copy all of the style sheets from the parent document
-    /*PRInt32 count = mStyleSheets.Count();
-    for (PRInt32 i = 0; i < count; i++) {
+    PRInt32 count = mStyleSheets.Count();
+    for (PRInt32 i = 1; i < count-1; i++) {
       // Don't bother addrefing. We don't live as long as our parent document
         nsIStyleSheet* sheet = (nsIStyleSheet*) mStyleSheets.ElementAt(i);
-        sheet->SetOwningDocument(popupDoc);
-        popupDoc->mStyleSheets.AppendElement(sheet);  
-    }*/
+        nsCOMPtr<nsICSSStyleSheet> cssSheet = do_QueryInterface(sheet);
+        if (cssSheet) {
+          nsCOMPtr<nsICSSStyleSheet> clonedSheet;
+          if (NS_SUCCEEDED(cssSheet->Clone(*getter_AddRefs(clonedSheet)))) {
+            popupDoc->AddStyleSheet(clonedSheet);
+          }
+        }
+    }
 
     // We don't share builders, but we do share the DB that the current
     // XUL builder has.
