@@ -26,39 +26,34 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-        onload="manualSelected();return StartUp('Proxies');"  title="Sample Prefs Panel">
+        onload="manualSelected();return StartUp('Proxies');"  
+		align="vertical" title="Sample Prefs Panel"
+		debug="false">
 
 <html:script language="javascript" src="PrefsWindow.js"/>
-<html:div flex="100%">
 
-   
-  	<box id="header" align="horizontal">  
-		  <spring style="width:20px"/>
-		  <html:div style="vertical-align: middle;">
-		  <html:B>&lHeader;</html:B>
-		  </html:div>
-    	  <spring flex="100%"/><spring style="width:60px"/>
-		  <html:div >&rHeader;</html:div><spring style="width:5px"/>
-	</box>
+<box class="header" align="horizontal">  
+      <titledbutton class="left-header-text" value="&lHeader;"/>
+	  <spring class="header-spring" flex="1"/>
+	  <titledbutton class="right-header-text" value="&rHeader;"/>
+</box>
 
-
-
-	<box align="vertical" style="width: 100%;">
-		<html:fieldset style="width: 100%;">
+<box align="vertical" style="width: 100%;">
+   	<html:fieldset style="width: 100%;">
 		   
-		<!--	&networkHeader.label;  Bug in boxes-->
+	<!--	&networkHeader.label;  Bug in boxes-->
 	<html:div>
-			<html:input name="directManualOrAuto" type="radio" id="pref:0:int:network.proxy.type" />
-			<html:label for="pref:0:int:network.proxy.type" accesskey="d" tabindex="0">
-			&directTypeRadio.label;
-			</html:label>
+		<html:input name="directManualOrAuto" type="radio" id="pref:0:int:network.proxy.type" />
+		<html:label for="pref:0:int:network.proxy.type" accesskey="d" tabindex="0">
+		&directTypeRadio.label;
+		</html:label>
 	</html:div>
 	<html:div>
-			<html:input name="directManualOrAuto" type="radio" id="pref:1:int:network.proxy.type" />
-			<html:label for="pref:1:int:network.proxy.type" accesskey="m" tabindex="0">
-			&manualTypeRadio.label;
-			</html:label>
-			<titledbutton class="dialog push" value="&view.label;" align="left" onclick="openit();"/>
+		<html:input name="directManualOrAuto" type="radio" id="pref:1:int:network.proxy.type" />
+		<html:label for="pref:1:int:network.proxy.type" accesskey="m" tabindex="0">
+		&manualTypeRadio.label;
+		</html:label>
+		<titledbutton class="dialog push" value="&view.label;" align="left" onclick="openit();"/>
 	</html:div>
 	<html:div id="manual-proxy" style="display: none">
 	<html:table width="100%">
@@ -102,7 +97,8 @@
 	</html:table>
 
 	<!-- Not supporting gopher -->
-<!--	<box align="horizontal">
+    <!--	
+	<box align="horizontal">
 		<html:div>
 		&gopher.label;
 		</html:div>
@@ -113,7 +109,8 @@
 	</box>  -->
 
 	<!--  Not supporting wais right now  -->
-<!--	<box align="horizontal">
+	<!--	
+	<box align="horizontal">
 		<html:div>
 		&wais.label;
 		</html:div>
@@ -124,7 +121,8 @@
 		</html:div>
 		<html:input name="waisproxyport" type="text" id="pref:string:network.proxy.wais_port" size="5" />  
 	</box>  -->
-<!--	<box align="put name="gopherproxy" type="text" id="pref:string:network.proxy.gopher" size="20" />
+	<!--
+	<box align="put name="gopherproxy" type="text" id="pref:string:network.proxy.gopher" size="20" />
 		<spring flex="100%"/>
 		<html:dihorizontal">
 		<html:div>
@@ -133,7 +131,8 @@
 	</box>   -->
 	 
 	<!-- No supporting at this point  -->
-<!--	<box align="horizontal">
+	<!--
+	<box align="horizontal">
 		<html:div>
 		&sockhost.label;
 		</html:div>
@@ -147,21 +146,19 @@
 	
 	</html:div>
 
-			<html:div>
-				<html:input name="directManualOrAuto" type="radio" id="pref:2:int:network.proxy.type" />
-				<html:label for="pref:2:int:network.proxy.type" accesskey="a" tabindex="0">
-				&autoTypeRadio.label;
-				</html:label>
-				
-			</html:div>
+	<html:div>
+		<html:input name="directManualOrAuto" type="radio" id="pref:2:int:network.proxy.type" />
+		<html:label for="pref:2:int:network.proxy.type" accesskey="a" tabindex="0">
+		&autoTypeRadio.label;
+		</html:label>			
+	</html:div>
 
-			<html:div>
-				&configAutoconfigText.label;
-				<html:input name="" type="text" size="15" id="pref:0:string:network.proxy.autoconfig_url" />
-			</html:div>
-				<spring flex="1"/><titledbutton class="dialog push" value="&reload.label;" align="right"/>
-		</html:fieldset>
-	</box>
-</html:div>
+	<html:div>
+		&configAutoconfigText.label;
+		<html:input name="" type="text" size="15" id="pref:0:string:network.proxy.autoconfig_url" />
+	</html:div>
+	<spring flex="1"/><titledbutton class="dialog push" value="&reload.label;" align="right"/>
+	</html:fieldset>
+</box>
 </window>
 
