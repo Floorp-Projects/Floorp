@@ -726,7 +726,7 @@ static nsCString uTypeDesc( UINT uType ) {
 
 static nsCString hszValue( DWORD instance, HSZ hsz ) {
     // Extract string from HSZ.
-    nsCString result = "[";
+    nsCString result("[");
     DWORD len = DdeQueryString( instance, hsz, NULL, NULL, CP_WINANSI );
     if ( len ) {
         char buffer[ 256 ];
