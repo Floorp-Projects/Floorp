@@ -217,6 +217,12 @@ MaiAppRoot::GetDescription(void)
     return atkObject->description;
 }
 
+PRUint32
+MaiAppRoot::GetRole(void)
+{
+    return nsIAccessible::ROLE_APPLICATION;
+}
+
 MaiObject *
 MaiAppRoot::GetParent(void)
 {

@@ -59,6 +59,8 @@ public:
 
     virtual void Finalize(void);
 
+    virtual PRUint32 GetRole(void);
+
     static MaiTopLevel * Create(nsIAccessible *aAcc);
 
     NS_DECL_ISUPPORTS

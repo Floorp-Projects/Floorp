@@ -196,7 +196,7 @@ Important:
   enum { ROLE_MENUITEM = 34U };    // ATK_ROLE_MENU_ITEM
   enum { ROLE_TOOLTIP = 63U };     // ATK_ROLE_TOOL_TIP
   // The object represents a main window for a application
-  enum { ROLE_APPLICATION = 22U }; // ATK_ROLE_FRAME
+  enum { ROLE_APPLICATION = 73U }; // ATK_ROLE_APPLICATION
   // The object represents a document window, only for MDI windows
   enum { ROLE_DOCUMENT = 68U };    // ATK_ROLE_WINDOW
   enum { ROLE_PANE = 38U };        // ATK_ROLE_PANEL
