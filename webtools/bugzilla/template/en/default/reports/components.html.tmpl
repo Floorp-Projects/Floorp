@@ -79,13 +79,15 @@
       <a name="[% comp.name FILTER html %]">[% comp.name FILTER html %]</a>
     </td>
     <td>
-      <a href="mailto:[% comp.initialowner %][% Param('emailsuffix') %]">
+      <a href="mailto:[% comp.initialowner FILTER html %]
+                      [% Param('emailsuffix') %]">
       [% comp.initialowner FILTER html %]</a>
     </td>
     [% IF Param("useqacontact") %]
       <td>
-        <a href="mailto:[% comp.initialqacontact %][% Param('emailsuffix') %]">
-        [% comp.initialqacontact %]</a>
+        <a href="mailto:[% comp.initialqacontact FILTER html %]
+                        [% Param('emailsuffix') %]">
+        [% comp.initialqacontact FILTER html %]</a>
       </td>
     [% END %]
   </tr>

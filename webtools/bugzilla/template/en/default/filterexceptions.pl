@@ -33,17 +33,7 @@
 # Safe vmethods                   - [% foo.size %]
 # TT loop variables               - [% loop.count %]
 # Already-filtered stuff          - [% wibble FILTER html %]
-#   where the filter is one of html|csv|js|url_quote|quoteUrls|time|uri|xml
-
-# Key:
-#
-# "#": directive should be filtered, but not doing so is not a security hole
-# The plan is to come back and add filtering for all those marked "#" after
-# the security release.
-#
-# "# Email": as above; but noting that it's an email address.
-# Other sorts of comments denote cleanups noticed while doing this work;
-# they should be fixed in the very short term.
+#   where the filter is one of html|csv|js|url_quote|quoteUrls|time|uri|xml|none
 
 %::safe = (
 
@@ -80,19 +70,6 @@
   'field.accesskey',
   'sel.name',
   'sel.accesskey',
-  'button_name', #
-],
-
-'search/knob.html.tmpl' => [
-  'button_name', #
-],
-
-'search/search-report-graph.html.tmpl' => [
-  'button_name', #
-],
-
-'search/search-report-table.html.tmpl' => [
-  'button_name', #
 ],
 
 'search/search-specific.html.tmpl' => [
@@ -115,19 +92,11 @@
 'reports/components.html.tmpl' => [
   'numcols',
   'comp.description', 
-  'comp.initialowner', # email address
-  'comp.initialqacontact', # email address
-],
-
-'reports/duplicates-simple.html.tmpl' => [
-  'title', #
 ],
 
 'reports/duplicates-table.html.tmpl' => [
   '"&maxrows=$maxrows" IF maxrows',
   '"&changedsince=$changedsince" IF changedsince',
-  '"&product=$product" IF product', #
-  '"&format=$format" IF format', #
   '"&bug_id=$bug_ids_string&sortvisible=1" IF sortvisible',
   'column.name', 
   'column.description',
@@ -135,10 +104,6 @@
   'bug.id', 
   'bug.count', 
   'bug.delta', 
-  'bug.component', #
-  'bug.bug_severity', #
-  'bug.op_sys', #
-  'bug.target_milestone', #
 ],
 
 'reports/duplicates.html.tmpl' => [
@@ -154,11 +119,9 @@
 ],
 
 'reports/report-table.csv.tmpl' => [
-  '"$tbl_field_disp: $tbl\n" IF tbl_field', #
-  'row_field_disp IF row_field', #
-  'col_field_disp', #
   'num_bugs',
   'data.$tbl.$col.$row',
+  'title',
   '', # This is not a bug in the filter exceptions - this template has an 
       # empty directive which is necessary for it to work properly.
 ],
@@ -168,7 +131,6 @@
   '"&amp;$tbl_vals" IF tbl_vals', 
   '"&amp;$col_vals" IF col_vals', 
   '"&amp;$row_vals" IF row_vals', 
-  'tbl_disp', # 
   'classes.$row_idx.$col_idx', 
   'urlbase', 
   'data.$tbl.$col.$row', 
@@ -178,16 +140,12 @@
 ],
 
 'reports/report.html.tmpl' => [
-  'tbl_field_disp IF tbl_field', #
-  'row_field_disp IF row_field', #
-  'col_field_disp', #
   'imagebase', 
   'width', 
   'height', 
   'imageurl', 
   'formaturl', 
   'other_format.name', 
-  'other_format.description', #
   'sizeurl', 
   'switchbase',
   'format',
@@ -233,7 +191,6 @@
 
 'list/change-columns.html.tmpl' => [
   'column', 
-  'field_descs.${column} || column', #
 ],
 
 'list/edit-multiple.html.tmpl' => [
@@ -250,7 +207,6 @@
 
 'list/list.html.tmpl' => [
   'buglist', 
-  'bugowners', # email address
 ],
 
 'list/list.rdf.tmpl' => [
@@ -260,7 +216,6 @@
 ],
 
 'list/table.html.tmpl' => [
-  'abbrev.$id.title || field_descs.$id || column.title', #
   'tableheader',
   'bug.bug_id', 
 ],
@@ -287,19 +242,12 @@
   'proddesc.$p', 
 ],
 
+# You are not permitted to add any values here. Everything in this file should 
+# be filtered unless there's an extremely good reason why not, in which case,
+# use the "none" dummy filter.
 'global/code-error.html.tmpl' => [
-  'parameters', 
-  'bug.bug_id',
-  'field', 
-  'argument', #
-  'function', #
-  'bug_id', # Need to remove unused error no_bug_data
-  'variables.id', 
-  'template_error_msg', # Should move filtering from CGI.pl to template
-  'error', 
-  'error_message', 
 ],
-
+ 
 'global/header.html.tmpl' => [
   'javascript', 
   'style', 
@@ -313,49 +261,27 @@
 ],
 
 'global/messages.html.tmpl' => [
-  'parameters',
-  '# ---', # Work out what this is
-  'namedcmd', #
-  'old_email', # email address
-  'new_email', # email address
   'message_tag', 
   'series.frequency * 2',
 ],
 
 'global/select-menu.html.tmpl' => [
   'options', 
-  'onchange', # Again, need to be certain where we are filtering
   'size', 
 ],
 
 'global/useful-links.html.tmpl' => [
   'email', 
-  'user.login', # Email address
 ],
 
-# Need to change this and code-error to use a no-op filter, for safety
+# You are not permitted to add any values here. Everything in this file should 
+# be filtered unless there's an extremely good reason why not, in which case,
+# use the "none" dummy filter.
 'global/user-error.html.tmpl' => [
-  'disabled_reason', 
-  'bug_link', 
-  'action', # 
-  'bug_id', 
-  'both', 
-  'filesize', 
-  'attach_id', 
-  'field', 
-  'field_descs.$field', 
-  'today', 
-  'product', #
-  'max', 
-  'votes', 
-  'error_message', 
 ],
 
 'global/confirm-user-match.html.tmpl' => [
-  '# use the global field descs', # Need to fix commenting style here
   'script',
-  '# this is messy to allow later expansion',
-  '# ELSIF for things that don\'t belong in the field_descs hash here',
   'fields.${field_name}.flag_type.name',
 ],
 
@@ -381,22 +307,16 @@
 ],
 
 'bug/dependency-tree.html.tmpl' => [
-  'hide_resolved ? "Open $terms.bugs" : "$terms.Bugs"',
   'bugid', 
   'maxdepth', 
   'dependson_ids.join(",")', 
   'blocked_ids.join(",")', 
   'dep_id', 
   'hide_resolved', 
-  'realdepth < 2 ? "disabled" : ""', 
   'maxdepth + 1', 
-  'maxdepth == 0 || maxdepth == realdepth ? "disabled" : ""', 
-  'realdepth < 2 || ( maxdepth && maxdepth < 2 ) ? "disabled" : ""',
   'maxdepth > 0 && maxdepth <= realdepth ? maxdepth : ""',
   'maxdepth == 1 ? 1
                        : ( maxdepth ? maxdepth - 1 : realdepth - 1 )',
-  'realdepth < 2 || ! maxdepth || maxdepth >= realdepth ?
-            "disabled" : ""',
 ],
 
 'bug/edit.html.tmpl' => [
@@ -425,8 +345,6 @@
 
 'bug/show-multiple.html.tmpl' => [
   'bug.bug_id', 
-  'bug.component', #
-  'attr.description', #
 ],
 
 'bug/show.xml.tmpl' => [
@@ -454,7 +372,6 @@
   'product.total', 
   'product.maxvotes', 
 ],
-# h2 = voting_user.name # Email
 
 'bug/process/confirm-duplicate.html.tmpl' => [
   'original_bug_id', 
@@ -474,21 +391,11 @@
   'id', 
 ],
 
-'bug/process/verify-new-product.html.tmpl' => [
-  'form.product', # 
-],
-
-'bug/process/bugmail.html.tmpl' => [
-  'description', 
-  'name', # Email 
-],
-
 'bug/create/comment.txt.tmpl' => [
   'form.comment', 
 ],
 
 'bug/create/create.html.tmpl' => [
-  'default.bug_status', #
   'g.bit',
   'g.description',
   'sel.name',
@@ -498,7 +405,6 @@
 'bug/create/create-guided.html.tmpl' => [
   'matches.0', 
   'tablecolour',
-  'product', #
   'buildid',
   'sel', 
 ],
@@ -508,7 +414,6 @@
 ],
 
 'bug/activity/table.html.tmpl' => [
-  'operation.who', # Email
   'change.attachid', 
   'change.field', 
 ],
@@ -532,10 +437,7 @@
 
 'attachment/list.html.tmpl' => [
   'attachment.attachid', 
-  'FOR flag = attachment.flags', # Bug? No FOR directive
-  'flag.type.name', 
   'flag.status',
-  'flag.requestee.nick', # Email
   'bugid',
 ],
 
@@ -585,7 +487,6 @@
 
 'admin/flag-type/confirm-delete.html.tmpl' => [
   'flag_count', 
-  'name', #
   'flag_type.id', 
 ],
 
@@ -593,10 +494,7 @@
   'action', 
   'type.id', 
   'type.target_type', 
-  'category', #
-  'item', #
   'type.sortkey || 1',
-  '(last_action == "enter" || last_action == "copy") ? "Create" : "Save Changes"',
   'typeLabelLowerPlural',
   'typeLabelLowerSingular',
 ],
@@ -610,12 +508,7 @@
   'target', 
 ],
 
-'account/prefs/account.html.tmpl' => [
-  'login_change_date', #
-],
-
 'account/prefs/email.html.tmpl' => [
-  'watchedusers', # Email
   'role', 
   'reason.name', 
   'reason.description',
@@ -634,5 +527,3 @@
 ],
 
 );
-
-# Should filter reports/report.html.tmpl:130 $format

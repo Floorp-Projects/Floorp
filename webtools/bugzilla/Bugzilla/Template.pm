@@ -256,6 +256,11 @@ sub create {
                 $var =~ s/\@/\&#64;/g;
                 return $var;
             },
+            
+            # We force filtering of every variable in key security-critical
+            # places; we have a none filter for people to use when they 
+            # really, really don't want a variable to be changed.
+            none => sub { return $_[0]; } ,
         },
 
         PLUGIN_BASE => 'Bugzilla::Template::Plugin',

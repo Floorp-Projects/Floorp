@@ -97,7 +97,7 @@
     <tr>
       <td colspan="2">
         <b>Component:</b>&nbsp;
-        [% bug.component %]
+        [% bug.component FILTER html %]
       </td>
 
       <td colspan="2">
@@ -190,7 +190,7 @@
 
 [% BLOCK cell %]
   <td>
-    <b>[% attr.description%]:</b>&nbsp;
+    <b>[% attr.description FILTER html %]:</b>&nbsp;
     [% bug.${attr.name} FILTER html %]
   </td>
 [% END %]

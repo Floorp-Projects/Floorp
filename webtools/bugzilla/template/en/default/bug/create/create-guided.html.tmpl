@@ -224,7 +224,8 @@ function PutDescription() {
         The area where the problem occurs.
         To pick the right component, you could use the same one as
         similar [% terms.bugs %] you found in your search, or read the full list of
-        <a href="describecomponents.cgi?product=[% product %]">component
+        <a href="describecomponents.cgi?product=
+            [% product FILTER url_quote %]">component
         descriptions</a> if you need more help.
       </p>
 

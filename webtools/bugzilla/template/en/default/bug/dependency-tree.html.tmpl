@@ -32,8 +32,14 @@
 [% PROCESS depthControlToolbar %]
 
 [%# Display the tree of bugs that this bug depends on. %]
-<h3>[% hide_resolved ? "Open $terms.bugs" : "$terms.Bugs" %]
- that <a href="show_bug.cgi?id=[% bugid %]">[% terms.bug %]&nbsp;[% bugid %]</a> depends on</h3>
+<h3>
+  [% IF hide_resolved %]
+    Open [% terms.bugs %]
+  [% ELSE %]
+    [% terms.Bugs %]
+  [% END %] 
+  that <a href="show_bug.cgi?id=[% bugid %]">[% terms.bug %]&nbsp;[% bugid %]</a> 
+  depends on</h3>
 [% IF dependson_ids.size > 0 %]
   (
   [% IF maxdepth -%]Up to [% maxdepth %] level[% "s" IF maxdepth > 1 %] deep | [% END %]
@@ -48,8 +54,14 @@
 [% END %]
 
 [%# Display the tree of bugs that this bug blocks. %]
-<h3>[% hide_resolved ? "Open $terms.bugs" : "$terms.Bugs" %]
- that <a href="show_bug.cgi?id=[% bugid %]">[% terms.bug %]&nbsp;[% bugid %]</a> blocks</h3>
+<h3>
+  [% IF hide_resolved %]
+    Open [% terms.bugs %]
+  [% ELSE %]
+    [% terms.Bugs %]
+  [% END %] 
+  that <a href="show_bug.cgi?id=[% bugid %]">[% terms.bug %]&nbsp;[% bugid %]</a> 
+  blocks</h3>
 [% IF blocked_ids.size > 0 %]
   (
   [% IF maxdepth -%]Up to [% maxdepth %] level[% "s" IF maxdepth > 1 %] deep | [% END %]
@@ -112,7 +124,8 @@
        <input name="maxdepth" type="hidden" value="[% maxdepth %]">
      [% END %]
      <input type="hidden" name="hide_resolved" value="[% hide_resolved ? 0 : 1 %]">
-     <input type="submit" value="[% hide_resolved ? "Show" : "Hide" %] Resolved">
+     <input type="submit" 
+            value="[% IF hide_resolved %]Show[% ELSE %]Hide[% END %] Resolved">
    </form>
    </td>
 
@@ -128,9 +141,8 @@
    <form method="get" action="showdependencytree.cgi"
          style="display: inline; margin: 0px;">
      [%# set to one form %]
-     <input type="submit" value="&nbsp;1&nbsp;" [%
-         realdepth < 2 || maxdepth == 1 ? "disabled" : ""
-     %]>
+     <input type="submit" value="&nbsp;1&nbsp;" 
+       [% "disabled" IF realdepth < 2 || maxdepth == 1 %]>
      <input name="id" type="hidden" value="[% bugid %]">
      <input name="maxdepth" type="hidden" value="1">
      <input name="hide_resolved" type="hidden" value="[% hide_resolved %]">
@@ -148,9 +160,8 @@
                        : ( maxdepth ? maxdepth - 1 : realdepth - 1 )
      %]">
      <input name="hide_resolved" type="hidden" value="[% hide_resolved %]">
-     <input type="submit" value="&nbsp;&lt;&nbsp;" [%
-        realdepth < 2 || ( maxdepth && maxdepth < 2 ) ? "disabled" : ""
-     %]>
+     <input type="submit" value="&nbsp;&lt;&nbsp;" 
+       [% "disabled" IF realdepth < 2 || ( maxdepth && maxdepth < 2 ) %]>
    </form>
    </td>
 
@@ -165,7 +176,7 @@
      <input name="id" type="hidden" value="[% bugid %]">
      <input name="hide_resolved" type="hidden" value="[% hide_resolved %]">
      <noscript>
-       <input type="submit" value="Change" [% realdepth < 2 ? "disabled" : "" %]>
+       <input type="submit" value="Change" [% "disabled" IF realdepth < 2 %]>
      </noscript>
    </form>
    </td>
@@ -180,10 +191,9 @@
        <input name="maxdepth" type="hidden" value="[% maxdepth + 1 %]">
      [% END %]
      <input name="hide_resolved" type="hidden" value="[% hide_resolved %]">
-     <input type="submit" value="&nbsp;&gt;&nbsp;" [%
-            realdepth < 2 || ! maxdepth || maxdepth >= realdepth ?
-            "disabled" : ""
-     %]>
+     <input type="submit" value="&nbsp;&gt;&nbsp;" 
+        [% "disabled" IF realdepth < 2 || !maxdepth || maxdepth >= realdepth %]
+    %]>
    </form>
    </td>
 
@@ -194,7 +204,7 @@
      <input name="id" type="hidden" value="[% bugid %]">
      <input name="hide_resolved" type="hidden" value="[% hide_resolved %]">
      <input type="submit" value="&nbsp;Unlimited&nbsp;"
-       [% maxdepth == 0 || maxdepth == realdepth ? "disabled" : "" %]>
+       [% "disabled" IF maxdepth == 0 || maxdepth == realdepth %]>
    </form>
    </td>
  </tr>

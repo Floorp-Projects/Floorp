@@ -21,9 +21,9 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
+[% h2 = voting_user.login FILTER html %]
 [% PROCESS global/header.html.tmpl
            title = "Show Votes"
-           h2 = voting_user.name
  %]
 
 [% canedit = 1 IF voting_user.login == user.login %]

@@ -42,7 +42,9 @@
   [% FOREACH column = masterlist %]
     <input type="checkbox" id="[% column %]" name="column_[% column %]"
       [% "checked='checked'" IF lsearch(collist, column) != -1 %]>
-    <label for="[% column %]">[% field_descs.${column} || column %]</label>
+    <label for="[% column %]">
+      [% (field_descs.${column} || column) FILTER html %]
+    </label>
     <br>
   [% END %]
 

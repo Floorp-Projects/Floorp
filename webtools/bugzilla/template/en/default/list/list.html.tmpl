@@ -149,7 +149,9 @@
     [% END %]
 
     [% IF bugowners %]
-      <a href="mailto:[% bugowners %]">Send Mail to [% terms.Bug %] Owners</a> &nbsp;&nbsp;
+      <a href="mailto:[% bugowners FILTER html %]">Send 
+      Mail to [% terms.Bug %] Owners</a> 
+      &nbsp;&nbsp;
     [% END %]
 
     <a href="query.cgi?

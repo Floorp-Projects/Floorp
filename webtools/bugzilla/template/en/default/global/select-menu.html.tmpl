@@ -44,7 +44,7 @@
 [% options_type = BLOCK %][% options %][% END %]
 
 <select name="[% name FILTER html %]" 
-        [% IF onchange %]onchange="[% onchange %]"[% END %]
+        [% IF onchange %]onchange="[% onchange FILTER html %]"[% END %]
         [% IF multiple %] multiple [% IF size %] size="[% size %]" [% END %] [% END %]>
   [% IF options_type.search("ARRAY") %]
     [% FOREACH value = options %]

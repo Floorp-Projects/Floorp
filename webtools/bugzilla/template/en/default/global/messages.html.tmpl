@@ -28,21 +28,15 @@
 [% message_tag = message %]
 
 [% message = BLOCK %]
-  [% IF    message_tag == "aaa_example_message_tag" %]
-    [% title = "Example Message" %]
-    This is an example message. The title is set above. This text is the body
-    of the message. It can contain arbitrary <b>HTML</b>, and also references
-    to any [% parameters %] which you may have set.
-
-  [% ELSIF message_tag == "buglist_adding_field" %]
+  [% IF    message_tag == "buglist_adding_field" %]
     [% title = "Adding field to query page..." %]
     [% link  = "Click here if the page does not redisplay automatically." %]
-    [% # --- %] 
 
   [% ELSIF message_tag == "buglist_load_named_query" %]
-    [% title = BLOCK %]Loading your query named [% namedcmd %][% END %]
+    [% title = BLOCK %]
+      Loading your query named [% namedcmd FILTER html %]
+    [% END %]
     [% link  = "Click here if the page does not redisplay automatically." %]
-    [% # --- %] 
 
   [% ELSIF message_tag == "buglist_updated_named_query" %]
     OK, your query named <code>[% queryname FILTER html %]</code> is updated.
@@ -81,8 +75,9 @@
   [% ELSIF message_tag == "email_change_cancelled_reinstated" %]
     [% title = "Cancel Request to Change Email Address" %]
     The request to change the email address for the
-    [% old_email %] account to [% new_email %] has been cancelled.
-    Your old account settings have been reinstated.
+    [% old_email FILTER html %] account to 
+    [% new_email FILTER html %] has been cancelled.
+   Your old account settings have been reinstated.
 
   [% ELSIF message_tag == "logged_out" %]
     [% title = "Logged Out" %]

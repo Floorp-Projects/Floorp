@@ -57,7 +57,8 @@
     <tr>
       <th align="right">Users to watch:</th>
       <td>
-        <input size="35" name="watchedusers" value="[% watchedusers %]">
+        <input size="35" name="watchedusers" 
+               value="[% watchedusers FILTER html %]">
       </td>
     </tr>
   [% END %]

@@ -74,7 +74,7 @@
         </tr>
         <tr>
           <th align="right">Change request expires:</th>
-          <td>[% login_change_date %]</td>
+          <td>[% login_change_date FILTER time %]</td>
         </tr>
       [% ELSE %]
         <tr>
@@ -83,7 +83,7 @@
         </tr>
         <tr>
           <th align="right">Completion date:</th>
-          <td>[% login_change_date %]</td>
+          <td>[% login_change_date FILTER time %]</td>
         </tr>
       [% END %]
     [% ELSE %]

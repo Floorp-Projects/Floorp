@@ -67,10 +67,10 @@
   <input type="hidden" name="id" value="[% type.id %]">
   <input type="hidden" name="target_type" value="[% type.target_type %]">
   [% FOREACH category = type.inclusions %]
-    <input type="hidden" name="inclusions" value="[% category %]">
+    <input type="hidden" name="inclusions" value="[% category FILTER html %]">
   [% END %]
   [% FOREACH category = type.exclusions %]
-    <input type="hidden" name="exclusions" value="[% category %]">
+    <input type="hidden" name="exclusions" value="[% category FILTER html %]">
   [% END %]
 
   <table id="form" cellspacing="0" cellpadding="4" border="0">
@@ -105,13 +105,17 @@
               <select name="product" onchange="selectProduct(this.form, 'product', 'component', '__Any__');">
                 <option value="">__Any__</option>
                 [% FOREACH item = products %]
-                  <option value="[% item %]" [% "selected" IF type.product.name == item %]>[% item %]</option>
+                  <option value="[% item FILTER html %]" 
+                          [% "selected" IF type.product.name == item %]>
+                          [% item FILTER html %]</option>
                 [% END %]
               </select><br>
               <select name="component">
                 <option value="">__Any__</option>
                 [% FOREACH item = components %]
-                  <option value="[% item %]" [% "selected" IF type.component.name == item %]>[% item %]</option>
+                  <option value="[% item FILTER html %]" 
+                          [% "selected" IF type.component.name == item %]>
+                          [% item FILTER html %]</option>
                 [% END %]
               </select><br>
               <input type="submit" name="categoryAction" value="Include">
@@ -186,7 +190,10 @@
     <tr>
       <th></th>
       <td>
-        <input type="submit" value="[% (last_action == "enter" || last_action == "copy") ? "Create" : "Save Changes" %]">
+        <input type="submit" value="        
+          [% IF (last_action == "enter" || last_action == "copy") %]Create 
+          [% ELSE %]Save Changes 
+          [% END %]">
       </td>
     </tr>
 

@@ -171,7 +171,8 @@ function set_assign_to() {
     <td colspan="2"></td>
   </tr>
 [% ELSE %]
-  <input type="hidden" name="bug_status" value="[% default.bug_status %]">
+  <input type="hidden" name="bug_status" 
+         value="[% default.bug_status FILTER html %]">
 [% END %]
 
   <tr>

@@ -70,17 +70,18 @@
               [% bug_ids_string = bug_ids.join(',') %]
               <a href="duplicates.cgi?sortby=[% column.name %]
                 [% IF sortby == column.name %]
-                  [% "&reverse=1" IF NOT reverse %]
+                  [% "&amp;reverse=1" IF NOT reverse %]
                 [% ELSE %]
                   [%-# Some columns start off reversed %]
-                  [% "&reverse=1" IF column.name.match('delta|count') %]
+                  [% "&amp;reverse=1" IF column.name.match('delta|count') %]
                 [% END %]
-                [% "&maxrows=$maxrows" IF maxrows %]
-                [% "&changedsince=$changedsince" IF changedsince %]
-                [% "&openonly=1" IF openonly %]
-                [% "&product=$product" IF product %]
-                [% "&format=$format" IF format %]
-                [% "&bug_id=$bug_ids_string&sortvisible=1" IF sortvisible %]">
+                [% "&amp;maxrows=$maxrows" IF maxrows %]
+                [% "&amp;changedsince=$changedsince" IF changedsince %]
+                [% "&amp;openonly=1" IF openonly %]
+                [% IF product %]&amp;product=[% product FILTER html %][% END %]
+                [% IF format %]&amp;format=[% format FILTER html %][% END %]
+                [% "&amp;bug_id=$bug_ids_string&amp;sortvisible=1" 
+                                                            IF sortvisible %]">
                 [% column.description %]</a>
             </b>
           </center>
@@ -135,10 +136,10 @@
         <td><center>[% bug.delta %]</center></td>
       [% END %]
 
-      <td>[% bug.component %]</td>
-      <td><center>[% bug.bug_severity %]</center></td>
-      <td><center>[% bug.op_sys %]</center></td>
-      <td><center>[% bug.target_milestone %]</center></td>
+      <td>[% bug.component FILTER html %]</td>
+      <td><center>[% bug.bug_severity FILTER html %]</center></td>
+      <td><center>[% bug.op_sys FILTER html %]</center></td>
+      <td><center>[% bug.target_milestone FILTER html %]</center></td>
       <td>[% bug.short_desc FILTER html %]</td>
     </tr>
   [% END %]

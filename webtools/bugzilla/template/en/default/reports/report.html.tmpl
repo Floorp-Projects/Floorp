@@ -54,11 +54,15 @@
 
 [% title = BLOCK %]
   Report: 
-  [% tbl_field_disp IF tbl_field %]
+  [% IF tbl_field %]
+    [% tbl_field_disp FILTER html %]
+  [% END %]
   [% " / " IF tbl_field AND (col_field OR row_field) %]
-  [% row_field_disp IF row_field %]
+  [% IF row_field %]
+    [% row_field_disp FILTER html %]
+  [% END %]
   [% " / " IF col_field AND row_field %]
-  [% col_field_disp %]
+  [% col_field_disp FILTER html %]
 [% END %]
 
 [% PROCESS global/header.html.tmpl 
@@ -128,7 +132,7 @@
           [% UNLESS other_format.name == format %]
             <a href="[% formaturl %]&amp;format=[% other_format.name %]">
           [% END %]
-          [% other_format.description %]
+          [% other_format.description FILTER html %]
           [% "</a>" UNLESS other_format.name == format %] | 
         [% END %]
         <a href="[% formaturl %]&amp;ctype=csv&amp;format=table">CSV</a> 
@@ -139,7 +143,9 @@
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         </td>
 
-        [% sizeurl = "report.cgi?$switchbase&amp;action=wrap&amp;format=$format" %]
+        [% sizeurl = BLOCK %]report.cgi?
+          [% switchbase %]&amp;action=wrap&amp;format=
+          [% format FILTER html %][% END %]
         <td align="center">
           <a href="[% sizeurl %]&amp;width=[% width %]&amp;height=
                    [% height + 100 %]">Taller</a><br>

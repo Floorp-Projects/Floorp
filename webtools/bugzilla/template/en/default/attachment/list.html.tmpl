@@ -53,13 +53,13 @@
           [% IF attachment.flags.size == 0 %]
             <i>none</i>
           [% ELSE %]
-            [% FOR flag = attachment.flags %]
+            [% FOREACH flag = attachment.flags %]
                 [% IF flag.setter %]
                   [% flag.setter.nick FILTER html %]:
                 [% END %]
-                [%+ flag.type.name %][% flag.status %]
+                [%+ flag.type.name FILTER html %][% flag.status %]
                 [%+ IF flag.status == "?" && flag.requestee %]
-                  ([% flag.requestee.nick %])
+                  ([% flag.requestee.nick FILTER html %])
                 [% END %]<br>
             [% END %]
           [% END %]

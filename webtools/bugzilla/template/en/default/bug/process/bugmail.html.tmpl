@@ -61,10 +61,10 @@
 [%############################################################################%]
 
 [% BLOCK emails %]
-  <b>[% description %]:</b>
+  <b>[% description FILTER html %]:</b>
   [% IF names.size > 0 %]
     [%+ FOREACH name = names %]
-      [% name %][% ", " UNLESS loop.last() %]
+      [% name FILTER html %][% ", " UNLESS loop.last() %]
     [% END %]
   [% ELSE %]
     no one

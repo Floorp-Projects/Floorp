@@ -60,7 +60,7 @@
     [% FOREACH operation = operations %]
       <tr>
         <td rowspan="[% operation.changes.size %]" valign="top">
-          [% operation.who %]
+          [% operation.who FILTER html %]
         </td>
         <td rowspan="[% operation.changes.size %]" valign="top">
           [% operation.when FILTER time %]

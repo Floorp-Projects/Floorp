@@ -199,7 +199,7 @@ sub directive_ok {
     # Note: If a single directive prints two things, and only one is 
     # filtered, we may not catch that case.
     return 1 if $directive =~ /FILTER\ (html|csv|js|url_quote|css_class_quote|
-                                        quoteUrls|time|uri|xml|lower)/x;
+                                        quoteUrls|time|uri|xml|lower|none)/x;
 
     return 0;
 }

@@ -27,6 +27,9 @@
 
 [%# This is a list of all the possible user errors. Please keep them in
   # alphabetical order by error tag, and leave a blank line between errors.
+  #
+  # Note that you must explicitly filter every single template variable
+  # in this file; if you do not wish to change it, use the "none" filter.
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
@@ -44,7 +47,7 @@
 
   [% ELSIF error == "account_disabled" %]
     [% title = "Account Disabled" %]
-    [% disabled_reason %]
+    [% disabled_reason FILTER none %]
     <hr>
     If you believe your account should be restored, please
     send email to [% Param("maintainer") %] explaining why.
@@ -72,7 +75,7 @@
 
   [% ELSIF error == "alias_in_use" %]
     [% title = "Alias In Use" %]
-    [% bug_link %] has already taken the alias
+    [% bug_link FILTER none %] has already taken the alias 
     <em>[% alias FILTER html %]</em>.  Please choose another one.
 
   [% ELSIF error == "alias_is_numeric" %]
@@ -95,7 +98,7 @@
 
   [% ELSIF error == "authorization_failure" %]
     [% title = "Authorization Failed" %]
-    You are not allowed to [% action %].
+    You are not allowed to [% action FILTER html %].
 
   [% ELSIF error == "attachment_access_denied" %]
     [% title = "Access Denied" %]
@@ -103,13 +106,14 @@
 
   [% ELSIF error == "bug_access_denied" %]
     [% title = "Access Denied" %]
-    You are not authorized to access [% terms.bug %] #[% bug_id %].
+    You are not authorized to access [% terms.bug %] #[% bug_id FILTER html %].
 
   [% ELSIF error == "bug_access_query" %]
     [% title = "Access Denied" %]
-    You are not authorized to access [% terms.bug %] #[% bug_id %]. To see
-    this [% terms.bug %], you must
-    first <a href="show_bug.cgi?id=[% bug_id %]&amp;GoAheadAndLogIn=1">log
+    You are not authorized to access [% terms.bug %] #[% bug_id FILTER html %].
+    To see this [% terms.bug %], you must
+    first <a href="show_bug.cgi?id=
+                   [% bug_id FILTER url_quote %]&amp;GoAheadAndLogIn=1">log
     in to an account</a> with the appropriate permissions.
 
   [% ELSIF error == "buglist_parameters_required" %]
@@ -139,7 +143,7 @@
     [% title = "Dependency Loop Detected" %]
     The following [% terms.bug %](s) would appear on both the "depends on"
     and "blocks" parts of the dependency tree if these changes
-    are committed: [% both %]. This would create a circular
+    are committed: [% both FILTER none %]. This would create a circular
     dependency, which is not allowed.
 
   [% ELSIF error == "dependency_loop_single" %]
@@ -176,7 +180,8 @@
 
   [% ELSIF error == "file_too_large" %]
     [% title = "File Too Large" %]
-    The file you are trying to attach is [% filesize %] kilobytes (KB) in size.
+    The file you are trying to attach is [% filesize FILTER html %] 
+    kilobytes (KB) in size.
     Non-patch attachments cannot be more than [% Param('maxattachmentsize') %]
     KB.
     If your attachment is an image, try converting it to a compressable
@@ -187,8 +192,10 @@
     [% title = "Flag Requestee Not Authorized" %]
 
     You asked [% requestee.identity FILTER html %]
-    for <code>[% flag_type.name FILTER html %]</code> on [% terms.bug %] [% bug_id -%]
-    [% IF attach_id %], attachment [% attach_id %][% END %], but that [% terms.bug %]&bnsp;
+    for <code>[% flag_type.name FILTER html %]</code> on [% terms.bug %] 
+    [% bug_id FILTER html -%]
+    [% IF attach_id %], attachment [% attach_id FILTER html %][% END %], 
+    but that [% terms.bug %]&bnsp;
     has been restricted to users in certain groups, and the user you asked
     isn't in all the groups to which the [% terms.bug %] has been restricted.
     Please choose someone else to ask, or make the [% terms.bug %] accessible to users
@@ -198,8 +205,10 @@
     [% title = "Flag Requestee Not Authorized" %]
 
     You asked [% requestee.identity FILTER html %]
-    for <code>[% flag_type.name FILTER html %]</code> on [% terms.bug %]&nbsp;[% bug_id %],
-    attachment [% attach_id %], but that attachment is restricted to users
+    for <code>[% flag_type.name FILTER html %]</code> on 
+    [% terms.bug %]&nbsp;[% bug_id FILTER html %],
+    attachment [% attach_id FILTER html %], but that attachment is restricted 
+    to users
     in the [% Param("insidergroup") FILTER html %] group, and the user
     you asked isn't in that group.  Please choose someone else to ask,
     or ask an administrator to add the user to the group.
@@ -233,11 +242,12 @@
     
   [% ELSIF error == "illegal_attachment_edit" %]
     [% title = "Unauthorised Action" %]
-    You are not authorised to edit attachment [% attach_id %].
+    You are not authorised to edit attachment [% attach_id FILTER html %].
 
   [% ELSIF error == "illegal_attachment_edit_bug" %]
     [% title = "Unauthorised Action" %]
-    You are not authorised to edit attachments on [% terms.bug %] [%+ bug_id %].
+    You are not authorised to edit attachments on [% terms.bug %] 
+    [%+ bug_id FILTER html %].
          
   [% ELSIF error == "illegal_attachment_is_patch" %]
     [% title = "Your Query Makes No Sense" %]
@@ -246,7 +256,8 @@
          
   [% ELSIF error == "illegal_change" %]
     [% title = "Not allowed" %]
-    You tried to change the <strong>[% field %]</strong> field 
+    You tried to change the 
+    <strong>[% field_descs.$field FILTER html %]</strong> field 
     from <em>[% oldvalue FILTER html %]</em> to 
     <em>[% newvalue FILTER html %]</em>, 
     but only the owner or submitter of the [% terms.bug %], or a 
@@ -320,7 +331,7 @@
 
   [% ELSIF error == "invalid_bug_id_non_existent" %]
     [% title = BLOCK %]Invalid [% terms.Bug %] ID[% END %]
-    [% terms.Bug %] #[% bug_id %] does not exist.
+    [% terms.Bug %] #[% bug_id FILTER html %] does not exist.
     
   [% ELSIF error == "invalid_bug_id_or_alias" %]
     [% title = BLOCK %]Invalid [% terms.Bug %] ID[% END %]
@@ -383,7 +394,8 @@
 
   [% ELSIF error == "milestone_required" %]
     [% title = "Milestone Required" %]
-    You must determine a target milestone for [% terms.bug %] [%+ bug_id %]
+    You must determine a target milestone for [% terms.bug %] 
+    [%+ bug_id FILTER html %]
     if you are going to accept it.  Part of accepting 
     [% terms.abug %] is giving an estimate of when it will be fixed.
 
@@ -459,7 +471,8 @@
 
   [% ELSIF error == "need_positive_number" %]
     [% title = "Positive Number Required" %]
-    The <em>[% field_descs.$field %]</em> field requires a positive number.
+    The <em>[% field_descs.$field FILTER html %]</em> field requires a positive
+    number.
 
   [% ELSIF error == "need_product" %]
     [% title = "Product Required" %]
@@ -499,7 +512,8 @@
 
   [% ELSIF error == "no_dupe_stats" %]
     [% title = "Cannot Find Duplicate Statistics" %]
-    There are no duplicate statistics for today ([% today %]) or yesterday.
+    There are no duplicate statistics for today ([% today FILTER html %]) 
+    or yesterday.
 
   [% ELSIF error == "no_dupe_stats_error_today" %]
     [% title = "Error Reading Today's Dupes File" %]
@@ -513,7 +527,8 @@
 
   [% ELSIF error == "no_dupe_stats_error_yesterday" %]
     [% title = "Error Reading Yesterday's Dupes File" %]
-    There are no duplicate statistics for today ([% today %]), and an error
+    There are no duplicate statistics for today ([% today FILTER html %]), 
+    and an error
     occurred opening yesterday's dupes file: [% error_msg FILTER html %].
 
   [% ELSIF error == "no_html_in_quips" %]
@@ -558,7 +573,8 @@
 
   [% ELSIF error == "patch_too_large" %]
     [% title = "File Too Large" %]
-    The file you are trying to attach is [% filesize %] kilobytes (KB) in size.
+    The file you are trying to attach is [% filesize FILTER html %] 
+    kilobytes (KB) in size.
     Patches cannot be more than [% Param('maxpatchsize') %] KB in size.
     Try breaking your patch into several pieces.
 
@@ -568,7 +584,8 @@
 
   [% ELSIF error == "product_edit_denied" %]
     [% title = "Product Edit Access Denied" %]
-    You are not permitted to edit [% terms.bugs %] in product [% product %].
+    You are not permitted to edit [% terms.bugs %] in product 
+    [% product FILTER html %].
 
   [% ELSIF error == "query_name_missing" %]
     [% title = "No Query Name Specified" %]
@@ -620,15 +637,17 @@
 
   [% ELSIF error == "too_many_votes_for_bug" %]
     [% title = "Illegal Vote" %]
-    You may only use at most [% max %] votes for a single [% terms.bug %] in the
+    You may only use at most [% max FILTER html %] votes for a single 
+    [%+ terms.bug %] in the
     <tt>[% prod FILTER html %]</tt> product, but you are trying to use
-    [% votes %].
+    [% votes FILTER html %].
 
   [% ELSIF error == "too_many_votes_for_product" %]
     [% title = "Illegal Vote" %]
-    You may only use at most [% max %] votes for [% terms.bugs %] in the
+    You may only use at most [% max FILTER html %] votes for [% terms.bugs %] 
+    in the
     <tt>[% prod FILTER html %]</tt> product, but you are trying to use
-    [% votes %].
+    [% votes FILTER html %].
 
   [% ELSIF error == "token_inexistent" %]
     [% title = "Token Does Not Exist" %]
@@ -662,7 +681,8 @@
 
   [% ELSIF error == "value_out_of_range" %]
     [% title = "Value Out Of Range" %]
-    Value is out of range for field <em>[% field_descs.$field %]</em>.
+    Value is out of range for field 
+    <em>[% field_descs.$field FILTER html %]</em>.
 
   [% ELSIF error == "zero_length_file" %]
     [% title = "File Is Empty" %]
@@ -684,7 +704,7 @@
   <tr>
     <td bgcolor="#ff0000">
       <font size="+2">
-        [% error_message %]
+        [% error_message FILTER none %]
       </font>
     </td>
   </tr>

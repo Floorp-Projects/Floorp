@@ -48,11 +48,13 @@
 
   <p>
   [% IF use_target_milestone %]
-    You are moving the [% terms.bug %](s) to the product <b>[% form.product %]</b>,
+    You are moving the [% terms.bug %](s) to the product 
+    <b>[% form.product FILTER html %]</b>,
     and the version, component, and/or target milestone fields are no longer
     correct.  Please set the correct version, component, and target milestone now:
   [% ELSE %]
-    You are moving the [% terms.bug %](s) to the product <b>[% form.product %]</b>,
+    You are moving the [% terms.bug %](s) to the product 
+    <b>[% form.product FILTER html %]</b>,
     and the version and component fields are no longer correct.
     Please set the correct version and component now:
   [% END %]

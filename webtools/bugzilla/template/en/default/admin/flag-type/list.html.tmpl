@@ -92,7 +92,7 @@
 
     [% FOREACH type = types %]
 
-      <tr class="[% type.is_active ? "active" : "inactive" %]">
+      <tr class="[% IF type.is_active %]active[% ELSE %]inactive[% END %]">
         <td><a href="editflagtypes.cgi?action=edit&amp;id=[% type.id %]">[% type.name FILTER html %]</a></td>
         <td>[% type.description FILTER html %]</td>
         <td>

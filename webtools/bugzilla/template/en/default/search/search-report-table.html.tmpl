@@ -82,7 +82,7 @@
 [% PROCESS search/form.html.tmpl %]
 
 <br>
-<input type="submit" value="[% button_name %]">
+<input type="submit" value="[% button_name FILTER html %]">
 <input type="hidden" name="format" value="table">
 <input type="hidden" name="action" value="wrap">
 <hr>

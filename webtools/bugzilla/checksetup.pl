@@ -1078,6 +1078,7 @@ END
                 csv => sub { return $_; },
                 time => sub { return $_; },
                 obscure_email => sub { return $_; },
+                none => sub { return $_; } ,
                },
            }) || die ("Could not create Template Provider: "
                        . Template::Provider->error() . "\n");

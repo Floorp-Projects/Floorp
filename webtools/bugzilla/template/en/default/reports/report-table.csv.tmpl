@@ -29,13 +29,18 @@
 [% row_field_disp = field_descs.$row_field || row_field %]
 
 [% title = BLOCK %]
-  [% "$tbl_field_disp: $tbl\n" IF tbl_field %]
-  [% row_field_disp IF row_field %]
+  [% IF tbl_field %]
+    [% tbl_field_disp FILTER csv %]: [% tbl FILTER csv %]
+
+  [% END %]
+  [% IF row_field %]
+    [% row_field_disp FILTER csv %]
+  [% END %]
   [% " / " IF col_field AND row_field %]
-  [% col_field_disp %]
+  [% col_field_disp FILTER csv %]
 [% END %]
 
-[% title FILTER csv %],
+[% title %],
 [% IF col_field -%]
 [% FOREACH col = col_names -%]
   [% col FILTER csv -%],

@@ -28,6 +28,9 @@
 
 [%# This is a list of all the possible code errors. Please keep them in
   # alphabetical order by error tag, and leave a blank line between errors.
+  #
+  # Note that you must explicitly filter every single template variable
+  # in this file; if you do not wish to change it, use the "none" filter.
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
@@ -35,14 +38,7 @@
 [% DEFAULT title = "Internal Error" %]
 
 [% error_message = BLOCK %]
-  [% IF    error == "aaa_example_error_tag" %]
-    [% title = "Example Error" %]
-    This is an example error. The title is set above. This text is the body
-    of the error. It can contain arbitrary <b>HTML</b>, and also references
-    to any [% parameters %] which you may have set before calling
-    ThrowCodeError.
-
-  [% ELSIF error == "action_unrecognized" %]
+  [% IF    error == "action_unrecognized" %]
     I don't recognize the value (<em>[% variables.action FILTER html %]</em>)
     of the <em>action</em> variable.
   
@@ -61,8 +57,8 @@
     An authorization handler return value was not handled by the login code.
 
   [% ELSIF error == "bug_error" %]
-    Trying to retrieve [% terms.bug %] [%+ bug.bug_id %] returned the error
-    [% bug.error FILTER html %]
+    Trying to retrieve [% terms.bug %] [%+ bug.bug_id FILTER html %] returned 
+    the error [% bug.error FILTER html %].
     
   [% ELSIF error == "chart_data_not_generated" %]
     The tool which gathers [% terms.bug %] counts has not been run yet.
@@ -82,7 +78,7 @@
     Run checksetup.pl for installation instructions.
 
   [% ELSIF error == "field_type_mismatch" %]
-    Cannot seem to handle <code>[% field %]</code>
+    Cannot seem to handle <code>[% field FILTER html %]</code>
     and <code>[% type FILTER html %]</code> together.
 
   [% ELSIF error == "gd_not_installed" %]
@@ -107,8 +103,8 @@
     '[% bit FILTER html %]'.
 
   [% ELSIF error == "bad_arg" %]
-    Bad argument <code>[% argument %]</code> sent to
-    <code>[% function %]</code> function.
+    Bad argument <code>[% argument FILTER html %]</code> sent to
+    <code>[% function FILTER html %]</code> function.
 
   [% ELSIF error == "invalid_attach_id_to_obsolete" %]
      The attachment number of one of the attachments you wanted to obsolete,
@@ -145,11 +141,8 @@
     but you tried to flag it as obsolete while creating a new attachment to 
     [% terms.bug %] [%+ my_bug_id FILTER html %].
         
-  [% ELSIF error == "no_bug_data" %]
-    No data when fetching [% terms.bug %] [%+ bug_id %].
-    
   [% ELSIF error == "flag_nonexistent" %]
-    There is no flag with ID #[% variables.id %].
+    There is no flag with ID #[% variables.id FILTER html %].
   
   [% ELSIF error == "flag_status_invalid" %]
     The flag status <em>[% variables.status FILTER html %]</em> is invalid.
@@ -166,7 +159,7 @@
     a positive integer.
 
   [% ELSIF error == "flag_type_nonexistent" %]
-    There is no flag type with the ID <em>[% variables.id %]</em>.
+    There is no flag type with the ID <em>[% variables.id FILTER html %]</em>.
   
   [% ELSIF error == "flag_type_product_nonexistent" %]
     The product <em>[% variables.product FILTER html %]</em> does not exist.
@@ -212,7 +205,7 @@
     Something is seriously wrong with the token generation system.
 
   [% ELSIF error == "template_error" %]
-    [% template_error_msg %]
+    [% template_error_msg FILTER html %]
 
   [% ELSIF error == "unable_to_retrieve_password" %]
      I was unable to retrieve your old password from the database.
@@ -238,9 +231,9 @@
   [% ELSE %]
     [%# Give sensible error if error functions are used incorrectly.
       #%]
-    You are using [% terms.Bugzilla %]'s ThrowCodeError() function incorrectly. You
-    passed in the string '[% error %]'. The correct use is to pass
-    in a tag, and define that tag in the file code-error.html.tmpl.<br>
+    You are using [% terms.Bugzilla %]'s ThrowCodeError() function incorrectly. 
+    You passed in the string '[% error FILTER html %]'. The correct use is to 
+    pass in a tag, and define that tag in the file code-error.html.tmpl.<br>
     <br>
     If you are a [% terms.Bugzilla %] end-user seeing this message, please save this
     page and send it to [% Param('maintainer') %].
@@ -267,7 +260,7 @@
   <tr>
     <td bgcolor="#ff0000">
       <font size="+2">
-        [% error_message %]
+        [% error_message FILTER none %]
       </font>
     </td>
   </tr>

@@ -29,7 +29,7 @@
 %]
 
 <p>
-   There are [% flag_count %] flags of type [% name %].
+   There are [% flag_count %] flags of type [% name FILTER html %].
    If you delete this type, those flags will also be deleted.  Note that
    instead of deleting the type you can
    <a href="editflagtypes.cgi?action=deactivate&amp;id=[% flag_type.id %]">deactivate it</a>,

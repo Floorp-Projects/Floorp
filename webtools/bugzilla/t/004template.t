@@ -99,6 +99,7 @@ foreach my $include_path (@include_paths) {
             csv       => sub { return $_ } ,
             time      => sub { return $_ } ,
             obscure_email => sub { return $_ } ,
+            none      => sub { return $_ } ,
         },
     }
     );
