@@ -10,6 +10,7 @@
 #include "nsICollection.h" /* interface nsICollection */
 #include "nsIFolderListener.h" /* interface nsIFolderListener */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
+#include "nsID.h" /* interface nsID */
 #include "nsIFolder.h" /* interface nsIFolder */
 #include "nsIMessage.h" /* interface nsIMessage */
 

@@ -8,9 +8,10 @@
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIDOMWindow.h" /* interface nsIDOMWindow */
 #include "nsID.h" /* interface nsID */
+#include "nsIDOMXULTreeElement.h" /* interface nsIDOMXULTreeElement */
 #include "nsIDOMBaseAppCore.h" /* interface nsIDOMBaseAppCore */
-#include "nsIDOMNodeList.h" /*interface nsIDOMNodeList*/
-#include "nsIDOMXULTreeElement.h" /*interface nsIDOMXULTreeElement*/
+#include "nsIDOMNodeList.h" /* interface nsIDOMNodeList */
+
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
@@ -42,16 +43,16 @@ class nsIDOMMsgAppCore : public nsIDOMBaseAppCore {
   /* void OpenURL (in string str); */
   NS_IMETHOD OpenURL(const char *str) = 0;
 
-  /* void DeleteMessage (in string str); */
-  NS_IMETHOD DeleteMessage(nsIDOMXULTreeElement *tree, nsIDOMNodeList *nodeList) = 0;
+  /* void DeleteMessage (in nsIDOMXULTreeElement tree, in nsIDOMNodeList node); */
+  NS_IMETHOD DeleteMessage(nsIDOMXULTreeElement *tree, nsIDOMNodeList *node) = 0;
 
-  /* void GetRDFResourceForMessage (in string str); */
-  NS_IMETHOD GetRDFResourceForMessage(nsIDOMXULTreeElement *tree, nsIDOMNodeList *nodeList, nsISupports **_retval) = 0;
+  /* nsISupports GetRDFResourceForMessage (in nsIDOMXULTreeElement tree, in nsIDOMNodeList node); */
+  NS_IMETHOD GetRDFResourceForMessage(nsIDOMXULTreeElement *tree, nsIDOMNodeList *node, nsISupports **_retval) = 0;
 
-  /* void exit(); */
-  NS_IMETHOD Exit()= 0;
+  /* void Exit (); */
+  NS_IMETHOD Exit() = 0;
 
- #ifdef XPIDL_JS_STUBS
+#ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
   static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIDOMMsgAppCore *priv);
 #endif
