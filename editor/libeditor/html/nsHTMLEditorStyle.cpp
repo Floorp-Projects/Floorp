@@ -691,6 +691,27 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
     // remove any matching inlinestyles entirely
     if (!aAttribute || aAttribute->IsEmpty())
     {
+      NS_NAMED_LITERAL_STRING(styleAttr, "style");
+      NS_NAMED_LITERAL_STRING(classAttr, "class");
+      PRBool hasStyleAttr = HasAttr(aNode, &styleAttr);
+      PRBool hasClassAtrr = HasAttr(aNode, &classAttr);
+      if (hasStyleAttr || hasClassAtrr) {
+        // aNode carries inline styles or a class attribute so we can't
+        // just remove the element... We need to create above the element
+        // a span that will carry those styles or class, then we can delete
+        // the node.
+        nsCOMPtr<nsIDOMNode> spanNode;
+        res = InsertContainerAbove(aNode, address_of(spanNode),
+                                   NS_LITERAL_STRING("span"));
+        if (NS_FAILED(res))
+          return res;
+        res = CloneAttribute(styleAttr, spanNode, aNode);
+        if (NS_FAILED(res))
+          return res;
+        res = CloneAttribute(classAttr, spanNode, aNode);
+        if (NS_FAILED(res))
+          return res;
+      }
       res = RemoveContainer(aNode);
     }
     // otherwise we just want to eliminate the attribute

@@ -374,6 +374,21 @@ interface nsIEditor  : nsISupports
                        in AString aAttribute);
 
   /**
+   * cloneAttribute() copies the attribute from the source node to
+   * the destination node and delete those not in the source.
+   *
+   * The supplied nodes MUST BE ELEMENTS (most callers are working with nodes)
+   * @param aAttribute    the name of the attribute to copy
+   * @param aDestNode     the destination element to operate on
+   * @param aSourceNode   the source element to copy attributes from
+   * @exception NS_ERROR_NULL_POINTER at least one of the nodes is null
+   * @exception NS_ERROR_NO_INTERFACE at least one of the nodes is not an
+   *                                  element
+   */
+  void cloneAttribute(in AString aAttribute,
+                      in nsIDOMNode aDestNode, in nsIDOMNode aSourceNode);
+
+  /**
    * cloneAttributes() is similar to nsIDOMNode::cloneNode(),
    *   it assures the attribute nodes of the destination are identical
    *   with the source node by copying all existing attributes from the

@@ -2223,6 +2223,36 @@ nsEditor::EndOperation()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsEditor::CloneAttribute(const nsAString & aAttribute,
+                         nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
+{
+  nsresult rv = NS_OK;
+
+  if (!aDestNode || !aSourceNode)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDOMElement> destElement = do_QueryInterface(aDestNode);
+  nsCOMPtr<nsIDOMElement> sourceElement = do_QueryInterface(aSourceNode);
+  if (!destElement || !sourceElement)
+    return NS_ERROR_NO_INTERFACE;
+
+  nsAutoString attrValue;
+  PRBool isAttrSet;
+  rv = GetAttributeValue(sourceElement,
+                         aAttribute,
+                         attrValue,
+                         &isAttrSet);
+  if (NS_FAILED(rv))
+    return rv;
+  if (isAttrSet)
+    rv = SetAttribute(destElement, aAttribute, attrValue);
+  else
+    rv = RemoveAttribute(destElement, aAttribute);
+
+  return rv;
+}
+
 // Objects must be DOM elements
 NS_IMETHODIMP
 nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
