@@ -730,14 +730,6 @@ basic_nsAReadableString<CharT>::FindChar( CharT aChar, PRUint32 aOffset ) const
     return -1;
   }
 
-template <class CharT>
-inline
-int
-basic_nsAReadableString<CharT>::Compare( const basic_nsAReadableString<CharT>& rhs ) const
-  {
-    return ::Compare(*this, rhs);
-  }
-
 
 
 
@@ -844,16 +836,6 @@ basic_nsLiteralString<CharT>::Length() const
   }
 
 
-// XXX Note that these are located here because some compilers are
-// sensitive to the ordering of declarations with regard to templates.
-template <class CharT>
-inline
-PRBool
-basic_nsAReadableString<CharT>::Equals( const CharT* rhs ) const
-  {
-    return Compare(basic_nsLiteralString<CharT>(rhs)) == 0;
-  }
-
 #if 0
 template <class CharT>
 inline
@@ -863,14 +845,6 @@ basic_nsAReadableString<CharT>::Equals( const CharT* rhs, PRUint32 rhs_length ) 
     return Compare(basic_nsLiteralString<CharT>(rhs, rhs_length)) == 0;
   }
 #endif
-
-template <class CharT>
-inline
-int
-basic_nsAReadableString<CharT>::Compare( const CharT* rhs ) const
-  {
-    return ::Compare(*this, NS_READABLE_CAST(CharT, basic_nsLiteralString<CharT>(rhs)));
-  }
 
 #if 0
 template <class CharT>
@@ -1370,6 +1344,32 @@ int
 Compare( const CharT* lhs, const basic_nsAReadableString<CharT>& rhs )
   {
     return Compare(NS_READABLE_CAST(CharT, basic_nsLiteralString<CharT>(lhs)), rhs);
+  }
+
+// XXX Note that these are located here because some compilers are
+// sensitive to the ordering of declarations with regard to templates.
+template <class CharT>
+inline
+int
+basic_nsAReadableString<CharT>::Compare( const basic_nsAReadableString<CharT>& rhs ) const
+  {
+    return ::Compare(*this, rhs);
+  }
+
+template <class CharT>
+inline
+PRBool
+basic_nsAReadableString<CharT>::Equals( const CharT* rhs ) const
+  {
+    return Compare(basic_nsLiteralString<CharT>(rhs)) == 0;
+  }
+
+template <class CharT>
+inline
+int
+basic_nsAReadableString<CharT>::Compare( const CharT* rhs ) const
+  {
+    return ::Compare(*this, NS_READABLE_CAST(CharT, basic_nsLiteralString<CharT>(rhs)));
   }
 
 
