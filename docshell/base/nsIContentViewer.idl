@@ -33,10 +33,14 @@ interface nsIContentViewer : nsISupports
   [noscript] void getBounds(in nsRectRef aBounds);
   [noscript] void setBounds([const] in nsRectRef aBounds);
 
+  [noscript] void setPreviousViewer(in nsIContentViewer aViewer);
+  [noscript] nsIContentViewer getPreviousViewer();
+
   void move(in long aX, in long aY);
 
   void show();
   void hide();
+  void validate();
 
   attribute boolean enableRendering;
 };

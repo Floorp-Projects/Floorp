@@ -3275,7 +3275,8 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
             nsCOMPtr<nsPIDOMWindow> newWindow = do_QueryInterface(newGlobal);
 		    nsCOMPtr<nsPIDOMWindow> oldWindow = do_QueryInterface(oldGlobal);
 
-		    newWindow->GetRootFocusController(getter_AddRefs(newFocusController));
+        if (newWindow)
+          newWindow->GetRootFocusController(getter_AddRefs(newFocusController));
 		    oldWindow->GetRootFocusController(getter_AddRefs(oldFocusController));
             if(oldFocusController && oldFocusController != newFocusController)
 			  oldFocusController->SetSuppressFocus(PR_TRUE, "SendFocusBlur Window Switch #2");

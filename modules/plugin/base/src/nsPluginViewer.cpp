@@ -168,9 +168,12 @@ public:
   NS_IMETHOD SetDOMDocument(nsIDOMDocument *aDocument);
   NS_IMETHOD GetBounds(nsRect& aResult);
   NS_IMETHOD SetBounds(const nsRect& aBounds);
+  NS_IMETHOD GetPreviousViewer(nsIContentViewer** aViewer);
+  NS_IMETHOD SetPreviousViewer(nsIContentViewer* aViewer);
   NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD Show();
   NS_IMETHOD Hide();
+  NS_IMETHOD Validate();
   NS_IMETHOD SetEnableRendering(PRBool aOn);
   NS_IMETHOD GetEnableRendering(PRBool* aResult);
 
@@ -527,6 +530,26 @@ PluginViewerImpl::GetBounds(nsRect& aResult)
   else {
     aResult.SetRect(0, 0, 0, 0);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PluginViewerImpl::GetPreviousViewer(nsIContentViewer** aViewer)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+PluginViewerImpl::SetPreviousViewer(nsIContentViewer* aViewer)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+PluginViewerImpl::Validate()
+{
+  if (mWindow)
+    mWindow->Validate();
   return NS_OK;
 }
 

@@ -177,18 +177,19 @@ nsDocShell::~nsDocShell()
 NS_IMETHODIMP
 nsDocShell::DestroyChildren()
 {
-    PRInt32 i, n = mChildren.Count();
-    nsCOMPtr<nsIDocShellTreeItem> shell;
-    for (i = 0; i < n; i++) {
-        shell = dont_AddRef((nsIDocShellTreeItem *) mChildren.ElementAt(i));
-        if (!NS_WARN_IF_FALSE(shell, "docshell has null child"))
-            shell->SetParent(nsnull);
-        nsCOMPtr<nsIBaseWindow> shellWin(do_QueryInterface(shell));
-        if (shellWin)
-            shellWin->Destroy();
-    }
-    mChildren.Clear();
-    return NS_OK;
+  PRInt32 i, n = mChildren.Count();
+  nsCOMPtr<nsIDocShellTreeItem> shell;
+  for (i = 0; i < n; i++) {
+    shell = dont_AddRef((nsIDocShellTreeItem *) mChildren.ElementAt(i));
+    if (!NS_WARN_IF_FALSE(shell, "docshell has null child"))
+      shell->SetParent(nsnull);
+      shell->SetTreeOwner(nsnull);
+      // just clear out the array.  When the nsFrameFrame that holds the subshell is
+      // destroyed, then the Destroy() method of that subshell will actually get
+      // called.
+  }
+  mChildren.Clear();
+  return NS_OK;
 }
 
 //*****************************************************************************
@@ -3233,28 +3234,8 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
         // Stop any activity that may be happening in the old document before
         // releasing it...
         mContentViewer->Stop();
-
-        // Try to extract the default background color from the old
-        // view manager, so we can use it for the next document.
-        nsCOMPtr<nsIDocumentViewer> docviewer =
-            do_QueryInterface(mContentViewer);
-
-        if (docviewer) {
-            nsCOMPtr<nsIPresShell> shell;
-            docviewer->GetPresShell(*getter_AddRefs(shell));
-
-            if (shell) {
-                nsCOMPtr<nsIViewManager> vm;
-                shell->GetViewManager(getter_AddRefs(vm));
-
-                if (vm) {
-                    vm->GetDefaultBackgroundColor(&bgcolor);
-                    bgSet = PR_TRUE;
-                }
-            }
-        }
-
         mContentViewer->Destroy();
+        aNewViewer->SetPreviousViewer(mContentViewer);
         mContentViewer = nsnull;
     }
 
@@ -3314,7 +3295,9 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
 // XXX: It looks like the LayoutState gets restored again in Embed()
 //      right after the call to SetupNewViewer(...)
 
-    mContentViewer->Show();
+    // We don't show the mContentViewer yet, since we want to draw the old page
+    // until we have enough of the new page to show.  Just return with the new
+    // viewer still set to hidden.
 
     // Now that we have switched documents, forget all of our children
     DestroyChildren();
