@@ -318,6 +318,11 @@ void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
 						break;
 				}
 				break;
+			
+			case kHighLevelEvent:
+				::AEProcessAppleEvent(anEvent);
+			break;
+
 		}
 	} else {
 		DoIdle(*anEvent);
