@@ -119,28 +119,6 @@ static PRUint32 GetMessageSizeFromURI(const char * originalMsgURI)
 }
 #endif
 
-void
-SetWindowSticky(nsIDOMWindowInternal *aWindow)
-{
-  nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(aWindow));
-  if (globalObj)
-  {
-    nsCOMPtr<nsIDocShell> docshell;
-    globalObj->GetDocShell(getter_AddRefs(docshell));
-
-    if (docshell)
-    {
-      nsCOMPtr<nsIContentViewer> contentViewer;
-      docshell->GetContentViewer(getter_AddRefs(contentViewer));
-
-      if (contentViewer)
-      {
-        contentViewer->SetSticky(PR_TRUE);
-      }
-    }
-  }
-}
-
 nsMsgComposeService::nsMsgComposeService()
 {
 #ifdef NS_DEBUG
@@ -765,8 +743,6 @@ nsMsgComposeService::CacheWindow(nsIDOMWindowInternal *aWindow, PRBool aComposeH
   {
     if (!mCachedWindows[i].window)
     {
-      SetWindowSticky(aWindow);
-
       rv = ShowCachedComposeWindow(aWindow, PR_FALSE);
       if (NS_SUCCEEDED(rv))
         mCachedWindows[i].Initialize(aWindow, aListener, aComposeHTML);
@@ -825,6 +801,14 @@ nsresult nsMsgComposeService::ShowCachedComposeWindow(nsIDOMWindowInternal *aCom
   NS_ENSURE_SUCCESS(rv,rv);
   
   if (webShellContainer) {
+
+    // the window need to be sticky before we hide it.
+    nsCOMPtr<nsIContentViewer> contentViewer;
+    rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    rv = contentViewer->SetSticky(!aShow);
+    NS_ENSURE_SUCCESS(rv,rv);
 
     // disable (enable) the cached window
     nsCOMPtr <nsIWebShellWindow> webShellWindow = do_QueryInterface(webShellContainer, &rv);
