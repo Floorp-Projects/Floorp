@@ -2,7 +2,7 @@
 
 #include "nsres.h"
 
-#ifdef BSDI
+#if defined(BSDI)||defined(RHAPSODY)
 #include <stdlib.h>
 #else
 #include <malloc.h>
