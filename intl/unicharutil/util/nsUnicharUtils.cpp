@@ -26,18 +26,57 @@
 #include "nsICaseConversion.h"
 #include "nsIServiceManager.h"
 
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
+#include "nsObserverService.h"
+
 // global cache of the case conversion service
 static nsICaseConversion *gCaseConv = nsnull;
 static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 
+class nsShutdownObserver : public nsIObserver
+{
+public:
+    nsShutdownObserver() { NS_INIT_REFCNT(); }
+    virtual ~nsShutdownObserver() {}
+    NS_DECL_ISUPPORTS
+    
+    NS_IMETHOD Observe(nsISupports *aSubject, const char *aTopic,
+                       const PRUnichar *aData)
+    {
+        if (nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)==0) {
+            NS_IF_RELEASE(gCaseConv);
+        }
+
+        return NS_OK;
+    }
+
+};
+
+NS_IMPL_ISUPPORTS1(nsShutdownObserver, nsIObserver)
+
 static nsresult NS_InitCaseConversion() {
     if (gCaseConv) return NS_OK;
 
-    return nsServiceManager::GetService(kUnicharUtilCID,
-                                        NS_GET_IID(nsICaseConversion),
-                                        (nsISupports**)&gCaseConv);
+    nsresult rv;
+    
+    rv = nsServiceManager::GetService(kUnicharUtilCID,
+                                      NS_GET_IID(nsICaseConversion),
+                                      (nsISupports**)&gCaseConv);
 
+    if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIObserverService> obs =
+            do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            nsShutdownObserver *observer = new nsShutdownObserver();
+            if (observer)
+                obs->AddObserver(observer, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+        }
+    }
+    
+    return NS_OK;
 }
+
 
 // to be turned on for bug 100214
 #if 0
@@ -99,16 +138,41 @@ nsCaseInsensitiveStringComparator::operator()( const PRUnichar* lhs, const PRUni
       return result;
   }
 
-PRBool
+int
 nsCaseInsensitiveStringComparator::operator()( PRUnichar lhs, PRUnichar rhs ) const
   {
-      if (lhs == rhs) return PR_TRUE;
+      if (lhs == rhs) return 0;
       NS_InitCaseConversion();
 
-      gCaseConv->ToUpper(lhs, &lhs);
-      gCaseConv->ToUpper(rhs, &rhs);
+      gCaseConv->ToLower(lhs, &lhs);
+      gCaseConv->ToLower(rhs, &rhs);
 
-      return lhs == rhs;
+      if (lhs == rhs) return 0;
+      if (lhs < rhs) return -1;
+      return 1;
   }
 
 #endif
+
+PRUnichar
+ToLowerCase(PRUnichar aChar)
+{
+    PRUnichar result;
+    if (NS_FAILED(NS_InitCaseConversion()))
+        return aChar;
+    
+    gCaseConv->ToLower(aChar, &result);
+    return result;
+}
+
+PRUnichar
+ToUpperCase(PRUnichar aChar)
+{
+    PRUnichar result;
+    if (NS_FAILED(NS_InitCaseConversion()))
+        return aChar;
+        
+    gCaseConv->ToUpper(aChar, &result);
+    return result;
+}
+
