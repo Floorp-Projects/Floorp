@@ -216,7 +216,6 @@ embed.jar:
   locale/en-US/global/nsHelperAppDlg.dtd (en-US/locale/en-US/global/nsHelperAppDlg.dtd)
   locale/en-US/global/nsHelperAppDlg.properties (en-US/locale/en-US/global/nsHelperAppDlg.properties)
   locale/en-US/global/nsOutlinerSorting.properties (en-US/locale/en-US/global/nsOutlinerSorting.properties)
-  locale/en-US/global/platformKeys.properties (en-US/locale/en-US/global/platformKeys.properties)
   locale/en-US/global/regionNames.properties (en-US/locale/en-US/global/regionNames.properties)
   locale/en-US/global/replacedialog.dtd (en-US/locale/en-US/global/replacedialog.dtd)
   locale/en-US/global/textcontext.dtd (en-US/locale/en-US/global/textcontext.dtd)
