@@ -1322,7 +1322,7 @@ jsdService::ClearAllBreakpoints (void)
 }
 
 NS_IMETHODIMP
-jsdService::EnterNestedEventLoop (PRUint32 *_rval)
+jsdService::EnterNestedEventLoop (jsdINestCallback *callback, PRUint32 *_rval)
 {
     nsCOMPtr<nsIAppShell> appShell(do_CreateInstance(kAppShellCID));
     NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
@@ -1342,6 +1342,11 @@ jsdService::EnterNestedEventLoop (PRUint32 *_rval)
     if (stack && NS_SUCCEEDED(stack->Push(nsnull)) &&
         NS_SUCCEEDED(eventService->PushThreadEventQueue(getter_AddRefs(eventQ))))
     {
+        if (NS_SUCCEEDED(rv) && callback)
+        {
+            rv = callback->OnNest();
+        }
+        
         while(NS_SUCCEEDED(rv) && mNestedLoopLevel >= nestLevel)
         {
             void* data;

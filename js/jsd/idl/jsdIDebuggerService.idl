@@ -53,6 +53,7 @@ native jsuword(jsuword);
 
 /* interfaces we declare in this file */
 interface jsdIDebuggerService;
+interface jsdINestCallback;
 interface jsdIScriptEnumerator;
 interface jsdIScriptHook;
 interface jsdIExecutionHook;
@@ -166,13 +167,27 @@ interface jsdIDebuggerService : nsISupports
     
     /**
      * XXX temporary hacks
-     * These routines are used to nest and unnest UI event loops.
+     * These routines are used to nest and unnest UI and network event loops.
      */
-    unsigned long enterNestedEventLoop ();
+    unsigned long enterNestedEventLoop (in jsdINestCallback callback);
     unsigned long exitNestedEventLoop ();
 };
 
 /* callback interfaces */
+
+/**
+ * Pass an instance of one of these to jsdIDebuggerService::enterNestedEventLoop.
+ */
+[scriptable, uuid(88bea60f-9b5d-4b39-b08b-1c3a278782c6)]
+interface jsdINestCallback : nsISupports
+{
+    /**
+     * This method will be called after pre-nesting work has completed, such
+     * as pushing the js context and network event queue, but before the new
+     * event loop starts.
+     */
+    void onNest ();
+};
 
 /**
  * Pass an instance of one of these to jsdIDebuggerService::enumerateScripts.
