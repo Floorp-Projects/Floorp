@@ -22,7 +22,6 @@
 DEPTH=..\..
 include <$(DEPTH)/config/config.mak>
 
-
 DEFINES=-D_IMPL_NS_COOKIE -DWIN32_LEAN_AND_MEAN
 MODULE=cookie 
 
@@ -70,6 +69,9 @@ LLIBS	= \
  $(DIST)\lib\netwerk.lib \
 !endif
  $(HASHLIBS)
+
+DIRS=tests
+
 
 include <$(DEPTH)\config\rules.mak>
 
