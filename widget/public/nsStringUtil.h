@@ -30,50 +30,21 @@
 // REMEMBER to always use the NS_FREE_STR_BUF after using the 
 // NS_ALLOC_STR_BUF. You can not nest NS_ALLOC_STR_BUF's. 
 
-#define NS_ALLOC_STR_BUF(varName, strName, tempSize)          \
-  static const int _ns_kSmallBufferSize = tempSize;           \
-  char* varName = 0;                                          \
-  int _ns_smallBufUsed = 0;                                   \
-  char _ns_smallBuffer[_ns_kSmallBufferSize];                 \
-  if (strName.Length() < (_ns_kSmallBufferSize - 1)) {        \
-    strName.ToCString(_ns_smallBuffer, _ns_kSmallBufferSize); \
-    _ns_smallBuffer[_ns_kSmallBufferSize - 1] = '\0';         \
-    _ns_smallBufUsed = 1;                                     \
-    varName = _ns_smallBuffer;                                \
-  }                                                           \
-  else {                                                      \
-    varName = strName.ToNewCString();                         \
-  }
+#define NS_ALLOC_CHAR_BUF(aBuf, aSize, aActualSize) \
+  int _ns_tmpActualSize = aActualSize;              \
+  char _ns_smallBuffer[aSize];                      \
+  char * const aBuf = _ns_tmpActualSize <= aSize ? _ns_smallBuffer : new char[_ns_tmpActualSize]; 
 
-#define NS_FREE_STR_BUF(varName)                              \
- if (! _ns_smallBufUsed)                                      \
-    delete[] varName;
+#define NS_FREE_CHAR_BUF(aBuf)   \
+  if (aBuf != _ns_smallBuffer) \
+   delete[] aBuf;
 
-// Create temporary char[] macro
-//
-// Create a temporary buffer for storing chars.
-// If the actual size is > size then the buffer
-// is allocated from the heap, otherwise the buffer
-// is a stack variable. REMEMBER: use NS_FREE_BUF
-// when finished with the buffer allocated, and do
-// NOT nest INSERT_BUF'S.
+#define NS_ALLOC_STR_BUF(aBuf, aStrName, aTempSize) \
+  NS_ALLOC_CHAR_BUF(aBuf, aTempSize, aStrName.Length()+1); \
+  aStrName.ToCString(aBuf, aStrName.Length()+1);
 
-#define NS_ALLOC_CHAR_BUF(aBuf, aSize, aActualSize)   \
-  char *aBuf;                                         \
-  int _ns_smallBufUsed = 0;                           \
-  static const int _ns_kSmallBufferSize = aSize;      \
-  if (aActualSize < _ns_kSmallBufferSize) {           \
-    char _ns_smallBuffer[_ns_kSmallBufferSize];       \
-    aBuf = _ns_smallBuffer;                           \
-    _ns_smallBufUsed = 1;                             \
-  }                                                   \
-  else {                                              \
-    aBuf = new char[aActualSize];                      \
-  } 
-
-#define NS_FREE_CHAR_BUF(aBuf) \
-if (! _ns_smallBufUsed) \
-    delete[] aBuf; 
+#define NS_FREE_STR_BUF(aBuf)  \
+  NS_FREE_CHAR_BUF(aBuf)
 
 
 #endif  // NSStringUtil

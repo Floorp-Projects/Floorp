@@ -32,6 +32,7 @@
 #include "nsIDeviceContext.h"
 #include "nsRect.h"
 #include "nsGfxCIID.h"
+#include "nsMenu.h"
 
 // IIDs
 static NS_DEFINE_IID(kIMenuBarIID, NS_IMENUBAR_IID);
