@@ -744,7 +744,7 @@ public abstract class ScriptableObject implements Scriptable {
                InvocationTargetException, ClassDefinitionException,
                PropertyException
     {
-        Method[] methods = clazz.getMethods();
+        Method[] methods = FunctionObject.getMethodList(clazz);
         for (int i=0; i < methods.length; i++) {
             if (!methods[i].getName().equals("init"))
                 continue;

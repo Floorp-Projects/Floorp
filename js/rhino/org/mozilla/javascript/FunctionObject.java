@@ -297,18 +297,58 @@ public class FunctionObject extends NativeFunction {
      * @see java.lang.Class#getDeclaredMethods
      */
     public static Method[] findMethods(Class clazz, String name) {
-        Vector v = new Vector(5);
-        Method[] methods = clazz.getDeclaredMethods();
+        return findMethods(getMethodList(clazz), name);
+    }
+    
+    public static Method[] findMethods(Method[] methods, String name) {
+        // Usually we're just looking for a single method, so optimize
+        // for that case.
+        Vector v = null;
+        Method[] result = null;
         for (int i=0; i < methods.length; i++) {
+            if (methods[i] == null)
+                continue;
             if (methods[i].getName().equals(name)) {
-                v.addElement(methods[i]);
+                if (result == null) {
+                    result = new Method[1];
+                    result[0] = methods[i];
+                } else {
+                    if (v == null) {
+                        v = new Vector(5);
+                        v.addElement(result[0]);
+                    }
+                    v.addElement(methods[i]);
+                }
             }
         }
-        if (v.size() == 0) {
-            return null;
-        }
-        Method[] result = new Method[v.size()];
+        if (v == null)
+            return result;
+        result = new Method[v.size()];
         v.copyInto(result);
+        return result;
+    }
+
+    public static Method[] getMethodList(Class clazz) {
+        Method[] cached = methodsCache; // get once to avoid synchronization
+        if (cached != null && cached[0].getDeclaringClass() == clazz)
+            return cached;
+        Method[] methods = clazz.getMethods();
+        int count = 0;
+        for (int i=0; i < methods.length; i++) {
+            if (methods[i].getDeclaringClass() != clazz) {
+                methods[i] = null;
+            } else {
+                count++;
+            }
+        }
+        Method[] result = new Method[count];
+        int j=0;
+        for (int i=0; i < methods.length; i++) {
+            if (methods[i] != null)
+                result[j++] = methods[i];
+        }
+        if (result.length > 0 && Context.isCachingEnabled)
+            methodsCache = result;
         return result;
     }
 
@@ -562,6 +602,8 @@ public class FunctionObject extends NativeFunction {
 
     private static final short VARARGS_METHOD = -1;
     private static final short VARARGS_CTOR =   -2;
+
+    static Method[] methodsCache;
 
     Method method;
     Constructor ctor;

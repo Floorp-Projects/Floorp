@@ -591,21 +591,32 @@ public final class Context {
             // Set the prototype of the object passed in if need be
             if (scope.getPrototype() == null)
                 scope.setPrototype(objectProto);
+            
+            // must precede NativeGlobal since it's needed therein
+            ScriptableObject.defineClass(scope, NativeError.class, sealed);
+            ScriptableObject.defineClass(scope, NativeGlobal.class, sealed);                                     
 
-            String[] classes = { "NativeError",   // must precede NativeGlobal
-                                                  // since it's needed therein
-                                 "NativeGlobal",        "NativeArray", 
-                                 "NativeString",        "NativeBoolean", 
-                                 "NativeNumber",        "NativeDate", 
-                                 "NativeMath",          "NativeCall", 
-                                 "NativeWith", 
-                                 "regexp.NativeRegExp", "NativeScript"                                 
+            String[] classes = { "NativeArray",         "Array",
+                                 "NativeString",        "String",
+                                 "NativeBoolean",       "Boolean",
+                                 "NativeNumber",        "Number",
+                                 "NativeDate",          "Date",
+                                 "NativeMath",          "Math",
+                                 "NativeCall",          "Call",
+                                 "NativeWith",          "With",
+                                 "regexp.NativeRegExp", "RegExp",
+                                 "NativeScript",        "Script",
                                };
-            for (int i=0; i < classes.length; i++) {
+            for (int i=0; i < classes.length; i+=2) {
                 try {
-                    Class c = Class.forName("org.mozilla.javascript." + 
-                                            classes[i]);
-                    ScriptableObject.defineClass(scope, c, sealed);
+                    if (sealed) {
+                        Class c = Class.forName("org.mozilla.javascript." + 
+                                                classes[i]);
+                        ScriptableObject.defineClass(scope, c, sealed);
+                    } else {
+                        String s = "org.mozilla.javascript." + classes[i];
+                        new LazilyLoadedCtor(scope, classes[i+1], s, 0);
+                    }
                 } catch (ClassNotFoundException e) {
                     continue;
                 }
@@ -1631,6 +1642,31 @@ public final class Context {
     public void setCompileFunctionsWithDynamicScope(boolean flag) {
         compileFunctionsWithDynamicScopeFlag = flag;
     }
+    
+    /**
+     * Set whether to cache some values statically.
+     * <p>
+     * By default, the engine will cache some values statically 
+     * (reflected Java classes, for instance). This can speed
+     * execution dramatically, but increases the memory footprint.
+     * Also, with caching enabled, references may be held to 
+     * objects past the lifetime of any real usage. 
+     * <p>
+     * If caching is enabled and this method is called with a 
+     * <code>false</code> argument, the caches will be emptied.
+     * So one strategy could be to clear the caches at times
+     * appropriate to the application.
+     * @param cachingEnabled if true, caching is enabled
+     * @since 1.5 Release 1 
+     */
+    public static void setCachingEnabled(boolean cachingEnabled) {
+        if (isCachingEnabled && !cachingEnabled) {
+            // Caching is being turned off. Empty caches.
+            FunctionObject.methodsCache = null;
+            JavaMembers.classTable = null;
+        }
+        isCachingEnabled = cachingEnabled;
+    }
 
     /********** end of API **********/
 
@@ -1930,6 +1966,7 @@ public final class Context {
 
     int version;
     int errorCount;
+    static boolean isCachingEnabled = true;
     
     private SecuritySupport securitySupport;
     private ErrorReporter errorReporter;

@@ -514,7 +514,8 @@ class JavaMembers {
                 else
                     throw e;
             }
-            classTable.put(cl, members);
+            if (Context.isCachingEnabled)
+                classTable.put(cl, members);
             return members;
         }
     }
@@ -527,7 +528,7 @@ class JavaMembers {
                                errArgs));
     }
 
-    private static Hashtable classTable = new Hashtable();
+    static Hashtable classTable = new Hashtable();
 
     private Class cl;
     private Hashtable members;

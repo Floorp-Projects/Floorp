@@ -68,6 +68,7 @@ SOURCES =						\
 	$(PATH_PREFIX)/JavaScriptException.java		\
 	$(PATH_PREFIX)/Label.java			\
 	$(PATH_PREFIX)/LabelTable.java			\
+	$(PATH_PREFIX)/LazilyLoadedCtor.java		\
 	$(PATH_PREFIX)/LineBuffer.java			\
 	$(PATH_PREFIX)/ListenerCollection.java		\
 	$(PATH_PREFIX)/LocalVariable.java		\
