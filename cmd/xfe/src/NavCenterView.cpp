@@ -46,7 +46,12 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
                                      MWContext *context)
 
   : XFE_View(toplevel_component, parent_view, context),
-    XFE_RDFBase()
+    XFE_RDFBase(),
+#ifdef MOZ_SELECTOR_BAR
+    _selector(0),
+#endif
+    _rdftree(0),
+    _isStandalone(0)
 {
   m_viewType = VIEW_NAVCENTER;
 
@@ -65,7 +70,9 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
   setBaseWidget(navCenterMainForm);
 
 #ifdef MOZ_SELECTOR_BAR
-  createSelectorBar();
+  /* Create the selector bar only in the docked mode */
+  if (!_isStandalone)
+     createSelectorBar();
 #endif
 
   createTree();
@@ -73,13 +80,15 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
   doAttachments();
 
 #ifdef MOZ_SELECTOR_BAR
-  newPane();
+  if (_selector)
+     newPane();
 #endif
 
   addView(_rdftree);
 
 #ifdef MOZ_SELECTOR_BAR
-  XtManageChild(_selector);
+  if (_selector)
+    XtManageChild(_selector);
 #endif /*MOZ_SELECTOR_BAR*/
 
   _rdftree->show();
@@ -111,9 +120,10 @@ XFE_NavCenterView::notify(HT_Resource		n,
   case HT_EVENT_VIEW_ADDED: 
     {
 #ifdef MOZ_SELECTOR_BAR
-      HT_View view = HT_GetView(n);
-      
-      addHTView(view);
+      if (!_isStandalone && _selector) {
+        HT_View view = HT_GetView(n);
+        addHTView(view);
+      }
 #endif
     }
     break;
@@ -136,9 +146,13 @@ void
 XFE_NavCenterView::finishPaneCreate()
 {
 #ifdef MOZ_SELECTOR_BAR
+  if (_selector) {
     HT_SetPaneFEData(_ht_pane, this);
 
     _ht_view = HT_GetSelectedView(_ht_pane);
+  }
+  else
+    XFE_RDFBase::finishPaneCreate();
 #else
   XFE_RDFBase::finishPaneCreate();
 #endif
@@ -189,6 +203,7 @@ XFE_NavCenterView::selectHTView(HT_View view)
     // XfeToolBarSetSelectedButton() call
 
     Widget   toolbar;
+    if (_selector) {
     XtVaGetValues(_selector, XmNtoolBar, &toolbar, NULL);
 
     Widget   button = XtNameToWidget(toolbar, HT_GetViewName(view));
@@ -196,6 +211,7 @@ XFE_NavCenterView::selectHTView(HT_View view)
     if (toolbar && button)
     {
         XfeToolBarSetSelectedButton(toolbar, button);
+    }
     }
 #endif
 }
@@ -210,6 +226,7 @@ XFE_NavCenterView::addHTView(HT_View htview)
   char * imageURL = "http://people.netscape.com/radha/sony/images/LocationProxy.gif";
   Pixmap   image = (Pixmap)NULL;
   Pixmap   mask = (Pixmap)NULL;
+
   PRInt32  w,h;
 
 
@@ -277,7 +294,7 @@ XFE_NavCenterView::addHTView(HT_View htview)
 				   XmNpixmapMask, mask,
                    XmNwidth, (unsigned int)(w = rdfImage->getImageWidth()),
                    XmNheight, (unsigned int)(h = rdfImage->getImageHeight()),
-                   /*				   XmNbuttonLayout, XmBUTTON_PIXMAP_ONLY, */
+                   /*                    XmNbuttonLayout, XmBUTTON_PIXMAP_ONLY,  */
                    NULL);
 
 
@@ -337,7 +354,7 @@ XFE_NavCenterView::getSelector(void)
   return _selector;
 }
 #endif  /* MOZ_SELECTOR_BAR  */
-
+//////////////////////////////////////////////////////////////////////
  void 
 XFE_NavCenterView::handleDisplayPixmap(Widget w, IL_Pixmap * image, IL_Pixmap * mask, PRInt32  width, PRInt32 height)
 {
@@ -353,7 +370,7 @@ XFE_NavCenterView::handleDisplayPixmap(Widget w, IL_Pixmap * image, IL_Pixmap * 
      rdfImage->RDFDisplayPixmap(image, mask, width, height);
 }
 
-
+//////////////////////////////////////////////////////////////////////
 void
 XFE_NavCenterView::handleNewPixmap(Widget w, IL_Pixmap * image, Boolean mask)
 {
@@ -369,7 +386,7 @@ XFE_NavCenterView::handleNewPixmap(Widget w, IL_Pixmap * image, Boolean mask)
      rdfImage->RDFNewPixmap(image, (PRBool)mask);
 }
 
-
+//////////////////////////////////////////////////////////////////////
 void 
 XFE_NavCenterView::handleImageComplete(Widget w, IL_Pixmap * image)
 {
@@ -386,7 +403,7 @@ XFE_NavCenterView::handleImageComplete(Widget w, IL_Pixmap * image)
    if (rdfImage)
     rdfImage->RDFImageComplete(image);
 }
-
+//////////////////////////////////////////////////////////////////////
 #ifdef MOZ_SELECTOR_BAR
 /*static*/ void
 XFE_NavCenterView::image_complete_cb(XtPointer client_data)
@@ -402,10 +419,10 @@ XFE_NavCenterView::image_complete_cb(XtPointer client_data)
      XtUnmanageChild(button);
      XtVaGetValues(button, XmNwidth, &b_width, XmNheight, &b_height, NULL);
 
-     XtVaSetValues(button,/*  XmNheight,(cb->height + b_height), */
+     XtVaSetValues(button, /*  XmNheight,(cb->height + b_height),*/
 				   XmNpixmap, cb->image, 
 				   XmNpixmapMask, cb->mask,
-                   /*                   XmNbuttonLayout, XmBUTTON_PIXMAP_ONLY, */
+                   XmNbuttonLayout, XmBUTTON_PIXMAP_ONLY,
                    NULL);
      XtManageChild(button);
      XP_FREE(cb);
@@ -444,33 +461,37 @@ XFE_NavCenterView::createTree()
 	
 	_rdftree->setStandAlone(_isStandalone);
     
-    //  	_rdftree->setHtmlPaneHeightPercent(50);
-
-//	_rdftree->setHtmlPaneHeightFixed(100);
 }
 //////////////////////////////////////////////////////////////////////////
 void
 XFE_NavCenterView::doAttachments()
 {
 #ifdef MOZ_SELECTOR_BAR
+  if (_selector) {
     XtVaSetValues(_selector,
                   XmNtopAttachment,    XmATTACH_FORM,
                   XmNbottomAttachment, XmATTACH_FORM,
                   XmNleftAttachment,   XmATTACH_FORM,
                   XmNrightAttachment,  XmATTACH_NONE,
                   NULL);
-#endif
 
     XtVaSetValues(_rdftree->getBaseWidget(),
                   XmNtopAttachment,    XmATTACH_FORM,
                   XmNbottomAttachment, XmATTACH_FORM,
-#ifdef MOZ_SELECTOR_BAR
                   XmNleftAttachment,   XmATTACH_WIDGET,
                   XmNleftWidget,       _selector,
-#else
-                  XmNleftAttachment,   XmATTACH_FORM,
-#endif /*MOZ_SELECTOR_BAR*/
                   XmNrightAttachment,  XmATTACH_FORM,
                   NULL);
+  }
+  else
+#endif
+    {
+    XtVaSetValues(_rdftree->getBaseWidget(),
+                  XmNtopAttachment,    XmATTACH_FORM,
+                  XmNbottomAttachment, XmATTACH_FORM,
+                  XmNleftAttachment,   XmATTACH_FORM,
+                  XmNrightAttachment,  XmATTACH_FORM,
+                  NULL);
+  }
 }
 //////////////////////////////////////////////////////////////////////////
