@@ -1666,7 +1666,10 @@ NS_IMETHODIMP nsDocShell::Destroy()
     }
   }
 
-   mContentViewer = nsnull;
+    if (mContentViewer) {
+        mContentViewer->Destroy();
+        mContentViewer = nsnull;
+    }
 
    DestroyChildren();
 
@@ -2912,7 +2915,11 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
     mContentViewer->Stop();
   }
 
-   mContentViewer = nsnull;
+    if (mContentViewer) {
+        mContentViewer->Destroy();
+        mContentViewer = nsnull;
+    }
+
    // End copying block (Don't hold content/document viewer ref beyond here!!)
 
    // See the book I wrote above regarding why the focus controller is 
@@ -3368,8 +3375,8 @@ NS_IMETHODIMP nsDocShell::AddHeadersToChannel(nsIInputStream *aHeadersData,
     nsCAutoString oneHeader;
     nsCAutoString headerName;
     nsCAutoString headerValue;
-    PRUint32 crlf = 0;
-    PRUint32 colon = 0;
+    PRInt32 crlf = 0;
+    PRInt32 colon = 0;
     nsIAtom *headerAtom;
 
     //
