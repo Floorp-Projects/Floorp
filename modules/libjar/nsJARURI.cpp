@@ -326,8 +326,7 @@ nsJARURI::Resolve(const nsACString &relativePath, nsACString &result)
 {
     nsresult rv;
 
-    nsCAutoString scheme;
-    rv = net_ExtractURLScheme(relativePath, nsnull, nsnull, &scheme);
+    rv = net_ExtractURLScheme(relativePath, nsnull, nsnull, nsnull);
     if (NS_SUCCEEDED(rv)) {
         // then aSpec is absolute
         result = relativePath;
