@@ -565,8 +565,13 @@ public class Codegen extends Interpreter {
                 break;
 
               case TokenStream.FUNCTION:
-                if (inFunction || parent.getType() != TokenStream.SCRIPT)
-                    visitFunction(node);
+                if (inFunction || parent.getType() != TokenStream.SCRIPT) {
+                    FunctionNode fn = (FunctionNode) node.getProp(Node.FUNCTION_PROP);
+                    byte t = fn.getFunctionType();
+                    if (t != FunctionNode.FUNCTION_STATEMENT) {
+                        visitFunction(fn, t == FunctionNode.FUNCTION_EXPRESSION_STATEMENT);
+                    }
+                }
                 break;
 
               case TokenStream.NAME:
@@ -1610,6 +1615,17 @@ public class Codegen extends Interpreter {
         }
         astore(variableObjectLocal);
         
+        Vector fns = (Vector) tree.getProp(Node.FUNCTION_PROP);
+        if (fns != null) {
+            for (int i=0; i < fns.size(); i++) {
+                FunctionNode fn = (FunctionNode) fns.elementAt(i);
+                if (fn.getFunctionType() == FunctionNode.FUNCTION_STATEMENT) {
+                    visitFunction(fn, true);
+                }
+            }
+        }
+        
+        
         if (cx.isGeneratingDebug()) {
             debugVars = new OptVariableTable();
             debugVars.addLocal(debugVariableName);
@@ -1898,9 +1914,8 @@ public class Codegen extends Interpreter {
         }
     }
 
-    private void visitFunction(Node node) {
+    private void visitFunction(Node fn, boolean setName) {
         aload(variableObjectLocal);
-        FunctionNode fn = (FunctionNode) node.getProp(Node.FUNCTION_PROP);
         Short index = (Short) fn.getProp(Node.FUNCTION_PROP);
         aload(funObjLocal);
         classFile.add(ByteCode.GETFIELD, "org/mozilla/javascript/NativeFunction",
@@ -1909,15 +1924,13 @@ public class Codegen extends Interpreter {
         addByteCode(ByteCode.AALOAD);
         addVirtualInvoke("java/lang/Object", "getClass", "()", "Ljava/lang/Class;");
         aload(contextLocal);
-        byte z = fn.getFunctionType() == FunctionNode.FUNCTION_EXPRESSION_STATEMENT
-                 ? (byte)1 : (byte)0;
-        addByteCode(ByteCode.BIPUSH, z);
+        addByteCode(ByteCode.BIPUSH, setName ? (byte)1 : (byte)0);
         
         addScriptRuntimeInvoke("createFunctionObject", 
-                                    "(Lorg/mozilla/javascript/Scriptable;"+
-                                    "Ljava/lang/Class;" +
-                                    "Lorg/mozilla/javascript/Context;Z)", 
-                                    "Lorg/mozilla/javascript/NativeFunction;");
+                               "(Lorg/mozilla/javascript/Scriptable;"+
+                                "Ljava/lang/Class;" +
+                                "Lorg/mozilla/javascript/Context;Z)", 
+                               "Lorg/mozilla/javascript/NativeFunction;");
 
     }
 

@@ -132,12 +132,10 @@ public class VariableTable {
     
     // This should only be called very early in compilation
     public void removeLocal(String name) {
-        for (int i=0; i < itsVariables.size(); i++) {
-            LocalVariable v = (LocalVariable) itsVariables.elementAt(i);
-            if (v.getName().equals(name)) {
-                itsVariables.removeElementAt(i);
-                return;
-            }
+        Integer i = (Integer) itsVariableNames.get(name);
+        if (i != null) {
+            itsVariables.removeElementAt(i.intValue());
+            itsVariableNames.remove(name);
         }
     }
     
