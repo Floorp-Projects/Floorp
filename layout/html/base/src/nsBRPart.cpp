@@ -56,9 +56,10 @@ BRFrame::~BRFrame()
 {
 }
 
-NS_METHOD BRFrame::Paint(nsIPresContext& aPresContext,
-                         nsIRenderingContext& aRenderingContext,
-                         const nsRect& aDirtyRect)
+NS_METHOD
+BRFrame::Paint(nsIPresContext&      aPresContext,
+               nsIRenderingContext& aRenderingContext,
+               const nsRect&        aDirtyRect)
 {
   if (nsIFrame::GetShowFrameBorders()) {
     nsStyleColor* color = (nsStyleColor*)
@@ -70,7 +71,9 @@ NS_METHOD BRFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-NS_METHOD BRFrame::GetReflowMetrics(nsIPresContext* aPresContext, nsReflowMetrics& aMetrics)
+NS_METHOD
+BRFrame::GetReflowMetrics(nsIPresContext*  aPresContext,
+                          nsReflowMetrics& aMetrics)
 {
   // We have no width, but we're the height of the default font
   nsStyleFont* font =
@@ -90,40 +93,51 @@ NS_METHOD BRFrame::GetReflowMetrics(nsIPresContext* aPresContext, nsReflowMetric
   NS_RELEASE(fm);
 
   // Get cached state for containing block frame
-  nsLineLayout* lineLayoutState = nsnull;
   nsBlockReflowState* state =
     nsBlockFrame::FindBlockReflowState(aPresContext, this);
   if (nsnull != state) {
-    lineLayoutState = state->mCurrentLine;
+    nsLineLayout* lineLayoutState = state->mCurrentLine;
     if (nsnull != lineLayoutState) {
       lineLayoutState->mReflowResult =
         NS_LINE_LAYOUT_REFLOW_RESULT_BREAK_AFTER;
+      nsStyleDisplay* display = (nsStyleDisplay*)
+        mStyleContext->GetData(eStyleStruct_Display);
+      lineLayoutState->mPendingBreak = display->mBreakType;
+      if (NS_STYLE_CLEAR_NONE == lineLayoutState->mPendingBreak) {
+        lineLayoutState->mPendingBreak = NS_STYLE_CLEAR_LINE;
+      }
     }
   }
 
   return NS_OK;
 }
 
-NS_METHOD BRFrame::Reflow(nsIPresContext* aPresContext,
-                          nsReflowMetrics& aDesiredSize,
-                          const nsReflowState& aMaxSize,
-                          nsReflowStatus& aStatus)
+NS_METHOD
+BRFrame::Reflow(nsIPresContext*      aPresContext,
+                nsReflowMetrics&     aDesiredSize,
+                const nsReflowState& aMaxSize,
+                nsReflowStatus&      aStatus)
 {
+  GetReflowMetrics(aPresContext, aDesiredSize);
+  aStatus = NS_FRAME_COMPLETE;
+
   // Get cached state for containing block frame
-  nsLineLayout* lineLayoutState = nsnull;
   nsBlockReflowState* state =
     nsBlockFrame::FindBlockReflowState(aPresContext, this);
   if (nsnull != state) {
-    lineLayoutState = state->mCurrentLine;
+    nsLineLayout* lineLayoutState = state->mCurrentLine;
     if (nsnull != lineLayoutState) {
       lineLayoutState->mReflowResult =
         NS_LINE_LAYOUT_REFLOW_RESULT_BREAK_AFTER;
-      lineLayoutState->LineBreak();
+      nsStyleDisplay* display = (nsStyleDisplay*)
+        mStyleContext->GetData(eStyleStruct_Display);
+      lineLayoutState->mPendingBreak = display->mBreakType;
+      if (NS_STYLE_CLEAR_NONE == lineLayoutState->mPendingBreak) {
+        lineLayoutState->mPendingBreak = NS_STYLE_CLEAR_LINE;
+      }
     }
   }
 
-  GetReflowMetrics(aPresContext, aDesiredSize);
-  aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
 
@@ -134,33 +148,18 @@ public:
   BRPart(nsIAtom* aTag);
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
-
-  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
-                                     nsHTMLValue& aResult) const;
-
-  virtual void UnsetAttribute(nsIAtom* aAttribute);
-
-
+  virtual void MapAttributesInto(nsIStyleContext* aContext,
+                                 nsIPresContext* aPresContext);
   virtual nsresult CreateFrame(nsIPresContext* aPresContext,
                                nsIFrame* aParentFrame,
                                nsIStyleContext* aStyleContext,
                                nsIFrame*& aResult);
-
-  PRInt32 GetClear() {
-    return mClear;
-  }
-
-  void SetClear(PRInt32 aValue) {
-    mClear = aValue;
-  }
 
 protected:
   virtual ~BRPart();
   virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
                                           nsHTMLValue& aValue,
                                           nsString& aResult) const;
-
-  PRInt32 mClear;
 };
 
 BRPart::BRPart(nsIAtom* aTag)
@@ -187,9 +186,6 @@ BRPart::CreateFrame(nsIPresContext*  aPresContext,
   return NS_OK;
 }
 
-//----------------------------------------------------------------------
-// Attributes
-
 static nsHTMLTagContent::EnumTable kClearTable[] = {
   { "left", NS_STYLE_CLEAR_LEFT },
   { "right", NS_STYLE_CLEAR_RIGHT },
@@ -198,48 +194,38 @@ static nsHTMLTagContent::EnumTable kClearTable[] = {
   { 0 }
 };
 
-void BRPart::SetAttribute(nsIAtom* aAttribute, const nsString& aString)
+void
+BRPart::SetAttribute(nsIAtom* aAttribute, const nsString& aString)
 {
   if (aAttribute == nsHTMLAtoms::clear) {
     nsHTMLValue value;
     if (ParseEnumValue(aString, kClearTable, value)) {
-      mClear = value.GetIntValue();
-    }
-    else {
-      mClear = NS_STYLE_CLEAR_NONE;
+      nsHTMLTagContent::SetAttribute(aAttribute, value);
     }
     return;
   }
   nsHTMLTagContent::SetAttribute(aAttribute, aString);
 }
 
-nsContentAttr BRPart::GetAttribute(nsIAtom* aAttribute,
-                                   nsHTMLValue& aResult) const
+void
+BRPart::MapAttributesInto(nsIStyleContext* aContext,
+                          nsIPresContext* aPresContext)
 {
-  nsContentAttr ca = eContentAttr_NotThere;
-  if (aAttribute == nsHTMLAtoms::clear) {
-    aResult.Reset();
-    if (NS_STYLE_CLEAR_NONE != mClear) {
-      aResult.SetIntValue(mClear, eHTMLUnit_Enumerated);
-      ca = eContentAttr_HasValue;
+  if (nsnull != mAttributes) {
+    nsStyleDisplay* display = (nsStyleDisplay*)
+      aContext->GetData(eStyleStruct_Display);
+    nsHTMLValue value;
+    GetAttribute(nsHTMLAtoms::clear, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {
+      display->mBreakType = value.GetIntValue();
     }
   }
-  else {
-    ca = nsHTMLTagContent::GetAttribute(aAttribute, aResult);
-  }
-  return ca;
 }
 
-void BRPart::UnsetAttribute(nsIAtom* aAttribute)
-{
-  if (aAttribute == nsHTMLAtoms::clear) {
-    mClear = NS_STYLE_CLEAR_NONE;
-  }
-}
-
-nsContentAttr BRPart::AttributeToString(nsIAtom* aAttribute,
-                                        nsHTMLValue& aValue,
-                                        nsString& aResult) const
+nsContentAttr
+BRPart::AttributeToString(nsIAtom*     aAttribute,
+                          nsHTMLValue& aValue,
+                          nsString&    aResult) const
 {
   if (aAttribute == nsHTMLAtoms::clear) {
     if ((eHTMLUnit_Enumerated == aValue.GetUnit()) &&
