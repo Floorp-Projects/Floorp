@@ -68,7 +68,7 @@ EXPORTS = 					\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\..\..\base -I..\..\dom \
-	-I..\..
+	-I..\.. -I..\..\..\net
 
 LCFLAGS = \
         $(LCFLAGS) \
