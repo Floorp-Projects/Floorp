@@ -79,6 +79,10 @@ NSPR_CFLAGS	+= -DGETCWD_CANT_MALLOC
 endif
 
 export:: $(TARGETS)
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+	$(INSTALL) -m 444 $(srcdir)/os2/dirent.h  $(DIST)/include
+	$(INSTALL) -m 444 $(srcdir)/os2/getopt.h  $(DIST)/include
+endif
 
 #update build number from within make script
 $(DEPTH)/build/build_number: FORCE
