@@ -50,6 +50,7 @@
 #include "simpleCID.h"
 
 #include "nsISimplePluginInstance.h"
+#include "nsIScriptablePlugin.h"
 
 /*------------------------------------------------------------------------------
  * Windows Includes
@@ -171,7 +172,9 @@ static const PRInt32 kNumMimeTypes = sizeof(kMimeTypes) / sizeof(*kMimeTypes);
 
 class SimplePluginInstance : 
     public nsIPluginInstance, 
+    public nsIScriptablePlugin,
     public nsISimplePluginInstance {
+
 public:
     ////////////////////////////////////////////////////////////////////////////
     // for implementing a generic module
@@ -191,6 +194,7 @@ public:
 
 
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISCRIPTABLEPLUGIN
     NS_DECL_NSISIMPLEPLUGININSTANCE
 
     ////////////////////////////////////////////////////////////////////////////
@@ -367,6 +371,32 @@ static nsModuleComponentInfo gComponentInfo[] = {
 
 NS_IMPL_NSGETMODULE("SimplePlugin", gComponentInfo);
 
+
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIScriptablePlugin methods
+////////////////////////////////////////////////////////////////////////////////
+NS_METHOD
+SimplePluginInstance::GetScriptablePeer(void **aScriptablePeer)
+{
+   // We implement the interface we want to be scriptable by
+   // (nsISimplePluginInstance) so we just return this.
+   *aScriptablePeer = NS_STATIC_CAST(nsISimplePluginInstance *, this);
+   NS_ADDREF(NS_STATIC_CAST(nsISimplePluginInstance *, *aScriptablePeer));
+   return NS_OK;
+}
+
+NS_METHOD
+SimplePluginInstance::GetScriptableInterface(nsIID **aScriptableInterface)
+{
+  *aScriptableInterface = (nsIID *)nsMemory::Alloc(sizeof(nsIID));
+  NS_ENSURE_TRUE(*aScriptableInterface, NS_ERROR_OUT_OF_MEMORY);
+
+  **aScriptableInterface = NS_GET_IID(nsISimplePluginInstance);
+
+  return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // SimplePluginInstance Methods
 ////////////////////////////////////////////////////////////////////////////////
@@ -461,7 +491,7 @@ SimplePluginInstance::~SimplePluginInstance(void)
 // These macros produce simple version of QueryInterface and AddRef.
 // See the nsISupports.h header file for details.
 
-NS_IMPL_ISUPPORTS2(SimplePluginInstance, nsIPluginInstance, nsISimplePluginInstance)
+NS_IMPL_ISUPPORTS3(SimplePluginInstance, nsIPluginInstance, nsISimplePluginInstance, nsIScriptablePlugin)
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++
  * NewInstance:
