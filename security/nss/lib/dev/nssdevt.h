@@ -35,7 +35,7 @@
 #define NSSDEVT_H
 
 #ifdef DEBUG
-static const char NSSDEVT_CVS_ID[] = "@(#) $RCSfile: nssdevt.h,v $ $Revision: 1.2 $ $Date: 2001/11/08 00:14:54 $ $Name:  $";
+static const char NSSDEVT_CVS_ID[] = "@(#) $RCSfile: nssdevt.h,v $ $Revision: 1.3 $ $Date: 2001/11/28 16:23:39 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -63,8 +63,6 @@ typedef struct NSSModuleStr NSSModule;
 typedef struct NSSSlotStr NSSSlot;
 
 typedef struct NSSTokenStr NSSToken;
-
-typedef struct nssSessionStr nssSession;
 
 PR_END_EXTERN_C
 

@@ -32,12 +32,25 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.4 $ $Date: 2001/10/11 18:41:50 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.5 $ $Date: 2001/11/28 16:23:43 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
 #include "nsspki.h"
 #endif /* NSSPKI_H */
+
+#ifndef PKIT_H
+#include "pkit.h"
+#endif /* PKIT_H */
+
+#ifndef DEV_H
+#include "dev.h"
+#endif /* DEV_H */
+
+#ifdef NSS_3_4_CODE
+#include "pk11func.h"
+#include "dev3hack.h"
+#endif
 
 extern const NSSError NSS_ERROR_NOT_FOUND;
 
@@ -91,8 +104,28 @@ NSSCryptoContext_ImportCertificate
   NSSCertificate *c
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return PR_FAILURE;
+    NSSToken *token;
+    nssSession *session = NULL;
+#ifdef NSS_3_4_CODE
+    /* XXX hack alert - what this needs to do is find the preferred
+     * token for cert storage
+     */
+    if (PR_TRUE) {
+	PK11SlotInfo *slot = PK11_GetInternalSlot();
+	token = PK11Slot_GetNSSToken(slot);
+    }
+#endif
+    /*
+     * question - are there multiple available tokens for the crypto context?
+     * in that case, it needs to store a session for each one
+     */
+#ifdef nodef
+    session = get_token_session(cc, tok);
+    if (!session) {
+	return PR_FAILURE;
+    }
+#endif
+    return nssToken_ImportCertificate(token, session, c, NULL, cc);
 }
 
 NSS_IMPLEMENT NSSCertificate *
@@ -428,10 +461,10 @@ struct token_session_str {
     nssSession *session;
 };
 
+#ifdef nodef
 static nssSession *
 get_token_session(NSSCryptoContext *cc, NSSToken *tok)
 {
-#if 0
     struct token_session_str *ts;
     for (ts  = (struct token_session_str *)nssListIterator_Start(cc->sessions);
          ts != (struct token_session_str *)NULL;
@@ -450,8 +483,8 @@ get_token_session(NSSCryptoContext *cc, NSSToken *tok)
 	nssList_AddElement(cc->sessionList, (void *)ts);
     }
     return ts->session;
-#endif
 }
+#endif
 
 NSS_IMPLEMENT NSSItem *
 NSSCryptoContext_Decrypt
@@ -516,6 +549,7 @@ NSSCryptoContext_Decrypt
     }
     return rvData;
 #endif
+    return NULL;
 }
 
 NSS_IMPLEMENT PRStatus
@@ -864,8 +898,8 @@ NSSCryptoContext_Digest
   NSSArena *arenaOpt
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return NULL;
+    return nssToken_Digest(cc->token, cc->session, apOpt, 
+                           data, rvOpt, arenaOpt);
 }
 
 NSS_IMPLEMENT PRStatus
@@ -876,8 +910,7 @@ NSSCryptoContext_BeginDigest
   NSSCallback *uhhOpt
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return PR_FAILURE;
+    return nssToken_BeginDigest(cc->token, cc->session, apOpt);
 }
 
 NSS_IMPLEMENT PRStatus
@@ -888,8 +921,12 @@ NSSCryptoContext_ContinueDigest
   NSSItem *item
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return PR_FAILURE;
+	/*
+    NSSAlgorithmAndParameters *ap;
+    ap = (apOpt) ? apOpt : cc->ap;
+    */
+	/* why apOpt?  can't change it at this point... */
+    return nssToken_ContinueDigest(cc->token, cc->session, item);
 }
 
 NSS_IMPLEMENT NSSItem *
@@ -900,8 +937,7 @@ NSSCryptoContext_FinishDigest
   NSSArena *arenaOpt
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return NULL;
+    return nssToken_FinishDigest(cc->token, cc->session, rvOpt, arenaOpt);
 }
 
 NSS_IMPLEMENT NSSCryptoContext *

@@ -58,8 +58,9 @@
 #include "pki3hack.h"
 #include "dev3hack.h"
 
-/*#include "dev.h" */
+#include "dev.h" 
 #include "nsspki.h"
+#include "pkim.h"
 #include "pkitm.h"
 
 #define PK11_SEARCH_CHUNKSIZE 10
@@ -1135,6 +1136,23 @@ PK11_FindObjectsFromNickname(char *nickname,PK11SlotInfo **slotptr,
     return objID;
 }
 
+static PRStatus 
+get_newest_cert(NSSCertificate *c, void *arg)
+{
+    nssDecodedCert *dc, *founddc;
+    NSSCertificate **cfound = (NSSCertificate **)arg;
+    if (!*cfound) {
+	*cfound = c;
+	return PR_SUCCESS;
+    }
+    dc = nssCertificate_GetDecoding(c);
+    founddc = nssCertificate_GetDecoding(*cfound);
+    if (!founddc->isNewerThan(founddc, dc)) {
+	*cfound = c;
+    }
+    return PR_SUCCESS;
+}
+
    
 CERTCertificate *
 PK11_FindCertFromNickname(char *nickname, void *wincx) {
@@ -1167,19 +1185,34 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
 	/* find token by name */
 	token = NSSTrustDomain_FindTokenByName(defaultTD, (NSSUTF8 *)tokenName);
 	if (token) {
+	    nssTokenCertSearch search;
+	    nssList *certList;
+	    certList = nssList_Create(NULL, PR_FALSE);
+	    (void)nssTrustDomain_GetCertsForNicknameFromCache(defaultTD, 
+	                                                      nickname, 
+	                                                      certList);
+	    /* set the search criteria */
+	    search.callback = get_newest_cert;
+	    search.cbarg = (void *)&cert;
+	    search.cached = certList;
+	    search.trustDomain = defaultTD;
+	    search.cryptoContext = NULL;
 	    /* find best cert on token */
-	    cert = nssTrustDomain_FindBestCertificateByNicknameForToken(
-	                                                 defaultTD,
-                                                         token,
-                                                         (NSSUTF8 *)nickname,
-                                                         NULL,
-                                                         &usage,
-                                                         NULL);
+	    nssToken_TraverseCertificatesByNickname(token, NULL, 
+	                                            (NSSUTF8 *)nickname,
+	                                            &search);
+	    nssList_Destroy(certList);
 	    if (!cert) {
-		/* don't have a "for token" here yet... */
-		cert = NSSTrustDomain_FindCertificateByEmail(defaultTD, 
-		                                         (NSSASCII7 *)nickname,
-		                                          NULL, &usage, NULL);
+		certList = nssList_Create(NULL, PR_FALSE);
+		(void)nssTrustDomain_GetCertsForEmailAddressFromCache(
+		                                                  defaultTD, 
+	                                                          nickname, 
+	                                                          certList);
+		search.cached = certList;
+		nssToken_TraverseCertificatesByNickname(token, NULL, 
+		                                        (NSSASCII7 *)nickname,
+		                                        &search);
+		nssList_Destroy(certList);
 	    }
 	}
     } else {
@@ -1204,6 +1237,15 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
     }
     return rvCert;
 #endif
+}
+
+static PRStatus 
+collect_certs(NSSCertificate *c, void *arg)
+{
+    nssList *list = (nssList *)arg;
+    /* Add the cert to the return list */
+    nssList_AddUnique(list, (void *)c);
+    return PR_SUCCESS;
 }
 
 CERTCertList *
@@ -1233,11 +1275,13 @@ PK11_FindCertsFromNickname(char *nickname, void *wincx) {
     PORT_Free(certID);
     return certList;
 #else
+    PRStatus nssrv;
     char *delimit = NULL;
     char *tokenName;
-    CERTCertList *certList = CERT_NewCertList();
+    int i;
+    CERTCertList *certList = NULL;
     NSSCertificate **foundCerts;
-    NSSCertificate **pCerts;
+    NSSCertificate *c;
     NSSTrustDomain *defaultTD = STAN_GetDefaultTrustDomain();
     if ((delimit = PORT_Strchr(nickname,':')) != NULL) {
 	NSSToken *token;
@@ -1247,14 +1291,25 @@ PK11_FindCertsFromNickname(char *nickname, void *wincx) {
 	/* find token by name */
 	token = NSSTrustDomain_FindTokenByName(defaultTD, (NSSUTF8 *)tokenName);
 	if (token) {
-	    /* find best cert on token */
-	    foundCerts = nssTrustDomain_FindCertificatesByNicknameForToken(
-	                                                 defaultTD,
-                                                         token,
-                                                         (NSSUTF8 *)nickname,
-                                                         NULL,
-                                                         0,
-                                                         NULL);
+	    nssTokenCertSearch search;
+	    PRUint32 count;
+	    nssList *nameList;
+	    nameList = nssList_Create(NULL, PR_FALSE);
+	    (void)nssTrustDomain_GetCertsForNicknameFromCache(defaultTD,
+	                                                      nickname, 
+	                                                      nameList);
+	    /* set the search criteria */
+	    search.callback = collect_certs;
+	    search.cbarg = nameList;
+	    search.cached = nameList;
+	    search.trustDomain = defaultTD;
+	    search.cryptoContext = NULL;
+	    nssrv = nssToken_TraverseCertificatesByNickname(token, NULL, 
+	                                                    nickname, &search);
+	    count = nssList_Count(nameList);
+	    foundCerts = nss_ZNEWARRAY(NULL, NSSCertificate *, count + 1);
+	    nssList_GetArray(nameList, (void **)foundCerts, count);
+	    nssList_Destroy(nameList);
 	}
 	*delimit = ':';
     } else {
@@ -1265,17 +1320,17 @@ PK11_FindCertsFromNickname(char *nickname, void *wincx) {
                                                   0,
                                                   NULL);
     }
-    pCerts = foundCerts;
-    while (pCerts != NULL) {
-	NSSCertificate *c = *pCerts;
-	CERT_AddCertToListTail(certList, STAN_GetCERTCertificate(c));
-	pCerts++;
+    if (foundCerts) {
+	certList = CERT_NewCertList();
+	for (i=0, c = *foundCerts; c; c = foundCerts[++i]) {
+	    CERT_AddCertToListTail(certList, STAN_GetCERTCertificate(c));
+	}
+	if (CERT_LIST_HEAD(certList) == NULL) {
+	    CERT_DestroyCertList(certList);
+	    certList = NULL;
+	}
+	nss_ZFreeIf(foundCerts);
     }
-    if (CERT_LIST_HEAD(certList) == NULL) {
-	CERT_DestroyCertList(certList);
-	certList = NULL;
-    }
-    nss_ZFreeIf(foundCerts);
     return certList;
 #endif
 }
@@ -1482,10 +1537,22 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
 	PORT_SetError( PK11_MapError(crv) );
     }
 
+    if (!cert->nickname && nickname) {
+	cert->nickname = PORT_ArenaStrdup(cert->arena, nickname);
+    }
+
+    cert->pkcs11ID = certID;
+    cert->dbhandle = STAN_GetDefaultTrustDomain();
     if (cert->slot == NULL) {
 	cert->slot = PK11_ReferenceSlot(slot);
 	if (cert->nssCertificate) {
-	    cert->nssCertificate->token = slot->nssToken;
+	    nssPKIObjectInstance *instance;
+	    NSSCertificate *c = cert->nssCertificate;
+	    instance = nss_ZNEW(c->object.arena, nssPKIObjectInstance);
+	    instance->cryptoki.token = slot->nssToken;
+	    instance->cryptoki.handle = cert->pkcs11ID;
+	    instance->trustDomain = cert->dbhandle;
+	    nssList_Add(c->object.instanceList, instance);
 	} else {
 	    cert->nssCertificate = STAN_GetNSSCertificate(cert);
 	}
@@ -2262,31 +2329,29 @@ PK11_TraverseCertsForSubjectInSlot(CERTCertificate *cert, PK11SlotInfo *slot,
     
     return PK11_TraverseSlot(slot, &callarg);
 #else
-    /* Alas, stan isn't really made for this...  perhaps collect all matching
-     * subject certs on the token and then pass the certs to the callback?
-     */
     struct nss3_cert_cbstr pk11cb;
     PRStatus nssrv;
-    NSSToken *tok;
-    CK_OBJECT_CLASS certClass = CKO_CERTIFICATE;
-    CK_ATTRIBUTE theTemplate[] = {
-	{ CKA_CLASS,   NULL, 0 },
-	{ CKA_SUBJECT, NULL, 0 },
-    };
-    CK_ATTRIBUTE *attr = theTemplate;
-    CK_ULONG templateSize = sizeof(theTemplate)/sizeof(theTemplate[0]);
-    PK11_SETATTRS(attr,CKA_CLASS, &certClass, sizeof(certClass)); attr++;
-    PK11_SETATTRS(attr,CKA_SUBJECT,cert->derSubject.data,cert->derSubject.len);
+    NSSToken *token;
+    NSSDER subject;
+    NSSTrustDomain *td;
+    nssList *subjectList;
+    nssTokenCertSearch search;
     pk11cb.callback = callback;
     pk11cb.arg = arg;
-    tok = PK11Slot_GetNSSToken(slot);
-    if (tok) {
-	nssrv = nssToken_TraverseCertificatesByTemplate(tok, NULL, NULL,
-	                                            theTemplate, templateSize,
-	                                            convert_cert, &pk11cb);
-    } else {
-	return SECFailure;
-    }
+    td = STAN_GetDefaultTrustDomain();
+    NSSITEM_FROM_SECITEM(&subject, &cert->derSubject);
+    subjectList = nssList_Create(NULL, PR_FALSE);
+    (void)nssTrustDomain_GetCertsForSubjectFromCache(td, &subject, subjectList);
+    /* set the search criteria */
+    search.callback = convert_cert;
+    search.cbarg = &pk11cb;
+    search.cached = subjectList;
+    search.trustDomain = td;
+    search.cryptoContext = NULL;
+    token = PK11Slot_GetNSSToken(slot);
+    nssrv = nssToken_TraverseCertificatesBySubject(token, NULL, 
+                                                   &subject, &search);
+    nssList_Destroy(subjectList);
     return (nssrv == PR_SUCCESS) ? SECSuccess : SECFailure;
 #endif
 }
@@ -2328,31 +2393,37 @@ PK11_TraverseCertsForNicknameInSlot(SECItem *nickname, PK11SlotInfo *slot,
 
     return PK11_TraverseSlot(slot, &callarg);
 #else
-    /* Alas, stan isn't really made for this...  perhaps collect all matching
-     * subject certs on the token and then pass the certs to the callback?
-     */
     struct nss3_cert_cbstr pk11cb;
     PRStatus nssrv;
-    NSSToken *tok;
-    CK_OBJECT_CLASS certClass = CKO_CERTIFICATE;
-    CK_ATTRIBUTE theTemplate[] = {
-	{ CKA_CLASS, NULL, 0 },
-	{ CKA_LABEL, NULL, 0 },
-    };
-    CK_ATTRIBUTE *attr = theTemplate;
-    CK_ULONG templateSize = sizeof(theTemplate)/sizeof(theTemplate[0]);
-    PK11_SETATTRS(attr,CKA_CLASS, &certClass, sizeof(certClass)); attr++;
-    PK11_SETATTRS(attr,CKA_LABEL,nickname->data,nickname->len);
+    NSSToken *token;
+    NSSTrustDomain *td;
+    NSSUTF8 *nick;
+    PRBool created = PR_FALSE;
+    nssTokenCertSearch search;
+    nssList *nameList;
     pk11cb.callback = callback;
     pk11cb.arg = arg;
-    tok = PK11Slot_GetNSSToken(slot);
-    if (tok) {
-	nssrv = nssToken_TraverseCertificatesByTemplate(tok, NULL, NULL,
-	                                            theTemplate, templateSize,
-	                                            convert_cert, &pk11cb);
+    if (nickname->data[nickname->len-1] != '\0') {
+	nick = nssUTF8_Create(NULL, nssStringType_UTF8String, 
+	                      nickname->data, nickname->len-1);
+	created = PR_TRUE;
     } else {
-	return SECFailure;
+	nick = (NSSUTF8 *)nickname->data;
     }
+    td = STAN_GetDefaultTrustDomain();
+    nameList = nssList_Create(NULL, PR_FALSE);
+    (void)nssTrustDomain_GetCertsForNicknameFromCache(td, nick, nameList);
+    /* set the search criteria */
+    search.callback = convert_cert;
+    search.cbarg = &pk11cb;
+    search.cached = nameList;
+    search.trustDomain = td;
+    search.cryptoContext = NULL;
+    token = PK11Slot_GetNSSToken(slot);
+    nssrv = nssToken_TraverseCertificatesByNickname(token, NULL, 
+                                                    nick, &search);
+    nssList_Destroy(nameList);
+    if (created) nss_ZFreeIf(nick);
     return (nssrv == PR_SUCCESS) ? SECSuccess : SECFailure;
 #endif
 }
@@ -2387,17 +2458,29 @@ PK11_TraverseCertsInSlot(PK11SlotInfo *slot,
     callarg.templateCount = templateSize;
     return PK11_TraverseSlot(slot, &callarg);
 #else
+    PRStatus nssrv;
+    NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
     struct nss3_cert_cbstr pk11cb;
     NSSToken *tok;
+    nssList *certList = nssList_Create(NULL, PR_FALSE);
+    nssTokenCertSearch search;
     pk11cb.callback = callback;
     pk11cb.arg = arg;
+    (void *)nssTrustDomain_GetCertsFromCache(td, certList);
+    /* set the search criteria */
+    search.callback = convert_cert;
+    search.cbarg = &pk11cb;
+    search.cached = certList;
+    search.trustDomain = td;
+    search.cryptoContext = NULL;
     tok = PK11Slot_GetNSSToken(slot);
     if (tok) {
-	return (SECStatus)nssToken_TraverseCertificates(tok, NULL,
-	                                                convert_cert, &pk11cb);
+	nssrv = nssToken_TraverseCertificates(tok, NULL, &search);
     } else {
-	return SECFailure;
+	nssrv = PR_FAILURE;
     }
+    nssList_Destroy(certList);
+    return (nssrv == PR_SUCCESS) ? SECSuccess : SECFailure;
 #endif
 }
 
@@ -2441,12 +2524,11 @@ PK11_FindCertFromDERCert(PK11SlotInfo *slot, CERTCertificate *cert,
     CERTCertificate *rvCert = NULL;
     NSSCertificate *c;
     NSSDER derCert;
-    derCert.data = (void *)cert->derCert.data;
-    derCert.size = (PRUint32)cert->derCert.len;
+    NSSToken *tok;
+    tok = PK11Slot_GetNSSToken(slot);
+    NSSITEM_FROM_SECITEM(&derCert, &cert->derCert);
     /* XXX login to slots */
-    c = NSSTrustDomain_FindCertificateByEncodedCertificate(
-                                                  STAN_GetDefaultTrustDomain(),
-                                                  &derCert);
+    c = nssToken_FindCertificateByEncodedCertificate(tok, NULL, &derCert);
     if (c) {
 	rvCert = STAN_GetCERTCertificate(c);
     }
@@ -2803,7 +2885,11 @@ isOnList(CERTCertList *certList,CERTCertificate *cert)
 	return PR_FALSE;
 }
 static SECStatus
+#ifdef NSS_CLASSIC
 pk11ListCertCallback(CERTCertificate *cert, SECItem *derCert, void *arg)
+#else
+pk11ListCertCallback(CERTCertificate *cert, void *arg)
+#endif
 {
     struct listCertsStr *listCertP = (struct listCertsStr *)arg;
     CERTCertificate *newCert = NULL;
@@ -2821,11 +2907,15 @@ pk11ListCertCallback(CERTCertificate *cert, SECItem *derCert, void *arg)
     if (!isUnique && cert->nickname) {
          nickname = PORT_ArenaStrdup(listCertP->certList->arena,cert->nickname);
     }
+#ifdef NSS_CLASSIC
     if (derCert == NULL) {
 	newCert=CERT_DupCertificate(cert);
     } else {
 	newCert=CERT_FindCertByDERCert(CERT_GetDefaultCertDB(),&cert->derCert);
     }
+#else
+    newCert=CERT_DupCertificate(cert);
+#endif
 
     if (newCert == NULL) return SECSuccess;
 
@@ -2870,13 +2960,6 @@ pk11ListCertCallback(CERTCertificate *cert, SECItem *derCert, void *arg)
     return SECSuccess;
 }
 
-static SECStatus
-pk11ListCertCallbackStub(CERTCertificate *cert, void *arg)
-{
-    return pk11ListCertCallback(cert, NULL, arg);
-}
-
-
 
 CERTCertList *
 PK11_ListCerts(PK11CertListType type, void *pwarg)
@@ -2904,8 +2987,7 @@ PK11_ListCerts(PK11CertListType type, void *pwarg)
     certList = CERT_NewCertList();
     listCerts.type = type;
     listCerts.certList = certList;
-    /* XXX need to fix, this callback is of a different form */
-    pk11cb.callback = pk11ListCertCallbackStub;
+    pk11cb.callback = pk11ListCertCallback;
     pk11cb.arg = &listCerts;
     NSSTrustDomain_TraverseCertificates(defaultTD, convert_cert, &pk11cb);
     return certList;

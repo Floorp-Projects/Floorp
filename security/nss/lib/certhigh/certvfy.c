@@ -417,9 +417,13 @@ loser:
     nss_ZFreeIf(nssTime);
     if (status == PR_SUCCESS) {
 	/* if it's a root, the chain will only have one cert */
-	NSSCertificate *issuer = chain[1] ? chain[1] : chain[0];
-	CERTCertificate *rvc = STAN_GetCERTCertificate(issuer);
-	return rvc;
+	if (!chain[1]) {
+	    /* need to dupe since caller expects new cert */
+	    return CERT_DupCertificate(cert);
+	} else {
+	    /* this is the only instance */
+	    return STAN_GetCERTCertificate(chain[1]);
+	}
     }
     return NULL;
 #endif

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.2 $ $Date: 2001/11/09 00:36:12 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.3 $ $Date: 2001/11/28 16:23:39 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -43,22 +43,9 @@ static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.2 $ $Da
 #include "devm.h"
 #endif /* DEVM_H */
 
-/* for the cache... */
-#ifndef PKI_H
-#include "pki.h"
-#endif /* PKI_H */
-
 #ifndef NSSCKEPV_H
 #include "nssckepv.h"
 #endif /* NSSCKEPV_H */
-
-#ifndef NSSPKI_H
-#include "nsspki.h"
-#endif /* NSSPKI_H */
-
-#ifndef PKI_H
-#include "pki.h"
-#endif /* PKI_H */
 
 #ifndef CKHELPER_H
 #include "ckhelper.h"
@@ -207,330 +194,191 @@ nssToken_GetName
     return tok->name;
 }
 
-NSS_IMPLEMENT PRStatus
-nssToken_DeleteStoredObject
+NSS_IMPLEMENT NSSItem *
+nssToken_Digest
 (
   NSSToken *tok,
   nssSession *sessionOpt,
-  CK_OBJECT_HANDLE object
+  NSSAlgorithmAndParameters *ap,
+  NSSItem *data,
+  NSSItem *rvOpt,
+  NSSArena *arenaOpt
 )
 {
-    nssSession *session = NULL;
     CK_RV ckrv;
-    PRStatus nssrv;
-    PRBool createdSession;
-    if (nssCKObject_IsAttributeTrue(object, CKA_TOKEN, tok->defaultSession,
-	                            tok->slot, &nssrv)) {
-       if (sessionOpt) {
-	   if (!nssSession_IsReadWrite(sessionOpt)) {
-	       return PR_FAILURE;;
-	   } else {
-	       session = sessionOpt;
-	   }
-       } else if (nssSession_IsReadWrite(tok->defaultSession)) {
-	   session = tok->defaultSession;
-       } else {
-	   session = nssSlot_CreateSession(tok->slot, NULL, PR_TRUE);
-	   createdSession = PR_TRUE;
-       }
-    }
-
-    if (session == NULL) {
-	return PR_FAILURE;
-    }
-
-    nssSession_EnterMonitor(session);
-    ckrv = CKAPI(tok->slot)->C_DestroyObject(session->handle, object);
-    nssSession_ExitMonitor(session);
-    if (createdSession) {
-	nssSession_Destroy(session);
-    }
-    if (ckrv != CKR_OK) {
-	return PR_FAILURE;
-    }
-    return PR_SUCCESS;
-}
-
-NSS_IMPLEMENT CK_OBJECT_HANDLE
-nssToken_ImportObject
-(
-  NSSToken *tok,
-  nssSession *sessionOpt,
-  CK_ATTRIBUTE_PTR objectTemplate,
-  CK_ULONG otsize
-)
-{
-    nssSession *session = NULL;
-    PRBool createdSession = PR_FALSE;
-    CK_OBJECT_HANDLE object;
-    CK_RV ckrv;
-
-    if (nssCKObject_IsTokenObjectTemplate(objectTemplate, otsize)) {
-	if (sessionOpt) {
-	    if (!nssSession_IsReadWrite(sessionOpt)) {
-		return CK_INVALID_HANDLE;
-	    } else {
-		session = sessionOpt;
-	    }
-	} else if (nssSession_IsReadWrite(tok->defaultSession)) {
-	    session = tok->defaultSession;
-	} else {
-	    session = nssSlot_CreateSession(tok->slot, NULL, PR_TRUE);
-	    createdSession = PR_TRUE;
-	}
-    }
-    if (session == NULL) {
-	return PR_FAILURE;
-    }
-    nssSession_EnterMonitor(session);
-    ckrv = CKAPI(tok->slot)->C_CreateObject(session->handle, 
-                                            objectTemplate, otsize,
-                                            &object);
-    nssSession_ExitMonitor(session);
-    if (createdSession) {
-	nssSession_Destroy(session);
-    }
-    if (ckrv != CKR_OK) {
-	return CK_INVALID_HANDLE;
-    }
-    return object;
-}
-
-NSS_IMPLEMENT CK_OBJECT_HANDLE
-nssToken_FindObjectByTemplate
-(
-  NSSToken *tok,
-  nssSession *sessionOpt,
-  CK_ATTRIBUTE_PTR cktemplate,
-  CK_ULONG ctsize
-)
-{
-    CK_SESSION_HANDLE hSession;
-    CK_OBJECT_HANDLE rvObject;
-    CK_ULONG count;
-    CK_RV ckrv;
+    CK_ULONG digestLen;
+    CK_BYTE_PTR digest;
+    NSSItem *rvItem = NULL;
     nssSession *session;
     session = (sessionOpt) ? sessionOpt : tok->defaultSession;
-    hSession = session->handle;
     nssSession_EnterMonitor(session);
-    ckrv = CKAPI(tok)->C_FindObjectsInit(hSession, cktemplate, ctsize);
+    ckrv = CKAPI(tok)->C_DigestInit(session->handle, &ap->mechanism);
     if (ckrv != CKR_OK) {
 	nssSession_ExitMonitor(session);
-	return CK_INVALID_HANDLE;
+	return NULL;
     }
-    ckrv = CKAPI(tok)->C_FindObjects(hSession, &rvObject, 1, &count);
+#if 0
+    /* XXX the standard says this should work, but it doesn't */
+    ckrv = CKAPI(tok)->C_Digest(session->handle, NULL, 0, NULL, &digestLen);
     if (ckrv != CKR_OK) {
 	nssSession_ExitMonitor(session);
-	return CK_INVALID_HANDLE;
+	return NULL;
     }
-    ckrv = CKAPI(tok)->C_FindObjectsFinal(hSession);
-    nssSession_ExitMonitor(session);
-    if (ckrv != CKR_OK) {
-	return CK_INVALID_HANDLE;
-    }
-    return rvObject;
-}
-
-extern const NSSError NSS_ERROR_MAXIMUM_FOUND;
-
-struct collect_arg_str
-{
-    NSSArena *arena;
-    nssList *list;
-    PRUint32 maximum;
-};
-
-static PRStatus
-collect_certs_callback(NSSToken *t, nssSession *session,
-                       CK_OBJECT_HANDLE h, void *arg)
-{
-    NSSCertificate *cert;
-    struct collect_arg_str *ca = (struct collect_arg_str *)arg;
-    cert = nssCertificate_CreateFromHandle(ca->arena, h, session, t->slot);
-    if (!cert) {
-	goto loser;
-    }
-    /* addref */
-    nssList_Add(ca->list, (void *)cert);
-    if (ca->maximum > 0 && nssList_Count(ca->list) >= ca->maximum) {
-	/* signal the end of collection) */
-	nss_SetError(NSS_ERROR_MAXIMUM_FOUND);
-	return PR_FAILURE;
-    }
-    return PR_SUCCESS;
-loser:
-    return PR_FAILURE;
-}
-
-struct cert_callback_str {
-    nssListIterator *cachedCerts;
-    PRStatus (*callback)(NSSCertificate *c, void *arg);
-    void *arg;
-};
-
-static PRStatus 
-retrieve_cert(NSSToken *t, nssSession *session, CK_OBJECT_HANDLE h, void *arg)
-{
-    NSSCertificate *cert = NULL;
-    NSSCertificate *c;
-    struct cert_callback_str *ccb = (struct cert_callback_str *)arg;
-    if (ccb->cachedCerts) {
-	for (c  = (NSSCertificate *)nssListIterator_Start(ccb->cachedCerts);
-	     c != (NSSCertificate *)NULL;
-	     c  = (NSSCertificate *)nssListIterator_Next(ccb->cachedCerts)) 
-	{
-	    if (c->handle == h && c->token == t) {
-		/* this is enough, right? */
-		cert = c;
-		break;
-	    }
-	}
-	nssListIterator_Finish(ccb->cachedCerts);
-    }
-    if (!cert) {
-	/* Could not find cert, so create it */
-	cert = nssCertificate_CreateFromHandle(NULL, h, session, t->slot);
-	if (!cert) {
-	    goto loser;
-	}
-    }
-    /* Got the cert, feed it to the callback */
-    return (*ccb->callback)(cert, ccb->arg);
-loser:
-    return PR_FAILURE;
-}
-
-#define OBJECT_STACK_SIZE 16
-
-static PRStatus 
-nsstoken_TraverseObjects
-(
-  NSSToken *tok,
-  nssSession *session,
-  CK_ATTRIBUTE_PTR obj_template,
-  CK_ULONG otsize,
-  PRStatus (*callback)(NSSToken *t, nssSession *session,
-                       CK_OBJECT_HANDLE h, void *arg),
-  void *arg
-)
-{
-    NSSSlot *slot;
-    PRStatus cbrv;
-    PRUint32 i;
-    CK_RV ckrv;
-    CK_ULONG count;
-    CK_OBJECT_HANDLE *objectStack;
-    CK_OBJECT_HANDLE startOS[OBJECT_STACK_SIZE];
-    CK_SESSION_HANDLE hSession;
-    NSSArena *objectArena = NULL;
-    nssList *objectList = NULL;
-    slot = tok->slot;
-    hSession = session->handle;
-    objectStack = startOS;
-    nssSession_EnterMonitor(session);
-    ckrv = CKAPI(slot)->C_FindObjectsInit(hSession, obj_template, otsize);
-    if (ckrv != CKR_OK) {
-	nssSession_ExitMonitor(session);
-	goto loser;
-    }
-    while (PR_TRUE) {
-	ckrv = CKAPI(slot)->C_FindObjects(hSession, objectStack, 
-	                                  OBJECT_STACK_SIZE, &count);
-	if (ckrv != CKR_OK) {
+#endif
+    digestLen = 0; /* XXX for now */
+    digest = NULL;
+    if (rvOpt) {
+	if (rvOpt->size > 0 && rvOpt->size < digestLen) {
 	    nssSession_ExitMonitor(session);
-	    goto loser;
+	    /* the error should be bad args */
+	    return NULL;
 	}
-	if (count == OBJECT_STACK_SIZE) {
-	    if (!objectList) {
-		objectArena = NSSArena_Create();
-		objectList = nssList_Create(objectArena, PR_FALSE);
-	    }
-	    objectStack = nss_ZNEWARRAY(objectArena, CK_OBJECT_HANDLE, 
-	                                OBJECT_STACK_SIZE);
-	    nssList_Add(objectList, objectStack);
-	} else {
-	    break;
+	if (rvOpt->data) {
+	    digest = rvOpt->data;
+	}
+	digestLen = rvOpt->size;
+    }
+    if (!digest) {
+	digest = (CK_BYTE_PTR)nss_ZAlloc(arenaOpt, digestLen);
+	if (!digest) {
+	    nssSession_ExitMonitor(session);
+	    return NULL;
 	}
     }
-    ckrv = CKAPI(slot)->C_FindObjectsFinal(hSession);
+    ckrv = CKAPI(tok)->C_Digest(session->handle, 
+                                (CK_BYTE_PTR)data->data, 
+                                (CK_ULONG)data->size,
+                                (CK_BYTE_PTR)digest,
+                                &digestLen);
     nssSession_ExitMonitor(session);
     if (ckrv != CKR_OK) {
-	goto loser;
+	nss_ZFreeIf(digest);
+	return NULL;
     }
-    if (objectList) {
-	nssListIterator *objects;
-	objects = nssList_CreateIterator(objectList);
-	for (objectStack = (CK_OBJECT_HANDLE *)nssListIterator_Start(objects);
-	     objectStack != NULL;
-	     objectStack = (CK_OBJECT_HANDLE *)nssListIterator_Next(objects)) {
-	    for (i=0; i<count; i++) {
-		cbrv = (*callback)(tok, session, objectStack[i], arg);
-	    }
-	}
-	nssListIterator_Finish(objects);
-	count = OBJECT_STACK_SIZE;
+    if (!rvOpt) {
+	rvItem = nssItem_Create(arenaOpt, NULL, digestLen, (void *)digest);
     }
-    for (i=0; i<count; i++) {
-	cbrv = (*callback)(tok, session, startOS[i], arg);
-    }
-    if (objectArena)
-	NSSArena_Destroy(objectArena);
-    return PR_SUCCESS;
-loser:
-    if (objectArena)
-	NSSArena_Destroy(objectArena);
-    return PR_FAILURE;
-}
-
-NSS_IMPLEMENT PRStatus 
-nssToken_TraverseCertificates
-(
-  NSSToken *tok,
-  nssSession *sessionOpt,
-  PRStatus (*callback)(NSSCertificate *c, void *arg),
-  void *arg
-)
-{
-    PRStatus nssrv;
-    /* this is really traversal - the template is all certs */
-    CK_ATTRIBUTE cert_template[] = {
-	{ CKA_CLASS, NULL, 0 }
-    };
-    CK_ULONG ctsize = sizeof(cert_template) / sizeof(cert_template[0]);
-    NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 0, &g_ck_class_cert);
-    nssrv = nssToken_TraverseCertificatesByTemplate(tok, sessionOpt, NULL,
-                                                    cert_template, ctsize,
-                                                    callback, arg);
-    return nssrv;
+    return rvItem;
 }
 
 NSS_IMPLEMENT PRStatus
-nssToken_TraverseCertificatesByTemplate
+nssToken_BeginDigest
 (
   NSSToken *tok,
   nssSession *sessionOpt,
-  nssList *cachedList,
-  CK_ATTRIBUTE_PTR cktemplate,
-  CK_ULONG ctsize,
-  PRStatus (*callback)(NSSCertificate *c, void *arg),
-  void *arg
+  NSSAlgorithmAndParameters *ap
 )
 {
-    PRStatus rv;
+    CK_RV ckrv;
     nssSession *session;
-    struct cert_callback_str ccb;
     session = (sessionOpt) ? sessionOpt : tok->defaultSession;
-    /* this isn't really traversal, it's find by template ... */
-    if (cachedList) {
-	ccb.cachedCerts = nssList_CreateIterator(cachedList);
-    } else {
-	ccb.cachedCerts = NULL;
+    nssSession_EnterMonitor(session);
+    ckrv = CKAPI(tok)->C_DigestInit(session->handle, &ap->mechanism);
+    nssSession_ExitMonitor(session);
+    return (ckrv == CKR_OK) ? PR_SUCCESS : PR_FAILURE;
+}
+
+NSS_IMPLEMENT PRStatus
+nssToken_ContinueDigest
+(
+  NSSToken *tok,
+  nssSession *sessionOpt,
+  NSSItem *item
+)
+{
+    CK_RV ckrv;
+    nssSession *session;
+    session = (sessionOpt) ? sessionOpt : tok->defaultSession;
+    nssSession_EnterMonitor(session);
+    ckrv = CKAPI(tok)->C_DigestUpdate(session->handle, 
+                                      (CK_BYTE_PTR)item->data, 
+                                      (CK_ULONG)item->size);
+    nssSession_ExitMonitor(session);
+    return (ckrv == CKR_OK) ? PR_SUCCESS : PR_FAILURE;
+}
+
+NSS_IMPLEMENT NSSItem *
+nssToken_FinishDigest
+(
+  NSSToken *tok,
+  nssSession *sessionOpt,
+  NSSItem *rvOpt,
+  NSSArena *arenaOpt
+)
+{
+    CK_RV ckrv;
+    CK_ULONG digestLen;
+    CK_BYTE_PTR digest;
+    NSSItem *rvItem = NULL;
+    nssSession *session;
+    session = (sessionOpt) ? sessionOpt : tok->defaultSession;
+    nssSession_EnterMonitor(session);
+    ckrv = CKAPI(tok)->C_DigestFinal(session->handle, NULL, &digestLen);
+    if (ckrv != CKR_OK || digestLen == 0) {
+	nssSession_ExitMonitor(session);
+	return NULL;
     }
-    ccb.callback = callback;
-    ccb.arg = arg;
-    rv = nsstoken_TraverseObjects(tok, session, 
-                                  cktemplate, ctsize,
-                                  retrieve_cert, (void *)&ccb);
-    return rv;
+    digest = NULL;
+    if (rvOpt) {
+	if (rvOpt->size > 0 && rvOpt->size < digestLen) {
+	    nssSession_ExitMonitor(session);
+	    /* the error should be bad args */
+	    return NULL;
+	}
+	if (rvOpt->data) {
+	    digest = rvOpt->data;
+	}
+	digestLen = rvOpt->size;
+    }
+    if (!digest) {
+	digest = (CK_BYTE_PTR)nss_ZAlloc(arenaOpt, digestLen);
+	if (!digest) {
+	    nssSession_ExitMonitor(session);
+	    return NULL;
+	}
+    }
+    ckrv = CKAPI(tok)->C_DigestFinal(session->handle, digest, &digestLen);
+    nssSession_ExitMonitor(session);
+    if (ckrv != CKR_OK) {
+	nss_ZFreeIf(digest);
+	return NULL;
+    }
+    if (!rvOpt) {
+	rvItem = nssItem_Create(arenaOpt, NULL, digestLen, (void *)digest);
+    }
+    return rvItem;
+}
+
+/* XXX of course this doesn't belong here */
+NSS_IMPLEMENT NSSAlgorithmAndParameters *
+NSSAlgorithmAndParameters_CreateSHA1Digest
+(
+  NSSArena *arenaOpt
+)
+{
+    NSSAlgorithmAndParameters *rvAP = NULL;
+    rvAP = nss_ZNEW(arenaOpt, NSSAlgorithmAndParameters);
+    if (rvAP) {
+	rvAP->mechanism.mechanism = CKM_SHA_1;
+	rvAP->mechanism.pParameter = NULL;
+	rvAP->mechanism.ulParameterLen = 0;
+    }
+    return rvAP;
+}
+
+NSS_IMPLEMENT NSSAlgorithmAndParameters *
+NSSAlgorithmAndParameters_CreateMD5Digest
+(
+  NSSArena *arenaOpt
+)
+{
+    NSSAlgorithmAndParameters *rvAP = NULL;
+    rvAP = nss_ZNEW(arenaOpt, NSSAlgorithmAndParameters);
+    if (rvAP) {
+	rvAP->mechanism.mechanism = CKM_MD5;
+	rvAP->mechanism.pParameter = NULL;
+	rvAP->mechanism.ulParameterLen = 0;
+    }
+    return rvAP;
 }
 

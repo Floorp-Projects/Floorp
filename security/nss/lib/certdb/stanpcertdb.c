@@ -116,8 +116,7 @@ CERT_ChangeCertTrust(CERTCertDBHandle *handle, CERTCertificate *cert,
 	/* XXX store it on a writeable token */
 	goto done;
     } else {
-	NSSCertificate *c = STAN_GetNSSCertificate(cert);
-	ret = STAN_ChangeCertTrust(c, trust);
+	ret = STAN_ChangeCertTrust(cert, trust);
 	rv = (ret == PR_SUCCESS) ? SECSuccess : SECFailure;
     }
 done:
@@ -141,7 +140,7 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
     }
     if (c->nickname && strcmp(nickname, c->nickname) != 0) {
 	nss_ZFreeIf(c->nickname);
-	c->nickname = nssUTF8_Duplicate((NSSUTF8 *)nickname, c->arena);
+	c->nickname = nssUTF8_Duplicate((NSSUTF8 *)nickname, c->object.arena);
 	PORT_Free(cert->nickname);
 	cert->nickname = PORT_Strdup(nickname);
     }
@@ -168,6 +167,7 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
 			  char *nickname, PRBool isperm, PRBool copyDER)
 {
     NSSCertificate *c;
+    NSSCryptoContext *context;
     nssDecodedCert *dc;
     NSSArena *arena;
     CERTCertificate *cc;
@@ -175,13 +175,19 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
     if (!arena) {
 	return NULL;
     }
-    c = NSSCertificate_Create(arena);
+    c = nss_ZNEW(arena, NSSCertificate);
     if (!c) {
 	goto loser;
     }
     NSSITEM_FROM_SECITEM(&c->encoding, derCert);
+    c->object.arena = arena;
+    c->object.refCount = 1;
+    c->object.instanceList = nssList_Create(arena, PR_TRUE);
+    c->object.instances = nssList_CreateIterator(c->object.instanceList);
+    /* Forces a decoding of the cert in order to obtain the parts used
+     * below
+     */
     cc = STAN_GetCERTCertificate(c);
-    c->arena = arena;
     nssItem_Create(arena, 
                    &c->issuer, cc->derIssuer.len, cc->derIssuer.data);
     nssItem_Create(arena, 
@@ -200,12 +206,13 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
 	                          (NSSUTF8 *)cc->emailAddr, 
 	                          PORT_Strlen(cc->emailAddr));
     }
-    c->trustDomain = handle;
-    cc->dbhandle = handle;
-    nssTrustDomain_AddCertsToCache(handle, &c, 1);
-    cc->istemp = 1;
-    cc->isperm = 0;
-
+    context = STAN_GetDefaultCryptoContext();
+    NSSCryptoContext_ImportCertificate(context, c);
+    /* This is a hack to work around the fact that an instance of the cert
+     * doesn't really exist until the import
+     */
+    cc->nssCertificate = NULL;
+    cc = STAN_GetCERTCertificate(c);
     return cc;
 loser:
     nssArena_Destroy(arena);
@@ -363,10 +370,13 @@ CERT_DestroyCertificate(CERTCertificate *cert)
         CERT_UnlockCertRefCount(cert);
 	if ( ( refCount == 0 ) && !cert->keepSession ) {
 	    PRArenaPool *arena  = cert->arena;
-	    if ( cert->istemp ) {
-		/* uncache the cert ? */
-	    }
 	    /* delete the NSSCertificate */
+	    NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
+	    NSSCertificate *tmp = STAN_GetNSSCertificate(cert);
+	    if (tmp) {
+		nssTrustDomain_RemoveCertFromCache(td, tmp);
+		NSSCertificate_Destroy(tmp);
+	    }
 	    /* zero cert before freeing. Any stale references to this cert
 	     * after this point will probably cause an exception.  */
 	    PORT_Memset(cert, 0, sizeof *cert);

@@ -35,7 +35,7 @@
 #define PKI_H
 
 #ifdef DEBUG
-static const char PKI_CVS_ID[] = "@(#) $RCSfile: pki.h,v $ $Revision: 1.6 $ $Date: 2001/10/17 14:40:22 $ $Name:  $";
+static const char PKI_CVS_ID[] = "@(#) $RCSfile: pki.h,v $ $Revision: 1.7 $ $Date: 2001/11/28 16:23:43 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
@@ -50,27 +50,6 @@ PR_BEGIN_EXTERN_C
 
 NSS_EXTERN NSSCertificate *
 nssCertificate_AddRef
-(
-  NSSCertificate *c
-);
-
-NSS_EXTERN NSSCertificate *
-nssCertificate_CreateFromHandle
-(
-  NSSArena *arenaOpt,
-  CK_OBJECT_HANDLE object,
-  nssSession *session,
-  NSSSlot *slot
-);
-
-NSS_EXTERN NSSUTF8 *
-NSSCertificate_GetLabel
-(
-  NSSCertificate *c
-);
-
-NSS_EXTERN NSSItem *
-NSSCertificate_GetID
 (
   NSSCertificate *c
 );

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: hash.c,v $ $Revision: 1.3 $ $Date: 2001/10/08 19:26:02 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: hash.c,v $ $Revision: 1.4 $ $Date: 2001/11/28 16:23:34 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -112,7 +112,7 @@ nss_compare_items(const void *v1, const void *v2)
  * nssHash_create
  *
  */
-static nssHash *
+NSS_IMPLEMENT nssHash *
 nssHash_Create
 (
   NSSArena *arenaOpt,

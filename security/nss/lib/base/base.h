@@ -35,7 +35,7 @@
 #define BASE_H
 
 #ifdef DEBUG
-static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.9 $ $Date: 2001/10/15 17:13:31 $ $Name:  $";
+static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.10 $ $Date: 2001/11/28 16:23:34 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -562,6 +562,12 @@ nssItem_Create
   const void *data
 );
 
+NSS_EXTERN void
+nssItem_Destroy
+(
+  NSSItem *item
+);
+
 NSS_EXTERN NSSItem *
 nssItem_Duplicate
 (
@@ -831,8 +837,8 @@ nssList_Destroy
   nssList *list
 );
 
-NSS_EXTERN PRStatus
-nssList_DestroyElements
+NSS_EXTERN void
+nssList_Clear
 (
   nssList *list, 
   nssListElementDestructorFunc destructor
@@ -1003,6 +1009,16 @@ nssListIterator_Finish
  * nssHash_Create
  *
  */
+
+NSS_EXTERN nssHash *
+nssHash_Create
+(
+  NSSArena *arenaOpt,
+  PRUint32 numBuckets,
+  PLHashFunction keyHash,
+  PLHashComparator keyCompare,
+  PLHashComparator valueCompare
+);
 
 NSS_EXTERN nssHash *
 nssHash_CreatePointer

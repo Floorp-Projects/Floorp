@@ -35,7 +35,7 @@
 #define PKINSS3HACK_H
 
 #ifdef DEBUG
-static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile: pki3hack.h,v $ $Revision: 1.1 $ $Date: 2001/11/08 00:15:20 $ $Name:  $";
+static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile: pki3hack.h,v $ $Revision: 1.2 $ $Date: 2001/11/28 16:23:43 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKIT_H
@@ -57,6 +57,9 @@ PR_BEGIN_EXTERN_C
 NSS_EXTERN NSSTrustDomain *
 STAN_GetDefaultTrustDomain();
 
+NSSCryptoContext *
+STAN_GetDefaultCryptoContext();
+
 NSS_IMPLEMENT void
 STAN_LoadDefaultNSS3TrustDomain
 (
@@ -76,7 +79,7 @@ NSS_EXTERN NSSCertificate *
 STAN_GetNSSCertificate(CERTCertificate *c);
 
 NSS_EXTERN PRStatus
-STAN_ChangeCertTrust(NSSCertificate *c, CERTCertTrust *trust);
+STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust);
 
 /* exposing this */
 NSS_EXTERN NSSCertificate *
