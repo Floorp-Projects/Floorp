@@ -25,6 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 FILES = \
+	Google.src				\
 	Netscape_Open_Directory.src		\
 	$(NULL)
 
