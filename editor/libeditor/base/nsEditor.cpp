@@ -54,6 +54,7 @@
 #include "nsICaret.h"
 #include "nsIStyleContext.h"
 #include "nsIEditActionListener.h"
+#include "nsIEditorObserver.h"
 #include "nsIKBStateControl.h"
 #include "nsIWidget.h"
 #include "nsIScrollbar.h"
@@ -780,6 +781,7 @@ nsEditor::nsEditor()
 ,  mIMETextOffset(0)
 ,  mIMEBufferLength(0)
 ,  mActionListeners(nsnull)
+,  mEditorObservers(nsnull)
 ,  mDocDirtyState(-1)
 ,  mDocWeak(nsnull)
 {
@@ -794,6 +796,9 @@ nsEditor::~nsEditor()
   // not sure if this needs to be called earlier.
   NotifyDocumentListeners(eDocumentToBeDestroyed);
 
+  delete mEditorObservers;   // no need to release observers; we didn't addref them
+  mEditorObservers = 0;
+  
   if (mActionListeners)
   {
     PRInt32 i;
@@ -1107,7 +1112,7 @@ nsEditor::Undo(PRUint32 aCount)
   }
 
   EndUpdateViewBatch();
-
+  NotifyEditorObservers();  
   return result;
 }
 
@@ -1153,7 +1158,7 @@ nsEditor::Redo(PRUint32 aCount)
   }
 
   EndUpdateViewBatch();
-
+  NotifyEditorObservers();  
   return result;
 }
 
@@ -1257,6 +1262,8 @@ nsEditor::EndPlaceHolderTransaction()
         // since that is the only known case where the placeholdertxn would disappear on us.
         // For now just removing the assert.
       }
+      // notify editor observers of action unless it is uncommitted IME
+      if (!mInIMEMode) NotifyEditorObservers();
     }
   }
   mPlaceHolderBatch--;
@@ -2037,6 +2044,73 @@ nsEditor::MoveNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aOffset)
 
 #ifdef XP_MAC
 #pragma mark -
+#pragma mark  editor observer maintainance
+#pragma mark -
+#endif
+
+NS_IMETHODIMP
+nsEditor::AddEditorObserver(nsIEditorObserver *aObserver)
+{
+  // we don't keep ownership of the observers.  They must
+  // remove themselves as observers before they are destroyed.
+  
+  if (!aObserver)
+    return NS_ERROR_NULL_POINTER;
+
+  if (!mEditorObservers)
+  {
+    mEditorObservers = new nsVoidArray();
+
+    if (!mEditorObservers)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // Make sure the listener isn't already on the list
+  if (mEditorObservers->IndexOf(aObserver) == -1) 
+  {
+    if (!mEditorObservers->AppendElement((void *)aObserver))
+      return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsEditor::RemoveEditorObserver(nsIEditorObserver *aObserver)
+{
+  if (!aObserver || !mEditorObservers)
+    return NS_ERROR_FAILURE;
+
+  if (!mEditorObservers->RemoveElement((void *)aObserver))
+    return NS_ERROR_FAILURE;
+
+  if (mEditorObservers->Count() < 1)
+  {
+    delete mEditorObservers;
+    mEditorObservers = 0;
+  }
+
+  return NS_OK;
+}
+
+void nsEditor::NotifyEditorObservers(void)
+{
+  if (mEditorObservers)
+  {
+    PRInt32 i;
+    nsIEditorObserver *observer;
+    for (i = 0; i < mEditorObservers->Count(); i++)
+    {
+      observer = (nsIEditorObserver*)mEditorObservers->ElementAt(i);
+      if (observer)
+        observer->EditAction();
+    }
+  }
+}
+
+#ifdef XP_MAC
+#pragma mark -
 #pragma mark  action listener maintainance
 #pragma mark -
 #endif
@@ -2055,10 +2129,14 @@ nsEditor::AddEditActionListener(nsIEditActionListener *aListener)
       return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (!mActionListeners->AppendElement((void *)aListener))
-    return NS_ERROR_FAILURE;
-
-  NS_ADDREF(aListener);
+  // Make sure the listener isn't already on the list
+  if (mActionListeners->IndexOf(aListener) == -1) 
+  {
+    if (!mActionListeners->AppendElement((void *)aListener))
+      return NS_ERROR_FAILURE;
+    else
+      NS_ADDREF(aListener);
+  }
 
   return NS_OK;
 }
@@ -2083,6 +2161,13 @@ nsEditor::RemoveEditActionListener(nsIEditActionListener *aListener)
 
   return NS_OK;
 }
+
+
+#ifdef XP_MAC
+#pragma mark -
+#pragma mark  docstate listener maintainance
+#pragma mark -
+#endif
 
 
 NS_IMETHODIMP
@@ -2261,6 +2346,9 @@ nsEditor::EndComposition(void)
   mIMEBufferLength = 0;
   mInIMEMode = PR_FALSE;
 
+  // notify editor observers of action
+  NotifyEditorObservers();
+
   return result;
 }
 
@@ -2339,14 +2427,6 @@ nsEditor::ForceCompositionEnd()
       }
   }
   
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsEditor::Composing(PRBool *aInIMEMode)
-{
-  if (!aInIMEMode) return NS_ERROR_NULL_POINTER;
-  *aInIMEMode = mInIMEMode;
   return NS_OK;
 }
 
