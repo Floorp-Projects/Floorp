@@ -80,6 +80,7 @@ public:
   void KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
   void ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag);
   void Escape(PRBool& aHandledFlag);
+  void Enter();
 
   void ToggleMenuState();
   void SelectMenu(PRBool aActivateFlag);

@@ -203,6 +203,7 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
   }
   else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
     // The menu item was invoked and can now be dismissed.
+    // XXX Execute the execute event handler.
     nsCOMPtr<nsIAtom> tag;
     mContent->GetTag(*getter_AddRefs(tag));
     if (tag.get() == nsXULAtoms::xpmenuitem && mMenuParent) {
@@ -268,7 +269,7 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
   nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
 
   if (aActivateFlag) {
-
+    // XXX Execute the oncreate handler
     // Sync up the view.
     if (menuPopup)
       menuPopup->SyncViewWithFrame(PR_TRUE);
@@ -288,7 +289,8 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
     //  menuPopup->CaptureMouseEvents(PR_TRUE);
   }
   else {
-    // Close the menu.
+    // Close the menu. 
+    // XXX Execute the ondestroy handler
     mContent->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::open, PR_TRUE);
     if (child)
       child->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
@@ -376,6 +378,33 @@ nsMenuFrame::Escape(PRBool& aHandledFlag)
   if (frame) {
     nsMenuPopupFrame* popup = (nsMenuPopupFrame*)frame;
     popup->Escape(aHandledFlag);
+  }
+}
+
+void
+nsMenuFrame::Enter()
+{
+  if (!mMenuOpen) {
+    // The enter key press applies to us.
+    // XXX Execute the event handler.
+    nsCOMPtr<nsIAtom> tag;
+    mContent->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsXULAtoms::xpmenuitem && mMenuParent) {
+      // Close up the parent.
+      mMenuParent->DismissChain();
+    }
+    else if (tag.get() == nsXULAtoms::xpmenuchildren) {
+      OpenMenu(PR_TRUE);
+      SelectFirstItem();
+    }
+
+    return;
+  }
+
+  nsIFrame* frame = mPopupFrames.FirstChild();
+  if (frame) {
+    nsMenuPopupFrame* popup = (nsMenuPopupFrame*)frame;
+    popup->Enter();
   }
 }
 

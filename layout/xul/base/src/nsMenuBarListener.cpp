@@ -136,7 +136,8 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
     if (active)
       mMenuBarFrame->Escape();
   }
-  else if (theChar == NS_VK_ENTER) {
+  else if (theChar == NS_VK_ENTER ||
+           theChar == NS_VK_RETURN) {
     // Open one level.
     if (active)
       mMenuBarFrame->Enter();
