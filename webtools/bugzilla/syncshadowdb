@@ -38,6 +38,8 @@ sub sillyness {
     open SAVEOUT,">/dev/null";
     $zz = $::db;
     $zz = $::dbwritesallowed;
+    $zz = $::db_host;
+    $zz = $::db_port;
 }
 
 my $verbose = 0;
@@ -98,6 +100,15 @@ if (!Param("shadowdb")) {
     exit;
 }
 
+if (!Param("updateshadowdb")) {
+    Verbose("This shadow database is not set to be updated by Bugzilla.\nSee the mysql replication FAQ if you want to pause the main db until the\nshadowdb catches up");
+    # I could run the commands here, but that involves keeping a connection
+    # open to the main db and the shadowdb at the same time, and our current
+    # db stuff doesn't support that. Its not sufficient to reconnect, because
+    # the lock on the main db will be dropped when the connection closes...
+    exit 1;
+}
+
 if (Param("shutdownhtml") && ! $force) {
     Verbose("Bugzilla was shutdown prior to running syncshadowdb. \n" .
             "  If you wish to sync anyway, use the -force command line option");
@@ -115,8 +126,9 @@ if ($shutdown) {
     # Now we need to wait for existing connections to this database to clear. We
     # do this by looking for connections to the main or shadow database using
     # 'mysqladmin processlist'
-    my $cmd = "$::mysqlpath/mysqladmin -u $::db_user";
-    if ($::db_pass) { $cmd .= " -p$::db_pass" }
+    my $cmd = "$::mysqlpath/mysqladmin -u $::db_user -h $::db_host -P $::db_port";
+    if ($::db_pass) { $cmd .= " -p$::db_pass"; }
+    if ($::db_sock) { $cmd .= " -S$::db_sock"; }
     $cmd .= " processlist";
     my $found_proc = 1;
     # We need to put together a nice little regular expression to use in the
@@ -240,6 +252,7 @@ if ($syncall) {
     Verbose("Dumping database to a temp file ($tempfile).");
     my @ARGS = ("-u", $::db_user);
     if ($::db_pass) { push @ARGS, "-p$::db_pass" }
+    if ($::db_sock) { push @ARGS, "-S$::db_sock" }
     push @ARGS, "-l", "-e", $::db_name, @tables;
     open SAVEOUT, ">&STDOUT";     # stash the original output stream
     open STDOUT, ">$tempfile";    # redirect to file
@@ -251,10 +264,13 @@ if ($syncall) {
     if ($::db_pass) {
         $extra .= " -p$::db_pass";
     }
+    if ($::db_sock) {
+        $extra .= " -S$::db_sock";
+    }
     if ($verbose) {
         $extra .= " -v";
     }
-    open(MYSQL, "cat $tempfile | $::mysqlpath/mysql $extra " .
+    open(MYSQL, "/bin/cat $tempfile | $::mysqlpath/mysql $extra " .
          Param("shadowdb") . "|") || die "Couldn't do db copy";
     my $count = 0;
     while (<MYSQL>) {

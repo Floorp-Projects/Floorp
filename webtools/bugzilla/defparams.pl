@@ -53,7 +53,6 @@ use vars qw(@param_list);
 
 sub check_priority {
     my ($value) = (@_);
-    &::ConnectToDatabase();
     &::GetVersionTable();
     if (lsearch(\@::legal_priority, $value) < 0) {
         return "Must be a legal priority value: one of " .
@@ -68,7 +67,11 @@ sub check_shadowdb {
     if ($value eq "") {
         return "";
     }
-    &::ConnectToDatabase();
+    if (!Param("updateshadowdb")) {
+        # Can't test this, because ConnectToDatabase uses the param, but
+        # we can't set this before testing....
+        return "";
+    }
     &::SendSQL("SHOW DATABASES");
     while (&::MoreSQLData()) {
         my $n = &::FetchOneColumn();
@@ -76,8 +79,18 @@ sub check_shadowdb {
             return "The $n database already exists.  If that's really the name you want to use for the backup, please CAREFULLY make the existing database go away somehow, and then try again.";
         }
     }
+    # We trust the admin....
+    trick_taint($value);
     &::SendSQL("CREATE DATABASE $value");
     &::SendSQL("INSERT INTO shadowlog (command) VALUES ('SYNCUP')", 1);
+    return "";
+}
+
+sub check_shadowdbhost {
+    my ($value) = (@_);
+    if ($value && Param("updateshadowdb")) {
+        return "Sorry, you can't have the shadowdb on a different connection to the main database if you want Bugzilla to handle the replication for you.";
+    }
     return "";
 }
 
@@ -247,25 +260,89 @@ sub check_netmask {
   },
 
   {
+   name => 'queryagainstshadowdb',
+   desc => 'If this is on, and the <tt>shadowdb</tt> parameter is set, then ' .
+           'certain queries will happen against the shadow database.',
+   type => 'b',
+   default => 0,
+  },
+
+  {
+   name => 'updateshadowdb',
+   desc => 'If this is on, and the <tt>shadowdb</tt> parameter is set, then ' .
+           'Bugzilla will use the old style of shadow database in which it ' .
+           'manually propogates changes to the shadow database. Otherwise, ' .
+           'Bugzilla will assume that the <tt>shadowdb</tt> database (if ' . 
+           'any) is being updated via replication. <b>WARNING! This ' .
+           'manual replication is deprecated and is going away soon ' .
+           '(<u>BEFORE</u> the next stable Bugzilla release).</b> It has ' .
+           'several problems with data consistency, and replication is the ' .
+           'preferred option. If this parameter is on, and you disable it, ' .
+           'make sure that the shadow database is already set up for ' .
+           'replication, or queries will return stale data.',
+   type => 'b',
+   default => 1,
+  },
+
+  # This entry must be _after_ updateshadowdb, because check_shadowdbhost uses
+  # that
+  {
+   name => 'shadowdbhost',
+   desc => 'The host the shadow database is on. If blank, then then we ' .
+           'assume it\'s on the main database host (as defined in ' .
+           'localconfig) and ingore the <tt>shadowdbport</tt> and ' .
+           '<tt>shadowdbsock</tt> parameters below, which means that this ' .
+           'parameter <em>must be filled in<em> if your shadow database is ' .
+           'on a different instance of the mysql server, even if that ' .
+           'instance runs on the same machine as the main database. Note ' .
+           'that <tt>updateshadowdb<tt> must be off if the shadow database ' .
+           'is on a difference mysql instance, since Bugzilla can\'t ' .
+           'propogate changes between instances itself, and this should be ' .
+           'left blank if the shadow database is on the same instance, ' .
+           'since Bugzilla can then reuse the same database connection for '.
+           'better performance.',
+   type => 't',
+   default => '',
+   checker => \&check_shadowdbhost,
+  },
+
+  {
+   name => 'shadowdbport',
+   desc => 'The port the shadow database is on. Ignored if ' .
+           '<tt>shadowdbhost</tt> is blank. Note: if the host is the local ' .
+           'machine, then MySQL will ignore this setting, and you must ' .
+           'specify a socket below.',
+   type => 't',
+   default => '3306',
+   checker => \&check_numeric,
+  },
+
+  {
+   name => 'shadowdbsock',
+   desc => 'The socket used to connect to the shadow database, if the host ' .
+           'is the local machine. This setting is required because MySQL ' .
+           'ignores the port specified by the client and connects using ' .
+           'its compiled-in socket path (on unix machines) when connecting ' .
+           'from a client to a local server. If you leave this blank, and ' .
+           'have the database on localhost, then the <tt>shadowdbport</tt> ' .
+           'will be ignored.',
+   type => 't',
+   default => '',
+  },
+
+  # This entry must be _after_ the shadowdb{host,port,sock} settings so that
+  # they can be used in the validation here
+  {
    name => 'shadowdb',
    desc => 'If non-empty, then this is the name of another database in ' .
            'which Bugzilla will keep a shadow read-only copy of everything. ' .
            'This is done so that long slow read-only operations can be used ' .
            'against this db, and not lock up things for everyone else. ' .
            'Turning on this parameter will create the given database ; be ' .
-           'careful not to use the name of an existing database with useful ' .
-           'data in it!',
+           'careful not to use the name of an existing database with useful ' .           'data in it!',
    type => 't',
    default => '',
    checker => \&check_shadowdb
-  },
-
-  {
-   name => 'queryagainstshadowdb',
-   desc => 'If this is on, and the shadowdb is set, then queries will ' .
-           'happen against the shadow database.',
-   type => 'b',
-   default => 0,
   },
 
   {

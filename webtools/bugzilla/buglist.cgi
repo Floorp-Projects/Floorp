@@ -678,7 +678,7 @@ while (my @row = FetchSQLData()) {
 # Switch back from the shadow database to the regular database so PutFooter()
 # can determine the current user even if the "logincookies" table is corrupted
 # in the shadow database.
-SendSQL("USE $::db_name");
+ReconnectToMainDatabase();
 
 # Check for bug privacy and set $bug->{isingroups} = 1 if private 
 # to 1 or more groups

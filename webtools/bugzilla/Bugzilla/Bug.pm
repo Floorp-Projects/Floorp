@@ -96,14 +96,6 @@ sub initBug  {
      }
   }
      
-
-  &::ConnectToDatabase();
-  &::GetVersionTable();
-
-  # this verification should already have been done by caller
-  # my $loginok = quietly_check_login();
-
-
   $self->{'whoid'} = $user_id;
 
   my $query = "

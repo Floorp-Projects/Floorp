@@ -20,7 +20,7 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Jacob Steenhagen <jake@bugzilla.org>
-#                 Bradley Baetz <bbaetz@cs.mcgill.ca>
+#                 Bradley Baetz <bbaetz@student.usyd.edu.au>
 #                 Christopher Aillon <christopher@aillon.com>
 #                 Joel Peshkin <bugreport@peshkin.net> 
 
@@ -107,29 +107,70 @@ $::dbwritesallowed = 1;
 
 sub ConnectToDatabase {
     my ($useshadow) = (@_);
-    if (!defined $::db) {
-        my $name = $::db_name;
-        if ($useshadow && Param("shadowdb") && Param("queryagainstshadowdb")) {
-            $name = Param("shadowdb");
-            $::dbwritesallowed = 0;
+    $::dbwritesallowed = !$useshadow;
+    $useshadow = ($useshadow && Param("shadowdb") &&
+                  Param("queryagainstshadowdb"));
+    my $useshadow_dbh = ($useshadow && Param("shadowdbhost") ne "");
+    my $name = $useshadow ? Param("shadowdb") : $::db_name;
+    my $connectstring;
+
+    if ($useshadow_dbh) {
+        if (defined $::shadow_dbh) {
+            $::db = $::shadow_dbh;
+            return;
         }
-        $::db = DBI->connect("DBI:mysql:host=$::db_host;database=$name;port=$::db_port", $::db_user, $::db_pass)
-            || die "Bugzilla is currently broken. Please try again later. " . 
-      "If the problem persists, please contact " . Param("maintainer") .
-      ". The error you should quote is: " . $DBI::errstr;
+        $connectstring="DBI:mysql:host=" . Param("shadowdbhost") .
+          ";database=$name;port=" . Param("shadowdbport");
+        if (Param("shadowdbsock") ne "") {
+            $connectstring .= ";mysql_socket=" . Param("shadowdbsock");
+        }
+    } else {
+        if (defined $::main_dbh) {
+            $::db = $::main_dbh;
+            return;
+        }
+        $connectstring="DBI:mysql:host=$::db_host;database=$name;port=$::db_port";
+        if ($::db_sock ne "") {
+            $connectstring .= ";mysql_socket=$::db_sock";
+        }
+    }
+    $::db = DBI->connect($connectstring, $::db_user, $::db_pass)
+      || die "Bugzilla is currently broken. Please try again " .
+        "later. If the problem persists, please contact " .
+        Param("maintainer") . ". The error you should quote is: " .
+        $DBI::errstr;
+
+    if ($useshadow_dbh) {
+        $::shadow_dbh = $::db;
+    } else {
+        $::main_dbh = $::db;
     }
 }
 
 sub ReconnectToShadowDatabase {
+    # This will connect us to the shadowdb if we're not already connected,
+    # but if we're using the same dbh for both the main db and the shadowdb,
+    # be sure to USE the correct db
     if (Param("shadowdb") && Param("queryagainstshadowdb")) {
-        SendSQL("USE " . Param("shadowdb"));
-        $::dbwritesallowed = 0;
+        ConnectToDatabase(1);
+        if (!Param("shadowdbhost")) {
+            SendSQL("USE " . Param("shadowdb"));
+        }
+    }
+}
+
+sub ReconnectToMainDatabase {
+    if (Param("shadowdb") && Param("queryagainstshadowdb")) {
+        ConnectToDatabase();
+        if (!Param("shadowdbhost")) {
+            SendSQL("USE $::db_name");
+        }
     }
 }
 
 my $shadowchanges = 0;
 sub SyncAnyPendingShadowChanges {
-    if ($shadowchanges) {
+    if ($shadowchanges && Param("updateshadowdb")) {
         my $pid;
         FORK: {
             if ($pid = fork) { # create a fork
@@ -218,7 +259,7 @@ sub SendSQL {
 
     my $iswrite =  ($str =~ /^(INSERT|REPLACE|UPDATE|DELETE)/i);
     if ($iswrite && !$::dbwritesallowed) {
-        die "Evil code attempted to write stuff to the shadow database.";
+        die "Evil code attempted to write '$str' to the shadow database";
     }
     if ($str =~ /^LOCK TABLES/i && $str !~ /shadowlog/ && $::dbwritesallowed) {
         $str =~ s/^LOCK TABLES/LOCK TABLES shadowlog WRITE, /i;
@@ -242,7 +283,7 @@ sub SendSQL {
         die "$str: " . $errstr;
     }
     SqlLog("Done");
-    if (!$dontshadow && $iswrite && Param("shadowdb")) {
+    if (!$dontshadow && $iswrite && Param("shadowdb") && Param("updateshadowdb")) {
         my $q = SqlQuote($str);
         my $insertid;
         if ($str =~ /^(INSERT|REPLACE)/i) {
@@ -537,7 +578,7 @@ sub GetVersionTable {
     }
     if (time() - $mtime > 3600) {
         use Token;
-        Token::CleanTokenTable();
+        Token::CleanTokenTable() if $::dbwritesallowed;
         GenerateVersionTable();
     }
     require 'data/versioncache';

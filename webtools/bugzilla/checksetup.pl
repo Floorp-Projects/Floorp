@@ -478,7 +478,11 @@ LocalVar('db_pass', '
 $db_pass = \'\';
 ');
 
-
+LocalVar('db_sock', '
+# Enter a path to the unix socket for mysql. If this is blank, then mysql\'s
+# compiled-in default will be used. You probably want that.
+$db_sock = \'\';
+');
 
 LocalVar('db_check', '
 #
@@ -619,6 +623,7 @@ my $my_db_host = ${*{$main::{'db_host'}}{SCALAR}};
 my $my_db_port = ${*{$main::{'db_port'}}{SCALAR}};
 my $my_db_name = ${*{$main::{'db_name'}}{SCALAR}};
 my $my_db_user = ${*{$main::{'db_user'}}{SCALAR}};
+my $my_db_sock = ${*{$main::{'db_sock'}}{SCALAR}};
 my $my_db_pass = ${*{$main::{'db_pass'}}{SCALAR}};
 my $my_index_html = ${*{$main::{'index_html'}}{SCALAR}};
 my $my_create_htaccess = ${*{$main::{'create_htaccess'}}{SCALAR}};
@@ -1212,10 +1217,6 @@ my $db_base = 'mysql';
 # pretty one saying they need to install it. -- justdave@syndicomm.com
 #use DBI;
 
-# get a handle to the low-level DBD driver
-my $drh = DBI->install_driver($db_base)
-    or die "Can't connect to the $db_base. Is the database installed and up and running?\n";
-
 if ($my_db_check) {
     # Do we have the database itself?
 
@@ -1226,6 +1227,9 @@ if ($my_db_check) {
 # removed the $db_name because we don't know it exists yet, and this will fail
 # if we request it here and it doesn't. - justdave@syndicomm.com 2000/09/16
     my $dsn = "DBI:$db_base:;$my_db_host;$my_db_port";
+    if ($my_db_sock ne "") {
+        $dsn .= ";mysql_socket=$my_db_sock";
+    }
     my $dbh = DBI->connect($dsn, $my_db_user, $my_db_pass)
       or die "Can't connect to the $db_base database. Is the database " .
         "installed and\nup and running?  Do you have the correct username " .
@@ -1249,7 +1253,7 @@ if ($my_db_check) {
     my @databases = $dbh->func('_ListDBs');
     unless (grep /^$my_db_name$/, @databases) {
        print "Creating database $my_db_name ...\n";
-       $drh->func('createdb', $my_db_name, "$my_db_host:$my_db_port", $my_db_user, $my_db_pass, 'admin')
+       $dbh->func('createdb', $my_db_name, 'admin')
             or die <<"EOF"
 
 The '$my_db_name' database is not accessible. This might have several reasons:
@@ -1268,6 +1272,10 @@ EOF
 
 # now get a handle to the database:
 my $connectstring = "dbi:$db_base:$my_db_name:host=$my_db_host:port=$my_db_port";
+if ($my_db_sock ne "") {
+    $connectstring .= ";mysql_socket=$my_db_sock";
+}
+
 my $dbh = DBI->connect($connectstring, $my_db_user, $my_db_pass)
     or die "Can't connect to the table '$connectstring'.\n",
            "Have you read the Bugzilla Guide in the doc directory?  Have you read the doc of '$db_base'?\n";
