@@ -767,10 +767,10 @@ NS_IMETHODIMP nsMsgNewsFolder::Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos)
 }
 
 NS_IMETHODIMP 
-nsMsgNewsFolder::GetChildNamed(nsString& name, nsISupports ** aChild)
+nsMsgNewsFolder::GetChildNamed(const char *name, nsISupports ** aChild)
 {
-#ifdef DEBUG_sspitzer_
-  printf("nsMsgNewsFolder::GetChildNamed()\n");
+#ifdef DEBUG_sspitzer
+  printf("nsMsgNewsFolder::GetChildNamed(%s)\n",name);
 #endif
   NS_ASSERTION(aChild, "NULL child");
 
@@ -791,8 +791,9 @@ nsMsgNewsFolder::GetChildNamed(nsString& name, nsISupports ** aChild)
       char *folderName;
 
       folder->GetName(&folderName);
-      // case-insensitive compare is probably LCD across OS filesystems
-      if (folderName && !name.EqualsIgnoreCase(folderName)) {
+      
+	  // case-insensitive compare is probably LCD across OS filesystems
+	  if (folderName && PL_strcasecmp(name, folderName)!=0) {
         *aChild = folder;
         PR_FREEIF(folderName);
         return NS_OK;
@@ -830,16 +831,16 @@ NS_IMETHODIMP nsMsgNewsFolder::GetName(char **name)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::GetPrettyName(nsString& prettyName)
+NS_IMETHODIMP nsMsgNewsFolder::GetPrettyName(char ** prettyName)
 {
   if (mDepth == 1) {
     // Depth == 1 means we are on the news server level
     // override the name here to say "News.Foo.Bar"
-    prettyName = PL_strdup("News.Foo.Bar");
+    *prettyName = PL_strdup("News.Foo.Bar");
   }
   else {
     nsresult rv = NS_ERROR_NULL_POINTER;
-    char *pName = prettyName.ToNewCString();
+    char *pName = PL_strdup(*prettyName);
     if (pName)
       rv = nsMsgFolder::GetPrettyName(&pName);
     delete[] pName;
@@ -978,7 +979,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetRequiresCleanup(PRBool *requiresCleanup)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::GetSizeOnDisk(PRUint32 size)
+NS_IMETHODIMP nsMsgNewsFolder::GetSizeOnDisk(PRUint32 *size)
 {
   return NS_OK;
 }

@@ -67,11 +67,11 @@ public:
 	NS_IMETHOD Rename (const char *newName);
 	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
 
-  NS_IMETHOD GetChildNamed(nsString& name, nsISupports ** aChild);
+  NS_IMETHOD GetChildNamed(const char* name, nsISupports ** aChild);
 
   // this override pulls the value from the db
 	NS_IMETHOD GetName(char ** name);   // Name of this folder (as presented to user).
-	NS_IMETHOD GetPrettyName(nsString& prettyName);	// Override of the base, for top-level news folder
+	NS_IMETHOD GetPrettyName(char ** prettyName);	// Override of the base, for top-level news folder
 
   NS_IMETHOD BuildFolderURL(char **url);
 
@@ -83,12 +83,12 @@ public:
 	NS_IMETHOD GetCanBeRenamed (PRBool *canBeRenamed);
 	NS_IMETHOD GetRequiresCleanup(PRBool *requiresCleanup);
 
-	NS_IMETHOD GetSizeOnDisk(PRUint32 size);
+	NS_IMETHOD GetSizeOnDisk(PRUint32 *size);
 
 	NS_IMETHOD GetUsersName(char** userName);
 	NS_IMETHOD GetHostName(char** hostName);
 	NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate);
-	NS_IMETHOD RememberPassword(char *password);
+	NS_IMETHOD RememberPassword(const char *password);
 	NS_IMETHOD GetRememberedPassword(char ** password);
 
   virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db);
