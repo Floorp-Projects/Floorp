@@ -814,7 +814,7 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
   }
   NS_IF_RELEASE(nameSpace);
 
-  if (mNeedToBlockParser) {
+  if (mNeedToBlockParser || (mParser && !mParser->IsParserEnabled())) {
     return NS_ERROR_HTMLPARSER_BLOCK;
   }
 
