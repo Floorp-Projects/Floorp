@@ -73,20 +73,22 @@ function doEngineClick( event, aNode )
 	if (event.button != 1)
 		return(false);
 
+	var html = null;
+
 	var resultsTree = document.getElementById("internetresultstree");
 	var contentArea = document.getElementById("content");
-  var splitter = document.getElementById("gray_horizontal_splitter");
+	var splitter = document.getElementById("gray_horizontal_splitter");
 	var engineURI = aNode.getAttribute("id");
 	if (engineURI == "allEngines")
 	{
 		resultsTree.setAttribute("style", "display: table;");
-    splitter.setAttribute("style","display: block;");
+		splitter.setAttribute("style","display: block;");
 		contentArea.setAttribute("style", "height: 100; width: 100%;");
 	}
 	else
 	{
 		resultsTree.setAttribute("style", "display: none;");
-    splitter.setAttribute("style","display: none");
+		splitter.setAttribute("style","display: none");
 		contentArea.setAttribute("style", "height: 100%; width: 100%;");
 		try
 		{
@@ -99,9 +101,9 @@ function doEngineClick( event, aNode )
 				{
 					var src = rdf.GetResource(engineURI, true);
 					var htmlProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#HTML", true);
- 				  html = internetSearchStore.GetTarget(src, htmlProperty, true);
+					html = internetSearchStore.GetTarget(src, htmlProperty, true);
 					if ( html )	html = html.QueryInterface(Components.interfaces.nsIRDFLiteral);
-          if ( html ) html = html.Value
+					if ( html )	html = html.Value;
 				}
 			}
 		}
@@ -118,7 +120,9 @@ function doEngineClick( event, aNode )
 		doc.close();
 	}
 	else
+	{
 		window.frames[0].document.location = "chrome://search/content/default.htm";
+	}
 }
 
 
