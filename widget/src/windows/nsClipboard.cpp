@@ -176,7 +176,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
   }
 
   // Clear the native clipboard
-  ::OleFlushClipboard();
+  ::OleSetClipboard(NULL);
 
   // Release the existing DataObject
   if (mDataObj) {
