@@ -2,6 +2,6 @@
 
 Evaluate % = ("{{SourceFile}}" =~ /(Å:)¨0Å/)
 
-MakeStub "{{SourceFile}}" -o "{{¨0}}MemAllocatorStubsPPCLib" ¶
+MakeStub "{{SourceFile}}" -o "{{¨0}}:::dist:client_stubs:MemAllocatorStubsLib" ¶
 	-fragname MemoryAllocator ¶
 	-vercur 400 -verdef 400 -verimp 400

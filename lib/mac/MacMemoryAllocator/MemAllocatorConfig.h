@@ -17,4 +17,4 @@
  */
 
 #include "IDE_Options.h"
-#include "NSCrossProductDefines.h"
+#include "DefinesMac.h"
