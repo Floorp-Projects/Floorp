@@ -769,6 +769,38 @@ Boolean MRJContext::appletLoaded()
 	return (mViewer != NULL);
 }
 
+void MRJContext::setProxyInfoForURL(char * url, JMProxyType proxyType) 
+{
+	/*
+	 * We then call 'nsIPluginManager2::FindProxyForURL' which will return
+	 * proxy information which we can parse and set via JMSetProxyInfo.
+	 */	
+	 
+	 char * result = NULL;
+	
+	thePluginManager2->FindProxyForURL(url, &result);
+	if (result != NULL) {
+		JMProxyInfo proxyInfo;
+
+		/* See if a proxy was specified */
+		if (strcmp("DIRECT", result)) {				
+			int index = 0;
+			int length = strlen(result);
+			
+			proxyInfo.useProxy = true;
+			result = strchr(result, ' ');
+			for (index = 0; *result != ':' && index < length; result++, index++) {
+				proxyInfo.proxyHost[index] = *result;
+			}
+			proxyInfo.proxyHost[index] = '\0';
+			result++;
+			proxyInfo.proxyPort = atoi(result);
+			JMSetProxyInfo(mSessionRef, proxyType, &proxyInfo);
+		}			
+	}
+}
+
+
 Boolean MRJContext::loadApplet()
 {
 	static JMAppletSecurity security = {
@@ -786,6 +818,18 @@ Boolean MRJContext::loadApplet()
 		&setStatusMessage,				/* applet changed status message */
 	};
 	OSStatus status;
+	
+	/* Added by Mark: */
+	/* 
+	 * Set proxy info 
+	 * It is only set if the new enhanced Plugin Manager exists.
+	 */
+	if (thePluginManager2 != NULL) {
+		/* Sample URL's to use for getting the HTTP proxy and FTP proxy */
+		setProxyInfoForURL("http://www.mozilla.org", eHTTPProxy);
+		setProxyInfoForURL("ftp://ftp.mozilla.org", eFTPProxy);
+	}
+	/* End set proxy info code */
 	
 	status = ::JMNewAppletViewer(&mViewer, mContext, mLocator, 0,
 								 			&security, &callbacks, this);

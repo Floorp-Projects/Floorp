@@ -37,7 +37,7 @@
 // Instance state information about the plugin.
 //
 // *Developers*: Use this struct to hold per-instance
-//				 information that you¹ll need in the
+//				 information that you¼ll need in the
 //				 various functions in this file.
 //
 
@@ -58,6 +58,7 @@ public:
 	Boolean createContext();
 	JMAWTContextRef getContextRef();
 	
+	void setProxyInfoForURL(char * url, JMProxyType proxyType);
 	Boolean appletLoaded();
 	Boolean loadApplet();
 	Boolean isActive();
