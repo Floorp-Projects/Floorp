@@ -70,6 +70,7 @@ int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath,
 		comps[*compNum].additional = (strstr(attr, "ADDITIONAL") != NULL);
 		comps[*compNum].disabled = (strstr(attr, "DISABLED") != NULL);
 		comps[*compNum].forceupgrade = (strstr(attr, "FORCE_UPGRADE") != NULL);
+		comps[*compNum].uncompress = (strstr(attr, "UNCOMPRESS") != NULL);
 		comps[*compNum].downloadonly = (strstr(attr, "DOWNLOAD_ONLY") != NULL);
 
 		

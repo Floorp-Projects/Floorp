@@ -9,6 +9,7 @@ typedef struct s_component {
 	BOOL	additional;
 	BOOL	disabled;
 	BOOL	forceupgrade;
+	BOOL	uncompress;
 	BOOL	downloadonly;
 
 	} COMPONENT;
