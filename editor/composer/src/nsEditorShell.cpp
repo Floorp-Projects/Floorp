@@ -942,6 +942,11 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
 #endif
     }
 
+    // disable the preference style sheet so we can override colors
+    if (NS_SUCCEEDED(err)) {
+      err = aPresShell->EnablePrefStyleRules(PR_FALSE,0);
+    }
+
     if (NS_SUCCEEDED(err) && editor)
     {
       mEditor = do_QueryInterface(editor);    // this does the addref that is the owning reference
