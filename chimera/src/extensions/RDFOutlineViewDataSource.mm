@@ -60,19 +60,22 @@
 
 - (void) ensureDataSourceLoaded
 {
-    nsCOMPtr<nsIRDFContainer> ctr = do_CreateInstance("@mozilla.org/rdf/container;1");
-    NS_ADDREF(mContainer = ctr);
-        
-    nsCOMPtr<nsIRDFContainerUtils> ctrUtils = do_GetService("@mozilla.org/rdf/container-utils;1");
-    NS_ADDREF(mContainerUtils = ctrUtils);
-        
-    nsCOMPtr<nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1");
-    NS_ADDREF(mRDFService = rdfService);
-        
-    mDataSource = nsnull;
-    mRootResource = nsnull;
+    if (!mContainer)
+    {
+      nsCOMPtr<nsIRDFContainer> ctr = do_CreateInstance("@mozilla.org/rdf/container;1");
+      NS_ADDREF(mContainer = ctr);
+          
+      nsCOMPtr<nsIRDFContainerUtils> ctrUtils = do_GetService("@mozilla.org/rdf/container-utils;1");
+      NS_ADDREF(mContainerUtils = ctrUtils);
+          
+      nsCOMPtr<nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1");
+      NS_ADDREF(mRDFService = rdfService);
+  
+      mDictionary = [[NSMutableDictionary alloc] initWithCapacity: 30];
 
-    mDictionary = [[NSMutableDictionary alloc] initWithCapacity: 30];
+      mDataSource = nsnull;
+      mRootResource = nsnull;
+    }
 }
 
 - (void) dealloc
