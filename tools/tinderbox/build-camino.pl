@@ -210,14 +210,14 @@ sub CaminoWindowLeaksTest($$$$$)
   if ($run_test)
   {
     my $close_window_script =<<END_SCRIPT;
-tell application "Navigator"
+tell application "Camino"
   delay 5
   close the first window
 end tell
 END_SCRIPT
     
     my $new_window_script =<<END_SCRIPT;
-tell application "Navigator"
+tell application "Camino"
   Get URL "about:blank"
   delay 20
   close the first window
@@ -286,7 +286,7 @@ sub main {
 
   my $camino_dir = "$mozilla_build_dir/mozilla/camino";
   my $embedding_dir = "$mozilla_build_dir/mozilla/embedding/config";
-  my $camino_binary = "Navigator";
+  my $camino_binary = "Camino";
 
   unless ($Settings::TestOnly) {
     # Checkout/update the camino code.
@@ -319,7 +319,7 @@ sub main {
       
       if ($status == 0) {
         TinderUtils::print_log("Deleting binary...\n");
-        TinderUtils::DeleteBinary("$camino_dir/build/Navigator.app/Contents/MacOS/$camino_binary");
+        TinderUtils::DeleteBinary("$camino_dir/build/Camino.app/Contents/MacOS/$camino_binary");
           
         # Always do a clean build; gecko dependencies don't work correctly
         # for Camino.
@@ -335,8 +335,8 @@ sub main {
       if ($status != 0) {
         TinderUtils::print_log("busted, pbxbuild status non-zero\n");
         $post_status = 'busted';
-      } elsif (not TinderUtils::BinaryExists("$camino_dir/build/Navigator.app/Contents/MacOS/$camino_binary")) {
-        TinderUtils::print_log("Error: binary not found: $camino_dir/build/Navigator.app/Contents/MacOS/$camino_binary\n");
+      } elsif (not TinderUtils::BinaryExists("$camino_dir/build/Camino.app/Contents/MacOS/$camino_binary")) {
+        TinderUtils::print_log("Error: binary not found: $camino_dir/build/Camino.app/Contents/MacOS/$camino_binary\n");
         $post_status = 'busted';
       } else {
         $post_status = 'success';
@@ -349,11 +349,11 @@ sub main {
   #
 
   # Clean profile out, if set.
-  # Assume Camino always uses ~/Library/Application Support/Camino/Profiles/default for now.
+  # Assume Camino always uses ~/Library/Application Support/Chimera/Profiles/default for now.
   if ($camino_clean_profile) {
     # Warning: workaround camino bug, delete whole Camino dir.
-    my $chim_profile_dir = "$ENV{HOME}/Library/Application Support/Camino";
-    #my $chim_profile_dir = "$ENV{HOME}/Library/Application Support/Camino/Profiles/default";
+    my $chim_profile_dir = "$ENV{HOME}/Library/Application Support/Chimera";
+    #my $chim_profile_dir = "$ENV{HOME}/Library/Application Support/Chimera/Profiles/default";
 
     TinderUtils::print_log("Deleting $chim_profile_dir...\n");
     print "Deleting $chim_profile_dir...\n";
@@ -371,17 +371,17 @@ sub main {
   if ($camino_alive_test and $post_status eq 'success') {
 
     $post_status = TinderUtils::AliveTest("CaminoAliveTest",
-                                          "$camino_dir/build/Navigator.app/Contents/MacOS",
-                                          ["Navigator", "-url", "about:blank"],
+                                          "$camino_dir/build/Camino.app/Contents/MacOS",
+                                          ["Camino", "-url", "about:blank"],
                                           45);
   }
 
   # Find the prefs file, remember we have the secret/random salt dir,
-  # e.g. /Users/cltbld/Library/Application Support/Camino/Profiles/default/dyrs1ar8.slt/prefs.js
+  # e.g. /Users/cltbld/Library/Application Support/Chimera/Profiles/default/dyrs1ar8.slt/prefs.js
   # so File::Path::find will find the prefs.js file.
   #
   my $pref_file = "prefs.js";
-  my $start_dir = "/Users/cltbld/Library/Application Support/Camino/Profiles/default";
+  my $start_dir = "/Users/cltbld/Library/Application Support/Chimera/Profiles/default";
   my $found = undef;
   my $sub = sub {$pref_file = $File::Find::name, $found++ if $pref_file eq $_};
 
@@ -425,13 +425,13 @@ sub main {
           select STDOUT; $| = 1;  # make STDOUT unbuffered
           select STDERR; $| = 1;  # make STDERR unbuffered
           print STDERR "hello, world\n";
-          chdir("$camino_dir/build/Navigator.app/Contents/MacOS");
-          exec "./Navigator -url \"http://lxr.mozilla.org/seamonkey/source/webshell/tests/viewer/samples/test8.html\"";
+          chdir("$camino_dir/build/Camino.app/Contents/MacOS");
+          exec "./Camino -url \"http://lxr.mozilla.org/seamonkey/source/webshell/tests/viewer/samples/test8.html\"";
           #exec "foo";
       } else {
           $post_status = TinderUtils::AliveTest("CaminoLayoutTest8Test",
-                                                "$camino_dir/build/Navigator.app/Contents/MacOS",
-                                                ["Navigator", "-url", "http://lxr.mozilla.org/seamonkey/source/webshell/tests/viewer/samples/test8.html"],
+                                                "$camino_dir/build/Camino.app/Contents/MacOS",
+                                                ["Camino", "-url", "http://lxr.mozilla.org/seamonkey/source/webshell/tests/viewer/samples/test8.html"],
                                                 20);
       }
   }
@@ -441,8 +441,8 @@ sub main {
 
       $post_status = 
         TinderUtils::LayoutPerformanceTest("CaminoLayoutPerformanceTest",
-                                           "$camino_dir/build/Navigator.app/Contents/MacOS",
-                                           ["Navigator", "-url"]);
+                                           "$camino_dir/build/Camino.app/Contents/MacOS",
+                                           ["Camino", "-url"]);
 
   }
 
@@ -466,16 +466,16 @@ sub main {
   if ($camino_startup_test and $post_status eq 'success') {
       $post_status =
         TinderUtils::StartupPerformanceTest("CaminoStartupPerformanceTest",
-                                            "Navigator",
-                                            "$camino_dir/build/Navigator.app/Contents/MacOS",
+                                            "Camino",
+                                            "$camino_dir/build/Camino.app/Contents/MacOS",
                                             ["-url"],
                                             "file:$camino_dir/../../../startup-test.html");      
   }
   
   if ($camino_window_leaks_test and $post_status eq 'success') {
         $post_status = CaminoWindowLeaksTest("CaminoWindowLeakTest",
-                                              "$camino_dir/build/Navigator.app/Contents/MacOS/",
-                                              "./Navigator",
+                                              "$camino_dir/build/Camino.app/Contents/MacOS/",
+                                              "./Camino",
                                               "-url \"http://www.mozilla.org\"",
                                               20);
 
