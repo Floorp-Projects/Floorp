@@ -21,8 +21,7 @@
 
 #include "nsTextEditRules.h"
 #include "nsCOMPtr.h"
-
-class nsIContent;
+#include "nsIContent.h"
 
 class nsHTMLEditRules : public nsTextEditRules
 {
@@ -58,7 +57,7 @@ protected:
   nsresult InsertSpace(nsIDOMSelection *aSelection, PRBool *aCancel, PlaceholderTxn **aTxn, nsString *outString);
 
   // helper methods
-  PRBool IsBlockNode(nsIContent *aContent);
+  PRBool IsBlockNode(nsCOMPtr <nsIContent> aContent);
   nsCOMPtr<nsIContent> GetBlockNodeParent(nsCOMPtr<nsIContent> aContent);
   nsCOMPtr<nsIDOMNode> GetStartNode(nsIDOMSelection *aSelection);
   nsresult IsPreformatted(nsCOMPtr<nsIDOMNode> aNode, PRBool *aResult);
