@@ -28,6 +28,7 @@
 #include "nsIDOMElement.h"
 #include "nsXULTreeOuterGroupFrame.h"
 #include "nsXULAtoms.h"
+#include "nsINameSpaceManager.h"
 
 //
 // NS_NewXULTreeFrame
@@ -344,3 +345,38 @@ nsXULTreeFrame::GetTreeBody(nsXULTreeOuterGroupFrame** aResult)
   *aResult = nsnull;
 }
 
+NS_IMETHODIMP
+nsXULTreeFrame::AttributeChanged (nsIPresContext* aPresContext, nsIContent* aChild,
+                                  PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aHint)
+{
+  if (aAttribute == nsXULAtoms::rows) {
+    nsXULTreeOuterGroupFrame* treeOuterGroup = nsnull;
+    GetTreeBody(&treeOuterGroup);
+
+    if (treeOuterGroup) {
+      nsCOMPtr<nsIContent>child;
+      treeOuterGroup->GetContent(getter_AddRefs(child));
+      
+      nsAutoString rows;
+      mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::rows, rows);
+      
+      if (!rows.IsEmpty()) {
+        PRInt32 dummy;
+        PRInt32 count = rows.ToInteger(&dummy);
+        float t2p;
+        aPresContext->GetTwipsToPixels(&t2p);
+        PRInt32 rowHeight = treeOuterGroup->GetRowHeightTwips();
+        rowHeight = NSTwipsToIntPixels(rowHeight, t2p);
+        nsAutoString value;
+        value.AppendInt(rowHeight*count);
+        child->SetAttribute(kNameSpaceID_None, nsXULAtoms::minheight, value, PR_FALSE);
+
+        nsBoxLayoutState state(aPresContext);
+        treeOuterGroup->MarkDirty(state);
+      }
+    }
+    return NS_OK;
+  }
+  else
+    return nsBoxFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
+}
