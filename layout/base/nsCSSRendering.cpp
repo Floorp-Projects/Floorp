@@ -36,6 +36,9 @@
 #include "nsIDrawingSurface.h"
 #include "nsTransform2D.h"
 #include "nsIDeviceContext.h"
+#include "nsIContent.h"
+#include "nsHTMLAtoms.h"
+#include "nsIDocument.h"
 
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
@@ -1357,6 +1360,76 @@ PRIntn  whichSide=0;
   }
 }
 
+
+// method GetBGColorForHTMLElement
+//
+// Now here's a *fun* hack: Nav4 uses the BODY element's background color for the 
+//                          background color on tables so we need to find that element's
+//                          color and use it... Actually, we can use the HTML element as well.
+//
+// Traverse from PresContext to PresShell to Document to RootContent. The RootContent is
+// then checked to ensure that it is the HTML or BODY element, and if it is, we get
+// it's primary frame and from that the style context and from that the color to use.
+//
+PRBool GetBGColorForHTMLElement( nsIPresContext *aPresContext,
+                                   const nsStyleColor *&aBGColor )
+{
+  NS_ASSERTION(aPresContext, "null params not allowed");
+  PRBool result = PR_FALSE; // assume we did not find the HTML element
+
+  nsIPresShell* shell = nsnull;
+  aPresContext->GetShell(&shell);
+  if (shell) {
+    nsIDocument *doc = nsnull;
+    if (NS_SUCCEEDED(shell->GetDocument(&doc)) && doc) {
+      nsIContent *pContent = doc->GetRootContent();
+      if (pContent) {
+        // make sure that this is the HTML element
+        nsIAtom *tag = nsnull;
+        pContent->GetTag(tag);
+        NS_ASSERTION(tag, "Tag could not be retrieved from root content element");
+        if (tag) {
+          if (tag == nsHTMLAtoms::html ||
+              tag == nsHTMLAtoms::body) {
+            // use this guy's color
+            nsIFrame *pFrame = nsnull;
+            if (NS_SUCCEEDED(shell->GetPrimaryFrameFor(pContent, &pFrame)) && pFrame) {
+              nsIStyleContext *pContext = nsnull;
+              pFrame->GetStyleContext(&pContext);
+              if (pContext) {
+                const nsStyleColor* color = (const nsStyleColor*)pContext->GetStyleData(eStyleStruct_Color);
+                NS_ASSERTION(color,"ColorStyleData should not be null");
+                if (0 == (color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
+                  aBGColor = color;
+                  // set the reslt to TRUE to indicate we mapped the color
+                  result = PR_TRUE;
+                }
+                NS_RELEASE(pContext);
+              }// if context
+            }// if frame
+          }// if tag == html or body
+#ifdef DEBUG
+          else {
+            printf( "Root Content is not HTML or BODY: cannot get bgColor of HTML or BODY\n");
+          }
+#endif
+          NS_RELEASE(tag);
+        }// if tag
+        NS_RELEASE(pContent);
+      }// if content
+      NS_RELEASE(doc);
+    }// if doc
+    NS_RELEASE(shell);
+  } // if shell
+
+  return result;
+}
+
+// helper macro to determine if the borderstyle 'a' is a MOZ-BG-XXX style
+#define MOZ_BG_BORDER(a)\
+((a==NS_STYLE_BORDER_STYLE_BG_INSET) || (a==NS_STYLE_BORDER_STYLE_BG_OUTSET))
+
+
 // XXX improve this to constrain rendering to the damaged area
 void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
                                  nsIRenderingContext& aRenderingContext,
@@ -1370,18 +1443,40 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
                                  nscoord aHardBorderSize,
                                  PRBool  aShouldIgnoreRounded)
 {
-PRIntn              cnt;
-nsMargin            border;
-nsStyleCoord        bordStyleRadius[4];
-PRInt16             borderRadii[4],i;
-float               percent;
-nsCompatibility     compatMode;
-aPresContext->GetCompatibilityMode(&compatMode);
-// in NavQuirks mode we want to use the parent's context as a starting point 
-// for determining the background color
-const nsStyleColor* bgColor = 
-  nsStyleUtil::FindNonTransparentBackground(aStyleContext, 
+  PRIntn              cnt;
+  nsMargin            border;
+  nsStyleCoord        bordStyleRadius[4];
+  PRInt16             borderRadii[4],i;
+  float               percent;
+  nsCompatibility     compatMode;
+  aPresContext->GetCompatibilityMode(&compatMode);
+
+  // in NavQuirks mode we want to use the parent's context as a starting point 
+  // for determining the background color
+  const nsStyleColor* bgColor = 
+    nsStyleUtil::FindNonTransparentBackground(aStyleContext, 
                                             compatMode == eCompatibility_NavQuirks ? PR_TRUE : PR_FALSE); 
+  // mozBGColor is used instead of bgColor when the display type is BG_INSET or BG_OUTSET
+  // AND, in quirk mode, it is set to the BODY element's background color instead of the nearest
+  // ancestor's background color.
+  const nsStyleColor* mozBGColor = bgColor;
+
+  // now check if we are in Quirks mode and have a border style of BG_INSET or OUTSET
+  // - if so we use the bgColor from the HTML element instead of the nearest ancestor
+  if (compatMode == eCompatibility_NavQuirks) {
+    PRBool bNeedBodyBGColor = PR_FALSE;
+    if (aStyleContext) {
+      for (cnt=0; cnt<4;cnt++) {
+        bNeedBodyBGColor = MOZ_BG_BORDER(aBorderStyle.GetBorderStyle(cnt));
+        if (bNeedBodyBGColor) {
+          break;
+        }
+      }
+    }
+    if (bNeedBodyBGColor) {
+      GetBGColorForHTMLElement(aPresContext, mozBGColor);
+    } 
+  }
 
   if (aHardBorderSize > 0) {
     border.SizeTo(aHardBorderSize, aHardBorderSize, aHardBorderSize, aHardBorderSize);
@@ -1472,7 +1567,10 @@ const nsStyleColor* bgColor =
       DrawSide(aRenderingContext, NS_SIDE_BOTTOM,
                aBorderStyle.GetBorderStyle(NS_SIDE_BOTTOM),
                sideColor,
-               bgColor->mBackgroundColor, inside,outside, aSkipSides,
+               MOZ_BG_BORDER(aBorderStyle.GetBorderStyle(NS_SIDE_BOTTOM)) ? 
+                mozBGColor->mBackgroundColor :
+                bgColor->mBackgroundColor,
+               inside,outside, aSkipSides,
                twipsPerPixel, aGap);
     }
   }
@@ -1481,7 +1579,10 @@ const nsStyleColor* bgColor =
       DrawSide(aRenderingContext, NS_SIDE_LEFT,
                aBorderStyle.GetBorderStyle(NS_SIDE_LEFT), 
                sideColor,
-               bgColor->mBackgroundColor,inside, outside,aSkipSides,
+               MOZ_BG_BORDER(aBorderStyle.GetBorderStyle(NS_SIDE_LEFT)) ? 
+                mozBGColor->mBackgroundColor :
+                bgColor->mBackgroundColor,
+               inside, outside,aSkipSides,
                twipsPerPixel, aGap);
     }
   }
@@ -1490,8 +1591,11 @@ const nsStyleColor* bgColor =
       DrawSide(aRenderingContext, NS_SIDE_TOP,
                aBorderStyle.GetBorderStyle(NS_SIDE_TOP),
                sideColor,
-			   bgColor->mBackgroundColor,inside, outside,aSkipSides,
-			   twipsPerPixel, aGap);
+               MOZ_BG_BORDER(aBorderStyle.GetBorderStyle(NS_SIDE_TOP)) ? 
+                mozBGColor->mBackgroundColor :
+                bgColor->mBackgroundColor,
+               inside, outside,aSkipSides,
+               twipsPerPixel, aGap);
     }
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_RIGHT))) {
@@ -1499,8 +1603,11 @@ const nsStyleColor* bgColor =
       DrawSide(aRenderingContext, NS_SIDE_RIGHT,
                aBorderStyle.GetBorderStyle(NS_SIDE_RIGHT),
                sideColor,
-      			   bgColor->mBackgroundColor,inside, outside,aSkipSides,
-			         twipsPerPixel, aGap);
+               MOZ_BG_BORDER(aBorderStyle.GetBorderStyle(NS_SIDE_RIGHT)) ? 
+                mozBGColor->mBackgroundColor :
+                bgColor->mBackgroundColor,
+               inside, outside,aSkipSides,
+               twipsPerPixel, aGap);
     }
   }
 }
@@ -1626,14 +1733,14 @@ nscoord width;
     DrawSide(aRenderingContext, NS_SIDE_TOP,
              outlineStyle,
              outlineColor,
-			       bgColor->mBackgroundColor,outside, inside,aSkipSides,
-			       twipsPerPixel, aGap);
+             bgColor->mBackgroundColor,outside, inside,aSkipSides,
+             twipsPerPixel, aGap);
 
     DrawSide(aRenderingContext, NS_SIDE_RIGHT,
              outlineStyle,
              outlineColor,
-      			 bgColor->mBackgroundColor,outside, inside,aSkipSides,
-			       twipsPerPixel, aGap);
+             bgColor->mBackgroundColor,outside, inside,aSkipSides,
+             twipsPerPixel, aGap);
   }
   // Restore clipping
   aRenderingContext.PopState(clipState);
@@ -1770,7 +1877,7 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext* aPresContext,
         width = aBorderArea.width - aBorderEdges->mMaxBorderWidth.right;
         width += borderEdge->mWidth;
       }
-	    else
+      else
       {
         width = aBorderArea.width;
       }
@@ -2220,7 +2327,7 @@ PRInt16       borderRadii[4],i;
       theDevContext->GetAppUnitsToDevUnits(app2dev);
       NS_RELEASE(theDevContext);
       theTransform->SetToIdentity();  
-	    theTransform->AddScale(app2dev, app2dev);
+      theTransform->AddScale(app2dev, app2dev);
 
       // XXX this #ifdef needs to go away when we are sure that this works on windows and mac
 #ifdef XP_UNIX
@@ -2461,16 +2568,16 @@ nsCSSRendering::PaintRoundedBorder(nsIPresContext* aPresContext,
                                  nsRect* aGap,
                                  PRBool aIsOutline)
 {
-RoundedRect   outerPath;
-QBCurve       UL,LL,UR,LR;
-QBCurve       IUL,ILL,IUR,ILR;
-QBCurve       cr1,cr2,cr3,cr4;
-QBCurve       Icr1,Icr2,Icr3,Icr4;
-nsPoint       thePath[MAXPATHSIZE];
-PRInt16       np;
-nsMargin      border;
-nscoord       twipsPerPixel,qtwips;
-float         p2t;
+  RoundedRect   outerPath;
+  QBCurve       UL,LL,UR,LR;
+  QBCurve       IUL,ILL,IUR,ILR;
+  QBCurve       cr1,cr2,cr3,cr4;
+  QBCurve       Icr1,Icr2,Icr3,Icr4;
+  nsPoint       thePath[MAXPATHSIZE];
+  PRInt16       np;
+  nsMargin      border;
+  nscoord       twipsPerPixel,qtwips;
+  float         p2t;
 
 
   if (!aIsOutline) {
@@ -2597,12 +2704,12 @@ nsCSSRendering::RenderSide(nsPoint aPoints[],nsIRenderingContext& aRenderingCont
                         PRUint8 aSide,nsMargin  &aBorThick,nscoord aTwipsPerPixel,
                         PRBool aIsOutline)
 {
-QBCurve   thecurve;
-nscolor   sideColor;
-nsPoint   polypath[MAXPOLYPATHSIZE];
-PRInt32   curIndex,c1Index,c2Index,junk;
-PRInt8    border_Style;
-PRInt16   thickness;
+  QBCurve   thecurve;
+  nscolor   sideColor;
+  nsPoint   polypath[MAXPOLYPATHSIZE];
+  PRInt32   curIndex,c1Index,c2Index,junk;
+  PRInt8    border_Style;
+  PRInt16   thickness;
 
   // set the style information
   if (!aIsOutline) {
@@ -2742,9 +2849,9 @@ PRInt16   thickness;
 void 
 RoundedRect::CalcInsetCurves(QBCurve &aULCurve,QBCurve &aURCurve,QBCurve &aLLCurve,QBCurve &aLRCurve,nsMargin &aBorder)
 {
-PRInt32   nLeft,nTop,nRight,nBottom;
-PRInt32   tLeft,bLeft,tRight,bRight,lTop,rTop,lBottom,rBottom;
-PRInt16   adjust=0;
+  PRInt32   nLeft,nTop,nRight,nBottom;
+  PRInt32   tLeft,bLeft,tRight,bRight,lTop,rTop,lBottom,rBottom;
+  PRInt16   adjust=0;
 
   if(mDoRound)
     adjust = mRoundness[0]>>3;
@@ -2821,9 +2928,9 @@ PRInt16   adjust=0;
 void 
 RoundedRect::Set(nscoord aLeft,nscoord aTop,PRInt32  aWidth,PRInt32 aHeight,PRInt16 aRadius[4],PRInt16 aNumTwipPerPix)
 {
-PRBool  doRound;
-nscoord x,y,width,height;
-int     i;
+  PRBool  doRound;
+  nscoord x,y,width,height;
+  int     i;
 
   // convert this rect to pixel boundaries
   x = (aLeft/aNumTwipPerPix)*aNumTwipPerPix;
@@ -2880,7 +2987,7 @@ void
 RoundedRect::GetRoundedBorders(QBCurve &aULCurve,QBCurve &aURCurve,QBCurve &aLLCurve,QBCurve &aLRCurve)
 {
 
-PRInt16 adjust=0;
+  PRInt16 adjust=0;
 
   if(mDoRound)
     adjust = mRoundness[0]>>3;
@@ -2912,7 +3019,7 @@ PRInt16 adjust=0;
 static void 
 GetPath(nsPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPathType,PRInt32 &aC1Index,float aFrac)
 {
-QBCurve thecurve;
+  QBCurve thecurve;
 
   switch (aPathType) {
     case eOutside:
@@ -2970,8 +3077,8 @@ QBCurve thecurve;
 void 
 QBCurve::SubDivide(nsIRenderingContext *aRenderingContext,nsPoint aPointArray[],PRInt32 *aCurIndex)
 {
-QBCurve		curve1,curve2;
-PRInt16		fx,fy,smag;
+QBCurve   curve1,curve2;
+PRInt16   fx,fy,smag;
 
   // divide the curve into 2 pieces
 	MidPointDivide(&curve1,&curve2);
