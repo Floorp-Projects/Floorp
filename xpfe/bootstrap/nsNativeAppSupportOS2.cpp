@@ -206,6 +206,10 @@ public:
     HWND mDlg;
     HBITMAP mBitmap;
     nsrefcnt mRefCnt;
+    HDC hdcMemory;
+    HPS hpsMemory;
+    LONG mBitmapCX;
+    LONG mBitmapCY;
 }; // class nsSplashScreenOS2
 
 MRESULT EXPENTRY DialogProc( HWND dlg, ULONG msg, MPARAM mp1, MPARAM mp2 );
@@ -415,7 +419,8 @@ private:
 }; // nsNativeAppSupportOS2
 
 nsSplashScreenOS2::nsSplashScreenOS2()
-    : mDlg( 0 ), mBitmap( 0 ), mRefCnt( 0 ) {
+    : mDlg( 0 ), mBitmap( 0 ), mRefCnt( 0 ),
+      hdcMemory( 0 ), hpsMemory( 0 ), mBitmapCX(0), mBitmapCY(0) {
 }
 
 nsSplashScreenOS2::~nsSplashScreenOS2() {
@@ -456,56 +461,131 @@ nsSplashScreenOS2::Hide() {
 
         // Dismiss the dialog.
         WinPostMsg(mDlg, WM_CLOSE, 0, 0);
-        // Release custom bitmap (if there is one).
-        if ( mBitmap ) {
-            BOOL ok = GpiDeleteBitmap( mBitmap );
-        }
-        mBitmap = 0;
         mDlg = 0;
+        GpiSetBitmap(hpsMemory, NULLHANDLE);
+        if (mBitmap) {
+            GpiDeleteBitmap(mBitmap);
+            mBitmap = 0;
+        }
+        if (hdcMemory) {
+            DevCloseDC(hdcMemory);
+            hdcMemory = 0;
+        }
+        if (hpsMemory) {
+           GpiDestroyPS(hpsMemory);
+           hpsMemory = 0;
+        }
     }
     return NS_OK;
 }
 
+HBITMAP LoadAndSetBitmapFromFile(HPS hps, PSZ pszFilename)
+{
+   FILE *fp = fopen(pszFilename, "rb");
+   if (fp == NULL) {
+      return NULLHANDLE;
+   }
+   fseek(fp, 0, SEEK_END );
+   ULONG cbFile = ftell(fp);
+   if (cbFile ==0) {
+      fclose(fp);
+      return NULLHANDLE;
+   }
+   fseek(fp, 0, SEEK_SET );
+   PBYTE pBitmapData = (PBYTE)malloc(cbFile);
+   fread((PVOID)pBitmapData, cbFile, 1, fp);
+   fclose(fp);
+
+   PBITMAPFILEHEADER2 pbfh2 = (PBITMAPFILEHEADER2)pBitmapData;
+   PBITMAPINFOHEADER2 pbmp2 = NULL;
+
+   switch (pbfh2->usType)
+   {
+      case BFT_BITMAPARRAY:
+         /*
+          *   If this is a Bitmap-Array, adjust pointer to the normal
+          *   file header.  We'll just use the first bitmap in the
+          *   array and ignore other device forms.
+          */
+         pbfh2 = &(((PBITMAPARRAYFILEHEADER2) pBitmapData)->bfh2);
+         pbmp2 = &pbfh2->bmp2;
+         break;
+      case BFT_BMAP:
+         pbmp2 = &pbfh2->bmp2;
+         break;
+      case BFT_ICON:
+      case BFT_POINTER:
+      case BFT_COLORICON:
+      case BFT_COLORPOINTER:
+      default:
+         break;
+   }
+    
+   if (pbmp2 == NULL) {
+      free(pBitmapData);
+      return NULLHANDLE;
+   }
+
+   LONG lScans;
+   if (pbmp2->cbFix == sizeof(BITMAPINFOHEADER))
+      lScans = (LONG) ((PBITMAPINFOHEADER)pbmp2)->cy;
+   else
+      lScans = pbmp2->cy;
+
+   HBITMAP hbmp = GpiCreateBitmap(hps, pbmp2, 0L, NULL, NULL);
+   if (!hbmp) {
+      free(pBitmapData);
+      return NULLHANDLE;
+   }
+
+   if (GpiSetBitmap(hps, hbmp) == HBM_ERROR) {
+      GpiDeleteBitmap(hbmp);
+      free(pBitmapData);
+      return NULLHANDLE;
+   }
+
+   LONG lScansSet = GpiSetBitmapBits(hps, 0L, lScans, pBitmapData + pbfh2->offBits,
+                                     (PBITMAPINFO2) pbmp2);
+   free(pBitmapData);
+
+   if (lScansSet != lScans) {
+      GpiSetBitmap(hps, NULLHANDLE);
+      GpiDeleteBitmap(hbmp);
+      return NULLHANDLE;
+   }
+
+   return hbmp;
+}
+
 void
 nsSplashScreenOS2::LoadBitmap() {
-#ifdef XP_OS2
-     HPS hps = WinGetPS( mDlg );
-     mBitmap = GpiLoadBitmap (hps, NULL, IDB_SPLASH, 0L, 0L);
-     WinReleasePS( hps );
-#else
+    hdcMemory = DevOpenDC((HAB)0, OD_MEMORY, "*", 0L, NULL, 0L);
+    SIZEL sizel = {0, 0};
+    hpsMemory = GpiCreatePS((HAB)0, hdcMemory, &sizel,
+                            PU_PELS | GPIF_DEFAULT | GPIT_MICRO | GPIA_ASSOC );
+
     // Check for '<program-name>.bmp" in same directory as executable.
-    char fileName[ _MAX_PATH ];
-    int fileNameLen = ::GetModuleFileName( NULL, fileName, sizeof fileName );
-    if ( fileNameLen >= 3 ) {
+    PPIB ppib;
+    PTIB ptib;
+    char fileName[CCHMAXPATH];
+    DosGetInfoBlocks( &ptib, &ppib);
+    DosQueryModuleName( ppib->pib_hmte, CCHMAXPATH, fileName);
+    int fileNameLen = strlen(fileName);
+    if (fileNameLen >=3) {
         fileName[ fileNameLen - 3 ] = 0;
         strcat( fileName, "bmp" );
         // Try to load bitmap from that file.
-        HBITMAP bitmap = (HBITMAP)::LoadImage( NULL,
-                                               fileName,
-                                               IMAGE_BITMAP,
-                                               0,
-                                               0,
-                                               LR_LOADFROMFILE );
-        if ( bitmap ) {
-            HWND bitmapControl = GetDlgItem( mDlg, IDB_SPLASH );
-            if ( bitmapControl ) {
-                HBITMAP old = (HBITMAP)SendMessage( bitmapControl,
-                                                    STM_SETIMAGE,
-                                                    IMAGE_BITMAP,
-                                                    (LPARAM)bitmap );
-                // Remember bitmap so we can delete it later.
-                mBitmap = bitmap;
-                // Delete old bitmap.
-                if ( old ) {
-                    BOOL ok = DeleteObject( old );
-                }
-            } else {
-                // Delete bitmap since it isn't going to be used.
-                DeleteObject( bitmap );
-            }
-        }
+        mBitmap = LoadAndSetBitmapFromFile(hpsMemory, fileName);
     }
-#endif
+    if (!mBitmap) {
+        mBitmap = GpiLoadBitmap(hpsMemory, NULL, IDB_SPLASH, 0L, 0L);
+        GpiSetBitmap(hpsMemory, mBitmap);
+    }
+    BITMAPINFOHEADER bitmap;
+    bitmap.cbFix = sizeof(BITMAPINFOHEADER);
+    GpiQueryBitmapParameters(mBitmap, &bitmap);
+    mBitmapCX = bitmap.cx;
+    mBitmapCY = bitmap.cy;
 }
 
 MRESULT EXPENTRY DialogProc( HWND dlg, ULONG msg, MPARAM mp1, MPARAM mp2 ) {
@@ -525,15 +605,12 @@ MRESULT EXPENTRY DialogProc( HWND dlg, ULONG msg, MPARAM mp1, MPARAM mp2 ) {
          */ 
         HBITMAP hbitmap = splashScreen->mBitmap;
         if ( hbitmap ) {
-            BITMAPINFOHEADER bitmap;
-            bitmap.cbFix = sizeof (BITMAPINFOHEADER);
-            GpiQueryBitmapParameters (splashScreen->mBitmap, &bitmap);
             WinSetWindowPos( dlg,
                              HWND_TOP,
-                             WinQuerySysValue( HWND_DESKTOP, SV_CXSCREEN )/2 - bitmap.cx/2,
-                             WinQuerySysValue( HWND_DESKTOP, SV_CYSCREEN )/2 - bitmap.cy/2,
-                             bitmap.cx,
-                             bitmap.cy,
+                             WinQuerySysValue( HWND_DESKTOP, SV_CXSCREEN )/2 - splashScreen->mBitmapCX/2,
+                             WinQuerySysValue( HWND_DESKTOP, SV_CYSCREEN )/2 - splashScreen->mBitmapCY/2,
+                             splashScreen->mBitmapCX,
+                             splashScreen->mBitmapCY,
                              SWP_ACTIVATE | SWP_MOVE | SWP_SIZE );
             WinShowWindow( dlg, TRUE );
         }
@@ -543,12 +620,12 @@ MRESULT EXPENTRY DialogProc( HWND dlg, ULONG msg, MPARAM mp1, MPARAM mp2 ) {
         nsSplashScreenOS2 *splashScreen = (nsSplashScreenOS2*)WinQueryWindowPtr( dlg, QWL_USER );
         HPS hps = WinBeginPaint (dlg, NULLHANDLE, NULL);
         GpiErase (hps);
-        if (splashScreen->mBitmap) {
-            POINTL ptl;
-            ptl.x = 0;
-            ptl.y = 0;
-            WinDrawBitmap( hps, splashScreen->mBitmap, NULL, &ptl, CLR_NEUTRAL, CLR_BACKGROUND, DBM_NORMAL);
-        }
+        POINTL aptl[8] = {0, 0, splashScreen->mBitmapCX, splashScreen->mBitmapCY,
+                          0, 0, 0, 0,
+                          0, 0, 0, 0,
+                          0, 0, 0, 0};
+
+        GpiBitBlt( hps, splashScreen->hpsMemory, 3L, aptl, ROP_SRCCOPY, 0L );
         WinEndPaint( hps );
         return (MRESULT)TRUE;
     }
