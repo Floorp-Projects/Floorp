@@ -884,11 +884,11 @@ void JSConsole::EvaluateText(UINT aStartSel, UINT aEndSel)
             nsAutoString returnValue;
             PRBool isUndefined;
 
-            if (mContext->EvaluateString(nsString(cleanBuffer), 
+            if (NS_SUCCEEDED(mContext->EvaluateString(nsString(cleanBuffer), 
                                          nsnull,
                                          0,
                                          returnValue,
-                                         &isUndefined)) {
+                                         &isUndefined))) {
                 // output the result on the console and on the edit area
                 CHAR result[128];
                 LPSTR res = result;

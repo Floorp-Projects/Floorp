@@ -38,6 +38,7 @@
 #include "nsIServiceManager.h"
 #include "nsIXPConnect.h"
 #include "nsIXPCSecurityManager.h"
+#include "nsIJSContextStack.h"
 
 #if defined(OJI)
 #include "nsIJVMManager.h"
@@ -123,7 +124,7 @@ nsJSContext::~nsJSContext()
 
 NS_IMPL_ISUPPORTS(nsJSContext, kIScriptContextIID);
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP
 nsJSContext::EvaluateString(const nsString& aScript, 
                             const char *aURL,
                             PRUint32 aLineNo,
@@ -134,7 +135,8 @@ nsJSContext::EvaluateString(const nsString& aScript,
 	nsIScriptGlobalObject *global = GetGlobalObject();
 	nsIScriptGlobalObjectData *globalData;
 	JSPrincipals* principals = nsnull;
-	
+	nsresult rv = NS_OK;
+
 	if (global && NS_SUCCEEDED(global->QueryInterface(kIScriptGlobalObjectDataIID, (void**)&globalData))) {
 		if (NS_FAILED(globalData->GetPrincipals((void**)&principals))) {
 			NS_RELEASE(global);
@@ -145,27 +147,39 @@ nsJSContext::EvaluateString(const nsString& aScript,
 	}
 	NS_IF_RELEASE(global);
 	
-	PRBool ret = ::JS_EvaluateUCScriptForPrincipals(mContext, 
-		JS_GetGlobalObject(mContext),
-		principals,
-		(jschar*)aScript.GetUnicode(), 
-		aScript.Length(),
-		aURL, 
-		aLineNo,
-		&val);
+  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = stack->Push(mContext);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  PRBool ret = ::JS_EvaluateUCScriptForPrincipals(mContext, 
+                                                  JS_GetGlobalObject(mContext),
+                                                  principals,
+                                                  (jschar*)aScript.GetUnicode(), 
+                                                  aScript.Length(),
+                                                  aURL, 
+                                                  aLineNo,
+                                                  &val);
 	
-	if (ret) {
-		*aIsUndefined = JSVAL_IS_VOID(val);
-		JSString* jsstring = JS_ValueToString(mContext, val);   
-		aRetValue.SetString(JS_GetStringChars(jsstring));
-	}
-	else {
-		aRetValue.Truncate();
-	}
+  if (ret) {
+    *aIsUndefined = JSVAL_IS_VOID(val);
+    JSString* jsstring = JS_ValueToString(mContext, val);   
+    aRetValue.SetString(JS_GetStringChars(jsstring));
+  }
+  else {
+    aRetValue.Truncate();
+  }
 	
-	ScriptEvaluated();
+  ScriptEvaluated();
+  
+  rv = stack->Pop(nsnull);
 	
-	return ret;
+	return rv;
 }
 
 NS_IMETHODIMP_(nsIScriptGlobalObject*)

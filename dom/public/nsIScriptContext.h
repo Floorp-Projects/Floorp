@@ -50,14 +50,14 @@ public:
    * @param aScriptSize the length of aScript
    * @param aRetValue return value 
    *
-   * @return true if the script was valid and got executed
+   * @return NS_OK if the script was valid and got executed
    *
    **/
-  NS_IMETHOD_(PRBool) EvaluateString(const nsString& aScript, 
-                                     const char *aURL,
-                                     PRUint32 aLineNo,
-                                     nsString& aRetValue,
-                                     PRBool* aIsUndefined) = 0;
+  NS_IMETHOD EvaluateString(const nsString& aScript, 
+                            const char *aURL,
+                            PRUint32 aLineNo,
+                            nsString& aRetValue,
+                            PRBool* aIsUndefined) = 0;
 
   /**
    * Return the global object.
