@@ -391,7 +391,7 @@
             if (!booleanNodes) return;
 
             var stringBundle = this.stringBundle;
-            var andString = booleanAnd ? "And" : "Or";
+            var andString = val ? "And" : "Or";
             for (var i=0; i<booleanNodes.length; i++) {
               try {              
                 var staticString =
