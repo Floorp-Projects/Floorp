@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.46 $ 
-# $Date: 2002/05/06 23:00:05 $ 
+# $Revision: 1.47 $ 
+# $Date: 2002/05/06 23:01:55 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.46 $ )[1];
+$VERSION = ( qw $Revision: 1.47 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -432,7 +432,7 @@ sub status_table_row {
 
   # first find out what time the break will occur at.
 
-  my $next_index = $row_index;
+  my $next_index = $DB_TIMES[$NEXT_DB];
 
   while (!(
          is_break_cell(
@@ -442,12 +442,11 @@ sub status_table_row {
                        )
          )) {
 
-      $NEXT_DB++;
       $next_index++;
 
   }
 
-  $next_time = $DB_TIMES[$NEXT_DB];
+  $next_time = $DB_TIMES[$next_index];
 
 
   # If there is no treestate, then the tree state has not changed
