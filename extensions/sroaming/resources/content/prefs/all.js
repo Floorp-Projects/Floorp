@@ -303,7 +303,7 @@ RoamingPrefs.prototype =
     try {
       return this.registry.getKey(baseregkey, branchname);
     } catch (e) { // XXX catch selectively
-      dump("got (expected?) exception " + e + "\n");
+      dumpError("got (expected?) exception " + e + "\n");
       return this.registry.addKey(baseregkey, branchname);
       // if that fails with an exception, throw it to caller
     }
