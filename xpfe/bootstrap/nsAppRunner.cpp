@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
   nsresult rv;
   nsString controllerCID;
 
-  nsICmdLineService *  cmdLineArgs = nsnull;
+  nsICmdLineService *  cmdLineArgs;
   char *  urlstr=nsnull;
   char *   progname = nsnull;
   char *   width=nsnull, *height=nsnull;
@@ -93,7 +93,18 @@ int main(int argc, char* argv[])
   PRInt32 widthVal  = 615;
   PRInt32 heightVal = 650;
 
-  nsIAppShellService* appShell = nsnull;
+  nsIAppShellService* appShell;
+  nsIDOMAppCoresManager *appCoresManager;
+  nsIURL* url;
+
+  /* 
+   * initialize all variables that are NS_IF_RELEASE(...) during
+   * cleanup...
+   */
+  url             = nsnull;
+  appShell        = nsnull;
+  cmdLineArgs     = nsnull;
+  appCoresManager = nsnull;
 
   /*
    * Initialize XPCOM.  Ultimately, this should be a function call such as
@@ -114,7 +125,7 @@ int main(int argc, char* argv[])
   rv = nsServiceManager::GetService(kCmdLineServiceCID,
                                     kICmdLineServiceIID,
                                     (nsISupports **)&cmdLineArgs);
-  if (!NS_SUCCEEDED(rv)) {
+  if (NS_FAILED(rv)) {
     fprintf(stderr, "Could not obtain CmdLine processing service\n");
     goto done;
   }
@@ -141,40 +152,38 @@ int main(int argc, char* argv[])
 
   // Check if -iconic was set
   rv = cmdLineArgs->GetCmdLineValue("-iconic", &iconic_state);
-  if (rv != NS_OK)
+  if (NS_FAILED(rv)) {
      goto done;
-  else {
-    if (nsnull == iconic_state)
-      fprintf(stderr, "iconic  state not set\n");
-    else
-      fprintf(stderr, "iconic state set \n");
+  }
+  if (nsnull == iconic_state) {
+    fprintf(stderr, "iconic  state not set\n");
+  } else {
+    fprintf(stderr, "iconic state set \n");
   }
   
  
   // Get the value of -width option
   rv = cmdLineArgs->GetCmdLineValue("-width", &width);
-  if (rv != NS_OK)
-     goto done;
-  else {
-    if (width) {
-      PR_sscanf(width, "%d", &widthVal);
-      fprintf(stderr, "Width is set to %d\n", widthVal);
-    } else {
-      fprintf(stderr, "width was not set\n");
-    }
+  if (NS_FAILED(rv)) {
+    goto done;
+  }
+  if (width) {
+    PR_sscanf(width, "%d", &widthVal);
+    fprintf(stderr, "Width is set to %d\n", widthVal);
+  } else {
+    fprintf(stderr, "width was not set\n");
   }
   
   // Get the value of -height option
   rv = cmdLineArgs->GetCmdLineValue("-height", &height);
-  if (rv != NS_OK)
-     goto done;
-  else {
-    if (height) {
-      PR_sscanf(height, "%d", &heightVal);
-      fprintf(stderr, "height is set to %d\n", heightVal);
-    } else {
-      fprintf(stderr, "height was not set\n");
-    }
+  if (NS_FAILED(rv)) {
+    goto done;
+  }
+  if (height) {
+    PR_sscanf(height, "%d", &heightVal);
+    fprintf(stderr, "height is set to %d\n", heightVal);
+  } else {
+    fprintf(stderr, "height was not set\n");
   }
   
    
@@ -185,7 +194,7 @@ int main(int argc, char* argv[])
   rv = nsServiceManager::GetService(kAppShellServiceCID,
                                     kIAppShellServiceIID,
                                     (nsISupports**)&appShell);
-  if (!NS_SUCCEEDED(rv)) {
+  if (NS_FAILED(rv)) {
     goto done;
   }
 
@@ -193,7 +202,7 @@ int main(int argc, char* argv[])
    * Initialize the Shell...
    */
   rv = appShell->Initialize();
-  if (!NS_SUCCEEDED(rv)) {
+  if (NS_FAILED(rv)) {
     goto done;
   }
  
@@ -205,7 +214,6 @@ int main(int argc, char* argv[])
    * deal with GUI initialization...
    */
   ///write me...
-  nsIURL* url;
   nsIWidget* newWindow;
   
   rv = NS_NewURL(&url, urlstr);
@@ -235,11 +243,10 @@ int main(int argc, char* argv[])
   /* ********************************************************************* */
 
   /* Kick off appcores */
-  nsIDOMAppCoresManager *appCoresManager;
   rv = nsServiceManager::GetService(kAppCoresManagerCID,
                                     kIDOMAppCoresManagerIID,
                                     (nsISupports**)&appCoresManager);
-	if (rv == NS_OK) {
+	if (NS_SUCCEEDED(rv)) {
 		if (appCoresManager->Startup() != NS_OK) {
 		  appCoresManager->Shutdown();
       nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoresManager);
@@ -256,7 +263,9 @@ int main(int argc, char* argv[])
                    nsnull, nsnull, widthVal, heightVal);
 
   NS_RELEASE(url);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) {
+    goto done;
+  }
 
  
   /*
