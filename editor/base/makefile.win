@@ -43,6 +43,7 @@ CPPSRCS =				\
       DeleteRangeTxn.cpp     \
       SplitElementTxn.cpp    \
       JoinElementTxn.cpp     \
+      nsStyleSheetTxns.cpp   \
       TransactionFactory.cpp \
       nsHTMLEditor.cpp       \
       nsHTMLEditFactory.cpp  \
@@ -89,6 +90,7 @@ CPP_OBJS =					\
   .\$(OBJDIR)\DeleteRangeTxn.obj      \
   .\$(OBJDIR)\SplitElementTxn.obj     \
   .\$(OBJDIR)\JoinElementTxn.obj      \
+  .\$(OBJDIR)\nsStyleSheetTxns.obj    \
   .\$(OBJDIR)\TransactionFactory.obj  \
   .\$(OBJDIR)\nsHTMLEditor.obj        \
   .\$(OBJDIR)\nsHTMLEditFactory.obj   \

@@ -60,6 +60,7 @@ CPPSRCS =                       \
     DeleteRangeTxn.cpp          \
     SplitElementTxn.cpp         \
     JoinElementTxn.cpp          \
+    nsStyleSheetTxns.cpp        \
     TransactionFactory.cpp      \
     nsInternetCiter.cpp         \
     nsAOLCiter.cpp              \
@@ -67,8 +68,8 @@ CPPSRCS =                       \
     nsEditorShellFactory.cpp    \
     nsJSEditorLog.cpp           \
     nsJSTxnLog.cpp              \
-	IMETextTxn.cpp				\
-	IMECommitTxn.cpp			\
+    IMETextTxn.cpp              \
+    IMECommitTxn.cpp            \
     $(NULL)
 
 MODULE = editor
