@@ -78,6 +78,8 @@
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIPref.h"
+#include "nsIObserverService.h"
+#include "nsIProfileChangeStatus.h"
 
 static char kChromePrefix[] = "chrome://";
 static char kAllPackagesName[] = "all-packages.rdf";
@@ -233,48 +235,6 @@ nsChromeRegistry::nsChromeRegistry()
     prefService->GetBoolPref(kUseXBLFormsPref, &mUseXBLForms);
 
   mDataSourceTable = nsnull;
-
-  nsresult rv;
-  rv = nsServiceManager::GetService(kRDFServiceCID,
-                                    NS_GET_IID(nsIRDFService),
-                                    (nsISupports**)&mRDFService);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
-
-  rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
-                                    NS_GET_IID(nsIRDFContainerUtils),
-                                    (nsISupports**)&mRDFContainerUtils);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF container utils");
-
-  if (mRDFService) {
-    rv = mRDFService->GetResource(kURICHROME_selectedSkin, getter_AddRefs(mSelectedSkin));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
-
-    rv = mRDFService->GetResource(kURICHROME_selectedLocale, getter_AddRefs(mSelectedLocale));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
-
-    rv = mRDFService->GetResource(kURICHROME_baseURL, getter_AddRefs(mBaseURL));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
-
-    rv = mRDFService->GetResource(kURICHROME_packages, getter_AddRefs(mPackages));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
-
-    rv = mRDFService->GetResource(kURICHROME_package, getter_AddRefs(mPackage));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
-
-    rv = mRDFService->GetResource(kURICHROME_name, getter_AddRefs(mName));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
-
-    rv = mRDFService->GetResource(kURICHROME_image, getter_AddRefs(mImage));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
-
-    rv = mRDFService->GetResource(kURICHROME_locType, getter_AddRefs(mLocType));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
-
-    rv = mRDFService->GetResource(kURICHROME_allowScripts, getter_AddRefs(mAllowScripts));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
-  }
-
-  CheckForNewChrome();
 }
 
 
@@ -316,10 +276,61 @@ nsChromeRegistry::~nsChromeRegistry()
 
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsChromeRegistry, nsIChromeRegistry);
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsChromeRegistry, nsIChromeRegistry, nsIObserver, nsISupportsWeakReference);
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIChromeRegistry methods:
+
+nsresult
+nsChromeRegistry::Init()
+{
+  nsresult rv;
+  rv = nsServiceManager::GetService(kRDFServiceCID,
+                                    NS_GET_IID(nsIRDFService),
+                                    (nsISupports**)&mRDFService);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
+                                    NS_GET_IID(nsIRDFContainerUtils),
+                                    (nsISupports**)&mRDFContainerUtils);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mRDFService->GetResource(kURICHROME_selectedSkin, getter_AddRefs(mSelectedSkin));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
+
+  rv = mRDFService->GetResource(kURICHROME_selectedLocale, getter_AddRefs(mSelectedLocale));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
+
+  rv = mRDFService->GetResource(kURICHROME_baseURL, getter_AddRefs(mBaseURL));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
+
+  rv = mRDFService->GetResource(kURICHROME_packages, getter_AddRefs(mPackages));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
+
+  rv = mRDFService->GetResource(kURICHROME_package, getter_AddRefs(mPackage));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
+
+  rv = mRDFService->GetResource(kURICHROME_name, getter_AddRefs(mName));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
+
+  rv = mRDFService->GetResource(kURICHROME_image, getter_AddRefs(mImage));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
+
+  rv = mRDFService->GetResource(kURICHROME_locType, getter_AddRefs(mLocType));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
+
+  rv = mRDFService->GetResource(kURICHROME_allowScripts, getter_AddRefs(mAllowScripts));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
+
+  NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  if (observerService)
+    observerService->AddObserver(this, PROFILE_DO_CHANGE_TOPIC);
+
+  CheckForNewChrome();
+  
+  return NS_OK;
+}
+
 
 static nsresult
 SplitURL(nsIURI* aChromeURI, nsCString& aPackage, nsCString& aProvider, nsCString& aFile)
@@ -473,40 +484,8 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
     // Just setSpec 
     rv = GetInstallRoot(mInstallRoot);
     if (NS_FAILED(rv)) return rv;
-    rv = GetProfileRoot(mProfileRoot);
-    if (NS_SUCCEEDED(rv)) {
-      // Load the profile search path for skins, content, and locales
-      // Prepend them to our list of substitutions.
-      mProfileInitialized = mInstallInitialized = PR_TRUE;
-      mChromeDataSource = nsnull;
-      rv = AddToCompositeDataSource(PR_TRUE);
-      if (NS_FAILED(rv)) return rv;
-
-      // We have to flush the chrome cache!
-      rv = RefreshSkins();
-      if (NS_FAILED(rv)) return rv;
-
-      rv = LoadStyleSheet(getter_AddRefs(mScrollbarSheet), nsCAutoString("chrome://global/skin/scrollbars.css")); 
-      // This must always be the last line of profile initialization!
-
-      nsCAutoString sheetURL;
-      rv = GetUserSheetURL(PR_TRUE, sheetURL);
-      if (NS_FAILED(rv)) return rv;
-      if(!sheetURL.IsEmpty()) {
-        (void)LoadStyleSheet(getter_AddRefs(mUserChromeSheet), sheetURL);
-        // it's ok to not have a user.css file
-      }
-      rv = GetUserSheetURL(PR_FALSE, sheetURL);
-      if (NS_FAILED(rv)) return rv;
-      if(!sheetURL.IsEmpty()) {
-        (void)LoadStyleSheet(getter_AddRefs(mUserContentSheet), sheetURL);
-        // it's ok not to have a userContent.css or userChrome.css file
-      }
-      rv = GetFormSheetURL(sheetURL); 
-      if (NS_FAILED(rv)) return rv;
-      if(!sheetURL.IsEmpty())
-        (void)LoadStyleSheet(getter_AddRefs(mFormSheet), sheetURL);
-    }
+    rv = LoadProfileDataSource();
+    if (NS_FAILED(rv)) return rv;
   }
  
   nsCAutoString finalURL;
@@ -2473,6 +2452,45 @@ nsresult nsChromeRegistry::GetFormSheetURL(nsCString& aURL)
   return NS_OK;
 }
 
+nsresult nsChromeRegistry::LoadProfileDataSource()
+{
+  nsresult rv = GetProfileRoot(mProfileRoot);
+  if (NS_SUCCEEDED(rv)) {
+    // Load the profile search path for skins, content, and locales
+    // Prepend them to our list of substitutions.
+    mProfileInitialized = mInstallInitialized = PR_TRUE;
+    mChromeDataSource = nsnull;
+    rv = AddToCompositeDataSource(PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
+    // We have to flush the chrome cache!
+    rv = RefreshSkins();
+    if (NS_FAILED(rv)) return rv;
+
+    rv = LoadStyleSheet(getter_AddRefs(mScrollbarSheet), nsCAutoString("chrome://global/skin/scrollbars.css")); 
+    // This must always be the last line of profile initialization!
+
+    nsCAutoString sheetURL;
+    rv = GetUserSheetURL(PR_TRUE, sheetURL);
+    if (NS_FAILED(rv)) return rv;
+    if(!sheetURL.IsEmpty()) {
+      (void)LoadStyleSheet(getter_AddRefs(mUserChromeSheet), sheetURL);
+      // it's ok to not have a user.css file
+    }
+    rv = GetUserSheetURL(PR_FALSE, sheetURL);
+    if (NS_FAILED(rv)) return rv;
+    if(!sheetURL.IsEmpty()) {
+      (void)LoadStyleSheet(getter_AddRefs(mUserContentSheet), sheetURL);
+      // it's ok not to have a userContent.css or userChrome.css file
+    }
+    rv = GetFormSheetURL(sheetURL); 
+    if (NS_FAILED(rv)) return rv;
+    if(!sheetURL.IsEmpty())
+      (void)LoadStyleSheet(getter_AddRefs(mFormSheet), sheetURL);
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsChromeRegistry::AllowScriptsForSkin(nsIURI* aChromeURI, PRBool *aResult)
 {
   *aResult = PR_TRUE;
@@ -2750,19 +2768,13 @@ nsChromeRegistry::GetProviderCount(const nsCString& aProviderType, nsIRDFDataSou
   return count;
 }
 
-//////////////////////////////////////////////////////////////////////
 
-nsresult
-NS_NewChromeRegistry(nsIChromeRegistry** aResult)
+NS_IMETHODIMP nsChromeRegistry::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
 {
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
+  nsresult rv = NS_OK;
+    
+  if (!nsCRT::strcmp(PROFILE_DO_CHANGE_TOPIC, aTopic))
+    rv = LoadProfileDataSource();
 
-    nsChromeRegistry* chromeRegistry = new nsChromeRegistry();
-    if (chromeRegistry == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(chromeRegistry);
-    *aResult = chromeRegistry;
-    return NS_OK;
+  return rv;
 }

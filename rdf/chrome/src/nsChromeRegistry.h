@@ -37,8 +37,13 @@ class nsIDocument;
 
 #include "nsIRDFCompositeDataSource.h"
 #include "nsICSSStyleSheet.h"
+#include "nsIObserver.h"
+#include "nsWeakReference.h"
+#include "nsString.h"
 
-class nsChromeRegistry : public nsIChromeRegistry
+class nsChromeRegistry : public nsIChromeRegistry,
+                         public nsIObserver,
+                         public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
@@ -46,9 +51,13 @@ public:
   // nsIChromeRegistry methods:
   NS_DECL_NSICHROMEREGISTRY
 
+  NS_DECL_NSIOBSERVER
+
   // nsChromeRegistry methods:
   nsChromeRegistry();
   virtual ~nsChromeRegistry();
+
+  nsresult Init();
 
 public:
   static nsresult FollowArc(nsIRDFDataSource *aDataSource,
@@ -76,6 +85,8 @@ protected:
   
   nsresult GetUserSheetURL(PRBool aIsChrome, nsCString & aURL);
   nsresult GetFormSheetURL(nsCString& aURL);
+  
+  nsresult LoadProfileDataSource();
 
 private:
   NS_IMETHOD LoadDataSource(const nsCString &aFileName, nsIRDFDataSource **aResult,
