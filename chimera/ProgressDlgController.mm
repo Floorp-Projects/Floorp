@@ -82,6 +82,11 @@ static NSString *ProgressWindowFrameSaveName      = @"ProgressWindow";
 
 - (void)dealloc
 {
+  // if we get here because we're quitting, the listener will still be alive
+  // yet we're going away. As a result, we need to tell the d/l listener to
+  // forget it ever met us and necko will clean it up on its own.
+  if ( mDownloader) 
+    mDownloader->DetachDownloadDisplay();
   NS_IF_RELEASE(mDownloader);
   [super dealloc];
 }
@@ -486,8 +491,15 @@ static NSString *ProgressWindowFrameSaveName      = @"ProgressWindow";
 
 - (void)onEndDownload
 {
-  [self killDownloadTimer];
-  [self setDownloadProgress:nil];
+  // if we're quitting, our progress window is already gone and we're in the
+  // process of shutting down gecko and all the d/l listeners. The timer, at 
+  // that point, is the only thing keeping us alive. Killing it will cause
+  // us to go away immediately, so kung-fu deathgrip it until we're done twiddling
+  // bits on ourself.
+  [self retain];                           // Enter The Dragon!
+    [self killDownloadTimer];
+    [self setDownloadProgress:nil];
+  [self release];
 }
 
 - (void)setProgressTo:(long)aCurProgress ofMax:(long)aMaxProgress

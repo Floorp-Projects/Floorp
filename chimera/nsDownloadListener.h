@@ -73,6 +73,7 @@ public:
     virtual void ResumeDownload();
     virtual void CancelDownload();
     virtual void DownloadDone();
+    virtual void DetachDownloadDisplay();
     
 private:
 
