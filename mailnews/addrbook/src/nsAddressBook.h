@@ -30,13 +30,15 @@
 #include "nsIWebShell.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIFileSpecWithUI.h"
-
+#include "nsICmdLineHandler.h"
+#include "nsIComponentManager.h"
+#include "nsIFileSpec.h"
 
 #define NC_RDF_NEWABCARD			"http://home.netscape.com/NC-rdf#NewCard"
 #define NC_RDF_DELETE				"http://home.netscape.com/NC-rdf#Delete"
 #define NC_RDF_NEWDIRECTORY			"http://home.netscape.com/NC-rdf#NewDirectory"
 
-class nsAddressBook : public nsIAddressBook
+class nsAddressBook : public nsIAddressBook, nsICmdLineHandler
 {
   
 public:
@@ -44,7 +46,17 @@ public:
 	virtual ~nsAddressBook();
 
 	NS_DECL_ISUPPORTS
-    NS_DECL_NSIADDRESSBOOK
+ 	NS_DECL_NSIADDRESSBOOK
+	NS_DECL_NSICMDLINEHANDLER
+
+  static NS_METHOD RegisterProc(nsIComponentManager *aCompMgr,
+                                nsIFile *aPath,
+                                const char *registryLocation,
+                                const char *componentType);
+
+  static NS_METHOD UnregisterProc(nsIComponentManager *aCompMgr,
+                                  nsIFile *aPath,
+                                  const char *registryLocation);
 
 protected:
 	nsresult DoCommand(nsIRDFCompositeDataSource *db, char * command, nsISupportsArray *srcArray, 
