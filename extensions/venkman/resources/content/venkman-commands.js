@@ -36,12 +36,35 @@
 function initCommands(commandObject)
 {
 
-    console.commands = new CCommandManager();
+    console._commands = new CCommandManager();
 
     function add (name, func, usage, help)
     {
-        console.commands.add (name, func, usage, help);
+        console._commands.add (name, func, usage, help);
     }
+
+    add ("eval", "onInputEval", "<script>",
+         "Evaluates <script> as JavaScript, in the debugger's context.");
+    
+    add ("frame", "onInputFrame", "[<frame-number>]",
+         "Sets the current frame to the one numbered <frame-number>, and " +
+         "displays a summary of the frame.  If <frame-number> is not " +
+         "provided, a summary of the current frame will be displayed.  " +
+         "Use the /where command to list available frames and frame numbers.");
+    
+    add ("help", "onInputHelp", "[<command>]",
+         "Displays help on <command>, which can be a full command name, or " +
+         "the first few characters of the command name.  If <command> matches " +
+         "more than one command, help on all matching commands will be" +
+         "displayed.");
+    
+    add ("scope", "onInputScope", "",
+         "Lists the properties part of the topmost object in the scope chain " +
+         "for the current frame.");
+    
+    add ("where", "onInputWhere", "",
+         "Displays a summarized list of stack frames in the current " + 
+         "call chain.");
     
     add ("quit", "onInputQuit", "",
          "Close this window.");
