@@ -359,7 +359,7 @@ NS_IMETHODIMP_(nsrefcnt)
 XPCCallContext::Release(void)
 {
   NS_PRECONDITION(0 != mRefCnt, "dup release");
-  NS_ASSERT_OWNINGTHREAD(_class);
+  NS_ASSERT_OWNINGTHREAD(XPCCallContext);
   --mRefCnt;
   NS_LOG_RELEASE(this, mRefCnt, "XPCCallContext");
   // no delete this!
