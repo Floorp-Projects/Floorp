@@ -353,8 +353,7 @@ protected:
                          nsPlaceholderFrame* aPlaceholder,
                          nsRect& aCombinedRectResult,
                          nsMargin& aMarginResult,
-                         nsMargin& aComputedOffsetsResult,
-                         nscoord& aMaxElementWidthResult);
+                         nsMargin& aComputedOffsetsResult);
 
   //----------------------------------------
   // Methods for pushing/pulling lines/frames
