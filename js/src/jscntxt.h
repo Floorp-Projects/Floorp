@@ -153,7 +153,7 @@ struct JSContext {
 
     /* Client opaque pointer */
     void                *data;
-    
+
     /* Java environment and JS errors to throw as exceptions. */
     void                *javaEnv;
     void                *savedErrors;

@@ -835,8 +835,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    pc += oplen;
 		    js_printf(jp, "\t} catch ("); /* balance) */
 		    pc += 6;	/* name Object, pushobj, exception */
-		    js_printf(jp, "%s", ATOM_BYTES(GET_ATOM(cx, 
-							    jp->script, pc)));
+		    js_printf(jp, "%s",
+			      ATOM_BYTES(GET_ATOM(cx, jp->script, pc)));
 		    len = js_GetSrcNoteOffset(sn, 0);
 		    pc += 4;	/* initprop, enterwith */
 		    if (len) {

@@ -990,15 +990,14 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	} else {
 	    /* Set pn1 to a var list or an initializing expression. */
 #if JS_HAS_IN_OPERATOR
-            /* 
+            /*
              * Set the TCF_IN_FOR_INIT flag during parsing of the first clause
-             * of the for statement.  This flag will will be used by the
-             * RelExpr production; if it flag is set, then the 'in' keyword
-             * will not be recognized as an operator, leaving it available to
-             * be parsed as part of a for/in loop.  A side effect of this
-             * restriction is that (unparenthesized) expressions involving an
-             * 'in' operator are illegal in the init clause of an ordinary for
-             * loop.
+             * of the for statement.  This flag will be used by the RelExpr
+             * production; if it is set, then the 'in' keyword will not be
+             * recognized as an operator, leaving it available to be parsed as
+             * part of a for/in loop.  A side effect of this restriction is
+             * that (unparenthesized) expressions involving an 'in' operator
+             * are illegal in the init clause of an ordinary for loop.
              */
             tc->flags |= TCF_IN_FOR_INIT;
 #endif /* JS_HAS_IN_OPERATOR */
@@ -1124,7 +1123,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	     * catch (v)
 	     * catch (v if <boolean_expression>)
 	     */
-	    
+
 	    if (!catchtail->pn_kid1->pn_expr) {
 		js_ReportCompileError(cx, ts,
 				      "catch clause after general catch");
@@ -1207,7 +1206,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
       case TOK_CATCH:
 	js_ReportCompileError(cx, ts, "catch without try");
 	return NULL;
-	
+
       case TOK_FINALLY:
 	js_ReportCompileError(cx, ts, "finally without try");
 	return NULL;
@@ -1865,7 +1864,7 @@ RelExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
     inForInitFlag = tc->flags & TCF_IN_FOR_INIT;
     /*
-     * Uses of the in operator in ShiftExprs are always unambiguous, 
+     * Uses of the in operator in ShiftExprs are always unambiguous,
      * so unset the flag that prohibits recognizing it.
      */
     tc->flags &= ~TCF_IN_FOR_INIT;
@@ -1893,7 +1892,7 @@ RelExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     /* Restore previous state of inForInit flag. */
     tc->flags |= inForInitFlag;
 #endif /* JS_HAS_IN_OPERATOR */
-     
+
     return pn;
 }
 
