@@ -416,14 +416,14 @@ nsresult DeviceContextImpl::CreateFontAliasTable()
   if (nsnull == mFontAliasTable) {
     mFontAliasTable = new nsHashtable();
     if (nsnull != mFontAliasTable) {
-      AliasFont("Times", "Times New Roman", "Times Roman");
-      AliasFont("Times Roman", "Times New Roman", "Times");
-      AliasFont("Times New Roman", "Times Roman", "Times");
-      AliasFont("Arial", "Helvetica", "");
-      AliasFont("Helvetica", "Arial", "");
-      AliasFont("Courier", "Courier New", "");
-      AliasFont("Courier New", "Courier", "");
-      AliasFont("Unicode", "Bitstream Cyberbit", ""); // XXX ????
+      AliasFont("Times", "Times New Roman", "Times Roman", PR_FALSE);
+      AliasFont("Times Roman", "Times New Roman", "Times", PR_FALSE);
+      AliasFont("Times New Roman", "Times Roman", "Times", PR_FALSE);
+      AliasFont("Arial", "Helvetica", "", PR_FALSE);
+      AliasFont("Helvetica", "Arial", "", PR_FALSE);
+      AliasFont("Courier", "Courier New", "", PR_TRUE);
+      AliasFont("Courier New", "Courier", "", PR_FALSE);
+      AliasFont("Unicode", "Bitstream Cyberbit", "", PR_FALSE); // XXX ????
     }
     else {
       result = NS_ERROR_OUT_OF_MEMORY;
@@ -433,12 +433,13 @@ nsresult DeviceContextImpl::CreateFontAliasTable()
 }
 
 nsresult DeviceContextImpl::AliasFont(const nsString& aFont, 
-                            const nsString& aAlias, const nsString& aAltAlias)
+                                      const nsString& aAlias, const nsString& aAltAlias,
+                                      PRBool aForceAlias)
 {
   nsresult result = NS_OK;
 
   if (nsnull != mFontAliasTable) {
-    if (NS_OK != CheckFontExistence(aFont)) {
+    if (aForceAlias || (NS_OK != CheckFontExistence(aFont))) {
       if (NS_OK == CheckFontExistence(aAlias)) {
         nsString* entry = aAlias.ToNewString();
         if (nsnull != entry) {
@@ -449,7 +450,7 @@ nsresult DeviceContextImpl::AliasFont(const nsString& aFont,
           result = NS_ERROR_OUT_OF_MEMORY;
         }
       }
-      else if ((aAltAlias.Length() > 0) && (NS_OK == CheckFontExistence(aAltAlias))) {
+      else if ((0 < aAltAlias.Length()) && (NS_OK == CheckFontExistence(aAltAlias))) {
         nsString* entry = aAltAlias.ToNewString();
         if (nsnull != entry) {
           StringKey key(aFont);

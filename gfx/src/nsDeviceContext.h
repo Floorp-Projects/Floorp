@@ -80,7 +80,8 @@ protected:
   nsresult CreateIconILGroupContext();
   virtual nsresult CreateFontAliasTable();
   nsresult AliasFont(const nsString& aFont, 
-                     const nsString& aAlias, const nsString& aAltAlias);
+                     const nsString& aAlias, const nsString& aAltAlias,
+                     PRBool aForceAlias);
 
   float             mTwipsToPixels;
   float             mPixelsToTwips;
