@@ -78,7 +78,8 @@
 #include "nsContentCID.h"
 
 const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
-static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
+// was used in nsSplitterFrame::Init but now commented out
+//static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 PRInt32 realTimeDrag;
 
 class nsSplitterInfo {
