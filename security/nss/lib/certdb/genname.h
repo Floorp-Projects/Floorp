@@ -132,7 +132,16 @@ CERT_DupGeneralNameList(CERTGeneralNameList *list);
 /* returns the length of a CERTGeneralName */
 int
 CERT_GetNamesLength(CERTGeneralName *names);
+
 /************************************************************************/
+
+SECStatus
+CERT_CompareNameSpace(CERTCertificate  *cert,
+		      CERTGeneralName  *namesList,
+ 		      CERTCertificate **certsList,
+ 		      PRArenaPool      *arena,
+ 		      CERTCertificate **pBadCert);
+
 SEC_END_PROTOS
 
 #endif

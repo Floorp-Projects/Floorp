@@ -1392,12 +1392,12 @@ cert_CompareNameWithConstraints(CERTGeneralName     *name,
 ** If some name is not acceptable, returns a pointer to the cert that
 ** contained that name.
 */
-CERTCertificate *
+SECStatus
 CERT_CompareNameSpace(CERTCertificate  *cert,
 		      CERTGeneralName  *namesList,
- 		      SECItem          *namesListIndex,
+ 		      CERTCertificate **certsList,
  		      PRArenaPool      *arena,
- 		      CERTCertDBHandle *handle)
+ 		      CERTCertificate **pBadCert)
 {
     SECStatus            rv;
     SECItem              constraintsExtension;
@@ -1410,53 +1410,57 @@ CERT_CompareNameSpace(CERTCertificate  *cert,
     rv = CERT_FindCertExtension(cert, SEC_OID_X509_NAME_CONSTRAINTS, 
                                 &constraintsExtension);
     if (rv != SECSuccess) {
-	return (PORT_GetError() == SEC_ERROR_EXTENSION_NOT_FOUND)
-	       ? NULL  /* success, space is unconstrained. */
-	       : CERT_DupCertificate(cert); /* failure, some other error */
+	if (PORT_GetError() == SEC_ERROR_EXTENSION_NOT_FOUND) {
+	    rv = SECSuccess;
+	} else {
+	    count = -1;
+	}
+	goto done;
     }
     /* TODO: mark arena */
     constraints = cert_DecodeNameConstraints(arena, &constraintsExtension);
     currentName = namesList;
-    if (constraints == NULL)  /* decode failed */
-	goto loser;
+    if (constraints == NULL) { /* decode failed */
+	rv = SECFailure;
+    	count = -1;
+	goto done;
+    } 
     do {
  	if (constraints->excluded != NULL) {
  	    rv = CERT_GetNameConstraintByType(constraints->excluded, 
 	                                      currentName->type, 
  					      &matchingConstraints, arena);
- 	    if (rv != SECSuccess)
- 		goto loser;
- 	    if (matchingConstraints != NULL) {
+ 	    if (rv == SECSuccess && matchingConstraints != NULL) {
  		rv = cert_CompareNameWithConstraints(currentName, 
 		                                     matchingConstraints,
  						     PR_TRUE);
- 		if (rv != SECSuccess) 
- 		    goto loser;
  	    }
+	    if (rv != SECSuccess) 
+		break;
  	}
  	if (constraints->permited != NULL) {
  	    rv = CERT_GetNameConstraintByType(constraints->permited, 
 	                                      currentName->type, 
  					      &matchingConstraints, arena);
-            if (rv != SECSuccess) 
-		goto loser;
- 	    if (matchingConstraints != NULL) {
+            if (rv == SECSuccess && matchingConstraints != NULL) {
  		rv = cert_CompareNameWithConstraints(currentName, 
 		                                     matchingConstraints,
  						     PR_FALSE);
- 		if (rv != SECSuccess) 
- 		    goto loser;
  	    }
+	    if (rv != SECSuccess) 
+		break;
  	}
  	currentName = cert_get_next_general_name(currentName);
  	count ++;
     } while (currentName != namesList);
+done:
+    if (rv != SECSuccess) {
+	badCert = (count >= 0) ? certsList[count] : cert;
+    }
+    if (pBadCert)
+	*pBadCert = badCert;
     /* TODO: release back to mark */
-    return NULL;
-loser:
-    /* TODO: release back to mark */
-    badCert = CERT_FindCertByName (handle, &namesListIndex[count]);
-    return badCert;
+    return rv;
 }
 
 /* Search the cert for an X509_SUBJECT_ALT_NAME extension.
