@@ -422,14 +422,14 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetAccState(PRUint32 *_retval)
   *_retval = STATE_FOCUSABLE | STATE_SELECTABLE;
 
   // get expanded/collapsed state
-  PRBool isContainer, isContainerOpen;
+  PRBool isContainer, isContainerOpen, isContainerEmpty;
   mTreeView->IsContainer(mRow, &isContainer);
   if (isContainer) {
-    mTreeView->IsContainerOpen(mRow, &isContainerOpen);
-    if (isContainerOpen)
-      *_retval |= STATE_EXPANDED;
-    else
-      *_retval |= STATE_COLLAPSED;
+    mTreeView->IsContainerEmpty(mRow, &isContainerEmpty);
+    if (!isContainerEmpty) {
+      mTreeView->IsContainerOpen(mRow, &isContainerOpen);
+      *_retval |= isContainerOpen? STATE_EXPANDED: STATE_COLLAPSED;
+    }
   }
 
   // get selected state
