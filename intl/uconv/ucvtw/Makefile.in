@@ -34,6 +34,8 @@ REQUIRES	= xpcom string uconv
 CPPSRCS		= \
 		nsBIG5ToUnicode.cpp \
 		nsUnicodeToBIG5.cpp \
+		nsBIG5HKSCSToUnicode.cpp \
+		nsUnicodeToBIG5HKSCS.cpp \
 		nsCP950ToUnicode.cpp \
 		nsUnicodeToCP950.cpp \
 		nsUnicodeToBIG5NoAscii.cpp \
