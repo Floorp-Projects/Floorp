@@ -788,10 +788,6 @@ NS_IMETHODIMP nsWebBrowser::Create()
    info.mColor = &mBackgroundColor;
    mDC->GetSystemAttribute(eSystemAttr_Color_WindowBackground, &info);
 
-   // set the foreground color of our rendering context so we don't
-   // have to do it later.
-   mRC->SetColor(mBackgroundColor);
-
    nsCOMPtr<nsIDocShell> docShell(do_CreateInstance(kWebShellCID));
    NS_ENSURE_SUCCESS(SetDocShell(docShell), NS_ERROR_FAILURE);
 
@@ -1309,6 +1305,7 @@ NS_IMETHODIMP nsWebBrowser::EnsureDocShellTreeOwner()
 
 NS_IMETHODIMP nsWebBrowser::FillBackground(const nsRect &aRect)
 {
+    mRC->SetColor(mBackgroundColor);
     mRC->FillRect(aRect);
     return NS_OK;
 }
