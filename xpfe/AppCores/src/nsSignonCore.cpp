@@ -262,3 +262,72 @@ NS_IMETHODIMP nsSignonCore::CancelSignon()
     return Close(mPanelWindow);
 }
 
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsSignonCore::GetSignonList(nsString& aSignonList)
+//----------------------------------------------------------------------------------------
+{
+  nsIWalletService *walletservice;
+  nsresult res;
+  res = nsServiceManager::GetService(kWalletServiceCID,
+                                     kIWalletServiceIID,
+                                     (nsISupports **)&walletservice);
+  if ((NS_OK == res) && (nsnull != walletservice)) {
+    res = walletservice->SI_GetSignonListForViewer(aSignonList);
+    nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
+  }
+
+    return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsSignonCore::GetRejectList(nsString& aRejectList)
+//----------------------------------------------------------------------------------------
+{
+  nsIWalletService *walletservice;
+  nsresult res;
+  res = nsServiceManager::GetService(kWalletServiceCID,
+                                     kIWalletServiceIID,
+                                     (nsISupports **)&walletservice);
+  if ((NS_OK == res) && (nsnull != walletservice)) {
+    res = walletservice->SI_GetRejectListForViewer(aRejectList);
+    nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
+  }
+
+    return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsSignonCore::GetNopreviewList(nsString& aNopreviewList)
+//----------------------------------------------------------------------------------------
+{
+  nsIWalletService *walletservice;
+  nsresult res;
+  res = nsServiceManager::GetService(kWalletServiceCID,
+                                     kIWalletServiceIID,
+                                     (nsISupports **)&walletservice);
+  if ((NS_OK == res) && (nsnull != walletservice)) {
+    res = walletservice->WALLET_GetNopreviewListForViewer(aNopreviewList);
+    nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
+  }
+
+    return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsSignonCore::GetNocaptureList(nsString& aNocaptureList)
+//----------------------------------------------------------------------------------------
+{
+  nsIWalletService *walletservice;
+  nsresult res;
+  res = nsServiceManager::GetService(kWalletServiceCID,
+                                     kIWalletServiceIID,
+                                     (nsISupports **)&walletservice);
+  if ((NS_OK == res) && (nsnull != walletservice)) {
+    res = walletservice->WALLET_GetNocaptureListForViewer(aNocaptureList);
+    nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
+  }
+
+    return NS_OK;
+}
+
+

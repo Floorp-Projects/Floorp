@@ -9,6 +9,9 @@ interface SignonCore : BaseAppCore
 
 	void SaveSignon(in wstring results);
 	void CancelSignon();
+
+	wstring GetSignonList();
+	wstring GetRejectList();
+	wstring GetNopreviewList();
+	wstring GetNocaptureList();
 };
-
-
