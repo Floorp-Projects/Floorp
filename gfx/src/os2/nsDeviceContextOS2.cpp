@@ -295,6 +295,12 @@ nsDeviceContextOS2 :: FindScreen ( nsIScreen** outScreen )
 // Create a rendering context against our hdc for a printer
 nsresult nsDeviceContextOS2::CreateRenderingContext( nsIRenderingContext *&aContext)
 {
+#ifdef NS_PRINT_PREVIEW
+   // Defer to Alt when there is one
+   if (mAltDC && (mUseAltDC & kUseAltDCFor_CREATE_RC))
+      return mAltDC->CreateRenderingContext(aContext);  
+#endif
+
    NS_ASSERTION( mPrintDC, "CreateRenderingContext for non-print DC");
 
    nsIRenderingContext *pContext = new nsRenderingContextOS2;
@@ -757,6 +763,12 @@ NS_IMETHODIMP nsDeviceContextOS2 :: ConvertPixel(nscolor aColor, PRUint32 & aPix
 
 NS_IMETHODIMP nsDeviceContextOS2 :: GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
+#ifdef NS_PRINT_PREVIEW
+  // Defer to Alt when there is one
+  if (mAltDC && (mUseAltDC & kUseAltDCFor_SURFACE_DIM))
+    return mAltDC->GetDeviceSurfaceDimensions(aWidth, aHeight);
+#endif
+
   if ( mSpec )
   {
     // we have a printer device
