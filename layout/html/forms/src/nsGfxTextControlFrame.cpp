@@ -1558,7 +1558,11 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext* aPresContext,
 #endif
   nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
   NS_ENSURE_TRUE(webShellWin, NS_ERROR_FAILURE);
-  webShellWin->SetVisibility(PR_TRUE);
+  PRInt32 type;
+  GetType(&type);
+  if ((PR_FALSE==IsSingleLineTextControl()) || (NS_FORM_INPUT_PASSWORD == type)) {
+    webShellWin->SetVisibility(PR_TRUE);
+  }
   return NS_OK;
 }
 
@@ -1598,8 +1602,8 @@ nsGfxTextControlFrame::CalculateSizeNavQuirks (nsIPresContext*       aPresContex
   // Get the Font Metrics for the Control
   // without it we can't calculate  the size
   nsCOMPtr<nsIFontMetrics> fontMet;
-  nsFormControlHelper::GetFrameFontFM(aPresContext, aFrame, getter_AddRefs(fontMet));
-  if (fontMet) {
+  nsresult res = nsFormControlHelper::GetFrameFontFM(aPresContext, aFrame, getter_AddRefs(fontMet));
+  if (NS_SUCCEEDED(res) && fontMet) {
     aRendContext->SetFont(fontMet);
 
     // Figure out the number of columns
@@ -1841,8 +1845,8 @@ nsGfxTextControlFrame::CalculateSizeStandard (nsIPresContext*       aPresContext
   //nscoord fontLeading = 0;
   // get leading
   nsCOMPtr<nsIFontMetrics> fontMet;
-  nsFormControlHelper::GetFrameFontFM(aPresContext, aFrame, getter_AddRefs(fontMet));
-  if (fontMet) {
+  nsresult res = nsFormControlHelper::GetFrameFontFM(aPresContext, aFrame, getter_AddRefs(fontMet));
+  if (NS_SUCCEEDED(res) && fontMet) {
     aRendContext->SetFont(fontMet);
     fontMet->GetHeight(fontHeight);
     // leading is NOT suppose to be added in
@@ -2193,6 +2197,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
     {
       if (mDisplayFrame) 
       {
+        webShellWin->SetVisibility(PR_TRUE);
         mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, mDisplayFrame, nsnull);
         mDisplayFrame->Destroy(mFramePresContext);
         mDisplayFrame = nsnull;
@@ -2251,13 +2256,15 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
 #ifdef DEBUG_rodsXXX
 //#ifdef NS_DEBUG
   {
-    nsFont font(aPresContext->GetDefaultFixedFontDeprecated());
-    GetFont(aPresContext, font);
-    nsCOMPtr<nsIDeviceContext> deviceContext;
-    aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
+    const nsFont * font = nsnull;
+    nsresult res = GetFont(aPresContext, font);
+    if (NS_SUCCEEDED(res) & font != nsnull) {
+      nsCOMPtr<nsIDeviceContext> deviceContext;
+      aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
 
-    nsIFontMetrics* fontMet;
-    deviceContext->GetMetricsFor(font, fontMet);
+      nsIFontMetrics* fontMet;
+      deviceContext->GetMetricsFor(font, fontMet);
+    }
 
     const nsFont& normal = aPresContext->GetDefaultFixedFontDeprecated();
     PRInt32 scaler;
@@ -2634,12 +2641,17 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
    * pres context at creation, rather than having it create its own.
    */
 
-  nsFont font(presContext->GetDefaultFixedFontDeprecated()); 
-  GetFont(presContext, font);
+  const nsFont * font = nsnull;
+  nsresult res = GetFont(presContext, font);
+  if (NS_SUCCEEDED(res) && font != nsnull) {
+    //nsFont defFont = *font;
+    presContext->SetDefaultFont(*font);
+    presContext->SetDefaultFixedFont(*font);
+  }
+
   const nsStyleFont* controlFont;
   GetStyleData(eStyleStruct_Font,  (const nsStyleStruct *&)controlFont);
-  presContext->SetDefaultFont(font);
-  presContext->SetDefaultFixedFont(font);
+
 
   const nsStyleColor* controlColor;
   GetStyleData(eStyleStruct_Color,  (const nsStyleStruct *&)controlColor);
