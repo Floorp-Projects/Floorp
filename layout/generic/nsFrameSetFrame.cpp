@@ -358,7 +358,7 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
   aPresContext->GetShell(getter_AddRefs(shell));
   
   nsFrameborder  frameborder = GetFrameBorder(PR_FALSE);
-  PRInt32 borderWidth = GetBorderWidth(aPresContext);
+  PRInt32 borderWidth = GetBorderWidth(aPresContext, PR_FALSE);
   nscolor borderColor = GetBorderColor();
  
   // parse the rows= cols= data
@@ -405,13 +405,14 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
                                            PR_FALSE, getter_AddRefs(kidSC));
       if (nsHTMLAtoms::frameset == tag.get()) {
         result = NS_NewHTMLFramesetFrame(shell, &frame);
-        frame->Init(aPresContext, child, this, kidSC, nsnull);
 
         mChildTypes[mChildCount] = FRAMESET;
         nsHTMLFramesetFrame* childFrame = (nsHTMLFramesetFrame*)frame;
         childFrame->SetParentFrameborder(frameborder);
         childFrame->SetParentBorderWidth(borderWidth);
         childFrame->SetParentBorderColor(borderColor);
+        frame->Init(aPresContext, child, this, kidSC, nsnull);
+        
         mChildBorderColors[mChildCount].Set(childFrame->GetBorderColor());
       } else { // frame
         result = NS_NewHTMLFrameOuterFrame(shell, &frame);
@@ -619,9 +620,12 @@ void nsHTMLFramesetFrame::GenerateRowCol(nsIPresContext* aPresContext,
   }
 }
 
-PRInt32 nsHTMLFramesetFrame::GetBorderWidth(nsIPresContext* aPresContext)
+PRInt32 nsHTMLFramesetFrame::GetBorderWidth(nsIPresContext* aPresContext,
+                                            PRBool aTakeForcingIntoAccount)
 {
-  if (!mForceFrameResizability) {
+  PRBool forcing = mForceFrameResizability && aTakeForcingIntoAccount;
+  
+  if (!forcing) {
     nsFrameborder frameborder = GetFrameBorder(PR_FALSE);
     if (frameborder == eFrameborder_No) {
       return 0;
@@ -645,7 +649,7 @@ PRInt32 nsHTMLFramesetFrame::GetBorderWidth(nsIPresContext* aPresContext)
         intVal = 0;
       }
       NS_RELEASE(content);
-      if (mForceFrameResizability && intVal == 0) {
+      if (forcing && intVal == 0) {
         intVal = DEFAULT_BORDER_WIDTH_PX;
       }
       return NSIntPixelsToTwips(intVal, p2t);
@@ -654,7 +658,7 @@ PRInt32 nsHTMLFramesetFrame::GetBorderWidth(nsIPresContext* aPresContext)
   }
 
   if (mParentBorderWidth > 0 ||
-      (mParentBorderWidth == 0 && !mForceFrameResizability)) {
+      (mParentBorderWidth == 0 && !forcing)) {
     return mParentBorderWidth;
   }
 
@@ -1143,7 +1147,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
       if (prefBranch) {
         nsCOMPtr<nsIPrefBranchInternal> prefBranchInternal(do_QueryInterface(prefBranch));
         if (prefBranchInternal) {
-	  mPrefBranchWeakRef = getter_AddRefs(NS_GetWeakReference(prefBranchInternal));
+          mPrefBranchWeakRef = getter_AddRefs(NS_GetWeakReference(prefBranchInternal));
           prefBranchInternal->AddObserver(kFrameResizePref, this, PR_FALSE);
         }
         prefBranch->GetBoolPref(kFrameResizePref, &mForceFrameResizability);
@@ -1154,7 +1158,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
   // subtract out the width of all of the potential borders. There are
   // only borders between <frame>s. There are none on the edges (e.g the
   // leftmost <frame> has no left border).
-  PRInt32 borderWidth = GetBorderWidth(aPresContext);
+  PRInt32 borderWidth = GetBorderWidth(aPresContext, PR_TRUE);
 
   width  -= (mNumCols - 1) * borderWidth;
   if (width < 0) width = 0;
@@ -1642,7 +1646,7 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext* aPresContext,
     mColSizes[mDragger->mNextNeighbor] = mNextNeighborOrigSize - change;
 
     // Recompute the specs from the new sizes.
-    nscoord width = mRect.width - (mNumCols - 1) * GetBorderWidth(aPresContext);
+    nscoord width = mRect.width - (mNumCols - 1) * GetBorderWidth(aPresContext, PR_TRUE);
     GenerateRowCol(aPresContext, width, mNumCols, mColSpecs, mColSizes);
   } else {
     change = aEvent->point.y - mFirstDragPoint.y;
@@ -1655,7 +1659,7 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext* aPresContext,
     mRowSizes[mDragger->mNextNeighbor] = mNextNeighborOrigSize - change;
 
     // Recompute the specs from the new sizes.
-    nscoord height = mRect.height - (mNumRows - 1) * GetBorderWidth(aPresContext);
+    nscoord height = mRect.height - (mNumRows - 1) * GetBorderWidth(aPresContext, PR_TRUE);
     GenerateRowCol(aPresContext, height, mNumRows, mRowSpecs, mRowSizes);
   }
 
