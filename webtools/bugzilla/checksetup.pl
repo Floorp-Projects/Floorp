@@ -3025,17 +3025,17 @@ if (!GetFieldDef("bugs", "alias")) {
 # Move quips to the db.
 my $renamed_comments_file = 0;
 if (GetFieldDef("quips", "quipid")) {
-    if (-s 'data/comments' && open (COMMENTS, "<data/comments")) {
+    if (-e 'data/comments' && open (COMMENTS, "<data/comments")) {
         print "Populating quips table from data/comments...\n";
         while (<COMMENTS>) {
             chomp;
             $dbh->do("INSERT INTO quips (quip) VALUES ("
                       . $dbh->quote($_) . ")");
         }
-        print "The data/comments file (used to store quips) has been
-copied into the database, and the data/comments file
-moved to data/comments.bak - you can delete this file
-once you're satisfied the migration worked correctly.\n";
+        print "The data/comments file (used to store quips) has been        
+               copied into the database, and the data/comments file
+               moved to data/comments.bak - you can delete this file
+               once you're satisfied the migration worked correctly.\n\n";
         close COMMENTS;
         rename("data/comments", "data/comments.bak") or next;        
         $renamed_comments_file = 1;
@@ -3043,11 +3043,10 @@ once you're satisfied the migration worked correctly.\n";
 }
 
 # Warn if data/comments.bak exists, as it should be deleted.
-if (-s 'data/comments.bak' && !$renamed_comments_file) {
-    print "Please note the data/comments.bak file can be removed as it's
-no longer used.\n";
+if (-e 'data/comments.bak' && !$renamed_comments_file) {
+    print "The data/comments.bak file can be removed, as it's no longer
+           used.\n\n";
 }
-
         
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
