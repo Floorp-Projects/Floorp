@@ -117,7 +117,8 @@ nsTextTransformer::Shutdown()
 MOZ_DECL_CTOR_COUNTER(nsTextTransformer);
 
 nsTextTransformer::nsTextTransformer(nsILineBreaker* aLineBreaker,
-                                     nsIWordBreaker* aWordBreaker)
+                                     nsIWordBreaker* aWordBreaker,
+                                     nsIPresContext* aPresContext)
   : mFrag(nsnull),
     mOffset(0),
     mMode(eNormal),
@@ -129,6 +130,9 @@ nsTextTransformer::nsTextTransformer(nsILineBreaker* aLineBreaker,
 {
   MOZ_COUNT_CTOR(nsTextTransformer);
 
+  aPresContext->
+    GetLanguageSpecificTransformType(&mLanguageSpecificTransformType);
+
   if (aLineBreaker == nsnull && aWordBreaker == nsnull )
     NS_ASSERTION(0, "invalid creation of nsTextTransformer");
   
@@ -136,7 +140,7 @@ nsTextTransformer::nsTextTransformer(nsILineBreaker* aLineBreaker,
   static PRBool firstTime = PR_TRUE;
   if (firstTime) {
     firstTime = PR_FALSE;
-    SelfTest(aLineBreaker, aWordBreaker);
+    SelfTest(aLineBreaker, aWordBreaker, aPresContext);
   }
 #endif
 }
@@ -182,8 +186,10 @@ nsTextTransformer::Init(nsIFrame* aFrame,
     if (aLeaveAsAscii) { // See if the text fragment is 1-byte text
       SetLeaveAsAscii(PR_TRUE);	    
       // XXX Currently we only leave it as ascii for normal text and not for preformatted
-      // or preformatted wrapped text
-      if (mFrag->Is2b() || (eNormal != mMode))
+      // or preformatted wrapped text or language specific transforms
+      if (mFrag->Is2b() || (eNormal != mMode) ||
+          (mLanguageSpecificTransformType !=
+           eLanguageSpecificTransformType_None))
         // We don't step down from Unicode to ascii
         SetLeaveAsAscii(PR_FALSE);           
     } 
@@ -673,6 +679,40 @@ static void ReplaceGermanSzligToSS(PRUnichar* aText, PRInt32 len, PRInt32 szCnt)
   }
 }
 
+void
+nsTextTransformer::LanguageSpecificTransform(PRUnichar* aText, PRInt32 aLen,
+                                             PRBool* aWasTransformed)
+{
+  if (mLanguageSpecificTransformType ==
+      eLanguageSpecificTransformType_Japanese) {
+    for (PRInt32 i = 0; i < aLen; i++) {
+      if (aText[i] == 0x5C) { // BACKSLASH
+        aText[i] = 0xA5; // YEN SIGN
+        *aWasTransformed = PR_TRUE;
+      }
+#if 0
+      /*
+       * We considered doing this, but since some systems may not have fonts
+       * with this OVERLINE glyph, we decided not to do this.
+       */
+      else if (aText[i] == 0x7E) { // TILDE
+        aText[i] = 0x203E; // OVERLINE
+        *aWasTransformed = PR_TRUE;
+      }
+#endif
+    }
+  }
+  else if (mLanguageSpecificTransformType ==
+           eLanguageSpecificTransformType_Korean) {
+    for (PRInt32 i = 0; i < aLen; i++) {
+      if (aText[i] == 0x5C) { // BACKSLASH
+        aText[i] = 0x20A9; // WON SIGN
+        *aWasTransformed = PR_TRUE;
+      }
+    }
+  }
+}
+
 PRUnichar*
 nsTextTransformer::GetNextWord(PRBool aInWord,
                                PRInt32* aWordLenResult,
@@ -808,6 +848,9 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
           AsciiToUpperCase(wordPtr, wordLen);
           break;
         }
+        NS_ASSERTION(mLanguageSpecificTransformType ==
+                     eLanguageSpecificTransformType_None,
+                     "should not be ASCII for language specific transforms");
       }
       result = (PRUnichar*)wordPtr;
 
@@ -857,6 +900,10 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
             }
           }
           break;
+        }
+        if (mLanguageSpecificTransformType !=
+            eLanguageSpecificTransformType_None) {
+          LanguageSpecificTransform(result, wordLen, aWasTransformed);
         }
       }
     }
@@ -1322,7 +1369,8 @@ static SelfTestData tests[] = {
 
 void
 nsTextTransformer::SelfTest(nsILineBreaker* aLineBreaker,
-                            nsIWordBreaker* aWordBreaker)
+                            nsIWordBreaker* aWordBreaker,
+                            nsIPresContext* aPresContext)
 {
   PRBool gNoisy = PR_FALSE;
   if (PR_GetEnv("GECKO_TEXT_TRANSFORMER_NOISY_SELF_TEST")) {
@@ -1349,7 +1397,7 @@ nsTextTransformer::SelfTest(nsILineBreaker* aLineBreaker,
     }
 
     nsTextFragment frag(st->text);
-    nsTextTransformer tx(aLineBreaker, aWordBreaker);
+    nsTextTransformer tx(aLineBreaker, aWordBreaker, aPresContext);
 
     for (PRInt32 preMode = 0; preMode < NUM_MODES; preMode++) {
       // Do forwards test
