@@ -115,7 +115,7 @@
 #include "nsLayoutCID.h"
 #include "nsParserCIID.h"
 #include "nsRDFCID.h"
-#include "nsRDFContentUtils.h"
+#include "nsIXULContentUtils.h"
 #include "nsRDFDOMNodeList.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h" // XXX should go away
@@ -195,6 +195,7 @@ static NS_DEFINE_CID(kRDFXULBuilderCID,          NS_RDFXULBUILDER_CID);
 static NS_DEFINE_CID(kTextNodeCID,               NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID,          NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_CID(kXULContentSinkCID,         NS_XULCONTENTSINK_CID);
+static NS_DEFINE_CID(kXULContentUtilsCID,        NS_XULCONTENTUTILS_CID);
 
 static NS_DEFINE_CID(kXULCommandDispatcherCID, NS_XULCOMMANDDISPATCHER_CID);
 static NS_DEFINE_IID(kIXULCommandDispatcherIID, NS_IXULCOMMANDDISPATCHER_IID);
@@ -873,6 +874,8 @@ protected:
     static nsINameSpaceManager* gNameSpaceManager;
     static PRInt32 kNameSpaceID_XUL;
 
+    static nsIXULContentUtils* gXULUtils;
+
     nsIContent*
     FindContent(const nsIContent* aStartNode,
                 const nsIContent* aTest1,
@@ -959,6 +962,8 @@ nsIRDFResource* XULDocumentImpl::kXUL_element;
 nsINameSpaceManager* XULDocumentImpl::gNameSpaceManager;
 PRInt32 XULDocumentImpl::kNameSpaceID_XUL;
 
+nsIXULContentUtils* XULDocumentImpl::gXULUtils;
+
 ////////////////////////////////////////////////////////////////////////
 // ctors & dtors
 
@@ -1019,6 +1024,11 @@ XULDocumentImpl::XULDocumentImpl(void)
 #define XUL_NAMESPACE_URI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
         gNameSpaceManager->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
+
+
+        rv = nsServiceManager::GetService(kXULContentUtilsCID,
+                                          nsCOMTypeInfo<nsIXULContentUtils>::GetIID(),
+                                          (nsISupports**) &gXULUtils);
     }
 
 #ifdef PR_LOGGING
@@ -1113,6 +1123,11 @@ XULDocumentImpl::~XULDocumentImpl()
         NS_IF_RELEASE(kRDF_instanceOf);
         NS_IF_RELEASE(kRDF_type);
         NS_IF_RELEASE(kXUL_element);
+
+        if (gXULUtils) {
+            nsServiceManager::ReleaseService(kXULContentUtilsCID, gXULUtils);
+            gXULUtils = nsnull;
+        }
     }
 }
 
@@ -2709,7 +2724,9 @@ XULDocumentImpl::SplitProperty(nsIRDFResource* aProperty,
     if (! p)
         return NS_ERROR_UNEXPECTED;
 
-    nsAutoString uri(p);
+    PRUnichar buf[256];
+    nsAutoString uri(CBufDescriptor(buf, PR_TRUE, sizeof(buf) / sizeof(PRUnichar), 0));
+    uri = p;
 
     // First try to split the namespace using the rightmost '#' or '/'
     // character.
@@ -3150,7 +3167,7 @@ XULDocumentImpl::Persist(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aA
     nsresult rv;
 
     nsCOMPtr<nsIRDFResource> source;
-    rv = nsRDFContentUtils::GetElementResource(aElement, getter_AddRefs(source));
+    rv = gXULUtils->GetElementResource(aElement, getter_AddRefs(source));
     if (NS_FAILED(rv)) return rv;
 
     // No ID, so nothing to persist.
@@ -3159,7 +3176,7 @@ XULDocumentImpl::Persist(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aA
 
     // Ick. Construct a resource from the namespace and attribute.
     nsCOMPtr<nsIRDFResource> property;
-    rv = nsRDFContentUtils::GetResource(aNameSpaceID, aAttribute, getter_AddRefs(property));
+    rv = gXULUtils->GetResource(aNameSpaceID, aAttribute, getter_AddRefs(property));
     if (NS_FAILED(rv)) return rv;
 
     nsAutoString value;
@@ -3309,7 +3326,7 @@ XULDocumentImpl::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
     nsresult rv;
 
     nsCOMPtr<nsIRDFResource> resource;
-    rv = nsRDFContentUtils::MakeElementResource(this, aId, getter_AddRefs(resource));
+    rv = gXULUtils->MakeElementResource(this, aId, getter_AddRefs(resource));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsISupportsArray> elements;
@@ -3362,7 +3379,7 @@ XULDocumentImpl::AddElementToMap(nsIContent* aElement, PRBool aDeep)
 
             if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
                 nsCOMPtr<nsIRDFResource> resource;
-                rv = nsRDFContentUtils::MakeElementResource(this, value, getter_AddRefs(resource));
+                rv = gXULUtils->MakeElementResource(this, value, getter_AddRefs(resource));
 
                 rv = mResources.Add(resource, aElement);
                 if (NS_FAILED(rv)) return rv;
@@ -3408,7 +3425,7 @@ XULDocumentImpl::RemoveElementFromMap(nsIContent* aElement, PRBool aDeep)
 
             if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
                 nsCOMPtr<nsIRDFResource> resource;
-                rv = nsRDFContentUtils::MakeElementResource(this, value, getter_AddRefs(resource));
+                rv = gXULUtils->MakeElementResource(this, value, getter_AddRefs(resource));
 
                 rv = mResources.Remove(resource, aElement);
                 if (NS_FAILED(rv)) return rv;
@@ -3612,7 +3629,7 @@ XULDocumentImpl::CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aR
     // Use the absolute URL to retrieve a resource from the RDF
     // service that corresponds to the root content.
     nsCOMPtr<nsIRDFResource> rootResource;
-    rv = nsRDFContentUtils::MakeElementResource(this, idValue, getter_AddRefs(rootResource));
+    rv = gXULUtils->MakeElementResource(this, idValue, getter_AddRefs(rootResource));
     if (NS_FAILED(rv)) return rv;
 
     // Tell the builder to create its root from this resrouce.

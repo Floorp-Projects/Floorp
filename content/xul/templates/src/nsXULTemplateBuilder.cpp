@@ -62,7 +62,7 @@
 #include "nsIXULSortService.h"
 #include "nsLayoutCID.h"
 #include "nsRDFCID.h"
-#include "nsRDFContentUtils.h"
+#include "nsIXULContentUtils.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
@@ -93,8 +93,8 @@ static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,       NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kTextNodeCID,                NS_TEXTNODE_CID);
 
-static NS_DEFINE_IID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
-static NS_DEFINE_IID(kIXULSortServiceIID,        NS_IXULSORTSERVICE_IID);
+static NS_DEFINE_CID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
+static NS_DEFINE_CID(kXULContentUtilsCID,        NS_XULCONTENTUTILS_CID);
 
 static NS_DEFINE_CID(kHTMLElementFactoryCID,  NS_HTML_ELEMENT_FACTORY_CID);
 static NS_DEFINE_CID(kIHTMLElementFactoryIID, NS_IHTML_ELEMENT_FACTORY_IID);
@@ -277,6 +277,7 @@ protected:
     static nsIRDFContainerUtils*  gRDFContainerUtils;
     static nsINameSpaceManager*   gNameSpaceManager;
     static nsIHTMLElementFactory* gHTMLElementFactory;
+    static nsIXULContentUtils*    gXULUtils;
 
     static nsIAtom* kContainerAtom;
     static nsIAtom* kContainerContentsGeneratedAtom;
@@ -358,6 +359,7 @@ nsIRDFService*  RDFGenericBuilderImpl::gRDFService;
 nsIRDFContainerUtils* RDFGenericBuilderImpl::gRDFContainerUtils;
 nsINameSpaceManager* RDFGenericBuilderImpl::gNameSpaceManager;
 nsIHTMLElementFactory* RDFGenericBuilderImpl::gHTMLElementFactory;
+nsIXULContentUtils* RDFGenericBuilderImpl::gXULUtils;
 
 nsIRDFResource* RDFGenericBuilderImpl::kNC_Title;
 nsIRDFResource* RDFGenericBuilderImpl::kNC_child;
@@ -441,11 +443,28 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
         NS_IF_RELEASE(kRDF_instanceOf);
         NS_IF_RELEASE(kXUL_element);
 
-        nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-        nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFContainerUtils);
-        nsServiceManager::ReleaseService(kXULSortServiceCID, gXULSortService);
+        if (gRDFService) {
+            nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+            gRDFService = nsnull;
+        }
+
+        if (gRDFContainerUtils) {
+            nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFContainerUtils);
+            gRDFContainerUtils = nsnull;
+        }
+
+        if (gXULSortService) {
+            nsServiceManager::ReleaseService(kXULSortServiceCID, gXULSortService);
+            gXULSortService = nsnull;
+        }
+
         NS_RELEASE(gNameSpaceManager);
         NS_IF_RELEASE(gHTMLElementFactory);
+
+        if (gXULUtils) {
+            nsServiceManager::ReleaseService(kXULContentUtilsCID, gXULUtils);
+            gXULUtils = nsnull;
+        }
     }
 }
 
@@ -529,7 +548,7 @@ RDFGenericBuilderImpl::Init()
         if (NS_FAILED(rv)) return rv;
 
         rv = nsServiceManager::GetService(kXULSortServiceCID,
-                                          kIXULSortServiceIID,
+                                          nsCOMTypeInfo<nsIXULSortService>::GetIID(),
                                           (nsISupports**) &gXULSortService);
         if (NS_FAILED(rv)) return rv;
 
@@ -537,6 +556,11 @@ RDFGenericBuilderImpl::Init()
                                                 nsnull,
                                                 kIHTMLElementFactoryIID,
                                                 (void**) &gHTMLElementFactory);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = nsServiceManager::GetService(kXULContentUtilsCID,
+                                          nsCOMTypeInfo<nsIXULContentUtils>::GetIID(),
+                                          (nsISupports**) &gXULUtils);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -665,7 +689,7 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
     nsresult rv;
 
     nsCOMPtr<nsIRDFResource> resource;
-    rv = nsRDFContentUtils::GetElementRefResource(aElement, getter_AddRefs(resource));
+    rv = gXULUtils->GetElementRefResource(aElement, getter_AddRefs(resource));
     if (NS_SUCCEEDED(rv)) {
         // The element has a resource; that means that it corresponds
         // to something in the graph, so we need to go to the graph to
@@ -698,7 +722,7 @@ RDFGenericBuilderImpl::OpenContainer(nsIContent* aElement)
         return NS_OK;
 
     nsCOMPtr<nsIRDFResource> resource;
-    rv = nsRDFContentUtils::GetElementRefResource(aElement, getter_AddRefs(resource));
+    rv = gXULUtils->GetElementRefResource(aElement, getter_AddRefs(resource));
 
     // If it has no resource, there's nothing that we need to be
     // concerned about here.
@@ -917,7 +941,7 @@ RDFGenericBuilderImpl::CreateElement(PRInt32 aNameSpaceID,
         if (NS_FAILED(rv)) return rv;
 
         nsAutoString id;
-        rv = nsRDFContentUtils::MakeElementID(doc, nsAutoString(uri), id);
+        rv = gXULUtils->MakeElementID(doc, nsAutoString(uri), id);
         if (NS_FAILED(rv)) return rv;
 
         rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, id, PR_FALSE);
@@ -1376,7 +1400,7 @@ RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIContent* aElement,
         }
         else {
             nsCOMPtr<nsIRDFResource> property;
-            rv = nsRDFContentUtils::GetResource(attrNameSpaceID, attr, getter_AddRefs(property));
+            rv = gXULUtils->GetResource(attrNameSpaceID, attr, getter_AddRefs(property));
             if (NS_FAILED(rv)) return rv;
 
             nsCOMPtr<nsIRDFNode> target;
@@ -1384,7 +1408,7 @@ RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIContent* aElement,
             if (NS_FAILED(rv)) return rv;
 
             nsAutoString targetStr;
-            rv = nsRDFContentUtils::GetTextForNode(target, targetStr);
+            rv = gXULUtils->GetTextForNode(target, targetStr);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get text for target");
             if (NS_FAILED(rv)) return rv;
 
@@ -1540,7 +1564,7 @@ RDFGenericBuilderImpl::GetSubstitutionText(nsIRDFResource* aResource,
         if (NS_FAILED(rv)) return rv;
 
         if (valueNode) {
-            rv = nsRDFContentUtils::GetTextForNode(valueNode, aResult);
+            rv = gXULUtils->GetTextForNode(valueNode, aResult);
             if (NS_FAILED(rv)) return rv;
         }
         else {
@@ -1838,7 +1862,7 @@ RDFGenericBuilderImpl::AddPersistentAttributes(nsIContent* aTemplateNode, nsIRDF
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIRDFResource> property;
-        rv = nsRDFContentUtils::GetResource(nameSpaceID, tag, getter_AddRefs(property));
+        rv = gXULUtils->GetResource(nameSpaceID, tag, getter_AddRefs(property));
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIRDFNode> target;
@@ -1937,7 +1961,7 @@ RDFGenericBuilderImpl::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
             if (property.get() == aProperty) {
                 nsAutoString text("");
 
-                rv = nsRDFContentUtils::GetTextForNode(aValue, text);
+                rv = gXULUtils->GetTextForNode(aValue, text);
                 if (NS_FAILED(rv)) return rv;
 
                 if ((text.Length() > 0) && (aAction == eSet)) {
@@ -2020,7 +2044,7 @@ RDFGenericBuilderImpl::RemoveWidgetItem(nsIContent* aElement,
         nsCOMPtr<nsIContent> child( do_QueryInterface(isupports) );
         NS_IF_RELEASE(isupports);
 
-        if (! nsRDFContentUtils::IsContainedBy(child, aElement))
+        if (! gXULUtils->IsContainedBy(child, aElement))
             continue;
 
         nsCOMPtr<nsIContent> parent;
@@ -2190,7 +2214,7 @@ RDFGenericBuilderImpl::CreateTemplateContents(nsIContent* aElement, const nsStri
 
     nsCOMPtr<nsIContent> element = aElement;
     while (element) {
-        rv = nsRDFContentUtils::GetElementRefResource(element, getter_AddRefs(resource));
+        rv = gXULUtils->GetElementRefResource(element, getter_AddRefs(resource));
         if (NS_SUCCEEDED(rv)) break;
 
         nsCOMPtr<nsIContent> parent;
@@ -2215,7 +2239,7 @@ RDFGenericBuilderImpl::EnsureElementHasGenericChild(nsIContent* parent,
 {
     nsresult rv;
 
-    rv = nsRDFContentUtils::FindChildByTag(parent, nameSpaceID, tag, result);
+    rv = gXULUtils->FindChildByTag(parent, nameSpaceID, tag, result);
     if (NS_FAILED(rv)) return rv;
 
     if (rv == NS_RDF_NO_VALUE) {
@@ -2544,7 +2568,7 @@ RDFGenericBuilderImpl::GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aR
         return rv;
     }
 
-    return nsRDFContentUtils::GetElementRefResource(element, aResource);
+    return gXULUtils->GetElementRefResource(element, aResource);
 }
 
 
@@ -2564,11 +2588,11 @@ RDFGenericBuilderImpl::FindInsertionPoint(nsIContent* aElement, nsIContent** aRe
     if (NS_FAILED(rv)) return rv;
 
     if (tagName.Equals("tree") || tagName.Equals("treeitem")) {
-        rv = nsRDFContentUtils::FindChildByTag(aElement, kNameSpaceID_XUL, NS_NewAtom("treechildren"), aResult);
+        rv = gXULUtils->FindChildByTag(aElement, kNameSpaceID_XUL, NS_NewAtom("treechildren"), aResult);
         if (NS_FAILED(rv)) return rv;
     }
     else if (tagName.Equals("menu")) {
-        rv = nsRDFContentUtils::FindChildByTag(aElement, kNameSpaceID_XUL, NS_NewAtom("menupopup"), aResult);
+        rv = gXULUtils->FindChildByTag(aElement, kNameSpaceID_XUL, NS_NewAtom("menupopup"), aResult);
         if (NS_FAILED(rv)) return rv;
     }
     else {
@@ -2723,10 +2747,10 @@ RDFGenericBuilderImpl::ForceTreeReflow(nsITimer* aTimer, void* aClosure)
     // XXX What if kTreeChildrenAtom & kNameSpaceXUL are clobbered b/c
     // the generic builder has been destroyed?
     nsCOMPtr<nsIContent> treechildren;
-    rv = nsRDFContentUtils::FindChildByTag(builder->mRoot,
-                                           kNameSpaceID_XUL,
-                                           kTreeChildrenAtom,
-                                           getter_AddRefs(treechildren));
+    rv = gXULUtils->FindChildByTag(builder->mRoot,
+                                   kNameSpaceID_XUL,
+                                   kTreeChildrenAtom,
+                                   getter_AddRefs(treechildren));
 
     if (NS_FAILED(rv)) return; // couldn't find
 

@@ -41,7 +41,7 @@
 #include "nsIURL.h"
 #include "nsLayoutCID.h"
 #include "nsRDFCID.h"
-#include "nsRDFContentUtils.h"
+#include "nsIXULContentUtils.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "rdf.h"
@@ -108,6 +108,8 @@ static NS_DEFINE_CID(kRDFServiceCID,          NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kIRDFResourceIID,        NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,         NS_IRDFLITERAL_IID);
+
+static NS_DEFINE_CID(kXULContentUtilsCID,     NS_XULCONTENTUTILS_CID);
 
 static NS_DEFINE_IID(kIDomXulElementIID,      NS_IDOMXULELEMENT_IID);
 
@@ -186,6 +188,8 @@ private:
 
     static nsIRDFService	*gRDFService;
 
+    static nsIXULContentUtils   *gXULUtils;
+
 nsresult	FindTreeElement(nsIContent* aElement,nsIContent** aTreeElement);
 nsresult	FindTreeChildrenElement(nsIContent *tree, nsIContent **treeBody);
 nsresult	GetSortColumnIndex(nsIContent *tree, const nsString&sortResource, const nsString& sortDirection, PRInt32 *colIndex);
@@ -220,6 +224,8 @@ public:
 nsICollation		*XULSortServiceImpl::collationService = nsnull;
 nsIRDFService		*XULSortServiceImpl::gRDFService = nsnull;
 nsrefcnt XULSortServiceImpl::gRefCnt = 0;
+
+nsIXULContentUtils      *XULSortServiceImpl::gXULUtils = nsnull;
 
 nsIAtom* XULSortServiceImpl::kTreeAtom;
 nsIAtom* XULSortServiceImpl::kTreeBodyAtom;
@@ -274,6 +280,12 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 		{
 			NS_ERROR("couldn't create rdf service");
 		}
+
+
+		rv = nsServiceManager::GetService(kXULContentUtilsCID,
+						  nsCOMTypeInfo<nsIXULContentUtils>::GetIID(),
+						  (nsISupports**) &gXULUtils);
+		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get XUL content utils");
 
 		nsILocaleFactory	*localeFactory = nsnull; 
 		nsILocale		*locale = nsnull;
@@ -369,8 +381,16 @@ XULSortServiceImpl::~XULSortServiceImpl(void)
 
 		NS_IF_RELEASE(collationService);
 		collationService = nsnull;
-		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-		gRDFService = nsnull;
+
+		if (gRDFService) {
+		    nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+		    gRDFService = nsnull;
+		}
+
+		if (gXULUtils) {
+		    nsServiceManager::ReleaseService(kXULContentUtilsCID, gXULUtils);
+		    gXULUtils = nsnull;
+		}
 	}
 }
 
@@ -1120,7 +1140,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 			for (loop = 0; loop < numElements; loop++)
 			{
 				nsIRDFResource	*resource;
-				nsRDFContentUtils::GetElementResource(flatArray[loop], &resource);
+				gXULUtils->GetElementResource(flatArray[loop], &resource);
 				// Note that we don't release; see part deux below...
 			}
 
@@ -1137,7 +1157,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 			for (loop = 0; loop < numElements; loop++)
 			{
 				nsIRDFResource	*resource;
-				nsRDFContentUtils::GetElementResource(flatArray[loop], &resource);
+				gXULUtils->GetElementResource(flatArray[loop], &resource);
 				nsrefcnt	refcnt;
 				NS_RELEASE2(resource, refcnt);
 				NS_RELEASE(resource);
@@ -1307,7 +1327,7 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node,
 				&& (rv == NS_CONTENT_ATTR_HAS_VALUE))
 			{
 				nsCOMPtr<nsIRDFResource>	containerRes;
-				rv = nsRDFContentUtils::MakeElementResource(doc, id, getter_AddRefs(containerRes));
+				rv = gXULUtils->MakeElementResource(doc, id, getter_AddRefs(containerRes));
 
 				if (NS_SUCCEEDED(rv)) {
 					rv = sortInfo.db->HasAssertion(containerRes,
