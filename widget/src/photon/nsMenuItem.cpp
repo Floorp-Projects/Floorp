@@ -539,7 +539,19 @@ NS_METHOD nsMenuItem::DoCommand()
   rv = contentNode->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
   return rv;
 }
-
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::SetDOMNode(nsIDOMNode * aDOMNode)
+{
+  PR_LOG(PhWidLog, PR_LOG_ERROR,("nsMenuItem::SetDOMNode\n"));
+  return NS_OK;
+}
+    
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::GetDOMNode(nsIDOMNode ** aDOMNode)
+{
+  PR_LOG(PhWidLog, PR_LOG_ERROR,("nsMenuItem::GetDOMNode\n"));
+  return NS_OK;
+}
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::SetDOMElement(nsIDOMElement * aDOMElement)
 {
