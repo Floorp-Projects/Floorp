@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   L. David Baron <dbaron@fas.harvard.edu>
  *   Daniel Glazman <glazman@netscape.com>
  */
 #ifndef nsCSSScanner_h___
@@ -27,12 +28,13 @@
 class nsIUnicharInputStream;
 
 // for testing
-//#define CSS_REPORT_PARSE_ERRORS
+#ifdef DEBUG_dbaron
+#define CSS_REPORT_PARSE_ERRORS
+#endif
 
-#ifdef CSS_REPORT_PARSE_ERRORS
+// for #ifdef CSS_REPORT_PARSE_ERRORS
 #include "nsXPIDLString.h"
 class nsIURI;
-#endif
 
 // Token types
 enum nsCSSTokenType {
@@ -107,11 +109,12 @@ class nsCSSScanner {
   ~nsCSSScanner();
 
   // Init the scanner.
-  void Init(nsIUnicharInputStream* aInput);
+  void Init(nsIUnicharInputStream* aInput, nsIURI* aURI);
 
 #ifdef CSS_REPORT_PARSE_ERRORS
-  void InitErrorReporting(nsIURI* aURI);
-  void ReportError(const nsAReadableString& aError);
+  void AddToError(const nsAReadableString& aErrorText);
+  void OutputError();
+  void ClearError();
 #endif
 
   PRUint32 GetLineNumber();
@@ -162,7 +165,8 @@ protected:
   PRUint32 mLineNumber;
 #ifdef CSS_REPORT_PARSE_ERRORS
   nsXPIDLCString mFileName;
-  PRUint32 mColNumber;
+  PRUint32 mErrorLineNumber, mColNumber, mErrorColNumber;
+  nsString mError;
 #endif
 
 };
