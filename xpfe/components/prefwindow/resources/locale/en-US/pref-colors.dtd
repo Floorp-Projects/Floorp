@@ -3,7 +3,7 @@
 <!-- LOCALIZATION NOTE : FILE Color management prefs -->
 <!ENTITY  window.title                    "Colors">
 <!ENTITY  lHeader                         "Colors">
-<!ENTITY  color                           "Text and background">
+<!ENTITY  color                           "Text and Background">
 <!ENTITY  textColor.label                 "Text:">
 <!ENTITY  textColor.accesskey             "t">
 <!ENTITY  backgroundColor.label           "Background:">
@@ -11,16 +11,16 @@
 
 <!ENTITY  underlineLinks.label            "Underline links">
 <!ENTITY  underlineLinks.accesskey        "u">
-<!ENTITY  links                           "Link colors">
+<!ENTITY  links                           "Link Colors">
 <!ENTITY  linkColor.label                 "Unvisited Links:">
 <!ENTITY  linkColor.accesskey             "l">
 <!ENTITY  visitedLinkColor.label          "Visited Links:">
 <!ENTITY  visitedLinkColor.accesskey      "v">
 <!-- LOCALIZATION NOTE (someProvColors): This is the start of a sentence and will be followed by the following radio buttons. -->
-<!ENTITY  someProvColors                  "When a web page provides its own colors and background">
+<!ENTITY  someProvColors                  "When a web page provides its own colors and background:">
 <!-- LOCALIZATION NOTE (alwaysUseDocColors.label): This is option one, and it appends to 'someProvColors' above. -->
-<!ENTITY  alwaysUseDocumentColors.label   "always use the colors and background specified by the web page">
+<!ENTITY  alwaysUseDocumentColors.label   "Always use the colors and background specified by the web page">
 <!ENTITY  alwaysUseDocumentColors.accesskey "a">
 <!-- LOCALIZATION NOTE (ignoreDocColors.label): This is option two, and it appends to 'someProvColors' above.  -->
-<!ENTITY  useMyColors.label               "use my chosen colors, ignoring the colors specified">
+<!ENTITY  useMyColors.label               "Use my chosen colors, ignoring the colors specified">
 <!ENTITY  useMyColors.accesskey           "i">

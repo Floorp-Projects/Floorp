@@ -40,15 +40,16 @@ Rights Reserved.
 
 	<box align="vertical" >
 		
-		<spring flex="100%"/>
+		<spring flex="1"/>
 
-		<text value="&name.label;" />
+		<text value="&name.label;" class="label" accesskey="&name.accesskey;" for="name"/>
 		<textfield tabindex="0" id="name" />
 	    <separator/>
-		<text value="&newDialogDescription.label;"/>
+		
+		<text value="&newDialogDescription.label;" class="label" accesskey="&description.accesskey;" for="msgNewFolderPicker"/>
 		<box align="horizontal">
 			<menu id="msgNewFolderPicker"/>
-        	<spring flex="100%"/>
+        	<spring flex="1"/>
         </box>
 		<box align="vertical" orient="vertical" hidden="true" id="newFolderTypeBox">
 			<separator class="thin"/>
@@ -61,9 +62,9 @@ Rights Reserved.
 				<spring flex="100%"/>
 			</radiogroup>
 		</box>
-		<spring flex="100%"/>
+		<spring flex="1"/>
 		<separator/>
-		<box id="okCancelButtons"/>
+		<box id="okCancelButtonsRight"/>
 		
 	</box>
 

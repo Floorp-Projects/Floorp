@@ -19,10 +19,12 @@ Rights Reserved.
 --> 
 
 <!-- Labels -->
-<!ENTITY name.label			"Name:">
-<!ENTITY rename.label		"Enter the new name for your folder:">
-<!ENTITY newDialogDescription.label		"Create as a subfolder of:">
-<!ENTITY folderRestriction1.label  "This server restricts folders to two special kinds.">
-<!ENTITY folderRestriction2.label  "Allow your new folder to contain:">
-<!ENTITY foldersOnly.label  "Folders Only">
-<!ENTITY messagesOnly.label "Messages Only">
+<!ENTITY name.label			        "Name:">
+<!ENTITY name.accesskey             "n">
+<!ENTITY rename.label		        "Enter the new name for your folder:">
+<!ENTITY newDialogDescription.label "Create as a subfolder of:">
+<!ENTITY description.accesskey      "c">
+<!ENTITY folderRestriction1.label   "This server restricts folders to two special kinds.">
+<!ENTITY folderRestriction2.label   "Allow your new folder to contain:">
+<!ENTITY foldersOnly.label          "Folders Only">
+<!ENTITY messagesOnly.label         "Messages Only">

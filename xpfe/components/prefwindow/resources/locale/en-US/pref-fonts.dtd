@@ -3,7 +3,7 @@
 <!-- LOCALIZATION NOTE : FILE 'Fonts' prefs dialog -->
 <!ENTITY  window.title                            "Fonts">
 <!ENTITY  lHeader                                 "Fonts">
-<!ENTITY  displayFonts                            "Default fonts for displaying web pages">
+<!ENTITY  displayFonts                            "Default Fonts for Displaying Web Pages">
 
 <!ENTITY  language.label                          "Language encoding:">
 <!ENTITY  language.accesskey                      "o">
@@ -67,7 +67,7 @@
 <!ENTITY  useDocFontDynamic.accesskey             "a">
 
 <!-- font scaling -->
-<!ENTITY  fontScaling                             "Screen resolution">
+<!ENTITY  fontScaling                             "Screen Resolution">
 <!ENTITY  fontScalingIntro                        "Choose a screen resolution. A larger value can improve text readability on some displays.">
 <!ENTITY  defaultScaling                          "96">
 <!ENTITY  fontScalingExample                      "dpi. (e.g. 96dpi)">
