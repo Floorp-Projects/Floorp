@@ -33,6 +33,7 @@ var bug = 85880;
 var summary = 'Arguments object of g(){f()} should not be null ';
 var cnNonNull = 'Arguments != null';
 var cnNull = 'Arguments == null';
+var cnRecurse = true;
 var status = '';
 var statusitems = [ ];
 var actual = '';
@@ -76,6 +77,7 @@ actual = (f3(0) == null);
 expect = false;
 addThis();
 
+
 function f4()
 {
   f1();
@@ -90,6 +92,26 @@ addThis();
 
 status = 'Section F of test';
 actual = (f4(0) == null);
+expect = false;
+addThis();
+
+
+function f5()
+{
+  if (cnRecurse)
+  {
+    cnRecurse = false;
+    f5();
+  }
+  return f5.arguments;
+}
+status = 'Section G of test';
+actual = (f5() == null);
+expect = false;
+addThis();
+
+status = 'Section H of test';
+actual = (f5(0) == null);
 expect = false;
 addThis();
 
@@ -114,7 +136,7 @@ function test()
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
- 
+
   for (var i = 0; i < UBound; i++)
   {
     reportCompare(expectedvalues[i], actualvalues[i], statusitems[i]);
