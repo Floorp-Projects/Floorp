@@ -119,11 +119,13 @@ nsTimerImpl::~nsTimerImpl()
 void nsTimerImpl::Shutdown()
 {
 #ifdef DEBUG_TIMERS
-  double mean = 0, stddev = 0;
-  myNS_MeanAndStdDev(sNum, sDeltaSum, sDeltaSumSquared, &mean, &stddev);
+  if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
+    double mean = 0, stddev = 0;
+    myNS_MeanAndStdDev(sNum, sDeltaSum, sDeltaSumSquared, &mean, &stddev);
 
-  PR_LOG(gTimerLog, PR_LOG_DEBUG, ("sNum = %f, sDeltaSum = %f, sDeltaSumSquared = %f\n", sNum, sDeltaSum, sDeltaSumSquared));
-  PR_LOG(gTimerLog, PR_LOG_DEBUG, ("mean: %fms, stddev: %fms\n", mean, stddev));
+    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("sNum = %f, sDeltaSum = %f, sDeltaSumSquared = %f\n", sNum, sDeltaSum, sDeltaSumSquared));
+    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("mean: %fms, stddev: %fms\n", mean, stddev));
+  }
 #endif
 
   if (!gThread)
@@ -217,21 +219,24 @@ void nsTimerImpl::Process()
     return;
 
 #ifdef DEBUG_TIMERS
-  PRIntervalTime now = PR_IntervalNow();
-  PRIntervalTime a = now - mStart; // actual delay in intervals
-  PRUint32       b = PR_MillisecondsToInterval(mDelay); // expected delay in intervals
-  PRUint32       d = PR_IntervalToMilliseconds((a > b) ? a - b : 0); // delta in ms
-  sDeltaSum += d;
-  sDeltaSumSquared += double(d) * double(d);
-  sNum++;
+  PRIntervalTime now;
+  if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
+    now = PR_IntervalNow();
+    PRIntervalTime a = now - mStart; // actual delay in intervals
+    PRUint32       b = PR_MillisecondsToInterval(mDelay); // expected delay in intervals
+    PRUint32       d = PR_IntervalToMilliseconds((a > b) ? a - b : 0); // delta in ms
+    sDeltaSum += d;
+    sDeltaSumSquared += double(d) * double(d);
+    sNum++;
 
-  PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] expected delay time %dms\n", this, mDelay));
-  PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] actual delay time   %dms\n", this, PR_IntervalToMilliseconds(a)));
-  PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p]                     -------\n", this));
-  PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p]     delta           %dms\n", this, d));
+    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] expected delay time %dms\n", this, mDelay));
+    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] actual delay time   %dms\n", this, PR_IntervalToMilliseconds(a)));
+    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p]                     -------\n", this));
+    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p]     delta           %dms\n", this, d));
 
-  mStart = mStart2;
-  mStart2 = 0;
+    mStart = mStart2;
+    mStart2 = 0;
+  }
 #endif
 
   mFiring = PR_TRUE;
@@ -247,8 +252,10 @@ void nsTimerImpl::Process()
   mFiring = PR_FALSE;
 
 #ifdef DEBUG_TIMERS
-  PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] Took %dms to fire process timer callback\n", this,
-                                   PR_IntervalToMilliseconds(PR_IntervalNow() - now)));
+  if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
+    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] Took %dms to fire process timer callback\n", this,
+                                     PR_IntervalToMilliseconds(PR_IntervalNow() - now)));
+  }
 #endif
 
   if (mType == NS_TYPE_REPEATING_SLACK) {
@@ -271,9 +278,10 @@ struct MyEventType {
 void* handleMyEvent(MyEventType* event)
 {
 #ifdef DEBUG_TIMERS
-  PRIntervalTime now = PR_IntervalNow();
-  PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] time between Fire() and Process(): %dms\n",
-                                   event->e.owner, PR_IntervalToMilliseconds(now - event->mInit)));
+  if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
+    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] time between Fire() and Process(): %dms\n",
+                                     event->e.owner, PR_IntervalToMilliseconds(PR_IntervalNow() - event->mInit)));
+  }
 #endif
   NS_STATIC_CAST(nsTimerImpl*, event->e.owner)->Process();
   return NULL;
@@ -305,7 +313,9 @@ void nsTimerImpl::Fire()
   // in destroyMyEvent.
 
 #ifdef DEBUG_TIMERS
-  event->mInit = PR_IntervalNow();
+  if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
+    event->mInit = PR_IntervalNow();
+  }
 #endif
 
   // If this is a repeating precise timer, we need to calulate the time for the next timer to fire
@@ -335,9 +345,11 @@ void nsTimerImpl::SetDelayInternal(PRUint32 aDelay)
   mTimeout = now + PR_MillisecondsToInterval(mDelay);
 
 #ifdef DEBUG_TIMERS
-  if (mStart == 0)
-    mStart = now;
-  else
-    mStart2 = now;
+  if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
+    if (mStart == 0)
+      mStart = now;
+    else
+      mStart2 = now;
+  }
 #endif
 }
