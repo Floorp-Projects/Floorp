@@ -214,7 +214,7 @@ nsElementMap::Add(const nsAReadableString& aID, nsIContent* aContent)
             head = head->mNext;
         }
 
-        head->mNext = ContentListItem::Create(mPool, aContent);
+        head->mNext = nsElementMap::ContentListItem::Create(mPool, aContent);
         if (! head->mNext)
             return NS_ERROR_OUT_OF_MEMORY;
     }
