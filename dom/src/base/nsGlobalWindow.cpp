@@ -1085,9 +1085,9 @@ GlobalWindowImpl::GetScreen(nsIDOMScreen** aScreen)
     if (!mScreen) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    NS_ADDREF(*aScreen = mScreen);
   }
+
+  NS_IF_ADDREF(*aScreen = mScreen);
 
   return NS_OK;
 }
@@ -1367,11 +1367,10 @@ GlobalWindowImpl::GetFrames(nsIDOMWindowCollection** aFrames)
     if (!mFrames) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    *aFrames = NS_STATIC_CAST(nsIDOMWindowCollection *, mFrames);
-    NS_ADDREF(*aFrames);
   }
 
+  *aFrames = NS_STATIC_CAST(nsIDOMWindowCollection *, mFrames);
+  NS_IF_ADDREF(*aFrames);
   return NS_OK;
 }
 
@@ -4223,10 +4222,10 @@ GlobalWindowImpl::GetLocation(nsIDOMLocation ** aLocation)
     if (!mLocation) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    NS_ADDREF(*aLocation = mLocation);
   }
 
+  NS_IF_ADDREF(*aLocation = mLocation);
+  
   return NS_OK;
 }
 
