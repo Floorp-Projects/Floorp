@@ -145,15 +145,14 @@ public class Interpreter {
     }
 
     private void generateNestedFunctions(Context cx, Scriptable scope,
-                                         Node tree)
+                                         ScriptOrFnNode tree)
     {
-        ObjArray functionList = (ObjArray) tree.getProp(Node.FUNCTION_PROP);
-        if (functionList == null) return;
+        int functionCount = tree.getFunctionCount();
+        if (functionCount == 0) return;
 
-        int N = functionList.size();
-        InterpreterData[] array = new InterpreterData[N];
-        for (int i = 0; i != N; i++) {
-            FunctionNode def = (FunctionNode)functionList.get(i);
+        InterpreterData[] array = new InterpreterData[functionCount];
+        for (int i = 0; i != functionCount; i++) {
+            FunctionNode def = tree.getFunctionNode(i);
             Interpreter jsi = new Interpreter();
             jsi.itsSourceFile = itsSourceFile;
             jsi.itsData = new InterpreterData(itsData.securityDomain);

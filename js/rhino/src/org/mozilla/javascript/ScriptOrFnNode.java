@@ -47,11 +47,39 @@ public class ScriptOrFnNode extends Node {
 
     public final String getOriginalSource() { return originalSource; }
 
+    public final void setOriginalSource(String originalSource) {
+        // One time action
+        if (originalSource == null || this.originalSource != null)
+            Context.codeBug();
+        this.originalSource = originalSource;
+    }
+
     public final String getSourceName() { return sourceName; }
 
     public final int getBaseLineno() { return baseLineno; }
 
     public final int getEndLineno() { return baseLineno; }
+
+    public final int getFunctionCount() {
+        if (functions == null) { return 0; }
+        return functions.size();
+    }
+
+    public final FunctionNode getFunctionNode(int i) {
+        return (FunctionNode)functions.get(i);
+    }
+
+    public final void replaceFunctionNode(int i, FunctionNode fnNode) {
+        if (fnNode == null) Context.codeBug();
+        functions.set(i, fnNode);
+    }
+
+    public final int addFunction(FunctionNode fnNode) {
+        if (fnNode == null) Context.codeBug();
+        if (functions == null) { functions = new ObjArray(); }
+        functions.add(fnNode);
+        return functions.size();
+    }
 
     public final int getRegexpCount() {
         if (regexps == null) { return 0; }
@@ -67,6 +95,7 @@ public class ScriptOrFnNode extends Node {
     }
 
     public final int addRegexp(String string, String flags) {
+        if (string == null) Context.codeBug();
         if (regexps == null) { regexps = new ObjArray(); }
         regexps.add(string);
         regexps.add(flags);
@@ -75,10 +104,11 @@ public class ScriptOrFnNode extends Node {
 
     VariableTable variableTable;
     String encodedSource;
-    String originalSource;
+    private String originalSource;
     String sourceName;
     int baseLineno = -1;
     int endLineno = -1;
+    private ObjArray functions;
     private ObjArray regexps;
 
 }

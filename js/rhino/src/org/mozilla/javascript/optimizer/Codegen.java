@@ -385,10 +385,10 @@ public class Codegen extends Interpreter {
     private String
     generateCode(ScriptOrFnNode tree, ObjArray names, ObjArray classFiles)
     {
-        ObjArray fns = (ObjArray) tree.getProp(Node.FUNCTION_PROP);
-        if (fns != null) {
-            for (int i = 0; i != fns.size(); ++i) {
-                OptFunctionNode fn = (OptFunctionNode) fns.get(i);
+        int functionCount = tree.getFunctionCount();
+        if (functionCount != 0) {
+            for (int i = 0; i != functionCount; ++i) {
+                OptFunctionNode fn = (OptFunctionNode)tree.getFunctionNode(i);
                 Codegen codegen = new Codegen(this);
                 codegen.generateCode(fn, names, classFiles);
             }
@@ -1235,29 +1235,29 @@ public class Codegen extends Interpreter {
                 classFile.startMethod(getSourceMethodStr,
                                       "()Ljava/lang/Object;",
                                       (short)flags);
-                ObjArray fns = (ObjArray) tree.getProp(Node.FUNCTION_PROP);
-                if (fns == null) {
+                int functionCount = tree.getFunctionCount();
+                if (functionCount == 0) {
                     // generate return <source-literal-string>;
                     push(source);
                 } else {
-                    // generate with N = fns.size():
-                    // Object[] result = new Object[1 + N];
+                    // generate
+                    // Object[] result = new Object[1 + functionCount];
                     // result[0] = <source-literal-string>
                     // result[1] = Class1.getSourcesTreeImpl();
                     // ...
-                    // result[N] = ClassN.getSourcesTreeImpl();
+                    // result[functionCount] = ClassN.getSourcesTreeImpl();
                     // return result;
-                    push(1 + fns.size());
+                    push(1 + functionCount);
                     addByteCode(ByteCode.ANEWARRAY, "java/lang/Object");
                        addByteCode(ByteCode.DUP); // dup array reference
                     push(0);
                     push(source);
                     addByteCode(ByteCode.AASTORE);
-                    for (int i = 0; i != fns.size(); ++i) {
+                    for (int i = 0; i != functionCount; ++i) {
+                        OptFunctionNode fn;
                         addByteCode(ByteCode.DUP); // dup array reference
                         push(1 + i);
-
-                        OptFunctionNode fn = (OptFunctionNode) fns.get(i);
+                        fn = (OptFunctionNode)tree.getFunctionNode(i);
                         classFile.add(ByteCode.INVOKESTATIC,
                                       fn.getClassName(),
                                       getSourceMethodStr,
@@ -1324,8 +1324,9 @@ public class Codegen extends Interpreter {
      * @param directParameterCount number of parameters for direct call,
      *        or -1 if not direct call
      */
-    private void generatePrologue(Context cx, Node tree, boolean inFunction,
-                                  int directParameterCount)
+    private void
+    generatePrologue(Context cx, ScriptOrFnNode tree, boolean inFunction,
+                     int directParameterCount)
     {
         funObjLocal = reserveWordLocal(0);
         contextLocal = reserveWordLocal(1);
@@ -1488,10 +1489,10 @@ public class Codegen extends Interpreter {
         }
         astore(variableObjectLocal);
 
-        ObjArray fns = (ObjArray) tree.getProp(Node.FUNCTION_PROP);
-        if (fns != null) {
-            for (int i=0; i < fns.size(); i++) {
-                OptFunctionNode fn = (OptFunctionNode) fns.get(i);
+        int functionCount = tree.getFunctionCount();
+        if (functionCount != 0) {
+            for (int i=0; i < functionCount; i++) {
+                OptFunctionNode fn = (OptFunctionNode)tree.getFunctionNode(i);
                 if (fn.getFunctionType() == FunctionNode.FUNCTION_STATEMENT) {
                     visitFunction(fn, FunctionNode.FUNCTION_STATEMENT);
                     addByteCode(ByteCode.POP);

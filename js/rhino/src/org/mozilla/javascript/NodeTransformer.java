@@ -112,8 +112,8 @@ public class NodeTransformer {
                     }
 
                 } else {
-                    FunctionNode fnNode = (FunctionNode)
-                                          node.getProp(Node.FUNCTION_PROP);
+                    FunctionNode
+                        fnNode = (FunctionNode)node.getProp(Node.FUNCTION_PROP);
                     if (inFunction) {
                         // Functions containing other functions require
                         //  activation objects
@@ -127,12 +127,7 @@ public class NodeTransformer {
                     NodeTransformer inner = newInstance();
                     fnNode = (FunctionNode)inner.transform(fnNode);
                     node.putProp(Node.FUNCTION_PROP, fnNode);
-                    ObjArray fns = (ObjArray) tree.getProp(Node.FUNCTION_PROP);
-                    if (fns == null) {
-                        fns = new ObjArray();
-                        tree.putProp(Node.FUNCTION_PROP, fns);
-                    }
-                    fns.add(fnNode);
+                    tree.addFunction(fnNode);
                 }
                 break;
 

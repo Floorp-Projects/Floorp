@@ -2021,7 +2021,7 @@ public class Context {
 
         if (debugger != null) {
             if (sourceString == null) Context.codeBug();
-            tree.originalSource = sourceString;
+            tree.setOriginalSource(sourceString);
         }
 
         Object result = compiler.compile(this, scope, tree,

@@ -154,8 +154,8 @@ class OptTransformer extends NodeTransformer {
     private void collectContainedFunctions(Node node) {
         for (Node tNode=node; tNode != null; tNode = tNode.getNext()) {
             if (tNode.getType() == TokenStream.FUNCTION) {
-                FunctionNode fnNode = (FunctionNode)
-                                      tNode.getProp(Node.FUNCTION_PROP);
+                FunctionNode
+                    fnNode = (FunctionNode)tNode.getProp(Node.FUNCTION_PROP);
                 if (fnNode.getType() == FunctionNode.FUNCTION_STATEMENT) {
                     String name = fnNode.getFunctionName();
                     if (name.length() != 0) {
