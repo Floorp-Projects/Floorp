@@ -450,10 +450,9 @@ Wallet_Localize(const char* genericString) {
   }
 
   /* localize the given string */
-  nsAutoString   strtmp; strtmp.AssignWithConversion(genericString);
-  const PRUnichar *ptrtmp = strtmp.get();
+  NS_ConvertASCIItoUTF16 strtmp(genericString);
   PRUnichar *ptrv = nsnull;
-  ret = bundle->GetStringFromName(ptrtmp, &ptrv);
+  ret = bundle->GetStringFromName(strtmp.get(), &ptrv);
   if (NS_FAILED(ret)) {
 #ifdef DEBUG
     printf("cannot get string from name\n");
@@ -1934,15 +1933,14 @@ wallet_StepForwardOrBack
     /* if we've reached a #text node, append it to accumulated text */
     nsAutoString siblingNameUCS2;
     result = elementNode->GetNodeName(siblingNameUCS2);
-    nsCAutoString siblingNameUTF8; siblingNameUTF8.AssignWithConversion(siblingNameUCS2);
-    if (siblingNameUTF8.LowerCaseEqualsLiteral("#text")) {
+    if (siblingNameUCS2.LowerCaseEqualsLiteral("#text")) {
       nsAutoString siblingValue;
       result = elementNode->GetNodeValue(siblingValue);
       text.Append(siblingValue);
     }
 
     /* if we've reached a SCRIPT node, don't fetch its siblings */
-    if (siblingNameUTF8.LowerCaseEqualsLiteral("script")) {
+    if (siblingNameUCS2.LowerCaseEqualsLiteral("script")) {
       return;
     }
 

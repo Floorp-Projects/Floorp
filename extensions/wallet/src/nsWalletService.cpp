@@ -547,7 +547,7 @@ nsWalletlibService::WALLET_Encrypt (const PRUnichar *text, char **crypt) {
 
 NS_IMETHODIMP
 nsWalletlibService::WALLET_Decrypt (const char *crypt, PRUnichar **text) {
-  nsAutoString cryptAutoString; cryptAutoString.AssignWithConversion(crypt);
+  nsAutoString cryptAutoString; cryptAutoString.AssignASCII(crypt);
   nsAutoString textAutoString;
   PRBool rv = ::Wallet_Decrypt(cryptAutoString, textAutoString);
   *text = ToNewUnicode(textAutoString);

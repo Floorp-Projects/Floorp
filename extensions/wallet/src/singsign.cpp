@@ -1373,7 +1373,7 @@ si_GetURLAndUserForChangeForm(nsIPrompt* dialog, const nsString& password)
 
           nsAutoString userName;
           if (NS_SUCCEEDED(si_Decrypt (data->value, userName))) {
-            nsAutoString temp; temp.AssignWithConversion(url->passwordRealm);
+            nsAutoString temp; temp.AssignASCII(url->passwordRealm); // XXX non-ascii realms?
             temp.AppendLiteral(":");
             temp.Append(userName);
 
@@ -2546,14 +2546,14 @@ si_RememberSignonDataFromBrowser(const char* passwordRealm, const nsString& user
 
   nsVoidArray signonData;
   si_SignonDataStruct data1;
-  data1.name.AssignWithConversion(USERNAMEFIELD);
+  data1.name.AssignLiteral(USERNAMEFIELD);
   if (NS_FAILED(si_Encrypt(nsAutoString(username), data1.value))) {
     return;
   }
   data1.isPassword = PR_FALSE;
   signonData.AppendElement(&data1);
   si_SignonDataStruct data2;
-  data2.name.AssignWithConversion(PASSWORDFIELD);
+  data2.name.AssignLiteral(PASSWORDFIELD);
   if (NS_FAILED(si_Encrypt(nsAutoString(password), data2.value))) {
     return;
   }
