@@ -41,7 +41,7 @@ nsHTTPEncodeStream::~nsHTTPEncodeStream()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsHTTPEncodeStream, nsIInputStream::GetIID());
+NS_IMPL_ISUPPORTS2(nsHTTPEncodeStream, nsIInputStream, nsIRandomAccessStore);
 
 NS_METHOD
 nsHTTPEncodeStream::Create(nsIInputStream *rawStream, PRUint32 flags,
@@ -122,8 +122,8 @@ nsHTTPEncodeStream::Read(char* outBuf, PRUint32 outBufCnt, PRUint32 *result)
     while (outBufCnt > 0) {
         PRUint32 readCnt = PR_MIN(outBufCnt, BUF_SIZE);
         rv = GetData(readBuf, readCnt, &amt);
-	bytesRead += amt;
-	*result = bytesRead;
+        bytesRead += amt;
+        *result = bytesRead;
         if (NS_FAILED(rv)) return rv;
         if (rv == NS_BASE_STREAM_WOULD_BLOCK || amt == 0)
             return rv;
@@ -151,6 +151,50 @@ nsHTTPEncodeStream::Read(char* outBuf, PRUint32 outBufCnt, PRUint32 *result)
         outBufCnt -= amt;
     }
     return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIRandomAccessStore methods:
+
+NS_IMETHODIMP
+nsHTTPEncodeStream::Seek(PRSeekWhence whence, PRInt32 offset)
+{
+    nsresult rv;
+    nsCOMPtr<nsIRandomAccessStore> ras = do_QueryInterface(mInput, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    mPushBackBuffer.SetLength(0);
+    return ras->Seek(whence, offset);
+}
+
+NS_IMETHODIMP
+nsHTTPEncodeStream::Tell(PRIntn* outWhere)
+{
+    nsresult rv;
+    nsCOMPtr<nsIRandomAccessStore> ras = do_QueryInterface(mInput, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    return ras->Tell(outWhere);
+}
+
+NS_IMETHODIMP
+nsHTTPEncodeStream::GetAtEOF(PRBool* outAtEOF)
+{
+    nsresult rv;
+    nsCOMPtr<nsIRandomAccessStore> ras = do_QueryInterface(mInput, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    return ras->GetAtEOF(outAtEOF);
+}
+
+NS_IMETHODIMP
+nsHTTPEncodeStream::SetAtEOF(PRBool inAtEOF)
+{
+    nsresult rv;
+    nsCOMPtr<nsIRandomAccessStore> ras = do_QueryInterface(mInput, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    return ras->SetAtEOF(inAtEOF);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
