@@ -25,7 +25,34 @@ include <$(DEPTH)\config\rules.mak>
 include <$(DEPTH)\config\config.mak>
 
 embed_chrome: embed-jar.mn
-        $(PERL) $(DEPTH)\config\make-jars.pl -v $(_NO_FLOCK) -s $(DIST)\bin\chrome -d $(DIST)\bin\chrome < embed-jar.mn
+!if "$(_CHROME_FILE_FORMAT)" != "jar"
+        $(PERL) $(DEPTH)\config\make-jars.pl -v -f $(_CHROME_FILE_FORMAT) -s $(DIST)\bin\chrome -d $(DIST)\bin\chrome < embed-jar.mn
+!else
+	nsinstall -D $(DIST)\Embed\tmpchrome\US
+	unzip -d $(DIST)\Embed\tmpchrome\US $(DIST)\bin\chrome\US.jar
+	nsinstall -D $(DIST)\Embed\tmpchrome\blue
+	unzip -d $(DIST)\Embed\tmpchrome\blue $(DIST)\bin\chrome\blue.jar
+	nsinstall -D $(DIST)\Embed\tmpchrome\chatzilla
+	unzip -d $(DIST)\Embed\tmpchrome\chatzilla $(DIST)\bin\chrome\chatzilla.jar
+	nsinstall -D $(DIST)\Embed\tmpchrome\classic
+	unzip -d $(DIST)\Embed\tmpchrome\classic $(DIST)\bin\chrome\classic.jar
+	nsinstall -D $(DIST)\Embed\tmpchrome\en-US
+	unzip -d $(DIST)\Embed\tmpchrome\en-US $(DIST)\bin\chrome\en-US.jar
+	nsinstall -D $(DIST)\Embed\tmpchrome\en-mac
+	unzip -d $(DIST)\Embed\tmpchrome $(DIST)\bin\chrome\en-mac.jar
+	nsinstall -D $(DIST)\Embed\tmpchrome\en-unix
+	unzip -d $(DIST)\Embed\tmpchrome\en-unix $(DIST)\bin\chrome\en-unix.jar
+	nsinstall -D $(DIST)\Embed\tmpchrome\en-win
+	unzip -d $(DIST)\Embed\tmpchrome\en-win $(DIST)\bin\chrome\en-win.jar
+	nsinstall -D $(DIST)\Embed\tmpchrome\messenger
+	unzip -d $(DIST)\Embed\tmpchrome\messenger $(DIST)\bin\chrome\messenger.jar
+	nsinstall -D $(DIST)\Embed\tmpchrome\modern
+	unzip -d $(DIST)\Embed\tmpchrome\modern $(DIST)\bin\chrome\modern.jar
+	nsinstall -D $(DIST)\Embed\tmpchrome\toolkit
+	unzip -d $(DIST)\Embed\tmpchrome\toolkit $(DIST)\bin\chrome\toolkit.jar
+        $(PERL) $(DEPTH)\config\make-jars.pl -v -f $(_CHROME_FILE_FORMAT) -s $(DIST)\Embed\tmpchrome -d $(DIST)\bin\chrome < embed-jar.mn
+	$(RM) -rf $(DIST)\Embed\tmpchrome
+!endif
 
 install:: embed_chrome
  $(PERL) $(DEPTH)\xpinstall\packager\pkgcp.pl -s $(DIST)\bin -d $(DIST) --f basebrowser-win -o dos -v
