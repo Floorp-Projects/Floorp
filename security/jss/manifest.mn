@@ -35,7 +35,16 @@ CORE_DEPTH = ..
  
 MODULE = jss
  
-IMPORTS =	nss/NSS_3_7_8_RTM \
+#
+# Whenever you change the NSPR or NSS version that JSS imports,
+# please update the JAR_NSPR_VERSION or JAR_NSS_VERSION value in
+# org/mozilla/jss/CryptoManager.java.
+#
+# To change the JSS version, update the version macros in
+# org/mozilla/jss/util/jssver.h and the JAR_JSS_VERSION value in
+# org/mozilla/jss/CryptoManager.java.
+#
+IMPORTS =	nss/NSS_3_7_9_RTM \
 			nspr20/v4.2.2 \
 			$(NULL)
 
