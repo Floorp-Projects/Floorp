@@ -28,6 +28,8 @@
 	#undef RGB_BLUE
 #endif
 
+#endif
+
 /*
  * First we include the configuration files that record how this
  * installation of the JPEG library is set up.  jconfig.h can be
