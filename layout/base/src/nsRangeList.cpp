@@ -315,7 +315,7 @@ nsRangeListIterator::CurrentItem(nsIDOMRange **aItem)
     return NS_ERROR_NULL_POINTER;
   if (mIndex >=0 && mIndex < (PRInt32)mRangeList->mRangeArray->Count()){
     nsCOMPtr<nsISupports> indexIsupports = dont_AddRef(mRangeList->mRangeArray->ElementAt(mIndex));
-    return CallQueryInterface(indexIsupports, aItem);
+    return indexIsupports->QueryInterface(nsIDOMRange::GetIID(),(void **)aItem);
   }
   return NS_ERROR_FAILURE;
 }
@@ -1219,7 +1219,7 @@ nsRangeList::GetIsCollapsed(PRBool* aIsCollapsed)
   
   nsCOMPtr<nsISupports> nsisup(dont_AddRef(mRangeArray->ElementAt(0)));
   nsCOMPtr<nsIDOMRange> range;
-  if (!NS_SUCCEEDED(CallQueryInterface(nsisup,&range)))
+  if (range = do_QueryInterface(nsisup))
   {
     *aIsCollapsed = PR_TRUE;
     return NS_OK;
