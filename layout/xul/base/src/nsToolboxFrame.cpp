@@ -28,25 +28,35 @@
 #include "nsIStyleContext.h"
 #include "nsCSSRendering.h"
 
-#if 0
 //
 // NS_NewToolboxFrame
 //
 // Creates a new toolbox frame and returns it in |aNewFrame|
 //
 nsresult
-NS_NewToolboxFrame ( nsIFrame*& aNewFrame, PRUint32 aFlags )
+NS_NewToolboxFrame ( nsIFrame*& aNewFrame )
 {
   nsToolboxFrame* it = new nsToolboxFrame;
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  it->SetFlags(aFlags);
+  //it->SetFlags(aFlags);
   aNewFrame = it;
   return NS_OK;
   
 } // NS_NewToolboxFrame
-#endif
+
+
+//
+// nsToolboxFrame cntr
+//
+// Init, if necessary
+//
+nsToolboxFrame :: nsToolboxFrame ( )
+{
+	//*** anything?
+}
+
 
 //
 // nsToolboxFrame dstr

@@ -41,7 +41,7 @@
 class nsToolbarFrame : public nsBlockFrame
 {
 public:
-  friend nsresult NS_NewToolbarFrame(nsIFrame*& aNewFrame, PRUint32 aFlags);
+  friend nsresult NS_NewToolbarFrame(nsIFrame*& aNewFrame);
 
     // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
