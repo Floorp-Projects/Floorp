@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-// Registry interpreter
+/* Registry interpreter */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,11 +42,11 @@ int error(char *func, int err)
 
 	return err;
 
-}	// error
+}	/* error */
 
 static char  *GetNextWord(char *cmd, char *buf)
 {
-	// copies until ',' or eos, then skips spaces
+	/* copies until ',' or eos, then skips spaces */
 	if (!cmd || !buf)
 		return 0;
 	while (*cmd && *cmd != ',')
@@ -60,7 +60,7 @@ static char  *GetNextWord(char *cmd, char *buf)
 	}
 	return cmd;
 
-}	// GetNextWord
+}	/* GetNextWord */
 
 static int vr_ParseVersion(char *verstr, VERSION *result)
 {
@@ -93,13 +93,13 @@ static int vr_ParseVersion(char *verstr, VERSION *result)
 
 	return REGERR_OK;
 
-}	// ParseVersion
+}	/* ParseVersion */
 
 
 void vCreate(char *cmd)
 {
 
-	// Syntax: Create [new,] 5.0b1
+	/* Syntax: Create [new,] 5.0b1 */
 	char buf[512];
     
 	int flag = 0;
@@ -107,7 +107,7 @@ void vCreate(char *cmd)
     
 	error("VR_CreateRegistry", VR_CreateRegistry("Communicator", buf, cmd));
 
-}	// vCreate
+}	/* vCreate */
 
 
 
@@ -131,7 +131,7 @@ void vFind(char *cmd)
 	printf("%s not found.\n", cmd);
 	return;
 
-}	// vFind
+}	/* vFind */
 
 
 void vHelp(char *cmd)
@@ -157,7 +157,7 @@ void vHelp(char *cmd)
     puts("");
 	puts("\tQ)uit            - end the program");
 
-}	// vHelp
+}	/* vHelp */
 
 
 void vInstall(char *cmd)
@@ -178,7 +178,7 @@ void vInstall(char *cmd)
 
 	error("VR_Install", VR_Install(name, pPath, pVer, FALSE));
 
-}	// vInstall
+}	/* vInstall */
 
 
 
@@ -195,10 +195,10 @@ void interp(void)
 	{
 		putchar('>');
 		putchar(' ');
-		flushall();
+		fflush(stdin); fflush(stdout); fflush(stderr);
 		gets(line);
 
-		// p points to next word after verb on command line
+		/* p points to next word after verb on command line */
 		p = line;
 		while (*p && *p!=' ')
 			p++;
@@ -263,12 +263,12 @@ void interp(void)
 			break;
 		case 'Q':
 			return;
-		}	// switch
-	}	// while
+		}	/* switch */
+	}	/* while */
 
 	assert(0);
-	return;	// shouldn't get here
+	return;	/* shouldn't get here */
 
-}	// interp
+}	/* interp */
 
-// EOF: interp.c
+/* EOF: interp.c */
