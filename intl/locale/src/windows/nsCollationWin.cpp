@@ -146,7 +146,7 @@ nsresult nsCollationWin::CompareString(const nsCollationStrength strength,
 {
   int retval;
   nsresult res;
-  DWORD dwMapFlags = LCMAP_SORTKEY;
+  DWORD dwMapFlags = 0;
 
   if (strength == kCollationCaseInSensitive)
     dwMapFlags |= NORM_IGNORECASE;
