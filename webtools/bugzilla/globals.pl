@@ -580,7 +580,9 @@ sub ModTime {
 
 # This proc must be called before using legal_product or the versions array.
 
+$::VersionTableLoaded = 0;
 sub GetVersionTable {
+    return if $::VersionTableLoaded;
     my $mtime = ModTime("data/versioncache");
     if (!defined $mtime || $mtime eq "") {
         $mtime = 0;
@@ -597,6 +599,7 @@ sub GetVersionTable {
             die "Can't generate file data/versioncache";
         }
     }
+    $::VersionTableLoaded = 1;
 }
 
 
