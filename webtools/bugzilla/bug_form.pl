@@ -379,9 +379,7 @@ if ($::usergroupset ne '0') {
 	    "order by description");
     # We only print out a header bit for this section if there are any
     # results.
-    if(MoreSQLData()) {
-      print "<br><b>Only users in the selected groups can view this bug:</b><br>\n";
-    }
+    my $groupFound = 0;
     while (MoreSQLData()) {
       my ($bit, $name, $description, $ison) = (FetchSQLData());
       # For product groups, we only want to display the checkbox if either
@@ -390,6 +388,11 @@ if ($::usergroupset ne '0') {
       # All other product groups will be skipped.  Non-product bug groups
       # will still be displayed.
       if($ison || ($name eq $bug{'product'}) || (!defined $::proddesc{$name})) {
+        if(!$groupFound) {
+          print "<br><b>Only users in the selected groups can view this bug:</b><br>\n";
+          print "<font size=\"-1\">(Leave all boxes unchecked to make this a public bug.)</font><br><br>\n";
+          $groupFound = 1;
+        }
         # Modifying this to use checkboxes instead
         my $checked = $ison ? " CHECKED" : "";
         # indent these a bit

@@ -413,15 +413,17 @@ if ($::usergroupset ne '0') {
             "  AND isbuggroup != 0 AND isactive = 1 ORDER BY description");
     # We only print out a header bit for this section if there are any
     # results.
-    if(MoreSQLData()) {
-      print "<br><b>Only users in the selected groups can view this bug:</b><br>\n";
-      print "<font size=\"-1\">(Leave all boxes unchecked to make this a public bug.)</font><br><br>\n";
-    }
+    my $groupFound = 0;
     while (MoreSQLData()) {
         my ($bit, $prodname, $description) = (FetchSQLData());
         # Don't want to include product groups other than this product.
         unless(($prodname eq $product) || (!defined($::proddesc{$prodname}))) {
             next;
+        }
+        if(!$groupFound) {
+          print "<br><b>Only users in the selected groups can view this bug:</b><br>\n";
+          print "<font size=\"-1\">(Leave all boxes unchecked to make this a public bug.)</font><br><br>\n";
+          $groupFound = 1;
         }
         # Rather than waste time with another Param check and another database
         # access, $group_bit will only have a non-zero value if we're using
