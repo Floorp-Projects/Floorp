@@ -844,11 +844,7 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
   if (aRoot)
     mBodyElement = do_QueryInterface(aRoot);
 
-  // disable links
-  nsCOMPtr<nsIPresContext> context;
-  ps->GetPresContext(getter_AddRefs(context));
-  if (!context) return NS_ERROR_NULL_POINTER;
-  context->SetLinkHandler(0);  
+
 
   // Set up the DTD
   // XXX - in the long run we want to get this from the document, but there
@@ -879,7 +875,11 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
   aSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
 
   // Set the selection to the beginning:
-  BeginningOfDocument();
+
+//hack to get around this for now.
+  nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mSelConWeak);
+  if (shell)
+    BeginningOfDocument();
 
   NS_POSTCONDITION(mDocWeak && mPresShellWeak, "bad state");
 
