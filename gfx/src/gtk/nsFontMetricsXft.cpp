@@ -272,6 +272,15 @@ nsFontMetricsXft::Init(const nsFont& aFont, nsIAtom* aLangGroup,
             mPointSize = minimum;
     }
 
+    // Make sure that the point size is at least greater than zero
+    if (mPointSize < 1) {
+#ifdef DEBUG
+        printf("*** Warning: nsFontMetricsXft was passed a point size of %d\n",
+               mPointSize);
+#endif
+        mPointSize = 1;
+    }
+
     if (NS_FAILED(RealizeFont()))
         return NS_ERROR_FAILURE;
 
