@@ -96,9 +96,14 @@ public interface KeyWrapper {
      * @param keyLength The expected length of the key in bytes.  This is 
      *   only used for variable-length keys (RC4) and non-padding
      *   algorithms. Otherwise, it can be set to anything(like 0).
+     * @param usage The operation the key will be used for after it is
+     *   unwrapped. You have to specify this so that the key can be properly
+     *   marked with the operation it supports. Some PKCS #11 tokens require
+     *   that a key be marked for an operation before it can perform that
+     *   operation.
      */
     public SymmetricKey unwrapSymmetric(byte[] wrapped, SymmetricKey.Type type,
-        int keyLength)
+        SymmetricKey.Usage usage, int keyLength)
         throws TokenException, IllegalStateException,
             InvalidAlgorithmParameterException;
 
