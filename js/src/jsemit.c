@@ -3933,6 +3933,8 @@ js_NewSrcNote(JSContext *cx, JSCodeGenerator *cg, JSSrcNoteType type)
      * incrementing cg->noteCount.
      */
     index = AllocSrcNote(cx, cg);
+    if (index < 0)
+        return -1;
     sn = &cg->notes[index];
 
     /*
