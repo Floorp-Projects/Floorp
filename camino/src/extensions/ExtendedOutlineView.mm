@@ -217,7 +217,13 @@
   return [self menu];
 }
 
-
+//
+// -textDidEndEditing:
+//
+// Called when the object we're editing is done. The default behavior is to
+// select another editable item, but that's not the behavior we want. We just
+// want to keep the selection on what was being editing.
+//
 - (void)textDidEndEditing:(NSNotification *)aNotification
 {
   // Fake our own notification. We pretend that the editing was canceled due to a
