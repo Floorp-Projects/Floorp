@@ -150,7 +150,7 @@ protected:
     PRInt32 mCurrentTotalProgress;
     PRInt32 mMaxTotalProgress;
 
-    nsVoidArray mRequestInfoList;
+    nsAutoVoidArray mRequestInfoList;
 
 private:
     nsresult GetProgressStatusFlags(PRInt32* aProgressStatusFlags);

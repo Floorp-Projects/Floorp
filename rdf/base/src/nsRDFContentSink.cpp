@@ -239,7 +239,7 @@ protected:
     };
 
     NameSpaceEntry* mNameSpaceStack;
-    nsVoidArray     mNameSpaceScopes;
+    nsAutoVoidArray mNameSpaceScopes;
 
     nsIAtom*
     CutNameSpacePrefix(nsString& aString);
@@ -283,7 +283,7 @@ protected:
     nsresult        PopContext(nsIRDFResource*& rContext, RDFContentSinkState& rState);
     nsIRDFResource* GetContextElement(PRInt32 ancestor = 0);
 
-    nsVoidArray* mContextStack;
+    nsAutoVoidArray* mContextStack;
 
     nsIURI*      mDocumentURL;
 };
@@ -1534,7 +1534,7 @@ PRInt32
 RDFContentSinkImpl::PushContext(nsIRDFResource *aResource, RDFContentSinkState aState)
 {
     if (! mContextStack) {
-        mContextStack = new nsVoidArray();
+        mContextStack = new nsAutoVoidArray();
         if (! mContextStack)
             return 0;
     }

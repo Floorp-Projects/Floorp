@@ -88,7 +88,7 @@ public:
     CompositeDataSourceImpl(void);
     CompositeDataSourceImpl(char** dataSources);
 
-    nsVoidArray mDataSources;
+    nsAutoVoidArray mDataSources;
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
@@ -108,7 +108,7 @@ public:
                             PRBool tv);
 
 protected:
-	nsVoidArray mObservers;
+	nsAutoVoidArray mObservers;
 
 	PRBool      mAllowNegativeAssertions;
 	PRBool      mCoalesceDuplicateArcs;
@@ -157,7 +157,7 @@ protected:
     nsISimpleEnumerator* mCurrent;
     nsIRDFNode*  mResult;
     PRInt32      mNext;
-    nsVoidArray  mAlreadyReturned;
+    nsAutoVoidArray  mAlreadyReturned;
     PRPackedBool mAllowNegativeAssertions;
     PRPackedBool mCoalesceDuplicateArcs;
 };
