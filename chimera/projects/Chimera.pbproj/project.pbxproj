@@ -1808,11 +1808,6 @@
 			settings = {
 			};
 		};
-		F5571933022B3C3B010001CA = {
-			isa = PBXFileReference;
-			path = ChimeraPrefs.rtf;
-			refType = 2;
-		};
 		F5571934022B3C3B010001CA = {
 			fileRef = F5571933022B3C3B010001CA;
 			isa = PBXBuildFile;
