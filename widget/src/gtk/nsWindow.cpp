@@ -1221,6 +1221,9 @@ void nsWindow::HandleMozAreaFocusIn(void)
 
 void nsWindow::HandleMozAreaFocusOut(void)
 {
+  // Working around unexplained missing calls to top level focus out
+  gJustGotDeactivate = PR_TRUE; 
+   
   // If there's a shell window then we aren't embedded so all the
   // functionality is done in the focus handlers for the toplevel
   // window.  Do nothing.
