@@ -241,6 +241,7 @@ nsHttpHandler::Init()
         observerSvc->AddObserver(this, "profile-change-net-teardown", PR_TRUE);
         observerSvc->AddObserver(this, "session-logout", PR_TRUE);
         observerSvc->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
+        observerSvc->AddObserver(this, "network:offline-status-changed", PR_TRUE);
     }
 
     mTimer = do_CreateInstance("@mozilla.org/timer;1");
@@ -404,12 +405,12 @@ nsHttpHandler::ReclaimConnection(nsHttpConnection *conn)
     NS_ENSURE_ARG_POINTER(conn);
     NS_ASSERTION(PR_GetCurrentThread() == NS_SOCKET_THREAD, "wrong thread");
 
+    PR_Lock(mConnectionLock);
+
     PRBool reusable = conn->CanReuse();
 
     LOG(("nsHttpHandler::ReclaimConnection [conn=%x(%s:%d) keep-alive=%d]\n",
         conn, conn->ConnectionInfo()->Host(), conn->ConnectionInfo()->Port(), reusable));
-
-    PR_Lock(mConnectionLock);
 
     // remove connection from the active connection list
     mActiveConnections.RemoveElement(conn);
@@ -962,6 +963,7 @@ nsHttpHandler::DropConnections(nsVoidArray &connections)
     PRInt32 i;
     for (i=0; i<connections.Count(); ++i) {
         conn = (nsHttpConnection *) connections[i];
+        conn->DropTransport();
         NS_RELEASE(conn);
     }
     connections.Clear();
@@ -2095,16 +2097,37 @@ nsHttpHandler::Observe(nsISupports *subject,
             PrefsChanged(prefBranch, NS_ConvertUCS2toUTF8(data).get());
     }
     else if (!nsCRT::strcmp(topic, "profile-change-net-teardown") ||
-             !nsCRT::strcmp(topic, "session-logout")) {
+             !nsCRT::strcmp(topic, "session-logout") ||
+             !nsCRT::strcmp(topic, "network:offline-status-changed")) {
+
+        // ignore online notification
+        if (!nsCRT::strcmp(topic, "network:offline-status-changed") &&
+            NS_LITERAL_STRING("online").Equals(data))
+            return NS_OK;
+
         // clear cache of all authentication credentials.
         if (mAuthCache)
             mAuthCache->ClearAll();
 
-        // kill mIdleConnections - these sockets could be holding onto other resources
-        // that need to be freed.
         {
-          nsAutoLock lock(mConnectionLock);
-          DropConnections(mIdleConnections);
+            nsAutoLock lock(mConnectionLock);
+
+            LOG(("  http logout [idle-count=%u active-count=%u]\n",
+                mIdleConnections.Count(),
+                mActiveConnections.Count()));
+
+            // kill idle connections; these sockets could be holding onto other
+            // resources that need to be freed (e.g., NSS file descriptors).
+            DropConnections(mIdleConnections);
+
+            // mark all active connections as not reusable.  this prevents any
+            // active connections from finding their way onto the idle
+            // connection list.
+            nsHttpConnection *conn;
+            for (PRInt32 i=0; i<mActiveConnections.Count(); ++i) {
+                conn = (nsHttpConnection *) mActiveConnections[i];
+                conn->DontReuse();
+            }
         }
 
         // need to reset the session start time since cache validation may

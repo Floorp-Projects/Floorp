@@ -83,6 +83,7 @@ public:
     void     DontReuse()   { mKeepAliveMask = PR_FALSE;
                              mKeepAlive = PR_FALSE;
                              mIdleTimeout = 0; }
+    void     DropTransport() { DontReuse(); mSocketTransport = 0; }
 
     nsAHttpTransaction   *Transaction()    { return mTransaction; }
     nsHttpConnectionInfo *ConnectionInfo() { return mConnectionInfo; }
