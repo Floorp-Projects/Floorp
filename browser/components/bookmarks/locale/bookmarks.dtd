@@ -51,14 +51,14 @@
 
 <!ENTITY menuitem.view.command.toolbar.label        "Toolbar">
 <!ENTITY menuitem.view.command.toolbar.accesskey    "t">
+<!ENTITY menuitem.view.show_columns.label           "Show columns">
+<!ENTITY menuitem.view.show_columns.accesskey       "S">
 <!ENTITY menuitem.view.unsorted.label               "Unsorted">
 <!ENTITY menuitem.view.unsorted.accesskey           "u">
 <!ENTITY menuitem.view.ascending.label              "A > Z Sort Order">
 <!ENTITY menuitem.view.ascending.accesskey          "a">
 <!ENTITY menuitem.view.descending.label             "Z > A Sort Order">
 <!ENTITY menuitem.view.descending.accesskey         "z">
-<!ENTITY menuitem.view.show_columns.label           "Show columns">
-<!ENTITY menuitem.view.show_columns.accesskey       "S">
 <!ENTITY menuitem.newbookmarkfolder.label           "Set as New Bookmark Folder">
 <!ENTITY menuitem.newbookmarkfolder.accesskey       "b">
 <!ENTITY menuitem.newinternetsearchfolder.label     "Set as New Internet Search Folder">

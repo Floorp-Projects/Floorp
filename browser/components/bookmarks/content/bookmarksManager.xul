@@ -70,12 +70,6 @@
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
 
   <commands id="commands">
-    <commandset id="CommandUpdate_Bookmarks"
-                commandupdater="true"
-                events="focus,tree-select"
-                oncommandupdate="document.getElementById('bookmarks-view').onCommandUpdate();">
-    </commandset>                
-
     <commandset id="selectEditMenuItems"/>
     <commandset id="globalEditMenuItems"/>
     <commandset id="tasksCommands"/> 
@@ -91,6 +85,7 @@
       <command id="cmd_bm_openinnewwindow"           oncommand="goDoCommand('cmd_bm_openinnewwindow');"/>
       <command id="cmd_bm_openinnewtab"              oncommand="goDoCommand('cmd_bm_openinnewtab');"/>
       <command id="cmd_bm_expandfolder"              oncommand="goDoCommand('cmd_bm_expandfolder');"/>
+      <command id="cmd_bm_openfolder"                oncommand="goDoCommand('cmd_bm_openfolder');"/>
       <command id="cmd_bm_managefolder"              oncommand="goDoCommand('cmd_bm_managefolder');"/>
       <command id="cmd_bm_newfolder"                 oncommand="goDoCommand('cmd_bm_newfolder');"/>
       <command id="cmd_bm_newbookmark"               oncommand="goDoCommand('cmd_bm_newbookmark');"/>
@@ -206,6 +201,11 @@
                     accesskey="&menuitem.view.command.toolbar.accesskey;"
                     oncommand="goToggleToolbar('command-toolbar', 'viewCommandToolbar'); event.preventBubble();"
                     persist="checked"/>
+          <menu id="descending" label="&menuitem.view.show_columns.label;"
+                accesskey="&menuitem.view.show_columns.accesskey;">
+            <menupopup id="columnsPopup" onpopupshowing="fillColumnsMenu(event);"
+                       oncommand="onViewMenuColumnItemSelected(event);"/>
+          </menu>
           <menuseparator id="fill-after-this-node"/>
           <menuitem id="natural" label="&menuitem.view.unsorted.label;"
                     accesskey="&menuitem.view.unsorted.accesskey;"
@@ -220,12 +220,6 @@
                     accesskey="&menuitem.view.descending.accesskey;"
                     type="radio"
                     resource="direction" name="sortDirectionSet"/>
-          <menuseparator/>
-          <menu id="descending" label="&menuitem.view.show_columns.label;"
-                accesskey="&menuitem.view.show_columns.accesskey;">
-            <menupopup id="columnsPopup" onpopupshowing="fillColumnsMenu(event);"
-                       oncommand="onViewMenuColumnItemSelected(event);"/>
-          </menu>
           <menuseparator/>
           <menuitem label="&menuitem.personaltoolbarfolder.label;"    
                     command="cmd_bm_setpersonaltoolbarfolder"

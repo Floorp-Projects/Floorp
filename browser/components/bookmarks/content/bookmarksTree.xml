@@ -437,22 +437,22 @@ dump("error in refresh sort:"+e)
             return;
           var browserTarget = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
           if (this.clickCount == 1 || browserTarget != "current" && 
-              this.clickCount == aClickCount && !this.treeBoxObject.selection.isSelected(row))
-            this.treeBoxObject.selection.select(row)
-
-          var selection = this.getTreeSelection();
-          this._selection = selection;
-          var isFolderGroup = selection.type[0] == "FolderGroup";
+              this.clickCount == aClickCount && !this.treeBoxObject.selection.isSelected(row)) {
+            this.treeBoxObject.selection.select(row);
+            this._selection = this.getTreeSelection();
+          }
+          var selection = this._selection;
           
-          if (!isFolderGroup && selection.isContainer[0]) {
-            if (this.clickCount == 1) {
-              if (row >= 0) {
-                this.treeBoxObject.view.toggleOpenState(row);
-              }
+          if (selection.type[0] != "FolderGroup" && selection.isContainer[0]) {
+            var modifKey = aEvent.shiftKey || aEvent.ctrlKey || aEvent.altKey || 
+                           aEvent.metaKey  || aEvent.button == 1;
+            if (this.clickCount == 1 && !modifKey) {
+              this.treeBoxObject.view.toggleOpenState(row);
+              if (selection.protocol[0] != "file")
+                return;
             }
-            if (selection.protocol[0] != "file")
-              return;
-          }          
+          }
+
           BookmarksCommand.openBookmark(selection, browserTarget, this.db);
         ]]></body>
       </method>

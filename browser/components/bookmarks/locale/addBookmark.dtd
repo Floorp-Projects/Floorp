@@ -39,7 +39,7 @@
 <!ENTITY button.defaultfolder.label "Use Default">
 <!ENTITY button.defaultfolder.accesskey "d">
 <!ENTITY selectFolder.label         "Choose Folder">
-<!ENTITY addGroup.label             "Bookmark this group of tabs">
+<!ENTITY addGroup.label             "Bookmark all tabs in a folder">
 <!ENTITY addGroup.accesskey         "B">
 
 
