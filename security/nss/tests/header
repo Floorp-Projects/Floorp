@@ -481,6 +481,7 @@ tbx_dirs()
         else
             RESULTDIRURL="<a title=\"QA Results\" href=\"http://${URL}${RESULTDIR}\">QA</a>"
         fi
+        Debug "RESULTDIRURL TinderboxPrint:$RESULTDIRURL"
     fi
     TBX_DAILY_BUILD=`cd ../../../../..;pwd`
     NSS_VER_DIR="${TBX_DAILY_BUILD}/../.." 
