@@ -113,18 +113,21 @@ XPIDLSRCS	= \
 		nsIAtomService.idl \
 		nsICollection.idl \
 		nsIEnumerator.idl \
-		nsIObserver.idl \
-		nsIObserverService.idl \
 		nsIPersistentProperties2.idl \
 		nsIProperties.idl \
 		nsIPropertyBag.idl \
 		nsIVariant.idl \
 		nsISerializable.idl \
-		nsISimpleEnumerator.idl \
 		nsISupportsArray.idl \
 		nsISupportsIterators.idl \
 		nsISupportsPrimitives.idl \
 		nsITimelineService.idl \
+		$(NULL)
+
+SDK_XPIDLSRCS   = \
+		nsIObserverService.idl	   \
+		nsIObserver.idl		   \
+		nsISimpleEnumerator.idl	   \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

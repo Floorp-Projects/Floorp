@@ -1293,8 +1293,8 @@ endif
 ################################################################################
 # Copy each element of EXPORTS to $(PUBLIC)
 
-ifneq ($(EXPORTS)$(XPIDLSRCS),)
-$(PUBLIC)::
+ifneq ($(EXPORTS)$(XPIDLSRCS)$(SDK_HEADERS)$(SDK_XPIDLSRCS),)
+$(SDK_PUBLIC) $(PUBLIC)::
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
 endif
 
@@ -1303,6 +1303,18 @@ export:: $(EXPORTS) $(PUBLIC)
 ifndef NO_DIST_INSTALL
 	$(INSTALL) $(IFLAGS1) $^
 	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(PUBLIC)/.headerlist $(notdir $(filter-out $(PUBLIC),$^))
+endif
+endif 
+
+ifneq ($(SDK_HEADERS),)
+export:: $(PUBLIC) $(SDK_PUBLIC)
+
+export:: $(SDK_HEADERS) 
+ifndef NO_DIST_INSTALL
+	$(INSTALL) $(IFLAGS1) $^ $(PUBLIC)
+	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(PUBLIC)/.headerlist $(notdir $(filter-out $(PUBLIC),$^))
+	$(INSTALL) $(IFLAGS1) $^ $(SDK_PUBLIC)
+	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(PUBLIC)/.headerlist $(notdir $(filter-out $(SDK_PUBLIC),$^))
 endif
 endif 
 
@@ -1331,10 +1343,10 @@ ifndef NO_DIST_INSTALL
 endif
 endif 
 ################################################################################
-# Export the elements of $(XPIDLSRCS), generating .h and .xpt files and
-# moving them to the appropriate places.
+# Export the elements of $(XPIDLSRCS) & $(SDK_XPIDLSRCS), 
+# generating .h and .xpt files and moving them to the appropriate places.
 
-ifneq ($(XPIDLSRCS),)
+ifneq ($(XPIDLSRCS)$(SDK_XPIDLSRCS),)
 
 ifndef XPIDL_MODULE
 XPIDL_MODULE		= $(MODULE)
@@ -1349,14 +1361,8 @@ export:: FORCE
 	@echo; sleep 2; false
 endif
 
-# export .idl files to $(DIST)/idl
-$(DIST)/idl::
+$(SDK_IDL_DIR) $(IDL_DIR)::
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
-
-export:: $(XPIDLSRCS) $(DIST)/idl
-ifndef NO_DIST_INSTALL
-	$(INSTALL) $(IFLAGS1) $^
-endif
 
 # generate .h files from into $(XPIDL_GEN_DIR), then export to $(PUBLIC);
 # warn against overriding existing .h file. 
@@ -1369,22 +1375,16 @@ $(XPIDL_GEN_DIR)/.done:
 
 $(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
 	$(REPORT_BUILD)
-	$(ELOG) $(XPIDL_COMPILE) -m header -w -I $(DIST)/idl -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $<
-	@if test -n "$(findstring $*.h, $(EXPORTS))"; \
+	$(ELOG) $(XPIDL_COMPILE) -m header -w -I $(IDL_DIR) -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $<
+	@if test -n "$(findstring $*.h, $(EXPORTS) $(SDK_HEADERS))"; \
 	  then echo "*** WARNING: file $*.h generated from $*.idl overrides $(srcdir)/$*.h"; else true; fi
-
-export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS)) $(PUBLIC)
-ifndef NO_DIST_INSTALL
-	$(INSTALL) $(IFLAGS1) $^
-	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(PUBLIC)/.headerlist $(notdir $(filter-out $(PUBLIC),$^))
-endif
 
 ifndef NO_GEN_XPT
 # generate intermediate .xpt files into $(XPIDL_GEN_DIR), then link
 # into $(XPIDL_MODULE).xpt and export it to $(DIST)/bin/components.
 $(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_COMPILE)
 	$(REPORT_BUILD)
-	$(ELOG) $(XPIDL_COMPILE) -m typelib -w -I $(DIST)/idl -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $<
+	$(ELOG) $(XPIDL_COMPILE) -m typelib -w -I $(IDL_DIR) -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $<
 
 $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS))
 	$(XPIDL_LINK) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $^
@@ -1393,11 +1393,60 @@ libs:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
 ifndef NO_DIST_INSTALL
 	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(DIST)/bin/$(COMPONENTS_PATH)
 endif
-
-endif
+endif # NO_GEN_XPT
 
 GARBAGE_DIRS		+= $(XPIDL_GEN_DIR)
+
+endif # XPIDLSRCS || SDK_XPIDLSRCS
+
+ifneq ($(XPIDLSRCS),)
+# export .idl files to $(IDL_DIR)
+export:: $(XPIDLSRCS) $(IDL_DIR)
+ifndef NO_DIST_INSTALL
+	$(INSTALL) $(IFLAGS1) $^
 endif
+
+export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS)) $(PUBLIC)
+ifndef NO_DIST_INSTALL
+	$(INSTALL) $(IFLAGS1) $^
+	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(PUBLIC)/.headerlist $(notdir $(filter-out $(PUBLIC),$^))
+endif
+
+endif # XPIDLSRCS
+
+ifneq ($(SDK_XPIDLSRCS),)
+# export .idl files to $(IDL_DIR) & $(SDK_IDL_DIR)
+export:: $(IDL_DIR) $(SDK_IDL_DIR)
+
+export:: $(SDK_XPIDLSRCS)
+ifndef NO_DIST_INSTALL
+	$(INSTALL) $(IFLAGS1) $^ $(IDL_DIR)
+	$(INSTALL) $(IFLAGS1) $^ $(SDK_IDL_DIR)
+endif
+
+export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(SDK_XPIDLSRCS))
+ifndef NO_DIST_INSTALL
+	$(INSTALL) $(IFLAGS1) $^ $(PUBLIC)
+	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(PUBLIC)/.headerlist $(notdir $(filter-out $(PUBLIC),$^))
+	$(INSTALL) $(IFLAGS1) $^ $(SDK_PUBLIC)
+	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(PUBLIC)/.headerlist $(notdir $(filter-out $(SDK_PUBLIC),$^))
+endif
+
+endif # SDK_XPIDLSRCS
+
+################################################################################
+# SDK
+
+ifneq (,$(SDK_BINARY))
+$(SDK_BIN_DIR)::
+	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
+
+libs:: $(SDK_BINARY) $(SDK_BIN_DIR)
+ifndef NO_DIST_INSTALL
+	$(INSTALL) $(IFLAGS2) $^
+endif
+
+endif # SDK_BINARY
 
 ################################################################################
 # CHROME PACKAGING
