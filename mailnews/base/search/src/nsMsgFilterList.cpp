@@ -168,6 +168,9 @@ nsMsgFilterList::GetLogFileSpec(nsIFileSpec **aFileSpec)
 {
   NS_ENSURE_ARG_POINTER(aFileSpec);
 
+  // XXX todo
+  // the path to the log file won't change
+  // should we cache it?
   nsCOMPtr <nsIMsgFolder> folder;
   nsresult rv = GetFolder(getter_AddRefs(folder));
   NS_ENSURE_SUCCESS(rv,rv);
@@ -197,6 +200,9 @@ nsMsgFilterList::GetLogFileSpec(nsIFileSpec **aFileSpec)
     rv = filterLogFile->FromFileSpec(thisFolder);
     NS_ENSURE_SUCCESS(rv, rv);
     
+    // XXX todo
+    // do we need to call NS_MsgHashIfNecessary()
+    // I'm thinking of the mac, with a long newsgroup name
     nsXPIDLCString filterLogName;
     rv = filterLogFile->GetLeafName(getter_Copies(filterLogName));
     NS_ENSURE_SUCCESS(rv,rv);

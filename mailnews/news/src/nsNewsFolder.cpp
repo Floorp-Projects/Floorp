@@ -1878,6 +1878,9 @@ nsMsgNewsFolder::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aRes
     rv = mFilterFile->FromFileSpec(thisFolder);
     NS_ENSURE_SUCCESS(rv, rv);
     
+    // XXX todo
+    // do we need to call NS_MsgHashIfNecessary()
+    // I'm thinking of the mac, with a long newsgroup name
     nsXPIDLCString filterFileName;
     rv = mFilterFile->GetLeafName(getter_Copies(filterFileName));
     NS_ENSURE_SUCCESS(rv,rv);
