@@ -51,10 +51,7 @@ interface nsINNTPNewsgroupList : nsISupports {
      line to, followed by a "\n".  This is used by the XOVER-caching code.
   */
   /* the XOVER Sink should maintain the ListNewsGroupState */
-  void InitXOVER(in string hostname, in string groupname,
-            in long first_message, in long last_message,
-            in long oldest_message, in long newest_message);
-  
+  void InitXOVER(in long first_message, in long last_message);  
   void ProcessXOVER(in string line, out long status);
   void ProcessNonXOVER(in string line);
   void ResetXOVER();

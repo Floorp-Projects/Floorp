@@ -33,7 +33,7 @@ class nsINNTPNewsgroupList : public nsISupports {
   NS_IMETHOD AddToKnownArticles(PRInt32 first_message, PRInt32 last_message) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD InitXOVER(const char *hostname, const char *groupname, PRInt32 first_message, PRInt32 last_message, PRInt32 oldest_message, PRInt32 newest_message) = 0;
+  NS_IMETHOD InitXOVER(PRInt32 first_message, PRInt32 last_message) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD ProcessXOVER(const char *line, PRInt32 *status) = 0;
