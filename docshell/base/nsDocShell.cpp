@@ -3818,7 +3818,7 @@ nsDocShell::NewContentViewerObj(const char *aContentType,
 
     nsCOMPtr<nsIPluginViewer> pv(do_QueryInterface(*aViewer));
     if (pv)
-      SetTitle(nsnull);  // clear title bar for full-page plugins
+      SetTitle(nsnull);  // clear title bar for full-page plugin
 
     return NS_OK;
 }
