@@ -21,6 +21,9 @@ LIBRARY_NAME=raptorhtmlbase_s
 MODULE=raptor 
 REQUIRES=xpcom raptor js
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
+!if defined(XP_NEW_SELECTION)
+DEFINES = $(DEFINES) -DXP_NEW_SELECTION
+!endif
 
 CPPSRCS=				\
 	nsAbsoluteFrame.cpp		\

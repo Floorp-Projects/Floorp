@@ -39,7 +39,10 @@
 #include "nsIDocument.h"
 #include "nsIDeviceContext.h"
 #include "nsXIFConverter.h"
+#if XP_NEW_SELECTION
+#else
 #include "nsISelection.h"
+#endif
 #include "nsSelectionRange.h"
 #include "nsHTMLAtoms.h"
 
@@ -583,7 +586,10 @@ TextFrame::ComputeSelectionInfo(nsIRenderingContext& aRenderingContext,
   aResult.mEndOffset = aTextLength;
   aResult.mEmptySelection = PR_FALSE;
 
+#if XP_NEW_SELECTION
+#else
   nsISelection     * selection;
+#endif
   aDocument->GetSelection(selection);
 
   nsSelectionRange * range     = selection->GetRange();

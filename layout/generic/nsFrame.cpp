@@ -82,11 +82,13 @@ PRBool      nsFrame::mDidDrag        = PR_FALSE;
 PRInt32     nsFrame::mStartPos       = 0;
 
 // Selection data is valid only from the Mouse Press to the Mouse Release
+#if XP_NEW_SELECTION
+#else
 nsSelectionRange * nsFrame::mSelectionRange      = nsnull;
 nsISelection     * nsFrame::mSelection           = nsnull;
-
 nsSelectionPoint * nsFrame::mStartSelectionPoint = nsnull;
 nsSelectionPoint * nsFrame::mEndSelectionPoint   = nsnull;
+#endif
 
 //----------------------------------------------------------------------
 
@@ -601,7 +603,10 @@ NS_IMETHODIMP nsFrame::Paint(nsIPresContext&      aPresContext,
   nsIPresShell       * shell     = aPresContext.GetShell();
   nsIDocument        * doc       = shell->GetDocument();
   if (mSelectionRange == nsnull) { // Get Selection Object
+#if XP_NEW_SELECTION
+#else
     nsISelection     * selection;
+#endif
     doc->GetSelection(selection);
 
     mSelectionRange = selection->GetRange(); 
@@ -701,7 +706,10 @@ NS_IMETHODIMP nsFrame::HandlePress(nsIPresContext& aPresContext,
   
   gDoc = shell->GetDocument();
 
+#if XP_NEW_SELECTION
+#else
   nsISelection     * selection;
+#endif
   gDoc->GetSelection(selection);
 
   shell->CreateRenderingContext(this, acx);
