@@ -36,9 +36,6 @@
  * PR time code.
  */
 #include "jsstddef.h"
-#ifdef MOZILLA_CLIENT
-#include "platform.h"
-#endif
 #ifdef SOLARIS
 #define _REENTRANT 1
 #endif

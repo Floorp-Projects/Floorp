@@ -2,11 +2,6 @@
 # This is a list of local files which get copied to the mozilla:dist directory
 #
 
-minicom.h
-platform.h
-xpassert.h
-xp_debug.h
 xp_mcom.h
 xp_path.h
 xp_str.h
-xp_trace.h

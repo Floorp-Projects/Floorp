@@ -544,7 +544,7 @@ nsresult nsMsgSearchNewsEx::SaveProfile (const char *profileName)
 	else if (FOLDER_CONTAINERONLY == folder->GetType())
 		host = ((MSG_NewsFolderInfoContainer*) folder)->GetHost();
 
-	XP_ASSERT(nsnull != host && nsnull != profileName);
+	NS_ABORT_IF_FALSE(nsnull != host && nsnull != profileName, "host and profileName should not be NULL");
 	if (nsnull != host && nsnull != profileName)
 	{
 		char *scopeString = nsnull;
@@ -637,7 +637,7 @@ SEARCH_API nsresult MSG_SaveProfileStatus (MSG_Pane *searchPane, PRBool *cmdEnab
 {
 	nsresult err = NS_OK;
 
-	XP_ASSERT(cmdEnabled);
+	NS_ABORT_IF_FALSE(cmdEnabled, "cmdEnabled cannot be NULL");
 	if (cmdEnabled)
 	{
 		*cmdEnabled = PR_FALSE;
@@ -659,19 +659,17 @@ SEARCH_API nsresult MSG_SaveProfile (MSG_Pane *searchPane, const char * profileN
 #ifdef _DEBUG
 	PRBool enabled = PR_FALSE;
 	MSG_SaveProfileStatus (searchPane, &enabled);
-	XP_ASSERT(enabled);
-	if (!enabled)
-		return SearchError_ScopeAgreement;
+	NS_ENSURE_TRUE(enabled, SearchError_ScopeAgreement);
 #endif
 
 	if (profileName)
 	{
 		MSG_SearchFrame *frame = MSG_SearchFrame::FromPane (searchPane);
-		XP_ASSERT(frame);
+		NS_ASSERTION(frame, "frame cannot be NULL");
 		if (frame)
 		{
 			nsMsgSearchNewsEx *adapter = frame->GetProfileAdapter();
-			XP_ASSERT(adapter);
+			NS_ASSERTION(adapter, "adaptor cannot be NULL");
 			if (adapter)
 				err = adapter->SaveProfile (profileName);
 		}

@@ -699,7 +699,7 @@ nsresult nsImapOfflineSync::ProcessNextOperation()
         else if (folderFlags & MSG_FOLDER_FLAG_IMAPBOX)
         {
           //					if (imapFolder->GetHasOfflineEvents())
-          //						XP_ASSERT(PR_FALSE);
+          //						NS_ASSERTION(PR_FALSE, "Hardcoded assertion");
           
           if (!m_pseudoOffline)	// if pseudo offline, falls through to playing ops back.
           {

@@ -548,7 +548,7 @@ NS_IMETHODIMP nsDBFolderInfo::ChangeNumNewMessages(PRInt32 delta)
 	if (m_numNewMessages < 0)
 	{
 #ifdef DEBUG_bienvenu1
-		XP_ASSERT(FALSE);
+		NS_ASSERTION(PR_FALSE, "Hardcoded assertion");
 #endif
 		m_numNewMessages = 0;
 	}
