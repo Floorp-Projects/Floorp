@@ -356,6 +356,12 @@ nsButtonControlFrame::Reflow(nsIPresContext&          aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsReflowStatus&          aStatus)
 {
+
+  // add ourself as an nsIFormControlFrame
+  if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
+       nsFormFrame::AddFormControlFrame(aPresContext, *this);
+  }
+
   PRInt32 type;
   GetType(&type);
 
@@ -370,12 +376,25 @@ nsButtonControlFrame::Reflow(nsIPresContext&          aPresContext,
 
     nsSize ignore;
     GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, ignore);
+
+    // if our size is intrinsic. Then we need to return the size we really need
+    // so include our inner borders we use for focus.
+    nsMargin added = mRenderer.GetAddedButtonBorderAndPadding();
+    if (aReflowState.computedWidth == NS_INTRINSICSIZE)
+       aDesiredSize.width += added.left + added.right;
+ 
+    if (aReflowState.computedHeight == NS_INTRINSICSIZE)
+       aDesiredSize.height += added.top + added.bottom;
+
     nsMargin bp(0,0,0,0);
     AddBordersAndPadding(&aPresContext, aReflowState, aDesiredSize, bp);
-    mRenderer.AddFocusBordersAndPadding(aPresContext, aReflowState, aDesiredSize, bp);
+       
 
     if (nsnull != aDesiredSize.maxElementSize) {
       aDesiredSize.AddBorderPaddingToMaxElementSize(bp);
+      aDesiredSize.maxElementSize->width += added.left + added.right;
+      aDesiredSize.maxElementSize->height += added.top + added.bottom;
+
     }
     aStatus = NS_FRAME_COMPLETE;
     return NS_OK;

@@ -264,7 +264,7 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
     }
     aMinSize.width = aDesiredSize.width;
     if (CSS_NOTSET != aCSSSize.width) {  // css provides width
-      NS_ASSERTION(aCSSSize.width > 0, "form control's computed width is <= 0"); 
+      NS_ASSERTION(aCSSSize.width >= 0, "form control's computed width is < 0"); 
       if (NS_INTRINSICSIZE != aCSSSize.width) {
         aDesiredSize.width = PR_MAX(aDesiredSize.width,aCSSSize.width);
         aWidthExplicit = PR_TRUE;

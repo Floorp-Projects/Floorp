@@ -22,16 +22,28 @@
 #include "nsHTMLImageLoader.h"
 #include "nsLeafFrame.h"
 #include "nsButtonFrameRenderer.h"
+#include "nsIBox.h"
 
 class nsIPopUpMenu;
 
-class nsTitledButtonFrame : public nsLeafFrame
+class nsTitledButtonFrame : public nsLeafFrame, public nsIBox
 {
 public:
 
   enum TruncationStyle { Left, Right, Center };
 
   friend nsresult NS_NewTitledButtonFrame(nsIFrame*& aNewFrame);
+
+  // nsIBox frame interface
+  NS_IMETHOD GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
+  NS_IMETHOD Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild);
+
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
+
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
+
+
 
   NS_IMETHOD  Init(nsIPresContext&  aPresContext,
                    nsIContent*      aContent,
@@ -122,6 +134,8 @@ protected:
                                    PRUint32 aStatus);
 
   void GetImageSource(nsString& aResult);
+
+  virtual void GetImageSize(nsIPresContext* aPresContext);
 
 private:
 

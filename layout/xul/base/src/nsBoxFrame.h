@@ -20,7 +20,8 @@
 /**
 
   Eric D Vaughan
-  This class lays out its children either vertically or horizontally
+  nsBoxFrame is a frame that can lay its children out either vertically or horizontally.
+  It lays them out according to a min max or preferred size.
  
 **/
 
@@ -28,87 +29,51 @@
 #define nsBoxFrame_h___
 
 #include "nsHTMLContainerFrame.h"
+#include "nsIBox.h"
+class nsHTMLReflowCommand;
 
-class nsBoxDataSpring {
+class nsCalculatedBoxInfo : public nsBoxInfo {
 public:
-    nscoord preferredSize;
-    nscoord minSize;
-    nscoord maxSize;
-    float  springConstant;
+    nsSize calculatedSize;
+    PRBool sizeValid;
+    PRBool needsReflow;
+    PRBool needsRecalc;
 
-    nscoord altMinSize;
-    nscoord altMaxSize;
-    nscoord altPreferredSize;
-
-    nscoord calculatedSize;
-    PRBool  sizeValid;
-    PRBool  wasFlowed;
-
-    void init()
-    {
-        preferredSize = 0;
-        springConstant = 0.0;
-        minSize = 0;
-        maxSize = NS_INTRINSICSIZE;
-        altMinSize = 0;
-        altMaxSize = NS_INTRINSICSIZE;
-        altPreferredSize = 0;
-
-        calculatedSize = 0;
-        sizeValid = PR_FALSE;
-        wasFlowed = PR_FALSE;
-    }
+    nsCalculatedBoxInfo();
+    virtual void clear();
 
 };
 
-class nsBoxFrame : public nsHTMLContainerFrame
+class nsBoxFrame : public nsHTMLContainerFrame, public nsIBox
 {
 public:
 
   friend nsresult NS_NewBoxFrame(nsIFrame*& aNewFrame);
 
-  NS_IMETHOD FlowChildAt(nsIFrame* frame, 
-                     nsIPresContext& aPresContext,
-                     nsHTMLReflowMetrics&     aDesiredSize,
-                     const nsHTMLReflowState& aReflowState,
-                     nsReflowStatus&          aStatus,
-                     const nsSize& size,
-                     nsIFrame*& incrementalChild);
+  // nsIBox methods
+  NS_IMETHOD GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
+  NS_IMETHOD Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild);
+
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
 
 
-    NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD  Init(nsIPresContext&  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
                    nsIFrame*        asPrevInFlow);
 
-   NS_IMETHOD  ReResolveStyleContext ( nsIPresContext* aPresContext, 
-                                      nsIStyleContext* aParentContext,
-                                      PRInt32 aParentChange,
-                                      nsStyleChangeList* aChangeList,
-                                      PRInt32* aLocalChange) ;
-
+ 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent* aChild,
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
 
 
-  // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
-
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect& aDirtyRect,
-                    nsFramePaintLayer aWhichLayer);
-
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
-                         nsGUIEvent* aEvent,
-                         nsEventStatus& aEventStatus);
-
 
   NS_IMETHOD  AppendFrames(nsIPresContext& aPresContext,
                            nsIPresShell&   aPresShell,
@@ -128,26 +93,61 @@ public:
 
   PRBool IsHorizontal() const { return mHorizontal; }
 
+  
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
+
+
 protected:
     nsBoxFrame();
 
+    virtual void GetRedefinedMinPrefMax(nsIFrame* aFrame, nsBoxInfo& aSize);
+    virtual nsresult GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsBoxInfo& aSize);
+    virtual nsresult FlowChildren(nsIPresContext&   aPresContext,
+                     nsHTMLReflowMetrics&     aDesiredSize,
+                     const nsHTMLReflowState& aReflowState,
+                     nsReflowStatus&          aStatus,
+                     nsRect& availableSize,
+                     nsIFrame*& incrementalChild); 
+
+    virtual nsresult FlowChildAt(nsIFrame* frame, 
+                     nsIPresContext& aPresContext,
+                     nsHTMLReflowMetrics&     aDesiredSize,
+                     const nsHTMLReflowState& aReflowState,
+                     nsReflowStatus&          aStatus,
+                     nscoord spring,
+                     nsIFrame*& incrementalChild);
+
+    virtual nsresult PlaceChildren(nsRect& boxRect);
+
+
+    virtual void BoundsCheck(const nsBoxInfo& aBoxInfo, nsRect& aRect);
+
+    /*
 	  virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
+    */
 
     virtual PRIntn GetSkipSides() const { return 0; }
 
     virtual void GetInset(nsMargin& margin);
   
-    virtual void Stretch(nsBoxDataSpring* springs, PRInt32 nSprings, nscoord& size);
+    virtual void LayoutChildrenInRect(nsRect& size);
+
+    virtual void InvalidateChildren();
+
+    virtual void AddSize(const nsSize& a, nsSize& b, PRBool largest);
+
 
     PRBool mHorizontal;
 
 private: 
-
-    nsBoxDataSpring springs[100];
-    nscoord totalCount;
-
+  
+    // XXX for the moment we can only handle 100 children.
+    // Should use a dynamic array.
+    nsCalculatedBoxInfo mSprings[100];
+    nscoord mSpringCount;
 }; // class nsBoxFrame
 
 

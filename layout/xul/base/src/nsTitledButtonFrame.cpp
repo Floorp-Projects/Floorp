@@ -652,7 +652,6 @@ nsTitledButtonFrame::Reflow(nsIPresContext&   aPresContext,
 {
   mNeedsLayout = PR_TRUE;
   nsresult result = nsLeafFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
-  mRenderer.AddFocusBordersAndPadding(aPresContext, aReflowState, aMetrics, mBorderPadding);
   return result;
 }
 
@@ -661,115 +660,28 @@ nsTitledButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                     const nsHTMLReflowState& aReflowState,
                                     nsHTMLReflowMetrics& aDesiredSize)
 {
-  aDesiredSize.width = 0;
-  aDesiredSize.height = 0;
+  // get our info object.
+  nsBoxInfo info;
+  info.clear();
 
-	if (mHasImage) {
-	  // get the size of the image and set the desired size
-	  if (mSizeFrozen) {
-			float p2t;
-			aPresContext->GetScaledPixelsToTwips(&p2t);
-			int v = NSIntPixelsToTwips(30, p2t);
+  GetBoxInfo(*aPresContext, aReflowState, info);
 
-			aDesiredSize.width = v;
-			aDesiredSize.height = v;
-	  } else {
-      // Ask the image loader for the *intrinsic* image size
-      mImageLoader.GetDesiredSize(aPresContext, nsnull, aDesiredSize);
+  // size is our preferred unless calculated.
+  aDesiredSize.width = info.prefSize.width;
+  aDesiredSize.height = info.prefSize.height;
 
-      if (aDesiredSize.width == 1 || aDesiredSize.height == 1)
-      {
-        // Use temporary size of 30x30 pixels until the size arrives
-        float p2t;
-        aPresContext->GetScaledPixelsToTwips(&p2t);
-        int v = NSIntPixelsToTwips(30, p2t);
+  // if either the width or the height was not computed use our intrinsic size
+  if (aReflowState.computedWidth != NS_INTRINSICSIZE)
+    if (aReflowState.computedWidth > info.minSize.width)
+       aDesiredSize.width = aReflowState.computedWidth;
+    else 
+       aDesiredSize.width = info.minSize.width;
 
-        aDesiredSize.width = v;
-        aDesiredSize.height = v;
-      }
-
-	  }
-	}
-
-  mMinSize.width = aDesiredSize.width;
-  mMinSize.height = aDesiredSize.height;
-
-  // cache the width and height of the image
-  mImageRect.width = aDesiredSize.width;
-  mImageRect.height = aDesiredSize.height;
-  
-  // depending on the type of alignment add in the space for the text
-  nsSize size;
-  GetTextSize(*aPresContext, *aReflowState.rendContext, mTitle, size);
- 
-   switch (mAlign) {
-      case NS_SIDE_TOP:
-      case NS_SIDE_BOTTOM:
-		  if (size.width > aDesiredSize.width)
-			  aDesiredSize.width = size.width;
-
-  		  if (mTitle.Length() > 0) 
-             aDesiredSize.height += size.height;
-			 
-		  if (mTitle.Length() > 0 && mHasImage) 
-              aDesiredSize.height += mSpacing;
-
-		  mMinSize.height = aDesiredSize.height;
-          break;
-     case NS_SIDE_LEFT:
-     case NS_SIDE_RIGHT:
-		  if (size.height > aDesiredSize.height)
-			  aDesiredSize.height = size.height;
-
-   		  if (mTitle.Length() > 0) 
-             aDesiredSize.width += size.width;
-
-		  if (mTitle.Length() > 0 && mHasImage)
-             aDesiredSize.width += mSpacing;
-
-  		  mMinSize.height = aDesiredSize.height; 
-
-         break;
-  
-   }
-
-  PRBool fixedWidthContent = aReflowState.HaveFixedContentWidth();
-  if (NS_INTRINSICSIZE == aReflowState.computedWidth) {
-		fixedWidthContent = PR_FALSE;
-  }
-
-  PRBool fixedHeightContent = aReflowState.HaveFixedContentHeight();
-  if (NS_INTRINSICSIZE == aReflowState.computedHeight) {
-		fixedHeightContent = PR_FALSE;
-  }
-
- 
-  nsRect minSize(0,0,mMinSize.width, mMinSize.height);
- 
-  // we need to factory or focus stuff into our computed size.
-  nscoord computedWidth = aReflowState.computedWidth;
-  nscoord computedHeight = aReflowState.computedHeight;
-
-  
-  nsMargin added = mRenderer.GetAddedButtonBorderAndPadding();
-
-  computedWidth -= (added.left + added.right);
-  computedHeight -= (added.top + added.bottom);
-
-  // if the width is set
-  if (fixedWidthContent)
-	  if (computedWidth >= minSize.width)
-	      aDesiredSize.width = computedWidth;
-	  else
-        aDesiredSize.width = minSize.width;
-  
-
-  // if the height is set
-  if (fixedHeightContent) 
-	  if (computedHeight >= minSize.height)
-	      aDesiredSize.height = computedHeight;
-	  else
-        aDesiredSize.height = minSize.height;
+  if (aReflowState.computedHeight != NS_INTRINSICSIZE)
+    if (aReflowState.computedHeight > info.minSize.height)
+       aDesiredSize.height = aReflowState.computedHeight;
+    else 
+       aDesiredSize.height = info.minSize.height;
 }
 
 
@@ -1037,4 +949,147 @@ nsTitledButtonFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsI
   return rv;
   
 } // ReResolveStyleContext
+
+void
+nsTitledButtonFrame::GetImageSize(nsIPresContext* aPresContext)
+{
+  nsSize s(0,0);
+  nsHTMLReflowMetrics desiredSize(&s);
+// not calculated? Get the intrinsic size
+	if (mHasImage) {
+	  // get the size of the image and set the desired size
+	  if (mSizeFrozen) {
+			float p2t;
+			aPresContext->GetScaledPixelsToTwips(&p2t);
+			int v = NSIntPixelsToTwips(30, p2t);
+
+			mImageRect.width = v;
+			mImageRect.height = v;
+      return;
+	  } else {
+      // Ask the image loader for the *intrinsic* image size
+      mImageLoader.GetDesiredSize(aPresContext, nsnull, desiredSize);
+
+      if (desiredSize.width == 1 || desiredSize.height == 1)
+      {
+        // Use temporary size of 30x30 pixels until the size arrives
+        float p2t;
+        aPresContext->GetScaledPixelsToTwips(&p2t);
+        int v = NSIntPixelsToTwips(30, p2t);
+
+        mImageRect.width = v;
+        mImageRect.height = v;
+        return;
+      }
+	  }
+	}
+
+  mImageRect.width = desiredSize.width;
+  mImageRect.height = desiredSize.height;
+
+
+}
+
+/**
+ * Ok return our dimensions
+ */
+NS_IMETHODIMP
+nsTitledButtonFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
+{
+  GetImageSize(&aPresContext);
+
+  aSize.minSize.width = mImageRect.width;
+  aSize.minSize.height = mImageRect.height;
+  aSize.prefSize.width = mImageRect.width;
+  aSize.prefSize.height = mImageRect.height;
+
+  // depending on the type of alignment add in the space for the text
+  nsSize size;
+  GetTextSize(aPresContext, *aReflowState.rendContext, mTitle, size);
+ 
+   switch (mAlign) {
+      case NS_SIDE_TOP:
+      case NS_SIDE_BOTTOM:
+		  if (size.width > aSize.prefSize.width)
+			  aSize.prefSize.width = size.width;
+
+  		  if (mTitle.Length() > 0) 
+             aSize.prefSize.height += size.height;
+			 
+  		  if (mTitle.Length() > 0 && mHasImage) 
+              aSize.prefSize.height += mSpacing;
+
+        aSize.minSize.height = aSize.prefSize.height;
+          
+        break;
+     case NS_SIDE_LEFT:
+     case NS_SIDE_RIGHT:
+		  if (size.height > aSize.prefSize.height)
+			  aSize.prefSize.height = size.height;
+
+   		  if (mTitle.Length() > 0) 
+             aSize.prefSize.width += size.width;
+
+		  if (mTitle.Length() > 0 && mHasImage)
+             aSize.prefSize.width += mSpacing;
+
+         aSize.minSize.width = aSize.prefSize.width;
+
+         break;
+   }
+
+   nsMargin focusBorder = mRenderer.GetAddedButtonBorderAndPadding();
+
+   aSize.prefSize.width += focusBorder.left + focusBorder.right;
+   aSize.prefSize.height += focusBorder.top + focusBorder.bottom;
+
+   aSize.minSize.width += focusBorder.left + focusBorder.right;
+   aSize.minSize.height += focusBorder.top + focusBorder.bottom;
+
+   return NS_OK;
+}
+
+/**
+ * We can be a nsIBox
+ */
+NS_IMETHODIMP 
+nsTitledButtonFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+{           
+  if (NULL == aInstancePtr) {                                            
+    return NS_ERROR_NULL_POINTER;                                        
+  }                                                                      
+                                                                         
+  *aInstancePtr = NULL;                                                  
+                                                                                        
+  if (aIID.Equals(kIBoxIID)) {                                         
+    *aInstancePtr = (void*)(nsIBox*) this;                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }   
+
+  return nsLeafFrame::QueryInterface(aIID, aInstancePtr);                                     
+}
+
+NS_IMETHODIMP
+nsTitledButtonFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
+{
+  // leafs should just return themselves as the incremental child
+  incrementalChild = this;
+  return NS_OK;
+}
+
+/*
+ * We are a frame and we do not maintain a ref count
+ */
+NS_IMETHODIMP_(nsrefcnt) 
+nsTitledButtonFrame::AddRef(void)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(nsrefcnt) 
+nsTitledButtonFrame::Release(void)
+{
+    return NS_OK;
+}
 

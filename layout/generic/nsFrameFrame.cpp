@@ -347,8 +347,14 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&          aPresContext,
     spacing->CalcBorderFor(this, border);
     offset.x = border.left;
     offset.y = border.right;
-    innerSize.width  -= border.left + border.right;
-    innerSize.height -= border.top  + border.bottom;
+    // XXX Don't subtract the border!!! The size we are given does not include our
+    // border! -EDV
+    //innerSize.width  -= border.left + border.right;
+    //innerSize.height -= border.top  + border.bottom;
+
+    // we now need to add our border in. -EDV
+    aDesiredSize.width += border.left + border.right;
+    aDesiredSize.height += border.top + border.bottom;
   }
 
   // Reflow the child and get its desired size
