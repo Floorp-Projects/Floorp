@@ -44,7 +44,8 @@ $who_list2 = [];
 @note_array = ();
 
 $bloat_by_log = {};
-
+$minLeaks = 0;
+$minBloat = 0;
 
 #$body_tag = "<BODY TEXT=#000000 BGCOLOR=#8080C0 LINK=#FFFFFF VLINK=#800080 ALINK=#FFFF00>";
 #$body_tag = "<BODY TEXT=#000000 BGCOLOR=#FFFFC0 LINK=#0000FF VLINK=#800080 ALINK=#FF00FF>";
@@ -184,7 +185,7 @@ sub load_data {
 
   &make_build_table;
 
-  load_bloat($td1);
+  ($minLeaks, $minBloat) = load_bloat($td1);
 }
 
 sub load_buildlog {
@@ -324,11 +325,20 @@ sub load_bloat {
   my ($treedata) = @_;
   local $_;
   open(BLOATLOG, "<$treedata->{name}/bloat.dat");
+  my $leakMin = -1;
+  my $bloatMin = -1;
   while (<BLOATLOG>) {
     chomp;
     my ($logfile, $leaks, $bloat) = split /\|/;
     $bloat_by_log->{$logfile} = [ $leaks, $bloat ];
+    if ($leakMin == -1 || $leaks < $leakMin) {
+        $leakMin = $leaks;
+    }
+    if ($bloatMin == -1 || $bloats < $bloatMin) {
+        $bloatMin = $bloats;
+    }
   }
+  return ($leakMin, $bloatMin);
 }
     
 sub get_build_name_index {

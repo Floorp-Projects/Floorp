@@ -229,6 +229,32 @@ sub print_table_body {
   }
 }
 
+sub print_delta {
+  my ($value, $min) = @_;
+  # this function rounds off, and prints bad (> min) values in red
+  my $units = "b";
+  if ($value >= 1000000) {
+      $value = int($value / 1000000);
+      $min = int($min / 1000000);
+      $units = "Mb";
+  }
+  else {
+    if ($value >= 1000) {
+      $value = int($value / 1000);
+      $min = int($min / 1000);
+      $units = "Kb";
+    }
+  }
+
+  if ($value > $min) {
+      return sprintf("<b><font color=\"#FF0000\">%d%s</font></b>",
+                     $value, $units);
+  }
+  else {
+      return sprintf("%d%s", $value, $units);
+  }
+}
+
 sub print_table_row {
   my ($tt) = @_;
 
@@ -330,7 +356,10 @@ sub print_table_row {
       ($leaks, $bloat) = @{ $bloat_by_log->{$logfile} };
       # Percentage, or absolute?
       # printf "<br>%+.2f<br>%+.2f", $leaks, $bloat;
-      printf "<br>%d<br>%d", $leaks, $bloat;
+      #printf "<br>%d<br>%d", $leaks, $bloat;
+      printf "<br>Lk:%s<br>Bl:%s", 
+             print_delta($leaks, $minLeaks), 
+             print_delta($bloat, $minBloat);
     }
 
     # Binary
