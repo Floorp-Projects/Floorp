@@ -33,7 +33,7 @@ class nsScreenManagerGtk : public nsIScreenManager
 {
 public:
   nsScreenManagerGtk ( );
-  ~nsScreenManagerGtk();
+  virtual ~nsScreenManagerGtk();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCREENMANAGER
