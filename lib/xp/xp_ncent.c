@@ -549,7 +549,7 @@ void XP_RegisterNavCenter(HT_Pane htPane, MWContext *pDocked)
  */
 void XP_UnregisterNavCenter(HT_Pane htPane)
 {
-    if(htPane && xp_GlobalNavCenters) {
+    if(htPane) {
         /*  Remove whatever info it may be holding.
          */
         xp_uninitnavcenter(htPane, NULL, TRUE);
@@ -563,11 +563,13 @@ void XP_UnregisterNavCenter(HT_Pane htPane)
         
         /*  List cleanup.
          */
+		if (xp_GlobalNavCenters) {
         XP_ListRemoveObject(xp_GlobalNavCenters, (void *)htPane);
         if(XP_ListIsEmpty(xp_GlobalNavCenters)) {
             XP_ListDestroy(xp_GlobalNavCenters);
             xp_GlobalNavCenters = NULL;
         }
+		}
     }
 }
 
