@@ -76,14 +76,14 @@ public:
     : mContext(aContext), mMutable(PR_TRUE)
   {
     if (aContext)
-      aContext->ReadMutableStyleData(SID, &(nsStyleStruct*)mStyleStruct);
+      aContext->ReadMutableStyleData(SID, (nsStyleStruct**)&mStyleStruct);
   }
 
   basic_nsAutoMutableStyle(nsIStyleContext* aContext)
     : mContext(aContext), mMutable(PR_FALSE)
   {
     if (aContext)
-      aContext->ReadMutableStyleData(SID, &(nsStyleStruct*)mStyleStruct);
+      aContext->ReadMutableStyleData(SID, (nsStyleStruct**)&mStyleStruct);
   }
 
   ~basic_nsAutoMutableStyle()
