@@ -54,8 +54,6 @@ extern "C" void GC_gcollect(void);
 static void GC_gcollect() {}
 #endif
 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-
 NS_IMPL_ISUPPORTS1(nsAboutBloat, nsIAboutModule)
 
 NS_IMETHODIMP
