@@ -21,7 +21,7 @@
 */
 
 #include "jsdbpriv.h"
-
+#include <errno.h>
 
 /***************************************************************************/
 
@@ -73,8 +73,11 @@ jsdb_ScriptHookProc(JSDContext* jsdc,
        NULL != (fun = JS_ValueToFunction(data->cxDebugger, data->jsScriptHook)))
     {
         jsval result;
-        jsval args[2] = {P2H_SCRIPT(data->cxDebugger, jsdscript),
-                         creating ? JSVAL_TRUE : JSVAL_FALSE };
+        jsval args[2];
+
+        args[0] = P2H_SCRIPT(data->cxDebugger, jsdscript);
+        args[1] = creating ? JSVAL_TRUE : JSVAL_FALSE;
+
         JS_CallFunction(data->cxDebugger, NULL, fun, 2, args, &result);
     }
 }
@@ -233,7 +236,7 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 Gets(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     char buf[1024];
-    if(! gets(buf))
+    if(! fgets(buf, sizeof(buf), stdin))
         return JS_FALSE;
     *rval = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, buf));
     return JS_TRUE;
