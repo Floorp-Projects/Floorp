@@ -45,6 +45,7 @@
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
 #include "nsIImapIncomingServer.h"
+#include "nsXPIDLString.h"
 
 class nsIMAPMessagePartIDArray;
 class nsIMsgIncomingServer;
@@ -496,6 +497,9 @@ private:
     PRBool m_fromHeaderSeen;
 
 	// progress stuff
+	void SetProgressString(PRInt32 stringId);
+
+	nsXPIDLString m_progressString;
 	PRInt32	m_progressStringId;
 	PRInt32	m_progressIndex;
 	PRInt32 m_progressCount;
