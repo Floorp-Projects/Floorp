@@ -73,7 +73,9 @@ class nsINodeInfo;
 
 typedef unsigned long PtrBits;
 
-/** This bit will be set if the nsGenericElement has nsDOMSlots */
+/**
+ * This bit will be set if the nsGenericElement doesn't have nsDOMSlots
+ */
 #define GENERIC_ELEMENT_DOESNT_HAVE_DOMSLOTS   0x00000001U
 
 /**
