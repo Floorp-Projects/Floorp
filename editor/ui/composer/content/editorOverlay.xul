@@ -576,14 +576,14 @@
     <popup id="TextColorPopup"  popupanchor="bottomleft">
       <html:div id="TextColorCaption" class="color-caption" align="center">&textColorCaption.label;</html:div>
   		<!-- TODO: Add "Last color picked" button and text -->
-      <colorpicker id="TextColorPicker" palettename="standard" onclick="EditorSelectTextColor('TextColorPicker','TextColorPopupButton')"/>
+      <colorpicker id="TextColorPicker" palettename="standard" onclick="EditorSelectTextColor('TextColorPicker','TextColorPopupButton'); parentNode.closePopup();"/>
     </popup>
 
     <popup id="BackColorPopup"  popupanchor="bottomleft">
       <!-- Text Caption is filled in at runtime -->
   		<!-- TODO: Add "Last color picked" button and text -->
       <html:div id="BackColorCaption" class="color-caption" align="center">Background Color</html:div>
-  		<colorpicker id="BackColorPicker" palettename="standard" onclick="EditorSelectBackColor('BackColorPicker','BackColorPopupButton')"/>
+  		<colorpicker id="BackColorPicker" palettename="standard" onclick="EditorSelectBackColor('BackColorPicker','BackColorPopupButton'); parentNode.closePopup();"/>
     </popup>
 
     <menupopup id="AlignmentPopup">

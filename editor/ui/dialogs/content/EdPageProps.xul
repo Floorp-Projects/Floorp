@@ -162,19 +162,19 @@
 
 <popupset>
   <popup id="textPopup">
-    <colorpicker id="textCP" palettename="standard" onclick="getColor('textCP', 'textCW');"/>
+    <colorpicker id="textCP" palettename="standard" onclick="getColor('textCP', 'textCW'); parentNode.closePopup();"/>
   </popup>
   <popup id="linkPopup">
-    <colorpicker id="linkCP" palettename="standard" onclick="getColor('linkCP', 'linkCW');"/>
+    <colorpicker id="linkCP" palettename="standard" onclick="getColor('linkCP', 'linkCW'); parentNode.closePopup();"/>
   </popup>
   <popup id="activePopup">
-    <colorpicker id="activeCP" palettename="standard" onclick="getColor('activeCP', 'activeCW');"/>
+    <colorpicker id="activeCP" palettename="standard" onclick="getColor('activeCP', 'activeCW'); parentNode.closePopup();"/>
   </popup>
   <popup id="followedPopup">
-    <colorpicker id="followedCP" palettename="standard" onclick="getColor('followedCP', 'followedCW');"/>
+    <colorpicker id="followedCP" palettename="standard" onclick="getColor('followedCP', 'followedCW'); parentNode.closePopup();"/>
   </popup>
   <popup id="backgroundPopup">
-    <colorpicker id="backgroundCP" palettename="standard" onclick="getColor('backgroundCP', 'backgroundCW');"/>
+    <colorpicker id="backgroundCP" palettename="standard" onclick="getColor('backgroundCP', 'backgroundCW'); parentNode.closePopup();"/>
   </popup>
 </popupset>
 
