@@ -253,7 +253,7 @@ foreach my $i (@ARGV) {
     print FID $text;
     close FID;
     if (Different($old, $new)) {
-        system("diff -c $old $new > $diffs");
+        system("diff -c -b $old $new > $diffs");
         my $tolist = fixaddresses([$::bug{'assigned_to'}, $::bug{'reporter'},
                                    $::bug{'qa_contact'}]);
         my $cclist = fixaddresses($::bug{'cclist'});
