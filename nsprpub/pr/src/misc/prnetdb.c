@@ -83,6 +83,12 @@ PRLock *_pr_dnsLock = NULL;
  * Some return a pointer to struct protoent, others return
  * an int.
  */
+#if defined(XP_BEOS) && defined(BONE_VERSION)
+#include <arpa/inet.h>  /* pick up define for inet_addr */
+#include <sys/socket.h>
+#define _PR_HAVE_GETPROTO_R
+#define _PR_HAVE_GETPROTO_R_POINTER
+#endif
 
 #if defined(SOLARIS) || (defined(BSDI) && defined(_REENTRANT)) \
 	|| (defined(LINUX) && defined(_REENTRANT) \
