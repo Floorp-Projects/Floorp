@@ -14,7 +14,6 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-#
 # Build the Mozilla client.
 #
 # This needs CVSROOT set to work, e.g.,
@@ -22,30 +21,40 @@
 # or
 #   setenv CVSROOT :pserver:username%somedomain.org@cvs.mozilla.org:/cvsroot
 # 
-# Usage:
+# To checkout and build a new tree,
+#    1. cvs co mozilla/client.mk
+#    2. cd mozilla
+#    3. gmake -f client.mk webconfig
+#       (or goto http://cvs-mirror.mozilla.org/webtools/build/config.cgi)
+#    4. gmake -f client.mk
 #
-#  To checkout and build a new tree,
-#      cvs checkout mozilla/client.mk
-#      gmake -f mozilla/client.mk
-#  To checkout (update) and build an existing tree,
-#      gmake -f mozilla/client.mk
-#  To only checkout, configure, or build,
-#      gmake -f mozilla/client.mk [checkout] [configure] [build]
+# To checkout (update) and build an existing tree,
+#    gmake -f client.mk
 #
-# See http://www.mozilla.org/unix/ for more information.
+# Other targets (gmake -f client.mk [targets...]),
+#    checkout  (also pull_all)
+#    build     (also build_all)
+#    realclean (also clobber_all)
+#    clean     (also clobber)
+#
+# The nspr library is handled as follows,
+#    Read $HOME/.mozmyconfig.sh (or $(TOPSRCDIR)/myconfig.sh) and
+#    get the directory specified by --with-nspr.
+#    If the flag is not there, look for nspr in /usr/bin.
+#    Otherwise, build from tip and install in $(OBJDIR)/dist/nspr
+#
+# See http://www.mozilla.org/build/unix.html for more information.
 #
 # Options:
-#   NSPR_INSTALL_DIR     - nspr directory for configure --with-nspr=
-#   USE_PTHREADS         - pthreads for nspr and configure
-#   MOZ_OBJDIR           - destination Object Directory (relative path)
+#   MOZ_WITH_NSPR       - Nspr directory for configure --with-nspr=
+#   MOZ_WITH_PTHREADS   - Pthreads for nspr and configure
+#   MOZ_OBJDIR          - Destination object directory
 # also,
-#   MOZ_CVS_FLAGS        - flags to pass to CVS
-#   MOZ_CHECKOUT_FLAGS   - flags to pass after cvs co
-#   MOZ_BRANCH           - default branch to checkout
-#   MOZ_TOOLKIT          - toolkit for configure --enable-toolkit=
+#   MOZ_CO_BRANCH       - Branch tag to use for checkout (default: HEAD)
+#   MOZ_CO_MODULE       - Module to checkout (default: SeaMonkeyEditor)
+#   MOZ_CVS_FLAGS       - Flags to pass cvs (default: -q -z3)
+#   MOZ_CO_FLAGS        - Flags to pass after 'cvs co' (default: -P)
 
-# Basic static variables
-# 
 CWD		:= $(shell pwd)
 ifeq (mozilla, $(notdir $(CWD)))
 ROOTDIR		:= $(shell dirname $(CWD))
@@ -57,41 +66,39 @@ endif
 
 
 AUTOCONF	:= autoconf
-TARGETS		:= export libs install
 MKDIR		:= mkdir
 SH		:= /bin/sh
 ifndef MAKE
 MAKE		:= gmake
 endif
+WEBCONFIG_URL   := http://cvs-mirror.mozilla.org/webtools/build/config.cgi
 
 CONFIG_GUESS	:= $(wildcard $(TOPSRCDIR)/build/autoconf/config.guess)
 ifndef CONFIG_GUESS
   IS_FIRST_CHECKOUT := 1
+  CONFIG_GUESS := $(shell $(CONFIG_GUESS))
 endif
+
+# Load options from myconfig.sh
+#   (See build pages, http://www.mozilla.org/build/unix.html, 
+#    for how to set up myconfig.sh.)
+run_for_side_effects := \
+	$(shell build/autoconf/myconfig2defs.sh > .client-defs.mk)
+-include .client-defs.mk
 
 ifdef MOZ_OBJDIR
   OBJDIR := $(MOZ_OBJDIR)
 else
-# Default objdir, e.g. mozilla/../obj-sparc-sun-solaris2.5.1
+# Default objdir, e.g. mozilla/obj-i686-pc-linux-gnu
   OBJDIR :=
   ifdef CONFIG_GUESS
-    OBJDIR := $(ROOTDIR)/obj-$(shell $(CONFIG_GUESS))
+    OBJDIR := $(ROOTDIR)/obj-$(CONFIG_GUESS)
   endif
 endif
 
 # 
 # Step 1: CVS
 #
-# Add new cvs-related flags here in the form
-# ifdef MOZ_FLAGNAME
-# 	CVS_FLAGNAME = -option $(CVS_FLAGNAME)
-# else (optional)
-#   CVS_FLAGNAME = -some -defaults
-# endif
-# then:
-# - DOCUMENT THE NEW OPTION ABOVE!
-# - Add $(CVS_FLAGNAME) to CVS_FLAGS at the bottom
-
 
 # Basic CVS flags
 ifdef MOZ_CVS_FLAGS
@@ -101,15 +108,19 @@ else
 endif
 
 # Anything that we should use on all checkouts
-ifdef MOZ_CHECKOUT_FLAGS
-  CVS_COFLAGS := $(MOZ_CHECKOUT_FLAGS)
+ifdef MOZ_CO_FLAGS
+  CVS_COFLAGS := $(MOZ_CO_FLAGS)
 else
   CVS_COFLAGS := -P
 endif
 
 # The default branch tag
-ifdef MOZ_BRANCH
-  CVS_BRANCH_FLAGS := -r $(MOZ_BRANCH_FLAGS)
+ifdef MOZ_CO_BRANCH
+  CVS_BRANCH_FLAGS := -r $(MOZ_CO_BRANCH)
+endif
+
+ifndef MOZ_CO_MODULE
+  MOZ_CO_MODULE := SeaMonkeyEditor
 endif
 
 CVS		:= cvs $(CVS_CFLAGS)
@@ -120,7 +131,7 @@ CVSCO_LOGFILE	:= $(ROOTDIR)/cvsco.log
 # Step 2: NSPR
 #
 
-ifeq ($(USE_PTHREADS), 1)
+ifeq ($(MOZ_WITH_PTHREADS), 1)
 NSPR_PTHREAD_FLAG := USE_PTHREADS=1
 endif
 
@@ -129,10 +140,14 @@ NSPR_BRANCH :=
 
 # These options can be overriden by the user
 
-ifndef NSPR_INSTALL_DIR
-NSPR_INSTALL_DIR	:= $(TOPSRCDIR)/$(OBJDIR)/nspr
-# Need to build nspr since none was given
-OPTIONAL_NSPR_BUILD	:= nspr
+ifdef MOZ_WITH_NSPR
+NSPR_INSTALL_DIR := $(MOZ_WITH_NSPR)
+else
+ifneq ("$(wildcard /usr/lib/libnspr21*)","")
+NSPR_INSTALL_DIR := /usr
+else
+NSPR_INSTALL_DIR := $(TOPSRCDIR)/$(OBJDIR)/nspr
+endif
 endif
 
 ifndef NSPR_OPTIONS
@@ -153,31 +168,16 @@ NSPR_GMAKE_OPTIONS := \
 #
 # Step 3: autoconf
 #
-# Add new autoconf/configure flags here in the form:
-# ifdef MOZ_FLAGNAME
-#   CONFIG_FLAGNAME_FLAG = --some-config-option=$(MOZ_FLAGNAME)
-# endif
-# then:
-# - DOCUMENT THE NEW OPTION ABOVE!
-# - Add $(CONFIG_FLAGNAME_FLAG) to CONFIG_FLAGS at the bottom
 
-# Default object directory, e.g. obj-sparc-sun-solaris2.5.1
+CONFIG_FLAGS :=
 
-ifdef MOZ_TOOLKIT
-  CONFIG_TOOLKIT_FLAG	:= --enable-toolkit=$(MOZ_TOOLKIT)
+ifeq "$(origin MOZ_WITH_NSPR)" "environment"
+CONFIG_FLAGS += --with-nspr=$(NSPR_INSTALL_DIR)
 endif
 
-ifeq ($(USE_PTHREADS), 1)
-  CONFIG_PTHREAD_FLAG	:= --with-pthreads
+ifeq "$(origin MOZ_WITH_PTHREADS)" "environment"
+CONFIG_FLAGS += --with-pthreads
 endif
-
-CONFIG_FLAGS := \
-	--with-nspr=$(NSPR_INSTALL_DIR) \
-	--enable-editor \
-	--enable-debug \
-	$(CONFIG_PTHREADS_FLAG) \
-	$(CONFIG_TOOLKIT_FLAG) \
-	$(NULL)
 
 #
 # Rules
@@ -203,7 +203,7 @@ checkout:
 	fi
 	@date > $(CVSCO_LOGFILE)
 	cd $(ROOTDIR) && \
-	  $(CVSCO) SeaMonkeyEditor | tee -a $(CVSCO_LOGFILE)
+	  $(CVSCO) $(MOZ_CO_MODULE) | tee -a $(CVSCO_LOGFILE)
 	@if egrep "^C " $(CVSCO_LOGFILE) > /dev/null 2>&1 ; then \
 	  echo "$(MAKE): *** Conflicts during checkout. \
 	       Refer to $(CVSCO_LOGFILE)."; \
@@ -212,8 +212,9 @@ checkout:
 
 
 ifdef IS_FIRST_CHECKOUT
+# First time, do build target in a new process to pick up new files.
 build:
-	$(MAKE) -f $(TOPSRCDIR)/client.mk $(OPTIONAL_NSPR_BUILD) build
+	$(MAKE) -f $(TOPSRCDIR)/client.mk build
 else
 
 #
@@ -224,23 +225,23 @@ CONFIG_STATUS := $(wildcard $(OBJDIR)/config.status)
 CONFIG_CACHE  := $(wildcard $(OBJDIR)/config.cache)
 
 ifdef RUN_AUTOCONF_LOCALLY
-EX_CONFIG_DEPS := \
+EXTRA_CONFIG_DEPS := \
 	$(TOPSRCDIR)/aclocal.m4 \
 	$(TOPSRCDIR)/build/autoconf/gtk.m4 \
 	$(TOPSRCDIR)/build/autoconf/altoptions.m4 \
 	$(NULL)
 
-$(TOPSRCDIR)/configure: $(TOPSRCDIR)/configure.in $(EX_CONFIG_DEPS)
+$(TOPSRCDIR)/configure: $(TOPSRCDIR)/configure.in $(EXTRA_CONFIG_DEPS)
 	@echo Generating $@ using autoconf
 	cd $(TOPSRCDIR); $(AUTOCONF)
 endif
 
-$(OBJDIR)/Makefile:  $(TOPSRCDIR)/configure
+$(OBJDIR)/Makefile:  $(TOPSRCDIR)/configure $(TOPSRCDIR)/allmakefiles.sh
 	@if test ! -d $(OBJDIR); then $(MKDIR) $(OBJDIR); fi
 	@echo cd $(OBJDIR); 
 	@echo ../configure $(CONFIG_FLAGS)
 	@cd $(OBJDIR) && \
-	  LD_LIBRARY_PATH=$(NSPR_INSTALL_DIR)/lib:$(LD_LIBRARY_PATH) \
+	  LD_LIBRARY_PATH=$(MOZ_WITH_NSPR)/lib:$(LD_LIBRARY_PATH) \
 	  $(TOPSRCDIR)/configure $(CONFIG_FLAGS) \
 	  || echo Fix above errors and then restart with \"$(MAKE) -f client.mk build\"
 
@@ -254,18 +255,19 @@ endif
 # Build it
 #
 
-build:	$(OBJDIR)/Makefile
+build:  nspr $(OBJDIR)/Makefile 
 	cd $(OBJDIR); $(MAKE);
 
 # Build & install nspr.  Classic build, no autoconf.
 # Linux/RPM available.
 nspr:	$(NSPR_INSTALL_DIR)/lib/libnspr21.so
-	@echo NSPR is ready and installed in $(NSPR_INSTALL_DIR)
+	@echo NSPR is installed in $(NSPR_INSTALL_DIR)/lib
 
 $(NSPR_INSTALL_DIR)/lib/libnspr21.so:
 	@-$(MKDIR) -p $(NSPR_INSTALL_DIR)
 	($(MAKE) -C $(TOPSRCDIR)/nsprpub $(NSPR_GMAKE_OPTIONS)) 
 
+# NSPR is pulled by SeaMonkeyEditor module
 #	cd $(ROOTDIR) && $(CVSCO) $(NSPR_BRANCH) NSPR
 
 # Pass these target onto the real build system
