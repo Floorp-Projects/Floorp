@@ -286,7 +286,7 @@ void printHelp()
 "                        specifed, the xpti.dat file will be in its default     \n"
 "                        location.                                              \n"
 "         -a             Option to register all files in the default component  \n"
-"                        directories.  This is the default behavoir if regxpcom \n"
+"                        directories.  This is the default behavior if regxpcom \n"
 "                        is called without any arguments.                       \n"
 "         -h             Displays this help screen.  Must be the only option    \n"
 "                        specified.                                             \n"
