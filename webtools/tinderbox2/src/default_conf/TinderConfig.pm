@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.4 $ 
-# $Date: 2001/02/15 20:55:49 $ 
+# $Revision: 1.5 $ 
+# $Date: 2001/02/16 00:10:48 $ 
 # $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -123,7 +123,7 @@ $PopUpImpl = (
 @DBImpl = (
 	   'TinderDB::Time',
 	   'TinderDB::VC_CVS',
-	   'TinderDB::VC_Bonsai',
+#	   'TinderDB::VC_Bonsai',
 	   'TinderDB::Notice',
 	   'TinderDB::BT_Generic',
 	   'TinderDB::Build',
