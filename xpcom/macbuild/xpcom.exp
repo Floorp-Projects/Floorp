@@ -49,6 +49,9 @@ Abort__7nsDebugFPCci		# nsDebug::Abort(const char*,int)
 #__vc__17SupportsArrayImplCFi		# SupportsArrayImpl::operator [](int) const
 #AppendElement__17SupportsArrayImplFP11nsISupports		# SupportsArrayImpl::AppendElement(nsISupports*)
 NS_NewISupportsArray__FPP16nsISupportsArray		# NS_NewISupportsArray(nsISupportsArray**)
+NS_NewUnionEnumerator
+NS_NewIntersectionEnumerator
+NS_NewConjoiningEnumerator
 #EnumerateBackwards__17SupportsArrayImplFPFP11nsISupportsPv_iPv		# SupportsArrayImpl::EnumerateBackwards(int (*)(nsISupports*, void*),void*)
 #EnumerateForwards__17SupportsArrayImplFPFP11nsISupportsPv_iPv		# SupportsArrayImpl::EnumerateForwards(int (*)(nsISupports*, void*),void*)
 #Compact__17SupportsArrayImplFv		# SupportsArrayImpl::Compact()

@@ -147,7 +147,7 @@ nsConjoiningEnumerator::Prev(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_COM nsresult
+extern "C" NS_COM nsresult
 NS_NewConjoiningEnumerator(nsIEnumerator* first, nsIEnumerator* second,
                            nsIBidirectionalEnumerator* *aInstancePtrResult)
 {
@@ -292,7 +292,7 @@ nsIntersectionEnumerator::IsDone(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_COM nsresult
+extern "C" NS_COM nsresult
 NS_NewIntersectionEnumerator(nsIEnumerator* first, nsIEnumerator* second,
                       nsIEnumerator* *aInstancePtrResult)
 {
@@ -409,7 +409,7 @@ nsUnionEnumerator::IsDone(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_COM nsresult
+extern "C" NS_COM nsresult
 NS_NewUnionEnumerator(nsIEnumerator* first, nsIEnumerator* second,
                       nsIEnumerator* *aInstancePtrResult)
 {
