@@ -25,7 +25,7 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsIChromeRegistry.h"
-
+#include "nsIAppStartupNotifier.h"
 #include "nsIStringBundle.h"
 
 #include "nsIDirectoryService.h"
@@ -111,6 +111,11 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
 
         sRegistryInitializedFlag = PR_TRUE;
     }
+
+	nsCOMPtr<nsIObserver> mStartupNotifier = do_CreateInstance(NS_APPSTARTUPNOTIFIER_CONTRACTID, &rv);
+	if(NS_FAILED(rv))
+		return rv;
+	mStartupNotifier->Observe(nsnull, APPSTARTUP_TOPIC, nsnull);
 
     // Create the Event Queue for the UI thread...
     //
