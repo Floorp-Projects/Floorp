@@ -335,8 +335,7 @@ BookmarksToolbar.prototype = {
   findRDFNode: function (aStartNode, aIncludeStartNodeFlag)
   {
     var temp = aStartNode;
-    while (temp && temp.localName != (aIncludeStartNodeFlag ? "button"     : "hbox") 
-                && temp.localName != (aIncludeStartNodeFlag ? "menubutton" : "hbox"))
+    while (temp && temp.localName != (aIncludeStartNodeFlag ? "toolbarbutton" : "hbox")) 
       temp = temp.parentNode;
     return temp || this.element;
   },
@@ -410,11 +409,11 @@ BookmarksToolbar.prototype = {
         return false;
       case "cmd_open":
         var seln = gBookmarksShell.getSelection();
-        return document.popupNode != null && seln[0].getAttribute("type") == NC_NS + "Bookmark";
+        return document.popupNode != null && seln[0].getAttributeNS(RDF_NS, "type") == NC_NS + "Bookmark";
       case "cmd_openfolder":
       case "cmd_openfolderinnewwindow":
         seln = gBookmarksShell.getSelection();
-        return document.popupNode != null && seln[0].getAttribute("type") == NC_NS + "Folder";
+        return document.popupNode != null && seln[0].getAttributeNS(RDF_NS, "type") == NC_NS + "Folder";
       case "cmd_find":
       case "cmd_newbookmark":
       case "cmd_newfolder":
@@ -428,17 +427,17 @@ BookmarksToolbar.prototype = {
       case "cmd_setnewbookmarkfolder":
         seln = gBookmarksShell.getSelection();
         if (!seln.length) return false;
-        var folderType = seln[0].getAttribute("type") == (NC_NS + "Folder");
+        var folderType = seln[0].getAttributeNS(RDF_NS, "type") == (NC_NS + "Folder");
         return document.popupNode != null && !(NODE_ID(seln[0]) == "NC:NewBookmarkFolder") && folderType;
       case "cmd_setpersonaltoolbarfolder":
         seln = gBookmarksShell.getSelection();
         if (!seln.length) return false;
-        folderType = seln[0].getAttribute("type") == (NC_NS + "Folder");
+        folderType = seln[0].getAttributeNS(RDF_NS, "type") == (NC_NS + "Folder");
         return document.popupNode != null && !(NODE_ID(seln[0]) == "NC:PersonalToolbarFolder") && folderType;
       case "cmd_setnewsearchfolder":
         seln = gBookmarksShell.getSelection();
         if (!seln.length) return false;
-        folderType = seln[0].getAttribute("type") == (NC_NS + "Folder");
+        folderType = seln[0].getAttributeNS(RDF_NS, "type") == (NC_NS + "Folder");
         return document.popupNode != null && !(NODE_ID(seln[0]) == "NC:NewSearchFolder") && folderType;
       case "cmd_bm_fileBookmark":
         seln = gBookmarksShell.getSelection();
