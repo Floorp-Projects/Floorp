@@ -70,6 +70,7 @@ sub run {
                     $self->{command} = '';
                     $self->noCommand();
                 }
+                $self->commandDone();
             } # verifyInput should deal with the errors
         } except {
             $self->dump(3, "previous command didn't go over well: @_");
@@ -246,6 +247,11 @@ sub unknownCommand {
 sub noCommand {
     my $self = shift;
     $self->unknownCommand(@_);
+}
+
+sub commandDone {
+    my $self = shift;
+    $self->getCollectingServiceList('dispatcher.commandDone')->commandDone($self);
 }
 
 sub name {
