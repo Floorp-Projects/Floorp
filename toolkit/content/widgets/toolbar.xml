@@ -11,7 +11,61 @@
     </resources>
   </binding>
   
-  <binding id="toolbar" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base"/>
+  <binding id="toolbar" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base">
+    <implementation>
+      <field name="palette">
+        null
+      </field>
+      <field name="afterPalette">
+        null
+      </field>
+      <method name="buildItemsFromPalette">
+        <body>
+          <![CDATA[
+            var node = this.firstChild;
+            while (node) {
+              if (node.localName == "toolbarpalette")
+                break;
+              node = node.nextSibling;
+            }
+            if (!node)
+              return;
+            
+            this.afterPalette = node.nextSibling;
+            this.palette = node;
+            this.removeChild(node);
+
+            var currentSet = node.getAttribute("currentset");
+            if (!currentSet)
+              currentSet = node.getAttribute("defaultset");
+
+            var items = currentSet.split(",");
+            for (var i = 0; i < items.length; i++) {
+              var item = items[i];
+
+              // Attempt to locate the item within the palette's list of children.
+              var paletteItem = node.firstChild;
+              while (paletteItem) {
+                var paletteID = paletteItem.getAttribute("id");
+                if (paletteID == item) {
+                  var newItem = paletteItem.cloneNode(true);
+                  this.insertBefore(newItem, this.afterPalette);
+                }
+                  
+                paletteItem = paletteItem.nextSibling;
+              }
+            }
+          ]]>
+        </body>
+      </method>
+      <constructor>
+        <![CDATA[
+          this.buildItemsFromPalette();
+        ]]>
+      </constructor>
+    </implementation>
+  </binding>
+
   <binding id="toolbox" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base"/>
 
   <binding id="menubar" extends="xul:menubar">
