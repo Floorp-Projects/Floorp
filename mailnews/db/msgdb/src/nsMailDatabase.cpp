@@ -121,7 +121,7 @@ NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, PRBo
   }
   
   // if the old summary doesn't exist, we're creating a new one.
-  if (!summarySpec.Exists() && create)
+  if ((!summarySpec.Exists() || !summarySpec.GetFileSize()) && create)
     newFile = PR_TRUE;
   
   mailDB = new nsMailDatabase();
