@@ -1879,7 +1879,7 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::maxlength) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Pixel, 0)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
