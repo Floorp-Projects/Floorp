@@ -285,6 +285,7 @@ nsFileView::SetDirectory(nsIFile* aDirectory)
   if (mOutliner) {
     mOutliner->RowCountChanged(0, -oldRows);
     mOutliner->RowCountChanged(0, mTotalRows);
+    mOutliner->ScrollToRow(0);
   }
 
   return NS_OK;
