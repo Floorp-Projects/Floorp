@@ -336,6 +336,8 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
      */
     int row_stride;
 
+    // Note! row_stride here must match the row_stride in
+    // nsJPEGDecoder::OutputScanlines
 #if defined(XP_MAC) || defined(XP_MACOSX)
     row_stride = mInfo.output_width * 4;
 #else
@@ -529,11 +531,19 @@ nsJPEGDecoder::OutputScanlines()
       samples = mSamples[0];
 #endif
 
+      // Note! row_stride here must match the row_stride in
+      // nsJPEGDecoder::WriteFrom
+#if defined(XP_MAC) || defined(XP_MACOSX)
+      int row_stride = mInfo.output_width * 4;
+#else
+      int row_stride = mInfo.output_width * 3;
+#endif
+
       PRUint32 bpr;
       mFrame->GetImageBytesPerRow(&bpr);
       mFrame->SetImageData(
         samples,             // data
-        bpr,                 // length
+        row_stride,          // length
         (mInfo.output_scanline-1) * bpr); // offset
   }
 
