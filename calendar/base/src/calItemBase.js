@@ -76,6 +76,10 @@ calItemBase.prototype = {
         if (this.mAlarmTime)
             m.mAlarmTime = this.mAlarmTime.clone();
 
+        m.mAttendees = [];
+        for (var i = 0; i < this.mAttendees.length; i++)
+            mAttendees[i] = this.mAttendees[i].clone();
+
 
         m.mAttachments = this.mAttachments;
 
@@ -274,6 +278,8 @@ calItemBase.prototype = {
             genprop.stringValue = String(this.mGeneration);
             icalcomp.addProperty(genprop);
         }
+        if (this.mRecurrenceInfo)
+            icalcomp.addProperty(this.mRecurrenceInfo.icalProperty);
     },
 
 };
