@@ -30,8 +30,6 @@ REQUIRES	= util
 CSRCS		= obs.c
 CPPSRCS		= stopwatch.cpp
 
-INHIBIT_STRIP_NOT_EXPORTED = 1
-
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 

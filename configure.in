@@ -2439,23 +2439,6 @@ MOZ_ARG_ENABLE_BOOL(strip-libs,
 
 dnl ========================================================
 dnl =
-dnl = --enable-strip-not-exported
-dnl = 
-dnl = Enable stripping of not exported symbols in .so files
-dnl = 
-dnl ========================================================
-MOZ_STRIP_NOT_EXPORTED=
-
-MOZ_ARG_ENABLE_BOOL(strip-not-exported,
-[  --enable-strip-not-exported
-                          Enable stripping of not exported symbols in .so files ],
-  [MOZ_STRIP_NOT_EXPORTED=1
-   AC_DEFINE(MOZ_STRIP_NOT_EXPORTED) ])
-
-dnl ========================================================
-
-dnl ========================================================
-dnl =
 dnl = MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS
 dnl = 
 dnl = Flags to strip unused symbols from .so components
@@ -2868,7 +2851,6 @@ AC_SUBST(MOZ_ENABLE_GTK_MOZILLA)
 AC_SUBST(USE_IMPLICIT_ARCHIVE)
 
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
-AC_SUBST(MOZ_STRIP_NOT_EXPORTED)
 
 AC_SUBST(MOZ_GLE)
 
