@@ -98,6 +98,7 @@ nsWindow::nsWindow():
   mClientData = nsnull;
   mPreferredWidth  = 0;
   mPreferredHeight = 0;
+  mFont = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -341,7 +342,6 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-printf("ENTER Create a child window\n");
   mBounds = aRect;
   mAppShell = aAppShell;
  
@@ -370,7 +370,6 @@ printf("ENTER Create a child window\n");
                                     XmNuserData, this,
 				    nsnull);
 
-printf("Created a child window %d %d\n", aRect.width, aRect.height);
   if (aWidgetParent) {
     aWidgetParent->AddChild(this);
   }
@@ -381,7 +380,6 @@ printf("Created a child window %d %d\n", aRect.width, aRect.height);
 
   InitCallbacks();
   CreateGC();
-printf("EXIT Creating a child window\n");
 }
 
 //-------------------------------------------------------------------------
