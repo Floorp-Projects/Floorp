@@ -186,7 +186,7 @@ sub test_url {
     $| = 1; # gotta love autoflushing
     local $reaperchild;
     local $url = shift || "";
-    local $run_time = 0;
+    local $run_time = 'FAIL';
 
     if ( $reaperchild = fork ) {
     ## ok, the parent spins until apprunner
