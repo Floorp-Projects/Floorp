@@ -654,7 +654,7 @@ DEFINES 	+= -DMOZ_USER_DIR=$(MOZ_USER_DIR)
 
 ######################################################################
 
-GARBAGE		= $(DEPENDENCIES) core $(wildcard core.[0-9]*)
+GARBAGE		= $(DEPENDENCIES) core $(wildcard core.[0-9]*) $(wildcard *.err)
 
 ifndef SDK
 SDK		= $(DEPTH)/dist/sdk
