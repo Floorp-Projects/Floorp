@@ -642,11 +642,8 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
       do_GetService(kChromeRegistryCID, &ret);
     if (NS_SUCCEEDED(ret)) {
     
-      ret = chromeRegistry->ConvertChromeURL(mScratchUri);
+      ret = chromeRegistry->ConvertChromeURL(mScratchUri, getter_Copies(newSpec));
       if (NS_SUCCEEDED(ret)) {
-      
-        // get resolved spec
-        ret = mScratchUri->GetSpec(getter_Copies(newSpec));
         if (NS_SUCCEEDED(ret)) urlSpec = newSpec;
       }
     }
