@@ -75,6 +75,9 @@ nsresult nsLWBrkFactory::CreateInstance(nsISupports *aDelegate,
    
   nsLWBreakerFImp *imp = new nsLWBreakerFImp() ;
   
+  if(nsnull == imp) 
+     return NS_ERROR_OUT_OF_MEMORY;
+
   nsresult res = imp->QueryInterface(aIID, aResult);
   
   if(NS_FAILED(res)) {
@@ -93,7 +96,10 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
     return NS_ERROR_NULL_POINTER;
   }
   if (aClass.Equals(kLWBrkCID)) {
+    *aFactory = NULL;
     nsLWBrkFactory *factory = new nsLWBrkFactory();
+    if(nsnull == factory) 
+      return NS_ERROR_OUT_OF_MEMORY;
     nsresult res = factory->QueryInterface(kFactoryIID, (void **) aFactory);
     if (NS_FAILED(res)) {
       *aFactory = NULL;

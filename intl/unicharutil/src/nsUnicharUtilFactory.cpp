@@ -97,8 +97,11 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
   if (aFactory == NULL) {
     return NS_ERROR_NULL_POINTER;
   }
+  *aFactory = NULL;
   if (aClass.Equals(kUnicharUtilCID)) {
     nsUnicharUtilFactory *factory = new nsUnicharUtilFactory();
+    if(nsnull == factory)
+      return NS_ERROR_OUT_OF_MEMORY;
     nsresult res = factory->QueryInterface(kFactoryIID, (void **) aFactory);
     if (NS_FAILED(res)) {
       *aFactory = NULL;
@@ -108,6 +111,8 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
   }
   if (aClass.Equals(kHankakuToZenkakuCID)) {
     nsIFactory *factory = NEW_HANKAKU_TO_ZENKAKU_FACTORY();
+    if(nsnull == factory)
+      return NS_ERROR_OUT_OF_MEMORY;
     nsresult res = factory->QueryInterface(kFactoryIID, (void **) aFactory);
     if (NS_FAILED(res)) {
       *aFactory = NULL;
