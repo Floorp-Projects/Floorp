@@ -43,7 +43,6 @@ typedef int PRInt32;
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
-#include <afxres.h>
 #include <direct.h>
 #include <tchar.h>
 #include <commctrl.h>

@@ -22,8 +22,6 @@
 
 DEPTH=..\..\..
 
-!ifdef MOZ_MFC
-DIRS=$(DIRS) nszip setup setuprsc nsinstall ren8dot3
-!endif
+DIRS=$(DIRS) nsinstall nsztool setup setuprsc ren8dot3 test
 
 include <$(DEPTH)\config\rules.mak>

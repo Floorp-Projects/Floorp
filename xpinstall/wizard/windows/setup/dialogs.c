@@ -100,12 +100,12 @@ LRESULT CALLBACK DlgProcMain(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_COMMAND:
       switch(LOWORD(wParam))
       {
-        case ID_WIZNEXT:
+        case IDWIZNEXT:
           DlgSequenceNext();
           bReturn = FALSE;
           break;
 
-        case ID_WIZBACK:
+        case IDWIZBACK:
           DlgSequencePrev();
           bReturn = FALSE;
           break;
@@ -160,14 +160,14 @@ LRESULT CALLBACK DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
     case WM_COMMAND:
       switch(LOWORD(wParam))
       {
-        case ID_WIZNEXT:
+        case IDWIZNEXT:
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, ID_WIZNEXT, 0);
+          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
           break;
 
-        case ID_WIZBACK:
+        case IDWIZBACK:
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, ID_WIZBACK, 0);
+          PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
           break;
 
         case IDCANCEL:
@@ -227,14 +227,14 @@ LRESULT CALLBACK DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
     case WM_COMMAND:
       switch(LOWORD(wParam))
       {
-        case ID_WIZNEXT:
+        case IDWIZNEXT:
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, ID_WIZNEXT, 0);
+          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
           break;
 
-        case ID_WIZBACK:
+        case IDWIZBACK:
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, ID_WIZBACK, 0);
+          PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
           break;
 
         case IDCANCEL:
@@ -534,7 +534,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
             WinSpawn(diSetupType.szReadmeApp, diSetupType.szReadmeFilename, szSetupDir, SW_SHOWNORMAL, FALSE);
           break;
 
-        case ID_WIZNEXT:
+        case IDWIZNEXT:
           GetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szTempSetupPath, MAX_PATH);
           lstrcpy(sgProduct.szPath, szTempSetupPath);
 
@@ -602,14 +602,14 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           CheckWizardStateCustom(DLG_WINDOWS_INTEGRATION);
 
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, ID_WIZNEXT, 0);
+          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
           break;
 
-        case ID_WIZBACK:
+        case IDWIZBACK:
           dwTempSetupType = dwSetupType;
           lstrcpy(szTempSetupPath, sgProduct.szPath);
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, ID_WIZBACK, 0);
+          PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
           break;
 
         case IDCANCEL:
@@ -958,7 +958,7 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
             SetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(dwIndex, FALSE));
           break;
 
-        case ID_WIZNEXT:
+        case IDWIZNEXT:
           dwItems       = ListView_GetItemCount(hwndLBComponents);
           dwArrayIndex  = 0;
           for(dwCurrentItem = 0; dwCurrentItem < dwItems; dwCurrentItem++)
@@ -973,12 +973,12 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
           SiCNodeSetItemsSelected(dwItems, dwItemsSelected);
 
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, ID_WIZNEXT, 0);
+          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
           break;
 
-        case ID_WIZBACK:
+        case IDWIZBACK:
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, ID_WIZBACK, 0);
+          PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
           break;
 
         case IDCANCEL:
@@ -1178,7 +1178,7 @@ LRESULT CALLBACK DlgProcSelectAdditions(HWND hDlg, UINT msg, WPARAM wParam, LONG
             SetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(dwIndex, FALSE));
           break;
 
-        case ID_WIZNEXT:
+        case IDWIZNEXT:
           dwItems       = ListView_GetItemCount(hwndLBComponents);
           dwArrayIndex  = 0;
           for(dwCurrentItem = 0; dwCurrentItem < dwItems; dwCurrentItem++)
@@ -1193,12 +1193,12 @@ LRESULT CALLBACK DlgProcSelectAdditions(HWND hDlg, UINT msg, WPARAM wParam, LONG
           SiCNodeSetItemsSelected(dwItems, dwItemsSelected);
 
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, ID_WIZNEXT, 0);
+          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
           break;
 
-        case ID_WIZBACK:
+        case IDWIZBACK:
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, ID_WIZBACK, 0);
+          PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
           break;
 
         case IDCANCEL:
@@ -1278,7 +1278,7 @@ LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, L
     case WM_COMMAND:
       switch(LOWORD(wParam))
       {
-        case ID_WIZNEXT:
+        case IDWIZNEXT:
           if(IsDlgButtonChecked(hDlg, IDC_CHECK0) == BST_CHECKED)
           {
           }
@@ -1316,15 +1316,15 @@ LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, L
           }
 
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, ID_WIZNEXT, 0);
+          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
           break;
 
-        case ID_WIZBACK:
+        case IDWIZBACK:
           dwWizardState = DLG_WINDOWS_INTEGRATION;
           CheckWizardStateCustom(DLG_SETUP_TYPE);
 
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, ID_WIZBACK, 0);
+          PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
           break;
 
         case IDCANCEL:
@@ -1379,16 +1379,16 @@ LRESULT CALLBACK DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG l
     case WM_COMMAND:
       switch(LOWORD(wParam))
       {
-        case ID_WIZNEXT:
+        case IDWIZNEXT:
           GetDlgItemText(hDlg, IDC_EDIT_PROGRAM_FOLDER, sgProduct.szProgramFolderName, MAX_BUF);
 
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, ID_WIZNEXT, 0);
+          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
           break;
 
-        case ID_WIZBACK:
+        case IDWIZBACK:
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, ID_WIZBACK, 0);
+          PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
           break;
 
         case IDC_LIST:
@@ -1429,14 +1429,14 @@ LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
     case WM_COMMAND:
       switch(LOWORD(wParam))
       {
-        case ID_WIZNEXT:
+        case IDWIZNEXT:
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, ID_WIZNEXT, 0);
+          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
           break;
 
-        case ID_WIZBACK:
+        case IDWIZBACK:
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, ID_WIZBACK, 0);
+          PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
           break;
 
         case IDCANCEL:
@@ -1631,7 +1631,7 @@ void DlgSequenceNext()
       if(diWelcome.bShowDialog)
         InstantiateDialog(dwWizardState, diWelcome.szTitle, DlgProcWelcome);
       else
-        PostMessage(hWndMain, WM_COMMAND, ID_WIZNEXT, 0);
+        PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
       break;
 
     case DLG_WELCOME:
@@ -1639,7 +1639,7 @@ void DlgSequenceNext()
       if(diLicense.bShowDialog)
         InstantiateDialog(dwWizardState, diLicense.szTitle, DlgProcLicense);
       else
-        PostMessage(hWndMain, WM_COMMAND, ID_WIZNEXT, 0);
+        PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
 
       break;
 
@@ -1650,7 +1650,7 @@ void DlgSequenceNext()
       else
       {
         CheckWizardStateCustom(DLG_SELECT_COMPONENTS);
-        PostMessage(hWndMain, WM_COMMAND, ID_WIZNEXT, 0);
+        PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
       }
       break;
 
@@ -1661,7 +1661,7 @@ void DlgSequenceNext()
       if(diSelectComponents.bShowDialog)
         InstantiateDialog(dwWizardState, diSelectComponents.szTitle, DlgProcSelectComponents);
       else
-        PostMessage(hWndMain, WM_COMMAND, ID_WIZNEXT, 0);
+        PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
       break;
 
     case DLG_SELECT_COMPONENTS:
@@ -1669,7 +1669,7 @@ void DlgSequenceNext()
       if(diWindowsIntegration.bShowDialog)
         InstantiateDialog(dwWizardState, diWindowsIntegration.szTitle, DlgProcWindowsIntegration);
       else
-        PostMessage(hWndMain, WM_COMMAND, ID_WIZNEXT, 0);
+        PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
       break;
 
     case DLG_WINDOWS_INTEGRATION:
@@ -1699,7 +1699,7 @@ void DlgSequenceNext()
       if(diProgramFolder.bShowDialog)
         InstantiateDialog(dwWizardState, diProgramFolder.szTitle, DlgProcProgramFolder);
       else
-        PostMessage(hWndMain, WM_COMMAND, ID_WIZNEXT, 0);
+        PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
       break;
 
     case DLG_PROGRAM_FOLDER:
@@ -1707,7 +1707,7 @@ void DlgSequenceNext()
       if(diStartInstall.bShowDialog)
         InstantiateDialog(dwWizardState, diStartInstall.szTitle, DlgProcStartInstall);
       else
-        PostMessage(hWndMain, WM_COMMAND, ID_WIZNEXT, 0);
+        PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
       break;
 
     default:
@@ -1783,7 +1783,7 @@ void DlgSequencePrev()
       if(diStartInstall.bShowDialog)
         InstantiateDialog(dwWizardState, diProgramFolder.szTitle, DlgProcProgramFolder);
       else
-        PostMessage(hWndMain, WM_COMMAND, ID_WIZBACK, 0);
+        PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
       break;
 
     case DLG_PROGRAM_FOLDER:
@@ -1793,7 +1793,7 @@ void DlgSequencePrev()
       else
       {
         CheckWizardStateCustom(DLG_SELECT_COMPONENTS);
-        PostMessage(hWndMain, WM_COMMAND, ID_WIZBACK, 0);
+        PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
       }
       break;
 
@@ -1804,7 +1804,7 @@ void DlgSequencePrev()
       if(diSelectComponents.bShowDialog)
         InstantiateDialog(dwWizardState, diSelectComponents.szTitle, DlgProcSelectComponents);
       else
-        PostMessage(hWndMain, WM_COMMAND, ID_WIZBACK, 0);
+        PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
       break;
 
     case DLG_SELECT_COMPONENTS:
@@ -1812,7 +1812,7 @@ void DlgSequencePrev()
       if(diSetupType.bShowDialog)
         InstantiateDialog(dwWizardState, diSetupType.szTitle, DlgProcSetupType);
       else
-        PostMessage(hWndMain, WM_COMMAND, ID_WIZBACK, 0);
+        PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
       break;
 
     case DLG_SETUP_TYPE:
@@ -1820,7 +1820,7 @@ void DlgSequencePrev()
       if(diLicense.bShowDialog)
         InstantiateDialog(dwWizardState, diLicense.szTitle, DlgProcLicense);
       else
-        PostMessage(hWndMain, WM_COMMAND, ID_WIZBACK, 0);
+        PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
       break;
 
     case DLG_LICENSE:
@@ -1828,7 +1828,7 @@ void DlgSequencePrev()
       if(diWelcome.bShowDialog)
         InstantiateDialog(dwWizardState, diWelcome.szTitle, DlgProcWelcome);
       else
-        PostMessage(hWndMain, WM_COMMAND, ID_WIZBACK, 0);
+        PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
       break;
 
     default:
@@ -1836,7 +1836,7 @@ void DlgSequencePrev()
       if(diWelcome.bShowDialog)
         InstantiateDialog(DLG_WELCOME, diWelcome.szTitle, DlgProcWelcome);
       else
-        PostMessage(hWndMain, WM_COMMAND, ID_WIZBACK, 0);
+        PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
       break;
   }
 }
