@@ -19,7 +19,6 @@
  *
  * Contributor(s):
  *   Joe Hewitt (hewitt@netscape.com)
- *   Kevin Gerich (webmail@kmgerich.com)
  */
 
 /* ===== toolbarbutton.css =====================================================
@@ -31,67 +30,72 @@
 /* ::::: toolbarbutton ::::: */
 
 toolbarbutton {
+  -moz-appearance: toolbarbutton;
   -moz-box-align: center;
   -moz-box-pack: center;
-  margin: 0px 2px 0px 2px;
-  padding: 3px 1px 3px 1px;
-  border-right: 1px solid transparent;
-  border-left: 1px solid transparent;
+  margin: 0;
+  border: 1px solid transparent;
+  padding: 3px;
   background-color: transparent;
+  color: -moz-DialogText;
 }
 
 .toolbarbutton-icon {
-	padding: 1px 0px 1px 0px;
+  margin-right: 2px;
 }
 
 .toolbarbutton-text {
-  margin: 0px;
-  padding: 0px;
+  margin: 0 !important;
   text-align: center;
-  vertical-align: middle;
-  
 }
 
-toolbarbutton:hover:active[buttonstyle="text"],
-toolbarbutton[open="true"][buttonstyle="text"] {
+toolbarbutton:hover,
+toolbarbutton[buttonover="true"] {
+  border-color: ThreeDHighlight ThreeDShadow ThreeDShadow ThreeDHighlight;
   color: -moz-gtk2-hovertext;
 }
 
-
+toolbarbutton:hover:active,
+toolbarbutton[open="true"] {
+  border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
+  padding: 4px 2px 2px 4px;
+  color: ButtonText;
+}
 
 toolbarbutton[disabled="true"],
 toolbarbutton[disabled="true"]:hover,
-toolbarbutton[disabled="true"]:hover:active
+toolbarbutton[disabled="true"]:hover:active,
 toolbarbutton[disabled="true"][open="true"] {
-  color: GrayText !important;
+  border-color: transparent;
+  padding: 3px;
+  color: GrayText;
 }
 
 /* ..... checked state ..... */
 
 toolbarbutton[checked="true"] {
-    background-color: #DDDDDD;
-    background-image: none;
-    border-right: 1px solid #b9b9b9;
-    border-left: 1px solid #b9b9b9;
-    color: ButtonText !important;
+  border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow !important;
+  padding: 4px 2px 2px 4px !important;
+  background-image: url("chrome://global/skin/toolbar/Lighten.png");
+  color: ButtonText !important;
 }
-    
+
 /* ::::: toolbarbutton menu ::::: */
 
 .toolbarbutton-menu-dropmarker {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.png");
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
   -moz-image-region: auto; /* cut off inheritance */
-  padding-left: 2px;
 }
 
 .toolbarbutton-menu-dropmarker[disabled="true"] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.png");
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
 }
 
 /* ::::: toolbarbutton menu-button ::::: */
 
 toolbarbutton[type="menu-button"] {
   -moz-box-align: stretch;
+  -moz-box-orient: horizontal !important;
 }
 
 toolbarbutton[type="menu-button"],
@@ -101,26 +105,29 @@ toolbarbutton[type="menu-button"][open="true"],
 toolbarbutton[type="menu-button"][disabled="true"],
 toolbarbutton[type="menu-button"][disabled="true"]:hover,
 toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
-  background-color: transparent;
-  color: ButtonText;
+  border-style: none;
+  padding: 0 !important;
 }
 
 .toolbarbutton-menubutton-button {
   -moz-box-align: center;
   -moz-box-pack: center;
-
+  -moz-box-orient: vertical;
 }
-
 
 /* .......... dropmarker .......... */
 
 .toolbarbutton-menubutton-dropmarker {
   -moz-box-align: center;
-  -moz-box-pack: center;
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.png");
+  padding: 3px;
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
   -moz-image-region: auto; /* cut off inheritance */
 }
 
 .toolbarbutton-menubutton-dropmarker[disabled="true"] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.png") !important;
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif") !important;
+}
+
+toolbarbutton[type="menu-button"][open="true"] > .toolbarbutton-menubutton-dropmarker,
+toolbarbutton[type="menu-button"][buttondown="true"] > .toolbarbutton-menubutton-dropmarker {
 }
