@@ -50,22 +50,94 @@ static NS_DEFINE_IID(kIPluginStreamListener2IID, NS_IPLUGINSTREAMLISTENER2_IID);
 ns4xPluginStreamListener::ns4xPluginStreamListener(nsIPluginInstance* inst, 
                                                    void* notifyData)
     : mNotifyData(notifyData),
-      mStreamInfo(nsnull)
+      mStreamInfo(nsnull),
+      mStreamStarted(PR_FALSE),
+      mStreamCleanedUp(PR_FALSE)
 {
-    NS_INIT_REFCNT();
-	mInst = (ns4xPluginInstance*) inst;
-	mStreamBuffer=nsnull;
-    mPosition = 0;
-    mCurrentStreamOffset = -1;
-    // Initialize the 4.x interface structure
-    memset(&mNPStream, 0, sizeof(mNPStream));
+  NS_INIT_REFCNT();
+  mInst = (ns4xPluginInstance*) inst;
+  mStreamBuffer=nsnull;
+  mPosition = 0;
+  mCurrentStreamOffset = -1;
+  // Initialize the 4.x interface structure
+  memset(&mNPStream, 0, sizeof(mNPStream));
 
-	NS_IF_ADDREF(mInst);
+  NS_IF_ADDREF(mInst);
 }
 
 ns4xPluginStreamListener::~ns4xPluginStreamListener(void)
 {
-	NS_IF_RELEASE(mInst);
+#ifdef NS_DEBUG
+  printf("ns4xPluginStreamListener::~ns4xPluginStreamListener\n");
+#endif
+	CleanUpStream();
+  NS_IF_RELEASE(mInst);
+}
+
+nsresult ns4xPluginStreamListener::CleanUpStream()
+{
+  if(!mStreamStarted || mStreamCleanedUp)
+    return NS_OK;
+
+  if(!mInst)
+    return NS_ERROR_FAILURE;
+
+  NPP npp;
+  const NPPluginFuncs *callbacks = nsnull;
+
+  mInst->GetCallbacks(&callbacks);
+  mInst->GetNPP(&npp);
+
+  if(!callbacks)
+    return NS_ERROR_FAILURE;
+
+  NPError error;
+
+  if (callbacks->destroystream != NULL)
+  {
+    // XXX need to convert status to NPReason
+    PRLibrary* lib = nsnull;
+    lib = mInst->fLibrary;
+
+#ifdef NS_DEBUG
+  printf("calling NPP_DestroyStream\n");
+#endif
+
+    NS_TRY_SAFE_CALL_RETURN(error, CallNPP_DestroyStreamProc(callbacks->destroystream,
+                                                               npp,
+                                                               &mNPStream,
+                                                               NPRES_DONE), lib);
+    if(error != NPERR_NO_ERROR)
+      return NS_ERROR_FAILURE;
+  }
+
+  // check to see if we have a call back and a
+  // XXX nasty hack for Shockwave Registration. 
+  //     we seem to crash doing URLNotify so just always exclude it.
+  //     See bug 85334.
+  if (callbacks->urlnotify != NULL && mNotifyData != nsnull &&
+      strcmp(mNPStream.url,"http://pinger.macromedia.com") < 0 )
+  {
+    PRLibrary* lib = nsnull;
+    lib = mInst->fLibrary;
+
+    NS_TRY_SAFE_CALL_VOID(CallNPP_URLNotifyProc(callbacks->urlnotify,
+                                                npp,
+                                                mNPStream.url,
+                                                nsPluginReason_Done,
+                                                mNotifyData), lib);
+  }
+
+  // lets get rid of the buffer if we made one globally
+  if (mStreamBuffer)
+  {
+    PR_Free(mStreamBuffer);
+    mStreamBuffer=nsnull;
+  }
+
+  mStreamCleanedUp = PR_TRUE;
+  mStreamStarted   = PR_FALSE;
+  return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS2(ns4xPluginStreamListener, nsIPluginStreamListener, 
@@ -144,6 +216,7 @@ ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  mStreamStarted = PR_TRUE;
   return NS_OK;
 }
 
@@ -447,61 +520,26 @@ NS_IMETHODIMP
 ns4xPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo, 
                                         nsresult status)
 {
+#ifdef NS_DEBUG
+  printf("ns4xPluginStreamListener::OnStopBinding\n");
+#endif
+
   if(!mInst || !mInst->IsStarted())
     return NS_ERROR_FAILURE;
 
-  NPP npp;
-  const NPPluginFuncs *callbacks = nsnull;
+  if(pluginInfo) {
+    pluginInfo->GetURL(&mNPStream.url);
+    pluginInfo->GetLastModified((PRUint32*)&(mNPStream.lastmodified));
+  }
 
-  mInst->GetCallbacks(&callbacks);
-  mInst->GetNPP(&npp);
-
-  if(!callbacks)
+  // check if the stream is not of asfileonly type and later its destruction
+  // see bug 91140    
+  nsresult rv = NS_OK;
+  if(mStreamType == nsPluginStreamType_AsFileOnly)
+    rv = CleanUpStream();
+  
+  if(rv != NPERR_NO_ERROR)
     return NS_ERROR_FAILURE;
-
-  NPError error;
-
-  pluginInfo->GetURL(&mNPStream.url);
-  pluginInfo->GetLastModified((PRUint32*)&(mNPStream.lastmodified));
-
-  if (callbacks->destroystream != NULL)
-  {
-    // XXX need to convert status to NPReason
-    PRLibrary* lib = nsnull;
-    lib = mInst->fLibrary;
-
-    NS_TRY_SAFE_CALL_RETURN(error, CallNPP_DestroyStreamProc(callbacks->destroystream,
-                                                               npp,
-                                                               &mNPStream,
-                                                               NPRES_DONE), lib);
-    if(error != NPERR_NO_ERROR)
-      return NS_ERROR_FAILURE;
-  }
-
-  // check to see if we have a call back and a
-  // XXX nasty hack for Shockwave Registration. 
-  //     we seem to crash doing URLNotify so just always exclude it.
-  //     See bug 85334.
-  if (callbacks->urlnotify != NULL && mNotifyData != nsnull &&
-      strcmp(mNPStream.url,"http://pinger.macromedia.com") < 0 )
-  {
-    PRLibrary* lib = nsnull;
-    lib = mInst->fLibrary;
-
-    NS_TRY_SAFE_CALL_VOID(CallNPP_URLNotifyProc(callbacks->urlnotify,
-                                                npp,
-                                                mNPStream.url,
-                                                nsPluginReason_Done,
-                                                mNotifyData), lib);
-  }
-
-
-  // lets get rid of the buffer if we made one globally
-  if (mStreamBuffer)
-  {
-    PR_Free(mStreamBuffer);
-    mStreamBuffer=nsnull;
-  }
 
   return NS_OK;
 }
