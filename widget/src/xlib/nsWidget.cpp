@@ -179,7 +179,7 @@ NS_IMETHODIMP nsWidget::Destroy()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWidget::Move(PRUint32 aX, PRUint32 aY)
+NS_IMETHODIMP nsWidget::Move(PRInt32 aX, PRInt32 aY)
 {
 
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::Move(x, y)\n"));
@@ -194,8 +194,8 @@ NS_IMETHODIMP nsWidget::Move(PRUint32 aX, PRUint32 aY)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWidget::Resize(PRUint32 aWidth,
-                               PRUint32 aHeight,
+NS_IMETHODIMP nsWidget::Resize(PRInt32 aWidth,
+                               PRInt32 aHeight,
                                PRBool   aRepaint)
 {
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::Resize(width, height)\n"));
@@ -219,10 +219,10 @@ NS_IMETHODIMP nsWidget::Resize(PRUint32 aWidth,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWidget::Resize(PRUint32 aX,
-                               PRUint32 aY,
-                               PRUint32 aWidth,
-                               PRUint32 aHeight,
+NS_IMETHODIMP nsWidget::Resize(PRInt32 aX,
+                               PRInt32 aY,
+                               PRInt32 aWidth,
+                               PRInt32 aHeight,
                                PRBool   aRepaint)
 {
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::Resize(x, y, width, height)\n"));
