@@ -30,10 +30,50 @@ require "CGI.pl";
 ConnectToDatabase();
 GetVersionTable();
 
+quietly_check_login();
+
+######################################################################
+# Begin Data/Security Validation
+######################################################################
+
+# If this installation uses bug groups to restrict access to products,
+# only show the user products that don't have their own bug group or
+# those whose bug group the user is a member of.  Otherwise, if this 
+# installation doesn't use bug groups, show the user all legal products.
+my @products;
+if ( Param("usebuggroups") ) {
+  @products = grep( !GroupExists($_) || UserInGroup($_) , @::legal_product );
+} else {
+  @products = @::legal_product;
+}
+
+if ( defined $::FORM{'product'} ) {
+  # Make sure the user specified a valid product name.  Note that
+  # if the user specifies a valid product name but is not authorized
+  # to access that product, they will receive a different error message
+  # which could enable people guessing product names to determine
+  # whether or not certain products exist in Bugzilla, even if they
+  # cannot get any other information about that product.
+  grep( $::FORM{'product'} eq $_ , @::legal_product )
+    || DisplayError("The product name is invalid.")
+    && exit;
+
+  # Make sure the user is authorized to access this product.
+  if ( Param("usebuggroups") && GroupExists($::FORM{'product'}) ) {
+    UserInGroup($::FORM{'product'})
+      || DisplayError("You are not authorized to access that product.")
+      && exit;
+  }
+}
+
+######################################################################
+# End Data/Security Validation
+######################################################################
+
 print "Content-type: text/html\n\n";
 
 my $product = $::FORM{'product'};
-if (!defined $product || lsearch(\@::legal_product, $product) < 0) {
+if (!defined $product || lsearch(\@products, $product) < 0) {
 
     PutHeader("Bugzilla component description");
     print "
@@ -42,7 +82,7 @@ Please specify the product whose components you want described.
 <P>
 Product: <SELECT NAME=product>
 ";
-    print make_options(\@::legal_product);
+    print make_options(\@products);
     print "
 </SELECT>
 <P>
