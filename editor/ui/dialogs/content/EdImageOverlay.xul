@@ -43,28 +43,52 @@
       accesskey="&locationEditField.accessKey;"
       tooltiptext="&locationEditField.tooltip;"
       />
-    <textbox id="srcInput" oninput="ChangeImageSrc();"/>
+    <textbox id="srcInput" oninput="ChangeImageSrc();" tabindex="1"/>
     <hbox>
       <checkbox 
         id  = "MakeRelativeCheckbox"
-        for = "srcInput"/>
+        for = "srcInput"
+        tabindex="2"/>
       <spacer flex="1"/>
       <!-- from EdDialogOverlay.xul -->
-      <button id="ChooseFile"/>
+      <button id="ChooseFile"  tabindex="3"/>
     </hbox>
     <spacer class="spacer"/>
     <radiogroup id="altTextRadioGroup" flex="1">
-      <hbox align="center">
-        <radio id = "altTextRadio" 
-          label   = "&altText.label;"
-          accesskey = "&altText.accessKey;"
-          oncommand = "SetAltTextDisabled(false);"/>
-        <textbox flex="1"
-          id      = "altTextInput"
-          style   = "min-width : 20em"
-          tooltiptext="&altTextEditField.tooltip;"
-          oninput = "SetAltTextDisabled(false);"/>
-      </hbox>
+      <grid>
+        <columns><column/><column flex="1"/></columns>
+        <rows>
+          <row align="center">
+            <label 
+              style   = "margin-left: 26px"
+              control = "titleInput"
+              accesskey = "&title.accessKey;"
+              value   ="&title.label;"
+              tooltiptext="&title.tooltip;"
+              for     = "titleInput"/>
+            <textbox flex="1"
+              id      = "titleInput"
+              class   = "MinWidth20em"
+              tooltiptext="&title.tooltip;"
+              tabindex="4"/>
+          </row>
+          <row align="center">
+            <radio id = "altTextRadio" 
+              label   = "&altText.label;"
+              accesskey = "&altText.accessKey;"
+              tooltiptext="&altTextEditField.tooltip;"
+              oncommand = "SetAltTextDisabled(false);"
+              tabindex="5"/>
+            <textbox flex="1"
+              id      = "altTextInput"
+              class   = "MinWidth20em"
+              tooltiptext="&altTextEditField.tooltip;"
+              oninput = "SetAltTextDisabled(false);"
+              tabindex="6"/>
+          </row>
+        </rows>
+      </grid>
+
       <radio id = "noAltTextRadio" 
         label   = "&noAltText.label;"
         accesskey = "&noAltText.accessKey;"

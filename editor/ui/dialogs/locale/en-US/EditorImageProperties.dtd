@@ -32,6 +32,9 @@
 <!ENTITY locationEditField.label "Image Location:">
 <!ENTITY locationEditField.accessKey "L">
 <!ENTITY locationEditField.tooltip "Type the image's filename or location">
+<!ENTITY title.label "Tooltip:">
+<!ENTITY title.accessKey "T">
+<!ENTITY title.tooltip "The html 'title' attribute that displays as a tooltip">
 <!ENTITY altText.label "Alternate text:">
 <!ENTITY altText.accessKey "A">
 <!ENTITY altTextEditField.tooltip "Type text to display in place of the image">
