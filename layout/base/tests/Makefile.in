@@ -40,11 +40,13 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+include $(DEPTH)/config/autoconf.mk
+
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES	= xpcom \
 		  gfx \
 		  $(NULL)
-
-include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS		= \
 		TestSpaceManager.cpp \

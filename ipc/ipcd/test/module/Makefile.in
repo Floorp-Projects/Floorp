@@ -47,6 +47,7 @@ MODULE			= ipcd_test
 LIBRARY_NAME	= testmodule
 SHORT_LIBNAME	= testmod
 MODULE_NAME		= ipcd_test
+MOZILLA_INTERNAL_API = 1
 
 FORCE_SHARED_LIB	= 1
 NO_DIST_INSTALL	= 1
