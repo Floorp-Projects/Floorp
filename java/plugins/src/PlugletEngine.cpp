@@ -51,7 +51,74 @@ PRLogModuleInfo* PlugletLog::log = NULL;
   0xc1e694f3, 0x9be1, 0x11d3, { 0x83, 0x7c, 0x0, 0x4, 0xac, 0x56, 0xc4, 0x9e } \
 } 
 
+
+
+
+#ifdef XP_PC
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(PlugletEngine)
+
+#else  //XP_PC
+
+#include <dlfcn.h>
+
+/* 
+ * CheckForXTSymbol
+ * return value
+ * 1 - AWT will not complain
+ * 0 - AWT will not work
+ *
+ */
+
+int
+CheckForXTSymbol(void) 
+{
+    Dl_info dlinfo;
+    void *v;
+    v = dlsym(RTLD_DEFAULT, "vendorShellWidgetClass");
+    if (v != NULL && dladdr(v, &dlinfo)) {
+        if (strstr(dlinfo.dli_fname, "libXt.so") != NULL) {
+            fprintf(stderr, "\nRuntime link error - it appears that "
+                    "libXt got loaded before libXm,\n"
+                    "which is not allowed for pluglets\n");
+            return 0;
+        }
+    }
+    return 1;
+    
+}
+
+static NS_IMETHODIMP                                                            
+PlugletEngineConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{                                                                               
+    nsresult rv;                                                                
+    PlugletEngine * inst;
+    if ( !CheckForXTSymbol() ) {
+        rv = NS_ERROR_FAILURE;
+        return rv;
+    }
+    if (NULL == aResult) {                                                      
+        rv = NS_ERROR_NULL_POINTER;                                             
+        return rv;                                                              
+    }                                                                           
+    *aResult = NULL;                                                            
+    if (NULL != aOuter) {                                                       
+        rv = NS_ERROR_NO_AGGREGATION;                                           
+        return rv;                                                              
+    }                                                                           
+    NS_NEWXPCOM(inst, PlugletEngine);                                          
+    if (NULL == inst) {                                                         
+      rv = NS_ERROR_OUT_OF_MEMORY;                                            
+      return rv;                                                              
+    }                                                                           
+    NS_ADDREF(inst);                                                            
+    rv = inst->QueryInterface(aIID, aResult);                                   
+    NS_RELEASE(inst);                                                           
+    return rv;                                                                  
+}                                                                               
+
+#endif //XP_PC
+
 
 static  nsModuleComponentInfo components[] = 
 {
@@ -187,7 +254,7 @@ void PlugletEngine::StartJVM() {
     JavaVMInitArgs vm_args;
     JavaVMOption options[2];
     char * classpathEnv = PR_GetEnv("CLASSPATH");
-    if (classpath != NULL) {
+    if (classpathEnv != NULL) {
         sprintf(classpath, "-Djava.class.path=%s",classpathEnv);
         PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
                ("PlugletEngine::StartJVM about to create JVM classpath=%s\n",classpath));
