@@ -828,16 +828,7 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
     if ( mIsSheet && parentWindowRef ) {
         WindowPtr top = GetWindowTop(parentWindowRef);
         if (piParentWidget)
-        {
           piParentWidget->SetIgnoreDeactivate(PR_TRUE);
-          PRBool sheetFlag = PR_FALSE;
-          if (parentWindowRef &&
-            NS_SUCCEEDED(piParentWidget->GetIsSheet(&sheetFlag)) && (sheetFlag))
-          {
-            ::GetSheetWindowParent(parentWindowRef, &top);
-            ::HideSheetWindow(parentWindowRef);
-          }
-        }
         ::ShowSheetWindow(mWindowPtr, top);
         UpdateWindowMenubar(parentWindowRef, PR_FALSE);
         gEventDispatchHandler.DispatchGuiEvent(this, NS_GOTFOCUS);
@@ -881,14 +872,7 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
         // we need to ensure that the top app window is active
         WindowPtr top = GetWindowTop(parentWindowRef);
 
-        PRBool sheetFlag = PR_FALSE;
-        if (parentWindowRef &&
-          NS_SUCCEEDED(piParentWidget->GetIsSheet(&sheetFlag)) && (sheetFlag))
-        {
-          ::GetSheetWindowParent(parentWindowRef, &top);
-          ::ShowSheetWindow(parentWindowRef, top);
-        }
-        else if ( mAcceptsActivation ) {
+        if ( mAcceptsActivation ) {
             ::ShowWindow(top);
         }
         else {
@@ -1384,13 +1368,6 @@ NS_IMETHODIMP
 nsMacWindow::SetIgnoreDeactivate(PRBool ignoreDeactivate)
 {
   mIgnoreDeactivate = ignoreDeactivate;
-  return(NS_OK);
-}
-
-NS_IMETHODIMP
-nsMacWindow::GetIsSheet(PRBool *_retval)
-{
-  *_retval = mIsSheet;
   return(NS_OK);
 }
 
