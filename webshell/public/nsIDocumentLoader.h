@@ -22,11 +22,7 @@
 #include "nsweb.h"
 #include "prtypes.h"
 #include "nsISupports.h"
-#ifdef NECKO
 #include "nsIChannel.h"
-#else
-#include "nsILoadAttribs.h"
-#endif // NECKO
 
 /* Forward declarations... */
 class nsString;
@@ -68,12 +64,8 @@ public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENTLOADERFACTORY_IID)
 
     NS_IMETHOD CreateInstance(const char *aCommand,
-#ifdef NECKO
                               nsIChannel* aChannel,
                               nsILoadGroup* aLoadGroup,
-#else
-                              nsIURI* aURL,
-#endif
                               const char* aContentType, 
                               nsIContentViewerContainer* aContainer,
                               nsISupports* aExtraInfo,

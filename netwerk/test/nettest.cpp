@@ -224,9 +224,6 @@ int main(int argc, char **argv)
         // Create the URL object...
         pURL = NULL;
 #if 1
-#ifndef NECKO
-        result = NS_NewURL(&pURL, argv[i], nsnull);
-#else
         NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
         if (NS_FAILED(result)) return result;
 
@@ -237,7 +234,6 @@ int main(int argc, char **argv)
         result = uri->QueryInterface(nsCOMTypeInfo<nsIURL>::GetIID(), (void**)&pURL);
         NS_RELEASE(uri);
         if (NS_FAILED(result)) return result;
-#endif // NECKO
         if (NS_OK != result) {
             if (bTraceEnabled) {
                 printf("NS_NewURL() failed...\n");

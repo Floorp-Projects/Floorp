@@ -24,9 +24,6 @@ interface nsIChannel;
 
 %{C++
 class nsIDOMWindow; // Seems domstubs.idl should do this, though.
-#ifndef NECKO   // gross hack since we can't put ifdefs in idl:
-#define nsIChannel nsIURI
-#endif
 %}
 
 

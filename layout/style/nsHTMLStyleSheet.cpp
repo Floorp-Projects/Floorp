@@ -21,13 +21,11 @@
 #include "nsCRT.h"
 #include "nsIAtom.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsNeckoUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 #include "nsISupportsArray.h"
 #include "nsHashtable.h"
 #include "nsIHTMLContent.h"
@@ -657,9 +655,6 @@ HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                
                   nsAutoString absURLSpec;
                   nsresult rv;
-#ifndef NECKO
-                  rv = NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
-#else
                   nsIURI *baseUri = nsnull;
                   rv = docURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
                   if (NS_FAILED(rv)) return 0;
@@ -667,7 +662,6 @@ HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                   rv = NS_MakeAbsoluteURI(href, baseUri, absURLSpec);
 
                   NS_RELEASE(baseUri);
-#endif // NECKO
                   NS_IF_RELEASE(docURL);
 
                   nsLinkState  state;
@@ -1153,22 +1147,12 @@ void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
 
   fputs("HTML Style Sheet: ", out);
-#ifdef NECKO
   char* urlSpec = nsnull;
   mURL->GetSpec(&urlSpec);
   if (urlSpec) {
     fputs(urlSpec, out);
     nsCRT::free(urlSpec);
   }
-#else
-  PRUnichar* urlSpec = nsnull;
-  mURL->ToString(&urlSpec);
-  if (urlSpec) {
-    nsAutoString buffer(urlSpec);
-    fputs(buffer, out);
-    delete [] urlSpec;
-  }
-#endif
   fputs("\n", out);
 }
 

@@ -21,10 +21,6 @@
 
 #include "nsIXPBaseWindow.h"
 #include "nsIStreamListener.h"
-#ifdef NECKO
-#else
-#include "nsINetSupport.h"
-#endif
 #include "nsIWebShell.h"
 #include "nsIScriptContextOwner.h"
 #include "nsString.h"
@@ -45,9 +41,6 @@ class nsIPref;
  * 
  */
 class nsXPBaseWindow : public nsIXPBaseWindow,
-#ifndef NECKO
-                       public nsINetSupport,
-#endif
                        public nsIWebShellContainer,
                        public nsIDOMMouseListener
 {
@@ -103,20 +96,6 @@ public:
                          nsIDOMWindow* aWindow, nsIDOMWindow** outPopup);
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
   NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
-
-#ifndef NECKO
-  // nsINetSupport
-  NS_IMETHOD_(void) Alert(const nsString &aText);
-  NS_IMETHOD_(PRBool) Confirm(const nsString &aText);
-  NS_IMETHOD_(PRBool) Prompt(const nsString &aText,
-                             const nsString &aDefault,
-                             nsString &aResult);
-  NS_IMETHOD_(PRBool) PromptUserAndPassword(const nsString &aText,
-                                            nsString &aUser,
-                                            nsString &aPassword);
-  NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
-                                     nsString &aPassword);
-#endif
 
   void Layout(PRInt32 aWidth, PRInt32 aHeight);
 

@@ -39,10 +39,8 @@
 #include "mkutils.h"
 #include "prefapi.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsIIOService.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 #include "nsINetlibURL.h"
 #include "nsINetService.h"
 #include "nsIInputStream.h"
@@ -846,9 +844,6 @@ nsSilentDownloadTask::DownloadSelf(PRInt32 range)
     // Create the URL object...
     pURL = NULL;
 
-#ifndef NECKO
-    result = NS_NewURL(&pURL, mUrl);
-#else
     NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
     if (NS_FAILED(result)) return result;
 
@@ -861,7 +856,6 @@ nsSilentDownloadTask::DownloadSelf(PRInt32 range)
 
     result = uri->QueryInterface(nsIURI::GetIID(), (void**)&pURL);
     NS_RELEASE(uri);
-#endif // NECKO
 
     if (result != NS_OK) 
     {

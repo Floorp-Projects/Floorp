@@ -32,11 +32,7 @@
 
 #include "prmem.h"
 #include "nsIUnicharInputStream.h"
-#ifdef NECKO
 #include "nsNeckoUtil.h"
-#else
-#include "nsINetService.h"
-#endif
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsSpecialSystemDirectory.h"
@@ -50,12 +46,6 @@ static NS_DEFINE_IID(kISupportsIID,       NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITokenizerIID,      NS_ITOKENIZER_IID);
 static NS_DEFINE_IID(kHTMLTokenizerIID,   NS_HTMLTOKENIZER_IID);
 static NS_DEFINE_IID(kClassIID,           NS_EXPATTOKENIZER_IID);
-
-#ifndef NECKO
-static NS_DEFINE_IID(kNetServiceCID,      NS_NETSERVICE_CID);
-static NS_DEFINE_IID(kINetServiceIID,     NS_INETSERVICE_IID);
-#endif
-
 
 static CTokenRecycler* gTokenRecycler=0;
 static nsDeque* gTokenDeque=0;
@@ -565,37 +555,6 @@ nsExpatTokenizer::OpenInputStream(const nsString& aURLStr,
                                   nsString* aAbsURL) 
 {
   nsresult rv;
-#ifndef NECKO
-  nsCOMPtr<nsINetService> pNetService = nsnull;
-
-  aAbsURL->Truncate(0);
-  rv = nsServiceManager::GetService(kNetServiceCID,
-                                     kINetServiceIID, (nsISupports**) getter_AddRefs(pNetService));
-  
-  if (NS_SUCCEEDED(rv) && nsnull != pNetService) {
-    nsCOMPtr<nsIURI> contextURL = nsnull;
-    rv = pNetService->CreateURL(getter_AddRefs(contextURL), aBaseURL);
-    if (NS_SUCCEEDED(rv) && nsnull != contextURL) {
-      nsCOMPtr<nsIURI> url = nsnull;
-      rv = pNetService->CreateURL(getter_AddRefs(url), aURLStr, contextURL);
-      if (NS_SUCCEEDED(rv) && nsnull != url) {
-        char* protocol = nsnull;
-        rv = url->GetProtocol(&protocol);
-        if (NS_SUCCEEDED(rv) &&
-          nsnull != protocol &&
-          PL_strcmp(protocol, kChromeProtocol) == 0 ) {
-          rv = pNetService->OpenBlockingStream(url, nsnull, in);
-          const char* absURL = nsnull;
-          url->GetSpec(&absURL);
-          aAbsURL->Append(absURL);
-        }
-        else {
-          rv = NS_ERROR_NOT_IMPLEMENTED;
-        }        
-      }          
-    }    
-  }
-#else // NECKO  
   nsCOMPtr<nsIURI> baseURI;  
   rv = NS_NewURI(getter_AddRefs(baseURI), aBaseURL);
   if (NS_SUCCEEDED(rv) && nsnull != baseURI) {
@@ -614,7 +573,6 @@ nsExpatTokenizer::OpenInputStream(const nsString& aURLStr,
       }
     }    
   }
-#endif // NECKO
   return rv;
 }
 

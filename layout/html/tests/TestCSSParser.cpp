@@ -20,13 +20,9 @@
 #include "nsICSSStyleSheet.h"
 #include "nsIStyleRule.h"
 #include "nsIURL.h"
-#ifndef NECKO
-#include "nsINetService.h"
-#else
 #include "nsNeckoUtil.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
-#endif // NECKO
 #include "nsIInputStream.h"
 #include "nsIUnicharInputStream.h"
 #include "nsString.h"
@@ -55,11 +51,7 @@
 #endif
 #endif
 
-#ifndef NECKO
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-#else
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
@@ -76,11 +68,7 @@ int main(int argc, char** argv)
 {
   nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 
-#ifndef NECKO
-  nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-#else
   nsComponentManager::RegisterComponent(kIOServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-#endif // NECKO
 
   nsComponentManager::RegisterComponent(kCSSParserCID, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
@@ -151,9 +139,6 @@ int main(int argc, char** argv)
       char* urlName = argv[i];
       // Create url object
       nsIURI* url;
-#ifndef NECKO
-      rv = NS_NewURL(&url, urlName);
-#else
       NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
       if (NS_FAILED(rv)) return -1;
 
@@ -163,7 +148,6 @@ int main(int argc, char** argv)
 
       rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
       NS_RELEASE(uri);
-#endif // NECKO
       if (NS_OK != rv) {
         printf("invalid URL: '%s'\n", urlName);
         return -1;
@@ -171,11 +155,7 @@ int main(int argc, char** argv)
 
       // Get an input stream from the url
       nsIInputStream* in;
-#ifndef NECKO
-      rv = NS_OpenURL(url, &in);
-#else
       rv = NS_OpenURI(&in, url);
-#endif // NECKO
       if (rv != NS_OK) {
         printf("open of url('%s') failed: error=%x\n", urlName, rv);
         continue;

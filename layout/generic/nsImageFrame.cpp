@@ -35,13 +35,11 @@
 #include "nsImageMap.h"
 #include "nsILinkHandler.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsNeckoUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsHTMLContainerFrame.h"
@@ -764,12 +762,7 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
           // element to provide the basis for the destination url.
           nsAutoString src;
           if (GetAnchorHREF(src)) {
-#ifndef NECKO
-            nsString empty;
-            NS_MakeAbsoluteURL(baseURL, empty, src, absURL);
-#else
             NS_MakeAbsoluteURI(src, baseURL, absURL);
-#endif // NECKO
             NS_IF_RELEASE(baseURL);
             
             // XXX if the mouse is over/clicked in the border/padding area

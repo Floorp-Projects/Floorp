@@ -78,10 +78,8 @@
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsNeckoUtil.h"
 #include "nsIChannel.h"
-#endif // NECKO
 #include "nsLayoutCID.h" // for NS_NAMESPACEMANAGER_CID.
 #include "nsParserCIID.h"
 #include "nsRDFCID.h"
@@ -566,7 +564,6 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
     // to the parser: it seems like this is something that netlib
     // should be able to do by itself.
 
-#ifdef NECKO
     nsCOMPtr<nsIChannel> channel;
     // Null LoadGroup ?
     rv = NS_OpenURI(getter_AddRefs(channel), aURL, nsnull);
@@ -578,10 +575,6 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
     nsIInputStream* in;
     PRUint32 sourceOffset = 0;
     rv = channel->OpenInputStream(0, -1, &in);
-#else
-    nsIInputStream* in;
-    rv = NS_OpenURL(aURL, &in, nsnull /* XXX aConsumer */);
-#endif
     if (NS_FAILED(rv))
     {
         // file doesn't exist -- just exit
@@ -597,12 +590,7 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
     if (! proxy)
         goto done;
 
-#ifdef NECKO
     aConsumer->OnStartRequest(channel, nsnull);
-#else
-    // XXX shouldn't netlib be doing this???
-    aConsumer->OnStartRequest(aURL, "text/rdf");
-#endif
     while (PR_TRUE) {
         char buf[1024];
         PRUint32 readCount;
@@ -615,22 +603,12 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
 
         proxy->SetBuffer(buf, readCount);
 
-#ifdef NECKO
         rv = aConsumer->OnDataAvailable(channel, nsnull, proxy, sourceOffset, readCount);
         sourceOffset += readCount;
-#else
-        // XXX shouldn't netlib be doing this???
-        rv = aConsumer->OnDataAvailable(aURL, proxy, readCount);
-#endif
         if (NS_FAILED(rv))
             break;
     }
-#ifdef NECKO
     aConsumer->OnStopRequest(channel, nsnull, NS_OK, nsnull);
-#else
-    // XXX shouldn't netlib be doing this???
-    aConsumer->OnStopRequest(aURL, 0, nsnull);
-#endif
 
 	// don't leak proxy!
 	proxy->Close();
@@ -655,20 +633,12 @@ static const char kResourceURIPrefix[] = "resource:";
 
     nsresult rv;
 
-#ifndef NECKO
-    rv = NS_NewURL(getter_AddRefs(mURL), uri);
-#else
     rv = NS_NewURI(getter_AddRefs(mURL), uri);
-#endif // NECKO
     if (NS_FAILED(rv)) return rv;
 
     // XXX this is a hack: any "file:" URI is considered writable. All
     // others are considered read-only.
-#ifdef NECKO
     char* realURL;
-#else
-    const char* realURL;
-#endif
     mURL->GetSpec(&realURL);
     if ((PL_strncmp(realURL, kFileURIPrefix, sizeof(kFileURIPrefix) - 1) != 0) &&
         (PL_strncmp(realURL, kResourceURIPrefix, sizeof(kResourceURIPrefix) - 1) != 0)) {
@@ -681,9 +651,7 @@ static const char kResourceURIPrefix[] = "resource:";
         PL_strfree(mURLSpec);
 
     mURLSpec = PL_strdup(realURL);
-#ifdef NECKO
     nsCRT::free(realURL);
-#endif
 
     rv = gRDFService->RegisterDataSource(this, PR_FALSE);
     if (NS_FAILED(rv)) return rv;

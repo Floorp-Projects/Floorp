@@ -22,9 +22,7 @@
 #include "nsISupportsArray.h"
 #include "nsIComponentManager.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsNeckoUtil.h"
-#endif // NECKO
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsIObserverService.h"

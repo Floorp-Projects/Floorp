@@ -25,9 +25,7 @@
 class nsIURI;
 class nsIContentViewer;
 class nsIDocumentLoader;
-#ifdef NECKO
 class nsIChannel;
-#endif
 
 /* f6b4f550-317c-11d2-bd8c-00805f8ae3f4 */
 #define NS_IDOCUMENT_LOADER_OBSERVER_IID   \

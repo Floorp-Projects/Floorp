@@ -47,10 +47,8 @@
 #include "nsEscape.h"
 
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsNeckoUtil.h"
 #include "nsIBufferInputStream.h"
-#endif // NECKO
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 #include "nsIRDFFTP.h"
@@ -83,25 +81,11 @@ public:
 			FTPDataSourceCallback(nsIRDFDataSource *ds, nsIRDFResource *parent);
 	virtual		~FTPDataSourceCallback(void);
 
-#ifdef NECKO
 	// nsIStreamObserver methods:
     NS_DECL_NSISTREAMOBSERVER
 
 	// nsIStreamListener methods:
     NS_DECL_NSISTREAMLISTENER
-#else
-	// stream observer
-
-	NS_IMETHOD	OnStartRequest(nsIURI *aURL, const char *aContentType);
-	NS_IMETHOD	OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-	NS_IMETHOD	OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-	NS_IMETHOD	OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
-
-	// stream listener
-	NS_IMETHOD	GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
-	NS_IMETHOD	OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
-                               PRUint32 aLength);
-#endif
 };
 
 
@@ -604,11 +588,7 @@ FTPDataSourceCallback::~FTPDataSourceCallback()
 
 
 NS_IMETHODIMP
-#ifdef NECKO
 FTPDataSourceCallback::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
-#else
-FTPDataSourceCallback::OnStartRequest(nsIURI *aURL, const char *aContentType)
-#endif
 {
 	nsAutoString		trueStr("true");
 	nsIRDFLiteral		*literal = nsnull;
@@ -621,32 +601,8 @@ FTPDataSourceCallback::OnStartRequest(nsIURI *aURL, const char *aContentType)
 	return(NS_OK);
 }
 
-
-
-#ifndef NECKO
 NS_IMETHODIMP
-FTPDataSourceCallback::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax) 
-{
-	return(NS_OK);
-}
-
-
-
-NS_IMETHODIMP
-FTPDataSourceCallback::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
-{
-	return(NS_OK);
-}
-#endif
-
-
-
-NS_IMETHODIMP
-#ifdef NECKO
 FTPDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) 
-#else
-FTPDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg) 
-#endif
 {
 	nsAutoString		trueStr("true");
 	nsIRDFLiteral		*literal = nsnull;
@@ -665,23 +621,10 @@ FTPDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUni
 
 
 
-#ifndef NECKO
-NS_IMETHODIMP
-FTPDataSourceCallback::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
-{
-	return(NS_OK);
-}
-#endif
-
-
 
 NS_IMETHODIMP
-#ifdef NECKO
 FTPDataSourceCallback::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
                                        nsIInputStream *aIStream, PRUint32 sourceOffset, PRUint32 aLength)
-#else
-FTPDataSourceCallback::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)
-#endif
 {
 	nsresult	rv = NS_OK;
 
@@ -814,18 +757,6 @@ FTPDataSource::GetFTPListing(nsIRDFResource *source, nsISimpleEnumerator** aResu
 		nsXPIDLCString ftpURL;
 		source->GetValue( getter_Copies(ftpURL) );
 
-#ifndef NECKO
-        nsIURI		*url;
-        rv = NS_NewURL(&url, (const char*) ftpURL);
-		if (NS_SUCCEEDED(rv))
-		{
-			FTPDataSourceCallback	*callback = new FTPDataSourceCallback(mInner, source);
-			if (nsnull != callback)
-			{
-				rv = NS_OpenURL(url, NS_STATIC_CAST(nsIStreamListener *, callback));
-			}
-		}
-#else
         nsIURI		*url;
         rv = NS_NewURI(&url, (const char*) ftpURL);
 		if (NS_SUCCEEDED(rv))
@@ -837,7 +768,6 @@ FTPDataSource::GetFTPListing(nsIRDFResource *source, nsISimpleEnumerator** aResu
 			}
             NS_RELEASE(url);
 		}
-#endif // NECKO
 	}
 	return NS_NewEmptyEnumerator(aResult);
 }

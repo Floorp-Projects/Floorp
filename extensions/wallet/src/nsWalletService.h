@@ -67,7 +67,6 @@ public:
   NS_IMETHOD Notify(nsIContent* formNode);
 
   // nsIDocumentLoaderObserver
-#ifdef NECKO
   NS_IMETHOD OnStartDocumentLoad
     (nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
   NS_IMETHOD OnEndDocumentLoad
@@ -85,24 +84,6 @@ public:
   NS_IMETHOD HandleUnknownContentType
     (nsIDocumentLoader* loader, nsIChannel* channel, const char *aContentType,
      const char *aCommand );		
-#else
-  NS_IMETHOD OnStartDocumentLoad
-    (nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
-  NS_IMETHOD OnEndDocumentLoad
-    (nsIDocumentLoader* loader, nsIURI *aUrl, PRInt32 aStatus,
-     nsIDocumentLoaderObserver * aObserver);
-  NS_IMETHOD OnStartURLLoad
-    (nsIDocumentLoader* loader, nsIURI* aURL, const char* aContentType,
-     nsIContentViewer* aViewer);
-  NS_IMETHOD OnProgressURLLoad
-    (nsIDocumentLoader* loader, nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, nsString& aMsg);
-  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, PRInt32 aStatus);
-  NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,
-                                        nsIURI *aURL,
-                                        const char *aContentType,
-                                        const char *aCommand );
-#endif
 
 protected:
   virtual ~nsWalletlibService();

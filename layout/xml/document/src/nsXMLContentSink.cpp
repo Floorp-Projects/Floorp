@@ -26,12 +26,8 @@
 #include "nsIXMLContent.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsIURL.h"
 #include "nsNeckoUtil.h"
-#else
-#include "nsIURLGroup.h"
-#endif // NECKO
 #include "nsIWebShell.h"
 #include "nsIContent.h"
 #include "nsITextContent.h"
@@ -1125,27 +1121,7 @@ nsXMLContentSink::CreateStyleSheetURL(nsIURI** aUrl,
                                       const nsAutoString& aHref)
 {
   nsresult result = NS_OK;
-#ifdef NECKO
   result = NS_NewURI(aUrl, aHref, mDocumentBaseURL);
-#else
-  nsAutoString absURL;
-  nsIURI* docURL = mDocument->GetDocumentURL();
-  nsILoadGroup* LoadGroup;
-
-  result = docURL->GetLoadGroup(&LoadGroup);
-
-  if ((NS_SUCCEEDED(result)) && LoadGroup) {
-   result = LoadGroup->CreateURL(aUrl, docURL, aHref, nsnull);
-   NS_RELEASE(LoadGroup);
-  }
-  else {
-   result = NS_MakeAbsoluteURL(docURL, nsnull, aHref, absURL);
-   if (NS_SUCCEEDED(result)) {
-     result = NS_NewURL(aUrl, absURL);
-   }
-  }
-  NS_RELEASE(docURL);
-#endif
   return result;
 
 }
@@ -1266,20 +1242,9 @@ nsXMLContentSink::ProcessCSSStyleLink(nsIContent* aElement,
 
   if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css")) {
     nsIURI* url = nsnull;
-#ifdef NECKO    // XXX we need to get passed in the nsILoadGroup here!
+// XXX we need to get passed in the nsILoadGroup here!
 //    nsILoadGroup* group = mDocument->GetDocumentLoadGroup();
     result = NS_NewURI(&url, aHref, mDocumentBaseURL/*, group*/);
-#else
-    nsILoadGroup* LoadGroup = nsnull;
-    mDocumentBaseURL->GetLoadGroup(&LoadGroup);
-    if (LoadGroup) {
-      result = LoadGroup->CreateURL(&url, mDocumentBaseURL, aHref, nsnull);
-      NS_RELEASE(LoadGroup);
-    }
-    else {
-      result = NS_NewURL(&url, aHref, mDocumentBaseURL);
-    }
-#endif
     if (NS_OK != result) {
       return NS_OK; // The URL is bad, move along, don't propogate the error (for now)
     }
@@ -1586,7 +1551,6 @@ nsXMLContentSink::StartLayout()
 
   // If the document we are loading has a reference or it is a top level
   // frameset document, disable the scroll bars on the views.
-#ifdef NECKO
   char* ref = nsnull;
   nsIURL* url;
   nsresult rv = mDocumentURL->QueryInterface(nsIURL::GetIID(), (void**)&url);
@@ -1594,10 +1558,6 @@ nsXMLContentSink::StartLayout()
     rv = url->GetRef(&ref);
     NS_RELEASE(url);
   }
-#else
-  const char* ref;
-  (void)mDocumentURL->GetRef(&ref);
-#endif
   PRBool topLevelFrameset = PR_FALSE;
   if (mWebShell) {
     nsIWebShell* rootWebShell;
@@ -1637,10 +1597,8 @@ nsXMLContentSink::StartLayout()
         NS_RELEASE(shell);
       }
     }
-#ifdef NECKO
     // XXX who actually uses ref here anyway?
     nsCRT::free(ref);
-#endif
   }
 }
 
@@ -1672,11 +1630,7 @@ nsXMLContentSink::EvaluateScript(nsString& aScript, PRUint32 aLineNo, const char
       }
 
       nsIURI* docURL = mDocument->GetDocumentURL();
-#ifdef NECKO
       char* url;
-#else
-      const char* url;
-#endif
       if (docURL) {
         rv = docURL->GetSpec(&url);
       }
@@ -1692,9 +1646,7 @@ nsXMLContentSink::EvaluateScript(nsString& aScript, PRUint32 aLineNo, const char
 
         NS_RELEASE(context);
         NS_RELEASE(owner);
-#ifdef NECKO
         nsCRT::free(url);
-#endif
       }
     }
   }
@@ -1836,22 +1788,9 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
       // Use the SRC attribute value to load the URL
       nsIURI* url = nsnull;
       nsAutoString absURL;
-#ifdef NECKO    // XXX we need to get passed in the nsILoadGroup here!
+    // XXX we need to get passed in the nsILoadGroup here!
 //      nsILoadGroup* group = mDocument->GetDocumentLoadGroup();
       rv = NS_NewURI(&url, src, mDocumentBaseURL);
-#else
-      nsIURI* docURL = mDocument->GetDocumentURL();
-      nsILoadGroup* group = nsnull;
-      rv = docURL->GetLoadGroup(&group);
-      if ((NS_OK == rv) && group) {
-        rv = group->CreateURL(&url, docURL, src, nsnull);
-        NS_RELEASE(group);
-      }
-      else {
-        rv = NS_NewURL(&url, absURL);
-      }
-      NS_RELEASE(docURL);
-#endif
       if (NS_OK != rv) {
         return rv;
       }

@@ -30,9 +30,7 @@
 #include "nsIServiceManager.h"
 #include "nsAppShellCIDs.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsNeckoUtil.h"
-#endif // NECKO
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIBrowserWindow.h"
 #include "nsIWebShellWindow.h"
@@ -53,9 +51,6 @@ static NS_DEFINE_IID(kIAppShellServiceIID,       NS_IAPPSHELL_SERVICE_IID);
 
 static NS_DEFINE_IID(kIDOMMouseListenerIID,   NS_IDOMMOUSELISTENER_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID,   NS_IDOMEVENTRECEIVER_IID);
-#ifndef NECKO
-static NS_DEFINE_IID(kINetSupportDialogIID,   NS_INETSUPPORTDIALOGSERVICE_IID);
-#endif
 static NS_DEFINE_IID(kIFactoryIID,         NS_IFACTORY_IID);
 static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
 
@@ -333,11 +328,7 @@ void nsNetSupportDialog::Init()
   mWebShellWindow = NULL;
 }
 
-#ifdef NECKO
 NS_IMETHODIMP nsNetSupportDialog::Alert(const PRUnichar *text)
-#else
-NS_IMETHODIMP nsNetSupportDialog::Alert( const nsString &aText )
-#endif
 {
 	 nsresult rv;
 	 NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
@@ -355,9 +346,7 @@ NS_IMETHODIMP nsNetSupportDialog::Alert( const nsString &aText )
 	 return rv;
 #if 0
 	Init();
-#ifdef NECKO
   nsAutoString aText(text);
-#endif
 	mMsg = &aText;
 	nsString  url( "chrome://navigator/content/NetSupportAlert.xul") ;
 	DoDialog( url );
@@ -365,11 +354,7 @@ NS_IMETHODIMP nsNetSupportDialog::Alert( const nsString &aText )
 #endif
 }
 
-#ifdef NECKO
 NS_IMETHODIMP nsNetSupportDialog::Confirm(const PRUnichar *text, PRBool *returnValue)
-#else
-NS_IMETHODIMP nsNetSupportDialog::Confirm( const nsString &aText, PRInt32* returnValue )
-#endif
 {
 
  nsresult rv;
@@ -388,9 +373,7 @@ NS_IMETHODIMP nsNetSupportDialog::Confirm( const nsString &aText, PRInt32* retur
 	 return rv;
 #if 0
 	Init();
-#ifdef NECKO
   nsAutoString aText(text);
-#endif
 	mMsg = &aText;
 	mReturnValue = returnValue;
 	nsString  url( "chrome://navigator/content/NetSupportConfirm.xul") ; 
@@ -399,14 +382,10 @@ NS_IMETHODIMP nsNetSupportDialog::Confirm( const nsString &aText, PRInt32* retur
 #endif
 }
 
-#ifdef NECKO
 NS_IMETHODIMP	nsNetSupportDialog::ConfirmCheck(const PRUnichar *text, 
                                                const PRUnichar *checkMsg, 
                                                PRBool *checkValue, 
                                                PRBool *returnValue)
-#else
-NS_IMETHODIMP	nsNetSupportDialog::ConfirmCheck( const nsString &aText, const nsString& aCheckMsg, PRInt32* returnValue, PRBool* checkValue )
-#endif
 {
  nsresult rv;
 	 NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
@@ -424,10 +403,8 @@ NS_IMETHODIMP	nsNetSupportDialog::ConfirmCheck( const nsString &aText, const nsS
 	 return rv;
 #if 0
 	Init();
-#ifdef NECKO
   nsAutoString aText(text);
   nsAutoString aCheckMsg(checkMsg);
-#endif
 	mMsg = &aText;
 	mReturnValue = returnValue;
 	mCheckValue = checkValue;
@@ -438,16 +415,10 @@ NS_IMETHODIMP	nsNetSupportDialog::ConfirmCheck( const nsString &aText, const nsS
 #endif
 }
 
-#ifdef NECKO
 NS_IMETHODIMP nsNetSupportDialog::ConfirmYN(const PRUnichar *text, PRBool *returnValue)
-#else
-NS_IMETHODIMP nsNetSupportDialog::ConfirmYN( const nsString &aText, PRInt32* returnValue )
-#endif
 {
 	Init();
-#ifdef NECKO
   nsAutoString aText(text);
-#endif
 	mMsg = &aText;
 	mReturnValue = returnValue;
 	nsString  url( "chrome://navigator/content/NetSupportConfirmYN.xul") ; 
@@ -455,21 +426,15 @@ NS_IMETHODIMP nsNetSupportDialog::ConfirmYN( const nsString &aText, PRInt32* ret
 	return NS_OK;	
 }
 
-#ifdef NECKO
 NS_IMETHODIMP	nsNetSupportDialog::ConfirmCheckYN(const PRUnichar *text, 
                                                const PRUnichar *checkMsg, 
                                                PRBool *checkValue, 
                                                PRBool *returnValue)
-#else
-NS_IMETHODIMP	nsNetSupportDialog::ConfirmCheckYN( const nsString &aText, const nsString& aCheckMsg, PRInt32* returnValue, PRBool* checkValue )
-#endif
 {
 	
 	Init();
-#ifdef NECKO
   nsAutoString aText(text);
   nsAutoString aCheckMsg(checkMsg);
-#endif
 	mMsg = &aText;
 	mReturnValue = returnValue;
 	mCheckValue = checkValue;
@@ -479,14 +444,10 @@ NS_IMETHODIMP	nsNetSupportDialog::ConfirmCheckYN( const nsString &aText, const n
 	return NS_OK;	
 }
 
-#ifdef NECKO
 NS_IMETHODIMP nsNetSupportDialog::Prompt(const PRUnichar *text,
                                          const PRUnichar *defaultText, 
                                          PRUnichar **resultText,
                                          PRBool *returnValue)
-#else
-NS_IMETHODIMP nsNetSupportDialog::Prompt(	const nsString &aText, const nsString &aDefault,nsString &aResult, PRInt32* returnValue )
-#endif
 {
  nsresult rv;
 	 NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
@@ -504,34 +465,24 @@ NS_IMETHODIMP nsNetSupportDialog::Prompt(	const nsString &aText, const nsString 
 	 return rv;
 #if 0
   Init();
-#ifdef NECKO
   nsAutoString aText(text);
   nsAutoString aDefault(defaultText);
   nsAutoString aResult;
-#endif
 	mMsg = &aText;
 	mDefault = &aDefault;
 	mUser	= &aResult;
 	mReturnValue = returnValue;
 	nsString  url( "chrome://navigator/content/NetSupportPrompt.xul")  ;
 	DoDialog( url );
-#ifdef NECKO
   *resultText = aResult.ToNewUnicode();
-#endif
 	return NS_OK;	
 #endif
 }
 
-#ifdef NECKO
 NS_IMETHODIMP nsNetSupportDialog::PromptUsernameAndPassword(const PRUnichar *text,
                                                             PRUnichar **user,
                                                             PRUnichar **pwd,
                                                             PRBool *returnValue)
-#else
-NS_IMETHODIMP nsNetSupportDialog::PromptUserAndPassword(  const nsString &aText,
-                                        nsString &aUser,
-                                        nsString &aPassword,PRInt32* returnValue )
-#endif
 {
 	 nsresult rv;
 	 NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
@@ -549,33 +500,24 @@ NS_IMETHODIMP nsNetSupportDialog::PromptUserAndPassword(  const nsString &aText,
 	 return rv;
 #if 0
 	Init();
-#ifdef NECKO
   nsAutoString aText(text);
   nsAutoString aUser;
   nsAutoString aPassword;
-#endif
 	mMsg = &aText;
 	mUser = &aUser;
 	mPassword	= &aPassword;
 	mReturnValue = returnValue;
 	nsString  url( "chrome://navigator/content/NetSupportUserPassword.xul")  ;
 	DoDialog( url );
-#ifdef NECKO
   *user = aUser.ToNewUnicode();
   *pwd = aPassword.ToNewUnicode();
-#endif
 	return NS_OK;
 #endif	
 }
 
-#ifdef NECKO
 NS_IMETHODIMP nsNetSupportDialog::PromptPassword(const PRUnichar *text, 
                                                  PRUnichar **pwd, 
                                                  PRBool *returnValue)
-#else
-NS_IMETHODIMP nsNetSupportDialog::PromptPassword( 	const nsString &aText,
-                                     	nsString &aPassword, PRInt32* returnValue )
-#endif
 {
 	 nsresult rv;
 	 NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
@@ -593,18 +535,14 @@ NS_IMETHODIMP nsNetSupportDialog::PromptPassword( 	const nsString &aText,
 	 return rv;
 #if 0
  	Init();
-#ifdef NECKO
   nsAutoString aText(text);
   nsAutoString aPassword;
-#endif
 	mMsg = &aText;
 	mPassword	= &aPassword;
 	mReturnValue = returnValue;
 	nsString  url( "chrome://navigator/content/NetSupportPassword.xul")  ;
 	DoDialog( url );
-#ifdef NECKO
   *pwd = aPassword.ToNewUnicode();
-#endif
  	return NS_OK;	
 #endif
 }
@@ -653,11 +591,7 @@ nsresult nsNetSupportDialog::DoDialog(  nsString& inXULURL  )
     return result;
 
   nsIURI* dialogURL;
-#ifndef NECKO
-  result = NS_NewURL(&dialogURL, inXULURL );
-#else
   result = NS_NewURI(&dialogURL, inXULURL );
-#endif // NECKO
   if ( !NS_SUCCEEDED (result) )
     return result;
 
@@ -771,21 +705,12 @@ NS_IMETHODIMP nsNetSupportDialog::QueryInterface(REFNSIID aIID,void** aInstanceP
   // Always NULL result, in case of failure
   *aInstancePtr = NULL;
 
-#ifdef NECKO
   if ( aIID.Equals( nsIPrompt::GetIID() ) )
   {
     *aInstancePtr = (void*) ((nsIPrompt*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-#else
-  if ( aIID.Equals( kINetSupportDialogIID ) )
-  {
-    *aInstancePtr = (void*) ((nsINetSupportDialogService*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-#endif
   else if (aIID.Equals(kIDOMMouseListenerIID))
   {
     NS_ADDREF_THIS(); // Increase reference count for caller

@@ -215,13 +215,8 @@ nsWalletlibService::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL
 #include "prmem.h"
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* channel, nsresult aStatus,
 									nsIDocumentLoaderObserver * aObserver)
-#else
-nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, PRInt32 aStatus,
-									nsIDocumentLoaderObserver * aObserver)
-#endif
 {
   nsresult rv = NS_OK;
   nsIContentViewerContainer *cont = nsnull;
@@ -267,11 +262,7 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, 
   /* get url name as ascii string */
   char *URLName = nsnull;
   nsIURI* docURL = nsnull;
-#ifdef NECKO
   char* spec;
-#else
-  const char* spec;
-#endif
   if (!doc) {
     return NS_OK;
   }
@@ -283,9 +274,7 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, 
   URLName = (char*)PR_Malloc(PL_strlen(spec)+1);
   PL_strcpy(URLName, spec);
   NS_IF_RELEASE(docURL);
-#ifdef NECKO
   nsCRT::free(spec);
-#endif
 
   nsIDOMHTMLDocument *htmldoc = nsnull;
   rv = doc->QueryInterface(kIDOMHTMLDocumentIID, (void**)&htmldoc);
@@ -379,61 +368,37 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, 
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsWalletlibService::OnStartURLLoad
   (nsIDocumentLoader* loader, nsIChannel* channel, nsIContentViewer* aViewer)
-#else
-nsWalletlibService::OnStartURLLoad
-  (nsIDocumentLoader* loader, nsIURI* aURL, const char* aContentType, nsIContentViewer* aViewer)
-#endif
 {
  return NS_OK;
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsWalletlibService::OnProgressURLLoad
   (nsIDocumentLoader* loader, nsIChannel* channel, PRUint32 aProgress, PRUint32 aProgressMax)
-#else
-nsWalletlibService::OnProgressURLLoad
-  (nsIDocumentLoader* loader, nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
-#endif
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsWalletlibService::OnStatusURLLoad
   (nsIDocumentLoader* loader, nsIChannel* channel, nsString& aMsg)
-#else
-nsWalletlibService::OnStatusURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, nsString& aMsg)
-#endif
 {
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsWalletlibService::OnEndURLLoad
   (nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus)
-#else
-nsWalletlibService::OnEndURLLoad
-  (nsIDocumentLoader* loader, nsIURI* aURL, PRInt32 aStatus)
-#endif
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsWalletlibService::HandleUnknownContentType
   (nsIDocumentLoader* loader, nsIChannel* channel, const char *aContentType, const char *aCommand )
-#else
-nsWalletlibService::HandleUnknownContentType
-  (nsIDocumentLoader* loader, nsIURI *aURL, const char *aContentType, const char *aCommand )
-#endif
 {
   return NS_OK;
 }

@@ -24,12 +24,10 @@
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 #include "nsIDTDDebug.h"
 #include "nsIComponentManager.h"
 #include "nsParserCIID.h"
@@ -278,9 +276,6 @@ extern "C" NS_EXPORT int DebugRobot(
     // Create url
     nsIURI* url;
     nsresult rv;
-#ifndef NECKO
-    rv = NS_NewURL(&url, *urlName);
-#else
     NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
@@ -293,7 +288,6 @@ extern "C" NS_EXPORT int DebugRobot(
 
     rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
     NS_RELEASE(uri);
-#endif // NECKO    
     if (NS_OK != rv) {
       printf("invalid URL: '");
       fputs(*urlName, stdout);
@@ -344,16 +338,10 @@ extern "C" NS_EXPORT int DebugRobot(
     parser->Parse(url, nsnull,PR_TRUE);/* XXX hook up stream listener here! */
     while (!g_bReadyForNextUrl) {
       if (yieldProc != NULL) {
-#ifdef NECKO
         char* spec;
         (void)url->GetSpec(&spec);
         (*yieldProc)(spec);
         nsCRT::free(spec);
-#else
-        const char* spec;
-        (void)url->GetSpec(&spec);
-        (*yieldProc)(spec);
-#endif
       }
     }
     g_bReadyForNextUrl = PR_FALSE;
@@ -365,28 +353,16 @@ extern "C" NS_EXPORT int DebugRobot(
         docLoader->AddObserver(pl);
         NS_RELEASE(docLoader);
       }
-#ifdef NECKO
       char* spec;
       (void)url->GetSpec(&spec);
       nsAutoString theSpec(spec);
       nsCRT::free(spec);
-#else
-      const char* spec;
-      (void)url->GetSpec(&spec);
-      nsAutoString theSpec(spec);
-#endif
       ww->LoadURL(theSpec.GetUnicode());/* XXX hook up stream listener here! */
       while (!g_bReadyForNextUrl) {
         if (yieldProc != NULL) {
-#ifdef NECKO
           (void)url->GetSpec(&spec);
           (*yieldProc)(spec);
           nsCRT::free(spec);
-#else
-          const char* spec;
-          (void)url->GetSpec(&spec);
-          (*yieldProc)(spec);
-#endif
         }
       }
     }  

@@ -33,11 +33,9 @@
 #include "nsViewSourceHTML.h" 
 #include "nsHTMLContentSinkStream.h" //this is here so we can get a null sink, which really should be gotten from nsICOntentSink.h
 #include "nsIStringStream.h"
-#ifdef NECKO
 #include "nsIChannel.h"
 #include "nsIProgressEventSink.h"
 #include "nsIBufferInputStream.h"
-#endif
 
 #undef rickgdebug 
 #ifdef  rickgdebug
@@ -196,9 +194,7 @@ nsParser::nsParser(nsITokenObserver* anObserver) : mCommand(""), mUnusedInput(""
   NS_INIT_REFCNT();
   mParserFilter = 0;
   mObserver = 0;
-#ifdef NECKO
   mProgressEventSink = nsnull;
-#endif
   mSink=0;
   mParserContext=0;
   mTokenObserver=anObserver;
@@ -225,9 +221,7 @@ nsParser::nsParser(nsITokenObserver* anObserver) : mCommand(""), mUnusedInput(""
  */
 nsParser::~nsParser() {
   NS_IF_RELEASE(mObserver);
-#ifdef NECKO
   NS_IF_RELEASE(mProgressEventSink);
-#endif
   NS_IF_RELEASE(mSink);
 
   //don't forget to add code here to delete 
@@ -263,11 +257,9 @@ nsresult nsParser::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   else if(aIID.Equals(kIParserIID)) {  //do IParser base class...
     *aInstancePtr = (nsIParser*)(this);                                        
   }
-#ifdef NECKO
   else if(aIID.Equals(nsIProgressEventSink::GetIID())) {
     *aInstancePtr = (nsIStreamListener*)(this);                                        
   }
-#endif
   else if(aIID.Equals(nsIStreamObserver::GetIID())) {
     *aInstancePtr = (nsIStreamObserver*)(this);                                        
   }
@@ -726,20 +718,14 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerif
   nsresult result=kBadURL;
   mDTDVerification=aVerifyEnabled;
   if(aURL) {
-#ifdef NECKO
     char* spec;
-#else
-    const char* spec;
-#endif
     nsresult rv = aURL->GetSpec(&spec);
     if (rv != NS_OK) {
       NS_STOP_STOPWATCH(mTotalTime) 
       return rv;
     }
     nsAutoString theName(spec);
-#ifdef NECKO
     nsCRT::free(spec);
-#endif
 
     nsScanner* theScanner=new nsScanner(theName,PR_FALSE,mCharset,mCharsetSource);
     CParserContext* pc=new CParserContext(theScanner,aKey,aListener);
@@ -1088,20 +1074,6 @@ nsITokenizer* nsParser::GetTokenizer(void) {
   These methods are used to talk to the netlib system...
  *******************************************************************/
 
-#ifndef NECKO
-/**
- *  
- *  
- *  @update  gess 5/12/98
- *  @param   
- *  @return  error code -- 0 if ok, non-zero if error.
- */
-nsresult nsParser::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo){
-  nsresult result=0;
-  return result;
-}
-#endif
-
 /**
  *  
  *  
@@ -1110,22 +1082,12 @@ nsresult nsParser::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo){
  *  @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult
-#ifdef NECKO
 nsParser::OnProgress(nsIChannel* channel, nsISupports* aContext, PRUint32 aProgress, PRUint32 aProgressMax)
-#else
-nsParser::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
-#endif
 {
   nsresult result=0;
-#ifdef NECKO
   if (nsnull != mProgressEventSink) {
     mProgressEventSink->OnProgress(channel, aContext, aProgress, aProgressMax);
   }
-#else
-  if (nsnull != mObserver) {
-    mObserver->OnProgress(aURL, aProgress, aProgressMax);
-  }
-#endif
   return result;
 }
 
@@ -1137,22 +1099,12 @@ nsParser::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
  *  @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult
-#ifdef NECKO
 nsParser::OnStatus(nsIChannel* channel, nsISupports* aContext, const PRUnichar* aMsg)
-#else
-nsParser::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
-#endif
 {
   nsresult result=0;
-#ifdef NECKO
   if (nsnull != mProgressEventSink) {
     mProgressEventSink->OnStatus(channel, aContext, aMsg);
   }
-#else
-  if (nsnull != mObserver) {
-    mObserver->OnStatus(aURL, aMsg);
-  }
-#endif
   return result;
 }
 
@@ -1168,25 +1120,16 @@ nsParser::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
  *  @param   
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-#ifdef NECKO
 nsresult nsParser::OnStartRequest(nsIChannel* channel, nsISupports* aContext)
-#else
-nsresult nsParser::OnStartRequest(nsIURI* aURL, const char *aSourceType)
-#endif
 {
   NS_PRECONDITION((eNone==mParserContext->mStreamListenerState),kBadListenerInit);
 
   if (nsnull != mObserver) {
-#ifdef NECKO
     mObserver->OnStartRequest(channel, aContext);
-#else
-    mObserver->OnStartRequest(aURL, aSourceType);
-#endif
   }
   mParserContext->mStreamListenerState=eOnStart;
   mParserContext->mAutoDetectStatus=eUnknownDetect;
   mParserContext->mDTD=0;
-#ifdef NECKO
   nsresult rv;
   char* contentType = nsnull;
   rv = channel->GetContentType(&contentType);
@@ -1197,10 +1140,6 @@ nsresult nsParser::OnStartRequest(nsIURI* aURL, const char *aSourceType)
   }
   else
     NS_ASSERTION(contentType, "parser needs a content type to find a dtd");
-
-#else
-  mParserContext->mSourceType=aSourceType;
-#endif
 
 #ifdef rickgdebug
   gDumpFile = new fstream("c:/temp/out.file",ios::trunc);
@@ -1322,12 +1261,8 @@ static PRBool detectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen,
  *  @param   length is the number of bytes waiting input
  *  @return  error code (usually 0)
  */
-#ifdef NECKO
 nsresult nsParser::OnDataAvailable(nsIChannel* channel, nsISupports* aContext,
                                    nsIInputStream *pIStream, PRUint32 sourceOffset, PRUint32 aLength)
-#else
-nsresult nsParser::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 aLength)
-#endif
 {
 
   NS_PRECONDITION(((eOnStart==mParserContext->mStreamListenerState)||(eOnDataAvail==mParserContext->mStreamListenerState)),kOnStartNotCalled);
@@ -1410,12 +1345,8 @@ nsresult nsParser::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUin
  *  @param   
  *  @return  
  */
-#ifdef NECKO
 nsresult nsParser::OnStopRequest(nsIChannel* channel, nsISupports* aContext,
                                  nsresult status, const PRUnichar* aMsg)
-#else
-nsresult nsParser::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
-#endif
 {
   NS_START_STOPWATCH(mTotalTime)
 
@@ -1447,11 +1378,7 @@ nsresult nsParser::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar*
   // XXX Should we wait to notify our observers as well if the
   // parser isn't yet enabled?
   if (nsnull != mObserver) {
-#ifdef NECKO
     mObserver->OnStopRequest(channel, aContext, status, aMsg);
-#else
-    mObserver->OnStopRequest(aURL, status, aMsg);
-#endif
   }
 
 #ifdef rickgdebug

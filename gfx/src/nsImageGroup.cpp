@@ -29,11 +29,7 @@
 #include "il_util.h"
 #include "nsIDeviceContext.h"
 #include "nsIStreamListener.h"
-#ifdef NECKO
 #include "nsILoadGroup.h"
-#else
-#include "nsIURLGroup.h"
-#endif
 
 static NS_DEFINE_IID(kIImageGroupIID, NS_IIMAGEGROUP_IID);
 

@@ -16,8 +16,6 @@
  * Reserved.
  */
  
-#ifdef NECKO
-
 #include "nsChromeProtocolHandler.h"
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
@@ -191,4 +189,3 @@ nsChromeProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-#endif // NECKO

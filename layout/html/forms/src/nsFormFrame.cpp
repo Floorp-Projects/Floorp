@@ -54,12 +54,10 @@
 
 #include "nsIFormProcessor.h"
 
-#ifdef NECKO
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsNeckoUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 #include "nsIDocument.h"
 #include "nsILinkHandler.h"
 #include "nsRadioControlFrame.h"
@@ -613,12 +611,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
       }
     }
     nsAutoString absURLSpec;
-#ifndef NECKO
-    nsAutoString base;
-    result = NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
-#else
     result = NS_MakeAbsoluteURI(href, docURL, absURLSpec);
-#endif // NECKO
     NS_IF_RELEASE(docURL);
     if (NS_FAILED(result)) return result;
 

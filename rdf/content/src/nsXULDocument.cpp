@@ -505,11 +505,7 @@ void
 nsXULDocument::SetDocumentURLAndGroup(nsIURI* anURL)
 {
     mDocumentURL = dont_QueryInterface(anURL);
-#ifdef NECKO
     // XXX help
-#else
-    anURL->GetLoadGroup(getter_AddRefs(mDocumentLoadGroup));
-#endif
 }
 
 NS_IMETHODIMP 

@@ -22,9 +22,7 @@
 #include "nsIFileWidget.h"
 #include "nsWidgetsCID.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsNeckoUtil.h"
-#endif
 
 // {BEBA91C0-070F-11d3-8068-00600811A9C3}
 #define NS_STREAMTRANSFER_CID \
@@ -71,19 +69,13 @@ nsStreamTransfer::SelectFileAndTransferLocation( nsIURI *aURL, nsIDOMWindow *par
 
     if ( NS_SUCCEEDED( rv ) ) {
         // Open a downloadProgress dialog.
-#ifdef NECKO
         char *source = 0;
-#else
-        const char *source = 0;
-#endif
         aURL->GetSpec( &source );
 
         nsStreamXferOp *p= new nsStreamXferOp( source, (const char*)outputFileName );
         nsCOMPtr<nsIStreamTransferOperation> op = dont_QueryInterface( (nsIStreamTransferOperation*)p ); 
 
-#ifdef NECKO
         nsCRT::free( source );
-#endif
 
         if ( op ) {
             // Open download progress dialog.
@@ -110,11 +102,7 @@ nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL, nsIDOMWin
 
     // Construct URI from spec.
     nsIURI *uri;
-#ifndef NECKO
-    rv = NS_NewURL( &uri, aURL );
-#else  // NECKO
     rv = NS_NewURI( &uri, aURL );
-#endif // NECKO
 
     if ( NS_SUCCEEDED( rv ) && uri ) {
         rv = this->SelectFileAndTransferLocation( uri,parent );

@@ -60,12 +60,8 @@ public:
                          nsIPresShell** aInstancePtrResult);
 
   NS_IMETHOD StartDocumentLoad(const char* aCommand,
-#ifdef NECKO
                                nsIChannel* aChannel,
                                nsILoadGroup* aLoadGroup,
-#else
-                               nsIURI *aUrl, 
-#endif
                                nsIContentViewerContainer* aContainer,
                                nsIStreamListener **aDocListener);
 
@@ -195,11 +191,7 @@ protected:
 
   NS_IMETHOD GetDomainURI(nsIURI **uri);
 
-#ifdef NECKO
   virtual nsresult Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
-#else
-  virtual nsresult Reset(nsIURI *aURL);
-#endif
   nsresult WriteCommon(const nsString& aText,
                        PRBool aNewlineTerminate);
   nsresult ScriptWriteCommon(JSContext *cx, 

@@ -2060,21 +2060,6 @@ SINGSIGN_RestoreSignonData (char* URLName, char* name, char** value) {
 
   /* restore the data from previous time this URL was visited */
 
-#ifndef NECKO
-/* fix bug 9326 */
-/*
- * This is a temporary hack until necko lands because it is believed necko will fix this
- * The problem is that if the database of saved passwords had not already been unlocked,
- * a dialog will come up at this time asking for password to unlock the database.  But
- * that dialog was coming up blank because we are on the netlib thread.  Hack is to not
- * attempt to prefill with saved passwords at this time if the database has not been
- * previously unlocked.  Such unlocking could be done by doing edit/wallet/wallet-contents
- * for example.
- */
-extern PRBool keySet;
-if (!keySet) user=0; else
-#endif
-
   user = si_GetUser(URLName, PR_FALSE, name);
   if (user) {
     SI_LoadSignonData(PR_TRUE); /* this destroys user so need to recaculate it */

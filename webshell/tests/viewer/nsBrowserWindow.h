@@ -21,11 +21,7 @@
 
 #include "nsIBrowserWindow.h"
 #include "nsIStreamListener.h"
-#ifdef NECKO
 #include "nsIProgressEventSink.h"
-#else
-#include "nsINetSupport.h"
-#endif
 #include "nsIWebShell.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIDocumentLoaderObserver.h"

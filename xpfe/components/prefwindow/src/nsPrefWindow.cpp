@@ -21,11 +21,9 @@
 
 #include "nsIPref.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsIIOService.h"
 #include "nsIURL.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
 #include "nsFileSpec.h"
@@ -191,9 +189,6 @@ NS_IMETHODIMP nsPrefWindow::ShowWindow(
     nsCOMPtr<nsIURI> urlObj;
     char * urlStr = "chrome://pref/content/";
     nsresult rv;
-#ifndef NECKO
-    rv = NS_NewURL(getter_AddRefs(urlObj), urlStr);
-#else
     NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
@@ -202,7 +197,6 @@ NS_IMETHODIMP nsPrefWindow::ShowWindow(
     if (NS_FAILED(rv)) return rv;
 
     rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
-#endif // NECKO
     if (NS_FAILED(rv)) return rv;
 
     NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);

@@ -1092,16 +1092,10 @@ RDFContentSinkImpl::GetResourceAttribute(const nsIParserNode& aNode,
             // XXX Take the URI and make it fully qualified by
             // sticking it into the document's URL. This may not be
             // appropriate...
-#ifdef NECKO
             char* documentURL;
-#else
-            const char* documentURL;
-#endif
             mDocumentURL->GetSpec(&documentURL);
             rdf_MakeAbsoluteURI(nsAutoString(documentURL), uri);
-#ifdef NECKO
             nsCRT::free(documentURL);
-#endif
 
             return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
         }

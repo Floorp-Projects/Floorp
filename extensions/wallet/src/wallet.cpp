@@ -22,13 +22,9 @@
 */
 
 #include "wallet.h"
-#ifndef NECKO
-#include "nsINetService.h"
-#else
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
-#endif // NECKO
 
 #include "nsIServiceManager.h"
 #include "nsIDocument.h"
@@ -62,13 +58,8 @@ static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
 
-#ifndef NECKO
-static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-#else
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
@@ -637,15 +628,9 @@ Wallet_Localize(char* genericString) {
   nsAutoString v("");
 
   /* create a URL for the string resource file */
-#ifndef NECKO
-  nsINetService* pNetService = nsnull;
-  ret = nsServiceManager::GetService(kNetServiceCID, kINetServiceIID,
-    (nsISupports**) &pNetService);
-#else
   nsIIOService* pNetService = nsnull;
   ret = nsServiceManager::GetService(kIOServiceCID, kIIOServiceIID,
     (nsISupports**) &pNetService);
-#endif // NECKO
 
   if (NS_FAILED(ret)) {
     printf("cannot get net service\n");
@@ -653,12 +638,6 @@ Wallet_Localize(char* genericString) {
   }
   nsIURI *url = nsnull;
 
-#ifndef NECKO
-  ret = pNetService->CreateURL(&url, nsString(PROPERTIES_URL), nsnull, nsnull,
-    nsnull);
-  nsServiceManager::ReleaseService(kNetServiceCID, pNetService);
-
-#else
   nsIURI *uri = nsnull;
   ret = pNetService->NewURI(PROPERTIES_URL, nsnull, &uri);
   if (NS_FAILED(ret)) {
@@ -669,8 +648,6 @@ Wallet_Localize(char* genericString) {
 
   ret = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
   nsServiceManager::ReleaseService(kIOServiceCID, pNetService);
-
-#endif // NECKO
 
   if (NS_FAILED(ret)) {
     printf("cannot create URL\n");
@@ -688,24 +665,16 @@ Wallet_Localize(char* genericString) {
   nsILocale* locale = nsnull;
   nsIStringBundle* bundle = nsnull;
 #if 1
-#ifndef NECKO
-  const char* spec = nsnull;
-#else
   char* spec = nsnull;
-#endif /* NECKO */
   ret = url->GetSpec(&spec);
   if (NS_FAILED(ret)) {
     printf("cannot get url spec\n");
     nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
-#ifdef NECKO
     nsCRT::free(spec);
-#endif /* NECKO */
     return v.ToNewUnicode();
   }
   ret = pStringService->CreateBundle(spec, locale, &bundle);
-#ifdef NECKO
   nsCRT::free(spec);
-#endif /* NECKO */
 #else
   ret = pStringService->CreateBundle(url, locale, &bundle);
 #endif
@@ -812,7 +781,6 @@ Wallet_3ButtonConfirm(PRUnichar * szMessage)
 PUBLIC void
 Wallet_Alert(PRUnichar * szMessage)
 {
-#ifdef NECKO
   nsresult res;  
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
   if (NS_FAILED(res)) {
@@ -822,26 +790,11 @@ Wallet_Alert(PRUnichar * szMessage)
   const nsString message = szMessage;
   res = dialog->Alert(message.GetUnicode());
   return;     // XXX should return the error
-#else
-  nsINetSupportDialogService* dialog = NULL;
-  nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
-  nsINetSupportDialogService::GetIID(), (nsISupports**)&dialog);
-  if (NS_FAILED(res)) {
-    return;
-  }
-  if (dialog) {
-    const nsString message = szMessage;
-    dialog->Alert(message);
-  }
-  nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
-  return;
-#endif
 }
 
 PUBLIC PRBool
 Wallet_CheckConfirmYN(PRUnichar * szMessage, char * szCheckMessage, PRBool* checkValue)
 {
-#ifdef NECKO
   PRBool retval = PR_TRUE; /* default value */
 
   nsresult res;  
@@ -866,31 +819,10 @@ Wallet_CheckConfirmYN(PRUnichar * szMessage, char * szCheckMessage, PRBool* chec
     *checkValue = 0; /* this should never happen but it is happening!!! */
   }
   return retval;
-#else
-  PRBool retval = PR_TRUE; /* default value */
-  nsINetSupportDialogService* dialog = NULL;
-  nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
-  nsINetSupportDialogService::GetIID(), (nsISupports**)&dialog);
-  if (NS_FAILED(res)) {
-    return retval;
-  }
-  if (dialog) {
-    const nsString message = szMessage;
-    const nsString checkMessage = szCheckMessage;
-    retval = PR_FALSE; /* in case user exits dialog by clicking X */
-    dialog->ConfirmCheckYN(message, checkMessage, &retval, checkValue);
-    if (*checkValue!=0 && *checkValue!=1) {
-      *checkValue = 0; /* this should never happen but it is happening!!! */
-    }
-  }
-  nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
-  return retval;
-#endif
 }
 
 char * wallet_GetString(PRUnichar * szMessage)
 {
-#ifdef NECKO
   nsString password;
   PRBool retval;
 
@@ -915,27 +847,6 @@ char * wallet_GetString(PRUnichar * szMessage)
   } else {
     return NULL; /* user pressed cancel */
   }
-#else
-  nsString password;
-  PRBool retval;
-  nsINetSupportDialogService* dialog = NULL;
-  nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
-  nsINetSupportDialogService::GetIID(), (nsISupports**)&dialog);
-  if (NS_FAILED(res)) {
-    return NULL; /* failure value */
-  }
-  if (dialog) {
-    const nsString message = szMessage;
-    retval = PR_FALSE; /* in case user exits dialog by clicking X */
-    dialog->PromptPassword(message, password, &retval);
-  }
-  nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
-  if (retval) {
-    return password.ToNewCString();
-  } else {
-    return NULL; /* user pressed cancel */
-  }
-#endif
 }
 
 char * wallet_GetDoubleString(PRUnichar * szMessage, PRUnichar * szMessage2, PRBool& matched)

@@ -70,9 +70,7 @@ class IContentSink;
 class nsIDTD;
 class nsScanner;
 class nsIParserFilter;
-#ifdef NECKO
 class nsIProgressEventSink;
-#endif
 
 
 #include <fstream.h>
@@ -245,7 +243,6 @@ CLASS_EXPORT_HTMLPARS nsParser : public nsIParser, public nsIStreamListener {
       // These methods are callback methods used by
       // net lib to let us know about our inputstream.
       //*********************************************
-#ifdef NECKO
     // nsIProgressEventSink methods:
     NS_IMETHOD OnProgress(nsIChannel* channel, nsISupports* context, PRUint32 Progress, PRUint32 ProgressMax);
     NS_IMETHOD OnStatus(nsIChannel* channel, nsISupports* context, const PRUnichar* aMmsg);
@@ -255,15 +252,6 @@ CLASS_EXPORT_HTMLPARS nsParser : public nsIParser, public nsIStreamListener {
 
     // nsIStreamListener methods:
     NS_DECL_NSISTREAMLISTENER
-
-#else
-    NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
-    NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 Progress, PRUint32 ProgressMax);
-    NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMmsg);
-    NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
-    NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 length);
-    NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
-#endif
 
     void              PushContext(CParserContext& aContext);
     CParserContext*   PopContext();
@@ -378,9 +366,7 @@ protected:
     PRInt32             mMinorIteration;
 
     nsIStreamObserver*  mObserver;
-#ifdef NECKO
     nsIProgressEventSink* mProgressEventSink;
-#endif
     nsIContentSink*     mSink;
     nsIParserFilter*    mParserFilter;
     PRBool              mDTDVerification;

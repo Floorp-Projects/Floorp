@@ -2939,11 +2939,7 @@ nsHTMLEditor::ApplyDocumentOrOverrideStyleSheet(const nsString& aURL, PRBool aOv
   nsresult rv   = NS_OK;
   nsCOMPtr<nsIURI> uaURL;
 
-#ifndef NECKO
-  rv = NS_NewURL(getter_AddRefs(uaURL), aURL);
-#else
   rv = NS_NewURI(getter_AddRefs(uaURL), aURL);
-#endif // NECKO
 
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIDocument> document;

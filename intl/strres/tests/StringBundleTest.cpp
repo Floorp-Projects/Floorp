@@ -24,13 +24,9 @@
 #include "nsILocale.h"
 #include <iostream.h>
 
-#ifndef NECKO
-#include "nsINetService.h"
-#else
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
-#endif
 
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
@@ -60,13 +56,8 @@
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
-#ifndef NECKO
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-#else
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
@@ -145,11 +136,7 @@ nsresult NS_AutoregisterComponents()
                                         NULL, NULL, 
                                         XPCOM_DLL, 
                                         PR_FALSE, PR_FALSE);
-#ifndef NECKO
-  nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-#else
   nsComponentManager::RegisterComponent(kIOServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-#endif // NECKO
 
   // Create the Event Queue for this thread...
   nsIEventQueueService* pEventQService;

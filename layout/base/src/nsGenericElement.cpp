@@ -37,9 +37,7 @@
 #include "nsISizeOfHandler.h"
 #include "nsISupportsArray.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsNeckoUtil.h"
-#endif // NECKO
 #include "nsFrame.h"
 #include "nsIPresShell.h"
 #include "nsIView.h"
@@ -1248,13 +1246,8 @@ nsGenericElement::TriggerLink(nsIPresContext& aPresContext,
     // Resolve url to an absolute url
     nsAutoString absURLSpec;
     if (nsnull != aBaseURL) {
-#ifndef NECKO
-      nsString empty;
-      NS_MakeAbsoluteURL(aBaseURL, empty, aURLSpec, absURLSpec);
-#else
       rv = NS_MakeAbsoluteURI(aURLSpec, aBaseURL, absURLSpec);
       NS_ASSERTION(NS_SUCCEEDED(rv), "XXX make this function return an nsresult, like it should!");
-#endif // NECKO
     }
     else {
       absURLSpec = aURLSpec;

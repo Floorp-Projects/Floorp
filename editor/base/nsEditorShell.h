@@ -28,11 +28,7 @@
 #include "nsIEditorShell.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsIDOMSelectionListener.h"
-#ifdef NECKO
 #include "nsIPrompt.h"
-#else
-#include "nsINetSupport.h"
-#endif
 #include "nsIStreamObserver.h"
 #include "nsIDOMDocument.h"
 #include "nsVoidArray.h"
@@ -93,53 +89,20 @@ class nsEditorShell :   public nsIEditorShell,
     // nsIDocumentLoaderObserver
     NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
 
-#ifndef NECKO
-    NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURI *aUrl, PRInt32 aStatus,
-								  nsIDocumentLoaderObserver * aObserver);
-#else
     NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus,
                                   nsIDocumentLoaderObserver * aObserver);
-#endif // NECKO
-
-#ifndef NECKO
-    NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aContentType, 
-                           		 nsIContentViewer* aViewer);
-#else
     NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel,
                                  nsIContentViewer* aViewer);
-#endif // NECKO
-
-#ifndef NECKO
-    NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, PRUint32 aProgress, 
-                               PRUint32 aProgressMax);
-#else
     NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRUint32 aProgress,
                                PRUint32 aProgressMax);
-#endif // NECKO
-
-#ifndef NECKO
-    NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, nsString& aMsg);
-#else
     NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsString& aMsg);
-#endif // NECKO
 
-#ifndef NECKO
-    NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, PRInt32 aStatus);
-#else
     NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus);
-#endif // NECKO
 
-#ifndef NECKO
-    NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,
-                                        nsIURI *aURL,
-                                        const char *aContentType,
-                                        const char *aCommand );
-#else
     NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,
                                         nsIChannel* channel,
                                         const char *aContentType,
                                         const char *aCommand );
-#endif // NECKO
 
   protected:
     nsIDOMWindow       *mToolbarWindow;				// weak reference

@@ -170,24 +170,12 @@ XP_MakeHTMLDialog2(XPDialogInfo *dialogInfo) {
   char* separator;
   nsresult res;
 
-#ifndef NECKO
-  nsINetService *netservice;
-  res = nsServiceManager::GetService(kNetServiceCID,
-                                     kINetServiceIID,
-                                     (nsISupports **)&netservice);
-#else
   NS_WITH_SERVICE(nsIIOService, netservice, kIOServiceCID, &res);
-#endif // NECKO
 
   if ((NS_SUCCEEDED(res)) && (nsnull != netservice)) {
     const nsAutoString html_dlgs = nsAutoString(HTML_DLGS_URL);
-#ifndef NECKO
-    if (!NS_FAILED(NS_NewURL(&url, html_dlgs))) {
-        res = netservice->GetCookieString(url, *nsCookie);
-#else
     if (1) {
         return; // NECKO XXX
-#endif // NECKO
 
       /* convert cookie to a C string */
 

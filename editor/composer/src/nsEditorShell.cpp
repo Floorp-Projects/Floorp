@@ -113,10 +113,6 @@ static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kCommonDialogsCID,         NS_CommonDialog_CID );
 static NS_DEFINE_CID(kDialogParamBlockCID,      NS_DialogParamBlock_CID);
 /* Define Interface IDs */
-#ifdef NECKO
-#else
-static NS_DEFINE_IID(kINetSupportIID,           NS_INETSUPPORT_IID);
-#endif
 static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
 
 #define APP_DEBUG 0 
@@ -694,11 +690,7 @@ NS_IMETHODIMP nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
         nsAutoString styleURL("chrome://editor/content/EditorContent.css");
 
         nsCOMPtr<nsIURI>uaURL;
-#ifndef NECKO
-        rv = NS_NewURL(getter_AddRefs(uaURL), styleURL);
-#else
         rv = NS_NewURI(getter_AddRefs(uaURL), styleURL);
-#endif // NECKO
 
         if (NS_SUCCEEDED(rv))
         {
@@ -3553,13 +3545,8 @@ nsEditorShell::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, cons
 }
 
 NS_IMETHODIMP
-#ifndef NECKO
-nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURI *aUrl, PRInt32 aStatus,
-                 nsIDocumentLoaderObserver * aObserver)
-#else
 nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus,
                  nsIDocumentLoaderObserver * aObserver)
-#endif // NECKO
 {
   // for pages with charsets, this gets called the first time with a 
   // non-zero status value. Don't prepare the editor that time.
@@ -3577,70 +3564,41 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel,
 }
 
 NS_IMETHODIMP
-#ifndef NECKO
-nsEditorShell::OnStartURLLoad(nsIDocumentLoader* loader, 
-                                 nsIURI* aURL, const char* aContentType,
-                                 nsIContentViewer* aViewer)
-#else
 nsEditorShell::OnStartURLLoad(nsIDocumentLoader* loader,
                               nsIChannel* channel,
                               nsIContentViewer* aViewer)
-#endif // NECKO
 {
 
    return NS_OK;
 }
 
 NS_IMETHODIMP
-#ifndef NECKO
-nsEditorShell::OnProgressURLLoad(nsIDocumentLoader* loader, 
-                                    nsIURI* aURL, PRUint32 aProgress, 
-                                    PRUint32 aProgressMax)
-#else
 nsEditorShell::OnProgressURLLoad(nsIDocumentLoader* loader,
                                     nsIChannel* channel, PRUint32 aProgress, 
                                     PRUint32 aProgressMax)
-#endif // NECKO
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-#ifndef NECKO
-nsEditorShell::OnStatusURLLoad(nsIDocumentLoader* loader, 
-                                  nsIURI* aURL, nsString& aMsg)
-#else
 nsEditorShell::OnStatusURLLoad(nsIDocumentLoader* loader,
                                   nsIChannel* channel, nsString& aMsg)
-#endif // NECKO
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-#ifndef NECKO
-nsEditorShell::OnEndURLLoad(nsIDocumentLoader* loader, 
-                               nsIURI* aURL, PRInt32 aStatus)
-#else
 nsEditorShell::OnEndURLLoad(nsIDocumentLoader* loader,
                                nsIChannel* channel, nsresult aStatus)
-#endif // NECKO
 {
    return NS_OK;
 }
 
 NS_IMETHODIMP
-#ifndef NECKO
-nsEditorShell::HandleUnknownContentType(nsIDocumentLoader* loader, 
-                                           nsIURI *aURL,
-                                           const char *aContentType,
-                                           const char *aCommand )
-#else
 nsEditorShell::HandleUnknownContentType(nsIDocumentLoader* loader, 
                                            nsIChannel* channel,
                                            const char *aContentType,
                                            const char *aCommand )
-#endif // NECKO
 {
    return NS_OK;
 }

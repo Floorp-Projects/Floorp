@@ -22,11 +22,9 @@
 #include "nsIRenderingContext.h"
 #include "nsIPresContext.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsNeckoUtil.h"
-#endif // NECKO
 #include "nsXIFConverter.h"
 #include "nsISizeOfHandler.h"
 #include "nsTextFragment.h"
@@ -871,9 +869,6 @@ nsImageMap::IsInside(nscoord aX, nscoord aY,
   for (i = 0; i < n; i++) {
     Area* area = (Area*) mAreas.ElementAt(i);
     if (area->IsInside(aX, aY) && area->mHasURL) {
-#ifndef NECKO
-      NS_MakeAbsoluteURL(aDocURL, area->mBase, area->mHREF, aAbsURL);
-#else
       nsresult rv;
       // Set the image loader's source URL and base URL
       nsIURI* baseUri = nsnull;
@@ -898,7 +893,6 @@ nsImageMap::IsInside(nscoord aX, nscoord aY,
       NS_MakeAbsoluteURI(area->mHREF, baseUri, aAbsURL);
 
       NS_RELEASE(baseUri);
-#endif // NECKO
       aTarget = area->mTarget;
       if (mMap && (aTarget.Length() == 0)) {
         nsIHTMLContent* content = nsnull;

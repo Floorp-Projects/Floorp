@@ -18,9 +18,7 @@
 #include <stdio.h>
 #include "nsIUnicharInputStream.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsNeckoUtil.h"
-#endif // NECKO
 #include "nsCRT.h"
 #include "nsString.h"
 #include "prprf.h"
@@ -49,11 +47,7 @@ int main(int argc, char** argv)
   char* urlName = argv[1];
   nsIURI* url;
   nsresult rv;
-#ifndef NECKO
-  rv = NS_NewURL(&url, urlName);
-#else
   rv = NS_NewURI(&url, urlName);
-#endif // NECKO
   if (NS_OK != rv) {
     printf("invalid URL: '%s'\n", urlName);
     return -1;
@@ -62,11 +56,7 @@ int main(int argc, char** argv)
   // Get an input stream from the url
   nsresult ec;
   nsIInputStream* in;
-#ifndef NECKO
-  ec = NS_OpenURL(url, &in);
-#else
   ec = NS_OpenURI(&in, url);
-#endif // NECKO
   if (nsnull == in) {
     printf("open of url('%s') failed: error=%x\n", urlName, ec);
     return -1;

@@ -28,11 +28,7 @@
 #include "nsXPBaseWindow.h"
 #endif
 
-#ifdef NECKO
 #include "nsIPrompt.h"
-#else
-#include "nsINetSupport.h"
-#endif
 #include "nsIAppShell.h"
 #include "nsIWidget.h"
 #include "nsIDOMDocument.h"
@@ -89,11 +85,6 @@ static NS_DEFINE_IID(kIDOMEventReceiverIID,   NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 
-#ifdef NECKO
-#else
-static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
-#endif
-
 //----------------------------------------------------------------------
 nsXPBaseWindow::nsXPBaseWindow() :
   mContentRoot(nsnull),
@@ -137,14 +128,6 @@ nsresult nsXPBaseWindow::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-#ifdef NECKO
-#else
-  if (aIID.Equals(kINetSupportIID)) {
-    *aInstancePtrResult = (void*) ((nsINetSupport*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-#endif
   if (aIID.Equals(kIDOMMouseListenerIID)) {
     NS_ADDREF_THIS(); // Increase reference count for caller
     *aInstancePtrResult = (void *)((nsIDOMMouseListener*)this);
@@ -578,100 +561,6 @@ nsXPBaseWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupConten
 {
   return NS_OK;
 }
-
-
-#ifndef NECKO
-//----------------------------------------
-NS_IMETHODIMP_(void) nsXPBaseWindow::Alert(const nsString &aText)
-{
-  char *str;
-
-  str = aText.ToNewCString();
-  printf("%cBrowser Window Alert: %s\n", '\007', str);
-  delete[] str;
-}
-
-//----------------------------------------
-NS_IMETHODIMP_(PRBool) nsXPBaseWindow::Confirm(const nsString &aText)
-{
-  char *str;
-
-  str = aText.ToNewCString();
-  printf("%cBrowser Window Confirm: %s (y/n)? \n", '\007', str);
-  delete[] str;
-  char c;
-  for (;;) {
-    c = getchar();
-    if (tolower(c) == 'y') {
-      return PR_TRUE;
-    }
-    if (tolower(c) == 'n') {
-      return PR_FALSE;
-    }
-  }
-  return PR_FALSE;
-}
-
-//----------------------------------------
-NS_IMETHODIMP_(PRBool) nsXPBaseWindow::Prompt(const nsString &aText,
-                                              const nsString &aDefault,
-                                              nsString &aResult)
-{
-  char *str;
-  char buf[256];
-
-  str = aText.ToNewCString();
-  printf("Browser Window: %s\n", str);
-  delete[] str;
-
-  printf("%cPrompt: ", '\007');
-  scanf("%s", buf);
-  aResult = buf;
-  
-  return (aResult.Length() > 0);
-}
-
-//----------------------------------------
-NS_IMETHODIMP_(PRBool) nsXPBaseWindow::PromptUserAndPassword(const nsString &aText,
-                                                             nsString &aUser,
-                                                             nsString &aPassword)
-{
-  char *str;
-  char buf[256];
-
-  str = aText.ToNewCString();
-  printf("Browser Window: %s\n", str);
-  delete[] str;
-
-  printf("%cUser: ", '\007');
-  scanf("%s", buf);
-  aUser = buf;
-  printf("%cPassword: ", '\007');
-  scanf("%s", buf);
-  aPassword = buf;
-  
-  return (aUser.Length() > 0);
-}
-
-//----------------------------------------
-NS_IMETHODIMP_(PRBool) nsXPBaseWindow::PromptPassword(const nsString &aText,
-                                                      nsString &aPassword)
-{
-  char *str;
-  char buf[256];
-
-  str = aText.ToNewCString();
-  printf("Browser Window: %s\n", str);
-  delete[] str;
-
-  printf("%cPassword: ", '\007');
-  scanf("%s", buf);
-  aPassword = buf;
- 
-  return PR_TRUE;
-}
-
-#endif // NECKO
 
 
 //----------------------------------------------------------------------

@@ -35,13 +35,8 @@
 #include "nsINameSpaceManager.h"
 #include "nsIContentViewer.h"
 #include "nsIDOMElement.h"
-#ifndef NECKO
-#include "nsIURL.h"
-#include "nsINetService.h"
-#else
 #include "nsNeckoUtil.h"
 #include "nsIURL.h"
-#endif // NECKO
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 
@@ -222,11 +217,7 @@ nsInstallProgressDialog::Open()
         // Open "progress" dialog.
         nsIURI *url;
         char * urlStr = "resource:/res/xpinstall/progress.xul";
-#ifndef NECKO
-        rv = NS_NewURL( &url, urlStr );
-#else
         rv = NS_NewURI( &url, urlStr );
-#endif // NECKO
         
         if ( NS_SUCCEEDED(rv) ) 
         {

@@ -39,11 +39,7 @@
 #include "nsIContent.h"
 #include "nsIEventQueueService.h"
 #include "nsIInputStream.h"
-#ifndef NECKO
-#include "nsINetService.h"
-#else
 #include "nsIIOService.h"
-#endif // NECKO
 #include "nsIOutputStream.h"
 #include "nsIPostToServer.h"
 #include "nsIRDFXMLDataSource.h"
@@ -90,11 +86,7 @@
 // CIDs
 
 // netlib
-#ifndef NECKO
-static NS_DEFINE_CID(kNetServiceCID,            NS_NETSERVICE_CID);
-#else
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 
 // rdf
 static NS_DEFINE_CID(kRDFBookMarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
@@ -131,11 +123,7 @@ static nsresult
 SetupRegistry(void)
 {
     // netlib
-#ifndef NECKO
-    nsComponentManager::RegisterComponent(kNetServiceCID,            NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-#else
     nsComponentManager::RegisterComponent(kIOServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-#endif // NECKO
 
     // parser
     nsComponentManager::RegisterComponent(kParserCID,                NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);

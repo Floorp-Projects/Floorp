@@ -19,9 +19,7 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsNeckoUtil.h"
-#endif // NECKO
 #include "nsIWidget.h"
 #include "nsIBrowserWindow.h"
 #include "nsIWebShellWindow.h"
