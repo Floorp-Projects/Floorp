@@ -45,6 +45,7 @@
 
 #include "nsImageButton.h"
 #include "nsMenuButton.h"
+#include "nsTreeView.h"
 #include "nsToolbar.h"
 #include "nsToolbarManager.h"
 #include "nsToolbarItemHolder.h"
@@ -89,6 +90,7 @@ static NS_DEFINE_IID(kCToolBar,       NS_TOOLBAR_CID);
 static NS_DEFINE_IID(kCToolBarManager,  NS_TOOLBARMANAGER_CID);
 static NS_DEFINE_IID(kCToolBarItemHolder,  NS_TOOLBARITEMHOLDER_CID);
 static NS_DEFINE_IID(kCMenuButton,     NS_MENUBUTTON_CID);
+static NS_DEFINE_IID(kCTreeView, NS_TREEVIEW_CID);
 
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
@@ -240,6 +242,9 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCPopUpMenu)) {
         inst = (nsISupports*)new nsPopUpMenu();
     }
+	else if (mClassID.Equals(kCTreeView)) {
+		inst = (nsISupports*)(nsWindow*)new nsTreeView();
+	}
     else if (mClassID.Equals(kCLookAndFeelCID)) {
         nsLookAndFeel *laf = new nsLookAndFeel();
         if (laf == NULL) {  
