@@ -27,6 +27,7 @@ CSRCS		= font_metrics.c \
 		  tblprint.c \
 		  text.c \
 		  xlateimg.c \
+		  parseAFM.c \
 		  $(NULL)
 
 REQUIRES	= nspr dbm img util layer js pref java jtools applet
