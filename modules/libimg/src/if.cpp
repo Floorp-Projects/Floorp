@@ -1874,12 +1874,6 @@ IL_GetImage(const char* image_url,
     ic->net_cx->AddReferer(url);
 #endif
 
-    /* EXTREME HACK ALERT!
-       Special signal for Composer (Editor)
-       This will be used in IL_ViewStream to tell we are an editor
-       and use IL_NewStream instead (as we did in 4.06 code) */
-    url->SetOwnerId((int)flags);
-    
     ic->is_looping = FALSE;
     ic->url = url;
 	/* Record the fact that we are calling NetLib to load a URL. */

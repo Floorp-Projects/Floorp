@@ -474,9 +474,6 @@ struct URL_Struct_ {
 										   */ /* larubbio */
 	int		 owner_id;					  /* unique ID for each library:
 												NPL (plugins) => 0x0000BAC0;
-                                                EDITOR => 0x000000ED;  
-                                                used to tell Image MIME converter we are an editor
-                                                (see IL_ViewStream in libimg/external.c)
 										   */
 	void	*owner_data;				  /* private data owned by whomever created the URL_Struct */			
 	char    *page_services_url;
