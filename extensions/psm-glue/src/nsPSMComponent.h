@@ -36,7 +36,7 @@
 #define NS_PSMCOMPONENT_CID {0xddcae170, 0x5412, 0x11d3, {0xbb, 0xc8, 0x00, 0x00, 0x86, 0x1d, 0x12, 0x37}}
 
 #define NS_CERTCONTENTLISTEN_CID {0xc94f4a30, 0x64d7, 0x11d4, {0x99, 0x60, 0x00, 0xb0, 0xd0, 0x23, 0x54, 0xa0}}
-#define NS_CERTCONTENTLISTEN_PROGID "netscape://security/certdownload"
+#define NS_CERTCONTENTLISTEN_CONTRACTID "@mozilla.org/security/certdownload;1"
 
 //--------------------------------------------
 // Now we need a content listener to register 

@@ -19,13 +19,13 @@
  */
 
  //This file stores variables common to mail windows
-var messengerProgID        = "component://netscape/messenger";
-var statusFeedbackProgID   = "component://netscape/messenger/statusfeedback";
-var messageViewProgID      = "component://netscape/messenger/messageview";
-var mailSessionProgID      = "component://netscape/messenger/services/session";
+var messengerContractID        = "@mozilla.org/messenger;1";
+var statusFeedbackContractID   = "@mozilla.org/messenger/statusfeedback;1";
+var messageViewContractID      = "@mozilla.org/messenger/messageview;1";
+var mailSessionContractID      = "@mozilla.org/messenger/services/session;1";
 
-var prefProgID             = "component://netscape/preferences";
-var msgWindowProgID		   = "component://netscape/messenger/msgwindow";
+var prefContractID             = "@mozilla.org/preferences;1";
+var msgWindowContractID		   = "@mozilla.org/messenger/msgwindow;1";
 
 var messenger;
 var pref;
@@ -44,10 +44,10 @@ var mailSession;
 var Bundle;
 var BrandBundle;
 
-var datasourceProgIDPrefix = "component://netscape/rdf/datasource?name=";
-var accountManagerDSProgID = datasourceProgIDPrefix + "msgaccountmanager";
-var folderDSProgID         = datasourceProgIDPrefix + "mailnewsfolders";
-var messageDSProgID        = datasourceProgIDPrefix + "mailnewsmessages";
+var datasourceContractIDPrefix = "@mozilla.org/rdf/datasource;1?name=?name=";
+var accountManagerDSContractID = datasourceContractIDPrefix + "msgaccountmanager";
+var folderDSContractID         = datasourceContractIDPrefix + "mailnewsfolders";
+var messageDSContractID        = datasourceContractIDPrefix + "mailnewsmessages";
 
 var accountManagerDataSource;
 var folderDataSource;
@@ -66,7 +66,7 @@ var startTime = 0;
 function OnMailWindowUnload()
 {
 	dump("we get here\n");
-	var mailSession = Components.classes[mailSessionProgID].getService();
+	var mailSession = Components.classes[mailSessionContractID].getService();
 	if(mailSession)
 	{
 		mailSession = mailSession.QueryInterface(Components.interfaces.nsIMsgMailSession);
@@ -96,34 +96,34 @@ function OnMailWindowUnload()
 function CreateMailWindowGlobals()
 {
 	// get the messenger instance
-	messenger = Components.classes[messengerProgID].createInstance();
+	messenger = Components.classes[messengerContractID].createInstance();
 	messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
 
-	pref = Components.classes[prefProgID].getService(Components.interfaces.nsIPref);
+	pref = Components.classes[prefContractID].getService(Components.interfaces.nsIPref);
 
 	//Create windows status feedback
   // set the JS implementation of status feedback before creating the c++ one..
   window.MsgStatusFeedback = new nsMsgStatusFeedback();
-	statusFeedback           = Components.classes[statusFeedbackProgID].createInstance();
+	statusFeedback           = Components.classes[statusFeedbackContractID].createInstance();
 	statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
 
 	window.MsgWindowCommands = new nsMsgWindowCommands();
 	//Create message view object
-	messageView = Components.classes[messageViewProgID].createInstance();
+	messageView = Components.classes[messageViewContractID].createInstance();
 	messageView = messageView.QueryInterface(Components.interfaces.nsIMessageView);
 
 	//Create message window object
-	msgWindow = Components.classes[msgWindowProgID].createInstance();
+	msgWindow = Components.classes[msgWindowContractID].createInstance();
 	msgWindow = msgWindow.QueryInterface(Components.interfaces.nsIMsgWindow);
 
-	msgComposeService = Components.classes['component://netscape/messengercompose'].getService();
+	msgComposeService = Components.classes['@mozilla.org/messengercompose;1'].getService();
 	msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
 
-	mailSession = Components.classes["component://netscape/messenger/services/session"].getService(Components.interfaces.nsIMsgMailSession); 
+	mailSession = Components.classes["@mozilla.org/messenger/services/session;1"].getService(Components.interfaces.nsIMsgMailSession); 
 
-	accountManager = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
+	accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
 
-	RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
+	RDF = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService();
 	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 
 	msgComposeType = Components.interfaces.nsIMsgCompType;
@@ -133,9 +133,9 @@ function CreateMailWindowGlobals()
   BrandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
 
 	//Create datasources
-	accountManagerDataSource = Components.classes[accountManagerDSProgID].createInstance();
-	folderDataSource         = Components.classes[folderDSProgID].createInstance();
-	messageDataSource        = Components.classes[messageDSProgID].createInstance();
+	accountManagerDataSource = Components.classes[accountManagerDSContractID].createInstance();
+	folderDataSource         = Components.classes[folderDSContractID].createInstance();
+	messageDataSource        = Components.classes[messageDSContractID].createInstance();
 
 }
 

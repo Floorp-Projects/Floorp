@@ -112,7 +112,7 @@ nsMsgServiceProviderService::Init()
   // now enumerate every file in the directory, and suck it into the datasource
 
   nsCOMPtr<nsIDirectoryIterator> fileIterator =
-    do_CreateInstance(NS_DIRECTORYITERATOR_PROGID, &rv);
+    do_CreateInstance(NS_DIRECTORYITERATOR_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = fileIterator->Init(dataFilesDir, PR_TRUE);

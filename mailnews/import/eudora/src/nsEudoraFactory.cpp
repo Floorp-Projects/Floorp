@@ -44,7 +44,7 @@ NS_METHOD EudoraRegister(nsIComponentManager *aCompMgr,
 {	
 	nsresult rv;
 
-	nsCOMPtr<nsICategoryManager> catMan = do_GetService( NS_CATEGORYMANAGER_PROGID, &rv);
+	nsCOMPtr<nsICategoryManager> catMan = do_GetService( NS_CATEGORYMANAGER_CONTRACTID, &rv);
 	if (NS_SUCCEEDED( rv)) {
 		nsXPIDLCString	replace;
 		char *theCID = kEudoraImportCID.ToString();
@@ -65,7 +65,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsEudoraImport)
 static nsModuleComponentInfo components[] = {
     {	"Text Import Component", 
 		NS_EUDORAIMPORT_CID,
-		"component://mozilla/import/import-eudora", 
+		"@mozilla.org/import/import-eudora;1", 
 		nsEudoraImportConstructor,
 		&EudoraRegister,
 		nsnull

@@ -33,7 +33,7 @@
 #define NS_IGENERICFACTORY_IID \
 { 0x3bc97f00, 0xccdf, 0x11d2, { 0xba, 0xb8, 0xb5, 0x48, 0x65, 0x44, 0x61, 0xfc } }
 
-#define NS_GENERICFACTORY_PROGID "component:/netscape/generic-factory"
+#define NS_GENERICFACTORY_CONTRACTID "@mozilla.org/generic-factory;1"
 #define NS_GENERICFACTORY_CLASSNAME "Generic Factory"
 /**
  * Provides a Generic nsIFactory implementation that can be used by
@@ -90,7 +90,7 @@ typedef NS_CALLBACK(NSUnregisterSelfProcPtr) (nsIComponentManager *aCompMgr,
 struct nsModuleComponentInfo {
     const char*                                 mDescription;
     nsCID                                       mCID;
-    const char*                                 mProgID;
+    const char*                                 mContractID;
     nsIGenericFactory::ConstructorProcPtr       mConstructor;
     NSRegisterSelfProcPtr                       mRegisterSelfProc;
     NSUnregisterSelfProcPtr                     mUnregisterSelfProc;

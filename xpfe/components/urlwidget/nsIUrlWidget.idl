@@ -45,6 +45,6 @@ interface nsIUrlWidget : nsISupports {
 
 //Used in navigator.js to instantiate and call this class.
 %{C++
-#define NS_IURLWIDGET_PROGID    "component://mozilla/urlwidget"
+#define NS_IURLWIDGET_CONTRACTID    "@mozilla.org/urlwidget;1"
 #define NS_IURLWIDGET_CLASSNAME "nsUrlWidget"
 %}

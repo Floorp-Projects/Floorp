@@ -399,7 +399,7 @@ nsXULKeyBindingDeleter::nsXULKeyBindingDeleter(void)
   NS_INIT_ISUPPORTS();
 
   nsresult rv;
-  NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+  NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) { return; }
   nsAutoString topic;
   topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
@@ -494,7 +494,7 @@ nsXULKeyListenerImpl::Init(
 
   // Get the accelerator key value from prefs, overriding the default:
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && prefs)
   {
     rv = prefs->GetIntPref("ui.key.acceleratorKey",
@@ -1178,7 +1178,7 @@ NS_IMETHODIMP nsXULKeyListenerImpl::GetKeyBindingDocument(nsCAutoString& aURLStr
   if (!mKeyBindingTable) return NS_ERROR_NULL_POINTER;
   if (!aURLStr.IsEmpty()) {
     nsCOMPtr<nsIURL> uri;
-    nsComponentManager::CreateInstance("component://netscape/network/standard-url",
+    nsComponentManager::CreateInstance("@mozilla.org/network/standard-url;1",
                                           nsnull,
                                           NS_GET_IID(nsIURL),
                                           getter_AddRefs(uri));

@@ -42,11 +42,11 @@ interface nsISidebar : nsISupports
 #define NS_SIDEBAR_CID \
 { 0x577cb744, 0x8caf, 0x11d3, { 0xaa, 0xef, 0x0, 0x80, 0x5f, 0x8a, 0x49, 0x5 } }
 
-#define NS_SIDEBAR_PROGID "component://mozilla/sidebar"
+#define NS_SIDEBAR_CONTRACTID "@mozilla.org/sidebar;1"
 %}
 
 /*
  var isidebar = Components.interfaces.nsISidebar;
- var csidebar = Components.classes['component://mozilla/sidebar'];
+ var csidebar = Components.classes['@mozilla.org/sidebar;1'];
  var sidebar = csidebar.createInstance(isidebar);
 */

@@ -1357,7 +1357,7 @@ NS_IMETHODIMP nsAddressBook::ConvertNA2toLDIF(nsIFileSpec *srcFileSpec, nsIFileS
   nsresult rv = NS_OK;
   if (!srcFileSpec || !dstFileSpec) return NS_ERROR_NULL_POINTER;
   
-  nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_PROGID, &rv);
+  nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
   if (!abUpgrader) return NS_ERROR_FAILURE;
 
@@ -1418,7 +1418,7 @@ NS_IMETHODIMP nsAddressBook::ImportAddressBook()
 	}
 
 	if (isNA2File) {
- 		nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_PROGID, &rv);
+ 		nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_CONTRACTID, &rv);
   		if (NS_FAILED(rv) || !abUpgrader) {
 			// todo:  make this an alert
 			printf("this product can't import Netscape 4.x addressbooks.  use the commercial build\n");
@@ -1459,4 +1459,4 @@ NS_IMETHODIMP nsAddressBook::ImportAddressBook()
     return rv;
 }
 
-CMDLINEHANDLER_IMPL(nsAddressBook,"-addressbook","general.startup.addressbook","chrome://messenger/content/addressbook/addressbook.xul","Start with the addressbook.",NS_ADDRESSBOOKSTARTUPHANDLER_PROGID,"Addressbook Startup Handler",PR_FALSE,"", PR_TRUE)
+CMDLINEHANDLER_IMPL(nsAddressBook,"-addressbook","general.startup.addressbook","chrome://messenger/content/addressbook/addressbook.xul","Start with the addressbook.",NS_ADDRESSBOOKSTARTUPHANDLER_CONTRACTID,"Addressbook Startup Handler",PR_FALSE,"", PR_TRUE)

@@ -72,7 +72,7 @@ function GetFileURL(node)
 		// add support for IE favorites under Win32, and NetPositive URLs under BeOS
 		if (url.indexOf("file://") == 0)
 		{
-			var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+			var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 			if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 			if (rdf)
 			{

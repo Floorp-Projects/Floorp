@@ -532,7 +532,7 @@ nsGtkMozRemoteHelper::OpenURL        (const char *aURL, PRBool aNewWindow, PRBoo
   nsString name;
   nsCString navChromeURL;
   nsXPIDLCString tempString;
-  NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+  NS_WITH_SERVICE(nsIPref, prefs, "@mozilla.org/preferences;1", &rv);
   if (NS_SUCCEEDED(rv))
     prefs->CopyCharPref("browser.chromeURL", getter_Copies(tempString));
   // make a copy for the auto string
@@ -663,7 +663,7 @@ nsGtkMozRemoteHelper::MailTo         (const PRUnichar *aToList)
   nsresult rv;
   // get the messenger compose service
   NS_WITH_SERVICE(nsIMsgComposeService, composeService,
-		  "component://netscape/messengercompose", &rv);
+		  "@mozilla.org/messengercompose;1", &rv);
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
   if (aToList)

@@ -279,12 +279,12 @@ function renameProperty (obj, oldname, newname)
     
 }
 
-function newObject(progID, iface)
+function newObject(contractID, iface)
 {
     if (!jsenv.HAS_XPCOM)
         return null;
 
-    var obj = Components.classes[progID].createInstance();
+    var obj = Components.classes[contractID].createInstance();
     var rv;
 
     switch (typeof iface)

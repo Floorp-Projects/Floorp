@@ -82,10 +82,10 @@ function EncryptionTest() {
 /* initializes the wallet editor dialog */
 function Startup()
 {
-  walleteditor = Components.classes["component://netscape/walleteditor/walleteditor-world"].createInstance();
+  walleteditor = Components.classes["@mozilla.org/walleteditor/walleteditor-world;1"].createInstance();
   walleteditor = walleteditor.QueryInterface(Components.interfaces.nsIWalletEditor);
 
-  walletservice = Components.classes['component://netscape/wallet/wallet-service'];
+  walletservice = Components.classes['@mozilla.org/wallet/wallet-service;1'];
   walletservice = walletservice.getService();
   walletservice = walletservice.QueryInterface(Components.interfaces.nsIWalletService);
 
@@ -594,7 +594,7 @@ function myPrompt(message, oldValue, title) {
     title = " ";
   }
   var commonDialogService =
-    Components.classes["component://netscape/appshell/commonDialogs"].getService();
+    Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
   commonDialogService =
     commonDialogService.QueryInterface(Components.interfaces.nsICommonDialogs);
   commonDialogService.Prompt(window, title, message, oldValue, newValue)

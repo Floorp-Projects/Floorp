@@ -77,7 +77,7 @@ int main(int argc, const char** argv)
   }
 
   // Get the charset alias manager
-  res = nsServiceManager::GetService(NS_CHARSETALIAS_PROGID, NS_GET_IID(nsICharsetAlias),
+  res = nsServiceManager::GetService(NS_CHARSETALIAS_CONTRACTID, NS_GET_IID(nsICharsetAlias),
                                      (nsISupports**) &aliasmgr);
   if (NS_FAILED(res))
   {
@@ -205,7 +205,7 @@ int main(int argc, const char** argv)
     NS_IF_RELEASE(encoder);
     NS_IF_RELEASE(decoder);
     nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccMain);
-    nsServiceManager::ReleaseService(NS_CHARSETALIAS_PROGID, aliasmgr);
+    nsServiceManager::ReleaseService(NS_CHARSETALIAS_CONTRACTID, aliasmgr);
     return 0;
   }
   usage();
@@ -218,6 +218,6 @@ int main(int argc, const char** argv)
   NS_IF_RELEASE(encoder);
   NS_IF_RELEASE(decoder);
   nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccMain);
-  nsServiceManager::ReleaseService(NS_CHARSETALIAS_PROGID, aliasmgr);
+  nsServiceManager::ReleaseService(NS_CHARSETALIAS_CONTRACTID, aliasmgr);
   return -1;
 }

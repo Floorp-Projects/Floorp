@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.23 2000/08/26 04:56:49 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XSLTProcessor.cpp,v 1.24 2000/09/13 23:51:15 rayw%netscape.com Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -53,7 +53,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.23 $ $Date: 2000/08/26 04:56:49 $
+ * @version $Revision: 1.24 $ $Date: 2000/09/13 23:51:15 $
 **/
 
 /**
@@ -1753,7 +1753,7 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
 	    nsresult res = NS_OK;
 	    nsAutoString topic; topic.Assign(NS_LITERAL_STRING("xslt-done"));
 
-	    nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_PROGID, &res);
+	    nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
 	    if (NS_SUCCEEDED(res)) {
           nsIDOMNode* docElement = (resultDocument->getDocumentElement())->getNSObj();
 

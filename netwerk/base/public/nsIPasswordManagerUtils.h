@@ -25,6 +25,6 @@
 #include "nsIPasswordManager.h"
 
 /* XXX love me, rayw, love me true */
-#define PASSWORDMANAGER_PROGID "mozilla.network.password-manager.1"
+#define PASSWORDMANAGER_CONTRACTID "mozilla.network.password-manager.1"
 
 #endif /* NSIPASSWORDMANAGERUTILS_H__ */

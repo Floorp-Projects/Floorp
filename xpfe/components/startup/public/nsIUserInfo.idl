@@ -45,6 +45,6 @@ interface nsIUserInfo : nsISupports
 {  0x14c13684, 0x1dd2, 0x11b2, \
   {0x94, 0x63, 0xbb, 0x10, 0xba, 0x74, 0x25, 0x54}}
 
-#define NS_USERINFO_PROGID "component://netscape/userinfo"
+#define NS_USERINFO_CONTRACTID "@mozilla.org/userinfo;1"
 
 %}

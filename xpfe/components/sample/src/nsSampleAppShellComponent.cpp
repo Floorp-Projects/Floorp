@@ -175,5 +175,5 @@ nsSampleAppShellComponent::DoDialogTests( nsISupports *parent, nsIObserver *obse
 // Generate base nsIAppShellComponent implementation.
 NS_IMPL_IAPPSHELLCOMPONENT( nsSampleAppShellComponent,
                             nsISampleAppShellComponent,
-                            NS_ISAMPLEAPPSHELLCOMPONENT_PROGID,
+                            NS_ISAMPLEAPPSHELLCOMPONENT_CONTRACTID,
                             0 )

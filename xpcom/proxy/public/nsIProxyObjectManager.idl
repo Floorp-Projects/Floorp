@@ -44,7 +44,7 @@ interface nsIProxyObjectManager : nsISupports
 %{C++
 #include "nsProxyEvent.h"
 
-#define NS_XPCOMPROXY_PROGID "component://netscape/xpcomproxy"
+#define NS_XPCOMPROXY_CONTRACTID "@mozilla.org/xpcomproxy;1"
 #define NS_XPCOMPROXY_CLASSNAME "XPCom Proxy"
 
 #define NS_PROXYEVENT_MANAGER_CID                \

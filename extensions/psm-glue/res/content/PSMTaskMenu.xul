@@ -9,7 +9,7 @@
   <script language="JavaScript">
     function displaySecurityAdvisor()
     {
-      var psm = Components.classes["component://netscape/psm"].getService();
+      var psm = Components.classes["@mozilla.org/psm;1"].getService();
       psm = psm.QueryInterface(Components.interfaces.nsIPSMComponent);
       psm.displaySecurityAdvisor( null, null, null );
     }

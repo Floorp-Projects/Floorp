@@ -38,7 +38,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppFileLocationProvider)
 static nsModuleComponentInfo components[] =
 {
    { "AppFileLocationProvider Component", NS_APPFILELOCATIONPROVIDER_CID, 
-      NS_APPFILELOCATIONPROVIDER_PROGID, nsAppFileLocationProviderConstructor }
+      NS_APPFILELOCATIONPROVIDER_CONTRACTID, nsAppFileLocationProviderConstructor }
 };
 
 

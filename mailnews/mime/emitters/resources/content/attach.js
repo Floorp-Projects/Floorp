@@ -22,11 +22,11 @@
  * Attachment Command-specific code. This stuff should be called by the widgets
  */
 
-var msgWindowProgID		   = "component://netscape/messenger/msgwindow";
-var messenger = Components.classes['component://netscape/messenger'].createInstance();
+var msgWindowContractID		   = "@mozilla.org/messenger/msgwindow;1";
+var messenger = Components.classes['@mozilla.org/messenger;1'].createInstance();
 messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
 //Create message window object
-//var msgWindow = Components.classes[msgWindowProgID].createInstance();
+//var msgWindow = Components.classes[msgWindowContractID].createInstance();
 //msgWindow = msgWindow.QueryInterface(Components.interfaces.nsIMsgWindow);
 
 function OpenAttachURL(url, displayName, messageUri)

@@ -57,6 +57,6 @@ interface nsISOAPFault : nsISupports {
 { /* 87d21ec1-539d-11d4-9a59-00104bdf5339 */        \
   0x87d21ec1, 0x539d, 0x11d4,                       \
  {0x9a, 0x59, 0x00, 0x10, 0x4b, 0xdf, 0x53, 0x39} }
-#define NS_SOAPFAULT_PROGID \
-"component://netscape/xmlextras/soap/fault"
+#define NS_SOAPFAULT_CONTRACTID \
+"@mozilla.org/xmlextras/soap/fault;1"
 %}

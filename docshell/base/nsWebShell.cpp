@@ -1393,7 +1393,7 @@ NS_IMETHODIMP nsWebShell::Create()
   // HACK....force the uri loader to give us a load cookie for this webshell...then get it's
   // doc loader and store it...as more of the docshell lands, we'll be able to get rid
   // of this hack...
-  nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_PROGID);
+  nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_CONTRACTID);
   uriLoader->GetDocumentLoaderForContext(NS_STATIC_CAST( nsISupports*, (nsIWebShell *) this), &mDocLoader);
 
   // Set the webshell as the default IContentViewerContainer for the loader...

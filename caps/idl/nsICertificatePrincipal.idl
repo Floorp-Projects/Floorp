@@ -26,7 +26,7 @@
 #include "nsIZipReader.idl"
 
 %{C++
-#define NS_CERTIFICATEPRINCIPAL_PROGID "component://netscape/certificateprincipal"
+#define NS_CERTIFICATEPRINCIPAL_CONTRACTID "@mozilla.org/certificateprincipal;1"
 #define NS_CERTIFICATEPRINCIPAL_CLASSNAME "certificateprincipal"
 %}
 

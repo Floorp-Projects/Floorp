@@ -27,6 +27,6 @@
 { 0xe86b337b, 0xbf89, 0x11d2, \
     { 0xb3, 0xaf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
 
-#define NS_LWBRK_PROGID "component://netscape/intl/lwbrk"
+#define NS_LWBRK_CONTRACTID "@mozilla.org/intl/lwbrk;1"
 
 #endif

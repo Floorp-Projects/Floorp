@@ -32,7 +32,7 @@ loop: for (var c in Components.classes)
     {
         var cls = Components.classes[c];
         dumpln ("**");
-        dumpln (" * ProgID: '" + cls.name + "'");
+        dumpln (" * ContractID: '" + cls.name + "'");
         dumpln (" * CLSID: " + cls.number);
 
         if(ignore) {
@@ -99,13 +99,13 @@ for (var c in Components.classes)
     totalClasses++;
     if (Components.classes[c].name == "")
     {
-        dumpln ("CLSID " + c + " has no progID.");
+        dumpln ("CLSID " + c + " has no contractID.");
         nonameClasses++;
     }
     else
         if (c.search(/^component:\/\//) == -1)
         {
-            dumpln ("Strange progID '" + c + "'");
+            dumpln ("Strange contractID '" + c + "'");
             strangeClasses++;
         }
 }
@@ -126,64 +126,64 @@ for (var i in Components.interfaces)
 }
 
 dumpln ("** Enumerated " + totalClasses + " classes");
-dumpln (" * " + nonameClasses + " without progIDs");
+dumpln (" * " + nonameClasses + " without contractIDs");
 dumpln (" * " + strangeClasses + " with strange names");
 dumpln ("");
 dumpln ("** Enumerated " + totalIfaces + " interfaces");
 dumpln (" * " + strangeIfaces + " with strange names");
 
-var progIDsTo_NOT_Create = [
+var contractIDsTo_NOT_Create = [
 
-// fixed    "component://netscape/prefwindow", // nsPrefWindow::~nsPrefWindow() releases null service
-// fixed /* BUG 11511 */    "component://netscape/rdf/datasource?name=addresscard",      // nsAbRDFDataSource::~nsAbRDFDataSource calls mRDFService->UnregisterDataSource(this); even though it was not registered
-// fixed /* BUG 11511 */    "component://netscape/rdf/datasource?name=addressdirectory", // nsAbRDFDataSource::~nsAbRDFDataSource calls mRDFService->UnregisterDataSource(this); even though it was not registered
-// fixed    "component://netscape/addressbook/directoryproperty",  // fails to init refcount
+// fixed    "@mozilla.org/prefwindow;1", // nsPrefWindow::~nsPrefWindow() releases null service
+// fixed /* BUG 11511 */    "@mozilla.org/rdf/datasource;1?name=addresscard",      // nsAbRDFDataSource::~nsAbRDFDataSource calls mRDFService->UnregisterDataSource(this); even though it was not registered
+// fixed /* BUG 11511 */    "@mozilla.org/rdf/datasource;1?name=addressdirectory", // nsAbRDFDataSource::~nsAbRDFDataSource calls mRDFService->UnregisterDataSource(this); even though it was not registered
+// fixed    "@mozilla.org/addressbook/directoryproperty;1",  // fails to init refcount
 
-// fixed    "component://netscape/rdf/datasource?name=local-store", //NS_NewLocalStore calls stuff that asserts
-// fixed    "component://netscape/rdf/datasource?name=xpinstall-update-notifier", //RDFXMLDataSourceImpl::Refresh does CreateInstance of parser but fails to check the result (I think I've seen this elsewhere)
-// fixed    "component://netscape/rdf/xul-template-builder",    //RDFXMLDataSourceImpl::Refresh does CreateInstance of parser but fails to check the result (I think I've seen this elsewhere)
+// fixed    "@mozilla.org/rdf/datasource;1?name=local-store", //NS_NewLocalStore calls stuff that asserts
+// fixed    "@mozilla.org/rdf/datasource;1?name=?name=xpinstall-update-notifier", //RDFXMLDataSourceImpl::Refresh does CreateInstance of parser but fails to check the result (I think I've seen this elsewhere)
+// fixed    "@mozilla.org/rdf/xul-template-builder;1",    //RDFXMLDataSourceImpl::Refresh does CreateInstance of parser but fails to check the result (I think I've seen this elsewhere)
 
-// fixed    "component://netscape/rdf/xul-content-sink", // nsXULContentSink.cpp, XULContentSinkImpl::XULContentSinkImpl needs to init mNameSpaceManager
+// fixed    "@mozilla.org/rdf/xul-content-sink;1", // nsXULContentSink.cpp, XULContentSinkImpl::XULContentSinkImpl needs to init mNameSpaceManager
 
-/* dp claims to have fixes coming */   "component://netscape/image/decoder&type=image/",  // PNGDecoder::QueryInterface and JPGDecoder::QueryInterface, do NS_INIT_REFCNT() in QueryInterface! (npunn)
+/* dp claims to have fixes coming */   "@mozilla.org/image/decoder;1?type=image/",  // PNGDecoder::QueryInterface and JPGDecoder::QueryInterface, do NS_INIT_REFCNT() in QueryInterface! (npunn)
 
-/* BUG 11507 */    "component://netscape/wallet", // WalletFactoryImpl::CreateInstance broken : calls "delete inst" then calls "NS_IF_RELEASE(inst)"
+/* BUG 11507 */    "@mozilla.org/wallet;1", // WalletFactoryImpl::CreateInstance broken : calls "delete inst" then calls "NS_IF_RELEASE(inst)"
 
-/* BUG 11509 */    "component://netscape/messengercompose/compose",              // ASSERTION in nsMsgAccountManager::prefService() (needs prefs service)
-/* BUG 11509 */    "component://netscape/messenger",                             // ASSERTION in nsMsgAccountManager::prefService() (needs prefs service)
-/* BUG 11509 */    "component://netscape/rdf/datasource?name=msgaccountmanager", // ASSERTION in nsMsgAccountManager::prefService() (needs prefs service) 
-/* BUG 11509 */    "component://netscape/rdf/datasource?name=mailnewsfolders",   // ASSERTION in nsMsgAccountManager::prefService() (needs prefs service)
-/* BUG 11509 */    "component://netscape/rdf/datasource?name=msgnotifications",  // ASSERTION in nsMsgAccountManager::prefService() (needs prefs service)
-/* BUG 11509 */    "component://netscape/rdf/datasource?name=mailnewsmessages",  // ASSERTION in nsMsgAccountManager::prefService() (needs prefs service)
-
-
-
-/* BUG 11510 */    "component://netscape/rdf/xul-key-listener",   // RDFFactoryImpl::CreateInstance asserts when creating if requested interface is nsISupports!
-/* BUG 11510 */    "component://netscape/rdf/xul-popup-listener", // RDFFactoryImpl::CreateInstance asserts when creating if requested interface is nsISupports!
-/* BUG 11510 */    "component://netscape/rdf/xul-focus-tracker",  // RDFFactoryImpl::CreateInstance asserts when creating if requested interface is nsISupports!
+/* BUG 11509 */    "@mozilla.org/messengercompose/compose;1",              // ASSERTION in nsMsgAccountManager::prefService() (needs prefs service)
+/* BUG 11509 */    "@mozilla.org/messenger;1",                             // ASSERTION in nsMsgAccountManager::prefService() (needs prefs service)
+/* BUG 11509 */    "@mozilla.org/rdf/datasource;1?name=msgaccountmanager", // ASSERTION in nsMsgAccountManager::prefService() (needs prefs service) 
+/* BUG 11509 */    "@mozilla.org/rdf/datasource;1?name=mailnewsfolders",   // ASSERTION in nsMsgAccountManager::prefService() (needs prefs service)
+/* BUG 11509 */    "@mozilla.org/rdf/datasource;1?name=msgnotifications",  // ASSERTION in nsMsgAccountManager::prefService() (needs prefs service)
+/* BUG 11509 */    "@mozilla.org/rdf/datasource;1?name=mailnewsmessages",  // ASSERTION in nsMsgAccountManager::prefService() (needs prefs service)
 
 
-/* BUG 11512 */    "component://netscape/rdf/datasource?name=files", // FileSystemDataSource::~FileSystemDataSource calls gRDFService->UnregisterDataSource(this); even though it was not registered
-/* BUG 11512 */    "component://netscape/rdf/datasource?name=find", // FindDataSource::~FindDataSource calls gRDFService->UnregisterDataSource(this) even if it was not actaully registered.
 
-/* BUG 11514 */    "component://netscape/rdf/datasource?name=msgaccounts", // nsMsgAccountDataSource::QueryInterface is COMPLETELY <censor>screwed</censor> up
+/* BUG 11510 */    "@mozilla.org/rdf/xul-key-listener;1",   // RDFFactoryImpl::CreateInstance asserts when creating if requested interface is nsISupports!
+/* BUG 11510 */    "@mozilla.org/rdf/xul-popup-listener;1", // RDFFactoryImpl::CreateInstance asserts when creating if requested interface is nsISupports!
+/* BUG 11510 */    "@mozilla.org/rdf/xul-focus-tracker;1",  // RDFFactoryImpl::CreateInstance asserts when creating if requested interface is nsISupports!
 
-/* BUG 11516 */    "component://netscape/rdf/xul-sort-service",  // XULSortServiceImpl releases itself in its own destructor!
+
+/* BUG 11512 */    "@mozilla.org/rdf/datasource;1?name=files", // FileSystemDataSource::~FileSystemDataSource calls gRDFService->UnregisterDataSource(this); even though it was not registered
+/* BUG 11512 */    "@mozilla.org/rdf/datasource;1?name=?name=find", // FindDataSource::~FindDataSource calls gRDFService->UnregisterDataSource(this) even if it was not actaully registered.
+
+/* BUG 11514 */    "@mozilla.org/rdf/datasource;1?name=?name=msgaccounts", // nsMsgAccountDataSource::QueryInterface is COMPLETELY <censor>screwed</censor> up
+
+/* BUG 11516 */    "@mozilla.org/rdf/xul-sort-service;1",  // XULSortServiceImpl releases itself in its own destructor!
 
 /* BUG 11570 */    "componment://netscape/intl/charsetconvertermanager", // another case where CreateInstance returned NS_OK, but the instance pointer was null!
 
-/* BUG 11571 */    "component://netscape/rdf/datasource?name=mail-messageview", // nsMessageViewDataSource::RemoveDataSource uses mDataSource without checking for validity
+/* BUG 11571 */    "@mozilla.org/rdf/datasource;1?name=?name=mail-messageview", // nsMessageViewDataSource::RemoveDataSource uses mDataSource without checking for validity
 
 
-/* BUG 11575 */    "component://netscape/rdf/resource-factory",  // calling a property - trying to copy a null value in nsRDFResource::GetValue
+/* BUG 11575 */    "@mozilla.org/rdf/resource-factory;1",  // calling a property - trying to copy a null value in nsRDFResource::GetValue
 
 
-/* BUG 11579 */   "component://netscape/messenger/maildb", // calling a property - nsMsgDatabase::m_newSet used but not set
+/* BUG 11579 */   "@mozilla.org/messenger/maildb;1", // calling a property - nsMsgDatabase::m_newSet used but not set
 
-/* BUG 11580 */    "component://netscape/messenger/identity",  // calling a property - nsMsgIdentity::getCharPref  is null
-/* BUG 11580 */    "component://netscape/messenger/server&type=", // calling a property - nsMsgIncomingServer::getCharPref uses m_prefs which is null
+/* BUG 11580 */    "@mozilla.org/messenger/identity;1",  // calling a property - nsMsgIdentity::getCharPref  is null
+/* BUG 11580 */    "@mozilla.org/messenger/server;1?type=", // calling a property - nsMsgIncomingServer::getCharPref uses m_prefs which is null
 
-/* ASSERTION OK? */    "component://netscape/messenger/account",   // calling a property - nsMsgAccount::GetIncomingServer asserts because m_accountKey is null
+/* ASSERTION OK? */    "@mozilla.org/messenger/account;1",   // calling a property - nsMsgAccount::GetIncomingServer asserts because m_accountKey is null
 
 ];
 
@@ -191,10 +191,10 @@ var progIDsTo_NOT_Create = [
 dumpln ("-------------------------------------------------------");
 dumpln (" Now let's create every component we can find...");
 
-if(progIDsTo_NOT_Create.length) {
+if(contractIDsTo_NOT_Create.length) {
     dumpln ("...except the following 'cuz they've been know to cause CRASHES!...")
-    for(var i = 0; i < progIDsTo_NOT_Create.length; i++)
-        dumpln ("  "+progIDsTo_NOT_Create[i]);
+    for(var i = 0; i < contractIDsTo_NOT_Create.length; i++)
+        dumpln ("  "+contractIDsTo_NOT_Create[i]);
     dumpln ();
 }
-bruteForceEnumeration(progIDsTo_NOT_Create);
+bruteForceEnumeration(contractIDsTo_NOT_Create);

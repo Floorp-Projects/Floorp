@@ -26,7 +26,7 @@
 static nsModuleComponentInfo gResComponents[] = {
     { "The DateTime Protocol Handler", 
       NS_DATETIMEHANDLER_CID,
-      NS_NETWORK_PROTOCOL_PROGID_PREFIX "datetime",
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "datetime",
       nsDateTimeHandler::Create
     }
 };

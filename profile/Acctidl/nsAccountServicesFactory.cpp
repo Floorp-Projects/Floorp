@@ -42,7 +42,7 @@ static NS_DEFINE_CID(kAccountServicesCID,            NS_AccountServices_CID);
 class AccountServicesFactoryImpl : public nsIFactory
 {
 public:
-    AccountServicesFactoryImpl(const nsCID &aClass, const char* className, const char* progID);
+    AccountServicesFactoryImpl(const nsCID &aClass, const char* className, const char* contractID);
 
     // nsISupports methods
     NS_DECL_ISUPPORTS
@@ -60,15 +60,15 @@ protected:
 protected:
     nsCID       mClassID;
     const char* mClassName;
-    const char* mProgID;
+    const char* mContractID;
 };
 
 ////////////////////////////////////////////////////////////////////////
 
 AccountServicesFactoryImpl::AccountServicesFactoryImpl(const nsCID &aClass, 
                                    const char* className,
-                                   const char* progID)
-    : mClassID(aClass), mClassName(className), mProgID(progID)
+                                   const char* contractID)
+    : mClassID(aClass), mClassName(className), mContractID(contractID)
 {
     NS_INIT_REFCNT();
 }
@@ -152,13 +152,13 @@ extern "C" PR_IMPLEMENT(nsresult)
 NSGetFactory(nsISupports* aServMgr,
              const nsCID &aClass,
              const char *aClassName,
-             const char *aProgID,
+             const char *aContractID,
              nsIFactory **aFactory)
 {
     if (! aFactory)
         return NS_ERROR_NULL_POINTER;
 
-    AccountServicesFactoryImpl* factory = new AccountServicesFactoryImpl(aClass, aClassName, aProgID);
+    AccountServicesFactoryImpl* factory = new AccountServicesFactoryImpl(aClass, aClassName, aContractID);
     if (factory == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -182,7 +182,7 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
 
     rv = compMgr->RegisterComponent(kAccountServicesCID,
                                     "Account Services",
-                                    "component://netscape/profile/Account-services",
+                                    "@mozilla.org/profile/Account-services;1",
                                     aPath, PR_TRUE, PR_TRUE);
 
     if (NS_FAILED(rv)) return rv;

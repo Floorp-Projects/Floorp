@@ -45,8 +45,8 @@ interface nsISOAPEncoder : nsISupports {
 };
 
 %{ C++
-#define NS_SOAPENCODER_PROGID  \
-"component://netscape/xmlextras/soap/encoder"
-#define NS_SOAPENCODER_PROGID_PREFIX   NS_SOAPENCODER_PROGID "?encodingStyle="
+#define NS_SOAPENCODER_CONTRACTID  \
+"@mozilla.org/xmlextras/soap/encoder;1"
+#define NS_SOAPENCODER_CONTRACTID_PREFIX   NS_SOAPENCODER_CONTRACTID "?encodingStyle="
 %}
 

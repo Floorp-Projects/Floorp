@@ -71,6 +71,6 @@ protected:
 { /* 0b6e6ef0-56c4-11d4-9a5e-00104bdf5339 */    \
   0x0b6e6ef0, 0x56c4, 0x11d4,                   \
   {0x9a, 0x5e, 0x00, 0x10, 0x4b, 0xdf, 0x53, 0x39} }
-#define NS_DEFAULTSOAPENCODER_PROGID NS_SOAPENCODER_PROGID_PREFIX "http://schemas.xmlsoap.org/soap/encoding/"
+#define NS_DEFAULTSOAPENCODER_CONTRACTID NS_SOAPENCODER_CONTRACTID_PREFIX "http://schemas.xmlsoap.org/soap/encoding/"
 
 #endif

@@ -38,7 +38,7 @@ function onLoad()
     if (!messengerStrings)
         messengerStrings = srGetStrBundle("chrome://messenger/locale/messenger.properties");    
     if (!smtpService)
-        smtpService = Components.classes["component://netscape/messengercompose/smtp"].getService(Components.interfaces.nsISmtpService);
+        smtpService = Components.classes["@mozilla.org/messengercompose/smtp;1"].getService(Components.interfaces.nsISmtpService);
 
 
     serverList = document.getElementById("smtpTree");

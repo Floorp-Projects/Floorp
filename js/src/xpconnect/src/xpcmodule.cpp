@@ -46,14 +46,14 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIJSContextStack, nsXPCThreadJSContext
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIJSRuntimeService, nsJSRuntimeServiceImpl::GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptError)
 
-// XXX progids need to be standardized!
+// XXX contractids need to be standardized!
 static nsModuleComponentInfo components[] = {
-  {nsnull, NS_JS_ID_CID,                      "nsID",                   nsJSIDConstructor             },
-  {nsnull, NS_XPCONNECT_CID,                  "nsIXPConnect",           nsIXPConnectConstructor       },
-  {nsnull, NS_XPC_THREAD_JSCONTEXT_STACK_CID, "nsThreadJSContextStack", nsIJSContextStackConstructor  },
-  {nsnull, NS_XPCEXCEPTION_CID,               "nsXPCException",         nsXPCExceptionConstructor     },
-  {nsnull, NS_JS_RUNTIME_SERVICE_CID,         "nsJSRuntimeService",     nsIJSRuntimeServiceConstructor},
-  {NS_SCRIPTERROR_CLASSNAME, NS_SCRIPTERROR_CID, NS_SCRIPTERROR_PROGID, nsScriptErrorConstructor}
+  {nsnull, NS_JS_ID_CID,                      "@mozilla.org/js/xpc/ID;1",                   nsJSIDConstructor             },
+  {nsnull, NS_XPCONNECT_CID,                  "@mozilla.org/js/xpc/XPConnect;1",           nsIXPConnectConstructor       },
+  {nsnull, NS_XPC_THREAD_JSCONTEXT_STACK_CID, "@mozilla.org/js/xpc/ContextStack;1", nsIJSContextStackConstructor  },
+  {nsnull, NS_XPCEXCEPTION_CID,               "@mozilla.org/js/xpc/Exception;1",         nsXPCExceptionConstructor     },
+  {nsnull, NS_JS_RUNTIME_SERVICE_CID,         "@mozilla.org/js/xpc/RuntimeService;1",     nsIJSRuntimeServiceConstructor},
+  {NS_SCRIPTERROR_CLASSNAME, NS_SCRIPTERROR_CID, NS_SCRIPTERROR_CONTRACTID, nsScriptErrorConstructor}
 };
 
 PR_STATIC_CALLBACK(void)

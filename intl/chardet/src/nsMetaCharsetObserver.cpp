@@ -309,7 +309,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Start()
 {
     nsresult res = NS_OK;
 
-    NS_WITH_SERVICE(nsIObserverService, anObserverService, NS_OBSERVERSERVICE_PROGID, &res);
+    NS_WITH_SERVICE(nsIObserverService, anObserverService, NS_OBSERVERSERVICE_CONTRACTID, &res);
     if (NS_FAILED(res)) return res;
 
     nsAutoString htmlTopic; htmlTopic.AssignWithConversion(kHTMLTextContentType);    
@@ -320,7 +320,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::End()
 {
     nsresult res = NS_OK;
 
-    NS_WITH_SERVICE(nsIObserverService, anObserverService, NS_OBSERVERSERVICE_PROGID, &res);
+    NS_WITH_SERVICE(nsIObserverService, anObserverService, NS_OBSERVERSERVICE_CONTRACTID, &res);
     if (NS_FAILED(res)) return res;
      
     nsAutoString htmlTopic; htmlTopic.AssignWithConversion(kHTMLTextContentType);

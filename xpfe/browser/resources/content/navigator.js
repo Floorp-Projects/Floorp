@@ -35,7 +35,7 @@ var homePageDefault = bundle.GetStringFromName( "homePageDefault" );
 
 try
 {
-	pref = Components.classes["component://netscape/preferences"];
+	pref = Components.classes["@mozilla.org/preferences;1"];
 	if (pref)	pref = pref.getService();
 	if (pref)	pref = pref.QueryInterface(Components.interfaces.nsIPref);
 }
@@ -83,7 +83,7 @@ function savePage( url )
   // Default is to save current page.
   url = url ? url : window._content.location.href;
   // Use stream xfer component to prompt for destination and save.
-  var xfer = getService("component://netscape/appshell/component/xfer", "nsIStreamTransfer");
+  var xfer = getService("@mozilla.org/appshell/component/xfer;1", "nsIStreamTransfer");
   try {
     // Save; use page in cache if possible.
     var postData = appCore.postData;
@@ -146,7 +146,7 @@ function UpdateBookmarksLastVisitedDate(event)
 		try
 		{
 			// if the URL is bookmarked, update its "Last Visited" date
-			var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
+			var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"].getService();
 			if (bmks)	bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
 			if (bmks)	bmks.UpdateBookmarkLastVisitedDate(window._content.location.href, window._content.document.characterSet);
 		}
@@ -165,7 +165,7 @@ function UpdateInternetSearchResults(event)
 
 		try
 		{
-			var search = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
+			var search = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"].getService();
 			if (search)	search = search.QueryInterface(Components.interfaces.nsIInternetSearchService);
 			if (search)	searchInProgressFlag = search.FindInternetSearchResults(window._content.location.href);
 		}
@@ -183,7 +183,7 @@ function UpdateInternetSearchResults(event)
 function createBrowserInstance()
 {
     appCore = Components
-                .classes[ "component://netscape/appshell/component/browser/instance" ]
+                .classes[ "@mozilla.org/appshell/component/browser/instance;1" ]
                   .createInstance( Components.interfaces.nsIBrowserInstance );
     if ( !appCore ) {
         alert( "Error creating browser instance\n" );
@@ -480,7 +480,7 @@ function Shutdown()
 	try
 	{
 		// If bookmarks are dirty, flush 'em to disk
-		var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
+		var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"].getService();
 		if (bmks)	bmks = bmks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
 		if (bmks)	bmks.Flush();
     	}
@@ -490,7 +490,7 @@ function Shutdown()
 	try
 	{
 		// give history a change at flushing to disk also                           
-    		var history = getService( "component://netscape/browser/global-history", "nsIRDFRemoteDataSource" );
+    		var history = getService( "@mozilla.org/browser/global-history;1", "nsIRDFRemoteDataSource" );
     		if (history)    
       		history.Flush();   
 	}
@@ -524,7 +524,7 @@ function Shutdown()
 /* START OF UNNECESSARY CODE */
         if ( !explicitURL ) {
             try {
-                var handler = Components.classes['component://netscape/commandlinehandler/general-startup-browser'];
+                var handler = Components.classes['@mozilla.org/commandlinehandler/general-startup;1?type=browser'];
                 handler = handler.getService();
                 handler = handler.QueryInterface(Components.interfaces.nsICmdLineHandler);
                 if (handler) {
@@ -660,7 +660,7 @@ function OpenBookmarkURL(node, datasources)
 	try
 	{
 		// add support for IE favorites under Win32, and NetPositive URLs under BeOS
-		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+		var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 		if (rdf && datasources)
 		{
@@ -759,7 +759,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 		if ((searchMode == 1) || (forceDialogFlag == true))
 		{
 			// Use a single search dialog
-			var cwindowManager = Components.classes["component://netscape/rdf/datasource?name=window-mediator"].getService();
+			var cwindowManager = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService();
 			var iwindowManager = Components.interfaces.nsIWindowMediator;
 			var windowManager  = cwindowManager.QueryInterface(iwindowManager);
 			var searchWindow = windowManager.getMostRecentWindow("search:window");
@@ -777,7 +777,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 		{  
 			if ((!searchStr) || (searchStr == ""))	return;
 
-			var searchDS = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
+			var searchDS = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"].getService();
 			if (searchDS)	searchDS = searchDS.QueryInterface(Components.interfaces.nsIInternetSearchService);
 
 			var	escapedSearchStr = escape(searchStr);
@@ -881,9 +881,9 @@ function RevealSearchPanel()
     setTimeout("window.openDialog('"+chrome+"','_blank','"+flags+"','"+url+"')", 10);
   }
   
-  function createInstance( progid, iidName ) {
+  function createInstance( contractid, iidName ) {
       var iid = Components.interfaces[iidName];
-      return Components.classes[ progid ].createInstance( iid );
+      return Components.classes[ contractid ].createInstance( iid );
   }
 
   function createInstanceById( cid, iidName ) {
@@ -891,9 +891,9 @@ function RevealSearchPanel()
       return Components.classesByID[ cid ].createInstance( iid );
   }
 
-  function getService( progid, iidName ) {
+  function getService( contractid, iidName ) {
       var iid = Components.interfaces[iidName];
-      return Components.classes[ progid ].getService( iid );
+      return Components.classes[ contractid ].getService( iid );
   }
 
   function getServiceById( cid, iidName ) {
@@ -931,7 +931,7 @@ function RevealSearchPanel()
     // Get filepicker component.
     try {
       var nsIFilePicker = Components.interfaces.nsIFilePicker;
-      var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
+      var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
       fp.init(window, bundle.GetStringFromName("openFile"), nsIFilePicker.modeOpen);
       fp.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText | 
 			nsIFilePicker.filterAll | nsIFilePicker.filterImages | nsIFilePicker.filterXML);
@@ -960,7 +960,7 @@ function RevealSearchPanel()
 
   function BrowserAddBookmark(url,title)
   {
-    var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
+    var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"].getService();
     var wnd = document.commandDispatcher.focusedWindow;
     if (window == wnd) wnd = window._content;
     var docCharset = wnd.document.characterSet;
@@ -985,7 +985,7 @@ function BrowserEditBookmarks()
 { 
   // Use a single sidebar bookmarks dialog
 
-  var cwindowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+  var cwindowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
   var iwindowManager = Components.interfaces.nsIWindowMediator;
   var windowManager  = cwindowManager.QueryInterface(iwindowManager);
 
@@ -1134,7 +1134,7 @@ function BrowserChangeTextSize(newSize)
     // rjc: added support for URL shortcuts (3/30/1999)
     try
     {
-      var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
+      var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"].getService();
       bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
 
       var text = document.getElementById('urlbar').value;
@@ -1186,11 +1186,11 @@ function BrowserChangeTextSize(newSize)
     try {
       // Get clipboard.
       var clipboard = Components
-                        .classes["component://netscape/widget/clipboard"]
+                        .classes["@mozilla.org/widget/clipboard;1"]
                           .getService ( Components.interfaces.nsIClipboard );
       // Create tranferable that will transfer the text.
       var trans = Components
-                     .classes["component://netscape/widget/transferable"]
+                     .classes["@mozilla.org/widget/transferable;1"]
                        .createInstance( Components.interfaces.nsITransferable );
       if ( !clipboard || !trans )
         return null;
@@ -1418,7 +1418,7 @@ function TileWindow()
 	var xShift = 25;
 	var yShift = 50;
 	var done = false;
-	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+	var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
 	dump("got window Manager \n");
 	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
 	
@@ -1543,7 +1543,7 @@ function LeakDetector(verbose)
 {
     this.verbose = verbose;
     try {
-	    this.vtable = createInstance("component://netscape/xpcom/leakdetector", "nsILeakDetector");
+	    this.vtable = createInstance("@mozilla.org/xpcom/leakdetector;1", "nsILeakDetector");
 	} catch (err) {
 	}
 }
@@ -1638,7 +1638,7 @@ function clearErrorNotification()
 //Posts the currently displayed url to a native widget so third-party apps can observe it.
 var urlWidgetService = null;
 try {
-    urlWidgetService = getService( "component://mozilla/urlwidget", "nsIUrlWidget" );
+    urlWidgetService = getService( "@mozilla.org/urlwidget;1", "nsIUrlWidget" );
 } catch( exception ) {
     //dump( "Error getting url widget service: " + exception + "\n" );
 }
@@ -1794,7 +1794,7 @@ function stylesheetSwitch(forDocument, title) {
 function applyTheme(themeName)
 {
 try {
-  var chromeRegistry = Components.classes["component://netscape/chrome/chrome-registry"].getService();
+  var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService();
   if ( chromeRegistry )
     chromeRegistry = chromeRegistry.QueryInterface( Components.interfaces.nsIChromeRegistry );
 }

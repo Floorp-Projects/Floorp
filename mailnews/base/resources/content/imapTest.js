@@ -1,14 +1,14 @@
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var accountManager = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
+var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
 dump("AM = " + accountManager + "\n");
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var smtpservice = Components.classes["component://netscape/messengercompose/smtp"].getService(Components.interfaces.nsISmtpService);
+var smtpservice = Components.classes["@mozilla.org/messengercompose/smtp;1"].getService(Components.interfaces.nsISmtpService);
 dump("SMTPSERVICE =	" + smtpservice + "\n");
 smtpserver = smtpservice.defaultServer;
 smtpserver.hostname = "parp.mcom.com";
 dump("SMTPSERVER CREATED \n");
 
-var msgwindow = Components.classes["component://netscape/messenger/msgwindow"].getService(Components.interfaces.nsIMsgWindow);
+var msgwindow = Components.classes["@mozilla.org/messenger/msgwindow;1"].getService(Components.interfaces.nsIMsgWindow);
 var identity;
 var subfolders;
 var accountKey;
@@ -86,7 +86,7 @@ try {
 
 
 // local folder 
-	var messengerMigrator = Components.classes["component://netscape/messenger/migrator"].getService(Components.interfaces.nsIMessengerMigrator);
+	var messengerMigrator = Components.classes["@mozilla.org/messenger/migrator;1"].getService(Components.interfaces.nsIMessengerMigrator);
 	messengerMigrator.createLocalMailAccount(false);
 	dump("Created local mail account \n");
 }
@@ -200,7 +200,7 @@ function getNewMail()
 	netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead"); 
 	netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect"); 
 	try {
-	var instanceofpop3service =Components.classes['component://netscape/messenger/popservice'].getService();
+	var instanceofpop3service =Components.classes['@mozilla.org/messenger/popservice;1'].getService();
 	var interfaceofpop3service =instanceofpop3service.QueryInterface(Components.interfaces.nsIPop3Service); 
 	dump("interfaceofpop3service = " + interfaceofpop3service +"\n");
   	var popserver =server.QueryInterface(Components.interfaces.nsIPop3IncomingServer);   
@@ -216,7 +216,7 @@ function deleteMessage() {
 	var flag = 0;
 	netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 	try {
-		var supportsarray =Components.classes["component://netscape/supports-array"].getService(Components.interfaces.nsISupportsArray);
+		var supportsarray =Components.classes["@mozilla.org/supports-array;1"].getService(Components.interfaces.nsISupportsArray);
  		dump("ARRAY = " + supportsarray + "\n");
  		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
  		dump("MSGWINDOW = " + msgwindow + "\n");
@@ -353,7 +353,7 @@ function sendMessage()
 	netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead"); 
 	netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect"); 
 	try {
-	var msgComposeService = Components.classes["component://netscape/messengercompose"].getService();
+	var msgComposeService = Components.classes["@mozilla.org/messengercompose;1"].getService();
 	msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
 
 //	var msgCompose = null;

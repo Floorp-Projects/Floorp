@@ -49,7 +49,7 @@ void nsDocLoadObserver::Register()
 	if (!mRegistered)
 	{
 		nsresult rv;
-		nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_PROGID, &rv);
+		nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
 		if (NS_SUCCEEDED(rv))
 		{
 			if (NS_SUCCEEDED(anObserverService->AddObserver(this, 
@@ -66,7 +66,7 @@ void nsDocLoadObserver::Unregister()
 	if (mRegistered)
 	{
 		nsresult rv;
-		nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_PROGID, &rv);
+		nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
 		if (NS_SUCCEEDED(rv))
 		{
 			if (NS_SUCCEEDED(anObserverService->RemoveObserver(this, 

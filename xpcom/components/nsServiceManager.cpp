@@ -52,16 +52,16 @@ nsGetServiceByCID::operator()( const nsIID& aIID, void** aInstancePtr ) const
   }
 
 nsresult
-nsGetServiceByProgID::operator()( const nsIID& aIID, void** aInstancePtr ) const
+nsGetServiceByContractID::operator()( const nsIID& aIID, void** aInstancePtr ) const
   {
     nsresult status;
-    if ( mProgID )
+    if ( mContractID )
     	{
     			// Too bad |nsServiceManager| isn't an |nsIServiceManager|, then this could have been one call
     		if ( mServiceManager )
-    			status = mServiceManager->GetService(mProgID, aIID, NS_REINTERPRET_CAST(nsISupports**, aInstancePtr), 0);
+    			status = mServiceManager->GetService(mContractID, aIID, NS_REINTERPRET_CAST(nsISupports**, aInstancePtr), 0);
     		else
-    			status = nsServiceManager::GetService(mProgID, aIID, NS_REINTERPRET_CAST(nsISupports**, aInstancePtr), 0);
+    			status = nsServiceManager::GetService(mContractID, aIID, NS_REINTERPRET_CAST(nsISupports**, aInstancePtr), 0);
 
         if ( !NS_SUCCEEDED(status) )
       		*aInstancePtr = 0;
@@ -81,7 +81,7 @@ nsGetServiceFromCategory::operator()( const nsIID& aIID, void** aInstancePtr)
   nsresult status;
   nsXPIDLCString value;
   nsCOMPtr<nsICategoryManager> catman = 
-    do_GetService(NS_CATEGORYMANAGER_PROGID, &status);
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &status);
   
   if (NS_FAILED(status)) goto error;
   
@@ -91,7 +91,7 @@ nsGetServiceFromCategory::operator()( const nsIID& aIID, void** aInstancePtr)
     goto error;
   }
   
-  /* find the progID for category.entry */
+  /* find the contractID for category.entry */
   status = catman->GetCategoryEntry(mCategory, mEntry,
                                     getter_Copies(value));
   if (NS_FAILED(status)) goto error;
@@ -224,18 +224,18 @@ public:
                    nsIShutdownListener* shutdownListener = NULL);
 
     NS_IMETHOD
-    RegisterService(const char* aProgID, nsISupports* aService);
+    RegisterService(const char* aContractID, nsISupports* aService);
 
     NS_IMETHOD
-    UnregisterService(const char* aProgID);
+    UnregisterService(const char* aContractID);
 
     NS_IMETHOD
-    GetService(const char* aProgID, const nsIID& aIID,
+    GetService(const char* aContractID, const nsIID& aIID,
                nsISupports* *result,
                nsIShutdownListener* shutdownListener = NULL);
 
     NS_IMETHOD
-    ReleaseService(const char* aProgID, nsISupports* service,
+    ReleaseService(const char* aContractID, nsISupports* service,
                    nsIShutdownListener* shutdownListener = NULL);
 
     nsServiceManagerImpl(void);
@@ -457,47 +457,47 @@ nsServiceManagerImpl::UnregisterService(const nsCID& aClass)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// let's do it again, this time with ProgIDs...
+// let's do it again, this time with ContractIDs...
 
 NS_IMETHODIMP
-nsServiceManagerImpl::RegisterService(const char* aProgID, nsISupports* aService)
+nsServiceManagerImpl::RegisterService(const char* aContractID, nsISupports* aService)
 {
     nsCID aClass;
     nsresult rv;
-    rv = nsComponentManager::ProgIDToClassID(aProgID, &aClass);
+    rv = nsComponentManager::ContractIDToClassID(aContractID, &aClass);
     if (NS_FAILED(rv)) return rv;
     return RegisterService(aClass, aService);
 }
 
 NS_IMETHODIMP
-nsServiceManagerImpl::UnregisterService(const char* aProgID)
+nsServiceManagerImpl::UnregisterService(const char* aContractID)
 {
     nsCID aClass;
     nsresult rv;
-    rv = nsComponentManager::ProgIDToClassID(aProgID, &aClass);
+    rv = nsComponentManager::ContractIDToClassID(aContractID, &aClass);
     if (NS_FAILED(rv)) return rv;
     return UnregisterService(aClass);
 }
 
 NS_IMETHODIMP
-nsServiceManagerImpl::GetService(const char* aProgID, const nsIID& aIID,
+nsServiceManagerImpl::GetService(const char* aContractID, const nsIID& aIID,
                                  nsISupports* *result,
                                  nsIShutdownListener* shutdownListener)
 {
     nsCID aClass;
     nsresult rv;
-    rv = nsComponentManager::ProgIDToClassID(aProgID, &aClass);
+    rv = nsComponentManager::ContractIDToClassID(aContractID, &aClass);
     if (NS_FAILED(rv)) return rv;
     return GetService(aClass, aIID, result, shutdownListener);
 }
 
 NS_IMETHODIMP
-nsServiceManagerImpl::ReleaseService(const char* aProgID, nsISupports* service,
+nsServiceManagerImpl::ReleaseService(const char* aContractID, nsISupports* service,
                                      nsIShutdownListener* shutdownListener)
 {
     nsCID aClass;
     nsresult rv;
-    rv = nsComponentManager::ProgIDToClassID(aProgID, &aClass);
+    rv = nsComponentManager::ContractIDToClassID(aContractID, &aClass);
     if (NS_FAILED(rv)) return rv;
     return ReleaseService(aClass, service, shutdownListener);
 }
@@ -591,50 +591,50 @@ nsServiceManager::UnregisterService(const nsCID& aClass)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// let's do it again, this time with ProgIDs...
+// let's do it again, this time with ContractIDs...
 
 nsresult
-nsServiceManager::GetService(const char* aProgID, const nsIID& aIID,
+nsServiceManager::GetService(const char* aContractID, const nsIID& aIID,
                              nsISupports* *result,
                              nsIShutdownListener* shutdownListener)
 {
     nsIServiceManager* mgr;
     nsresult rv = GetGlobalServiceManager(&mgr);
     if (NS_FAILED(rv)) return rv;
-    return mgr->GetService(aProgID, aIID, result, shutdownListener);
+    return mgr->GetService(aContractID, aIID, result, shutdownListener);
 }
 
 nsresult
-nsServiceManager::ReleaseService(const char* aProgID, nsISupports* service,
+nsServiceManager::ReleaseService(const char* aContractID, nsISupports* service,
                                  nsIShutdownListener* shutdownListener)
 {
     // Don't create the global service manager here because we might
     // be shutting down, and releasing all the services in its
     // destructor
     if (gServiceManager)
-        return gServiceManager->ReleaseService(aProgID, service, shutdownListener);
+        return gServiceManager->ReleaseService(aContractID, service, shutdownListener);
     // If there wasn't a global service manager, just release the object:
     NS_RELEASE(service);
     return NS_OK;
 }
 
 nsresult
-nsServiceManager::RegisterService(const char* aProgID, nsISupports* aService)
+nsServiceManager::RegisterService(const char* aContractID, nsISupports* aService)
 {
     nsIServiceManager* mgr;
     nsresult rv = GetGlobalServiceManager(&mgr);
     if (NS_FAILED(rv)) return rv;
-    return mgr->RegisterService(aProgID, aService);
+    return mgr->RegisterService(aContractID, aService);
 }
 
 nsresult
-nsServiceManager::UnregisterService(const char* aProgID)
+nsServiceManager::UnregisterService(const char* aContractID)
 {
     // Don't create the global service manager here because we might
     // be shutting down, and releasing all the services in its
     // destructor
     if (gServiceManager) 
-        return gServiceManager->UnregisterService(aProgID);
+        return gServiceManager->UnregisterService(aContractID);
     return NS_OK;
 }
 

@@ -25,7 +25,7 @@
 var newmessages = "";
 var newsgroupname = "";
 var Bundle = srGetStrBundle("chrome://messenger/locale/news.properties");
-var prefs = Components.classes['component://netscape/preferences'].getService();
+var prefs = Components.classes['@mozilla.org/preferences;1'].getService();
 prefs = prefs.QueryInterface(Components.interfaces.nsIPref); 
 
 var serverid = null;
@@ -57,7 +57,7 @@ function OnLoad()
 		//dump("newsgroup name = " + newsgroupname + "\n");
 		//dump("serverid = " + serverid + "\n");
 
-		var accountManager = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
+		var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
 		server = accountManager.getIncomingServer(serverid);
 		nntpServer = server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
 

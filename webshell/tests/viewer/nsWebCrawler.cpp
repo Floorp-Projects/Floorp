@@ -807,7 +807,7 @@ void
 nsWebCrawler::LoadNextURL(PRBool aQueueLoad)
 {
   if (0 != mDelay) {
-    mTimer = do_CreateInstance("component://netscape/timer");
+    mTimer = do_CreateInstance("@mozilla.org/timer;1");
     mTimer->Init(TimerCallBack, (void *)this, mDelay * 1000);
   }
 

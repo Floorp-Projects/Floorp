@@ -51,7 +51,7 @@ PRInt32 g_LockCount = 0;
 extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
-                                           const char *aProgID,
+                                           const char *aContractID,
                                            nsIFactory **aFactory)
 {
   if (aFactory == NULL) {
@@ -100,25 +100,25 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
 
   rv = compMgr->RegisterComponent(kJANativeDetectorCID, 
                                   "Native JA Charset Detector", 
-                                  NS_CHARSET_DETECTOR_PROGID_BASE "jams", 
+                                  NS_CHARSET_DETECTOR_CONTRACTID_BASE "jams", 
                                   path,
                                   PR_TRUE, PR_TRUE);
 
   rv = compMgr->RegisterComponent(kJANativeStringDetectorCID, 
                                   "Native JA String Charset Detector", 
-                                  NS_STRCDETECTOR_PROGID_BASE "jams", 
+                                  NS_STRCDETECTOR_CONTRACTID_BASE "jams", 
                                   path,
                                   PR_TRUE, PR_TRUE);
 
   rv = compMgr->RegisterComponent(kKONativeDetectorCID, 
                                   "Native KO Charset Detector", 
-                                  NS_CHARSET_DETECTOR_PROGID_BASE "koms", 
+                                  NS_CHARSET_DETECTOR_CONTRACTID_BASE "koms", 
                                   path,
                                   PR_TRUE, PR_TRUE);
 
   rv = compMgr->RegisterComponent(kKONativeStringDetectorCID, 
                                   "Native KO String Charset Detector", 
-                                  NS_STRCDETECTOR_PROGID_BASE "koms", 
+                                  NS_STRCDETECTOR_CONTRACTID_BASE "koms", 
                                   path,
                                   PR_TRUE, PR_TRUE);
 

@@ -560,7 +560,7 @@ nsresult nsMsgSearchSession::StartTimer()
   nsresult err;
   PRBool done;
 
-  m_backgroundTimer = do_CreateInstance("component://netscape/timer", &err);
+  m_backgroundTimer = do_CreateInstance("@mozilla.org/timer;1", &err);
   m_backgroundTimer->Init(TimerCallback, (void *) this, 0, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
   // ### start meteors?
   return TimeSlice(&done);

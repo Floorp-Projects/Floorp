@@ -52,7 +52,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSampleImpl)
 
 ////////////////////////////////////////////////////////////////////////
 // Define a table of CIDs implemented by this module along with other
-// information like the function to create an instance, progid, and
+// information like the function to create an instance, contractid, and
 // class name.
 //
 // The Registration and Unregistration proc are optional in the structure.
@@ -89,7 +89,7 @@ static NS_METHOD nsSampleUnregistrationProc(nsIComponentManager *aCompMgr,
 
 static nsModuleComponentInfo components[] =
 {
-  { "Sample Component", NS_SAMPLE_CID, NS_SAMPLE_PROGID, nsSampleImplConstructor,
+  { "Sample Component", NS_SAMPLE_CID, NS_SAMPLE_CONTRACTID, nsSampleImplConstructor,
     nsSampleRegistrationProc /* NULL if you dont need one */,
     nsSampleUnregistrationProc /* NULL if you dont need one */
   }

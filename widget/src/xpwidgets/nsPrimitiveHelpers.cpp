@@ -69,7 +69,7 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, void* aDataB
 
   if ( strcmp(aFlavor,kTextMime) == 0 ) {
     nsCOMPtr<nsISupportsString> primitive;
-    nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
+    nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 
                                        NS_GET_IID(nsISupportsString), getter_AddRefs(primitive));
     if ( primitive ) {
       primitive->SetDataWithLength ( aDataLen, NS_STATIC_CAST(char*, aDataBuff) );
@@ -80,7 +80,7 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, void* aDataB
   }
   else {
     nsCOMPtr<nsISupportsWString> primitive;
-    nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
+    nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, nsnull, 
                                                       NS_GET_IID(nsISupportsWString), getter_AddRefs(primitive));
     if (NS_SUCCEEDED(rv) && primitive ) {
       // recall that SetDataWithLength() takes length as characters, not bytes
@@ -144,7 +144,7 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
 
   // get the charset
   nsAutoString platformCharset;
-  nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+  nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
     rv = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
   if (NS_FAILED(rv))
@@ -152,7 +152,7 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
 
 #if 0
   // get the encoder
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, NS_CHARSETCONVERTERMANAGER_PROGID, &rv);  
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);  
   rv = ccm->GetUnicodeEncoder(&platformCharset, getter_AddRefs(encoder));
 
   // Estimate out length and allocate the buffer based on a worst-case estimate, then do
@@ -172,7 +172,7 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
   nsCAutoString cPlatformCharset;
   cPlatformCharset.AssignWithConversion(platformCharset);
 
-  nsCOMPtr<nsISaveAsCharset> converter = do_CreateInstance("component://netscape/intl/saveascharset");
+  nsCOMPtr<nsISaveAsCharset> converter = do_CreateInstance("@mozilla.org/intl/saveascharset;1");
   converter->Init(cPlatformCharset,
                   nsISaveAsCharset::attr_EntityAfterCharsetConv,
                   nsIEntityConverter::transliterate);
@@ -210,14 +210,14 @@ nsPrimitiveHelpers :: ConvertPlatformPlainTextToUnicode ( const char* inText, PR
   if ( !hasConverter ) {
     // get the charset
     nsAutoString platformCharset;
-    nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+    nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
       rv = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
     if (NS_FAILED(rv))
       platformCharset.AssignWithConversion("ISO-8859-1");
       
     // get the decoder
-    NS_WITH_SERVICE(nsICharsetConverterManager, ccm, NS_CHARSETCONVERTERMANAGER_PROGID, &rv);  
+    NS_WITH_SERVICE(nsICharsetConverterManager, ccm, NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);  
     rv = ccm->GetUnicodeDecoder(&platformCharset, getter_AddRefs(decoder));
 
     hasConverter = PR_TRUE;

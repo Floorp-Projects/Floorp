@@ -30,7 +30,7 @@ function onLoad(event)
 
     if (!smtpService) {
         smtpService =
-            Components.classes["component://netscape/messengercompose/smtp"].getService(Components.interfaces.nsISmtpService);
+            Components.classes["@mozilla.org/messengercompose/smtp;1"].getService(Components.interfaces.nsISmtpService);
     }
 
     var server = window.arguments[0].server;

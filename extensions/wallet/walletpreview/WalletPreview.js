@@ -31,7 +31,7 @@ var doNotPrefill = bundle.GetStringFromName("doNotPrefill");
 /* for xpconnect */
 var walletpreview =
     Components.classes
-      ["component://netscape/walletpreview/walletpreview-world"].createInstance();
+      ["@mozilla.org/walletpreview/walletpreview-world;1"].createInstance();
 walletpreview = walletpreview.QueryInterface(Components.interfaces.nsIWalletPreview);
 
 var prefillList = [];

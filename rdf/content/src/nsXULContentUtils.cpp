@@ -292,7 +292,7 @@ nsXULContentUtils::Init()
             ++entry;
         }
 
-        NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+        NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv)) {
             // XXX Ignore return values.
             prefs->GetBoolPref(kDisableXULCachePref, &gDisableXULCache);
@@ -1005,7 +1005,7 @@ nsXULContentUtils::DisableXULCacheChangedCallback(const char* aPref, void* aClos
 {
     nsresult rv;
 
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
         prefs->GetBoolPref(kDisableXULCachePref, &gDisableXULCache);
     }

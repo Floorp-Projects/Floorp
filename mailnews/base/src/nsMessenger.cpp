@@ -389,7 +389,7 @@ nsMessenger::Find()
     PRBool   found = PR_FALSE;
 
     // Get find component.
-    nsCOMPtr <nsIFindComponent> finder = do_GetService(NS_IFINDCOMPONENT_PROGID, &rv);
+    nsCOMPtr <nsIFindComponent> finder = do_GetService(NS_IFINDCOMPONENT_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     if (!finder) return NS_ERROR_FAILURE;
 
@@ -412,7 +412,7 @@ nsMessenger::FindAgain()
     PRBool   found = PR_FALSE;
 
     // Get find component.
-    nsCOMPtr <nsIFindComponent> finder = do_GetService(NS_IFINDCOMPONENT_PROGID, &rv);
+    nsCOMPtr <nsIFindComponent> finder = do_GetService(NS_IFINDCOMPONENT_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     if (!finder) return NS_ERROR_FAILURE;
 
@@ -751,7 +751,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
 
     if (asFile) {
 
-        nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("component://mozilla/filepicker", &rv);
+        nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1", &rv);
         if (NS_FAILED(rv)) goto done;
 
         filePicker->Init(nsnull, GetString(NS_ConvertASCIItoUCS2("SaveMailAs").GetUnicode()), nsIFilePicker::modeSave);
@@ -798,7 +798,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
         //        localFile->GetUnicodePath(getter_Copies(path));
         nsXPIDLCString path;
         localFile->GetPath(getter_Copies(path));
-        nsCOMPtr<nsIFileSpec> fileSpec = do_CreateInstance("component://netscape/filespec", &rv);
+        nsCOMPtr<nsIFileSpec> fileSpec = do_CreateInstance("@mozilla.org/filespec;1", &rv);
         if (NS_FAILED(rv)) goto done;
         fileSpec->SetNativePath(path);
 

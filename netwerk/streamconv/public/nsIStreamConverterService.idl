@@ -44,7 +44,7 @@
     0x11d3,                                          \
     {0xa1, 0x6c, 0x00, 0x50, 0x04, 0x1c, 0xaf, 0x44} \
 }
-#define NS_ISTREAMCONVERTER_KEY         "Software/Netscape/streamconv/"
+#define NS_ISTREAMCONVERTER_KEY         "@mozilla.org/streamconv;1"
 %}
 
 [scriptable, uuid(00362090-3B97-11d3-A16C-0050041CAF44)]

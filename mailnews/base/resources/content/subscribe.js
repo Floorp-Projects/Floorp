@@ -13,7 +13,7 @@ var gStatusFeedback = new nsMsgStatusFeedback;
 function SetUpRDF()
 {
 	if (!RDF) {
-			RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
+			RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 			RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 	}
 		
@@ -145,7 +145,7 @@ function SubscribeOnLoad()
     gSubscribeTree = document.getElementById('subscribetree');
 	gNameField = document.getElementById('namefield');
 
-	msgWindow = Components.classes[msgWindowProgID].createInstance(Components.interfaces.nsIMsgWindow);
+	msgWindow = Components.classes[msgWindowContractID].createInstance(Components.interfaces.nsIMsgWindow);
     msgWindow.statusFeedback = gStatusFeedback;
 	msgWindow.SetDOMWindow(window);
 

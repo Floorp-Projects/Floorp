@@ -142,7 +142,7 @@ printf("calling back to caller!\n\n");
     nsIProxyObjectManager*  manager;
     nsITestProxy         *  proxyObject;
     
-    nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
+    nsServiceManager::GetService( NS_XPCOMPROXY_CONTRACTID, 
                                   NS_GET_IID(nsIProxyObjectManager),
                                   (nsISupports **)&manager);
 
@@ -192,7 +192,7 @@ void TestCase_TwoClassesOneInterface(void *arg)
 
     nsIProxyObjectManager*  manager;
     
-    nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
+    nsServiceManager::GetService( NS_XPCOMPROXY_CONTRACTID, 
                                   NS_GET_IID(nsIProxyObjectManager),
                                   (nsISupports **)&manager);
 
@@ -263,7 +263,7 @@ void TestCase_NestedLoop(void *arg)
 
     nsIProxyObjectManager*  manager;
     
-    nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
+    nsServiceManager::GetService( NS_XPCOMPROXY_CONTRACTID, 
                                   NS_GET_IID(nsIProxyObjectManager),
                                   (nsISupports **)&manager);
 
@@ -326,7 +326,7 @@ void TestCase_2(void *arg)
 
     nsIProxyObjectManager*  manager;
     
-    nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
+    nsServiceManager::GetService( NS_XPCOMPROXY_CONTRACTID, 
                                   NS_GET_IID(nsIProxyObjectManager),
                                   (nsISupports **)&manager);
     
@@ -356,7 +356,7 @@ void TestCase_nsISupports(void *arg)
 
     nsIProxyObjectManager*  manager;
     
-    nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
+    nsServiceManager::GetService( NS_XPCOMPROXY_CONTRACTID, 
                                   NS_GET_IID(nsIProxyObjectManager),
                                   (nsISupports **)&manager);
     
@@ -433,7 +433,7 @@ static void PR_CALLBACK EventLoop( void *arg )
 
     nsIProxyObjectManager*  manager;
     
-    nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
+    nsServiceManager::GetService( NS_XPCOMPROXY_CONTRACTID, 
                                   NS_GET_IID(nsIProxyObjectManager),
                                   (nsISupports **)&manager);
     

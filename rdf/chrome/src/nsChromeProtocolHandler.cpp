@@ -728,7 +728,7 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         if (PL_strcmp(fileExtension, "xul") == 0)
         {
             NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                            NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                            NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
             if (NS_FAILED(rv)) return rv;
             
             nsCOMPtr<nsIPrincipal> principal;

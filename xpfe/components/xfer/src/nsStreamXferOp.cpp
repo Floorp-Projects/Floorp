@@ -143,7 +143,7 @@ nsStreamXferOp::OnError( int operation, nsresult errorCode ) {
         char buf[32];
         PR_snprintf( buf, sizeof( buf ), "%d %X", operation, (int)errorCode );
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
-                                 NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_PROGID ";onError" ).GetUnicode(),
+                                 NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_CONTRACTID ";onError" ).GetUnicode(),
                                  NS_ConvertASCIItoUCS2( buf ).GetUnicode() );
         if ( NS_FAILED( rv ) ) {
             DEBUG_PRINTF( PR_STDOUT, "%s %d: Observe failed, rv=0x%08X\n",
@@ -362,7 +362,7 @@ nsStreamXferOp::GetInterface(const nsIID &anIID, void **aResult ) {
 }
 
 // Pass notification to our observer (if we have one). This object is the
-// "subject", the topic is the component progid (plus ";onProgress"), and
+// "subject", the topic is the component contractid (plus ";onProgress"), and
 // the data is the progress numbers (in the form "%lu %lu" where the first
 // value is the number of bytes processed, the second the total number
 // expected.
@@ -382,7 +382,7 @@ nsStreamXferOp::OnProgress(nsIChannel* channel, nsISupports* aContext,
         char buf[32];
         PR_snprintf( buf, sizeof buf, "%lu %ld", (unsigned long)aProgress, (long)mContentLength );
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
-                                  NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_PROGID ";onProgress" ).GetUnicode(),
+                                  NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_CONTRACTID ";onProgress" ).GetUnicode(),
                                   NS_ConvertASCIItoUCS2( buf ).GetUnicode() );
         if ( NS_FAILED( rv ) ) {
             DEBUG_PRINTF( PR_STDOUT, "%s %d: Observe failed, rv=0x%08X\n",
@@ -394,7 +394,7 @@ nsStreamXferOp::OnProgress(nsIChannel* channel, nsISupports* aContext,
 }
 
 // Pass notification to our observer (if we have one). This object is the
-// "subject", the topic is the component progid (plus ";onStatus"), and
+// "subject", the topic is the component contractid (plus ";onStatus"), and
 // the data is the status text.
 NS_IMETHODIMP
 nsStreamXferOp::OnStatus( nsIChannel      *channel,
@@ -411,7 +411,7 @@ nsStreamXferOp::OnStatus( nsIChannel      *channel,
         if (NS_FAILED(rv)) return rv;
         nsAutoString msg(NS_STATIC_CAST(const PRUnichar*, str));
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
-                                  NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_PROGID ";onStatus" ).GetUnicode(),
+                                  NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_CONTRACTID ";onStatus" ).GetUnicode(),
                                   msg.GetUnicode() );
         if ( NS_FAILED( rv ) ) {
             DEBUG_PRINTF( PR_STDOUT, "%s %d: Observe failed, rv=0x%08X\n",
@@ -453,7 +453,7 @@ nsStreamXferOp::OnStopRequest( nsIChannel      *channel,
     if ( mObserver ) {
         nsString msg(aMsg);
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
-                                  NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_PROGID ";onCompletion" ).GetUnicode(),
+                                  NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_CONTRACTID ";onCompletion" ).GetUnicode(),
                                   msg.GetUnicode() );
         if ( NS_FAILED( rv ) ) {
             DEBUG_PRINTF( PR_STDOUT, "%s %d: Observe failed, rv=0x%08X\n",

@@ -33,37 +33,37 @@ static nsModuleComponentInfo components[] =
 {
    { "About Protocol Handler", 
      NS_ABOUTPROTOCOLHANDLER_CID,
-     NS_NETWORK_PROTOCOL_PROGID_PREFIX "about", 
+     NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "about", 
      nsAboutProtocolHandler::Create
    },
 
    { "about:blank", 
      NS_ABOUT_BLANK_MODULE_CID,
-     NS_ABOUT_MODULE_PROGID_PREFIX "blank", 
+     NS_ABOUT_MODULE_CONTRACTID_PREFIX "blank", 
      nsAboutBlank::Create
    },
    
    { "about:bloat", 
      NS_ABOUT_BLOAT_MODULE_CID,
-     NS_ABOUT_MODULE_PROGID_PREFIX "bloat", 
+     NS_ABOUT_MODULE_CONTRACTID_PREFIX "bloat", 
      nsAboutBloat::Create
    },
 
    { "about:credits",
      NS_ABOUT_CREDITS_MODULE_CID,
-     NS_ABOUT_MODULE_PROGID_PREFIX "credits",
+     NS_ABOUT_MODULE_CONTRACTID_PREFIX "credits",
      nsAboutCredits::Create
    },
 
    { "about:mozilla",
      MZ_ABOUT_MOZILLA_MODULE_CID,
-     NS_ABOUT_MODULE_PROGID_PREFIX "mozilla",
+     NS_ABOUT_MODULE_CONTRACTID_PREFIX "mozilla",
      mzAboutMozilla::Create
    },	     
 
    { "about:cache", 
      NS_ABOUT_CACHE_MODULE_CID,
-     NS_ABOUT_MODULE_PROGID_PREFIX "cache", 
+     NS_ABOUT_MODULE_CONTRACTID_PREFIX "cache", 
      nsAboutCache::Create
    },
 };

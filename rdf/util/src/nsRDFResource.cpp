@@ -175,16 +175,16 @@ nsRDFResource::GetDelegate(const char* aKey, REFNSIID aIID, void** aResult)
         entry = entry->mNext;
     }
 
-    // Construct a ProgID of the form "component:/rdf/delegate/[key]/[scheme]
-    nsCAutoString progID(NS_RDF_DELEGATEFACTORY_PROGID_PREFIX);
-    progID.Append(aKey);
-    progID.Append('.');
+    // Construct a ContractID of the form "@mozilla.org/rdf/delegate/[key]/[scheme];1
+    nsCAutoString contractID(NS_RDF_DELEGATEFACTORY_CONTRACTID_PREFIX);
+    contractID.Append(aKey);
+    contractID.Append('.');
 
     for (const char* p = mURI; *p && *p != ':'; ++p)
-        progID.Append(*p);
+        contractID.Append(*p);
 
     nsCOMPtr<nsIRDFDelegateFactory> delegateFactory;
-    rv = nsComponentManager::CreateInstance(progID,
+    rv = nsComponentManager::CreateInstance(contractID,
                                             nsnull,
                                             NS_GET_IID(nsIRDFDelegateFactory),
                                             getter_AddRefs(delegateFactory));

@@ -32,7 +32,7 @@
 #define NS_BASIC_STREAM_GENERATOR_CID \
 { 0x87496b68, 0x1dd2, 0x11b2, { 0xb0, 0x80, 0xcc, 0xab, 0xe9, 0x89, 0x47, 0x83 } }
 
-#define NS_BASIC_STREAM_GENERATOR_PROGID "component://netscape/keyed-stream-generator/basic"
+#define NS_BASIC_STREAM_GENERATOR_CONTRACTID "@mozilla.org/keyed-stream-generator/basic;1"
 #define NS_BASIC_STREAM_GENERATOR_CLASSNAME "Basic Keyed Stream Generator"
 
 class nsBasicStreamGenerator : public nsIKeyedStreamGenerator

@@ -134,6 +134,6 @@ interface nsIWindowsHooks : nsISupports {
 };
 
 %{C++
-#define NS_IWINDOWSHOOKS_PROGID    "component://mozilla/winhooks"
+#define NS_IWINDOWSHOOKS_CONTRACTID    "@mozilla.org/winhooks;1"
 #define NS_IWINDOWSHOOKS_CLASSNAME "Mozilla Windows Integration Hooks"
 %}

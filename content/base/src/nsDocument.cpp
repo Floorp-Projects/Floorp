@@ -1010,7 +1010,7 @@ nsDocument::GetPrincipal(nsIPrincipal **aPrincipal)
   if (!mPrincipal) {
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) 
         return rv;
     if (NS_FAILED(rv = securityManager->GetCodebasePrincipal(mDocumentURL, 
@@ -2385,7 +2385,7 @@ nsDocument::GetAnonymousNodes(nsIDOMElement* aElement, nsIDOMNodeList** aResult)
   *aResult = nsnull;
 
   // Use the XBL service to get a content list.
-  NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+  NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
   if (!xblService)
     return rv;
 
@@ -3584,19 +3584,19 @@ nsDocument::SaveFile(nsFileSpec*     aFileSpec,
 
   // Get a document encoder instance:
   nsCOMPtr<nsIDocumentEncoder> encoder;
-  char* progid = (char *)nsMemory::Alloc(strlen(NS_DOC_ENCODER_PROGID_BASE)
+  char* contractid = (char *)nsMemory::Alloc(strlen(NS_DOC_ENCODER_CONTRACTID_BASE)
                                             + aFormatType.Length() + 1);
-  if (! progid)
+  if (! contractid)
     return NS_ERROR_OUT_OF_MEMORY;
-  strcpy(progid, NS_DOC_ENCODER_PROGID_BASE);
+  strcpy(contractid, NS_DOC_ENCODER_CONTRACTID_BASE);
   char* type = aFormatType.ToNewCString();
-  strcat(progid, type);
+  strcat(contractid, type);
   nsCRT::free(type);
-  rv = nsComponentManager::CreateInstance(progid,
+  rv = nsComponentManager::CreateInstance(contractid,
                                           nsnull,
                                           NS_GET_IID(nsIDocumentEncoder),
                                           getter_AddRefs(encoder));
-  nsCRT::free(progid);
+  nsCRT::free(contractid);
   if (NS_FAILED(rv))
     return rv;
 
@@ -3674,7 +3674,7 @@ nsDocument::GetBindingManager(nsIBindingManager** aResult)
 {
   nsresult rv;
   if (!mBindingManager) {
-    mBindingManager = do_CreateInstance("component://netscape/xbl/binding-manager", &rv);
+    mBindingManager = do_CreateInstance("@mozilla.org/xbl/binding-manager;1", &rv);
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
   }

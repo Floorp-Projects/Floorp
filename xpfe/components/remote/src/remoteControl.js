@@ -23,7 +23,7 @@
  * Shane Culpepper <pepper@netscape.com>
  */
 
-var remoteControlProgID	= "component://netscape/browser/remote-browser-control";
+var remoteControlContractID	= "@mozilla.org/browser/remote-browser-control;1";
 
 var nsIRemoteBrowserControl = Components.interfaces.nsIRemoteBrowserControl;
 
@@ -49,7 +49,7 @@ var browserRemoteControl = {
     saveAs: function(aURL)
     {
         dump("saveAs(" + aURL + ")\n");
-        var saveAsDialog = Components.classes["component://xfer"].getService();
+        var saveAsDialog = Components.classes["@mozilla.org/xfer;1"].getService();
         saveAsDialog = saveAsDialog.QueryInterface(Components.interfaces.nsIMsgComposeService);
         if ( !saveAsDialog ) return(false);
        
@@ -60,7 +60,7 @@ var browserRemoteControl = {
     mailTo: function(mailToList)
     {
         dump("mailto(" + mailToList + ")\n");
-        var msgComposeService = Components.classes["component://netscape/messengercompose"].getService();
+        var msgComposeService = Components.classes["@mozilla.org/messengercompose;1"].getService();
         msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
         if ( !msgComposeService ) return(false);
 
@@ -92,7 +92,7 @@ var browserRemoteControl = {
     addBookmark: function(aURL, aTitle)
     {
         dump("addBookmark(" + aURL + "," + aTitle + ")\n");
-        var bookmarkService = Components.classes["component://netscape/browser/bookmarks-service"].getService();
+        var bookmarkService = Components.classes["@mozilla.org/browser/bookmarks-service;1"].getService();
         bookmarkService = bookmarkService.QueryInterface(Components.interfaces.nsIBookmarksService);
         if ( !bookmarkService ) return(false);
 
@@ -114,7 +114,7 @@ var module = {
         dump("registerSelf for remoteControl\n");
         compMgr.registerComponentWithType(this.myCID,
                                           "Browser Remote Control",
-                                          remoteControlProgID,
+                                          remoteControlContractID,
                                           fileSpec, location, true, true, 
                                           type);
     },

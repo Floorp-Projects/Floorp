@@ -515,7 +515,7 @@ ImageConsumer::OnStopRequest(nsIChannel* channel, nsISupports* aContext, nsresul
           SetKeepPumpingData(channel, aContext);
 
           nsresult rv;
-          mTimer = do_CreateInstance("component://netscape/timer", &rv);
+          mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
           if (NS_FAILED(rv) ||
               (NS_OK != mTimer->Init(ImageConsumer::KeepPumpingStream, this, 0))) {
             mStatus = MK_IMAGE_LOSSAGE;
@@ -805,7 +805,7 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
    nsCOMPtr<nsISupports> window (do_QueryInterface(NS_STATIC_CAST(nsIStreamListener *, ic)));
 
     // let's try uri dispatching...
-    nsCOMPtr<nsIURILoader> pURILoader (do_GetService(NS_URI_LOADER_PROGID, &rv));
+    nsCOMPtr<nsIURILoader> pURILoader (do_GetService(NS_URI_LOADER_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv)) 
     {
       nsURILoadCommand loadCmd = nsIURILoader::viewNormal;

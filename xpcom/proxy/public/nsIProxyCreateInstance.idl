@@ -34,7 +34,7 @@ interface nsIProxyCreateInstance : nsISupports
                                         in nsIIDRef iid,
                                         out voidPtr result);
 
-    [noscript] void CreateInstanceByProgID(in string aProgID, 
+    [noscript] void CreateInstanceByContractID(in string aContractID, 
                                            in nsISupports aOuter,
                                            in nsIIDRef iid,
                                            out voidPtr result);

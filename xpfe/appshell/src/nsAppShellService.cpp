@@ -237,7 +237,7 @@ nsAppShellService::EnumerateComponents( EnumeratorMemberFunction function ) {
     nsRegistryKey key;
     nsCOMPtr<nsIEnumerator> components;
     const char *failed = "GetService";
-    NS_WITH_SERVICE(nsIRegistry, registry, NS_REGISTRY_PROGID, &rv);
+    NS_WITH_SERVICE(nsIRegistry, registry, NS_REGISTRY_CONTRACTID, &rv);
     if ( NS_SUCCEEDED(rv) 
          &&
          ( failed = "Open" )
@@ -830,7 +830,7 @@ void nsAppShellService::RegisterObserver(PRBool aRegister)
 
   NS_ASSERTION(weObserve, "who's been chopping bits off nsAppShellService?");
 
-  rv = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID,
+  rv = nsServiceManager::GetService(NS_OBSERVERSERVICE_CONTRACTID,
                            NS_GET_IID(nsIObserverService), &glop);
   if (NS_SUCCEEDED(rv)) {
     nsIObserverService *os = NS_STATIC_CAST(nsIObserverService*,glop);
@@ -841,7 +841,7 @@ void nsAppShellService::RegisterObserver(PRBool aRegister)
       os->RemoveObserver(weObserve, topicA.GetUnicode());
       os->RemoveObserver(weObserve, topicB.GetUnicode());
     }
-    nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_PROGID, glop);
+    nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_CONTRACTID, glop);
   }
 }
 

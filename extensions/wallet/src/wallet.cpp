@@ -947,7 +947,7 @@ wallet_CryptSetup() {
     /* Get a secret decoder ring */
     nsresult rv = NS_OK;
     nsCOMPtr<nsISecretDecoderRing> secretDecoderRing
-      = do_CreateInstance("netscape.security.sdr", &rv);
+      = do_CreateInstance("@mozilla.org/security/sdr;1", &rv);
     if (NS_FAILED(rv)) {
       return NS_ERROR_FAILURE;
     }
@@ -3463,7 +3463,7 @@ wallet_IsFromCartman(nsIURI* aURL) {
   if (host && PL_strncasecmp(host, "127.0.0.1",  9) == 0) {
     /* submit is to server on local machine */
     nsresult res;
-    NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &res);
+    NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_CONTRACTID, &res);
     PCMT_CONTROL control;
     if (NS_SUCCEEDED(res) && NS_SUCCEEDED(psm->GetControlConnection(&control))) { 
       char* password;

@@ -89,7 +89,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHTTPHandler, Init);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBasicAuth);
 #define NS_BASICAUTH_CID { 0xd5c9bc48, 0x1dd1, 0x11b2, { 0x9a, 0x0b, 0xf7, 0x3f, 0x59, 0x53, 0x19, 0xae } }
-#define NS_BASICAUTH_PROGID "mozilla.network.http-basic-auth.1"
+#define NS_BASICAUTH_CONTRACTID "@mozilla.org/network/http-basic-auth;1"
 
 /* XXX this should all be data-driven, via NS_IMPL_GETMODULE_WITH_CATEGORIES */
 static NS_METHOD
@@ -98,10 +98,10 @@ RegisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
 {
     nsresult rv;
     nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(NS_CATEGORYMANAGER_PROGID, &rv);
+        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     nsXPIDLCString previous;
-    return catman->AddCategoryEntry("http-auth", "basic", NS_BASICAUTH_PROGID,
+    return catman->AddCategoryEntry("http-auth", "basic", NS_BASICAUTH_CONTRACTID,
                                     PR_TRUE, PR_TRUE, getter_Copies(previous));
 }
 
@@ -111,7 +111,7 @@ UnregisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
 {
     nsresult rv;
     nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(NS_CATEGORYMANAGER_PROGID, &rv);
+        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     nsXPIDLCString basicAuth;
     rv = catman->GetCategoryEntry("http-auth", "basic",
@@ -119,7 +119,7 @@ UnregisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
     if (NS_FAILED(rv)) return rv;
     
     // only unregister if we're the current Basic-auth handler
-    if (!strcmp(basicAuth, NS_BASICAUTH_PROGID))
+    if (!strcmp(basicAuth, NS_BASICAUTH_CONTRACTID))
         return catman->DeleteCategoryEntry("http-auth", "basic", PR_TRUE,
                                            getter_Copies(basicAuth));
     return NS_OK;
@@ -347,123 +347,123 @@ static void PR_CALLBACK nsNeckoShutdown(nsIModule *neckoModule)
 static nsModuleComponentInfo gNetModuleInfo[] = {
     { "I/O Service", 
       NS_IOSERVICE_CID,
-      "component://netscape/network/io-service",
+      "@mozilla.org/network/io-service;1",
       nsIOService::Create },
     { "File Transport Service", 
       NS_FILETRANSPORTSERVICE_CID,
-      "component://netscape/network/file-transport-service",
+      "@mozilla.org/network/file-transport-service;1",
       nsFileTransportService::Create },
     { "Socket Transport Service", 
       NS_SOCKETTRANSPORTSERVICE_CID,
-      "component://netscape/network/socket-transport-service", 
+      "@mozilla.org/network/socket-transport-service;1", 
       nsSocketTransportService::Create },
     { "Socket Provider Service", 
       NS_SOCKETPROVIDERSERVICE_CID,
-      "component://netscape/network/socket-provider-service",
+      "@mozilla.org/network/socket-provider-service;1",
       nsSocketProviderService::Create },
     { "DNS Service", 
       NS_DNSSERVICE_CID,
-      "component://netscape/network/dns-service",
+      "@mozilla.org/network/dns-service;1",
       nsDNSService::Create },
     { "Standard URL Implementation",
       NS_STANDARDURL_CID,
-      "component://netscape/network/standard-url",
+      "@mozilla.org/network/standard-url;1",
       nsStdURL::Create },
     { "Simple URI Implementation",
       NS_SIMPLEURI_CID,
-      "component://netscape/network/simple-uri",
+      "@mozilla.org/network/simple-uri;1",
       nsSimpleURI::Create },
     { "External Module Manager", 
       NS_NETMODULEMGR_CID,
-      "component://netscape/network/net-extern-mod",
+      "@mozilla.org/network/net-extern-mod;1",
       nsNetModuleMgr::Create },
     { NS_FILEIO_CLASSNAME,
       NS_FILEIO_CID,
-      NS_FILEIO_PROGID,
+      NS_FILEIO_CONTRACTID,
       nsFileIO::Create },
     { NS_INPUTSTREAMIO_CLASSNAME,
       NS_INPUTSTREAMIO_CID,
-      NS_INPUTSTREAMIO_PROGID,
+      NS_INPUTSTREAMIO_CONTRACTID,
       nsInputStreamIO::Create },
     { NS_STREAMIOCHANNEL_CLASSNAME,
       NS_STREAMIOCHANNEL_CID,
-      NS_STREAMIOCHANNEL_PROGID,
+      NS_STREAMIOCHANNEL_CONTRACTID,
       nsStreamIOChannel::Create },
     { "Unichar Stream Loader", 
       NS_STREAMLOADER_CID,
-      "component://netscape/network/stream-loader",
+      "@mozilla.org/network/stream-loader;1",
       nsStreamLoader::Create },
     { "Async Stream Observer",
       NS_ASYNCSTREAMOBSERVER_CID,
-      "component://netscape/network/async-stream-observer",
+      "@mozilla.org/network/async-stream-observer;1",
       nsAsyncStreamObserver::Create },
     { "Async Stream Listener",
       NS_ASYNCSTREAMLISTENER_CID,
-      "component://netscape/network/async-stream-listener",
+      "@mozilla.org/network/async-stream-listener;1",
       nsAsyncStreamListener::Create },
     { "Sync Stream Listener", 
       NS_SYNCSTREAMLISTENER_CID,
-      "component://netscape/network/sync-stream-listener",
+      "@mozilla.org/network/sync-stream-listener;1",
       nsSyncStreamListener::Create },
     { "Load Group", 
       NS_LOADGROUP_CID,
-      "component://netscape/network/load-group",
+      "@mozilla.org/network/load-group;1",
       nsLoadGroup::Create },
     { NS_LOCALFILEINPUTSTREAM_CLASSNAME, 
       NS_LOCALFILEINPUTSTREAM_CID,
-      NS_LOCALFILEINPUTSTREAM_PROGID,
+      NS_LOCALFILEINPUTSTREAM_CONTRACTID,
       nsFileInputStream::Create },
     { NS_LOCALFILEOUTPUTSTREAM_CLASSNAME, 
       NS_LOCALFILEOUTPUTSTREAM_CID,
-      NS_LOCALFILEOUTPUTSTREAM_PROGID,
+      NS_LOCALFILEOUTPUTSTREAM_CONTRACTID,
       nsFileOutputStream::Create },
     { "StdURLParser", 
       NS_STANDARDURLPARSER_CID,
-      "component://netscape/network/standard-urlparser",
+      "@mozilla.org/network/standard-urlparser;1",
       nsStdURLParser::Create },
     { "AuthURLParser", 
       NS_AUTHORITYURLPARSER_CID,
-      "component://netscape/network/authority-urlparser",
+      "@mozilla.org/network/authority-urlparser;1",
       nsAuthURLParser::Create },
     { "NoAuthURLParser", 
       NS_NOAUTHORITYURLPARSER_CID,
-      "component://netscape/network/no-authority-urlparser",
+      "@mozilla.org/network/no-authority-urlparser;1",
       nsNoAuthURLParser::Create },
     { NS_BUFFEREDINPUTSTREAM_CLASSNAME, 
       NS_BUFFEREDINPUTSTREAM_CID,
-      NS_BUFFEREDINPUTSTREAM_PROGID,
+      NS_BUFFEREDINPUTSTREAM_CONTRACTID,
       nsBufferedInputStream::Create },
     { NS_BUFFEREDOUTPUTSTREAM_CLASSNAME, 
       NS_BUFFEREDOUTPUTSTREAM_CID,
-      NS_BUFFEREDOUTPUTSTREAM_PROGID,
+      NS_BUFFEREDOUTPUTSTREAM_CONTRACTID,
       nsBufferedOutputStream::Create },
     { "Protocol Proxy Service",
       NS_PROTOCOLPROXYSERVICE_CID,
-      "component::/netscape/network/protocol-proxy-service",
+      "@mozilla.org/network/protocol-proxy-service;1",
       nsProtocolProxyService::Create },
 
     // from netwerk/streamconv:
     { "Stream Converter Service", 
       NS_STREAMCONVERTERSERVICE_CID,
-      "component:||netscape|streamConverters", 
+      "@mozilla.org/streamConverters;1", 
       nsStreamConverterService::Create },
 
     // from netwerk/streamconv/converters:
     { "FTPDirListingConverter", 
       NS_FTPDIRLISTINGCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=text/ftp-dir-unix?to=application/http-index-format", 
+      NS_ISTREAMCONVERTER_KEY "?from=text/ftp-dir-unix&to=application/http-index-format", 
       CreateNewFTPDirListingConv
     },
 
     { "FTPDirListingConverter", 
       NS_FTPDIRLISTINGCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=text/ftp-dir-nt?to=application/http-index-format", 
+      NS_ISTREAMCONVERTER_KEY "?from=text/ftp-dir-nt&to=application/http-index-format", 
       CreateNewFTPDirListingConv
     },
     
     { "MultiMixedConverter", 
       NS_MULTIMIXEDCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=multipart/x-mixed-replace?to=*/*", 
+      NS_ISTREAMCONVERTER_KEY "?from=multipart/x-mixed-replace&to=*/*", 
       CreateNewMultiMixedConvFactory
     },
 
@@ -471,56 +471,56 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
     // indicate they want x-mixed-replace behavior.
     { "MultiMixedConverter2",
       NS_MULTIMIXEDCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=multipart/mixed?to=*/*",
+      NS_ISTREAMCONVERTER_KEY "?from=multipart/mixed&to=*/*",
       CreateNewMultiMixedConvFactory
     },
     { "Unknown Content-Type Decoder",
       NS_UNKNOWNDECODER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=application/x-unknown-content-type?to=*/*",
+      NS_ISTREAMCONVERTER_KEY "?from=application/x-unknown-content-type&to=*/*",
       CreateNewUnknownDecoderFactory
     },
 
     { "HttpChunkConverter", 
       NS_HTTPCHUNKCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=chunked?to=unchunked",
+      NS_ISTREAMCONVERTER_KEY "?from=chunked&to=unchunked",
       CreateNewHTTPChunkConvFactory
     },
 
     { "HttpChunkConverter", 
       NS_HTTPCHUNKCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=unchunked?to=chunked",
+      NS_ISTREAMCONVERTER_KEY "?from=unchunked&to=chunked",
       CreateNewHTTPChunkConvFactory
     },
 
     { "HttpCompressConverter", 
       NS_HTTPCOMPRESSCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=gzip?to=uncompressed",
+      NS_ISTREAMCONVERTER_KEY "?from=gzip&to=uncompressed",
       CreateNewHTTPCompressConvFactory
     },
 
     { "HttpCompressConverter", 
       NS_HTTPCOMPRESSCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=x-gzip?to=uncompressed",
+      NS_ISTREAMCONVERTER_KEY "?from=x-gzip&to=uncompressed",
       CreateNewHTTPCompressConvFactory
     },
     { "HttpCompressConverter", 
       NS_HTTPCOMPRESSCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=compress?to=uncompressed",
+      NS_ISTREAMCONVERTER_KEY "?from=compress&to=uncompressed",
       CreateNewHTTPCompressConvFactory
     },
     { "HttpCompressConverter", 
       NS_HTTPCOMPRESSCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=x-compress?to=uncompressed",
+      NS_ISTREAMCONVERTER_KEY "?from=x-compress&to=uncompressed",
       CreateNewHTTPCompressConvFactory
     },
     { "HttpCompressConverter", 
       NS_HTTPCOMPRESSCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=deflate?to=uncompressed",
+      NS_ISTREAMCONVERTER_KEY "?from=deflate&to=uncompressed",
       CreateNewHTTPCompressConvFactory
     },
     { "NSTXTToHTMLConverter",
       NS_NSTXTTOHTMLCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=text/plain?to=text/html",
+      NS_ISTREAMCONVERTER_KEY "?from=text/plain&to=text/html",
       CreateNewNSTXTToHTMLConvFactory
 	},
 	// This is not a real stream converter, it's just
@@ -532,51 +532,51 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
     },
 
     // from netwerk/cache:
-    { "Memory Cache", NS_MEM_CACHE_FACTORY_CID, NS_NETWORK_MEMORY_CACHE_PROGID, nsMemCacheConstructor },
-    { "File Cache",   NS_NETDISKCACHE_CID,      NS_NETWORK_FILE_CACHE_PROGID,   nsNetDiskCacheConstructor },
-    { "Cache Manager",NS_CACHE_MANAGER_CID,     NS_NETWORK_CACHE_MANAGER_PROGID,nsCacheManagerConstructor },
+    { "Memory Cache", NS_MEM_CACHE_FACTORY_CID, NS_NETWORK_MEMORY_CACHE_CONTRACTID, nsMemCacheConstructor },
+    { "File Cache",   NS_NETDISKCACHE_CID,      NS_NETWORK_FILE_CACHE_CONTRACTID,   nsNetDiskCacheConstructor },
+    { "Cache Manager",NS_CACHE_MANAGER_CID,     NS_NETWORK_CACHE_MANAGER_CONTRACTID,nsCacheManagerConstructor },
 
     // from netwerk/mime:
     { "The MIME mapping service", 
       NS_MIMESERVICE_CID,
-      "component:||netscape|mimeold",
+      "@mozilla.org/mimeold;1",
       nsMIMEService::Create
     },
     { "xml mime datasource", 
       NS_XMLMIMEDATASOURCE_CID,
-      NS_XMLMIMEDATASOURCE_PROGID,
+      NS_XMLMIMEDATASOURCE_CONTRACTID,
       nsXMLMIMEDataSource::Create
     },
     { "xml mime INFO", 
       NS_MIMEINFO_CID,
-      NS_MIMEINFO_PROGID,
+      NS_MIMEINFO_CONTRACTID,
       nsMIMEInfoImplConstructor
     },
 
     // from netwerk/protocol/file:
     { "File Protocol Handler", 
       NS_FILEPROTOCOLHANDLER_CID,  
-      NS_NETWORK_PROTOCOL_PROGID_PREFIX "file", 
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "file", 
       nsFileProtocolHandler::Create
     },
     { NS_LOCALFILECHANNEL_CLASSNAME,
       NS_LOCALFILECHANNEL_CID,  
-      NS_LOCALFILECHANNEL_PROGID, 
+      NS_LOCALFILECHANNEL_CONTRACTID, 
       nsFileChannel::Create
     },
     
     // from netwerk/protocol/http:
     { "HTTP Handler",
       NS_IHTTPHANDLER_CID,
-      NS_NETWORK_PROTOCOL_PROGID_PREFIX "http",
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http",
       nsHTTPHandlerConstructor },
     { "HTTPS Handler",
       NS_HTTPS_HANDLER_FACTORY_CID,
-      NS_NETWORK_PROTOCOL_PROGID_PREFIX "https",
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "https",
       nsHTTPSHandler::Create },
     { "Basic Auth Encoder",
       NS_BASICAUTH_CID,
-      NS_BASICAUTH_PROGID,
+      NS_BASICAUTH_CONTRACTID,
       nsBasicAuthConstructor,
       RegisterBasicAuth,
       UnregisterBasicAuth
@@ -585,60 +585,60 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
     // from netwerk/protocol/data:
     { "Data Protocol Handler", 
       NS_DATAHANDLER_CID,
-      NS_NETWORK_PROTOCOL_PROGID_PREFIX "data", 
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "data", 
       nsDataHandler::Create},
 
     // from netwerk/protocol/jar:
     { "JAR Protocol Handler", 
        NS_JARPROTOCOLHANDLER_CID,
-       NS_NETWORK_PROTOCOL_PROGID_PREFIX "jar", 
+       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "jar", 
        nsJARProtocolHandler::Create
     },
 
     // from netwerk/protocol/res:
     { "The Resource Protocol Handler", 
       NS_RESPROTOCOLHANDLER_CID,
-      NS_NETWORK_PROTOCOL_PROGID_PREFIX "resource",
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "resource",
       nsResProtocolHandler::Create
     },
 
     // from netwerk/protocol/about:
     { "About Protocol Handler", 
       NS_ABOUTPROTOCOLHANDLER_CID,
-      NS_NETWORK_PROTOCOL_PROGID_PREFIX "about", 
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "about", 
       nsAboutProtocolHandler::Create
     },
     { "about:blank", 
       NS_ABOUT_BLANK_MODULE_CID,
-      NS_ABOUT_MODULE_PROGID_PREFIX "blank", 
+      NS_ABOUT_MODULE_CONTRACTID_PREFIX "blank", 
       nsAboutBlank::Create
     },
     { "about:bloat", 
       NS_ABOUT_BLOAT_MODULE_CID,
-      NS_ABOUT_MODULE_PROGID_PREFIX "bloat", 
+      NS_ABOUT_MODULE_CONTRACTID_PREFIX "bloat", 
       nsAboutBloat::Create
     },
     { "about:credits",
       NS_ABOUT_CREDITS_MODULE_CID,
-      NS_ABOUT_MODULE_PROGID_PREFIX "credits",
+      NS_ABOUT_MODULE_CONTRACTID_PREFIX "credits",
       nsAboutCredits::Create
     },
     { "about:mozilla",
       MZ_ABOUT_MOZILLA_MODULE_CID,
-      NS_ABOUT_MODULE_PROGID_PREFIX "mozilla",
+      NS_ABOUT_MODULE_CONTRACTID_PREFIX "mozilla",
       mzAboutMozilla::Create
     },
 
     // from netwerk/protocol/keyword:
     { "The Keyword Protocol Handler", 
       NS_KEYWORDPROTOCOLHANDLER_CID,
-      NS_NETWORK_PROTOCOL_PROGID_PREFIX "keyword",
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "keyword",
       nsKeywordProtocolHandler::Create
     },
 
     {  NS_ISOCKSSOCKETPROVIDER_CLASSNAME,
        NS_SOCKSSOCKETPROVIDER_CID,
-       NS_ISOCKSSOCKETPROVIDER_PROGID,
+       NS_ISOCKSSOCKETPROVIDER_CONTRACTID,
        nsSOCKSSocketProvider::Create
     }
 

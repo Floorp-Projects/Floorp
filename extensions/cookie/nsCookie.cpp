@@ -681,7 +681,7 @@ MODULE_PRIVATE int PR_CALLBACK
 cookie_BehaviorPrefChanged(const char * newpref, void * data) {
   PRInt32 n;
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+  NS_WITH_SERVICE(nsIPref, prefs, "@mozilla.org/preferences;1", &rv);
   if (NS_FAILED(prefs->GetIntPref(cookie_behaviorPref, &n))) {
     n = COOKIE_Accept;
   }
@@ -693,7 +693,7 @@ MODULE_PRIVATE int PR_CALLBACK
 cookie_WarningPrefChanged(const char * newpref, void * data) {
   PRBool x;
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+  NS_WITH_SERVICE(nsIPref, prefs, "@mozilla.org/preferences;1", &rv);
   if (NS_FAILED(prefs->GetBoolPref(cookie_warningPref, &x))) {
     x = PR_FALSE;
   }
@@ -726,7 +726,7 @@ MODULE_PRIVATE int PR_CALLBACK
 image_BehaviorPrefChanged(const char * newpref, void * data) {
   PRInt32 n;
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+  NS_WITH_SERVICE(nsIPref, prefs, "@mozilla.org/preferences;1", &rv);
   if (NS_FAILED(prefs->GetIntPref(image_behaviorPref, &n))) {
     image_SetBehaviorPref(COOKIE_Accept);
   } else {
@@ -739,7 +739,7 @@ MODULE_PRIVATE int PR_CALLBACK
 image_WarningPrefChanged(const char * newpref, void * data) {
   PRBool x;
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+  NS_WITH_SERVICE(nsIPref, prefs, "@mozilla.org/preferences;1", &rv);
   if (NS_FAILED(prefs->GetBoolPref(image_warningPref, &x))) {
     x = PR_FALSE;
   }
@@ -751,7 +751,7 @@ MODULE_PRIVATE int PR_CALLBACK
 cookie_LifetimeOptPrefChanged(const char * newpref, void * data) {
   PRInt32 n;
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+  NS_WITH_SERVICE(nsIPref, prefs, "@mozilla.org/preferences;1", &rv);
   if (NS_FAILED(prefs->GetIntPref(cookie_lifetimePref, &n))) {
     n = COOKIE_Normal;
   }
@@ -763,7 +763,7 @@ MODULE_PRIVATE int PR_CALLBACK
 cookie_LifetimeLimitPrefChanged(const char * newpref, void * data) {
   PRInt32 n;
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+  NS_WITH_SERVICE(nsIPref, prefs, "@mozilla.org/preferences;1", &rv);
   if (!NS_FAILED(prefs->GetIntPref(cookie_lifetimeValue, &n))) {
     cookie_SetLifetimeLimit(n);
   }
@@ -894,7 +894,7 @@ Image_CheckForPermission(char * hostname, char * firstHostname, PRBool &permissi
   /* exit if imageblocker is not enabled */
   nsresult rv;
   PRBool prefvalue = PR_FALSE;
-  NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+  NS_WITH_SERVICE(nsIPref, prefs, "@mozilla.org/preferences;1", &rv);
   if (NS_FAILED(rv) || 
       NS_FAILED(prefs->GetBoolPref("imageblocker.enabled", &prefvalue)) ||
       !prefvalue) {
@@ -958,7 +958,7 @@ COOKIE_RegisterCookiePrefCallbacks(void) {
   PRInt32 n;
   PRBool x;
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+  NS_WITH_SERVICE(nsIPref, prefs, "@mozilla.org/preferences;1", &rv);
 
   // Initialize for cookie_behaviorPref
   if (NS_FAILED(prefs->GetIntPref(cookie_behaviorPref, &n))) {
@@ -1534,7 +1534,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, char * setCookieHead
        *
        */
       nsresult rv;
-      NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+      NS_WITH_SERVICE(nsIPref, prefs, "@mozilla.org/preferences;1", &rv);
       if (NS_FAILED(prefs->GetBoolPref(cookie_strictDomainsPref, &pref_scd))) {
         pref_scd = PR_FALSE;
       }

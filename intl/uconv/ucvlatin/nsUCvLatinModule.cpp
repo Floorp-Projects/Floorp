@@ -1071,7 +1071,7 @@ NS_IMETHODIMP nsConverterModule::RegisterSelf(nsIComponentManager *aCompMgr,
   char buff[1024];
 
   // get the registry
-  res = nsServiceManager::GetService(NS_REGISTRY_PROGID, 
+  res = nsServiceManager::GetService(NS_REGISTRY_CONTRACTID, 
       NS_GET_IID(nsIRegistry), (nsISupports**)&registry);
   if (NS_FAILED(res)) goto done;
 
@@ -1081,24 +1081,24 @@ NS_IMETHODIMP nsConverterModule::RegisterSelf(nsIComponentManager *aCompMgr,
   if (NS_FAILED(res)) goto done;
 
   char name[128];
-  char progid[128];
+  char contractid[128];
   char * cid_string;
   for (i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
     if(0==PL_strcmp(g_FactoryData[i].mCharsetSrc,"Unicode"))
     {
        PL_strcpy(name, ENCODER_NAME_BASE);
        PL_strcat(name, g_FactoryData[i].mCharsetDest);
-       PL_strcpy(progid, NS_UNICODEENCODER_PROGID_BASE);
-       PL_strcat(progid, g_FactoryData[i].mCharsetDest);
+       PL_strcpy(contractid, NS_UNICODEENCODER_CONTRACTID_BASE);
+       PL_strcat(contractid, g_FactoryData[i].mCharsetDest);
     } else {
        PL_strcpy(name, DECODER_NAME_BASE);
        PL_strcat(name, g_FactoryData[i].mCharsetSrc);
-       PL_strcpy(progid, NS_UNICODEDECODER_PROGID_BASE);
-       PL_strcat(progid, g_FactoryData[i].mCharsetSrc);
+       PL_strcpy(contractid, NS_UNICODEDECODER_CONTRACTID_BASE);
+       PL_strcat(contractid, g_FactoryData[i].mCharsetSrc);
     }
     // register component
     res = aCompMgr->RegisterComponentSpec(*(g_FactoryData[i].mCID), name, 
-      progid, aPath, PR_TRUE, PR_TRUE);
+      contractid, aPath, PR_TRUE, PR_TRUE);
     if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) goto done;
 
     // register component info
@@ -1116,7 +1116,7 @@ NS_IMETHODIMP nsConverterModule::RegisterSelf(nsIComponentManager *aCompMgr,
 
 done:
   if (registry != NULL) {
-    nsServiceManager::ReleaseService(NS_REGISTRY_PROGID, registry);
+    nsServiceManager::ReleaseService(NS_REGISTRY_CONTRACTID, registry);
   }
 
   return res;

@@ -1360,7 +1360,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteSubFolders(
   if (!msgWindow) return NS_ERROR_NULL_POINTER;
   msgWindow->GetRootDocShell(getter_AddRefs(docShell));
   if (!mMsgStringService)
-    mMsgStringService = do_GetService(NS_MSG_POPSTRINGSERVICE_PROGID);
+    mMsgStringService = do_GetService(NS_MSG_POPSTRINGSERVICE_CONTRACTID);
   if (!mMsgStringService) return NS_ERROR_FAILURE;
   PRUnichar *alertString = nsnull;
   mMsgStringService->GetStringByID(POP3_MOVE_FOLDER_TO_TRASH, &alertString);
@@ -2841,7 +2841,7 @@ nsMsgLocalMailFolder::GetIncomingServerType()
 	nsUnescape(NS_CONST_CAST(char*,(const char*)hostName));
 
   NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
+                  NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return "";
 
   nsCOMPtr<nsIMsgIncomingServer> server;

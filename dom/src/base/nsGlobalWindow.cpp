@@ -116,8 +116,8 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID,
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 
-static const char *kCryptoProgID = NS_CRYPTO_PROGID;
-static const char *kPkcs11ProgID = NS_PKCS11_PROGID;
+static const char *kCryptoContractID = NS_CRYPTO_CONTRACTID;
+static const char *kPkcs11ContractID = NS_PKCS11_CONTRACTID;
 
 //*****************************************************************************
 //***    GlobalWindowImpl: Object Management
@@ -657,7 +657,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetSidebar(nsISidebar** aSidebar)
   nsresult rv = NS_OK;
 
   if (!mSidebar) {
-    mSidebar = do_CreateInstance(NS_SIDEBAR_PROGID, &rv);
+    mSidebar = do_CreateInstance(NS_SIDEBAR_CONTRACTID, &rv);
 
     if (mSidebar) {
       nsIDOMWindowInternal *win = NS_STATIC_CAST(nsIDOMWindowInternal *, this);
@@ -829,7 +829,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetCrypto(nsIDOMCrypto** aCrypto)
   nsresult rv;
 
   if (!mCrypto) {
-    mCrypto = do_CreateInstance(kCryptoProgID, &rv);
+    mCrypto = do_CreateInstance(kCryptoContractID, &rv);
   }
   *aCrypto = mCrypto;
   NS_IF_ADDREF(*aCrypto);
@@ -841,7 +841,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetPkcs11(nsIDOMPkcs11** aPkcs11)
   nsresult rv;
 
   if (!mPkcs11) {
-    mPkcs11 = do_CreateInstance(kPkcs11ProgID, &rv);
+    mPkcs11 = do_CreateInstance(kPkcs11ContractID, &rv);
   }
   *aPkcs11 = mPkcs11;
   NS_IF_ADDREF(*aPkcs11);
@@ -939,7 +939,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetName(const nsAReadableString& aName)
 NS_IMETHODIMP    
 GlobalWindowImpl::GetLocation(jsval* aLocation)
 {
-  nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService("nsThreadJSContextStack"));
+  nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
   NS_ENSURE_TRUE(stack, NS_ERROR_FAILURE);
   
   JSContext* cx;
@@ -978,7 +978,7 @@ GlobalWindowImpl::SetLocation(jsval aLocation)
   }
 
   if (mLocation) {
-    nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService("nsThreadJSContextStack"));
+    nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
     NS_ENSURE_TRUE(stack, NS_ERROR_FAILURE);
 
     JSContext* cx;
@@ -1268,7 +1268,7 @@ GlobalWindowImpl::CheckSecurityWidthAndHeight(PRInt32* aWidth,
   if ((aWidth && *aWidth < 100) || (aHeight && *aHeight < 100)) {
     // Check security state for use in determing window dimensions
     nsCOMPtr<nsIScriptSecurityManager>
-      securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_PROGID));
+      securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
     NS_ENSURE_TRUE(securityManager, NS_ERROR_FAILURE);
 
     PRBool enabled;
@@ -1298,7 +1298,7 @@ GlobalWindowImpl::CheckSecurityLeftAndTop(PRInt32* aLeft, PRInt32* aTop)
 
   // Check security state for use in determing window dimensions
   nsCOMPtr<nsIScriptSecurityManager>
-    securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_PROGID));
+    securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
   NS_ENSURE_TRUE(securityManager, NS_ERROR_FAILURE);
 
   PRBool enabled;
@@ -2553,7 +2553,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetObjectProperty(const PRUnichar *aProperty,
 {
   // Get JSContext from stack.
   nsCOMPtr<nsIThreadJSContextStack>
-    stack(do_GetService("nsThreadJSContextStack"));
+    stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
   NS_ENSURE_TRUE(stack, NS_ERROR_FAILURE);
 
   JSContext *cx;
@@ -2586,7 +2586,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetObjectProperty(const PRUnichar *aProperty,
 {
   // Get JSContext from stack.
   nsCOMPtr<nsIThreadJSContextStack>
-    stack(do_GetService("nsThreadJSContextStack"));
+    stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
   NS_ENSURE_TRUE(stack, NS_ERROR_FAILURE);
 
   JSContext *cx;
@@ -2796,7 +2796,7 @@ GlobalWindowImpl::GetComputedStyle(nsIDOMElement* aElt,
   nsCOMPtr<nsIComputedDOMStyle> compStyle;
 
   compStyle =
-    do_CreateInstance("component://netscape/DOM/Level2/CSS/computedStyleDeclaration", &rv);
+    do_CreateInstance("@mozilla.org/DOM/Level2/CSS/computedStyleDeclaration;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = compStyle->Init(aElt, aPseudoElt, presShell);
@@ -3195,7 +3195,7 @@ PRUint32 GlobalWindowImpl::CalculateChromeFlags(char *aFeatures, PRBool aDialog)
 
   //Check security state for use in determing window dimensions
   nsCOMPtr<nsIScriptSecurityManager>
-    securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_PROGID));
+    securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
   NS_ENSURE_TRUE(securityManager, NS_ERROR_FAILURE);
 
   PRBool enabled;
@@ -3314,7 +3314,7 @@ GlobalWindowImpl::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
 
   // Check security state for use in determing window dimensions
   nsCOMPtr<nsIScriptSecurityManager>
-    securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_PROGID));
+    securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
   NS_ENSURE_TRUE(securityManager, NS_ERROR_FAILURE);
 
   res = securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
@@ -3585,7 +3585,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetTimeoutOrInterval(JSContext *cx,
   // Get principal of currently executing code, save for execution of timeout
   nsresult rv;
   nsCOMPtr<nsIScriptSecurityManager>
-    securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_PROGID, &rv));
+    securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
   if (NS_FAILED(securityManager->GetSubjectPrincipal(&timeout->principal)))
@@ -3595,7 +3595,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetTimeoutOrInterval(JSContext *cx,
   LL_D2L(delta, PR_MillisecondsToInterval((PRUint32) interval));
   LL_ADD(timeout->when, now, delta);
   nsresult err;
-  timeout->timer = do_CreateInstance("component://netscape/timer", &err);
+  timeout->timer = do_CreateInstance("@mozilla.org/timer;1", &err);
   if (NS_OK != err) {
     DropTimeout(timeout);
     return err;
@@ -3784,7 +3784,7 @@ PRBool GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
            code below that checks for zero toid. */
         nsresult err;
         timeout->timer =
-          do_CreateInstance("component://netscape/timer", &err);
+          do_CreateInstance("@mozilla.org/timer;1", &err);
         if (NS_OK != err) {
           mTimeoutInsertionPoint = last_insertion_point;
           NS_RELEASE(temp);
@@ -4058,7 +4058,7 @@ GlobalWindowImpl::RegisterEventListener(const char* aEventName,
   nsCOMPtr<nsIAtom> eventName = dont_AddRef(NS_NewAtom(aEventName));
 
   // This should only happen from JS
-  nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService("nsThreadJSContextStack"));
+  nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
   NS_ENSURE_TRUE(stack, NS_ERROR_FAILURE);
   
   JSContext* cx;
@@ -4679,7 +4679,7 @@ NS_IMETHODIMP NavigatorImpl::Preference(JSContext *cx, jsval *argv,
     return NS_ERROR_FAILURE;
 
   NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_PROGID, &result);
+                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &result);
   if (NS_FAILED(result))
     return result;
 

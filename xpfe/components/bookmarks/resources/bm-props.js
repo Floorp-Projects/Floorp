@@ -36,10 +36,10 @@ var Properties = [NC_NAMESPACE_URI + "Name",
                   NC_NAMESPACE_URI + "Description",
                   NC_NAMESPACE_URI + "URL"];
 
-var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
+var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 
-var RDFC = Components.classes["component://netscape/rdf/container-utils"].getService();
+var RDFC = Components.classes["@mozilla.org/rdf/container-utils;1"].getService();
 RDFC = RDFC.QueryInterface(Components.interfaces.nsIRDFContainerUtils);
 
 var Bookmarks = RDF.GetDataSource("rdf:bookmarks");

@@ -43,7 +43,7 @@
 #include "nsIScriptGlobalObject.h"
 
 #include "nsISound.h"
-#include "nsWidgetsCID.h"   // ugh! progID, please
+#include "nsWidgetsCID.h"   // ugh! contractID, please
 
 #include "nsFindComponent.h"
 
@@ -915,4 +915,4 @@ nsFindComponent::ResetContext( nsISupports *aContext,
 // nsFindComponent::Context implementation...
 NS_IMPL_ISUPPORTS( nsFindComponent::Context, NS_GET_IID(nsISearchContext) )
 
-NS_IMPL_IAPPSHELLCOMPONENT( nsFindComponent, nsIFindComponent, NS_IFINDCOMPONENT_PROGID, 0 )
+NS_IMPL_IAPPSHELLCOMPONENT( nsFindComponent, nsIFindComponent, NS_IFINDCOMPONENT_CONTRACTID, 0 )

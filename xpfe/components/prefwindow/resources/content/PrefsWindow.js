@@ -30,7 +30,7 @@ function StartUp(windowName)
 	if (prefwindow == null)
 	{
 		dump("Creating prefwindow object...\n");
-    	prefwindow = Components.classes['component://netscape/prefwindow'].getService(Components.interfaces.nsIPrefWindow);
+    	prefwindow = Components.classes['@mozilla.org/prefwindow;1'].getService(Components.interfaces.nsIPrefWindow);
 	}
 	else
 	{
@@ -94,7 +94,7 @@ function openit()  {
  	dump("SetPrefToCurrentPage("+ prefID +") \n ");
 	if ((prefID == null) || (prefID == "")) return;
 	
- 	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+ 	var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
 	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
 
     
@@ -115,15 +115,15 @@ function openit()  {
 	}
  }
 
-function createInstance( progid, iidName ) {
+function createInstance( contractid, iidName ) {
   var iid = eval( "Components.interfaces." + iidName );
-  return Components.classes[ progid ].createInstance( iid );
+  return Components.classes[ contractid ].createInstance( iid );
 }
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 function PrefNavSelectFile(prefID) {
 
   try {
-    var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
+    var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
     /* XXX    no title here */
     fp.init(window, "", nsIFilePicker.modeOpen);
     fp.appendFilters(nsIFilePicker.filterAll);
@@ -136,7 +136,7 @@ function PrefNavSelectFile(prefID) {
 function PrefCacheSelectFolder() {
     // Get filespecwithui component.     
   try {
-    var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
+    var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
     /* XXX    no title here */
     fp.init(window, "", nsIFilePicker.modeGetFolder);
     fp.appendFilters(nsIFilePicker.filterAll);
@@ -160,7 +160,7 @@ function onOK()
 	if (prefwindow == null)
 	{
 		dump("Creating prefwindow object...\n");
-    	prefwindow = Components.classes['component://netscape/prefwindow'].createInstance(Components.interfaces.nsIPrefWindow);
+    	prefwindow = Components.classes['@mozilla.org/prefwindow;1'].createInstance(Components.interfaces.nsIPrefWindow);
 	}
 	else
 	{

@@ -65,7 +65,7 @@ nsEntityConverter::LoadVersionPropertyFile()
 	NS_RELEASE(url);
 	if (NS_FAILED(rv)) return rv;
 
-	rv = nsComponentManager::CreateInstance(NS_PERSISTENTPROPERTIES_PROGID,NULL,
+	rv = nsComponentManager::CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID,NULL,
                                              kIPersistentPropertiesIID, 
                                              (void**)&entityProperties);
 	if(NS_SUCCEEDED(rv) && in) {
@@ -125,7 +125,7 @@ nsEntityConverter::LoadEntityPropertyFile(PRInt32 version)
 	NS_RELEASE(url);
 	if (NS_FAILED(rv)) return NULL;
 
-	rv = nsComponentManager::CreateInstance(NS_PERSISTENTPROPERTIES_PROGID,NULL,
+	rv = nsComponentManager::CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID,NULL,
                                              kIPersistentPropertiesIID, 
                                              (void**)&entityProperties);
 	if(NS_SUCCEEDED(rv) && in) {

@@ -34,7 +34,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIXPConnectFactory interface...
-  NS_IMETHOD CreateInstance(const nsString &progID, nsISupports**_retval);
+  NS_IMETHOD CreateInstance(const nsString &contractID, nsISupports**_retval);
 
   // nsIScriptObjectOwner interface...
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);

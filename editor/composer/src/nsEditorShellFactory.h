@@ -35,7 +35,7 @@ class nsEditorShellFactoryImpl : public nsIFactory
 {
 public:
     
-               nsEditorShellFactoryImpl(const nsCID &aClass, const char* className, const char* progID);
+               nsEditorShellFactoryImpl(const nsCID &aClass, const char* className, const char* contractID);
     
     // nsISupports methods
     NS_DECL_ISUPPORTS
@@ -55,10 +55,10 @@ protected:
 protected:
     nsCID       mClassID;
     const char* mClassName;
-    const char* mProgID;
+    const char* mContractID;
 };
 
 nsresult
-GetEditorShellFactory(nsIFactory **aFactory, const nsCID &aClass, const char *aClassName, const char *aProgID);
+GetEditorShellFactory(nsIFactory **aFactory, const nsCID &aClass, const char *aClassName, const char *aContractID);
 
 #endif // nsEditorAppCoreFactory_h___

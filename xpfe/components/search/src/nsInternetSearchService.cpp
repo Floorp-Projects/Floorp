@@ -658,7 +658,7 @@ else
 
 	nsresult rv;
 
-	mTimer = do_CreateInstance("component://netscape/timer", &rv);
+	mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
 	if (NS_FAILED(rv) || (!mTimer)) return;
 	mTimer->Init(InternetSearchDataSource::FireTimer, search,
 		SEARCH_UPDATE_TIMEOUT, NS_PRIORITY_LOWEST, NS_TYPE_REPEATING_SLACK);
@@ -858,7 +858,7 @@ InternetSearchDataSource::Init()
 	if (!mTimer)
 	{
 		busySchedule = PR_FALSE;
-		mTimer = do_CreateInstance("component://netscape/timer", &rv);
+		mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
 		if (mTimer)
 		{
 			mTimer->Init(InternetSearchDataSource::FireTimer, this,
@@ -2589,7 +2589,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
  			// apply charset conversion to the search text
  			if (!mQueryEncodingStr.IsEmpty())
  			{
- 				nsCOMPtr<nsITextToSubURI> textToSubURI = do_GetService(NS_ITEXTTOSUBURI_PROGID, &rv);
+ 				nsCOMPtr<nsITextToSubURI> textToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
  				if (NS_SUCCEEDED(rv))
  				{
  					nsCAutoString	escapedSearchText;

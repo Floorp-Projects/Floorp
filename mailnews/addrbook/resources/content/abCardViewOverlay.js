@@ -41,7 +41,7 @@ var cvData;
 
 function OnLoadCardView()
 {
-	rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 	rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 
 	var doc = document;

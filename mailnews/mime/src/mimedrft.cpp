@@ -1713,7 +1713,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     if (pos > 0)
       contentType.Truncate(pos);
     nsresult  rv = NS_OK;
-    nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_PROGID, &rv));
+    nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv) && mimeFinder) 
     {
       nsCOMPtr<nsIMIMEInfo> mimeInfo = nsnull;

@@ -2,7 +2,7 @@
 <head>
 <script>
 var title  = "Sample Application Shell Component Test";
-var progid = "component://netscape/appshell/component/sample";
+var contractid = "@mozilla.org/appshell/component/sample;1";
 var iid    = Components.interfaces.nsISampleAppShellComponent;
 var observer = {
     Observe: function( subject, topic, data ) {
@@ -11,7 +11,7 @@ var observer = {
     }
 }
 function RunTest() {
-   var sampleComponent = Components.classes[progid].getService();
+   var sampleComponent = Components.classes[contractid].getService();
    if ( sampleComponent ) {
       dump("sampleComponent is " + sampleComponent + "\n" );
       sampleComponent = sampleComponent.QueryInterface( iid );
@@ -19,10 +19,10 @@ function RunTest() {
          dump("sampleComponent is " + sampleComponent + "\n" );
          sampleComponent.DoDialogTests( window, observer );
       } else {
-         alert( "QueryInterface failed for " + progid + "\n" );
+         alert( "QueryInterface failed for " + contractid + "\n" );
       }
    } else {
-      alert( "getService failed for " + progid + "\n" );
+      alert( "getService failed for " + contractid + "\n" );
    }
 }
 </script>

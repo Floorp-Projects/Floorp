@@ -1024,7 +1024,7 @@ NS_IMETHODIMP nsMsgDatabase::Commit(nsMsgDBCommit commitType)
 
   nsresult rv;
   NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
+                  NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && accountManager)
   {
     nsCOMPtr<nsIMsgFolderCache> folderCache;
@@ -2552,7 +2552,7 @@ nsresult nsMsgDatabase::GetCollationKeyGenerator()
 		nsString localeName; 
 
 		// get a locale service 
-		nsCOMPtr <nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_PROGID, &err);
+		nsCOMPtr <nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_CONTRACTID, &err);
 		if (NS_SUCCEEDED(err))
 		{
 			// do this for a new db if no UI to be provided for locale selection 

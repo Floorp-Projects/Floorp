@@ -76,7 +76,7 @@ class nsTextConverterFactory : public nsIFactory
 {
 public:
   nsTextConverterFactory(const nsCID &aClass, const char* className,
-                         const char* progID);
+                         const char* contractID);
 
   // nsISupports methods
   NS_DECL_ISUPPORTS
@@ -94,5 +94,5 @@ protected:
 protected:
   nsCID       mClassID;
   const char* mClassName;
-  const char* mProgID;
+  const char* mContractID;
 };

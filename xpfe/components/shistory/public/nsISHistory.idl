@@ -32,7 +32,7 @@
 #define NS_SHISTORY_CID \
 {0xdd335421, 0xb8b8, 0x11d3, {0xbd, 0xc8, 0x00, 0x50, 0x04, 0x0a, 0x9b, 0x44}}
 
-#define NS_SHISTORY_PROGID "component://netscape/browser/shistory"
+#define NS_SHISTORY_CONTRACTID "@mozilla.org/browser/shistory;1"
 %}
 
 [scriptable, uuid(DD335421-B8B8-11d3-BDC8-0050040A9B44)]

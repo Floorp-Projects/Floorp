@@ -146,7 +146,7 @@ function copySelectionToClipboard()
     if (select_list.length < 1) return false;
     debug("# of Nodes selected: " + select_list.length + "\n");
 
-    var rdf_uri = "component://netscape/rdf/rdf-service"
+    var rdf_uri = "@mozilla.org/rdf/rdf-service;1"
     var RDF = Components.classes[rdf_uri].getService();
     RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
     if (!RDF) return false;
@@ -210,12 +210,12 @@ function copySelectionToClipboard()
     debug("Copy URL: " + url);
 
     // get some useful components
-    var trans_uri = "component://netscape/widget/transferable";
+    var trans_uri = "@mozilla.org/widget/transferable;1";
     var trans = Components.classes[trans_uri].createInstance();
     if (trans) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
     if (!trans) return false;
 
-    var clip_uri = "component://netscape/widget/clipboard";
+    var clip_uri = "@mozilla.org/widget/clipboard;1";
     var clip = Components.classes[clip_uri].getService();
     if (clip) clip = clip.QueryInterface(Components.interfaces.nsIClipboard);
     if (!clip) return false;
@@ -223,7 +223,7 @@ function copySelectionToClipboard()
 
     // save bookmark's ID
     trans.addDataFlavor("moz/bookmarkclipboarditem");
-    var data_uri = "component://netscape/supports-wstring";
+    var data_uri = "@mozilla.org/supports-wstring;1";
     var data = Components.classes[data_uri].createInstance();
     if (data) {
         data = data.QueryInterface(Components.interfaces.nsISupportsWString);
@@ -237,7 +237,7 @@ function copySelectionToClipboard()
     {
         trans.addDataFlavor("text/unicode");
 
-        var textData_uri = "component://netscape/supports-wstring";
+        var textData_uri = "@mozilla.org/supports-wstring;1";
         var textData = Components.classes[textData_uri].createInstance();
         if (textData) textData = textData.QueryInterface(Components.interfaces.nsISupportsWString);
         if (!textData) return false;
@@ -249,7 +249,7 @@ function copySelectionToClipboard()
     {
         trans.addDataFlavor("text/html");
 
-        var wstring_uri = "component://netscape/supports-wstring";
+        var wstring_uri = "@mozilla.org/supports-wstring;1";
         var htmlData = Components.classes[wstring_uri].createInstance();
         if (htmlData) {
             var wstring_interface = Components.interfaces.nsISupportsWString;
@@ -293,12 +293,12 @@ function doPaste()
     var isContainerFlag = (select_list[0].getAttribute("container") == "true");
     debug("Container status: " + ((isContainerFlag) ? "true" : "false"));
 
-    var clip_uri = "component://netscape/widget/clipboard";
+    var clip_uri = "@mozilla.org/widget/clipboard;1";
     var clip = Components.classes[clip_uri].getService();
     if (clip) clip = clip.QueryInterface(Components.interfaces.nsIClipboard);
     if (!clip) return false;
 
-    var trans_uri = "component://netscape/widget/transferable";
+    var trans_uri = "@mozilla.org/widget/transferable;1";
     var trans = Components.classes[trans_uri].createInstance();
     if (trans) {
         trans = trans.QueryInterface(Components.interfaces.nsITransferable);
@@ -322,11 +322,11 @@ function doPaste()
     var strings = url.split(";");
     if (!strings) return false;
 
-    var rdf_uri = "component://netscape/rdf/rdf-service";
+    var rdf_uri = "@mozilla.org/rdf/rdf-service;1";
     var RDF = Components.classes[rdf_uri].getService();
     RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
     if (!RDF) return false;
-    var rdfc_uri = "component://netscape/rdf/container";
+    var rdfc_uri = "@mozilla.org/rdf/container;1";
     var RDFC = Components.classes[rdfc_uri].getService();
     RDFC = RDFC.QueryInterface(Components.interfaces.nsIRDFContainer);
     if (!RDFC) return false;
@@ -457,12 +457,12 @@ function doDelete(promptFlag)
         if (!ok) return false;
     }
 
-    var RDF_uri = "component://netscape/rdf/rdf-service";
+    var RDF_uri = "@mozilla.org/rdf/rdf-service;1";
     var RDF = Components.classes[RDF_uri].getService();
     RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
     if (!RDF) return false;
 
-    var RDFC_uri = "component://netscape/rdf/container";
+    var RDFC_uri = "@mozilla.org/rdf/container;1";
     var RDFC = Components.classes[RDFC_uri].getService();
     RDFC = RDFC.QueryInterface(Components.interfaces.nsIRDFContainer);
     if (!RDFC) return false;
@@ -588,7 +588,7 @@ function getAbsoluteID(root, node)
 
         // add support for anonymous resources such as Internet Search results,
         // IE favorites under Win32, and NetPositive URLs under BeOS
-        var rdf_uri = "component://netscape/rdf/rdf-service";
+        var rdf_uri = "@mozilla.org/rdf/rdf-service;1";
         var rdf = Components.classes[rdf_uri].getService();
         if (rdf) rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
         if (rdf && ds)
@@ -771,7 +771,7 @@ function TriStateColumnSort(column_name)
 
 function sort_column(column, direction)
 {
-    var isupports_uri = "component://netscape/rdf/xul-sort-service";
+    var isupports_uri = "@mozilla.org/rdf/xul-sort-service;1";
     var isupports = Components.classes[isupports_uri].getService();
     if (!isupports) return false;
     var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
@@ -848,7 +848,7 @@ function fillContextMenu(name)
     var compositeDB = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
     if (!compositeDB) return false;
 
-    var isupports_uri = "component://netscape/rdf/rdf-service";
+    var isupports_uri = "@mozilla.org/rdf/rdf-service;1";
     var isupports = Components.classes[isupports_uri].getService();
     if (!isupports) return false;
     var rdf = isupports.QueryInterface(Components.interfaces.nsIRDFService);
@@ -1091,7 +1091,7 @@ function doContextCmd(cmdName)
     {
         try
         {
-            picker_uri = "component://mozilla/filepicker";
+            picker_uri = "@mozilla.org/filepicker;1";
             filePicker = Components.classes[picker_uri].createInstance(nsIFilePicker);
             if (!filePicker) return false;
 
@@ -1114,7 +1114,7 @@ function doContextCmd(cmdName)
     {
         try
         {
-            picker_uri = "component://mozilla/filepicker";
+            picker_uri = "@mozilla.org/filepicker;1";
             filePicker = Components.classes[picker_uri].createInstance(nsIFilePicker);
             if (!filePicker) return false;
 
@@ -1145,7 +1145,7 @@ function doContextCmd(cmdName)
     var compositeDB = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
     if (!compositeDB) return false;
 
-    var isupports_uri = "component://netscape/rdf/rdf-service";
+    var isupports_uri = "@mozilla.org/rdf/rdf-service;1";
     var isupports = Components.classes[isupports_uri].getService();
     if (!isupports) return false;
     var rdf = isupports.QueryInterface(Components.interfaces.nsIRDFService);
@@ -1158,12 +1158,12 @@ function doContextCmd(cmdName)
     if (!cmdResource) return false;
 
     // set up selection nsISupportsArray
-    var selection_uri = "component://netscape/supports-array";
+    var selection_uri = "@mozilla.org/supports-array;1";
     var selectionInstance = Components.classes[selection_uri].createInstance();
     var selectionArray = selectionInstance.QueryInterface(Components.interfaces.nsISupportsArray);
 
     // set up arguments nsISupportsArray
-    var arguments_uri = "component://netscape/supports-array";
+    var arguments_uri = "@mozilla.org/supports-array;1";
     var argumentsInstance = Components.classes[arguments_uri].createInstance();
     var argumentsArray = argumentsInstance.QueryInterface(Components.interfaces.nsISupportsArray);
 

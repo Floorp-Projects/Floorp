@@ -46,19 +46,19 @@ static nsModuleComponentInfo components[] =
 {
   { "HTML MIME Emitter",
     NS_HTML_MIME_EMITTER_CID,
-    NS_HTML_MIME_EMITTER_PROGID,
+    NS_HTML_MIME_EMITTER_CONTRACTID,
     nsMimeHtmlDisplayEmitterConstructor },
   { "XML MIME Emitter",
     NS_XML_MIME_EMITTER_CID,
-    NS_XML_MIME_EMITTER_PROGID,
+    NS_XML_MIME_EMITTER_CONTRACTID,
     nsMimeXmlEmitterConstructor },
   { "RAW MIME Emitter",
     NS_RAW_MIME_EMITTER_CID,
-    NS_RAW_MIME_EMITTER_PROGID,
+    NS_RAW_MIME_EMITTER_CONTRACTID,
     nsMimeRawEmitterConstructor },
   { "XUL MIME Emitter",
     NS_XUL_MIME_EMITTER_CID,
-    NS_XUL_MIME_EMITTER_PROGID,
+    NS_XUL_MIME_EMITTER_CONTRACTID,
     nsMimeXULEmitterConstructor }
 };
 

@@ -698,7 +698,7 @@ nsEditorShell::SetContentWindow(nsIDOMWindowInternal* aWin)
   
   {
     // the first is an editor controller, and takes an nsIEditor as the refCon
-    nsCOMPtr<nsIController> controller = do_CreateInstance("component://netscape/editor/editorcontroller", &rv);
+    nsCOMPtr<nsIController> controller = do_CreateInstance("@mozilla.org/editor/editorcontroller;1", &rv);
     if (NS_FAILED(rv)) return rv;  
     nsCOMPtr<nsIEditorController> editorController = do_QueryInterface(controller);
     rv = editorController->Init(nsnull);    // we set the editor later when we have one
@@ -712,7 +712,7 @@ nsEditorShell::SetContentWindow(nsIDOMWindowInternal* aWin)
   
   {
     // the second is a composer controller, and takes an nsIEditorShell as the refCon
-    nsCOMPtr<nsIController> controller = do_CreateInstance("component://netscape/editor/composercontroller", &rv);
+    nsCOMPtr<nsIController> controller = do_CreateInstance("@mozilla.org/editor/composercontroller;1", &rv);
     if (NS_FAILED(rv)) return rv;  
     nsCOMPtr<nsIEditorController> editorController = do_QueryInterface(controller);
     
@@ -2886,7 +2886,7 @@ nsEditorShell::DoFind(PRBool aFindNext)
   
   // Get find component.
   nsresult rv;
-  NS_WITH_SERVICE(nsIFindComponent, findComponent, NS_IFINDCOMPONENT_PROGID, &rv);
+  NS_WITH_SERVICE(nsIFindComponent, findComponent, NS_IFINDCOMPONENT_CONTRACTID, &rv);
   NS_ASSERTION(((NS_SUCCEEDED(rv)) && findComponent), "GetService failed for find component.");
   if (NS_FAILED(rv)) { return rv; }
 
@@ -4507,7 +4507,7 @@ nsEditorShell::InitSpellChecker()
     if (NS_FAILED(result))
       return result;
 
-    result = nsComponentManager::CreateInstance(NS_SPELLCHECKER_PROGID,
+    result = nsComponentManager::CreateInstance(NS_SPELLCHECKER_CONTRACTID,
                                                 nsnull,
                                                 NS_GET_IID(nsISpellChecker),
                                                 (void **)getter_AddRefs(mSpellChecker));

@@ -437,7 +437,7 @@ nsXPCComponents_Classes::Enumerate(JSContext *cx, JSObject *obj,
                                 arbitrary, retval);
 }
 
-/* enumerate the known progids, adding a property for each new one */
+/* enumerate the known contractids, adding a property for each new one */
 void
 nsXPCComponents_Classes::FillCache(JSContext *cx, JSObject *obj,
                         nsIXPConnectWrappedNative *wrapper,
@@ -453,7 +453,7 @@ nsXPCComponents_Classes::FillCache(JSContext *cx, JSObject *obj,
     if(NS_FAILED(rv))
         return;
 
-    if(NS_FAILED(rv = compMgr->EnumerateProgIDs(&Classes)))
+    if(NS_FAILED(rv = compMgr->EnumerateContractIDs(&Classes)))
         return;
 
     if(!NS_FAILED(rv = Classes->First()))
@@ -521,7 +521,7 @@ nsXPCComponents_Classes::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
 
     if(JS_IdToValue(cx, id, &idval) && JSVAL_IS_STRING(idval) &&
        (property_name = JS_GetStringBytes(JSVAL_TO_STRING(idval))) != nsnull &&
-       property_name[0] != '{') // we only allow progids here
+       property_name[0] != '{') // we only allow contractids here
     {
         nsCOMPtr<nsIJSCID> nsid = 
             dont_AddRef(NS_STATIC_CAST(nsIJSCID*,nsJSCID::NewID(property_name)));
@@ -673,7 +673,7 @@ nsXPCComponents_ClassesByID::Enumerate(JSContext *cx, JSObject *obj,
                                 arbitrary, retval);
 }
 
-/* enumerate the known progids, adding a property for each new one */
+/* enumerate the known contractids, adding a property for each new one */
 void
 nsXPCComponents_ClassesByID::FillCache(JSContext *cx, JSObject *obj,
                             nsIXPConnectWrappedNative *wrapper,
@@ -827,7 +827,7 @@ nsXPCComponents_ClassesByID::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id
 /***************************************************************************/
 
 // Currently the possible results do not change at runtime, so they are only
-// cached once (unlike ProgIDs, CLSIDs, and IIDs)
+// cached once (unlike ContractIDs, CLSIDs, and IIDs)
 
 class nsXPCComponents_Results : public nsIXPCComponents_Results, public nsIXPCScriptable
 {
@@ -1689,7 +1689,7 @@ nsXPCComponents_Constructor::CallOrConstruct(JSContext *cx, JSObject *obj,
 
     // a new scope to avoid warnings about shadowed names
     {
-        // argv[0] is a progid name string
+        // argv[0] is a contractid name string
         // XXXjband support passing "Components.classes.foo"?
 
         // we do the lookup by asking the Components.classes object

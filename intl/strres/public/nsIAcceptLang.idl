@@ -24,13 +24,13 @@
 
 %{C++
 
-// Define Progid and CID
+// Define Contractid and CID
 // {383F6C15-2797-11d4-BA1C-001083344DE7} 
 #define NS_ACCEPTLANG_CID \
 { 0x383f6c15, 0x2797, 0x11d4, \
 	{ 0xba, 0x1c, 0x0, 0x10, 0x83, 0x34, 0x4d, 0xe7 }}
 
-#define NS_ACCEPTLANG_PROGID "component://netscape/intl/acceptlang"
+#define NS_ACCEPTLANG_CONTRACTID "@mozilla.org/intl/acceptlang;1"
 %}
 
 [scriptable, uuid(383F6C16-2797-11d4-BA1C-001083344DE7)]

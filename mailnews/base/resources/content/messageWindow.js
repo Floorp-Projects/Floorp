@@ -22,7 +22,7 @@
 
 /* globals for a particular window */
 
-var compositeDataSourceProgID        = datasourceProgIDPrefix + "composite-datasource";
+var compositeDataSourceContractID        = datasourceContractIDPrefix + "composite-datasource";
 
 var gCompositeDataSource;
 var gCurrentMessageUri;
@@ -210,7 +210,7 @@ function OnUnloadMessageWindow()
 
 function CreateMessageWindowGlobals()
 {
-	gCompositeDataSource = Components.classes[compositeDataSourceProgID].createInstance();
+	gCompositeDataSource = Components.classes[compositeDataSourceContractID].createInstance();
 	gCompositeDataSource = gCompositeDataSource.QueryInterface(Components.interfaces.nsIRDFCompositeDataSource);
 
 }

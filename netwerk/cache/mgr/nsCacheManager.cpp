@@ -48,7 +48,7 @@ const char* CACHE_DISK_CAPACITY = "browser.cache.disk_cache_size";
 static int PR_CALLBACK diskCacheSizeChanged(const char *pref, void *closure)
 {
 	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
 	PRInt32 capacity = DEFAULT_DISK_CACHE_CAPACITY;
 	if ( NS_SUCCEEDED (rv ) )
 	{
@@ -61,7 +61,7 @@ static int PR_CALLBACK memCacheSizeChanged(const char *pref, void *closure)
 {
 	nsresult rv;
 	PRInt32 capacity = DEFAULT_MEMORY_CACHE_CAPACITY ;
-	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
 	if ( NS_SUCCEEDED (rv ) )
 	{
 		rv = prefs->GetIntPref(CACHE_MEM_CAPACITY, &capacity   );
@@ -94,7 +94,7 @@ nsCacheManager::~nsCacheManager()
     delete mMemSpaceManager;
     delete mDiskSpaceManager;
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
     if ( NS_SUCCEEDED (rv ) )
     {
         prefs->UnregisterCallback( CACHE_DISK_CAPACITY, diskCacheSizeChanged, this); 
@@ -106,7 +106,7 @@ nsCacheManager::~nsCacheManager()
 nsresult nsCacheManager::InitPrefs()
 {
 	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
 	if ( NS_FAILED (rv ) )
 		return rv; 
 	rv = prefs->RegisterCallback( CACHE_DISK_CAPACITY, diskCacheSizeChanged, this); 
@@ -132,14 +132,14 @@ nsCacheManager::Init()
         return NS_ERROR_OUT_OF_MEMORY;
 
     // Instantiate the memory cache component
-    rv = nsComponentManager::CreateInstance(NS_NETWORK_MEMORY_CACHE_PROGID,
+    rv = nsComponentManager::CreateInstance(NS_NETWORK_MEMORY_CACHE_CONTRACTID,
                                             nsnull,
                                             NS_GET_IID(nsINetDataCache),
                                             getter_AddRefs(mMemCache));
     if (NS_FAILED(rv))
         return rv;
 
-    rv = nsComponentManager::CreateInstance(NS_NETWORK_FLAT_CACHE_PROGID,
+    rv = nsComponentManager::CreateInstance(NS_NETWORK_FLAT_CACHE_CONTRACTID,
                                             nsnull,
                                             NS_GET_IID(nsINetDataCache),
 
@@ -153,7 +153,7 @@ nsCacheManager::Init()
 
 #ifdef FILE_CACHE_IS_READY
     // Instantiate the file cache component
-    rv = nsComponentManager::CreateInstance(NS_NETWORK_FILE_CACHE_PROGID,
+    rv = nsComponentManager::CreateInstance(NS_NETWORK_FILE_CACHE_CONTRACTID,
                                             nsnull,
                                             NS_GET_IID(nsINetDataCache),
                                             getter_AddRefs(mDiskCache));

@@ -214,7 +214,7 @@ nsGenericModule::RegisterSelf(nsIComponentManager *aCompMgr,
     nsModuleComponentInfo* cp = mComponents;
     for (PRUint32 i = 0; i < mComponentCount; i++) {
         rv = aCompMgr->RegisterComponentSpec(cp->mCID, cp->mDescription,
-                                             cp->mProgID, aPath, PR_TRUE,
+                                             cp->mContractID, aPath, PR_TRUE,
                                              PR_TRUE);
         if (NS_FAILED(rv)) {
 #ifdef DEBUG

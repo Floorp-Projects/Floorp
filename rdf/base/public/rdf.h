@@ -82,13 +82,13 @@ static const char* kURI##prefix##_##name = ns #name
 
 
 
-/* ProgID prefixes for RDF DLL registration. */
-#define NS_RDF_PROGID                           "component://netscape/rdf"
-#define NS_RDF_DATASOURCE_PROGID                NS_RDF_PROGID "/datasource"
-#define NS_RDF_DATASOURCE_PROGID_PREFIX         NS_RDF_DATASOURCE_PROGID "?name="
-#define NS_RDF_RESOURCE_FACTORY_PROGID          "component://netscape/rdf/resource-factory"
-#define NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX   NS_RDF_RESOURCE_FACTORY_PROGID "?name="
-#define NS_RDF_DELEGATEFACTORY_PROGID_PREFIX    "rdf.delegate-factory."
+/* ContractID prefixes for RDF DLL registration. */
+#define NS_RDF_CONTRACTID                           "@mozilla.org/rdf"
+#define NS_RDF_DATASOURCE_CONTRACTID                NS_RDF_CONTRACTID "/datasource;1"
+#define NS_RDF_DATASOURCE_CONTRACTID_PREFIX         NS_RDF_DATASOURCE_CONTRACTID "?name="
+#define NS_RDF_RESOURCE_FACTORY_CONTRACTID          "@mozilla.org/rdf/resource-factory;1"
+#define NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX   NS_RDF_RESOURCE_FACTORY_CONTRACTID "?name="
+#define NS_RDF_DELEGATEFACTORY_CONTRACTID_PREFIX    "@mozilla.org/rdf/delegate-factory/"
 
 
 /*@}*/

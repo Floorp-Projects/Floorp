@@ -29,8 +29,8 @@ interface nsIURL;
 
 #include <Files.h>
 
-#define NS_INTERNETCONFIGSERVICE_PROGID \
-"component://netscape/mac/internet-config-service"
+#define NS_INTERNETCONFIGSERVICE_CONTRACTID \
+"@mozilla.org/mac/internet-config-service;1"
 
 %}
 

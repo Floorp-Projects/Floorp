@@ -146,7 +146,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsIOService, nsIIOService);
 
 #define MAX_SCHEME_LENGTH       64      // XXX big enough?
 
-#define MAX_NET_PROGID_LENGTH   (MAX_SCHEME_LENGTH + NS_NETWORK_PROTOCOL_PROGID_PREFIX_LENGTH + 1)
+#define MAX_NET_CONTRACTID_LENGTH   (MAX_SCHEME_LENGTH + NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX_LENGTH + 1)
 
 NS_IMETHODIMP
 nsIOService::CacheProtocolHandler(const char *scheme, nsIProtocolHandler *handler)
@@ -201,9 +201,9 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
 {
     nsresult rv;
 
-    NS_ASSERTION(NS_NETWORK_PROTOCOL_PROGID_PREFIX_LENGTH
-                 == nsCRT::strlen(NS_NETWORK_PROTOCOL_PROGID_PREFIX),
-                 "need to fix NS_NETWORK_PROTOCOL_PROGID_PREFIX_LENGTH");
+    NS_ASSERTION(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX_LENGTH
+                 == nsCRT::strlen(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX),
+                 "need to fix NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX_LENGTH");
 
     NS_ENSURE_ARG_POINTER(scheme);
     // XXX we may want to speed this up by introducing our own protocol 
@@ -213,11 +213,11 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
     rv = GetCachedProtocolHandler(scheme, result);
     if (NS_SUCCEEDED(rv)) return NS_OK;
 
-    char buf[MAX_NET_PROGID_LENGTH];
-    nsCAutoString progID(NS_NETWORK_PROTOCOL_PROGID_PREFIX);
-    progID += scheme;
-    progID.ToLowerCase();
-    progID.ToCString(buf, MAX_NET_PROGID_LENGTH);
+    char buf[MAX_NET_CONTRACTID_LENGTH];
+    nsCAutoString contractID(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX);
+    contractID += scheme;
+    contractID.ToLowerCase();
+    contractID.ToCString(buf, MAX_NET_CONTRACTID_LENGTH);
 
     rv = nsServiceManager::GetService(buf, NS_GET_IID(nsIProtocolHandler), (nsISupports **)result);
     if (NS_FAILED(rv)) 

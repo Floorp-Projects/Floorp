@@ -23,17 +23,17 @@
 #ifndef nsMessageMimeCID_h__
 #define nsMessageMimeCID_h__
 
-#define NS_MAILNEWS_MIME_HEADER_PARSER_PROGID \
-  "component://netscape/messenger/headerparser"
+#define NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID \
+  "@mozilla.org/messenger/headerparser;1"
 
-#define NS_MAILNEWS_MIME_STREAM_CONVERTER_PROGID \
-	NS_ISTREAMCONVERTER_KEY "?from=message/rfc822?to=text/xul"
+#define NS_MAILNEWS_MIME_STREAM_CONVERTER_CONTRACTID \
+	NS_ISTREAMCONVERTER_KEY "?from=message/rfc822&to=text/xul"
 
-#define NS_MAILNEWS_MIME_STREAM_CONVERTER_PROGID1 \
-	NS_ISTREAMCONVERTER_KEY "?from=message/rfc822?to=text/html"
+#define NS_MAILNEWS_MIME_STREAM_CONVERTER_CONTRACTID1 \
+	NS_ISTREAMCONVERTER_KEY "?from=message/rfc822&to=text/html"
 
-#define NS_MAILNEWS_MIME_STREAM_CONVERTER_PROGID2 \
-	NS_ISTREAMCONVERTER_KEY "?from=message/rfc822?to=*/*"
+#define NS_MAILNEWS_MIME_STREAM_CONVERTER_CONTRACTID2 \
+	NS_ISTREAMCONVERTER_KEY "?from=message/rfc822&to=*/*"
 
 #define NS_MAILNEWS_MIME_STREAM_CONVERTER_CID                    \
 { /* FAF4F9A6-60AD-11d3-989A-001083010E9B */         \

@@ -39,7 +39,7 @@ interface nsISOAPTransport : nsISupports {
 };
 
 %{ C++
-#define NS_SOAPTRANSPORT_PROGID  \
-"component://netscape/xmlextras/soap/transport"
-#define NS_SOAPTRANSPORT_PROGID_PREFIX   NS_SOAPTRANSPORT_PROGID "?protocol="
+#define NS_SOAPTRANSPORT_CONTRACTID  \
+"@mozilla.org/xmlextras/soap/transport;1"
+#define NS_SOAPTRANSPORT_CONTRACTID_PREFIX   NS_SOAPTRANSPORT_CONTRACTID "?protocol="
 %}

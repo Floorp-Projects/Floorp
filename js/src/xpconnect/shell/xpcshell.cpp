@@ -712,7 +712,7 @@ main(int argc, char **argv)
 
     SetupRegistry();
 
-    nsCOMPtr<nsIJSRuntimeService> rtsvc = do_GetService("nsJSRuntimeService");
+    nsCOMPtr<nsIJSRuntimeService> rtsvc = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
     // get the JSRuntime from the runtime svc
     if (!rtsvc) {
         printf("failed to get nsJSRuntimeService!\n");
@@ -747,7 +747,7 @@ main(int argc, char **argv)
         NS_STATIC_CAST(nsIXPCSecurityManager*, new FullTrustSecMan());
     xpc->SetSecurityManagerForJSContext(jscontext, secman, 0);
     
-    nsCOMPtr<nsIJSContextStack> cxstack = do_GetService("nsThreadJSContextStack");
+    nsCOMPtr<nsIJSContextStack> cxstack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
     if (!cxstack) {
         printf("failed to get the nsThreadJSContextStack service!\n");
         return 1;

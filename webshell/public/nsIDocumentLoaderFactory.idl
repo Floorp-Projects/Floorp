@@ -35,12 +35,12 @@ interface nsILoadGroup;
 // this prefix to be found. The format is <prefix>/%s/%s where the
 // first %s is replaced with the command and the second %s is replaced
 // with the mimetype. For example, to view a image/gif file you would
-// create this progid:
+// create this contractid:
 //
-//  "component://netscape/content-viewer-factory/view/image/gif"
+//  "@mozilla.org/content-viewer-factory/view;1?type=image/gif"
 //
-#define NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX \
-  "component://netscape/content-viewer-factory/"
+#define NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX \
+  "@mozilla.org/content-viewer-factory/"
 %}
 
 [scriptable, uuid(df15f850-5d98-11d4-9f4d-0010a4053fd0)]

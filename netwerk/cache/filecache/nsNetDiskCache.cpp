@@ -77,7 +77,7 @@ static const char * const CACHE_ENABLE_PREF   = "browser.cache.disk.enable";
 static int PR_CALLBACK folderChanged(const char *pref, void *closure)
 {
 	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
 	if ( NS_FAILED (rv ) )
 		return rv;
 			
@@ -91,7 +91,7 @@ static int PR_CALLBACK folderChanged(const char *pref, void *closure)
 static int PR_CALLBACK enableChanged(const char *pref, void *closure)
 {
 	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
 	if ( NS_FAILED (rv ) )
 		return rv;
 		
@@ -129,7 +129,7 @@ nsNetDiskCache::~nsNetDiskCache()
   NS_IF_RELEASE(mDB) ;
   
   nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
 	if ( NS_SUCCEEDED (rv ) )
 	{
 		 prefs->UnregisterCallback( CACHE_DIR_PREF, folderChanged, this ); 
@@ -229,7 +229,7 @@ NS_IMETHODIMP
 nsNetDiskCache::Init(void) 
 {
 	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
 	if ( NS_FAILED (rv ) )
 		return rv; 
 	rv = prefs->RegisterCallback( CACHE_DIR_PREF, folderChanged, this); 

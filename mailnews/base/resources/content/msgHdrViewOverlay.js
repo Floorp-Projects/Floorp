@@ -32,8 +32,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////////
 
-var msgHeaderParserProgID		   = "component://netscape/messenger/headerparser";
-var abAddressCollectorProgID	 = "component://netscape/addressbook/services/addressCollecter";
+var msgHeaderParserContractID		   = "@mozilla.org/messenger/headerparser;1";
+var abAddressCollectorContractID	 = "@mozilla.org/addressbook/services/addressCollecter;1";
 
 var msgPaneData;
 var currentHeaderData = {};
@@ -50,8 +50,8 @@ var attachmentUrlArray = new Array();
 var attachmentDisplayNameArray = new Array();
 var attachmentMessageUriArray = new Array();
 
-var msgHeaderParser = Components.classes[msgHeaderParserProgID].getService(Components.interfaces.nsIMsgHeaderParser);
-var abAddressCollector = Components.classes[abAddressCollectorProgID].getService(Components.interfaces.nsIAbAddressCollecter);
+var msgHeaderParser = Components.classes[msgHeaderParserContractID].getService(Components.interfaces.nsIMsgHeaderParser);
+var abAddressCollector = Components.classes[abAddressCollectorContractID].getService(Components.interfaces.nsIAbAddressCollecter);
 
 function OnLoadMsgHeaderPane()
 {

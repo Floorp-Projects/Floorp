@@ -31,7 +31,7 @@
 
 function ConvertDOMListToResourceArray(nodeList)
 {
-    var result = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+    var result = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
 
     for (var i=0; i<nodeList.length; i++) {
         result.AppendElement(nodeList[i].resource);
@@ -236,7 +236,7 @@ function MsgToggleSplitter(id)
 
 function NotifyQuitApplication()
 {
-	var ObserverService = Components.classes["component://netscape/observer-service"].getService();
+	var ObserverService = Components.classes["@mozilla.org/observer-service;1"].getService();
 	ObserverService = ObserverService.QueryInterface(Components.interfaces.nsIObserverService);
 	if (ObserverService)
 	{
@@ -253,7 +253,7 @@ function NotifyQuitApplication()
 
 function LastToClose()
 {
-	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+	var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
 	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
 	var enumerator = windowManagerInterface.getEnumerator( null );
     var count = 0;

@@ -132,7 +132,7 @@ private:
   CRYPTO_KeyGenContextHandler *mHandlerInfo;
 };
 
-const char * nsCrypto::kPSMComponentProgID = PSM_COMPONENT_PROGID;
+const char * nsCrypto::kPSMComponentContractID = PSM_COMPONENT_CONTRACTID;
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
 NS_IMPL_ISUPPORTS2(nsCrypto, nsIDOMCrypto,nsIScriptObjectOwner)
@@ -595,7 +595,7 @@ nsIEventQueue* getUIEventQueue()
 {
   nsresult rv;
   NS_WITH_SERVICE(nsIEventQueueService, eventQService, 
-                  NS_EVENTQUEUESERVICE_PROGID, &rv);
+                  NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) 
     return nsnull;
   

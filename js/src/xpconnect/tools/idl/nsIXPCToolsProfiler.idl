@@ -48,5 +48,5 @@ interface nsIXPCToolsProfiler : nsISupports
 };
 
 %{ C++
-#define XPCTOOLS_PROFILER_PROGID "xpctools.profiler.1"
+#define XPCTOOLS_PROFILER_CONTRACTID "xpctools.profiler.1"
 %}

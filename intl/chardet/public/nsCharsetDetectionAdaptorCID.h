@@ -25,7 +25,7 @@
 
 #include "nscore.h"
 
-#define NS_CHARSET_DETECTION_ADAPTOR_PROGID "component://netscape/intl/charsetdetectionadaptor"
+#define NS_CHARSET_DETECTION_ADAPTOR_CONTRACTID "@mozilla.org/intl/charsetdetectionadaptor;1"
 
 // {12BB8F17-2389-11d3-B3BF-00805F8A6670}
 #define NS_CHARSET_DETECTION_ADAPTOR_CID \

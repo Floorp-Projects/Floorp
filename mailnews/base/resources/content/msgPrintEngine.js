@@ -21,7 +21,7 @@
 /* This is where functions related to the print engine are kept */
 
 /* globals for a particular window */
-var printEngineProgID      = "component://netscape/messenger/msgPrintEngine";
+var printEngineContractID      = "@mozilla.org/messenger/msgPrintEngine;1";
 var printEngineWindow;
 var printEngine;
 
@@ -40,7 +40,7 @@ function OnUnloadPrintEngine()
 function PrintEngineCreateGlobals()
 {
 	/* get the print engine instance */
-	printEngine = Components.classes[printEngineProgID].createInstance();
+	printEngine = Components.classes[printEngineContractID].createInstance();
 	printEngine = printEngine.QueryInterface(Components.interfaces.nsIMsgPrintEngine);
 }
 

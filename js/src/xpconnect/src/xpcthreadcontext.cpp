@@ -301,7 +301,7 @@ xpcPerThreadData::GetSafeJSContext()
     {
         JSRuntime *rt;
         nsCOMPtr<nsIJSRuntimeService> rtsvc = 
-            do_GetService("nsJSRuntimeService");
+            do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
         if(rtsvc && NS_SUCCEEDED(rtsvc->GetRuntime(&rt)) && rt)
         {
             nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());

@@ -35,7 +35,7 @@
 
 function toScriptableInputStream (i)
 {
-    var si = Components.classes["component://netscape/scriptableinputstream"];
+    var si = Components.classes["@mozilla.org/scriptableinputstream;1"];
     
     si = si.createInstance();
     si = si.QueryInterface(Components.interfaces.nsIScriptableInputStream);

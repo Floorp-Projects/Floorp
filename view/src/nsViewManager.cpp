@@ -623,7 +623,7 @@ NS_IMETHODIMP nsViewManager::SetFrameRate(PRUint32 aFrameRate)
 			if (mFrameRate != 0)
 			{
 #ifdef NS_VIEWMANAGER_NEEDS_TIMER
-				mTimer = do_CreateInstance("component://netscape/timer", &rv);
+				mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
 
 				if (NS_OK == rv)
 					mTimer->Init(vm_timer_callback, this, 1000 / mFrameRate);

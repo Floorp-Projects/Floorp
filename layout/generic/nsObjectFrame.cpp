@@ -2387,7 +2387,7 @@ NS_IMETHODIMP_(void) nsPluginInstanceOwner::Notify(nsITimer* /* timer */)
   // reprime the timer? currently have to create a new timer for each call, which is
   // kind of wasteful. need to get periodic timers working on all platforms.
   nsresult rv;
-  mPluginTimer = do_CreateInstance("component://netscape/timer", &rv);
+  mPluginTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_SUCCEEDED(rv))
     mPluginTimer->Init(this, 1000 / 60);
 #endif
@@ -2480,7 +2480,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 
 #if defined(XP_MAC)
           // start a periodic timer to provide null events to the plugin instance.
-          mPluginTimer = do_CreateInstance("component://netscape/timer", &rv);
+          mPluginTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
           if (rv == NS_OK)
 	        rv = mPluginTimer->Init(this, 1000 / 60, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
 #endif

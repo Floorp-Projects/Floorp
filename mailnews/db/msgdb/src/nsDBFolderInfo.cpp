@@ -57,7 +57,7 @@ static nsString gDefaultCharacterSet;	// default charset
 static int PR_CALLBACK defaultCharacterSetChanged(const char *prefName, void *closure)
 {
 	nsresult rv;
-	nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_PROGID, &rv);
+	nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
 	if (NS_SUCCEEDED(rv))
 	{
 		PRUnichar *prefCharset = nsnull;
@@ -125,7 +125,7 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
 
 	// Initialize a default charset to a pref default.
 	nsresult rv;
-	nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_PROGID, &rv);
+	nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
 	if (NS_SUCCEEDED(rv))
 	{
 		rv = prefs->RegisterCallback(MAILNEWS_VIEW_DEFAULT_CHARSET, defaultCharacterSetChanged, NULL);
@@ -164,7 +164,7 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
 nsDBFolderInfo::~nsDBFolderInfo()
 {
 	nsresult rv;
-	nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_PROGID, &rv);
+	nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
 	if (NS_SUCCEEDED(rv))
 		rv = prefs->UnregisterCallback(MAILNEWS_VIEW_DEFAULT_CHARSET, defaultCharacterSetChanged, NULL);
 

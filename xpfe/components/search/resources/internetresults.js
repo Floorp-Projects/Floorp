@@ -5,7 +5,7 @@ function searchResultsOpenURL(event)
 		return false;
 
 	var url = node.id;
-	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 	if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 	if (rdf)
 	{
@@ -40,7 +40,7 @@ function onLoadInternetResults()
   // HACK HACK HACK HACK HACK HACK - chrome urls are being stored in sh as file urls!
   // access to xpconnect is denied! ack! erk! ork!
   try {
-    var pref = Components.classes["component://netscape/preferences"].getService();
+    var pref = Components.classes["@mozilla.org/preferences;1"].getService();
     if (pref) pref = pref.QueryInterface(Components.interfaces.nsIPref);
   } 
   catch(e) {
@@ -53,7 +53,7 @@ function onLoadInternetResults()
   }
 
   // clear any previous results on load
-	var iSearch = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
+	var iSearch = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"].getService();
 	if (iSearch) iSearch = iSearch.QueryInterface(Components.interfaces.nsIInternetSearchService);
 	if (iSearch) iSearch.ClearResultSearchSites();
 
@@ -115,7 +115,7 @@ function doEngineClick( event, aNode )
 		splitter.setAttribute("hidden", "true");
 		try
 		{
-			var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+			var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 			if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 			if (rdf)
 			{
@@ -158,7 +158,7 @@ function doResultClick(node)
 
 	try
 	{
-		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+		var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 		if (rdf)
 		{

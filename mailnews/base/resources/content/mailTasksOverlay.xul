@@ -16,7 +16,7 @@
     // which is included by most clients. 
     function toMessengerWindow()
       {
-	var pref = Components.classes["component://netscape/preferences"].getService(Components.interfaces.nsIPref);
+	var pref = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
         var windowDoc = "chrome://messenger/content/messenger.xul";
       	try
           {

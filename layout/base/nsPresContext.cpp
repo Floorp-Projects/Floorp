@@ -317,8 +317,8 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
 
   mDeviceContext = dont_QueryInterface(aDeviceContext);
 
-  mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_PROGID);
-  mPrefs = do_GetService(NS_PREF_PROGID);
+  mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
+  mPrefs = do_GetService(NS_PREF_CONTRACTID);
   if (mPrefs) {
     // Register callbacks so we're notified when the preferences change
     mPrefs->RegisterCallback("font.", PrefChangedCallback, (void*)this);

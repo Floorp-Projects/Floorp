@@ -1254,7 +1254,7 @@ nsMsgSendLater::DealWithTheIdentityMojo(nsIMsgIdentity  *identity,
   if (mIdentityKey)
   {
     // get the account manager
-    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_PROGID, &rv);
+    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) 
       return rv;
 
@@ -1305,7 +1305,7 @@ nsMsgSendLater::DealWithTheIdentityMojo(nsIMsgIdentity  *identity,
   if ( (!tIdentity) && (!identity) )
   {
     // get the account manager
-    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_PROGID, &rv);
+    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) 
       return rv;
 

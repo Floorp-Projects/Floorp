@@ -43,14 +43,14 @@
   * These values come from xpctest_attributes.idl and xpctest_attributes.cpp
   */
 
- var PROGID = "xpcTestObjectReadWrite";
+ var CONTRACTID = "@mozilla.org/js/xpc/test/ObjectReadWrite;1";
  var INAME   = Components.interfaces["nsIXPCTestObjectReadWrite"];
 
- var O = Components.classes[PROGID].createInstance();
+ var O = Components.classes[CONTRACTID].createInstance();
  o = O.QueryInterface( INAME );
 
 
- AddTestCase( "typeof Components.classes[" + PROGID+"].createInstance()",
+ AddTestCase( "typeof Components.classes[" + CONTRACTID+"].createInstance()",
 			   "object",
 			   typeof O );
 

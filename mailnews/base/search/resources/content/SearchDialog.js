@@ -18,10 +18,10 @@
  * Rights Reserved.
  */
 
-var rdfDatasourcePrefix = "component://netscape/rdf/datasource?name=";
-var rdfServiceProgID    = "component://netscape/rdf/rdf-service";
-var searchSessionProgID = "component://netscape/messenger/searchSession";
-var folderDSProgID         = rdfDatasourcePrefix + "mailnewsfolders";
+var rdfDatasourcePrefix = "@mozilla.org/rdf/datasource;1?name=?name=";
+var rdfServiceContractID    = "@mozilla.org/rdf/rdf-service;1";
+var searchSessionContractID = "@mozilla.org/messenger/searchSession;1";
+var folderDSContractID         = rdfDatasourcePrefix + "mailnewsfolders";
 var gSearchDatasource;
 
 var nsIMsgFolder = Components.interfaces.nsIMsgFolder;
@@ -61,7 +61,7 @@ function initializeSearchWindowWidgets()
     gFolderPicker = document.getElementById("searchableFolders");
     gThreadTree = document.getElementById("threadTree");
 
-    msgWindow = Components.classes[msgWindowProgID].createInstance(nsIMsgWindow);
+    msgWindow = Components.classes[msgWindowContractID].createInstance(nsIMsgWindow);
     msgWindow.statusFeedback = gStatusFeedback;
     msgWindow.SetDOMWindow(window);
 }
@@ -196,7 +196,7 @@ function GetScopeForFolder(folder) {
     
 function setupDatasource() {
 
-    RDF = Components.classes[rdfServiceProgID].getService(Components.interfaces.nsIRDFService);
+    RDF = Components.classes[rdfServiceContractID].getService(Components.interfaces.nsIRDFService);
     
     gSearchDatasource = Components.classes[rdfDatasourcePrefix + "msgsearch"].createInstance(Components.interfaces.nsIRDFDataSource);
 
@@ -206,7 +206,7 @@ function setupDatasource() {
     // the thread pane needs to use the search datasource (to get the
     // actual list of messages) and the message datasource (to get any
     // attributes about each message)
-    gSearchSession = Components.classes[searchSessionProgID].createInstance(Components.interfaces.nsIMsgSearchSession);
+    gSearchSession = Components.classes[searchSessionContractID].createInstance(Components.interfaces.nsIMsgSearchSession);
     
     setMsgDatasourceWindow(gSearchDatasource, msgWindow);
     gThreadTree.database.AddDataSource(gSearchDatasource);
@@ -253,7 +253,7 @@ function testelement(element)
 function GetFolderDatasource()
 {
     if (!gFolderDatasource)
-        gFolderDatasource = Components.classes[folderDSProgID].createInstance(Components.interfaces.nsIRDFDataSource);
+        gFolderDatasource = Components.classes[folderDSContractID].createInstance(Components.interfaces.nsIRDFDataSource);
     return gFolderDatasource;
 }
 

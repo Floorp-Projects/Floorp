@@ -33,7 +33,7 @@
 #define NS_SDR_CLASSNAME "Secret Decoder Ring"
 #define NS_SDR_CID \
   { 0xd9a0341, 0xce7, 0x11d4, { 0x9f, 0xdd, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
-#define NS_SDR_PROGID "netscape.security.sdr"
+#define NS_SDR_CONTRACTID "@mozilla.org/security/sdr;1"
 
 class nsSecretDecoderRing : public nsISecretDecoderRing
 {
@@ -49,7 +49,7 @@ public:
 private:
   nsIPSMComponent *mPSM;
 
-  static const char *kPSMComponentProgID;
+  static const char *kPSMComponentContractID;
 
   nsresult encode(const unsigned char *data, PRInt32 dataLen, char **_retval);
   nsresult decode(const char *data, unsigned char **result, PRInt32 * _retval);

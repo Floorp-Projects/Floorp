@@ -35,7 +35,7 @@ nsMsgDisplayMessageByID(nsIPrompt * aPrompt, PRInt32 msgID)
 {
   nsresult rv;
 
-  nsCOMPtr<nsIMsgStringService> composebundle (do_GetService(NS_MSG_COMPOSESTRINGSERVICE_PROGID, &rv));
+  nsCOMPtr<nsIMsgStringService> composebundle (do_GetService(NS_MSG_COMPOSESTRINGSERVICE_CONTRACTID, &rv));
   nsXPIDLString msg;
 
   if (composebundle)
@@ -66,7 +66,7 @@ nsMsgDisplayMessageByString(nsIPrompt * aPrompt, const PRUnichar * msg)
 nsresult
 nsMsgAskBooleanQuestionByID(nsIPrompt * aPrompt, PRInt32 msgID, PRBool *answer)
 {
-  nsCOMPtr<nsIMsgStringService> composebundle (do_GetService(NS_MSG_COMPOSESTRINGSERVICE_PROGID));
+  nsCOMPtr<nsIMsgStringService> composebundle (do_GetService(NS_MSG_COMPOSESTRINGSERVICE_CONTRACTID));
   nsXPIDLString msg;
 
   if (composebundle)

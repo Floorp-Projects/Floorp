@@ -65,8 +65,8 @@ ArrayEnumerator.prototype = {
 
 // the datasource object itself
 //
-const NS_LDAPDATASOURCE_PROGID = 
-    'component://netscape/rdf/datasource?name=ldap';
+const NS_LDAPDATASOURCE_CONTRACTID = 
+    '@mozilla.org/rdf/datasource;1?name=?name=ldap';
 const NS_LDAPDATASOURCE_CID =
     Components.ID('{8da18684-6486-4a7e-b261-35331f3e7163}');
 
@@ -119,7 +119,7 @@ nsLDAPDataSource.prototype = {
 	// get the RDF service
 	//
 	var rdfSvc = Components.
-	    classes["component://netscape/rdf/rdf-service"].
+	    classes["@mozilla.org/rdf/rdf-service;1"].
 	    getService(Components.interfaces.nsIRDFService);
 
 	// get some RDF Resources that we'll need
@@ -327,8 +327,8 @@ nsLDAPDataSource.prototype = {
 
 // the nsILDAPMessage associated with a given resource
 //
-const NS_LDAPMESSAGERDFDELEGATEFACTORY_PROGID = 
-    'rdf.delegate-factory.message.ldap';
+const NS_LDAPMESSAGERDFDELEGATEFACTORY_CONTRACTID = 
+    '@mozilla.org/rdf/delegate-factory/message.ldap;1';
 const NS_LDAPMESSAGERDFDELEGATEFACTORY_CID = 
     Components.ID('{4b6fb566-1dd2-11b2-a1a9-889a3f852b0b`}');
 
@@ -361,14 +361,14 @@ nsLDAPMessageRDFDelegateFactory.prototype =
 
 // the nsILDAPURL associated with a given resource
 //
-const NS_LDAPURLRDFDELEGATEFACTORY_PROGID = 'rdf.delegate-factory.url.ldap';
+const NS_LDAPURLRDFDELEGATEFACTORY_CONTRACTID = '@mozilla.org/rdf/delegate-factory/url.ldap;1';
 const NS_LDAPURLRDFDELEGATEFACTORY_CID = 
     Components.ID('b6048700-1dd1-11b2-ae88-a5e18bb1f25e');
 
 // the nsILDAPConnection associated with a given resource
 //
-const NS_LDAPCONNECTIONRDFDELEGATEFACTORY_PROGID = 
-    'rdf.delegate-factory.connection.ldap';
+const NS_LDAPCONNECTIONRDFDELEGATEFACTORY_CONTRACTID = 
+    '@mozilla.org/rdf/delegate-factory/connection.ldap;1';
 const NS_LDAPCONNECTIONRDFDELEGATEFACTORY_CID = 
     Components.ID('57075fc6-1dd2-11b2-9df5-dbb9111d1b38');
 
@@ -380,27 +380,27 @@ var nsLDAPDataSourceModule = {
 
         compMgr.registerComponentWithType(NS_LDAPDATASOURCE_CID, 
 					  'LDAP RDF DataSource', 
-					  NS_LDAPDATASOURCE_PROGID, 
+					  NS_LDAPDATASOURCE_CONTRACTID, 
 					  fileSpec, location, true, true, 
 					  type);
 
         compMgr.registerComponentWithType(
 	    NS_LDAPMESSAGERDFDELEGATEFACTORY_CID, 
 	    'LDAP Message RDF Delegate', 
-	    NS_LDAPMESSAGERDFDELEGATEFACTORY_PROGID, 
+	    NS_LDAPMESSAGERDFDELEGATEFACTORY_CONTRACTID, 
 	    fileSpec, location, true, true, 
 	    type);
 
         compMgr.registerComponentWithType(NS_LDAPURLRDFDELEGATEFACTORY_CID, 
 					  'LDAP URL RDF Delegate', 
-					  NS_LDAPURLRDFDELEGATEFACTORY_PROGID, 
+					  NS_LDAPURLRDFDELEGATEFACTORY_CONTRACTID, 
 					  fileSpec, location, true, true, 
 					  type);
 
         compMgr.registerComponentWithType(
 	    NS_LDAPCONNECTIONRDFDELEGATEFACTORY_CID, 
 	    'LDAP Connection RDF Delegate', 
-	    NS_LDAPCONNECTIONRDFDELEGATEFACTORY_PROGID, 
+	    NS_LDAPCONNECTIONRDFDELEGATEFACTORY_CONTRACTID, 
 	    fileSpec, location, true, true, 
 	    type);
 

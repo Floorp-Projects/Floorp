@@ -549,7 +549,7 @@ TestThreadJSContextStack(JSContext* jscontext)
     printf("ThreadJSContextStack tests...\n");
 
     nsresult rv;
-    NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
+    NS_WITH_SERVICE(nsIJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", &rv);
 
     if(NS_SUCCEEDED(rv))
     {
@@ -718,7 +718,7 @@ int main()
     SetupRegistry();
 
     // get the JSRuntime from the runtime svc, if possible
-    NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &rv);
+    NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "@mozilla.org/js/xpc/RuntimeService;1", &rv);
     if(NS_FAILED(rv) || NS_FAILED(rtsvc->GetRuntime(&rt)) || !rt)
         DIE("failed to get a JSRuntime");
 
@@ -732,7 +732,7 @@ int main()
     if(!xpc) 
         DIE("failed to get xpconnect service\n");
 
-    NS_WITH_SERVICE(nsIJSContextStack, cxstack, "nsThreadJSContextStack", &rv);
+    NS_WITH_SERVICE(nsIJSContextStack, cxstack, "@mozilla.org/js/xpc/ContextStack;1", &rv);
     if(NS_FAILED(rv)) 
         DIE("failed to get the nsThreadJSContextStack service!\n");
 

@@ -451,7 +451,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
     
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
       rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
       if (NS_SUCCEEDED(rv)) {

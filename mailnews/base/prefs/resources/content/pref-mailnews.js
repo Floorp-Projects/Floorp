@@ -12,7 +12,7 @@ function setColorWell(menu)
 function setHomePageToDefaultPage(folderFieldId)
 {
   var homePageField = document.getElementById(folderFieldId);
-  var prefs = Components.classes["component://netscape/preferences"].getService(Components.interfaces.nsIPref);
+  var prefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
   var url = prefs.CopyDefaultCharPref("mailnews.start_page.url");
   homePageField.value = url;
 }

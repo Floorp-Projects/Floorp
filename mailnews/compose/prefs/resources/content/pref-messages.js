@@ -30,8 +30,8 @@ function startUp()
 {
   try
   {
-    prefInt = Components.classes["component://netscape/preferences"];
-    ccm		= Components.classes['component://netscape/charset-converter-manager'];
+    prefInt = Components.classes["@mozilla.org/preferences;1"];
+    ccm		= Components.classes['@mozilla.org/charset-converter-manager;1'];
 
     if (ccm) {
       ccm = ccm.getService();

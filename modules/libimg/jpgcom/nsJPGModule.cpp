@@ -33,7 +33,7 @@ static nsModuleComponentInfo components[] =
 {
   { "JPEG Decoder",
      NS_JPGDECODER_CID,
-     "component://netscape/image/decoder&type=image/jpeg",
+     "@mozilla.org/image/decoder;1?type=image/jpeg",
      JPGDecoder::Create }
 };
 

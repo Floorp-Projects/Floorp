@@ -40,7 +40,7 @@ main(int argc, const char** argv)
 	PRUnichar*						category_value, *charset;
 	nsString						categoryAsNSString, charsetAsNSString;
 
-	nsresult rv = nsComponentManager::CreateInstance(NS_PLATFORMCHARSET_PROGID,NULL,kPlatformCharsetIID,getter_AddRefs(platform_charset));
+	nsresult rv = nsComponentManager::CreateInstance(NS_PLATFORMCHARSET_CONTRACTID,NULL,kPlatformCharsetIID,getter_AddRefs(platform_charset));
 	rv = nsComponentManager::CreateInstance(kLocaleServiceCID,NULL,kLocaleServiceIID,getter_AddRefs(locale_service));
 	if (NS_FAILED(rv)) return -1;
 

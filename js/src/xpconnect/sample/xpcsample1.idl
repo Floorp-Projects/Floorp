@@ -71,7 +71,7 @@ interface nsIXPCSample_HookerUpper : nsISupports
 };
 
 %{C++
-#define NS_NSXPCSAMPLE_HOOKERUPPER_PROGID "xpc.sample_hookerupper.1"
+#define NS_NSXPCSAMPLE_HOOKERUPPER_CONTRACTID "xpc.sample_hookerupper.1"
 %}
 
 

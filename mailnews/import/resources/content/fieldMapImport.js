@@ -11,7 +11,7 @@ var dragData = null;
 function OnLoadFieldMapImport()
 {
 	// top.bundle = srGetStrBundle("chrome://messenger/locale/importMsgs.properties");
-	top.importService = Components.classes["component://mozilla/import/import-service"].getService();
+	top.importService = Components.classes["@mozilla.org/import/import-service;1"].getService();
 	top.importService = top.importService.QueryInterface(Components.interfaces.nsIImportService);
 	top.transferType = "moz/fieldmap";
 	top.recordNum = 0;
@@ -144,19 +144,19 @@ function BeginDrag( event)
 		return( false);
 	}
 
-	var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
+	var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
 	if ( dragService ) dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
 	if ( !dragService )	{
 		return(false);
 	}
 
-	var trans = Components.classes["component://netscape/widget/transferable"].createInstance();
+	var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance();
 	if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
 	if ( !trans ) {
 		return(false);
 	}
 
-	var genData = Components.classes["component://netscape/supports-wstring"].createInstance();
+	var genData = Components.classes["@mozilla.org/supports-wstring;1"].createInstance();
 	if ( genData ) genData = genData.QueryInterface(Components.interfaces.nsISupportsWString);
 	if (!genData) {
 		return(false);
@@ -183,7 +183,7 @@ function BeginDrag( event)
 	// trans.setTransferData ( "text/unicode", genData, indexStr.length * 2);
 	trans.setTransferData ( top.transferType, genData, indexStr.length * 2);
 
-	var transArray = Components.classes["component://netscape/supports-array"].createInstance();
+	var transArray = Components.classes["@mozilla.org/supports-array;1"].createInstance();
 	if ( transArray ) transArray = transArray.QueryInterface(Components.interfaces.nsISupportsArray);
 	if ( !transArray )	{
 		return(false);
@@ -281,14 +281,14 @@ function DropOnTree( event)
 		containerItem = treeItem.parentNode.parentNode;
 	*/
 
-	var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
+	var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
 	if ( dragService ) dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
 	if ( !dragService )	return(false);
 	
 	var dragSession = dragService.getCurrentSession();
 	if ( !dragSession )	return(false);
 
-	var trans = Components.classes["component://netscape/widget/transferable"].createInstance();
+	var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance();
 	if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
 	if ( !trans )		return(false);
 	trans.addDataFlavor( top.transferType);
@@ -403,7 +403,7 @@ function DragOverTree( event)
 	var dragSession = null;
 	var retVal = true;
 
-	var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
+	var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
 	if ( dragService ) dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
 	if ( !dragService )	return(false);
 

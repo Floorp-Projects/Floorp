@@ -475,11 +475,11 @@ nsSOAPCall::CreateParameterElements()
   nsSOAPUtils::GetInheritedEncodingStyle(entry, getter_Copies(encodingStyle));
 
   // Find the corresponding encoder
-  nsCAutoString encoderProgid;
-  encoderProgid.Assign(NS_SOAPENCODER_PROGID_PREFIX);
-  encoderProgid.Append(encodingStyle);
+  nsCAutoString encoderContractid;
+  encoderContractid.Assign(NS_SOAPENCODER_CONTRACTID_PREFIX);
+  encoderContractid.Append(encodingStyle);
 
-  nsCOMPtr<nsISOAPEncoder> encoder = do_CreateInstance(encoderProgid);
+  nsCOMPtr<nsISOAPEncoder> encoder = do_CreateInstance(encoderContractid);
   if (!encoder) return NS_ERROR_INVALID_ARG;
 
   PRUint32 index, count;
@@ -500,11 +500,11 @@ nsSOAPCall::CreateParameterElements()
       // find an encoder
       if (paramEncoding && 
           (nsCRT::strcmp(encodingStyle, paramEncoding) != 0)) {
-        nsCAutoString paramEncoderProgid;
-        paramEncoderProgid.Assign(NS_SOAPENCODER_PROGID_PREFIX);
-        paramEncoderProgid.Append(paramEncoding);
+        nsCAutoString paramEncoderContractid;
+        paramEncoderContractid.Assign(NS_SOAPENCODER_CONTRACTID_PREFIX);
+        paramEncoderContractid.Append(paramEncoding);
         
-        paramEncoder = do_CreateInstance(paramEncoderProgid);
+        paramEncoder = do_CreateInstance(paramEncoderContractid);
         if (!paramEncoder) return NS_ERROR_INVALID_ARG;
       }
 
@@ -680,11 +680,11 @@ nsSOAPCall::GetTransport(nsISOAPTransport** aTransport)
 
   uri->GetScheme(getter_Copies(protocol));
   
-  nsCAutoString transportProgid;
-  transportProgid.Assign(NS_SOAPTRANSPORT_PROGID_PREFIX);
-  transportProgid.Append(protocol);
+  nsCAutoString transportContractid;
+  transportContractid.Assign(NS_SOAPTRANSPORT_CONTRACTID_PREFIX);
+  transportContractid.Append(protocol);
 
-  nsCOMPtr<nsISOAPTransport> transport = do_CreateInstance(transportProgid);
+  nsCOMPtr<nsISOAPTransport> transport = do_CreateInstance(transportContractid);
   if (!transport) return NS_ERROR_INVALID_ARG;
 
   *aTransport = transport.get();

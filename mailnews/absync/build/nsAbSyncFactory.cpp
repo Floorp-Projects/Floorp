@@ -49,15 +49,15 @@ static nsModuleComponentInfo components[] =
 {
   { "Addressbook Sync",
     NS_ABSYNC_SERVICE_CID,
-    NS_ABSYNC_SERVICE_PROGID,
+    NS_ABSYNC_SERVICE_CONTRACTID,
     nsAbSyncConstructor },
   { "Addressbook Sync Post Engine",
     NS_ABSYNC_POST_ENGINE_CID,
-    NS_ABSYNC_POST_ENGINE_PROGID,
+    NS_ABSYNC_POST_ENGINE_CONTRACTID,
     nsAbSyncPostEngine::Create },
   { "The Address Book Sync Driver", 
     NS_ADDBOOK_SYNCDRIVER_CID,
-    NS_ADDBOOK_SYNCDRIVER_PROGID,
+    NS_ADDBOOK_SYNCDRIVER_CONTRACTID,
     nsAbSyncDriverConstructor }    
 };
 

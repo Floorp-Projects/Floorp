@@ -279,7 +279,7 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
         nsCOMPtr<nsIMsgImapMailFolder> imapFolder =
             do_QueryInterface(dstFolder);
         NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                        NS_MSGACCOUNTMANAGER_PROGID, &rv);
+                        NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;
         PRBool shutdownInProgress = PR_FALSE;
         rv = accountManager->GetShutdownInProgress(&shutdownInProgress);
@@ -473,7 +473,7 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
 
     // get the account manager
     NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                    NS_MSGACCOUNTMANAGER_PROGID, &rv);
+                    NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     // if anyfolder will do, go look for one.

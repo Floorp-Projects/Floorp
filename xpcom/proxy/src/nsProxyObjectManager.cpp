@@ -46,7 +46,7 @@ class nsProxyCreateInstance : public nsIProxyCreateInstance
 {
     NS_DECL_ISUPPORTS
     NS_IMETHOD CreateInstanceByIID(const nsIID & cid, nsISupports *aOuter, const nsIID & iid, void * *result);
-    NS_IMETHOD CreateInstanceByProgID(const char *aProgID, nsISupports *aOuter, const nsIID & iid, void * *result);
+    NS_IMETHOD CreateInstanceByContractID(const char *aContractID, nsISupports *aOuter, const nsIID & iid, void * *result);
 
     nsProxyCreateInstance();
     virtual ~nsProxyCreateInstance();
@@ -73,9 +73,9 @@ NS_IMETHODIMP nsProxyCreateInstance::CreateInstanceByIID(const nsIID & cid, nsIS
 }
 
 
-NS_IMETHODIMP nsProxyCreateInstance::CreateInstanceByProgID(const char *aProgID, nsISupports *aOuter, const nsIID & iid, void * *result)
+NS_IMETHODIMP nsProxyCreateInstance::CreateInstanceByContractID(const char *aContractID, nsISupports *aOuter, const nsIID & iid, void * *result)
 {
-    return nsComponentManager::CreateInstance(  aProgID, 
+    return nsComponentManager::CreateInstance(  aContractID, 
                                                 aOuter,
                                                 iid,
                                                 result);

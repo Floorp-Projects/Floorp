@@ -380,7 +380,7 @@ nsresult nsIMAP4TestDriver::OnIdentityCheck()
 	nsresult result = NS_OK;
 
 	NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                    NS_MSGACCOUNTMANAGER_PROGID, &result);
+                    NS_MSGACCOUNTMANAGER_CONTRACTID, &result);
 
 	if (NS_SUCCEEDED(result) && accountManager)
 	{
@@ -618,7 +618,7 @@ nsresult nsIMAP4TestDriver::OnTestUrlParsing()
 
 	nsIImapUrl * imapUrl = nsnull;
 	
-	nsComponentManager::CreateInstance(kImapUrlCID, nsnull /* progID */, NS_GET_IID(nsIImapUrl), (void **) &imapUrl);
+	nsComponentManager::CreateInstance(kImapUrlCID, nsnull /* contractID */, NS_GET_IID(nsIImapUrl), (void **) &imapUrl);
 	if (imapUrl)
 	{
 		char * urlSpec = nsnull;
@@ -660,7 +660,7 @@ int main()
 	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
 	nsComponentManager::RegisterComponent(kEventQueueCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
-	nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NS_FILELOCATOR_PROGID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+	nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NS_FILELOCATOR_CONTRACTID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 	
 	result = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL /* default */);
 

@@ -193,7 +193,7 @@ nsDll::Init(const char *libPersistentDescriptor)
     nsCOMPtr<nsILocalFile> dllSpec;
     
     nsCID clsid;
-    nsComponentManager::ProgIDToClassID(NS_LOCAL_FILE_PROGID, &clsid);
+    nsComponentManager::ContractIDToClassID(NS_LOCAL_FILE_CONTRACTID, &clsid);
     rv = nsComponentManager::CreateInstance(clsid, nsnull, 
                                             NS_GET_IID(nsILocalFile),
                                             (void**)getter_AddRefs(dllSpec));

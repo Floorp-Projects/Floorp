@@ -1,6 +1,6 @@
 function goQuitApplication()
 {
-	var ObserverService = Components.classes["component://netscape/observer-service"].getService();
+	var ObserverService = Components.classes["@mozilla.org/observer-service;1"].getService();
 	ObserverService = ObserverService.QueryInterface(Components.interfaces.nsIObserverService);
 	if (ObserverService)
 	{
@@ -14,7 +14,7 @@ function goQuitApplication()
 		}
 	}
 	
-	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+	var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
 	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
 	var enumerator = windowManagerInterface.getEnumerator( null );
 
@@ -37,7 +37,7 @@ function goQuitApplication()
 	};
 	
 	// call appshell exit
-	var appShell = Components.classes['component://netscape/appshell/appShellService'].getService();
+	var appShell = Components.classes['@mozilla.org/appshell/appShellService;1'].getService();
 	appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService );
 	appShell.Quit();
 	return true;

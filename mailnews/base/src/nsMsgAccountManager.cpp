@@ -143,7 +143,7 @@ nsMsgAccountManager::~nsMsgAccountManager()
     Shutdown();
 	//Don't remove from Observer service in Shutdown because Shutdown also gets called
 	//from xpcom shutdown observer.  And we don't want to remove from the service in that case.
-	NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+	NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
 	{    
       nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
@@ -165,7 +165,7 @@ nsresult nsMsgAccountManager::Init()
 
   rv = NS_NewISupportsArray(getter_AddRefs(mFolderListeners));
 
-  NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+  NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
   {    
     nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
@@ -335,7 +335,7 @@ nsMsgAccountManager::createKeyedIdentity(const char* key,
 {
   nsresult rv;
   nsCOMPtr<nsIMsgIdentity> identity;
-  rv = nsComponentManager::CreateInstance(NS_MSGIDENTITY_PROGID,
+  rv = nsComponentManager::CreateInstance(NS_MSGIDENTITY_CONTRACTID,
                                           nsnull,
                                           NS_GET_IID(nsIMsgIdentity),
                                           getter_AddRefs(identity));
@@ -446,15 +446,15 @@ nsMsgAccountManager::createKeyedServer(const char* key,
   nsresult rv;
 
   nsCOMPtr<nsIMsgIncomingServer> server;
-  //construct the progid
-  nsCAutoString serverProgID(NS_MSGINCOMINGSERVER_PROGID_PREFIX);
-  serverProgID += type;
+  //construct the contractid
+  nsCAutoString serverContractID(NS_MSGINCOMINGSERVER_CONTRACTID_PREFIX);
+  serverContractID += type;
   
   // finally, create the server
 #ifdef DEBUG_sspitzer_
-  printf("serverProgID = %s\n", (const char *)serverProgID);
+  printf("serverContractID = %s\n", (const char *)serverContractID);
 #endif
-  rv = nsComponentManager::CreateInstance(serverProgID,
+  rv = nsComponentManager::CreateInstance(serverContractID,
                                           nsnull,
                                           NS_GET_IID(nsIMsgIncomingServer),
                                           getter_AddRefs(server));

@@ -41,7 +41,7 @@ interface nsIObserver : nsISupports {
 
 %{C++
 
-#define NS_OBSERVER_PROGID "component://netscape/xpcom/observer"
+#define NS_OBSERVER_CONTRACTID "@mozilla.org/xpcom/observer;1"
 
 #define NS_OBSERVER_CLASSNAME "Observer"
 

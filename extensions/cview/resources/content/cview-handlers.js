@@ -38,7 +38,7 @@ function onLoad()
     cview.rdf.setTreeRoot ("component-list", cview.rdf.resRoot);
     cview.rdf.setTreeRoot ("interface-list", cview.rdf.resRoot);
 
-    onSortCol ("componentcol-progid");
+    onSortCol ("componentcol-contractid");
     onSortCol ("interfacecol-iname");
     
     refreshComponents();
@@ -60,7 +60,7 @@ function onSortCol(sortColName)
      * moment.
      */
     const nsIXULSortService = Components.interfaces.nsIXULSortService;
-    const isupports_uri = "component://netscape/rdf/xul-sort-service";
+    const isupports_uri = "@mozilla.org/rdf/xul-sort-service;1";
     
     var node = document.getElementById(sortColName);
     // determine column resource to sort on
@@ -74,12 +74,12 @@ function onSortCol(sortColName)
 
     switch (sortColName)
     {
-        case "componentcol-progid":
+        case "componentcol-contractid":
             document.getElementById("componentcol-clsid")
                 .setAttribute("sortDirection", "natural");
             break;
         case "componentcol-clsid":
-            document.getElementById("componentcol-progid")
+            document.getElementById("componentcol-contractid")
                 .setAttribute("sortDirection", "natural");
             break;
         case "interfacecol-iname":
@@ -120,11 +120,11 @@ function onSortCol(sortColName)
 
 function onComponentClick(e)
 {
-    cview.lastProgID = e.target.parentNode.getAttribute("progid");
+    cview.lastContractID = e.target.parentNode.getAttribute("contractid");
     
     if (cview.interfaceMode == "implemented-by")
     {
-        cview.interfaceFilter = cview.lastProgID;
+        cview.interfaceFilter = cview.lastContractID;
         filterInterfaces();
     }
 }
@@ -183,7 +183,7 @@ function onChangeDisplayMode (e)
     }
 
     if (ary[2] == "implemented-by")
-        filter = cview.lastProgID;
+        filter = cview.lastContractID;
 
     if (ary[1] == "cmp")
     {

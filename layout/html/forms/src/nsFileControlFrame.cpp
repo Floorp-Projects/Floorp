@@ -276,7 +276,7 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
   nsString title;
   nsFormControlHelper::GetLocalizedString("FileUpload", title);
 
-  nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("component://mozilla/filepicker");
+  nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1");
   if (!filePicker)
     return NS_ERROR_FAILURE;
 
@@ -291,7 +291,7 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
   nsAutoString defaultName;
   GetProperty(nsHTMLAtoms::value, defaultName);
 
-  nsCOMPtr<nsILocalFile> currentFile = do_CreateInstance("component://mozilla/file/local");
+  nsCOMPtr<nsILocalFile> currentFile = do_CreateInstance("@mozilla.org/file/local;1");
   if (currentFile && !defaultName.IsEmpty()) {
     result = currentFile->InitWithUnicodePath(defaultName.GetUnicode());
     if (NS_SUCCEEDED(result)) {

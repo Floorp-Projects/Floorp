@@ -70,7 +70,7 @@ function PREF_onload()
   doSetOKCancel( this.onok, null );
   // create pref object
   try {
-    this.pref = Components.classes["component://netscape/preferences"].getService();
+    this.pref = Components.classes["@mozilla.org/preferences;1"].getService();
     if(this.pref)
       this.pref = this.pref.QueryInterface( Components.interfaces.nsIPref );
   }

@@ -138,7 +138,7 @@ nsFSStringConversion::PrepareFSCharset()
    if(mFSCharset.Length() == 0)
    { 
      // lazy eval of the file system charset
-     NS_WITH_SERVICE(nsIPlatformCharset, pcharset, NS_PLATFORMCHARSET_PROGID, &res);
+     NS_WITH_SERVICE(nsIPlatformCharset, pcharset, NS_PLATFORMCHARSET_CONTRACTID, &res);
      if (!(NS_SUCCEEDED(res) && pcharset)) {
        NS_WARNING("cannot get platform charset");
      }
@@ -160,7 +160,7 @@ nsFSStringConversion::PrepareEncoder()
        res = PrepareFSCharset();
        if(NS_SUCCEEDED(res)) {
            NS_WITH_SERVICE(nsICharsetConverterManager,
-                ucmgr, NS_CHARSETCONVERTERMANAGER_PROGID, &res);
+                ucmgr, NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
            NS_ASSERTION((NS_SUCCEEDED(res) && ucmgr), 
                    "cannot get charset converter manager ");
            if(NS_SUCCEEDED(res) && ucmgr) 
@@ -183,7 +183,7 @@ nsFSStringConversion::PrepareDecoder()
        res = PrepareFSCharset();
        if(NS_SUCCEEDED(res)) {
            NS_WITH_SERVICE(nsICharsetConverterManager,
-                ucmgr, NS_CHARSETCONVERTERMANAGER_PROGID, &res);
+                ucmgr, NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
            NS_ASSERTION((NS_SUCCEEDED(res) && ucmgr), 
                    "cannot get charset converter manager ");
            if(NS_SUCCEEDED(res) && ucmgr) 

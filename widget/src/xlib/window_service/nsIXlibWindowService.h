@@ -43,7 +43,7 @@
     0x11d3,                        \
     { 0xae, 0xb9, 0x00, 0x00, 0xf8, 0xe2, 0x5c, 0x06 } }
 
-#define NS_XLIB_WINDOW_SERVICE_PROGID "component://netscape/widget/xlib/window_service"
+#define NS_XLIB_WINDOW_SERVICE_CONTRACTID "@mozilla.org/widget/xlib/window_service;1"
 
 typedef void (*nsXlibWindowCallback)(PRUint32 aWindowID);
 

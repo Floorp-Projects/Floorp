@@ -26,7 +26,7 @@
 // get the current identity from the UI
 var identityElement;
 
-var accountManager = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
+var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
 
     
 var AddressAutoCompleteListener = {
@@ -69,7 +69,7 @@ function AutoCompleteAddress(inputElement)
 		return;
 	}
 	
-	var ac = Components.classes['component://netscape/messenger/autocomplete&type=addrbook'];
+	var ac = Components.classes['@mozilla.org/messenger/autocomplete;1?type=addrbook'];
 	if (ac) {
 		ac = ac.getService();
 	}       

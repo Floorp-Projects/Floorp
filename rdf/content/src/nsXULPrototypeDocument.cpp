@@ -327,7 +327,7 @@ nsXULPrototypeDocument::GetDocumentPrincipal(nsIPrincipal** aResult)
         nsresult rv;
         NS_WITH_SERVICE(nsIScriptSecurityManager,
                         securityManager,
-                        NS_SCRIPTSECURITYMANAGER_PROGID,
+                        NS_SCRIPTSECURITYMANAGER_CONTRACTID,
                         &rv);
 
         if (NS_FAILED(rv))

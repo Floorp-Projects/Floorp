@@ -4927,7 +4927,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
       if (fileObj && len > 0)
       {
         nsCOMPtr<nsIFileURL> fileURL;
-        rv = nsComponentManager::CreateInstance("component://netscape/network/standard-url", nsnull, 
+        rv = nsComponentManager::CreateInstance("@mozilla.org/network/standard-url;1", nsnull, 
                                      NS_GET_IID(nsIURL), getter_AddRefs(fileURL));
         if (NS_FAILED(rv))
           return rv;
@@ -5006,7 +5006,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   ForceCompositionEnd();
   
   nsresult rv;
-  NS_WITH_SERVICE(nsIDragService, dragService, "component://netscape/widget/dragservice", &rv);
+  NS_WITH_SERVICE(nsIDragService, dragService, "@mozilla.org/widget/dragservice;1", &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
@@ -5231,7 +5231,7 @@ NS_IMETHODIMP nsHTMLEditor::DoDrag(nsIDOMEvent *aDragEvent)
     return NS_ERROR_OUT_OF_MEMORY;
 
   /* get the drag service */
-  NS_WITH_SERVICE(nsIDragService, dragService, "component://netscape/widget/dragservice", &rv);
+  NS_WITH_SERVICE(nsIDragService, dragService, "@mozilla.org/widget/dragservice;1", &rv);
   if (NS_FAILED(rv)) return rv;
 
   /* create xif flavor transferable */
@@ -5261,7 +5261,7 @@ NS_IMETHODIMP nsHTMLEditor::DoDrag(nsIDOMEvent *aDragEvent)
       if (!xifConverter) return NS_ERROR_OUT_OF_MEMORY;
 
       nsCOMPtr<nsISupportsWString> dataWrapper;
-      rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull,
+      rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, nsnull,
                                               NS_GET_IID(nsISupportsWString), getter_AddRefs(dataWrapper));
       if (NS_FAILED(rv)) return rv;
       if ( !dataWrapper ) return NS_ERROR_OUT_OF_MEMORY;
@@ -5341,7 +5341,7 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool &aCanPaste)
   char* htmlEditorFlavors[] = { kJPEGImageMime, kHTMLMime, nsnull };
 
   nsCOMPtr<nsISupportsArray> flavorsList;
-  rv = nsComponentManager::CreateInstance(NS_SUPPORTSARRAY_PROGID, nsnull, 
+  rv = nsComponentManager::CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, nsnull, 
          NS_GET_IID(nsISupportsArray), getter_AddRefs(flavorsList));
   if (NS_FAILED(rv)) return rv;
   
@@ -5352,7 +5352,7 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool &aCanPaste)
   for (char** flavor = textEditorFlavors; *flavor; flavor++)
   {
     nsCOMPtr<nsISupportsString> flavorString;            
-    nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
+    nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 
          NS_GET_IID(nsISupportsString), getter_AddRefs(flavorString));
     if (flavorString)
     {
@@ -5367,7 +5367,7 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool &aCanPaste)
     for (char** htmlFlavor = htmlEditorFlavors; *htmlFlavor; htmlFlavor++)
     {
       nsCOMPtr<nsISupportsString> flavorString;            
-      nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
+      nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 
            NS_GET_IID(nsISupportsString), getter_AddRefs(flavorString));
       if (flavorString)
       {
@@ -5751,7 +5751,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsAWritableString& aOutputString,
       nsresult rv = NS_OK;
 
       nsCOMPtr<nsIDocumentEncoder> encoder;
-      nsCAutoString formatType(NS_DOC_ENCODER_PROGID_BASE);
+      nsCAutoString formatType(NS_DOC_ENCODER_CONTRACTID_BASE);
       formatType.AppendWithConversion(aFormatType);
       rv = nsComponentManager::CreateInstance(formatType,
                                               nsnull,
@@ -5852,19 +5852,19 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsAWritableString& aOutputString,
 
 
     nsCOMPtr<nsIDocumentEncoder> encoder;
-    char* progid = (char *)nsMemory::Alloc(strlen(NS_DOC_ENCODER_PROGID_BASE) + aFormatType.Length() + 1);
-    if (! progid)
+    char* contractid = (char *)nsMemory::Alloc(strlen(NS_DOC_ENCODER_CONTRACTID_BASE) + aFormatType.Length() + 1);
+    if (! contractid)
       return NS_ERROR_OUT_OF_MEMORY;
-    strcpy(progid, NS_DOC_ENCODER_PROGID_BASE);
+    strcpy(contractid, NS_DOC_ENCODER_CONTRACTID_BASE);
     char* type = aFormatType.ToNewCString();
-    strcat(progid, type);
+    strcat(contractid, type);
     nsCRT::free(type);
-    rv = nsComponentManager::CreateInstance(progid,
+    rv = nsComponentManager::CreateInstance(contractid,
                                             nsnull,
                                             NS_GET_IID(nsIDocumentEncoder),
                                             getter_AddRefs(encoder));
 
-    nsCRT::free(progid);
+    nsCRT::free(contractid);
     if (NS_FAILED(rv))
       return rv;
 
@@ -5932,23 +5932,23 @@ NS_IMETHODIMP nsHTMLEditor::OutputToStream(nsIOutputStream* aOutputStream,
   }
 
   nsCOMPtr<nsIDocumentEncoder> encoder;
-  char* progid = (char *)nsMemory::Alloc(strlen(NS_DOC_ENCODER_PROGID_BASE) + aFormatType.Length() + 1);
-  if (! progid)
+  char* contractid = (char *)nsMemory::Alloc(strlen(NS_DOC_ENCODER_CONTRACTID_BASE) + aFormatType.Length() + 1);
+  if (! contractid)
       return NS_ERROR_OUT_OF_MEMORY;
 
-  strcpy(progid, NS_DOC_ENCODER_PROGID_BASE);
+  strcpy(contractid, NS_DOC_ENCODER_CONTRACTID_BASE);
   char* type = aFormatType.ToNewCString();
-  strcat(progid, type);
+  strcat(contractid, type);
   nsCRT::free(type);
-  rv = nsComponentManager::CreateInstance(progid,
+  rv = nsComponentManager::CreateInstance(contractid,
                                           nsnull,
                                           NS_GET_IID(nsIDocumentEncoder),
                                           getter_AddRefs(encoder));
 
-  nsCRT::free(progid);
+  nsCRT::free(contractid);
   if (NS_FAILED(rv))
   {
-    printf("Couldn't get progid %s\n", progid);
+    printf("Couldn't get contractid %s\n", contractid);
     return rv;
   }
 

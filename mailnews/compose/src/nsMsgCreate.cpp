@@ -200,7 +200,7 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const PRUnichar *msgURI, nsMimeOutpu
   // HACK: if we are forwarding a message and that message used a charset over ride
   // (as speciifed in the top most window (assuming the reply originated from that window)
   // then use that over ride charset instead of the charset specified in the message
-	nsCOMPtr <nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_PROGID);          
+	nsCOMPtr <nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID);          
   nsXPIDLString mailCharset;
   if (mailSession)
   {

@@ -451,7 +451,7 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
  */
   rv = prefs->GetBoolPref(PREF_MAIL_ALLOW_AT_SIGN_IN_USER_NAME, &m_allow_at_sign_in_mail_user_name);
 
-  mStringService = do_GetService(NS_MSG_POPSTRINGSERVICE_PROGID);
+  mStringService = do_GetService(NS_MSG_POPSTRINGSERVICE_CONTRACTID);
   return rv;
 }
 

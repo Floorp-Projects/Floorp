@@ -854,7 +854,7 @@ nsNntpService::CreateNewsAccount(const char *username, const char *hostname, PRB
 	// username can be null.
 	if (!hostname || !server) return NS_ERROR_NULL_POINTER;
 	
-	nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_PROGID, &rv);
+	nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
 	if (NS_FAILED(rv)) return rv;
 	if (!accountManager) return NS_ERROR_FAILURE;
 
@@ -910,7 +910,7 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
   rv = aUri->GetScheme(getter_Copies(scheme));
   rv = aUri->GetPort(&port);
 
-  nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_PROGID, &rv);
+  nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
   if (!accountManager) return NS_ERROR_FAILURE;
 
@@ -1427,7 +1427,7 @@ nsNntpService::BuildSubscribeDatasource(nsINntpIncomingServer *aNntpServer, nsIM
 	return NS_OK;
 }
 
-CMDLINEHANDLER3_IMPL(nsNntpService,"-news","general.startup.news","Start with news.",NS_NEWSSTARTUPHANDLER_PROGID,"News Cmd Line Handler", PR_FALSE,"", PR_TRUE)
+CMDLINEHANDLER3_IMPL(nsNntpService,"-news","general.startup.news","Start with news.",NS_NEWSSTARTUPHANDLER_CONTRACTID,"News Cmd Line Handler", PR_FALSE,"", PR_TRUE)
 
 NS_IMETHODIMP nsNntpService::GetChromeUrlForTask(char **aChromeUrlForTask) 
 { 
@@ -1467,7 +1467,7 @@ nsNntpService::HandleContent(const char * aContentType, const char * aCommand, c
 	  if (NS_FAILED(rv)) return rv;
 
       if (uri) { 	
-		nsCOMPtr <nsIMessengerWindowService> messengerWindowService = do_GetService(NS_MESSENGERWINDOWSERVICE_PROGID,&rv);
+		nsCOMPtr <nsIMessengerWindowService> messengerWindowService = do_GetService(NS_MESSENGERWINDOWSERVICE_CONTRACTID,&rv);
 		if (NS_FAILED(rv)) return rv;
 
 		rv = messengerWindowService->OpenMessengerWindowWithUri(uri);

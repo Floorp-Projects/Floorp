@@ -37,12 +37,12 @@
 const DEBUG = false; /* set to false to suppress debug messages */
 const PANELS_RDF_FILE  = "UPnls"; /* directory services property to find panels.rdf */
 
-const SIDEBAR_PROGID   = "component://mozilla/sidebar";
+const SIDEBAR_CONTRACTID   = "@mozilla.org/sidebar;1";
 const SIDEBAR_CID      = Components.ID("{22117140-9c6e-11d3-aaf1-00805f8a4905}");
-const CONTAINER_PROGID = "component://netscape/rdf/container";
-const DIR_SERV_PROGID  = "component://netscape/file/directory_service"
-const STD_URL_PROGID   = "component://netscape/network/standard-url"
-const NETSEARCH_PROGID = "component://netscape/rdf/datasource?name=internetsearch"
+const CONTAINER_CONTRACTID = "@mozilla.org/rdf/container;1";
+const DIR_SERV_CONTRACTID  = "@mozilla.org/file/directory_service;1"
+const STD_URL_CONTRACTID   = "@mozilla.org/network/standard-url;1"
+const NETSEARCH_CONTRACTID = "@mozilla.org/rdf/datasource;1?name=internetsearch"
 const nsISupports      = Components.interfaces.nsISupports;
 const nsIFactory       = Components.interfaces.nsIFactory;
 const nsISidebar       = Components.interfaces.nsISidebar;
@@ -55,10 +55,10 @@ const nsISecurityCheckedComponent = Components.interfaces.nsISecurityCheckedComp
 
 function nsSidebar()
 {
-    const RDF_PROGID = "component://netscape/rdf/rdf-service";
+    const RDF_CONTRACTID = "@mozilla.org/rdf/rdf-service;1";
     const nsIRDFService = Components.interfaces.nsIRDFService;
     
-    this.rdf = Components.classes[RDF_PROGID].getService(nsIRDFService);
+    this.rdf = Components.classes[RDF_CONTRACTID].getService(nsIRDFService);
     this.datasource_uri = getSidebarDatasourceURI(PANELS_RDF_FILE);
     debug('datasource_uri is ' + this.datasource_uri);
     this.resource = 'urn:sidebar:current-panel-list';
@@ -77,7 +77,7 @@ nsSidebar.prototype.isPanel =
 function (aContentURL)
 {
     var container = 
-        Components.classes[CONTAINER_PROGID].createInstance(nsIRDFContainer);
+        Components.classes[CONTAINER_CONTRACTID].createInstance(nsIRDFContainer);
 
     container.Init(this.datasource, this.rdf.GetResource(this.resource));
     
@@ -112,7 +112,7 @@ function (aTitle, aContentURL, aCustomizeURL)
         debug("Sidebar datasource is busted\n");
   }
 
-    var container = Components.classes[CONTAINER_PROGID].createInstance(nsIRDFContainer);
+    var container = Components.classes[CONTAINER_CONTRACTID].createInstance(nsIRDFContainer);
     container.Init(this.datasource, panel_list);
 
     /* Create a resource for the new panel and add it to the list */
@@ -135,7 +135,7 @@ function (aTitle, aContentURL, aCustomizeURL)
             dialogMessage = aContentURL + " already exists in My Sidebar.";
         }
           
-        var cDlgService = Components.classes["component://netscape/appshell/commonDialogs"].getService();
+        var cDlgService = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
         if (cDlgService) 
             cDlgService = cDlgService.QueryInterface(Components.interfaces.nsICommonDialogs);
         cDlgService.Alert(this.window, titleMessage, dialogMessage);
@@ -159,7 +159,7 @@ function (aTitle, aContentURL, aCustomizeURL)
         dialogMessage = "Add the Tab '" + aTitle + "' to My Sidebar?\n\n" + "Source: " + aContentURL;
     }
           
-    var cDlgService = Components.classes["component://netscape/appshell/commonDialogs"].getService();
+    var cDlgService = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
     if (cDlgService) 
         cDlgService = cDlgService.QueryInterface(Components.interfaces.nsICommonDialogs);
     var rv = cDlgService.Confirm(this.window, titleMessage, dialogMessage);
@@ -268,7 +268,7 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
         dialogMessage += "\nSource: " + engineURL;
     }
           
-    var cDlgService = Components.classes["component://netscape/appshell/commonDialogs"].getService();
+    var cDlgService = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
     if (cDlgService) 
         cDlgService = cDlgService.QueryInterface(Components.interfaces.nsICommonDialogs);
     var rv = cDlgService.Confirm(this.window, titleMessage, dialogMessage);
@@ -276,7 +276,7 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
     if (!rv)
         return;
 
-    var internetSearch = Components.classes[NETSEARCH_PROGID].getService();
+    var internetSearch = Components.classes[NETSEARCH_CONTRACTID].getService();
     if (internetSearch)	
         internetSearch = internetSearch.QueryInterface(nsIInternetSearchService);
     if (internetSearch)
@@ -333,7 +333,7 @@ function (compMgr, fileSpec, location, type)
 {
     debug("registering (all right -- a JavaScript module!)");
     compMgr.registerComponentWithType(SIDEBAR_CID, "Sidebar JS Component",
-                                      SIDEBAR_PROGID, fileSpec, location,
+                                      SIDEBAR_CONTRACTID, fileSpec, location,
                                       true, true, type);
 }
 
@@ -385,7 +385,7 @@ function getSidebarDatasourceURI(panels_file_id)
         /* use the fileLocator to look in the profile directory 
          * to find 'panels.rdf', which is the
          * database of the user's currently selected panels. */
-        var directory_service = Components.classes[DIR_SERV_PROGID].getService();
+        var directory_service = Components.classes[DIR_SERV_CONTRACTID].getService();
         if (directory_service)
             directory_service = directory_service.QueryInterface(Components.interfaces.nsIProperties);
 
@@ -401,7 +401,7 @@ function getSidebarDatasourceURI(panels_file_id)
             return null;
         }
 
-        var file_url = Components.classes[STD_URL_PROGID].createInstance(Components.interfaces.nsIFileURL);
+        var file_url = Components.classes[STD_URL_CONTRACTID].createInstance(Components.interfaces.nsIFileURL);
         file_url.file = sidebar_file;
 
         debug("sidebar uri is " + file_url.spec);
@@ -417,10 +417,10 @@ function getSidebarDatasourceURI(panels_file_id)
 
 function getStringBundle(aURL) 
 {
-  var stringBundleService = Components.classes["component://netscape/intl/stringbundle"].getService();
+  var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService();
   stringBundleService = stringBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
   var appLocale;
-  var localeService = Components.classes["component://netscape/intl/nslocaleservice"].getService();
+  var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"].getService();
   if (localeService)
     localeService = localeService.QueryInterface(Components.interfaces.nsILocaleService);
   if (localeService)

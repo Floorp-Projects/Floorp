@@ -41,7 +41,7 @@ function validate() {
    */
   var pageData = parent.GetPageData();
   var serverType = parent.getCurrentServerType(pageData);
-  var protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + serverType].getService(Components.interfaces.nsIMsgProtocolInfo);
+  var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + serverType].getService(Components.interfaces.nsIMsgProtocolInfo);
   if (!protocolinfo.requiresUsername) {
     var userName = parent.getCurrentUserName(pageData);
     var hostName = servername.value;

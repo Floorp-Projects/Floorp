@@ -74,12 +74,12 @@ protected:
     nsresult RegistryNameForLib(const char *aLibName, char **aRegistryName);
     nsresult RegisterComponentCommon(const nsCID &aClass,
                                      const char *aClassName,
-                                     const char *aProgID,
+                                     const char *aContractID,
                                      const char *aRegistryName,
                                      PRBool aReplace, PRBool aPersist,
                                      const char *aType);
     nsresult AddComponentToRegistry(const nsCID &aCID, const char *aClassName,
-                                    const char *aProgID,
+                                    const char *aContractID,
                                     const char *aRegistryName,
                                     const char *aType);
     nsresult GetLoaderForType(const char *aType, 
@@ -91,25 +91,25 @@ protected:
     nsresult SyncComponentsInDir(PRInt32 when, nsIFile *dirSpec);
     nsresult SelfRegisterDll(nsDll *dll);
     nsresult SelfUnregisterDll(nsDll *dll);
-    nsresult HashProgID(const char *aprogID, const nsCID &aClass);
+    nsresult HashContractID(const char *acontractID, const nsCID &aClass);
     nsresult UnloadLibraries(nsIServiceManager *servmgr, PRInt32 when);
 
     // The following functions are the only ones that operate on the persistent
     // registry
     nsresult PlatformInit(void);
     nsresult PlatformVersionCheck(nsRegistryKey *aXPCOMRootKey);
-    nsresult PlatformRegister(const char *cidString, const char *className, const char *progID, nsDll *dll);
+    nsresult PlatformRegister(const char *cidString, const char *className, const char *contractID, nsDll *dll);
     nsresult PlatformUnregister(const char *cidString, const char *aLibrary);
     nsresult PlatformFind(const nsCID &aCID, nsFactoryEntry* *result);
-    nsresult PlatformProgIDToCLSID(const char *aProgID, nsCID *aClass);
-    nsresult PlatformCLSIDToProgID(const nsCID *aClass, char* *aClassName, char* *aProgID);
+    nsresult PlatformContractIDToCLSID(const char *aContractID, nsCID *aClass);
+    nsresult PlatformCLSIDToContractID(const nsCID *aClass, char* *aClassName, char* *aContractID);
 
 private:
     nsresult AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec);
 
 protected:
     nsObjectHashtable*  mFactories;
-    nsObjectHashtable*  mProgIDs;
+    nsObjectHashtable*  mContractIDs;
     nsSupportsHashtable*  mLoaders;
     PRMonitor*          mMon;
     nsRegistry*         mRegistry;

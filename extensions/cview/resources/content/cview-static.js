@@ -74,7 +74,7 @@ function refreshComponentsStep()
             break;
             
         var res = cview.rdf.GetResource ("component:" + (++cview.componentID));
-        cview.rdf.Assert (res, cview.rdf.resProgID,
+        cview.rdf.Assert (res, cview.rdf.resContractID,
                           cview.rdf.GetLiteral(cls.name));
         cview.rdf.Assert (res, cview.rdf.resCLSID,
                           cview.rdf.GetLiteral(cls.id));
@@ -212,7 +212,7 @@ function filterComponents()
     while (cmps.hasMoreElements())
     {
         var cmpNode = cmps.getNext().QueryInterface(nsIRDFResource);
-        var cmpName = cview.rdf.GetTarget(cmpNode, cview.rdf.resProgID);
+        var cmpName = cview.rdf.GetTarget(cmpNode, cview.rdf.resContractID);
         if (cmpName)
         {
             cmpName = cmpName.QueryInterface(nsIRDFLiteral);

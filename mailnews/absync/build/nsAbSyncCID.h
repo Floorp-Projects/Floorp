@@ -35,8 +35,8 @@
     0x3c21bb39, 0xa87, 0x11d4,                      \
   { 0x8f, 0xd6, 0x0, 0xa0, 0x24, 0xa7, 0xd1, 0x44 } }
 
-#define NS_ABSYNC_SERVICE_PROGID			\
-  "component://netscape/absync"
+#define NS_ABSYNC_SERVICE_CONTRACTID			\
+  "@mozilla.org/absync;1"
 
 //
 // Ab Sync Listener
@@ -46,8 +46,8 @@
     0x3c21bb44, 0xa87, 0x11d4,                      \
   { 0x8f, 0xd6, 0x0, 0xa0, 0x24, 0xa7, 0xd1, 0x44 } }
 
-#define NS_ABSYNC_LISTENER_PROGID			\
-  "component://netscape/absync/listener"
+#define NS_ABSYNC_LISTENER_CONTRACTID			\
+  "@mozilla.org/absync/listener;1"
 
 //
 // Ab Sync Post Engine
@@ -57,8 +57,8 @@
     0x3c21bb9f, 0xa87, 0x11d4,                      \
   { 0x8f, 0xd6, 0x0, 0xa0, 0x24, 0xa7, 0xd1, 0x44 } }
 
-#define NS_ABSYNC_POST_ENGINE_PROGID			\
-  "component://netscape/absync/postengine"
+#define NS_ABSYNC_POST_ENGINE_CONTRACTID			\
+  "@mozilla.org/absync/postengine;1"
 
 
 //
@@ -69,14 +69,14 @@
     0x3c21bbcc, 0xa87, 0x11d4,                      \
   { 0x8f, 0xd6, 0x0, 0xa0, 0x24, 0xa7, 0xd1, 0x44 } }
 
-#define NS_ABSYNC_POST_LISTENER_PROGID			\
-  "component://netscape/absync/postlistener"
+#define NS_ABSYNC_POST_LISTENER_CONTRACTID			\
+  "@mozilla.org/absync/postlistener;1"
   
 //
 // Sync Driver
 //
-#define NS_ADDBOOK_SYNCDRIVER_PROGID \
-  "component://netscape/addressbook/services/syncdriver"
+#define NS_ADDBOOK_SYNCDRIVER_CONTRACTID \
+  "@mozilla.org/addressbook/services/syncdriver;1"
 #define NS_ADDBOOK_SYNCDRIVER_CID \
 {	/* 40D1D3DA-1637-11d4-8FE1-00A024A7D144 */		    \
   0x40d1d3da, 0x1637, 0x11d4,                       \

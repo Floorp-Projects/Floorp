@@ -30,11 +30,11 @@
 //
 // nsAddressBook
 //
-#define NS_ADDRESSBOOK_PROGID \
-  "component://netscape/addressbook"
+#define NS_ADDRESSBOOK_CONTRACTID \
+  "@mozilla.org/addressbook;1"
 
-#define NS_ADDRESSBOOKSTARTUPHANDLER_PROGID \
-  "component://netscape/commandlinehandler/general-startup-addressbook"
+#define NS_ADDRESSBOOKSTARTUPHANDLER_CONTRACTID \
+  "@mozilla.org/commandlinehandler/general-startup;1?type=addressbook"
 
 #define NS_ADDRESSBOOK_CID							\
 { /* {D60B84F2-2A8C-11d3-9E07-00A0C92B5F0D} */		\
@@ -45,8 +45,8 @@
 //
 // nsAbDirectoryDataSource
 //
-#define NS_ABDIRECTORYDATASOURCE_PROGID \
-  NS_RDF_DATASOURCE_PROGID_PREFIX "addressdirectory"
+#define NS_ABDIRECTORYDATASOURCE_CONTRACTID \
+  NS_RDF_DATASOURCE_CONTRACTID_PREFIX "addressdirectory"
 
 #define NS_ABDIRECTORYDATASOURCE_CID				\
 { /* 0A79186D-F754-11d2-A2DA-001083003D0C */		\
@@ -57,8 +57,8 @@
 //
 // nsAbDirectory
 //
-#define NS_ABDIRECTORY_PROGID \
-  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "abdirectory"
+#define NS_ABDIRECTORY_CONTRACTID \
+  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "abdirectory"
 
 #define NS_ABDIRECTORY_CID                  \
 { /* {6C21831D-FCC2-11d2-A2E2-001083003D0C}*/		\
@@ -69,8 +69,8 @@
 //
 // nsAbCardDataSource
 //
-#define NS_ABCARDDATASOURCE_PROGID \
-  NS_RDF_DATASOURCE_PROGID_PREFIX "addresscard"
+#define NS_ABCARDDATASOURCE_CONTRACTID \
+  NS_RDF_DATASOURCE_CONTRACTID_PREFIX "addresscard"
 
 #define NS_ABCARDDATASOURCE_CID						\
 { /* 1920E486-0709-11d3-A2EC-001083003D0C */		\
@@ -81,8 +81,8 @@
 //
 // nsAbCard
 //
-#define NS_ABCARD_PROGID \
-  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "abcard"
+#define NS_ABCARD_CONTRACTID \
+  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "abcard"
 
 #define NS_ABCARD_CID						\
 { /* {1920E487-0709-11d3-A2EC-001083003D0C}*/		\
@@ -93,8 +93,8 @@
 //
 // nsAddressBookDB
 //
-#define NS_ADDRDATABASE_PROGID \
-  "component://netscape/addressbook/carddatabase"
+#define NS_ADDRDATABASE_CONTRACTID \
+  "@mozilla.org/addressbook/carddatabase;1"
 
 #define NS_ADDRDATABASE_CID						\
 { /* 63187917-1D19-11d3-A302-001083003D0C */		\
@@ -105,8 +105,8 @@
 //
 // nsAbCardProperty
 //
-#define NS_ABCARDPROPERTY_PROGID \
-  "component://netscape/addressbook/cardproperty"
+#define NS_ABCARDPROPERTY_CONTRACTID \
+  "@mozilla.org/addressbook/cardproperty;1"
 #define NS_ABCARDPROPERTY_CID						\
 { /* 2B722171-2CEA-11d3-9E0B-00A0C92B5F0D */		\
     0x2b722171, 0x2cea, 0x11d3,						\
@@ -116,8 +116,8 @@
 //
 // nsAddrBookSession
 //
-#define NS_ADDRBOOKSESSION_PROGID \
-  "component://netscape/addressbook/services/session"
+#define NS_ADDRBOOKSESSION_CONTRACTID \
+  "@mozilla.org/addressbook/services/session;1"
 
 #define NS_ADDRBOOKSESSION_CID						\
 { /* C5339442-303F-11d3-9E13-00A0C92B5F0D */		\
@@ -128,8 +128,8 @@
 //
 // nsAbDirProperty
 //
-#define NS_ABDIRPROPERTY_PROGID \
-  "component://netscape/addressbook/directoryproperty"
+#define NS_ABDIRPROPERTY_CONTRACTID \
+  "@mozilla.org/addressbook/directoryproperty;1"
 #define NS_ABDIRPROPERTY_CID						\
 { /* 6FD8EC67-3965-11d3-A316-001083003D0C */		\
     0x6fd8ec67, 0x3965, 0x11d3,						\
@@ -139,8 +139,8 @@
 //
 // nsAbAutoCompleteSession
 //
-#define NS_ABAUTOCOMPLETESESSION_PROGID \
-  "component://netscape/autocompleteSession&type=addrbook"
+#define NS_ABAUTOCOMPLETESESSION_CONTRACTID \
+  "@mozilla.org/autocompleteSession;1?type=addrbook"
 #define NS_ABAUTOCOMPLETESESSION_CID				\
 { /* 138DE9BD-362B-11d3-988E-001083010E9B */		\
     0x138de9bd, 0x362b, 0x11d3,						\
@@ -150,16 +150,16 @@
 //
 // nsAbAddressCollecter
 //
-#define NS_ABADDRESSCOLLECTER_PROGID \
-  "component://netscape/addressbook/services/addressCollecter"
+#define NS_ABADDRESSCOLLECTER_CONTRACTID \
+  "@mozilla.org/addressbook/services/addressCollecter;1"
 #define NS_ABADDRESSCOLLECTER_CID \
 {	/* fe04c8e6-501e-11d3-a527-0060b0fc04b7 */		\
 	0xfe04c8e6, 0x501e, 0x11d3,						\
 	{0xa5, 0x27, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0xb7}	\
 }
 
-#define NS_AB4xUPGRADER_PROGID \
-	"component://netscape/addressbook/services/4xUpgrader"
+#define NS_AB4xUPGRADER_CONTRACTID \
+	"@mozilla.org/addressbook/services/4xUpgrader;1"
 #define NS_AB4xUPGRADER_CID \
 {	/* 0a6ae8e6-f550-11d3-a563-0060b0fc04b7 */		\
 	0x0a6ae8e6, 0xf550, 0x11d3,						\
@@ -169,8 +169,8 @@
 //
 // addbook URL
 //
-#define NS_ADDBOOKURL_PROGID \
-  "component://netscape/addressbook/services/addbookurl"
+#define NS_ADDBOOKURL_CONTRACTID \
+  "@mozilla.org/addressbook/services/addbookurl;1"
 #define NS_ADDBOOKURL_CID \
 {	/* ff04c8e6-501e-11d3-a527-0060b0fc0444 */		\
 	0xff04c8e6, 0x501e, 0x11d3,						\
@@ -180,8 +180,8 @@
 //
 // addbook Protocol Handler
 //
-#define NS_ADDBOOK_HANDLER_PROGID \
-  "component://netscape/addressbook/services/addbook"
+#define NS_ADDBOOK_HANDLER_CONTRACTID \
+  "@mozilla.org/addressbook/services/addbook;1"
 #define NS_ADDBOOK_HANDLER_CID \
 {	/* ff04c8e6-501e-11d3-ffcc-0060b0fc0444 */		\
 	0xff04c8e6, 0x501e, 0x11d3,						\

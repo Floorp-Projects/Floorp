@@ -36,19 +36,19 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsOSHelperAppService)
 
 ////////////////////////////////////////////////////////////////////////
 // Define a table of CIDs implemented by this module along with other
-// information like the function to create an instance, progid, and
+// information like the function to create an instance, contractid, and
 // class name.
 //
 static nsModuleComponentInfo components[] = {
-  { "Netscape URI Loader Service", NS_URI_LOADER_CID, NS_URI_LOADER_PROGID, nsURILoaderConstructor, },
-  { "Netscape Doc Loader", NS_DOCUMENTLOADER_CID, NS_DOCUMENTLOADER_PROGID, nsDocLoaderImplConstructor, },
-  { "Netscape Doc Loader Service", NS_DOCUMENTLOADER_SERVICE_CID, NS_DOCUMENTLOADER_SERVICE_PROGID, 
+  { "Netscape URI Loader Service", NS_URI_LOADER_CID, NS_URI_LOADER_CONTRACTID, nsURILoaderConstructor, },
+  { "Netscape Doc Loader", NS_DOCUMENTLOADER_CID, NS_DOCUMENTLOADER_CONTRACTID, nsDocLoaderImplConstructor, },
+  { "Netscape Doc Loader Service", NS_DOCUMENTLOADER_SERVICE_CID, NS_DOCUMENTLOADER_SERVICE_CONTRACTID, 
      nsDocLoaderImplConstructor, },
-  { "Netscape External Helper App Service", NS_EXTERNALHELPERAPPSERVICE_CID, NS_EXTERNALHELPERAPPSERVICE_PROGID, 
+  { "Netscape External Helper App Service", NS_EXTERNALHELPERAPPSERVICE_CID, NS_EXTERNALHELPERAPPSERVICE_CONTRACTID, 
      nsOSHelperAppServiceConstructor, },
-  { "Netscape External Helper App Service", NS_EXTERNALHELPERAPPSERVICE_CID, NS_EXTERNALPROTOCOLSERVICE_PROGID, 
+  { "Netscape External Helper App Service", NS_EXTERNALHELPERAPPSERVICE_CID, NS_EXTERNALPROTOCOLSERVICE_CONTRACTID, 
      nsOSHelperAppServiceConstructor, },
-  { "Netscape Mime Mapping Service", NS_EXTERNALHELPERAPPSERVICE_CID, NS_MIMESERVICE_PROGID, 
+  { "Netscape Mime Mapping Service", NS_EXTERNALHELPERAPPSERVICE_CID, NS_MIMESERVICE_CONTRACTID, 
      nsOSHelperAppServiceConstructor, }  
 };
 

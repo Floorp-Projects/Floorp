@@ -143,7 +143,7 @@ nsresult
 nsXIFFormatConverter :: AddFlavorToList ( nsISupportsArray* inList, const char* inFlavor )
 {
   nsCOMPtr<nsISupportsString> dataFlavor;
-  nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
+  nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 
                                                     NS_GET_IID(nsISupportsString), getter_AddRefs(dataFlavor));
   if ( dataFlavor ) {
     dataFlavor->SetData ( NS_CONST_CAST(char*, inFlavor) );
@@ -288,7 +288,7 @@ nsXIFFormatConverter::ConvertFromXIFToText(const nsAutoString & aFromStr, nsCAut
   static PRBool hasDeterminedCharset = PR_FALSE;
   if ( !hasDeterminedCharset ) {
     nsresult res;
-    nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_PROGID, &res);
+    nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
     if (NS_SUCCEEDED(res))
       res = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
     if (NS_FAILED(res))

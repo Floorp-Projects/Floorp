@@ -1277,7 +1277,7 @@ NS_IMETHODIMP nsImapUrl::GetFolderCharset(PRUnichar ** aCharacterSet)
   nsXPIDLCString uri;
   GetUri(getter_Copies(uri));
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIRDFService> rdfService = do_GetService(NS_RDF_PROGID "/rdf-service"); 
+  nsCOMPtr<nsIRDFService> rdfService = do_GetService(NS_RDF_CONTRACTID "/rdf-service;1"); 
   nsCOMPtr<nsIRDFResource> resource;
   rdfService->GetResource(uri, getter_AddRefs(resource));
 

@@ -39,7 +39,7 @@
   {0x3c1c0163, 0x9bd0, 0x11d3, { 0x9d, 0x9, 0x0, 0x50, 0x4, 0x0, 0x7, 0xb2}}
 
 // XXX change to NS_CHARSETCONVERTERMANAGER_PID
-#define NS_CHARSETCONVERTERMANAGER_PROGID "component://netscape/charset-converter-manager"
+#define NS_CHARSETCONVERTERMANAGER_CONTRACTID "@mozilla.org/charset-converter-manager;1"
 
 #define NS_REGISTRY_UCONV_BASE          "software/netscape/intl/uconv/"
 // XXX change "xuconv" to "uconv" when the new enc&dec trees are in place
@@ -60,7 +60,7 @@ nsUConverterRegSelf( const char* aFromCharset,                          \
   nsRegistryKey key;                                                    \
   char buff[1024];                                                      \
   PRBool isOpen = PR_FALSE;                                             \
-  NS_WITH_SERVICE( nsIRegistry, registry, NS_REGISTRY_PROGID, &res);    \
+  NS_WITH_SERVICE( nsIRegistry, registry, NS_REGISTRY_CONTRACTID, &res);    \
   if (NS_FAILED(res))                                                   \
     goto done;                                                          \
   res = registry->IsOpen(&isOpen);                                      \

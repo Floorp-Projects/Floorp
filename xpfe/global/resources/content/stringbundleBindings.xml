@@ -32,7 +32,7 @@
         <setter>
         <![CDATA[
           try {
-            strBundleService = Components.classes["component://netscape/intl/stringbundle"].getService(); 
+            strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(); 
             strBundleService = strBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
           } 
           catch (ex) {
@@ -48,7 +48,7 @@
         <![CDATA[
           var applicationLocale = null;
           try {
-            localeService = Components.classes["component://netscape/intl/nslocaleservice"].getService();
+            localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"].getService();
             localeService = localeService.QueryInterface(Components.interfaces.nsILocaleService);
           } 
           catch (ex) {

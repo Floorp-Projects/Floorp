@@ -26,7 +26,7 @@ var	fieldMap = null;
 function OnLoadFieldMapExport()
 {
 	// top.bundle = srGetStrBundle("chrome://messenger/locale/importMsgs.properties");
-	top.importService = Components.classes["component://mozilla/import/import-service"].getService();
+	top.importService = Components.classes["@mozilla.org/import/import-service;1"].getService();
 	top.importService = top.importService.QueryInterface(Components.interfaces.nsIImportService);
 	
 	// We need a field map object...

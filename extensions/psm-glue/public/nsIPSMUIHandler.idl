@@ -32,6 +32,6 @@ interface nsIPSMUIHandler : nsISupports
 };
 
 %{C++
-#define PSM_UI_HANLDER_PROGID "component://netscape/psm/ui"
+#define PSM_UI_HANLDER_CONTRACTID "@mozilla.org/psm/ui;1"
 #define PSM_UI_HANLDER_CLASSNAME "Mozilla PSM UI Handler"
 %}

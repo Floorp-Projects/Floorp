@@ -29,7 +29,7 @@ int main(int argc, char **argv)
   NS_InitXPCOM(nsnull, nsnull);
 
   nsCOMPtr <nsIChromeRegistry> chromeReg = 
-    do_GetService("component://netscape/chrome/chrome-registry");
+    do_GetService("@mozilla.org/chrome/chrome-registry;1");
   if (!chromeReg) {
     NS_WARNING("chrome check couldn't get the chrome registry");
     return NS_ERROR_FAILURE;
@@ -46,7 +46,7 @@ int main(int argc, char **argv)
   NS_ADDREF(appFileLocProvider);
   nsresult rv;
   NS_WITH_SERVICE(nsIDirectoryService, directoryService,
-		  NS_DIRECTORY_SERVICE_PROGID, &rv);
+		  NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
     NS_WARNING("failed to get directory service");
     return rv;

@@ -38,7 +38,7 @@ static nsModuleComponentInfo components[] =
 {
   { "Photon timer",
     NS_TIMER_PH_CID,
-    "component://netscape/timer", 
+    "@mozilla.org/timer;1", 
     nsTimerPhConstructor }
 };
 

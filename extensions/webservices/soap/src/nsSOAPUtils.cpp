@@ -159,7 +159,7 @@ nsSOAPUtils::GetSafeContext()
 {
   // Get the "safe" JSContext: our JSContext of last resort
   nsresult rv;
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", 
+  NS_WITH_SERVICE(nsIJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", 
                   &rv);
   if (NS_FAILED(rv))
     return nsnull;
@@ -176,7 +176,7 @@ nsSOAPUtils::GetCurrentContext()
 {
   // Get JSContext from stack.
   nsresult rv;
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", 
+  NS_WITH_SERVICE(nsIJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", 
                   &rv);
   if (NS_FAILED(rv))
     return nsnull;
@@ -374,7 +374,7 @@ nsSOAPUtils::ConvertJSValToValue(JSContext* aContext,
     
     jsstr = JSVAL_TO_STRING(val);
     if (jsstr) {
-      nsCOMPtr<nsISupportsWString> wstr = do_CreateInstance(NS_SUPPORTS_WSTRING_PROGID);
+      nsCOMPtr<nsISupportsWString> wstr = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
       if (!wstr) return NS_ERROR_FAILURE;
 
       PRUnichar* data = NS_REINTERPRET_CAST(PRUnichar*, 
@@ -389,7 +389,7 @@ nsSOAPUtils::ConvertJSValToValue(JSContext* aContext,
   else if (JSVAL_IS_DOUBLE(val)) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_DOUBLE;
     
-    nsCOMPtr<nsISupportsDouble> dub = do_CreateInstance(NS_SUPPORTS_DOUBLE_PROGID);
+    nsCOMPtr<nsISupportsDouble> dub = do_CreateInstance(NS_SUPPORTS_DOUBLE_CONTRACTID);
     if (!dub) return NS_ERROR_FAILURE;
 
     dub->SetData((double)(*JSVAL_TO_DOUBLE(val)));
@@ -399,7 +399,7 @@ nsSOAPUtils::ConvertJSValToValue(JSContext* aContext,
   else if (JSVAL_IS_INT(val)) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_INT;
     
-    nsCOMPtr<nsISupportsPRInt32> isupint = do_CreateInstance(NS_SUPPORTS_PRINT32_PROGID);
+    nsCOMPtr<nsISupportsPRInt32> isupint = do_CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID);
     if (!isupint) return NS_ERROR_FAILURE;
     
     isupint->SetData((PRInt32)JSVAL_TO_INT(val));
@@ -409,7 +409,7 @@ nsSOAPUtils::ConvertJSValToValue(JSContext* aContext,
   else if (JSVAL_IS_BOOLEAN(val)) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_BOOLEAN;
     
-    nsCOMPtr<nsISupportsPRBool> isupbool = do_CreateInstance(NS_SUPPORTS_PRBOOL_PROGID);
+    nsCOMPtr<nsISupportsPRBool> isupbool = do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID);
     if (!isupbool) return NS_ERROR_FAILURE;
 
     isupbool->SetData((PRBool)JSVAL_TO_BOOLEAN(val));

@@ -412,7 +412,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow * aMsgWindow,
     nsresult rv = NS_OK;
 
 	// get the incoming msg server
-	NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_PROGID, &rv)
+	NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_CONTRACTID, &rv)
 	if (NS_FAILED(rv)) return rv;
 	nsCOMPtr<nsIMsgIncomingServer> server;
 	rv = accountManager->FindServer(m_username,m_hostname,"nntp", getter_AddRefs(server));

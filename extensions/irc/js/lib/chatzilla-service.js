@@ -34,26 +34,26 @@
  */
 
 /* components defined in this file */
-const CLINE_SERVICE_PROGID =
-    "component://netscape/commandlinehandler/general-startup-chat";
+const CLINE_SERVICE_CONTRACTID =
+    "@mozilla.org/commandlinehandler/general-startup;1?type=chat";
 const CLINE_SERVICE_CID =
     Components.ID("{38a95514-1dd2-11b2-97e7-9da958640f2c}");
-const IRCCNT_HANDLER_PROGID =
-    "component://netscape/uriloader/content-handler?type=x-application-irc";
+const IRCCNT_HANDLER_CONTRACTID =
+    "@mozilla.org/uriloader/content-handler;1?type=x-application-irc";
 const IRCCNT_HANDLER_CID =
     Components.ID("{98919a14-1dd1-11b2-be1a-b84344307f0a}");
-const IRCPROT_HANDLER_PROGID =
-    "component://netscape/network/protocol?name=irc";
+const IRCPROT_HANDLER_CONTRACTID =
+    "@mozilla.org/network/protocol;1?name=irc";
 const IRCPROT_HANDLER_CID =
     Components.ID("{f21c35f4-1dd1-11b2-a503-9bf8a539ea39}");
 
 /* components used in this file */
-const MEDIATOR_PROGID =
-    "component://netscape/rdf/datasource?name=window-mediator"
-const SIMPLEURI_PROGID = 
-    "component://netscape/network/simple-uri";
-const ASS_PROGID =
-    "component://netscape/appshell/appShellService";
+const MEDIATOR_CONTRACTID =
+    "@mozilla.org/rdf/datasource;1?name=window-mediator"
+const SIMPLEURI_CONTRACTID = 
+    "@mozilla.org/network/simple-uri;1";
+const ASS_CONTRACTID =
+    "@mozilla.org/appshell/appShellService;1";
 
 /* interafces used in this file */
 const nsIWindowMediator  = Components.interfaces.nsIWindowMediator;
@@ -116,7 +116,7 @@ function (aContentType, aCommand, aWindowTarget, aSourceContext, aChannel)
           aChannel.URI.spec + ")\n");
     
     var windowManager =
-        Components.classes[MEDIATOR_PROGID].getService(nsIWindowMediator);
+        Components.classes[MEDIATOR_CONTRACTID].getService(nsIWindowMediator);
 
     var w = windowManager.getMostRecentWindow("irc:chatzilla");
 
@@ -127,7 +127,7 @@ function (aContentType, aCommand, aWindowTarget, aSourceContext, aChannel)
     }
     else
     {
-        var ass = Components.classes[ASS_PROGID].getService(nsIAppShellService);
+        var ass = Components.classes[ASS_CONTRACTID].getService(nsIAppShellService);
         var w = ass.getHiddenDOMWindow();
         w.open("chrome://chatzilla/content/chatzilla.xul?" + aChannel.URI.spec,
                "_blank", "chrome,menubar,toolbar,resizable");
@@ -166,7 +166,7 @@ function (aSpec, aBaseURI)
         return null;
     }
     
-    var uri = Components.classes[SIMPLEURI_PROGID].createInstance(nsIURI);
+    var uri = Components.classes[SIMPLEURI_CONTRACTID].createInstance(nsIURI);
     uri.spec = aSpec;
     
     return uri;
@@ -274,25 +274,25 @@ function (compMgr, fileSpec, location, type)
     dump("*** Registering -chat handler.\n");
     compMgr.registerComponentWithType(CLINE_SERVICE_CID,
                                       "Chatzilla CommandLine Service",
-                                      CLINE_SERVICE_PROGID, fileSpec,
+                                      CLINE_SERVICE_CONTRACTID, fileSpec,
                                       location, true, true, type);
     
 	catman = Components.classes["mozilla.categorymanager.1"]
         .getService(nsICategoryManager);
 	catman.addCategoryEntry("command-line-argument-handlers",
                             "chatzilla command line handler",
-                            CLINE_SERVICE_PROGID, true, true);
+                            CLINE_SERVICE_CONTRACTID, true, true);
 
     dump("*** Registering x-application-irc handler.\n");
     compMgr.registerComponentWithType(IRCCNT_HANDLER_CID,
                                       "IRC Content Handler",
-                                      IRCCNT_HANDLER_PROGID, fileSpec,
+                                      IRCCNT_HANDLER_CONTRACTID, fileSpec,
                                       location, true, true, type);
 
     dump("*** Registering irc protocol handler.\n");
     compMgr.registerComponentWithType(IRCPROT_HANDLER_CID,
                                       "IRC protocol handler",
-                                      IRCPROT_HANDLER_PROGID, fileSpec, location,
+                                      IRCPROT_HANDLER_CONTRACTID, fileSpec, location,
                                       true, true, type);
 
 }
@@ -304,7 +304,7 @@ function(compMgr, fileSpec, location)
 	catman = Components.classes["mozilla.categorymanager.1"]
         .getService(nsICategoryManager);
 	catman.deleteCategoryEntry("command-line-argument-handlers",
-                               CLINE_SERVICE_PROGID, true);
+                               CLINE_SERVICE_CONTRACTID, true);
 }
 
 ChatzillaModule.getClassObject =

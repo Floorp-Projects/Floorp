@@ -44,7 +44,7 @@ void main(int argc, char* argv[])
                                                     (void**)&obj);
         }
         else {
-            // progID case:
+            // contractID case:
             rv = nsComponentManager::CreateInstance(cidStr, nsnull,
                                                     NS_GET_IID(nsISupports),
                                                     (void**)&obj);

@@ -13,8 +13,8 @@ function dumpPathOfProperty(prop)
     }
 }
 
-var dsprogid = "component://netscape/file/directory_service";  // XXX old-style
-var ds = Components.classes[dsprogid].getService();
+var dscontractid = "@mozilla.org/file/directory_service;1";  // XXX old-style
+var ds = Components.classes[dscontractid].getService();
 var dsprops = ds.QueryInterface(Components.interfaces.nsIProperties);
 
 dump("xpcom locations::\n");

@@ -52,7 +52,7 @@ NS_IMETHODIMP nsOSHelperAppService::CanHandleContent(const char *aMimeContentTyp
 
   if (NS_FAILED(rv) || *aCanHandleContent == PR_FALSE)
   {
-    nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_PROGID));
+    nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
     if (icService)
     {
       rv = icService->HasMappingForMIMEType(aMimeContentType, aCanHandleContent);
@@ -107,7 +107,7 @@ NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIU
   *aStreamListener = nsnull;
   // use InternetConfig to fill in MIMEInfo
   nsCOMPtr<nsIMIMEInfo> mimeInfo;
-  nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_PROGID));
+  nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
   if (icService)
   {
     if (url)
@@ -162,7 +162,7 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
 
 nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile)
 {
-  nsCOMPtr<nsILocalFile> localFile (do_CreateInstance(NS_LOCAL_FILE_PROGID));
+  nsCOMPtr<nsILocalFile> localFile (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
   nsresult rv = NS_OK;
 
   if (localFile)

@@ -67,7 +67,7 @@ interface nsIBufferedOutputStream : nsIOutputStream
 ////////////////////////////////////////////////////////////////////////////////
 
 #define NS_LOCALFILEINPUTSTREAM_CLASSNAME "Local File Input Stream"
-#define NS_LOCALFILEINPUTSTREAM_PROGID "component://netscape/network/file-input-stream"
+#define NS_LOCALFILEINPUTSTREAM_CONTRACTID "@mozilla.org/network/file-input-stream;1"
 
 #define NS_LOCALFILEINPUTSTREAM_CID                  \
 { /* be9a53ae-c7e9-11d3-8cda-0060b0fc14a3 */         \
@@ -78,7 +78,7 @@ interface nsIBufferedOutputStream : nsIOutputStream
 }
 
 #define NS_LOCALFILEOUTPUTSTREAM_CLASSNAME "Local File Output Stream"
-#define NS_LOCALFILEOUTPUTSTREAM_PROGID "component://netscape/network/file-output-stream"
+#define NS_LOCALFILEOUTPUTSTREAM_CONTRACTID "@mozilla.org/network/file-output-stream;1"
 
 #define NS_LOCALFILEOUTPUTSTREAM_CID                 \
 { /* c272fee0-c7e9-11d3-8cda-0060b0fc14a3 */         \
@@ -91,7 +91,7 @@ interface nsIBufferedOutputStream : nsIOutputStream
 ////////////////////////////////////////////////////////////////////////////////
 
 #define NS_BUFFEREDINPUTSTREAM_CLASSNAME "Buffered Input Stream"
-#define NS_BUFFEREDINPUTSTREAM_PROGID "component://netscape/network/buffered-input-stream"
+#define NS_BUFFEREDINPUTSTREAM_CONTRACTID "@mozilla.org/network/buffered-input-stream;1"
 
 #define NS_BUFFEREDINPUTSTREAM_CID                   \
 { /* 9226888e-da08-11d3-8cda-0060b0fc14a3 */         \
@@ -102,7 +102,7 @@ interface nsIBufferedOutputStream : nsIOutputStream
 }
 
 #define NS_BUFFEREDOUTPUTSTREAM_CLASSNAME "Buffered Output Stream"
-#define NS_BUFFEREDOUTPUTSTREAM_PROGID "component://netscape/network/buffered-output-stream"
+#define NS_BUFFEREDOUTPUTSTREAM_CONTRACTID "@mozilla.org/network/buffered-output-stream;1"
 
 #define NS_BUFFEREDOUTPUTSTREAM_CID                  \
 { /* 9868b4ce-da08-11d3-8cda-0060b0fc14a3 */         \

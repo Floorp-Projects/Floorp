@@ -42,7 +42,7 @@ function OnLoadSelectAddress()
 
 	doSetOKCancel(SelectAddressOKButton, 0);
 
-	top.addressbook = Components.classes["component://netscape/addressbook"].createInstance();
+	top.addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance();
 	top.addressbook = top.addressbook.QueryInterface(Components.interfaces.nsIAddressBook);
 
 	top.gDialogResultsPaneSelectionChanged = DialogResultsPaneSelectionChanged;
@@ -177,7 +177,7 @@ function AddSelectedAddressesIntoBucket(prefix)
 {
 	var item, uri, rdf, cardResource, card, address;
 	var email ="";
-	rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 	rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 
 	if ( resultsTree && resultsTree.selectedItems && resultsTree.selectedItems.length )

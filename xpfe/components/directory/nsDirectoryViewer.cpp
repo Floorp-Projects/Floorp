@@ -201,12 +201,12 @@ nsHTTPIndexParser::Init()
     return NS_ERROR_UNEXPECTED;
 
   if (gRefCntParser++ == 0) {
-    rv = nsServiceManager::GetService("component://netscape/rdf/rdf-service",
+    rv = nsServiceManager::GetService("@mozilla.org/rdf/rdf-service;1",
                                       NS_GET_IID(nsIRDFService),
                                       NS_REINTERPRET_CAST(nsISupports**, &gRDF));
     if (NS_FAILED(rv)) return rv;
 
-    rv = nsServiceManager::GetService(NS_ITEXTTOSUBURI_PROGID,
+    rv = nsServiceManager::GetService(NS_ITEXTTOSUBURI_CONTRACTID,
                                       NS_GET_IID(nsITextToSubURI),
                                       NS_REINTERPRET_CAST(nsISupports**, &gTextToSubURI));
     if (NS_FAILED(rv)) return rv;
@@ -260,12 +260,12 @@ nsHTTPIndexParser::~nsHTTPIndexParser()
 
     if (gRDF)
     {
-        nsServiceManager::ReleaseService("component://netscape/rdf/rdf-service", gRDF);
+        nsServiceManager::ReleaseService("@mozilla.org/rdf/rdf-service;1", gRDF);
         gRDF = nsnull;
     }
     if (gTextToSubURI)
     {
-        nsServiceManager::ReleaseService(NS_ITEXTTOSUBURI_PROGID, gTextToSubURI);
+        nsServiceManager::ReleaseService(NS_ITEXTTOSUBURI_CONTRACTID, gTextToSubURI);
         gTextToSubURI = nsnull;
     }
   }
@@ -1234,7 +1234,7 @@ nsHTTPIndex::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aProperty, PRBo
                 // which should fire as soon as possible (out-of-band)
             	if (!mTimer)
             	{
-            		mTimer = do_CreateInstance("component://netscape/timer", &rv);
+            		mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
             		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a timer");
             		if (NS_SUCCEEDED(rv))
             		{
@@ -1271,7 +1271,7 @@ nsHTTPIndex::AddElement(nsIRDFResource *parent, nsIRDFResource *prop, nsIRDFNode
 
 	if (!mTimer)
 	{
-		mTimer = do_CreateInstance("component://netscape/timer", &rv);
+		mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
 		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a timer");
 		if (NS_FAILED(rv))  return(rv);
 
@@ -1415,7 +1415,7 @@ nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
     // to cancel the timer if we don't need to refire it
 	if (refireTimer == PR_TRUE)
 	{
-		httpIndex->mTimer = do_CreateInstance("component://netscape/timer");
+		httpIndex->mTimer = do_CreateInstance("@mozilla.org/timer;1");
         if (httpIndex->mTimer)
 		{
     		httpIndex->mTimer->Init(nsHTTPIndex::FireTimer, aClosure, 10,
@@ -1680,7 +1680,7 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
 
   // Create a dummy loader that will load a stub XUL document.
   nsCOMPtr<nsIDocumentLoaderFactory> factory;
-  rv = nsComponentManager::CreateInstance(NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "view/text/xul",
+  rv = nsComponentManager::CreateInstance(NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=text/xul",
                                           nsnull,
                                           NS_GET_IID(nsIDocumentLoaderFactory),
                                           getter_AddRefs(factory));

@@ -77,7 +77,7 @@ RDFFileName = baseURL + RDFRelFileName;
 appts_resourcename = RDFFileName + "#WhenComAppointmentsRoot";
 
 // the rdf service
-RDFService = Components.classes['component://netscape/rdf/rdf-service'].getService();
+RDFService = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService();
 RDFService = RDFService.QueryInterface(Components.interfaces.nsIRDFService);
 
 // ************************************************************
@@ -885,7 +885,7 @@ function Init()
 		// First try to construct a new one and load it
 		// synchronously. nsIRDFService::GetDataSource() loads RDF/XML
 		// asynchronously by default.
-		rdf_datasource = Components.classes['component://netscape/rdf/datasource?name=xml-datasource'].createInstance();
+		rdf_datasource = Components.classes['@mozilla.org/rdf/datasource;1?name=xml-datasource'].createInstance();
 		rdf_datasource = rdf_datasource.QueryInterface(Components.interfaces.nsIRDFDataSource);
 
 		rdf_remote_datasource = rdf_datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
@@ -906,7 +906,7 @@ function Init()
 	// resource so we can use some utility routines that make access a
 	// bit easier.
 	// NOT var, so it's global
-	appts_container = Components.classes['component://netscape/rdf/container'].createInstance();
+	appts_container = Components.classes['@mozilla.org/rdf/container;1'].createInstance();
 	appts_container = appts_container.QueryInterface(Components.interfaces.nsIRDFContainer);
 
 	appts_resource = RDFService.GetResource(appts_resourcename);

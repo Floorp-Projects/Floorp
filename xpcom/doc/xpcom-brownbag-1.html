@@ -82,7 +82,7 @@ with COM. nsIFactory</td>
 </tr>
 
 <tr>
-<td>ProgID</td>
+<td>ContractID</td>
 
 <td>A String name for a Component.</td>
 </tr>
@@ -263,7 +263,7 @@ for object creation. Simplies factory implementation.</li>
 <h3>
 Object Creation</h3>
 
-<ul><tt>rv = compMgr->CreateInstance(imgProgID, NULL, <a href="http://lxr.mozilla.org/seamonkey/ident?i=NS_GET_IID">NS_GET_IID</a>(nsIImgDecoder),
+<ul><tt>rv = compMgr->CreateInstance(imgContractID, NULL, <a href="http://lxr.mozilla.org/seamonkey/ident?i=NS_GET_IID">NS_GET_IID</a>(nsIImgDecoder),
 (void **)&amp;imgdec);</tt>
 <br>&nbsp;
 <li>
@@ -284,7 +284,7 @@ The component manager does this on a CreateInstance()</li>
 
 <ul>
 <li>
-map ProgID to CLSID</li>
+map ContractID to CLSID</li>
 
 <li>
 Get module object for dll which implements component CLSID</li>
@@ -304,7 +304,7 @@ return factory->CreateInstance(IID);</li>
 
 <br>&nbsp;
 <ul><tt>nsCOMPtr &lt;nsIImgDecoder> imgdec;</tt>
-<br><tt>rv = compMgr->CreateInstance(imgProgID, NULL, <a href="http://lxr.mozilla.org/seamonkey/ident?i=NS_GET_IID">NS_GET_IID</a>(nsIImgDecoder),
+<br><tt>rv = compMgr->CreateInstance(imgContractID, NULL, <a href="http://lxr.mozilla.org/seamonkey/ident?i=NS_GET_IID">NS_GET_IID</a>(nsIImgDecoder),
 <font color="#990000">getter_AddRefs(imgdec)</font>);</tt></ul>
 </ul>
 
@@ -341,7 +341,7 @@ nsIModule module = "NSGetModule"() - Create the module object</li>
 module->RegisterSelf(<i>location</i>)</li>
 </ul>
 
-<p><br>The module registers with the componentmanager every {CLSID, ProgID}
+<p><br>The module registers with the componentmanager every {CLSID, ContractID}
 it implements with a call to <tt>nsIComponentManager::RegisterComponentSpec()</tt>
 These registrations are stored in the registry. Hence the next time around,
 the module is loaded not at startup but only when the first object that
@@ -428,30 +428,30 @@ to newsgroup netscape.public.mozilla.xpcom (or Email <a href="mailto:mozilla-xpc
 with suggestions.</blockquote>
 
 <h3>
-ProgID vs CLSID</h3>
+ContractID vs CLSID</h3>
 
 <blockquote>CLSID is a number identifying a specific implementation.
-<p>ProgID is a like a pointer to a CLSID. It is an opaque string to xpcom.It
+<p>ContractID is a like a pointer to a CLSID. It is an opaque string to xpcom.It
 is used for two purposes.
 <ol>
 <li>
-Implementation independence for clients: <tt>component://netscape/registry</tt></li>
+Implementation independence for clients: <tt>@mozilla.org/registry;1</tt></li>
 
-<br>The CLSID associating itself to a ProgID can be changed. Hence if a
+<br>The CLSID associating itself to a ContractID can be changed. Hence if a
 new implementation with a new CLSID superceeds an older implementation,
-the client wont be tied to the older implementation if it uses the ProgID.
+the client wont be tied to the older implementation if it uses the ContractID.
 <li>
-CLSID switching: <tt>component://netscape/image/decoder&amp;type=image/gif</tt></li>
+CLSID switching: <tt>@mozilla.org/image/decoder;1?type=image/gif</tt></li>
 
 <br>A client wants to create different objects based on a switch (the mimetype
-for the case of imagedecoders). A Progid is formed with a concatenation
-of a BASE_PROGID and the switch (mimetype) and an instance of that created.
-Components, when registering, associate their CLSID to specific progids.</ol>
+for the case of imagedecoders). A Contractid is formed with a concatenation
+of a BASE_CONTRACTID and the switch (mimetype) and an instance of that created.
+Components, when registering, associate their CLSID to specific contractids.</ol>
 NOTE: Only Clients that are adamant about the use of a specific implementation
 need to create instances using CLSID.
-<p>We encourage use of ProgID. This works well in the scriptable world
+<p>We encourage use of ContractID. This works well in the scriptable world
 too.
-<p><b>We are working on a ProgID syntax.</b></blockquote>
+<p><b>We are working on a ContractID syntax.</b></blockquote>
 
 <h3>
 Steps for XPCOM Review</h3>

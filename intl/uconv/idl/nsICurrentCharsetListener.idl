@@ -26,7 +26,7 @@
 %{C++
 // {CF9428C1-DF50-11d3-9D0C-0050040007B2}
 #define NS_CURRENTCHARSETLISTENER_CID { 0xcf9428c1, 0xdf50, 0x11d3, { 0x9d, 0xc, 0x0, 0x50, 0x4, 0x0, 0x7, 0xb2 } }
-#define NS_ICURRENTCHARSETLISTENER_PROGID "component://netscape/intl/currentcharsetlistener"
+#define NS_ICURRENTCHARSETLISTENER_CONTRACTID "@mozilla.org/intl/currentcharsetlistener;1"
 %}
 
 [scriptable, uuid(CF9428C1-DF50-11d3-9D0C-0050040007B2)]

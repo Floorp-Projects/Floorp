@@ -46,12 +46,12 @@ static nsModuleComponentInfo components[] =
 {
     { "Zip Reader", 
        NS_ZIPREADER_CID,
-      "component://netscape/libjar/zip-reader", 
+      "@mozilla.org/libjar/zip-reader;1", 
       nsJAR::Create
     },
     { "Zip Reader Cache", 
        NS_ZIPREADERCACHE_CID,
-      "component://netscape/libjar/zip-reader-cache", 
+      "@mozilla.org/libjar/zip-reader-cache;1", 
       nsZipReaderCache::Create
     }
 };

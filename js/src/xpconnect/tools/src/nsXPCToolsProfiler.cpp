@@ -379,7 +379,7 @@ JSBool
 nsXPCToolsProfiler::VerifyRuntime()
 {
     JSRuntime* rt;
-    nsCOMPtr<nsIJSRuntimeService> rts = do_GetService("nsJSRuntimeService");
+    nsCOMPtr<nsIJSRuntimeService> rts = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
     return rts && NS_SUCCEEDED(rts->GetRuntime(&rt)) && rt && rt == mRuntime;
 }
 
@@ -388,7 +388,7 @@ nsXPCToolsProfiler::InitializeRuntime()
 {
     NS_ASSERTION(!mRuntime, "can't init runtime twice");
     JSRuntime* rt;
-    nsCOMPtr<nsIJSRuntimeService> rts = do_GetService("nsJSRuntimeService");
+    nsCOMPtr<nsIJSRuntimeService> rts = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
     if(rts && NS_SUCCEEDED(rts->GetRuntime(&rt)) && rt)
         mRuntime = rt;
     return mRuntime != nsnull;

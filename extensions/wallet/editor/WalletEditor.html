@@ -6,7 +6,7 @@
       /* for xpconnect */
       var walleteditor =
         Components.classes
-          ["component://netscape/walleteditor/walleteditor-world"].createInstance();
+          ["@mozilla.org/walleteditor/walleteditor-world;1"].createInstance();
       walleteditor = walleteditor.QueryInterface(Components.interfaces.nsIWalletEditor);
 
       function get()

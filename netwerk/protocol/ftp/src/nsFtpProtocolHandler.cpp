@@ -103,7 +103,7 @@ nsFtpProtocolHandler::Init() {
                           NS_FTP_CONNECTION_STACK_SIZE);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIObserverService> obsServ = do_GetService(NS_OBSERVERSERVICE_PROGID, &rv);
+    nsCOMPtr<nsIObserverService> obsServ = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
         nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
         obsServ->AddObserver(this, topic.GetUnicode());
@@ -278,7 +278,7 @@ nsFtpProtocolHandler::Observe(nsISupports     *aSubject,
         mRootConnectionList = nsnull;
     }
     // remove ourself from the observer service.
-    NS_WITH_SERVICE(nsIObserverService, obsServ, NS_OBSERVERSERVICE_PROGID, &rv);
+    NS_WITH_SERVICE(nsIObserverService, obsServ, NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
         nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
         obsServ->RemoveObserver(this, topic.GetUnicode());

@@ -182,7 +182,7 @@ interface nsIStandardLogEventSink : nsILogEventSink
     {0x93, 0xb6, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
-#define NS_STANDARDLOGEVENTSINK_PROGID          "component://netscape/standard-log-event-sink"
+#define NS_STANDARDLOGEVENTSINK_CONTRACTID          "@mozilla.org/standard-log-event-sink;1"
 #define NS_STANDARDLOGEVENTSINK_CLASSNAME       "Standard Log Event Sink"
 %}
 
@@ -207,7 +207,7 @@ interface nsILoggingService : nsISupports
     {0x93, 0xb6, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
-#define NS_LOGGINGSERVICE_PROGID        "component://netscape/logging-service"
+#define NS_LOGGINGSERVICE_CONTRACTID        "@mozilla.org/logging-service;1"
 #define NS_LOGGINGSERVICE_CLASSNAME     "Logging Service"
 %}
 

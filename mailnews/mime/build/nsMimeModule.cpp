@@ -181,7 +181,7 @@ NS_IMETHODIMP nsMimeModule::GetClassObject(nsIComponentManager *aCompMgr,
 struct Components {
     const char* mDescription;
     const nsID* mCID;
-    const char* mProgID;
+    const char* mContractID;
 };
 
 // The list of components we register
@@ -191,13 +191,13 @@ static Components gComponents[] = {
     { "Mime Converter", &kCMimeConverterCID,
       nsnull},
     { "Msg Header Parser", &kCMsgHeaderParserCID,
-      NS_MAILNEWS_MIME_HEADER_PARSER_PROGID },
+      NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID },
     { "Mailnews Mime Stream Converter", &kCStreamConverterCID,
-      NS_MAILNEWS_MIME_STREAM_CONVERTER_PROGID },
+      NS_MAILNEWS_MIME_STREAM_CONVERTER_CONTRACTID },
     { "Mailnews Mime Stream Converter", &kCStreamConverterCID,
-      NS_MAILNEWS_MIME_STREAM_CONVERTER_PROGID1 },
+      NS_MAILNEWS_MIME_STREAM_CONVERTER_CONTRACTID1 },
     { "Mailnews Mime Stream Converter", &kCStreamConverterCID,
-      NS_MAILNEWS_MIME_STREAM_CONVERTER_PROGID2 },
+      NS_MAILNEWS_MIME_STREAM_CONVERTER_CONTRACTID2 },
     { "Mime Headers", &kCIMimeHeadersCID,
       nsnull }
 };
@@ -216,7 +216,7 @@ NS_IMETHODIMP nsMimeModule::RegisterSelf(nsIComponentManager *aCompMgr,
     while (cp < end) 
     {
         rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
-                                             cp->mProgID, aPath, PR_TRUE,
+                                             cp->mContractID, aPath, PR_TRUE,
                                              PR_TRUE);
         if (NS_FAILED(rv)) 
             break;

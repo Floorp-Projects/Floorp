@@ -26,12 +26,12 @@
 
 
 
-const RDFSERVICE_PROGID     = "component://netscape/rdf/rdf-service";
-const DRAGSERVICE_PROGID    = "component://netscape/widget/dragservice";
-const TRANSFERABLE_PROGID   = "component://netscape/widget/transferable";
-const XULSORTSERVICE_PROGID = "component://netscape/rdf/xul-sort-service";
-const ARRAY_PROGID          = "component://netscape/supports-array";
-const WSTRING_PROGID        = "component://netscape/supports-wstring";
+const RDFSERVICE_CONTRACTID     = "@mozilla.org/rdf/rdf-service;1";
+const DRAGSERVICE_CONTRACTID    = "@mozilla.org/widget/dragservice;1";
+const TRANSFERABLE_CONTRACTID   = "@mozilla.org/widget/transferable;1";
+const XULSORTSERVICE_CONTRACTID = "@mozilla.org/rdf/xul-sort-service;1";
+const ARRAY_CONTRACTID          = "@mozilla.org/supports-array;1";
+const WSTRING_CONTRACTID        = "@mozilla.org/supports-wstring;1";
 
 const NC_NS                 = "http://home.netscape.com/NC-rdf#";
 const NC_NAME               = NC_NS + "Name";
@@ -177,7 +177,7 @@ function Init()
     }
 
     // Note: set encoding BEFORE setting "ref" (important!)
-    var RDF = Components.classes[RDFSERVICE_PROGID].getService();
+    var RDF = Components.classes[RDFSERVICE_CONTRACTID].getService();
     if (RDF)    RDF = RDF.QueryInterface(nsIRDFService);
     if (RDF)
     {
@@ -284,7 +284,7 @@ function doSort(sortColName)
 
 	try
 	{
-		var isupports = Components.classes[XULSORTSERVICE_PROGID].getService();
+		var isupports = Components.classes[XULSORTSERVICE_CONTRACTID].getService();
 		if (!isupports)    return(false);
 		var xulSortService = isupports.QueryInterface(nsIXULSortService);
 		if (!xulSortService)    return(false);
@@ -312,21 +312,21 @@ function BeginDragTree ( event )
   if (!database)    return(false);
 
   var RDF = 
-    Components.classes[RDFSERVICE_PROGID].getService(nsIRDFService);
+    Components.classes[RDFSERVICE_CONTRACTID].getService(nsIRDFService);
   if (!RDF) return(false);
 
   var dragStarted = false;
 
   var trans = 
-    Components.classes[TRANSFERABLE_PROGID].createInstance(nsITransferable);
+    Components.classes[TRANSFERABLE_CONTRACTID].createInstance(nsITransferable);
   if ( !trans ) return(false);
 
   var genData = 
-    Components.classes[WSTRING_PROGID].createInstance(nsISupportsWString);
+    Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsWString);
   if (!genData) return(false);
 
   var genDataURL = 
-    Components.classes[WSTRING_PROGID].createInstance(nsISupportsWString);
+    Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsWString);
   if (!genDataURL) return(false);
 
   trans.addDataFlavor("text/unicode");
@@ -369,7 +369,7 @@ function BeginDragTree ( event )
   trans.setTransferData ( "text/unicode", genDataURL, genDataURL.data.length * 2);  // double byte data
 
   var transArray = 
-    Components.classes[ARRAY_PROGID].createInstance(nsISupportsArray);
+    Components.classes[ARRAY_CONTRACTID].createInstance(nsISupportsArray);
   if ( !transArray )  return(false);
 
   // put it into the transferable as an |nsISupports|
@@ -377,7 +377,7 @@ function BeginDragTree ( event )
   transArray.AppendElement(genTrans);
   
   var dragService = 
-    Components.classes[DRAGSERVICE_PROGID].getService(nsIDragService);
+    Components.classes[DRAGSERVICE_CONTRACTID].getService(nsIDragService);
   if ( !dragService ) return(false);
 
   dragService.invokeDragSession ( event.target, transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 

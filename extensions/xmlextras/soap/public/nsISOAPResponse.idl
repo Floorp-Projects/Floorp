@@ -99,6 +99,6 @@ interface nsISOAPResponse : nsISupports {
 { /* 87d21ec3-539d-11d4-9a59-00104bdf5339 */        \
   0x87d21ec3, 0x539d, 0x11d4,                       \
  {0x9a, 0x59, 0x00, 0x10, 0x4b, 0xdf, 0x53, 0x39} }
-#define NS_SOAPRESPONSE_PROGID \
-"component://netscape/xmlextras/soap/response"
+#define NS_SOAPRESPONSE_CONTRACTID \
+"@mozilla.org/xmlextras/soap/response;1"
 %}

@@ -35,7 +35,7 @@ function getBundle()
 
 function onLoad()
 {
-    rdf = Components.classes["component://netscape/rdf/rdf-service"].getService(Components.interfaces.nsIRDFService);
+    rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 
     editButton = document.getElementById("editButton");
     deleteButton = document.getElementById("deleteButton");

@@ -34,7 +34,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLWBreakerFImp)
 
 static nsModuleComponentInfo components[] = {
   { "Line and Word Breaker", NS_LWBRK_CID,
-     NS_LWBRK_PROGID, nsLWBreakerFImpConstructor}
+     NS_LWBRK_CONTRACTID, nsLWBreakerFImpConstructor}
 };
 
 NS_IMPL_NSGETMODULE("nsLWBrkModule", components);

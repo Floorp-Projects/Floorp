@@ -27,7 +27,7 @@ const nsIFilePicker = Components.interfaces.nsIFilePicker;
 function getFileOrFolderSpec( aTitle, aFolder )
 {
   try {
-    var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
+    var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
   }
   catch(e) {
     dump("*** failed to create fileSpecWithUI or fileSpec objects\n");
@@ -68,7 +68,7 @@ function prefNavSelectFile(folderFieldId, stringId, useNative)
     else
     {
       // Hack to get a file: url from an nsIFile
-      var tempFileSpec = Components.classes["component://netscape/filespec"].createInstance(Components.interfaces.nsIFileSpec);
+      var tempFileSpec = Components.classes["@mozilla.org/filespec;1"].createInstance(Components.interfaces.nsIFileSpec);
       tempFileSpec.nativePath = file.unicodePath;
 
       try {
@@ -95,7 +95,7 @@ function setHomePageToCurrentPage(folderFieldId)
 function prefClearUrlbarHistory()
 {
   var button = document.getElementById("ClearUrlBarHistoryButton");
-  var urlBarHist = nsJSComponentManager.getService("component://netscape/browser/urlbarhistory",
+  var urlBarHist = nsJSComponentManager.getService("@mozilla.org/browser/urlbarhistory;1",
   "nsIUrlbarHistory");
   if ( urlBarHist )
   {

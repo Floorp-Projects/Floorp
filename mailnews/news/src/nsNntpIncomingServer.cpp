@@ -266,7 +266,7 @@ nsresult nsNntpIncomingServer::SetupNewsrcSaveTimer()
 	{
 		mNewsrcSaveTimer->Cancel();
 	}
-  mNewsrcSaveTimer = do_CreateInstance("component://netscape/timer");
+  mNewsrcSaveTimer = do_CreateInstance("@mozilla.org/timer;1");
 	mNewsrcSaveTimer->Init(OnNewsrcSaveTimer, (void*)this, timeInMSUint32, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
   return NS_OK;
 }
@@ -905,7 +905,7 @@ nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo()
 			mUpdateTimer = nsnull;
 		}
 
-    	mUpdateTimer = do_CreateInstance("component://netscape/timer", &rv);
+    	mUpdateTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     	NS_ASSERTION(NS_SUCCEEDED(rv),"failed to create timer");
     	if (NS_FAILED(rv)) return rv;
 

@@ -6,7 +6,7 @@ function OnLoadAddressBook()
 {
 	verifyAccounts(); 	// this will do migration, if we need to.
 
-	top.addressbook = Components.classes["component://netscape/addressbook"].createInstance();
+	top.addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance();
 	top.addressbook = top.addressbook.QueryInterface(Components.interfaces.nsIAddressBook);
 	top.gUpdateCardView = UpdateCardView;
 
@@ -36,7 +36,7 @@ function GetCurrentPrefs()
 	if ( cvPrefs == 0 )
 		cvPrefs = new Object;
 
-	var prefs = Components.classes["component://netscape/preferences"];
+	var prefs = Components.classes["@mozilla.org/preferences;1"];
 	if ( prefs )
 	{
 		prefs = prefs.getService();
@@ -175,7 +175,7 @@ function AbPrintCard()
 		return false;
 	}  
 	var statusFeedback;
-	statusFeedback = Components.classes["component://netscape/messenger/statusfeedback"].createInstance();
+	statusFeedback = Components.classes["@mozilla.org/messenger/statusfeedback;1"].createInstance();
 	statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
 
 	var selectionArray = new Array(numSelected);
@@ -246,7 +246,7 @@ function AbDeleteDirectory()
 	dump("\AbDeleteDirectory from XUL\n");
 
     var commonDialogsService 
-        = Components.classes["component://netscape/appshell/commonDialogs"].getService();
+        = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
     commonDialogsService 
         = commonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
 
@@ -257,7 +257,7 @@ function AbDeleteDirectory()
         return;
 
     var isPersonalOrCollectedAbsSelectedForDeletion = false;
-    var parentArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+    var parentArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
     if ( !parentArray ) return (false); 
 
     for ( var i = 0; i < count; ++i )

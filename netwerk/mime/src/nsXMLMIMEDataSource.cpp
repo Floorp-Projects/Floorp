@@ -766,7 +766,7 @@ nsXMLMIMEDataSource::InitFromFile( nsIFile*  aFile  )
 		}
 		
 		nsCOMPtr<nsIMIMEInfo> info;
-		rv = nsComponentManager::CreateInstance(NS_MIMEINFO_PROGID, nsnull, nsIMIMEInfo::GetIID(),getter_AddRefs(info ));	  	
+		rv = nsComponentManager::CreateInstance(NS_MIMEINFO_CONTRACTID, nsnull, nsIMIMEInfo::GetIID(),getter_AddRefs(info ));	  	
 		if ( NS_FAILED( rv ) ) return rv;
 		// Read in Attribute
 		nsCString attribute;

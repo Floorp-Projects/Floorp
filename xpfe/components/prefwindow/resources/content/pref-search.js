@@ -23,7 +23,7 @@
 	var pref = null;
 	try
 	{
-		pref = Components.classes["component://netscape/preferences"];
+		pref = Components.classes["@mozilla.org/preferences;1"];
 		if (pref)	pref = pref.getService();
 		if (pref)	pref = pref.QueryInterface(Components.interfaces.nsIPref);
 	}

@@ -38,12 +38,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeContentTypeHandler)
 
 ////////////////////////////////////////////////////////////////////////
 // Define a table of CIDs implemented by this module along with other
-// information like the function to create an instance, progid, and
+// information like the function to create an instance, contractid, and
 // class name.
 //
 static nsModuleComponentInfo components[] =
 {
-  { "MIME VCard Handler", NS_VCARD_CONTENT_TYPE_HANDLER_CID, "mimecth:text/x-vcard",
+  { "MIME VCard Handler", NS_VCARD_CONTENT_TYPE_HANDLER_CID, "@mozilla.org/mimecth;1?type=text/x-vcard",
     nsMimeContentTypeHandlerConstructor, }
 };
 

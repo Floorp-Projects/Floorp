@@ -6699,11 +6699,11 @@ nsXULTemplateBuilder::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory*
   nsAutoString nameSpace;
   gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, nameSpace);
 
-  nsCAutoString progID(NS_ELEMENT_FACTORY_PROGID_PREFIX);
-  progID.AppendWithConversion(nameSpace.GetUnicode());
+  nsCAutoString contractID(NS_ELEMENT_FACTORY_CONTRACTID_PREFIX);
+  contractID.AppendWithConversion(nameSpace.GetUnicode());
 
   // Retrieve the appropriate factory.
-  NS_WITH_SERVICE(nsIElementFactory, elementFactory, progID, &rv);
+  NS_WITH_SERVICE(nsIElementFactory, elementFactory, contractID, &rv);
 
   if (!elementFactory)
     elementFactory = gXMLElementFactory; // Nothing found. Use generic XML element.

@@ -38,7 +38,7 @@ interface nsIObserverService : nsISupports {
 
 %{C++
 
-#define NS_OBSERVERSERVICE_PROGID "component://netscape/observer-service"
+#define NS_OBSERVERSERVICE_CONTRACTID "@mozilla.org/observer-service;1"
 
 #define NS_OBSERVERSERVICE_CLASSNAME "Observer Service"
 

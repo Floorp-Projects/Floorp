@@ -1687,7 +1687,7 @@ nsBookmarksService::Init()
 	if (!mTimer)
 	{
 		busySchedule = PR_FALSE;
-		mTimer = do_CreateInstance("component://netscape/timer", &rv);
+		mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
 		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a timer");
 		if (NS_FAILED(rv)) return rv;
 		mTimer->Init(nsBookmarksService::FireTimer, this, BOOKMARK_TIMEOUT, NS_PRIORITY_LOWEST, NS_TYPE_REPEATING_SLACK);
@@ -2013,7 +2013,7 @@ else
 		mTimer->Cancel();
 		mTimer = nsnull;
 	}
-	mTimer = do_CreateInstance("component://netscape/timer", &rv);
+	mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
 	if (NS_FAILED(rv) || (!mTimer)) return;
 	mTimer->Init(nsBookmarksService::FireTimer, bmks, BOOKMARK_TIMEOUT, NS_PRIORITY_LOWEST, NS_TYPE_REPEATING_SLACK);
 	// Note: don't addref "this" as we'll cancel the timer in the nsBookmarkService destructor

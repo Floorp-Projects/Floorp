@@ -104,6 +104,6 @@ interface nsITimeBomb : nsISupports
 };
 
 %{ C++
-#define NS_TIMEBOMB_PROGID "component://netscape/timebomb"
+#define NS_TIMEBOMB_CONTRACTID "@mozilla.org/timebomb;1"
 %}
 

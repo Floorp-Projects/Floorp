@@ -45,7 +45,7 @@ interface nsILocaleService : nsISupports {
 
 // {C8E518C1-47AE-11d3-91CD-00105AA3F7DC}
 #define NS_LOCALESERVICE_CID {0xc8e518c1,0x47ae,0x11d3,{0x91,0xcd,0x0,0x10,0x5a,0xa3,0xf7,0xdc}}
-#define NS_LOCALESERVICE_PROGID "component://netscape/intl/nslocaleservice"
+#define NS_LOCALESERVICE_CONTRACTID "@mozilla.org/intl/nslocaleservice;1"
 
 extern nsresult
 NS_NewLocaleService(nsILocaleService** result);

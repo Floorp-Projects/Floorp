@@ -29,25 +29,25 @@ function loadDialog() {
     dialog.fileName.setAttribute( "value", data.target.nativePath );
 }
 
-var progId = "component://netscape/appshell/component/xfer";
+var contractId = "@mozilla.org/appshell/component/xfer;1";
 var observer = {
     Observe: function( subject, topic, data ) {
         switch ( topic ) {
-            case progId+";onProgress":
+            case contractId+";onProgress":
                 var words = data.split( " " );
                 onProgress( words[0], words[1] );
                 break;
-            case progId+";onStatus":
+            case contractId+";onStatus":
                 // Ignore useless "Transferring data..." messages
                 // after download has started.
                 if ( !started ) {
                    onStatus( data );
                 }
                 break;
-            case progId+";onCompletion":
+            case contractId+";onCompletion":
                 onCompletion( data );
                 break;
-            case progId+";onError":
+            case contractId+";onError":
                 onError( data );
                 break;
             default:

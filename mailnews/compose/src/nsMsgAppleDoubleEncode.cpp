@@ -109,7 +109,7 @@ MacGetFileType(nsFileSpec   *fs,
 
     if (NS_SUCCEEDED(nsMsgNewURL(&tURI, tFileURL.GetURLString())) && tURI)
     {
-      nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_PROGID, &rv));
+      nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
       if (NS_SUCCEEDED(rv) && mimeFinder) 
       {
         char *mimeType = nsnull;

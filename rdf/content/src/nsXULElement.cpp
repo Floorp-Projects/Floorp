@@ -181,7 +181,7 @@ AddJSGCRoot(JSContext* cx, void* aScriptObjectRef, const char* aName)
     if (! ok) return NS_ERROR_OUT_OF_MEMORY;
 
     if (gScriptRuntimeRefcnt++ == 0) {
-        nsServiceManager::GetService("nsJSRuntimeService", // progid
+        nsServiceManager::GetService("@mozilla.org/js/xpc/RuntimeService;1", // contractid
                                      NS_GET_IID(nsIJSRuntimeService),
                                      (nsISupports**) &gJSRuntimeService);
 
@@ -562,7 +562,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
              (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
       nsCOMPtr<nsIAtom> tag;
       PRInt32 dummy;
-      NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+      NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
       xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
       if (tag.get() == nsXULAtoms::menulist) {
         // We delegate XULMenuListElement APIs to an aggregate object
@@ -584,7 +584,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
              (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))){
       nsCOMPtr<nsIAtom> tag;
       PRInt32 dummy;
-      NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+      NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
       xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
       if (tag.get() == nsXULAtoms::tree) {
         // We delegate XULTreeElement APIs to an aggregate object
@@ -1859,7 +1859,7 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
 
         nsCOMPtr<nsIAtom> tag;
         PRInt32 dummy;
-        NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+        NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
         xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
 
         const char* rootname;
@@ -3982,27 +3982,27 @@ nsXULElement::GetBoxObject(nsIBoxObject** aResult)
   nsresult rv;
   PRInt32 dummy;
   nsCOMPtr<nsIAtom> tag;
-  NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+  NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
   xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
   
-  nsCAutoString progID("component://netscape/layout/xul-boxobject");
+  nsCAutoString contractID("@mozilla.org/layout/xul-boxobject");
   if (tag.get() == nsXULAtoms::browser)
-    progID += "-browser";
+    contractID += "-browser;1";
   else if (tag.get() == nsXULAtoms::editor)
-    progID += "-editor";
+    contractID += "-editor;1";
   else if (tag.get() == nsXULAtoms::iframe)
-    progID += "-iframe";
+    contractID += "-iframe;1";
   else if (tag.get() == nsXULAtoms::menu)
-    progID += "-menu";
+    contractID += "-menu;1";
   else if (tag.get() == nsXULAtoms::popupset)
-    progID += "-popupset";
+    contractID += "-popupset;1";
   else if (tag.get() == nsXULAtoms::tree)
-    progID += "-tree";
+    contractID += "-tree;1";
   else if (tag.get() == nsXULAtoms::scrollbox)
-    progID += "-scrollbox";
+    contractID += "-scrollbox;1";
 
 
-  mBoxObject = do_CreateInstance(progID);
+  mBoxObject = do_CreateInstance(contractID);
   if (!mBoxObject)
     return NS_OK;
 

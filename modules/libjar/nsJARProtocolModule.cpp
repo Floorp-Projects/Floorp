@@ -28,7 +28,7 @@ static nsModuleComponentInfo components[] =
 {
     { "JAR Protocol Handler", 
        NS_JARPROTOCOLHANDLER_CID,
-       NS_NETWORK_PROTOCOL_PROGID_PREFIX "jar", 
+       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "jar", 
        nsJARProtocolHandler::Create
     },
 };

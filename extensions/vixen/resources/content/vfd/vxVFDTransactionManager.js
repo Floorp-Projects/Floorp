@@ -23,9 +23,9 @@
  
 function vxVFDTransactionManager() 
 {
-  const kTxMgrProgID = "component://netscape/transaction/manager";
+  const kTxMgrContractID = "@mozilla.org/transaction/manager;1";
   const kTxMgrIID = "nsITransactionManager";
-  this.mTxMgr = nsJSComponentManager.getService(kTxMgrProgID, kTxMgrIID);
+  this.mTxMgr = nsJSComponentManager.getService(kTxMgrContractID, kTxMgrIID);
 }
 
 vxVFDTransactionManager.prototype = 
@@ -53,10 +53,10 @@ vxVFDTransactionManager.prototype =
     if (!this.mTxMgr) {
       // If a Transaction Manager does not exist for this VFD, 
       // create one.
-      const kTxMgrPROGID = "component://netscape/transaction/manager";
+      const kTxMgrCONTRACTID = "@mozilla.org/transaction/manager;1";
       const kTxMgrIID = "nsITransactionManager";
       // XXX comment this out until this works
-      // this.mTxMgr = nsJSComponentManager.getService(kTxMgrPROGID, kTxMgrIID);
+      // this.mTxMgr = nsJSComponentManager.getService(kTxMgrCONTRACTID, kTxMgrIID);
     }
     
     // do the transaction

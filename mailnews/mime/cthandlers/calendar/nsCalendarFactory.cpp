@@ -48,7 +48,7 @@ public:
 
   nsCalendarFactory(const nsCID &aClass,
                const char* aClassName,
-               const char* aProgID,
+               const char* aContractID,
                nsISupports*);
 
   // nsIFactory methods   
@@ -60,17 +60,17 @@ protected:
 
   nsCID mClassID;
   char* mClassName;
-  char* mProgID;
+  char* mContractID;
   nsIServiceManager* mServiceManager;
 };   
 
 nsCalendarFactory::nsCalendarFactory(const nsCID &aClass,
                            const char* aClassName,
-                           const char* aProgID,
+                           const char* aContractID,
                            nsISupports *compMgrSupports)
   : mClassID(aClass),
     mClassName(nsCRT::strdup(aClassName)),
-    mProgID(nsCRT::strdup(aProgID))
+    mContractID(nsCRT::strdup(aContractID))
 {
 	NS_INIT_REFCNT();
 
@@ -83,7 +83,7 @@ nsCalendarFactory::~nsCalendarFactory()
 {
   NS_IF_RELEASE(mServiceManager);
   PL_strfree(mClassName);
-  PL_strfree(mProgID);
+  PL_strfree(mContractID);
 }   
 
 nsresult
@@ -166,13 +166,13 @@ nsCalendarFactory::LockFactory(PRBool aLock)
 extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
-                                           const char *aProgID,
+                                           const char *aContractID,
                                            nsIFactory **aFactory)
 {
 	if (nsnull == aFactory)
 		return NS_ERROR_NULL_POINTER;
 
-  *aFactory = new nsCalendarFactory(aClass, aClassName, aProgID, aServMgr);
+  *aFactory = new nsCalendarFactory(aClass, aClassName, aContractID, aServMgr);
   if (aFactory)
     return (*aFactory)->QueryInterface(NS_GET_IID(nsIFactory),
                                        (void**)aFactory);
@@ -197,7 +197,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 
   rv = compMgr->RegisterComponent(kMimeContentTypeHandlerCID,
                                        "MIME Calendar Handler",
-                                       "mimecth:text/calendar",
+                                       "@mozilla.org/mimecth;1?type=text/calendar",
                                        path, PR_TRUE, PR_TRUE);
   return rv;
 }

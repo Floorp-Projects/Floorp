@@ -40,7 +40,7 @@ function onInit() {
     if (accountNameInput.value=="") {
         var pageData = parent.GetPageData();
         var type = parent.getCurrentServerType(pageData);
-        var protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
+        var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
         var accountName;
         if (type == "nntp") {
             accountName = pageData.newsserver.hostname.value;

@@ -201,7 +201,7 @@ nsEventQueueImpl::NotifyObservers(const char *aTopic)
 {
   nsresult rv;
 
-  nsCOMPtr<nsIObserverService> os = do_GetService(NS_OBSERVERSERVICE_PROGID, &rv);
+  nsCOMPtr<nsIObserverService> os = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
     nsAutoString topic;
     topic.AssignWithConversion(aTopic);

@@ -150,7 +150,7 @@ NS_IMETHODIMP nsDeviceContextSpecXlib::Init(PRBool aQuiet)
             PRInt32 buttonPressed = 0;
             ioParamBlock->GetInt(0, &buttonPressed);
             if (buttonPressed == 0) {
-              nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_PROGID, &rv);
+              nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
               if (NS_SUCCEEDED(rv) && pPrefs) {
                 (void) pPrefs->GetBoolPref("print.print_reversed", &reversed);
                 (void) pPrefs->GetBoolPref("print.print_color", &color);
@@ -295,7 +295,7 @@ NS_IMETHODIMP nsDeviceContextSpecXlib::GetUserCancelled(PRBool &aCancel)
 NS_IMETHODIMP nsDeviceContextSpecXlib::GetPrintMethod(int &aMethod)
 {
   nsresult rv;
-  nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_PROGID, &rv);
+  nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && pPrefs) {
     PRInt32 method = 0;
     (void) pPrefs->GetIntPref("print.print_method", &method);

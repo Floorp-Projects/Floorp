@@ -629,7 +629,7 @@ nsresult
 nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
 {
   nsresult rv;
-  NS_WITH_SERVICE ( nsIDragService, dragService, "component://netscape/widget/dragservice", &rv );
+  NS_WITH_SERVICE ( nsIDragService, dragService, "@mozilla.org/widget/dragservice;1", &rv );
   if ( NS_SUCCEEDED(rv) ) {
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
     if ( dragSession ) {
@@ -675,7 +675,7 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
   if ( htmlEditor )
   {
     nsresult rv;
-    NS_WITH_SERVICE(nsIDragService, dragService, "component://netscape/widget/dragservice", &rv);
+    NS_WITH_SERVICE(nsIDragService, dragService, "@mozilla.org/widget/dragservice;1", &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));

@@ -50,7 +50,7 @@
 #include "nsIScriptError.h"
 #include "nsIConsoleService.h"
 
-const char mozJSComponentLoaderProgID[] = "moz.jsloader.1";
+const char mozJSComponentLoaderContractID[] = "@mozilla.org/moz/jsloader;1";
 const char jsComponentTypeName[] = "text/javascript";
 
 /* XXX export properly from libxpcom, for now this will let Mac build */
@@ -64,9 +64,9 @@ const char lastModValueName[] = "LastModTimeStamp";
 const char xpcomKeyName[] = "software/mozilla/XPCOM/components";
 #endif
 
-const char kJSRuntimeServiceProgID[] = "nsJSRuntimeService";
-const char kXPConnectServiceProgID[] = "nsIXPConnect";
-const char kJSContextStackProgID[] =   "nsThreadJSContextStack";
+const char kJSRuntimeServiceContractID[] = "@mozilla.org/js/xpc/RuntimeService;1";
+const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect;1";
+const char kJSContextStackContractID[] =   "@mozilla.org/js/xpc/ContextStack;1";
 
 static JSBool PR_CALLBACK
 Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
@@ -288,7 +288,7 @@ Reporter(JSContext *cx, const char *message, JSErrorReport *rep)
      * poll the service to update the JavaScript console.
      */
     nsCOMPtr<nsIScriptError>
-        errorObject(do_CreateInstance("mozilla.scripterror.1"));
+        errorObject(do_CreateInstance("@mozilla.org/scripterror;1"));
     
     if (consoleService != nsnull && errorObject != nsnull) {
         /*
@@ -356,7 +356,7 @@ mozJSComponentLoader::ReallyInit()
      * We keep a reference around, because it's a Bad Thing if the runtime
      * service gets shut down before we're done.  Bad!
      */
-    mRuntimeService = do_GetService(kJSRuntimeServiceProgID, &rv);
+    mRuntimeService = do_GetService(kJSRuntimeServiceContractID, &rv);
     if (NS_FAILED(rv) ||
         NS_FAILED(rv = mRuntimeService->GetRuntime(&mRuntime)))
         return rv;
@@ -364,7 +364,7 @@ mozJSComponentLoader::ReallyInit()
     /*
      * Get the XPConnect service.
      */
-    nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceProgID);
+    nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceContractID);
     if (!xpc)
         return NS_ERROR_FAILURE;
 
@@ -374,7 +374,7 @@ mozJSComponentLoader::ReallyInit()
 
 #ifndef XPCONNECT_STANDALONE
     NS_WITH_SERVICE(nsIScriptSecurityManager, secman, 
-                   NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                   NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv) || !secman)
         return NS_ERROR_FAILURE;
 
@@ -741,7 +741,7 @@ mozJSComponentLoader::AttemptRegistration(nsIFile *component,
     
     {
       // Notify observers, if any, of autoregistration work
-      NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+      NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
       if (NS_SUCCEEDED(rv))
       {
         nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
@@ -805,7 +805,7 @@ mozJSComponentLoader::UnregisterComponent(nsIFile *component)
     
     {
       // Notify observers, if any, of autoregistration work
-      NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+      NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
       if (NS_SUCCEEDED(rv))
       {
         nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
@@ -900,12 +900,12 @@ mozJSComponentLoader::ModuleForLocation(const char *registryLocation,
         return nsnull;
     }
 
-    nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceProgID);
+    nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceContractID);
     if (!xpc)
         return nsnull;
 
     nsresult rv;
-    NS_WITH_SERVICE(nsIJSContextStack, cxstack, kJSContextStackProgID, &rv);
+    NS_WITH_SERVICE(nsIJSContextStack, cxstack, kJSContextStackContractID, &rv);
     if (NS_FAILED(rv) ||
         NS_FAILED(cxstack->Push(mContext)))
         return nsnull;
@@ -987,7 +987,7 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
     nsCOMPtr<nsISupports> backstagePass = new BackstagePass();
 #endif
 
-    nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceProgID);
+    nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceContractID);
     if (!xpc)
       return nsnull;
 
@@ -1014,7 +1014,7 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
         needRelease = PR_TRUE;
     }
 
-    NS_WITH_SERVICE(nsIJSContextStack, cxstack, kJSContextStackProgID, &rv);
+    NS_WITH_SERVICE(nsIJSContextStack, cxstack, kJSContextStackContractID, &rv);
     if (NS_FAILED(rv) ||
         NS_FAILED(cxstack->Push(mContext)))
         return nsnull;
@@ -1081,13 +1081,13 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
 
 NS_IMETHODIMP
 mozJSComponentLoader::OnRegister(const nsIID &aCID, const char *aType,
-                                 const char *aClassName, const char *aProgID,
+                                 const char *aClassName, const char *aContractID,
                                  const char *aLocation,
                                  PRBool aReplace, PRBool aPersist)
 
 {
 #ifdef DEBUG_shaver_off
-    fprintf(stderr, "mJCL: registered %s/%s in %s\n", aClassName, aProgID,
+    fprintf(stderr, "mJCL: registered %s/%s in %s\n", aClassName, aContractID,
             aLocation);
 #endif
     return NS_OK;
@@ -1122,11 +1122,11 @@ RegisterJSLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
 {
     nsresult rv;
     nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(NS_CATEGORYMANAGER_PROGID, &rv);
+        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     nsXPIDLCString previous;
     return catman->AddCategoryEntry("component-loader", jsComponentTypeName,
-                                    mozJSComponentLoaderProgID,
+                                    mozJSComponentLoaderContractID,
                                     PR_TRUE, PR_TRUE, getter_Copies(previous));
 }
 
@@ -1136,7 +1136,7 @@ UnregisterJSLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
 {
     nsresult rv;
     nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(NS_CATEGORYMANAGER_PROGID, &rv);
+        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     nsXPIDLCString jsLoader;
     rv = catman->GetCategoryEntry("component-loader", jsComponentTypeName,
@@ -1144,7 +1144,7 @@ UnregisterJSLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
     if (NS_FAILED(rv)) return rv;
 
     // only unregister if we're the current JS component loader
-    if (!strcmp(jsLoader, mozJSComponentLoaderProgID)) {
+    if (!strcmp(jsLoader, mozJSComponentLoaderContractID)) {
         return catman->DeleteCategoryEntry("component-loader",
                                            jsComponentTypeName, PR_TRUE,
                                            getter_Copies(jsLoader));
@@ -1156,7 +1156,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSComponentLoader);
 
 static nsModuleComponentInfo components[] = {
     { "JS component loader", MOZJSCOMPONENTLOADER_CID,
-      mozJSComponentLoaderProgID, mozJSComponentLoaderConstructor,
+      mozJSComponentLoaderContractID, mozJSComponentLoaderConstructor,
       RegisterJSLoader, UnregisterJSLoader }
 };
 

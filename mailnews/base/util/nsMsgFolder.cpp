@@ -619,7 +619,7 @@ nsMsgFolder::parseURI(PRBool needServer)
       // turn it back into a server:
       
       NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                      NS_MSGACCOUNTMANAGER_PROGID, &rv);
+                      NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
       if (NS_FAILED(rv)) return rv;
 
 #ifdef DEBUG_alecf
@@ -1434,7 +1434,7 @@ NS_IMETHODIMP nsMsgFolder::SetPrefFlag()
   // flag set appropriately.
   nsresult rv = NS_OK;
   NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
+                  NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
 	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);

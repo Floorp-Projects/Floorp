@@ -42,7 +42,7 @@
 | shell components.  The macros of interest (that you would typically use      |
 | in the implementation of your component) are:                                |
 |                                                                              |
-| NS_IMPL_IAPPSHELLCOMPONENT( className, interfaceName, progId ):              |
+| NS_IMPL_IAPPSHELLCOMPONENT( className, interfaceName, contractId ):              |
 |                                                                              |
 |   This macro will generate all the boilderplate app shell component          |
 |   implementation details.                                                    |
@@ -50,7 +50,7 @@
 |           class.                                                             |
 |       "interfaceName" is the name of the interface that the class            |
 |           implements (sorry, currently only one is supported).               |
-|       "progId" is the progId corresponding to the interface your             |
+|       "contractId" is the contractId corresponding to the interface your             |
 |           class implements.                                                  |
 ------------------------------------------------------------------------------*/
 
@@ -158,7 +158,7 @@ nsAppShellComponentImpl::~nsAppShellComponentImpl() { \
 #define NS_IMPL_IAPPSHELLCOMPONENTIMPL_CTORDTOR(className)
 #endif
 
-#define NS_IMPL_IAPPSHELLCOMPONENT( className, interfaceName, progId, autoInit ) \
+#define NS_IMPL_IAPPSHELLCOMPONENT( className, interfaceName, contractId, autoInit ) \
 /* Define instance counter implementation stuff. */\
 NS_DEFINE_MODULE_INSTANCE_COUNTER() \
 /* Define component globals. */\
@@ -171,7 +171,7 @@ className::Initialize( nsIAppShellService *anAppShell, \
     mAppShell = anAppShell; \
     mCmdLine  = aCmdLineService; \
     if ( Is_Service() ) { \
-        rv = nsServiceManager::RegisterService( progId, this ); \
+        rv = nsServiceManager::RegisterService( contractId, this ); \
     } \
     if ( NS_SUCCEEDED( rv ) ) { \
         rv = DoInitialization(); \
@@ -183,7 +183,7 @@ NS_IMETHODIMP \
 className::Shutdown() { \
     nsresult rv = NS_OK; \
     if ( Is_Service() ) { \
-        rv = nsServiceManager::UnregisterService( progId ); \
+        rv = nsServiceManager::UnregisterService( contractId ); \
     } \
     return rv; \
 } \
@@ -314,13 +314,13 @@ className##Module::RegisterSelf(nsIComponentManager *compMgr, \
     if (NS_FAILED(rv)) return rv; \
     /* Register our component. */ \
     rv = compMgr->RegisterComponentSpec( className::GetCID(), #className, \
-                                          progId, aPath, PR_TRUE, PR_TRUE ); \
+                                          contractId, aPath, PR_TRUE, PR_TRUE ); \
     if ( NS_SUCCEEDED( rv ) ) { \
         DEBUG_PRINTF( PR_STDOUT, #className " registration successful\n" ); \
         if ( autoInit ) { \
             /* Add to appshell component list. */ \
             nsIRegistry *registry; \
-            rv = nsServiceManager::GetService( NS_REGISTRY_PROGID, \
+            rv = nsServiceManager::GetService( NS_REGISTRY_CONTRACTID, \
                                       NS_GET_IID(nsIRegistry), \
                                       (nsISupports**)&registry ); \
             if ( NS_SUCCEEDED( rv ) ) { \

@@ -172,13 +172,13 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindowInternal *window, nsIDOMElement *button)
 
     // hook up to the form post notifications:
     nsIObserverService *svc = 0;
-    rv = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, 
+    rv = nsServiceManager::GetService(NS_OBSERVERSERVICE_CONTRACTID, 
                                       NS_GET_IID(nsIObserverService), 
                                       (nsISupports**)&svc );
     if (NS_SUCCEEDED(rv) && svc) {
         nsString  topic; topic.AssignWithConversion(NS_FORMSUBMIT_SUBJECT);
         rv = svc->AddObserver( this, topic.GetUnicode());
-        nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_PROGID, svc );
+        nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_CONTRACTID, svc );
     }
 
     // hook up to the webprogress notifications.
@@ -204,7 +204,7 @@ NS_IMETHODIMP
 nsSecureBrowserUIImpl::DisplayPageInfoUI()
 {
     nsresult res;
-    NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &res);
+    NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_CONTRACTID, &res);
     if (NS_FAILED(res)) 
         return res;
     
@@ -512,7 +512,7 @@ nsSecureBrowserUIImpl::IsURLfromPSM(nsIURI* aURL, PRBool* value)
 
     if ( PL_strncasecmp(host, "127.0.0.1",  9) == 0 ) {
 	    nsresult res;
-	    NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &res);
+	    NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_CONTRACTID, &res);
 	    if (NS_FAILED(res)) 
 		    return res;
 
@@ -595,7 +595,7 @@ nsSecureBrowserUIImpl::CheckProtocolContextSwitch( nsIURI* newURI, nsIURI* oldUR
 
             if (!outCheckValue) {
                 mPref->SetBoolPref(LEAVE_SITE_PREF, PR_FALSE);
-                NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &res);
+                NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_CONTRACTID, &res);
                 if (NS_FAILED(res)) 
                     return res;
                 psm->PassPrefs();
@@ -630,7 +630,7 @@ nsSecureBrowserUIImpl::CheckProtocolContextSwitch( nsIURI* newURI, nsIURI* oldUR
             if (!outCheckValue)
             {
                 mPref->SetBoolPref(ENTER_SITE_PREF, PR_FALSE);
-                NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &res);
+                NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_CONTRACTID, &res);
                 if (NS_FAILED(res)) 
                     return res;
                 psm->PassPrefs();
@@ -685,7 +685,7 @@ nsSecureBrowserUIImpl::CheckMixedContext(nsIURI* nextURI)
 
             if (!outCheckValue) {
                 mPref->SetBoolPref(MIXEDCONTENT_PREF, PR_FALSE);
-                NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &rv);
+                NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_CONTRACTID, &rv);
                 if (NS_FAILED(rv)) 
                     return rv;
                 psm->PassPrefs();
@@ -756,7 +756,7 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
 
         if (!outCheckValue) {
             mPref->SetBoolPref(INSECURE_SUBMIT_PREF, PR_FALSE);
-            NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &rv);
+            NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_CONTRACTID, &rv);
             if (NS_FAILED(rv)) 
                 return rv;
             psm->PassPrefs();

@@ -37,13 +37,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(WalletEditorImpl)
 // The list of components we register
 static nsModuleComponentInfo components[] = {
     { "WalletPreview World Component", NS_WALLETPREVIEW_CID,
-      "component://netscape/walletpreview/walletpreview-world", WalletPreviewImplConstructor },
+      "@mozilla.org/walletpreview/walletpreview-world;1", WalletPreviewImplConstructor },
     { "SignonViewer World Component", NS_SIGNONVIEWER_CID,
-      "component://netscape/signonviewer/signonviewer-world", SignonViewerImplConstructor },
+      "@mozilla.org/signonviewer/signonviewer-world;1", SignonViewerImplConstructor },
     { "CookieViewer World Component", NS_COOKIEVIEWER_CID,
-      "component://netscape/cookieviewer/cookieviewer-world", CookieViewerImplConstructor },
+      "@mozilla.org/cookieviewer/cookieviewer-world;1", CookieViewerImplConstructor },
     { "WalletEditor World Component", NS_WALLETEDITOR_CID,
-      "component://netscape/walleteditor/walleteditor-world", WalletEditorImplConstructor },
+      "@mozilla.org/walleteditor/walleteditor-world;1", WalletEditorImplConstructor },
 };
 
 NS_IMPL_NSGETMODULE("nsWalletViewerModule", components)

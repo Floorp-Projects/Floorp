@@ -339,7 +339,7 @@ nsMessengerMigrator::~nsMessengerMigrator()
     Shutdown();
     //Don't remove from Observer service in Shutdown because Shutdown also gets called
     //from xpcom shutdown observer.  And we don't want to remove from the service in that case.
-    NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+    NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
     {
       nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
@@ -352,7 +352,7 @@ nsresult nsMessengerMigrator::Init()
 {
   nsresult rv;
 
-  NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+  NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
   {
     nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
@@ -694,7 +694,7 @@ nsMessengerMigrator::SetUsernameIfNecessary()
 
     nsXPIDLString fullnameFromSystem;
     
-    nsCOMPtr<nsIUserInfo> userInfo = do_GetService(NS_USERINFO_PROGID, &rv);
+    nsCOMPtr<nsIUserInfo> userInfo = do_GetService(NS_USERINFO_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     if (!userInfo) return NS_ERROR_FAILURE;
@@ -1876,7 +1876,7 @@ nsMessengerMigrator::MigrateAddressBooks()
 {
   nsresult rv = NS_OK;
 
-  nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_PROGID, &rv);
+  nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_CONTRACTID, &rv);
   if (NS_FAILED(rv) || !abUpgrader) {
     printf("the addressbook migrator is only in the commercial builds.\n");
     return NS_OK;

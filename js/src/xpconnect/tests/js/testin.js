@@ -39,7 +39,7 @@
 
   StartTest( "Passing different types in" );
 
-  var CLASS = Components.classes["xpcTestIn"];
+  var CLASS = Components.classes["@mozilla.org/js/xpc/test/In;1"];
   var IFACE = Components.interfaces["nsIXPCTestIn" ];
 
   var C = CLASS.createInstance();

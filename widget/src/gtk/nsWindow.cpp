@@ -1988,14 +1988,14 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
   nsCOMPtr<nsIUnicodeEncoder> encoder;
   // get the charset
   nsAutoString platformCharset;
-  nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+  nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
     rv = platformCharsetService->GetCharset(kPlatformCharsetSel_Menu, platformCharset);
   if (NS_FAILED(rv))
     platformCharset.AssignWithConversion("ISO-8859-1");
 
   // get the encoder
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, NS_CHARSETCONVERTERMANAGER_PROGID, &rv);  
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);  
   rv = ccm->GetUnicodeEncoder(&platformCharset, getter_AddRefs(encoder));
 
   // Estimate out length and allocate the buffer based on a worst-case estimate, then do
@@ -3408,7 +3408,7 @@ nsWindow::ResetDragMotionTimer(GtkWidget *aWidget,
   }
   
   // otherwise we create a new timer
-  mDragMotionTimer = do_CreateInstance("component://netscape/timer");
+  mDragMotionTimer = do_CreateInstance("@mozilla.org/timer;1");
   NS_ASSERTION(mDragMotionTimer, "Failed to create drag motion timer!");
   mDragMotionTimer->Init(DragMotionTimerCallback, this, 100);
 }

@@ -34,7 +34,7 @@
 extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
-                                           const char *aProgID,
+                                           const char *aContractID,
                                            nsIFactory **aFactory);
 extern "C" NS_EXPORT PRBool   NSCanUnload(nsISupports* aServMgr);
 extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *fullpath);
@@ -43,7 +43,7 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
 typedef nsresult (*nsFactoryProc)(nsISupports* aServMgr,
                                   const nsCID &aClass,
                                   const char *aClassName,
-                                  const char *aProgID,
+                                  const char *aContractID,
                                   nsIFactory **aFactory);
 typedef PRBool   (*nsCanUnloadProc)(nsISupports* aServMgr);
 typedef nsresult (*nsRegisterProc)(nsISupports* aServMgr, const char *path);
@@ -58,7 +58,7 @@ typedef nsresult (*nsUnregisterProc)(nsISupports* aServMgr, const char *path);
     {0x92, 0xfb, 0x00, 0xe0, 0x98, 0x05, 0x57, 0x0f} \
 }
 
-#define NS_COMPONENTMANAGER_PROGID "xpcom.componentmanager.1"
+#define NS_COMPONENTMANAGER_CONTRACTID "@mozilla.org/xpcom/componentmanager;1"
 
 extern NS_COM nsresult
 NS_GetGlobalComponentManager(nsIComponentManager* *result);
@@ -80,14 +80,14 @@ public:
                                  void **aResult);
 
   // Finds a class ID for a specific Program ID
-  static nsresult ProgIDToClassID(const char *aProgID,
+  static nsresult ContractIDToClassID(const char *aContractID,
                                 nsCID *aClass);
   
   // Finds a Program ID for a specific class ID
   // caller frees the result with delete[]
-  static nsresult CLSIDToProgID(nsCID *aClass,
+  static nsresult CLSIDToContractID(nsCID *aClass,
                                 char* *aClassName,
-                                char* *aProgID);
+                                char* *aContractID);
   
   // Creates a class instance for a specific class ID
   static nsresult CreateInstance(const nsCID &aClass, 
@@ -95,8 +95,8 @@ public:
                                  const nsIID &aIID,
                                  void **aResult);
 
-  // Convenience routine, creates a class instance for a specific ProgID
-  static nsresult CreateInstance(const char *aProgID,
+  // Convenience routine, creates a class instance for a specific ContractID
+  static nsresult CreateInstance(const char *aContractID,
                                  nsISupports *aDelegate,
                                  const nsIID &aIID,
                                  void **aResult);
@@ -104,7 +104,7 @@ public:
   // Manually registry a factory for a class
   static nsresult RegisterFactory(const nsCID &aClass,
                                   const char *aClassName,
-                                  const char *aProgID,
+                                  const char *aContractID,
                                   nsIFactory *aFactory,
                                   PRBool aReplace);
 
@@ -117,7 +117,7 @@ public:
   // it internally turns around and calls RegisterComponentSpec.
   static nsresult RegisterComponent(const nsCID &aClass,
                                const char *aClassName,
-                               const char *aProgID,
+                               const char *aContractID,
                                const char *aLibraryPersistentDescriptor,
                                PRBool aReplace,
                                PRBool aPersist);
@@ -126,7 +126,7 @@ public:
   // This is the more prevalent use.
   static nsresult RegisterComponentSpec(const nsCID &aClass,
                                    const char *aClassName,
-                                   const char *aProgID,
+                                   const char *aContractID,
                                    nsIFile *aLibrary,
                                    PRBool aReplace,
                                    PRBool aPersist);
@@ -136,7 +136,7 @@ public:
   // this could be a code fragment name on the Mac.
   static nsresult RegisterComponentLib(const nsCID &aClass,
                                        const char *aClassName,
-                                       const char *aProgID,
+                                       const char *aContractID,
                                        const char *adllName,
                                        PRBool aReplace,
                                        PRBool aPersist);
@@ -172,8 +172,8 @@ public:
   // Get an enumeration of all the CIDs
   static nsresult EnumerateCLSIDs(nsIEnumerator** aEmumerator);
     
-  // Get an enumeration of all the ProgIDs
-  static nsresult EnumerateProgIDs(nsIEnumerator** aEmumerator);
+  // Get an enumeration of all the ContractIDs
+  static nsresult EnumerateContractIDs(nsIEnumerator** aEmumerator);
 
 };
 
@@ -197,11 +197,11 @@ class NS_COM nsCreateInstanceByCID : public nsCOMPtr_helper
 			nsresult*			mErrorPtr;
 	};
 
-class NS_COM nsCreateInstanceByProgID : public nsCOMPtr_helper
+class NS_COM nsCreateInstanceByContractID : public nsCOMPtr_helper
 	{
 		public:
-			nsCreateInstanceByProgID( const char* aProgID, nsISupports* aOuter, nsresult* aErrorPtr )
-					: mProgID(aProgID),
+			nsCreateInstanceByContractID( const char* aContractID, nsISupports* aOuter, nsresult* aErrorPtr )
+					: mContractID(aContractID),
 						mOuter(aOuter),
 						mErrorPtr(aErrorPtr)
 				{
@@ -211,7 +211,7 @@ class NS_COM nsCreateInstanceByProgID : public nsCOMPtr_helper
 			virtual nsresult operator()( const nsIID&, void** ) const;
 
 		private:
-			const char*	  mProgID;
+			const char*	  mContractID;
 			nsISupports*	mOuter;
 			nsresult*			mErrorPtr;
 	};
@@ -252,17 +252,17 @@ do_CreateInstance( const nsCID& aCID, nsISupports* aOuter, nsresult* error = 0 )
 	}
 
 inline
-const nsCreateInstanceByProgID
-do_CreateInstance( const char* aProgID, nsresult* error = 0 )
+const nsCreateInstanceByContractID
+do_CreateInstance( const char* aContractID, nsresult* error = 0 )
 	{
-		return nsCreateInstanceByProgID(aProgID, 0, error);
+		return nsCreateInstanceByContractID(aContractID, 0, error);
 	}
 
 inline
-const nsCreateInstanceByProgID
-do_CreateInstance( const char* aProgID, nsISupports* aOuter, nsresult* error = 0 )
+const nsCreateInstanceByContractID
+do_CreateInstance( const char* aContractID, nsISupports* aOuter, nsresult* error = 0 )
 	{
-		return nsCreateInstanceByProgID(aProgID, aOuter, error);
+		return nsCreateInstanceByContractID(aContractID, aOuter, error);
 	}
 
 inline

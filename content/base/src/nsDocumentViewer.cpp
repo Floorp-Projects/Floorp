@@ -1087,7 +1087,7 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
       }
     }
 
-    NS_WITH_SERVICE(nsIChromeRegistry, chromeRegistry, "component://netscape/chrome/chrome-registry", &rv);
+    NS_WITH_SERVICE(nsIChromeRegistry, chromeRegistry, "@mozilla.org/chrome/chrome-registry;1", &rv);
     if (NS_SUCCEEDED(rv) && chromeRegistry) {
       nsCOMPtr<nsISupportsArray> sheets;
       chromeRegistry->GetBackstopSheets(getter_AddRefs(sheets));
@@ -1763,7 +1763,7 @@ NS_IMETHODIMP DocumentViewerImpl::GetDefaultCharacterSet(PRUnichar** aDefaultCha
       webShell = do_QueryInterface(mContainer);
       if (webShell)
       {
-        nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_PROGID));
+        nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
         if(prefs)
           prefs->GetLocalizedUnicharPref("intl.charset.default", &gDefCharset);
       }

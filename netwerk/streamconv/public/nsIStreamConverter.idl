@@ -55,13 +55,13 @@
  * Registering a stream converter:
  * Stream converter registration is a two step process. First of all the stream
  * converter implementation must register itself with the component manager using
- * a progid in the format below. Second, the stream converter must add the progid
+ * a contractid in the format below. Second, the stream converter must add the contractid
  * to the registry.
  *
- * Stream converter progid format (the stream converter root key is defined in this
+ * Stream converter contractid format (the stream converter root key is defined in this
  * file):
  *
- * <pre>Software/Netscape/streamconv/?from=FROM_MIME_TYPE?to=TO_MIME_TYPE</pre>
+ * <pre>Software/Netscape/streamconv/?from=FROM_MIME_TYPE&to=TO_MIME_TYPE</pre>
  *
  * @author Jud Valeski
  * @see nsIStreamConverterService
@@ -114,5 +114,5 @@ interface nsIStreamConverter : nsIStreamListener {
 };
 
 %{C++
-#define NS_ISTREAMCONVERTER_KEY         "Software/Netscape/streamconv/"
+#define NS_ISTREAMCONVERTER_KEY         "@mozilla.org/streamconv;1"
 %}

@@ -68,8 +68,8 @@ void create(in nsIURI aURI, in wstring aTitle, in nsIDOMDocument aDocument,
 #define NS_SHENTRY_CID \
 {0xbfd1a791, 0xad9f, 0x11d3, {0xbd, 0xc7, 0x0, 0x50, 0x4, 0xa, 0x9b, 0x44}}
 
-#define NS_SHENTRY_PROGID \
-    "component://netscape/browser/session-history-entry"
+#define NS_SHENTRY_CONTRACTID \
+    "@mozilla.org/browser/session-history-entry;1"
 
 %}
 

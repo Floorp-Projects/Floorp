@@ -268,7 +268,7 @@ nsresult nsInterfaceState::PrimeUpdateTimer()
     mUpdateTimer = NULL;      // free it
   }
   
-  mUpdateTimer = do_CreateInstance("component://netscape/timer", &rv);
+  mUpdateTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_FAILED(rv)) return rv;
 
   const PRUint32 kUpdateTimerDelay = 150;

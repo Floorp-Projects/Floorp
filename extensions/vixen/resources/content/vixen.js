@@ -53,9 +53,9 @@ var vxShell =
     this.focusedWindow = vxShell.loadDocument(null);
   
     // initialise the document focus observer
-    const kObserverServicePROGID = "component://netscape/observer-service";
+    const kObserverServiceCONTRACTID = "@mozilla.org/observer-service;1";
     const kObserverServiceIID = "nsIObserverService";
-    this.mFocusObserver = nsJSComponentManager.getService(kObserverServicePROGID, kObserverServiceIID);
+    this.mFocusObserver = nsJSComponentManager.getService(kObserverServiceCONTRACTID, kObserverServiceIID);
     
   },
   
@@ -104,8 +104,8 @@ var vxShell =
   loadDocumentWithUI: function ()
   {
     const kFilePickerIID = "nsIFilePicker";
-    const kFilePickerPROGID = "component://mozilla/filepicker";
-    var filePicker = nsJSComponentManager.createInstance(kFilePickerPROGID, kFilePickerIID);
+    const kFilePickerCONTRACTID = "@mozilla.org/filepicker;1";
+    var filePicker = nsJSComponentManager.createInstance(kFilePickerCONTRACTID, kFilePickerIID);
     if (filePicker) {
       const FP = Components.interfaces.nsIFilePicker;
       filePicker.init(window, "Open", FP.modeOpen);

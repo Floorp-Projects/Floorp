@@ -65,7 +65,7 @@ static NS_DEFINE_IID(kIUnicodeDecoderIID, NS_IUNICODEDECODER_IID);
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 14)
 
 
-#define NS_UNICODEDECODER_PROGID_BASE "component://netscape/intl/unicode/decoder?charset="
+#define NS_UNICODEDECODER_CONTRACTID_BASE "@mozilla.org/intl/unicode/decoder;1?charset="
 
 /**
  * Interface for a Converter from a Charset into Unicode.

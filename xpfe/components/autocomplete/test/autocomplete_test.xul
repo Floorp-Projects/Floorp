@@ -21,13 +21,13 @@ var AutoCompleteSession = {
     {
         dump("Search Session: onStartLookup\n");
 
-        var results = Components.classes["component://netscape/autocomplete/results"].createInstance();
+        var results = Components.classes["@mozilla.org/autocomplete/results;1"].createInstance();
         results = results.QueryInterface(Components.interfaces.nsIAutoCompleteResults);
         results.searchString = value;
         results.defaultItemIndex = 0;
         results.param = null;
 
-        var item = Components.classes["component://netscape/autocomplete/item"].createInstance();
+        var item = Components.classes["@mozilla.org/autocomplete/item;1"].createInstance();
         item = item.QueryInterface(Components.interfaces.nsIAutoCompleteItem);
         item.value = "Jean-Francois Ducarroz";
         item.comment = "[put your comment here]";
@@ -47,13 +47,13 @@ var AutoCompleteSession = {
     {
         dump("Search Session: onAutoComplete, value =" + value + "\n");
         
-        var results = Components.classes["component://netscape/autocomplete/results"].createInstance();
+        var results = Components.classes["@mozilla.org/autocomplete/results;1"].createInstance();
         results = results.QueryInterface(Components.interfaces.nsIAutoCompleteResults);
         results.searchString = value;
         results.defaultItemIndex = 0;
         results.param = null;
         
-        var item = Components.classes["component://netscape/autocomplete/item"].createInstance();
+        var item = Components.classes["@mozilla.org/autocomplete/item;1"].createInstance();
         item = item.QueryInterface(Components.interfaces.nsIAutoCompleteItem);
         item.value = value + "@mozilla.org";
         item.comment = "[put your comment here]";
@@ -62,7 +62,7 @@ var AutoCompleteSession = {
         
         results.items.AppendElement(item);
 
-        item = Components.classes["component://netscape/autocomplete/item"].createInstance();
+        item = Components.classes["@mozilla.org/autocomplete/item;1"].createInstance();
         item = item.QueryInterface(Components.interfaces.nsIAutoCompleteItem);
         item.value = value + "@netscape.com";
         item.comment = "[put your comment here]";

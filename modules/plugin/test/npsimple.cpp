@@ -363,7 +363,7 @@ protected:
 static nsModuleComponentInfo gComponentInfo[] = {
     { "Simple Plugin",
       NS_SIMPLEPLUGIN_CID,
-      NS_INLINE_PLUGIN_PROGID_PREFIX PLUGIN_MIME_TYPE,
+      NS_INLINE_PLUGIN_CONTRACTID_PREFIX PLUGIN_MIME_TYPE,
       SimplePluginInstance::Create,
       SimplePluginInstance::RegisterSelf,
       SimplePluginInstance::UnregisterSelf },

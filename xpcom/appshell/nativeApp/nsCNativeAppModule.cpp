@@ -25,7 +25,7 @@
 
 static nsModuleComponentInfo components[] =
 {
-  { "Native App Service", NS_NATIVE_APP_CID, NS_NATIVE_APP_PROGID,
+  { "Native App Service", NS_NATIVE_APP_CID, NS_NATIVE_APP_CONTRACTID,
     nsCNativeAppImpl::Create
   }
 };

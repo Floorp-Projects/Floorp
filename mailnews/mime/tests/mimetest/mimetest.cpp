@@ -150,9 +150,9 @@ SetupRegistry(void)
   // mime
   nsComponentManager::RegisterComponent(kStreamConverterCID,   NULL, NULL, MIME_DLL,  PR_FALSE, PR_FALSE);
 
-  nsComponentManager::RegisterComponent(kHtmlEmitterCID, "RFC822 Parser", "component://netscape/messenger/mimeemitter;type=text/html", EMITTER_DLL,  PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kXmlEmitterCID,  "RFC822 Parser", "component://netscape/messenger/mimeemitter;type=raw", EMITTER_DLL,  PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kRawEmitterCID,  "RFC822 Parser", "component://netscape/messenger/mimeemitter;type=text/xml", EMITTER_DLL,  PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kHtmlEmitterCID, "RFC822 Parser", "@mozilla.org/messenger/mimeemitter;1?type=text/html", EMITTER_DLL,  PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kXmlEmitterCID,  "RFC822 Parser", "@mozilla.org/messenger/mimeemitter;1?type=raw", EMITTER_DLL,  PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kRawEmitterCID,  "RFC822 Parser", "@mozilla.org/messenger/mimeemitter;1?type=text/xml", EMITTER_DLL,  PR_FALSE, PR_FALSE);
 
   return NS_OK;
 }

@@ -49,7 +49,7 @@ class nsISupportsArray;
     {0x83, 0x0f, 0x00, 0x10, 0x4b, 0xed, 0x04, 0x5e} \
 }
 
-#define NS_DOC_ENCODER_PROGID_BASE "component://netscape/layout/documentEncoder?type="
+#define NS_DOC_ENCODER_CONTRACTID_BASE "@mozilla.org/layout/documentEncoder;1?type="
 
 class nsIDocumentEncoder : public nsISupports
 {

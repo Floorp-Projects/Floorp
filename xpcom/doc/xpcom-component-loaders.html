@@ -38,18 +38,18 @@ the proposal for Component Loaders.
 <h3>
 Component Loaders</h3>
 XPCOM in its simplest form can be viewed as creating instances of objects
-given a PROGID or ClassID. How it does this instantiation is specific to
+given a CONTRACTID or ClassID. How it does this instantiation is specific to
 XPCOM and opaque to clients of XPCOM.
-<p>Internally XPCOM maps the passed in PROGID to a CID and then the CID
+<p>Internally XPCOM maps the passed in CONTRACTID to a CID and then the CID
 maps into a DLL name. XPCOM loads the DLL assuming the dynamic loading
 mechanism to create a factory. Then, asks the factory to create a particular
 instance. Here are roughly the steps involved:
 <ol>
 <li>
-CreateInstance(..., PROGID,...)</li>
+CreateInstance(..., CONTRACTID,...)</li>
 
 <li>
-Map PROGID to CID</li>
+Map CONTRACTID to CID</li>
 
 <li>
 Map CID to DLL</li>
@@ -64,10 +64,10 @@ The proposal for Component Loaders is to get XPCOM to delegate the loading
 to a component loader:
 <ul>
 <li>
-CreateInstance(..., PROGID,...)</li>
+CreateInstance(..., CONTRACTID,...)</li>
 
 <li>
-Map PROGID to CID</li>
+Map CONTRACTID to CID</li>
 
 <li>
 <font color="#990000">Map CID to ComponentType</font></li>
@@ -85,11 +85,11 @@ factory = Dynamically Load DLL to create Factory</li>
 
 <ul>
 <li>
-<font color="#990000">ComponentLoaderServicePROGID = "<i>component://Netscape/XPCOM/component-loader&amp;type=</i>"
-+ ComponentType <sup><a href="#* ProgID syntax might change">*</a></sup></font></li>
+<font color="#990000">ComponentLoaderServiceCONTRACTID = "<i>@mozilla.org/xpcom/component-loader;1?type=</i>"
++ ComponentType <sup><a href="#* ContractID syntax might change">*</a></sup></font></li>
 
 <li>
-<font color="#990000">loaderInstance = GetService(..., ComponentLoaderServicePROGID,...)</font></li>
+<font color="#990000">loaderInstance = GetService(..., ComponentLoaderServiceCONTRACTID,...)</font></li>
 
 <li>
 <font color="#990000">factory = loaderInstance->CreateFactory(..., componentLocation,...)</font></li>
@@ -110,7 +110,7 @@ types, the component manager will provide the following API:
 <br><tt><font color="#990000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 const char *aClassName,</font></tt>
 <br><tt><font color="#990000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-const char *aProgID,</font></tt>
+const char *aContractID,</font></tt>
 <br><tt><font color="#990000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 const char *aComponentType,</font></tt>
 <br><tt><font color="#990000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -123,7 +123,7 @@ PRBool aPersist);</font></tt>
 <br>&nbsp;
 <h4>
 Component Loader Service Registration</h4>
-Since the loader is just another component with a special progid, there
+Since the loader is just another component with a special contractid, there
 is no special registration of the component loader.&nbsp; Component Loaders
 use either the RegisterComponent() api if they are a DLL (most common)
 or use RegisterComponentWithType() api if they are themselves of a particular
@@ -133,8 +133,8 @@ type (very rare).</ul>
 Autoregistration of non DLL Components and Component Loaders</h3>
 &lt;Need to figure this out>
 <br>&nbsp;
-<p><a NAME="* ProgID syntax might change"></a><sup><a href="#* ProgID syntax might change">*</a></sup>
-ProgID&nbsp;syntax might change
+<p><a NAME="* ContractID syntax might change"></a><sup><a href="#* ContractID syntax might change">*</a></sup>
+ContractID&nbsp;syntax might change
 <br>
 <hr WIDTH="100%">
 <br><i><font size=-1>Last Modified: 1 Aug 1999&nbsp; Suresh Duddi &lt;<a href="mailto:dp@netscape.com">dp@netscape.com</a>></font></i>

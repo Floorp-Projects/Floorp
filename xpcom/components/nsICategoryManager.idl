@@ -111,7 +111,7 @@ interface nsICategoryManager : nsISupports
 };
 
 %{C++
-#define NS_CATEGORYMANAGER_PROGID     "mozilla.categorymanager.1"
+#define NS_CATEGORYMANAGER_CONTRACTID     "mozilla.categorymanager.1"
 #define NS_CATEGORYMANAGER_CLASSNAME  "Category Manager"
 /* 16d222a6-1dd2-11b2-b693-f38b02c021b2 */
 #define NS_CATEGORYMANAGER_CID \

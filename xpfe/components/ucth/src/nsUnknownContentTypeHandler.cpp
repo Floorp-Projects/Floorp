@@ -228,7 +228,7 @@ NS_IMETHODIMP
 nsUnknownContentTypeHandler::PromptForSaveToFile(nsISupports * aWindowContext, const PRUnichar * aDefaultFile, const PRUnichar * aSuggestedFileExtension, nsILocalFile ** aNewFile)
 {
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("component://mozilla/filepicker", &rv);
+  nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1", &rv);
   if (filePicker)
   {
     nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID);
@@ -292,11 +292,11 @@ nsUnknownContentTypeHandler* nsUnknownContentTypeHandler::mInstance = nsnull;
 nsModuleComponentInfo nsUnknownContentTypeHandler::components[] = {
   { NS_IUNKNOWNCONTENTTYPEHANDLER_CLASSNAME, 
     NS_UNKNOWNCONTENTTYPEHANDLER_CID, 
-    NS_IUNKNOWNCONTENTTYPEHANDLER_PROGID, 
+    NS_IUNKNOWNCONTENTTYPEHANDLER_CONTRACTID, 
     nsUnknownContentTypeHandler::CreateComponent },
   { NS_IHELPERAPPLAUNCHERDLG_CLASSNAME, 
     NS_UNKNOWNCONTENTTYPEHANDLER_CID, 
-    NS_IHELPERAPPLAUNCHERDLG_PROGID, 
+    NS_IHELPERAPPLAUNCHERDLG_CONTRACTID, 
     nsUnknownContentTypeHandler::CreateComponent },
 };
 
@@ -306,7 +306,7 @@ NS_IMPL_NSGETMODULE( "nsUnknownContentTypeHandler", nsUnknownContentTypeHandler:
 // Generate base nsIAppShellComponent implementation.
 NS_IMPL_IAPPSHELLCOMPONENT( nsUnknownContentTypeHandler,
                             nsIUnknownContentTypeHandler,
-                            NS_IUNKNOWNCONTENTTYPEHANDLER_PROGID,
+                            NS_IUNKNOWNCONTENTTYPEHANDLER_CONTRACTID,
                             0 )
 #else
 
@@ -315,7 +315,7 @@ NS_IMPL_IAPPSHELLCOMPONENT( nsUnknownContentTypeHandler,
 // These make the macro source compile appropriately.
 #define className     nsUnknownContentTypeHandler
 #define interfaceName nsIUnknownContentTypeHandler
-#define progId        NS_IUNKNOWNCONTENTTYPEHANDLER_PROGID
+#define contractId        NS_IUNKNOWNCONTENTTYPEHANDLER_CONTRACTID
 
 /* Define instance counter implementation stuff. */
 NS_DEFINE_MODULE_INSTANCE_COUNTER()
@@ -329,7 +329,7 @@ className::Initialize( nsIAppShellService *anAppShell,
     mAppShell = anAppShell; 
     mCmdLine  = aCmdLineService; 
     if ( Is_Service() ) { 
-        rv = nsServiceManager::RegisterService( progId, (interfaceName*)this ); 
+        rv = nsServiceManager::RegisterService( contractId, (interfaceName*)this ); 
     } 
     if ( NS_SUCCEEDED( rv ) ) { 
         rv = DoInitialization(); 
@@ -341,7 +341,7 @@ NS_IMETHODIMP
 className::Shutdown() { 
     nsresult rv = NS_OK; 
     if ( Is_Service() ) { 
-        rv = nsServiceManager::UnregisterService( progId ); 
+        rv = nsServiceManager::UnregisterService( contractId ); 
     } 
     return rv; 
 } 
@@ -476,13 +476,13 @@ className##Module::RegisterSelf(nsIComponentManager *compMgr,
     if (NS_FAILED(rv)) return rv; 
     /* Register our component. */ 
     rv = compMgr->RegisterComponentSpec( className::GetCID(), #className, 
-                                          progId, aPath, PR_TRUE, PR_TRUE ); 
+                                          contractId, aPath, PR_TRUE, PR_TRUE ); 
     if ( NS_SUCCEEDED( rv ) ) { 
         DEBUG_PRINTF( PR_STDOUT, #className " registration successfuln" ); 
         if ( autoInit ) { 
             /* Add to appshell component list. */ 
             nsIRegistry *registry; 
-            rv = nsServiceManager::GetService( NS_REGISTRY_PROGID, 
+            rv = nsServiceManager::GetService( NS_REGISTRY_CONTRACTID, 
                                       NS_GET_IID(nsIRegistry), 
                                       (nsISupports**)&registry ); 
             if ( NS_SUCCEEDED( rv ) ) { 

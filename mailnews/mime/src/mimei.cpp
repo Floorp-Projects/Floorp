@@ -198,8 +198,8 @@ mime_locate_external_content_handler(const char *content_type,
   nsCOMPtr<nsIMimeContentTypeHandler>     ctHandler;
   nsresult rv = NS_OK;
 
-  PR_snprintf(lookupID, sizeof(lookupID), "mimecth:%s", content_type);
-	if (nsComponentManager::ProgIDToClassID(lookupID, &classID) != NS_OK)
+  PR_snprintf(lookupID, sizeof(lookupID), "@mozilla.org/mimecth;1?type=%s", content_type);
+	if (nsComponentManager::ContractIDToClassID(lookupID, &classID) != NS_OK)
     return NULL;
   
   rv  = nsComponentManager::CreateInstance(classID, (nsISupports *)nsnull, kIMimeContentTypeHandlerIID, 

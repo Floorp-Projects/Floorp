@@ -35,7 +35,7 @@
   {0xd25e0511, 0x2bae, 0x11d4, {0x9d, 0x10, 0x0, 0x50, 0x4, 0x0, 0x7, 0xb2}}
 
 #define NS_DOCUMENTCHARSETINFO_PID \
-  "component://netscape/document-charset-info"
+  "@mozilla.org/document-charset-info;1"
 
 // XXX doc me
 // XXX make this interface IDL

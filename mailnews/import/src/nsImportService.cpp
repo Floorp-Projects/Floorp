@@ -237,7 +237,7 @@ NS_IMETHODIMP nsImportService::SystemStringToUnicode(const char *sysStr, nsStrin
   
 	nsresult	rv;
 	if (m_sysCharset.IsEmpty()) {
-		nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+		nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
 		if (NS_SUCCEEDED(rv)) 
 			rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, m_sysCharset);
 
@@ -541,23 +541,23 @@ nsresult nsImportService::DoDiscover( void)
 		    
     nsresult rv;
 	
-	nsCOMPtr<nsICategoryManager> catMan = do_GetService( NS_CATEGORYMANAGER_PROGID, &rv);
+	nsCOMPtr<nsICategoryManager> catMan = do_GetService( NS_CATEGORYMANAGER_CONTRACTID, &rv);
 	if (NS_FAILED( rv)) return( rv);
     
 	nsCOMPtr<nsISimpleEnumerator> e;
 	rv = catMan->EnumerateCategory( "mailnewsimport", getter_AddRefs( e));
 	if (NS_FAILED( rv)) return( rv);
-	nsCOMPtr<nsISupportsString> progid;
-	rv = e->GetNext( getter_AddRefs( progid));
-	while (NS_SUCCEEDED( rv) && progid) {
-		nsXPIDLCString	progIdStr;
-		progid->ToString( getter_Copies( progIdStr));
+	nsCOMPtr<nsISupportsString> contractid;
+	rv = e->GetNext( getter_AddRefs( contractid));
+	while (NS_SUCCEEDED( rv) && contractid) {
+		nsXPIDLCString	contractIdStr;
+		contractid->ToString( getter_Copies( contractIdStr));
 		nsXPIDLCString	supportsStr;
-		rv = catMan->GetCategoryEntry( "mailnewsimport", progIdStr, getter_Copies( supportsStr));
+		rv = catMan->GetCategoryEntry( "mailnewsimport", contractIdStr, getter_Copies( supportsStr));
 		if (NS_SUCCEEDED( rv)) {
-			LoadModuleInfo( progIdStr, supportsStr);
+			LoadModuleInfo( contractIdStr, supportsStr);
 		}
-		rv = e->GetNext( getter_AddRefs( progid));
+		rv = e->GetNext( getter_AddRefs( contractid));
 	}
 
 	m_didDiscovery = PR_TRUE;

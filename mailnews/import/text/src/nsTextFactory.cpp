@@ -44,7 +44,7 @@ NS_METHOD TextRegister(nsIComponentManager *aCompMgr,
 {	
 	nsresult rv;
 
-	nsCOMPtr<nsICategoryManager> catMan = do_GetService( NS_CATEGORYMANAGER_PROGID, &rv);
+	nsCOMPtr<nsICategoryManager> catMan = do_GetService( NS_CATEGORYMANAGER_CONTRACTID, &rv);
 	if (NS_SUCCEEDED( rv)) {
 		nsXPIDLCString	replace;
 		char *theCID = kTextImportCID.ToString();
@@ -65,7 +65,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextImport)
 static nsModuleComponentInfo components[] = {
     {	"Text Import Component", 
 		NS_TEXTIMPORT_CID,
-		"component://mozilla/import/import-text", 
+		"@mozilla.org/import/import-text;1", 
 		nsTextImportConstructor,
 		&TextRegister,
 		nsnull

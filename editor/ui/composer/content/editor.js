@@ -307,7 +307,7 @@ function FindAndSelectEditorWindowWithURL(urlToMatch)
 
   // returns true if found; false if an error or not found
   
-  var windowManager = Components.classes["component://netscape/rdf/datasource?name=window-mediator"].getService();
+  var windowManager = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService();
   if ( !windowManager )
     return false;
   
@@ -1818,7 +1818,7 @@ function IsSpellCheckerInstalled()
   if (gSoughtSpellChecker)
     return gHaveSpellChecker;
 
-  var spellcheckerClass = Components.classes["mozilla.spellchecker.1"]; 
+  var spellcheckerClass = Components.classes["@mozilla.org/spellchecker;1"]; 
   gHaveSpellChecker = (spellcheckerClass != null);
   gSoughtSpellChecker = true;
   dump("Have SpellChecker = "+gHaveSpellChecker+"\n");
@@ -1833,7 +1833,7 @@ function IsFindInstalled()
   if (gSoughtFind)
     return gHaveFind;
 
-  var findClass = Components.classes["component://netscape/appshell/component/find"]; 
+  var findClass = Components.classes["@mozilla.org/appshell/component/find;1"]; 
   gHaveFind = (findClass != null);
   gSoughtFind = true;
   dump("Have Find = "+gHaveFind+"\n");
@@ -1883,7 +1883,7 @@ function GetPrefsService()
 {
   // Store the prefs object
   try {
-    var prefsService = Components.classes["component://netscape/preferences"];
+    var prefsService = Components.classes["@mozilla.org/preferences;1"];
     if (prefsService) 
       prefsService = prefsService.getService();
     if (prefsService)
@@ -2105,7 +2105,7 @@ function SwitchInsertCharToThisWindow(windowWithDialog)
 function FindEditorWithInsertCharDialog()
 {
   // Find window with an InsertCharsWindow and switch association to this one
-	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+	var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
 	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
 	var enumerator = windowManagerInterface.getEnumerator( null );
 
@@ -2147,7 +2147,7 @@ function SwitchInsertCharToAnotherEditorOrClose()
 {
 	if (window.InsertCharWindow)
   {
-    var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+    var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
 	  var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
 	  var enumerator = windowManagerInterface.getEnumerator( null );
 

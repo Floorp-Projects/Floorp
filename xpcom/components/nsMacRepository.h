@@ -61,59 +61,59 @@ typedef struct MacLibrary
 extern "C" nsresult		NSGetFactory_WIDGET_DLL(nsISupports* serviceMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
-                                           const char *aProgID,
+                                           const char *aContractID,
                                            nsIFactory **aFactory);
 extern "C" nsresult		NSGetFactory_GFXWIN_DLL(nsISupports* serviceMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
-                                           const char *aProgID,
+                                           const char *aContractID,
                                            nsIFactory **aFactory);
 extern "C" nsresult		NSGetFactory_VIEW_DLL(nsISupports* serviceMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
-                                           const char *aProgID,
+                                           const char *aContractID,
                                            nsIFactory **aFactory);
 extern "C" nsresult		NSGetFactory_WEB_DLL(nsISupports* serviceMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
-                                           const char *aProgID,
+                                           const char *aContractID,
                                            nsIFactory **aFactory);
 #if 0
 extern "C" nsresult		NSGetFactory_PLUGIN_DLL(nsISupports* serviceMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
-                                           const char *aProgID,
+                                           const char *aContractID,
                                            nsIFactory **aFactory);
 #endif
 extern "C" nsresult		NSGetFactory_PREF_DLL(nsISupports* serviceMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
-                                           const char *aProgID,
+                                           const char *aContractID,
                                            nsIFactory **aFactory);
 extern "C" nsresult		NSGetFactory_PARSER_DLL(nsISupports* serviceMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
-                                           const char *aProgID,
+                                           const char *aContractID,
                                            nsIFactory **aFactory);
 extern "C" nsresult		NSGetFactory_DOM_DLL(nsISupports* serviceMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
-                                           const char *aProgID,
+                                           const char *aContractID,
                                            nsIFactory **aFactory);
 extern "C" nsresult		NSGetFactory_LAYOUT_DLL(nsISupports* serviceMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
-                                           const char *aProgID,
+                                           const char *aContractID,
                                            nsIFactory **aFactory);
 extern "C" nsresult		NSGetFactory_NETLIB_DLL(nsISupports* serviceMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
-                                           const char *aProgID,
+                                           const char *aContractID,
                                            nsIFactory **aFactory);
 extern "C" nsresult		NSGetFactory_EDITOR_DLL(nsISupports* serviceMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
-                                           const char *aProgID,
+                                           const char *aContractID,
                                            nsIFactory **aFactory);
 
 extern "C" PRBool		NSCanUnload_PREF_DLL(void);

@@ -71,6 +71,6 @@ interface nsIStreamTransfer : nsIAppShellComponent {
 
 
 %{C++
-#define NS_ISTREAMTRANSFER_PROGID NS_IAPPSHELLCOMPONENT_PROGID "/xfer"
+#define NS_ISTREAMTRANSFER_CONTRACTID NS_IAPPSHELLCOMPONENT_CONTRACTID "/xfer;1"
 #define NS_ISTREAMTRANSFER_CLASSNAME "Mozilla Stream Transfer Component"
 %}

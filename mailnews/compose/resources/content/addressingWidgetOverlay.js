@@ -537,7 +537,7 @@ function DragOverTree(event)
 	var dragSession = null;
 	var retVal = true;
 
-	var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
+	var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
 	if (dragService) 
 		dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
 	if (!dragService)	return(false);
@@ -564,12 +564,12 @@ function DragOverTree(event)
 function DropOnAddressingWidgetTree(event)
 {
 	dump("DropOnTree\n");
-	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 	if (rdf)   
 		rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 	if (!rdf) return(false);
 
-	var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
+	var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
 	if (dragService) 
 		dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
 	if (!dragService)	return(false);
@@ -577,7 +577,7 @@ function DropOnAddressingWidgetTree(event)
 	var dragSession = dragService.getCurrentSession();
 	if ( !dragSession )	return(false);
 
-	var trans = Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
+	var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
 	if ( !trans ) return(false);
 	trans.addDataFlavor("text/nsabcard");
 

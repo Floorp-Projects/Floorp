@@ -32,7 +32,7 @@
     {0xa1, 0x81, 0x00, 0x50, 0x04, 0x1c, 0xaf, 0x44} \
 }
 
-#define NS_THREADPOOL_PROGID "component://netscape/thread-pool"
+#define NS_THREADPOOL_CONTRACTID "@mozilla.org/thread-pool;1"
 #define NS_THREADPOOL_CLASSNAME "Thread Pool"
 #if 0
 %}

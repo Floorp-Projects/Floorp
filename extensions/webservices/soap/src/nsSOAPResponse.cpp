@@ -222,11 +222,11 @@ NS_IMETHODIMP nsSOAPResponse::GetReturnValue(nsISOAPParameter * *aReturnValue)
     }
     
     // Find the corresponding encoder
-    nsCAutoString encoderProgid;
-    encoderProgid.Assign(NS_SOAPENCODER_PROGID_PREFIX);
-    encoderProgid.Append(encodingStyle);
+    nsCAutoString encoderContractid;
+    encoderContractid.Assign(NS_SOAPENCODER_CONTRACTID_PREFIX);
+    encoderContractid.Append(encodingStyle);
 
-    nsCOMPtr<nsISOAPEncoder> encoder = do_CreateInstance(encoderProgid);
+    nsCOMPtr<nsISOAPEncoder> encoder = do_CreateInstance(encoderContractid);
     if (!encoder) {
       nsMemory::Free(encodingStyle);
       return NS_ERROR_NOT_IMPLEMENTED;

@@ -24,7 +24,7 @@ class nsSanePluginFactoryImpl : public nsIPlugin
 {
 public:
     nsSanePluginFactoryImpl(const nsCID &aClass, const char* className,
-                            const char* progID);
+                            const char* contractID);
 
     // nsISupports methods
     NS_DECL_ISUPPORTS ;
@@ -48,7 +48,7 @@ protected:
 
   nsCID       mClassID;
   const char* mClassName;
-  const char* mProgID;
+  const char* mContractID;
 
 };
 

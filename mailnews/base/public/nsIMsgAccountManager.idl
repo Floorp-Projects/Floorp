@@ -48,7 +48,7 @@ interface nsIMsgAccountManager : nsISupports {
 
   /*
    * creates a new server and assigns it a new, unique "key"
-   * the given type will be used to construct a ProgID
+   * the given type will be used to construct a ContractID
    */
   nsIMsgIncomingServer createIncomingServer(in string username,
                                             in string hostname,

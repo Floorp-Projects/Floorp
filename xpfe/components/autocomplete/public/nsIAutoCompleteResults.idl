@@ -50,11 +50,11 @@ interface nsIAutoCompleteResults : nsISupports {
 // {FE4FC780-063D-11d4-A449-D45A120774BC}
 #define NS_AUTOCOMPLETERESULTS_CID \
 { 0xfe4fc780, 0x063d, 0x11d4, { 0xa4, 0x49, 0xd4, 0x5a, 0x12, 0x07, 0x74, 0xbc } }
-#define NS_AUTOCOMPLETERESULTS_PROGID  "component://netscape/autocomplete/results"
+#define NS_AUTOCOMPLETERESULTS_CONTRACTID  "@mozilla.org/autocomplete/results;1"
 
 // {FE4FC781-063D-11d4-A449-D45A120774BC}
 #define NS_AUTOCOMPLETEITEM_CID \
 { 0xfe4fc781, 0x063d, 0x11d4, { 0xa4, 0x49, 0xd4, 0x5a, 0x12, 0x07, 0x74, 0xbc } }
-#define NS_AUTOCOMPLETEITEM_PROGID  "component://netscape/autocomplete/item"
+#define NS_AUTOCOMPLETEITEM_CONTRACTID  "@mozilla.org/autocomplete/item;1"
 %}
 

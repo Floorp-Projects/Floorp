@@ -41,7 +41,7 @@ createEventQueue() {
     nsCOMPtr<nsIEventQueue> result;
     // Get event queue service.
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIEventQueueService, eqs, NS_EVENTQUEUESERVICE_PROGID, &rv);
+    NS_WITH_SERVICE(nsIEventQueueService, eqs, NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
     if ( NS_SUCCEEDED( rv ) ) {
         // Have service create us an event queue.
         rv = eqs->CreateThreadEventQueue();

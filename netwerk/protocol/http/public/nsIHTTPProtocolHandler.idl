@@ -170,7 +170,7 @@ interface nsIHTTPProtocolHandler : nsIProtocolHandler
 #define NS_ERROR_BAD_REQUEST    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 200)
 #define NS_ERROR_BUSY           NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 201)
 
-// HTTP protocol handler will do_GetService() each CID or Progid that is registered
+// HTTP protocol handler will do_GetService() each CID or Contractid that is registered
 // under this category when it comes alive.
 #define NS_HTTP_STARTUP_CATEGORY "http-startup-category"
 %}

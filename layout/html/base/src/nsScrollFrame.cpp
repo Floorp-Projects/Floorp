@@ -1019,7 +1019,7 @@ nsScrollFrame::SaveState(nsIPresContext* aPresContext,
   res = NS_NewPresState(aState);
   nsCOMPtr<nsISupportsPRInt32> xoffset;
   if (NS_SUCCEEDED(res)) {
-    res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_PROGID,
+    res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
             nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(xoffset));
     if (NS_SUCCEEDED(res) && xoffset) {
       res = xoffset->SetData(x);
@@ -1030,7 +1030,7 @@ nsScrollFrame::SaveState(nsIPresContext* aPresContext,
   }
   nsCOMPtr<nsISupportsPRInt32> yoffset;
   if (NS_SUCCEEDED(res)) {
-    res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_PROGID,
+    res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
             nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(yoffset));
     if (NS_SUCCEEDED(res) && yoffset) {
       res = yoffset->SetData(y);
@@ -1041,7 +1041,7 @@ nsScrollFrame::SaveState(nsIPresContext* aPresContext,
   }
   nsCOMPtr<nsISupportsPRInt32> width;
   if (NS_SUCCEEDED(res)) {
-    res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_PROGID,
+    res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
             nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(width));
     if (NS_SUCCEEDED(res) && width) {
       res = width->SetData(childRect.width);
@@ -1052,7 +1052,7 @@ nsScrollFrame::SaveState(nsIPresContext* aPresContext,
   }
   nsCOMPtr<nsISupportsPRInt32> height;
   if (NS_SUCCEEDED(res)) {
-    res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_PROGID,
+    res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
             nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(height));
     if (NS_SUCCEEDED(res) && height) {
       res = height->SetData(childRect.height);

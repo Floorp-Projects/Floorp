@@ -1386,14 +1386,14 @@ PresShell::Init(nsIDocument* aDocument,
   }
 
   // cache the observation service
-  mObserverService = do_GetService(NS_OBSERVERSERVICE_PROGID,
+  mObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID,
                                    &result);
   if (NS_FAILED(result)) {
     return result;
   }
 
   // cache the drag service so we can check it during reflows
-  mDragService = do_GetService("component://netscape/widget/dragservice");
+  mDragService = do_GetService("@mozilla.org/widget/dragservice;1");
 
   return NS_OK;
 }
@@ -3092,7 +3092,7 @@ PresShell::DoCopy()
         // the transferable wants the number bytes for the data and since it is double byte
         // we multiply by 2. 
         nsCOMPtr<nsISupportsWString> dataWrapper;
-        rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID,
+        rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID,
                                                 nsnull, 
                                                 NS_GET_IID(nsISupportsWString),
                                                 getter_AddRefs(dataWrapper));

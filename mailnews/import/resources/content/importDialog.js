@@ -52,7 +52,7 @@ function GetFormattedBundleString( strId, formatStr)
 function OnLoadImportDialog()
 {
 	top.bundle = srGetStrBundle("chrome://messenger/locale/importMsgs.properties");
-	top.importService = Components.classes["component://mozilla/import/import-service"].getService();
+	top.importService = Components.classes["@mozilla.org/import/import-service;1"].getService();
 	top.importService = top.importService.QueryInterface(Components.interfaces.nsIImportService);
 	
 	top.progressInfo = new Object();
@@ -155,11 +155,11 @@ function ImportDialogOKButton()
 			switch( top.importType )
 			{
 				case "mail":
-					top.successStr = Components.classes["component://netscape/supports-wstring"].createInstance();
+					top.successStr = Components.classes["@mozilla.org/supports-wstring;1"].createInstance();
 					if (top.successStr) {
 						top.successStr = top.successStr.QueryInterface( Components.interfaces.nsISupportsWString);
 					}
-					top.errorStr = Components.classes["component://netscape/supports-wstring"].createInstance();
+					top.errorStr = Components.classes["@mozilla.org/supports-wstring;1"].createInstance();
 					if (top.errorStr)
 						top.errorStr = top.errorStr.QueryInterface( Components.interfaces.nsISupportsWString);
 					
@@ -194,10 +194,10 @@ function ImportDialogOKButton()
 					break;
 					
 				case "addressbook":
-					top.successStr = Components.classes["component://netscape/supports-wstring"].createInstance();
+					top.successStr = Components.classes["@mozilla.org/supports-wstring;1"].createInstance();
 					if (top.successStr)
 						top.successStr = top.successStr.QueryInterface( Components.interfaces.nsISupportsWString);
-					top.errorStr = Components.classes["component://netscape/supports-wstring"].createInstance();
+					top.errorStr = Components.classes["@mozilla.org/supports-wstring;1"].createInstance();
 					if (top.errorStr)
 						top.errorStr = top.errorStr.QueryInterface( Components.interfaces.nsISupportsWString);
 					
@@ -439,7 +439,7 @@ function ShowAddressComplete( good)
 
 function CreateNewFileSpecFromPath( inPath)
 {
-	var file = Components.classes["component://netscape/filespec"].createInstance();
+	var file = Components.classes["@mozilla.org/filespec;1"].createInstance();
 	if (file != null) {
 		file = file.QueryInterface( Components.interfaces.nsIFileSpec);
 		if (file != null) {
@@ -476,7 +476,7 @@ function ImportSettings( module, newAccount, error) {
 		if (location.value != null) {
 			// Settings were not found, however, they are specified
 			// in a file, so ask the user for the settings file.
-			var filePicker = Components.classes["component://mozilla/filepicker"].createInstance();
+			var filePicker = Components.classes["@mozilla.org/filepicker;1"].createInstance();
 			if (filePicker != null) {
 				filePicker = filePicker.QueryInterface( Components.interfaces.nsIFilePicker);
 				if (filePicker != null) {
@@ -531,7 +531,7 @@ function ImportSettings( module, newAccount, error) {
 
 function CreateNewFileSpec( inFile)
 {
-	var file = Components.classes["component://netscape/filespec"].createInstance();
+	var file = Components.classes["@mozilla.org/filespec;1"].createInstance();
 	if (file != null) {
 		file = file.QueryInterface( Components.interfaces.nsIFileSpec);
 		if (file != null) {
@@ -563,7 +563,7 @@ function ImportMail( module, success, error) {
 	if (loc == null) {
 		// No location found, check to see if we can ask the user.
 		if (mailInterface.GetStatus( "canUserSetLocation") != 0) {
-			var filePicker = Components.classes["component://mozilla/filepicker"].createInstance();
+			var filePicker = Components.classes["@mozilla.org/filepicker;1"].createInstance();
 			if (filePicker != null) {
 				filePicker = filePicker.QueryInterface( Components.interfaces.nsIFilePicker);
 				if (filePicker != null) {
@@ -650,7 +650,7 @@ function ImportAddress( module, success, error) {
 			return( false);
 		}
 
-		var filePicker = Components.classes["component://mozilla/filepicker"].createInstance();
+		var filePicker = Components.classes["@mozilla.org/filepicker;1"].createInstance();
 		if (filePicker != null) {
 			filePicker = filePicker.QueryInterface( Components.interfaces.nsIFilePicker);
 			if (filePicker == null) {

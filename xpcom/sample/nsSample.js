@@ -63,7 +63,7 @@ var myModule = {
         dump("*** Registering sample JS components\n");
         compMgr.registerComponentWithType(this.myCID,
                                           "Sample JS Component",
-                                          "mozilla.jssample.1", fileSpec,
+                                          "@mozilla.org/jssample;1", fileSpec,
                                           location, true, true, 
                                           type);
     },

@@ -26,7 +26,7 @@
 #include "nsISupports.h"
 #include "nsAWritableString.h"
 
-#define NS_PLAINTEXTSINK_PROGID "component://netscape/layout/plaintextsink"
+#define NS_PLAINTEXTSINK_CONTRACTID "@mozilla.org/layout/plaintextsink;1"
 
 /* starting interface:    nsIContentSerializer */
 #define NS_IHTMLTOTEXTSINK_IID_STR "b12b5643-07cb-401e-aabb-64b2dcd2717f"

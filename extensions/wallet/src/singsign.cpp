@@ -2010,7 +2010,7 @@ SINGSIGN_RememberSignonData
      nsIDOMWindowInternal* window)
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIURL, uri, "component://netscape/network/standard-url", &rv);
+  NS_WITH_SERVICE(nsIURL, uri, "@mozilla.org/network/standard-url;1", &rv);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -2133,7 +2133,7 @@ si_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const PRUnich
 PUBLIC void
 SINGSIGN_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 elementNumber) {
   nsresult rv;
-  NS_WITH_SERVICE(nsIURL, uri, "component://netscape/network/standard-url", &rv);
+  NS_WITH_SERVICE(nsIURL, uri, "@mozilla.org/network/standard-url;1", &rv);
   if (NS_FAILED(rv)) {
     return;
   }

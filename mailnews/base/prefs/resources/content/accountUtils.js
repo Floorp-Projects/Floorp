@@ -21,8 +21,8 @@
  * Alec Flett <alecf@netscape.com>
  */
 
-var accountManagerProgID   = "component://netscape/messenger/account-manager";
-var messengerMigratorProgID   = "component://netscape/messenger/migrator";
+var accountManagerContractID   = "@mozilla.org/messenger/account-manager;1";
+var messengerMigratorContractID   = "@mozilla.org/messenger/migrator;1";
 
 // returns the first account with an invalid server or identity
 
@@ -65,7 +65,7 @@ function verifyAccounts() {
     var prefillAccount;
     
     try {
-        var am = Components.classes[accountManagerProgID].getService(Components.interfaces.nsIMsgAccountManager);
+        var am = Components.classes[accountManagerContractID].getService(Components.interfaces.nsIMsgAccountManager);
 
         var accounts = am.accounts;
 
@@ -82,7 +82,7 @@ function verifyAccounts() {
         // then kick off the account migration
         if (accountCount == invalidAccounts.length) {
             try {
-                messengerMigrator = Components.classes[messengerMigratorProgID].getService(Components.interfaces.nsIMessengerMigrator);  
+                messengerMigrator = Components.classes[messengerMigratorContractID].getService(Components.interfaces.nsIMessengerMigrator);  
                 dump("attempt to UpgradePrefs.  If that fails, open the account wizard.\n");
                 messengerMigrator.UpgradePrefs();
             }

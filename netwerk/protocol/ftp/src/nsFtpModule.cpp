@@ -29,7 +29,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFtpProtocolHandler, Init);
 static nsModuleComponentInfo gResComponents[] = {
     { "The FTP Protocol Handler", 
       NS_FTPPROTOCOLHANDLER_CID,
-      NS_NETWORK_PROTOCOL_PROGID_PREFIX "ftp",
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ftp",
       nsFtpProtocolHandlerConstructor
     }
 };

@@ -146,7 +146,7 @@
         <treechildren flex="1">
           <treeitem uri="...">
             <treerow onclick="onComponentClick(event);"
-              progid="rdf:http://www.mozilla.org/NC-xpcom#progid">
+              contractid="rdf:http://www.mozilla.org/NC-xpcom#contractid">
 <!--
   Even though we specified the onClick handler as an attribute of the
   <treerow> tag, the event's target will be the <treecell>.  We compensate
@@ -154,7 +154,7 @@
   cview-handlers.js:onComponentClick().
 -->
                 <treecell>
-                  <text value="rdf:http://www.mozilla.org/NC-xpcom#progid"/>
+                  <text value="rdf:http://www.mozilla.org/NC-xpcom#contractid"/>
                 </treecell>
                 <treecell>
                   <text value="rdf:http://www.mozilla.org/NC-xpcom#clsid"/>
@@ -167,17 +167,17 @@
 
       <treecolgroup>
         <treecol flex="1"
-          rdf:resource="http://www.mozilla.org/NC-xpcom#progid"/>
+          rdf:resource="http://www.mozilla.org/NC-xpcom#contractid"/>
         <treecol flex="1"
           rdf:resource="http://www.mozilla.org/NC-xpcom#clsid"/>
       </treecolgroup>
 
       <treehead>
         <treerow>
-          <treecell id="componentcol-progid"
-            rdf:resource="http://www.mozilla.org/NC-xpcom#progid"
-            class="treecell-header sortDirectionIndicator" value="ProgID"
-            onclick="return onSortCol('componentcol-progid');"/>
+          <treecell id="componentcol-contractid"
+            rdf:resource="http://www.mozilla.org/NC-xpcom#contractid"
+            class="treecell-header sortDirectionIndicator" value="ContractID"
+            onclick="return onSortCol('componentcol-contractid');"/>
           <treecell id="componentcol-clsid"
             rdf:resource="http://www.mozilla.org/NC-xpcom#clsid"
             class="treecell-header sortDirectionIndicator" value="CLSID"

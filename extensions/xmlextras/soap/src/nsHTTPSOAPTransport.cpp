@@ -59,7 +59,7 @@ nsHTTPSOAPTransport::SyncCall(const char *url,
   nsresult rv;
   nsCOMPtr<nsIXMLHttpRequest> request;
 
-  request = do_CreateInstance(NS_XMLHTTPREQUEST_PROGID, &rv);
+  request = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
   if (action) {
@@ -92,7 +92,7 @@ nsHTTPSOAPTransport::AsyncCall(const char *url,
 
   nsresult rv;
 
-  mRequest = do_CreateInstance(NS_XMLHTTPREQUEST_PROGID, &rv);
+  mRequest = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
   if (action) {

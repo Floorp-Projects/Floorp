@@ -1062,7 +1062,7 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
   nsIImgDecoder *imgdec ;   
   char imgtypestr[200];
 
-  PR_snprintf(imgtypestr, sizeof(imgtypestr), "component://netscape/image/decoder&type=%s"
+  PR_snprintf(imgtypestr, sizeof(imgtypestr), "@mozilla.org/image/decoder;1?type=%s"
             , ic->type );
   
   static NS_DEFINE_IID(kIImgDecoderIID, NS_IIMGDECODER_IID);
@@ -1752,7 +1752,7 @@ PRBool il_PermitLoad(const char * image_url, nsIImageRequestObserver * aObserver
 
     /* convert image_url to an nsIURL so we can extract host and scheme */
     nsresult rv;
-    NS_WITH_SERVICE(nsIURL, uri, "component://netscape/network/standard-url", &rv);
+    NS_WITH_SERVICE(nsIURL, uri, "@mozilla.org/network/standard-url;1", &rv);
     if (NS_FAILED(rv) || NS_FAILED(uri->SetSpec(image_url))) {
         return PR_TRUE;
     }

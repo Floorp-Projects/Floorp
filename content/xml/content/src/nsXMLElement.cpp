@@ -288,7 +288,7 @@ static nsresult CheckLoadURI(nsIURI *aBaseURI, const nsAReadableString& aURI, ns
   if (NS_SUCCEEDED(rv)) {
     NS_WITH_SERVICE(nsIScriptSecurityManager,
                     securityManager, 
-                    NS_SCRIPTSECURITYMANAGER_PROGID,
+                    NS_SCRIPTSECURITYMANAGER_CONTRACTID,
                     &rv);
     if (NS_SUCCEEDED(rv)) {
       rv= securityManager->CheckLoadURI(aBaseURI,

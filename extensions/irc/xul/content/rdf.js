@@ -28,17 +28,17 @@ const nsIRDFNode = Components.interfaces.nsIRDFNode;
 
 function RDFHelper()
 {
-    const RDF_MEMORYDS_PROGID =
-        "component://netscape/rdf/datasource?name=in-memory-datasource";
+    const RDF_MEMORYDS_CONTRACTID =
+        "@mozilla.org/rdf/datasource;1?name=in-memory-datasource";
     const RDF_DS_IID = Components.interfaces.nsIRDFDataSource;
 
-    const RDF_DS_PROGID = "component://netscape/rdf/rdf-service";
+    const RDF_DS_CONTRACTID = "@mozilla.org/rdf/rdf-service;1";
     const RDF_SVC_IID = Components.interfaces.nsIRDFService;
 
     this.ds =
-        Components.classes[RDF_MEMORYDS_PROGID].createInstance(RDF_DS_IID);
+        Components.classes[RDF_MEMORYDS_CONTRACTID].createInstance(RDF_DS_IID);
     this.svc = 
-        Components.classes[RDF_DS_PROGID].getService(RDF_SVC_IID);    
+        Components.classes[RDF_DS_CONTRACTID].getService(RDF_SVC_IID);    
 
     /* predefined nodes */
     this.resRoot     = this.svc.GetResource ("NC:chatzilla-data");

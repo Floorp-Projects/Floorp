@@ -195,7 +195,7 @@ NS_IMETHODIMP nsMsgImapModule::GetClassObject(nsIComponentManager *aCompMgr,
 struct Components {
     const char* mDescription;
     const nsID* mCID;
-    const char* mProgID;
+    const char* mContractID;
 };
 
 // The list of components we register
@@ -209,17 +209,17 @@ static Components gComponents[] = {
     { "Imap Host Session List", &kCImapHostSessionList,
       nsnull },
     { "Imap Incoming Server", &kCImapIncomingServer,
-      NS_IMAPINCOMINGSERVER_PROGID },
+      NS_IMAPINCOMINGSERVER_CONTRACTID },
     { "Mail/News Imap Resource Factory", &kCImapResource,
-      NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "imap" },
+      NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "imap" },
     { "Imap Service", &kCImapService,
-      "component://netscape/messenger/messageservice;type=imap_message" },
+      "@mozilla.org/messenger/messageservice;1?type=imap_message" },
     { "Imap Service", &kCImapService,
-      "component://netscape/messenger/messageservice;type=imap"},
+      "@mozilla.org/messenger/messageservice;1?type=imap"},
     { "Imap Protocol Handler", &kCImapService,
-      NS_NETWORK_PROTOCOL_PROGID_PREFIX "imap"},
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "imap"},
     { "Imap Protocol Handler", &kCImapService,
-      NS_IMAPPROTOCOLINFO_PROGID},
+      NS_IMAPPROTOCOLINFO_CONTRACTID},
 
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
@@ -236,7 +236,7 @@ NS_IMETHODIMP nsMsgImapModule::RegisterSelf(nsIComponentManager *aCompMgr,
     while (cp < end) 
     {
         rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
-                                             cp->mProgID, aPath, PR_TRUE,
+                                             cp->mContractID, aPath, PR_TRUE,
                                              PR_TRUE);
         if (NS_FAILED(rv)) 
             break;

@@ -54,7 +54,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPURL);
 static nsModuleComponentInfo components[] =
 {
     { "LDAP Protocol Handler", NS_LDAPPROTOCOLHANDLER_CID, 
-	  NS_NETWORK_PROTOCOL_PROGID_PREFIX "ldap", 
+	  NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ldap", 
 	  nsLDAPProtocolHandlerConstructor },	
     { "LDAP Service", NS_LDAPSERVICE_CID, "mozilla.network.ldapservice", 
 	  nsLDAPServiceConstructor },

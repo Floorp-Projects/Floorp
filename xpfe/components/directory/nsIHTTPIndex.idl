@@ -68,10 +68,10 @@ interface nsIHTTPIndex : nsISupports
 #define NS_HTTPINDEX_SERVICE_CID \
 { 0x2587e382, 0x1324, 0x11d4, { 0xa6, 0x52, 0xea, 0xdb, 0xb2, 0xbe, 0x34, 0x84 } }
 
-#define NS_HTTPINDEX_SERVICE_PROGID \
-    "component://netscape/browser/httpindex-service"
+#define NS_HTTPINDEX_SERVICE_CONTRACTID \
+    "@mozilla.org/browser/httpindex-service;1"
 
-#define NS_HTTPINDEX_DATASOURCE_PROGID \
-    "component://netscape/rdf/datasource?name=httpindex"
+#define NS_HTTPINDEX_DATASOURCE_CONTRACTID \
+    "@mozilla.org/rdf/datasource;1?name=httpindex"
 
 %}

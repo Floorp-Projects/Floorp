@@ -220,7 +220,7 @@ void nsMsgMailboxParser::UpdateStatusText (PRUint32 stringID)
 	{
         nsresult rv;
         if (!mStringService) // if we haven't gotten the serivce yet...
-            mStringService = do_GetService(NS_MSG_MAILBOXSTRINGSERVICE_PROGID);
+            mStringService = do_GetService(NS_MSG_MAILBOXSTRINGSERVICE_CONTRACTID);
     
         nsXPIDLString finalString;
 		if (stringID == LOCAL_STATUS_SELECTING_MAILBOX)

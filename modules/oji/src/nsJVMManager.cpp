@@ -851,7 +851,7 @@ nsJVMManager::IsAllPermissionGranted(
     // Get the Script Security Manager.
 
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv)
+                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv)
     if (NS_FAILED(rv) || !secMan) return PR_FALSE;
 
     // Ask the Script Security Manager to make a Certificate Principal.
@@ -894,7 +894,7 @@ nsJVMManager::IsAppletTrusted(
     PRBool   success = PR_FALSE;
 
     //-- Get the signature verifier service
-    NS_WITH_SERVICE(nsISignatureVerifier, verifier, SIGNATURE_VERIFIER_PROGID, &rv);
+    NS_WITH_SERVICE(nsISignatureVerifier, verifier, SIGNATURE_VERIFIER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) // No signature verifier available
         return NS_OK;
 
@@ -902,7 +902,7 @@ nsJVMManager::IsAppletTrusted(
   // Get the Script Security Manager.
 
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv)
+                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv)
     if (NS_FAILED(rv) || !secMan) return PR_FALSE;
 
 

@@ -1702,7 +1702,7 @@ nsGenericElement::GetScriptObject(nsIScriptContext* aContext,
                   // We have a binding that must be installed.
                   nsresult rv;
                   PRBool dummy;
-                  NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+                  NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
                   xblService->LoadBindings(mContent, value, PR_FALSE, getter_AddRefs(binding), &dummy);
                   if (binding) {
                     binding->ExecuteAttachedHandler();
@@ -2420,7 +2420,7 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
     nsresult proceed = NS_OK;
     // Check that this page is allowed to load this URI.
     NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     nsCOMPtr<nsIURI> absURI;
     if (NS_SUCCEEDED(rv)) 
       rv = NS_NewURI(getter_AddRefs(absURI), absURLSpec, aBaseURL);
@@ -2457,7 +2457,7 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
 
   if (!context) {
     // Get JSContext from stack.
-    nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService("nsThreadJSContextStack"));
+    nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
     NS_ENSURE_TRUE(stack, NS_ERROR_FAILURE);
     NS_ENSURE_SUCCESS(stack->Peek(&cx), NS_ERROR_FAILURE);
 

@@ -109,8 +109,8 @@ TestConverter::OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
 ////////////////////////////////////////////////////////////////////////
 TestConverterFactory::TestConverterFactory(const nsCID &aClass, 
                                    const char* className,
-                                   const char* progID)
-    : mClassID(aClass), mClassName(className), mProgID(progID)
+                                   const char* contractID)
+    : mClassID(aClass), mClassName(className), mContractID(contractID)
 {
     NS_INIT_ISUPPORTS();
 }

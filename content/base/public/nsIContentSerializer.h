@@ -72,7 +72,7 @@ class nsIContentSerializer : public nsISupports {
                               nsAWritableString& aStr) = 0;
 };
 
-#define NS_CONTENTSERIALIZER_PROGID_PREFIX \
-"component://netscape/layout/contentserializer?mimetype="
+#define NS_CONTENTSERIALIZER_CONTRACTID_PREFIX \
+"@mozilla.org/layout/contentserializer;1?mimetype="
 
 #endif /* __gen_nsIContentSerializer_h__ */

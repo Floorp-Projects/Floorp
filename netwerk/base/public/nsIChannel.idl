@@ -347,7 +347,7 @@ interface nsIStreamIOChannel : nsIChannel
 %{C++
 
 #define NS_STREAMIOCHANNEL_CLASSNAME "Stream I/O Channel"
-#define NS_STREAMIOCHANNEL_PROGID    "component://netscape/network/stream-io-channel"
+#define NS_STREAMIOCHANNEL_CONTRACTID    "@mozilla.org/network/stream-io-channel;1"
 
 #define NS_STREAMIOCHANNEL_CID                       \
 { /* 6ddb050c-0d04-11d4-986e-00c04fa0cf4a */         \
@@ -394,7 +394,7 @@ interface nsIFileChannel : nsIChannel
 %{C++
 
 #define NS_LOCALFILECHANNEL_CLASSNAME "Local File Channel"
-#define NS_LOCALFILECHANNEL_PROGID "component://netscape/network/local-file-channel"
+#define NS_LOCALFILECHANNEL_CONTRACTID "@mozilla.org/network/local-file-channel;1"
 
 #define NS_LOCALFILECHANNEL_CID                      \
 { /* 6d5b2d44-f947-11d3-8cda-0060b0fc14a3 */         \

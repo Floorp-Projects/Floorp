@@ -54,10 +54,10 @@ NS_IMPL_QUERY_INTERFACE2(XPConnectFactoryImpl, nsIDOMXPConnectFactory, nsIScript
 // -----
 
 NS_IMETHODIMP
-XPConnectFactoryImpl::CreateInstance(const nsString &progID, nsISupports**_retval)
+XPConnectFactoryImpl::CreateInstance(const nsString &contractID, nsISupports**_retval)
 {
   nsresult rv;
-  char *progIdStr;
+  char *contractIdStr;
 
   // Argument validation...
   if (!_retval) {
@@ -66,14 +66,14 @@ XPConnectFactoryImpl::CreateInstance(const nsString &progID, nsISupports**_retva
   }
 
   *_retval = nsnull;
-  progIdStr = progID.ToNewCString();
+  contractIdStr = contractID.ToNewCString();
 
-  if (progIdStr) {
-    rv = nsRepository::CreateInstance(progIdStr, 
+  if (contractIdStr) {
+    rv = nsRepository::CreateInstance(contractIdStr, 
                                       nsnull,           // No Aggregration
                                       NS_GET_IID(nsISupports), 
                                       (void**)_retval);
-    delete [] progIdStr;
+    delete [] contractIdStr;
   } else {
     rv = NS_ERROR_OUT_OF_MEMORY;
   }

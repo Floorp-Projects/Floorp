@@ -48,7 +48,7 @@ nsContentPolicy::nsContentPolicy()
 {
     NS_INIT_REFCNT();
     nsresult rv;
-    NS_WITH_SERVICE(nsICategoryManager, catman, NS_CATEGORYMANAGER_PROGID, &rv);
+    NS_WITH_SERVICE(nsICategoryManager, catman, NS_CATEGORYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv))
 	/* log an error? */
 	return;
@@ -72,7 +72,7 @@ nsContentPolicy::nsContentPolicy()
     }
     
     /* 
-     * Populate mPolicies with policy services named by progids in the
+     * Populate mPolicies with policy services named by contractids in the
      * "content-policy" category.
      */
     nsCOMPtr<nsISupports> item;
@@ -81,12 +81,12 @@ nsContentPolicy::nsContentPolicy()
 	if (NS_FAILED(rv))
 	    continue;
 	
-	nsXPIDLCString progid;
-	if (NS_FAILED(string->GetData(getter_Copies(progid))))
+	nsXPIDLCString contractid;
+	if (NS_FAILED(string->GetData(getter_Copies(contractid))))
 	    continue;
 
 #ifdef DEBUG_shaver
-	fprintf(stderr, "POLICY: loading %s\n", (const char *)progid);
+	fprintf(stderr, "POLICY: loading %s\n", (const char *)contractid);
 #endif
 	/*
 	 * Create this policy service and add to mPolicies.
@@ -94,7 +94,7 @@ nsContentPolicy::nsContentPolicy()
 	 * Should we try to parse as a CID, in case the component prefers to be
 	 * registered that way?
 	 */
-	nsCOMPtr<nsISupports> policy = do_GetService(progid, &rv);
+	nsCOMPtr<nsISupports> policy = do_GetService(contractid, &rv);
 	if (NS_SUCCEEDED(rv))
 	    mPolicies->AppendElement(policy);
     }

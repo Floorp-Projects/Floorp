@@ -429,7 +429,7 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
       }
 
       // We're a menu, we're built, we're closed, and no timer has been kicked off.
-      mOpenTimer = do_CreateInstance("component://netscape/timer");
+      mOpenTimer = do_CreateInstance("@mozilla.org/timer;1");
       mOpenTimer->Init(this, menuDelay, NS_PRIORITY_HIGHEST);
     }
   }
@@ -776,7 +776,7 @@ void
 nsMenuFrame::GetMenuChildrenElement(nsIContent** aResult)
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+  NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
   PRInt32 dummy;
   PRInt32 count;
   mContent->ChildCount(count);
@@ -1408,7 +1408,7 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
 
     // Get the accelerator key value from prefs, overriding the default:
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv) && prefs)
     {
       rv = prefs->GetIntPref("ui.key.acceleratorKey", &accelKey);

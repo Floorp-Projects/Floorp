@@ -284,11 +284,11 @@ nsDefaultSOAPEncoder::EncodeParameter(nsISOAPParameter* parameter,
   // Otherwise find a new encoder for it
   else {
     // Find the corresponding encoder
-    nsCAutoString encoderProgid;
-    encoderProgid.Assign(NS_SOAPENCODER_PROGID_PREFIX);
-    encoderProgid.Append(encodingStyle);
+    nsCAutoString encoderContractid;
+    encoderContractid.Assign(NS_SOAPENCODER_CONTRACTID_PREFIX);
+    encoderContractid.Append(encodingStyle);
 
-    nsCOMPtr<nsISOAPEncoder> encoder = do_CreateInstance(encoderProgid);
+    nsCOMPtr<nsISOAPEncoder> encoder = do_CreateInstance(encoderContractid);
     if (!encoder) return NS_ERROR_INVALID_ARG;
     
     return encoder->ParameterToElement(parameter, encodingStyle,
@@ -676,11 +676,11 @@ nsDefaultSOAPEncoder::DecodeParameter(nsIDOMElement* element,
   // Otherwise find a new encoder for it
   else {
     // Find the corresponding encoder
-    nsCAutoString encoderProgid;
-    encoderProgid.Assign(NS_SOAPENCODER_PROGID_PREFIX);
-    encoderProgid.Append(NS_ConvertUCS2toUTF8(attrVal.GetUnicode()));
+    nsCAutoString encoderContractid;
+    encoderContractid.Assign(NS_SOAPENCODER_CONTRACTID_PREFIX);
+    encoderContractid.Append(NS_ConvertUCS2toUTF8(attrVal.GetUnicode()));
 
-    nsCOMPtr<nsISOAPEncoder> encoder = do_CreateInstance(encoderProgid);
+    nsCOMPtr<nsISOAPEncoder> encoder = do_CreateInstance(encoderContractid);
     if (!encoder) return NS_ERROR_INVALID_ARG;
     
     return encoder->ElementToParameter(element, 
@@ -694,7 +694,7 @@ nsresult
 nsDefaultSOAPEncoder::DeserializeSupportsArray(nsIDOMElement *element,
                                                nsISupportsArray **_retval)
 {
-  nsCOMPtr<nsISupportsArray> array = do_CreateInstance(NS_SUPPORTSARRAY_PROGID);
+  nsCOMPtr<nsISupportsArray> array = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
   if (!array) return NS_ERROR_FAILURE;
 
   nsAutoString attrNS, attrName, attrVal;
@@ -806,7 +806,7 @@ nsDefaultSOAPEncoder::DeserializeParameter(nsIDOMElement *element,
 
     case nsISOAPParameter::PARAMETER_TYPE_STRING:
     {
-      nsCOMPtr<nsISupportsWString> wstr = do_CreateInstance(NS_SUPPORTS_WSTRING_PROGID);
+      nsCOMPtr<nsISupportsWString> wstr = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
       if (!wstr) return NS_ERROR_FAILURE;
 
       nsSOAPUtils::GetElementTextContent(element, text);
@@ -818,7 +818,7 @@ nsDefaultSOAPEncoder::DeserializeParameter(nsIDOMElement *element,
 
     case nsISOAPParameter::PARAMETER_TYPE_BOOLEAN:
     {
-      nsCOMPtr<nsISupportsPRBool> isupbool = do_CreateInstance(NS_SUPPORTS_PRBOOL_PROGID);
+      nsCOMPtr<nsISupportsPRBool> isupbool = do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID);
       if (!isupbool) return NS_ERROR_FAILURE;
       
       nsSOAPUtils::GetElementTextContent(element, text);
@@ -835,7 +835,7 @@ nsDefaultSOAPEncoder::DeserializeParameter(nsIDOMElement *element,
 
     case nsISOAPParameter::PARAMETER_TYPE_DOUBLE:
     {
-      nsCOMPtr<nsISupportsDouble> dub = do_CreateInstance(NS_SUPPORTS_DOUBLE_PROGID);
+      nsCOMPtr<nsISupportsDouble> dub = do_CreateInstance(NS_SUPPORTS_DOUBLE_CONTRACTID);
       if (!dub) return NS_ERROR_FAILURE;
       
       float val;
@@ -849,7 +849,7 @@ nsDefaultSOAPEncoder::DeserializeParameter(nsIDOMElement *element,
 
     case nsISOAPParameter::PARAMETER_TYPE_FLOAT:
     {
-      nsCOMPtr<nsISupportsFloat> flt = do_CreateInstance(NS_SUPPORTS_FLOAT_PROGID);
+      nsCOMPtr<nsISupportsFloat> flt = do_CreateInstance(NS_SUPPORTS_FLOAT_CONTRACTID);
       if (!flt) return NS_ERROR_FAILURE;
 
       float val;
@@ -863,7 +863,7 @@ nsDefaultSOAPEncoder::DeserializeParameter(nsIDOMElement *element,
 
     case nsISOAPParameter::PARAMETER_TYPE_LONG:
     {
-      nsCOMPtr<nsISupportsPRInt64> isup64 = do_CreateInstance(NS_SUPPORTS_PRINT64_PROGID);
+      nsCOMPtr<nsISupportsPRInt64> isup64 = do_CreateInstance(NS_SUPPORTS_PRINT64_CONTRACTID);
       if (!isup64) return NS_ERROR_FAILURE;
       
       PRInt64 val;
@@ -877,7 +877,7 @@ nsDefaultSOAPEncoder::DeserializeParameter(nsIDOMElement *element,
 
     case nsISOAPParameter::PARAMETER_TYPE_INT:
     {
-      nsCOMPtr<nsISupportsPRInt32> isup32 = do_CreateInstance(NS_SUPPORTS_PRINT32_PROGID);
+      nsCOMPtr<nsISupportsPRInt32> isup32 = do_CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID);
       if (!isup32) return NS_ERROR_FAILURE;
       
       PRInt32 val;
@@ -891,7 +891,7 @@ nsDefaultSOAPEncoder::DeserializeParameter(nsIDOMElement *element,
 
     case nsISOAPParameter::PARAMETER_TYPE_SHORT:
     {
-      nsCOMPtr<nsISupportsPRInt16> isup16 = do_CreateInstance(NS_SUPPORTS_PRINT16_PROGID);
+      nsCOMPtr<nsISupportsPRInt16> isup16 = do_CreateInstance(NS_SUPPORTS_PRINT16_CONTRACTID);
       if (!isup16) return NS_ERROR_FAILURE;
       
       PRInt16 val;
@@ -905,7 +905,7 @@ nsDefaultSOAPEncoder::DeserializeParameter(nsIDOMElement *element,
 
     case nsISOAPParameter::PARAMETER_TYPE_BYTE:
     {
-      nsCOMPtr<nsISupportsChar> isup8 = do_CreateInstance(NS_SUPPORTS_CHAR_PROGID);
+      nsCOMPtr<nsISupportsChar> isup8 = do_CreateInstance(NS_SUPPORTS_CHAR_CONTRACTID);
       if (!isup8) return NS_ERROR_FAILURE;
       
       char val;

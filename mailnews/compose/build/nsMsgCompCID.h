@@ -35,16 +35,16 @@
  0x588595fe, 0x1ada, 0x11d3,                      \
  {0xa7, 0x15, 0x0, 0x60, 0xb0, 0xeb, 0x39, 0xb5}}
 
-#define NS_MSGCOMPOSESERVICE_PROGID			\
-  "component://netscape/messengercompose"
-#define NS_MSGCOMPOSESTARTUPHANDLER_PROGID \
-  "component://netscape/commandlinehandler/general-startup-compose"
+#define NS_MSGCOMPOSESERVICE_CONTRACTID			\
+  "@mozilla.org/messengercompose;1"
+#define NS_MSGCOMPOSESTARTUPHANDLER_CONTRACTID \
+  "@mozilla.org/commandlinehandler/general-startup;1?type=compose"
 
 //
 // nsMsgCompose
 //
-#define NS_MSGCOMPOSE_PROGID \
-  "component://netscape/messengercompose/compose"
+#define NS_MSGCOMPOSE_CONTRACTID \
+  "@mozilla.org/messengercompose/compose;1"
 
 #define NS_MSGCOMPOSE_CID						  \
 { /* EB5BDAF8-BBC6-11d2-A6EC-0060B0EB39B5 */      \
@@ -54,8 +54,8 @@
 //
 // nsMsgCompFields
 //
-#define NS_MSGCOMPFIELDS_PROGID \
-  "component://netscape/messengercompose/composefields"
+#define NS_MSGCOMPFIELDS_CONTRACTID \
+  "@mozilla.org/messengercompose/composefields;1"
 
 #define NS_MSGCOMPFIELDS_CID	                  \
 { /* 6D222BA0-BD46-11d2-8293-000000000000 */      \
@@ -65,8 +65,8 @@
 //
 // nsMsgSend
 //
-#define NS_MSGSEND_PROGID \
-  "component://netscape/messengercompose/send"
+#define NS_MSGSEND_CONTRACTID \
+  "@mozilla.org/messengercompose/send;1"
 
 #define NS_MSGSEND_CID							  \
 { /* 935284E0-C5D8-11d2-8297-000000000000 */      \
@@ -76,8 +76,8 @@
 //
 // nsMsgSendLater
 //
-#define NS_MSGSENDLATER_PROGID							              \
-  "component://netscape/messengercompose/sendlater"
+#define NS_MSGSENDLATER_CONTRACTID							              \
+  "@mozilla.org/messengercompose/sendlater;1"
 
 #define NS_MSGSENDLATER_CID							              \
 { /* E15C83F1-1CF4-11d3-8EF0-00A024A7D144 */      \
@@ -87,8 +87,8 @@
 //
 // nsSmtpUrl
 //
-#define NS_SMTPURL_PROGID \
-  "component://netscape/messengercompose/smtpurl"
+#define NS_SMTPURL_CONTRACTID \
+  "@mozilla.org/messengercompose/smtpurl;1"
 
 #define NS_SMTPURL_CID                            \
 { /* BE59DBF0-2812-11d3-80A3-006008128C4E} */      \
@@ -98,8 +98,8 @@
 //
 // nsMailtoUrl
 //
-#define NS_MAILTOURL_PROGID \
-  "component://netscape/messengercompose/mailtourl"
+#define NS_MAILTOURL_CONTRACTID \
+  "@mozilla.org/messengercompose/mailtourl;1"
 
 #define NS_MAILTOURL_CID                            \
 { /* 05BAB5E7-9C7D-11d3-98A3-001083010E9B} */       \
@@ -109,8 +109,8 @@
 //
 // nsSmtpServer
 //
-#define NS_SMTPSERVER_PROGID \
-  "component://netscape/messenger/smtp/server"
+#define NS_SMTPSERVER_CONTRACTID \
+  "@mozilla.org/messenger/smtp/server;1"
 
 #define NS_SMTPSERVER_CID                      \
 { /* 60dc861a-56ce-11d3-9118-00a0c900d445 */   \
@@ -120,11 +120,11 @@
 //
 // nsSmtpService
 //
-#define NS_SMTPSERVICE_PROGID \
-  "component://netscape/messengercompose/smtp"
+#define NS_SMTPSERVICE_CONTRACTID \
+  "@mozilla.org/messengercompose/smtp;1"
 
-#define NS_MAILTOHANDLER_PROGID \
-  NS_NETWORK_PROTOCOL_PROGID_PREFIX "mailto"
+#define NS_MAILTOHANDLER_CONTRACTID \
+  NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "mailto"
 
 #define NS_SMTPSERVICE_CID						  \
 { /* 5B6419F1-CA9B-11d2-8063-006008128C4E */      \
@@ -134,14 +134,14 @@
 //
 // nsMsgQuote
 //
-#define NS_MSGQUOTE_PROGID \
-  "component://netscape/messengercompose/quoting"
+#define NS_MSGQUOTE_CONTRACTID \
+  "@mozilla.org/messengercompose/quoting;1"
 #define NS_MSGQUOTE_CID \
   {0x1C7ABF0C, 0x21E5, 0x11d3, \
     { 0x8E, 0xF1, 0x00, 0xA0, 0x24, 0xA7, 0xD1, 0x44 }}
 
-#define NS_MSGQUOTELISTENER_PROGID \
-  "component://netscape/messengercompose/quotinglistener"
+#define NS_MSGQUOTELISTENER_CONTRACTID \
+  "@mozilla.org/messengercompose/quotinglistener;1"
 #define NS_MSGQUOTELISTENER_CID \
   {0x683728ac, 0x88df, 0x11d3, \
     { 0x98, 0x9d, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b }}
@@ -149,8 +149,8 @@
 //
 // nsMsgDraft
 //
-#define NS_MSGDRAFT_PROGID \
-  "component://netscape/messengercompose/drafts"
+#define NS_MSGDRAFT_CONTRACTID \
+  "@mozilla.org/messengercompose/drafts;1"
 #define NS_MSGDRAFT_CID \
   { 0xa623746c, 0x453b, 0x11d3, \
   { 0x8f, 0xf, 0x0, 0xa0, 0x24, 0xa7, 0xd1, 0x44 } }
@@ -158,8 +158,8 @@
 //
 // nsMsgRecipientArray
 //
-#define NS_MSGRECIPIENTARRAY_PROGID \
-  "component://netscape/messengercompose/recipientarray"
+#define NS_MSGRECIPIENTARRAY_CONTRACTID \
+  "@mozilla.org/messengercompose/recipientarray;1"
 #define NS_MSGRECIPIENTARRAY_CID \
   {0x9d653e00, 0xa1ca, 0x11d3, \
     { 0xa4, 0x49, 0xf7, 0x9a, 0xb1, 0xc7, 0xd8, 0xfc }}
@@ -172,17 +172,17 @@
 { 0xb51e56bd, 0xff80, 0x11d3,                  \
     { 0x98, 0xbc, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b } }
 
-#define NS_MSG_SMTPSTRINGSERVICE_PROGID \
-  NS_MAILNEWS_STRINGSERVICE_PROGID_PREFIX "smtp"
+#define NS_MSG_SMTPSTRINGSERVICE_CONTRACTID \
+  NS_MAILNEWS_STRINGSERVICE_CONTRACTID_PREFIX "smtp"
 
-#define NS_MSG_COMPOSESTRINGSERVICE_PROGID \
-  NS_MAILNEWS_STRINGSERVICE_PROGID_PREFIX "compose"
+#define NS_MSG_COMPOSESTRINGSERVICE_CONTRACTID \
+  NS_MAILNEWS_STRINGSERVICE_CONTRACTID_PREFIX "compose"
 
 //
 // nsSmtpDataSource
 //
-#define NS_SMTPDATASOURCE_PROGID \
-  NS_RDF_DATASOURCE_PROGID_PREFIX "smtp"
+#define NS_SMTPDATASOURCE_CONTRACTID \
+  NS_RDF_DATASOURCE_CONTRACTID_PREFIX "smtp"
 
 // {0C612140-25FE-11d4-9A27-0010A4E03656}
 #define NS_SMTPDATASOURCE_CID \
@@ -192,8 +192,8 @@
 //
 // nsSmtpDelegateFactory
 //
-#define NS_SMTPDELEGATEFACTORY_PROGID \
-  NS_RDF_DELEGATEFACTORY_PROGID_PREFIX "smtpserver.smtp"
+#define NS_SMTPDELEGATEFACTORY_CONTRACTID \
+  NS_RDF_DELEGATEFACTORY_CONTRACTID_PREFIX "smtpserver/smtp;1"
 
 // {0C612141-25FE-11d4-9A27-0010A4E03656}
 #define NS_SMTPDELEGATEFACTORY_CID \

@@ -1207,7 +1207,7 @@ char *intl_decode_mime_part2_str(const char *header, char* charset)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsIStringCharsetDetector* MimeCharsetConverterClass::mDetector = NULL;
-nsCString MimeCharsetConverterClass::mDetectorProgID;
+nsCString MimeCharsetConverterClass::mDetectorContractID;
 
 MimeCharsetConverterClass::MimeCharsetConverterClass()
 {
@@ -1264,33 +1264,33 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
   }
 
   if (mAutoDetect) {
-    char detector_progid[128];
+    char detector_contractid[128];
     PRUnichar* detector_name = nsnull;
-    PL_strcpy(detector_progid, NS_STRCDETECTOR_PROGID_BASE);
+    PL_strcpy(detector_contractid, NS_STRCDETECTOR_CONTRACTID_BASE);
 
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
     if (NS_SUCCEEDED(res)) {
       if (NS_SUCCEEDED(prefs->CopyUnicharPref("mail.charset.detector", &detector_name))) {
-        PL_strcat(detector_progid, NS_ConvertUCS2toUTF8(detector_name));
+        PL_strcat(detector_contractid, NS_ConvertUCS2toUTF8(detector_name));
         PR_FREEIF(detector_name);
       }
       else if (NS_SUCCEEDED(prefs->GetLocalizedUnicharPref("intl.charset.detector", &detector_name))) {
-        PL_strcat(detector_progid, NS_ConvertUCS2toUTF8(detector_name));
+        PL_strcat(detector_contractid, NS_ConvertUCS2toUTF8(detector_name));
         PR_FREEIF(detector_name);
       }
     }
 
-    if (!mDetectorProgID.Equals(detector_progid)) {
+    if (!mDetectorContractID.Equals(detector_contractid)) {
       // may have multi-thread issue updating these static variables
       // but charset detector can only be changed globally through UI
       NS_IF_RELEASE(mDetector);
-      mDetectorProgID.Assign("");
+      mDetectorContractID.Assign("");
       // create instance when the detector name is not empty
-      if (nsCRT::strcmp(detector_progid, NS_STRCDETECTOR_PROGID_BASE)) {
-        res = nsComponentManager::CreateInstance(detector_progid, nsnull, 
+      if (nsCRT::strcmp(detector_contractid, NS_STRCDETECTOR_CONTRACTID_BASE)) {
+        res = nsComponentManager::CreateInstance(detector_contractid, nsnull, 
                                                  NS_GET_IID(nsIStringCharsetDetector), (void**)&mDetector);
         if (NS_SUCCEEDED(res)) {
-          mDetectorProgID.Assign(detector_progid);
+          mDetectorContractID.Assign(detector_contractid);
         }
       }
     }

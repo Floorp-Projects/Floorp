@@ -1188,7 +1188,7 @@ nsWebShellWindow::SetPersistenceTimer(PRBool aSize, PRBool aPosition)
     mSPTimerPosition |= aPosition;
   } else {
     nsresult rv;
-    mSPTimer = do_CreateInstance("component://netscape/timer", &rv);
+    mSPTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     if (NS_SUCCEEDED(rv)) {
       mSPTimer->Init(FirePersistenceTimer, this,
                      SIZE_PERSISTENCE_TIMEOUT, NS_TYPE_ONE_SHOT);
@@ -1693,16 +1693,16 @@ nsWebShellWindow::DocumentWillBeDestroyed(nsIDocument *aDocument)
   return NS_OK;
 }
 
-// This should rightfully be somebody's PROGID?
+// This should rightfully be somebody's CONTRACTID?
 // Will switch when the "app shell browser component" arrives.
-static const char *prefix = "component://netscape/appshell/component/browser/window";
+static const char *prefix = "@mozilla.org/appshell/component/browser/window;1";
 
 nsresult
 nsWebShellWindow::NotifyObservers( const nsString &aTopic, const nsString &someData ) {
     nsresult rv = NS_OK;
     // Get observer service.
     nsIObserverService *svc = 0;
-    rv = nsServiceManager::GetService( NS_OBSERVERSERVICE_PROGID,
+    rv = nsServiceManager::GetService( NS_OBSERVERSERVICE_CONTRACTID,
                                        NS_GET_IID(nsIObserverService),
                                        (nsISupports**)&svc );
     if ( NS_SUCCEEDED( rv ) && svc ) {
@@ -1712,7 +1712,7 @@ nsWebShellWindow::NotifyObservers( const nsString &aTopic, const nsString &someD
         topic += aTopic;
         rv = svc->Notify( (nsIWebShellWindow*)this, topic.GetUnicode(), someData.GetUnicode() );
         // Release the service.
-        nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_PROGID, svc );
+        nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_CONTRACTID, svc );
     } else {
     }
     return rv;

@@ -33,7 +33,7 @@ the <a href="http://lxr.mozilla.org/seamonkey/source/xpcom/sample/nsISample.idl"
 <br>
 <pre>
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var sample = Components.classes["component://netscape/sample"].createInstance();
+var sample = Components.classes["@mozilla.org/sample;1"].createInstance();
 sample = sample.QueryInterface(Components.interfaces.nsISample);
 </pre>
 
@@ -119,7 +119,7 @@ printed is calculated in C++ code defined in <a href="http://lxr.mozilla.org/sea
 <script>
 /* to use nsSample.js version, use "mozilla.jssample.1" */
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var sample = Components.classes["component://netscape/sample"].createInstance();
+var sample = Components.classes["@mozilla.org/sample;1"].createInstance();
 sample = sample.QueryInterface(Components.interfaces.nsISample);
 dump("sample = " + sample + "\n");
 
@@ -170,7 +170,7 @@ JavaScript and form source:
 &lt;script&gt;
 /* to use nsSample.js version, use "mozilla.jssample.1" */
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var sample = Components.classes["component://netscape/sample"].createInstance();
+var sample = Components.classes["@mozilla.org/sample;1"].createInstance();
 sample = sample.QueryInterface(Components.interfaces.nsISample);
 dump("sample = " + sample + "\n");
 

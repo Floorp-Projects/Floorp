@@ -354,7 +354,7 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 				case cmd_DumpLeaks:
 					{
 						nsresult rv;
-						NS_WITH_SERVICE(nsILeakDetector, leakDetector, "component://netscape/xpcom/leakdetector", &rv)
+						NS_WITH_SERVICE(nsILeakDetector, leakDetector, "@mozilla.org/xpcom/leakdetector;1", &rv)
 						if (NS_SUCCEEDED(rv))
 							leakDetector->DumpLeaks();
 					}

@@ -42,7 +42,7 @@ class nsVoidArray;
 #define NS_FORMPROCESSOR_CID \
 { 0x7e4bb410, 0x8740, 0x11d3, { 0x96, 0x7f, 0x0, 0x10, 0x5a, 0x1b, 0x1b, 0x76 } }
 
-#define NS_FORMPROCESSOR_PROGID "component://netscape/layout/form-processor"
+#define NS_FORMPROCESSOR_CONTRACTID "@mozilla.org/layout/form-processor;1"
 
 // F11C1E20-873F-11d3-967F-00105A1B1B76
 #define NS_IFORMPROCESSOR_IID      \

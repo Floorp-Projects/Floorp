@@ -56,5 +56,5 @@ class nsInstallVersion: public nsIScriptObjectOwner, public nsIDOMInstallVersion
 };
 
 
-#define NS_INSTALLVERSIONCOMPONENT_PROGID NS_IXPINSTALLCOMPONENT_PROGID "/installversion"
+#define NS_INSTALLVERSIONCOMPONENT_CONTRACTID NS_IAPPSHELLCOMPONENT_CONTRACTID "/xpinstall/installversion;1"
 #endif

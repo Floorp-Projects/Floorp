@@ -16,9 +16,9 @@
 
 { 0x2f977d40, 0x5485, 0x11d4, { 0x87, 0xe2, 0x00, 0x10, 0xa4, 0xe7, 0x5e, 0xf2 } }
 
-#define NS_APPFILELOCATIONPROVIDER_PROGID \
+#define NS_APPFILELOCATIONPROVIDER_CONTRACTID \
 
-"component://netscape/nsAppFileLocationProvider"
+"@mozilla.org/nsAppFileLocationProvider;1"
 
 
 

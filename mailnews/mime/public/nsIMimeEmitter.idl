@@ -37,8 +37,8 @@ interface nsMimeHeaderDisplayTypes
 }; 
 
 %{C++
-//#define NS_IMIME_MISC_STATUS_KEY       "component://netscape/messenger/mimestatus;"
-#define NS_IMIME_MISC_STATUS_KEY       "Software/Netscape/MimeMiscStatus/"
+//#define NS_IMIME_MISC_STATUS_KEY       "@mozilla.org/messenger/mimestatus;1?"
+#define NS_IMIME_MISC_STATUS_KEY       "@mozilla.org/MimeMiscStatus;1?type="
 %}
 
 [scriptable, uuid(D01D7B59-DCCD-11d2-A411-00805F613C79)]

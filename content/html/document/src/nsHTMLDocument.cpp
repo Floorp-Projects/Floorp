@@ -109,8 +109,8 @@
 #include "nsHTMLParts.h" //for createelementNS
 
 
-#define DETECTOR_PROGID_MAX 127
-static char g_detector_progid[DETECTOR_PROGID_MAX + 1];
+#define DETECTOR_CONTRACTID_MAX 127
+static char g_detector_contractid[DETECTOR_CONTRACTID_MAX + 1];
 static PRBool gInitDetector = PR_FALSE;
 static PRBool gPlugDetector = PR_FALSE;
 //static PRBool gBookmarkCharset = PR_TRUE;
@@ -154,18 +154,18 @@ static int PR_CALLBACK
 MyPrefChangedCallback(const char*aPrefName, void* instance_data)
 {
         nsresult rv;
-        NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+        NS_WITH_SERVICE(nsIPref, prefs, "@mozilla.org/preferences;1", &rv);
         PRUnichar* detector_name = nsnull;
         if(NS_SUCCEEDED(rv) && NS_SUCCEEDED(
              rv = prefs->GetLocalizedUnicharPref("intl.charset.detector",
                                      &detector_name)))
         {
 			if(nsCRT::strlen(detector_name) > 0) {
-				PL_strncpy(g_detector_progid, NS_CHARSET_DETECTOR_PROGID_BASE,DETECTOR_PROGID_MAX);
-				PL_strncat(g_detector_progid, NS_ConvertUCS2toUTF8(detector_name),DETECTOR_PROGID_MAX);
+				PL_strncpy(g_detector_contractid, NS_CHARSET_DETECTOR_CONTRACTID_BASE,DETECTOR_CONTRACTID_MAX);
+				PL_strncat(g_detector_contractid, NS_ConvertUCS2toUTF8(detector_name),DETECTOR_CONTRACTID_MAX);
 				gPlugDetector = PR_TRUE;
 			} else {
-				g_detector_progid[0]=0;
+				g_detector_contractid[0]=0;
 				gPlugDetector = PR_FALSE;
 			}
             PR_FREEIF(detector_name);
@@ -339,7 +339,7 @@ nsHTMLDocument::~nsHTMLDocument()
 
   if (--gRefCntRDFService == 0)
   {     
-     nsServiceManager::ReleaseService("component://netscape/rdf/rdf-service", gRDF);
+     nsServiceManager::ReleaseService("@mozilla.org/rdf/rdf-service;1", gRDF);
   }
 }
 
@@ -769,7 +769,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     nsresult rv_detect = NS_OK;
     if(! gInitDetector)
     {
-      nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_PROGID));
+      nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
       if(pref)
       {
         PRUnichar* detector_name = nsnull;
@@ -777,8 +777,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
              rv_detect = pref->GetLocalizedUnicharPref("intl.charset.detector",
                                  &detector_name)))
         {
-          PL_strncpy(g_detector_progid, NS_CHARSET_DETECTOR_PROGID_BASE,DETECTOR_PROGID_MAX);
-          PL_strncat(g_detector_progid, NS_ConvertUCS2toUTF8(detector_name),DETECTOR_PROGID_MAX);
+          PL_strncpy(g_detector_contractid, NS_CHARSET_DETECTOR_CONTRACTID_BASE,DETECTOR_CONTRACTID_MAX);
+          PL_strncat(g_detector_contractid, NS_ConvertUCS2toUTF8(detector_name),DETECTOR_CONTRACTID_MAX);
           gPlugDetector = PR_TRUE;
           PR_FREEIF(detector_name);
         }
@@ -824,7 +824,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     if(bTryCache)
     {
        nsCOMPtr<nsINetDataCacheManager> cacheMgr;
-       cacheMgr = do_GetService(NS_NETWORK_CACHE_MANAGER_PROGID, &rv);       
+       cacheMgr = do_GetService(NS_NETWORK_CACHE_MANAGER_CONTRACTID, &rv);       
        NS_ASSERTION(NS_SUCCEEDED(rv),"Cannot get cache mgr");
        if(NS_SUCCEEDED(rv) && urlSpec)
        {
@@ -863,11 +863,11 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
     if((kCharsetFromAutoDetection > charsetSource )  && gPlugDetector)
     {
-      nsCOMPtr <nsICharsetDetector> cdet = do_CreateInstance(g_detector_progid, 
+      nsCOMPtr <nsICharsetDetector> cdet = do_CreateInstance(g_detector_contractid, 
                                                              &rv_detect);
       if(NS_SUCCEEDED( rv_detect )) 
       {
-        cdetflt = do_CreateInstance(NS_CHARSET_DETECTION_ADAPTOR_PROGID,
+        cdetflt = do_CreateInstance(NS_CHARSET_DETECTION_ADAPTOR_CONTRACTID,
 			            &rv_detect);
         if(NS_SUCCEEDED( rv_detect )) 
         {
@@ -1776,7 +1776,7 @@ nsHTMLDocument::SetDomain(const nsAReadableString& aDomain)
   // Get codebase principal
   nsresult rv;
   NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                 NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                 NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) 
     return NS_ERROR_FAILURE;
   nsCOMPtr<nsIPrincipal> newCodebase;

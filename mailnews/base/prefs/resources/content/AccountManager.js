@@ -71,12 +71,12 @@ function onLoad() {
     selectedServer = window.arguments[0].server;
   
   accountArray = new Array;
-  RDF = Components.classes["component://netscape/rdf/rdf-service"].getService(Components.interfaces.nsIRDFService);
+  RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 
-  accountManager = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
+  accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
 
   smtpService =
-    Components.classes["component://netscape/messengercompose/smtp"].getService(Components.interfaces.nsISmtpService);
+    Components.classes["@mozilla.org/messengercompose/smtp;1"].getService(Components.interfaces.nsISmtpService);
   accounttree = document.getElementById("accounttree");
   
   doSetOKCancel(onOk, 0);
@@ -92,7 +92,7 @@ function onLoad() {
 
 function sortAccountList(accounttree)
 {
-  var xulSortService = Components.classes["component://netscape/rdf/xul-sort-service"].getService(Components.interfaces.nsIXULSortService);
+  var xulSortService = Components.classes["@mozilla.org/rdf/xul-sort-service;1"].getService(Components.interfaces.nsIXULSortService);
   
   xulSortService.Sort(accounttree, 'http://home.netscape.com/NC-rdf#FolderTreeName?sort=true', 'ascending');
 }
@@ -145,7 +145,7 @@ function onOk() {
   onSave();
     // hack hack - save the prefs file NOW in case we crash
     try {
-        var prefs = Components.classes["component://netscape/preferences"].getService(Components.interfaces.nsIPref);
+        var prefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
         prefs.SavePrefFile();
     } catch (ex) {
         dump("Error saving prefs!\n");
@@ -188,7 +188,7 @@ function onDuplicateAccount() {
             var server = account.incomingServer;
             var type = server.type;
 
-			var protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
+			var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
 			canDuplicate = protocolinfo.canDuplicate;
         }
         else {
@@ -233,7 +233,7 @@ function onDeleteAccount(event) {
     var server = account.incomingServer;
     var type = server.type; 
 
-    var protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
+    var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
     if (!protocolinfo.canDelete) return;
 
     var confirmDeleteAccount =
@@ -326,7 +326,7 @@ function updateButtons(tree,serverId) {
     
 	//dump("servertype = " + type + "\n");
 
-	var protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
+	var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
     canDuplicate = protocolinfo.canDuplicate;
 	canDelete = protocolinfo.canDelete;
 
@@ -572,7 +572,7 @@ function getFormElementValue(formElement) {
   else if (type == "textfield" &&
            formElement.getAttribute("datatype") == "nsIFileSpec") {
     if (formElement.value) {
-      var filespec = Components.classes["component://netscape/filespec"].createInstance(Components.interfaces.nsIFileSpec);
+      var filespec = Components.classes["@mozilla.org/filespec;1"].createInstance(Components.interfaces.nsIFileSpec);
       filespec.nativePath = formElement.value;
       return filespec;
     } else {

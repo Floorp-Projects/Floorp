@@ -28,7 +28,7 @@ function debugDump(msg)
 
 function GetDragService()
 {
-	var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
+	var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
 	if (dragService) 
 		dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
 
@@ -37,7 +37,7 @@ function GetDragService()
 
 function GetRDFService()
 {
-	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 	if (rdf)   
 		rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 
@@ -102,7 +102,7 @@ function BeginDragResultTree(event)
 	var dragService = GetDragService();
 	if ( !dragService )	return(false);
 
-	var transArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+	var transArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
 	if ( !transArray ) return(false); 
 
 	var selArray = tree.selectedItems;
@@ -110,10 +110,10 @@ function BeginDragResultTree(event)
 	debugDump("selArray.length = " + count + "\n");
 	for ( var i = 0; i < count; ++i )
 	{
-		var trans = Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
+		var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
 		if ( !trans )		return(false);
 
-		var genTextData = Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
+		var genTextData = Components.classes["@mozilla.org/supports-wstring;1"].createInstance(Components.interfaces.nsISupportsWString);
 		if (!genTextData)	return(false);
 
 		trans.addDataFlavor("text/nsabcard");
@@ -180,7 +180,7 @@ function DropOnDirectoryTree(event)
 	var dragSession = dragService.getCurrentSession();
 	if ( !dragSession )	return(false);
 
-	var trans = Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
+	var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
 	if ( !trans ) return(false);
 	trans.addDataFlavor("text/nsabcard");
 

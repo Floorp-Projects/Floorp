@@ -38,7 +38,7 @@ your Form Manager Information here</font></font></font></h3></center>
 
   function Save() {
     appCore = Components
-                .classes["component://netscape/appshell/component/browser/instance"]
+                .classes["@mozilla.org/appshell/component/browser/instance;1"]
                 .createInstance(Components.interfaces.nsIBrowserInstance);
     if (appCore) {
       appCore.setWebShellWindow(window);

@@ -752,7 +752,7 @@ nsImageFrame::TriggerLink(nsIPresContext* aPresContext,
       // Almost a copy of the similarly named method in nsGenericElement
       nsresult rv;
       NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                      NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                      NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
 
       nsCOMPtr<nsIPresShell> ps;
       if (NS_SUCCEEDED(rv)) 

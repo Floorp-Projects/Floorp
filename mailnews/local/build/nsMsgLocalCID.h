@@ -33,8 +33,8 @@
 //
 // nsLocalMailFolderResourceCID
 //
-#define NS_LOCALMAILFOLDERRESOURCE_PROGID \
-  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "mailbox"
+#define NS_LOCALMAILFOLDERRESOURCE_CONTRACTID \
+  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "mailbox"
 #define  NS_LOCALMAILFOLDERRESOURCE_CID              \
 { /* e490d22c-cd67-11d2-8cca-0060b0fc14a3 */         \
 	0xe490d22c,										 \
@@ -46,8 +46,8 @@
 //
 // nsPop3IncomingServer
 //
-#define NS_POP3INCOMINGSERVER_PROGID \
-  NS_MSGINCOMINGSERVER_PROGID_PREFIX NS_POP3INCOMINGSERVER_TYPE
+#define NS_POP3INCOMINGSERVER_CONTRACTID \
+  NS_MSGINCOMINGSERVER_CONTRACTID_PREFIX NS_POP3INCOMINGSERVER_TYPE
 
 #define NS_POP3INCOMINGSERVER_CID									\
 { /* D2876E51-E62C-11d2-B7FC-00805F05FFA5 */			\
@@ -57,8 +57,8 @@
 //
 // nsNoIncomingServer
 //
-#define NS_NOINCOMINGSERVER_PROGID \
-  NS_MSGINCOMINGSERVER_PROGID_PREFIX "none"
+#define NS_NOINCOMINGSERVER_CONTRACTID \
+  NS_MSGINCOMINGSERVER_CONTRACTID_PREFIX "none"
 
 #define NS_NOINCOMINGSERVER_CID            	\
 { /* {ca5ffe7e-5f47-11d3-9a51-004005263078} */	\
@@ -68,17 +68,17 @@
 
 //
 // nsMsgMailboxService
-#define NS_MAILBOXSERVICE_PROGID1	\
-  "component://netscape/messenger/mailboxservice"
+#define NS_MAILBOXSERVICE_CONTRACTID1	\
+  "@mozilla.org/messenger/mailboxservice;1"
 
-#define NS_MAILBOXSERVICE_PROGID2 \
-  "component://netscape/messenger/messageservice;type=mailbox"
+#define NS_MAILBOXSERVICE_CONTRACTID2 \
+  "@mozilla.org/messenger/messageservice;1?type=mailbox"
 
-#define NS_MAILBOXSERVICE_PROGID3 \
-  "component://netscape/messenger/messageservice;type=mailbox_message"
+#define NS_MAILBOXSERVICE_CONTRACTID3 \
+  "@mozilla.org/messenger/messageservice;1?type=mailbox_message"
 
-#define NS_MAILBOXSERVICE_PROGID4 \
-  NS_NETWORK_PROTOCOL_PROGID_PREFIX "mailbox"
+#define NS_MAILBOXSERVICE_CONTRACTID4 \
+  NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "mailbox"
 
 #define NS_MAILBOXSERVICE_CID                         \
 { /* EEF82462-CB69-11d2-8065-006008128C4E */      \
@@ -89,8 +89,8 @@
 //
 // nsMailboxUrl
 //
-#define NS_MAILBOXURL_PROGID	\
-  "component://netscape/messenger/mailboxurl"
+#define NS_MAILBOXURL_CONTRACTID	\
+  "@mozilla.org/messenger/mailboxurl;1"
 
 /* 46EFCB10-CB6D-11d2-8065-006008128C4E */
 #define NS_MAILBOXURL_CID                      \
@@ -101,8 +101,8 @@
 //
 // nsPop3Url
 //
-#define NS_POP3URL_PROGID \
-  "component://netscape/messenger/popurl"
+#define NS_POP3URL_CONTRACTID \
+  "@mozilla.org/messenger/popurl;1"
 
 /* EA1B0A11-E6F4-11d2-8070-006008128C4E */
 #define NS_POP3URL_CID                         \
@@ -114,14 +114,14 @@
 // nsPop3Service
 //
 
-#define NS_POP3SERVICE_PROGID1 \
-  "component://netscape/messenger/popservice"
+#define NS_POP3SERVICE_CONTRACTID1 \
+  "@mozilla.org/messenger/popservice;1"
 
-#define NS_POP3SERVICE_PROGID2 \
-  NS_NETWORK_PROTOCOL_PROGID_PREFIX "pop"
+#define NS_POP3SERVICE_CONTRACTID2 \
+  NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "pop"
 
-#define NS_POP3PROTOCOLINFO_PROGID \
-  NS_MSGPROTOCOLINFO_PROGID_PREFIX NS_POP3INCOMINGSERVER_TYPE
+#define NS_POP3PROTOCOLINFO_CONTRACTID \
+  NS_MSGPROTOCOLINFO_CONTRACTID_PREFIX NS_POP3INCOMINGSERVER_TYPE
 
 #define NS_POP3SERVICE_CID								\
 { /* 3BB459E3-D746-11d2-806A-006008128C4E */			\
@@ -132,11 +132,11 @@
 // nsNoneService
 //
 
-#define NS_NONESERVICE_PROGID \
-  "component://netscape/messenger/noneservice"
+#define NS_NONESERVICE_CONTRACTID \
+  "@mozilla.org/messenger/noneservice;1"
 
-#define NS_NONEPROTOCOLINFO_PROGID \
-  NS_MSGPROTOCOLINFO_PROGID_PREFIX "none"
+#define NS_NONEPROTOCOLINFO_CONTRACTID \
+  NS_MSGPROTOCOLINFO_CONTRACTID_PREFIX "none"
 
 #define NS_NONESERVICE_CID								\
 { /* 75b63b46-1dd2-11b2-9873-bb375e1550fa */			\
@@ -146,8 +146,8 @@
 //
 // nsParseMailMsgState
 //
-#define NS_PARSEMAILMSGSTATE_PROGID \
-  "component://netscape/messenger/messagestateparser"
+#define NS_PARSEMAILMSGSTATE_CONTRACTID \
+  "@mozilla.org/messenger/messagestateparser;1"
 
 #define NS_PARSEMAILMSGSTATE_CID \
 { /* 2B79AC51-1459-11d3-8097-006008128C4E */ \
@@ -158,8 +158,8 @@
 // nsMsgMailboxParser
 //
 
-#define NS_MAILBOXPARSER_PROGID \
-  "component://netscape/messenger/mailboxparser"
+#define NS_MAILBOXPARSER_CONTRACTID \
+  "@mozilla.org/messenger/mailboxparser;1"
 
 /* 46EFCB10-CB6D-11d2-8065-006008128C4E */
 #define NS_MAILBOXPARSER_CID                      \
@@ -171,10 +171,10 @@
 { 0x15263446, 0xd55e, 0x11d3,                  \
     { 0x98, 0xb1, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b } }
 
-#define NS_MSG_MAILBOXSTRINGSERVICE_PROGID \
-  NS_MAILNEWS_STRINGSERVICE_PROGID_PREFIX "mailbox"
+#define NS_MSG_MAILBOXSTRINGSERVICE_CONTRACTID \
+  NS_MAILNEWS_STRINGSERVICE_CONTRACTID_PREFIX "mailbox"
 
-#define NS_MSG_POPSTRINGSERVICE_PROGID \
-  NS_MAILNEWS_STRINGSERVICE_PROGID_PREFIX NS_POP3INCOMINGSERVER_TYPE
+#define NS_MSG_POPSTRINGSERVICE_CONTRACTID \
+  NS_MAILNEWS_STRINGSERVICE_CONTRACTID_PREFIX NS_POP3INCOMINGSERVER_TYPE
 
 #endif // nsMsgLocalCID_h__

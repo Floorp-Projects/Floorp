@@ -597,13 +597,13 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
   if ( (newType != nsMimeOutput::nsMimeMessageDraftOrTemplate) && 
     (newType != nsMimeOutput::nsMimeMessageEditorTemplate) )
   {
-    nsCAutoString progID("component://netscape/messenger/mimeemitter;type=");
+    nsCAutoString contractID("@mozilla.org/messenger/mimeemitter;1?type=");
     if (mOverrideFormat)
-      progID += mOverrideFormat;
+      contractID += mOverrideFormat;
     else
-      progID += mOutputFormat;
+      contractID += mOutputFormat;
     
-    rv = nsComponentManager::CreateInstance(progID, nsnull,
+    rv = nsComponentManager::CreateInstance(contractID, nsnull,
       NS_GET_IID(nsIMimeEmitter),
       (void **) getter_AddRefs(mEmitter));
     if ((NS_FAILED(rv)) || (!mEmitter))

@@ -26,6 +26,6 @@
 // {2EFB4FFF-4508-11d3-AEDA-00A024FFC08C} -
 #define NS_NATIVE_APP_CID \
 { 0x2EFB4FFF, 0x4508, 0x11d3, { 0xae, 0xda, 0x00, 0xa0, 0x24, 0xff, 0xc0, 0x8c } }
-#define NS_NATIVE_APP_PROGID \
-"component://netscape/xpcom/nativeApp"
+#define NS_NATIVE_APP_CONTRACTID \
+"@mozilla.org/xpcom/nativeApp;1"
 %}

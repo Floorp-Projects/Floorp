@@ -62,7 +62,7 @@ nsMsgRDFDataSource::Init()
         return NS_ERROR_ALREADY_INITIALIZED;
     
     /* Add an observer to XPCOM shutdown */
-    nsCOMPtr<nsIObserverService> obs = do_GetService(NS_OBSERVERSERVICE_PROGID,
+    nsCOMPtr<nsIObserverService> obs = do_GetService(NS_OBSERVERSERVICE_CONTRACTID,
                                                      &rv);
     if (NS_FAILED(rv)) return rv;
     nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
@@ -83,7 +83,7 @@ void nsMsgRDFDataSource::Cleanup()
     mRDFService = nsnull;
     
     // release ourselves from the observer service
-    nsCOMPtr<nsIObserverService> obs = do_GetService(NS_OBSERVERSERVICE_PROGID,
+    nsCOMPtr<nsIObserverService> obs = do_GetService(NS_OBSERVERSERVICE_CONTRACTID,
                                                      &rv);
     if (NS_SUCCEEDED(rv)) {
         nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);

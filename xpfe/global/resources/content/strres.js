@@ -7,7 +7,7 @@ function srGetAppLocale()
 
   if (!localeService) {
       try {
-          localeService = Components.classes["component://netscape/intl/nslocaleservice"].getService();
+          localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"].getService();
       
           localeService = localeService.QueryInterface(Components.interfaces.nsILocaleService);
       } catch (ex) {
@@ -30,7 +30,7 @@ function srGetStrBundleWithLocale(path, locale)
   if (!strBundleService) {
       try {
           strBundleService =
-              Components.classes["component://netscape/intl/stringbundle"].getService(); 
+              Components.classes["@mozilla.org/intl/stringbundle;1"].getService(); 
           strBundleService = 
               strBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
       } catch (ex) {
@@ -55,7 +55,7 @@ function srGetStrBundle(path)
 function selectLocale(event)
 {
   try {
-    var chromeRegistry = Components.classes["component://netscape/chrome/chrome-registry"].getService();
+    var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService();
     if ( chromeRegistry ) {
       chromeRegistry = chromeRegistry.QueryInterface( Components.interfaces.nsIChromeRegistry );
     }

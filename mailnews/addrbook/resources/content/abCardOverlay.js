@@ -31,7 +31,7 @@ function OnLoadNewCard()
 
 	doSetOKCancel(NewCardOKButton, 0);
 	
-	var cardproperty = Components.classes["component://netscape/addressbook/cardproperty"].createInstance();
+	var cardproperty = Components.classes["@mozilla.org/addressbook/cardproperty;1"].createInstance();
 	cardproperty = cardproperty.QueryInterface(Components.interfaces.nsIAbCard);
 
 	editCard.card = cardproperty;
@@ -138,7 +138,7 @@ function InitEditCard()
 	editCard = new Object;
 	
 	// get pointer to nsIPref object
-	var prefs = Components.classes["component://netscape/preferences"];
+	var prefs = Components.classes["@mozilla.org/preferences;1"];
 	if ( prefs )
 	{
 		prefs = prefs.getService();

@@ -139,7 +139,7 @@ nsPSMUIHandlerImpl::PromptForFile(const PRUnichar *prompt,
                                   PRBool shouldFileExist, char **outFile)
 {
     NS_ENSURE_ARG_POINTER(outFile);
-    nsCOMPtr<nsIFilePicker> fp = do_CreateInstance("component://mozilla/filepicker");
+    nsCOMPtr<nsIFilePicker> fp = do_CreateInstance("@mozilla.org/filepicker;1");
     
     if (!fp)
         return NS_ERROR_NULL_POINTER;

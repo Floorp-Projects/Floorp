@@ -395,7 +395,7 @@ nsresult nsCaret::PrimeTimer()
   if (!mReadOnly && mBlinkRate > 0)
   {
     nsresult  err;
-    mBlinkTimer = do_CreateInstance("component://netscape/timer", &err);
+    mBlinkTimer = do_CreateInstance("@mozilla.org/timer;1", &err);
     
     if (NS_FAILED(err))
       return err;

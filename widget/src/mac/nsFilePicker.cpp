@@ -149,7 +149,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
   if (userClicksOK == returnOK || userClicksOK == returnReplace)
   {
-    nsCOMPtr<nsILocalFile>    localFile(do_CreateInstance("component://mozilla/file/local"));
+    nsCOMPtr<nsILocalFile>    localFile(do_CreateInstance("@mozilla.org/file/local;1"));
 	  nsCOMPtr<nsILocalFileMac> macFile(do_QueryInterface(localFile));
 
     nsresult rv = macFile->InitWithFSSpec(&theFile);
@@ -614,7 +614,7 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
 {
-  nsCOMPtr<nsIFileURL> file(do_CreateInstance("component://netscape/network/standard-url"));
+  nsCOMPtr<nsIFileURL> file(do_CreateInstance("@mozilla.org/network/standard-url;1"));
   NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
   file->SetFile(mFile);
   NS_ADDREF(*aFileURL = file);

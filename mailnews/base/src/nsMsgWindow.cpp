@@ -65,7 +65,7 @@ nsresult nsMsgWindow::Init()
 {
   // register ourselves as a content listener with the uri dispatcher service
   nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_PROGID, &rv);
+  NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) 
     rv = dispatcher->RegisterContentListener(this);
 
@@ -125,7 +125,7 @@ NS_IMETHODIMP nsMsgWindow::SelectMessage(const char *messageUri)
 NS_IMETHODIMP nsMsgWindow::CloseWindow()
 {
   nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_PROGID, &rv);
+  NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) 
     rv = dispatcher->UnRegisterContentListener(this);
 
@@ -289,7 +289,7 @@ NS_IMETHODIMP nsMsgWindow::SetMailCharacterSet(const PRUnichar * aMailCharacterS
   // Convert to a canonical charset name instead of using the charset name from the message header as is.
   // This is needed for charset menu item to have a check mark correctly.
   nsresult rv;
-  nsCOMPtr<nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID, &rv);
+  nsCOMPtr<nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) 
   {
     nsCOMPtr <nsIAtom> charsetAtom;

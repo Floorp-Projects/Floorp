@@ -53,7 +53,7 @@ ExtractKeyString( nsHashKey* key, void*, void*, nsISupports** _retval )
   */
 {
   nsresult status;
-  nsCOMPtr<nsISupportsString> obj = do_CreateInstance(NS_SUPPORTS_STRING_PROGID, &status);
+  nsCOMPtr<nsISupportsString> obj = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &status);
   if ( obj ) {
     nsCStringKey* strkey = NS_STATIC_CAST(nsCStringKey*, key);
     status = obj->SetDataWithLength(strkey->GetStringLength(), strkey->GetString());
@@ -169,7 +169,7 @@ nsCategoryManager::initialize()
       // Get a pointer to the registry, and get it open and ready for us
 
     nsresult status;
-    if ( mRegistry = do_GetService(NS_REGISTRY_PROGID, &status) )
+    if ( mRegistry = do_GetService(NS_REGISTRY_CONTRACTID, &status) )
       if ( NS_SUCCEEDED(status = mRegistry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry)) )
         if ( (status = mRegistry->GetSubtree(nsIRegistry::Common, kCategoriesRegistryPath, &mCategoriesRegistryKey)) == NS_ERROR_REG_NOT_FOUND )
           status = mRegistry->AddSubtree(nsIRegistry::Common, kCategoriesRegistryPath, &mCategoriesRegistryKey);

@@ -30,8 +30,8 @@
 //
 // nsMsgFolderDataSource
 //
-#define NS_MAILNEWSFOLDERDATASOURCE_PROGID \
-  NS_RDF_DATASOURCE_PROGID_PREFIX "mailnewsfolders"
+#define NS_MAILNEWSFOLDERDATASOURCE_CONTRACTID \
+  NS_RDF_DATASOURCE_CONTRACTID_PREFIX "mailnewsfolders"
 
 #define NS_MAILNEWSFOLDERDATASOURCE_CID                    \
 { /* 2B8ED4A4-F684-11d2-8A5D-0060B0FC04D2 */         \
@@ -44,8 +44,8 @@
 //
 // nsMsgMessageDataSource
 //
-#define NS_MAILNEWSMESSAGEDATASOURCE_PROGID \
-  NS_RDF_DATASOURCE_PROGID_PREFIX "mailnewsmessages"
+#define NS_MAILNEWSMESSAGEDATASOURCE_CONTRACTID \
+  NS_RDF_DATASOURCE_CONTRACTID_PREFIX "mailnewsmessages"
 
 #define NS_MAILNEWSMESSAGEDATASOURCE_CID                    \
 { /* 2B8ED4A5-F684-11d2-8A5D-0060B0FC04D2 */         \
@@ -59,8 +59,8 @@
 //
 // nsMessageViewDataSource
 //
-#define NS_MESSAGEVIEWDATASOURCE_PROGID \
-  NS_RDF_DATASOURCE_PROGID_PREFIX "mail-messageview"
+#define NS_MESSAGEVIEWDATASOURCE_CONTRACTID \
+  NS_RDF_DATASOURCE_CONTRACTID_PREFIX "mail-messageview"
 
 #define NS_MESSAGEVIEWDATASOURCE_CID				\
 { /* 14495573-E945-11d2-8A52-0060B0FC04D2 */		\
@@ -71,8 +71,8 @@
 //
 // nsMsgAccountManager
 // 
-#define NS_MSGACCOUNTMANAGER_PROGID \
-  "component://netscape/messenger/account-manager"
+#define NS_MSGACCOUNTMANAGER_CONTRACTID \
+  "@mozilla.org/messenger/account-manager;1"
 
 #define NS_MSGACCOUNTMANAGER_CID									\
 { /* D2876E50-E62C-11d2-B7FC-00805F05FFA5 */			\
@@ -82,8 +82,8 @@
 // 
 // nsMessengerMigrator
 //
-#define NS_MESSENGERMIGRATOR_PROGID \
-	"component://netscape/messenger/migrator"
+#define NS_MESSENGERMIGRATOR_CONTRACTID \
+	"@mozilla.org/messenger/migrator;1"
 
 #define NS_MESSENGERMIGRATOR_CID	\
 { /* 54818d98-1dd2-11b2-82aa-a9197f997503 */	\
@@ -95,8 +95,8 @@
 //
 // nsMsgIdentity
 //
-#define NS_MSGIDENTITY_PROGID \
-  "component://netscape/messenger/identity"
+#define NS_MSGIDENTITY_CONTRACTID \
+  "@mozilla.org/messenger/identity;1"
 
 #define NS_MSGIDENTITY_CID												\
 { /* 8fbf6ac0-ebcc-11d2-b7fc-00805f05ffa5 */			\
@@ -105,11 +105,11 @@
 
 //
 // nsMsgIncomingServer
-#define NS_MSGINCOMINGSERVER_PROGID_PREFIX \
-  "component://netscape/messenger/server&type="
+#define NS_MSGINCOMINGSERVER_CONTRACTID_PREFIX \
+  "@mozilla.org/messenger/server;1?type="
 
-#define NS_MSGINCOMINGSERVER_PROGID \
-  NS_MSGINCOMINGSERVER_PROGID_PREFIX "generic"
+#define NS_MSGINCOMINGSERVER_CONTRACTID \
+  NS_MSGINCOMINGSERVER_CONTRACTID_PREFIX "generic"
 
 /* {66e5ff08-5126-11d3-9711-006008948010} */
 #define NS_MSGINCOMINGSERVER_CID \
@@ -120,8 +120,8 @@
 //
 // nsMsgAccount
 //
-#define NS_MSGACCOUNT_PROGID \
-  "component://netscape/messenger/account"
+#define NS_MSGACCOUNT_CONTRACTID \
+  "@mozilla.org/messenger/account;1"
 
 #define NS_MSGACCOUNT_CID													\
 { /* 68b25510-e641-11d2-b7fc-00805f05ffa5 */			\
@@ -131,8 +131,8 @@
 //
 // nsMsgFilterService
 //
-#define NS_MSGFILTERSERVICE_PROGID \
-  "component://netscape/messenger/services/filters"
+#define NS_MSGFILTERSERVICE_CONTRACTID \
+  "@mozilla.org/messenger/services/filters;1"
 
 #define NS_MSGFILTERSERVICE_CID                         \
 { 0x5cbb0700, 0x04bc, 0x11d3,                 \
@@ -147,8 +147,8 @@
 { 0xe9a7cd70, 0x0303, 0x11d3,                 \
     { 0xa5, 0x0a, 0x0, 0x60, 0xb0, 0xfc, 0x04, 0xb7 } }
 
-#define NS_MSGSEARCHSESSION_PROGID \
-  "component://netscape/messenger/searchSession"
+#define NS_MSGSEARCHSESSION_CONTRACTID \
+  "@mozilla.org/messenger/searchSession;1"
 
 
 //
@@ -159,14 +159,14 @@
   {0x1510faee, 0xad1a, 0x4194, \
     { 0x80, 0x39, 0x33, 0xde, 0x32, 0xd5, 0xa8, 0x82 }}
 
-#define NS_MSGSEARCHVALIDITYMANAGER_PROGID \
-  "mozilla.mail.search.validityManager.1"
+#define NS_MSGSEARCHVALIDITYMANAGER_CONTRACTID \
+  "@mozilla.org/mail/search/validityManager;1"
 
 //
 // nsMsgMailSession
 //
-#define NS_MSGMAILSESSION_PROGID \
-  "component://netscape/messenger/services/session"
+#define NS_MSGMAILSESSION_CONTRACTID \
+  "@mozilla.org/messenger/services/session;1"
 
 /* D5124441-D59E-11d2-806A-006008128C4E */
 #define NS_MSGMAILSESSION_CID							\
@@ -176,8 +176,8 @@
 //
 // nsMsgBiffManager
 //
-#define NS_MSGBIFFMANAGER_PROGID \
-  "component://netscape/messenger/biffManager"
+#define NS_MSGBIFFMANAGER_CONTRACTID \
+  "@mozilla.org/messenger/biffManager;1"
 
 /* 4A374E7E-190F-11d3-8A88-0060B0FC04D2 */
 #define NS_MSGBIFFMANAGER_CID							\
@@ -188,8 +188,8 @@
 //
 // nsStatusBarBiffManager
 //
-#define NS_STATUSBARBIFFMANAGER_PROGID \
-  "component://netscape/messenger/statusBarBiffManager"
+#define NS_STATUSBARBIFFMANAGER_CONTRACTID \
+  "@mozilla.org/messenger/statusBarBiffManager;1"
 
 /* 7f9a9fb0-4161-11d4-9876-00c04fa0d2a6 */
 #define NS_STATUSBARBIFFMANAGER_CID                \
@@ -200,8 +200,8 @@
 //
 // nsMsgNotificationManager
 //
-#define NS_MSGNOTIFICATIONMANAGER_PROGID \
-  NS_RDF_DATASOURCE_PROGID_PREFIX "msgnotifications"
+#define NS_MSGNOTIFICATIONMANAGER_CONTRACTID \
+  NS_RDF_DATASOURCE_CONTRACTID_PREFIX "msgnotifications"
 
 /* 7C601F60-1EF3-11d3-9574-006097222B83 */
 #define NS_MSGNOTIFICATIONMANAGER_CID							\
@@ -211,8 +211,8 @@
 //
 // nsCopyMessageStreamListener
 //
-#define NS_COPYMESSAGESTREAMLISTENER_PROGID \
-  "component://netscape/messenger/copymessagestreamlistener"
+#define NS_COPYMESSAGESTREAMLISTENER_CONTRACTID \
+  "@mozilla.org/messenger/copymessagestreamlistener;1"
 
 #define NS_COPYMESSAGESTREAMLISTENER_CID							\
 { 0x7741daed, 0x2125, 0x11d3,							\
@@ -221,16 +221,16 @@
 //
 // nsMsgCopyService
 //
-#define NS_MSGCOPYSERVICE_PROGID \
-  "component://netscape/messenger/messagecopyservice"
+#define NS_MSGCOPYSERVICE_CONTRACTID \
+  "@mozilla.org/messenger/messagecopyservice;1"
 
 /* c766e666-29bd-11d3-afb3-001083002da8 */
 #define NS_MSGCOPYSERVICE_CID \
 { 0xc766e666, 0x29bd, 0x11d3, \
     { 0xaf, 0xb3, 0x00, 0x10, 0x83, 0x00, 0x2d, 0xa8 } }
 
-#define NS_MSGFOLDERCACHE_PROGID \
-	"component://netscape/messenger/msgFolderCache"
+#define NS_MSGFOLDERCACHE_CONTRACTID \
+	"@mozilla.org/messenger/msgFolderCache;1"
 
 /* bcdca970-3b22-11d3-8d76-00805f8a6617 */
 #define NS_MSGFOLDERCACHE_CID \
@@ -240,8 +240,8 @@
 //
 // nsUrlListenerManager
 //
-#define NS_URLLISTENERMANAGER_PROGID \
-  "component://netscape/messenger/urlListenerManager"
+#define NS_URLLISTENERMANAGER_CONTRACTID \
+  "@mozilla.org/messenger/urlListenerManager;1"
 
 /* B1AA0820-D04B-11d2-8069-006008128C4E */
 #define NS_URLLISTENERMANAGER_CID \
@@ -251,12 +251,12 @@
 //
 // nsMessengerBootstrap
 //
-#define NS_MESSENGERBOOTSTRAP_PROGID \
-  "component://netscape/appshell/component/messenger"
-#define NS_MAILSTARTUPHANDLER_PROGID \
-  "component://netscape/commandlinehandler/general-startup-mail"
-#define NS_MESSENGERWINDOWSERVICE_PROGID \
-  "component://netscape/messenger/windowservice"
+#define NS_MESSENGERBOOTSTRAP_CONTRACTID \
+  "@mozilla.org/appshell/component/messenger;1"
+#define NS_MAILSTARTUPHANDLER_CONTRACTID \
+  "@mozilla.org/commandlinehandler/general-startup;1?type=mail"
+#define NS_MESSENGERWINDOWSERVICE_CONTRACTID \
+  "@mozilla.org/messenger/windowservice;1"
 #define NS_MESSENGERWINDOWSERVICE_CID \
 { 0xa01b6724, 0x1dd1, 0x11b2, \
   {0xaa, 0xb9, 0x82,0xf2, 0x4c,0x59, 0x5f, 0x41} }
@@ -264,14 +264,14 @@
 //
 // nsMessenger
 //
-#define NS_MESSENGER_PROGID	\
-  "component://netscape/messenger"
+#define NS_MESSENGER_CONTRACTID	\
+  "@mozilla.org/messenger;1"
 
 //
 // nsMsgStatusFeedback
 //
-#define NS_MSGSTATUSFEEDBACK_PROGID \
-  "component://netscape/messenger/statusfeedback"
+#define NS_MSGSTATUSFEEDBACK_CONTRACTID \
+  "@mozilla.org/messenger/statusfeedback;1"
 
 /* B1AA0820-D04B-11d2-8069-006008128C4E */
 #define NS_MSGSTATUSFEEDBACK_CID \
@@ -281,8 +281,8 @@
 //
 //nsMessageView
 //
-#define NS_MESSAGEVIEW_PROGID \
-	"component://netscape/messenger/messageview"
+#define NS_MESSAGEVIEW_CONTRACTID \
+	"@mozilla.org/messenger/messageview;1"
 
 /* 4E03B3A6-624A-11d3-8AD4-0060B0FC04D2*/
 #define NS_MESSAGEVIEW_CID \
@@ -292,8 +292,8 @@
 //
 //nsMsgWindow
 //
-#define NS_MSGWINDOW_PROGID \
-	"component://netscape/messenger/msgwindow"
+#define NS_MSGWINDOW_CONTRACTID \
+	"@mozilla.org/messenger/msgwindow;1"
 
 /* BB460DFF-8BF0-11d3-8AFE-0060B0FC04D2*/
 #define NS_MSGWINDOW_CID \
@@ -310,22 +310,22 @@
    { 0xb8, 0xb7, 0x6f, 0xa3, 0xde, 0x37, 0x2e, 0x7e } }
 
 
-#define NS_MESSAGE_MAILBOX_PROGID \
-  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "mailbox_message"
+#define NS_MESSAGE_MAILBOX_CONTRACTID \
+  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "mailbox_message"
 
-#define NS_MESSAGE_NEWS_PROGID \
-  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "news_message"
+#define NS_MESSAGE_NEWS_CONTRACTID \
+  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "news_message"
 
-#define NS_MESSAGE_IMAP_PROGID \
-  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "imap_message"
+#define NS_MESSAGE_IMAP_CONTRACTID \
+  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "imap_message"
 
 
 
 //
 //nsMsgViewNavigationService
 //
-#define NS_MSGVIEWNAVIGATIONSERVICE_PROGID \
-	"component://netscape/messenger/msgviewnavigationservice"
+#define NS_MSGVIEWNAVIGATIONSERVICE_CONTRACTID \
+	"@mozilla.org/messenger/msgviewnavigationservice;1"
 
 /* 60D34FB4-D031-11d3-8B2E-0060B0FC04D2*/
 #define NS_MSGVIEWNAVIGATIONSERVICE_CID \
@@ -335,8 +335,8 @@
 //
 // Print Engine...
 //
-#define NS_MSGPRINTENGINE_PROGID \
-  "component://netscape/messenger/msgPrintEngine"
+#define NS_MSGPRINTENGINE_CONTRACTID \
+  "@mozilla.org/messenger/msgPrintEngine;1"
 
 #define NS_MSG_PRINTENGINE_CID                  \
   { /* 91FD6B19-E0BC-11d3-8F97-000064657374 */  \
@@ -346,16 +346,16 @@
 //
 // nsMsgServiceProviderService
 //
-#define NS_MSGSERVICEPROVIDERSERVICE_PROGID \
-  NS_RDF_DATASOURCE_PROGID_PREFIX "ispdefaults"
+#define NS_MSGSERVICEPROVIDERSERVICE_CONTRACTID \
+  NS_RDF_DATASOURCE_CONTRACTID_PREFIX "ispdefaults"
   
 /* 10998cef-d7f2-4772-b7db-bd097454984c */
 #define NS_MSGSERVICEPROVIDERSERVICE_CID \
 { 0x10998cef, 0xd7f2, 0x4772, \
   { 0xb7, 0xdb, 0xbd, 0x09, 0x74, 0x54, 0x98, 0x4c}}
 
-#define NS_MSGLOGONREDIRECTORSERVICE_PROGID \
-	"component://netscape/messenger/msglogonredirector"
+#define NS_MSGLOGONREDIRECTORSERVICE_CONTRACTID \
+	"@mozilla.org/messenger/msglogonredirector;1"
 
 #define NS_MSGLOGONREDIRECTORSERVICE_CID \
 {0x0d7456ae, 0xe28a, 0x11d3, \
@@ -364,8 +364,8 @@
 //
 // nsSubscribableServer
 //
-#define NS_SUBSCRIBABLESERVER_PROGID \
- "component://netscape/messenger/subscribableserver"
+#define NS_SUBSCRIBABLESERVER_CONTRACTID \
+ "@mozilla.org/messenger/subscribableserver;1"
 
 #define NS_SUBSCRIBABLESERVER_CID \
 {0x8510876a, 0x1dd2, 0x11b2, \
@@ -374,8 +374,8 @@
 //
 // nsSubscribeDataSource
 //
-#define NS_SUBSCRIBEDATASOURCE_PROGID \
-  NS_RDF_DATASOURCE_PROGID_PREFIX "subscribe"
+#define NS_SUBSCRIBEDATASOURCE_CONTRACTID \
+  NS_RDF_DATASOURCE_CONTRACTID_PREFIX "subscribe"
 
 /* 00e89c82-1dd2-11b2-9a1c-e75995d7d595 */
 #define NS_SUBSCRIBEDATASOURCE_CID \
@@ -391,28 +391,28 @@
   {0xc6584cee, 0x8ee8, 0x4b2c, \
     { 0x8d, 0xbe, 0x7d, 0xfc, 0xb5, 0x5c, 0x9c, 0x61 }}
 
-#define NS_MSGFILTERDELEGATEFACTORY_PROGID_PREFIX \
-  NS_RDF_DELEGATEFACTORY_PROGID_PREFIX "filter" "."   
+#define NS_MSGFILTERDELEGATEFACTORY_CONTRACTID_PREFIX \
+  NS_RDF_DELEGATEFACTORY_CONTRACTID_PREFIX "filter" "/"   
 
 // Note: the above CID should live in base, but each protocol
-// should be creating the ProgID themselves. for now we'll
+// should be creating the ContractID themselves. for now we'll
 // do it for news/imap/local mail
 
-#define NS_MSGFILTERDELEGATEFACTORY_MAILBOX_PROGID \
-  NS_MSGFILTERDELEGATEFACTORY_PROGID_PREFIX "mailbox"
+#define NS_MSGFILTERDELEGATEFACTORY_MAILBOX_CONTRACTID \
+  NS_MSGFILTERDELEGATEFACTORY_CONTRACTID_PREFIX "mailbox;1"
 
-#define NS_MSGFILTERDELEGATEFACTORY_NEWS_PROGID \
-  NS_MSGFILTERDELEGATEFACTORY_PROGID_PREFIX "news"
+#define NS_MSGFILTERDELEGATEFACTORY_NEWS_CONTRACTID \
+  NS_MSGFILTERDELEGATEFACTORY_CONTRACTID_PREFIX "news;1"
 
-#define NS_MSGFILTERDELEGATEFACTORY_IMAP_PROGID \
-  NS_MSGFILTERDELEGATEFACTORY_PROGID_PREFIX "imap"
+#define NS_MSGFILTERDELEGATEFACTORY_IMAP_CONTRACTID \
+  NS_MSGFILTERDELEGATEFACTORY_CONTRACTID_PREFIX "imap;1"
 
 
 //
 // nsMsgSearchDataSource
 //
-#define NS_MSGSEARCHDATASOURCE_PROGID \
-  NS_RDF_DATASOURCE_PROGID_PREFIX "msgsearch"
+#define NS_MSGSEARCHDATASOURCE_CONTRACTID \
+  NS_RDF_DATASOURCE_CONTRACTID_PREFIX "msgsearch"
 
 /* f713896e-3a48-44a8-a7e0-8dde5b4b6461 */
 #define NS_MSGSEARCHDATASOURCE_CID \
@@ -423,8 +423,8 @@
 //
 // nsMsgFilterDataSource
 //
-#define NS_MSGFILTERDATASOURCE_PROGID \
-  NS_RDF_DATASOURCE_PROGID_PREFIX "msgfilters"
+#define NS_MSGFILTERDATASOURCE_CONTRACTID \
+  NS_RDF_DATASOURCE_CONTRACTID_PREFIX "msgfilters"
 
 /* d97edfb5-bcbe-4a15-a4fb-fbf2f958b388 */
 #define NS_MSGFILTERDATASOURCE_CID \

@@ -81,7 +81,7 @@ ImageSystemServicesImpl::SetTimeout(ilTimeoutCallbackFunction aFunc,
     TimerClosure *tc;
 
     nsresult rv;
-    rv = nsComponentManager::CreateInstance("component://netscape/timer",
+    rv = nsComponentManager::CreateInstance("@mozilla.org/timer;1",
                                             nsnull,
                                             NS_GET_IID(nsITimer),
                                             (void**)&timer);

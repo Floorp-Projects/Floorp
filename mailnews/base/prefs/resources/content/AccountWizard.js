@@ -97,7 +97,7 @@ function onLoad() {
     // load up the SMTP service for later
     if (!smtpService) {
         smtpService =
-            Components.classes["component://netscape/messengercompose/smtp"].getService(Components.interfaces.nsISmtpService);
+            Components.classes["@mozilla.org/messengercompose/smtp;1"].getService(Components.interfaces.nsISmtpService);
     }
 
     checkForInvalidAccounts();
@@ -143,7 +143,7 @@ function onFinish() {
 
     // hack hack - save the prefs file NOW in case we crash
     try {
-        var prefs = Components.classes["component://netscape/preferences"].getService(Components.interfaces.nsIPref);
+        var prefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
         prefs.SavePrefFile();
     } catch (ex) {
         dump("Error saving prefs!\n");
@@ -405,14 +405,14 @@ function verifyLocalFoldersAccount(account) {
     var identity = account.identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
 
 	// use server type to get the protocol info
-	var protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + server.type].getService(Components.interfaces.nsIMsgProtocolInfo);
+	var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + server.type].getService(Components.interfaces.nsIMsgProtocolInfo);
 	// for this protocol, do we default the folder prefs to this server, or to the "Local Folders" server
 	defaultCopiesAndFoldersPrefsToServer = protocolinfo.defaultCopiesAndFoldersPrefsToServer;
 
 	if (!localMailServer) {
         	// dump("Creating local mail account\n");
 		// creates a copy of the identity you pass in
-        	messengerMigrator = Components.classes["component://netscape/messenger/migrator"].getService(Components.interfaces.nsIMessengerMigrator);
+        	messengerMigrator = Components.classes["@mozilla.org/messenger/migrator;1"].getService(Components.interfaces.nsIMessengerMigrator);
 		messengerMigrator.createLocalMailAccount(false /* false, since we are not migrating */);
 		try {
 			localMailServer = am.localFoldersServer;
@@ -492,7 +492,7 @@ function AccountExists(userName,hostName,serverType)
 {
   dump("AccountExists("+userName+","+hostName+","+serverType+")\n");
   var accountExists = false;
-  var accountManager = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
+  var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
   try {
         var server = accountManager.FindServer(userName,hostName,serverType);
         if (server) {
@@ -509,7 +509,7 @@ function AccountExists(userName,hostName,serverType)
 
 function checkForInvalidAccounts()
 {
-    am = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
+    am = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
 
     var invalidAccounts = getInvalidAccounts(am.accounts);
     var firstInvalidAccount; 
@@ -713,11 +713,11 @@ function SetCurrentAccountData(accountData)
 
 function getInterfaceForType(type) {
     try {
-        var protocolInfoProgIDPrefix = "component://netscape/messenger/protocol/info;type=";
+        var protocolInfoContractIDPrefix = "@mozilla.org/messenger/protocol/info;1?type=";
         
-        var thisProgID = protocolInfoProgIDPrefix + type;
+        var thisContractID = protocolInfoContractIDPrefix + type;
         
-        var protoInfo = Components.classes[thisProgID].getService(Components.interfaces.nsIMsgProtocolInfo);
+        var protoInfo = Components.classes[thisContractID].getService(Components.interfaces.nsIMsgProtocolInfo);
         
         return protoInfo.serverIID;
     } catch (ex) {

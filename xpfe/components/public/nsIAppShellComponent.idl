@@ -53,7 +53,7 @@ class nsICmdLineService;
 |      component" also implements the nsIFindComponent interface which         |
 |      adds functions specific to that component.                              |
 |   3. Register (using the Mozilla XPCOM component registration facilities)    |
-|      using a ProgID of the form:                                             |
+|      using a ContractID of the form:                                             |
 |       component://netscape/appshell/component/foo                            |
 |      where "foo" is a component-specific identifier (which should match the  |
 |      component-specific interface name).                                     |
@@ -89,7 +89,7 @@ interface nsIAppShellComponent : nsISupports {
 };
 
 %{C++
-#define NS_IAPPSHELLCOMPONENT_PROGID    "component://netscape/appshell/component"
+#define NS_IAPPSHELLCOMPONENT_CONTRACTID    "@mozilla.org/appshell/component"
 #define NS_IAPPSHELLCOMPONENT_CLASSNAME "Mozilla AppShell Component"
 #define NS_IAPPSHELLCOMPONENT_KEY       "software/netscape/appshell/components"
 %}

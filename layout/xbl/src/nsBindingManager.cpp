@@ -354,7 +354,7 @@ nsBindingManager::AddLayeredBinding(nsIContent* aContent, const nsAReadableStrin
 {
   // First we need to load our binding.
   nsresult rv;
-  NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+  NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
   if (!xblService)
     return rv;
 
@@ -414,7 +414,7 @@ nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc, const nsAReadableS
   // First we need to load our binding.
   *aResult = nsnull;
   nsresult rv;
-  NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+  NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
   if (!xblService)
     return rv;
 

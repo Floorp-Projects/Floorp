@@ -209,7 +209,7 @@ NS_IMETHODIMP nsInternetConfigService::FillInMIMEInfo(const char *mimetype, nsIU
   if (rv == NS_OK)
   {
     // create a mime info object and we'll fill it in based on the values from IC mapping entry
-    nsCOMPtr<nsIMIMEInfo> info (do_CreateInstance(NS_MIMEINFO_PROGID));
+    nsCOMPtr<nsIMIMEInfo> info (do_CreateInstance(NS_MIMEINFO_CONTRACTID));
 
     if (info)
     {

@@ -75,7 +75,7 @@ int main( int argc, char *argv[] ) {
 
     // Create the registry
     nsIRegistry *reg;
-    rv = compMgr->CreateInstanceByProgID(NS_REGISTRY_PROGID, NULL,
+    rv = compMgr->CreateInstanceByContractID(NS_REGISTRY_CONTRACTID, NULL,
                                          NS_GET_IID(nsIRegistry),
                                          (void **) &reg);
 
@@ -104,7 +104,7 @@ int main( int argc, char *argv[] ) {
         // Called with no arguments. Print both the default registry and 
         // the components registry. We already printed the default regsitry.
         // So just do the component registry.
-        rv = compMgr->CreateInstanceByProgID(NS_REGISTRY_PROGID, NULL,
+        rv = compMgr->CreateInstanceByContractID(NS_REGISTRY_CONTRACTID, NULL,
                                              NS_GET_IID(nsIRegistry),
                                              (void **) &reg);
 

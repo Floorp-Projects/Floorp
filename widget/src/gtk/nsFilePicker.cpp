@@ -193,7 +193,7 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
   if (mWidget) {
     gchar *fn = gtk_file_selection_get_filename(GTK_FILE_SELECTION(mWidget));
 
-    nsCOMPtr<nsILocalFile> file(do_CreateInstance("component://mozilla/file/local"));
+    nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
     
     NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
 

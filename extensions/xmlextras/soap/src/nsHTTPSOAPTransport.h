@@ -54,6 +54,6 @@ protected:
  { /* d852ade0-5823-11d4-9a62-00104bdf5339 */      \
  0xd852ade0, 0x5823, 0x11d4,                       \
  {0x9a, 0x62, 0x00, 0x10, 0x4b, 0xdf, 0x53, 0x39} }
-#define NS_HTTPSOAPTRANSPORT_PROGID NS_SOAPTRANSPORT_PROGID_PREFIX "http"
+#define NS_HTTPSOAPTRANSPORT_CONTRACTID NS_SOAPTRANSPORT_CONTRACTID_PREFIX "http"
 
 #endif

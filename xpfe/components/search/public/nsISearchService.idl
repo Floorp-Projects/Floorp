@@ -89,14 +89,14 @@ interface nsIInternetSearchContext : nsISupports
 #define NS_ILOCALSEARCHDATASOURCE_IID \
 { 0x1222e6f0, 0xa5e3, 0x11d2, { 0x8b, 0x7c, 0x00, 0x80, 0x5f, 0x8a, 0x7d, 0xb6 } }
 
-#define NS_LOCALSEARCH_SERVICE_PROGID \
-    "component://netscape/browser/localsearch-service"
-#define NS_LOCALSEARCH_DATASOURCE_PROGID \
-    "component://netscape/rdf/datasource?name=localsearch"
+#define NS_LOCALSEARCH_SERVICE_CONTRACTID \
+    "@mozilla.org/browser/localsearch-service;1"
+#define NS_LOCALSEARCH_DATASOURCE_CONTRACTID \
+    "@mozilla.org/rdf/datasource;1?name=localsearch"
 
-#define NS_INTERNETSEARCH_SERVICE_PROGID \
-    "component://netscape/browser/internetsearch-service"
-#define NS_INTERNETSEARCH_DATASOURCE_PROGID \
-    "component://netscape/rdf/datasource?name=internetsearch"
+#define NS_INTERNETSEARCH_SERVICE_CONTRACTID \
+    "@mozilla.org/browser/internetsearch-service;1"
+#define NS_INTERNETSEARCH_DATASOURCE_CONTRACTID \
+    "@mozilla.org/rdf/datasource;1?name=internetsearch"
 
 %}

@@ -155,7 +155,7 @@ nsMimeXULEmitter::BuildListOfStatusProviders()
   nsCOMPtr<nsIEnumerator> components;
   miscStatusType        *newInfo = nsnull;
 
-  NS_WITH_SERVICE(nsIRegistry, registry, NS_REGISTRY_PROGID, &rv); 
+  NS_WITH_SERVICE(nsIRegistry, registry, NS_REGISTRY_CONTRACTID, &rv); 
   if (NS_FAILED(rv)) 
     return rv;
   
@@ -172,7 +172,7 @@ nsMimeXULEmitter::BuildListOfStatusProviders()
     return rv;
   
   // go ahead and enumerate through.
-  nsCAutoString actualProgID;
+  nsCAutoString actualContractID;
   rv = components->First();
   while (NS_SUCCEEDED(rv) && (NS_OK != components->IsDone()))
   {
@@ -192,17 +192,17 @@ nsMimeXULEmitter::BuildListOfStatusProviders()
     if (NS_FAILED(rv)) 
       return rv;
     
-    actualProgID = NS_IMIME_MISC_STATUS_KEY;
-    actualProgID.Append(name);
+    actualContractID = NS_IMIME_MISC_STATUS_KEY;
+    actualContractID.Append(name);
     
-    // now we've got the PROGID, let's add it to the list...
+    // now we've got the CONTRACTID, let's add it to the list...
     newInfo = (miscStatusType *)PR_NEWZAP(miscStatusType);
     if (newInfo)
     {
-      newInfo->obj = GetStatusObjForProgID(actualProgID);
+      newInfo->obj = GetStatusObjForContractID(actualContractID);
       if (newInfo->obj)
       {
-        newInfo->progID.AssignWithConversion(actualProgID);
+        newInfo->contractID.AssignWithConversion(actualContractID);
         mMiscStatusArray->AppendElement(newInfo);
       }
     }
@@ -214,7 +214,7 @@ nsMimeXULEmitter::BuildListOfStatusProviders()
 }
 
 nsIMimeMiscStatus *
-nsMimeXULEmitter::GetStatusObjForProgID(nsCString aProgID)
+nsMimeXULEmitter::GetStatusObjForContractID(nsCString aContractID)
 {
   nsresult            rv = NS_OK;
   nsISupports         *obj = nsnull;
@@ -224,7 +224,7 @@ nsMimeXULEmitter::GetStatusObjForProgID(nsCString aProgID)
     return nsnull;
   
   nsCID         cid;
-  rv = comMgr->ProgIDToClassID(aProgID, &cid);
+  rv = comMgr->ContractIDToClassID(aContractID, &cid);
   if (NS_FAILED(rv))
     return nsnull;
 

@@ -32,8 +32,8 @@ nsIURILoader
 //	{9F6D5D40-90E7-11d3-AF93-00A024FFC08C} - 
 #define NS_URI_LOADER_CID \
 { 0x9f6d5d40, 0x90e7, 0x11d3, { 0xaf, 0x80, 0x00, 0xa0, 0x24, 0xff, 0xc0, 0x8c } }
-#define NS_URI_LOADER_PROGID \
-"component://netscape/uriloader"
+#define NS_URI_LOADER_CONTRACTID \
+"@mozilla.org/uriloader;1"
 
 /* 057b04d0-0ccf-11d2-beba-00805f8a66dc */
 #define NS_DOCUMENTLOADER_SERVICE_CID   \
@@ -41,17 +41,17 @@ nsIURILoader
 
 #define NS_DOCUMENTLOADER_CID \
  { 0xdbe63944, 0xd434, 0x11d3, { 0x98, 0xb1, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b}}
-#define NS_DOCUMENTLOADER_PROGID \
-"component://netscape/docloader"
+#define NS_DOCUMENTLOADER_CONTRACTID \
+"@mozilla.org/docloader;1"
 
 /* 057b04d0-0ccf-11d2-beba-00805f8a66dc */
 #define NS_DOCUMENTLOADER_SERVICE_CID   \
  { 0x057b04d0, 0x0ccf, 0x11d2,{0xbe, 0xba, 0x00, 0x80, 0x5f, 0x8a, 0x66, 0xdc}}
 
-#define NS_DOCUMENTLOADER_SERVICE_PROGID \
-"component://netscape/docloaderservice"
+#define NS_DOCUMENTLOADER_SERVICE_CONTRACTID \
+"@mozilla.org/docloaderservice;1"
 
-#define NS_CONTENT_HANDLER_PROGID               "component://netscape/uriloader/content-handler"
-#define NS_CONTENT_HANDLER_PROGID_PREFIX	     NS_CONTENT_HANDLER_PROGID "?type="
+#define NS_CONTENT_HANDLER_CONTRACTID               "@mozilla.org/uriloader/content-handler;1"
+#define NS_CONTENT_HANDLER_CONTRACTID_PREFIX	     NS_CONTENT_HANDLER_CONTRACTID "?type="
 
 %}

@@ -154,7 +154,7 @@ nsresult nsGfxFactoryBeOS::LockFactory(PRBool aLock)
 extern "C" NS_GFXNONXP nsresult NSGetFactory(nsISupports* servMgr,
                                              const nsCID &aClass,
                                              const char *aClassName,
-                                             const char *aProgID,
+                                             const char *aContractID,
                                              nsIFactory **aFactory)
 {
   if (nsnull == aFactory) {

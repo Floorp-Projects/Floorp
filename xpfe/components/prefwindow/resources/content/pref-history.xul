@@ -44,7 +44,7 @@
 
   function Startup()
   {
-   	var urlBarHist = nsJSComponentManager.getService("component://netscape/browser/urlbarhistory",
+   	var urlBarHist = nsJSComponentManager.getService("@mozilla.org/browser/urlbarhistory;1",
   "nsIUrlbarHistory");
   if ( urlBarHist )
   {

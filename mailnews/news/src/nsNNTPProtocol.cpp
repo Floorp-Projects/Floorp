@@ -500,7 +500,7 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
 	if (NS_FAILED(rv)) return rv;
 
     // retrieve the AccountManager
-    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_PROGID, &rv);
+    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     // find the server
@@ -747,7 +747,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
       // need to make sure there is no cycle. 
 
       // retrieve the AccountManager
-      NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_PROGID, &rv);
+      NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
       if (NS_FAILED(rv)) goto FAIL;
 
       // find the incoming server
@@ -2960,7 +2960,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 			mUpdateTimer->Cancel();
 			mUpdateTimer = nsnull;
 	    }
-        mUpdateTimer = do_CreateInstance("component://netscape/timer", &rv);
+        mUpdateTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
 		NS_ASSERTION(NS_SUCCEEDED(rv),"failed to create timer");
 		if (NS_FAILED(rv)) return -1;
 

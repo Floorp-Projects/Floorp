@@ -172,7 +172,7 @@ nsImapIncomingServer::GetConstructedPrettyName(PRUnichar **retval)
   nsresult rv;
 
   NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
+                  NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   if (NS_FAILED(rv)) return rv;
@@ -476,7 +476,7 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
 
           mockChannel->Close(); // try closing it to get channel listener nulled out.
 
-          nsCOMPtr<nsINetDataCacheManager> cacheManager = do_GetService(NS_NETWORK_CACHE_MANAGER_PROGID, &res);
+          nsCOMPtr<nsINetDataCacheManager> cacheManager = do_GetService(NS_NETWORK_CACHE_MANAGER_CONTRACTID, &res);
           if (NS_SUCCEEDED(res) && cacheManager)
           {
             nsCOMPtr<nsICachedNetData>  cacheEntry;
@@ -1963,14 +1963,14 @@ nsresult nsImapIncomingServer::RequestOverrideInfo(nsIMsgWindow *aMsgWindow)
 {
 
 	nsresult rv;
-	nsCAutoString progID(NS_MSGLOGONREDIRECTORSERVICE_PROGID);
+	nsCAutoString contractID(NS_MSGLOGONREDIRECTORSERVICE_CONTRACTID);
 	nsXPIDLCString redirectorType;
 
 	GetRedirectorType(getter_Copies(redirectorType));
-	progID.Append('/');
-	progID.Append(redirectorType);
+	contractID.Append('/');
+	contractID.Append(redirectorType);
 
-	m_logonRedirector = do_GetService(progID.GetBuffer(), &rv);
+	m_logonRedirector = do_GetService(contractID.GetBuffer(), &rv);
 	if (m_logonRedirector && NS_SUCCEEDED(rv))
 	{
 		nsCOMPtr <nsIMsgLogonRedirectionRequester> logonRedirectorRequester;

@@ -49,7 +49,7 @@ public:
 
   nsSignedStubFactory(const nsCID &aClass,
                const char* aClassName,
-               const char* aProgID,
+               const char* aContractID,
                nsISupports*);
 
   // nsIFactory methods   
@@ -61,17 +61,17 @@ protected:
 
   nsCID mClassID;
   char* mClassName;
-  char* mProgID;
+  char* mContractID;
   nsIServiceManager* mServiceManager;
 };   
 
 nsSignedStubFactory::nsSignedStubFactory(const nsCID &aClass,
                            const char* aClassName,
-                           const char* aProgID,
+                           const char* aContractID,
                            nsISupports *compMgrSupports)
   : mClassID(aClass),
     mClassName(nsCRT::strdup(aClassName)),
-    mProgID(nsCRT::strdup(aProgID))
+    mContractID(nsCRT::strdup(aContractID))
 {
 	NS_INIT_REFCNT();
 
@@ -84,7 +84,7 @@ nsSignedStubFactory::~nsSignedStubFactory()
 {
   NS_IF_RELEASE(mServiceManager);
   PL_strfree(mClassName);
-  PL_strfree(mProgID);
+  PL_strfree(mContractID);
 }   
 
 nsresult
@@ -167,13 +167,13 @@ nsSignedStubFactory::LockFactory(PRBool aLock)
 extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
-                                           const char *aProgID,
+                                           const char *aContractID,
                                            nsIFactory **aFactory)
 {
 	if (nsnull == aFactory)
 		return NS_ERROR_NULL_POINTER;
 
-  *aFactory = new nsSignedStubFactory(aClass, aClassName, aProgID, aServMgr);
+  *aFactory = new nsSignedStubFactory(aClass, aClassName, aContractID, aServMgr);
   if (aFactory)
     return (*aFactory)->QueryInterface(NS_GET_IID(nsIFactory),
                                        (void**)aFactory);
@@ -196,7 +196,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
   NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  char *cType = {"mimecth:"SIGNED_CONTENT_TYPE};
+  char *cType = {"@mozilla.org/mimecth;1?type="SIGNED_CONTENT_TYPE};
   rv = compMgr->RegisterComponent(kMimeContentTypeHandlerCID,
                                        "MIME SignedStubed Mail Handler",
                                        cType,

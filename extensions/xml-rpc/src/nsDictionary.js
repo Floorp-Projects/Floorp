@@ -18,15 +18,15 @@
 
 /*
  *  nsDictionary XPCOM component
- *  Version: $Revision: 1.3 $
+ *  Version: $Revision: 1.4 $
  *
- *  $Id: nsDictionary.js,v 1.3 2000/08/10 20:11:58 rayw%netscape.com Exp $
+ *  $Id: nsDictionary.js,v 1.4 2000/09/13 23:51:27 rayw%netscape.com Exp $
  */
 
 /*
  * Constants
  */
-const DICTIONARY_PROGID = 'mozilla.dictionary.1';
+const DICTIONARY_CONTRACTID = '@mozilla.org/dictionary;1';
 const DICTIONARY_CID = Components.ID('{1dd0cb45-aea3-4a52-8b29-01429a542863}');
 const DICTIONARY_IID = Components.interfaces.nsIDictionary;
 
@@ -84,7 +84,7 @@ nsDictionary.prototype= {
 var nsDictionaryModule = {
     registerSelf: function(compMgr, fileSpec, location, type) {
         compMgr.registerComponentWithType(DICTIONARY_CID, 
-            "nsDictionary JS component", DICTIONARY_PROGID, fileSpec, location,
+            "nsDictionary JS component", DICTIONARY_CONTRACTID, fileSpec, location,
             true, true, type);
     },
 

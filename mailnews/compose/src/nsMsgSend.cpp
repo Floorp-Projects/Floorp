@@ -1858,7 +1858,7 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
         // Now, most importantly, we need to figure out what the content type is for
         // this attachment...If we can't, then just make it application/octet-stream
         nsresult  rv = NS_OK;
-        nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_PROGID, &rv));
+        nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
         if (NS_SUCCEEDED(rv) && mimeFinder) 
         {
           char *fileExt = nsMsgGetExtensionFromFileURL(NS_ConvertASCIItoUCS2(str));
@@ -2527,7 +2527,7 @@ nsMsgComposeAndSend::Init(
 	nsresult      rv = NS_OK;
   nsXPIDLString msg;
   if (!mComposeBundle)
-    mComposeBundle = do_GetService(NS_MSG_COMPOSESTRINGSERVICE_PROGID);
+    mComposeBundle = do_GetService(NS_MSG_COMPOSESTRINGSERVICE_CONTRACTID);
 
   // Tell the user we are assembling the message...
   mComposeBundle->GetStringByID(NS_MSG_ASSEMBLING_MESSAGE, getter_Copies(msg));

@@ -431,7 +431,7 @@ xpctestEcho::CallReceiverSometimeLater(void)
 #ifdef IMPLEMENT_TIMER_STUFF
     nsCOMPtr<nsITimer> timer;
     nsresult rv;
-    timer = do_CreateInstance("component://netscape/timer", &rv);
+    timer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     if(NS_FAILED(rv))
         return NS_ERROR_FAILURE;
     timer->Init(NS_STATIC_CAST(nsITimerCallback*,this), 2000);

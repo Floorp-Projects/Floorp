@@ -215,15 +215,15 @@ nsLocaleModule::GetClassObject(nsIComponentManager *aCompMgr,
 struct Components {
   const char* mDescription;
   const nsID* mCID;
-  const char* mProgID;
+  const char* mContractID;
 };
 
 // The list of components we register
 static Components gComponents[] = {
   { "nsLocale component", &kLocaleFactoryCID,
-    NS_LOCALE_PROGID, },
+    NS_LOCALE_CONTRACTID, },
   { "nsLocaleService component", &kLocaleServiceCID,
-    NS_LOCALESERVICE_PROGID, },
+    NS_LOCALESERVICE_CONTRACTID, },
   { "Posix locale", &kPosixLocaleFactoryCID,
     NULL, },
   { "Collation factory", &kCollationFactoryCID,
@@ -233,9 +233,9 @@ static Components gComponents[] = {
   { "Date/Time formatter", &kDateTimeFormatCID,
     NULL, },
   { "Scriptable Date Format", &kScriptableDateFormatCID,
-    NS_SCRIPTABLEDATEFORMAT_PROGID, },
+    NS_SCRIPTABLEDATEFORMAT_CONTRACTID, },
   { "Language Atom Service", &kLanguageAtomServiceCID,
-    NS_LANGUAGEATOMSERVICE_PROGID, },
+    NS_LANGUAGEATOMSERVICE_CONTRACTID, },
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
@@ -255,7 +255,7 @@ nsLocaleModule::RegisterSelf(nsIComponentManager *aCompMgr,
   Components* end = cp + NUM_COMPONENTS;
   while (cp < end) {
     rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
-                                         cp->mProgID, aPath, PR_TRUE,
+                                         cp->mContractID, aPath, PR_TRUE,
                                          PR_TRUE);
     if (NS_FAILED(rv)) {
 #ifdef DEBUG

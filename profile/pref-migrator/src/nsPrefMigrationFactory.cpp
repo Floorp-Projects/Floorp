@@ -54,11 +54,11 @@ static nsModuleComponentInfo components[] =
 {
     { "Profile Migration", 
       NS_PREFMIGRATION_CID,
-      NS_PROFILEMIGRATION_PROGID, 
+      NS_PROFILEMIGRATION_CONTRACTID, 
       CreateNewPrefMigration },
     { "Pref Conversion",
       NS_PREFCONVERTER_CID,
-      NS_PREFCONVERTER_PROGID, nsPrefConverterConstructor}
+      NS_PREFCONVERTER_CONTRACTID, nsPrefConverterConstructor}
 };
 
 NS_IMPL_NSGETMODULE("nsPrefMigrationModule", components);

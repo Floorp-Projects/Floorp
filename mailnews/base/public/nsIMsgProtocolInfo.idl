@@ -24,8 +24,8 @@
 #include "nsIFileSpec.idl"
 
 %{C++
-#define NS_MSGPROTOCOLINFO_PROGID_PREFIX \
-  "component://netscape/messenger/protocol/info;type="
+#define NS_MSGPROTOCOLINFO_CONTRACTID_PREFIX \
+  "@mozilla.org/messenger/protocol/info;1?type="
 %}
 
 

@@ -929,7 +929,7 @@ nsMsgIncomingServer::GetFilterList(nsIMsgFilterList **aResult)
       rv = msgFolder->GetPath(getter_AddRefs(thisFolder));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      mFilterFile = do_CreateInstance(NS_FILESPEC_PROGID, &rv);
+      mFilterFile = do_CreateInstance(NS_FILESPEC_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = mFilterFile->FromFileSpec(thisFolder);
@@ -1038,11 +1038,11 @@ nsMsgIncomingServer::getProtocolInfo(nsIMsgProtocolInfo **aResult)
     rv = GetType(getter_Copies(type));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString progid(NS_MSGPROTOCOLINFO_PROGID_PREFIX);
-    progid.Append(type);
+    nsCAutoString contractid(NS_MSGPROTOCOLINFO_CONTRACTID_PREFIX);
+    contractid.Append(type);
 
     nsCOMPtr<nsIMsgProtocolInfo> protocolInfo =
-        do_GetService(progid, &rv);
+        do_GetService(contractid, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     *aResult = protocolInfo;

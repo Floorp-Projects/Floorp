@@ -32,7 +32,7 @@ static nsModuleComponentInfo components[] =
 {
   { "GIF Decoder",
      NS_GIFDECODER_CID,
-     "component://netscape/image/decoder&type=image/gif",
+     "@mozilla.org/image/decoder;1?type=image/gif",
      GIFDecoder::Create }
 };
 

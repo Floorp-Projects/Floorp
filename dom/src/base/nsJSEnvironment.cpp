@@ -121,7 +121,7 @@ NS_ScriptErrorReporter(JSContext *cx,
         // Make an nsIScriptError and populate it with information from
         // this error.
         nsCOMPtr<nsIScriptError>
-          errorObject(do_CreateInstance("mozilla.scripterror.1"));
+          errorObject(do_CreateInstance("@mozilla.org/scripterror;1"));
 
         // XXX possible here to distinguish between XUL and content js?
         // or could just expose setCategory and twiddle it later.
@@ -334,12 +334,12 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
   mBranchCallbackCount = 0;
 }
 
-const char kScriptSecurityManagerProgID[] = NS_SCRIPTSECURITYMANAGER_PROGID;
+const char kScriptSecurityManagerContractID[] = NS_SCRIPTSECURITYMANAGER_CONTRACTID;
 
 nsJSContext::~nsJSContext()
 {
   if (mSecurityManager) {
-    nsServiceManager::ReleaseService(kScriptSecurityManagerProgID,
+    nsServiceManager::ReleaseService(kScriptSecurityManagerContractID,
                                      mSecurityManager);
     mSecurityManager = nsnull;
   }
@@ -430,7 +430,7 @@ nsJSContext::EvaluateStringWithValue(const nsAReadableString& aScript,
   // from native code via XPConnect uses the right context.  Do this whether
   // or not the SecurityManager said "ok", in order to simplify control flow
   // below where we pop before returning.
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
+  NS_WITH_SERVICE(nsIJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", &rv);
   if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext))) {
     JSPRINCIPALS_DROP(mContext, jsprin);
     return NS_ERROR_FAILURE;
@@ -546,7 +546,7 @@ nsJSContext::EvaluateString(const nsAReadableString& aScript,
   // from native code via XPConnect uses the right context.  Do this whether
   // or not the SecurityManager said "ok", in order to simplify control flow
   // below where we pop before returning.
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
+  NS_WITH_SERVICE(nsIJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", &rv);
   if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext))) {
     JSPRINCIPALS_DROP(mContext, jsprin);
     return NS_ERROR_FAILURE;
@@ -702,7 +702,7 @@ nsJSContext::ExecuteScript(void* aScriptObject,
 
   // Push our JSContext on our thread's context stack, in case native code
   // called from JS calls back into JS via XPConnect.
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
+  NS_WITH_SERVICE(nsIJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", &rv);
   if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext))) {
     return NS_ERROR_FAILURE;
   }
@@ -883,7 +883,7 @@ nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
+  NS_WITH_SERVICE(nsIJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", &rv);
   if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext)))
     return NS_ERROR_FAILURE;
 
@@ -1316,7 +1316,7 @@ nsJSContext::GetNameSpaceManager(nsIScriptNameSpaceManager** aInstancePtr)
   if (!mNameSpaceManager.get()) {
     rv = NS_NewScriptNameSpaceManager(getter_AddRefs(mNameSpaceManager));
     if (NS_SUCCEEDED(rv)) {
-      // XXXbe used progid rather than CID?
+      // XXXbe used contractid rather than CID?
       NS_WITH_SERVICE(nsIScriptNameSetRegistry, registry, kCScriptNameSetRegistryCID, &rv);
       if (NS_SUCCEEDED(rv)) {
         rv = registry->PopulateNameSpace(this);
@@ -1333,7 +1333,7 @@ NS_IMETHODIMP
 nsJSContext::GetSecurityManager(nsIScriptSecurityManager **aInstancePtr)
 {
   if (!mSecurityManager) {
-    nsresult rv = nsServiceManager::GetService(kScriptSecurityManagerProgID,
+    nsresult rv = nsServiceManager::GetService(kScriptSecurityManagerContractID,
                                                NS_GET_IID(nsIScriptSecurityManager),
                                                (nsISupports**)&mSecurityManager);
     if (NS_FAILED(rv))
@@ -1410,7 +1410,7 @@ nsJSEnvironment::GetScriptingEnvironment()
   return sTheEnvironment;
 }
 
-const char kJSRuntimeServiceProgID[] = "nsJSRuntimeService";
+const char kJSRuntimeServiceContractID[] = "@mozilla.org/js/xpc/RuntimeService;1";
 static int globalCount;
 static PRThread *gDOMThread;
 
@@ -1429,7 +1429,7 @@ nsJSEnvironment::nsJSEnvironment()
   // So that we get deleted on XPCOM shutdown, set up an
   // observer.
   nsresult rv;
-  NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+  NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
   NS_ASSERTION(NS_SUCCEEDED(rv), "going to leak a nsJSEnvironment");
   if (NS_SUCCEEDED(rv))
   {
@@ -1439,7 +1439,7 @@ nsJSEnvironment::nsJSEnvironment()
   }
 
   mRuntimeService = nsnull;
-  rv = nsServiceManager::GetService(kJSRuntimeServiceProgID,
+  rv = nsServiceManager::GetService(kJSRuntimeServiceContractID,
                                     NS_GET_IID(nsIJSRuntimeService),
                                     (nsISupports**)&mRuntimeService);
   // get the JSRuntime from the runtime svc, if possible
@@ -1452,7 +1452,7 @@ nsJSEnvironment::nsJSEnvironment()
   gDOMThread = PR_GetCurrentThread();
   ::JS_SetGCCallbackRT(mRuntime, DOMGCCallback);
 
-  // Initialize LiveConnect.  XXXbe use progid rather than GetCID
+  // Initialize LiveConnect.  XXXbe use contractid rather than GetCID
   NS_WITH_SERVICE(nsILiveConnectManager, manager,
                   nsIJVMManager::GetCID(), &rv);
 
@@ -1470,7 +1470,7 @@ nsJSEnvironment::~nsJSEnvironment()
   if (--globalCount == 0)
     nsJSUtils::nsClearCachedSecurityManager();
   if (mRuntimeService)
-    nsServiceManager::ReleaseService(kJSRuntimeServiceProgID, mRuntimeService);
+    nsServiceManager::ReleaseService(kJSRuntimeServiceContractID, mRuntimeService);
 }
 
 NS_IMPL_ISUPPORTS1(nsJSEnvironment,nsIObserver);

@@ -75,10 +75,10 @@ nsMIMEService::~nsMIMEService() {
 nsresult
 nsMIMEService::Init() {
     nsresult rv = NS_OK;
-    rv = nsComponentManager::CreateInstance(NS_XMLMIMEDATASOURCE_PROGID, nsnull, nsIMIMEDataSource::GetIID(), getter_AddRefs(mXML) );
+    rv = nsComponentManager::CreateInstance(NS_XMLMIMEDATASOURCE_CONTRACTID, nsnull, nsIMIMEDataSource::GetIID(), getter_AddRefs(mXML) );
   	
   	// Create native
-		nsComponentManager::CreateInstance(NS_NATIVEMIMEDATASOURCE_PROGID, nsnull, nsIMIMEDataSource::GetIID(), getter_AddRefs(mNative) );
+		nsComponentManager::CreateInstance(NS_NATIVEMIMEDATASOURCE_CONTRACTID, nsnull, nsIMIMEDataSource::GetIID(), getter_AddRefs(mNative) );
    return rv;
 }
 

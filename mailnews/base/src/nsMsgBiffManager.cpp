@@ -69,7 +69,7 @@ nsMsgBiffManager::~nsMsgBiffManager()
 		Shutdown();
 		//Don't remove from Observer service in Shutdown because Shutdown also gets called
 		//from xpcom shutdown observer.  And we don't want to remove from the service in that case.
-		NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+		NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
 		if (NS_SUCCEEDED(rv))
 		{    
 			nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
@@ -92,7 +92,7 @@ nsresult nsMsgBiffManager::Init()
 		accountManager->AddIncomingServerListener(this);
 	}
 
-	NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+	NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
 	if (NS_SUCCEEDED(rv))
 	{    
 		nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
@@ -289,7 +289,7 @@ nsresult nsMsgBiffManager::SetupNextBiff()
 		{
 			mBiffTimer->Cancel();
 		}
-        mBiffTimer = do_CreateInstance("component://netscape/timer");
+        mBiffTimer = do_CreateInstance("@mozilla.org/timer;1");
 		mBiffTimer->Init(OnBiffTimer, (void*)this, timeInMSUint32);
 		
 	}

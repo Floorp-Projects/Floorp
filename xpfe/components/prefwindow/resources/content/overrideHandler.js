@@ -3,7 +3,7 @@
  * Datasource initialization
  **/
 
-var	gRDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
+var	gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 if (gRDF)
   gRDF = gRDF.QueryInterface(Components.interfaces.nsIRDFService);
 
@@ -234,7 +234,7 @@ HandlerOverride.prototype = {
     var helperAppResource = gRDF.GetResource(APP_URI(this.mimeType));
     gDS.Assert(handlerResource, helperAppProperty, helperAppResource, true);
     // add the mime type to the MIME types seq
-    var container = Components.classes["component://netscape/rdf/container"].createInstance();
+    var container = Components.classes["@mozilla.org/rdf/container;1"].createInstance();
     if (container) {
       container = container.QueryInterface(Components.interfaces.nsIRDFContainer);
       if (container) {
@@ -350,7 +350,7 @@ function removeOverride(aMIMEType)
 {
   dump("*** mimeType = " + aMIMEType + "\n");
   // remove entry from seq
-  var rdfc = Components.classes["component://netscape/rdf/container"].createInstance();
+  var rdfc = Components.classes["@mozilla.org/rdf/container;1"].createInstance();
   if (rdfc) {
     rdfc = rdfc.QueryInterface(Components.interfaces.nsIRDFContainer);
     if (rdfc) {

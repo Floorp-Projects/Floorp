@@ -36,7 +36,7 @@
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 
-#define NS_IXPINSTALLCOMPONENT_PROGID NS_IAPPSHELLCOMPONENT_PROGID "/xpinstall"
+#define NS_IXPINSTALLCOMPONENT_CONTRACTID NS_IAPPSHELLCOMPONENT_CONTRACTID "/xpinstall;1"
 #define NS_IXPINSTALLCOMPONENT_CLASSNAME "Mozilla XPInstall Component"
 
 #define XPINSTALL_ENABLE_PREF            "xpinstall.enabled"

@@ -52,7 +52,7 @@ nsDOMViewerObject::SetTargetLiteral(nsIRDFResource *aProperty,
                                     nsString& str)
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIRDFService, rdf, NS_RDF_PROGID "/rdf-service", &rv);
+  NS_WITH_SERVICE(nsIRDFService, rdf, NS_RDF_CONTRACTID "/rdf-service;1", &rv);
 
   PRUnichar* uniStr = str.ToNewUnicode();
   nsCOMPtr<nsIRDFLiteral> literal;

@@ -141,7 +141,7 @@ nsHelperAppLauncherDialog.prototype= {
 
     // Choose a new/different app...
     chooseApp : function () {
-        var fp = Components.classes["component://mozilla/filepicker"].createInstance( this.nsIFilePicker );
+        var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance( this.nsIFilePicker );
         fp.init( window,
                  this.getString( "chooseAppFilePickerTitle" ),
                  this.nsIFilePicker.modeOpen );

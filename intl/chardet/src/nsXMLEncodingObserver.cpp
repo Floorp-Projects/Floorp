@@ -249,7 +249,7 @@ NS_IMETHODIMP nsXMLEncodingObserver::Start()
     nsAutoString xmlTopic; xmlTopic.AssignWithConversion("xmlparser");
     nsIObserverService* anObserverService = nsnull;
 
-    res = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, 
+    res = nsServiceManager::GetService(NS_OBSERVERSERVICE_CONTRACTID, 
                                        NS_GET_IID(nsIObserverService),
                                        (nsISupports**) &anObserverService);
     if(NS_FAILED(res)) 
@@ -257,7 +257,7 @@ NS_IMETHODIMP nsXMLEncodingObserver::Start()
      
     res = anObserverService->AddObserver(this, xmlTopic.GetUnicode());
 
-    nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_PROGID, 
+    nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_CONTRACTID, 
                                     anObserverService);
 done:
     return res;
@@ -269,7 +269,7 @@ NS_IMETHODIMP nsXMLEncodingObserver::End()
     nsAutoString xmlTopic; xmlTopic.AssignWithConversion("xmlparser");
     nsIObserverService* anObserverService = nsnull;
 
-    res = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, 
+    res = nsServiceManager::GetService(NS_OBSERVERSERVICE_CONTRACTID, 
                                        NS_GET_IID(nsIObserverService),
                                        (nsISupports**) &anObserverService);
     if(NS_FAILED(res)) 
@@ -277,7 +277,7 @@ NS_IMETHODIMP nsXMLEncodingObserver::End()
      
     res = anObserverService->RemoveObserver(this, xmlTopic.GetUnicode());
 
-    nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_PROGID, 
+    nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_CONTRACTID, 
                                     anObserverService);
 done:
     return res;

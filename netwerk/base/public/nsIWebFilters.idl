@@ -47,6 +47,6 @@ interface nsIWebFilters : nsISupports
     {0x86, 0x54, 0xe8, 0x36, 0xef, 0xb6, 0x99, 0x5c} \
 }
 
-#define NS_WEBFILTERS_PROGID "component://mozilla/network/filters" 
+#define NS_WEBFILTERS_CONTRACTID "@mozilla.org/network/filters;1" 
 
 %}

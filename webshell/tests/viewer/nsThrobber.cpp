@@ -315,7 +315,7 @@ nsThrobber::Tick()
 #ifndef REPEATING_TIMERS
 
   nsresult rv;
-  mTimer = do_CreateInstance("component://netscape/timer", &rv);
+  mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_OK == rv) {
     mTimer->Init(ThrobTimerCallback, this, 33);
   }
@@ -341,7 +341,7 @@ nsThrobber::LoadThrobberImages(const nsString& aFileNameMask, PRInt32 aNumImages
   mImageGroup->Init(deviceCtx, nsnull);
   NS_RELEASE(deviceCtx);
 
-  mTimer = do_CreateInstance("component://netscape/timer", &rv);
+  mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_OK != rv) {
     return rv;
   }

@@ -200,7 +200,7 @@ nsresult nsMimeFactory::LockFactory(PRBool aLock)
 extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
-                                           const char *aProgID,
+                                           const char *aContractID,
                                            nsIFactory **aFactory)
 {
 	if (nsnull == aFactory)
@@ -256,13 +256,13 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
   // notifies the mime converter service provided by necko)
   rv = compMgr->RegisterComponent(kCStreamConverterCID,
                                     "Mailnews Mime Stream Converter",
-                                    NS_MAILNEWS_MIME_STREAM_CONVERTER_PROGID,
+                                    NS_MAILNEWS_MIME_STREAM_CONVERTER_CONTRACTID,
                                     path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->RegisterComponent(kCStreamConverterCID,
                                     "Mailnews Mime Stream Converter",
-                                    NS_MAILNEWS_MIME_STREAM_CONVERTER_PROGID1,
+                                    NS_MAILNEWS_MIME_STREAM_CONVERTER_CONTRACTID1,
                                     path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 

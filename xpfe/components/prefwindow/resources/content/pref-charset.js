@@ -29,7 +29,7 @@ function Init()
 
 	try
 	{
-		prefInt = Components.classes["component://netscape/preferences"];
+		prefInt = Components.classes["@mozilla.org/preferences;1"];
 
 		if (prefInt) {
 			prefInt = prefInt.getService();
@@ -59,7 +59,7 @@ function Init()
 
 
   try {
-		ccm		= Components.classes['component://netscape/charset-converter-manager'];
+		ccm		= Components.classes['@mozilla.org/charset-converter-manager;1'];
 
 		if (ccm) {
 			ccm = ccm.getService();

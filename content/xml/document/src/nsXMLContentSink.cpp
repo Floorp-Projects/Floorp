@@ -607,7 +607,7 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
   else {
     // The first step here is to see if someone has provided their
     // own content element implementation (e.g., XUL or MathML).  
-    // This is done based off a progid/namespace scheme.
+    // This is done based off a contractid/namespace scheme.
     nsCOMPtr<nsIElementFactory> elementFactory;
 
     // This should *not* be done for every node, only when we find
@@ -1762,7 +1762,7 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
 
       // Check that this page is allowed to load this URI.
       NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                      NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                      NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
       if (NS_FAILED(rv)) 
           return rv;
       rv = securityManager->CheckLoadURI(mDocumentBaseURL, url, PR_FALSE);
@@ -1884,11 +1884,11 @@ nsXMLContentSink::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aR
   nsAutoString nameSpace;
   gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, nameSpace);
 
-  nsCAutoString progID( NS_ELEMENT_FACTORY_PROGID_PREFIX );
-  progID.AppendWithConversion(nameSpace);
+  nsCAutoString contractID( NS_ELEMENT_FACTORY_CONTRACTID_PREFIX );
+  contractID.AppendWithConversion(nameSpace);
 
   // Retrieve the appropriate factory.
-  NS_WITH_SERVICE(nsIElementFactory, elementFactory, progID, &rv);
+  NS_WITH_SERVICE(nsIElementFactory, elementFactory, contractID, &rv);
 
   *aResult = elementFactory;
   NS_IF_ADDREF(*aResult);

@@ -30,7 +30,7 @@ function readIRCPrefs (rootNode)
         return false;
 
     var pref =
-        Components.classes["component://netscape/preferences"].createInstance();
+        Components.classes["@mozilla.org/preferences;1"].createInstance();
     if(!pref)
         throw ("Can't find pref component.");
 

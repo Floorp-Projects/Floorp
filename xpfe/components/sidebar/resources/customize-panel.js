@@ -20,7 +20,7 @@
  */ 
 
 // the rdf service
-var RDF = 'component://netscape/rdf/rdf-service'
+var RDF = '@mozilla.org/rdf/rdf-service;1'
 RDF = Components.classes[RDF].getService();
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 

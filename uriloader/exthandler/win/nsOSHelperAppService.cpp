@@ -112,7 +112,7 @@ nsresult nsOSHelperAppService::FindOSMimeInfoForType(const char * aMimeContentTy
         // create a new mime info object and initialize it if we don't have one already...
         if (!mimeInfo)
         {
-          mimeInfo = do_CreateInstance(NS_MIMEINFO_PROGID);
+          mimeInfo = do_CreateInstance(NS_MIMEINFO_CONTRACTID);
           if (mimeInfo)
           {
             mimeInfo->SetMIMEType((char *) pBytes);
@@ -332,7 +332,7 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
 
 nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile)
 {
-  nsCOMPtr<nsILocalFile> localFile (do_CreateInstance(NS_LOCAL_FILE_PROGID));
+  nsCOMPtr<nsILocalFile> localFile (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
   nsresult rv = NS_OK;
 
   if (localFile)

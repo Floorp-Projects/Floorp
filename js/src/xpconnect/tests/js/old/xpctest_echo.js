@@ -360,7 +360,7 @@ print("[shared] test - "+(all_ok ? "passed" : "failed"));
 // test wrapper Service Identity
 
 var iface = Components.interfaces["nsIScriptError"];
-var clazz = Components.classes["mozilla.scripterror.1"];
+var clazz = Components.classes["@mozilla.org/scripterror;1"];
 var foo = clazz.getService(iface);
 var bar = clazz.getService(iface);
 all_ok = foo === bar;

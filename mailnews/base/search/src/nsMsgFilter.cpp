@@ -407,7 +407,7 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
       else
       {
         NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                        NS_MSGACCOUNTMANAGER_PROGID, &rv);
+                        NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv))
         {
           nsCOMPtr <nsIMsgIncomingServer> server; 

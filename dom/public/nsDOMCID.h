@@ -46,7 +46,7 @@
 //were used in older days, so if someone wants to provide
 //the service they must implement an object and give it 
 //this class ID
-#define NS_CRYPTO_PROGID "component://netscape/security/crypto"
-#define NS_PKCS11_PROGID "component://netscape/security/pkcs11"
+#define NS_CRYPTO_CONTRACTID "@mozilla.org/security/crypto;1"
+#define NS_PKCS11_CONTRACTID "@mozilla.org/security/pkcs11;1"
 
 #endif /* nsDOMCID_h__ */

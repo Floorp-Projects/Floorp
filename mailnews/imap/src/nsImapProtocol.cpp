@@ -4327,7 +4327,7 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
 #if 0
   if (flag & kHasCRAMCapability)
   {
-    nsCOMPtr<nsIKeyedHashAlgorithm> keyedHash (do_GetService(NS_KEYEDHASHALGORITHM_PROGID_PREFIX "MD5"));
+    nsCOMPtr<nsIKeyedHashAlgorithm> keyedHash (do_GetService(NS_KEYEDHASHALGORITHM_CONTRACTID_PREFIX "MD5"));
     if (keyedHash)
     {
       // inform the server that we want to begin a CRAM authentication procedure...
@@ -6777,7 +6777,7 @@ NS_IMETHODIMP nsImapMockChannel::AsyncRead(nsIStreamListener *listener, nsISuppo
   // look to see if this url should be added to the memory cache..
   PRBool useMemoryCache = PR_FALSE;
   mailnewsUrl->GetAddToMemoryCache(&useMemoryCache);
-  nsCOMPtr<nsINetDataCacheManager> cacheManager = do_GetService(NS_NETWORK_CACHE_MANAGER_PROGID, &rv);
+  nsCOMPtr<nsINetDataCacheManager> cacheManager = do_GetService(NS_NETWORK_CACHE_MANAGER_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && cacheManager)
   {
     // Retrieve an existing cache entry or create a new one if none exists for the

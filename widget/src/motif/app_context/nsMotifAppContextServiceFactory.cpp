@@ -96,7 +96,7 @@ extern "C" NS_EXPORT nsresult
 NSGetFactory(nsISupports *servMgr,
 	     const nsCID &aClass,
 	     const char *aClassName,
-	     const char *aProgID,
+	     const char *aContractID,
 	     nsIFactory **aFactory)
 {
   if (nsnull == aFactory) {
@@ -136,7 +136,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char *fullpath)
   
   rv = compMgr->RegisterComponent(kCMotifAppContextServiceCID,
                                   "Motif App Context Service",
-                                  NS_MOTIF_APP_CONTEXT_SERVICE_PROGID,
+                                  NS_MOTIF_APP_CONTEXT_SERVICE_CONTRACTID,
                                   fullpath,
                                   PR_TRUE,
                                   PR_TRUE);

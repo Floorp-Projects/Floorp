@@ -105,7 +105,7 @@ function onOK()
 function LoadAvailableCharSets()
 {
   try {
-    var ccm	= Components.classes['component://netscape/charset-converter-manager'];
+    var ccm	= Components.classes['@mozilla.org/charset-converter-manager;1'];
 
     if (ccm) {
       ccm = ccm.getService();

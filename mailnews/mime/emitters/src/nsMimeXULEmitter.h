@@ -39,7 +39,7 @@
 
 
 typedef struct {
-  nsString            progID;
+  nsString            contractID;
   nsIMimeMiscStatus   *obj;
 } miscStatusType;
 
@@ -88,7 +88,7 @@ public:
     nsresult      DoGlobalStatusProcessing();
     nsresult      DoWindowStatusProcessing();
     nsresult      BuildListOfStatusProviders();
-    nsIMimeMiscStatus   *GetStatusObjForProgID(nsCString aProgID);
+    nsIMimeMiscStatus   *GetStatusObjForContractID(nsCString aContractID);
 
 protected:
     PRInt32             mCutoffValue;

@@ -144,7 +144,7 @@ function WSM_SavePageData( currentPageTag, optAttributes, exclElements, inclElem
                formElement.getAttribute( "datatype" ) == "nsIFileSpec" &&
                formElement.value ) {
         try {
-          var filespec = Components.classes["component://netscape/filespec"].createInstance();
+          var filespec = Components.classes["@mozilla.org/filespec;1"].createInstance();
           filespec = filespec.QueryInterface( Components.interfaces.nsIFileSpec );
         }
         catch(e) {

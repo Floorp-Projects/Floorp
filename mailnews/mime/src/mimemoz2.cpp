@@ -252,7 +252,7 @@ ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs)
     if (pos > 0)
       contentType.Truncate(pos);
 
-    nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_PROGID, &rv));
+    nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv) && mimeFinder) 
     {
       nsIMIMEInfo *mimeInfo = nsnull;
@@ -592,7 +592,7 @@ mime_file_type (const char *filename, void *stream_closure)
   if (ext)
   {
     ext++;
-    nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_PROGID, &rv));
+    nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv) && mimeFinder) 
       mimeFinder->GetTypeFromExtension(ext, &retType);
   }
@@ -2037,7 +2037,7 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRU
 
       aCharset.ToLowerCase();
 
-      aCharSets = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID);
+      aCharSets = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID);
       if (!aCharSets)
         return NS_ERROR_FAILURE;
         

@@ -34,7 +34,7 @@ class nsIInputStream;
 #define NS_IBYTEBUFFER_IID    \
 { 0xe4a6e4b0, 0x93b4, 0x11d1, \
   {0x89, 0x5b, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81} }
-#define NS_BYTEBUFFER_PROGID "component://netscape/byte-buffer"
+#define NS_BYTEBUFFER_CONTRACTID "@mozilla.org/byte-buffer;1"
 #define NS_BYTEBUFFER_CLASSNAME "Byte Buffer"
 
 /** Interface to a buffer that holds bytes */

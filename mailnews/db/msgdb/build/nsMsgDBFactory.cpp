@@ -151,7 +151,7 @@ NS_IMETHODIMP nsMsgDBModule::GetClassObject(nsIComponentManager *aCompMgr,
 struct Components {
     const char* mDescription;
     const nsID* mCID;
-    const char* mProgID;
+    const char* mContractID;
 };
 
 // The list of components we register
@@ -178,7 +178,7 @@ NS_IMETHODIMP nsMsgDBModule::RegisterSelf(nsIComponentManager *aCompMgr,
     while (cp < end) 
     {
         rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
-                                             cp->mProgID, aPath, PR_TRUE,
+                                             cp->mContractID, aPath, PR_TRUE,
                                              PR_TRUE);
         if (NS_FAILED(rv)) 
             break;

@@ -43,7 +43,7 @@ nsGetNewsServer(const char* username, const char *hostname,
 
   // retrieve the AccountManager
   NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
+                  NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
   
   // find the news host

@@ -49,7 +49,7 @@ NS_METHOD OutlookRegister(nsIComponentManager *aCompMgr,
 {
 	nsresult rv;
 	
-	nsCOMPtr<nsICategoryManager> catMan = do_GetService( NS_CATEGORYMANAGER_PROGID, &rv);
+	nsCOMPtr<nsICategoryManager> catMan = do_GetService( NS_CATEGORYMANAGER_CONTRACTID, &rv);
 	if (NS_SUCCEEDED( rv)) {
 		nsXPIDLCString	replace;
 		char *theCID = kOutlookImportCID.ToString();
@@ -69,7 +69,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsOutlookImport)
 static nsModuleComponentInfo components[] = {
     {	"Outlook Import Component", 
 		NS_OUTLOOKIMPORT_CID,
-		"component://mozilla/import/import-outlook", 
+		"@mozilla.org/import/import-outlook;1", 
 		nsOutlookImportConstructor,
 		&OutlookRegister,
 		nsnull

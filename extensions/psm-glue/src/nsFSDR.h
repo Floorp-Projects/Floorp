@@ -35,7 +35,7 @@
 #define NS_FSDR_CID \
   { 0x1ee28720, 0x2b93, 0x11d4, { 0xa0, 0xa4, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 
-#define NS_FSDR_PROGID "netscape.security.fsdr"
+#define NS_FSDR_CONTRACTID "@mozilla.org/security/fsdr;1"
 
 class nsFSecretDecoderRing : public nsISecretDecoderRing
 {
@@ -51,7 +51,7 @@ public:
 private:
   nsIPSMComponent *mPSM;
 
-  static const char *kPSMComponentProgID;
+  static const char *kPSMComponentContractID;
 
   nsresult encode(const unsigned char *data, PRInt32 dataLen, char **_retval);
   nsresult decode(const char *data, unsigned char **result, PRInt32 * _retval);

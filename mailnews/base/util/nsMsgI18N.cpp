@@ -83,7 +83,7 @@ nsresult nsMsgI18NConvertFromUnicode(const nsCString& aCharset,
   nsresult res;
 
   // Resolve charset alias
-  nsCOMPtr <nsICharsetAlias> calias = do_GetService(NS_CHARSETALIAS_PROGID, &res);
+  nsCOMPtr <nsICharsetAlias> calias = do_GetService(NS_CHARSETALIAS_CONTRACTID, &res);
   if (NS_SUCCEEDED(res)) {
     nsAutoString aAlias; aAlias.AssignWithConversion(aCharset);
     if (aAlias.Length()) {
@@ -91,7 +91,7 @@ nsresult nsMsgI18NConvertFromUnicode(const nsCString& aCharset,
     }
   }
 
-  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID, &res);
+  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
   if(NS_SUCCEEDED(res)) {
     nsCOMPtr <nsIUnicodeEncoder> encoder;
 
@@ -151,7 +151,7 @@ nsresult nsMsgI18NConvertToUnicode(const nsCString& aCharset,
   nsresult res;
 
   // Resolve charset alias
-  nsCOMPtr <nsICharsetAlias> calias = do_GetService(NS_CHARSETALIAS_PROGID, &res);
+  nsCOMPtr <nsICharsetAlias> calias = do_GetService(NS_CHARSETALIAS_CONTRACTID, &res);
   if (NS_SUCCEEDED(res)) {
     nsAutoString aAlias; aAlias.AssignWithConversion(aCharset);
     if (aAlias.Length()) {
@@ -162,7 +162,7 @@ nsresult nsMsgI18NConvertToUnicode(const nsCString& aCharset,
     return res;
   }
 
-  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID, &res);
+  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
   if(NS_SUCCEEDED(res)) {
     nsCOMPtr <nsIUnicodeDecoder> decoder;
 
@@ -368,7 +368,7 @@ const nsString& nsMsgI18NFileSystemCharset()
 	if (aPlatformCharset.Length() < 1) 
 	{
 		nsresult rv;
-		nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+		nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
 		if (NS_SUCCEEDED(rv)) 
 			rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aPlatformCharset);
 
@@ -690,7 +690,7 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset, co
 
           if (!return_val) {
             nsCOMPtr <nsITextTransform> textTransform;
-            res = nsComponentManager::CreateInstance(NS_HANKAKUTOZENKAKU_PROGID, nsnull, 
+            res = nsComponentManager::CreateInstance(NS_HANKAKUTOZENKAKU_CONTRACTID, nsnull, 
                                                      NS_GET_IID(nsITextTransform), getter_AddRefs(textTransform));
             if (NS_SUCCEEDED(res)) {
               nsAutoString aText(inString);

@@ -854,7 +854,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
     nsXPIDLCString    turl;
     nsXPIDLString     msg;
     PRUnichar         *printfString = nsnull;
-    nsCOMPtr<nsIMsgStringService> composebundle (do_GetService(NS_MSG_COMPOSESTRINGSERVICE_PROGID));
+    nsCOMPtr<nsIMsgStringService> composebundle (do_GetService(NS_MSG_COMPOSESTRINGSERVICE_CONTRACTID));
 
     composebundle->GetStringByID(NS_MSG_FAILURE_ON_OBJ_EMBED, getter_Copies(msg));
  

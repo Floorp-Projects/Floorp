@@ -52,15 +52,15 @@ function BeginDragTree ( event )
   var dragStarted = false;
 
   var trans = 
-    Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
+    Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
   if ( !trans ) return(false);
 
   var genData = 
-    Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
+    Components.classes["@mozilla.org/supports-wstring;1"].createInstance(Components.interfaces.nsISupportsWString);
   if (!genData) return(false);
 
   var genDataURL = 
-    Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
+    Components.classes["@mozilla.org/supports-wstring;1"].createInstance(Components.interfaces.nsISupportsWString);
   if (!genDataURL) return(false);
 
   trans.addDataFlavor("text/unicode");
@@ -92,7 +92,7 @@ function BeginDragTree ( event )
 
   var database = childWithDatabase.database;
   var rdf = 
-    Components.classes["component://netscape/rdf/rdf-service"].getService(Components.interfaces.nsIRDFService);
+    Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
   if ((!rdf) || (!database))  { dump("CAN'T GET DATABASE\n"); return(false); }
 
   // make sure its a bookmark, bookmark separator, or bookmark folder
@@ -114,7 +114,7 @@ dump("genData is " + genData.data + " len is " + genData.data.length + "\n");
   trans.setTransferData ( "text/unicode", genDataURL, genDataURL.data.length * 2);  // double byte data
 
   var transArray = 
-    Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+    Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
   if ( !transArray )  return(false);
 
   // put it into the transferable as an |nsISupports|
@@ -122,7 +122,7 @@ dump("genData is " + genData.data + " len is " + genData.data.length + "\n");
   transArray.AppendElement(genTrans);
   
   var dragService = 
-    Components.classes["component://netscape/widget/dragservice"].getService(Components.interfaces.nsIDragService);
+    Components.classes["@mozilla.org/widget/dragservice;1"].getService(Components.interfaces.nsIDragService);
   if ( !dragService ) return(false);
 
   var nsIDragService = Components.interfaces.nsIDragService;
@@ -142,7 +142,7 @@ function DragOverTree ( event )
   var retVal = true;
 
   var dragService = 
-    Components.classes["component://netscape/widget/dragservice"].getService(Components.interfaces.nsIDragService);
+    Components.classes["@mozilla.org/widget/dragservice;1"].getService(Components.interfaces.nsIDragService);
   if ( !dragService ) return(false);
 
   dragSession = dragService.getCurrentSession();
@@ -193,10 +193,10 @@ function DropOnTree ( event )
   }
 
   var RDF = 
-    Components.classes["component://netscape/rdf/rdf-service"].getService(Components.interfaces.nsIRDFService);
+    Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
   if (!RDF) return(false);
   var RDFC =
-    Components.classes["component://netscape/rdf/container"].getService(Components.interfaces.nsIRDFContainer);
+    Components.classes["@mozilla.org/rdf/container;1"].getService(Components.interfaces.nsIRDFContainer);
   if (!RDFC)  return(false);
 
   var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
@@ -265,14 +265,14 @@ function DropOnTree ( event )
   if (!containerNode) return(false);
 
   var dragService = 
-    Components.classes["component://netscape/widget/dragservice"].getService(Components.interfaces.nsIDragService);
+    Components.classes["@mozilla.org/widget/dragservice;1"].getService(Components.interfaces.nsIDragService);
   if ( !dragService ) return(false);
   
   var dragSession = dragService.getCurrentSession();
   if ( !dragSession ) return(false);
 
   var trans = 
-    Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
+    Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
   if ( !trans )   return(false);
   trans.addDataFlavor("moz/rdfitem");
   trans.addDataFlavor("text/x-moz-url");

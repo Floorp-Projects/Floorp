@@ -25,7 +25,7 @@
 
 %{C++
 #define NS_SAVEASCHARSET_CID { 0xcd233e0, 0x7a86, 0x11d3, { 0x91, 0x5c, 0x0, 0x60, 0x8, 0xa6, 0xed, 0xf6 } }
-#define NS_SAVEASCHARSET_PROGID "component://netscape/intl/saveascharset"
+#define NS_SAVEASCHARSET_CONTRACTID "@mozilla.org/intl/saveascharset;1"
 %}
 
 [scriptable, uuid(33B87F70-7A9C-11d3-915C-006008A6EDF6)]

@@ -54,7 +54,7 @@ public:
 
    nsMimeMiscStatusFactory(const nsCID &aClass,
                const char* aClassName,
-               const char* aProgID,
+               const char* aContractID,
                nsISupports*);
 
    // nsIFactory methods   
@@ -66,16 +66,16 @@ protected:
 
 	nsCID mClassID;
 	char* mClassName;
-	char* mProgID;
+	char* mContractID;
 };   
 
 nsMimeMiscStatusFactory::nsMimeMiscStatusFactory(const nsCID &aClass,
                            const char* aClassName,
-                           const char* aProgID,
+                           const char* aContractID,
                            nsISupports *compMgrSupports)
   : mClassID(aClass),
     mClassName(nsCRT::strdup(aClassName)),
-    mProgID(nsCRT::strdup(aProgID))
+    mContractID(nsCRT::strdup(aContractID))
 {
 	NS_INIT_REFCNT();
 }   
@@ -83,7 +83,7 @@ nsMimeMiscStatusFactory::nsMimeMiscStatusFactory(const nsCID &aClass,
 nsMimeMiscStatusFactory::~nsMimeMiscStatusFactory()   
 {
 	PL_strfree(mClassName);
-	PL_strfree(mProgID);
+	PL_strfree(mContractID);
 }   
 
 nsresult nsMimeMiscStatusFactory::QueryInterface(const nsIID &aIID, void **aResult)   
@@ -148,13 +148,13 @@ nsMimeMiscStatusFactory::LockFactory(PRBool aLock)
 extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
-                                           const char *aProgID,
+                                           const char *aContractID,
                                            nsIFactory **aFactory)
 {
 	if (nsnull == aFactory)
 		return NS_ERROR_NULL_POINTER;
 
-  *aFactory = new nsMimeMiscStatusFactory(aClass, aClassName, aProgID, aServMgr);
+  *aFactory = new nsMimeMiscStatusFactory(aClass, aClassName, aContractID, aServMgr);
   if (aFactory)
     return (*aFactory)->QueryInterface(NS_GET_IID(nsIFactory),
                                        (void**)aFactory);
@@ -178,15 +178,15 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
   NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  nsCAutoString actualProgID(NS_IMIME_MISC_STATUS_KEY);
-  actualProgID.Append(STATUS_ID_NAME);
+  nsCAutoString actualContractID(NS_IMIME_MISC_STATUS_KEY);
+  actualContractID.Append(STATUS_ID_NAME);
   rv = compMgr->RegisterComponent(kMimeMiscStatusCID,
                                   "Mime Misc Status",
-                                  actualProgID,
+                                  actualContractID,
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
-  // register the TestConverter with the registry. One progid registration
+  // register the TestConverter with the registry. One contractid registration
   // per conversion ability.
   NS_WITH_SERVICE(nsIRegistry, registry, kRegistryCID, &rv);
   if (NS_SUCCEEDED(rv))

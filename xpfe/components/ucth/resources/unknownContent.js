@@ -113,7 +113,7 @@ function fileNameFromContentDisp( contentDisp ) {
 function save() 
 {
     // Use stream xfer component to prompt for destination and save.
-    var xfer = Components.classes[ "component://netscape/appshell/component/xfer" ].getService();
+    var xfer = Components.classes[ "@mozilla.org/appshell/component/xfer;1" ].getService();
     xfer = xfer.QueryInterface( Components.interfaces.nsIStreamTransfer );
     var retry = false;
     try {

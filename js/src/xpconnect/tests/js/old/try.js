@@ -1,5 +1,5 @@
 
-var name = "component://netscape/messenger/server&type=pop3";
+var name = "@mozilla.org/messenger/server;1?type=pop3";
 
 try {
     var foo = Components.classes[name].createInstance();

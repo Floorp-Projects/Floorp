@@ -65,14 +65,14 @@ var JS_STRINGS_FILE       = "chrome://communicator/locale/wallet/CookieViewer.pr
 function Startup()
 {
   // xpconnect to cookieviewer interface
-  cookieviewer = Components.classes["component://netscape/cookieviewer/cookieviewer-world"].createInstance();
+  cookieviewer = Components.classes["@mozilla.org/cookieviewer/cookieviewer-world;1"].createInstance();
   cookieviewer = cookieviewer.QueryInterface(Components.interfaces.nsICookieViewer);
   // intialise string bundle for 
   bundle = srGetStrBundle(JS_STRINGS_FILE);
 
   // install imageblocker tab if instructed to do so by the "imageblocker.enabled" pref
   try {
-    pref = Components.classes['component://netscape/preferences'];
+    pref = Components.classes['@mozilla.org/preferences;1'];
     pref = pref.getService();
     pref = pref.QueryInterface(Components.interfaces.nsIPref);
     try {

@@ -253,7 +253,7 @@ nsUrlbarHistory::OnStartLookup(const PRUnichar *uSearchString, nsIAutoCompleteRe
 	/* Don't call SearchPreviousResults. It is buggy 
     if (NS_FAILED(SearchPreviousResults(uSearchString, previousSearchResult)))
     {
-        results = do_CreateInstance(NS_AUTOCOMPLETERESULTS_PROGID);
+        results = do_CreateInstance(NS_AUTOCOMPLETERESULTS_CONTRACTID);
 		NS_ENSURE_TRUE(results, NS_ERROR_FAILURE);
         rv = SearchCache(uSearchString, results);       
     }
@@ -261,7 +261,7 @@ nsUrlbarHistory::OnStartLookup(const PRUnichar *uSearchString, nsIAutoCompleteRe
         results = previousSearchResult;
       */
 	
-	results = do_CreateInstance(NS_AUTOCOMPLETERESULTS_PROGID);
+	results = do_CreateInstance(NS_AUTOCOMPLETERESULTS_CONTRACTID);
 	NS_ENSURE_TRUE(results, NS_ERROR_FAILURE);
     rv = SearchCache(uSearchString, results);    
 
@@ -435,7 +435,7 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
 
 	   if (index ==0) {
            // Item found. Create an AutoComplete Item 
-		   nsCOMPtr<nsIAutoCompleteItem> newItem(do_CreateInstance(NS_AUTOCOMPLETEITEM_PROGID));
+		   nsCOMPtr<nsIAutoCompleteItem> newItem(do_CreateInstance(NS_AUTOCOMPLETEITEM_CONTRACTID));
 		   NS_ENSURE_TRUE(newItem, NS_ERROR_FAILURE);
            
            newItem->SetValue(match);

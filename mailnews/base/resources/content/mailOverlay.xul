@@ -24,7 +24,7 @@
 	catch(ex) {
 	;
 	}
-      	var msgComposeService = Components.classes["component://netscape/messengercompose"].getService(); 
+      	var msgComposeService = Components.classes["@mozilla.org/messengercompose;1"].getService(); 
       	msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService); 
         msgComposeService.OpenComposeWindow(null, null,
 										                        Components.interfaces.nsIMsgCompType.New,

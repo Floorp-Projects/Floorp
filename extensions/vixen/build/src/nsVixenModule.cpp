@@ -28,7 +28,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsVixenShell)
 
 static nsModuleComponentInfo components[] =
 {
-  { "Vixen Shell", NS_VIXENSHELL_CID, NS_VIXENSHELL_PROGID, nsVixenShellConstructor,
+  { "Vixen Shell", NS_VIXENSHELL_CID, NS_VIXENSHELL_CONTRACTID, nsVixenShellConstructor,
     NULL, NULL
   }
 };

@@ -287,7 +287,7 @@ function Create3PaneGlobals()
 {
 	showPerformance = pref.GetBoolPref('mail.showMessengerPerformance');
 
-	msgNavigationService = Components.classes['component://netscape/messenger/msgviewnavigationservice'].getService();
+	msgNavigationService = Components.classes['@mozilla.org/messenger/msgviewnavigationservice;1'].getService();
 	msgNavigationService= msgNavigationService.QueryInterface(Components.interfaces.nsIMsgViewNavigationService);
 
 }
@@ -385,7 +385,7 @@ function loadStartFolder(startFolderUri)
 function AddToSession()
 {
     try {
-        var mailSession = Components.classes[mailSessionProgID].getService(Components.interfaces.nsIMsgMailSession);
+        var mailSession = Components.classes[mailSessionContractID].getService(Components.interfaces.nsIMsgMailSession);
         
         mailSession.AddFolderListener(folderListener);
 	} catch (ex) {

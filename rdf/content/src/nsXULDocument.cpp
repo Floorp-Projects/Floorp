@@ -545,7 +545,7 @@ nsXULDocument::~nsXULDocument()
         }
 
         if (gScriptSecurityManager) {
-            nsServiceManager::ReleaseService(NS_SCRIPTSECURITYMANAGER_PROGID, gScriptSecurityManager);
+            nsServiceManager::ReleaseService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, gScriptSecurityManager);
             gScriptSecurityManager = nsnull;
         }
 
@@ -1955,7 +1955,7 @@ nsXULDocument::GetBindingManager(nsIBindingManager** aResult)
 {
   nsresult rv;
   if (!mBindingManager) {
-    mBindingManager = do_CreateInstance("component://netscape/xbl/binding-manager", &rv);
+    mBindingManager = do_CreateInstance("@mozilla.org/xbl/binding-manager;1", &rv);
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
   }
@@ -2983,7 +2983,7 @@ nsXULDocument::GetAnonymousNodes(nsIDOMElement* aElement,
   *aResult = elements;
 
   // Use the XBL service to get a content list.
-  NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+  NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
   if (!xblService)
     return rv;
 
@@ -3913,7 +3913,7 @@ nsXULDocument::Init()
                                             getter_AddRefs(mNameSpaceManager));
     if (NS_FAILED(rv)) return rv;
 
-    rv = nsComponentManager::CreateInstance(NS_NODEINFOMANAGER_PROGID,
+    rv = nsComponentManager::CreateInstance(NS_NODEINFOMANAGER_CONTRACTID,
                                             nsnull,
                                             NS_GET_IID(nsINodeInfoManager),
                                             getter_AddRefs(mNodeInfoManager));
@@ -4048,7 +4048,7 @@ static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
                                           (nsISupports**) &gXULCache);
         if (NS_FAILED(rv)) return rv;
 
-        rv = nsServiceManager::GetService(NS_SCRIPTSECURITYMANAGER_PROGID,
+        rv = nsServiceManager::GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,
                                           NS_GET_IID(nsIScriptSecurityManager),
                                           (nsISupports**) &gScriptSecurityManager);
         if (NS_FAILED(rv)) return rv;
@@ -6511,11 +6511,11 @@ nsXULDocument::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResu
   nsAutoString nameSpace;
   gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, nameSpace);
 
-  nsCAutoString progID(NS_ELEMENT_FACTORY_PROGID_PREFIX);
-  progID.AppendWithConversion(nameSpace);
+  nsCAutoString contractID(NS_ELEMENT_FACTORY_CONTRACTID_PREFIX);
+  contractID.AppendWithConversion(nameSpace);
 
   // Retrieve the appropriate factory.
-  NS_WITH_SERVICE(nsIElementFactory, elementFactory, progID, &rv);
+  NS_WITH_SERVICE(nsIElementFactory, elementFactory, contractID, &rv);
 
   if (!elementFactory)
     elementFactory = gXMLElementFactory; // Nothing found. Use generic XML element.

@@ -7,7 +7,7 @@
 
     var signonviewer =
       Components.classes
-        ["component://netscape/signonviewer/signonviewer-world"].createInstance();
+        ["@mozilla.org/signonviewer/signonviewer-world;1"].createInstance();
     signonviewer = signonviewer.QueryInterface(Components.interfaces.nsISignonViewer);
 
     function DoGetSignonList()

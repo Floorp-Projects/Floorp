@@ -84,8 +84,8 @@ interface nsIBrowserInstance : nsISupports {
 
 %{C++
 
-#define NS_BROWSERINSTANCE_PROGID "component://netscape/appshell/component/browser/instance"
-#define NS_BROWSERSTARTUPHANDLER_PROGID "component://netscape/commandlinehandler/general-startup-browser"
+#define NS_BROWSERINSTANCE_CONTRACTID "@mozilla.org/appshell/component/browser/instance;1"
+#define NS_BROWSERSTARTUPHANDLER_CONTRACTID "@mozilla.org/commandlinehandler/general-startup;1?type=browser"
 
 // {c7bee75a-1dd1-11b2-9333-a38e085287cf}
 #define NS_BROWSERCONTROLLER_CID { 0xc7bee75a, 0x1dd1, 0x11b2, { 0x93, 0x33, 0xa3, 0x8e, 0x08, 0x52, 0x87, 0xcf } } 

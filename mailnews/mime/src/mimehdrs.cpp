@@ -698,7 +698,7 @@ MimeHeaders_convert_rfc1522(MimeDisplayOptions *opt,
       if (!nsCRT::strcasecmp(output_charset, "UTF-8"))
       {
         nsresult rv;
-        nsCOMPtr<nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID, &rv);
+        nsCOMPtr<nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv)) 
         {
           nsCOMPtr <nsIAtom> sourceCharsetAtom;

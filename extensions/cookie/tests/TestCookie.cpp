@@ -88,7 +88,7 @@ int main(PRInt32 argc, char *argv[])
 
     eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
 
-    NS_WITH_SERVICE(nsIStringBundleService, bundleService, NS_STRINGBUNDLE_PROGID, &rv);
+    NS_WITH_SERVICE(nsIStringBundleService, bundleService, NS_STRINGBUNDLE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
     {
         nsCOMPtr<nsIStringBundle> stringBundle;

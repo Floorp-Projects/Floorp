@@ -22,7 +22,7 @@ function displayAccounts() {
 
   dump("Here come the accounts: \n");
 
-  var msg = Components.classes["component://netscape/messenger/services/session"].getService(Components.interfaces.nsIMsgMailSession);
+  var msg = Components.classes["@mozilla.org/messenger/services/session;1"].getService(Components.interfaces.nsIMsgMailSession);
 
   var am = msg.accountManager;
 //  describe(am, "AccountManager");

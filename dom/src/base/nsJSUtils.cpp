@@ -711,7 +711,7 @@ nsJSUtils::nsGetSecurityManager(JSContext *cx, JSObject *obj)
   if (!mCachedSecurityManager) {
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
       nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
       return nsnull;

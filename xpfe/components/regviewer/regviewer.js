@@ -26,7 +26,7 @@
 
 */
 
-var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
+var RDF = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService();
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 
 var Registry;
@@ -41,7 +41,7 @@ function debug(msg)
 
 function OnLoad()
 {
-    Registry = Components.classes['component://netscape/registry-viewer'].createInstance();
+    Registry = Components.classes['@mozilla.org/registry-viewer;1'].createInstance();
     Registry = Registry.QueryInterface(Components.interfaces.nsIRegistryDataSource);
 
     Registry.openWellKnownRegistry(Registry.ApplicationComponentRegistry);

@@ -1160,7 +1160,7 @@ void nsFileSpec::GetFileSystemCharset(nsString & fileSystemCharset)
   nsresult rv;
 
   if (aCharset.Length() < 1) {
-		nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+		nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
 	  if (NS_SUCCEEDED(rv)) 
 		  rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
 
@@ -1418,7 +1418,7 @@ NS_FileSpecToIFile(nsFileSpec* fileSpec, nsILocalFile* *result)
 {
     nsresult rv;
 
-    nsCOMPtr<nsILocalFile> file(do_CreateInstance(NS_LOCAL_FILE_PROGID));
+    nsCOMPtr<nsILocalFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
 
     if (!file) return NS_ERROR_FAILURE;
 

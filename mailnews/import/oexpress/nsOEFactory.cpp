@@ -47,7 +47,7 @@ NS_METHOD OERegister(nsIComponentManager *aCompMgr,
 {
 	nsresult rv;
 	
-	nsCOMPtr<nsICategoryManager> catMan = do_GetService( NS_CATEGORYMANAGER_PROGID, &rv);
+	nsCOMPtr<nsICategoryManager> catMan = do_GetService( NS_CATEGORYMANAGER_CONTRACTID, &rv);
 	if (NS_SUCCEEDED( rv)) {
 		nsXPIDLCString	replace;
 		char *theCID = kOEImportCID.ToString();
@@ -68,7 +68,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsOEImport)
 static nsModuleComponentInfo components[] = {
     {	"Outlook Express Import Component", 
 		NS_OEIMPORT_CID,
-		"component://mozilla/import/import-oe", 
+		"@mozilla.org/import/import-oe;1", 
 		nsOEImportConstructor,
 		&OERegister,
 		nsnull

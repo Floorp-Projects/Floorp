@@ -1002,7 +1002,7 @@ NS_IMETHODIMP nsPref::GetFilePref(const char *pref_name, nsIFileSpec** value)
     if (NS_FAILED(SecurePrefCheck(pref_name))) return NS_ERROR_FAILURE;
 
         nsresult rv = nsComponentManager::CreateInstance(
-        	(const char*)NS_FILESPEC_PROGID,
+        	(const char*)NS_FILESPEC_CONTRACTID,
         	(nsISupports*)nsnull,
         	(const nsID&)NS_GET_IID(nsIFileSpec),
         	(void**)value);
@@ -1040,7 +1040,7 @@ NS_IMETHODIMP nsPref::SetFilePref(const char *pref_name,
         // object. Make it first. COM makes this difficult, of course...
 	    nsIFileSpec* tmp = nsnull;
         rv = nsComponentManager::CreateInstance(
-        	(const char*)NS_FILESPEC_PROGID,
+        	(const char*)NS_FILESPEC_CONTRACTID,
         	(nsISupports*)nsnull,
         	(const nsID&)NS_GET_IID(nsIFileSpec),
         	(void**)&tmp);
@@ -1068,7 +1068,7 @@ NS_IMETHODIMP
 nsPref::GetFileXPref(const char *aPref, nsILocalFile ** aResult)
 {
     nsresult rv;
-    nsCOMPtr<nsILocalFile> file = do_CreateInstance(NS_LOCAL_FILE_PROGID, &rv);
+    nsCOMPtr<nsILocalFile> file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsXPIDLCString descriptorString;
@@ -1428,7 +1428,7 @@ PRBool pref_VerifyLockFileSpec(char* buf, long buflen)
        
         nsresult rv;
 
-        NS_WITH_SERVICE(nsISignatureVerifier, verifier, SIGNATURE_VERIFIER_PROGID, &rv);
+        NS_WITH_SERVICE(nsISignatureVerifier, verifier, SIGNATURE_VERIFIER_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return success; // No signature verifier available
        
         //-- Calculate the digest
@@ -1584,7 +1584,7 @@ extern "C" JSBool pref_InitInitialObjects()
 	// Parse all the random files that happen to be in the components directory.
     nsCOMPtr<nsIDirectoryIterator> dirIterator;
     rv = nsComponentManager::CreateInstance(
-        	(const char*)NS_DIRECTORYITERATOR_PROGID,
+        	(const char*)NS_DIRECTORYITERATOR_CONTRACTID,
         	(nsISupports*)nsnull,
         	(const nsID&)NS_GET_IID(nsIDirectoryIterator),
         	getter_AddRefs(dirIterator));
@@ -1797,14 +1797,14 @@ CreateNewPref(nsISupports *aDelegate, REFNSIID aIID, void **aResult)
 
 // The list of components we register
 static nsModuleComponentInfo components[] = {
-    { NS_PREF_CLASSNAME, NS_PREF_CID, NS_PREF_PROGID, CreateNewPref, },
+    { NS_PREF_CLASSNAME, NS_PREF_CID, NS_PREF_CONTRACTID, CreateNewPref, },
 };
 
 extern "C" JSRuntime* PREF_GetJSRuntime()
 {
     nsresult rv;
 
-    NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &rv);
+    NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "@mozilla.org/js/xpc/RuntimeService;1", &rv);
     if (NS_FAILED(rv)) return nsnull;
 
     JSRuntime* rt;

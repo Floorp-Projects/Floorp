@@ -88,7 +88,7 @@ nsPresState::SetStateProperty(const nsAReadableString& aName, const nsAReadableS
   nsStringKey key(keyStr);
 
   nsCOMPtr<nsISupportsWString> supportsStr;
-  nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
+  nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, nsnull, 
                                                     NS_GET_IID(nsISupportsWString), getter_AddRefs(supportsStr));
 
   supportsStr->SetData(nsPromiseFlatString(aValue).get());

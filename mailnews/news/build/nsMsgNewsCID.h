@@ -30,8 +30,8 @@
 
 //
 // nsMsgNewsFolder
-#define NS_NEWSFOLDERRESOURCE_PROGID \
-  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "news"
+#define NS_NEWSFOLDERRESOURCE_CONTRACTID \
+  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "news"
 #define NS_NEWSFOLDERRESOURCE_CID                    	\
 { /* 4ace448a-f6d4-11d2-880d-004005263078 */         	\
  0x4ace448a, 0xf6d4, 0x11d2, 				\
@@ -41,8 +41,8 @@
 //
 // nsNntpIncomingServer
 //
-#define NS_NNTPINCOMINGSERVER_PROGID \
-  NS_MSGINCOMINGSERVER_PROGID_PREFIX "nntp"
+#define NS_NNTPINCOMINGSERVER_CONTRACTID \
+  NS_MSGINCOMINGSERVER_CONTRACTID_PREFIX "nntp"
 
 #define NS_NNTPINCOMINGSERVER_CID 			\
 { /* 6ff28d0a-f776-11d2-87ca-004005263078 */ 		\
@@ -53,20 +53,20 @@
 //
 // nsNntpService
 //
-#define NS_NNTPPROTOCOLINFO_PROGID		\
-  NS_MSGPROTOCOLINFO_PROGID_PREFIX "nntp"
-#define NS_NEWSPROTOCOLHANDLER_PROGID \
-  NS_NETWORK_PROTOCOL_PROGID_PREFIX "news"
-#define NS_SNEWSPROTOCOLHANDLER_PROGID \
-  NS_NETWORK_PROTOCOL_PROGID_PREFIX "snews"
-#define NS_NEWSMESSAGESERVICE_PROGID \
-  "component://netscape/messenger/messageservice;type=news_message"
-#define NS_NNTPMESSAGESERVICE_PROGID \
-  "component://netscape/messenger/messageservice;type=news" 
-#define NS_NNTPSERVICE_PROGID \
-  "component://netscape/messenger/nntpservice"
-#define NS_NEWSSTARTUPHANDLER_PROGID \
-  "component://netscape/commandlinehandler/general-startup-news"
+#define NS_NNTPPROTOCOLINFO_CONTRACTID		\
+  NS_MSGPROTOCOLINFO_CONTRACTID_PREFIX "nntp"
+#define NS_NEWSPROTOCOLHANDLER_CONTRACTID \
+  NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "news"
+#define NS_SNEWSPROTOCOLHANDLER_CONTRACTID \
+  NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "snews"
+#define NS_NEWSMESSAGESERVICE_CONTRACTID \
+  "@mozilla.org/messenger/messageservice;1?type=news_message"
+#define NS_NNTPMESSAGESERVICE_CONTRACTID \
+  "@mozilla.org/messenger/messageservice;1?type=news" 
+#define NS_NNTPSERVICE_CONTRACTID \
+  "@mozilla.org/messenger/nntpservice;1"
+#define NS_NEWSSTARTUPHANDLER_CONTRACTID \
+  "@mozilla.org/commandlinehandler/general-startup;1?type=news"
 
 #define NS_NNTPSERVICE_CID                              \
 { /* 4C9F90E1-E19B-11d2-806E-006008128C4E */  		\
@@ -77,8 +77,8 @@
 //
 // nsNNTPNewsgroup
 //
-#define NS_NNTPNEWSGROUP_PROGID \
-  "component://netscape/messenger/nntpnewsgroup"
+#define NS_NNTPNEWSGROUP_CONTRACTID \
+  "@mozilla.org/messenger/nntpnewsgroup;1"
 #define NS_NNTPNEWSGROUP_CID  \
 { /* 2c070e8a-187e-11d3-8e02-004005263078 */ \
  0x2c070e8a, 0x187e, 0x11d3, \
@@ -88,8 +88,8 @@
 //
 // nsNNTPNewsgroupPost
 //
-#define NS_NNTPNEWSGROUPPOST_PROGID \
-  "component://netscape/messenger/nntpnewsgrouppost"
+#define NS_NNTPNEWSGROUPPOST_CONTRACTID \
+  "@mozilla.org/messenger/nntpnewsgrouppost;1"
 #define NS_NNTPNEWSGROUPPOST_CID  \
 { /* 30c60228-187e-11d3-842f-004005263078 */ \
  0x30c60228, 0x187e, 0x11d3, \
@@ -99,8 +99,8 @@
 //
 // nsNNTPNewsgroupList
 //
-#define NS_NNTPNEWSGROUPLIST_PROGID \
-  "component://netscape/messenger/nntpnewsgrouplist"
+#define NS_NNTPNEWSGROUPLIST_CONTRACTID \
+  "@mozilla.org/messenger/nntpnewsgrouplist;1"
 #define NS_NNTPNEWSGROUPLIST_CID \
 { /* 631e9054-1893-11d3-9916-004005263078 */ \
  0x631e9054, 0x1893, 0x11d3, \
@@ -110,8 +110,8 @@
 //
 // nsNNTPArticleList
 //
-#define NS_NNTPARTICLELIST_PROGID \
-  "component://netscape/messenger/nntparticlelist"
+#define NS_NNTPARTICLELIST_CONTRACTID \
+  "@mozilla.org/messenger/nntparticlelist;1"
 #define NS_NNTPARTICLELIST_CID  \
 { /* 9f12bdf0-189f-11d3-973e-00805f916fd3 */ \
  0x9f12bdf0, 0x189f, 0x11d3, \
@@ -121,8 +121,8 @@
 //
 // nsNNTPHost
 //
-#define NS_NNTPHOST_PROGID \
-  "component://netscape/messenger/nntphost"
+#define NS_NNTPHOST_CONTRACTID \
+  "@mozilla.org/messenger/nntphost;1"
 #define NS_NNTPHOST_CID \
 { /* 339e5576-196a-11d3-929a-004005263078 */ \
  0x339e5576, 0x196a, 0x11d3, \
@@ -132,8 +132,8 @@
 //
 // nsNntpUrl
 //
-#define NS_NNTPURL_PROGID \
-  "component://netscape/messenger/nntpurl"
+#define NS_NNTPURL_CONTRACTID \
+  "@mozilla.org/messenger/nntpurl;1"
 #define NS_NNTPURL_CID									\
 { /* 196B4B30-E18C-11d2-806E-006008128C4E */			\
   0x196b4b30, 0xe18c, 0x11d2,							\

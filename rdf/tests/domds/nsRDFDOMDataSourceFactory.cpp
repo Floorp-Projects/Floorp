@@ -35,11 +35,11 @@ static nsModuleComponentInfo gRDFDOMViewerModuleComponents[] =
 {
     { "DOM Data Source", 
       NS_RDF_DOMDATASOURCE_CID,
-      NS_RDF_DATASOURCE_PROGID_PREFIX "domds",
+      NS_RDF_DATASOURCE_CONTRACTID_PREFIX "domds",
       nsRDFDOMDataSourceConstructor },
     { "DOM Resource Factory",
       NS_RDF_DOMRESOURCEFACTORY_CID,
-      NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "dom",
+      NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "dom",
       nsRDFDOMViewerElementConstructor }
 };
 

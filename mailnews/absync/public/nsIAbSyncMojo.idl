@@ -28,8 +28,8 @@
   { 0x842cc263, 0x5255, 0x1144,   \
   { 0xcc, 0xb8, 0x44, 0x45, 0x53, 0xff, 0x0, 0x2 } }
   
-#define NS_AB_SYNC_MOJO_PROGID			\
-  "component://netscape/absync/absyncmojo"
+#define NS_AB_SYNC_MOJO_CONTRACTID			\
+  "@mozilla.org/absync/absyncmojo;1"
 %}  
   
 [scriptable, uuid(74872D27-0A4E-11d4-8FD6-BEEF24A7D144)]

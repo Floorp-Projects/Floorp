@@ -728,7 +728,7 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
       // we have a normal file, use some Necko objects to get our file path
 	    nsCOMPtr<nsILocalFile> file;
       if ( NS_SUCCEEDED(NS_NewLocalFile(filepath, PR_FALSE, getter_AddRefs(file))) ) {
-        nsCOMPtr<nsIFileURL> url ( do_CreateInstance("component://netscape/network/standard-url") );
+        nsCOMPtr<nsIFileURL> url ( do_CreateInstance("@mozilla.org/network/standard-url;1") );
         if ( url ) {
           // get the file:// url from our native path
           url->SetFile ( file );

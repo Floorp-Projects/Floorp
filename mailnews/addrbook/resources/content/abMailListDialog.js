@@ -39,7 +39,7 @@ function handleKeyPress(element, event)
 
 function mailingListExists(listname)
 {
-	var addressbook = Components.classes["component://netscape/addressbook"].createInstance(Components.interfaces.nsIAddressBook);
+	var addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook);
 	if (addressbook.mailListNameExists(listname))
 	{
 		var strBundle = srGetStrBundle("chrome://messenger/locale/addressbook/addressBook.properties");
@@ -88,7 +88,7 @@ function GetListValue(mailList, doAdd)
 	{
 	    fieldValue = inputField.value;
 		if (doAdd || (doAdd == false && pos >= oldTotal))
-			var cardproperty = Components.classes["component://netscape/addressbook/cardproperty"].createInstance();
+			var cardproperty = Components.classes["@mozilla.org/addressbook/cardproperty;1"].createInstance();
 		else
 			var cardproperty = mailList.addressLists.GetElementAt(pos);
 
@@ -146,7 +146,7 @@ function MailListOKButton()
 		// -----
 		
 		//Add mailing list to database
-		mailList = Components.classes["component://netscape/addressbook/directoryproperty"].createInstance();
+		mailList = Components.classes["@mozilla.org/addressbook/directoryproperty;1"].createInstance();
 		mailList = mailList.QueryInterface(Components.interfaces.nsIAbDirectory);
 
 		if (GetListValue(mailList, true))
@@ -222,7 +222,7 @@ function OnLoadEditList()
 	parentURI  = window.arguments[0].abURI;
 	var listUri  = window.arguments[0].listURI;
 
-	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 	rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 	editList = rdf.GetResource(listUri);
 	editList = editList.QueryInterface(Components.interfaces.nsIAbDirectory);
@@ -541,7 +541,7 @@ function DragOverTree(event)
 	var dragSession = null;
 	var retVal = true;
 
-	var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
+	var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
 	if (dragService) 
 		dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
 	if (!dragService)	return(false);
@@ -567,12 +567,12 @@ function DragOverTree(event)
 
 function DropOnAddressListTree(event)
 {
-	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 	if (rdf)   
 		rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 	if (!rdf) return(false);
 
-	var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
+	var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
 	if (dragService) 
 		dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
 	if (!dragService)	return(false);
@@ -580,7 +580,7 @@ function DropOnAddressListTree(event)
 	var dragSession = dragService.getCurrentSession();
 	if ( !dragSession )	return(false);
 
-	var trans = Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
+	var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
 	if ( !trans ) return(false);
 	trans.addDataFlavor("text/nsabcard");
 

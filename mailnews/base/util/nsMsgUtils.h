@@ -34,7 +34,7 @@
 //These are utility functions that can used throughout the mailnews code
 
 //Utilities for getting a message service.
-NS_MSG_BASE nsresult GetMessageServiceProgIDForURI(const char *uri, nsString &progID);
+NS_MSG_BASE nsresult GetMessageServiceContractIDForURI(const char *uri, nsString &contractID);
 //Use ReleaseMessageServiceFromURI to release the service.
 NS_MSG_BASE nsresult GetMessageServiceFromURI(const char *uri, nsIMsgMessageService **messageService);
 NS_MSG_BASE nsresult ReleaseMessageServiceFromURI(const char *uri, nsIMsgMessageService *messageService);

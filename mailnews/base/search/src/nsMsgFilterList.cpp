@@ -170,7 +170,7 @@ nsMsgFilterList::SetDefaultFile(nsIFileSpec *aFileSpec)
 {
     nsresult rv;
     m_defaultFile = 
-        do_CreateInstance(NS_FILESPEC_PROGID, &rv);
+        do_CreateInstance(NS_FILESPEC_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     
     rv = m_defaultFile->FromFileSpec(aFileSpec);
@@ -186,7 +186,7 @@ nsMsgFilterList::GetDefaultFile(nsIFileSpec **aResult)
 
     nsresult rv;
     nsCOMPtr<nsIFileSpec> fileSpec =
-        do_CreateInstance(NS_FILESPEC_PROGID, &rv);
+        do_CreateInstance(NS_FILESPEC_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     
     rv = fileSpec->FromFileSpec(m_defaultFile);

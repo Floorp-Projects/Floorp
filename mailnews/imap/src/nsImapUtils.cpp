@@ -97,7 +97,7 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 
 	nsCOMPtr<nsIMsgIncomingServer> server;
   NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
+                  NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if(NS_FAILED(rv)) return rv;
 
   char *unescapedUserName = username.ToNewCString();

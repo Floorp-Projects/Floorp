@@ -206,7 +206,7 @@ nsXULTreeElement::TimedSelect(nsIDOMXULElement* aTreeItem, PRInt32 aMsec)
         if (mSelectTimer)
           mSelectTimer->Cancel();
 
-        mSelectTimer = do_CreateInstance("component://netscape/timer");
+        mSelectTimer = do_CreateInstance("@mozilla.org/timer;1");
         mSelectTimer->Init(SelectCallback, this, aMsec, NS_PRIORITY_HIGH);
     }
   }

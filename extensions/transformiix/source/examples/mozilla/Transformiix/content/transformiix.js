@@ -72,7 +72,7 @@ function tryToTransform() {
       var xmlDocumentNode = xmlDocument.documentElement;
       var xslDocumentNode = xslDocument.documentElement;
       
-      xsltProcessor = Components.classes["component://netscape/document-transformer?type=text/xsl"].getService();
+      xsltProcessor = Components.classes["@mozilla.org/document-transformer;1?type=text/xsl"].getService();
       if (xsltProcessor)	xsltProcessor = xsltProcessor.QueryInterface(Components.interfaces.nsIDocumentTransformer);
     }
     catch (ex) {

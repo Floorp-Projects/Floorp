@@ -238,7 +238,7 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
    else if (aIID.Equals(NS_GET_IID(nsIProgressEventSink)) || aIID.Equals(NS_GET_IID(nsIHTTPEventSink)) ||
             aIID.Equals(NS_GET_IID(nsIWebProgress)))
    {
-     nsCOMPtr<nsIURILoader> uriLoader(do_GetService(NS_URI_LOADER_PROGID));
+     nsCOMPtr<nsIURILoader> uriLoader(do_GetService(NS_URI_LOADER_CONTRACTID));
      NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
      nsCOMPtr<nsIDocumentLoader> docLoader;
      NS_ENSURE_SUCCESS(uriLoader->GetDocumentLoaderForContext(NS_STATIC_CAST(nsIDocShell*, this),
@@ -356,7 +356,7 @@ NS_IMETHODIMP nsDocShell::LoadStream(nsIInputStream *aStream, nsIURI *aURI,
    NS_ENSURE_SUCCESS(NS_NewInputStreamChannel(getter_AddRefs(channel), aURI, aStream, 
                                               aContentType, aContentLen), NS_ERROR_FAILURE);
    
-   nsCOMPtr<nsIURILoader> uriLoader(do_GetService(NS_URI_LOADER_PROGID));
+   nsCOMPtr<nsIURILoader> uriLoader(do_GetService(NS_URI_LOADER_CONTRACTID));
    NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
 
    NS_ENSURE_SUCCESS(DoChannelLoad(channel, nsIURILoader::viewNormal, nsnull, uriLoader), NS_ERROR_FAILURE);
@@ -381,7 +381,7 @@ NS_IMETHODIMP nsDocShell::StopLoad()
 
    if(mLoadCookie)
       {
-      nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_PROGID);
+      nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_CONTRACTID);
       if(uriLoader)
          uriLoader->Stop(mLoadCookie);
       }
@@ -1106,7 +1106,7 @@ nsDocShell::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry,
     rv = mSessionHistory->GetEntryAtIndex(index, PR_FALSE,
                                           getter_AddRefs(currentEntry));
     if (currentEntry) {
-      nsCOMPtr<nsISHEntry> nextEntry; //(do_CreateInstance(NS_SHENTRY_PROGID));
+      nsCOMPtr<nsISHEntry> nextEntry; //(do_CreateInstance(NS_SHENTRY_CONTRACTID));
       //   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
       rv = CloneAndReplace(currentEntry, aCloneRef, aNewEntry,
                            getter_AddRefs(nextEntry));
@@ -1384,7 +1384,7 @@ NS_IMETHODIMP nsDocShell::Stop()
 
    if(mLoadCookie)
       {
-      nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_PROGID);
+      nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_CONTRACTID);
       if(uriLoader)
          uriLoader->Stop(mLoadCookie);
       }
@@ -1484,9 +1484,9 @@ NS_IMETHODIMP nsDocShell::InitWindow(nativeWindow parentNativeWindow,
 NS_IMETHODIMP nsDocShell::Create()
 {
    NS_ENSURE_STATE(!mContentViewer);
-   mPrefs = do_GetService(NS_PREF_PROGID);
+   mPrefs = do_GetService(NS_PREF_CONTRACTID);
    //GlobalHistory is now set in SetGlobalHistory
- //  mGlobalHistory = do_GetService(NS_GLOBALHISTORY_PROGID);
+ //  mGlobalHistory = do_GetService(NS_GLOBALHISTORY_CONTRACTID);
 
    // i don't want to read this pref in every time we load a url
    // so read it in once here and be done with it...
@@ -2288,7 +2288,7 @@ NS_IMETHODIMP nsDocShell::RefreshURI(nsIURI *aURI, PRInt32 aDelay, PRBool aRepea
          NS_ERROR_FAILURE);
    }
    
-   nsCOMPtr<nsITimer> timer = do_CreateInstance("component://netscape/timer");
+   nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1");
    NS_ENSURE_TRUE(timer, NS_ERROR_FAILURE);
     
    mRefreshURIList->AppendElement(timer);    // owning timer ref
@@ -2519,7 +2519,7 @@ nsresult nsDocShell::NewContentViewerObj(const char* aContentType,
 {
   //XXX This should probably be some category thing....
   char id[256];
-  PR_snprintf(id, sizeof(id), NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "%s/%s",
+  PR_snprintf(id, sizeof(id), NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "%s;1?type=%s",
              (const char*)((viewSource == mViewMode) ? "view-source" : "view"),
              aContentType);
 
@@ -3110,14 +3110,14 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
     // don't do it for javascript urls!
     if (urlScheme && nsCRT::strcasecmp(jsSchemeName, urlScheme))
     {
-      nsCOMPtr<nsIExternalProtocolService> extProtService (do_GetService(NS_EXTERNALPROTOCOLSERVICE_PROGID));
+      nsCOMPtr<nsIExternalProtocolService> extProtService (do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
       PRBool haveHandler = PR_FALSE;
       extProtService->ExternalProtocolHandlerExists(urlScheme, &haveHandler);
       if (haveHandler)
         return extProtService->LoadUrl(aURI);
     }
   }
-   nsCOMPtr<nsIURILoader> uriLoader(do_GetService(NS_URI_LOADER_PROGID));
+   nsCOMPtr<nsIURILoader> uriLoader(do_GetService(NS_URI_LOADER_CONTRACTID));
    NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
 
    // we need to get the load group from our load cookie so we can pass it into open uri...
@@ -3779,7 +3779,7 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI *aURI,
   
   // Create a new entry if necessary.
   if(!entry) {
-    entry = do_CreateInstance(NS_SHENTRY_PROGID);
+    entry = do_CreateInstance(NS_SHENTRY_CONTRACTID);
 
     if (!entry) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -4004,7 +4004,7 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, nsISHEntry * cloneRef,
 		srcContainer->GetChildAt(i, getter_AddRefs(srcChild));
 		if (!srcChild)
 			return NS_ERROR_FAILURE;
-		nsCOMPtr<nsISHEntry>  destChild(do_CreateInstance(NS_SHENTRY_PROGID));
+		nsCOMPtr<nsISHEntry>  destChild(do_CreateInstance(NS_SHENTRY_CONTRACTID));
 		if (!NS_SUCCEEDED(result))
 			return result;
 		result = CloneAndReplace(srcChild, cloneRef, replaceEntry, destChild);
@@ -4048,7 +4048,7 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, nsISHEntry * cloneRef,
 	nsCOMPtr<nsILayoutHistoryState> LHS;
 	PRUnichar * title=nsnull;
 	nsCOMPtr<nsISHEntry> parent;
-	result = nsComponentManager::CreateInstance(NS_SHENTRY_PROGID, NULL,
+	result = nsComponentManager::CreateInstance(NS_SHENTRY_CONTRACTID, NULL,
 			NS_GET_IID(nsISHEntry), (void **) &dest);
 	if (!NS_SUCCEEDED(result))
       return result;
@@ -4220,14 +4220,14 @@ NS_IMETHODIMP nsDocShell::GetPromptAndStringBundle(nsIPrompt** aPrompt,
 {
    NS_ENSURE_SUCCESS(GetInterface(NS_GET_IID(nsIPrompt), (void**)aPrompt), NS_ERROR_FAILURE);
 
-   nsCOMPtr<nsILocaleService> localeService(do_GetService(NS_LOCALESERVICE_PROGID));
+   nsCOMPtr<nsILocaleService> localeService(do_GetService(NS_LOCALESERVICE_CONTRACTID));
    NS_ENSURE_TRUE(localeService, NS_ERROR_FAILURE);
 
    nsCOMPtr<nsILocale> locale;
    localeService->GetSystemLocale(getter_AddRefs(locale));
    NS_ENSURE_TRUE(locale, NS_ERROR_FAILURE);
 
-   nsCOMPtr<nsIStringBundleService> stringBundleService(do_GetService(NS_STRINGBUNDLE_PROGID));
+   nsCOMPtr<nsIStringBundleService> stringBundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
    NS_ENSURE_TRUE(stringBundleService, NS_ERROR_FAILURE);
 
    NS_ENSURE_SUCCESS(stringBundleService->CreateBundle(DIALOG_STRING_URI, locale, 

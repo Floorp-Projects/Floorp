@@ -91,7 +91,7 @@ xptiInterfaceInfoManager::xptiInterfaceInfoManager()
     const char* statsFilename = PR_GetEnv("MOZILLA_XPTI_STATS");
     if(statsFilename)
     {
-        mStatsLogFile = do_CreateInstance(NS_LOCAL_FILE_PROGID);         
+        mStatsLogFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);         
         if(mStatsLogFile && 
            NS_SUCCEEDED(mStatsLogFile->InitWithPath(statsFilename)))
         {
@@ -107,7 +107,7 @@ xptiInterfaceInfoManager::xptiInterfaceInfoManager()
     const char* autoRegFilename = PR_GetEnv("MOZILLA_XPTI_REGLOG");
     if(autoRegFilename)
     {
-        mAutoRegLogFile = do_CreateInstance(NS_LOCAL_FILE_PROGID);         
+        mAutoRegLogFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);         
         if(mAutoRegLogFile && 
            NS_SUCCEEDED(mAutoRegLogFile->InitWithPath(autoRegFilename)))
         {
@@ -145,7 +145,7 @@ GetDirectoryFromDirService(const char* codename, nsILocalFile** aDir)
     // modify it.
 
     nsCOMPtr<nsIProperties> dirService = 
-        do_GetService(NS_DIRECTORY_SERVICE_PROGID);
+        do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
     if(dirService)
     {
         nsCOMPtr<nsILocalFile> dir;
@@ -192,7 +192,7 @@ xptiInterfaceInfoManager::BuildFileList(nsISupportsArray** aFileList)
         return PR_FALSE;
 
     nsCOMPtr<nsISupportsArray> fileList = 
-        do_CreateInstance(NS_SUPPORTSARRAY_PROGID);
+        do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
     if(!fileList)
         return PR_FALSE;
 
@@ -1489,7 +1489,7 @@ NS_IMETHODIMP xptiInterfaceInfoManager::EnumerateInterfaces(nsIEnumerator **_ret
     // We can afford this transient cost.
 
     nsCOMPtr<nsISupportsArray> array = 
-        do_CreateInstance(NS_SUPPORTSARRAY_PROGID);
+        do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
     if(!array)
         return NS_ERROR_UNEXPECTED;
 

@@ -45,6 +45,6 @@ interface nsIMsgStringService : nsISupports {
 };
 
 %{C++
-#define NS_MAILNEWS_STRINGSERVICE_PROGID      "component://netscape/messenger/stringservice"
-#define NS_MAILNEWS_STRINGSERVICE_PROGID_PREFIX NS_MAILNEWS_STRINGSERVICE_PROGID"?type="
+#define NS_MAILNEWS_STRINGSERVICE_CONTRACTID      "@mozilla.org/messenger/stringservice;1"
+#define NS_MAILNEWS_STRINGSERVICE_CONTRACTID_PREFIX NS_MAILNEWS_STRINGSERVICE_CONTRACTID"?type="
 %}

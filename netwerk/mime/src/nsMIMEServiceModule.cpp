@@ -29,17 +29,17 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMIMEInfoImpl);
 static nsModuleComponentInfo gResComponents[] = {
     { "The MIME mapping service", 
       NS_MIMESERVICE_CID,
-      "component:||netscape|mime",
+      "@mozilla.org/mime;1",
       nsMIMEService::Create
     },
        { "xml mime datasource", 
       NS_XMLMIMEDATASOURCE_CID,
-      NS_XMLMIMEDATASOURCE_PROGID,
+      NS_XMLMIMEDATASOURCE_CONTRACTID,
       nsXMLMIMEDataSource::Create
     },
         { "xml mime INFO", 
       NS_MIMEINFO_CID,
-      NS_MIMEINFO_PROGID,
+      NS_MIMEINFO_CONTRACTID,
       nsMIMEInfoImplConstructor
     },
 };

@@ -70,7 +70,7 @@ nsSmtpServer::GetHostname(char * *aHostname)
 {
     nsresult rv;
     nsCAutoString pref;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
     getPrefString("hostname", pref);
     rv = prefs->CopyCharPref(pref, aHostname);
     if (NS_FAILED(rv)) *aHostname=nsnull;
@@ -82,7 +82,7 @@ nsSmtpServer::SetHostname(const char * aHostname)
 {
     nsresult rv;
     nsCAutoString pref;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
     getPrefString("hostname", pref);
     if (aHostname)
         return prefs->SetCharPref(pref, aHostname);
@@ -97,7 +97,7 @@ nsSmtpServer::GetTrySSL(PRInt32 *trySSL)
     nsresult rv;
     nsCAutoString pref;
     NS_ENSURE_ARG_POINTER(trySSL);
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     *trySSL= 0;
     getPrefString("try_ssl", pref);
@@ -111,7 +111,7 @@ nsSmtpServer::SetTrySSL(PRInt32 trySSL)
 {
     nsresult rv;
     nsCAutoString pref;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     getPrefString("try_ssl", pref);
     return prefs->SetIntPref(pref, trySSL);
@@ -123,7 +123,7 @@ nsSmtpServer::GetAuthMethod(PRInt32 *authMethod)
     nsresult rv;
     nsCAutoString pref;
     NS_ENSURE_ARG_POINTER(authMethod);
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     *authMethod = 0;
     getPrefString("auth_method", pref);
@@ -137,7 +137,7 @@ nsSmtpServer::SetAuthMethod(PRInt32 authMethod)
 {
     nsresult rv;
     nsCAutoString pref;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     getPrefString("auth_method", pref);
     return prefs->SetIntPref(pref, authMethod);
@@ -148,7 +148,7 @@ nsSmtpServer::GetUsername(char * *aUsername)
 {
     nsresult rv;
     nsCAutoString pref;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
     getPrefString("username", pref);
     rv = prefs->CopyCharPref(pref, aUsername);
     if (NS_FAILED(rv)) *aUsername = nsnull;
@@ -160,7 +160,7 @@ nsSmtpServer::SetUsername(const char * aUsername)
 {
     nsresult rv;
     nsCAutoString pref;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
     getPrefString("username", pref);
     if (aUsername)
         return prefs->SetCharPref(pref, aUsername);
@@ -302,7 +302,7 @@ nsSmtpServer::SetRedirectorType(const char *aRedirectorType)
 {
     nsresult rv;
     nsCAutoString pref;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
     getPrefString("redirector_type", pref);
     if (aRedirectorType)
         return prefs->SetCharPref(pref, aRedirectorType);
@@ -316,7 +316,7 @@ nsSmtpServer::GetRedirectorType(char **aResult)
 {
     nsresult rv;
     nsCAutoString pref;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
     getPrefString("redirector_type", pref);
     rv = prefs->CopyCharPref(pref, aResult);
     if (NS_FAILED(rv)) *aResult=nsnull;

@@ -55,7 +55,7 @@ function onInit() {
       var type = parent.getCurrentServerType(pageData);
 
       dump("type = " + type + "\n");
-      protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
+      protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
 
       if (protocolinfo.requiresUsername) {
         // since we require a username, use the uid from the email address

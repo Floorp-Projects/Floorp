@@ -35,7 +35,7 @@ function GetMsgFolderFromUri(uri)
 
 function GetResourceFromUri(uri)
 {
-	var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
+	var RDF = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService();
 	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
         var resource = RDF.GetResource(uri);
 
@@ -57,7 +57,7 @@ function DoRDFCommand(dataSource, command, srcArray, argumentArray)
 function ConvertMessagesToResourceArray(messages,  resourceArray)
 {
 	if(!resourceArray)
-	    resourceArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+	    resourceArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
 
     for (var i=0; i<messages.length; i++) {
 		var messageResource = messages[i].QueryInterface(Components.interfaces.nsIRDFResource);
@@ -87,7 +87,7 @@ function GetNewMessages(selectedFolders, compositeDataSource)
 		if(compositeDataSource)
 		{
 			var folderResource = msgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-		    var folderArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+		    var folderArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
 			folderArray.AppendElement(folderResource);
 
 			DoRDFCommand(compositeDataSource, "http://home.netscape.com/NC-rdf#GetNewMessages", folderArray, null);
@@ -102,7 +102,7 @@ function DeleteMessages(compositeDataSource, srcFolder, messages, reallyDelete)
 {
 
 	var srcFolderResource = srcFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-	var folderArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+	var folderArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
 	folderArray.AppendElement(srcFolderResource);
 
 	var argumentArray = ConvertMessagesToResourceArray(messages, null);
@@ -124,10 +124,10 @@ function CopyMessages(compositeDataSource, srcFolder, destFolder, messages, isMo
 	if(compositeDataSource)
 	{
 		var destFolderResource = destFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-		var folderArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+		var folderArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
 		folderArray.AppendElement(destFolderResource);
 
-		var argumentArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+		var argumentArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
 		var srcFolderResource = srcFolder.QueryInterface(Components.interfaces.nsIRDFResource);
 		argumentArray.AppendElement(srcFolderResource);
 		ConvertMessagesToResourceArray(messages, argumentArray);
@@ -307,8 +307,8 @@ function NewFolder(name,uri)
 		//dump("selectedFolder = " + uri + "\n");
 		var compositeDataSource = GetCompositeDataSource("NewFolder");
 
-	    var folderArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
-	    var nameArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+	    var folderArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+	    var nameArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
 
 		folderArray.AppendElement(selectedFolderResource);
 
@@ -442,7 +442,7 @@ function MarkAllMessagesRead(compositeDataSource, folder)
 {
 
 	var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
-	var folderResourceArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+	var folderResourceArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
 	folderResourceArray.AppendElement(folderResource);
 
 	DoRDFCommand(compositeDataSource, "http://home.netscape.com/NC-rdf#MarkAllMessagesRead", folderResourceArray, null);
@@ -460,10 +460,10 @@ function MarkThreadAsRead(compositeDataSource, message)
 			if(thread)
 			{
 				var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
-				var folderResourceArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+				var folderResourceArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
 				folderResourceArray.AppendElement(folderResource);
 
-				var argumentArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+				var argumentArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
 				argumentArray.AppendElement(thread);
 
 				DoRDFCommand(compositeDataSource, "http://home.netscape.com/NC-rdf#MarkThreadRead", folderResourceArray, argumentArray);
@@ -477,7 +477,7 @@ function ViewPageSource(messages)
 {
 	var url;
 	var uri;
-	var mailSessionProgID      = "component://netscape/messenger/services/session";
+	var mailSessionContractID      = "@mozilla.org/messenger/services/session;1";
 
 	var numMessages = messages.length;
 
@@ -488,7 +488,7 @@ function ViewPageSource(messages)
 	}
 
 	// First, get the mail session
-	var mailSession = Components.classes[mailSessionProgID].getService();
+	var mailSession = Components.classes[mailSessionContractID].getService();
 	if (!mailSession)
 		return false;
 

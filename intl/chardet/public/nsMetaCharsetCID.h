@@ -25,7 +25,7 @@
 
 #include "nscore.h"
 
-#define NS_META_CHARSET_PROGID "component://netscape/intl/metacharset"
+#define NS_META_CHARSET_CONTRACTID "@mozilla.org/intl/metacharset;1"
 
 // {218F2AC0-0A48-11d3-B3BA-00805F8A6670}
 #define NS_META_CHARSET_CID \

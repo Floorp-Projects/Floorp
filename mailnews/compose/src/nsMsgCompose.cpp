@@ -1055,7 +1055,7 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
           // HACK: if we are replying to a message and that message used a charset over ride
           // (as speciifed in the top most window (assuming the reply originated from that window)
           // then use that over ride charset instead of the charset specified in the message
-	        nsCOMPtr <nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_PROGID);          
+	        nsCOMPtr <nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID);          
           if (mailSession)
           {
             nsCOMPtr<nsIMsgWindow>    msgWindow;
@@ -1979,7 +1979,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
     // this signature...if we can't, we assume text
     rv = NS_OK;
     char      *sigContentType = nsnull;
-    nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_PROGID, &rv));
+    nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv) && mimeFinder && fileExt) 
     {
       mimeFinder->GetTypeFromExtension(fileExt, &(sigContentType));
@@ -2431,7 +2431,7 @@ nsresult nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, PRBoo
       nsXPIDLString addr;
 			addressArray->GetCount(&nbrRecipients);
 
-      rv = nsComponentManager::CreateInstance(NS_SUPPORTSARRAY_PROGID, nsnull, 
+      rv = nsComponentManager::CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, nsnull, 
                   NS_GET_IID(nsISupportsArray), getter_AddRefs(recipientsList[i]));
       if (NS_FAILED(rv))
         return rv;
@@ -2470,13 +2470,13 @@ nsresult nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, PRBoo
   nsCOMPtr <nsISupportsArray> mailListAddresses;
   nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);
   nsCOMPtr<nsISupportsArray> mailListArray;
-  rv = nsComponentManager::CreateInstance(NS_SUPPORTSARRAY_PROGID, nsnull, 
+  rv = nsComponentManager::CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, nsnull, 
               NS_GET_IID(nsISupportsArray), getter_AddRefs(mailListArray));
   if (NS_FAILED(rv))
     return rv;
 
   nsCOMPtr<nsISupportsArray> addrbookDirArray;
-  rv = nsComponentManager::CreateInstance(NS_SUPPORTSARRAY_PROGID, nsnull, 
+  rv = nsComponentManager::CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, nsnull, 
                 NS_GET_IID(nsISupportsArray), getter_AddRefs(addrbookDirArray));
   if (NS_SUCCEEDED(rv) && addrbookDirArray)
   {

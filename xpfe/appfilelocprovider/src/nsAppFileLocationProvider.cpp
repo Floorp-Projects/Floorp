@@ -140,7 +140,7 @@ nsAppFileLocationProvider::nsAppFileLocationProvider()
     //    This will be set if a directory was passed to NS_InitXPCOM
     // 2. If that doesn't work, set it to be the current process directory
     
-    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
         rv = directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(mMozBinDirectory));
 

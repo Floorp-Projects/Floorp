@@ -42,14 +42,14 @@ public:
                                  nsIContent** aResult) = 0;
 };
 
-// ProgIDs for element factory registration
-#define NS_ELEMENT_FACTORY_PROGID          "component://netscape/layout/element-factory"
-#define NS_ELEMENT_FACTORY_PROGID_PREFIX   NS_ELEMENT_FACTORY_PROGID "?namespace="
+// ContractIDs for element factory registration
+#define NS_ELEMENT_FACTORY_CONTRACTID          "@mozilla.org/layout/element-factory;1"
+#define NS_ELEMENT_FACTORY_CONTRACTID_PREFIX   NS_ELEMENT_FACTORY_CONTRACTID "?namespace="
 
 #define NS_HTML_NAMESPACE                  "http://www.w3.org/1999/xhtml"
 #define NS_XML_NAMESPACE                   "http://www.w3.org/XML/1998/namespace"
  
-#define NS_HTML_ELEMENT_FACTORY_PROGID     NS_ELEMENT_FACTORY_PROGID_PREFIX NS_HTML_NAMESPACE
-#define NS_XML_ELEMENT_FACTORY_PROGID      NS_ELEMENT_FACTORY_PROGID_PREFIX NS_XML_NAMESPACE
+#define NS_HTML_ELEMENT_FACTORY_CONTRACTID     NS_ELEMENT_FACTORY_CONTRACTID_PREFIX NS_HTML_NAMESPACE
+#define NS_XML_ELEMENT_FACTORY_CONTRACTID      NS_ELEMENT_FACTORY_CONTRACTID_PREFIX NS_XML_NAMESPACE
 
 #endif /* nsIElementFactory_h___ */

@@ -37,7 +37,7 @@ interface nsIRelatedLinksHandler : nsISupports
 
 
 %{C++
-#define NS_RELATEDLINKSHANDLER_PROGID "component://netscape/related-links-handler"
+#define NS_RELATEDLINKSHANDLER_CONTRACTID "@mozilla.org/related-links-handler;1"
 
 // {8BB4FB61-1CAC-11d3-BDF9-000064657374}
 #define NS_RELATEDLINKSHANDLER_CID \

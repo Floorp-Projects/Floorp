@@ -147,7 +147,7 @@ nsIFileSpec*
 DataStruct::GetFileSpec(const char * aFileName)
 {
   nsIFileSpec* cacheFile = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance( NS_FILESPEC_PROGID, nsnull, NS_GET_IID(nsIFileSpec),
+  nsresult rv = nsComponentManager::CreateInstance( NS_FILESPEC_CONTRACTID, nsnull, NS_GET_IID(nsIFileSpec),
                                                      NS_REINTERPRET_CAST(void**,&cacheFile));
   NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a Clipboard Cache file spec.");
 
@@ -301,7 +301,7 @@ nsTransferable :: GetTransferDataFlavors(nsISupportsArray ** aDataFlavorList)
     for ( PRInt32 i=0; i<mDataArray->Count(); ++i ) {
       DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
       nsCOMPtr<nsISupportsString> flavorWrapper;
-      rv = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
+      rv = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 
                                                NS_GET_IID(nsISupportsString), getter_AddRefs(flavorWrapper));
       if ( flavorWrapper ) {
         flavorWrapper->SetData ( NS_CONST_CAST(char*, data->mFlavor.GetBuffer()) );

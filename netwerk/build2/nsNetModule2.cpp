@@ -35,21 +35,21 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
     // from netwerk/protocol/ftp:
     { "The FTP Protocol Handler", 
       NS_FTPPROTOCOLHANDLER_CID,
-      NS_NETWORK_PROTOCOL_PROGID_PREFIX "ftp",
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ftp",
       nsFtpProtocolHandlerConstructor
     },
 
     // from netwerk/protocol/finger:
     { "The Finger Protocol Handler", 
       NS_FINGERHANDLER_CID,
-      NS_NETWORK_PROTOCOL_PROGID_PREFIX "finger",
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "finger",
       nsFingerHandler::Create
     },
 
     // from netwerk/protocol/datetime:
     { "The DateTime Protocol Handler", 
       NS_DATETIMEHANDLER_CID,
-      NS_NETWORK_PROTOCOL_PROGID_PREFIX "datetime",
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "datetime",
       nsDateTimeHandler::Create
     }
 };

@@ -466,13 +466,13 @@ nsPICS::Init()
         if (NS_FAILED(rv = NS_NewPICSElementObserver(&mPICSElementObserver)))
           return rv;
   
-        rv = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, 
+        rv = nsServiceManager::GetService(NS_OBSERVERSERVICE_CONTRACTID, 
                                 NS_GET_IID(nsIObserverService), 
                                 (nsISupports **)&anObserverService);
 
         if(rv == NS_OK) {
           rv = anObserverService->AddObserver(mPICSElementObserver, aTopic.GetUnicode());
-          nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_PROGID, anObserverService );
+          nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_CONTRACTID, anObserverService );
           if (NS_FAILED(rv))
               return rv;
 
@@ -1431,11 +1431,11 @@ CreateNewPICS(nsISupports* aOuter, REFNSIID aIID, void **aResult)
 
 ////////////////////////////////////////////////////////////////////////
 // Define a table of CIDs implemented by this module along with other
-// information like the function to create an instance, progid, and
+// information like the function to create an instance, contractid, and
 // class name.
 //
 static nsModuleComponentInfo components[] = {
-    { "PICS", NS_PICS_CID, NS_PICS_PROGID, CreateNewPICS, },
+    { "PICS", NS_PICS_CID, NS_PICS_CONTRACTID, CreateNewPICS, },
 };
 
 ////////////////////////////////////////////////////////////////////////

@@ -44,9 +44,9 @@ interface nsIEventQueue;
 #define NS_NETMODULEMGR_CID \
 { 0x4ebdafe0, 0x13ba, 0x11d3, { 0xa1, 0x5a, 0x0, 0x50, 0x4, 0x1c, 0xaf, 0x44 } }
 
-// The list of available PROGIDS to register for notification on.
-#define NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_PROGID          "component://netscape/network/moduleMgr/http/request"
-#define NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_PROGID         "component://netscape/network/moduleMgr/http/response"
+// The list of available CONTRACTIDS to register for notification on.
+#define NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_CONTRACTID          "@mozilla.org/network/moduleMgr/http/request;1"
+#define NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_CONTRACTID         "@mozilla.org/network/moduleMgr/http/response;1"
 %}
 
 [scriptable, uuid(ff9ead40-0ef2-11d3-9de6-0010a4053fd0)]

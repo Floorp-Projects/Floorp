@@ -33,7 +33,7 @@
 
 class nsIDOMElement;
 
-#define NS_CONTENTPOLICY_PROGID   "layout.content-policy.1"
+#define NS_CONTENTPOLICY_CONTRACTID   "@mozilla.org/layout/content-policy;1"
 #define NS_CONTENTPOLICY_CATEGORY "content-policy"
 #define NS_CONTENTPOLICY_CID						      \
   {0x0e3afd3d, 0xeb60, 0x4c2b,						      \
@@ -43,7 +43,7 @@ class nsIDOMElement;
 #define CHECK_CONTENT_POLICY(action, result)                                  \
 PR_BEGIN_MACRO                                                                \
     nsresult rv;                                                              \
-    NS_WITH_SERVICE(nsIContentPolicy, policy, NS_CONTENTPOLICY_PROGID, &rv);  \
+    NS_WITH_SERVICE(nsIContentPolicy, policy, NS_CONTENTPOLICY_CONTRACTID, &rv);  \
     if (NS_FAILED(rv))                                                        \
         return rv;                                                            \
                                                                               \

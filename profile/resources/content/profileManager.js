@@ -22,7 +22,7 @@
  *   Ben Goodger <ben@netscape.com>
  */
 
-var commonDialogService = nsJSComponentManager.getService("component://netscape/appshell/commonDialogs",
+var commonDialogService = nsJSComponentManager.getService("@mozilla.org/appshell/commonDialogs;1",
                                                           "nsICommonDialogs");
 var bundle = srGetStrBundle("chrome://communicator/locale/profile/profileManager.properties");
 var brandBundle = srGetStrBundle("chrome://global/locale/brand.properties");

@@ -70,7 +70,7 @@ private:
   PRBool mAutoDetect;                   // true if apply auto detection
   nsString mInputCharset;               // input charset for auto detection hint as well as need conversion check
   nsString mOutputCharset;              // output charset for need conversion check
-  static nsCString mDetectorProgID;     // ProgID of charset detector
+  static nsCString mDetectorContractID;     // ContractID of charset detector
 };
 
   

@@ -44,7 +44,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
  *
  * This simple test program will not trigger a component registration. So 
  * Mozilla has to be run once before running this, so that the necessary 
- * components will be registered. Also, please observe that the ProgID's are 
+ * components will be registered. Also, please observe that the ContractID's are 
  * case sensitive now!
  *
  * @created         28/Mar/2000

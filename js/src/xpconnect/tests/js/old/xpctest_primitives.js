@@ -10,8 +10,8 @@
 */
 
 
-// prefix used by all these progids
-progid_prefix = "component://netscape/";
+// prefix used by all these contractids
+contractid_prefix = "@mozilla.org/";
 
 // an iid to use to test nsISupportsID
 var iface_test = Components.interfaces.nsISupports;
@@ -24,7 +24,7 @@ var same = Object;
 // the table of data...
 
 // columns are:
-// 1) progid suffix
+// 1) contractid suffix
 // 2) interface name
 // 3) value
 // 4) string to use to compare for toString ('same' mans use original value)
@@ -77,15 +77,15 @@ function regular_compare(v1, v2)
     return v1 == v2;    
 }    
 
-function test(progid, iid, d, string_val, val_compare_fn, str_compare_fn)
+function test(contractid, iid, d, string_val, val_compare_fn, str_compare_fn)
 {
     var test1_result;    
     var test2_result;    
-    var full_progid = progid_prefix+progid;
-//    println("checking... "+progid+" "+iid+ " with "+d);
-    var clazz = Components.classes[full_progid];
+    var full_contractid = contractid_prefix+contractid;
+//    println("checking... "+contractid+" "+iid+ " with "+d);
+    var clazz = Components.classes[full_contractid];
     if(!clazz) {
-        println(progid+ " is not a valid progid");
+        println(contractid+ " is not a valid contractid");
         return false;
     }
     var v = clazz.createInstance(Components.interfaces[iid])
@@ -109,10 +109,10 @@ function test(progid, iid, d, string_val, val_compare_fn, str_compare_fn)
         test2_result = true;
 
     if(!test1_result)
-        println("failed for... "+progid+" with "+d+" returned "+v.data);
+        println("failed for... "+contractid+" with "+d+" returned "+v.data);
 
     if(!test2_result)
-        println("failed toString for... "+progid+" with "+d+" returned "+""+v);
+        println("failed toString for... "+contractid+" with "+d+" returned "+""+v);
 
 
     return test1_result && test2_result;

@@ -43,14 +43,14 @@ var deleted_nocaptures_count = 1;
 // purpose  : initialises interface, calls init functions for each page
 function Startup()
 {
-  signonviewer = Components.classes["component://netscape/signonviewer/signonviewer-world"].createInstance();
+  signonviewer = Components.classes["@mozilla.org/signonviewer/signonviewer-world;1"].createInstance();
   signonviewer = signonviewer.QueryInterface(Components.interfaces.nsISignonViewer);
 
   doSetOKCancel(onOK, null);  // init ok event handler
 
   // remove wallet functions (unless overruled by the "wallet.enabled" pref)
   try {
-    pref = Components.classes['component://netscape/preferences'];
+    pref = Components.classes['@mozilla.org/preferences;1'];
     pref = pref.getService();
     pref = pref.QueryInterface(Components.interfaces.nsIPref);
     try {
@@ -129,7 +129,7 @@ function LoadSignons()
     if (user == "") {
       /* no username passed in, parse if out of url */
       var uri =
-        Components.classes["component://netscape/network/standard-url"]
+        Components.classes["@mozilla.org/network/standard-url;1"]
           .createInstance(Components.interfaces.nsIURI); 
       uri.spec = site; 
       if (user.username) {

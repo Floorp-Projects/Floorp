@@ -30,17 +30,17 @@
 static nsModuleComponentInfo gComponentInfo[] = {
   { "Plugin Host",
     NS_PLUGIN_HOST_CID,
-    "component://netscape/plugin/host",
+    "@mozilla.org/plugin/host;1",
     nsPluginHostImpl::Create },
 
   { "Plugin Manager",
     NS_PLUGINMANAGER_CID,
-    "component://netscape/plugin/manager",
+    "@mozilla.org/plugin/manager;1",
     nsPluginHostImpl::Create },
 
   { "Plugin Doc Loader Factory",
     NS_PLUGINDOCLOADERFACTORY_CID,
-    "component://netscape/plugin/doc-loader/factory",
+    "@mozilla.org/plugin/doc-loader/factory;1",
     nsPluginDocLoaderFactory::Create },
 };
 

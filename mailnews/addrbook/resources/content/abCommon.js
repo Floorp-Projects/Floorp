@@ -179,7 +179,7 @@ function AbNewCard()
 
 function AbEditCard()
 {
-	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 	rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 
 	if ( resultsTree.selectedItems && resultsTree.selectedItems.length == 1 )
@@ -204,7 +204,7 @@ function AbNewMessage()
 {
 	var msgComposeType = Components.interfaces.nsIMsgCompType;
 	var msgComposFormat = Components.interfaces.nsIMsgCompFormat;
-	var msgComposeService = Components.classes["component://netscape/messengercompose"].getService(); 
+	var msgComposeService = Components.classes["@mozilla.org/messengercompose;1"].getService(); 
 	msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService); 
 
 	msgComposeService.OpenComposeWindowWithValues(null, msgComposeType.New, msgComposFormat.Default,
@@ -217,7 +217,7 @@ function GetSelectedAddresses()
 	var item, uri, rdf, cardResource, card;
 	var selectedAddresses = "";
 	
-	rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 	rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 
 	if ( resultsTree.selectedItems && resultsTree.selectedItems.length )
@@ -367,7 +367,7 @@ function WaitUntilDocumentIsLoaded()
 {
 	// FIX ME - we should really have this function available in a global place that does not
 	// require that we have access to mailnews code (msgNavigationService) from address book.
-	var msgNavigationService = Components.classes['component://netscape/messenger/msgviewnavigationservice'].getService();
+	var msgNavigationService = Components.classes['@mozilla.org/messenger/msgviewnavigationservice;1'].getService();
 	msgNavigationService= msgNavigationService.QueryInterface(Components.interfaces.nsIMsgViewNavigationService);
 
 	msgNavigationService.EnsureDocumentIsLoaded(document);
@@ -423,7 +423,7 @@ function SortResultPane(column, sortKey)
 
 function DoSort(column, key, direction)
 {
-	var isupports = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
+	var isupports = Components.classes["@mozilla.org/rdf/xul-sort-service;1"].getService();
 	if (!isupports)    return(false);
 	
 	var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);

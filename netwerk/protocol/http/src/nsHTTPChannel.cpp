@@ -397,7 +397,7 @@ nsHTTPChannel::GetContentType(char * *aContentType)
     // No response yet...  Try to determine the content-type based
     // on the file extension of the URI...
     //
-    nsCOMPtr<nsIMIMEService> MIMEService (do_GetService(NS_MIMESERVICE_PROGID, &rv));
+    nsCOMPtr<nsIMIMEService> MIMEService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv)) {
         rv = MIMEService->GetTypeFromURI(mURI, aContentType);
         if (NS_SUCCEEDED(rv)) return rv;
@@ -939,7 +939,7 @@ nsHTTPChannel::CheckCache()
         // Get the cache manager service
         // TODO - we should cache this service
         NS_WITH_SERVICE(nsINetDataCacheManager, cacheManager,
-                        NS_NETWORK_CACHE_MANAGER_PROGID, &rv);
+                        NS_NETWORK_CACHE_MANAGER_CONTRACTID, &rv);
         if (rv == NS_ERROR_FACTORY_NOT_REGISTERED) {
             if (!warnedCacheIsMissing) {
                 NS_WARNING("Unable to find network cache component. "
@@ -1427,7 +1427,7 @@ nsHTTPChannel::Open(PRBool bIgnoreCache)
 
         nsCOMPtr<nsISimpleEnumerator> pModules;
         rv = pNetModuleMgr->EnumerateModules(
-                NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_PROGID,
+                NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_CONTRACTID,
                 getter_AddRefs(pModules));
         if (NS_FAILED(rv)) return rv;
 
@@ -1673,7 +1673,7 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   if (checkSecurity)
   {
     NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     rv = securityManager->CheckLoadURI(mOriginalURI ? mOriginalURI : mURI, newURI, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
@@ -1905,7 +1905,7 @@ nsresult nsHTTPChannel::OnHeadersAvailable()
 
     nsCOMPtr<nsISimpleEnumerator> pModules;
     rv = pNetModuleMgr->EnumerateModules(
-            NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_PROGID, 
+            NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_CONTRACTID, 
             getter_AddRefs(pModules));
     if (NS_FAILED(rv)) return rv;
 
@@ -2763,7 +2763,7 @@ nsSyncHelper::Run()
 
     // create an event queue for this thread.
     
-    nsCOMPtr<nsIEventQueueService> service = do_GetService(NS_EVENTQUEUESERVICE_PROGID, &rv);
+    nsCOMPtr<nsIEventQueueService> service = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = service->CreateThreadEventQueue();

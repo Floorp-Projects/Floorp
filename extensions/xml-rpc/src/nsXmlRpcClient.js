@@ -18,20 +18,20 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.10 $
+ *  Version: $Revision: 1.11 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.10 2000/08/10 20:11:58 rayw%netscape.com Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.11 2000/09/13 23:51:27 rayw%netscape.com Exp $
  */
 
 /*
  * Constants
  */
-const XMLRPCCLIENT_PROGID = 'mozilla.xml-rpc.client.1';
+const XMLRPCCLIENT_CONTRACTID = '@mozilla.org/xml-rpc/client;1';
 const XMLRPCCLIENT_CID =
     Components.ID('{37127241-1e6e-46aa-ba87-601d41bb47df}');
 const XMLRPCCLIENT_IID = Components.interfaces.nsIXmlRpcClient;
 
-const XMLRPCFAULT_PROGID = 'mozilla.xml-rpc.fault.1';
+const XMLRPCFAULT_CONTRACTID = '@mozilla.org/xml-rpc/fault;1';
 const XMLRPCFAULT_CID =
     Components.ID('{691cb864-0a7e-448c-98ee-4a7f359cf145}');
 const XMLRPCFAULT_IID = Components.interfaces.nsIXmlRpcFault;
@@ -78,7 +78,7 @@ nsXmlRpcClient.prototype = {
     _serverUrl: null,
 
     init: function(serverURL) {
-        var oURL = createInstance('component://netscape/network/standard-url',
+        var oURL = createInstance('@mozilla.org/network/standard-url;1',
             'nsIURL');
         oURL.spec = serverURL;
 
@@ -230,9 +230,9 @@ nsXmlRpcClient.prototype = {
     // Return a HTTP channel ready for POSTing.
     _getChannel: function(request) {
         // Set up channel.
-        var ioService = getService('component://netscape/network/io-service',
+        var ioService = getService('@mozilla.org/network/io-service;1',
             'nsIIOService');
-        var atomService = getService('component://netscape/atom-service',
+        var atomService = getService('@mozilla.org/atom-service;1',
             'nsIAtomService');
 
         var chann = ioService.newChannelFromURI(this._serverUrl)
@@ -287,7 +287,7 @@ nsXmlRpcClient.prototype = {
         debug('Parse finished');
         if (this._foundFault) {
             try {
-                this._fault = createInstance(XMLRPCFAULT_PROGID,
+                this._fault = createInstance(XMLRPCFAULT_CONTRACTID,
                     'nsIXmlRpcFault');
                 this._fault.init(this._result.getValue('faultCode').data,
                     this._result.getValue('faultString').data);
@@ -410,7 +410,7 @@ nsXmlRpcClient.prototype = {
     STRUCT:   7,
     BASE64:   8, // Not part of nsIXmlRpcClient interface, internal use.
     createType: function(type) {
-        const SUPPORTSID = 'component://netscape/supports-';
+        const SUPPORTSID = '@mozilla.org/supports-;1';
         switch(type) {
             case this.INT:
                 return createInstance(SUPPORTSID + 'PRInt32',
@@ -436,7 +436,7 @@ nsXmlRpcClient.prototype = {
                 return createInstance(SUPPORTSID + 'array', 'nsISupportsArray');
 
             case this.STRUCT:
-                return createInstance('mozilla.dictionary.1', 'nsIDictionary');
+                return createInstance('@mozilla.org/dictionary;1', '@mozilla.org/js/xpc/ID;1ictionary');
 
             default: throw Components.Exception('Unsupported type');
         }
@@ -661,7 +661,7 @@ nsXmlRpcClient.prototype = {
 
         if (this._foundFault) {
             try {
-                this._fault = createInstance(XMLRPCFAULT_PROGID,
+                this._fault = createInstance(XMLRPCFAULT_CONTRACTID,
                     'nsIXmlRpcFault');
                 this._fault.init(this._result.getValue('faultCode').data,
                     this._result.getValue('faultString').data);
@@ -1245,10 +1245,10 @@ PushbackInputStream.prototype = {
 var nsXmlRpcClientModule = {
     registerSelf: function(compMgr, fileSpec, location, type) {
         compMgr.registerComponentWithType(XMLRPCCLIENT_CID, 
-            'XML-RPC Client JS component', XMLRPCCLIENT_PROGID, fileSpec,
+            'XML-RPC Client JS component', XMLRPCCLIENT_CONTRACTID, fileSpec,
             location, true, true, type);
         compMgr.registerComponentWithType(XMLRPCFAULT_CID, 
-            'XML-RPC Fault JS component', XMLRPCFAULT_PROGID, fileSpec,
+            'XML-RPC Fault JS component', XMLRPCFAULT_CONTRACTID, fileSpec,
             location, true, true, type);
     },
 
@@ -1302,21 +1302,21 @@ var nsXmlRpcFaultFactory = {
 /* module initialisation */
 function NSGetModule(comMgr, fileSpec) { return nsXmlRpcClientModule; }
 
-/* Create an instance of the given ProgID, with given interface */
-function createInstance(progId, intf) {
-    return Components.classes[progId]
+/* Create an instance of the given ContractID, with given interface */
+function createInstance(contractId, intf) {
+    return Components.classes[contractId]
         .createInstance(Components.interfaces[intf]);
 }
 
-/* Get a pointer to a service indicated by the ProgID, with given interface */
-function getService(progId, intf) {
-    return Components.classes[progId].getService(Components.interfaces[intf]);
+/* Get a pointer to a service indicated by the ContractID, with given interface */
+function getService(contractId, intf) {
+    return Components.classes[contractId].getService(Components.interfaces[intf]);
 }
 
 /* Convert an inputstream to a scriptable inputstream */
 function toScriptableStream(input) {
     var SIStream = Components.Constructor(
-        'component://netscape/scriptableinputstream',
+        '@mozilla.org/scriptableinputstream;1',
         'nsIScriptableInputStream', 'init');
     return new SIStream(input);
 }

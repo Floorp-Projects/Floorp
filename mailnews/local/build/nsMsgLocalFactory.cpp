@@ -239,47 +239,47 @@ NS_IMETHODIMP nsMsgLocalModule::GetClassObject(nsIComponentManager *aCompMgr,
 struct Components {
     const char* mDescription;
     const nsID* mCID;
-    const char* mProgID;
+    const char* mContractID;
 };
 
 // The list of components we register
 static Components gComponents[] = {
     { "Mailbox URL", &kMailboxUrlCID,
-      NS_MAILBOXURL_PROGID },
+      NS_MAILBOXURL_CONTRACTID },
     { "Mailbox Service", &kMailboxServiceCID,
-      NS_MAILBOXSERVICE_PROGID1 },
+      NS_MAILBOXSERVICE_CONTRACTID1 },
     { "Mailbox Service", &kMailboxServiceCID,
-      NS_MAILBOXSERVICE_PROGID2 },
+      NS_MAILBOXSERVICE_CONTRACTID2 },
     { "Mailbox Service", &kMailboxServiceCID,
-      NS_MAILBOXSERVICE_PROGID3 },
+      NS_MAILBOXSERVICE_CONTRACTID3 },
     { "Mailbox Protocol Handler", &kMailboxServiceCID,
-      NS_MAILBOXSERVICE_PROGID4 },
+      NS_MAILBOXSERVICE_CONTRACTID4 },
     { "Mailbox Parser", &kMailboxParserCID,
-      NS_MAILBOXPARSER_PROGID },
+      NS_MAILBOXPARSER_CONTRACTID },
     { "Pop3 URL", &kPop3UrlCID,
-      NS_POP3URL_PROGID },
+      NS_POP3URL_CONTRACTID },
     { "Pop3 Service", &kPop3ServiceCID,
-      NS_POP3SERVICE_PROGID1 },
+      NS_POP3SERVICE_CONTRACTID1 },
     { "POP Protocol Handler", &kPop3ServiceCID,
-      NS_POP3SERVICE_PROGID2 },
+      NS_POP3SERVICE_CONTRACTID2 },
     { "None Service", &kNoneServiceCID,
-      NS_NONESERVICE_PROGID },
+      NS_NONESERVICE_CONTRACTID },
     { "pop3 Protocol Information", &kPop3ServiceCID,
-      NS_POP3PROTOCOLINFO_PROGID },
+      NS_POP3PROTOCOLINFO_CONTRACTID },
     { "none Protocol Information", &kNoneServiceCID,
-      NS_NONEPROTOCOLINFO_PROGID },
+      NS_NONEPROTOCOLINFO_CONTRACTID },
     { "Local Mail Folder Resource Factory", &kLocalMailFolderResourceCID,
-      NS_LOCALMAILFOLDERRESOURCE_PROGID },
+      NS_LOCALMAILFOLDERRESOURCE_CONTRACTID },
     { "Pop3 Incoming Server", &kPop3IncomingServerCID,
-      NS_POP3INCOMINGSERVER_PROGID },
+      NS_POP3INCOMINGSERVER_CONTRACTID },
     { "No Incoming Server", &kNoIncomingServerCID,
-      NS_NOINCOMINGSERVER_PROGID },
+      NS_NOINCOMINGSERVER_CONTRACTID },
     { "Parse MailMessage State", &kParseMailMsgStateCID,
-      NS_PARSEMAILMSGSTATE_PROGID },
+      NS_PARSEMAILMSGSTATE_CONTRACTID },
     { "Mailbox String Bundle Service", &kLocalStringServiceCID,
-      NS_MSG_MAILBOXSTRINGSERVICE_PROGID },
+      NS_MSG_MAILBOXSTRINGSERVICE_CONTRACTID },
     { "Pop String Bundle Service", &kLocalStringServiceCID,
-      NS_MSG_POPSTRINGSERVICE_PROGID },
+      NS_MSG_POPSTRINGSERVICE_CONTRACTID },
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
@@ -295,7 +295,7 @@ NS_IMETHODIMP nsMsgLocalModule::RegisterSelf(nsIComponentManager *aCompMgr,
     while (cp < end) 
     {
         rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
-                                             cp->mProgID, aPath, PR_TRUE,
+                                             cp->mContractID, aPath, PR_TRUE,
                                              PR_TRUE);
         if (NS_FAILED(rv)) 
             break;

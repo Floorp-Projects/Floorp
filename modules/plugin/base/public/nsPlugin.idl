@@ -99,7 +99,7 @@
 //extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 //                                           const nsCID &aClass,
 //                                           const char *aClassName,
-//                                           const char *aProgID,
+//                                           const char *aContractID,
 //                                           nsIFactory **aFactory);
 
 /**                                                               
@@ -192,7 +192,7 @@
 #include "nsIOutputStream.idl"
 
 ////////////////////////////////////////////////////////////////////////////////
-// CIDs and ProgIDs for Services
+// CIDs and ContractIDs for Services
 
 %{C++
 
@@ -205,7 +205,7 @@
     {0x81, 0x64, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
 }
 
-#define NS_PLUGINMANAGER_PROGID "component://netscape/plugin/plugin-manager"
+#define NS_PLUGINMANAGER_CONTRACTID "@mozilla.org/plugin/plugin-manager;1"
 #define NS_PLUGINMANAGER_CLASSNAME "Plugin Manager"
 
 %}

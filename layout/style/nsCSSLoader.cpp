@@ -770,9 +770,9 @@ CSSLoaderImpl::SheetComplete(nsICSSStyleSheet* aSheet, SheetLoadData* aLoadData)
 {
 #ifdef INCLUDE_XUL
   if (IsChromeURI(aLoadData->mURL)) {
-    nsCOMPtr<nsIXULContentUtils> utils(do_GetService("component://netscape/rdf/xul-content-utils"));
+    nsCOMPtr<nsIXULContentUtils> utils(do_GetService("@mozilla.org/rdf/xul-content-utils;1"));
     if (utils && utils->UseXULCache()) {
-      nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("component://netscape/rdf/xul-prototype-cache"));
+      nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("@mozilla.org/rdf/xul-prototype-cache;1"));
       if (cache) {
         nsCOMPtr<nsICSSStyleSheet> sheet;
         cache->GetStyleSheet(aLoadData->mURL, getter_AddRefs(sheet));
@@ -1317,7 +1317,7 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
 
   //-- Make sure this page is allowed to load this URL
   nsresult rv;
-  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan, NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan, NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
   nsIURI* docURI;
   rv = mDocument->GetBaseURL(docURI);
@@ -1337,9 +1337,9 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
     nsICSSStyleSheet* sheet = (nsICSSStyleSheet*)mLoadedSheets.Get(&key);
 #ifdef INCLUDE_XUL
     if (!sheet && IsChromeURI(aURL)) {
-      nsCOMPtr<nsIXULContentUtils> utils(do_GetService("component://netscape/rdf/xul-content-utils"));
+      nsCOMPtr<nsIXULContentUtils> utils(do_GetService("@mozilla.org/rdf/xul-content-utils;1"));
       if (utils && utils->UseXULCache()) {
-        nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("component://netscape/rdf/xul-prototype-cache"));
+        nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("@mozilla.org/rdf/xul-prototype-cache;1"));
         if (cache) {
           nsCOMPtr<nsICSSStyleSheet> cachedSheet;
           cache->GetStyleSheet(aURL, getter_AddRefs(cachedSheet));
@@ -1413,9 +1413,9 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
     nsICSSStyleSheet* sheet = (nsICSSStyleSheet*)mLoadedSheets.Get(&key);
 #ifdef INCLUDE_XUL
     if (!sheet && IsChromeURI(aURL)) {
-      nsCOMPtr<nsIXULContentUtils> utils(do_GetService("component://netscape/rdf/xul-content-utils"));
+      nsCOMPtr<nsIXULContentUtils> utils(do_GetService("@mozilla.org/rdf/xul-content-utils;1"));
       if (utils && utils->UseXULCache()) {
-        nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("component://netscape/rdf/xul-prototype-cache"));
+        nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("@mozilla.org/rdf/xul-prototype-cache;1"));
         if (cache) {
           nsCOMPtr<nsICSSStyleSheet> cachedSheet;
           cache->GetStyleSheet(aURL, getter_AddRefs(cachedSheet));

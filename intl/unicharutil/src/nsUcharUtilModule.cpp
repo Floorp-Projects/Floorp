@@ -78,13 +78,13 @@ PRInt32 g_LockCount = 0;
 static nsModuleComponentInfo components[] =
 {
   { "Unichar Utility", NS_UNICHARUTIL_CID, 
-      NS_UNICHARUTIL_PROGID, nsCaseConversionImp2Constructor},
+      NS_UNICHARUTIL_CONTRACTID, nsCaseConversionImp2Constructor},
   { "Unicode To Entity Converter", NS_ENTITYCONVERTER_CID, 
-      NS_ENTITYCONVERTER_PROGID, nsEntityConverterConstructor },
+      NS_ENTITYCONVERTER_CONTRACTID, nsEntityConverterConstructor },
   { "Unicode To Charset Converter", NS_SAVEASCHARSET_CID, 
-      NS_SAVEASCHARSET_PROGID, nsSaveAsCharsetConstructor},
+      NS_SAVEASCHARSET_CONTRACTID, nsSaveAsCharsetConstructor},
   { "Japanese Hankaku To Zenkaku", NS_HANKAKUTOZENKAKU_CID, 
-      NS_HANKAKUTOZENKAKU_PROGID, CreateNewHankakuToZenkaku},
+      NS_HANKAKUTOZENKAKU_CONTRACTID, CreateNewHankakuToZenkaku},
 };
 
 NS_IMPL_NSGETMODULE("UcharUtil", components)

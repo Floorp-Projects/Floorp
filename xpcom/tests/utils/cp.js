@@ -4,7 +4,7 @@ var prefix = "";
 function rename(source, newName)
 {
     try {
-    var sourceFile = Components.classes["component://mozilla/file/local"].
+    var sourceFile = Components.classes["@mozilla.org/file/local;1"].
 	createInstance(nsILocalFile);
     sourceFile.initWithPath(source);
     
@@ -26,11 +26,11 @@ function rename(source, newName)
 function cp(source, dest, followLinks, newName)
 {
     try {
-    var sourceFile = Components.classes["component://mozilla/file/local"].
+    var sourceFile = Components.classes["@mozilla.org/file/local;1"].
 	createInstance(nsILocalFile);
     sourceFile.initWithPath(source);
     
-    var destFile = Components.classes["component://mozilla/file/local"].
+    var destFile = Components.classes["@mozilla.org/file/local;1"].
 	createInstance(nsILocalFile);
     destFile.initWithPath(dest);
     
@@ -70,11 +70,11 @@ function cp(source, dest, followLinks, newName)
 function mv(source, dest, followLinks, newName)
 {
     try {
-    var sourceFile = Components.classes["component://mozilla/file/local"].
+    var sourceFile = Components.classes["@mozilla.org/file/local;1"].
 	createInstance(nsILocalFile);
     sourceFile.initWithPath(source);
     
-    var destFile = Components.classes["component://mozilla/file/local"].
+    var destFile = Components.classes["@mozilla.org/file/local;1"].
 	createInstance(nsILocalFile);
     destFile.initWithPath(dest);
     

@@ -6,7 +6,7 @@
 var nsPreferences = {
   get mPrefService()
     {
-      return nsJSComponentManager.getService("component://netscape/preferences", "nsIPref");
+      return nsJSComponentManager.getService("@mozilla.org/preferences;1", "nsIPref");
     },
 
   setBoolPref: function (aPrefName, aPrefValue)

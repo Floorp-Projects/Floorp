@@ -39,11 +39,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsCommandHandler)
 static nsModuleComponentInfo components[] =
 {
    { "WebBrowser Component", NS_WEBBROWSER_CID, 
-      NS_WEBBROWSER_PROGID, nsWebBrowserConstructor },
+      NS_WEBBROWSER_CONTRACTID, nsWebBrowserConstructor },
    { "CommandHandler Component", NS_COMMANDHANDLER_CID,
-      NS_COMMANDHANDLER_PROGID, nsCommandHandlerConstructor }
+      NS_COMMANDHANDLER_CONTRACTID, nsCommandHandlerConstructor }
 //   { "WebBrowserSetup Component", NS_WEBBROWSER_SETUP_CID, 
-//      NS_WEBBROWSER_SETUP_PROGID, nsWebBrowserSetupConstructor }
+//      NS_WEBBROWSER_SETUP_CONTRACTID, nsWebBrowserSetupConstructor }
 };
 
 

@@ -163,7 +163,7 @@ function DomainInSkipList(sDomain)
 	}
 
 	try {
-		var pref = Components.classes["component://netscape/preferences"];
+		var pref = Components.classes["@mozilla.org/preferences;1"];
 		if (pref) pref = pref.getService();
 		if (pref) pref = pref.QueryInterface(Components.interfaces.nsIPref);
 		if (pref) {
@@ -217,7 +217,7 @@ function Init()
 
 	if (oContentWindow && oFrame) {
 		window.setTimeout('window._content.resizeBy(0,1);window._content.resizeBy(0,-1);',0);
-		var oObserverService = Components.classes["component://netscape/observer-service"].getService();
+		var oObserverService = Components.classes["@mozilla.org/observer-service;1"].getService();
 		oObserverService = oObserverService.QueryInterface(Components.interfaces.nsIObserverService);
 
 		oNavObserver = new NavObserver(oFrame,oContentWindow);
@@ -238,7 +238,7 @@ function Init()
 function Destruct()
 {
 	// remove our navigation observer.
-	var oObserverService = Components.classes["component://netscape/observer-service"].getService();
+	var oObserverService = Components.classes["@mozilla.org/observer-service;1"].getService();
 	oObserverService = oObserverService.QueryInterface(Components.interfaces.nsIObserverService);
 	if (oObserverService && oNavObserver) {
 		debug("Removing observer\n");

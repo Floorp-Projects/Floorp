@@ -23,18 +23,18 @@ var msgCompSendFormat = Components.interfaces.nsIMsgCompSendFormat;
 var msgCompConvertible = Components.interfaces.nsIMsgCompConvertible;
 var msgCompType = Components.interfaces.nsIMsgCompType;
 
-var accountManagerProgID   = "component://netscape/messenger/account-manager";
-var accountManager = Components.classes[accountManagerProgID].getService(Components.interfaces.nsIMsgAccountManager);
+var accountManagerContractID   = "@mozilla.org/messenger/account-manager;1";
+var accountManager = Components.classes[accountManagerContractID].getService(Components.interfaces.nsIMsgAccountManager);
 
-//var mailSessionProgID   = "component://netscape/messenger/services/session";
-//var mailSession = Components.classes[mailSessionProgID].getService(Components.interfaces.nsIMsgMailSession);
+//var mailSessionContractID   = "@mozilla.org/messenger/services/session;1";
+//var mailSession = Components.classes[mailSessionContractID].getService(Components.interfaces.nsIMsgMailSession);
 
-var messengerMigratorProgID   = "component://netscape/messenger/migrator";
+var messengerMigratorContractID   = "@mozilla.org/messenger/migrator;1";
 
-var msgComposeService = Components.classes["component://netscape/messengercompose"].getService();
+var msgComposeService = Components.classes["@mozilla.org/messengercompose;1"].getService();
 msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
 
-var commonDialogsService = Components.classes["component://netscape/appshell/commonDialogs"].getService();
+var commonDialogsService = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
 commonDialogsService = commonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
 
 var msgCompose = null;
@@ -51,7 +51,7 @@ var Bundle = srGetStrBundle("chrome://messenger/locale/messengercompose/composeM
 var other_header = "";
 var update_compose_title_as_you_type = true;
 var sendFormat = msgCompSendFormat.AskUser;
-var prefs = Components.classes["component://netscape/preferences"].getService();
+var prefs = Components.classes["@mozilla.org/preferences;1"].getService();
 if (prefs) {
 	prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
 	if (prefs) {
@@ -614,7 +614,7 @@ function ComposeStartup()
 		if (msgCompose)
 		{
 			//Creating a Editor Shell
-      var editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
+      var editorShell = Components.classes["@mozilla.org/editor/editorshell;1"].createInstance();
       editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
 			if (!editorShell)
 			{
@@ -778,7 +778,7 @@ function SetDefaultMailSendCharacterSet()
     // try to get preferences service
     var prefs = null;
     try {
-      prefs = Components.classes['component://netscape/preferences'];
+      prefs = Components.classes['@mozilla.org/preferences;1'];
       prefs = prefs.getService();
       prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
     }
@@ -813,7 +813,7 @@ function InitCharsetMenuCheckMark()
   // try to get preferences service
   var prefs = null;
   try {
-    prefs = Components.classes['component://netscape/preferences'];
+    prefs = Components.classes['@mozilla.org/preferences;1'];
     prefs = prefs.getService();
     prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
   }
@@ -853,7 +853,7 @@ function GetCharsetUIString()
   var charset = msgCompose.compFields.GetCharacterSet();
   if (g_send_default_charset == null) {
     try {
-      prefs = Components.classes['component://netscape/preferences'];
+      prefs = Components.classes['@mozilla.org/preferences;1'];
       prefs = prefs.getService();
       prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
       g_send_default_charset = prefs.getLocalizedUnicharPref("mailnews.send_default_charset");
@@ -873,7 +873,7 @@ function GetCharsetUIString()
 
     if (g_charsetTitle == null) {
       try {
-        var ccm = Components.classes['component://netscape/charset-converter-manager'];
+        var ccm = Components.classes['@mozilla.org/charset-converter-manager;1'];
         ccm = ccm.getService();
         ccm = ccm.QueryInterface(Components.interfaces.nsICharsetConverterManager2);
         // get a localized string
@@ -1337,7 +1337,7 @@ function AttachFile()
 	currentAttachment = "";
 	//Get file using nsIFilePicker and convert to URL
     try {
-			var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
+			var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
 			fp.init(window, Bundle.GetStringFromName("chooseFileToAttach"), nsIFilePicker.modeOpen);
 			fp.appendFilters(nsIFilePicker.filterAll);
 			if (fp.show() == nsIFilePicker.returnOK) {
@@ -1592,7 +1592,7 @@ function LoadIdentity(startup)
         }
         
         //Setup autocomplete session, we can doit from here as it's use as a service
-        var session = Components.classes["component://netscape/autocompleteSession&type=addrbook"].getService(Components.interfaces.nsIAbAutoCompleteSession);
+        var session = Components.classes["@mozilla.org/autocompleteSession;1?type=addrbook"].getService(Components.interfaces.nsIAbAutoCompleteSession);
         if (session)
         {
             var emailAddr = currentIdentity.email;
@@ -1645,7 +1645,7 @@ var attachmentBucketObserver = {
       if (!dataObj) 
         return;
         
-      var fileURL = nsJSComponentManager.createInstance("component://netscape/network/standard-url", "nsIFileURL");
+      var fileURL = nsJSComponentManager.createInstance("@mozilla.org/network/standard-url;1", "nsIFileURL");
       fileURL.file = dataObj;
 	    AddAttachment(fileURL.spec);
     },

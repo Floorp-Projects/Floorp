@@ -28,13 +28,13 @@
 
 #include "nsILocale.h"
 
-// Define Progid and CID
+// Define Contractid and CID
 // {D85A17C1-AA7C-11d2-9B8C-00805F8A16D9}
 #define NS_STRINGBUNDLESERVICE_CID \
 { 0xd85a17c1, 0xaa7c, 0x11d2, \
   { 0x9b, 0x8c, 0x0, 0x80, 0x5f, 0x8a, 0x16, 0xd9 } }
 
-#define NS_STRINGBUNDLE_PROGID "component://netscape/intl/stringbundle"
+#define NS_STRINGBUNDLE_CONTRACTID "@mozilla.org/intl/stringbundle;1"
 %}
 
 [scriptable, uuid(D85A17C2-AA7C-11d2-9B8C-00805F8A16D9)]

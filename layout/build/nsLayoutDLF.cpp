@@ -525,16 +525,16 @@ RegisterTypes(nsIComponentManager* aCompMgr,
 {
   nsresult rv = NS_OK;
   while (*aTypes) {
-    char progid[500];
+    char contractid[500];
     char* contentType = *aTypes++;
-    PR_snprintf(progid, sizeof(progid),
-                NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "%s/%s",
+    PR_snprintf(contractid, sizeof(contractid),
+                NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "%s;1?type=%s",
                 aCommand, contentType);
 #ifdef NOISY_REGISTRY
-    printf("Register %s => %s\n", progid, aPath);
+    printf("Register %s => %s\n", contractid, aPath);
 #endif
     rv = aCompMgr->RegisterComponentSpec(kDocumentFactoryImplCID, "Layout",
-                                         progid, aPath, PR_TRUE, PR_TRUE);
+                                         contractid, aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) {
       break;
     }

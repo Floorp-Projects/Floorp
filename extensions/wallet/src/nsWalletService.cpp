@@ -181,11 +181,11 @@ void nsWalletlibService::Init()
   nsIDocumentLoader *docLoaderService;
 
   nsresult rv = nsServiceManager::GetService
-    (NS_OBSERVERSERVICE_PROGID, NS_GET_IID(nsIObserverService), (nsISupports**)&svc );
+    (NS_OBSERVERSERVICE_CONTRACTID, NS_GET_IID(nsIObserverService), (nsISupports**)&svc );
   if ( NS_SUCCEEDED( rv ) && svc ) {
     nsString  topic; topic.AssignWithConversion(NS_FORMSUBMIT_SUBJECT);
     rv = svc->AddObserver( this, topic.GetUnicode());
-    nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_PROGID, svc );
+    nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_CONTRACTID, svc );
   }
 
   // Get the global document loader service...  

@@ -233,7 +233,7 @@ extern "C" NS_WIDGET nsresult
 NSGetFactory(nsISupports* serviceMgr,
              const nsCID &aClass,
              const char *aClassName,
-             const char *aProgID,
+             const char *aContractID,
              nsIFactory **aFactory)
 {
   if (nsnull == aFactory) {

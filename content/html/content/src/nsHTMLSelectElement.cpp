@@ -925,7 +925,7 @@ nsHTMLSelectElement::SetOptionSelectedByIndex(PRInt32 aIndex, PRBool aIsSelected
     if (-1 != aIndex) {
       if (aIsSelected) {
         nsCOMPtr<nsISupportsPRInt32> thisVal;
-        res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_PROGID,
+        res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
 	                     nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(thisVal));
         if (NS_SUCCEEDED(res) && thisVal) {
           res = thisVal->SetData(aIndex);

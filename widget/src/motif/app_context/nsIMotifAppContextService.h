@@ -38,7 +38,7 @@
  { 0x90f55e52, 0x40eb, 0x11d3,                          \
   { 0xb2, 0x19, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 
-#define NS_MOTIF_APP_CONTEXT_SERVICE_PROGID "component://netscape/widget/motif/app_context"
+#define NS_MOTIF_APP_CONTEXT_SERVICE_CONTRACTID "@mozilla.org/widget/motif/app_context;1"
 
 class nsIMotifAppContextService : public nsISupports
 {

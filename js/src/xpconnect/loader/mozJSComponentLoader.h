@@ -31,7 +31,7 @@
 #ifndef XPCONNECT_STANDALONE
 #include "nsIPrincipal.h"
 #endif
-extern const char mozJSComponentLoaderProgID[];
+extern const char mozJSComponentLoaderContractID[];
 extern const char jsComponentTypeName[];
 
 /* 6bd13476-1dd2-11b2-bbef-f0ccb5fa64b6 (thanks, mozbot) */

@@ -51,7 +51,7 @@ nsFilePicker::nsFilePicker()
   mWnd = NULL;
   mUnicodeEncoder = nsnull;
   mUnicodeDecoder = nsnull;
-  mDisplayDirectory = do_CreateInstance("component://mozilla/file/local");
+  mDisplayDirectory = do_CreateInstance("@mozilla.org/file/local;1");
 }
 
 //-------------------------------------------------------------------------
@@ -331,7 +331,7 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
   if (mFile.IsEmpty())
       return NS_OK;
 
-  nsCOMPtr<nsILocalFile> file(do_CreateInstance("component://mozilla/file/local"));
+  nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
     
   NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
 
@@ -345,11 +345,11 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
 {
-  nsCOMPtr<nsILocalFile> file(do_CreateInstance("component://mozilla/file/local"));
+  nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
   NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
   file->InitWithPath(mFile);
 
-  nsCOMPtr<nsIFileURL> fileURL(do_CreateInstance("component://netscape/network/standard-url"));
+  nsCOMPtr<nsIFileURL> fileURL(do_CreateInstance("@mozilla.org/network/standard-url;1"));
   NS_ENSURE_TRUE(fileURL, NS_ERROR_FAILURE);
   fileURL->SetFile(file);
 
@@ -424,7 +424,7 @@ void nsFilePicker::GetFileSystemCharset(nsString & fileSystemCharset)
   nsresult rv;
 
   if (aCharset.Length() < 1) {
-    nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+    nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
 	  if (NS_SUCCEEDED(rv)) 
 		  rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
 
