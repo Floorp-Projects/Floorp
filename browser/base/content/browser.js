@@ -608,6 +608,8 @@ function updateGoMenu(goMenu)
     var res = builder.getResourceAtIndex(i);
     var url = res.Value;
     var titleRes = history.database.GetTarget(res, nameResource, true);
+    if (!titleRes)
+      continue;
     var titleLiteral = titleRes.QueryInterface(Components.interfaces.nsIRDFLiteral);
     beforeItem = constructGoMenuItem(goMenu, beforeItem, url, titleLiteral.Value);
   }
