@@ -1,0 +1,25 @@
+# 
+#           CONFIDENTIAL AND PROPRIETARY SOURCE CODE OF
+#              NETSCAPE COMMUNICATIONS CORPORATION
+# Copyright (C) 1996 Netscape Communications Corporation.  All Rights
+# Reserved.  Use of this Source Code is subject to the terms of the
+# applicable license agreement from Netscape Communications Corporation.
+# The copyright notice(s) in this Source Code does not indicate actual or
+# intended publication of this Source Code.
+#
+CORE_DEPTH = ../../..
+
+DEFINES += -DNSPR20 
+
+# MODULE public and private header  directories are implicitly REQUIRED.
+MODULE = security 
+
+CSRCS = \
+	dbck.c \
+	$(NULL)
+
+# The MODULE is always implicitly required.
+# Listing it here in REQUIRES makes it appear twice in the cc command line.
+REQUIRES = dbm seccmd
+
+PROGRAM = dbck
