@@ -101,7 +101,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         // We could be asked to modify the value of a property in the 
         // prototype. Since we can't add a property to a Java object,
         // we modify it in the prototype rather than copy it down.
-        if (members.has(name, false) || prototype == null)
+        if (prototype == null || members.has(name, false))
             members.put(name, javaObject, value, false);
         else
             prototype.put(name, prototype, value);
