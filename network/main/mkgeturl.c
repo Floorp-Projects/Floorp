@@ -4226,6 +4226,7 @@ NET_FreeURLStruct (URL_Struct * URL_s)
 	FREEIF(URL_s->window_chrome);
 	FREEIF(URL_s->refresh_url);
 	FREEIF(URL_s->wysiwyg_url);
+	FREEIF(URL_s->etag);
 	FREEIF(URL_s->origin_url);
 	FREEIF(URL_s->error_msg);
 
