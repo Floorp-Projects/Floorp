@@ -18,12 +18,9 @@
 # Rights Reserved.
 #
 # Contributor(s): 
-#     Daniel Veditz <dveditz@netscape.com>
-#     Douglas Turner <dougt@netscape.com>
-#     Samir Gehani <sgehani@netscape.com>
-#
+#      leaf nunes <leaf@mozilla.org>
 
-DEPTH		= ..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -31,30 +28,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpinstall
-DIRS		= public res src stub cleanup
 
-ifdef MOZ_INSTALLER
-DIRS		+= wizard/libxpnet
-ifdef MOZ_ENABLE_GTK
-DIRS		+= wizard/unix/src2
-endif
-ifeq ($(OS_ARCH),WINNT)
-DIRS		+= wizard/windows
-endif
-ifeq ($(OS_ARCH),OS2)
-DIRS		+= wizard/os2
-endif
-
-packages:
-	make -C packager
-
-installer: packages
-ifeq ($(OS_ARCH),Linux)
-	make -C packager/unix
-endif
-ifeq ($(OS_ARCH),WINNT)
-	make -C wizard/windows/builder
-endif
+installer:
+	$(PERL) $(srcdir)/deliver.pl -o $(DEPTH) -s $(topsrcdir)
 
 include $(topsrcdir)/config/rules.mk
 
