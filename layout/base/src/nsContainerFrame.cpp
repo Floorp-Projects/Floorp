@@ -45,16 +45,6 @@ nsContainerFrame::nsContainerFrame(nsIContent* aContent, nsIFrame* aParent)
 
 nsContainerFrame::~nsContainerFrame()
 {
-  // Delete our child frames before doing anything else. In particular
-  // we do all of this before our base class releases it's hold on the
-  // view.
-  for (nsIFrame* child = mFirstChild; child; ) {
-    nsIFrame* nextChild;
-     
-    child->GetNextSibling(nextChild);
-    child->DeleteFrame();
-    child = nextChild;
-  }
 }
 
 NS_IMETHODIMP
@@ -62,6 +52,25 @@ nsContainerFrame::SizeOf(nsISizeOfHandler* aHandler) const
 {
   aHandler->Add(sizeof(*this));
   nsContainerFrame::SizeOfWithoutThis(aHandler);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContainerFrame::DeleteFrame(nsIPresContext& aPresContext)
+{
+  // Delete our child frames before doing anything else. In particular
+  // we do all of this before our base class releases it's hold on the
+  // view.
+  for (nsIFrame* child = mFirstChild; child; ) {
+    nsIFrame* nextChild;
+     
+    child->GetNextSibling(nextChild);
+    child->DeleteFrame(aPresContext);
+    child = nextChild;
+  }
+
+  nsFrame::DeleteFrame(aPresContext);
+
   return NS_OK;
 }
 
@@ -502,7 +511,7 @@ nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*            aKidFrame,
       // parent is not this because we are executing pullup code)
       nsIFrame* parent;
       aKidFrame->GetGeometricParent(parent);
-      ((nsContainerFrame*)parent)->DeleteChildsNextInFlow(aKidFrame);
+      ((nsContainerFrame*)parent)->DeleteChildsNextInFlow(*aPresContext, aKidFrame);
     }
   }
   return status;
@@ -519,7 +528,7 @@ nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*            aKidFrame,
  * @return  PR_TRUE if successful and PR_FALSE otherwise
  */
 PRBool
-nsContainerFrame::DeleteChildsNextInFlow(nsIFrame* aChild)
+nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame* aChild)
 {
   NS_PRECONDITION(IsChild(aChild), "bad geometric parent");
 
@@ -536,7 +545,7 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIFrame* aChild)
 
   nextInFlow->GetNextInFlow(nextNextInFlow);
   if (nsnull != nextNextInFlow) {
-    parent->DeleteChildsNextInFlow(nextInFlow);
+    parent->DeleteChildsNextInFlow(aPresContext, nextInFlow);
   }
 
 #ifdef NS_DEBUG
@@ -605,7 +614,7 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIFrame* aChild)
 
   // Delete the next-in-flow frame and adjust its parents child count
   WillDeleteNextInFlowFrame(nextInFlow);
-  nextInFlow->DeleteFrame();
+  nextInFlow->DeleteFrame(aPresContext);
   parent->mChildCount--;
 
 #ifdef NS_DEBUG
