@@ -645,9 +645,9 @@ PRUint32 nsCRT::BufferHashCode(const char* s, PRUint32 len)
   return h;
 }
 
-PRInt32 nsCRT::atoi( const PRUnichar *string )
+PRInt32 nsCRT::atoi( const PRUnichar *aString )
 {
-  return atoi(string);
+  return ::atoi(NS_ConvertUCS2toUTF8(aString).get());
 }
 
 /**
