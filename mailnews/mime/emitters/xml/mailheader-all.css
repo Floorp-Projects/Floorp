@@ -1,0 +1,303 @@
+Subject:before {
+  content:  "Subject: ";
+}
+
+Subject {
+  display: block;
+  text-align:left; 
+}
+
+To {
+  display: block;
+  text-align:left; 
+}
+
+Return-Path {
+  display: block;
+  text-align:left; 
+}
+
+BCC {
+  display: block;
+  text-align:left; 
+}
+
+CC {
+  display: block;
+  text-align:left; 
+}
+
+Content-Base {
+  display: block;
+  text-align:left; 
+}
+
+Content-Location {
+  display: block;
+  text-align:left; 
+}
+
+Content-ID {
+  display: block;
+  text-align:left; 
+}
+
+Content-Description {
+  display: block;
+  text-align:left; 
+}
+
+Content-Disposition {
+  display: block;
+  text-align:left; 
+}
+
+Content-Encoding {
+  display: block;
+  text-align:left; 
+}
+
+Content-Length {
+  display: block;
+  text-align:left; 
+}
+
+Content-Name {
+  display: block;
+  text-align:left; 
+}
+
+Content-Transfer-Encoding {
+  display: block;
+  text-align:left; 
+}
+
+Content-Type {
+  display: block;
+  text-align:left; 
+}
+
+Date {
+  display: block;
+  text-align:left; 
+}
+
+Distribution {
+  display: block;
+  text-align:left; 
+}
+
+FCC {
+  display: block;
+  text-align:left; 
+}
+
+Followup-To {
+  display: block;
+  text-align:left; 
+}
+
+From {
+  display: block;
+  text-align:left; 
+}
+
+Lines {
+  display: block;
+  text-align:left; 
+}
+
+Message-ID {
+  display: block;
+  text-align:left; 
+}
+
+MIME-Version {
+  display: block;
+  text-align:left; 
+}
+
+Newsgroups {
+  display: block;
+  text-align:left; 
+}
+
+Organization {
+  display: block;
+  text-align:left; 
+}
+
+References {
+  display: block;
+  text-align:left; 
+}
+
+Reply-To {
+  display: block;
+  text-align:left; 
+}
+
+Resent-Comments {
+  display: block;
+  text-align:left; 
+}
+
+Resent-Date {
+  display: block;
+  text-align:left; 
+}
+
+Resent-From {
+  display: block;
+  text-align:left; 
+}
+
+Resent-Message-ID {
+  display: block;
+  text-align:left; 
+}
+
+Resent-Sender {
+  display: block;
+  text-align:left; 
+}
+
+Resent-To {
+  display: block;
+  text-align:left; 
+}
+
+Resent-CC {
+  display: block;
+  text-align:left; 
+}
+
+Sender {
+  display: block;
+  text-align:left; 
+}
+
+X-Mailer {
+  display: block;
+  text-align:left; 
+}
+
+X-Newsreader {
+  display: block;
+  text-align:left; 
+}
+
+X-Posting-Software {
+  display: block;
+  text-align:left; 
+}
+
+X-Mozilla-Status {
+  display: block;
+  text-align:left; 
+}
+
+X-Mozilla-News-Host {
+  display: block;
+  text-align:left; 
+}
+
+X-Mozilla-Draft-Info {
+  display: block;
+  text-align:left; 
+}
+
+X-UIDL {
+  display: block;
+  text-align:left; 
+}
+
+XREF {
+  display: block;
+  text-align:left; 
+}
+
+X-Sun-Charset {
+  display: block;
+  text-align:left; 
+}
+
+X-Sun-Content-Length {
+  display: block;
+  text-align:left; 
+}
+
+X-Sun-Content-Lines {
+  display: block;
+  text-align:left; 
+}
+
+X-Sun-Data-Description {
+  display: block;
+  text-align:left; 
+}
+
+X-Sun-Data-Name {
+  display: block;
+  text-align:left; 
+}
+
+X-Sun-Data-Type {
+  display: block;
+  text-align:left; 
+}
+
+X-Sun-Encoding-Info {
+  display: block;
+  text-align:left; 
+}
+
+X-Priority {
+  display: block;
+  text-align:left; 
+}
+
+X-Mozilla-PartURL {
+  display: block;
+  text-align:left; 
+}
+
+X-Mozilla-Draft-Info {
+  display: block;
+  text-align:left; 
+}
+
+X-Accept-Language {
+  display: block;
+  text-align:left; 
+}
+
+X-Mozilla-Status2 {
+  display: block;
+  text-align:left; 
+}
+
+X-Mailing-List {
+  display: block;
+  text-align:left; 
+}
+
+X-Mailing-Loop {
+  display: block;
+  text-align:left; 
+}
+
+Received {
+  display: block;
+  text-align:left; 
+}
+
+X-Loop {
+ display: block;
+ text-align: left;
+}
+
+Precedence {
+ display: block;
+ text-align: left;
+}

@@ -1,0 +1,13 @@
+Subject:before {
+  content:  "Subject: ";
+}
+
+Subject {
+  display: block;
+  text-align:left; 
+}
+
+headertag {
+  display: none;
+  text-align:left; 
+}
