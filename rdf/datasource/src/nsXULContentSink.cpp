@@ -287,19 +287,13 @@ XULContentSinkImpl::XULContentSinkImpl()
                                           kIRDFServiceIID,
                                           (nsISupports**) &gRDFService);
 
-        NS_VERIFY(NS_SUCCEEDED(rv), "unable to get RDF service");
-
-        NS_VERIFY(NS_SUCCEEDED(rv = gRDFService->GetResource(kURIRDF_child, &kRDF_child)),
-                  "unalbe to get resource");
-
-        NS_VERIFY(NS_SUCCEEDED(rv = gRDFService->GetResource(kURIRDF_instanceOf, &kRDF_instanceOf)),
-                  "unalbe to get resource");
-
-        NS_VERIFY(NS_SUCCEEDED(rv = gRDFService->GetResource(kURIRDF_type, &kRDF_type)),
-                  "unalbe to get resource");
-
-        NS_VERIFY(NS_SUCCEEDED(rv = gRDFService->GetResource(kURIXUL_element, &kXUL_element)),
-                  "unalbe to get resource");
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
+        if (NS_SUCCEEDED(rv)) {
+            gRDFService->GetResource(kURIRDF_child,      &kRDF_child);
+            gRDFService->GetResource(kURIRDF_instanceOf, &kRDF_instanceOf);
+            gRDFService->GetResource(kURIRDF_type,       &kRDF_type);
+            gRDFService->GetResource(kURIXUL_element,    &kXUL_element);
+        }
     }
 
 #ifdef PR_LOGGING
@@ -1334,10 +1328,9 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
         return rv;
     }
 
-    if (NS_FAILED(rv = rdf_Assert(mDataSource, rdfResource, kRDF_instanceOf, kXUL_element))) {
-        NS_ERROR("unable to mark resource as XUL element");
-        return rv;
-    }
+    rv = mDataSource->Assert(rdfResource, kRDF_instanceOf, kXUL_element, PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to mark resource as XUL element");
+    if (NS_FAILED(rv)) return rv;
 
     // Convert the container's namespace/tag pair to a fully qualified
     // URI so that we can specify it as an RDF resource.
