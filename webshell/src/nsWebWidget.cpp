@@ -83,7 +83,6 @@ public:
 
   virtual nsIDocument* GetDocument();
 
-  virtual void HackAppendContent();
   virtual void DumpContent(FILE* out);
   virtual void DumpFrames(FILE* out);
   virtual void DumpStyle(FILE* out);
@@ -624,21 +623,6 @@ nsresult WebWidgetImpl::CreateStyleSet(nsIDocument* aDocument, nsIStyleSet** aSt
     }
   }
   return rv;
-}
-
-void WebWidgetImpl::HackAppendContent()
-{
-#ifdef NS_DEBUG
-
-  if (nsnull != mPresShell) {
-    nsIDocument* doc = mPresShell->GetDocument();
-    if (nsnull != doc) {
-      NS_HackAppendContent(doc);
-      NS_RELEASE(doc);
-    }
-  }
-
-#endif
 }
 
 nsIWidget* WebWidgetImpl::GetWWWindow()

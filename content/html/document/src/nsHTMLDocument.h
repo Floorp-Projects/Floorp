@@ -45,15 +45,6 @@ public:
 protected:
   virtual void AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet);
 
-#ifdef NS_DEBUG
-public:
-  void HackAppendContent();
-
-protected:
-  nsresult HackAppendSimpleSpan(nsIContent* aContainer, const char* aTag,
-                                const char* aText);
-#endif
-
   class AggIHTMLDocument : public nsIHTMLDocument {
   public:
     AggIHTMLDocument();

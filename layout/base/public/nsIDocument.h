@@ -157,8 +157,4 @@ public:
 extern NS_LAYOUT nsresult
    NS_NewHTMLDocument(nsIDocument** aInstancePtrResult);
 
-// XXX temporary - it's going away!
-extern NS_LAYOUT void
-   NS_HackAppendContent(nsIDocument* aDoc);
-
 #endif /* nsIDocument_h___ */
