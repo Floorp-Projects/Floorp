@@ -1,0 +1,365 @@
+#! /bin/sh
+########################################################################
+#
+# /u/sonmi/bin/qa_stat - /u/svbld/bin/init/nss/qa_stat
+#
+# this script is supposed to automatically run QA for NSS on all required
+# Unix platforms
+#
+# parameters
+# ----------
+#	nssversion (supported: 30b, 31, tip)
+#	builddate (default - today)
+#
+# options
+# -------
+#	-y answer all questions with y - use at your own risk...ignores warnings
+#	-s silent (only usefull with -y)
+#	-h, -? - you guessed right - displays this text
+#	-d debug
+#	-f <filename> - write the (error)output to filename
+#	-m <mailinglist> - send filename to mailinglist (csl) only useful
+#		with -f
+#	-cron equivalient to -y -s -d -f $RESULTDIR/$HOST.qa_stat
+#
+########################################################################
+
+
+O_OPTIONS=ON
+
+. /u/sonmi/bin/header
+
+DOCDIR=/u/sonmi/doc
+
+Debug "NTDIST $NTDIST"
+Debug "UXDIST $UXDIST"
+Debug "TESTSCRIPTDIR $TESTSCRIPTDIR"
+Debug "RESULTDIR $RESULTDIR"
+
+############################### find_qa_systems ##########################
+# local shell function, tries to determine the QA operating system
+########################################################################
+find_qa_systems()
+{
+for w in `ls $RESULTDIR | grep \. | sed -e "s/\..*//" | sort -u`
+do
+	QA_OS=""
+	QA_RHVER=""
+	IS_64=""
+	IS_WIN=""
+
+	grep WINDOWS-OS-LINE ${RESULTDIR}/${w}.nssqa >>$TMP_PLATFORMLIST_FILE	#FIXME - if windows don't attempt an rsh
+	#w=`echo $d | sed -e "s/\..*//"`
+    QA_SYS=`rsh $w uname -sr`
+	echo $QA_SYS | grep Linux && QA_RHVER=`rsh $w cat /etc/redhat-release`
+	if [ -n "$QA_RHVER" ]
+	then
+		QA_OS=`echo $w $QA_RHVER | sed -e "s/Red Hat /RH /" -e "s/ release//"`
+	else
+		echo $QA_SYS | grep "SunOS 5.8" && \
+			IS_64=`rsh $w isainfo -v | grep 64 >/dev/null && echo 64 bit`
+		echo $QA_SYS | grep "HP" && \
+			IS_64=`rsh $w getconf KERNEL_BITS | grep 64 >/dev/null && \
+				echo 64 bit`
+		echo $QA_SYS | grep "AIX" && \
+			IS_64=`rsh $w lslpp -l | grep "bos.64bit"> /dev/null && \
+				echo 64 bit`
+		QA_OS=`echo "$w $QA_SYS $IS_64"`
+	fi
+	echo $QA_OS
+	echo $QA_OS | sed -e "s/ /_/g" >>$TMP_PLATFORMLIST_FILE	# use later for 
+															# missing list
+done
+
+}
+################################### set_files ##########################
+# local shell function, sets the name of the resultfile to:
+#	<filename> if option -f <filename>
+#	$RESULTDIR/result if write permission 
+#		(mozilla/tests_results/security/result)
+#	$HOME/resultNSS${NSSVER}-${BUILDDATE} if no write permission in $RESULTDIR
+########################################################################
+set_files()
+{
+	if [ $O_FILE = ON -a $O_CRON = OFF ]	# if -f was specified write there 
+	then
+		RFILE=$FILENAME	
+	else
+		RFILE=${RESULTDIR}/result
+		#RFILE=${RESULTDIR}/result.$$
+		if [ ! -w $RESULTDIR ]
+		then
+			RFILE=$HOME/resultNSS${NSSVER}-${BUILDDATE}
+			Debug "Using alternate resultfile $RFILE"
+		elif [ $O_CRON = ON ]
+		then
+			 find ${RESULTDIR} -exec chmod a+rw {} \;	#FIXME - umask 
+							#doesn't seem to work - this is a tmp workaround
+		fi
+	
+		if [ -d $RESULTDIR ]
+		then
+			cd $RESULTDIR
+		else
+			glob_usage "$RESULTDIR does not exist"
+		fi
+	fi
+	TMP_E_FILE=${RFILE}.E$$
+	TMP_P_FILE=${RFILE}.P$$
+	TMP_A_FILE=${RFILE}.A$$
+	TMP_PLATFORMLIST_FILE=${RFILE}.Q$$
+	HTML_FILE=${RFILE}.html
+	TMPFILES="$TMPFILES  $TMP_E_FILE $TMP_P_FILE" 
+	FILENAME=$RFILE		#we might want to mail it...later switch to html file
+	O_FILE="ON"
+	rm $HTML_FILE $RFILE $TMP_A_FILE $TMP_E_FILE $TMP_P_FILE 2>/dev/null
+	cp $DOCDIR/QAheader.html $HTML_FILE
+}
+
+################################# html_eot #########################
+# local shell function, writes end of the html table
+########################################################################
+html_eot()
+{
+echo '</table>'
+}
+
+################################# html_footer #########################
+# local shell function, writes end of the html body
+########################################################################
+html_footer()
+{
+
+echo '</body>'
+echo '</html>'
+
+}
+
+################################# setQAsysvars #########################
+# local shell function, sets system specific variables
+########################################################################
+setQAsysvars()
+{
+	if [ "$MACHINE" != "0" ]
+	then
+		TESTDATE=`ls -ld $MACHINE | awk '{ print $5, $6, $7 }'`
+		TESTNUMBER=`echo $MACHINE | sed -e 's/.*\.//'`
+		SYSNAME=`echo $MACHINE | sed -e 's/\..*//'`
+		Debug "SYSNAME= $SYSNAME"
+		#QA_SYS_OS=`rsh $SYSNAME uname -sr` #rsh never returns???
+		echo $SYSNAME >>/tmp/qasys
+		QA_SYS_OS=`grep $SYSNAME $TMP_A_FILE | sed -e "s/$SYSNAME //"`
+		Debug "QA_SYS_OS= $QA_SYS_OS"
+		#QA_SYS_OS="SunOS 5.8"
+	fi
+	BUILD_SYS=`echo $BUILDPLATFORM | sed -e 's/\.OBJ//' -e 's/_DBG/ Debug/' \
+			-e 's/_OPT/ Optimized/'  -e 's/_64/ 64bit/' -e 's/_glibc_PTH//' \
+			-e 's/_/ /'`
+	Debug "BUILD_SYS=$BUILD_SYS"
+	if [ -f "${RESULTDIR}/${MACHINE}/results.html" ] 
+	then
+		RESULT="http://cindercone${RESULTDIR}/${MACHINE}/results.html"
+		Debug "RESULT=$RESULT"
+	else
+        RESULT="0"
+        Debug "no resultfile"
+	fi
+
+	if [ -f "${RESULTDIR}/${MACHINE}/output.log" ] 
+	then
+		LOG="http://cindercone${RESULTDIR}/${MACHINE}/output.log"
+		Debug "LOG=$LOG"
+	else
+		LOG="0"
+		Debug "no logfile"
+	fi
+}
+
+HTML_ERRORCOLOR=\"#FF0000\"
+HTML_ERRORMSG=Failed
+
+HTML_MISSINGCOLOR=\"#FFFFCC\"
+HTML_MISSINGMSG=Missing
+
+HTML_PASSEDCOLOR=\"#66FF99\"
+HTML_PASSEDMSG=Passed
+################################# html_line() #########################
+# local shell function, writes a line in the html table
+########################################################################
+html_line()
+{
+echo '<tr NOSAVE>'
+echo '<td NOSAVE>'$BUILD_SYS'</td>'
+echo ''
+echo '<td NOSAVE>'$QA_SYS_OS'</td>'
+echo ''
+echo '<td>'$SYSNAME'</td>'
+#echo '<td>'$SYSNAME $TESTNUMBER $TESTDATE'</td>'
+echo ''
+if [ "$1" = "failed" ]
+then
+	echo '<td BGCOLOR='$HTML_ERRORCOLOR' NOSAVE><b>'$HTML_ERRORMSG'</b></td>'
+elif [ "$1" = "passed" ]
+then
+	echo '<td BGCOLOR='$HTML_PASSEDCOLOR' NOSAVE>'$HTML_PASSEDMSG'</td>'
+else
+	echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE>'$HTML_MISSINGMSG'</td>'	
+fi
+
+if [ "$RESULT" = "0" ]
+then
+	echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE>'$HTML_MISSINGMSG'</td>'
+else
+	echo '<td>&nbsp;<a href="'$RESULT'">result</a>&nbsp;</td>'
+fi
+echo ''
+if [ "$LOG" = "0" ]
+then
+	echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE>'$HTML_MISSINGMSG'</td>'
+else
+	echo '<td>&nbsp;<a href="'$LOG'">log</a>&nbsp;</td>'
+fi
+echo ''
+if [ "$1" = "failed" ]
+then
+	echo '<td>&nbsp;<a href="#errorlist">error</a>&nbsp;</td>'
+else
+	echo '<td></td>'
+fi
+echo '<td>'$TESTDATE $TESTNUMBER'</td>'
+echo '</tr>'
+
+}
+
+################################# qa_errorlist #########################
+# local shell function, finds problems in the previously run QA
+########################################################################
+qa_errorlist()
+{
+	if [ "$1" = "1" ]
+	then
+		echo "	R e s u l t		E r r o r l i s t"
+		lline
+	fi
+
+	#FIXME - take bad password out!!!!
+	grep red */results.html | grep -v 'bad password' |
+		sed -e 's/.results.html:<TR><TD>/ /' -e 's/<[^>]*>/ /g'
+	if [ "$1" = "1" ]
+	then
+		lline
+		echo "	O u t p u t		E r r o r / W a r n i n g l i s t"
+		lline
+	fi
+
+	grep 'cache hits; .* cache misses, .* cache not reusable' */output.log | 
+		grep -v selfserv |
+		grep -v '0 cache hits; 1 cache misses, 0 cache not reusable' | 
+		grep -v '0 cache hits; 0 cache misses, 0 cache not reusable' | 
+		grep -v ' cache hits; 1 cache misses, 0 cache not reusable'
+		#grep -v '999 cache hits; 1 cache misses, 0 cache not reusable'
+	
+	if [ "$1" = "1" ]
+	then
+		lline
+		echo "	C o r e l i s t "
+		lline
+	fi
+	
+	find . -name core -print 2>/dev/null
+
+}
+
+platformlist()
+{
+	lline
+	echo "	P l a t f o r m l i s t "
+	
+	grep Platform */results.html | 
+		sed -e 's/.results.html:<H4>Platform:/	/' \
+			-e 's/<BR>//' |
+	while read MACHINE BUILDPLATFORM
+	do
+		grep $MACHINE $1 >/dev/null
+		ret=$?
+		setQAsysvars
+		if [ $ret -eq 0 ]
+		then
+			echo "Failed $MACHINE $BUILDPLATFORM"
+			html_line failed >>$HTML_FILE
+			#echo "1 $MACHINE $BUILDPLATFORM Failed 2" 
+		else
+			echo "Passed $MACHINE $BUILDPLATFORM"
+			html_line passed >>$HTML_FILE
+			#echo "1 $MACHINE $BUILDPLATFORM passed 2"
+		fi
+	done 
+
+}
+
+############################ check_platforms ###########################
+# local shell function, finds out if we ran on all required platforms
+########################################################################
+check_platforms()
+{
+	lline
+	echo "	M i s s i n g  P l a t f o r m s"
+	lline
+	QA_MISSING="QA report missing"
+	MACHINE="0"
+
+	for BUILDPLATFORM in `cat $TESTSCRIPTDIR/platformlist`
+	do
+		grep $BUILDPLATFORM $TMP_PLATFORMLIST_FILE > /dev/null || {
+			echo "$BUILDPLATFORM not tested: $QA_MISSING" >>$TMP_P_FILE
+			setQAsysvars
+			html_line missing >>$HTML_FILE
+
+
+		}
+	done
+}
+
+lline()
+{
+	echo
+	echo "------------------------------------------------------------------"
+	echo
+}
+
+header()
+{
+	lline
+	echo "QA results for NSS $NSSVER builddate $QAYEAR $BUILDDATE "
+	echo "today's date `date`"
+	lline
+	echo "testing in $RESULTDIR"
+}
+
+set_files
+
+find_qa_systems >$TMP_A_FILE 2>/dev/null
+
+#header > $RFILE
+
+qa_errorlist 1 > $TMP_E_FILE
+
+cat $TMP_E_FILE
+
+platformlist $TMP_E_FILE > $RFILE
+
+cat $RFILE
+
+echo "" >$TMP_P_FILE
+
+check_platforms $RFILE 
+
+html_eot >>$HTML_FILE
+
+echo '<a NAME="errorlist"></a>' >> $HTML_FILE
+qa_errorlist 2  | sed -e "s/^/<br>/" >>$HTML_FILE
+
+html_footer >>$HTML_FILE
+
+FILENAME=$HTML_FILE		#we might want to mail it...
+Exit

@@ -1,0 +1,82 @@
+#! /bin/perl
+
+########################################################################
+#
+# /u/sonmi/bin/path_uniq
+#
+# this script makes components of a PATH like string unique cand prints
+# it to stdout
+#
+# parameters
+# ----------
+#	PATH
+#
+# options
+# -------
+# 	-d delimiter - default : 
+#
+# usefull enhancements: in the usage part, try to guess what was meant as 
+# a path and echo it to stdout to not break for PATHs with blanks
+#
+########################################################################
+
+sub usage {
+	print STDERR "usage $0 [-d <delimiter>] PATH\n";
+	print STDERR "	this script makes components of the PATH unique, if you\n";
+	print STDERR "	pass in a searchpath A:B:C:A:B:E it will print A:B:C:E to\n";
+	print STDERR "	the stdout\n";
+	print STDERR "	the parameters you gave were: ";
+	for ( $i = 0; $i <= $#ARGV; $i++ ) {
+		print STDERR "		$ARGV[$i]\n";
+	}
+	exit ;
+}
+
+
+$i = 0;
+$j = 0;
+$delimiter = ":";
+$searchpath = "";
+@pathcomponents;
+$found=0;
+$newpath="";
+
+
+if ( $ARGV[0] eq '-d' ) {
+	if ( $#ARGV != 2 ) {
+		usage;
+	}
+	$delimiter = $ARGV[1];
+	$searchpath = $ARGV[2];
+} else {
+	if ( $#ARGV != 0 ) {
+		usage;
+	}
+	$searchpath = $ARGV[0];
+}
+
+@pathcomponents=split($delimiter, $searchpath);
+
+
+for ( $i = 0; $i <= $#pathcomponents; $i++ ) {
+	$found=0;
+	for ( $j = 0; $j < $i; $j++ ) {
+		if ( $pathcomponents[$j] eq $pathcomponents[$i] ) {
+			#print "$i and $j match - $pathcomponents[$i] - $pathcomponents[$j]\n";
+			$found=1;
+			last;
+		}
+	}
+	if ( $found == 0 ) {
+		#print "$pathcomponents[$i]:";
+		if ($i == 0) {
+			$newpath = $pathcomponents[$i];
+		} else {
+			$newpath=join($delimiter, $newpath,$pathcomponents[$i]);
+		}
+	}
+}
+print "$newpath\n";
+exit;
+
+

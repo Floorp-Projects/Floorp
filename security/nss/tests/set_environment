@@ -1,0 +1,169 @@
+#! /bin/sh
+
+########################################################################
+#
+# /u/sonmi/bin/cron_environment
+#
+# sourced from the header if running from cron to get the full environment
+# to run nssqa	
+#
+# This is derived from the .cshrc file for the svbld account.  
+#
+########################################################################
+
+if [ -z "$HOME" ] 
+then
+	HOME=/u/svbld
+fi
+if [ -z "$QASCRIPT_DIR" ]
+then
+    QASCRIPT_DIR=`dirname $0`
+fi
+
+
+#FIXME - where do we need the OLDPATH
+OLDPATH="$PATH"
+PATH=.:$HOME/bin:/tools/ns/bin:/bin:/usr/bin:/usr/sbin:/usr/ccs/bin:/usr/dist/local/exe:/usr/bin/X11:/usr/audio/bin:/u/sonmi/bin:$PATH
+
+CVSROOT=:pserver:svbld@cvsserver:/m/src
+
+os_name=`uname -s`
+os_version=`uname -r`
+os_full=""
+
+if [ -f /u/svbld/bin/nsarch  ]
+then
+	os_full=`/u/svbld/bin/nsarch -f`	#FIXME
+fi
+
+MANPATH=/usr/share/man:/usr/openwin/man:/usr/local/man
+
+export CVSROOT HOME os_name os_version os_full MANPATH
+
+
+if [ $os_name = "HP-UX" ]
+then
+	PATH=$PATH:/usr/local/bin:/opt/aCC/bin:/usr/local/bin/audio:/tools/ns/bin:/etc:/usr/contrib/bin:/usr/contrib/bin/X11:/usr/local/hpux/bin:/nfs/iapp1/hphome/bin:/etc
+elif [ $os_name = "SunOS" ]
+then
+	XAPPLRESDIR=/usr/openwin/lib/app-defaults:/usr/local/lib/X11/app-defaults
+	OPENWINHOME=/usr/openwin
+	LD_LIBRARY_PATH=$OPENWINHOME/lib
+	PATH=/tools/ns/bin:$PATH:/opt/SUNWspro/bin:/usr/bin/X11:/usr/openwin/bin:/usr/openwin/demo
+	if [ $os_version = "5.8" -o $os_version = "5.7" ]
+	then
+		PATH=$PATH:/tools/ns/workshop-5.0/bin
+	else
+		PATH=$PATH:/tools/ns/workshop-4.0/bin
+	fi
+	PATH=$PATH:/usr/ccs/bin:/usr/ucb/bin:/opt/SUNWwabi/bin:/usr/local/bin:/tools/ns/bin:/etc:/tools/contrib/bin
+	PATH=/usr/ucb:/h/tortoise/export/share/builds/tools/sparc_sun_solaris2.5.1/perl5.004/bin:$PATH
+	export XAPPLRESDIR  OPENWINHOME LD_LIBRARY_PATH
+elif [ $os_name = "IRIX" ]
+then
+	PATH=$PATH:/tools/ns/bin:/usr/local/bin:/etc:/usr/bsd
+	MANPATH=/tools/ns/man:/usr/local/man
+elif [ $os_name = "IRIX64" ]
+then
+	PATH=$PATH:/tools/ns/bin:/usr/local/bin:/etc:/usr/bsd
+	MANPATH=/tools/ns/man:/usr/local/man
+elif [ $os_name = "Linux" ]
+then
+	PATH=/lib:/usr/lib:/bin:/sbin:/usr/bin:/usr/sbin:$PATH
+elif [ $os_name = "AIX" ]
+then
+	PATH=$PATH:/tools/contrib/bin:/usr/local/bin 
+	TERM=vt100
+	export TERM
+elif [ $os_name = "OSF1" ]
+then
+	PATH=/h/tortoise/export/share/builds/tools/alpha_dec_osf4.0/perl5.004/bin:$PATH:/usr/local/bin
+fi
+
+if [ "$os_full" = "HPUX 11.00" ]
+then
+	PATH=/h/tortoise/export/share/builds/tools/hppa1.1_hp_hpux11.00/perl5.004/bin:$PATH
+elif [ "$os_full" = "HPUX 10.10" ]
+then
+	PATH=/h/tortoise/export/share/builds/tools/hppa1.1_hp_hpux10.10/perl5.004/bin:$PATH
+elif [ "$os_full" = "AIX 4.1.4.0" ]
+then
+	PATH=/h/tortoise/export/share/builds/tools/rs6000_ibm_aix3.2.5/perl5.004/bin:$PATH
+elif [ "$os_full" = "AIX 4.1.5.0" ]
+then
+	PATH=/h/tortoise/export/share/builds/tools/rs6000_ibm_aix3.2.5/perl5.004/bin:$PATH
+elif [ "$os_full" = "AIX 4.2.1.0" ]
+then
+	PATH=/h/tortoise/export/share/builds/tools/rs6000_ibm_aix4.1/perl5.004/bin:$PATH
+elif [ "$os_name" = "IRIX" ]
+then
+	PATH=/tools/ns-arch/soft/perl-5.004_04/run/default/mips_sgi_irix5.3/bin:$PATH
+elif [ "$os_name" = "IRIX64" ]
+then
+	PATH=/tools/ns-arch/soft/perl-5.004_04/run/default/mips_sgi_irix5.3/bin:$PATH
+fi
+
+O_CYGNUS=OFF
+O_MKS=OFF
+O_WIN=OFF
+
+if [ "$os_name" = "CYGWIN_NT-4.0" -o \
+	"$os_name" = "CYGWIN_NT-5.0" -o \
+	"$os_name" = "CYGWIN_95-4.0" -o \
+	"$os_name" = "CYGWIN_98-4.10" ]
+then
+	#FIXME net use, mount the neccessary pnetwork drives and partitiones first
+	#FIXME - take MKS out of the PATH
+	os_full=$os_name
+	os_name="Windows"
+	O_CYGNUS=ON
+	O_WIN=ON
+	OLDPATH=`echo "$OLDPATH" | sed -e 's/\\\/\//g'`
+	PATH="`dirname $0`:.:/cygdrive/c/cygwin/bin:/cygdrive/z/nstools/bin:/cygdrive/z/nstools/perl5:/cygdrive/z/bin:/cygdrive/c/WINNT/System32:/cygdrive/c/WINNT"
+#:$OLDPATH:
+	RM=/cygdrive/c/cygwin/bin/rm.exe	#FIXME - in case we cant cporrect 
+										#these with the PATH alone
+	PATH=`perl $QASCRIPT_DIR/path_uniq "$PATH"`
+elif [ "$os_name" = "Windows_95" -o \
+	"$os_name" = "Windows_NT" -o \
+	"$os_name" = "WINNT" -o \
+	"$os_name" = "Windows_98" ]
+then
+	#FIXME net use, mount the neccessary pnetwork drives and partitiones first
+	#OLDPATH=`echo "$OLDPATH" | sed -e 's/\\\/\//g'` FIXME - MKS shell 
+			# interprets \bin as <backspace>in...
+ 	PATH=`echo $SHELL | sed -e "s/.ksh.exe//g"  -e "s/.sh.exe//g"`
+	PATH="Z:/nstools/bin;Z:/nstools/perl5;z:/bin;$PATH"
+
+	if [  "$os_name" = "Windows_NT" -o \
+		"$os_name" = "WINNT" ]
+	then
+		PATH="${PATH};C:/WINNT/System32;C:/WINNT;.;"
+	fi
+	PATH="`dirname $0`;$PATH"
+	
+	PATH=`perl $QASCRIPT_DIR/path_uniq -d ';' "$PATH"`
+	echo $PATH
+	os_full=$os_name
+	os_name="Windows"
+	O_MKS=ON
+	O_WIN=ON
+	
+else
+	EDITOR=vi
+	EMACSLOADPATH=/u/svbld/emacs
+	PYTHONPATH=.:/tools/ns/lib/python1.4
+	PAGER=less
+	XMCD_LIBDIR=/usr/local/lib/xmcd
+	DISPLAY=:0.0
+	PATH=`$QASCRIPT_DIR/path_uniq "$PATH"`
+fi
+
+BASEPATH=$PATH	# in  case we we set and reset DIST directories the PATH 
+				# needs to change accordingly
+export PATH EDITOR EMACSLOADPATH PYTHONPATH PAGER XMCD_LIBDIR DISPLAY MANPATH os_full os_name BASEPATH
+
+umask 022
+
+system=`uname -n`		# name of this system.
+
