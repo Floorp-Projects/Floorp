@@ -18,7 +18,10 @@
 
 #include <stdio.h>
 #include <assert.h>
+
+#ifdef XP_PC
 #include <windows.h>
+#endif
 
 #include "plstr.h"
 
