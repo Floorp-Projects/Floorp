@@ -116,7 +116,7 @@ public: // typesafe refcounting inlines calling inherited morkNode methods
 |*/
 #define morkStore_kGroundColumnSpace 'c' /* for mStore_GroundColumnSpace*/
 #define morkStore_kColumnSpaceScope ((mork_scope) 'c') /*kGroundColumnSpace*/
-#define morkStore_kGroundAtomSpace 'a' /* for mStore_GroundAtomSpace*/
+#define morkStore_kValueSpaceScope ((mork_scope) 'v')
 #define morkStore_kStreamBufSize (8 * 1024) /* okay buffer size */
 
 #define morkStore_kReservedColumnCount 0x20 /* for well-known columns */
@@ -167,6 +167,9 @@ public: // state is public because the entire Mork system is private
 
   // we alloc a max size book atom to reuse space for atom map key searches:
   morkMaxBookAtom  mStore_BookAtom; // staging area for atom map searches
+  
+  mork_bool        mStore_CanAutoAssignAtomIdentity;
+  mork_u1          mStore_Pad[ 3 ]; // for u4 alignment
  
 public: // coping with any changes to store token slots above:
  
@@ -229,7 +232,8 @@ public: // dynamic type identification
 public: // typing
   static void NonStoreTypeError(morkEnv* ev);
   static void NilStoreFileError(morkEnv* ev);
-
+  static void CannotAutoAssignAtomIdentityError(morkEnv* ev);
+  
 public: //  store utilties
   
   morkAtom* YarnToAtom(morkEnv* ev, const mdbYarn* inYarn);
