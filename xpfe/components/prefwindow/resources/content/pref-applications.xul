@@ -23,7 +23,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-applications.dtd" >
 
-<xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="return StartUp('Applications');"  title="&window.title;">
 
@@ -69,4 +69,4 @@
 </box>
 
 </html:div>
-</xul:window>
+</window>
