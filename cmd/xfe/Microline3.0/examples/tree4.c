@@ -36,6 +36,7 @@
 
 void rowExpand();
 void rowCollapse();
+void rowDelete();
 void cellSelect();
 
 Widget grid;
@@ -91,6 +92,7 @@ char *argv[];
 
 	XtAddCallback(tree, XmNexpandCallback, rowExpand, NULL);
 	XtAddCallback(tree, XmNcollapseCallback, rowCollapse, NULL);
+    XtAddCallback(tree, XmNdeleteCallback, rowDelete, NULL);
 	XtAddCallback(tree, XmNselectCallback, cellSelect, NULL);
 
 	/* Add a Grid to the right of the Form and set cell defaults */
@@ -204,33 +206,36 @@ XtPointer clientData, callData;
 	int i, j, level, rows;
 
 	/* Collapse the row by deleting the rows in the tree which */
-	/* are children of the collapsed row.  We also need to free */
-	/* the path contained in the rowUserData of the rows deleted */
+	/* are children of the collapsed row. */
 	cbs = (XmLGridCallbackStruct *)callData;
+
+    XmLTreeDeleteChildren(w, cbs->row);
+}
+
+void rowDelete(w, clientData, callData)
+Widget w;
+XtPointer clientData, callData;
+{
+    /* Free the path contained in the rowUserData of the rows deleted */
+
+	XmLGridCallbackStruct *cbs;
+	XmLGridRow row;
+	char *path;
+
+	cbs = (XmLGridCallbackStruct *)callData;
+
+ 	if (cbs->rowType != XmCONTENT || cbs->reason != XmCR_DELETE_ROW)
+		return;
+
 	row = XmLGridGetRow(w, XmCONTENT, cbs->row);
+
 	XtVaGetValues(w,
 		XmNrowPtr, row,
-		XmNrowLevel, &level,
+		XmNrowUserData, &path,
 		NULL);
-	XtVaGetValues(w,
-		XmNrows, &rows,
-		NULL);
-	i = cbs->row + 1;
-	while (i < rows)
-	{
-		row = XmLGridGetRow(w, XmCONTENT, i);
-		XtVaGetValues(w,
-			XmNrowPtr, row,
-			XmNrowLevel, &j,
-			XmNrowUserData, &path,
-			NULL);
-		if (j <= level)
-			break;
-		free(path);
-		i++;
-	}
-	j = i - cbs->row - 1;
-	XmLGridDeleteRows(w, XmCONTENT, cbs->row + 1, j);
+
+    if (path)
+        free(path);
 }
 
 void cellSelect(w, clientData, callData)
@@ -247,7 +252,7 @@ XtPointer clientData, callData;
 
 	/* Retrieve the directory selected */
 	cbs = (XmLGridCallbackStruct *)callData;
-	if (cbs->rowType != XmCONTENT)
+ 	if (cbs->rowType != XmCONTENT)
 		return;
 	row = XmLGridGetRow(w, XmCONTENT, cbs->row);
 	XtVaGetValues(w,
