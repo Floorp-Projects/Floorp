@@ -21,8 +21,11 @@
  */
 
 #include "nsScreenMac.h"
+#if TARGET_CARBON
+#include <MacWindows.h>
+#else
 #include <Menus.h>
-
+#endif
 
 nsScreenMac :: nsScreenMac ( GDHandle inScreen )
   : mScreen(inScreen)
@@ -64,7 +67,12 @@ NS_IMETHODIMP
 nsScreenMac :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
 {
   Rect adjustedRect;
+  
+#if TARGET_CARBON
+  ::GetAvailableWindowPositioningBounds ( mScreen, &adjustedRect );
+#else
   SubtractMenuBar ( (**mScreen).gdRect, &adjustedRect );
+#endif
 
   *outLeft = adjustedRect.left;
   *outTop = adjustedRect.top;  
@@ -95,6 +103,7 @@ nsScreenMac :: GetColorDepth(PRInt32 *aColorDepth)
 } // GetColorDepth
 
 
+#if !TARGET_CARBON
 
 //
 // SubtractMenuBar
@@ -112,3 +121,4 @@ nsScreenMac :: SubtractMenuBar ( const Rect & inScreenRect, Rect* outAdjustedRec
     outAdjustedRect->top += ::GetMBarHeight();
 }
 
+#endif
