@@ -5,8 +5,8 @@
 # Util.tst - simple regression tests for the Util.pm module
 
 
-# $Revision: 1.2 $ 
-# $Date: 2000/09/22 14:56:14 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/11/09 19:13:17 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/util.tst,v $ 
 # $Name:  $ 
@@ -155,6 +155,17 @@ sub extract_html_chars_tst {
 }
 
 
+sub fix_time_format_tst {
+
+( '973724041' == fix_time_format('11/8/2000 17:54:01') ) || die();
+( '973724041' == fix_time_format('11/08/2000    17:54:1\n') ) || die();
+
+( '973724041' == fix_time_format('973724041') ) || die();
+
+( fix_time_format('foobar') ) && die();
+
+  return 1;
+}
 
 sub is_time_valid_tst {
 
@@ -240,6 +251,7 @@ sub median_tst {
   extract_digits_tst();
   extract_user_tst();
   extract_html_chars_tst();
+  fix_time_format_tst();
   is_time_valid_tst();
 
   uniq_tst();
