@@ -1028,10 +1028,9 @@ nsMsgAccountManager::LoadAccounts()
   
   if (NS_FAILED(rv) || !accountList || !accountList[0]) {
 #ifdef DEBUG_ACCOUNTMANAGER
-    printf("No accounts. I'll try to migrate 4.x prefs..\n");
+    printf("No accounts.\n");
 #endif
-    rv = UpgradePrefs();
-    return rv;
+    return NS_OK;
   }
 
     /* parse accountList and run loadAccount on each string, comma-separated */
