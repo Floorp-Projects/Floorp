@@ -2074,7 +2074,7 @@ net_NuCacheLoad (ActiveEntry * cur_entry)
         {
             cur_entry->URL_s->error_msg = NET_ExplainErrorDetails(MK_OUT_OF_MEMORY);
             cur_entry->status = MK_OUT_OF_MEMORY;
-            return (cur_entry->status);
+            return cur_entry->status;
         }
 
         cur_entry->protocol = NU_CACHE_TYPE_URL;
@@ -2088,6 +2088,16 @@ net_NuCacheLoad (ActiveEntry * cur_entry)
         NET_SetCallNetlibAllTheTime(cur_entry->window_id, "nucache");
         cur_entry->format_out = CLEAR_CACHE_BIT(cur_entry->format_out);
         FE_EnableClicking(cur_entry->window_id);
+        
+        if (0==cur_entry->format_out) 
+        {
+            /* This means that this is a CACHE_ONLY request and shouldn't 
+             * be getting read from memory anyway. So mark it as not present in memory
+             * and return as such. */
+		    cur_entry->status = MK_OBJECT_NOT_IN_CACHE;
+            return cur_entry->status;
+        }
+
         /* Build the stream to read data from */
         con_data->stream = NET_StreamBuilder(cur_entry->format_out, cur_entry->URL_s, cur_entry->window_id);
         if(!con_data->stream)
@@ -2096,7 +2106,7 @@ net_NuCacheLoad (ActiveEntry * cur_entry)
             PR_DELETE(con_data);
             cur_entry->URL_s->error_msg = NET_ExplainErrorDetails(MK_UNABLE_TO_CONVERT);
             cur_entry->status = MK_UNABLE_TO_CONVERT;
-            return (cur_entry->status);
+            return cur_entry->status;
         }
 
         if (!cur_entry->URL_s->load_background)
