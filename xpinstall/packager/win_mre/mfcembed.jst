@@ -34,13 +34,6 @@ function registerKeys()
   winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
 
   createRootRegKey(winreg);
-
-  subkey = regRootKey + "\\$UserAgent$";
-  err    = winreg.setValueString(subkey, "Version", "1.0");
-  tmpstr = new String(fProgram);
-  err    = winreg.setValueString(subkey, "MreHome", tmpstr.substring(0, tmpstr.length-1));
-  err    = winreg.setValueString(subkey, "MreComponentsDir", fProgram + "Components");
-
   registerMainKeys(winreg);
 }
 
@@ -103,6 +96,7 @@ var srDest;
 var err;
 var err2;
 var fProgram;
+var fSubdir;
 var fWindowsSystem;
 var fileComponentRegStr;
 var fileComponentReg;
@@ -111,10 +105,10 @@ var fileToRegister;
 var regRootKey;
 
 // So far the only argument passed in is the root path into the Windows registry.
-regRootKey = new String(Install.arguments);
+regRootKey = new String("Software\\Mozilla\\MFCEmbed");
 
 srDest = $SpaceRequired$:bin;
-err    = initInstall("$ProductName$", "MRE", "$Version$"); 
+err    = initInstall("$ProductName$", "MFCEmbed", "$Version$"); 
 logComment("initInstall: " + err);
 
 fProgram  = getFolder("Program");
@@ -126,11 +120,25 @@ if(verifyDiskSpace(fProgram, srDest))
 
   err = addDirectory("",
                      "",
-                     "mre",              // dir name in jar to extract 
+                     "bin",         // dir name in jar to extract 
+                     fProgram,      // Where to put this file (Returned from GetFolder) 
+                     "",            // subdir name to create relative to fProgram
+                     true);         // Force Flag 
+  logComment("addDirectory() of Program returned: " + err);
+
+  err = addDirectory("",
+                     "",
+                     "mre_app_support",  // dir name in jar to extract 
                      fProgram,           // Where to put this file (Returned from GetFolder) 
                      "",                 // subdir name to create relative to fProgram
                      true);              // Force Flag 
   logComment("addDirectory() of Program returned: " + err);
+
+  fSubdir = getFolder("Program", "plugins");
+  File.dirCreate(fSubdir);
+
+  fSubdir = getFolder("Program", "components");
+  File.dirCreate(fSubdir);
 
   // check return value
   if( err == SUCCESS )
