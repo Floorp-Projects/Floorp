@@ -51,7 +51,7 @@
 #include "nsCOMPtr.h"
 #include "nsStyleChangeList.h"
 
-#define NORMAL_DRAG_HANDLING 1
+#define NORMAL_DRAG_HANDLING 1  // remove this to simulate a start-drag event.
 #if !NORMAL_DRAG_HANDLING
 #include "nsWidgetsCID.h"
 #include "nsIDragService.h"
