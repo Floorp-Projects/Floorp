@@ -199,8 +199,8 @@ sub GetCwd
     {
        mkdir("$depthPath\\dist\\inst_mfcembed", 775);
 
-;      print "path not found: $depthPath\\dist\\inst_mfcembed\n";
-;      exit(1);
+#      print "path not found: $depthPath\\dist\\inst_mfcembed\n";
+#      exit(1);
     }
 
     $distPath = "$depthPath\\dist\\inst_mfcembed";
