@@ -1842,10 +1842,36 @@ nsHTMLDocument::GetURL(nsAWritableString& aURL)
 NS_IMETHODIMP    
 nsHTMLDocument::GetBody(nsIDOMHTMLElement** aBody)
 {
-  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_ARG_POINTER(aBody);
+  *aBody = nsnull;
+
+  nsISupports* element = nsnull;
+  nsCOMPtr<nsIDOMNode> node;
+
+  if (mBodyContent || (GetBodyContent() && mBodyContent)) {
+    // There is a body element, return that as the body.
+    element = mBodyContent;
+  } else {
+    // The document is most likely a frameset document so look for the
+    // outer most frameset element
+
+    nsCOMPtr<nsIDOMNodeList> nodeList;
+
+    nsresult rv = GetElementsByTagName(NS_LITERAL_STRING("frameset"),
+                                       getter_AddRefs(nodeList));
+    if (NS_FAILED(rv))
+      return rv;
+
+    if (nodeList) {
+      rv = nodeList->Item(0, getter_AddRefs(node));
+      if (NS_FAILED(rv))
+        return rv;
+
+      element = node;
+    }
   }
-  return mBodyContent->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), (void **)aBody);
+
+  return element ? CallQueryInterface(element, aBody) : NS_OK;
 }
 
 NS_IMETHODIMP    
