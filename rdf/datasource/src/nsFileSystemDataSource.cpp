@@ -57,6 +57,7 @@
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
 #include "nsIFile.h"
+#include "nsEscape.h"
 
 #ifdef	XP_WIN
 #include "nsIUnicodeDecoder.h"
@@ -1232,37 +1233,31 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
 		char            *leafStr = nsnull;
 		if (NS_FAILED(rv = aFile->GetLeafName(&leafStr)))
 		    break;
-		if (!leafStr)   break;
+		if (!leafStr)   continue;
   
 		nsCAutoString           fullURI;
 		fullURI.Assign(parentURI);
 		if (fullURI.Last() != '/')
-                {
+        {
 		    fullURI.Append('/');
-                }
-  
-		nsCAutoString           leaf(leafStr);
+        }
+
+        char    *escLeafStr = nsEscape(leafStr, url_Path);
 		Recycle(leafStr);
 		leafStr = nsnull;
 
-		// we need to escape this leaf name;
-		// for now, let's just hack it and encode
-		// spaces, slashes and question marks
+        if (!escLeafStr)    continue;
+  
+		nsCAutoString           leaf(escLeafStr);
+		Recycle(escLeafStr);
+		escLeafStr = nsnull;
+
+        // using nsEscape() [above] doesn't escape slashes, so do that by hand
 		PRInt32			aOffset;
-		while ((aOffset = leaf.FindChar(' ')) >= 0)
-		{
-			leaf.Cut((PRUint32)aOffset, 1);
-			leaf.Insert("%20", (PRUint32)aOffset);
-		}
 		while ((aOffset = leaf.FindChar('/')) >= 0)
 		{
 			leaf.Cut((PRUint32)aOffset, 1);
 			leaf.Insert("%2F", (PRUint32)aOffset);
-		}
-		while ((aOffset = leaf.FindChar('?')) >= 0)
-		{
-			leaf.Cut((PRUint32)aOffset, 1);
-			leaf.Insert("%3F", (PRUint32)aOffset);
 		}
 
 		// append the encoded name
