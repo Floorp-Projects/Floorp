@@ -197,6 +197,10 @@ struct nsHTMLReflowState : nsReflowState {
   const nsStylePosition* mStylePosition;
   const nsStyleSpacing* mStyleSpacing;
 
+  // This value keeps track of how deeply nested a given reflow state
+  // is from the top of the frame tree.
+  PRInt32 mReflowDepth;
+
   // Note: The copy constructor is written by the compiler
   // automatically. You can use that and then override specific values
   // if you want, or you can call Init as desired...
