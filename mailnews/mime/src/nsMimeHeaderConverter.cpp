@@ -96,7 +96,7 @@ nsMimeHeaderConverter::DecodeMimePartIIStr(const nsString& header,
       // convert to unicode
       PRUnichar *unichars;
       PRInt32 unicharLength;
-      res = MIME_ConvertToUnicode(charsetCstr, (const char *) decodedCstr, PL_strlen((const char *) decodedCstr),
+      res = MIME_ConvertToUnicode(charsetCstr, (const char *) decodedCstr,
                                   (void **) &unichars, &unicharLength);
       if (NS_SUCCEEDED(res)) {
         charset.SetString(charsetCstr);
