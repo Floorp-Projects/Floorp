@@ -11,10 +11,10 @@
       <rdf:Seq>
         <rdf:li> <rdf:Description nc:panelid="glossary" nc:datasources="help-glossary.rdf"/> </rdf:li>
         <rdf:li> <rdf:Description nc:panelid="index" nc:datasources="help-indexAZ.rdf help-index1.rdf"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:panelid="search" 
-                    nc:datasources="search-db.rdf" 
-                    nc:emptysearchtext="[No matching items found.]" 
-                    nc:emptysearchlink="about:blank"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:panelid="search"
+                    nc:datasources="search-db.rdf"
+                    nc:emptysearchtext="[No matching items found.]"
+                    nc:emptysearchlink="chrome://help/locale/help_help.html#search_tips"/> </rdf:li>
         <rdf:li> <rdf:Description nc:panelid="toc" nc:datasources="help-toc.rdf"/> </rdf:li>
       </rdf:Seq>
     </nc:panellist>
