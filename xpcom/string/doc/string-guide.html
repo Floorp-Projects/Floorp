@@ -1,0 +1,149 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+  <head>
+    <title>the complete guide to mozilla/string</title>
+    <link rel="stylesheet" href="string-guide.css" type="text/css">
+  </head>
+  <body>
+<!-- ----|---------|---------|---------|---------|---------|---------|---------| -->
+<!-- ...............................................................Front Matter -->
+<h1>the complete guide to <a class="exact-uri" href="http://lxr.mozilla.org/seamonkey/source/string/">mozilla/string</a></h1>
+
+<div class="author-note">
+  <p>by <a href="http://ScottCollins.net/">Scott Collins</a><!-- /p -->
+  <p>last modified 8 April 2001<!-- /p -->
+</div>
+
+<div class="abstract">
+  <p>
+    <h1>Abstract</h1>
+    This document <span class="LXRSHORTDESC">provides
+      an <a href="#users_guide">introduction</a> to the design and use of the string classes in mozilla,
+      <a href="#implementors_guide">detailed information</a> on their implementation and how one may extend them,
+      and <a href="#faq">answers</a> to frequently asked questions about strings</span>.
+  </p>
+</div>
+
+
+
+<h2><a name="contents">contents</a></h2>
+
+<div class="contents">
+  <ul>
+    <li><a href="#users_guide"       >user's guide</a></li>
+    <li><a href="#implementors_guide">implementor's guide</a></li>
+    <li><a href="#faq"               >frequently asked questions</a></li>
+  </ul>
+</div>
+
+<div class="author-note">
+  <p>
+    A note to potential editors:
+      don't even <strong>consider</strong> modifying this document with an HTML editor.
+    That would destroy the internal formatting,
+      and make patches unmanagable.
+  </p>
+</div>
+
+
+
+
+<!-- ...............................................................User's Guide -->
+<hr>
+<h1><a name="users_guide">user's guide</a></h1>
+
+<div class="author-note">
+  <p>
+    Strings in mozilla are a world apart from <span class="code">char*</span>s.
+    If you don't know why they are different,
+      this section is the place for you to start.
+    If you're already familiar with the hierarchy of string classes in mozilla,
+      then you might want to skip ahead to the <a href="#implementors_guide">implementor's guide</a>
+      or the <a href="#faq">FAQ</a>.
+  </p>
+</div>
+
+<div class="contents">
+  <ul>
+    <li><a href="#users_guide_introduction">introduction</a></li>
+    <li><a href="#users_guide_how_to"      >using the string classes right; using the right string class</a></li>
+    <li><a href="#users_guide_iterators"   >using string iterators</a></li>
+    <li><a href="#users_guide_summary"     >summary</a></li>
+  </ul>
+</div>
+
+<h2><a name="users_guide_introduction">introduction</a></h2>
+  <h3>what is a string?</h3>
+  <h3>readable and writable</h3>
+  <h3>promises</h3>
+  <h3>flat strings</h3>
+  <h3>encoding</h3>
+  <h3>sharing</h3>
+
+<h2><a name="users_guide_how_to">using the string classes right; using the right string class</a></h2>
+  <h3>basic string operations</h3>
+    <h4>comparison</h4>
+    <h4>concatenation</h4>
+    <h4>substrings</h4>
+    <h4>find and replace</h4>
+  <h3>conversions</h3>
+    <h4>calling a function that expects a different kind of string</h4>
+    <h4>converting between string classes</h4>
+    <h4>converting between encodings</h4>
+  <h3>selecting the right string class</h3>
+    <h4>user string classes</h4>
+    <h4>selecting the right string class for a parameter</h4>
+    <h4>selecting the right string class for a local variable</h4>
+    <h4>selecting the right string class for a member variable</h4>
+    <h4>selecting the right string class for a return value</h4>
+    <h4>selecting the right string class in IDL</h4>
+  <h3>dont's</h3>
+
+<h2><a name="users_guide_iterators">using string iterators</a></h2>
+  <h3>what is an iterator?</h3>
+  <h3>reading iterators and writing iterators</h3>
+  <h3>`chunky' iterating for efficiency</h3>
+  <h3><span class="code">copy_string</span>, character sources and sinks</h3>
+  <h3>encoding conversion iterators</h3>
+
+<h2><a name="users_guide_summary">summary</a></h2>
+
+
+<!-- ........................................................Implementor's Guide -->
+<hr>
+<h1><a name="implementors_guide">implementor's guide</a></h1>
+
+<div class="author-note">
+  <p>
+    
+  </p>
+</div>
+
+<div class="contents">
+  <ul>
+    <!-- li></li -->
+  </ul>
+</div>
+
+
+
+<!-- ........................................................................FAQ -->
+<hr>
+<h1><a name="faq">frequently asked questions</a></h1>
+
+<div class="author-note">
+</div>
+
+<div class="contents">
+  <ul>
+    <!-- li></li -->
+  </ul>
+</div>
+
+
+<!-- .................................................................End Matter -->
+
+
+
+  </body>
+</html>

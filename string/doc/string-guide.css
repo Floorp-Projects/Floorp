@@ -1,0 +1,118 @@
+/* string-guide.css */
+
+body										  { font-family: serif; background-color: white;  }
+strong                    { font-style: italic; }
+
+h1, h2, h3, h4, h5, h6	  { font-family: sans-serif; }
+h4, h5, h6                { margin-left: 2em; }
+h3                        { color: gray; }
+
+a:hover                   { background-color: yellow; }
+
+li                        { list-style: square; }
+
+.code                     { font-family: monospace; }
+.source-code              { font-family: monospace; }
+
+.warning                  { color: red; }
+.notice                   { color: blue; }
+.exact-uri                { font-family: monospace; /* font-size: 80%; */ }
+
+div.abstract
+  {
+    margin-left:      5em;
+    margin-right:     5em;
+    font-size:        90%;
+  }
+
+.abstract h1
+  {
+    display:          inline;
+    font-size:        100%;
+    margin-bottom:    0.0em;
+  }
+
+.abstract p
+  {
+    margin-top:       0.25em;
+  }
+
+div.author-note
+  {
+    font-family:  sans-serif;
+    font-size:    80%;
+    text-align:   right;
+    margin-top:   0.5em;
+    margin-left:  15em;
+  }
+
+div.document-mod-date
+  {
+    font-family:    sans-serif;
+    font-size:      0.8em;
+    text-align:     right;
+    float:          right;
+    margin-top:     1.75em;
+    margin-bottom:  0em;
+  }
+
+quote
+	{
+    font-family:    sans-serif;
+		font-style: 		italic;
+    font-size:    	90%;
+	}
+
+table caption
+	{
+		vertical-align: bottom;
+		font-family:    sans-serif;
+		font-size:      80%;
+	}
+
+table.legend
+  {
+    font-size:  80%;
+    float:      right;
+    clear:      left;
+  }
+
+.warning .comment         { color: red; }
+.notice .comment          { color: blue; }
+.comment                  { color: green; }
+
+.source-code strong
+	{
+		font-family: Courier;
+		font-style: bold;
+	}
+
+div.source-code
+	{
+		padding: 1em;
+		border: solid thin;
+		margin: 0;
+		background: #eee;
+	}
+
+pre.source-code
+	{
+		margin-left: 0;
+	}
+
+div.bibliography-entry
+  {
+    margin-left:      1em;
+    font-size:        90%;
+  }
+
+.bibliography-entry h1
+  {
+    font-size:        100%;
+    margin-bottom:    0.0em;
+  }
+
+.bibliography-entry p
+  {
+    margin-top:       0.25em;
+  }
