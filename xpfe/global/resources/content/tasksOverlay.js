@@ -110,13 +110,31 @@ function OpenBrowserWindow()
   handler = handler.QueryInterface(Components.interfaces.nsICmdLineHandler);
   var startpage = handler.defaultArgs;
   var url = handler.chromeUrlForTask;
+  var taskOverlayAppCore = null;
+
+  try {
+ 
+    if ((appCore != null) && (taskOverlayAppCore == null)) {
+       taskOverlayAppCore = appCore;
+    } else {
+       CreateTaskOverlayBrowserInstance(taskOverlayAppCore);
+    }
+  }
+    
+  catch (ex) {
+
+    if (taskOverlayAppCore == null) {
+      CreateTaskOverlayBrowserInstance(taskOverlayAppCore);
+    }
   
-  if (appCore != null) {
+  }
+
+  if (taskOverlayAppCore != null) {
        
       try 
       {
           //let's try to extract the current charset menu setting
-          var DocCharset = appCore.GetDocumentCharset();
+          var DocCharset = taskOverlayAppCore.GetDocumentCharset();
           charsetArg = "charset="+DocCharset;
           dump("*** Current document charset: " + DocCharset + "\n");
 
@@ -436,3 +454,30 @@ function toImport()
 						{importType: "addressbook"});
 }
 
+function CreateTaskOverlayBrowserInstance(taskOverlayAppCore)
+{
+    //Create browser instance
+    try {
+      taskOverlayAppCore = Components
+                  .classes[ "component://netscape/appshell/component/browser/instance" ]
+                    .createInstance( Components.interfaces.nsIBrowserInstance );
+    }
+
+    catch (ex) {
+      dump( "Error creating browser instance\n" );
+      return;
+    }
+
+    // now initialize it
+    try {
+      taskOverlayAppCore.setWebShellWindow(window);
+      if ( window.content ) {
+          dump("Setting content window\n");
+          taskOverlayAppCore.setContentWindow( window.content );
+      }
+    }
+
+    catch(ex) {
+        dump("Failed to create and initialiaze the AppCore...\n");
+    }
+}
