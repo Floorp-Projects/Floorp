@@ -1720,13 +1720,14 @@ nsresult nsMsgDatabase::MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,
   nsresult rv;
   nsMsgKey key;
   PRUint32 oldFlags;
+  PRBool   hdrInDB;
   (void)msgHdr->GetMessageKey(&key);
   msgHdr->GetFlags(&oldFlags);
   
   if (m_newSet)
     m_newSet->Remove(key);
-  
-  if (m_dbFolderInfo != NULL)
+  (void) ContainsKey(key, &hdrInDB);
+  if (hdrInDB && m_dbFolderInfo)
   {
     if (bRead)
       m_dbFolderInfo->ChangeNumNewMessages(-1);
@@ -3683,21 +3684,35 @@ nsresult nsMsgDatabase::AddNewThread(nsMsgHdr *msgHdr)
 // I imagine we might have separate preferences for mail and news, so this is a virtual method.
 PRBool	nsMsgDatabase::ThreadBySubjectWithoutRe()
 {
-	return PR_TRUE;
+  return PR_TRUE;
 }
 
 nsresult nsMsgDatabase::GetBoolPref(const char *prefName, PRBool *result)
 {
-	PRBool prefValue = PR_FALSE;
-	nsresult rv;
-	nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
-    if (NS_SUCCEEDED(rv) && prefs)
-	{
-		rv = prefs->GetBoolPref(prefName, &prefValue);
-		*result = prefValue;
-	}
-	return rv;
+  PRBool prefValue = PR_FALSE;
+  nsresult rv;
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
+  if (NS_SUCCEEDED(rv) && prefs)
+  {
+    rv = prefs->GetBoolPref(prefName, &prefValue);
+    *result = prefValue;
+  }
+  return rv;
 }
+
+nsresult nsMsgDatabase::GetIntPref(const char *prefName, PRInt32 *result)
+{
+  PRInt32 prefValue = 0;
+  nsresult rv;
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
+  if (NS_SUCCEEDED(rv) && prefs)
+  {
+    rv = prefs->GetIntPref(prefName, &prefValue);
+    *result = prefValue;
+  }
+  return rv;
+}
+
 
 nsresult nsMsgDatabase::ListAllThreads(nsMsgKeyArray *threadIds)
 {
@@ -3794,8 +3809,11 @@ NS_IMETHODIMP nsMsgDatabase::ListAllOfflineDeletes(nsMsgKeyArray *offlineDeletes
 }
 NS_IMETHODIMP nsMsgDatabase::GetHighWaterArticleNum(nsMsgKey *key)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (!m_dbFolderInfo)
+    return NS_ERROR_NULL_POINTER;
+  return m_dbFolderInfo->GetHighWater(key);    
 }
+
 NS_IMETHODIMP nsMsgDatabase::GetLowWaterArticleNum(nsMsgKey *key)
 {
     return NS_ERROR_NOT_IMPLEMENTED;

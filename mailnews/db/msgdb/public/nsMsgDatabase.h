@@ -118,87 +118,88 @@ public:
   nsresult        SetUint32Property(nsIMdbRow *row, const char *propertyName, PRUint32 propertyVal);
   // helper function for once we have the token.
   nsresult        SetNSStringPropertyWithToken(nsIMdbRow *row, mdb_token aProperty, nsString *propertyStr);
-
-	// helper functions to put values in cells for the passed-in row
-	nsresult				UInt32ToRowCellColumn(nsIMdbRow *row, mdb_token columnToken, PRUint32 value);
-	nsresult				CharPtrToRowCellColumn(nsIMdbRow *row, mdb_token columnToken, const char *charPtr);
-	nsresult				RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnToken, char **result);
-
-
-	// helper functions to copy an nsString to a yarn, int32 to yarn, and vice versa.
-	static	struct mdbYarn *nsStringToYarn(struct mdbYarn *yarn, nsString *str);
-	static	struct mdbYarn *UInt32ToYarn(struct mdbYarn *yarn, PRUint32 i);
-	static	void			YarnTonsString(struct mdbYarn *yarn, nsString *str);
-	static	void			YarnTonsCString(struct mdbYarn *yarn, nsCString *str);
-	static	void			YarnToUInt32(struct mdbYarn *yarn, PRUint32 *i);
-
-	
-	// helper functions to convert a 64bits PRTime into a 32bits value (compatible time_t) and vice versa.
-	static void				PRTime2Seconds(PRTime prTime, PRUint32 *seconds);
-	static void				Seconds2PRTime(PRUint32 seconds, PRTime *prTime);
-
-	static void		CleanupCache();
+  
+  // helper functions to put values in cells for the passed-in row
+  nsresult				UInt32ToRowCellColumn(nsIMdbRow *row, mdb_token columnToken, PRUint32 value);
+  nsresult				CharPtrToRowCellColumn(nsIMdbRow *row, mdb_token columnToken, const char *charPtr);
+  nsresult				RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnToken, char **result);
+  
+  
+  // helper functions to copy an nsString to a yarn, int32 to yarn, and vice versa.
+  static	struct mdbYarn *nsStringToYarn(struct mdbYarn *yarn, nsString *str);
+  static	struct mdbYarn *UInt32ToYarn(struct mdbYarn *yarn, PRUint32 i);
+  static	void			YarnTonsString(struct mdbYarn *yarn, nsString *str);
+  static	void			YarnTonsCString(struct mdbYarn *yarn, nsCString *str);
+  static	void			YarnToUInt32(struct mdbYarn *yarn, PRUint32 *i);
+  
+  
+  // helper functions to convert a 64bits PRTime into a 32bits value (compatible time_t) and vice versa.
+  static void				PRTime2Seconds(PRTime prTime, PRUint32 *seconds);
+  static void				Seconds2PRTime(PRUint32 seconds, PRTime *prTime);
+  
+  static void		CleanupCache();
 #ifdef DEBUG
-	static int		GetNumInCache(void) {return(GetDBCache()->Count());}
-	static void		DumpCache();
-    virtual nsresult DumpContents();
-			nsresult DumpThread(nsMsgKey threadId);
-	nsresult DumpMsgChildren(nsIMsgDBHdr *msgHdr);
+  static int		GetNumInCache(void) {return(GetDBCache()->Count());}
+  static void		DumpCache();
+  virtual nsresult DumpContents();
+  nsresult DumpThread(nsMsgKey threadId);
+  nsresult DumpMsgChildren(nsIMsgDBHdr *msgHdr);
 #endif
-
-	friend class nsMsgHdr;	// use this to get access to cached tokens for hdr fields
-	friend class nsMsgThread;	// use this to get access to cached tokens for hdr fields
-    friend class nsMsgDBEnumerator;
-	friend class nsMsgDBThreadEnumerator;
+  
+  friend class nsMsgHdr;	// use this to get access to cached tokens for hdr fields
+  friend class nsMsgThread;	// use this to get access to cached tokens for hdr fields
+  friend class nsMsgDBEnumerator;
+  friend class nsMsgDBThreadEnumerator;
 protected:
-	// prefs stuff - in future, we might want to cache the prefs interface
-	nsresult GetBoolPref(const char *prefName, PRBool *result);
-	// retrieval methods
-	nsIMsgThread *	GetThreadForReference(nsCString &msgID, nsIMsgDBHdr **pMsgHdr);
-	nsIMsgThread *	GetThreadForSubject(nsCString &subject);
-	nsIMsgThread *	GetThreadForThreadId(nsMsgKey threadId);
-	nsMsgHdr	*	GetMsgHdrForReference(nsCString &reference);
-	nsIMsgDBHdr	*	GetMsgHdrForSubject(nsCString &msgID);
-	// threading interfaces
-	virtual nsresult CreateNewThread(nsMsgKey key, const char *subject, nsMsgThread **newThread);
-	virtual PRBool	ThreadBySubjectWithoutRe();
-	virtual nsresult ThreadNewHdr(nsMsgHdr* hdr, PRBool &newThread);
-	virtual nsresult AddNewThread(nsMsgHdr *msgHdr);
-	virtual nsresult AddToThread(nsMsgHdr *newHdr, nsIMsgThread *thread, nsIMsgDBHdr *pMsgHdr, PRBool threadInThread);
-
-
-	// open db cache
-    static void		AddToCache(nsMsgDatabase* pMessageDB) 
-						{GetDBCache()->AppendElement(pMessageDB);}
-	static void		RemoveFromCache(nsMsgDatabase* pMessageDB);
-	static int		FindInCache(nsMsgDatabase* pMessageDB);
-			PRBool	MatchDbName(nsFileSpec &dbName);	// returns TRUE if they match
-
+  // prefs stuff - in future, we might want to cache the prefs interface
+  nsresult GetBoolPref(const char *prefName, PRBool *result);
+  nsresult GetIntPref(const char *prefName, PRInt32 *result);
+    // retrieval methods
+    nsIMsgThread *	GetThreadForReference(nsCString &msgID, nsIMsgDBHdr **pMsgHdr);
+  nsIMsgThread *	GetThreadForSubject(nsCString &subject);
+  nsIMsgThread *	GetThreadForThreadId(nsMsgKey threadId);
+  nsMsgHdr	*	GetMsgHdrForReference(nsCString &reference);
+  nsIMsgDBHdr	*	GetMsgHdrForSubject(nsCString &msgID);
+  // threading interfaces
+  virtual nsresult CreateNewThread(nsMsgKey key, const char *subject, nsMsgThread **newThread);
+  virtual PRBool	ThreadBySubjectWithoutRe();
+  virtual nsresult ThreadNewHdr(nsMsgHdr* hdr, PRBool &newThread);
+  virtual nsresult AddNewThread(nsMsgHdr *msgHdr);
+  virtual nsresult AddToThread(nsMsgHdr *newHdr, nsIMsgThread *thread, nsIMsgDBHdr *pMsgHdr, PRBool threadInThread);
+  
+  
+  // open db cache
+  static void		AddToCache(nsMsgDatabase* pMessageDB) 
+  {GetDBCache()->AppendElement(pMessageDB);}
+  static void		RemoveFromCache(nsMsgDatabase* pMessageDB);
+  static int		FindInCache(nsMsgDatabase* pMessageDB);
+  PRBool	MatchDbName(nsFileSpec &dbName);	// returns TRUE if they match
+  
 #if defined(XP_PC) || defined(XP_MAC)	// this should go away when we can provide our own file stream to MDB/Mork
-	static void		UnixToNative(char*& ioPath);
+  static void		UnixToNative(char*& ioPath);
 #endif
-
-	// Flag handling routines
-	virtual nsresult SetKeyFlag(nsMsgKey key, PRBool set, PRUint32 flag,
-							  nsIDBChangeListener *instigator = NULL);
-	virtual nsresult SetMsgHdrFlag(nsIMsgDBHdr *msgHdr, PRBool set, PRUint32 flag, 
-								nsIDBChangeListener *instigator);
-
-	virtual PRBool	SetHdrFlag(nsIMsgDBHdr *, PRBool bSet, MsgFlags flag);
-    virtual PRBool  SetHdrReadFlag(nsIMsgDBHdr *, PRBool pRead);
-	virtual PRUint32 GetStatusFlags(nsIMsgDBHdr *msgHdr, PRUint32 origFlags);
-	// helper function which doesn't involve thread object
-
-	virtual nsresult		RemoveHeaderFromDB(nsMsgHdr *msgHdr);
+  
+  // Flag handling routines
+  virtual nsresult SetKeyFlag(nsMsgKey key, PRBool set, PRUint32 flag,
+    nsIDBChangeListener *instigator = NULL);
+  virtual nsresult SetMsgHdrFlag(nsIMsgDBHdr *msgHdr, PRBool set, PRUint32 flag, 
+    nsIDBChangeListener *instigator);
+  
+  virtual PRBool	SetHdrFlag(nsIMsgDBHdr *, PRBool bSet, MsgFlags flag);
+  virtual PRBool  SetHdrReadFlag(nsIMsgDBHdr *, PRBool pRead);
+  virtual PRUint32 GetStatusFlags(nsIMsgDBHdr *msgHdr, PRUint32 origFlags);
+  // helper function which doesn't involve thread object
+  
+  virtual nsresult		RemoveHeaderFromDB(nsMsgHdr *msgHdr);
   virtual nsresult    RemoveHeaderFromThread(nsMsgHdr *msgHdr);
-virtual nsresult AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr);
-
-
-	static nsVoidArray/*<nsMsgDatabase>*/* GetDBCache();
-	static nsVoidArray/*<nsMsgDatabase>*/* m_dbCache;
-
-	nsCOMPtr <nsICollation> m_collationKeyGenerator;
-	nsCOMPtr <nsIMimeConverter> m_mimeConverter;
+  virtual nsresult AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr);
+  
+  
+  static nsVoidArray/*<nsMsgDatabase>*/* GetDBCache();
+  static nsVoidArray/*<nsMsgDatabase>*/* m_dbCache;
+  
+  nsCOMPtr <nsICollation> m_collationKeyGenerator;
+  nsCOMPtr <nsIMimeConverter> m_mimeConverter;
   nsCOMPtr <nsIMsgRetentionSettings> m_retentionSettings;
   nsCOMPtr <nsIMsgDownloadSettings> m_downloadSettings;
 
