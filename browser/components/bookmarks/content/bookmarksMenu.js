@@ -651,9 +651,11 @@ var BookmarksMenuDNDObserver = {
     var currentObserver = this.getObserverForNode(this.mCurrentDragOverTarget);
     // close all the menus not hovered by the mouse
     for (var i=0; i < this.mObservers.length; i++) {
-      if (currentObserver != this.mObservers[i])
+      if (currentObserver != this.mObservers[i]) {
         this.onDragCloseMenu(this.mObservers[i]);
-      else
+        if (this.mObservers[i].parentNode.id == "bookmarks-menu")
+          this.mObservers[i].hidePopup();
+      } else
         this.onDragCloseMenu(this.mCurrentDragOverTarget.parentNode);
     }
   },
