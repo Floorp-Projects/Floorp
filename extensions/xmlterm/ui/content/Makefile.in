@@ -57,7 +57,10 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/xmlterm.html \
 	$(srcdir)/xmlterm.xul \
 	$(srcdir)/xmlterm2.xul \
+	$(srcdir)/XMLTermChrome.js \
 	$(srcdir)/XMLTermCommands.js \
+	$(srcdir)/xmltermTips.html \
+	$(srcdir)/xmltermAbout.html \
 	$(srcdir)/xmltblank.html \
 	$(NULL)
 

@@ -153,7 +153,7 @@ int ltermProcessEscape(struct lterms *lts, const UNICHAR *buf,
     LTERM_LOG(ltermProcessEscape,52,("Application Keypad\n"));
     if (lto->outputMode == LTERM2_LINE_MODE) {
       ltermSwitchToScreenMode(lts);
-      *opcodes = LTERM_SCREENDATA_CODE | LTERM_CLEAR_CODE;
+      *opcodes = LTERM_LINEDATA_CODE | LTERM_OUTPUT_CODE;
     }
     return 0;
 
@@ -161,7 +161,7 @@ int ltermProcessEscape(struct lterms *lts, const UNICHAR *buf,
     LTERM_LOG(ltermProcessEscape,52,("Normal Keypad\n"));
     if (lto->outputMode == LTERM1_SCREEN_MODE) {
       ltermSwitchToLineMode(lts);
-      *opcodes = LTERM_LINEDATA_CODE;
+      *opcodes = LTERM_SCREENDATA_CODE | LTERM_CLEAR_CODE;
     }
     return 0;
 
@@ -701,7 +701,7 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
       /* Switch to alternate buffer */
       if (lto->outputMode == LTERM2_LINE_MODE) {
         ltermSwitchToScreenMode(lts);
-        *opcodes = LTERM_SCREENDATA_CODE | LTERM_CLEAR_CODE;
+        *opcodes = LTERM_LINEDATA_CODE | LTERM_OUTPUT_CODE;
       }
     }
     return 0;
@@ -720,7 +720,7 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
       /* Switch to regular buffer */
       if (lto->outputMode == LTERM1_SCREEN_MODE) {
         ltermSwitchToLineMode(lts);
-        *opcodes = LTERM_LINEDATA_CODE;
+        *opcodes = LTERM_SCREENDATA_CODE | LTERM_CLEAR_CODE;
       }
     }
     return 0;
@@ -892,7 +892,7 @@ static int ltermProcessDECPrivateMode(struct lterms *lts,
       /* Switch to screen mode */
       if (lto->outputMode == LTERM2_LINE_MODE) {
         ltermSwitchToScreenMode(lts);
-        *opcodes = LTERM_SCREENDATA_CODE | LTERM_CLEAR_CODE;
+        *opcodes = LTERM_LINEDATA_CODE | LTERM_OUTPUT_CODE;
       }
     }
     return 0;
@@ -903,7 +903,7 @@ static int ltermProcessDECPrivateMode(struct lterms *lts,
       /* Switch to line mode */
       if (lto->outputMode == LTERM1_SCREEN_MODE) {
         ltermSwitchToLineMode(lts);
-        *opcodes = LTERM_LINEDATA_CODE;
+        *opcodes = LTERM_SCREENDATA_CODE | LTERM_CLEAR_CODE;
       }
     }
     return 0;
@@ -1159,6 +1159,27 @@ static int ltermProcessXMLTermSequence(struct lterms *lts, const UNICHAR *buf,
       lts->disabledInputEcho = 1;
 
       LTERM_LOG(ltermProcessXMLTermSequence,52,("Disabled input echo\n"));
+    }
+    return 0;
+
+  case U_F_CHAR:    /* Enable/disable full screen mode */
+    if (param1) {
+      /* Enable full screen mode */
+      if (lto->outputMode == LTERM2_LINE_MODE) {
+        ltermSwitchToScreenMode(lts);
+        *opcodes = LTERM_LINEDATA_CODE | LTERM_OUTPUT_CODE;
+      }
+
+      LTERM_LOG(ltermProcessXMLTermSequence,52,("Enabled full screen mode\n"));
+
+    } else {
+      /* Disable full screen mode */
+      if (lto->outputMode == LTERM1_SCREEN_MODE) {
+        ltermSwitchToLineMode(lts);
+        *opcodes = LTERM_SCREENDATA_CODE | LTERM_CLEAR_CODE;
+      }
+
+      LTERM_LOG(ltermProcessXMLTermSequence,52,("Disabled full screen mode\n"));
     }
     return 0;
 

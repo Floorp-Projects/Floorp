@@ -313,14 +313,26 @@ int ltermWrite(struct lterms *lts, int *opcodes)
     /* Process plain text input record */
     int doNotCancelCompletion = 0;
 
-    if ( (lti->inputMode >= LTERM3_COMPLETION_MODE) &&
-         (availableChars == 1) ) {
+    if (lti->inputMode >= LTERM3_COMPLETION_MODE) {
 
-      doNotCancelCompletion =
-        ((lts->completionRequest == LTERM_TAB_COMPLETION) &&
-         (lti->inputBuf[2] == U_TAB)) ||
-        ((lts->completionRequest == LTERM_HISTORY_COMPLETION) &&
-           ((lti->inputBuf[2] == U_CTL_P) || (lti->inputBuf[2] == U_CTL_N)) );
+      if (availableChars == 1) {
+        /* Single control character completion requests */
+
+        doNotCancelCompletion =
+         ( (lts->completionRequest == LTERM_TAB_COMPLETION) &&
+           (lti->inputBuf[2] == U_TAB) ) ||
+         ( (lts->completionRequest == LTERM_HISTORY_COMPLETION) &&
+            ((lti->inputBuf[2] == U_CTL_P) || (lti->inputBuf[2] == U_CTL_N)) );
+
+      } else if (availableChars == 3) {
+        /* Three character escape sequences for up/down arrow keys */
+        /* NOTE: Input CSI escape sequence; may not be portable */
+
+        doNotCancelCompletion =
+       ( (lts->completionRequest == LTERM_HISTORY_COMPLETION) &&
+         (lti->inputBuf[2] == U_ESCAPE) && (lti->inputBuf[3] == U_LBRACKET) &&
+         ((lti->inputBuf[4] == U_A_CHAR) || (lti->inputBuf[4] == U_B_CHAR)) );
+      }
     }
 
     if (!doNotCancelCompletion &&

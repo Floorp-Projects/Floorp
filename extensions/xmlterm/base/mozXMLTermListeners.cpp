@@ -277,13 +277,17 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       NS_SUCCEEDED(keyEvent->GetAltKey(&altKey)) ) {
 
     PRUint32 keyChar = 0;
+    PRUint32 escPrefix = 0;
     nsAutoString JSCommand = "";
+
+    PRBool screenMode = 0;
+    result = mXMLTerminal->GetScreenMode(&screenMode);
 
     result = keyEvent->GetCharCode(&keyChar);
 
     XMLT_LOG(mozXMLTermKeyListener::KeyPress,52,
-          ("code=0x%x, char=0x%x, shift=%d, ctrl=%d, alt=%d\n",
-           keyCode, keyChar, shiftKey, ctrlKey, altKey));
+          ("code=0x%x, char=0x%x, shift=%d, ctrl=%d, alt=%d, screenMode=%d\n",
+           keyCode, keyChar, shiftKey, ctrlKey, altKey, screenMode));
 
     if (keyChar == 0) {
       // Key that hasn't been mapped to a character code
@@ -305,38 +309,63 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       case nsIDOMKeyEvent::DOM_VK_RETURN:
         keyChar = U_CRETURN;
         break;
-      case nsIDOMKeyEvent::DOM_VK_LEFT:
-        keyChar = U_CTL_B;
-        break;
-      case nsIDOMKeyEvent::DOM_VK_RIGHT:
-        keyChar = U_CTL_F;
-        break;
       case nsIDOMKeyEvent::DOM_VK_UP:
-        keyChar = U_CTL_P;
+        escPrefix = 1;
+        keyChar = U_A_CHAR;
         break;
       case nsIDOMKeyEvent::DOM_VK_DOWN:
-        keyChar = U_CTL_N;
+        escPrefix = 1;
+        keyChar = U_B_CHAR;
+        break;
+      case nsIDOMKeyEvent::DOM_VK_RIGHT:
+        escPrefix = 1;
+        keyChar = U_C_CHAR;
+        break;
+      case nsIDOMKeyEvent::DOM_VK_LEFT:
+        escPrefix = 1;
+        keyChar = U_D_CHAR;
         break;
       case nsIDOMKeyEvent::DOM_VK_ESCAPE:
         keyChar = U_ESCAPE;
         break;
       case nsIDOMKeyEvent::DOM_VK_HOME:
-        JSCommand = "ScrollHome";
+        JSCommand = "ScrollHomeKey";
         break;
       case nsIDOMKeyEvent::DOM_VK_END:
-        JSCommand = "ScrollEnd";
+        JSCommand = "ScrollEndKey";
         break;
       case nsIDOMKeyEvent::DOM_VK_PAGE_UP:
-        JSCommand = "ScrollPageUp";
+        JSCommand = "ScrollPageUpKey";
         break;
       case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN:
-        JSCommand = "ScrollPageDown";
+        JSCommand = "ScrollPageDownKey";
         break;
       case nsIDOMKeyEvent::DOM_VK_F1:
-        JSCommand = "HideAll";
+        JSCommand = "F1Key";
         break;
       case nsIDOMKeyEvent::DOM_VK_F2:
-        JSCommand = "ShowAll";
+        JSCommand = "F2Key";
+        break;
+      case nsIDOMKeyEvent::DOM_VK_F3:
+        JSCommand = "F3Key";
+        break;
+      case nsIDOMKeyEvent::DOM_VK_F4:
+        JSCommand = "F4Key";
+        break;
+      case nsIDOMKeyEvent::DOM_VK_F5:
+        JSCommand = "F5Key";
+        break;
+      case nsIDOMKeyEvent::DOM_VK_F6:
+        JSCommand = "F6Key";
+        break;
+      case nsIDOMKeyEvent::DOM_VK_F7:
+        JSCommand = "F7Key";
+        break;
+      case nsIDOMKeyEvent::DOM_VK_F8:
+        JSCommand = "F8Key";
+        break;
+      case nsIDOMKeyEvent::DOM_VK_F9:
+        JSCommand = "F9Key";
         break;
       default: // ignore event without consuming
         return NS_OK;
@@ -348,6 +377,9 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       // Is this portable?
       keyChar = (keyChar >= 0x60U) ? keyChar-0x60U : keyChar-0x40U;
     }
+
+    XMLT_LOG(mozXMLTermKeyListener::KeyPress,53,
+             ("escPrefix=%d, keyChar=0x%x, \n", escPrefix, keyChar));
 
     if (JSCommand.Length() > 0) {
       // Execute JS command
@@ -370,8 +402,14 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
     if (!mSuspend && (keyChar > 0) && (keyChar <= 0xFFFDU)) {
       // Transmit valid non-null Unicode character
-      const PRUnichar temUString[] = {keyChar,0};
-      nsAutoString keyString(temUString);
+      nsAutoString keyString = "";
+      if (escPrefix) {
+        keyString.Append((PRUnichar) U_ESCAPE);
+        keyString.Append((PRUnichar) U_LBRACKET);
+      }
+
+      keyString.Append((PRUnichar) keyChar);
+
       result = mXMLTerminal->SendTextAux(keyString);
     }
   }

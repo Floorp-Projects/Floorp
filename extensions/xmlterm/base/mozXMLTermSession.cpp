@@ -30,7 +30,6 @@
 
 #include "nsIDocumentViewer.h"
 
-#include "nsICaret.h"
 #include "nsITextContent.h"
 
 #include "nsIDOMElement.h"
@@ -81,8 +80,7 @@ const char* const mozXMLTermSession::sessionElementNames[] = {
 
 // Should HTML event names should always be in lower case for DOM to work?
 const char* const mozXMLTermSession::sessionEventNames[] = {
-  "click",
-  "dblclick"
+  "click"
 };
 
 const char* const mozXMLTermSession::metaCommandNames[] = {
@@ -196,15 +194,6 @@ NS_IMETHODIMP mozXMLTermSession::Init(mozIXMLTerminal* aXMLTerminal,
   mDOMDocument = aDOMDocument;    // DOM document; no addref
 
   nsresult result = NS_OK;
-
-  // Show the caret
-  nsCOMPtr<nsICaret> caret;
-  if (NS_SUCCEEDED(mPresShell->GetCaret(getter_AddRefs(caret)))) {
-  	caret->SetCaretVisible(PR_TRUE);
-  	caret->SetCaretReadOnly(PR_FALSE);
-  }
-
-  mPresShell->SetCaretEnabled(PR_TRUE);
 
   nsCOMPtr<nsIDOMHTMLDocument> vDOMHTMLDocument
                                              (do_QueryInterface(mDOMDocument));
@@ -552,13 +541,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
       // WORKAROUND for some unknown bug in the full screen implementation.
       // Without this, if you delete a line using "vi" and save the file,
       // the cursor suddenly disappears
-      nsCOMPtr<nsICaret> caret;
-      if (NS_SUCCEEDED(mPresShell->GetCaret(getter_AddRefs(caret)))) {
-  	caret->SetCaretVisible(PR_TRUE);
-  	caret->SetCaretReadOnly(PR_FALSE);
-      }
-
-      mPresShell->SetCaretEnabled(PR_TRUE);
+      mXMLTerminal->ShowCaret();
     }
 
     if (streamData) {
@@ -1121,6 +1104,9 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
                                                  SELECTION_FOCUS_REGION);
   }
 
+  // Show caret
+  mXMLTerminal->ShowCaret();
+
   // Scroll frame (ignore result)
   ScrollToBottomLeft();
 
@@ -1171,19 +1157,20 @@ NS_IMETHODIMP mozXMLTermSession::DisplayInput(const nsString& aString,
     result = selection->Collapse(mInputTextNode, cursorCol);
 
   } else {
+    // Get the last bit of text in the prompt
     nsCOMPtr<nsIDOMNode> promptTextNode;
-    result = mPromptSpanNode->GetFirstChild(getter_AddRefs(promptTextNode));
+    result = mPromptSpanNode->GetLastChild(getter_AddRefs(promptTextNode));
 
     if (NS_SUCCEEDED(result)) {
       nsCOMPtr<nsIDOMText> domText (do_QueryInterface(promptTextNode));
 
       if (domText) {
-        PRUint32 promptLength;
-        result = domText->GetLength(&promptLength);
+        PRUint32 textLength;
+        result = domText->GetLength(&textLength);
         if (NS_SUCCEEDED(result)) {
           XMLT_LOG(mozXMLTermSession::DisplayInput,72,
-                   ("promptLength=%d\n", promptLength));
-          result = selection->Collapse(promptTextNode, promptLength);
+                   ("textLength=%d\n", textLength));
+          result = selection->Collapse(promptTextNode, textLength);
         }
       }
     }
@@ -1623,6 +1610,7 @@ NS_IMETHODIMP mozXMLTermSession::LimitOutputLines(PRBool deleteAllOld)
   if (NS_FAILED(result) || !firstChild)
     return NS_ERROR_FAILURE;
 
+  attValue = "";
   result = mozXMLTermUtils::GetNodeAttribute(firstChild, "class", attValue);
   if (NS_FAILED(result))
     return result;
@@ -1666,6 +1654,7 @@ NS_IMETHODIMP mozXMLTermSession::LimitOutputLines(PRBool deleteAllOld)
       deleteNode = 1;
 
     } else {
+      attValue = "";
       result = mozXMLTermUtils::GetNodeAttribute(nextChild, "class", attValue);
 
       if (NS_FAILED(result)|| (attValue.Length() == 0)) {
@@ -2191,7 +2180,7 @@ NS_IMETHODIMP mozXMLTermSession::AppendLineLS(const nsString& aString,
  * @param parentNode parent node for HTML fragment
  * @param entryNumber entry number (default value = -1)
  *                   (if entryNumber >= 0, all '#' characters in
- *                    id/onclick/ondblclick attribute values are substituted
+ *                    id/onclick attribute values are substituted
  *                    with entryNumber)
  * @param beforeNode child node before which to insert fragment;
  *                   if null, insert after last child node
@@ -2377,7 +2366,7 @@ void mozXMLTermSession::SubstituteCommandNumber(nsString& aString,
 
 /** Sanitize event handler attribute values by imposing syntax checks.
  * @param aAttrValue attribute value to be sanitized
- * @param aEventName name of event being handled ("click", "dblclick", ...)
+ * @param aEventName name of event being handled ("click", ...)
  */
 void mozXMLTermSession::SanitizeAttribute(nsString& aAttrValue,
                                           const char* aEventName)
@@ -2466,6 +2455,7 @@ NS_IMETHODIMP mozXMLTermSession::DeepSanitizeFragment(
       attName = "on";
       attName.Append(sessionEventNames[j]);
 
+      attValue = "";
       result = domElement->GetAttribute(attName, attValue);
       if (NS_SUCCEEDED(result) && (attValue.Length() > 0)) {
         // Save allowed event attribute value for re-insertion
@@ -2527,6 +2517,7 @@ NS_IMETHODIMP mozXMLTermSession::DeepSanitizeFragment(
       // Process ID attribute
       attName = "id";
 
+      attValue = "";
       result = domElement->GetAttribute(attName, attValue);
 
       if (NS_SUCCEEDED(result) && (attValue.Length() > 0)) {
@@ -2541,7 +2532,6 @@ NS_IMETHODIMP mozXMLTermSession::DeepSanitizeFragment(
       attName = "on";
       attName.Append(sessionEventNames[j]);
       attValue = eventAttrVals[j];
-
 
       if (attValue.Length() > 0) {
         SubstituteCommandNumber(attValue, entryNumber);
@@ -2601,6 +2591,7 @@ NS_IMETHODIMP mozXMLTermSession::DeepRefreshEventHandlers(
     XMLT_LOG(mozXMLTermSession::DeepRefreshEventHandlers,89,
              ("Refreshing on%s attribute\n",sessionEventNames[j] ));
 
+    attValue = "";
     result = domElement->GetAttribute(attName, attValue);
 
     if (NS_SUCCEEDED(result) && (attValue.Length() > 0)) {
@@ -2840,7 +2831,7 @@ NS_IMETHODIMP mozXMLTermSession::ScrollToBottomLeft(void)
     return NS_ERROR_FAILURE;
 
   // Scroll to bottom left of screen
-  domWindow->ScrollBy(-9999,9999);
+  domWindow->ScrollBy(-99999,99999);
 
   return NS_OK;
 }
@@ -2918,6 +2909,20 @@ NS_IMETHODIMP mozXMLTermSession::GetPrompt(PRUnichar **_aPrompt)
 NS_IMETHODIMP mozXMLTermSession::SetPrompt(const PRUnichar* aPrompt)
 {
   mPromptHTML = aPrompt;
+  return NS_OK;
+}
+
+
+/** Gets flag denoting whether terminal is in full screen mode
+ * @param aFlag (output) screen mode flag
+ */
+NS_IMETHODIMP mozXMLTermSession::GetScreenMode(PRBool* aFlag)
+{
+  if (!aFlag)
+    return NS_ERROR_NULL_POINTER;
+
+  *aFlag = (mScreenNode != nsnull);
+
   return NS_OK;
 }
 
@@ -3061,6 +3066,68 @@ NS_IMETHODIMP mozXMLTermSession::NewEntry(const nsString& aPrompt)
                                 mPromptSpanNode);
 
   if (mPromptHTML.Length() == 0) {
+
+#define DEFAULT_ICON_PROMPT
+#ifdef DEFAULT_ICON_PROMPT    // Experimental code; has scrolling problems
+    // Create text node + image node as child of prompt element
+    nsCOMPtr<nsIDOMNode> spanNode, textNode;
+
+    tagName = "span";
+    name ="noicons";
+    result = NewElementWithText(tagName, name, -1,
+                                mPromptSpanNode, spanNode, textNode);
+    if (NS_FAILED(result) || !spanNode || !textNode) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // Set prompt text
+    result = SetDOMText(textNode, aPrompt);
+    if (NS_FAILED(result))
+      return NS_ERROR_FAILURE;
+
+    // Create IMG element
+    tagName = "img";
+    nsCOMPtr<nsIDOMElement> imgElement;
+    result = mDOMDocument->CreateElement(tagName, getter_AddRefs(imgElement));
+    if (NS_FAILED(result) || !imgElement)
+      return NS_ERROR_FAILURE;
+
+    // Set attributes
+    nsAutoString attName("class");
+    nsAutoString attValue("icons");
+    imgElement->SetAttribute(attName, attValue);
+
+    attName = "src";
+    attValue = "chrome://editor/skin/images/preview.gif";
+    imgElement->SetAttribute(attName, attValue);
+
+    attName = "align";
+    attValue = "middle";
+    imgElement->SetAttribute(attName, attValue);
+
+    nsCOMPtr<nsIDOMNode> resultNode;
+
+    // Append IMG element
+    nsCOMPtr<nsIDOMNode> imgNode = do_QueryInterface(imgElement);
+    result = mPromptSpanNode->AppendChild(imgNode,
+                                          getter_AddRefs(resultNode));
+    if (NS_FAILED(result))
+      return NS_ERROR_FAILURE;
+
+    // Append text node containing single space
+    nsCOMPtr<nsIDOMText> stubText;
+    nsAutoString spaceStr (" ");
+    result = mDOMDocument->CreateTextNode(spaceStr, getter_AddRefs(stubText));
+    if (NS_FAILED(result) || !stubText)
+      return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIDOMNode> stubNode = do_QueryInterface(stubText);
+    result = mPromptSpanNode->AppendChild(stubNode,
+                                          getter_AddRefs(resultNode));
+    if (NS_FAILED(result))
+      return NS_ERROR_FAILURE;
+
+#else // !DEFAULT_ICON_PROMPT
     // Create text node as child of prompt element
     nsCOMPtr<nsIDOMNode> textNode;
     result = NewTextNode(mPromptSpanNode, textNode);
@@ -3072,6 +3139,7 @@ NS_IMETHODIMP mozXMLTermSession::NewEntry(const nsString& aPrompt)
     result = SetDOMText(textNode, aPrompt);
     if (NS_FAILED(result))
       return NS_ERROR_FAILURE;
+#endif // !DEFAULT_ICON_PROMPT
 
   } else {
     // User-specified HTML prompt
@@ -3802,7 +3870,7 @@ NS_IMETHODIMP mozXMLTermSession::NewIFrame(nsIDOMNode* parentNode,
 }
 
 
-/** Add event attributes (onclick, ondblclick, ...) to DOM node
+/** Add event attributes (onclick, ...) to DOM node
  * @param name name of DOM node (supplied as argument to the event handler)
  * @param number entry number (supplied as argument to the event handler)
  * @param domNode DOM node to be modified 
@@ -4197,7 +4265,7 @@ void mozXMLTermSession::TraverseDOMTree(FILE* fileStream,
         int j;
         for (j=0; j<PRINT_ATTRIBUTE_NAMES; j++) {
           nsAutoString attName (printAttributeNames[j]);
-          nsAutoString attValue;
+          nsAutoString attValue = "";
 
           result = domElement->GetAttribute(attName, attValue);
           if (NS_SUCCEEDED(result) && (attValue.Length() > 0)) {

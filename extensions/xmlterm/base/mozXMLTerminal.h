@@ -79,9 +79,13 @@ class mozXMLTerminal : public mozIXMLTerminal,
 
   NS_IMETHOD GetPresShell(nsIPresShell** aPresShell);
 
+  NS_IMETHOD GetScreenMode(PRBool* aFlag);
+
   NS_IMETHOD MatchesCookie(const PRUnichar* aCookie, PRBool *_retval);
 
   NS_IMETHOD Resize(void);
+
+  NS_IMETHOD ShowCaret(void);
 
   // nsIDocumentLoaderObserver interface
   NS_DECL_NSIDOCUMENTLOADEROBSERVER

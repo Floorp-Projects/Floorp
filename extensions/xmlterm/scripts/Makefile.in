@@ -54,6 +54,7 @@ include ../config/xmlterm_config.mk
 include $(topsrcdir)/config/rules.mk
 
 XMLTERM_SCRIPTS = \
+	$(srcdir)/menuhack \
 	$(srcdir)/xmlterm \
 	$(srcdir)/xls \
 	$(srcdir)/xcat \

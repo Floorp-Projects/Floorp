@@ -385,10 +385,6 @@ mozXMLTermShell::NewXMLTermWindow(const PRUnichar* args,
   XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,0,("check0, topWin=0x%x\n",
                                                 (int) topWin.get()));
 
-  // Determine preferences
-  nsCOMPtr<nsIPref> prefs = nsnull;
-  result = mContentAreaDocShell->GetPrefs(getter_AddRefs(prefs));
-
 #ifdef NEW_XMLTERM_IMP    // Test C++ NewXMLTerm implementation
   PRInt32 width = 760;
   PRInt32 height = 400;
