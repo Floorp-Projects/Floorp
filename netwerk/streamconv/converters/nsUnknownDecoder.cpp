@@ -51,7 +51,6 @@
 
 #define MAX_BUFFER_SIZE 1024
 
-static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
 
 #if defined WORDS_BIGENDIAN || defined IS_BIG_ENDIAN
