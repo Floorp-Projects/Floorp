@@ -3235,7 +3235,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     return;
   }
   
-  if (!mInComposition && nonDeadKeyPress)
+  if (nonDeadKeyPress)
   {
     // Fire a key press.
     nsKeyEvent geckoEvent;
@@ -3263,7 +3263,8 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
       }
       
       // do we need to end composition if we got here by arrow key press or other?
-      isKeyEventHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
+      if (!mInComposition)
+        isKeyEventHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
       
       // only force this through cocoa if this special-key was not handled by gecko
       mLastKeyEventWasSentToCocoa = !isKeyEventHandled;
