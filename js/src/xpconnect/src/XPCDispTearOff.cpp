@@ -50,45 +50,30 @@
  */
 static HRESULT Error(HRESULT hResult, const CComBSTR & message)
 {
-    ICreateErrorInfo * pCreateError;
-    IErrorInfo * pError;
+    CComPtr<ICreateErrorInfo> pCreateError;
+    CComPtr<IErrorInfo> pError;
     HRESULT result = CreateErrorInfo(&pCreateError);
-    if (FAILED(result))
+    if(FAILED(result))
         return E_NOTIMPL;
     result = pCreateError->QueryInterface(&pError);
-    if (FAILED(result))
+    if(FAILED(result))
         return E_NOTIMPL;
     result = pCreateError->SetDescription(message);
-    if (FAILED(result))
+    if(FAILED(result))
         return E_NOTIMPL;
     result = pCreateError->SetGUID(IID_IDispatch);
-    if (FAILED(result))
+    if(FAILED(result))
         return E_NOTIMPL;
     CComBSTR source(L"@mozilla.XPCDispatchTearOff");
     result = pCreateError->SetSource(source);
-    if (FAILED(result))
+    if(FAILED(result))
         return E_NOTIMPL;
     result = SetErrorInfo(0, pError);
-    if (FAILED(result))
+    if(FAILED(result))
         return E_NOTIMPL;
-    pError->Release();
-    pCreateError->Release();
     return hResult;
 }
 
-
-/**
- * Sets the COM error from a result code and text message
- * @param hResult the COM error code to be used
- * @param message the message to put in the error
- * @return the error code passed in via hResult
- */
-inline
-HRESULT Error(HRESULT hResult, const nsCString & message)
-{
-    CComBSTR someText(PromiseFlatCString(message).get());
-    return Error(hResult, someText);
-}
 
 /**
  * Sets the COM error from a result code and text message
@@ -108,28 +93,22 @@ HRESULT Error(HRESULT hResult, const char * message)
  * @param exception
  * @return the description of the exception
  */
-static nsCString BuildMessage(nsIException * exception)
+static void BuildMessage(nsIException * exception, nsCString & result)
 {
-    nsCString result;
-    char * msg;
-    if(NS_FAILED(exception->GetMessage(&msg)))
-        msg = "";
-    char * filename;
-    if(NS_FAILED(exception->GetFilename(&filename)))
-        filename = "";
+    nsXPIDLCString msg;
+    exception->GetMessage(getter_Copies(msg));
+    nsXPIDLCString filename;
+    exception->GetFilename(getter_Copies(filename));
 
     PRUint32 lineNumber;
     if(NS_FAILED(exception->GetLineNumber(&lineNumber)))
         lineNumber = 0;
-    char lineNumberStr[32];
-    sprintf(lineNumberStr, "%d", lineNumber);
     result = "Error in file ";
     result += filename;
     result += ",#";
-    result += lineNumberStr;
+    result.AppendInt(lineNumber);
     result += " : ";
     result += msg;
-    return result; 
 }
 
 /**
@@ -139,8 +118,9 @@ static nsCString BuildMessage(nsIException * exception)
 inline
 static void SetCOMError(nsIException * exception)
 {
-    nsCString message = BuildMessage(exception);
-    Error(E_FAIL, message);
+    nsCString message;
+    BuildMessage(exception, message);
+    Error(E_FAIL, message.get());
 }
 
 XPCDispatchTearOff::XPCDispatchTearOff(nsIXPConnectWrappedJS * wrappedJS) :
@@ -155,31 +135,8 @@ XPCDispatchTearOff::~XPCDispatchTearOff()
     NS_IF_RELEASE(mCOMTypeInfo);
 }
 
-ULONG XPCDispatchTearOff::AddRef()
-{
-    NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
-    nsrefcnt count;
-    count = PR_AtomicIncrement((PRInt32*)&mRefCnt);
-    NS_LOG_ADDREF(this, count, "XPCDispatchTearOff", sizeof(*this));
-    return count;
-}
-
-ULONG XPCDispatchTearOff::Release()
-{
-    nsrefcnt count;
-    NS_PRECONDITION(0 != mRefCnt, "dup release");
-    count = PR_AtomicDecrement((PRInt32 *)&mRefCnt);
-    NS_LOG_RELEASE(this, count, "XPCDispatchTearOff");
-    if(0 == count)
-    {
-        mRefCnt = 1; /* stabilize */
-        /* enable this to find non-threadsafe destructors: */
-        /* NS_ASSERT_OWNINGTHREAD(XPCDispatchTearOff); */
-        NS_DELETEXPCOM(this);
-        return 0;
-    }
-    return count;
-}
+NS_COM_IMPL_ADDREF(XPCDispatchTearOff)
+NS_COM_IMPL_RELEASE(XPCDispatchTearOff)
 
 STDMETHODIMP XPCDispatchTearOff::InterfaceSupportsErrorInfo(REFIID riid)
 {
@@ -201,19 +158,19 @@ STDMETHODIMP XPCDispatchTearOff::QueryInterface(const struct _GUID & guid,
 {
     if(IsEqualIID(guid, IID_IDispatch))
     {
-        *pPtr = NS_STATIC_CAST(IDispatch*, this);
-        NS_ADDREF(NS_REINTERPRET_CAST(IUnknown*, *pPtr));
+        *pPtr = NS_STATIC_CAST(IDispatch*,this);
+        NS_ADDREF_THIS();
         return NS_OK;
     }
 
     if(IsEqualIID(guid, IID_ISupportErrorInfo))
     {
-        *pPtr = NS_STATIC_CAST(ISupportErrorInfo*, this);
-        NS_ADDREF(NS_REINTERPRET_CAST(IUnknown*, *pPtr));
+        *pPtr = NS_STATIC_CAST(IDispatch*,this);
+        NS_ADDREF_THIS();
         return NS_OK;
     }
 
-    return mWrappedJS->QueryInterface(XPCDispGUID2nsIID(guid), pPtr);
+    return mWrappedJS->QueryInterface(XPCDispIID2nsIID(guid), pPtr);
 }
 
 STDMETHODIMP XPCDispatchTearOff::GetTypeInfoCount(unsigned int FAR * pctinfo)
@@ -265,11 +222,11 @@ xpcWrappedJSErrorReporter(JSContext *cx, const char *message,
                           JSErrorReport *report);
 
 STDMETHODIMP XPCDispatchTearOff::Invoke(DISPID dispIdMember, REFIID riid, 
-                                    LCID lcid, WORD wFlags,
-                                    DISPPARAMS FAR* pDispParams, 
-                                    VARIANT FAR* pVarResult, 
-                                    EXCEPINFO FAR* pExcepInfo, 
-                                    unsigned int FAR* puArgErr)
+                                        LCID lcid, WORD wFlags,
+                                        DISPPARAMS FAR* pDispParams, 
+                                        VARIANT FAR* pVarResult, 
+                                        EXCEPINFO FAR* pExcepInfo, 
+                                        unsigned int FAR* puArgErr)
 {
     XPCDispTypeInfo* pTypeInfo = GetCOMTypeInfo();
     if(!pTypeInfo)
@@ -290,8 +247,9 @@ STDMETHODIMP XPCDispatchTearOff::Invoke(DISPID dispIdMember, REFIID riid,
         cx = nsnull;
     }
     // Get the name as a flat string
-    const nsACString & xname = pTypeInfo->GetNameForDispID(dispIdMember);
-    const nsPromiseFlatCString & name = PromiseFlatCString(xname);
+    // This isn't that efficient, but we have to make the conversion somewhere
+    const nsAString & xname = pTypeInfo->GetNameForDispID(dispIdMember);
+    const nsPromiseFlatCString & name = PromiseFlatCString(NS_LossyConvertUCS2toASCII(xname));
     if(name.IsEmpty())
         return E_FAIL;
     // Decide if this is a getter or setter
@@ -309,17 +267,17 @@ STDMETHODIMP XPCDispatchTearOff::Invoke(DISPID dispIdMember, REFIID riid,
             obj = GetJSObject();
             if(!obj)
                 return E_FAIL;
-            if (!JS_GetProperty(cx, obj, name.get(), &val))
+            if(!JS_GetProperty(cx, obj, name.get(), &val))
             {
                 nsCString msg("Unable to retrieve property ");
-                msg += xname;
-                return Error(E_FAIL, msg);
+                msg += name;
+                return Error(E_FAIL, msg.get());
             }
             if(!XPCDispConvert::JSToCOM(ccx, val, *pVarResult, err))
             {
                 nsCString msg("Failed to convert value from JS property ");
-                msg += xname;
-                return Error(E_FAIL, msg);
+                msg += name;
+                return Error(E_FAIL, msg.get());
             }
         }
         else if(pDispParams->cArgs > 0)
@@ -328,17 +286,17 @@ STDMETHODIMP XPCDispatchTearOff::Invoke(DISPID dispIdMember, REFIID riid,
             if(!XPCDispConvert::COMToJS(ccx, pDispParams->rgvarg[0], val, err))
             {
                 nsCString msg("Failed to convert value for JS property ");
-                msg += xname;
-                return Error(E_FAIL, msg);
+                msg += name;
+                return Error(E_FAIL, msg.get());
             }
             obj = GetJSObject();
             if(!obj)
                 return Error(E_FAIL, "The JS wrapper did not return a JS object");
-            if (!JS_SetProperty(cx, obj, name.get(), &val))
+            if(!JS_SetProperty(cx, obj, name.get(), &val))
             {
                 nsCString msg("Unable to set property ");
-                msg += xname;
-                return Error(E_FAIL, msg);
+                msg += name;
+                return Error(E_FAIL, msg.get());
             }
         }
     }
@@ -347,7 +305,7 @@ STDMETHODIMP XPCDispatchTearOff::Invoke(DISPID dispIdMember, REFIID riid,
         jsval* stackbase;
         jsval* sp = nsnull;
         uint8 i;
-        uint8 argc=pDispParams->cArgs;
+        uint8 argc = pDispParams->cArgs;
         uint8 stack_size;
         jsval result;
         uint8 paramCount=0;
@@ -485,7 +443,7 @@ pre_call_clean_up:
             fp = oldfp = cx->fp;
             if(!fp)
             {
-                memset(&frame, 0, sizeof frame);
+                memset(&frame, 0, sizeof(frame));
                 cx->fp = fp = &frame;
             }
             oldsp = fp->sp;
@@ -545,7 +503,7 @@ pre_call_clean_up:
             }
             JS_ClearPendingException(cx);
         }
-
+        // TODO: This exception logic needs to be refactored and shared with wrapped JS
         if(xpc_exception)
         {
             nsresult e_result;

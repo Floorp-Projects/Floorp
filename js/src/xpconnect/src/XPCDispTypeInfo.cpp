@@ -49,6 +49,9 @@
 
 #include "xpcprivate.h"
 
+// There's no CPP for XPCDispNameArray so it's just plopped here
+const nsString XPCDispNameArray::sEmpty;
+
 /**
  * Helper function that initializes the element description
  * @param vt The type of variant
@@ -96,7 +99,7 @@ ELEMDESC* XPCDispJSPropertyInfo::GetParamInfo()
     if(paramCount != 0)
     {
         elemDesc = new ELEMDESC[paramCount];
-        if (elemDesc)
+        if(elemDesc)
         {
             for(PRUint32 index = 0; index < paramCount; ++index)
             {
@@ -114,20 +117,21 @@ XPCDispJSPropertyInfo::XPCDispJSPropertyInfo(JSContext* cx, PRUint32 memid,
                                              JSObject* obj, jsval val) : 
     mPropertyType(INVALID), mMemID(memid)
 {
-    const char* chars = xpc_JSString2Char(cx, val);
+    PRUint32 len;
+    jschar * chars = xpc_JSString2String(cx, val, &len);
     if(!chars)
         return;
 
-    mName = chars;
+    mName = nsString(chars, len);
     JSBool found;
     uintN attr;
     // Get the property's attributes, and make sure it's found and enumerable 
-    if(!JS_GetPropertyAttributes(cx, obj, chars, &attr, &found) || 
+    if(!JS_GetUCPropertyAttributes(cx, obj, chars, len, &attr, &found) || 
         !found || (attr & JSPROP_ENUMERATE) == 0)
         return;
 
     // Retrieve the property 
-    if(!chars || !JS_GetProperty(cx, obj, chars, &mProperty) ||
+    if(!chars || !JS_GetUCProperty(cx, obj, chars, len, &mProperty) ||
         JSVAL_IS_NULL(mProperty))
         return;
 
@@ -160,6 +164,7 @@ XPCDispJSPropertyInfo::XPCDispJSPropertyInfo(JSContext* cx, PRUint32 memid,
 PRBool XPCDispTypeInfo::FuncDescArray::BuildFuncDesc(XPCCallContext& ccx, JSObject* obj, 
                                      XPCDispJSPropertyInfo & propInfo)
 {
+    // While this memory is passed out, we're ultimately responsible to free it
     FUNCDESC* funcDesc = new FUNCDESC;
     if(!funcDesc)
         return PR_FALSE;
@@ -226,10 +231,6 @@ XPCDispTypeInfo::XPCDispTypeInfo(XPCCallContext& ccx, JSObject* obj,
 
 XPCDispTypeInfo * XPCDispTypeInfo::New(XPCCallContext& ccx, JSObject* obj)
 {
-    nsresult retval = NS_ERROR_FAILURE;
-    // Saved state must be restored
-    JSExceptionState* saved_exception = xpc_DoPreScriptEvaluated(ccx);
-    JSErrorReporter older = JS_SetErrorReporter(ccx, nsnull);
     XPCDispTypeInfo * pTypeInfo = 0;
     JSIdArray * jsArray = JS_Enumerate(ccx, obj);
     if(!jsArray)
@@ -243,15 +244,13 @@ XPCDispTypeInfo * XPCDispTypeInfo::New(XPCCallContext& ccx, JSObject* obj)
         delete array;
         return nsnull;
     }
-    JS_SetErrorReporter(ccx, older);
-    xpc_DoPostScriptEvaluated(ccx, saved_exception);
-
+    NS_ADDREF(pTypeInfo);
     return pTypeInfo;
 }
 
 NS_COM_MAP_BEGIN(XPCDispTypeInfo)
-NS_COM_MAP_ENTRY(ITypeInfo)
-NS_COM_MAP_ENTRY(IUnknown)
+    NS_COM_MAP_ENTRY(ITypeInfo)
+    NS_COM_MAP_ENTRY(IUnknown)
 NS_COM_MAP_END
 
 NS_IMPL_THREADSAFE_ADDREF(XPCDispTypeInfo)
@@ -312,14 +311,12 @@ STDMETHODIMP XPCDispTypeInfo::GetIDsOfNames(
         /* [in] */ UINT cNames,
         /* [size_is][out] */ MEMBERID __RPC_FAR *pMemId)
 {
-    _bstr_t name;
     // lookup each name
     for(UINT index = 0; index < cNames; ++index)
     {
-        // This can probably be streamlined, I wasn't sure if
-        // we could go safely from LPOLESTR to nsDependentString
-        name = rgszNames[index];
-        nsDependentCString buffer(NS_STATIC_CAST(const char *,name));
+        nsDependentString buffer(NS_STATIC_CAST(const PRUnichar *,
+                                 rgszNames[index]),
+                                 SysStringLen(rgszNames[index]));
         pMemId[index] = mNameArray.Find(buffer);
 
     }
@@ -335,16 +332,13 @@ STDMETHODIMP XPCDispTypeInfo::Invoke(
         /* [out] */ EXCEPINFO __RPC_FAR *pExcepInfo,
         /* [out] */ UINT __RPC_FAR *puArgErr)
 {
-    IUnknown* ptr = NS_REINTERPRET_CAST(IUnknown*,pvInstance);
-    IDispatch* pDisp;
-    HRESULT result = ptr->QueryInterface(IID_IDispatch, 
-                                         NS_REINTERPRET_CAST(void**,&pDisp));
-    if(SUCCEEDED(result))
+    CComQIPtr<IDispatch> pDisp(NS_REINTERPRET_CAST(IUnknown*,pvInstance));
+    if(pDisp)
     {
-        result = pDisp->Invoke(memid, IID_NULL, LOCALE_SYSTEM_DEFAULT, wFlags, 
+        return pDisp->Invoke(memid, IID_NULL, LOCALE_SYSTEM_DEFAULT, wFlags, 
                                pDispParams, pVarResult, pExcepInfo, puArgErr);
     }
-    return result;
+    return E_NOINTERFACE;
 }
     
 STDMETHODIMP XPCDispTypeInfo::GetDocumentation(

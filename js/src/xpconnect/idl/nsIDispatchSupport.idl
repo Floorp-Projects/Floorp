@@ -79,7 +79,7 @@ interface nsIDispatchSupport : nsISupports
      * @param className contract ID or class ID of the desired component to instantiate 
      * @return The IDispatch interface pointer if instantiated
      */
-    IDispatch CreateInstance(in string className, in PRBool testScriptability);
+    IDispatch CreateInstance(in astring className, in PRBool testScriptability);
 };
 
 %{ C++

@@ -376,7 +376,6 @@ DefinePropertyIfFound(XPCCallContext& ccx,
 #ifdef XPC_IDISPATCH_SUPPORT
         // Check to see if there's an IDispatch tearoff     
         if(wrapperToReflectInterfaceNames &&
-            nsXPConnect::IsIDispatchEnabled() &&
             XPCIDispatchExtension::DefineProperty(ccx, obj, 
                 idval, wrapperToReflectInterfaceNames, propFlags, resolved))
             return JS_TRUE;
@@ -604,19 +603,18 @@ XPC_WN_Shared_Enumerate(JSContext *cx, JSObject *obj)
     XPCNativeInterface** interfaceArray = set->GetInterfaceArray();
     for(PRUint16 i = 0; i < interface_count; i++)
     {
-        XPCNativeInterface* interface = interfaceArray[i];
+        XPCNativeInterface* iface = interfaceArray[i];
 #ifdef XPC_IDISPATCH_SUPPORT
-        if (nsXPConnect::GetXPConnect()->IsIDispatchEnabled() && 
-            interface->GetIID()->Equals(NSID_IDISPATCH))
+        if(iface->GetIID()->Equals(NSID_IDISPATCH))
         {
             XPCIDispatchExtension::Enumerate(ccx, obj, wrapper);
             continue;
         }
 #endif
-        PRUint16 member_count = interface->GetMemberCount();
+        PRUint16 member_count = iface->GetMemberCount();
         for(PRUint16 k = 0; k < member_count; k++)
         {
-            XPCNativeMember* member = interface->GetMemberAt(k);
+            XPCNativeMember* member = iface->GetMemberAt(k);
             jsval name = member->GetName();
 
             // Skip if this member is going to come from the proto.

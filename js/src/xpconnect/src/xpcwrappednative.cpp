@@ -216,7 +216,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     // in a pointer that hasn't been QI'd to IDispatch properly this could
     // create multiple wrappers for the same object, creating a fair bit of
     // confusion.
-    if(nsXPConnect::IsIDispatchEnabled() && Interface->GetIID()->Equals(NSID_IDISPATCH))
+    if(Interface->GetIID()->Equals(NSID_IDISPATCH))
         identity = Object;
     else
 #endif
@@ -435,7 +435,7 @@ XPCWrappedNative::GetUsedOnly(XPCCallContext& ccx,
     nsCOMPtr<nsISupports> identity;
 #ifdef XPC_IDISPATCH_SUPPORT
     // XXX See GetNewOrUsed for more info on this
-    if(!nsXPConnect::IsIDispatchEnabled() && Interface->GetIID()->Equals(NSID_IDISPATCH))
+    if(Interface->GetIID()->Equals(NSID_IDISPATCH))
         identity = Object;
     else
 #endif
@@ -1443,7 +1443,7 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
     aTearOff->SetNative(obj);
 #ifdef XPC_IDISPATCH_SUPPORT
     // Are we building a tearoff for IDispatch?
-    if(ccx.GetXPConnect()->IsIDispatchEnabled() && iid->Equals(NSID_IDISPATCH))
+    if(iid->Equals(NSID_IDISPATCH))
     {
         aTearOff->SetIDispatch(ccx);
     }  
@@ -2477,7 +2477,7 @@ XPCWrappedNative::HandlePossibleNameCaseError(XPCCallContext& ccx,
     PRUnichar* oldStr;
     PRUnichar* newStr;
     XPCNativeMember* member;
-    XPCNativeInterface* interface;
+    XPCNativeInterface* localIface;
 
     /* PRUnichar->char->PRUnichar hack is to avoid pulling in i18n code. */
     if(JSVAL_IS_STRING(name) &&
@@ -2492,11 +2492,11 @@ XPCWrappedNative::HandlePossibleNameCaseError(XPCCallContext& ccx,
         newJSStr = JS_NewUCStringCopyZ(ccx, (const jschar*)newStr);
         nsCRT::free(newStr);
         if(newJSStr && (set ?
-             set->FindMember(STRING_TO_JSVAL(newJSStr), &member, &interface) :
+             set->FindMember(STRING_TO_JSVAL(newJSStr), &member, &localIface) :
                         (JSBool)NS_PTR_TO_INT32(iface->FindMember(STRING_TO_JSVAL(newJSStr)))))
         {
             // found it!
-            const char* ifaceName = interface->GetNameString();
+            const char* ifaceName = localIface->GetNameString();
             const char* goodName = JS_GetStringBytes(newJSStr);
             const char* badName = JS_GetStringBytes(oldJSStr);
             char* locationStr = nsnull;

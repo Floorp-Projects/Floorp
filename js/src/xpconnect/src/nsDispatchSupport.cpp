@@ -96,11 +96,15 @@ NS_IMETHODIMP nsDispatchSupport::JSVal2COMVariant(jsval val, VARIANT * comvar)
  * @param result pointer to an IDispatch to receive the pointer to the instance
  * @return nsresult
  */
-NS_IMETHODIMP nsDispatchSupport::CreateInstance(const char * className,
+NS_IMETHODIMP nsDispatchSupport::CreateInstance(const nsAString & className,
                                                 PRBool testScriptability,
                                                 IDispatch ** result)
 {
-    return XPCDispObject::COMCreateInstance(className, testScriptability, result);
+    if (!nsXPConnect::IsIDispatchEnabled())
+        return NS_ERROR_XPC_IDISPATCH_NOT_ENABLED;
+    const nsPromiseFlatString & flat = PromiseFlatString(className);
+    CComBSTR name(flat.Length(), flat.get());
+    return XPCDispObject::COMCreateInstance(name, testScriptability, result);
 }
 
 nsDispatchSupport* nsDispatchSupport::GetSingleton()

@@ -566,10 +566,13 @@ inline
 JSObject* XPCWrappedNativeTearOff::GetJSObject() const
 {
 #ifdef XPC_IDISPATCH_SUPPORT
-    return IsIDispatch() ? GetIDispatchInfo()->GetJSObject() : mJSObject;
-#else
-    return mJSObject;
+    if(IsIDispatch())
+    {
+        XPCDispInterface * iface = GetIDispatchInfo();
+        return iface ? iface->GetJSObject() : nsnull;
+    }
 #endif
+    return mJSObject;
 }
 
 inline
@@ -577,7 +580,11 @@ void XPCWrappedNativeTearOff::SetJSObject(JSObject*  JSObj)
 {
 #ifdef XPC_IDISPATCH_SUPPORT
     if(IsIDispatch())
-        GetIDispatchInfo()->SetJSObject(JSObj);
+    {
+        XPCDispInterface* iface = GetIDispatchInfo();
+        if (iface)
+            iface->SetJSObject(JSObj);
+    }
     else
 #endif
         mJSObject = JSObj;
@@ -595,6 +602,8 @@ XPCWrappedNativeTearOff::SetIDispatch(JSContext* cx)
 inline XPCDispInterface* 
 XPCWrappedNativeTearOff::GetIDispatchInfo() const
 {
+    NS_ASSERTION((jsword)mJSObject & 2, "XPCWrappedNativeTearOff::GetIDispatchInfo "
+                                "called on a non IDispatch interface");
     return NS_REINTERPRET_CAST(XPCDispInterface*,
                                (((jsword)mJSObject) & ~JSOBJECT_MASK));
 }

@@ -334,7 +334,7 @@ void XPCDispNameArray::SetSize(PRUint32 size)
 {
     NS_ASSERTION(mCount == 0, "SetSize called more than once");
     mCount = size;
-    mNames = (size ? new nsCString[size] : 0);
+    mNames = (size ? new nsString[size] : 0);
 }
 
 inline
@@ -344,27 +344,27 @@ PRUint32 XPCDispNameArray::GetSize() const
 }
 
 inline
-void XPCDispNameArray::SetName(DISPID dispid, nsACString const & name) 
+void XPCDispNameArray::SetName(DISPID dispid, nsAString const & name) 
 {
     NS_ASSERTION(dispid <= mCount, "Array bounds error in XPCDispNameArray::SetName");
     mNames[dispid - 1] = name;
 }
 
 inline
-nsCString XPCDispNameArray::GetName(DISPID dispid) const 
+const nsAString & XPCDispNameArray::GetName(DISPID dispid) const 
 {
     NS_ASSERTION(dispid <= mCount, "Array bounds error in XPCDispNameArray::Get");
     if(dispid > 0)
         return mNames[dispid - 1];
-    return nsCString();
+    return sEmpty;
 }
 
 inline
-DISPID XPCDispNameArray::Find(const nsACString &target) const
+DISPID XPCDispNameArray::Find(const nsAString &target) const
 {
     for(PRUint32 index = 0; index < mCount; ++index) 
     {
-        if(mNames[index] == target) 
+        if(mNames[index].Equals(target)) 
             return NS_STATIC_CAST(DISPID, index + 1);
     }
     return 0; 
@@ -429,7 +429,7 @@ PRUint32 XPCDispTypeInfo::FuncDescArray::Length() const
 }
 
 inline
-nsCString XPCDispTypeInfo::GetNameForDispID(DISPID dispID)
+const nsAString & XPCDispTypeInfo::GetNameForDispID(DISPID dispID)
 {
     return mNameArray.GetName(dispID);
 }
@@ -486,7 +486,7 @@ void XPCDispJSPropertyInfo::SetSetter()
 }
 
 inline
-nsACString const & XPCDispJSPropertyInfo::GetName() const
+const nsAString & XPCDispJSPropertyInfo::GetName() const
 {
     return mName; 
 }
@@ -501,31 +501,31 @@ XPCDispJSPropertyInfo::property_type XPCDispJSPropertyInfo::PropertyType() const
 // GUID/nsIID/nsCID conversion functions
 
 inline
-const nsIID & XPCDispGUID2nsIID(const struct _GUID & guid)
+const nsIID & XPCDispIID2nsIID(const IID & iid)
 {
-    NS_ASSERTION(sizeof(struct _GUID) == sizeof(nsIID), "GUID is not the same as nsIID");
-    return NS_REINTERPRET_CAST(const nsIID &,guid);
+    NS_ASSERTION(sizeof(IID) == sizeof(nsIID), "IID is not the same size as nsIID");
+    return NS_REINTERPRET_CAST(const nsIID &,iid);
 }
 
 inline
-const GUID & XPCDispIID2GUID(const nsIID & iid)
+const IID & XPCDispIID2IID(const nsIID & iid)
 {
-    NS_ASSERTION(sizeof(struct _GUID) == sizeof(nsIID), "GUID is not the same as IID");
-    return NS_REINTERPRET_CAST(const struct _GUID &, iid);
+    NS_ASSERTION(sizeof(IID) == sizeof(nsIID), "IID is not the same size as nsIID");
+    return NS_REINTERPRET_CAST(const IID &, iid);
 }
 
 inline
-const nsCID & XPCDispGUID2nsCID(const struct _GUID & guid)
+const nsCID & XPCDispCLSID2nsCID(const CLSID & clsid)
 {
-    NS_ASSERTION(sizeof(struct _GUID) == sizeof(nsCID), "GUID is not the same as nsCID");
-    return NS_REINTERPRET_CAST(const nsCID &,guid);
+    NS_ASSERTION(sizeof(CLSID) == sizeof(nsCID), "CLSID is not the same size as nsCID");
+    return NS_REINTERPRET_CAST(const nsCID &,clsid);
 }
 
 inline
-const GUID & XPCDispCID2GUID(const nsCID & iid)
+const CLSID & XPCDispnsCID2CLSID(const nsCID & clsid)
 {
-    NS_ASSERTION(sizeof(struct _GUID) == sizeof(nsCID), "GUID is not the same as IID");
-    return NS_REINTERPRET_CAST(const struct _GUID &, iid);
+    NS_ASSERTION(sizeof(CLSID) == sizeof(nsCID), "CLSID is not the same size as nsCID");
+    return NS_REINTERPRET_CAST(const CLSID &, clsid);
 }
 
 //=============================================================================
@@ -537,6 +537,14 @@ void XPCDispParams::SetNamedPropID()
     mDispParams.rgdispidNamedArgs = &mPropID; 
     mDispParams.cNamedArgs = 1; 
 }
+/*
+inline
+const VARIANT & XPCDispParams::GetParamRef(PRUint32 index) const
+{
+    NS_ASSERTION(index < mDispParams.cArgs, "XPCDispParams::GetParam bounds error");
+    return mDispParams.rgvarg[mDispParams.cArgs - index - 1];
+}
+*/
 
 inline
 VARIANT & XPCDispParams::GetParamRef(PRUint32 index)
@@ -555,7 +563,7 @@ inline
 void * XPCDispParams::GetOutputBuffer(PRUint32 index)
 {
     NS_ASSERTION(index < mDispParams.cArgs, "XPCDispParams::GetParam bounds error");
-    return mVarBuffer + VARIANT_UNION_SIZE * index;
+    return mRefBuffer + sizeof(VARIANT) * index;
 }
 
 //=============================================================================
@@ -579,14 +587,19 @@ JSBool XPCDispParamPropJSClass::Invoke(XPCCallContext& ccx,
  * @return a C string (Does not need to be freed)
  */
 inline
-const char * xpc_JSString2Char(JSContext * cx, jsval val)
+jschar * xpc_JSString2String(JSContext * cx, jsval val, PRUint32 * len = 0)
 {
-    JSString* str = JS_ValueToString(cx, val);
-    if(!str)
-        return nsnull;
-
-    return JS_GetStringBytes(str);
-
+    JSString* str = JSVAL_IS_STRING(val) ? JSVAL_TO_STRING(val) : 
+                                           JS_ValueToString(cx, val);
+    if(str)
+    {
+        if(len)
+            *len = JS_GetStringLength(str);
+        return JS_GetStringChars(str);
+    }
+    if(len)
+        *len = 0;
+    return nsnull;
 }
 
 /**

@@ -47,27 +47,46 @@
 #error "DispPrivate.h should not be included directly, please use XPCPrivate.h"
 #endif
 
+/**
+ * Needed for CComPtr and friends
+ */
+#include <atlbase.h>
+/**
+ * Needed for _variant_t and _bstr_t
+ */
+#include <comdef.h>
+/**
+ * IObjectSafety interface and friends
+ */
+#include "objsafe.h"
+
+// MS clutters the global namespace with so many macro names :-(
+// I tried to keep these includes in the CPP's but it became too
+// convoluted
+#undef GetClassInfo
+#undef GetClassName
+#undef GetMessage
+
 // We need IDispatch
 #include "nsIDispatchSupport.h"
 
 // The following are macro helpers pulled from XPCOM but tailored to COM
 #define NS_DECL_IUNKNOWN                                                      \
 public:                                                                       \
-  STDMETHOD(QueryInterface)(const struct _GUID& aIID,                         \
+  STDMETHOD(QueryInterface)(REFIID aIID,                                      \
                             void** aInstancePtr);                             \
-  STDMETHODIMP_(nsrefcnt) AddRef(void);                                       \
-  STDMETHODIMP_(nsrefcnt) Release(void);                                      \
+  STDMETHODIMP_(ULONG) AddRef(void);                                          \
+  STDMETHODIMP_(ULONG) Release(void);                                         \
 protected:                                                                    \
-  nsAutoRefCnt mRefCnt;                                                       \
-  NS_DECL_OWNINGTHREAD                                                        \
+  ULONG mRefCnt;                                                       
 
 #define NS_IMPL_COM_QUERY_HEAD(_class)                                        \
-STDMETHODIMP _class::QueryInterface(const GUID& aIID, void** aInstancePtr)    \
+STDMETHODIMP _class::QueryInterface(REFIID aIID, void** aInstancePtr)         \
 {                                                                             \
   NS_ASSERTION(aInstancePtr,                                                  \
                "QueryInterface requires a non-NULL destination!");            \
   if( !aInstancePtr )                                                         \
-    return NS_ERROR_NULL_POINTER;                                             \
+    return E_POINTER;                                                         \
   IUnknown* foundInterface;
 
 #define NS_IMPL_COM_QUERY_BODY(_interface)                                    \
@@ -77,13 +96,13 @@ STDMETHODIMP _class::QueryInterface(const GUID& aIID, void** aInstancePtr)    \
 
 #define NS_IMPL_COM_QUERY_TAIL_GUTS                                           \
     foundInterface = 0;                                                       \
-  nsresult status;                                                            \
+  HRESULT status;                                                             \
   if( !foundInterface )                                                       \
-    status = NS_NOINTERFACE;                                                  \
+    status = E_NOINTERFACE;                                                   \
   else                                                                        \
     {                                                                         \
       NS_ADDREF(foundInterface);                                              \
-      status = NS_OK;                                                         \
+      status = S_OK;                                                          \
     }                                                                         \
   *aInstancePtr = foundInterface;                                             \
   return status;                                                              \
@@ -93,11 +112,36 @@ STDMETHODIMP _class::QueryInterface(const GUID& aIID, void** aInstancePtr)    \
 #define NS_COM_MAP_ENTRY(_interface)      NS_IMPL_COM_QUERY_BODY(_interface)
 #define NS_COM_MAP_END                    NS_IMPL_COM_QUERY_TAIL_GUTS
 
+#define NS_COM_IMPL_ADDREF(_class)                                            \
+STDMETHODIMP_(ULONG) _class::AddRef(void)                                     \
+{                                                                             \
+  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");                   \
+  NS_ASSERT_OWNINGTHREAD(_class);                                             \
+  ++mRefCnt;                                                                  \
+  NS_LOG_ADDREF(this, mRefCnt, #_class, sizeof(*this));                       \
+  return mRefCnt;                                                             \
+}
+
+#define NS_COM_IMPL_RELEASE(_class)                                           \
+STDMETHODIMP_(ULONG) _class::Release(void)                                    \
+{                                                                             \
+  NS_PRECONDITION(0 != mRefCnt, "dup release");                               \
+  NS_ASSERT_OWNINGTHREAD(_class);                                             \
+  --mRefCnt;                                                                  \
+  NS_LOG_RELEASE(this, mRefCnt, #_class);                                     \
+  if(mRefCnt == 0) {                                                         \
+    mRefCnt = 1; /* stabilize */                                              \
+    delete this;                                                              \
+    return 0;                                                                 \
+  }                                                                           \
+  return mRefCnt;                                                             \
+}
+
 #ifndef NS_MT_SUPPORTED
 #error "We need MT support
 #endif
 
-extern nsID NSID_IDISPATCH;
+extern const nsID NSID_IDISPATCH;
 
 /**
  * JS<>COM Conversion functions. XPCDispConvert serves more as a namespace than
@@ -125,7 +169,8 @@ public:
      * @return True if the conversion succeeded
      */
     static
-    JSBool JSToCOM(XPCCallContext& ccx, jsval src, VARIANT & dest, nsresult& err);
+    JSBool JSToCOM(XPCCallContext& ccx, jsval src, VARIANT & dest, 
+                   nsresult& err, JSBool isByRef = JS_FALSE);
 
     /**
      * Converts a COM variant to a jsval
@@ -136,7 +181,7 @@ public:
      * @return Returns true if the conversion succeeded
      */
     static
-    JSBool COMToJS(XPCCallContext& ccx, const _variant_t & src, jsval & dest,
+    JSBool COMToJS(XPCCallContext& ccx, const VARIANT & src, jsval & dest,
                    nsresult& err);
 private:
     /**
@@ -159,7 +204,7 @@ private:
      * @return True if the conversion succeeded
      */
     static
-    JSBool COMArrayToJSArray(XPCCallContext& ccx, const _variant_t & src,
+    JSBool COMArrayToJSArray(XPCCallContext& ccx, const VARIANT & src,
                              jsval & dest, nsresult& err);
 };
 
@@ -220,22 +265,27 @@ public:
      * @param dispid IDispatch id for the name
      * @param name the name to assign
      */
-    void SetName(DISPID dispid, nsACString const & name);
+    void SetName(DISPID dispid, nsAString const & name);
     /**
      * Retrieves a name/string for a dispid. This function
      * performs bounds checking in debug builds
      * @param dispid dispatch ID of the name to retrieve
      */
-    nsCString GetName(DISPID dispid) const;
+    const nsAString&  GetName(DISPID dispid) const;
     /**
      * Performs a search of the array for the target returning the
      * the id for the name
      * @param target the name to find
      */
-    DISPID Find(const nsACString &target) const;
+    DISPID Find(const nsAString &target) const;
 private:
+    /**
+     * This is used by Find when it doesn't find something
+     * @see XPCDispNameArray::Find
+     */
+    static const nsString sEmpty;
     PRUint32 mCount;
-    nsCString* mNames;
+    nsString* mNames;
 };
 
 /**
@@ -436,7 +486,7 @@ public:
      * @param dispID the DISPID to look up
      * @return the name of the function
      */
-    nsCString GetNameForDispID(DISPID dispID);
+    const nsAString& GetNameForDispID(DISPID dispID);
 private:
     /**
      * Initializes the object
@@ -524,7 +574,7 @@ public:
      * returns the name of the property/method
      * @return the name of the property/method
      */
-    nsACString const & GetName() const;
+    nsAString const & GetName() const;
 private:
     enum property_type
     {
@@ -539,7 +589,7 @@ private:
     PRUint32        mParamCount;
     PRUint32        mMemID;
     jsval           mProperty;
-    nsCAutoString   mName;
+    nsString        mName;
 
     /**
      * Accessor for the property type mProperty
@@ -584,7 +634,7 @@ public:
      * interface pointer
      * @return HRESULT
      */
-    STDMETHOD(QueryInterface)(const struct _GUID & IID,void ** pPtr);
+    STDMETHOD(QueryInterface)(REFIID IID,void ** pPtr);
     /**
      * Returns the number of type info's for this IDispatch instance.
      * See MSDN for form information
@@ -622,12 +672,14 @@ private:
     // The Type information for our instance
     XPCDispTypeInfo *                 mCOMTypeInfo;
     // Reference count
-    nsrefcnt                        mRefCnt;
+    ULONG                             mRefCnt;
     // Returns the type information
     XPCDispTypeInfo *                 GetCOMTypeInfo();
     // Returns the JS Object being used to wrap
     inline
     JSObject* GetJSObject();
+
+    NS_DECL_OWNINGTHREAD;
 };
 
 /**
@@ -909,8 +961,10 @@ private:
      * @param cx a JS context
      * @param pTypeInfo pointer to the type information for the object
      * @param members number of members in the interface
+     * @return PR_TRUE if it worked, PR_FALSE if it didn't (usually out of 
+     * memory)
      */
-    void InspectIDispatch(JSContext * cx, ITypeInfo * pTypeInfo, 
+    PRBool InspectIDispatch(JSContext * cx, ITypeInfo * pTypeInfo, 
                           PRUint32 members);
 };
 
@@ -937,7 +991,7 @@ public:
      */
     static
     JSBool Dispatch(XPCCallContext& ccx, IDispatch * pDisp,
-                    DISPID dispID, CallMode mode, XPCDispParams & params,
+                    DISPID dispID, CallMode mode, XPCDispParams * params,
                     jsval* retval, XPCDispInterface::Member* member = nsnull,
                     XPCJSRuntime* rt = nsnull);
     /**
@@ -956,7 +1010,7 @@ public:
      * @param result pointer to the pointer to receive the interface pointer
      */
     static
-    HRESULT COMCreateInstance(const char * className, 
+    HRESULT COMCreateInstance(BSTR className, 
                                PRBool testScriptability, IDispatch ** result);
     /**
      * Wraps an IDispatch interface, returning the object as a jsval
@@ -966,7 +1020,7 @@ public:
      * @param rval is a pointer to a jsval to receive the JS object wrapper
      */
     static
-    PRBool WrapIDispatch(IDispatch *pDispatch, JSContext *cx,
+    PRBool WrapIDispatch(IDispatch *pDispatch, XPCCallContext & ccx,
                          JSObject *obj, jsval *rval);
 };
 
@@ -1045,10 +1099,6 @@ public:
      */
     XPCDispParams(PRUint32 args);
     /**
-     * Makes a copy and transfers ownership of buffers
-     */
-    XPCDispParams(XPCDispParams & other);
-    /**
      * Cleans up the parameters' data
      */
     ~XPCDispParams();
@@ -1057,6 +1107,12 @@ public:
      * setters.
      */
     void SetNamedPropID();
+    /**
+     * Returns a reference to a parameter
+     * @param index index of the parameter
+     * @return a reference to the parameter at index
+     */
+//    const VARIANT & GetParamRef(PRUint32 index) const;
     /**
      * Returns a reference to a parameter
      * @param index index of the parameter
@@ -1079,7 +1135,7 @@ public:
      * Returns a DISPPARAMS structure pointer for the parameters
      * @return a DISPPARAMS structure pointer for the parameters
      */
-    DISPPARAMS* GetDispParams() { return &mDispParams; }
+    DISPPARAMS* GetDispParams() const { return &NS_CONST_CAST(XPCDispParams*,this)->mDispParams; }
     /**
      * Returns the number of parameters
      * @return the number of parameters
@@ -1093,6 +1149,11 @@ public:
     void InsertParam(_variant_t & var);
 private:
     /**
+     * Don't allow copying
+     */
+    XPCDispParams(const XPCDispParams & other) {
+        NS_ERROR("XPCDispParams can't be copied"); }
+    /**
      * We don't allow assignments
      */
     XPCDispParams& operator =(const XPCDispParams&) {
@@ -1101,16 +1162,24 @@ private:
     enum
     {
         DEFAULT_ARG_ARRAY_SIZE = 8,
-// This is the size of the largest member in the union in VARIANT
-        VARIANT_UNION_SIZE = sizeof(VARIANT) - sizeof(VARTYPE) - sizeof(unsigned short) * 3
+        DEFAULT_REF_BUFFER_SIZE = 8 * sizeof(VARIANT)
     };
-#define XPC_VARIANT_BUFFER_SIZE(count)  (VARIANT_UNION_SIZE * count)
+    static
+    PRUint32 RefBufferSize(PRUint32 args) { return (args + 1) * sizeof(VARIANT); }
 
     DISPPARAMS  mDispParams;
-    char*       mVarBuffer;
-    char        mVarStackBuffer[XPC_VARIANT_BUFFER_SIZE(DEFAULT_ARG_ARRAY_SIZE)];
+    char*       mRefBuffer;
+    VARIANT*    mDispParamsAllocated;
+    char*       mRefBufferAllocated;
+    /**
+     * Used by output/ref variant types
+     */
+    char        mStackRefBuffer[DEFAULT_REF_BUFFER_SIZE];
     VARIANT     mStackArgs[DEFAULT_ARG_ARRAY_SIZE];
     DISPID      mPropID;
+#ifdef DEBUG
+    PRBool mInserted;
+#endif
 };
 
 /**
@@ -1132,9 +1201,9 @@ public:
      * JS function object
      * @return true if the JS function object was created
      */
-    static JSBool GetNewOrUsed(XPCCallContext& ccx, XPCWrappedNative* wrapper,
+    static JSBool NewInstance(XPCCallContext& ccx, XPCWrappedNative* wrapper,
                                PRUint32 dispID,
-                               XPCDispParams& dispParams,
+                               XPCDispParams* dispParams,
                                jsval* paramPropObj);
     /**
      * Cleans up the member, derefs the mDispObj, mWrapper and such
@@ -1158,7 +1227,7 @@ public:
      * Returns the parameters for the parameterized property
      * @return a reference to the parameters for the parameterized property
      */
-    XPCDispParams&    GetParams() { return mDispParams; }
+    XPCDispParams*    GetParams() const { return mDispParams; }
 private:
     /**
      * Private constructor to initialize data members
@@ -1168,11 +1237,11 @@ private:
      * @param dispParams the parameters for the parameterized property
      */
     XPCDispParamPropJSClass(XPCWrappedNative* wrapper, nsISupports* dispObj, 
-                            PRUint32 dispID, XPCDispParams& dispParams);
+                            PRUint32 dispID, XPCDispParams* dispParams);
 
     XPCWrappedNative*           mWrapper;
     PRUint32                    mDispID;
-    XPCDispParams               mDispParams;
+    XPCDispParams*              mDispParams;
     IDispatch*                  mDispObj;
 };
 
