@@ -256,7 +256,11 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
 #endif
 
     // Construct a chrome URL and use it to look up a resource.
+#ifndef NECKO
+    nsAutoString windowType = nsAutoString("chrome://") + hostStr + "/";
+#else
     nsAutoString windowType = nsAutoString("chrome://") + hostStr ;
+#endif
 
     // Stash any search part of the URL for later
 #ifdef NECKO
@@ -293,12 +297,20 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
         if (slashIndex == -1)
 		    slashIndex = restOfURL.Length();
 
+#ifndef NECKO
+        restOfURL.Mid(packageType, 1, slashIndex - 1);
+#else
         restOfURL.Mid(packageType, 0, slashIndex);
+#endif
 
         if (slashIndex < restOfURL.Length()-1)
         {
             // There are some extra subdirectories to remember.
+#ifndef NECKO
+            restOfURL.Right(path, restOfURL.Length()-slashIndex-1);
+#else
             restOfURL.Right(path, restOfURL.Length()-slashIndex);
+#endif
         }
     }
 
@@ -339,7 +351,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     // Check to see if we should append the "main" entry in the registry.
     // Only do this when the user doesn't have anything following "skin"
     // or "content" in the specified URL.
-    if (path == "")
+    if (path.IsEmpty())
     {
 			  PRInt32 length = restOfURL.Length();
 				if (length > 0)
@@ -359,6 +371,11 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     }
     else
     {
+#if 0
+        // if path starts in a slash, remove it.
+        if (path[0] == '/')
+          path.Cut(0, 1);
+#endif        
         // XXX Just append the rest of the URL to base to get the actual URL to look up.
 			  chromeBase += path;
     }
