@@ -724,22 +724,18 @@ public class Interpreter
                     }
                     itsStackDepth--;
                 } else {
-                    iCodeTop = generateICode(child, iCodeTop);
+                    String property = child.getString();
                     child = child.getNext();
                     if (type == Token.SETPROP_OP) {
-                        iCodeTop = addIcode(Icode_DUPSECOND, iCodeTop);
-                        iCodeTop = addIcode(Icode_DUPSECOND, iCodeTop);
-                        itsStackDepth += 2;
-                        if (itsStackDepth > itsData.itsMaxStack)
-                            itsData.itsMaxStack = itsStackDepth;
-                        iCodeTop = addToken(Token.GETPROP, iCodeTop);
-                        itsStackDepth--;
+                        iCodeTop = addIcode(Icode_DUP, iCodeTop);
+                        stackChange(1);
+                        iCodeTop = addStringOp(Token.GETPROP, property, iCodeTop);
                         // Compensate for the following USE_STACK
-                        itsStackDepth--;
+                        stackChange(-1);
                     }
                     iCodeTop = generateICode(child, iCodeTop);
-                    iCodeTop = addToken(Token.SETPROP, iCodeTop);
-                    itsStackDepth -= 2;
+                    iCodeTop = addStringOp(Token.SETPROP, property, iCodeTop);
+                    stackChange(-1);
                 }
                 break;
             }
@@ -788,8 +784,7 @@ public class Interpreter
                     iCodeTop = addStringOp(Icode_TYPEOFNAME, name, iCodeTop);
                     stackChange(1);
                 } else {
-                    iCodeTop = addToken(Token.GETVAR, iCodeTop);
-                    iCodeTop = addByte(index, iCodeTop);
+                    iCodeTop = addVarOp(Token.GETVAR, index, iCodeTop);
                     stackChange(1);
                     iCodeTop = addToken(Token.TYPEOF, iCodeTop);
                 }
@@ -813,25 +808,16 @@ public class Interpreter
                         String name = child.getString();
                         if (itsData.itsNeedsActivation) {
                             iCodeTop = addIcode(Icode_SCOPE, iCodeTop);
-                            iCodeTop = addStringOp(Token.STRING, name, iCodeTop);
-                            itsStackDepth += 2;
-                            if (itsStackDepth > itsData.itsMaxStack)
-                                itsData.itsMaxStack = itsStackDepth;
-                            iCodeTop = addIcode(type == Token.INC
-                                                ? Icode_PROPINC
-                                                : Icode_PROPDEC,
-                                                iCodeTop);
-                            itsStackDepth--;
+                            stackChange(1);
+                            int op = (type == Token.INC)
+                                     ? Icode_PROPINC : Icode_PROPDEC;
+                            iCodeTop = addStringOp(op, name, iCodeTop);
                         } else {
                             int i = scriptOrFn.getParamOrVarIndex(name);
-                            iCodeTop = addIcode(type == Token.INC
-                                                ? Icode_VARINC
-                                                : Icode_VARDEC,
-                                                iCodeTop);
-                            iCodeTop = addByte(i, iCodeTop);
-                            itsStackDepth++;
-                            if (itsStackDepth > itsData.itsMaxStack)
-                                itsData.itsMaxStack = itsStackDepth;
+                            int op = (type == Token.INC)
+                                     ? Icode_VARINC : Icode_VARDEC;
+                            iCodeTop = addVarOp(op, i, iCodeTop);
+                            stackChange(1);
                         }
                         break;
                     }
@@ -840,17 +826,18 @@ public class Interpreter
                         Node getPropChild = child.getFirstChild();
                         iCodeTop = generateICode(getPropChild, iCodeTop);
                         getPropChild = getPropChild.getNext();
-                        iCodeTop = generateICode(getPropChild, iCodeTop);
-                        int icode;
                         if (childType == Token.GETPROP) {
-                            icode = (type == Token.INC)
-                                    ? Icode_PROPINC : Icode_PROPDEC;
+                            String property = getPropChild.getString();
+                            int op = (type == Token.INC)
+                                     ? Icode_PROPINC : Icode_PROPDEC;
+                            iCodeTop = addStringOp(op, property, iCodeTop);
                         } else {
-                            icode = (type == Token.INC)
-                                    ? Icode_ELEMINC : Icode_ELEMDEC;
+                            iCodeTop = generateICode(getPropChild, iCodeTop);
+                            int op = (type == Token.INC)
+                                     ? Icode_ELEMINC : Icode_ELEMDEC;
+                            iCodeTop = addIcode(op, iCodeTop);
+                            stackChange(-1);
                         }
-                        iCodeTop = addIcode(icode, iCodeTop);
-                        itsStackDepth--;
                         break;
                     }
                     default : {
@@ -1012,19 +999,12 @@ public class Interpreter
                     // bogus children. Instead we use a special op to
                     // push the current scope.
                     iCodeTop = addIcode(Icode_SCOPE, iCodeTop);
-                    iCodeTop = addStringOp(Token.STRING, name, iCodeTop);
-                    itsStackDepth += 2;
-                    if (itsStackDepth > itsData.itsMaxStack)
-                        itsData.itsMaxStack = itsStackDepth;
-                    iCodeTop = addToken(Token.GETPROP, iCodeTop);
-                    itsStackDepth--;
+                    stackChange(1);
+                    iCodeTop = addStringOp(Token.GETPROP, name, iCodeTop);
                 } else {
                     int index = scriptOrFn.getParamOrVarIndex(name);
-                    iCodeTop = addToken(Token.GETVAR, iCodeTop);
-                    iCodeTop = addByte(index, iCodeTop);
-                    itsStackDepth++;
-                    if (itsStackDepth > itsData.itsMaxStack)
-                        itsData.itsMaxStack = itsStackDepth;
+                    iCodeTop = addVarOp(Token.GETVAR, index, iCodeTop);
+                    stackChange(1);
                 }
                 break;
             }
@@ -1040,8 +1020,7 @@ public class Interpreter
                     child = child.getNext();
                     iCodeTop = generateICode(child, iCodeTop);
                     int index = scriptOrFn.getParamOrVarIndex(name);
-                    iCodeTop = addToken(Token.SETVAR, iCodeTop);
-                    iCodeTop = addByte(index, iCodeTop);
+                    iCodeTop = addVarOp(Token.SETVAR, index, iCodeTop);
                 }
                 break;
             }
@@ -1164,9 +1143,8 @@ public class Interpreter
             }
         } else {
             child = child.getNext();
-            iCodeTop = generateICode(child, iCodeTop);
-            iCodeTop = addToken(Token.GETPROP, iCodeTop);
-            stackChange(-1);
+            String property = child.getString();
+            iCodeTop = addStringOp(Token.GETPROP, property, iCodeTop);
         }
         return iCodeTop;
     }
@@ -1410,6 +1388,16 @@ public class Interpreter
         itsData.itsDoubleTable[index] = num;
         itsDoubleTableTop = index + 1;
         return index;
+    }
+
+    private int addVarOp(int op, int varIndex, int iCodeTop)
+    {
+        if (op == Token.GETVAR || op == Token.SETVAR) {
+            iCodeTop = addToken(op, iCodeTop);
+        } else if (op == Icode_VARINC || op == Icode_VARDEC) {
+            iCodeTop = addIcode(op, iCodeTop);
+        }
+        return addByte(varIndex, iCodeTop);
     }
 
     private int addStringOp(int op, String str, int iCodeTop)
@@ -2580,22 +2568,18 @@ public class Interpreter
         continue Loop;
     }
     case Token.GETPROP : {
-        String name = (String)stack[stackTop];
-        --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.getProp(lhs, name, scope);
+        stack[stackTop] = ScriptRuntime.getProp(lhs, stringReg, scope);
         continue Loop;
     }
     case Token.SETPROP : {
         Object rhs = stack[stackTop];
         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
-        String name = (String)stack[stackTop];
-        --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.setProp(lhs, name, rhs, scope);
+        stack[stackTop] = ScriptRuntime.setProp(lhs, stringReg, rhs, scope);
         continue Loop;
     }
     case Token.GETELEM :
@@ -2608,11 +2592,9 @@ public class Interpreter
         continue Loop;
     case Icode_PROPINC :
     case Icode_PROPDEC : {
-        String name = (String)stack[stackTop];
-        --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.postIncrDecr(lhs, name, scope, op == Icode_PROPINC);
+        stack[stackTop] = ScriptRuntime.postIncrDecr(lhs, stringReg, scope, op == Icode_PROPINC);
         continue Loop;
     }
     case Icode_ELEMINC :
