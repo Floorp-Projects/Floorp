@@ -28,5 +28,9 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= public bookmarks directory filepicker find history search sidebar related regviewer xfer prefwindow shistory remote timebomb console autocomplete urlbarhistory build
 
+ifdef MOZ_ENABLE_XREMOTE
+DIRS		+= xremote
+endif
+
 include $(topsrcdir)/config/rules.mk
 
