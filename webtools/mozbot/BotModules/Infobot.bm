@@ -67,6 +67,9 @@ sub RegisterConfig {
         ['teachers', 1, 1, []], # list of users who may teach, leave blank to allow anyone to teach
         ['factoidPositions', 0, 0, {'is' => {}, 'are' => {}}],
         ['friendBots', 1, 1, []],
+        ['prefixes', 1, 1, ['', 'I have heard that ', '', 'Maybe ', 'I seem to recall that ', '', 'iirc, ', '',
+                            'Was it not... er, someone, who said: ', '', 'Well, ', 'um... ', 'Oh, I know this one! ',
+                            '', 'everyone knows that! ', '', 'hmm... I think ', 'well, duh. ']],
         ['researchNotes', 0, 0, {}],
         ['pruneDelay', 1, 1, 120], # how frequently to look through the research notes and remove expired items
         ['queryTimeToLive', 1, 1, 600], # queries can be remembered up to ten minutes by default
@@ -147,7 +150,8 @@ sub DoFactoidCheck {
     # $direct is one of: 0 = heard, 1 = told, 2 = baffled
 
     my $shortMessage;
-    if ($message =~ /^\s* (?:(?:well|and|or|yes|[uh]+m*|o+[oh]*[k]+(?:a+y+)?|still|well|so|[ah]+|[oh]+)[:,.!?\s]+|)*
+    if ($message =~ /^\s* (?:\w+[:.!\s]+\s+)?
+                          (?:(?:well|and|or|yes|[uh]+m*|o+[oh]*[k]+(?:a+y+)?|still|well|so|[ah]+|[oh]+)[:,.!?\s]+|)*
                           (?:(?:geez?|boy|du+des?|golly|gosh|wow|whee|wo+ho+)?[:,.!\s]+|)*
                           (?:(?:heya?|hello|hi)(?:\s+there)?(?:\s+peoples?|\s+kids?|\s+folks?)?[:,!.?\s]+)*
                           (?:(?:geez?|boy|du+des?|golly|gosh|wow|whee|wo+ho+)?[:,.!\s]+|)*
@@ -433,10 +437,12 @@ sub GetFactoid {
             if ($answer =~ /^<reply>/o) {
                 $answer =~ s/^<reply>\s*//o;
             } else {
+                # pick a 'random' prefix
+                my $prefix = $self->{'prefixes'}->[time() % @{$self->{'prefixes'}}];
                 if (lc($who) eq lc($subject)) {
-                    $answer = "you are $answer";
+                    $answer = "${prefix}you are $answer";
                 } else {
-                    $answer = "$subject $database $answer";
+                    $answer = "$prefix$subject $database $answer";
                 }
                 if (defined($friend)) {
                     $answer = "$friend knew: $answer";
