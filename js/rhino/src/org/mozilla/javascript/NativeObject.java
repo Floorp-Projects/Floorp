@@ -89,6 +89,14 @@ public class NativeObject extends ScriptableObject {
         return toSource(cx, thisObj, args, funObj);
     }
     
+    public static String jsFunction_toLocaleString(Context cx, 
+                                                   Scriptable thisObj, 
+                                                   Object[] args, 
+                                                   Function funObj)
+    {
+        return jsFunction_toString(cx, thisObj, args, funObj);
+    }
+    
     public static String toSource(Context cx, Scriptable thisObj,
                                   Object[] args, Function funObj)
     {
