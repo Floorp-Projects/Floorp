@@ -21,8 +21,14 @@
 
 #include "nsWindow.h"
 
+#include <gtk/gtkwindow.h>
+#include <gdk/gdkx.h>
+
 nsWindow::nsWindow()
 {
+  mContainer       = nsnull;
+  mDrawingarea     = nsnull;
+  mIsTopLevel      = PR_FALSE;
 }
 
 nsWindow::~nsWindow()
@@ -38,7 +44,8 @@ nsWindow::Create(nsIWidget        *aParent,
 		 nsIToolkit       *aToolkit,
 		 nsWidgetInitData *aInitData)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return CommonCreate(aParent, nsnull, aRect, aHandleEventFunction,
+		      aContext, aAppShell, aToolkit, aInitData);
 }
 
 NS_IMETHODIMP
@@ -50,7 +57,8 @@ nsWindow::Create(nsNativeWidget aParent,
 		 nsIToolkit       *aToolkit,
 		 nsWidgetInitData *aInitData)
 {
-  return NS_ERROR_NOT_IMPLEMENTED; 
+  return CommonCreate(nsnull, aParent, aRect, aHandleEventFunction,
+		      aContext, aAppShell, aToolkit, aInitData);
 }
 
 NS_IMETHODIMP
@@ -62,13 +70,25 @@ nsWindow::Destroy(void)
 nsIWidget*
 nsWindow::GetParent(void)
 {
-  return nsnull;
+  nsIWidget *retval;
+  retval = mParent;
+  NS_IF_ADDREF(retval);
+  return retval;
 }
 
 NS_IMETHODIMP
 nsWindow::Show(PRBool aState)
 {
-  return NS_ERROR_NOT_IMPLEMENTED; 
+  if (mIsTopLevel) {
+    moz_drawingarea_set_visibility(mDrawingarea, aState);
+    gtk_widget_show(GTK_WIDGET(mContainer));
+    gtk_widget_show(mShell);
+  }
+  else {
+    moz_drawingarea_set_visibility(mDrawingarea, aState);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -94,7 +114,19 @@ NS_IMETHODIMP
 nsWindow::Move(PRInt32 aX,
 	       PRInt32 aY)
 {
-  return NS_ERROR_NOT_IMPLEMENTED; 
+  if ((aX == mBounds.x) && (aY == mBounds.y) && !mIsTopLevel)
+    return NS_OK;
+
+  mBounds.x = aX;
+  mBounds.y = aY;
+
+  // XXX do we need to handle the popup crud here?
+  if (mIsTopLevel)
+    gtk_widget_set_uposition(mShell, aX, aY);
+  else
+    moz_drawingarea_move(mDrawingarea, aX, aY);
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -102,7 +134,17 @@ nsWindow::Resize(PRInt32 aWidth,
 		 PRInt32 aHeight,
 		 PRBool  aRepaint)
 {
-  return NS_ERROR_NOT_IMPLEMENTED; 
+  mBounds.width = aWidth;
+  mBounds.height = aHeight;
+
+  if (mIsTopLevel) {
+    gtk_window_set_default_size(GTK_WINDOW(mShell), aWidth, aHeight);
+    gtk_widget_set_size_request(GTK_WIDGET(mContainer), aWidth, aHeight);
+  }
+
+  moz_drawingarea_resize (mDrawingarea, aWidth, aHeight);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -110,9 +152,23 @@ nsWindow::Resize(PRInt32 aX,
 		 PRInt32 aY,
 		 PRInt32 aWidth,
 		 PRInt32 aHeight,
-		 PRBool   aRepaint)
+		 PRBool  aRepaint)
 {
-  return NS_ERROR_NOT_IMPLEMENTED; 
+  mBounds.x = aX;
+  mBounds.y = aY;
+  mBounds.width = aWidth;
+  mBounds.height = aHeight;
+
+  if (mIsTopLevel) {
+    gtk_window_set_default_size(GTK_WINDOW(mShell), aWidth, aHeight);
+    gtk_widget_set_uposition(mShell, aX, aY);
+    gtk_widget_set_size_request(GTK_WIDGET(mContainer), aWidth, aHeight);
+    moz_drawingarea_resize(mDrawingarea, aWidth, aHeight);
+  }
+  else {
+    moz_drawingarea_move_resize(mDrawingarea, aX, aY, aWidth, aHeight);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -234,7 +290,33 @@ nsWindow::ScrollRect(nsRect  &aSrcRect,
 void*
 nsWindow::GetNativeData(PRUint32 aDataType)
 {
-  return nsnull;
+  switch (aDataType) {
+  case NS_NATIVE_WINDOW:
+    return mDrawingarea->inner_window;
+    break;
+
+  case NS_NATIVE_WIDGET:
+    return mDrawingarea;
+    break;
+
+  case NS_NATIVE_PLUGIN_PORT:
+    NS_WARNING("nsWindow::GetNativeData plugin port not supported yet\n");
+    return nsnull;
+    break;
+
+  case NS_NATIVE_DISPLAY:
+    return GDK_DISPLAY();
+    break;
+
+  case NS_NATIVE_GRAPHIC:
+    NS_WARNING("nsWindow::GetNativeData native graphic not support yet\n");
+    return nsnull;
+    break;
+
+  default:
+    NS_WARNING("nsWindow::GetNativeData called with bad value\n");
+    return nsnull;
+  }
 }
 
 NS_IMETHODIMP
@@ -357,4 +439,116 @@ NS_IMETHODIMP
 nsWindow::GetAttention()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsWindow::CommonCreate(nsIWidget        *aParent,
+		       nsNativeWidget    aNativeParent,
+		       const nsRect     &aRect,
+		       EVENT_CALLBACK    aHandleEventFunction,
+		       nsIDeviceContext *aContext,
+		       nsIAppShell      *aAppShell,
+		       nsIToolkit       *aToolkit,
+		       nsWidgetInitData *aInitData)
+{
+  // only set the base parent if we're going to be a dialog or a
+  // toplevel
+  nsIWidget *baseParent = aInitData &&
+    (aInitData->mWindowType == eWindowType_dialog ||
+     aInitData->mWindowType == eWindowType_toplevel) ?
+    nsnull : aParent;
+
+  // initialize all the common bits of this class
+  BaseCreate(baseParent, aRect, aHandleEventFunction, aContext,
+	     aAppShell, aToolkit, aInitData);
+
+  // save a ref to our parent
+  mParent = aParent;
+
+  // save our bounds
+  mBounds = aRect;
+
+  // figure out our parent window
+  MozDrawingarea *parentArea = nsnull;
+  MozContainer   *parentContainer = nsnull;
+  GtkWindow      *topLevelParent = nsnull;
+  if (aParent || aNativeParent) {
+    // get the drawing area and the container from the parent
+    if (aParent)
+      parentArea = MOZ_DRAWINGAREA(aParent->GetNativeData(NS_NATIVE_WINDOW));
+    else
+      parentArea = MOZ_DRAWINGAREA(aNativeParent);
+
+    NS_ASSERTION(parentArea, "no drawingarea for parent widget!\n");
+    if (!parentArea)
+      return NS_ERROR_FAILURE;
+
+    // get the user data for the widget - it should be a container
+    gpointer user_data = nsnull;
+    gdk_window_get_user_data(parentArea->inner_window, &user_data);
+    NS_ASSERTION(user_data, "no user data for parentArea\n");
+    if (!user_data)
+      return NS_ERROR_FAILURE;
+
+    // XXX support generic containers here for embedding!
+    parentContainer = MOZ_CONTAINER(user_data);
+    NS_ASSERTION(parentContainer, "owning widget is not a mozcontainer!\n");
+    if (!parentContainer)
+      return NS_ERROR_FAILURE;
+
+    // get the toplevel window just in case someone needs to use it
+    // for setting transients or whatever.
+    topLevelParent =
+      GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(parentContainer)));
+  }
+
+  // ok, create our windows
+  switch (mWindowType) {
+  case eWindowType_dialog:
+  case eWindowType_popup:
+  case eWindowType_toplevel:
+    {
+      mIsTopLevel = PR_TRUE;
+      if (mWindowType == eWindowType_dialog) {
+	mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_type_hint(GTK_WINDOW(mShell),
+				 GDK_WINDOW_TYPE_HINT_DIALOG);
+	gtk_window_set_transient_for(GTK_WINDOW(mShell), topLevelParent);
+      }
+      else if (mWindowType == eWindowType_popup) {
+	mShell = gtk_window_new(GTK_WINDOW_POPUP);
+	gtk_window_set_transient_for(GTK_WINDOW(mShell), topLevelParent);
+      }
+      else { // must be eWindowType_toplevel
+	mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+      }
+
+      // create our container
+      mContainer = MOZ_CONTAINER(moz_container_new());
+      gtk_container_add(GTK_CONTAINER(mShell), GTK_WIDGET(mContainer));
+      gtk_widget_realize(GTK_WIDGET(mContainer));
+      
+      // and the drawing area
+      mDrawingarea = moz_drawingarea_new(nsnull, mContainer);
+    }
+    break;
+  case eWindowType_child:
+    {
+      mDrawingarea = moz_drawingarea_new(parentArea, parentContainer);
+    }
+    break;
+  default:
+    break;
+  }
+
+  // label the drawing area with this object so we can find our way
+  // home
+  g_object_set_data(G_OBJECT(mDrawingarea->clip_window), "nsWindow",
+		    this);
+  g_object_set_data(G_OBJECT(mDrawingarea->inner_window), "nsWindow",
+		    this);
+  g_object_set_data(G_OBJECT(mContainer), "nsWindow",
+		    this);
+
+  return NS_OK;
 }
