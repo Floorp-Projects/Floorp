@@ -783,6 +783,7 @@ toolbar[iconsize="small"] #history-button[disabled="true"] {
 #page-report-button[blocked] {
   display: -moz-box;
   list-style-image: url("chrome://browser/skin/info-small.png");
+  padding: 0px 3px 0px 3px;
 }
 
 /* ::::: throbber ::::: */
