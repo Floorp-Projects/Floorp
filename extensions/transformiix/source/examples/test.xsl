@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    - original author.
  *
- * $Id: test.xsl,v 1.5 2000/03/31 10:16:38 kvisco%ziplink.net Exp $
+ * $Id: test.xsl,v 1.6 2000/08/26 04:43:33 Peter.VanderBeken%pandora.be Exp $
  */
 -->
 
@@ -813,12 +813,12 @@
 
 <!-- simple union expressions -->
 <xsl:template match="x | y | z" priority="1.0">
-   <xsl:if test="not(position()=1)">,</xsl:if>
+   <xsl:if test="not(position()=3)">,</xsl:if>
    element<B><xsl:text> </xsl:text><xsl:value-of select="@*"/></B>
 </xsl:template>
 
 <xsl:template match="x | y | z" mode="mode-test">
-   <xsl:if test="not(position()=1)"><xsl:text>, </xsl:text></xsl:if>
+   <xsl:if test="not(position()=3)"><xsl:text>, </xsl:text></xsl:if>
    <xsl:value-of select="@*"/>
 </xsl:template>
 
