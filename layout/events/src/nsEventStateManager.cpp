@@ -819,12 +819,14 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
           nsIView* focusView = nsnull;
           nsIScrollableView* sv = nsnull;
           nsISelfScrollingFrame* sf = nsnull;
+          nsIPresContext* mwPresContext = aPresContext;
           
 #ifdef USE_FOCUS_FOR_MOUSEWHEEL
           if (NS_SUCCEEDED(GetScrollableFrameOrView(sv, sf, focusView)))
 #else
-          if (NS_SUCCEEDED(GetScrollableFrameOrView(aPresContext, aTargetFrame,
-                                                    aView, sv, sf, focusView)))
+          if (NS_SUCCEEDED(GetScrollableFrameOrView(mwPresContext,
+                                                      aTargetFrame, aView, sv,
+                                                      sf, focusView)))
 #endif
             {
               if (sv)
@@ -835,7 +837,14 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
               else if (sf)
                 sf->ScrollByLines(aPresContext, numLines);
             }
+        // We may end up with a different PresContext than we started with.
+        // If so, we are done with it now, so release it.
+
+        if (mwPresContext != aPresContext)
+          NS_RELEASE(mwPresContext);
+
         }
+
         break;
 
       case MOUSE_SCROLL_PAGE:
@@ -2347,8 +2356,13 @@ nsEventStateManager::UnregisterAccessKey(nsIFrame * aFrame)
 
 #ifndef USE_FOCUS_FOR_MOUSEWHEEL
 
+// This function MAY CHANGE the PresContext that you pass into it.  It
+// will be changed to the PresContext for the main document.  If the
+// new PresContext differs from the one you passed in, you should
+// be sure to release the new one.
+
 nsIFrame*
-nsEventStateManager::GetDocumentFrame(nsIPresContext* aPresContext)
+nsEventStateManager::GetDocumentFrame(nsIPresContext* &aPresContext)
 {
   nsCOMPtr<nsIPresShell> presShell;
   nsCOMPtr<nsIDocument> aDocument;
@@ -2363,6 +2377,20 @@ nsEventStateManager::GetDocumentFrame(nsIPresContext* aPresContext)
   }
 
   presShell->GetDocument(getter_AddRefs(aDocument));
+
+  // Walk up the document parent chain.  This lets us scroll the main
+  // document, even when the event is fired for an editor control.
+
+  nsCOMPtr<nsIDocument> parentDoc(dont_AddRef(aDocument->GetParentDocument()));
+
+  while(parentDoc) {
+    aDocument = parentDoc;
+    parentDoc = dont_AddRef(aDocument->GetParentDocument());
+  }
+
+  presShell = dont_AddRef(aDocument->GetShellAt(0));
+  presShell->GetPresContext(&aPresContext);
+
   nsCOMPtr<nsIContent> rootContent(dont_AddRef(aDocument->GetRootContent()));
   presShell->GetPrimaryFrameFor(rootContent, &aFrame);
 
@@ -2440,9 +2468,11 @@ nsEventStateManager::GetScrollableFrameOrView(nsIScrollableView* &sv,
 //   as an ancestor of the event target.  If there isn't one, we try to get
 //   an nsIView corresponding to the main document.
 // Confused yet?
+// This function may call GetDocumentFrame, so read the warning above
+// regarding the PresContext that you pass into this function.
 
 nsresult
-nsEventStateManager::GetScrollableFrameOrView(nsIPresContext* aPresContext,
+nsEventStateManager::GetScrollableFrameOrView(nsIPresContext* &aPresContext,
                                               nsIFrame* aTargetFrame,
                                               nsIView* aView,
                                               nsIScrollableView* &sv,

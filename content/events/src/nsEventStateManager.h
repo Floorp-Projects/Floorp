@@ -121,8 +121,18 @@ protected:
                                      nsISelfScrollingFrame* &sf,
                                      nsIView* &focusView);
 #else
-  nsIFrame* GetDocumentFrame(nsIPresContext* aPresContext);
-  nsresult  GetScrollableFrameOrView(nsIPresContext* aPresContext,
+
+  // This function MAY CHANGE the PresContext that you pass into it.  It
+  // will be changed to the PresContext for the main document.  If the
+  // new PresContext differs from the one you passed in, you should
+  // be sure to release the new one.
+
+  nsIFrame* GetDocumentFrame(nsIPresContext* &aPresContext);
+
+  // This function may call GetDocumentFrame, so read the warning above
+  // regarding the PresContext that you pass into this function.
+
+  nsresult  GetScrollableFrameOrView(nsIPresContext* &aPresContext,
                                      nsIFrame* aTargetFrame, nsIView* aView,
                                      nsIScrollableView* &sv,
                                      nsISelfScrollingFrame* &sf,
