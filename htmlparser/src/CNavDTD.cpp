@@ -913,7 +913,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
         eHTMLTags theParentTag=mBodyContext->Last();
         theTag=(eHTMLTags)theToken->GetTypeID();
         if((FindTagInSet(theTag,gLegalElements,sizeof(gLegalElements)/sizeof(theTag))) ||
-          (gHTMLElements[theParentTag].CanContain(theTag)) && (theTag!=eHTMLTag_comment)) { // Added comment -> bug 40855
+          (gHTMLElements[theParentTag].CanContain(theTag,mDTDMode)) && (theTag!=eHTMLTag_comment)) { // Added comment -> bug 40855
             
           mFlags &= ~NS_DTD_FLAG_MISPLACED_CONTENT; // reset the state since all the misplaced tokens are about to get handled.
 
@@ -1890,7 +1890,7 @@ PRBool HasCloseablePeerAboveRoot(const TagList& aRootTagList,nsDTDContext& aCont
  *  @return  PR_TRUE if autoclosure should occur
  */ 
 static
-eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsDTDContext& aContext) {
+eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsDTDContext& aContext,nsDTDMode aMode) {
   int theTopIndex=aContext.GetCount();
   eHTMLTags thePrevTag=aContext.Last();
  
@@ -1949,7 +1949,7 @@ eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsDTDContext& aCont
       else{
         //Ok, a much more sensible approach for non-block closers; use the tag group to determine closure:
         //For example: %phrasal closes %phrasal, %fontstyle and %special
-        return gHTMLElements[aCurrentTag].GetCloseTargetForEndTag(aContext,theChildIndex);
+        return gHTMLElements[aCurrentTag].GetCloseTargetForEndTag(aContext,theChildIndex,aMode);
       }
     }//if
   } //if
@@ -2086,7 +2086,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
             return result;
           }
           if(result==NS_OK) {
-            eHTMLTags theTarget=FindAutoCloseTargetForEndTag(theChildTag,*mBodyContext);
+            eHTMLTags theTarget=FindAutoCloseTargetForEndTag(theChildTag,*mBodyContext,mDTDMode);
             if(eHTMLTag_unknown!=theTarget) {
               if (nsHTMLElement::IsResidualStyleTag(theChildTag)) {
                 result=OpenTransientStyles(theChildTag); 
@@ -2533,7 +2533,7 @@ CNavDTD::CollectSkippedContent(PRInt32 aTag, nsAString& aContent, PRInt32 &aLine
  */
 PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const 
 {
-  PRBool result=gHTMLElements[aParent].CanContain((eHTMLTags)aChild);
+  PRBool result=gHTMLElements[aParent].CanContain((eHTMLTags)aChild,mDTDMode);
 
 #ifdef ALLOW_TR_AS_CHILD_OF_TABLE
   if(!result) {
@@ -2741,7 +2741,7 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild,PRBool& aParentContai
 
     if(-1==aParentContains) {    
       //we need to compute parent containment here, since it wasn't given...
-      if(!gHTMLElements[aParent].CanContain(aChild)){
+      if(!gHTMLElements[aParent].CanContain(aChild,mDTDMode)){
         return PR_TRUE;
       }
     }
@@ -2958,7 +2958,7 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
             nsCParserNode* theNode=(nsCParserNode*)theEntry->mNode;
             if(1==theNode->mUseCount) {
               eHTMLTags theNodeTag=(eHTMLTags)theNode->GetNodeType();
-              if(gHTMLElements[theNodeTag].CanContain(aChildTag)) {
+              if(gHTMLElements[theNodeTag].CanContain(aChildTag,mDTDMode)) {
                 theEntry->mParent = theStack;  //we do this too, because this entry differs from the new one we're pushing...
                 if(gHTMLElements[mBodyContext->Last()].IsMemberOf(kHeading)) {
                   // Bug 77352

@@ -70,7 +70,8 @@ DECL_TAG_LIST(gInDL,{eHTMLTag_dl COMMA eHTMLTag_body})
 DECL_TAG_LIST(gInFrameset,{eHTMLTag_frameset})
 DECL_TAG_LIST(gInNoframes,{eHTMLTag_noframes})
 //Removed ADDRESS to solve 24885
-DECL_TAG_LIST(gInP,{eHTMLTag_span COMMA eHTMLTag_table}) // added table for bug 43678, removed FORM bug 94269
+// gInP: nsHTMLElement::CanContain() also allows table in Quirks mode for bug 43678, removed FORM bug 94269
+DECL_TAG_LIST(gInP,{eHTMLTag_span})
 DECL_TAG_LIST(gOptgroupParents,{eHTMLTag_select COMMA eHTMLTag_optgroup})
 DECL_TAG_LIST(gBodyParents,{eHTMLTag_html COMMA eHTMLTag_noframes})
 DECL_TAG_LIST(gColParents,{eHTMLTag_table COMMA eHTMLTag_colgroup})
@@ -1729,10 +1730,10 @@ PRBool nsHTMLElement::IsSectionTag(eHTMLTags aTag){
  * @param 
  * @return
  */
-PRBool nsHTMLElement::CanContain(eHTMLTags aParent,eHTMLTags aChild){
+PRBool nsHTMLElement::CanContain(eHTMLTags aParent,eHTMLTags aChild,nsDTDMode aMode){
   PRBool result=PR_FALSE;
   if((aParent>=eHTMLTag_unknown) & (aParent<=eHTMLTag_userdefined)){
-    result=gHTMLElements[aParent].CanContain(aChild);
+    result=gHTMLElements[aParent].CanContain(aChild,aMode);
   } 
   return result;
 }
@@ -2071,7 +2072,7 @@ PRBool nsHTMLElement::CanAutoCloseTag(nsDTDContext& aContext,eHTMLTags aChildTag
  * @param 
  * @return  
  */
-eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 anIndex) const{
+eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 anIndex,nsDTDMode aMode) const{
   eHTMLTags result=eHTMLTag_unknown;
 
   int theCount=aContext.GetCount();
@@ -2143,7 +2144,7 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
     while((--theIndex>=anIndex) && (eHTMLTag_unknown==result)){
       eHTMLTags theTag=aContext.TagAt(theIndex);
       if(theTag!=mTagID) {
-        if(!CanContain(theTag)) {
+        if(!CanContain(theTag,aMode)) {
           break; //it's not something I can close
         }
       }
@@ -2159,7 +2160,7 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
     while((--theIndex>=anIndex) && (eHTMLTag_unknown==result)){
       eHTMLTags theTag=aContext.TagAt(theIndex);
       if(theTag!=mTagID) {
-        if(!CanContain(theTag)) {
+        if(!CanContain(theTag,aMode)) {
           break; //it's not something I can close
         }
       }
@@ -2184,7 +2185,7 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
       if(theTag == mTagID) {
         return theTag; // we found our target.
       }
-      else if (!CanContain(theTag) || 
+      else if (!CanContain(theTag,aMode) || 
                (theRootTags && FindTagInSet(theTag,theRootTags->mTags,theRootTags->mCount))) {
         // If you cannot contain this tag then
         // you cannot close it either. It looks like
@@ -2229,7 +2230,7 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
  * @param 
  * @return
  */
-PRBool nsHTMLElement::CanContain(eHTMLTags aChild) const{
+PRBool nsHTMLElement::CanContain(eHTMLTags aChild,nsDTDMode aMode) const{
 
 
   if(IsContainer(mTagID)){
@@ -2292,6 +2293,10 @@ PRBool nsHTMLElement::CanContain(eHTMLTags aChild) const{
       }
     }
 
+    // Allow <p> to contain <table> only in Quirks mode, bug 43678 and bug 91927
+    if (aChild == eHTMLTag_table && mTagID == eHTMLTag_p && aMode == eDTDMode_quirks) {
+      return PR_TRUE;
+    }
   }
   
   return PR_FALSE;
