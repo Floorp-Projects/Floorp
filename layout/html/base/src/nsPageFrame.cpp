@@ -268,6 +268,7 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
   PRINT_DEBUG_MSG2("PageFrame::Reflow %p ", this);
   PRINT_DEBUG_MSG3("[%d,%d]\n", aReflowState.availableWidth, aReflowState.availableHeight);
 
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
 

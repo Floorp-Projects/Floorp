@@ -1150,6 +1150,7 @@ printf("\n");
   NS_STATIC_CAST(nsMathMLContainerFrame*,
                  aFrame)->FinalizeReflow(aPresContext, *aReflowState.rendContext,
                                          aDesiredSize);
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
 
@@ -1332,6 +1333,7 @@ printf("\n");
   FinalizeReflow(aPresContext, *aReflowState.rendContext, aDesiredSize);
 
   aStatus = NS_FRAME_COMPLETE;
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
 

@@ -551,6 +551,7 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   NS_FRAME_TRACE_REFLOW_OUT("nsSimplePageSequeceFrame::Reflow", aStatus);
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
 

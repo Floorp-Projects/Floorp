@@ -287,6 +287,7 @@ nsGfxCheckboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   nsresult rv = nsFormControlFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   COMPARE_QUIRK_SIZE("nsGfxCheckboxControlFrame", 13, 13) 
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return rv;
 }
 #endif

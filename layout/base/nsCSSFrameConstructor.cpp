@@ -2726,7 +2726,7 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsIPresShell*            aPresShel
 
   return rv;
 }
-
+      
 nsresult
 nsCSSFrameConstructor::ConstructTableColFrame(nsIPresShell*            aPresShell, 
                                               nsIPresContext*          aPresContext,
@@ -3941,6 +3941,10 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*    aPresShell,
     // The placeholder frame has a pointer back to the out-of-flow frame
     placeholderFrame->SetOutOfFlowFrame(aFrame);
   
+    nsFrameState frameState;
+    aFrame->GetFrameState(&frameState);
+    aFrame->SetFrameState(frameState | NS_FRAME_OUT_OF_FLOW);
+
     // Add mapping from absolutely positioned frame to its placeholder frame
     aFrameManager->RegisterPlaceholderFrame(placeholderFrame);
 
@@ -11560,22 +11564,22 @@ nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresShell* aPresShell,
 }
 
 NS_IMETHODIMP
-nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell* aPresShell, 
+nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell*   aPresShell, 
                                              nsIPresContext* aPresContext,
                                              nsIFrame*       aFrame,
                                              nsIFrame*       aParentFrame,
                                              nsIFrame**      aContinuingFrame)
 {
-  nsIAtom*          frameType;
-  nsIContent*       content;
-  nsIStyleContext*  styleContext;
-  nsIFrame*         newFrame = nsnull;
-  nsresult          rv;
+  nsCOMPtr<nsIAtom>          frameType;
+  nsCOMPtr<nsIContent>       content;
+  nsCOMPtr<nsIStyleContext>  styleContext;
+  nsIFrame*                  newFrame = nsnull;
+  nsresult                   rv;
 
   // Use the frame type to determine what type of frame to create
-  aFrame->GetFrameType(&frameType);
-  aFrame->GetContent(&content);
-  aFrame->GetStyleContext(&styleContext);
+  aFrame->GetFrameType(getter_AddRefs(frameType));
+  aFrame->GetContent(getter_AddRefs(content));
+  aFrame->GetStyleContext(getter_AddRefs(styleContext));
 
   if (nsLayoutAtoms::textFrame == frameType) {
     rv = NS_NewContinuingTextFrame(aPresShell, &newFrame);
@@ -11727,16 +11731,29 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell* aPresShell,
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
     }
-
+  } else if (nsLayoutAtoms::placeholderFrame == frameType) {
+    // create a continuing out of flow frame
+    nsIFrame* oofFrame = ((nsPlaceholderFrame*)aFrame)->GetOutOfFlowFrame();
+    nsIFrame* oofContFrame;
+    CreateContinuingFrame(aPresShell, aPresContext, oofFrame, aParentFrame, &oofContFrame);
+    if (!oofContFrame) 
+      return NS_ERROR_NULL_POINTER;
+    // create a continuing placeholder frame
+    nsCOMPtr<nsIFrameManager> frameManager;
+    aPresShell->GetFrameManager(getter_AddRefs(frameManager));
+    NS_ASSERTION(frameManager, "no frame manager");
+    CreatePlaceholderFrameFor(aPresShell, aPresContext, frameManager, content, 
+                              oofContFrame, styleContext, aParentFrame, &newFrame);
+    if (!newFrame) 
+      return NS_ERROR_NULL_POINTER;
+    newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
   } else {
     NS_ASSERTION(PR_FALSE, "unexpected frame type");
     rv = NS_ERROR_UNEXPECTED;
   }
 
-  *aContinuingFrame = newFrame;
-  NS_RELEASE(styleContext);
-  NS_IF_RELEASE(content);
-  NS_IF_RELEASE(frameType);
+  *aContinuingFrame = newFrame; 
+
   return rv;
 }
 

@@ -567,6 +567,7 @@ nsFormControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
   SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return rv;
 }
 

@@ -571,6 +571,7 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
      ("exit nsHTMLFrameOuterFrame::Reflow: size=%d,%d status=%x",
       aDesiredSize.width, aDesiredSize.height, aStatus));
 
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
 

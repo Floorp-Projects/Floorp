@@ -687,15 +687,15 @@ PruneReflowPathFor(nsIFrame *aFrame, nsReflowPath *aReflowPath)
 
 nsresult
 nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
-                     nsIPresContext*   aPresContext,
+                     nsIPresContext*          aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus,
-                     nscoord aX,
-                     nscoord aY,
-                     nscoord aWidth,
-                     nscoord aHeight,
-                     PRBool aMoveFrame)
+                     nscoord                  aX,
+                     nscoord                  aY,
+                     nscoord                  aWidth,
+                     nscoord                  aHeight,
+                     PRBool                   aMoveFrame)
 {
   DO_GLOBAL_REFLOW_COUNT("nsBoxToBlockAdaptor", aReflowState.reason);
 
@@ -990,6 +990,7 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
   gIndent2--;
 #endif
 
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
 

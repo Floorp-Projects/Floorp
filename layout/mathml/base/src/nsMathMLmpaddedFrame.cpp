@@ -435,5 +435,6 @@ nsMathMLmpaddedFrame::Reflow(nsIPresContext*          aPresContext,
   mReference.x = 0;
   mReference.y = aDesiredSize.ascent;
 
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }

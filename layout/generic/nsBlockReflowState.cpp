@@ -123,6 +123,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     }
   }
   mHaveRightFloaters = PR_FALSE;
+  mOverflowFloaters.SetFrames(nsnull);
 
   // Compute content area height. Unlike the width, if we have a
   // specified style height we ignore it since extra content is
@@ -618,8 +619,9 @@ nsBlockReflowState::IsImpactedByFloater() const
 
 
 void
-nsBlockReflowState::InitFloater(nsLineLayout& aLineLayout,
-                                nsPlaceholderFrame* aPlaceholder)
+nsBlockReflowState::InitFloater(nsLineLayout&       aLineLayout,
+                                nsPlaceholderFrame* aPlaceholder,
+                                nsReflowStatus&     aReflowStatus)
 {
   // Set the geometric parent of the floater
   nsIFrame* floater = aPlaceholder->GetOutOfFlowFrame();
@@ -627,7 +629,7 @@ nsBlockReflowState::InitFloater(nsLineLayout& aLineLayout,
 
   // Then add the floater to the current line and place it when
   // appropriate
-  AddFloater(aLineLayout, aPlaceholder, PR_TRUE);
+  AddFloater(aLineLayout, aPlaceholder, PR_TRUE, aReflowStatus);
 }
 
 // This is called by the line layout's AddFloater method when a
@@ -641,12 +643,14 @@ nsBlockReflowState::InitFloater(nsLineLayout& aLineLayout,
 // float as well unless it won't fit next to what we already have.
 // But nobody else implements it that way...
 void
-nsBlockReflowState::AddFloater(nsLineLayout& aLineLayout,
+nsBlockReflowState::AddFloater(nsLineLayout&       aLineLayout,
                                nsPlaceholderFrame* aPlaceholder,
-                               PRBool aInitialReflow)
+                               PRBool              aInitialReflow,
+                               nsReflowStatus&     aReflowStatus)
 {
   NS_PRECONDITION(mBlock->end_lines() != mCurrentLine, "null ptr");
 
+  aReflowStatus = NS_FRAME_COMPLETE;
   // Allocate a nsFloaterCache for the floater
   nsFloaterCache* fc = mFloaterCacheFreeList.Alloc();
   fc->mPlaceholder = aPlaceholder;
@@ -671,7 +675,7 @@ nsBlockReflowState::AddFloater(nsLineLayout& aLineLayout,
 
     // And then place it
     PRBool isLeftFloater;
-    FlowAndPlaceFloater(fc, &isLeftFloater);    
+    FlowAndPlaceFloater(fc, &isLeftFloater, aReflowStatus);    
 
     // Pass on updated available space to the current inline reflow engine
     GetAvailableSpace();
@@ -825,8 +829,10 @@ nsBlockReflowState::CanPlaceFloater(const nsRect& aFloaterRect,
 
 void
 nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
-                                        PRBool* aIsLeftFloater)
+                                        PRBool*         aIsLeftFloater,
+                                        nsReflowStatus& aReflowStatus)
 {
+  aReflowStatus = NS_FRAME_COMPLETE;
   // Save away the Y coordinate before placing the floater. We will
   // restore mY at the end after placing the floater. This is
   // necessary because any adjustments to mY during the floater
@@ -867,7 +873,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
 
   // Reflow the floater
   mBlock->ReflowFloater(*this, aFloaterCache->mPlaceholder, aFloaterCache->mCombinedArea,
-			aFloaterCache->mMargins, aFloaterCache->mOffsets);
+			                  aFloaterCache->mMargins, aFloaterCache->mOffsets, aReflowStatus);
 
   // Get the floaters bounding box and margin information
   floater->GetRect(region);
@@ -951,7 +957,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
       GetAvailableSpace();
       // reflow the floater again now since we have more space
       mBlock->ReflowFloater(*this, aFloaterCache->mPlaceholder, aFloaterCache->mCombinedArea,
-        aFloaterCache->mMargins, aFloaterCache->mOffsets);
+                            aFloaterCache->mMargins, aFloaterCache->mOffsets, aReflowStatus);
       // Get the floaters bounding box and margin information
       floater->GetRect(region);
       // Adjust the floater size by its margin. That's the area that will
@@ -973,14 +979,23 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   }
   else {
     isLeftFloater = PR_FALSE;
-    if (NS_UNCONSTRAINEDSIZE != mAvailSpaceRect.XMost())
-      if(!keepFloaterOnSameLine) {
+    if (NS_UNCONSTRAINEDSIZE != mAvailSpaceRect.XMost()) {
+      nsIFrame* prevInFlow;
+      floater->GetPrevInFlow(&prevInFlow);
+      if (prevInFlow) {
+        nsRect rect;
+        prevInFlow->GetRect(rect);
+        region.x = rect.x;
+      }
+      else if (!keepFloaterOnSameLine) {
         region.x = mAvailSpaceRect.XMost() - region.width;
-      } else {
+      } 
+      else {
         // this is the IE quirk (see few lines above)
         // the table is keept in the same line: don't let it overlap the previous floater 
         region.x = mAvailSpaceRect.x;
       }
+    }
     else {
       okToAddRectRegion = PR_FALSE;
       region.x = mAvailSpaceRect.x;
@@ -1102,7 +1117,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
 /**
  * Place below-current-line floaters.
  */
-void
+PRBool
 nsBlockReflowState::PlaceBelowCurrentLineFloaters(nsFloaterCacheList& aList)
 {
   nsFloaterCache* fc = aList.Head();
@@ -1119,10 +1134,23 @@ nsBlockReflowState::PlaceBelowCurrentLineFloaters(nsFloaterCacheList& aList)
 
       // Place the floater
       PRBool isLeftFloater;
-      FlowAndPlaceFloater(fc, &isLeftFloater);
+      nsReflowStatus reflowStatus;
+      FlowAndPlaceFloater(fc, &isLeftFloater, reflowStatus);
+
+      if (NS_FRAME_IS_TRUNCATED(reflowStatus)) {
+        // return before processing all of the floaters, since the line will be pushed.
+        return PR_FALSE;
+      }
+      else if (NS_FRAME_IS_NOT_COMPLETE(reflowStatus)) {
+        // Create a continuation for the incomplete floater and its placeholder.
+        nsresult rv = mBlock->SplitPlaceholder(*this, *fc->mPlaceholder);
+        if (NS_FAILED(rv)) 
+          return PR_FALSE;
+      }
     }
     fc = fc->Next();
   }
+  return PR_TRUE;
 }
 
 void

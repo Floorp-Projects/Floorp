@@ -73,12 +73,14 @@ public:
    * already has a next-in-flow then this method does
    * nothing. Otherwise, a new continuation frame is created and
    * linked into the flow. In addition, the new frame becomes the
-   * next-sibling of aFrame.
+   * next-sibling of aFrame. If aPlaceholderResult is not null and
+   * aFrame is a float or positioned, then *aPlaceholderResult holds
+   * a placeholder.
    */
   static nsresult CreateNextInFlow(nsIPresContext* aPresContext,
-                                   nsIFrame* aOuterFrame,
-                                   nsIFrame* aFrame,
-                                   nsIFrame*& aNextInFlowResult);
+                                   nsIFrame*       aOuterFrame,
+                                   nsIFrame*       aFrame,
+                                   nsIFrame*&      aNextInFlowResult);
 
   /**
    * Helper method to wrap views around frames. Used by containers

@@ -947,6 +947,32 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   if (NS_FAILED(rv)) return rv;
 
   aStatus = state.mReflowStatus;
+ 
+  // If there are incomplete floaters then they will go in the 1st line of the overflow lines.
+  if (state.mOverflowFloaters.NotEmpty()) {
+    aStatus = NS_FRAME_NOT_COMPLETE;
+    nsLineList* overflowLines = GetOverflowLines(aPresContext, PR_FALSE);
+    if (overflowLines) {
+      // put the floaters at the beginning of the line
+      line_iterator firstLine = overflowLines->begin(); 
+      nsIFrame* firstFrame = firstLine->mFirstChild;
+      firstLine->mFirstChild = state.mOverflowFloaters.FirstChild();
+      PRInt32 numOverflowFloaters = state.mOverflowFloaters.GetLength();
+      state.mOverflowFloaters.LastChild()->SetNextSibling(firstFrame);
+      firstLine->SetChildCount(firstLine->GetChildCount() + numOverflowFloaters);
+    }
+    else { 
+      // there aren't any overflow lines, so create a line, put the floaters in it, and then push.
+      nsLineBox* newLine = state.NewLineBox(state.mOverflowFloaters.FirstChild(), 
+                                            state.mOverflowFloaters.GetLength(), PR_FALSE);
+      if (!newLine) 
+        return NS_ERROR_OUT_OF_MEMORY;
+      mLines.push_back(newLine);
+      nsLineList::iterator nextToLastLine = ----end_lines();
+      PushLines(state, nextToLastLine);
+    }
+  }
+
   if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
     if (NS_STYLE_OVERFLOW_HIDDEN == aReflowState.mStyleDisplay->mOverflow) {
       aStatus = NS_FRAME_COMPLETE;
@@ -1080,6 +1106,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   }
 #endif
 
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
   return rv;
 }
 
@@ -3228,13 +3255,11 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       // the available space.
       if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus)) {
         PRBool madeContinuation;
-        rv = CreateContinuationFor(aState, aLine, frame, madeContinuation);
-        if (NS_FAILED(rv)) {
+        rv = CreateContinuationFor(aState, nsnull, frame, madeContinuation);
+        if (NS_FAILED(rv)) 
           return rv;
-        }
 
-        // Push continuation to a new line, but only if we actually
-        // made one.
+        // Push continuation to a new line, but only if we actually made one.
         if (madeContinuation) {
           frame->GetNextSibling(&frame);
           nsLineBox* line = aState.NewLineBox(frame, 1, PR_TRUE);
@@ -3242,11 +3267,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
             return NS_ERROR_OUT_OF_MEMORY;
           }
           mLines.after_insert(aLine, line);
-
-          // Do not count the continuation child on the line it used
-          // to be on
-          aLine->SetChildCount(aLine->GetChildCount() - 1);
-       }
+        }
 
         // Advance to next line since some of the block fit. That way
         // only the following lines will be pushed.
@@ -3378,9 +3399,11 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   return rv;
 }
 
-#define LINE_REFLOW_OK   0
-#define LINE_REFLOW_STOP 1
-#define LINE_REFLOW_REDO 2
+#define LINE_REFLOW_OK        0
+#define LINE_REFLOW_STOP      1
+#define LINE_REFLOW_REDO      2
+// a frame was complete, but truncated and not at the top of a page
+#define LINE_REFLOW_TRUNCATED 3
 
 nsresult
 nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
@@ -3469,6 +3492,38 @@ nsBlockFrame::DoReflowInlineFramesAuto(nsBlockReflowState& aState,
   return rv;
 }
 
+// If at least one floater on the line was complete, not at the top of page, but was 
+// truncated, then restore the overflow floaters to what they were before and push the line.
+// The floaters that will be removed from the list aren't yet known by the block's next in flow.  
+void
+nsBlockFrame::PushTruncatedPlaceholderLine(nsBlockReflowState& aState,
+                                           line_iterator       aLine,
+                                           nsIFrame*           aLastPlaceholder,
+                                           PRBool&             aKeepReflowGoing)
+{
+  nsIFrame* undoPlaceholder = nsnull;
+  if (aLastPlaceholder) {
+    aLastPlaceholder->GetNextSibling(&undoPlaceholder);
+    aLastPlaceholder->SetNextSibling(nsnull);
+  }
+  else {
+    undoPlaceholder = aState.mOverflowFloaters.FirstChild();
+    aState.mOverflowFloaters.SetFrames(nsnull);
+  }
+  // remove the next in flows of the placeholders that need to be removed
+  for (nsIFrame* placeholder = undoPlaceholder; placeholder; ) {
+    nsSplittableFrame::RemoveFromFlow(placeholder);
+    nsIFrame* savePlaceholder = placeholder; 
+    placeholder->GetNextSibling(&placeholder);
+    savePlaceholder->Destroy(aState.mPresContext);
+  }
+  line_iterator prevLine = aLine;
+  --prevLine;
+  PushLines(aState, prevLine);
+  aKeepReflowGoing = PR_FALSE;
+  aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
+}
+
 nsresult
 nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
                                    nsLineLayout& aLineLayout,
@@ -3529,6 +3584,9 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
     aLineLayout.SetFirstLetterStyleOK(PR_TRUE);
   }
 
+  // keep track of the last overflow floater in case we need to undo and push the line
+  nsIFrame* lastPlaceholder = aState.mOverflowFloaters.LastChild();
+
   // Reflow the frames that are already on the line first
   nsresult rv = NS_OK;
   PRUint8 lineReflowStatus = LINE_REFLOW_OK;
@@ -3557,6 +3615,11 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
         aState.FreeLineBox(toremove);
       }
       --aLine;
+
+      if (LINE_REFLOW_TRUNCATED == lineReflowStatus) {
+        // Push the line with the truncated floater 
+        PushTruncatedPlaceholderLine(aState, aLine, lastPlaceholder, *aKeepReflowGoing);
+      }
       break;
     }
     frame->GetNextSibling(&frame);
@@ -3608,7 +3671,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
     // push the line and return now instead of later on after we are
     // past the floater.
   }
-  else {
+  else if (LINE_REFLOW_TRUNCATED != lineReflowStatus) {
     // If we are propagating out a break-before status then there is
     // no point in placing the line.
     if (!NS_INLINE_IS_BREAK_BEFORE(aState.mReflowStatus)) {
@@ -3745,9 +3808,8 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
         // frame may already have a continuation.
         PRBool madeContinuation;
         rv = CreateContinuationFor(aState, aLine, aFrame, madeContinuation);
-        if (NS_FAILED(rv)) {
+        if (NS_FAILED(rv)) 
           return rv;
-        }
         // Remember that the line has wrapped
         aLine->SetLineWrapped(PR_TRUE);
       }
@@ -3773,23 +3835,26 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   else if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus)) {
     // Frame is not-complete, no special breaking status
 
+    nsCOMPtr<nsIAtom> frameType;
+    aFrame->GetFrameType(getter_AddRefs(frameType));
+
     // Create a continuation for the incomplete frame. Note that the
     // frame may already have a continuation.
     PRBool madeContinuation;
-    rv = CreateContinuationFor(aState, aLine, aFrame, madeContinuation);
-    if (NS_FAILED(rv)) {
+    rv = (nsLayoutAtoms::placeholderFrame == frameType)
+         ? SplitPlaceholder(aState, *aFrame)
+         : CreateContinuationFor(aState, aLine, aFrame, madeContinuation);
+    if (NS_FAILED(rv)) 
       return rv;
-    }
 
     // Remember that the line has wrapped
     aLine->SetLineWrapped(PR_TRUE);
     
-    // If we are reflowing the first letter frame then don't split the
-    // line and don't stop the line reflow...
-    PRBool splitLine = !reflowingFirstLetter;
+    // If we are reflowing the first letter frame or a placeholder then 
+    // don't split the line and don't stop the line reflow...
+    PRBool splitLine = !reflowingFirstLetter && 
+                       (nsLayoutAtoms::placeholderFrame != frameType);
     if (reflowingFirstLetter) {
-      nsCOMPtr<nsIAtom> frameType;
-      aFrame->GetFrameType(getter_AddRefs(frameType));
       if ((nsLayoutAtoms::inlineFrame == frameType.get()) ||
           (nsLayoutAtoms::lineFrame == frameType.get())) {
         splitLine = PR_TRUE;
@@ -3813,20 +3878,28 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       }
     }
   }
+  else if (NS_FRAME_IS_TRUNCATED(frameReflowStatus)) {
+    // if the frame is a placeholder and was complete but truncated (and not at the top
+    // of page), the entire line will be pushed to give it another chance to not truncate.
+    nsCOMPtr<nsIAtom> frameType;
+    aFrame->GetFrameType(getter_AddRefs(frameType));
+    if (nsLayoutAtoms::placeholderFrame == frameType) {
+      *aLineReflowStatus = LINE_REFLOW_TRUNCATED;
+    }
+  }  
 
   return NS_OK;
 }
 
 /**
- * Create a continuation, if necessary, for aFrame. Place it on the
- * same line that aFrame is on. Set aMadeNewFrame to PR_TRUE if a
- * new frame is created.
+ * Create a continuation, if necessary, for aFrame. Place it in aLine
+ * if aLine is not null. Set aMadeNewFrame to PR_TRUE if a new frame is created.
  */
 nsresult
 nsBlockFrame::CreateContinuationFor(nsBlockReflowState& aState,
-                                    nsLineBox* aLine,
-                                    nsIFrame* aFrame,
-                                    PRBool& aMadeNewFrame)
+                                    nsLineBox*          aLine,
+                                    nsIFrame*           aFrame,
+                                    PRBool&             aMadeNewFrame)
 {
   aMadeNewFrame = PR_FALSE;
   nsresult rv;
@@ -3837,12 +3910,33 @@ nsBlockFrame::CreateContinuationFor(nsBlockReflowState& aState,
   }
   if (nsnull != nextInFlow) {
     aMadeNewFrame = PR_TRUE;
-    aLine->SetChildCount(aLine->GetChildCount() + 1);
+    if (aLine) { 
+      aLine->SetChildCount(aLine->GetChildCount() + 1);
+    }
   }
 #ifdef DEBUG
   VerifyLines(PR_FALSE);
 #endif
   return rv;
+}
+
+nsresult
+nsBlockFrame::SplitPlaceholder(nsBlockReflowState& aState,
+                               nsIFrame&           aPlaceholder)
+{
+  nsIFrame* nextInFlow;
+  nsresult rv = CreateNextInFlow(aState.mPresContext, this, &aPlaceholder, nextInFlow);
+  if (NS_FAILED(rv)) 
+    return rv;
+  // put the sibling list back to what it was before the continuation was created
+  nsIFrame *contFrame, *next; 
+  aPlaceholder.GetNextSibling(&contFrame);
+  contFrame->GetNextSibling(&next);
+  aPlaceholder.SetNextSibling(next);
+  contFrame->SetNextSibling(nsnull);
+  // add the placehoder to the overflow floaters
+  aState.mOverflowFloaters.AppendFrames(this, contFrame);
+  return NS_OK;
 }
 
 nsresult
@@ -4164,10 +4258,19 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 
   // Any below current line floaters to place?
   if (aState.mBelowCurrentLineFloaters.NotEmpty()) {
+    // keep track of the last overflow floater in case we need to undo and push the line
+    nsIFrame* lastPlaceholder = aState.mOverflowFloaters.LastChild();
     // Reflow the below-current-line floaters, then add them to the
-    // lines floater list.
-    aState.PlaceBelowCurrentLineFloaters(aState.mBelowCurrentLineFloaters);
-    aLine->AppendFloaters(aState.mBelowCurrentLineFloaters);
+    // lines floater list if there aren't any truncated floaters.
+    if (aState.PlaceBelowCurrentLineFloaters(aState.mBelowCurrentLineFloaters)) {
+      aLine->AppendFloaters(aState.mBelowCurrentLineFloaters);
+    }
+    else { 
+      // At least one floater is truncated, so fix up any placeholders that got split and 
+      // push the line. XXX It may be better to put the floater on the next line, but this 
+      // is not common enough to justify the complexity.
+      PushTruncatedPlaceholderLine(aState, aLine, lastPlaceholder, *aKeepReflowGoing);
+    }
   }
 
   // When a line has floaters, factor them into the combined-area
@@ -4825,10 +4928,56 @@ nsBlockFrame::RemoveFrame(nsIPresContext* aPresContext,
   return rv;
 }
 
+void
+nsBlockFrame::DoRemoveOutOfFlowFrame(nsIPresContext* aPresContext,
+                                     nsIFrame*       aFrame)
+{
+  // First remove aFrame's next in flow
+  nsIFrame* nextInFlow;
+  aFrame->GetNextInFlow(&nextInFlow);
+  if (nextInFlow) {
+    nsBlockFrame::DoRemoveOutOfFlowFrame(aPresContext, nextInFlow);
+  }
+  // Now remove aFrame
+  const nsStyleDisplay* display = nsnull;
+  aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+  NS_ASSERTION(display, "program error");
+  nsIFrame* parent;
+  aFrame->GetParent(&parent); 
+#ifdef DEBUG
+  NS_ASSERTION(parent, "program error");
+  nsCOMPtr<nsIAtom> parentType;
+  parent->GetFrameType(getter_AddRefs(parentType));
+  NS_ASSERTION((nsLayoutAtoms::blockFrame == parentType) ||
+               (nsLayoutAtoms::areaFrame == parentType), "program error");
+#endif
+  nsBlockFrame* block = (nsBlockFrame*)parent;
+  // Remove aFrame from the appropriate list. 
+  if (display->IsAbsolutelyPositioned()) {
+    nsCOMPtr<nsIPresShell> presShell;
+    aPresContext->GetShell(getter_AddRefs(presShell));
+    block->mAbsoluteContainer.RemoveFrame(block, aPresContext, *presShell,
+                                          nsLayoutAtoms::absoluteList, aFrame);
+  }
+  else {
+    block->mFloaters.RemoveFrame(aFrame);
+  }
+  // Destroy aFrame
+  nsSplittableFrame::RemoveFromFlow(aFrame);
+  aFrame->Destroy(aPresContext);
+}
+
 nsresult
 nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
                             nsIFrame* aDeletedFrame)
 {
+  nsFrameState state;
+  aDeletedFrame->GetFrameState(&state);
+  if (state & NS_FRAME_OUT_OF_FLOW) {
+    DoRemoveOutOfFlowFrame(aPresContext, aDeletedFrame);
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
   
@@ -5001,9 +5150,14 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
 
 void
 nsBlockFrame::DeleteChildsNextInFlow(nsIPresContext* aPresContext,
-                                     nsIFrame* aChild)
+                                     nsIFrame*       aChild)
 {
-  NS_PRECONDITION(IsChild(aPresContext, aChild), "bad geometric parent");
+#ifdef DEBUG
+  nsFrameState childState;
+  aChild->GetFrameState(&childState);
+  NS_PRECONDITION((childState & NS_FRAME_OUT_OF_FLOW) || IsChild(aPresContext, aChild), 
+                  "bad geometric parent");
+#endif
   nsIFrame* nextInFlow;
   aChild->GetNextInFlow(&nextInFlow);
   NS_PRECONDITION(nsnull != nextInFlow, "null next-in-flow");
@@ -5030,12 +5184,23 @@ nsBlockFrame::DeleteChildsNextInFlow(nsIPresContext* aPresContext,
 nsresult
 nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
                             nsPlaceholderFrame* aPlaceholder,
-                            nsRect& aCombinedRectResult,
-                            nsMargin& aMarginResult,
-                            nsMargin& aComputedOffsetsResult)
+                            nsRect&             aCombinedRectResult,
+                            nsMargin&           aMarginResult,
+                            nsMargin&           aComputedOffsetsResult,
+                            nsReflowStatus&     aReflowStatus)
 {
+  // Delete the placeholder's next in flows, if any
+  nsIFrame* nextInFlow;
+  aPlaceholder->GetNextInFlow(&nextInFlow);
+  if (nextInFlow) {
+    nsHTMLContainerFrame* parent;
+    aPlaceholder->GetParent((nsIFrame**)&parent);
+    NS_ASSERTION(parent, "no parent");
+    parent->DeleteChildsNextInFlow(aState.mPresContext, aPlaceholder);
+  }
   // Reflow the floater.
   nsIFrame* floater = aPlaceholder->GetOutOfFlowFrame();
+  aReflowStatus = NS_FRAME_COMPLETE;
 
 #ifdef NOISY_FLOATER
   printf("Reflow Floater %p in parent %p, availSpace(%d,%d,%d,%d)\n",
@@ -5048,19 +5213,29 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   // Compute the available width. By default, assume the width of the
   // containing block.
   nscoord availWidth;
-  if(aState.GetFlag(BRS_UNCONSTRAINEDWIDTH)){
+  if (aState.GetFlag(BRS_UNCONSTRAINEDWIDTH)) {
     availWidth = NS_UNCONSTRAINEDSIZE;
-  }else{
+  }
+  else {
     const nsStyleDisplay* floaterDisplay;
     floater->GetStyleData(eStyleStruct_Display,
                           (const nsStyleStruct*&)floaterDisplay);
     nsCompatibility mode;
     aState.mPresContext->GetCompatibilityMode(&mode);
 
-    if (NS_STYLE_DISPLAY_TABLE != floaterDisplay->mDisplay ||
-         eCompatibility_NavQuirks != mode ) {
+    nsIFrame* prevInFlow;
+    floater->GetPrevInFlow(&prevInFlow);
+    // if the floater is continued, constrain its width to the prev-in-flow's width
+    if (prevInFlow) {
+      nsRect rect;
+      prevInFlow->GetRect(rect);
+      availWidth = rect.width;
+    }
+    else if (NS_STYLE_DISPLAY_TABLE != floaterDisplay->mDisplay ||
+             eCompatibility_NavQuirks != mode ) {
       availWidth = aState.mContentArea.width;
-    }else{
+    }
+    else {
       // give tables only the available space
       // if they can shrink we may not be constrained to place
       // them in the next line
@@ -5076,6 +5251,9 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
       availWidth -=  availWidth % twp;
     }
   }
+  nscoord availHeight = (NS_UNCONSTRAINEDSIZE == aState.mAvailSpaceRect.height)
+                        ? NS_UNCONSTRAINEDSIZE 
+                        : PR_MAX(0, aState.mContentArea.height - aState.mY);
 
   // If the floater's width is automatic, we can't let the floater's
   // width shrink below its maxElementSize.
@@ -5091,7 +5269,7 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
 
   nsRect availSpace(aState.BorderPadding().left,
                     aState.BorderPadding().top,
-                    availWidth, NS_UNCONSTRAINEDSIZE);
+                    availWidth, availHeight);
 
   // Setup a block reflow state to reflow the floater.
   nsBlockReflowContext brc(aState.mPresContext, aState.mReflowState,
@@ -5101,11 +5279,10 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   // Reflow the floater
   PRBool isAdjacentWithTop = aState.IsAdjacentWithTop();
 
-  nsReflowStatus frameReflowStatus;
   nsCollapsingMargin margin;
   nsresult rv = brc.ReflowBlock(floater, availSpace, PR_TRUE, margin,
                                 isAdjacentWithTop,
-                                aComputedOffsetsResult, frameReflowStatus);
+                                aComputedOffsetsResult, aReflowStatus);
   if (NS_SUCCEEDED(rv) && isAutoWidth) {
     nscoord maxElementWidth = brc.GetMaxElementSize().width;
     if (maxElementWidth > availSpace.width) {
@@ -5116,7 +5293,7 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
       nsCollapsingMargin marginMES;
       rv = brc.ReflowBlock(floater, availSpace, PR_TRUE, marginMES,
                            isAdjacentWithTop,
-                           aComputedOffsetsResult, frameReflowStatus);
+                           aComputedOffsetsResult, aReflowStatus);
     }
   }
 
@@ -5950,7 +6127,7 @@ nsBlockFrame::IsChild(nsIPresContext* aPresContext, nsIFrame* aFrame)
     return PR_TRUE;
   }
   nsLineList* overflowLines = GetOverflowLines(aPresContext, PR_FALSE);
-  if (InLineList(*overflowLines, aFrame) && InSiblingList(*overflowLines, aFrame)) {
+  if (overflowLines && InLineList(*overflowLines, aFrame) && InSiblingList(*overflowLines, aFrame)) {
     return PR_TRUE;
   }
   return PR_FALSE;

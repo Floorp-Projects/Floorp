@@ -178,6 +178,7 @@ NS_METHOD nsTableColFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.maxElementSize->height=0;
   }
   aStatus = NS_FRAME_COMPLETE;
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
 

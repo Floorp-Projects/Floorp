@@ -270,6 +270,9 @@ protected:
   nsresult DoRemoveFrame(nsIPresContext* aPresContext,
                          nsIFrame* aDeletedFrame);
 
+  // Remove a floater, abs, rel positioned frame from the appropriate block's list
+  static void DoRemoveOutOfFlowFrame(nsIPresContext* aPresContext,
+                                     nsIFrame*       aFrame);
 
   /** set up the conditions necessary for an initial reflow */
   nsresult PrepareInitialReflow(nsBlockReflowState& aState);
@@ -403,17 +406,30 @@ protected:
 
   nsresult ReflowFloater(nsBlockReflowState& aState,
                          nsPlaceholderFrame* aPlaceholder,
-                         nsRect& aCombinedRectResult,
-                         nsMargin& aMarginResult,
-                         nsMargin& aComputedOffsetsResult);
+                         nsRect&             aCombinedRectResult,
+                         nsMargin&           aMarginResult,
+                         nsMargin&           aComputedOffsetsResult,
+                         nsReflowStatus&     aReflowStatus);
 
   //----------------------------------------
   // Methods for pushing/pulling lines/frames
 
   virtual nsresult CreateContinuationFor(nsBlockReflowState& aState,
-                                         nsLineBox* aLine,
-                                         nsIFrame* aFrame,
-                                         PRBool& aMadeNewFrame);
+                                         nsLineBox*          aLine,
+                                         nsIFrame*           aFrame,
+                                         PRBool&             aMadeNewFrame);
+
+  // Push aLine which contains a positioned element that was truncated. Clean up any 
+  // placeholders on the same line that were continued. Set aKeepReflowGoing to false. 
+  void PushTruncatedPlaceholderLine(nsBlockReflowState& aState,
+                                    line_iterator       aLine,
+                                    nsIFrame*           aLastPlaceholder,
+                                    PRBool&             aKeepReflowGoing);
+
+  // Create a contination for aPlaceholder and its out of flow frame and
+  // add it to the list of overflow floaters
+  nsresult SplitPlaceholder(nsBlockReflowState& aState,
+                            nsIFrame&           aPlaceholder);
 
   nsresult SplitLine(nsBlockReflowState& aState,
                      nsLineLayout& aLineLayout,

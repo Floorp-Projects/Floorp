@@ -1464,6 +1464,7 @@ nsTableRowFrame::Reflow(nsIPresContext*          aPresContext,
 #if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState, &aDesiredSize, aStatus);
 #endif
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return rv;
 }
 

@@ -1097,6 +1097,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   }
 #endif // IBMBIDI
 
+  nsCOMPtr<nsIAtom> frameType;
+  aFrame->GetFrameType(getter_AddRefs(frameType));
+
   rv = aFrame->Reflow(mPresContext, metrics, reflowState, aReflowStatus);
   if (NS_FAILED(rv)) {
     NS_WARNING( "Reflow of frame failed in nsLineLayout" );
@@ -1108,9 +1111,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     mPresContext->SetVisualMode(visual);
   }
 #endif // IBMBIDI
-
-  nsCOMPtr<nsIAtom> frameType;
-  aFrame->GetFrameType(getter_AddRefs(frameType));
 
   // SEC: added this next block for bug 45152
   // text frames don't know how to invalidate themselves on initial reflow.  Do it for them here.
@@ -1168,10 +1168,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         outOfFlowFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
         if (!display->IsAbsolutelyPositioned()) {
           if (eReflowReason_Incremental == reason) {
-            InitFloater((nsPlaceholderFrame*)aFrame);
+            InitFloater((nsPlaceholderFrame*)aFrame, aReflowStatus);
           }
           else {
-            AddFloater((nsPlaceholderFrame*)aFrame);
+            AddFloater((nsPlaceholderFrame*)aFrame, aReflowStatus);
           }
           nsIAtom* oofft;
           outOfFlowFrame->GetFrameType(&oofft);

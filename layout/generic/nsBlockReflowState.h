@@ -43,6 +43,7 @@
 
 #include "nsBlockBandData.h"
 #include "nsLineBox.h"
+#include "nsFrameList.h"
 
 class nsBlockFrame;
 
@@ -67,19 +68,22 @@ public:
 
   void GetAvailableSpace(nscoord aY);
 
-  void InitFloater(nsLineLayout& aLineLayout,
-                   nsPlaceholderFrame* aPlaceholderFrame);
+  void InitFloater(nsLineLayout&       aLineLayout,
+                   nsPlaceholderFrame* aPlaceholderFrame,
+                   nsReflowStatus&     aReflowStatus);
 
-  void AddFloater(nsLineLayout& aLineLayout,
+  void AddFloater(nsLineLayout&       aLineLayout,
                   nsPlaceholderFrame* aPlaceholderFrame,
-                  PRBool aInitialReflow);
+                  PRBool              aInitialReflow,
+                  nsReflowStatus&     aReflowStatus);
 
   PRBool CanPlaceFloater(const nsRect& aFloaterRect, PRUint8 aFloats);
 
   void FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
-                           PRBool* aIsLeftFloater);
+                           PRBool*         aIsLeftFloater,
+                           nsReflowStatus& aReflowStatus);
 
-  void PlaceBelowCurrentLineFloaters(nsFloaterCacheList& aFloaters);
+  PRBool PlaceBelowCurrentLineFloaters(nsFloaterCacheList& aFloaters);
 
   void ClearFloaters(nscoord aY, PRUint8 aBreakType);
 
@@ -194,6 +198,9 @@ public:
   nsRect mRightFloaterCombinedArea;
 
   nsFloaterCacheFreeList mFloaterCacheFreeList;
+
+  // next-in-flows of incomplete floaters which get put into overflow lines
+  nsFrameList mOverflowFloaters; 
 
   // Previous child. This is used when pulling up a frame to update
   // the sibling list.

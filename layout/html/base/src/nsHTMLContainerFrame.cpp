@@ -142,9 +142,9 @@ nsHTMLContainerFrame::Paint(nsIPresContext*      aPresContext,
  */
 nsresult
 nsHTMLContainerFrame::CreateNextInFlow(nsIPresContext* aPresContext,
-                                       nsIFrame* aOuterFrame,
-                                       nsIFrame* aFrame,
-                                       nsIFrame*& aNextInFlowResult)
+                                       nsIFrame*       aOuterFrame,
+                                       nsIFrame*       aFrame,
+                                       nsIFrame*&      aNextInFlowResult)
 {
   aNextInFlowResult = nsnull;
 

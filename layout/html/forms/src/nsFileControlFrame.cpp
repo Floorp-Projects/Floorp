@@ -428,6 +428,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext*          aPresContext,
 
     }
   }
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return rv;
 }
 
