@@ -57,9 +57,9 @@
         </xul:box>
       </xul:box>
       <xul:menupopup class="select-menulist-menupopup" style="-moz-binding: none;" menugenerated="true">
-        <xul:box class="select-menulistpopup-internal-box" orient="vertical" flex="1" style="overflow: auto">
+        <xul:vbox class="select-menulistpopup-internal-box" flex="1" style="overflow: auto">
           <children/>
-        </xul:box>
+        </xul:vbox>
       </xul:menupopup>
     </content>
   </binding>
