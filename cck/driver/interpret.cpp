@@ -592,6 +592,27 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						return FALSE;
 					}
 				}
+				else if (strcmp(pcmd, "CopyFile") == 0)
+				{
+					// VerifySet checks to see if the first parameter has any value
+					//   If (p1) then continue else show error dialog and return FALSE
+
+					char *p2 = strchr(parms, ',');
+
+					if (p2)
+						*p2++ = '\0';
+					else
+						p2 = "You must specify a second file to copy";
+					CString fchild =replaceVars(parms,NULL);
+					CString tchild = replaceVars(p2,NULL);
+					if (!CopyFile((LPCTSTR) fchild, (LPCTSTR) tchild, FALSE))
+					{
+						DWORD copyerror = GetLastError();
+						AfxMessageBox("Error - File couldnt be copied", MB_OK|MB_SYSTEMMODAL);
+						return FALSE;
+					}
+				}
+
 				else if (strcmp(pcmd, "Reload") == 0)
 				{
 					// Enforce the rule that Reload() cannot be followed by any 
