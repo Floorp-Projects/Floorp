@@ -40,7 +40,6 @@
 #include "nsIMIMEService.h"
 #include "nsILoadGroup.h"
 #include "nsCURILoader.h"
-#include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
 #include "nsIDownload.h"
 #include "nsReadableUtils.h"
@@ -1038,8 +1037,6 @@ NS_INTERFACE_MAP_BEGIN(nsExternalAppHandler)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
    NS_INTERFACE_MAP_ENTRY(nsIHelperAppLauncher)   
-   NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
-   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END_THREADSAFE
 
@@ -1059,12 +1056,6 @@ nsExternalAppHandler::nsExternalAppHandler()
 nsExternalAppHandler::~nsExternalAppHandler()
 {
   NS_IF_RELEASE(mHelperAppService);
-}
-
-NS_IMETHODIMP nsExternalAppHandler::GetInterface(const nsIID & aIID, void * *aInstancePtr)
-{
-  NS_ENSURE_ARG_POINTER(aInstancePtr);
-  return QueryInterface(aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP nsExternalAppHandler::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData )
@@ -1088,16 +1079,7 @@ NS_IMETHODIMP nsExternalAppHandler::SetWebProgressListener(nsIWebProgressListene
     mProgressListenerInitialized = PR_TRUE;
 
   // Go ahead and register the progress listener....
-
-  if (mLoadCookie) 
-  {
-    nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
-
-    if (webProgress) 
-    {
-      mWebProgressListener = aWebProgressListener;
-    }
-  }
+  mWebProgressListener = aWebProgressListener;
 
   // while we were bringing up the progress dialog, we actually finished processing the
   // url. If that's the case then mStopRequestIssued will be true. We need to execute the
@@ -1129,39 +1111,31 @@ NS_IMETHODIMP nsExternalAppHandler::GetTimeDownloadStarted(PRTime* aTime)
 
 NS_IMETHODIMP nsExternalAppHandler::CloseProgressWindow()
 {
-  // make our docloader release the progress listener from the progress window...
-  if (mLoadCookie && mWebProgressListener) 
-  {
-    nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
-
-    if (webProgress) 
-    {
-      webProgress->RemoveProgressListener(mWebProgressListener);
-    }
-  }
-
   // release extra state...
   mWebProgressListener = nsnull;
-  mLoadCookie = nsnull;
   return NS_OK;
 }
 
-nsresult nsExternalAppHandler::RetargetLoadNotifications(nsIRequest *request)
+void nsExternalAppHandler::RetargetLoadNotifications(nsIRequest *request)
 {
   // we are going to run the downloading of the helper app in our own little docloader / load group context. 
   // so go ahead and force the creation of a load group and doc loader for us to use...
-  nsresult rv = NS_OK;
-  
   nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
-  NS_ENSURE_TRUE(aChannel, NS_ERROR_FAILURE);
+  if (!aChannel)
+    return;
+
+  nsCOMPtr<nsILoadGroup> oldLoadGroup;
+  aChannel->GetLoadGroup(getter_AddRefs(oldLoadGroup));
+
+  if(oldLoadGroup)
+     oldLoadGroup->RemoveRequest(request, nsnull, NS_OK);
+      
+  aChannel->SetLoadGroup(nsnull);
+  aChannel->SetNotificationCallbacks(nsnull);
 
   nsCOMPtr<nsIURILoader> uriLoader(do_GetService(NS_URI_LOADER_CONTRACTID));
-  NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsILoadGroup> newLoadGroup;
-  nsCOMPtr<nsILoadGroup> oldLoadGroup;
-  uriLoader->GetLoadGroupForContext(NS_STATIC_CAST(nsIURIContentListener*, this), getter_AddRefs(newLoadGroup));
-  aChannel->GetLoadGroup(getter_AddRefs(oldLoadGroup));
+  if (!uriLoader)
+    return;
 
   // we need to store off the original (pre redirect!) channel that initiated the load. We do
   // this so later on, we can pass any refresh urls associated with the original channel back to the 
@@ -1175,15 +1149,6 @@ nsresult nsExternalAppHandler::RetargetLoadNotifications(nsIRequest *request)
   uriLoader->GetDocumentLoaderForContext(mWindowContext, getter_AddRefs(origContextLoader));
   if (origContextLoader)
     origContextLoader->GetDocumentChannel(getter_AddRefs(mOriginalChannel));
-
-  if(oldLoadGroup)
-     oldLoadGroup->RemoveRequest(request, nsnull, NS_OK);
-      
-   aChannel->SetLoadGroup(newLoadGroup);
-   nsCOMPtr<nsIInterfaceRequestor> req (do_QueryInterface(mLoadCookie));
-   aChannel->SetNotificationCallbacks(req);
-   rv = newLoadGroup->AddRequest(request, nsnull);
-   return rv;
 }
 
 #define SALT_SIZE 8
@@ -2211,73 +2176,6 @@ PRBool nsExternalAppHandler::GetNeverAskFlagFromPref(const char * prefName, cons
   }
   // Default is true, if not found in the pref string.
   return PR_TRUE;
-}
-
-// nsIURIContentListener implementation
-NS_IMETHODIMP
-nsExternalAppHandler::OnStartURIOpen(nsIURI* aURI, PRBool* aAbortOpen)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsExternalAppHandler::IsPreferred(const char * aContentType,
-                                  char ** aDesiredContentType,
-                                  PRBool * aCanHandleContent)
-
-{
-  NS_NOTREACHED("IsPreferred");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsExternalAppHandler::CanHandleContent(const char * aContentType,
-                                       PRBool aIsContentPreferred,
-                                       char ** aDesiredContentType,
-                                       PRBool * aCanHandleContent)
-
-{
-  NS_NOTREACHED("CanHandleContent");
-  return NS_ERROR_NOT_IMPLEMENTED;
-} 
-
-NS_IMETHODIMP
-nsExternalAppHandler::DoContent(const char * aContentType,
-                                PRBool aIsContentPreferred,
-                                nsIRequest * aRequest,
-                                nsIStreamListener ** aContentHandler,
-                                PRBool * aAbortProcess)
-{
-  NS_NOTREACHED("DoContent");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsExternalAppHandler::GetParentContentListener(nsIURIContentListener** aParent)
-{
-  *aParent = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsExternalAppHandler::SetParentContentListener(nsIURIContentListener* aParent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsExternalAppHandler::GetLoadCookie(nsISupports ** aLoadCookie)
-{
-  *aLoadCookie = mLoadCookie;
-  NS_IF_ADDREF(*aLoadCookie);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsExternalAppHandler::SetLoadCookie(nsISupports * aLoadCookie)
-{
-  mLoadCookie = aLoadCookie;
-  return NS_OK;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
