@@ -41,7 +41,7 @@
 // Interface IDs
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
-class RootFrame : public nsContainerFrame {
+class RootFrame : public nsHTMLContainerFrame {
 public:
   RootFrame(nsIContent* aContent);
 
@@ -57,6 +57,9 @@ public:
     aBase = PR_TRUE;
     return NS_OK;
   }
+
+protected:
+  virtual PRIntn GetSkipSides() const;
 };
 
 // Pseudo frame created by the root frame
@@ -99,7 +102,7 @@ NS_NewHTMLFrame(nsIContent* aContent, nsIFrame* aParentFrame,
 }
 
 RootFrame::RootFrame(nsIContent* aContent)
-  : nsContainerFrame(aContent, nsnull)
+  : nsHTMLContainerFrame(aContent, nsnull)
 {
 }
 
@@ -157,21 +160,30 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
   // Reflow our pseudo frame. It will choose whetever height its child frame
   // wants
   if (nsnull != mFirstChild) {
+    // Compute how much space to reserve for our border and padding
+    const nsStyleSpacing* spacing =
+      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+    nsMargin borderPadding;
+    spacing->CalcBorderPaddingFor(this, borderPadding);
+
+    nsSize  kidMaxSize(aReflowState.maxSize);
+    kidMaxSize.width -= borderPadding.left + borderPadding.right;
+    kidMaxSize.height -= borderPadding.top + borderPadding.bottom;
     nsHTMLReflowMetrics desiredSize(nsnull);
     nsHTMLReflowState kidReflowState(aPresContext, mFirstChild, aReflowState,
-                                     aReflowState.maxSize);
+                                     kidMaxSize);
     // XXX HACK
     kidReflowState.widthConstraint = eHTMLFrameConstraint_Fixed;
-    kidReflowState.minWidth = aReflowState.maxSize.width;
+    kidReflowState.minWidth = kidMaxSize.width;
     kidReflowState.heightConstraint = eHTMLFrameConstraint_Fixed;
-    kidReflowState.minHeight = aReflowState.maxSize.height;
+    kidReflowState.minHeight = kidMaxSize.height;
     nsIHTMLReflow* htmlReflow;
 
     if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       ReflowChild(mFirstChild, aPresContext, desiredSize, kidReflowState, aStatus);
     
       // Place and size the child
-      nsRect  rect(0, 0, desiredSize.width, desiredSize.height);
+      nsRect  rect(borderPadding.left, borderPadding.top, desiredSize.width, desiredSize.height);
       mFirstChild->SetRect(rect);
 
       // XXX We should resolve the details of who/when DidReflow() notifications
@@ -188,6 +200,12 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
 
   NS_FRAME_TRACE_REFLOW_OUT("RootFrame::Reflow", aStatus);
   return NS_OK;
+}
+
+PRIntn
+RootFrame::GetSkipSides() const
+{
+  return 0;
 }
 
 NS_IMETHODIMP
