@@ -2453,9 +2453,9 @@ RDFGenericBuilderImpl::IsContainmentProperty(nsIContent* aElement, nsIRDFResourc
 {
     // XXX is this okay to _always_ treat ordinal properties as tree
     // properties? Probably not...
-    nsresult rv;
+    nsresult		rv;
+    PRBool		isOrdinal;
 
-    PRBool isOrdinal;
     rv = gRDFContainerUtils->IsOrdinalProperty(aProperty, &isOrdinal);
     if (NS_FAILED(rv))
         return PR_FALSE;
@@ -2463,14 +2463,26 @@ RDFGenericBuilderImpl::IsContainmentProperty(nsIContent* aElement, nsIRDFResourc
     if (isOrdinal)
         return PR_TRUE;
 
-    const char* propertyURI;
+    const char		*propertyURI;
+
     rv = aProperty->GetValueConst(&propertyURI);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get property URI");
     if (NS_FAILED(rv)) return PR_FALSE;
 
-    nsAutoString containment;
+    nsAutoString	containment;
 
-    // Walk up the content tree looking for the "rdf:containment"
+    // rjc: Optimization: 99% of trees that use "containment='...'" put the
+    // attribute on the root of the tree, so check that first
+	rv = mRoot->GetAttribute(kNameSpaceID_None, kContainmentAtom, containment);
+	if (NS_FAILED(rv)) return rv;
+	if (rv == NS_CONTENT_ATTR_HAS_VALUE)
+	{
+		if (containment.Find(propertyURI) >= 0)
+			return(PR_TRUE);
+		else	return(PR_FALSE);
+	}
+
+    // Walk up the content tree looking for the "containment"
     // attribute, so we can determine if the specified property
     // actually defines containment.
     nsCOMPtr<nsIContent> element( dont_QueryInterface(aElement) );
@@ -2515,20 +2527,37 @@ RDFGenericBuilderImpl::IsContainmentProperty(nsIContent* aElement, nsIRDFResourc
 PRBool
 RDFGenericBuilderImpl::IsIgnoredProperty(nsIContent* aElement, nsIRDFResource* aProperty)
 {
-    nsresult rv;
-
+    nsresult		rv;
     const char		*propertyURI;
+
     rv = aProperty->GetValueConst(&propertyURI);
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString uri;
+    nsAutoString	uri;
+    PRInt32		nameSpaceID;
+
+    // rjc: Optimization: 99% of trees that use "ignore='...'" put the
+    // attribute on the root of the tree, so check that first
+	rv = mRoot->GetNameSpaceID(nameSpaceID);
+	if (NS_FAILED(rv)) return rv;
+        // Never ever ask an HTML element about non-HTML attributes
+        if (nameSpaceID != kNameSpaceID_HTML)
+        {
+            rv = mRoot->GetAttribute(kNameSpaceID_None, kIgnoreAtom, uri);
+            if (NS_FAILED(rv)) return rv;
+            if (rv == NS_CONTENT_ATTR_HAS_VALUE)
+            {
+		if (uri.Find(propertyURI) >= 0)
+			return(PR_TRUE);
+		else	return(PR_FALSE);
+            }
+        }
 
     // Walk up the content tree looking for the "rdf:ignore"
     // attribute, so we can determine if the specified property should
     // be ignored.
     nsCOMPtr<nsIContent> element( dont_QueryInterface(aElement) );
     while (element) {
-        PRInt32 nameSpaceID;
         rv = element->GetNameSpaceID(nameSpaceID);
         if (NS_FAILED(rv)) return rv;
 
