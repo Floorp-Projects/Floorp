@@ -302,6 +302,11 @@ nsSocketInputStream::Read(char *buf, PRUint32 count, PRUint32 *countRead)
     }
     if (NS_FAILED(rv))
         mTransport->OnInputClosed(rv);
+
+    // only send this notification if we have indeed read some data.
+    // see bug 196827 for an example of why this is important.
+    if (n > 0)
+        mTransport->SendStatus(nsISocketTransport::STATUS_RECEIVING_FROM);
     return rv;
 }
 
@@ -495,6 +500,11 @@ nsSocketOutputStream::Write(const char *buf, PRUint32 count, PRUint32 *countWrit
     }
     if (NS_FAILED(rv))
         mTransport->OnOutputClosed(rv);
+
+    // only send this notification if we have indeed written some data.
+    // see bug 196827 for an example of why this is important.
+    if (n > 0)
+        mTransport->SendStatus(nsISocketTransport::STATUS_SENDING_TO);
     return rv;
 }
 
@@ -1241,7 +1251,6 @@ nsSocketTransport::OnSocketReady(PRFileDesc *fd, PRInt16 outFlags)
     if (mState == STATE_TRANSFERRING) {
         // if waiting to write and socket is writable or hit an exception.
         if ((mPollFlags & PR_POLL_WRITE) && (outFlags & ~PR_POLL_READ)) {
-            SendStatus(STATUS_SENDING_TO);
             // assume that we won't need to poll any longer (the stream will
             // request that we poll again if it is still pending).
             mPollFlags &= ~PR_POLL_WRITE;
@@ -1249,7 +1258,6 @@ nsSocketTransport::OnSocketReady(PRFileDesc *fd, PRInt16 outFlags)
         }
         // if waiting to read and socket is readable or hit an exception.
         if ((mPollFlags & PR_POLL_READ) && (outFlags & ~PR_POLL_WRITE)) {
-            SendStatus(STATUS_RECEIVING_FROM);
             // assume that we won't need to poll any longer (the stream will
             // request that we poll again if it is still pending).
             mPollFlags &= ~PR_POLL_READ;
