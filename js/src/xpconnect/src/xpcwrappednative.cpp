@@ -1606,7 +1606,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
 #define PARAM_AUTOSTRING_COUNT     1
 
 #if PARAM_AUTOSTRING_COUNT
-    XPCVoidableString autoStrings[PARAM_AUTOSTRING_COUNT];
+    nsVoidableString autoStrings[PARAM_AUTOSTRING_COUNT];
     int autoStringIndex = 0;
 #endif
 
@@ -1808,7 +1808,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                         }
 #endif
                         dp->SetValIsDOMString();
-                        if(!(dp->val.p = new XPCVoidableString()))
+                        if(!(dp->val.p = new nsVoidableString()))
                         {
                             JS_ReportOutOfMemory(ccx);
                             goto done;

@@ -482,6 +482,21 @@ public:
     PRUnichar mBuffer[kDefaultStringSize];
 };
 
+class nsVoidableString : public nsAutoString
+{
+public:
+  nsVoidableString() :
+    nsAutoString(),
+    mIsVoid(PR_FALSE) { }
+
+  char_type* GetWritableFragment(nsWritableFragment<char_type>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset);
+  PRBool IsVoid() const;
+  void SetIsVoid(PRBool aVoid);
+
+protected:
+  PRBool mIsVoid;
+};
+
 // NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsAutoString, PRUnichar)
 
 class NS_COM NS_ConvertASCIItoUTF16
