@@ -143,6 +143,7 @@ CTagList  gFormKids(1,eHTMLTag_keygen);
 CTagList  gFramesetKids(3,eHTMLTag_frame,eHTMLTag_frameset,eHTMLTag_noframes);
 CTagList  gHtmlKids(6,eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_script);
 CTagList  gHeadKids(7,eHTMLTag_base,eHTMLTag_bgsound,eHTMLTag_link,eHTMLTag_meta,eHTMLTag_script,eHTMLTag_style,eHTMLTag_title);
+CTagList  gLIKids(2,eHTMLTag_ol,eHTMLTag_ul);
 CTagList  gMapKids(1,eHTMLTag_area);
 CTagList  gNoframesKids(1,eHTMLTag_body);
 CTagList  gPreKids(1,eHTMLTag_hr);
@@ -158,6 +159,7 @@ CTagList  gULKids(2,eHTMLTag_li,eHTMLTag_p);
 CTagList  gRootTags(2,eHTMLTag_body,eHTMLTag_td);
 CTagList  gHTMLRootTags(1,eHTMLTag_unknown);
 CTagList  gLIRootTags(7,eHTMLTag_ul,eHTMLTag_ol,eHTMLTag_dir,eHTMLTag_menu,eHTMLTag_p,eHTMLTag_body,eHTMLTag_td);
+CTagList  gOLRootTags(3,eHTMLTag_body,eHTMLTag_li,eHTMLTag_td);
 CTagList  gTextRootTags(2,eHTMLTag_p,eHTMLTag_body);
 CTagList  gTDRootTags(3,eHTMLTag_tr,eHTMLTag_tbody,eHTMLTag_table);
 CTagList  gOptionRootTags(1,eHTMLTag_select);
@@ -268,8 +270,8 @@ static nsHTMLElement gHTMLElements[] = {
 
   {eHTMLTag_label,      &gRootTags,    0,              0,              kBPIPIC},
   {eHTMLTag_layer,      &gRootTags,    0,              0,              kAll},
-  {eHTMLTag_legend,     &gRootTags,    0,              0,              kIC,          &gLegendParents,0},
-  {eHTMLTag_li,         &gLIRootTags,  &gLIAutoClose,   0,             kAll},
+  {eHTMLTag_legend,     &gRootTags,    0,              0,              kIC,          &gLegendParents, 0},
+  {eHTMLTag_li,         &gLIRootTags,  &gLIAutoClose,  0,              kAll,         0,               &gLIKids},
   {eHTMLTag_link,       &gInHead,      0,              0,              kNone,        &gInHead,     0},
   {eHTMLTag_listing,    &gRootTags,    0,              0,              kAll}, 
 
@@ -285,7 +287,7 @@ static nsHTMLElement gHTMLElements[] = {
   {eHTMLTag_noscript,   &gRootTags,    0,              0,              kBPBCIC},
   
   {eHTMLTag_object,     &gRootTags,    0,              0,              kAll,         0,            &gContainsParam},
-  {eHTMLTag_ol,         &gRootTags,    0,              0,              kAll,         0,            &gULKids},
+  {eHTMLTag_ol,         &gOLRootTags,  0,              0,              kAll,         0,            &gULKids},
   {eHTMLTag_optgroup,   &gRootTags,    0,              0,              kNone, &gOptgroupParents,   &gContainsOpts},
   {eHTMLTag_option,     &gOptionRootTags,0,              0,            kNone, &gOptgroupParents,   &gContainsText},
 
@@ -326,7 +328,7 @@ static nsHTMLElement gHTMLElements[] = {
   {eHTMLTag_tt,         &gRootTags,    0,              0,              kBPIPIC},
 
   {eHTMLTag_u,          &gRootTags,    0,              0,              kBPIPIC},
-  {eHTMLTag_ul,         &gRootTags,    0,              0,              kAll,         0,            &gULKids},
+  {eHTMLTag_ul,         &gOLRootTags,  0,              0,              kAll,         0,            &gULKids},
   {eHTMLTag_var,        &gRootTags,    0,              0,              kBPIPIC},
   {eHTMLTag_wbr,        &gRootTags,    0,              0,              kBPIP},
   {eHTMLTag_xmp,        &gRootTags,    0,              0,              kBPIP},

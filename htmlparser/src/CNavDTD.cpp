@@ -658,7 +658,7 @@ PRInt32 GetTopmostIndexOf(eHTMLTags aTag,nsTagStack& aTagStack) {
  *  can be autoclosed. This means that based on the current
  *  context, the stack should be closed to the nearest matching
  *  tag.  
- *   
+ *    
  *  @param   aTag -- tag enum of child to be tested
  *  @return  PR_TRUE if autoclosure should occur
  */  
@@ -729,7 +729,7 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
       CStartToken theToken(eHTMLTag_body);  //open the body container...
       result=HandleStartToken(&theToken);
     }
-  }//if                     
+  }//if                      
 
   eHTMLTags theParentTag=mBodyContext->Last();
   PRBool theCanContainResult=CanContain(theParentTag,aChildTag);
@@ -851,9 +851,9 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
                   result = rv;
                 }
               }
-            }
+            } 
           } 
-        }
+        } 
         break;
 
       case eHTMLTag_area:
