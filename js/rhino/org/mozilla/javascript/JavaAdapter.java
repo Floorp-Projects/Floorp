@@ -53,7 +53,7 @@ public class JavaAdapter extends ScriptableObject {
             }
             intfs[interfaceCount++] = c;
         }
-        String adapterName = "adapter" + serial++;
+        
         Class[] interfaces = new Class[interfaceCount];
         System.arraycopy(intfs, 0, interfaces, 0, interfaceCount);
         Scriptable obj = (Scriptable) args[args.length - 1];
@@ -61,6 +61,7 @@ public class JavaAdapter extends ScriptableObject {
         ClassSignature sig = new ClassSignature(superClass, interfaces, obj);
         Class adapterClass = (Class) generatedClasses.get(sig);
         if (adapterClass == null) {
+            String adapterName = "adapter" + serial++;
             adapterClass = createAdapterClass(cx, obj, adapterName, 
                                               superClass, interfaces, 
                                               null, null);
@@ -72,7 +73,7 @@ public class JavaAdapter extends ScriptableObject {
         Object v = adapterClass.getConstructor(ctorParms).newInstance(ctorArgs);
         return cx.toObject(v, ScriptableObject.getTopLevelScope(ctorObj));                           
     }
-    
+
     public static Class createAdapterClass(Context cx, Scriptable jsObj,
                                            String adapterName, Class superClass, 
                                            Class[] interfaces, 
@@ -116,7 +117,7 @@ public class JavaAdapter extends ScriptableObject {
                     generateMethod(cfw, adapterName, methodName,
                                    method.getParameterTypes(),
                                    method.getReturnType());
-                    generatedOverrides.put(methodKey, methodKey);
+                    generatedOverrides.put(methodKey, Boolean.TRUE);
                     generatedMethods.put(methodName, Boolean.TRUE);
                 }
             }
@@ -148,7 +149,7 @@ public class JavaAdapter extends ScriptableObject {
                     generateMethod(cfw, adapterName, methodName,
                                    method.getParameterTypes(),
                                    method.getReturnType());
-                    generatedOverrides.put(methodKey, method);
+                    generatedOverrides.put(methodKey, Boolean.TRUE);
                     generatedMethods.put(methodName, Boolean.TRUE);
                 }
                 // if a method was overridden, generate a "super$method"
@@ -177,7 +178,7 @@ public class JavaAdapter extends ScriptableObject {
                 Scriptable p = (Scriptable) f;
                 if (!(p instanceof Function))
                     continue;
-                length = (int) Context.toNumber(p.get("length", p));
+                length = (int) Context.toNumber(getProperty(p, "length"));
             } else if (f instanceof FunctionNode) {
                 length = ((FunctionNode) f).getVariableTable().getParameterCount();
             } else {
@@ -225,48 +226,6 @@ public class JavaAdapter extends ScriptableObject {
         }
     }
     
-    static class ClassSignature {
-    	Class mSuperClass;
-    	Class[] mInterfaces;
-    	Object[] mProperties;
-    
-    	ClassSignature(Class superClass, Class[] interfaces, Scriptable jsObj) {
-    		mSuperClass = superClass;
-    		mInterfaces = interfaces;
-    		mProperties = jsObj.getIds();
-	    }
-	    
-	    public boolean equals(Object obj) {
-	    	if (obj instanceof ClassSignature) {
-	    		ClassSignature sig = (ClassSignature) obj;
-	    		if (mSuperClass == sig.mSuperClass) {
-    				Class[] interfaces = sig.mInterfaces;
-	    			if (mInterfaces != interfaces) {
-	    				if (mInterfaces == null || interfaces == null)
-	    					return false;
-	    				if (mInterfaces.length != interfaces.length)
-	    					return false;
-	    				for (int i = 0; i < interfaces.length; i++)
-	    					if (mInterfaces[i] != interfaces[i])
-	    						return false;
-	    			}
-	    			Object[] properties = sig.mProperties;
-	    			if (mProperties.length != properties.length)
-	    				return false;
-	    			for (int i = 0; i < properties.length; i++)
-	    				if (!mProperties[i].equals(properties[i]))
-	    					return false;
-	    			return true;
-	    		}
-	    	}
-	    	return false;
-	    }
-	    
-	    public int hashCode() {
-	    	return mSuperClass.hashCode();
-	    }
-	}
-
     /**
      * Utility method, which dynamically binds a Context to the current thread, 
      * if none already exists.
@@ -780,6 +739,24 @@ public class JavaAdapter extends ScriptableObject {
         return sb;
     }
     
+	/**
+	 * Looks up a property of a scriptable object, searching the entire prototype
+	 * chain. Works like FlattenedObject.getProperty() without the overhead.
+	 */
+    private static Object getProperty(Scriptable obj, String id) {
+        Scriptable m = obj;
+        Object result = null;
+        for(;;) {
+            result = m.get(id, obj);
+            if (result != Scriptable.NOT_FOUND)
+                break;
+            m = m.getPrototype();
+            if (m == null)
+                return Undefined.instance;
+        }
+        return result;
+    }
+    
     static final class MyClassLoader extends ClassLoader {
         public Class defineClass(String name, byte data[]) {
             return super.defineClass(name, data, 0, data.length);
@@ -800,6 +777,52 @@ public class JavaAdapter extends ScriptableObject {
             return clazz;
         }
     }
+
+	/**
+	 * Provides a key with which to distinguish previously generated
+	 * adapter classes stored in a hash table.
+	 */
+    static class ClassSignature {
+    	Class mSuperClass;
+    	Class[] mInterfaces;
+    	Object[] mProperties;
+    
+    	ClassSignature(Class superClass, Class[] interfaces, Scriptable jsObj) {
+    		mSuperClass = superClass;
+    		mInterfaces = interfaces;
+    		mProperties = jsObj.getIds();
+	    }
+	    
+	    public boolean equals(Object obj) {
+	    	if (obj instanceof ClassSignature) {
+	    		ClassSignature sig = (ClassSignature) obj;
+	    		if (mSuperClass == sig.mSuperClass) {
+    				Class[] interfaces = sig.mInterfaces;
+	    			if (mInterfaces != interfaces) {
+	    				if (mInterfaces == null || interfaces == null)
+	    					return false;
+	    				if (mInterfaces.length != interfaces.length)
+	    					return false;
+	    				for (int i = 0; i < interfaces.length; i++)
+	    					if (mInterfaces[i] != interfaces[i])
+	    						return false;
+	    			}
+	    			Object[] properties = sig.mProperties;
+	    			if (mProperties.length != properties.length)
+	    				return false;
+	    			for (int i = 0; i < properties.length; i++)
+	    				if (!mProperties[i].equals(properties[i]))
+	    					return false;
+	    			return true;
+	    		}
+	    	}
+	    	return false;
+	    }
+	    
+	    public int hashCode() {
+	    	return mSuperClass.hashCode();
+	    }
+	}
     
     private static int serial = 0;
     private static MyClassLoader classLoader = new MyClassLoader();
