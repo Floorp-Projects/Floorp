@@ -32,7 +32,8 @@ typedef long nsNativeFilterDataType;
 [scriptable, uuid(2EFB5012-4508-11d3-AEDA-00A024FFC08C)]
 interface nsNativeFilterDataTypes
 {
-	const long WinFilter = 1; // nsCWinFilter structure
+	const long WinFilter = 1;    // nsCWinFilter structure
+	const long PhotonFilter = 2; // nsCWinFilter structure
 };
 
 

@@ -34,7 +34,8 @@ typedef long nsNativeEventDataType;
 [scriptable, uuid(2EFB5011-4508-11d3-AEDA-00A024FFC08C)]
 interface nsNativeEventDataTypes
 {
-	const long WinMsgStruct = 1; // Windows MSG structure
+	const long WinMsgStruct = 1;    // Windows MSG structure
+	const long PhotonMsgStruct = 2; // Photon MSG structure
 };
 
 [scriptable, uuid(2EFB5004-4508-11d3-AEDA-00A024FFC08C)]
