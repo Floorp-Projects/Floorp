@@ -953,7 +953,7 @@ nsHTMLInputElement::GetRadioGroupContainer()
   nsIRadioGroupContainer* retval = nsnull;
   if (mForm) {
     CallQueryInterface(mForm, &retval);
-  } else if (mDocument && mParent) {
+  } else if (mDocument && GetParent()) {
     CallQueryInterface(mDocument, &retval);
   }
   return retval;
@@ -2629,7 +2629,7 @@ nsHTMLInputElement::AddedToRadioGroup()
   //  If the input element is not in a form and
   //  not in a document, we just need to return.
   //
-  if (!mForm && !(mDocument && mParent)) {
+  if (!mForm && !(mDocument && GetParent())) {
     return NS_OK;
   }
 
@@ -2684,7 +2684,7 @@ nsHTMLInputElement::WillRemoveFromRadioGroup()
   // If the input element is not in a form and
   // not in a document, we just need to return.
   //
-  if (!mForm && !(mDocument && mParent)) {
+  if (!mForm && !(mDocument && GetParent())) {
     return NS_OK;
   }
 
