@@ -358,7 +358,8 @@ nsProfileMigrator::ImportRegistryProfiles(const nsACString& aAppName)
     if (!profileFile)
       continue;
 
-    rv = profileFile->InitWithNativePath(nsDependentCString(profilePath));
+    NS_ConvertUTF8toUTF16 widePath(profilePath);
+    rv = profileFile->InitWithPath(widePath);
     if (NS_FAILED(rv)) continue;
 
     nsCOMPtr<nsIToolkitProfile> tprofile;
