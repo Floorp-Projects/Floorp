@@ -41,7 +41,7 @@ export PATH=/usr/xpg4/bin:/usr/sbin:/usr/bin
 # Enumerate installed patches
 enumerate_patch_list()
 {
-    showrev -p | grep "^Patch: "
+    showrev -p | sort -n |grep "^Patch: "
     #cat patchlist.txt | grep "^Patch: "
 }
 
