@@ -37,36 +37,41 @@
 
 #include "nsIGenericFactory.h"
 #include "ipcService.h"
-#include "ipcSocketProvider.h"
 #include "ipcCID.h"
+#include "ipcConfig.h"
 
-////////////////////////////////////////////////////////////////////////
+//-----------------------------------------------------------------------------
 // Define the contructor function for the objects
 //
 // NOTE: This creates an instance of objects by using the default constructor
-//
+//-----------------------------------------------------------------------------
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ipcService, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(ipcSocketProvider)
 
-////////////////////////////////////////////////////////////////////////
+#ifndef IPC_USE_INET
+#include "ipcSocketProvider.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(ipcSocketProvider)
+#endif
+
+//-----------------------------------------------------------------------------
 // Define a table of CIDs implemented by this module along with other
 // information like the function to create an instance, contractid, and
 // class name.
-//
+//-----------------------------------------------------------------------------
 static const nsModuleComponentInfo components[] = {
   { IPC_SERVICE_CLASSNAME,
     IPC_SERVICE_CID,
     IPC_SERVICE_CONTRACTID,
     ipcServiceConstructor, },
+#ifndef IPC_USE_INET
   { IPC_SOCKETPROVIDER_CLASSNAME,
     IPC_SOCKETPROVIDER_CID,
     NS_NETWORK_SOCKET_CONTRACTID_PREFIX "ipc",
     ipcSocketProviderConstructor, },
+#endif
 };
 
-
-////////////////////////////////////////////////////////////////////////
+//-----------------------------------------------------------------------------
 // Implement the NSGetModule() exported function for your module
 // and the entire implementation of the module object.
-//
+//-----------------------------------------------------------------------------
 NS_IMPL_NSGETMODULE(ipcModule, components)

@@ -42,7 +42,10 @@
 #ifdef XP_UNIX
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <signal.h>
+#include "prprf.h"
 #endif
 
 #include "prio.h"
@@ -63,6 +66,127 @@
 #include "prnetdb.h"
 #endif
 
+//-----------------------------------------------------------------------------
+// ipc directory and locking...
+//-----------------------------------------------------------------------------
+
+#ifdef XP_UNIX
+
+static char *ipcDir;
+static char *ipcSockFile;
+static char *ipcLockFile;
+static int   ipcLockFD;
+
+static PRBool AcquireDaemonLock()
+{
+    const char lockName[] = "lock";
+
+    int dirLen = strlen(ipcDir);
+    int len = dirLen            // ipcDir
+            + 1                 // "/"
+            + sizeof(lockName); // "lock"
+
+    ipcLockFile = (char *) malloc(len);
+    memcpy(ipcLockFile, ipcDir, dirLen);
+    ipcLockFile[dirLen] = '/';
+    memcpy(ipcLockFile + dirLen + 1, lockName, sizeof(lockName));
+
+    ipcLockFD = open(ipcLockFile, O_WRONLY|O_CREAT|O_TRUNC, S_IWUSR|S_IRUSR);
+    if (ipcLockFD == -1)
+        return PR_FALSE;
+
+    //
+    // we use fcntl for locking.  assumption: filesystem should be local.
+    // this API is nice because the lock will be automatically released
+    // when the process dies.  it will also be released when the file
+    // descriptor is closed.
+    //
+    struct flock lock;
+    lock.l_type = F_WRLCK;
+    lock.l_start = 0;
+    lock.l_len = 0;
+    lock.l_whence = SEEK_SET;
+    if (fcntl(ipcLockFD, F_SETLK, &lock) == -1)
+        return PR_FALSE;
+
+    //
+    // write our PID into the lock file (this just seems like a good idea...
+    // no real purpose otherwise).
+    //
+    char buf[256];
+    int nb = PR_snprintf(buf, sizeof(buf), "%u\n", (unsigned long) getpid());
+    write(ipcLockFD, buf, nb);
+
+    return PR_TRUE;
+}
+
+static PRBool InitDaemonDir(const char *socketPath)
+{
+    LOG(("InitDaemonDir [sock=%s]\n", socketPath));
+
+    ipcSockFile = PL_strdup(socketPath);
+    ipcDir      = PL_strdup(socketPath);
+
+    //
+    // make sure IPC directory exists (XXX this should be recursive)
+    //
+    char *p = strrchr(ipcDir, '/');
+    if (p)
+        p[0] = '\0';
+    mkdir(ipcDir, 0700);
+
+    //
+    // if we can't acquire the daemon lock, then another daemon
+    // must be active, so bail.
+    //
+    if (!AcquireDaemonLock())
+        return PR_FALSE;
+
+    //
+    // delete an existing socket to prevent bind from failing.
+    //
+    unlink(socketPath);
+
+    return PR_TRUE;
+}
+
+static void ShutdownDaemonDir()
+{
+    LOG(("ShutdownDaemonDir [sock=%s]\n", ipcSockFile));
+
+    //
+    // unlink files from directory before giving up lock; otherwise, we'd be
+    // unable to delete it w/o introducing a race condition.
+    //
+    unlink(ipcLockFile);
+    unlink(ipcSockFile);
+
+    //
+    // should be able to remove the ipc directory now.
+    //
+    rmdir(ipcDir);
+
+    // 
+    // this removes the advisory lock, allowing other processes to acquire it.
+    //
+    close(ipcLockFD);
+
+    //
+    // free allocated memory
+    //
+    PL_strfree(ipcDir);
+    PL_strfree(ipcSockFile);
+    free(ipcLockFile);
+
+    ipcDir = NULL;
+    ipcSockFile = NULL;
+    ipcLockFile = NULL;
+}
+
+#endif
+
+//-----------------------------------------------------------------------------
+// poll list
 //-----------------------------------------------------------------------------
 
 // upper limit on the number of active connections
@@ -247,7 +371,7 @@ int main(int argc, char **argv)
     IPC_InitLog("###");
 #endif
 
-start:
+//start:
 #ifdef IPC_USE_INET
     listen_fd = PR_OpenTCPSocket(PR_AF_INET);
     if (!listen_fd) {
@@ -258,17 +382,20 @@ start:
     PR_InitializeNetAddr(PR_IpAddrLoopback, IPC_PORT, &addr);
 
 #else
+    listen_fd = PR_OpenTCPSocket(PR_AF_LOCAL);
+    if (!listen_fd) {
+        LOG(("PR_OpenUDPSocket failed [%d]\n", PR_GetError()));
+        return -1;
+    }
+
     const char *socket_path;
     if (argc < 2)
         socket_path = IPC_DEFAULT_SOCKET_PATH;
     else
         socket_path = argv[1];
 
-    listen_fd = PR_OpenTCPSocket(PR_AF_LOCAL);
-    if (!listen_fd) {
-        LOG(("PR_OpenUDPSocket failed [%d]\n", PR_GetError()));
-        return -1;
-    }
+    if (!InitDaemonDir(socket_path))
+        return 0;
 
     addr.local.family = PR_AF_LOCAL;
     PL_strncpyz(addr.local.path, socket_path, sizeof(addr.local.path));
@@ -276,6 +403,9 @@ start:
 
     if (PR_Bind(listen_fd, &addr) != PR_SUCCESS) {
         LOG(("PR_Bind failed [%d]\n", PR_GetError()));
+        return -1;
+    }
+#if 0
         //
         // failure here indicates that another process may be bound
         // to the socket already.  let's try connecting to that socket.
@@ -310,6 +440,7 @@ start:
         PR_Close(listen_fd);
         goto start;
     }
+#endif
 
     InitModuleReg(argv[0]);
 
@@ -322,22 +453,9 @@ start:
 
     IPC_ShutdownModuleReg();
 
-    //
-    // XXX enable this delay for startup testing
-    //
-    //LOG(("sleeping for 5 seconds...\n"));
-    //PR_Sleep(PR_SecondsToInterval(5));
-
 #ifndef IPC_USE_INET
-    LOG(("deleting socket at %s\n", socket_path));
-    //
-    // we delete the file itself first to avoid a race between shutting
-    // ourselves down and another instance of the daemon starting up.
-    //
-    if (PR_Delete(socket_path) != PR_SUCCESS) {
-        LOG(("PR_Delete failed [%d]\n", PR_GetError()));
-        return -1;
-    }
+
+    ShutdownDaemonDir();
 #endif
 
     LOG(("closing socket\n"));

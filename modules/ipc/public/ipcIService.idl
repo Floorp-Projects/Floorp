@@ -43,22 +43,23 @@ interface ipcIClientObserver;
 
 /**
  * the IPC service provides the means to communicate with an external IPC
- * daemon and/or other mozilla-based applications sharing the same user
- * profile.  the IPC daemon hosts modules (some builtin and others dynamically
- * loaded) with which applications may interact.
+ * daemon and/or other mozilla-based applications on the same physical system.
+ * the IPC daemon hosts modules (some builtin and others dynamically loaded)
+ * with which applications may interact.
  *
  * at application startup, the IPC service will attempt to establish a
- * connection with the IPC daemon for the current profile.  (there is one IPC
- * daemon per profile.)  the IPC daemon will be automatically started if
- * necessary.  when a connection has been established, the IPC service will
- * broadcast an "ipc-startup" notification using the observer service.
+ * connection with the IPC daemon.  the IPC daemon will be automatically
+ * started if necessary.  when a connection has been established, the IPC
+ * service will broadcast an "ipc-startup" notification using the observer
+ * service.
  *
- * when the connection to the IPC daemon is closed (due to error, profile
- * change, or normal shutdown), an "ipc-shutdown" notification will be
- * broadcast.
+ * XXX startup category
+ *
+ * when the connection to the IPC daemon is closed, an "ipc-shutdown"
+ * notification will be broadcast.
  *
  * each client has a name.  the client name need not be unique across all
- * clients, but it is usually good if it is.  this IPC service does not require
+ * clients, but it is usually good if it is.  the IPC service does not require
  * unique names.  instead, the IPC daemon assigns each client a unique ID that
  * is good for the current "session."  clients can query other clients by name
  * or by ID.  the IPC service supports forwarding messages from one client to
@@ -192,8 +193,8 @@ interface ipcIClientObserver : nsISupports
      * @param aStatus        client status (e.g. CLIENT_UP).
      */
     void onClientStatus(in unsigned long  aRequestToken,
-                        in ipcIClientInfo aClientInfo,
-                        in unsigned long  aStatus);
+                        in unsigned long  aStatus,
+                        in ipcIClientInfo aClientInfo);
 
     // XXX do we care about changes to the aliases and targets supported
     //     by a client?  if so, how should we pass this information up?
