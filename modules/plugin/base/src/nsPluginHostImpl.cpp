@@ -526,9 +526,16 @@ nsPluginHostImpl::FindProxyForURL(const char* url, char* *result)
 
 nsresult nsPluginHostImpl :: Init(void)
 {
-  nsresult  rv;
+  nsresult rv;
+  nsISupports *object;
 
-  rv = nsMalloc::Create(nsnull, kIMallocIID, (void **)&mMalloc);
+  rv = nsMalloc::Create(nsnull, kIMallocIID, (void **)&object);
+
+  if (NS_OK == rv)
+  {
+    rv = object->QueryInterface(kIMallocIID, (void **)&mMalloc);
+    NS_RELEASE(object);
+  }
 
   return rv;
 }
