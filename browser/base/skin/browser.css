@@ -270,7 +270,7 @@ toolbar[mode="icons"] .toolbarbutton-text {
 }
 
 toolbar[mode="icons"] .toolbarbutton-icon {
-  padding: 0px 0px 2px 0px important;
+  padding: 0px 0px 2px 0px !important;
 }
 
 toolbar[mode="text"] .toolbarbutton-menubutton-dropmarker,
