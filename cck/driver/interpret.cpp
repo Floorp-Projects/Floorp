@@ -700,7 +700,20 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					}
 					
 				}
-        
+				else if(strcmp(pcmd, "IsPortnumEmpty") ==0)
+				{
+					WIDGET *wid;
+					wid = curWidget;
+					if (wid)
+					{
+						CString retval = CWizardUI::GetScreenValue(curWidget);
+						if (retval == "")
+						{
+							SetGlobal(curWidget->value,"0");
+							((CEdit*)wid->control)->SetWindowText("0");
+						}
+					}
+				}
 				else if (strcmp(pcmd, "VerifySet") == 0)
 				{
 					// VerifySet checks to see if the first parameter has any value
