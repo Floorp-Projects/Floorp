@@ -14,8 +14,8 @@
 #define LICENSE_TITLE Software License Agreement
 #define LICENSE_SUBTITLE Terms and conditions for using this software.
 #define LICENSE_MESSAGE0 Please read the following license agreement. Use the scroll bar to view the rest of this agreement.
-#define LICENSE_ACCEPT I Accept the terms of the License Agreement
-#define LICENSE_DECLINE I do NOT Accept the terms of the License Agreement
+#define LICENSE_ACCEPT I &Accept the terms of the License Agreement
+#define LICENSE_DECLINE I do &NOT Accept the terms of the License Agreement
 
 #define SETUP_TYPE_TITLE Setup Type
 #define SETUP_TYPE_SUBTITLE Choose setup options.
