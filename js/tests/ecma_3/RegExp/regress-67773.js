@@ -26,18 +26,12 @@
 */
 //-------------------------------------------------------------------------------------------------
 var bug = 67773;
-var summary = 'Testing regular subexpressions followed by ? or +';
-var statprefix = 'regexp = '; 
-var statmiddle = ',  string = '; 
-var statsuffix = ',  match=$';
-var cnSingleQuote = "'"; var cnEmptyString = ''; var cnSingleSpace = ' ';
-var cnNoMatch = 'regexp FAILED to match anything!!!\n';
-var cnUnexpectedMatch = 'regexp MATCHED when we expected it to fail!!!\n';
-var i = -1; var j = -1;
+var summary = 'Testing regular subexpressions followed by ? or +\n';
+var cnSingleSpace = ' ';
 var pattern = ''; var patterns = new Array();
 var string = ''; var strings = new Array();
-var actualmatch = '';  var actual = new Array();
-var expectedmatch = ''; var expect = new Array();
+var actualmatch = '';  var actualmatches = new Array();
+var expectedmatch = ''; var expectedmatches = new Array();
 
 
 pattern = /^(\S+)?( ?)(B+)$/;  //single space before second ? character
@@ -109,26 +103,26 @@ pattern = /^(\w+\-)+$/;
 
 
 pattern = /^(\S+)+(A+)$/;
-    string = 'asdlfkjasdflkjAAA';
+    string = 'asdldflkjAAA';
     actualmatch = string.match(pattern);
-    expectedmatch = Array(string, 'asdlfkjasdflkjAA', 'A');  
+    expectedmatch = Array(string, 'asdldflkjAA', 'A');  
     addThis(); 
 
-    string = 'asdlfkjasdflkj AAA'; // space in middle
+    string = 'asdldflkj AAA'; // space in middle
     actualmatch = string.match(pattern);
     expectedmatch = null;  //because of the space
     addThis(); 
 
 
 pattern = /^(\S+)+(\d+)$/;
-    string = 'asdlfkjasdflkj122211';
+    string = 'asdldflkj122211';
     actualmatch = string.match(pattern);
-    expectedmatch = Array(string, 'asdlfkjasdflkj12221', '1');  
+    expectedmatch = Array(string, 'asdldflkj12221', '1');  
     addThis(); 
 
-    string = 'asdlfkjasdflkj1111111aaaaa1'; 
+    string = 'asdldflkj1111111aaa1'; 
     actualmatch = string.match(pattern);
-    expectedmatch = Array(string, 'asdlfkjasdflkj1111111aaaaa', '1'); 
+    expectedmatch = Array(string, 'asdldflkj1111111aaa', '1'); 
     addThis(); 
 
 
@@ -144,8 +138,8 @@ function addThis()
   i++;
   patterns[i] = pattern;
   strings[i] = string;
-  actual[i] = actualmatch;
-  expect[i] = expectedmatch;
+  actualmatches[i] = actualmatch;
+  expectedmatches[i] = expectedmatch;
 }
 
 
@@ -153,60 +147,7 @@ function test()
 {
   enterFunc ('test'); 
   printBugNumber (bug);
-  printStatus (summary);
-  
-  for (i=0; i != patterns.length; i++)
-  {
-    actualmatch=actual[i];
-    expectedmatch=expect[i];
-
-    if(actualmatch) // there was a successful match - 
-    {
-      if(expectedmatch)
-      {
-        // expectedmatch and actualmatch are array objects. Compare them element-by-element -
-        for (j=0; j !=actualmatch.length; j++)
-        {
-          reportCompare (expectedmatch[j],  actualmatch[j], getStatus(i, j));
-        }
-      }
-      else // we did not expect a match -
-      {
-        reportFailure(cnUnexpectedMatch + getStatus(i));
-      }    
-    }
-    else // actualmatch is null; there was no successful match - 
-    {
-      if (expectedmatch)  // we expected a match
-      {    
-        reportFailure(cnNoMatch + getStatus(i));
-      }
-      else // we did not expect a match
-      {
-        // Being ultra-cautious here. Presumably expectedmatch===actualmatch===null
-        reportCompare (expectedmatch, actualmatch, getStatus(i));
-      }
-    }
-  }
- 
+  printStatus (summary);  
+  testRegExp(patterns, strings, actualmatches, expectedmatches);
   exitFunc ('test');
-}
-
-
-function getStatus(i, j)
-{
-  if ( j )
-  {
-    return (statprefix  +  patterns[i]  +  statmiddle  +  quote(strings[i])  +  statsuffix  +  j ); 
-  }
-  else
-  {
-    return (statprefix  +  patterns[i]  +  statmiddle  +  quote(strings[i]));
-  }
-}
-
-
-function quote(text)
-{
-  return (cnSingleQuote  +  text  +  cnSingleQuote);
 }
