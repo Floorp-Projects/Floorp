@@ -78,6 +78,25 @@ nsFileWidget::~nsFileWidget()
 static void file_ok_clicked(GtkWidget *w, PRBool *ret)
 {
   g_print("user hit ok\n");
+#if 0
+  struct stat buf;
+
+  text = g_strdup(gtk_file_selection_get_filename(GTK_FILE_SELECTION(filesel)));
+  g_strstrip(text);
+  while ((text[strlen(text) - 1] == '/') && (strlen(text) != 1)) {
+    text[strlen(text) - 1] = '\0';
+  }
+  if (stat(text, &buf) == 0) {
+    if (S_ISDIR(buf.st_mode)) {               /* Selected directory -- don't close frequester */
+      text2 = g_strdup_printf("%s/", text);
+      gtk_file_selection_set_filename(GTK_FILE_SELECTION(filesel), text2);
+      g_free(text2);
+      return PR_FALSE;
+    }
+  }
+  
+  g_free(text);
+#endif
   *ret = PR_TRUE;
   gtk_main_quit();
 }
