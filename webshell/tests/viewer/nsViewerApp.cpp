@@ -35,6 +35,8 @@
 #include "nsILabel.h"
 #include "nsIButton.h"
 #include "nsITextWidget.h"
+#include "nsILookAndFeel.h"
+#include "nscolor.h"
 
 // XXX For font setting below
 #include "nsFont.h"
@@ -510,19 +512,21 @@ static nsIButton      * mSitePrevBtn;
 static nsIButton      * mSiteNextBtn;
 static nsILabel       * mSiteLabel;
 
-static NS_DEFINE_IID(kButtonCID, NS_BUTTON_CID);
-static NS_DEFINE_IID(kTextFieldCID, NS_TEXTFIELD_CID);
-static NS_DEFINE_IID(kWindowCID, NS_WINDOW_CID);
-static NS_DEFINE_IID(kDialogCID, NS_DIALOG_CID);
+static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
+static NS_DEFINE_IID(kButtonCID,      NS_BUTTON_CID);
+static NS_DEFINE_IID(kTextFieldCID,   NS_TEXTFIELD_CID);
+static NS_DEFINE_IID(kWindowCID,      NS_WINDOW_CID);
+static NS_DEFINE_IID(kDialogCID,      NS_DIALOG_CID);
 static NS_DEFINE_IID(kCheckButtonCID, NS_CHECKBUTTON_CID);
-static NS_DEFINE_IID(kLabelCID, NS_LABEL_CID);
+static NS_DEFINE_IID(kLabelCID,       NS_LABEL_CID);
 
-static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
-static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
-static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-static NS_DEFINE_IID(kIDialogIID, NS_IDIALOG_IID);
+static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
+static NS_DEFINE_IID(kIButtonIID,      NS_IBUTTON_IID);
+static NS_DEFINE_IID(kITextWidgetIID,  NS_ITEXTWIDGET_IID);
+static NS_DEFINE_IID(kIWidgetIID,      NS_IWIDGET_IID);
+static NS_DEFINE_IID(kIDialogIID,      NS_IDIALOG_IID);
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
-static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
+static NS_DEFINE_IID(kILabelIID,       NS_ILABEL_IID);
 
 
 
@@ -646,7 +650,17 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   mRobotDialog->Create(aParent, rect, HandleRobotEvent, NULL);
   mRobotDialog->SetLabel("Debug Robot Options");
 
-  nscoord txtHeight = 24;
+  nscoord txtHeight   = 24;
+  nscolor textBGColor = NS_RGB(255,255,255);
+  nscolor textFGColor = NS_RGB(255,255,255);
+
+  nsILookAndFeel * lookAndFeel;
+  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+     lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
+     lookAndFeel->GetColor(nsILookAndFeel::eColor_TextBackground, textBGColor);
+     lookAndFeel->GetColor(nsILookAndFeel::eColor_TextForeground, textFGColor);
+  }
+  
   nscoord w  = 65;
   nscoord x  = 5;
   nscoord y  = 10;
@@ -677,7 +691,8 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   rect.SetRect(x, y, 225, txtHeight);  
   nsRepository::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID, (void**)&mVerDirTxt);
   mVerDirTxt->Create(mRobotDialog, rect, HandleRobotEvent, NULL);
-  mVerDirTxt->SetBackgroundColor(NS_RGB(255,255,255));
+  mVerDirTxt->SetBackgroundColor(textBGColor);
+  mVerDirTxt->SetForegroundColor(textFGColor);
   mVerDirTxt->SetFont(font);
   nsString verStr(DEBUG_EMPTY);
   mVerDirTxt->SetText(verStr);
@@ -703,7 +718,8 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   rect.SetRect(x, y, 75, txtHeight);  
   nsRepository::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID, (void**)&mStopAfterTxt);
   mStopAfterTxt->Create(mRobotDialog, rect, HandleRobotEvent, NULL);
-  mStopAfterTxt->SetBackgroundColor(NS_RGB(255,255,255));
+  mStopAfterTxt->SetBackgroundColor(textBGColor);
+  mStopAfterTxt->SetForegroundColor(textFGColor);
   mStopAfterTxt->SetFont(font);
   mStopAfterTxt->Show(PR_TRUE);
 
@@ -987,19 +1003,18 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
 
   PRBool result = TRUE;
 
-   /* mSiteDialog->Show(PR_TRUE);
-    mSiteNextBtn->SetFocus();
-    // Init
-    mSitePrevBtn->Enable(PR_FALSE);
-    if (gWinData) {
-      nsString urlStr(gTop100List[gTop100Pointer]);
-      gWinData->LoadURL(urlStr);
-      mSiteLabel->SetLabel(urlStr);
-    }
-    return TRUE;
-  }*/
-
   if (mSiteDialog == nsnull) {
+    nscoord txtHeight   = 24;
+    nscolor textBGColor = NS_RGB(0,0,0);
+    nscolor textFGColor = NS_RGB(255,255,255);
+
+    nsILookAndFeel * lookAndFeel;
+    if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+       //lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
+       //lookAndFeel->GetColor(nsILookAndFeel::eColor_TextBackground, textBGColor);
+       //lookAndFeel->GetColor(nsILookAndFeel::eColor_TextForeground, textFGColor);
+    }
+
     nsILabel * label;
 
     nsIDeviceContext* dc = aParent->GetDeviceContext();
@@ -1021,7 +1036,6 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     mSiteDialog->SetLabel("Top 100 Site Walker");
     //mSiteDialog->SetClientData(this);
 
-    nscoord txtHeight = 24;
     nscoord w  = 65;
     nscoord x  = 5;
     nscoord y  = 10;
