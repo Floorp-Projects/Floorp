@@ -65,9 +65,6 @@ nsRenderingContextGTK::nsRenderingContextGTK()
   mGC = nsnull;
 
   mFunction = GDK_COPY;
-  mClipIsSet = PR_TRUE;
-  mFontIsSet = PR_TRUE;
-  mColorIsSet = PR_TRUE;
 
   PushState();
 }
@@ -91,7 +88,6 @@ nsRenderingContextGTK::~nsRenderingContextGTK()
 
   if (mTMatrix)
     delete mTMatrix;
-  NS_IF_RELEASE(mClipRegion);
   NS_IF_RELEASE(mOffscreenSurface);
   NS_IF_RELEASE(mFontMetrics);
   NS_IF_RELEASE(mContext);
@@ -279,7 +275,7 @@ NS_IMETHODIMP nsRenderingContextGTK::PushState(PRInt32 aFlags)
   if (aFlags & NS_STATE_CLIP) {
     if (mClipRegion) {
       // set the state's clip region to a new copy of the current clip region
-      GetClipRegion(&state->mClipRegion);
+      GetClipRegion(getter_AddRefs(state->mClipRegion));
     }
   }
 
@@ -314,7 +310,7 @@ NS_IMETHODIMP nsRenderingContextGTK::PushState(void)
   if (mClipRegion)
   {
     // set the state's clip region to a new copy of the current clip region
-    GetClipRegion(&state->mClipRegion);
+    GetClipRegion(getter_AddRefs(state->mClipRegion));
   }
 
   NS_IF_ADDREF(mFontMetrics);
@@ -344,11 +340,7 @@ NS_IMETHODIMP nsRenderingContextGTK::PopState(PRBool &aClipEmpty)
       mTMatrix = state->mMatrix;
     }
 
-    // state->mClipRegion might be null, but thats ok.  we want that.
-    NS_IF_RELEASE(mClipRegion);
-
     mClipRegion = state->mClipRegion;
-    mClipIsSet = PR_FALSE;
 
     if (state->mFontMetrics && (mFontMetrics != state->mFontMetrics))
       SetFont(state->mFontMetrics);
@@ -454,8 +446,6 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
          nsClipCombine_to_string(aCombine));
 #endif // TRACE_SET_CLIP
 
-  mClipIsSet = PR_FALSE;
-
   mTMatrix->TransformCoord(&trect.x, &trect.y,
                            &trect.width, &trect.height);
 
@@ -493,7 +483,6 @@ void nsRenderingContextGTK::UpdateGC()
   if (mGC)
     gdk_gc_unref(mGC);
 
-
   memset(&values, 0, sizeof(GdkGCValues));
 
   values.font = mCurrentFont;
@@ -528,8 +517,6 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
 {
   CreateClipRegion();
 
-  mClipIsSet = PR_FALSE;
-
   switch(aCombine)
   {
     case nsClipCombine_kIntersect:
@@ -559,7 +546,7 @@ NS_IMETHODIMP nsRenderingContextGTK::CopyClipRegion(nsIRegion &aRegion)
   if (!mClipRegion)
     return NS_ERROR_FAILURE;
 
-  aRegion.SetTo(*NS_STATIC_CAST(nsIRegion*, mClipRegion));
+  aRegion.SetTo(*mClipRegion);
   return NS_OK;
 }
 
@@ -570,25 +557,21 @@ NS_IMETHODIMP nsRenderingContextGTK::GetClipRegion(nsIRegion **aRegion)
   if (!aRegion || !mClipRegion)
     return NS_ERROR_NULL_POINTER;
 
-  if (*aRegion) { // copy it, they should be using CopyClipRegion 
-    // printf("you should be calling CopyClipRegion()\n");
-    (*aRegion)->SetTo(*mClipRegion);
-    rv = NS_OK;
-  } else {
-    if ( NS_SUCCEEDED(nsComponentManager::CreateInstance(kRegionCID, 0, NS_GET_IID(nsIRegion), 
-                                                         (void**)aRegion )) )
-    {
-      if (mClipRegion) {
-        (*aRegion)->Init();
-        (*aRegion)->SetTo(*mClipRegion);
-        NS_ADDREF(*aRegion);
-        rv = NS_OK;
-      } else {
-        printf("null clip region, can't make a valid copy\n");
-        NS_RELEASE(*aRegion);
-        rv = NS_ERROR_FAILURE;
+  if (mClipRegion) {
+    if (*aRegion) { // copy it, they should be using CopyClipRegion 
+      (*aRegion)->SetTo(*mClipRegion);
+      rv = NS_OK;
+    } else {
+      nsCOMPtr<nsIRegion> newRegion = do_CreateInstance(kRegionCID, &rv);
+      if (NS_SUCCEEDED(rv)) {
+        newRegion->Init();
+        newRegion->SetTo(*mClipRegion);
+        NS_ADDREF(*aRegion = newRegion);
       }
-    } 
+    }
+  } else {
+    printf("null clip region, can't make a valid copy\n");
+    rv = NS_ERROR_FAILURE;
   }
 
   return rv;
@@ -599,14 +582,8 @@ NS_IMETHODIMP nsRenderingContextGTK::SetColor(nscolor aColor)
   if (nsnull == mContext)  
     return NS_ERROR_FAILURE;
 
-  // return if the colors are the same so that mColorIsSet doesn't get changed and we don't update the GC again
-  if (mCurrentColor == aColor)
-    return NS_OK;
-
   mCurrentColor = aColor;
 
-  mColorIsSet = PR_FALSE;
-  
   return NS_OK;
 }
 
@@ -637,7 +614,6 @@ NS_IMETHODIMP nsRenderingContextGTK::SetFont(nsIFontMetrics *aFontMetrics)
     nsFontHandle  fontHandle;
     mFontMetrics->GetFontHandle(fontHandle);
     mCurrentFont = (GdkFont *)fontHandle;
-    mFontIsSet = PR_FALSE;
   }
 
   return NS_OK;

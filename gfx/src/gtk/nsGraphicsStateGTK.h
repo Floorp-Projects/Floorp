@@ -27,13 +27,14 @@
 #include "nsIFontMetrics.h"
 #include "nsTransform2D.h"
 #include "nsRegionGTK.h"
+#include "nsCOMPtr.h"
 
 class nsGraphicsState
 {
 public:
 
   nsTransform2D  *mMatrix;
-  nsIRegion      *mClipRegion;
+  nsCOMPtr<nsIRegion> mClipRegion;
   nscolor         mColor;
   nsLineStyle     mLineStyle;
   nsIFontMetrics *mFontMetrics;
