@@ -35,7 +35,12 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext,
+  NS_IMETHOD PreHandleEvent(nsIPresContext& aPresContext,
+                         nsGUIEvent *aEvent,
+                         nsIFrame* aTargetFrame,
+                         nsEventStatus& aStatus);
+
+  NS_IMETHOD PostHandleEvent(nsIPresContext& aPresContext,
                          nsGUIEvent *aEvent,
                          nsIFrame* aTargetFrame,
                          nsEventStatus& aStatus);
@@ -52,11 +57,18 @@ public:
 protected:
   void UpdateCursor(nsIPresContext& aPresContext, nsPoint& aPoint, nsIFrame* aTargetFrame);
   void GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIEvent* aEvent, nsIFrame* aTargetFrame);
+  NS_IMETHOD DispatchKeyPressEvent(nsIPresContext& aPresContext, nsKeyEvent *aEvent, nsEventStatus& aStatus);  
+  NS_IMETHOD CheckForAndDispatchClick(nsIPresContext& aPresContext, nsMouseEvent *aEvent, nsEventStatus& aStatus);  
   void ShiftFocus();
   nsIContent* GetNextTabbableContent(nsIContent* aParent, nsIContent* aChild, nsIContent* aTop);
 
+  //Any frames here must be checked for validity in ClearFrameRefs
   nsIFrame* mCurrentTarget;
   nsIFrame* mLastMouseOverFrame;
+  nsIFrame* mLastLeftMouseDownFrame;
+  nsIFrame* mLastMiddleMouseDownFrame;
+  nsIFrame* mLastRightMouseDownFrame;
+
   nsIContent* mActiveLink;
   nsIContent* mCurrentFocus;
 

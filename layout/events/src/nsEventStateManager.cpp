@@ -43,6 +43,10 @@ static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID
 nsEventStateManager::nsEventStateManager() {
   mLastMouseOverFrame = nsnull;
   mCurrentTarget = nsnull;
+  mLastLeftMouseDownFrame = nsnull;
+  mLastMiddleMouseDownFrame = nsnull;
+  mLastRightMouseDownFrame = nsnull;
+
   mActiveLink = nsnull;
   mCurrentFocus = nsnull;
   mDocument = nsnull;
@@ -61,7 +65,7 @@ NS_IMPL_RELEASE(nsEventStateManager)
 NS_IMPL_QUERY_INTERFACE(nsEventStateManager, kIEventStateManagerIID);
 
 NS_IMETHODIMP
-nsEventStateManager::HandleEvent(nsIPresContext& aPresContext, 
+nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext, 
                                  nsGUIEvent *aEvent,
                                  nsIFrame* aTargetFrame,
                                  nsEventStatus& aStatus)
@@ -83,20 +87,50 @@ nsEventStateManager::HandleEvent(nsIPresContext& aPresContext,
   case NS_MOUSE_EXIT:
     //GenerateMouseEnterExit(aPresContext, aEvent, aTargetFrame);
     break;
-  case NS_KEY_DOWN:
-    switch(((nsKeyEvent*)aEvent)->keyCode) {
-    case NS_VK_TAB:
-      ShiftFocus();
-      aStatus = nsEventStatus_eConsumeNoDefault;
-      break;
-    }
-    break;
   case NS_GOTFOCUS:
     NS_IF_RELEASE(mCurrentFocus);
     aTargetFrame->GetContent(mCurrentFocus);
     break;
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext, 
+                                 nsGUIEvent *aEvent,
+                                 nsIFrame* aTargetFrame,
+                                 nsEventStatus& aStatus)
+{
+  mCurrentTarget = aTargetFrame;
+  nsresult ret = NS_OK;
+
+  nsFrameState state;
+  mCurrentTarget->GetFrameState(state);
+  state |= NS_FRAME_EXTERNAL_REFERENCE;
+  mCurrentTarget->SetFrameState(state);
+
+  switch (aEvent->message) {
+  case NS_MOUSE_LEFT_BUTTON_DOWN:
+  case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+  case NS_MOUSE_RIGHT_BUTTON_DOWN:
+  case NS_MOUSE_LEFT_BUTTON_UP:
+  case NS_MOUSE_MIDDLE_BUTTON_UP:
+  case NS_MOUSE_RIGHT_BUTTON_UP:
+    ret = CheckForAndDispatchClick(aPresContext, (nsMouseEvent*)aEvent, aStatus);
+    break;
+  case NS_KEY_DOWN:
+    ret = DispatchKeyPressEvent(aPresContext, (nsKeyEvent*)aEvent, aStatus);
+    if (nsEventStatus_eConsumeNoDefault != aStatus) {
+      switch(((nsKeyEvent*)aEvent)->keyCode) {
+        case NS_VK_TAB:
+          ShiftFocus();
+          aStatus = nsEventStatus_eConsumeNoDefault;
+          break;
+      }
+    }
+    break;
+  }
+  return ret;
 }
 
 NS_IMETHODIMP
@@ -112,8 +146,17 @@ nsEventStateManager::ClearFrameRefs(nsIFrame* aFrame)
   if (aFrame == mLastMouseOverFrame) {
     mLastMouseOverFrame = nsnull;
   }
-  else if (aFrame == mCurrentTarget) {
+  if (aFrame == mCurrentTarget) {
     mCurrentTarget = nsnull;
+  }
+  if (aFrame == mLastLeftMouseDownFrame) {
+    mLastLeftMouseDownFrame = nsnull;
+  }
+  if (aFrame == mLastMiddleMouseDownFrame) {
+    mLastMiddleMouseDownFrame = nsnull;
+  }
+  if (aFrame == mLastRightMouseDownFrame) {
+    mLastRightMouseDownFrame = nsnull;
   }
   return NS_OK;
 }
@@ -184,6 +227,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
           nsMouseEvent event;
           event.eventStructType = NS_MOUSE_EVENT;
           event.message = NS_MOUSE_EXIT;
+          event.widget = nsnull;
 
           //The frame has change but the content may not have.  Check before dispatching to content
           mLastMouseOverFrame->GetContent(lastContent);
@@ -204,6 +248,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
         nsMouseEvent event;
         event.eventStructType = NS_MOUSE_EVENT;
         event.message = NS_MOUSE_ENTER;
+        event.widget = nsnull;
 
         //The frame has change but the content may not have.  Check before dispatching to content
         if (lastContent != targetContent) {
@@ -238,6 +283,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
         nsMouseEvent event;
         event.eventStructType = NS_MOUSE_EVENT;
         event.message = NS_MOUSE_EXIT;
+        event.widget = nsnull;
 
         nsIContent *lastContent;
         mLastMouseOverFrame->GetContent(lastContent);
@@ -254,6 +300,96 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
     break;
   }
   
+}
+
+NS_IMETHODIMP
+nsEventStateManager::CheckForAndDispatchClick(nsIPresContext& aPresContext, 
+                                              nsMouseEvent *aEvent,
+                                              nsEventStatus& aStatus)
+{
+  nsresult ret;
+  nsMouseEvent event;
+  PRBool fireClick = PR_FALSE;
+
+  switch (aEvent->message) {
+  case NS_MOUSE_LEFT_BUTTON_DOWN:
+    mLastLeftMouseDownFrame = mCurrentTarget;
+    break;
+  case NS_MOUSE_LEFT_BUTTON_UP:
+    if (mLastLeftMouseDownFrame == mCurrentTarget) {
+      fireClick = PR_TRUE;
+      event.message = NS_MOUSE_LEFT_CLICK;
+    }
+    break;
+  case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+    mLastMiddleMouseDownFrame = mCurrentTarget;
+    break;
+  case NS_MOUSE_MIDDLE_BUTTON_UP:
+    if (mLastMiddleMouseDownFrame == mCurrentTarget) {
+      fireClick = PR_TRUE;
+      event.message = NS_MOUSE_MIDDLE_CLICK;
+    }
+    break;
+  case NS_MOUSE_RIGHT_BUTTON_DOWN:
+    mLastRightMouseDownFrame = mCurrentTarget;
+    break;
+  case NS_MOUSE_RIGHT_BUTTON_UP:
+    if (mLastRightMouseDownFrame == mCurrentTarget) {
+      fireClick = PR_TRUE;
+      event.message = NS_MOUSE_RIGHT_CLICK;
+    }
+    break;
+  }
+
+  if (fireClick) {
+    //fire click
+    event.eventStructType = NS_MOUSE_EVENT;
+    event.widget = nsnull;
+
+    nsIContent *content;
+    mCurrentTarget->GetContent(content);
+
+    if (nsnull != content) {
+      ret = content->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, aStatus); 
+      NS_RELEASE(content);
+    }
+
+    //Now dispatch to the frame
+    if (nsnull != mCurrentTarget) {
+      mCurrentTarget->HandleEvent(aPresContext, &event, aStatus);   
+    }
+  }
+  return ret;
+}
+
+NS_IMETHODIMP
+nsEventStateManager::DispatchKeyPressEvent(nsIPresContext& aPresContext, 
+                                           nsKeyEvent *aEvent,
+                                           nsEventStatus& aStatus)
+{
+  nsresult ret;
+
+  //fire keypress
+  nsKeyEvent event;
+  event.eventStructType = NS_KEY_EVENT;
+  event.message = NS_KEY_PRESS;
+  event.widget = nsnull;
+  event.keyCode = aEvent->keyCode;
+
+  nsIContent *content;
+  mCurrentTarget->GetContent(content);
+
+  if (nsnull != content) {
+    ret = content->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, aStatus); 
+    NS_RELEASE(content);
+  }
+
+  //Now dispatch to the frame
+  if (nsnull != mCurrentTarget) {
+    mCurrentTarget->HandleEvent(aPresContext, &event, aStatus);   
+  }
+
+  return ret;
 }
 
 void

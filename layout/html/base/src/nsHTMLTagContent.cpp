@@ -1286,13 +1286,7 @@ nsresult nsHTMLTagContent::HandleDOMEvent(nsIPresContext& aPresContext,
         }
 
         if (mActiveLink == this) {
-          nsEventStatus mStatus;
-          nsMouseEvent event;
-          event.eventStructType = NS_MOUSE_EVENT;
-          event.message = NS_MOUSE_LEFT_CLICK;
-          HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, mStatus);
-
-          if (nsEventStatus_eConsumeNoDefault != mStatus) {
+          if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
             nsAutoString base, href, target;
             GetAttribute(nsString(NS_HTML_BASE_HREF), base);
             GetAttribute(nsString("href"), href);

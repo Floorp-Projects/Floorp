@@ -414,17 +414,7 @@ NS_METHOD nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
 	    break;
     case NS_MOUSE_LEFT_BUTTON_UP:
 	    if (eMouseDown == mLastMouseState) {
-        float t2p = aPresContext.GetTwipsToPixels();
-        ((nsInput*)mContent)->SetClickPoint(NSTwipsToIntPixels(aEvent->point.x, t2p),
-                                            NSTwipsToIntPixels(aEvent->point.y, t2p));   
-
-        nsEventStatus mStatus = nsEventStatus_eIgnore;
-        nsMouseEvent event;
-        event.eventStructType = NS_MOUSE_EVENT;
-        event.message = NS_MOUSE_LEFT_CLICK;
-        mContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, mStatus);
-        
-        if (nsEventStatus_eConsumeNoDefault != mStatus) {
+        if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
           MouseClicked(&aPresContext);
         }
 	    } 

@@ -385,6 +385,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return mEventNames[eDOMEvents_keyup];
   case NS_KEY_DOWN:
     return mEventNames[eDOMEvents_keydown];
+  case NS_KEY_PRESS:
+    return mEventNames[eDOMEvents_keypress];
   case NS_GOTFOCUS:
     return mEventNames[eDOMEvents_focus];
   case NS_LOSTFOCUS:

@@ -319,7 +319,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
             else {
               ret = mEventListener->ProcessEvent(*aDOMEvent);
             }
-            aEventStatus = (NS_OK == ret) ? nsEventStatus_eIgnore : nsEventStatus_eConsumeNoDefault;
+            aEventStatus = (NS_OK == ret) ? aEventStatus : nsEventStatus_eConsumeNoDefault;
           }
         }
       }
@@ -350,7 +350,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
             else {
               ret = mEventListener->ProcessEvent(*aDOMEvent);
             }
-            aEventStatus = (NS_OK == ret) ? nsEventStatus_eIgnore : nsEventStatus_eConsumeNoDefault;
+            aEventStatus = (NS_OK == ret) ? aEventStatus : nsEventStatus_eConsumeNoDefault;
           }
         }
       }
@@ -358,6 +358,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
   
     case NS_KEY_UP:
     case NS_KEY_DOWN:
+    case NS_KEY_PRESS:
       if (nsnull != mKeyListeners) {
         if (nsnull == *aDOMEvent) {
           ret = NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
@@ -377,6 +378,9 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                 case NS_KEY_DOWN:
                   ret = mKeyListener->KeyDown(*aDOMEvent);
                   break;
+                case NS_KEY_PRESS:
+                  ret = mKeyListener->KeyPress(*aDOMEvent);
+                  break;
                 default:
                   break;
               }
@@ -385,7 +389,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
             else {
               ret = mEventListener->ProcessEvent(*aDOMEvent);
             }
-            aEventStatus = (NS_OK == ret) ? nsEventStatus_eIgnore : nsEventStatus_eConsumeNoDefault;
+            aEventStatus = (NS_OK == ret) ? aEventStatus : nsEventStatus_eConsumeNoDefault;
           }
         }
       }
@@ -420,7 +424,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
             else {
               ret = mEventListener->ProcessEvent(*aDOMEvent);
             }
-            aEventStatus = (NS_OK == ret) ? nsEventStatus_eIgnore : nsEventStatus_eConsumeNoDefault;
+            aEventStatus = (NS_OK == ret) ? aEventStatus : nsEventStatus_eConsumeNoDefault;
           }
         }
       }
@@ -459,7 +463,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
             else {
               ret = mEventListener->ProcessEvent(*aDOMEvent);
             }
-            aEventStatus = (NS_OK == ret) ? nsEventStatus_eIgnore : nsEventStatus_eConsumeNoDefault;
+            aEventStatus = (NS_OK == ret) ? aEventStatus : nsEventStatus_eConsumeNoDefault;
           }
         }
       }
@@ -494,7 +498,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
             else {
               ret = mEventListener->ProcessEvent(*aDOMEvent);
             }
-            aEventStatus = (NS_OK == ret) ? nsEventStatus_eIgnore : nsEventStatus_eConsumeNoDefault;
+            aEventStatus = (NS_OK == ret) ? aEventStatus : nsEventStatus_eConsumeNoDefault;
           }
         }
       }
@@ -521,7 +525,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
               ret = eventListener->ProcessEvent(*aDOMEvent);
             }
             aEventStatus = (NS_OK == ret)
-              ? nsEventStatus_eIgnore
+              ? aEventStatus
               : nsEventStatus_eConsumeNoDefault;
           }
         }

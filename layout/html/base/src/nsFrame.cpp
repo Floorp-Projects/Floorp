@@ -921,8 +921,8 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
       }
       mCurrentFrame = this;
 
-      NS_RELEASE(currentContent);
-      NS_RELEASE(newContent);
+      NS_IF_RELEASE(currentContent);
+      NS_IF_RELEASE(newContent);
     } else if ((nsnull != mStartSelectionPoint) && (nsnull != mEndSelectionPoint)) {
       if (SELECTION_DEBUG) printf("HandleDrag::Same Frame.\n");
 
@@ -964,7 +964,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
         //                               " "+mStartSelectionPoint->IsAnchor()+
         //                                "  End: "+mEndSelectionPoint->GetOffset()  +
         //                               " "+mEndSelectionPoint->IsAnchor());
-        NS_RELEASE(newContent);
+        NS_IF_RELEASE(newContent);
       }
       NS_IF_RELEASE(selStartContent);
       NS_IF_RELEASE(selEndContent);
