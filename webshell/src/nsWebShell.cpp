@@ -1747,6 +1747,30 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   return LoadURL(aURLSpec,"view",aPostData,aModifyHistory,aType, aLocalIP);
 }
 
+// Nisheeth: returns true if the host and the file parts of
+// the two nsIURI's match.
+static PRBool EqualBaseURLs(nsIURI* url1, nsIURI* url2)
+{
+  const char *host1;
+  const char *host2;
+  const char *file1;
+  const char *file2;
+  PRBool rv = PR_FALSE;
+  
+  // XXX We need to make these strcmps case insensitive.
+  url1->GetHost(&host1);
+  url2->GetHost(&host2);  
+  if (0 == PL_strcmp(host1, host2)) {
+    url1->GetFile(&file1);
+    url2->GetFile(&file2);
+    if (0 == PL_strcmp(file1, file2)) {
+      rv = PR_TRUE;
+    }
+  }
+
+  return rv;
+}
+
 nsresult
 nsWebShell::DoLoadURL(const nsString& aUrlSpec,
                       const char* aCommand,
@@ -1770,6 +1794,7 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
 #endif
   {
     nsCOMPtr<nsIDocumentViewer> docViewer;
+    nsresult rv;
     if (NS_SUCCEEDED(mContentViewer->QueryInterface(kIDocumentViewerIID,
                                                     getter_AddRefs(docViewer)))) {
       // Get the document object
@@ -1783,31 +1808,24 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
       nsCOMPtr<nsIURI>  url;
 #ifndef NECKO
       NS_NewURL(getter_AddRefs(url), aUrlSpec);
-#else
-    nsresult rv;
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+#else      
+      NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+      if (NS_FAILED(rv)) return rv;
 
-    nsIURI *uri = nsnull;
-    char *uriSpec = aUrlSpec.ToNewCString();
-    rv = service->NewURI(uriSpec, nsnull, &uri);
-    nsCRT::free(uriSpec);
-    if (NS_FAILED(rv)) return rv;
+      nsIURI *uri = nsnull;
+      char *uriSpec = aUrlSpec.ToNewCString();
+      rv = service->NewURI(uriSpec, nsnull, &uri);
+      nsCRT::free(uriSpec);
+      if (NS_FAILED(rv)) return rv;
 
-    rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-    NS_RELEASE(uri);
-    if (NS_FAILED(rv)) return rv;
+      rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
+      NS_RELEASE(uri);
+      if (NS_FAILED(rv)) return rv;
 #endif // NECKO
 
-#ifdef NECKO
-      PRBool eq;
-      rv = docURL->Equals(url, &eq);
-      if (NS_SUCCEEDED(rv) && eq)
-#else
-      if ((PRBool)docURL->Equals(url))
-#endif
+      if (EqualBaseURLs(docURL, url))
       {
-        // See if there's a destination anchor
+      // See if there's a destination anchor
 #ifdef NECKO
         char* ref = nsnull;
         nsCOMPtr<nsIURL> url2 = do_QueryInterface(url);
@@ -1818,16 +1836,30 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
         const char* ref;
         url->GetRef(&ref);
 #endif
+        nsCOMPtr<nsIPresShell> presShell;
+        rv = docViewer->GetPresShell(*getter_AddRefs(presShell));
 
-        if (nsnull != ref) {
-          // Get the pres shell object
-          nsCOMPtr<nsIPresShell> presShell;
-          docViewer->GetPresShell(*getter_AddRefs(presShell));
-
-          presShell->GoToAnchor(nsAutoString(ref));
-          return NS_OK;
+        if (NS_SUCCEEDED(rv) && presShell) {
+          if (nsnull != ref) {
+            // Go to the anchor in the current document                    
+            presShell->GoToAnchor(nsAutoString(ref));          
+          }
+          else {
+            // Go to the top of the current document
+            nsCOMPtr<nsIViewManager> viewMgr;            
+            rv = presShell->GetViewManager(getter_AddRefs(viewMgr));
+            if (NS_SUCCEEDED(rv) && viewMgr) {
+              nsIScrollableView* view;
+              rv = viewMgr->GetRootScrollableView(&view);
+              if (NS_SUCCEEDED(rv) && view) {                
+                view->ScrollTo(0, 0, NS_VMREFRESH_IMMEDIATE);
+              }
+            }
+          }
         }
-      }
+
+        return NS_OK;
+      } // EqualBaseURLs(docURL, url)
     }
   }
 
