@@ -134,6 +134,10 @@ RCFLAGS += -DDEBUG
 endif
 endif
 
+ifeq ($(OS_ARCH),BeOS)
+OS_LIBS += -ltracker
+endif
+
 ifeq ($(OS_ARCH),OS2)
 RESFILE=splashos2.res
 RCFLAGS += -DMOZ_PHOENIX
