@@ -80,6 +80,11 @@ public:
   nsresult DrawString(const PRUnichar *aCharPt, PRInt32 x, PRInt32 y, short &oWidth, 
                       short aSize, short fontNum, PRBool aBold, PRBool aItalic, 
                       nscolor aColor);
+#ifdef MOZ_MATHML
+  nsresult GetBoundingMetrics(const PRUnichar *aCharPt, nsBoundingMetrics &aBoundingMetrics,
+                              short aSize, short fontNum, PRBool aBold, 
+                              PRBool aItalic, nscolor aColor);
+#endif // MOZ_MATHML
 
 private:
   void StartDraw(const PRUnichar *aCharPt, short aSize, short fontNum, PRBool aBold,

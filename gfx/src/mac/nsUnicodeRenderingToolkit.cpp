@@ -448,6 +448,83 @@ nsUnicodeRenderingToolkit::ATSUIFallbackGetDimensions(
 }
 //------------------------------------------------------------------------
 
+#ifdef MOZ_MATHML
+PRBool
+nsUnicodeRenderingToolkit::ATSUIFallbackGetBoundingMetrics(
+  const PRUnichar *aCharPt,
+  nsBoundingMetrics& oBoundingMetrics,
+  short origFontNum,
+  short aSize, PRBool aBold, PRBool aItalic, nscolor aColor)
+{
+
+  nsMacUnicodeFontInfo info;
+  if (nsATSUIUtils::IsAvailable()  
+      && (IN_STANDARD_MAC_ROMAN_FONT(*aCharPt) 
+         ||IN_SYMBOL_FONT(*aCharPt)
+         ||SPECIAL_IN_SYMBOL_FONT(*aCharPt)
+         ||info.HasGlyphFor(*aCharPt)))
+  {
+    mATSUIToolkit.PrepareToDraw(mPort, mContext );
+    nsresult res;
+    if (SPECIAL_IN_SYMBOL_FONT(*aCharPt))
+    {
+      short rep = 0;
+      if ((*aCharPt) > 0x230b)
+         rep = (*aCharPt) - 0x2325;
+      else
+         rep = (*aCharPt) - 0x2308;
+      res = mATSUIToolkit.GetBoundingMetrics(gSymbolReplacement+rep, oBoundingMetrics, aSize, 
+                                             origFontNum, 
+                                             aBold, aItalic, aColor);
+    }
+    else
+    {
+      res = mATSUIToolkit.GetBoundingMetrics(aCharPt, oBoundingMetrics, aSize, 
+                                             origFontNum, 
+                                             aBold, aItalic, aColor);
+    }
+    if (NS_SUCCEEDED(res))
+    {
+      return PR_TRUE;
+    }
+  }
+  if (IN_ARABIC_PRESENTATION_A_OR_B(*aCharPt))
+  {  
+    PRUnichar isolated;
+    if (NS_SUCCEEDED( FormAorBIsolated(*aCharPt, info, &isolated))) 
+    {
+      if(NS_SUCCEEDED(ATSUIFallbackGetBoundingMetrics(&isolated, oBoundingMetrics, origFontNum, 
+                                                      aSize, aBold, aItalic, aColor))) 
+      {
+        return PR_TRUE;
+      }
+    }                                                 
+  }
+
+  // we know some ATSUI font do not have bold, turn it off and try again
+  if (aBold)
+  {
+    if (NS_SUCCEEDED(ATSUIFallbackGetBoundingMetrics(aCharPt, oBoundingMetrics, origFontNum, 
+                                                     aSize, PR_FALSE, aItalic, aColor))) 
+    {
+      return PR_TRUE;
+    }
+  }
+  // we know some ATSUI font do not have italic, turn it off and try again
+  if (aItalic) 
+  {
+    if (NS_SUCCEEDED(ATSUIFallbackGetBoundingMetrics(aCharPt, oBoundingMetrics, origFontNum, 
+                                                     aSize, PR_FALSE, PR_FALSE, aColor))) 
+    {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+#endif // MOZ_MATHML
+
+//------------------------------------------------------------------------
+
 PRBool nsUnicodeRenderingToolkit :: ATSUIFallbackDrawChar(
   const PRUnichar *aCharPt, 
   PRInt32 x,   PRInt32 y, 
@@ -1188,6 +1265,69 @@ nsUnicodeRenderingToolkit::GetTextSegmentDimensions(
 }
 //------------------------------------------------------------------------
 
+#ifdef MOZ_MATHML
+nsresult
+nsUnicodeRenderingToolkit::GetTextSegmentBoundingMetrics(
+      const PRUnichar *aString, PRUint32 aLength,
+      short fontNum, const short *scriptFallbackFonts,
+      nsBoundingMetrics& oBoundingMetrics)
+{
+  oBoundingMetrics.Clear();
+  if(aLength == 0) 
+    return NS_OK;
+  NS_PRECONDITION(BAD_FONT_NUM != fontNum, "illegal font num");
+  PRBool firstTime = PR_TRUE;
+  PRUint32 processLen = 0;
+  nsBoundingMetrics segBoundingMetrics;
+
+  do {
+    // should this be tried with the TEC & OutlineMetrics here?
+    // Cannot process by TEC, process one char a time by fallback mechanism
+    if (processLen < aLength)
+    {
+      PRBool fallbackDone = PR_FALSE;
+      segBoundingMetrics.Clear();
+      
+#ifndef DISABLE_ATSUI_FALLBACK  
+      // Fallback by using ATSUI
+      if (!fallbackDone)  
+      {
+        const nsFont *font;
+        mGS->mFontMetrics->GetFont(font);
+        fallbackDone = ATSUIFallbackGetBoundingMetrics(aString, segBoundingMetrics, fontNum, 
+                                                  font->size, 
+                                                  (font->weight > NS_FONT_WEIGHT_NORMAL), 
+                                                  ((NS_FONT_STYLE_ITALIC ==  font->style) || 
+                                                   (NS_FONT_STYLE_OBLIQUE ==  font->style)),
+                                                  mGS->mColor );
+      }
+
+#endif
+      if(! fallbackDone) {
+         if(IS_ZERO_WIDTH_CHAR(*aString))
+         {
+           fallbackDone = PR_TRUE;
+         }
+      }
+
+      if (firstTime) {
+        firstTime = PR_FALSE;
+        oBoundingMetrics = segBoundingMetrics;
+      }
+      else
+        oBoundingMetrics += segBoundingMetrics;
+      // for fallback measure/drawing, we always do one char a time.
+      aString++;
+      processLen++;
+    }
+  } while (processLen < aLength);
+    
+  return NS_OK;
+}
+#endif // MOZ_MATHML
+//------------------------------------------------------------------------
+
+
 nsresult nsUnicodeRenderingToolkit :: DrawTextSegment(
 			const PRUnichar *aString, PRUint32 aLength, 
 			short fontNum, const short *scriptFallbackFonts, 
@@ -1388,6 +1528,61 @@ nsUnicodeRenderingToolkit::GetTextDimensions(const PRUnichar *aString, PRUint32 
   aDim.descent = NSToCoordRound(float(textDim.descent) * mP2T);
   return res;  
 }
+//------------------------------------------------------------------------
+
+#ifdef MOZ_MATHML
+nsresult
+nsUnicodeRenderingToolkit::GetTextBoundingMetrics(const PRUnichar *aString, PRUint32 aLength,
+                                                  nsBoundingMetrics &aBoundingMetrics, PRInt32 *aFontID)
+{
+  nsresult res = NS_OK;
+  nsFontMetricsMac *metrics = (nsFontMetricsMac*) mGS->mFontMetrics;
+  nsUnicodeFontMappingMac* fontmap = metrics->GetUnicodeFontMapping();
+
+  PRUint32 i;
+  short fontNum[2];
+  fontNum[0] = fontNum[1] = BAD_FONT_NUM;
+  PRUint32 start;
+
+  PRBool firstTime = PR_TRUE;
+  nsBoundingMetrics textBoundingMetrics;
+  nsBoundingMetrics thisBoundingMetrics;
+
+  const short *scriptFallbackFonts = fontmap->GetScriptFallbackFonts();
+  for(i =0, start = 0; i < aLength; i++)
+  {
+    fontNum[ i % 2] = fontmap->GetFontID(aString[i]);
+    if ((fontNum[0] != fontNum[1]) && (0 != i))
+    {  // start new font run...
+      res = GetTextSegmentBoundingMetrics(aString+start, i - start, fontNum[(i + 1) % 2], scriptFallbackFonts, thisBoundingMetrics);
+      if (NS_FAILED (res))
+        return res;
+      if (firstTime) {
+        firstTime = PR_FALSE;
+        textBoundingMetrics = thisBoundingMetrics;
+      }
+      else
+        textBoundingMetrics += thisBoundingMetrics;
+      start = i;
+    }
+  }
+  res = GetTextSegmentBoundingMetrics(aString+start, aLength - start, fontNum[(i + 1) % 2], scriptFallbackFonts, thisBoundingMetrics);
+  if (NS_FAILED (res))
+    return res;
+  if (firstTime)
+    textBoundingMetrics = thisBoundingMetrics;
+  else
+    textBoundingMetrics += thisBoundingMetrics;
+
+  aBoundingMetrics.leftBearing = NSToCoordRound(float(textBoundingMetrics.leftBearing) * mP2T);
+  aBoundingMetrics.rightBearing = NSToCoordRound(float(textBoundingMetrics.rightBearing) * mP2T);
+  aBoundingMetrics.ascent = NSToCoordRound(float(textBoundingMetrics.ascent) * mP2T);
+  aBoundingMetrics.descent = NSToCoordRound(float(textBoundingMetrics.descent) * mP2T);
+  aBoundingMetrics.width = NSToCoordRound(float(textBoundingMetrics.width) * mP2T);
+
+  return res;
+}
+#endif // MOZ_MATHML
 
 //------------------------------------------------------------------------
 

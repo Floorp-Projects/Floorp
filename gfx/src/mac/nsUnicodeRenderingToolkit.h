@@ -67,6 +67,11 @@ public:
   nsresult DrawString(const PRUnichar *aString, PRUint32 aLength, nscoord aX, nscoord aY,
                       PRInt32 aFontID,
                       const nscoord* aSpacing);
+#ifdef MOZ_MATHML
+  nsresult GetTextBoundingMetrics(const PRUnichar *aString, PRUint32 aLength,
+                                  nsBoundingMetrics &aBoundingMetrics, PRInt32 *aFontID);
+#endif // MOZ_MATHML
+
 private:  
   // Unicode text measure/drawing functions
   UnicodeToTextInfo GetConverterByScript(ScriptCode sc);
@@ -104,7 +109,14 @@ private:
                                     const short *scriptFallbackFonts, nsTextDimensions& aDimension);
   nsresult DrawTextSegment(const PRUnichar *aString, PRUint32 aLength, short fontNum, 
                            const short *scriptFallbackFonts, PRInt32 x, PRInt32 y, PRUint32& oWidth);
-                        
+
+#ifdef MOZ_MATHML
+  PRBool ATSUIFallbackGetBoundingMetrics(const PRUnichar *pChar, nsBoundingMetrics& oBoundingMetrics, short fontNum,
+                                         short aSize, PRBool aBold, PRBool aItalic, nscolor aColor);
+  nsresult GetTextSegmentBoundingMetrics(const PRUnichar *aString, PRUint32 aLength, short fontNum,
+                                         const short *scriptFallbackFonts, nsBoundingMetrics& oBoundingMetrics);
+#endif // MOZ_MATHML
+
   nsUnicodeFallbackCache* GetTECFallbackCache();    
 private:
   float mP2T; // Pixel to Twip conversion factor

@@ -1546,7 +1546,17 @@ nsRenderingContextMac::GetBoundingMetrics(const PRUnichar*   aString,
                                           nsBoundingMetrics& aBoundingMetrics,
                                           PRInt32*           aFontID)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  SetupPortState();
+  
+  nsresult rv = SetPortTextState();
+  if(NS_FAILED(rv))
+    return rv;
+  
+  rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS, mPort, mRightToLeftText);
+  if(NS_SUCCEEDED(rv))
+    rv = mUnicodeRenderingToolkit.GetTextBoundingMetrics(aString, aLength, aBoundingMetrics, aFontID);
+  
+  return rv;
 }
 
 
