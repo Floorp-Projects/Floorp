@@ -91,36 +91,36 @@ MOZILLA_INCLUDES = -I@MOZILLA_DIR@/dist/include
 NULL = 
 NSPR_LIBS = -lplds3 -lplc3 -lnspr3 -lpthread
 
+MOZ_LIB_JS_PREFIX = moz
+MOZ_LIB_UTIL_PREFIX = moz
+
 ZLIB_LIBS = -lz
 
-BASE_LIBS = -lpref $(ZLIB_LIBS) -lmozreg -lmozjs -ltimer_s -lxpcom -lsecfree -lmozutil
+TIMER_LIBS = -ltimer_s
+
+BASE_LIBS =          -lmozreg                -lmozjs 		$(TIMER_LIBS)         -lxpcom              -lmozutil         $(NULL)
 
 
-MOZ_WIDGET_TOOLKIT_LDFLAGS = -lwidget_gtk
-
-GECKO_LIBS = -lraptorwebwidget $(MOZ_WIDGET_TOOLKIT_LDFLAGS) -lraptorgfx -lraptorhtmlpars -lexpat -lxmltok -ljsdom
+GECKO_LIBS =  		-lraptorgfx 		-ljsdom 		-ljsurl 		$(NULL)
 
 
-JPEG_LIBS = -ljpeg
-PNG_LIBS = -lpng
+IMGLIB_LIBS =          -limg                $(NULL)
 
-IMGLIB_LIBS = -limg $(JPEG_LIBS) $(PNG_LIBS)
 
-NETLIB_LIBS = -labouturl -lfileurl -lftpurl -lgophurl -lhttpurl -lremoturl -lsockstuburl -lmimetype -lnetcache -lnetcnvts -lnetlib -lnetwork -lxp -ljsurl -lmozdbm -lpwcac
-
+NETLIB_LIBS = -lneckoutil_s
 
 JSJ_LIB = 
 TK_LIBS = 
 
-ALL_MOZ_LIBS = $(GECKO_LIBS) $(NETLIB_LIBS) $(IMGLIB_LIBS) $(BASE_LIBS) $(JSJ_LIB) $(NSPR_LIBS) $(TK_LIBS)
+ALL_MOZ_LIBS =          $(GECKO_LIBS)          $(NETLIB_LIBS)         $(IMGLIB_LIBS)         $(BASE_LIBS)           $(JSJ_LIB)             $(NSPR_LIBS)           $(TK_LIBS)             $(NULL)
 
 
-MOZILLA_LIBS = -L$(MOZILLA_DIR)/dist/lib $(ALL_MOZ_LIBS)
+MOZILLA_LIBS = -L$(MOZILLA_DIR)/dist/lib          $(ALL_MOZ_LIBS)
 
 
 INCLUDES = $(MOZILLA_INCLUDES) @GTK_CFLAGS@ @DEBUG_FLAGS@
 
-CPPFLAGS = -DXP_UNIX -DMOZ_DLL_SUFFIX=\".so\"
+CPPFLAGS = -DXP_UNIX -DMOZ_DLL_SUFFIX=\".so\" -DNECKO
 
 libgtkmozilla_la_LIBADD = $(MOZILLA_LIBS) @GTK_LIBS@
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs

@@ -35,7 +35,8 @@ public:
   NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason);
   NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL);
   NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
-  NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus);
+  NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsresult aStatus);
+
   
   NS_IMETHOD NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
                          nsIWebShell *&aNewWebShell);
@@ -82,15 +83,20 @@ public:
   gint GetHistoryIndex();
 
   /* Stream stuff: */
-  gint StartStream(const char *base_url, const char *action,
-                   const char *content_type);
-  gint WriteStream(const char *data, gint len);
+  gint StartStream(const char *base_url, 
+                   const char *action,
+                   nsISupports * ctxt);
+  
+  gint WriteStream(const char *data, 
+                   gint offset,
+                   gint len);
   void EndStream(void);
   
 protected:
-  nsresult CreateContentViewer(nsIURI* aURL, 
+  nsresult CreateContentViewer(const char *aCommand,
+                               nsIChannel * aChannel,
+                               nsILoadGroup * aLoadGroup, 
                                const char* aContentType, 
-                               const char *aCommand,
                                nsIContentViewerContainer* aContainer,
                                nsISupports* aExtraInfo,
                                nsIStreamListener** aDocListenerResult,
@@ -102,7 +108,11 @@ protected:
 
   /* Stream stuff: */
   GtkMozillaInputStream *mStream;
-  nsIURI *mStreamURL;
+//  nsIURI *mStreamURL;
+
+  nsIChannel * mChannel;
+  nsISupports * mContext;
+
   nsIStreamListener *mListener;
 };
 
