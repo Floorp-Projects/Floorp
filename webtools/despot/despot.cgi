@@ -50,6 +50,13 @@ print start_html(-Title=>"Despot -- configure mozilla users$extra",
 
 if (!param()) {
     print h1("Despot -- access control for mozilla.org.");
+    if ($ENV{"HTTPS"} ne "ON") {
+        my $fixedurl = $ENV{"SERVER_URL"} . $ENV{"SCRIPT_NAME"};
+        $fixedurl =~ s/^http:/https:/;
+        print b("<font color=red>If possible, please use the secure version " .
+                "of this form, by " . a({href=>$fixedurl}, "clicking here") .
+                ".</font>");
+    }
     print h2("Login, please.");
     print img({-align=>"right",-width=>72,-height=>84,-src=>"handcuff.gif"});
     print p("To manage mozilla users, or to change your mozilla.org " .
