@@ -179,7 +179,7 @@ printf("\n****Inside ShowOSAlert ***\n");
     WinDestroyMsgQueue(hmq);
     WinTerminate(hab);
 #else
-    printf(stdout, "%s\n", aMessage);
+    fprintf(stdout, "%s\n", aMessage);
 #endif
 
 }
