@@ -1334,33 +1334,6 @@ nsEditorAppCore::Exit()
 {  
   nsIAppShellService* appShell = nsnull;
 
-#ifdef NEW_CLIPBOARD_SUPPORT
-  nsIClipboard* clipboard;
-  nsresult rvv = nsServiceManager::GetService(kCClipboardCID,
-                                             kIClipboardIID,
-                                             (nsISupports **)&clipboard);
-
-  if (NS_OK == rvv) {
-    nsITransferable * trans = nsnull;			// XXX this needs fixin
-    clipboard->GetData(trans);
-    if (nsnull != trans) {
-      if (PR_TRUE == trans->IsLargeDataSet()) {
-        // XXX A Dialog goes here to see if they want to "force" a copy 
-        // of the data to the clipboard 
-
-        //if (status == IDYES) {
-        //  clipboard->ForceDataToClipboard();
-        //}
-
-      }
-      NS_RELEASE(trans);
-    }
-    NS_RELEASE(clipboard);
-  }
-
-#endif
-
-
   /*
    * Create the Application Shell instance...
    */
