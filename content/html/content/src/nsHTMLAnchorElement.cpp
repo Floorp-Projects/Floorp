@@ -35,6 +35,11 @@
 #include "nsDOMEvent.h"
 #include "nsNeckoUtil.h"
 
+#include "nsCOMPtr.h"
+#include "nsIFrameManager.h"
+#include "nsIPresShell.h"
+#include "nsIDocument.h"
+
 // XXX suppress
 
 // XXX either suppress is handled in the event code below OR we need a
@@ -193,7 +198,30 @@ nsHTMLAnchorElement::Blur()
 NS_IMETHODIMP
 nsHTMLAnchorElement::Focus()
 {
-  // XXX write me
+  nsIDocument* doc; // Strong
+  nsresult rv = GetDocument(doc);
+  if (NS_FAILED(rv)) { return rv; }
+  if (!doc) { return NS_ERROR_NULL_POINTER; }
+
+  PRInt32 numShells = doc->GetNumberOfShells();
+  nsIPresShell* shell = nsnull; // Strong
+  nsCOMPtr<nsIPresContext> context;
+  for (PRInt32 i=0; i<numShells; i++) 
+  {
+    shell = doc->GetShellAt(i);
+    if (!shell) { return NS_ERROR_NULL_POINTER; }
+
+    rv = shell->GetPresContext(getter_AddRefs(context));
+    if (NS_FAILED(rv)) { return rv; }
+    if (!context) { return NS_ERROR_NULL_POINTER; }
+
+    rv = SetFocus(context);
+    if (NS_FAILED(rv)) { return rv; }
+
+    NS_RELEASE(shell);
+  }
+  NS_RELEASE(doc);
+
   return NS_OK;
 }
 
@@ -208,12 +236,28 @@ nsHTMLAnchorElement::SetFocus(nsIPresContext* aPresContext)
     nsIEventStateManager *stateManager;
     if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
       stateManager->SetContentState(this, NS_EVENT_STATE_FOCUS);
+
+      nsCOMPtr<nsIPresShell> presShell;
+      aPresContext->GetShell(getter_AddRefs(presShell));
+      if (presShell) {
+        nsCOMPtr<nsIFrameManager> frameManager;
+        presShell->GetFrameManager(getter_AddRefs(frameManager));
+        if (frameManager) {
+
+          nsIFrame* frame = nsnull;
+          frameManager->GetPrimaryFrameFor(this, &frame);
+          if (frame) {
+            presShell->ScrollFrameIntoView(frame,
+                           NS_PRESSHELL_SCROLL_ANYWHERE,NS_PRESSHELL_SCROLL_ANYWHERE);
+          }
+        }
+      }
+
       NS_RELEASE(stateManager);
     }
     NS_RELEASE(handler);
   }
 
-  // XXX write me
   return NS_OK;
 }
 
