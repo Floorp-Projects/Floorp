@@ -126,7 +126,8 @@ DIST_DIRS =			\
 # related libraries.
 
 RAPTOR_DIRS =			\
-  editor \
+  editor 			\
+  expat 			\
   htmlparser			\
   gfx				\
   dom				\
@@ -256,6 +257,7 @@ pull_nglayoutcore:
 	$(CVSCO_RAPTOR) $(MOZ_TOP)/base
 	$(CVSCO_RAPTOR) $(MOZ_TOP)/dom
 	$(CVSCO_RAPTOR) $(MOZ_TOP)/gfx
+	$(CVSCO_RAPTOR) $(MOZ_TOP)/expat
 	$(CVSCO_RAPTOR) $(MOZ_TOP)/htmlparser
 	$(CVSCO_RAPTOR) $(MOZ_TOP)/layout
 	$(CVSCO_RAPTOR) $(MOZ_TOP)/view
