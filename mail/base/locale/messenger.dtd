@@ -36,6 +36,7 @@
 <!ENTITY subscribeCmd.accesskey "b">
 <!ENTITY renameFolder.label "Rename Folder...">
 <!ENTITY renameFolder.accesskey "R">
+<!ENTITY renameFolder.key "VK_F2"> 
 <!ENTITY compactFolders.label "Compact Folders">
 <!ENTITY compactFolder.accesskey		"F">
 <!ENTITY emptyTrashCmd.label "Empty Trash">

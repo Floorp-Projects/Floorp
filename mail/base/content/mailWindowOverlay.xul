@@ -276,6 +276,9 @@
 
   <!-- File Menu -->
   <key id="key_close"/>
+#ifndef XP_MACOSX
+  <key id="key_renameFolder" keycode="&renameFolder.key;" oncommand="goDoCommand('cmd_renameFolder')"/>
+#endif
   <key id="key_quit"/>
   <!-- Edit Menu -->
   <key id="key_undo"/>
@@ -1042,6 +1045,7 @@
            <menuseparator/>
           <menuitem id="menu_renameFolder" label="&renameFolder.label;"
                  accesskey="&renameFolder.accesskey;"
+                 key="key_renameFolder"
                  observes="cmd_renameFolder"/>
           <menuitem id="menu_compactFolder" label="&compactFolders.label;" accesskey="&compactFolder.accesskey;" observes="cmd_compactFolder"/>
           <menuitem id="menu_emptyTrash" label="&emptyTrashCmd.label;"
