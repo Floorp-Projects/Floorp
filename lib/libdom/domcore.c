@@ -25,12 +25,17 @@
 JSBool
 DOM_Init(JSContext *cx, JSObject *scope) {
     JSObject *node, *cdata;
-    return (( node = dom_NodeInit(cx, scope)) &&
-            dom_AttributeInit(cx, scope, node) &&
-            dom_ElementInit(cx, scope, node) &&
-            ( cdata = dom_CharacterDataInit(cx, scope, node)) &&
-            dom_TextInit(cx, scope, cdata) &&
-            dom_CommentInit(cx, scope, cdata));
+    JSBool ok = (( node = dom_NodeInit(cx, scope)) &&
+                 dom_AttributeInit(cx, scope, node) &&
+                 dom_ElementInit(cx, scope, node) &&
+                 ( cdata = dom_CharacterDataInit(cx, scope, node)) &&
+                 dom_TextInit(cx, scope, cdata) &&
+                 dom_CommentInit(cx, scope, cdata));
+#ifdef PERIGNON
+    ok &= (dom_StyleSelectorInit(cx, scope) &&
+           dom_TagsObjectInit(cx, scope));
+#endif
+    return ok;
 }
 
 static char *exception_names[] = {

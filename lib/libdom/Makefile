@@ -20,9 +20,16 @@ DEPTH		= ../..
 MODULE		= dom
 LIBRARY_NAME	= dom
 
-REQUIRES	= js
+REQUIRES	= js dom
 
-EXPORTS         = dom.h
+ifdef MOZILLA_CLIENT
+REQUIRES       += lay img layer util
+
+# hack until PERIGNON takes over the world
+REQUIRES       += style
+endif
+
+EXPORTS         = dom.h domstyle.h
 
 CSRCS =	  	  domattr.c \
 		  domcore.c \
@@ -34,3 +41,5 @@ CSRCS =	  	  domattr.c \
 		  $(NULL)
 
 include $(DEPTH)/config/rules.mk
+
+DEFINES += -DDOM

@@ -17,8 +17,7 @@
  */
 
 /*
- * Style things for the DOM.
- * Very purty.  Makes it all go.
+ * Perignon: store style information in the DOM, using CSS-1 selectors.
  */
 
 #include "jsapi.h"
@@ -40,11 +39,6 @@ typedef struct DOM_StyleRule DOM_StyleRule;
 /* this may become int or something later, for speed */
 typedef const char *DOM_StyleToken;
 
-#define DOM_STYLE_PSEUDO_TAG            (1 << 7)
-#define DOM_SELECTOR_IS_PSEUDO(sel)     ((sel) & DOM_STYLE_PSEUDO_TAG)
-#define DOM_STYLE_SELECTOR_TYPE(sel)    ((sel) & ~DOM_STYLE_PSEUDO_TAG)
-#define DOM_PSEUDOIZE(sel)              ((sel) | DOM_STYLE_PSEUDO_TAG)
-
 enum {
     SELECTOR_UNKNOWN = 0,
     SELECTOR_ID,
@@ -53,19 +47,33 @@ enum {
 };
 
 struct DOM_StyleDatabase {
-    PLHashTable *ht;  /* PRHash, from js/ref or nsprpub, depending? */
+    PLHashTable *ht;
 };
 
 DOM_StyleDatabase *
 DOM_NewStyleDatabase(JSContext *cx);
 
+void
+DOM_DestroyStyleDatabase(JSContext *cx, DOM_StyleDatabase *db);
+
+/*
+ * Find or create the StyleDatabase for the given JSContext.
+ * The embedder must provide an implementation, or #define MOZILLA_CLIENT
+ * to get the Mozilla-specific one which depends on MochaDecoder and 
+ * MWContext and lo_TopState and stuff.
+ */
+DOM_StyleDatabase *
+DOM_StyleDatabaseFromContext(JSContext *cx);
+
 struct DOM_StyleSelector {
     int8 type;
     DOM_StyleToken selector;
     DOM_StyleToken pseudo;
+    DOM_StyleToken extra;
     DOM_StyleSelector *enclosing;
     DOM_StyleSelector *sibling;
     DOM_StyleRule *rules;
+    JSObject *mocha_object;     /* reflection for this selector's rules */
 };
 
 /*
@@ -80,13 +88,24 @@ struct DOM_StyleSelector {
  * Now find/create a selector for "CODE B":
  * sel2 = DOM_StyleFindSelector(cx, db, sel, "CODE", NULL);
  *
- * And for "A:visited CODE B":
- * sel3 = DOM_StyleFindSelector(cx, db, sel2, "A", "visited");
+ * And ".myclass CODE B":
+ * sel3 = DOM_StyleFindSelector(cx, db, sel2, ".myclass", NULL);
  */
 DOM_StyleSelector *
 DOM_StyleFindSelector(JSContext *cx, DOM_StyleDatabase *db,
                       DOM_StyleSelector *base, DOM_StyleToken enclosing,
                       DOM_StyleToken pseudo);
+
+/*
+ * As above, but take type explicitly rather than parsing leading # or . for
+ * ID or class.  For classes or extra is a tag or NULL.  For tags, extra is an
+ * ID or NULL.  (For ID, extra is ignored.)
+ */
+DOM_StyleSelector *
+DOM_StyleFindSelectorFull(JSContext *cx, DOM_StyleDatabase *db,
+                          DOM_StyleSelector *base, uint8 type,
+                          DOM_StyleToken enclosing, DOM_StyleToken extra,
+                          DOM_StyleToken pseudo);
 
 struct DOM_StyleRule {
     DOM_AttributeEntry entry;
@@ -96,7 +115,7 @@ struct DOM_StyleRule {
 
 /*
  * Parses a style rule and adds it to the style database.
- * If len is 0, rule is presumed to be NUL-terminated.
+ * If len is 0, rule is presumed to be NUL-terminated. (XXX NYI)
  *
  * Usage example:
  * 
@@ -119,6 +138,8 @@ DOM_StyleParseRule(JSContext *cx, DOM_StyleDatabase *db, const char *rule,
  * enclosing Element is used for finding matches.  The implementation is
  * necessarily somewhat hairy.  See domstyle.c for details.
  *
+ * If db is NULL, DOM_StyleDatabaseFromContext is used to find it.
+ *
  * Usage examples:
  * 
  * Get the color for a section of text:
@@ -130,16 +151,38 @@ DOM_StyleParseRule(JSContext *cx, DOM_StyleDatabase *db, const char *rule,
 
 JSBool
 DOM_StyleGetProperty(JSContext *cx, DOM_StyleDatabase *db, DOM_Node *node,
-                     DOM_StyleToken property, DOM_StyleToken psuedo,
-                     DOM_AttributeEntry **entryp);
+                     DOM_StyleToken property, DOM_AttributeEntry **entryp);
+
+/*
+ * Get/set the pseudoclass for an element
+ */
+DOM_StyleToken
+DOM_GetElementPseudo(JSContext *cx, DOM_Element *element);
+
+JSBool
+DOM_SetElementPseudo(JSContext *cx, DOM_Element *element,
+                     DOM_StyleToken pseudo);
 
 /*
  * Add a property to the provided selector.
  *
  * DOM_StyleAddRule(cx, db, sel, "color", "blue");
  */
-JSBool
+DOM_AttributeEntry *
 DOM_StyleAddRule(JSContext *cx, DOM_StyleDatabase *db, DOM_StyleSelector *sel,
                  DOM_StyleToken name, const char *value);
+
+/*
+ * Resolve classes, tags, ids, contextual on the given object.
+ */
+JSBool
+DOM_DocObjectResolveStyleProps(JSContext *cx, JSObject *obj, jsval id);
+
+/*
+ * The contextual selector JS function: contextual("H1", "EM");
+ */
+JSBool
+DOM_JSContextual(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                 jsval *rval);
 
 #endif /* DOM_STYLE_H */

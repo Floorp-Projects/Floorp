@@ -188,7 +188,7 @@ static JSFunctionSpec element_methods[] = {
 
 DOM_Element *
 DOM_NewElement(const char *tagName, DOM_ElementOps *eleops, char *name,
-               DOM_NodeOps *nodeops)
+               char *styleClass, char *styleID, DOM_NodeOps *nodeops)
 {
     DOM_Node *node;
     DOM_Element *element = XP_NEW_ZAP(DOM_Element);
@@ -201,7 +201,10 @@ DOM_NewElement(const char *tagName, DOM_ElementOps *eleops, char *name,
     node->ops = nodeops;
     
     element->tagName = tagName;
+    element->styleClass = styleClass;
+    element->styleID = styleID;
     element->ops = eleops;
+
     return element;
 }
 
@@ -290,7 +293,22 @@ DOM_GetElementAttribute(JSContext *cx, DOM_Element *element, const char *name,
     return JS_TRUE;
 }
 
-static JSBool
+JSBool
+DOM_GetCleanEntryData(JSContext *cx, DOM_AttributeEntry *entry,
+                      DOM_DataParser parser, uint32 *data, void *closure)
+{
+    if (entry->dirty) {
+        uint32 newdata;
+        if (!parser(entry->value, &newdata, closure))
+            return JS_FALSE;
+        entry->data = newdata;
+        entry->dirty = JS_FALSE;
+    }
+    *data = entry->data;
+    return JS_TRUE;
+}
+
+static DOM_AttributeEntry *
 AddAttribute(JSContext *cx, DOM_Element *element, const char *name,
              const char *value)
 {
@@ -299,29 +317,31 @@ AddAttribute(JSContext *cx, DOM_Element *element, const char *name,
     if (!element->attrs) {
         element->attrs = JS_malloc(cx, sizeof(DOM_AttributeEntry));
         if (!element->attrs)
-            return JS_FALSE;
+            return NULL;
         element->nattrs = 1;
     } else {
         element->attrs = XP_REALLOC(element->attrs,
                              (element->nattrs++) * sizeof(DOM_AttributeEntry));
         if (!element->attrs)
-            return JS_FALSE;
+            return NULL;
     }
     entry = element->attrs + element->nattrs - 1;
     entry->name = name;
     entry->value = value;
-    return JS_TRUE;
+
+    return entry;
 }
 
 JSBool
-DOM_SetElementAttribute(JSContext *cx, DOM_Element *element, const char *name,
-                        const char *value)
+dom_SetElementAttribute(JSContext *cx, DOM_Element *element, const char *name,
+                        const char *value, JSBool runCallback)
 {
     DOM_AttributeEntry *entry;
     if (!DOM_GetElementAttribute(cx, element, name, &entry))
         return JS_FALSE;
     if (!entry) {
-        if (!AddAttribute(cx, element, name, value))
+        entry = AddAttribute(cx, element, name, value);
+        if (!entry)
             return JS_FALSE;
     } else {
         if (entry->value)
@@ -330,7 +350,16 @@ DOM_SetElementAttribute(JSContext *cx, DOM_Element *element, const char *name,
     }
     entry->dirty = JS_TRUE;
 
+    if (!runCallback)
+        return JS_TRUE;
     return element->ops->setAttribute(cx, element, name, value);
+}
+
+JSBool
+DOM_SetElementAttribute(JSContext *cx, DOM_Element *element, const char *name,
+                        const char *value)
+{
+    return dom_SetElementAttribute(cx, element, name, value, JS_TRUE);
 }
 
 static JSBool

@@ -26,8 +26,14 @@ MODULE		= dom
 LIBRARY_NAME	= dom
 
 REQUIRES	= js
+#ifdef MOZILLA_CLIENT
+REQUIRES       += lay img layer util
 
-EXPORTS         = $(srcdir)/dom.h
+# hack until PERIGNON takes over the world
+REQUIRES       += style
+#endif
+
+EXPORTS         = $(srcdir)/dom.h $(srcdir)/domstyle.h
 
 CSRCS =	  	  domattr.c \
 		  domcore.c \
@@ -39,3 +45,5 @@ CSRCS =	  	  domattr.c \
 		  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES += -DDOM

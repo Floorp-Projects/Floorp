@@ -224,8 +224,9 @@ struct DOM_Element {
     DOM_ElementOps      *ops;
     const char          *tagName;
     uintN               nattrs;
-    DOM_AttributeEntry *attrs;
-    void               *style;  /* later, later... */
+    DOM_AttributeEntry  *attrs;
+    char                *styleClass;
+    char                *styleID;
 };
 
 /*
@@ -235,7 +236,7 @@ struct DOM_Element {
 
 DOM_Element *
 DOM_NewElement(const char *tagName, DOM_ElementOps *eleops, char *name,
-               DOM_NodeOps *nodeops);
+               char *styleClass, char *styleID, DOM_NodeOps *nodeops);
 
 JSObject *
 DOM_NewElementObject(JSContext *cx, DOM_Element *element);
@@ -250,6 +251,12 @@ DOM_GetElementAttribute(JSContext *cx, DOM_Element *element, const char *name,
 JSBool
 DOM_SetElementAttribute(JSContext *cx, DOM_Element *element, const char *name,
                         const char *value);
+
+typedef JSBool(*DOM_DataParser)(const char *str, uint32 *data, void *closure);
+
+JSBool
+DOM_GetCleanEntryData(JSContext *cx, DOM_AttributeEntry *entry,
+                      DOM_DataParser parser, uint32 *data, void *closure);
 
 /*
  * Set the attributes from a pair of synchronized lists.

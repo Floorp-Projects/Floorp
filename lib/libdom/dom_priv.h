@@ -43,6 +43,10 @@ dom_NodeInit(JSContext *cx, JSObject *obj);
 JSObject *
 dom_ElementInit(JSContext *cx, JSObject *obj, JSObject *node_proto);
 
+JSBool
+dom_SetElementAttribute(JSContext *cx, DOM_Element *element, const char *name,
+                        const char *value, JSBool runCallback);
+
 JSObject *
 dom_AttributeInit(JSContext *cx, JSObject *scope, JSObject *node_proto);
 

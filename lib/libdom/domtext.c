@@ -373,6 +373,7 @@ DOM_NewText(const char *data, int64 length, DOM_CDataOp notify,
 
     LL_L2I(nbytes, length);
     cdata = (DOM_CharacterData *)text;
+    cdata->len = length;
     cdata->data = XP_ALLOC(nbytes);
     cdata->notify = notify;
     if (!cdata->data) {
