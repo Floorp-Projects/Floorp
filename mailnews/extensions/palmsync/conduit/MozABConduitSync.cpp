@@ -659,9 +659,9 @@ long CMozABConduitSync::CopyHHtoPC()
     if(!retval)
         retval = m_dbPC->GetPCABList(&mozABCount, &mozCatIndexList, &mozABNameList, &mozABUrlList, &mozIsFirstSyncList);
 
+    CONDUIT_LOG1(gFD, "Done getting moz AB List. retval = %d\n", retval);
     if (retval)
       return retval;
-    CONDUIT_LOG0(gFD, "Done getting moz AB List. \n");
     
     // Create an array to help us identify addrbooks that have been deleted on Palm.
     DWORD *mozABSeen = (DWORD *) CoTaskMemAlloc(sizeof(DWORD) * mozABCount);

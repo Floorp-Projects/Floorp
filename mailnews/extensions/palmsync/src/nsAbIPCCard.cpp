@@ -48,7 +48,7 @@
 extern PRLogModuleInfo *PALMSYNC;
 
 #define CONVERT_ASSIGNTO_UNICODE(d, s, convertCRLF)  d.SetLength(0);\
-                                        if((char*) s) d=NS_ConvertASCIItoUCS2((char*)s);\
+                                        if((char*) s) d=NS_ConvertASCIItoUCS2((const char*)s);\
                                         if (convertCRLF) \
                                           d.ReplaceSubstring(NS_LITERAL_STRING("\x0D\x0A").get(),NS_LITERAL_STRING(" ").get());
 
@@ -725,12 +725,8 @@ PRBool nsAbIPCCard::Same(nsABCOMCardStruct * card, PRBool isUnicode)
     if(!card)
         return PR_FALSE;
 
-    if(mRecordId && card->dwRecordId) {
-        if(mRecordId == card->dwRecordId)
-            return PR_TRUE;
-        else
-            return PR_FALSE;
-    }
+    if(mRecordId && card->dwRecordId) 
+        return (mRecordId == card->dwRecordId);
 
     if(CompareValue(isUnicode, card->firstName, m_FirstName))
         if(CompareValue(isUnicode, card->lastName, m_LastName))

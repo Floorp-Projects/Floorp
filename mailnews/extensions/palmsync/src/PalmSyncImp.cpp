@@ -156,12 +156,12 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
     {
         if (NS_SUCCEEDED(subDirectories->GetNext(getter_AddRefs(item))))
         {
-          directory = do_QueryInterface(item, &rv);
+          nsCOMPtr <nsIAbDirectory> subDirectory = do_QueryInterface(item, &rv);
           if (NS_SUCCEEDED(rv))
           {
               nsCOMPtr <nsIAbDirectoryProperties> properties;
               nsXPIDLCString fileName;
-              rv = directory->GetDirectoryProperties(getter_AddRefs(properties));
+              rv = subDirectory->GetDirectoryProperties(getter_AddRefs(properties));
               if(NS_FAILED(rv)) 
                 continue;
               rv = properties->GetFileName(getter_Copies(fileName));
@@ -170,7 +170,7 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
               PRUint32 dirType;
               rv = properties->GetDirType(&dirType);
               nsCAutoString prefName;
-              directory->GetDirPrefId(prefName);
+              subDirectory->GetDirPrefId(prefName);
               prefName.Append(".disablePalmSync");
               PRBool disableThisAB = GetBoolPref(prefName.get(), PR_FALSE);
               // Skip/Ignore 4.X addrbooks (ie, with ".na2" extension), and non personal AB's
@@ -195,6 +195,7 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
     *aFirstTimeSyncList = firstTimeSyncList;
     *aABCatIndexList = catIndexList;
 
+    directory->GetChildNodes(getter_AddRefs(subDirectories)); // reset enumerator
     // For each valid addrbook collect info.
     while (NS_SUCCEEDED(rv = subDirectories->HasMoreElements(&hasMore)) && hasMore)
     {

@@ -272,7 +272,7 @@ long CMozABConduitRecord::ConvertFromGeneric(CPalmRecord &rec)
     if (flags.firstName) COPY_FROM_GENERIC(m_csFirst, m_nsCard.firstName)
     // DisplayName
     m_csDisplayName = m_nsCard.firstName;
-    m_csDisplayName += "  ";
+    m_csDisplayName += " ";
     m_csDisplayName += m_nsCard.lastName;
     m_nsCard.displayName = m_csDisplayName.GetBuffer(0);
     // Company
