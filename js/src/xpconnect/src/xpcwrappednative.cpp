@@ -312,15 +312,16 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 
     AutoMarkingWrappedNativeProtoPtr proto(ccx);
 
-    // If there is nsIClassInfo then we use a wrapper that needs a prototype.
+    // If there is ClassInfo (and we are not building a wrapper for the
+    // nsIClassInfo interface) then we use a wrapper that needs a prototype.
 
     // Note that the security check happens inside FindTearOff - after the
     // wrapper is actually created, but before JS code can see it.
 
-    if(info)
+    if(info && !isClassInfo)
     {
         proto = XPCWrappedNativeProto::GetNewOrUsed(ccx, Scope, info, &sciProto,
-                                                    isClassInfo);
+                                                    JS_FALSE);
         if(!proto)
             return NS_ERROR_FAILURE;
 
