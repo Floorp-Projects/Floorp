@@ -777,8 +777,13 @@ PRBool nsFileSpec::operator == (const nsFileSpec& inOther) const
         inOther.mSpec.parID   == mSpec.parID &&
         EqualString(inOther.mSpec.name, mSpec.name, false, false))
         return (PR_TRUE);
+#elif XP_PC
+   // windows does not care about case.
+
+   if (_stricmp(mPath, inOther.mPath ) == 0)
+       return (PR_TRUE);
 #else
-   if (strcmp(mPath, inOther.mPath ) == 0)
+    if (strcmp(mPath, inOther.mPath ) == 0)
        return (PR_TRUE);
 #endif
 

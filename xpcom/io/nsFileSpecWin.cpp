@@ -59,12 +59,6 @@ void nsFileSpecHelpers::Canonify(char*& ioPath, PRBool inMakeDirs)
   if (canonicalPath[0] == '\0')
     return;
 
-  // windows does not care about case.  push to uppercase:
-  int length = strlen(canonicalPath);
-  for (int i = 0; i < length; i++)
-      if (islower(canonicalPath[i]))
-        canonicalPath[i] = _toupper(canonicalPath[i]);
-
   nsFileSpecHelpers::StringAssign(ioPath, canonicalPath);
 }
 
