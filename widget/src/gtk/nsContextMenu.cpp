@@ -18,7 +18,7 @@
 
 #include <gtk/gtk.h>
 
-#include "nsMenu.h"
+#include "nsContextMenu.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
@@ -36,7 +36,7 @@ static NS_DEFINE_CID(kMenuItemCID,         NS_MENUITEM_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 //-------------------------------------------------------------------------
-nsresult nsContextMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+nsresult nsContextMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
@@ -74,13 +74,16 @@ NS_IMPL_RELEASE(nsContextMenu)
 nsContextMenu::nsContextMenu()
 {
   NS_INIT_REFCNT();
-  mMenu           = nsnull;
-  mListener       = nsnull;
-  nsresult result = NS_NewISupportsArray(&mItems);
-  mDOMNode        = nsnull;
-  mDOMElement     = nsnull;
-  mWebShell       = nsnull;
-  mConstructed    = false;
+  mNumMenuItems  = 0;
+  mMenu          = nsnull;
+  mParent        = nsnull;
+  mListener      = nsnull;
+  mConstructCalled = PR_FALSE;
+  
+  mDOMNode       = nsnull;
+  mWebShell      = nsnull;
+  mDOMElement    = nsnull;
+
   mAlignment      = "topleft";
   mAnchorAlignment = "none";
 }
@@ -101,31 +104,24 @@ nsContextMenu::~nsContextMenu()
 // Create the proper widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsContextMenu::Create(nsISupports *aParent, const nsString& anAlignment,
+NS_METHOD nsContextMenu::Create(nsISupports *aParent,
+                                const nsString& anAlignment,
                                 const nsString& anAnchorAlignment)
 {
   if(aParent)
   {
-    nsIMenuBar * menubar = nsnull;
-    aParent->QueryInterface(nsIMenuBar::GetIID(), (void**) &menubar);
-    if(menubar)
+    nsIWidget *parent = nsnull;
+    aParent->QueryInterface(nsIWidget::GetIID(), (void**) &parent);
+    if(parent)
     {
-      mMenuBarParent = menubar;
-      NS_RELEASE(menubar);
-    }
-    else
-    {
-      nsIMenu * menu = nsnull;
-      aParent->QueryInterface(nsIMenu::GetIID(), (void**) &menu);
-      if(menu)
-      {
-        mMenuParent = menu;
-        NS_RELEASE(menu);
-      }
+      mParent = parent;
+      NS_RELEASE(parent);
     }
   }
 
-  mLabel = aLabel;
+  mAlignment       = anAlignment;
+  mAnchorAlignment = anAnchorAlignment;
+
   mMenu = gtk_menu_new();
 
   gtk_signal_connect (GTK_OBJECT (mMenu), "map",
@@ -141,12 +137,9 @@ NS_METHOD nsContextMenu::Create(nsISupports *aParent, const nsString& anAlignmen
 NS_METHOD nsContextMenu::GetParent(nsISupports*& aParent)
 {
   aParent = nsnull;
-  if (nsnull != mMenuParent) {
-    return mMenuParent->QueryInterface(kISupportsIID,
-                                       (void**)&aParent);
-  } else if (nsnull != mMenuBarParent) {
-    return mMenuBarParent->QueryInterface(kISupportsIID,
-                                          (void**)&aParent);
+  if (nsnull != mParent) {
+    return mParent->QueryInterface(kISupportsIID,
+                                   (void**)&aParent);
   }
 
   return NS_ERROR_FAILURE;
@@ -180,15 +173,6 @@ NS_METHOD nsContextMenu::AddItem(nsISupports * aItem)
 
   return NS_OK;
 }
-
-//-------------------------------------------------------------------------
-// This does not return a ref counted object
-// This is NOT an nsIMenu method
-nsIWidget *nsContextMenu::GetParentWidget()
-{
-  return mParentWindow;
-}
-
 
 //-------------------------------------------------------------------------
 NS_METHOD nsContextMenu::AddMenuItem(nsIMenuItem * aMenuItem)
@@ -338,6 +322,7 @@ NS_METHOD nsContextMenu::RemoveItem(const PRUint32 aCount)
 NS_METHOD nsContextMenu::RemoveAll()
 {
   //g_print("nsMenu::RemoveAll()\n");
+#undef DEBUG_pavlov
 #ifdef DEBUG_pavlov
   // this doesn't work quite right, but this is about all that should really be needed
   int i=0;
@@ -452,9 +437,24 @@ nsEventStatus nsContextMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
   return nsEventStatus_eIgnore;
 }
 
+void nsContextMenu::MenuPosFunc(GtkMenu *menu,
+                                  gint *x,
+                                  gint *y,
+                                  gpointer data)
+{
+  nsContextMenu *cm = (nsContextMenu*)data;
+  *x = cm->GetX();
+  *y = cm->GetY();
+}
 
 nsEventStatus nsContextMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
+  GtkWidget *parent = GTK_WIDGET(mParent->GetNativeData(NS_NATIVE_WIDGET));
+  gtk_menu_popup (GTK_MENU(mMenu),
+                  parent, NULL,
+                  nsContextMenu::MenuPosFunc,
+                  this, 1, GDK_CURRENT_TIME);
+
   if (nsnull != mListener) {
     mListener->MenuSelected(aMenuEvent);
   }
@@ -464,7 +464,7 @@ nsEventStatus nsContextMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 //-------------------------------------------------------------------------
 nsIMenuItem * nsContextMenu::FindMenuItem(nsIContextMenu * aMenu, PRUint32 aId)
 {
-
+  return nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -699,6 +699,18 @@ NS_METHOD nsContextMenu::SetLocation(PRInt32 aX, PRInt32 aY)
   return NS_OK;
 }
 
+
+// local methods
+gint nsContextMenu::GetX(void)
+{
+  return mX;
+}
+
+gint nsContextMenu::GetY(void)
+{
+  return mY;
+}
+// end silly local methods
 
 //-------------------------------------------------------------------------
 NS_METHOD nsContextMenu::SetDOMNode(nsIDOMNode *aMenuNode)
