@@ -371,12 +371,15 @@
            click, so that drags work correctly. -->
       <handler event="mousedown">
       <![CDATA[
-         if (event.originalTarget.localName == 'treecell' && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
-           var isSelected = event.target.parentNode.parentNode.getAttribute("selected");
+         var lt = event.originalTarget.localName;
+         var target = (lt == 'treecell' || lt == 'treerow') ? lt : null;
+         if (target && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
+           var parent = lt == 'treecell' ? event.target.parentNode.parentNode : event.target.parentNode;
+           var isSelected = parent.getAttribute("selected");
            if (!isSelected) {
-             parentNode.selectItem(event.originalTarget.parentNode.parentNode);
+             parentNode.selectItem(parent);
            }
-           parentNode.currentItem = event.originalTarget.parentNode.parentNode;
+           parentNode.currentItem = parent;
          }
       ]]>
       </handler>
