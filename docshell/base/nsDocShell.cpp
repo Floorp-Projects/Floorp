@@ -35,12 +35,14 @@
 #include "nsNetUtil.h"
 #include "nsRect.h"
 #include "prprf.h"
-#include "nsIFrame.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsXPIDLString.h"
 #include "nsIChromeEventHandler.h"
 #include "nsIDOMWindow.h"
 #include "nsIWebBrowserChrome.h"
+
+// Interfaces Needed
+#include "nsIGlobalHistory.h"
 
 #ifdef XXX_NS_DEBUG       // XXX: we'll need a logging facility for debugging
 #define WEB_TRACE(_bit,_args)            \
@@ -53,9 +55,6 @@
 #define WEB_TRACE(_bit,_args)
 #endif
 
-
-
-
 //*****************************************************************************
 //***    nsDocShell: Object Management
 //*****************************************************************************
@@ -66,6 +65,8 @@ nsDocShell::nsDocShell() :
   mMarginWidth(0), 
   mMarginHeight(0),
   mItemType(typeContent),
+  mUpdateHistoryOnLoad(PR_TRUE),
+  mInitialPageLoad(PR_TRUE),
   mParent(nsnull),
   mTreeOwner(nsnull),
   mChromeEventHandler(nsnull)
@@ -91,6 +92,23 @@ NS_IMETHODIMP nsDocShell::Create(nsISupports* aOuter, const nsIID& aIID,
   nsresult rv = docShell->QueryInterface(aIID, ppv);
   NS_RELEASE(docShell);  
   return rv;
+}
+
+NS_IMETHODIMP nsDocShell::DestroyChildren()
+{
+   PRInt32 i, n = mChildren.Count();
+   nsCOMPtr<nsIDocShellTreeItem>   shell;
+   for (i = 0; i < n; i++) 
+      {
+      shell = dont_AddRef((nsIDocShellTreeItem*)mChildren.ElementAt(i));
+      if(!NS_WARN_IF_FALSE(shell, "docshell has null child"))
+         shell->SetParent(nsnull);
+      nsCOMPtr<nsIBaseWindow> shellWin(do_QueryInterface(shell));
+      if(shellWin)
+         shellWin->Destroy();
+      }
+   mChildren.Clear();
+   return NS_OK;
 }
 
 //*****************************************************************************
@@ -153,35 +171,34 @@ NS_IMETHODIMP nsDocShell::LoadURI(nsIURI* aUri,
    return LoadURIVia(aUri, presContext, 0);
 }
 
-NS_IMETHODIMP nsDocShell::LoadURIVia(nsIURI* aUri, 
+NS_IMETHODIMP nsDocShell::LoadURIVia(nsIURI* aURI, 
    nsIPresContext* aPresContext, PRUint32 aAdapterBinding)
 {
-   NS_ENSURE_ARG(aUri);
+   NS_ENSURE_ARG(aURI);
 
-   // If Anchor, goto anchor
-   // Stop
-   // URI Load
+   NS_ENSURE_SUCCESS(InternalLoad(aURI, nsnull), NS_ERROR_FAILURE);
 
-   nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_PROGID);
-   NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
+   return NS_OK;
+}
 
-   NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
-   mContentListener->SetPresContext(aPresContext);
+NS_IMETHODIMP nsDocShell::StopLoad()
+{
+   if(mLoadCookie)
+      {
+      nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_PROGID);
+      if(uriLoader)
+         uriLoader->Stop(mLoadCookie);
+      }
 
-   // first, open a channel for the url
-   nsCOMPtr<nsIChannel> channel;
-   nsCOMPtr<nsIInterfaceRequestor> capabilities (do_QueryInterface(NS_STATIC_CAST(nsIDocShell *, this)));
-
-   // we need to get the load group from our load cookie so we can pass it into open uri...
-   nsCOMPtr<nsILoadGroup> loadGroup;
-   NS_ENSURE_SUCCESS(uriLoader->GetLoadGroupForContext(NS_STATIC_CAST(nsISupports *, (nsIDocShell *) this), getter_AddRefs(loadGroup)),
-                     NS_ERROR_FAILURE);
-
-   NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(channel), aUri, loadGroup, capabilities), NS_ERROR_FAILURE);
-
-
-   NS_ENSURE_SUCCESS(uriLoader->OpenURIVia(channel, nsIURILoader::viewNormal, nsnull, 
-      NS_STATIC_CAST(nsIDocShell*, this), aAdapterBinding), NS_ERROR_FAILURE);
+   PRInt32 n;
+   PRInt32 count = mChildren.Count();
+   for(n = 0; n < count; n++)
+      {
+      nsIDocShellTreeItem* shellItem = (nsIDocShellTreeItem*)mChildren.ElementAt(n);
+      nsCOMPtr<nsIDocShell> shell(do_QueryInterface(shellItem));
+      if(shell)
+         shell->StopLoad();
+      }
 
    return NS_OK;
 }
@@ -819,34 +836,106 @@ NS_IMETHODIMP nsDocShell::FindChildWithName(const PRUnichar *aName,
 
 NS_IMETHODIMP nsDocShell::GetCanGoBack(PRBool* aCanGoBack)
 {
-   //XXX First Checkin
-   NS_ERROR("Not Yet Implemented");
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(mSessionHistory);  
+   NS_ENSURE_ARG_POINTER(aCanGoBack);
+   *aCanGoBack = PR_FALSE;
+
+   PRInt32 index = -1;
+   NS_ENSURE_SUCCESS(mSessionHistory->GetIndex(&index), NS_ERROR_FAILURE);
+   if(index > 0)
+      *aCanGoBack = PR_TRUE;
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::GetCanGoForward(PRBool* aCanGoForward)
 {
-   //XXX First Checkin
-   NS_ERROR("Not Yet Implemented");
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(mSessionHistory);  
+   NS_ENSURE_ARG_POINTER(aCanGoForward);
+   *aCanGoForward = PR_FALSE;
+
+   PRInt32 index = -1;
+   PRInt32 count = -1;
+
+   NS_ENSURE_SUCCESS(mSessionHistory->GetIndex(&index), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(mSessionHistory->GetCount(&count), NS_ERROR_FAILURE);
+
+   if((index >= 0) && (index < (count - 1)))
+      *aCanGoForward = PR_TRUE;
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::GoBack()
 {
-   //XXX First Checkin
-   NS_ERROR("Not Yet Implemented");
-   return NS_ERROR_FAILURE;
+   nsCOMPtr<nsIDocShellTreeItem> root;
+   GetSameTypeRootTreeItem(getter_AddRefs(root));
+   if(root.get() != NS_STATIC_CAST(nsIDocShellTreeItem*, this))
+      {
+      nsCOMPtr<nsIWebNavigation> rootAsNav(do_QueryInterface(root));
+      return rootAsNav->GoBack();
+      }
+
+   NS_ENSURE_STATE(mSessionHistory);
+   
+   PRBool canGoBack = PR_FALSE;
+   GetCanGoBack(&canGoBack);
+   NS_ENSURE_TRUE(canGoBack, NS_ERROR_UNEXPECTED);
+   
+   UpdateCurrentSessionHistory();  
+
+   nsCOMPtr<nsISHEntry> previousEntry;
+
+   NS_ENSURE_SUCCESS(mSessionHistory->GetPreviousEntry(PR_TRUE, 
+      getter_AddRefs(previousEntry)), NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(previousEntry, NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(LoadHistoryEntry(previousEntry), NS_ERROR_FAILURE);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::GoForward()
 {
-   //XXX First Checkin
-   NS_ERROR("Not Yet Implemented");
-   return NS_ERROR_FAILURE;
+   nsCOMPtr<nsIDocShellTreeItem> root;
+   GetSameTypeRootTreeItem(getter_AddRefs(root));
+   if(root.get() != NS_STATIC_CAST(nsIDocShellTreeItem*, this))
+      {
+      nsCOMPtr<nsIWebNavigation> rootAsNav(do_QueryInterface(root));
+      return rootAsNav->GoForward();
+      }
+
+   NS_ENSURE_STATE(mSessionHistory);
+   
+   PRBool canGoForward = PR_FALSE;
+   GetCanGoForward(&canGoForward);
+   NS_ENSURE_TRUE(canGoForward, NS_ERROR_UNEXPECTED);  
+
+   UpdateCurrentSessionHistory();  
+
+   nsCOMPtr<nsISHEntry> nextEntry;
+
+   NS_ENSURE_SUCCESS(mSessionHistory->GetNextEntry(PR_TRUE, 
+      getter_AddRefs(nextEntry)), NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(nextEntry, NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(LoadHistoryEntry(nextEntry), NS_ERROR_FAILURE);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::LoadURI(const PRUnichar* aURI)
 {
+   //XXXTAB Implement
+   NS_ERROR("Not Yet Implemeted");
+   return NS_ERROR_FAILURE;
+   nsCOMPtr<nsIURI> uri;
+
+//   CreateFixupURI(aURI, getter_AddRefs(uri));
+   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(LoadURI(uri, nsnull), NS_ERROR_FAILURE);
+   return NS_OK;
    // Mangle URL
    // If anchor goto Anchor
    // Stop Current Loads
@@ -856,11 +945,16 @@ NS_IMETHODIMP nsDocShell::LoadURI(const PRUnichar* aURI)
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocShell::Reload()
-{
-   //XXX First Checkin
-   NS_ERROR("Not Yet Implemented");
-   return NS_ERROR_FAILURE;
+NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
+{  
+   // XXX Honor the reload type
+   NS_ENSURE_STATE(mCurrentURI);
+
+   mUpdateHistoryOnLoad = PR_FALSE;
+   
+   NS_ENSURE_SUCCESS(InternalLoad(mCurrentURI, mReferrerURI), NS_ERROR_FAILURE);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::Stop()
@@ -868,11 +962,11 @@ NS_IMETHODIMP nsDocShell::Stop()
    if(mContentViewer)
       mContentViewer->Stop();
 
-   if(mContentListener->mLoadCookie)
+   if(mLoadCookie)
       {
       nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_PROGID);
       if(uriLoader)
-         uriLoader->Stop(mContentListener->mLoadCookie);
+         uriLoader->Stop(mLoadCookie);
       }
 
    PRInt32 n;
@@ -901,11 +995,11 @@ NS_IMETHODIMP nsDocShell::GetDocument(nsIDOMDocument** aDocument)
   NS_ENSURE_ARG_POINTER(aDocument);
   NS_ENSURE_STATE(mContentViewer);
 
-  nsCOMPtr<nsIPresShell> presShell;
-  NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
+  nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(mContentViewer));
+  NS_ENSURE_TRUE(docv, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocument>doc;
-  NS_ENSURE_SUCCESS(presShell->GetDocument(getter_AddRefs(doc)), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(docv->GetDocument(*getter_AddRefs(doc)), NS_ERROR_FAILURE);
   NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
 
   // the result's addref comes from this QueryInterface call
@@ -975,6 +1069,17 @@ NS_IMETHODIMP nsDocShell::Create()
 
 NS_IMETHODIMP nsDocShell::Destroy()
 {
+   mContentViewer = nsnull;
+   mDocLoader = nsnull;
+   mDocLoaderObserver = nsnull;
+   mParentWidget = nsnull;
+   mPrefs = nsnull;
+   mCurrentURI = nsnull;
+   mScriptGlobal = nsnull;
+   mScriptContext = nsnull;
+   mSessionHistory = nsnull;
+   mLoadCookie = nsnull;
+
    if(mInitInfo)
       {
       delete mInitInfo;
@@ -986,6 +1091,7 @@ NS_IMETHODIMP nsDocShell::Destroy()
       mContentListener->DocShell(nsnull);
       NS_RELEASE(mContentListener);
       }
+
 
    return NS_OK;
 }
@@ -1315,6 +1421,16 @@ NS_IMETHODIMP nsDocShell::SetTitle(const PRUnichar* aTitle)
       treeOwnerAsWin->SetTitle(aTitle);
       }
 
+   nsCOMPtr<nsIGlobalHistory> 
+      globalHistory(do_GetService(NS_GLOBALHISTORY_PROGID));
+   if(globalHistory && mCurrentURI)
+      {
+      nsXPIDLCString url;
+      mCurrentURI->GetSpec(getter_Copies(url));
+      globalHistory->SetPageTitle(url, aTitle);
+      }
+
+
    return NS_OK;
 }
 
@@ -1624,152 +1740,10 @@ NS_IMETHODIMP nsDocShell::HandleUnknownContentType(nsIDocumentLoader* aLoader,
   NS_ENSURE_SUCCESS(PR_FALSE, NS_ERROR_NOT_IMPLEMENTED);
   return NS_OK;
 }
-  
+
 //*****************************************************************************
-// nsDocShell: Helper Routines
+// nsDocShell: Content Viewer Management
 //*****************************************************************************   
-
-nsDocShellInitInfo* nsDocShell::InitInfo()
-{
-   if(mInitInfo)
-      return mInitInfo;
-   return mInitInfo = new nsDocShellInitInfo();
-}
-
-NS_IMETHODIMP nsDocShell::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode* aParent,
-   PRInt32* aOffset)
-{
-   NS_ENSURE_ARG_POINTER(aChild || aParent);
-   
-   nsCOMPtr<nsIDOMNodeList> childNodes;
-   NS_ENSURE_SUCCESS(aParent->GetChildNodes(getter_AddRefs(childNodes)),
-      NS_ERROR_FAILURE);
-   NS_ENSURE_TRUE(childNodes, NS_ERROR_FAILURE);
-
-   PRInt32 i=0;
-
-   for( ; PR_TRUE; i++)
-      {
-      nsCOMPtr<nsIDOMNode> childNode;
-      NS_ENSURE_SUCCESS(childNodes->Item(i, getter_AddRefs(childNode)), 
-         NS_ERROR_FAILURE);
-      NS_ENSURE_TRUE(childNode, NS_ERROR_FAILURE);
-
-      if(childNode.get() == aChild)
-         {
-         *aOffset = i;
-         return NS_OK;
-         }
-      }
-
-   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsDocShell::GetRootScrollableView(nsIScrollableView** aOutScrollView)
-{
-   NS_ENSURE_ARG_POINTER(aOutScrollView);
-   
-   nsCOMPtr<nsIPresShell> shell;
-   NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(shell)), NS_ERROR_FAILURE);
-
-   nsCOMPtr<nsIViewManager> viewManager;
-   NS_ENSURE_SUCCESS(shell->GetViewManager(getter_AddRefs(viewManager)),
-      NS_ERROR_FAILURE);
-
-   NS_ENSURE_SUCCESS(viewManager->GetRootScrollableView(aOutScrollView),
-      NS_ERROR_FAILURE);
-
-   return NS_OK;
-} 
-
-NS_IMETHODIMP nsDocShell::EnsureContentListener()
-{
-   if(mContentListener)
-      return NS_OK;
-   
-   mContentListener = new nsDSURIContentListener();
-   NS_ENSURE_TRUE(mContentListener, NS_ERROR_OUT_OF_MEMORY);
-
-   NS_ADDREF(mContentListener);
-   mContentListener->DocShell(this);
-
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::EnsureScriptEnvironment()
-{
-   if(mScriptContext)
-      return NS_OK;
-
-   NS_NewScriptGlobalObject(getter_AddRefs(mScriptGlobal));
-   NS_ENSURE_TRUE(mScriptGlobal, NS_ERROR_FAILURE);
-
-   mScriptGlobal->SetDocShell(NS_STATIC_CAST(nsIDocShell*, this));
-   mScriptGlobal->SetGlobalObjectOwner(
-      NS_STATIC_CAST(nsIScriptGlobalObjectOwner*, this));
-
-   NS_CreateScriptContext(mScriptGlobal, getter_AddRefs(mScriptContext));
-   NS_ENSURE_TRUE(mScriptContext, NS_ERROR_FAILURE);
-
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::GetTarget(const PRUnichar* aName, nsIDocShellTreeItem** aShell)
-{
-   nsAutoString name(aName);
-
-   if(!name.Length() || name.EqualsIgnoreCase("_self"))
-      {
-      *aShell = NS_STATIC_CAST(nsIDocShellTreeItem*, this);
-      }
-   else if(name.EqualsIgnoreCase("_blank"))
-      {
-      NS_ENSURE_SUCCESS(CreateTargetLocation(nsnull, aShell), NS_ERROR_FAILURE);
-      }
-   else if(name.EqualsIgnoreCase("_parent"))
-      {
-      GetSameTypeParent(aShell);
-      if(!*aShell)
-         *aShell = NS_STATIC_CAST(nsIDocShellTreeItem*, this);
-      }
-   else if(name.EqualsIgnoreCase("_top"))
-      {
-      NS_ENSURE_SUCCESS(GetSameTypeRootTreeItem(aShell), NS_ERROR_FAILURE);
-      }
-   else if(name.EqualsIgnoreCase("_content"))
-      {
-      if(mTreeOwner)
-         mTreeOwner->FindItemWithName(aName, nsnull, aShell);
-      else
-         {
-         NS_ERROR("Someone isn't setting up the tree owner.  You might like to try that."
-            "Things will.....you know, work.");
-         }
-      }
-   else
-      {
-      NS_ENSURE_SUCCESS(FindItemWithName(aName, nsnull, aShell), NS_ERROR_FAILURE);
-      if(!*aShell)
-         {
-         NS_ENSURE_SUCCESS(CreateTargetLocation(aName, aShell), NS_ERROR_FAILURE);
-         }
-      }
-
-   NS_IF_ADDREF(*aShell);
-
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::CreateTargetLocation(const PRUnichar* aName, 
-   nsIDocShellTreeItem** aShell)
-{
-   return mTreeOwner->GetNewWindow(nsIWebBrowserChrome::allChrome, aShell);
-}
-
-void nsDocShell::SetCurrentURI(nsIURI* aUri)
-{
-   mCurrentURI = aUri; //This assignment addrefs
-}
 
 NS_IMETHODIMP nsDocShell::EnsureContentViewer()
 {
@@ -1819,7 +1793,7 @@ nsresult nsDocShell::NewContentViewerObj(const char* aContentType,
    nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory(do_CreateInstance(id));
    NS_ENSURE_TRUE(docLoaderFactory, NS_ERROR_FAILURE);
 
-   nsCOMPtr<nsILoadGroup> loadGroup(do_QueryInterface(mContentListener->mLoadCookie));
+   nsCOMPtr<nsILoadGroup> loadGroup(do_QueryInterface(mLoadCookie));
    // Now create an instance of the content viewer
    nsXPIDLCString strCommand;
    // go to the uri loader and ask it to convert the uri load command into a old
@@ -1959,20 +1933,272 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
    return NS_OK;
 }
 
+//*****************************************************************************
+// nsDocShell: Site Loading
+//*****************************************************************************   
+  
+NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
+   nsIInputStream* aPostData, loadType aLoadType)
+{
+   PRBool wasAnchor = PR_FALSE;
+   NS_ENSURE_SUCCESS(ScrollIfAnchor(aURI, &wasAnchor), NS_ERROR_FAILURE);
+   if(wasAnchor)
+      return NS_OK;
+   
+   NS_ENSURE_SUCCESS(StopCurrentLoads(), NS_ERROR_FAILURE);
+   
+   NS_ENSURE_SUCCESS(DoURILoad(aURI), NS_ERROR_FAILURE);
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI)
+{
+   nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_PROGID);
+   NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
+   //mContentListener->SetPresContext(aPresContext);
+
+   // we need to get the load group from our load cookie so we can pass it into open uri...
+   nsCOMPtr<nsILoadGroup> loadGroup;
+   NS_ENSURE_SUCCESS(
+      uriLoader->GetLoadGroupForContext(NS_STATIC_CAST(nsIDocShell*, this),
+      getter_AddRefs(loadGroup)), NS_ERROR_FAILURE);
+
+   // open a channel for the url
+   nsCOMPtr<nsIChannel> channel;
+   NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(channel), aURI, loadGroup, 
+      NS_STATIC_CAST(nsIInterfaceRequestor*, this)), NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(uriLoader->OpenURI(channel, nsIURILoader::viewNormal,
+      nsnull, NS_STATIC_CAST(nsIDocShell*, this)), NS_ERROR_FAILURE);
+
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsDocShell::StopCurrentLoads()
 {
-   // XXX
-   NS_ERROR("Not Yet Implemented");
+   StopLoad();
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::AddCurrentSiteToHistories()
+NS_IMETHODIMP nsDocShell::ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor)
 {
-   // XXX
+   *aWasAnchor = PR_FALSE;
+
+   //XXXTAB Implement this
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::OnLoadingSite(nsIURI* aURI)
+{
+   UpdateCurrentSessionHistory();
+   PRBool shouldAdd = PR_FALSE;
+   ShouldAddToSessionHistory(aURI, &shouldAdd);
+   if(shouldAdd)
+      AddToSessionHistory(aURI);
+
+   shouldAdd = PR_FALSE;
+   UpdateCurrentGlobalHistory();
+   ShouldAddToGlobalHistory(aURI, &shouldAdd);
+   if(shouldAdd)
+      AddToGlobalHistory(aURI);
+
+   SetCurrentURI(aURI);
+   mInitialPageLoad = PR_FALSE;
+   mUpdateHistoryOnLoad = PR_TRUE;
+   return NS_OK;
+}
+
+void nsDocShell::SetCurrentURI(nsIURI* aURI)
+{
+   mCurrentURI = aURI; //This assignment addrefs
+}
+
+void nsDocShell::SetReferrerURI(nsIURI* aURI)
+{
+   mReferrerURI = aURI; // This assigment addrefs
+}
+
+//*****************************************************************************
+// nsDocShell: Session History
+//*****************************************************************************   
+
+NS_IMETHODIMP nsDocShell::ShouldAddToSessionHistory(nsIURI* aURI, 
+   PRBool* aShouldAdd)
+{
+   if((!mSessionHistory) || (IsFrame() && mInitialPageLoad))
+      {
+      *aShouldAdd = PR_FALSE;
+      return NS_OK;
+      } 
+      
+   //XXXTAB Do testing here if there are some things that shouldn't go in
+
+   *aShouldAdd = PR_TRUE;
+ 
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::AddToSessionHistory(nsIURI* aURI)
+{
+   // XXXTAB
+   NS_ERROR("Haven't Implemented this yet");
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::UpdateCurrentSessionHistory()
+{
+   if(mInitialPageLoad || !mSessionHistory)
+      return NS_OK;
+
+   // XXXTAB
    NS_ERROR("Not Yet Implemented");
    return NS_OK;
 }
 
+NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry)
+{
+   nsCOMPtr<nsIURI> uri;
+   nsCOMPtr<nsIInputStream> postData;
+
+   NS_ENSURE_SUCCESS(aEntry->GetUri(getter_AddRefs(uri)), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(aEntry->GetPostData(getter_AddRefs(postData)),
+      NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, postData, loadHistory),
+      NS_ERROR_FAILURE);
+
+   return NS_OK;
+}
+
+//*****************************************************************************
+// nsDocShell: Global History
+//*****************************************************************************   
+
+NS_IMETHODIMP nsDocShell::ShouldAddToGlobalHistory(nsIURI* aURI, 
+   PRBool* aShouldAdd)
+{
+   *aShouldAdd = PR_TRUE;
+
+   //XXX Should add code here for things we don't want added to global
+   // history
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::AddToGlobalHistory(nsIURI* aURI)
+{
+   nsCOMPtr<nsIGlobalHistory> 
+                        globalHistory(do_GetService(NS_GLOBALHISTORY_PROGID));
+   
+   // XXX Remove this when this starts working
+   if(!globalHistory)
+      return NS_ERROR_FAILURE;
+   NS_ENSURE_TRUE(globalHistory, NS_ERROR_FAILURE);   
+   nsXPIDLCString spec;
+   NS_ENSURE_SUCCESS(aURI->GetSpec(getter_Copies(spec)), NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(globalHistory->AddPage(spec, nsnull, PR_Now()), 
+      NS_ERROR_FAILURE);
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::UpdateCurrentGlobalHistory()
+{
+   // XXX Add code here that needs to update the current history item
+   return NS_OK;
+}
+
+//*****************************************************************************
+// nsDocShell: Helper Routines
+//*****************************************************************************   
+
+nsDocShellInitInfo* nsDocShell::InitInfo()
+{
+   if(mInitInfo)
+      return mInitInfo;
+   return mInitInfo = new nsDocShellInitInfo();
+}
+
+NS_IMETHODIMP nsDocShell::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode* aParent,
+   PRInt32* aOffset)
+{
+   NS_ENSURE_ARG_POINTER(aChild || aParent);
+   
+   nsCOMPtr<nsIDOMNodeList> childNodes;
+   NS_ENSURE_SUCCESS(aParent->GetChildNodes(getter_AddRefs(childNodes)),
+      NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(childNodes, NS_ERROR_FAILURE);
+
+   PRInt32 i=0;
+
+   for( ; PR_TRUE; i++)
+      {
+      nsCOMPtr<nsIDOMNode> childNode;
+      NS_ENSURE_SUCCESS(childNodes->Item(i, getter_AddRefs(childNode)), 
+         NS_ERROR_FAILURE);
+      NS_ENSURE_TRUE(childNode, NS_ERROR_FAILURE);
+
+      if(childNode.get() == aChild)
+         {
+         *aOffset = i;
+         return NS_OK;
+         }
+      }
+
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocShell::GetRootScrollableView(nsIScrollableView** aOutScrollView)
+{
+   NS_ENSURE_ARG_POINTER(aOutScrollView);
+   
+   nsCOMPtr<nsIPresShell> shell;
+   NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(shell)), NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsIViewManager> viewManager;
+   NS_ENSURE_SUCCESS(shell->GetViewManager(getter_AddRefs(viewManager)),
+      NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(viewManager->GetRootScrollableView(aOutScrollView),
+      NS_ERROR_FAILURE);
+
+   return NS_OK;
+} 
+
+NS_IMETHODIMP nsDocShell::EnsureContentListener()
+{
+   if(mContentListener)
+      return NS_OK;
+   
+   mContentListener = new nsDSURIContentListener();
+   NS_ENSURE_TRUE(mContentListener, NS_ERROR_OUT_OF_MEMORY);
+
+   NS_ADDREF(mContentListener);
+   mContentListener->DocShell(this);
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::EnsureScriptEnvironment()
+{
+   if(mScriptContext)
+      return NS_OK;
+
+   NS_NewScriptGlobalObject(getter_AddRefs(mScriptGlobal));
+   NS_ENSURE_TRUE(mScriptGlobal, NS_ERROR_FAILURE);
+
+   mScriptGlobal->SetDocShell(NS_STATIC_CAST(nsIDocShell*, this));
+   mScriptGlobal->SetGlobalObjectOwner(
+      NS_STATIC_CAST(nsIScriptGlobalObjectOwner*, this));
+
+   NS_CreateScriptContext(mScriptGlobal, getter_AddRefs(mScriptContext));
+   NS_ENSURE_TRUE(mScriptContext, NS_ERROR_FAILURE);
+
+   return NS_OK;
+}
 
 NS_IMETHODIMP
 nsDocShell::FireStartDocumentLoad(nsIDocumentLoader* aLoader,
@@ -2174,22 +2400,16 @@ NS_IMETHODIMP nsDocShell::InsertDocumentInDocTree()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::DestroyChildren()
+PRBool nsDocShell::IsFrame()
 {
-   PRInt32 i, n = mChildren.Count();
-   nsCOMPtr<nsIDocShellTreeItem>   shell;
-   for (i = 0; i < n; i++) 
+   if(mParent)
       {
-      shell = dont_AddRef((nsIDocShellTreeItem*)mChildren.ElementAt(i));
-      if(!NS_WARN_IF_FALSE(shell, "docshell has null child"))
-         shell->SetParent(nsnull);
+      PRInt32 parentType = ~mItemType;  // Not us
+      mParent->GetItemType(&parentType);
+      if(parentType == mItemType)   // This is a frame
+         return PR_TRUE;
       }
-   mChildren.Clear();
-   return NS_OK;
+
+   return PR_FALSE;
 }
 
-nsresult nsDocShell::GetPrimaryFrameFor(nsIContent* content, nsIFrame** frame)
-{
-   //XXX Implement
-   return NS_ERROR_FAILURE;
-}   
