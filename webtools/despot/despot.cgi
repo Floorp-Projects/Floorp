@@ -19,6 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Dan Mosedale <dmose@mozilla.org>
 
 use strict;
 use diagnostics;
@@ -813,7 +814,12 @@ sub ChangePartition {
 
     my @files = split(/\n/, $F::files);
 
-    $query = Query("select files.pattern,partitions.name from files,partitions where files.partitionid != $F::partitionid and partitions.id=files.partitionid and partitions.repositoryid=$F::repid");
+    my $q = SqlQuote($F::branchname);
+    $query = Query("select files.pattern,partitions.name from " .
+                   "files,partitions,branches where files.partitionid != " . 
+                   "$F::partitionid and partitions.id=files.partitionid " .
+                   "and partitions.repositoryid=$F::repid and branches.id=" .
+                   "partitions.branchid and branches.name='$q'");
     while (@row = $query->fetchrow()) {
         my $f1 = $row[0];
         foreach my $f2 (@files) {
