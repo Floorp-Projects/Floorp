@@ -718,7 +718,7 @@ nsContainerFrame::FinishReflowChild(nsIFrame*            aKidFrame,
     // Make sure the frame's view is properly sized and positioned and has
     // things like opacity correct
     SyncFrameViewAfterReflow(aPresContext, aKidFrame, view,
-                             &aDesiredSize.mCombinedArea,
+                             &aDesiredSize.mOverflowArea,
                              aFlags);
 
   } else if (0 == (aFlags & NS_FRAME_NO_MOVE_CHILD_VIEWS)) {

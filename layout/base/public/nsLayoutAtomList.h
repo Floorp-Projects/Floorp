@@ -104,12 +104,13 @@ LAYOUT_ATOM(textFrame, "TextFrame")
 LAYOUT_ATOM(viewportFrame, "ViewportFrame")
 
   // Alphabetical list of frame property names
-LAYOUT_ATOM(collapseOffsetProperty, "CollapseOffsetProperty")
-LAYOUT_ATOM(inlineFrameAnnotation, "InlineFrameAnnotation")
-LAYOUT_ATOM(maxElementSizeProperty, "MaxElementSizeProperty")
-LAYOUT_ATOM(overflowProperty, "OverflowProperty")
-LAYOUT_ATOM(overflowLinesProperty, "OverflowLinesProperty")
-LAYOUT_ATOM(viewProperty, "ViewProperty")
+LAYOUT_ATOM(collapseOffsetProperty, "CollapseOffsetProperty")  // nsPoint*
+LAYOUT_ATOM(inlineFrameAnnotation, "InlineFrameAnnotation")    // BOOL
+LAYOUT_ATOM(maxElementSizeProperty, "MaxElementSizeProperty")  // nsSize*
+LAYOUT_ATOM(overflowAreaProperty, "OverflowArea")              // nsRect*
+LAYOUT_ATOM(overflowProperty, "OverflowProperty")              // list of nsIFrame*
+LAYOUT_ATOM(overflowLinesProperty, "OverflowLinesProperty")    // list of nsLineBox*
+LAYOUT_ATOM(viewProperty, "ViewProperty")                      // nsView*
 
   // Alphabetical list of event handler names
 LAYOUT_ATOM(onabort, "onabort")

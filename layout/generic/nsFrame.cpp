@@ -1567,10 +1567,10 @@ nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
     aMetrics.ascent = 0;
     aMetrics.descent = 0;
     aMetrics.mCarriedOutBottomMargin = 0;
-    aMetrics.mCombinedArea.x = 0;
-    aMetrics.mCombinedArea.y = 0;
-    aMetrics.mCombinedArea.width = 0;
-    aMetrics.mCombinedArea.height = 0;
+    aMetrics.mOverflowArea.x = 0;
+    aMetrics.mOverflowArea.y = 0;
+    aMetrics.mOverflowArea.width = 0;
+    aMetrics.mOverflowArea.height = 0;
     if (aMetrics.maxElementSize) {
       aMetrics.maxElementSize->width = 0;
       aMetrics.maxElementSize->height = 0;

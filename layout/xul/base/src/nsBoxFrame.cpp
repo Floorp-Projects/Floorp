@@ -1130,8 +1130,8 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
        // printf("width: %d, height: %d\n", desiredSize.mCombinedArea.width, desiredSize.mCombinedArea.height);
 
         if (kidState & NS_FRAME_OUTSIDE_CHILDREN) {
-             desiredSize.width = desiredSize.mCombinedArea.width;
-             desiredSize.height = desiredSize.mCombinedArea.height;
+             desiredSize.width = desiredSize.mOverflowArea.width;
+             desiredSize.height = desiredSize.mOverflowArea.height;
         }
 
         

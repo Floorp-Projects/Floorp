@@ -24,7 +24,6 @@
 
 #include "nsBlockFrame.h"
 #include "nsVoidArray.h"
-#include "nsIAreaFrame.h"
 #include "nsAbsoluteContainingBlock.h"
 
 class nsSpaceManager;
@@ -44,13 +43,10 @@ struct nsStylePosition;
  *
  * @see nsLayoutAtoms::absoluteList
  */
-class nsAreaFrame : public nsBlockFrame, public nsIAreaFrame
+class nsAreaFrame : public nsBlockFrame
 {
 public:
   friend nsresult NS_NewAreaFrame(nsIPresShell* aPresShell, nsIFrame** aResult, PRUint32 aFlags);
-  
-  // nsISupports
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   
   // nsIFrame
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
@@ -94,15 +90,11 @@ public:
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
 
-  // nsIAreaFrame
-  NS_IMETHOD GetPositionedInfo(nscoord& aXMost, nscoord& aYMost) const;
-
 protected:
   nsAreaFrame();
 
 private:
   nsAbsoluteContainingBlock mAbsoluteContainer;
-  nsRect                    mCombinedArea;
 };
 
 #endif /* nsAreaFrame_h___ */

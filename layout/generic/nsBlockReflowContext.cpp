@@ -317,11 +317,11 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
 
   aFrame->GetFrameState(&state);
   if (0 == (NS_FRAME_OUTSIDE_CHILDREN & state)) {
-    // Provide combined area for child that doesn't have any
-    mMetrics.mCombinedArea.x = 0;
-    mMetrics.mCombinedArea.y = 0;
-    mMetrics.mCombinedArea.width = mMetrics.width;
-    mMetrics.mCombinedArea.height = mMetrics.height;
+    // Provide overflow area for child that doesn't have any
+    mMetrics.mOverflowArea.x = 0;
+    mMetrics.mOverflowArea.y = 0;
+    mMetrics.mOverflowArea.width = mMetrics.width;
+    mMetrics.mOverflowArea.height = mMetrics.height;
   }
 
   // Now that frame has been reflowed at least one time make sure that
@@ -376,8 +376,8 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
   nscoord x = mX;
   nscoord y = mY;
   // When deciding whether it's an empty paragraph we also need to take into
-  // account the combined area
-  if ((0 == mMetrics.height) && (0 == mMetrics.mCombinedArea.height)) {
+  // account the overflow area
+  if ((0 == mMetrics.height) && (0 == mMetrics.mOverflowArea.height)) {
     if (IsHTMLParagraph(mFrame)) {
       // Special "feature" for HTML compatability - empty paragraphs
       // collapse into nothingness, including their margins. Signal
@@ -432,7 +432,7 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
 
     // Retain combined area information in case we contain a floater
     // and nothing else.
-    aCombinedRect = mMetrics.mCombinedArea;
+    aCombinedRect = mMetrics.mOverflowArea;
     aCombinedRect.x += x;
     aCombinedRect.y += y;
   }
@@ -549,10 +549,10 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
       // Compute combined-rect in callers coordinate system. The value
       // returned in the reflow metrics is relative to the child
       // frame.
-      aCombinedRect.x = mMetrics.mCombinedArea.x + x;
-      aCombinedRect.y = mMetrics.mCombinedArea.y + y;
-      aCombinedRect.width = mMetrics.mCombinedArea.width;
-      aCombinedRect.height = mMetrics.mCombinedArea.height;
+      aCombinedRect.x = mMetrics.mOverflowArea.x + x;
+      aCombinedRect.y = mMetrics.mOverflowArea.y + y;
+      aCombinedRect.width = mMetrics.mOverflowArea.width;
+      aCombinedRect.height = mMetrics.mOverflowArea.height;
 
       // Now place the frame and complete the reflow process
       nsContainerFrame::FinishReflowChild(mFrame, mPresContext, mMetrics, x, y, 0);

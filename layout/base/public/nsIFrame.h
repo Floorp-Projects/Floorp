@@ -217,20 +217,23 @@ struct nsHTMLReflowMetrics {
   // (generational) bottom margin value.
   nscoord mCarriedOutBottomMargin;
   
-  // For frames that have children that stick outside their rect
-  // (NS_FRAME_OUTSIDE_CHILDREN) this rectangle will contain the
-  // absolute bounds of the frame. Since the frame doesn't know where
-  // it is going to be positioned in its parent, the assumption is
-  // that it is placed at 0,0 when computing this area.
-  nsRect mCombinedArea;
+  // For frames that have content that overflow their content area
+  // (NS_FRAME_OUTSIDE_CHILDREN) this rectangle represents the total area
+  // of the frame including visible overflow, i.e., don't include overflowing
+  // content that is hidden.
+  // The rect is in the local coordinate space of the frame, and should be at
+  // least as big as the desired size. If there is no content that overflows,
+  // then the overflow area is identical to the desired size and should be
+  // {0, 0, mWidth, mHeight}.
+  nsRect mOverflowArea;
   
   nsHTMLReflowMetrics(nsSize* aMaxElementSize) {
     maxElementSize = aMaxElementSize;
     mCarriedOutBottomMargin = 0;
-    mCombinedArea.x = 0;
-    mCombinedArea.y = 0;
-    mCombinedArea.width = 0;
-    mCombinedArea.height = 0;
+    mOverflowArea.x = 0;
+    mOverflowArea.y = 0;
+    mOverflowArea.width = 0;
+    mOverflowArea.height = 0;
 
     // XXX These are OUT parameters and so they shouldn't have to be
     // initialized, but there are some bad frame classes that aren't

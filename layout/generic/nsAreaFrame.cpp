@@ -60,23 +60,6 @@ nsAreaFrame::nsAreaFrame()
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// nsISupports
-
-NS_IMETHODIMP
-nsAreaFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIAreaFrameIID)) {
-    nsIAreaFrame* tmp = (nsIAreaFrame*)this;
-    *aInstancePtr = (void*)tmp;
-    return NS_OK;
-  }
-  return nsBlockFrame::QueryInterface(aIID, aInstancePtr);
-}
-
-/////////////////////////////////////////////////////////////////////////////
 // nsIFrame
 
 NS_IMETHODIMP
@@ -186,32 +169,6 @@ nsAreaFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
   return nsBlockFrame::FirstChild(aListName, aFirstChild);
 }
 
-// Return the x-most and y-most for the child absolutely positioned
-// elements
-NS_IMETHODIMP
-nsAreaFrame::GetPositionedInfo(nscoord& aXMost, nscoord& aYMost) const
-{
-  nsresult  rv = mAbsoluteContainer.GetPositionedInfo(this, aXMost, aYMost);
-
-  // If we have child frames that stick outside of our box, and they should
-  // be visible, then include them too so the total size is correct
-  if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
-    const nsStyleDisplay* display = (const nsStyleDisplay*)
-      mStyleContext->GetStyleData(eStyleStruct_Display);
-
-    if (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow) {
-      if (mCombinedArea.XMost() > aXMost) {
-        aXMost = mCombinedArea.XMost();
-      }
-      if (mCombinedArea.YMost() > aYMost) {
-        aYMost = mCombinedArea.YMost();
-      }
-    }
-  }
-
-  return rv;
-}
-
 static void
 CalculateContainingBlock(const nsHTMLReflowState& aReflowState,
                          nscoord                  aFrameWidth,
@@ -244,7 +201,7 @@ CalculateContainingBlock(const nsHTMLReflowState& aReflowState,
 
 NS_IMETHODIMP
 nsAreaFrame::Reflow(nsIPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
+                    nsHTMLReflowMetrics&     aMetrics,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus)
 {
@@ -262,31 +219,55 @@ nsAreaFrame::Reflow(nsIPresContext*          aPresContext,
     nscoord containingBlockWidth;
     nscoord containingBlockHeight;
     PRBool  handled;
+    nsRect  childBounds;
 
     CalculateContainingBlock(aReflowState, mRect.width, mRect.height,
                              containingBlockWidth, containingBlockHeight);
     
     mAbsoluteContainer.IncrementalReflow(this, aPresContext, aReflowState,
                                          containingBlockWidth, containingBlockHeight,
-                                         handled);
+                                         handled, childBounds);
 
     // If the incremental reflow command was handled by the absolute positioning
     // code, then we're all done
     if (handled) {
-      // Just return our current size as our desired size
-      aDesiredSize.width = mRect.width;
-      aDesiredSize.height = mRect.height;
-      aDesiredSize.ascent = mRect.height;
-      aDesiredSize.descent = 0;
+      // Just return our current size as our desired size.
+      // XXX We need to know the overflow area for the flowed content, and
+      // we don't have a way to get that currently so for the time being pretend
+      // a resize reflow occured
+#if 0
+      aMetrics.width = mRect.width;
+      aMetrics.height = mRect.height;
+      aMetrics.ascent = mRect.height;
+      aMetrics.descent = 0;
   
       // Whether or not we're complete hasn't changed
       aStatus = (nsnull != mNextInFlow) ? NS_FRAME_NOT_COMPLETE : NS_FRAME_COMPLETE;
+#else
+      nsHTMLReflowState reflowState(aReflowState);
+      reflowState.reason = eReflowReason_Resize;
+      reflowState.reflowCommand = nsnull;
+      rv = nsBlockFrame::Reflow(aPresContext, aMetrics, reflowState, aStatus);
+#endif
+      
+      // Factor the absolutely positioned child bounds into the overflow area
+      aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, childBounds);
+
+      // Make sure the NS_FRAME_OUTSIDE_CHILDREN flag is set correctly
+      if ((aMetrics.mOverflowArea.x < 0) ||
+          (aMetrics.mOverflowArea.y < 0) ||
+          (aMetrics.mOverflowArea.XMost() > aMetrics.width) ||
+          (aMetrics.mOverflowArea.YMost() > aMetrics.height)) {
+        mState |= NS_FRAME_OUTSIDE_CHILDREN;
+      } else {
+        mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
+      }
       return rv;
     }
   }
 
   // Let the block frame do its reflow first
-  rv = nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  rv = nsBlockFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
 
   // Let the absolutely positioned container reflow any absolutely positioned
   // child frames that need to be reflowed, e.g., elements with a percentage
@@ -294,27 +275,36 @@ nsAreaFrame::Reflow(nsIPresContext*          aPresContext,
   if (NS_SUCCEEDED(rv)) {
     nscoord containingBlockWidth;
     nscoord containingBlockHeight;
+    nsRect  childBounds;
 
-    CalculateContainingBlock(aReflowState, aDesiredSize.width, aDesiredSize.height,
+    CalculateContainingBlock(aReflowState, aMetrics.width, aMetrics.height,
                              containingBlockWidth, containingBlockHeight);
 
     rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState,
-                                   containingBlockWidth, containingBlockHeight);
+                                   containingBlockWidth, containingBlockHeight,
+                                   childBounds);
+
+    // Factor the absolutely positioned child bounds into the overflow area
+    aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, childBounds);
+
+    // Make sure the NS_FRAME_OUTSIDE_CHILDREN flag is set correctly
+    if ((aMetrics.mOverflowArea.x < 0) ||
+        (aMetrics.mOverflowArea.y < 0) ||
+        (aMetrics.mOverflowArea.XMost() > aMetrics.width) ||
+        (aMetrics.mOverflowArea.YMost() > aMetrics.height)) {
+      mState |= NS_FRAME_OUTSIDE_CHILDREN;
+    } else {
+      mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
+    }
   }
 
 #ifdef NOISY_MAX_ELEMENT_SIZE
   ListTag(stdout);
   printf(": maxElementSize=%d,%d desiredSize=%d,%d\n",
-         aDesiredSize.maxElementSize ? aDesiredSize.maxElementSize->width : 0,
-         aDesiredSize.maxElementSize ? aDesiredSize.maxElementSize->height : 0,
-         aDesiredSize.width, aDesiredSize.height);
+         aMetrics.maxElementSize ? aMetrics.maxElementSize->width : 0,
+         aMetrics.maxElementSize ? aMetrics.maxElementSize->height : 0,
+         aMetrics.width, aMetrics.height);
 #endif
-
-  // If we have children that stick outside our box, then remember the
-  // combined area, because we'll need it later when sizing our view
-  if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
-    mCombinedArea = aDesiredSize.mCombinedArea;
-  }
 
   return rv;
 }
