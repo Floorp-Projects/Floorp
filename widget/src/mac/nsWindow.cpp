@@ -701,7 +701,8 @@ PRBool OnJaguarOrLater() // Return true if we are on Mac OS X 10.2 or later
     static PRBool gOnJaguarOrLater = PR_FALSE;
     if(!gInitVer)
     {
-        gOnJaguarOrLater = (nsToolkit::OSXVersion() >= MAC_OS_X_VERSION_10_2);
+        gOnJaguarOrLater =
+            (nsToolkit::OSXVersion() >= MAC_OS_X_VERSION_10_2_HEX);
         gInitVer = PR_TRUE;
     }
     return gOnJaguarOrLater;
@@ -713,7 +714,8 @@ PRBool OnPantherOrLater() // Return true if we are on Mac OS X 10.3 or later
     static PRBool gOnPantherOrLater = PR_FALSE;
     if(!gInitVer1030)
     {
-        gOnPantherOrLater = (nsToolkit::OSXVersion() >= 0x00001030);
+        gOnPantherOrLater =
+            (nsToolkit::OSXVersion() >= MAC_OS_X_VERSION_10_3_HEX);
         gInitVer1030 = PR_TRUE;
     }
     return gOnPantherOrLater;

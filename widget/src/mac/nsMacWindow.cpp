@@ -431,7 +431,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
         // XXX kWindowDoesNotCycleAttribute is only defined in the 10.3 (or
         //     higher) SDK but MacWindows.h claims it should work on 10.2
         //     and higher.
-        if (nsToolkit::OSXVersion() > MAC_OS_X_VERSION_10_2)
+        if (nsToolkit::OSXVersion() >= MAC_OS_X_VERSION_10_2_HEX)
         {
           attributes = (1L << 15); // kWindowDoesNotCycleAttribute
         }
@@ -459,7 +459,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
                                  wRect.right - wRect.left, wRect.bottom - wRect.top,
                                  getter_AddRefs(screen));
       if (screen) {
-          PRInt32 left, top, width, height;
+        PRInt32 left, top, width, height;
         screen->GetAvailRect(&left, &top, &width, &height);
         if (wRect.bottom > top+height) {
           bottomPinDelta = wRect.bottom - (top+height);
@@ -468,18 +468,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
       }
     }
 
-    // XXX Need to special-case for OS X versions below 10.1, because
-    //     kSimpleWindowClass doesn't exist.
-    if (mWindowType == eWindowType_popup &&
-        nsToolkit::OSXVersion() < MAC_OS_X_VERSION_10_1)
-    {
-      mWindowPtr = ::NewCWindow(nil, &wRect, "\p", false, kWindowSimpleProc,
-                                (WindowRef)-1, false, (long)nsnull);
-    }
-    else
-    {
-      ::CreateNewWindow(windowClass, attributes, &wRect, &mWindowPtr);
-    }
+    ::CreateNewWindow(windowClass, attributes, &wRect, &mWindowPtr);
 
     mWindowMadeHere = PR_TRUE;
 
@@ -1437,7 +1426,6 @@ NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
 
     short w = macRect.right - macRect.left;
     short h = macRect.bottom - macRect.top;
-    Boolean needReposition = (w == 1 && h == 1);
 
     if ((w != aWidth) || (h != aHeight))
     {
@@ -1455,12 +1443,6 @@ NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
       }
 
       mResizeIsFromUs = PR_FALSE;
-
-#if defined(XP_MACOSX)
-      // workaround for bug in MacOSX if windows start life as 1x1.
-      if (needReposition)
-        RepositionWindow(mWindowPtr, NULL, kWindowCascadeOnMainScreen);
-#endif
     }
   }
   Inherited::Resize(aWidth, aHeight, aRepaint);

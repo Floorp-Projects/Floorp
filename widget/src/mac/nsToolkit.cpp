@@ -268,7 +268,7 @@ nsToolkit :: OSXVersion()
     OSErr err = ::Gestalt(gestaltSystemVersion, &gOSXVersion);
     if (err != noErr) {
       NS_ERROR("Couldn't determine OS X version, assume 10.0");
-      gOSXVersion = MAC_OS_X_VERSION_10_0;
+      gOSXVersion = MAC_OS_X_VERSION_10_0_HEX;
     }
   }
   return gOSXVersion;
