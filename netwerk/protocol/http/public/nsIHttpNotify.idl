@@ -61,7 +61,7 @@ interface nsIHttpNotify : nsINetNotify
 
     /**
      * After an HTTP server response is received, this method is called
-     * asyncronously.  The implementor can interrogate the nsIHttpChannel as
+     * syncronously.  The implementor can interrogate the nsIHttpChannel as
      * it deems necessary.  The HTTP protocol interpreter blocks on this call
      * until it returns.
      */
