@@ -15,6 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+ 
+#ifdef NECKO
 
 #include "nsChromeProtocolHandler.h"
 #include "nsCRT.h"
@@ -167,3 +169,4 @@ nsChromeProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#endif // NECKO
