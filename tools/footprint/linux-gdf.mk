@@ -43,9 +43,10 @@
 #
 # e.g.,
 #
-#   make MOZILLA_DIR=/export2/waterson/seamonkey-opt/mozilla/dist/bin \
+#   make -flinux-gdf.mk \
+#     MOZILLA_DIR=/export2/waterson/seamonkey-opt/mozilla/dist/bin \
 #     PROGRAM=gtkEmbed \
-#     URL="http://localhost/cgi-bin/buster.cgi?refresh=10"
+#     BUSTER_URL="http://localhost/cgi-bin/buster.cgi?refresh=10"
 #
 # To use this program, you'll need to:
 #
