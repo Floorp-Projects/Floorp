@@ -1101,6 +1101,7 @@ nsMenuFrame::AppendFrames(nsIPresContext& aPresContext,
 void
 nsMenuFrame::UpdateDismissalListener(nsIMenuParent* aMenuParent)
 {
+#if 0
   if (!nsMenuFrame::mDismissalListener) {
     // Create the listener and attach it to the outermost window.
     aMenuParent->CreateDismissalListener();
@@ -1108,5 +1109,6 @@ nsMenuFrame::UpdateDismissalListener(nsIMenuParent* aMenuParent)
   
   // Make sure the menu dismissal listener knows what the current
   // innermost menu popup frame is.
-  //nsMenuFrame::mDismissalListener->SetCurrentMenuParent(aMenuParent);
+  nsMenuFrame::mDismissalListener->SetCurrentMenuParent(aMenuParent);
+#endif
 }
