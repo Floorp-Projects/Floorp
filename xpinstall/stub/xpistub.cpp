@@ -43,6 +43,7 @@
 
 #ifdef XP_PC
 #include <direct.h>
+#define COMPONENT_REG "component.reg"
 #endif
 
 #ifdef XP_MAC
@@ -80,6 +81,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     nsresult              rv;
     nsCOMPtr<nsIFileSpec> nsIfsDirectory;
     nsFileSpec            nsfsDirectory;
+    nsFileSpec            nsfsRegFile;
 
     //--------------------------------------------------------------------
     // Initialize XPCOM and AutoRegister() its components
@@ -89,7 +91,6 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     long       xpiStubDirID = 0;
     Boolean    isDir = false;
     FSSpec     fsRegFile;
-    nsFileSpec nsfsRegFile;
     
     FSpGetDirectoryID(&aXPIStubDir, &xpiStubDirID, &isDir);
     err = FSMakeFSSpec(aXPIStubDir.vRefNum, xpiStubDirID, COMPONENT_REG, &fsRegFile);
@@ -99,44 +100,22 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     nsfsRegFile = fsRegFile;
     nsfsDirectory = aXPIStubDir;
     rv = NS_InitXPCOM(&gServiceMgr, &nsfsRegFile, &nsfsDirectory);
+#elif defined(XP_PC)
+    char componentPath[_MAX_PATH];
+
+    getcwd(componentPath, _MAX_PATH);
+    nsfsDirectory   = componentPath;
+    nsfsRegFile     = componentPath;
+    nsfsDirectory  += "\\components";
+    nsfsRegFile    += "\\";
+    nsfsRegFile    += COMPONENT_REG;
+
+    rv = NS_InitXPCOM(&gServiceMgr, &nsfsRegFile, &nsfsDirectory);
+
 #else
     rv = NS_InitXPCOM(&gServiceMgr, NULL, NULL);
 #endif
-    if (!NS_SUCCEEDED(rv))
-        return rv;
 
-#ifdef XP_PC
-    //
-    // Passing 0 as the 2nd parameter to AutoRegister() will tell it to
-    // automatically determine the path to the components directory.
-    // Since XPI_Init() is being called by Setup.exe, not apprunner.exe,
-    // the wrong components directory is determined.
-    // As a requirement to loading xpistub.dll, it must be loaded from
-    // the same directory as xpcom.dll.
-    // This makes is easy to locate the correct components directory by
-    // using a form of GetCurrentDirectory().
-    //
-    // Since nsFileSpec() does not contain a GetCwd() function,
-    // a call to getcwd() is being used under Windows only.
-    //
-
-    char            szTemp[_MAX_PATH];
-    getcwd(szTemp, _MAX_PATH);
-    PL_strcat(szTemp, "\\");
-    PL_strcat(szTemp, "components");
-    nsfsDirectory = szTemp;
-    rv = NS_NewFileSpecWithSpec(*(&nsfsDirectory), getter_AddRefs(nsIfsDirectory));
-    if(NS_FAILED(rv))
-      return rv;
-
-    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsIfsDirectory);
-#elif defined(XP_MAC)
-    // XXX Mac handling already taken care of in last XP_MAC ifdef so do nothing
-    // XXX Remove this ifdef when Win32 also points to pre-populated comp reg
-#else
-    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, 0);
-#endif
-    
     if (!NS_SUCCEEDED(rv))
         return rv;
 
