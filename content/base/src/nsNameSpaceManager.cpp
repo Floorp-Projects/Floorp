@@ -64,8 +64,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #define kSVGNameSpaceURI "http://www.w3.org/2000/svg"
 #define kXMLEventsNameSpaceURI "http://www.w3.org/2001/xml-events"
 #define kXHTML2UnofficialNameSpaceURI "http://www.w3.org/TR/xhtml2" // Will eventually change
-#define kRolesWAIUnofficialNameSpaceURI "http://www.w3.org/wai/pf/GUIRoleTaxonomy#" // Will eventually change
-#define kStatesWAIUnofficialNameSpaceURI "http://www.w3.org/wai/pf/GUIStateTaxonomy#" // Will eventually change
+#define kRolesWAIUnofficialNameSpaceURI "http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#" // Will eventually change
+#define kStatesWAIUnofficialNameSpaceURI "http://www.w3.org/2005/01/wai-rdf/GUIStateTaxonomy#" // Will eventually change
 
 //-----------------------------------------------------------
 // Name Space 
