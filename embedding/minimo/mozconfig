@@ -36,6 +36,7 @@ ac_add_options --disable-necko-disk-cache
 ac_add_options --enable-necko-small-buffers
 
 # disable debug logging and tests
+ac_add_options --disable-dtd-debug
 ac_add_options --disable-logging
 ac_add_options --disable-tests
 
