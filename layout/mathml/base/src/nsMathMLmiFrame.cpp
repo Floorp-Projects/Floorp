@@ -123,38 +123,38 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
   // Insert a new pseudo frame between our children and us, i.e., the new frame
   // becomes our sole child, and our children become children of the new frame.
-
-  // Get a pseudo style context for the appropriate style font
-  // XXX how important is the PseudoStyleContext?
-  nsAutoString fontStyle = (1 == aLength) 
-                         ? ":-moz-math-font-style-italic" 
-                         : ":-moz-math-font-style-normal";
-  nsCOMPtr<nsIAtom> fontAtom(getter_AddRefs(NS_NewAtom(fontStyle)));
-  nsCOMPtr<nsIStyleContext> newStyleContext;
-  aPresContext.ResolvePseudoStyleContextFor(mContent, fontAtom, mStyleContext,
-                                            PR_FALSE, getter_AddRefs(newStyleContext));          
-
-  if (newStyleContext && newStyleContext.get() != mStyleContext) {
-
-    nsIFrame* newFrame = nsnull;
-    NS_NewMathMLWrapperFrame(&newFrame);
-    NS_ASSERTION(newFrame, "Failed to create new frame");
-
-    newFrame->Init(aPresContext, mContent, this, newStyleContext, nsnull);
-
-    // our children become children of the new frame
-    nsIFrame* firstFrame = mFrames.FirstChild();
-    nsIFrame* childFrame = firstFrame;
-    while (nsnull != childFrame) {
-      childFrame->SetParent(newFrame);
-      aPresContext.ReParentStyleContext(childFrame, newStyleContext);
-      childFrame->GetNextSibling(&childFrame);
+  nsIFrame* firstChild = mFrames.FirstChild();
+  if (firstChild) {
+    // Get a pseudo style context for the appropriate style font
+    // XXX how important is the PseudoStyleContext?
+    nsAutoString fontStyle = (1 == aLength) 
+                           ? ":-moz-math-font-style-italic" 
+                           : ":-moz-math-font-style-normal";
+    nsCOMPtr<nsIAtom> fontAtom(getter_AddRefs(NS_NewAtom(fontStyle)));
+    nsCOMPtr<nsIStyleContext> newStyleContext;
+    aPresContext.ResolvePseudoStyleContextFor(mContent, fontAtom, mStyleContext,
+                                              PR_FALSE, getter_AddRefs(newStyleContext));          
+    
+    if (newStyleContext && newStyleContext.get() != mStyleContext) {
+    
+      nsIFrame* newFrame = nsnull;
+      NS_NewMathMLWrapperFrame(&newFrame);
+      NS_ASSERTION(newFrame, "Failed to create new frame");
+    
+      newFrame->Init(aPresContext, mContent, this, newStyleContext, nsnull);
+    
+      // our children become children of the new frame
+      nsIFrame* childFrame = firstChild;
+      while (childFrame) {
+        childFrame->SetParent(newFrame);
+        aPresContext.ReParentStyleContext(childFrame, newStyleContext);
+        childFrame->GetNextSibling(&childFrame);
+      }
+      newFrame->SetInitialChildList(aPresContext, nsnull, firstChild);
+    
+      // the new frame becomes our sole child
+      mFrames.SetFrames(newFrame);
     }
-    newFrame->SetInitialChildList(aPresContext, nsnull, firstFrame);
-
-    // the new frame becomes our sole child
-    mFrames.SetFrames(newFrame);
   }
-
   return rv;
 }
