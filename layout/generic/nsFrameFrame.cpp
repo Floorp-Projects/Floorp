@@ -965,6 +965,10 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&          aPresContext,
   aDesiredSize.height = aReflowState.availableHeight;
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
+  if (nsnull != aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width = aDesiredSize.width;
+    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  }
 
   aStatus = NS_FRAME_COMPLETE;
 
