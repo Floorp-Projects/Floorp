@@ -241,7 +241,7 @@ nsDOMStyleSheetList::GetLength(PRUint32* aLength)
       PRInt32 i, imax = mDocument->GetNumberOfStyleSheets();
       
       for (i = 0; i < imax; i++) {
-        nsCOMPtr<nsIStyleSheet> sheet(do_QueryInterface(mDocument->GetStyleSheetAt(i)));
+        nsCOMPtr<nsIStyleSheet> sheet(dont_AddRef(mDocument->GetStyleSheetAt(i)));
         if (!sheet)
           continue;
         nsCOMPtr<nsIDOMStyleSheet> domss(do_QueryInterface(sheet));
