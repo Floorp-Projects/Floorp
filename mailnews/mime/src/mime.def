@@ -18,12 +18,3 @@ LIBRARY mime.dll
 EXPORTS
 ; Will be an XP-COM interface
 	MIME_MessageConverter
-; For content type handler plugins
-	MIME_MimeObject_write
-	MIME_GetmimeObjectClass
-	MIME_GetmimeContainerClass
-	MIME_GetmimeLeafClass
-	MIME_GetmimeInlineTextClass
-	MIME_GetmimeMultipartClass
-	MIME_GetmimeMultipartSignedClass
-	

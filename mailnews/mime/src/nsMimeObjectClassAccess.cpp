@@ -81,7 +81,10 @@ nsMimeObjectClassAccess::MimeObjectWrite(void *mimeObject,
                                 PRBool user_visible_p)
 {
   int rc = XPCOM_MimeObject_write(mimeObject, data, length, user_visible_p);
-  return NS_OK;
+  if (rc < 0)
+    return NS_ERROR_FAILURE;
+  else
+    return NS_OK;
 }
 
 nsresult 

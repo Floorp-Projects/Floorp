@@ -1301,7 +1301,6 @@ MIME_MessageConverter2 (int format_out, void *closure,
   return stream;
 }
 
-
 /* Interface between libmime and inline display of images: the abomination
    that is known as "internal-external-reconnect".
  */
