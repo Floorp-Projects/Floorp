@@ -17,6 +17,6 @@
 
 DEPTH=..
 
-DIRS=driver
+DIRS=globals driver
 
 include <$(DEPTH)\config\rules.mak>
