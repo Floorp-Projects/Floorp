@@ -61,6 +61,7 @@ REQUIRES	= xpcom \
 		  layout_xul \
 		  profile \
 		  webBrowser_core \
+		  exthandler \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
