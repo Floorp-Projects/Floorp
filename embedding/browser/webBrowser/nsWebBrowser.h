@@ -25,6 +25,7 @@
 
 // Local Includes
 #include "nsDocShellTreeOwner.h"
+#include "nsWBURIContentListener.h"
 
 // Core Includes
 #include "nsCOMPtr.h"
@@ -68,6 +69,7 @@ class nsWebBrowser : public nsIWebBrowser,
                      public nsIInterfaceRequestor
 {
 friend class nsDocShellTreeOwner;
+friend class nsWBURIContentListener;
 public:
    nsWebBrowser();
 
@@ -84,12 +86,15 @@ public:
 
 protected:
    virtual ~nsWebBrowser();
+   NS_IMETHOD InternalDestroy();
 
    NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
    NS_IMETHOD EnsureDocShellTreeOwner();
+   NS_IMETHOD EnsureContentListener();
 
 protected:
    nsDocShellTreeOwner*       mDocShellTreeOwner;
+   nsWBURIContentListener*    mContentListener;
    nsCOMPtr<nsISupportsArray> mListenerList;
    nsCOMPtr<nsIDocShell>      mDocShell;
    nsCOMPtr<nsIInterfaceRequestor> mDocShellAsReq;

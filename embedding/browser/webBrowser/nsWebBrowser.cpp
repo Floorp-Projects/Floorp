@@ -44,8 +44,9 @@ static NS_DEFINE_IID(kDeviceContextCID,       NS_DEVICE_CONTEXT_CID);
 //***    nsWebBrowser: Object Management
 //*****************************************************************************
 
-nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nsnull), mInitInfo(nsnull),
-   mParentNativeWindow(nsnull), mParentWidget(nsnull), mParent(nsnull)
+nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nsnull), 
+   mContentListener(nsnull), mInitInfo(nsnull), mParentNativeWindow(nsnull),
+   mParentWidget(nsnull), mParent(nsnull)
 {
 	NS_INIT_REFCNT();
    mInitInfo = new nsWebBrowserInitInfo();
@@ -53,17 +54,30 @@ nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nsnull), mInitInfo(nsnull),
 
 nsWebBrowser::~nsWebBrowser()
 {
-   Destroy();
+   InternalDestroy();
+}
+
+NS_IMETHODIMP nsWebBrowser::InternalDestroy()
+{
+   SetDocShell(nsnull);
+
    if(mDocShellTreeOwner)
       {
-      delete mDocShellTreeOwner;
-      mDocShellTreeOwner = nsnull;
+      mDocShellTreeOwner->WebBrowser(nsnull);
+      NS_RELEASE(mDocShellTreeOwner);
+      }
+   if(mContentListener)
+      {
+      mContentListener->WebBrowser(nsnull);
+      NS_RELEASE(mContentListener);
       }
    if(mInitInfo)
       {
       delete mInitInfo;
       mInitInfo = nsnull;
       }
+
+   return NS_OK;
 }
 
 //*****************************************************************************
@@ -147,6 +161,23 @@ NS_IMETHODIMP nsWebBrowser::SetTopLevelWindow(nsIWebBrowserChrome* aTopWindow)
 {
    NS_ENSURE_SUCCESS(EnsureDocShellTreeOwner(), NS_ERROR_FAILURE);
    return mDocShellTreeOwner->SetWebBrowserChrome(aTopWindow);
+}
+
+NS_IMETHODIMP nsWebBrowser::GetParentURIContentListener(nsIURIContentListener**
+   aParentContentListener)
+{
+   NS_ENSURE_ARG_POINTER(aParentContentListener);
+   NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
+
+   return mContentListener->GetParentContentListener(aParentContentListener);
+}
+
+NS_IMETHODIMP nsWebBrowser::SetParentURIContentListener(nsIURIContentListener*
+   aParentContentListener)
+{
+   NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
+
+   return mContentListener->SetParentContentListener(aParentContentListener);
 }
 
 NS_IMETHODIMP nsWebBrowser::GetDocShell(nsIDocShell** aDocShell)
@@ -483,6 +514,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
    NS_ENSURE_STATE(!mDocShell && (mParentNativeWindow || mParentWidget));
 
    NS_ENSURE_SUCCESS(EnsureDocShellTreeOwner(), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
 
    nsCOMPtr<nsIWidget> docShellParentWidget(mParentWidget);
    if(!mParentWidget) // We need to create a widget
@@ -524,6 +556,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
    mDocShellAsItem->SetName(mInitInfo->name.GetUnicode());
    mDocShellAsItem->SetItemType(nsIDocShellTreeItem::typeContent);
    mDocShellAsItem->SetTreeOwner(mDocShellTreeOwner);
+   mDocShell->SetParentURIContentListener(mContentListener);
 
    if(!mInitInfo->sessionHistory)
       mInitInfo->sessionHistory = do_CreateInstance(NS_SHISTORY_PROGID);
@@ -540,7 +573,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
 
 NS_IMETHODIMP nsWebBrowser::Destroy()
 {
-   SetDocShell(nsnull);
+   InternalDestroy();
 
    if(!mInitInfo)
       mInitInfo = new nsWebBrowserInitInfo();
@@ -977,6 +1010,20 @@ NS_IMETHODIMP nsWebBrowser::EnsureDocShellTreeOwner()
 
    NS_ADDREF(mDocShellTreeOwner);
    mDocShellTreeOwner->WebBrowser(this);
+   
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsWebBrowser::EnsureContentListener()
+{
+   if(mContentListener)
+      return NS_OK;
+
+   mContentListener = new nsWBURIContentListener();
+   NS_ENSURE_TRUE(mContentListener, NS_ERROR_OUT_OF_MEMORY);
+
+   NS_ADDREF(mContentListener);
+   mContentListener->WebBrowser(this);
    
    return NS_OK;
 }

@@ -32,6 +32,7 @@ LIBRARY_NAME=nsWebBrowser_s
 
 CPP_OBJS=											\
 		.\$(OBJDIR)\nsDocShellTreeOwner.obj			\
+		.\$(OBJDIR)\nsWBURIContentListener.obj			\
 		.\$(OBJDIR)\nsWebBrowser.obj			\
 		$(NULL)
 
