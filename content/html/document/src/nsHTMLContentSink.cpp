@@ -4680,8 +4680,6 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
     src.StripWhitespace();
 
     if (!mInsideNoXXXTag && NS_SUCCEEDED(rv) && src.IsEmpty()) {
-      PRInt32 i, count = aNode.GetAttributeCount();
-
       nsAutoString title; 
       nsAutoString type; 
       nsAutoString media; 
