@@ -1074,9 +1074,19 @@ char      *workAddr = nsnull;
   if ( (curName) && (*curName) )
   {
     nsString  workString(curName);
+    char      *tName;
     
     workString.Trim("\"");
-    workName = workString.ToNewCString();    
+    tName = workString.ToNewCString();    
+    workName = nsEscapeHTML(tName);
+    if (workName)
+    {
+      PR_FREEIF(tName);
+    }
+    else
+    {
+      workName = tName;
+    }
   }
 
   if ( (curAddress) && (*curAddress) )
