@@ -72,7 +72,19 @@ var gDisplayPane = {
 
   fontOptionsDialog: function()
   {
-    document.documentElement.openSubDialog("chrome://messenger/content/preferences/fonts.xul",
-                                           "", null);  
+    document.documentElement.openSubDialog("chrome://messenger/content/preferences/fonts.xul", "", null);  
   },
+  
+  mCharsetMenuInitialized: false,
+  readDefaultCharset: function()
+  {
+    if (!this.mCharsetMenuInitialized) 
+    {
+      var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+      os.notifyObservers(null, "charsetmenu-selected", "mailedit");     
+      this.mCharsetMenuInitialized = true;
+    }
+    return undefined;
+  },
+
 };
