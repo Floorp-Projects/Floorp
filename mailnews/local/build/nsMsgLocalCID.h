@@ -83,6 +83,9 @@
 #define NS_MAILBOXSERVICE_PROGID4 \
   NS_NETWORK_PROTOCOL_PROGID_PREFIX "mailbox"
 
+#define NS_MAILBOXSERVICE_PROGID5 \
+  NS_NETWORK_PROTOCOL_PROGID_PREFIX "mailboxMessage"
+
 #define NS_MAILBOXSERVICE_CID                         \
 { /* EEF82462-CB69-11d2-8065-006008128C4E */      \
  0xeef82462, 0xcb69, 0x11d2,                      \

@@ -281,6 +281,13 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
+  rv = compMgr->RegisterComponent(kMailboxServiceCID,  
+                                  "Mailbox Message Protocol Handler",
+                                  NS_MAILBOXSERVICE_PROGID5,
+                                  path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) finalResult = rv;
+
+
   rv = compMgr->RegisterComponent(kMailboxParserCID,
                                   "Mailbox Parser",
                                   NS_MAILBOXPARSER_PROGID,
