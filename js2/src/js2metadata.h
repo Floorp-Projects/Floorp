@@ -258,7 +258,7 @@ public:
     }
     ~RootKeeper() { JS2Object::removeRoot(ri); delete file; }
 #else
-    RootKeeper(void *p) :{ ri = JS2Object::addRoot(p); }
+    RootKeeper(void *p) { ri = JS2Object::addRoot(p); }
     ~RootKeeper() { JS2Object::removeRoot(ri); }
 #endif
 

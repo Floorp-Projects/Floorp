@@ -126,12 +126,13 @@
                 }
                 uint32 length = getLength(meta, fObj);
                 if (fWrap->code) {  // native code
+                    uint16 argc = argCount;
                     while (argCount < length) {
                         push(JS2VAL_UNDEFINED);
                         argCount++;
                     }
                     jsr(phase, NULL, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);
-                    a = fWrap->code(meta, a, base(argCount), argCount);
+                    a = fWrap->code(meta, a, base(argCount), argc);
                     rts();
                     push(a);
                 }
