@@ -61,6 +61,8 @@ public:
 
 //----------------------------------------------------------------------
 
+MOZ_DECL_CTOR_COUNTER(SizeOfDataStats);
+
 SizeOfDataStats::SizeOfDataStats(nsIAtom* aType, PRUint32 aSize)
   : mType(aType),
     mCount(1),
@@ -68,11 +70,13 @@ SizeOfDataStats::SizeOfDataStats(nsIAtom* aType, PRUint32 aSize)
     mMinSize(aSize),
     mMaxSize(aSize)
 {
+  MOZ_COUNT_CTOR(SizeOfDataStats);
   NS_IF_ADDREF(mType);
 }
 
 SizeOfDataStats::~SizeOfDataStats()
 {
+  MOZ_COUNT_DTOR(SizeOfDataStats);
   NS_IF_RELEASE(mType);
 }
 
@@ -101,10 +105,13 @@ PointerCompareKeys(void* key1, void* key2)
   return key1 == key2;
 }
 
+MOZ_DECL_CTOR_COUNTER(nsSizeOfHandler);
+
 nsSizeOfHandler::nsSizeOfHandler()
   : mTotalSize(0),
     mTotalCount(0)
 {
+  MOZ_COUNT_CTOR(nsSizeOfHandler);
   NS_INIT_REFCNT();
   mTotalSize = 0;
   mSizeTable = PL_NewHashTable(32, (PLHashFunction) PointerHashKey,
@@ -139,6 +146,7 @@ nsSizeOfHandler::RemoveSizeEntry(PLHashEntry* he, PRIntn i, void* arg)
 
 nsSizeOfHandler::~nsSizeOfHandler()
 {
+  MOZ_COUNT_DTOR(nsSizeOfHandler);
   if (nsnull != mObjectTable) {
     PL_HashTableEnumerateEntries(mObjectTable, RemoveObjectEntry, 0);
     PL_HashTableDestroy(mObjectTable);
@@ -227,9 +235,7 @@ nsSizeOfHandler::ReportEntry(PLHashEntry* he, PRIntn i, void* arg)
                    ra->mArg);
     }
   }
-    
-  // Remove and free this entry and continue enumerating
-  return HT_ENUMERATE_REMOVE | HT_ENUMERATE_NEXT;
+  return HT_ENUMERATE_NEXT;
 }
 
 NS_IMETHODIMP
