@@ -752,6 +752,10 @@ nsGfxScrollFrameInner::SetFrameSize(   nsIFrame* aFrame,
     nsresult rv = aFrame->GetStyleData(eStyleStruct_Spacing,
                    (const nsStyleStruct*&) spacing);
 
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get spacing");
+    if (NS_FAILED(rv))
+        return rv;
+
     nsMargin margin;
     if (!spacing->GetMargin(margin)) 
       margin.SizeTo(0,0,0,0);
@@ -778,6 +782,10 @@ nsGfxScrollFrameInner::GetFrameSize(   nsIFrame* aFrame,
     const nsStyleSpacing* spacing;
     nsresult rv = aFrame->GetStyleData(eStyleStruct_Spacing,
                    (const nsStyleStruct*&) spacing);
+
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get spacing");
+    if (NS_FAILED(rv))
+        return rv;
 
     nsMargin margin;
     if (!spacing->GetMargin(margin)) 
@@ -1140,7 +1148,10 @@ nsGfxScrollFrameInner::ReflowFrame(    nsIPresContext&          aPresContext,
     nsresult rv = aFrame->GetStyleData(eStyleStruct_Spacing,
                    (const nsStyleStruct*&) spacing);
 
- 
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get spacing");
+    if (NS_FAILED(rv))
+        return rv;
+
     // this basically sucks. Sometime it fails to get the border and padding
     // because one or the other is not set. So we are forced to go out and get
     // the border and padding separately and add them together.
@@ -1213,6 +1224,7 @@ nsGfxScrollFrameInner::ReflowScrollArea(   nsIPresContext&          aPresContext
 
       // get the current scrollarea size
       nsSize oldScrollAreaSize;
+
       GetFrameSize(mScrollAreaFrame, oldScrollAreaSize);
 
       // get the width of the vertical scrollbar and the height of the horizontal scrollbar
@@ -1221,7 +1233,6 @@ nsGfxScrollFrameInner::ReflowScrollArea(   nsIPresContext&          aPresContext
 
       // Compute the scroll area size (area inside of the border edge and inside
       // of any vertical and horizontal scrollbars)
-      nsSize scrollAreaSize;
       nsHTMLReflowMetrics scrollAreaDesiredSize(aDesiredSize.maxElementSize);
 
       CalculateScrollAreaSize(aPresContext, aReflowState, sbSize,
@@ -1292,9 +1303,9 @@ nsGfxScrollFrameInner::ReflowScrollArea(   nsIPresContext&          aPresContext
 
             // Go ahead and reflow the child a second time if we added or removed the scrollbar
             if (mustReflow) {
-              nsSize          scrollAreaReflowSize(scrollAreaSize.width, scrollAreaSize.height);
+              scrollAreaReflowSize.SizeTo(scrollAreaSize.width, scrollAreaSize.height);
 
-              PRBool resized = PR_FALSE;
+              resized = PR_FALSE;
 
               ReflowFrame(aPresContext, scrollAreaDesiredSize, aReflowState, aStatus, mScrollAreaFrame, 
                               scrollAreaReflowSize,
@@ -1676,6 +1687,9 @@ nsGfxScrollFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& increm
         nsIBox* ibox = nsnull;
         nsresult rv = childFrame->QueryInterface(nsIBox::GetIID(), (void**)&ibox);
         NS_ASSERTION(NS_SUCCEEDED(rv),"We have a child that is not a box!!!!");
+        if (NS_FAILED(rv))
+            return rv;
+
         ibox->Dirty(aReflowState, incrementalChild);
         break;
     }

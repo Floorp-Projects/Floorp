@@ -650,6 +650,10 @@ nsScrollPortFrame::GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLRef
     nsresult rv = aFrame->GetStyleData(eStyleStruct_Spacing,
                    (const nsStyleStruct*&) spacing);
 
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get spacing");
+    if (NS_FAILED(rv))
+        return rv;
+
     nsMargin border(0,0,0,0);;
     spacing->GetBorderPadding(border);
     
@@ -692,7 +696,6 @@ nsScrollPortFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incre
   nsIFrame* frame;
   aReflowState.reflowCommand->GetNext(frame);
 
-  nscoord count = 0;
   nsIFrame* childFrame = mFrames.FirstChild(); 
     
   nsIBox* ibox;

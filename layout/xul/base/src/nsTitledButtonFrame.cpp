@@ -1246,6 +1246,11 @@ nsTitledButtonFrame::MouseClicked (nsIPresContext & aPresContext)
     
     case eOff:
       newState = mHasOnceBeenInMixedState ? eMixed: eOn;
+      break;
+
+    case eUnset:
+      newState = eOn;
+      break;
   }
   SetCurrentCheckState(newState);
 }
@@ -1288,6 +1293,9 @@ nsTitledButtonFrame :: CheckStateToString ( CheckState inState, nsString& outSta
     case eMixed:
       outStateAsString = "2";
       break;
+
+    case eUnset:
+      outStateAsString = "";
   }
 } // CheckStateToString
 

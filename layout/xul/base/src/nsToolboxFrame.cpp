@@ -361,7 +361,6 @@ nsToolboxFrame::ReflowGrippies(nsIPresContext&          aPresContext,
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);
   nscoord grippyWidth = kGrippyWidthInPixels * onePixel;   // remember to leave room for the grippy on the right
   nscoord collapsedGrippyHeight = kCollapsedGrippyHeightInPixels * onePixel;
-  nscoord collapsedGrippyWidth  = kCollapsedGrippyWidthInPixels  * onePixel;
   nsresult errCode = NS_OK;
 
   const PRBool isHorz = IsHorizontal();

@@ -70,7 +70,7 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
 
-    virtual void CurrentPositionChanged(nsIPresContext* aPresContext);
+    virtual nsresult CurrentPositionChanged(nsIPresContext* aPresContext);
 
      NS_IMETHOD  Init(nsIPresContext&  aPresContext,
                    nsIContent*      aContent,
@@ -192,7 +192,7 @@ public:
 
 protected:
 
-  virtual void ReflowThumb(nsIPresContext&   aPresContext,
+  virtual nsresult ReflowThumb(nsIPresContext&   aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus,

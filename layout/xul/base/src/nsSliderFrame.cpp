@@ -192,7 +192,10 @@ nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
                                               aNameSpaceID, aAttribute, aHint);
   // if the current position changes
   if (aAttribute == nsXULAtoms::curpos) {
-     CurrentPositionChanged(aPresContext);
+     rv = CurrentPositionChanged(aPresContext);
+     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to change position");
+     if (NS_FAILED(rv))
+        return rv;
   } else if (aAttribute == nsXULAtoms::maxpos) {
       // bounds check it.
 
@@ -267,7 +270,7 @@ nsSliderFrame::Paint(nsIPresContext& aPresContext,
   return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }
 
-void
+nsresult
 nsSliderFrame::ReflowThumb(nsIPresContext&   aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
@@ -288,6 +291,11 @@ nsSliderFrame::ReflowThumb(nsIPresContext&   aPresContext,
     nsresult rv = thumbFrame->GetStyleData(eStyleStruct_Spacing,
                    (const nsStyleStruct*&) spacing);
 
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get spacing");
+    if (NS_FAILED(rv))
+        return rv;
+
+
     nsMargin margin(0,0,0,0);
     spacing->GetMargin(margin);
     nsMargin border(0,0,0,0);
@@ -305,6 +313,8 @@ nsSliderFrame::ReflowThumb(nsIPresContext&   aPresContext,
     // add the margin back in
     aDesiredSize.width += margin.left + margin.right;
     aDesiredSize.height += margin.top + margin.bottom;
+
+    return NS_OK;
 }
 
 PRBool 
@@ -516,7 +526,6 @@ nsSliderFrame::HandleEvent(nsIPresContext& aPresContext,
 
        // set it
        SetCurrentPosition(scrollbar, thumbFrame, pospx);
-       //CurrentPositionChanged(&aPresContext);
 
     } 
     break;
@@ -525,7 +534,6 @@ nsSliderFrame::HandleEvent(nsIPresContext& aPresContext,
     case NS_MOUSE_LEFT_BUTTON_UP:
        // stop capturing
       //printf("stop capturing\n");
-      nsIFrame* thumbFrame = mFrames.FirstChild();
       AddListener();
       DragThumb(PR_FALSE);
     }
@@ -576,7 +584,7 @@ nsSliderFrame::PageUpDown(nsIFrame* aThumbFrame, nscoord change)
 }
 
 // called when the current position changed and we need to update the thumb's location
-void
+nsresult
 nsSliderFrame::CurrentPositionChanged(nsIPresContext* aPresContext)
 {
     nsIContent* scrollbar = GetScrollBar();
@@ -588,7 +596,7 @@ nsSliderFrame::CurrentPositionChanged(nsIPresContext* aPresContext)
 
     // do nothing if the position did not change
     if (mCurPos == curpos)
-        return;
+        return NS_OK;
 
     // get our current position and max position from our content node
     PRInt32 maxpos = GetMaxPosition(scrollbar);
@@ -614,6 +622,10 @@ nsSliderFrame::CurrentPositionChanged(nsIPresContext* aPresContext)
     const nsStyleSpacing* spacing;
     nsresult rv = GetStyleData(eStyleStruct_Spacing,
                    (const nsStyleStruct*&) spacing);
+
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get spacing");
+    if (NS_FAILED(rv))
+        return rv;
 
     nsMargin borderPadding(0,0,0,0);
     spacing->GetBorderPadding(borderPadding);
@@ -641,6 +653,7 @@ nsSliderFrame::CurrentPositionChanged(nsIPresContext* aPresContext)
     
     mCurPos = curpos;
 
+    return NS_OK;
 }
 
 void
