@@ -314,6 +314,7 @@ CERTUTIL_GeneratePrivateKey(KeyType keytype, PK11SlotInfo *slot, int size,
     PQGParams *dsaparams = NULL;
     void *params;
     secuPWData pwdata = { PW_NONE, 0 };
+    PRArenaPool *dsaparena;
 
     /*
      * Do some random-number initialization.
@@ -344,7 +345,17 @@ CERTUTIL_GeneratePrivateKey(KeyType keytype, PK11SlotInfo *slot, int size,
 	if (pqgFile) {
 	    dsaparams = getpqgfromfile(size, pqgFile);
 	} else {
-	    dsaparams = &default_pqg_params;
+	    dsaparena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+	    if (dsaparena == NULL) return NULL;
+	    dsaparams = PORT_ArenaZAlloc(dsaparena, sizeof(PQGParams));
+	    if (params == NULL) return NULL;
+	    dsaparams->arena = dsaparena;
+	    SECITEM_AllocItem(dsaparena, &dsaparams->prime, sizeof P);
+	    SECITEM_AllocItem(dsaparena, &dsaparams->subPrime, sizeof Q);
+	    SECITEM_AllocItem(dsaparena, &dsaparams->base, sizeof G);
+	    PORT_Memcpy(dsaparams->prime.data, P, dsaparams->prime.len);
+	    PORT_Memcpy(dsaparams->subPrime.data, Q, dsaparams->subPrime.len);
+	    PORT_Memcpy(dsaparams->base.data, G, dsaparams->base.len);
 	}
 	params = dsaparams;
 	break;
