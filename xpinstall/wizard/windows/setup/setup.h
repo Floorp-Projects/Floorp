@@ -496,7 +496,7 @@ typedef struct dlgInstall
     char szUrl[MAX_BUF];
     char szTo[MAX_BUF];
     char szAccept_[MAX_BUF];
-    char szNo_[MAX_BUF];
+    char szDecline_[MAX_BUF];
     char szProgramFolder_[MAX_BUF];
     char szExistingFolder_[MAX_BUF];
     char szSetupMessage[MAX_BUF];
