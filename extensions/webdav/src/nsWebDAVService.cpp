@@ -461,7 +461,7 @@ nsWebDAVService::GetToOutputStream(nsIWebDAVResource *resource,
     nsCOMPtr<nsIRequestObserver> getObserver;
     nsresult rv;
 
-    rv = NS_WD_NewGetOperationRequestObserver(resource, listener,
+    rv = NS_WD_NewGetOperationRequestObserver(resource, listener, stream,
                                               getter_AddRefs(getObserver));
     NS_ENSURE_SUCCESS(rv, rv);
 

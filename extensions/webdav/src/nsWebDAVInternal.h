@@ -43,6 +43,7 @@
 
 class nsIStreamListener;
 class nsIRequestObserver;
+class nsIOutputStream;
 
 #include "nsIDOMElement.h"
 #include "nsIWebDAVListener.h"
@@ -66,6 +67,7 @@ NS_WD_NewPutOperationStreamListener(nsIWebDAVResource *resource,
 nsresult
 NS_WD_NewGetOperationRequestObserver(nsIWebDAVResource *resource,
                                      nsIWebDAVOperationListener *listener,
+                                     nsIOutputStream *outstream,
                                      nsIRequestObserver **observer);
 
 nsresult

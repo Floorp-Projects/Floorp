@@ -56,13 +56,16 @@ public:
     
     OperationStreamListener(nsIWebDAVResource *resource,
                             nsIWebDAVOperationListener *listener,
+                            nsIOutputStream *outstream,
                             OperationMode mode) :
-        mResource(resource), mListener(listener), mMode(mode) { }
+        mResource(resource), mListener(listener), 
+        mOutputStream(outstream), mMode(mode) { }
     virtual ~OperationStreamListener() { }
     
 protected:
     nsCOMPtr<nsIWebDAVResource>          mResource;
     nsCOMPtr<nsIWebDAVOperationListener> mListener;
+    nsCOMPtr<nsIOutputStream>            mOutputStream;
     OperationMode                        mMode;
 };
 
@@ -94,6 +97,9 @@ OperationStreamListener::OnStopRequest(nsIRequest *aRequest,
         mListener->OnGetResult(aStatusCode, mResource);
         break;
     }
+
+    if (mOutputStream)
+        mOutputStream->Flush();
     return NS_OK;
 }
 
@@ -113,7 +119,7 @@ NS_WD_NewPutOperationStreamListener(nsIWebDAVResource *resource,
                                     nsIStreamListener **streamListener)
 {
     nsCOMPtr<nsIRequestObserver> osl = 
-        new OperationStreamListener(resource, listener,
+        new OperationStreamListener(resource, listener, nsnull,
                                     OperationStreamListener::PUT);
     if (!osl)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -123,10 +129,11 @@ NS_WD_NewPutOperationStreamListener(nsIWebDAVResource *resource,
 nsresult
 NS_WD_NewGetOperationRequestObserver(nsIWebDAVResource *resource,
                                      nsIWebDAVOperationListener *listener,
+                                     nsIOutputStream *outstream,
                                      nsIRequestObserver **observer)
 {
     nsCOMPtr<nsIRequestObserver> osl = 
-        new OperationStreamListener(resource, listener,
+        new OperationStreamListener(resource, listener, outstream,
                                     OperationStreamListener::GET);
     if (!osl)
         return NS_ERROR_OUT_OF_MEMORY;
