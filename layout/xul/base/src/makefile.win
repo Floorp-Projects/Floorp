@@ -44,6 +44,7 @@ CPPSRCS=					\
         nsMonumentLayout.cpp \
         nsImageBoxFrame.cpp        \
         nsRootBoxFrame.cpp        \
+        nsDocElementBoxFrame.cpp \
         nsStackLayout.cpp        \
         nsSplitterFrame.cpp        \
 		nsButtonBoxFrame.cpp \
@@ -103,6 +104,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsMonumentLayout.obj		\
 	.\$(OBJDIR)\nsImageBoxFrame.obj		\
 	.\$(OBJDIR)\nsRootBoxFrame.obj		\
+  .\$(OBJDIR)\nsDocElementBoxFrame.obj \
 	.\$(OBJDIR)\nsStackLayout.obj		\
 	.\$(OBJDIR)\nsPopupSetFrame.obj \
 	.\$(OBJDIR)\nsMenuBarFrame.obj \

@@ -55,6 +55,7 @@ CPPSRCS		= \
        nsMonumentLayout.cpp \
        nsImageBoxFrame.cpp \
        nsRootBoxFrame.cpp \
+       nsDocElementBoxFrame.cpp \
 		nsBox.cpp \
         nsBoxLayoutState.cpp \
         nsBoxToBlockAdaptor.cpp \
