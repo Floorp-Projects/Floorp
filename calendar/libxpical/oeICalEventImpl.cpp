@@ -888,6 +888,7 @@ NS_IMETHODIMP oeICalEventImpl::GetNextRecurrence( PRTime begin, PRTime *retval, 
 #endif
     *isvalid = false;
     icaltimetype begindate,result;
+    begindate = ConvertFromPrtime( begin );
     result = GetNextRecurrence( begindate, nsnull );
     result.is_date = false;
     if( icaltime_is_null_time( result ) )
@@ -966,12 +967,11 @@ NS_IMETHODIMP oeICalEventImpl::GetPreviousOccurrence( PRTime beforethis, PRTime 
 }
 
 icaltimetype oeICalEventImpl::GetNextRecurrence( icaltimetype begin, bool *isbeginning ) {
+    icaltimetype result = icaltime_null_time();
 
     if( isbeginning ) {
         *isbeginning = true;
     }
-
-    icaltimetype result = icaltime_null_time();
 
     if( icaltime_compare( m_start->m_datetime , begin ) > 0 )
         return m_start->m_datetime;
@@ -2149,15 +2149,6 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
         icalcomponent_add_property( vevent, prop );
     }
 
-//No need for allday x-prop anymore
-/*    //allday
-    if( m_allday ) {
-        tmppar = icalparameter_new_member( "AllDay" );
-        prop = icalproperty_new_x( "TRUE" );
-        icalproperty_add_parameter( prop, tmppar );
-        icalcomponent_add_property( vevent, prop );
-    }*/
-
     //alarm
     if( m_hasalarm ) {
         struct icaltriggertype trig;
@@ -2236,7 +2227,7 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     }
 
     //recurinterval
-    if( m_recurinterval && m_recurinterval != 1 ){
+    if( m_recurinterval != 1 ){
         sprintf( tmpstr, "%lu", m_recurinterval );
         prop = icalproperty_new_x( tmpstr );
         icalproperty_set_x_name( prop, XPROP_RECURINTERVAL);
@@ -2255,8 +2246,6 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
                recurtype = RECUR_DAILY;
             } else if( strcasecmp( m_recurunits , "weeks" ) == 0 ) {
                recurtype = RECUR_WEEKLY;
-//               recurtype = RECUR_DAILY;
-//               interval = 7 * m_recurinterval;
             } else if( strcasecmp( m_recurunits , "months" ) == 0 ) {
                 recurtype = RECUR_MONTHLY_MDAY;
             } else if( strcasecmp( m_recurunits, "months_day" ) == 0 ) {
