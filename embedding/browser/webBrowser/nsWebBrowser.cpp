@@ -34,18 +34,18 @@ static NS_DEFINE_IID(kDeviceContextCID,       NS_DEVICE_CONTEXT_CID);
 //***    nsWebBrowser: Object Management
 //*****************************************************************************
 
-nsWebBrowser::nsWebBrowser() : m_Created(PR_FALSE)
+nsWebBrowser::nsWebBrowser() : mCreated(PR_FALSE)
 {
 	NS_INIT_REFCNT();
-   m_InitInfo = new nsWebBrowserInitInfo();
+   mInitInfo = new nsWebBrowserInitInfo();
 }
 
 nsWebBrowser::~nsWebBrowser()
 {
-   if(m_InitInfo)
+   if(mInitInfo)
       {
-      delete m_InitInfo;
-      m_InitInfo = nsnull;
+      delete mInitInfo;
+      mInitInfo = nsnull;
       }
 }
 
@@ -78,19 +78,19 @@ NS_IMPL_ISUPPORTS6(nsWebBrowser, nsIWebBrowser, nsIWebBrowserNav, nsIProgress,
 NS_IMETHODIMP nsWebBrowser::AddWebBrowserListener(nsIInterfaceRequestor* listener, 
    PRInt32* cookie)
 {                   
-   if(!m_ListenerList)
-      NS_ENSURE_SUCCESS(NS_NewISupportsArray(getter_AddRefs(m_ListenerList)), 
+   if(!mListenerList)
+      NS_ENSURE_SUCCESS(NS_NewISupportsArray(getter_AddRefs(mListenerList)), 
          NS_ERROR_FAILURE);
 
    // Make sure it isn't already in the list...  This is bad!
-   NS_ENSURE_TRUE(m_ListenerList->IndexOf(listener) == -1, NS_ERROR_INVALID_ARG);
+   NS_ENSURE_TRUE(mListenerList->IndexOf(listener) == -1, NS_ERROR_INVALID_ARG);
 
-   NS_ENSURE_SUCCESS(m_ListenerList->AppendElement(listener), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(mListenerList->AppendElement(listener), NS_ERROR_FAILURE);
 
    if(cookie)
       *cookie = (PRInt32)listener;
 
-   if(m_Created)
+   if(mCreated)
       UpdateListeners();
    
    return NS_OK;
@@ -99,14 +99,14 @@ NS_IMETHODIMP nsWebBrowser::AddWebBrowserListener(nsIInterfaceRequestor* listene
 NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsIInterfaceRequestor* listener,
    PRInt32 cookie)
 {
-   NS_ENSURE_STATE(m_ListenerList);
+   NS_ENSURE_STATE(mListenerList);
 
    if(!listener)
       listener = (nsIInterfaceRequestor*)cookie;
 
    NS_ENSURE_TRUE(listener, NS_ERROR_INVALID_ARG);
 
-   NS_ENSURE_TRUE(m_ListenerList->RemoveElement(listener), NS_ERROR_INVALID_ARG);
+   NS_ENSURE_TRUE(mListenerList->RemoveElement(listener), NS_ERROR_INVALID_ARG);
 
    return NS_OK;
 }
@@ -115,7 +115,7 @@ NS_IMETHODIMP nsWebBrowser::GetDocShell(nsIDocShell** docShell)
 {
    NS_ENSURE_ARG_POINTER(docShell);
 
-   *docShell = m_DocShell;
+   *docShell = mDocShell;
    NS_IF_ADDREF(*docShell);
 
    return NS_OK;
@@ -148,6 +148,11 @@ NS_IMETHODIMP nsWebBrowser::GetCanGoForward(PRBool* pCanGoForward)
 
 NS_IMETHODIMP nsWebBrowser::GoBack()
 {
+   NS_ENSURE_STATE(mDocShell);
+   PRBool canGoBack;
+   NS_ENSURE_SUCCESS(GetCanGoBack(&canGoBack), NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(canGoBack, NS_ERROR_UNEXPECTED);
+
    //XXX First Check
 	/*
 	Tells the browser to navigate to the next Back session history item.
@@ -157,6 +162,11 @@ NS_IMETHODIMP nsWebBrowser::GoBack()
 
 NS_IMETHODIMP nsWebBrowser::GoForward()
 {
+   NS_ENSURE_STATE(mDocShell);
+   PRBool canGoForward;
+   NS_ENSURE_SUCCESS(GetCanGoForward(&canGoForward), NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(canGoForward, NS_ERROR_UNEXPECTED);
+
    //XXX First Check
 	/*
 	Tells the browser to navigate to the next Forward session history item.
@@ -222,9 +232,9 @@ NS_IMETHODIMP nsWebBrowser::SetDocument(nsIDOMDocument* document)
 NS_IMETHODIMP nsWebBrowser::GetDocument(nsIDOMDocument** document)
 {
    NS_ENSURE_ARG_POINTER(document);
-   NS_ENSURE_STATE(m_DocShell);
+   NS_ENSURE_STATE(mDocShell);
 
-   NS_ENSURE_SUCCESS(m_DocShell->GetDocument(document), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(mDocShell->GetDocument(document), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
@@ -372,25 +382,25 @@ NS_IMETHODIMP nsWebBrowser::InitWindow(nativeWindow parentNativeWindow,
    nsIWidget* parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)   
 {
    NS_ENSURE_ARG(parentNativeWindow || parentWidget);
-   NS_ENSURE_STATE(!m_Created || m_InitInfo);
+   NS_ENSURE_STATE(!mCreated || mInitInfo);
 
-   m_ParentNativeWindow = parentNativeWindow;
-   m_ParentWidget = parentWidget;
-   m_InitInfo->x = x;
-   m_InitInfo->y = y;
-   m_InitInfo->cx = cx;
-   m_InitInfo->cy = cy;
+   mParentNativeWindow = parentNativeWindow;
+   mParentWidget = parentWidget;
+   mInitInfo->x = x;
+   mInitInfo->y = y;
+   mInitInfo->cx = cx;
+   mInitInfo->cy = cy;
 
    return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowser::Create()
 {
-   NS_ENSURE_STATE(!m_Created && (m_ParentNativeWindow || m_ParentWidget));
+   NS_ENSURE_STATE(!mCreated && (mParentNativeWindow || mParentWidget));
 
-   if(m_ParentWidget)
+   if(mParentWidget)
       {
-      m_ParentNativeWindow = m_ParentWidget->GetNativeData(NS_NATIVE_WIDGET);
+      mParentNativeWindow = mParentWidget->GetNativeData(NS_NATIVE_WIDGET);
       }
    else // We need to create a widget
       {
@@ -401,7 +411,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
          nsnull, NS_GET_IID(nsIDeviceContext), getter_AddRefs(deviceContext)), 
          NS_ERROR_FAILURE);
 
-      deviceContext->Init(m_ParentNativeWindow);
+      deviceContext->Init(mParentNativeWindow);
       float dev2twip;
       deviceContext->GetDevUnitsToTwips(dev2twip);
       deviceContext->SetDevUnitsToAppUnits(dev2twip);
@@ -412,15 +422,15 @@ NS_IMETHODIMP nsWebBrowser::Create()
 
       // Create the widget
       NS_ENSURE_SUCCESS(nsComponentManager::CreateInstance(kChildCID, nsnull,
-         NS_GET_IID(nsIWidget), getter_AddRefs(m_InternalWidget)), NS_ERROR_FAILURE);
+         NS_GET_IID(nsIWidget), getter_AddRefs(mInternalWidget)), NS_ERROR_FAILURE);
 
       nsWidgetInitData  widgetInit;
 
       widgetInit.clipChildren = PR_FALSE;
       widgetInit.mWindowType = eWindowType_child;
-      nsRect bounds(m_InitInfo->x, m_InitInfo->y, m_InitInfo->cx, m_InitInfo->cy);
+      nsRect bounds(mInitInfo->x, mInitInfo->y, mInitInfo->cx, mInitInfo->cy);
       
-      m_InternalWidget->Create(m_ParentNativeWindow, bounds, nsnull /* was nsWebShell::HandleEvent*/,
+      mInternalWidget->Create(mParentNativeWindow, bounds, nsnull /* was nsWebShell::HandleEvent*/,
          deviceContext, nsnull, nsnull, &widgetInit);  
       }
    //XXX First Check
@@ -441,20 +451,20 @@ NS_IMETHODIMP nsWebBrowser::Destroy()
 
 NS_IMETHODIMP nsWebBrowser::SetPosition(PRInt32 x, PRInt32 y)
 {
-   if(!m_Created)
+   if(!mCreated)
       {
-      m_InitInfo->x = x;
-      m_InitInfo->y = y;
+      mInitInfo->x = x;
+      mInitInfo->y = y;
       }
    else
       {
       // If there is an internal widget you just want to move it as the 
       // DocShell View will implicitly be moved as the widget moves
-      if(m_InternalWidget)
-         NS_ENSURE_SUCCESS(m_InternalWidget->Move(x, y), NS_ERROR_FAILURE);
+      if(mInternalWidget)
+         NS_ENSURE_SUCCESS(mInternalWidget->Move(x, y), NS_ERROR_FAILURE);
       else // Else rely on the docShell to set it
          {
-         nsCOMPtr<nsIGenericWindow> docShellWin(do_QueryInterface(m_DocShell));
+         nsCOMPtr<nsIGenericWindow> docShellWin(do_QueryInterface(mDocShell));
          NS_ENSURE_SUCCESS(docShellWin->SetPosition(x, y), NS_ERROR_FAILURE);
          }
       }
@@ -465,26 +475,26 @@ NS_IMETHODIMP nsWebBrowser::GetPosition(PRInt32* x, PRInt32* y)
 {
    NS_ENSURE_ARG_POINTER(x && y);
 
-   if(!m_Created)
+   if(!mCreated)
       {
-      *x = m_InitInfo->x;
-      *y = m_InitInfo->y;
+      *x = mInitInfo->x;
+      *y = mInitInfo->y;
       }
    else
       {
       //If there is an internal widget you just want to get the position of the 
       //widget as that is the implied position of the docshell as well.
-      if(m_InternalWidget)
+      if(mInternalWidget)
          {
          nsRect bounds;
-         m_InternalWidget->GetBounds(bounds);
+         mInternalWidget->GetBounds(bounds);
 
          *x = bounds.x;
          *y = bounds.y;
          }
       else //Else Rely on the docShell to tell us
          {
-         nsCOMPtr<nsIGenericWindow> docShellWin(do_QueryInterface(m_DocShell));
+         nsCOMPtr<nsIGenericWindow> docShellWin(do_QueryInterface(mDocShell));
          NS_ENSURE_SUCCESS(docShellWin->GetPosition(x, y), NS_ERROR_FAILURE);
          }
       }
@@ -494,19 +504,19 @@ NS_IMETHODIMP nsWebBrowser::GetPosition(PRInt32* x, PRInt32* y)
 
 NS_IMETHODIMP nsWebBrowser::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
 {
-   if(!m_Created)
+   if(!mCreated)
       {
-      m_InitInfo->cx = cx;
-      m_InitInfo->cy = cy;
+      mInitInfo->cx = cx;
+      mInitInfo->cy = cy;
       }
    else
       {
       // If there is an internal widget set the size of it as well
-      if(m_InternalWidget)
-         m_InternalWidget->Resize(cx, cy, fRepaint);
+      if(mInternalWidget)
+         mInternalWidget->Resize(cx, cy, fRepaint);
 
       // Now size the docShell as well
-      nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(m_DocShell));
+      nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(mDocShell));
 
       NS_ENSURE_SUCCESS(docShellWindow->SetSize(cx, cy, fRepaint), NS_ERROR_FAILURE);
       }
@@ -518,16 +528,16 @@ NS_IMETHODIMP nsWebBrowser::GetSize(PRInt32* cx, PRInt32* cy)
 {
    NS_ENSURE_ARG_POINTER(cx && cy);
 
-   if(!m_Created)
+   if(!mCreated)
       {
-      *cx = m_InitInfo->cx;
-      *cy = m_InitInfo->cy;
+      *cx = mInitInfo->cx;
+      *cy = mInitInfo->cy;
       }
    else
       {
       // We can ignore the internal widget and just rely on the docShell for 
       // this question.
-      nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(m_DocShell));
+      nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(mDocShell));
 
       NS_ENSURE_SUCCESS(docShellWindow->GetSize(cx, cy), NS_ERROR_FAILURE);
       }
@@ -538,12 +548,12 @@ NS_IMETHODIMP nsWebBrowser::GetSize(PRInt32* cx, PRInt32* cy)
 NS_IMETHODIMP nsWebBrowser::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
    PRInt32 cy, PRBool fRepaint)
 {
-   if(!m_Created)
+   if(!mCreated)
       {
-      m_InitInfo->x = x;
-      m_InitInfo->y = y;
-      m_InitInfo->cx = cx;
-      m_InitInfo->cy = cy;
+      mInitInfo->x = x;
+      mInitInfo->y = y;
+      mInitInfo->cx = cx;
+      mInitInfo->cy = cy;
       }
    else
       {
@@ -553,14 +563,14 @@ NS_IMETHODIMP nsWebBrowser::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
       // If there is an internal widget we need to make the docShell coordinates
       // relative to the internal widget rather than the calling app's parent.
       // We also need to resize our widget then.
-      if(m_InternalWidget)
+      if(mInternalWidget)
          {
          doc_x = doc_y = 0;
-         NS_ENSURE_SUCCESS(m_InternalWidget->Resize(x, y, cx, cy, fRepaint),
+         NS_ENSURE_SUCCESS(mInternalWidget->Resize(x, y, cx, cy, fRepaint),
             NS_ERROR_FAILURE);
          }
 
-      nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(m_DocShell));
+      nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(mDocShell));
 
       // Now reposition/ resize the doc
       NS_ENSURE_SUCCESS(docShellWindow->SetPositionAndSize(doc_x, doc_y, cx, cy, 
@@ -585,7 +595,7 @@ NS_IMETHODIMP nsWebBrowser::GetParentWidget(nsIWidget** parentWidget)
 {
    NS_ENSURE_ARG_POINTER(parentWidget);
 
-   *parentWidget = m_ParentWidget;
+   *parentWidget = mParentWidget;
 
    NS_IF_ADDREF(*parentWidget);
 
@@ -594,9 +604,9 @@ NS_IMETHODIMP nsWebBrowser::GetParentWidget(nsIWidget** parentWidget)
 
 NS_IMETHODIMP nsWebBrowser::SetParentWidget(nsIWidget* parentWidget)
 {
-   NS_ENSURE_STATE(!m_Created);
+   NS_ENSURE_STATE(!mCreated);
 
-   m_ParentWidget = parentWidget;
+   mParentWidget = parentWidget;
 
    return NS_OK;
 }
@@ -605,10 +615,10 @@ NS_IMETHODIMP nsWebBrowser::GetParentNativeWindow(nativeWindow* parentNativeWind
 {
    NS_ENSURE_ARG_POINTER(parentNativeWindow);
    
-   if(m_ParentNativeWindow)
-      *parentNativeWindow = m_ParentNativeWindow;
-   else if(m_ParentWidget)
-      *parentNativeWindow = m_ParentWidget->GetNativeData(NS_NATIVE_WIDGET);
+   if(mParentNativeWindow)
+      *parentNativeWindow = mParentNativeWindow;
+   else if(mParentWidget)
+      *parentNativeWindow = mParentWidget->GetNativeData(NS_NATIVE_WIDGET);
    else
       *parentNativeWindow = nsnull;
 
@@ -617,9 +627,9 @@ NS_IMETHODIMP nsWebBrowser::GetParentNativeWindow(nativeWindow* parentNativeWind
 
 NS_IMETHODIMP nsWebBrowser::SetParentNativeWindow(nativeWindow parentNativeWindow)
 {
-   NS_ENSURE_STATE(!m_Created);
+   NS_ENSURE_STATE(!mCreated);
 
-   m_ParentNativeWindow = parentNativeWindow;
+   mParentNativeWindow = parentNativeWindow;
 
    return NS_OK;
 }
@@ -628,11 +638,11 @@ NS_IMETHODIMP nsWebBrowser::GetVisibility(PRBool* visibility)
 {
    NS_ENSURE_ARG_POINTER(visibility);
 
-   if(!m_Created)
-      *visibility = m_InitInfo->visible;
+   if(!mCreated)
+      *visibility = mInitInfo->visible;
    else
       {
-      nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(m_DocShell));
+      nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(mDocShell));
 
       NS_ENSURE_SUCCESS(docShellWindow->GetVisibility(visibility), 
          NS_ERROR_FAILURE);
@@ -643,11 +653,11 @@ NS_IMETHODIMP nsWebBrowser::GetVisibility(PRBool* visibility)
 
 NS_IMETHODIMP nsWebBrowser::SetVisibility(PRBool visibility)
 {
-   if(!m_Created)
-      m_InitInfo->visible = visibility;
+   if(!mCreated)
+      mInitInfo->visible = visibility;
    else
       {
-      nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(m_DocShell));
+      nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(mDocShell));
 
       NS_ENSURE_SUCCESS(docShellWindow->SetVisibility(visibility), 
          NS_ERROR_FAILURE);
@@ -660,10 +670,10 @@ NS_IMETHODIMP nsWebBrowser::GetMainWidget(nsIWidget** mainWidget)
 {
    NS_ENSURE_ARG_POINTER(mainWidget);
 
-   if(m_InternalWidget)
-      *mainWidget = m_InternalWidget;
+   if(mInternalWidget)
+      *mainWidget = mInternalWidget;
    else
-      *mainWidget = m_ParentWidget;
+      *mainWidget = mParentWidget;
 
    NS_IF_ADDREF(*mainWidget);
 
@@ -701,9 +711,9 @@ NS_IMETHODIMP nsWebBrowser::GetCurScrollPos(PRInt32 scrollOrientation,
    PRInt32* curPos)
 {
    NS_ENSURE_ARG_POINTER(curPos);
-   NS_ENSURE_STATE(m_DocShell);
+   NS_ENSURE_STATE(mDocShell);
 
-   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
+   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(mDocShell));
 
    NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
@@ -713,9 +723,9 @@ NS_IMETHODIMP nsWebBrowser::GetCurScrollPos(PRInt32 scrollOrientation,
 NS_IMETHODIMP nsWebBrowser::SetCurScrollPos(PRInt32 scrollOrientation, 
    PRInt32 curPos)
 {
-   NS_ENSURE_STATE(m_DocShell);
+   NS_ENSURE_STATE(mDocShell);
 
-   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
+   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(mDocShell));
 
    NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
@@ -725,9 +735,9 @@ NS_IMETHODIMP nsWebBrowser::SetCurScrollPos(PRInt32 scrollOrientation,
 NS_IMETHODIMP nsWebBrowser::SetCurScrollPosEx(PRInt32 curHorizontalPos, 
    PRInt32 curVerticalPos)
 {
-   NS_ENSURE_STATE(m_DocShell);
+   NS_ENSURE_STATE(mDocShell);
 
-   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
+   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(mDocShell));
 
    NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
@@ -738,9 +748,9 @@ NS_IMETHODIMP nsWebBrowser::GetScrollRange(PRInt32 scrollOrientation,
    PRInt32* minPos, PRInt32* maxPos)
 {
    NS_ENSURE_ARG_POINTER(minPos && maxPos);
-   NS_ENSURE_STATE(m_DocShell);
+   NS_ENSURE_STATE(mDocShell);
 
-   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
+   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(mDocShell));
 
    NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
@@ -750,9 +760,9 @@ NS_IMETHODIMP nsWebBrowser::GetScrollRange(PRInt32 scrollOrientation,
 NS_IMETHODIMP nsWebBrowser::SetScrollRange(PRInt32 scrollOrientation,
    PRInt32 minPos, PRInt32 maxPos)
 {
-   NS_ENSURE_STATE(m_DocShell);
+   NS_ENSURE_STATE(mDocShell);
 
-   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
+   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(mDocShell));
 
    NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
@@ -762,9 +772,9 @@ NS_IMETHODIMP nsWebBrowser::SetScrollRange(PRInt32 scrollOrientation,
 NS_IMETHODIMP nsWebBrowser::SetScrollRangeEx(PRInt32 minHorizontalPos,
    PRInt32 maxHorizontalPos, PRInt32 minVerticalPos, PRInt32 maxVerticalPos)
 {
-   NS_ENSURE_STATE(m_DocShell);
+   NS_ENSURE_STATE(mDocShell);
 
-   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
+   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(mDocShell));
 
    NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
@@ -776,9 +786,9 @@ NS_IMETHODIMP nsWebBrowser::GetScrollbarPreferences(PRInt32 scrollOrientation,
    PRInt32* scrollbarPref)
 {
    NS_ENSURE_ARG_POINTER(scrollbarPref);
-   NS_ENSURE_STATE(m_DocShell);
+   NS_ENSURE_STATE(mDocShell);
 
-   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
+   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(mDocShell));
 
    NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
@@ -788,9 +798,9 @@ NS_IMETHODIMP nsWebBrowser::GetScrollbarPreferences(PRInt32 scrollOrientation,
 NS_IMETHODIMP nsWebBrowser::SetScrollbarPreferences(PRInt32 scrollOrientation,
    PRInt32 scrollbarPref)
 {
-   NS_ENSURE_STATE(m_DocShell);
+   NS_ENSURE_STATE(mDocShell);
 
-   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
+   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(mDocShell));
 
    NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
@@ -800,9 +810,9 @@ NS_IMETHODIMP nsWebBrowser::SetScrollbarPreferences(PRInt32 scrollOrientation,
 NS_IMETHODIMP nsWebBrowser::GetScrollbarVisibility(PRBool* verticalVisible,
    PRBool* horizontalVisible)
 {
-   NS_ENSURE_STATE(m_DocShell);
+   NS_ENSURE_STATE(mDocShell);
 
-   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
+   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(mDocShell));
 
    NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
@@ -815,9 +825,9 @@ NS_IMETHODIMP nsWebBrowser::GetScrollbarVisibility(PRBool* verticalVisible,
 
 NS_IMETHODIMP nsWebBrowser::ScrollByLines(PRInt32 numLines)
 {
-   NS_ENSURE_STATE(m_DocShell);
+   NS_ENSURE_STATE(mDocShell);
 
-   nsCOMPtr<nsITextScroll> scroll(do_QueryInterface(m_DocShell));
+   nsCOMPtr<nsITextScroll> scroll(do_QueryInterface(mDocShell));
 
    NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
@@ -826,9 +836,9 @@ NS_IMETHODIMP nsWebBrowser::ScrollByLines(PRInt32 numLines)
 
 NS_IMETHODIMP nsWebBrowser::ScrollByPages(PRInt32 numPages)
 {
-   NS_ENSURE_STATE(m_DocShell);
+   NS_ENSURE_STATE(mDocShell);
 
-   nsCOMPtr<nsITextScroll> scroll(do_QueryInterface(m_DocShell));
+   nsCOMPtr<nsITextScroll> scroll(do_QueryInterface(mDocShell));
 
    NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
@@ -843,16 +853,16 @@ NS_IMETHODIMP nsWebBrowser::ScrollByPages(PRInt32 numPages)
 void nsWebBrowser::UpdateListeners()
 {
    // XXX
-   // Should walk the m_ListenerList and call each asking for our needed
+   // Should walk the mListenerList and call each asking for our needed
    // interfaces.
 }
 
 nsresult nsWebBrowser::CreateDocShell(const PRUnichar* contentType)
 {
-   if(m_DocShell)
+   if(mDocShell)
       {
       PRBool fCanHandle = PR_FALSE;
-      m_DocShell->CanHandleContentType(contentType, &fCanHandle);
+      mDocShell->CanHandleContentType(contentType, &fCanHandle);
       if(fCanHandle)
          return NS_OK;
       }
