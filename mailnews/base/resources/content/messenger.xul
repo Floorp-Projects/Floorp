@@ -166,7 +166,7 @@ Rights Reserved.
       <!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
       <splitter collapse="after" persist="state" 
 		onmouseup="OnMouseUpThreadAndMessagePaneSplitter()"
-                id="threadpane-splitter" orient="vertical" autostretch="never">
+                id="threadpane-splitter">
         <grippy onclick="OnClickThreadAndMessagePaneSplitterGrippy()"/>
       </splitter>
       
