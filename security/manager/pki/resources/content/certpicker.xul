@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Communicator
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corp..
+   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s): Kai Engert <kaie@netscape.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE window [
+<!ENTITY % pippkiDTD SYSTEM "chrome://pippki/locale/pippki.dtd" >
+%pippkiDTD;
+]>
+
+
+<window id="certPicker" title="&certPicker.defaultTitle;"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
+  onload="onLoad();">
+
+<script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
+<script type="application/x-javascript" src="chrome://pippki/content/certpicker.js"/>
+
+<keyset id="keys">
+  <key id="enter-key"  keycode="VK_ENTER"  oncommand="doOK();"/>
+  <key id="return-key" keycode="VK_RETURN" oncommand="doOK();"/>
+  <key id="esc-key"    keycode="VK_ESCAPE" oncommand="doCancel();"/>
+</keyset>
+
+<vbox style="margin: 5px;">
+    <groupbox orient="vertical">
+    <html id="pickerInfo" style="font-weight: bold;">&certPicker.defaultInfo;</html>
+    <broadcaster id="certSelected" oncommand="onCertSelected();"/>
+    <!-- The items in this menulist must never be sorted,
+         but remain in the order filled by the application
+    -->
+    <menulist id="nicknames" observes="certSelected">
+        <menupopup/>
+    </menulist>
+    <html>&certPicker.detailsLabel;</html>
+    <textbox readonly="true" id="details" multiline="true"
+      style="height: 11em; width=80em;"/>
+    </groupbox>
+  <separator class="thin"/>
+  <hbox>
+  <button id="ok-button" class="dialog" label="&ok.label;"
+          oncommand="doOK();" disabled="false"/> 
+  <button id="cancel-button" class="dialog" label="&cancel.label;"
+          oncommand="doCancel();"/> 
+  </hbox>
+</vbox>
+</window>

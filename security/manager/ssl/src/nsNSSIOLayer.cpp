@@ -155,13 +155,17 @@ nsNSSSocketInfo::nsNSSSocketInfo()
     mForTLSStepUp(PR_FALSE),
     mFirstWrite(PR_TRUE),
     mTLSIntolerant(PR_FALSE),
-    mPort(0)
+    mPort(0),
+    mCAChain(nsnull)
 { 
   NS_INIT_ISUPPORTS();
 }
 
 nsNSSSocketInfo::~nsNSSSocketInfo()
 {
+  if (mCAChain) {
+    CERT_DestroyCertList(mCAChain);
+  }
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS4(nsNSSSocketInfo,
@@ -361,6 +365,15 @@ nsresult nsNSSSocketInfo::GetSSLStatus(nsISSLStatus** _result)
   *_result = mSSLStatus;
   NS_IF_ADDREF(*_result);
 
+  return NS_OK;
+}
+
+nsresult nsNSSSocketInfo::RememberCAChain(CERTCertList *aCertList)
+{
+  if (mCAChain) {
+    CERT_DestroyCertList(mCAChain);
+  }
+  mCAChain = aCertList;
   return NS_OK;
 }
 
@@ -1703,156 +1716,29 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     certNicknameList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
     certDetailsList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
 
-    nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
-    NS_DEFINE_CID(nssComponentCID, NS_NSSCOMPONENT_CID);
-    nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(nssComponentCID, &rv));
-
-    if (proxyman && nssComponent)
     for (i = 0, node = CERT_LIST_HEAD(certList);
          !CERT_LIST_END(node, certList);
          ++i, node = CERT_LIST_NEXT(node)
         )
     {
       nsNSSCertificate *tempCert = new nsNSSCertificate(node->cert);
-      NS_ADDREF(tempCert);
+      if (tempCert) {
+      
+        // XXX we really should be using an nsCOMPtr instead of manually add-refing,
+        // but nsNSSCertificate does not have a default constructor.
+        
+        NS_ADDREF(tempCert);
 
-      nsCOMPtr<nsIX509Cert> x509 = do_QueryInterface(tempCert);
-
-      nsCOMPtr<nsIX509Cert> x509Proxy;
-      proxyman->GetProxyForObject( NS_UI_THREAD_EVENTQ,
-                                   nsIX509Cert::GetIID(),
-                                   x509,
-                                   PROXY_SYNC | PROXY_ALWAYS,
-                                   getter_AddRefs(x509Proxy));
-
-      if (x509Proxy) {
+        nsAutoString i_nickname(NS_ConvertUTF8toUCS2(nicknames->nicknames[i]));
         nsAutoString nickWithSerial;
-        nsAutoString str;
-        nsAutoString info;
-        PRUnichar *temp1 = 0;
-
-        nickWithSerial.Append(NS_ConvertUTF8toUCS2(nicknames->nicknames[i]));
-
-        if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoIssuedFor").get(), info))) {
-          str.Append(info);
-          str.Append(NS_LITERAL_STRING("\n"));
+        nsAutoString details;
+        if (NS_SUCCEEDED(tempCert->FormatUIStrings(i_nickname, nickWithSerial, details))) {
+          certNicknameList[i] = ToNewUnicode(nickWithSerial);
+          certDetailsList[i] = ToNewUnicode(details);
         }
 
-        if (NS_SUCCEEDED(x509Proxy->GetSubjectName(&temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
-          str.Append(NS_LITERAL_STRING("  "));
-          if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSubject").get(), info))) {
-            str.Append(info);
-            str.Append(NS_LITERAL_STRING(": "));
-          }
-          str.Append(temp1);
-          nsMemory::Free(temp1);
-          str.Append(NS_LITERAL_STRING("\n"));
-        }
-
-        if (NS_SUCCEEDED(x509Proxy->GetSerialNumber(&temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
-          str.Append(NS_LITERAL_STRING("  "));
-          if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSerialNo").get(), info))) {
-            str.Append(info);
-            str.Append(NS_LITERAL_STRING(": "));
-          }
-          str.Append(temp1);
-
-          nickWithSerial.Append(NS_LITERAL_STRING(" ["));
-          nickWithSerial.Append(temp1);
-          nickWithSerial.Append(NS_LITERAL_STRING("]"));
-
-          nsMemory::Free(temp1);
-          str.Append(NS_LITERAL_STRING("\n"));
-        }
-
-
-        {
-          nsCOMPtr<nsIX509CertValidity> validity;
-          nsCOMPtr<nsIX509CertValidity> originalValidity;
-          rv = x509Proxy->GetValidity(getter_AddRefs(originalValidity));
-          if (NS_SUCCEEDED(rv) && originalValidity) {
-            proxyman->GetProxyForObject( NS_UI_THREAD_EVENTQ,
-                                         nsIX509CertValidity::GetIID(),
-                                         originalValidity,
-                                         PROXY_SYNC | PROXY_ALWAYS,
-                                         getter_AddRefs(validity));
-          }
-
-          if (validity) {
-            str.Append(NS_LITERAL_STRING("  "));
-            if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoValid").get(), info))) {
-              str.Append(info);
-            }
-
-            if (NS_SUCCEEDED(validity->GetNotBeforeLocalTime(&temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
-              str.Append(NS_LITERAL_STRING(" "));
-              if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoFrom").get(), info))) {
-                str.Append(info);
-              }
-              str.Append(NS_LITERAL_STRING(" "));
-              str.Append(temp1);
-              nsMemory::Free(temp1);
-            }
-
-            if (NS_SUCCEEDED(validity->GetNotAfterLocalTime(&temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
-              str.Append(NS_LITERAL_STRING(" "));
-              if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoTo").get(), info))) {
-                str.Append(info);
-              }
-              str.Append(NS_LITERAL_STRING(" "));
-              str.Append(temp1);
-              nsMemory::Free(temp1);
-            }
-
-            str.Append(NS_LITERAL_STRING("\n"));
-          }
-        }
-
-        PRUint32 tempInt = 0;
-        if (NS_SUCCEEDED(x509Proxy->GetPurposes(&tempInt, &temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
-          str.Append(NS_LITERAL_STRING("  "));
-          if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoPurposes").get(), info))) {
-            str.Append(info);
-          }
-          str.Append(NS_LITERAL_STRING(": "));
-          str.Append(temp1);
-          nsMemory::Free(temp1);
-          str.Append(NS_LITERAL_STRING("\n"));
-        }
-
-        if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoIssuedBy").get(), info))) {
-          str.Append(info);
-          str.Append(NS_LITERAL_STRING("\n"));
-        }
-
-        if (NS_SUCCEEDED(x509Proxy->GetIssuerName(&temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
-          str.Append(NS_LITERAL_STRING("  "));
-          if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSubject").get(), info))) {
-            str.Append(info);
-            str.Append(NS_LITERAL_STRING(": "));
-          }
-          str.Append(temp1);
-          nsMemory::Free(temp1);
-          str.Append(NS_LITERAL_STRING("\n"));
-        }
-
-        /*
-          the above produces output the following output:
-
-          Issued to: 
-            Subject: $subjectName
-            Serial number: $serialNumber
-            Valid from: $starting_date to $expriation_date
-            Purposes: $purposes
-          Issued by:
-            Subject: $issuerName
-        */
-
-        certNicknameList[i] = ToNewUnicode(nickWithSerial);
-        certDetailsList[i] = ToNewUnicode(str);
+        NS_RELEASE(tempCert);
       }
-
-      NS_RELEASE(tempCert);
     }
 
     /* Throw up the client auth dialog and get back the index of the selected cert */

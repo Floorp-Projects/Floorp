@@ -44,6 +44,9 @@
 //For the NS_CRYPTO_CONTRACTID define
 #include "nsDOMCID.h"
 
+#include "nsCMSSecureMessage.h"
+#include "nsCMS.h"
+#include "nsCertPicker.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNSSComponent, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecureBrowserUIImpl)
@@ -57,7 +60,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsNSSCertificateDB)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCertOutliner)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCrypto)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPkcs11)
-
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCMSSecureMessage)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCMSDecoder)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCMSEncoder)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCMSMessage)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHash)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCertPicker)
 
 static nsModuleComponentInfo components[] =
 {
@@ -192,9 +200,49 @@ static nsModuleComponentInfo components[] =
     NS_CRYPTO_CID,
     NS_CRYPTO_CONTRACTID,
     nsCryptoConstructor
+  },
+
+  {
+    NS_CMSSECUREMESSAGE_CLASSNAME,
+    NS_CMSSECUREMESSAGE_CID,
+    NS_CMSSECUREMESSAGE_CONTRACTID,
+    nsCMSSecureMessageConstructor
+  },
+
+  {
+    NS_CMSDECODER_CLASSNAME,
+    NS_CMSDECODER_CID,
+    NS_CMSDECODER_CONTRACTID,
+    nsCMSDecoderConstructor
+  },
+
+  {
+    NS_CMSENCODER_CLASSNAME,
+    NS_CMSENCODER_CID,
+    NS_CMSENCODER_CONTRACTID,
+    nsCMSEncoderConstructor
+  },
+
+  {
+    NS_CMSMESSAGE_CLASSNAME,
+    NS_CMSMESSAGE_CID,
+    NS_CMSMESSAGE_CONTRACTID,
+    nsCMSMessageConstructor
+  },
+
+  {
+    NS_HASH_CLASSNAME,
+    NS_HASH_CID,
+    NS_HASH_CONTRACTID,
+    nsHashConstructor
+  },
+
+  {
+    NS_CERT_PICKER_CLASSNAME,
+    NS_CERT_PICKER_CID,
+    NS_CERT_PICKER_CONTRACTID,
+    nsCertPickerConstructor
   }
-
-
 };
 
 NS_IMPL_NSGETMODULE(NSS, components);

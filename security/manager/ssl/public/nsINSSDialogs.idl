@@ -171,6 +171,27 @@ interface nsIClientAuthDialogs : nsISupports
                         out boolean canceled);
 };
 
+/**
+ * nsICertPicker
+ * Provides generic UI for choosing a certificate
+ */
+[scriptable, uuid(51d59b08-1dd2-11b2-ad4a-a51b92f8a184)]
+interface nsICertPickDialogs : nsISupports
+{
+  /**
+   * PickCertificate
+   *   General purpose certificate prompter
+   */
+  void PickCertificate(in nsIInterfaceRequestor ctx, 
+                       in wstring title,
+                       in wstring infoPrompt,
+                       [array, size_is(count)] in wstring certNickList,
+                       [array, size_is(count)] in wstring certDetailsList,
+                       in PRUint32 count,
+                       out PRInt32 selectedIndex,
+                       out boolean canceled);
+};
+
 [scriptable, uuid(bb4bae9c-39c5-11d5-ba26-00108303b117)]
 interface nsITokenDialogs : nsISupports
 {

@@ -123,6 +123,16 @@ interface nsIX509CertDB : nsISupports {
                                               in nsCertCompareFunc aCertCmpFn,
                                               out nsISupportsArray certs);
 
+  /* Get the user encryption cert */
+  nsIX509Cert getEmailEncryptionCert(in wstring aNickname);
+
+  /* Get the user signing cert */
+  nsIX509Cert getEmailSigningCert(in wstring aNickname);
+
+  /* Get a cert by email address */
+  nsIX509Cert getCertByEmailAddress(in nsIPK11Token aToken,
+                             in string aEmailAddress);
+
   /*
    * importCertificates
    * Use this to import a stream sent down as a mime type into
@@ -137,6 +147,9 @@ interface nsIX509CertDB : nsISupports {
                                      in unsigned long type,
                                      in nsIInterfaceRequestor ctx);
 
+  [noscript] void importEmailCertificate(in charPtr data,
+                                     in unsigned long length,
+                                     in nsIInterfaceRequestor ctx);
   /*
    * importCertificate
    *
@@ -244,5 +257,12 @@ interface nsIX509CertDB : nsISupports {
    * values.
    */
   void enableOCSP();
- };
+
+  /*
+   * decode base64 certificate and return a new nsIX509Cert instance
+   * 
+   */
+  nsIX509Cert constructX509FromBase64(in string base64);
+
+};
 

@@ -504,6 +504,8 @@ nsCertOutliner::GetCellText(PRInt32 row, const PRUnichar *colID,
     }
   } else if (strcmp(col, "tokencol") == 0) {
     rv = cert->GetTokenName(&wstr);
+  } else if (strcmp(col, "emailcol") == 0) {
+    rv = cert->GetEmailAddress(&wstr);
   } else if (strcmp(col, "verifiedcol") == 0) {
     PRUint32 verified;
     nsCOMPtr<nsINSSComponent> nssComponent(

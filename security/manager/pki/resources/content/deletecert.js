@@ -72,6 +72,13 @@ function setWindowName()
      impact = bundle.GetStringFromName("deleteCaCertImpact");
      helpUrl = "chrome://help/content/help.xul?delete_ca_certs"   
   }
+  else if(typeFlag == bundle.GetStringFromName("deleteEmailCertFlag"))
+  {
+     title = bundle.GetStringFromName("deleteEmailCertTitle");
+     confirm = bundle.GetStringFromName("deleteEmailCertConfirm");
+     impact = bundle.GetStringFromName("deleteEmailCertImpact");
+     helpUrl = "chrome://help/content/help.xul?delete_email_certs"
+  }
   else
   {
      return;

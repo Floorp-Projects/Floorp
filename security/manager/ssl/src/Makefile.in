@@ -72,6 +72,9 @@ CPPSRCS = 				\
 	nsCrypto.cpp			\
         nsPKCS11Slot.cpp                \
         nsKeygenThread.cpp              \
+        nsCMSSecureMessage.cpp          \
+        nsCMS.cpp 	                \
+        nsCertPicker.cpp                \
 	$(NULL)
 
 REQUIRES	= nspr \

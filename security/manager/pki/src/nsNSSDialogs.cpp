@@ -127,15 +127,16 @@ nsNSSDialogs::~nsNSSDialogs()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS9(nsNSSDialogs, nsINSSDialogs, 
-                                            nsITokenPasswordDialogs,
-                                            nsISecurityWarningDialogs,
-                                            nsIBadCertListener,
-                                            nsICertificateDialogs,
-                                            nsIClientAuthDialogs,
-                                            nsITokenDialogs,
-                                            nsIDOMCryptoDialogs,
-                                            nsIGeneratingKeypairInfoDialogs);
+NS_IMPL_THREADSAFE_ISUPPORTS10(nsNSSDialogs, nsINSSDialogs, 
+                                             nsITokenPasswordDialogs,
+                                             nsISecurityWarningDialogs,
+                                             nsIBadCertListener,
+                                             nsICertificateDialogs,
+                                             nsIClientAuthDialogs,
+                                             nsICertPickDialogs,
+                                             nsITokenDialogs,
+                                             nsIDOMCryptoDialogs,
+                                             nsIGeneratingKeypairInfoDialogs);
 
 nsresult
 nsNSSDialogs::Init()
@@ -772,6 +773,58 @@ nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *cn,
   }
   return rv;
 }
+
+
+NS_IMETHODIMP
+nsNSSDialogs::PickCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *title, const PRUnichar *infoPrompt, const PRUnichar **certNickList, const PRUnichar **certDetailsList, PRUint32 count, PRInt32 *selectedIndex, PRBool *canceled) 
+{
+  nsresult rv;
+  PRUint32 i;
+
+  *canceled = PR_FALSE;
+
+  // Get the parent window for the dialog
+  nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
+
+  nsCOMPtr<nsIDialogParamBlock> block(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
+  if (!block) return NS_ERROR_FAILURE;
+
+  rv = block->SetString(1, title);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = block->SetString(2, infoPrompt);
+  if (NS_FAILED(rv)) return rv;
+
+  for (i = 0; i < count; i++) {
+	  rv = block->SetString(i+3, certNickList[i]);
+	  if (NS_FAILED(rv)) return rv;
+  }
+
+  for (i = 0; i < count; i++) {
+	  rv = block->SetString(i+count+3, certDetailsList[i]);
+	  if (NS_FAILED(rv)) return rv;
+  }
+
+  rv = block->SetInt(1, count);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = nsNSSDialogHelper::openDialog(nsnull,
+                                "chrome://pippki/content/certpicker.xul",
+                                block);
+  if (NS_FAILED(rv)) return rv;
+
+  PRInt32 status;
+
+  rv = block->GetInt(1, &status);
+  if (NS_FAILED(rv)) return rv;
+
+  *canceled = (status == 0)?PR_TRUE:PR_FALSE;
+  if (!*canceled) {
+    rv = block->GetInt(2, selectedIndex);
+  }
+  return rv;
+}
+
 
 /*
  * void setPKCS12FilePassword(in nsIInterfaceRequestor ctx, 
