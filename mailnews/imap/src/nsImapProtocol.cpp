@@ -4225,15 +4225,16 @@ void nsImapProtocol::Language()
     // extract the desired language attribute from prefs
     nsresult rv = NS_OK; 
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
-    nsXPIDLCString acceptLanguages;
+    nsXPIDLString acceptLanguages;
     if (NS_SUCCEEDED(rv) && prefs) 
-        prefs->CopyCharPref("intl.accept_languages", getter_Copies(acceptLanguages));
+        prefs->GetLocalizedUnicharPref("intl.accept_languages", getter_Copies(acceptLanguages));
 
     // we need to parse out the first language out of this comma separated list....
     // i.e if we have en,ja we only want to send en to the server.
     if (acceptLanguages)
     {
-      nsCAutoString extractedLanguage (acceptLanguages);
+      nsCAutoString extractedLanguage;
+      extractedLanguage.AssignWithConversion(acceptLanguages);
       PRInt32 pos = extractedLanguage.FindChar(',', PR_TRUE);
       if (pos > 0) // we have a comma separated list of languages...
         extractedLanguage.Truncate(pos); // truncate everything after the first comma (including the comma)
