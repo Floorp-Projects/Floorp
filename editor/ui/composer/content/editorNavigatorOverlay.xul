@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <!-- retrieve generic commands -->
-<?xul-overlay href="chrome://messenger/content/mailOverlay.xul"?>
+<!-- <?xul-overlay href="chrome://messenger/content/mailOverlay.xul"?> -->
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editorNavigatorOverlay.dtd" >
 
