@@ -430,6 +430,10 @@ nsImageXlib::DrawComposited16(PRBool isLSB, PRBool flipBytes,
   unsigned *blueScale  = (xlib_get_prec_from_mask(visual->blue_mask)  == 5)
                           ? scaled5 : scaled6;
 
+  unsigned long redShift = xlib_get_shift_from_mask(visual->red_mask);
+  unsigned long greenShift = xlib_get_shift_from_mask(visual->green_mask);
+  unsigned long blueShift = xlib_get_shift_from_mask(visual->blue_mask);
+
   for (unsigned y=0; y<height; y++) {
     unsigned char *baseRow   = (unsigned char *)ximage->data
                                             +y*ximage->bytes_per_line;
@@ -448,13 +452,13 @@ nsImageXlib::DrawComposited16(PRBool isLSB, PRBool flipBytes,
         pix = *((short *)baseRow);
       unsigned alpha = *alphaRow;
       MOZ_BLEND(targetRow[0],
-                redScale[(pix&visual->red_mask)>>visual->red_shift], 
+                redScale[(pix&visual->red_mask) >> redShift], 
                 imageRow[0], alpha);
       MOZ_BLEND(targetRow[1],
-                greenScale[(pix&visual->green_mask)>>visual->green_shift], 
+                greenScale[(pix&visual->green_mask) >> greenShift], 
                 imageRow[1], alpha);
       MOZ_BLEND(targetRow[2],
-                blueScale[(pix&visual->blue_mask)>>visual->blue_shift], 
+                blueScale[(pix&visual->blue_mask) >> blueShift], 
                 imageRow[2], alpha);
     }
   }
@@ -523,6 +527,10 @@ nsImageXlib::DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
   greenFill = 0xff>>xlib_get_prec_from_mask(visual->green_mask);
   blueFill =  0xff>>xlib_get_prec_from_mask(visual->blue_mask);
 
+  unsigned long redShift = xlib_get_shift_from_mask(visual->red_mask);
+  unsigned long greenShift = xlib_get_shift_from_mask(visual->green_mask);
+  unsigned long blueShift = xlib_get_shift_from_mask(visual->blue_mask);
+
   for (int row=0; row<ximage->height; row++) {
     unsigned char *ptr =
       (unsigned char *)ximage->data + row*ximage->bytes_per_line;
@@ -560,14 +568,11 @@ nsImageXlib::DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
       }
 
       *target++ =
-        redFill|((pix&visual->red_mask) >>
-                 xlib_get_shift_from_mask(visual->red_mask))<<redScale;
+        redFill|((pix&visual->red_mask) >> redShift)<<redScale;
       *target++ =
-        greenFill|((pix&visual->green_mask) >>
-                 xlib_get_shift_from_mask(visual->green_mask))<<greenScale;
+        greenFill|((pix&visual->green_mask) >> greenShift)<<greenScale;
       *target++ =
-        blueFill|((pix&visual->blue_mask) >>
-                 xlib_get_shift_from_mask(visual->blue_mask))<<blueScale;
+        blueFill|((pix&visual->blue_mask) >> blueShift)<<blueScale;
     }
   }
 
