@@ -259,6 +259,8 @@
 
   <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js">
   </html:script>
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js">
+  </script>
 
   <broadcaster id="args" value="chrome://editor/content/EditorInitPage.html"/>
   <broadcaster id="canPrint"/>

@@ -2308,18 +2308,17 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
   }
   
   nsCOMPtr<nsIDOMNode> parentSelectedNode;
-  PRInt32 splitPointOffset;
-  PRInt32 offsetOfSelectedNode;
+  PRInt32 offsetForInsert;
   res = selection->GetAnchorNode(getter_AddRefs(parentSelectedNode));
-  if (NS_SUCCEEDED(res) && NS_SUCCEEDED(selection->GetAnchorOffset(&splitPointOffset)) && parentSelectedNode)
+  if (NS_SUCCEEDED(res) && NS_SUCCEEDED(selection->GetAnchorOffset(&offsetForInsert)) && parentSelectedNode)
   {
 #ifdef DEBUG_cmanske
     {
     nsAutoString name;
     parentSelectedNode->GetNodeName(name);
-    printf("parentSelectedNode: ");
+    printf("InsertElement: Anchor node of selection: ");
     wprintf(name.GetUnicode());
-    printf("\n");
+    printf(" Offset: %d\n", offsetForInsert);
     }
 #endif
     nsAutoString tagName;
@@ -2328,15 +2327,15 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
     nsCOMPtr<nsIDOMNode> parent = parentSelectedNode;
     nsCOMPtr<nsIDOMNode> topChild = parentSelectedNode;
     nsCOMPtr<nsIDOMNode> tmp;
-    PRInt32 offset = offsetOfSelectedNode;
-    
+    nsAutoString parentTagName;
+    PRBool isRoot;
+
+    // Search up the parent chain to find a suitable container    
     while (!CanContainTag(parent, tagName))
     {
       // If the current parent is a root (body or table cell)
       // then go no further - we can't insert
-      nsAutoString parentTagName;
       parent->GetNodeName(parentTagName);
-      PRBool isRoot;
       res = IsRootTag(parentTagName, isRoot);
       if (!NS_SUCCEEDED(res) || isRoot)
         return NS_ERROR_FAILURE;
@@ -2347,18 +2346,31 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
       topChild = parent;
       parent = tmp;
     }
-  
-    // we need to split up to the child of parent
-    res = SplitNodeDeep(topChild, parentSelectedNode, splitPointOffset);
-    if (NS_FAILED(res))
-      return res;
-    // topChild already went to the right on the split
-    // so we don't need to add one to offset when figuring
-    // out where to plop list
-    offset = GetIndexOf(parent,topChild);  
-
-    // Now we can finally insert the new node
-    res = InsertNode(aElement, parent, offset);
+#ifdef DEBUG_cmanske
+    {
+    nsAutoString name;
+    parent->GetNodeName(name);
+    printf("Parent node to insert under: ");
+    wprintf(name.GetUnicode());
+    printf("\n");
+    topChild->GetNodeName(name);
+    printf("TopChild to split: ");
+    wprintf(name.GetUnicode());
+    printf("\n");
+    }
+#endif
+    if (parent != topChild)
+    {
+      // we need to split some levels above the original selection parent
+      res = SplitNodeDeep(topChild, parentSelectedNode, offsetForInsert);
+      if (NS_FAILED(res))
+        return res;
+      // topChild went to the right on the split
+      // so this is the offset to insert at
+      offsetForInsert = GetIndexOf(parent,topChild);  
+    }
+    // Now we can insert the new node
+    res = InsertNode(aElement, parent, offsetForInsert);
     
     // Set caret after element, but check for special case 
     //  of inserting table-related elements: set in first cell instead
@@ -2634,6 +2646,19 @@ nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
         {
           // Collapse selection to just after desired element,
           selection->Collapse(parent, offsetInParent+1);
+#ifdef DEBUG_cmanske
+          {
+          nsAutoString name;
+          parent->GetNodeName(name);
+          printf("SetCaretAfterElement: Parent node: ");
+          wprintf(name.GetUnicode());
+          printf(" Offset: %d\n\nHTML:\n", offsetInParent+1);
+          nsString Format("text/html");
+          nsString ContentsAs;
+          OutputToString(ContentsAs, Format, 2);
+          wprintf(ContentsAs.GetUnicode());
+          }
+#endif
         }
       }
     }

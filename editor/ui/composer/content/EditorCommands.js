@@ -476,8 +476,8 @@ function CheckSpelling()
     dump(firstMisspelledWord+"\n");
     if( firstMisspelledWord == "")
     {
-      dump("THERE IS NO MISSPELLED WORD!\n");
-      // TODO: PUT UP A MESSAGE BOX TO TELL THE USER
+      // No misspelled word - tell user
+      window.openDialog("chrome://editor/content/EdMessage.xul", "NoSpellError", "chrome", "", "No misspelled word was found.", "Check Spelling");
       spellChecker.CloseSpellChecking();
     } else {
       dump("We found a MISSPELLED WORD\n");

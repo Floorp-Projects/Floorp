@@ -23,7 +23,7 @@
 <!ENTITY saveSettings.label "Save Settings">
 <!ENTITY OKButton.label "OK">
 <!ENTITY CancelButton.label "Cancel">
-<!ENTITY MoreAttributesButton.label "More Attributes...">
+<!ENTITY AdvancedEditButton.label "Advanced Edit...">
 
 ]>
 
@@ -92,7 +92,7 @@
   </table>
   <hr width="100%"/>
   <xul:box>
-    <xul:titledbutton class="spaced" id="MoreAttributes" onclick="onMoreAttributes()" value="&MoreAttributesButton.label;"/>
+    <xul:titledbutton class="spaced" id="AdvancedEdit" onclick="onAdvancedEdit()" value="&AdvancedEditButton.label;"/>
     <xul:spring flex="100%"/>    
     <xul:titledbutton class="spaced" id="OK" onclick="onOK()" value="&OKButton.label;"/>  
     <xul:titledbutton class="spaced" id="Cancel" onclick="onCancel()" value="&CancelButton.label;"/>
