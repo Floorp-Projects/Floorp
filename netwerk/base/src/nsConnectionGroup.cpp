@@ -76,7 +76,10 @@ NS_IMETHODIMP
 nsConnectionGroup::Cancel(void)
 {
     nsresult rv = NS_OK;
-    PRUint32 cnt = mElements->Count();
+    PRUint32 cnt;
+
+    rv = mElements->Count(&cnt);
+
     for (PRUint32 i = 0; i < cnt; i++) {
         nsIProtocolConnection* connection = 
             (nsIProtocolConnection*)(*mElements)[i];
@@ -90,7 +93,10 @@ NS_IMETHODIMP
 nsConnectionGroup::Suspend(void)
 {
     nsresult rv = NS_OK;
-    PRUint32 cnt = mElements->Count();
+    PRUint32 cnt;
+
+    rv = mElements->Count(&cnt);
+
     for (PRUint32 i = 0; i < cnt; i++) {
         nsIProtocolConnection* connection = 
             (nsIProtocolConnection*)(*mElements)[i];
@@ -104,7 +110,10 @@ NS_IMETHODIMP
 nsConnectionGroup::Resume(void)
 {
     nsresult rv = NS_OK;
-    PRUint32 cnt = mElements->Count();
+    PRUint32 cnt;
+
+    rv = mElements->Count(&cnt);
+
     for (PRUint32 i = 0; i < cnt; i++) {
         nsIProtocolConnection* connection = 
             (nsIProtocolConnection*)(*mElements)[i];
@@ -120,7 +129,12 @@ nsConnectionGroup::Resume(void)
 NS_IMETHODIMP_(PRUint32) 
 nsConnectionGroup::Count(void) const
 {
-    return mElements->Count();
+    PRUint32 cnt;
+    nsresult rv = NS_OK;
+
+    rv = mElements->Count(&cnt);
+
+    return cnt;
 }
 
 NS_IMETHODIMP
