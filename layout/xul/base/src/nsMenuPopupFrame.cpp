@@ -411,7 +411,27 @@ nsMenuPopupFrame::FindMenuWithShortcut(PRUint32 aLetter)
 void 
 nsMenuPopupFrame::ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag)
 {
-  
+  if (mCurrentMenu) {
+    nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
+    if (menuFrame->IsOpen()) {
+      // No way this applies to us. Give it to our child.
+      menuFrame->ShortcutNavigation(aLetter, aHandledFlag);
+      return;
+    }
+  }
+
+  // This applies to us. Let's see if one of the shortcuts applies
+  nsIFrame* result = FindMenuWithShortcut(aLetter);
+  if (result) {
+    // We got one!
+    aHandledFlag = PR_TRUE;
+    nsMenuFrame* menuFrame = (nsMenuFrame*)result;
+    SetCurrentMenuItem(result);
+    menuFrame->OpenMenu(PR_TRUE);
+    menuFrame->SelectFirstItem();
+
+    // XXX For menu items, do an execution of the onclick handler!
+  }
 }
 
 void
