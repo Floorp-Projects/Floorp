@@ -5133,15 +5133,17 @@ SI_LoadSignonData(char * filename) {
 	    value_array[submit.value_cnt] = NULL;
             /* note that we need to skip over leading '=' of value */
 	    if (type_array[submit.value_cnt] == FORM_TYPE_PASSWORD) {
-		if ((unmungedValue=SECNAV_UnMungeString(buffer+1)) == NULL) {
-                    /* this is the free source and there is no obscuring of passwords */
-                    unmungedValue = buffer+1;
-                }
-                StrAllocCopy(value_array[submit.value_cnt++], unmungedValue);
-                XP_FREE(unmungedValue);
-	    } else {
-		StrAllocCopy(value_array[submit.value_cnt++], buffer+1);
-	    }
+			if ((unmungedValue=SECNAV_UnMungeString(buffer+1)) == NULL) {
+                /* this is the free source and there is no obscuring of passwords */
+				StrAllocCopy(value_array[submit.value_cnt++], buffer+1);
+			}
+			else {
+				StrAllocCopy(value_array[submit.value_cnt++], unmungedValue);
+				XP_FREE(unmungedValue);
+			}
+		} else {
+			StrAllocCopy(value_array[submit.value_cnt++], buffer+1);
+		}
 
 	    /* check for overruning of the arrays */
 	    if (submit.value_cnt >= MAX_ARRAY_SIZE) {
@@ -5441,17 +5443,12 @@ SI_RestoreOldSignonData
 	    data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
 	    while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
 		if (data->isPassword) {
-#ifdef XP_MAC
-		    StrAllocCopy(
-			(char *)form_element->element_data->ele_text.default_text,
-			data->value);
-#else
 		    char* default_text =
 			(char*)(form_element->element_data->ele_text.default_text);
 		    StrAllocCopy(default_text, data->value);
 		    form_element->element_data->ele_text.default_text =
-			(unsigned long *)default_text;
-#endif
+			(PA_Block)default_text;
+
 		    si_unlock_signon_list();
 		    return;
 		}
