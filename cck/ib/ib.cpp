@@ -3167,6 +3167,18 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 	}
 
 
+  // Copy the .cfg, if it exists, to the output directory in case the user
+  // wants to save it or look at it or something.
+  if (!gstrCFGPrefFile.IsEmpty())
+  {
+    int ipos = gstrCFGPrefFile.ReverseFind('/');
+    if (ipos >= 0)
+    {
+      CString baseFilename = gstrCFGPrefFile.Right(gstrCFGPrefFile.GetLength() - (ipos + 1)); 
+      CopyFile(tempPath+"\\bin\\"+baseFilename, outputPath+"\\"+baseFilename, FALSE);  // FALSE to overwrite
+    }
+  }
+
 	// Put all the extracted files back into their new XPI homes
 	ReplaceJARFiles();
 
