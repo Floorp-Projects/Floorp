@@ -144,6 +144,11 @@ nsBaseAppCore::GetScriptContext(nsIDOMWindow * aWin)
 nsCOMPtr<nsIDOMNode> nsBaseAppCore::FindNamedDOMNode(const nsString &aName, nsIDOMNode * aParent, PRInt32 & aCount, PRInt32 aEndCount)
 {
   nsCOMPtr<nsIDOMNode> node;
+
+  if (nsnull == aParent) {
+    return node;
+	}
+
   aParent->GetFirstChild(getter_AddRefs(node));
   while (node) {
     nsString name;
