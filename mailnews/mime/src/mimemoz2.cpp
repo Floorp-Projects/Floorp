@@ -439,60 +439,68 @@ GenerateAttachmentData(MimeObject *object, const char *aMessageURL, MimeDisplayO
 }
 
 nsresult
-BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
-                    const char *aMessageURL, PRBool addExternalBodiesOnly)
+BuildAttachmentList(MimeObject *anObject, nsMsgAttachmentData *aAttachData, const char *aMessageURL)
 {
   nsresult              rv;
   PRInt32               i;
-  MimeContainer         *cobj = (MimeContainer *) aChild;
-  PRBool                isAlternativeOrRelated;
+  MimeContainer         *cobj = (MimeContainer *) anObject;
 
-  if ( (!aChild) || (!cobj->children) || 
-       (mime_typep(aChild, (MimeObjectClass *)&mimeExternalBodyClass)))
+  if ( (!anObject) || (!cobj->children) || (!cobj->nchildren) ||
+       (mime_typep(anObject, (MimeObjectClass *)&mimeExternalBodyClass)))
     return NS_OK;
 
-  if (MimeObjectChildIsMessageBody(aChild, &isAlternativeOrRelated) &&
-      !mime_typep(aChild, (MimeObjectClass *) &mimeMessageClass))
-    i = 1;
-  else
-    i = 0;
-
-  for (; i<cobj->nchildren ; i++) 
+  for (i = 0; i < cobj->nchildren ; i++) 
   {
     MimeObject    *child = cobj->children[i];
 
+    // Skip the first child if it's in fact a message body
+    if (i == 0)                                         // it's the first child
+      if (child->content_type)                          // and it's content-type is one of folowing...
+        if (!nsCRT::strcasecmp (child->content_type, TEXT_PLAIN) ||
+            !nsCRT::strcasecmp (child->content_type, TEXT_HTML) ||
+            !nsCRT::strcasecmp (child->content_type, TEXT_MDL) ||
+            !nsCRT::strcasecmp (child->content_type, MULTIPART_ALTERNATIVE) ||
+            !nsCRT::strcasecmp (child->content_type, MULTIPART_RELATED))
+        {
+          if (child->headers) // and finally, be sure it doesn't have a content-disposition: attachment 
+          {
+            char * disp = MimeHeaders_get (child->headers, HEADER_CONTENT_DISPOSITION, PR_TRUE, PR_FALSE);
+            if (!disp || nsCRT::strcasecmp (disp, "attachment"))
+              continue;
+          }
+          else
+            continue;
+        }
+
+    
+    // We should generate an attachment for leaf object only but...
+    PRBool isALeafObject = mime_subclass_p(child->clazz, (MimeObjectClass *) &mimeLeafClass);
+
+    // ...we will generate an attachment for inline message too.
     PRBool isAnInlineMessage = mime_typep(child, (MimeObjectClass *) &mimeMessageClass);
     
-    /*
-      AppleDouble part need special care: we need to fetch the part as well it's two
-      children for the needed info as they could be anywhere, eventually, they won't contain
-      a name or file name. In any case we need to build only one attachment data
-    */
+    // AppleDouble part need special care: we need to fetch the part as well its two
+    // children for the needed info as they could be anywhere, eventually, they won't contain
+    // a name or file name. In any case we need to build only one attachment data
     PRBool isAnAppleDoublePart = mime_typep(child, (MimeObjectClass *) &mimeMultipartAppleDoubleClass) &&
                                  ((MimeContainer *)child)->nchildren == 2;
+
+    if (isALeafObject || isAnInlineMessage || isAnAppleDoublePart)
+    {
+      rv = GenerateAttachmentData(child, aMessageURL, anObject->options, isAnAppleDoublePart, aAttachData);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
     
-    PRBool fetchExternalBodiesFromChildren = addExternalBodiesOnly; // inherit from our parent.
-    // whenever we encounter an inlined message, we want to only fetch external bodies from that point
-    // forward
-    if (!addExternalBodiesOnly && isAnInlineMessage)
-      fetchExternalBodiesFromChildren = PR_TRUE;  
-
-    if (!isAnAppleDoublePart /* && !isAnInlineMessage */)
-      if ( NS_FAILED(BuildAttachmentList((MimeObject *)child, aAttachData, aMessageURL, fetchExternalBodiesFromChildren)) )
-        return NS_OK;
-
-    // okay, if the current recursive call only wants us to list external body attachments
-    // then kick out of this method if we are an inlined part and our child class isn't an 
-    // external body or an apple double attachment!
-    
-    if (addExternalBodiesOnly && !mime_typep((MimeObject *)child, (MimeObjectClass *)&mimeExternalObjectClass) && !isAnAppleDoublePart )
-        return NS_OK;
-
-    rv = GenerateAttachmentData(child, aMessageURL, aChild->options, isAnAppleDoublePart, aAttachData);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // Now build the attachment list for the children of our object...
+    if (!isALeafObject && !isAnAppleDoublePart)
+    {
+      rv = BuildAttachmentList((MimeObject *)child, aAttachData, aMessageURL);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   return NS_OK;
+
 }
 
 extern "C" nsresult
@@ -536,13 +544,12 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
 
   nsresult rv;
 
-  PRBool isBodyAnInlineMessage = mime_typep(obj, (MimeObjectClass *) &mimeMessageClass);
-  rv = BuildAttachmentList((MimeObject *) cobj, *data, aMessageURL, isBodyAnInlineMessage);
-  if (NS_SUCCEEDED(rv))
-    if (isBodyAnInlineMessage)
-      rv = GenerateAttachmentData(obj, aMessageURL, obj->options, PR_FALSE, *data);
-
-  return rv;
+  if (mime_typep(obj, (MimeObjectClass *) &mimeMessageClass))
+  {
+    rv = GenerateAttachmentData(obj, aMessageURL, obj->options, PR_FALSE, *data);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return BuildAttachmentList((MimeObject *) cobj, *data, aMessageURL);
 }
 
 extern "C" void
