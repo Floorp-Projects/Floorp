@@ -106,6 +106,31 @@ nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShel
   return result;
 }
 
+
+static nsresult PrintEditorOutput(nsIHTMLEditor* editor, PRInt32 aCommandID)
+{
+	nsString		outString;
+	char*				cString;
+	
+	switch (aCommandID)
+	{
+      case VIEWER_DISPLAYTEXT:
+        gEditor->OutputText(outString);
+        break;
+        
+      case VIEWER_DISPLAYHTML:
+        gEditor->OutputHTML(outString);
+        break;
+	}
+
+	cString = outString.ToNewCString();
+	printf(cString);
+	delete [] cString;
+	
+	return NS_OK;
+}
+
+
 nsresult NS_DoEditorTest(PRInt32 aCommandID)
 {
   if (gEditor)
@@ -145,11 +170,8 @@ nsresult NS_DoEditorTest(PRInt32 aCommandID)
         gEditor->JoinTableCells(PR_FALSE);
         break;
       case VIEWER_DISPLAYTEXT:
-        gEditor->OutputText(nsnull);
-        break;
-       case VIEWER_DISPLAYHTML:
-        
-        gEditor->OutputHTML(nsnull);
+      case VIEWER_DISPLAYHTML:
+        PrintEditorOutput(gEditor, aCommandID);
         break;
      default:
         return NS_ERROR_NOT_IMPLEMENTED;    
