@@ -267,6 +267,7 @@ nsForm::~nsForm()
     mElements->ReleaseForm();
     NS_RELEASE(mElements);
   }
+  NS_IF_RELEASE(mAttributes);
 }
 
 nsresult nsForm::QueryInterface(REFNSIID aIID, void** aInstancePtr)
