@@ -156,33 +156,33 @@ nsCookiePermission::Init()
 }
 
 void
-nsCookiePermission::PrefChanged(nsIPrefBranch *prefBranch,
-                                const char    *pref)
+nsCookiePermission::PrefChanged(nsIPrefBranch *aPrefBranch,
+                                const char    *aPref)
 {
   PRBool val;
 
-#define PREF_CHANGED(_P) (!pref || !strcmp(pref, _P))
+#define PREF_CHANGED(_P) (!aPref || !strcmp(aPref, _P))
 
   if (PREF_CHANGED(kCookiesAskPermission) &&
-      NS_SUCCEEDED(prefBranch->GetBoolPref(kCookiesAskPermission, &val)))
+      NS_SUCCEEDED(aPrefBranch->GetBoolPref(kCookiesAskPermission, &val)))
     mCookiesAskPermission = val;
 
   if (PREF_CHANGED(kCookiesLifetimeEnabled) &&
-      NS_SUCCEEDED(prefBranch->GetBoolPref(kCookiesLifetimeEnabled, &val)))
+      NS_SUCCEEDED(aPrefBranch->GetBoolPref(kCookiesLifetimeEnabled, &val)))
     mCookiesLifetimeEnabled = val;
 
 #ifndef MOZ_PHOENIX
   if (PREF_CHANGED(kCookiesLifetimeCurrentSession) &&
-      NS_SUCCEEDED(prefBranch->GetIntPref(kCookiesLifetimeCurrentSession, &val)))
+      NS_SUCCEEDED(aPrefBranch->GetIntPref(kCookiesLifetimeCurrentSession, &val)))
     mCookiesLifetimeCurrentSession = (val == 0);
 
   if (PREF_CHANGED(kCookiesLifetimeDays) &&
-      NS_SUCCEEDED(prefBranch->GetIntPref(kCookiesLifetimeDays, &val)))
+      NS_SUCCEEDED(aPrefBranch->GetIntPref(kCookiesLifetimeDays, &val)))
     // save cookie lifetime in seconds instead of days
     mCookiesLifetimeSec = val * 24 * 60 * 60;
 
   if (PREF_CHANGED(kCookiesDisabledForMailNews) &&
-      NS_SUCCEEDED(prefBranch->GetBoolPref(kCookiesDisabledForMailNews, &val)))
+      NS_SUCCEEDED(aPrefBranch->GetBoolPref(kCookiesDisabledForMailNews, &val)))
     mCookiesDisabledForMailNews = val;
 #endif
 }
@@ -406,7 +406,10 @@ nsCookiePermission::Observe(nsISupports     *aSubject,
                             const PRUnichar *aData)
 {
   nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(aSubject);
+  NS_ASSERTION(!nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic),
+               "unexpected topic - we only deal with pref changes!");
+
   if (prefBranch)
-    PrefChanged(prefBranch, NS_LossyConvertUCS2toASCII(aData).get());
+    PrefChanged(prefBranch, NS_LossyConvertUTF16toASCII(aData).get());
   return NS_OK;
 }

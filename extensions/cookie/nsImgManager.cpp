@@ -40,16 +40,15 @@
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsINodeInfo.h"
-#include "nsCOMPtr.h"
-#include "nsXPIDLString.h"
 #include "nsIURI.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsCRT.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsIPrefBranchInternal.h"
-#include "nsIObserverService.h"
+#include "nsIDocShell.h"
 #include "nsString.h"
 
 // Possible behavior pref values
@@ -62,10 +61,32 @@ static const char kImageWarningPrefName[] = "network.image.warnAboutImages";
 static const char kImageBlockerPrefName[] = "imageblocker.enabled";
 static const char kImageBlockImageInMailNewsPrefName[] = "mailnews.message_display.disable_remote_image";
 
-static const PRInt32 kImageBehaviorPrefDefault = IMAGE_ACCEPT;
-static const PRBool kImageWarningPrefDefault = PR_FALSE;
-static const PRBool kImageBlockerPrefDefault = PR_FALSE;
-static const PRBool kImageBlockImageInMailNewsPrefDefault = PR_FALSE;
+static const PRUint8      kImageBehaviorPrefDefault = IMAGE_ACCEPT;
+static const PRPackedBool kImageBlockerPrefDefault = PR_FALSE;
+static const PRPackedBool kImageWarningPrefDefault = PR_FALSE;
+static const PRPackedBool kImageBlockImageInMailNewsPrefDefault = PR_FALSE;
+
+static inline already_AddRefed<nsIDocShell>
+GetRootDocShell(nsIDOMWindow *aWindow)
+{
+  nsIDocShell *rootShell = nsnull;
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(aWindow));
+  if (globalObj) {
+    nsCOMPtr<nsIDocShell> docShell;
+    globalObj->GetDocShell(getter_AddRefs(docShell));
+
+    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(docShell));
+    if (docShellTreeItem) {
+      nsCOMPtr<nsIDocShellTreeItem> rootItem;
+      docShellTreeItem->GetRootTreeItem(getter_AddRefs(rootItem));
+
+      CallQueryInterface(rootItem, &rootShell);
+    }
+  }
+
+  return rootShell;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsImgManager Implementation
@@ -78,6 +99,10 @@ NS_IMPL_ISUPPORTS4(nsImgManager,
                    nsSupportsWeakReference)
 
 nsImgManager::nsImgManager()
+  : mBehaviorPref(kImageBehaviorPrefDefault)
+  , mBlockerPref(kImageBlockerPrefDefault)
+  , mWarningPref(kImageWarningPrefDefault)
+  , mBlockInMailNewsPref(kImageBlockImageInMailNewsPrefDefault)
 {
 }
 
@@ -87,17 +112,14 @@ nsImgManager::~nsImgManager()
 
 nsresult nsImgManager::Init()
 {
-  nsresult rv;
-
   // On error, just don't use the host based lookup anymore. We can do the
   // other things, like mailnews blocking
   mPermissionManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
 
-  mPrefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
- 
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(mPrefBranch, &rv);
-    if (NS_SUCCEEDED(rv)) {
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefBranch) {
+    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefBranch);
+    if (prefInternal) {
       prefInternal->AddObserver(kImageBehaviorPrefName, this, PR_TRUE);
 
       // We don't do anything with it yet, but let it be. (bug 110112, 146513)
@@ -107,12 +129,36 @@ nsresult nsImgManager::Init()
       prefInternal->AddObserver(kImageBlockerPrefName, this, PR_TRUE);
       prefInternal->AddObserver(kImageBlockImageInMailNewsPrefName, this, PR_TRUE);
     }
+    PrefChanged(prefBranch, nsnull);
   }
 
-  rv = ReadPrefs();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Error occured reading image preferences");
-
   return NS_OK;
+}
+
+void
+nsImgManager::PrefChanged(nsIPrefBranch *aPrefBranch,
+                          const char    *aPref)
+{
+  PRBool val;
+
+#define PREF_CHANGED(_P) (!aPref || !strcmp(aPref, _P))
+
+  if (PREF_CHANGED(kImageBehaviorPrefName) &&
+      NS_SUCCEEDED(aPrefBranch->GetIntPref(kImageBehaviorPrefName, &val)) &&
+      val >= 0 && val <= 2)
+    mBehaviorPref = val;
+
+  if (PREF_CHANGED(kImageBlockerPrefName) &&
+      NS_SUCCEEDED(aPrefBranch->GetBoolPref(kImageBlockerPrefName, &val)))
+    mBlockerPref = val;
+
+  if (PREF_CHANGED(kImageWarningPrefName) &&
+      NS_SUCCEEDED(aPrefBranch->GetBoolPref(kImageWarningPrefName, &val)))
+    mWarningPref = val;
+
+  if (PREF_CHANGED(kImageBlockImageInMailNewsPrefName) &&
+      NS_SUCCEEDED(aPrefBranch->GetBoolPref(kImageBlockImageInMailNewsPrefName, &val)))
+    mBlockInMailNewsPref = val;
 }
 
 // nsIContentPolicy Implementation
@@ -171,8 +217,7 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
       if (!baseURI)
         return rv;
 
-      nsCOMPtr<nsIDocShell> docshell;
-      rv = GetRootDocShell(aWindow, getter_AddRefs(docshell));
+      nsCOMPtr<nsIDocShell> docshell = GetRootDocShell(aWindow);
       if (docshell) {
         PRUint32 appType;
         rv = docshell->GetAppType(&appType);
@@ -286,108 +331,15 @@ nsImgManager::TestPermission(nsIURI *aCurrentURI,
 }
 
 NS_IMETHODIMP
-nsImgManager::Observe(nsISupports *aSubject,
-                      const char *aTopic,
+nsImgManager::Observe(nsISupports     *aSubject,
+                      const char      *aTopic,
                       const PRUnichar *aData)
 {
-  nsresult rv;
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(aSubject);
+  NS_ASSERTION(!nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic),
+               "unexpected topic - we only deal with pref changes!");
 
-  // check the topic, and the cached prefservice
-  if (!mPrefBranch) {
-    NS_ERROR("No prefbranch");
-    return NS_ERROR_FAILURE;
-  }
-  
-  if (!nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) {
-    // which pref changed?
-    NS_LossyConvertUCS2toASCII pref(aData);
-
-    if (pref.Equals(kImageBehaviorPrefName)) {
-      rv = mPrefBranch->GetIntPref(kImageBehaviorPrefName, &mBehaviorPref);
-      if (NS_FAILED(rv) || mBehaviorPref < 0 || mBehaviorPref > 2) {
-        mBehaviorPref = kImageBehaviorPrefDefault;
-      }
-    } else if (pref.Equals(kImageWarningPrefName)) {
-      rv = mPrefBranch->GetIntPref(kImageWarningPrefName, &mWarningPref);
-      if (NS_FAILED(rv)) {
-        mWarningPref = kImageWarningPrefDefault;
-      }
-    } else if (pref.Equals(kImageBlockerPrefName)) {
-      rv = mPrefBranch->GetIntPref(kImageBlockerPrefName, &mBlockerPref);
-      if (NS_FAILED(rv)) {
-        mBlockerPref = kImageBlockerPrefDefault;
-      }
-    } else if (pref.Equals(kImageBlockImageInMailNewsPrefName)) {
-      rv = mPrefBranch->GetBoolPref(kImageBlockImageInMailNewsPrefName, &mBlockInMailNewsPref);
-      if (NS_FAILED(rv)) {
-        mBlockInMailNewsPref = kImageBlockImageInMailNewsPrefDefault;
-      }
-    }
-  }
-  
+  if (prefBranch)
+    PrefChanged(prefBranch, NS_LossyConvertUTF16toASCII(aData).get());
   return NS_OK;
-}
-
-nsresult
-nsImgManager::ReadPrefs()
-{
-  nsresult rv, rv2 = NS_OK;
-
-  // check the prefservice is cached
-  if (!mPrefBranch) {
-    NS_ERROR("No prefbranch");
-    return NS_ERROR_FAILURE;
-  }
-
-  rv = mPrefBranch->GetIntPref(kImageBehaviorPrefName, &mBehaviorPref);
-  if (NS_FAILED(rv) || mBehaviorPref < 0 || mBehaviorPref > 2) {
-    rv2 = rv;
-    mBehaviorPref = kImageBehaviorPrefDefault;
-  }
-
-  rv = mPrefBranch->GetBoolPref(kImageBlockerPrefName, &mBlockerPref);
-  if (NS_FAILED(rv)) {
-    rv2 = rv;
-    mBlockerPref = kImageWarningPrefDefault;
-  }
-
-  rv = mPrefBranch->GetBoolPref(kImageWarningPrefName, &mWarningPref);
-  if (NS_FAILED(rv)) {
-    rv2 = rv;
-    mWarningPref = kImageBlockerPrefDefault;
-  }
-
-  rv = mPrefBranch->GetBoolPref(kImageBlockImageInMailNewsPrefName, &mBlockInMailNewsPref);
-  if (NS_FAILED(rv)) {
-    rv2 = rv;
-    mBlockInMailNewsPref = kImageBlockImageInMailNewsPrefDefault;
-  }
-
-  return rv2;
-}
-
-NS_IMETHODIMP
-nsImgManager::GetRootDocShell(nsIDOMWindow *aWindow, nsIDocShell **result)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(aWindow));
-  if (!globalObj)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocShell> docshell;
-  rv = globalObj->GetDocShell(getter_AddRefs(docshell));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsIDocShellTreeItem> docshellTreeItem(do_QueryInterface(docshell, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsIDocShellTreeItem> rootItem;
-  rv = docshellTreeItem->GetRootTreeItem(getter_AddRefs(rootItem));
-  if (NS_FAILED(rv))
-    return rv;
-
-  return CallQueryInterface(rootItem, result);
 }
