@@ -758,6 +758,7 @@ protected:
     nsAutoString               mDocumentTitle;
     nsCOMPtr<nsIURI>           mDocumentURL;        // [OWNER] ??? compare with loader
     nsCOMPtr<nsILoadGroup>      mDocumentLoadGroup;   // [OWNER] leads to loader
+    nsCOMPtr<nsIRDFResource>   mRootResource;       // [OWNER]
     nsCOMPtr<nsIContent>       mRootContent;        // [OWNER] 
     nsIDocument*               mParentDocument;     // [WEAK]
     nsIScriptContextOwner*     mScriptContextOwner; // [WEAK] it owns me! (indirectly)
@@ -1083,19 +1084,19 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
                                 const char* aCommand,
                                 nsIURI* aOptionalURL )
 {
-		nsCOMPtr<nsIURI> syntheticURL;
-		if ( aOptionalURL )
-			syntheticURL = dont_QueryInterface(aOptionalURL);
-		else
-			{
-				nsAutoString seedString;
-				generate_RDF_seed(&seedString, 0);
+    nsCOMPtr<nsIURI> syntheticURL;
+    if ( aOptionalURL )
+        syntheticURL = dont_QueryInterface(aOptionalURL);
+    else
+        {
+            nsAutoString seedString;
+            generate_RDF_seed(&seedString, 0);
 #ifndef NECKO
-				NS_NewURL(getter_AddRefs(syntheticURL), seedString);
+            NS_NewURL(getter_AddRefs(syntheticURL), seedString);
 #else
-				NS_NewURI(getter_AddRefs(syntheticURL), seedString);
+            NS_NewURI(getter_AddRefs(syntheticURL), seedString);
 #endif // NECKO
-			}
+        }
 
 #if 0
     NS_ASSERTION(aURL != nsnull, "null ptr");
@@ -1104,7 +1105,7 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
 #endif
 
     if (aContainer && aContainer != mContentViewerContainer)
-      mContentViewerContainer = aContainer;
+        mContentViewerContainer = aContainer;
 
     nsresult rv;
 
@@ -1119,46 +1120,13 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
 
     SetDocumentURLAndGroup(syntheticURL);
 
-    if (NS_FAILED(rv = PrepareStyleSheets(syntheticURL))) 
-      return rv;
+    rv = PrepareStyleSheets(syntheticURL);
+    if (NS_FAILED(rv)) return rv;
 
-    // Create the composite data source and builder, but only do this if we're
-    // not a XUL fragment.
+    // Create the composite data source and builder, but only do this
+    // if we're not a XUL fragment. XUL fragments get "imported"
+    // directly into the parent document's datasource.
     if (mFragmentRoot == nsnull) {
-
-        nsCOMPtr<nsIRDFCompositeDataSource> db;
-        rv = nsComponentManager::CreateInstance(kRDFCompositeDataSourceCID,
-                                                nsnull,
-                                                kIRDFCompositeDataSourceIID,
-                                                (void**) getter_AddRefs(db));
-
-        if (NS_FAILED(rv)) {
-            NS_ERROR("couldn't create composite datasource");
-            return rv;
-        }
-
-        // Create a XUL content model builder
-        rv = nsComponentManager::CreateInstance(kRDFXULBuilderCID,
-                                                nsnull,
-                                                kIRDFContentModelBuilderIID,
-                                                getter_AddRefs(mXULBuilder));
-
-        if (NS_FAILED(rv)) {
-            NS_ERROR("couldn't create XUL builder");
-            return rv;
-        }
-
-        if (NS_FAILED(rv = mXULBuilder->SetDataBase(db))) {
-            NS_ERROR("couldn't set builder's db");
-            return rv;
-        }
-
-        mBuilders = nsnull; // release content model builders.
-        if (NS_FAILED(rv = AddContentModelBuilder(mXULBuilder))) {
-            NS_ERROR("could't add XUL builder");
-            return rv;
-        }
-
         // Create a "scratch" in-memory data store to associate with the
         // document to be a catch-all for any doc-specific info that we
         // need to store (e.g., current sort order, etc.)
@@ -1166,83 +1134,42 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
         // XXX This needs to be cloned across windows, and the final
         // instance needs to be flushed to disk. It may be that this is
         // really an RDFXML data source...
-#ifdef USE_LOCAL_STORE
-        rv = gRDFService->GetDataSource("rdf:local-store", &mLocalDataSource);
-
-        if (NS_FAILED(rv)) {
-            NS_ERROR("couldn't create local data source");
-            return rv;
-        }
-
-        if (NS_FAILED(rv = db->AddDataSource(mLocalDataSource))) {
-            NS_ERROR("couldn't add local data source to db");
-            return rv;
-        }
-#endif
-
-#if 0
-        // Now load the actual RDF/XML document data source. First, we'll
-        // see if the data source has been loaded and is registered with
-        // the RDF service. If so, do some monkey business to "pretend" to
-        // load it: really, we'll just walk its graph to generate the
-        // content model.
-        const char* uri;
-        if (NS_FAILED(rv = aURL->GetSpec(&uri)))
-            return rv;
-#endif
-
-        // We need to construct a new stream and load it. The stream will
-        // automagically register itself as a named data source, so if
-        // subsequent docs ask for it, they'll get the real deal. In the
-        // meantime, add us as an nsIRDFXMLDataSourceObserver so that
-        // we'll be notified when we need to load style sheets, etc.
-        if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-                                                        nsnull,
-                                                        kIRDFDataSourceIID,
-                                                        getter_AddRefs(mDocumentDataSource)))) {
-            NS_ERROR("unable to create XUL datasource");
-            return rv;
-        }
-
-        if (NS_FAILED(rv = db->AddDataSource(mDocumentDataSource))) {
-            NS_ERROR("unable to add XUL datasource to db");
-            return rv;
-        }
+        rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
+                                                nsnull,
+                                                kIRDFDataSourceIID,
+                                                getter_AddRefs(mDocumentDataSource));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create XUL datasource");
+        if (NS_FAILED(rv)) return rv;
     }
 
+    // Create a XUL content sink, a parser, and kick off the load.
     nsCOMPtr<nsIXULContentSink> sink;
-    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kXULContentSinkCID,
-                                                    nsnull,
-                                                    kIXULContentSinkIID,
-                                                    (void**) getter_AddRefs(sink)))) {
-        NS_ERROR("unable to create XUL content sink");
-        return rv;
-    }
+    rv = nsComponentManager::CreateInstance(kXULContentSinkCID,
+                                            nsnull,
+                                            kIXULContentSinkIID,
+                                            getter_AddRefs(sink));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create XUL content sink");
+    if (NS_FAILED(rv)) return rv;
 
-    {
-        if (NS_FAILED(rv = sink->Init(this, mDocumentDataSource))) {
-            NS_ERROR("Unable to initialize XUL content sink");
-            return rv;
-        }
-    }
+    rv = sink->Init(this, mDocumentDataSource);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to initialize datasource sink");
+    if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIParser> parser;
-    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kParserCID,
-                                                    nsnull,
-                                                    kIParserIID,
-                                                    (void**) getter_AddRefs(parser)))) {
-        NS_ERROR("unable to create parser");
-        return rv;
-    }
+    rv = nsComponentManager::CreateInstance(kParserCID,
+                                            nsnull,
+                                            kIParserIID,
+                                            getter_AddRefs(parser));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create parser");
+    if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIDTD> dtd;
-    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kWellFormedDTDCID,
-                                                    nsnull,
-                                                    kIDTDIID,
-                                                    (void**) getter_AddRefs(dtd)))) {
-        NS_ERROR("unable to construct DTD");
-        return rv;
-    }
+    rv = nsComponentManager::CreateInstance(kWellFormedDTDCID,
+                                            nsnull,
+                                            kIDTDIID,
+                                            getter_AddRefs(dtd));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to construct DTD");
+    if (NS_FAILED(rv)) return rv;
 
     mCommand = aCommand;
 
@@ -1252,10 +1179,10 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
     parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
     parser->SetContentSink(sink); // grabs a reference to the parser
 
-		*created_parser = parser;
+    *created_parser = parser;
 
-		return rv;
-	}
+    return rv;
+}
 
 NS_IMETHODIMP 
 XULDocumentImpl::PrepareStyleSheets(nsIURI* anURL)
@@ -1861,6 +1788,72 @@ XULDocumentImpl::BeginLoad()
 NS_IMETHODIMP 
 XULDocumentImpl::EndLoad()
 {
+    // Set up the document's composite datasource, which will include
+    // the main document datasource and the local store. Only do this
+    // if we are a bona-fide top-level XUL document; (mFragmentRoot !=
+    // nsnull) implies we are a XUL fragment.
+    if (mFragmentRoot == nsnull) {
+        NS_PRECONDITION(mRootResource != nsnull, "no root resource");
+        if (! mRootResource)
+            return NS_ERROR_UNEXPECTED;
+
+        nsresult rv;
+
+        nsCOMPtr<nsIRDFCompositeDataSource> db;
+        rv = nsComponentManager::CreateInstance(kRDFCompositeDataSourceCID,
+                                                nsnull,
+                                                kIRDFCompositeDataSourceIID,
+                                                (void**) getter_AddRefs(db));
+
+        NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't create composite datasource");
+        if (NS_FAILED(rv)) return rv;
+
+        // Create a XUL content model builder
+        rv = nsComponentManager::CreateInstance(kRDFXULBuilderCID,
+                                                nsnull,
+                                                kIRDFContentModelBuilderIID,
+                                                getter_AddRefs(mXULBuilder));
+
+        NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't create XUL builder");
+        if (NS_FAILED(rv)) return rv;
+
+        rv = mXULBuilder->SetDataBase(db);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't set builder's db");
+        if (NS_FAILED(rv)) return rv;
+
+        mBuilders = nsnull; // release content model builders.
+        rv = AddContentModelBuilder(mXULBuilder);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "could't add XUL builder");
+        if (NS_FAILED(rv)) return rv;
+
+        // Add the main document datasource to the content model builder
+        rv = db->AddDataSource(mDocumentDataSource);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add XUL datasource to db");
+        if (NS_FAILED(rv)) return rv;
+
+#ifdef USE_LOCAL_STORE
+        // Add the local store to the composite datasource.
+        rv = gRDFService->GetDataSource("rdf:local-store", &mLocalDataSource);
+
+        if (NS_FAILED(rv)) {
+            NS_ERROR("couldn't create local data source");
+            return rv;
+        }
+
+        rv = db->AddDataSource(mLocalDataSource);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't add local data source to db");
+        if (NS_FAILED(rv)) return rv;
+#endif
+
+        // Now create the root content for the document.
+        rv = mXULBuilder->CreateRootContent(mRootResource);
+        if (NS_FAILED(rv)) return rv;
+
+        NS_POSTCONDITION(mRootContent != nsnull, "unable to create root content");
+        if (! mRootContent)
+            return NS_ERROR_UNEXPECTED;
+    }
+
     StartLayout();
 
     PRInt32 i;
@@ -2370,18 +2363,8 @@ XULDocumentImpl::SetTransformMediator(nsITransformMediator* aMediator)
 NS_IMETHODIMP
 XULDocumentImpl::SetRootResource(nsIRDFResource* aResource)
 {
-    NS_PRECONDITION(mXULBuilder != nsnull, "not initialized");
-    if (! mXULBuilder)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    NS_PRECONDITION(mRootContent == nsnull, "already initialize");
-    if (mRootContent)
-        return NS_ERROR_ALREADY_INITIALIZED;
-
-    nsresult rv = mXULBuilder->CreateRootContent(aResource);
-
-    NS_POSTCONDITION(mRootContent != nsnull, "root content wasn't set");
-    return rv;
+    mRootResource = dont_QueryInterface(aResource);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
