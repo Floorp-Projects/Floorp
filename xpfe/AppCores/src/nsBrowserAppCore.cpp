@@ -1861,6 +1861,16 @@ nsBrowserAppCore::Confirm(const PRUnichar *text,
 }
 
 NS_IMETHODIMP
+nsBrowserAppCore::ConfirmYN(const PRUnichar *text,
+                          PRBool *result)
+{
+  PRBool bResult = PR_FALSE;
+  if (APP_DEBUG) printf("ConfirmYN\n");
+  *result = bResult;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsBrowserAppCore::ConfirmCheck(const PRUnichar *text, 
                                const PRUnichar *checkMsg, 
                                PRBool *checkValue, 
@@ -1868,6 +1878,18 @@ nsBrowserAppCore::ConfirmCheck(const PRUnichar *text,
 {
   PRBool bResult = PR_FALSE;
   if (APP_DEBUG) printf("ConfirmCheck\n");
+  *result = bResult;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserAppCore::ConfirmCheckYN(const PRUnichar *text, 
+                               const PRUnichar *checkMsg, 
+                               PRBool *checkValue, 
+                               PRBool *result)
+{
+  PRBool bResult = PR_FALSE;
+  if (APP_DEBUG) printf("ConfirmCheckYN\n");
   *result = bResult;
   return NS_OK;
 }

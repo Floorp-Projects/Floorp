@@ -1,15 +1,18 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
-<!DOCTYPE window> 
+
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
        >
        <data>
        	<broadcaster id="NetDialog:Message"/>
+       	<broadcaster id="NetDialog:CheckMessage"/>
        </data>
         <dialog>
       		<observes element="NetDialog:Message"   attribute="text" onchange="onUpdate()"/>
+      		<observes element="NetDialog:CheckMessage"   attribute="text" onchange="onUpdate()"/>
     	</dialog>
+
   <html:script>
 	function onUpdate()
 	{
@@ -26,6 +29,19 @@
         		prompt.childNodes[0].nodeValue = text;
         	}
         }
+        
+         var msg = document.getElementById("NetDialog:CheckMessage");
+    	if ( msg)
+    	{
+     		var text = msg.getAttribute("text");
+        	dump( text +"\n" );
+        	var prompt = (document.getElementById("checkboxLabel"));
+        	if ( prompt )
+        	{
+        		dump(" setting message \n" );
+        		prompt.childNodes[1].nodeValue = text;
+        	}
+        }
     }    
 </html:script>
           
@@ -33,23 +49,35 @@
     
    <html:table>
    <html:tr >
-   	<html:td html:colspan="2" >
-   		<html:span id="message">message text here </html:span>
+   	<html:td>
+   		<html:img html:src="resource:/res/samples/questionl.gif"></html:img>
+   	</html:td>
+   	
+   	<html:td>	
+   		<html:span id="message">m</html:span>
 	 </html:td>
    	
 
    </html:tr>
-  <html:tr>
-	  	<html:td html:valign ="middle">User: </html:td>
-	  	<html:td><html:input html:name="User" html:type="text" html:id="User" > </html:input>
-		</html:td>
-  </html:tr>
+ 
 	
   <html:tr>
-  	<html:td></html:td>
+  	<html:td>
+  	<html:label id="checkboxLabel">
+  		 <html:input type="checkbox" id="checkbox"/>
+  		  Backwards
+    </html:label>
+       </html:td>
+  	 <html:td>
+ 	 </html:td>
+   </html:tr>
+  
+  <html:tr>            
+  	<html:td>
+  	</html:td>
   	<html:td html:align="justify">
-  	<html:button id="OKButton"> OK </html:button>
-  	<html:button id ="CancelButton"> Cancel </html:button>
+  	<html:button id="OKButton">  Yes </html:button>
+  	<html:button id ="CancelButton"> No </html:button>
         </html:td>
  </html:tr>
  </html:table>

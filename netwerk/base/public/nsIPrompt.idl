@@ -42,6 +42,21 @@ interface nsIPrompt : nsISupports
                          out boolean checkValue);
 
     /**
+     * Puts up a dialog with Yes and No buttons.
+     * @return true for OK, false for Cancel
+     */
+    boolean ConfirmYN(in wstring text);
+
+    /**
+     * Puts up a dialog with Yes and No buttons, and
+     * a message with a single checkbox.
+     * @return true for OK, false for Cancel
+     */
+    boolean ConfirmCheckYN(in wstring text,
+                         in wstring checkMsg,
+                         out boolean checkValue);
+
+    /**
      * Puts up a text input dialog with OK and Cancel buttons.
      * @return true for OK, false for Cancel
      */

@@ -381,6 +381,8 @@ public:
   NS_IMETHOD Alert(const PRUnichar *text);
   NS_IMETHOD Confirm(const PRUnichar *text, PRBool *_retval);
   NS_IMETHOD ConfirmCheck(const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval);
+  NS_IMETHOD ConfirmYN(const PRUnichar *text, PRBool *_retval);
+  NS_IMETHOD ConfirmCheckYN(const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval);
   NS_IMETHOD Prompt(const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval);
   NS_IMETHOD PromptUsernameAndPassword(const PRUnichar *text, PRUnichar **user, PRUnichar **pwd, PRBool *_retval);
   NS_IMETHOD PromptPassword(const PRUnichar *text, PRUnichar **pwd, PRBool *_retval);
@@ -388,6 +390,7 @@ public:
 	// nsINetSupport interface methods
   NS_IMETHOD_(void) Alert(const nsString &aText);
   NS_IMETHOD_(PRBool) Confirm(const nsString &aText);
+  NS_IMETHOD_(PRBool) ConfirmYN(const nsString &aText);
   NS_IMETHOD_(PRBool) Prompt(const nsString &aText,
                              const nsString &aDefault,
                              nsString &aResult);
@@ -3673,6 +3676,29 @@ nsWebShell::Confirm(const nsString &aText)
 
 #ifdef NECKO
 NS_IMETHODIMP
+nsWebShell::ConfirmYN(const PRUnichar *text,
+                    PRBool *result)
+#else
+NS_IMETHODIMP_(PRBool)
+nsWebShell::ConfirmYN(const nsString &aText)
+#endif
+{
+#ifdef NECKO
+  if (mPrompter == nsnull)
+    return NS_OK;
+  return mPrompter->ConfirmYN(text, result);
+#else
+  PRBool bResult = PR_FALSE;
+
+  if (nsnull != mNetSupport) {
+    bResult = mNetSupport->ConfirmYN(aText);
+  }
+  return bResult;
+#endif
+}
+
+#ifdef NECKO
+NS_IMETHODIMP
 nsWebShell::ConfirmCheck(const PRUnichar *text, 
                          const PRUnichar *checkMsg, 
                          PRBool *checkValue, 
@@ -3681,6 +3707,19 @@ nsWebShell::ConfirmCheck(const PRUnichar *text,
   if (mPrompter == nsnull)
     return NS_OK;
   return mPrompter->ConfirmCheck(text, checkMsg, checkValue, result);
+}
+#endif
+
+#ifdef NECKO
+NS_IMETHODIMP
+nsWebShell::ConfirmCheckYN(const PRUnichar *text, 
+                         const PRUnichar *checkMsg, 
+                         PRBool *checkValue, 
+                         PRBool *result)
+{
+  if (mPrompter == nsnull)
+    return NS_OK;
+  return mPrompter->ConfirmCheckYN(text, checkMsg, checkValue, result);
 }
 #endif
 

@@ -76,8 +76,9 @@
   	<html:td>
   	</html:td>
   	<html:td html:align="justify">
+  	<html:button id="OKButton">  OK </html:button>
   	<html:button id ="CancelButton"> Cancel </html:button>
-  	<html:button id="OKButton">  OK </html:button> </html:td>
+        </html:td>
  </html:tr>
  </html:table>
 </window> 
