@@ -43,14 +43,6 @@
     #include "windows.h"
 #endif /* _WIN32 */
 
-
-#if defined(XP_MAC) || defined(XP_UNIX)
-#include "fe_proto.h"
-#endif
-#if defined(XP_PC) || defined(XP_OS2)
-#define LINEBREAK "\n"
-#endif
-
 #define XP_QSORT qsort
 
 #include "prefapi_private_data.h"
@@ -387,7 +379,7 @@ NS_IMETHODIMP nsPref::StartUpWith(const nsFileSpec& inFile)
             }
         }
 
-#if !defined(XP_PC) && !defined(XP_OS2) && !defined(XP_MAC)
+#if !defined(XP_PC) && !defined(XP_OS2)
         ok = pref_InitInitialObjects();
 #endif
     }
