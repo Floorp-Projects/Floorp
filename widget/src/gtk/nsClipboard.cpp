@@ -326,7 +326,10 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
 
   // Walk through flavors and see which flavor matches the one being pasted:
   PRUint32 i;
-  for (i=0;i<dfList->Count();i++) {
+  PRUint32 cnt = 0;
+  nsresult rv = dfList->Count(&cnt);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+  for (i=0;i<cnt;i++) {
     nsIDataFlavor * df;
     nsISupports * supports = dfList->ElementAt(i);
     if (NS_OK == supports->QueryInterface(kIDataFlavorIID, (void **)&df)) {
