@@ -2828,11 +2828,11 @@ nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNod
   if (!found && (refContent == mRootContent)) {
     if (ELEMENT_NODE == nodeType) {
       // Out with the old
-      ContentRemoved(nsnull, mRootContent, mProlog->Count());
+      ContentRemoved(nsnull, mRootContent, mProlog ? mProlog->Count() : 0);
       
       // In with the new
       SetRootContent(content);
-      ContentInserted(nsnull, content, mProlog->Count());
+      ContentInserted(nsnull, content, mProlog ? mProlog->Count() : 0);
       found = PR_TRUE;
     }
     else {
@@ -2846,10 +2846,10 @@ nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNod
     if (-1 != index) {
       nsIContent* oldContent;
       oldContent = (nsIContent*)mEpilog->ElementAt(index);
-      ContentRemoved(nsnull, oldContent, mProlog->Count()+(mRootContent?1:0)+index);
+      ContentRemoved(nsnull, oldContent, (mProlog ? mProlog->Count() : 0) +(mRootContent?1:0)+index);
       NS_RELEASE(oldContent);
       mEpilog->ReplaceElementAt(content, index);
-      ContentInserted(nsnull, content, mProlog->Count()+(mRootContent?1:0)+index);
+      ContentInserted(nsnull, content, (mProlog ? mProlog->Count() : 0)+(mRootContent?1:0)+index);
       NS_ADDREF(content);
       found = PR_TRUE;
     }
@@ -2903,7 +2903,7 @@ nsDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 
   if (!found && (content == mRootContent)) {
     // Out with the old
-    ContentRemoved(nsnull, mRootContent, mProlog->Count());
+    ContentRemoved(nsnull, mRootContent, mProlog ? mProlog->Count() : 0);
     NS_ADDREF(mRootContent); // for return, since next line releases
     SetRootContent(nsnull);
     found = PR_TRUE;
@@ -2913,7 +2913,7 @@ nsDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
     if (-1 != index) {
       // Don't drop reference count since we're going
       // to return this element anyway.
-      ContentRemoved(nsnull, content, mProlog->Count()+(mRootContent?1:0)+index);
+      ContentRemoved(nsnull, content, (mProlog ? mProlog->Count() : 0)+(mRootContent?1:0)+index);
       mEpilog->RemoveElementAt(index);
       found = PR_TRUE;
     }
