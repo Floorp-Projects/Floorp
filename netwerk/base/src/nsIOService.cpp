@@ -340,8 +340,6 @@ nsIOService::GetUserAgent(PRUnichar* *aUserAgent)
     return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 NS_IMETHODIMP
 nsIOService::NewChannelFromNativePath(const char *nativePath,
                                       nsILoadGroup* aLoadGroup,
@@ -373,6 +371,20 @@ nsIOService::NewChannelFromNativePath(const char *nativePath,
     
     *result = channel;
     NS_ADDREF(*result);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIOService::GetOffline(PRBool *offline)
+{
+    *offline = mOffline;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIOService::SetOffline(PRBool offline)
+{
+    mOffline = offline;
     return NS_OK;
 }
 
