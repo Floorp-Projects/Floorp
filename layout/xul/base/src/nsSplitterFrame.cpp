@@ -1076,66 +1076,27 @@ nsSplitterFrameInner::AdjustChildren(nsIPresContext* aPresContext)
 
    
 if (realTimeDrag) {
-    //    nsBoxLayoutState state(aPresContext);
-    //  state.SetLayoutReason(nsBoxLayoutState::Resize);
-    //mParentBox->Layout(state);
-    /*
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
-
-    shell->EnterReflowLock();
-    shell->ProcessReflowCommands(PR_TRUE);
-    shell->ExitReflowLock(PR_FALSE);
-    */
-
     nsCOMPtr<nsIPresShell> shell;
     aPresContext->GetShell(getter_AddRefs(shell));
     nsIFrame* frame = nsnull;
     mParentBox->GetFrame(&frame);
 
-    /*
-    shell->EnterReflowLock();
-    nsRect                bounds;
-    mParentBox->GetBounds(bounds);
-    nsSize                maxSize(bounds.width, bounds.height);
-    nsIRenderingContext*  rcx = nsnull;
-    nsresult rv = shell->CreateRenderingContext(frame, &rcx);
-    nsHTMLReflowState reflowState(aPresContext, frame,
-                                      eReflowReason_Resize, rcx, maxSize);
-    nsBoxLayoutState state(aPresContext, reflowState);
-    mParentBox->Layout(state);
-    shell->ExitReflowLock(PR_TRUE);
-    */
-     
     nsCOMPtr<nsIViewManager> viewManager;
     nsIView* view = nsnull;
     frame->GetView(aPresContext, &view);
 
-    nsRect damageRect(0,0,0,0);
-    mParentBox->GetContentRect(damageRect);
-
-    if (view) {
-        view->GetViewManager(*getter_AddRefs(viewManager));    
-    }
-    else {
+    if (!view) {
         nsPoint   offset;
         frame->GetOffsetFromView(aPresContext, offset, &view);
         NS_ASSERTION(nsnull != view, "no view");
-        damageRect += offset;
-        view->GetViewManager(*getter_AddRefs(viewManager));
     }
+    view->GetViewManager(*getter_AddRefs(viewManager));
 
     viewManager->DisableRefresh();
     shell->FlushPendingNotifications(PR_FALSE);
-    viewManager->EnableRefresh(NS_VMREFRESH_NO_SYNC);
-
-    viewManager->UpdateView(view, damageRect, NS_VMREFRESH_IMMEDIATE);
-
-
+    viewManager->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
 }
 else {
-    //mOuter->mState |= NS_FRAME_IS_DIRTY;
-    //mOuter->mParent->ReflowDirtyChild(shell, mOuter->mParent);
     nsBoxLayoutState state(aPresContext);
     mOuter->MarkDirty(state);
 }
