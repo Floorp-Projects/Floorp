@@ -98,8 +98,7 @@ public:
   
 private:
   nsHashtable *m_accounts;
-  nsIMsgAccount *m_defaultAccount;
-
+  nsCOMPtr<nsIMsgAccount> m_defaultAccount;
 
   nsHashKey *findAccount(nsIMsgAccount *);
   // hash table enumerators
@@ -128,7 +127,7 @@ private:
 NS_IMPL_ISUPPORTS(nsMsgAccountManager, GetIID());
 
 nsMsgAccountManager::nsMsgAccountManager() :
-  m_defaultAccount(0),
+  m_defaultAccount(null_nsCOMPtr()),
   m_prefs(0)
 {
   NS_INIT_REFCNT();
@@ -137,6 +136,7 @@ nsMsgAccountManager::nsMsgAccountManager() :
 
 nsMsgAccountManager::~nsMsgAccountManager()
 {
+  if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
   delete m_accounts;
 }
 
@@ -164,7 +164,7 @@ nsMsgAccountManager::createAccountWithKey(nsIMsgIncomingServer *server,
                                           nsIMsgAccount **_retval)
 {
   nsresult rv;
-  nsIMsgAccount *account=nsnull;
+  nsIMsgAccount* account=nsnull;
 
   rv = nsComponentManager::CreateInstance(kMsgAccountCID,
                                           nsnull,
@@ -177,27 +177,37 @@ nsMsgAccountManager::createAccountWithKey(nsIMsgIncomingServer *server,
   }
 
   account->SetKey((char *)accountKey);
-  return addAccount(account);
+  rv = addAccount(account);
+
+  // pointer has already been addreffed by CreateInstance
+  if (NS_SUCCEEDED(rv))
+    *_retval = account;
+
+  return rv;
+  
 }
 
 NS_IMETHODIMP
 nsMsgAccountManager::addAccount(nsIMsgAccount *account)
 {
-#ifdef DEBUG_alecf
-    printf("Adding account %p\n", account);
-#endif
     char *accountKey=nsnull;
     account->GetKey(&accountKey);
-    
     nsCStringKey key(accountKey);
+    
+#ifdef DEBUG_alecf
+    printf("Adding account %s\n", accountKey);
+#endif
     
     if (m_accounts->Exists(&key))
       return NS_ERROR_UNEXPECTED;
         
     m_accounts->Put(&key, account);
 
+    // do an addref for the storage in the hash table
+    NS_ADDREF(account);
+    
     if (m_accounts->Count() == 1)
-      m_defaultAccount = account;
+      m_defaultAccount = dont_QueryInterface(account);
 
     return NS_OK;
 }
@@ -224,7 +234,7 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
 #if defined(DEBUG_alecf) || defined(DEBUG_sspitzer)
     printf("Account (%p) found\n", entry.account);
 #endif
-    m_defaultAccount = entry.account;
+    m_defaultAccount = dont_QueryInterface(entry.account);
     
   }
   *aDefaultAccount = m_defaultAccount;
@@ -237,7 +247,7 @@ NS_IMETHODIMP
 nsMsgAccountManager::SetDefaultAccount(nsIMsgAccount * aDefaultAccount)
 {
   if (!findAccount(aDefaultAccount)) return NS_ERROR_UNEXPECTED;
-  m_defaultAccount = aDefaultAccount;
+  m_defaultAccount = dont_QueryInterface(aDefaultAccount);
   return NS_OK;
 }
 
@@ -340,12 +350,10 @@ nsMsgAccountManager::addServerToArray(nsHashKey *key, void *aData,
 {
   nsISupportsArray *array = (nsISupportsArray *)closure;
   nsIMsgAccount *account = (nsIMsgAccount *)aData;
-
   nsCOMPtr<nsIMsgIncomingServer> server;
   nsresult rv = account->GetIncomingServer(getter_AddRefs(server));
   if (NS_SUCCEEDED(rv))
     array->AppendElement(server);
-
   return PR_TRUE;
 }
 
@@ -378,7 +386,8 @@ nsMsgAccountManager::GetAllServers(nsISupportsArray **_retval)
   if (NS_FAILED(rv)) return rv;
 
   // convert hash table->nsISupportsArray of servers
-  m_accounts->Enumerate(addServerToArray, (void *)servers);
+  if (m_accounts)
+    m_accounts->Enumerate(addServerToArray, (void *)servers);
   
   *_retval = servers;
   return rv;
@@ -411,7 +420,7 @@ nsMsgAccountManager::LoadAccounts()
     printf("accountList = %s\n", accountList);
 #endif
    
-    nsIMsgAccount *account = nsnull;
+    nsCOMPtr<nsIMsgAccount> account;
     char *token = nsnull;
     char *rest = accountList;
     nsString2 str = "";
@@ -427,7 +436,7 @@ nsMsgAccountManager::LoadAccounts()
 #ifdef DEBUG_sspitzer
         printf("accountKey = %s\n", accountKey);
 #endif
-        account = LoadAccount(accountKey);
+        account = getter_AddRefs(LoadAccount(accountKey));
         if (account) {
           addAccount(account);
         }
@@ -445,14 +454,11 @@ nsMsgAccountManager::LoadAccounts()
       delete [] accountKey;
       accountKey = nsnull;
       str = "";
-      account = nsnull;
       token = nsCRT::strtok(rest, ",", &rest);
     }
 
     /* finished loading accounts */
     PR_Free(accountList);
-    accountList = nsnull;
-
     return NS_OK;
   }
 }
@@ -484,9 +490,9 @@ nsresult
 nsMsgAccountManager::upgradePrefs()
 {
     nsresult rv;
-    nsIMsgAccount *account;
-    nsIMsgIdentity *identity;
-    nsIMsgIncomingServer *server;
+    nsCOMPtr<nsIMsgAccount> account;
+    nsCOMPtr<nsIMsgIdentity> identity;
+    nsCOMPtr<nsIMsgIncomingServer> server;
 
     rv = nsComponentManager::CreateInstance(kMsgAccountCID,
                                             nsnull,
@@ -579,9 +585,8 @@ nsMsgAccountManager::upgradePrefs()
 
     // pop stuff
     // some of this ought to be moved out into the POP implementation
-    nsIPop3IncomingServer *popServer;
-    rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
-                                (void **)&popServer);
+    nsCOMPtr<nsIPop3IncomingServer> popServer;
+    popServer = do_QueryInterface(server, &rv);
     if (NS_SUCCEEDED(rv)) {
 
       rv = m_prefs->CopyCharPref("mail.pop_name", &oldstr);
