@@ -1617,15 +1617,15 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionError(const PRUnichar *pEr
 	if (badPassword)
 		SetPassword(nsnull);
 
+	PRUint32 urlQueueCnt = 0;
+
+	// pull the url out of the queue so we can get the msg window, and try to rerun it.
+	m_urlQueue->Count(&urlQueueCnt);
 	if (badPassword && ++m_redirectedLogonRetries <= 3)
 	{
 		// this will force a reprompt for the password.
 		// ### DMB TODO display error message?
-		PRUint32 cnt = 0;
-
-		// pull the url out of the queue so we can get the msg window, and try to rerun it.
-		m_urlQueue->Count(&cnt);
-		if (cnt > 0)
+		if (urlQueueCnt > 0)
 		{
 			nsCOMPtr<nsISupports>
 				aSupport(getter_AddRefs(m_urlQueue->ElementAt(0)));
@@ -1644,24 +1644,23 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionError(const PRUnichar *pEr
 
 			if (aImapUrl)
 			{
-				nsISupports *aConsumer =
-					(nsISupports*)m_urlConsumers.ElementAt(0);
-
-				NS_IF_ADDREF(aConsumer);
-        
+       
 				nsCOMPtr <nsIImapProtocol>  protocolInstance ;
 				m_waitingForConnectionInfo = PR_FALSE;
 				rv = CreateImapConnection(aEventQueue, aImapUrl,
 												   getter_AddRefs(protocolInstance));
-				m_urlQueue->RemoveElementAt(0);
-				m_urlConsumers.RemoveElementAt(0);
-
-				NS_IF_RELEASE(aConsumer);
 			}
 		}
 	}
 	else
+	{
 		m_redirectedLogonRetries = 0; // reset so next attempt will start at 0.
+		if (urlQueueCnt > 0)
+		{
+			m_urlQueue->RemoveElementAt(0);
+			m_urlConsumers.RemoveElementAt(0);
+		}
+	}
     return rv;
 }
   
