@@ -48,8 +48,10 @@
 #define MAX_PATH _MAX_PATH
 #else
 #include <windows.h>
-#include <direct.h>
 #endif
+#ifndef XP_OS2_EMX
+#include <direct.h>
+#endif /*emx*/
 #define COMPONENT_REG "component.reg"
 #endif
 
