@@ -215,7 +215,7 @@ NS_IMETHODIMP nsWalletlibService::Observe(nsISupports*, const char *aTopic, cons
 {
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
     WLLT_ClearUserData();
-    if (!nsCRT::strcmp(someData, "shutdown-cleanse")) {
+    if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
       WLLT_DeletePersistentUserData();
     }
   }
@@ -562,7 +562,7 @@ public:
     {
         if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
             SI_ClearUserData();
-        if (!nsCRT::strcmp(someData, "shutdown-cleanse"))
+        if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get()))
             SI_DeletePersistentUserData();
         }
         return NS_OK;
