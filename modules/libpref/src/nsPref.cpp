@@ -1004,7 +1004,7 @@ pref_addChild(PLHashEntry *he, int i, void *arg)
 
 		if (!substring || !substringBordersSeparator)
 		{
-			uint newsize = strlen(pcs->childList) + strlen(buf) + 2;
+			unsigned int newsize = strlen(pcs->childList) + strlen(buf) + 2;
 			if (newsize > pcs->bufsize)
 			{
 				pcs->bufsize *= 3;
