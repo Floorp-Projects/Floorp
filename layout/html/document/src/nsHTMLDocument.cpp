@@ -2316,13 +2316,13 @@ nsHTMLDocument::Writeln(JSContext *cx, jsval *argv, PRUint32 argc)
 }
 
 nsIContent *
-nsHTMLDocument::MatchId(nsIContent *aContent, const nsAReadableString& aName)
+nsHTMLDocument::MatchId(nsIContent *aContent, const nsAReadableString& aId)
 {
   nsAutoString value;
   nsIContent *result = nsnull;
 
   if ((NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, value)) &&
-      aName.Equals(value)) {
+      aId.Equals(value)) {
     return aContent;
   }
   
@@ -2331,7 +2331,7 @@ nsHTMLDocument::MatchId(nsIContent *aContent, const nsAReadableString& aName)
   for (i = 0; i < count && result == nsnull; i++) {
     nsIContent *child;
     aContent->ChildAt(i, child);
-    result = MatchId(child, aName);
+    result = MatchId(child, aId);
     NS_RELEASE(child);
   }  
 

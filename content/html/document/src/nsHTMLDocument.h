@@ -200,7 +200,7 @@ protected:
                             PRBool aInForm);
 
   void DeleteNamedItems();
-  nsIContent *MatchId(nsIContent *aContent, const nsAReadableString& aName);
+  nsIContent *MatchId(nsIContent *aContent, const nsAReadableString& aId);
 
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);
   virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);
