@@ -1754,9 +1754,6 @@ nsWindow::ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inTop
   StRegionFromPool localVisRgn;
   if ( !localVisRgn ) return;
 
-  nsRect bounds = mBounds;
-  LocalToWindowCoordinate(bounds);    // used below
-
   Rect frame;
   ::GetRegionBounds(clipRgn, &frame);
 
@@ -1793,15 +1790,11 @@ nsWindow::ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inTop
   }
   else
   {
-    // compute the non-visible region
+    // compute the non-visible region by subtracting what's currently
+    // visible (the window's visRgn) from the whole area we're updating
     StRegionFromPool nonVisibleRgn;
     if ( !nonVisibleRgn ) return;
-
-    // have to translate the window's visRgn from window to local coords
-    ::CopyRgn(mWindowPtr->visRgn, localVisRgn);
-    ::OffsetRgn(localVisRgn, bounds.x, bounds.y);
-
-    ::DiffRgn ( totalVisRgn, localVisRgn, nonVisibleRgn );
+    ::DiffRgn ( totalVisRgn, mWindowPtr->visRgn, nonVisibleRgn );
     
     // compute the extra area that may need to be updated
     // scoll the non-visible region to determine what needs updating
@@ -1832,13 +1825,11 @@ nsWindow::ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inTop
   
   // If the region to be scrolled contains regions which are currently dirty,
   // we must scroll those too, and union them with the updateRgn.
-  // get a copy of the dirty region
+  // get a copy of the dirty region.
   ::BeginUpdate(mWindowPtr);
   ::CopyRgn(mWindowPtr->visRgn, localVisRgn);   // re-use localVisRgn
   ::EndUpdate(mWindowPtr);
 
-  ::OffsetRgn(localVisRgn, bounds.x, bounds.y);
-  
   StRegionFromPool  dirtyRgn;
   if (!dirtyRgn) return;
   // get only the part of the dirtyRgn that intersects the frame
