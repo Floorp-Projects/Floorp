@@ -1949,7 +1949,7 @@ bool nsWindow::CallMethod(MethodInfo *info)
 		OnMove(aX,aY);
 		break;
 
-	case ONWORKSPACE:
+	case nsWindow::ONWORKSPACE:
 		NS_ASSERTION(info->nArgs == 2, "Wrong number of arguments to CallMethod");
 		if(eWindowType_popup != mWindowType && eWindowType_child != mWindowType)
 			DealWithPopups(ONWORKSPACE,nsPoint(0,0));
