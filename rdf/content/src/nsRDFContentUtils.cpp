@@ -583,18 +583,20 @@ nsRDFContentUtils::GetResource(PRInt32 aNameSpaceID, const nsString& aAttribute,
     // construct a fully-qualified URI from the namespace/tag pair.
 
     // XXX should we allow nodes with no namespace???
-    NS_PRECONDITION(aNameSpaceID != kNameSpaceID_Unknown, "no namespace");
-    if (aNameSpaceID == kNameSpaceID_Unknown)
-        return NS_ERROR_UNEXPECTED;
+    //NS_PRECONDITION(aNameSpaceID != kNameSpaceID_Unknown, "no namespace");
+    //if (aNameSpaceID == kNameSpaceID_Unknown)
+    //    return NS_ERROR_UNEXPECTED;
 
     nsresult rv;
 
-    NS_WITH_SERVICE(nsINameSpaceManager, nsmgr, kNameSpaceManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
     nsAutoString uri;
-    rv = nsmgr->GetNameSpaceURI(aNameSpaceID, uri);
-    // XXX ignore failure; treat as "no namespace"
+    if (aNameSpaceID != kNameSpaceID_Unknown && aNameSpaceID != kNameSpaceID_None) {
+        NS_WITH_SERVICE(nsINameSpaceManager, nsmgr, kNameSpaceManagerCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = nsmgr->GetNameSpaceURI(aNameSpaceID, uri);
+        // XXX ignore failure; treat as "no namespace"
+    }
 
     // XXX check to see if we need to insert a '/' or a '#'
     if (0 < uri.Length() && uri.Last() != '#' && uri.Last() != '/' && aAttribute.First() != '#')
