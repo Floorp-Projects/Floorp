@@ -201,7 +201,15 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
     if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       ReflowChild(mFirstChild, aPresContext, desiredSize, kidReflowState, aStatus);
     
-      // Place and size the child
+      // Place and size the child. Because we told the child it was fixed make sure
+      // it's at least as big as we told it. This handles the case where the child
+      // ignores the reflow state constraints
+      if (desiredSize.width < kidMaxSize.width) {
+        desiredSize.width = kidMaxSize.width;
+      }
+      if (desiredSize.height < kidMaxSize.height) {
+        desiredSize.height = kidMaxSize.height;
+      }
       nsRect  rect(borderPadding.left, borderPadding.top, desiredSize.width, desiredSize.height);
       mFirstChild->SetRect(rect);
 
