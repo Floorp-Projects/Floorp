@@ -401,11 +401,13 @@ fieldset {
 
 /* links */
 :link {
+  text-decoration: underline;
   cursor: pointer;
   -moz-user-focus: normal;
 }
 
 :visited {
+  text-decoration: underline;
   cursor: pointer;
   -moz-user-focus: normal;
 }
@@ -470,16 +472,16 @@ select {
 select > input[type="button"] {
   position: static ! important;
   white-space: nowrap;
-  background-image: url("arrow.gif");
-  background-repeat: no-repeat;
-  background-position: center;
+  background-image: url("arrow.gif") !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
   width: 12px;
   height: 12px;
   -moz-user-focus: none;
 }
 
 select > input[type="button"]:active {
-  background-image: url("arrowd.gif");
+  background-image: url("arrowd.gif") !important;
 }
 
 select[size], :-moz-select-scrolled-content {
