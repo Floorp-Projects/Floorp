@@ -362,6 +362,9 @@ bin/components/libpippki.so
 bin/components/pippki.xpt
 bin/chrome/pipnss.jar
 bin/chrome/pippki.jar
+; These are required for solaris 32-bit builds
+bin/libfreebl_pure32_3.so
+bin/libfreebl_hybrid_3.so
 
 [inspector]
 bin/components/libinspector.so
