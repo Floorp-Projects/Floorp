@@ -147,9 +147,8 @@ nsresult
 //
 //  Second, the encodings themselves.
 //
-
-NS_IMPL_QUERY_INTERFACE1(nsSOAPEncoding, nsISOAPEncoding)
 NS_IMPL_CI_INTERFACE_GETTER1(nsSOAPEncoding, nsISOAPEncoding)
+NS_IMPL_QUERY_INTERFACE1_CI(nsSOAPEncoding, nsISOAPEncoding)
 
 // Due to circular referencing with the registry we abdicate all ref counting
 //   to the registry itself. When the registry reaches zero it destroys all
