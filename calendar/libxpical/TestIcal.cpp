@@ -36,7 +36,7 @@
 
 
 #include <oeIICal.h>
-#include <oeICalImpl.h>
+#include "oeICalImpl.h"
 #include <nsIServiceManager.h>
 #include "nsIComponentRegistrar.h"
 

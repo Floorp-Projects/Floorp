@@ -975,8 +975,13 @@ icaltimetype oeICalEventImpl::GetNextRecurrence( icaltimetype begin, bool *isbeg
         *isbeginning = true;
     }
 
-    if( icaltime_compare( m_start->m_datetime , begin ) > 0 )
-        return m_start->m_datetime;
+    if( icaltime_compare( m_start->m_datetime , begin ) > 0 ) {
+        if( !m_recur )
+            return m_start->m_datetime;
+        PRTime nextinms = ConvertToPrtime( m_start->m_datetime );
+        if( !IsExcepted( nextinms ) )
+            return m_start->m_datetime;
+    }
 
     //for non recurring events
     if( !m_recur ) {
