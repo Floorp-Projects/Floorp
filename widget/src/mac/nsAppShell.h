@@ -34,6 +34,7 @@
 
 #include "nsIAppShell.h"
 #include "nsCOMPtr.h"
+#include "nsIToolkit.h"
 
 #include <memory>
 
@@ -42,7 +43,6 @@ using std::auto_ptr;
 class nsMacMessagePump;
 class nsMacMessageSink;
 class nsMacMemoryCushion;
-class nsIToolkit;
 
 
 class nsAppShell : public nsIAppShell
