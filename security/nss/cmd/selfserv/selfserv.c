@@ -90,6 +90,10 @@ static int handle_connection( PRFileDesc *, PRFileDesc *, int );
 static const char envVarName[] = { SSL_ENV_VAR_NAME };
 static const char inheritableSockName[] = { "SELFSERV_LISTEN_SOCKET" };
 
+static PRFloat64 secondsPerTick;
+static PRBool logStats = PR_FALSE;
+static int logPeriod = 30;
+
 
 const int ssl2CipherSuites[] = {
     SSL_EN_RC4_128_WITH_MD5,			/* A */
@@ -1005,6 +1009,14 @@ do_accepts(
     PRNetAddr   addr;
     PRErrorCode  perr;
 
+    PRIntervalTime previous = PR_IntervalNow();
+    PRIntervalTime latest = previous;
+    PRIntervalTime period = 0;
+    PRInt32 ops = 0;
+    PRFloat64 seconds;
+    PRFloat64 opsPerSec;
+
+
     VLOG(("selfserv: do_accepts: starting"));
     PR_SetThreadPriority( PR_GetCurrentThread(), PR_PRIORITY_HIGH);
 
@@ -1032,6 +1044,23 @@ do_accepts(
 
         VLOG(("selfserv: do_accept: Got connection\n"));
 
+        if (logStats) {
+            ops++;
+            latest = PR_IntervalNow();
+            period = latest - previous;
+            if (period < 1) {
+                period = 1; /* tick */
+            }
+            seconds = (PRFloat64) period*secondsPerTick;
+            if (seconds >= logPeriod) {
+                opsPerSec = ops / seconds;
+                fprintf(stderr, "%.2f op%s/second\n", opsPerSec,
+    	    	(opsPerSec>1)?"s":"");
+                seconds = 0;
+                previous = latest;
+                ops = 0;
+            }
+        }
 	PZ_Lock(qLock);
 	while (PR_CLIST_IS_EMPTY(&freeJobs) && !stopping) {
             PZ_WaitCondVar(freeListNotEmptyCv, PR_INTERVAL_NO_TIMEOUT);
@@ -1370,12 +1399,15 @@ main(int argc, char **argv)
     progName = strrchr(tmp, '\\');
     progName = progName ? progName + 1 : tmp;
 
+    secondsPerTick = 1.0 / (PRFloat64)PR_SecondsToInterval(1);
+
     PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
 
     /* please keep this list of options in ASCII collating sequence.
     ** numbers, then capital letters, then lower case, alphabetical. 
     */
-    optstate = PL_CreateOptState(argc, argv, "2:3DM:RTc:d:f:hi:lmn:op:rt:vw:x");
+    optstate = PL_CreateOptState(argc, argv, 
+    	"2:3DL:M:RTc:d:f:hi:lmn:op:rt:vw:x");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	++optionsFound;
 	switch(optstate->option) {
@@ -1384,6 +1416,12 @@ main(int argc, char **argv)
 	case '3': disableSSL3 = PR_TRUE; break;
 
 	case 'D': noDelay = PR_TRUE; break;
+
+        case 'L':
+            logStats = PR_TRUE;
+            logPeriod  = PORT_Atoi(optstate->value);
+            if (logPeriod < 0) logPeriod = 30;
+            break;
 
 	case 'M': 
 	    maxProcs = PORT_Atoi(optstate->value); 
