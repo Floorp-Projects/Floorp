@@ -40,7 +40,6 @@ REQUIRES    = xpcom \
 		      shistory \
 		      embed_base \
 		      pref \
-			  cookie\
 			  view\
 			  windowwatcher \
 			  appshell \
