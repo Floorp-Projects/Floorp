@@ -864,7 +864,6 @@ PRInt32 _MD_send(PRFileDesc *fd, const void *buf, PRInt32 amount,
      * write() are fairly equivalent in performance.
      */
 #if defined(SOLARIS)
-retry:
     PR_ASSERT(0 == flags);
     while ((rv = write(osfd,buf,tmp_amount)) == -1) {
 #else
@@ -894,7 +893,7 @@ retry:
 			if (err == ERANGE) {
 				if (tmp_amount > 1) {
 					tmp_amount = tmp_amount/2;	/* half the bytes */
-					goto retry;
+					continue;
 				}
 			}
 #endif
