@@ -182,7 +182,7 @@ public class BaseFunction extends IdScriptable implements Function {
               case Id_toString: {
                 BaseFunction realf = realFunction(thisObj, f);
                 int indent = ScriptRuntime.toInt32(args, 0);
-                return realf.decompile(cx, indent, 0);
+                return realf.decompile(indent, 0);
               }
 
               case Id_toSource: {
@@ -197,7 +197,7 @@ public class BaseFunction extends IdScriptable implements Function {
                         indent = 0;
                     }
                 }
-                return realf.decompile(cx, indent, flags);
+                return realf.decompile(indent, flags);
               }
 
               case Id_apply:
@@ -301,13 +301,11 @@ public class BaseFunction extends IdScriptable implements Function {
      * Decompile the source information associated with this js
      * function/script back into a string.
      *
-     * @param cx Current context.
-     *
      * @param indent How much to indent the decompiled result.
      *
      * @param flags Flags specifying format of decompilation output.
      */
-    public String decompile(Context cx, int indent, int flags)
+    String decompile(int indent, int flags)
     {
         StringBuffer sb = new StringBuffer();
         boolean justbody = (0 != (flags & Decompiler.ONLY_BODY_FLAG));

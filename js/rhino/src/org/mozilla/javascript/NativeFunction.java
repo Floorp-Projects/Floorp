@@ -67,17 +67,15 @@ public class NativeFunction extends BaseFunction
     }
 
     /**
-     * @param cx Current context
-     *
      * @param indent How much to indent the decompiled result
      *
      * @param flags Flags specifying format of decompilation output
      */
-    public final String decompile(Context cx, int indent, int flags)
+    final String decompile(int indent, int flags)
     {
         String encodedSource = getEncodedSource();
         if (encodedSource == null) {
-            return super.decompile(cx, indent, flags);
+            return super.decompile(indent, flags);
         } else {
             UintMap properties = new UintMap(1);
             properties.put(Decompiler.INITIAL_INDENT_PROP, indent);

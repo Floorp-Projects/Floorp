@@ -1243,7 +1243,7 @@ public class Context
                                         int indent)
     {
         NativeFunction scriptImpl = (NativeFunction) script;
-        return scriptImpl.decompile(this, indent, 0);
+        return scriptImpl.decompile(indent, 0);
     }
 
     /**
@@ -1262,7 +1262,7 @@ public class Context
     public final String decompileFunction(Function fun, int indent)
     {
         if (fun instanceof BaseFunction)
-            return ((BaseFunction)fun).decompile(this, indent, 0);
+            return ((BaseFunction)fun).decompile(indent, 0);
         else
             return "function " + fun.getClassName() +
                    "() {\n\t[native code]\n}\n";
@@ -1285,7 +1285,7 @@ public class Context
     {
         if (fun instanceof BaseFunction) {
             BaseFunction bf = (BaseFunction)fun;
-            return bf.decompile(this, indent, Decompiler.ONLY_BODY_FLAG);
+            return bf.decompile(indent, Decompiler.ONLY_BODY_FLAG);
         }
         // ALERT: not sure what the right response here is.
         return "[native code]\n";

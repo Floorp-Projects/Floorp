@@ -107,7 +107,7 @@ public class NativeJavaMethod extends BaseFunction
         return sig.toString();
     }
 
-    public String decompile(Context cx, int indent, int flags)
+    String decompile(int indent, int flags)
     {
         StringBuffer sb = new StringBuffer();
         boolean justbody = (0 != (flags & Decompiler.ONLY_BODY_FLAG));
