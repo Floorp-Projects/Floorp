@@ -25,6 +25,7 @@ interface BrowserAppCore : BaseAppCore
 	void walletEditor(in Window win);
 	void walletChangePassword();
 	void walletQuickFillin(in Window win);
+	void walletRequestToCapture(in Window win);
 	void walletSamples();
 
 	void setToolbarWindow(in Window win);

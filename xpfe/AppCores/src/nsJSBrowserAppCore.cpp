@@ -892,6 +892,62 @@ BrowserAppCoreWalletQuickFillin(JSContext *cx, JSObject *obj, uintN argc, jsval 
 
 
 //
+// Native method WalletRequestToCapture
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreWalletRequestToCapture(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindowPtr b0;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.walletrequesttocapture", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function walletRequestToCapture requires 1 parameter");
+      return JS_FALSE;
+    }
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
+                                           kIWindowIID,
+                                           "Window",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->WalletRequestToCapture(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method WalletSamples
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1536,6 +1592,7 @@ static JSFunctionSpec BrowserAppCoreMethods[] =
   {"walletEditor",          BrowserAppCoreWalletEditor,     1},
   {"walletChangePassword",          BrowserAppCoreWalletChangePassword,     0},
   {"walletQuickFillin",          BrowserAppCoreWalletQuickFillin,     1},
+  {"walletRequestToCapture",          BrowserAppCoreWalletRequestToCapture,     1},
   {"walletSamples",          BrowserAppCoreWalletSamples,     0},
   {"setToolbarWindow",          BrowserAppCoreSetToolbarWindow,     1},
   {"setContentWindow",          BrowserAppCoreSetContentWindow,     1},

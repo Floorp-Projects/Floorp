@@ -65,6 +65,8 @@ public:
 
   NS_IMETHOD    WalletQuickFillin(nsIDOMWindow* aWin)=0;
 
+  NS_IMETHOD    WalletRequestToCapture(nsIDOMWindow* aWin)=0;
+
   NS_IMETHOD    WalletSamples()=0;
 
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin)=0;
@@ -109,6 +111,7 @@ public:
   NS_IMETHOD    WalletEditor(nsIDOMWindow* aWin);  \
   NS_IMETHOD    WalletChangePassword();  \
   NS_IMETHOD    WalletQuickFillin(nsIDOMWindow* aWin);  \
+  NS_IMETHOD    WalletRequestToCapture(nsIDOMWindow* aWin);  \
   NS_IMETHOD    WalletSamples();  \
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin);  \
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin);  \
@@ -141,6 +144,7 @@ public:
   NS_IMETHOD    WalletEditor(nsIDOMWindow* aWin) { return _to WalletEditor(aWin); }  \
   NS_IMETHOD    WalletChangePassword() { return _to WalletChangePassword(); }  \
   NS_IMETHOD    WalletQuickFillin(nsIDOMWindow* aWin) { return _to WalletQuickFillin(aWin); }  \
+  NS_IMETHOD    WalletRequestToCapture(nsIDOMWindow* aWin) { return _to WalletRequestToCapture(aWin); }  \
   NS_IMETHOD    WalletSamples() { return _to WalletSamples(); }  \
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin) { return _to SetToolbarWindow(aWin); }  \
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin) { return _to SetContentWindow(aWin); }  \

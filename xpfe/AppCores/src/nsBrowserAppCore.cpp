@@ -1075,28 +1075,13 @@ nsBrowserAppCore::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
   scriptGlobalObject = do_QueryInterface(aForm); 
   scriptGlobalObject->GetWebShell(getter_AddRefs(webcontent)); 
 
-  /* obtain the url */
-  nsresult res;
-  nsString urlString = nsString("");
-  if (webcontent) {
-    const PRUnichar *url = 0;
-    PRInt32 history;
-    res = webcontent->GetHistoryIndex(history);
-    if (NS_SUCCEEDED(res)) {
-      res = webcontent->GetURL( history, &url );
-      if (NS_SUCCEEDED(res)) {
-        urlString = nsString(url);
-      }
-    }
-  }
-
   shell = GetPresShellFor(webcontent);
   nsIWalletService *walletservice;
-  res = nsServiceManager::GetService(kWalletServiceCID,
+  nsresult res = nsServiceManager::GetService(kWalletServiceCID,
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
   if (NS_SUCCEEDED(res) && (nsnull != walletservice)) {
-    res = walletservice->WALLET_Prefill(shell, urlString, PR_FALSE);
+    res = walletservice->WALLET_Prefill(shell, PR_FALSE);
     nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
     if (NS_FAILED(res)) { /* this just means that there was nothing to prefill */
       return NS_OK;
@@ -1195,8 +1180,37 @@ nsBrowserAppCore::WalletQuickFillin(nsIDOMWindow* aWin)
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
-    nsString urlString = nsString("");
-    res = walletservice->WALLET_Prefill(shell, urlString, PR_TRUE);
+    res = walletservice->WALLET_Prefill(shell, PR_TRUE);
+    nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
+    return NS_OK;
+  } else {
+    return res;
+  }
+}
+
+NS_IMETHODIMP    
+nsBrowserAppCore::WalletRequestToCapture(nsIDOMWindow* aWin)
+{
+  NS_PRECONDITION(aWin != nsnull, "null ptr");
+  if (! aWin)
+    return NS_ERROR_NULL_POINTER;
+
+  nsIPresShell* shell;
+  shell = nsnull;
+  nsCOMPtr<nsIWebShell> webcontent; 
+
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject; 
+  scriptGlobalObject = do_QueryInterface(aWin); 
+  scriptGlobalObject->GetWebShell(getter_AddRefs(webcontent)); 
+
+  shell = GetPresShellFor(webcontent);
+  nsIWalletService *walletservice;
+  nsresult res;
+  res = nsServiceManager::GetService(kWalletServiceCID,
+                                     kIWalletServiceIID,
+                                     (nsISupports **)&walletservice);
+  if ((NS_OK == res) && (nsnull != walletservice)) {
+    res = walletservice->WALLET_RequestToCapture(shell);
     nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
     return NS_OK;
   } else {
@@ -1223,6 +1237,10 @@ nsBrowserAppCore::WalletSamples() {
 }
 NS_IMETHODIMP
 nsBrowserAppCore::WalletChangePassword() {
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsBrowserAppCore::WalletRequestToCapture(nsIDOMWindow*) {
   return NS_OK;
 }
 NS_IMETHODIMP
