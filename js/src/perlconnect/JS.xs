@@ -77,6 +77,14 @@ checkError(JSContext *cx)
     return JS_TRUE;
 }
 
+static void
+clearException(JSContext *cx) 
+{
+    if (JS_IsExceptionPending(cx)) {
+        JS_ClearPendingException(cx);
+    }
+}
+
 /************************************************************/
 /* calback stub */
 
@@ -109,6 +117,7 @@ typedef struct PerlCallbackItem PerlCallbackItem;
 struct PerlObjectItem {
     char * name;
     SV* pObject;
+    //JSObject *jsStub;
     JSObject *jsObject;
     JSClass *jsClass;
     struct PerlCallbackItem* vector;
@@ -284,7 +293,7 @@ PCB_FreeObjectItem(PerlObjectItem *object) {
 }
 
 static void 
-PCB_FreeContextItem(JSContext * cx) {
+PCB_FreeContextItem(JSContext *cx) {
     JSContextItem *cxitem, *aux;
     PerlObjectItem *objitem, *next;
 
@@ -456,6 +465,10 @@ PCB_SetProperty(JSContext *cx, JSObject *obj, jsval name, jsval *rval) {
 /* JSClass pointer is disposed by 
    JS engine during context cleanup _PH_ 
 */
+void
+PCB_FinalizeStub(JSContext *cx, JSObject *obj) {
+}
+
 static JSClass* 
 PCB_NewStdJSClass(char *name) {	
     JSClass *class;
@@ -470,7 +483,8 @@ PCB_NewStdJSClass(char *name) {
     class->enumerate = JS_EnumerateStub;
     class->resolve = JS_ResolveStub;
     class->convert = JS_ConvertStub;
-    class->finalize = JS_FinalizeStub;
+    //class->finalize = JS_FinalizeStub;
+    class->finalize = PCB_FinalizeStub;
     return(class);
 }
 
@@ -594,7 +608,7 @@ JS_DestroyRuntime(rt)
  # package JS::Runtime
 MODULE = JS    PACKAGE = JS::Runtime   PREFIX = JS_
 
-JSContext *
+int
 JS_NewContext(rt, stacksize)
     JSRuntime *rt
     int        stacksize
@@ -613,8 +627,9 @@ JS_NewContext(rt, stacksize)
         /* __PH__ set the error reporter */
         JS_SetErrorReporter(cx, PCB_ErrorReporter); 
         obj = JS_NewObject(cx, &global_class, NULL, NULL);
+        JS_SetGlobalObject(cx, obj);
         JS_InitStandardClasses(cx, obj);
-        RETVAL = cx;
+        RETVAL = (int)cx;
     }
     OUTPUT:
     RETVAL
@@ -631,6 +646,7 @@ JS_DestroyContext(cx)
             JS_ClearPendingException(cx);
         }
         JS_SetErrorReporter(cx, NULL);
+        JS_GC(cx); //important
         JS_DestroyContext(cx);
         PCB_FreeContextItem(cx);
     }
@@ -658,72 +674,50 @@ JS_eval(cx, bytes, ...)
             cxitem = PCB_FindContextItem(cx);
             if (!cxitem || cxitem->dieFromErrors)
                 croak("JS script evaluation failed");
+       
+            clearException(cx);
             XSRETURN_UNDEF;
         } 
         RETVAL = rval; 
     }
+    clearException(cx);
     OUTPUT:
     RETVAL
 
-
-JSScript *
-JS_compileScript(cx, bytes, ...)
-    JSContext *cx
-    char *bytes
-    PREINIT:
-    JSContextItem *cxitem;
-    char *filename = NULL;
-    JSObject *scrobj;
-    CODE:
-    {
-        if (items > 2) { filename = SvPV(ST(2), PL_na); };
-        /* Call on the global object */
-        if(!(RETVAL = JS_CompileScript(cx, JS_GetGlobalObject(cx), 
-                                       bytes, strlen(bytes), 
-                                       filename ? filename : "Perl", 
-                                       0)))
-            {
-                cxitem = PCB_FindContextItem(cx);
-                if (!cxitem || cxitem->dieFromErrors)
-                    croak("JS script compilation failed");
-                XSRETURN_UNDEF;
-            }
-        //scrobj = JS_NewScriptObject(cx, RETVAL);
-        //JS_AddRoot(cx, &scrobj);
-    }
-    OUTPUT:
-    RETVAL
 
 jsval
-JS_exec(cx, script)
+JS_exec_(cx, script)
     JSContext *cx
-    JSScript *script
+    SV    *script
     PREINIT:
     JSContextItem *cxitem;
-    char *filename = NULL;
+    JSScript *handle;
     CODE:
     {
         jsval rval;
+        handle = (JSScript*)SvIV(*hv_fetch((HV*)SvRV(script), "_script", 7, 0));
         /* Call on the global object */
         if(!JS_ExecuteScript(cx, JS_GetGlobalObject(cx), 
-                             script, &rval)) {
+                             handle, &rval)) {
             cxitem = PCB_FindContextItem(cx);
             if (!cxitem || cxitem->dieFromErrors)
                 croak("JS script evaluation failed");
+
+            clearException(cx);
             XSRETURN_UNDEF;
         }
+        clearException(cx);
         RETVAL = rval;
-        //RETVAL = 1;
     }
     OUTPUT:
     RETVAL
 
-void
-JS_destroyScript(cx, script)
-     JSContext *cx
-     JSScript *script
-    CODE:
-    JS_DestroyScript(cx, script);
+#void
+#JS_destroyScript(cx, script)
+#     JSContext *cx
+#     JSScript *script
+#    CODE:
+#    JS_DestroyScript(cx, script);
 
 # __PH__
 void
@@ -808,7 +802,14 @@ JS_createObject(cx, object, name,  methods)
     }
     /* create js object in given context */
     object_class = PCB_NewStdJSClass(name);
-    jso = JS_NewObject(cx, object_class, NULL, 0);
+    //jso = JS_NewObject(cx, object_class, NULL, 0);
+
+    jso = JS_DefineObject(cx, JS_GetGlobalObject(cx), name, 
+                          object_class, NULL, 
+                          JSPROP_ENUMERATE | JSPROP_READONLY | 
+                          JSPROP_PERMANENT);
+
+
     if (!jso) croak("Unable create JS object");
     /* create callback info */
     po = PCB_AddObject(name, object, cx, jso, object_class);
@@ -826,17 +827,6 @@ JS_createObject(cx, object, name,  methods)
             croak("Unable create JS function");
         pcbitem = pcbitem->next;
     }
-/*    for (i = 0; i < po->count; i++) {
-        if (! JS_DefineFunction(cx, jso, 
-                           po->vector[i]->name,
-                           PCB_UniversalStub,
-                           0,0))
-           croak("Unable create JS function\n");
-           } */
-    po->jsObject = JS_InitClass(cx, JS_GetGlobalObject(cx), jso, 
-                object_class, 0, 0,
-                NULL, NULL, NULL, NULL);
-
 
 # __PH__END
 
@@ -995,4 +985,61 @@ JS_EXISTS(obj, key)
     OUTPUT:
     RETVAL
 
+#script
+MODULE = JS    PACKAGE = JS::Script   PREFIX = JS_
+
+int
+JS_compileScript(object, cx, bytes, ...)
+    SV *object
+    JSContext *cx
+    char *bytes
+    PREINIT:
+    JSContextItem *cxitem;
+    char *filename = NULL;
+    CODE:
+    {
+        if (items > 2) { filename = SvPV(ST(2), PL_na); };
+        /* Call on the global object */
+        if(!(RETVAL = (int)JS_CompileScript(cx, JS_GetGlobalObject(cx), 
+                                       bytes, strlen(bytes), 
+                                       filename ? filename : "Perl", 
+                                       0)))
+            {
+                cxitem = PCB_FindContextItem(cx);
+                if (!cxitem || cxitem->dieFromErrors)
+                    croak("JS script compilation failed");
+                XSRETURN_UNDEF;
+            }
+    }
+    OUTPUT:
+    RETVAL
+
+int 
+JS_rootScript(object, cx, name)
+    SV *object
+    JSContext *cx
+    char *name
+    PREINIT:
+    JSObject **scrobj;
+    JSScript *handle;
+    CODE:
+    handle = (JSScript*)SvIV(*hv_fetch((HV*)SvRV(object), "_script", 7, 0));
+    scrobj = malloc(sizeof(JSObject*));
+    *scrobj = JS_NewScriptObject(cx, handle);
+    JS_AddNamedRoot(cx, scrobj, name);
+    RETVAL = (int)scrobj;
+    OUTPUT:
+    RETVAL
+
+void 
+JS_destroyScript(object, cx)
+    SV *object
+    JSContext *cx
+    PREINIT:
+    JSObject **scrobj;
+    JSScript *handle;
+    CODE:
+    handle = (JSScript*)SvIV(*hv_fetch((HV*)SvRV(object), "_script", 7, 0));
+    scrobj = (JSObject**)SvIV(*hv_fetch((HV*)SvRV(object), "_root", 5, 0));
+    JS_RemoveRoot(cx, scrobj);
 

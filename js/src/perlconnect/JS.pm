@@ -118,9 +118,23 @@ sub new     #7/31/98 3:39PM
 {
     warn "JS::Context::new\n" if $DEBUG;
     my($class, $rt, $stacksize) = @_;
-    my $this = JS::Runtime::NewContext($rt, $stacksize);
-    return  $this;
+    $class = ref $class || $class;
+    my $cx = JS::Runtime::NewContext($rt, $stacksize);
+    my $self = {
+		_handle => $cx,
+		_name => ("name_" . int (rand 1000)),
+	       };
+      $self->{_handle};
+    bless $self, $class;
+    return  $self;
 }   ##new
+
+use Data::Dumper;
+
+sub exec {
+    my ($self, $script) = @_;
+    $self->exec_($script);
+}
 
 sub DESTROY     #7/31/98 4:54PM
 {
@@ -136,23 +150,22 @@ sub DESTROY     #7/31/98 4:54PM
 package JS::Script;
 
 sub new {
-    my ($class, $code, $name, $rt, $cx) = @_;
+    my ($class, $cx, $code, $name) = @_;
     $class = ref $class || $class;
     my $self = {};
     bless $self, $class;
-    $self->{_rt} = $rt;
-    my $wcx = $cx or $rt->createContext(8192);
-    $self->{_script} = $wcx->compileScript($code, $name);
-    undef $wcx unless $cx;
+    $self->{_script} = $self->compileScript($cx, $code, $name);
+    $self->{_root} = $self->rootScript($cx, $name);
+    $self->{_cx} = $cx; #!!! dangerous
+    $self->{_name} = $name;
     return $self;
 }
 
 sub DESTROY {
-    my ($self, $cx) = @_;
-    my $wcx = $cx or $self->{_rt}->createContext(8192);
-    $wcx->destroyScript($self);
-    undef $self->{_rt};
-    undef $wcx unless $cx;
+    my $self = shift;
+    print "---> script destroy\n";
+    my $cx = $self->{_cx};
+    $self->destroyScript($cx);
 }
 
 ############################################################
