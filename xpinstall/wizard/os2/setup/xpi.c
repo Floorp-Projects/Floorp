@@ -237,9 +237,9 @@ HRESULT SmartUpdateJars()
     hrResult = pfnXpiInit(szBuf, FILE_INSTALL_LOG, cbXPIProgress);
 
     ShowMessage(szMsgSmartUpdateStart, FALSE);
-//    InitProgressDlg();
+    InitProgressDlg();
     GetTotalArchivesToInstall();
-//    WinSetWindowText(dlgInfo.hWndDlg, szDlgExtractingTitle);
+    WinSetWindowText(dlgInfo.hWndDlg, szDlgExtractingTitle);
 
     dwIndex0          = 0;
     dwCurrentArchive  = 0;
@@ -297,7 +297,7 @@ HRESULT SmartUpdateJars()
         }
 
         sprintf(szBuf, szStrInstalling, siCObject->szDescriptionShort);
-//        SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS0, szBuf);
+        WinSetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS0, szBuf);
         LogISXPInstallComponent(siCObject->szDescriptionShort);
 
         hrResult = pfnXpiInstall(szArchive, "", 0xFFFF);
@@ -375,7 +375,7 @@ void cbXPIProgress(const char* msg, PRInt32 val, PRInt32 max)
     if(max == 0)
     {
       sprintf(szStrProcessingFileBuf, szStrProcessingFile, szFilename);
-//      SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS3, szStrProcessingFileBuf);
+      WinSetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS3, szStrProcessingFileBuf);
       bBarberBar = TRUE;
 //      UpdateGaugeFileBarber();
     }
@@ -391,7 +391,7 @@ void cbXPIProgress(const char* msg, PRInt32 val, PRInt32 max)
       }
 
       sprintf(szStrCopyingFileBuf, szStrCopyingFile, szFilename);
-//      SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS3, szStrCopyingFileBuf);
+      WinSetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS3, szStrCopyingFileBuf);
 //      UpdateGaugeFileProgressBar((unsigned)(((double)(val+1)/(double)max)*(double)100));
     }
   }
@@ -423,14 +423,16 @@ CenterWindow(HWND hWndDlg)
 
 	SetWindowPos(hWndDlg, NULL, iLeft, iTop, -1, -1, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 }
+#endif
 
 // Window proc for dialog
-LRESULT CALLBACK
-ProgressDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+MRESULT APIENTRY
+ProgressDlgProc(HWND hWndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
+#ifdef OLDCODE
 	switch (msg)
   {
-		case WM_INITDIALOG:
+		case WM_INITDLG:
       DisableSystemMenuItems(hWndDlg, TRUE);
 			CenterWindow(hWndDlg);
       SendDlgItemMessage (hWndDlg, IDC_STATUS0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
@@ -444,8 +446,11 @@ ProgressDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 
 	return FALSE;  // didn't handle the message
+#endif
+  return WinDefDlgProc(hWndDlg, msg, mp1, mp2);
 }
 
+#ifdef OLDCODE
 // This routine will update the File Gauge progress bar to the specified percentage
 // (value between 0 and 100)
 static void
@@ -777,9 +782,13 @@ GaugeArchiveWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	return(DefWindowProc(hWnd, msg, wParam, lParam));
 }
+#endif
 
 void InitProgressDlg()
 {
+    dlgInfo.hWndDlg = WinLoadDlg(HWND_DESKTOP, hWndMain, ProgressDlgProc, hSetupRscInst, DLG_EXTRACTING, NULL);
+    WinShowWindow(dlgInfo.hWndDlg, TRUE);
+#ifdef OLDCODE
 	WNDCLASS	wc;
 
   if(sgProduct.dwMode != SILENT)
@@ -800,8 +809,10 @@ void InitProgressDlg()
     dlgInfo.hWndDlg = CreateDialog(hSetupRscInst, MAKEINTRESOURCE(DLG_EXTRACTING), hWndMain, (WNDPROC)ProgressDlgProc);
     UpdateWindow(dlgInfo.hWndDlg);
   }
+#endif
 }
 
+#ifdef OLDCODE
 void DeInitProgressDlg()
 {
   if(sgProduct.dwMode != SILENT)

@@ -136,7 +136,7 @@ void              GetAlternateArchiveSearchPath(LPSTR lpszCmdLine);
 BOOL              NeedReboot(void);
 BOOL              LocatePreviousPath(LPSTR szMainSectionName, LPSTR szPath, DWORD dwPathSize);
 BOOL              LocatePathNscpReg(LPSTR szSection, LPSTR szPath, DWORD dwPathSize);
-BOOL              LocatePathWinReg(LPSTR szSection, LPSTR szPath, DWORD dwPathSize);
+BOOL              LocatePathOS2INI(PSZ szSection, PSZ szPath, ULONG ulPathSize);
 BOOL              LocatePath(LPSTR szSection, LPSTR szPath, DWORD dwPathSize);
 int               VR_GetPath(char *component_path, unsigned long sizebuf, char *buf);
 dsN               *CreateDSNode();
@@ -208,7 +208,8 @@ BOOL              DeleteWGetLog(void);
 DWORD             ParseOSType(char *szOSType);
 BOOL              ShowAdditionalOptionsDialog(void);
 DWORD             GetPreviousUnfinishedState(void);
-void              RefreshIcons();
+
+HWND              FindWindow(PCSZ pszClassName, PCSZ pszWindowName);
 
 #endif /* _EXTRA_H_ */
 

@@ -84,13 +84,6 @@ url=$ArchiveUrl$
 ;   Setup Type 3 - fourth radio button (usually the Custom option)
 Default Setup Type=Setup Type 1
 
-; Forces the icons on the system to be refreshed.
-; Default value is FALSE.
-; Possible values:
-;   FALSE
-;   TRUE
-Refresh Icons=FALSE
-
 ; This section contains info on how to send error information in case of
 ; either a download or xpinstall error.
 ; By default, this feature is enabled, unless disabled.
@@ -116,17 +109,16 @@ Confirmation Message=There was an error encountered during installation of $Prod
 
 
 
-; HKey:              valid decryptable setup key is [Product CurrentVersion] or [Product PreviousVersion]
-; Decrypt HKey:      there are times when '[' and ']' are valid part of windows registry key names.
+; HApp:              valid decryptable setup key is [Product CurrentVersion] or [Product PreviousVersion]
+; Decrypt HApp:      there are times when '[' and ']' are valid part of windows registry key names.
 ; Contains Filename: tells setup that the path contains filename needed to be removed before
 ;                    using it as a path.
 ; Verify Existence:  FILE or PATH
 ;
 [Locate Previous Product Path0]
-HRoot=HKEY_LOCAL_MACHINE
-HKey=[Product CurrentVersion]\Main
+HApp=[Product CurrentVersion]
 Name=Install Directory
-Decrypt HKey=TRUE
+Decrypt HApp=TRUE
 Contains Filename=FALSE
 Verify Existence=
 
@@ -497,10 +489,6 @@ $InstallSizeArchive$:xpcom.xpi
 ;                   if a file exists.
 ;                   Use SupersedeType=File Exists to specify the type of comparison
 ;                   Use SupersedeFileX=File Name to specify the file
-;                   Use SupersedeMinVersionX=a.b.c.d (optional) to specify the 
-;                   minimum version of the file.  If the version of the existing file
-;                   is greater than or equal to the SupersedeMinVersion the component
-;                   will be superseded.
 ;
 Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\xpcom.dll
@@ -744,214 +732,28 @@ WorkingDir=[SETUP PATH]
 Criterion ID=RecaptureHP
 Run App If Criterion=TRUE
 
-[Windows Registry0]
-Root Key=HKEY_LOCAL_MACHINE
-;*** LOCALIZE ME BABY ***
-Key=Software\$CompanyName$
-Name=
-Name Value=
-Type=REG_SZ
+[OS2 INI0]
+App=$ProductName$ $UserAgent$
+Key=Program Folder Path
+Key Value=[Default Folder]
+Decrypt App=FALSE
 Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
+Decrypt Key Value=TRUE
 Timing=pre smartupdate
 
-[Windows Registry1]
-Root Key=HKEY_LOCAL_MACHINE
-;*** LOCALIZE ME BABY ***
-Key=Software\$CompanyName$\$ProductName$
-Name=
-Name Value=
-Type=REG_SZ
+[OS2 INI1]
+App=$ProductName$ $UserAgent$
+Key=Program Folder Path
+Key Value=[Default Folder]
+Decrypt App=FALSE
 Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=pre smartupdate
-
-[Windows Registry2]
-Root Key=HKEY_LOCAL_MACHINE
-;*** LOCALIZE ME BABY ***
-Key=Software\$CompanyName$\$ProductName$\$UserAgent$
-Name=
-Name Value=
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=pre smartupdate
-
-[Windows Registry3]
-Root Key=HKEY_LOCAL_MACHINE
-;*** LOCALIZE ME BABY ***
-Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Main
-Name=Program Folder Path
-Name Value=[Default Folder]
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=pre smartupdate
-
-[Windows Registry4]
-Root Key=HKEY_CURRENT_USER
-;*** LOCALIZE ME BABY ***
-Key=Software\$CompanyName$
-Name=
-Name Value=
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=pre smartupdate
-
-[Windows Registry5]
-Root Key=HKEY_CURRENT_USER
-;*** LOCALIZE ME BABY ***
-Key=Software\$CompanyName$\$ProductName$
-Name=
-Name Value=
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=pre smartupdate
-
-[Windows Registry6]
-Root Key=HKEY_CURRENT_USER
-;*** LOCALIZE ME BABY ***
-Key=Software\$CompanyName$\$ProductName$\$UserAgent$
-Name=
-Name Value=
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=pre smartupdate
-
-[Windows Registry7]
-Root Key=HKEY_CURRENT_USER
-;*** LOCALIZE ME BABY ***
-Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Main
-Name=Program Folder Path
-Name Value=[Default Folder]
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=pre smartupdate
-
-[Windows Registry8]
-Root Key=HKEY_LOCAL_MACHINE
-Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
-Name=DisplayName
-Name Value=$ProductName$ ($UserAgentShort$)
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=FALSE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=post smartupdate
-
-[Windows Registry9]
-Root Key=HKEY_LOCAL_MACHINE
-Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
-Name=UninstallString
-;*** LOCALIZE ME BABY ***
-Name Value=[WINDIR]\$UninstallFile$ /ua "$UserAgent$"
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=post smartupdate
-
-; The following keys are to help JRE's installer locate where mozilla gets
-; installed to.  It has not been updated to look for the new keys.
-[Windows Registry10]
-Root Key=HKEY_LOCAL_MACHINE
-Key=Software\Mozilla
-Name=
-Name Value=
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=pre smartupdate
-
-[Windows Registry11]
-Root Key=HKEY_LOCAL_MACHINE
-;*** LOCALIZE ME BABY ***
-Key=Software\Mozilla\Seamonkey
-Name=CurrentVersion
-Name Value=$UserAgent$
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=pre smartupdate
-
-[Windows Registry12]
-Root Key=HKEY_LOCAL_MACHINE
-;*** LOCALIZE ME BABY ***
-Key=Software\Mozilla\Seamonkey\$UserAgent$
-Name=
-Name Value=
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=pre smartupdate
-
-[Windows Registry13]
-Root Key=HKEY_LOCAL_MACHINE
-;*** LOCALIZE ME BABY ***
-Key=Software\Mozilla\Seamonkey\$UserAgent$\Main
-Name=Program Folder Path
-Name Value=[Default Folder]
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
+Decrypt Key Value=TRUE
 Timing=pre smartupdate
 
 [Cleanup Previous Product RegKeys]
-Reg Key Root0=HKEY_LOCAL_MACHINE
 Product Name0=Mozilla
 Product Reg Key0=Software\Mozilla.org\Mozilla
 Current Version0=$UserAgent$
-;
-Reg Key Root1=HKEY_CURRENT_USER
-Product Name1=Mozilla
-Product Reg Key1=Software\Mozilla.org\Mozilla
-Current Version1=$UserAgent$
-
-
 
 ; Values for Show Folder:
 ;   HIDE             Hides the window and activates another window.
@@ -990,14 +792,6 @@ Working Dir=[SETUP PATH]
 Description=Uninstall $ProductName$
 Icon Path=[SETUP PATH]\Uninstall\$UninstallFile$
 Icon Id=0
-
-; Default value:
-;    IGNORE
-;
-; Possible values:
-;    ONLY_RESTRICTED    - create shortcut only if user access is restricted
-;    ONLY_NONRESTRICTED - create shortcut only if user access is not restricted
-Restricted Access=ONLY_RESTRICTED
 
 ;[Program Folder0-Shortcut1]
 ;File=[SETUP PATH]\$MainExeFile$
@@ -1085,11 +879,6 @@ IDC Recapture Homepage=&Make Netscape.com my home page
 IDC Turbo Mode=&Use Quick Launch for faster startup times when possible
 ;*** LOCALIZE ME BABY ***
 Message Download Paused=Setup has encountered a network problem and has paused the download.  If you have just lost your network connection, please click Resume once your network has been reestablished.
-;*** LOCALIZE ME BABY ***
-Message NORMAL Restricted Access=Setup has detected that you do not have the appropriate Administrator privileges to this system.  It is highly recommended that you do not continue with the installation of $ProductName$, or it may not function properly.  Would you still like to continue?
-;*** LOCALIZE ME BABY ***
-Message AUTO Restricted Access=Setup has detected that you do not have the appropriate Administrator privileges to this system.  Setup cannot continue with the installation of $ProductName$.
-
 
 [Site Selector]
 ; Dictates whether or not to show the pull down menu.

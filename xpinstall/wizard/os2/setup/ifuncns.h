@@ -41,7 +41,7 @@ HRESULT     ProcessDeleteFile(DWORD dwTiming, char *szSectionPrefix);
 HRESULT     DirectoryRemove(LPSTR szDestination, BOOL bRemoveSubdirs);
 HRESULT     ProcessRemoveDirectory(DWORD dwTiming, char *szSectionPrefix);
 HRESULT     ProcessRunApp(DWORD dwTiming, char *szSectionPrefix);
-HRESULT     ProcessWinReg(DWORD dwTiming, char *szSectionPrefix);
+HRESULT     ProcessOS2INI(ULONG ulTiming, char *szSectionPrefix);
 HRESULT     CreateALink(LPSTR lpszPathObj,
                         LPSTR lpszPathLink,
                         LPSTR lpszDesc,
@@ -53,7 +53,6 @@ HRESULT     ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix);
 HRESULT     ProcessProgramFolderShowCmd(void);
 HRESULT     CreateDirectoriesAll(char* szPath, BOOL bLogForUninstall);
 void        ProcessFileOps(DWORD dwTiming, char *szSectionPrefix);
-void        DeleteWinRegValue(HKEY hkRootKey, LPSTR szKey, LPSTR szName);
 void        DeleteWinRegKey(HKEY hkRootKey, LPSTR szKey, BOOL bAbsoluteDelete);
 DWORD       GetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, LPSTR szReturnValue, DWORD dwSize);
 void        SetWinReg(HKEY hkRootKey,
@@ -83,7 +82,6 @@ HRESULT     ProcessSetVersionRegistry(DWORD dwTiming, char *szSectionPrefix);
 char        *BuildNumberedString(DWORD dwIndex, char *szInputStringPrefix, char *szInputString, char *szOutBuf, DWORD dwOutBufSize);
 void        GetUserAgentShort(char *szUserAgent, char *szOutUAShort, DWORD dwOutUAShortSize);
 void        CleanupPreviousVersionRegKeys(void);
-DWORD       ParseRestrictedAccessKey(LPSTR szKey);
 void        AppendWinReg(HKEY hkRootKey,
                       LPSTR szKey,
                       LPSTR szName,
