@@ -283,11 +283,6 @@ sub BuildClientDist()
 	#LIBREG
     InstallFromManifest(":mozilla:modules:libreg:include:MANIFEST",					"$distdirectory:libreg:");
 
-	#PREFS
-	InstallFromManifest(":mozilla:modules:libpref:src:MANIFEST_PREFS",				$dist_dir."Components:", 1);
-	BuildOneProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp", 			"headers", "", 0, 0, 0);
-	BuildOneProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp",				"libpref.xpt", "", 1, 0, 1);
-
 	#XPCOM
 	InstallFromManifest(":mozilla:xpcom:base:MANIFEST_IDL",							"$distdirectory:idl:");
 	InstallFromManifest(":mozilla:xpcom:io:MANIFEST_IDL",							"$distdirectory:idl:");
@@ -308,6 +303,11 @@ sub BuildClientDist()
 
 	InstallFromManifest(":mozilla:xpcom:typelib:xpt:public:MANIFEST",					"$distdirectory:xpcom:");
 	
+	#PREFS
+	InstallFromManifest(":mozilla:modules:libpref:src:MANIFEST_PREFS",				$dist_dir."Components:", 1);
+	BuildOneProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp", 			"headers", "", 0, 0, 0);
+	BuildOneProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp",				"libpref.xpt", "", 1, 0, 1);
+
 	#ZLIB
     InstallFromManifest(":mozilla:modules:zlib:src:MANIFEST",						"$distdirectory:zlib:");
 
