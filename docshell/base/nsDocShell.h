@@ -113,10 +113,13 @@ protected:
    // Content Viewer Management
    NS_IMETHOD EnsureContentViewer();
    NS_IMETHOD CreateAboutBlankContentViewer();
-   NS_IMETHOD CreateContentViewer(const char* aContentType, nsURILoadCommand aCommand,
-      nsIChannel* aOpenedChannel, nsIStreamListener** aContentHandler);
-   NS_IMETHOD NewContentViewerObj(const char* aContentType, nsURILoadCommand aCommand,
-      nsIChannel* aOpenedChannel, nsIStreamListener** aContentHandler);
+   NS_IMETHOD CreateContentViewer(const char* aContentType, 
+      nsURILoadCommand aCommand, nsIChannel* aOpenedChannel,
+      nsIStreamListener** aContentHandler);
+   NS_IMETHOD NewContentViewerObj(const char* aContentType, 
+      nsURILoadCommand aCommand, nsIChannel* aOpenedChannel, 
+      nsILoadGroup* aLoadGroup, nsIStreamListener** aContentHandler,
+      nsIContentViewer** aViewer);
    NS_IMETHOD SetupNewViewer(nsIContentViewer* aNewViewer);
 
    // Site Loading
