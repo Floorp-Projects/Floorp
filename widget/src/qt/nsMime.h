@@ -53,12 +53,12 @@ public:
     virtual QByteArray encodedData(const char*) const;
 
     PRBool AddFlavorData(const char* name, void* data, PRInt32 len);
-
+    PRBool ContainsFlavor(const char* name);
     PRUint32  count();
 
 protected:
     QList<nsMimeStoreData> mMimeStore;
-    nsMimeStoreData*	   at(int n);
+    nsMimeStoreData*       at(int n);
 };
 
 inline PRUint32 nsMimeStore::count() { return mMimeStore.count(); }
