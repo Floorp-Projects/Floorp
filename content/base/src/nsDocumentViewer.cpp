@@ -6650,8 +6650,9 @@ DocumentViewerImpl::DoPrintProgress(PRBool aIsForPrinting)
         nsCOMPtr<nsIDOMWindow> active;
         wwatch->GetActiveWindow(getter_AddRefs(active));
 
+        PRBool notifyOnOpen;
         nsCOMPtr<nsIDOMWindowInternal> parent(do_QueryInterface(active));
-        mPrt->mPrintProgress->OpenProgressDialog(parent, "chrome://global/content/printProgress.xul", mPrt->mPrintProgressParams);
+        mPrt->mPrintProgress->OpenProgressDialog(parent, "chrome://global/content/printProgress.xul", mPrt->mPrintProgressParams, nsnull, &notifyOnOpen);
       }
     }
   }
