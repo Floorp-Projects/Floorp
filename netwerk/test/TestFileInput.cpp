@@ -57,7 +57,7 @@ public:
 //        printf("running\n");
 
         // event loop
-        mEventQueue->ProcessPendingEvents();
+        mEventQueue->EventLoop();
 
         while (PR_TRUE) {
 
