@@ -514,10 +514,10 @@ nsCacheService::ValidateEntry(nsCacheEntry * entry)
 
     entry->MarkValid();
     nsresult rv = ProcessPendingRequests(entry);
-    NS_ASSERTION(rv = NS_OK, "ProcessPendingRequests failed.");
+    NS_ASSERTION(rv == NS_OK, "ProcessPendingRequests failed.");
     // XXX what else can be done?
 
-    return NS_OK;
+    return rv;
 }
 
 

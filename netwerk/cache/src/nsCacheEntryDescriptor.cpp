@@ -282,11 +282,11 @@ nsCacheEntryDescriptor::DoomAndFailPendingRequests(nsresult status)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::MarkValid()
 {
-    if (mCacheEntry) {
-        mCacheEntry->MarkValid();
-        return NS_OK;
-    }
-    return NS_ERROR_NOT_AVAILABLE;
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
+    nsresult  rv;
+    rv = nsCacheService::GlobalInstance()->ValidateEntry(mCacheEntry);
+    return rv;
 }
 
 
