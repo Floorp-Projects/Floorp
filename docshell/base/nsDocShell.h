@@ -32,6 +32,7 @@
 #include "nsIPref.h"
 #include "nsVoidArray.h"
 #include "nsIScriptContext.h"
+#include "nsITimer.h"
 
 #include "nsCDocShell.h"
 #include "nsIDocShellTreeOwner.h"
@@ -69,7 +70,6 @@
 #include "nsISHistory.h"
 #include "nsIStringBundle.h"
 #include "nsISupportsArray.h"
-#include "nsITimerCallback.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebPageDescriptor.h"
 #include "nsIWebProgressListener.h"
@@ -116,9 +116,8 @@ public:
     nsRefreshTimer();
 
     NS_DECL_ISUPPORTS
- 
-    // nsITimerCallback interface
-    NS_IMETHOD_(void) Notify(nsITimer * timer);
+    NS_DECL_NSITIMERCALLBACK
+
     PRInt32 GetDelay() { return mDelay ;}
 
     nsCOMPtr<nsIDocShell> mDocShell;

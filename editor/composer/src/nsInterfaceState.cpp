@@ -40,7 +40,7 @@
 
 
 #include "nsCOMPtr.h"
-
+#include "nsIServiceManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsISelection.h"
@@ -234,7 +234,9 @@ nsresult nsInterfaceState::PrimeUpdateTimer()
   if (NS_FAILED(rv)) return rv;
 
   const PRUint32 kUpdateTimerDelay = 150;
-  return mUpdateTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this), kUpdateTimerDelay);
+  return mUpdateTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*, this), 
+                                        kUpdateTimerDelay,
+                                        nsITimer::TYPE_ONE_SHOT);
 }
 
 
@@ -330,12 +332,13 @@ nsInterfaceState::SelectionIsCollapsed()
 #endif
 
 
-void
+NS_IMETHODIMP
 nsInterfaceState::Notify(nsITimer *timer)
 {
   NS_ASSERTION(timer == mUpdateTimer.get(), "Hey, this ain't my timer!");
   mUpdateTimer = NULL;    // release my hold  
   TimerCallback();
+  return NS_OK;
 }
 
 #ifdef XP_MAC

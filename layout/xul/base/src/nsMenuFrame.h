@@ -53,7 +53,6 @@
 #include "nsIMenuFrame.h"
 #include "nsMenuDismissalListener.h"
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 #include "nsISupportsArray.h"
 #include "nsIDOMText.h"
 #include "nsIContent.h"
@@ -84,7 +83,7 @@ public:
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
 
   // The nsITimerCallback interface
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
+  NS_DECL_NSITIMERCALLBACK
 
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,

@@ -32,6 +32,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "gfxIImageFrame.h"
 #include "nsMemory.h"
+#include "nsITimer.h"
 
 NS_IMPL_ISUPPORTS3(imgContainer, imgIContainer, nsITimerCallback, imgIDecoderObserver)
 
@@ -199,8 +200,8 @@ NS_IMETHODIMP imgContainer::AppendFrame(gfxIImageFrame *item)
         if (mAnimating) {
           // Since we have more than one frame we need a timer
           mTimer = do_CreateInstance("@mozilla.org/timer;1");
-          mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this), 
-                       timeout, PR_TRUE, NS_TYPE_REPEATING_SLACK);
+          mTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*, this), 
+                       timeout, nsITimer::TYPE_REPEATING_SLACK);
         }
       }
   }
@@ -322,16 +323,16 @@ NS_IMETHODIMP imgContainer::StartAnimation()
         mAnimating = PR_TRUE;
         if (!mTimer) mTimer = do_CreateInstance("@mozilla.org/timer;1");
       
-        mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this),
-                     timeout, PR_TRUE, NS_TYPE_REPEATING_SLACK);
+        mTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*, this),
+                     timeout, nsITimer::TYPE_REPEATING_SLACK);
       }
     } else {
       // XXX hack.. the timer notify code will do the right thing, so just get that started
       mAnimating = PR_TRUE;
       if (!mTimer) mTimer = do_CreateInstance("@mozilla.org/timer;1");
 
-      mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this),
-                   100, PR_TRUE, NS_TYPE_REPEATING_SLACK);
+      mTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*, this),
+                               100, nsITimer::TYPE_REPEATING_SLACK);
     }
   }
 
@@ -378,25 +379,26 @@ NS_IMETHODIMP imgContainer::SetLoopCount(PRInt32 aLoopCount)
 }
 
 
-NS_IMETHODIMP_(void) imgContainer::Notify(nsITimer *timer)
+
+NS_IMETHODIMP imgContainer::Notify(nsITimer *timer)
 {
   NS_ASSERTION(mTimer == timer, "uh");
 
   if(!mAnimating || !mTimer)
-    return;
+    return NS_OK;
 
   nsCOMPtr<imgIContainerObserver> observer(do_QueryReferent(mObserver));
   if (!observer) {
     // the imgRequest that owns us is dead, we should die now too.
     this->StopAnimation();
-    return;
+    return NS_OK;
   }
 
   nsCOMPtr<gfxIImageFrame> nextFrame;
   PRInt32 timeout = 100;
   PRUint32 numFrames = inlinedGetNumFrames();
   if(!numFrames)
-    return;
+    return NS_OK;
   
   // If we're done decoding the next frame, go ahead and display it now and reinit
   // the timer with the next frame's delay time.
@@ -411,7 +413,7 @@ NS_IMETHODIMP_(void) imgContainer::Notify(nsITimer *timer)
     } else {
       // twiddle our thumbs
       inlinedGetFrameAt(mCurrentAnimationFrameIndex, getter_AddRefs(nextFrame));
-      if(!nextFrame) return;
+      if(!nextFrame) return NS_OK;
       
       nextFrame->GetTimeout(&timeout);
     }
@@ -420,12 +422,12 @@ NS_IMETHODIMP_(void) imgContainer::Notify(nsITimer *timer)
       // If animation mode is "loop once", it's time to stop animating
       if (mAnimationMode == kLoopOnceAnimMode || mLoopCount == 0) {
         this->StopAnimation();
-        return;
+        return NS_OK;
       }
 
       // Go back to the beginning of the animation
       inlinedGetFrameAt(0, getter_AddRefs(nextFrame));
-      if(!nextFrame) return;
+      if(!nextFrame) return NS_OK;
       
       mCurrentAnimationFrameIndex = 0;
       nextFrame->GetTimeout(&timeout);
@@ -434,13 +436,13 @@ NS_IMETHODIMP_(void) imgContainer::Notify(nsITimer *timer)
     } else {
       mCurrentAnimationFrameIndex++;
       inlinedGetFrameAt(mCurrentAnimationFrameIndex, getter_AddRefs(nextFrame));
-      if(!nextFrame) return;
+      if(!nextFrame) return NS_OK;
       
       nextFrame->GetTimeout(&timeout);
     }
   } else {
     inlinedGetFrameAt(mCurrentAnimationFrameIndex, getter_AddRefs(nextFrame));
-    if(!nextFrame) return;
+    if(!nextFrame) return NS_OK;
   }
 
   if(timeout > 0)
@@ -464,7 +466,7 @@ NS_IMETHODIMP_(void) imgContainer::Notify(nsITimer *timer)
     // do notification to FE to draw this frame
     observer->FrameChanged(this, nsnull, nextFrame, &dirtyRect);
   }
-
+  return NS_OK;
 }
 //******************************************************************************
 // DoComposite gets called when the timer for animation get fired and we have to

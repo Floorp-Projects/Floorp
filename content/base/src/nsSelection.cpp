@@ -95,7 +95,6 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsIScrollableView.h"
 #include "nsIDeviceContext.h"
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 #include "nsIServiceManager.h"
 #include "nsIAutoCopy.h"
 #include "nsIEventQueue.h"
@@ -602,7 +601,7 @@ public:
         return result;
     }
 
-    return mTimer->Init(this, mDelay);
+    return mTimer->InitWithCallback(this, mDelay, nsITimer::TYPE_ONE_SHOT);
   }
 
   nsresult Stop()
@@ -631,7 +630,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD_(void) Notify(nsITimer *timer)
+  NS_IMETHOD Notify(nsITimer *timer)
   {
     if (mSelection && mPresContext && mView)
     {
@@ -640,7 +639,7 @@ public:
       nsIFrame *frame = (nsIFrame *)clientData;
 
       if (!frame)
-        return;
+        return NS_OK;
 
       //the frame passed in here will be a root frame for the view. there is no need to call the constrain
       //method here. the root frame has NO content now unfortunately...
@@ -658,6 +657,7 @@ public:
       //mFrameSelection->HandleDrag(mPresContext, mFrame, mPoint);
       mSelection->DoAutoScrollView(mPresContext, mView, mPoint, PR_TRUE);
     }
+    return NS_OK;
   }
 private:
   nsSelection    *mFrameSelection;

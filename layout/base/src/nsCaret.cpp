@@ -40,7 +40,6 @@
 #include "nsCOMPtr.h"
 
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -465,7 +464,8 @@ nsresult nsCaret::PrimeTimer()
     if (NS_FAILED(err))
       return err;
     
-    mBlinkTimer->Init(CaretBlinkCallback, this, mBlinkRate, PR_TRUE, NS_TYPE_REPEATING_PRECISE);
+    mBlinkTimer->InitWithFuncCallback(CaretBlinkCallback, this, mBlinkRate,
+                                      nsITimer::TYPE_REPEATING_PRECISE);
   }
 
   return NS_OK;

@@ -46,7 +46,7 @@
 #define nsScrollbarButtonFrame_h___
 
 #include "nsButtonBoxFrame.h"
-#include "nsITimerCallback.h"
+#include "nsITimer.h"
 
 class nsSliderFrame;
 
@@ -86,7 +86,7 @@ public:
                            nsGUIEvent *    aEvent,
                            nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
+  NS_DECL_NSITIMERCALLBACK
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef(void) { return NS_OK; }

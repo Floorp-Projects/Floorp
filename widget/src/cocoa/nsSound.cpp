@@ -57,7 +57,6 @@
 #include "nsIInternetConfigService.h"
 
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 
 #include <Gestalt.h>
 #include <Sound.h>
@@ -81,7 +80,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsITimerCallback
-  NS_IMETHOD_(void) Notify(nsITimer *timer) = 0;    // pure virtual
+  NS_DECL_NSITIMERCALLBACK
 
   virtual nsresult  PlaySound() = 0;
 
@@ -109,7 +108,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsITimerCallback
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
+  NS_DECL_NSITIMERCALLBACK
 
   nsresult          Init(nsISound* aSound, ConstStr255Param aSoundName);
   virtual nsresult  PlaySound();
@@ -143,7 +142,7 @@ public:
   NS_DECL_NSISTREAMLOADEROBSERVER
 
   // nsITimerCallback
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
+  NS_DECL_NSITIMERCALLBACK
 
   nsresult          Init(nsISound* aSound, nsIURL *aURL);
   virtual nsresult  PlaySound();
@@ -600,8 +599,8 @@ nsSystemSoundRequest::PlaySound()
   }
   
   const PRInt32   kSoundTimerInterval = 250;      // 250 milliseconds
-  rv = mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this), kSoundTimerInterval,
-          PR_TRUE, NS_TYPE_REPEATING_PRECISE);
+  rv = mTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*, this), kSoundTimerInterval,
+                                nsITimer::TYPE_REPEATING_PRECISE);
   if (NS_FAILED(rv)) {
     Cleanup();
     return rv;
@@ -610,13 +609,14 @@ nsSystemSoundRequest::PlaySound()
   return NS_OK;
 }
 
-NS_IMETHODIMP_(void)
+NS_IMETHODIMP
 nsSystemSoundRequest::Notify(nsITimer *timer)
 {
   if (mSoundDone)
   {
     Cleanup();
   }
+  return NS_OK;
 }
 
 
@@ -804,8 +804,8 @@ nsMovieSoundRequest::PlaySound()
     }
     
     const PRInt32   kMovieTimerInterval = 250;      // 250 milliseconds
-    rv = mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this), kMovieTimerInterval,
-            PR_TRUE, NS_TYPE_REPEATING_PRECISE);
+    rv = mTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*, this), kMovieTimerInterval,
+                                  nsITimer::TYPE_REPEATING_PRECISE);
     if (NS_FAILED(rv)) {
       Cleanup();
       return rv;
@@ -849,13 +849,13 @@ nsMovieSoundRequest::PlaySound()
   return NS_OK;
 }
 
-NS_IMETHODIMP_(void)
+NS_IMETHODIMP
 nsMovieSoundRequest::Notify(nsITimer *timer)
 {
   if (!mMovie)
   {
     NS_ASSERTION(0, "nsMovieSoundRequest has no movie in timer callback");
-    return;
+    return NS_OK;;
   }
   
 #ifdef SOUND_DEBUG
@@ -870,6 +870,7 @@ nsMovieSoundRequest::Notify(nsITimer *timer)
   // so won't necessarily go away.
   if (moviesDone)
     Cleanup();
+  return NS_OK;
 }
 
 OSErr

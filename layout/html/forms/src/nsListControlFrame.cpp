@@ -89,7 +89,6 @@
 
 // Timer Includes
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 
 // Constants
 const nscoord kMaxDropDownRows          = 20; // This matches the setting for 4.x browsers
@@ -249,8 +248,7 @@ public:
   }
 
   virtual ~nsSelectUpdateTimer();
-
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
+  NS_DECL_NSITIMERCALLBACK
 
   // Additional Methods
   nsresult Start(nsIPresContext *aPresContext) 
@@ -273,7 +271,7 @@ public:
 
       NS_RELEASE_THIS();
     }
-    result = mTimer->Init(this, mDelay);
+    result = mTimer->InitWithCallback(this, mDelay, nsITimer::TYPE_ONE_SHOT);
 
     if (mHasBeenNotified) {
       mItemsAdded      = PR_FALSE;
@@ -366,7 +364,7 @@ nsresult NS_NewUpdateTimer(nsSelectUpdateTimer **aResult)
 }
 
 // nsITimerCallback
-NS_IMETHODIMP_(void) nsSelectUpdateTimer::Notify(nsITimer *timer)
+NS_IMETHODIMP nsSelectUpdateTimer::Notify(nsITimer *timer)
 {
   if (mPresContext && mListControl && !mHasBeenNotified) {
     mHasBeenNotified = PR_TRUE;
@@ -376,6 +374,7 @@ NS_IMETHODIMP_(void) nsSelectUpdateTimer::Notify(nsITimer *timer)
       mListControl->ItemsHaveBeenRemoved(mPresContext);
     }
   }
+  return NS_OK;
 }
 
 nsSelectUpdateTimer::~nsSelectUpdateTimer()

@@ -35,7 +35,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 #include "imgIDecoderObserver.h"
 
 #include "gfxIImageFrame.h"
@@ -59,8 +58,7 @@ public:
   NS_DECL_IMGICONTAINER
   NS_DECL_IMGIDECODEROBSERVER
   NS_DECL_IMGICONTAINEROBSERVER
-
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
+  NS_DECL_NSITIMERCALLBACK
 
   imgContainer();
   virtual ~imgContainer();

@@ -131,9 +131,10 @@ nsScrollbarButtonFrame::HandleRelease(nsIPresContext* aPresContext,
 }
 
 
-NS_IMETHODIMP_(void) nsScrollbarButtonFrame::Notify(nsITimer *timer)
+NS_IMETHODIMP nsScrollbarButtonFrame::Notify(nsITimer *timer)
 {
   MouseClicked();
+  return NS_OK;
 }
 
 void

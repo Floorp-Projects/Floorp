@@ -3293,7 +3293,8 @@ nsWindow::OnDragLeaveSignal       (GtkWidget *      aWidget,
   mDragLeaveTimer = do_CreateInstance("@mozilla.org/timer;1");
   NS_ASSERTION(mDragLeaveTimer, "Failed to create drag leave timer!");
   // fire this baby asafp
-  mDragLeaveTimer->Init(DragLeaveTimerCallback, this, 0);
+  mDragLeaveTimer->InitWithFuncCallback(DragLeaveTimerCallback, this, 0,
+                                        nsITimer::TYPE_ONE_SHOT);
 }
 
 /* static */
@@ -3693,7 +3694,8 @@ nsresult nsWindow::PrimeICSpotTimer ()
    mICSpotTimer = do_CreateInstance("@mozilla.org/timer;1", &err);
    if (NS_FAILED(err))
      return err;
-   mICSpotTimer->Init(ICSpotCallback, this, 1000);
+   mICSpotTimer->InitWithFuncCallback(ICSpotCallback, this, 1000,
+                                      nsITimer::TYPE_ONE_SHOT);
    return NS_OK;
 }
 

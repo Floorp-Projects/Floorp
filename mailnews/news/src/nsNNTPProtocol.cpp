@@ -3292,7 +3292,8 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 		mInputStream = inputStream;
 
 		const PRUint32 kUpdateTimerDelay = READ_NEWS_LIST_TIMEOUT;
-		rv = mUpdateTimer->Init(NS_STATIC_CAST(nsITimerCallback*,this), kUpdateTimerDelay);
+		rv = mUpdateTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*,this), kUpdateTimerDelay,
+                                            nsITimer::TYPE_ONE_SHOT);
 		NS_ASSERTION(NS_SUCCEEDED(rv),"failed to init timer");
 		if (NS_FAILED(rv)) {
 			PR_FREEIF(orig_line);
@@ -3307,12 +3308,13 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
     return(status);
 }
 
-void
+NS_IMETHODIMP
 nsNNTPProtocol::Notify(nsITimer *timer)
 {
   NS_ASSERTION(timer == mUpdateTimer.get(), "Hey, this ain't my timer!");
   mUpdateTimer = nsnull;    // release my hold  
   TimerCallback();
+  return NS_OK;
 }
 
 void nsNNTPProtocol::TimerCallback()

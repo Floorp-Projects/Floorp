@@ -67,7 +67,6 @@
 #include "nsContentCID.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 
 class nsIPrintSettings;
 class nsIDOMWindow;
@@ -152,7 +151,8 @@ public:
   NS_IMETHOD Init(PluginViewerImpl *aViewer, nsIWidget *aWindow);
 
   // nsITimerCallback interface
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
+  NS_DECL_NSITIMERCALLBACK
+
   void CancelTimer();
 
   nsPluginPort* GetPluginPort();
@@ -1083,7 +1083,7 @@ NS_IMETHODIMP pluginInstanceOwner :: CreateWidget(void)
           // start a periodic timer to provide null events to the plugin instance.
           mPluginTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
           if (rv == NS_OK)
-            rv = mPluginTimer->Init(this, 1020 / 60, PR_TRUE, NS_TYPE_REPEATING_SLACK);
+            rv = mPluginTimer->InitWithCallback(this, 1020 / 60, nsITimer::TYPE_REPEATING_SLACK);
 #endif
 
 
@@ -1326,7 +1326,7 @@ nsEventStatus pluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 
 // Here's how we give idle time to plugins.
 
-NS_IMETHODIMP_(void) pluginInstanceOwner::Notify(nsITimer* /* timer */)
+NS_IMETHODIMP pluginInstanceOwner::Notify(nsITimer* /* timer */)
 {
 #ifdef XP_MAC
     // validate the plugin clipping information by syncing the plugin window info to
@@ -1356,9 +1356,10 @@ NS_IMETHODIMP_(void) pluginInstanceOwner::Notify(nsITimer* /* timer */)
   nsresult rv;
   mPluginTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_SUCCEEDED(rv))
-    mPluginTimer->Init(this, 1020 / 60);
+    mPluginTimer->InitWithCallback(this, 1020 / 60, nsITimer::TYPE_ONE_SHOT);
 #endif  // REPEATING_TIMERS
 #endif // XP_MAC
+  return NS_OK;
 }
 
 

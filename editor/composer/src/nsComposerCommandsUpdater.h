@@ -27,14 +27,13 @@
 #ifndef nsComposerCommandsUpdater_h__
 #define nsComposerCommandsUpdater_h__
 
+#include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsITimer.h"
 
 #include "nsISelectionListener.h"
 #include "nsIDocumentStateListener.h"
 #include "nsITransactionListener.h"
-#include "nsITimerCallback.h"
-
 
 class nsIEditor;
 class nsIDocShell;
@@ -60,7 +59,7 @@ public:
   NS_DECL_NSIDOCUMENTSTATELISTENER
 
   // nsITimerCallback interfaces
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
+  NS_DECL_NSITIMERCALLBACK
 
   /** nsITransactionListener interfaces
     */  

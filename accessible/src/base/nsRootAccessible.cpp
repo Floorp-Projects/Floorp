@@ -241,7 +241,8 @@ NS_IMETHODIMP nsRootAccessible::GetAccValue(nsAString& aAccValue)
   return GetURL(aAccValue);
 }
 
-void nsRootAccessible::Notify(nsITimer *timer)
+
+NS_IMETHODIMP nsRootAccessible::Notify(nsITimer *timer)
 {
   if (mScrollPositionChangedTicks) {
     if (++mScrollPositionChangedTicks > 2) {
@@ -269,6 +270,7 @@ void nsRootAccessible::Notify(nsITimer *timer)
       mLastScrolledPresShell = nsnull;
     }
   }
+  return NS_OK;
 }
   
 void nsRootAccessible::AddScrollListener(nsIPresShell *aPresShell)
@@ -374,7 +376,7 @@ NS_IMETHODIMP nsRootAccessible::ScrollPositionDidChange(nsIScrollableView *aScro
     mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     if (NS_SUCCEEDED(rv)) {
       const PRUint32 kScrollPosCheckWait = 50;
-      mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this), kScrollPosCheckWait, PR_TRUE, NS_TYPE_REPEATING_SLACK);
+      mTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*, this), kScrollPosCheckWait, nsITimer::TYPE_REPEATING_SLACK);
     }
     mScrollPositionChangedTicks = 1;
     mLastScrolledPresShell = weakShell;

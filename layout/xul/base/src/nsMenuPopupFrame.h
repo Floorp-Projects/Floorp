@@ -56,7 +56,6 @@
 #include "nsIWidget.h"
 
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 
 #define INC_TYP_INTERVAL  2500  // 2.5s. If the interval of two typings is shorter than this, 
                                 //   treat as a continue typing
@@ -78,7 +77,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // The nsITimerCallback interface
-  NS_IMETHOD_(void) Notify(nsITimer *aTimer);
+  NS_DECL_NSITIMERCALLBACK
 
   // nsIMenuParentInterface
   NS_IMETHOD GetCurrentMenuItem(nsIMenuFrame** aResult);

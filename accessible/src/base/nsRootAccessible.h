@@ -51,7 +51,6 @@
 #include "nsIWebProgressListener.h"
 #include "nsIWeakReference.h"
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 #include "nsIWebProgress.h"
 #include "nsIScrollPositionListener.h"
 #include "nsIScrollableView.h"
@@ -134,7 +133,7 @@ class nsRootAccessible : public nsAccessible,
     NS_IMETHOD ScrollPositionDidChange(nsIScrollableView *aView, nscoord aX, nscoord aY);
 
     // ----- nsITimerCallback ------------------------------------
-    NS_IMETHOD_(void) Notify(nsITimer *timer);
+    NS_DECL_NSITIMERCALLBACK
 
     NS_DECL_NSIACCESSIBLEDOCUMENT
     NS_DECL_NSIWEBPROGRESSLISTENER

@@ -337,7 +337,8 @@ nsWebCrawler::LoadNextURLCallback(nsITimer *aTimer, void *aClosure)
           viewerFile->GetPrintable(&printable);
           if (PR_TRUE !=printable){
             self->mTimer = do_CreateInstance("@mozilla.org/timer;1");
-            self->mTimer->Init(LoadNextURLCallback, self, self->mDelay);
+            self->mTimer->InitWithFuncCallback(LoadNextURLCallback, self, self->mDelay,
+                                               nsITimer::TYPE_ONE_SHOT);
             return;
           }
         }
@@ -463,10 +464,12 @@ nsWebCrawler::OnStateChange(nsIWebProgress* aWebProgress,
     }    
     
     if ((0 < mQueuedLoadURLs) || (0 < mPendingURLs.Count())) {
-      mTimer->Init(LoadNextURLCallback, this, mDelay);
+      mTimer->InitWithFuncCallback(LoadNextURLCallback, this, mDelay,
+                                   nsITimer::TYPE_ONE_SHOT);
     }
     else if (mPostExit) {
-      mTimer->Init(QueueExitCallback, this, mDelay);
+      mTimer->InitWithFuncCallback(QueueExitCallback, this, mDelay,
+                                   nsITimer::TYPE_ONE_SHOT);
     }
   }
 

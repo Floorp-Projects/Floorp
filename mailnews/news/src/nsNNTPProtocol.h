@@ -59,7 +59,6 @@
 #include "nsXPIDLString.h"
 #include "nsIStringBundle.h"
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 #include "nsICacheListener.h"
 
 // this is only needed as long as our libmime hack is in place
@@ -170,7 +169,7 @@ public:
   NS_DECL_NSICACHELISTENER
 
   // nsITimerCallback interfaces
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
+  NS_DECL_NSITIMERCALLBACK
   
   // Creating a protocol instance requires the URL 
   // need to call Initialize after we do a new of nsNNTPProtocol

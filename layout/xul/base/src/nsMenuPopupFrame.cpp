@@ -70,6 +70,7 @@
 #include "nsGUIEvent.h"
 #include "nsIRootBox.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsITimerInternal.h"
 #ifdef XP_WIN
 #include "nsISound.h"
 #endif
@@ -1500,7 +1501,9 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
 
       // Kick off the timer.
       mCloseTimer = do_CreateInstance("@mozilla.org/timer;1");
-      mCloseTimer->Init(this, menuDelay, PR_FALSE); 
+      nsCOMPtr<nsITimerInternal> ti = do_QueryInterface(mCloseTimer);
+      ti->SetIdle(PR_TRUE);
+      mCloseTimer->InitWithCallback(this, menuDelay, nsITimer::TYPE_ONE_SHOT); 
       mTimerMenu = mCurrentMenu;
     }
   }
@@ -2111,7 +2114,7 @@ nsMenuPopupFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 //
 // The code below melds the two cases together.
 //
-NS_IMETHODIMP_(void)
+NS_IMETHODIMP
 nsMenuPopupFrame::Notify(nsITimer* aTimer)
 {
   // Our timer has fired. 
@@ -2164,6 +2167,7 @@ nsMenuPopupFrame::Notify(nsITimer* aTimer)
   
   mCloseTimer = nsnull;
   mTimerMenu = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -1246,10 +1246,11 @@ nsSliderFrame::SetScrollbarListener(nsIScrollbarListener* aListener)
   mScrollbarListener = aListener;
 }
 
-NS_IMETHODIMP_(void) nsSliderMediator::Notify(nsITimer *timer)
+NS_IMETHODIMP nsSliderMediator::Notify(nsITimer *timer)
 {
   if (mSlider)
     mSlider->Notify(timer);
+  return NS_OK;
 }
 
 NS_IMETHODIMP_(void) nsSliderFrame::Notify(nsITimer *timer)

@@ -927,8 +927,8 @@ nsHTTPIndex::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aProperty, PRBo
             		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a timer");
             		if (NS_SUCCEEDED(rv))
             		{
-                		mTimer->Init(nsHTTPIndex::FireTimer, this, 1,
-                		    PR_TRUE, NS_TYPE_ONE_SHOT);
+                		mTimer->InitWithFuncCallback(nsHTTPIndex::FireTimer, this, 1,
+                		    nsITimer::TYPE_ONE_SHOT);
                 		// Note: don't addref "this" as we'll cancel the
                 		// timer in the httpIndex destructor
             		}
@@ -963,8 +963,8 @@ nsHTTPIndex::AddElement(nsIRDFResource *parent, nsIRDFResource *prop, nsIRDFNode
 		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a timer");
 		if (NS_FAILED(rv))  return(rv);
 
-		mTimer->Init(nsHTTPIndex::FireTimer, this, 1,
-		    PR_TRUE, NS_TYPE_ONE_SHOT);
+		mTimer->InitWithFuncCallback(nsHTTPIndex::FireTimer, this, 1,
+		    nsITimer::TYPE_ONE_SHOT);
 		// Note: don't addref "this" as we'll cancel the
 		// timer in the httpIndex destructor
 	}
@@ -1104,8 +1104,8 @@ nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
       httpIndex->mTimer = do_CreateInstance("@mozilla.org/timer;1");
       if (httpIndex->mTimer)
       {
-        httpIndex->mTimer->Init(nsHTTPIndex::FireTimer, aClosure, 10,
-                                PR_TRUE, NS_TYPE_ONE_SHOT);
+        httpIndex->mTimer->InitWithFuncCallback(nsHTTPIndex::FireTimer, aClosure, 10,
+                                                nsITimer::TYPE_ONE_SHOT);
         // Note: don't addref "this" as we'll cancel the
         // timer in the httpIndex destructor
       }

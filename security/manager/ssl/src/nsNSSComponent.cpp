@@ -694,7 +694,8 @@ nsresult nsNSSComponent::getParamsForNextCrlToDownload(nsAutoString *url, PRTime
   return rv;
 }
 
-void nsNSSComponent::Notify(nsITimer *timer)
+NS_IMETHODIMP
+nsNSSComponent::Notify(nsITimer *timer)
 {
   nsresult rv;
 
@@ -709,6 +710,7 @@ void nsNSSComponent::Notify(nsITimer *timer)
   //Dont Worry if successful or not
   //Set the next timer
   DefineNextTimer();
+  return NS_OK;
 }
 
 nsresult
@@ -767,7 +769,9 @@ nsNSSComponent::DefineNextTimer()
     interval = primaryDelay;
   }
   
-  mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this), interval);
+  mTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*, this), 
+                           interval,
+                           nsITimer::TYPE_ONE_SHOT);
   crlDownloadTimerOn = PR_TRUE;
   //Release
   PR_Unlock(mCrlTimerLock);

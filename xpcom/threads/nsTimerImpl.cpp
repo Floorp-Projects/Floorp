@@ -76,7 +76,7 @@ myNS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
 }
 #endif
 
-NS_IMPL_THREADSAFE_QUERY_INTERFACE2(nsTimerImpl, nsITimer, nsIScriptableTimer)
+NS_IMPL_THREADSAFE_QUERY_INTERFACE2(nsTimerImpl, nsITimer, nsITimerInternal)
 NS_IMPL_THREADSAFE_ADDREF(nsTimerImpl)
 
 NS_IMETHODIMP_(nsrefcnt) nsTimerImpl::Release(void)
@@ -157,7 +157,8 @@ nsTimerImpl::nsTimerImpl() :
   mFiring(PR_FALSE),
   mArmed(PR_FALSE),
   mCanceled(PR_FALSE),
-  mTimeout(0)
+  mTimeout(0),
+  mIdle(PR_TRUE)
 {
   NS_INIT_REFCNT();
   nsIThread::GetCurrent(getter_AddRefs(mCallingThread));
@@ -204,11 +205,10 @@ void nsTimerImpl::Shutdown()
 }
 
 
-NS_IMETHODIMP nsTimerImpl::Init(nsTimerCallbackFunc aFunc,
-                                void *aClosure,
-                                PRUint32 aDelay,
-                                PRBool aIdle,
-                                PRUint32 aType)
+NS_IMETHODIMP nsTimerImpl::InitWithFuncCallback(nsTimerCallbackFunc aFunc,
+                                                void *aClosure,
+                                                PRUint32 aDelay,
+                                                PRUint32 aType)
 {
   if (!gThread)
     return NS_ERROR_FAILURE;
@@ -218,7 +218,6 @@ NS_IMETHODIMP nsTimerImpl::Init(nsTimerCallbackFunc aFunc,
 
   mClosure = aClosure;
 
-  mIdle = aIdle;
   mType = (PRUint8)aType;
 
   SetDelayInternal(aDelay);
@@ -226,10 +225,9 @@ NS_IMETHODIMP nsTimerImpl::Init(nsTimerCallbackFunc aFunc,
   return gThread->AddTimer(this);
 }
 
-NS_IMETHODIMP nsTimerImpl::Init(nsITimerCallback *aCallback,
-                                PRUint32 aDelay,
-                                PRBool aIdle,
-                                PRUint32 aType)
+NS_IMETHODIMP nsTimerImpl::InitWithCallback(nsITimerCallback *aCallback,
+                                            PRUint32 aDelay,
+                                            PRUint32 aType)
 {
   if (!gThread)
     return NS_ERROR_FAILURE;
@@ -238,7 +236,6 @@ NS_IMETHODIMP nsTimerImpl::Init(nsITimerCallback *aCallback,
   NS_ADDREF(mCallback.i);
   mCallbackType = CALLBACK_TYPE_INTERFACE;
 
-  mIdle = aIdle;
   mType = (PRUint8)aType;
 
   SetDelayInternal(aDelay);
@@ -248,7 +245,6 @@ NS_IMETHODIMP nsTimerImpl::Init(nsITimerCallback *aCallback,
 
 NS_IMETHODIMP nsTimerImpl::Init(nsIObserver *aObserver,
                                 PRUint32 aDelay,
-                                PRBool aIdle,
                                 PRUint32 aType)
 {
   if (!gThread)
@@ -260,7 +256,6 @@ NS_IMETHODIMP nsTimerImpl::Init(nsIObserver *aObserver,
   NS_ADDREF(mCallback.o);
   mCallbackType = CALLBACK_TYPE_OBSERVER;
 
-  mIdle = aIdle;
   mType = (PRUint8)aType;
 
   return gThread->AddTimer(this);
@@ -276,25 +271,60 @@ NS_IMETHODIMP nsTimerImpl::Cancel()
   return NS_OK;
 }
 
-NS_IMETHODIMP_(void) nsTimerImpl::SetDelay(PRUint32 aDelay)
+NS_IMETHODIMP nsTimerImpl::SetDelay(PRUint32 aDelay)
 {
   // If we're already repeating precisely, update mTimeout now so that the
   // new delay takes effect in the future.
-  if (mTimeout != 0 && mType == NS_TYPE_REPEATING_PRECISE)
+  if (mTimeout != 0 && mType == TYPE_REPEATING_PRECISE)
     mTimeout = PR_IntervalNow();
 
   SetDelayInternal(aDelay);
 
   if (!mFiring && gThread)
     gThread->TimerDelayChanged(this);
+
+  return NS_OK;
 }
 
-NS_IMETHODIMP_(void) nsTimerImpl::SetType(PRUint32 aType)
+NS_IMETHODIMP nsTimerImpl::GetDelay(PRUint32* aDelay)
+{
+  *aDelay = mDelay;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTimerImpl::SetType(PRUint32 aType)
 {
   mType = (PRUint8)aType;
   // XXX if this is called, we should change the actual type.. this could effect
   // repeating timers.  we need to ensure in Fire() that if mType has changed
   // during the callback that we don't end up with the timer in the queue twice.
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTimerImpl::GetType(PRUint32* aType)
+{
+  *aType = mType;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsTimerImpl::GetClosure(void** aClosure)
+{
+  *aClosure = mClosure;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsTimerImpl::GetIdle(PRBool *aIdle)
+{
+  *aIdle = mIdle;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTimerImpl::SetIdle(PRBool aIdle)
+{
+  mIdle = aIdle;
+  return NS_OK;
 }
 
 void nsTimerImpl::Fire()
@@ -323,7 +353,7 @@ void nsTimerImpl::Fire()
 #endif
 
   PRIntervalTime timeout = mTimeout;
-  if (mType == NS_TYPE_REPEATING_PRECISE) {
+  if (mType == TYPE_REPEATING_PRECISE) {
     // Precise repeating timers advance mTimeout by mDelay without fail before
     // calling Fire().
     timeout -= PR_MillisecondsToInterval(mDelay);
@@ -340,7 +370,7 @@ void nsTimerImpl::Fire()
       mCallback.i->Notify(this);
       break;
     case CALLBACK_TYPE_OBSERVER:
-      mCallback.o->Observe(NS_STATIC_CAST(nsIScriptableTimer *, this),
+      mCallback.o->Observe(NS_STATIC_CAST(nsITimer*,this),
                            NS_TIMER_CALLBACK_TOPIC,
                            nsnull);
       break;
@@ -357,7 +387,7 @@ void nsTimerImpl::Fire()
   }
 #endif
 
-  if (mType == NS_TYPE_REPEATING_SLACK) {
+  if (mType == TYPE_REPEATING_SLACK) {
     SetDelayInternal(mDelay); // force mTimeout to be recomputed.
     if (gThread)
       gThread->AddTimer(this);
@@ -386,7 +416,9 @@ void* handleTimerEvent(TimerEventType* event)
 #endif
 
   if (gFireOnIdle) {
-    if (NS_STATIC_CAST(nsTimerImpl*, event->e.owner)->IsIdle()) {
+    PRBool idle = PR_FALSE;
+    NS_STATIC_CAST(nsTimerImpl*, event->e.owner)->GetIdle(&idle);
+    if (idle) {
       NS_ASSERTION(gManager, "Global Thread Manager is null!");
       if (gManager)
         gManager->AddIdleTimer(NS_STATIC_CAST(nsTimerImpl*, event->e.owner));
@@ -432,7 +464,7 @@ void nsTimerImpl::PostTimerEvent()
 
   // If this is a repeating precise timer, we need to calculate the time for
   // the next timer to fire before we make the callback.
-  if (mType == NS_TYPE_REPEATING_PRECISE) {
+  if (mType == TYPE_REPEATING_PRECISE) {
     SetDelayInternal(mDelay);
     if (gThread)
       gThread->AddTimer(this);
@@ -459,7 +491,7 @@ void nsTimerImpl::SetDelayInternal(PRUint32 aDelay)
   mDelay = aDelay;
 
   PRIntervalTime now = PR_IntervalNow();
-  if (mTimeout == 0 || mType != NS_TYPE_REPEATING_PRECISE)
+  if (mTimeout == 0 || mType != TYPE_REPEATING_PRECISE)
     mTimeout = now;
 
   mTimeout += delayInterval;
@@ -473,26 +505,6 @@ void nsTimerImpl::SetDelayInternal(PRUint32 aDelay)
   }
 #endif
 }
-
-nsresult
-NS_NewTimer(nsITimer* *aResult, nsTimerCallbackFunc aCallback, void *aClosure,
-            PRUint32 aDelay, PRBool aIdle, PRUint32 aType)
-{
-    nsTimerImpl* timer = new nsTimerImpl();
-    if (timer == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(timer);
-
-    nsresult rv = timer->Init(aCallback, aClosure, aDelay, aIdle, aType);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(timer);
-        return rv;
-    }
-
-    *aResult = timer;
-    return NS_OK;
-}
-
 
 /**
  * Timer Manager code
@@ -579,4 +591,26 @@ NS_IMETHODIMP nsTimerManager::FireNextIdleTimer()
   NS_RELEASE(theTimer);
 
   return NS_OK;
+}
+
+
+// NOT FOR PUBLIC CONSUMPTION!
+nsresult
+NS_NewTimer(nsITimer* *aResult, nsTimerCallbackFunc aCallback, void *aClosure,
+            PRUint32 aDelay, PRUint32 aType)
+{
+    nsTimerImpl* timer = new nsTimerImpl();
+    if (timer == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(timer);
+
+    nsresult rv = timer->InitWithFuncCallback(aCallback, aClosure, 
+                                              aDelay, aType);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(timer);
+        return rv;
+    }
+
+    *aResult = timer;
+    return NS_OK;
 }

@@ -335,7 +335,8 @@ nsThrobber::Tick()
   nsresult rv;
   mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_OK == rv) {
-    mTimer->Init(ThrobTimerCallback, this, 33);
+    mTimer->InitWithFuncCallback(ThrobTimerCallback, this, 33, 
+                                 nsITimer::TYPE_ONE_SHOT);
   }
 #endif
 }
@@ -364,7 +365,7 @@ nsThrobber::LoadThrobberImages(const nsString& aFileNameMask, PRInt32 aNumImages
   if (NS_OK != rv) {
     return rv;
   }
-  mTimer->Init(ThrobTimerCallback, this, 33, PR_TRUE, NS_TYPE_REPEATING_SLACK);
+  mTimer->InitWithFuncCallback(ThrobTimerCallback, this, 33, nsITimer::TYPE_REPEATING_SLACK);
   
   char * mask = ToNewCString(aFileNameMask);
   for (PRInt32 cnt = 0; cnt < mNumImages; cnt++)

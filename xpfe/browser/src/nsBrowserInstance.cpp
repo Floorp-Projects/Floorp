@@ -338,7 +338,8 @@ public:
       mShutdownTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create timer for PageCycler...");
       if (NS_SUCCEEDED(rv) && mShutdownTimer){
-        mShutdownTimer->Init(TimesUp, (void *)this, mTimeoutValue*1000);
+        mShutdownTimer->InitWithFuncCallback(TimesUp, (void *)this, mTimeoutValue*1000,
+                                             nsITimer::TYPE_ONE_SHOT);
       }
     }
     return rv;

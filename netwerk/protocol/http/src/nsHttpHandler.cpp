@@ -245,9 +245,8 @@ nsHttpHandler::Init()
     // failure to create a timer is not a fatal error, but idle connections
     // may not be cleaned up as aggressively.
     if (mTimer)
-        mTimer->Init(DeadConnectionCleanupCB, this, 15*1000, // 15 seconds
-                     PR_TRUE,
-                     NS_TYPE_REPEATING_SLACK);
+        mTimer->InitWithFuncCallback(DeadConnectionCleanupCB, this, 15*1000, // 15 seconds
+                                     nsITimer::TYPE_REPEATING_SLACK);
  
     return NS_OK;
 }

@@ -43,7 +43,6 @@
 #include "nsIScrollPositionListener.h"
 #include "nsISelectionListener.h"
 #include "nsISelectionController.h"
-#include "nsITimerCallback.h"
 #include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsUnicharUtils.h"
@@ -102,7 +101,7 @@ public:
                                      nscoord aX, nscoord aY);
 
   // ----- nsITimerCallback -----------------------------
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
+  NS_DECL_NSITIMERCALLBACK
 
   static nsTypeAheadFind *GetInstance();
   static void ReleaseInstance(void);

@@ -39,6 +39,7 @@
 #include "nsIFileTransportService.h"
 #include "nsIChannel.h"
 #include "nsITimer.h"
+#include "nsIServiceManager.h"
 #include "nsString.h"
 
 // XXX
@@ -269,10 +270,9 @@ nsBrowserStatusFilter::StartDelayTimer()
 
     NS_ASSERTION(!DelayInEffect(), "delay should not be in effect");
 
-    rv = NS_NewTimer(getter_AddRefs(mTimer),
-                     TimeoutHandler,
-                     this, 400, PR_TRUE,
-                     NS_TYPE_ONE_SHOT);
+    mTimer = do_CreateInstance("@mozilla.org/timer;1");
+    mTimer->InitWithFuncCallback(TimeoutHandler, this, 400, 
+                                 nsITimer::TYPE_ONE_SHOT);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;

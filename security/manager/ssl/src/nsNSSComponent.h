@@ -41,7 +41,6 @@
 #include "nsWeakReference.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 #include "nsNetUtil.h"
 #include "nsHashtable.h"
 #include "prlock.h"
@@ -150,6 +149,7 @@ public:
   NS_DECL_NSISIGNATUREVERIFIER
   NS_DECL_NSIENTROPYCOLLECTOR
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSITIMERCALLBACK
 
   NS_METHOD Init();
 
@@ -169,7 +169,7 @@ public:
   NS_IMETHOD DefineNextTimer();
   NS_IMETHOD DownloadCRLDirectly(nsAutoString, nsAutoString);
   NS_IMETHOD RememberCert(CERTCertificate *cert);
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
+
 private:
 
   nsresult InitializeNSS();

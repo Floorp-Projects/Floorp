@@ -41,7 +41,6 @@
 #include "msgCore.h"
 #include "nsIMsgBiffManager.h"
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 #include "nsVoidArray.h"
 #include "nsTime.h"
 #include "nsCOMPtr.h"

@@ -182,9 +182,10 @@ nsAutoConfig::OnStopRequest(nsIRequest *request, nsISupports *context,
 }
 
 // Notify method as a TimerCallBack function 
-NS_IMETHODIMP_(void) nsAutoConfig::Notify(nsITimer *timer) 
+NS_IMETHODIMP nsAutoConfig::Notify(nsITimer *timer) 
 {
     downloadAutoConfig();
+    return NS_OK;
 }
 
 /* Observe() is called twice: once at the instantiation time and other 
@@ -379,8 +380,8 @@ nsresult nsAutoConfig::downloadAutoConfig()
             mTimer = do_CreateInstance("@mozilla.org/timer;1",&rv);
             if (NS_FAILED(rv)) 
                 return rv;
-            rv = mTimer->Init(this, minutes * 60 * 1000, PR_TRUE, 
-                             NS_TYPE_REPEATING_SLACK);
+            rv = mTimer->InitWithCallback(this, minutes * 60 * 1000, 
+                             nsITimer::TYPE_REPEATING_SLACK);
             if (NS_FAILED(rv)) 
                 return rv;
         }

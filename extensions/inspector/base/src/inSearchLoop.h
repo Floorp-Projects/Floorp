@@ -39,6 +39,7 @@
 #ifndef __inSearchLoop_h__
 #define __inSearchLoop_h__
 
+#include "nsCOMPtr.h"
 #include "nsITimer.h"
 #include "inISearchProcess.h"
 

@@ -295,10 +295,11 @@ nsTypeAheadFind::PrefsReset(const char* aPrefName, void* instance_data)
 
 // ------- nsITimer Methods (1) ---------------
 
-void
+NS_IMETHODIMP
 nsTypeAheadFind::Notify(nsITimer *timer)
 {
   CancelFind();
+  return NS_OK;
 }
 
 // ----------- nsIObserver Methods (1) -------------------
@@ -760,7 +761,7 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     }
 
     if (mTimer) {
-      mTimer->Init(this, mTimeoutLength);
+      mTimer->InitWithCallback(this, mTimeoutLength, nsITimer::TYPE_ONE_SHOT);
     }
   }
 

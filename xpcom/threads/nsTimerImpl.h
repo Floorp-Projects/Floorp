@@ -36,15 +36,12 @@
 #ifndef nsTimerImpl_h___
 #define nsTimerImpl_h___
 
-#define NS_TIMER_CONTRACTID "@mozilla.org/timer;1"
-
 //#define FORCE_PR_LOG /* Allow logging in the release build */
 
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
-#include "nsIScriptableTimer.h"
 #include "nsVoidArray.h"
 #include "nsIThread.h"
+#include "nsITimerInternal.h"
 
 #include "nsCOMPtr.h"
 
@@ -82,7 +79,7 @@ enum {
 // Is interval-time t less than u, even if t has wrapped PRIntervalTime?
 #define TIMER_LESS_THAN(t, u)   ((t) - (u) > DELAY_INTERVAL_LIMIT)
 
-class nsTimerImpl : public nsITimer, public nsIScriptableTimer
+class nsTimerImpl : public nsITimer, public nsITimerInternal
 {
 public:
 
@@ -97,29 +94,9 @@ public:
   void PostTimerEvent();
   void SetDelayInternal(PRUint32 aDelay);
 
-  NS_IMETHOD Init(nsTimerCallbackFunc aFunc,
-                  void *aClosure,
-                  PRUint32 aDelay,
-                  PRBool aIdle,
-                  PRUint32 aType);
-
-  NS_IMETHOD Init(nsITimerCallback *aCallback,
-                  PRUint32 aDelay,
-                  PRBool aIdle,
-                  PRUint32 aType);
-
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISCRIPTABLETIMER
-
-  NS_IMETHOD_(PRBool) IsIdle() const { return mIdle; }
-
-  NS_IMETHOD_(PRUint32) GetDelay() const { return mDelay; }
-  NS_IMETHOD_(void) SetDelay(PRUint32 aDelay);
-
-  NS_IMETHOD_(PRUint32) GetType() const { return (PRUint32)mType; }
-  NS_IMETHOD_(void) SetType(PRUint32 aType);
-
-  NS_IMETHOD_(void*) GetClosure() const { return mClosure; }
+  NS_DECL_NSITIMER
+  NS_DECL_NSITIMERINTERNAL
 
 private:
   nsCOMPtr<nsIThread>   mCallingThread;

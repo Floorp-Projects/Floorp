@@ -84,7 +84,7 @@
 #include "nsIStringBundle.h"
 #include "nsGUIEvent.h"
 #include "nsIEventStateManager.h"
-
+#include "nsITimerInternal.h"
 #define NS_MENU_POPUP_LIST_INDEX   0
 
 #ifdef XP_PC
@@ -533,7 +533,12 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
 
       // We're a menu, we're built, we're closed, and no timer has been kicked off.
       mOpenTimer = do_CreateInstance("@mozilla.org/timer;1");
-      mOpenTimer->Init(this, menuDelay, PR_FALSE);
+
+      nsCOMPtr<nsITimerInternal> ti = do_QueryInterface(mOpenTimer);
+      ti->SetIdle(PR_TRUE);
+
+      mOpenTimer->InitWithCallback(this, menuDelay, nsITimer::TYPE_ONE_SHOT);
+
     }
   }
   
@@ -1314,7 +1319,7 @@ nsMenuFrame::IsMenu()
   return mIsMenu;
 }
 
-NS_IMETHODIMP_(void)
+NS_IMETHODIMP
 nsMenuFrame::Notify(nsITimer* aTimer)
 {
   // Our timer has fired.
@@ -1334,6 +1339,7 @@ nsMenuFrame::Notify(nsITimer* aTimer)
   }
   
   mOpenTimer = nsnull;
+  return NS_OK;
 }
 
 PRBool 

@@ -311,7 +311,8 @@ nsresult nsMsgBiffManager::SetupNextBiff()
       mBiffTimer->Cancel();
     }
     mBiffTimer = do_CreateInstance("@mozilla.org/timer;1");
-    mBiffTimer->Init(OnBiffTimer, (void*)this, timeInMSUint32);
+    mBiffTimer->InitWithFuncCallback(OnBiffTimer, (void*)this, timeInMSUint32, 
+                                     nsITimer::TYPE_ONE_SHOT);
     
   }
   return NS_OK;

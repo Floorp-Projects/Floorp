@@ -1169,7 +1169,8 @@ nsMessengerWinIntegration::SetupUnreadCountUpdateTimer()
   }
 
   mUnreadCountUpdateTimer = do_CreateInstance("@mozilla.org/timer;1");
-  mUnreadCountUpdateTimer->Init(OnUnreadCountUpdateTimer, (void*)this, timeInMSUint32, PR_TRUE, NS_TYPE_REPEATING_SLACK);
+  mUnreadCountUpdateTimer->InitWithFuncCallback(OnUnreadCountUpdateTimer, (void*)this, timeInMSUint32, 
+                                                nsITimer::TYPE_REPEATING_SLACK);
 
   return NS_OK;
 }

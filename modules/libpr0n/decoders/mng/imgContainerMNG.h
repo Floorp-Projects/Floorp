@@ -28,7 +28,6 @@
 #include "nsSupportsArray.h"
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 #include "imgIDecoderObserver.h"
 #include "gfxIImageFrame.h"
 #include "nsWeakReference.h"

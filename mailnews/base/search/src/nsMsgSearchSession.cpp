@@ -533,7 +533,8 @@ nsresult nsMsgSearchSession::StartTimer()
   PRBool done;
 
   m_backgroundTimer = do_CreateInstance("@mozilla.org/timer;1", &err);
-  m_backgroundTimer->Init(TimerCallback, (void *) this, 0, PR_TRUE, NS_TYPE_REPEATING_SLACK);
+  m_backgroundTimer->InitWithFuncCallback(TimerCallback, (void *) this, 0, 
+                                          nsITimer::TYPE_REPEATING_SLACK);
   // ### start meteors?
   return TimeSlice(&done);
 }

@@ -57,7 +57,6 @@
 #include "nsIPresShell.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
-#include "nsITimerCallback.h"
 #include "nsITimer.h"
 #include "prtime.h"
 #include "nsVoidArray.h"
@@ -224,7 +223,7 @@ public:
 
   void Stop();
 
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
+  NS_DECL_NSITIMERCALLBACK
 
   static nsresult AddBlinkFrame(nsIPresContext* aPresContext, nsIFrame* aFrame);
   static nsresult RemoveBlinkFrame(nsIFrame* aFrame);
@@ -277,7 +276,7 @@ void nsBlinkTimer::Start()
   nsresult rv;
   mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_OK == rv) {
-    mTimer->Init(this, 750, PR_TRUE, NS_TYPE_REPEATING_PRECISE);
+    mTimer->InitWithCallback(this, 750, nsITimer::TYPE_REPEATING_PRECISE);
   }
 }
 
@@ -321,7 +320,7 @@ PRInt32 nsBlinkTimer::FrameCount() {
   return mFrames.Count();
 }
 
-NS_IMETHODIMP_(void) nsBlinkTimer::Notify(nsITimer *timer)
+NS_IMETHODIMP nsBlinkTimer::Notify(nsITimer *timer)
 {
   // Toggle blink state bit so that text code knows whether or not to
   // render. All text code shares the same flag so that they all blink
@@ -362,6 +361,7 @@ NS_IMETHODIMP_(void) nsBlinkTimer::Notify(nsITimer *timer)
     vm->UpdateView(view, bounds, 0);
     NS_RELEASE(vm);
   }
+  return NS_OK;
 }
 
 

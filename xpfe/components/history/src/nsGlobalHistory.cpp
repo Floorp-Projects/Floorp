@@ -1724,8 +1724,8 @@ nsGlobalHistory::SetDirty()
   if (NS_FAILED(rv)) return rv;
   
   mDirty = PR_TRUE;
-  mSyncTimer->Init(fireSyncTimer, this, HISTORY_SYNC_TIMEOUT,
-                   PR_TRUE, NS_TYPE_ONE_SHOT);
+  mSyncTimer->InitWithFuncCallback(fireSyncTimer, this, HISTORY_SYNC_TIMEOUT,
+                                   nsITimer::TYPE_ONE_SHOT);
   
 
   return NS_OK;
@@ -1743,8 +1743,8 @@ nsGlobalHistory::GetNow()
       mExpireNowTimer = do_CreateInstance("@mozilla.org/timer;1");
 
     if (mExpireNowTimer)
-      mExpireNowTimer->Init(expireNowTimer, this, HISTORY_EXPIRE_NOW_TIMEOUT,
-                            PR_TRUE, NS_TYPE_ONE_SHOT);
+      mExpireNowTimer->InitWithFuncCallback(expireNowTimer, this, HISTORY_EXPIRE_NOW_TIMEOUT,
+                                            nsITimer::TYPE_ONE_SHOT);
   }
   
   return mLastNow;

@@ -38,6 +38,7 @@
 #include "nsPagePrintTimer.h"
 #include "nsPrintEngine.h"
 #include "nsIContentViewer.h"
+#include "nsIServiceManager.h"
 
 NS_IMPL_ISUPPORTS1(nsPagePrintTimer, nsITimerCallback)
 
@@ -71,7 +72,7 @@ nsPagePrintTimer::StartTimer(PRBool aUseDelay)
   if (NS_FAILED(result)) {
     NS_WARNING("unable to start the timer");
   } else {
-    mTimer->Init(this, aUseDelay?mDelay:0, PR_TRUE, NS_TYPE_ONE_SHOT);
+    mTimer->InitWithCallback(this, aUseDelay?mDelay:0, nsITimer::TYPE_ONE_SHOT);
   }
   return result;
 }
@@ -79,7 +80,7 @@ nsPagePrintTimer::StartTimer(PRBool aUseDelay)
 
 
 // nsITimerCallback
-NS_IMETHODIMP_(void)
+NS_IMETHODIMP
 nsPagePrintTimer::Notify(nsITimer *timer)
 {
   if (mPresContext && mDocViewerPrint) {
@@ -105,6 +106,7 @@ nsPagePrintTimer::Notify(nsITimer *timer)
       }
     }
   }
+  return NS_OK;
 }
 
 void 
