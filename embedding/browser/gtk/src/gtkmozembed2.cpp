@@ -32,6 +32,10 @@
 // so we can do our get_nsIWebBrowser later...
 #include <nsIWebBrowser.h>
 
+// for strings
+#include <nsXPIDLString.h>
+#include <nsReadableUtils.h>
+
 // so we can get callbacks from the mozarea
 #include <gtkmozarea.h>
 
@@ -832,14 +836,18 @@ gtk_moz_embed_get_link_message(GtkMozEmbed *embed)
 {
   char *retval = nsnull;
   EmbedPrivate *embedPrivate;
+  nsXPIDLCString embedString;
 
   g_return_val_if_fail ((embed != NULL), (char *)NULL);
   g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), (char *)NULL);
 
   embedPrivate = (EmbedPrivate *)embed->data;
 
-  if (embedPrivate->mWindow)
-    retval = embedPrivate->mWindow->mLinkMessage.ToNewCString();
+  if (embedPrivate->mWindow) {
+    *getter_Copies(embedString) =
+      ToNewCString(embedPrivate->mWindow->mLinkMessage);
+    retval = strdup(embedString);
+  }
 
   return retval;
 }
@@ -849,14 +857,18 @@ gtk_moz_embed_get_js_status(GtkMozEmbed *embed)
 {
   char *retval = nsnull;
   EmbedPrivate *embedPrivate;
+  nsXPIDLCString embedString;
 
   g_return_val_if_fail ((embed != NULL), (char *)NULL);
   g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), (char *)NULL);
 
   embedPrivate = (EmbedPrivate *)embed->data;
 
-  if (embedPrivate->mWindow)
-    retval = embedPrivate->mWindow->mJSStatus.ToNewCString();
+  if (embedPrivate->mWindow) {
+    *getter_Copies(embedString) =
+      ToNewCString(embedPrivate->mWindow->mJSStatus);
+    retval = strdup(embedString);
+  }
 
   return retval;
 }
@@ -866,14 +878,17 @@ gtk_moz_embed_get_title(GtkMozEmbed *embed)
 {
   char *retval = nsnull;
   EmbedPrivate *embedPrivate;
+  nsXPIDLCString embedString;
 
   g_return_val_if_fail ((embed != NULL), (char *)NULL);
   g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), (char *)NULL);
 
   embedPrivate = (EmbedPrivate *)embed->data;
 
-  if (embedPrivate->mWindow)
-    retval = embedPrivate->mWindow->mTitle.ToNewCString();
+  if (embedPrivate->mWindow) {
+    *getter_Copies(embedString) = ToNewCString(embedPrivate->mWindow->mTitle);
+    retval = strdup(embedString);
+  }
 
   return retval;
 }
@@ -883,13 +898,17 @@ gtk_moz_embed_get_location(GtkMozEmbed *embed)
 {
   char *retval = nsnull;
   EmbedPrivate *embedPrivate;
+  nsXPIDLCString embedString;
 
   g_return_val_if_fail ((embed != NULL), (char *)NULL);
   g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), (char *)NULL);
 
   embedPrivate = (EmbedPrivate *)embed->data;
   
-  retval = embedPrivate->mURI.ToNewCString();
+  if (embedPrivate->mURI.Length()) {
+    *getter_Copies(embedString) = ToNewCString(embedPrivate->mURI);
+    retval = strdup(embedString);
+  }
 
   return retval;
 }
