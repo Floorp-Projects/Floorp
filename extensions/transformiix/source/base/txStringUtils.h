@@ -71,7 +71,7 @@ void TX_ToLowerCase(const nsAString& aSource, nsAString& aDest);
 /**
  * Check equality between a string and an atom.
  */
-static PRBool TX_StringEqualsAtom(const nsAString& aString, nsIAtom* aAtom)
+inline PRBool TX_StringEqualsAtom(const nsAString& aString, nsIAtom* aAtom)
 {
   return aAtom->Equals(aString);
 };
