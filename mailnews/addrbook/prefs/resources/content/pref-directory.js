@@ -114,16 +114,13 @@ function createDirectoriesList(flag)
 function LoadDirectories(popup)
 {
   var prefCount = {value:0};
-  var enabled = false;
   var description = "";
   var item;
-  var formElement;
   var j=0;
   var arrayOfDirectories;
-  var position = 0;
-  var dirType = 1;
+  var position;
+  var dirType;
   var directoriesList;
-  var directoryDescription;
   if (!gPrefInt) { 
     try {
       gPrefInt = Components.classes["@mozilla.org/preferences-service;1"]
@@ -174,12 +171,12 @@ function LoadDirectories(popup)
               item.setAttribute("value", arrayOfDirectories[i]);
               popup.appendChild(item);
             }
-            gAvailDirectories[j] = {value:arrayOfDirectories[i], label:description};
-            j++;
+            gAvailDirectories[j++] = {value:arrayOfDirectories[i], label:description};
           }
         }
       }
     }
+    var value;
     if (popup && !gFromGlobalPref) 
     {
       // we are in mail/news Account settings
@@ -192,7 +189,7 @@ function LoadDirectories(popup)
       if (gRefresh) {  
       // gRefresh is true if user edits, removes or adds a directory.
         directoriesList =  document.getElementById("directoriesList");
-        var value = directoriesList.value;
+        value = directoriesList.value;
         directoriesList.selectedItem = null;
         directoriesList.value = value;
         if (!directoriesList.selectedItem)
@@ -204,7 +201,7 @@ function LoadDirectories(popup)
       directoriesList =  document.getElementById("directoriesList");
       if (gRefresh) {
         // gRefresh is true if user edits, removes or adds a directory.
-        var value = directoriesList.value;
+        value = directoriesList.value;
         directoriesList.selectedItem = null;
         directoriesList.value = value;
         if (!directoriesList.selectedItem)
@@ -402,7 +399,7 @@ function onAccept()
       var identitiesCount = allIdentities.Count();
       var identityServer = new Array();
       var currentIdentity = null;
-      var j=0;
+      var j;
       for (j=0; j< identitiesCount; j++) {
         currentIdentity = allIdentities.QueryElementAt(j, Components.interfaces.nsIMsgIdentity);
         identityServer[j] = {server:currentIdentity.directoryServer, deleted:false};
