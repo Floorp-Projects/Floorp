@@ -1466,6 +1466,7 @@ nsBrowserWindow::DoSelectAll()
     nsIDocument* doc = shell->GetDocument();
     if (nsnull != doc) {
       doc->SelectAll();
+      ForceRefresh();
       NS_RELEASE(doc);
     }
     NS_RELEASE(shell);
