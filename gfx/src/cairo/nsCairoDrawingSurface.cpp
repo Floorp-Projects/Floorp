@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCairoDrawingSurface.h"
 #include "nsCairoDeviceContext.h"
+#include "nsCairoDrawingSurface.h"
 
 #if defined(MOZ_ENABLE_GTK2)
 #include <sys/ipc.h>
@@ -58,6 +58,9 @@ nsCairoDrawingSurface::nsCairoDrawingSurface()
 #if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
     mPixmap = 0;
     mShmInfo.shmid = -1;
+#ifdef MOZ_ENABLE_XFT
+    mXftDraw = nsnull;
+#endif
 #endif
 }
 
@@ -89,11 +92,13 @@ nsCairoDrawingSurface::Init(nsCairoDeviceContext *aDC, PRUint32 aWidth, PRUint32
 
     mWidth = aWidth;
     mHeight = aHeight;
+    mDC = aDC;
 
     if (aFastAccess) {
         fprintf (stderr, "++++ [%p] Creating IMAGE surface: %dx%d\n", this, aWidth, aHeight);
         mSurface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, aWidth, aHeight);
         mFastAccess = PR_TRUE;
+        mDrawable = nsnull;
     } else {
         fprintf (stderr, "++++ [%p] Creating PIXMAP surface: %dx%d\n", this, aWidth, aHeight);
         // otherwise, we need to do toolkit-specific stuff
@@ -157,6 +162,8 @@ nsCairoDrawingSurface::Init (nsCairoDeviceContext *aDC, nsIWidget *aWidget)
 {
     nsNativeWidget nativeWidget = aWidget->GetNativeData(NS_NATIVE_WIDGET);
     fprintf (stderr, "++++ [%p] Creating DRAWABLE (0x%08x) surface\n", this, nativeWidget);
+
+    mDC = aDC;
 
 #ifdef MOZ_ENABLE_GTK2
     mDrawable = GDK_DRAWABLE_XID(GDK_DRAWABLE(nativeWidget));
@@ -311,26 +318,32 @@ nsCairoDrawingSurface::GetPixelFormat(nsPixelFormat *aFormat)
 XftDraw *
 nsCairoDrawingSurface::GetXftDraw(void)
 {
-  if (!mXftDraw) {
-    mXftDraw = XftDrawCreate(GDK_DISPLAY(), mDrawable,
-                             GDK_VISUAL_XVISUAL(::gdk_rgb_get_visual()),
-                             GDK_COLORMAP_XCOLORMAP(::gdk_rgb_get_cmap()));
-  }
+    if (mDrawable == nsnull) {
+        NS_ERROR("GetXftDraw with null drawable!\n");
+    }
 
-  return mXftDraw;
+    if (!mXftDraw) {
+        fprintf (stderr, "++++ [%p] Creating XFTDRAW for (0x%08x)\n", this, mDrawable);
+
+        mXftDraw = XftDrawCreate(mDC->GetXDisplay(), mDrawable,
+                                 mDC->GetXVisual(),
+                                 mDC->GetXColormap());
+    }
+
+    return mXftDraw;
 }
 
 void
 nsCairoDrawingSurface::GetLastXftClip(nsIRegion **aLastRegion)
 {
-  *aLastRegion = mLastXftClip.get();
-  NS_IF_ADDREF(*aLastRegion);
+    *aLastRegion = mLastXftClip.get();
+    NS_IF_ADDREF(*aLastRegion);
 }
 
 void
-nsCairoDrawingSurface::SetLastXftClip(nsIRegion  *aLastRegion)
+nsCairoDrawingSurface::SetLastXftClip(nsIRegion *aLastRegion)
 {
-  mLastXftClip = aLastRegion;
+    mLastXftClip = aLastRegion;
 }
 
 #endif /* MOZ_ENABLE_XFT */

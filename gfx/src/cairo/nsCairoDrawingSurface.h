@@ -58,7 +58,6 @@ class nsCairoDeviceContext;
 typedef struct _XftDraw XftDraw;
 #endif
 
-
 class nsCairoDrawingSurface : public nsIDrawingSurface
 {
 public:
@@ -98,6 +97,7 @@ public:
 
 private:
     cairo_surface_t *mSurface, *mImageSurface;
+    nsCairoDeviceContext *mDC;
 
 #if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
     Display *mXDisplay;
