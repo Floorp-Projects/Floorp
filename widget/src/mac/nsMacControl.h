@@ -25,6 +25,8 @@
 
 class nsMacControl : public nsWindow
 {
+private:
+	typedef nsWindow Inherited;
 
 public:
                            nsMacControl();
@@ -39,20 +41,27 @@ public:
 				              nsWidgetInitData *aInitData = nsnull);
 
 	virtual void		SetControlType(short type)	{mControlType = type;}
+	short						GetControlType()						{return mControlType;}
 
 	// event handling
   virtual PRBool	OnPaint(nsPaintEvent & aEvent);
-  virtual PRBool	OnResize(nsSizeEvent &aEvent);
   virtual PRBool	DispatchMouseEvent(nsMouseEvent &aEvent);
     
+	// nsIWidget interface
+	NS_IMETHOD    	Show(PRBool aState);
 
 protected:
 	nsString				mLabel;
 	PRBool					mWidgetArmed;
 	PRBool					mMouseInButton;
-	PRBool					mButtonSet;
+	PRInt16					mValue;
 	ControlHandle		mControl;
 	short						mControlType;
+
+	nsString				mLastLabel;
+	nsRect					mLastBounds;
+	PRInt16					mLastValue;
+	PRInt16					mLastHilite;
 };
 
 #endif // nsMacControl_h__

@@ -26,11 +26,16 @@
 //-------------------------------------------------------------------------
 nsMacControl::nsMacControl() : nsWindow()
 {
-  mButtonSet			= PR_FALSE;
+  mValue					= 0;
   mWidgetArmed		= PR_FALSE;
   mMouseInButton	= PR_FALSE;
   mControl				= nsnull;
   mControlType		= pushButProc;
+
+	mLastLabel = "";
+	mLastBounds.SetRect(0,0,0,0);
+	mLastValue = 0;
+	mLastHilite = 0;
 }
 
 //-------------------------------------------------------------------------
@@ -45,7 +50,7 @@ NS_IMETHODIMP nsMacControl::Create(nsIWidget *aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData) 
 {
-	nsWindow::Create(aParent, aRect, aHandleEventFunction,
+	Inherited::Create(aParent, aRect, aHandleEventFunction,
 						aContext, aAppShell, aToolkit, aInitData);
 
   
@@ -55,6 +60,8 @@ NS_IMETHODIMP nsMacControl::Create(nsIWidget *aParent,
 	Rect macRect;
 	nsRectToMacRect(ctlRect, macRect);
 	mControl = ::NewControl(mWindowPtr, &macRect, "\p", true, 0, 0, 1, mControlType, nil);
+
+	mLastBounds = ctlRect;
 
 	return NS_OK;
 }
@@ -72,6 +79,7 @@ nsMacControl::~nsMacControl()
 	}
 }
 
+#pragma mark -
 //-------------------------------------------------------------------------
 //
 //
@@ -90,40 +98,46 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 		fontStyleRec.style = mWindowPtr->txFace;
 		::SetControlFontStyle(mControl, &fontStyleRec);
 
-/*
-		// set the background color
-		//¥TODO: this should be done by the rendering context
-		#define COLOR8TOCOLOR16(color8)	 (color8 == 0xFF ? 0xFFFF : (color8 << 8))
-		nscolor backColor = GetBackgroundColor();
-		RGBColor macColor;
-		macColor.red   = COLOR8TOCOLOR16(NS_GET_R(backColor));
-		macColor.green = COLOR8TOCOLOR16(NS_GET_G(backColor));
-		macColor.blue  = COLOR8TOCOLOR16( NS_GET_B(backColor));
-		::RGBBackColor(&macColor);
-*/
 		// draw the control
-		Str255 aStr;
-		StringToStr255(mLabel, aStr);
-		::SetControlTitle(mControl, aStr);
+		if (mLabel != mLastLabel)
+		{
+			mLastLabel = mLabel;
+			Str255 aStr;
+			StringToStr255(mLabel, aStr);
+			::SetControlTitle(mControl, aStr);
+		}
 
-		::SetControlValue(mControl, (mButtonSet ? 1 : 0));
+		if (mBounds != mLastBounds)
+		{
+			mLastBounds = mBounds;
+			nsRect ctlRect = mBounds;
+			ctlRect.x = ctlRect.y = 0;
+			Rect macRect;
+			nsRectToMacRect(ctlRect, macRect);
+			::MoveControl(mControl, macRect.left, macRect.top);
+			::SizeControl(mControl, ctlRect.width, ctlRect.height);
+		}
 
+		if (mValue != mLastValue)
+		{
+			mLastValue = mValue;
+			::SetControlValue(mControl, mValue);
+		}
+
+		PRInt16 hilite;
 		if (mEnabled)
-			::HiliteControl(mControl, (mWidgetArmed && mMouseInButton ? 1 : 0));
+			hilite = (mWidgetArmed && mMouseInButton ? 1 : 0);
 		else
-			::HiliteControl(mControl, kControlInactivePart);
+			hilite = kControlInactivePart;
+		if (hilite != mLastHilite)
+		{
+			mLastHilite = hilite;
+			::HiliteControl(mControl, hilite);
+		}
 
-		::ValidRect(&(*mControl)->contrlRect);
+		::Draw1Control(mControl);
+//¥¥		::ValidRect(&(*mControl)->contrlRect);
 	}
-	return PR_FALSE;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-PRBool nsMacControl::OnResize(nsSizeEvent &aEvent)
-{
 	return PR_FALSE;
 }
 
@@ -172,5 +186,23 @@ PRBool  nsMacControl::DispatchMouseEvent(nsMouseEvent &aEvent)
 	}
 	if (eatEvent)
 		return PR_TRUE;
-	return (nsWindow::DispatchMouseEvent(aEvent));
+	return (Inherited::DispatchMouseEvent(aEvent));
+}
+
+#pragma mark -
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsMacControl::Show(PRBool bState)
+{
+  Inherited::Show(bState);
+  if (mControl)
+  {
+  	if (bState)
+  		::ShowControl(mControl);
+  	else
+  		::HideControl(mControl);
+  }
+  return NS_OK;
 }
