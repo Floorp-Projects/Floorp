@@ -32,6 +32,8 @@
 #include <TextUtils.h>
 #elif defined (MOZ_WIDGET_GTK)
 #include <gtk/gtk.h>
+#elif defined (XP_OS2)
+#include <os2.h>
 #endif
 
 extern "C" void ShowOSAlert(char* aMessage);
@@ -163,13 +165,15 @@ void ShowOSAlert(char* aMessage)
 printf("\n****Inside ShowOSAlert ***\n");	
 #endif 
 
-#if defined (XP_PC)
+#if defined (XP_WIN)
     MessageBox(NULL, aMessage, NULL, MB_OK);
 #elif (XP_MAC)
     short buttonClicked;
     StandardAlert(kAlertStopAlert, c2pstr(aMessage), nil, nil, &buttonClicked);
 #elif defined (MOZ_WIDGET_GTK)
     NS_gtk_alert(aMessage, NULL, "OK");
+#elif defined (XP_OS2)
+    WinMessageBox( HWND_DESKTOP, HWND_DESKTOP, aMessage, "", 0, MB_OK);
 #else
     printf(stdout, "%s\n", aMessage);
 #endif
