@@ -425,7 +425,7 @@ NS_IMETHODIMP nsLDAPURL::GetAttributes(PRUint32 *aCount, char ***_retval)
 {
     PRUint32 index = 0;
     PRUint32 count;
-    char **cArray;
+    char **cArray = nsnull;
 
     if (!_retval) {
         NS_ERROR("nsLDAPURL::GetAttributes: null pointer ");
@@ -433,21 +433,23 @@ NS_IMETHODIMP nsLDAPURL::GetAttributes(PRUint32 *aCount, char ***_retval)
     }
 
     count = mAttributes->Count();
-    cArray = NS_STATIC_CAST(char **, nsMemory::Alloc(count * sizeof(char *)));
-    if (!cArray) {
-        NS_ERROR("nsLDAPURL::GetAttributes: out of memory ");
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    // Loop through the string array, and build up the C-array.
-    //
-    while (index < count) {
-        if (!(cArray[index] = ToNewCString(*(mAttributes->CStringAt(index))))) {
-            NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(index, cArray);
+    if (count > 0) {
+        cArray = NS_STATIC_CAST(char **, nsMemory::Alloc(count * sizeof(char *)));
+        if (!cArray) {
             NS_ERROR("nsLDAPURL::GetAttributes: out of memory ");
             return NS_ERROR_OUT_OF_MEMORY;
         }
-        index++;
+
+        // Loop through the string array, and build up the C-array.
+        //
+        while (index < count) {
+            if (!(cArray[index] = ToNewCString(*(mAttributes->CStringAt(index))))) {
+                NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(index, cArray);
+                NS_ERROR("nsLDAPURL::GetAttributes: out of memory ");
+                return NS_ERROR_OUT_OF_MEMORY;
+            }
+            index++;
+        }
     }
     *aCount = count;
     *_retval = cArray;
