@@ -30,6 +30,10 @@ class nsIToolkit;
 
 #include <gtk/gtk.h>
 
+#ifndef       USE_XIM
+#define       USE_XIM
+#endif
+
 #ifdef DEBUG
 #undef NOISY_DESTROY
 #else

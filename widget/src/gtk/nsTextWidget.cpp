@@ -18,6 +18,8 @@
 
 #include <gtk/gtk.h>
 
+#define USE_XIM
+
 #include "nsTextWidget.h"
 #include "nsString.h"
 #include "nsGtkEventHandler.h"
@@ -68,11 +70,19 @@ NS_IMETHODIMP nsTextWidget::CreateNative(GtkWidget *parentWindow)
   gtk_widget_set_name(mWidget, "nsTextWidget");
   gtk_signal_connect_after(GTK_OBJECT(mWidget),
                      "key_press_event",
+#ifdef USE_XIM
+                     GTK_SIGNAL_FUNC(handle_key_press_event_for_text),
+#else
                      GTK_SIGNAL_FUNC(handle_key_press_event),
+#endif
                      this);
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "key_release_event",
+#ifdef USE_XIM
+                     GTK_SIGNAL_FUNC(handle_key_release_event_for_text),
+#else
                      GTK_SIGNAL_FUNC(handle_key_release_event),
+#endif
                      this);
   SetPassword(mIsPassword);
   SetReadOnly(mIsReadOnly, oldIsReadOnly);
@@ -92,3 +102,13 @@ NS_IMETHODIMP nsTextWidget::CreateNative(GtkWidget *parentWindow)
 
   return NS_OK;
 }
+
+#ifdef USE_XIM
+PRBool nsTextWidget::OnKey(nsKeyEvent &aEvent)
+{
+  if (mEventCallback) {
+    return DispatchWindowEvent(&aEvent);
+  }
+  return PR_FALSE;
+}
+#endif

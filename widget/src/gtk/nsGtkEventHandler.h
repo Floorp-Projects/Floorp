@@ -30,6 +30,10 @@ void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p);
 gint handle_expose_event(GtkWidget *w, GdkEventExpose *event, gpointer p);
 gint handle_key_release_event(GtkWidget *w, GdkEventKey* event, gpointer p);
 gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p);
+#ifdef USE_XIM
+gint handle_key_release_event_for_text(GtkWidget *w, GdkEventKey* event, gpointer p);
+gint handle_key_press_event_for_text(GtkWidget *w, GdkEventKey* event, gpointer p);
+#endif
 
 void handle_scrollbar_value_changed(GtkAdjustment *adjustment, gpointer p);
 
