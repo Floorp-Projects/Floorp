@@ -117,6 +117,7 @@
 #include "nsXULRadioElement.h"
 #include "nsXULRadioGroupElement.h"
 #include "nsXULMenuListElement.h"
+#include "nsXULDocument.h"
 
 #include "prlog.h"
 #include "rdf.h"
@@ -1574,6 +1575,180 @@ nsXULElement::GetElementsByTagName(const nsString& aName, nsIDOMNodeList** aRetu
 
     // transfer ownership to caller
     *aReturn = elements;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULElement::GetAttributeNS(const nsString& aNamespaceURI,
+                             const nsString& aLocalName, nsString& aReturn)
+{
+    nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aLocalName)));
+    PRInt32 nsid;
+
+    gNameSpaceManager->GetNameSpaceID(aNamespaceURI, nsid);
+
+    if (nsid == kNameSpaceID_Unknown) {
+        // Unkonwn namespace means no attr...
+
+        aReturn.Truncate();
+        return NS_OK;
+    }
+
+    GetAttribute(nsid, name, aReturn);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULElement::SetAttributeNS(const nsString& aNamespaceURI,
+                             const nsString& aQualifiedName,
+                             const nsString& aValue)
+{
+    NS_NOTYETIMPLEMENTED("write me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULElement::RemoveAttributeNS(const nsString& aNamespaceURI,
+                                const nsString& aLocalName)
+{
+    PRInt32 nameSpaceId;
+    nsCOMPtr<nsIAtom> tag = dont_AddRef(NS_NewAtom(aLocalName));
+
+    if (!aNamespaceURI.EqualsWithConversion("*")) {
+        gNameSpaceManager->GetNameSpaceID(aNamespaceURI, nameSpaceId);
+
+        if (nameSpaceId == kNameSpaceID_Unknown) {
+            // Unkonwn namespace means no attr...
+
+            return NS_OK;
+        }
+    }
+
+    nsresult rv = UnsetAttribute(nameSpaceId, tag, PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove attribute");
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULElement::GetAttributeNodeNS(const nsString& aNamespaceURI,
+                                 const nsString& aLocalName,
+                                 nsIDOMAttr** aReturn)
+{
+    NS_ENSURE_ARG_POINTER(aReturn);
+
+    nsresult rv;
+
+    nsCOMPtr<nsIDOMNamedNodeMap> map;
+    rv = GetAttributes(getter_AddRefs(map));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIDOMNode> node;
+    rv = map->GetNamedItemNS(aNamespaceURI, aLocalName, getter_AddRefs(node));
+    if (NS_FAILED(rv)) return rv;
+
+    if (node) {
+        rv = node->QueryInterface(NS_GET_IID(nsIDOMAttr), (void**) aReturn);
+    }
+    else {
+        *aReturn = nsnull;
+        rv = NS_OK;
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsXULElement::SetAttributeNodeNS(nsIDOMAttr* aNewAttr,
+                                 nsIDOMAttr** aReturn)
+{
+    NS_NOTYETIMPLEMENTED("write me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULElement::GetElementsByTagNameNS(const nsString& aNamespaceURI,
+                                     const nsString& aLocalName,
+                                     nsIDOMNodeList** aReturn)
+{
+    NS_ENSURE_ARG_POINTER(aReturn);
+
+    PRInt32 nameSpaceId = kNameSpaceID_Unknown;
+
+    nsRDFDOMNodeList* elements;
+    nsresult rv = nsRDFDOMNodeList::Create(&elements);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIDOMNodeList> kungFuGrip;
+    kungFuGrip = dont_AddRef(NS_STATIC_CAST(nsIDOMNodeList *, elements));
+
+    if (!aNamespaceURI.EqualsWithConversion("*")) {
+        gNameSpaceManager->GetNameSpaceID(aNamespaceURI, nameSpaceId);
+
+        if (nameSpaceId == kNameSpaceID_Unknown) {
+            // Unkonwn namespace means no matches, we return an empty list...
+
+            *aReturn = elements;
+            NS_ADDREF(*aReturn);
+
+            return NS_OK;
+        }
+    }
+
+    rv = nsXULDocument::GetElementsByTagName(NS_STATIC_CAST(nsIStyledContent *,
+                                                            this), aLocalName,
+                                             nameSpaceId, elements);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    *aReturn = elements;
+    NS_ADDREF(*aReturn);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULElement::HasAttribute(const nsString& aName, PRBool* aReturn)
+{
+    NS_ENSURE_ARG_POINTER(aReturn);
+
+    nsCOMPtr<nsIAtom> name;
+    PRInt32 nsid;
+
+    nsresult rv = ParseAttributeString(aName, *getter_AddRefs(name), nsid);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoString tmp;
+    rv = GetAttribute(nsid, name, tmp);
+
+    *aReturn = rv == NS_CONTENT_ATTR_NOT_THERE ? PR_FALSE : PR_TRUE;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULElement::HasAttributeNS(const nsString& aNamespaceURI,
+                             const nsString& aLocalName, PRBool* aReturn)
+{
+    NS_ENSURE_ARG_POINTER(aReturn);
+
+    nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aLocalName)));
+    PRInt32 nsid;
+
+    gNameSpaceManager->GetNameSpaceID(aNamespaceURI, nsid);
+
+    if (nsid == kNameSpaceID_Unknown) {
+        // Unkonwn namespace means no attr...
+
+        *aReturn = PR_FALSE;
+        return NS_OK;
+    }
+
+    nsAutoString tmp;
+    nsresult rv = GetAttribute(nsid, name, tmp);
+
+    *aReturn = rv == NS_CONTENT_ATTR_NOT_THERE ? PR_FALSE : PR_TRUE;
+
     return NS_OK;
 }
 

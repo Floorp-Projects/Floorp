@@ -844,6 +844,209 @@ nsGenericElement::GetElementsByTagName(const nsString& aTagname,
 }
 
 nsresult
+nsGenericElement::GetAttributeNS(const nsString& aNamespaceURI,
+                                 const nsString& aLocalName, nsString& aReturn)
+{
+  nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aLocalName)));
+  PRInt32 nsid;
+
+  nsCOMPtr<nsINodeInfoManager> nimgr;
+  mNodeInfo->GetNodeInfoManager(*getter_AddRefs(nimgr));
+  NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsINameSpaceManager> nsmgr;
+  nimgr->GetNamespaceManager(*getter_AddRefs(nsmgr));
+  NS_ENSURE_TRUE(nsmgr, NS_ERROR_FAILURE);
+
+  nsmgr->GetNameSpaceID(aNamespaceURI, nsid);
+
+  if (nsid == kNameSpaceID_Unknown) {
+    // Unkonwn namespace means no attr...
+
+    aReturn.Truncate();
+    return NS_OK;
+  }
+
+  mContent->GetAttribute(nsid, name, aReturn);
+
+  return NS_OK;
+}
+
+nsresult
+nsGenericElement::SetAttributeNS(const nsString& aNamespaceURI,
+                                 const nsString& aQualifiedName,
+                                 const nsString& aValue)
+{
+  nsCOMPtr<nsINodeInfoManager> nimgr;
+  mNodeInfo->GetNodeInfoManager(*getter_AddRefs(nimgr));
+  NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsINodeInfo> ni;
+  nsresult rv = nimgr->GetNodeInfo(aQualifiedName, aNamespaceURI,
+                                   *getter_AddRefs(ni));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIAtom> name;
+  PRInt32 nsid;
+
+  ni->GetNameAtom(*getter_AddRefs(name));
+  ni->GetNamespaceID(nsid);
+
+  return mContent->SetAttribute(nsid, name, aValue, PR_TRUE);
+}
+
+nsresult
+
+nsGenericElement::RemoveAttributeNS(const nsString& aNamespaceURI,
+                                    const nsString& aLocalName)
+{
+  nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aLocalName)));
+  PRInt32 nsid;
+
+  nsCOMPtr<nsINodeInfoManager> nimgr;
+  mNodeInfo->GetNodeInfoManager(*getter_AddRefs(nimgr));
+  NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsINameSpaceManager> nsmgr;
+  nimgr->GetNamespaceManager(*getter_AddRefs(nsmgr));
+  NS_ENSURE_TRUE(nsmgr, NS_ERROR_FAILURE);
+
+  nsmgr->GetNameSpaceID(aNamespaceURI, nsid);
+
+  if (nsid == kNameSpaceID_Unknown) {
+    // Unkonwn namespace means no attr...
+
+    return NS_OK;
+  }
+
+  nsAutoString tmp;
+  mContent->UnsetAttribute(nsid, name, PR_TRUE);
+
+  return NS_OK;
+}
+
+nsresult
+nsGenericElement::GetAttributeNodeNS(const nsString& aNamespaceURI,
+                                     const nsString& aLocalName,
+                                     nsIDOMAttr** aReturn)
+{
+  NS_ENSURE_ARG_POINTER(aReturn);
+
+  nsIDOMNamedNodeMap* map;
+  nsresult result = GetAttributes(&map);
+ 
+  *aReturn = nsnull;
+  if (NS_OK == result) {
+    nsIDOMNode* node;
+    result = map->GetNamedItemNS(aNamespaceURI, aLocalName, &node);
+    if ((NS_OK == result) && (nsnull != node)) {
+      result = node->QueryInterface(kIDOMAttrIID, (void **)aReturn);
+      NS_IF_RELEASE(node);
+    }
+    NS_RELEASE(map);
+  }
+
+  return result;
+}
+
+nsresult
+nsGenericElement::SetAttributeNodeNS(nsIDOMAttr* aNewAttr,
+                                     nsIDOMAttr** aReturn)
+{
+  return NS_OK;
+}
+
+nsresult
+nsGenericElement::GetElementsByTagNameNS(const nsString& aNamespaceURI,
+                                         const nsString& aLocalName,
+                                         nsIDOMNodeList** aReturn)
+{
+  nsCOMPtr<nsIAtom> nameAtom(dont_AddRef(NS_NewAtom(aLocalName)));
+  PRInt32 nameSpaceId = kNameSpaceID_Unknown;
+  
+  nsContentList* list = nsnull;
+
+  if (!aNamespaceURI.EqualsWithConversion("*")) {
+    nsCOMPtr<nsINodeInfoManager> nimgr;
+    mNodeInfo->GetNodeInfoManager(*getter_AddRefs(nimgr));
+    NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsINameSpaceManager> nsmgr;
+    nimgr->GetNamespaceManager(*getter_AddRefs(nsmgr));
+    NS_ENSURE_TRUE(nsmgr, NS_ERROR_FAILURE);
+
+    nsmgr->GetNameSpaceID(aNamespaceURI, nameSpaceId);
+
+    if (nameSpaceId == kNameSpaceID_Unknown) {
+      // Unkonwn namespace means no matches, we create an empty list...
+      list = new nsContentList(mDocument, nsnull, kNameSpaceID_None);
+      NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
+    }
+  }
+
+  if (!list) {
+    list = new nsContentList(mDocument, nameAtom, nameSpaceId, mContent);
+    NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  return list->QueryInterface(kIDOMNodeListIID, (void **)aReturn);
+}
+
+nsresult
+nsGenericElement::HasAttribute(const nsString& aName, PRBool* aReturn)
+{
+  NS_ENSURE_ARG_POINTER(aReturn);
+
+  nsCOMPtr<nsIAtom> name;
+  PRInt32 nsid;
+
+  nsresult rv = mContent->ParseAttributeString(aName, *getter_AddRefs(name),
+                                               nsid);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString tmp;
+  rv = mContent->GetAttribute(nsid, name, tmp);
+
+  *aReturn = rv == NS_CONTENT_ATTR_NOT_THERE ? PR_FALSE : PR_TRUE;
+
+  return NS_OK;
+}
+
+nsresult
+nsGenericElement::HasAttributeNS(const nsString& aNamespaceURI,
+                                 const nsString& aLocalName, PRBool* aReturn)
+{
+  NS_ENSURE_ARG_POINTER(aReturn);
+
+  nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aLocalName)));
+  PRInt32 nsid;
+
+  nsCOMPtr<nsINodeInfoManager> nimgr;
+  mNodeInfo->GetNodeInfoManager(*getter_AddRefs(nimgr));
+  NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsINameSpaceManager> nsmgr;
+  nimgr->GetNamespaceManager(*getter_AddRefs(nsmgr));
+  NS_ENSURE_TRUE(nsmgr, NS_ERROR_FAILURE);
+
+  nsmgr->GetNameSpaceID(aNamespaceURI, nsid);
+
+  if (nsid == kNameSpaceID_Unknown) {
+    // Unkonwn namespace means no attr...
+
+    *aReturn = PR_FALSE;
+    return NS_OK;
+  }
+
+  nsAutoString tmp;
+  nsresult rv = mContent->GetAttribute(nsid, name, tmp);
+
+  *aReturn = rv == NS_CONTENT_ATTR_NOT_THERE ? PR_FALSE : PR_TRUE;
+
+  return NS_OK;
+}
+
+nsresult
 nsGenericElement::JoinTextNodes(nsIContent* aFirst,
                                 nsIContent* aSecond)
 {

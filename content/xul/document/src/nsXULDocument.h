@@ -402,6 +402,12 @@ public:
     NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult);
     NS_IMETHOD GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult);
 
+    static nsresult
+    GetElementsByTagName(nsIContent* aContent,
+                         const nsString& aTagName,
+                         PRInt32 aNamespaceID,
+                         nsRDFDOMNodeList* aElements);
+
 protected:
     // Implementation methods
     friend nsresult
@@ -430,12 +436,6 @@ protected:
     RemoveElementsFromMapByContent(const PRUnichar* aID,
                                    nsIContent* aElement,
                                    void* aClosure);
-
-    static nsresult
-    GetElementsByTagName(nsIContent* aContent,
-                         const nsString& aTagName,
-                         PRInt32 aNamespaceID,
-                         nsRDFDOMNodeList* aElements);
 
     static nsresult
     GetElementsByAttribute(nsIDOMNode* aNode,
