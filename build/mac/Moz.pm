@@ -380,8 +380,8 @@ sub InstallFromManifest($;$)
    close (BDATE);
    close (OUTPUT);
 
-   system ("perl :mozilla:config:aboutime.pl :mozilla:l10n:us:xp:about-all.html :mozilla:config:build_number");
-
+   system ("perl :mozilla:config:aboutime.pl :mozilla:xpfe:browser:src:navigator.xul :mozilla:config:build_number");
+die;
  }
 
 sub SetAgentString
