@@ -16,10 +16,3 @@
 # This is a list of local files which get copied to the mozilla:dist:mailnews directory
 #
 
-#[installed by xpidl] nsIAbBase.h
-#[installed by xpidl] nsIAbListener.h
-#[installed by xpidl] nsIAbDirectory.h
-#[installed by xpidl] nsIAbCard.h
-#[installed by xpidl] nsIAddrDBListener.h
-#[installed by xpidl] nsIAddrDBAnnouncer.h
-#[installed by xpidl] nsIAddrDatabase.h

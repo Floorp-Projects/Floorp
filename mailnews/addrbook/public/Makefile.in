@@ -22,7 +22,6 @@ srcdir		= @srcdir@
 MODULE		= addrbook
 
 include $(DEPTH)/config/autoconf.mk
-NO_GEN_XPT=1
 XPIDLSRCS =				  \
 		nsIAbBase.idl	\
 		nsIAbListener.idl	\
@@ -34,10 +33,6 @@ XPIDLSRCS =				  \
 		$(NULL)
 
 EXPORTS =				\
-		nsIAbBase.h		\
-		nsIAbListener.h		\
-		nsIAbDirectory.h	\
-		nsIAbCard.h		\
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
