@@ -181,7 +181,7 @@ NS_IMETHODIMP nsCacheEntryDescriptor::GetTransport(nsITransport * *aTransport)
     if (!mCacheEntry)                  return NS_ERROR_NOT_AVAILABLE;
     if (!mCacheEntry->IsStreamData())  return NS_ERROR_CACHE_DATA_IS_NOT_STREAM;
 
-    return nsCacheService::GlobalInstance()->GetTransportForEntry(mCacheEntry, aTransport);
+    return nsCacheService::GlobalInstance()->GetTransportForEntry(mCacheEntry, mAccessGranted, aTransport);
 }
 
 

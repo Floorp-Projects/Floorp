@@ -71,7 +71,7 @@ public:
      * Methods called by nsCacheEntryDescriptor
      */
 
-    nsresult       GetTransportForEntry(nsCacheEntry * entry, nsITransport **result);
+    nsresult       GetTransportForEntry(nsCacheEntry * entry, nsCacheAccessMode mode, nsITransport **result);
     void           CloseDescriptor(nsCacheEntryDescriptor * descriptor);
 
 

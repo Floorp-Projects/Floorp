@@ -409,7 +409,9 @@ nsCacheService::DoomEntry_Internal(nsCacheEntry * entry)
 }
 
 nsresult
-nsCacheService::GetTransportForEntry(nsCacheEntry * entry, nsITransport **result)
+nsCacheService::GetTransportForEntry(nsCacheEntry * entry,
+                                     nsCacheAccessMode mode,
+                                     nsITransport **result)
 {
     nsAutoLock lock(mCacheServiceLock);
     nsresult   rv = NS_OK;
@@ -422,7 +424,7 @@ nsCacheService::GetTransportForEntry(nsCacheEntry * entry, nsITransport **result
         device = entry->CacheDevice();
     }
     
-    return device->GetTransportForEntry(entry, result);
+    return device->GetTransportForEntry(entry, mode, result);
 }
 
 
