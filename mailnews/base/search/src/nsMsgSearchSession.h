@@ -58,6 +58,7 @@ protected:
 	nsresult AddUrl(const char *url);
 	nsresult SearchWOUrls ();
 	nsresult GetNextUrl();
+  nsresult NotifyListenersDone(nsresult status);
 
 	nsMsgSearchScopeTermArray m_scopeList;
 	nsCOMPtr <nsISupportsArray> m_termList;
@@ -68,6 +69,7 @@ protected:
 	void DestroyTermList ();
 	void DestroyScopeList ();
 	void DestroyResultList ();
+
 
   static void TimerCallback(nsITimer *aTimer, void *aClosure);
 	// support for searching multiple scopes in serial

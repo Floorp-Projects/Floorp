@@ -100,6 +100,13 @@ nsMsgSearchDataSource::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgSearchDataSource::OnSearchDone(nsresult status)
+{
+  return NS_OK;
+}
+
+
 // for now also acts as a way of resetting the search datasource
 NS_IMETHODIMP
 nsMsgSearchDataSource::OnNewSearch()

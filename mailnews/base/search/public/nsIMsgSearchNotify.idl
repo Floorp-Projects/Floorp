@@ -34,6 +34,8 @@ interface nsIMsgSearchNotify : nsISupports
 {
   void onSearchHit(in nsIMsgDBHdr header, in nsIMsgFolder folder);
 
+  // notification that a search has finished.
+  void onSearchDone(in nsresult status);
   /*
    * until we can encode searches with a URI, this will be an
    * out-of-bound way to connect a set of search terms to a datasource

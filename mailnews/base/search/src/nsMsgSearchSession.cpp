@@ -326,7 +326,19 @@ NS_IMETHODIMP nsMsgSearchSession::Search(nsIMsgWindow *aWindow)
 /* void InterruptSearch (); */
 NS_IMETHODIMP nsMsgSearchSession::InterruptSearch()
 {
-    return NS_OK;
+  if (m_window)
+  {
+    m_idxRunningScope = m_scopeList.Count(); // this'll make us not run another url
+    m_window->StopUrls();
+  }
+  if (m_backgroundTimer)
+  {
+    m_backgroundTimer->Cancel();
+    NotifyListenersDone(NS_OK); // ### is there a cancelled status?
+
+    m_backgroundTimer = nsnull;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgSearchSession::PauseSearch()
@@ -408,6 +420,8 @@ NS_IMETHODIMP nsMsgSearchSession::OnStopRunningUrl(nsIURI *url, nsresult aExitCo
   m_idxRunningScope++;
   if (m_idxRunningScope < m_scopeList.Count())
     GetNextUrl();
+  else
+    NotifyListenersDone(aExitCode);
   return NS_OK;
 }
 
@@ -435,6 +449,9 @@ nsresult nsMsgSearchSession::Initialize()
 	// if we don't have any search scopes to search, return that code. 
 	if (m_scopeList.Count() == 0)
 		return NS_MSG_ERROR_INVALID_SEARCH_SCOPE;
+
+  m_urlQueue.Clear(); // clear out old urls, if any.
+	m_idxRunningScope = 0; 
 
 	// If this term list (loosely specified here by the first term) should be
 	// scheduled in parallel, build up a list of scopes to do the round-robin scheduling
@@ -534,6 +551,7 @@ nsresult nsMsgSearchSession::AddUrl(const char *url)
   {
     aTimer->Cancel();
     searchSession->m_backgroundTimer = nsnull;
+    searchSession->NotifyListenersDone(NS_OK);
   }
 }
 
@@ -580,6 +598,25 @@ NS_IMETHODIMP nsMsgSearchSession::AddSearchHit(nsIMsgDBHdr *header, nsIMsgFolder
                                (void **)getter_AddRefs(pListener));
       if (pListener)
         pListener->OnSearchHit(header, folder);
+
+    }
+  }
+	return NS_OK;
+}
+
+nsresult nsMsgSearchSession::NotifyListenersDone(nsresult status)
+{
+  if (m_listenerList)
+  {
+    PRUint32 count;
+    m_listenerList->Count(&count);
+    for (PRUint32 i = 0; i < count; i++)
+    {
+      nsCOMPtr<nsIMsgSearchNotify> pListener;
+      m_listenerList->QueryElementAt(i, NS_GET_IID(nsIMsgSearchNotify),
+                               (void **)getter_AddRefs(pListener));
+      if (pListener)
+        pListener->OnSearchDone(status);
 
     }
   }
