@@ -72,9 +72,9 @@ secmod_parseTokenParameters(char *param, pk11_token_parameters *parsed)
     index = pk11_argStrip(param);
 
     while (*index) {
-	PK11_HANDLE_STRING_ARG(index,parsed->configdir,"configdir=",;)
-	PK11_HANDLE_STRING_ARG(index,parsed->certPrefix,"certprefix=",;)
-	PK11_HANDLE_STRING_ARG(index,parsed->keyPrefix,"keyprefix=",;)
+	PK11_HANDLE_STRING_ARG(index,parsed->configdir,"configDir=",;)
+	PK11_HANDLE_STRING_ARG(index,parsed->certPrefix,"certPrefix=",;)
+	PK11_HANDLE_STRING_ARG(index,parsed->keyPrefix,"keyPrefix=",;)
 	PK11_HANDLE_STRING_ARG(index,parsed->tokdes,"tokenDescription=",;)
 	PK11_HANDLE_STRING_ARG(index,parsed->slotdes,"slotDescription=",;)
 	PK11_HANDLE_STRING_ARG(index,tmp,"minPWLen=", 
@@ -148,13 +148,13 @@ secmod_parseParameters(char *param, pk11_parameters *parsed, PRBool isFIPS)
     PORT_Memset(parsed, 0, sizeof(pk11_parameters));
 
     while (*index) {
-	PK11_HANDLE_STRING_ARG(index,parsed->configdir,"configdir=",;)
+	PK11_HANDLE_STRING_ARG(index,parsed->configdir,"configDir=",;)
 	PK11_HANDLE_STRING_ARG(index,parsed->secmodName,"secmod=",;)
-	PK11_HANDLE_STRING_ARG(index,parsed->man,"manufactureID=",;)
+	PK11_HANDLE_STRING_ARG(index,parsed->man,"manufacturerID=",;)
 	PK11_HANDLE_STRING_ARG(index,parsed->libdes,"libraryDescription=",;)
 	/* constructed values, used so legacy interfaces still work */
-	PK11_HANDLE_STRING_ARG(index,certPrefix,"certprefix=",;)
-        PK11_HANDLE_STRING_ARG(index,keyPrefix,"keyprefix=",;)
+	PK11_HANDLE_STRING_ARG(index,certPrefix,"certPrefix=",;)
+        PK11_HANDLE_STRING_ARG(index,keyPrefix,"keyPrefix=",;)
         PK11_HANDLE_STRING_ARG(index,tokdes,"cryptoTokenDescription=",;)
         PK11_HANDLE_STRING_ARG(index,ptokdes,"dbTokenDescription=",;)
         PK11_HANDLE_STRING_ARG(index,slotdes,"cryptoSlotDescription=",;)
@@ -258,7 +258,7 @@ secmod_getSecmodName(char *param, PRBool *rw)
 	
 
     while (*param) {
-	PK11_HANDLE_STRING_ARG(param,configdir,"configdir=",;)
+	PK11_HANDLE_STRING_ARG(param,configdir,"configDir=",;)
 	PK11_HANDLE_STRING_ARG(param,secmodName,"secmod=",;)
 	PK11_HANDLE_FINAL_ARG(param)
    }
