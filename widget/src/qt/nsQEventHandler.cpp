@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-#include "nsQEventHandler.h"
+
 
 #include "nsWidget.h"
 #include "nsWindow.h"
@@ -28,13 +28,10 @@
 #include "nsGUIEvent.h"
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
-
 #include "stdio.h"
+#include "nsQEventHandler.h"
 
 #define DBG 0
-
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
@@ -222,6 +219,19 @@ bool nsQEventHandler::eventFilter(QObject * object, QEvent * event)
     case QEvent::MouseButtonRelease:
         handled = MouseReleasedEvent((QMouseEvent *) event, widget);
         break;
+
+    case QEvent::MouseMove:
+        handled = MouseMovedEvent((QMouseEvent *) event, widget);
+        break;
+
+    case QEvent::KeyPress:
+        handled = KeyPressEvent((QKeyEvent *) event, widget);
+        break;
+        
+    case QEvent::KeyRelease:
+        handled = KeyReleaseEvent((QKeyEvent *) event, widget);
+        break;
+
     case QEvent::Close:
     case QEvent::Destroy:
         handled = DestroyEvent((QCloseEvent *) event, widget);
@@ -259,8 +269,9 @@ bool nsQEventHandler::MousePressedEvent(QMouseEvent * event, nsWidget * widget)
 {
     PR_LOG(QtWidgetsLM, 
            PR_LOG_DEBUG, 
-           ("nsQEventHandler::MousePressedEvent for %s\n", 
-            (const char *) mObjectName));
+           ("nsQEventHandler::MousePressedEvent for %s(%p)\n", 
+            (const char *) mObjectName,
+            widget));
 
     if (event && widget)
     {
@@ -287,14 +298,23 @@ bool nsQEventHandler::MousePressedEvent(QMouseEvent * event, nsWidget * widget)
             break;
         }
 
-        nsEvent.widget = widget;
+        nsEvent.point.x  = event->x();
+        nsEvent.point.y  = event->y();
+        nsEvent.widget   = widget;
         NS_IF_ADDREF(nsEvent.widget);
         nsEvent.eventStructType = NS_MOUSE_EVENT;
-        nsEvent.clickCount = 1;
+        nsEvent.clickCount      = 1;
         widget->DispatchMouseEvent(nsEvent);
     }
 
-    return false;
+    if (mObjectName == "nsRadioButton" || mObjectName == "nsCheckButton")
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 bool nsQEventHandler::MouseReleasedEvent(QMouseEvent * event, 
@@ -302,8 +322,9 @@ bool nsQEventHandler::MouseReleasedEvent(QMouseEvent * event,
 {
     PR_LOG(QtWidgetsLM, 
            PR_LOG_DEBUG, 
-           ("nsQEventHandler::MouseReleasedEvent for %s\n", 
-            (const char *) mObjectName));
+           ("nsQEventHandler::MouseReleasedEvent for %s(%p)\n", 
+            (const char *) mObjectName,
+            widget));
 
     if (event && widget)
     {
@@ -340,16 +361,52 @@ bool nsQEventHandler::MouseReleasedEvent(QMouseEvent * event,
                 break;
             }
 
-            nsEvent.widget = widget;
+            nsEvent.point.x  = event->x();
+            nsEvent.point.y  = event->y();
+            nsEvent.widget   = widget;
             NS_IF_ADDREF(nsEvent.widget);
             nsEvent.eventStructType = NS_MOUSE_EVENT;
-            nsEvent.clickCount = 1;
+            nsEvent.clickCount      = 1;
             widget->DispatchMouseEvent(nsEvent);
         }
 
         delete rect;
     }
 
+    if (mObjectName == "nsRadioButton" || mObjectName == "nsCheckButton")
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool nsQEventHandler::MouseMovedEvent(QMouseEvent * event, nsWidget * widget)
+{
+    PR_LOG(QtWidgetsLM, 
+           PR_LOG_DEBUG, 
+           ("nsQEventHandler::DestroyEvent for %s\n", 
+            (const char *) mObjectName));
+
+	if (event && widget)
+	{
+		// Generate XPFE mouse moved event
+        
+        nsMouseEvent nsEvent;
+
+        nsEvent.point.x  = event->x();
+        nsEvent.point.y  = event->y();
+        nsEvent.message = NS_MOUSE_MOVE;
+        nsEvent.widget = widget;
+        NS_IF_ADDREF(nsEvent.widget);
+        nsEvent.eventStructType = NS_MOUSE_EVENT;
+        nsEvent.clickCount = 1;
+        widget->DispatchMouseEvent(nsEvent);
+        //widget->Invalidate(PR_TRUE);
+    }
+        
     return false;
 }
 
@@ -420,8 +477,9 @@ bool nsQEventHandler::ResizeEvent(QResizeEvent * event, nsWidget * widget)
 {
     PR_LOG(QtWidgetsLM, 
            PR_LOG_DEBUG, 
-           ("nsQEventHandler::ResizeEvent for %s\n", 
-            (const char *) mObjectName));
+           ("nsQEventHandler::ResizeEvent for %s(%p)\n", 
+            (const char *) mObjectName,
+            widget));
 	if (event && widget)
 	{
 		// Generate XPFE resize event
@@ -445,9 +503,12 @@ bool nsQEventHandler::ResizeEvent(QResizeEvent * event, nsWidget * widget)
         rect->width     = event->size().width();
         rect->height    = event->size().height();
 
+        nsEvent.point.x    = 0;
+        nsEvent.point.y    = 0;
         nsEvent.windowSize = rect;
         nsEvent.mWinHeight = event->size().height();
         nsEvent.mWinWidth  = event->size().width();
+        nsEvent.time       = PR_IntervalNow();
 
         widget->OnResize(*rect);
         delete rect;
@@ -475,8 +536,9 @@ bool nsQEventHandler::PaintEvent(QPaintEvent * event, nsWidget * widget)
 {
     PR_LOG(QtWidgetsLM, 
            PR_LOG_DEBUG, 
-           ("nsQEventHandler::PaintEvent for %s\n", 
-            (const char *) mObjectName));
+           ("nsQEventHandler::PaintEvent for %s(%p)\n", 
+            (const char *) mObjectName,
+            widget));
 
     if (event && widget)
     {
@@ -509,27 +571,86 @@ bool nsQEventHandler::PaintEvent(QPaintEvent * event, nsWidget * widget)
         delete rect;
     }
 
-    return false;
-    //return true;
+    if (mObjectName == "nsWindow" || mObjectName == "nsWidget")
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
-bool nsQEventHandler::KeyPressEvent(QWidget * widget)
+bool nsQEventHandler::KeyPressEvent(QKeyEvent * event, nsWidget * widget)
 {
     PR_LOG(QtWidgetsLM, 
            PR_LOG_DEBUG, 
            ("nsQEventHandler::KeyPressEvent for %s\n", 
             (const char *) mObjectName));
 
-    return false;
+    if (event && widget)
+    {
+        nsKeyEvent nsEvent;
+
+        nsEvent.message = NS_KEY_DOWN;
+        nsEvent.eventStructType = NS_KEY_EVENT;
+        nsEvent.widget = widget;
+        NS_IF_ADDREF(nsEvent.widget);
+        nsEvent.keyCode = GetNSKey(event->key(), event->state());
+        nsEvent.isShift = event->state() & ShiftButton;
+        nsEvent.isControl = event->state() & ControlButton;
+        nsEvent.isAlt = event->state() & AltButton;
+        widget->AddRef();
+        ((nsWindow *)widget)->OnKey(nsEvent);
+        widget->Release();
+    }
+
+    return true;
+    //return false;
 }
 
-bool nsQEventHandler::KeyReleaseEvent(QWidget * widget)
+bool nsQEventHandler::KeyReleaseEvent(QKeyEvent * event, nsWidget * widget)
 {
     PR_LOG(QtWidgetsLM, 
            PR_LOG_DEBUG, 
            ("nsQEventHandler::KeyReleaseEvent for %s\n", 
             (const char *) mObjectName));
-    return false;
+
+    if (event && widget)
+    {
+        nsKeyEvent nsEvent;
+
+        nsEvent.message = NS_KEY_UP;
+        nsEvent.eventStructType = NS_KEY_EVENT;
+        nsEvent.widget = widget;
+        NS_IF_ADDREF(nsEvent.widget);
+        nsEvent.keyCode = GetNSKey(event->key(), event->state());
+        nsEvent.isShift = event->state() & ShiftButton;
+        nsEvent.isControl = event->state() & ControlButton;
+        nsEvent.isAlt = event->state() & AltButton;
+        widget->AddRef();
+        ((nsWindow *)widget)->OnKey(nsEvent);
+        widget->Release();
+    }
+
+    return true;
+    //return false;
+}
+
+PRInt32 nsQEventHandler::GetNSKey(PRInt32 key, PRInt32 state)
+{
+    PRInt32 nsKey = 0;
+    PRInt32 length = sizeof(nsKeycodes) / sizeof(nsKeyConverter);
+
+    for (PRInt32 i = 0; i < length; i++)
+    {
+        if (nsKeycodes[i].keysym == key)
+        {
+            nsKey |= nsKeycodes[i].vkCode;
+        }
+    }
+
+    return nsKey;
 }
 
 bool nsQEventHandler::FocusInEvent(QWidget * widget)
