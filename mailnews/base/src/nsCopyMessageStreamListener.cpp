@@ -183,8 +183,9 @@ NS_IMETHODIMP nsCopyMessageStreamListener::OnStopRequest(nsIChannel * aChannel, 
 			nsCOMPtr <nsIMsgImapMailFolder> destImap = do_QueryInterface(mDestination);
 			if (!destImap)
 			{
-				rv = DeleteMessage(uri, mSrcFolder);
-				if(NS_SUCCEEDED(rv))
+        // if the destination is a local folder, it will handle the delete from the source in EndMove
+//				rv = DeleteMessage(uri, mSrcFolder);
+//				if(NS_SUCCEEDED(rv))
 					rv = mDestination->EndMove();
 			}
 		}
