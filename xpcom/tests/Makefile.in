@@ -55,6 +55,7 @@ CPPSRCS		= \
 		TestServMgr.cpp \
 		TestThreads.cpp \
 		TestXPIDLString.cpp \
+		TestDeque.cpp \
 		$(NULL)
 
 #CPPSRCS		+= TimerTest.cpp

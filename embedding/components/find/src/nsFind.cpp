@@ -744,7 +744,7 @@ PRBool nsFind::FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
 #endif
 
       // Get the current node, either from the deque or the tree.
-      if (fromQ && (iter != iterEnd))
+      if (fromQ && mNodeQ.GetSize() > 0 && (iter != iterEnd))
         tc = NS_STATIC_CAST(nsITextContent*, iter.GetCurrent());
       else
         tc = nsnull;
@@ -871,7 +871,6 @@ PRBool nsFind::FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
           if (restart <= 0)
             mNodeQ.Pop();
         } else {
-          ++iter;
           if (restart >= frag->GetLength())
             mNodeQ.PopFront();
         }
