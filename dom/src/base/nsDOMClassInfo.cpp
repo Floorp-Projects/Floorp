@@ -666,7 +666,7 @@ nsDOMClassInfo::Init()
   sXPConnect->SetFunctionThisTranslator(NS_GET_IID(nsIDOMEventListener),
                                         elt, getter_AddRefs(old));
 
-  nsCOMPtr<nsIScriptSecurityManager> sm = 
+  nsCOMPtr<nsIScriptSecurityManager> sm =
       do_GetService("@mozilla.org/scriptsecuritymanager;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   sSecMan = sm;
@@ -748,7 +748,7 @@ nsDOMClassInfo::GetContractID(char **aContractID)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsDOMClassInfo::GetClassDescription(char **aClassDescription)
 {
   return GetClassName(aClassDescription);
@@ -1302,7 +1302,7 @@ StubConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
   const char *name = ::JS_GetFunctionName(fun);
- 
+
   nsAutoString nameStr;
   nameStr.AssignWithConversion(name);
 
@@ -2823,7 +2823,7 @@ nsHTMLPluginObjElementSH::GetPluginJSObject(JSContext *cx, JSObject *obj,
     }
   }
 
-  // notify the PluginManager that this one is scriptable -- 
+  // notify the PluginManager that this one is scriptable --
   // it will need some special treatment later
   nsCOMPtr<nsIPluginHost> pluginManager =
     do_GetService(kCPluginManagerCID);
@@ -2867,7 +2867,7 @@ nsHTMLPluginObjElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
 
     char* cstring = ::JS_GetStringBytes(str);
 
-    nsCOMPtr<nsIInterfaceInfoManager> iim = 
+    nsCOMPtr<nsIInterfaceInfoManager> iim =
       dont_AddRef(XPTI_GetInterfaceInfoManager());
     NS_ENSURE_TRUE(iim, NS_ERROR_UNEXPECTED);
 
@@ -2881,7 +2881,7 @@ nsHTMLPluginObjElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
       GetPluginInstance(wrapper, getter_AddRefs(pi));
 
       if (pi) {
-        // notify the PluginManager that this one is scriptable -- 
+        // notify the PluginManager that this one is scriptable --
         // it will need some special treatment later
 
         nsCOMPtr<nsIPluginHost> pluginManager =
@@ -2917,7 +2917,7 @@ nsHTMLPluginObjElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
         }
       }
 
-      nsMemory::Free(iid);        
+      nsMemory::Free(iid);
     }
   }
 
