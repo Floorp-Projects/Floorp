@@ -28,11 +28,13 @@ DEFINES=$(DEFINES) -DMOZ_XSL
 CPPSRCS=			\
 	XMLPrinter.cpp		\
 	HTMLPrinter.cpp		\
+	TEXTPrinter.cpp		\
 	$(NULL)
 
 CPP_OBJS=				\
 	.\$(OBJDIR)\XMLPrinter.obj	\
 	.\$(OBJDIR)\HTMLPrinter.obj	\
+	.\$(OBJDIR)\TEXTPrinter.obj	\
 	$(NULL)
 
 EXPORTS =	\

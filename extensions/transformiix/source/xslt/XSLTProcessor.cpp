@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.25 2000/09/26 07:38:51 kvisco%ziplink.net Exp $
+ * $Id: XSLTProcessor.cpp,v 1.26 2000/11/16 22:08:58 axel%pike.org Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -53,7 +53,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.25 $ $Date: 2000/09/26 07:38:51 $
+ * @version $Revision: 1.26 $ $Date: 2000/11/16 22:08:58 $
 **/
 
 /**
@@ -142,6 +142,7 @@ void XSLTProcessor::print
     MBool indent = MB_FALSE;
     if (format->isMethodExplicit()) {
         if (format->isHTMLOutput()) xmlPrinter = new HTMLPrinter(*target);
+	else if (format->isTextOutput()) xmlPrinter = new TEXTPrinter(*target);
         else xmlPrinter = new XMLPrinter(*target);
         indent = format->getIndent();
     }
