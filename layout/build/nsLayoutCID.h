@@ -43,4 +43,14 @@
  0xd6008c40, 0x4dad, 0x11d2,                      \
  {0xb3, 0x28, 0x00, 0x80, 0x5f, 0x8a, 0x38, 0x59}}
 
+
+// XXX This should really be factored into a style-specific DLL so
+// that all the HTML, generic layout, and style stuff isn't munged
+// together.
+
+// {2E363D60-872E-11d2-B531-000000000000}
+#define NS_CSSPARSER_CID \
+{ 0x2e363d60, 0x872e, 0x11d2, { 0xb5, 0x31, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
+
+
 #endif // nsLayoutCID_h__
