@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: rsawrapr.c,v 1.7 2004/04/27 23:04:38 gerv%gerv.net Exp $ */
+/* $Id: rsawrapr.c,v 1.8 2005/04/04 09:27:42 julien.pierre.bugs%sun.com Exp $ */
 
 #include "blapi.h"
 #include "softoken.h"
@@ -416,6 +416,9 @@ rsa_FormatBlock(SECItem *result, unsigned modulusLen,
 	 * Pad is zeros. The application is responsible for recovering
 	 * the actual data.
 	 */
+	if (data->len > modulusLen ) {
+	    return SECFailure;
+	}
 	result->data = (unsigned char*)PORT_ZAlloc(modulusLen);
 	result->len = modulusLen;
 	PORT_Memcpy(result->data+(modulusLen-data->len),data->data,data->len);
