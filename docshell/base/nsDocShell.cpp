@@ -990,7 +990,7 @@ NS_IMETHODIMP nsDocShell::FocusAvailable(nsIBaseWindow* aCurrentFocus,
          {
          while(++i < n)
             {
-            child = do_QueryInterface((nsISupports*)mChildren.ElementAt(++i));
+            child = do_QueryInterface((nsISupports*)mChildren.ElementAt(i));
             if(NS_SUCCEEDED(child->SetFocus()))
                {
                *aTookFocus = PR_TRUE;
