@@ -27,10 +27,10 @@
 
 // Version Numbers //
 
-#define 	VERSION_MAJOR			0
-#define		VERSION_MINOR			128		// =[0x80] This is really revision & fix in BCD
-#define 	VERSION_MICRO			0		// This is really the internal stage
-#define		VERSION_KIND			alpha
+#define		VERSION_MAJOR			0
+#define		VERSION_MINOR			0x80	// revision & fix in BCD
+#define		VERSION_KIND			alpha	// alpha, beta, or final
+#define		VERSION_MICRO			0		// internal stage: alpha or beta number
 
 
 // Version Strings (Finder's Get Info dialog box) //
