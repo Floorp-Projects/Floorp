@@ -3353,7 +3353,7 @@ LO_Element *lo_GetFirstAndLastCellsInColumnOrRow(LO_Element *pCellElement, LO_El
 XP_Bool lo_AllCellsSelectedInColumnOrRow( LO_CellStruct *pCell, XP_Bool bInColumn )
 {
 	LO_Element *pFirstCell;
-	LO_Element *pLastCell;
+	LO_Element *pLastCell = NULL;
 	LO_Element *tptr;
 
     /* Get first and last cells in row or column */
@@ -3472,8 +3472,7 @@ XP_Bool LO_IsEmptyCell(LO_CellStruct *cell)
 */ 
 int32 lo_GetCellTagWidth(LO_Element *pCellElement)
 {
-    /*XP_ASSERT(pCellElement->type == LO_CELL);*/
-    
+    /* XP_ASSERT(pCellElement->type == LO_CELL); */ /* Why doesn't this compile! */
     int32 iColSpan = lo_GetColSpan(pCellElement);
     int32 iPadding = iColSpan * 2 * (pCellElement->lo_cell.border_width + 
                                      lo_GetCellPadding(pCellElement));
@@ -3493,7 +3492,8 @@ int32 lo_GetCellTagHeight(LO_Element *pCellElement)
     /*XP_ASSERT(pCellElement->type == LO_CELL);*/
 
     int32 iRowSpan = lo_GetRowSpan(pCellElement);
-    int32 iPadding = iRowSpan * 2 * lo_GetCellPadding(pCellElement);
+    int32 iPadding = iRowSpan * 2 * (/*pCellElement->lo_cell.border_width + */
+                                     lo_GetCellPadding(pCellElement));
     
     if( iRowSpan > 1 )
         iPadding += (iRowSpan - 1) * pCellElement->lo_cell.inter_cell_space;

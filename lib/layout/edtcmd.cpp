@@ -1023,7 +1023,7 @@ CInsertTableRowCommand::CInsertTableRowCommand(CEditBuffer* buffer,
             int32 Y = pTableCell->GetY();
             int32 iNewY = Y + (bAfterCurrentRow ? pTableCell->GetHeight() : 0);
             // Try to locate cursor in new cell
-            int32 iCaretY = iNewY + (bAfterCurrentRow ? pTable->GetInterCellSpace() : 0);
+            int32 iCaretY = iNewY + (bAfterCurrentRow ? pTable->GetCellSpacing() : 0);
             pTable->InsertRows(Y, iNewY, number);
             pTable->FinishedLoad(GetEditBuffer());
             GetEditBuffer()->Relayout(pTable, 0);
@@ -1101,13 +1101,13 @@ CInsertTableColumnCommand::CInsertTableColumnCommand(CEditBuffer* buffer,
         {
             int32 X = pTableCell->GetX();
             int32 Y = pTableCell->GetY();
-            int32 iNewX = X + (bAfterCurrentCell ? pTableCell->GetWidth() : 0);
+            int32 iNewX = X + (bAfterCurrentCell ? pTableCell->GetFullWidth() : 0); // WAS GetWidth()
             // Try to place cursor in inserted cell
-            int32 iCaretX = iNewX + (bAfterCurrentCell ? pTable->GetInterCellSpace() : 0);
+            //int32 iCaretX = iNewX + (bAfterCurrentCell ? pTable->GetCellSpacing() : 0);
             pTable->InsertColumns(X, iNewX, number);
             pTable->FinishedLoad(GetEditBuffer());
             GetEditBuffer()->Relayout(pTable, 0);
-            GetEditBuffer()->MoveToExistingCell(pTable, iCaretX, Y);
+            GetEditBuffer()->MoveToExistingCell(pTable, iNewX /*iCaretX*/, Y);
         }
     }
 }
@@ -1139,7 +1139,8 @@ CDeleteTableColumnCommand::CDeleteTableColumnCommand(CEditBuffer* buffer, intn c
             m_bDeletedWholeTable = FALSE; //m_column == 0 && m_columns >= pTable->GetColumns();
             int32 X = pTableCell->GetX();
             int32 Y = pTableCell->GetY();
-            pTable->DeleteColumns(X, columns, &m_table);
+            // We don't save the table to undo any more
+            pTable->DeleteColumns(X, columns /*, &m_table*/);
             pTable->FinishedLoad(GetEditBuffer());
             // Move to a safe location so Relayout() doesn't assert
             GetEditBuffer()->Relayout(pTable, 0, NULL, RELAYOUT_NOCARET);
@@ -1180,13 +1181,13 @@ CInsertTableCellCommand::CInsertTableCellCommand(CEditBuffer* buffer,
         {
             int32 X = pTableCell->GetX();
             int32 Y = pTableCell->GetY();
-            int32 iNewX = X + (bAfterCurrentCell ? pTableCell->GetWidth() : 0);
+            int32 iNewX = X + (bAfterCurrentCell ? pTableCell->GetFullWidth() : 0); // WAS GetWidth()
             // Try to move cursor to new column
-            int32 iCaretX = bAfterCurrentCell ? (iNewX+pTable->GetInterCellSpace()) : X;
+            // int32 iCaretX = bAfterCurrentCell ? (iNewX+pTable->GetCellSpacing()) : X;
             pTableRow->InsertCells(X, iNewX, number);
             pTable->FinishedLoad(GetEditBuffer());
             GetEditBuffer()->Relayout(pTable, 0);
-            GetEditBuffer()->MoveToExistingCell(pTable, iCaretX, Y);
+            GetEditBuffer()->MoveToExistingCell(pTable, iNewX /*iCaretX*/, Y);
         }
     }
 }

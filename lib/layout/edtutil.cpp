@@ -4224,7 +4224,8 @@ CSizingObject::CSizingObject() :
         m_bPercentOriginal(0),
         m_bFirstTime(1),
         m_iAddCols(0),
-        m_iAddRows(0)
+        m_iAddRows(0),
+        m_bCenterSizing(0)
 {
 }
 
@@ -4305,6 +4306,7 @@ XP_Bool CSizingObject::Create(CEditBuffer *pBuffer,
                         m_pLoElement = pElement;
                         break;
                     }
+                    pElement = pElement->lo_any.next;
                 }
                 while( pElement != pLastElement );
         }
@@ -4418,6 +4420,9 @@ XP_Bool CSizingObject::Create(CEditBuffer *pBuffer,
             if( pHData )
             {
                 m_bWidthPercent = pHData->bWidthPercent;
+                if(  pHData->align == ED_ALIGN_CENTER )
+                    m_bCenterSizing = TRUE;
+
                 //Note: we will get width and "size" (height) in pixels below
                 m_iStartHeight = pHData->size;
                 EDT_FreeHorizRuleData(pHData);
@@ -4554,8 +4559,6 @@ XP_Bool CSizingObject::Create(CEditBuffer *pBuffer,
         }
     }
 
-    XP_TRACE(("Start Sizing: m_iStartWidth=%d, m_iStartHeight=%d", m_iStartWidth, m_iStartHeight));
-
     if( !m_bWidthPercent )
     {
         // We aren't doing percent, so set message ID for pixels
@@ -4580,14 +4583,9 @@ XP_Bool CSizingObject::Create(CEditBuffer *pBuffer,
         m_iStartHeight = max(1, pAny->height);
     }
 
-    XP_Rect rectSize;
-    
-    GetSizingRect(xVal, yVal, bLockAspect, &rectSize);
-
-    XP_ASSERT(rectSize.left == m_Rect.left);
-    XP_ASSERT(rectSize.right == m_Rect.right);
-    XP_ASSERT(rectSize.top == m_Rect.top);
-    XP_ASSERT(rectSize.bottom == m_Rect.bottom);
+    // Call this now primarily to start the 
+    //  status line display of sizing information
+    GetSizingRect(xVal, yVal, bLockAspect, &m_Rect);
 
     if( pRect )
         *pRect = m_Rect;
@@ -4635,6 +4633,12 @@ XP_Bool CSizingObject::GetSizingRect(int32 xVal, int32 yVal, XP_Bool bLockAspect
     // And don't allow dragging past opposite side:
     XP_Rect new_rect = m_Rect;
 
+    int32 iAmountMoved = 0;
+    if( m_iStyle == ED_SIZE_RIGHT )
+        iAmountMoved = max(m_Rect.left, iViewX) - m_Rect.right;
+    else if( m_iStyle == ED_SIZE_LEFT )
+        iAmountMoved = m_Rect.left - min(m_Rect.right, iViewX);
+
     if( m_bWidthPercent )
     {
         // In % mode, limit largest value to get 100% of width or height
@@ -4653,11 +4657,24 @@ XP_Bool CSizingObject::GetSizingRect(int32 xVal, int32 yVal, XP_Bool bLockAspect
         }
         if( m_iStyle & ED_SIZE_LEFT )
         {
-            new_rect.left = min(m_Rect.right, max(iViewX,m_Rect.right-iFullWidth));
+            if( m_bCenterSizing )
+            {
+                new_rect.left -= iAmountMoved;
+                new_rect.right += iAmountMoved;
+            }
+            else
+                new_rect.left = min(m_Rect.right, max(iViewX,m_Rect.right-iFullWidth));
+
         }
         if( m_iStyle & ED_SIZE_RIGHT )
         {
-            new_rect.right = max(m_Rect.left, iViewX); //(m_pLoElement->type == LO_CELL) ? iViewX : min(iViewX,m_Rect.left+iFullWidth));
+            if( m_bCenterSizing )
+            {
+                new_rect.left -= iAmountMoved;
+                new_rect.right += iAmountMoved;
+            }
+            else
+                new_rect.right = max(m_Rect.left, iViewX);
         }
     } else {
         if( m_iStyle & ED_SIZE_TOP )
@@ -4670,11 +4687,23 @@ XP_Bool CSizingObject::GetSizingRect(int32 xVal, int32 yVal, XP_Bool bLockAspect
         }
         if( m_iStyle & ED_SIZE_LEFT )
         {
-            new_rect.left = min(m_Rect.right, iViewX);
+            if( m_bCenterSizing )
+            {
+                new_rect.left -= iAmountMoved;
+                new_rect.right += iAmountMoved;
+            }
+            else
+                new_rect.left = min(m_Rect.right, iViewX);
         }
         if( m_iStyle & ED_SIZE_RIGHT  || m_iStyle == ED_SIZE_ADD_COLS )
         {
-            new_rect.right = max(m_Rect.left, iViewX);
+            if( m_bCenterSizing )
+            {
+                new_rect.left -= iAmountMoved;
+                new_rect.right += iAmountMoved;
+            }
+            else
+                new_rect.right = max(m_Rect.left, iViewX);
         }
     }
     int iNewWidth = new_rect.right - new_rect.left;
@@ -4737,12 +4766,12 @@ XP_Bool CSizingObject::GetSizingRect(int32 xVal, int32 yVal, XP_Bool bLockAspect
         //
         if( bDoWidth )
         {
+            iPercent = (iWidth * 100 ) / m_iStartWidth;
             if(m_bWidthPercent)
             {
                 // Convert to % format
                 iWidth = (iWidth * 100) / m_iParentWidth;
             }
-            iPercent = (iWidth * 100 ) / m_iStartWidth;
 
             // "Width = x"
             PR_snprintf(pMsg, 128, XP_GetString(XP_EDT_WIDTH_EQUALS), iWidth);
@@ -4757,15 +4786,15 @@ XP_Bool CSizingObject::GetSizingRect(int32 xVal, int32 yVal, XP_Bool bLockAspect
         }
         if( bDoHeight )
         {
-            if(m_bHeightPercent)
-            {
-                iHeight = (iHeight * 100) / m_iViewHeight;
-            }
             // Since corners are constrained to aspect ratio,
             //  just use Width's calculation if already done
             if( !bDoWidth )
             {
                 iPercent = (iHeight * 100 ) / m_iStartHeight;
+            }
+            if(m_bHeightPercent)
+            {
+                iHeight = (iHeight * 100) / m_iViewHeight;
             }
 
             // "Height = x"
@@ -4853,7 +4882,7 @@ void CSizingObject::ResizeObject()
     int32 iWidth, iWidthPixels, iHeightPixels, iHeight;
 
     // Get the element being sized (except table or cell - obtained below)
-    CEditLeafElement *pElement = (CEditLeafElement*)(m_pLoElement->lo_any.edit_element);
+     CEditLeafElement *pElement = (CEditLeafElement*)(m_pLoElement->lo_any.edit_element);
 
     if( !(m_iStyle == ED_SIZE_ADD_ROWS || m_iStyle == ED_SIZE_ADD_COLS) )
     {
