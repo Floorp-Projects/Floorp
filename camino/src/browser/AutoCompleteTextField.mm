@@ -654,6 +654,11 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
       [self selectRowBy:1];
       [self completeSelectedResult];
       return YES;
+    } else {
+      // The usual nextKeyView business in the NIB should handle but it doesn't
+      // this is basically a benign hack
+      NSWindow* wind = [self window];
+      [wind makeFirstResponder:wind];
     }
   } else if (command == @selector(deleteBackward:) || 
              command == @selector(deleteForward:)) {
