@@ -1,6 +1,14 @@
 TransforMiiX (TM) 
 (C) Copyright 1999, 2000, The MITRE Corporation, Keith Visco, et al. All rights reserved.
 
+
+Build 20000413
+
+-- Added some bug fixes from Marina
+   -- fixed parsing of multiple predicates
+   -- added support to handle attribute-set recursion
+   -- added appropriate calls to handle use-attribute-sets on xsl:copy
+
 Build 20000412
 
 -- Fixed the following Axes names in Names.cpp so that
