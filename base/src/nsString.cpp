@@ -1752,6 +1752,11 @@ ostream& operator<<(ostream& os,nsString& aString){
 
 //----------------------------------------------------------------------
 
+#define INIT_AUTO_STRING()                                        \
+  mLength = 0;                                                    \
+  mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype); \
+  mStr = mBuf
+
 /**
  * 
  * @update	gess 7/27/98
@@ -1761,9 +1766,7 @@ ostream& operator<<(ostream& os,nsString& aString){
 nsAutoString::nsAutoString() 
   : nsString() 
 {
-  mStr = mBuf;
-  mLength=0;
-  mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
+  INIT_AUTO_STRING();
   mStr[0] = 0;
 }
 
@@ -1776,9 +1779,7 @@ nsAutoString::nsAutoString()
 nsAutoString::nsAutoString(const char* isolatin1) 
   : nsString()
 {
-  mLength=0;
-  mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
-  mStr=mBuf;
+  INIT_AUTO_STRING();
   SetString(isolatin1);
 }
 
@@ -1791,9 +1792,7 @@ nsAutoString::nsAutoString(const char* isolatin1)
 nsAutoString::nsAutoString(const nsString& other)
   : nsString()
 {
-  mLength=0;
-  mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
-  mStr=mBuf;
+  INIT_AUTO_STRING();
   SetString(other.GetUnicode(),other.Length());
 }
 
@@ -1806,9 +1805,7 @@ nsAutoString::nsAutoString(const nsString& other)
 nsAutoString::nsAutoString(PRUnichar aChar) 
   : nsString()
 {
-  mLength=0;
-  mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
-  mStr=mBuf;
+  INIT_AUTO_STRING();
   Append(aChar);
 }
 
@@ -1821,10 +1818,35 @@ nsAutoString::nsAutoString(PRUnichar aChar)
 nsAutoString::nsAutoString(const nsAutoString& other) 
   : nsString()
 {
-  mLength=0;
-  mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
-  mStr=mBuf;
+  INIT_AUTO_STRING();
   SetString(other.GetUnicode(),other.mLength);
+}
+
+/**
+ * 
+ * @update	gess 7/27/98
+ * @param 
+ * @return
+ */
+nsAutoString::nsAutoString(const PRUnichar* unicode, PRInt32 uslen) 
+  : nsString()
+{
+  INIT_AUTO_STRING();
+  Append(unicode, uslen ? uslen : nsCRT::strlen(unicode));
+}
+
+/**
+ * 
+ * @update	gess 7/27/98
+ * @param 
+ * @return
+ */
+nsAutoString::~nsAutoString()
+{
+  if (mStr == mBuf) {
+    // Force to null so that baseclass dtor doesn't do damage
+    mStr = nsnull;
+  }
 }
 
 /**
@@ -1849,37 +1871,6 @@ void nsAutoString::EnsureCapacityFor(PRInt32 aNewLength) {
       delete [] mStr;
     }
     mStr = temp;
-  }
-}
-
-/**
- * 
- * @update	gess 7/27/98
- * @param 
- * @return
- */
-nsAutoString::nsAutoString(const PRUnichar* unicode, PRInt32 uslen) 
-  : nsString()
-{
-  mStr = mBuf;
-  mCapacity = sizeof(mBuf) / sizeof(chartype);
-  if (0 == uslen) {
-    uslen = nsCRT::strlen(unicode);
-  }
-  Append(unicode, uslen);
-}
-
-/**
- * 
- * @update	gess 7/27/98
- * @param 
- * @return
- */
-nsAutoString::~nsAutoString()
-{
-  if (mStr == mBuf) {
-    // Force to null so that baseclass dtor doesn't do damage
-    mStr = nsnull;
   }
 }
 
