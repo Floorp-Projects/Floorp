@@ -27,10 +27,17 @@ Create a new [% terms.Bugzilla %] account
 [% PROCESS global/header.html.tmpl %]
 
 <p>
-  To create a [% terms.Bugzilla %] account, all that you need to do is to enter a
-  legitimate e-mail address.  The account will be created, and its
-  password will be mailed to you. Optionally you may enter your real name
-  as well.
+  To create a [% terms.Bugzilla %] account, all you need to do is
+  enter a legitimate e-mail address. The account will be created, and
+  its password will be mailed to you. <b>You will not be able to log
+  in until you receive the password.</b> If it doesn't arrive within a
+  reasonable amount of time, you can contact the maintainer of this
+  [% terms.Bugzilla %] installation
+  at <a href="mailto:[% Param("maintainer") %]">[% Param("maintainer") %]</a>.
+</p>
+
+<p>
+  Optionally you may enter your real name as well.
 </p>
 
 <form method="get" action="createaccount.cgi">
