@@ -431,6 +431,7 @@ function doHelpButton()
 
 const NS_BAYESIANFILTER_CONTRACTID = "@mozilla.org/messenger/filter-plugin;1?name=bayesianfilter";
 const nsIJunkMailPlugin = Components.interfaces.nsIJunkMailPlugin;
+const nsIMsgDBHdr = Components.interfaces.nsIMsgDBHdr;
 
 var gJunkmailComponent;
 
@@ -467,13 +468,13 @@ function analyzeFolder()
     {
         if (messages.hasMoreElements()) {
             // XXX TODO jumping through hoops here.
-            var message = messages.getNext().QueryInterface(Components.interfaces.nsIMsgDBHdr);
+            var message = messages.getNext().QueryInterface(nsIMsgDBHdr);
             while (!message.isRead) {
                 if (!messages.hasMoreElements()) {
                     gJunkmailComponent.batchUpdate = false;
                     return;
                 }
-                message = messages.getNext().QueryInterface(Components.interfaces.nsIMsgDBHdr);
+                message = messages.getNext().QueryInterface(nsIMsgDBHdr);
             }
             analyze(message, processNext);
         }
@@ -584,30 +585,43 @@ function JunkSelectedMessages(setAsJunk)
 // temporary
 function markFolderAsJunk(aSpam)
 {
-    function processNext()
-    {
-        if (messages.hasMoreElements()) {
-            // Pffft, jumping through hoops here.
-            var message = messages.getNext().QueryInterface(Components.interfaces.nsIMsgDBHdr);
-            mark(message, aSpam, processNext);
+    getJunkmailComponent();
+    
+    var listener = {
+        messageCount: 0,
+        onMessageClassified: function(aMsgURL, aClassification)
+        {
+            if (--this.messageCount == 0) {
+                dump('[folder marking complete.]\n');
+                gJunkmailComponent.batchUpdate = false;
+            }
+        }
+    };
 
-            // now set the score
-            // XXX TODO invalidate the row
-            if (aSpam)
-              message.setStringProperty("junkscore","100");
-            else
-              message.setStringProperty("junkscore","0");
-        }
-        else {
-            dump('[folder marking complete.]\n');
-            gJunkmailComponent.batchUpdate = false;
-        }
+    var process = function(aMessage)
+    {
+        var score = aMessage.getStringProperty("junkscore");
+        var oldClassification = ((score == "100") ? nsIJunkMailPlugin.JUNK :
+                                 (score == "0") ? nsIJunkMailPlugin.GOOD : nsIJunkMailPlugin.UNCLASSIFIED);
+        var newClassification = (aSpam ? nsIJunkMailPlugin.JUNK : nsIJunkMailPlugin.GOOD);
+        var messageURI = aMessage.folder.generateMessageURI(aMessage.messageKey) + "?fetchCompleteMessage=true";
+        
+        ++listener.messageCount;
+        gJunkmailComponent.setMessageClassification(messageURI, oldClassification, newClassification, listener);
     }
 
-    getJunkmailComponent();
     var folder = GetFirstSelectedMsgFolder();
     var messages = folder.getMessages(msgWindow);
+    var newScore = (aSpam ? "100" : "0");
+    
     gJunkmailComponent.batchUpdate = true;
     dump('[folder marking starting.]\n');
-    processNext();
+    
+    while (messages.hasMoreElements()) {
+        var message = messages.getNext().QueryInterface(nsIMsgDBHdr);
+        process(message);
+        // now set the score
+        // XXX TODO invalidate the row
+        message.setStringProperty("junkscore", newScore);
+    }
 }
