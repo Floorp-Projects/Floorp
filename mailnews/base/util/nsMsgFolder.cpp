@@ -487,8 +487,12 @@ NS_IMETHODIMP nsMsgFolder::CreateFolderInDatasource(const char *uri, nsIMsgFolde
 {
 	nsresult rv;
 
-	// does this work with a non-top level folder 
-	// imap://sspitzer@tintin/Sent works, but what about imap://sspitzer@tintin/Foo/Bar ?
+	// XXX TODO: fix this.
+	// imap://sspitzer@tintin/Sent works, 
+	// but should do bad things with imap://sspitzer@tintin/Foo/Bar
+	// we are appending Foo/Bar to list of subfolders for tintin
+	// are we feeding the copy service some floating resource?
+	// do we end up with two Sent folder subfolders of tintin, after discovery?
 	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
 	if(NS_FAILED(rv)) return rv;
        
@@ -502,10 +506,15 @@ NS_IMETHODIMP nsMsgFolder::CreateFolderInDatasource(const char *uri, nsIMsgFolde
 	nsCOMPtr <nsISupports> supports = do_QueryInterface(folder);
         NS_ASSERTION(supports, "couldn't get isupports for msg folder");
 
+	// is this necessary?
+	// think about imap://sspitzer@tintin/Foo/Bar
+	// read comment above
+#if 0
 	if (supports)
 		mSubFolders->AppendElement(supports);
 
 	folder->SetParent(this);
+#endif
         *child = folder;
         NS_IF_ADDREF(*child);
         return rv;
