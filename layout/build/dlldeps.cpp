@@ -22,6 +22,7 @@
 #include "nsIPresContext.h"
 #include "nsIStyleSet.h"
 #include "nsIDocument.h"
+#include "nsHTMLParts.h"
 
 void XXXNeverCalled()
 {
@@ -33,4 +34,10 @@ void XXXNeverCalled()
   nsIDocument* doc;
   NS_NewHTMLDocument(&doc);
   NS_NewImageDocument(&doc);
+  nsIFrame* f;
+  NS_NewTextFrame(nsnull, nsnull, f);
+  NS_NewInlineFrame(nsnull, nsnull, f);
+  NS_NewBRFrame(nsnull, nsnull, f);
+  NS_NewWBRFrame(nsnull, nsnull, f);
+  NS_NewHRFrame(nsnull, nsnull, f);
 }
