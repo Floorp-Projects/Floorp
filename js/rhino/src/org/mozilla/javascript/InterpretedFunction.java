@@ -51,6 +51,5 @@ class InterpretedFunction extends NativeFunction {
     }
 
     InterpreterData itsData;
-       
 }
     
