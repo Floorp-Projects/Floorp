@@ -221,7 +221,7 @@ public:
     static nsresult	InplaceSort(nsIContent *node1, nsIContent *node2, sortPtr sortInfo, PRInt32 & sortOrder);
     static nsresult	CompareNodes(nsIRDFNode *cellNode1, PRBool isCollationKey1,
 				 nsIRDFNode *cellNode2, PRBool isCollationKey2,
-				 PRInt32 & sortOrder);
+				 PRBool &bothValid, PRInt32 & sortOrder);
 
     // nsISupports
     NS_DECL_ISUPPORTS
@@ -822,8 +822,9 @@ XULSortServiceImpl::GetNodeTextValue(sortPtr sortInfo, nsIContent *node, nsStrin
 nsresult
 XULSortServiceImpl::CompareNodes(nsIRDFNode *cellNode1, PRBool isCollationKey1,
 				 nsIRDFNode *cellNode2, PRBool isCollationKey2,
-				 PRInt32 & sortOrder)
+				 PRBool &bothValid, PRInt32 & sortOrder)
 {
+	bothValid = PR_FALSE;
 	sortOrder = 0;
 
 	const PRUnichar			*uni1 = nsnull, *uni2 = nsnull;
@@ -834,6 +835,8 @@ XULSortServiceImpl::CompareNodes(nsIRDFNode *cellNode1, PRBool isCollationKey1,
 
 	if (isCollationKey1 == PR_TRUE && isCollationKey2 == PR_TRUE)
 	{
+		bothValid = PR_TRUE;
+
 		// sort collation keys
 		if (collationService)
 		{
@@ -858,7 +861,13 @@ XULSortServiceImpl::CompareNodes(nsIRDFNode *cellNode1, PRBool isCollationKey1,
 		// not a collation key, but one or both are strings
 		if (literal1 && literal2)
 		{
-			sortOrder = nsCRT::strcasecmp(uni1, uni2);
+			if ((*uni1) && (*uni2))
+			{
+				bothValid = PR_TRUE;
+				sortOrder = nsCRT::strcasecmp(uni1, uni2);
+			}
+			else if (*uni1)	sortOrder = -1;
+			else		sortOrder = 1;
 		}
 		else if (literal1)	sortOrder = -1;
 		else			sortOrder = 1;
@@ -873,7 +882,7 @@ XULSortServiceImpl::CompareNodes(nsIRDFNode *cellNode1, PRBool isCollationKey1,
 			PRInt32			intVal1, intVal2;
 			intLiteral1->GetValue(&intVal1);
 			intLiteral2->GetValue(&intVal2);
-			
+			bothValid = PR_TRUE;
 			sortOrder = 0;
 			if (intVal1 < intVal2)		sortOrder = -1;
 			else if (intVal1 > intVal2)	sortOrder = 1;
@@ -888,7 +897,7 @@ XULSortServiceImpl::CompareNodes(nsIRDFNode *cellNode1, PRBool isCollationKey1,
 				PRInt64			dateVal1, dateVal2;
 				dateLiteral1->GetValue(&dateVal1);
 				dateLiteral2->GetValue(&dateVal2);
-				
+				bothValid = PR_TRUE;
 				sortOrder = 0;
 				if (LL_CMP(dateVal1, <, dateVal2))	sortOrder = -1;
 				else if (LL_CMP(dateVal1, >, dateVal2))	sortOrder = 1;
@@ -1245,7 +1254,8 @@ XULSortServiceImpl::InplaceSort(nsIContent *node1, nsIContent *node2, sortPtr so
 		rv = GetNodeValue(node2, kNC_Name, sortInfo, getter_AddRefs(cellNode2), isCollationKey2);
 	}
 
-	rv = CompareNodes(cellNode1, isCollationKey1, cellNode2, isCollationKey2, sortOrder);
+	PRBool	bothValid = PR_FALSE;
+	rv = CompareNodes(cellNode1, isCollationKey1, cellNode2, isCollationKey2, bothValid, sortOrder);
 
 	if (sortOrder == 0)
 	{
@@ -1263,7 +1273,7 @@ XULSortServiceImpl::InplaceSort(nsIContent *node1, nsIContent *node2, sortPtr so
 		}
 	}
 
-	if (sortInfo->descendingSort == PR_TRUE)
+	if ((bothValid == PR_TRUE) && (sortInfo->descendingSort == PR_TRUE))
 	{
 		// descending sort is being imposed, so reverse the sort order
 		sortOrder = -sortOrder;
