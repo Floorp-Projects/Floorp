@@ -12,7 +12,6 @@
   		  onload="parent.initPanel('chrome://communicator/content/pref/pref-smartupdate.xul');">
   
   <script language="JavaScript">
-  var _elementIDs;
   <![CDATA[
     var _elementIDs = ["XPInstallEnabled"];
   ]]>
