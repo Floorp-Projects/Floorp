@@ -951,30 +951,22 @@ void HTMLContentSink::StartLayout()
 
 void HTMLContentSink::ReflowNewContent()
 {
-    PRInt32 i, ns = mDocument->GetNumberOfShells();
-    for (i = 0; i < ns; i++) {
-      nsIPresShell* shell = mDocument->GetShellAt(i);
-      if (nsnull != shell) {
-        nsIPresContext* cx = shell->GetPresContext();
-        nsRect r;
-        cx->GetVisibleArea(r);
-        shell->ResizeReflow(r.width, r.height);
-        NS_RELEASE(cx);
-        NS_RELEASE(shell);
-      }
-    }
-#if XXX
-  printf("reflow body\n");
-
-  // Trigger reflows in each of the presentation shells
+#if 0
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
     nsIPresShell* shell = mDocument->GetShellAt(i);
     if (nsnull != shell) {
-      shell->ContentAppended(mBody);
+      nsIPresContext* cx = shell->GetPresContext();
+      nsRect r;
+      cx->GetVisibleArea(r);
+      shell->ResizeReflow(r.width, r.height);
+      NS_RELEASE(cx);
       NS_RELEASE(shell);
     }
-  } 
+  }
+#else
+  // Trigger reflows in each of the presentation shells
+  mDocument->ContentAppended(mBody);
 #endif
 }
 
