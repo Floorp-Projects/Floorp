@@ -43,34 +43,177 @@
 #include "sym_file.h"
 #include "gc.h"
 
-extern "C" {
-FILE* FSp_fopen(ConstFSSpecPtr spec, const char * open_mode);
+struct sym_file {
+	// file data structures.
+	SInt16 mFileRef;
+	UInt8* mPageBuffer;
+	UInt32 mPageOffset;
+	UInt32 mBufferOffset;
+	
+	DiskSymbolHeaderBlock mHeader;
+	ResourceTableEntry mCodeEntry;
+	UInt8** mNameTable;
+	
+	sym_file();
+	~sym_file();
+	
+	bool open(const FSSpec* spec);
+	bool seek(UInt32 position);
+	UInt32 read(void* buffer, UInt32 count);
+
+	const UInt8* getName(UInt32 nameIndex);
+};
+
+sym_file::sym_file()
+	:	mFileRef(-1), mPageBuffer(NULL), mPageOffset(0), mBufferOffset(0),
+		mNameTable(NULL)
+{
 }
 
-static int getFileReferenceTableEntry(FILE* symFile,
-									   const DiskSymbolHeaderBlock& header,
-									   const FileReference& fileRef,
-									   FileReferenceTableEntry* frte)
+sym_file::~sym_file()
 {
+	// this seems to die when we are being debugged.
+	if (mFileRef != -1) {
+		::FSClose(mFileRef);
+		mFileRef = -1;
+	}
+	
+	if (mPageBuffer != NULL) {
+		delete[] mPageBuffer;
+		mPageBuffer = NULL;
+	}
+	
+	if (mNameTable != NULL) {
+		UInt8** nameTable = mNameTable;
+		UInt16 pageCount = mHeader.dshb_nte.dti_page_count;
+		while (pageCount-- > 0) {
+			GC_free(*nameTable++);
+		}
+		delete[] mNameTable;
+		mNameTable = NULL;
+	}
+}
+
+bool sym_file::open(const FSSpec* spec)
+{
+	// open the specified symbol file.
+	if (::FSpOpenDF(spec, fsRdPerm, &mFileRef) != noErr)
+		return false;
+
+	// read the header. should make sure it is a valid .xSYM file, etc.
+	DiskSymbolHeaderBlock& header = mHeader;
+	long count = sizeof(header);
+	if (::FSRead(mFileRef, (long*) &count, &header) != noErr || count != sizeof(header))
+		return false;
+
+	// read the name table.
+	mNameTable = new UInt8*[header.dshb_nte.dti_page_count];
+	if (mNameTable == NULL)
+		return false;
+	
+	// seek to first page of the name table.
+	::SetFPos(mFileRef, fsFromStart, header.dshb_nte.dti_first_page * header.dshb_page_size);
+	// read all of the pages into memory, for speed.
+	for (int i = 0; i < header.dshb_nte.dti_page_count; i++) {
+		// allocate each page atomically, so GC won't have to scan them.
+		UInt8* page = mNameTable[i] = (UInt8*) GC_malloc_atomic(header.dshb_page_size);
+		if (page == NULL)
+			return false;
+		count = header.dshb_page_size;
+		if (::FSRead(mFileRef, &count, page) != noErr || count != header.dshb_page_size)
+			return false;
+	}
+
+	// allocate the page buffer and initialize offsets.
+	mPageBuffer = new UInt8[header.dshb_page_size];
+
+	// read the RTE tables.
+	seek(header.dshb_rte.dti_first_page * header.dshb_page_size + sizeof(ResourceTableEntry));
+	for (int i = 1; i <= header.dshb_rte.dti_object_count; i++) {
+		ResourceTableEntry resEntry;
+		if (read(&resEntry, sizeof(resEntry)) == sizeof(resEntry)) {
+			switch (resEntry.rte_ResType) {
+			case 'CODE':
+				mCodeEntry = resEntry;
+				break;
+			case 'DATA':
+				break;
+			}
+		}
+	}
+	
+	return true;
+}
+
+bool sym_file::seek(UInt32 position)
+{
+	if (position != (mPageOffset + mBufferOffset)) {
+		// if position is off current page, the resync the buffer.
+		UInt32 pageSize = mHeader.dshb_page_size;
+		if (position < mPageOffset || position >= (mPageOffset + pageSize)) {
+			// read the nearest page to this offset.
+			mPageOffset = (position - (position % pageSize));
+			if (::SetFPos(mFileRef, fsFromStart, mPageOffset) != noErr)
+				return false;
+			long count = pageSize;
+			if (::FSRead(mFileRef, &count, mPageBuffer) != noErr)
+				return false;
+		}
+		mBufferOffset = (position - mPageOffset);
+	}
+	return true;
+}
+
+UInt32 sym_file::read(void* buffer, UInt32 count)
+{
+	// we don't handle reads that aren't on the current page.
+	if ((mBufferOffset + count) < mHeader.dshb_page_size) {
+		::BlockMoveData(mPageBuffer + mBufferOffset, buffer, count);
+		mBufferOffset += count;
+		return count;
+	}
+	return 0;
+}
+
+const UInt8* sym_file::getName(UInt32 nameIndex)
+{
+	UInt32 nameOffset = 2 * nameIndex;
+	const UInt8* page = mNameTable[nameOffset / mHeader.dshb_page_size];
+	const UInt8* name = page + (nameOffset % mHeader.dshb_page_size);
+	return name;
+}
+
+static bool getFileReferenceTableEntry(sym_file* symbols,
+									  const FileReference& fileRef,
+									  FileReferenceTableEntry* frte)
+{
+	const DiskSymbolHeaderBlock& header = symbols->mHeader;
 	UInt32 fileRefsPerPage = (header.dshb_page_size / sizeof(FileReferenceTableEntry));
 	UInt32 fileRefPage = (fileRef.fref_frte_index / fileRefsPerPage);
 	UInt32 fileRefIndex = (fileRef.fref_frte_index % fileRefsPerPage);
 
 	// seek to the specified frte.
-	fseek(symFile, (header.dshb_frte.dti_first_page + fileRefPage) * header.dshb_page_size + fileRefIndex * sizeof(FileReferenceTableEntry), SEEK_SET);
-	return fread(frte, sizeof(FileReferenceTableEntry), 1, symFile);
+	symbols->seek((header.dshb_frte.dti_first_page + fileRefPage) * header.dshb_page_size + fileRefIndex * sizeof(FileReferenceTableEntry));
+	return (symbols->read(frte, sizeof(FileReferenceTableEntry)) == sizeof(FileReferenceTableEntry));
 }
 
-static int getContainedStatementTableEntry(FILE* symFile,
-									   const DiskSymbolHeaderBlock& header,
-									   UInt32 statementIndex,
-									   ContainedStatementsTableEntry* statementEntry)
+static bool getContainedStatementTableEntry(sym_file* symbols,
+									       UInt32 statementIndex,
+									       ContainedStatementsTableEntry* statementEntry)
 {
+	const DiskSymbolHeaderBlock& header = symbols->mHeader;
 	UInt32 entriesPerPage = (header.dshb_page_size / sizeof(ContainedStatementsTableEntry));
 	UInt32 entryPage = (statementIndex / entriesPerPage);
 	UInt32 entryIndex = (statementIndex % entriesPerPage);
-	fseek(symFile, (header.dshb_csnte.dti_first_page + entryPage) * header.dshb_page_size + entryIndex * sizeof(ContainedStatementsTableEntry), SEEK_SET);
-	return fread(statementEntry, sizeof(ContainedStatementsTableEntry), 1, symFile);
+	
+	// seek to the specified statement entry.
+	symbols->seek((header.dshb_csnte.dti_first_page + entryPage) * header.dshb_page_size + entryIndex * sizeof(ContainedStatementsTableEntry));
+	return (symbols->read(statementEntry, sizeof(ContainedStatementsTableEntry)) == sizeof(ContainedStatementsTableEntry));
+}
+
+inline bool isMeatyModule(const ModulesTableEntry& moduleEntry)
+{
+	return (moduleEntry.mte_kind == kModuleKindProcedure) || (moduleEntry.mte_kind == kModuleKindFunction);
 }
 
 inline UInt32 delta(UInt32 x, UInt32 y)
@@ -81,24 +224,11 @@ inline UInt32 delta(UInt32 x, UInt32 y)
 		return (y - x);
 }
 
-inline bool isMeatyModule(const ModulesTableEntry& moduleEntry)
+int get_source(sym_file* symbols, UInt32 codeOffset, char fileName[256], UInt32* fileOffset)
 {
-	return (moduleEntry.mte_kind == MODULE_KIND_PROCEDURE) || (moduleEntry.mte_kind == MODULE_KIND_FUNCTION);
-}
+	const DiskSymbolHeaderBlock& header = symbols->mHeader;
+	const ResourceTableEntry& codeEntry = symbols->mCodeEntry;
 
-static const UInt8* getName(const DiskSymbolHeaderBlock& header, const UInt8* nameTable[], UInt32 nameIndex)
-{
-	UInt32 nameOffset = 2 * nameIndex;
-	const UInt8* page = nameTable[nameOffset / header.dshb_page_size];
-	const UInt8* name = page + (nameOffset % header.dshb_page_size);
-	return name;
-}
-
-static int getSource(UInt32 codeOffset, FILE* symFile,
-					  const DiskSymbolHeaderBlock& header,
-					  const ResourceTableEntry& codeEntry,
-					  const UInt8* nameTable[], char fileName[256],  UInt32* fileOffset)
-{
 	// since module entries can't span pages, must compute which page module entry size.
 	UInt32 modulesPerPage = (header.dshb_page_size / sizeof(ModulesTableEntry));
 
@@ -108,15 +238,15 @@ static int getSource(UInt32 codeOffset, FILE* symFile,
 		ModulesTableEntry moduleEntry;
 		UInt32 modulePage = (i / modulesPerPage);
 		UInt32 moduleIndex = (i % modulesPerPage);
-		fseek(symFile, (header.dshb_mte.dti_first_page + modulePage) * header.dshb_page_size + moduleIndex * sizeof(ModulesTableEntry), SEEK_SET);
-		if (fread(&moduleEntry, sizeof(moduleEntry), 1, symFile) == 1) {
-			const UInt8* moduleName = getName(header, nameTable, moduleEntry.mte_nte_index);
+		symbols->seek((header.dshb_mte.dti_first_page + modulePage) * header.dshb_page_size + moduleIndex * sizeof(ModulesTableEntry));
+		if (symbols->read(&moduleEntry, sizeof(moduleEntry)) == sizeof(moduleEntry)) {
+			const UInt8* moduleName = symbols->getName(moduleEntry.mte_nte_index);
 			// printf("module name = %#s\n", moduleName);
 			if (isMeatyModule(moduleEntry) && (codeOffset >= moduleEntry.mte_res_offset) && (codeOffset - moduleEntry.mte_res_offset) < moduleEntry.mte_size) {
 				FileReferenceTableEntry frte;
-				if (getFileReferenceTableEntry(symFile, header, moduleEntry.mte_imp_fref, &frte) == 1) {
+				if (getFileReferenceTableEntry(symbols, moduleEntry.mte_imp_fref, &frte)) {
 					// get the name of the file.
-					const UInt8* name = getName(header, nameTable, frte.frte_fn.nte_index);
+					const UInt8* name = symbols->getName(frte.frte_fn.nte_index);
 					UInt32 length = name[0];
 					BlockMoveData(name + 1, fileName, length);
 					fileName[length] = '\0';
@@ -128,7 +258,7 @@ static int getSource(UInt32 codeOffset, FILE* symFile,
 					UInt32 currentFileOffset, currentCodeOffset = moduleEntry.mte_res_offset, currentCodeDelta;
 					for (UInt32 j = moduleEntry.mte_csnte_idx_1; j <= moduleEntry.mte_csnte_idx_2; j++) {
 						ContainedStatementsTableEntry statementEntry;
-						if (getContainedStatementTableEntry(symFile, header, j, &statementEntry) == 1) {
+						if (getContainedStatementTableEntry(symbols, j, &statementEntry)) {
 							switch (statementEntry.csnte_file.change) {
 							case kSourceFileChange:
 								currentFileOffset = statementEntry.csnte_file.fref.fref_offset;
@@ -159,144 +289,19 @@ static int getSource(UInt32 codeOffset, FILE* symFile,
 	return 0;
 }
 
-/**
- * Returns the complete name table from the symbol file.
- */
-static UInt8** getNameTable(FILE* symFile, const DiskSymbolHeaderBlock& header)
-{
-	UInt8** nameTable = new UInt8*[header.dshb_nte.dti_page_count];
-	long count = 0;
-	if (nameTable != NULL) {
-		// seek to first page of the name table.
-		fseek(symFile, header.dshb_nte.dti_first_page * header.dshb_page_size, SEEK_SET);
-		// read all of the pages into memory, for speed.
-		for (int i = 0; i < header.dshb_nte.dti_page_count; i++) {
-			// allocate each page atomically, so GC won't have to scan them.
-			UInt8* page = nameTable[i] = (UInt8*) GC_malloc_atomic(header.dshb_page_size);
-			if (page != NULL)
-				fread(page, header.dshb_page_size, 1, symFile);
-		}
-	}
-	return nameTable;
-}
-
-struct sym_file {
-	FILE* mFile;
-	DiskSymbolHeaderBlock mHeader;
-	ResourceTableEntry mCodeEntry;
-	UInt8** mNameTable;
-	
-	sym_file() : mFile(NULL), mNameTable(NULL) {}
-	~sym_file();
-};
-
-sym_file::~sym_file()
-{
-	// this seems to die when we are being debugged.
-	if (mFile != NULL) {
-		::fclose(mFile);
-		mFile = NULL;
-	}
-	
-	if (mNameTable != NULL) {
-		UInt8** nameTable = mNameTable;
-		UInt16 pageCount = mHeader.dshb_nte.dti_page_count;
-		while (pageCount-- > 0) {
-			GC_free(*nameTable++);
-		}
-		delete[] mNameTable;
-		mNameTable = NULL;
-	}
-}
-
 sym_file* open_sym_file(const FSSpec* symSpec)
 {
 	sym_file* symbols = new sym_file;
 	if (symbols != NULL) {	
-		symbols->mFile = FSp_fopen(symSpec, "rb");
-		if (symbols->mFile == NULL)
-			goto err_exit;
-		
-		// read the header. should make sure it is a valid .xSYM file, etc.
-		DiskSymbolHeaderBlock& header = symbols->mHeader;
-		if (fread(&header, sizeof(header), 1, symbols->mFile) != 1)
-			goto err_exit;
-
-		// read the RTE tables.
-		fseek(symbols->mFile, header.dshb_rte.dti_first_page * header.dshb_page_size + sizeof(ResourceTableEntry), SEEK_SET);
-		for (int i = 1; i <= header.dshb_rte.dti_object_count; i++) {
-			ResourceTableEntry resEntry;
-			if (fread(&resEntry, sizeof(resEntry), 1, symbols->mFile) == 1) {
-				switch (resEntry.rte_ResType) {
-				case 'CODE':
-					symbols->mCodeEntry = resEntry;
-					break;
-				case 'DATA':
-					break;
-				}
-			}
+		if (!symbols->open(symSpec)) {
+			delete symbols;
+			return NULL;
 		}
-		
-		symbols->mNameTable = getNameTable(symbols->mFile, symbols->mHeader);
 	}
 	return symbols;
-
-err_exit:
-	delete symbols;
-	return NULL;
 }
 
 void close_sym_file(sym_file* symbols)
 {
 	delete symbols;
 }
-
-int get_source(sym_file* symbols, UInt32 codeOffset, char fileName[256], UInt32* fileOffset)
-{
-	return getSource(codeOffset, symbols->mFile, symbols->mHeader, symbols->mCodeEntry, symbols->mNameTable, fileName, fileOffset);
-}
-
-#if 0
-
-int main()
-{
-	printf ("Opening my own .xSYM file.\n");
-
-	FILE* symFile = fopen("SymFiles.xSYM", "rb");
-	if (symFile != NULL) {
-		DiskSymbolHeaderBlock header;
-		if (fread (&header, sizeof(header), 1, symFile) == 1) {
-			// read the RTE tables.
-			ResourceTableEntry codeEntry, dataEntry;
-			fseek(symFile, header.dshb_rte.dti_first_page * header.dshb_page_size + sizeof(ResourceTableEntry), SEEK_SET);
-			for (int i = 1; i <= header.dshb_rte.dti_object_count; i++) {
-				ResourceTableEntry resEntry;
-				if (fread(&resEntry, sizeof(resEntry), 1, symFile) == 1) {
-					switch (resEntry.rte_ResType) {
-					case 'CODE':
-						codeEntry = resEntry;
-						break;
-					case 'DATA':
-						dataEntry = resEntry;
-						break;
-					}
-				}
-			}
-			printf("data entry size = %d\n", dataEntry.rte_res_size);
-			printf("code entry size = %d\n", codeEntry.rte_res_size);
-			printf("actual code size = %d\n", __code_end__ - __code_start__);
-			// load the name table.
-			UInt8** nameTable = getNameTable(symFile, header);
-			// get source location of a routine.
-			char fileName[256];
-			UInt32 fileOffset;
-			TV* tv = (TV*)&getSource;
-			getSource(UInt32(tv->addr - __code_start__) + 536, symFile, header, codeEntry, nameTable, fileName, &fileOffset);
-		}
-		fclose(symFile);
-	}
-	
-	return 0;
-}
-
-#endif
