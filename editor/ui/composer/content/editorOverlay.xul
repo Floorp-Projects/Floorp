@@ -25,6 +25,7 @@
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editorOverlay.dtd">
 
 <?xml-stylesheet href="chrome://editor/skin/EditorToolbars.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://editor/content/EditorExtra.css" type="text/css"?>
 
 <overlay id="editorOverlay"
         xmlns:html="http://www.w3.org/1999/xhtml"
@@ -129,6 +130,7 @@
     <command id="cmd_objectProperties" oncommand="goDoCommand('cmd_objectProperties')"/>
     <command id="cmd_insertChars"      oncommand="goDoCommand('cmd_insertChars')"     value="&insertCharsCmd.label;"/>
     <command id="cmd_insertHTML"       oncommand="goDoCommand('cmd_insertHTML')"     value="&insertHTMLCmd.label;"/>
+    <command id="cmd_smiley"           state=""         oncommand="goDoCommand('cmd_smiley')"/>
     
     <command id="cmd_NormalMode"       oncommand="goDoCommand('cmd_NormalMode')"     value="&NormalMode.label;"/>
     <command id="cmd_AllTagsMode"      oncommand="goDoCommand('cmd_AllTagsMode')"    value="&AllTagsMode.label;"/>
@@ -555,6 +557,37 @@
       <menuitem id="menu_tableProperties"  value="&tableProperties.label;"  accesskey="&tableProperties.accesskey;"  observes="cmd_editTable"/>
     </menupopup>
   </menu>
+
+
+  <!-- smiley menu -->
+  <menu id="smileButtonMenu" tooltip="aTooltip" tooltiptext="&SmileButton.tooltip;">
+       <button class="button-toolbar" id="smileButton">
+       </button>
+       <menupopup id="smilyPopup" flex="100%">
+               <menuitem oncommand="doStatefulCommand('cmd_smiley', ':-)' )">
+                       <button class="plain" id="insert-smile" align="left"  value="&smiley1Cmd.label;"/>
+               </menuitem>
+               <menuitem oncommand="doStatefulCommand('cmd_smiley', ':-(' )">
+                       <button class="plain" id="insert-frown" align="left"  value="&smiley2Cmd.label;"/>
+               </menuitem>
+               <menuitem oncommand="doStatefulCommand('cmd_smiley', ';-)' )">
+                       <button class="plain" id="insert-wink" align="left"   value="&smiley3Cmd.label;"/>
+               </menuitem>
+               <menuitem oncommand="doStatefulCommand('cmd_smiley', ';-P' )">
+                       <button class="plain" id="insert-sick" align="left"   value="&smiley4Cmd.label;"/>
+               </menuitem>
+               <menuitem oncommand="doStatefulCommand('cmd_smiley', ':)' )">
+                       <button class="plain" id="insert-smile5" align="left" value="&smiley5Cmd.label;"/>
+               </menuitem>
+               <menuitem oncommand="doStatefulCommand('cmd_smiley', ':(' )">
+                       <button class="plain" id="insert-smile6" align="left" value="&smiley6Cmd.label;"/>
+           </menuitem>
+               <menuitem oncommand="doStatefulCommand('cmd_smiley', ';)' )">
+                       <button class="plain" id="insert-smile7" align="left" value="&smiley7Cmd.label;"/>
+               </menuitem>
+           <spring flex="100%" />
+       </menupopup>
+   </menu>
 
   <!-- this is only used in mailnews -->
   <menupopup id="AlignmentPopup">

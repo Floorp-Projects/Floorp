@@ -86,6 +86,7 @@ function SetupHTMLEditorCommands()
   gHTMLEditorCommandManager.registerCommand("cmd_NormalizeTable",     nsNormalizeTableCommand);
   gHTMLEditorCommandManager.registerCommand("cmd_FinishHTMLSource",   nsFinishHTMLSource);
   gHTMLEditorCommandManager.registerCommand("cmd_CancelHTMLSource",   nsCancelHTMLSource);
+gHTMLEditorCommandManager.registerCommand("cmd_smiley",             nsSetSmiley);
 }
 
 function SetupComposerWindowCommands()
@@ -868,6 +869,76 @@ var nsObjectPropertiesCommand =
     window._content.focus();
   }
 };
+
+//-----------------------------------------------------------------------------------
+var nsSetSmiley =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    var selection = window.editorShell.editorSelection;
+    var focNode   = selection.focusNode;
+    var userChoice = selection.isCollapsed && (focNode.nodeType == Node.TEXT_NODE);
+
+    return (userChoice && window.editorShell && window.editorShell.documentEditable);
+  },
+
+  doCommand: function(aCommand)
+  {
+    var prevChar;
+    var nextChar;
+
+    var leftAdd;
+    var rightAdd;
+
+    var curNode;
+
+    var endRightNode;
+
+    var commandNode = document.getElementById(aCommand);
+    var smileyCode  = commandNode.getAttribute("state");
+
+        var selection = window.editorShell.editorSelection;
+    var focusInd  = selection.focusOffset;
+
+
+    if (selection)
+    {
+      var focusN = selection.focusNode;
+
+      var  outputText = focusN.nodeValue;
+
+      prevChar = outputText.charAt(focusInd - 1);
+      nextChar = outputText.charAt(focusInd);
+
+      switch(prevChar)
+      {
+        case "":
+        case " ":
+                 leftAdd ="";
+                 break;
+        default:
+                 leftAdd = " " ;
+                 break;
+      }
+
+      switch(nextChar)
+      {
+        case "":
+        case " ":
+                 rightAdd ="";
+                 break;
+        default:
+                 rightAdd = " " ;
+                 break;
+      }
+
+
+       editorShell.InsertSource(leftAdd + smileyCode + rightAdd);
+       window._content.focus();
+    }
+   }
+};
+
 
 function doAdvancedProperties(element)
 {

@@ -611,3 +611,14 @@
 <!ENTITY PreviewMode.accesskey "p">
 <!ENTITY PreviewMode.tooltip "Display as WYSIWYG (as in Navigator)">
 
+<!-- Smiley Menu items -->
+<!ENTITY smiley1Cmd.label "  Smile      ">
+<!ENTITY smiley2Cmd.label "  Frown      ">
+<!ENTITY smiley3Cmd.label "  Wink       ">
+<!ENTITY smiley4Cmd.label "  Sick       ">
+<!ENTITY smiley5Cmd.label "  Short smile">
+<!ENTITY smiley6Cmd.label "  Short frown">
+<!ENTITY smiley7Cmd.label "  Short wink ">
+<!ENTITY SmileButton.tooltip "Choose smiley face">
+
+

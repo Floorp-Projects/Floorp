@@ -511,6 +511,9 @@
         <button id="InsertPopupButton"/>
         <menupopup id="InsertPopup"/>
       </menu>
+
+	  <menu id="smileButtonMenu"/>
+
       <spring flex="1"/>
     </toolbar>
   </toolbox>

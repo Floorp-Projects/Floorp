@@ -836,6 +836,13 @@ function GetBackgroundElementWithColor()
   return element;
 }
 
+function SetSmiley(smileyText)
+{
+  editorShell.InsertText(smileyText);
+
+  window._content.focus();
+}
+
 function EditorSelectColor(colorType)
 {
   if (!gColorObj)

@@ -31,10 +31,11 @@ EditorContextMenu.js
 EditorContextMenuOverlay.xul
 EditorInitPage.html
 EditorInitPagePlain.html
-EditorContent.css
+EditorExtra.css
 EditorAllTags.css
 EditorOverride.css
 EditorParagraphMarks.css
+EditorContent.css
 editorOverlay.js
 editorOverlay.xul
 sidebar-editor.rdf
@@ -146,3 +147,11 @@ images:tag-u.gif
 images:tag-ul.gif  
 images:tag-var.gif
 images:tag-userdefined.gif
+images:smile.gif
+images:smile_active.gif
+images:smile_disabled.gif
+images:smile_hover.gif
+images:frown.gif
+images:wink.gif
+images:sick.gi
+

@@ -139,6 +139,51 @@ button.edit-mode[selected="1"]:hover:active
     list-style-image      : url("chrome://editor/skin/images/bold-hover-active.gif");
   } 
 
+#smileButton {
+  list-style-image:url(chrome://messenger/skin/smile.gif); 
+}
+
+#smileButton:hover, #smileButton[toggled="true"]:hover:active {
+  list-style-image:url(chrome://messenger/skin/smile.gif); 
+}
+
+#smileButton[toggled="true"], #smileButton:hover:active {
+  list-style-image:url(chrome://messenger/skin/smile.gif); 
+}
+
+#smileButton[disabled="true"], #smileButton[disabled="true"]:hover:active {
+  list-style-image:url(chrome://messenger/skin/smile.gif); 
+}
+
+#insert-smile {
+  list-style-image:url(chrome://messenger/skin/smile.gif); 
+}
+
+#insert-sick {
+  list-style-image:url(chrome://messenger/skin/sick.gif); 
+}
+
+#insert-frown {
+  list-style-image:url(chrome://messenger/skin/frown.gif); 
+}
+
+#insert-wink {
+  list-style-image:url(chrome://messenger/skin/wink.gif); 
+}
+
+#insert-smile5 {
+  list-style-image:url(chrome://messenger/skin/smile.gif); 
+}
+
+#insert-smile6 {
+  list-style-image:url(chrome://messenger/skin/frown.gif); 
+}
+
+#insert-smile7 {
+  list-style-image:url(chrome://messenger/skin/wink.gif); 
+}
+
+
 #italicButton
   {
     list-style-image      : url("chrome://editor/skin/images/italic.gif");
