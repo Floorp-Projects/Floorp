@@ -103,15 +103,17 @@ nsContainerFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                       nsIAtom*        aListName,
                                       nsIFrame*       aChildList)
 {
-//  NS_PRECONDITION(mFrames.IsEmpty(), "already initialized");
-
   nsresult  result;
   if (!mFrames.IsEmpty()) {
     // We already have child frames which means we've already been
     // initialized
+#ifdef DEBUG_dbaron // XXX Fix asserts and remove this ifdef.
+    NS_NOTREACHED("unexpected second call to SetInitialChildList");
+#endif
     result = NS_ERROR_UNEXPECTED;
   } else if (aListName) {
     // All we know about is the unnamed principal child list
+    NS_NOTREACHED("unknown frame list");
     result = NS_ERROR_INVALID_ARG;
   } else {
 #ifdef NS_DEBUG

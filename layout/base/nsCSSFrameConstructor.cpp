@@ -347,6 +347,14 @@ static PRInt32 FFWC_nextInFlows=0;
 static PRInt32 FFWC_slowSearchForText=0;
 #endif
 
+inline PRBool
+HasNextSibling(nsIFrame *aFrame)
+{
+  nsIFrame *sib;
+  aFrame->GetNextSibling(&sib);
+  return sib != nsnull;
+}
+
 //----------------------------------------------------------------------
 //
 // When inline frames get weird and have block frames in them, we
@@ -1503,6 +1511,17 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
   return NS_OK;
 }
 
+/*
+ *
+ * aFrame - the frame that should be the parent of the generated
+ *   content.  For non-leaf frames, this is the frame for the
+ *   corresponding content node.  For leaf frames (those with non-null
+ *   |aWrapperFrame|), this is the parent.
+ * aWrapperFrame - inout parameter, which may be null.  If non-null,
+ *   then the generated content being created is for a leaf frame so
+ *   that the generated content requires a wrapper frame, which we must
+ *   create if it hasn't been already.
+ */
 PRBool
 nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShell, 
                                                    nsIPresContext*  aPresContext,
@@ -1511,7 +1530,7 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
                                                    nsIContent*      aContent,
                                                    nsIStyleContext* aStyleContext,
                                                    nsIAtom*         aPseudoElement,
-                                                   PRBool           aForBlock, // XXXldb unused
+                                                   nsIFrame**       aWrapperFrame,
                                                    nsIFrame**       aResult)
 {
   *aResult = nsnull; // initialize OUT parameter
@@ -1538,6 +1557,30 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
 
       // XXXldb What is contentCount for |content: ""|?
       if (contentCount > 0) {
+        if (aWrapperFrame) {
+          if (!*aWrapperFrame) {
+            const nsStyleDisplay *display;
+            ::GetStyleData(aStyleContext, &display);
+            nsIAtom *wrapperPseudo;
+            if (display->IsBlockLevel()) {
+              NS_NewBlockFrame(aPresShell, aWrapperFrame);
+              wrapperPseudo = nsCSSAtoms::mozGCWrapperBlock;
+            } else {
+              NS_NewInlineFrame(aPresShell, aWrapperFrame);
+              wrapperPseudo = nsCSSAtoms::mozGCWrapperInline;
+            }        
+            nsCOMPtr<nsIStyleContext> parentSC =
+              dont_AddRef(aStyleContext->GetParent()); 
+            nsCOMPtr<nsIStyleContext> wrapperSC;
+            aPresContext->ResolvePseudoStyleContextFor(nsnull, wrapperPseudo,
+                                          parentSC, getter_AddRefs(wrapperSC));
+            // |aFrame| is already the correct parent.
+            InitAndRestoreFrame(aPresContext, aState, aContent, aFrame,
+                                wrapperSC, nsnull, *aWrapperFrame);
+          }
+          // Use the wrapper as the parent.
+          aFrame = *aWrapperFrame;
+        }
         // Create a block box or an inline box depending on the value of
         // the 'display' property
         nsIFrame*     containerFrame;
@@ -4862,26 +4905,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
   // If we succeeded in creating a frame then initialize it, process its
   // children (if requested), and set the initial child list
 
-  // first, create its "before" generated content
-  // XXXldb We really shouldn't be doing this at all, based on the
-  // interpretation of CSS2 *excluding examples*.  And we could remove
-  // |RemoveGeneratedContentFrameSiblings|.  However, it would break our
-  // hr stuff in the UA stylesheet.  However, instead we're only going
-  // to do it when |processChildren| is false, since when
-  // |processChildren| is true, |nsCSSFrameConstructor::ProcessChildren|
-  // will handle :before and :after (and correctly too, unlike here).
-  // See bug 141289.
-  if (!processChildren) {
-    nsIFrame* beforeFrame;
-    if (CreateGeneratedContentFrame(aPresShell, aPresContext,
-                                    aState, aParentFrame, aContent,
-                                    aStyleContext, nsCSSAtoms::beforePseudo,
-                                    PR_FALSE, &beforeFrame)) {
-      // Add the generated frame to the child list
-      aFrameItems.AddChild(beforeFrame);
-    }
-  }
-
   // If the frame is a replaced element, then set the frame state bit
   if (isReplaced) {
     nsFrameState  state;
@@ -4999,6 +5022,56 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
     aFrameItems.AddChild(placeholderFrame);
 
   } else {
+    // Handle :before/:after for leaf elements.  For now (XXX bug), just
+    // don't create any generated content if the element in question is
+    // floating or positioned, since that's *hard* (TM).  It requires the
+    // display data in the style context go to the wrapper and the rest go
+    // to the frame inside.
+    // See also bug 141289.
+    if (!processChildren) {
+      nsIFrame *wrapperFrame = nsnull, *beforeFrame, *afterFrame;
+      if (!CreateGeneratedContentFrame(aPresShell, aPresContext,
+                                       aState, aParentFrame, aContent,
+                                       aStyleContext, nsCSSAtoms::beforePseudo,
+                                       &wrapperFrame, &beforeFrame)) {
+        beforeFrame = nsnull;
+      }
+      if (!CreateGeneratedContentFrame(aPresShell, aPresContext,
+                                      aState, aParentFrame, aContent,
+                                      aStyleContext, nsCSSAtoms::afterPseudo,
+                                      &wrapperFrame, &afterFrame)) {
+        afterFrame = nsnull;
+      }
+      NS_ASSERTION(!(beforeFrame || afterFrame) == !wrapperFrame,
+                   "should get wrapper iff GC");
+      if (wrapperFrame) {
+        // OK, we have generated content for a leaf.
+        // This means |CreateGeneratedContentFrame| created a wrapper
+        // frame to hold the generated content and the leaf frame.  We now
+        // need to link everything together.
+
+        NS_ASSERTION(!HasNextSibling(newFrame),
+                     "must not have sibling");
+        NS_ASSERTION(!beforeFrame || !HasNextSibling(beforeFrame),
+                     "must not have sibling");
+        NS_ASSERTION(!afterFrame || !HasNextSibling(afterFrame),
+                     "must not have sibling");
+
+        nsIFrame *firstChild = newFrame;
+        if (beforeFrame) {
+          beforeFrame->SetNextSibling(newFrame);
+          firstChild = beforeFrame;
+        }
+        newFrame->SetNextSibling(afterFrame);
+
+        newFrame->SetParent(wrapperFrame);
+        wrapperFrame->SetInitialChildList(aPresContext, nsnull, firstChild);
+
+        // From now on, pretend the wrapper frame is the real frame.
+        newFrame = wrapperFrame;
+      }
+    }
+
     // Add the newly constructed frame to the flow
     aFrameItems.AddChild(newFrame);
   }
@@ -5008,26 +5081,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
     // floated and positioned frames this is the out-of-flow frame and not
     // the placeholder frame
     aState.mFrameManager->SetPrimaryFrameFor(aContent, newFrame);
-  }
-
-  // finally, create its "after" generated content
-  // XXXldb We really shouldn't be doing this at all, based on the
-  // interpretation of CSS2 *excluding examples*.  And we could remove
-  // |RemoveGeneratedContentFrameSiblings|.  However, it would break our
-  // hr stuff in the UA stylesheet.  However, instead we're only going
-  // to do it when |processChildren| is false, since when
-  // |processChildren| is true, |nsCSSFrameConstructor::ProcessChildren|
-  // will handle :before and :after (and correctly too, unlike here).
-  // See bug 141289.
-  if (!processChildren) {
-    nsIFrame* afterFrame;
-    if (CreateGeneratedContentFrame(aPresShell, aPresContext,
-                                    aState, aParentFrame, aContent,
-                                    aStyleContext, nsCSSAtoms::afterPseudo,
-                                    PR_FALSE, &afterFrame)) {
-      // Add the generated frame to the child list
-      aFrameItems.AddChild(afterFrame);
-    }
   }
 
   return rv;
@@ -7226,7 +7279,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
   // can then be extended arbitrarily.
   const nsStyleDisplay*  display = (const nsStyleDisplay*)
         aStyleContext->GetStyleData(eStyleStruct_Display);
-  nsCOMPtr<nsIStyleContext> styleContext(do_QueryInterface(aStyleContext));
+  nsCOMPtr<nsIStyleContext> styleContext(aStyleContext);
   nsCOMPtr<nsIXBLBinding> binding;
   if (!aXBLBaseTag)
   {
@@ -8600,7 +8653,7 @@ nsCSSFrameConstructor::AddDummyFrameToSelect(nsIPresContext*  aPresContext,
                                         aParentFrame, aContainer,
                                         styleContext,
                                         nsLayoutAtoms::dummyOptionPseudo,
-                                        PR_FALSE, &generatedFrame)) {
+                                        nsnull, &generatedFrame)) {
           // Add the generated frame to the child list
           if (aChildItems) {
             aChildItems->AddChild(generatedFrame);
@@ -9476,90 +9529,6 @@ HasPseudoStyle(nsIPresContext* aPresContext,
   return pseudoStyleContext != nsnull;
 }
 
-static void
-RemoveGeneratedContentFrameSiblings(nsIPresContext *aPresContext, nsIPresShell *aPresShell, nsIFrameManager *aFrameManager, nsIFrame *aInsertionPoint, nsIFrame *aFrame)
-{
-  NS_ASSERTION(aPresContext && aPresShell && aFrameManager && aFrame, "Null arg pointer!");
-
-  nsCOMPtr<nsIContent> content;
-  nsCOMPtr<nsIStyleContext> styleContext;
-
-  aFrame->GetContent(getter_AddRefs(content));
-  aFrame->GetStyleContext(getter_AddRefs(styleContext));
-
-  if (!content || !content->IsContentOfType(nsIContent::eELEMENT) || !styleContext)
-    return;
-
-  // Remove any :before generated content frame that precedes aFrame.
-  // Note that we don't want to check |HasPseudoStyle| since the
-  // pseudo-style may have just been removed (and thus we want to remove
-  // the frames).
-
-  nsIFrame *beforeFrame = nsnull;
-  nsIFrame *frame = nsnull;
-  aFrame->GetParent(&frame);
-
-  NS_ASSERTION(frame, "No parent frame!");
-
-  // Find aFrame's previous sibling.
-  // XXX: Is there a better way to do this?
-
-  if (frame) {
-    nsIFrame *prev = nsnull;
-    frame->FirstChild(aPresContext, nsnull, &frame);
-
-    while (frame) {
-      if (frame == aFrame) {
-        beforeFrame = prev;
-        break;
-      }
-
-      prev = frame;
-      frame->GetNextSibling(&frame);
-    }
-  }
-
-  if (beforeFrame &&
-      IsGeneratedContentFor(content, beforeFrame, nsCSSAtoms::beforePseudo)) {
-    // Do we need to call something like |DeletingFrameSubtree| here?
-    // (Do we create content nodes for images specified in
-    // ::before/::after?  Even if they're 'display: none'?)
-    aFrameManager->RemoveFrame(aPresContext, *aPresShell,
-                               aInsertionPoint, nsnull,
-                               beforeFrame);
-  }
-
-  // Remove any :after generated content frame that follows aFrame.
-  nsIFrame *afterFrame = nsnull;
-  aFrame->GetNextSibling(&afterFrame);
-
-  if (!afterFrame) {
-    // At this point we know that aFrame has a :after frame,
-    // but it has no next sibling, so it's possible that it's
-    // :after frame was pushed into a continuing frame for it's parent.
-
-    nsIFrame *frame = nsnull;
-    aFrame->GetParent(&frame);
-    NS_ASSERTION(frame, "No parent frame!");
-    if (frame) {
-      // Now get the first child of the parent's next-in-flow.
-      frame->GetNextInFlow(&frame);
-      if (frame)
-        frame->FirstChild(aPresContext, nsnull, &afterFrame);
-    }
-  }
-
-  if (afterFrame &&
-      IsGeneratedContentFor(content, afterFrame, nsCSSAtoms::afterPseudo)) {
-    // Do we need to call something like |DeletingFrameSubtree| here?
-    // (Do we create content nodes for images specified in
-    // ::before/::after?  Even if they're 'display: none'?)
-    aFrameManager->RemoveFrame(aPresContext, *aPresShell,
-                               aInsertionPoint, nsnull,
-                               afterFrame);
-  }
-}
-
 NS_IMETHODIMP
 nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
                                       nsIContent*     aContainer,
@@ -9884,7 +9853,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
                                        nsLayoutAtoms::captionList, childFrame);
       }
       else {
-        RemoveGeneratedContentFrameSiblings(aPresContext, shell, frameManager, insertionPoint, childFrame);
         rv = frameManager->RemoveFrame(aPresContext, *shell, insertionPoint,
                                        nsnull, childFrame);
       }
@@ -12340,7 +12308,7 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresShell*            aPresShell,
     nsIFrame* generatedFrame;
     if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aFrame, aContent,
                                     styleContext, nsCSSAtoms::beforePseudo,
-                                    aParentIsBlock, &generatedFrame)) {
+                                    nsnull, &generatedFrame)) {
       // Add the generated frame to the child list
       aFrameItems.AddChild(generatedFrame);
     }
@@ -12382,7 +12350,7 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresShell*            aPresShell,
     nsIFrame* generatedFrame;
     if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aFrame, aContent,
                                     styleContext, nsCSSAtoms::afterPseudo,
-                                    aParentIsBlock, &generatedFrame)) {
+                                    nsnull, &generatedFrame)) {
       // Add the generated frame to the child list
       aFrameItems.AddChild(generatedFrame);
     }
@@ -13533,7 +13501,7 @@ nsCSSFrameConstructor::ProcessBlockChildren(nsIPresShell* aPresShell,
     aFrame->GetStyleContext(getter_AddRefs(styleContext));
     if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aFrame, aContent,
                                     styleContext, nsCSSAtoms::beforePseudo,
-                                    aParentIsBlock, &generatedFrame)) {
+                                    nsnull, &generatedFrame)) {
       // Add the generated frame to the child list
       aFrameItems.AddChild(generatedFrame);
     }
@@ -13562,7 +13530,7 @@ nsCSSFrameConstructor::ProcessBlockChildren(nsIPresShell* aPresShell,
     nsIFrame* generatedFrame;
     if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aFrame, aContent,
                                     styleContext, nsCSSAtoms::afterPseudo,
-                                    aParentIsBlock, &generatedFrame)) {
+                                    nsnull, &generatedFrame)) {
       // Add the generated frame to the child list
       aFrameItems.AddChild(generatedFrame);
     }
@@ -13836,7 +13804,7 @@ nsCSSFrameConstructor::ProcessInlineChildren(nsIPresShell* aPresShell,
     aFrame->GetStyleContext(getter_AddRefs(styleContext));
     if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aFrame, aContent,
                                     styleContext, nsCSSAtoms::beforePseudo,
-                                    PR_FALSE, &generatedFrame)) {
+                                    nsnull, &generatedFrame)) {
       // Add the generated frame to the child list
       aFrameItems.AddChild(generatedFrame);
     }
@@ -13883,7 +13851,7 @@ nsCSSFrameConstructor::ProcessInlineChildren(nsIPresShell* aPresShell,
     nsIFrame* generatedFrame;
     if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aFrame, aContent,
                                     styleContext, nsCSSAtoms::afterPseudo,
-                                    PR_FALSE, &generatedFrame)) {
+                                    nsnull, &generatedFrame)) {
       // Add the generated frame to the child list
       aFrameItems.AddChild(generatedFrame);
     }
@@ -14401,7 +14369,7 @@ nsresult nsCSSFrameConstructor::RemoveFixedItems(nsIPresContext*  aPresContext,
       }
     } while(fixedChild);
   } else {
-    NS_WARNING( "RemoveDixedItems called with no FixedContainingBlock data member set");
+    NS_WARNING( "RemoveFixedItems called with no FixedContainingBlock data member set");
   }
   return rv;
 }

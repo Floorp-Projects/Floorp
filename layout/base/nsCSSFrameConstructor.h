@@ -243,7 +243,7 @@ protected:
                                      nsIContent*              aContent,
                                      nsIStyleContext*         aStyleContext,
                                      nsIAtom*                 aPseudoElement,
-                                     PRBool                   aForBlock,
+                                     nsIFrame**               aWrapperFrame,
                                      nsIFrame**               aResult);
 
   nsresult AppendFrames(nsIPresContext*  aPresContext,
