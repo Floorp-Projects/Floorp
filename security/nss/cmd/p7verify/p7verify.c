@@ -34,7 +34,7 @@
 /*
  * p7verify -- A command to do a verification of a *detached* pkcs7 signature.
  *
- * $Id: p7verify.c,v 1.6 2001/02/01 00:57:26 kirke%netscape.com Exp $
+ * $Id: p7verify.c,v 1.7 2001/09/20 21:59:11 relyea%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -86,7 +86,7 @@ DigestFile(unsigned char *digest, unsigned int *len, unsigned int maxLen,
 	   FILE *inFile, HASH_HashType hashType)
 {
     int nb;
-    char ibuf[4096];
+    unsigned char ibuf[4096];
     const SECHashObject *hashObj;
     void *hashcx;
 
