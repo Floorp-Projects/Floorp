@@ -35,7 +35,7 @@
     <treecell url="__header" value="&categoryHeader;"/>
   </treerow>
  </treehead>
-  <treechildren>
+  <treechildren id="panelChildren">
     <treeitem open="true" container="true">
       <treerow>   
         <treecell indent="true" url="chrome://pref/content/pref-appearance.xul" value="&appear.label;"/> 
