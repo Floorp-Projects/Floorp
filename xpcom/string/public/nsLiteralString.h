@@ -32,11 +32,6 @@
 #include "nsDependentString.h"
 #endif
 
-  // temporary |typedef|s till we fix commercial and soap
-  //  see http://bugzilla.mozilla.org/show_bug.cgi?id=75220
-typedef nsDependentString   nsLiteralString;
-typedef nsDependentCString  nsLiteralCString;
-
 
 #if 0
 inline
