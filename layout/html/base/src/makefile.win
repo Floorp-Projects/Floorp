@@ -87,6 +87,7 @@ EXPORTS=nsGlobalVariables.h
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
  -I$(PUBLIC)\dom -I$(PUBLIC)\netlib				\
  -I..\..\style\src -I..\..\..\css\layout\src			\
+ -I..\..\content\src \
  -I..\..\..\base\src -I$(PUBLIC)\plugin -I$(PUBLIC)\java
 
 LCFLAGS = \
