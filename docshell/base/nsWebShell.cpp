@@ -132,7 +132,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_C
 #define DETECT_WEBSHELL_LEAKS
 #endif
 
-//#define SH_IN_FRAMES 1
+#define SH_IN_FRAMES 1
 
 #ifdef NS_DEBUG
 /**

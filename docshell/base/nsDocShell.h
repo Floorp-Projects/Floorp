@@ -51,7 +51,7 @@
 #include "nsPoint.h" // mCurrent/mDefaultScrollbarPreferences
 #include "nsString.h"
 
-//#define SH_IN_FRAMES 1
+#define SH_IN_FRAMES 1
 
 // Interfaces Needed
 #include "nsIDocumentCharsetInfo.h"
