@@ -169,7 +169,7 @@ nsLocaleService::nsLocaleService(void)
     : mSystemLocale(0), mApplicationLocale(0)
 {
 #if defined(XP_WIN)
-    nsCOMPtr<nsIWin32Locale> win32Converter = do_CreateInstance(NS_WIN32LOCALE_CONTRACTID);
+    nsCOMPtr<nsIWin32Locale> win32Converter = do_GetService(NS_WIN32LOCALE_CONTRACTID);
 
     NS_ASSERTION(win32Converter, "nsLocaleService: can't get win32 converter\n");
 
@@ -199,7 +199,7 @@ nsLocaleService::nsLocaleService(void)
     }
 #endif
 #if (defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_BEOS)
-    nsCOMPtr<nsIPosixLocale> posixConverter = do_CreateInstance(NS_POSIXLOCALE_CONTRACTID);
+    nsCOMPtr<nsIPosixLocale> posixConverter = do_GetService(NS_POSIXLOCALE_CONTRACTID);
 
     nsAutoString xpLocale;
     if (posixConverter) {
@@ -235,7 +235,7 @@ nsLocaleService::nsLocaleService(void)
        
 #endif // XP_UNIX || XP_BEOS
 #if defined(XP_OS2)
-    nsCOMPtr<nsIOS2Locale> os2Converter = do_CreateInstance(NS_OS2LOCALE_CONTRACTID);
+    nsCOMPtr<nsIOS2Locale> os2Converter = do_GetService(NS_OS2LOCALE_CONTRACTID);
     nsAutoString xpLocale;
     if (os2Converter) {
         nsAutoString category;
@@ -351,7 +351,7 @@ nsLocaleService::nsLocaleService(void)
         long script = GetScriptManagerVariable(smSysScript);
         long lang = GetScriptVariable(smSystemScript,smScriptLang);
         long region = GetScriptManagerVariable(smRegionCode);
-        nsCOMPtr<nsIMacLocale> macConverter = do_CreateInstance(NS_MACLOCALE_CONTRACTID);
+        nsCOMPtr<nsIMacLocale> macConverter = do_GetService(NS_MACLOCALE_CONTRACTID);
         if (macConverter) {
             nsresult result;
             nsAutoString xpLocale;
