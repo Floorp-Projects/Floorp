@@ -23,7 +23,6 @@
 #include "nsICaret.h"
 
 class nsITimer;
-class nsCaretProperties;
 class nsIView;
 class nsIRenderingContext;
 
@@ -46,7 +45,7 @@ class nsCaret : public nsICaret,
 	public:
 	
 	  // nsICaret interface
-  	NS_IMETHOD    Init(nsIPresShell *inPresShell, nsCaretProperties *inCaretProperties);
+  	NS_IMETHOD    Init(nsIPresShell *inPresShell);
 
  		NS_IMETHOD    SetCaretVisible(PRBool inMakeVisible);
   	NS_IMETHOD    SetCaretReadOnly(PRBool inMakeReadonly);

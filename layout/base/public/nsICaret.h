@@ -22,14 +22,12 @@
 #define NS_ICARET_IID       \
 { 0xa6cf90e1, 0x15b3, 0x11d2, {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
 
-class nsCaretProperties;
-
 class nsICaret: public nsISupports
 {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_ICARET_IID; return iid; }
 
-  NS_IMETHOD Init(nsIPresShell *inPresShell, nsCaretProperties *inCaretProperties) = 0;
+  NS_IMETHOD Init(nsIPresShell *inPresShell) = 0;
   
   /** SetCaretVisible will set the visibility of the caret
    *  @param inMakeVisible PR_TRUE to show the caret, PR_FALSE to hide it

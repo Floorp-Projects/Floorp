@@ -22,6 +22,7 @@
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
 
+#include "nsIComponentManager.h"
 #include "nsIFrameSelection.h"
 #include "nsIFrame.h"
 #include "nsIDOMNode.h"
@@ -35,21 +36,23 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsIPresContext.h"
-
-#include "nsCaretProperties.h"
+#include "nsILookAndFeel.h"
+#include "nsWidgetsCID.h"			// for NS_LOOKANDFEEL_CID
 
 #include "nsCaret.h"
 
 
 static NS_DEFINE_IID(kISupportsIID, 		NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIDOMSelectionIID, NS_IDOMSELECTION_IID);
 static NS_DEFINE_IID(kICaretID, NS_ICARET_IID);
+
+static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 
 //-----------------------------------------------------------------------------
 nsCaret::nsCaret()
 :	mPresShell(nsnull)
 ,	mBlinkTimer(nsnull)
 ,	mBlinkRate(500)
+, mCaretWidth(20)
 ,	mVisible(PR_FALSE)
 ,	mReadOnly(PR_TRUE)
 ,	mDrawn(PR_FALSE)
@@ -68,19 +71,26 @@ nsCaret::~nsCaret()
 }
 
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell, nsCaretProperties *inCaretProperties)
+NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
 {
 	if (!inPresShell)
-		return NS_ERROR_NULL_POINTER;
-
-	if (!inCaretProperties)
 		return NS_ERROR_NULL_POINTER;
 	
 	mPresShell = inPresShell;		// the presshell owns us, so no addref
 	
-	mBlinkRate = inCaretProperties->GetCaretBlinkRate();
-	mCaretWidth = inCaretProperties->GetCaretWidth();
-	
+  nsILookAndFeel* touchyFeely;
+  if (NS_SUCCEEDED(nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, nsILookAndFeel::GetIID(), (void**)&touchyFeely)))
+  {
+    PRInt32	tempInt;
+    
+    if (NS_SUCCEEDED(touchyFeely->GetMetric(nsILookAndFeel::eMetric_CaretWidthTwips, tempInt)))
+      mCaretWidth = (nscoord)tempInt;
+    if (NS_SUCCEEDED(touchyFeely->GetMetric(nsILookAndFeel::eMetric_CaretBlinkTime, tempInt)))
+      mBlinkRate = (PRUint32)tempInt;
+    
+    NS_RELEASE(touchyFeely);
+  }
+  
 	// get the selection from the pres shell, and set ourselves up as a selection
 	// listener
 	

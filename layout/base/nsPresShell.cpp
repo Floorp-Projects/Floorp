@@ -51,7 +51,6 @@
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsICaret.h"
-#include "nsCaretProperties.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIXMLDocument.h"
 #include "nsIScrollableView.h"
@@ -650,19 +649,13 @@ PresShell::Init(nsIDocument* aDocument,
     return result;
   // Important: this has to happen after the selection has been set up
 #ifdef SHOW_CARET
-  nsCaretProperties  *caretProperties = NewCaretProperties();
-  
   // make the caret
   nsresult  err = NS_NewCaret(getter_AddRefs(mCaret));
   if (NS_SUCCEEDED(err))
   {
-    mCaret->Init(this, caretProperties);
+    mCaret->Init(this);
   }
-  delete caretProperties;
-  caretProperties = nsnull;
 
-  // do this when we have a way of figuring out how to tell chrome
-  // from content
   //SetCaretEnabled(PR_TRUE);			// make it show in browser windows
 #endif  
 //set up selection to be displayed in document
