@@ -155,7 +155,6 @@ static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
 #define PREF_4X_NEWS_USE_FCC "news.use_fcc"
 #define PREF_4X_NEWS_MAX_ARTICLES "news.max_articles"
 #define PREF_4X_NEWS_NOTIFY_ON "news.notify.on"
-#define PREF_4X_NEWS_NOTIFY_SIZE "news.notify.size"
 #define PREF_4X_NEWS_MARK_OLD_READ "news.mark_old_read"
 
 #define CONVERT_4X_URI(IDENTITY,DEFAULT_FOLDER_NAME,MACRO_GETTER,MACRO_SETTER) \
@@ -2814,7 +2813,6 @@ nsMsgAccountManager::MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const cha
   nntpServer = do_QueryInterface(server, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  MIGRATE_SIMPLE_INT_PREF(PREF_4X_NEWS_NOTIFY_SIZE,nntpServer,SetNotifySize)
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_NEWS_NOTIFY_ON,nntpServer,SetNotifyOn)
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_NEWS_MARK_OLD_READ,nntpServer,SetMarkOldRead)
   MIGRATE_SIMPLE_INT_PREF(PREF_4X_NEWS_MAX_ARTICLES,nntpServer,SetMaxArticles)
