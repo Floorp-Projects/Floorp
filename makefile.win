@@ -166,5 +166,5 @@ componentreg:
 	regxpcom.exe
 !endif
 
-install:: rebase componentreg splitsymbols
+install:: rebase splitsymbols componentreg
 
