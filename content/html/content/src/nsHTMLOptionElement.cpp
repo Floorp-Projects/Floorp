@@ -529,7 +529,7 @@ nsHTMLOptionElement::SetText(const nsString& aText)
     result = NS_NewTextNode(&text);
     if (NS_OK == result) {
       nsIDOMText* domtext;
-      result = text->QueryInterface(kIDOMTextIID, (void**)&tc);
+      result = text->QueryInterface(kIDOMTextIID, (void**)&domtext);
       if (NS_OK == result) {
         result = domtext->SetData(aText);
 	if (NS_SUCCEEDED(result)) {
