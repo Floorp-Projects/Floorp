@@ -35,10 +35,9 @@ class nsICSSLoader;
 enum nsDTDMode {
 
   eDTDMode_Unknown    =0,
-  eDTDMode_Raptor     =1, //5.0 version of nav. and greater
-  eDTDMode_Nav        =2, //pre 5.0 versions
-  eDTDMode_NoQuirks   =3, //pre 5.0 without quirks (as best as we can...)
-  eDTDMode_Other      =4,
+  eDTDMode_Nav        =1, //5.0 version of nav. and greater
+  eDTDMode_NoQuirks   =2, //pre 5.0 versions
+  eDTDMode_Other      =4, //pre 5.0 without quirks (as best as we can...)
   eDTDMode_Autodetect =5
 
 };
