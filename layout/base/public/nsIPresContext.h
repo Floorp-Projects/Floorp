@@ -158,8 +158,8 @@ public:
   /**
    * Access the image animation mode for this context
    */
-  NS_IMETHOD GetImageAnimationMode(PRUint16* aModeResult) = 0;
-  NS_IMETHOD SetImageAnimationMode(PRUint16 aMode) = 0;
+  PRUint16     ImageAnimationMode() const { return mImageAnimationMode; }
+  virtual void SetImageAnimationMode(PRUint16 aMode) = 0;
 
   /**
    * Get an special load flags for images for this context
@@ -580,6 +580,7 @@ protected:
   nsIEventStateManager* mEventManager;  // [STRONG]
 
   nsCompatibility       mCompatibilityMode;
+  PRUint16              mImageAnimationMode;
 };
 
 // Bit values for StartLoadImage's aImageStatus

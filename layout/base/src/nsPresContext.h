@@ -72,8 +72,7 @@ public:
   NS_IMETHOD Init(nsIDeviceContext* aDeviceContext);
   NS_IMETHOD SetShell(nsIPresShell* aShell);
   virtual void SetCompatibilityMode(nsCompatibility aMode);
-  NS_IMETHOD GetImageAnimationMode(PRUint16* aModeResult);
-  NS_IMETHOD SetImageAnimationMode(PRUint16 aMode);
+  virtual void SetImageAnimationMode(PRUint16 aMode);
   NS_IMETHOD GetImageLoadFlags(nsLoadFlags& aLoadFlags);
   NS_IMETHOD GetLookAndFeel(nsILookAndFeel** aLookAndFeel);
   NS_IMETHOD GetIOService(nsIIOService** aIOService);
@@ -256,8 +255,7 @@ protected:
   nsCOMPtr<nsIURI>      mBaseURL;
 
   PRPackedBool          mImageAnimationStopped;   // image animation stopped
-
-  PRUint16              mImageAnimationMode;
+  PRPackedBool          mNeverAnimate;            // never animate images
 
   PRPackedBool          mStopped;                 // loading stopped
   PRPackedBool          mStopChrome;              // should we stop chrome?

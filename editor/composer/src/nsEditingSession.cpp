@@ -407,8 +407,7 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   if (NS_FAILED(rv)) return rv;
   if (!presContext) return NS_ERROR_FAILURE;
 
-  rv = presContext->SetImageAnimationMode(imgIContainer::kDontAnimMode);
-  if (NS_FAILED(rv)) return rv;
+  presContext->SetImageAnimationMode(imgIContainer::kDontAnimMode);
 
   // create and set editor
   nsCOMPtr<nsIEditorDocShell> editorDocShell = do_QueryInterface(docShell, &rv);

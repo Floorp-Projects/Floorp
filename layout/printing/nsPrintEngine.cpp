@@ -2735,7 +2735,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
 
   // turn off animated GIFs
   if (aPO->mPresContext) {
-    aPO->mPresContext->GetImageAnimationMode(&aPO->mImgAnimationMode);
+    aPO->mImgAnimationMode = aPO->mPresContext->ImageAnimationMode();
     aPO->mPresContext->SetImageAnimationMode(imgIContainer::kDontAnimMode);
   }
 

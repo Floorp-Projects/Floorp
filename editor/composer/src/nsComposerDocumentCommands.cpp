@@ -128,8 +128,7 @@ nsSetDocumentOptionsCommand::DoCommandParams(const char *aCommandName,
   {
     // for possible values of animation mode, see:
     // http://lxr.mozilla.org/seamonkey/source/modules/libpr0n/public/imgIContainer.idl
-    rv = presContext->SetImageAnimationMode(animationMode);
-    if (NS_FAILED(rv)) return rv;
+    presContext->SetImageAnimationMode(animationMode);
   }
 
   PRBool allowPlugins; 
@@ -182,11 +181,8 @@ nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
   {
     // for possible values of animation mode, see
     // http://lxr.mozilla.org/seamonkey/source/modules/libpr0n/public/imgIContainer.idl
-    PRUint16 tmp;
-    rv = presContext->GetImageAnimationMode(&tmp);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = aParams->SetLongValue("imageAnimation", animationMode);
+    rv = aParams->SetLongValue("imageAnimation",
+                               presContext->ImageAnimationMode());
     if (NS_FAILED(rv)) return rv;
   }
 

@@ -63,8 +63,7 @@ public:
   NS_IMETHOD GetPaginatedScrolling(PRBool* aResult);
   NS_IMETHOD GetPageDim(nsRect* aActualRect, nsRect* aAdjRect);
   NS_IMETHOD SetPageDim(nsRect* aRect);
-  NS_IMETHOD SetImageAnimationMode(PRUint16 aMode);
-  NS_IMETHOD GetImageAnimationMode(PRUint16* aModeResult);
+  virtual void SetImageAnimationMode(PRUint16 aMode);
   NS_IMETHOD SetPrintSettings(nsIPrintSettings* aPS);
   NS_IMETHOD GetPrintSettings(nsIPrintSettings** aPS);
   NS_IMETHOD GetScaledPixelsToTwips(float* aScale) const;
@@ -84,6 +83,9 @@ PrintPreviewContext::PrintPreviewContext() :
 {
   SetBackgroundImageDraw(PR_FALSE);
   SetBackgroundColorDraw(PR_FALSE);
+  // Printed images are never animated
+  mImageAnimationMode = imgIContainer::kDontAnimMode;
+  mNeverAnimate = PR_TRUE;
 }
 
 PrintPreviewContext::~PrintPreviewContext()
@@ -165,21 +167,9 @@ PrintPreviewContext::SetPageDim(nsRect* aPageDim)
  * Ignore any attempt to set an animation mode for images in print
  * preview
  */
-NS_IMETHODIMP
+void
 PrintPreviewContext::SetImageAnimationMode(PRUint16 aMode)
 {
-  return NS_OK;
-}
-
-/**
- * Images in print preview are never animated: always return kDontAnimMode
- */
-NS_IMETHODIMP
-PrintPreviewContext::GetImageAnimationMode(PRUint16* aModeResult)
-{
-  NS_PRECONDITION(aModeResult, "null out param");
-  *aModeResult = imgIContainer::kDontAnimMode;
-  return NS_OK;
 }
 
 NS_IMETHODIMP 
