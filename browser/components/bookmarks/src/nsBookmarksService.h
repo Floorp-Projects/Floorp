@@ -88,7 +88,6 @@ protected:
     PRUint32      htmlSize;
     PRInt32       mUpdateBatchNest;
     nsXPIDLString mPersonalToolbarName;
-    nsXPIDLString mWebPanelsName;
     nsXPIDLString mBookmarksRootName;
     PRBool        mBookmarksAvailable;
     PRBool        mDirty;
