@@ -35,11 +35,10 @@ namespace JS = JavaScript;
 JS::Reader::Reader(const String &source, const String &sourceLocation, uint32 initialLineNum):
 	source(source), sourceLocation(sourceLocation), initialLineNum(initialLineNum)
 {
-	Reader::source += char16(uni::null);   // ensure last character is always '\0'
-	const char16 *b = Reader::source.data();
+	const char16 *b = Reader::source.c_str();
 	begin = b;
 	p = b;
-	end = b + Reader::source.size() - 1;
+	end = b + Reader::source.size();
   #ifdef DEBUG
 	recordString = 0;
   #endif
@@ -162,147 +161,212 @@ void JS::Reader::error(Exception::Kind kind, const String &message, uint32 pos)
 //
 
 
-const char *const JS::Token::kindNames[] = {
+static const char controlCharNames[6] = {'b', 't', 'n', 'v', 'f', 'r'};
+
+// Print the characters from begin to end, escaping them as necessary to make the resulting
+// string be readable if placed between two quotes specified by quote (which should be either
+// '\'' or '"').
+void JS::escapeString(Formatter &f, const char16 *begin, const char16 *end, char16 quote)
+{
+	ASSERT(begin <= end);
+
+	const char16 *chunk = begin;
+	while (begin != end) {
+		char16 ch = *begin++;
+		CharInfo ci(ch);
+		if (char16Value(ch) < 0x20 || isLineBreak(ci) || isFormat(ci) || ch == '\\' || ch == quote) {
+			if (begin-1 != chunk)
+				printString(f, chunk, begin-1);
+			chunk = begin;
+
+			f << '\\';
+			switch (ch) {
+			  case 0x0008:
+			  case 0x0009:
+			  case 0x000A:
+			  case 0x000B:
+			  case 0x000C:
+			  case 0x000D:
+				f << controlCharNames[ch - 0x0008];
+				break;
+
+			  case '\'':
+			  case '"':
+			  case '\\':
+				f << ch;
+				break;
+
+			  case 0x0000:
+				if (begin == end || char16Value(*begin) < '0' || char16Value(*begin) > '9') {
+					f << '0';
+					break;
+				}
+			  default:
+				if (char16Value(ch) <= 0xFF) {
+					f << 'x';
+					printHex(f, static_cast<uint32>(char16Value(ch)), 2);
+				} else {
+					f << 'u';
+					printHex(f, static_cast<uint32>(char16Value(ch)), 4);
+				}
+			}
+		}
+	}
+	if (begin != chunk)
+		printString(f, chunk, begin);
+}
+
+
+// Print s as a quoted string using the given quotes (which should be either '\'' or '"').
+void JS::quoteString(Formatter &f, const String &s, char16 quote)
+{
+	f << quote;
+	const char16 *begin = s.data();
+	escapeString(f, begin, begin + s.size(), quote);
+	f << quote;
+}
+
+
+const char *const JS::Token::kindNames[kindsEnd] = {
   // Special
-	"end of input",		// Token::end
-	"number",			// Token::number
-	"string",			// Token::string
-	"unit",				// Token::unit
-	"regular expression",// Token::regExp
+	"end of input",		// end
+	"number",			// number
+	"string",			// string
+	"unit",				// unit
+	"regular expression",// regExp
 
   // Punctuators
-	"(",				// Token::openParenthesis
-	")",				// Token::closeParenthesis
-	"[",				// Token::openBracket
-	"]",				// Token::closeBracket
-	"{",				// Token::openBrace
-	"}",				// Token::closeBrace
-	",",				// Token::comma
-	";",				// Token::semicolon
-	".",				// Token::dot
-	"..",				// Token::doubleDot
-	"...",				// Token::tripleDot
-	"->",				// Token::arrow
-	":",				// Token::colon
-	"::",				// Token::doubleColon
-	"#",				// Token::pound
-	"@",				// Token::at
-	"++",				// Token::increment
-	"--",				// Token::decrement
-	"~",				// Token::complement
-	"!",				// Token::logicalNot
-	"*",				// Token::times
-	"/",				// Token::divide
-	"%",				// Token::modulo
-	"+",				// Token::plus
-	"-",				// Token::minus
-	"<<",				// Token::leftShift
-	">>",				// Token::rightShift
-	">>>",				// Token::logicalRightShift
-	"&&",				// Token::logicalAnd
-	"^^",				// Token::logicalXor
-	"||",				// Token::logicalOr
-	"&",				// Token::bitwiseAnd
-	"^",				// Token::bitwiseXor
-	"|",				// Token::bitwiseOr
-	"=",				// Token::assignment
-	"*=",				// Token::timesEquals
-	"/=",				// Token::divideEquals
-	"%=",				// Token::moduloEquals
-	"+=",				// Token::plusEquals
-	"-=",				// Token::minusEquals
-	"<<=",				// Token::leftShiftEquals
-	">>=",				// Token::rightShiftEquals
-	">>>=",				// Token::logicalRightShiftEquals
-	"&&=",				// Token::logicalAndEquals
-	"^^=",				// Token::logicalXorEquals
-	"||=",				// Token::logicalOrEquals
-	"&=",				// Token::bitwiseAndEquals
-	"^=",				// Token::bitwiseXorEquals
-	"|=",				// Token::bitwiseOrEquals
-	"==",				// Token::equal
-	"!=",				// Token::notEqual
-	"<",				// Token::lessThan
-	"<=",				// Token::lessThanOrEqual
-	">",				// Token::greaterThan
-	">=",				// Token::greaterThanOrEqual
-	"===",				// Token::identical
-	"!==",				// Token::notIdentical
-	"?",				// Token::question
+	"(",				// openParenthesis
+	")",				// closeParenthesis
+	"[",				// openBracket
+	"]",				// closeBracket
+	"{",				// openBrace
+	"}",				// closeBrace
+	",",				// comma
+	";",				// semicolon
+	".",				// dot
+	"..",				// doubleDot
+	"...",				// tripleDot
+	"->",				// arrow
+	":",				// colon
+	"::",				// doubleColon
+	"#",				// pound
+	"@",				// at
+	"++",				// increment
+	"--",				// decrement
+	"~",				// complement
+	"!",				// logicalNot
+	"*",				// times
+	"/",				// divide
+	"%",				// modulo
+	"+",				// plus
+	"-",				// minus
+	"<<",				// leftShift
+	">>",				// rightShift
+	">>>",				// logicalRightShift
+	"&&",				// logicalAnd
+	"^^",				// logicalXor
+	"||",				// logicalOr
+	"&",				// bitwiseAnd
+	"^",				// bitwiseXor
+	"|",				// bitwiseOr
+	"=",				// assignment
+	"*=",				// timesEquals
+	"/=",				// divideEquals
+	"%=",				// moduloEquals
+	"+=",				// plusEquals
+	"-=",				// minusEquals
+	"<<=",				// leftShiftEquals
+	">>=",				// rightShiftEquals
+	">>>=",				// logicalRightShiftEquals
+	"&&=",				// logicalAndEquals
+	"^^=",				// logicalXorEquals
+	"||=",				// logicalOrEquals
+	"&=",				// bitwiseAndEquals
+	"^=",				// bitwiseXorEquals
+	"|=",				// bitwiseOrEquals
+	"==",				// equal
+	"!=",				// notEqual
+	"<",				// lessThan
+	"<=",				// lessThanOrEqual
+	">",				// greaterThan
+	">=",				// greaterThanOrEqual
+	"===",				// identical
+	"!==",				// notIdentical
+	"?",				// question
 
   // Reserved words
-	"abstract",			// Token::Abstract
-	"break",			// Token::Break
-	"case",				// Token::Case
-	"catch",			// Token::Catch
-	"class",			// Token::Class
-	"const",			// Token::Const
-	"continue",			// Token::Continue
-	"debugger",			// Token::Debugger
-	"default",			// Token::Default
-	"delete",			// Token::Delete
-	"do",				// Token::Do
-	"else",				// Token::Else
-	"enum",				// Token::Enum
-	"eval",				// Token::Eval
-	"export",			// Token::Export
-	"extends",			// Token::Extends
-	"false",			// Token::False
-	"final",			// Token::Final
-	"finally",			// Token::Finally
-	"for",				// Token::For
-	"function",			// Token::Function
-	"goto",				// Token::Goto
-	"if",				// Token::If
-	"implements",		// Token::Implements
-	"import",			// Token::Import
-	"in",				// Token::In
-	"instanceof",		// Token::Instanceof
-	"native",			// Token::Native
-	"new",				// Token::New
-	"null",				// Token::Null
-	"package",			// Token::Package
-	"private",			// Token::Private
-	"protected",		// Token::Protected
-	"public",			// Token::Public
-	"return",			// Token::Return
-	"static",			// Token::Static
-	"super",			// Token::Super
-	"switch",			// Token::Switch
-	"synchronized",		// Token::Synchronized
-	"this",				// Token::This
-	"throw",			// Token::Throw
-	"throws",			// Token::Throws
-	"transient",		// Token::Transient
-	"true",				// Token::True
-	"try",				// Token::Try
-	"typeof",			// Token::Typeof
-	"var",				// Token::Var
-	"volatile",			// Token::Volatile
-	"while",			// Token::While
-	"with",				// Token::With
+	"abstract",			// Abstract
+	"break",			// Break
+	"case",				// Case
+	"catch",			// Catch
+	"class",			// Class
+	"const",			// Const
+	"continue",			// Continue
+	"debugger",			// Debugger
+	"default",			// Default
+	"delete",			// Delete
+	"do",				// Do
+	"else",				// Else
+	"enum",				// Enum
+	"eval",				// Eval
+	"export",			// Export
+	"extends",			// Extends
+	"false",			// False
+	"final",			// Final
+	"finally",			// Finally
+	"for",				// For
+	"function",			// Function
+	"goto",				// Goto
+	"if",				// If
+	"implements",		// Implements
+	"import",			// Import
+	"in",				// In
+	"instanceof",		// Instanceof
+	"native",			// Native
+	"new",				// New
+	"null",				// Null
+	"package",			// Package
+	"private",			// Private
+	"protected",		// Protected
+	"public",			// Public
+	"return",			// Return
+	"static",			// Static
+	"super",			// Super
+	"switch",			// Switch
+	"synchronized",		// Synchronized
+	"this",				// This
+	"throw",			// Throw
+	"throws",			// Throws
+	"transient",		// Transient
+	"true",				// True
+	"try",				// Try
+	"typeof",			// Typeof
+	"var",				// Var
+	"volatile",			// Volatile
+	"while",			// While
+	"with",				// With
 
   // Non-reserved words
-	"box",				// Token::Box
-	"constructor",		// Token::Constructor
-	"field",			// Token::Field
-	"get",				// Token::Get
-	"language",			// Token::Language
-	"local",			// Token::Local
-	"method",			// Token::Method
-	"override",			// Token::Override
-	"set",				// Token::Set
-	"version",			// Token::Version
+	"attribute",		// Attribute
+	"constructor",		// Constructor
+	"get",				// Get
+	"language",			// Language
+	"local",			// Local
+	"namespace",		// Namespace
+	"override",			// Override
+	"set",				// Set
+	"use",				// Use
 
-	"identifier"		// Token::identifier
+	"identifier"		// identifier
 };
 
 
 // Initialize the keywords in the given world.
 void JS::Token::initKeywords(World &world)
 {
-	const char *const*keywordName = kindNames + KeywordsBegin;
-	for (Kind kind = KeywordsBegin; kind != KeywordsEnd; kind = Kind(kind+1))
+	const char *const*keywordName = kindNames + keywordsBegin;
+	for (Kind kind = keywordsBegin; kind != keywordsEnd; kind = Kind(kind+1))
 		world.identifiers[widenCString(*keywordName++)].tokenKind = kind;
 }
 
@@ -325,7 +389,7 @@ void JS::Token::print(Formatter &f, bool debug) const
 		if (debug)
 			f << "[unit]";
 	  case string:
-		f << '"' << getChars() << '"';
+		quoteString(f, getChars(), '"');
 		break;
 
 	  case regExp:
@@ -986,6 +1050,286 @@ void JS::Lexer::lexToken(bool preferRegExp)
 // Parser
 //
 
+
+const char *const JS::ExprNode::kindNames[kindsEnd] = {
+	"NIL",			// none
+	0,				// identifier
+	0,				// number
+	0,				// string
+	0,				// regExp
+	"null",			// Null
+	"true",			// True
+	"false",		// False
+	"this",			// This
+	"super",		// Super
+	"public",		// Public
+	"package",		// Package
+	"private",		// Private
+
+	0,				// parentheses
+	0,				// numUnit
+	0,				// exprUnit
+	"::",			// qualify
+
+	0,				// objectLiteral
+	0,				// arrayLiteral
+	0,				// functionLiteral
+
+	0,				// call
+	0,				// New
+	0,				// index
+
+	".",			// dot
+	".(",			// dotParen
+	"@",			// at
+
+	"delete ",		// Delete
+	"typeof ",		// Typeof
+	"eval ",		// Eval
+	"++ ",			// preIncrement
+	"-- ",			// preDecrement
+	" ++",			// postIncrement
+	" --",			// postDecrement
+	"+ ",			// plus
+	"- ",			// minus
+	"~ ",			// complement
+	"! ",			// logicalNot
+
+	"+",			// add
+	"-",			// subtract
+	"*",			// multiply
+	"/",			// divide
+	"%",			// modulo
+	"<<",			// leftShift
+	">>",			// rightShift
+	">>>",			// logicalRightShift
+	"&",			// bitwiseAnd
+	"^",			// bitwiseXor
+	"|",			// bitwiseOr
+	"&&",			// logicalAnd
+	"^^",			// logicalXor
+	"||",			// logicalOr
+
+	"==",			// equal
+	"!=",			// notEqual
+	"<",			// lessThan
+	"<=",			// lessThanOrEqual
+	">",			// greaterThan
+	">=",			// greaterThanOrEqual
+	"===",			// identical
+	"!==",			// notIdentical
+	"in",			// In
+	"instanceof",	// Instanceof
+
+	"=",			// assignment
+	"+=",			// addEquals
+	"-=",			// subtractEquals
+	"*=",			// multiplyEquals
+	"/=",			// divideEquals
+	"%=",			// moduloEquals
+	"<<=",			// leftShiftEquals
+	">>=",			// rightShiftEquals
+	">>>=",			// logicalRightShiftEquals
+	"&=",			// bitwiseAndEquals
+	"^=",			// bitwiseXorEquals
+	"|=",			// bitwiseOrEquals
+	"&&=",			// logicalAndEquals
+	"^^=",			// logicalXorEquals
+	"||=",			// logicalOrEquals
+
+	"?",			// conditional
+	","				// comma
+};
+
+
+const bool debugExprNodePrint = true;
+
+// Print this onto f.
+void JS::ExprNode::print(PrettyPrinter &f) const
+{
+	f << kindName(kind);
+}
+
+void JS::IdentifierExprNode::print(PrettyPrinter &f) const
+{
+	f << name;
+}
+
+void JS::NumberExprNode::print(PrettyPrinter &f) const
+{
+	f << value;
+}
+
+void JS::StringExprNode::print(PrettyPrinter &f) const
+{
+	quoteString(f, str, '"');
+}
+
+void JS::RegExpExprNode::print(PrettyPrinter &f) const
+{
+	f << '/' << regExp << '/' << flags;
+}
+
+void JS::NumUnitExprNode::print(PrettyPrinter &f) const
+{
+	f << numStr;
+	StringExprNode::print(f);
+}
+
+void JS::ExprUnitExprNode::print(PrettyPrinter &f) const
+{
+	f << op;
+	StringExprNode::print(f);
+}
+
+void JS::FunctionExprNode::print(PrettyPrinter &) const
+{
+	NOT_REACHED("***** functions not implemented yet *****");
+}
+
+void JS::PairListExprNode::print(PrettyPrinter &f) const
+{
+	char beginBracket;
+	char endBracket;
+	
+	switch (getKind()) {
+	  case objectLiteral:
+		beginBracket = '{';
+		endBracket = '}';
+		break;
+
+	  case arrayLiteral:
+	  case index:
+		beginBracket = '[';
+		endBracket = ']';
+		break;
+
+	  case call:
+	  case New:
+		beginBracket = '(';
+		endBracket = ')';
+		break;
+
+	  default:
+		NOT_REACHED("Bad kind");
+		return;
+	}
+
+	f << beginBracket;
+	PrettyPrinter::Block b(f);
+	const ExprPairList *p = pairs;
+	if (p) 
+		while (true) {
+			const ExprNode *field = p->field;
+			if (field) {
+				{
+					PrettyPrinter::Block b2(f);
+					f << field << ':';
+				}
+				f.fillBreak(0);
+			}
+
+			const ExprNode *value = p->value;
+			if (value) {
+				PrettyPrinter::Block b3(f);
+				f << value;
+			}
+			
+			p = p->next;
+			if (!p) break;
+			f << ',';
+			f.linearBreak(static_cast<uint32>(field || value));
+		}
+	f << endBracket;
+}
+
+void JS::InvokeExprNode::print(PrettyPrinter &f) const
+{
+	ASSERT(hasKind(New) || hasKind(index));
+	if (hasKind(New))
+		f << "new ";
+	{
+		PrettyPrinter::Block b(f);
+		f << op;
+	}
+	f.fillBreak(0);
+	PairListExprNode::print(f);
+}
+
+void JS::UnaryExprNode::print(PrettyPrinter &f) const
+{
+	if (hasKind(parentheses)) {
+		f << '(';
+		{
+			PrettyPrinter::Block b(f);
+			f << op;
+		}
+		f << ')';
+	} else {
+		if (debugExprNodePrint)
+			f << '(';
+		const char *name = kindName(getKind());
+		if (hasKind(postIncrement) || hasKind(postDecrement)) {
+			f << op;
+			f << name;
+		} else {
+			f << name;
+			f << op;
+		}
+		if (debugExprNodePrint)
+			f << ')';
+	}
+}
+
+void JS::BinaryExprNode::print(PrettyPrinter &f) const
+{
+	if (debugExprNodePrint)
+		f << '(';
+	{
+		PrettyPrinter::Block b(f);
+		f << op1;
+	}
+	uint32 nSpaces = hasKind(dot) || hasKind(dotParen) || hasKind(at) || hasKind(qualify) ? (uint32)0 : (uint32)1;
+	f.fillBreak(nSpaces);
+	f << kindName(getKind());
+	f.fillBreak(nSpaces);
+	{
+		PrettyPrinter::Block b(f);
+		f << op2;
+	}
+	if (hasKind(dotParen))
+		f << ')';
+	if (debugExprNodePrint)
+		f << ')';
+}
+
+void JS::TernaryExprNode::print(PrettyPrinter &f) const
+{
+	if (debugExprNodePrint)
+		f << '(';
+	{
+		PrettyPrinter::Block b(f);
+		f << op1;
+	}
+	f.fillBreak(1);
+	f << '?';
+	f.fillBreak(1);
+	{
+		PrettyPrinter::Block b(f);
+		f << op2;
+	}
+	f.fillBreak(1);
+	f << ':';
+	f.fillBreak(1);
+	{
+		PrettyPrinter::Block b(f);
+		f << op3;
+	}
+	if (debugExprNodePrint)
+		f << ')';
+}
+
+
 // Create a new Parser for parsing the provided source code, interning identifiers, keywords, and regular
 // expressions in the designated world, and allocating the parse tree in the designated arena.
 JS::Parser::Parser(World &world, Arena &arena, const String &source, const String &sourceLocation, uint32 initialLineNum):
@@ -1042,28 +1386,25 @@ inline JS::String &JS::Parser::copyTokenChars(const Token &t)
 
 // An identifier or parenthesized expression has just been parsed into e.
 // If it is followed by one or more ::'s followed by identifiers, construct the appropriate
-// qualifiedIdentifier parse node and return it and set foundQualifiers to true.  If no ::
+// qualify parse node and return it and set foundQualifiers to true.  If no ::
 // is found, return e and set foundQualifiers to false.
 JS::ExprNode *JS::Parser::parseIdentifierQualifiers(ExprNode *e, bool &foundQualifiers)
 {
-	foundQualifiers = false;
-
-	while (true) {
-		const Token *tDoubleColon = lexer.eat(false, Token::doubleColon);
-		if (!tDoubleColon)
-			return e;
-		const Token &tId = lexer.get(true);
-		if (!Token::isIdentifierKind(tId.getKind()))
-			syntaxError("Identifier expected");
-		e = new(arena) OpIdentifierExprNode(tDoubleColon->getPos(), ExprNode::qualifiedIdentifier, tId.getIdentifier(), e);
-		foundQualifiers = true;
+	const Token *tDoubleColon = lexer.eat(false, Token::doubleColon);
+	if (!tDoubleColon) {
+		foundQualifiers = false;
+		return e;
 	}
+
+	foundQualifiers = true;
+	checkStackSize();
+	return new(arena) BinaryExprNode(tDoubleColon->getPos(), ExprNode::qualify, e, parseQualifiedIdentifier(lexer.get(true)));
 }
 
 
 // An opening parenthesis has just been parsed into tParen.  Finish parsing a ParenthesizedExpression.
 // If it is followed by one or more ::'s followed by identifiers, construct the appropriate
-// qualifiedIdentifier parse node and return it and set foundQualifiers to true.  If no ::
+// qualify parse node and return it and set foundQualifiers to true.  If no ::
 // is found, return the ParenthesizedExpression and set foundQualifiers to false.
 JS::ExprNode *JS::Parser::parseParenthesesAndIdentifierQualifiers(const Token &tParen, bool &foundQualifiers)
 {
@@ -1075,20 +1416,42 @@ JS::ExprNode *JS::Parser::parseParenthesesAndIdentifierQualifiers(const Token &t
 
 
 // Parse and return a qualifiedIdentifier.  The first token has already been parsed and is in t.
-// If the first token was peeked, it should be have been done with preferRegExp set to true.
-JS::IdentifierExprNode *JS::Parser::parseQualifiedIdentifier(const Token &t)
+// If the second token was peeked, it should be have been done with preferRegExp set to false.
+JS::ExprNode *JS::Parser::parseQualifiedIdentifier(const Token &t)
 {
 	bool foundQualifiers;
+	ExprNode::Kind eKind;
+	ExprNode *e;
 
 	if (Token::isIdentifierKind(t.getKind())) {
 		IdentifierExprNode *id = new(arena) IdentifierExprNode(t.getPos(), ExprNode::identifier, t.getIdentifier());
-		return static_cast<IdentifierExprNode *>(parseIdentifierQualifiers(id, foundQualifiers));
+		return parseIdentifierQualifiers(id, foundQualifiers);
 	}
 	if (t.hasKind(Token::openParenthesis)) {
-		ExprNode *e = parseParenthesesAndIdentifierQualifiers(t, foundQualifiers);
+		e = parseParenthesesAndIdentifierQualifiers(t, foundQualifiers);
+		goto checkQualifiers;
+	}
+
+	if (t.hasKind(Token::Super)) {
+		eKind = ExprNode::Super;
+		goto keywordQualifier;
+	}
+	if (t.hasKind(Token::Public)) {
+		eKind = ExprNode::Public;
+		goto keywordQualifier;
+	}
+	if (t.hasKind(Token::Package)) {
+		eKind = ExprNode::Package;
+		goto keywordQualifier;
+	}
+	if (t.hasKind(Token::Private)) {
+		eKind = ExprNode::Private;
+	  keywordQualifier:
+		e = parseIdentifierQualifiers(new(arena) ExprNode(t.getPos(), eKind), foundQualifiers);
+	  checkQualifiers:
 		if (!foundQualifiers)
 			syntaxError(":: expected", 0);
-		return static_cast<IdentifierExprNode *>(e);
+		return e;
 	}
 	syntaxError("Identifier or '(' expected");
 	return 0;	// Unreachable code here just to shut up compiler warnings
@@ -1132,7 +1495,8 @@ JS::PairListExprNode *JS::Parser::parseObjectLiteral(const Token &initialToken)
 		while (true) {
 			const Token &t = lexer.get(true);
 			ExprNode *field;
-			if (Token::isIdentifierKind(t.getKind()) || t.hasKind(Token::openParenthesis))
+			if (Token::isIdentifierKind(t.getKind()) || t.hasKind(Token::openParenthesis) || t.hasKind(Token::Super) ||
+				t.hasKind(Token::Public) || t.hasKind(Token::Package) || t.hasKind(Token::Private))
 				field = parseQualifiedIdentifier(t);
 			else if (t.hasKind(Token::string))
 				field = new(arena) StringExprNode(t.getPos(), ExprNode::string, copyTokenChars(t));
@@ -1166,9 +1530,7 @@ JS::ExprNode *JS::Parser::parsePrimaryExpression()
 	switch (t.getKind()) {
 	  case Token::Null:
 		eKind = ExprNode::Null;
-	  makeExprNode:
-		e = new(arena) ExprNode(t.getPos(), eKind);
-		break;
+		goto makeExprNode;
 		
 	  case Token::True:
 		eKind = ExprNode::True;
@@ -1184,7 +1546,16 @@ JS::ExprNode *JS::Parser::parsePrimaryExpression()
 		
 	  case Token::Super:
 		eKind = ExprNode::Super;
-		goto makeExprNode;
+		goto makeExprOrQualifierNode;
+		
+	  case Token::Public:
+		eKind = ExprNode::Public;
+	  makeExprOrQualifierNode:
+		if (lexer.peek(false).hasKind(Token::doubleColon))
+			goto makeQualifiedIdentifierNode;
+	  makeExprNode:
+		e = new(arena) ExprNode(t.getPos(), eKind);
+		break;
 		
 	  case Token::number:
 		{
@@ -1205,7 +1576,10 @@ JS::ExprNode *JS::Parser::parsePrimaryExpression()
 		e = new(arena) RegExpExprNode(t.getPos(), ExprNode::regExp, t.getIdentifier(), copyTokenChars(t));
 		break;
 	
+	  case Token::Package:
+	  case Token::Private:
 	  case CASE_TOKEN_NONRESERVED:
+	  makeQualifiedIdentifierNode:
 		e = parseQualifiedIdentifier(t);
 		break;
 	
@@ -1361,34 +1735,272 @@ JS::ExprNode *JS::Parser::parsePostfixExpression(bool newExpression)
 }
 
 
-// Parse and return a NonAssignmentExpression.
+// Parse and return a UnaryExpression.
 // If the first token was peeked, it should be have been done with preferRegExp
 // set to true.
-JS::ExprNode *JS::Parser::parseNonAssignmentExpression(bool /* noIn */)
+JS::ExprNode *JS::Parser::parseUnaryExpression()
 {
-	checkStackSize();
-	syntaxError("***** parseNonAssignmentExpression not implemented yet *****");
-	return 0;
+	ExprNode::Kind eKind;
+	ExprNode *e;
+
+	const Token &t = lexer.peek(true);
+	uint32 pos = t.getPos();
+	switch (t.getKind()) {
+	  case Token::Delete:
+		eKind = ExprNode::Delete;
+		goto getPostfixExpression;
+
+	  case Token::increment:
+		eKind = ExprNode::preIncrement;
+		goto getPostfixExpression;
+
+	  case Token::decrement:
+		eKind = ExprNode::preDecrement;
+	  getPostfixExpression:
+		e = parsePostfixExpression();
+		break;
+
+	  case Token::Typeof:
+		eKind = ExprNode::Typeof;
+		goto getUnaryExpression;
+
+	  case Token::Eval:
+		eKind = ExprNode::Eval;
+		goto getUnaryExpression;
+
+	  case Token::plus:
+		eKind = ExprNode::plus;
+		goto getUnaryExpression;
+
+	  case Token::minus:
+		eKind = ExprNode::minus;
+		goto getUnaryExpression;
+
+	  case Token::complement:
+		eKind = ExprNode::complement;
+		goto getUnaryExpression;
+
+	  case Token::logicalNot:
+		eKind = ExprNode::logicalNot;
+	  getUnaryExpression:
+		checkStackSize();
+		e = parseUnaryExpression();
+		break;
+
+	  default:
+		return parsePostfixExpression();
+	}
+	return new(arena) UnaryExprNode(pos, eKind, e);
 }
 
 
-// Parse and return an AssignmentExpression.
-// If the first token was peeked, it should be have been done with
-// preferRegExp set to true.
-JS::ExprNode *JS::Parser::parseAssignmentExpression(bool /* noIn */)
-{
-	checkStackSize();
-	syntaxError("***** parseAssignmentExpression not implemented yet *****");
-	return 0;
-}
+const JS::Parser::BinaryOperatorInfo JS::Parser::tokenBinaryOperatorInfos[Token::kindsEnd] = {
+  // Special
+	{ExprNode::none, pExpression, pNone},						// Token::end
+	{ExprNode::none, pExpression, pNone},						// Token::number
+	{ExprNode::none, pExpression, pNone},						// Token::string
+	{ExprNode::none, pExpression, pNone},						// Token::unit
+	{ExprNode::none, pExpression, pNone},						// Token::regExp
+
+  // Punctuators
+	{ExprNode::none, pExpression, pNone},						// Token::openParenthesis
+	{ExprNode::none, pExpression, pNone},						// Token::closeParenthesis
+	{ExprNode::none, pExpression, pNone},						// Token::openBracket
+	{ExprNode::none, pExpression, pNone},						// Token::closeBracket
+	{ExprNode::none, pExpression, pNone},						// Token::openBrace
+	{ExprNode::none, pExpression, pNone},						// Token::closeBrace
+	{ExprNode::comma, pExpression, pExpression},				// Token::comma
+	{ExprNode::none, pExpression, pNone},						// Token::semicolon
+	{ExprNode::none, pExpression, pNone},						// Token::dot
+	{ExprNode::none, pExpression, pNone},						// Token::doubleDot
+	{ExprNode::none, pExpression, pNone},						// Token::tripleDot
+	{ExprNode::none, pExpression, pNone},						// Token::arrow
+	{ExprNode::none, pExpression, pNone},						// Token::colon
+	{ExprNode::none, pExpression, pNone},						// Token::doubleColon
+	{ExprNode::none, pExpression, pNone},						// Token::pound
+	{ExprNode::none, pExpression, pNone},						// Token::at
+	{ExprNode::none, pExpression, pNone},						// Token::increment
+	{ExprNode::none, pExpression, pNone},						// Token::decrement
+	{ExprNode::none, pExpression, pNone},						// Token::complement
+	{ExprNode::none, pExpression, pNone},						// Token::logicalNot
+	{ExprNode::multiply, pMultiplicative, pMultiplicative},		// Token::times
+	{ExprNode::divide, pMultiplicative, pMultiplicative},		// Token::divide
+	{ExprNode::modulo, pMultiplicative, pMultiplicative},		// Token::modulo
+	{ExprNode::add, pAdditive, pAdditive},						// Token::plus
+	{ExprNode::subtract, pAdditive, pAdditive},					// Token::minus
+	{ExprNode::leftShift, pShift, pShift},						// Token::leftShift
+	{ExprNode::rightShift, pShift, pShift},						// Token::rightShift
+	{ExprNode::logicalRightShift, pShift, pShift},				// Token::logicalRightShift
+	{ExprNode::logicalAnd, pBitwiseOr, pLogicalAnd},			// Token::logicalAnd	(right-associative for efficiency)
+	{ExprNode::logicalXor, pLogicalAnd, pLogicalXor},			// Token::logicalXor	(right-associative for efficiency)
+	{ExprNode::logicalOr, pLogicalXor, pLogicalOr},				// Token::logicalOr		(right-associative for efficiency)
+	{ExprNode::bitwiseAnd, pBitwiseAnd, pBitwiseAnd},			// Token::bitwiseAnd
+	{ExprNode::bitwiseXor, pBitwiseXor, pBitwiseXor},			// Token::bitwiseXor
+	{ExprNode::bitwiseOr, pBitwiseOr, pBitwiseOr},				// Token::bitwiseOr
+	{ExprNode::assignment, pPostfix, pAssignment},				// Token::assignment
+	{ExprNode::multiplyEquals, pPostfix, pAssignment},			// Token::timesEquals
+	{ExprNode::divideEquals, pPostfix, pAssignment},			// Token::divideEquals
+	{ExprNode::moduloEquals, pPostfix, pAssignment},			// Token::moduloEquals
+	{ExprNode::addEquals, pPostfix, pAssignment},				// Token::plusEquals
+	{ExprNode::subtractEquals, pPostfix, pAssignment},			// Token::minusEquals
+	{ExprNode::leftShiftEquals, pPostfix, pAssignment},			// Token::leftShiftEquals
+	{ExprNode::rightShiftEquals, pPostfix, pAssignment},		// Token::rightShiftEquals
+	{ExprNode::logicalRightShiftEquals, pPostfix, pAssignment},	// Token::logicalRightShiftEquals
+	{ExprNode::logicalAndEquals, pPostfix, pAssignment},		// Token::logicalAndEquals
+	{ExprNode::logicalXorEquals, pPostfix, pAssignment},		// Token::logicalXorEquals
+	{ExprNode::logicalOrEquals, pPostfix, pAssignment},			// Token::logicalOrEquals
+	{ExprNode::bitwiseAndEquals, pPostfix, pAssignment},		// Token::bitwiseAndEquals
+	{ExprNode::bitwiseXorEquals, pPostfix, pAssignment},		// Token::bitwiseXorEquals
+	{ExprNode::bitwiseOrEquals, pPostfix, pAssignment},			// Token::bitwiseOrEquals
+	{ExprNode::equal, pEquality, pEquality},					// Token::equal
+	{ExprNode::notEqual, pEquality, pEquality},					// Token::notEqual
+	{ExprNode::lessThan, pRelational, pRelational},				// Token::lessThan
+	{ExprNode::lessThanOrEqual, pRelational, pRelational},		// Token::lessThanOrEqual
+	{ExprNode::greaterThan, pRelational, pRelational},			// Token::greaterThan
+	{ExprNode::greaterThanOrEqual, pRelational, pRelational},	// Token::greaterThanOrEqual
+	{ExprNode::identical, pEquality, pEquality},				// Token::identical
+	{ExprNode::notIdentical, pEquality, pEquality},				// Token::notIdentical
+	{ExprNode::conditional, pLogicalOr, pConditional},			// Token::question
+
+  // Reserved words
+	{ExprNode::none, pExpression, pNone},						// Token::Abstract
+	{ExprNode::none, pExpression, pNone},						// Token::Break
+	{ExprNode::none, pExpression, pNone},						// Token::Case
+	{ExprNode::none, pExpression, pNone},						// Token::Catch
+	{ExprNode::none, pExpression, pNone},						// Token::Class
+	{ExprNode::none, pExpression, pNone},						// Token::Const
+	{ExprNode::none, pExpression, pNone},						// Token::Continue
+	{ExprNode::none, pExpression, pNone},						// Token::Debugger
+	{ExprNode::none, pExpression, pNone},						// Token::Default
+	{ExprNode::none, pExpression, pNone},						// Token::Delete
+	{ExprNode::none, pExpression, pNone},						// Token::Do
+	{ExprNode::none, pExpression, pNone},						// Token::Else
+	{ExprNode::none, pExpression, pNone},						// Token::Enum
+	{ExprNode::none, pExpression, pNone},						// Token::Eval
+	{ExprNode::none, pExpression, pNone},						// Token::Export
+	{ExprNode::none, pExpression, pNone},						// Token::Extends
+	{ExprNode::none, pExpression, pNone},						// Token::False
+	{ExprNode::none, pExpression, pNone},						// Token::Final
+	{ExprNode::none, pExpression, pNone},						// Token::Finally
+	{ExprNode::none, pExpression, pNone},						// Token::For
+	{ExprNode::none, pExpression, pNone},						// Token::Function
+	{ExprNode::none, pExpression, pNone},						// Token::Goto
+	{ExprNode::none, pExpression, pNone},						// Token::If
+	{ExprNode::none, pExpression, pNone},						// Token::Implements
+	{ExprNode::none, pExpression, pNone},						// Token::Import
+	{ExprNode::In, pRelational, pRelational},					// Token::In
+	{ExprNode::Instanceof, pRelational, pRelational},			// Token::Instanceof
+	{ExprNode::none, pExpression, pNone},						// Token::Native
+	{ExprNode::none, pExpression, pNone},						// Token::New
+	{ExprNode::none, pExpression, pNone},						// Token::Null
+	{ExprNode::none, pExpression, pNone},						// Token::Package
+	{ExprNode::none, pExpression, pNone},						// Token::Private
+	{ExprNode::none, pExpression, pNone},						// Token::Protected
+	{ExprNode::none, pExpression, pNone},						// Token::Public
+	{ExprNode::none, pExpression, pNone},						// Token::Return
+	{ExprNode::none, pExpression, pNone},						// Token::Static
+	{ExprNode::none, pExpression, pNone},						// Token::Super
+	{ExprNode::none, pExpression, pNone},						// Token::Switch
+	{ExprNode::none, pExpression, pNone},						// Token::Synchronized
+	{ExprNode::none, pExpression, pNone},						// Token::This
+	{ExprNode::none, pExpression, pNone},						// Token::Throw
+	{ExprNode::none, pExpression, pNone},						// Token::Throws
+	{ExprNode::none, pExpression, pNone},						// Token::Transient
+	{ExprNode::none, pExpression, pNone},						// Token::True
+	{ExprNode::none, pExpression, pNone},						// Token::Try
+	{ExprNode::none, pExpression, pNone},						// Token::Typeof
+	{ExprNode::none, pExpression, pNone},						// Token::Var
+	{ExprNode::none, pExpression, pNone},						// Token::Volatile
+	{ExprNode::none, pExpression, pNone},						// Token::While
+	{ExprNode::none, pExpression, pNone},						// Token::With
+
+  // Non-reserved words
+	{ExprNode::none, pExpression, pNone},						// Token::Attribute
+	{ExprNode::none, pExpression, pNone},						// Token::Constructor
+	{ExprNode::none, pExpression, pNone},						// Token::Get
+	{ExprNode::none, pExpression, pNone},						// Token::Language
+	{ExprNode::none, pExpression, pNone},						// Token::Local
+	{ExprNode::none, pExpression, pNone},						// Token::Namespace
+	{ExprNode::none, pExpression, pNone},						// Token::Override
+	{ExprNode::none, pExpression, pNone},						// Token::Set
+	{ExprNode::none, pExpression, pNone},						// Token::Use
+
+	{ExprNode::none, pExpression, pNone}						// Token::identifier
+};
 
 
-// Parse and return an Expression.
+struct JS::Parser::StackedSubexpression {
+	ExprNode::Kind kind;				// The kind of BinaryExprNode the subexpression should generate
+	uchar precedence;					// Precedence of an operator with respect to operators on its right
+	uint32 pos;							// The operator token's position
+	ExprNode *op1;						// First operand of the operator
+	ExprNode *op2;						// Second operand of the operator (used for ?: only)
+};
+
+
+
+// Parse and return an Expression.  If noIn is false, allow the in operator.  If noAssignment is
+// false, allow the = and op= operators.  If noComma is false, allow the comma operator.
 // If the first token was peeked, it should be have been done with preferRegExp
 // set to true.
-JS::ExprNode *JS::Parser::parseExpression(bool /* noIn */)
+JS::ExprNode *JS::Parser::parseExpression(bool noIn, bool noAssignment, bool noComma)
 {
+	ArrayBuffer<StackedSubexpression, 10> subexpressionStack;
+
 	checkStackSize();
-	syntaxError("***** parseExpression not implemented yet *****");
-	return 0;
+	// Push a limiter onto subexpressionStack.
+	subexpressionStack.reserve_advance_back()->precedence = pNone;
+
+	while (true) {
+	  foundColon:
+		ExprNode *e = parseUnaryExpression();
+
+		const Token &t = lexer.peek(false);
+		const BinaryOperatorInfo &binOpInfo = tokenBinaryOperatorInfos[t.getKind()];
+		Precedence precedence = binOpInfo.precedenceLeft;
+		ExprNode::Kind kind = binOpInfo.kind;
+		ASSERT(precedence > pNone);
+		
+		// Disqualify assignments, 'in', and comma if the flags indicate that these should end the expression.
+		if (precedence == pPostfix && noAssignment || kind == ExprNode::In && noIn || kind == ExprNode::comma && noComma) {
+			kind = ExprNode::none;
+			precedence = pExpression;
+		}
+
+		if (precedence == pPostfix) {
+			// Ensure that the target of an assignment is a postfix subexpression.
+			if (ExprNode::isUnaryKind(e->getKind()))
+				syntaxError("Cannot assign to the result of this unary expression", 0);
+		} else
+			// Reduce already stacked operators with precedenceLeft or higher precedence
+			while (subexpressionStack.back().precedence >= precedence) {
+				StackedSubexpression &s = subexpressionStack.pop_back();
+				if (s.kind == ExprNode::conditional) {
+					if (s.op2)
+						e = new(arena) TernaryExprNode(s.pos, s.kind, s.op1, s.op2, e);
+					else {
+						if (!t.hasKind(Token::colon))
+							syntaxError("':' expected", 0);
+						lexer.get(false);
+						s.op2 = e;
+						goto foundColon;
+					}
+				} else
+					e = new(arena) BinaryExprNode(s.pos, s.kind, s.op1, e);
+			}
+		
+		if (kind == ExprNode::none) {
+			ASSERT(subexpressionStack.size() == 1);
+			return e;
+		}
+		
+		// Push the current operator onto the subexpressionStack.
+		lexer.get(false);
+		StackedSubexpression &s = *subexpressionStack.reserve_advance_back();
+		s.kind = kind;
+		s.precedence = binOpInfo.precedenceRight;
+		s.pos = t.getPos();
+		s.op1 = e;
+		s.op2 = 0;
+	}
 }
