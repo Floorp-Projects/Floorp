@@ -253,10 +253,10 @@ namespace JSTypes {
             return mPrototype;
         }
 
-        void printProperties(Formatter& f) const;
+        virtual void printProperties(Formatter& f);
     };
     
-    Formatter& operator<<(Formatter& f, const JSObject& obj);
+    Formatter& operator<<(Formatter& f, JSObject& obj);
 
     /**
      * Private representation of a JavaScript array.

@@ -56,6 +56,7 @@ namespace Interpreter {
 
 using namespace ICG;
 using namespace JSTypes;
+using namespace JSClasses;
     
 // These classes are private to the JS interpreter.
 
@@ -709,6 +710,28 @@ using JSString throughout.
                 }
                 break;
 
+            case GET_SLOT:
+                {
+                    GetSlot* gs = static_cast<GetSlot*>(instruction);
+                    JSValue& value = (*registers)[src1(gs).first];
+                    if (value.isObject()) {
+                        JSInstance* inst = static_cast<JSInstance *>(value.object);
+                        (*registers)[dst(gs).first] = (*inst)[src2(gs)];
+                    }
+                    // XXX runtime error
+                }
+                break;
+            case SET_SLOT:
+                {
+                    SetSlot* ss = static_cast<SetSlot*>(instruction);
+                    JSValue& value = (*registers)[dst(ss).first];
+                    if (value.isObject()) {
+                        JSInstance* inst = static_cast<JSInstance *>(value.object);
+                        (*inst)[src1(ss)] = (*registers)[src2(ss).first];
+                    }
+                }
+                break;
+
             case LOAD_IMMEDIATE:
                 {
                     LoadImmediate* li = static_cast<LoadImmediate*>(instruction);
@@ -819,6 +842,19 @@ using JSString throughout.
                     dest = r;
                     r.f64 += val4(px);
                     object->setProperty(*src2(px), r);
+                }
+                break;
+
+            case SLOT_XCR:
+                {
+                    SlotXcr *sx = static_cast<SlotXcr*>(instruction);
+                    JSValue& dest = (*registers)[dst(sx).first];
+                    JSValue& base = (*registers)[src1(sx).first];
+                    JSInstance *inst = static_cast<JSInstance*>(base.object);
+                    JSValue r = (*inst)[src2(sx)].toNumber();
+                    dest = r;
+                    r.f64 += val4(sx);
+                    (*inst)[src2(sx)] = r;
                 }
                 break;
 

@@ -22,8 +22,8 @@
 // JS2 shell.
 //
 
-#if 0
-#define DEBUGGER_FOO
+#if 1
+//#define DEBUGGER_FOO
 #define INTERPRET_INPUT
 #else
 #undef DEBUGGER_FOO

@@ -104,6 +104,11 @@ namespace JSClasses {
             return mSlots[name];
         }
         
+        JSSlots& getSlots()
+        {
+            return mSlots;
+        }
+        
         bool hasSlot(const String& name)
         {
             return (mSlots.count(name) != 0);
@@ -142,6 +147,18 @@ namespace JSClasses {
         {
             return mSlots[index];
         }
+
+        virtual void printProperties(Formatter& f)
+        {
+            JSObject::printProperties(f);
+            JSClass *thisClass = getClass();
+            JSSlots &slots = thisClass->getSlots();
+            f << "Slots:\n";
+            for (JSSlots::iterator i = slots.begin(), end = slots.end(); i != end; ++i) {
+                f << i->first << " : " <<  mSlots[i->second.mIndex]  << "\n";
+            }
+        }
+
     };
     
 } /* namespace JSClasses */
