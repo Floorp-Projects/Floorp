@@ -962,8 +962,9 @@ const nsString* nsDocument::GetDocumentTitle() const
 
 nsIURI* nsDocument::GetDocumentURL() const
 {
-  NS_IF_ADDREF(mDocumentURL);
-  return mDocumentURL;
+  nsIURI* url = mDocumentURL;
+  NS_IF_ADDREF(url);
+  return url;
 }
 
 NS_IMETHODIMP
@@ -1027,7 +1028,7 @@ NS_IMETHODIMP
 nsDocument::GetBaseURL(nsIURI*& aURL) const
 {
   aURL = mDocumentURL;
-  NS_IF_ADDREF(mDocumentURL);
+  NS_IF_ADDREF(aURL);
   return NS_OK;
 }
 
