@@ -973,9 +973,59 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const nsAC
 
     if (!move)
         copyOK = CopyFile(filePath.get(), destPath.get(), PR_TRUE);
-    else
+    else 
+    {
+        // What we have to do is check to see if the destPath exists.  If it 
+        // does, we have to move it out of the say so that MoveFile will 
+        // succeed.  However, we don't want to just remove it since MoveFile 
+        // can fail leaving us without a file.
+        
+        nsCAutoString backup;
+        PRFileInfo64 fileInfo64;
+        PRStatus status = PR_GetFileInfo64(destPath.get(), &fileInfo64);
+        if (status == PR_SUCCESS)
+        {
+        
+            // the file exists.  Check to make sure it is not a directory,
+            // then move it out of the way.
+            if (fileInfo64.type == PR_FILE_FILE)
+            {
+                backup.Append(destPath);
+                backup.Append(".moztmp");
+
+                // remove any existing backup file that we may already have.
+                // maybe we should be doing some kind of unique naming here, 
+                // but why bother.
+                remove(backup.get());
+                
+                // move destination file to backup file
+                copyOK = MoveFile(destPath.get(), backup.get());
+                if (!copyOK)
+                {
+                    // I guess we can't do the backup copy, so return.
+                    rv = ConvertWinError(GetLastError());
+                    return rv;
+                }
+            }
+        }
+        // move source file to destination file
         copyOK = MoveFile(filePath.get(), destPath.get());
     
+        if (!backup.IsEmpty())
+        {
+            if (copyOK) 
+            {
+                // remove the backup copy.
+                (void) remove(backup.get());
+            }
+            else
+            {
+                // restore backup
+                int backupOk = MoveFile(backup.get(), destPath.get());
+                NS_ASSERTION(backupOk, "move backup failed");
+            }
+        }
+    }        
     if (!copyOK)  // CopyFile and MoveFile returns non-zero if succeeds (backward if you ask me).
         rv = ConvertWinError(GetLastError());
 
@@ -1013,7 +1063,7 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsACString &newName, PRBool fol
     // make sure it exists and is a directory.  Create it if not there.
     PRBool exists;
     newParentDir->Exists(&exists);
-    if (exists == PR_FALSE)
+    if (!exists)
     {
         rv = newParentDir->Create(DIRECTORY_TYPE, 0644);  // TODO, what permissions should we use
         if (NS_FAILED(rv))
@@ -1104,10 +1154,35 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsACString &newName, PRBool fol
             return rv;
 
         allocatedNewName.Truncate();
+        
+        // check if the destination directory already exists
+        target->Exists(&exists);
+        if (!exists)
+        {
+            // if the destination directory cannot be created, return an error
+            rv = target->Create(DIRECTORY_TYPE, 0644);  // TODO, what permissions should we use
+            if (NS_FAILED(rv))
+                return rv;
+        }
+        else
+        {
+            // check if the destination directory is writable and empty
+            PRBool isWritable;
 
-        target->Create(DIRECTORY_TYPE, 0644);  // TODO, what permissions should we use
-        if (NS_FAILED(rv))
-            return rv;
+            target->IsWritable(&isWritable);
+            if (!isWritable)
+                return NS_ERROR_FILE_ACCESS_DENIED;
+
+            nsCOMPtr<nsISimpleEnumerator> targetIterator;
+            rv = target->GetDirectoryEntries(getter_AddRefs(targetIterator));
+
+            PRBool more;
+            targetIterator->HasMoreElements(&more);
+            // return error if target directory is not empty
+            if (more)
+                return NS_ERROR_FILE_DIR_NOT_EMPTY;
+        }
+
         
         nsDirEnumerator* dirEnum = new nsDirEnumerator();
         if (!dirEnum)
