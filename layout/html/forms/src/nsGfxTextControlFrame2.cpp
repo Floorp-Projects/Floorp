@@ -1970,17 +1970,6 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
     }
   }
 
-  // Temporary fix for the password dialog.
-  // We need to figure out why Reflow() and GetPrefSize() are
-  // not called for that dialog.
-
-  rv = SetInitialValue();
-  
-  if (NS_FAILED(rv))
-    return rv;
-
-  // End temporary fix.
-
   return NS_OK;
 }
 
@@ -2008,9 +1997,10 @@ nsGfxTextControlFrame2::Reflow(nsIPresContext*   aPresContext,
 {
   DO_GLOBAL_REFLOW_COUNT("nsGfxTextControlFrame2", aReflowState.reason);
 
+  SetInitialValue();
+
   // make sure the the form registers itself on the initial/first reflow
   if (mState & NS_FRAME_FIRST_REFLOW) {
-    SetInitialValue();
     nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
     mNotifyOnInput = PR_TRUE;//its ok to notify now. all has been prepared.
@@ -2063,11 +2053,10 @@ nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   if (!aReflowState)
     return NS_OK;
 
+  SetInitialValue();
+
   if (mState & NS_FRAME_FIRST_REFLOW)
-  {
-    SetInitialValue();
     mNotifyOnInput = PR_TRUE;//its ok to notify now. all has been prepared.
-  }
 
   nsCompatibility mode;
   aPresContext->GetCompatibilityMode(&mode); 
