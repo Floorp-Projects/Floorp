@@ -27,17 +27,17 @@
 #include "nsP3PObserverUtils.h"
 #include "nsP3PLogging.h"
 
-#include <nsIServiceManager.h>
+#include "nsIServiceManager.h"
 
-#include <nsIParser.h>
+#include "nsIParser.h"
 
-#include <nsIDocShell.h>
-#include <nsIDocShellTreeItem.h>
-#include <nsIWebNavigation.h>
-#include <nsIDocument.h>
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIWebNavigation.h"
+#include "nsIDocument.h"
 
-#include <nsString.h>
-#include <nsXPIDLString.h>
+#include "nsString.h"
+#include "nsXPIDLString.h"
 
 
 // ****************************************************************************
@@ -102,11 +102,11 @@ nsP3PObserverXML::~nsP3PObserverXML( ) {
 
   if (mObserverService) {
     mObserverService->RemoveObserver( this,
-                                      NS_LITERAL_STRING("text/xml") );
+                                      NS_LITERAL_STRING("text/xml").get() );
     mObserverService->RemoveObserver( this,
-                                      NS_LITERAL_STRING("application/xml") );
+                                      NS_LITERAL_STRING("application/xml").get() );
     mObserverService->RemoveObserver( this,
-                                      NS_LITERAL_STRING("application/xhtml+xml") );
+                                      NS_LITERAL_STRING("application/xhtml+xml").get() );
   }
 }
 
@@ -133,13 +133,13 @@ nsP3PObserverXML::Init( ) {
   if (NS_SUCCEEDED( rv )) {
     // Register to observer XML tags
     rv = mObserverService->AddObserver( this,
-                                      NS_LITERAL_STRING("text/xml") );
+                                      NS_LITERAL_STRING("text/xml").get() );
     if (NS_SUCCEEDED(rv)) {
       rv = mObserverService->AddObserver( this,
-                                        NS_LITERAL_STRING("application/xml") );
+                                        NS_LITERAL_STRING("application/xml").get() );
       if (NS_SUCCEEDED(rv)) {
         rv = mObserverService->AddObserver( this,
-                                          NS_LITERAL_STRING("application/xhtml+xml") );
+                                          NS_LITERAL_STRING("application/xhtml+xml").get() );
       }
     }
 
