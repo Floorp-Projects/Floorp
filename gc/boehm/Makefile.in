@@ -34,7 +34,9 @@ DEFINES += -DREDIRECT_MALLOC=GC_malloc
 # linux-specific stuff
 DEFINES += -DLINUX_THREADS -D_REENTRANT
 
-EXPORTS = gc.h
+EXPORTS = gc.h \
+	generic_threads.h \
+	$(NULL)
 
 CSRCS= allchblk.c \
 		alloc.c \
@@ -63,6 +65,7 @@ CSRCS= allchblk.c \
 		solaris_threads.c \
 		stubborn.c \
 		typd_mlc.c \
+		generic_threads.c \
 		$(NULL)
 
 CPPSRCS = gc_cpp.cc
