@@ -572,6 +572,24 @@ PRInt32 nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
     if (mBorderRadius != aOther.mBorderRadius) {
       return NS_STYLE_HINT_VISUAL;
     }
+    if (mBorderColors && !aOther.mBorderColors ||
+        !mBorderColors && aOther.mBorderColors) {
+      return NS_STYLE_HINT_VISUAL;
+    }
+
+    if (mBorderColors && aOther.mBorderColors) {
+      for (ix = 0; ix < 4; ix++) {
+        if (mBorderColors[ix] && !aOther.mBorderColors[ix] ||
+            !mBorderColors[ix] && aOther.mBorderColors[ix]) {
+          return NS_STYLE_HINT_VISUAL;
+        } else if (mBorderColors[ix] && aOther.mBorderColors[ix]) {
+          if (!mBorderColors[ix]->Equals(aOther.mBorderColors[ix]))
+            return NS_STYLE_HINT_VISUAL;
+        }
+      }
+    }
+
+
     return NS_STYLE_HINT_NONE;
   }
   return NS_STYLE_HINT_REFLOW;
