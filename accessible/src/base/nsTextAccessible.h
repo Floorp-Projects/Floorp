@@ -44,6 +44,10 @@
 #include "nsIAccessibleText.h"
 #include "nsISelectionController.h"
 
+#ifdef MOZ_ACCESSIBILITY_ATK
+
+enum EGetTextType { eGetBefore=-1, eGetAt=0, eGetAfter=1 };
+
 class nsAccessibleText : public nsIAccessibleText
 {
 public:
@@ -55,23 +59,30 @@ public:
 
   void SetTextNode(nsIDOMNode *aNode);
 
-private:
+protected:
   nsCOMPtr<nsIDOMNode> mTextNode;
-
-  enum EGetTextType { eGetBefore=-1, eGetAt=0, eGetAfter=1 };
 
   nsresult GetSelections(nsISelectionController **aSelCon, nsISelection **aDomSel);
   nsresult GetTextHelper(EGetTextType aType, nsAccessibleTextBoundary aBoundaryType, 
-                         PRInt32 aOffset, PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & _retval);
+                         PRInt32 aOffset, PRInt32 *aStartOffset, PRInt32 *aEndOffset, 
+                         nsISupportsArray *aDomNodeArray, nsAString & _retval);
+
+  friend class nsAccessibleHyperText;
 };
+
+#endif //MOZ_ACCESSIBILITY_ATK
 
  /**
   * Text nodes have no children, but since double inheritance
   *  no-worky we have to re-impl the LeafAccessiblity blocks 
   *  this way.
   */
+#ifndef MOZ_ACCESSIBILITY_ATK
+class nsTextAccessible : public nsLinkableAccessible
+#else
 class nsTextAccessible : public nsLinkableAccessible,
                          public nsAccessibleText
+#endif
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

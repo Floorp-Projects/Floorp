@@ -57,6 +57,8 @@
 #include "nsTextAccessible.h"
 #include "nsTextFragment.h"
 
+#ifdef MOZ_ACCESSIBILITY_ATK
+
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
 NS_IMPL_ISUPPORTS1(nsAccessibleText, nsIAccessibleText)
@@ -133,7 +135,8 @@ ATK_TEXT_BOUNDARY_LINE_END
   The returned string is from the line end before/at/after the offset to the next line start.
 */
 nsresult nsAccessibleText::GetTextHelper(EGetTextType aType, nsAccessibleTextBoundary aBoundaryType, 
-                                         PRInt32 aOffset, PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & _retval)
+                                         PRInt32 aOffset, PRInt32 *aStartOffset, PRInt32 *aEndOffset,
+                                         nsISupportsArray *aDomNodeArray, nsAString & _retval)
 {
   nsCOMPtr<nsISelectionController> selCon;
   nsCOMPtr<nsISelection> domSel;
@@ -174,30 +177,52 @@ nsresult nsAccessibleText::GetTextHelper(EGetTextType aType, nsAccessibleTextBou
     return NS_ERROR_INVALID_ARG;
   }
 
+  // The start/end focus node may be not our mTextNode
+  nsCOMPtr<nsIDOMNode> startFocusNode, endFocusNode;
   switch (aBoundaryType)
   {
   case BOUNDARY_CHAR:
     if (aType == eGetAfter) { // We need the character next to current position
       selCon->CharacterMove(isStep1Forward, PR_FALSE);
+      domSel->GetFocusNode(getter_AddRefs(startFocusNode));
       domSel->GetFocusOffset(aStartOffset);
     }
     selCon->CharacterMove(isStep2Forward, PR_TRUE);
+    domSel->GetFocusNode(getter_AddRefs(endFocusNode));
     domSel->GetFocusOffset(aEndOffset);
     break;
   case BOUNDARY_WORD_START:
-    selCon->WordMove(isStep1Forward, PR_FALSE); // Move caret to previous/next word start boundary
-    domSel->GetFocusOffset(aStartOffset);
+    {
+    PRBool dontMove = PR_FALSE;
+    // If we are at the word boundary, don't move the caret in the first step
+    if (*aStartOffset == 0)
+      dontMove = PR_TRUE;
+    else {
+      PRUnichar prevChar;
+      GetCharacterAtOffset(aOffset - 1, &prevChar);
+      if (prevChar == ' ' || prevChar == '\t')
+        dontMove = PR_TRUE;
+    }
+    if (!dontMove) {
+      selCon->WordMove(isStep1Forward, PR_FALSE); // Move caret to previous/next word start boundary
+      domSel->GetFocusNode(getter_AddRefs(startFocusNode));
+      domSel->GetFocusOffset(aStartOffset);
+    }
     selCon->WordMove(isStep2Forward, PR_TRUE);  // Select previous/next word
+    domSel->GetFocusNode(getter_AddRefs(endFocusNode));
     domSel->GetFocusOffset(aEndOffset);
+    }
     break;
   case BOUNDARY_LINE_START:
-    if (aType != eGetAt) { // We need adjust the caret position to previous/next line
-      selCon->LineMove(isStep1Forward, PR_TRUE);
-      domSel->GetFocusOffset(aEndOffset);
+    if (aType != eGetAt) {
+      // XXX, don't support yet
+      return NS_ERROR_NOT_IMPLEMENTED;
     }
     selCon->IntraLineMove(PR_FALSE, PR_FALSE);  // Move caret to the line start
+    domSel->GetFocusNode(getter_AddRefs(startFocusNode));
     domSel->GetFocusOffset(aStartOffset);
     selCon->IntraLineMove(PR_TRUE, PR_TRUE);    // Move caret to the line end and select the whole line
+    domSel->GetFocusNode(getter_AddRefs(endFocusNode));
     domSel->GetFocusOffset(aEndOffset);
     break;
   case BOUNDARY_WORD_END:
@@ -215,6 +240,34 @@ nsresult nsAccessibleText::GetTextHelper(EGetTextType aType, nsAccessibleTextBou
   domSel->ToString(getter_Copies(text));
   domSel->RemoveAllRanges();
   _retval = text;
+
+  if (aDomNodeArray) {
+    PRInt32 charCount, totalCount = 0;
+    PRBool isStartFinished = PR_FALSE, isEndFinished = PR_FALSE;
+    PRUint32 index, count;
+    aDomNodeArray->Count(&count);
+    for (index = 0; index < count; index++) {
+      nsIDOMNode* domNode = (nsIDOMNode *)aDomNodeArray->ElementAt(index);
+      if (startFocusNode == domNode && !isStartFinished) {
+        *aStartOffset += totalCount;
+        isStartFinished = PR_TRUE;
+        if (isEndFinished)
+          break;
+      }
+      if (endFocusNode == domNode && !isEndFinished) {
+        *aEndOffset += totalCount;
+        isEndFinished = PR_TRUE;
+        if (isStartFinished)
+          break;
+      }
+      nsCOMPtr<nsITextContent> textContent(do_QueryInterface(domNode));
+      if (!textContent)
+        continue;
+      textContent->GetTextLength(&charCount);
+      totalCount += charCount;
+    }
+  }
+  // XXX, startFocusNode and endFocusNode may be not in the aDomNodeArray
 
   // Ensure aStartOffset <= aEndOffset
   if (*aStartOffset > *aEndOffset) {
@@ -300,19 +353,19 @@ NS_IMETHODIMP nsAccessibleText::GetText(PRInt32 aStartOffset, PRInt32 aEndOffset
 NS_IMETHODIMP nsAccessibleText::GetTextBeforeOffset(PRInt32 aOffset, nsAccessibleTextBoundary aBoundaryType, 
                                                     PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & _retval)
 {
-  return GetTextHelper(eGetBefore, aBoundaryType, aOffset, aStartOffset, aEndOffset, _retval);
+  return GetTextHelper(eGetBefore, aBoundaryType, aOffset, aStartOffset, aEndOffset, nsnull, _retval);
 }
 
 NS_IMETHODIMP nsAccessibleText::GetTextAtOffset(PRInt32 aOffset, nsAccessibleTextBoundary aBoundaryType, 
                                                 PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & _retval)
 {
-  return GetTextHelper(eGetAt, aBoundaryType, aOffset, aStartOffset, aEndOffset, _retval);
+  return GetTextHelper(eGetAt, aBoundaryType, aOffset, aStartOffset, aEndOffset, nsnull, _retval);
 }
 
 NS_IMETHODIMP nsAccessibleText::GetTextAfterOffset(PRInt32 aOffset, nsAccessibleTextBoundary aBoundaryType, 
                                                    PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & _retval)
 {
-  return GetTextHelper(eGetAfter, aBoundaryType, aOffset, aStartOffset, aEndOffset, _retval);
+  return GetTextHelper(eGetAfter, aBoundaryType, aOffset, aStartOffset, aEndOffset, nsnull, _retval);
 }
 
 /*
@@ -585,6 +638,8 @@ NS_IMETHODIMP nsAccessibleText::RemoveSelection(PRInt32 aSelectionNum)
   return domSel->RemoveRange(range);
 }
 
+#endif //MOZ_ACCESSIBILITY_ATK
+
 // ------------
 // Text Accessibles
 // ------------
@@ -592,10 +647,16 @@ NS_IMETHODIMP nsAccessibleText::RemoveSelection(PRInt32 aSelectionNum)
 nsTextAccessible::nsTextAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell):
 nsLinkableAccessible(aDOMNode, aShell)
 { 
+#ifdef MOZ_ACCESSIBILITY_ATK
   SetTextNode(aDOMNode);
+#endif
 }
 
+#ifndef MOZ_ACCESSIBILITY_ATK
+NS_IMPL_ISUPPORTS_INHERITED0(nsTextAccessible, nsLinkableAccessible)
+#else
 NS_IMPL_ISUPPORTS_INHERITED1(nsTextAccessible, nsLinkableAccessible, nsAccessibleText)
+#endif
 
 /**
   * We are text

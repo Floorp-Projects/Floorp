@@ -73,10 +73,12 @@ NS_IMETHODIMP nsHTMLHRAccessible::GetAccState(PRUint32 *aState)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLBlockAccessible, nsBlockAccessible)
+#ifdef MOZ_ACCESSIBILITY_ATK
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLBlockAccessible, nsBlockAccessible, nsIAccessibleText)
 
 nsHTMLBlockAccessible::nsHTMLBlockAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsBlockAccessible(aDomNode, aShell)
+nsBlockAccessible(aDomNode, aShell), nsAccessibleHyperText(aDomNode, aShell)
 { 
 }
 
@@ -97,6 +99,8 @@ NS_IMETHODIMP nsHTMLBlockAccessible::GetAccState(PRUint32 *aState)
   *aState &= ~STATE_FOCUSABLE;
   return NS_OK;
 }
+
+#endif //MOZ_ACCESSIBILITY_ATK
 
 nsHTMLLabelAccessible::nsHTMLLabelAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
 nsTextAccessible(aDomNode, aShell)

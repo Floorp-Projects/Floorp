@@ -53,10 +53,17 @@
 #include "nsIDOMHTMLTableSectionElem.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsITableLayout.h"
+#include "nsHyperTextAccessible.h"
 
+#ifndef MOZ_ACCESSIBILITY_ATK
 class nsHTMLTableCellAccessible : public nsBlockAccessible
+#else
+class nsHTMLTableCellAccessible : public nsBlockAccessible, public nsAccessibleHyperText
+#endif
 {
 public:
+  NS_DECL_ISUPPORTS_INHERITED
+
   nsHTMLTableCellAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccRole(PRUint32 *aResult); 
   NS_IMETHOD GetAccState(PRUint32 *aResult); 
@@ -70,10 +77,19 @@ public:
   NS_IMETHOD GetAccValue(nsAString& aResult);
 };
 
+#ifndef MOZ_ACCESSIBILITY_ATK
+class nsHTMLTableAccessible : public nsBlockAccessible
+#else
 class nsHTMLTableAccessible : public nsBlockAccessible,
                               public nsIAccessibleTable
+#endif
 {
 public:
+  NS_DECL_ISUPPORTS_INHERITED
+#ifdef MOZ_ACCESSIBILITY_ATK
+  NS_DECL_NSIACCESSIBLETABLE
+#endif
+
   nsHTMLTableAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
 
   /* nsIAccessible */
@@ -81,19 +97,17 @@ public:
   NS_IMETHOD GetAccState(PRUint32 *aResult); 
   NS_IMETHOD GetAccName(nsAString& aResult);
 
-  /* nsIAccessibleTable */
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIACCESSIBLETABLE
-
 protected:
-
+#ifdef MOZ_ACCESSIBILITY_ATK
   nsresult GetTableNode(nsIDOMNode **_retval);
   nsresult GetTableLayout(nsITableLayout **aLayoutObject);
   nsresult GetCellAt(PRInt32        aRowIndex,
                      PRInt32        aColIndex,
                      nsIDOMElement* &aCell);
+#endif
 };
 
+#ifdef MOZ_ACCESSIBILITY_ATK
 class nsHTMLTableHeadAccessible : public nsHTMLTableAccessible
 {
 public:
@@ -110,5 +124,7 @@ public:
   NS_IMETHOD GetColumnHeader(nsIAccessibleTable **aColumnHeader);
   NS_IMETHOD GetRows(PRInt32 *aRows);
 };
+
+#endif //MOZ_ACCESSIBILITY_ATK
 
 #endif  

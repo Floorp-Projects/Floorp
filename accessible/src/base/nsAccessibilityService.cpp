@@ -436,6 +436,10 @@ nsAccessibilityService::CreateHTMLAreaAccessible(nsIWeakReference *aShell, nsIDO
 NS_IMETHODIMP
 nsAccessibilityService::CreateHTMLBlockAccessible(nsISupports *aFrame, nsIAccessible **_retval)
 {
+#ifndef MOZ_ACCESSIBILITY_ATK
+  *_retval = nsnull;
+  return NS_ERROR_FAILURE;
+#else
   nsIFrame* frame;
   nsCOMPtr<nsIDOMNode> node;
   nsCOMPtr<nsIWeakReference> weakShell;
@@ -449,6 +453,7 @@ nsAccessibilityService::CreateHTMLBlockAccessible(nsISupports *aFrame, nsIAccess
 
   NS_ADDREF(*_retval);
   return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP
@@ -743,6 +748,10 @@ nsAccessibilityService::CreateHTMLTableCaptionAccessible(nsIDOMNode *aDOMNode, n
 NS_IMETHODIMP
 nsAccessibilityService::CreateHTMLTableHeadAccessible(nsIDOMNode *aDOMNode, nsIAccessible **_retval)
 {
+#ifndef MOZ_ACCESSIBILITY_ATK
+  *_retval = nsnull;
+  return NS_ERROR_FAILURE;
+#else
   NS_ENSURE_ARG_POINTER(aDOMNode);
 
   nsresult rv = NS_OK;
@@ -760,6 +769,7 @@ nsAccessibilityService::CreateHTMLTableHeadAccessible(nsIDOMNode *aDOMNode, nsIA
   NS_IF_ADDREF(*_retval);
 
   return rv;
+#endif
 }
 
 NS_IMETHODIMP
