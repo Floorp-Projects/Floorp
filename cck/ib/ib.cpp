@@ -37,7 +37,7 @@ CString Setup0Short = "&Typical";
 CString Setup1Short = "C&ustom";
 CString quotes = "\"";
 CString spaces = " ";
-
+BOOL prefDoesntExist = TRUE;
 COMPONENT Components[100];
 int		numComponents;
 int		componentOrder;
@@ -163,6 +163,7 @@ void ModifyPref(char *buffer, CString entity, CString newvalue)
 	buf.Insert(i, newvalue);
 
 	strcpy(buffer, (char *)(LPCTSTR) buf);
+	prefDoesntExist = FALSE;
 }
 
 int ModifyProperties(CString xpifile, CString entity, CString newvalue)
@@ -202,6 +203,43 @@ int ModifyProperties(CString xpifile, CString entity, CString newvalue)
 	rename(tempFile, xpifile);
 	return rv;
 }
+void AddPref(CString xpifile, CString entity, CString newvalue)
+{
+
+	int rv = TRUE;
+	CString prefFile = xpifile;
+	CString tempFile = xpifile + ".temp";
+	char properties[400];
+
+	ofstream tf(tempFile);
+	if(!tf) 
+	{
+		rv = FALSE;
+		cout <<"Cannot open: "<<tempFile<<"\n";
+		return;
+	}
+
+	tf<< "pref("<< entity <<", \""<< newvalue <<"\");\n";
+
+	ifstream pf(prefFile);
+	if (!pf)
+	{
+		rv = FALSE;
+		cout <<"Cannot open: "<<prefFile<<"\n";
+		return;
+	}
+	
+	while (!pf.eof()) 
+	{
+		pf.getline(properties,400);
+		tf <<properties<<"\n";
+	}
+	pf.close();
+	tf.close();
+	remove(xpifile);
+	rename(tempFile, xpifile);
+	return;
+}
 
 int ModifyJS(CString xpifile, CString entity, CString newvalue)
 {
@@ -240,9 +278,10 @@ int ModifyJS(CString xpifile, CString entity, CString newvalue)
 		fclose(srcf);
 		fclose(dstf);
 	}
-
 	remove(xpifile);
 	rename(newfile, xpifile);
+	if (prefDoesntExist)
+		AddPref(xpifile,entity,newvalue);
 
 	return TRUE;
 }
@@ -709,6 +748,13 @@ int StartIB(CString parms, WIDGET *curWidget)
 	CString ftpLocation = GetGlobal("FTPLocation");
 //checking to see if the AnimatedLogoURL has a http:// appended in front of it 
 //if not then we have to append it;
+
+//Check to see if the User Agent string exists and if so then append -CCK to it ;
+	CString userAgent = GetGlobal("OrganizationName");
+	CString tempAgent ="CCK -";
+	if (userAgent)
+		tempAgent += userAgent;
+	SetGlobal("OrganizationName",tempAgent);
 
 // check to see if the bmp for rshell background is bigger than 302KB;
 	HANDLE hFile;
