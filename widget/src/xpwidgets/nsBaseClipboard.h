@@ -48,6 +48,7 @@ public:
   NS_IMETHOD EmptyClipboard();
   NS_IMETHOD ForceDataToClipboard();
 
+  NS_IMETHOD HasDataMatchingFlavors ( nsISupportsArray* aFlavorList, PRBool * outResult ) ;
 
 protected:
 

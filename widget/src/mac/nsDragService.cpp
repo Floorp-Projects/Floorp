@@ -35,6 +35,7 @@
 #include "nsVoidArray.h"
 #include "nsISupportsPrimitives.h"
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
 
 
 DragSendDataUPP nsDragService::sDragSendDataUPP = NewDragSendDataProc(DragSendDataProc);
@@ -209,11 +210,10 @@ nsDragService :: RegisterDragItemsAndFlavors ( nsISupportsArray * inArray )
           flavorList->GetElementAt ( flavorIndex, getter_AddRefs(genericWrapper) );
           nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericWrapper) );
 	      if ( currentFlavor ) {
-	        char* flavorStr = nsnull;
-	        currentFlavor->ToString ( &flavorStr );
+	        nsXPIDLCString flavorStr;
+	        currentFlavor->ToString ( getter_Copies(flavorStr) );
 	        FlavorType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr);
 	        ::AddDragItemFlavor ( mDragRef, itemIndex, macOSFlavor, NULL, 0, flags );
-	        delete [] flavorStr;
 	      }
           
         } // foreach flavor in item              
@@ -223,11 +223,11 @@ nsDragService :: RegisterDragItemsAndFlavors ( nsISupportsArray * inArray )
     // put the mime mapping data for this item in a special flavor. Unlike the other data,
     // we have to put the data in now (rather than defer it) or the mappings will go out 
     // of scope by the time they are asked for.
-    const char* mapping = theMapper.ExportMapping(nsnull);
+    char* mapping = theMapper.ExportMapping(nsnull);
     if ( strlen(mapping) )
       ::AddDragItemFlavor ( mDragRef, itemIndex, nsMimeMapperMac::MappingFlavor(), 
                                mapping, strlen(mapping), flags );
-	delete [] mapping;
+	nsCRT::free ( mapping );
     
   } // foreach drag item
   
@@ -266,7 +266,7 @@ nsDragService :: GetData ( nsITransferable * aTransferable, PRUint32 aItemIndex 
   // create a mime mapper to help us out based on data in a special flavor for this item
   char* mappings = LookupMimeMappingsForItem(mDragRef, itemRef);
   nsMimeMapperMac theMapper ( mappings );
-  delete [] mappings;
+  nsCRT::free ( mappings );
   
   // Now walk down the list of flavors. When we find one that is actually present,
   // copy out the data into the transferable in that format. SetTransferData()
@@ -279,10 +279,10 @@ nsDragService :: GetData ( nsITransferable * aTransferable, PRUint32 aItemIndex 
     nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericWrapper) );
     if ( currentFlavor ) {
       // find MacOS flavor
-      char* flavorStr;
-      currentFlavor->ToString ( &flavorStr );
+      nsXPIDLCString flavorStr;
+      currentFlavor->ToString ( getter_Copies(flavorStr) );
       FlavorType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr);
-printf("looking for data in type %s, mac flavor %ld\n", flavorStr, macOSFlavor);
+printf("looking for data in type %s, mac flavor %ld\n", NS_STATIC_CAST(const char*,flavorStr), macOSFlavor);
 	    
       // check if it is present in the current drag item.
       FlavorFlags unused;
@@ -296,7 +296,7 @@ printf("flavor found\n");
         OSErr err = ::GetFlavorDataSize ( mDragRef, itemRef, macOSFlavor, &dataSize );
 printf("flavor data size is %ld\n", dataSize);
         if ( !err && dataSize > 0 ) {
-          char* dataBuff = new char[dataSize];
+          char* dataBuff = NS_REINTERPRET_CAST(char*, nsAllocator::Alloc(dataSize));
           if ( !dataBuff )
             return NS_ERROR_OUT_OF_MEMORY;
 	          
@@ -316,7 +316,7 @@ printf("flavor data size is %ld\n", dataSize);
             if ( errCode != NS_OK ) printf("nsDragService:: Error setting data into transferable\n");
           #endif
           
-          delete [] dataBuff;
+          nsAllocator::Free ( dataBuff );
         } 
         else {
           #ifdef NS_DEBUG
@@ -330,7 +330,6 @@ printf("flavor data size is %ld\n", dataSize);
 	        
       } // if a flavor found
         
-      delete [] flavorStr;
     }
   } // foreach flavor
   
@@ -445,7 +444,7 @@ nsDragService :: DragSendDataProc ( FlavorType inFlavor, void* inRefCon, ItemRef
         retVal = ::SetDragItemFlavorData ( inDragRef, inItemRef, inFlavor, data, dataSize, 0 );
         NS_ASSERTION ( retVal == noErr, "SDIFD failed in DragSendDataProc" );
     }
-    delete [] data;
+    nsAllocator::Free ( data );
   } // if valid refcon
   
   return retVal;
@@ -474,22 +473,20 @@ nsDragService :: GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference
   inDragItems->GetElementAt ( inItemIndex, getter_AddRefs(genericItem) );
   nsCOMPtr<nsITransferable> item ( do_QueryInterface(genericItem) );
   if ( item ) {
-    nsString mimeFlavor;
+    nsCAutoString mimeFlavor;
 
     // create a mime mapper to help us out based on data in a special flavor for this item.
     char* mappings = LookupMimeMappingsForItem(inDragRef, inItemIndex) ;
     nsMimeMapperMac theMapper ( mappings );
     theMapper.MapMacOSTypeToMimeType ( inFlavor, mimeFlavor );
-    delete [] mappings;
+    nsCRT::free ( mappings );
     
     *outDataSize = 0;
-    char* mimeStr = mimeFlavor.ToNewCString();
     nsCOMPtr<nsISupports> data;
-    if ( NS_SUCCEEDED(item->GetTransferData(mimeStr, getter_AddRefs(data), outDataSize)) )
-      CreateDataFromPrimitive ( mimeStr, data, outData, *outDataSize );
+    if ( NS_SUCCEEDED(item->GetTransferData(mimeFlavor.GetBuffer(), getter_AddRefs(data), outDataSize)) )
+      CreateDataFromPrimitive ( mimeFlavor.GetBuffer(), data, outData, *outDataSize );
     else
       retVal = cantGetFlavorErr;
-    delete [] mimeStr;     
   } // if valid item
 
   return retVal;
@@ -513,7 +510,7 @@ nsDragService :: LookupMimeMappingsForItem ( DragReference inDragRef, ItemRefere
   Size mapperSize = 0;
   OSErr err = ::GetFlavorDataSize ( inDragRef, itemRef, nsMimeMapperMac::MappingFlavor(), &mapperSize );
   if ( !err && mapperSize > 0 ) {
-    mapperData = new char[mapperSize + 1];
+    mapperData = NS_REINTERPRET_CAST(char*, nsAllocator::Alloc(mapperSize + 1));
     if ( !mapperData )
       return nsnull;
 	          

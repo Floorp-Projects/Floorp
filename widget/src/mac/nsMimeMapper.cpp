@@ -59,7 +59,7 @@ nsMimeMapperMac :: ~nsMimeMapperMac ( )
 // be exported along with the data.
 //
 ResType
-nsMimeMapperMac :: MapMimeTypeToMacOSType ( const nsString & aMimeStr )
+nsMimeMapperMac :: MapMimeTypeToMacOSType ( const char* aMimeStr )
 {
   ResType format = 0;
 
@@ -77,7 +77,7 @@ nsMimeMapperMac :: MapMimeTypeToMacOSType ( const nsString & aMimeStr )
   // pick them up by special casing MapMacsOSTypeToMimeType(). This means that
   // the low two bytes of the generated flavor can be used as an index into the list.
   if ( !format ) {
-    if (aMimeStr.Equals(kTextMime) )
+    if ( PL_strcmp(aMimeStr, kTextMime) == 0 )
       format = 'TEXT';
     else {
       // create the flavor based on the unique id in the lower two bytes and 'MZ' in the
@@ -105,7 +105,7 @@ nsMimeMapperMac :: MapMimeTypeToMacOSType ( const nsString & aMimeStr )
 // we probably won't get a match in that case.
 //
 void
-nsMimeMapperMac :: MapMacOSTypeToMimeType ( ResType inMacType, nsString & outMimeStr )
+nsMimeMapperMac :: MapMacOSTypeToMimeType ( ResType inMacType, nsCAutoString & outMimeStr )
 {
   switch ( inMacType ) {
   

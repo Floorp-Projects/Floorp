@@ -24,7 +24,6 @@
 //
 // Remaining Work:
 // * only convert data to clipboard on an app switch.
-// * better mime type --> OS type conversion needed. Only a few formats supported now.
 //
 
 #include "nsCOMPtr.h"
@@ -38,6 +37,7 @@
 
 #include "nsIComponentManager.h"
 #include "nsISupportsPrimitives.h"
+#include "nsXPIDLString.h"
 
 #include <Scrap.h>
 
@@ -94,13 +94,13 @@ nsClipboard :: SetNativeClipboardData()
   // is required or not.
   PRUint32 cnt;
   flavorList->Count(&cnt);
-  for ( int i = 0; i < cnt; ++i ) {
+  for ( PRUint32 i = 0; i < cnt; ++i ) {
     nsCOMPtr<nsISupports> genericFlavor;
     flavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
     nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
     if ( currentFlavor ) {
-      char* flavorStr;
-      currentFlavor->ToString(&flavorStr);
+      nsXPIDLCString flavorStr;
+      currentFlavor->ToString( getter_Copies(flavorStr) );
       
       // find MacOS flavor
       ResType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr);
@@ -121,8 +121,7 @@ nsClipboard :: SetNativeClipboardData()
       if ( numBytes != dataSize )
         errCode = NS_ERROR_FAILURE;
         
-      delete [] data;
-      delete [] flavorStr;
+      nsAllocator::Free ( data );
     }
   } // foreach flavor in transferable
 
@@ -133,7 +132,7 @@ nsClipboard :: SetNativeClipboardData()
   long numBytes = ::PutScrap ( mappingLen, nsMimeMapperMac::MappingFlavor(), mapping );
   if ( numBytes != mappingLen )
     errCode = NS_ERROR_FAILURE;
-  delete [] mapping;
+  nsCRT::free ( NS_CONST_CAST(char*, mapping) );
   
   return errCode;
   
@@ -166,7 +165,7 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
   char* mimeMapperData = nsnull;
   GetDataOffClipboard ( nsMimeMapperMac::MappingFlavor(), &mimeMapperData, nsnull );
   nsMimeMapperMac theMapper ( mimeMapperData );
-  delete [] mimeMapperData;
+  nsCRT::free ( mimeMapperData );
  
   // 
   // Now walk down the list of flavors. When we find one that is actually on the
@@ -174,13 +173,13 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
   // implicitly handles conversions.
   PRUint32 cnt;
   flavorList->Count(&cnt);
-  for ( int i = 0; i < cnt; ++i ) {
+  for ( PRUint32 i = 0; i < cnt; ++i ) {
     nsCOMPtr<nsISupports> genericFlavor;
     flavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
     nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
     if ( currentFlavor ) {
-      char* flavorStr;
-      currentFlavor->ToString ( &flavorStr );
+      nsXPIDLCString flavorStr;
+      currentFlavor->ToString ( getter_Copies(flavorStr) );
       
       // find MacOS flavor
       ResType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr);
@@ -196,12 +195,11 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
         #ifdef NS_DEBUG
           if ( errCode != NS_OK ) printf("nsClipboard:: Error setting data into transferable\n");
         #endif
-
+        nsCRT::free ( clipboardData );
+        
         // we found one, get out of this loop!
-        delete [] flavorStr;
         break;        
       } // if flavor found on clipboard
-      delete [] flavorStr;
     }
   } // foreach flavor
   
@@ -223,15 +221,12 @@ nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, char** outData, long* 
   long offsetUnused = 0;
   OSErr clipResult = ::GetScrap(NULL, inMacFlavor, &offsetUnused);
   if ( clipResult > 0 ) {
-    // we have it, get it off the clipboard. Put it into memory that we allocate
-    // with new[] so that the tranferable can own it (and then later use delete[]
-    // on it).
     Handle dataHand = ::NewHandle(0);
     if ( !dataHand )
       return NS_ERROR_OUT_OF_MEMORY;
     long dataSize = ::GetScrap ( dataHand, inMacFlavor, &offsetUnused );
     if ( dataSize > 0 ) {
-      char* dataBuff = new char[dataSize];
+      char* dataBuff = NS_REINTERPRET_CAST(char*, nsAllocator::Alloc(dataSize));
       if ( !dataBuff )
         return NS_ERROR_OUT_OF_MEMORY;
       ::HLock(dataHand);
