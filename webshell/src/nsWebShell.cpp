@@ -1822,6 +1822,7 @@ static PRBool EqualBaseURLs(nsIURI* url1, nsIURI* url2)
   nsXPIDLCString host2;
   nsXPIDLCString file1;
   nsXPIDLCString file2;
+  char *  anchor1 = nsnull, * anchor2=nsnull;
   PRBool rv = PR_FALSE;
   
   if (url1 && url2) {
@@ -1841,11 +1842,27 @@ static PRBool EqualBaseURLs(nsIURI* url1, nsIURI* url2)
       url1->GetFile(getter_Shares(file1));
       url2->GetFile(getter_Shares(file2));
 #endif
+
+      anchor1 = PL_strrchr(file1, '#');
+	  if (anchor1) {
+          char * tmp = PL_strstr(file1, file2);
+	    if (tmp && tmp == file1) {
+				  return PR_TRUE;
+		}
+	  }
+	  anchor2 = PL_strrchr(file2, '#');
+	  if (anchor2) {
+          char * tmp = PL_strstr(file2, file1);
+	    if (tmp && tmp == file2) {			 
+				  return PR_TRUE;
+		}
+	  }
+	
       if (0 == PL_strcmp(file1, file2)) {
-        rv = PR_TRUE;
-      }
-    }
-  }
+          rv = PR_TRUE;
+	  }
+    }  // strcmp(host1, host2)
+  }   // url1 && url2
   return rv;
 }
 
@@ -1866,7 +1883,9 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
   // If it's a normal reload that uses the cache, look at the destination anchor
   // and see if it's an element within the current document
 #ifdef NECKO
-  if ((aType == nsIChannel::LOAD_NORMAL) && (nsnull != mContentViewer) &&
+	// We don't have a reload loadtype yet in necko. So, check for just history
+	// loadtype
+	if ((aType == LOAD_HISTORY || aType == nsIChannel::LOAD_NORMAL) && (nsnull != mContentViewer) &&
     (nsnull == aPostDataStream))
 #else
   if ((aType == nsURLReload || aType == nsURLReloadFromHistory) && 
@@ -1923,10 +1942,20 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
           if (nsnull != ref) {
             // Go to the anchor in the current document                    
             rv = presShell->GoToAnchor(nsAutoString(ref));
+
+	        // Pass notifications to BrowserAppCore just to be consistent with
+			// regular page loads thro' necko
+			nsCOMPtr<nsIChannel> dummyChannel;
+            rv = NS_OpenURI(getter_AddRefs(dummyChannel), url);
+            if (NS_FAILED(rv)) return rv;  
+	
+			mProcessedEndDocumentLoad = PR_FALSE;
+			rv = OnEndDocumentLoad(mDocLoader, dummyChannel, 0, this);
+
             return rv;
           }
 #ifdef NECKO
-          else if (PR_FALSE)    // XXX Need to add support for nsURLReloadFromHistory equivalent
+          else if (aType == LOAD_HISTORY)
 #else
           else if (aType == nsURLReloadFromHistory)
 #endif
@@ -1935,10 +1964,24 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
             nsCOMPtr<nsIViewManager> viewMgr;            
             rv = presShell->GetViewManager(getter_AddRefs(viewMgr));
             if (NS_SUCCEEDED(rv) && viewMgr) {
+
+
               nsIScrollableView* view;
               rv = viewMgr->GetRootScrollableView(&view);
               if (NS_SUCCEEDED(rv) && view)           
                 rv = view->ScrollTo(0, 0, NS_VMREFRESH_IMMEDIATE);
+
+			  // Pass notifications to BrowserAppCore just to be consistent with 
+		      // regular necko loads.
+			  nsCOMPtr<nsIChannel> dummyChannel;
+              rv = NS_OpenURI(getter_AddRefs(dummyChannel), url);
+              if (NS_FAILED(rv)) return rv;  		   
+			  mProcessedEndDocumentLoad = PR_FALSE;
+		
+			  rv = OnEndDocumentLoad(mDocLoader, dummyChannel, 0, this);
+
+
+
             }
             return rv;
           }
@@ -1990,6 +2033,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     const PRUint32 aLocalIP)
 {
   nsresult rv;
+
   nsString2 urlStr = aURLSpec;
 
 #ifdef NECKO
@@ -2043,6 +2087,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
     }
 
   }
+
 
   char *scheme = nsnull, *CUriSpec = nsnull;
 
@@ -2751,6 +2796,7 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
 {
   nsAutoString target(aTargetSpec);
 
+
   switch(aVerb) {
     case eLinkVerb_New:
       target.SetString("_blank");
@@ -3001,6 +3047,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
   if (NS_FAILED(rv)) return rv;
 #endif
 
+
   if (!mProcessedEndDocumentLoad) {
     mProcessedEndDocumentLoad = PR_TRUE;    
 
@@ -3036,7 +3083,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
          if (nsnull != mContainer) {
             rv = mContainer->EndLoadURL(this, urlString.GetUnicode(), 0);
          }  
-#ifdef NECKO
+#ifdef NECKO			
          nsCRT::free(spec);
 #endif
        }
