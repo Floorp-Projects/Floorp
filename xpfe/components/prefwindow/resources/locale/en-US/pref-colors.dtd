@@ -4,7 +4,7 @@
 <!ENTITY  lHeader                         "Colors">
 <!ENTITY  color                           "Text and Background">
 <!ENTITY  textColor.label                 "Text:">
-<!ENTITY  textColor.accesskey             "t">
+<!ENTITY  textColor.accesskey             "T">
 <!ENTITY  backgroundColor.label           "Background:">
 <!ENTITY  backgroundColor.accesskey       "b">
 <!ENTITY  useSystemColors.label           "Use system colors">
