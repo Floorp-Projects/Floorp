@@ -50,10 +50,12 @@ GRE_MODULE	= 1
 REQUIRES        = pref \
 		  string \
 		  xpcom \
+		  embedcomponents \
 		  $(NULL)
 
 CPPSRCS =   \
 	nsSystemPrefService.cpp       \
+	nsSystemPrefFactory.cpp \
 	$(NULL)
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libsystem-pref_s.a
@@ -76,3 +78,8 @@ include $(topsrcdir)/config/rules.mk
 
 CFLAGS		+= $(MOZ_GTK2_CFLAGS)
 CXXFLAGS	+= $(MOZ_GTK2_CFLAGS)
+
+LOCAL_INCLUDES = -I$(srcdir)/..
+
+export::
+	$(INSTALL) $(srcdir)/../nsSystemPrefFactory.cpp .
