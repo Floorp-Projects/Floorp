@@ -549,18 +549,6 @@ NS_IMETHODIMP nsURILoader::GetTarget(nsIChannel * aChannel, const char * aWindow
   else
   {
     windowCtxtAsTreeItem->FindItemWithName(name.GetUnicode(), nsnull, getter_AddRefs(treeItem));
-    // this is a bit hokey.....if we retargted this content to a different window
-    // during GetTarget, then tweak the load attributes on the channel to set the
-    // LOAD_RETARGETED_DOCUMENT_URI flag...
-    nsCOMPtr<nsISupports> retargetedWindowCtxt = do_QueryInterface(treeItem);
-    if (retargetedWindowCtxt && (aWindowContext != retargetedWindowCtxt.get()))
-    {
-       // we must be retargeting...so set an appropriate flag on the channel
-      nsLoadFlags loadAttribs = 0;
-      aChannel->GetLoadAttributes(&loadAttribs);
-      loadAttribs |= nsIChannel::LOAD_RETARGETED_DOCUMENT_URI;
-      aChannel->SetLoadAttributes(loadAttribs);
-    }
   }
 
   nsCOMPtr<nsISupports> treeItemCtxt (do_QueryInterface(treeItem));
