@@ -173,7 +173,7 @@ void Context::doCall(JSFunction *target, Instruction *pc)
 */
 JSValue multiply_number(const JSValues& argv)
 {
-    return argv[0].f64 * argv[1].f64;
+    return JSValue (argv[0].f64 * argv[1].f64);
 }
 
 JSValue multiply_object(const JSValues& argv)
@@ -735,6 +735,9 @@ using JSString throughout.
                                 dest = JSValue(lv.f64 > rv.f64); break;
                             case COMPARE_GE:
                                 dest = JSValue(lv.f64 >= rv.f64); break;
+                            default:
+                                assert(0); /* quiet linux warnings */
+                                
                             }
 //                            float64 diff = lv.f64 - rv.f64;
 //                            dest = JSValue( (int32) (diff == 0.0 ? 0 : (diff > 0.0 ? 1 : -1)));
