@@ -924,13 +924,16 @@ button:focus:-moz-focus-inner {
 
 input[type=text] {
   box-sizing: border-box;
-  font-family:monospace;
-  font-size: 10;
+  font-family:-moz-fixed;
   border: 2px inset rgb(204, 204, 204); /* for Nav Quirks */
   padding: 0px;                         /* for Nav Quirks */
   background-color: white;
   color: black;
   padding: 0px;
+  margin-top:    1px;
+  margin-bottom: 1px;
+  margin-left:   0px;
+  margin-rigth:  0px;
 } 
 
 input[type=text][disabled] {
@@ -1281,16 +1284,16 @@ td textarea {
 
 textarea {
   box-sizing: border-box;
-  font-family:monospace;
-  font-size: 10;
+  font-family:-moz-fixed;
   vertical-align: bottom;
   border: 2px inset #c0c0c0;
   background-color:white;
   color:black;
-  padding-left:   1px;
-  padding-top:    1px;
-  padding-right:  1px;
-  padding-bottom: 2px;
+  padding:   0px;
+  margin-top:    1px;
+  margin-bottom: 1px;
+  margin-left:   0px;
+  margin-rigth:  0px;
 }
 
 textarea[disabled] {
