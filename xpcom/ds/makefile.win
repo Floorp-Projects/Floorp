@@ -56,6 +56,7 @@ EXPORTS =                          \
 	nsVector.h                 \
 	nsVoidArray.h              \
 	nsVoidBTree.h              \
+	nsValueArray.h             \
 	pldhash.h                  \
 	plvector.h                 \
 	$(NULL)			
@@ -120,6 +121,7 @@ CPP_OBJS =                                        \
 	.\$(OBJDIR)\nsVariant.obj                 \
 	.\$(OBJDIR)\nsVoidArray.obj               \
 	.\$(OBJDIR)\nsVoidBTree.obj               \
+	.\$(OBJDIR)\nsValueArray.obj              \
 	.\$(OBJDIR)\pldhash.obj                   \
 	.\$(OBJDIR)\plvector.obj                  \
 	$(NULL)

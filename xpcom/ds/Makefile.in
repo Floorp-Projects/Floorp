@@ -70,6 +70,7 @@ CPPSRCS		= \
 		nsVoidBTree.cpp \
 		nsTextFormatter.cpp \
 		nsTimelineService.cpp \
+		nsValueArray.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -102,6 +103,7 @@ EXPORTS		= \
 		pldhash.h \
 		plvector.h \
 		nsTextFormatter.h \
+		nsValueArray.h \
 		$(NULL)			
 
 XPIDLSRCS	= \

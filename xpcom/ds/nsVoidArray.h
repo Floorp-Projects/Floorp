@@ -333,17 +333,23 @@ private:
 
 // XXX we're really re-implementing the whole nsVoidArray interface here -
 // some form of abstract class would be useful
+
+// I disagree on the abstraction here.  If the point of this class is to be
+// as small as possible, and no one will ever derive from it, as I found
+// today, there should not be any virtualness to it to avoid the vtable
+// ptr overhead.
+
 class NS_COM nsSmallVoidArray
 {
 public:
   nsSmallVoidArray();
-  virtual ~nsSmallVoidArray();
+  ~nsSmallVoidArray();
 
   nsSmallVoidArray& operator=(nsSmallVoidArray& other);
   void* operator[](PRInt32 aIndex) const { return ElementAt(aIndex); }
 
 #ifdef DEBUG
-  virtual void  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+  void  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
   PRInt32 GetArraySize() const;
 

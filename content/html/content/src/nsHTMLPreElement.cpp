@@ -46,7 +46,7 @@
 #include "nsIPresContext.h"
 #include "nsIHTMLAttributes.h"
 #include "nsRuleNode.h"
-#include "nsICSSDeclaration.h"
+#include "nsCSSDeclaration.h"
 
 // XXX wrap, variable, cols, tabstop
 

@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsDOMCSSAttrDeclaration.h"
-#include "nsICSSDeclaration.h"
+#include "nsCSSDeclaration.h"
 #include "nsIDocument.h"
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLContent.h"
@@ -47,7 +47,6 @@
 #include "nsINodeInfo.h"
 #include "nsICSSLoader.h"
 #include "nsICSSParser.h"
-#include "nsICSSDeclaration.h"
 #include "nsIURI.h"
 #include "nsINameSpaceManager.h"
 #include "nsIHTMLContentContainer.h"
@@ -72,8 +71,8 @@ NS_IMETHODIMP
 nsDOMCSSAttributeDeclaration::RemoveProperty(const nsAReadableString& aPropertyName,
                                              nsAWritableString& aReturn)
 {
-  nsCOMPtr<nsICSSDeclaration> decl;
-  nsresult rv = GetCSSDeclaration(getter_AddRefs(decl), PR_TRUE);
+  nsCSSDeclaration* decl;
+  nsresult rv = GetCSSDeclaration(&decl, PR_TRUE);
 
   if (NS_SUCCEEDED(rv) && decl && mContent) {
     nsCOMPtr<nsIDocument> doc;
@@ -86,8 +85,7 @@ nsDOMCSSAttributeDeclaration::RemoveProperty(const nsAReadableString& aPropertyN
                                nsHTMLAtoms::style);
     }
 
-    PRInt32 hint;
-    decl->GetStyleImpact(&hint);
+    PRInt32 hint = decl->GetStyleImpact();
 
     nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
     nsCSSValue val;
@@ -122,7 +120,7 @@ nsDOMCSSAttributeDeclaration::DropReference()
 }
 
 nsresult
-nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsICSSDeclaration **aDecl,
+nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsCSSDeclaration **aDecl,
                                                 PRBool aAllocate)
 {
   nsHTMLValue val;
@@ -156,7 +154,8 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsICSSDeclaration **aDecl,
           NS_RELEASE(cssRule);
         }
         else {
-          NS_RELEASE(*aDecl);
+          (*aDecl)->RuleAbort();
+          *aDecl = nsnull;
         }
       }
     }
@@ -166,7 +165,7 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsICSSDeclaration **aDecl,
 }
 
 nsresult
-nsDOMCSSAttributeDeclaration::SetCSSDeclaration(nsICSSDeclaration *aDecl)
+nsDOMCSSAttributeDeclaration::SetCSSDeclaration(nsCSSDeclaration *aDecl)
 {
   nsHTMLValue val;
   nsIStyleRule* rule;
@@ -245,8 +244,8 @@ nsresult
 nsDOMCSSAttributeDeclaration::ParsePropertyValue(const nsAReadableString& aPropName,
                                                  const nsAReadableString& aPropValue)
 {
-  nsCOMPtr<nsICSSDeclaration> decl;
-  nsresult result = GetCSSDeclaration(getter_AddRefs(decl), PR_TRUE);
+  nsCSSDeclaration* decl;
+  nsresult result = GetCSSDeclaration(&decl, PR_TRUE);
 
   if (!decl) {
     return result;
@@ -295,8 +294,8 @@ nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAReadableString& aDecl,
                                                PRBool aParseOnlyOneDecl,
                                                PRBool aClearOldDecl)
 {
-  nsCOMPtr<nsICSSDeclaration> decl;
-  nsresult result = GetCSSDeclaration(getter_AddRefs(decl), PR_TRUE);
+  nsCSSDeclaration* decl;
+  nsresult result = GetCSSDeclaration(&decl, PR_TRUE);
 
   if (decl) {
     nsCOMPtr<nsICSSLoader> cssLoader;
@@ -321,15 +320,14 @@ nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAReadableString& aDecl,
         doc->AttributeWillChange(mContent, kNameSpaceID_None,
                                  nsHTMLAtoms::style);
       }
-      nsCOMPtr<nsICSSDeclaration> declClone;
-      decl->Clone(*getter_AddRefs(declClone));
+      nsCSSDeclaration* declClone = decl->Clone();
 
       if (aClearOldDecl) {
         // This should be done with decl->Clear() once such a method exists.
         nsAutoString propName;
         PRUint32 count, i;
 
-        decl->Count(&count);
+        count = decl->Count();
 
         for (i = 0; i < count; i++) {
           decl->GetNthProperty(0, propName);

@@ -46,7 +46,7 @@
 #include "nsIFrame.h"
 #include "nsFixedSizeAllocator.h"
 #include "nsIPresContext.h"
-#include "nsICSSDeclaration.h"
+#include "nsCSSDeclaration.h"
 #include "nsILanguageAtomService.h"
 
 class nsIStyleContext;

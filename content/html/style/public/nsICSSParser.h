@@ -44,7 +44,7 @@ class nsIStyleRule;
 class nsICSSStyleSheet;
 class nsIUnicharInputStream;
 class nsIURI;
-class nsICSSDeclaration;
+class nsCSSDeclaration;
 class nsICSSLoader;
 class nsICSSRule;
 class nsISupportsArray;
@@ -91,7 +91,7 @@ public:
 
   NS_IMETHOD ParseAndAppendDeclaration(const nsAReadableString& aBuffer,
                                        nsIURI*                  aBaseURL,
-                                       nsICSSDeclaration*       aDeclaration,
+                                       nsCSSDeclaration*        aDeclaration,
                                        PRBool                   aParseOnlyOneDecl,
                                        PRInt32*                 aHint) = 0;
 
@@ -102,7 +102,7 @@ public:
   NS_IMETHOD ParseProperty(const nsAReadableString& aPropName,
                            const nsAReadableString& aPropValue,
                            nsIURI* aBaseURL,
-                           nsICSSDeclaration* aDeclaration,
+                           nsCSSDeclaration* aDeclaration,
                            PRInt32* aHint) = 0;
   
   // Charset management method:

@@ -35,8 +35,8 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsICSSDeclaration_h___
-#define nsICSSDeclaration_h___
+#ifndef nsCSSDeclaration_h___
+#define nsCSSDeclaration_h___
 
 #include "nsISupports.h"
 #include "nsColor.h"
@@ -45,12 +45,14 @@
 #include "nsCoord.h"
 #include "nsCSSValue.h"
 #include "nsCSSProps.h"
+#include "nsVoidArray.h"
+#include "nsValueArray.h"
 
 class nsISizeOfHandler;
+class nsStringArray;
 
 struct nsCSSStruct {
-  virtual const nsID& GetID(void) = 0;
-  virtual ~nsCSSStruct();
+  // EMPTY on purpose.  ABSTRACT with no virtuals (typedef void nsCSSStruct?)
 };
 
 
@@ -118,16 +120,10 @@ struct nsCSSStruct {
 { 0x9a41a036, 0x27b, 0x45ef, { 0x89, 0xc9, 0x6e, 0x32, 0x79, 0x78, 0x39, 0xe7 } }
 #endif
 
-// IID for the nsICSSDeclaration interface {7b36b9ac-b48d-11d1-9ca5-0060088f9ff7}
-#define NS_ICSS_DECLARATION_IID   \
-{0x7b36b9ac, 0xb48d, 0x11d1, {0x9c, 0xa5, 0x00, 0x60, 0x08, 0x8f, 0x9f, 0xf7}}
-
-
-
 struct nsCSSFont : public nsCSSStruct {
   nsCSSFont(void);
   nsCSSFont(const nsCSSFont& aCopy);
-  virtual ~nsCSSFont(void);
+  ~nsCSSFont(void);
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -152,7 +148,7 @@ struct nsCSSValueList {
 struct nsCSSColor : public nsCSSStruct  {
   nsCSSColor(void);
   nsCSSColor(const nsCSSColor& aCopy);
-  virtual ~nsCSSColor(void);
+  ~nsCSSColor(void);
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -180,7 +176,7 @@ struct nsCSSShadow {
 struct nsCSSText : public nsCSSStruct  {
   nsCSSText(void);
   nsCSSText(const nsCSSText& aCopy);
-  virtual ~nsCSSText(void);
+  ~nsCSSText(void);
 
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -214,7 +210,7 @@ struct nsCSSRect {
 struct nsCSSDisplay : public nsCSSStruct  {
   nsCSSDisplay(void);
   nsCSSDisplay(const nsCSSDisplay& aCopy);
-  virtual ~nsCSSDisplay(void);
+  ~nsCSSDisplay(void);
 
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -239,7 +235,7 @@ struct nsCSSDisplay : public nsCSSStruct  {
 struct nsCSSMargin : public nsCSSStruct  {
   nsCSSMargin(void);
   nsCSSMargin(const nsCSSMargin& aCopy);
-  virtual ~nsCSSMargin(void);
+  ~nsCSSMargin(void);
 
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -263,7 +259,7 @@ struct nsCSSMargin : public nsCSSStruct  {
 struct nsCSSPosition : public nsCSSStruct  {
   nsCSSPosition(void);
   nsCSSPosition(const nsCSSPosition& aCopy);
-  virtual ~nsCSSPosition(void);
+  ~nsCSSPosition(void);
 
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -282,7 +278,7 @@ struct nsCSSPosition : public nsCSSStruct  {
 struct nsCSSList : public nsCSSStruct  {
   nsCSSList(void);
   nsCSSList(const nsCSSList& aCopy);
-  virtual ~nsCSSList(void);
+  ~nsCSSList(void);
 
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -296,7 +292,7 @@ struct nsCSSList : public nsCSSStruct  {
 struct nsCSSTable : public nsCSSStruct  { // NEW
   nsCSSTable(void);
   nsCSSTable(const nsCSSTable& aCopy);
-  virtual ~nsCSSTable(void);
+  ~nsCSSTable(void);
 
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -317,7 +313,7 @@ struct nsCSSTable : public nsCSSStruct  { // NEW
 struct nsCSSBreaks : public nsCSSStruct  { // NEW
   nsCSSBreaks(void);
   nsCSSBreaks(const nsCSSBreaks& aCopy);
-  virtual ~nsCSSBreaks(void);
+  ~nsCSSBreaks(void);
 
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -333,7 +329,7 @@ struct nsCSSBreaks : public nsCSSStruct  { // NEW
 struct nsCSSPage : public nsCSSStruct  { // NEW
   nsCSSPage(void);
   nsCSSPage(const nsCSSPage& aCopy);
-  virtual ~nsCSSPage(void);
+  ~nsCSSPage(void);
 
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -366,7 +362,7 @@ struct nsCSSQuotes {
 struct nsCSSContent : public nsCSSStruct  {
   nsCSSContent(void);
   nsCSSContent(const nsCSSContent& aCopy);
-  virtual ~nsCSSContent(void);
+  ~nsCSSContent(void);
 
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -381,7 +377,7 @@ struct nsCSSContent : public nsCSSStruct  {
 struct nsCSSUserInterface : public nsCSSStruct  { // NEW
   nsCSSUserInterface(void);
   nsCSSUserInterface(const nsCSSUserInterface& aCopy);
-  virtual ~nsCSSUserInterface(void);
+  ~nsCSSUserInterface(void);
 
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -399,7 +395,7 @@ struct nsCSSUserInterface : public nsCSSStruct  { // NEW
 struct nsCSSAural : public nsCSSStruct  { // NEW
   nsCSSAural(void);
   nsCSSAural(const nsCSSAural& aCopy);
-  virtual ~nsCSSAural(void);
+  ~nsCSSAural(void);
 
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -429,7 +425,7 @@ struct nsCSSAural : public nsCSSStruct  { // NEW
 struct nsCSSXUL : public nsCSSStruct  {
   nsCSSXUL(void);
   nsCSSXUL(const nsCSSXUL& aCopy);
-  virtual ~nsCSSXUL(void);
+  ~nsCSSXUL(void);
 
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -447,7 +443,7 @@ struct nsCSSXUL : public nsCSSStruct  {
 struct nsCSSSVG : public nsCSSStruct {
   nsCSSSVG(void);
   nsCSSSVG(const nsCSSSVG& aCopy);
-  virtual ~nsCSSSVG(void);
+  ~nsCSSSVG(void);
 
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -466,51 +462,202 @@ struct nsCSSSVG : public nsCSSStruct {
 };
 #endif
 
-class nsICSSDeclaration : public nsISupports {
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSS_DECLARATION_IID);
-
-  NS_IMETHOD GetData(const nsID& aIID, nsCSSStruct** aData) = 0;
-  NS_IMETHOD EnsureData(const nsID& aSID, nsCSSStruct** aData) = 0;
-
-  NS_IMETHOD AppendValue(nsCSSProperty aProperty,
-                         const nsCSSValue& aValue) = 0;
-  NS_IMETHOD AppendStructValue(nsCSSProperty aProperty, void* aStruct) = 0;
-  NS_IMETHOD SetValueImportant(nsCSSProperty aProperty) = 0;
-  NS_IMETHOD AppendComment(const nsAReadableString& aComment) = 0;
-  NS_IMETHOD RemoveProperty(nsCSSProperty aProperty, nsCSSValue& aValue) = 0;
-
-// XXX make nscolor a struct to avoid type conflicts
-  NS_IMETHOD GetValue(nsCSSProperty aProperty, nsCSSValue& aValue) = 0;
-
-  NS_IMETHOD GetValue(nsCSSProperty aProperty, nsAWritableString& aValue) = 0;
-  NS_IMETHOD GetValue(const nsAReadableString& aProperty,
-                      nsAWritableString& aValue) = 0;
-
-  NS_IMETHOD GetImportantValues(nsICSSDeclaration*& aResult) = 0;
-  NS_IMETHOD GetValueIsImportant(nsCSSProperty aProperty,
-                                 PRBool& aIsImportant) = 0;
-  NS_IMETHOD GetValueIsImportant(const nsAReadableString& aProperty,
-                                 PRBool& aIsImportant) = 0;
-
-  NS_IMETHOD Count(PRUint32* aCount) = 0;
-  NS_IMETHOD GetNthProperty(PRUint32 aIndex, nsAWritableString& aReturn) = 0;
-
-  NS_IMETHOD GetStyleImpact(PRInt32* aHint) const = 0;
-
-  NS_IMETHOD ToString(nsAWritableString& aString) = 0;
-
-  NS_IMETHOD Clone(nsICSSDeclaration*& aClone) const = 0;
-
-#ifdef DEBUG
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
-
-  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize) = 0;
+//
+// Some useful types.
+//
+typedef PRUint16 nsCSSBitField;
+typedef PRUint16 nsCSSDeclRefCount;
+struct nsCSSDeclContains
+{
+    nsCSSBitField mHasDisplay:1;          //  1
+    nsCSSBitField mHasText:1;             //  2
+    nsCSSBitField mHasColor:1;            //  3
+    nsCSSBitField mHasMargin:1;           //  4
+    nsCSSBitField mHasList:1;             //  4
+    nsCSSBitField mHasFont:1;             //  5
+    nsCSSBitField mHasPosition:1;         //  6
+    nsCSSBitField mHasUserInterface:1;    //  8
+    nsCSSBitField mHasTable:1;            //  9
+    nsCSSBitField mHasContent:1;          // 10
+#if defined(INCLUDE_XUL)
+    nsCSSBitField mHasXUL:1;              // 11
+#endif
+    nsCSSBitField mHasBreaks:1;           // 12
+    nsCSSBitField mHasPage:1;             // 13
+    nsCSSBitField mHasAural:1;            // 14
+#if defined(MOZ_SVG)
+    nsCSSBitField mHasSVG:1;              // 15
 #endif
 };
 
+//
+// Macros used to figure out at what index the pointer to the object is.
+// These macros have been placed in the order of what is considered most
+//  created nsCSSStruct first, such that "less math for most likely" will
+//  lend itself to the speed of the index lookup calculation.
+// I have also ordered the bit fields, in case the compiler can come up
+//  with an optimization if the ordering would matter.
+// Presence (mContains.mHasWhatever) is NOT tested for, so do that yourself.
+//
+#define CSSDECLIDX_Display(decl)       ((decl).mContains.mHasDisplay - 1)
+#define CSSDECLIDX_Text(decl)          ((decl).mContains.mHasText + CSSDECLIDX_Display(decl))
+#define CSSDECLIDX_Color(decl)         ((decl).mContains.mHasColor + CSSDECLIDX_Text(decl))
+#define CSSDECLIDX_Margin(decl)        ((decl).mContains.mHasMargin + CSSDECLIDX_Color(decl))
+#define CSSDECLIDX_List(decl)          ((decl).mContains.mHasList + CSSDECLIDX_Margin(decl))
+#define CSSDECLIDX_Font(decl)          ((decl).mContains.mHasFont + CSSDECLIDX_List(decl))
+#define CSSDECLIDX_Position(decl)      ((decl).mContains.mHasPosition + CSSDECLIDX_Font(decl))
+#define CSSDECLIDX_UserInterface(decl) ((decl).mContains.mHasUserInterface + CSSDECLIDX_Position(decl))
+#define CSSDECLIDX_Table(decl)         ((decl).mContains.mHasTable + CSSDECLIDX_UserInterface(decl))
+#define CSSDECLIDX_Content(decl)       ((decl).mContains.mHasContent + CSSDECLIDX_Table(decl))
+#if defined(INCLUDE_XUL)
+#define CSSDECLIDX_XUL(decl)           ((decl).mContains.mHasXUL + CSSDECLIDX_Content(decl))
+#endif
+#if !defined(INCLUDE_XUL)
+#define CSSDECLIDX_Breaks(decl)        ((decl).mContains.mHasBreaks + CSSDECLIDX_Content(decl))
+#else
+#define CSSDECLIDX_Breaks(decl)        ((decl).mContains.mHasBreaks + CSSDECLIDX_XUL(decl))
+#endif
+#define CSSDECLIDX_Page(decl)          ((decl).mContains.mHasPage + CSSDECLIDX_Breaks(decl))
+#define CSSDECLIDX_Aural(decl)         ((decl).mContains.mHasAural + CSSDECLIDX_Page(decl))
+#if defined(MOZ_SVG)
+#define CSSDECLIDX_SVG(decl)           ((decl).mContains.mHasSVG + CSSDECLIDX_Aural(decl))
+#endif
+
+// --- nsCSSDeclaration -----------------
+
+class nsCSSDeclaration {
+public:
+  nsCSSDeclaration(void);
+  nsCSSDeclaration(const nsCSSDeclaration& aCopy);
+
+public:
+  NS_DECL_ZEROING_OPERATOR_NEW
+
+  nsCSSStruct* GetData(const nsID& aSID);
+  nsCSSStruct* EnsureData(const nsID& aSID);
+
+  nsresult AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValue);
+  nsresult AppendStructValue(nsCSSProperty aProperty, void* aStruct);
+  nsresult SetValueImportant(nsCSSProperty aProperty);
+  nsresult AppendComment(const nsAReadableString& aComment);
+  nsresult RemoveProperty(nsCSSProperty aProperty, nsCSSValue& aValue);
+
+  nsresult GetValue(nsCSSProperty aProperty, nsCSSValue& aValue);
+  nsresult GetValue(nsCSSProperty aProperty, nsAWritableString& aValue);
+  nsresult GetValue(const nsAReadableString& aProperty, nsAWritableString& aValue);
+
+  nsCSSDeclaration* GetImportantValues();
+  PRBool GetValueIsImportant(nsCSSProperty aProperty);
+  PRBool GetValueIsImportant(const nsAReadableString& aProperty);
+
+  PRUint32 Count();
+  nsresult GetNthProperty(PRUint32 aIndex, nsAWritableString& aReturn);
+
+  PRInt32 GetStyleImpact() const;
+
+  nsresult ToString(nsAWritableString& aString);
+
+  nsCSSDeclaration* Clone() const;
+
+#ifdef DEBUG
+  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+#endif
+  
+protected:
+  nsresult RemoveProperty(nsCSSProperty aProperty);
+
+private:
+  PRBool   AppendValueToString(nsCSSProperty aProperty, nsAWritableString& aResult);
+  PRBool   AppendValueToString(nsCSSProperty aProperty, const nsCSSValue& aValue, nsAWritableString& aResult);
+  nsCSSDeclaration& operator=(const nsCSSDeclaration& aCopy);
+  PRBool operator==(const nsCSSDeclaration& aCopy) const;
+
+  void TryBorderShorthand(nsAWritableString & aString,
+                          PRInt32 & aBorderTopWidth,
+                          PRInt32 & aBorderTopStyle,
+                          PRInt32 & aBorderTopColor,
+                          PRInt32 & aBorderBottomWidth,
+                          PRInt32 & aBorderBottomStyle,
+                          PRInt32 & aBorderBottomColor,
+                          PRInt32 & aBorderLeftWidth,
+                          PRInt32 & aBorderLeftStyle,
+                          PRInt32 & aBorderLeftColor,
+                          PRInt32 & aBorderRightWidth,
+                          PRInt32 & aBorderRightStyle,
+                          PRInt32 & aBorderRightColor);
+  void  TryBorderSideShorthand(nsAWritableString & aString,
+                               nsCSSProperty  aShorthand,
+                               PRInt32 & aBorderWidth,
+                               PRInt32 & aBorderStyle,
+                               PRInt32 & aBorderColor);
+  void  TryMarginOrPaddingShorthand(nsAWritableString & aString,
+                                    nsCSSProperty aShorthand,
+                                    PRInt32 & aTop, PRInt32 & aBottom,
+                                    PRInt32 & aLeft, PRInt32 & aRight);
+  void  TryBackgroundShorthand(nsAWritableString & aString,
+                               PRInt32 & aBgColor, PRInt32 & aBgImage,
+                               PRInt32 & aBgRepeat, PRInt32 & aBgAttachment,
+                               PRInt32 & aBgPositionX,
+                               PRInt32 & aBgPositionY);
+  void  TryBackgroundPosition(nsAWritableString & aString,
+                              PRInt32 & aBgPositionX,
+                              PRInt32 & aBgPositionY);
+
+  PRBool   AllPropertiesSameValue(PRInt32 aFirst, PRInt32 aSecond,
+                                  PRInt32 aThird, PRInt32 aFourth);
+  void     AppendPropertyAndValueToString(nsCSSProperty aProperty,
+                                          nsAWritableString& aResult);
+
+protected:
+    //
+    // Specialized ref counting.
+    // We do not want everyone to ref count us, only the rules which hold
+    //  onto us (our well defined lifetime is when the last rule releases
+    //  us).
+    // It's worth a comment here that the main nsCSSDeclaration is refcounted,
+    //  but it's |mImportant| is not refcounted, but just owned by the
+    //  non-important declaration.
+    //
+    friend class CSSStyleRuleImpl;
+    void AddRef(void) {
+      NS_ASSERTION(0 <= mRuleRefs, "bad AddRef");
+      mRuleRefs++;
+    }
+    void Release(void) {
+      NS_ASSERTION(0 < mRuleRefs, "bad Release");
+      if (0 == --mRuleRefs) {
+        delete this;
+      }
+    }
+public:
+    void RuleAbort(void) {
+      NS_ASSERTION(0 == mRuleRefs, "bad RuleAbort");
+      delete this;
+    }
+protected:
+    //
+    // Block everyone, except us or a derivitive, from deleting us.
+    //
+  ~nsCSSDeclaration(void);
+    
+
+private:
+    nsValueArray* mOrder;
+    nsCSSDeclaration* mImportant;
+    nsSmallVoidArray mStructs;
+
+    //
+    // Keep these two together, as they should pack.
+    //
+    nsCSSDeclRefCount mRuleRefs;
+    nsCSSDeclContains mContains;
+};
+
+
 extern NS_EXPORT nsresult
-  NS_NewCSSDeclaration(nsICSSDeclaration** aInstancePtrResult);
+  NS_NewCSSDeclaration(nsCSSDeclaration** aInstancePtrResult);
 
-#endif /* nsICSSDeclaration_h___ */
 
+#endif /* nsCSSDeclaration_h___ */

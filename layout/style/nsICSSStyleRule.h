@@ -47,7 +47,7 @@ class nsISizeOfHandler;
 
 class nsIAtom;
 class nsIArena;
-class nsICSSDeclaration;
+class nsCSSDeclaration;
 class nsICSSStyleSheet;
 
 struct nsAtomList {
@@ -160,8 +160,8 @@ public:
   virtual PRUint32 GetLineNumber(void) const = 0;
   virtual void SetLineNumber(PRUint32 aLineNumber) = 0;
 
-  virtual nsICSSDeclaration* GetDeclaration(void) const = 0;
-  virtual void SetDeclaration(nsICSSDeclaration* aDeclaration) = 0;
+  virtual nsCSSDeclaration* GetDeclaration(void) const = 0;
+  virtual void SetDeclaration(nsCSSDeclaration* aDeclaration) = 0;
 
   virtual PRInt32 GetWeight(void) const = 0;
   virtual void SetWeight(PRInt32 aWeight) = 0;

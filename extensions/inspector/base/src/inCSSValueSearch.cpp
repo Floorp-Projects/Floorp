@@ -314,7 +314,7 @@ inCSSValueSearch::SearchStyleRule(nsIStyleRule* aStyleRule)
 
   nsCOMPtr<nsICSSStyleRule> cssRule = do_QueryInterface(aStyleRule);
   if (cssRule) {
-    nsCOMPtr<nsICSSDeclaration> aDec = cssRule->GetDeclaration();
+    nsCSSDeclaration* aDec = cssRule->GetDeclaration();
     for (PRUint32 i = 0; i < mPropertyCount; i++) {
       nsCSSProperty prop = mProperties[i];
       SearchStyleValue(aDec, prop);
@@ -327,7 +327,7 @@ inCSSValueSearch::SearchStyleRule(nsIStyleRule* aStyleRule)
 }
 
 nsresult
-inCSSValueSearch::SearchStyleValue(nsICSSDeclaration* aDec, nsCSSProperty aProp)
+inCSSValueSearch::SearchStyleValue(nsCSSDeclaration* aDec, nsCSSProperty aProp)
 {
   const nsAFlatCString& cstring = nsCSSProps::GetStringValue(aProp);
 
