@@ -1,8 +1,10 @@
 TransforMiiX (TM) 
 (C) Copyright 1999, 2000, The MITRE Corporation, Keith Visco, et al. All rights reserved.
 
-Build 20000326
+Build 20000327
+-- Fixed "dot" bug in CNAME parsing (ExprLexer.cpp) reported by Nathan Pride
 
+Build 20000326
 -- Added Peter Van der Beken's changes to net/URIUtils for integration
    within Mozilla
 
