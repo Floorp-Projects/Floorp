@@ -91,8 +91,8 @@ static CFPlugInRef LoadPDEPlugIn()
         rv = dirService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsILocalFileMac), getter_AddRefs(pluginDir));
         if (NS_FAILED(rv))
             return nsnull;
-        pluginDir->Append(NS_LITERAL_CSTRING"Essential Files"));
-        pluginDir->Append(NS_LITERAL_CSTRING"PrintDialogPDE.plugin"));
+        pluginDir->Append(NS_LITERAL_CSTRING("Essential Files"));
+        pluginDir->Append(NS_LITERAL_CSTRING("PrintDialogPDE.plugin"));
         FSSpec pluginSpec;
         rv = pluginDir->GetFSSpec(&pluginSpec);
         if (NS_FAILED(rv))
