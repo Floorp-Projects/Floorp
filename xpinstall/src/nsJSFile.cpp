@@ -611,7 +611,7 @@ JSBool PR_CALLBACK
 InstallFileOpFileGetModDate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall*   nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
-  PRUint32     nativeRet;
+  double     nativeRet;
   JSObject *jsObj;
   nsInstallFolder *folder;
 
@@ -646,18 +646,7 @@ InstallFileOpFileGetModDate(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     return JS_TRUE;
   }
 
-  if ( nativeRet <= JSVAL_INT_MAX )
-    *rval = INT_TO_JSVAL(nativeRet);
-  else
-  {
-    JSInt64 l;
-    jsdouble d;
-
-    JSLL_UI2L( l, nativeRet );
-    JSLL_L2D( d, l );
-
-    JS_NewDoubleValue( cx, d, rval );
-  }
+  JS_NewDoubleValue( cx, nativeRet, rval );
 
   return JS_TRUE;
 }
@@ -814,7 +803,6 @@ InstallFileOpFileModDateChanged(JSContext *cx, JSObject *obj, uintN argc, jsval 
 {
   nsInstall*   nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt32      nativeRet;
-  PRUint32     b1;
   JSObject *jsObj;
   nsInstallFolder *folder;
 
@@ -831,7 +819,7 @@ InstallFileOpFileModDateChanged(JSContext *cx, JSObject *obj, uintN argc, jsval 
     //  public int FileModDateChanged (nsInstallFolder aSourceFolder,
     //                                 Number aOldDate);
 
-    b1 = JSVAL_TO_INT(argv[1]);
+    jsdouble dval = *(JSVAL_TO_DOUBLE(argv[1]));
     if (argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
     {
       *rval =     *rval = BOOLEAN_TO_JSVAL(PR_FALSE);
@@ -848,7 +836,7 @@ InstallFileOpFileModDateChanged(JSContext *cx, JSObject *obj, uintN argc, jsval 
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
 
-    if(!folder || NS_OK != nativeThis->FileOpFileModDateChanged(*folder, b1, &nativeRet))
+    if(!folder || NS_OK != nativeThis->FileOpFileModDateChanged(*folder, dval, &nativeRet))
     {
       return JS_TRUE;
     }

@@ -1834,11 +1834,23 @@ nsInstall::FileOpFileGetDiskSpaceAvailable(nsInstallFolder& aTarget, PRInt64* aR
 
 //nsIFileXXX: need to get nsIFile equivalent to GetModDate
 PRInt32
-nsInstall::FileOpFileGetModDate(nsInstallFolder& aTarget, nsFileSpec::TimeStamp* aReturn)
+nsInstall::FileOpFileGetModDate(nsInstallFolder& aTarget, double* aReturn)
 {
-  //nsCOMPtr<nsIFile> localFile = aTarget.GetFileSpec();
+    * aReturn = 0;
 
-  //localFile->GetModDate(*aReturn);
+    nsCOMPtr<nsIFile> localFile = aTarget.GetFileSpec();
+  
+    if (localFile)
+    {
+        double newStamp;
+        PRInt64 lastModDate = LL_ZERO;
+        localFile->GetLastModificationDate(&lastModDate);
+    
+        LL_L2D(newStamp, lastModDate);
+
+        *aReturn = newStamp;
+    }
+
   return NS_OK;
 }
 
@@ -1871,12 +1883,22 @@ nsInstall::FileOpFileIsFile(nsInstallFolder& aTarget, PRBool* aReturn)
 
 //nsIFileXXX: need to get the ModDateChanged equivalent for nsIFile
 PRInt32
-nsInstall::FileOpFileModDateChanged(nsInstallFolder& aTarget, nsFileSpec::TimeStamp& aOldStamp, PRBool* aReturn)
+nsInstall::FileOpFileModDateChanged(nsInstallFolder& aTarget, double aOldStamp, PRBool* aReturn)
 {
-  //nsFileSpec* localFS = aTarget.GetFileSpec();
+    *aReturn = PR_TRUE;
 
-  //*aReturn = localFS->ModDateChanged(aOldStamp);
-  return NS_OK;
+    nsCOMPtr<nsIFile> localFile = aTarget.GetFileSpec();
+    if (localFile)
+    {
+        double newStamp;
+        PRInt64 lastModDate = LL_ZERO;
+        localFile->GetLastModificationDate(&lastModDate);
+        
+        LL_L2D(newStamp, lastModDate);
+
+        *aReturn = !(newStamp == aOldStamp);
+    }
+    return NS_OK;
 }
 
 PRInt32
