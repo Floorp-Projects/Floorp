@@ -88,6 +88,7 @@ class nsWidgetModuleData
    void Init( nsIAppShell *aPrimaevalAppShell);
 
  private:
+   ULONG        idSelect;    
    HPOINTER     hptrSelect;  // !! be more sensible about this...
    HPOINTER     hptrFrameIcon;
 #if 0

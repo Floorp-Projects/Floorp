@@ -46,7 +46,20 @@ ICON ID_ICO_FOLDER        folder.ico
 ICON ID_ICO_DRAGITEM      dragitem.ico
 
 /* pointers */
-POINTER ID_PTR_SELECTURL  select.ptr
+POINTER ID_PTR_SELECTURL   select.ptr
+POINTER ID_PTR_ARROWNORTH  arrow_north.ptr
+POINTER ID_PTR_ARROWNORTHP arrow_north_plus.ptr
+POINTER ID_PTR_ARROWSOUTH  arrow_south.ptr
+POINTER ID_PTR_ARROWSOUTHP arrow_south_plus.ptr
+POINTER ID_PTR_ARROWWEST   arrow_west.ptr
+POINTER ID_PTR_ARROWWESTP  arrow_west_plus.ptr
+POINTER ID_PTR_ARROWEAST   arrow_east.ptr
+POINTER ID_PTR_ARROWEASTP  arrow_east_plus.ptr
+POINTER ID_PTR_COPY        copy.ptr
+POINTER ID_PTR_ALIAS       aliasb.ptr
+POINTER ID_PTR_CELL        cell.ptr
+POINTER ID_PTR_GRAB        grab.ptr
+POINTER ID_PTR_GRABBING    grabbing.ptr
 
 /* stringtable */
 STRINGTABLE

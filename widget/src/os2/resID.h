@@ -33,15 +33,28 @@
 #define IDD_HELPBUTTON 104
 
 // Icons
-#define ID_ICO_FRAME       500
-#define ID_ICO_FOLDER      501
-#define ID_ICO_DRAGITEM    502
+#define ID_ICO_FRAME         500
+#define ID_ICO_FOLDER        501
+#define ID_ICO_DRAGITEM      502
 
-#define ID_PTR_SELECTURL  2000
+#define ID_PTR_SELECTURL    2000
+#define ID_PTR_ARROWNORTH   2001
+#define ID_PTR_ARROWNORTHP  2002
+#define ID_PTR_ARROWSOUTH   2003
+#define ID_PTR_ARROWSOUTHP  2004
+#define ID_PTR_ARROWWEST    2005
+#define ID_PTR_ARROWWESTP   2006
+#define ID_PTR_ARROWEAST    2007
+#define ID_PTR_ARROWEASTP   2008
+#define ID_PTR_COPY         2009
+#define ID_PTR_ALIAS        2010
+#define ID_PTR_CELL         2011
+#define ID_PTR_GRAB         2012
+#define ID_PTR_GRABBING     2013
 
-#define ID_STR_FONT      10000
-#define ID_STR_HMMDIR    10001
-#define ID_STR_NOCDIR    10002
+#define ID_STR_FONT        10000
+#define ID_STR_HMMDIR      10001
+#define ID_STR_NOCDIR      10002
 
 // OS2TODO HCT temporary bug fix
 #ifndef FCF_CLOSEBUTTON // defined in the Merlin toolkit
