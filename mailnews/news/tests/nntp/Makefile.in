@@ -57,6 +57,7 @@ LIBS = \
 	-lexpat \
 	-lxmltok \
 	-ljsdom	\
+	-lcaps \
 	-ljsurl	\
 	-limg	\
 	-lmozutil	\
