@@ -99,9 +99,11 @@ nsresult OnIdentityCheck()
 		result = mailSession->GetCurrentServer(&incomingServer);
 		if (NS_SUCCEEDED(result) && incomingServer)
 		{
+			PRUnichar * uniValue = nsnull;
 			char * value = nsnull;
-			incomingServer->GetPrettyName(&value);
-			printf("Server pretty name: %s\n", value ? value : "");
+			incomingServer->GetPrettyName(&uniValue);
+//			nsCString cPrettyname(value);
+			printf("Server pretty name: %s\n", uniValue ? (const char *) nsCAutoString(uniValue) : "");
 			incomingServer->GetUsername(&value);
 			printf("User Name: %s\n", value ? value : "");
 			incomingServer->GetHostName(&value);
