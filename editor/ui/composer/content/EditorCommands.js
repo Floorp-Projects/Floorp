@@ -410,17 +410,52 @@ function CheckSpelling()
 function EditorExecuteScript(fileSpec)
 {
   fileSpec.openStreamForReading();
-  var buf = { value:null };
-  fileSpec.read(buf, fileSpec.FileSize);
 
-  // fileSpec.read() reads in only the characters, without
-  // a zero terminator. eval() needs the string to be zero
-  // terminated. This is a workaround to get a zero terminated
-  // string.
+  var buf         = { value:null };
+  var tmpBuf      = { value:null };
+  var didTruncate = { value:false };
 
-  buf.value = buf.value.substr(0, fileSpec.FileSize);
+  // Log files can be quite huge, so read in a line
+  // at a time and execute it:
 
-  eval(buf.value);
+  while (!fileSpec.eof())
+  {
+    buf.value         = "";
+    didTruncate.value = true;
+
+    // Keep looping until we get a complete line of
+    // text, or we hit the end of file:
+
+    while (didTruncate.value && !fileSpec.eof())
+    {
+      didTruncate.value = false;
+      fileSpec.readLine(tmpBuf, 1024, didTruncate);
+      buf.value += tmpBuf.value;
+
+      // XXX Need to null out tmpBuf.value to avoid crashing
+      // XXX in some JavaScript string allocation method.
+      // XXX This is probably leaking the buffer allocated
+      // XXX by the readLine() implementation.
+
+      tmpBuf.value = null;
+
+      // XXX There is a bug in the nsIFileSpec implementation.
+      // XXX the didTruncate value actually returns a bool
+      // XXX that indicates if the read successfully read
+      // XXX a line that fit into the buffer.
+      // XXX That is, it returns true if everything fit
+      // XXX and false if it didn't ... the reverse of what
+      // XXX the args name suggests.
+      // XXX
+      // XXX Remove the following line when this bug gets fixed.
+
+      didTruncate.value = !didTruncate.value;
+    }
+
+    eval(buf.value);
+  }
+
+  buf.value = null;
 }
 
 function EditorGetScriptFileSpec()
@@ -437,10 +472,7 @@ function EditorStartLog()
 
   if (window.editorShell)
   {
-    fs = Components.classes["component://netscape/filespec"].createInstance();
-    fs = fs.QueryInterface(Components.interfaces.nsIFileSpec);
-    fs.UnixStyleFilePath = "journal.js";
-
+    fs = EditorGetScriptFileSpec();
     window.editorShell.StartLogging(fs);
 
     fs = null;
