@@ -40,7 +40,7 @@ public abstract class XMLWidgetBuilder {
    * The properties bundle that the builder will reference to for 
    * things like getReferencedLabel.
    */
-  protected Properties properties;
+  protected Properties properties = new Properties();
 
   /**
    * Reference point into the CLASSPATH for locating the XML file.
@@ -67,13 +67,13 @@ public abstract class XMLWidgetBuilder {
       URL linkURL;
       Class local = ((ref == null) ? getClass() : ref);;
       // get the string properties
-      if (config.getAttribute("href") != null 
+      if (config.getAttribute("href").length() != 0
 	  && config.getAttribute("role").equals("stringprops")
 	  && config.getTagName().equals("link")) {
 
+        // this should never return null
 	linkURL = local.getResource(config.getAttribute("href"));
-	properties = new Properties();
-	if (linkURL != null) properties.load(linkURL.openStream());
+	properties.load(linkURL.openStream());
       }
     } catch (IOException io) {
       io.printStackTrace();
@@ -89,8 +89,6 @@ public abstract class XMLWidgetBuilder {
    */
   public String getReferencedLabel(Element current, String attr) {
     String label = current.getAttribute(attr);
-    
-    if (properties == null) return label;
     
     // if it starts with a '$' we crossreference to properties
     if (label != null && label.length() > 0 

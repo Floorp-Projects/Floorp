@@ -47,7 +47,6 @@ import org.w3c.dom.Node;
 import com.sun.xml.parser.Resolver;
 import com.sun.xml.parser.Parser;
 import com.sun.xml.tree.XmlDocument;
-// import com.sun.xml.tree.XmlDocumentBuilder;
 import com.sun.xml.tree.TreeWalker;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -118,7 +117,7 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
    * 
    * @param stream the stream containing the XML data
    */
-  public void buildFrom(InputStream stream) {
+  public JComponent buildFrom(InputStream stream) {
     XmlDocument doc;
     TreeWalker tree;
     Node node;
@@ -131,46 +130,66 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
       tree = new TreeWalker(current);
 
       // get the link tag for this file
-      // node = tree.getNextElement("head");
+      node = tree.getNextElement("head");
       // get into head and get the first element
-      node = 
-        tree.getNextElement("head").getElementsByTagName("link").item(0);
-      // node = node.getFirstChild();
-      // node = node.getNextSibling();
+      node = node.getFirstChild();
+      node = node.getNextSibling();
 
       // set the configuration contained in this node
       setConfiguration((Element)node);
 
       // skip to the body
-      buildFrom(new TreeWalker(tree.getNextElement("body")));
+      buildFrom(tree.getNextElement("body"));
     } catch (Throwable t) {
       t.printStackTrace();
+    } finally {
+      return component;
     }
   }
 
-  /**
-   * Build a menu bar from the data in the tree
-   *
-   * @param tree the tree containing the full set of a menubar tag
-   */
-  public void buildFrom(TreeWalker tree) {
-    Element current  ;
+  public JMenu buildMenu(Element element) {
     Node node;
+    MenuCtrl menu = new MenuCtrl();
+    String my_id = element.getAttribute(id_attr);
 
-    // skip to the "menubar" tag
-    node = tree.getNextElement("menubar");
-    current = (Element)node;
-    component = new MenuBarCtrl();
-    
-    // iterate through every node
-    node = node.getFirstChild();
-    node = node.getNextSibling();
-    
-    // at the very first menu tag
+    menu.setText(getReferencedLabel(element, label_attr).trim());
+    menu.setActionCommand(element.getAttribute(id_attr));
+
+    node = element.getFirstChild().getNextSibling();
+
     while (node != null) {
-      processNode(node, component);
+      if (node.getNodeType() == Node.ELEMENT_NODE) {
+        Element current = (Element)node;
+        String tag = current.getTagName();
+        JComponent comp = buildComponent((Element)node);
+        
+        menu.add(comp);
+      }
+
       node = node.getNextSibling();
     }
+
+    return menu;
+  }
+  
+  public JComponent buildFrom(Element element) {
+    Node node = 
+      element.getFirstChild().getNextSibling().getFirstChild().getNextSibling();
+    component = new MenuBarCtrl();
+
+    while (node != null) {
+
+      // if it's an element, we process.
+      // otherwise, it's probably a closing tag
+      if (node.getNodeType() == Node.ELEMENT_NODE) {
+        JMenu menu = buildMenu((Element)node);
+        component.addItemByName(menu.getActionCommand(), menu);
+      }
+
+      node = node.getNextSibling();
+    }
+    
+    return component;
   }
 
   /**
@@ -183,36 +202,6 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
   public void configureForOwner(JComponent component) {
   }
 
-  public void associateClass(Class c, Object o) {
-  }
-
-  /**
-   * Process the node. This method will call <code>buildComponent</code>.
-   * @param node the node to process
-   * @param parent the parent component to add the information from
-   * this node to
-   */
-  protected void processNode(Node node, JComponent parent) {
-    JComponent container = null;
-    JComponent item = null;
-
-    if (node.getNodeType() != Node.ELEMENT_NODE) return; // can't process it
-
-    // things will recurse through here
-    item = buildComponent((Element)node);
-    
-    // find out where we stash the item
-    if (item != null) {
-      Element current = (Element)node;
-      if (item instanceof JSeparator) {
-        parent.add(item);
-      } else if (parent instanceof Control) {
-        ((Control)parent).addItemByName(current.getAttribute(id_attr), 
-                                        (JMenuItem)item);
-      }
-    }
-  }
-
   /**
    * Build the component at the current XML element and add to the parent
    * @param current the current element
@@ -220,28 +209,12 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
   protected JComponent buildComponent(Element current) {
     String tag = current.getTagName();
     JComponent comp = null;
-    String label = null;;
     
     // menu tag
     if (tag.equals(menu_tag)) {
-      Node node;
-      JMenu menu = new MenuCtrl();
-      String my_id = current.getAttribute(id_attr);
-      comp = menu;
-
-      label = getReferencedLabel(current, label_attr);
-      if (label != null) ((JMenuItem)comp).setText(label);
-      menu.setActionCommand(my_id);
-      node = current.getFirstChild().getNextSibling();
-
-      // loop through all its children
-      while (node != null) {
-        processNode(node, menu);
-        node = node.getNextSibling();
-      }
+      comp = buildMenu(current);
     } else if (tag.equals(menuitem_tag)) { // menuitem tag
       String type = current.getAttribute(type_attr);
-      UIAction action;
       
       // which type of menuitem?
       if (type.equals("")) { 
@@ -321,18 +294,17 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
     String label = getReferencedLabel(current, label_attr);
     UIAction action = null;
 
-    if (label != null) {
+    if (label.length() > 0) {
       item.setText(label);
     }
 
     label = current.getAttribute("action");
-    if (label != null 
-        && (action = (UIAction)actions.get(label)) != null) {
+    if ((action = (UIAction)actions.get(label)) != null) {
       item.addActionListener(action);
     }
     
     label = getReferencedLabel(current, accel_attr);
-    if (label != null) {
+    if (label.length() > 0) {
       item.setMnemonic(label.charAt(0));
     }
   }

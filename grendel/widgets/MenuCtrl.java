@@ -21,6 +21,8 @@
 
 package grendel.widgets;
 
+import java.awt.Component;
+
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -59,6 +61,17 @@ public class MenuCtrl extends JMenu implements Control {
     
     return item;
   }
+
+  public Component add(Component comp) {
+    if (comp instanceof JMenuItem) {
+      JMenuItem item = (JMenuItem)comp;
+      addItemByName(item.getActionCommand(), item);
+    } else {
+      super.add(comp);
+    }
+
+    return comp;
+  }
   
   /**
    * Add a menu item to the menu.
@@ -67,7 +80,7 @@ public class MenuCtrl extends JMenu implements Control {
    */
   public void addItemByName(String name, JMenuItem component) {
     controls.put(name, component);
-    add(component);
+    super.add(component);
   }
 }
 
