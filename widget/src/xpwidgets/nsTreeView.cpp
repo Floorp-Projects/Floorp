@@ -313,7 +313,7 @@ void nsTreeView::HandleMouseUp(nsGUIEvent* aEvent)
 		  if (type == eTriggerHit)
 		  {
 			  nsHierarchicalDataItem* pItem = mDataModel->GetNthItem(row);
-			  pItem->ToggleOpenState();
+			  if (pItem) pItem->ToggleOpenState();
 		  }
 		  else if (type == eContentHit)
 		  {
