@@ -858,74 +858,8 @@ NS_IMETHODIMP
 nsXULElement::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
                            nsIDOMNode** aReturn)
 {
-    NS_PRECONDITION(aNewChild != nsnull, "null ptr");
-    if (! aNewChild)
-        return NS_ERROR_NULL_POINTER;
-
-    // aRefChild may be null; that means "append".
-
-    nsresult rv = nsContentUtils::CheckSameOrigin(this, aNewChild);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // We can't insert an ancestor or ourself.
-    if (IsAncestor(aNewChild, this)) {
-        return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-    }
-
-    nsCOMPtr<nsIContent> newcontent = do_QueryInterface(aNewChild);
-    NS_ASSERTION(newcontent != nsnull, "not an nsIContent");
-    if (! newcontent)
-        return NS_ERROR_UNEXPECTED;
-
-    // First, check to see if the content was already parented
-    // somewhere. If so, remove it.
-    nsCOMPtr<nsIContent> oldparent = newcontent->GetParent();
-
-    if (oldparent) {
-        PRInt32 oldindex = oldparent->IndexOf(newcontent);
-
-        NS_ASSERTION(oldindex >= 0, "old parent didn't think aNewChild was a child");
-
-        if (oldindex >= 0) {
-            rv = oldparent->RemoveChildAt(oldindex, PR_TRUE);
-            if (NS_FAILED(rv)) return rv;
-        }
-    }
-
-    // Now, insert the element into the content model under 'this'
-    if (aRefChild) {
-        nsCOMPtr<nsIContent> refcontent = do_QueryInterface(aRefChild);
-        NS_ASSERTION(refcontent != nsnull, "not an nsIContent");
-        if (! refcontent)
-            return NS_ERROR_UNEXPECTED;
-
-        PRInt32 pos = IndexOf(refcontent);
-
-        if (pos >= 0) {
-            // Some frames assume that the document will have been set,
-            // so pass in PR_TRUE for aDeepSetDocument here.
-            rv = InsertChildAt(newcontent, pos, PR_TRUE, PR_TRUE);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to insert aNewChild");
-            if (NS_FAILED(rv)) return rv;
-        }
-
-        // XXX Hmm. There's a case here that we handle ambiguously, I
-        // think. If aRefChild _isn't_ actually one of our kids, then
-        // pos == -1, and we'll never insert the new kid. Should we
-        // just append it?
-    }
-    else {
-        // Some frames assume that the document will have been set,
-        // so pass in PR_TRUE for aDeepSetDocument here.
-        rv = AppendChildTo(newcontent, PR_TRUE, PR_TRUE);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to append a aNewChild");
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    NS_ADDREF(aNewChild);
-    *aReturn = aNewChild;
-    return NS_OK;
+    return nsGenericElement::doInsertBefore(this, aNewChild, aRefChild,
+                                            aReturn);
 }
 
 
@@ -933,74 +867,22 @@ NS_IMETHODIMP
 nsXULElement::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
                            nsIDOMNode** aReturn)
 {
-    NS_PRECONDITION(aNewChild != nsnull, "null ptr");
-    if (! aNewChild)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_PRECONDITION(aOldChild != nsnull, "null ptr");
-    if (! aOldChild)
-        return NS_ERROR_NULL_POINTER;
-
-    nsresult rv = nsContentUtils::CheckSameOrigin(this, aNewChild);
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsCOMPtr<nsIContent> oldelement = do_QueryInterface(aOldChild);
-    NS_ASSERTION(oldelement != nsnull, "not an nsIContent");
-
-    if (oldelement) {
-        PRInt32 pos = IndexOf(oldelement);
-
-        if (pos >= 0) {
-            nsCOMPtr<nsIContent> newelement = do_QueryInterface(aNewChild);
-            NS_ASSERTION(newelement != nsnull, "not an nsIContent");
-
-            if (newelement) {
-                // Some frames assume that the document will have been set,
-                // so pass in PR_TRUE for aDeepSetDocument here.
-                rv = ReplaceChildAt(newelement, pos, PR_TRUE, PR_TRUE);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to replace old child");
-            }
-        }
-    }
-
-    NS_ADDREF(aNewChild);
-    *aReturn = aNewChild;
-    return NS_OK;
+    return nsGenericElement::doReplaceChild(this, aNewChild, aOldChild,
+                                            aReturn);
 }
 
 
 NS_IMETHODIMP
 nsXULElement::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-    NS_PRECONDITION(aOldChild != nsnull, "null ptr");
-    if (! aOldChild)
-        return NS_ERROR_NULL_POINTER;
-
-    nsresult rv;
-
-    nsCOMPtr<nsIContent> element = do_QueryInterface(aOldChild);
-    NS_ASSERTION(element != nsnull, "not an nsIContent");
-
-    if (element) {
-        PRInt32 pos = IndexOf(element);
-
-        if (pos >= 0) {
-            rv = RemoveChildAt(pos, PR_TRUE);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove old child");
-        }
-    }
-
-    NS_ADDREF(aOldChild);
-    *aReturn = aOldChild;
-    return NS_OK;
+    return nsGenericElement::doRemoveChild(this, aOldChild, aReturn);
 }
 
 
 NS_IMETHODIMP
 nsXULElement::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 {
-    return InsertBefore(aNewChild, nsnull, aReturn);
+    return nsGenericElement::doInsertBefore(this, aNewChild, nsnull, aReturn);
 }
 
 

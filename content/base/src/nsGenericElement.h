@@ -485,19 +485,20 @@ public:
    * Generic implementation of InsertBefore to be called by subclasses
    * @see nsIDOMNode::InsertBefore
    */
-  nsresult  doInsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
-                           nsIDOMNode** aReturn);
+  static nsresult doInsertBefore(nsIContent *aElement, nsIDOMNode* aNewChild,
+                                 nsIDOMNode* aRefChild, nsIDOMNode** aReturn);
   /**
    * Generic implementation of ReplaceChild to be called by subclasses
    * @see nsIDOMNode::ReplaceChild
    */
-  nsresult  doReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
-                           nsIDOMNode** aReturn);
+  static nsresult doReplaceChild(nsIContent *aElement, nsIDOMNode* aNewChild,
+                                 nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
   /**
    * Generic implementation of RemoveChild to be called by subclasses
    * @see nsIDOMNode::RemoveChild
    */
-  nsresult  doRemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
+  static nsresult doRemoveChild(nsIContent *aElement, nsIDOMNode* aOldChild,
+                                nsIDOMNode** aReturn);
 
   //----------------------------------------
 
@@ -762,20 +763,22 @@ public:
   NS_IMETHOD InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
                           nsIDOMNode** aReturn)
   {
-    return nsGenericElement::doInsertBefore(aNewChild, aRefChild, aReturn);
+    return nsGenericElement::doInsertBefore(this, aNewChild, aRefChild,
+                                            aReturn);
   }
   NS_IMETHOD ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
                           nsIDOMNode** aReturn)
   {
-    return nsGenericElement::doReplaceChild(aNewChild, aOldChild, aReturn);
+    return nsGenericElement::doReplaceChild(this, aNewChild, aOldChild,
+                                            aReturn);
   }
   NS_IMETHOD RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
   {
-    return nsGenericElement::doRemoveChild(aOldChild, aReturn);
+    return nsGenericElement::doRemoveChild(this, aOldChild, aReturn);
   }
   NS_IMETHOD AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
   {
-    return nsGenericElement::doInsertBefore(aNewChild, nsnull, aReturn);
+    return nsGenericElement::doInsertBefore(this, aNewChild, nsnull, aReturn);
   }
 
   // Remainder of nsIContent
