@@ -20,6 +20,7 @@
 #define nsIRegion_h___
 
 #include "nscore.h"
+#include "nsISupports.h"
 #include "nsRect.h"
 
 // Function type passed into nsIRegion::forEachRect, invoked

@@ -645,11 +645,13 @@ WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
   static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID);
   static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID);
   static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID);
+  static NS_DEFINE_IID(kCRegionIID, NS_REGION_CID);
 
   NSRepository::RegisterFactory(kCRenderingContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCDeviceContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCFontMetricsIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCImageIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCRegionIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
 
   static NS_DEFINE_IID(kCViewManagerCID, NS_VIEW_MANAGER_CID);
   static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
