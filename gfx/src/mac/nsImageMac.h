@@ -168,7 +168,7 @@ protected:
                                 Rect& aDestRegion,
                                 const PRInt32 aDestDepth,
                                 const PRBool aCopyMaskBits,
-                                Handle *aDestData
+                                Handle *aDestData                       
                               ); 
   static nsresult   ConcatBitsHandles(  Handle srcData1, 
                                         Handle srcData2,
@@ -212,7 +212,6 @@ private:
 	PRInt32					mDecodedY1;				// has been decoded.
 	PRInt32					mDecodedX2; 
 	PRInt32					mDecodedY2;		 
-
 		
 	//nsPoint					mLocation;			// alpha mask location
 
@@ -222,6 +221,24 @@ private:
 	PRIntn					mPixelDataSize;
 	PRBool					mIsTopToBottom;
 
+	static OSErr			CreatePixMapInternal( PRInt32 aWidth, 
+	                                        PRInt32 aHeight, 
+	                                        PRInt32 aDepth, 
+	                                        CTabHandle aColorTable,
+																					PixMap& ioPixMap, 
+																					Handle& ioBitsHandle, 
+																					PRBool aAllow2Bytes);
+
+	static PRInt32		CalculateRowBytesInternal(PRUint32 aWidth, 
+	                                            PRUint32 aDepth, 
+	                                            PRBool aAllow2Bytes);
+
+  nsresult          CopyPixMapInternal( Rect& aSrcRegion,
+                                        Rect& aDestRegion,
+                                        const PRInt32 aDestDepth,
+                                        const PRBool aCopyMaskBits,
+                                        Handle *aDestData,
+                                        PRBool aAllow2Bytes);
 };
 
 #endif
