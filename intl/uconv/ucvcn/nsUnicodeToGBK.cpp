@@ -214,7 +214,7 @@ PRBool nsUnicodeToGBK::TryExtensionEncoder(
     PRInt32 len = 1;
     nsresult res = NS_OK;
     res = mExtensionEncoder->Convert(&aChar, &len, aOut, aOutLen);
-    if(NS_SUCCEEDED(res))
+    if(NS_SUCCEEDED(res) && (*aOutLen > 0))
       return PR_TRUE;
   }
   return PR_FALSE;
@@ -235,7 +235,7 @@ PRBool nsUnicodeToGBK::Try4BytesEncoder(
     res = m4BytesEncoder->Convert(&aChar, &len, aOut, aOutLen);
     NS_ASSERTION(NS_FAILED(res) || ((1 == len) && (4 == *aOutLen)),
       "unexpect conversion length");
-    if(NS_SUCCEEDED(res))
+    if(NS_SUCCEEDED(res) && (*aOutLen > 0))
       return PR_TRUE;
   }
   return PR_FALSE;
