@@ -31,4 +31,5 @@ nsMessage.h
 nsMsgProtocol.h
 nsMsgTxn.h
 nsMsgMailNewsUrl.h
+nsMsgI18N.h
 

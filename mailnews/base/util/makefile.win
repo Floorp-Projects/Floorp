@@ -39,6 +39,7 @@ EXPORTS=                \
 	nsMsgProtocol.h \
 	nsMsgMailNewsUrl.h \
 	nsMsgTxn.h \
+	nsMsgI18N.h \
 	$(NULL)
 
 ################################################################################
@@ -70,6 +71,7 @@ CPP_OBJS=                               \
 	.\$(OBJDIR)\nsMsgProtocol.obj		\
 	.\$(OBJDIR)\nsMsgMailNewsUrl.obj	\
 	.\$(OBJDIR)\nsMsgTxn.obj			\
+	.\$(OBJDIR)\nsMsgI18N.obj			\
 	$(NULL)
 
 LLIBS=								\

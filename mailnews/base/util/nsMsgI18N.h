@@ -19,31 +19,30 @@
 #ifndef _nsMsgI18N_H_
 #define _nsMsgI18N_H_
 
-#include "nsMsgTransition.h"
+#include "nscore.h"
+#include "msgCore.h"
 
-NS_BEGIN_EXTERN_C
 
-char      *nsMsgI18NEncodeMimePartIIStr(const char *header, const char *charset, PRBool bUseMime);
-PRBool    nsMsgI18Nstateful_charset(const char *charset);
-PRBool    nsMsgI18N7bit_data_part(const char *charset, const char *string, const PRUint32 size);
-char      *nsMsgI18NGetAcceptLanguage(void); 
+NS_MSG_BASE char      *nsMsgI18NEncodeMimePartIIStr(const char *header, const char *charset, PRBool bUseMime);
+NS_MSG_BASE PRBool    nsMsgI18Nstateful_charset(const char *charset);
+NS_MSG_BASE PRBool    nsMsgI18N7bit_data_part(const char *charset, const char *string, const PRUint32 size);
+NS_MSG_BASE char      *nsMsgI18NGetAcceptLanguage(void); 
 
-const char *msgCompHeaderInternalCharset(void);
+NS_MSG_BASE const char *msgCompHeaderInternalCharset(void);
 
-char * nsMsgI18NGetDefaultMailCharset(void);
-nsresult ConvertFromUnicode(const nsString& aCharset, 
+NS_MSG_BASE char * nsMsgI18NGetDefaultMailCharset(void);
+NS_MSG_BASE nsresult ConvertFromUnicode(const nsString& aCharset, 
                                    const nsString& inString,
                                    char** outCString);
-nsresult ConvertToUnicode(const nsString& aCharset, 
+NS_MSG_BASE nsresult ConvertToUnicode(const nsString& aCharset, 
                                  const char* inCString, 
                                  nsString& outString);
 
-nsresult nsMsgI18NDecodeMimePartIIStr(const nsString& header, nsString& charset, nsString& decodedString);
+NS_MSG_BASE nsresult nsMsgI18NDecodeMimePartIIStr(const nsString& header, nsString& charset, nsString& decodedString);
 
-const char *nsMsgI18NParseMetaCharset(nsFileSpec* fileSpec);
+NS_MSG_BASE const char *nsMsgI18NParseMetaCharset(nsFileSpec* fileSpec);
 
-nsresult nsMsgI18NConvertToEntity(const nsString& inString, nsString* outString);
+NS_MSG_BASE nsresult nsMsgI18NConvertToEntity(const nsString& inString, nsString* outString);
 
-NS_END_EXTERN_C
 
 #endif /* _nsMsgI18N_H_ */

@@ -41,6 +41,7 @@ CPPSRCS		= \
 		nsMsgProtocol.cpp \
 		nsMsgMailNewsUrl.cpp \
 		nsMsgTxn.cpp \
+		nsMsgI18N.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -59,6 +60,7 @@ EXPORTS		= \
 		nsMsgProtocol.h \
 		nsMsgMailNewsUrl.h \
 		nsMsgTxn.h \
+		nsMsgI18N.h \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

@@ -90,6 +90,7 @@
 #include "nsIMsgCompFields.h"
 #include "nsIMsgComposeService.h"
 #include "nsMsgCompFieldsFact.h"
+#include "nsMsgI18N.h"
 
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -1633,6 +1634,9 @@ nsMessenger::ForwardMessages(nsIDOMNodeList *domNodeList,
           }
           nsString subject;
           nsString fwdSubject;
+          nsString charSet;
+          nsString encodedCharset;
+          nsString decodedString;
           msgSupport = getter_AddRefs(messageArray->ElementAt(0));
           nsCOMPtr<nsIDBMessage> aMessage = do_QueryInterface(msgSupport);
           if (aMessage)
@@ -1641,15 +1645,22 @@ nsMessenger::ForwardMessages(nsIDOMNodeList *domNodeList,
             aMessage->GetMsgDBHdr(getter_AddRefs(aMsgHdr));
             if (aMsgHdr)
             {
+              aMsgHdr->GetCharSet(&charSet);
               aMsgHdr->GetSubject(&subject);
               fwdSubject = "[Fwd: ";
               fwdSubject += subject;
               fwdSubject += "]";
             }
           }
-          if (fwdSubject.Length())
-            compFields->SetSubject(fwdSubject.ToNewUnicode());
-          compFields->SetAttachments(attachments.ToNewUnicode());
+          if (!charSet.Equals(""))
+            compFields->SetCharacterSet(charSet.GetUnicode());
+          if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(fwdSubject, 
+                                                             encodedCharset, 
+                                                             decodedString)))
+            compFields->SetSubject(decodedString.GetUnicode());
+          else if (fwdSubject.Length())
+            compFields->SetSubject(fwdSubject.GetUnicode());
+          compFields->SetAttachments(attachments.GetUnicode());
           rv = composeService->OpenComposeWindowWithCompFields(nsnull,
                                      nsIMsgCompFormat::Default, compFields);
           break;
@@ -1675,7 +1686,7 @@ nsMessenger::ForwardMessages(nsIDOMNodeList *domNodeList,
                                                      nsCOMTypeInfo<nsIMsgDraft>::GetIID(), 
                                                      getter_AddRefs(pMsgDraft));
                         if (NS_SUCCEEDED(rv) && pMsgDraft)
-                          pMsgDraft->OpenDraftMsg(str.ToNewUnicode(),
+                          pMsgDraft->OpenDraftMsg(str.GetUnicode(),
                                                   nsnull, PR_TRUE);
                       }
                   }
