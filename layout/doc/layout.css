@@ -54,14 +54,17 @@ Components {
   color: white;
   cursor: pointer;
 }
+
 /* workaround for above rule not working */
-*[xml:link] {
+*[xlink:type] {
   cursor: pointer;
 }
+
 /* workaround for above rule not working */
-*[show="replace"] {
+*[xlink:show="replace"] {
   cursor: pointer;
 }
+
 Term {
   display: block;
   font-weight: bold;

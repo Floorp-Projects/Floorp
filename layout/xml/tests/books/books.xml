@@ -5,7 +5,8 @@
 
 <!DOCTYPE SearchResult>
 
-<SearchResult xmlns:html="http://www.w3.org/TR/REC-html40">
+<SearchResult xmlns:html="http://www.w3.org/TR/REC-html40"
+              xmlns:xlink="http://www.w3.org/1999/xlink">
 
 <Header>
   <Toolbar>
@@ -25,7 +26,7 @@
 
   <Book>
     <BookCover><html:img src="kerouac.gif" width="100" height="140"/></BookCover>
-    <Title xml:link="simple" show="replace" href="http://www.amazon.com/exec/obidos/ASIN/0140042598/002-5969498-2733628">On the Road</Title>
+    <Title xlink:type="simple" xlink:show="replace" xlink:href="http://www.amazon.com/exec/obidos/ASIN/0140042598/002-5969498-2733628">On the Road</Title>
     <Author>Kerouac, Jack</Author>
     <ISBN>0140042598</ISBN>
     <Synopsis>
@@ -37,7 +38,7 @@ On The Road, the most famous of Jack Kerouac's works, is not only the soul of th
 
   <Book>
     <BookCover><html:img src="bill.gif" width="100" height="140" /></BookCover>
-    <Title xml:link="simple" show="replace" href="http://www.amazon.com/exec/obidos/ASIN/0140260404/002-5969498-2733628">The Road Ahead</Title>
+    <Title xlink:type="simple" xlink:show="replace" xlink:href="http://www.amazon.com/exec/obidos/ASIN/0140260404/002-5969498-2733628">The Road Ahead</Title>
     <Author>Gates, Bill</Author>
     <ISBN>666666666</ISBN>
     <Synopsis>
@@ -49,7 +50,7 @@ In a study, the founder of Microsoft presents his vision for the future in which
 
   <Book>
     <BookCover><html:img src="welville.gif" width="100" height="140" /></BookCover>
-    <Title xml:link="simple" show="replace" href="http://www.amazon.com/exec/obidos/ASIN/0140167188/002-5969498-2733628">The Road to Wellville</Title>
+    <Title xlink:type="simple" xlink:show="replace" xlink:href="http://www.amazon.com/exec/obidos/ASIN/0140167188/002-5969498-2733628">The Road to Wellville</Title>
     <Author>Boyle, T. Coraghessan</Author>
     <ISBN>0140167188</ISBN>
     <Synopsis>
@@ -61,7 +62,7 @@ A snobbish wife and her henpecked husband travel to Dr. Kellogg's spa in turn-of
 
   <Book>
     <BookCover><html:img src="road.gif" width="100" height="140" /></BookCover>
-    <Title xml:link="simple" show="replace" href="http://www.amazon.com/exec/obidos/ASIN/1562512625/002-5969498-2733628">AAA Road Atlas 1999</Title>
+    <Title xlink:type="simple" xlink:show="replace" xlink:href="http://www.amazon.com/exec/obidos/ASIN/1562512625/002-5969498-2733628">AAA Road Atlas 1999</Title>
     <Author>A. A. A.</Author>
     <ISBN>1562512625</ISBN>
     <Synopsis>
@@ -73,7 +74,7 @@ The definitive road atlas to the United States, Canada and Mexico.
 
   <Book>
     <BookCover><html:img src="bethlehem.gif" width="100" height="140" /></BookCover>
-    <Title xml:link="simple" show="replace" href="http://www.amazon.com/exec/obidos/ASIN/0449219143/002-5969498-2733628">Bethlehem Road</Title>
+    <Title xlink:type="simple" xlink:show="replace" xlink:href="http://www.amazon.com/exec/obidos/ASIN/0449219143/002-5969498-2733628">Bethlehem Road</Title>
     <Author>Perry, Anne</Author>
     <ISBN>0449219143</ISBN>
     <Synopsis>
@@ -85,7 +86,7 @@ He might be elegant, but there's no mistaking it--the gentleman tied to the lamp
 
   <Book>
     <BookCover><html:img src="charing.gif" width="100" height="140" /></BookCover>
-    <Title xml:link="simple" show="replace" href="http://www.amazon.com/exec/obidos/ASIN/0140143505/002-5969498-2733628">84 Charing Cross Road</Title>
+    <Title xlink:type="simple" xlink:show="replace" xlink:href="http://www.amazon.com/exec/obidos/ASIN/0140143505/002-5969498-2733628">84 Charing Cross Road</Title>
     <Author>Hanff, Helene</Author>
     <ISBN>0140143505</ISBN>
     <Synopsis>

@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="docbook.css" type="text/css"?>
 <!DOCTYPE Book SYSTEM "docbook.dtd">
-<Book> <Title>SoftQuad
+<Book xmlns:xlink="http://www.w3.org/1999/xlink"> 
+<Title>SoftQuad
 Inc.</Title>
 <p xmlns="http://www.w3.org/TR/REC-html40" xmlns:h="http://www.w3.org/TR/REC-html40">
 <h:img src="flamer.gif"/>
@@ -64,12 +65,12 @@ tokenized attribute values. </Para>
 <Para>The following topics describe DOM attributes: </Para> 
 <ItemizedList Mark="Bullet"> <ListItem> 
 <Para> 
-<ULink xml:link="simple" show="replace"
- href="http://www.w3.org/TR/REC-DOM-Level-1/level-one-core.html#ID-637646024">Interface
+<ULink xlink:type="simple" xlink:show="replace"
+ xlink:href="http://www.w3.org/TR/REC-DOM-Level-1/level-one-core.html#ID-637646024">Interface
 Attr</ULink> </Para></ListItem> <ListItem> 
 <Para> 
-<ULink xml:link="simple" show="new"
- href="http://www.w3.org/TR/REC-DOM-Level-1/level-one-core.html#ID-745549614">
+<ULink xlink:type="simple" xlink:show="new"
+ xlink:href="http://www.w3.org/TR/REC-DOM-Level-1/level-one-core.html#ID-745549614">
 Interface Element</ULink> </Para></ListItem> </ItemizedList> </Sect1></Chapter>
 
 <Chapter Label="26" Role="funcref"> <Title><Anchor

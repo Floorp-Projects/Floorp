@@ -2,7 +2,8 @@
 <?xml-stylesheet href="book.css" type="text/css"?>
 <?xml-stylesheet href="toc.css" type="text/css"?>
 
-<book id="book" xmlns:html="http://www.w3.org/TR/REC-html40">
+<book id="book" xmlns:html="http://www.w3.org/TR/REC-html40"
+                xmlns:xlink="http://www.w3.org/1999/xlink">
  <html:script src="toc.js"/>
  <html:img src="irslogo.gif"/>
  <navbar>
@@ -43,7 +44,7 @@ For estimated tax payments for tax years beginning in 1999, the safe harbor for 
             </para>
             <para>
 For more information on estimated tax, see 
-            <link xml:link="simple" href="http://www.irs.ustreas.gov/prod/forms_pubs/pubs/p505toc.htm" show="replace" actuate="user">Publication 505</link>. 
+            <link xlink:type="simple" xlink:href="http://www.irs.ustreas.gov/prod/forms_pubs/pubs/p505toc.htm" xlink:show="replace" xlink:actuate="user">Publication 505</link>. 
             </para>
          </contents>
       </section>
@@ -52,7 +53,7 @@ For more information on estimated tax, see
          <contents>
             <para>
 For 1999, the health insurance deduction for the self-employed is increased from 45% to 60% of the amount you pay for medical insurance for yourself and your family. For more information, see chapter 10 in 
-              <link xml:link="simple" href="http://www.irs.ustreas.gov/prod/forms_pubs/pubs/p535toc.htm" show="replace" actuate="user">Publication 535</link>. 
+              <link xlink:type="simple" xlink:href="http://www.irs.ustreas.gov/prod/forms_pubs/pubs/p535toc.htm" xlink:show="replace" xlink:actuate="user">Publication 535</link>. 
             </para>
          </contents>
       </section>
@@ -73,7 +74,7 @@ For 1999, the employer and employee will continue to pay:
             <para>
                <heading>Wage limits.</heading>
 For social security tax, the maximum amount of 1999 wages subject to the tax has increased to $72,600. For Medicare tax, all covered 1999 wages are subject to the tax. There is no wage base limit. For information about these taxes, see 
-              <link xml:link="simple" href="http://www.irs.ustreas.gov/prod/forms_pubs/pubs/p15toc.htm" show="replace" actuate="user">Publication 15</link>, <ref>Circular E, Employer's Tax Guide</ref>. 
+              <link xlink:type="simple" xlink:href="http://www.irs.ustreas.gov/prod/forms_pubs/pubs/p15toc.htm" xlink:show="replace" xlink:actuate="user">Publication 15</link>, <ref>Circular E, Employer's Tax Guide</ref>. 
             </para>
          </contents>
       </section>
@@ -110,7 +111,7 @@ For 1999, the employer and employee will continue to pay:
           </para>
           <para>
 <heading>Wage limits.</heading> For social security tax, the maximum amount of 1999 wages subject to the tax has increased to $72,600. For Medicare tax, all covered 1999 wages are subject to the tax. There is no wage base limit. For information about these taxes and amounts to withhold, see 
-<link xml:link="simple" href="http://www.irs.ustreas.gov/prod/forms_pubs/pubs/p15toc.htm" show="replace" actuate="user">Publication 15</link>, <ref>Circular E, Employer's TaxGuide</ref>. 
+<link xlink:type="simple" xlink:href="http://www.irs.ustreas.gov/prod/forms_pubs/pubs/p15toc.htm" xlink:show="replace" xlink:actuate="user">Publication 15</link>, <ref>Circular E, Employer's TaxGuide</ref>. 
           </para>
         </contents>
       </section>
@@ -126,7 +127,7 @@ Under certain circumstances, the IRS can waive the penalty for a first-time depo
         <title>Electronic Deposit of Taxes</title>
         <contents>
           <para>
-If you were first required to deposit taxes by electronic funds transfer after June 30, 1997, the IRS will not impose the penalty for not doing so before July 1, 1999. Previously, the IRS had waived the penalty through December 31, 1998. For information about depositing taxes electronically, see <link xml:link="simple" href="http://www.irs.ustreas.gov/prod/forms_pubs/pubs/p15toc.htm" show="replace" actuate="user">Publication 15</link>. 
+If you were first required to deposit taxes by electronic funds transfer after June 30, 1997, the IRS will not impose the penalty for not doing so before July 1, 1999. Previously, the IRS had waived the penalty through December 31, 1998. For information about depositing taxes electronically, see <link xlink:type="simple" xlink:href="http://www.irs.ustreas.gov/prod/forms_pubs/pubs/p15toc.htm" xlink:show="replace" xlink:actuate="user">Publication 15</link>. 
           </para>
         </contents>
       </section>
@@ -167,7 +168,7 @@ The maximum amount subject to the social security part for tax years beginning i
         <title>Hardship Distributions</title>
         <contents>
           <para>
-Beginning in 1999, hardship distributions from 401(k) plans and 403(b) plans are not eligible rollover distributions. They cannot be rolled over into a traditional IRA. For more information on traditional IRAs, see <link xml:link="simple" href="http://www.irs.ustreas.gov/prod/forms_pubs/pubs/p590toc.htm" show="replace" actuate="user">Publication 590</link>. 
+Beginning in 1999, hardship distributions from 401(k) plans and 403(b) plans are not eligible rollover distributions. They cannot be rolled over into a traditional IRA. For more information on traditional IRAs, see <link xlink:type="simple" xlink:href="http://www.irs.ustreas.gov/prod/forms_pubs/pubs/p590toc.htm" xlink:show="replace" xlink:actuate="user">Publication 590</link>. 
           </para>
         </contents>
       </section>
@@ -184,8 +185,8 @@ Beginning in 1999, hardship distributions from 401(k) plans and 403(b) plans are
 For estates of decedents dying after 1997, the executor can elect to deduct the adjusted value of a qualified family-owned business interest, up to a limited amount, from the gross estate. For more information, see section 2057 of the Internal Revenue Code and the instructions for Schedule T, Form 706, <ref>United States Estate (and Generation-Skipping Transfer) Tax Return</ref>. 
           </para>
         </contents>
-      </section id="chap4sec2">
-      <section>
+      </section>
+      <section id="chap4sec2">
         <title>Suit for Refund</title>
         <contents>
           <para>
@@ -253,7 +254,7 @@ For 1999, the tax on the use of international air travel facilities will be $12.
 For 1999, the luxury tax on a passenger vehicle is reduced from 7% to 6% of the amount of the sales price that exceeds the base amount. The base amount for 1999 is $36,000. 
           </para>
           <para>
-The base amount is increased for electric vehicles and clean-fuel vehicles. See <link xml:link="simple" href="http://www.irs.ustreas.gov/prod/forms_pubs/pubs/p510toc.htm" show="replace" actuate="user">Publication 510</link> for information on these amounts. 
+The base amount is increased for electric vehicles and clean-fuel vehicles. See <link xlink:type="simple" xlink:href="http://www.irs.ustreas.gov/prod/forms_pubs/pubs/p510toc.htm" xlink:show="replace" xlink:actuate="user">Publication 510</link> for information on these amounts. 
           </para>
         </contents>
       </section>
