@@ -277,7 +277,7 @@ sub can_see_bug {
         $isoncclist, $missinggroup) = $sth->fetchrow_array();
     $self->{sthCanSeeBug} = $sth;
     return ( (($reporter == $userid) && $reporter_access)
-           || (Param('qacontact') && ($qacontact == $userid) && $userid)
+           || (Param('useqacontact') && ($qacontact == $userid) && $userid)
            || ($owner == $userid)
            || ($isoncclist && $cclist_access)
            || (!$missinggroup) );
