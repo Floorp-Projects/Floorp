@@ -37,6 +37,7 @@ var fm = {
   "chrome://cookie/content/pref-cookies.xul": "?cookies_prefs",
   "chrome://cookie/content/pref-images.xul": "?images_prefs",
   "chrome://wallet/content/pref-wallet.xul": "?forms_prefs",
+  "chrome://wallet/content/pref-masterpass.xul": "?passwords_master",
   "chrome://wallet/content/pref-passwords.xul": "?passwords_prefs",
   "chrome://pippki/content/pref-ssl.xul": "?ssl_prefs",
   "chrome://pippki/content/pref-certs.xul": "?certs_prefs",
