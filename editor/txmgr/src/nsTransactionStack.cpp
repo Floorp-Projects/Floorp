@@ -136,6 +136,7 @@ nsTransactionStack::Write(nsIOutputStream *aOutputStream)
     tx->Write(aOutputStream);
     tx = (nsTransactionItem *)--di;
   }
+  return NS_OK;
 }
 
 
