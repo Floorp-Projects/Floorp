@@ -40,6 +40,7 @@ typedef struct _nsMsgRDFNotification {
 
 #define NC_RDF_SUBJECT				NC_NAMESPACE_URI "Subject"
 #define NC_RDF_SENDER				NC_NAMESPACE_URI "Sender"
+#define NC_RDF_RECIPIENT			NC_NAMESPACE_URI "Recipient"
 #define NC_RDF_DATE					NC_NAMESPACE_URI "Date"
 #define NC_RDF_STATUS				NC_NAMESPACE_URI "Status"
 #define NC_RDF_FLAGGED				NC_NAMESPACE_URI "Flagged"
@@ -75,7 +76,10 @@ typedef struct _nsMsgRDFNotification {
 //Sort Properties
 #define NC_RDF_SUBJECT_COLLATION_SORT	NC_NAMESPACE_URI "Subject?collation=true"
 #define NC_RDF_SENDER_COLLATION_SORT	NC_NAMESPACE_URI "Sender?collation=true"
+#define NC_RDF_RECIPIENT_COLLATION_SORT	NC_NAMESPACE_URI "Recipient?collation=true"
 #define NC_RDF_ORDERRECEIVED_SORT		NC_NAMESPACE_URI "OrderReceived?sort=true"
+#define NC_RDF_PRIORITY_SORT			NC_NAMESPACE_URI "Priority?sort=true"
+#define NC_RDF_SIZE_SORT				NC_NAMESPACE_URI "Size?sort=true"
 
 #define NC_RDF_NAME_SORT				NC_NAMESPACE_URI "Name?sort=true"
 #define NC_RDF_FOLDERTREENAME_SORT		NC_NAMESPACE_URI "FolderTreeName?sort=true"

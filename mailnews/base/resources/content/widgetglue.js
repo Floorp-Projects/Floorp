@@ -34,39 +34,6 @@ var viewShowUnread =2;
 var viewShowWatched = 3;
 
 
-function MsgDeleteMessage(reallyDelete, fromToolbar)
-{
-  //dump("\nMsgDeleteMessage from XUL\n");
-  //dump("from toolbar? " + fromToolbar + "\n");
-
-  if(reallyDelete)
-	dump("reallyDelete\n");
-  var tree = GetThreadTree();
-  if(tree) {
-	var srcFolder = GetThreadTreeFolder();
-	// if from the toolbar, return right away if this is a news message
-	// only allow cancel from the menu:  "Edit | Cancel / Delete Message"
-	if (fromToolbar) {
-		uri = srcFolder.getAttribute('ref');
-		//dump("uri[0:6]=" + uri.substring(0,6) + "\n");
-		if (uri.substring(0,6) == "news:/") {
-			//dump("delete ignored!\n");
-			return;
-		}
-	}
-	dump("tree is valid\n");
-	//get the selected elements
-
-	var messageList = ConvertDOMListToResourceArray(tree.selectedItems);
-    var nextMessage = GetNextMessageAfterDelete(tree.selectedItems);
-	if(nextMessage)
-		gNextMessageAfterDelete = nextMessage.getAttribute('id');
-	else
-		gNextMessageAfterDelete = null;
-
-	messenger.DeleteMessages(tree.database, srcFolder.resource, messageList, reallyDelete);
-  }
-}
 
 function ConvertDOMListToResourceArray(nodeList)
 {
@@ -113,40 +80,7 @@ function MsgDeleteFolder()
 
 
 
-function MsgMoveMessage(destFolder)
-{
-	// Get the id for the folder we're copying into
-    destUri = destFolder.getAttribute('id');
-	dump(destUri);
 
-	var tree = GetThreadTree();
-	if(tree)
-	{
-		//Get the selected messages to copy
-		var messageList = ConvertDOMListToResourceArray(tree.selectedItems);
-		//get the current folder
-		var nextMessage = GetNextMessageAfterDelete(tree.selectedItems);
-		var srcFolder = GetThreadTreeFolder();
-        var srcUri = srcFolder.getAttribute('ref');
-        if (srcUri.substring(0,6) == "news:/")
-        {
-            messenger.CopyMessages(tree.database,
-                                   srcFolder.resource,
-                                   destFolder.resource, messageList, false);
-        }
-        else
-        {
-			if(nextMessage)
-				gNextMessageAfterDelete = nextMessage.getAttribute('id');
-			else
-				gNextMessageAfterDelete = null;
-
-            messenger.CopyMessages(tree.database,
-                                   srcFolder.resource,
-                                   destFolder.resource, messageList, true);
-        }
-	}	
-}
 
 function MsgViewAllMsgs() 
 {
@@ -193,6 +127,11 @@ function MsgSortByDate()
 function MsgSortBySender()
 {
 	SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Sender', 'http://home.netscape.com/NC-rdf#Date', true, null);
+}
+
+function MsgSortByRecipient()
+{
+	SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Recipient', 'http://home.netscape.com/NC-rdf#Date', true, null);
 }
 
 function MsgSortByStatus()
@@ -421,20 +360,6 @@ function MsgCompactFolder()
 	}
 }
 
-function MsgFind() {
-    messenger.find();
-}
-function MsgFindAgain() {
-    messenger.findAgain();
-}
-
-function MsgSearchMessages() {
-    window.openDialog("chrome://messenger/content/SearchDialog.xul", "SearchMail", "chrome");
-}
-
-function MsgFilters() {
-    window.openDialog("chrome://messenger/content/FilterListDialog.xul", "FilterDialog", "chrome");
-}
 
 function MsgToggleMessagePane()
 {
@@ -481,51 +406,6 @@ function MsgViewBriefHeaders()
 function MsgReload() 
 {
 	ThreadPaneSelectionChange()
-}
-
-
-function MsgViewPageSource() 
-{
-	dump("MsgViewPageSource(); \n ");
-	
-	var tree = GetThreadTree();
-	var selectedItems = tree.selectedItems;
-	var numSelected = selectedItems.length;
-  var url;
-  var uri;
-  var mailSessionProgID      = "component://netscape/messenger/services/session";
-
-  if (numSelected == 0)
-  {
-    dump("MsgViewPageSource(): No messages selected.\n");
-    return false;
-  }
-
-  // First, get the mail session
-  var mailSession = Components.classes[mailSessionProgID].getService();
-  if (!mailSession)
-    return false;
-
-  mailSession = mailSession.QueryInterface(Components.interfaces.nsIMsgMailSession);
-  if (!mailSession)
-    return false;
-
-	for(var i = 0; i < numSelected; i++)
-	{
-    uri = selectedItems[i].getAttribute("id");
-  
-    // Now, we need to get a URL from a URI
-    url = mailSession.ConvertMsgURIToMsgURL(uri, msgWindow);
-    if (url)
-      url += "?header=src";
-
-    // Use a browser window to view source
-    window.openDialog( "chrome://navigator/content/navigator.xul",
-                       "_blank",
-                       "chrome,menubar,status,dialog=no,resizable",
-                       url,
-                       "view-source" );
-	}
 }
 
 

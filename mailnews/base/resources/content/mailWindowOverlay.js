@@ -36,6 +36,36 @@ function MsgGetMessage()
 	GetNewMessages(folders, compositeDataSource);
 }
 
+function MsgDeleteMessage(reallyDelete, fromToolbar)
+{
+
+	if(reallyDelete)
+		dump("reallyDelete\n");
+	var srcFolder = GetLoadedMsgFolder();
+	var tree = GetThreadTree();
+	// if from the toolbar, return right away if this is a news message
+	// only allow cancel from the menu:  "Edit | Cancel / Delete Message"
+	if (fromToolbar)
+	{
+		var folderResource = srcFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+		var uri = folderResource.Value;
+		//dump("uri[0:6]=" + uri.substring(0,6) + "\n");
+		if (uri.substring(0,6) == "news:/")
+		{
+			//dump("delete ignored!\n");
+			return;
+		}
+	}
+	dump("tree is valid\n");
+	//get the selected elements
+
+	var compositeDataSource = GetCompositeDataSource("DeleteMessages");
+	var messages = GetSelectedMessages();
+
+	SetNextMessageAfterDelete(null, true);
+	DeleteMessages(compositeDataSource, srcFolder, messages, reallyDelete);
+}
+
 function MsgCopyMessage(destFolder)
 {
 	// Get the id for the folder we're copying into
@@ -47,8 +77,33 @@ function MsgCopyMessage(destFolder)
 	var compositeDataSource = GetCompositeDataSource("Copy");
 	var messages = GetSelectedMessages();
 
-	CopyMessages(compositeDataSource, srcFolder, destMsgFolder, messages);
+	CopyMessages(compositeDataSource, srcFolder, destMsgFolder, messages, false);
 	
+}
+
+function MsgMoveMessage(destFolder)
+{
+	// Get the id for the folder we're copying into
+    destUri = destFolder.getAttribute('id');
+	destResource = RDF.GetResource(destUri);
+	destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+	
+	var srcFolder = GetLoadedMsgFolder();
+	var compositeDataSource = GetCompositeDataSource("Move");
+	var messages = GetSelectedMessages();
+
+	var srcResource = srcFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+	var srcUri = srcResource.Value;
+	if (srcUri.substring(0,6) == "news:/")
+	{
+		CopyMessages(compositeDataSource, srcFolder, destMsgFolder, messages, false);
+	}
+	else
+	{
+		SetNextMessageAfterDelete(null, true);
+
+		CopyMessages(compositeDataSource, srcFolder, destMsgFolder, messages, true);
+	}	
 }
 
 function MsgNewMessage(event)
@@ -276,6 +331,30 @@ function MsgMarkThreadAsRead()
 	}
 
 }
+
+function MsgViewPageSource() 
+{
+	dump("MsgViewPageSource(); \n ");
+	
+	var messages = GetSelectedMessages();
+	ViewPageSource(messages);
+}
+
+function MsgFind() {
+    messenger.find();
+}
+function MsgFindAgain() {
+    messenger.findAgain();
+}
+
+function MsgSearchMessages() {
+    window.openDialog("chrome://messenger/content/SearchDialog.xul", "SearchMail", "chrome");
+}
+
+function MsgFilters() {
+    window.openDialog("chrome://messenger/content/FilterListDialog.xul", "FilterDialog", "chrome");
+}
+
 
 function MsgMarkByDate() {}
 function MsgOpenAttachment() {}

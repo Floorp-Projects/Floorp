@@ -62,7 +62,7 @@ Rights Reserved.
 	  		<treerow>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Thread"/>
 				<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Subject"/>
-				<treecell value="rdf:http://home.netscape.com/NC-rdf#Sender"/>
+				<treecell value="rdf:http://home.netscape.com/NC-rdf#Sender" id ="SenderColumnTemplate"/>
 				<treecell allowevents="true" class="unreadcol image" onclick="return top.ToggleMessageRead(event.target.parentNode.parentNode.parentNode)"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Date"/>
 				<treecell class="prioritycol" value="rdf:http://home.netscape.com/NC-rdf#Priority"/>
@@ -99,7 +99,7 @@ Rights Reserved.
     <treerow id="headRow">
 		<treecell display="Thread" onclick="return top.ChangeThreadView();" class='threadColumnHeader' id="ThreadColumnHeader"/> 
 		<treecell value="&subjectColumn.label;" onclick="return top.MsgSortBySubject();"/>
-		<treecell onclick="return top.MsgSortBySender();" value="&senderColumn.label;"/>
+		<treecell onclick="return top.MsgSortBySender();" value="&senderColumn.label;" id="SenderColumnHeader"/>
 		<treecell display="Read" onclick="return top.MsgSortByRead();" class="readColumnHeader"/> 
 		<treecell value="&dateColumn.label;" onclick="return top.MsgSortByDate();"/>
 		<treecell value="&priorityColumn.label;" onclick="return top.MsgSortByPriority();"/>

@@ -123,6 +123,9 @@ protected:
 	nsresult createMessageSenderNode(nsIMessage *message,
 								 PRBool sort,
 								 nsIRDFNode **target);
+	nsresult createMessageRecipientNode(nsIMessage *message,
+                                               PRBool sort,
+                                               nsIRDFNode **target);
 	nsresult createMessageDateNode(nsIMessage *message,
 								 nsIRDFNode **target);
 	nsresult createMessageStatusNode(nsIMessage *message,
@@ -136,10 +139,11 @@ protected:
 	nsresult createMessagePriorityNode(nsIMessage *message,
 								   nsIRDFNode **target);
 
+	nsresult createMessagePrioritySortNode(nsIMessage *message, nsIRDFNode **target);
+
 	nsresult createPriorityString(nsMsgPriority priority, nsCAutoString &priorityStr);
 
-	nsresult createMessageSizeNode(nsIMessage *message,
-								   nsIRDFNode **target);
+	nsresult createMessageSizeNode(nsIMessage *message, nsIRDFNode **target, PRBool sort);
 
 	nsresult createMessageIsUnreadNode(nsIMessage *message, nsIRDFNode **target);
 	nsresult createMessageHasAttachmentNode(nsIMessage *message, nsIRDFNode **target);
@@ -188,11 +192,15 @@ protected:
 	static nsIRDFResource* kNC_SubjectCollation;
 	static nsIRDFResource* kNC_Sender;
 	static nsIRDFResource* kNC_SenderCollation;
+	static nsIRDFResource* kNC_Recipient;
+	static nsIRDFResource* kNC_RecipientCollation;
 	static nsIRDFResource* kNC_Date;
 	static nsIRDFResource* kNC_Status;
 	static nsIRDFResource* kNC_Flagged;
 	static nsIRDFResource* kNC_Priority;
+	static nsIRDFResource* kNC_PrioritySort;
 	static nsIRDFResource* kNC_Size;
+	static nsIRDFResource* kNC_SizeSort;
 	static nsIRDFResource* kNC_Total;
 	static nsIRDFResource* kNC_Unread;
 	static nsIRDFResource* kNC_MessageChild;
@@ -217,6 +225,11 @@ protected:
 	nsCOMPtr<nsIRDFNode> kLowLiteral;
 	nsCOMPtr<nsIRDFNode> kHighLiteral;
 	nsCOMPtr<nsIRDFNode> kHighestLiteral;
+	nsCOMPtr<nsIRDFNode> kLowestSortLiteral;
+	nsCOMPtr<nsIRDFNode> kLowSortLiteral;
+	nsCOMPtr<nsIRDFNode> kNormalSortLiteral;
+	nsCOMPtr<nsIRDFNode> kHighSortLiteral;
+	nsCOMPtr<nsIRDFNode> kHighestSortLiteral;
 	nsCOMPtr<nsIRDFNode> kFlaggedLiteral;
 	nsCOMPtr<nsIRDFNode> kUnflaggedLiteral;
 	nsCOMPtr<nsIRDFNode> kRepliedLiteral;

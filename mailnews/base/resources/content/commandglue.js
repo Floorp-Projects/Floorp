@@ -213,12 +213,36 @@ function RerootFolder(uri, newFolder, isThreaded, sortID, sortDirection)
   else
 	SortThreadPane("DateColumn", "http://home.netscape.com/NC-rdf#Date", "", false, null);
 
+  SetSentFolderColumns(IsSpecialFolder(newFolder, "Sent"));
   folder.setAttribute('ref', uri);
     msgNavigationService.EnsureDocumentIsLoaded(document);
 
   UpdateStatusMessageCounts(newFolder);
 }
 
+function SetSentFolderColumns(isSentFolder)
+{
+	var senderColumn = document.getElementById("SenderColumnHeader");
+	var senderColumnTemplate = document.getElementById("SenderColumnTemplate");
+	var authorColumnHeader = document.getElementById("AuthorColumn");
+
+	if(isSentFolder)
+	{
+		senderColumn.setAttribute("value", Bundle.GetStringFromName("recipientColumnHeader"));
+		senderColumn.setAttribute("onclick", "return top.MsgSortByRecipient();");
+		senderColumnTemplate.setAttribute("value", "rdf:http://home.netscape.com/NC-rdf#Recipient");
+		authorColumnHeader.setAttribute("rdf:resource", "http://home.netscape.com/NC-rdf#Recipient");
+	}
+	else
+	{
+		senderColumn.setAttribute("value", Bundle.GetStringFromName("senderColumnHeader"));
+		senderColumn.setAttribute("onclick", "return top.MsgSortBySender();");
+		senderColumnTemplate.setAttribute("value", "rdf:http://home.netscape.com/NC-rdf#Sender");
+		authorColumnHeader.setAttribute("rdf:resource", "http://home.netscape.com/NC-rdf#Sender");
+	}
+
+
+}
 
 function UpdateStatusMessageCounts(folder)
 {
@@ -299,6 +323,8 @@ function FindThreadPaneColumnBySortResource(sortID)
 	if(sortID == "http://home.netscape.com/NC-rdf#Date")
 		return "DateColumn";
 	else if(sortID == "http://home.netscape.com/NC-rdf#Sender")
+		return "AuthorColumn";
+	else if(sortID == "http://home.netscape.com/NC-rdf#Recipient")
 		return "AuthorColumn";
 	else if(sortID == "http://home.netscape.com/NC-rdf#Status")
 		return "StatusColumn";
@@ -606,7 +632,28 @@ function IsSpecialFolderSelected(folderName)
 	return false;
 }
 
+function IsSpecialFolder(msgFolder, specialFolderName)
+{
+	var folderTree = GetFolderTree();
+	var db = folderTree.database;
+	var folderResource = msgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+	if(folderResource)
+	{
+		var property =
+			RDF.GetResource('http://home.netscape.com/NC-rdf#SpecialFolder');
+		if (!property) return false;
+		var result = db.GetTarget(folderResource, property , true);
+		if (!result) return false;
+		result = result.QueryInterface(Components.interfaces.nsIRDFLiteral);
+		if (!result) return false;
+		dump("We are looking for " + specialFolderName + "\n");
+		dump("special folder name = " + result.Value + "\n");
+		if(result.Value == specialFolderName)
+			return true;
+	}
 
+	return false;
+}
 
 function ChangeThreadView()
 {

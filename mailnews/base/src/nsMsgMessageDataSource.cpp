@@ -52,11 +52,15 @@ nsIRDFResource* nsMsgMessageDataSource::kNC_Subject = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_SubjectCollation = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Sender= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_SenderCollation = nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_Recipient= nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_RecipientCollation = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Date= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Status= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Flagged= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Priority= nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_PrioritySort= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Size= nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_SizeSort= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Total = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Unread = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_MessageChild = nsnull;
@@ -108,11 +112,15 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 		NS_RELEASE2(kNC_SubjectCollation, refcnt);
 		NS_RELEASE2(kNC_Sender, refcnt);
 		NS_RELEASE2(kNC_SenderCollation, refcnt);
+		NS_RELEASE2(kNC_Recipient, refcnt);
+		NS_RELEASE2(kNC_RecipientCollation, refcnt);
 		NS_RELEASE2(kNC_Date, refcnt);
 		NS_RELEASE2(kNC_Status, refcnt);
 		NS_RELEASE2(kNC_Flagged, refcnt);
 		NS_RELEASE2(kNC_Priority, refcnt);
+		NS_RELEASE2(kNC_PrioritySort, refcnt);
 		NS_RELEASE2(kNC_Size, refcnt);
+		NS_RELEASE2(kNC_SizeSort, refcnt);
 		NS_RELEASE2(kNC_Total, refcnt);
 		NS_RELEASE2(kNC_Unread, refcnt);
 		NS_RELEASE2(kNC_MessageChild, refcnt);
@@ -165,11 +173,15 @@ nsresult nsMsgMessageDataSource::Init()
 		rdf->GetResource(NC_RDF_SUBJECT_COLLATION_SORT, &kNC_SubjectCollation);
 		rdf->GetResource(NC_RDF_SENDER, &kNC_Sender);
 		rdf->GetResource(NC_RDF_SENDER_COLLATION_SORT, &kNC_SenderCollation);
+		rdf->GetResource(NC_RDF_RECIPIENT, &kNC_Recipient);
+		rdf->GetResource(NC_RDF_RECIPIENT_COLLATION_SORT, &kNC_RecipientCollation);
 		rdf->GetResource(NC_RDF_DATE, &kNC_Date);
 		rdf->GetResource(NC_RDF_STATUS, &kNC_Status);
 		rdf->GetResource(NC_RDF_FLAGGED, &kNC_Flagged);
 		rdf->GetResource(NC_RDF_PRIORITY, &kNC_Priority);
+		rdf->GetResource(NC_RDF_PRIORITY_SORT, &kNC_PrioritySort);
 		rdf->GetResource(NC_RDF_SIZE, &kNC_Size);
+		rdf->GetResource(NC_RDF_SIZE_SORT, &kNC_SizeSort);
 		rdf->GetResource(NC_RDF_TOTALMESSAGES,   &kNC_Total);
 		rdf->GetResource(NC_RDF_TOTALUNREADMESSAGES,   &kNC_Unread);
 		rdf->GetResource(NC_RDF_MESSAGECHILD,   &kNC_MessageChild);
@@ -212,6 +224,16 @@ nsresult nsMsgMessageDataSource::CreateLiterals(nsIRDFService *rdf)
 	createNode(str, getter_AddRefs(kHighLiteral), rdf);
 	str = "highest";
 	createNode(str, getter_AddRefs(kHighestLiteral), rdf);
+	str = "4";
+	createNode(str, getter_AddRefs(kLowestSortLiteral), rdf);
+	str = "3";
+	createNode(str, getter_AddRefs(kLowSortLiteral), rdf);
+	str = "2";
+	createNode(str, getter_AddRefs(kNormalSortLiteral), rdf);
+	str = "1";
+	createNode(str, getter_AddRefs(kHighSortLiteral), rdf);
+	str = "0";
+	createNode(str, getter_AddRefs(kHighestSortLiteral), rdf);
 	str = "flagged";
 	createNode(str, getter_AddRefs(kFlaggedLiteral), rdf);
 	str = "unflagged";
@@ -526,6 +548,7 @@ nsMsgMessageDataSource::getMessageArcLabelsOut(PRBool showThreads,
 
 	(*arcs)->AppendElement(kNC_Subject);
 	(*arcs)->AppendElement(kNC_Sender);
+	(*arcs)->AppendElement(kNC_Recipient);
 	(*arcs)->AppendElement(kNC_Date);
 	(*arcs)->AppendElement(kNC_Status);
 	(*arcs)->AppendElement(kNC_Flagged);
@@ -915,6 +938,10 @@ nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
 		rv = createMessageSenderNode(message, PR_TRUE, target);
 	else if (kNC_Sender == property)
 		rv = createMessageSenderNode(message, PR_FALSE, target);
+	else if (kNC_RecipientCollation == property)
+		rv = createMessageRecipientNode(message, PR_TRUE, target);
+	else if (kNC_Recipient == property)
+		rv = createMessageRecipientNode(message, PR_FALSE, target);
 	else if ((kNC_Date == property))
 		rv = createMessageDateNode(message, target);
 	else if ((kNC_Status == property))
@@ -923,8 +950,12 @@ nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
 		rv = createMessageFlaggedNode(message, target);
 	else if ((kNC_Priority == property))
 		rv = createMessagePriorityNode(message, target);
+	else if ((kNC_PrioritySort == property))
+		rv = createMessagePrioritySortNode(message, target);
 	else if ((kNC_Size == property))
-		rv = createMessageSizeNode(message, target);
+		rv = createMessageSizeNode(message, target, PR_FALSE);
+	else if ((kNC_SizeSort == property))
+		rv = createMessageSizeNode(message, target, PR_TRUE);
 	else if (( kNC_Total == property))
 		rv = createMessageTotalNode(message, target);
 	else if ((kNC_Unread == property))
@@ -1002,6 +1033,31 @@ nsMsgMessageDataSource::createMessageSenderNode(nsIMessage *message,
 				 rv = GetSenderName(sender, &senderUserName);
 			if(NS_SUCCEEDED(rv))
 	       rv = createNode(senderUserName, target, getRDFService());
+	}
+  return rv;
+}
+
+nsresult
+nsMsgMessageDataSource::createMessageRecipientNode(nsIMessage *message,
+                                               PRBool sort,
+                                               nsIRDFNode **target)
+{
+	nsresult rv = NS_OK;
+	nsXPIDLString recipients;
+	nsAutoString recipientUserName;
+	if(sort)
+	{
+		rv = message->GetRecipientsCollationKey(getter_Copies(recipients));
+		if(NS_SUCCEEDED(rv))
+			rv = createNode(recipients, target, getRDFService());
+	}
+	else
+	{
+		rv = message->GetMime2DecodedRecipients(getter_Copies(recipients));
+		if(NS_SUCCEEDED(rv))
+			rv = GetSenderName(recipients, &recipientUserName);
+		if(NS_SUCCEEDED(rv))
+			rv = createNode(recipientUserName, target, getRDFService());
 	}
   return rv;
 }
@@ -1253,8 +1309,41 @@ nsMsgMessageDataSource::createMessagePriorityNode(nsIMessage *message,
 }
 
 nsresult
-nsMsgMessageDataSource::createMessageSizeNode(nsIMessage *message,
-                                               nsIRDFNode **target)
+nsMsgMessageDataSource::createMessagePrioritySortNode(nsIMessage *message, nsIRDFNode **target)
+{
+	nsresult rv;
+	nsMsgPriority priority;
+	rv = message->GetPriority(&priority);
+	if(NS_FAILED(rv))
+		return rv;
+	*target = kNormalSortLiteral;
+	switch (priority)
+	{
+		case nsMsgPriorityNotSet:
+		case nsMsgPriorityNone:
+		case nsMsgPriorityNormal:
+			*target = kNormalSortLiteral;
+			break;
+		case nsMsgPriorityLowest:
+			*target = kLowestSortLiteral;
+			break;
+		case nsMsgPriorityLow:
+			*target = kLowSortLiteral;
+			break;
+		case nsMsgPriorityHigh:
+			*target = kHighSortLiteral;
+			break;
+		case nsMsgPriorityHighest:
+			*target = kHighestSortLiteral;
+			break;
+	}
+	
+	NS_IF_ADDREF(*target);
+	return NS_OK;
+}
+
+nsresult
+nsMsgMessageDataSource::createMessageSizeNode(nsIMessage *message, nsIRDFNode **target, PRBool sort)
 {
 	nsresult rv;
 	PRUint32 size;
@@ -1266,13 +1355,18 @@ nsMsgMessageDataSource::createMessageSizeNode(nsIMessage *message,
 		size = 1024;
 	PRUint32 sizeInKB = size/1024;
 
-	char * kbStr = PR_smprintf("%uKB", sizeInKB);
-	if(kbStr)
+	if(!sort)
 	{
-		sizeStr =kbStr;
-		PR_smprintf_free(kbStr);
+		char * kbStr = PR_smprintf("%uKB", sizeInKB);
+		if(kbStr)
+		{
+			sizeStr =kbStr;
+			PR_smprintf_free(kbStr);
+		}
+		rv = createNode(sizeStr, target, getRDFService());
 	}
-	rv = createNode(sizeStr, target, getRDFService());
+	else
+		rv = createIntNode(sizeInKB, target, getRDFService());
 	return rv;
 }
 

@@ -1219,14 +1219,14 @@ function GetLoadedMessage()
 
 function GetCompositeDataSource(command)
 {
-	if(command == "GetNewMessages" || command == "Copy" || command == "NewFolder" ||
-	   command == "MarkAllMessagesRead")
+	if(command == "GetNewMessages" || command == "Copy"  || command == "Move" || 
+	   command == "NewFolder" ||  command == "MarkAllMessagesRead")
 	{
 		var folderTree = GetFolderTree();
 		return folderTree.database;
 	}
-	else if(command == "MarkMessageRead" || command == "MarkMessageFlagged" ||
-			command == "MarkThreadAsRead")
+	else if(command == "DeleteMessages" || command == "MarkMessageRead" || 
+			command == "MarkMessageFlagged" || command == "MarkThreadAsRead")
 	{
 		var threadTree = GetThreadTree();
 		return threadTree.database;
@@ -1234,4 +1234,20 @@ function GetCompositeDataSource(command)
 
 	return null;
 
+}
+
+//Sets the next message after a delete.  If useSelection is true then use the
+//current selection to determine this.  Otherwise use messagesToCheck which will
+//be an array of nsIMessage's.
+function SetNextMessageAfterDelete(messagesToCheck, useSelection)
+{
+	if(useSelection)
+	{
+		var tree = GetThreadTree();
+		var nextMessage = GetNextMessageAfterDelete(tree.selectedItems);
+		if(nextMessage)
+			gNextMessageAfterDelete = nextMessage.getAttribute('id');
+		else
+			gNextMessageAfterDelete = null;
+	}
 }

@@ -28,6 +28,8 @@ var gCompositeDataSource;
 var gCurrentMessageUri;
 var gCurrentFolderUri;
 
+var gCurrentMessageIsDeleted = false;
+
 function OnLoadMessageWindow()
 {
 	CreateMailWindowGlobals();
@@ -137,4 +139,12 @@ function GetLoadedMessage()
 function GetCompositeDataSource(command)
 {
 	return gCompositeDataSource;	
+}
+
+//Sets the next message after a delete.  If useSelection is true then use the
+//current selection to determine this.  Otherwise use messagesToCheck which will
+//be an array of nsIMessage's.
+function SetNextMessageAfterDelete(messagesToCheck, useSelection)
+{
+	gCurrentMessageIsDeleted = true;
 }

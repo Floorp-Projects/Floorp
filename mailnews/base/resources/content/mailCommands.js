@@ -69,6 +69,26 @@ function GetNewMessages(selectedFolders, compositeDataSource)
 	}
 }
 
+function DeleteMessages(compositeDataSource, srcFolder, messages, reallyDelete)
+{
+
+	var srcFolderResource = srcFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+	var folderArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+	folderArray.AppendElement(srcFolderResource);
+
+	var argumentArray = ConvertMessagesToResourceArray(messages, null);
+
+	var command;
+
+	if(reallyDelete)
+		command = "http://home.netscape.com/NC-rdf#ReallyDelete"
+	else
+		command = "http://home.netscape.com/NC-rdf#Delete"
+
+	DoRDFCommand(compositeDataSource, command, folderArray, argumentArray);
+
+}
+
 function CopyMessages(compositeDataSource, srcFolder, destFolder, messages, isMove)
 {
 
@@ -83,7 +103,13 @@ function CopyMessages(compositeDataSource, srcFolder, destFolder, messages, isMo
 		argumentArray.AppendElement(srcFolderResource);
 		ConvertMessagesToResourceArray(messages, argumentArray);
 		
-		DoRDFCommand(compositeDataSource, "http://home.netscape.com/NC-rdf#Copy", folderArray, argumentArray);
+		var command;
+		if(isMove)
+			command = "http://home.netscape.com/NC-rdf#Move"
+		else
+			command = "http://home.netscape.com/NC-rdf#Copy";
+
+		DoRDFCommand(compositeDataSource, command, folderArray, argumentArray);
 
 	}
 }
@@ -372,4 +398,46 @@ function MarkThreadAsRead(compositeDataSource, message)
 	}
 }
 
+
+function ViewPageSource(messages)
+{
+	var url;
+	var uri;
+	var mailSessionProgID      = "component://netscape/messenger/services/session";
+
+	var numMessages = messages.length;
+
+	if (numMessages == 0)
+	{
+		dump("MsgViewPageSource(): No messages selected.\n");
+		return false;
+	}
+
+	// First, get the mail session
+	var mailSession = Components.classes[mailSessionProgID].getService();
+	if (!mailSession)
+		return false;
+
+	mailSession = mailSession.QueryInterface(Components.interfaces.nsIMsgMailSession);
+	if (!mailSession)
+		return false;
+
+	for(var i = 0; i < numMessages; i++)
+	{
+		var messageResource = messages[i].QueryInterface(Components.interfaces.nsIRDFResource);
+		uri = messageResource.Value;
+  
+		// Now, we need to get a URL from a URI
+		url = mailSession.ConvertMsgURIToMsgURL(uri, msgWindow);
+		if (url)
+			url += "?header=src";
+
+		// Use a browser window to view source
+		window.openDialog( "chrome://navigator/content/navigator.xul",
+						   "_blank",
+						   "chrome,menubar,status,dialog=no,resizable",
+							url,
+							"view-source" );
+	}
+}
 
