@@ -1,4 +1,3 @@
-#!gmake
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -179,9 +178,9 @@ checkout:
 	@date | tee $(CVSCO_LOGFILE)
 	@echo cd $(ROOTDIR)\; $(CVSCO) $(MOZ_CO_MODULE)
 	@cd $(ROOTDIR) && \
-	  { $(CVSCO) $(MOZ_CO_MODULE) || touch cvs-failed.tmp$$$$ } 2>&1 \
-	  | tee -a $(CVSCO_LOGFILE);
-	if [ -f cvs-failed.tmp$$$$ ]; then \
+	  ( $(CVSCO) $(MOZ_CO_MODULE) || touch cvs-failed.tmp$$$$ ) 2>&1 \
+	  | tee -a $(CVSCO_LOGFILE)
+	@if [ -f cvs-failed.tmp$$$$ ]; then \
 	  rm cvs-failed.tmp$$$$; \
 	  false; \
 	else true; \
