@@ -31,6 +31,9 @@
 #include "layout.h"
 #include "laylayer.h"
 /*  #include "receipt.h" */
+#include "prefapi.h"
+#include "fe_proto.h"
+#include "libevent.h" /* Temporary, for FE_CheckConfirm straw-man. */
 
 #ifdef DEBUG_dfm
 #define D(x) x
@@ -41,6 +44,13 @@
 #define PRVCY_ExternalContext(c) ((c->type == MWContextBrowser) || \
                                   (MAIL_NEWS_TYPE(cp->type)))
 
+
+PRIVATE
+XP_Bool FE_CheckConfirm (
+        MWContext *pContext,
+        char* pConfirmMessage,
+        char* pCheckMessage,
+        XP_Bool* pChecked);
 
 
 PRIVATE int32
@@ -228,7 +238,7 @@ PRVCY_PrivacyPolicyConfirmSubmit(MWContext *ctxt,
                                  LO_FormElementStruct *form_element)
 {
   History_entry *entry;
-  XP_Bool value = FALSE, *valueptr, savevalue;
+  XP_Bool value = FALSE, savevalue;
   Bool returnvalue;
   
   int ret; 
