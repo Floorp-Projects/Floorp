@@ -2805,7 +2805,6 @@ nsXULDocument::GetElementsByTagNameNS(const nsString& aNamespaceURI,
                                       nsIDOMNodeList** aReturn)
 {
     nsresult rv;
-    PRInt32 nsid;
 
     nsRDFDOMNodeList* elements;
     if (NS_FAILED(rv = nsRDFDOMNodeList::Create(&elements))) {
@@ -2813,21 +2812,28 @@ nsXULDocument::GetElementsByTagNameNS(const nsString& aNamespaceURI,
         return rv;
     }
 
-    rv = mNameSpaceManager->GetNameSpaceID(aNamespaceURI, nsid);
-    NS_ENSURE_SUCCESS(rv, rv);
+    *aReturn = elements;
 
+    nsCOMPtr<nsIContent> root = dont_AddRef(GetRootContent());
+    NS_ASSERTION(root, "no doc root");
 
-    nsIContent* root = GetRootContent();
-    NS_ASSERTION(root != nsnull, "no doc root");
+    if (root) {
+        PRInt32 nsid = kNameSpaceID_Unknown;
+        if (!aNamespaceURI.EqualsWithConversion("*")) {
+            rv = mNameSpaceManager->GetNameSpaceID(aNamespaceURI, nsid);
+            NS_ENSURE_SUCCESS(rv, rv);
 
-    if (root != nsnull && nsid != kNameSpaceID_Unknown) {
+            if (nsid == kNameSpaceID_Unknown) {
+                // Namespace not found, then there can't be any elements to
+                // be found.
+                return NS_OK;
+            }
+        }
+
         rv = GetElementsByTagName(root, aLocalName, nsid,
                                   elements);
-
-        NS_RELEASE(root);
     }
 
-    *aReturn = elements;
     return NS_OK;
 }
 
