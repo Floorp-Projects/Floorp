@@ -79,13 +79,6 @@ interface ipcIService : nsISupports
     readonly attribute unsigned long clientID;
 
     /**
-     * returns the "primary client name" of this process.  this value is taken
-     * from the pref "ipc.primary-client-name" at IPC service initialization
-     * time.
-     */
-    readonly attribute ACString primaryClientName;
-
-    /**
      * this process can appear under several client names.  use the following
      * methods to add or remove names for this process.
      *

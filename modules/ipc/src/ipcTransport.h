@@ -90,8 +90,7 @@ public:
 
     virtual ~ipcTransport() {}
 
-    nsresult Init(const nsACString &appName,
-                  ipcTransportObserver *observer);
+    nsresult Init(ipcTransportObserver *observer);
     nsresult Shutdown();
 
     // takes ownership of |msg|
@@ -120,7 +119,6 @@ private:
     ipcMessageQ            mDelayedQ;
     ipcTransportObserver  *mObserver;
     nsCOMPtr<nsITimer>     mTimer;
-    nsCString              mAppName;
     PRPackedBool           mSentHello;
     PRPackedBool           mHaveConnection;
     PRPackedBool           mSpawnedDaemon;

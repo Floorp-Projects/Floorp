@@ -40,8 +40,6 @@
 #include "plstr.h"
 
 #include "nsIServiceManager.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsIObserverService.h"
 #include "nsICategoryManager.h"
 #include "nsCategoryManagerUtils.h"
@@ -171,24 +169,7 @@ ipcService::Init()
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(mTransport);
 
-    // read preferences
-    nsCAutoString appName;
-    nsCOMPtr<nsIPrefService> prefserv(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (prefserv) {
-        nsCOMPtr<nsIPrefBranch> prefbranch;
-        prefserv->GetBranch(nsnull, getter_AddRefs(prefbranch));
-        if (prefbranch) {
-            nsXPIDLCString val;
-            prefbranch->GetCharPref(IPC_SERVICE_PREF_PRIMARY_CLIENT_NAME,
-                                    getter_Copies(val));
-            if (!val.IsEmpty())
-                appName = val;
-        }
-    }
-    if (appName.IsEmpty())
-        appName = NS_LITERAL_CSTRING("test-app");
-
-    rv = mTransport->Init(appName, this);
+    rv = mTransport->Init(this);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
@@ -266,13 +247,6 @@ ipcService::GetClientID(PRUint32 *clientID)
         return NS_ERROR_NOT_AVAILABLE;
 
     *clientID = mClientID;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-ipcService::GetPrimaryClientName(nsACString &primaryName)
-{
-    primaryName.Truncate(); // XXX implement me
     return NS_OK;
 }
 

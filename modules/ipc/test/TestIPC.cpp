@@ -36,8 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "ipcIService.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentRegistrar.h"
@@ -188,20 +186,14 @@ int main(int argc, char **argv)
         rv = eqs->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
         RETURN_IF_FAILED(rv, "GetThreadEventQueue");
 
-        if (argc > 1) {
-            printf("*** using client name [%s]\n", argv[1]);
-            nsCOMPtr<nsIPrefService> prefserv(do_GetService(NS_PREFSERVICE_CONTRACTID));
-            if (prefserv) {
-                nsCOMPtr<nsIPrefBranch> prefbranch;
-                prefserv->GetBranch(nsnull, getter_AddRefs(prefbranch));
-                if (prefbranch)
-                    prefbranch->SetCharPref(IPC_SERVICE_PREF_PRIMARY_CLIENT_NAME, argv[1]);
-            }
-        }
-
         nsCOMPtr<ipcIService> ipcServ(do_GetService("@mozilla.org/ipc/service;1", &rv));
         RETURN_IF_FAILED(rv, "do_GetService(ipcServ)");
         NS_ADDREF(gIpcServ = ipcServ);
+
+        if (argc > 1) {
+            printf("*** using client name [%s]\n", argv[1]);
+            gIpcServ->AddClientName(nsDependentCString(argv[1]));
+        }
 
         ipcServ->SetMessageObserver(kTestTargetID, new myIpcMessageObserver());
 

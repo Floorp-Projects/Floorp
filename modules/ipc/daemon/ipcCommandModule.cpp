@@ -113,11 +113,6 @@ struct ipcCommandModule
     {
         LOG(("got CLIENT_HELLO\n"));
 
-        ipcMessageCast<ipcmMessageClientHello> msg(rawMsg);
-        const char *name = msg->PrimaryName();
-        if (name)
-            client->AddName(name);
-
         IPC_SendMsg(client, new ipcmMessageClientID(client->ID()));
     }
 

@@ -30,7 +30,6 @@ MODULE		= test_ipc
 REQUIRES	= xpcom \
 		  string \
 		  ipc \
-		  pref \
 		  $(NULL)
 
 CPPSRCS		= \
