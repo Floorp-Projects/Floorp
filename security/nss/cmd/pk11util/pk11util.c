@@ -39,6 +39,7 @@
 #undef __STDC__
 #include "fcntl.h"
 #include "io.h"
+#include <fcntl.h>
 #else
 #include <unistd.h>
 #include <sys/fcntl.h>
@@ -66,9 +67,59 @@ CK_ULONG systemFlags;
 #define FLAG_VerifyFile 0x00000002
 
 int ArgSize(ArgType type);
-char *constLookup(char *bp, CK_ULONG *value, ConstType *type);
+const char *constLookup(const char *bp, CK_ULONG *value, ConstType *type);
+
+int
+isNum(char c)
+{
+    return (c >= '0' && c <= '9');
+}
+
+int
+isConst(const char *c)
+{
+    CK_ULONG value;
+    ConstType type;
+
+    constLookup(c, &value, &type);
+    return type != ConstNone;
+}
+
+/*
+ * see if the variable is really a 'size' function. This
+ * function may modify var if it is a size function.
+ */
+char *
+isSize(char *var, int *isArray)
+{
+    char *ptr = NULL;
+    char *end;
+    int array = 0;
+
+    if (PL_strncasecmp(var,"sizeof(",/*)*/ 7) == 0) {
+	ptr = var + 7;
+    } else if (PL_strncasecmp(var,"size(",/*)*/ 5) == 0) {
+	ptr = var + 5;
+    } else if (PL_strncasecmp(var,"sizeofarray(",/*)*/ 12) == 0) {
+	ptr = var + 12;
+	array = 1;
+    } else if (PL_strncasecmp(var,"sizea(",/*)*/ 6) == 0) {
+	ptr = var + 6;
+	array = 1;
+    } else {
+	return NULL;
+    }
+    end = strchr(ptr,/*(*/ ')') ;
+    if (end == NULL) {
+	return NULL;
+    }
+    if (isArray) *isArray = array;
+    *end = 0;
+    return ptr;
+}
  
-void printConst(CK_ULONG value, ConstType type, int newLine)
+void
+printConst(CK_ULONG value, ConstType type, int newLine)
 {
     int i;
 
@@ -83,14 +134,19 @@ void printConst(CK_ULONG value, ConstType type, int newLine)
 	}
     }
     if (i == constCount) {
-	printf("Unknown %s (%lu:0x%lx)",constTypeString[type],value,value);
+	if ((type == ConstAvailableSizes) || (type == ConstCurrentSize)) {
+	    printf("%lu",value);
+	} else {
+	    printf("Unknown %s (%lu:0x%lx)",constTypeString[type],value,value);
+	}
     }
     if (newLine) {
 	printf("\n");
     }
 }
 
-ConstType getConstFromAttribute(CK_ATTRIBUTE_TYPE type)
+ConstType
+getConstFromAttribute(CK_ATTRIBUTE_TYPE type)
 {
     int i;
 
@@ -102,7 +158,8 @@ ConstType getConstFromAttribute(CK_ATTRIBUTE_TYPE type)
     return ConstNone;
 }
 
-void printChars(char *name, CK_ULONG size)
+void
+printChars(const char *name, CK_ULONG size)
 {
     CK_ULONG i;
     for (i=0; i < size; i++) {
@@ -115,7 +172,7 @@ void printChars(char *name, CK_ULONG size)
 }
 
 #define DUMP_LEN 16
-void printDump(unsigned char *buf, int size)
+void printDump(const unsigned char *buf, int size)
 {
     int i,j;
 
@@ -146,7 +203,26 @@ void printDump(unsigned char *buf, int size)
 /*
  * free an argument structure
  */
-void argFree(Value *arg)
+void
+argFreeData(Value *arg)
+{
+    if (arg->data && ((arg->type & ArgStatic) == 0)) {
+	if ((arg->type & ArgMask) == ArgAttribute) {
+	    int i;
+	    CK_ATTRIBUTE *template = (CK_ATTRIBUTE *)arg->data;
+
+	    for (i=0; i < arg->arraySize; i++) {
+		free(template[i].pValue);
+	    }
+	}
+	free(arg->data);
+    }
+    arg->type &= ~ArgStatic;
+    arg->data = NULL;
+}
+
+void
+argFree(Value *arg)
 {
     if (arg == NULL) return;
 
@@ -155,17 +231,7 @@ void argFree(Value *arg)
 	if (arg->type & ArgFile) {
 	    free(arg->filename);
 	}
-	if (arg->data) {
-	    if ((arg->type & ArgMask) == ArgAttribute) {
-		int i;
-		CK_ATTRIBUTE *template = (CK_ATTRIBUTE *)arg->data;
-
-		for (i=0; i < arg->arraySize; i++) {
-		    free(template[i].pValue);
-		}
-	    }
-	    free(arg->data);
-	}
+	argFreeData(arg);
 	free (arg);
     }
 }
@@ -173,7 +239,8 @@ void argFree(Value *arg)
 /*
  * free and argument list
  */
-void parseFree(Value **ap)
+void
+parseFree(Value **ap)
 {
     int i;
     for (i=0 ; i < MAX_ARGS; i++) {
@@ -184,7 +251,8 @@ void parseFree(Value **ap)
 /*
  * getEnd: how for to the end of this argmument list?
  */
-int getEnd(char *bp)
+int
+getEnd(const char *bp)
 {
     int count = 0;
 
@@ -200,7 +268,8 @@ int getEnd(char *bp)
 /*
  * strip: return the first none white space character
  */
-char *strip(char *bp)
+const char *
+strip(const char *bp)
 {
     while (*bp && (*bp == ' ' || *bp == '\t' || *bp == '\n')) bp++;
     return bp;
@@ -209,9 +278,10 @@ char *strip(char *bp)
 /*
  * read in the next argument into dp ... don't overflow
  */
-char *readChars(char *bp, char *dp, int max )
+const char *
+readChars(const char *bp, char *dp, int max )
 {
-    int count = 0;
+    int count = 1;
     while (*bp) {
         if (*bp == ' ' || *bp == '\t' || *bp == '\n' ) {
 	    *dp = 0;
@@ -225,62 +295,36 @@ char *readChars(char *bp, char *dp, int max )
     return (bp);
 }
 
-/*
- * look up a variable from the variable chain
- */
-static Variable *varHead = NULL;
-Value * varLookup(char *bp, char *vname, int max) {
-    Variable *current;
-    bp = readChars(bp, vname, max);
+Value * varLookup(const char *bp, char *vname, int max, int *error);
 
-    for (current = varHead; current; current = current->next) {
-	if (PL_strcasecmp(current->vname, vname) == 0) {
-		return current->value;
-	}
-    }
-    return NULL;
-}
-
-static CK_RV list(void)
+CK_ULONG
+getValue(const char *v, int *error)
 {
-    Variable *current;
+    Value * varVal = NULL;
+    CK_ULONG retVal = 0;
+    ConstType type;
+    char tvar[512];
 
-    if (varHead) {
-    	printf(" %10s\t%16s\t%8s\tSize\tElements\n","Name","Type","Const");
-    } else {
-    	printf(" no variables set\n");
-    }
+    *error = 0;
 
-    for (current = varHead; current; current = current->next) {
-    	printf(" %10s\t%16s\t%8s\t%d\t%d\n", current->vname,
-	    valueString[current->value->type&ArgMask],
-	    constTypeString[current->value->constType],
-	    current->value->size, current->value->arraySize);
-    }
-    return CKR_OK;
-}
+    varVal = varLookup( v, tvar, sizeof(tvar), error);
 
-CK_RV printFlags(char *s, CK_ULONG flags, ConstType type)
-{
-    CK_ULONG i;
-    int needComma = 0;
-
-    printf("%s",s);
-    for (i=1; i ; i=i << 1) {
-	if (flags & i) {
-	   printf("%s",needComma?",":"");
-	   printConst(i, type, 0);
-	   needComma=1;
+    if (varVal) {
+	if ((varVal->type & ArgMask) == ArgULong) {
+	    retVal = *(CK_ULONG *)varVal->data;
+	} else {
+	    fprintf(stderr,"%s: is not a ulong\n", v);
+	    *error = 1;
 	}
+	argFree(varVal);
+	return retVal;
     }
-    if (!needComma) {
-	printf("Empty");
-    }
-    printf("\n");
-    return CKR_OK;
+    constLookup(v, &retVal, &type);
+    return retVal;
 }
 
-Value *NewValue(ArgType type, CK_ULONG arraySize)
+Value *
+NewValue(ArgType type, CK_ULONG arraySize)
 {
     Value *value;
 
@@ -302,24 +346,236 @@ Value *NewValue(ArgType type, CK_ULONG arraySize)
     return value;
 }
 
+#define INVALID_INDEX 0xffffffff
+
+CK_ULONG
+handleArray(char *vname, int *error)
+{
+    char *bracket;
+    CK_ULONG index = INVALID_INDEX;
+
+    if ((bracket = strchr(vname,'[')) != 0) {
+	char *tmpv = bracket+1;
+	*bracket = 0;
+	bracket = strchr(tmpv,']');
+
+	if (bracket == 0) {
+	    fprintf(stderr,"%s: missing closing brace\n", vname);
+	    return INVALID_INDEX;
+	}
+	*bracket = 0;
+
+	index = getValue(tmpv, error);
+	if (*error == 1) {
+	    return INVALID_INDEX;
+	} else if (index == INVALID_INDEX) {
+	    fprintf(stderr, "%s: 0x%x is an invalid index\n",vname,index);
+	    *error = 1;
+	}
+    }
+    return index;
+}
+
+void *
+makeArrayTarget(const char *vname, const Value *value, CK_ULONG index)
+{
+    char * target;
+    CK_ULONG elementSize;
+
+    if (index > (CK_ULONG)value->arraySize) {
+	fprintf(stderr, "%s[%d]: index larger than array size (%d)\n",
+		vname, index, value->arraySize);
+	return NULL;
+    }
+
+    target = (char *)value->data;
+    elementSize = value->size/value->arraySize;
+    target += index * elementSize;
+    return target;
+}
+
+/*
+ * look up a variable from the variable chain
+ */
+static Variable *varHead = NULL;
+Value *
+varLookup(const char *bp, char *vname, int max, int *error)
+{
+    Variable *current;
+    CK_ULONG index = INVALID_INDEX;
+    int isArray = 0;
+    char *ptr;
+    *error = 0;
+
+    if (bp != NULL) {
+	readChars(bp, vname, max);
+    } 
+
+    /* don't make numbers into variables */
+    if (isNum(vname[0])) {
+	return NULL;
+    }
+    /* nor consts */
+    if (isConst(vname)) {
+	return NULL;
+    }
+    /* handle sizeof() */
+    if ((ptr = isSize(vname, &isArray)) != NULL) {
+	CK_ULONG size;
+	Value  *targetValue = NULL;
+	Value  *sourceValue = varLookup(NULL, ptr, 0, error);
+	if (!sourceValue) {
+	   if (*error == 0) {
+		/* just didn't find it */
+		*error = 1;
+		fprintf(stderr,"Couldn't find variable %s to take size of\n",
+			ptr);
+		return NULL;
+	   }
+	}
+	size = isArray ? sourceValue->arraySize : sourceValue->size;
+	targetValue = NewValue(ArgULong,1);
+	memcpy(targetValue->data, &size, sizeof(size));
+
+	return targetValue;
+    }
+
+    /* modifies vname */
+    index = handleArray(vname, error);
+    if (*error == 1) {
+	return NULL;
+    }
+
+    for (current = varHead; current; current = current->next) {
+	if (PL_strcasecmp(current->vname, vname) == 0) {
+	    char *target;
+	    if (index == INVALID_INDEX) {
+		(current->value->reference)++;
+		return current->value;
+	    }
+	    target = makeArrayTarget(vname, current->value, index);
+	    if (target) {
+		Value *element = NewValue(current->value->type, 1);
+		if (!element) {
+		    fprintf(stderr, "MEMORY ERROR!\n");
+		    *error = 1;
+		}
+		argFreeData(element);
+		element->data = target;
+		element->type |= ArgStatic;
+		return element;
+	    }
+	    *error = 1;
+	    return NULL;
+	}
+    }
+    return NULL;
+}
+
+static CK_RV 
+list(void)
+{
+    Variable *current;
+
+    if (varHead) {
+    	printf(" %10s\t%16s\t%8s\tSize\tElements\n","Name","Type","Const");
+    } else {
+    	printf(" no variables set\n");
+    }
+
+    for (current = varHead; current; current = current->next) {
+    	printf(" %10s\t%16s\t%8s\t%d\t%d\n", current->vname,
+	    valueString[current->value->type&ArgMask],
+	    constTypeString[current->value->constType],
+	    current->value->size, current->value->arraySize);
+    }
+    return CKR_OK;
+}
+
+CK_RV
+printFlags(const char *s, CK_ULONG flags, ConstType type)
+{
+    CK_ULONG i;
+    int needComma = 0;
+
+    printf("%s",s);
+    for (i=1; i ; i=i << 1) {
+	if (flags & i) {
+	   printf("%s",needComma?",":"");
+	   printConst(i, type, 0);
+	   needComma=1;
+	}
+    }
+    if (!needComma) {
+	printf("Empty");
+    }
+    printf("\n");
+    return CKR_OK;
+}
+
 /*
  * add a new variable to the chain
  */
-char *AddVariable(char *bp, Value **ptr)
+const char *
+AddVariable(const char *bp, Value **ptr)
 {
     char vname[512];
     Variable *current;
+    int index = INVALID_INDEX;
     int size;
+    int error = 0;
 
     bp = readChars(bp,vname,sizeof(vname));
 
+    /* don't make numbers into variables */
+    if (isNum(vname[0])) {
+	return bp;
+    }
+    /* or consts */
+    if (isConst(vname)) {
+	return bp;
+    }
+    /* or NULLs */
+    if (vname[0] == 0) {
+	return bp;
+    }
+    /* or sizeof */
+    if (isSize(vname, NULL)) {
+	return bp;
+    }
+    /* arrays values should be written back to the original */
+    index = handleArray(vname, &error);
+    if (error == 1) {
+	return bp;
+    }
+
+
     for (current = varHead; current; current = current->next) {
 	if (PL_strcasecmp(current->vname,vname) == 0) {
-	        argFree(*ptr);
+	    char *target;
+	    /* found a complete object, return the found one */
+	    if (index == INVALID_INDEX) {
+		argFree(*ptr);
 		*ptr = current->value;
 		return bp;
+	    }
+	    /* found an array, update the array element */
+	    target = makeArrayTarget(vname, current->value, index);
+	    if (target) {
+		memcpy(target, (*ptr)->data, (*ptr)->size);
+		argFreeData(*ptr);
+		(*ptr)->data = target;
+		(*ptr)->type |= ArgStatic;
+	    }
+	    return bp;
 	}
     }
+
+    /* we are looking for an array and didn't find one */
+    if (index != INVALID_INDEX) {
+	return bp;
+    }
+
 
     current = (Variable *)malloc(sizeof(Variable));
     size = strlen(vname);
@@ -333,7 +589,8 @@ char *AddVariable(char *bp, Value **ptr)
     return bp;
 }
 
-ArgType FindTypeByName(char *typeName)
+ArgType
+FindTypeByName(const char *typeName)
 {
     int i;
 
@@ -350,7 +607,8 @@ ArgType FindTypeByName(char *typeName)
     return ArgNone;
 }
 
-CK_RV ArrayVariable(char *bp, char *typeName, CK_ULONG count)
+CK_RV 
+ArrayVariable(const char *bp, const char *typeName, CK_ULONG count)
 {
     ArgType type;
     Value *value; /* new Value */
@@ -367,7 +625,8 @@ CK_RV ArrayVariable(char *bp, char *typeName, CK_ULONG count)
 
 #define MAX_TEMPLATE 25
 
-CK_RV ArrayTemplate(char *bp, char *attributes)
+CK_RV 
+ArrayTemplate(const char *bp, char *attributes)
 {
     char aname[512];
     CK_ULONG attributeTypes[MAX_TEMPLATE];
@@ -389,7 +648,7 @@ CK_RV ArrayTemplate(char *bp, char *attributes)
 
 	(void)constLookup(cur, &attributeTypes[count], &type);
 	if ((type != ConstAttribute) && (type != ConstNone)) {
-	   printf("Unknown Attribute %s\n", cur);
+	   fprintf(stderr, "Unknown Attribute %s\n", cur);
 	   return CKR_FUNCTION_FAILED;
 	}
     }
@@ -404,7 +663,8 @@ CK_RV ArrayTemplate(char *bp, char *attributes)
     return CKR_OK;
 }
 
-CK_RV BuildTemplate(Value *vp)
+CK_RV
+BuildTemplate(Value *vp)
 {
     CK_ATTRIBUTE *template = (CK_ATTRIBUTE *)vp->data;
     int i;
@@ -418,14 +678,15 @@ CK_RV BuildTemplate(Value *vp)
     return CKR_OK;
 }
 
-CK_RV SetTemplate(Value *vp, CK_ULONG index, CK_ULONG value)
+CK_RV
+SetTemplate(Value *vp, CK_ULONG index, CK_ULONG value)
 {
     CK_ATTRIBUTE *template = (CK_ATTRIBUTE *)vp->data;
     int isbool = 0;
     CK_ULONG len;
     ConstType attrType;
 
-    if (index >= vp->arraySize) {
+    if (index >= (CK_ULONG) vp->arraySize) {
 	fprintf(stderr,"index (%lu) greater than array (%d)\n", 
 						index, vp->arraySize);
 	return CKR_ARGUMENTS_BAD;
@@ -435,7 +696,7 @@ CK_RV SetTemplate(Value *vp, CK_ULONG index, CK_ULONG value)
     if (attrType == ConstNone) {
 	fprintf(stderr,"can't set index (%lu) because ", index);
 	printConst(template[index].type,ConstAttribute, 0);
-	printf(" is not a CK_BBOOL or CK_ULONG\n");
+	fprintf(stderr, " is not a CK_BBOOL or CK_ULONG\n");
 	return CKR_ARGUMENTS_BAD;
     }
     isbool = (attrType == ConstBool);
@@ -454,7 +715,8 @@ CK_RV SetTemplate(Value *vp, CK_ULONG index, CK_ULONG value)
 
 }
 
-CK_RV NewMechanism(char *bp, CK_ULONG mechType)
+CK_RV
+NewMechanism(const char *bp, CK_ULONG mechType)
 {
     Value *value; /* new Value */
     CK_MECHANISM *mechanism;
@@ -471,7 +733,8 @@ CK_RV NewMechanism(char *bp, CK_ULONG mechType)
 /*
  * add a new variable to the chain
  */
-CK_RV DeleteVariable(char *bp)
+CK_RV
+DeleteVariable(const char *bp)
 {
     char vname[512];
     Variable **current;
@@ -490,7 +753,8 @@ CK_RV DeleteVariable(char *bp)
 /*
  * convert an octal value to integer
  */   
-CK_ULONG otoi(char *o)
+CK_ULONG
+otoi(const char *o)
 {
     CK_ULONG value = 0;
 
@@ -507,7 +771,8 @@ CK_ULONG otoi(char *o)
 /*
  * convert a hex value to integer
  */   
-CK_ULONG  htoi(char *x)
+CK_ULONG
+htoi(const char *x)
 {
     CK_ULONG value = 0;
 
@@ -529,7 +794,8 @@ CK_ULONG  htoi(char *x)
 /*
  * look up or decode a constant value
  */
-char *constLookup(char *bp, CK_ULONG *value, ConstType *type)
+const char *
+constLookup(const char *bp, CK_ULONG *value, ConstType *type)
 {
     char vname[512];
     int i;
@@ -556,7 +822,8 @@ char *constLookup(char *bp, CK_ULONG *value, ConstType *type)
     return bp;
 }
 
-int ArgSize(ArgType type)
+int
+ArgSize(ArgType type)
 {
 	int size=0;
 	type &= ArgMask;
@@ -610,7 +877,7 @@ int ArgSize(ArgType type)
 }
 
 CK_RV
-restore(char *filename,Value *ptr)
+restore(const char *filename,Value *ptr)
 {
     int fd,size;
 
@@ -637,7 +904,7 @@ restore(char *filename,Value *ptr)
 }
 
 CK_RV
-save(char *filename,Value *ptr)
+save(const char *filename,Value *ptr)
 {
     int fd,size;
 
@@ -660,7 +927,8 @@ save(char *filename,Value *ptr)
     return CKR_OK;
 }
 
-CK_RV printArg(Value *ptr,int arg_number)
+CK_RV
+printArg(Value *ptr,int arg_number)
 {
     ArgType type = ptr->type & ArgMask;
     CK_INFO *info;
@@ -715,8 +983,7 @@ CK_RV printArg(Value *ptr,int arg_number)
 	}
 	break;
     case ArgVar:
-	printf(" Variable.....error\n");
-	ckrv = CKR_ARGUMENTS_BAD;
+	printf(" %s\n",(char *)ptr->data);
 	break;
     case ArgUTF8:
 	printf(" %s\n",(char *)ptr->data);
@@ -751,7 +1018,8 @@ CK_RV printArg(Value *ptr,int arg_number)
 	break;
     case ArgTokenInfo:
 	tokenInfo = (CK_TOKEN_INFO *)ptr->data;
-	printf(" Label: %s\n",tokenInfo->label);
+	printf(" Label: ");
+	printChars(tokenInfo->label,sizeof(tokenInfo->label));
 	printf(" Manufacturer ID: ");
 	printChars(tokenInfo->manufacturerID,sizeof(tokenInfo->manufacturerID));
 	printf(" Model: ");
@@ -759,24 +1027,30 @@ CK_RV printArg(Value *ptr,int arg_number)
 	printf(" Serial Number: ");
 	printChars(tokenInfo->serialNumber,sizeof(tokenInfo->serialNumber));
 	printFlags(" Flags: ", tokenInfo->flags, ConstTokenFlags);
-	printf(" Max Session Count: %lu\n",tokenInfo->ulMaxSessionCount);
-	printf(" Session Count: %lu\n",tokenInfo->ulSessionCount);
-	printf(" RW Session Count: %lu\n",tokenInfo->ulMaxRwSessionCount);
-	printf(" Max Pin Length : %lu\n",tokenInfo->ulMaxPinLen);
-	printf(" Min Pin Length : %lu\n",tokenInfo->ulMinPinLen);
-	printf(" Total Public Memory: %lu\n",
-		tokenInfo->ulTotalPublicMemory);
-	printf(" Free Public Memory: %lu\n",
-		tokenInfo->ulFreePublicMemory);
-	printf(" Total Private Memory: %lu\n",
-		tokenInfo->ulTotalPrivateMemory);
-	printf(" Free Private Memory: %lu\n",
-		tokenInfo->ulFreePrivateMemory);
+	printf(" Max Session Count: ");
+	printConst(tokenInfo->ulMaxSessionCount, ConstAvailableSizes, 1);
+	printf(" Session Count: ");
+	printConst(tokenInfo->ulSessionCount, ConstCurrentSize, 1);
+	printf(" RW Session Count: ");
+	printConst(tokenInfo->ulMaxRwSessionCount, ConstAvailableSizes, 1);
+	printf(" Max Pin Length : ");
+	printConst(tokenInfo->ulMaxPinLen, ConstCurrentSize, 1);
+	printf(" Min Pin Length : ");
+	printConst(tokenInfo->ulMinPinLen, ConstCurrentSize, 1);
+	printf(" Total Public Memory: ");
+	printConst(tokenInfo->ulTotalPublicMemory, ConstAvailableSizes, 1);
+	printf(" Free Public Memory: ");
+	printConst(tokenInfo->ulFreePublicMemory, ConstCurrentSize, 1);
+	printf(" Total Private Memory: ");
+	printConst(tokenInfo->ulTotalPrivateMemory, ConstAvailableSizes, 1);
+	printf(" Free Private Memory: ");
+	printConst(tokenInfo->ulFreePrivateMemory, ConstCurrentSize, 1);
 	printf(" Hardware Version: %d.%02d\n",
 		VERSION(tokenInfo->hardwareVersion));
 	printf(" Firmware Version: %d.%02d\n",
 		VERSION(tokenInfo->firmwareVersion));
-	printf(" UTC Time: %s\n",tokenInfo->utcTime);
+	printf(" UTC Time: ");
+	printChars(tokenInfo->utcTime,sizeof(tokenInfo->utcTime));
 	break;
     case ArgSessionInfo:
 	sessionInfo = (CK_SESSION_INFO *)ptr->data;
@@ -849,7 +1123,7 @@ CK_RV printArg(Value *ptr,int arg_number)
  * with full expressions.
  */
 Value **
-parseArgs(int index, char * bp)
+parseArgs(int index, const char * bp)
 {
     const Commands *cp = &commands[index];
     int size = strlen(cp->fname);
@@ -878,18 +1152,23 @@ parseArgs(int index, char * bp)
      */
     for (i=0 ;i < MAX_ARGS; i++) {
 	ArgType type = cp->args[i] & ArgMask;
+	int error;
 
         /* strip blanks */
         bp = strip(bp);
 
 	/* if we hit ArgNone, we've nabbed all the arguments we need */
 	if (type == ArgNone) {
-		break;
+	    break;
 	}
 
 	/* if we run out of space in the line, we weren't given enough
 	 * arguments... */
 	if (*bp == '\0') {
+	    /* we're into optional arguments, ok to quit now */
+	    if (cp->args[i] & ArgOpt) {
+		break;
+	    }
 	    fprintf(stderr,"%s: only %d args found,\n",cp->fname,i);
 	    parseFree(argList);
 	    return NULL;
@@ -899,8 +1178,9 @@ parseArgs(int index, char * bp)
 	 * look up the argument in our variable list first... only 
 	 * exception is the new argument type for set...
 	 */
+	error = 0;
 	if ((cp->args[i] != (ArgVar|ArgNew)) && 
-			(possible = varLookup(bp,vname,sizeof(vname)))) {
+			(possible = varLookup(bp,vname,sizeof(vname),&error))) {
 	   /* ints are only compatible with other ints... all other types
 	    * are interchangeable... */
 	   if (type != ArgVar) { /* ArgVar's match anyone */
@@ -908,6 +1188,7 @@ parseArgs(int index, char * bp)
 				((possible->type & ArgMask) == ArgULong)) {
 		    fprintf(stderr,"%s: Arg %d incompatible type with <%s>\n",
 				cp->fname,i+1,vname);
+		    argFree(possible);
 		    parseFree(argList);
 		    return NULL;
 		}
@@ -918,6 +1199,7 @@ parseArgs(int index, char * bp)
 		    fprintf(stderr,
 	        "%s: Arg %d %s is too small (%d bytes needs to be %d bytes)\n",
 	    		cp->fname,i+1,vname,possible->size,ArgSize(type));
+		    argFree(possible);
 		    parseFree(argList);
 		    return NULL;
 		}
@@ -925,13 +1207,17 @@ parseArgs(int index, char * bp)
 	
 	   /* everything looks kosher here, use it */	
 	   argList[i] = possible;
-	   possible->reference++;
 
 	   bp = readChars(bp,vname,sizeof(vname));
 	   if (cp->args[i] & ArgOut) {
 		possible->type |= ArgOut;
 	   }
 	   continue;
+	}
+
+	if (error == 1) {
+	    parseFree(argList);
+	    return NULL;
 	}
 
 	/* create space for our argument */
@@ -945,7 +1231,7 @@ parseArgs(int index, char * bp)
 		parseFree(argList);
 		return NULL;
 	    }
-	    free(argList[i]->data);
+	    argFreeData(argList[i]);
 	    argList[i]->data = NULL;
 	    argList[i]->size = 0;
 	    bp += 4;
@@ -955,17 +1241,17 @@ parseArgs(int index, char * bp)
 
 	/* if we're an output variable, we need to add it */
 	if (cp->args[i] & ArgOut) {
-            if (PL_strncasecmp(bp,"file(",5) == 0) {
+            if (PL_strncasecmp(bp,"file(",5) == 0 /* ) */ ) {
 	        char filename[512];
 		bp = readChars(bp+5,filename,sizeof(filename));
-		size = strlen(filename);
-	    	if ((size > 0) && (filename[size-1] == ')')) {
+		size = PL_strlen(filename);
+	    	if ((size > 0) && (/* ( */filename[size-1] == ')')) {
 		    filename[size-1] = 0; 
 		}
 		filename[size] = 0; 
 		argList[i]->filename = (char *)malloc(size+1);
 
-		strcpy(argList[i]->filename,filename);
+		PL_strcpy(argList[i]->filename,filename);
 
 	    	argList[i]->type |= ArgOut|ArgFile;
 		break;
@@ -975,43 +1261,19 @@ parseArgs(int index, char * bp)
 	    continue;
 	} 
 
-        if (PL_strncasecmp(bp, "file(", 5) == 0) {
+        if (PL_strncasecmp(bp, "file(", 5) == 0 /* ) */ ) {
 	    char filename[512];
 
 	    bp = readChars(bp+5,filename,sizeof(filename));
-	    size = strlen(filename);
-	    if ((size > 0) && (filename[size-1] == ')')) filename[size-1] = 0; 
+	    size = PL_strlen(filename);
+	    if ((size > 0) && ( /* ( */ filename[size-1] == ')')) {
+		filename[size-1] = 0; 
+	    }
 
 	    if (restore(filename,argList[i]) != CKR_OK) {
 		parseFree(argList);
 		return NULL;
 	    }
-	    continue;
-	}
-
-	if (PL_strncasecmp(bp, "size(", 5) == 0) {
-	    CK_ULONG *ulong = (CK_ULONG *)argList[i]->data;
-	    char tmpname[512];
-
-	    bp = readChars(bp+5,tmpname,sizeof(tmpname));
-	    size = strlen(tmpname);
-	    if ((size > 0) && (tmpname[size-1] == ')')) tmpname[size-1] = 0; 
-
-	    if (argList[i]->size == sizeof(CK_ULONG) || ulong == NULL) {
-		fprintf(stderr,
-			"%s: size used for non-int argument,\n",cp->fname);
-		parseFree(argList);
-		return NULL;
-	    }
-	    *ulong = 0;
-   	    varLookup(tmpname, vname,sizeof(vname));
-	    if (!possible) {
-		fprintf(stderr,
-			"%s: %s was not found\n",cp->fname, vname);
-		parseFree(argList);
-		return NULL;
-	    }
-	    *ulong = possible->arraySize;
 	    continue;
 	}
 
@@ -1022,8 +1284,8 @@ parseArgs(int index, char * bp)
 	     argList[i]->constType = constType;
 	     break;
     	case ArgVar:
-	     free(argList[i]->data);
-	     size = getEnd(bp);
+	     argFreeData(argList[i]);
+	     size = getEnd(bp)+1;
 	     argList[i]->data = (void *)malloc(size);
 	     argList[i]->size = size;
 	     /* fall through */
@@ -1048,28 +1310,27 @@ parseArgs(int index, char * bp)
 }
 
 /* lookup the command in the array */
-int lookup(char *buf)
+int
+lookup(const char *buf)
 {
     int size,i;
     int buflen;
 
-    buflen = strlen(buf);
+    buflen = PL_strlen(buf);
 
     for ( i = 0; i < commandCount; i++) {
-	size = strlen(commands[i].fname);
+	size = PL_strlen(commands[i].fname);
 
-	if (size > buflen) {
-	    continue;
+	if (size <= buflen) {
+	    if (PL_strncasecmp(buf,commands[i].fname,size) == 0) {
+		return i;
+	    }
 	}
-	if (PL_strncasecmp(buf,commands[i].fname,size) == 0) {
-	    return i;
-	}
-	if (size-2 > buflen) {
-	    continue;
-	}
-	if (commands[i].fname[0] == 'C' && commands[i].fname[1] == '_' &&
+	if (size-2 <= buflen) {
+	    if (commands[i].fname[0] == 'C' && commands[i].fname[1] == '_' &&
 		(PL_strncasecmp(buf,&commands[i].fname[2],size-2) == 0)) {
-	    return i;
+		return i;
+	    }
 	}
     }
     fprintf(stderr,"Can't find command %s\n",buf);
@@ -1103,7 +1364,9 @@ putOutput(Value **ptr)
     }
 }
 	   
-CK_RV unloadModule(Module *module) {
+CK_RV
+unloadModule(Module *module)
+{
    
    if (module->library) {
 	PR_UnloadLibrary(module->library);
@@ -1115,7 +1378,9 @@ CK_RV unloadModule(Module *module) {
    return CKR_OK;
 }
 
-CK_RV loadModule(Module *module, char *library) {
+CK_RV
+loadModule(Module *module, char *library)
+{
    PRLibrary *newLibrary;
    CK_C_GetFunctionList getFunctionList;
    CK_FUNCTION_LIST *functionList;
@@ -1148,15 +1413,53 @@ CK_RV loadModule(Module *module, char *library) {
    return CKR_OK;
 }
 
+static void
+printHelp(int index, int full)
+{
+   int j;
+   printf(" %s", commands[index].fname);
+   for (j=0; j < MAX_ARGS; j++) {
+	ArgType type = commands[index].args[j] & ArgMask;
+	if (type == ArgNone) {
+	    break;
+	}
+	printf(" %s", valueString[type]);
+   }
+   printf("\n");
+   printf(" %s\n",commands[index].helpString);
+}
+
+/* add Topical help here ! */
+static CK_RV
+printTopicHelp(char *topic)
+{
+    return CKR_DATA_INVALID;
+}
+
+static CK_RV
+printGeneralHelp(void)
+{
+    int i;
+    printf(" To get help on commands, select from the list below:");
+    for ( i = 0; i < commandCount; i++) {
+       if (i % 5 == 0) printf("\n");
+       printf("%s,", commands[i].fname);
+    }
+    printf("\n");
+    /* print help topics */
+   return CKR_OK;
+}
+
 CK_RV run(char *); 
 
 /*
  * Actually dispatch the function... Bad things happen
  * if these don't match the commands array.
  */
-CK_RV do_func(int index, Value **a)
+CK_RV
+do_func(int index, Value **a)
 {
-    int value;
+    int value, helpIndex;
     static Module module = { NULL, NULL} ;
     CK_FUNCTION_LIST *func = module.functionList;
 
@@ -1175,7 +1478,7 @@ CK_RV do_func(int index, Value **a)
 	return func->C_GetFunctionList((CK_FUNCTION_LIST **)a[0]->data);
     case F_C_GetSlotList:
 	if (!func) return CKR_CRYPTOKI_NOT_INITIALIZED;
-	return func->C_GetSlotList(*(CK_ULONG *)a[0]->data,
+	return func->C_GetSlotList((CK_BBOOL)*(CK_ULONG *)a[0]->data,
 					(CK_SLOT_ID *)a[1]->data,
 					(CK_LONG *)a[2]->data);
     case F_C_GetSlotInfo:
@@ -1540,6 +1843,7 @@ CK_RV do_func(int index, Value **a)
 					(void *)a[2]->data);
     /* set a variable */
     case F_SetVar:	
+    case F_SetStringVar:	
 	(void) DeleteVariable(a[0]->data);
 	(void) AddVariable(a[0]->data,&a[1]);
 	return CKR_OK;
@@ -1583,6 +1887,16 @@ CK_RV do_func(int index, Value **a)
 	    systemFlags |= value;
 	}
 	return CKR_OK;
+    case F_Help:
+	if (a[0]) {
+	    helpIndex = lookup(a[0]->data);
+	    if (helpIndex < 0) {
+		return printTopicHelp(a[0]->data);
+	    }
+	    printHelp(helpIndex, 1);
+	    return CKR_OK;
+	}
+	return printGeneralHelp();
     case F_Quit:
 	return 0x80000000;
     default:
@@ -1595,7 +1909,8 @@ CK_RV do_func(int index, Value **a)
 }
 
 
-CK_RV process(FILE *inFile,int user)
+CK_RV
+process(FILE *inFile,int user)
 {
     char buf[2048];
     Value **arglist;
@@ -1606,7 +1921,7 @@ CK_RV process(FILE *inFile,int user)
 
     while (fgets(buf,2048,inFile) != NULL) {
 	int index;
-	char *bp;
+	const char *bp;
 
 	if (!user) printf("* %s",buf);
 	bp = strip(buf);

@@ -39,7 +39,9 @@ const char *_constTypeString[] = {
     "Attribute",
     "Mechanism",
     "Result",
-    "Trust"
+    "Trust",
+    "AvailableSizes",
+    "CurrentSize"
 };
 
 const char **constTypeString = &_constTypeString[0];
@@ -246,10 +248,10 @@ const Constant _consts[] = {
 	mkEntry2(CKA_NETSCAPE_DB, Attribute, None),
 	mkEntry2(CKA_NETSCAPE_TRUST, Attribute, Trust),
 
-	mkEntry(CKM_RSA_PKCS_KEY_PAIR_GEN, Mechanism),
 	mkEntry(CKM_RSA_PKCS, Mechanism),
 	mkEntry(CKM_RSA_9796, Mechanism),
 	mkEntry(CKM_RSA_X_509, Mechanism),
+	mkEntry(CKM_RSA_PKCS_KEY_PAIR_GEN, Mechanism),
 	mkEntry(CKM_MD2_RSA_PKCS, Mechanism),
 	mkEntry(CKM_MD5_RSA_PKCS, Mechanism),
 	mkEntry(CKM_SHA1_RSA_PKCS, Mechanism),
@@ -550,6 +552,9 @@ const Constant _consts[] = {
 	mkEntry(CKT_NETSCAPE_TRUST_UNKNOWN, Trust),
 	mkEntry(CKT_NETSCAPE_VALID, Trust),
 	mkEntry(CKT_NETSCAPE_VALID_DELEGATOR, Trust),
+
+	mkEntry(CK_EFFECTIVELY_INFINITE, AvailableSizes),
+	mkEntry(CK_UNAVAILABLE_INFORMATION, CurrentSize),
 };
 
 const Constant *consts = &_consts[0];
@@ -557,257 +562,690 @@ const int constCount = sizeof(_consts)/sizeof(_consts[0]);
 
 const Commands _commands[] = {
     {"C_Initialize", F_C_Initialize,
+"C_Initialize pInitArgs\n\n"
+"C_Initialize initializes the PKCS #11 library.\n"
+"  pInitArgs  if this is not NULL_PTR  it gets\n"
+"              cast to \n"
+"              and dereferenced\n",
 	{ArgInitializeArgs, ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_Finalize", F_C_Finalize,
+"C_Finalize pReserved \n\n"
+"C_Finalize indicates that an application is done with the PKCS #11 library.\n"
+" pReserved   reserved.  Should be NULL_PTR\n",
 	{ArgInitializeArgs, ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_GetInfo", F_C_GetInfo,
+"C_GetInfo pInfo\n\n"
+"C_GetInfo returns general information about PKCS #11.\n"
+" pInfo   location that receives information\n",
 	{ArgInfo|ArgOut,   ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_GetFunctionList", F_C_GetFunctionList,
+"C_GetFunctionList ppFunctionList \n\n"
+"C_GetFunctionList returns the function list.\n"
+" ppFunctionList   receives pointer to\n"
+"                  function list\n",
 	{ArgFunctionList|ArgOut,   ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_GetSlotList", F_C_GetSlotList,
+"C_GetSlotList tokenPresent pSlotList pulCount \n\n"
+"C_GetSlotList obtains a list of slots in the system.\n"
+" tokenPresent    only slots with tokens?\n"
+" pSlotList       receives array of slot IDs\n"
+" pulCount        receives number of slots\n",
 	{ArgULong, ArgULong|ArgArray|ArgOut, ArgULong|ArgOut, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_GetSlotInfo", F_C_GetSlotInfo,
+"C_GetSlotInfo slotID pInfo\n\n"
+"C_GetSlotInfo obtains information about a particular slot in the system.\n"
+" slotID    the ID of the slot\n"
+" pInfo     receives the slot information\n",
 	{ArgULong, ArgSlotInfo|ArgOut, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_GetTokenInfo", F_C_GetTokenInfo,
+"C_GetTokenInfo slotID pInfo\n\n"
+"C_GetTokenInfo obtains information about a particular token in the system.\n"
+" slotID    ID of the token's slot\n"
+" pInfo     receives the token information\n",
 	{ArgULong, ArgTokenInfo|ArgOut, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_GetMechanismList", F_C_GetMechanismList,
+"C_GetMechanismList slotID pMechanismList pulCount\n\n"
+"C_GetMechanismList obtains a list of mechanism types supported by a token.\n"
+" slotID            ID of token's slot\n"
+" pMechanismList    gets mech. array\n"
+" pulCount          gets # of mechs.\n",
 	{ArgULong, ArgULong|ArgArray|ArgOut, ArgULong|ArgOut, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_GetMechanismInfo", F_C_GetMechanismInfo,
+"C_GetMechanismInfo slotID type pInfo\n\n"
+"C_GetMechanismInfo obtains information about a particular mechanism possibly supported by a token.\n"
+" slotID    ID of the token's slot\n"
+" type      type of mechanism\n"
+" pInfo     receives mechanism info\n",
 	{ArgULong, ArgULong, ArgMechanismInfo|ArgOut, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_InitToken", F_C_InitToken,
+"C_InitToken slotID pPin ulPinLen pLabel\n\n"
+"C_InitToken initializes a token.\n"
+" slotID      ID of the token's slot\n"
+" pPin        the SO's initial PIN\n"
+" ulPinLen    length in bytes of the PIN\n"
+" pLabel      32-byte token label (blank padded)\n",
 	{ArgULong, ArgUTF8, ArgULong, ArgUTF8, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_InitPIN", F_C_InitPIN,
+"C_InitPIN hSession pPin ulPinLen\n\n"
+"C_InitPIN initializes the normal user's PIN.\n"
+" hSession    the session's handle\n"
+" pPin        the normal user's PIN\n"
+" ulPinLen    length in bytes of the PIN\n",
 	{ArgULong, ArgUTF8, ArgULong, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_SetPIN", F_C_SetPIN,
+"C_SetPIN hSession pOldPin ulOldLen pNewPin ulNewLen\n\n"
+"C_SetPIN modifies the PIN of the user who is logged in.\n"
+" hSession    the session's handle\n"
+" pOldPin     the old PIN\n"
+" ulOldLen    length of the old PIN\n"
+" pNewPin     the new PIN\n"
+" ulNewLen    length of the new PIN\n",
 	{ArgULong, ArgUTF8, ArgULong, ArgUTF8, ArgULong,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_OpenSession", F_C_OpenSession,
+"C_OpenSession slotID flags phSession\n\n"
+"C_OpenSession opens a session between an application and a token.\n"
+" slotID          the slot's ID\n"
+" flags           from \n"
+" phSession       gets session handle\n",
 	{ArgULong, ArgULong, ArgULong|ArgOut, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_CloseSession", F_C_CloseSession,
+"C_CloseSession hSession\n\n"
+"C_CloseSession closes a session between an application and a token.\n"
+" hSession   the session's handle\n",
 	{ArgULong, ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_CloseAllSessions", F_C_CloseAllSessions,
+"C_CloseAllSessions slotID\n\n"
+"C_CloseAllSessions closes all sessions with a token.\n"
+" slotID   the token's slot\n",
 	{ArgULong, ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_GetSessionInfo", F_C_GetSessionInfo,
+"C_GetSessionInfo hSession pInfo\n\n"
+"C_GetSessionInfo obtains information about the session.\n"
+" hSession    the session's handle\n"
+" pInfo       receives session info\n",
 	{ArgULong, ArgSessionInfo|ArgOut, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_GetOperationState", F_C_GetOperationState,
+"C_GetOperationState hSession pOpState pulOpStateLen\n\n"
+"C_GetOperationState obtains the state of the cryptographic operation in a session.\n"
+" hSession        session's handle\n"
+" pOpState        gets state\n"
+" pulOpStateLen   gets state length\n",
 	{ArgULong, ArgChar|ArgOut, ArgULong|ArgOut, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_SetOperationState", F_C_SetOperationState,
+"C_SetOperationState hSession pOpState ulOpStateLen hEncKey hAuthKey\n\n"
+"C_SetOperationState restores the state of the cryptographic operation in a session.\n"
+" hSession        session's handle\n"
+" pOpState        holds state\n"
+" ulOpStateLen    holds state length\n"
+" hEncKey         en/decryption key\n"
+" hAuthnKey       sign/verify key\n",
 	{ArgULong, ArgChar|ArgOut, ArgULong, ArgULong, ArgULong,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_Login", F_C_Login,
+"C_Login hSession userType pPin ulPinLen\n\n"
+"C_Login logs a user into a token.\n"
+" hSession    the session's handle\n"
+" userType    the user type\n"
+" pPin        the user's PIN\n"
+" ulPinLen    the length of the PIN\n",
 	{ArgULong, ArgULong, ArgVar, ArgULong, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_Logout", F_C_Logout,
+"C_Logout hSession\n\n"
+"C_Logout logs a user out from a token.\n"
+" hSession   the session's handle\n",
 	{ArgULong, ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_CreateObject", F_C_CreateObject,
+"C_CreateObject hSession pTemplate ulCount phObject\n\n"
+"C_CreateObject creates a new object.\n"
+" hSession      the session's handle\n"
+" pTemplate     the object's template\n"
+" ulCount       attributes in template\n"
+" phObject   gets new object's handle.\n",
 	{ArgULong, ArgAttribute|ArgArray, ArgULong, ArgULong|ArgOut, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_CopyObject", F_C_CopyObject,
+"C_CopyObject hSession hObject pTemplate ulCount phNewObject\n\n"
+"C_CopyObject copies an object  creating a new object for the copy.\n"
+" hSession      the session's handle\n"
+" hObject       the object's handle\n"
+" pTemplate     template for new object\n"
+" ulCount       attributes in template\n"
+" phNewObject   receives handle of copy\n",
 	{ArgULong, ArgULong, ArgAttribute|ArgArray, ArgULong, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_DestroyObject", F_C_DestroyObject,
+"C_DestroyObject hSession hObject\n\n"
+"C_DestroyObject destroys an object.\n"
+" hSession    the session's handle\n"
+" hObject     the object's handle\n",
 	{ArgULong, ArgULong, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_GetObjectSize", F_C_GetObjectSize,
+"C_GetObjectSize hSession hObject pulSize\n\n"
+"C_GetObjectSize gets the size of an object in bytes.\n"
+" hSession    the session's handle\n"
+" hObject     the object's handle\n"
+" pulSize     receives size of object\n",
 	{ArgULong, ArgULong, ArgULong|ArgOut, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_GetAttributeValue", F_C_GetAttributeValue,
+"C_GetAttributeValue hSession hObject pTemplate ulCount\n\n"
+"C_GetAttributeValue obtains the value of one or more object attributes.\n"
+" hSession     the session's handle\n"
+" hObject      the object's handle\n"
+" pTemplate    specifies attrs; gets vals\n"
+" ulCount      attributes in template\n",
 	{ArgULong, ArgULong, ArgAttribute|ArgArray, ArgULong, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_SetAttributeValue", F_C_SetAttributeValue,
+"C_SetAttributeValue hSession hObject pTemplate ulCount\n\n"
+"C_SetAttributeValue modifies the value of one or more object attributes\n"
+" hSession     the session's handle\n"
+" hObject      the object's handle\n"
+" pTemplate    specifies attrs and values\n"
+" ulCount      attributes in template\n",
 	{ArgULong, ArgULong, ArgAttribute|ArgArray, ArgULong, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_FindObjectsInit", F_C_FindObjectsInit,
+"C_FindObjectsInit hSession pTemplate ulCount\n\n"
+"C_FindObjectsInit initializes a search for token and session objects that match a template.\n"
+" hSession     the session's handle\n"
+" pTemplate    attribute values to match\n"
+" ulCount      attrs in search template\n",
 	{ArgULong, ArgAttribute|ArgArray, ArgULong, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_FindObjectsFinal", F_C_FindObjectsFinal,
+"C_FindObjectsFinal hSession\n\n"
+"C_FindObjectsFinal finishes a search for token and session objects.\n"
+" hSession   the session's handle\n",
 	{ArgULong, ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_FindObjects", F_C_FindObjects,
+"C_FindObjects hSession phObject ulMaxObjectCount pulObjectCount\n\n"
+"C_FindObjects continues a search for token and session objects that match a template  obtaining additional object handles.\n"
+" hSession            session's handle\n"
+" phObject            gets obj. handles\n"
+" ulMaxObjectCount    max handles to get\n"
+" pulObjectCount      actual # returned\n",
 	{ArgULong, ArgULong|ArgOut, ArgULong, ArgULong|ArgOut, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_EncryptInit", F_C_EncryptInit,
+"C_EncryptInit hSession pMechanism hKey\n\n"
+"C_EncryptInit initializes an encryption operation.\n"
+" hSession      the session's handle\n"
+" pMechanism    the encryption mechanism\n"
+" hKey          handle of encryption key\n",
 	{ArgULong, ArgMechanism, ArgULong, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_EncryptUpdate", F_C_EncryptUpdate,
+"C_EncryptUpdate hSession pPart ulPartLen pEncryptedPart pulEncryptedPartLen\n\n"
+"C_EncryptUpdate continues a multiple-part encryption operation.\n"
+" hSession             session's handle\n"
+" pPart                the plaintext data\n"
+" ulPartLen            plaintext data len\n"
+" pEncryptedPart       gets ciphertext\n"
+" pulEncryptedPartLen  gets c-text size\n",
 	{ArgULong, ArgChar, ArgULong, ArgChar|ArgOut, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_EncryptFinal", F_C_EncryptFinal,
+"C_EncryptFinal hSession pLastEncryptedPart pulLastEncryptedPartLen\n\n"
+"C_EncryptFinal finishes a multiple-part encryption operation.\n"
+" hSession                  session handle\n"
+" pLastEncryptedPart        last c-text\n"
+" pulLastEncryptedPartLen   gets last size\n",
 	{ArgULong, ArgChar, ArgULong, ArgChar|ArgOut, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_Encrypt", F_C_Encrypt,
+"C_Encrypt hSession pData ulDataLen pEncryptedData pulEncryptedDataLen\n\n"
+"C_Encrypt encrypts single-part data.\n"
+" hSession              session's handle\n"
+" pData                 the plaintext data\n"
+" ulDataLen             bytes of plaintext\n"
+" pEncryptedData        gets ciphertext\n"
+" pulEncryptedDataLen   gets c-text size\n",
 	{ArgULong, ArgChar, ArgULong, ArgChar|ArgOut, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_DecryptInit", F_C_DecryptInit,
+"C_DecryptInit hSession pMechanism hKey\n\n"
+"C_DecryptInit initializes a decryption operation.\n"
+" hSession      the session's handle\n"
+" pMechanism    the decryption mechanism\n"
+" hKey          handle of decryption key\n",
 	{ArgULong, ArgMechanism, ArgULong, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_DecryptUpdate", F_C_DecryptUpdate,
+"C_DecryptUpdate hSession pEncryptedPart ulEncryptedPartLen pPart pulPartLen\n\n"
+"C_DecryptUpdate continues a multiple-part decryption operation.\n"
+" hSession              session's handle\n"
+" pEncryptedPart        encrypted data\n"
+" ulEncryptedPartLen    input length\n"
+" pPart                 gets plaintext\n"
+" pulPartLen            p-text size\n",
 	{ArgULong, ArgChar, ArgULong, ArgChar|ArgOut, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_DecryptFinal", F_C_DecryptFinal,
+"C_DecryptFinal hSession pLastPart pulLastPartLen\n\n"
+"C_DecryptFinal finishes a multiple-part decryption operation.\n"
+" hSession         the session's handle\n"
+" pLastPart        gets plaintext\n"
+" pulLastPartLen   p-text size\n",
 	{ArgULong, ArgChar, ArgULong, ArgChar|ArgOut, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_Decrypt", F_C_Decrypt,
+"C_Decrypt hSession pEncryptedData ulEncryptedDataLen pData pulDataLen\n\n"
+"C_Decrypt decrypts encrypted data in a single part.\n"
+" hSession             session's handle\n"
+" pEncryptedData       ciphertext\n"
+" ulEncryptedDataLen   ciphertext length\n"
+" pData                gets plaintext\n"
+" pulDataLen           gets p-text size\n",
 	{ArgULong, ArgChar, ArgULong, ArgChar|ArgOut, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_DigestInit", F_C_DigestInit,
+"C_DigestInit hSession pMechanism\n\n"
+"C_DigestInit initializes a message-digesting operation.\n"
+" hSession     the session's handle\n"
+" pMechanism   the digesting mechanism\n",
 	{ArgULong, ArgMechanism, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_DigestUpdate", F_C_DigestUpdate,
+"C_DigestUpdate hSession pPart ulPartLen\n\n"
+"C_DigestUpdate continues a multiple-part message-digesting operation.\n"
+" hSession    the session's handle\n"
+" pPart       data to be digested\n"
+" ulPartLen   bytes of data to be digested\n",
 	{ArgULong, ArgChar, ArgULong, ArgChar|ArgOut, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_DigestKey", F_C_DigestKey,
+"C_DigestKey hSession hKey\n\n"
+"C_DigestKey continues a multi-part message-digesting operation  by digesting the value of a secret key as part of the data already digested.\n"
+" hSession    the session's handle\n"
+" hKey        secret key to digest\n",
 	{ArgULong, ArgULong, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_DigestFinal", F_C_DigestFinal,
+"C_DigestFinal hSession pDigest pulDigestLen\n\n"
+"C_DigestFinal finishes a multiple-part message-digesting operation.\n"
+" hSession       the session's handle\n"
+" pDigest        gets the message digest\n"
+" pulDigestLen   gets byte count of digest\n",
 	{ArgULong, ArgChar|ArgOut, ArgULong|ArgOut, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_Digest", F_C_Digest,
+"C_Digest hSession pData ulDataLen pDigest pulDigestLen\n\n"
+"C_Digest digests data in a single part.\n"
+" hSession       the session's handle\n"
+" pData          data to be digested\n"
+" ulDataLen      bytes of data to digest\n"
+" pDigest        gets the message digest\n"
+" pulDigestLen   gets digest length\n",
 	{ArgULong, ArgChar, ArgULong, ArgChar|ArgOut, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_SignInit", F_C_SignInit,
+"C_SignInit hSession pMechanism hKey \n\n"
+"C_SignInit initializes a signature (private key encryption operation  where the signature is (will be) an appendix to the data  and plaintext cannot be recovered from the signature.\n"
+" hSession      the session's handle\n"
+" pMechanism    the signature mechanism\n"
+" hKey          handle of signature key\n",
 	{ArgULong, ArgMechanism, ArgULong, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_SignUpdate", F_C_SignUpdate,
+"C_SignUpdate hSession pPart ulPartLen\n\n"
+"C_SignUpdate continues a multiple-part signature operation  where the signature is (will be) an appendix to the data  and plaintext cannot be recovered from the signature.\n"
+" hSession    the session's handle\n"
+" pPart       the data to sign\n"
+" ulPartLen   count of bytes to sign\n",
 	{ArgULong, ArgChar|ArgOut, ArgULong|ArgOut, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_SignFinal", F_C_SignFinal,
+"C_SignFinal hSession pSignature pulSignatureLen\n\n"
+"C_SignFinal finishes a multiple-part signature operation  returning the signature.\n"
+" hSession          the session's handle\n"
+" pSignature        gets the signature\n"
+" pulSignatureLen   gets signature length\n",
 	{ArgULong, ArgChar|ArgOut, ArgULong|ArgOut, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_SignRecoverInit", F_C_SignRecoverInit,
+"C_SignRecoverInit hSession pMechanism hKey\n\n"
+"C_SignRecoverInit initializes a signature operation  where the data can be recovered from the signature.\n"
+" hSession     the session's handle\n"
+" pMechanism   the signature mechanism\n"
+" hKey         handle of the signature key\n",
 	{ArgULong, ArgMechanism, ArgULong, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_SignRecover", F_C_SignRecover,
+"C_SignRecover hSession pData ulDataLen pSignature pulSignatureLen\n\n"
+"C_SignRecover signs data in a single operation  where the data can be recovered from the signature.\n"
+" hSession          the session's handle\n"
+" pData             the data to sign\n"
+" ulDataLen         count of bytes to sign\n"
+" pSignature        gets the signature\n"
+" pulSignatureLen   gets signature length\n",
 	{ArgULong, ArgChar, ArgULong, ArgChar|ArgOut, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_Sign", F_C_Sign,
+"C_Sign hSession pData ulDataLen pSignature pulSignatureLen\n\n"
+"C_Sign signs (encrypts with private key) data in a single part  where the signature is (will be) an appendix to the data  and plaintext cannot be recovered from the signature.\n"
+" hSession          the session's handle\n"
+" pData             the data to sign\n"
+" ulDataLen         count of bytes to sign\n"
+" pSignature        gets the signature\n"
+" pulSignatureLen   gets signature length\n",
 	{ArgULong, ArgChar, ArgULong, ArgChar|ArgOut, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_VerifyInit", F_C_VerifyInit,
+"C_VerifyInit hSession pMechanism hKey\n\n"
+"C_VerifyInit initializes a verification operation  where the signature is an appendix to the data  and plaintext cannot cannot be recovered from the signature (e.g. DSA).\n"
+" hSession      the session's handle\n"
+" pMechanism    the verification mechanism\n"
+" hKey          verification key \n",
 	{ArgULong, ArgMechanism, ArgULong, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_VerifyUpdate", F_C_VerifyUpdate,
+"C_VerifyUpdate hSession pPart ulPartLen\n\n"
+"C_VerifyUpdate continues a multiple-part verification operation  where the signature is an appendix to the data  and plaintext cannot be recovered from the signature.\n"
+" hSession    the session's handle\n"
+" pPart       signed data\n"
+" ulPartLen   length of signed data\n",
 	{ArgULong, ArgChar|ArgOut, ArgULong|ArgOut, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_VerifyFinal", F_C_VerifyFinal,
+"C_VerifyFinal hSession pSignature ulSignatureLen\n\n"
+"C_VerifyFinal finishes a multiple-part verification operation  checking the signature.\n"
+" hSession         the session's handle\n"
+" pSignature       signature to verify\n"
+" ulSignatureLen   signature length\n",
 	{ArgULong, ArgChar|ArgOut, ArgULong|ArgOut, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_VerifyRecoverInit", F_C_VerifyRecoverInit,
+"C_VerifyRecoverInit hSession pMechanism hKey\n\n"
+"C_VerifyRecoverInit initializes a signature verification operation  where the data is recovered from the signature.\n"
+" hSession      the session's handle\n"
+" pMechanism    the verification mechanism\n"
+" hKey          verification key\n",
 	{ArgULong, ArgMechanism, ArgULong, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_VerifyRecover", F_C_VerifyRecover,
+"C_VerifyRecover hSession pSignature ulSignatureLen pData pulDataLen\n\n"
+"C_VerifyRecover verifies a signature in a single-part operation  where the data is recovered from the signature.\n"
+" hSession          the session's handle\n"
+" pSignature        signature to verify\n"
+" ulSignatureLen    signature length\n"
+" pData             gets signed data\n"
+" pulDataLen        gets signed data len\n",
 	{ArgULong, ArgChar, ArgULong, ArgChar|ArgOut, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_Verify", F_C_Verify,
+"C_Verify hSession pData ulDataLen pSignature ulSignatureLen\n\n"
+"C_Verify verifies a signature in a single-part operation  where the signature is an appendix to the data  and plaintext cannot be recovered from the signature.\n"
+" hSession         the session's handle\n"
+" pData            signed data\n"
+" ulDataLen        length of signed data\n"
+" pSignature       signature\n"
+" ulSignatureLen   signature length*/\n",
 	{ArgULong, ArgChar, ArgULong, ArgChar|ArgOut, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_DigestEncryptUpdate", F_C_DigestEncryptUpdate,
+"C_DigestEncryptUpdate hSession pPart ulPartLen pEncryptedPart pulEncryptedPartLen\n\n"
+"C_DigestEncryptUpdate continues a multiple-part digesting and encryption operation.\n"
+" hSession              session's handle\n"
+" pPart                 the plaintext data\n"
+" ulPartLen             plaintext length\n"
+" pEncryptedPart        gets ciphertext\n"
+" pulEncryptedPartLen   gets c-text length\n",
 	{ArgULong, ArgChar, ArgULong, ArgChar|ArgOut, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_DecryptDigestUpdate", F_C_DecryptDigestUpdate,
+"C_DecryptDigestUpdate hSession pEncryptedPart ulEncryptedPartLen pPart pulPartLen\n\n"
+"C_DecryptDigestUpdate continues a multiple-part decryption and digesting operation.\n"
+" hSession              session's handle\n"
+" pEncryptedPart        ciphertext\n"
+" ulEncryptedPartLen    ciphertext length\n"
+" pPart                 gets plaintext\n"
+" pulPartLen            gets plaintext len\n",
 	{ArgULong, ArgChar, ArgULong, ArgChar|ArgOut, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_SignEncryptUpdate", F_C_SignEncryptUpdate,
+"C_SignEncryptUpdate hSession pPart ulPartLen pEncryptedPart pulEncryptedPartLen\n\n"
+"C_SignEncryptUpdate continues a multiple-part signing and encryption operation.\n"
+" hSession              session's handle\n"
+" pPart                 the plaintext data\n"
+" ulPartLen             plaintext length\n"
+" pEncryptedPart        gets ciphertext\n"
+" pulEncryptedPartLen   gets c-text length\n",
 	{ArgULong, ArgChar, ArgULong, ArgChar|ArgOut, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_DecryptVerifyUpdate", F_C_DecryptVerifyUpdate,
+"C_DecryptVerifyUpdate hSession pEncryptedPart ulEncryptedPartLen pPart pulPartLen\n\n"
+"C_DecryptVerifyUpdate continues a multiple-part decryption and verify operation.\n"
+" hSession              session's handle\n"
+" pEncryptedPart        ciphertext\n"
+" ulEncryptedPartLen    ciphertext length\n"
+" pPart                 gets plaintext\n"
+" pulPartLen            gets p-text length\n",
 	{ArgULong, ArgChar, ArgULong, ArgChar|ArgOut, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_GenerateKeyPair", F_C_GenerateKeyPair,
+"C_GenerateKeyPair hSession pMechanism pPublicKeyTemplate ulPublicKeyAttributeCount pPrivateKeyTemplate ulPrivateKeyAttributeCount phPublicKey phPrivateKey \n\n"
+"C_GenerateKeyPair generates a public-key/private-key pair  creating new key objects.\n"
+" hSession                      sessionhandle\n"
+" pMechanism                    key-genmech.\n"
+" pPublicKeyTemplate            templatefor pub. key\n"
+" ulPublicKeyAttributeCount     # pub. attrs.\n"
+" pPrivateKeyTemplate           templatefor priv. key\n"
+" ulPrivateKeyAttributeCount    # priv. attrs.\n"
+" phPublicKey                   gets pub. keyhandle\n"
+" phPrivateKey                  getspriv. keyhandle\n",
 	{ArgULong, ArgMechanism, ArgAttribute|ArgArray, ArgULong, 
 						ArgAttribute|ArgArray,
 	 ArgULong, ArgULong|ArgOut, ArgULong|ArgOut, ArgNone, ArgNone }},
     {"C_GenerateKey", F_C_GenerateKey,
+"C_GenerateKey hSession pMechanism pTemplate ulCount phKey \n\n"
+"C_GenerateKey generates a secret key  creating a new key object.\n"
+" hSession      the session's handle\n"
+" pMechanism    key generation mech.\n"
+" pTemplate     template for new key\n"
+" ulCount       # of attrs in template\n"
+" phKey         gets handle of new key\n",
 	{ArgULong, ArgMechanism, ArgAttribute|ArgArray, ArgULong, 
 	 					ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_WrapKey", F_C_WrapKey,
+"C_WrapKey hSession pMechanism hWrappingKey hKey pWrappedKey pulWrappedKeyLen\n\n"
+"C_WrapKey wraps (i.e.  encrypts) a key.\n"
+" hSession          the session's handle\n"
+" pMechanism        the wrapping mechanism\n"
+" hWrappingKey      wrapping key\n"
+" hKey              key to be wrapped\n"
+" pWrappedKey       gets wrapped key\n"
+" pulWrappedKeyLen  gets wrapped key size\n",
 	{ArgULong, ArgMechanism, ArgULong, ArgULong, ArgULong,
 	 ArgChar|ArgOut, ArgULong|ArgOut, ArgNone, ArgNone, ArgNone }},
     {"C_UnwrapKey", F_C_UnwrapKey,
+"C_UnwrapKey hSession pMechanism hUnwrappingKey pWrappedKey ulWrappedKeyLen pTemplate ulAttributeCount phKey\n\n"
+"C_UnwrapKey unwraps (decrypts) a wrapped key  creating a new key object.\n"
+" hSession            session's handle\n"
+" pMechanism          unwrapping mech.\n"
+" hUnwrappingKey      unwrapping key\n"
+" pWrappedKey         the wrapped key\n"
+" ulWrappedKeyLen     wrapped key len\n"
+" pTemplate           new key template\n"
+" ulAttributeCount    template length\n"
+" phKey               gets new handle\n",
 	{ArgULong, ArgMechanism, ArgULong, ArgChar, ArgULong,
 	 ArgAttribute|ArgArray, ArgULong, ArgULong|ArgOut, ArgNone, ArgNone }},
     {"C_DeriveKey", F_C_DeriveKey,
+"C_DeriveKey hSession pMechanism hBaseKey pTemplate ulAttributeCount phKey\n\n"
+"C_DeriveKey derives a key from a base key  creating a new key object.\n"
+" hSession            session's handle\n"
+" pMechanism          key deriv. mech.\n"
+" hBaseKey            base key\n"
+" pTemplate           new key template\n"
+" ulAttributeCount    template length\n"
+" phKey               gets new handle\n",
 	{ArgULong, ArgMechanism, ArgULong, ArgAttribute|ArgArray,  ArgULong,
 	 ArgULong|ArgOut, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_SeedRandom", F_C_SeedRandom,
+"C_SeedRandom hSession pSeed ulSeedLen\n\n"
+"C_SeedRandom mixes additional seed material into the token's random number generator.\n"
+" hSession    the session's handle\n"
+" pSeed       the seed material\n"
+" ulSeedLen   length of seed material\n",
 	{ArgULong, ArgChar, ArgULong, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_GenerateRandom", F_C_GenerateRandom,
+"C_GenerateRandom hSession RandomData ulRandomLen\n\n"
+"C_GenerateRandom generates random data.\n"
+" hSession      the session's handle\n"
+" RandomData    receives the random data\n"
+" ulRandomLen   # of bytes to generate\n",
 	{ArgULong, ArgChar, ArgULong, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_GetFunctionStatus", F_C_GetFunctionStatus,
+"C_GetFunctionStatus hSession\n\n"
+"C_GetFunctionStatus is a legacy function; it obtains an updated status of a function running in parallel with an application.\n"
+" hSession   the session's handle\n",
 	{ArgULong, ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_CancelFunction", F_C_CancelFunction,
+"C_CancelFunction hSession\n\n"
+"C_CancelFunction is a legacy function; it cancels a function running in parallel.\n"
+" hSession   the session's handle\n",
 	{ArgULong, ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_WaitForSlotEvent", F_C_WaitForSlotEvent,
+"C_WaitForSlotEvent flags pSlot pRserved \n\n"
+"C_WaitForSlotEvent waits for a slot event (token insertion  removal  etc.) to occur.\n"
+" flags          blocking/nonblocking flag\n"
+" pSlot    location that receives the slot ID\n"
+" pRserved    reserved.  Should be NULL_PTR\n",
 	{ArgULong, ArgULong|ArgArray, ArgVar, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"NewArray", F_NewArray,
+"NewArray varName varType array size\n\n"
+"Creates a new array variable.\n"
+" varName     variable name of the new array\n"
+" varType     data type of the new array\n"
+" size        number of elements in the array\n",
 	{ArgVar|ArgNew, ArgVar, ArgULong, ArgNone, ArgNone, 
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"NewTemplate", F_NewTemplate,
+"NewTemplate varName attributeList\n\n"
+"Create a new empty template and populate the attribute list\n"
+" varName        variable name of the new template\n"
+" attributeList  comma separated list of CKA_ATTRIBUTE types\n",
 	{ArgVar|ArgNew, ArgVar, ArgNone, ArgNone, ArgNone, 
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"NewMechanism", F_NewMechanism,
+"NewMechanism varName mechanismType\n\n"
+"Create a new CK_MECHANISM object with type NULL paramters and specified type\n"
+" varName        variable name of the new mechansim\n"
+" mechanismType  CKM_ mechanism type value to set int the type field\n",
 	{ArgMechanism|ArgOut, ArgULong, ArgNone, ArgNone, ArgNone, 
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"BuildTemplate", F_BuildTemplate,
+"BuildTemplate template\n\n"
+"Allocates space for the value in a template which has the sizes filled in, but no values allocated yet.\n"
+" template        variable name of the template\n",
 	{ArgAttribute, ArgNone, ArgNone, ArgNone, ArgNone, 
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"SetTemplate", F_SetTemplate,
+"SetTemplate template index value\n\n"
+"Sets a particular element of a template to a CK_ULONG\n"
+" template        variable name of the template\n"
+" index           index into the template to the element to change\n"
+" value           32 bit value to set in the template\n",
 	{ArgAttribute, ArgULong, ArgULong, ArgNone, ArgNone, 
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
+    {"SetString", F_SetStringVar,
+"SetString varName string\n\n"
+"Sets a particular variable to a string value\n"
+" variable        variable name of new string\n"
+" string	         String to set the variable to\n",
+	{ArgVar|ArgNew, ArgVar, ArgNone, ArgNone, ArgNone, 
+	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"Set", F_SetVar,
+"Set varName value\n\n"
+"Sets a particular variable to CK_ULONG\n"
+" variable        name of the new variable\n"
+" value           32 bit value to set variable to\n",
 	{ArgVar|ArgNew, ArgULong, ArgNone, ArgNone, ArgNone, 
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"Print", F_Print,
+"Print varName\n\n"
+"prints a variable\n"
+" variable        name of the variable to print\n",
 	{ArgVar, ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"Delete", F_Delete,
+"Delete varName\n\n"
+"delete a variable\n"
+" variable        name of the variable to delete\n",
 	{ArgVar|ArgNew, ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"Load", F_Load,
+"load libraryName\n\n"
+"load a pkcs #11 module\n"
+" libraryName        Name of a shared library\n",
 	{ArgVar, ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"Save", F_SaveVar,
+"Save filename variable\n\n"
+"Saves the binary value of 'variable' in file 'filename'\n"
+" fileName        target file to save the variable in\n"
+" variable        variable to save\n",
 	{ArgVar|ArgNew, ArgVar, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"Restore", F_RestoreVar,
+"Restore filename variable\n\n"
+"Restors a variable from a file\n"
+" fileName        target file to restore the variable from\n"
+" variable        variable to restore\n",
 	{ArgVar|ArgNew, ArgVar, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"List", F_List,
+"List all the variables\n",
 	{ArgNone, ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"Unload", F_Unload,
+"Unload the currrently loaded PKCS #11 library\n",
 	{ArgNone, ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"Run", F_Run,
+"Run filename\n\n"
+"reads filename as script of commands to execute\n",
 	{ArgVar|ArgNew, ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"System", F_System,
+	"Fix Me... ",
 	{ArgULong, ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
+    {"Help", F_Help,
+"Help [command]\n\n"
+"print general help, or help for a specific command\n",
+	{ArgVar|ArgOpt, ArgNone, ArgNone, ArgNone, ArgNone,
+	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"Quit", F_Quit,
+"Exit from this program",
 	{ArgNone, ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
 };
