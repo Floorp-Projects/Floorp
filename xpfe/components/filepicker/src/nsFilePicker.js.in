@@ -119,10 +119,17 @@ nsFilePicker.prototype = {
     o.filters.types = this.mFilters;
     o.retvals = new Object();
 
-    this.mParentWindow.openDialog("chrome://global/content/filepicker.xul",
-                                 "",
-                                 "chrome,modal,resizeable=yes,dependent=yes",
-                                 o);
+    var parent;
+    if (this.mParentWindow) {
+      parent = this.mParentWindow;
+    } else {
+      parent = window;
+    }
+
+    parent.openDialog("chrome://global/content/filepicker.xul",
+                      "",
+                      "chrome,modal,resizeable=yes,dependent=yes",
+                      o);
 
     this.mFile = o.retvals.file;
     lastDirectory = o.retvals.directory;
