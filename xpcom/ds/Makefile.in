@@ -61,7 +61,6 @@ CPPSRCS		= \
 		nsPersistentProperties.cpp \
 		nsQuickSort.cpp \
 		nsRecyclingAllocator.cpp \
-		nsSizeOfHandler.cpp \
 		nsStaticNameTable.cpp \
 		nsStatistics.cpp \
 		nsStringService.cpp \
@@ -93,7 +92,6 @@ EXPORTS		= \
 		nsHashtableEnumerator.h \
 		nsIArena.h \
 		nsIByteBuffer.h \
-		nsISizeOfHandler.h \
 		nsIUnicharBuffer.h \
 		nsInt64.h \
 		nsObserverService.h \

@@ -1067,18 +1067,6 @@ nsGenericDOMDataNode::DumpContent(FILE* out, PRInt32 aIndent,
 {
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsGenericDOMDataNode::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  PRUint32 sum = sizeof(*this);
-  sum += mText.GetLength() * (mText.Is2b() ? sizeof(PRUnichar) : sizeof(char));
-  *aResult = sum;
-  return NS_OK;
-}
 #endif
 
 //----------------------------------------------------------------------

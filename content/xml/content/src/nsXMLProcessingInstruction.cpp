@@ -175,17 +175,4 @@ nsXMLProcessingInstruction::DumpContent(FILE* out, PRInt32 aIndent,
                                         PRBool aDumpAll) const {
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsXMLProcessingInstruction::SizeOf(nsISizeOfHandler* aSizer,
-                                   PRUint32* aResult) const
-{
-  if (!aResult) return NS_ERROR_NULL_POINTER;
-  PRUint32 sum;
-  nsGenericDOMDataNode::SizeOf(aSizer, &sum);
-  PRUint32 ssize;
-  mTarget.SizeOf(aSizer, &ssize);
-  sum = sum - sizeof(mTarget) + ssize;
-  return NS_OK;
-}
 #endif

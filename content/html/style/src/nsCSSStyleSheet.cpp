@@ -97,7 +97,6 @@
 #include "prlog.h"
 #include "nsCOMPtr.h"
 #include "nsIStyleSet.h"
-#include "nsISizeOfHandler.h"
 #include "nsStyleUtil.h"
 #include "nsQuickSort.h"
 #ifdef MOZ_XUL
@@ -762,10 +761,6 @@ public:
                                     nsIAtom* aMedium,
                                     PRBool* aResult);
 
-#ifdef DEBUG
-  virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
-#endif
-
 protected:
   RuleCascadeData* GetRuleCascade(nsIPresContext* aPresContext, nsIAtom* aMedium);
 
@@ -791,10 +786,6 @@ public:
   virtual void RemoveSheet(nsICSSStyleSheet* aParentSheet);
 
   virtual void RebuildNameSpaces(void);
-
-#ifdef DEBUG
-  virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
-#endif
 
   nsAutoVoidArray       mSheets;
 
@@ -897,8 +888,6 @@ public:
 
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-
-  virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
 #endif
 
   // nsIDOMStyleSheet interface
@@ -1632,81 +1621,6 @@ CSSStyleSheetInner::RebuildNameSpaces(void)
     mOrderedRules->EnumerateForwards(CreateNameSpace, address_of(mNameSpace));
   }
 }
-
-#ifdef DEBUG
-/******************************************************************************
-* SizeOf method:
-*
-*  Self (reported as CSSStyleSheetInner's size): 
-*    1) sizeof(*this) + sizeof mSheets array (not contents though)
-*       + size of the mOrderedRules array (not the contents though)
-*
-*  Contained / Aggregated data (not reported as CSSStyleSheetInner's size):
-*    1) mSheets: each style sheet is sized seperately
-*    2) mOrderedRules: each fule is sized seperately
-*
-*  Children / siblings / parents:
-*    none
-*    
-******************************************************************************/
-void CSSStyleSheetInner::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
-{
-  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
-
-  // first get the unique items collection
-  UNIQUE_STYLE_ITEMS(uniqueItems);
-  if(! uniqueItems->AddItem((void*)this)){
-    // this style sheet is lared accounted for
-    return;
-  }
-
-  PRUint32 localSize=0;
-  PRBool rulesCounted=PR_FALSE;
-
-  // create a tag for this instance
-  nsCOMPtr<nsIAtom> tag = do_GetAtom("CSSStyleSheetInner");
-  // get the size of an empty instance and add to the sizeof handler
-  aSize = sizeof(CSSStyleSheetInner);
-
-  // add in the size of the mSheets array itself
-  mSheets.SizeOf(aSizeOfHandler,&localSize);
-  aSize += localSize;
-
-  // and the mOrderedRules array (if there is one)
-  if(mOrderedRules && uniqueItems->AddItem(mOrderedRules)){
-    rulesCounted=PR_TRUE;
-    // no SizeOf method so we just get the basic object size
-    aSize += sizeof(*mOrderedRules);
-  }
-  aSizeOfHandler->AddSize(tag,aSize);
-
-
-  // delegate to the contained containers
-  // mSheets : nsVoidArray
-  {
-    PRUint32 sheetCount, sheetCur;
-    sheetCount = mSheets.Count();
-    for(sheetCur=0; sheetCur < sheetCount; sheetCur++){
-      nsICSSStyleSheet* sheet = (nsICSSStyleSheet*)mSheets.ElementAt(sheetCur);
-      if(sheet){
-        sheet->SizeOf(aSizeOfHandler, localSize);
-      }
-    }
-  }
-  // mOrderedRules : nsISupportsArray*
-  if(mOrderedRules && rulesCounted){
-    PRUint32 ruleCount, ruleCur;
-    mOrderedRules->Count(&ruleCount);
-    for(ruleCur=0; ruleCur < ruleCount; ruleCur++){
-      nsICSSRule* rule = (nsICSSRule*)mOrderedRules->ElementAt(ruleCur);
-      if(rule){
-        rule->SizeOf(aSizeOfHandler, localSize);
-        NS_IF_RELEASE(rule);
-      }
-    }
-  }
-}
-#endif
 
 
 // -------------------------------
@@ -2553,58 +2467,6 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 
   fputs("Rules in source order:\n", out);
   ListRules(mInner->mOrderedRules, out, aIndent);
-}
-
-/******************************************************************************
-* SizeOf method:
-*
-*  Self (reported as CSSStyleSheetImpl's size): 
-*    1) sizeof(*this) + sizeof the mImportsCollection + sizeof mCuleCollection)
-*
-*  Contained / Aggregated data (not reported as CSSStyleSheetImpl's size):
-*    1) mInner is delegated to be counted seperately
-*
-*  Children / siblings / parents:
-*    1) Recurse to mFirstChild
-*    
-******************************************************************************/
-void CSSStyleSheetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
-{
-  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
-
-  // first get the unique items collection
-  UNIQUE_STYLE_ITEMS(uniqueItems);
-  if(! uniqueItems->AddItem((void*)this)){
-    // this style sheet is already accounted for
-    return;
-  }
-
-  PRUint32 localSize=0;
-
-  // create a tag for this instance
-  nsCOMPtr<nsIAtom> tag = do_GetAtom("CSSStyleSheet");
-  // get the size of an empty instance and add to the sizeof handler
-  aSize = sizeof(CSSStyleSheetImpl);
-
-  // add up the contained objects we won't delegate to: 
-  // NOTE that we just add the sizeof the objects
-  // since the style data they contain is accounted for elsewhere
-  // - mImportsCollection
-  // - mRuleCollection
-  aSize += sizeof(mImportsCollection);
-  aSize += sizeof(mRuleCollection);
-  aSizeOfHandler->AddSize(tag,aSize);
-
-  // size the inner
-  if(mInner){
-    mInner->SizeOf(aSizeOfHandler, localSize);
-  }
-
-  // now travers the children (recursively, I'm sorry to say)
-  if(mFirstChild){
-    PRUint32 childSize=0;
-    mFirstChild->SizeOf(aSizeOfHandler, childSize);
-  }
 }
 #endif
 
@@ -4272,155 +4134,6 @@ CSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData,
 
   return NS_OK;
 }
-
-
-#ifdef DEBUG
-
-struct CascadeSizeEnumData {
-
-  CascadeSizeEnumData(nsISizeOfHandler *aSizeOfHandler, 
-                      nsUniqueStyleItems *aUniqueStyleItem,
-                      nsIAtom *aTag)
-  {
-    handler = aSizeOfHandler;
-    uniqueItems = aUniqueStyleItem;
-    tag = aTag;
-  }
-    // weak references all 'round
-
-  nsISizeOfHandler    *handler;
-  nsUniqueStyleItems  *uniqueItems;
-  nsIAtom             *tag;
-};
-
-static 
-PRBool PR_CALLBACK StateSelectorsSizeEnumFunc( void *aSelector, void *aData )
-{
-  nsCSSSelector* selector = (nsCSSSelector*)aSelector;
-  CascadeSizeEnumData *pData = (CascadeSizeEnumData *)aData;
-  NS_ASSERTION(selector && pData, "null arguments not supported");
-
-  if(! pData->uniqueItems->AddItem((void*)selector)){
-    return PR_TRUE;
-  }
-
-  // pass the call to the selector
-  PRUint32 localSize = 0;
-  selector->SizeOf(pData->handler, localSize);
-
-  return PR_TRUE;
-}
-
-static 
-PRBool WeightedRulesSizeEnumFunc( nsISupports *aRule, void *aData )
-{
-  nsICSSStyleRule* rule = (nsICSSStyleRule*)aRule;
-  CascadeSizeEnumData *pData = (CascadeSizeEnumData *)aData;
-
-  NS_ASSERTION(rule && pData, "null arguments not supported");
-
-  if(! pData->uniqueItems->AddItem((void*)rule)){
-    return PR_TRUE;
-  }
-
-  PRUint32 localSize=0;
-
-  // pass the call to the rule
-  rule->SizeOf(pData->handler, localSize);
-
-  return PR_TRUE;
-}
-
-static 
-void CascadeSizeEnumFunc(RuleCascadeData *cascade, CascadeSizeEnumData *pData)
-{
-  NS_ASSERTION(cascade && pData, "null arguments not supported");
-
-  // see if the cascade has already been counted
-  if(!(pData->uniqueItems->AddItem(cascade))){
-    return;
-  }
-  // record the size of the cascade data itself
-  PRUint32 localSize = sizeof(RuleCascadeData);
-  pData->handler->AddSize(pData->tag, localSize);
-
-  // next add up the selectors and the weighted rules for the cascade
-  nsCOMPtr<nsIAtom> stateSelectorSizeTag;
-  stateSelectorSizeTag = do_GetAtom("CascadeStateSelectors");
-  CascadeSizeEnumData stateData(pData->handler,pData->uniqueItems,stateSelectorSizeTag);
-  cascade->mStateSelectors.EnumerateForwards(StateSelectorsSizeEnumFunc, &stateData);
-  
-  if(cascade->mWeightedRules){
-    nsCOMPtr<nsIAtom> weightedRulesSizeTag;
-    weightedRulesSizeTag = do_GetAtom("CascadeWeightedRules");
-    CascadeSizeEnumData stateData2(pData->handler,pData->uniqueItems,weightedRulesSizeTag);
-    cascade->mWeightedRules->EnumerateForwards(WeightedRulesSizeEnumFunc, &stateData2);
-  }
-}
-
-/******************************************************************************
-* SizeOf method:
-*
-*  Self (reported as CSSRuleProcessor's size): 
-*    1) sizeof(*this)
-*
-*  Contained / Aggregated data (not reported as CSSRuleProcessor's size):
-*    1) Delegate to the StyleSheets in the mSheets collection
-*    2) Delegate to the Rules in the CascadeTable
-*
-*  Children / siblings / parents:
-*    none
-*    
-******************************************************************************/
-void CSSRuleProcessor::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
-{
-  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
-
-  // first get the unique items collection
-  UNIQUE_STYLE_ITEMS(uniqueItems);
-  if(! uniqueItems->AddItem((void*)this)){
-    return;
-  }
-
-  // create a tag for this instance
-  nsCOMPtr<nsIAtom> tag = do_GetAtom("CSSRuleProcessor");
-  // get the size of an empty instance and add to the sizeof handler
-  aSize = sizeof(CSSRuleProcessor);
-
-  // collect sizes for the data
-  // - mSheets
-  // - mRuleCascades
-
-  // sheets first
-  if(mSheets && uniqueItems->AddItem(mSheets)){
-    PRUint32 sheetCount, curSheet, localSize2;
-    mSheets->Count(&sheetCount);
-    for(curSheet=0; curSheet < sheetCount; curSheet++){
-      nsCOMPtr<nsICSSStyleSheet> pSheet =
-        dont_AddRef((nsICSSStyleSheet*)mSheets->ElementAt(curSheet));
-      if(pSheet && uniqueItems->AddItem((void*)pSheet)){
-        pSheet->SizeOf(aSizeOfHandler, localSize2);
-        // XXX aSize += localSize2;
-      }
-    }
-  }
-
-  // and for the medium cascade table we account for the hash table overhead,
-  // and then compute the sizeof each rule-cascade in the table
-  {
-    nsCOMPtr<nsIAtom> tag2 = do_GetAtom("RuleCascade");
-    CascadeSizeEnumData data(aSizeOfHandler, uniqueItems, tag2);
-    for (RuleCascadeData *cascadeData = mRuleCascades;
-   cascadeData;
-   cascadeData = cascadeData->mNext) {
-      CascadeSizeEnumFunc(cascadeData, &data);
-    }
-  }
-  
-  // now add the size of the RuleProcessor
-  aSizeOfHandler->AddSize(tag,aSize);
-}
-#endif
 
 NS_IMETHODIMP
 CSSRuleProcessor::ClearRuleCascades(void)

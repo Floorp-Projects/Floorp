@@ -38,7 +38,6 @@
 #include "nsIContent.h"
 #include "nsIPresContext.h"
 #include "nsStyleContext.h"
-#include "nsISizeOfHandler.h"
 
 NS_IMETHODIMP
 nsSplittableFrame::Init(nsIPresContext*  aPresContext,
@@ -182,15 +181,5 @@ nsSplittableFrame::DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* ou
     fprintf(out, "<prev-in-flow va=\"%ld\"/>\n", PRUptrdiff(mPrevInFlow));
   }
 
-}
-
-NS_IMETHODIMP
-nsSplittableFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = sizeof(*this);
-  return NS_OK;
 }
 #endif

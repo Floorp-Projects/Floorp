@@ -85,9 +85,6 @@ public:
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       nsChangeHint& aHint) const;
-#ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-#endif
 
 protected:
   // This does not return a nsresult since all we care about is if we
@@ -538,14 +535,3 @@ nsHTMLTableCellElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& a
   aMapRuleFunc = &MapAttributesIntoRule;
   return NS_OK;
 }
-
-#ifdef DEBUG
-NS_IMETHODIMP
-nsHTMLTableCellElement::SizeOf(nsISizeOfHandler* aSizer,
-                               PRUint32* aResult) const
-{
-  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
-
-  return NS_OK;
-}
-#endif

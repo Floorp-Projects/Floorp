@@ -106,9 +106,6 @@ public:
                                nsHTMLValue& aResult);
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       nsChangeHint& aHint) const;
-#ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-#endif
 
   // nsIOptionElement
   NS_IMETHOD SetSelectedInternal(PRBool aValue, PRBool aNotify);
@@ -800,13 +797,3 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
 
   return result;
 }
-
-#ifdef DEBUG
-NS_IMETHODIMP
-nsHTMLOptionElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
-{
-  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
-
-  return NS_OK;
-}
-#endif

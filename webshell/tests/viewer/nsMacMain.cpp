@@ -118,9 +118,6 @@ enum
     cmd_DumpViews,
     cmd_DumpStyleSheets,
     cmd_DumpStyleContexts,
-    cmd_ShowContentSize,
-    cmd_ShowFrameSize,
-    cmd_ShowStyleSize,
     cmd_DebugSave,
     cmd_DebugOutputText,
     cmd_DebugOutputHTML,    
@@ -362,10 +359,6 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
                 case cmd_DumpStyleSheets:       xpID = VIEWER_DUMP_STYLE_SHEETS;        break;
                 case cmd_DumpStyleContexts: xpID = VIEWER_DUMP_STYLE_CONTEXTS;  break;
 
-                case cmd_ShowContentSize:       xpID = VIEWER_SHOW_CONTENT_SIZE;        break;
-                case cmd_ShowFrameSize:         xpID = VIEWER_SHOW_FRAME_SIZE;          break;
-                case cmd_ShowStyleSize:         xpID = VIEWER_SHOW_STYLE_SIZE;          break;
-                
                 case cmd_DebugSave:                         xpID = VIEWER_DEBUGSAVE;                    break;
                 case cmd_DebugOutputText:               xpID = VIEWER_DISPLAYTEXT;              break;
                 case cmd_DebugOutputHTML:               xpID = VIEWER_DISPLAYHTML;              break;

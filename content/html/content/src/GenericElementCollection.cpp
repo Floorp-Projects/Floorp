@@ -131,16 +131,3 @@ GenericElementCollection::ParentDestroyed()
 
   return NS_OK;
 }
-
-#ifdef DEBUG
-nsresult
-GenericElementCollection::SizeOf(nsISizeOfHandler* aSizer,
-                                 PRUint32* aResult) const
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  *aResult = sizeof(*this);
-
-  return NS_OK;
-}
-#endif

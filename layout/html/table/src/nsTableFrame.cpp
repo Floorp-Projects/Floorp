@@ -70,7 +70,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLBodyElement.h"
-#include "nsISizeOfHandler.h"
 #include "nsIScrollableFrame.h"
 #include "nsHTMLReflowCommand.h"
 #include "nsIFrameManager.h"
@@ -7443,33 +7442,6 @@ nsTableFrame::GetProperty(nsIPresContext*      aPresContext,
 }
 
 #ifdef DEBUG
-NS_IMETHODIMP
-nsTableFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  PRUint32 sum = sizeof(*this);
-
-  // Add in size of cell map
-  PRUint32 cellMapSize;
-  mCellMap->SizeOf(aHandler, &cellMapSize);
-  aHandler->AddSize(nsLayoutAtoms::cellMap, cellMapSize);
-
-  // Add in size of col cache
-  PRUint32 voidArraySize;
-  mColFrames.SizeOf(aHandler, &voidArraySize);
-  sum += voidArraySize - sizeof(mColFrames);
-
-  // Add in size of table layout strategy
-  PRUint32 strategySize;
-  mTableLayoutStrategy->SizeOf(aHandler, &strategySize);
-  aHandler->AddSize(nsLayoutAtoms::tableStrategy, strategySize);
-
-  *aResult = sum;
-  return NS_OK;
-}
-
 #define MAX_SIZE  128
 #define MIN_INDENT 30
 

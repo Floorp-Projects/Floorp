@@ -75,7 +75,6 @@
 #include "nsIViewManager.h"
 #include "nsHTMLContainerFrame.h"
 #include "prprf.h"
-#include "nsISizeOfHandler.h"
 #include "nsIFontMetrics.h"
 #include "nsCSSRendering.h"
 #include "nsIDOMHTMLImageElement.h"

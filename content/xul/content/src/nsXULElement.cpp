@@ -145,7 +145,6 @@
 // The XUL doc interface
 #include "nsIDOMXULDocument.h"
 
-#include "nsISizeOfHandler.h"
 #include "nsReadableUtils.h"
 #include "nsITimelineService.h"
 #include "nsIFrame.h"
@@ -3149,19 +3148,6 @@ nsXULElement::List(FILE* out, PRInt32 aIndent) const
 
     return NS_OK;
 }
-
-
-NS_IMETHODIMP
-nsXULElement::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-    if (!aResult) {
-        return NS_ERROR_NULL_POINTER;
-    }
-    PRUint32 sum = 0;
-    sum += (PRUint32) sizeof(*this);
-    *aResult = sum;
-    return NS_OK;
-}
 #endif
 
 NS_IMETHODIMP
@@ -4441,16 +4427,6 @@ nsXULElement::IsContentOfType(PRUint32 aFlags)
 {
   return !(aFlags & ~(eELEMENT | eXUL));
 }
-
-#ifdef DEBUG
-void nsXULElement::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
-{
-  // XXX - implement this if you want the sizes of XUL style rules
-  //       dumped during StyleSize dump
-  return;
-}
-#endif
-
 
 nsresult
 nsXULElement::AddPopupListener(nsIAtom* aName)

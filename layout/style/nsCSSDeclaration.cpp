@@ -51,7 +51,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIStyleSet.h"
-#include "nsISizeOfHandler.h"
 
 // #define DEBUG_REFS
 
@@ -6102,102 +6101,6 @@ void nsCSSDeclaration::List(FILE* out, PRInt32 aIndent) const
     fputs(" ! important ", out);
     mImportant->List(out, 0);
   }
-}
-
-/******************************************************************************
-* SizeOf method:
-*
-*  Self (reported as nsCSSDeclaration's size): 
-*    1) sizeof(*this) + the sizeof each non-null attribute
-*
-*  Contained / Aggregated data (not reported as nsCSSDeclaration's size):
-*    none
-*
-*  Children / siblings / parents:
-*    none
-*    
-******************************************************************************/
-void nsCSSDeclaration::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
-{
-  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
-
-  // first get the unique items collection
-  UNIQUE_STYLE_ITEMS(uniqueItems);
-  if(! uniqueItems->AddItem((void*)this)){
-    return;
-  }
-
-  // create a tag for this instance
-  nsCOMPtr<nsIAtom> tag = do_GetAtom("nsCSSDeclaration");
-  // get the size of an empty instance and add to the sizeof handler
-  aSize = sizeof(*this);
-
-  // now add in all of the contained objects, checking for duplicates on all of them
-  CSS_VARONSTACK_GET(Font);
-  if(theFont && uniqueItems->AddItem(theFont)){
-    aSize += sizeof(*theFont);
-  }
-  CSS_VARONSTACK_GET(Color);
-  if(theColor && uniqueItems->AddItem(theColor)){
-    aSize += sizeof(*theColor);
-  }
-  CSS_VARONSTACK_GET(Text);
-  if(theText && uniqueItems->AddItem(theText)){
-    aSize += sizeof(*theText);
-  }
-  CSS_VARONSTACK_GET(Margin);
-  if(theMargin && uniqueItems->AddItem(theMargin)){
-    aSize += sizeof(*theMargin);
-  }
-  CSS_VARONSTACK_GET(Position);
-  if(thePosition && uniqueItems->AddItem(thePosition)){
-    aSize += sizeof(*thePosition);
-  }
-  CSS_VARONSTACK_GET(List);
-  if(theList && uniqueItems->AddItem(theList)){
-    aSize += sizeof(*theList);
-  }
-  CSS_VARONSTACK_GET(Display);
-  if(theDisplay && uniqueItems->AddItem(theDisplay)){
-    aSize += sizeof(*theDisplay);
-  }
-  CSS_VARONSTACK_GET(Table);
-  if(theTable && uniqueItems->AddItem(theTable)){
-    aSize += sizeof(*theTable);
-  }
-  CSS_VARONSTACK_GET(Breaks);
-  if(theBreaks && uniqueItems->AddItem(theBreaks)){
-    aSize += sizeof(*theBreaks);
-  }
-  CSS_VARONSTACK_GET(Page);
-  if(thePage && uniqueItems->AddItem(thePage)){
-    aSize += sizeof(*thePage);
-  }
-  CSS_VARONSTACK_GET(Content);
-  if(theContent && uniqueItems->AddItem(theContent)){
-    aSize += sizeof(*theContent);
-  }
-  CSS_VARONSTACK_GET(UserInterface);
-  if(theUserInterface && uniqueItems->AddItem(theUserInterface)){
-    aSize += sizeof(*theUserInterface);
-  }
-#ifdef INCLUDE_XUL
-  CSS_VARONSTACK_GET(XUL);
-  if(theXUL && uniqueItems->AddItem(theXUL)){
-    aSize += sizeof(*theXUL);
-  }
-#endif
-#ifdef MOZ_SVG
-  CSS_VARONSTACK_GET(SVG);
-  if(theSVG && uniqueItems->AddItem(theSVG)){
-    aSize += sizeof(*theSVG);
-  }
-#endif
-  CSS_VARONSTACK_GET(Aural);
-  if(theAural && uniqueItems->AddItem(theAural)){
-    aSize += sizeof(*theAural);
-  }
-  aSizeOfHandler->AddSize(tag, aSize);
 }
 #endif
 

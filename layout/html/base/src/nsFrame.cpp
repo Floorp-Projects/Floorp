@@ -56,7 +56,6 @@
 #include "prlog.h"
 #include "prprf.h"
 #include <stdarg.h>
-#include "nsISizeOfHandler.h"
 #include "nsIFrameManager.h"
 #include "nsCSSRendering.h"
 #ifdef ACCESSIBILITY
@@ -2776,15 +2775,6 @@ nsFrame::MakeFrameName(const nsAString& aType, nsAString& aResult) const
   aResult.Append(NS_ConvertASCIItoUCS2(buf));
   return NS_OK;
 }
-
-void
-nsFrame::SizeOfStyleContext(nsISizeOfHandler* aSizeOfHandler,
-                            PRUint32& aSize)
-{
-  if (mStyleContext)
-    mStyleContext->SizeOf(aSizeOfHandler, aSize);
-}
-
 #endif
 
 void
@@ -3051,16 +3041,6 @@ nsFrame::DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32
     NS_IF_RELEASE(list);
     GetAdditionalChildListName(listIndex++, &list);
   } while (nsnull != list);
-}
-
-NS_IMETHODIMP
-nsFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = sizeof(*this);
-  return NS_OK;
 }
 
 NS_IMETHODIMP

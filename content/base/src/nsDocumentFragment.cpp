@@ -177,16 +177,6 @@ public:
       return NS_OK;
     }
 
-#ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
-    if (!aResult) {
-      return NS_ERROR_NULL_POINTER;
-    }
-    *aResult = sizeof(*this);
-    return NS_OK;
-  }
-#endif
-
 protected:
   nsCOMPtr<nsIDocument> mOwnerDocument;
 };

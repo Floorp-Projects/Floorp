@@ -47,8 +47,6 @@
 #include "nsCSSValue.h"
 #include "nsIAtom.h"
 
-class nsISizeOfHandler;
-
 class nsIAtom;
 class nsIArena;
 class nsCSSDeclaration;
@@ -96,10 +94,6 @@ public:
   ~nsAttrSelector(void);
   PRBool Equals(const nsAttrSelector* aOther) const;
 
-#ifdef DEBUG
-  void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
-#endif
-
   PRInt32         mNameSpace;
   nsIAtom*        mAttr;
   PRUint8         mFunction;
@@ -136,9 +130,6 @@ public:
 
   PRInt32 CalcWeight(void) const;
 
-#ifdef DEBUG
-  void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
-#endif
   nsresult ToString( nsAString& aString, nsICSSStyleSheet* aSheet,
                     PRBool aIsPseudoElem, PRInt8 aNegatedIndex ) const;
 

@@ -203,37 +203,3 @@ nsDOMDocumentType::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
   return CallQueryInterface(it, aReturn);
 }
-
-#ifdef DEBUG
-NS_IMETHODIMP
-nsDOMDocumentType::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  PRUint32 sum;
-  nsGenericDOMDataNode::SizeOf(aSizer, &sum);
-  PRUint32 ssize;
-  mName.SizeOf(aSizer, &ssize);
-  sum = sum - sizeof(mName) + ssize;
-  if (mEntities) {
-    PRBool recorded;
-    aSizer->RecordObject((void*) mEntities, &recorded);
-    if (!recorded) {
-      PRUint32 size;
-      nsDOMAttributeMap::SizeOfNamedNodeMap(mEntities, aSizer, &size);
-      aSizer->AddSize(nsLayoutAtoms::xml_document_entities, size);
-    }
-  }
-  if (mNotations) {
-    PRBool recorded;
-    aSizer->RecordObject((void*) mNotations, &recorded);
-    if (!recorded) {
-      PRUint32 size;
-      nsDOMAttributeMap::SizeOfNamedNodeMap(mNotations, aSizer, &size);
-      aSizer->AddSize(nsLayoutAtoms::xml_document_notations, size);
-    }
-  }
-  return NS_OK;
-}
-#endif
-

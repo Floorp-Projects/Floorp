@@ -42,8 +42,6 @@
 #include "nscore.h"
 #include "nsAString.h"
 
-class nsISizeOfHandler;
-
 // Comparator callback function for sorting array values.
 typedef int (* PR_CALLBACK nsVoidArrayComparatorFunc)
             (const void* aElement1, const void* aElement2, void* aData);
@@ -59,10 +57,6 @@ public:
   virtual ~nsVoidArray();
 
   nsVoidArray& operator=(const nsVoidArray& other);
-
-#ifdef DEBUG
-  virtual void  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-#endif
 
   inline PRInt32 Count() const {
     return mImpl ? mImpl->mCount : 0;
@@ -212,10 +206,6 @@ public:
 
   nsStringArray& operator=(const nsStringArray& other);
 
-#ifdef DEBUG
-  void  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-#endif
-
   PRInt32 Count(void) const {
     return nsVoidArray::Count();
   }
@@ -276,10 +266,6 @@ public:
   // "a", "b" and "c" to the array. Parsing process has the same tokenizing 
   // behavior as strtok().  
   void ParseString(const char* string, const char* delimiter);
-
-#ifdef DEBUG
-  void  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-#endif
 
   PRInt32 Count(void) const {
     return nsVoidArray::Count();
@@ -355,9 +341,6 @@ public:
   nsSmallVoidArray& operator=(nsSmallVoidArray& other);
   void* operator[](PRInt32 aIndex) const { return ElementAt(aIndex); }
 
-#ifdef DEBUG
-  void  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-#endif
   PRInt32 GetArraySize() const;
 
   PRInt32 Count() const;

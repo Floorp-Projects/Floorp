@@ -69,9 +69,6 @@ public:
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags);
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
-#ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-#endif
 
 protected:
   PRBool GetNoShade();
@@ -359,15 +356,3 @@ HRuleFrame::GetFrameType(nsIAtom** aType) const
   NS_ADDREF(*aType);
   return NS_OK;
 }
-
-#ifdef DEBUG
-NS_IMETHODIMP
-HRuleFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = sizeof(*this);
-  return NS_OK;
-}
-#endif

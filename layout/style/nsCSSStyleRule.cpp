@@ -70,7 +70,6 @@
 #include "nsUnicharUtils.h"
 
 #include "nsIStyleSet.h"
-#include "nsISizeOfHandler.h"
 
 #include "nsContentUtils.h"
 #include "nsContentErrors.h"
@@ -308,51 +307,6 @@ PRBool nsAttrSelector::Equals(const nsAttrSelector* aOther) const
   }
   return PR_FALSE;
 }
-
-#ifdef DEBUG
-/******************************************************************************
-* SizeOf method:
-*
-*  Self (reported as nsAttrSelector's size): 
-*    1) sizeof(*this) + the size of mAttr atom (if it exists and is unique)
-*
-*  Contained / Aggregated data (not reported as nsAttrSelector's size):
-*    none
-*
-*  Children / siblings / parents:
-*    1) Recurses to the mMext instance which is reported as a seperate instance
-*    
-******************************************************************************/
-void nsAttrSelector::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
-{
-  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
-
-  // first get the unique items collection
-  UNIQUE_STYLE_ITEMS(uniqueItems);
-  if(! uniqueItems->AddItem((void*)this)){
-    return;
-  }
-
-  PRUint32 localSize=0;
-
-  // create a tag for this instance
-  nsCOMPtr<nsIAtom> tag = do_GetAtom("nsAttrSelector");
-  // get the size of an empty instance and add to the sizeof handler
-  aSize = sizeof(*this);
-
-  // add in the mAttr atom
-  if (mAttr && uniqueItems->AddItem(mAttr)){
-    mAttr->SizeOf(aSizeOfHandler, &localSize);
-    aSize += localSize;
-  }
-  aSizeOfHandler->AddSize(tag,aSize);
-
-  // recurse to the next one...
-  if(mNext){
-    mNext->SizeOf(aSizeOfHandler, localSize);
-  }
-}
-#endif
 
 MOZ_DECL_CTOR_COUNTER(nsCSSSelector)
 
@@ -625,113 +579,6 @@ PRInt32 nsCSSSelector::CalcWeight(void) const
   return weight;
 }
 
-#ifdef DEBUG
-/******************************************************************************
-* SizeOf method:
-*
-*  Self (reported as nsCSSSelector's size): 
-*    1) sizeof(*this) + the size of the mTag 
-*       + the size of the mIDList unique items 
-*       + the size of the mClassList and mPseudoClassList unique items
-*
-*  Contained / Aggregated data (not reported as nsCSSSelector's size):
-*    1) AttributeList is called out to seperately if it exists
-*
-*  Children / siblings / parents:
-*    1) Recurses to mNext which is counted as it's own instance
-*    
-******************************************************************************/
-void nsCSSSelector::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
-{
-  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
-
-  // first get the unique items collection
-  UNIQUE_STYLE_ITEMS(uniqueItems);
-  if(! uniqueItems->AddItem((void*)this)){
-    return;
-  }
-
-  PRUint32 localSize=0;
-
-  // create a tag for this instance
-  nsCOMPtr<nsIAtom> tag = do_GetAtom("nsCSSSelector");
-  // get the size of an empty instance and add to the sizeof handler
-  aSize = sizeof(*this);
-  
-  // now get the member-atoms and add them in
-  if(mTag && uniqueItems->AddItem(mTag)){
-    localSize = 0;
-    mTag->SizeOf(aSizeOfHandler, &localSize);
-    aSize += localSize;
-  }
-
-
-  // XXX ????
-
-
-
-  // a couple of simple atom lists
-  if(mIDList && uniqueItems->AddItem(mIDList)){
-    aSize += sizeof(*mIDList);
-    nsAtomList *pNext = nsnull;
-    pNext = mIDList;    
-    while(pNext){
-      if(pNext->mAtom && uniqueItems->AddItem(pNext->mAtom)){
-        localSize = 0;
-        pNext->mAtom->SizeOf(aSizeOfHandler, &localSize);
-        aSize += localSize;
-      }
-      pNext = pNext->mNext;
-    }
-  }
-  if(mClassList && uniqueItems->AddItem(mClassList)){
-    aSize += sizeof(*mClassList);
-    nsAtomList *pNext = nsnull;
-    pNext = mClassList;    
-    while(pNext){
-      if(pNext->mAtom && uniqueItems->AddItem(pNext->mAtom)){
-        localSize = 0;
-        pNext->mAtom->SizeOf(aSizeOfHandler, &localSize);
-        aSize += localSize;
-      }
-      pNext = pNext->mNext;
-    }
-  }
-  if(mPseudoClassList && uniqueItems->AddItem(mPseudoClassList)){
-    nsAtomStringList *pNext = nsnull;
-    pNext = mPseudoClassList;    
-    while(pNext){
-      if(pNext->mAtom && uniqueItems->AddItem(pNext->mAtom)){
-        localSize = 0;
-        pNext->mAtom->SizeOf(aSizeOfHandler, &localSize);
-        aSize += localSize;
-      }
-      pNext = pNext->mNext;
-    }
-  }
-  // done with undelegated sizes 
-  aSizeOfHandler->AddSize(tag, aSize);
-
-  // the AttributeList gets its own delegation-call
-  if(mAttrList){
-    localSize = 0;
-    mAttrList->SizeOf(aSizeOfHandler, localSize);
-  }
-
-  // don't forget the negated selectors
-  if(mNegations) {
-    localSize = 0;
-    mNegations->SizeOf(aSizeOfHandler, localSize);
-  }
-  
-  // finally chain to the next...
-  if(mNext){
-    localSize = 0;
-    mNext->SizeOf(aSizeOfHandler, localSize);
-  }
-}
-#endif
-
 // pseudo-elements are stored in the selectors' chain using fictional elements;
 // these fictional elements have mTag starting with a colon
 static PRBool IsPseudoElement(nsIAtom* aAtom)
@@ -950,8 +797,6 @@ public:
 
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-
-  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
 #endif
 
 protected:
@@ -1039,47 +884,6 @@ CSSImportantRule::List(FILE* out, PRInt32 aIndent) const
   fputs("\n", out);
 
   return NS_OK;
-}
-
-/******************************************************************************
-* SizeOf method:
-*
-*  Self (reported as CSSImportantRule's size): 
-*    1) sizeof(*this) 
-*
-*  Contained / Aggregated data (not reported as CSSImportantRule's size):
-*    1) mDeclaration is sized seperately
-*    2) mSheet is sized seperately
-*
-*  Children / siblings / parents:
-*    none
-*    
-******************************************************************************/
-void CSSImportantRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
-{
-  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
-
-  // first get the unique items collection
-  UNIQUE_STYLE_ITEMS(uniqueItems);
-  if(! uniqueItems->AddItem((void*)this)){
-    return;
-  }
-
-  PRUint32 localSize=0;
-
-  // create a tag for this instance
-  nsCOMPtr<nsIAtom> tag = do_GetAtom("CSSImportantRule");
-  // get the size of an empty instance and add to the sizeof handler
-  aSize = sizeof(CSSImportantRule);
-  aSizeOfHandler->AddSize(tag,aSize);
-
-  // now dump the mDeclaration and mSheet
-  if(mDeclaration){
-    mDeclaration->SizeOf(aSizeOfHandler, localSize);
-  }
-  if(mSheet){
-    mSheet->SizeOf(aSizeOfHandler, localSize);
-  }
 }
 #endif
 
@@ -1429,8 +1233,6 @@ public:
 
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-
-  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
 #endif
 
   // nsIDOMCSSRule interface
@@ -2415,58 +2217,6 @@ CSSStyleRuleImpl::List(FILE* out, PRInt32 aIndent) const
   fputs("\n", out);
 
   return NS_OK;
-}
-
-/******************************************************************************
-* SizeOf method:
-*
-*  Self (reported as CSSStyleRuleImpl's size): 
-*    1) sizeof(*this) 
-*       + sizeof the DOMDeclaration if it exists and is unique
-*
-*  Contained / Aggregated data (not reported as CSSStyleRuleImpl's size):
-*    1) mDeclaration if it exists
-*    2) mImportantRule if it exists
-*
-*  Children / siblings / parents:
-*    none
-*    
-******************************************************************************/
-void CSSStyleRuleImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
-{
-  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
-
-  // first get the unique items collection
-  UNIQUE_STYLE_ITEMS(uniqueItems);
-  if(! uniqueItems->AddItem((void*)this)){
-    return;
-  }
-
-  PRUint32 localSize=0;
-
-  // create a tag for this instance
-  nsCOMPtr<nsIAtom> tag = do_GetAtom("CSSStyleRuleImpl");
-  // get the size of an empty instance and add to the sizeof handler
-  aSize = sizeof(*this);
-  // remove the sizeof the mSelector's class since we count it seperately below
-  aSize -= sizeof(mSelector);
-
-  // and add the size of the DOMDeclaration
-  // XXX - investigate the size and quantity of these
-  if(mDOMDeclaration && uniqueItems->AddItem(mDOMDeclaration)){
-    aSize += sizeof(DOMCSSDeclarationImpl);
-  }
-  aSizeOfHandler->AddSize(tag,aSize);
-  
-  // now delegate to the Selector, Declaration, and ImportantRule
-  mSelector.SizeOf(aSizeOfHandler, localSize);
-
-  if(mDeclaration){
-    mDeclaration->SizeOf(aSizeOfHandler, localSize);
-  }
-  if(mImportantRule){
-    mImportantRule->SizeOf(aSizeOfHandler, localSize);
-  }
 }
 #endif
 

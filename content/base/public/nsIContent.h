@@ -53,7 +53,6 @@ class nsIDOMEvent;
 class nsIContent;
 class nsISupportsArray;
 class nsIDOMRange;
-class nsISizeOfHandler;
 class nsINodeInfo;
 class nsIEventListenerManager;
 
@@ -514,23 +513,6 @@ public:
   NS_IMETHOD DoneCreatingElement() = 0;
 
 #ifdef DEBUG
-  /**
-   * Get the size of the content object. The size value should include
-   * all subordinate data referenced by the content that is not
-   * accounted for by child content. However, this value should not
-   * include the frame objects, style contexts, views or other data
-   * that lies logically outside the content model.
-   *
-   * If the implementation so chooses, instead of returning the total
-   * subordinate data it may instead use the sizeof handler to store
-   * away subordinate data under its own key so that the subordinate
-   * data may be tabulated independently of the frame itself.
-   *
-   * The caller is responsible for recursing over all children that
-   * the content contains.
-   */
-  NS_IMETHOD  SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const = 0;
-
   /**
    * List the content (and anything it contains) out to the given
    * file stream. Use aIndent as the base indent during formatting.

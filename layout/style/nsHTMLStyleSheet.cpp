@@ -61,7 +61,6 @@
 #include "nsRuleWalker.h"
 
 #include "nsIStyleSet.h"
-#include "nsISizeOfHandler.h"
 
 static NS_DEFINE_CID(kCSSFrameConstructorCID, NS_CSSFRAMECONSTRUCTOR_CID);
 
@@ -79,8 +78,6 @@ public:
 
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-
-  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
 #endif
 
   nscolor             mColor;
@@ -93,10 +90,6 @@ public:
   virtual ~HTMLDocumentColorRule();
 
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
-
-#ifdef DEBUG
-  virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
-#endif
 
   void Reset() {
     mInitialized = PR_FALSE;
@@ -142,43 +135,6 @@ NS_IMETHODIMP
 HTMLColorRule::List(FILE* out, PRInt32 aIndent) const
 {
   return NS_OK;
-}
-
-/******************************************************************************
-* SizeOf method:
-*
-*  Self (reported as HTMLColorRule's size): 
-*    1) sizeof(*this) + 
-*
-*  Contained / Aggregated data (not reported as HTMLColorRule's size):
-*    1) delegate to the mSheet
-*
-*  Children / siblings / parents:
-*    none
-*    
-******************************************************************************/
-void HTMLColorRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
-{
-  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
-
-  // first get the unique items collection
-  UNIQUE_STYLE_ITEMS(uniqueItems);
-
-  if(! uniqueItems->AddItem((void*)this) ){
-    // object has already been accounted for
-    return;
-  }
-
-  // get or create a tag for this instance
-  nsCOMPtr<nsIAtom> tag = do_GetAtom("HTMLColorRule");
-  // get the size of an empty instance and add to the sizeof handler
-  aSize = sizeof(*this);
-  aSizeOfHandler->AddSize(tag,aSize);
-
-  if(mSheet){
-    PRUint32 localSize=0;
-    mSheet->SizeOf(aSizeOfHandler, localSize);
-  }
 }
 #endif
 
@@ -230,45 +186,6 @@ HTMLDocumentColorRule::Initialize(nsIPresContext* aPresContext)
   mColor = bodyColor->mColor;
 }
 
-#ifdef DEBUG
-/******************************************************************************
-* SizeOf method:
-*
-*  Self (reported as HTMLDocumentColorRule's size): 
-*    1) sizeof(*this)
-*
-*  Contained / Aggregated data (not reported as HTMLDocumentColorRule's size):
-*    1) Delegate to the mSheet
-*
-*  Children / siblings / parents:
-*    none
-*    
-******************************************************************************/
-void HTMLDocumentColorRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
-{
-  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
-
-  // first get the unique items collection
-  UNIQUE_STYLE_ITEMS(uniqueItems);
-
-  if(! uniqueItems->AddItem((void*)this) ){
-    // object has already been accounted for
-    return;
-  }
-
-  // get or create a tag for this instance
-  nsCOMPtr<nsIAtom> tag = do_GetAtom("HTMLDocumentColorRule");
-  // get the size of an empty instance and add to the sizeof handler
-  aSize = sizeof(*this);
-  aSizeOfHandler->AddSize(tag,aSize);
-
-  if(mSheet){
-    PRUint32 localSize;
-    mSheet->SizeOf(aSizeOfHandler, localSize);
-  }
-}
-#endif
-
 class GenericTableRule: public nsIStyleRule {
 public:
   GenericTableRule(nsIHTMLStyleSheet* aSheet);
@@ -283,8 +200,6 @@ public:
 
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-
-  virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
 #endif
 
   void Reset()
@@ -324,43 +239,6 @@ NS_IMETHODIMP
 GenericTableRule::List(FILE* out, PRInt32 aIndent) const
 {
   return NS_OK;
-}
-
-/******************************************************************************
-* SizeOf method:
-*
-*  Self (reported as GenericTableRule's size): 
-*    1) sizeof(*this) + 
-*
-*  Contained / Aggregated data (not reported as GenericTableRule's size):
-*    1) Delegate to the mSheet if it exists
-*
-*  Children / siblings / parents:
-*    none
-*    
-******************************************************************************/
-void GenericTableRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
-{
-  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
-
-  // first get the unique items collection
-  UNIQUE_STYLE_ITEMS(uniqueItems);
-
-  if(! uniqueItems->AddItem((void*)this) ){
-    // object has already been accounted for
-    return;
-  }
-
-  // get or create a tag for this instance
-  nsCOMPtr<nsIAtom> tag = do_GetAtom("GenericTableRule");
-  // get the size of an empty instance and add to the sizeof handler
-  aSize = sizeof(*this);
-  aSizeOfHandler->AddSize(tag,aSize);
-
-  if(mSheet){
-    PRUint32 localSize;
-    mSheet->SizeOf(aSizeOfHandler, localSize);
-  }
 }
 #endif
 
@@ -785,8 +663,6 @@ public:
 
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-
-  virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
 #endif
 
   // If changing the given attribute cannot affect style context, aAffects
@@ -813,8 +689,6 @@ protected:
   TableColgroupRule*   mTableColgroupRule;
   TableColRule*        mTableColRule;
   TableTHRule*         mTableTHRule;
-    // NOTE: if adding more rules, be sure to update 
-    // the SizeOf method to include them
 
   PLDHashTable         mMappedAttrTable;
 };
@@ -1346,164 +1220,6 @@ void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
     fputs(urlSpec.get(), out);
   }
   fputs("\n", out);
-}
-
-
-struct MappedAttributeSizeEnumData
-{
-  MappedAttributeSizeEnumData(nsISizeOfHandler *aSizeOfHandler, 
-                              nsUniqueStyleItems *aUniqueStyleItem)
-  {
-    aHandler = aSizeOfHandler;
-    uniqueItems = aUniqueStyleItem;
-  }
-
-  // weak references all 'round
-  nsISizeOfHandler  *aHandler;
-  nsUniqueStyleItems *uniqueItems;
-};
-
-PR_STATIC_CALLBACK(PLDHashOperator)
-MappedSizeAttributes(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                     PRUint32 number, void *arg)
-{
-  MappedAttributeSizeEnumData *pData = (MappedAttributeSizeEnumData *)arg;
-  NS_ASSERTION(pData,"null closure is not supported");
-  MappedAttrTableEntry *entry = NS_STATIC_CAST(MappedAttrTableEntry*, hdr);
-  nsIHTMLMappedAttributes* mapped = entry->mAttributes;
-  NS_ASSERTION(mapped, "null item in enumeration fcn is not supported");
-  // if there is an attribute and it has not been counted, the get its size
-  if(mapped){
-    PRUint32 size=0;
-    mapped->SizeOf(pData->aHandler, size);
-  }  
-  return PL_DHASH_NEXT;
-}
-
-
-/******************************************************************************
-* SizeOf method:
-*
-*  Self (reported as HTMLStyleSheetImpl's size): 
-*    1) sizeof(*this)
-*
-*  Contained / Aggregated data (not reported as HTMLStyleSheetImpl's size):
-*    1) Not really delegated, but counted seperately:
-*       - mLinkRule
-*       - mVisitedRule
-*       - mActiveRule
-*       - mDocumentColorRule
-*       - mTableTbodyRule
-*       - mTableRowRule
-*       - mTableColgroupRule
-*       - mTableColRule
-*       - mTableTHRule
-*       - mMappedAttrTable
-*    2) Delegates (really) to the MappedAttributes in the mMappedAttrTable
-*
-*  Children / siblings / parents:
-*    none
-*    
-******************************************************************************/
-void
-HTMLStyleSheetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
-{
-  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
-
-  // first get the unique items collection
-  UNIQUE_STYLE_ITEMS(uniqueItems);
-  if(! uniqueItems->AddItem((void*)this)){
-    // this style sheet is lared accounted for
-    return;
-  }
-
-  PRUint32 localSize=0;
-
-  // create a tag for this instance
-  nsCOMPtr<nsIAtom> tag = do_GetAtom("HTMLStyleSheet");
-  // get the size of an empty instance and add to the sizeof handler
-  aSize = sizeof(HTMLStyleSheetImpl);
-  aSizeOfHandler->AddSize(tag,aSize);
-
-  // now gather up the sizes of the data members
-  // - mLinkRule : sizeof object
-  // - mVisitedRule  : sizeof object
-  // - mActiveRule  : sizeof object
-  // - mDocumentColorRule  : sizeof object
-  // - mTableTbodyRule : sizeof object
-  // - mTableRowRule : sizeof object
-  // - mTableColgroupRule : sizeof object
-  // - mTableColRule : sizeof object
-  // - mTableTHRule : sizeof object
-  // - mMappedAttrTable
-
-  if(mLinkRule && uniqueItems->AddItem((void*)mLinkRule)){
-    localSize = sizeof(*mLinkRule);
-    tag = do_GetAtom("LinkRule");
-    aSizeOfHandler->AddSize(tag,localSize);
-  }
-  if(mVisitedRule && uniqueItems->AddItem((void*)mVisitedRule)){
-    localSize = sizeof(*mVisitedRule);
-    tag = do_GetAtom("VisitedRule");
-    aSizeOfHandler->AddSize(tag,localSize);
-  }
-  if(mActiveRule && uniqueItems->AddItem((void*)mActiveRule)){
-    localSize = sizeof(*mActiveRule);
-    tag = do_GetAtom("ActiveRule");
-    aSizeOfHandler->AddSize(tag,localSize);
-  }
-  if(uniqueItems->AddItem((void*)mDocumentColorRule)){
-    localSize = sizeof(*mDocumentColorRule);
-    tag = do_GetAtom("DocumentColorRule");
-    aSizeOfHandler->AddSize(tag,localSize);
-  }
-  if(uniqueItems->AddItem((void*)mTableTbodyRule)){
-    localSize = sizeof(*mTableTbodyRule);
-    tag = do_GetAtom("TableTbodyRule");
-    aSizeOfHandler->AddSize(tag,localSize);
-  }
-  if(uniqueItems->AddItem((void*)mTableRowRule)){
-    localSize = sizeof(*mTableRowRule);
-    tag = do_GetAtom("TableRowRule");
-    aSizeOfHandler->AddSize(tag,localSize);
-  }
-  if(uniqueItems->AddItem((void*)mTableColgroupRule)){
-    localSize = sizeof(*mTableColgroupRule);
-    tag = do_GetAtom("TableColgroupRule");
-    aSizeOfHandler->AddSize(tag,localSize);
-  }
-  if(uniqueItems->AddItem((void*)mTableColRule)){
-    localSize = sizeof(*mTableColRule);
-    tag = do_GetAtom("TableColRule");
-    aSizeOfHandler->AddSize(tag,localSize);
-  }
-  if(uniqueItems->AddItem((void*)mTableTHRule)){
-    localSize = sizeof(*mTableTHRule);
-    tag = do_GetAtom("TableTHRule");
-    aSizeOfHandler->AddSize(tag,localSize);
-  }
-  
-  // for the AttrTable it is kindof sleezy: 
-  //  We want the hash table overhead as well as the entries it contains
-  //
-  //  we get the overall size of the hashtable, and if there are entries,
-  //  we calculate a rough overhead estimate as:
-  //   number of entries X sizeof each hash-entry 
-  //   + the size of a hash table (see plhash.h and nsHashTable.h)
-  //  then we add up the size of each unique attribute
-  if (mMappedAttrTable.ops) {
-    localSize =
-      PL_DHASH_TABLE_SIZE(&mMappedAttrTable) * mMappedAttrTable.entrySize;
-    tag = do_GetAtom("MappedAttrTable");
-    aSizeOfHandler->AddSize(tag,localSize);
-
-    // now get each unique attribute
-    MappedAttributeSizeEnumData sizeEnumData(aSizeOfHandler, uniqueItems);
-    PL_DHashTableEnumerate(&mMappedAttrTable, &MappedSizeAttributes,
-                           &sizeEnumData);
-  }
-
-  // that's it
 }
 #endif
 

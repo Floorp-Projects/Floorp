@@ -59,12 +59,6 @@ public:
 
   void DropReference();
 
-#ifdef DEBUG
-  static nsresult SizeOfNamedNodeMap(nsIDOMNamedNodeMap* aMap,
-                                     nsISizeOfHandler* aSizer,
-                                     PRUint32* aResult);
-#endif
-
 private:
   nsIContent* mContent; // Weak reference
 };

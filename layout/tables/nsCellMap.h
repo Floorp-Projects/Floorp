@@ -193,10 +193,6 @@ public:
   void Dump(char* aString = nsnull) const;
 #endif
 
-#ifdef DEBUG
-  void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-#endif
-
 protected:
   BCData* GetRightMostBorder(PRInt32 aRowIndex);
   BCData* GetBottomMostBorder(PRInt32 aColIndex);
@@ -337,10 +333,6 @@ public:
   /** dump a representation of the cell map to stdout for debugging */
 #ifdef NS_DEBUG
   void Dump(PRBool aIsBorderCollapse) const;
-#endif
-
-#ifdef DEBUG
-  void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
 
 protected:

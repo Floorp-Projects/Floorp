@@ -89,9 +89,6 @@ public:
                                nsAString& aResult) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       nsChangeHint& aHint) const;
-#ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-#endif
 private:
   nsresult ParseRowCol(const nsAString& aValue,
                        PRInt32&         aNumSpecs,
@@ -396,17 +393,6 @@ nsHTMLFrameSetElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt
 
   return NS_OK;
 }
-
-#ifdef DEBUG
-NS_IMETHODIMP
-nsHTMLFrameSetElement::SizeOf(nsISizeOfHandler* aSizer,
-                              PRUint32* aResult) const
-{
-  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
-
-  return NS_OK;
-}
-#endif
 
 nsresult
 nsHTMLFrameSetElement::ParseRowCol(const nsAString & aValue,

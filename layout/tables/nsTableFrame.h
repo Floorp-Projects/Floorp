@@ -408,7 +408,6 @@ public:
 #ifdef DEBUG
   /** @see nsIFrame::GetFrameName */
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
 
   /** return the width of the column at aColIndex    */

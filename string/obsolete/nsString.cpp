@@ -52,7 +52,6 @@
 
 #ifndef RICKG_TESTBED
 #include "prdtoa.h"
-#include "nsISizeOfHandler.h"
 #endif
 
 static const char* kPossibleNull = "Error: possible unintended null in string";
@@ -139,14 +138,6 @@ nsCString::nsCString( const nsACString& aReadable ) {
   nsStrPrivate::Initialize(*this,eOneByte);
   Assign(aReadable);
 }
-
-#ifdef DEBUG
-void nsCString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
-  if (aResult) {
-    *aResult = sizeof(*this) + GetCapacity() * GetCharSize();
-  }
-}
-#endif
 
 /**
  * This method truncates this string to given length.
@@ -1272,12 +1263,3 @@ nsCAutoString::nsCAutoString(const CBufDescriptor& aBuffer) : nsCString() {
   if(!aBuffer.mIsConst)
     AddNullTerminator(*this); //this isn't really needed, but it guarantees that folks don't pass string constants.
 }
-
-
-#ifdef DEBUG
-void nsCAutoString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
-  if (aResult) {
-    *aResult = sizeof(*this) + GetCapacity() * GetCharSize();
-  }
-}
-#endif

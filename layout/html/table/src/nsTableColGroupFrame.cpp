@@ -752,15 +752,4 @@ nsTableColGroupFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("TableColGroup"), aResult);
 }
-
-NS_IMETHODIMP
-nsTableColGroupFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  PRUint32 sum = sizeof(*this);
-  *aResult = sum;
-  return NS_OK;
-}
 #endif

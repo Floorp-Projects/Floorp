@@ -255,9 +255,7 @@ public:
   NS_IMETHOD  List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD  GetFrameName(nsAString& aResult) const;
   NS_IMETHOD  DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData);
-  NS_IMETHOD  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
   NS_IMETHOD  VerifyTree() const;
-  virtual void SizeOfStyleContext(nsISizeOfHandler* aHandler, PRUint32& aSize);
 #endif
 
   NS_IMETHOD  SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);

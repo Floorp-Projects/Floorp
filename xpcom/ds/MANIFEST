@@ -14,7 +14,6 @@ nsHashtable.h
 nsHashtableEnumerator.h
 nsIArena.h
 nsIByteBuffer.h
-nsISizeOfHandler.h
 nsIUnicharBuffer.h
 nsInt64.h
 nsObserverService.h

@@ -108,8 +108,6 @@ public:
   void DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent);
 
   void List(FILE* out, PRInt32 aIndent);
-
-  void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
 #endif
 
 protected:

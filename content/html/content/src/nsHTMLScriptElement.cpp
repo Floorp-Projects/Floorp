@@ -358,10 +358,6 @@ public:
   virtual nsresult GetInnerHTML(nsAString& aInnerHTML);
   virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
 
-#ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-#endif
-
 protected:
   PRUint32 mLineNumber;
   PRPackedBool mIsEvaluated;
@@ -596,17 +592,6 @@ nsHTMLScriptElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
   return ReplaceContentsWithText(aInnerHTML, PR_TRUE);
 }
-
-
-#ifdef DEBUG
-NS_IMETHODIMP
-nsHTMLScriptElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
-{
-  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
-
-  return NS_OK;
-}
-#endif
 
 /* void scriptAvailable (in nsresult aResult, in nsIDOMHTMLScriptElement aElement, in nsIURI aURI, in PRInt32 aLineNo, in PRUint32 aScriptLength, [size_is (aScriptLength)] in wstring aScript); */
 NS_IMETHODIMP 

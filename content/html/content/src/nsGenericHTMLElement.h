@@ -237,8 +237,6 @@ public:
 
 #ifdef DEBUG
   void ListAttributes(FILE* out) const;
-
-  PRUint32 BaseSizeOf(nsISizeOfHandler* aSizer) const;
 #endif
 
   /**

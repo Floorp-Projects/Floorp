@@ -45,7 +45,6 @@
 #include "nsIPresContext.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
-#include "nsISizeOfHandler.h"
 
 
 class nsHTMLFieldSetElement : public nsGenericHTMLContainerFormElement,
@@ -75,11 +74,6 @@ public:
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
-
-#ifdef DEBUG
-  // nsIContent
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-#endif
 };
 
 // construction, destruction
@@ -172,18 +166,6 @@ nsHTMLFieldSetElement::GetForm(nsIDOMHTMLFormElement** aForm)
 }
 
 // nsIFormControl
-
-
-#ifdef DEBUG
-NS_IMETHODIMP
-nsHTMLFieldSetElement::SizeOf(nsISizeOfHandler* aSizer,
-                              PRUint32* aResult) const
-{
-  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
-
-  return NS_OK;
-}
-#endif
 
 nsresult
 nsHTMLFieldSetElement::Reset()

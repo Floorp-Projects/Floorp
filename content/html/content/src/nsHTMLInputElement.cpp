@@ -67,7 +67,6 @@
 #include "nsIFormControlFrame.h"
 #include "nsIFrame.h"
 #include "nsIEventStateManager.h"
-#include "nsISizeOfHandler.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsDOMError.h"
@@ -185,10 +184,6 @@ public:
                             
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
-
-#ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-#endif
 
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                      const nsAString& aValue, PRBool aNotify) {
@@ -2020,19 +2015,6 @@ nsHTMLInputElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapR
   aMapRuleFunc = &MapAttributesIntoRule;
   return NS_OK;
 }
-
-
-// nsIFormControl
-
-#ifdef DEBUG
-NS_IMETHODIMP
-nsHTMLInputElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
-{
-  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
-
-  return NS_OK;
-}
-#endif
 
 
 // Controllers Methods

@@ -51,7 +51,6 @@
 
 #ifndef RICKG_TESTBED
 #include "prdtoa.h"
-#include "nsISizeOfHandler.h"
 #endif
 
 static const char* kPossibleNull = "Error: possible unintended null in string";
@@ -154,14 +153,6 @@ nsString::nsString( const nsAString& aReadable ) {
   nsStrPrivate::Initialize(*this,eTwoByte);
   Assign(aReadable);
 }
-
-#ifdef DEBUG
-void nsString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
-  if (aResult) {
-    *aResult = sizeof(*this) + GetCapacity() * GetCharSize();
-  }
-}
-#endif
 
 /**
  * This method truncates this string to given length.
@@ -1473,12 +1464,3 @@ nsAutoString::nsAutoString(PRUnichar aChar) : nsString(){
   AddNullTerminator(*this);
   Append(aChar);
 }
-
-#ifdef DEBUG
-void nsAutoString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
-  if (aResult) {
-    *aResult = sizeof(*this) + GetCapacity() * GetCharSize();
-  }
-}
-#endif
-

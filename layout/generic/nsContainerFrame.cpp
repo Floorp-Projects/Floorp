@@ -47,7 +47,6 @@
 #include "nsIView.h"
 #include "nsIScrollableView.h"
 #include "nsVoidArray.h"
-#include "nsISizeOfHandler.h"
 #include "nsHTMLReflowCommand.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsIFrameManager.h"
@@ -1359,16 +1358,6 @@ nsContainerFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
     fputs("<>\n", out);
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsContainerFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = sizeof(*this);
   return NS_OK;
 }
 #endif

@@ -165,10 +165,6 @@ public:
 
   nsresult GetInnerHTML(nsAString& aInnerHTML);
   nsresult SetInnerHTML(const nsAString& aInnerHTML);
-  
-#ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-#endif
 
 protected:
   nsresult GetHrefCString(char* &aBuf);
@@ -316,16 +312,6 @@ nsHTMLStyleElement::SetInnerHTML(const nsAString& aInnerHTML)
   UpdateStyleSheet();
   return rv;
 }
-  
-#ifdef DEBUG
-NS_IMETHODIMP
-nsHTMLStyleElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
-{
-  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
-
-  return NS_OK;
-}
-#endif
 
 nsresult
 nsHTMLStyleElement::GetHrefCString(char* &aBuf)

@@ -52,7 +52,6 @@
 #include "nsCRT.h"
 #include "nsIEventStateManager.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsISizeOfHandler.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMText.h"
 #include "nsIDOMScriptObjectFactory.h"
@@ -157,7 +156,6 @@ public:
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {  return NS_OK;  }
   NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const {  return NS_OK;  }
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                           nsEvent* aEvent,
@@ -541,13 +539,3 @@ nsAttributeContent::CloneContent(PRBool aCloneText, nsITextContent** aReturn)
   it->mText = mText;
   return result;
 }
-
-#ifdef DEBUG
-NS_IMETHODIMP
-nsAttributeContent::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
-{
-  if (!aResult) return NS_ERROR_NULL_POINTER;
-  *aResult = sizeof(*this);
-  return NS_OK;
-}
-#endif

@@ -1414,34 +1414,3 @@ nsSpaceManager::BandRect::Length() const
 
   return len;
 }
-
-#ifdef DEBUG
-void
-nsSpaceManager::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  NS_PRECONDITION(aResult, "null OUT parameter pointer");
-  *aResult = sizeof(*this);
-
-  // Add in the size of the band data. Don't count the header which has
-  // already been taken into account
-  if (!mBandList.IsEmpty()) {
-    const BandRect* bandRect = mBandList.Head();
-    do {
-      *aResult += sizeof(*bandRect);
-      if (bandRect->mNumFrames > 1) {
-        PRUint32  voidArraySize;
-
-        bandRect->mFrames->SizeOf(aHandler, &voidArraySize);
-        *aResult += voidArraySize;
-      }
-
-      bandRect = bandRect->Next();
-    } while (bandRect != &mBandList);
-  }
-
-  // Add in the size of the frame info map
-  for (FrameInfo* info = mFrameInfoMap; info; info = info->mNext) {
-    *aResult += sizeof(*info);
-  }
-}
-#endif

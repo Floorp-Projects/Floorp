@@ -75,7 +75,6 @@ class nsIAtom;
 class nsIPresContext;
 class nsIPresShell;
 class nsIRenderingContext;
-class nsISizeOfHandler;
 class nsIView;
 class nsIWidget;
 class nsIDOMRange;

@@ -45,8 +45,6 @@
 #include "nsILinkHandler.h"
 #include "nsString.h"
 
-class nsISizeOfHandler;
-
 class nsIStyleSheet;
 class nsIPresContext;
 class nsIContent;
@@ -174,10 +172,6 @@ public:
   NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
                                     nsIAtom* aMedium,
                                     PRBool* aResult) = 0;
-
-#ifdef DEBUG
-  virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize) = 0;
-#endif
 };
 
 #endif /* nsIStyleRuleProcessor_h___ */

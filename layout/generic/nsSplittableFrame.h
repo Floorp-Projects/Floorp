@@ -53,10 +53,6 @@ public:
 
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
-#ifdef DEBUG
-  NS_IMETHOD  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-#endif
-
   // Flow member functions.
   NS_IMETHOD  GetPrevInFlow(nsIFrame** aPrevInFlow) const;
   NS_IMETHOD  SetPrevInFlow(nsIFrame*);

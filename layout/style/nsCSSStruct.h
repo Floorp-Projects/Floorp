@@ -49,7 +49,6 @@
 #include "nsVoidArray.h"
 #include "nsValueArray.h"
 
-class nsISizeOfHandler;
 class nsStringArray;
 
 struct nsCSSStruct {
@@ -653,8 +652,6 @@ public:
 
 #ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-
-  void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
 #endif
   
 protected:

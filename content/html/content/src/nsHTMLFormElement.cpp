@@ -53,7 +53,6 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsIFormControlFrame.h"
-#include "nsISizeOfHandler.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsDOMError.h"
 #include "nsContentUtils.h"
@@ -177,10 +176,6 @@ public:
                              nsIFormControl* aRadio);
   NS_IMETHOD RemoveFromRadioGroup(const nsAString& aName,
                                   nsIFormControl* aRadio);
-
-#ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-#endif
 
   // nsIContent
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
@@ -347,10 +342,6 @@ public:
                                   const nsAString& aName);
   nsresult IndexOfControl(nsIFormControl* aControl,
                           PRInt32* aIndex);
-
-#ifdef DEBUG
-  nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-#endif
 
   nsIDOMHTMLFormElement* mForm;  // WEAK - the form owns me
 
@@ -1863,27 +1854,6 @@ nsFormControlList::RemoveElementFromTable(nsIFormControl* aChild,
 
   return NS_OK;
 }
-
-#ifdef DEBUG
-nsresult
-nsFormControlList::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
-{
-  if (!aResult) return NS_ERROR_NULL_POINTER;
-  PRUint32 asize;
-  mElements.SizeOf(aSizer, &asize);
-  *aResult = sizeof(*this) - sizeof(mElements) + asize;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLFormElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
-{
-  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
-
-  return NS_OK;
-}
-
-#endif
 
 // nsFormControlEnumerator
 NS_IMPL_ISUPPORTS1(nsFormControlEnumerator, nsISimpleEnumerator);
