@@ -486,6 +486,7 @@ nsHTMLButtonControlFrame::HandleEvent(nsIPresContext& aPresContext,
       if ((grabber == view) || (nsnull == grabber)) {
         switch (aEvent->message) {
         case NS_MOUSE_ENTER:
+          mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "ROLLOVER", PR_TRUE);
           if (mLastMouseState == eMouseDown) {
             ShiftContents(aPresContext, PR_TRUE);
           }
@@ -494,7 +495,7 @@ nsHTMLButtonControlFrame::HandleEvent(nsIPresContext& aPresContext,
           mGotFocus = PR_TRUE;
           ShiftContents(aPresContext, PR_TRUE);
 	        mLastMouseState = eMouseDown;
-	        break;
+          break;
         case NS_MOUSE_LEFT_BUTTON_UP:
 	        if (eMouseDown == mLastMouseState) {
             if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
@@ -505,6 +506,7 @@ nsHTMLButtonControlFrame::HandleEvent(nsIPresContext& aPresContext,
 	        } 
 	        break;
         case NS_MOUSE_EXIT:
+          mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "", PR_TRUE);
           if (mLastMouseState == eMouseDown) {
             ShiftContents(aPresContext, PR_FALSE);
           }
