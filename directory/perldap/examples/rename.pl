@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: rename.pl,v 1.2 1998/08/13 09:11:24 leif Exp $
+# $Id: rename.pl,v 1.3 1998/08/13 09:56:03 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -77,7 +77,7 @@ if (! $entry || $conn->nextEntry())
 
 if (! $opt_I)
 {
-  print "Rename ", $entry->getDN(), "with $rdn [N]? ";
+  print "Rename ", $entry->getDN(), " with $rdn [N]? ";
   $key = Mozilla::LDAP::Utils::answer("N") unless $opt_I;
 }
 
