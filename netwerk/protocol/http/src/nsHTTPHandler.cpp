@@ -233,6 +233,7 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
         nsCOMPtr<nsIURI> channelURI;
         PRUint32 count;
         PRInt32 index;
+        PRBool useProxy;
 
         //Check to see if an instance already exists in the active list
         mConnections->Count(&count);
@@ -268,7 +269,7 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
             rv = pChannel->SetNotificationCallbacks(notificationCallbacks);
             if (NS_FAILED(rv)) goto done;
 
-            PRBool useProxy = mUseProxy && CanUseProxy(i_URL);
+            useProxy = mUseProxy && CanUseProxy(i_URL);
             if (useProxy)
             {
                rv = pChannel->SetProxyHost(mProxy);
