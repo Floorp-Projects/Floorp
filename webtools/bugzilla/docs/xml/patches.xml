@@ -98,9 +98,9 @@
     </para>
 
     <para>
-      USAGE: move the sendunsentbugmail.pl script up into the main directory,
-      ensure it has execute permission, and run it from the command line (or
-      from a cron job) with no parameters.
+      <emphasis>Usage</emphasis>: move the sendunsentbugmail.pl script
+      up into the main directory, ensure it has execute permission, and run it
+      from the command line (or from a cron job) with no parameters.
     </para>
   </section>
 
