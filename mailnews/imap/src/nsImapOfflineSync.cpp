@@ -117,7 +117,7 @@ void nsImapOfflineSync::ProcessFlagOperation(nsIMsgOfflineImapOperation *current
     PRUint32 curFolderFlags;
     m_currentFolder->GetFlags(&curFolderFlags);
 
-	  if (uids && (curFolderFlags & MSG_FOLDER_FLAG_IMAPBOX)) 
+	  if (uids.get() && (curFolderFlags & MSG_FOLDER_FLAG_IMAPBOX)) 
 	  {
 	    nsresult rv = NS_OK;
       nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_currentFolder);
@@ -439,6 +439,7 @@ nsresult nsImapOfflineSync::ProcessNextOperation()
 			if ((m_currentDB->ListAllOfflineOpIds(&m_CurrentKeys) != 0) || !m_CurrentKeys.GetSize())
 			{
 				m_currentDB = nsnull;
+        m_currentFolder->ClearFlag(MSG_FOLDER_FLAG_OFFLINEEVENTS);
 			}
 			else
 			{
