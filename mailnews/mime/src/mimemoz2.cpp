@@ -166,6 +166,7 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
   if (! id)
   {
     PR_FREEIF(*data);
+    PR_FREEIF(id_imap);
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -192,10 +193,12 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
     {
       PR_FREEIF(*data);
       PR_FREEIF(id);
+      PR_FREEIF(id_imap);
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
-
+  PR_FREEIF(id);
+  PR_FREEIF(id_imap);
   PR_FREEIF(tmpURL);
   tmp->description = MimeHeaders_get(child->headers, HEADER_CONTENT_DESCRIPTION, PR_FALSE, PR_FALSE);
   return NS_OK;
