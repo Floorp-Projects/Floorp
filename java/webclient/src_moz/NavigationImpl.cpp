@@ -64,7 +64,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
 	return;
       }
     
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
     
     if (initContext == nsnull) {
       ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellLoadURL");
@@ -87,7 +87,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
 (JNIEnv *env, jobject obj, jint webShellPtr, jobject stream, jstring uri, 
  jstring contentType, jint contentLength, jobject loadProperties)
 {
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
     PRUnichar *uriStringUniChars = nsnull;
     PRInt32 uriStringUniCharsLength = -1;
     const char *contentTypeChars = nsnull;
@@ -154,7 +154,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
 (JNIEnv *env, jobject obj, jint webShellPtr, jstring absoluteURL, jstring target, jint postDataLength,
  jstring postData, jint postHeadersLength, jstring postHeaders)
 {
-    WebShellInitContext *initContext      = (WebShellInitContext *) webShellPtr;
+    NativeBrowserControl *initContext      = (NativeBrowserControl *) webShellPtr;
     const PRUnichar     *urlChars         = nsnull;
     PRInt32             urlLen;
     const PRUnichar     *targetChars      = nsnull;
@@ -274,7 +274,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
 	JNIEnv	*	pEnv = env;
 	jobject		jobj = obj;
 
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
 
 	if (initContext == nsnull) {
 		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellRefresh");
@@ -299,7 +299,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
 	JNIEnv	*	pEnv = env;
 	jobject		jobj = obj;
 	
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
 
 	if (initContext == nsnull) {
 		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellStop");
@@ -321,7 +321,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativeSetPrompt
 	JNIEnv	*	pEnv = env;
 	jobject		jobj = obj;
 	
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
 
 	if (initContext == nsnull) {
 		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeSetPrompt");

@@ -52,11 +52,4 @@ extern PRLogModuleInfo *prLogModuleInfo; // defined in WrapperFactory.cpp
 class nsISHistory;
 extern nsISHistory *gHistory; // defined in NativeEventThread.cpp
 
-
-class nsIEventQueueService;
-extern PLEventQueue	*	gActionQueue; // defined in NativeEventThread.cpp
-
-class nsIThread;
-extern PRThread		*	gEmbeddedThread; // defined in NativeEventThread.cpp
-
 #endif // ns_globals_h

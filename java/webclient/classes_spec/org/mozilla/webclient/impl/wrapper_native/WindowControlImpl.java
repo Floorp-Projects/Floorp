@@ -52,8 +52,6 @@ public class WindowControlImpl extends ImplObjectNative implements WindowControl
 
 // Relationship Instance Variables
 
-protected NativeEventThread eventThread = null;
-
 //
 // Constructors and Initializers    
 //
@@ -62,21 +60,6 @@ public WindowControlImpl(WrapperFactory yourFactory,
 			 BrowserControl yourBrowserControl)
 {
     super(yourFactory, yourBrowserControl);
-}
-
-/**
-
- * First, we delete our eventThread, which causes the eventThread to
- * stop running, which causes the initContext to be deleted.  
- * deallocates native resources for this window.
-
- */
-
-public void delete()
-{
-    Assert.assert_it(null != eventThread, "eventThread shouldn't be null at delete time");
-    eventThread.delete();
-    eventThread = null;
 }
 
 //
@@ -92,12 +75,6 @@ public void delete()
 // Package Methods
 //
 
-NativeEventThread getNativeEventThread()
-{
-    return eventThread;
-}
-
-
 //
 // Methods from WindowControl    
 //
@@ -106,10 +83,10 @@ public void setBounds(Rectangle newBounds)
 {
     ParameterCheck.nonNull(newBounds);
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
     
     synchronized(getBrowserControl()) {
-        nativeSetBounds(getNativeWebShell(), newBounds.x, newBounds.y,
+        nativeSetBounds(getNativeBrowserControl(), newBounds.x, newBounds.y,
                         newBounds.width, newBounds.height);
     }
 }
@@ -119,37 +96,13 @@ public void createWindow(int nativeWindow, Rectangle bounds)
     ParameterCheck.greaterThan(nativeWindow, 0);
     ParameterCheck.nonNull(bounds);
     getWrapperFactory().verifyInitialized();
-
-    synchronized(getBrowserControl()) {
-        synchronized(this) {
-            /**
-            getNativeWebShell() = nativeCreateInitContext(nativeWindow, bounds.x, 
-                                                     bounds.y, bounds.width, 
-                                                     bounds.height, getBrowserControl());
-            **/
-            eventThread = new NativeEventThread("EventThread-" +
-                                                getNativeWebShell(),
-                                                getBrowserControl());
-
-            // IMPORTANT: the nativeEventThread initializes all the
-            // native browser stuff, then sends us notify().
-            eventThread.start();
-            try {
-                wait();
-            }
-            catch (Exception e) {
-                System.out.println("WindowControlImpl.createWindow: interrupted while waiting\n\t for NativeEventThread to notify(): " + e + 
-                                   " " + e.getMessage());
-            }
-        }
-    }
 }
 
 public int getNativeWebShell()
 {
     getWrapperFactory().verifyInitialized();
 
-    return getNativeWebShell();
+    return getNativeBrowserControl();
 }
 
 public void moveWindowTo(int x, int y)
@@ -157,7 +110,7 @@ public void moveWindowTo(int x, int y)
     getWrapperFactory().verifyInitialized();
     
     synchronized(getBrowserControl()) {
-        nativeMoveWindowTo(getNativeWebShell(), x, y);
+        nativeMoveWindowTo(getNativeBrowserControl(), x, y);
     }
 }
 
@@ -174,7 +127,7 @@ public void repaint(boolean forceRepaint)
     getWrapperFactory().verifyInitialized();
     
     synchronized(getBrowserControl()) {
-        nativeRepaint(getNativeWebShell(), forceRepaint);
+        nativeRepaint(getNativeBrowserControl(), forceRepaint);
     }
 }
 
@@ -183,7 +136,7 @@ public void setVisible(boolean newState)
     getWrapperFactory().verifyInitialized();
     
     synchronized(getBrowserControl()) {
-        nativeSetVisible(getNativeWebShell(), newState);
+        nativeSetVisible(getNativeBrowserControl(), newState);
     }
 }
 
@@ -201,26 +154,6 @@ public void setFocus()
 
 public native void nativeSetBounds(int webShellPtr, int x, int y, 
                                    int w, int h);
-
-/**
-
- * This method allows the native code to create a "context object" that
- * is passed to all subsequent native methods.  This context object is
- * opaque to Java and should just be a pointer cast to a jint.  For
- * example, this method could create a struct that encapsulates the
- * native window (from the nativeWindow argument), the x, y, width,
- * height parameters for the window, and any other per browser window
- * information.  <P>
-
- * Subsequent native methods would know how to turn this jint into the
- * struct.
-
- */
-
-public native int nativeCreateInitContext(int nativeWindow, 
-                                          int x, int y, int width, int height, BrowserControl BrowserControlImpl);
-
-public native void nativeDestroyInitContext(int nativeWindow);
 
 public native void nativeMoveWindowTo(int webShellPtr, int x, int y);
 
@@ -245,7 +178,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("WindowControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.2 2004/03/05 15:34:24 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.3 2004/04/10 21:50:38 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

@@ -80,30 +80,6 @@ public ImplObjectNative(WrapperFactory yourFactory,
     myFactory = yourFactory;
 }
 
-/**
-
- * Note how we call super.delete() at the end.  THIS IS VERY IMPORTANT. <P>
-
- * ImplObjectNative subclasses that further override delete() are <P>
-
-<CODE><PRE>
-BookmarksImpl.java
-EventRegistrationImpl.java
-NativeEventThread.java
-WindowControlImpl.java
-</PRE><CODE> <P>
-
- * All other ImplObject subclasses don't have any local Ivars and thus
- * don't need to override delete().
-
- */
-
-public void delete()
-{
-    getWrapperFactory().destroyNativeBrowserControl(getBrowserControl());
-    super.delete();
-}
-
 protected WrapperFactory getWrapperFactory() {
     return myFactory;
 }
@@ -115,12 +91,17 @@ protected WrapperFactory getWrapperFactory() {
 
     */
 
-protected int getNativeWebShell() {
+protected int getNativeBrowserControl() {
     if (-1 == nativeWebShell) {
         nativeWebShell = 
             getWrapperFactory().getNativeBrowserControl(getBrowserControl());
     }
     return nativeWebShell;
+}
+
+protected NativeEventThread getNativeEventThread() {
+    return (NativeEventThread) 
+        getWrapperFactory().getNativeEventThread(getBrowserControl());
 }
 
 } // end of class ImplObject

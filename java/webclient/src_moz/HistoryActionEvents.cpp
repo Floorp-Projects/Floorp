@@ -179,7 +179,7 @@ wsGoToEvent::handleEvent ()
  * wsGetHistoryLengthEvent
  */
 
-wsGetHistoryLengthEvent::wsGetHistoryLengthEvent(WebShellInitContext 
+wsGetHistoryLengthEvent::wsGetHistoryLengthEvent(NativeBrowserControl 
                                                  *yourInitContext) :
      nsActionEvent(),
      mInitContext(yourInitContext)
@@ -212,7 +212,7 @@ wsGetHistoryLengthEvent::handleEvent ()
  * wsGetHistoryIndexEvent
  */
 
-wsGetHistoryIndexEvent::wsGetHistoryIndexEvent(WebShellInitContext *yourInitContext) :
+wsGetHistoryIndexEvent::wsGetHistoryIndexEvent(NativeBrowserControl *yourInitContext) :
         nsActionEvent(),
         mInitContext(yourInitContext)
 {
@@ -241,7 +241,7 @@ wsGetHistoryIndexEvent::handleEvent ()
  * wsGetURLForIndexEvent
  */
 
-wsGetURLForIndexEvent::wsGetURLForIndexEvent(WebShellInitContext *yourInitContext, 
+wsGetURLForIndexEvent::wsGetURLForIndexEvent(NativeBrowserControl *yourInitContext, 
                                              PRInt32 historyIndex) :
   nsActionEvent(),
   mInitContext(yourInitContext),

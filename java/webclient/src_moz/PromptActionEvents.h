@@ -30,13 +30,13 @@
 #include "nsActions.h"
 #include "ns_util.h"
 
-struct WebShellInitContext;
+struct NativeBrowserControl;
 
 extern jobject gPromptProperties; // declared, defined in CBrowserContainer.cpp
 
 class wsPromptUsernameAndPasswordEvent : public nsActionEvent {
 public:
-    wsPromptUsernameAndPasswordEvent (WebShellInitContext *yourInitContext,
+    wsPromptUsernameAndPasswordEvent (NativeBrowserControl *yourInitContext,
                    jobject yourPromptGlobalRef,
                    wsStringStruct *inStrings,
                    PRUint32 savePassword, 
@@ -46,7 +46,7 @@ public:
     void    *       handleEvent    (void);
     
 protected:
-    WebShellInitContext *mInitContext;
+    NativeBrowserControl *mInitContext;
     jobject mPromptGlobalRef;
     wsStringStruct *mInStrings;
     PRUint32 mSavePassword;
@@ -57,7 +57,7 @@ protected:
 
 class wsPromptUniversalDialogEvent : public nsActionEvent {
 public:
-    wsPromptUniversalDialogEvent (WebShellInitContext *yourInitContext,
+    wsPromptUniversalDialogEvent (NativeBrowserControl *yourInitContext,
                                   jobject yourPromptGlobalRef,
                                   wsStringStruct *inStrings,
                                   PRUnichar **fieldOne, 
@@ -70,7 +70,7 @@ public:
     void    *       handleEvent    (void);
     
 protected:
-    WebShellInitContext *mInitContext;
+    NativeBrowserControl *mInitContext;
     jobject mPromptGlobalRef;
     wsStringStruct *mInStrings;
     PRUnichar **mFieldOne;

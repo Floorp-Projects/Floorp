@@ -29,11 +29,11 @@
 class WindowCreator : public nsIWindowCreator
 {
 private:
-    WebShellInitContext *mInitContext;
+    NativeBrowserControl *mInitContext;
     jobject mTarget;
 
 public:
-    WindowCreator(WebShellInitContext *yourInitContext);
+    WindowCreator(NativeBrowserControl *yourInitContext);
     virtual ~WindowCreator();
 
     NS_IMETHOD AddNewWindowListener(jobject target);

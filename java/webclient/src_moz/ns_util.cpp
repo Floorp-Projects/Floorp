@@ -35,6 +35,8 @@
 
 #include "nsString2.h"
 
+#include "NativeBrowserControl.h"
+
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #define kCommonDialogsProperties "chrome://global/locale/commonDialogs.properties"
@@ -55,25 +57,25 @@ const char *gSupportedListenerInterfaces[] = {
     nsnull
 };
 
-void util_PostEvent(WebShellInitContext * initContext, PLEvent * event)
+void util_PostEvent(NativeBrowserControl * initContext, PLEvent * event)
 {
-    PL_ENTER_EVENT_QUEUE_MONITOR(gActionQueue);
+    PL_ENTER_EVENT_QUEUE_MONITOR(NativeBrowserControl::sActionQueue);
   
-    ::PL_PostEvent(gActionQueue, event);
+    ::PL_PostEvent(NativeBrowserControl::sActionQueue, event);
     
-    PL_EXIT_EVENT_QUEUE_MONITOR(gActionQueue);
+    PL_EXIT_EVENT_QUEUE_MONITOR(NativeBrowserControl::sActionQueue);
 } // PostEvent()
 
 
-void *util_PostSynchronousEvent(WebShellInitContext * initContext, PLEvent * event)
+void *util_PostSynchronousEvent(NativeBrowserControl * initContext, PLEvent * event)
 {
     void    *       voidResult = nsnull;
 
-    PL_ENTER_EVENT_QUEUE_MONITOR(gActionQueue);
+    PL_ENTER_EVENT_QUEUE_MONITOR(NativeBrowserControl::sActionQueue);
     
-    voidResult = ::PL_PostSynchronousEvent(gActionQueue, event);
+    voidResult = ::PL_PostSynchronousEvent(NativeBrowserControl::sActionQueue, event);
     
-    PL_EXIT_EVENT_QUEUE_MONITOR(gActionQueue);
+    PL_EXIT_EVENT_QUEUE_MONITOR(NativeBrowserControl::sActionQueue);
     
     return voidResult;
 } // PostSynchronousEvent()          

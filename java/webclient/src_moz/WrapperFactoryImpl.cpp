@@ -49,6 +49,8 @@
 #include <windows.h> // for GetCurrentProcessId()
 #endif
 
+#include "NativeBrowserControl.h"
+
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 //
@@ -293,11 +295,16 @@ Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeDoesImp
 
 JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeCreateBrowserControl
 (JNIEnv *env, jobject obj, jint nativeContext) {
-    return -1;
+    NativeBrowserControl* initContext = new NativeBrowserControl();
+
+    return (jint) initContext;
 }
 
 JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeDestroyBrowserControl
 (JNIEnv *env, jobject obj, jint nativeContext, jint nativeBrowserControl) {
-    return -1;
+    NativeBrowserControl* initContext = 
+        (NativeBrowserControl *)nativeBrowserControl;
+    delete initContext;
+    return 0;
 }
 

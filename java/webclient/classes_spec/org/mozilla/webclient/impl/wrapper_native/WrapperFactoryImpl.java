@@ -27,6 +27,7 @@ import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
 
 import org.mozilla.webclient.BrowserControl;
+import org.mozilla.webclient.impl.BrowserControlImpl;
 import org.mozilla.webclient.Bookmarks;
 import org.mozilla.webclient.Preferences;
 import org.mozilla.webclient.ProfileManager;
@@ -60,11 +61,11 @@ protected int nativeContext = -1;
     /**
      * <p>keys: BrowserControl instances</p>
      *
-     * <p>values: the native counterpart to that BrowserControl
-     * instance, as an Integer.</p>
+     * <p>values: NativeEventThread instances that correspond to this
+     * window.</p>
      *
      */
-protected Map nativeBrowserControls = null;
+protected Map nativeEventThreads = null;
 
 // Relationship Instance Variables
 
@@ -95,7 +96,7 @@ protected ProfileManager profileManager = null;
 public WrapperFactoryImpl()
 {
     super();
-    nativeBrowserControls = new HashMap();
+    nativeEventThreads = new HashMap();
 }
 
 
@@ -257,34 +258,70 @@ public int getNativeContext() {
     return nativeContext;
 }
 
-public int getNativeBrowserControl(BrowserControl bc) {
+public Object getNativeEventThread(BrowserControl bc) {
     verifyInitialized();
-    Integer result = null;
-
-    synchronized(this) {
-        if (null == (result = (Integer) nativeBrowserControls.get(bc))) {
+    NativeEventThread eventThread = null;
+    int nativeBrowserControl = -1;
+    
+    synchronized(bc) {
+        // if this is the first time the nativeBrowserControl has been
+        // requested for this Java BrowserControl instance:
+        if (null == 
+            (eventThread = (NativeEventThread) nativeEventThreads.get(bc))) {
+            
+            // spin up the NativeEventThread
             try {
-                result = new Integer(nativeCreateBrowserControl(nativeContext));
-                nativeBrowserControls.put(bc, result);
+                nativeBrowserControl = 
+                    nativeCreateBrowserControl(nativeContext);
+                eventThread = new NativeEventThread("EventThread-" + 
+                                                    nativeBrowserControl,
+                                                    nativeBrowserControl, bc);
+                // IMPORTANT: the nativeEventThread initializes all the
+                // native browser stuff, then sends us notify().
+                eventThread.start();
+                try {
+                    bc.wait();
+                }
+                catch (Exception e) {
+                    System.out.println("WindowControlImpl.createWindow: interrupted while waiting\n\t for NativeEventThread to notify(): " + e + 
+                                       " " + e.getMessage());
+                }
+                
+                nativeEventThreads.put(bc, eventThread);
             }
             catch (Exception e) {
-                result = new Integer(-1);
+                nativeBrowserControl = -1;
             }
         }
     }
-    return result.intValue();
+    return eventThread;
+}
+
+public int getNativeBrowserControl(BrowserControl bc) {
+    NativeEventThread eventThread = 
+        (NativeEventThread) getNativeEventThread(bc);
+    return eventThread.getNativeBrowserControl();
 }
 
 public void destroyNativeBrowserControl(BrowserControl bc) {
     verifyInitialized();
-    Integer result = null;
+    NativeEventThread eventThread = null;
+    int nativeBrowserControl = -1;
 
     synchronized(this) {
-        if (null != (result = (Integer) nativeBrowserControls.get(bc))) {
+        if (null != 
+            (eventThread = (NativeEventThread) nativeEventThreads.get(bc))){
+            nativeBrowserControl = eventThread.getNativeBrowserControl();
+            
+            eventThread.delete();
+            
             try {
-                nativeDestroyBrowserControl(nativeContext, result.intValue());
+                nativeDestroyBrowserControl(nativeContext, 
+                                            nativeBrowserControl);
             }
             catch (Exception e) {
+                System.out.println("Exception while destroying nativeBrowserControl:"
+                                   + e.getMessage());
             }
         }
     }

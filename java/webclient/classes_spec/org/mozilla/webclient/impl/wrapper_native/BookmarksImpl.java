@@ -174,7 +174,7 @@ public void removeBookmark(BookmarkEntry bookmark)
 {
     ParameterCheck.nonNull(bookmark);
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
     
     throw new UnimplementedException("\nUnimplementedException -----\n API Function CurrentPage::getPageInfo has not yet been implemented.\n");
 }
@@ -185,8 +185,8 @@ public BookmarkEntry newBookmarkEntry(String url)
     getBookmarks();
     int newNode;
 
-    if (-1 != (newNode = nativeNewRDFNode(getNativeWebShell(), url, false))) {
-        result = new BookmarkEntryImpl(getNativeWebShell(),
+    if (-1 != (newNode = nativeNewRDFNode(getNativeBrowserControl(), url, false))) {
+        result = new BookmarkEntryImpl(getNativeBrowserControl(),
                                        newNode, null);
         // use put instead of setProperty for jdk1.1.x compatibility.
         result.getProperties().put(BookmarkEntry.NAME, url);
@@ -212,7 +212,7 @@ public BookmarkEntry newBookmarkFolder(String name)
     BookmarkEntry result = null;
     getBookmarks();
     
-    if (null == (result = new BookmarkEntryImpl(getNativeWebShell(), -1, null))) {
+    if (null == (result = new BookmarkEntryImpl(getNativeBrowserControl(), -1, null))) {
         throw new NullPointerException("Can't create bookmark folder for: " + 
                                        name);
     }

@@ -82,7 +82,7 @@ wsLoadURLEvent::~wsLoadURLEvent ()
 }
 
 
-wsLoadFromStreamEvent::wsLoadFromStreamEvent(WebShellInitContext *yourInitCx, 
+wsLoadFromStreamEvent::wsLoadFromStreamEvent(NativeBrowserControl *yourInitCx, 
                                              void *globalStream,
                                              nsString &uriToCopy,
                                              const char *contentTypeToCopy,
@@ -96,7 +96,7 @@ wsLoadFromStreamEvent::wsLoadFromStreamEvent(WebShellInitContext *yourInitCx,
     NS_IF_ADDREF(mShim);
 }
 
-wsLoadFromStreamEvent::wsLoadFromStreamEvent(WebShellInitContext *yourInitCx,
+wsLoadFromStreamEvent::wsLoadFromStreamEvent(NativeBrowserControl *yourInitCx,
                                              InputStreamShim *yourShim) :
     nsActionEvent(), mInitContext(yourInitCx), mUriString(nsnull),
     mContentType(nsnull), mProperties(nsnull), mShim(yourShim)
@@ -210,7 +210,7 @@ wsLoadFromStreamEvent::~wsLoadFromStreamEvent ()
 /*
  * wsPostEvent
  */
-wsPostEvent::wsPostEvent(WebShellInitContext *yourInitContext, 
+wsPostEvent::wsPostEvent(NativeBrowserControl *yourInitContext, 
                          nsIURI              *absoluteUri,
                          const PRUnichar     *targetToCopy,
                          PRInt32              targetLength,

@@ -114,6 +114,9 @@ public BrowserControlImpl(WrapperFactory yourWrapper)
 
 void delete()
 {
+
+    wrapperFactory.destroyNativeBrowserControl(this);
+
     if (null != myCanvas) {
     // Make sure we're not showing.
         if (myCanvas.isShowing()) {
@@ -146,7 +149,6 @@ void delete()
         ((ImplObject)windowControl).delete();
         windowControl = null;
     }
-
     // since bookmarks and prefs are static, we must not deallocate them
     // here.  That is done in WrapperFactoryImpl.terminate()
 

@@ -41,7 +41,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeBack
     JNIEnv	*	pEnv = env;
     jobject		jobj = obj;
 
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
 
     if (initContext == nsnull) {
       ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellBack");
@@ -69,7 +69,7 @@ JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeCanBac
         void        *       voidResult;
     //    PRBool voidResult;
     
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
     
     if (initContext == nsnull) {
       ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellCanBack");
@@ -110,7 +110,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_HistoryIm
     JNIEnv	*	pEnv = env;
     jobject		jobj = obj;
 
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
 
     if (initContext == nsnull) {
       ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellForward");
@@ -136,7 +136,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Histo
     jobject		jobj = obj;
     void        *       voidResult;
     
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
     
     if (initContext == nsnull) {
       ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellCanForward");
@@ -190,7 +190,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeGetCurrentHist
     void	*	voidResult = nsnull;
     jint result = -1;
     
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
     
     if (initContext == nsnull) {
       ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellGetHistoryIndex");
@@ -217,7 +217,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeSetCurrentHist
     JNIEnv	*	pEnv = env;
     jobject		jobj = obj;
     
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
     
     if (initContext == nsnull) {
       ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeSetCurrentHistoryIndex");
@@ -244,7 +244,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeGetHistoryLeng
     void	*	voidResult = nsnull;
     jint result = -1;
     
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
     
     if (initContext == nsnull) {
       ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellGetHistoryLength");
@@ -272,7 +272,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Histor
     char	*	charResult = nsnull;
     jstring		urlString = nsnull;
     
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
     
     if (initContext == nsnull) {
       ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellGetURL");

@@ -1,5 +1,5 @@
 /*
- * $Id: WrapperFactoryImplTest.java,v 1.1 2003/09/28 06:29:20 edburns%acm.org Exp $
+ * $Id: WrapperFactoryImplTest.java,v 1.2 2004/04/10 21:50:39 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -30,7 +30,9 @@ import junit.framework.TestSuite;
 import junit.framework.Test;
 
 import org.mozilla.webclient.BrowserControl;
+import org.mozilla.webclient.BrowserControlFactory;
 import org.mozilla.webclient.WebclientTestCase;
+import org.mozilla.webclient.impl.BrowserControlImpl;
 
 // WrapperFactoryImplTest.java
 
@@ -63,6 +65,14 @@ public class WrapperFactoryImplTest extends WebclientTestCase {
 	for (int i = 0, len = expectedInterfaces.length; i < len; i++) {
 	    assertTrue(wrapper.nativeDoesImplement(expectedInterfaces[i]));
 	}
+    }
+
+    public void testGetNativeBrowserControl() throws Exception {
+	WrapperFactoryImpl wrapper = new WrapperFactoryImpl();
+	wrapper.initialize(getBrowserBinDir());
+	BrowserControl bc = new BrowserControlImpl(wrapper);
+	assertTrue(-1 != wrapper.getNativeBrowserControl(bc));
+	BrowserControlFactory.deleteBrowserControl(bc);
     }
 
 }

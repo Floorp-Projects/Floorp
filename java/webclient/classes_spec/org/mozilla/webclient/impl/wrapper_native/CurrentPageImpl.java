@@ -93,10 +93,10 @@ public CurrentPageImpl(WrapperFactory yourFactory,
 public void copyCurrentSelectionToSystemClipboard()
 {
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
 
     synchronized(getBrowserControl()) {
-        nativeCopyCurrentSelectionToSystemClipboard(getNativeWebShell());
+        nativeCopyCurrentSelectionToSystemClipboard(getNativeBrowserControl());
     }
 }
 
@@ -104,9 +104,9 @@ public Selection getSelection() {
     Selection selection = new SelectionImpl();
 
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
     synchronized(getBrowserControl()) {
-        nativeGetSelection(getNativeWebShell(), selection);
+        nativeGetSelection(getNativeBrowserControl(), selection);
     }
 
     return selection;
@@ -120,18 +120,18 @@ public void highlightSelection(Selection selection) {
         int endOffset = selection.getEndOffset();
 
         getWrapperFactory().verifyInitialized();
-        Assert.assert_it(-1 != getNativeWebShell());
+        Assert.assert_it(-1 != getNativeBrowserControl());
         synchronized(getBrowserControl()) {
-            nativeHighlightSelection(getNativeWebShell(), startContainer, endContainer, startOffset, endOffset);
+            nativeHighlightSelection(getNativeBrowserControl(), startContainer, endContainer, startOffset, endOffset);
         }
     }
 }
 
 public void clearAllSelections() {
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
     synchronized(getBrowserControl()) {
-        nativeClearAllSelections(getNativeWebShell());
+        nativeClearAllSelections(getNativeBrowserControl());
     }
 }
 
@@ -141,7 +141,7 @@ public void findInPage(String stringToFind, boolean forward, boolean matchCase)
     getWrapperFactory().verifyInitialized();
 
     synchronized(getBrowserControl()) {
-        nativeFindInPage(getNativeWebShell(), stringToFind, forward, matchCase);
+        nativeFindInPage(getNativeBrowserControl(), stringToFind, forward, matchCase);
     }
 }
 
@@ -150,7 +150,7 @@ public void findNextInPage()
     getWrapperFactory().verifyInitialized();
 
     synchronized(getBrowserControl()) {
-        nativeFindNextInPage(getNativeWebShell());
+        nativeFindNextInPage(getNativeBrowserControl());
     }
 }
 
@@ -160,14 +160,14 @@ public String getCurrentURL()
     getWrapperFactory().verifyInitialized();
 
     synchronized(getBrowserControl()) {
-        result = nativeGetCurrentURL(getNativeWebShell());
+        result = nativeGetCurrentURL(getNativeBrowserControl());
     }
     return result;
 }
 
 public Document getDOM()
 {
-    Document result = nativeGetDOM(getNativeWebShell());
+    Document result = nativeGetDOM(getNativeBrowserControl());
     return result;
 }
 
@@ -176,7 +176,7 @@ public Properties getPageInfo()
   Properties result = null;
 
   /* synchronized(getBrowserControl()) {
-        result = nativeGetPageInfo(getNativeWebShell());
+        result = nativeGetPageInfo(getNativeBrowserControl());
     }
     return result;
     */
@@ -254,7 +254,7 @@ public void resetFind()
     getWrapperFactory().verifyInitialized();
 
     synchronized(getBrowserControl()) {
-        nativeResetFind(getNativeWebShell());
+        nativeResetFind(getNativeBrowserControl());
     }
 }
 
@@ -263,7 +263,7 @@ public void selectAll()
     getWrapperFactory().verifyInitialized();
 
     synchronized(getBrowserControl()) {
-        nativeSelectAll(getNativeWebShell());
+        nativeSelectAll(getNativeBrowserControl());
     }
 }
 
@@ -272,7 +272,7 @@ public void print()
     getWrapperFactory().verifyInitialized();
 
     synchronized(getBrowserControl()) {
-        nativePrint(getNativeWebShell());
+        nativePrint(getNativeBrowserControl());
     }
 }
 
@@ -281,7 +281,7 @@ public void printPreview(boolean preview)
     getWrapperFactory().verifyInitialized();
 
     synchronized(getBrowserControl()) {
-        nativePrintPreview(getNativeWebShell(), preview);
+        nativePrintPreview(getNativeBrowserControl(), preview);
     }
 }
 
@@ -332,7 +332,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("CurrentPageImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.2 2004/03/05 15:34:24 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.3 2004/04/10 21:50:38 edburns%acm.org Exp $");
 
 }
 

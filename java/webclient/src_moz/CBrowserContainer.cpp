@@ -52,7 +52,7 @@ jobject gPromptProperties = nsnull;
 PRInt32 CBrowserContainer::mInstanceCount = 0;
 
 CBrowserContainer::CBrowserContainer(nsIWebBrowser *pOwner, JNIEnv *env,
-                                     WebShellInitContext *yourInitContext) :
+                                     NativeBrowserControl *yourInitContext) :
     m_pOwner(pOwner), mJNIEnv(env), mInitContext(yourInitContext), 
     mDocTarget(nsnull), mMouseTarget(nsnull), mPrompt(nsnull),
     mDomEventTarget(nsnull), inverseDepth(-1), 

@@ -77,21 +77,21 @@ public HistoryImpl(WrapperFactory yourFactory,
 public void back()
 {
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
 
     synchronized(getBrowserControl()) {
-        nativeBack(getNativeWebShell());
+        nativeBack(getNativeBrowserControl());
     }
 }
             
 public boolean canBack()
 {
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
     boolean result = false;
 
     synchronized(getBrowserControl()) {
-        result = nativeCanBack(getNativeWebShell());
+        result = nativeCanBack(getNativeBrowserControl());
     }
     return result;
 }
@@ -99,11 +99,11 @@ public boolean canBack()
 public HistoryEntry [] getBackList()
 {
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
     HistoryEntry [] result = null;
     
     /* synchronized(getBrowserControl()) {
-        result = nativeGetBackList(getNativeWebShell());
+        result = nativeGetBackList(getNativeBrowserControl());
     }
     return result;
     */
@@ -114,10 +114,10 @@ public HistoryEntry [] getBackList()
 public void clearHistory()
 {
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
     
     /* synchronized(getBrowserControl()) {
-        nativeClearHistory(getNativeWebShell());
+        nativeClearHistory(getNativeBrowserControl());
     }
     */
     
@@ -129,21 +129,21 @@ public void clearHistory()
 public void forward()
 {
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
 
     synchronized(getBrowserControl()) {
-        nativeForward(getNativeWebShell());
+        nativeForward(getNativeBrowserControl());
     }
 }
  
 public boolean canForward()
 {
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
     boolean result = false;
 
     synchronized(getBrowserControl()) {
-        result = nativeCanForward(getNativeWebShell());
+        result = nativeCanForward(getNativeBrowserControl());
     }
     return result;
 }
@@ -152,10 +152,10 @@ public HistoryEntry [] getForwardList()
 {
     HistoryEntry [] result = null;
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
     
     /* synchronized(getBrowserControl()) {
-        result = nativeGetForwardList(getNativeWebShell());
+        result = nativeGetForwardList(getNativeBrowserControl());
     }
     return result;
     */
@@ -167,10 +167,10 @@ public HistoryEntry [] getHistory()
 {
     HistoryEntry [] result = null;
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
     
     /* synchronized(getBrowserControl()) {
-        result = nativeGetHistory(getNativeWebShell());
+        result = nativeGetHistory(getNativeBrowserControl());
     }
     return result;
     */
@@ -182,11 +182,11 @@ public HistoryEntry getHistoryEntry(int historyIndex)
 {
     ParameterCheck.noLessThan(historyIndex, 0);
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
     HistoryEntry result = null;
     
     /* synchronized(getBrowserControl()) {
-        result = nativeGetHistoryEntry(getNativeWebShell(), historyIndex);
+        result = nativeGetHistoryEntry(getNativeBrowserControl(), historyIndex);
     }
     return result;
     */
@@ -197,11 +197,11 @@ public HistoryEntry getHistoryEntry(int historyIndex)
 public int getCurrentHistoryIndex()
 {
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
     int result = -1;
 
     synchronized(getBrowserControl()) {
-        result = nativeGetCurrentHistoryIndex(getNativeWebShell());
+        result = nativeGetCurrentHistoryIndex(getNativeBrowserControl());
     }
     return result;
 }
@@ -210,21 +210,21 @@ public void setCurrentHistoryIndex(int historyIndex)
 {
     ParameterCheck.noLessThan(historyIndex, 0);
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
     
     synchronized(getBrowserControl()) {
-	nativeSetCurrentHistoryIndex(getNativeWebShell(), historyIndex);
+	nativeSetCurrentHistoryIndex(getNativeBrowserControl(), historyIndex);
     }
 }
 
 public int getHistoryLength()
 {
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
     int result = -1;
 
     synchronized(getBrowserControl()) {
-        result = nativeGetHistoryLength(getNativeWebShell());
+        result = nativeGetHistoryLength(getNativeBrowserControl());
     }
     return result;
 }
@@ -233,11 +233,11 @@ public String getURLForIndex(int historyIndex)
 {
     ParameterCheck.noLessThan(historyIndex, 0);
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
     String result = null;
     
     synchronized(getBrowserControl()) {
-        result = nativeGetURLForIndex(getNativeWebShell(), historyIndex);
+        result = nativeGetURLForIndex(getNativeBrowserControl(), historyIndex);
     }
     return result;
 }
@@ -283,7 +283,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("HistoryImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: HistoryImpl.java,v 1.2 2004/03/05 15:34:24 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: HistoryImpl.java,v 1.3 2004/04/10 21:50:38 edburns%acm.org Exp $");
     
 }
 

@@ -73,7 +73,7 @@ public:
 
 
 public:
-  CBrowserContainer(nsIWebBrowser *pOwner, JNIEnv *yourJNIEnv, WebShellInitContext *yourInitContext);
+  CBrowserContainer(nsIWebBrowser *pOwner, JNIEnv *yourJNIEnv, NativeBrowserControl *yourInitContext);
 
   CBrowserContainer();
 
@@ -84,7 +84,7 @@ public:
 protected:
   nsIWebBrowser *m_pOwner;
   JNIEnv *mJNIEnv;
-  WebShellInitContext *mInitContext;
+  NativeBrowserControl *mInitContext;
   jobject mDocTarget;
   jobject mMouseTarget;
   jobject mPrompt;

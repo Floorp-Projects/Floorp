@@ -65,6 +65,20 @@ public interface WrapperFactory {
     
     public int getNativeBrowserControl(BrowserControl bc);
 
+    /**
+     * <p>I would like this method to be on BrowserControl itself, but
+     * that would mean exposing implementation specific elements on the
+     * public java API.  Therefore, the WrapperFactory needs to be able
+     * to return the NativeEventThread given a java BrowserControl.</p>
+     *
+     */
+    public Object getNativeEventThread(BrowserControl bc);
+
+    /***
+     * <p>Also destroys the NativeEventThread.</p>
+     *
+     */ 
+
     public void destroyNativeBrowserControl(BrowserControl bc);
     
 } 

@@ -23,11 +23,11 @@
 #include "nsIWebBrowserChrome.h"
 #include "WindowCreator.h"
 
-int processEventLoop(WebShellInitContext * initContext);
+int processEventLoop(NativeBrowserControl * initContext);
 
-WebShellInitContext* gNewWindowInitContext;
+NativeBrowserControl* gNewWindowInitContext;
 
-WindowCreator::WindowCreator(WebShellInitContext *yourInitContext)
+WindowCreator::WindowCreator(NativeBrowserControl *yourInitContext)
 {
     mInitContext = yourInitContext;
     mTarget = 0;

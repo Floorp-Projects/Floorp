@@ -41,7 +41,7 @@ JNIEXPORT void JNICALL
 Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeSetBounds
 (JNIEnv *env, jobject obj, jint webShellPtr, jint x, jint y, jint w, jint h)
 {
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
     
 	if (initContext == nsnull) {
 		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeSetBounds");
@@ -57,87 +57,10 @@ Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeSetBound
     
 }
 
-JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeCreateInitContext
-(JNIEnv *env, jobject obj, jint windowPtr, jint x, jint y, 
- jint width, jint height, jobject aBrowserControlImpl)
-{
-#ifdef XP_MAC
-    WindowPtr		pWindow = (WindowPtr) windowPtr;
-    Rect			webRect = pWindow->portRect;
-    // nsIWidget	*	pWidget = (nsIWidget *) widgetPtr;
-#elif defined(XP_PC)
-    // elif defined(XP_WIN)
-    HWND parentHWnd = (HWND)windowPtr;
-#elif defined(XP_UNIX)
-    GtkWidget * parentHWnd = (GtkWidget *) windowPtr;
-#endif
-    
-    if (parentHWnd == nsnull) {
-      ::util_ThrowExceptionToJava(env, "Exception: null window handle passed to raptorWebShellCreate");
-      return (jint) 0;
-    }
-    WebShellInitContext* initContext = new WebShellInitContext;
-    
-    initContext->initComplete = FALSE;
-    initContext->initFailCode = 0;
-    initContext->parentHWnd = parentHWnd;
-    initContext->webShell = nsnull;
-    initContext->docShell = nsnull;
-    initContext->baseWindow = nsnull;
-    initContext->webNavigation = nsnull;
-    initContext->presShell = nsnull;
-    //    initContext->embeddedThread = nsnull;
-    //    initContext->actionQueue = nsnull;
-    initContext->env = env;
-    initContext->nativeEventThread = nsnull;
-    initContext->stopThread = FALSE;
-    initContext->x = x;
-    initContext->y = y;
-    initContext->w = width;
-    initContext->h = height;
-    initContext->currentDocument = nsnull;
-    initContext->browserContainer = nsnull;
-    util_InitializeShareInitContext(env, &(initContext->shareContext));
-
-#ifdef XP_UNIX
-    initContext->gtkWinPtr = 
-        (int)::util_GetGTKWinPtrFromCanvas(env, aBrowserControlImpl);
-#else
-    initContext->gtkWinPtr = nsnull;
-#endif
-    
-    return (jint) initContext;
-}
-
-JNIEXPORT void JNICALL 
-Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeDestroyInitContext
-(JNIEnv *env, jobject obj, jint webShellPtr)
-{
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-    
-	if (initContext == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeDestroyInitContext");
-		return;
-	}
-    wsDeallocateInitContextEvent	* actionEvent = 
-            new wsDeallocateInitContextEvent(initContext);
-    PLEvent			* event       = (PLEvent*) *actionEvent;
-    nsresult rv;
-    
-    rv = (nsresult) ::util_PostSynchronousEvent(initContext, event);
-    if (NS_FAILED(rv)) {
-		::util_ThrowExceptionToJava(env, "Exception: Can't destroy initContext");
-		return;
-	}
-    //    initContext->actionQueue = nsnull;
-    delete initContext;
-}
-
-
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeMoveWindowTo
 (JNIEnv *env, jobject obj, jint webShellPtr, jint x, jint y)
 {
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
 
 	if (initContext == nsnull) {
 		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellMoveTo");
@@ -155,7 +78,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowCon
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeRemoveFocus
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
 
 	if (initContext == nsnull) {
 		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellRemoveFocus");
@@ -173,7 +96,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowCon
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeRepaint
 (JNIEnv *env, jobject obj, jint webShellPtr, jboolean forceRepaint)
 {
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
 
 	if (initContext == nsnull) {
 		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellRepaint");
@@ -193,7 +116,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowCon
 (JNIEnv *env, jobject obj, jint webShellPtr, jboolean newState)
 {
 
-  WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+  NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
   if (initContext == nsnull) {
     ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellRepaint");
     return;
@@ -209,7 +132,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowCon
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeSetFocus
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
 
 	if (initContext == nsnull) {
 		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellSetFocus");

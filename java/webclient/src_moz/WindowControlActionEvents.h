@@ -36,7 +36,7 @@
 
 #include "nsIBaseWindow.h"
 
-struct WebShellInitContext;
+struct NativeBrowserControl;
 
 class wsResizeEvent : public nsActionEvent {
 public:
@@ -53,12 +53,12 @@ protected:
 
 class wsDeallocateInitContextEvent : public nsActionEvent {
 public:
-    wsDeallocateInitContextEvent(WebShellInitContext *yourInitContext);
+    wsDeallocateInitContextEvent(NativeBrowserControl *yourInitContext);
 
     void    *       handleEvent    (void);
 
 protected:
-    WebShellInitContext *mInitContext;
+    NativeBrowserControl *mInitContext;
 };
 
 class wsMoveToEvent : public nsActionEvent {

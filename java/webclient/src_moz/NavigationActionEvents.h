@@ -40,7 +40,7 @@
 #include "nsIURI.h"
 #include "ns_util.h"
 
-struct WebShellInitContext;
+struct NativeBrowserControl;
 class InputStreamShim;
 
 
@@ -57,7 +57,7 @@ protected:
 
 class wsLoadFromStreamEvent : public nsActionEvent {
 public:
-    wsLoadFromStreamEvent(WebShellInitContext *yourInitContext, 
+    wsLoadFromStreamEvent(NativeBrowserControl *yourInitContext, 
                           void *globalStream,
                           nsString &uriToCopy,
                           const char *contentTypeToCopy,
@@ -66,12 +66,12 @@ public:
     void * handleEvent(void);
 
 private:
-    wsLoadFromStreamEvent(WebShellInitContext *yourDocShell, 
+    wsLoadFromStreamEvent(NativeBrowserControl *yourDocShell, 
                           InputStreamShim *yourShim);
 
 protected:
 
-    WebShellInitContext *mInitContext;
+    NativeBrowserControl *mInitContext;
     nsString mUriString;
     char *mContentType;       // MUST be delete'd in destructor
     void * mProperties;       // MUST be util_deleteGlobalRef'd in destructor.
@@ -81,7 +81,7 @@ protected:
 
 class wsPostEvent : public nsActionEvent {
 public:
-    wsPostEvent(WebShellInitContext *yourInitContext, 
+    wsPostEvent(NativeBrowserControl *yourInitContext, 
                 nsIURI              *absoluteUrl,
                 const PRUnichar      *targetToCopy,
                 PRInt32              targetLength,
@@ -97,7 +97,7 @@ private:
 
 protected:
 
-    WebShellInitContext *mInitContext;
+    NativeBrowserControl *mInitContext;
     nsCOMPtr<nsIURI>     mAbsoluteURI;          
     nsString            *mTarget;          
     const char          *mPostData;      

@@ -28,7 +28,6 @@
  */
 
 #include "org_mozilla_webclient_impl_wrapper_0005fnative_NativeEventThread.h"
-#include "CBrowserContainer.h"
 
 #include "ns_util.h"
 #include "ns_globals.h"
@@ -55,24 +54,15 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIEventQueueService.h"
 //nsIWebShell is included in ns_util.h
-#include "NativeEventThreadActionEvents.h"
+// #include "NativeEventThreadActionEvents.h"
 #include "nsIWindowWatcher.h"
 #include "nsIComponentRegistrar.h"
 #include "WindowCreator.h"
 
+#include "NativeBrowserControl.h"
+
 #include "prlog.h" // for PR_ASSERT
 
-#ifdef XP_UNIX
-#include <unistd.h>
-#include "gdksuperwin.h"
-#include "gtkmozarea.h"
-
-extern "C" {
-    static int	    wc_x_error			 (Display     *display, 
-                                          XErrorEvent *error);
-}
-
-#endif
 
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
@@ -114,53 +104,12 @@ static const char *NS_DOCSHELL_PROGID = "component://netscape/docshell/html";
 // Local functions
 //
 
-#ifdef XP_UNIX
-static int
-wc_x_error (Display	 *display,
-            XErrorEvent *error)
-{
-    if (error->error_code)
-        {
-            char buf[64];
-            
-            XGetErrorText (display, error->error_code, buf, 63);
-            
-            fprintf (stderr, "Webclient-Gdk-ERROR **: %s\n  serial %ld error_code %d request_code %d minor_code %d\n",
-                     buf, 
-                     error->serial, 
-                     error->error_code, 
-                     error->request_code,
-                     error->minor_code);
-        }
-    
-    return 0;
-}
-#endif
-
-/**
-
- * Called from InitMozillaStuff().
-
- */
-
-int processEventLoop(WebShellInitContext * initContext);
-
-/**
-
- * Called from Java nativeInitialize to create the webshell 
- * and other mozilla things, then start the event loop.
-
- */
-
-nsresult InitMozillaStuff (WebShellInitContext * arg);
 
 //
 // Local data
 //
 
 static PRBool	gFirstTime = PR_TRUE;
-PLEventQueue	*	gActionQueue = nsnull;
-PRThread		*	gEmbeddedThread = nsnull;
 nsISHistory *gHistory = nsnull;
 WindowCreator   *   gCreatorCallback = nsnull;
 
@@ -176,47 +125,63 @@ char * errorMessages[] = {
 // JNI methods
 //
 
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NativeEventThread_nativeInitialize
-(JNIEnv *env, jobject obj, jint webShellPtr)
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NativeEventThread_nativeStartup
+(JNIEnv *env, jobject obj, jint nativeBCPtr)
 {
     nsresult rv = NS_ERROR_FAILURE;
-    WebShellInitContext * initContext = (WebShellInitContext *) webShellPtr;
+    NativeBrowserControl * nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
 
-    if (nsnull == initContext) {
+    if (!nativeBrowserControl) {
 	    ::util_ThrowExceptionToJava(env, 
-                                    "NULL webShellPtr passed to nativeInitialize.");
+                                    "NULL nativeBCPtr passed to nativeStartup.");
         return;
     }
-    rv = InitMozillaStuff(initContext);
+    rv = nativeBrowserControl->Init(env, obj);
     if (NS_FAILED(rv)) {
 	    ::util_ThrowExceptionToJava(env, 
-                                    errorMessages[initContext->initFailCode]);
+                                    errorMessages[3]);
         return;
     }
+    nativeBrowserControl->ProcessEventLoop();
 
-    while (initContext->initComplete == FALSE) {
+    while (!nativeBrowserControl->IsInitialized()) {
         
         ::PR_Sleep(PR_INTERVAL_NO_WAIT);
         
-        if (initContext->initFailCode != 0) {
-            ::util_ThrowExceptionToJava(env, errorMessages[initContext->initFailCode]);
+        if (NS_FAILED(nativeBrowserControl->GetFailureCode())) {
+            ::util_ThrowExceptionToJava(env, errorMessages[3]);
             return;
         }
     }
 }
 
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NativeEventThread_nativeProcessEvents
-(JNIEnv *env, jobject obj, jint webShellPtr)
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NativeEventThread_nativeShutdown
+(JNIEnv *env, jobject obj, jint nativeBCPtr)
 {
-    WebShellInitContext * initContext = (WebShellInitContext *) webShellPtr;
+    nsresult rv = NS_ERROR_FAILURE;
+    NativeBrowserControl * nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
     
-    if (nsnull == initContext) {
+    if (!nativeBrowserControl) {
 	    ::util_ThrowExceptionToJava(env, 
-                                    "NULL webShellPtr passed to nativeProcessEvents.");
+                                    "NULL nativeBCPtr passed to nativeStartup.");
+        return;
+    }
+    nativeBrowserControl->Destroy(); 
+}
+
+
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NativeEventThread_nativeProcessEvents
+(JNIEnv *env, jobject obj, jint nativeBCPtr)
+{
+    NativeBrowserControl * nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
+    
+    if (nsnull == nativeBrowserControl) {
+	    ::util_ThrowExceptionToJava(env, 
+                                    "NULL nativeBCPtr passed to nativeProcessEvents.");
         return;
     }
 
-    processEventLoop(initContext);
+    nativeBrowserControl->ProcessEventLoop();
 }
 
 /**
@@ -239,24 +204,18 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NativeEve
  */
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NativeEventThread_nativeAddListener
-(JNIEnv *env, jobject obj, jint webShellPtr, jobject typedListener, 
+(JNIEnv *env, jobject obj, jint nativeBCPtr, jobject typedListener, 
  jstring listenerString)
 {
-    WebShellInitContext *initContext = (WebShellInitContext *)webShellPtr;
+    /***************
+
+    NativeBrowserControl *nativeBrowserControl = (NativeBrowserControl *)nativeBCPtr;
         
-    if (initContext == nsnull) {
-        ::util_ThrowExceptionToJava(env, "Exception: null initContext passed tonativeAddListener");
+    if (nativeBrowserControl == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null nativeBrowserControl passed tonativeAddListener");
         return;
     }
 
-    if (nsnull == initContext->nativeEventThread) {
-        // store the java EventRegistrationImpl class in the initContext
-        initContext->nativeEventThread = 
-            ::util_NewGlobalRef(env, obj); // VERY IMPORTANT!!
-        
-        // This enables the listener to call back into java
-    }
-    
     jclass clazz = nsnull;
     int listenerType = 0;
     const char *listenerStringChars = ::util_GetStringUTFChars(env, 
@@ -289,33 +248,34 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NativeEve
         ::util_ThrowExceptionToJava(env, "Exception: NativeEventThread.nativeAddListener(): can't create NewGlobalRef\n\tfor argument");
         return;
     }
-    PR_ASSERT(initContext->browserContainer);
+    PR_ASSERT(nativeBrowserControl->browserContainer);
 
     switch(listenerType) {
     case DOCUMENT_LOAD_LISTENER:
-        initContext->browserContainer->AddDocumentLoadListener(globalRef); 
+        nativeBrowserControl->browserContainer->AddDocumentLoadListener(globalRef); 
         break;
     case MOUSE_LISTENER:
-        initContext->browserContainer->AddMouseListener(globalRef); 
+        nativeBrowserControl->browserContainer->AddMouseListener(globalRef); 
         break;
     case NEW_WINDOW_LISTENER:
         if (gCreatorCallback)
             gCreatorCallback->AddNewWindowListener(globalRef); 
         break;
     }
-
+    *********************/
     return;
 }
 
 JNIEXPORT void JNICALL 
 Java_org_mozilla_webclient_impl_wrapper_1native_NativeEventThread_nativeRemoveListener
-(JNIEnv *env, jobject obj, jint webShellPtr, jobject typedListener,
+(JNIEnv *env, jobject obj, jint nativeBCPtr, jobject typedListener,
  jstring listenerString)
 {
-    WebShellInitContext *initContext = (WebShellInitContext *)webShellPtr;
+    /*******************
+    NativeBrowserControl *nativeBrowserControl = (NativeBrowserControl *)nativeBCPtr;
 
-    if (initContext == nsnull) {
-        ::util_ThrowExceptionToJava(env, "Exception: null initContext passed to nativeRemoveListener");
+    if (nativeBrowserControl == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null nativeBrowserControl passed to nativeRemoveListener");
         return;
     }
     
@@ -344,95 +304,32 @@ Java_org_mozilla_webclient_impl_wrapper_1native_NativeEventThread_nativeRemoveLi
         return;
     }
 
-    PR_ASSERT(initContext->browserContainer);
+    PR_ASSERT(nativeBrowserControl->browserContainer);
     
     switch(listenerType) {
     case DOCUMENT_LOAD_LISTENER:
-        initContext->browserContainer->RemoveDocumentLoadListener(); 
+        nativeBrowserControl->browserContainer->RemoveDocumentLoadListener(); 
         break;
     case MOUSE_LISTENER:
-        initContext->browserContainer->RemoveMouseListener(); 
+        nativeBrowserControl->browserContainer->RemoveMouseListener(); 
         break;
     }
+    *****************/
 }
 
 JNIEXPORT void JNICALL 
-Java_org_mozilla_webclient_impl_wrapper_1native_NativeEventThread_nativeRemoveAllListeners(JNIEnv *env, jobject obj, jint webShellPtr)
+Java_org_mozilla_webclient_impl_wrapper_1native_NativeEventThread_nativeRemoveAllListeners(JNIEnv *env, jobject obj, jint nativeBCPtr)
 {
-    WebShellInitContext *initContext = (WebShellInitContext *)webShellPtr;
+    /*******************
+    NativeBrowserControl *nativeBrowserControl = (NativeBrowserControl *)nativeBCPtr;
 
-    if (initContext == nsnull) {
-        ::util_ThrowExceptionToJava(env, "Exception: null initContext passed to nativeRemoveAllListeners");
+    if (nativeBrowserControl == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null nativeBrowserControl passed to nativeRemoveAllListeners");
         return;
     }
 
-    initContext->browserContainer->RemoveAllListeners();
-}
-
-/**
-
- * This function processes methods inserted into WebShellInitContext's
- * actionQueue.  It is called once during the initialization of the
- * NativeEventThread java thread, and infinitely in
- * NativeEventThread.run()'s event loop.  The call to PL_HandleEvent
- * below, ends up calling the nsActionEvent subclass's handleEvent()
- * method.  After which it calls nsActionEvent::destroyEvent().
-
- */
-
-int processEventLoop(WebShellInitContext * initContext) 
-{
-    if (PR_GetCurrentThread() != gEmbeddedThread)
-        return 0;
-    
-    if (nsnull == initContext)
-        return 0;
-    
-#ifdef XP_UNIX
-    while(gtk_events_pending()) {
-        gtk_main_iteration();
-    }
-#else
-    // PENDING(mark): Does this work on the Mac?
-    MSG msg;
-    PRBool wasHandled;
-    
-    if (::PeekMessage(&msg, nsnull, 0, 0, PM_NOREMOVE)) {
-        if (::GetMessage(&msg, nsnull, 0, 0)) {
-            wasHandled = PR_FALSE;
-            ::NS_HandleEmbeddingEvent(msg, wasHandled);
-            if (!wasHandled) {
-                ::TranslateMessage(&msg);
-                ::DispatchMessage(&msg);
-            }
-        }
-    }
-#endif
-    ::PR_Sleep(PR_INTERVAL_NO_WAIT);
-    
-    if ((initContext->initComplete) && (gActionQueue)) {
-        PLEvent * event = nsnull;
-        
-        PL_ENTER_EVENT_QUEUE_MONITOR(gActionQueue);
-        if (::PL_EventAvailable(gActionQueue)) {
-            event = ::PL_GetEvent(gActionQueue);
-        }
-        PL_EXIT_EVENT_QUEUE_MONITOR(gActionQueue);
-        if (event != nsnull) {
-            ::PL_HandleEvent(event);
-        }
-    }
-    if (initContext->stopThread) {
-        initContext->stopThread++;
-        
-        return 0;
-      }
-
-    // PENDING(edburns): revisit this.  Not sure why this is necessary, but
-    // this fixes bug 44327
-    //    printf("%c", 8); // 8 is ASCII for backspace
-
-    return 1;
+    nativeBrowserControl->browserContainer->RemoveAllListeners();
+    *******************/
 }
 
 // Ashu
@@ -461,10 +358,11 @@ static void event_processor_callback(gpointer data,
 /* InitializeWindowCreator creates and hands off an object with a callback
    to a window creation function. This is how all new windows are opened,
    except any created directly by the embedding app. */
-nsresult InitializeWindowCreator(WebShellInitContext * initContext)
+/*****************
+nsresult InitializeWindowCreator(NativeBrowserControl * nativeBrowserControl)
 {
     // create an nsWindowCreator and give it to the WindowWatcher service
-    gCreatorCallback = new WindowCreator(initContext);
+    gCreatorCallback = new WindowCreator(nativeBrowserControl);
     if (gCreatorCallback)
     {
         nsCOMPtr<nsIWindowCreator> windowCreator(NS_STATIC_CAST(nsIWindowCreator *, gCreatorCallback));
@@ -480,213 +378,111 @@ nsresult InitializeWindowCreator(WebShellInitContext * initContext)
     }
     return NS_ERROR_FAILURE;
 }
+*******************/
 
-void DoMozInitialization(WebShellInitContext * initContext)
-{    
-    if (gFirstTime) {
-        
-        nsresult rv = nsnull;
-        JNIEnv *   env = initContext->env;
-
-        const char *webclientLogFile = PR_GetEnv("WEBCLIENT_LOG_FILE");
-        if (nsnull != webclientLogFile) {
-            PR_SetLogFile(webclientLogFile);
-            // If this fails, it just goes to stdout/stderr
-        }
-        
-        InitializeWindowCreator(initContext);
-
-    }
-} 
-
-
-
-nsresult InitMozillaStuff (WebShellInitContext * initContext) 
+nsresult InitMozillaStuff (NativeBrowserControl * nativeBrowserControl) 
 {
     nsresult rv = nsnull;
-
-    DoMozInitialization(initContext);
-    
-    if (gFirstTime) {
-        printf ("\n\nCreating Event Queue \n\n");
-        nsCOMPtr<nsIEventQueueService> 
-            aEventQService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
-    
-        // if we get here, we know that aEventQService is not null.
-        if (!aEventQService) {
-            rv = NS_ERROR_FAILURE;
-            return rv;
-        }
-    
-    //TODO Add tracing from nspr.
-    
-#if DEBUG_RAPTOR_CANVAS
-        if (prLogModuleInfo) {
-            PR_LOG(prLogModuleInfo, 3, ("InitMozillaStuff(%lx): Create the Event Queue for the UI thread...\n", initContext));
-        }
-#endif
-    
-        // Create the Event Queue for the UI thread...
-        if (!aEventQService) {
-            initContext->initFailCode = kEventQueueError;
-            return rv;
-        }
-    
-        // Create the event queue.
-        rv = aEventQService->CreateThreadEventQueue();
-        gEmbeddedThread = PR_GetCurrentThread();
-    
-        // Create the action queue
-        if (gEmbeddedThread) {
-            
-            if (gActionQueue == nsnull) {
-                printf("InitMozillaStuff(%lx): Create the action queue\n", initContext);
-            
-                // We need to do something different for Unix
-                nsIEventQueue * EQueue = nsnull;
-            
-                rv = aEventQService->GetThreadEventQueue(gEmbeddedThread, 
-                                                     &EQueue);
-                if (NS_FAILED(rv)) {
-                    initContext->initFailCode = kCreateWebShellError;
-                    return rv;
-                }
-            
-#ifdef XP_UNIX
-                gdk_input_add(EQueue->GetEventQueueSelectFD(),
-                              GDK_INPUT_READ,
-                              event_processor_callback,
-                              EQueue);
-#endif
-            
-                PLEventQueue * plEventQueue = nsnull;
-            
-                EQueue->GetPLEventQueue(&plEventQueue);
-                gActionQueue = plEventQueue;
-            }
-        }
-        else {
-            initContext->initFailCode = kCreateWebShellError;
-            return NS_ERROR_UNEXPECTED;
-        }
-
-#ifdef XP_UNIX
-
-        // The gdk_x_error function exits in some cases, we don't 
-        // want that.
-        XSetErrorHandler(wc_x_error);
-#endif
-
-    }
-
-    if (gFirstTime) {
-        gFirstTime = PR_FALSE;
-    }
-    PRBool allowPlugins = PR_TRUE;
-
 
     /*    
     // Create the WebBrowser.
     nsCOMPtr<nsIWebBrowser> webBrowser = nsnull;
     webBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
     
-    initContext->webBrowser = webBrowser;
+    nativeBrowserControl->webBrowser = webBrowser;
     
     // Get the BaseWindow from the DocShell - upcast
     //  nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(webBrowser));
 	nsCOMPtr<nsIBaseWindow> docShellAsWin;
 	rv = webBrowser->QueryInterface(NS_GET_IID(nsIBaseWindow), getter_AddRefs(docShellAsWin));
     
-    initContext->baseWindow = docShellAsWin;
+    nativeBrowserControl->baseWindow = docShellAsWin;
     
     printf ("Init the baseWindow\n");
     
 #ifdef XP_UNIX
     GtkWidget * bin;
-    bin = (GtkWidget *) initContext->gtkWinPtr;
+    bin = (GtkWidget *) nativeBrowserControl->gtkWinPtr;
     if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 3, ("Ashu Debugs - Inside InitMozillaStuff(%lx): - before Init Call...\n", initContext));
+        PR_LOG(prLogModuleInfo, 3, ("Ashu Debugs - Inside InitMozillaStuff(%lx): - before Init Call...\n", nativeBrowserControl));
     }
-    rv = initContext->baseWindow->InitWindow((nativeWindow) bin, nsnull, initContext->x, initContext->y, initContext->w, initContext->h);
+    rv = nativeBrowserControl->baseWindow->InitWindow((nativeWindow) bin, nsnull, nativeBrowserControl->x, nativeBrowserControl->y, nativeBrowserControl->w, nativeBrowserControl->h);
     if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 3, ("Ashu Debugs - Inside InitMozillaStuff(%lx): - after Init Call...\n", initContext));
+        PR_LOG(prLogModuleInfo, 3, ("Ashu Debugs - Inside InitMozillaStuff(%lx): - after Init Call...\n", nativeBrowserControl));
     }
 #else    
-    rv = initContext->baseWindow->InitWindow((nativeWindow) initContext->parentHWnd, nsnull,
-                                             initContext->x, initContext->y, initContext->w, initContext->h);
+    rv = nativeBrowserControl->baseWindow->InitWindow((nativeWindow) nativeBrowserControl->parentHWnd, nsnull,
+                                             nativeBrowserControl->x, nativeBrowserControl->y, nativeBrowserControl->w, nativeBrowserControl->h);
 #endif
     
     printf("Create the BaseWindow...\n");
     
-    rv = initContext->baseWindow->Create();
+    rv = nativeBrowserControl->baseWindow->Create();
     
     if (NS_FAILED(rv)) {
-        initContext->initFailCode = kInitWebShellError;
+        nativeBrowserControl->initFailCode = kInitWebShellError;
         return rv;
     }
     
     // Create the DocShell
     
-    initContext->docShell = do_GetInterface(initContext->webBrowser);
+    nativeBrowserControl->docShell = do_GetInterface(nativeBrowserControl->webBrowser);
     
-    if (!initContext->docShell) {
-        initContext->initFailCode = kCreateDocShellError;
+    if (!nativeBrowserControl->docShell) {
+        nativeBrowserControl->initFailCode = kCreateDocShellError;
         return rv;
     }
     
     // create our BrowserContainer, which implements many many things.
     
-    initContext->browserContainer = 
-        new CBrowserContainer(initContext->webBrowser, initContext->env, 
-                              initContext);
+    nativeBrowserControl->browserContainer = 
+        new CBrowserContainer(nativeBrowserControl->webBrowser, nativeBrowserControl->env, 
+                              nativeBrowserControl);
     
     // set the WebShellContainer.  This is a pain.  It's necessary
     // because nsWebShell.cpp still checks for mContainer all over the
     // place.
-    nsCOMPtr<nsIWebShellContainer> wsContainer(do_QueryInterface(initContext->browserContainer));
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(initContext->docShell));
+    nsCOMPtr<nsIWebShellContainer> wsContainer(do_QueryInterface(nativeBrowserControl->browserContainer));
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(nativeBrowserControl->docShell));
     webShell->SetContainer(wsContainer);
     
     // set the TreeOwner
-    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(initContext->docShell));
-    nsCOMPtr<nsIDocShellTreeOwner> treeOwner(do_QueryInterface(initContext->browserContainer));
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(nativeBrowserControl->docShell));
+    nsCOMPtr<nsIDocShellTreeOwner> treeOwner(do_QueryInterface(nativeBrowserControl->browserContainer));
     docShellAsItem->SetTreeOwner(treeOwner);
     
     // set the docloaderobserver
-    nsCOMPtr<nsIDocumentLoaderObserver> observer(do_QueryInterface(initContext->browserContainer));
-    initContext->docShell->SetDocLoaderObserver(observer);
+    nsCOMPtr<nsIDocumentLoaderObserver> observer(do_QueryInterface(nativeBrowserControl->browserContainer));
+    nativeBrowserControl->docShell->SetDocLoaderObserver(observer);
     
 	printf("Creation Done.....\n");
     // Get the WebNavigation Object from the DocShell
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(initContext->docShell));
-    initContext->webNavigation = webNav;
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(nativeBrowserControl->docShell));
+    nativeBrowserControl->webNavigation = webNav;
     
     printf("Show the webBrowser\n");
     // Show the webBrowser
-    rv = initContext->baseWindow->SetVisibility(PR_TRUE);
+    rv = nativeBrowserControl->baseWindow->SetVisibility(PR_TRUE);
     if (NS_FAILED(rv)) {
-        initContext->initFailCode = kShowWebShellError;
+        nativeBrowserControl->initFailCode = kShowWebShellError;
         return rv;
     }
     
-    initContext->initComplete = TRUE;
+    nativeBrowserControl->initComplete = TRUE;
    
-    */
 
-    wsRealizeBrowserEvent * actionEvent = new wsRealizeBrowserEvent(initContext);
+    wsRealizeBrowserEvent * actionEvent = new wsRealizeBrowserEvent(nativeBrowserControl);
     PLEvent			* event       = (PLEvent*) *actionEvent;      
-    ::util_PostSynchronousEvent(initContext, event);
+    ::util_PostSynchronousEvent(nativeBrowserControl, event);
 
 
 #if DEBUG_RAPTOR_CANVAS
     if (prLogModuleInfo) {
         PR_LOG(prLogModuleInfo, 3, 
-               ("InitMozillaStuff(%lx): enter event loop\n", initContext));
+               ("InitMozillaStuff(%lx): enter event loop\n", nativeBrowserControl));
     }
 #endif
-
-    processEventLoop(initContext);
-    
+    */
     return rv;
 }
 

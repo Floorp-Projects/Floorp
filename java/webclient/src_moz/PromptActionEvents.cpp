@@ -30,7 +30,7 @@
 #include "nsReadableUtils.h"
 #include "nsString2.h" // for nsAutoString
 
-wsPromptUsernameAndPasswordEvent::wsPromptUsernameAndPasswordEvent(WebShellInitContext *yourInitContext,
+wsPromptUsernameAndPasswordEvent::wsPromptUsernameAndPasswordEvent(NativeBrowserControl *yourInitContext,
                              jobject yourPromptGlobalRef, 
 			     wsStringStruct *inStrings,
                              PRUint32 savePassword, 
@@ -103,7 +103,7 @@ void *wsPromptUsernameAndPasswordEvent::handleEvent()
     return (void *) NS_OK;
 }
 
-wsPromptUniversalDialogEvent::wsPromptUniversalDialogEvent(WebShellInitContext *yourInitContext,
+wsPromptUniversalDialogEvent::wsPromptUniversalDialogEvent(NativeBrowserControl *yourInitContext,
 							   jobject yourPromptGlobalRef,
 							   wsStringStruct *inStrings,
 							   PRUnichar **fieldOne, 

@@ -29,7 +29,6 @@ import org.mozilla.util.ParameterCheck;
 
 import org.mozilla.webclient.BrowserControl;
 import org.mozilla.webclient.EventRegistration2;
-import org.mozilla.webclient.WindowControl;
 import org.mozilla.webclient.impl.WrapperFactory;
 import org.mozilla.webclient.DocumentLoadEvent;
 import org.mozilla.webclient.DocumentLoadListener;
@@ -60,7 +59,7 @@ public class EventRegistrationImpl extends ImplObjectNative implements EventRegi
 
 /**
 
- * the Java thread for processing events, owned by WindowControlImpl
+ * the Java thread for processing events, owned by WrapperFactoryImpl
 
  */
 
@@ -74,20 +73,9 @@ public EventRegistrationImpl(WrapperFactory yourFactory,
                  BrowserControl yourBrowserControl)
 {
     super(yourFactory, yourBrowserControl);
-
-        // pull out the NativeEventThread from the WindowControl
-    try {
-        WindowControl windowControl = (WindowControl)
-            getBrowserControl().queryInterface(BrowserControl.WINDOW_CONTROL_NAME);
-
-        if (windowControl instanceof WindowControlImpl) {
-            nativeEventThread =
-                ((WindowControlImpl)windowControl).getNativeEventThread();
-        }
-    }
-    catch (Exception e) {
-      System.out.println(e.getMessage());
-    }
+    
+    // pull out the NativeEventThread from the WrapperFactory
+    nativeEventThread = getNativeEventThread();
 }
 
 public void delete()
@@ -121,7 +109,7 @@ public void addDocumentLoadListener(DocumentLoadListener listener)
 {
     ParameterCheck.nonNull(listener);
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
     Assert.assert_it(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
 
@@ -141,7 +129,7 @@ public void removeDocumentLoadListener(DocumentLoadListener listener)
 {
     ParameterCheck.nonNull(listener);
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
     Assert.assert_it(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
 
@@ -161,7 +149,7 @@ public void addMouseListener(MouseListener listener)
 {
     ParameterCheck.nonNull(listener);
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
     Assert.assert_it(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
 
@@ -194,7 +182,7 @@ public void removeMouseListener(MouseListener listener)
 {
     ParameterCheck.nonNull(listener);
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
     Assert.assert_it(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
 
@@ -222,7 +210,7 @@ public void addNewWindowListener(NewWindowListener listener)
 {
     ParameterCheck.nonNull(listener);
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
     Assert.assert_it(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
 
@@ -242,7 +230,7 @@ public void removeNewWindowListener(NewWindowListener listener)
 {
     ParameterCheck.nonNull(listener);
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeWebShell());
+    Assert.assert_it(-1 != getNativeBrowserControl());
     Assert.assert_it(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
 
@@ -271,7 +259,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("EventRegistrationImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.2 2004/03/05 15:34:24 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.3 2004/04/10 21:50:38 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

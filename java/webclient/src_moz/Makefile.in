@@ -85,34 +85,37 @@ REQUIRES	= xpcom \
 	gtkembedmoz \
 	$(NULL)
 
+# BROKEN SOURCES
+#	nsActions.cpp \
+#	CBrowserContainer.cpp \
+#	PromptActionEvents.cpp  \
+#	CurrentPageImpl.cpp \
+#	CurrentPageActionEvents.cpp \
+#	HistoryImpl.cpp \
+#	HistoryActionEvents.cpp \
+#	ISupportsPeer.cpp \
+#	NativeEventThreadActionEvents.cpp \
+#	NavigationImpl.cpp \
+#	NavigationActionEvents.cpp \
+#	InputStreamShim.cpp \
+#	WindowControlImpl.cpp \
+#	WindowControlActionEvents.cpp \
+#	WindowCreator.cpp \
+
 CPPSRCS = \
+	NativeBrowserControl.cpp \
+	NativeEventThread.cpp \
 	ns_util.cpp \
 	ns_util_export.cpp \
 	dom_util.cpp \
-	nsActions.cpp \
 	rdf_util.cpp \
 	BookmarksImpl.cpp \
-	CBrowserContainer.cpp \
-	PromptActionEvents.cpp  \
-	CurrentPageImpl.cpp \
-	CurrentPageActionEvents.cpp \
-	HistoryImpl.cpp \
-	HistoryActionEvents.cpp \
-	ISupportsPeer.cpp \
-	NativeEventThread.cpp \
-	NativeEventThreadActionEvents.cpp \
-	NavigationImpl.cpp \
-	NavigationActionEvents.cpp \
-	InputStreamShim.cpp \
 	RDFEnumeration.cpp \
 	RDFTreeNode.cpp \
 	wsRDFObserver.cpp \
-	WindowControlImpl.cpp \
-	WindowControlActionEvents.cpp \
 	PreferencesImpl.cpp \
 	ProfileManagerImpl.cpp \
 	WrapperFactoryImpl.cpp \
-	WindowCreator.cpp \
 	$(NULL)
 
 ifeq ($(OS_ARCH),Linux)

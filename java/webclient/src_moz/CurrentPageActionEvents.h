@@ -41,22 +41,22 @@
 
 class wsCopySelectionEvent : public nsActionEvent {
 public:
-    wsCopySelectionEvent(WebShellInitContext *yourInitContext);
+    wsCopySelectionEvent(NativeBrowserControl *yourInitContext);
     void * handleEvent (void);
 
 protected:
-    WebShellInitContext *mInitContext;
+    NativeBrowserControl *mInitContext;
 };
 
 class wsFindEvent : public nsActionEvent {
 public:
-    wsFindEvent(WebShellInitContext *yourInitContext, jstring searchString,
+    wsFindEvent(NativeBrowserControl *yourInitContext, jstring searchString,
                 jboolean forward, jboolean matchCase);
-    wsFindEvent(WebShellInitContext *yourInitContext);
+    wsFindEvent(NativeBrowserControl *yourInitContext);
     void * handleEvent (void);
 
 protected:
-    WebShellInitContext *mInitContext;
+    NativeBrowserControl *mInitContext;
     jstring mSearchString;
     jboolean mForward;
     jboolean mMatchCase;
@@ -64,19 +64,19 @@ protected:
 
 class wsGetURLEvent : public nsActionEvent {
 public:
-                       wsGetURLEvent   (WebShellInitContext *yourInitContext);
+                       wsGetURLEvent   (NativeBrowserControl *yourInitContext);
         void    *      handleEvent     (void);
 protected:
-    WebShellInitContext *mInitContext;
+    NativeBrowserControl *mInitContext;
 };
 
 class wsSelectAllEvent : public nsActionEvent {
 public:
-    wsSelectAllEvent(WebShellInitContext *yourInitContext);
+    wsSelectAllEvent(NativeBrowserControl *yourInitContext);
     void * handleEvent (void);
 
 protected:
-    WebShellInitContext *mInitContext;
+    NativeBrowserControl *mInitContext;
 };
 
 /* PENDING(ashuk): remove this from here and in the motif directory
@@ -105,43 +105,43 @@ protected:
 
 class wsPrintEvent : public nsActionEvent {
 public:
-    wsPrintEvent(WebShellInitContext *yourInitContext);
+    wsPrintEvent(NativeBrowserControl *yourInitContext);
     void * handleEvent (void);
 
 protected:
-    WebShellInitContext *mInitContext;
+    NativeBrowserControl *mInitContext;
 };
 
 class wsPrintPreviewEvent : public nsActionEvent {
 public:
-    wsPrintPreviewEvent(WebShellInitContext *yourInitContext, jboolean preview);
+    wsPrintPreviewEvent(NativeBrowserControl *yourInitContext, jboolean preview);
     void * handleEvent (void);
 
 protected:
-    WebShellInitContext *mInitContext;
+    NativeBrowserControl *mInitContext;
     jboolean mInPreview;
 };
 
 class wsGetSelectionEvent: public nsActionEvent {
 public:
-    wsGetSelectionEvent (JNIEnv *yourEnv, WebShellInitContext *yourInitContext, jobject yourSelection);
+    wsGetSelectionEvent (JNIEnv *yourEnv, NativeBrowserControl *yourInitContext, jobject yourSelection);
     void * handleEvent (void);
 
 protected:
     JNIEnv * mEnv;
-    WebShellInitContext *mInitContext;
+    NativeBrowserControl *mInitContext;
     jobject mSelection;
 };
 
 
 class wsHighlightSelectionEvent: public nsActionEvent {
 public:
-    wsHighlightSelectionEvent (JNIEnv *yourEnv, WebShellInitContext *yourInitContext, jobject startContainer, jobject endContainer, PRInt32 startOffset, PRInt32 endOffset);
+    wsHighlightSelectionEvent (JNIEnv *yourEnv, NativeBrowserControl *yourInitContext, jobject startContainer, jobject endContainer, PRInt32 startOffset, PRInt32 endOffset);
     void * handleEvent (void);
 
 protected:
     JNIEnv *mEnv;
-    WebShellInitContext *mInitContext;
+    NativeBrowserControl *mInitContext;
     jobject mStartContainer;
     jobject mEndContainer;
     PRInt32 mStartOffset;
@@ -151,11 +151,11 @@ protected:
 
 class wsClearAllSelectionEvent: public nsActionEvent {
 public:
-    wsClearAllSelectionEvent (WebShellInitContext *yourInitContext);
+    wsClearAllSelectionEvent (NativeBrowserControl *yourInitContext);
     void * handleEvent (void);
 
 protected:
-    WebShellInitContext *mInitContext;
+    NativeBrowserControl *mInitContext;
 };
 
 #endif /* CurrentPageActionEvents_h___ */

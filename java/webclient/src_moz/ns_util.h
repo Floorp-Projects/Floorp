@@ -43,7 +43,6 @@
 #include "nsIWebBrowser.h"
 #include "nsIDocShell.h" // so we can save our nsIDocShell
 #include "nsIBaseWindow.h" // to get methods like SetVisibility
-#include "nsIWebNavigation.h" // for all Navigation commands
 #include "nsIPresShell.h"
 #include "nsIThread.h" // for PRThread
 #include "nsIWebShell.h" // for nsIWebShell
@@ -72,46 +71,14 @@
 // local classes
 //
 
-// PENDING(edburns): this should be a class, and we should define a
-// constructor and destructor for it.
-
-struct WebShellInitContext {
-#ifdef XP_UNIX
-    GtkWidget * parentHWnd;
-#else 
-    // PENDING(mark): Don't we need something for Mac?
-    HWND				parentHWnd;
-#endif
-	nsCOMPtr<nsIWebShell> webShell;
-    nsCOMPtr<nsIDocShell> docShell;
-    nsCOMPtr<nsIBaseWindow> baseWindow;
-  nsCOMPtr<nsIWebNavigation> webNavigation;
-  nsCOMPtr<nsIPresShell> presShell;
-  nsCOMPtr<nsIWebBrowser> webBrowser;
-    //	PLEventQueue	*	actionQueue;
-    //	PRThread		*	embeddedThread;
-    JNIEnv          *   env;
-    jobject             nativeEventThread;
-	int					stopThread;
-	int					initComplete;
-	int					initFailCode;
-	int					x;
-	int					y;
-	int					w;
-	int					h;
-    int                 gtkWinPtr;
-    nsCOMPtr<nsIDOMDocument> currentDocument;
-    nsCOMPtr<wcIBrowserContainer> browserContainer;
-    // This struct contains all per-window information not specific to mozilla
-    ShareInitContext   shareContext;
-};
 
 class nsIProfile;
 class nsIProfileInternal;
 class nsIPref;
 class nsIAppShell;
+class NativeBrowserControl;
 
-typedef struct WebclientContext {
+struct WebclientContext {
     nsIProfile *sProfile;
     nsIProfileInternal *sProfileInternal;
     nsIPref *sPrefs;
@@ -142,7 +109,7 @@ extern const char *gSupportedListenerInterfaces[]; // defined in ns_util.cpp
  * http://lxr.mozilla.org/mozilla/source/xpcom/threads/plevent.c#248
 
  * which simply uses nice monitors to insert the event into the provided
- * event queue, which is from WebShellInitContext->actionQueue, which is
+ * event queue, which is from NativeBrowserControl->actionQueue, which is
  * created in NativeEventThread.cpp:InitMozillaStuff().  The events are
  * processed in NativeEventThread.cpp:processEventLoop, which is called
  * from the Java NativeEventThread.run().  See the code and comments for
@@ -150,7 +117,7 @@ extern const char *gSupportedListenerInterfaces[]; // defined in ns_util.cpp
 
  */
 
-void    util_PostEvent (WebShellInitContext * initContext, PLEvent * event);
+void    util_PostEvent (NativeBrowserControl * initContext, PLEvent * event);
 
 
 /**
@@ -166,7 +133,7 @@ void    util_PostEvent (WebShellInitContext * initContext, PLEvent * event);
 
  */
 
-void *  util_PostSynchronousEvent (WebShellInitContext * initContext, PLEvent * event);
+void *  util_PostSynchronousEvent (NativeBrowserControl * initContext, PLEvent * event);
 
 typedef struct _wsStringStruct {
     const PRUnichar *uniStr;

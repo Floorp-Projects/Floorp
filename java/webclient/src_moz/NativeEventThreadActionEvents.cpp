@@ -37,13 +37,13 @@ static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kISHistoryIID, NS_ISHISTORY_IID);
 static NS_DEFINE_CID(kSHistoryCID, NS_SHISTORY_CID);
 
-extern WebShellInitContext* gNewWindowInitContext;
+extern NativeBrowserControl* gNewWindowInitContext;
 
 /*
  * wsRealizeBrowserEvent
  */
 
-wsRealizeBrowserEvent::wsRealizeBrowserEvent(WebShellInitContext * yourInitContext) :
+wsRealizeBrowserEvent::wsRealizeBrowserEvent(NativeBrowserControl * yourInitContext) :
         nsActionEvent(),
         mInitContext(yourInitContext)
 {

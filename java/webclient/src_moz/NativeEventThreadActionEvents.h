@@ -52,16 +52,16 @@
 #include <windows.h>
 #endif
 
-struct WebShellInitContext;
+struct NativeBrowserControl;
 
 class wsRealizeBrowserEvent : public nsActionEvent {
 public:
-                        wsRealizeBrowserEvent (WebShellInitContext * yourInitContext);
+                        wsRealizeBrowserEvent (NativeBrowserControl * yourInitContext);
                        ~wsRealizeBrowserEvent ();
         void    *       handleEvent    (void);
 
 protected:
-	WebShellInitContext * mInitContext;
+	NativeBrowserControl * mInitContext;
 };
 
 #endif /* NativeEventThreadActionEvents_h___ */

@@ -73,7 +73,7 @@ wsResizeEvent::handleEvent ()
 } // handleEvent()
 
 
-wsDeallocateInitContextEvent::wsDeallocateInitContextEvent(WebShellInitContext* yourInitContext) :
+wsDeallocateInitContextEvent::wsDeallocateInitContextEvent(NativeBrowserControl* yourInitContext) :
         nsActionEvent(),
         mInitContext(yourInitContext)
 {

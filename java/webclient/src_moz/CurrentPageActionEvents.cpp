@@ -56,7 +56,7 @@
 #include "nsIDOMNode.h"
 #include "nsCRT.h"
 
-wsCopySelectionEvent::wsCopySelectionEvent(WebShellInitContext *yourInitContext) :
+wsCopySelectionEvent::wsCopySelectionEvent(NativeBrowserControl *yourInitContext) :
         nsActionEvent(),
         mInitContext(yourInitContext)
 {
@@ -84,7 +84,7 @@ wsCopySelectionEvent::handleEvent ()
     return result;
 }
 
-wsGetSelectionEvent::wsGetSelectionEvent(JNIEnv *yourEnv, WebShellInitContext *yourInitContext, jobject yourSelection) :
+wsGetSelectionEvent::wsGetSelectionEvent(JNIEnv *yourEnv, NativeBrowserControl *yourInitContext, jobject yourSelection) :
     nsActionEvent(),
     mEnv(yourEnv),
     mInitContext(yourInitContext),
@@ -218,7 +218,7 @@ wsGetSelectionEvent::handleEvent()
 }
 
 
-wsHighlightSelectionEvent::wsHighlightSelectionEvent(JNIEnv *yourEnv, WebShellInitContext *yourInitContext, jobject startContainer, jobject endContainer, PRInt32 startOffset, PRInt32 endOffset) :
+wsHighlightSelectionEvent::wsHighlightSelectionEvent(JNIEnv *yourEnv, NativeBrowserControl *yourInitContext, jobject startContainer, jobject endContainer, PRInt32 startOffset, PRInt32 endOffset) :
     nsActionEvent(),
     mEnv(yourEnv),
     mInitContext(yourInitContext),
@@ -302,7 +302,7 @@ wsHighlightSelectionEvent::handleEvent()
     return result;
 }
 
-wsClearAllSelectionEvent::wsClearAllSelectionEvent(WebShellInitContext *yourInitContext) :
+wsClearAllSelectionEvent::wsClearAllSelectionEvent(NativeBrowserControl *yourInitContext) :
     nsActionEvent(),
     mInitContext(yourInitContext)
 {
@@ -339,7 +339,7 @@ wsClearAllSelectionEvent::handleEvent()
      return result;
 }
 
-wsFindEvent::wsFindEvent(WebShellInitContext *yourInitContext) :
+wsFindEvent::wsFindEvent(NativeBrowserControl *yourInitContext) :
     nsActionEvent(),
     mInitContext(yourInitContext),
     mSearchString(nsnull),
@@ -348,7 +348,7 @@ wsFindEvent::wsFindEvent(WebShellInitContext *yourInitContext) :
 {
 }
 
-wsFindEvent::wsFindEvent(WebShellInitContext *yourInitContext, jstring searchString,
+wsFindEvent::wsFindEvent(NativeBrowserControl *yourInitContext, jstring searchString,
                          jboolean forward, jboolean matchCase) :
     nsActionEvent(),
     mInitContext(yourInitContext),
@@ -417,7 +417,7 @@ wsFindEvent::handleEvent ()
  * wsGetURLEvent
  */
 
-wsGetURLEvent::wsGetURLEvent(WebShellInitContext *yourInitContext) :
+wsGetURLEvent::wsGetURLEvent(NativeBrowserControl *yourInitContext) :
         nsActionEvent(),
     mInitContext(yourInitContext)
 {
@@ -474,7 +474,7 @@ wsGetURLEvent::handleEvent ()
 } // handleEvent()
 
 
-wsSelectAllEvent::wsSelectAllEvent(WebShellInitContext *yourInitContext) :
+wsSelectAllEvent::wsSelectAllEvent(NativeBrowserControl *yourInitContext) :
         nsActionEvent(),
         mInitContext(yourInitContext)
 {
@@ -552,7 +552,7 @@ wsGetDOMEvent::handleEvent ()
 }
 
 // Deal with the Print events. TODO: we need a print setup UI in Java
-wsPrintEvent::wsPrintEvent(WebShellInitContext *yourInitContext) :
+wsPrintEvent::wsPrintEvent(NativeBrowserControl *yourInitContext) :
         nsActionEvent(),
         mInitContext(yourInitContext)
 {
@@ -587,7 +587,7 @@ wsPrintEvent::handleEvent ()
 }
 
 
-wsPrintPreviewEvent::wsPrintPreviewEvent(WebShellInitContext *yourInitContext, jboolean preview) :
+wsPrintPreviewEvent::wsPrintPreviewEvent(NativeBrowserControl *yourInitContext, jboolean preview) :
         nsActionEvent(),
         mInitContext(yourInitContext), mInPreview(preview)
 {
