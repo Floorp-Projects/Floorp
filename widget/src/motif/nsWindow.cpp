@@ -1604,6 +1604,12 @@ NS_METHOD nsWindow::ShowMenuBar(PRBool aShow)
   return NS_ERROR_FAILURE;
 }
 
+NS_METHOD nsWindow::IsMenuBarVisible(PRBool *aVisible)
+{
+  *aVisible = PR_TRUE;
+  return NS_ERROR_FAILURE;
+}
+
 NS_METHOD nsWindow::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
 {
   aWidth  = mPreferredWidth;
