@@ -261,7 +261,7 @@ matchAgeInDaysCallback(nsIMdbRow *row, void *aClosure)
   PRInt64 ageInDays;
   PRInt64 msecsPerDay;
   LL_I2L(msecsPerDay, MSECS_PER_DAY);
-  LL_DIV(ageInDays, age, MSECS_PER_DAY);
+  LL_DIV(ageInDays, age, msecsPerDay);
 
   PRInt32 days;
   LL_L2I(days, ageInDays);
@@ -1421,7 +1421,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
       LL_I2L(msecsPerDay, MSECS_PER_DAY);
       
       PRInt64 ageInDays;
-      LL_DIV(ageInDays, age, MSECS_PER_DAY);
+      LL_DIV(ageInDays, age, msecsPerDay);
 
       // now put in a 32-bit number (should be small now)
       PRInt32 days;
