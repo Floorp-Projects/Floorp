@@ -58,9 +58,9 @@ OBJS=						\
 #//
 #//------------------------------------------------------------------------
 !ifdef MOZ_STATIC_COMPONENT_LIBS
-LIBRARY_NAME=$(MODULE)
+LIBRARY_NAME=smimestb
 !else
-DLLNAME=$(MODULE)
+DLLNAME=smimestb
 !endif
 MAPFILE=$(MODULE).map
 DEFFILE=$(MODULE).def
