@@ -272,7 +272,7 @@ nsresult nsEudoraMac::IterateMailDir( nsIFileSpec *pFolder, nsISupportsArray *pA
 				nsCRT::free( pName);
 				if (isFolder) {
 					if (IsValidMailFolderName( fName)) {
-						rv = FoundMailFolder( entry, fName, pArray, pImport);
+						rv = FoundMailFolder( entry, fName.get(), pArray, pImport);
 						if (NS_SUCCEEDED( rv)) {
 							rv = ScanMailDir( entry, pArray, pImport);
 							if (NS_FAILED( rv)) {
@@ -288,7 +288,7 @@ nsresult nsEudoraMac::IterateMailDir( nsIFileSpec *pFolder, nsISupportsArray *pA
 						creator = 0;
 						spec.GetFileTypeAndCreator( &type, &creator);
 						if ((type == 'TEXT') && IsValidMailboxName( fName) && IsValidMailboxFile( entry)) {
-							rv = FoundMailbox( entry, fName, pArray, pImport);
+							rv = FoundMailbox( entry, fName.get(), pArray, pImport);
 						}
 					}
 				}
@@ -460,7 +460,7 @@ nsresult nsEudoraMac::FindTOCFile( nsIFileSpec *pMailFile, nsIFileSpec **ppTOCFi
 	OSType	creator = 0;
 	PRBool	exists = PR_FALSE;
 	PRBool	isFile = PR_FALSE;
-	rv = (*ppTOCFile)->AppendRelativeUnixPath( leaf);
+	rv = (*ppTOCFile)->AppendRelativeUnixPath( leaf.get());
 	if (NS_SUCCEEDED( rv))
 		rv = (*ppTOCFile)->Exists( &exists);
 	if (NS_SUCCEEDED( rv) && exists)
@@ -702,16 +702,16 @@ PRBool nsEudoraMac::BuildPOPAccount( nsIMsgAccountManager *accMgr, nsCString **p
 
 	// I now have a user name/server name pair, find out if it already exists?
 	nsCOMPtr<nsIMsgIncomingServer>	in;
-	nsresult rv = accMgr->FindServer( *(pStrs[kPopAccountNameStr]), *(pStrs[kPopServerStr]), "pop3", getter_AddRefs( in));
+	nsresult rv = accMgr->FindServer( pStrs[kPopAccountNameStr]->get(), pStrs[kPopServerStr]->get(), "pop3", getter_AddRefs( in));
 	if (NS_FAILED( rv) || (in == nsnull)) {
 		// Create the incoming server and an account for it?
-		rv = accMgr->CreateIncomingServer( *(pStrs[kPopAccountNameStr]), *(pStrs[kPopServerStr]), "pop3", getter_AddRefs( in));
+		rv = accMgr->CreateIncomingServer( pStrs[kPopAccountNameStr]->get(), pStrs[kPopServerStr]->get(), "pop3", getter_AddRefs( in));
 		if (NS_SUCCEEDED( rv) && in) {
 			rv = in->SetType( "pop3");
-			// rv = in->SetHostName( *(pStrs[kPopServerStr]));
-			// rv = in->SetUsername( *(pStrs[kPopAccountNameStr]));
+			// rv = in->SetHostName( pStrs[kPopServerStr]->get());
+			// rv = in->SetUsername( pStrs[kPopAccountNameStr]->get());
 
-			IMPORT_LOG2( "Created POP3 server named: %s, userName: %s\n", (const char *)(*(pStrs[kPopServerStr])), (const char *)(*(pStrs[kPopAccountNameStr])));
+			IMPORT_LOG2( "Created POP3 server named: %s, userName: %s\n", pStrs[kPopServerStr]->get(), pStrs[kPopAccountNameStr]->get());
 
 			PRUnichar *pretty = ToNewUnicode(accName);
 			IMPORT_LOG1( "\tSet pretty name to: %S\n", pretty);
@@ -728,10 +728,10 @@ PRBool nsEudoraMac::BuildPOPAccount( nsIMsgAccountManager *accMgr, nsCString **p
 					
         nsCOMPtr<nsIPop3IncomingServer> pop3Server = do_QueryInterface(in, &rv);
         NS_ENSURE_SUCCESS(rv,rv);
-        pop3Server->SetLeaveMessagesOnServer(*pStrs[kLeaveOnServerStr][0] == 'Y' ? PR_TRUE : PR_FALSE);
+        pop3Server->SetLeaveMessagesOnServer(pStrs[kLeaveOnServerStr]->First() == 'Y' ? PR_TRUE : PR_FALSE);
 
         // Fiddle with the identities
-				SetIdentities(accMgr, account, *(pStrs[kPopAccountNameStr]), *(pStrs[kPopServerStr]), pStrs);
+				SetIdentities(accMgr, account, pStrs[kPopAccountNameStr]->get(), pStrs[kPopServerStr]->get(), pStrs);
 				result = PR_TRUE;
 				if (ppAccount)
 					account->QueryInterface( NS_GET_IID(nsIMsgAccount), (void **)ppAccount);
@@ -754,16 +754,16 @@ PRBool nsEudoraMac::BuildIMAPAccount( nsIMsgAccountManager *accMgr, nsCString **
 	PRBool	result = PR_FALSE;
 
 	nsCOMPtr<nsIMsgIncomingServer>	in;
-	nsresult rv = accMgr->FindServer( *(pStrs[kPopAccountNameStr]), *(pStrs[kPopServerStr]), "imap", getter_AddRefs( in));
+	nsresult rv = accMgr->FindServer( pStrs[kPopAccountNameStr]->get(), pStrs[kPopServerStr]->get(), "imap", getter_AddRefs( in));
 	if (NS_FAILED( rv) || (in == nsnull)) {
 		// Create the incoming server and an account for it?
-		rv = accMgr->CreateIncomingServer( *(pStrs[kPopAccountNameStr]), *(pStrs[kPopServerStr]), "imap", getter_AddRefs( in));
+		rv = accMgr->CreateIncomingServer( pStrs[kPopAccountNameStr]->get(), pStrs[kPopServerStr]->get(), "imap", getter_AddRefs( in));
 		if (NS_SUCCEEDED( rv) && in) {
 			rv = in->SetType( "imap");
-			// rv = in->SetHostName( *(pStrs[kPopServerStr]));
-			// rv = in->SetUsername( *(pStrs[kPopAccountNameStr]));
+			// rv = in->SetHostName( pStrs[kPopServerStr]->get());
+			// rv = in->SetUsername( pStrs[kPopAccountNameStr]->get());
 			
-			IMPORT_LOG2( "Created IMAP server named: %s, userName: %s\n", (const char *)(*(pStrs[kPopServerStr])), (const char *)(*(pStrs[kPopAccountNameStr])));
+			IMPORT_LOG2( "Created IMAP server named: %s, userName: %s\n", pStrs[kPopServerStr]->get(), pStrs[kPopAccountNameStr]->get());
 			
 			PRUnichar *pretty = ToNewUnicode(accName);
 			
@@ -781,7 +781,7 @@ PRBool nsEudoraMac::BuildIMAPAccount( nsIMsgAccountManager *accMgr, nsCString **
 				IMPORT_LOG0( "Created an account and set the IMAP server as the incoming server\n");
 
 				// Fiddle with the identities
-				SetIdentities(accMgr, account, *(pStrs[kPopAccountNameStr]), *(pStrs[kPopServerStr]), pStrs);
+				SetIdentities(accMgr, account, pStrs[kPopAccountNameStr]->get(), pStrs[kPopServerStr]->get(), pStrs);
 				result = PR_TRUE;
 				if (ppAccount)
 					account->QueryInterface( NS_GET_IID(nsIMsgAccount), (void **)ppAccount);
@@ -804,12 +804,12 @@ void nsEudoraMac::SetIdentities(nsIMsgAccountManager *accMgr, nsIMsgAccount *acc
 	if (id) {
 		nsAutoString fullName; 
 		if (pStrs[kFullNameStr]->Length()) {
-			fullName.AssignWithConversion(*(pStrs[kFullNameStr]));
+			fullName.AssignWithConversion(pStrs[kFullNameStr]->get());
 		}
 		id->SetFullName( fullName.get());
 		id->SetIdentityName( fullName.get());
 		if (pStrs[kReturnAddressStr]->Length()) {
-			id->SetEmail( *(pStrs[kReturnAddressStr]));
+			id->SetEmail( pStrs[kReturnAddressStr]->get());
 		}
 		else {
 			nsCAutoString emailAddress;
@@ -821,11 +821,11 @@ void nsEudoraMac::SetIdentities(nsIMsgAccountManager *accMgr, nsIMsgAccount *acc
 		acc->AddIdentity( id);
 
 		IMPORT_LOG0( "Created identity and added to the account\n");
-		IMPORT_LOG1( "\tname: %s\n", (const char *)(*(pStrs[kFullNameStr])));
-		IMPORT_LOG1( "\temail: %s\n", (const char *)(*(pStrs[kReturnAddressStr])));
+		IMPORT_LOG1( "\tname: %s\n", pStrs[kFullNameStr]->get());
+		IMPORT_LOG1( "\temail: %s\n", pStrs[kReturnAddressStr]->get());
 	}
 
-	SetSmtpServer( accMgr, acc, *(pStrs[kSmtpServerStr]), nsnull);
+	SetSmtpServer( accMgr, acc, pStrs[kSmtpServerStr]->get(), nsnull);
 		
 }
 
@@ -922,8 +922,8 @@ nsresult nsEudoraMac::GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSp
 	
 	creatStr.Append( (const char *)&creator, 4);
 	typeStr.Append( (const char *)&type, 4);
-	IMPORT_LOG3( "\tAttachment type: %s, creator: %s, fileNum: %ld\n", (const char *)typeStr, (const char *)creatStr, fNum);
-	IMPORT_LOG1( "\tAttachment file name: %s\n", (const char *)str);
+	IMPORT_LOG3( "\tAttachment type: %s, creator: %s, fileNum: %ld\n", typeStr.get(), creatStr.get(), fNum);
+	IMPORT_LOG1( "\tAttachment file name: %s\n", str.get());
 #endif
 	
 	// Now we have all of the pertinent info, find out if the file exists?
@@ -948,11 +948,11 @@ nsresult nsEudoraMac::GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSp
 	Str63	str63;
 	short	vRefNum = 0;
 	if (volumeName.Length() > 63) {
-		nsCRT::memcpy( &(str63[1]), (const char *)volumeName, 63);
+		nsCRT::memcpy( &(str63[1]), volumeName.get(), 63);
 		str63[0] = 63;
 	}
 	else {
-		nsCRT::memcpy( &(str63[1]), (const char *)volumeName, volumeName.Length());
+		nsCRT::memcpy( &(str63[1]), volumeName.get(), volumeName.Length());
 		str63[0] = volumeName.Length();
 	}
 		
@@ -995,7 +995,7 @@ nsresult nsEudoraMac::GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSp
 	else
 		mimeType = "application/octet-stream";
 	
-	IMPORT_LOG1( "\tMimeType: %s\n", (const char *)mimeType);
+	IMPORT_LOG1( "\tMimeType: %s\n", mimeType.get());
 	
 	return( NS_OK);
 }

@@ -1078,7 +1078,7 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
 	{
 		case eInitWithPath:
 		{
-			filePath = (char *)nsMemory::Clone(mWorkingPath, strlen(mWorkingPath)+1);
+			filePath = (char *)nsMemory::Clone(mWorkingPath.get(), mWorkingPath.Length()+1);
 			err = ResolvePathAndSpec(filePath, nsnull, PR_FALSE, &mResolvedSpec);
 			nsMemory::Free(filePath);
 			break;
@@ -1086,9 +1086,9 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
 		
 		case eInitWithFSSpec:
 		{
-			if (strlen(mAppendedPath))
+			if (!mAppendedPath.IsEmpty())
 			{	// We've got an FSSpec and an appended path so pass 'em both to ResolvePathAndSpec
-				filePath = (char *)nsMemory::Clone(mAppendedPath, strlen(mAppendedPath)+1);
+				filePath = (char *)nsMemory::Clone(mAppendedPath.get(), mAppendedPath.Length()+1);
 				err = ResolvePathAndSpec(filePath, &mSpec, PR_FALSE, &mResolvedSpec);
 				nsMemory::Free(filePath);
 			}
@@ -1350,7 +1350,7 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 	{
 		case eInitWithPath:
 		{
-			filePath = (char *)nsMemory::Clone(mWorkingPath, strlen(mWorkingPath)+1);
+			filePath = (char *)nsMemory::Clone(mWorkingPath.get(), mWorkingPath.Length()+1);
 			err = ResolvePathAndSpec(filePath, nsnull, PR_TRUE, &mResolvedSpec);
 			nsMemory::Free(filePath);
 			break;
@@ -1358,9 +1358,9 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 		
 		case eInitWithFSSpec:
 		{
-			if (strlen(mAppendedPath))
+			if (!mAppendedPath.IsEmpty())
 			{	// We've got an FSSpec and an appended path so pass 'em both to ResolvePathAndSpec
-				filePath = (char *)nsMemory::Clone(mAppendedPath, strlen(mAppendedPath)+1);
+				filePath = (char *)nsMemory::Clone(mAppendedPath.get(), mAppendedPath.Length()+1);
 				err = ResolvePathAndSpec(filePath, &mSpec, PR_TRUE, &mResolvedSpec);
 				nsMemory::Free(filePath);
 			}
@@ -1578,7 +1578,7 @@ nsLocalFile::GetPath(char **_retval)
 	switch (mInitType)
 	{
 		case eInitWithPath:
-			*_retval = (char*) nsMemory::Clone(mWorkingPath, strlen(mWorkingPath)+1);
+			*_retval = (char*) nsMemory::Clone(mWorkingPath.get(), mWorkingPath.Length()+1);
 			if (!*_retval)
 				return NS_ERROR_OUT_OF_MEMORY;
 			break;
@@ -2439,7 +2439,7 @@ nsLocalFile::GetTarget(char **_retval)
 		return NS_ERROR_FILE_INVALID_PATH;
 	}
 		
-	*_retval = (char*) nsMemory::Clone( mResolvedPath, strlen(mResolvedPath)+1 );
+	*_retval = (char*) nsMemory::Clone( mResolvedPath.get(), mResolvedPath.Length()+1 );
 	return NS_OK;
 }
 
@@ -2500,7 +2500,7 @@ NS_IMETHODIMP nsLocalFile::GetURL(char * *aURL)
                  // make sure we have a trailing slash
                  escPath += "/";
              }
-             *aURL = nsCRT::strdup((const char *)escPath);
+             *aURL = ToNewCString(escPath);
              rv = *aURL ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
          }
      }
@@ -2558,7 +2558,7 @@ NS_IMETHODIMP nsLocalFile::SetURL(const char * aURL)
      if (path.CharAt(0) == ':')
          path.Cut(0, 1);
  
-     rv = InitWithPath(path);
+     rv = InitWithPath(path.get());
           
      return rv;
 
@@ -3245,7 +3245,7 @@ NS_IMETHODIMP nsLocalFile::SetAppendedPath(const char *aPath)
 NS_IMETHODIMP nsLocalFile::GetAppendedPath(char **_retval)
 {
 	NS_ENSURE_ARG_POINTER(_retval);
-	*_retval = (char*) nsMemory::Clone(mAppendedPath, strlen(mAppendedPath)+1);
+	*_retval = (char*) nsMemory::Clone(mAppendedPath.get(), mAppendedPath.Length()+1);
 	return NS_OK;
 }
 

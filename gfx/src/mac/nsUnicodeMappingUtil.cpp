@@ -306,7 +306,7 @@ nsUnicodeMappingUtil::PrefEnumCallback(const char* aName, void* aClosure)
   curPrefName.Mid(langGroup,  p1+1, curPrefName.Length()-p1-1);
   curPrefName.Mid(genName, p2+1, p1-p2-1);
   
-  ScriptCode script = Self->MapLangGroupToScriptCode(langGroup);
+  ScriptCode script = Self->MapLangGroupToScriptCode(langGroup.get());
   if(script >= (smPseudoTotalScripts))
   {
   	// Because of the pseudo-scripts of Unicode and User-Defined, we have to handle

@@ -1908,7 +1908,7 @@ nsPrefMigration::RenameAndMove4xImapFilterFiles(nsIFileSpec * profilePath)
 
     if (!str.IsEmpty()) {
       // str is the hostname
-      rv = RenameAndMove4xImapFilterFile(profilePath,str);
+      rv = RenameAndMove4xImapFilterFile(profilePath,str.get());
       if  (NS_FAILED(rv)) {
         // failed to migrate.  bail.
         return rv;

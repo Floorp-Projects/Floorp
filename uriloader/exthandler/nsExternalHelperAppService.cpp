@@ -1516,7 +1516,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile( nsIFile* aFile, char 
   	nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
     if (icService)
     {
-      rv = icService->GetMIMEInfoFromTypeCreator(type, creator, fileExt, getter_AddRefs(info));		 							
+      rv = icService->GetMIMEInfoFromTypeCreator(type, creator, fileExt.get(), getter_AddRefs(info));		 							
       if ( NS_SUCCEEDED( rv) )
 	    return info->GetMIMEType(aContentType);
 	}
@@ -1541,7 +1541,7 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromExtras(const char
   PRInt32 numEntries = sizeof(extraMimeEntries) / sizeof(extraMimeEntries[0]);
   for (PRInt32 index = 0; !*aMIMEInfo && index < numEntries; index++)
   {
-      if ( MIMEType == extraMimeEntries[index].mMimeType ) {
+      if ( MIMEType.Equals(extraMimeEntries[index].mMimeType) ) {
           // This is the one.  Create MIMEInfo object and set attributes appropriately.
           nsCOMPtr<nsIMIMEInfo> mimeInfo (do_CreateInstance(NS_MIMEINFO_CONTRACTID,&rv));
           NS_ENSURE_SUCCESS( rv, rv );
