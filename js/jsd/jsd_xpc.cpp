@@ -1092,7 +1092,7 @@ jsdScript::GetFunctionSource(nsAString & aFunctionSource)
     }
     if (!jsstr)
         return NS_ERROR_FAILURE;
-    aFunctionSource = JS_GetStringChars(jsstr);
+    aFunctionSource = NS_REINTERPRET_CAST(PRUnichar*, JS_GetStringChars(jsstr));
     return NS_OK;
 }
 
