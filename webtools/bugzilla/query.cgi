@@ -58,7 +58,16 @@ if (defined $::FORM{"GoAheadAndLogIn"}) {
     confirm_login();
 }
 
+if ($::FORM{'nukedefaultquery'}) {
+    print "Set-Cookie: DEFAULTQUERY= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT\n";
+    delete $::COOKIE{"DEFAULTQUERY"};
+    $::buffer = "";
+}
+
+
+my $userdefaultquery = 1;
 if (!defined $::COOKIE{"DEFAULTQUERY"}) {
+    $userdefaultquery = 0;
     $::COOKIE{"DEFAULTQUERY"} = Param("defaultquery");
 }
 
@@ -611,15 +620,23 @@ if ($::COOKIE{'LASTORDER'}) {
     $deforder = "Reuse same sort as last time";
     unshift(@orders, $deforder);
 }
-    
+
+my $defquerytype = $userdefaultquery ? "my" : "the";
+
 print make_options(\@orders, $deforder);
 print "</SELECT></NOBR>
 <INPUT TYPE=\"submit\" VALUE=\"Submit query\">
-<INPUT TYPE=\"reset\" VALUE=\"Reset back to the default query\">
-<INPUT TYPE=hidden name=form_name VALUE=query>
-<BR>Give me a <A HREF=\"help.html\">clue</A> about how to use this form.
-</FORM>
+<INPUT TYPE=\"reset\" VALUE=\"Reset back to $defquerytype default query\">
+";
 
+if ($userdefaultquery) {
+    print qq{<BR><A HREF="query.cgi?nukedefaultquery=1">Set my default query back to the system default</A>};
+}
+
+print "
+</FORM>
+<P>Give me a <A HREF=\"help.html\">clue</A> about how to use this form.
+<P>
 ";
 
 
