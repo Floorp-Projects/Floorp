@@ -863,13 +863,6 @@ static NSArray* sToolbarDefaults = nil;
     [[self window] makeFirstResponder: resp];
 }
 
-
--(void)loadURLString:(NSString*)aStr
-{
-  [self loadURL: aStr];
-}
-
-
 -(void)loadURL:(NSString*)aURLSpec
 {
     if (mInitialized) {
