@@ -30,9 +30,11 @@ include <$(DEPTH)\config\rules.mak>
 
 chrome::
         $(REGCHROME) content global toolkit.jar
-        $(REGCHROME) content global-region toolkit.jar
+	$(REGCHROME) content global-region toolkit.jar
+	$(REGCHROME) content global-platform toolkit.jar
         $(REGCHROME) locale en-US/global en-US.jar
         $(REGCHROME) locale US/global-region US.jar
+	$(REGCHROME) locale en-US/global-platform en-win.jar
 
 build.dtd: build.dtd.in $(DEPTH)\config\build_number
 	@rm -f $@

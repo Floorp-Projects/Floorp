@@ -160,9 +160,9 @@ Attributes=SELECTED|INVISIBLE
 URL0=$URLPath$
 
 [Component7]
-Description Short=English US Language Pack
+Description Short=English (US) Language Pack
 ; *** LOCALIZE ME BABY ***
-Description Long=English US Language Pack
+Description Long=English (US) Language Pack
 Archive=langenus.xpi
 $InstallSize$:langenus
 Attributes=SELECTED|INVISIBLE

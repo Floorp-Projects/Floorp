@@ -1,5 +1,6 @@
 toolkit.jar:
 	content/global/contents.rdf                 (resources/content/contents.rdf)
+        content/global-platform/contents.rdf        (resources/content/contents-platform.rdf)
 	content/global-region/contents.rdf          (resources/content/contents-region.rdf)
 	content/global/hiddenWindow.xul             (resources/content/hiddenWindow.xul) 
 	content/global/globalOverlay.xul            (resources/content/globalOverlay.xul) 

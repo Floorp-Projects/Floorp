@@ -1,2 +1,3 @@
-en-US.jar:
-        locale/en-US/communicator/pref/platformPrefOverlay.dtd
+en-win.jar:
+        locale/en-US/communicator-platform/contents.rdf			(contents-platform.rdf)
+        locale/en-US/communicator-platform/pref/platformPrefOverlay.dtd

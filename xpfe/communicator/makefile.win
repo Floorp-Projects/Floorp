@@ -28,5 +28,7 @@ include <$(DEPTH)\config\rules.mak>
 chrome::
         $(REGCHROME) content communicator comm.jar
         $(REGCHROME) content communicator-region comm.jar
+        $(REGCHROME) content communicator-platform comm.jar
         $(REGCHROME) locale en-US/communicator en-US.jar
         $(REGCHROME) locale US/communicator-region US.jar
+        $(REGCHROME) locale en-US/communicator-platform en-win.jar

@@ -33,5 +33,7 @@ include $(topsrcdir)/config/rules.mk
 chrome::
 	@$(REGCHROME) content navigator comm.jar
 	@$(REGCHROME) content navigator-region comm.jar
+	@$(REGCHROME) content navigator-platform comm.jar
 	@$(REGCHROME) locale en-US/navigator en-US.jar
 	@$(REGCHROME) locale US/navigator-region US.jar
+	@$(REGCHROME) locale en-US/navigator-platform en-unix.jar

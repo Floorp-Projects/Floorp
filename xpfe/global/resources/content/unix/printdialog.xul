@@ -25,7 +25,7 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-<!DOCTYPE window SYSTEM "chrome://global/locale/printdialog.dtd">
+<!DOCTYPE window SYSTEM "chrome://global-platform/locale/printdialog.dtd">
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

@@ -1,2 +1,3 @@
 comm.jar:
+    content/navigator-platform/contents.rdf        (contents-platform.rdf)
     content/navigator/platformNavigationBindings.xul
