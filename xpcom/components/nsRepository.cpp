@@ -285,11 +285,14 @@ static nsresult platformMarkNoComponents(nsDll *dll)
 	}
 	
 	PRTime lastModTime = dll->GetLastModifiedTime();
-	PRUint64 fileSize = dll->GetSize();
+    PRUint32 fileSize32 = dll->GetSize();
+	PRUint64 fileSize64;
+    LL_UI2L(filesize64, filesize32);
+    
 	NR_RegSetEntry(hreg, key, "LastModTimeStamp", REGTYPE_ENTRY_BYTES,
 		&lastModTime, sizeof(lastModTime));
 	NR_RegSetEntry(hreg, key, "FileSize",  REGTYPE_ENTRY_BYTES,
-		&fileSize, sizeof(fileSize));
+		&fileSize64, sizeof(fileSize64));
 	
 	char *ncomponentsString = "0";
 	
