@@ -430,6 +430,9 @@ void nsXULTreeGroupFrame::OnContentRemoved(nsIPresContext* aPresContext,
 
   }
   MarkDirtyChildren(state);
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  shell->FlushPendingNotifications();
 }
 
 PRBool nsXULTreeGroupFrame::ContinueReflow(nscoord height) 
