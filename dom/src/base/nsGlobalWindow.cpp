@@ -1547,14 +1547,7 @@ GlobalWindowImpl::SetName(const nsAString& aName)
 NS_IMETHODIMP
 GlobalWindowImpl::GetInnerWidth(PRInt32* aInnerWidth)
 {
-  // If we're a subframe, make sure our size is up to date.  It's OK that this
-  // crosses the content/chrome boundary, since chrome can have pending reflows
-  // too.
-  GlobalWindowImpl* parent = NS_STATIC_CAST(GlobalWindowImpl*,
-                                            GetPrivateParent());
-  if (parent) {
-    parent->FlushPendingNotifications(Flush_Layout);
-  }
+  EnsureSizeUpToDate();
 
   nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
   *aInnerWidth = 0;
@@ -1598,14 +1591,7 @@ GlobalWindowImpl::SetInnerWidth(PRInt32 aInnerWidth)
 NS_IMETHODIMP
 GlobalWindowImpl::GetInnerHeight(PRInt32* aInnerHeight)
 {
-  // If we're a subframe, make sure our size is up to date.  It's OK that this
-  // crosses the content/chrome boundary, since chrome can have pending reflows
-  // too.
-  GlobalWindowImpl* parent = NS_STATIC_CAST(GlobalWindowImpl*,
-                                            GetPrivateParent());
-  if (parent) {
-    parent->FlushPendingNotifications(Flush_Layout);
-  }
+  EnsureSizeUpToDate();
 
   nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
   *aInnerHeight = 0;
@@ -1955,6 +1941,7 @@ GlobalWindowImpl::GetScrollMaxXY(PRInt32* aScrollMaxX, PRInt32* aScrollMaxY)
   nsIScrollableView *view = nsnull;      // no addref/release for views
   float p2t, t2p;
 
+  FlushPendingNotifications(Flush_Layout);
   GetScrollInfo(&view, &p2t, &t2p);
   if (!view)
     return NS_OK;      // bug 230965 changed from NS_ERROR_FAILURE
@@ -1996,12 +1983,19 @@ GlobalWindowImpl::GetScrollMaxY(PRInt32* aScrollMaxY)
 }
 
 nsresult
-GlobalWindowImpl::GetScrollXY(PRInt32* aScrollX, PRInt32* aScrollY)
+GlobalWindowImpl::GetScrollXY(PRInt32* aScrollX, PRInt32* aScrollY,
+                              PRBool aDoFlush)
 {
   nsresult rv;
   nsIScrollableView *view = nsnull;      // no addref/release for views
   float p2t, t2p;
 
+  if (aDoFlush) {
+    FlushPendingNotifications(Flush_Layout);
+  } else {
+    EnsureSizeUpToDate();
+  }
+  
   GetScrollInfo(&view, &p2t, &t2p);
   if (!view)
     return NS_OK;      // bug 202206 changed from NS_ERROR_FAILURE
@@ -2009,6 +2003,14 @@ GlobalWindowImpl::GetScrollXY(PRInt32* aScrollX, PRInt32* aScrollY)
   nscoord xPos, yPos;
   rv = view->GetScrollPosition(xPos, yPos);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if ((xPos != 0 || yPos != 0) && !aDoFlush) {
+    // Oh, well.  This is the expensive case -- the window is scrolled and we
+    // didn't actually flush yet.  Repeat, but with a flush, since the content
+    // may get shorter and hence our scroll position may decrease.
+    return GetScrollXY(aScrollX, aScrollY, PR_TRUE);
+  }
+  
   if (aScrollX)
     *aScrollX = NSTwipsToIntPixels(xPos, t2p);
   if (aScrollY)
@@ -2022,7 +2024,7 @@ GlobalWindowImpl::GetScrollX(PRInt32* aScrollX)
 {
   NS_ENSURE_ARG_POINTER(aScrollX);
   *aScrollX = 0;
-  return GetScrollXY(aScrollX, nsnull);
+  return GetScrollXY(aScrollX, nsnull, PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -2030,7 +2032,7 @@ GlobalWindowImpl::GetScrollY(PRInt32* aScrollY)
 {
   NS_ENSURE_ARG_POINTER(aScrollY);
   *aScrollY = 0;
-  return GetScrollXY(nsnull, aScrollY);
+  return GetScrollXY(nsnull, aScrollY, PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -2706,6 +2708,7 @@ GlobalWindowImpl::ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll)
   nsIScrollableView *view = nsnull;      // no addref/release for views
   float p2t, t2p;
 
+  FlushPendingNotifications(Flush_Layout);
   result = GetScrollInfo(&view, &p2t, &t2p);
 
   if (view) {
@@ -2740,6 +2743,7 @@ GlobalWindowImpl::ScrollBy(PRInt32 aXScrollDif,
   nsIScrollableView *view = nsnull;      // no addref/release for views
   float p2t, t2p;
 
+  FlushPendingNotifications(Flush_Layout);
   result = GetScrollInfo(&view, &p2t, &t2p);
 
   if (view) {
@@ -2761,6 +2765,7 @@ GlobalWindowImpl::ScrollByLines(PRInt32 numLines)
   nsIScrollableView *view = nsnull;   // no addref/release for views
   float p2t, t2p;
 
+  FlushPendingNotifications(Flush_Layout);
   result = GetScrollInfo(&view, &p2t, &t2p);
   if (view) {
     result = view->ScrollByLines(0, numLines);
@@ -2776,6 +2781,7 @@ GlobalWindowImpl::ScrollByPages(PRInt32 numPages)
   nsIScrollableView *view = nsnull;   // no addref/release for views
   float p2t, t2p;
 
+  FlushPendingNotifications(Flush_Layout);
   result = GetScrollInfo(&view, &p2t, &t2p);
   if (view) {
     result = view->ScrollByPages(0, numPages);
@@ -5467,10 +5473,6 @@ GlobalWindowImpl::GetScrollInfo(nsIScrollableView **aScrollableView,
     return NS_OK;
   }
 
-  // Flush pending notifications so that the presentation is up to
-  // date.
-  FlushPendingNotifications(Flush_Layout);
-
   nsCOMPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
   if (presContext) {
@@ -5558,6 +5560,19 @@ GlobalWindowImpl::FlushPendingNotifications(mozFlushType aType)
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
   if (doc) {
     doc->FlushPendingNotifications(aType);
+  }
+}
+
+void
+GlobalWindowImpl::EnsureSizeUpToDate()
+{
+  // If we're a subframe, make sure our size is up to date.  It's OK that this
+  // crosses the content/chrome boundary, since chrome can have pending reflows
+  // too.
+  GlobalWindowImpl* parent = NS_STATIC_CAST(GlobalWindowImpl*,
+                                            GetPrivateParent());
+  if (parent) {
+    parent->FlushPendingNotifications(Flush_Layout);
   }
 }
 

@@ -241,6 +241,8 @@ protected:
   nsresult GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner);
   nsresult GetTreeOwner(nsIBaseWindow** aTreeOwner);
   nsresult GetWebBrowserChrome(nsIWebBrowserChrome** aBrowserChrome);
+  // GetScrollInfo does not flush.  Callers should do it themselves as needed,
+  // depending on which info they actually want off the scrollable view.
   nsresult GetScrollInfo(nsIScrollableView** aScrollableView, float* aP2T,
                          float* aT2P);
   nsresult SecurityCheckURL(const char *aURL);
@@ -251,6 +253,7 @@ protected:
                            const nsAString &aPopupWindowFeatures);
 
   void FlushPendingNotifications(mozFlushType aType);
+  void EnsureSizeUpToDate();
   void EnsureReflowFlushAndPaint();
   nsresult CheckSecurityWidthAndHeight(PRInt32* width, PRInt32* height);
   nsresult CheckSecurityLeftAndTop(PRInt32* left, PRInt32* top);
@@ -269,7 +272,10 @@ protected:
 
   PRBool   GetBlurSuppression();
 
-  nsresult GetScrollXY(PRInt32* aScrollX, PRInt32* aScrollY);
+  // If aDoFlush is true, we'll flush our own layout; otherwise we'll try to
+  // just flush our parent and only flush ourselves if we think we need to.
+  nsresult GetScrollXY(PRInt32* aScrollX, PRInt32* aScrollY,
+                       PRBool aDoFlush);
   nsresult GetScrollMaxXY(PRInt32* aScrollMaxX, PRInt32* aScrollMaxY);
 
   PRBool IsFrame()
