@@ -34,7 +34,6 @@
 
 class nsIEventListenerManager;
 class nsDOMStyleSheetCollection;
-class nsIDOMSelection;
 class nsIOutputStream;
 class nsDocument;
 
@@ -279,15 +278,6 @@ public:
                             nsIStyleRule* aStyleRule);
   NS_IMETHOD StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule);
-
-  /**
-    * Returns the Selection Object
-   */
-  NS_IMETHOD GetSelection(nsIDOMSelection ** aSelection);
-  /**
-    * Selects all the Content
-   */
-  NS_IMETHOD SelectAll();
 
   /**
     * Finds text in content

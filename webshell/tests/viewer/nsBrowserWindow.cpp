@@ -497,10 +497,6 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     DoPaste();
     break;
 
-  case VIEWER_EDIT_SELECTALL:
-    DoSelectAll();
-    break;
-
   case VIEWER_EDIT_FINDINPAGE:
     DoFind();
     break;
@@ -980,22 +976,6 @@ nsBrowserWindow::DoFind()
   }
   //NS_IF_RELEASE(dialog);
 
-}
-
-void
-nsBrowserWindow::DoSelectAll()
-{
-
-  nsIPresShell* shell = GetPresShell();
-  if (nsnull != shell) {
-    nsCOMPtr<nsIDocument> doc;
-    shell->GetDocument(getter_AddRefs(doc));
-    if (doc) {
-      doc->SelectAll();
-      ForceRefresh();
-    }
-    NS_RELEASE(shell);
-  }
 }
 
 

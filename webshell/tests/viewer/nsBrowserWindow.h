@@ -156,7 +156,6 @@ public:
   nsIPresShell* GetPresShell();
 
   void DoFind();
-  void DoSelectAll();
   NS_IMETHOD FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
   NS_IMETHOD ForceRefresh();
 
