@@ -41,6 +41,8 @@
 #include "nsHTMLValue.h"// XXX list ordinal hack
 #include "nsIHTMLContent.h"// XXX list ordinal hack
 
+#include "prprf.h"
+
 // XXX mLastContentOffset, mFirstContentOffset, mLastContentIsComplete
 // XXX pagination
 // XXX prev-in-flow continuations
@@ -208,6 +210,8 @@ protected:
                    LineData*              aLine,
                    nsInlineReflowStatus   aReflowStatus);
 
+  void FindFloaters(LineData* aLine);
+
   PRBool ReflowInlineFrame(nsCSSBlockReflowState& aState,
                            LineData*              aLine,
                            nsIFrame*              aFrame,
@@ -339,6 +343,8 @@ struct LineData {
 
   PRUint16 GetState() const { return mState; }
 
+  char* StateToString(char* aBuf, PRInt32 aBufSize) const;
+
   PRBool Contains(nsIFrame* aFrame) const;
 
 #ifdef NS_DEBUG
@@ -381,13 +387,24 @@ ListTextRuns(FILE* out, PRInt32 aIndent, nsCSSTextRun* aRuns)
   }
 }
 
+char*
+LineData::StateToString(char* aBuf, PRInt32 aBufSize) const
+{
+  PR_snprintf(aBuf, aBufSize, "%s,%s,%scomplete",
+              (mState & LINE_IS_DIRTY) ? "dirty" : "clean",
+              (mState & LINE_IS_BLOCK) ? "block" : "inline",
+              (mState & LINE_LAST_CONTENT_IS_COMPLETE) ? "" : "!");
+  return aBuf;
+}
+
 void
 LineData::List(FILE* out, PRInt32 aIndent) const
 {
   PRInt32 i;
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
-  fprintf(out, "line %p: count=%d state=%x {%d,%d,%d,%d} ibm=%d obm=%d <\n",
-          this, mChildCount, GetState(),
+  char cbuf[100];
+  fprintf(out, "line %p: count=%d state=%s {%d,%d,%d,%d} ibm=%d obm=%d <\n",
+          this, mChildCount, StateToString(cbuf, sizeof(cbuf)),
           mBounds.x, mBounds.y, mBounds.width, mBounds.height,
           mInnerBottomMargin, mOuterBottomMargin);
 
@@ -2661,7 +2678,7 @@ NS_ASSERTION(xmost < 1000000, "bad line width");
   }
   aState.mY = newY;
 
-  // Any below current line floaters to place?
+#if XXX_remove_me
   // XXX We really want to know whether this is the initial reflow (reflow
   // unmapped) or a subsequent reflow in which case we only need to offset
   // the existing floaters...
@@ -2672,7 +2689,11 @@ NS_ASSERTION(xmost < 1000000, "bad line width");
     aLine->mFloaters->operator=(aState.mPendingFloaters);
     aState.mPendingFloaters.Clear();
   }
+#else
+  FindFloaters(aLine);
+#endif
 
+  // Any below current line floaters to place?
   if (nsnull != aLine->mFloaters) {
     aState.PlaceBelowCurrentLineFloaters(aLine->mFloaters);
     // XXX Factor in the height of the floaters as well when considering
@@ -2707,6 +2728,76 @@ NS_ASSERTION(xmost < 1000000, "bad line width");
     aState.GetAvailableSpace();
   }
   return PR_TRUE;
+}
+
+static nsresult
+FindFloatersIn(nsIFrame* aFrame, nsVoidArray*& aArray)
+{
+  const nsStyleDisplay* display;
+  aFrame->GetStyleData(eStyleStruct_Display,
+                       (const nsStyleStruct*&) display);
+  if (NS_STYLE_FLOAT_NONE != display->mFloats) {
+    if (nsnull == aArray) {
+      aArray = new nsVoidArray();
+      if (nsnull == aArray) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+    aArray->AppendElement(aFrame);
+  }
+
+  nsIFrame* kid;
+  aFrame->FirstChild(kid);
+  while (nsnull != kid) {
+    nsresult rv = FindFloatersIn(kid, aArray);
+    if (NS_OK != rv) {
+      return rv;
+    }
+    kid->GetNextSibling(kid);
+  }
+  return NS_OK;
+}
+
+void
+nsCSSBlockFrame::FindFloaters(LineData* aLine)
+{
+  nsVoidArray* floaters = aLine->mFloaters;
+  if (nsnull != floaters) {
+    // Empty floater array before proceeding
+    floaters->Clear();
+  }
+
+  nsIFrame* frame = aLine->mFirstChild;
+  PRInt32 n = aLine->mChildCount;
+  while (--n >= 0) {
+    FindFloatersIn(frame, floaters);
+    frame->GetNextSibling(frame);
+  }
+
+  aLine->mFloaters = floaters;
+
+  if ((mLines == aLine) && (nsnull != mRunInFloaters) &&
+      (nsnull != floaters)) {
+    // Special check for the first line: remove any floaters that are
+    // "current line" floaters (they musn't show up in the lines
+    // floater array)
+    PRInt32 i;
+    n = mRunInFloaters->Count();
+    for (i = 0; i < n; i++) {
+      PRInt32 ix = floaters->IndexOf(mRunInFloaters->ElementAt(i));
+      if (ix >= 0) {
+        floaters->RemoveElementAt(ix);
+      }
+    }
+  }
+
+  // Get rid of floater array if we don't need it
+  if (nsnull != floaters) {
+    if (0 == floaters->Count()) {
+      delete floaters;
+      aLine->mFloaters = nsnull;
+    }
+  }
 }
 
 void
@@ -3477,10 +3568,13 @@ nsCSSBlockFrame::AddFloater(nsIPresContext*      aPresContext,
       }
       mRunInFloaters->AppendElement(aPlaceholder);
       state->PlaceCurrentLineFloater(aFloater);
-    } else {
+    }
+#if XXX_remove_me
+    else {
       // Add the placeholder to our to-do list
       state->mPendingFloaters.AppendElement(aPlaceholder);
     }
+#endif
     return PR_TRUE;
   }
 
@@ -3594,6 +3688,8 @@ nsCSSBlockReflowState::PlaceBelowCurrentLineFloaters(nsVoidArray* aFloaterList)
     nsPlaceholderFrame* placeholderFrame = (nsPlaceholderFrame*)
       aFloaterList->ElementAt(i);
     nsIFrame* floater = placeholderFrame->GetAnchoredItem();
+
+//    ReflowFloater(aPresContext, *state, aFloater);
 
     // Get the band of available space
     // XXX This is inefficient to do this inside the loop...
