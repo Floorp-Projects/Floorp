@@ -245,10 +245,12 @@ nsresult nsImageOS2::Draw( nsIRenderingContext &aContext,
 }
 
 NS_IMETHODIMP 
-nsImageOS2::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
-                 PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
-                 PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
+nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+                  PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+                  PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
+  nsresult rv = NS_OK;
+
    PRInt32 origSHeight = aSHeight, origDHeight = aDHeight;
    PRInt32 origSWidth = aSWidth, origDWidth = aDWidth;
 
@@ -261,8 +263,8 @@ nsImageOS2::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
    // limit the size of the blit to the amount of the image read in
    PRInt32 aSX2 = aSX + aSWidth;
 
-   if (aSX2 > mDecodedRect.XMost ()) 
-      aSX2 = mDecodedRect.XMost ();
+   if (aSX2 > mDecodedRect.XMost()) 
+      aSX2 = mDecodedRect.XMost();
 
    if (aSX < mDecodedRect.x) {
       aDX += (mDecodedRect.x - aSX) * origDWidth / origSWidth;
@@ -277,8 +279,8 @@ nsImageOS2::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 
    PRInt32 aSY2 = aSY + aSHeight;
 
-   if (aSY2 > mDecodedRect.YMost ())
-      aSY2 = mDecodedRect.YMost ();
+   if (aSY2 > mDecodedRect.YMost())
+      aSY2 = mDecodedRect.YMost();
 
    if (aSY < mDecodedRect.y) {
       aDY += (mDecodedRect.y - aSY) * origDHeight / origSHeight;
@@ -299,10 +301,10 @@ nsImageOS2::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
    surf->NS2PM_ININ (trect, rcl);
 
    // Set up blit coord array
-   POINTL aptl [4] = { rcl.xLeft, rcl.yBottom,                  // TLL - in
-                       rcl.xRight, rcl.yTop,                    // TUR - in
-                       aSX, mInfo->cy - (aSY + aSHeight),       // SLL - in
-                       aSX + aSWidth, mInfo->cy - aSY };        // SUR - ex
+   POINTL aptl[ 4] = { { rcl.xLeft, rcl.yBottom },              // TLL
+                       { rcl.xRight, rcl.yTop },                // TUR
+                       { aSX, mInfo->cy - (aSY + aSHeight) },   // SLL
+                       { aSX + aSWidth, mInfo->cy - aSY } };    // SUR
 
    if( mAlphaDepth == 0)
    {
@@ -343,123 +345,136 @@ LONG Technology = 0;
 if (Technology == CAPS_TECH_RASTER_DISPLAY)
 {
 //DJ - End of temporary hack
+      
+    rv = NS_ERROR_FAILURE;
+    
+     // create non-inclusive rect for GpiBitBlt
+    RECTL dest;
+    surf->NS2PM_INEX (trect, dest);
 
-      DEVOPENSTRUC dop = { 0, 0, 0, 0, 0 };
-      HDC MemDC = ::DevOpenDC( (HAB)0, OD_MEMORY, "*", 5, (PDEVOPENDATA) &dop, hdcCompat);
+    DEVOPENSTRUC dop = { 0, 0, 0, 0, 0 };
+    HDC MemDC = ::DevOpenDC( (HAB)0, OD_MEMORY, "*", 5, (PDEVOPENDATA) &dop, hdcCompat);
 
-      if (DEV_ERROR != MemDC)
+    if( MemDC != DEV_ERROR )
+    {   
+      // create the PS
+      SIZEL sizel = { 0, 0 };
+      HPS MemPS = GFX (::GpiCreatePS (0, MemDC, &sizel, PU_PELS | GPIT_MICRO | GPIA_ASSOC), GPI_ERROR);
+
+      if( MemPS != GPI_ERROR )
       {
-         // create the PS
-         SIZEL sizel = { 0, 0 };
-         HPS MemPS = GFX (::GpiCreatePS (0, MemDC, &sizel, PU_PELS | GPIT_MICRO | GPIA_ASSOC), GPI_ERROR);
+        // now create a bitmap of the right size
+        HBITMAP hMemBmp;
+        BITMAPINFOHEADER2 bihMem = { 0 };
 
-         if (GPI_ERROR != MemPS)
-         {
-            // now create a bitmap of the right size
-            HBITMAP hMemBmp;
-            BITMAPINFOHEADER2 bihMem = { 0 };
+        bihMem.cbFix = sizeof (BITMAPINFOHEADER2);
+        bihMem.cx = aDWidth;
+        bihMem.cy = aDHeight;
+        bihMem.cPlanes = 1;
+        LONG lBitCount = 0;
+        GFX (::DevQueryCaps( hdcCompat, CAPS_COLOR_BITCOUNT, 1, &lBitCount), FALSE);
+        bihMem.cBitCount = (USHORT) lBitCount;
 
-            bihMem.cbFix = sizeof (BITMAPINFOHEADER2);
-            bihMem.cx = rcl.xRight - rcl.xLeft + 1;
-            bihMem.cy = rcl.yTop - rcl.yBottom + 1;
-            bihMem.cPlanes = 1;
-            LONG lBitCount = 0;
-            GFX (::DevQueryCaps( hdcCompat, CAPS_COLOR_BITCOUNT, 1, &lBitCount), FALSE);
-            bihMem.cBitCount = (USHORT) lBitCount;
+        hMemBmp = GFX (::GpiCreateBitmap (MemPS, &bihMem, 0, 0, 0), GPI_ERROR);
 
-            hMemBmp = GFX (::GpiCreateBitmap (MemPS, &bihMem, 0, 0, 0), GPI_ERROR);
+        if( hMemBmp != GPI_ERROR )
+        {
+          GFX (::GpiSetBitmap (MemPS, hMemBmp), HBM_ERROR);
 
-            if (GPI_ERROR != hMemBmp)
+          POINTL aptlDevToMem [3] = { 0, 0,                       // TLL - mem bitmap (0, 0)
+                                      bihMem.cx, bihMem.cy,       // TUR - mem bitmap (cx, cy)
+                                      dest.xLeft, dest.yBottom }; // SLL - device (Dx1, Dy2)
+
+          GFX (::GpiBitBlt (MemPS, surf->GetPS (), 3, aptlDevToMem, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
+
+          // Now we want direct access to bitmap raw data. 
+          // Must copy data again because GpiSetBitmap doesn't provide pointer to
+          // start of raw bit data ?? (DJ)
+          BITMAPINFOHEADER2 bihDirect = { 0 };
+          bihDirect.cbFix   = sizeof (BITMAPINFOHEADER2);
+          bihDirect.cPlanes = 1;
+          bihDirect.cBitCount = 24;
+
+          int RawDataSize = bihMem.cy * RASWIDTH (bihMem.cx, 24);
+          PRUint8* pRawBitData = (PRUint8*)malloc (RawDataSize);
+
+          if( pRawBitData )
+          {
+            ULONG rc = GFX (::GpiQueryBitmapBits (MemPS, 0, bihMem.cy, (PBYTE)pRawBitData, (PBITMAPINFO2)&bihDirect), GPI_ALTERROR);
+
+            if( rc != GPI_ALTERROR )
             {
-               GFX (::GpiSetBitmap (MemPS, hMemBmp), HBM_ERROR);
+              // Do manual alpha blending
+              PRUint8* pDest  = pRawBitData;
+              PRUint8* pSrc;
+              PRUint8* pAlpha;
 
-               POINTL aptlDevToMem [3] = { 0, 0,                                    // TLL - in
-                                           bihMem.cx, bihMem.cy,                    // TUR - ex
-                                           rcl.xLeft, rcl.yBottom };                // SLL - in
+              if (mInfo->cBitCount == 8)
+              {
+                for (int y = mInfo->cy - aSY - aSHeight ; y < mInfo->cy - aSY ; y++)
+                {
+                  pSrc   = mImageBits + (y * mRowBytes) + aSX;
+                  pAlpha = mAlphaBits + (y * mARowBytes) + aSX;
+                       
+                  for (int x = 0 ; x < bihDirect.cx ; x++)
+                  {
+                    pDest [0] = FAST_BLEND (mColorMap->Index [3 * (*pSrc) + 0], pDest [0], *pAlpha);
+                    pDest [1] = FAST_BLEND (mColorMap->Index [3 * (*pSrc) + 1], pDest [1], *pAlpha);
+                    pDest [2] = FAST_BLEND (mColorMap->Index [3 * (*pSrc) + 2], pDest [2], *pAlpha);
+                    pSrc++;
+                    pDest += 3;
+                    pAlpha++;
+                  }
+        
+                  pDest  = (PRUint8*) ((ULONG)(pDest + 3) & ~3);    // For next scanline align pointers on DWORD boundary
+                }
+              }
+              else
+              {
+                for (int y = mInfo->cy - aSY - aSHeight ; y < mInfo->cy - aSY ; y++)
+                {
+                  pSrc   = mImageBits + (y * mRowBytes) + (aSX * 3);
+                  pAlpha = mAlphaBits + (y * mARowBytes) + aSX;
+                               
+                  for (int x = 0 ; x < bihDirect.cx ; x++)
+                  {
+                    pDest [0] = FAST_BLEND (pSrc [0], pDest [0], *pAlpha);
+                    pDest [1] = FAST_BLEND (pSrc [1], pDest [1], *pAlpha);
+                    pDest [2] = FAST_BLEND (pSrc [2], pDest [2], *pAlpha);
+                    pSrc  += 3;
+                    pDest += 3;
+                    pAlpha++;
+                  }
+        
+                  pDest  = (PRUint8*) ((ULONG)(pDest + 3) & ~3);    // For next scanline align pointers on DWORD boundary
+                }
+              }
+        
+              // Copy modified memory back to memory bitmap
+              GFX (::GpiSetBitmapBits (MemPS, 0, bihMem.cy, (PBYTE)pRawBitData, (PBITMAPINFO2)&bihDirect), GPI_ALTERROR);
+              
+              // Transfer bitmap from memory bitmap back to device
+              POINTL aptlMemToDev [3] = { dest.xLeft, dest.yBottom,   // TLL - device (Dx1, Dy2)
+                                          dest.xRight, dest.yTop,     // TUR - device (Dx2, Dy1)
+                                          0, 0 };                     // SLL - mem bitmap (0, 0)
 
-               GFX (::GpiBitBlt (MemPS, surf->GetPS (), 3, aptlDevToMem, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
-
-               // Now we want direct access to bitmap raw data. 
-               // Must copy data again because GpiSetBitmap doesn't provide pointer to start of raw bit data ?? (DJ)
-               
-               BITMAPINFOHEADER2 bihDirect = { 0 };
-               bihDirect.cbFix   = sizeof (BITMAPINFOHEADER2);
-               bihDirect.cPlanes = 1;
-               bihDirect.cBitCount = 24;
-
-               int RawDataSize = bihMem.cy * RASWIDTH (bihMem.cx, 24);
-               PRUint8* pRawBitData = (PRUint8*)malloc (RawDataSize);
-
-               if (pRawBitData)
-               {
-                 ULONG rc = GFX (::GpiQueryBitmapBits (MemPS, 0, bihMem.cy, (PBYTE)pRawBitData, (PBITMAPINFO2)&bihDirect), GPI_ALTERROR);
-
-                 if (rc != GPI_ALTERROR)
-                 {
-                   // Do manual alpha blending
-                   PRUint8* pDest  = pRawBitData;
-                   PRUint8* pSrc   = mImageBits;
-                   PRUint8* pAlpha = mAlphaBits;
-
-                   if (mInfo->cBitCount == 8)
-                   {
-                     for (int y = 0 ; y < bihDirect.cy ; y++)
-                     {
-                       for (int x = 0 ; x < bihDirect.cx ; x++)
-                       {
-                         pDest [0] = FAST_BLEND (mColorMap->Index [3 * (*pSrc) + 0], pDest [0], *pAlpha);
-                         pDest [1] = FAST_BLEND (mColorMap->Index [3 * (*pSrc) + 1], pDest [1], *pAlpha);
-                         pDest [2] = FAST_BLEND (mColorMap->Index [3 * (*pSrc) + 2], pDest [2], *pAlpha);
-                         pSrc++;
-                         pDest += 3;
-                         pAlpha++;
-                       }
-
-                       pSrc   = (PRUint8*) ((ULONG)(pSrc + 3) & ~3);    // For next scanline align pointers on DWORD boundary
-                       pDest  = (PRUint8*) ((ULONG)(pDest + 3) & ~3);
-                       pAlpha = (PRUint8*) ((ULONG)(pAlpha + 3) & ~3);
-                     }
-                   } else
-                   {
-                     for (int y = 0 ; y < bihDirect.cy ; y++)
-                     {
-                       for (int x = 0 ; x < bihDirect.cx ; x++)
-                       {
-                         pDest [0] = FAST_BLEND (pSrc [0], pDest [0], *pAlpha);
-                         pDest [1] = FAST_BLEND (pSrc [1], pDest [1], *pAlpha);
-                         pDest [2] = FAST_BLEND (pSrc [2], pDest [2], *pAlpha);
-                         pSrc  +=3;
-                         pDest += 3;
-                         pAlpha++;
-                       }
-
-                       pSrc   = (PRUint8*) ((ULONG)(pSrc + 3) & ~3);    // For next scanline align pointers on DWORD boundary
-                       pDest  = (PRUint8*) ((ULONG)(pDest + 3) & ~3);
-                       pAlpha = (PRUint8*) ((ULONG)(pAlpha + 3) & ~3);
-                     }
-                   }
-                   // Copy modified memory back to memory bitmap
-                   GFX (::GpiSetBitmapBits (MemPS, 0, bihMem.cy, (PBYTE)pRawBitData, (PBITMAPINFO2)&bihDirect), GPI_ALTERROR);
-
-                   // Transfer bitmap from memory bitmap back to device
-                   POINTL aptlMemToDev [3] = { rcl.xLeft, rcl.yBottom,              // TLL - in
-                                               rcl.xRight, rcl.yTop,                // TUR - ex
-                                               0, 0 };                              // SLL - in
-
-                   GFX (::GpiBitBlt (surf->GetPS (), MemPS, 3, aptlMemToDev, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
-                 }
-
-                 free (pRawBitData);
-               }
-
-               GFX (::GpiSetBitmap (MemPS, NULLHANDLE), HBM_ERROR);
-               GFX (::GpiDeleteBitmap (hMemBmp), FALSE);
+              GFX (::GpiBitBlt (surf->GetPS (), MemPS, 3, aptlMemToDev, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
+            
+              rv = NS_OK;
             }
 
-            GFX (::GpiDestroyPS (MemPS), FALSE);
-         }
-         GFX (::DevCloseDC (MemDC), DEV_ERROR);
+            free (pRawBitData);
+          }
+
+          GFX (::GpiSetBitmap (MemPS, NULLHANDLE), HBM_ERROR);
+          GFX (::GpiDeleteBitmap (hMemBmp), FALSE);
+        }
+        
+        GFX (::GpiDestroyPS (MemPS), FALSE);
       }
+    
+      ::DevCloseDC (MemDC);
+    }
 
 //DJ - temporary hack
 } else  // This is not display driver. Can't get info that is already drawn. Output only image without mask.
@@ -470,7 +485,7 @@ if (Technology == CAPS_TECH_RASTER_DISPLAY)
 
    }
 
-   return NS_OK;
+   return rv;
 }
 
 nsresult nsImageOS2::Optimize( nsIDeviceContext* aContext)
