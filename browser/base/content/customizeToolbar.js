@@ -22,7 +22,7 @@
 
 */
 
-var gCurrentDragOverItem;
+var gCurrentDragOverItem = null;
 
 function buildDialog()
 {
@@ -145,7 +145,6 @@ var dropObserver = {
       gCurrentDragOverItem = aEvent.target;
 
     gCurrentDragOverItem.setAttribute("dragactive", "true");
-
     aDragSession.canDrop = true;
   },
   onDrop: function (aEvent, aXferData, aDragSession)
@@ -164,6 +163,7 @@ var dropObserver = {
     paletteItem = paletteItem.cloneNode(paletteItem);
     var toolbar = document.getElementById("nav-bar");
     toolbar.insertBefore(paletteItem, gCurrentDragOverItem);
+    gCurrentDragOverItem = null;
   },
   _flavourSet: null,
   getSupportedFlavours: function ()
