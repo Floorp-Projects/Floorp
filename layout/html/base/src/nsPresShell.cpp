@@ -100,6 +100,7 @@
 #include "nsCSSAtoms.h"
 #include "nsIObserverService.h" // for reflow observation
 #include "nsIDocShell.h"        // for reflow observation
+#include "nsIDOMRange.h"
 #ifdef MOZ_PERF_METRICS
 #include "nsITimeRecorder.h"
 #endif
@@ -147,6 +148,7 @@
 #include "nsContentCID.h"
 static NS_DEFINE_CID(kCSSStyleSheetCID, NS_CSS_STYLESHEET_CID);
 static NS_DEFINE_CID(kStyleSetCID, NS_STYLESET_CID);
+static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 
 // supporting bugs 31816, 20760, 22963
 // define USE_OVERRIDE to put prefs in as an override stylesheet
@@ -884,7 +886,7 @@ public:
                                     nsIRenderingContext** aContext);
   NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
                                        nsIFrame*       aFrame);
-  NS_IMETHOD GoToAnchor(const nsString& aAnchorName) const;
+  NS_IMETHOD GoToAnchor(const nsString& aAnchorName);
 
   NS_IMETHOD ScrollFrameIntoView(nsIFrame *aFrame,
                                  PRIntn   aVPercent, 
@@ -1089,6 +1091,8 @@ protected:
   nsresult CreatePreferenceStyleSheet(void);
   nsresult SetPrefColorRules(void);
   nsresult SetPrefLinkRules(void);
+
+  nsresult SelectContent(nsIContent *aContent);
 
   // IMPORTANT: The ownership implicit in the following member variables has been 
   // explicitly checked and set using nsCOMPtr for owning pointers and raw COM interface 
@@ -3431,7 +3435,7 @@ PresShell::CantRenderReplacedElement(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-PresShell::GoToAnchor(const nsString& aAnchorName) const
+PresShell::GoToAnchor(const nsString& aAnchorName)
 {
   nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(mDocument);
   nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
@@ -3518,9 +3522,43 @@ PresShell::GoToAnchor(const nsString& aAnchorName) const
     if (NS_SUCCEEDED(GetPrimaryFrameFor(content, &frame))) {
       rv = ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_TOP,
                                NS_PRESSHELL_SCROLL_ANYWHERE);
+
+      if (NS_SUCCEEDED(rv)) {
+        // Should we select the target?
+        // This action is controlled by a preference: the default is to not select.
+        nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID,&rv));
+        if (NS_SUCCEEDED(rv) && prefs) {
+          PRBool selectAnchor;
+          rv = prefs->GetBoolPref("layout.selectanchor",&selectAnchor);
+          if (NS_SUCCEEDED(rv) && selectAnchor) {
+            rv = SelectContent(content);
+          }
+        }
+      }
     }
   } else {
     rv = NS_ERROR_FAILURE;
+  }
+
+  return rv;
+}
+
+nsresult
+PresShell::SelectContent(nsIContent *aContent)
+{
+  nsresult rv;
+  nsCOMPtr<nsISelection> sel;
+  rv = GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(sel));
+  if (NS_SUCCEEDED(rv) && sel) {
+    nsCOMPtr<nsIDOMRange> range(do_CreateInstance(kRangeCID,&rv));
+    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aContent));
+    if (NS_SUCCEEDED(rv) && node) {
+      rv = range->SelectNode(node);
+      if (NS_SUCCEEDED(rv)) {
+        sel->RemoveAllRanges();
+        rv = sel->AddRange(range);
+      }
+    }
   }
 
   return rv;
