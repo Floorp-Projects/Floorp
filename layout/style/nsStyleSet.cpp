@@ -687,7 +687,7 @@ NS_IMETHODIMP StyleSetImpl::EnableQuirkStyleSheet(PRBool aEnable)
     }
   }
   if (mQuirkStyleSheet) {
-#ifdef DEBUG
+#if defined(DEBUG_warren) || defined(DEBUG_attinasi)
     printf( "%s Quirk StyleSheet\n", aEnable ? "Enabling" : "Disabling" );
 #endif
     mQuirkStyleSheet->SetEnabled(aEnable);
