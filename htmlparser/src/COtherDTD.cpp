@@ -1,31 +1,30 @@
-#if 1
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */  
-/*                               
+/*                                
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of 
  * the License at http://www.mozilla.org/NPL/
- *        
+ *              
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or 
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *  
+ *      
  * The Original Code is mozilla.org code. 
- * 
+ *  
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
- * Rights Reserved. 
+ * Rights Reserved.  
  * 
  * Contributor(s):   
  */          
     
-//#define ENABLE_CRC  
+//#define ENABLE_CRC   
 //#define RICKG_DEBUG    
-
+ 
       
-#include "nsDebug.h" 
+#include "nsDebug.h"  
 #include "nsIDTDDebug.h"  
 #include "COtherDTD.h" 
 #include "nsHTMLTokens.h"
@@ -49,7 +48,7 @@
 #include "nsHTMLEntities.h"
 #include "nsLinebreakConverter.h"
 
-#include "prmem.h"
+#include "prmem.h" 
 
 
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
@@ -60,7 +59,7 @@ static NS_DEFINE_IID(kClassIID,     NS_IOTHERHTML_DTD_IID);
 static const  char* kNullToken = "Error: Null token given";
 static const  char* kInvalidTagStackPos = "Error: invalid tag stack position";
 static char*        kVerificationDir = "c:/temp";
-
+ 
 
 #ifdef  ENABLE_CRC
 static char gShowCRC;
@@ -410,8 +409,8 @@ eAutoDetectResult COtherDTD::CanParse(CParserContext& aParserContext,nsString& a
       }
     }
     return result;
-  }
-  return result;
+  } 
+  return result; 
 }
 
  
@@ -2028,6 +2027,4 @@ nsresult COtherDTD::WillInterruptParse(void){
 
   return result;
 }
-
-#endif /* From #if 0 at the begining */
 

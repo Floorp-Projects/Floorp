@@ -105,15 +105,9 @@ public:
     PRUint32  mIsContainer:1;
     PRUint32  mForDTDUseOnly:1;
     PRUint32  mDiscardTag:1;
-    PRUint32  mLegalOpen:1;
     PRUint32  mPropagateDepth:4;
     PRUint32  mBadContentWatch:1;
-    PRUint32  mNoStylesLeakOut:1;
-    PRUint32  mNoStylesLeakIn:1;
     PRUint32  mMustCloseSelf:1;
-    PRUint32  mSaveMisplaced:1;
-    PRUint32  mHandleStrayTags:1;
-    PRUint32  mRequiresBody:1;
     PRUint32  mOmitWS:1;
   };
 
@@ -224,8 +218,6 @@ public:
 
   static CGroupMembers& GetContainedGroups(void) {
     static CGroupMembers theGroups={0};
-    theGroups.mBits.mLeaf=1;
-    theGroups.mBits.mWhiteSpace=1;
     return theGroups;
   }
 
@@ -308,9 +300,17 @@ public:
     return theBlockGroup;
   }
 
+    //by default,members of the block group contain inline children
   static CGroupMembers& GetContainedGroups(void) {
     static CGroupMembers theGroups=CInlineElement::GetContainedGroups();
     theGroups.mBits.mSelf=0;
+    return theGroups;
+  }
+
+    //call this if you want a group that contains only block elements...
+  static CGroupMembers& GetBlockGroupMembers(void) {
+    static CGroupMembers theGroups={0};
+    theGroups.mBits.mBlock=1;
     return theGroups;
   }
 
@@ -587,6 +587,12 @@ public:
 class CFrameElement: public CElement {
 public:
 
+
+  static CGroupMembers& GetGroup(void) {
+    static CGroupMembers theGroup={0};
+    theGroup.mBits.mFrame=1;
+    return theGroup;
+  }
 
   static void Initialize(CElement& anElement,eHTMLTags aTag){
     anElement.mProperties.mIsContainer=1;
@@ -1040,6 +1046,8 @@ public:
 /**********************************************************
   This is for the body element...
  **********************************************************/
+static eHTMLTags gBodyKids[] = {eHTMLTag_del, eHTMLTag_ins, eHTMLTag_script, eHTMLTag_unknown};
+
 class CBodyElement: public CElement {
 public:
 
@@ -1050,9 +1058,8 @@ public:
     return theGroup;
   }
 
-  static CGroupMembers& GetContainedGroups(void) {
-    static CGroupMembers theGroups={0};
-    theGroups.mBits.mBlock=1;
+  CBodyElement(eHTMLTags aTag=eHTMLTag_body) : CElement(aTag) {    
+    CGroupMembers theGroups=CBlockElement::GetBlockGroupMembers();
 #ifdef  TRANSITIONAL
     theGroups.mBits.mComment=1;
     theGroups.mBits.mSpecial=1;
@@ -1060,14 +1067,9 @@ public:
     theGroups.mBits.mFontStyle=1;
     theGroups.mBits.mFormControl=1;
     theGroups.mBits.mLeaf=1;
-
 #endif
-    return theGroups;
-  }
-
-
-  CBodyElement(eHTMLTags aTag=eHTMLTag_body) : CElement(aTag) {    
-    CElement::Initialize(*this,aTag,CBodyElement::GetGroup(),CBodyElement::GetContainedGroups());
+    CElement::Initialize(*this,aTag,CBodyElement::GetGroup(),theGroups);
+    mIncludeKids=gBodyKids;
   }
 
   virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
@@ -1097,6 +1099,9 @@ public:
     return result;
   }
 
+protected:
+
+
 };
 
 
@@ -1120,7 +1125,7 @@ public:
   {
     memset(mElements,0,sizeof(mElements));
     InitializeElements();
-    //DebugDumpContainment("all elements");
+    DebugDumpContainment("all elements");
   }
 
 
@@ -1144,6 +1149,7 @@ public:
 
 static CElementTable *gElementTable = 0;
 
+static eHTMLTags kAppletKids[]={eHTMLTag_param,eHTMLTag_unknown};
 static eHTMLTags kDLKids[]={eHTMLTag_dd,eHTMLTag_dt,eHTMLTag_unknown};
 static eHTMLTags kAutoCloseDD[]={eHTMLTag_dd,eHTMLTag_dt,eHTMLTag_dl,eHTMLTag_unknown};
 static eHTMLTags kButtonExcludeKids[]={ eHTMLTag_a,eHTMLTag_button,eHTMLTag_select,eHTMLTag_textarea,
@@ -1153,8 +1159,7 @@ static eHTMLTags kColgroupKids[]={eHTMLTag_col,eHTMLTag_unknown};
 static eHTMLTags kDirKids[]={eHTMLTag_li,eHTMLTag_unknown};
 static eHTMLTags kOptionGroupKids[]={eHTMLTag_option,eHTMLTag_unknown};
 static eHTMLTags kFieldsetKids[]={eHTMLTag_legend,eHTMLTag_unknown};
-static eHTMLTags kFormKids[]={eHTMLTag_button,eHTMLTag_input,eHTMLTag_select,eHTMLTag_textarea,eHTMLTag_unknown};
-static eHTMLTags kFormExcludeKids[]={eHTMLTag_form,eHTMLTag_unknown};
+static eHTMLTags kFormKids[]={eHTMLTag_script,eHTMLTag_unknown};
 static eHTMLTags kLIExcludeKids[]={eHTMLTag_dir,eHTMLTag_menu,eHTMLTag_unknown};
 static eHTMLTags kMapKids[]={eHTMLTag_area,eHTMLTag_unknown};
 static eHTMLTags kPreExcludeKids[]={eHTMLTag_image,eHTMLTag_object,eHTMLTag_applet,
@@ -1164,6 +1169,8 @@ static eHTMLTags kSelectKids[]={eHTMLTag_optgroup,eHTMLTag_option,eHTMLTag_unkno
 static eHTMLTags kBlockQuoteKids[]={eHTMLTag_script,eHTMLTag_unknown};
 static eHTMLTags kFramesetKids[]={eHTMLTag_noframes,eHTMLTag_unknown};
 static eHTMLTags kObjectKids[]={eHTMLTag_param,eHTMLTag_unknown};
+static eHTMLTags kTBodyKids[]={eHTMLTag_tr,eHTMLTag_unknown};
+static eHTMLTags kTRKids[]={eHTMLTag_td,eHTMLTag_th,eHTMLTag_unknown};
 
 /***********************************************************************************
   This method is pretty interesting, because it's where the elements all get 
@@ -1185,6 +1192,7 @@ void CElementTable::InitializeElements() {
   CBlockElement::Initialize(        mDfltElements[eHTMLTag_address],    eHTMLTag_address);
 
   CElement::Initialize(             mDfltElements[eHTMLTag_applet],     eHTMLTag_applet,CSpecialElement::GetGroup(), CFlowElement::GetContainedGroups());
+  mDfltElements[eHTMLTag_applet].mIncludeKids=kAppletKids;
 
   CElement::Initialize(             mDfltElements[eHTMLTag_area],       eHTMLTag_area);
   mDfltElements[eHTMLTag_area].mContainsGroups.mBits.mSelf=0;
@@ -1197,9 +1205,7 @@ void CElementTable::InitializeElements() {
   CSpecialElement::Initialize(      mDfltElements[eHTMLTag_bdo],        eHTMLTag_bdo);
   CFontStyleElement::Initialize(    mDfltElements[eHTMLTag_big],        eHTMLTag_big);
   CLeafElement::Initialize(         mDfltElements[eHTMLTag_bgsound],    eHTMLTag_bgsound);
-  CBlockElement::Initialize(        mDfltElements[eHTMLTag_blockquote], eHTMLTag_blockquote);
-  mDfltElements[eHTMLTag_blockquote].mContainsGroups.mAllBits=0;
-  mDfltElements[eHTMLTag_blockquote].mContainsGroups.mBits.mBlock=1;
+  CElement::Initialize(             mDfltElements[eHTMLTag_blockquote], eHTMLTag_blockquote, CBlockElement::GetGroup(), CBlockElement::GetBlockGroupMembers());
   mDfltElements[eHTMLTag_blockquote].mIncludeKids=kBlockQuoteKids;
 
   //CBodyElement::Initialize(       mDfltElements[eHTMLTag_body],       eHTMLTag_body);
@@ -1215,6 +1221,8 @@ void CElementTable::InitializeElements() {
   CPhraseElement::Initialize(       mDfltElements[eHTMLTag_cite],       eHTMLTag_cite);
   CPhraseElement::Initialize(       mDfltElements[eHTMLTag_code],       eHTMLTag_code);
   CElement::Initialize(             mDfltElements[eHTMLTag_col],        eHTMLTag_col, CTableElement::GetGroup(), CLeafElement::GetContainedGroups());
+  mDfltElements[eHTMLTag_col].mProperties.mIsContainer=0;
+
   CTableElement::Initialize(        mDfltElements[eHTMLTag_colgroup],   eHTMLTag_colgroup);
   mDfltElements[eHTMLTag_colgroup].mContainsGroups.mAllBits=0;
   mDfltElements[eHTMLTag_colgroup].mIncludeKids=kColgroupKids;
@@ -1249,13 +1257,12 @@ void CElementTable::InitializeElements() {
   mDfltElements[eHTMLTag_fieldset].mIncludeKids=kFieldsetKids;
 
   CSpecialElement::Initialize(      mDfltElements[eHTMLTag_font],       eHTMLTag_font);
-  CElement::Initialize(             mDfltElements[eHTMLTag_form],       eHTMLTag_form, CFormControlElement::GetGroup(), CBlockElement::GetContainedGroups());
-  mDfltElements[eHTMLTag_form].mContainsGroups.mAllBits=0;
-  mDfltElements[eHTMLTag_form].mContainsGroups.mBits.mBlock=1;
+  CElement::Initialize(             mDfltElements[eHTMLTag_form],       eHTMLTag_form, CFormControlElement::GetGroup(), CBlockElement::GetBlockGroupMembers());
   mDfltElements[eHTMLTag_form].mIncludeKids=kFormKids;
-  mDfltElements[eHTMLTag_form].mExcludeKids=kFormExcludeKids;
 
-  CFrameElement::Initialize(        mDfltElements[eHTMLTag_frame],      eHTMLTag_frame);
+  CElement::Initialize(             mDfltElements[eHTMLTag_frame],      eHTMLTag_frame, CFrameElement::GetGroup(), CLeafElement::GetContainedGroups());
+  mDfltElements[eHTMLTag_frame].mProperties.mIsContainer=0;
+
   CFrameElement::Initialize(        mDfltElements[eHTMLTag_frameset],   eHTMLTag_frameset);
   mDfltElements[eHTMLTag_frameset].mIncludeKids=kFramesetKids;
   
@@ -1287,15 +1294,14 @@ void CElementTable::InitializeElements() {
   mDfltElements[eHTMLTag_label].mContainsGroups.mBits.mSelf=0;
 
   CElement::Initialize(             mDfltElements[eHTMLTag_layer],      eHTMLTag_layer);
-  CElement::Initialize(             mDfltElements[eHTMLTag_legend],     eHTMLTag_legend,CFormControlElement::GetGroup(), CInlineElement::GetContainedGroups());
+  CElement::Initialize(             mDfltElements[eHTMLTag_legend],     eHTMLTag_legend,  CFormControlElement::GetGroup(), CInlineElement::GetContainedGroups());
   CElement::Initialize(             mDfltElements[eHTMLTag_li],         eHTMLTag_li,    CListElement::GetGroup(), CFlowElement::GetContainedGroups());
   mDfltElements[eHTMLTag_li].mExcludeKids=kLIExcludeKids;
 
   CElement::InitializeLeaf(         mDfltElements[eHTMLTag_link],       eHTMLTag_link,  CHeadElement::GetMiscGroup(), CLeafElement::GetContainedGroups());
   CElement::Initialize(             mDfltElements[eHTMLTag_listing],    eHTMLTag_listing);
 
-  CElement::Initialize(             mDfltElements[eHTMLTag_map],        eHTMLTag_map,   CSpecialElement::GetGroup(), CFlowElement::GetContainedGroups());
-  mDfltElements[eHTMLTag_map].mProperties.mIsContainer=1;
+  CElement::Initialize(             mDfltElements[eHTMLTag_map],        eHTMLTag_map,   CSpecialElement::GetGroup(), CBlockElement::GetBlockGroupMembers());
   mDfltElements[eHTMLTag_map].mIncludeKids=kMapKids;
 
   CBlockElement::Initialize(        mDfltElements[eHTMLTag_menu],       eHTMLTag_menu);
@@ -1327,8 +1333,8 @@ void CElementTable::InitializeElements() {
   mDfltElements[eHTMLTag_optgroup].mIncludeKids=kOptionGroupKids;
 
   CFormControlElement::Initialize(  mDfltElements[eHTMLTag_option],     eHTMLTag_option);
-  mDfltElements[eHTMLTag_optgroup].mContainsGroups.mAllBits=0;
-  mDfltElements[eHTMLTag_optgroup].mContainsGroups.mBits.mLeaf=1;
+  mDfltElements[eHTMLTag_option].mContainsGroups.mAllBits=0;
+  mDfltElements[eHTMLTag_option].mContainsGroups.mBits.mLeaf=1;
 
   CElement::Initialize(             mDfltElements[eHTMLTag_p],          eHTMLTag_p, CBlockElement::GetGroup(), CInlineElement::GetContainedGroups());
   CElement::InitializeLeaf(         mDfltElements[eHTMLTag_param],      eHTMLTag_param, CSpecialElement::GetGroup(), CLeafElement::GetContainedGroups());
@@ -1361,17 +1367,24 @@ void CElementTable::InitializeElements() {
   CSpecialElement::Initialize(      mDfltElements[eHTMLTag_sup],        eHTMLTag_sup);
 
   CElement::Initialize(             mDfltElements[eHTMLTag_table],      eHTMLTag_table,  CBlockElement::GetGroup(), CTableElement::GetContainedGroups());
-  CElement::Initialize(             mDfltElements[eHTMLTag_tbody],      eHTMLTag_tbody);
-  CElement::Initialize(             mDfltElements[eHTMLTag_td],         eHTMLTag_td, CTableElement::GetGroup(), CFlowElement::GetContainedGroups());
+  CElement::Initialize(             mDfltElements[eHTMLTag_tbody],      eHTMLTag_tbody,  CTableElement::GetGroup(), CLeafElement::GetContainedGroups());
+  mDfltElements[eHTMLTag_tbody].mIncludeKids=kTBodyKids;
 
-  CFormControlElement::Initialize(  mDfltElements[eHTMLTag_textarea],   eHTMLTag_textarea);
-  mDfltElements[eHTMLTag_textarea].mGroup.mBits.mLeaf=1;
-  mDfltElements[eHTMLTag_textarea].mGroup.mBits.mWhiteSpace=1;
+  CElement::Initialize(             mDfltElements[eHTMLTag_td],         eHTMLTag_td,      CTableElement::GetGroup(), CFlowElement::GetContainedGroups());
 
-  CTableElement::Initialize(        mDfltElements[eHTMLTag_tfoot],      eHTMLTag_tfoot);
-  CElement::Initialize(             mDfltElements[eHTMLTag_th],         eHTMLTag_th, CTableElement::GetGroup(), CFlowElement::GetContainedGroups());
-  CTableElement::Initialize(        mDfltElements[eHTMLTag_thead],      eHTMLTag_thead);
-  CTableElement::Initialize(        mDfltElements[eHTMLTag_tr],         eHTMLTag_tr);
+  CElement::Initialize(             mDfltElements[eHTMLTag_textarea],   eHTMLTag_textarea, CFormControlElement::GetGroup(), CLeafElement::GetContainedGroups());
+  mDfltElements[eHTMLTag_textarea].mContainsGroups.mBits.mLeaf=1;
+  mDfltElements[eHTMLTag_textarea].mContainsGroups.mBits.mWhiteSpace=1;
+
+  CElement::Initialize(             mDfltElements[eHTMLTag_tfoot],      eHTMLTag_tfoot,   CTableElement::GetGroup(), CLeafElement::GetContainedGroups());
+  mDfltElements[eHTMLTag_tfoot].mIncludeKids=kTBodyKids;
+
+  CElement::Initialize(             mDfltElements[eHTMLTag_th],         eHTMLTag_th,      CTableElement::GetGroup(), CFlowElement::GetContainedGroups());
+  CElement::Initialize(             mDfltElements[eHTMLTag_thead],      eHTMLTag_thead,   CTableElement::GetGroup(), CLeafElement::GetContainedGroups());
+  mDfltElements[eHTMLTag_thead].mIncludeKids=kTBodyKids;
+
+  CElement::Initialize(             mDfltElements[eHTMLTag_tr],         eHTMLTag_tr,      CTableElement::GetGroup(), CFlowElement::GetContainedGroups());
+
   CElement::Initialize(             mDfltElements[eHTMLTag_title],      eHTMLTag_title);
 
   CFontStyleElement::Initialize(    mDfltElements[eHTMLTag_tt],         eHTMLTag_tt);
@@ -1484,7 +1497,7 @@ void CElementTable::DebugDumpGroups(CElement* aTag){
  
   }
   else {
-    printf("not container\n");
+    printf("empty\n");
   }
 }
 
