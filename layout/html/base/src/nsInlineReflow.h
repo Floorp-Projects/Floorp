@@ -89,13 +89,6 @@ public:
     return mRightEdge - mX;
   }
 
-  /**
-   * Calculate the line-height value for a given frame.
-   */
-  static nscoord CalcLineHeightFor(nsIPresContext& aPresContext,
-                                   nsIFrame* aFrame,
-                                   nscoord aBaseLineHeight);
-
 protected:
   nsresult SetFrame(nsIFrame* aFrame);
 
