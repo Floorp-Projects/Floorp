@@ -154,3 +154,36 @@
     {
       padding             : 20px 44px 10px 44px;
     }    
+    
+/* Double Border Boxes */
+
+  /* top only */
+  .double-box-top
+    {
+      behavior            : url("chrome://global/skin/classicBindings.xml#double-box");
+      border-top          : 1px solid threedshadow;
+      background-color    : #FFFFFF;
+      margin              : 0px;
+    }
+  
+  .double-box-top > .db-internal-box
+    {
+      border-top          : 1px solid threeddarkshadow;
+    }          
+    
+  /* all round */    
+  .double-box
+    {
+      behavior              : url("chrome://global/skin/classicBindings.xml#double-box");
+      border-left           : 1px solid threedshadow;
+      border-top            : 1px solid threedshadow;
+      border-bottom         : 1px solid threedhighlight;
+      border-right          : 1px solid threedhighlight;
+      background-color      : #FFFFFF;
+      margin                : 0px;
+    }
+  
+  .double-box > .db-internal-box
+    {
+      border                : 1px solid threeddarkshadow;
+    }   

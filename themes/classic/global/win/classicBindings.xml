@@ -138,5 +138,13 @@
       </xul:box>
     </content>
   </binding>
+
+  <binding id="splitter-hack" extends="xul:splitter">
+    <content>
+      <xul:box class="splitter-hack-box" flex="1" autostretch="never">
+        <children/>
+      </xul:box>
+    </content>
+  </binding>
   
 </bindings>

@@ -57,6 +57,23 @@ treecell
     padding               : 0px;
   }
 
+/* slimline sidebar treeheaders */  
+.treecell-header.treecell-header-sidebarpanel,
+.treecell-inset-header.treecell-header-sidebarpanel
+  {
+    border-left           : none !important;
+    border-top            : 1px solid threedhighlight !important;
+    border-bottom         : 1px solid threedshadow !important;
+    border-right          : none !important;
+    padding               : 0px 0px 0px 3px;
+  }
+
+.treecell-header-sidebarpanel > .treecell-header-box
+  {
+    border                : none !important;
+    border-right          : 1px solid threedface !important;
+  }
+ 
 .treecell-header-image 
   {
     behavior              : url("chrome://global/skin/treeBindings.xml#treecell-header-image");

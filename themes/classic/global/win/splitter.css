@@ -17,7 +17,7 @@
   
   grippy:hover
     {
-  	  background-color      : #CCCCFF;
+      background-color      : #CCCCFF;
     }
   
   splitter[state="collapsed"] > grippy
@@ -45,15 +45,21 @@
       background-image      : url("chrome://global/skin/splitter-drag-bg.gif");
     }
   
-  rows > splitter,
+  rows > splitter
+    {
+      cursor              : n-resize;
+    }
+    
   window[orient="vertical"] > splitter,
   box[orient="vertical"] > splitter,
   window[align="vertical"] > splitter,
   box[align="vertical"] > splitter
     {
       cursor              : n-resize;
+      behavior            : url("chrome://global/skin/classicBindings.xml#splitter-hack");
+      border-top          : 1px solid threedhighlight;
     }
-
+    
 /* Grippy alignment */
   splitter[autostretch="never"]
     {
@@ -70,8 +76,17 @@
   box > splitter > grippy
     {
       list-style-image    : url("chrome://global/skin/grippy-horizontal-before.gif");
+      border-left         : none;
+      border-right        : none;
     }  
     
+  window > splitter > grippy > .grippy-box,
+  box > splitter > grippy > .grippy-box
+    {
+      border-left         : none;
+      border-right        : none;
+    }  
+
   window > splitter[state="collapsed"] > grippy,
   box > splitter[state="collapsed"] > grippy
     {
@@ -96,8 +111,21 @@
   box[orient="vertical"] > splitter > grippy
     {
       list-style-image    : url("chrome://global/skin/grippy-vertical-before.gif");
+      border-left         : 1px solid threedshadow;
+      border-right        : 1px solid threedhighlight;
+      border-top          : none;
+      border-bottom       : none;
     }  
     
+  window[orient="vertical"] > splitter > grippy > .grippy-box,
+  box[orient="vertical"] > splitter > grippy > .grippy-box
+    {
+      border-left         : 1px solid threedhighlight;
+      border-right        : 1px solid threedshadow;
+      border-top          : none;
+      border-bottom       : none;
+    }  
+
   window[orient="vertical"] > splitter[state="collapsed"] > grippy,
   box[orient="vertical"] > splitter[state="collapsed"] > grippy
     {
