@@ -58,6 +58,10 @@ public:
   // normalize string before collation key generation
   nsresult NormalizeString(nsAutoString& stringInOut);
 
+  // charset conversion util, C string buffer is allocate by PR_Malloc, caller should call PR_Free
+  nsresult UnicodeToChar(const nsString& src, char** dst, const nsString& aCharset);
+
+
 protected:
   nsICaseConversion*  mCaseConversion;
 };
