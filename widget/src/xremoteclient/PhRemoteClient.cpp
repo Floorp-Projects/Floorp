@@ -74,11 +74,16 @@ XRemoteClient::Init (void)
 }
 
 NS_IMETHODIMP
-XRemoteClient::SendCommand (const char *aCommand, PRBool *aWindowFound)
+XRemoteClient::SendCommand (const char *aProgram, const char *aUsername,
+                            const char *aProfile, const char *aCommand,
+                            char **aResponse, PRBool *aWindowFound)
 {
   *aWindowFound = PR_TRUE;
 
 	char *RemoteServerName;
+
+	/* ATENTIE: register connections based on ProfileName and find the appropiate connection
+		based on the aProfile argument */
 
 	if( !strncmp( aCommand, "mping", 5 ) ) {
 		RemoteServerName = MailRemoteServerName;
