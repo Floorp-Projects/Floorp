@@ -107,6 +107,10 @@ ifeq ($(OS_ARCH),NCR)
 MDCPUCFG_H = _ncr.cfg
 endif
 
+ifeq ($(OS_ARCH),dgux)
+MDCPUCFG_H = _dgux.cfg
+endif
+
 export:: $(HEADERS) $(MDCPUCFG_H)
 	$(INSTALL) -m 444 $(HEADERS) $(DIST)/include/md
 	$(INSTALL) -m 444 $(MDCPUCFG_H) $(DIST)/include
