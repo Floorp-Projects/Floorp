@@ -98,7 +98,8 @@ void CnsIEditSession::MakeWinEditTest(PRBool afterUriLoad)
 	editingSession = GetEditSessionObject();
 	domWindow = GetTheDOMWindow(qaWebBrowser);
 	if (domWindow && editingSession) {
-		rv= editingSession->MakeWindowEditable(domWindow, NULL, afterUriLoad);
+		// aEditorType (2nd param) is crashing with null entry. bug 174151
+		rv= editingSession->MakeWindowEditable(domWindow, "text", afterUriLoad);
 		RvTestResult(rv, "MakeWindowEditable() test", 2);
 	}
 	else
