@@ -109,8 +109,8 @@ void nsToolkit::RunPump(void* arg)
   delete info;
 
   // system wide unique names
-  sprintf(portname, "event%lx", PR_GetCurrentThread());
-  sprintf(semname, "sync%lx", PR_GetCurrentThread());
+  sprintf(portname, "event%p", PR_GetCurrentThread());
+  sprintf(semname, "sync%p", PR_GetCurrentThread());
 
   port_id	event = create_port(100, portname);
   sem_id	sync = create_sem(0, semname);
@@ -258,8 +258,8 @@ void nsToolkit::GetInterface()
     char portname[64];
     char semname[64];
 
-    sprintf(portname, "event%lx", mGuiThread);
-    sprintf(semname, "sync%lx", mGuiThread);
+    sprintf(portname, "event%p", mGuiThread);
+    sprintf(semname, "sync%p", mGuiThread);
 
     eventport = find_port(portname);
     syncsem = my_find_sem(semname);
