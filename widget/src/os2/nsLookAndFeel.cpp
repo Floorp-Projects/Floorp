@@ -109,6 +109,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       idx = SYSCLR_BACKGROUND;
       break;
     case eColor_buttonface:
+    case eColor__moz_buttonhoverface:
       idx = SYSCLR_BUTTONMIDDLE;
       break;
     case eColor_buttonhighlight:
@@ -118,6 +119,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       idx = SYSCLR_BUTTONDARK;
       break;
     case eColor_buttontext:
+    case eColor__moz_buttonhovertext:
       idx = SYSCLR_MENUTEXT;
       break;
     case eColor_captiontext:
@@ -127,9 +129,11 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       idx = SYSCLR_MENUDISABLEDTEXT;
       break;
     case eColor_highlight:
+    case eColor__moz_menuhover:
       idx = SYSCLR_HILITEBACKGROUND;
       break;
     case eColor_highlighttext:
+    case eColor__moz_menuhovertext:
       idx = SYSCLR_HILITEFOREGROUND;
       break;
     case eColor_inactiveborder:
@@ -187,9 +191,11 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       idx = SYSCLR_WINDOWTEXT;
       break;
     case eColor__moz_dialog:
+    case eColor__moz_cellhighlight:
       idx = SYSCLR_DIALOGBACKGROUND;
       break;
     case eColor__moz_dialogtext:
+    case eColor__moz_cellhighlighttext:
       idx = SYSCLR_WINDOWTEXT;
       break;
     case eColor__moz_buttondefault:

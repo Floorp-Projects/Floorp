@@ -229,8 +229,8 @@ classic.jar:
   skin/classic/global/autocomplete.css                        (global/unix/autocomplete.css)
 * skin/classic/global/checkbox.css                            (global/unix/checkbox.css)
 * skin/classic/global/radio.css                               (global/unix/radio.css)
-* skin/classic/global/button.css                              (global/unix/button.css)
-* skin/classic/global/toolbarbutton.css                       (global/unix/toolbarbutton.css)
+  skin/classic/global/button.css                              (global/unix/button.css)
+  skin/classic/global/toolbarbutton.css                       (global/unix/toolbarbutton.css)
   skin/classic/global/global.css                              (global/unix/global.css)
 #else
   skin/classic/global/autocomplete.css                        (global/win/autocomplete.css)

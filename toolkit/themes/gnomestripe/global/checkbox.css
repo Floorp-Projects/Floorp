@@ -98,9 +98,8 @@ checkbox[disabled="true"] {
 }
 
 checkbox:hover {
-  color: -moz-gtk2-hovertext;
+  color: -moz-buttonhovertext;
 }
-
 checkbox:hover:active > .checkbox-spacer-box > .checkbox-check {
   background-color: -moz-Dialog;
 }

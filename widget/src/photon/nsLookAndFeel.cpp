@@ -120,9 +120,11 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
 		aColor = PH_TO_NS_RGB(Pg_DGREY);
 		break;
 	  case eColor_highlight:
+	  case eColor__moz_menuhover:
 		aColor = PH_TO_NS_RGB(0x9ba9c9); // bill blue
 		break;
 	  case eColor_highlighttext:
+	  case eColor__moz_menuhovertext:
 		aColor = PH_TO_NS_RGB(Pg_BLACK);
 		break;
 	  case eColor_inactiveborder:
@@ -151,6 +153,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
 		break;
 	  case eColor_threedface:
 	  case eColor_buttonface:
+	  case eColor__moz_buttonhoverface:
 		aColor = PH_TO_NS_RGB(Pg_LGREY);
 		break;
 
@@ -160,6 +163,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
 		break;
 
 	  case eColor_buttontext:
+	  case eColor__moz_buttonhovertext:
 		aColor = PH_TO_NS_RGB(Pg_BLACK);
 		break;
 
@@ -200,10 +204,12 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
 	  break;
 
 	case eColor__moz_dialog:
+	case eColor__moz_cellhighlight:
 	  aColor = PH_TO_NS_RGB(Pg_LGREY);
 	  break;
 
 	case eColor__moz_dialogtext:
+	case eColor__moz_cellhighlighttext:
 	  aColor = PH_TO_NS_RGB(Pg_BLACK);
 	  break;
 

@@ -47,6 +47,8 @@
 nscolor nsLookAndFeel::sInfoText = 0;
 nscolor nsLookAndFeel::sInfoBackground = 0;
 nscolor nsLookAndFeel::sMenuText = 0;
+nscolor nsLookAndFeel::sMenuHover = 0;
+nscolor nsLookAndFeel::sMenuHoverText = 0;
 nscolor nsLookAndFeel::sMenuBackground = 0;
 nscolor nsLookAndFeel::sButtonBackground = 0;
 nscolor nsLookAndFeel::sButtonText = 0;
@@ -150,11 +152,11 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
         break;
     case eColor_highlight:
         // background of selected item
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_SELECTED]);
+        aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_SELECTED]);
         break;
     case eColor_highlighttext:
         // text of selected item
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_SELECTED]);
+        aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_SELECTED]);
         break;
     case eColor_inactiveborder:
         // inactive window border
@@ -255,8 +257,23 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
         // default button border color
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->black);
         break;
-    case eColor__moz_gtk2_hovertext:
+    case eColor__moz_buttonhoverface:
+        aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_PRELIGHT]);
+        break;
+    case eColor__moz_buttonhovertext:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_PRELIGHT]);
+        break;
+    case eColor__moz_cellhighlight:
+        aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_ACTIVE]);
+        break;
+    case eColor__moz_cellhighlighttext:
+        aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_ACTIVE]);
+        break;
+    case eColor__moz_menuhover:
+        aColor = sMenuHover;
+        break;
+    case eColor__moz_menuhovertext:
+        aColor = sMenuHoverText;
         break;
     default:
         /* default color is BLACK */
@@ -485,6 +502,10 @@ nsLookAndFeel::InitColors()
 
     style = gtk_widget_get_style(menu);
     sMenuBackground = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
+    
+    style = gtk_widget_get_style(menuitem);
+    sMenuHover = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_PRELIGHT]);
+    sMenuHoverText = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_PRELIGHT]);
 
     gtk_widget_unref(menu);
 

@@ -106,6 +106,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       idx = COLOR_BACKGROUND;
       break;
     case eColor_buttonface:
+    case eColor__moz_buttonhoverface:
       idx = COLOR_BTNFACE;
       break;
     case eColor_buttonhighlight:
@@ -115,6 +116,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       idx = COLOR_BTNSHADOW;
       break;
     case eColor_buttontext:
+    case eColor__moz_buttonhovertext:
       idx = COLOR_BTNTEXT;
       break;
     case eColor_captiontext:
@@ -124,9 +126,11 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       idx = COLOR_GRAYTEXT;
       break;
     case eColor_highlight:
+    case eColor__moz_menuhover:
       idx = COLOR_HIGHLIGHT;
       break;
     case eColor_highlighttext:
+    case eColor__moz_menuhovertext:
       idx = COLOR_HIGHLIGHTTEXT;
       break;
     case eColor_inactiveborder:
@@ -184,9 +188,11 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       idx = COLOR_WINDOWTEXT;
       break;
     case eColor__moz_dialog:
+    case eColor__moz_cellhighlight:
       idx = COLOR_3DFACE;
       break;
     case eColor__moz_dialogtext:
+    case eColor__moz_cellhighlighttext:
       idx = COLOR_WINDOWTEXT;
       break;
     case eColor__moz_dragtargetzone:

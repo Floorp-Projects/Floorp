@@ -75,9 +75,8 @@ toolbarbutton[buttonover="true"] {
   -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
   -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
   -moz-border-left-colors: ThreeDDarkShadow ThreeDHighlight;
-#ifdef MOZ_WIDGET_GTK2
-  color: -moz-gtk2-hovertext;
-#endif
+  color: -moz-buttonhovertext;
+  background-color: -moz-buttonhoverface;
 } 
     
 toolbarbutton:hover:active,
@@ -87,9 +86,7 @@ toolbarbutton[open="true"] {
   -moz-border-bottom-colors: ThreeDDarkShadow ThreeDHighlight;
   -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
   padding: 3px 1px 1px 3px;
-#ifdef MOZ_WIDGET_GTK2
   color: ButtonText;
-#endif
 }
 
 toolbarbutton[disabled="true"],

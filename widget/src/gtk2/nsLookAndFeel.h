@@ -64,6 +64,8 @@ protected:
     static nscolor sInfoText;
     static nscolor sMenuBackground;
     static nscolor sMenuText;
+    static nscolor sMenuHover;
+    static nscolor sMenuHoverText;
     static nscolor sButtonBackground;
     static nscolor sButtonText;
     static nscolor sButtonOuterLightBorder;

@@ -113,9 +113,11 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
         aColor = NS_RGB(0x80, 0x80, 0x80);
         break;
     case eColor_highlight:
+    case eColor__moz_menuhover:
         aColor = NS_RGB(0x00, 0x00, 0x9c);
         break;
     case eColor_highlighttext:
+    case eColor__moz_menuhovertext:
         aColor = NS_RGB(0xff, 0xff, 0xff);
         break;
     case eColor_inactiveborder:
@@ -146,6 +148,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor_threedface:
           // 3-D face color
     case eColor_buttonface:
+    case eColor__moz_buttonhoverface:
           // 3-D face color
     case eColor_threedlightshadow:
           // 3-D inner highlight color
@@ -160,6 +163,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
         break;
 
     case eColor_buttontext:
+    case eColor__moz_buttonhovertext:
         aColor = NS_RGB(0x00, 0x00, 0x00);
         break;
 
@@ -191,9 +195,11 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
         aColor = NS_RGB(0x00, 0x00, 0x00);
         break;
     case eColor__moz_dialog:
+    case eColor__moz_cellhighlight:
         aColor = NS_RGB(0xcc, 0xcc, 0xcc);
         break;
     case eColor__moz_dialogtext:
+    case eColor__moz_cellhighlighttext:
         aColor = NS_RGB(0x00, 0x00, 0x00);
         break;
 

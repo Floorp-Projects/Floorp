@@ -63,7 +63,8 @@ menuitem[default="true"] {
 #ifdef MOZ_WIDGET_GTK2
 menu[_moz-menuactive="true"],
 menuitem[_moz-menuactive="true"] {
-  color: -moz-gtk2-hovertext;
+  color: -moz-menuhovertext;
+  background-color: -moz-menuhover;
 }
 
 menubar > menu[_moz-menuactive="true"] {
@@ -71,7 +72,8 @@ menubar > menu[_moz-menuactive="true"] {
 }
 
 menubar > menu[open] {
-  color: -moz-gtk2-hovertext;
+  color: -moz-menuhovertext;
+  background-color: -moz-menuhover;
 }
 #endif
   

@@ -114,6 +114,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
         break;
     case eColor_highlight: // CSS2 color
     case eColor_TextSelectBackground:
+    case eColor__moz_menuhover:
         // XXX can probably just always use GetMacBrushColor here
 #ifdef MOZ_WIDGET_COCOA
         res = GetMacBrushColor(kThemeBrushPrimaryHighlightColor, aColor, NS_RGB(0x00,0x00,0x00));
@@ -132,6 +133,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
         break;
     case eColor_highlighttext:  // CSS2 color
     case eColor_TextSelectForeground:
+    case eColor__moz_menuhovertext:
     		GetColor(eColor_TextSelectBackground, aColor);
     		if (aColor == 0x000000)
 					aColor = NS_RGB(0xff,0xff,0xff);
@@ -152,6 +154,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     //
     
     case eColor_buttontext:
+    case eColor__moz_buttonhovertext:
     	res = GetMacTextColor(kThemeTextColorPushButtonActive, aColor, NS_RGB(0x00,0x00,0x00));
 	    break;
     case eColor_captiontext:
@@ -194,6 +197,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
         res = NS_OK;
         break;
     case eColor_buttonface:
+    case eColor__moz_buttonhoverface:
     	res = GetMacBrushColor(kThemeBrushButtonFaceActive, aColor, NS_RGB(0xDD,0xDD,0xDD));
 	    break;
     case eColor_buttonhighlight:
@@ -269,12 +273,14 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
         res = GetMacTextColor(kThemeTextColorDialogActive, aColor, NS_RGB(0x00,0x00,0x00));
         break;
     case eColor__moz_dialog:
+    case eColor__moz_cellhighlight:
         // XXX There may be a better color for this, but I'm making it
         // the same as ThreeDFace since that's what's currently used where
         // I will use -moz-Dialog:
         res = GetMacBrushColor(kThemeBrushButtonFaceActive, aColor, NS_RGB(0xDD,0xDD,0xDD));
         break;
     case eColor__moz_dialogtext:
+    case eColor__moz_cellhighlighttext:
         // XXX There may be a better color for this, but I'm making it
         // the same as WindowText since that's what's currently used where
         // I will use -moz-DialogText.

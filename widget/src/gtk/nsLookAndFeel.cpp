@@ -145,10 +145,12 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
     // or maybe mStyle->text?
     break;
   case eColor_highlight:
+  case eColor__moz_menuhover:
       // background of selected item
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_SELECTED]);
     break;
   case eColor_highlighttext:
+  case eColor__moz_menuhovertext:
       // text of selected item
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_SELECTED]);
     break;
@@ -187,11 +189,13 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
 
   case eColor_threedface:
   case eColor_buttonface:
+  case eColor__moz_buttonhoverface:
       // 3-D face color
     aColor = sButtonBackground;
     break;
 
   case eColor_buttontext:
+  case eColor__moz_buttonhovertext:
       // text on push buttons
     aColor = sButtonText;
     break;
@@ -239,9 +243,11 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
     break;
   case eColor__moz_dialog:
+  case eColor__moz_cellhighlight:
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
     break;
   case eColor__moz_dialogtext:
+  case eColor__moz_cellhighlighttext:
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
     break;
   case eColor__moz_dragtargetzone:
