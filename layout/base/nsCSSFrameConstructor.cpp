@@ -4698,28 +4698,18 @@ nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresContext*  aPresContex
     if (0 == altText.Length()) {
       // If there's no "title" attribute, then use the filename minus the
       // extension
-      nsAutoString  srcURI;
+      imageElement->GetSrc(altText);
+      if (altText.Length() > 0) {
+        // Trim off the path part of the filename
+        PRInt32 offset = altText.RFind('/');
+        if (offset >= 0) {
+          altText.Cut(0, offset + 1);
+        }
 
-      imageElement->GetSrc(srcURI);
-      if (srcURI.Length() > 0) {
-        nsIURL* url;
-        if (NS_SUCCEEDED(NS_NewURL(&url, srcURI))) {
-          const char* file;
-          url->GetFile(&file);
-          altText = file;
-          NS_RELEASE(url);
-
-          // Trim off the path part of the filename
-          PRInt32 offset = altText.RFind('/');
-          if (offset >= 0) {
-            altText.Cut(0, offset + 1);
-          }
-
-          // Trim off the extension
-          offset = altText.RFind('.');
-          if (offset >= 0) {
-            altText.Truncate(offset);
-          }
+        // Trim off the extension
+        offset = altText.RFind('.');
+        if (offset >= 0) {
+          altText.Truncate(offset);
         }
       }
     }
