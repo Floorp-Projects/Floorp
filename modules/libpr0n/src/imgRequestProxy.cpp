@@ -306,6 +306,32 @@ NS_IMETHODIMP imgRequestProxy::GetMimeType(char **aMimeType)
   return NS_OK;
 }
 
+NS_IMETHODIMP imgRequestProxy::Clone(imgIDecoderObserver* aObserver,
+                                     imgIRequest** aClone)
+{
+  NS_PRECONDITION(aClone, "Null out param");
+  *aClone = nsnull;
+  imgRequestProxy* clone = new imgRequestProxy();
+  if (!clone) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_ADDREF(clone);
+
+  // It is important to call |SetLoadFlags()| before calling |Init()| because
+  // |Init()| adds the request to the loadgroup.
+  clone->SetLoadFlags(mLoadFlags);
+  nsresult rv = clone->Init(mOwner, mLoadGroup, aObserver);
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(clone);
+    return rv;
+  }
+
+  // Send the notifications to the clone's observer
+  mOwner->NotifyProxyListener(clone);
+
+  *aClone = clone;
+  return NS_OK;
+}
 
 /** imgIContainerObserver methods **/
 

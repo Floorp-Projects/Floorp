@@ -2965,23 +2965,18 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsMappedAttributes* aAtt
         // as well as elements with _baseHref set. We need to be able
         // to get to the element somehow, or store the base URI in the
         // attributes.
-        nsIPresShell *shell = aData->mPresContext->GetPresShell();
-        if (shell) {
-          nsCOMPtr<nsIDocument> doc;
-          nsresult rv = shell->GetDocument(getter_AddRefs(doc));
-          if (NS_SUCCEEDED(rv) && doc) {
-            nsCOMPtr<nsIURI> uri;
-            rv = nsContentUtils::NewURIWithDocumentCharset(
-              getter_AddRefs(uri), spec, doc, doc->GetBaseURI());
-            if (NS_SUCCEEDED(rv)) {
-              nsCSSValue::URL *url = new nsCSSValue::URL(uri, spec.get());
-              if (url) {
-                if (url->mString)
-                  aData->mColorData->mBackImage.SetURLValue(url);
-                else
-                  delete url;
-              }
+        nsIDocument* doc = aData->mPresContext->GetDocument();
+        nsCOMPtr<nsIURI> uri;
+        nsresult rv = nsContentUtils::NewURIWithDocumentCharset(
+            getter_AddRefs(uri), spec, doc, doc->GetBaseURI());
+        if (NS_SUCCEEDED(rv)) {
+          nsCSSValue::Image *img = new nsCSSValue::Image(uri, spec.get(), doc);
+          if (img) {
+            if (img->mString) {
+              aData->mColorData->mBackImage.SetImageValue(img);
             }
+            else
+              delete img;
           }
         }
       }

@@ -41,7 +41,7 @@ public:
   NS_DECL_IMGICONTAINEROBSERVER
 
   void Init(nsIFrame *aFrame, nsIPresContext *aPresContext);
-  nsresult Load(nsIURI *aURI);
+  nsresult Load(imgIRequest *aImage);
 
   void Destroy();
 

@@ -59,6 +59,9 @@ class nsIThreadJSContextStack;
 class nsIParserService;
 class nsIIOService;
 class nsIURI;
+class imgIDecoderObserver;
+class imgIRequest;
+class imgILoader;
 
 class nsContentUtils
 {
@@ -290,6 +293,33 @@ public:
                                           nsIDocument** aDocument,
                                           nsIPrincipal** aPrincipal);
 
+  /**
+   * Method to do security and content policy checks on the image URI
+   *
+   * @param aURI uri of the image to be loaded
+   * @param aContext the context the image is loaded in (eg an element)
+   * @param aLoadingDocument the document we belong to
+   * @throws NS_ERROR_IMAGE_BLOCKED if the load is blocked.  This is
+   *         subject to change.  See nsIContentPolicy.
+   */
+  static nsresult CanLoadImage(nsIURI* aURI,
+                               nsISupports* aContext,
+                               nsIDocument* aLoadingDocument);
+  /**
+   * Method to start an image load.  This does not do any security checks.
+   *
+   * @param aURI uri of the image to be loaded
+   * @param aLoadingDocument the document we belong to
+   * @param aObserver the observer for the image load
+   * @param aLoadFlags the load flags to use.  See nsIRequest
+   * @return the imgIRequest for the image load
+   */
+  static nsresult LoadImage(nsIURI* aURI,
+                            nsIDocument* aLoadingDocument,
+                            imgIDecoderObserver* aObserver,
+                            PRInt32 aLoadFlags,
+                            imgIRequest** aRequest);
+  
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            nsIDocument *aNewDocument,
@@ -312,6 +342,8 @@ private:
 
   static nsIIOService *sIOService;
 
+  static imgILoader* sImgLoader;
+  
   static PRBool sInitialized;
 };
 

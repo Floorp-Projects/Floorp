@@ -79,7 +79,7 @@ public:
   virtual const nsFont* GetDefaultFont(PRUint8 aFontID) const;
   NS_IMETHOD GetCachedIntPref(PRUint32 aPrefType, PRInt32& aValue);
 
-  virtual nsresult LoadImage(nsIURI* aURL,
+  virtual nsresult LoadImage(imgIRequest* aImage,
                              nsIFrame* aTargetFrame,
                              imgIRequest **aRequest);
 

@@ -185,6 +185,10 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                     if (target->GetUnit() == eCSSUnit_Null) {
                         const nsCSSValue *val = ValueAtCursor(cursor);
                         NS_ASSERTION(val->GetUnit() != eCSSUnit_Null, "oops");
+                        if (iProp == eCSSProperty_background_image &&
+                            val->GetUnit() == eCSSUnit_URL) {
+                          val->StartImageLoad(aRuleData->mPresContext->GetDocument());
+                        }
                         *target = *val;
                         if (iProp == eCSSProperty_font_family) {
                             // XXX Are there other things like this?
