@@ -258,6 +258,23 @@ nsInlineFrame::FindTextRuns(nsLineLayout&  aLineLayout,
   return rv;
 }
 
+void
+nsInlineFrame::InsertNewFrame(nsIFrame* aNewFrame, nsIFrame* aPrevSibling)
+{
+  nsIFrame* nextSibling = nsnull;
+
+  if (nsnull == aPrevSibling) {
+    if (nsnull != mFirstChild) {
+      mFirstChild->GetNextSibling(nextSibling);
+    }
+    mFirstChild = aNewFrame;
+  } else {
+    aPrevSibling->GetNextSibling(nextSibling);
+    aPrevSibling->SetNextSibling(aNewFrame);
+  }
+  aNewFrame->SetNextSibling(nextSibling);
+}
+
 NS_IMETHODIMP
 nsInlineFrame::InlineReflow(nsLineLayout&     aLineLayout,
                                nsReflowMetrics&     aMetrics,
@@ -300,10 +317,19 @@ nsInlineFrame::InlineReflow(nsLineLayout&     aLineLayout,
     if (this == target) {
       nsIReflowCommand::ReflowType type;
       state.reflowCommand->GetType(type);
+      nsIFrame* newFrame;
+      nsIFrame* prevSibling;
       switch (type) {
       case nsIReflowCommand::FrameAppended:
         rv = FrameAppendedReflow(state);
         break;
+
+      case nsIReflowCommand::FrameInserted:
+        // Link the new frame into the child list
+        state.reflowCommand->GetChildFrame(newFrame);
+        state.reflowCommand->GetPrevSiblingFrame(prevSibling);
+        InsertNewFrame(newFrame, prevSibling);
+        // fall thru...
 
       default:
         // XXX For now map the other incremental operations into full reflows
