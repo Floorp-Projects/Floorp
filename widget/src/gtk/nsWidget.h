@@ -124,6 +124,8 @@ public:
   virtual PRBool OnResize(nsRect &aRect);
   virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
 
+  NS_IMETHOD SetZIndex(PRInt32 aZIndex);
+
   nsIFontMetrics *GetFont(void);
   NS_IMETHOD SetFont(const nsFont &aFont);
 
@@ -197,6 +199,9 @@ public:
 
   // Return the Gdk window used for rendering
   virtual GdkWindow * GetRenderWindow(GtkObject * aGtkWidget);
+  // Return the Gdk window used for positioning, raising and lowering
+  virtual GdkWindow* GetLayeringWindow();
+
 
   // get the toplevel window for this widget
   virtual GtkWindow *GetTopLevelWindow(void);
@@ -319,9 +324,13 @@ public:
   // This reduces problems with 16-bit coordinates wrapping.
   virtual void ResetInternalVisibility();
 
+  // Reestablish the correct Z-ordering of this widget among
+  // its siblings
+  void ResetZOrder();
+
 protected:
-  // override this method to do whatever you have to do to make this widget
-  // visible or invisibile --- i.e., the real work of Show()
+  // override this method to do whatever you have to do to make this
+  // widget visible or invisibile --- i.e., the real work of Show()
   virtual void SetInternalVisibility(PRBool aVisible);
 
   //////////////////////////////////////////////////////////////////

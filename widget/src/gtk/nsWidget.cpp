@@ -493,6 +493,44 @@ NS_IMETHODIMP nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBoo
   return NS_OK;
 }
 
+GdkWindow* nsWidget::GetLayeringWindow()
+{
+  return mWidget->window;
+}
+
+void nsWidget::ResetZOrder()
+{
+    if (!GetNextSibling()) {
+        GdkWindow* window = GetLayeringWindow();
+        if (window) {
+            gdk_window_raise(window);
+        }
+    } else {
+        // Move this widget and all the widgets above it to the top, in
+        // the right order
+        for (nsWidget* w = this; w;
+             w = NS_STATIC_CAST(nsWidget*, w->GetNextSibling())) {
+            GdkWindow* window = w->GetLayeringWindow();
+            if (window) {
+                gdk_window_raise(window);
+            }
+        }
+    }
+}
+
+NS_IMETHODIMP nsWidget::SetZIndex(PRInt32 aZIndex)
+{
+    nsIWidget* oldPrev = GetPrevSibling();
+
+    nsBaseWidget::SetZIndex(aZIndex);
+
+    if (GetPrevSibling() == oldPrev) {
+        return NS_OK;
+    }
+
+    ResetZOrder();
+}
+
 NS_IMETHODIMP nsWidget::IsVisible(PRBool &aState)
 {
   if (mWidget)
