@@ -44,6 +44,9 @@ var calItemModule = {
     mTodoCID: Components.ID("{7af51168-6abe-4a31-984d-6f8a3989212d}"),
     mTodoContractId: "@mozilla.org/calendar/todo;1",
 
+    mItemOccurrenceCID: Components.ID("{bad672b3-30b8-4ecd-8075-7153313d1f2c}"),
+    mItemOccurrenceContractId: "@mozilla.org/calendar/item-occurrence;1",
+
     mScriptsLoaded: false,
     loadScripts: function () {
         if (this.mScriptsLoaded)
@@ -80,8 +83,8 @@ var calItemModule = {
     registerSelf: function (compMgr, fileSpec, location, type) {
         compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
-        var cids = [ this.mEventCID, this.mTodoCID ];
-        var contractids = [ this.mEventContractId, this.mTodoContractId ];
+        var cids = [ this.mEventCID, this.mTodoCID, this.mItemOccurrenceCID ];
+        var contractids = [ this.mEventContractId, this.mTodoContractId, this.mItemOccurrenceContractId ];
 
         for (var i = 0; i < cids.length; i++) {
             dump ("calItemModule: registering " + contractids[i] + "\n");
@@ -106,6 +109,9 @@ var calItemModule = {
 
         if (cid.equals(this.mTodoCID))
             return this.mTodoFactory;
+
+        if (cid.equals(this.mItemOccurrenceCID))
+            return this.mItemOccurrenceFactory;
 
         throw Components.results.NS_ERROR_NO_INTERFACE;
     },
@@ -137,6 +143,21 @@ var calItemModule = {
             if (outer != null)
                 throw Components.results.NS_ERROR_NO_AGGREGATION;
             return (new calTodo()).QueryInterface(iid);
+        }
+    },
+
+    mItemOccurrenceFactory: {
+        QueryInterface: function (aIID) {
+            if (!aIID.equals(Components.interfaces.nsISupports) &&
+                !aIID.equals(Components.interfaces.nsIFactory))
+                throw Components.results.NS_ERROR_NO_INTERFACE;
+            return this;
+        },
+
+        createInstance: function (outer, iid) {
+            if (outer != null)
+                throw Components.results.NS_ERROR_NO_AGGREGATION;
+            return (new calItemOccurrence()).QueryInterface(iid);
         }
     },
 
