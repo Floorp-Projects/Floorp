@@ -50,7 +50,7 @@ public:
   virtual PRBool OnResize(nsSizeEvent &aEvent);
 
 protected:
-  NS_IMETHOD nsCheckButton::CreateNative(GtkWidget *parentWindow);
+  NS_IMETHOD CreateNative(GtkWidget *parentWindow);
   GtkWidget *mLabel;
 };
 

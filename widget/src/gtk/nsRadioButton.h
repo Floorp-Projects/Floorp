@@ -56,7 +56,7 @@ public:
   void DisArmed();
 
 protected:
-  NS_IMETHOD  nsRadioButton::CreateNative(GtkWidget *parentWindow);
+  NS_IMETHOD  CreateNative(GtkWidget *parentWindow);
   GtkWidget *mLabel;
 
 };
