@@ -51,6 +51,9 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsFontPackageHandler.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMElement.h"
+#include "nsIWindowMediator.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
@@ -76,8 +79,51 @@ NS_IMETHODIMP nsFontPackageHandler::NeedFontPackage(const char *aFontPackID)
   // no FontPackage is passed, return
   NS_ENSURE_ARG_POINTER(aFontPackID);
 
+  // check whether the topmost window is a mailnews window. If it is,
+  // or if any of the calls fail, return NS_ERROR_ABORT
+  nsresult rv;
+  nsCOMPtr<nsIWindowMediator> windowMediator = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_ABORT);
+
+  nsCOMPtr<nsISimpleEnumerator> windowEnum;
+  rv = windowMediator->GetZOrderDOMWindowEnumerator(nsnull, PR_TRUE, getter_AddRefs(windowEnum));
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_ABORT);
+
+  nsCOMPtr<nsISupports> windowSupports;
+  nsCOMPtr<nsIDOMWindow> topMostWindow;
+  nsCOMPtr<nsIDOMDocument> domDocument;
+  nsCOMPtr<nsIDOMElement> domElement;
+  nsAutoString windowType;
+  PRBool more;
+  windowEnum->HasMoreElements(&more);
+  if (more) {
+    rv = windowEnum->GetNext(getter_AddRefs(windowSupports));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_ABORT);
+    NS_ENSURE_TRUE(windowSupports, NS_ERROR_ABORT);
+
+    topMostWindow = do_QueryInterface(windowSupports, &rv);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_ABORT);
+    NS_ENSURE_TRUE(topMostWindow, NS_ERROR_ABORT);
+
+    rv = topMostWindow->GetDocument(getter_AddRefs(domDocument));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_ABORT);
+    NS_ENSURE_TRUE(domDocument, NS_ERROR_ABORT);
+
+    rv = domDocument->GetDocumentElement(getter_AddRefs(domElement));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_ABORT);
+    NS_ENSURE_TRUE(domElement, NS_ERROR_ABORT);
+
+    rv = domElement->GetAttribute(NS_LITERAL_STRING("windowtype"), windowType);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_ABORT);
+
+    if (windowType.Equals(NS_LITERAL_STRING("mail:3pane")) ||
+        windowType.Equals(NS_LITERAL_STRING("mail:messageWindow"))) {
+      return NS_ERROR_ABORT;
+    }
+  }
+
   nsXPIDLCString absUrl;
-  nsresult rv = CreateURLString(aFontPackID, getter_Copies(absUrl));
+  rv = CreateURLString(aFontPackID, getter_Copies(absUrl));
   if (NS_FAILED(rv)) 
     return rv;
 

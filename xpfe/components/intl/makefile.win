@@ -33,6 +33,7 @@ REQUIRES= xpcom \
 		  necko \
 		  dom \
 		  windowwatcher \
+		  appshell \
 		  $(NULL)
 
 CPP_OBJS=\
