@@ -73,6 +73,14 @@ nsTreeRowGroupFrame::~nsTreeRowGroupFrame()
   NS_IF_RELEASE(mContentChain);
 }
 
+NS_IMETHODIMP
+nsTreeRowGroupFrame::DeleteFrame(nsIPresContext& aPresContext)
+{
+  if (mScrollbar)
+    mScrollbar->DeleteFrame(aPresContext);
+  return NS_OK;
+}
+
 NS_IMPL_ADDREF(nsTreeRowGroupFrame)
 NS_IMPL_RELEASE(nsTreeRowGroupFrame)
   
@@ -201,6 +209,68 @@ nsTreeRowGroupFrame::GetFirstRowContent(nsIContent** aResult)
   }
 }
 
+void
+nsTreeRowGroupFrame::FindRowContentAtIndex(PRInt32& aIndex, nsIContent* aParent,
+                                           nsIContent** aResult)
+{
+  // Init to nsnull.
+  *aResult = nsnull;
+
+  // It disappoints me that this function is completely tied to the content nodes,
+  // but I can't see any other way to handle this.  I don't have the frames, so I have nothing
+  // else to fall back on but the content nodes.
+
+  PRInt32 childCount;
+  aParent->ChildCount(childCount);
+
+  for (PRInt32 i = 0; i < childCount; i++) {
+    nsCOMPtr<nsIContent> childContent;
+    aParent->ChildAt(i, *getter_AddRefs(childContent));
+    nsCOMPtr<nsIAtom> tag;
+    childContent->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsXULAtoms::treerow) {
+      aIndex--;
+      if (aIndex < 0) {
+        *aResult = childContent;
+        NS_IF_ADDREF(*aResult);
+        return;
+      }
+    }
+    else if (tag.get() == nsXULAtoms::treeitem) {
+      // Descend into this row group and try to find the next row.
+      FindRowContentAtIndex(aIndex, childContent, aResult);
+      if (aIndex < 0)
+        return;
+
+      // If it's open, descend into its treechildren.
+      nsCOMPtr<nsIAtom> openAtom = dont_AddRef(NS_NewAtom("open"));
+      nsString isOpen;
+      childContent->GetAttribute(kNameSpaceID_None, openAtom, isOpen);
+      if (isOpen == "true") {
+        // Find the <treechildren> node.
+        PRInt32 childContentCount;
+        nsCOMPtr<nsIContent> grandChild;
+        childContent->ChildCount(childContentCount);
+
+        PRInt32 j;
+        for (j = childContentCount-1; j >= 0; j--) {
+          
+          childContent->ChildAt(j, *getter_AddRefs(grandChild));
+          nsCOMPtr<nsIAtom> grandChildTag;
+          grandChild->GetTag(*getter_AddRefs(grandChildTag));
+          if (grandChildTag.get() == nsXULAtoms::treechildren)
+            break;
+        }
+        if (j >= 0 && grandChild)
+          FindRowContentAtIndex(aIndex, grandChild, aResult);
+      
+        if (aIndex < 0)
+          return;
+      }
+    }
+  }
+}
+
 void 
 nsTreeRowGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpwardHint, 
                                             nsIContent* aDownwardHint, nsIContent** aResult)
@@ -215,6 +285,10 @@ nsTreeRowGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpward
   nsCOMPtr<nsIContent> parentContent;
   if (aUpwardHint) {
     aUpwardHint->GetParent(*getter_AddRefs(parentContent));
+    if (!parentContent) {
+      NS_ERROR("Parent content should not be NULL!");
+      return;
+    }
     parentContent->IndexOf(aUpwardHint, index);
   }
   else if (aDownwardHint) {
@@ -326,14 +400,22 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldI
   else {
     // Just blow away all our frames, but keep a content chain
     // as a hint to figure out how to build the frames.
-    NS_ERROR("Not yet implemented!\n");
-    //mFrames.DeleteFrames(aPresContext); // Destroys everything.
+    // Remove the scrollbar first.
+    mFrames.DeleteFrames(aPresContext);
+    nsCOMPtr<nsIContent> topRowContent;
+    FindRowContentAtIndex(aNewIndex, mContent, getter_AddRefs(topRowContent));
+    ConstructContentChain(topRowContent);
   }
 
   // Invalidate the cell map and column cache.
   tableFrame->InvalidateCellMap();
   tableFrame->InvalidateColumnCache();
     
+  mTopFrame = mBottomFrame = nsnull; // Make sure everything is cleared out.
+
+  // Force a reflow.
+  OnContentAdded(aPresContext);
+
   return NS_OK;
 }
 
@@ -349,6 +431,7 @@ nsTreeRowGroupFrame::SetScrollbarFrame(nsIFrame* aFrame)
 {
   mIsLazy = PR_TRUE;
   mScrollbar = aFrame;
+  
   nsCOMPtr<nsIAtom> sliderAtom = dont_AddRef(NS_NewAtom("slider"));
   nsCOMPtr<nsIAtom> incrementAtom = dont_AddRef(NS_NewAtom("increment"));
   nsCOMPtr<nsIAtom> pageIncrementAtom = dont_AddRef(NS_NewAtom("pageincrement"));
@@ -398,6 +481,32 @@ nsTreeRowGroupFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
   }
 
   return nsTableRowGroupFrame::GetFrameForPoint(aPoint, aFrame);
+}
+
+NS_IMETHODIMP
+nsTreeRowGroupFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
+{
+  nsCOMPtr<nsIAtom> scrollList = dont_AddRef(NS_NewAtom("scrollbarlist"));
+  if (scrollList.get() == aListName) {
+    *aFirstChild = mScrollbarList.FirstChild();
+    return NS_OK;
+  }
+  
+  nsTableRowGroupFrame::FirstChild(aListName, aFirstChild);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTreeRowGroupFrame::GetAdditionalChildListName(PRInt32   aIndex,
+                                                nsIAtom** aListName) const
+{
+  *aListName = nsnull;
+
+  if (aIndex == 0) {
+    *aListName = NS_NewAtom("scrollbarlist"); // AddRefs
+  }
+
+  return NS_OK;
 }
 
 void nsTreeRowGroupFrame::PaintChildren(nsIPresContext&      aPresContext,
@@ -479,29 +588,21 @@ nsTreeRowGroupFrame::ReflowBeforeRowLayout(nsIPresContext&      aPresContext,
   return rv;
 }
 
-
-PRBool nsTreeRowGroupFrame::ExcludeFrameFromReflow(nsIFrame* aFrame)
-{
-  if (aFrame == mScrollbar)
-    return PR_TRUE;
-  else return PR_FALSE;
-}
-
 void nsTreeRowGroupFrame::LocateFrame(nsIFrame* aStartFrame, nsIFrame** aResult)
 {
   if (aStartFrame == nsnull)
   {
-    aStartFrame = mFrames.FirstChild();
+    *aResult = mFrames.FirstChild();
   }
-  else aStartFrame->GetNextSibling(&aStartFrame);
+  else aStartFrame->GetNextSibling(aResult);
 
-  if (!aStartFrame) {
-    *aResult = nsnull;
-  } else if (aStartFrame != mScrollbar) {
-    *aResult = aStartFrame;
-  } else {
-    aStartFrame->GetNextSibling(&aStartFrame);
-    *aResult = aStartFrame;
+  if (mScrollbar && (*aResult == mScrollbar)) {
+    // Get this out of our flow.
+    mScrollbar->GetNextSibling(aResult);
+    mFrames.RemoveFrame(mScrollbar);
+
+    // Put it into a special list of our own.
+    mScrollbarList.AppendFrame(this, mScrollbar);
   }
 }
    
