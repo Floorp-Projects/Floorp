@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 
+#include "nsDebug.h"
 #include "nsWindow.h"
 #include "nsIAppShell.h"
 #include "nsIFontMetrics.h"
@@ -42,6 +43,7 @@
 #include <MenuBar.h>
 #include <app/Message.h>
 #include <app/MessageRunner.h>
+#include <support/String.h>
 
 #ifdef DRAG_DROP
 //#include "nsDropTarget.h"
@@ -645,7 +647,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
       if (FAILED(::OleInitialize(NULL)))
       {
-        printf("***** OLE has been initialized!\n");
+        NS_WARNING("***** OLE has been initialized!");
       }
       gOLEInited = TRUE;
     }
@@ -966,7 +968,7 @@ NS_METHOD nsWindow::IsVisible(PRBool & bState)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
 {
-	printf("nsWindow::ConstrainPosition - not implemented\n");
+	NS_WARNING("nsWindow::ConstrainPosition - not implemented");
 	return NS_OK;
 }
 
@@ -1481,7 +1483,7 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::SetColorMap(nsColorMap *aColorMap)
 {
-printf("nsWindow::SetColorMap - not implemented\n");
+NS_WARNING("nsWindow::SetColorMap - not implemented");
     return NS_OK;
 }
 
@@ -1698,12 +1700,12 @@ bool nsWindow::CallMethod(MethodInfo *info)
       break;
 		
     case nsWindow::ONKEY :
-      NS_ASSERTION(info->nArgs == 5, "Wrong number of arguments to CallMethod");
+      NS_ASSERTION(info->nArgs == 6, "Wrong number of arguments to CallMethod");
       if (((int32 *)info->args)[0] == NS_KEY_DOWN)
       {
         OnKeyDown(((int32 *)info->args)[0],
           (const char *)(&((uint32 *)info->args)[1]), ((int32 *)info->args)[2],
-          ((uint32 *)info->args)[3], ((uint32 *)info->args)[4]);
+          ((uint32 *)info->args)[3], ((uint32 *)info->args)[4], ((int32 *)info->args)[5]);
       }
       else
       {
@@ -1711,7 +1713,7 @@ bool nsWindow::CallMethod(MethodInfo *info)
         {
           OnKeyUp(((int32 *)info->args)[0],
           (const char *)(&((uint32 *)info->args)[1]), ((int32 *)info->args)[2],
-          ((uint32 *)info->args)[3], ((uint32 *)info->args)[4]);
+          ((uint32 *)info->args)[3], ((uint32 *)info->args)[4], ((int32 *)info->args)[5]);
         }
       }
       break;
@@ -1954,14 +1956,14 @@ static int TranslateBeOSKeyCode(int32 bekeycode, bool isnumlock)
 //
 //-------------------------------------------------------------------------
 PRBool nsWindow::OnKeyDown(PRUint32 aEventType, const char *bytes, 
-  int32 numBytes, PRUint32 mod, PRUint32 bekeycode)
+  int32 numBytes, PRUint32 mod, PRUint32 bekeycode, int32 rawcode)
 {
   PRUint32 aTranslatedKeyCode;
   PRBool result = PR_FALSE;
 
-  mIsShiftDown   = mod & B_SHIFT_KEY;
-  mIsControlDown = mod & B_CONTROL_KEY;
-  mIsAltDown     = mod & B_COMMAND_KEY;
+  mIsShiftDown   = (mod & B_SHIFT_KEY) ? PR_TRUE : PR_FALSE;
+  mIsControlDown = (mod & B_CONTROL_KEY) ? PR_TRUE : PR_FALSE;
+  mIsAltDown     = (mod & B_COMMAND_KEY) ? PR_TRUE : PR_FALSE;
   bool IsNumLocked = ((mod & B_NUM_LOCK) != 0);
 
   aTranslatedKeyCode = TranslateBeOSKeyCode(bekeycode, IsNumLocked);
@@ -1976,56 +1978,64 @@ PRBool nsWindow::OnKeyDown(PRUint32 aEventType, const char *bytes,
 // ------------  On Char  ------------
   PRUint32	uniChar;
 
-  if (numBytes == 0) // deal with unmapped key
-    return result;
-
-  switch((unsigned char)bytes[0])
-  {
-  case 0xc8://System Request
-  case 0xca://Break
-    return result;// do not send 'KEY_PRESS' message
-
-  case B_INSERT:
-  case B_ESCAPE:
-  case B_FUNCTION_KEY:
-  case B_HOME:
-  case B_PAGE_UP:
-  case B_END:
-  case B_PAGE_DOWN:
-  case B_UP_ARROW:
-  case B_LEFT_ARROW:
-  case B_DOWN_ARROW:
-  case B_RIGHT_ARROW:
-  case B_TAB:
-  case B_DELETE:
-  case B_BACKSPACE:
-  case B_ENTER:
-    uniChar = 0;
-    break;
-
-  default:
-    // UTF-8 to unicode conversion
-    if (numBytes >= 1 && (bytes[0] & 0x80) == 0) { 
-      // 1 byte utf-8 char
-      uniChar = bytes[0];
-    } else
-    if (numBytes >= 2 && (bytes[0] & 0xe0) == 0xc0) { 
-      // 2 byte utf-8 char
-      uniChar = ((uint16)(bytes[0] & 0x1f) << 6) | (uint16)(bytes[1] & 0x3f);
-    } else
-    if (numBytes >= 3 && (bytes[0] & 0xf0) == 0xe0) {
-      // 3 byte utf-8 char
-      uniChar = ((uint16)(bytes[0] & 0x0f) << 12) | ((uint16)(bytes[1] & 0x3f) << 6)
-                | (uint16)(bytes[2] & 0x3f);
-    } else {
-      //error
-      uniChar = 0;
-      printf("nsWindow::OnKeyDown() error: bytes[] has not enough chars.\n");
-    } 
-    
+  if ((mIsControlDown || mIsAltDown) && rawcode >= 'a' && rawcode <= 'z') {
+    if (mIsShiftDown)
+      uniChar = rawcode + 'A' - 'a';
+    else
+      uniChar = rawcode;
     aTranslatedKeyCode = 0;
-    mIsShiftDown = PR_FALSE;
-    break;
+  } else {
+    if (numBytes == 0) // deal with unmapped key
+      return result;
+
+    switch((unsigned char)bytes[0])
+    {
+      case 0xc8://System Request
+      case 0xca://Break
+        return result;// do not send 'KEY_PRESS' message
+
+      case B_INSERT:
+      case B_ESCAPE:
+      case B_FUNCTION_KEY:
+      case B_HOME:
+      case B_PAGE_UP:
+      case B_END:
+      case B_PAGE_DOWN:
+      case B_UP_ARROW:
+      case B_LEFT_ARROW:
+      case B_DOWN_ARROW:
+      case B_RIGHT_ARROW:
+      case B_TAB:
+      case B_DELETE:
+      case B_BACKSPACE:
+      case B_ENTER:
+        uniChar = 0;
+        break;
+
+      default:
+        // UTF-8 to unicode conversion
+        if (numBytes >= 1 && (bytes[0] & 0x80) == 0) { 
+          // 1 byte utf-8 char
+          uniChar = bytes[0];
+        } else
+        if (numBytes >= 2 && (bytes[0] & 0xe0) == 0xc0) { 
+          // 2 byte utf-8 char
+          uniChar = ((uint16)(bytes[0] & 0x1f) << 6) | (uint16)(bytes[1] & 0x3f);
+        } else
+        if (numBytes >= 3 && (bytes[0] & 0xf0) == 0xe0) {
+          // 3 byte utf-8 char
+          uniChar = ((uint16)(bytes[0] & 0x0f) << 12) | ((uint16)(bytes[1] & 0x3f) << 6)
+                | (uint16)(bytes[2] & 0x3f);
+        } else {
+          //error
+          uniChar = 0;
+          NS_WARNING("nsWindow::OnKeyDown() error: bytes[] has not enough chars.");
+        } 
+    
+        aTranslatedKeyCode = 0;
+        mIsShiftDown = PR_FALSE;
+        break;
+    }
   }
 
   PRBool result2 = DispatchKeyEvent(NS_KEY_PRESS, uniChar, aTranslatedKeyCode);
@@ -2039,14 +2049,14 @@ PRBool nsWindow::OnKeyDown(PRUint32 aEventType, const char *bytes,
 //
 //-------------------------------------------------------------------------
 PRBool nsWindow::OnKeyUp(PRUint32 aEventType, const char *bytes,
-  int32 numBytes, PRUint32 mod, PRUint32 bekeycode)
+  int32 numBytes, PRUint32 mod, PRUint32 bekeycode, int32 rawcode)
 {
   PRUint32 aTranslatedKeyCode;
   bool IsNumLocked = ((mod & B_NUM_LOCK) != 0);
 
-  mIsShiftDown   = mod & B_SHIFT_KEY;
-  mIsControlDown = mod & B_CONTROL_KEY;
-  mIsAltDown     = mod & B_COMMAND_KEY;
+  mIsShiftDown   = (mod & B_SHIFT_KEY) ? PR_TRUE : PR_FALSE;
+  mIsControlDown = (mod & B_CONTROL_KEY) ? PR_TRUE : PR_FALSE;
+  mIsAltDown     = (mod & B_COMMAND_KEY) ? PR_TRUE : PR_FALSE;
 
   aTranslatedKeyCode = TranslateBeOSKeyCode(bekeycode, IsNumLocked);
 
@@ -2219,7 +2229,7 @@ nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aF
 
   // if aNativeMenu is NULL then the menu is being deselected
   if (!aNativeMenu) {
-    printf("///////////// Menu is NULL!\n");
+    NS_WARNING("///////////// Menu is NULL!");
     // check to make sure something had been selected
     AdjustMenus(mHitMenu, nsnull, event);
     NS_IF_RELEASE(mHitMenu);
@@ -2281,11 +2291,13 @@ nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aF
 
         // Skip if it is a menu item, otherwise, we get the menu by position
         if (!isMenuItem) {
+#ifdef DEBUG
           printf("Getting submenu by position %d from parentMenu\n", aItemNum);
+#endif
           nsISupports * item;
           parentMenu->GetItemAt((PRUint32)aItemNum, item);
           if (NS_OK != item->QueryInterface(kIMenuIID, (void **)&newMenu)) {
-            printf("Item was not a menu! What are we doing here? Return early....\n");
+            NS_WARNING("Item was not a menu! What are we doing here? Return early....");
             return NS_ERROR_FAILURE;
           }
         }
@@ -2365,7 +2377,7 @@ nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aF
 
         NS_RELEASE(parentMenu);
       } else {
-        printf("no menu was found. This is bad.\n");
+        NS_WARNING("no menu was found. This is bad.");
         // XXX need to assert here!
       }
     }
@@ -2622,7 +2634,7 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
 	if(mMenuBar)
 	{
 		// Get rid of the old menubar
-printf("nsWindow::SetMenuBar - FIXME: Get rid of the old menubar!\n");
+NS_WARNING("nsWindow::SetMenuBar - FIXME: Get rid of the old menubar!");
 //		GtkWidget* oldMenuBar;
 //		mMenuBar->GetNativeData((void*&) oldMenuBar);
 //		if (oldMenuBar) {
@@ -2663,7 +2675,7 @@ printf("nsWindow::SetMenuBar - FIXME: Get rid of the old menubar!\n");
 
 NS_METHOD nsWindow::ShowMenuBar(PRBool aShow)
 {
-printf("nsWindow::ShowMenuBar - FIXME: not implemented!\n");
+NS_WARNING("nsWindow::ShowMenuBar - FIXME: not implemented!");
 //  if (!mMenuBar)
 //    //    return NS_ERROR_FAILURE;
 //    return NS_OK;
@@ -2776,6 +2788,20 @@ void nsWindowBeOS::MessageReceived(BMessage *msg)
       BWindow::MessageReceived(msg);
       break;
   }
+}
+
+// This function calls KeyDown() for Alt+whatever instead of app_server
+void nsWindowBeOS::DispatchMessage(BMessage *msg, BHandler *handler)
+{
+  if (msg->what == B_KEY_DOWN && modifiers() & B_COMMAND_KEY) {
+    BString bytes;
+    if (B_OK == msg->FindString("bytes", &bytes)) {
+      BView *view = this->CurrentFocus();
+      if (view)
+        view->KeyDown(bytes.String(), bytes.Length());
+    }
+  }
+  BWindow::DispatchMessage(msg, handler);
 }
 
 void nsWindowBeOS::FrameResized(float width, float height)
@@ -3040,64 +3066,67 @@ void nsViewBeOS::MessageReceived(BMessage *msg)
 
 void nsViewBeOS::KeyDown(const char *bytes, int32 numBytes)
 {
-	nsWindow	*w = (nsWindow *)GetMozillaWidget();
-	nsToolkit	*t;
-	int32 keycode = 0;
+  nsWindow	*w = (nsWindow *)GetMozillaWidget();
+  nsToolkit	*t;
+  int32 keycode = 0;
+  int32 rawcode = 0;
+		
+  BMessage *msg = this->Window()->CurrentMessage();
+  if (msg) {
+    msg->FindInt32("key", &keycode);
+    msg->FindInt32("raw_char", &rawcode);
+  }
 	
-	BMessage *msg = this->Window()->CurrentMessage();
-	if (msg) {
-		msg->FindInt32("key", &keycode);
-	}
-	
-	if(w && (t = w->GetToolkit()) != 0)
-	{
-		uint32 bytebuf = 0;
-		uint8 *byteptr = (uint8 *)&bytebuf;
-		for(int32 i = 0; i < numBytes; i++)
-			byteptr[i] = bytes[i];
+  if(w && (t = w->GetToolkit()) != 0) {
+    uint32 bytebuf = 0;
+    uint8 *byteptr = (uint8 *)&bytebuf;
+    for(int32 i = 0; i < numBytes; i++)
+      byteptr[i] = bytes[i];
 
-		uint32	args[5];
-		args[0] = NS_KEY_DOWN;
-		args[1] = bytebuf;
-		args[2] = numBytes;
-		args[3] = modifiers();
-		args[4] = keycode;
+    uint32	args[6];
+    args[0] = NS_KEY_DOWN;
+    args[1] = bytebuf;
+    args[2] = numBytes;
+    args[3] = modifiers();
+    args[4] = keycode;
+    args[5] = rawcode;
 
-		MethodInfo *info = new MethodInfo(w, w, nsWindow::ONKEY, 5, args);
-		t->CallMethodAsync(info);
-		NS_RELEASE(t);
-	}
+    MethodInfo *info = new MethodInfo(w, w, nsWindow::ONKEY, 6, args);
+    t->CallMethodAsync(info);
+    NS_RELEASE(t);
+  }
 }
 
 void nsViewBeOS::KeyUp(const char *bytes, int32 numBytes)
 {
-	nsWindow	*w = (nsWindow *)GetMozillaWidget();
-	nsToolkit	*t;
-	int32 keycode = 0;
-	
-	BMessage *msg = this->Window()->CurrentMessage();
-	if (msg) {
-		msg->FindInt32("key", &keycode);
-	}
+  nsWindow	*w = (nsWindow *)GetMozillaWidget();
+  nsToolkit	*t;
+  int32 keycode = 0;
+  int32 rawcode = 0;	
+  BMessage *msg = this->Window()->CurrentMessage();
+  if (msg) {
+    msg->FindInt32("key", &keycode);
+    msg->FindInt32("raw_char", &rawcode);
+  }
 
-	if(w && (t = w->GetToolkit()) != 0)
-	{
-		uint32 bytebuf = 0;
-		uint8 *byteptr = (uint8 *)&bytebuf;
-		for(int32 i = 0; i < numBytes; i++)
-			byteptr[i] = bytes[i];
+  if(w && (t = w->GetToolkit()) != 0) {
+    uint32 bytebuf = 0;
+    uint8 *byteptr = (uint8 *)&bytebuf;
+    for(int32 i = 0; i < numBytes; i++)
+      byteptr[i] = bytes[i];
 
-		uint32	args[5];
-		args[0] = NS_KEY_UP;
-		args[1] = (int32)bytebuf;
-		args[2] = numBytes;
-		args[3] = modifiers();
-		args[4] = keycode;
+    uint32	args[6];
+    args[0] = NS_KEY_UP;
+    args[1] = (int32)bytebuf;
+    args[2] = numBytes;
+    args[3] = modifiers();
+    args[4] = keycode;
+    args[5] = rawcode;
 
-		MethodInfo *info = new MethodInfo(w, w, nsWindow::ONKEY, 5, args);
-		t->CallMethodAsync(info);
-		NS_RELEASE(t);
-	}
+    MethodInfo *info = new MethodInfo(w, w, nsWindow::ONKEY, 6, args);
+    t->CallMethodAsync(info);
+    NS_RELEASE(t);
+  }
 }
 
 void nsViewBeOS::MakeFocus(bool focused)

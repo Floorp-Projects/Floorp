@@ -163,8 +163,8 @@ protected:
     virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
     virtual PRBool          OnPaint(nsRect &r);
     virtual PRBool          OnResize(nsRect &aWindowRect);
-    virtual PRBool			OnKeyDown(PRUint32 aEventType, const char *bytes, int32 numBytes, PRUint32 mod, PRUint32 bekeycode);
-    virtual PRBool			OnKeyUp(PRUint32 aEventType, const char *bytes, int32 numBytes, PRUint32 mod, PRUint32 bekeycode);
+    virtual PRBool			OnKeyDown(PRUint32 aEventType, const char *bytes, int32 numBytes, PRUint32 mod, PRUint32 bekeycode, int32 rawcode);
+    virtual PRBool			OnKeyUp(PRUint32 aEventType, const char *bytes, int32 numBytes, PRUint32 mod, PRUint32 bekeycode, int32 rawcode);
     virtual PRBool          DispatchKeyEvent(PRUint32 aEventType, PRUint32 aCharCode, PRUint32 aKeyCode);
     virtual PRBool          DispatchFocus(PRUint32 aEventType);
 	virtual PRBool			OnScroll();
@@ -272,13 +272,14 @@ class nsWindowBeOS : public BWindow, public nsIWidgetStore {
   public:
     nsWindowBeOS(nsIWidget *aWidgetWindow,  BRect aFrame, const char *aName, window_look aLook,
         window_feel aFeel, int32 aFlags, int32 aWorkspace = B_CURRENT_WORKSPACE);
-       virtual ~nsWindowBeOS();
+    virtual ~nsWindowBeOS();
 
     virtual bool QuitRequested( void );  
 	virtual void MessageReceived(BMessage *msg);
-       virtual void FrameResized(float width, float height);
+	virtual void DispatchMessage(BMessage *msg, BHandler *handler);
+    virtual void FrameResized(float width, float height);
        
-       void ResizeToWithoutEvent(float width, float height);
+    void ResizeToWithoutEvent(float width, float height);
 
 private:
        void DoFrameResized();
