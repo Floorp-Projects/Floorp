@@ -205,7 +205,7 @@ nsresult nsSocketTransportService::ProcessWorkQ(void)
   // XXX:  Need a way to restart the ProcessWorkQ(...) when space becomes
   //       available in the select set...
   //
-  nsAutoLock lock(mThreadLock);
+  PR_Lock(mThreadLock);
   while (!PR_CLIST_IS_EMPTY(&mWorkQ) && 
          (MAX_OPEN_CONNECTIONS > mSelectFDSetCount)) {
     nsSocketTransport* transport;
@@ -216,10 +216,16 @@ nsresult nsSocketTransportService::ProcessWorkQ(void)
     transport = nsSocketTransport::GetInstance(qp);
     PR_REMOVE_AND_INIT_LINK(qp);
 
-    // Try to perform the operation...
+    // Try to perform the operation...  
+    //
+    // Do not process the transport while holding the transport service 
+    // lock...  A deadlock could occur if another thread is holding the 
+    // transport lock and tries to add the transport to the service's WorkQ...
     //
     // Do not pass any select flags...
+    PR_Unlock(mThreadLock);
     rv = transport->Process(0);
+    PR_Lock(mThreadLock);
     //
     // If the operation would block, then add it to the select list for
     // later processing when the data arrives...
@@ -230,6 +236,7 @@ nsresult nsSocketTransportService::ProcessWorkQ(void)
     // Release the transport object (since it is no longer on the WorkQ).
     NS_RELEASE(transport);
   }
+  PR_Unlock(mThreadLock);
 
   return rv;
 }
