@@ -26,3 +26,35 @@ include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
 
+SAMPLES_DIR = $(DIST)/bin/res/samples
+
+EXPORT_RESOURCE_SAMPLES = \
+	./mailshell.xul \
+	./msgBar.xul \
+	./folderPane.xul \
+	./folderPane.css \
+	./threadPane.xul \
+	./threadPane.css \
+	./message.html \
+	./delmsg.gif \
+	./widgetglue.js \
+	./commandglue.js \
+	./shareglue.js \
+	./3panemail.html \
+	./messagePane.xul \
+	./closedMailFolder.gif \
+	./openMailFolder.gif \
+	./localMailHost.gif \
+	./mailMessage.gif \
+	./closedInbox.gif \
+	./closedTrash.gif \
+	./closedOutbox.gif \
+	$(NULL)
+
+EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
+
+install::
+	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(SAMPLES_DIR)
+
+clobber::
+	$(RM) $(EXPORT_RESOURCE_SAMPLES_TO_REMOVE)

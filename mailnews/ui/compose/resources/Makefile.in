@@ -26,6 +26,8 @@ include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
 
+SAMPLES_DIR = $(DIST)/bin/res/samples
+TOOLBAR_DIR = $(DIST)/bin/res/toolbar
 
 EXPORT_RESOURCE_SAMPLES = \
 	./Compose.xul \
@@ -33,7 +35,9 @@ EXPORT_RESOURCE_SAMPLES = \
 	./ComposeFrame.html \
 	$(NULL)
 
-EXPORT_RESOURCE_TOOBAR = \
+EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
+
+EXPORT_RESOURCE_TOOLBAR = \
 	./mail_options.gif \
 	./mail_options_mo.gif \
 	./mail_options_dis.gif \
@@ -60,7 +64,11 @@ EXPORT_RESOURCE_TOOBAR = \
 	./mail_save_dep.gif \
 	$(NULL)
 
+EXPORT_RESOURCE_TOOLBAR_TO_REMOVE := $(addprefix $(TOOLBAR_DIR)/, $(EXPORT_RESOURCE_TOOLBAR))
 
-#install:: 
-#	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
-#	$(INSTALL) $(EXPORT_RESOURCE_TOOLBAR) $(DIST)/bin/res/toolbar
+install:: 
+	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(SAMPLES_DIR)
+	$(INSTALL) $(EXPORT_RESOURCE_TOOLBAR) $(TOOLBAR_DIR)
+
+clobber::
+	$(RM) $(EXPORT_RESOURCE_SAMPLES_TO_REMOVE) $(EXPORT_RESOURCE_TOOLBAR_TO_REMOVE) 
