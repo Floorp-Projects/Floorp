@@ -31,8 +31,8 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=inspector
-XPIDL_MODULE=inspector
+MODULE=typeaheadfind
+XPIDL_MODULE=typeaheadfind
 
 XPIDLSRCS= ./nsITypeAheadFind.idl \
   $(NULL)
