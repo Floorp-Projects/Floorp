@@ -2304,11 +2304,13 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsAString& aStringToInsert,
 
 NS_IMETHODIMP nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert, 
                                                      nsIDOMCharacterData *aTextNode, 
-                                                     PRInt32 aOffset)
+                                                     PRInt32 aOffset, PRBool suppressIME)
 {
   EditTxn *txn;
   nsresult result;
-  if (mInIMEMode)
+  // suppressIME s used when editor must insert text, yet this text is not
+  // part of current ime operation.  example: adjusting whitespace around an ime insertion.
+  if (mInIMEMode && !suppressIME)
   {
     if (!mIMETextNode)
     {

@@ -1714,7 +1714,7 @@ nsWSRunObject::ConvertToNBSP(WSPoint aPoint)
   // first, insert an nbsp
   nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
   nsAutoString nbspStr(nbsp);
-  nsresult res = mHTMLEditor->InsertTextIntoTextNodeImpl(nbspStr, textNode, aPoint.mOffset);
+  nsresult res = mHTMLEditor->InsertTextIntoTextNodeImpl(nbspStr, textNode, aPoint.mOffset, PR_TRUE);
   NS_ENSURE_SUCCESS(res, res);
   
   // next, find range of ws it will replace
@@ -2055,7 +2055,7 @@ nsWSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
         return NS_ERROR_NULL_POINTER;
       nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
       nsAutoString spaceStr(PRUnichar(32));
-      res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, textNode, thePoint.mOffset);
+      res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, textNode, thePoint.mOffset, PR_TRUE);
       NS_ENSURE_SUCCESS(res, res);
   
       // finally, delete that nbsp
@@ -2097,7 +2097,7 @@ nsWSRunObject::CheckTrailingNBSP(WSFragment *aRun, nsIDOMNode *aNode, PRInt32 aO
       return NS_ERROR_NULL_POINTER;
     nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
     nsAutoString spaceStr(PRUnichar(32));
-    res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, textNode, thePoint.mOffset);
+    res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, textNode, thePoint.mOffset, PR_TRUE);
     NS_ENSURE_SUCCESS(res, res);
   
     // finally, delete that nbsp
@@ -2139,7 +2139,7 @@ nsWSRunObject::CheckLeadingNBSP(WSFragment *aRun, nsIDOMNode *aNode, PRInt32 aOf
       return NS_ERROR_NULL_POINTER;
     nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
     nsAutoString spaceStr(PRUnichar(32));
-    res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, textNode, thePoint.mOffset);
+    res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, textNode, thePoint.mOffset, PR_TRUE);
     NS_ENSURE_SUCCESS(res, res);
   
     // finally, delete that nbsp

@@ -1130,7 +1130,7 @@ NS_IMETHODIMP nsHTMLEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
     if (keyCode == nsIDOMKeyEvent::DOM_VK_TAB) character = '\t';
     else aKeyEvent->GetCharCode(&character);
     
-    if (keyCode == nsIDOMKeyEvent::DOM_VK_TAB && !(mFlags&eEditorPlaintextBit))
+    if (keyCode == nsIDOMKeyEvent::DOM_VK_TAB && !(mFlags&eEditorPlaintextMask))
     {
       nsCOMPtr<nsISelection>selection;
       res = GetSelection(getter_AddRefs(selection));
@@ -1168,7 +1168,7 @@ NS_IMETHODIMP nsHTMLEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
              || keyCode == nsIDOMKeyEvent::DOM_VK_ENTER)
     {
       nsString empty;
-      if (isShift && !(mFlags&eEditorPlaintextBit))
+      if (isShift && !(mFlags&eEditorPlaintextMask))
       {
         return TypedText(empty, eTypedBR);  // only inserts a br node
       }
@@ -5404,8 +5404,19 @@ nsHTMLEditor::CopyLastEditableChildStyles(nsIDOMNode * aPreviousBlock, nsIDOMNod
                                           nsIDOMNode **aOutBrNode)
 {
   *aOutBrNode = nsnull;
-  nsCOMPtr<nsIDOMNode> child = aPreviousBlock, tmp = aPreviousBlock;
+  nsCOMPtr<nsIDOMNode> child, tmp;
   nsresult res;
+  // first, clear out aNewBlock.  Contract is that we want only the styles from previousBlock.
+  res = aNewBlock->GetFirstChild(getter_AddRefs(child));
+  while (NS_SUCCEEDED(res) && child)
+  {
+    res = DeleteNode(child);
+    if (NS_FAILED(res)) return res;
+    res = aNewBlock->GetFirstChild(getter_AddRefs(child));
+  }
+  // now find and clone the styles
+  child = aPreviousBlock;
+  tmp = aPreviousBlock;
   while (tmp) {
     child = tmp;
     res = GetLastEditableChild(child, address_of(tmp));

@@ -147,6 +147,10 @@ nsTextEditRules::Init(nsPlaintextEditor *aEditor, PRUint32 aFlags)
   res = CreateBogusNodeIfNeeded(selection);   // this method handles null selection, which should never happen anyway
   if (NS_FAILED(res)) return res;
 
+  // insure trailing br node
+  res = CreateTrailingBRIfNeeded();
+  if (NS_FAILED(res)) return res;
+  
   // create a range that is the entire body contents
   nsCOMPtr<nsIDOMRange> wholeDoc = do_CreateInstance(kRangeCID);
   if (!wholeDoc) return NS_ERROR_NULL_POINTER;
@@ -222,6 +226,10 @@ nsTextEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
   
     // detect empty doc
     res = CreateBogusNodeIfNeeded(selection);
+    if (NS_FAILED(res)) return res;
+    
+    // insure trailing br node
+    res = CreateTrailingBRIfNeeded();
     if (NS_FAILED(res)) return res;
     
 #ifdef IBMBIDI
@@ -1188,6 +1196,29 @@ nsTextEditRules::ReplaceNewlines(nsIDOMRange *aRange)
   return res;
 }
 
+nsresult
+nsTextEditRules::CreateTrailingBRIfNeeded()
+{
+  // but only if we aren't a single line edit field
+  if (mFlags & nsIPlaintextEditor::eEditorSingleLineMask)
+    return NS_OK;
+  nsresult res = NS_OK;
+  nsCOMPtr<nsIDOMNode> lastChild, unused;
+  if (!mBody) return NS_ERROR_NULL_POINTER;
+  res = mBody->GetLastChild(getter_AddRefs(lastChild));
+  // assuming CreateBogusNodeIfNeeded() has been called first
+  if (NS_FAILED(res)) return res;  
+  if (!lastChild) return NS_ERROR_NULL_POINTER;
+  if (!nsTextEditUtils::IsBreak(lastChild))
+  {
+    nsAutoTxnsConserveSelection dontSpazMySelection(mEditor);
+    PRUint32 rootLen;
+    res = mEditor->GetLengthOfDOMNode(mBody, rootLen);
+    if (NS_FAILED(res)) return res; 
+    res = CreateMozBR(mBody, rootLen, address_of(unused));
+  }
+  return res;
+}
 
 nsresult
 nsTextEditRules::CreateBogusNodeIfNeeded(nsISelection *aSelection)
