@@ -85,7 +85,7 @@ void CPlugin::restorePreferences()
 
   char sz[256];
   XP_GetPrivateProfileString(szSection, KEY_AUTO_MODE, ENTRY_NO, sz, sizeof(sz), szFileName);
-  m_Pref_ShowGUI = (strcmpi(sz, ENTRY_YES) == 0) ? sg_auto : sg_manual;
+  m_Pref_ShowGUI = (stricmp(sz, ENTRY_YES) == 0) ? sg_auto : sg_manual;
 
   XP_GetPrivateProfileString(szSection, KEY_LOG_FILE, "Test.log", sz, sizeof(sz), szFileName);
   strcpy(m_Pref_szLogFile, sz);
@@ -94,19 +94,19 @@ void CPlugin::restorePreferences()
   strcpy(m_Pref_szScriptFile, sz);
 
   XP_GetPrivateProfileString(szSection, KEY_TO_FILE, ENTRY_NO, sz, sizeof(sz), szFileName);
-  m_Pref_bToFile = (strcmpi(sz, ENTRY_YES) == 0) ? TRUE : FALSE;
+  m_Pref_bToFile = (stricmp(sz, ENTRY_YES) == 0) ? TRUE : FALSE;
 
   XP_GetPrivateProfileString(szSection, KEY_TO_FRAME, ENTRY_YES, sz, sizeof(sz), szFileName);
-  m_Pref_bToFrame = (strcmpi(sz, ENTRY_YES) == 0) ? TRUE : FALSE;
+  m_Pref_bToFrame = (stricmp(sz, ENTRY_YES) == 0) ? TRUE : FALSE;
 
   XP_GetPrivateProfileString(szSection, KEY_FLUSH_NOW, ENTRY_YES, sz, sizeof(sz), szFileName);
-  m_Pref_bFlushNow = (strcmpi(sz, ENTRY_YES) == 0) ? TRUE : FALSE;
+  m_Pref_bFlushNow = (stricmp(sz, ENTRY_YES) == 0) ? TRUE : FALSE;
 
   XP_GetPrivateProfileString(szSection, KEY_REMEMBER_LAST_API_CALL, ENTRY_YES, sz, sizeof(sz), szFileName);
-  m_Pref_bRememberLastCall = (strcmpi(sz, ENTRY_YES) == 0) ? TRUE : FALSE;
+  m_Pref_bRememberLastCall = (stricmp(sz, ENTRY_YES) == 0) ? TRUE : FALSE;
 
   XP_GetPrivateProfileString(szSection, KEY_STAND_ALONE, ENTRY_NO, sz, sizeof(sz), szFileName);
-  m_Pref_bStandAlone = (strcmpi(sz, ENTRY_YES) == 0) ? TRUE : FALSE;
+  m_Pref_bStandAlone = (stricmp(sz, ENTRY_YES) == 0) ? TRUE : FALSE;
 }
 
 void CPlugin::savePreferences()

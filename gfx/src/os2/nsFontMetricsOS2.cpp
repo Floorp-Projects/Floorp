@@ -1156,7 +1156,7 @@ nsFontMetricsOS2::GetVectorSubstitute( HPS aPS, const char* aFamilyname,
   PRBool isBold = mFont.weight > NS_FONT_WEIGHT_NORMAL;
   PRBool isItalic = (mFont.style & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE));
 
-  if( strcmpi( aFamilyname, "Tms Rmn" ) == 0 )
+  if( stricmp( aFamilyname, "Tms Rmn" ) == 0 )
   {
     if( !isBold && !isItalic )
       strcpy( alias, "Times New Roman" );
@@ -1171,7 +1171,7 @@ nsFontMetricsOS2::GetVectorSubstitute( HPS aPS, const char* aFamilyname,
     return PR_TRUE;
   }
 
-  if( strcmpi( aFamilyname, "Helv" ) == 0 )
+  if( stricmp( aFamilyname, "Helv" ) == 0 )
   {
     if( !isBold && !isItalic )
       strcpy( alias, "Helvetica" );
@@ -1189,7 +1189,7 @@ nsFontMetricsOS2::GetVectorSubstitute( HPS aPS, const char* aFamilyname,
    // When printing, substitute vector fonts for these common bitmap fonts
   if( !mDeviceContext->SupportsRasterFonts() )
   {
-    if( strcmpi( aFamilyname, "System Proportional" ) == 0 )
+    if( stricmp( aFamilyname, "System Proportional" ) == 0 )
     {
       if( !isBold && !isItalic )
         strcpy( alias, "Helvetica" );
@@ -1204,8 +1204,8 @@ nsFontMetricsOS2::GetVectorSubstitute( HPS aPS, const char* aFamilyname,
       return PR_TRUE;
     }
 
-    if( strcmpi( aFamilyname, "System Monospaced" ) == 0 ||
-        strcmpi( aFamilyname, "System VIO" ) == 0 )
+    if( stricmp( aFamilyname, "System Monospaced" ) == 0 ||
+        stricmp( aFamilyname, "System VIO" ) == 0 )
     {
       if( !isBold && !isItalic )
         strcpy( alias, "Courier" );
@@ -1844,12 +1844,12 @@ nsFontMetricsOS2::InitializeGlobalFonts()
   {
      // The discrepencies between the Courier bitmap and outline fonts are
      // too much to deal with, so we only use the outline font
-    if( strcmpi(pFontMetrics[i].szFamilyname, "Courier") == 0 &&
+    if( stricmp(pFontMetrics[i].szFamilyname, "Courier") == 0 &&
         !(pFontMetrics[i].fsDefn & FM_DEFN_OUTLINE))
       continue;
 
-    if (strcmpi(pFontMetrics[i].szFamilyname, "Roman") == 0 ||
-        strcmpi(pFontMetrics[i].szFamilyname, "Swiss") == 0)
+    if (stricmp(pFontMetrics[i].szFamilyname, "Roman") == 0 ||
+        stricmp(pFontMetrics[i].szFamilyname, "Swiss") == 0)
       continue;
 
     nsGlobalFont* font = new nsGlobalFont;

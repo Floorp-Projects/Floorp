@@ -401,11 +401,11 @@ void SaveWebPage(HWND hDlg, nsIWebBrowser *aWebBrowser)
         _splitpath(saveFileNameInfo.szFullFile, drive, dir, fname, ext);
         //add the extension to the filename if there is no extension already
         if (strcmp(ext, "") == 0) {
-          if ((saveFileNameInfo.sEAType == 2) && (strcmpi(ext, ".txt") != 0)) {
+          if ((saveFileNameInfo.sEAType == 2) && (stricmp(ext, ".txt") != 0)) {
             strcat(saveFileNameInfo.szFullFile, ".txt");
             strcpy(ext, ".txt");
           } else 
-            if ((strcmpi(ext, ".html") != 0) && (strcmpi(ext, ".htm") != 0)) {
+            if ((stricmp(ext, ".html") != 0) && (stricmp(ext, ".htm") != 0)) {
               strcat(saveFileNameInfo.szFullFile, ".html");
               strcpy(ext, ".html");
           }
