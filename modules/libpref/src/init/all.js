@@ -215,6 +215,7 @@ pref("network.file_sort_method",            0);     // NAME 0, TYPE 1, SIZE 2, D
 pref("network.ftp.passive",		    true);
 pref("network.hosts.smtp_server",           "mail");
 pref("network.hosts.pop_server",            "mail");
+pref("network.protocols.useSystemDefaults",   false); // set to true if user links should use system default handlers
 
 // <ruslan>
 pref("network.http.version", "1.1");	  // default
