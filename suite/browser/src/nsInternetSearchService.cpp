@@ -54,7 +54,6 @@
 #include "nsIRDFRemoteDataSource.h"
 
 #include "nsEscape.h"
-
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
@@ -237,13 +236,11 @@ private:
 	static nsIRDFResource		*kNC_HTML;
 	static nsIRDFResource		*kNC_Icon;
 	static nsIRDFResource		*kNC_StatusIcon;
-
 	static nsIRDFResource		*kNC_Banner;
 	static nsIRDFResource		*kNC_Site;
 	static nsIRDFResource		*kNC_Relevance;
 	static nsIRDFResource		*kNC_RelevanceSort;
 	static nsIRDFResource		*kNC_Engine;
-
 	static nsIRDFResource		*kNC_Price;
 	static nsIRDFResource		*kNC_PriceSort;
 	static nsIRDFResource		*kNC_Availability;
@@ -273,6 +270,7 @@ static	nsresult	GetData(nsString &data, const char *sectionToFind, const char *a
 	nsresult	GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult);
 	nsresult	ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRDFResource *engine, const nsString &htmlPage, PRBool useAllHREFsFlag, PRUint32 &numResults);
 	nsresult	SetHint(nsIRDFResource *mParent, nsIRDFResource *hintRes);
+	nsresult	ConvertEntities(nsString &str, PRBool removeHTMLFlag = PR_TRUE, PRBool removeCRLFsFlag = PR_TRUE, PRBool trimWhiteSpaceFlag = PR_TRUE);
 
 			InternetSearchDataSource(void);
 	virtual		~InternetSearchDataSource(void);
@@ -2526,16 +2524,14 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 		PRInt32	bannerStart = htmlResults.Find(bannerStartStr, PR_TRUE);
 		if (bannerStart >= 0)
 		{
-			nsAutoString	htmlCopy(htmlResults);
-			htmlCopy.Cut(0, bannerStart + bannerStartStr.Length());
-			
-			PRInt32	bannerEnd = htmlCopy.Find(bannerEndStr, PR_TRUE);
-			if (bannerEnd > 0)
+			PRInt32	bannerEnd = htmlResults.Find(bannerEndStr, PR_TRUE, bannerStart + bannerStartStr.Length());
+			if (bannerEnd > bannerStart)
 			{
-				htmlCopy.Truncate(bannerEnd);
-				if (htmlCopy.Length() > 0)
+				nsAutoString	htmlBanner;
+				htmlResults.Mid(htmlBanner, bannerStart, bannerEnd - bannerStart - 1);
+				if (htmlBanner.Length() > 0)
 				{
-					const PRUnichar	*bannerUni = htmlCopy.GetUnicode();
+					const PRUnichar	*bannerUni = htmlBanner.GetUnicode();
 					if (bannerUni)
 					{
 						gRDFService->GetLiteral(bannerUni, getter_AddRefs(bannerLiteral));
@@ -2808,64 +2804,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 		
 		nsAutoString	nameStr;
 		resultItem.Mid(nameStr, anchorEnd + 1, anchorStop - anchorEnd - 1);
-
-		// munge any "&quot;" in name
-		PRInt32	quotOffset;
-		while ((quotOffset = nameStr.Find("&quot;", PR_TRUE)) >= 0)
-		{
-			nameStr.Cut(quotOffset, strlen("&quot;"));
-			nameStr.Insert(PRUnichar('\"'), quotOffset);
-		}
-		
-		// munge any "&amp;" in name
-		PRInt32	ampOffset;
-		while ((ampOffset = nameStr.Find("&amp;", PR_TRUE)) >= 0)
-		{
-			nameStr.Cut(ampOffset, strlen("&amp;"));
-			nameStr.Insert(PRUnichar('&'), ampOffset);
-		}
-		
-		// munge any "&nbsp;" in name
-		PRInt32	nbspOffset;
-		while ((nbspOffset = nameStr.Find("&nbsp;", PR_TRUE)) >= 0)
-		{
-			nameStr.Cut(nbspOffset, strlen("&nbsp;"));
-			nameStr.Insert(PRUnichar(' '), nbspOffset);
-		}
-
-		// munge any "&lt;" in name
-		PRInt32	ltOffset;
-		while ((ltOffset = nameStr.Find("&lt;", PR_TRUE)) >= 0)
-		{
-			nameStr.Cut(ltOffset, strlen("&lt;"));
-			nameStr.Insert(PRUnichar('<'), ltOffset);
-		}
-
-		// munge any "&gt;" in name
-		PRInt32	gtOffset;
-		while ((gtOffset = nameStr.Find("&gt;", PR_TRUE)) >= 0)
-		{
-			nameStr.Cut(gtOffset, strlen("&gt;"));
-			nameStr.Insert(PRUnichar('>'), gtOffset);
-		}
-		
-		// munge out anything inside of HTML "<" / ">" tags
-		PRInt32 tagStartOffset;
-		while ((tagStartOffset = nameStr.FindCharInSet("<", 0)) >= 0)
-		{
-			PRInt32	tagEndOffset = nameStr.FindCharInSet(">", tagStartOffset);
-			if (tagEndOffset <= tagStartOffset)	break;
-			nameStr.Cut(tagStartOffset, tagEndOffset - tagStartOffset + 1);
-		}
-
-		// cut out any CRs or LFs
-		PRInt32	eolOffset;
-		while ((eolOffset = nameStr.FindCharInSet("\n\r", 0)) >= 0)
-		{
-			nameStr.Cut(eolOffset, 1);
-		}
-		// and trim name
-		nameStr = nameStr.Trim(" \t");
+		ConvertEntities(nameStr);
 
 		// look for Name (if it isn't already set)
 		nsCOMPtr<nsIRDFNode>		oldNameRes = nsnull;
@@ -2902,20 +2841,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 				resultItem.Mid(priceItem, priceStart + priceStartStr.Length(),
 					priceEnd - priceStart - priceStartStr.Length());
 
-				// munge out anything inside of HTML "<" / ">" tags
-				PRInt32 priceTagStartOffset;
-				while ((priceTagStartOffset = priceItem.FindCharInSet("<", 0)) >= 0)
-				{
-					PRInt32	priceTagEndOffset = priceItem.FindCharInSet(">", priceTagStartOffset);
-					if (priceTagEndOffset <= priceTagStartOffset)	break;
-					priceItem.Cut(priceTagStartOffset, priceTagEndOffset - priceTagStartOffset + 1);
-				}
-				// cut out any CRs or LFs
-				PRInt32	priceEOLOffset;
-				while ((priceEOLOffset = priceItem.FindCharInSet("\n\r", 0)) >= 0)
-				{
-					priceItem.Cut(priceEOLOffset, 1);
-				}
+				ConvertEntities(priceItem);
 			}
 		}
 		if (priceItem.Length() > 0)
@@ -2961,20 +2887,8 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			{
 				resultItem.Mid(availItem, availStart + availStartStr.Length(),
 					availEnd - availStart - availStartStr.Length());
-				// munge out anything inside of HTML "<" / ">" tags
-				PRInt32 availTagStartOffset;
-				while ((availTagStartOffset = availItem.FindCharInSet("<", 0)) >= 0)
-				{
-					PRInt32	availTagEndOffset = availItem.FindCharInSet(">", availTagStartOffset);
-					if (availTagEndOffset <= availTagStartOffset)	break;
-					availItem.Cut(availTagStartOffset, availTagEndOffset - availTagStartOffset + 1);
-				}
-				// cut out any CRs or LFs
-				PRInt32	availEOLOffset;
-				while ((availEOLOffset = availItem.FindCharInSet("\n\r", 0)) >= 0)
-				{
-					availItem.Cut(availEOLOffset, 1);
-				}
+
+				ConvertEntities(availItem);
 			}
 		}
 		if (availItem.Length() > 0)
@@ -3154,9 +3068,12 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 	}
 
 	// set hints so that the appropriate columns can be displayed
-	if (hasPriceFlag == PR_TRUE)		SetHint(mParent, kNC_Price);
-	if (hasAvailabilityFlag == PR_TRUE)	SetHint(mParent, kNC_Availability);
-	if (hasRelevanceFlag == PR_TRUE)	SetHint(mParent, kNC_Relevance);
+	if (mParent)
+	{
+		if (hasPriceFlag == PR_TRUE)		SetHint(mParent, kNC_Price);
+		if (hasAvailabilityFlag == PR_TRUE)	SetHint(mParent, kNC_Availability);
+		if (hasRelevanceFlag == PR_TRUE)	SetHint(mParent, kNC_Relevance);
+	}
 
 	return(NS_OK);
 }
@@ -3180,4 +3097,66 @@ InternetSearchDataSource::SetHint(nsIRDFResource *mParent, nsIRDFResource *hintR
 		}
 	}
 	return(rv);
+}
+
+
+
+nsresult
+InternetSearchDataSource::ConvertEntities(nsString &nameStr, PRBool removeHTMLFlag,
+					PRBool removeCRLFsFlag, PRBool trimWhiteSpaceFlag)
+{
+	PRInt32	startOffset = 0, ampOffset, semiOffset, offset;
+
+	// do this before converting entities
+	if (removeHTMLFlag == PR_TRUE)
+	{
+		// munge out anything inside of HTML "<" / ">" tags
+		while ((offset = nameStr.FindChar(PRUnichar('<'), PR_FALSE, 0)) >= 0)
+		{
+			PRInt32	offsetEnd = nameStr.FindChar(PRUnichar('>'), PR_FALSE, offset+1);
+			if (offsetEnd <= offset)	break;
+			nameStr.Cut(offset, offsetEnd - offset + 1);
+		}
+	}
+	while ((ampOffset = nameStr.FindChar(PRUnichar('&'), PR_FALSE, startOffset)) >= 0)
+	{
+		if ((semiOffset = nameStr.FindChar(PRUnichar(';'), PR_FALSE, ampOffset+1)) <= ampOffset)
+			break;
+
+		nsAutoString	entityStr;
+		nameStr.Mid(entityStr, ampOffset, semiOffset-ampOffset+1);
+		nameStr.Cut(ampOffset, semiOffset-ampOffset+1);
+
+		PRUnichar	entityChar = 0;
+		if (entityStr.EqualsIgnoreCase("&quot;"))	entityChar = PRUnichar('\"');
+		if (entityStr.EqualsIgnoreCase("&amp;"))	entityChar = PRUnichar('&');
+		if (entityStr.EqualsIgnoreCase("&nbsp;"))	entityChar = PRUnichar(' ');
+		if (entityStr.EqualsIgnoreCase("&lt;"))		entityChar = PRUnichar('<');
+		if (entityStr.EqualsIgnoreCase("&gt;"))		entityChar = PRUnichar('>');
+		if (entityStr.EqualsIgnoreCase("&pound;"))	entityChar = PRUnichar(163);
+
+		startOffset = ampOffset;
+		if (entityChar != 0)
+		{
+			nameStr.Insert(entityChar, ampOffset);
+			++startOffset;
+		}
+	}
+
+	if (removeCRLFsFlag == PR_TRUE)
+	{
+		// cut out any CRs or LFs
+		while ((offset = nameStr.FindCharInSet("\n\r", 0)) >= 0)
+		{
+			nameStr.Cut(offset, 1);
+		}
+	}
+
+	if (trimWhiteSpaceFlag == PR_TRUE)
+	{
+		// trim name
+		nameStr = nameStr.Trim(" \t");
+	}
+
+	return(NS_OK);
 }
