@@ -1003,6 +1003,7 @@ nsFontMetricsXlibContext::~nsFontMetricsXlibContext()
   mCachedFFRESearches.Reset(FreeNodeArray, nsnull); 
   mFFRENodes.Reset(FreeNode, nsnull);
   mAFRENodes.Reset(FreeNode, nsnull);
+  mSpecialCharSets.Reset(FreeCharSetMap, nsnull);
 
   const nsFontCharSetMapXlib* charSetMap;
   for (charSetMap=mCharSetMap; charSetMap->mFontLangGroup; charSetMap++) {
