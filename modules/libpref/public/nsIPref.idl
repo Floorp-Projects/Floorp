@@ -124,15 +124,6 @@ interface nsIPref : nsISupports {
   nsIFileSpec GetFilePref(in string pref);
   void SetFilePref(in string pref, in nsIFileSpec value, in boolean setDefault);
 
-  /* Security Prefs Access 
-     These are here to support nsScriptSecurityManager and are insecure if used elsewhere.
-     Please do not call these functions from elsewhere. 
-  */
-  [noscript] boolean GetSecBoolPref(in string pref);
-  [noscript] string CopySecCharPref(in string pref);
-  [noscript] void SetSecCharPref(in string pref, in string value);
-  [noscript] void ClearSecUserPref(in string pref_name);
-
   /* pref attributes */
   boolean PrefIsLocked(in string pref);
 
