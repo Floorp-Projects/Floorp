@@ -542,7 +542,11 @@ nsNSSDialogs::AlertDialog(nsIInterfaceRequestor *ctx, const char *prefName,
   mStringBundle->GetStringFromName(showAgainName,
                                    getter_Copies(dontShowAgain));
   if (!windowTitle || !message || !dontShowAgain) return NS_ERROR_FAILURE;
-      
+
+#ifdef MOZ_PHOENIX
+  prefValue = PR_FALSE;
+#endif
+
   rv = prompt->AlertCheck(windowTitle, message, dontShowAgain, &prefValue);
   if (NS_FAILED(rv)) return rv;
       
