@@ -626,6 +626,8 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
   if (!mEventManager)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  NS_ADDREF(mEventManager);
+
   rv = mEventManager->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
