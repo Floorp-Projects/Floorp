@@ -116,9 +116,9 @@ nsMenuBarFrame::Init(nsIPresContext&  aPresContext,
 }
 
 NS_IMETHODIMP
-nsMenuBarFrame::SetActive()
+nsMenuBarFrame::SetActive(PRBool aActiveFlag)
 {
-  mIsActive = PR_TRUE;
+  mIsActive = aActiveFlag;
   return NS_OK;
 }
 
@@ -138,7 +138,7 @@ nsMenuBarFrame::ToggleMenuActiveState()
   }
   else {
     // Activate the menu bar
-    SetActive();
+    SetActive(PR_TRUE);
 
     // Set the active menu to be the top left item (e.g., the File menu).
     // We use an attribute called "active" to track the current active menu.
@@ -384,7 +384,14 @@ nsMenuBarFrame::Escape()
   nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
   if (menuFrame->IsOpen()) {
     // Let the child menu handle this.
-    menuFrame->Escape();
+    PRBool handled = PR_FALSE;
+    menuFrame->Escape(handled);
+    if (!handled) {
+      // Close up this menu but keep our current menu item
+      // designation.
+      menuFrame->OpenMenu(PR_FALSE);
+    }
+    return;
   }
 
   // It's us. Just set our active flag to false.

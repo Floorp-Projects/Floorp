@@ -194,12 +194,25 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
     if (frame) {
       // We have children.
       ToggleMenuState();
+      if (!IsOpen() && mMenuParent) {
+        // We closed up. The menu bar should always be
+        // deactivated when this happens.
+        mMenuParent->SetActive(PR_FALSE);
+      }
     }
   }
   else if (aEvent->message == NS_MOUSE_EXIT) {
     // Deactivate the menu.
-    if (mMenuParent && !mMenuOpen)
-      mMenuParent->SetCurrentMenuItem(nsnull);
+    PRBool isActive = PR_FALSE;
+    PRBool isMenuBar = PR_FALSE;
+    if (mMenuParent) {
+      mMenuParent->IsMenuBar(isMenuBar);
+      if (isMenuBar) {
+        mMenuParent->GetIsActive(isActive);
+        if (!isActive)
+          mMenuParent->SetCurrentMenuItem(nsnull);
+      }
+    }
   }
   else if (aEvent->message == NS_MOUSE_MOVE) {
     // Let the menu parent know we're the new item.
@@ -258,7 +271,7 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
       child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
       
       // Tell the menu bar we're active.
-      mMenuParent->SetActive();
+      mMenuParent->SetActive(PR_TRUE);
     }
 
     mMenuOpen = PR_TRUE;
@@ -348,10 +361,13 @@ nsMenuFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
 }
 
 void
-nsMenuFrame::Escape()
+nsMenuFrame::Escape(PRBool& aHandledFlag)
 {
-
-
+  nsIFrame* frame = mPopupFrames.FirstChild();
+  if (frame) {
+    nsMenuPopupFrame* popup = (nsMenuPopupFrame*)frame;
+    popup->Escape(aHandledFlag);
+  }
 }
 
 void

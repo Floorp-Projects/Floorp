@@ -45,7 +45,9 @@ public:
   NS_IMETHOD SetCurrentMenuItem(nsIFrame* aMenuItem);
   NS_IMETHOD GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult);
   NS_IMETHOD GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult);
-  NS_IMETHOD SetActive(); 
+  NS_IMETHOD SetActive(PRBool aActiveFlag); 
+  NS_IMETHOD GetIsActive(PRBool& isActive) { isActive = IsActive(); return NS_OK; };
+  NS_IMETHOD IsMenuBar(PRBool& isMenuBar) { isMenuBar = PR_TRUE; return NS_OK; };
 
   NS_IMETHOD IsActive() { return mIsActive; };
 
