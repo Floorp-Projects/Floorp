@@ -264,7 +264,7 @@ LocalSearchDataSource::GetURI(char **uri)
 	if (! uri)
 		return NS_ERROR_NULL_POINTER;
 
-	if ((*uri = nsXPIDLCString::Copy("rdf:find")) == nsnull)
+	if ((*uri = nsXPIDLCString::Copy("rdf:localsearch")) == nsnull)
 		return NS_ERROR_OUT_OF_MEMORY;
 
 	return NS_OK;
