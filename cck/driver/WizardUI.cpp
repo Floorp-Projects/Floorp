@@ -674,79 +674,21 @@ void CWizardUI::CreateControls()
 		}
 		else if (widgetType == "CheckListBox") 
 		{
+			// Don't use LBS_STANDARD since it includes LBS_SORT which we don't want!
 			curWidget->control = new CCheckListBox;
 			rv = ((CCheckListBox*)curWidget->control)->Create(
-				LBS_STANDARD | LBS_HASSTRINGS | BS_CHECKBOX |
-				LBS_OWNERDRAWFIXED | WS_HSCROLL | WS_VSCROLL | 
-				WS_TABSTOP, tmpRect, this, ID);
+				LBS_HASSTRINGS | LBS_OWNERDRAWFIXED | LBS_NOTIFY |
+				WS_HSCROLL | WS_VSCROLL | WS_BORDER | WS_TABSTOP, 
+				tmpRect, this, ID);
 			((CCheckListBox*)curWidget->control)->ModifyStyleEx(NULL, WS_EX_CLIENTEDGE, 0);
 
-			/*
-			if (curWidget->action.onInit == "GenerateFileList" ||
-				curWidget->action.onInit == "GenerateDirList")
-			{
-				CString ext = theInterpreter->replaceVars(curWidget->action.parameters, NULL);
-				theApp.GenerateList(curWidget->action.onInit, curWidget, ext);
-			}
-			if (!curWidget->action.onInit.IsEmpty())
-				theInterpreter->interpret(curWidget->action.onInit, curWidget);
-			else
-			{
-				for (int i = 0; i < curWidget->numOfOptions; i++) 
-				{
-					if (curWidget->options.value[i])
-					{
-						((CCheckListBox*)curWidget->control)->AddString(curWidget->options.value[i]);
-					}
-				}
-			}
-		
-			char* selectedItems;
-			selectedItems = (char *) GlobalAlloc(0, curWidget->value.GetLength()+1);
-			strcpy(selectedItems, (char *) (LPCTSTR) curWidget->value);
-
-			int i;
-			char *s = strtok(selectedItems, ",");
-			while (s) 
-			{
-				i = ((CCheckListBox*)curWidget->control)->FindString(0, s);
-				if (i != -1)
-					((CCheckListBox*)curWidget->control)->SetCheck(i, 1);
-				s = strtok( NULL, "," );
-			}
-			if (curWidget->numOfOptDesc > 0)
-				SetDescription(curWidget);
-			//GlobalFree(selectedItems);
-			*/
 			EnableWidget(curWidget);
 		}
 		else if (widgetType == "ComboBox") {
 			curWidget->control = new CComboBox;
 			rv = ((CComboBox*)curWidget->control)->Create(CBS_DROPDOWNLIST | WS_TABSTOP, tmpRect, this, ID);
 
-			/*
-			if (curWidget->action.onInit == "GenerateFileList" ||
-				curWidget->action.onInit == "GenerateDirList")
-			{
-				CString ext = theInterpreter->replaceVars(curWidget->action.parameters,NULL);				
-				theApp.GenerateList(curWidget->action.onInit, curWidget, ext);
-			}
-			if (!curWidget->action.onInit.IsEmpty())
-				theInterpreter->interpret(curWidget->action.onInit, curWidget);
-			else
-			{
-				for (int i = 0; i < curWidget->numOfOptions; i++) 
-				{
-					if (curWidget->options.value[i])
-					{
-						((CComboBox*)curWidget->control)->AddString(curWidget->options.value[i]);
-					}
-				}
-			}
-			*/
 			EnableWidget(curWidget);
-
-			//((CComboBox*)curWidget->control)->SelectString(0, selectedCustomization);
 		}
 		else if (widgetType == "GroupBox") {
 			curWidget->control = new CButton;
@@ -818,14 +760,11 @@ void CWizardUI::CreateControls()
 		{
 			if (!curWidget->action.onInit.IsEmpty())
 				theInterpreter->interpret(curWidget->action.onInit, curWidget);
-			else
+			for (int i = 0; i < curWidget->numOfOptions; i++) 
 			{
-				for (int i = 0; i < curWidget->numOfOptions; i++) 
+				if (curWidget->options.value[i])
 				{
-					if (curWidget->options.value[i])
-					{
-						((CCheckListBox*)curWidget->control)->AddString(curWidget->options.value[i]);
-					}
+					((CCheckListBox*)curWidget->control)->AddString(curWidget->options.value[i]);
 				}
 			}
 		
@@ -833,7 +772,7 @@ void CWizardUI::CreateControls()
 			selectedItems = (char *) GlobalAlloc(0, curWidget->value.GetLength()+1);
 			strcpy(selectedItems, (char *) (LPCTSTR) curWidget->value);
 
-			int i;
+			int idx;
 			BOOL selected = FALSE;
 			char *s = strtok(selectedItems, ",");
 			while (s) 
@@ -843,9 +782,9 @@ void CWizardUI::CreateControls()
 					selected = TRUE;
 					((CCheckListBox*)curWidget->control)->SelectString(0, s);
 				}
-				i = ((CCheckListBox*)curWidget->control)->FindString(0, s);
-				if (i != -1)
-					((CCheckListBox*)curWidget->control)->SetCheck(i, 1);
+				idx = ((CCheckListBox*)curWidget->control)->FindString(0, s);
+				if (idx != -1)
+					((CCheckListBox*)curWidget->control)->SetCheck(idx, 1);
 				s = strtok( NULL, "," );
 			}
 			if (curWidget->numOfOptDesc > 0)

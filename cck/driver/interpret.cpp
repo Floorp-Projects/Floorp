@@ -37,7 +37,6 @@ extern CString CachePath;
 extern char asePath[MAX_SIZE];
 extern char nciPath[MAX_SIZE];
 extern char tmpPath[MAX_SIZE];
-CString returnDir;
 extern UINT nID;
 extern UINT wNotifyCode;
 
@@ -141,11 +140,11 @@ BOOL CInterpret::BrowseFile(WIDGET *curWidget)
 	return TRUE;
 }
 
-BOOL CInterpret::BrowseDir(WIDGET *curWidget) 
+CString CInterpret::BrowseDir(WIDGET *curWidget) 
 {
 	// The following code is used to browse to a dir
 	// CFileDialog does not allow this
-	returnDir = "";
+	CString returnDir("");
 	BROWSEINFO bi;
 	char szPath[MAX_PATH];
 	char szTitle[] = "Select Directory";
@@ -180,7 +179,7 @@ BOOL CInterpret::BrowseDir(WIDGET *curWidget)
 	 }
 	returnDir = szPath;
 	free( bi.pszDisplayName );
-	return TRUE;
+	return returnDir;
 }
 
 BOOL CInterpret::Progress() 
@@ -397,7 +396,7 @@ CString CInterpret::replaceVars(char *str, char *listval)
 	return CString(buf);
 }
 
-BOOL CInterpret::CallDLL(char *dll, char *proc, char *parms)
+BOOL CInterpret::CallDLL(char *dll, char *proc, char *parms, WIDGET *curWidget)
 {
 	// When searching for DLL info, the m_DLLs is a dummy object
 	// that only exists to hold the head of the list.  This simplifies 
@@ -443,7 +442,7 @@ BOOL CInterpret::CallDLL(char *dll, char *proc, char *parms)
 	}
 
 	// OK, if we get this far we've got a valid DLLINFO struct so call the procedure
-	if (!(*dllp->procAddr)(CString(parms)))
+	if (!(*dllp->procAddr)(CString(parms), curWidget))
 		return FALSE;
 
 	return TRUE;
@@ -494,7 +493,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					if (!proc)
 						return FALSE;
 
-					if (!CallDLL(dll, proc, parms))
+					if (!CallDLL(dll, proc, parms, curWidget))
 						return FALSE;
 				}
 				else if (strcmp(pcmd, "command") == 0)
@@ -690,7 +689,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 
 					CString todir = replaceVars(parms, NULL);
 					CString ext = p2;
-					BrowseDir(curWidget);
+					CString returnDir = BrowseDir(curWidget);
 					CopyDir(returnDir,todir,ext,FALSE);
 				}
 				else if (strcmp(pcmd, "DisplayImage") == 0)

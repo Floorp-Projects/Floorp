@@ -253,7 +253,7 @@ int interpret(char *cmd)
 	return TRUE;
 }
 extern "C" __declspec(dllexport)
-int StartIB(CString parms)
+int StartIB(CString parms, WIDGET *curWidget)
 {
 	char *fgetsrv;
 	int rv = TRUE;

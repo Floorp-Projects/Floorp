@@ -135,7 +135,7 @@ typedef struct NODE
 
 //-----------------------------------------------------------
 
-typedef int (DLLPROC)(CString parms);
+typedef int (DLLPROC)(CString parms, WIDGET *curWidget);
 
 typedef struct DLLINFO
 {
