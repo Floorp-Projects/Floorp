@@ -308,7 +308,7 @@ function unifinderOnSelect( event )
    if( ArrayOfEvents.length == 1 )
    {
       /*start date is either the next or last occurence, or the start date of the event */
-      var eventStartDate = getNextOrPreviousRecurrence( calendarEvent );
+      var eventStartDate = getCurrentNextOrPreviousRecurrence( calendarEvent );
       
       /* you need this in case the current day is not visible. */
       if( gCalendarWindow.currentView.getVisibleEvent( calendarEvent ) == false )
@@ -529,11 +529,11 @@ var treeView =
             return( calendarEvent.title );
          
          case "unifinder-search-results-tree-col-startdate":
-            var eventStartDate = getNextOrPreviousRecurrence( calendarEvent );
+            var eventStartDate = getCurrentNextOrPreviousRecurrence( calendarEvent );
             return formatUnifinderEventDateTime(eventStartDate, calendarEvent.allDay);
          
          case "unifinder-search-results-tree-col-enddate":
-            var eventEndDate = getNextOrPreviousRecurrence( calendarEvent );
+            var eventEndDate = getCurrentNextOrPreviousRecurrence( calendarEvent );
             var eventLength = calendarEvent.end.getTime() - calendarEvent.start.getTime();
             var actualEndDate = eventEndDate.getTime() + eventLength;
             eventEndDate = new Date( actualEndDate );
@@ -724,46 +724,13 @@ function focusFirstItemIfNoSelection()
          gCalendarWindow.EventSelection.setArrayToSelection( ArrayOfEvents );
       
          /*start date is either the next or last occurence, or the start date of the event */
-         var eventStartDate = getNextOrPreviousRecurrence( SelectedEvent );
+         var eventStartDate = getCurrentNextOrPreviousRecurrence( SelectedEvent );
             
          /* you need this in case the current day is not visible. */
          gCalendarWindow.currentView.goToDay( eventStartDate, true);
       }
    }
 }
-
-
-function getNextOrPreviousRecurrence( calendarEvent )
-{
-   var isValid;
-
-   if( calendarEvent.recur )
-   {
-      var now = new Date();
-
-      var result = new Object();
-
-      isValid = calendarEvent.getNextRecurrence( now.getTime(), result );
-
-      if( isValid )
-      {
-         return( new Date( result.value ) );
-      }
-      else
-      {
-         isValid = calendarEvent.getPreviousOccurrence( now.getTime(), result );
-         
-         return( new Date( result.value ) );
-      }
-   }
-   
-   if( !isValid || !calendarEvent.recur )
-   {
-      return( new Date( calendarEvent.start.getTime() ) );
-   }
-   return( false );
-}
-
 
 function changeToolTipTextForEvent( event )
 {

@@ -597,10 +597,13 @@ function eventTitleOrEmpty(event) {
 
 CalendarEventDataSource.prototype.orderRawEventsByDate = function calEvent_orderRawEventsByDate( eventA, eventB )
 {
-    return( getNextOrPreviousRecurrence( eventA ).getTime() - getNextOrPreviousRecurrence( eventB ).getTime() );
+    return( getCurrentNextOrPreviousRecurrence( eventA ).getTime() - getCurrentNextOrPreviousRecurrence( eventB ).getTime() );
 }
 
-function getNextOrPreviousRecurrence( calendarEvent )
+/** If now is during an occurrence, return the ocurrence.
+    Else if now is before an ocurrence, return the next ocurrence.
+    Otherwise return the previous ocurrence. **/
+function getCurrentNextOrPreviousRecurrence( calendarEvent )
 {
    var isValid = false;
 
@@ -612,7 +615,13 @@ function getNextOrPreviousRecurrence( calendarEvent )
 
       var result = new Object();
 
-      isValid = calendarEvent.getNextRecurrence( now.getTime(), result );
+      var dur = calendarEvent.end.getTime() - calendarEvent.start.getTime();
+
+      // To find current event when now is during event, look for occurrence
+      // starting duration ago.
+      var probeTime = now.getTime() - dur;
+
+      isValid = calendarEvent.getNextRecurrence( probeTime, result );
 
       if( isValid )
       {
@@ -620,9 +629,12 @@ function getNextOrPreviousRecurrence( calendarEvent )
       }
       else
       {
-         isValid = calendarEvent.getPreviousOccurrence( now.getTime(), result );
+         isValid = calendarEvent.getPreviousOccurrence( probeTime, result );
          
-         eventStartDate = new Date( result.value );
+         if (isValid)
+         {
+            eventStartDate = new Date( result.value );
+         }
       }
    }
    
