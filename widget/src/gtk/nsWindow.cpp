@@ -17,6 +17,7 @@
  */
 
 #include <gtk/gtk.h>
+#define USE_XIM
 #include <gdk/gdkx.h>
 #include <gtk/gtkprivate.h>
 
@@ -34,6 +35,10 @@
 #include "nsGtkEventHandler.h"
 #include "nsIAppShell.h"
 #include "nsClipboard.h"
+#ifdef USE_XIM
+#include "nsIServiceManager.h"
+#include "nsIPref.h"
+#endif
 
 #include "stdio.h"
 
@@ -58,6 +63,12 @@ nsWindow::nsWindow()
   mFont = nsnull;
   
   mMenuBar = nsnull;
+#ifdef        USE_XIM
+  mIMEEnable = PR_TRUE;
+  mIC = nsnull;
+  mIMECompositionUniString = nsnull;
+  mIMECompositionUniStringSize = 0;
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -165,6 +176,64 @@ NS_METHOD nsWindow::Destroy()
   return NS_OK;
 }
 
+#ifdef        USE_XIM
+void
+nsWindow::OnFocusInSignal(GdkEventFocus * aGdkFocusEvent)
+{
+  nsWidget::OnFocusInSignal(aGdkFocusEvent);
+
+  if(mIMEEnable == PR_FALSE){
+#ifdef NOISY_XIM
+     printf("  IME is not usable on this window\n");
+#endif
+     return;
+  }
+  if (!mIC) {
+    GetXIC();
+  }
+  if (mIC){
+    GdkWindow *gdkWindow = (GdkWindow*) GetNativeData(NS_NATIVE_WINDOW);
+    if (gdkWindow) {
+      gdk_im_begin ((GdkIC*)mIC, gdkWindow);
+    } else {
+#ifdef NOISY_XIM
+      printf("gdkWindow is not usable\n");
+#endif
+    }
+  } else {
+#ifdef NOISY_XIM
+    printf("mIC can't created yet\n");
+#endif
+  }
+}
+
+void
+nsWindow::OnFocusOutSignal(GdkEventFocus * aGdkFocusEvent)
+{
+  nsWidget::OnFocusOutSignal(aGdkFocusEvent);
+
+  if(mIMEEnable == PR_FALSE){
+#ifdef NOISY_XIM
+     printf("  IME is not usable on this window\n");
+#endif
+     return;
+  }
+  if (mIC){
+    GdkWindow *gdkWindow = (GdkWindow*) GetNativeData(NS_NATIVE_WINDOW);
+    if (gdkWindow) {
+      gdk_im_end();
+    } else {
+#ifdef NOISY_XIM
+      printf("gdkWindow is not usable\n");
+#endif
+    }
+  } else {
+#ifdef NOISY_XIM
+    printf("mIC isn't created yet\n");
+#endif
+  }
+}
+#endif /* USE_XIM */
 void
 nsWindow::OnDestroySignal(GtkWidget* aGtkWidget)
 {
@@ -972,6 +1041,174 @@ nsWindow::OnDrawSignal(GdkRectangle * aArea)
 }
 //////////////////////////////////////////////////////////////////////
 
+#ifdef        USE_XIM
+
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+
+#define PREF_XIM_PREEDIT "xim.preedit"
+#define PREF_XIM_STATUS "xim.status"
+#define SUPPORTED_PREEDIT (GDK_IM_PREEDIT_AREA | \
+                         GDK_IM_PREEDIT_POSITION | \
+                         GDK_IM_PREEDIT_NOTHING | \
+                         GDK_IM_PREEDIT_NONE)
+//                     GDK_IM_PREEDIT_CALLBACKS
+
+#define SUPPORTED_STATUS (GDK_IM_STATUS_NOTHING | \
+                        GDK_IM_STATUS_NONE)
+//                    GDK_IM_STATUS_AREA
+//                    GDK_IM_STATUS_CALLBACKS
+
+void
+nsWindow::SetXIC(GdkICPrivate *aIC) {
+  if(mIMEEnable == PR_FALSE){
+     return;
+  }
+  mIC = aIC;
+  return;
+}
+
+GdkICPrivate*
+nsWindow::GetXIC() {
+  if(mIMEEnable == PR_FALSE){
+     return nsnull;
+  }
+  if (mIC) return mIC;          // mIC is already set
+
+  // IC-per-shell, we share a single IC among all widgets of
+  // a single toplevel widget
+  nsIWidget *widget = this;
+  nsIWidget *root = this;
+  while (widget) {
+    root = widget;
+    widget = widget->GetParent();
+  }
+  nsWindow *root_win = (nsWindow*)root; // this is a toplevel window
+  if (!root_win->mIC) {
+    // create an XIC as this is a new toplevel window
+
+    // open an XIM
+    if (!gdk_xim_ic) {
+#ifdef NOISY_XIM
+      printf("Try gdk_im_open()\n");
+#endif
+      if (gdk_im_open() == FALSE){
+#ifdef NOISY_XIM
+        printf("Can't Open IM\n");
+#endif
+      }
+    } else {
+#ifdef NOISY_XIM
+      printf("gdk_xim_ic is already created\n");
+#endif
+    }
+    if (gdk_im_ready()) {
+      int height, width;
+      // fontset is hardcoded, but need to get a fontset at the
+      // text insertion point
+      GdkFont *gfontset =
+gdk_fontset_load("-misc-fixed-medium-r-normal--*-130-*-*-*-*-*-0");
+      GdkWindow *gdkWindow = (GdkWindow*) GetNativeData(NS_NATIVE_WINDOW);
+      if (!gdkWindow) return nsnull;
+
+      GdkWindowPrivate *gdkWindow_private = (GdkWindowPrivate*) gdkWindow;
+      GdkICAttr *attr = gdk_ic_attr_new();
+      GdkICAttributesType attrmask = GDK_IC_ALL_REQ;
+      GdkIMStyle style;
+
+      PRInt32 ivalue = 0;
+      nsresult rv;
+
+      GdkIMStyle supported_style = SUPPORTED_PREEDIT | SUPPORTED_STATUS;
+      style = gdk_im_decide_style(supported_style);
+
+      NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+      if (!NS_FAILED(rv) && (prefs)) {
+        rv = prefs->GetIntPref(PREF_XIM_PREEDIT, &ivalue);
+        if (SUPPORTED_PREEDIT & ivalue) {
+            style = (style & GDK_IM_STATUS_MASK) | ivalue;
+        }
+        rv = prefs->GetIntPref(PREF_XIM_STATUS, &ivalue);
+        if (SUPPORTED_STATUS & ivalue) {
+            style = (style & GDK_IM_PREEDIT_MASK) | ivalue;
+        }
+      }
+
+      attr->style = style;
+      attr->client_window = gdkWindow;
+
+      attrmask |= GDK_IC_PREEDIT_COLORMAP;
+      attr->preedit_colormap = gdkWindow_private->colormap;
+
+      switch (style & GDK_IM_PREEDIT_MASK) {
+      case GDK_IM_PREEDIT_POSITION:
+      default:
+        attrmask |= GDK_IC_PREEDIT_POSITION_REQ;
+        gdk_window_get_size (gdkWindow, &width, &height);
+
+        /* need to know how to get spot location */
+        attr->spot_location.x = 0;
+        attr->spot_location.y = 0; // height;
+
+        attr->preedit_area.x = 0;
+        attr->preedit_area.y = 0;
+        attr->preedit_area.width = width;
+        attr->preedit_area.height = height;
+        attrmask |= GDK_IC_PREEDIT_AREA;
+
+        attr->preedit_fontset = gfontset;
+        attrmask |= GDK_IC_PREEDIT_FONTSET;
+        break;
+      }
+      GdkICPrivate *IC = (GdkICPrivate*) gdk_ic_new (attr, attrmask);
+      gdk_ic_attr_destroy(attr);
+      root_win->SetXIC(IC);     // set to toplevel
+      SetXIC(IC);               // set to myself
+      return IC;
+    }
+  } else {
+    mIC = root_win->mIC;
+    return mIC;
+  }
+  return nsnull;
+}
+
+void
+nsWindow::GetXYFromPosition(unsigned long *aX,
+                            unsigned long *aY) {
+  if(mIMEEnable == PR_FALSE){
+     return;
+  }
+  GdkICAttr *attr = gdk_ic_attr_new();
+  GdkICAttributesType attrMask = GDK_IC_PREEDIT_FONTSET;
+  mIC->mask = GDK_IC_PREEDIT_FONTSET; // hack
+  gdk_ic_get_attr((GdkIC*)mIC, attr, attrMask);
+  if (attr->preedit_fontset) {
+    *aY += attr->preedit_fontset->ascent;
+  }
+  gdk_ic_attr_destroy(attr);
+  return;
+}
+void
+nsWindow::SetXICSpotLocation(nsPoint aPoint) {
+  if(mIMEEnable == PR_FALSE){
+     return;
+  }
+  if (!mIC) GetXIC();
+  if (mIC) {
+    GdkICAttr *attr = gdk_ic_attr_new();
+    GdkICAttributesType attrMask = GDK_IC_SPOT_LOCATION;
+    unsigned long x, y;
+    x = aPoint.x, y = aPoint.y;
+    GetXYFromPosition(&x, &y);
+    attr->spot_location.x = x;
+    attr->spot_location.y = y;
+    gdk_ic_set_attr((GdkIC*)mIC, attr, attrMask);
+    gdk_ic_attr_destroy(attr);
+  }
+  return;
+}
+
+#endif
 ChildWindow::ChildWindow()
 {
 }

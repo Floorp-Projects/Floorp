@@ -21,12 +21,24 @@
 
 #include "nsWidget.h"
 #include "nsWindow.h"
+#ifdef USE_XIM
+#include "nsTextWidget.h"
+#endif
 #include "nsScrollbar.h"
 #include "nsIFileWidget.h"
 #include "nsGUIEvent.h"
 #include "nsIMenu.h"
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
+
+#ifdef        USE_XIM
+#include "nsICharsetConverterManager.h"
+#include "nsIPlatformCharset.h"
+#include "nsIServiceManager.h"
+
+static NS_DEFINE_CID(kCharsetConverterManagerCID,
+                     NS_ICHARSETCONVERTERMANAGER_CID);
+#endif /* USE_XIM */
 
 #include "stdio.h"
 #include "ctype.h"
@@ -570,6 +582,194 @@ gint handle_key_release_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   return PR_TRUE;
 }
 
+#ifdef USE_XIM
+static gint composition_start(GdkEventKey *aEvent, nsWindow *aWin,
+                              nsEventStatus *aStatus) {
+  nsCompositionEvent compEvent;
+
+  compEvent.widget = (nsWidget*)aWin;
+  compEvent.point.x = 0;
+  compEvent.point.y = 0;
+  compEvent.time = aEvent->time;
+  compEvent.message = NS_COMPOSITION_START;
+  compEvent.eventStructType = NS_COMPOSITION_START;
+  compEvent.compositionMessage = NS_COMPOSITION_START;
+  aWin->DispatchEvent(&compEvent, *aStatus);
+
+  return PR_TRUE;
+}
+
+static gint composition_draw(GdkEventKey *aEvent, nsWindow *aWin,
+                             nsIUnicodeDecoder *aDecoder,
+                             nsEventStatus *aStatus) {
+  if (!aWin->mIMECompositionUniString) {
+    aWin->mIMECompositionUniStringSize = 128;
+    aWin->mIMECompositionUniString =
+      new PRUnichar[aWin->mIMECompositionUniStringSize];
+  }
+  PRUnichar *uniChar;
+  PRInt32 uniCharSize;
+  PRInt32 srcLen = aEvent->length;
+  for (;;) {
+    uniChar = aWin->mIMECompositionUniString;
+    uniCharSize = aWin->mIMECompositionUniStringSize - 1;
+    aDecoder->Convert(uniChar, 0, &uniCharSize, (char*)aEvent->string,
+                      0, &srcLen);
+    if (srcLen == aEvent->length &&
+        uniCharSize < aWin->mIMECompositionUniStringSize - 1) {
+      break;
+    }
+    aWin->mIMECompositionUniStringSize += 32;
+    aWin->mIMECompositionUniString =
+      new PRUnichar[aWin->mIMECompositionUniStringSize];
+  }
+  aWin->mIMECompositionUniString[uniCharSize] = 0;
+
+  nsTextEvent textEvent;
+  textEvent.message = NS_TEXT_EVENT;
+  textEvent.widget = (nsWidget*)aWin;
+  textEvent.time = aEvent->time;
+  textEvent.point.x = 0;
+  textEvent.point.y = 0;
+  textEvent.theText = aWin->mIMECompositionUniString;
+  textEvent.rangeCount = 0;
+  textEvent.rangeArray = nsnull;
+  textEvent.isShift = (aEvent->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
+  textEvent.isControl = (aEvent->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
+  textEvent.isAlt = (aEvent->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
+  textEvent.eventStructType = NS_TEXT_EVENT;
+  aWin->DispatchEvent(&textEvent, *aStatus);
+
+  aWin->SetXICSpotLocation(textEvent.theReply.mCursorPosition);
+  return True;
+}
+
+static gint composition_end(GdkEventKey *aEvent, nsWindow *aWin,
+                            nsEventStatus *aStatus) {
+  nsCompositionEvent compEvent;
+
+  compEvent.widget = (nsWidget*)aWin;
+  compEvent.point.x = 0;
+  compEvent.point.y = 0;
+  compEvent.time = aEvent->time;
+  compEvent.message = NS_COMPOSITION_END;
+  compEvent.eventStructType = NS_COMPOSITION_END;
+  compEvent.compositionMessage = NS_COMPOSITION_END;
+  aWin->DispatchEvent(&compEvent, *aStatus);
+
+  return PR_TRUE;
+}
+
+static nsIUnicodeDecoder*
+open_unicode_decoder(void) {
+  nsresult result;
+  nsIUnicodeDecoder *decoder = nsnull;
+  NS_WITH_SERVICE(nsIPlatformCharset, platform, NS_PLATFORMCHARSET_PROGID,
+                  &result);
+  if (platform && NS_SUCCEEDED(result)) {
+    nsAutoString charset("");
+    result = platform->GetCharset(kPlatformCharsetSel_Menu, charset);
+    if (NS_FAILED(result) || (charset.Length() == 0)) {
+      charset = "ISO-8859-1";   // default
+    }
+    nsICharsetConverterManager* manager = nsnull;
+    nsresult res = nsServiceManager::
+      GetService(kCharsetConverterManagerCID,
+                 nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(),
+                 (nsISupports**)&manager);
+    if (NS_SUCCEEDED(res)) {
+      manager->GetUnicodeDecoder(&charset, &decoder);
+      nsServiceManager::ReleaseService(kCharsetConverterManagerCID, manager);
+    }
+  }
+  return decoder;
+}
+
+gint handle_key_press_event_for_text(GtkWidget *w, GdkEventKey* event,
+                                     gpointer p)
+{
+  nsKeyEvent kevent;
+  nsTextWidget* win = (nsTextWidget*)p;
+  int isModifier;
+
+  // work around for annoying things.
+  if (event->keyval == GDK_Tab)
+    if (event->state & GDK_CONTROL_MASK)
+      if (event->state & GDK_MOD1_MASK)
+        return PR_FALSE;
+
+  // Don't pass shift, control and alt as key press events
+  if (event->keyval == GDK_Shift_L
+      || event->keyval == GDK_Shift_R
+      || event->keyval == GDK_Control_L
+      || event->keyval == GDK_Control_R)
+    return PR_TRUE;
+
+  win->AddRef();
+  InitKeyEvent(event, p, kevent, NS_KEY_DOWN);
+  win->OnKey(kevent);
+
+  //
+  // Second, dispatch the Key event as a key press event w/ a Unicode
+  //  character code.  Note we have to check for modifier keys, since
+  // gtk returns a character value for them
+  //
+  isModifier = event->state &(GDK_CONTROL_MASK|GDK_MOD1_MASK);
+#ifdef DEBUG_EVENTS
+  if (isModifier) printf("isModifier\n");
+#endif
+#ifdef USE_XIM
+  if (event->length || !isModifier) {
+    static nsIUnicodeDecoder *decoder = nsnull;
+    if (!decoder) {
+      decoder = open_unicode_decoder();
+    }
+    if (decoder) {
+      nsEventStatus status;
+      composition_start(event, (nsWindow*) win, &status);
+      composition_draw(event, (nsWindow*) win, decoder, &status);
+      composition_end(event, (nsWindow*) win, &status);
+    } else {
+      InitKeyPressEvent(event,p, kevent);
+      win->OnKey(kevent);
+    }
+  }
+#else
+  if (event->length && !isModifier) {
+     InitKeyPressEvent(event,p,kevent);
+     win->OnKey(kevent);
+  }
+#endif
+  win->Release();
+  gtk_signal_emit_stop_by_name (GTK_OBJECT(w), "key_press_event");
+
+  return PR_TRUE;
+}
+
+gint handle_key_release_event_for_text(GtkWidget *w, GdkEventKey* event,
+                                       gpointer p)
+{
+  nsKeyEvent kevent;
+  nsTextWidget* win = (nsTextWidget*)p;
+
+  // Don't pass shift, control and alt as key release events
+  if (event->keyval == GDK_Shift_L
+      || event->keyval == GDK_Shift_R
+      || event->keyval == GDK_Control_L
+      || event->keyval == GDK_Control_R)
+    return PR_TRUE;
+
+  InitKeyEvent(event, p, kevent, NS_KEY_UP);
+  win->AddRef();
+  win->OnKey(kevent);
+  win->Release();
+
+  gtk_signal_emit_stop_by_name (GTK_OBJECT(w), "key_release_event");
+
+  return PR_TRUE;
+}
+
+#endif
 
 //==============================================================
 gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
