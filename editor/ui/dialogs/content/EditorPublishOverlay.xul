@@ -40,11 +40,11 @@
     </hbox>
     <spacer class="spacer"/>
     <label value="&siteUrl.label;"/>
-    <textbox id="PublishUrlInput" class="MinWidth20em"
+    <textbox id="PublishUrlInput" class="MinWidth20em uri-element"
       tooltiptext="&siteUrl.tooltip;" oninput="onInputSettings();"/>
     <spacer class="spacer"/>
     <label value="&browseUrl.label;"/>
-    <textbox id="BrowseUrlInput" class="MinWidth20em" 
+    <textbox id="BrowseUrlInput" class="MinWidth20em uri-element" 
       tooltiptext="&browseUrl.tooltip;" oninput="onInputSettings();"/>
     <spacer class="spacer"/>
   </groupbox>

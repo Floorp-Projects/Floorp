@@ -70,7 +70,7 @@
 
 <vbox id="LinkLocationBox">
   <label control="hrefInput" accesskey="&LinkURLEditField.accessKey;" width="1">&LinkURLEditField.label;</label>
-  <menulist editable="true" id="hrefInput" style="min-width: 30em" oninput="ChangeLinkLocation();">
+  <menulist editable="true" id="hrefInput" style="min-width: 30em" class="uri-element" oninput="ChangeLinkLocation();">
     <menupopup/>
   </menulist>
   <hbox align="center">

@@ -47,7 +47,7 @@
 
   <label id="srcMessage" value="&sourceEditField.label;"/>
   <vbox flex="1" style="width: 30em; height: 20em;">
-    <textbox id="srcInput" multiline="true" rows="1" style="width: 1em" flex="1"/>
+    <textbox id="srcInput" multiline="true" rows="1" style="width: 1em" flex="1" class="uri-element"/>
   </vbox>
   <!-- Will this accept the embedded HTML tags? -->
   <hbox>

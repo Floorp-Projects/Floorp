@@ -66,7 +66,7 @@
             </hbox>
             <hbox align="center">
               <textbox id="networkProxyHTTP" preftype="string" prefstring="network.proxy.http"
-                       flex="1"/>
+                       flex="1" class="uri-element"/>
               <label value="&port.label;" accesskey="&HTTPport.accesskey;" control="networkProxyHTTP_Port"/>
               <textbox id="networkProxyHTTP_Port" preftype="int" prefstring="network.proxy.http_port"
                        size="5"/>
@@ -78,7 +78,7 @@
             </hbox>
             <hbox align="center">
               <textbox id="networkProxySSL" preftype="string" prefstring="network.proxy.ssl"
-                       flex="1"/>
+                       flex="1" class="uri-element"/>
               <label value="&port.label;" accesskey="&SSLport.accesskey;" control="networkProxySSL_Port"/>
               <textbox id="networkProxySSL_Port" preftype="int" prefstring="network.proxy.ssl_port"
                        size="5"/>
@@ -90,7 +90,7 @@
             </hbox>
             <hbox align="center">
               <textbox id="networkProxyFTP" preftype="string" prefstring="network.proxy.ftp"
-                       flex="1"/>
+                       flex="1" class="uri-element"/>
               <label value="&port.label;" accesskey="&FTPport.accesskey;" control="networkProxyFTP_Port"/>
               <textbox id="networkProxyFTP_Port" preftype="int" prefstring="network.proxy.ftp_port"
                        size="5"/>
@@ -102,7 +102,7 @@
             </hbox>
             <hbox align="center">
               <textbox id="networkProxyGopher" preftype="string" prefstring="network.proxy.gopher"
-                       flex="1"/>
+                       flex="1" class="uri-element"/>
               <!-- gopher port doesn't have an accesskey because the window needs a redesign - bbaetz -->
               <label value="&port.label;" accesskey="&gopherPort.accesskey;" control="networkProxyGopher_Port"/>
               <textbox id="networkProxyGopher_Port" preftype="int" prefstring="network.proxy.gopher_port"
@@ -115,7 +115,7 @@
             </hbox>
             <hbox align="center">
               <textbox id="networkProxySOCKS" preftype="string" prefstring="network.proxy.socks"
-                       flex="1"/>
+                       flex="1" class="uri-element"/>
             <label value="&port.label;" accesskey="&SOCKSport.accesskey;" control="networkProxySOCKS_Port"/>
               <textbox id="networkProxySOCKS_Port" preftype="int" prefstring="network.proxy.socks_port"
                        size="5"/>
@@ -134,7 +134,7 @@
             <hbox align="center" pack="end">
               <label value="&noproxy.label;" accesskey="&noproxy.accesskey;" control="networkProxyNone"/>
             </hbox>
-            <textbox id="networkProxyNone" preftype="string" prefstring="network.proxy.no_proxies_on"/>
+            <textbox id="networkProxyNone" preftype="string" prefstring="network.proxy.no_proxies_on" class="uri-element"/>
           </row>
           <row>
             <spacer/>
@@ -145,7 +145,7 @@
       <radio value="2" label="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;" oncommand="DoEnabling();"/>
       <hbox class="indent" flex="1" align="center">
         <textbox id="networkProxyAutoconfigURL" flex="1" 
-                 preftype="string" prefstring="network.proxy.autoconfig_url"/>
+                 preftype="string" prefstring="network.proxy.autoconfig_url" class="uri-element"/>
         <button id="autoReload" label="&reload.label;" accesskey="&reload.accesskey;"
                 oncommand="ReloadPAC();"
                 prefstring="pref.advanced.proxies.disable_button.reload"/>

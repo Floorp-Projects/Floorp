@@ -45,6 +45,18 @@ window[chromehidden~="location"][chromehidden~="toolbar"] .chromeclass-toolbar
 }
 
 
+/* ::::::::::
+   :: Rules for forcing direction for entry and display of URIs
+   :: or URI elements
+   ::::: */
+
+textbox.uri-element,
+menulist.uri-element
+{
+  direction: ltr !important;
+}
+
+
 /****** elements that have no visual representation ******/
 
 data,

@@ -120,7 +120,7 @@
     <spacer class="spacer"/>
     <label value="&backgroundImage.label;" accesskey="&backgroundImage.accesskey;"/>
     <hbox align="center">
-      <textbox id="BackgroundImageInput" oninput="ChangeBackgroundImage();" style="min-width: 23em" flex="1">
+      <textbox id="BackgroundImageInput" oninput="ChangeBackgroundImage();" style="min-width: 23em" flex="1" class="uri-element">
         <observes element="backgroundImageData" attribute="disabled"/>
       </textbox>
       <button label="&chooseFile.label;" accesskey="&chooseFile.accesskey;"

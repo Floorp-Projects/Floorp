@@ -64,7 +64,7 @@
       <description>&homePageIntro.label;</description>
       <hbox align="center">
         <label value="&location.label;" accesskey="&location.accesskey;" control="browserStartupHomepage"/>
-        <textbox id="browserStartupHomepage" type="autocomplete" flex="1" 
+        <textbox id="browserStartupHomepage" type="autocomplete" flex="1" class="uri-element" 
                  searchSessions="history" timeout="50" maxrows="6"
                  oninput="locationInputHandler();" preftype="localizedstring"
                  prefstring="browser.startup.homepage"/>  <!-- we may wish to change this to data
