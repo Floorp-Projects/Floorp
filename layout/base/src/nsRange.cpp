@@ -1073,9 +1073,22 @@ nsresult nsRange::Unposition()
 
 nsresult nsRange::SelectNode(nsIDOMNode* aN)
 {
+  if (!aN) return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIDOMNode> parent;
   nsCOMPtr<nsIDOMNode> theNode( do_QueryInterface(aN) );
-  if (!aN) return NS_ERROR_NULL_POINTER;
+
+  PRUint16 type = 0;
+  aN->GetNodeType(&type);
+
+  switch (type) {
+    case nsIDOMNode::ATTRIBUTE_NODE :
+    case nsIDOMNode::ENTITY_NODE :
+    case nsIDOMNode::DOCUMENT_NODE :
+    case nsIDOMNode::DOCUMENT_FRAGMENT_NODE :
+    case nsIDOMNode::NOTATION_NODE :
+      return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
+  }
+
   nsresult res = aN->GetParentNode(getter_AddRefs(parent));
   if (NS_FAILED(res)) return res;
   PRInt32 indx = IndexOf(theNode);
