@@ -380,7 +380,7 @@ gtk_xtbin_new (GdkWindow *parent_window, String * f)
     if (fallback)
       XtAppSetFallbackResources(app_context, fallback);
   
-    xtdisplay = XtOpenDisplay(app_context, NULL, NULL, 
+    xtdisplay = XtOpenDisplay(app_context, gdk_get_display(), NULL, 
                               "Wrapper", NULL, 0, &mArgc, mArgv);
 
     if (!xtdisplay) {
