@@ -218,7 +218,6 @@ void MakeMenus(void)
 	if (menuHdl = GetMenuHandle(mApple)) 
 	{
 		AppendResMenu(menuHdl, 'DRVR');
-		DisableItem(menuHdl, 0);
 	}
 	else
 		ErrorHandler(); 

@@ -72,9 +72,9 @@ void HandleMouseDown(EventRecord* evt)
 	switch(cntlPartCode)
 	{
 		case inMenuBar:
-			//AdjustMenus();
 			menuChoice = MenuSelect(evt->where);
-			//HandleMenuChoice(menuChoice);
+			HandleMenuChoice(menuChoice);
+			InvalMenuBar();
 			break;
 		
 		case inContent:
@@ -148,6 +148,25 @@ void HandleKeyDown(EventRecord* evt)
 	}
 }
 
+void HandleMenuChoice(SInt32 aChoice)
+{
+	long menuID = HiWord(aChoice);
+	long menuItem = LoWord(aChoice);
+	
+	switch(menuID)
+	{
+		case mApple:
+			if (menuItem == iAbout)
+			{
+				Alert(rAboutBox, nil);
+			}
+			break;
+			
+		default:
+			break;
+	}
+}
+
 void HandleUpdateEvt(EventRecord* evt)
 {
 	Rect		bounds;
@@ -208,6 +227,8 @@ void HandleActivateEvt(EventRecord* evt)
 
 void HandleOSEvt(EventRecord* evt)
 {
+	HiliteMenu(0);
+	
 	switch ( (evt->message >> 24) & 0x000000FF)
 	{
 		case suspendResumeMessage:

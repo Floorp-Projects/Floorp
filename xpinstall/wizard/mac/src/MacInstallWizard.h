@@ -172,6 +172,8 @@ if (err) 								\
 #define   iPaste		5
 #define   iClear		6
 
+#define rAboutBox		128
+
 
 #define	rStringList 	140		/* i18n strings */
 #define sBackBtn 		1 
@@ -469,6 +471,7 @@ char *		PascalToC(unsigned char *);
 void 		HandleNextEvent(EventRecord *);
 void		HandleMouseDown(EventRecord *);
 void		HandleKeyDown(EventRecord *);
+void		HandleMenuChoice(SInt32);
 void		HandleUpdateEvt(EventRecord *);
 void 		HandleActivateEvt(EventRecord *);
 void 		HandleOSEvt(EventRecord *);
