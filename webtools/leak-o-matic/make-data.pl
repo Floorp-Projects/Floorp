@@ -19,7 +19,7 @@
 #
 # Contributor(s): 
 #
-# $Id: make-data.pl,v 1.1 1999/11/15 23:56:58 waterson%netscape.com Exp $
+# $Id: make-data.pl,v 1.2 1999/11/16 01:54:12 waterson%netscape.com Exp $
 #
 
 use 5.004;
@@ -36,10 +36,11 @@ sub ForkAndWait($$$) {
     my ($dir, $app, $timeout) = @_;
     my $pid = fork;
 
-    if (! $pid) {
+    if ($pid == 0) {
         open(STDOUT, ">/dev/null");
         open(STDERR, ">/dev/null");
-        exec("cd $dir ; $app");
+        chdir($::opt_dir);
+        exec("$app");
         # bye!
     }
 
