@@ -137,5 +137,5 @@
 
 <!ENTITY helpMenu.accesskey            "H">
 
-<!ENTITY walletPasswordManager.label     "Password Manager">
-<!ENTITY walletPasswordManager.accesskey "p">
+<!ENTITY walletPasswordManager.label     "Jelszókezelő">
+<!ENTITY walletPasswordManager.accesskey "J">
