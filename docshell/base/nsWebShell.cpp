@@ -2300,8 +2300,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
    * session History, it will be set to the cached history object by
    * session History.
    */
-  if (aHistoryState)
-    SetHistoryState(aHistoryState);
+   SetHistoryState(aHistoryState);
  
   /*
    * Set mURL to spec so that session history can get 
@@ -2729,11 +2728,6 @@ nsWebShell::GetHistoryState(nsISupports** aLayoutHistoryState)
       rv = docv->GetPresShell(*getter_AddRefs(shell));
       if (NS_SUCCEEDED(rv)) {
         rv = shell->GetHistoryState((nsILayoutHistoryState**) aLayoutHistoryState);
-		  /* The following line was added by mistake in one of the previous checkins. It 
-		   * causes a leak of nsHistorylayoutState. But removing it causes a crash. 
-		   * Eric Pollmann(pollmann@netscape.com) is investigating it. Bug # 16496
-       */
-		   NS_ADDREF(*aLayoutHistoryState);
       }
     }
   }
