@@ -105,14 +105,14 @@ nsTextConverter::Convert(nsIInputStream *aFromStream,
   if (NS_FAILED(rv)) return rv;
 
   // Get the first character 
-  nsString2 to(aToType);
+  nsString to(aToType);
   char *toMIME = to.ToNewCString();
   char toChar = *toMIME;
 
   for (PRUint32 i = 0; i < read; i++) 
     buf[i] = toChar;
 
-  nsString2 convDataStr(buf);
+  nsString convDataStr(buf);
   nsIInputStream *inputData = nsnull;
   nsISupports *inputDataSup = nsnull;
 
