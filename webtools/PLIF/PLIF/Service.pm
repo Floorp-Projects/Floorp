@@ -48,8 +48,12 @@ sub dispatch {
     my $method = $self->can($name);
     if ($method) {
         &$method($self, $app, @arguments);
-        return 1; # XXX ??? why not return what the method returns ???
+        # don't return what method returns otherwise we have no way of
+        # distinguishing a successful dispatch from an unsuccessful
+        # one.
+        return 1;
     } else {
+        # unsuccessful dispatch.
         return;
     }
 }
