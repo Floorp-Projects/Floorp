@@ -49,6 +49,7 @@
 
 static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
 static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
+static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 
 struct nsInputCallbackData
 {
@@ -63,8 +64,6 @@ struct nsInputCallbackData
 nsInputFrame::nsInputFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsLeafFrame(aContent, aParentFrame)
 {
-  mCacheBounds.width  = 0;
-  mCacheBounds.height = 0;
   mLastMouseState = eMouseNone;
 }
 
@@ -77,6 +76,48 @@ NS_METHOD nsInputFrame::SetRect(const nsRect& aRect)
   return nsInputFrameSuper::SetRect(aRect);
 }
 
+NS_METHOD
+nsInputFrame::MoveTo(nscoord aX, nscoord aY)
+{
+  if ((aX != mRect.x) || (aY != mRect.y)) {
+    mRect.x = aX;
+    mRect.y = aY;
+
+    // Let the view know
+    nsIView* view = nsnull;
+    GetView(view);
+    if (nsnull != view) {
+      // Position view relative to it's parent, not relative to our
+      // parent frame (our parent frame may not have a view). Also,
+      // inset the view by the border+padding if present
+      nsIView* parentWithView;
+      nsPoint origin;
+      GetOffsetFromView(origin, parentWithView);
+      view->SetPosition(origin.x + mViewBounds.x, origin.y + mViewBounds.y);
+      NS_IF_RELEASE(parentWithView);
+      NS_RELEASE(view);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_METHOD
+nsInputFrame::SizeTo(nscoord aWidth, nscoord aHeight)
+{
+  mRect.width = aWidth;
+  mRect.height = aHeight;
+
+  // Let the view know the correct size
+  nsIView* view = nsnull;
+  GetView(view);
+  if (nsnull != view) {
+    view->SetDimensions(mViewBounds.width, mViewBounds.height);
+    NS_RELEASE(view);
+  }
+  return NS_OK;
+}
+
 
 // XXX it would be cool if form element used our rendering sw, then
 // they could be blended, and bordered, and so on...
@@ -85,57 +126,50 @@ nsInputFrame::Paint(nsIPresContext& aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect)
 {
-  static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-
-  nsPoint offset;
-  nsIView *parent;
-  GetOffsetFromView(offset, parent);
-
-  //offset.x += padding + GetPadding(); // add back the padding if present
-
-  if (nsnull == parent) {  // a problem
-	  NS_ASSERTION(0, "parent view was null\n");
-  } else {
-	  nsIView* view;
-	  GetView(view);
-	  float t2p = aPresContext.GetTwipsToPixels();
-	  //nsIWidget *widget = view->GetWindow();
-	  nsIWidget* widget;
-	  nsresult result = GetWidget(view, &widget);
-	  if (NS_OK == result) {
-      nsRect  vBounds;
-      view->GetBounds(vBounds);
-
-      if ((vBounds.x != offset.x) || (vBounds.y != offset.y))
-        view->SetPosition(offset.x, offset.y);
-
-	    // initially the widget was created as hidden
-	    if (nsViewVisibility_kHide == view->GetVisibility()) {
-        nsInput* content;
-        GetContent((nsIContent *&) content);
-        content->GetFormManager()->Init(PR_FALSE); // this only inits the 1st time
-        NS_RELEASE(content);
-
-	      view->SetVisibility(nsViewVisibility_kShow);
-        PostCreateWidget(&aPresContext, view);
-      }
-	  } else {
-	    NS_ASSERTION(0, "could not get widget");
-	  }
-	  NS_IF_RELEASE(widget);
-	  NS_RELEASE(view);
-    NS_RELEASE(parent);
+  // Make sure the widget is visible if it isn't currently visible
+  nsIView* view = nsnull;
+  GetView(view);
+  if (nsnull != view) {
+    SetViewVisiblity(&aPresContext, PR_TRUE);
+    NS_RELEASE(view);
   }
-  return NS_OK;
+
+  // Point borders/padding if any
+  return nsInputFrameSuper::Paint(aPresContext, aRenderingContext, aDirtyRect);
+}
+
+void
+nsInputFrame::SetViewVisiblity(nsIPresContext* aPresContext, PRBool aShow)
+{
+  nsIView* view = nsnull;
+  GetView(view);
+  if (nsnull != view) {
+    nsIWidget* widget;
+    nsresult result = GetWidget(view, &widget);
+    if (NS_OK == result) {
+      // initially the widget was created as hidden
+      nsViewVisibility newVisibility =
+        aShow ? nsViewVisibility_kShow : nsViewVisibility_kHide;
+      if (newVisibility != view->GetVisibility()) {
+        // this only inits the 1st time
+        // XXX kipp says: this is yucky; init on first visibility seems lame
+        ((nsInput*)mContent)->GetFormManager()->Init(PR_FALSE);
+        view->SetVisibility(newVisibility);
+        PostCreateWidget(aPresContext, view);
+      }
+      NS_IF_RELEASE(widget);
+    }
+    NS_RELEASE(view);
+  }
 }
 
 PRBool 
 nsInputFrame::BoundsAreSet()
 {
-  if ((0 != mCacheBounds.width) || (0 != mCacheBounds.height)) {
+  if ((0 != mRect.width) || (0 != mRect.height)) {
     return PR_TRUE;
   } else {
-	return PR_FALSE;
+    return PR_FALSE;
   }
 }
 
@@ -181,11 +215,9 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
                           nsSize* aMaxElementSize,
                           ReflowStatus& aStatus)
 {
-  nsIView* view;
+  nsIView* view = nsnull;
   GetView(view);
-
   if (nsnull == view) {
-
     static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
     static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 
@@ -194,21 +226,21 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
       GetStyleContext(aPresContext, mStyleContext);
     }
     nsresult result = 
-	    NSRepository::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);// need to release
+	    NSRepository::CreateInstance(kViewCID, nsnull, kIViewIID,
+                                   (void **)&view);
 	  if (NS_OK != result) {
 	    NS_ASSERTION(0, "Could not create view for button"); 
       aStatus = frNotComplete;
-      return NS_OK;
+      return result;
 	  }
 	  nsIPresShell   *presShell = aPresContext->GetShell();     // need to release
 	  nsIViewManager *viewMan   = presShell->GetViewManager();  // need to release
 
-    nsReflowMetrics layoutSize;
     nsSize widgetSize;
-    GetDesiredSize(aPresContext, aMaxSize, layoutSize, widgetSize);
-    mCacheBounds.width  = layoutSize.width; // YYY what about caching widget size?
-    mCacheBounds.height = layoutSize.height;
+    GetDesiredSize(aPresContext, aMaxSize, aDesiredSize, widgetSize);
 
+    mViewBounds.width = widgetSize.width;
+    mViewBounds.height = widgetSize.height;
     nsRect boundBox(0, 0, widgetSize.width, widgetSize.height); 
 
     nsIFrame* parWithView;
@@ -220,8 +252,9 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
 	  const nsIID& id = GetCID();
     nsInputWidgetData* initData = GetWidgetInitData(); // needs to be deleted
 	  // initialize the view as hidden since we don't know the (x,y) until Paint
-    result = view->Init(viewMan, boundBox, parView, &id, initData, nsnull, 0, nsnull,
-		                1.0f, nsViewVisibility_kHide);
+    result = view->Init(viewMan, boundBox, parView, &id, initData,
+                        nsnull, 0, nsnull,
+                        1.0f, nsViewVisibility_kHide);
     if (nsnull != initData) {
       delete(initData);
     }
@@ -243,18 +276,37 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
 	  }
 
     viewMan->InsertChild(parView, view, 0);
-	  SetView(view);
-	  //PostCreateWidget(aPresContext, view);
+
+    SetView(view);
+    NS_RELEASE(view);
 	  
     NS_IF_RELEASE(parView);
-    NS_IF_RELEASE(view);
 	  NS_IF_RELEASE(viewMan);  
 	  NS_IF_RELEASE(presShell); 
   }
-  aDesiredSize.width   = mCacheBounds.width;
-  aDesiredSize.height  = mCacheBounds.height;
-  aDesiredSize.ascent  = mCacheBounds.height;
+  else {
+    nsSize widgetSize;
+    GetDesiredSize(aPresContext, aMaxSize, aDesiredSize, widgetSize);
+
+    // If we are being reflowed and have a view, hide the view until
+    // we are told to paint (which is when our location will have
+    // stabilized).
+    SetViewVisiblity(aPresContext, PR_FALSE);
+  }
+
+  // Add in borders and padding
+  nsStyleSpacing* space =
+    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+  aDesiredSize.width += space->mBorderPadding.left +
+    space->mBorderPadding.right;
+  aDesiredSize.height += space->mBorderPadding.top +
+    space->mBorderPadding.bottom;
+  aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
+
+  // Remember the view's offset coordinates
+  mViewBounds.x = space->mBorderPadding.left;
+  mViewBounds.y = space->mBorderPadding.top;
 
   if (nsnull != aMaxElementSize) {
     aMaxElementSize->width = aDesiredSize.width;
@@ -469,7 +521,8 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
   nsSize textSize(0,0);
 
   nsInput* content;
-  aFrame->GetContent((nsIContent *&) content); 
+  aFrame->GetContent((nsIContent*&) content);
+
   nsAutoString valAttr;
   nsContentAttr valStatus = eContentAttr_NotThere;
   if (nsnull != aSpec.mColValueAttr) {
@@ -553,15 +606,14 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
     aRowHeight = textSize.height;
   }
 
-  // add padding to width if width wasn't specified either from css or size attr
+  // add padding to width if width wasn't specified either from css or
+  // size attr
   if (!aWidthExplicit) {
     aBounds.width += charWidth;
   }
 
   NS_RELEASE(content);
-
   return numRows;
-
 }
 
 
