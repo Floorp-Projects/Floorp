@@ -209,7 +209,6 @@ nsPasteQuotationCommand::GetCommandStateParams(const char *aCommandName, nsIComm
 #pragma mark -
 #endif
 
-
 NS_IMETHODIMP
 nsPasteNoFormattingCommand::IsCommandEnabled(const char * aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
 {
@@ -241,7 +240,6 @@ nsPasteNoFormattingCommand::DoCommand(const char *aCommandName, nsISupports *ref
 NS_IMETHODIMP
 nsPasteNoFormattingCommand::DoCommandParams(const char *aCommandName, nsICommandParams *aParams, nsISupports *refCon)
 {
-  NS_ENSURE_ARG_POINTER(aParams);
   nsCOMPtr<nsIHTMLEditor> htmlEditor(do_QueryInterface(refCon));
   if (!htmlEditor)
     return NS_ERROR_NOT_IMPLEMENTED;
