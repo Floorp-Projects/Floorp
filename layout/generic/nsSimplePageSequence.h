@@ -41,6 +41,7 @@
 #include "nsContainerFrame.h"
 #include "nsIPrintSettings.h"
 #include "nsIPrintOptions.h"
+#include "nsIDateTimeFormat.h"
 
 //-----------------------------------------------
 // This class maintains all the data that 
@@ -185,6 +186,9 @@ protected:
   // Selection Printing Info
   nscoord      mSelectionHeight;
   nscoord      mYSelOffset;
+
+  // I18N date formatter service which we'll want to cache locally.
+  nsCOMPtr<nsIDateTimeFormat> mDateFormatter;
 
 private:
   void CacheBackground(nsIPresContext* aPresContext);

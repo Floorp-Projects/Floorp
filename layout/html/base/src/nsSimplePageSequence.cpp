@@ -59,13 +59,7 @@
 
 // DateTime Includes
 #include "nsDateTimeFormatCID.h"
-#include "nsIDateTimeFormat.h"
-#include "nsIServiceManager.h"
-#include "nsILocale.h"
-#include "nsLocaleCID.h"
-#include "nsILocaleService.h"
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
-static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
 
 #define OFFSET_NOT_SET -1
 
@@ -490,27 +484,21 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
     }
 
     // Create current Date/Time String
-    nsresult rv;
-    nsCOMPtr<nsILocale> locale; 
-    nsCOMPtr<nsILocaleService> localeSvc = do_GetService(kLocaleServiceCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = localeSvc->GetApplicationLocale(getter_AddRefs(locale));
-      if (NS_SUCCEEDED(rv) && locale) {
-        nsCOMPtr<nsIDateTimeFormat> dateTime;
-        rv = nsComponentManager::CreateInstance(kDateTimeFormatCID,
-                                               NULL,
-                                               NS_GET_IID(nsIDateTimeFormat),
-                                               (void**) getter_AddRefs(dateTime));
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString dateString;
-          time_t ltime;
-          time( &ltime );
-          if (NS_SUCCEEDED(dateTime->FormatTime(locale, kDateFormatShort, kTimeFormatNoSeconds, ltime, dateString))) {
-            PRUnichar * uStr = ToNewUnicode(dateString);
-            SetDateTimeStr(uStr); // memory will be freed
-          }
-        }
-      }
+    if (!mDateFormatter)
+      mDateFormatter = do_CreateInstance(kDateTimeFormatCID);
+
+    NS_ENSURE_TRUE(mDateFormatter, NS_ERROR_FAILURE);
+
+    nsAutoString formattedDateString;
+    time_t ltime;
+    time( &ltime );
+    if (NS_SUCCEEDED(mDateFormatter->FormatTime(nsnull /* nsILocale* locale */,
+                                                kDateFormatShort,
+                                                kTimeFormatNoSeconds,
+                                                ltime,
+                                                formattedDateString))) {
+      PRUnichar * uStr = ToNewUnicode(formattedDateString);
+      SetDateTimeStr(uStr); // memory will be freed
     }
 
   }
