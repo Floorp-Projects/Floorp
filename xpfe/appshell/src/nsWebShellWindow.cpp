@@ -101,6 +101,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #include "nsIBaseWindow.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeNode.h"
 
 #include "nsIMarkupDocumentViewer.h"
 
@@ -253,7 +254,6 @@ NS_INTERFACE_MAP_BEGIN(nsWebShellWindow)
    NS_INTERFACE_MAP_ENTRY(nsIWebShellWindow)
    NS_INTERFACE_MAP_ENTRY(nsIWebShellContainer)
    NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
-   NS_INTERFACE_MAP_ENTRY(nsIBrowserWindow)
    NS_INTERFACE_MAP_ENTRY(nsIPrompt)
    NS_INTERFACE_MAP_ENTRY(nsINetPrompt)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -315,21 +315,18 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   mWindow->SetBackgroundColor(NS_RGB(192,192,192));
 
   // Create web shell
-  rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
-                                    NS_GET_IID(nsIWebShell),
-                                    (void**)&mWebShell);
-  if (NS_OK != rv) {
-    return rv;
-  }
-  mDocShell = do_QueryInterface(mWebShell);
+  mDocShell = do_CreateInstance(kWebShellCID);
+  CallQueryInterface(mDocShell, &mWebShell);
+
+  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
   r.x = r.y = 0;
-  rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
-                       r.x, r.y, r.width, r.height,
-                       PR_TRUE,                     // Allow Plugins 
-                       PR_TRUE);
+  nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
+  NS_ENSURE_SUCCESS(docShellAsWin->InitWindow(nsnull, mWindow, 
+   r.x, r.y, r.width, r.height), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(docShellAsWin->Create(), NS_ERROR_FAILURE);
   mWebShell->SetContainer(this);
-  mWebShell->SetDocLoaderObserver(this);
+  mDocShell->SetDocLoaderObserver(this);
 
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
@@ -764,7 +761,7 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
     nsXULCommand * menuDelegate = new nsXULCommand();
     if ( menuDelegate ) {
         menuDelegate->SetCommand(cmdName);
-        menuDelegate->SetWebShell(mWebShell);
+        menuDelegate->SetDocShell(mDocShell);
         menuDelegate->SetDOMElement(domElement);
         menuDelegate->SetMenuItem(pnsMenuItem);
     } else {
@@ -920,7 +917,7 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
 
       // do a resize
       nsCOMPtr<nsIContentViewer> contentViewer;
-      if( NS_FAILED(mWebShell->GetContentViewer(getter_AddRefs(contentViewer))))
+      if( NS_FAILED(mDocShell->GetContentViewer(getter_AddRefs(contentViewer))))
          {
          NS_WARN_IF_FALSE(PR_FALSE, "Error Getting contentViewer");
          return;
@@ -954,10 +951,9 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
 
       // Resize the browser window by the difference.
       PRInt32 heightDelta = oldRect.height - rect.height;
-      nsRect currentBounds;
-      GetWindowBounds(currentBounds);
-      SizeWindowTo(currentBounds.width, currentBounds.height + heightDelta,
-                   PR_FALSE, PR_FALSE);
+      PRInt32 cx, cy;
+      GetSize(&cx, &cy);
+      SetSize(cx, cy + heightDelta, PR_FALSE);
       // END REFLOW CODE
       #endif
                   
@@ -1263,7 +1259,7 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
   // register as document listener
   // this is needed for menus
   nsCOMPtr<nsIContentViewer> cv;
-  mWebShell->GetContentViewer(getter_AddRefs(cv));
+  mDocShell->GetContentViewer(getter_AddRefs(cv));
   if (cv) {
    
     nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
@@ -1340,16 +1336,6 @@ nsWebShellWindow::OnEndURLLoad(nsIDocumentLoader* loader,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWebShellWindow::HandleUnknownContentType(nsIDocumentLoader* loader, 
-                                           nsIChannel* channel, 
-                                           const char *aContentType,
-                                           const char *aCommand )
-{
-  return NS_OK;
-}
-
-
 //----------------------------------------
 nsCOMPtr<nsIDOMNode> nsWebShellWindow::FindNamedDOMNode(const nsString &aName, nsIDOMNode * aParent, PRInt32 & aCount, PRInt32 aEndCount)
 {
@@ -1387,18 +1373,22 @@ nsCOMPtr<nsIDOMDocument> nsWebShellWindow::GetNamedDOMDoc(const nsString & aWebS
 {
   nsCOMPtr<nsIDOMDocument> domDoc; // result == nsnull;
 
-  // first get the toolbar child WebShell
-  nsCOMPtr<nsIWebShell> childWebShell;
+  // first get the toolbar child docShell
+  nsCOMPtr<nsIDocShell> childDocShell;
   if (aWebShellName.Equals("this")) { // XXX small kludge for code reused
-    childWebShell = do_QueryInterface(mWebShell);
+    childDocShell = mDocShell;
   } else {
-    mWebShell->FindChildWithName(aWebShellName.GetUnicode(), *getter_AddRefs(childWebShell));
-    if (!childWebShell)
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem;
+    nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(mDocShell));
+    docShellAsNode->FindChildWithName(aWebShellName.GetUnicode(), 
+      PR_TRUE, PR_FALSE, nsnull, getter_AddRefs(docShellAsItem));
+    childDocShell = do_QueryInterface(docShellAsItem);
+    if (!childDocShell)
       return domDoc;
   }
   
   nsCOMPtr<nsIContentViewer> cv;
-  childWebShell->GetContentViewer(getter_AddRefs(cv));
+  childDocShell->GetContentViewer(getter_AddRefs(cv));
   if (!cv)
     return domDoc;
    
@@ -1472,7 +1462,7 @@ void nsWebShellWindow::LoadContentAreas() {
 
   // fetch the chrome document URL
   nsCOMPtr<nsIContentViewer> contentViewer;
-  mWebShell->GetContentViewer(getter_AddRefs(contentViewer));
+  mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
   if (contentViewer) {
     nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(contentViewer);
     if (docViewer) {
@@ -1551,7 +1541,7 @@ PRBool nsWebShellWindow::ExecuteCloseHandler()
   if (globalObjectOwner) {
     if (NS_SUCCEEDED(globalObjectOwner->GetScriptGlobalObject(getter_AddRefs(globalObject))) && globalObject) {
       nsCOMPtr<nsIContentViewer> contentViewer;
-      if (NS_SUCCEEDED(mWebShell->GetContentViewer(getter_AddRefs(contentViewer)))) {
+      if (NS_SUCCEEDED(mDocShell->GetContentViewer(getter_AddRefs(contentViewer)))) {
         nsCOMPtr<nsIDocumentViewer> docViewer;
         nsCOMPtr<nsIPresContext> presContext;
         docViewer = do_QueryInterface(contentViewer);
@@ -1749,148 +1739,6 @@ nsWebShellWindow::DocumentWillBeDestroyed(nsIDocument *aDocument)
   return NS_OK;
 }
 
-/**************** nsIBrowserWindow interface ********************/
-NS_IMETHODIMP nsWebShellWindow::Init(nsIAppShell* aAppShell,
-                   const nsRect& aBounds,
-                   PRUint32 aChromeMask,
-                   PRBool aAllowPlugins)
-{
-   nsresult rv;
-   nsCOMPtr<nsIURI> urlObj;
-   char * urlStr = "chrome://navigator/content/";
- 
-   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-   if (NS_FAILED(rv)) return rv;
-
-   nsIURI *uri = nsnull;
-   rv = service->NewURI(urlStr, nsnull, &uri);
-   if (NS_FAILED(rv)) return rv;
-
-   rv = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&urlObj);
-   NS_RELEASE(uri);
-   if (NS_FAILED(rv))
-     return rv;
- 
-   // Note: null nsIStreamObserver means this window won't be able to answer FE_callback-type
-   // questions from netlib.  Observers are generally appcores.  We'll have to supply
-   // a generic browser appcore here someday.
-   nsWidgetInitData widgetInitData;
-   widgetInitData.mWindowType = eWindowType_child;
-   widgetInitData.mBorderStyle = eBorderStyle_default;
-
-   rv = Initialize(nsnull, aAppShell, urlObj, PR_TRUE, PR_TRUE,
-       aBounds.width, aBounds.height, widgetInitData);
-   EnsureContentTreeOwner();
-   mContentTreeOwner->SetChromeMask(aChromeMask);
-   if (NS_SUCCEEDED(rv))
-     MoveTo(aBounds.x, aBounds.y);
-   return rv;
-}
- 
-NS_IMETHODIMP nsWebShellWindow::MoveTo(PRInt32 aX, PRInt32 aY)
-{
-  mWindow->Move(aX, aY);
-  StoreBoundsToXUL(PR_TRUE, PR_FALSE, PR_FALSE);
-  return NS_OK;
-}
- 
-NS_IMETHODIMP nsWebShellWindow::SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight,
-                          PRBool aWidthTransient, PRBool aHeightTransient)
-{
-  mIntrinsicallySized = PR_FALSE; // We got changed. No more intrinsic sizing here.
-  if (aWidthTransient || aHeightTransient)
-    KillPersistentSize();
-  mWindow->Resize(aWidth, aHeight, PR_TRUE);
-  StoreBoundsToXUL(PR_FALSE, PR_TRUE, PR_FALSE);
-  return NS_OK;
-}
- 
-NS_IMETHODIMP nsWebShellWindow::SizeContentTo(PRInt32 aWidth, PRInt32 aHeight)
-{
-  // We have to look at the delta between our content shell's 
-  // size and the size passed in and then resize ourselves based on that
-  // delta.
-   nsCOMPtr<nsIWebShell> content;
-   GetContentWebShell(getter_AddRefs(content));
-   nsCOMPtr<nsIBaseWindow> contentAsWin(do_QueryInterface(content));
-   if (contentAsWin) {
-     PRInt32 x, y, width, height,
-             widthDelta, heightDelta;
-     contentAsWin->GetPositionAndSize(&x, & y, &width, &height);
-     widthDelta = aWidth - width;
-     heightDelta = aHeight - height;
-
-     if (widthDelta != 0 || heightDelta != 0) {
-       nsRect windowBounds;
-       mWindow->GetBounds(windowBounds);
-       mWindow->Resize(windowBounds.width + widthDelta, 
-                       windowBounds.height + heightDelta,
-                       PR_TRUE);
-       StoreBoundsToXUL(PR_FALSE, PR_TRUE, PR_FALSE);
-     }
-   }
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsWebShellWindow::GetContentBounds(nsRect& aResult)
-{
-  // Should return the size of the content webshell.
-  nsCOMPtr<nsIWebShell> contentShell;
-  GetContentWebShell(getter_AddRefs(contentShell));
-  nsCOMPtr<nsIBaseWindow> contentShellAsWin(do_QueryInterface(contentShell));
-  if (!contentShellAsWin) {
-    NS_ERROR("Attempt to retrieve the content bounds for a window with no content.");
-    return NS_ERROR_FAILURE;
-  }
-
-  PRInt32 x,y,width,height;
-  contentShellAsWin->GetPositionAndSize(&x, &y, &width, &height);
-  aResult.x = x;
-  aResult.y = y;
-  aResult.width = width;
-  aResult.height = height;
-
-  return NS_OK;
-}
- 
-NS_IMETHODIMP nsWebShellWindow::GetWindowBounds(nsRect& aResult)
-{
-   PRInt32 x, y, cx, cy;
-   GetPositionAndSize(&x, &y, &cx, &cy);
-
-   aResult.x = x;
-   aResult.y = y;
-   aResult.width = cx;
-   aResult.height = cy;
-   return NS_OK;
-}
- 
-NS_IMETHODIMP nsWebShellWindow::SetChrome(PRUint32 aNewChromeMask)
-{
-   if(mContentTreeOwner)
-      return mContentTreeOwner->SetChromeMask(aNewChromeMask);
-   return NS_OK;
-}
- 
-NS_IMETHODIMP nsWebShellWindow::GetChrome(PRUint32& aChromeMaskResult)
-{
-   if(mContentTreeOwner)
-      return mContentTreeOwner->GetChromeMask(&aChromeMaskResult);
-   return NS_OK;
-}
- 
-NS_IMETHODIMP nsWebShellWindow::SetTitle(const PRUnichar* aTitle)
-{
-   NS_ENSURE_SUCCESS(EnsureContentTreeOwner(), NS_ERROR_FAILURE);
-   return mContentTreeOwner->SetTitle(aTitle);
-}
- 
-NS_IMETHODIMP nsWebShellWindow::GetTitle(PRUnichar** aResult)
-{
-   // no, we didn't store the title for you. why so nosy?
-   return NS_ERROR_FAILURE;
-}
-
 // This should rightfully be somebody's PROGID?
 // Will switch when the "app shell browser component" arrives.
 static const char *prefix = "component://netscape/appshell/component/browser/window";
@@ -1916,56 +1764,6 @@ nsWebShellWindow::NotifyObservers( const nsString &aTopic, const nsString &someD
     return rv;
 }
  
-NS_IMETHODIMP nsWebShellWindow::SetStatus(const PRUnichar* aStatus)
-{
-   NS_ENSURE_SUCCESS(EnsureContentTreeOwner(), NS_ERROR_FAILURE);
-   return mContentTreeOwner->SetJSStatus(aStatus);
-}
- 
-NS_IMETHODIMP nsWebShellWindow::GetStatus(const PRUnichar** aResult)
-{
-   NS_ERROR("Can't use this anymore");
-   return NS_ERROR_FAILURE;
-}
- 
-NS_IMETHODIMP nsWebShellWindow::SetDefaultStatus(const PRUnichar* aStatus)
-{
-   NS_ENSURE_SUCCESS(EnsureContentTreeOwner(), NS_ERROR_FAILURE);
-   return mContentTreeOwner->SetJSDefaultStatus(aStatus);
-}
- 
-NS_IMETHODIMP nsWebShellWindow::GetDefaultStatus(const PRUnichar** aResult)
-{
-   NS_ERROR("Can't use this anymore");
-   return NS_ERROR_FAILURE;
-}
- 
-NS_IMETHODIMP nsWebShellWindow::SetProgress(PRInt32 aProgress, PRInt32 aProgressMax)
-{
-    nsresult rv = NS_OK;        
-
-    // Encode progress report in topic (there is no GetProgress for observers
-    // to query it).
-    char topic[32];
-    PR_snprintf( topic,
-                 sizeof topic,
-                 "%ld %ld",
-                 (long)aProgress,
-                 (long)aProgressMax );
-
-    // Broadcast progress info to interested parties.
-    rv = NotifyObservers( "progress", topic );
-
-    return rv;
-}
-
-NS_IMETHODIMP
-nsWebShellWindow::IsIntrinsicallySized(PRBool& aResult)
-{
-   return GetIntrinsicallySized(&aResult);
-}
-
-
 // nsIPrompt
 NS_IMETHODIMP nsWebShellWindow::Alert(const PRUnichar *text)
 {
