@@ -6365,8 +6365,12 @@ PresShell::DidCauseReflow()
     mViewManager->CacheWidgetChanges(PR_FALSE);
   }
 
+  // We may have had more reflow commands appended to the queue during
+  // our reflow.  Make sure these get processed at some point.
   if (!gAsyncReflowDuringDocLoad && mDocumentLoading) {
     FlushPendingNotifications(PR_FALSE);
+  } else {
+    PostReflowEvent();
   }
 
   return NS_OK;
