@@ -12,13 +12,13 @@
 
 <html:script language="JavaScript" src="DOMDataSourceViewer.js"/>
 <box align="vertical" flex="30%">
-  <html:input value="http://www.mozillazine.org/" type="text" name="url" id="url" onkeyup="if (event.which == 13) loadUrl();"/>
+  <html:input value="resource:/res/samples/rdf/domviewer.html" type="text" name="url" id="url" onkeyup="if (event.which == 13) loadUrl();"/>
   <box align="horizontal">
     <titledbutton onclick="loadUrl();" value="Load"/>
     <titledbutton onclick="refreshTree();" value="Refresh"/>
   </box>
   <html:iframe flex="100%" src="DOMTree.xul" name="treeframe"/>
 </box>
-<html:iframe onload="onSrcLoaded();" name="srcdoc" src="http://www.mozillazine.org/" flex="73%"/>
+<html:iframe onload="onSrcLoaded();" name="srcdoc" src="resource:/res/samples/rdf/domviewer.html" flex="73%"/>
 
 </window>
