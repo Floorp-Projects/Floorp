@@ -39,12 +39,12 @@
 <box id="sidebox" align="vertical" flex="100%">
  <box class="sidebartitle">
   <spring flex="100%"/>
+  <titledbutton class="dialog borderless paneltitle" 
+        value="&sidebar.reload.label;"
+        oncommand="window.location.reload()" />
   <titledbutton class="borderless paneltitle" 
-                value="&sidebar.reload.label;"
-                onclick="window.location.reload()" />
-  <titledbutton class="borderless paneltitle" 
-                value="&sidebar.customize.label;" 
-				onclick="var dialogWindow=customize();" />
+        value="&sidebar.customize.label;" 
+				oncommand="var dialogWindow=customize();" />
  </box>
 </box>
 </window>
