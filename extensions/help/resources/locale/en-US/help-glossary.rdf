@@ -53,6 +53,7 @@
         <rdf:li> <rdf:Description nc:name="JavaScript" nc:link="glossary.html#JavaScript"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="key" nc:link="glossary.html#999203"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Lightweight Directory Access Protocol (LDAP)" nc:link="glossary.html#1022286"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="location bar" nc:link="glossary.html#location_bar"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="master key" nc:link="glossary.html#1032598"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="master password" nc:link="glossary.html#1032744"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="misrepresentation" nc:link="glossary.html#1014057"/> </rdf:li>
@@ -61,6 +62,7 @@
         <rdf:li> <rdf:Description nc:name="object-signing certificate" nc:link="glossary.html#1014097"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Online Certificate Status Protocol (OCSP)" nc:link="glossary.html#1029304"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="password-based authentication" nc:link="glossary.html#1014123"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="personal toolbar" nc:link="glossary.html#personal_toolbar"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="PKCS #11" nc:link="glossary.html#1025194"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="PKCS #11 module" nc:link="glossary.html#1025197"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Platform for Privacy Preferences (P3P)" nc:link="glossary.html#p3p"/> </rdf:li>
