@@ -1537,12 +1537,7 @@ nsFtpState::S_retr() {
     
     if (!mDRequestForwarder)
         return NS_ERROR_FAILURE;
-
-    // bug 141451 - We call this before receiving the error because on some
-    // systems the error closes the mDRequestForwarder data socket faster
-    // than we can process the control channel’s error code.
-    mDRequestForwarder->SetRetrying(PR_TRUE);
-
+    
     rv = SendFTPCommand(retrStr);
     return rv;
 }
@@ -1584,6 +1579,7 @@ nsFtpState::R_retr() {
 
     if (mResponseCode/100 == 5) {
         mRETRFailed = PR_TRUE;
+        mDRequestForwarder->SetRetrying(PR_TRUE);
         return FTP_S_PASV;
     }
 
