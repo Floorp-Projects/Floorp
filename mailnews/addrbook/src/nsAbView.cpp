@@ -77,7 +77,6 @@ NS_IMPL_ISUPPORTS4(nsAbView, nsIAbView, nsITreeView, nsIAbListener, nsIObserver)
 
 nsAbView::nsAbView()
 {
-  NS_INIT_ISUPPORTS();
   mMailListAtom = getter_AddRefs(NS_NewAtom("MailList"));
   mSuppressSelectionChange = PR_FALSE;
   mSuppressCountChange = PR_FALSE;

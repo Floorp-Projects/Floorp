@@ -75,8 +75,6 @@ nsMsgFilterList::nsMsgFilterList() :
   m_startWritingToBuffer = PR_FALSE; 
   m_curFilter = nsnull;
   m_arbitraryHeaders.SetLength(0);
-
-  NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ADDREF(nsMsgFilterList)

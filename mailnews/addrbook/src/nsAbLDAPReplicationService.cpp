@@ -52,7 +52,6 @@ NS_IMPL_ISUPPORTS1(nsAbLDAPReplicationService, nsIAbLDAPReplicationService)
 nsAbLDAPReplicationService::nsAbLDAPReplicationService() 
     : mReplicating(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsAbLDAPReplicationService::~nsAbLDAPReplicationService()

@@ -50,7 +50,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsAddrBookSession, nsIAddrBookSession)
     
 nsAddrBookSession::nsAddrBookSession()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsAddrBookSession::~nsAddrBookSession()

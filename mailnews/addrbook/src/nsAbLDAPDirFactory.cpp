@@ -60,7 +60,6 @@ NS_IMPL_ISUPPORTS1(nsAbLDAPDirFactory, nsIAbDirFactory);
 
 nsAbLDAPDirFactory::nsAbLDAPDirFactory()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsAbLDAPDirFactory::~nsAbLDAPDirFactory()

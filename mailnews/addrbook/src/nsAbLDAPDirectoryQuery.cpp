@@ -137,8 +137,6 @@ nsAbQueryLDAPMessageListener::nsAbQueryLDAPMessageListener (
     mLock(0)
 
 {
-    NS_INIT_ISUPPORTS();
-
     NS_ADDREF(mDirectoryQuery);
 }
 
@@ -637,8 +635,6 @@ nsAbLDAPDirectoryQuery::nsAbLDAPDirectoryQuery() :
     mCounter (1),
     mLock (nsnull)
 {
-    NS_INIT_ISUPPORTS();
-
 }
 
 nsAbLDAPDirectoryQuery::~nsAbLDAPDirectoryQuery()

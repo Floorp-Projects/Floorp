@@ -69,7 +69,6 @@ NS_IMPL_ISUPPORTS1(nsAbOutlookDirFactory, nsIAbDirFactory)
 
 nsAbOutlookDirFactory::nsAbOutlookDirFactory(void)
 {
-    NS_INIT_ISUPPORTS() ;
 }
 
 nsAbOutlookDirFactory::~nsAbOutlookDirFactory(void)

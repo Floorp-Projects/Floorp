@@ -54,7 +54,6 @@ NS_IMPL_ISUPPORTS1(nsAbDirFactoryService, nsIAbDirFactoryService)
 
 nsAbDirFactoryService::nsAbDirFactoryService()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsAbDirFactoryService::~nsAbDirFactoryService()

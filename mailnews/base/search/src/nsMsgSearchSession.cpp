@@ -55,7 +55,6 @@ NS_IMPL_ISUPPORTS4(nsMsgSearchSession, nsIMsgSearchSession, nsIUrlListener, nsIF
 
 nsMsgSearchSession::nsMsgSearchSession()
 {
-  NS_INIT_ISUPPORTS();
 	m_sortAttribute = nsMsgSearchAttrib::Sender;
 	m_descending = PR_FALSE;
 	m_idxRunningScope = 0; 

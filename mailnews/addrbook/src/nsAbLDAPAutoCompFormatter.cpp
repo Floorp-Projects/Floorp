@@ -49,7 +49,6 @@ nsAbLDAPAutoCompFormatter::nsAbLDAPAutoCompFormatter() :
     mNameFormat(NS_LITERAL_STRING("[cn]")),
     mAddressFormat(NS_LITERAL_STRING("{mail}"))
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsAbLDAPAutoCompFormatter::~nsAbLDAPAutoCompFormatter()

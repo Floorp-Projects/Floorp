@@ -95,8 +95,6 @@ static nsresult GetMessage(nsIURI *aURL, nsIMsgDBHdr **message)
 
 nsCopyMessageStreamListener::nsCopyMessageStreamListener()
 {
-  /* the following macro is used to initialize the ref counting data */
-	NS_INIT_ISUPPORTS();
 }
 
 nsCopyMessageStreamListener::~nsCopyMessageStreamListener()

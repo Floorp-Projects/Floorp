@@ -44,7 +44,6 @@ NS_IMPL_ISUPPORTS2(nsAbDirectoryQueryProxy, nsIAbDirectoryQueryProxy, nsIAbDirec
 nsAbDirectoryQueryProxy::nsAbDirectoryQueryProxy() :
     mInitiated (PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsAbDirectoryQueryProxy::~nsAbDirectoryQueryProxy()

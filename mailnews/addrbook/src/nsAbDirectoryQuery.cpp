@@ -53,7 +53,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbDirectoryQuerySimpleBooleanExpression, nsIAbBo
 nsAbDirectoryQuerySimpleBooleanExpression::nsAbDirectoryQuerySimpleBooleanExpression() :
     mOperation (nsIAbBooleanOperationTypes::AND)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsAbDirectoryQuerySimpleBooleanExpression::~nsAbDirectoryQuerySimpleBooleanExpression()
@@ -136,7 +135,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbDirectoryQueryArguments, nsIAbDirectoryQueryAr
 nsAbDirectoryQueryArguments::nsAbDirectoryQueryArguments() :
     mQuerySubDirectories(PR_TRUE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsAbDirectoryQueryArguments::~nsAbDirectoryQueryArguments()
@@ -202,14 +200,11 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbDirectoryQueryPropertyValue, nsIAbDirectoryQue
 
 nsAbDirectoryQueryPropertyValue::nsAbDirectoryQueryPropertyValue()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsAbDirectoryQueryPropertyValue::nsAbDirectoryQueryPropertyValue(const char* aName,
       const PRUnichar* aValue)
 {
-    NS_INIT_ISUPPORTS();
-
     mName = aName;
     mValue = aValue;
 }
@@ -217,8 +212,6 @@ nsAbDirectoryQueryPropertyValue::nsAbDirectoryQueryPropertyValue(const char* aNa
 nsAbDirectoryQueryPropertyValue::nsAbDirectoryQueryPropertyValue(const char* aName,
       nsISupports* aValueISupports)
 {
-    NS_INIT_ISUPPORTS();
-
     mName = aName;
     mValueISupports = aValueISupports;
 }
@@ -267,7 +260,6 @@ nsAbDirectoryQueryResult::nsAbDirectoryQueryResult() :
     mContextID (-1),
     mType (queryResultError)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsAbDirectoryQueryResult::nsAbDirectoryQueryResult(PRInt32 aContextID,
@@ -275,8 +267,6 @@ nsAbDirectoryQueryResult::nsAbDirectoryQueryResult(PRInt32 aContextID,
       PRInt32 aType,
       nsCOMPtr<nsISupportsArray> aResult)
 {
-    NS_INIT_ISUPPORTS();
-
     mContextID = aContextID;
     mContextArgs = aContextArgs;
     mType = aType;
@@ -339,7 +329,6 @@ NS_IMPL_ISUPPORTS1(nsAbDirectoryQuery, nsIAbDirectoryQuery)
 
 nsAbDirectoryQuery::nsAbDirectoryQuery(nsIAbDirectory* aDirectory)
 {
-  NS_INIT_ISUPPORTS();
   mDirectory = aDirectory;
 }
 

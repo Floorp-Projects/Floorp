@@ -49,7 +49,6 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 nsAbRDFResource::nsAbRDFResource(void)
 {
-  NS_INIT_ISUPPORTS();
 	mDatabase = nsnull;
 }
 

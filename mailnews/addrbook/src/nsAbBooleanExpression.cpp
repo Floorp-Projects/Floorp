@@ -44,7 +44,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbBooleanConditionString, nsIAbBooleanConditionS
 nsAbBooleanConditionString::nsAbBooleanConditionString() :
     mCondition (nsIAbBooleanConditionTypes::Exists)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsAbBooleanConditionString::~nsAbBooleanConditionString()
@@ -119,7 +118,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbBooleanExpression, nsIAbBooleanExpression)
 nsAbBooleanExpression::nsAbBooleanExpression() :
     mOperation (nsIAbBooleanOperationTypes::AND)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsAbBooleanExpression::~nsAbBooleanExpression()

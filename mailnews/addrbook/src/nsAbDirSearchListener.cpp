@@ -49,7 +49,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbDirSearchListener, nsIAbDirectoryQueryResultLi
 nsAbDirSearchListener::nsAbDirSearchListener (nsAbDirSearchListenerContext* searchContext) :
     mSearchContext (searchContext)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsAbDirSearchListener::~nsAbDirSearchListener ()

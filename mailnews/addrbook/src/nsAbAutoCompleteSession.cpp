@@ -58,7 +58,6 @@ NS_IMPL_ISUPPORTS2(nsAbAutoCompleteSession, nsIAbAutoCompleteSession, nsIAutoCom
 
 nsAbAutoCompleteSession::nsAbAutoCompleteSession()
 {
-    NS_INIT_ISUPPORTS();
     mParser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
 }
 

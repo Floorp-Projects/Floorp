@@ -60,7 +60,6 @@ NS_IMPL_ISUPPORTS1(nsAbAddressCollecter, nsIAbAddressCollecter)
 
 nsAbAddressCollecter::nsAbAddressCollecter()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsAbAddressCollecter::~nsAbAddressCollecter()

@@ -68,7 +68,6 @@
 
 nsAddbookProtocolHandler::nsAddbookProtocolHandler()
 {
-  NS_INIT_ISUPPORTS();
   mAddbookOperation = nsIAddbookUrlOperation::InvalidUrl;
 }
 

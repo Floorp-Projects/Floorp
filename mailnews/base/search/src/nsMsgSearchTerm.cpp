@@ -319,8 +319,6 @@ PRInt32 NS_MsgGetStatusValueFromName(char *name)
 // Needed for DeStream method.
 nsMsgSearchTerm::nsMsgSearchTerm()
 {
-    NS_INIT_ISUPPORTS();
-
     // initialize this to zero
     m_value.string=nsnull;
     m_value.attribute=0;
@@ -337,7 +335,6 @@ nsMsgSearchTerm::nsMsgSearchTerm (
 	nsMsgSearchBooleanOperator boolOp,
 	const char * arbitraryHeader) 
 {
-    NS_INIT_ISUPPORTS();
 	m_operator = op;
 	m_attribute = attrib;
 	m_booleanOp = boolOp;
@@ -1429,7 +1426,6 @@ nsMsgSearchScopeTerm::nsMsgSearchScopeTerm (nsIMsgSearchSession *session,
                                             nsMsgSearchScopeValue attribute,
                                             nsIMsgFolder *folder)
 {
-	NS_INIT_ISUPPORTS();
 	m_attribute = attribute;
 	m_folder = folder;
 	m_searchServer = PR_TRUE;
@@ -1438,7 +1434,6 @@ nsMsgSearchScopeTerm::nsMsgSearchScopeTerm (nsIMsgSearchSession *session,
 
 nsMsgSearchScopeTerm::nsMsgSearchScopeTerm ()
 {
-	NS_INIT_ISUPPORTS();
 	m_searchServer = PR_TRUE;
 }
 

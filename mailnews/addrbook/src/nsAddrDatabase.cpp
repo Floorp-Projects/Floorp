@@ -167,7 +167,6 @@ nsAddrDatabase::nsAddrDatabase()
       m_LastRecordKey(0),
       m_dbDirectory(nsnull)
 {
-   NS_INIT_ISUPPORTS();
 }
 
 nsAddrDatabase::~nsAddrDatabase()
@@ -3021,7 +3020,6 @@ protected:
 nsAddrDBEnumerator::nsAddrDBEnumerator(nsAddrDatabase* db)
     : mDB(db), mRowCursor(nsnull), mCurrentRow(nsnull), mDone(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
     mDbTable = mDB->GetPabTable();
     mCurrentRowIsList = PR_FALSE;
 }
@@ -3145,7 +3143,6 @@ protected:
 nsListAddressEnumerator::nsListAddressEnumerator(nsAddrDatabase* db, mdb_id rowID)
     : mDB(db), mCurrentRow(nsnull), mListRowID(rowID), mDone(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
     mDbTable = mDB->GetPabTable();
     mDB->GetListRowByRowID(mListRowID, &mListRow);
     mAddressTotal = mDB->GetListAddressTotal(mListRow);

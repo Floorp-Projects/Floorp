@@ -64,8 +64,6 @@ nsCOMPtr<nsISupportsArray> nsMsgFilterDataSource::mFilterArcsOut;
 
 nsMsgFilterDataSource::nsMsgFilterDataSource()
 {
-    NS_INIT_ISUPPORTS();
-
     if (mGlobalRefCount++ == 0)
         initGlobalObjects(getRDFService());
 }

@@ -291,7 +291,6 @@ nsAbRDFDataSource::nsAbRDFDataSource():
   mProxyObservers(nsnull),
   mLock(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 	mLock = PR_NewLock ();
 }
 

@@ -43,7 +43,6 @@ NS_IMPL_ISUPPORTS1(nsAbSyncDriver, nsIAbSyncDriver)
 
 nsAbSyncDriver::nsAbSyncDriver()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 
   mTransactionID = -1;

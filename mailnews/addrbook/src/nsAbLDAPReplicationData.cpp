@@ -65,7 +65,6 @@ nsAbLDAPProcessReplicationData::nsAbLDAPProcessReplicationData()
    mInitialized(PR_FALSE),
    mDirServerInfo(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsAbLDAPProcessReplicationData::~nsAbLDAPProcessReplicationData()

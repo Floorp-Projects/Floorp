@@ -43,7 +43,6 @@
 
 nsMsgSearchValueImpl::nsMsgSearchValueImpl(nsMsgSearchValue *aInitialValue)
 {
-    NS_INIT_ISUPPORTS();
     mValue = *aInitialValue;
     if (IS_STRING_ATTRIBUTE(aInitialValue->attribute))
         mValue.string = nsCRT::strdup(aInitialValue->string);

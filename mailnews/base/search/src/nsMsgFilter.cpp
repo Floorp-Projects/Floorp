@@ -66,7 +66,6 @@ static const char *kWhitespace = "\b\t\r\n ";
 
 nsMsgRuleAction::nsMsgRuleAction()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsMsgRuleAction::~nsMsgRuleAction()
@@ -139,7 +138,6 @@ nsMsgFilter::nsMsgFilter():
     m_unparseable(PR_FALSE),
     m_filterList(nsnull)
 {
-	NS_INIT_ISUPPORTS();
   NS_NewISupportsArray(getter_AddRefs(m_termList));
   NS_NewISupportsArray(getter_AddRefs(m_actionList));
 

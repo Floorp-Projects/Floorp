@@ -66,7 +66,6 @@ NS_IMPL_ISUPPORTS1(nsMsgFilterService, nsIMsgFilterService)
 
 nsMsgFilterService::nsMsgFilterService()
 {
-	NS_INIT_ISUPPORTS();
 }
 
 nsMsgFilterService::~nsMsgFilterService()
@@ -344,7 +343,6 @@ NS_IMPL_ISUPPORTS3(nsMsgFilterAfterTheFact, nsIUrlListener, nsIMsgSearchNotify, 
 
 nsMsgFilterAfterTheFact::nsMsgFilterAfterTheFact(nsIMsgWindow *aMsgWindow, nsIMsgFilterList *aFilterList, nsISupportsArray *aFolderList)
 {
-  NS_INIT_ISUPPORTS();
   m_curFilterIndex = m_curFolderIndex = 0;
   m_msgWindow = aMsgWindow;
   m_filters = aFilterList;

@@ -48,8 +48,6 @@
 /////////////////////////////////////////////////////////////////////////////////////
 nsAddbookUrl::nsAddbookUrl()
 {
-  NS_INIT_ISUPPORTS();
-  
   m_baseURL = do_CreateInstance(NS_SIMPLEURI_CONTRACTID);
 
   mOperationType = nsIAddbookUrlOperation::InvalidUrl; 

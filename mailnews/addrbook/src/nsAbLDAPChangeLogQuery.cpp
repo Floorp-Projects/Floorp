@@ -53,7 +53,6 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsAbLDAPChangeLogQuery, nsAbLDAPReplicationQuery, n
 
 nsAbLDAPChangeLogQuery::nsAbLDAPChangeLogQuery()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsAbLDAPChangeLogQuery::~nsAbLDAPChangeLogQuery()

@@ -60,7 +60,6 @@ NS_IMPL_ISUPPORTS1(nsAbMDBDirFactory, nsIAbDirFactory);
 
 nsAbMDBDirFactory::nsAbMDBDirFactory()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsAbMDBDirFactory::~nsAbMDBDirFactory()

@@ -75,8 +75,6 @@ NS_IMPL_ISUPPORTS1(nsAbSync, nsIAbSync)
 
 nsAbSync::nsAbSync()
 {
-  NS_INIT_ISUPPORTS();
-
   // For listener array stuff...
   mListenerArrayCount = 0;
   mListenerArray = nsnull;

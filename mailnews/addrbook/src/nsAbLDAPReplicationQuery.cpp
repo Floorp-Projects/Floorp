@@ -56,7 +56,6 @@ nsAbLDAPReplicationQuery::nsAbLDAPReplicationQuery()
     :  mInitialized(PR_FALSE),
        mDirServer(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsAbLDAPReplicationQuery::~nsAbLDAPReplicationQuery()

@@ -119,8 +119,6 @@ static AppendItem CUSTOM_ATTRS_ARRAY[] = {
 
 nsAbCardProperty::nsAbCardProperty(void)
 {
-	NS_INIT_ISUPPORTS();
-
 	m_LastModDate = 0;
 
 	m_PreferMailFormat = nsIAbPreferMailFormat::unknown;

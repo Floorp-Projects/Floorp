@@ -104,7 +104,6 @@
 //
 nsAddressBook::nsAddressBook()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsAddressBook::~nsAddressBook()

@@ -55,8 +55,6 @@
 nsAbDirProperty::nsAbDirProperty(void)
   : m_LastModifiedDate(0)
 {
-	NS_INIT_ISUPPORTS();
-
 	m_IsMailList = PR_FALSE;
 }
 
@@ -293,7 +291,6 @@ NS_IMETHODIMP nsAbDirProperty::GetSearchDuringLocalAutocomplete(PRBool *aSearchD
 
 nsAbDirectoryProperties::nsAbDirectoryProperties(void)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsAbDirectoryProperties::~nsAbDirectoryProperties(void)

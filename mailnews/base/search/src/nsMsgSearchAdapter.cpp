@@ -101,7 +101,6 @@ NS_IMPL_ISUPPORTS1(nsMsgSearchAdapter, nsIMsgSearchAdapter)
 nsMsgSearchAdapter::nsMsgSearchAdapter(nsIMsgSearchScopeTerm *scope, nsISupportsArray *searchTerms) 
 	: m_searchTerms(searchTerms)
 {
-  NS_INIT_ISUPPORTS();
   m_scope = scope;
 }
 
@@ -852,7 +851,6 @@ char *nsMsgSearchAdapter::TransformSpacesToStars (const char *spaceString, msg_T
 
 nsMsgSearchValidityTable::nsMsgSearchValidityTable ()
 {
-    NS_INIT_ISUPPORTS();
 	// Set everything to be unavailable and disabled
 	for (int i = 0; i < nsMsgSearchAttrib::kNumMsgSearchAttributes; i++)
     for (int j = 0; j < nsMsgSearchOp::kNumMsgSearchOperators; j++)
@@ -1004,7 +1002,6 @@ nsMsgSearchValidityTable::SetDefaultAttrib(nsMsgSearchAttribValue aAttribute)
 
 nsMsgSearchValidityManager::nsMsgSearchValidityManager ()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 
