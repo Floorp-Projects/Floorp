@@ -85,7 +85,7 @@ class nsCParserNode :  public nsIParserNode {
     }
 
 #ifndef HEAP_ALLOCATED_NODES
-  private:
+  protected:
 
     /**
      * Hide operator new; clients should use Create() instead.
@@ -288,14 +288,14 @@ public:
     }
 
     nsCParserStartNode() 
-      : mAttributes(0), nsCParserNode() { }
+      : nsCParserNode(), mAttributes(0) { }
 
     nsCParserStartNode(CToken* aToken, 
                        nsTokenAllocator* aTokenAllocator, 
                        nsNodeAllocator* aNodeAllocator = 0) 
-      : mAttributes(0), nsCParserNode(aToken, aTokenAllocator, aNodeAllocator) { }
+      : nsCParserNode(aToken, aTokenAllocator, aNodeAllocator), mAttributes(0) { }
 
-    ~nsCParserStartNode() 
+    virtual ~nsCParserStartNode() 
     {
       NS_ASSERTION(0 != mTokenAllocator, "Error: no token allocator");
       CToken* theAttrToken = 0;
