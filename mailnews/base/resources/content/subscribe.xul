@@ -22,34 +22,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
-<!DOCTYPE window
-
-[
-
-<!ENTITY subscribeWindow.title "Subscribe">
-<!ENTITY allTab.label "All">
-<!ENTITY searchTab.label "Search">
-<!ENTITY newTab.label "New">
-<!ENTITY nameText.label "Name:">
-<!ENTITY addServerButton.label "Add Server">
-<!ENTITY okButton.label "OK">
-<!ENTITY cancelButton.label "Cancel">
-<!ENTITY helpButton.label "Help">
-<!ENTITY subscribeButton.label "Subscribe">
-<!ENTITY unsubscribeButton.label "Unsubscribe">
-<!ENTITY refreshListButton.label "Refresh List">
-<!ENTITY expandButton.label "Expand">
-<!ENTITY collapseAllButton.label "Collapse All">
-<!ENTITY stopButton.label "Stop">
-<!ENTITY nameColumn.label "Name">
-<!ENTITY messagesColumn.label "Messages">
-<!ENTITY getNewButton.label "Get New">
-<!ENTITY clearNewButton.label "Clear New">
-<!ENTITY searchNowButton.label "Search Now">
-<!ENTITY searchFor.label "Search For:">
-<!ENTITY newText.label "This list shows all new newsgroups since you last cleared the list.">
-
-]> 
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/subscribe.dtd" >
 
 <window id="subscribe"
 	xmlns:html="http://www.w3.org/TR/REC-html40"

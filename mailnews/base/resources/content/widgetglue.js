@@ -235,6 +235,7 @@ function MsgNewFolder()
 	messenger.NewFolder(folderTree.database, selectedFolder, "New Folder");
 }
 
+
 function MsgAccountManager()
 {
     dump('Opening account manager..\n');
@@ -249,7 +250,7 @@ function MsgSubscribe()
 
 function MsgAccountWizard()
 {
-    window.openDialog("chrome://messenger/content/AccountWizard.xul", "wizard", "chrome, modal");
+    window.openDialog("chrome://messenger/content/AccountWizard.xul", "wizard", "chrome, modal,height=190,width=390");
 }
 
 function MsgOpenAttachment() {}

@@ -1,11 +1,6 @@
 <?xml version="1.0"?> 
 
-<!DOCTYPE RDF
-[
-<!ENTITY sidebar.folders.label        "Messenger Folders">
-<!ENTITY sidebar.flash.label          "Flashes">
-]>
-
+<!DOCTYPE RDF SYSTEM "chrome://messenger/locale/sidebar-messenger-rdf.dtd" >
 <RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:NC="http://home.netscape.com/NC-rdf#">
 
@@ -15,7 +10,7 @@
          <NC:title>&sidebar.folders.label;</NC:title>
          <NC:content>chrome://messenger/content/folderPane.xul</NC:content>
          <NC:customize>chrome://messenger/content/messengerfolder-panel-cust.xul</NC:customize>
-		 <NC:height>200px</NC:height> 
+		 <NC:height>250px</NC:height> 
        </RDF:Description>
     </RDF:li>
     <RDF:li>

@@ -1,0 +1,4 @@
+<!-- extracted from sidebar-messenger.rdf -->
+
+<!ENTITY sidebar.folders.label        "Messenger Folders">
+<!ENTITY sidebar.flash.label          "Flashes">
