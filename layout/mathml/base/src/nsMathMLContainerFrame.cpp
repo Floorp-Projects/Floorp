@@ -64,8 +64,7 @@ NS_IMPL_QUERY_INTERFACE_INHERITED1(nsMathMLContainerFrame, nsHTMLContainerFrame,
 // =============================================================================
 
 // error handlers
-// by default show the Unicode REPLACEMENT CHARACTER U+FFFD
-// when a frame with bad markup can not be rendered
+// provide a feedback to the user when a frame with bad markup can not be rendered
 nsresult
 nsMathMLContainerFrame::ReflowError(nsIPresContext*      aPresContext,
                                     nsIRenderingContext& aRenderingContext,
@@ -84,7 +83,7 @@ nsMathMLContainerFrame::ReflowError(nsIPresContext*      aPresContext,
   aRenderingContext.SetFont(font->mFont);
 
   // bounding metrics
-  nsAutoString errorMsg(PRUnichar(0xFFFD));
+  nsAutoString errorMsg; errorMsg.AssignWithConversion("invalid-markup");
   rv = aRenderingContext.GetBoundingMetrics(errorMsg.get(),
                                             PRUint32(errorMsg.Length()),
                                             mBoundingMetrics);
@@ -126,20 +125,22 @@ nsMathMLContainerFrame::PaintError(nsIPresContext*      aPresContext,
     // Set color and font ...
     const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
       mStyleContext->GetStyleData(eStyleStruct_Font));
-    const nsStyleColor *color = NS_STATIC_CAST(const nsStyleColor*,
-      mStyleContext->GetStyleData(eStyleStruct_Color));
-    aRenderingContext.SetColor(color->mColor);
     aRenderingContext.SetFont(font->mFont);
+
+    aRenderingContext.SetColor(NS_RGB(255,0,0));
+    aRenderingContext.FillRect(0, 0, mRect.width, mRect.height);
+    aRenderingContext.SetColor(NS_RGB(255,255,255));
 
     nscoord ascent;
     nsCOMPtr<nsIFontMetrics> fm;
     aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
     fm->GetMaxAscent(ascent);
 
-    nsAutoString errorMsg(PRUnichar(0xFFFD));
+    nsAutoString errorMsg; errorMsg.AssignWithConversion("invalid-markup");
     aRenderingContext.DrawString(errorMsg.get(),
                                  PRUint32(errorMsg.Length()),
-                                 mRect.x, mRect.y + ascent);
+                                 0, ascent);
+
   }
   return NS_OK;
 }
@@ -884,6 +885,112 @@ nsMathMLContainerFrame::SetInitialChildList(nsIPresContext* aPresContext,
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsMathMLContainerFrame::AppendFrames(nsIPresContext* aPresContext,
+                                     nsIPresShell&   aPresShell,
+                                     nsIAtom*        aListName,
+                                     nsIFrame*       aFrameList)
+{
+NS_ASSERTION(0,"XXXrbs break - AppendFrames");
+  if (aListName) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  if (aFrameList) {
+    mFrames.AppendFrames(this, aFrameList);
+    // Ask the parent frame to reflow me.
+    ReflowDirtyChild(&aPresShell, nsnull);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMathMLContainerFrame::InsertFrames(nsIPresContext* aPresContext,
+                                     nsIPresShell&   aPresShell,
+                                     nsIAtom*        aListName,
+                                     nsIFrame*       aPrevFrame,
+                                     nsIFrame*       aFrameList)
+{
+NS_ASSERTION(0,"XXXrbs break - InsertFrames");
+  if (aListName) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  if (aFrameList) {
+    // Insert frames after aPrevFrame
+    mFrames.InsertFrames(this, aPrevFrame, aFrameList);
+    // Ask the parent frame to reflow me.
+    ReflowDirtyChild(&aPresShell, nsnull);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMathMLContainerFrame::RemoveFrame(nsIPresContext* aPresContext,
+                                    nsIPresShell&   aPresShell,
+                                    nsIAtom*        aListName,
+                                    nsIFrame*       aOldFrame)
+{
+NS_ASSERTION(0,"XXXrbs break - RemoveFrame");
+  if (aListName) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  if (aOldFrame) {
+    // Loop and destroy the frame and all of its continuations.
+    PRBool generateReflowCommand = PR_FALSE;
+    nsIFrame* oldFrameParent;
+    aOldFrame->GetParent(&oldFrameParent);
+    while (aOldFrame) {
+      // If the frame being removed has zero size then don't bother
+      // generating a reflow command, otherwise make sure we do.
+      nsRect rect;
+      aOldFrame->GetRect(rect);
+      if (!rect.IsEmpty()) {
+        generateReflowCommand = PR_TRUE;
+      }
+      // When the parent is an inline frame we have a simple task - just
+      // remove the frame from its parent's list and generate a reflow
+      // command.
+      nsIFrame* oldFrameNextInFlow;
+      aOldFrame->GetNextInFlow(&oldFrameNextInFlow);
+      nsSplittableType st;
+      aOldFrame->IsSplittable(st);
+      if (NS_FRAME_NOT_SPLITTABLE != st) {
+        nsSplittableFrame::RemoveFromFlow(aOldFrame);
+      }
+      nsIFrame* firstSibling;
+      oldFrameParent->FirstChild(aPresContext, nsnull, &firstSibling);
+      nsFrameList frameList(firstSibling);
+      frameList.DestroyFrame(aPresContext, aOldFrame);
+      aOldFrame = oldFrameNextInFlow;
+      if (aOldFrame) {
+        aOldFrame->GetParent(&oldFrameParent);
+      }
+    }
+    if (generateReflowCommand) {
+      // Ask the parent frame to reflow me.
+      ReflowDirtyChild(&aPresShell, nsnull);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMathMLContainerFrame::ReplaceFrame(nsIPresContext* aPresContext,
+                                     nsIPresShell&   aPresShell,
+                                     nsIAtom*        aListName,
+                                     nsIFrame*       aOldFrame,
+                                     nsIFrame*       aNewFrame)
+{
+NS_ASSERTION(0,"XXXrbs break - ReplaceFrame");
+  if (aListName || !aOldFrame || !aNewFrame) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  // Replace the old frame with the new frame in the list, then remove the old frame
+  mFrames.ReplaceFrame(this, aOldFrame, aNewFrame);
+  aOldFrame->Destroy(aPresContext);
+  // Ask the parent frame to reflow me.
+  return ReflowDirtyChild(&aPresShell, nsnull);
 }
 
 NS_IMETHODIMP
