@@ -155,7 +155,7 @@
   </xsl:template>
   
   <xsl:template name="expander">
-    <td class="expander"><img src="chrome://global/skin/tree/twisty-open.gif"/><div class="spacer"/></td>
+    <td class="expander">-<div class="spacer"/></td>
   </xsl:template>
 
 </xsl:stylesheet>

@@ -794,38 +794,65 @@ nsBindingManager::AddLayeredBinding(nsIContent* aContent, const nsAString& aURL)
 NS_IMETHODIMP
 nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, const nsAString& aURL)
 {
-  /*
   nsCOMPtr<nsIXBLBinding> binding;
-  GetBinding(aParent, getter_AddRefs(binding));
+  GetBinding(aContent, getter_AddRefs(binding));
   
-  nsCOMPtr<nsIXBLBinding> prevBinding;
-    
-  while (binding) {
-    nsCOMPtr<nsIXBLBinding> nextBinding;
-    binding->GetBaseBinding(getter_AddRefs(nextBinding));
-
-    PRBool style;
-    binding->IsStyleBinding(&style);
-    if (!style) {
-       // Remove only our binding.
-      if (prevBinding) {
-        prevBinding->SetBaseBinding(nextBinding);
-
-        // XXX Unhooking the binding should kill event handlers and
-        // fix up the prototype chain.
-        // e.g., binding->UnhookEventHandlers(); 
-        //       binding->FixupPrototypeChain();
-        // or maybe just binding->Unhook();
-
-      }
-      else SetBinding(aContent, nextBinding);
-    }
-
-    prevBinding = binding;
-    binding = nextBinding;
+  if (!binding) {
+    return NS_OK;
   }
-*/
-  return NS_OK;
+
+  // For now we can only handle removing a binding if it's the only one
+  nsCOMPtr<nsIXBLBinding> nextBinding;
+  binding->GetBaseBinding(getter_AddRefs(nextBinding));
+  NS_ENSURE_FALSE(nextBinding, NS_ERROR_FAILURE);
+
+  // Make sure that the binding has the URI that is requested to be removed
+  nsCAutoString bindingUriStr;
+  binding->GetBindingURI(bindingUriStr);
+  nsCOMPtr<nsIURI> bindingUri;
+  nsresult rv = NS_NewURI(getter_AddRefs(bindingUri), bindingUriStr);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIURI> uri;
+  rv = NS_NewURI(getter_AddRefs(uri), aURL);
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRBool equalUri;
+  rv = uri->Equals(bindingUri, &equalUri);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!equalUri) {
+    return NS_OK;
+  }
+
+  // Make sure it isn't a style binding
+  PRBool style;
+  binding->IsStyleBinding(&style);
+  if (style) {
+    return NS_OK;
+  }
+  
+  // Get to the document, this way is safer then using nsIContent::GetDocument
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aContent);
+  NS_ASSERTION(node, "uh? RemoveLayeredBinding called on non-node");
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  node->GetOwnerDocument(getter_AddRefs(domDoc));
+  NS_ENSURE_TRUE(domDoc, NS_ERROR_UNEXPECTED);
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  NS_ASSERTION(doc, "document doesn't implement nsIDocument");
+  
+  // Finally remove the binding...
+  binding->UnhookEventHandlers();
+  binding->ChangeDocument(doc, nsnull);
+  SetBinding(aContent, nsnull);
+  binding->MarkForDeath();
+  
+  // ...and recreate it's frames. We need to do this since the frames may have
+  // been removed and style may have changed due to the removal of the
+  // anonymous children.
+  nsCOMPtr<nsIPresShell> presShell;
+  rv = doc->GetShellAt(0, getter_AddRefs(presShell));
+  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+
+  return presShell->RecreateFramesFor(aContent);;
 }
 
 NS_IMETHODIMP

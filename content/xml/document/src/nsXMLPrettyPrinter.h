@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jonas Sicking <sicking@bigfoot.com> (Original author)
+ *   Jonas Sicking <jonas@sicking.cc> (Original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,53 +34,45 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+ 
+#ifndef nsXMLPrettyPrinter_h__
+#define nsXMLPrettyPrinter_h__
 
-@import url("resource:/res/viewsource.css");
+#include "nsIDocumentObserver.h"
+#include "nsIDocument.h"
+#include "nsCOMPtr.h"
 
-#top {
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  position: absolute;
-}
+class nsXMLPrettyPrinter : public nsIDocumentObserver
+{
+public:
+    nsXMLPrettyPrinter();
+    ~nsXMLPrettyPrinter();
 
-#header {
-  background-color: #ccc;
-  border-bottom: 3px solid black;
-  padding: 0.5em;
-  margin-bottom: 1em;
-}
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIDOCUMENTOBSERVER
+    
+    /**
+     * This will prettyprint the document if the document is loaded in a
+     * displayed window.
+     *
+     * @param aDocument  document to prettyprint
+     */
+    nsresult PrettyPrint(nsIDocument* aDocument);
 
-table {
-  border-spacing: 0;
-  margin: 0;
-}
+private:
+    /**
+     * Signals for unhooking by setting mUnhookPending if the node changed is
+     * non-anonymous content.
+     *
+     * @param aContent  content that has changed
+     */
+    void MaybeUnhook(nsIContent* aContent);
 
-td {
-  padding: 0;
-}
+    nsIDocument* mDocument; //weak. Set as long as we're observing the document
+    PRUint32 mUpdateDepth;
+    PRPackedBool mUnhookPending;
+};
 
-.indent {
-  margin-left: 1em;
-}
+nsresult NS_NewXMLPrettyPrinter(nsXMLPrettyPrinter** aPrinter);
 
-.spacer {
-  width: 1em;
-}
-
-.expander {
-  cursor: default;
-  -moz-user-select: none;
-  vertical-align: top;
-  text-align: center;
-}
-
-.expander-closed > * > .expander-content {
-  display: none;
-}
-
-.comment {
-  font-family: monospace;
-  white-space: pre;
-}
+#endif //nsXMLPrettyPrinter_h__
