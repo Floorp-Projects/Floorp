@@ -31,7 +31,6 @@
 #include "nsFileLocations.h"
 #include "nsIFileLocator.h"
 #include "nsIFileSpec.h"
-#include "nsSpecialSystemDirectory.h"
 
 #include "nsAppCoresCIDs.h"
 #include "nsIDOMAppCoresManager.h"
@@ -85,17 +84,6 @@ static NS_DEFINE_CID(kWindowMediatorCID,  NS_WINDOWMEDIATOR_CID);
 
 nsresult NS_AutoregisterComponents()
 {
-  // Dont run Autoregistration at startup if this is a release build and
-  // the component registry already exist. For debug builds we still run
-  // autoreg because developers change components that might require
-  // reregistration.
-#ifndef DEBUG
-  nsSpecialSystemDirectory componentRegistry(nsSpecialSystemDirectory::XPCOM_CurrentProcessComponentRegistry);
-  if (componentRegistry.Exists() == PR_TRUE)
-  {
-    return NS_OK;
-  }
-#endif /* !DEBUG */
   nsresult rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
                                                  NULL /* default */);
   return rv;
