@@ -71,11 +71,22 @@ protected:
   NS_IMETHOD SendFocusBlur(nsIContent *aContent);
   nsIScrollableView* GetNearestScrollingView(nsIView* aView);
 
+  // routines for the d&d gesture tracking state machine
+  void BeginTrackingDragGesture ( nsGUIEvent* inDownEvent, nsIFrame* inDownFrame ) ;
+  void StopTrackingDragGesture ( ) ;
+  void GenerateDragGesture ( nsIPresContext& aPresContext, nsGUIEvent *aEvent ) ;
+  PRBool IsTrackingDragGesture ( ) const { return mIsTrackingDragGesture; }
+
   //Any frames here must be checked for validity in ClearFrameRefs
   nsIFrame* mCurrentTarget;
   nsIContent* mCurrentTargetContent;
   nsIFrame* mLastMouseOverFrame;
   nsIFrame* mLastDragOverFrame;
+  
+  // member variables for the d&d gesture state machine
+  PRBool mIsTrackingDragGesture;
+  nsPoint mGestureDownPoint;
+  nsIFrame* mGestureDownFrame;
 
   nsIContent* mLastLeftMouseDownContent;
   nsIContent* mLastMiddleMouseDownContent;
