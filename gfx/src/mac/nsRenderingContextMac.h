@@ -31,7 +31,7 @@ class nsFont;
 class nsTransform2D;
 class nsVoidArray;
 
-class GraphicState;
+class nsGraphicState;
 class DrawingSurface;		// a surface is a combination of a port and a graphic state
 
 
@@ -156,7 +156,7 @@ protected:
 	nsDrawingSurfaceMac*			mCurrentSurface;	// pointer to the current surface
 
 	GrafPtr						mPort;			// current grafPort - shortcut for mCurrentSurface->GetPort()
-	GraphicState *		mGS;				// current graphic state - shortcut for mCurrentSurface->GetGS()
+	nsGraphicState *	mGS;				// current graphic state - shortcut for mCurrentSurface->GetGS()
 
 	nsVoidArray *			mGSStack;		// GraphicStates stack, used for PushState/PopState
 	PRInt8						mChanges;
