@@ -20,14 +20,9 @@
 # This is a list of local files which get copied to the mozilla:dist:editor directory
 #
 
-nsIEditor.h
 nsEditorCID.h
-nsIEditActionListener.h
 nsICiter.h
-nsIEditorIMESupport.h
 nsIEditorLogging.h
 nsIEditorMailSupport.h
-nsIEditorObserver.h
 nsIEditorStyleSheets.h
-nsIHTMLEditor.h
 nsITableEditor.h
