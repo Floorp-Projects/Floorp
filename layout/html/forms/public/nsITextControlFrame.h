@@ -34,6 +34,9 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#ifndef nsITextControlFrame_h___
+#define nsITextControlFrame_h___
  
 #include "nsIFormControlFrame.h"
 
@@ -86,3 +89,5 @@ public:
 
   NS_IMETHOD    GetSelectionContr(nsISelectionController **aSelCon) = 0;
 };
+
+#endif
