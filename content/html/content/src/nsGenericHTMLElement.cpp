@@ -692,6 +692,7 @@ nsGenericHTMLElement::GetScriptObjectFactory(nsIDOMScriptObjectFactory **aResult
   }
 
   *aResult = gScriptObjectFactory;
+  NS_ADDREF(gScriptObjectFactory);
   return result;
 }
 
@@ -1046,7 +1047,7 @@ nsGenericHTMLElement::SetDocument(nsIDocument* aDocument)
   // Once the element is added to the doc tree we need to check if
   // event handler were registered on it.  Unfortunately, this means
   // doing a GetAttribute for every type of handler.
-  if (nsnull != mAttributes) {
+  if ((nsnull != mDocument) && (nsnull != mAttributes)) {
     nsHTMLValue val;
     if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onclick, val))
       AddScriptEventListener(nsHTMLAtoms::onclick, val, kIDOMMouseListenerIID);
@@ -1803,6 +1804,7 @@ nsGenericHTMLElement::GetScriptObject(nsIScriptContext* aContext,
     mTag->ToString(tag);
     res = factory->NewScriptElement(tag, aContext, mContent,
                                     mParent, (void**)&mScriptObject);
+    NS_RELEASE(factory);
   }
   *aScriptObject = mScriptObject;
   return res;
