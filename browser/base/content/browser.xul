@@ -226,7 +226,12 @@ Contributor(s):
   <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
 
   <popupset id="bookmarksPopupset"/>
- 
+    <popup id="toolbar-context-menu">
+      <menuitem oncommand="BrowserCustomizeToolbar()"
+                label="&viewCustomizeToolbar.label;"
+                accesskey="&viewCustomizeToolbar.accesskey;"/>
+    </popup>
+
     <popup id="contentAreaContextMenu"
            onpopupshowing="gContextMenu = new nsContextMenu( this ); return gContextMenu.shouldDisplay;"
            onpopuphiding="gContextMenu = null;">
@@ -469,7 +474,9 @@ Contributor(s):
                 <menuitem label="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewpersonaltoolbar" />
                 <menuitem label="&taskbarCmd.label;" accesskey="&taskbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewtaskbar" />
               </menupopup>
-            </menu>   
+            </menu>
+            <menuitem label="&viewCustomizeToolbar.label;" accesskey="&viewCustomizeToolbar.accesskey;"
+                      oncommand="BrowserCustomizeToolbar()"/>   
             <menuitem accesskey="&fullScreenCmd.accesskey;"
                       label="&fullScreenCmd.label;" key="key_fullScreen"
                       command="View:FullScreen"/>
@@ -696,7 +703,7 @@ Contributor(s):
     </menubar>
   
     <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar"
-             fullscreentoolbar="true">
+             fullscreentoolbar="true" context="toolbar-context-menu">
         <toolbarpalette defaultset="back-button,forward-button,reload-button,stop-button,home-button,urlbar-container,go-container,print-button,throbber-box">
           <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1"
                          label="&backCmd.label;"

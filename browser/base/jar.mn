@@ -6,6 +6,8 @@ browser.jar:
         content/browser/browser.js                   (content/browser.js)
         content/browser/urlbarBindings.xml           (content/urlbarBindings.xml)
         content/browser/utilityOverlay.js            (content/utilityOverlay.js)
+        content/browser/customizeToolbar.xul         (content/customizeToolbar.xul)
+
 classic.jar:
         skin/classic/browser/browser.css             (skin/browser.css)
         skin/classic/browser/buttons.gif             (skin/buttons.gif)
