@@ -39,6 +39,7 @@ OBJS =                          \
     $(NULL)
 
 LLIBS=                          \
+    $(DIST)\lib\nsreg_s.lib     \
     $(DIST)\lib\jar_s.lib       \
     $(DIST)\lib\zlib_s.lib      \
     $(NULL)
