@@ -48,6 +48,8 @@
   {0xb9, 0xfd, 0x0, 0x10, 0x83, 0x2, 0x3c, 0xe}}
 
 
+typedef struct _XMLParserState XMLParserState;
+
 /***************************************************************
   Notes: 
  ***************************************************************/
@@ -84,12 +86,12 @@ protected:
   nsresult ParseXMLBuffer(const char *aBuffer, PRUint32 aLength, PRBool aIsFinal=PR_FALSE);
 
   /**
-   * Sets up the callbacks for the expat parser      
+   * Sets up the callbacks and user data for the expat parser      
    * @update  nra 2/24/99
    * @param   none
    * @return  none
    */
-  void SetupExpatCallbacks(void);
+  void SetupExpatParser(void);
 
   // Propagate XML errors to the content sink
   void PushXMLErrorToken(const char *aBuffer, PRUint32 aLength, PRBool aIsFinal);
@@ -143,6 +145,7 @@ protected:
   XML_Parser mExpatParser;
 	PRUint32 mBytesParsed;
   nsString mLastLine;
+  XMLParserState* mState;
 };
 
 extern NS_HTMLPARS nsresult NS_New_Expat_Tokenizer(nsITokenizer** aInstancePtrResult);
