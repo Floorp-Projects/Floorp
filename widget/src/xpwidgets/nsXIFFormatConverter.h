@@ -22,8 +22,6 @@
 #include "nsIFormatConverter.h"
 #include "nsString.h"
 
-#include "nsITransferable.h" // for mime defs
-
 class nsXIFFormatConverter : public nsIFormatConverter
 {
 
