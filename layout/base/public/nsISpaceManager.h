@@ -182,6 +182,11 @@ public:
    * Clears the list of regions representing the unavailable space.
    */
   NS_IMETHOD ClearRegions() = 0;
+
+  /**
+   * Dump the state of the spacemanager out to a file
+   */
+  NS_IMETHOD List(FILE* out) = 0;
 };
 
 inline void nsBandTrapezoid::GetRect(nsRect& aRect) const
