@@ -167,7 +167,7 @@ _PR_InitZones(void)
     char *envp;
     PRBool *sym;
 
-    if ((sym = pr_FindSymbolInProg("nspr_use_zone_allocator")) != NULL) {
+    if ((sym = (PRBool *)pr_FindSymbolInProg("nspr_use_zone_allocator")) != NULL) {
         use_zone_allocator = *sym;
     } else if ((envp = getenv("NSPR_USE_ZONE_ALLOCATOR")) != NULL) {
         use_zone_allocator = (atoi(envp) == 1);

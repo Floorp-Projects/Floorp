@@ -94,7 +94,7 @@ extern PRSharedMemory * _MD_OpenSharedMemory(
         return( NULL );
     }
 
-    shm->ipcname = PR_MALLOC( strlen( ipcname ) + 1 );
+    shm->ipcname = (char*)PR_MALLOC( strlen( ipcname ) + 1 );
     if ( NULL == shm->ipcname )
     {
         PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0 );
