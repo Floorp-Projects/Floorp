@@ -31,16 +31,16 @@ use File::stat;
 use Time::Local;
 
 # change for your platform ('\' == windows, ':' == mac, '/' == unix)
-$dirsep = ":";
+$dirsep = "\\";
 
 # Set this to the native OS of the *destination* tree
 # $dst_linebreaks = pack("cc", 13);           # Mac
-$dst_linebreaks = pack("cc", 13, 10);       # DOS
-# $dst_linebreaks = pack("cc", 10);           # UNIX
+#$dst_linebreaks = pack("cc", 13, 10);       # DOS
+$dst_linebreaks = pack("cc", 10);           # UNIX
 
 #change for your src and dest trees
-$src_tree =  "Development:Mozilla dev:src:mozilla:editor";
-$dest_tree = "src:mozilla:editor";
+$src_tree =  "x:\\mozilla\\xpfe\\components";
+$dest_tree = "h:\\builds\\mozilla\\xpfe\\components";
 
 
 #//--------------------------------------------------------------------------------------------------
@@ -233,7 +233,7 @@ sub _traverseDir($;$)
     closedir DIR;
     
     # suck in the CVS info for this dir, if there is a CVS dir
-    unless (-e $srcdir.$dirsep."CVS:Entries" && -e $destdir.$dirsep."CVS:Entries") {
+    unless (-e $srcdir.$dirsep."CVS".$dirsep."Entries" && -e $destdir.$dirsep."CVS".$dirsep."Entries") {
         print "$srcdir is not a CVS directory in both source and dest\n";
         return;
     }
