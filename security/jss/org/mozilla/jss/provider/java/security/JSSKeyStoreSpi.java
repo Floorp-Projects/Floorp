@@ -68,15 +68,10 @@ import org.mozilla.jss.crypto.SecretKeyFacade;
  * 
  * <li>getCertificateChain only returns a single certificate. That's because
  * we don't have a way to build a chain from a specific slot--only from
- * the set of all slots. Kannan Bhoopathy has already indicated that he
- * wants to get back whole chains from the KeyStore API, so this implementation
- * is incorrect. Question: is it better to do an NSS-wide cert chain lookup
- * and risk returning some certs from different tokens, or to only return
- * the one cert that is guaranteed to be on the token? Probably the former,
- * but I need confirmation.
+ * the set of all slots. 
  * 
  * <li>getCreationDate is unsupported because NSS doesn't store that
- * information. Hopefully nobody cares about this.
+ * information.
  * 
  * <li>getKey first looks for a private/symmetric key with the given label.
  * It returns the first one it finds. If it doesn't find one, it looks for a
