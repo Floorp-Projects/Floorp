@@ -62,19 +62,7 @@ function onInit()
 
   gEncryptionCertName.value = gIdentity.getUnicharAttribute("encryption_cert_name");
 
-  var selectedItemId = null;
-  var encryptionPolicy = gIdentity.getIntAttribute("encryptionpolicy");
-  switch (encryptionPolicy)
-  {
-    case 2:
-      selectedItemId = 'encrypt_mail_always';
-      break;
-    default:
-      selectedItemId = 'encrypt_mail_never';
-      break;
-  }
-
-  gEncryptionChoices.selectedItem = document.getElementById(selectedItemId);
+  gEncryptionChoices.value = gIdentity.getIntAttribute("encryptionpolicy");
     
   if (!gEncryptionCertName.value)
   {
@@ -112,7 +100,7 @@ function onPreInit(account, accountValues)
 function onSave()
 {
   // find out which radio for the encryption radio group is selected and set that on our hidden encryptionChoice pref....
-  var newValue = gEncryptionChoices.selectedItem.value;
+  var newValue = gEncryptionChoices.value;
   gHiddenEncryptionPolicy.setAttribute('value', newValue);
   gIdentity.setIntAttribute("encryptionpolicy", newValue);
   gIdentity.setUnicharAttribute("encryption_cert_name", gEncryptionCertName.value);
@@ -343,7 +331,7 @@ function enableEncryptionControls(do_enable)
   else {
     gEncryptAlways.setAttribute("disabled", "true");
     gNeverEncrypt.setAttribute("disabled", "true");
-    gEncryptionChoices.selectedItem = document.getElementById('encrypt_mail_never');
+    gEncryptionChoices.value = 0;
   }
 }
 

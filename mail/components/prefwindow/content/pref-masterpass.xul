@@ -30,7 +30,7 @@
       el.setAttribute("value", gPrefService.getIntPref(el.getAttribute("prefstring")) );
 
       el = document.getElementById('passwordAskTimes');
-      el.selectedItem = el.getElementsByAttribute('value', gPrefService.getIntPref(el.getAttribute("prefstring")))[0];
+      el.value = gPrefService.getIntPref(el.getAttribute("prefstring"));
 
       onMasterPasswordLoad();
     }
@@ -93,12 +93,12 @@
                   flex="1">
         <!-- note that these values are different than what NSS uses, which
              are (0, -1, 1) respectively -->
-        <radio value="0" label="&managepassword.askfirsttime;" id="askFirstTime"
+        <radio value="0" label="&managepassword.askfirsttime;"
                style="margin: 0px;" oncommand="changePasswordSettings(false);"/>
-        <radio value="1" label="&managepassword.askeverytime;" id="askEveryTime"
+        <radio value="1" label="&managepassword.askeverytime;"
                style="margin: 0px;" oncommand="changePasswordSettings(false);"/>
         <hbox align="center">
-          <radio value="2" label="&managepassword.asktimeout;" id="askTimeout"
+          <radio value="2" label="&managepassword.asktimeout;"
                  style="margin: 0px;" oncommand="changePasswordSettings(true);"/>
           <textbox id="passwordTimeout" size="4"
                    preftype="int"
