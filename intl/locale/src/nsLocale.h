@@ -31,7 +31,7 @@ class nsLocale : public nsILocale {
 public:
 	
 	nsLocale(nsString** catagoryList,nsString** valueList, PRUint32 count);
-	~nsLocale(void);
+	virtual ~nsLocale(void);
 	
 	NS_IMETHOD GetCatagory(const nsString* catagory, nsString* result);
 
