@@ -4718,13 +4718,11 @@ PresShell::GetGeneratedContentIterator(nsIContent*          aContent,
       // Avoid finding the :after frame unless we need to (it's
       // expensive). Instead probe for the existence of the pseudo-element
       nsStyleContext *styleContext;
-      nsRefPtr<nsStyleContext> pseudoStyleContext;
       
       styleContext = primaryFrame->GetStyleContext();
-      pseudoStyleContext = mPresContext->ProbePseudoStyleContextFor(aContent,
-                                                                    nsCSSPseudoElements::after,
-                                                                    styleContext);
-      if (pseudoStyleContext) {
+      if (nsLayoutUtils::HasPseudoStyle(aContent, styleContext,
+                                        nsCSSPseudoElements::after,
+                                        mPresContext)) {
         nsIFrame* afterFrame = nsLayoutUtils::GetAfterFrame(primaryFrame,
                                                             mPresContext);
         if (afterFrame)
