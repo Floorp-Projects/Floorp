@@ -179,7 +179,6 @@ typedef struct _Pop3ConData {
     PRBool command_succeeded;   /* did the last command succeed? */
     PRInt32 first_msg;
 
-    char *obuffer;              /* line buffer for output to msglib */
     PRUint32 obuffer_size;
     PRUint32 obuffer_fp;
     
@@ -230,6 +229,10 @@ typedef struct _Pop3ConData {
     PRBool delete_server_message_during_top_traversal;
     PRBool get_url;
     PRBool seenFromHeader;
+    PRInt32 parsed_bytes;
+    PRInt32 pop3_size;
+    PRBool dot_fix;
+    PRBool assumed_end;
 } Pop3ConData;
 
 // State Flags (Note, I use the word state in terms of storing 

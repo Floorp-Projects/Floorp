@@ -437,7 +437,6 @@ nsPop3Protocol::~nsPop3Protocol()
 
 	FreeMsgInfo();
 	PR_FREEIF(m_pop3ConData->only_uidl);
-	PR_FREEIF(m_pop3ConData->obuffer)
 	PR_Free(m_pop3ConData);
 
 	if (m_lineStreamBuffer)
@@ -1973,30 +1972,6 @@ nsPop3Protocol::SendRetr()
     return status;
 }
 
-
-static PRInt32 gPOP3parsed_bytes, gPOP3size;
-static PRBool gPOP3dotFix, gPOP3AssumedEnd;
-
-
-/*
-	To fix a bug where we think the message is over, check the alleged size of the message
-	before we assume that CRLF.CRLF is the end.
-	return PR_TRUE if end of message is unlikely. parsed bytes is not accurate since we add
-	bytes every now and then.
-*/
-
-PRBool NET_POP3TooEarlyForEnd(PRInt32 len)
-{
-	if (!gPOP3dotFix)
-		return PR_FALSE;	/* fix turned off */
-	gPOP3parsed_bytes += len;
-	if (gPOP3parsed_bytes >= (gPOP3size - 3))
-		return PR_FALSE;
-	return PR_TRUE;
-}
-
-
-
 /* digest the message
  */
 PRInt32
@@ -2048,11 +2023,11 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
             m_pop3ConData->msg_info[m_pop3ConData->last_accessed_msg].uidl)
             uidl = m_pop3ConData->msg_info[m_pop3ConData->last_accessed_msg].uidl;
 
-        gPOP3parsed_bytes = 0;
-        gPOP3size = m_pop3ConData->cur_msg_size;
-        gPOP3AssumedEnd = PR_FALSE;
+        m_pop3ConData->parsed_bytes = 0;
+        m_pop3ConData->pop3_size = m_pop3ConData->cur_msg_size;
+        m_pop3ConData->assumed_end = PR_FALSE;
         
-        m_pop3Server->GetDotFix(&gPOP3dotFix);
+        m_pop3Server->GetDotFix(&m_pop3ConData->dot_fix);
 		
 
         PR_LOG(POP3LOGMODULE,PR_LOG_ALWAYS, 
@@ -2078,9 +2053,9 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
 	char * line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 	buffer_size = status;
     
-    if(status == 0)  // no bytes read in...
+    if(status == 0 && !line)  // no bytes read in...
     {
-        if (gPOP3dotFix && gPOP3AssumedEnd)
+        if (m_pop3ConData->dot_fix && m_pop3ConData->assumed_end)
         {
             status =
                 m_nsIPop3Sink->IncorporateComplete(m_pop3ConData->msg_closure);
@@ -2090,21 +2065,12 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
         else
         {
             m_pop3ConData->pause_for_read = PR_TRUE;
-			PR_FREEIF(line);
             return (0);
         }
     }
     
     if (m_pop3ConData->msg_closure)	/* not done yet */
     {
-        if (!m_pop3ConData->obuffer)
-        {
-            m_pop3ConData->obuffer = (char *) PR_CALLOC(1024);
-            PR_ASSERT(m_pop3ConData->obuffer);
-            m_pop3ConData->obuffer_size = 1024;
-            m_pop3ConData->obuffer_fp = 0;
-        }
-
 		// buffer the line we just read in, and buffer all remaining lines in the stream
 		status = buffer_size;
 		do
@@ -2112,17 +2078,14 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
             PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS,("RECV: %s", line));
 			BufferInput(line, buffer_size);
 			// BufferInput(CRLF, 2);
-      BufferInput(MSG_LINEBREAK, MSG_LINEBREAK_LEN);
+            BufferInput(MSG_LINEBREAK, MSG_LINEBREAK_LEN);
 
 			// now read in the next line
 			PR_FREEIF(line);
-			line = m_lineStreamBuffer->ReadNextLine(inputStream, buffer_size, pauseForMoreData);
+			line = m_lineStreamBuffer->ReadNextLine(inputStream, buffer_size,
+                                                    pauseForMoreData);
 			status += buffer_size;
 		} while (/* !pauseForMoreData && */ line);
-
-		//PRUint32 size = 0;
-		//inputStream->GetLength(&size);
-		//NS_ASSERTION(size == 0, "hmmm....");
     }
 
 	buffer_size = status;  // status holds # bytes we've actually buffered so far...
@@ -2141,8 +2104,10 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
     {
         m_pop3ConData->pause_for_read = PR_FALSE;
         if (m_pop3ConData->truncating_cur_msg ||
-            !(m_pop3ConData->capability_flags & (POP3_HAS_UIDL | POP3_HAS_XTND_XLST |
-                                       POP3_HAS_TOP)))
+            (m_pop3ConData->leave_on_server &&
+            !(m_pop3ConData->capability_flags & (POP3_HAS_UIDL |
+                                                 POP3_HAS_XTND_XLST | 
+                                                 POP3_HAS_TOP))))
         {
             /* We've retrieved all or part of this message, but we want to
                keep it on the server.  Go on to the next message. */
@@ -2161,20 +2126,11 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
                                    m_bytesInMsgReceived);
     }
 
-#if 0
-    if (m_pop3ConData->graph_progress_bytes_p)
-        FE_GraphProgress(ce->window_id, ce->URL_s,
-                         m_totalBytesReceived,
-                         m_totalBytesReceived - old_bytes_received,
-                         m_pop3ConData->cur_msg_size);
-#endif
     /* set percent done to portion of total bytes of all messages
        that we're going to download. */
     if (m_totalDownloadSize)
 		UpdateProgressPercent(m_totalBytesReceived, m_totalDownloadSize);
 
-//        FE_SetProgressBarPercent(ce->window_id, ((m_totalBytesReceived*100) /
-//			m_totalDownloadSize)); 
 	PR_FREEIF(line);    
     return(0);
 }
@@ -2260,15 +2216,17 @@ nsPop3Protocol::HandleLine(char *line, PRUint32 line_length)
     status =
         m_nsIPop3Sink->IncorporateWrite(m_pop3ConData->msg_closure, 
                                              line, line_length);
+
+    m_pop3ConData->parsed_bytes += line_length;
     
     if ((status >= 0) &&
         (line[0] == '.') &&
         ((line[1] == CR) || (line[1] == LF)))
     {
-        gPOP3AssumedEnd = PR_TRUE;	/* in case byte count from server is */
+        m_pop3ConData->assumed_end = PR_TRUE;	/* in case byte count from server is */
                                     /* wrong, mark we may have had the end */ 
-        if (!gPOP3dotFix || m_pop3ConData->truncating_cur_msg ||
-            (gPOP3parsed_bytes >= (gPOP3size -3))) 
+        if (!m_pop3ConData->dot_fix || m_pop3ConData->truncating_cur_msg ||
+            (m_pop3ConData->parsed_bytes >= (m_pop3ConData->pop3_size -3))) 
         {
             status = 
                 m_nsIPop3Sink->IncorporateComplete(m_pop3ConData->msg_closure);
@@ -2399,7 +2357,8 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
     PRInt32 status = 0;
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_url);
 
-    PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS, ("Entering NET_ProcessPop3"));
+    PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS, ("Entering NET_ProcessPop3 %d",
+                                          aLength));
 
     m_pop3ConData->pause_for_read = PR_FALSE; /* already paused; reset */
     
