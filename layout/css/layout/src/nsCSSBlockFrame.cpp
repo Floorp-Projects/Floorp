@@ -2540,7 +2540,7 @@ nsCSSBlockFrame::ReflowFloater(nsIPresContext*        aPresContext,
 //XXX fix_me: use the values already stored in the nsCSSBlockReflowState
   // Compute the available space for the floater. Use the default
   // 'auto' width and height values
-  nsSize kidAvailSize(0, NS_UNCONSTRAINEDSIZE);
+  nsSize kidAvailSize;
   nsSize styleSize;
   PRIntn styleSizeFlags =
     nsCSSLayout::GetStyleSize(aPresContext, aState, styleSize);
@@ -2550,8 +2550,31 @@ nsCSSBlockFrame::ReflowFloater(nsIPresContext*        aPresContext,
   if (styleSizeFlags & NS_SIZE_HAS_WIDTH) {
     kidAvailSize.width = styleSize.width;
   }
+  else {
+    // If we are floating something and we don't know the width then
+    // find a maximum width for it to reflow into.
+
+    // XXX if the child is a block (instead of a table, say) then this
+    // will do the wrong thing. A better choice would be
+    // NS_UNCONSTRAINEDSIZE, but that has special meaning to tables.
+    const nsReflowState* rsp = &aState;
+    kidAvailSize.width = 0;
+    while (nsnull != rsp) {
+      if ((0 != rsp->maxSize.width) &&
+          (NS_UNCONSTRAINEDSIZE != rsp->maxSize.width)) {
+        kidAvailSize.width = rsp->maxSize.width;
+        break;
+      }
+      rsp = rsp->parentReflowState;
+    }
+    NS_ASSERTION(0 != kidAvailSize.width, "no width for block found");
+  }
+
   if (styleSizeFlags & NS_SIZE_HAS_HEIGHT) {
     kidAvailSize.height = styleSize.height;
+  }
+  else {
+    kidAvailSize.width = NS_UNCONSTRAINEDSIZE;
   }
 
   // Resize reflow the anchored item into the available space
