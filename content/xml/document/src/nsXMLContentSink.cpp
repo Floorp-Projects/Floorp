@@ -1350,11 +1350,11 @@ NS_IMETHODIMP
 nsXMLContentSink::HandleCharacterData(const PRUnichar *aData, 
                                       PRUint32 aLength)
 {
-  nsresult result = NS_OK;
-  if (aData) {
-    result = AddText(aData,aLength);
+  if (aData && mState != eXMLContentSinkState_InProlog &&
+      mState != eXMLContentSinkState_InEpilog) {
+    return AddText(aData, aLength);
   }
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

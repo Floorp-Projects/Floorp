@@ -346,6 +346,15 @@ nsDocumentEncoder::SerializeNodeEnd(nsIDOMNode* aNode,
     }
   }
 
+  nsCOMPtr<nsIDOMNode> parent;
+  aNode->GetParentNode(getter_AddRefs(parent));
+  if (parent) {
+    parent->GetNodeType(&type);
+    if (type == nsIDOMNode::DOCUMENT_NODE) {
+        aStr.Append((PRUnichar)'\n');
+    }
+  }
+
   return NS_OK;
 }
 
@@ -920,6 +929,7 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
     rv = mSerializer->AppendDocumentStart(domdoc, aOutputString);
 
     if (NS_SUCCEEDED(rv)) {
+      aOutputString.Append((PRUnichar)'\n');
       nsCOMPtr<nsIDOMNode> doc(do_QueryInterface(mDocument));
 
       rv = SerializeToStringRecursive(doc, aOutputString);
