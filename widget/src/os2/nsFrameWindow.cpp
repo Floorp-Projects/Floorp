@@ -80,10 +80,7 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
                                   nsIAppShell *aAppShell,
                                   nsWidgetInitData *aInitData, HWND hwndO)
 {
-/* OS2TODO Removing assertion since mail setup wizard and mail password windows come through 
-    here with a non-HWND_DESKTOP hwndP */
-/*   NS_ASSERTION( hwndP == HWND_DESKTOP && aParent == nsnull,
-                 "Attempt to create non-top-level frame");   */
+   hwndP = aParent ? aParent->GetMainWindow() : NULLHANDLE;
 
 #if DEBUG_sobotka
    printf("\nIn nsFrameWindow::RealDoCreate:\n");
@@ -109,7 +106,7 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
                                 WC_FRAME,
                                 0, 0,                  // text, style
                                 0, 0, 0, 0,            // position
-                                hwndP ? hwndP : HWND_DESKTOP,
+                                hwndP,
                                 HWND_TOP,
                                 0,                     // ID
                                 &fcd, 0);
@@ -254,10 +251,17 @@ nsresult nsFrameWindow::Show( PRBool bState)
 {
    if( mWnd)
    {
-      nsWindow::Show( bState);
+      ULONG ulFlags;
+      if( bState) {
+         ULONG ulStyle = WinQueryWindowULong( GetMainWindow(), QWL_STYLE);
+         ulFlags = SWP_SHOW | SWP_ACTIVATE;
+         if( ulStyle & WS_MINIMIZED)
+            ulFlags |= (SWP_RESTORE | SWP_MAXIMIZE);
+      }
+      else
+         ulFlags = SWP_HIDE | SWP_DEACTIVATE;
+      WinSetWindowPos( GetMainWindow(), NULLHANDLE, 0L, 0L, 0L, 0L, ulFlags);
       SetWindowListVisibility( bState);
-      WinSetWindowPos( GetMainWindow(), NULLHANDLE, 0L, 0L, 0L, 0L, 
-                       (bState == PR_TRUE) ? SWP_ACTIVATE : SWP_DEACTIVATE);
    }
 
    return NS_OK;

@@ -149,6 +149,7 @@ class nsWindow : public nsBaseWidget,
    // Get a HWND or a HPS.
    virtual void  *GetNativeData( PRUint32 aDataType);
    virtual void   FreeNativeData( void *aDatum, PRUint32 aDataType);
+   virtual HWND   GetMainWindow() const           { return mWnd; }
 
    // nsSwitchToPMThread interface
     virtual BOOL            CallMethod(MethodInfo *info);
@@ -179,7 +180,6 @@ protected:
    virtual PRInt32  GetHeight( PRInt32 aHeight)   { return aHeight; }
    virtual PRInt32  GetClientHeight()             { return mBounds.height; }
    virtual ULONG    GetSWPFlags( ULONG flags)     { return flags; }
-   virtual HWND     GetMainWindow() const         { return mWnd; }
    virtual void     SetupForPrint( HWND /*hwnd*/) {}
 
    // Useful functions for subclasses to use, threaded as necessary.
