@@ -309,7 +309,7 @@ oeICalContainerImpl::AddCalendars( PRUint32 serverCount, const char **servers ) 
 #ifdef ICAL_DEBUG
     printf( "oeICalContainerImpl::AddCalendars( %d, [Array] )\n", serverCount );
 #endif
-    nsresult rv;
+    nsresult rv=NS_OK;
     for( unsigned int i=0; i<serverCount; i++ ) {
         rv = AddCalendar( servers[i] );
         if( NS_FAILED( rv ) )
@@ -1441,6 +1441,9 @@ void oeICalContainerFilter::UpdateAllFilters( PRInt32 icaltype )
     }
 }
 
+NS_IMETHODIMP oeICalContainerFilter::ReportError( PRInt16 severity, PRUint32 errorid, const char *errorstring ) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 ///////////////////////////////////////////////////
 // FilterDateTime
 //////////////////////////////////////////////////

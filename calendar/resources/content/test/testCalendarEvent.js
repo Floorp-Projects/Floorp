@@ -282,9 +282,11 @@ function testAdd( )
         
         onDeleteItem : function( calendarEvent )
         {
+        },
+        
+        onError : function()
+        {
         }
-        
-        
     };
       
     var ds = new CalendarEventDataSource( calendarObserver, "/tmp/" );
@@ -332,6 +334,10 @@ function testAddDelete( owner )
         {
             testAddDeleteObject.deletedEvent = calendarEvent; 
             testAddDeleteObject.done = true;          
+        },
+        
+        onError : function()
+        {
         }
       
       
@@ -473,6 +479,10 @@ function testModify( owner )
         {
            testModifyObject.deletedEvent = calendarEvent; 
            testModifyObject.done = true;  
+        },
+        
+        onError : function()
+        {
         }
       };
       
@@ -696,6 +706,10 @@ function testAlarm( owner )
                testAlarmObject.alarmEvent = calendarEvent; 
             }
         },
+        
+        onError : function()
+        {
+        }
    
      };
      
@@ -846,6 +860,10 @@ function testGetDay( owner )
         {
             testGetDayObject.deletedEvent = calendarEvent; 
             --testGetDayObject.done;          
+        },
+        
+        onError : function()
+        {
         }
       };
       
@@ -1068,6 +1086,10 @@ function testGetById( owner )
         {
             testGetByIdObject.deletedEvent = calendarEvent; 
             testGetByIdObject.done = true;          
+        },
+        
+        onError : function()
+        {
         }
      };
      

@@ -87,6 +87,7 @@
                         onModifyItem : function( calendarEvent, originalEvent ) {},
                         onDeleteItem : function( calendarEvent ) {},
                         onAlarm      : function( calendarEvent ) {},
+                        onError      : function() {},
                      };
                      
                      These methods are now called synchronously, if you add an event the onAddItem
@@ -684,6 +685,7 @@ CalendarAlarmObserver.prototype.onLoad = function( calendarEvent ){}
 CalendarAlarmObserver.prototype.onAddItem = function( calendarEvent ){}
 CalendarAlarmObserver.prototype.onModifyItem = function( calendarEvent, originalEvent ){}
 CalendarAlarmObserver.prototype.onDeleteItem = function( calendarEvent ){}
+CalendarAlarmObserver.prototype.onError = function(){}
 
 CalendarAlarmObserver.prototype.onAlarm = function calAlarm_onAlarm( calendarEvent )
 {

@@ -94,6 +94,10 @@ var unifinderToDoDataSourceObserver =
    onAlarm : function( calendarToDo )
    {
       
+   },
+
+   onError : function()
+   {
    }
 
 };

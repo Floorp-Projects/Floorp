@@ -150,6 +150,8 @@ interface oeIICalEvent : nsISupports
     void addContact(in nsIAbCard contact);
     void removeContact(in nsIAbCard contact);
     void removeContacts();
+
+    void reportError( in short severity, in unsigned long errorid, in string errorstring );
 };
 
 [scriptable, uuid(f95df40e-0d5f-49ec-9ba8-4b88d3eb53e0)]
@@ -180,6 +182,7 @@ interface oeIICalObserver : nsISupports
     void onModifyItem( in oeIICalEvent e, in oeIICalEvent olde );
     void onDeleteItem( in oeIICalEvent e);
     void onAlarm( in oeIICalEventDisplay e);
+    void onError( in short severity, in unsigned long errorid, in string errorstring );
 };
 
 [scriptable, uuid(7a4fd625-69a8-4008-932e-cccc227b402c)]
@@ -192,11 +195,17 @@ interface oeIICalTodoObserver : nsISupports
     void onModifyItem( in oeIICalTodo e, in oeIICalTodo olde );
     void onDeleteItem( in oeIICalTodo e);
     void onAlarm( in oeIICalTodo e);
+    void onError( in short severity, in unsigned long errorid, in string errorstring );
 };
 
 [scriptable, uuid(981ab93d-ad51-45bb-a4a2-e158c2cfdeb4)]
 interface oeIICal : nsISupports
 {
+    const long ICAL_ERROR_DEBUG = 0;
+    const long ICAL_ERROR_WARN = 1;
+    const long ICAL_ERROR_PROBLEM = 1;
+    const long ICAL_ERROR_CRITICAL = 1;
+
 	void Test();
 
     attribute boolean batchMode;
@@ -227,6 +236,7 @@ interface oeIICal : nsISupports
 	nsISimpleEnumerator getAllTodos();
 
     void resetFilter();
+    void reportError( in short severity, in unsigned long errorid, in string errorstring );
 };
 
 [scriptable, uuid(c89ec938-f690-4f62-a4b3-11e962ba2314)]

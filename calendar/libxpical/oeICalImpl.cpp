@@ -1473,7 +1473,7 @@ oeICalImpl::GetFirstEventsForRange( PRTime checkdateinms, PRTime checkenddateinm
                 eventArray->GetElementAt( i, getter_AddRefs( tmpcomp ) );
                 oeIICalEvent* tmpevent = tmpcomp;
                 bool isbeginning;
-                icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate, nsnull );
+                icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate, &isbeginning );
                 bool isallday = next.is_date;
                 next.is_date = false;
                 if( !icaltime_is_null_time( next ) && (icaltime_compare( nextcheckdate, next ) == 0) ) {
@@ -2052,6 +2052,47 @@ oeICalImpl::GetAllTodos(nsISimpleEnumerator **resultList )
     return NS_OK;
 }
 
+NS_IMETHODIMP oeICalImpl::ReportError( PRInt16 severity, PRUint32 errorid, const char *errorstring ) {
+
+    if( severity >= ICAL_ERROR_PROBLEM ) {
+        #ifdef ICAL_DEBUG
+            printf( "oeICalImpl::ReportError(%d,%x) : %s\n", severity, errorid, errorstring );
+        #endif
+    } else {
+        #ifdef ICAL_DEBUG_ALL
+            printf( "oeICalImpl::ReportError(%d,%x) : %s\n", severity, errorid, errorstring );
+        #endif
+    }
+
+    unsigned int i;
+    PRUint32 observercount;
+    m_observerlist->Count(&observercount);
+    for( i=0; i<observercount; i++ ) {
+        nsCOMPtr<oeIICalObserver>observer;
+        m_observerlist->QueryElementAt( i, NS_GET_IID(oeIICalObserver), getter_AddRefs(observer));
+        nsresult rv;
+        rv = observer->OnError( severity, errorid, errorstring );
+        #ifdef ICAL_DEBUG
+        if( NS_FAILED( rv ) ) {
+            printf( "oeICalImpl::ReportError() : WARNING Call to observer's onError() unsuccessful: %x\n", rv );
+        }
+        #endif
+    }
+    m_todoobserverlist->Count(&observercount);
+    for( i=0; i<observercount; i++ ) {
+        nsCOMPtr<oeIICalTodoObserver>observer;
+        m_todoobserverlist->QueryElementAt( i, NS_GET_IID(oeIICalTodoObserver), getter_AddRefs(observer));
+        nsresult rv;
+        rv = observer->OnError( severity, errorid, errorstring );
+        #ifdef ICAL_DEBUG
+        if( NS_FAILED( rv ) ) {
+            printf( "oeICalImpl::ReportError() : WARNING Call to observer's onError() unsuccessful: %x\n", rv );
+        }
+        #endif
+    }
+    return NS_OK;
+}
+
 /*************************************************************************************************************/
 /*************************************************************************************************************/
 /*************************************************************************************************************/
@@ -2509,4 +2550,7 @@ NS_IMETHODIMP oeICalFilter::GetDuration(PRBool *is_negative, PRUint16 *weeks, PR
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP oeICalFilter::ReportError( PRInt16 severity, PRUint32 errorid, const char *errorstring ) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 

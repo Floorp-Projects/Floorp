@@ -181,6 +181,9 @@ var unifinderEventDataSourceObserver =
    onAlarm : function( calendarEvent )
    {
       
+   },
+   onError : function()
+   {
    }
 };
 

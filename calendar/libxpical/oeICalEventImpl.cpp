@@ -1693,9 +1693,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         tmpstr = icalproperty_get_uid( prop );
         SetId( tmpstr );
     } else {
-        #ifdef ICAL_DEBUG
-        printf( "oeICalEventImpl::ParseIcalComponent() failed: UID not found!\n" );
-        #endif
+        ReportError( oeIICal::ICAL_ERROR_PROBLEM, 0, "oeICalEventImpl::ParseIcalComponent() failed: UID not found!\n" );
         return false;
     }
 
@@ -2627,6 +2625,12 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     //add event to newcalendar
     icalcomponent_add_component( newcalendar, vevent );
     return newcalendar;
+}
+
+NS_IMETHODIMP oeICalEventImpl::ReportError( PRInt16 severity, PRUint32 errorid, const char *errorstring ) {
+    if( m_calendar )
+        m_calendar->ReportError( severity, errorid, errorstring );
+    return NS_OK;
 }
 
 /********************************************************************************************/

@@ -200,6 +200,9 @@ function CalendarWindow( )
       onAlarm : function( calendarEvent )
       {
       
+      },
+      onError : function()
+      {
       }
    };
    
