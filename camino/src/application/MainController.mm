@@ -1160,12 +1160,6 @@ const int kReuseWindowOnAE = 2;
   NSWindow* frontBrowser = [self getFrontmostBrowserWindow];
   if ( !frontBrowser )
     [self newWindow:self];
-  else {
-    if ([[frontBrowser windowController] respondsToSelector:@selector(showWindow:)])
-      [[frontBrowser windowController] showWindow:self];
-    else
-      [self newWindow:self];
-  }
 
   return NO;
 }
