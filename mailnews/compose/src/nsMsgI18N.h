@@ -28,6 +28,16 @@ PRBool    nsMsgI18Nstateful_charset(const char *charset);
 PRBool    nsMsgI18N7bit_data_part(const char *charset, const char *string, const PRUint32 size);
 char      *nsMsgI18NGetAcceptLanguage(void); 
 
+const char *msgCompHeaderInternalCharset(void);
+
+char * nsMsgI18NGetDefaultMailCharset(void);
+nsresult ConvertFromUnicode(const nsString& aCharset, 
+                                   const nsString& inString,
+                                   char** outCString);
+nsresult ConvertToUnicode(const nsString& aCharset, 
+                                 const char* inCString, 
+                                 nsString& outString);
+
 
 //
 // THIS IS BAD STUFF...MAKE IT GO AWAY!!!
