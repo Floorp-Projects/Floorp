@@ -796,8 +796,6 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
 
     event.renderingContext = nsnull;
 
-    result = DispatchEvent(&event);
-
     static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
     
