@@ -91,7 +91,7 @@ static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 #define LIBPROXY_DLL  "libproxy.dll"
 #else
 #ifdef XP_MAC
-#define LIBPROXY_DLL  "??????????????????"
+#define LIBPROXY_DLL  "LIBPROXY_DLL"
 #else
 #define LIBPROXY_DLL  "libproxy.so"
 #endif
