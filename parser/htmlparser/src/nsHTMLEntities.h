@@ -42,11 +42,11 @@ public:
 
 /**
  * Translate an entity string into it's unicode value. This call
- * returns an empty string if the entity cannot be mapped. 
+ * returns null if the entity cannot be mapped. 
  * Note that the string returned DOES NOT have the leading "&" nor 
  * the trailing ";" in it.
  */
-  static const nsCString& UnicodeToEntity(PRInt32 aUnicode);
+  static const char* UnicodeToEntity(PRInt32 aUnicode);
 };
 
 
