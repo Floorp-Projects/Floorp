@@ -3,30 +3,7 @@
 <?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
 <?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
-<!DOCTYPE window
-[
-<!ENTITY window.title "Messages">
-<!ENTITY pane.title "Messages">
-<!ENTITY forwardReply.label "Forwarding and Replying to Messages">
-<!ENTITY forwardMsg.label "By default, forward messages:">
-<!ENTITY inline.label "Inline">
-<!ENTITY quoted.label "Quoted">
-<!ENTITY asAttachment.label "As Attachment">
-<!ENTITY then.label "Then,">
-<!ENTITY autoQuote.label "Automatically quote the original message when replying">
-<!ENTITY aboveQuote.label "start my reply above the quoted text">
-<!ENTITY belowQuote.label "start my reply below the quoted text">
-<!ENTITY selectquote.label "select the quoted text">
-<!ENTITY spellCheck.label "Spell check messages before sending">
-<!ENTITY msgWrapping.label "Message Wrapping">
-<!ENTITY wrapInMsg.label "Wrap incoming, plain text messages to window width">
-<!ENTITY wrapOutMsg.label "Wrap outgoing, plain text messages at">
-<!ENTITY char.label "characters">
-<!ENTITY use8Bits.label "Send messages that use 8-bit characters">
-<!ENTITY cleanupMsg.label "When it's time to clean up messages:">
-<!ENTITY asIs.label "As is (does not work well with some mail servers)">
-<!ENTITY useMIME.label "Using the 'quoted printable' MIME encoding (does not work well with some mail or newsgroups readers)">
-]>
+<!DOCTYPE window SYSTEM "chrome://messengercompose/locale/pref-messages.dtd">
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

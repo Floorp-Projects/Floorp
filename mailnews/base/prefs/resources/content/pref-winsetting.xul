@@ -3,19 +3,7 @@
 <?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
 <?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
-<!DOCTYPE window
-[
-<!ENTITY window.title "Window Setting">
-<!ENTITY pane.title "Window Setting">
-<!ENTITY chooseLayout.label "Choose which layout you prefer for the Messenger window:">
-<!ENTITY chooseExp.label "If you prefer fewer windows, unselect these options, and Messenger will open items into existing windows.">
-<!ENTITY reuseThread.label "Double-clicking a folder or a newsgroup opens it in a new windowr">
-<!ENTITY reuseMessage.label "Double-clicking a message opens it in a new window">
-<!ENTITY reuseExp.label "If you prefer fewer windows, unselect these options, and Messenger will open items into existing windows.">
-<!ENTITY newsOpt.label "The Newsgroups menu item or button:">
-<!ENTITY openMessenger.label "Opens newsgroups in a Messenger window">
-<!ENTITY openCenter.label "Opens the Message Center">
-]>
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-winsetting.dtd">
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

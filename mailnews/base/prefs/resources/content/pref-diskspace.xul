@@ -3,24 +3,7 @@
 <?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
 <?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
-<!DOCTYPE window
-[
-<!ENTITY window.title "Disk Space">
-<!ENTITY pane.title "Disk Space">
-<!ENTITY allMsg.label "All Messages">
-<!ENTITY storeMsgLimit.label "Do not store messages locally that are larger than">
-<!ENTITY autoCompact.label "Automatically compact folders when it will save over">
-<!ENTITY kb.label " kB">
-<!ENTITY newgroupMsgOnly.label " Newsgroup Messages Only">
-<!ENTITY whenToClean.label "When it's time to clean up messages:">
-<!ENTITY keepMsgs.label "Keep messages which have arrived within the past">
-<!ENTITY days.label "days">
-<!ENTITY keepAllMsg.label "Keep all messages">
-<!ENTITY keepTheNewest.label "Keep the newest">
-<!ENTITY messages.label "messages">
-<!ENTITY keepUnread.label "Keep only unread messages">
-<!ENTITY removeMsg.label "Remove message bodies only older than">
-]>
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-diskspace.dtd">
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

@@ -4,22 +4,7 @@
 <?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
 
-<!DOCTYPE window
-[
-<!ENTITY window.title "Return Receipts">
-<!ENTITY pane.title "Return Receipts">
-<!ENTITY requestReceipt.label " If I request a receipt when sending a message, I want">
-<!ENTITY dsn.label "A delivery receipt from the receiving server (DSN)">
-<!ENTITY mdn.label "A read receipt, notifying me when recipients display the message (MDN)">
-<!ENTITY both.label "Both types of receipt">
-<!ENTITY receiptArrive.label " When a receipt arrives">
-<!ENTITY leaveIt.label "Leave it in my Inbox">
-<!ENTITY moveToSent.label "Move it to my Sent Mail folder">
-<!ENTITY requestMDN.label " When I receive a message and the sender requested a receipt (MDN)">
-<!ENTITY returnSome.label "Return receipts for some messages">
-<!ENTITY never.label "Return receipts for some messages">
-<!ENTITY custom.label "Customize...">
-]>
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-receipts.dtd">
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

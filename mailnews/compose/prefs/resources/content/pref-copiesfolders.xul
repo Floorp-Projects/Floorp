@@ -3,20 +3,7 @@
 <?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
 <?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
-<!DOCTYPE window
-[
-<!ENTITY window.title "Copies and Folders">
-<!ENTITY pane.title "Copies and Folders">
-<!ENTITY sendMsg.label "When sending a mail message, automatically">
-<!ENTITY place.label "Place a copy in FOLDER">
-<!ENTITY bccEmail.label "BCC: EMAIL">
-<!ENTITY bccOther.label "BCC Other Address:">
-<!ENTITY sendNews.label "When sending a newsgroup message, automatically">
-<!ENTITY storage.label "Storage for Drafts and Templates">
-<!ENTITY keepDraft.label "Keep Draft in FOLDER">
-<!ENTITY keepTemplate.label "Keep Templates in FOLDER">
-<!ENTITY chooseFolder.label "Choose Folder...">
-]>
+<!DOCTYPE window SYSTEM "chrome://messengercompose/locale/pref-copiesfolders.dtd">
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

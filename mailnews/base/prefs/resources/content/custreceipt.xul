@@ -3,20 +3,7 @@
 <?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
 <?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
-<!DOCTYPE window
-[
-<!ENTITY window.title "Customize Return Receipts">
-<!ENTITY pane.title "Customize Return Receipts">
-<!ENTITY sendReceipt.label "When I receive a message and its sender requested a receipt(MDN), send one in the following cases:">
-<!ENTITY notInToCc.label "If I'm not in the To or CC list of the message (as for a message to a mailing list):">
-<!ENTITY neverSend.label "Never Send">
-<!ENTITY automatically.label "Automatically">
-<!ENTITY askMe.label "Ask Me">
-<!ENTITY outside.label "If the message comes from outside the domain:">
-<!ENTITY other.label "In all other cases:">
-<!ENTITY ok.label "Ok">
-<!ENTITY cancel.label "Cancel">
-]>
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/custreceipt.dtd">
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

@@ -3,24 +3,7 @@
 <?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
 <?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
-<!DOCTYPE window
-[
-<!ENTITY window.title "Addressing">
-<!ENTITY pane.title "Addressing">
-<!ENTITY pinpoint.label "Pinpoint Addressing">
-<!ENTITY lookFor.label "Look for addresses in the following">
-<!ENTITY padCheck.label "Address Books">
-<!ENTITY dirCheck.label "Directory Server">
-<!ENTITY nsbook.label "Netscape Phonebook">
-<!ENTITY mulFound.label "When there are multiple addresses found:">
-<!ENTITY showList.label "Show me a list of choices">
-<!ENTITY acceptList.label "Accept what I have typed">
-<!ENTITY oneMatch.label "If there is one match in your personal address books:">
-<!ENTITY useAddress.label "Use the address and do not search in the directory">
-<!ENTITY displayFullname.label "When displaying full names:">
-<!ENTITY useDisplayName.label "Show names using display name (from address book card)">
-<!ENTITY useLastFirst.label "Show names using last name, first name">
-]>
+<!DOCTYPE window SYSTEM "chrome://addressbook/locale/pref-addressing.dtd">
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

@@ -3,20 +3,7 @@
 <?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
 <?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
-<!DOCTYPE window
-[
-<!ENTITY window.title "Formatting">
-<!ENTITY pane.title "Formatting">
-<!ENTITY msgFormatting.label "Message formatting">
-<!ENTITY useHtml.label "Use the HTML editor to compose messages.">
-<!ENTITY usePlain.label "Use the plain text editor to compose messages.">
-<!ENTITY sendMail.label "When sending HTML mail messages to recipients who are not listed as being able to receive them:">
-<!ENTITY askMe.label "Ask me what to do if the message has HTML formatting, otherwise send plain text.">
-<!ENTITY convertPlain.label "Convert the message into plain text (may lose some formatting).">
-<!ENTITY sendHTML.label "Send the message in HTML anyway (some recipients may not be able to read it).">
-<!ENTITY sendBoth.label "Send the message in plain text and HTML (uses more disk space).">
-<!ENTITY override.label "You can override these settings in any message through the options panel of the message composition window.">
-]>
+<!DOCTYPE window SYSTEM "chrome://messengercompose/locale/pref-formatting.dtd">
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
