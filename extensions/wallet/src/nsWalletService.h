@@ -50,6 +50,18 @@ public:
   NS_IMETHOD SI_Prompt
       (char *prompt, char **username, char *URLName);
 
+  NS_IMETHOD PromptUsernameAndPassword
+    (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
+     PRBool *_retval, char* urlname);
+  NS_IMETHOD PromptPassword
+    (const PRUnichar *text, PRUnichar **pwd, PRBool *_retval, char* urlname);
+  NS_IMETHOD Prompt
+    (const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **result,
+     PRBool *_retval, char* urlname);
+
+  NS_IMETHOD SI_RemoveUser(char *URLName, char *userName);
+
+
   NS_IMETHOD WALLET_GetNopreviewListForViewer(nsString& aNopreviewList);
   NS_IMETHOD WALLET_GetNocaptureListForViewer(nsString& aNocaptureList);
   NS_IMETHOD WALLET_GetPrefillListForViewer(nsString& aPrefillList);

@@ -57,7 +57,6 @@ static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static PRMonitor * signon_lock_monitor = NULL;
 static PRThread  * signon_lock_owner = NULL;
 static int signon_lock_count = 0;
-static PRBool si_anonymous = PR_FALSE;
 
 /* load states */
 
@@ -702,6 +701,9 @@ si_GetURL(char * URLName) {
   char *strippedURLName = 0;
   if (!URLName) {
     /* no URLName specified, return first URL (returns NULL if not URLs) */
+    if (LIST_COUNT(si_signon_list)==0) {
+      return NULL;
+    }
     return (si_SignonURLStruct *) (si_signon_list->ElementAt(0));
   }
   strippedURLName = si_StrippedURL(URLName);
@@ -792,6 +794,11 @@ si_RemoveUser(char *URLName, char *userName, PRBool save) {
 
   si_unlock_signon_list();
   return PR_TRUE;
+}
+
+PUBLIC PRBool
+SINGSIGN_RemoveUser(char *URLName, char *userName) {
+  return si_RemoveUser(URLName, userName, PR_TRUE);
 }
 
 /* Determine if a specified url/user exists */
@@ -1643,7 +1650,7 @@ SI_LoadSignonData(PRBool fullLoad) {
       }
 
       /* read in and save the value part */
-      if(!ret) {
+      if(NS_FAILED(ret)) {
         /* error in input file so give up */
         badInput = PR_TRUE;
         break;
@@ -1724,11 +1731,6 @@ si_SaveSignonDataLocked(PRBool fullSave) {
 
   /* do nothing if signon list has not changed */
   if(!si_signon_list_changed) {
-    return(-1);
-  }
-
-  /* do not save signons if in anonymous mode */
-  if(si_anonymous) {
     return(-1);
   }
 
@@ -2185,7 +2187,7 @@ si_RestoreOldSignonDataFromBrowser
 
 /* Browser-generated prompt for user-name and password */
 PUBLIC PRBool
-SINGSIGN_PromptUsernameAndPassword
+SINGSIGN_PromptUsernameAndPassword2
     (char *prompt, char **username, char **password, char *URLName) {
   PRBool status;
   char *copyOfPrompt=0;
@@ -2218,7 +2220,7 @@ SINGSIGN_PromptUsernameAndPassword
 
 /* Browser-generated prompt for password */
 PUBLIC char *
-SINGSIGN_PromptPassword
+SINGSIGN_PromptPassword2
     (char *prompt, char *URLName, PRBool pickFirstUser) {
   char *password=0, *username=0, *copyOfPrompt=0, *result;
   char *urlname = URLName;
@@ -2298,7 +2300,7 @@ SINGSIGN_PromptPassword
 
 /* Browser-generated prompt for username */
 PUBLIC char *
-SINGSIGN_Prompt (char *prompt, char* defaultUsername, char *URLName)
+SINGSIGN_Prompt2 (char *prompt, char* defaultUsername, char *URLName)
 {
   char *password=0, *username=0, *copyOfPrompt=0, *result;
 
@@ -2351,6 +2353,87 @@ SINGSIGN_Prompt (char *prompt, char* defaultUsername, char *URLName)
   return result;
 }
 
+PUBLIC nsresult
+SINGSIGN_PromptUsernameAndPassword
+    (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
+     PRBool *returnValue, char* urlname) {
+  return NS_OK;
+}
+
+PUBLIC nsresult
+SINGSIGN_PromptPassword
+    (const PRUnichar *text, PRUnichar **pwd, PRBool *returnValue, char* urlname) {
+
+  nsresult res;
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  if (NS_FAILED(res)) {
+    return res;
+  }
+
+  /* do only the dialog if signon preference is not enabled */
+  if (!si_GetSignonRememberingPref()){
+    return dialog->PromptPassword(text, pwd, returnValue);
+  }
+
+  /* get host part of URL which is of form user@host */
+  char * host = (char*) PL_strchr(urlname, '@');
+  if (host) {
+    /* @ found, host is URL part following the @ */
+    host++; /* host is part of URL after the @ */
+  } else {
+    host = urlname;
+  }
+
+  /* get previous password used with this username */
+  char *password=0, *username=0;
+  si_RestoreOldSignonDataFromBrowser(host, PR_TRUE, &username, &password);
+
+  /* return if a password was found */
+  if (password) {
+    *pwd = nsAutoString(password).ToNewUnicode();
+    *returnValue = PR_TRUE;
+    return NS_OK;
+  }
+
+  /* if no password found, get new password from user */
+  res = dialog->PromptPassword(text, pwd, returnValue);
+  if (NS_FAILED(res) || !(*returnValue)) {
+    /* user pressed Cancel */
+    return res;
+  }
+        
+  /* extract username from URLName */
+  if (!username) {
+    char * s = (char*) PL_strchr(urlname, '@');
+    if (s) {
+      /* @ found, username is URL part preceding the @ */
+      *s = '\0';
+      StrAllocCopy(username, urlname);
+      *s = '@';
+    } else {
+      /* no @ found, use entire URL as username */
+      StrAllocCopy(username, urlname);
+    }
+  }
+
+  /* remember these values for next time */
+
+  password = nsString(*pwd).ToNewCString();
+  if (password && PL_strlen(password) && si_OkToSave(host, username)) {
+    si_RememberSignonDataFromBrowser (host, username, password);
+  }
+
+  /* cleanup and return */
+  PR_FREEIF(username);
+  return NS_OK;
+}
+
+PUBLIC nsresult
+SINGSIGN_Prompt
+    (const PRUnichar *text, const PRUnichar *defaultText,
+     PRUnichar **resultText, PRBool *returnValue, char* urlname) {
+  return NS_OK;
+}
 
 /*****************
  * Signon Viewer *

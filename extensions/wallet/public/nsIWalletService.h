@@ -61,6 +61,16 @@ struct nsIWalletService : public nsISupports
   NS_IMETHOD SI_Prompt
     (char *prompt, char **username, char *URLName) = 0;
 
+  NS_IMETHOD PromptUsernameAndPassword
+    (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
+     PRBool *_retval, char* urlname) = 0;
+  NS_IMETHOD PromptPassword
+    (const PRUnichar *text, PRUnichar **pwd, PRBool *_retval, char* urlname) = 0;
+  NS_IMETHOD Prompt
+    (const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **result,
+     PRBool *_retval, char* urlname) = 0;
+  NS_IMETHOD SI_RemoveUser(char *URLName, char *userName) = 0;
+
   NS_IMETHOD WALLET_GetNopreviewListForViewer(nsString& aNopreviewList) = 0;
   NS_IMETHOD WALLET_GetNocaptureListForViewer(nsString& aNocaptureList) = 0;
   NS_IMETHOD WALLET_GetPrefillListForViewer(nsString& aPrefillList) = 0;
