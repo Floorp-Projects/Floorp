@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 EXPORTS = \
 		nsIMimeHeaderConverter.h    	\
 		nsIStreamConverter.h		\
-		nsIMimeObjectClassAccess.h
+		nsIMimeObjectClassAccess.h	\
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
