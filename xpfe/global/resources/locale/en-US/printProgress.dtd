@@ -1,7 +1,6 @@
 <!--LOCALIZATION NOTE sendprogress.dtd Main UI for Send Message Progress Dialog -->
 <!ENTITY printWindow.title "Printing"> 
-<!ENTITY titlePrefixPrint "Printing -"> 
-<!ENTITY status   "URL:"> 
+<!ENTITY status   "Title:"> 
 <!ENTITY progress "Progress:">
 
 <!ENTITY keepProgressDialogUpMsg.label "Keep this window open after the message is successfully sent."> 

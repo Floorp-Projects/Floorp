@@ -541,7 +541,6 @@ public:
   enum eDocTitleDefault {
     eDocTitleDefNone,
     eDocTitleDefBlank,
-    eDocTitleDefDocument,
     eDocTitleDefURLDoc
   };
 
@@ -2993,9 +2992,6 @@ DocumentViewerImpl::GetDisplayTitleAndURL(PrintObject*      aPO,
     } else {
       switch (aDefType) {
         case eDocTitleDefBlank: *aTitle = ToNewUnicode(NS_LITERAL_STRING(""));
-          break;
-
-        case eDocTitleDefDocument: if (aBrandName) *aTitle = nsCRT::strdup(aBrandName);
           break;
 
         case eDocTitleDefURLDoc:
@@ -6653,7 +6649,7 @@ DocumentViewerImpl::SetDocAndURLIntoProgress(PrintObject* aPO,
   PRUnichar * docTitleStr;
   PRUnichar * docURLStr;
   GetDisplayTitleAndURL(aPO, mPrt->mPrintSettings, mPrt->mBrandName,
-                        &docTitleStr, &docURLStr, eDocTitleDefDocument);
+                        &docTitleStr, &docURLStr, eDocTitleDefURLDoc);
 
   // Make sure the URLS don't get too long for the progress dialog
   if (docURLStr && nsCRT::strlen(docURLStr) > kTitleLength) {
