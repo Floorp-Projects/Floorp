@@ -232,6 +232,10 @@
     (:semantics-next s :semantics-next-num li 540 sa 60 keep nowidctlpar hyphpar 0 :10-pt :no-language)
     ((+ :styles) (:semantics-next sbasedon :semantics-num snext :semantics-next-num "Semantics Next;"))
     
+    (:semantic-comment-num 22)
+    (:semantic-comment s :semantic-comment-num qj li 180 sb 120 sa 0 widctlpar :10-pt :english)
+    ((+ :styles) (:semantic-comment sbasedon :normal-num snext :semantics-num "Semantic Comment;"))
+    
     (:default-paragraph-font-num 30)
     (:default-paragraph-font cs :default-paragraph-font-num)
     ((+ :styles) (* :default-paragraph-font additive "Default Paragraph Font;"))
@@ -333,6 +337,7 @@
     ((:vector-begin 1) (b "["))
     ((:vector-end 1) (b "]"))
     ((:empty-vector 2) (b "[]"))
+    ((:vector-construct 1) (b "|"))
     ((:vector-append 2) :circle-plus-10)
     ((:tuple-begin 1) (b :left-triangle-bracket-10))
     ((:tuple-end 1) (b :right-triangle-bracket-10))
