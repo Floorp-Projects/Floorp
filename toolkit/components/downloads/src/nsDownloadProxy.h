@@ -49,8 +49,7 @@
 #define PREF_BDM_SHOWWHENSTARTING "browser.download.manager.showWhenStarting"
 #define PREF_BDM_USEWINDOW "browser.download.manager.useWindow"
 
-class nsDownloadProxy : public nsIDownload,
-                        public nsIWebProgressListener
+class nsDownloadProxy : public nsIDownload
 {
 public:
 
