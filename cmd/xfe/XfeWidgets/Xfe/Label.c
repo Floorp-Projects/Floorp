@@ -1017,6 +1017,9 @@ _XfeLabelEdit(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 {
     XfeLabelPart *	lp = _XfeLabelPart(w);
 
+	/* Add fancy edit stuff here */
+    assert( 0 );
+
 #if 0
 	/* Make sure parent is XfeToolBar */
 	if (!XfeIsToolBar(_XfeParent(w)))
