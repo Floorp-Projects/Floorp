@@ -64,12 +64,13 @@
 # Where <b1> is the slope and <b0> is the y-intercept.
 LINEAR_REGRESSION=awk -f linear-regression.awk
 
-WATCH=./watch.sh
 INTERVAL=10
+WATCH=./watch.sh
 
 MOZILLA_DIR=../../dist/bin
 PROGRAM=gtkEmbed
 BUSTER_URL=http://localhost/cgi-bin/buster.cgi?refresh=$(INTERVAL)
+OUTFILE=linux.dat
 
 #----------------------------------------------------------------------
 # Top-level target
@@ -97,25 +98,49 @@ linux.gnuplot: linux.gnuplot.in vms.dat
 
 # Break the raw data file into temporary files that can be processed
 # by gnuplot directly.
-vms.dat: linux.dat
-	awk '{ print NR, $$1; }' $? > $@
+vms.dat: $(OUTFILE)
+	awk 'BEGIN    {$COUNT = 1} \
+             /^[0-9]/ { print $COUNT, $$1; \
+                        $COUNT = $COUNT + 1; \
+                      } \
+             /^ / {print $COUNT, "0"; \
+                              $COUNT = $COUNT + 1; \
+                             }' $? > $@
 
-vmd.dat: linux.dat
-	awk '{ print NR, $$2; }' $? > $@
+vmd.dat: $(OUTFILE)
+	awk 'BEGIN    {$COUNT = 1} \
+	     /^[0-9]/ { print $COUNT, $$2; \
+                        $COUNT = $COUNT + 1; \
+                      } \
+             /^ / {print $COUNT, "0"; \
+                              $COUNT = $COUNT + 1; \
+                      }' $? > $@
 
-vml.dat: linux.dat
-	awk '{ print NR, $$3; }' $? > $@
+vml.dat: $(OUTFILE)
+	awk 'BEGIN    {$COUNT = 1} \
+	     /^[0-9]/ { print $COUNT, $$3; \
+                        $COUNT = $COUNT + 1; \
+                      } \
+             /^ / {print $COUNT, "0"; \
+                              $COUNT = $COUNT + 1; \
+                      }' $? > $@
 
-rss.dat: linux.dat
-	awk '{ print NR, $$4; }' $? > $@
+rss.dat: $(OUTFILE)
+	awk 'BEGIN    {$COUNT = 1} \
+	     /^[0-9]/ { print $COUNT, $$4; \
+                        $COUNT = $COUNT + 1; \
+                      } \
+             /^ / {print $COUNT, "0"; \
+                              $COUNT = $COUNT + 1; \
+                      }' $? > $@
 
-# Run $(PROGRAM) to produce linux.dat
-linux.dat:
+# Run $(PROGRAM) to produce $(OUTFILE)
+$(OUTFILE):
 	LD_LIBRARY_PATH=$(MOZILLA_DIR) \
 	MOZILLA_FIVE_HOME=$(MOZILLA_DIR) \
 	$(WATCH) -i $(INTERVAL) -o $@ $(MOZILLA_DIR)/$(PROGRAM) "$(BUSTER_URL)"
 
 # Clean up the mess.
 clean:
-	rm -f linux.dat gdf.png *~
+	rm -f $(OUTFILE) gdf.png *~
 
