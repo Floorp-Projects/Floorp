@@ -50,6 +50,7 @@ nsFileTransportService::Init()
     rv = NS_NewThreadPool(getter_AddRefs(mPool), NS_FILE_TRANSPORT_WORKER_COUNT,
                           NS_FILE_TRANSPORT_WORKER_COUNT,
                           NS_FILE_TRANSPORT_WORKER_STACK_SIZE);
+    static void* th = NS_CurrentThread();       // XXX experiment -- is this exported on mac?
     return rv;
 }
 
@@ -58,7 +59,7 @@ nsFileTransportService::~nsFileTransportService()
     mPool->Shutdown();
 }
 
-NS_IMPL_ISUPPORTS(nsFileTransportService, NS_GET_IID(nsFileTransportService));
+NS_IMPL_ISUPPORTS1(nsFileTransportService, nsFileTransportService);
 
 NS_IMETHODIMP
 nsFileTransportService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
