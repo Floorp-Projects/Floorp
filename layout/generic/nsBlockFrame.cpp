@@ -542,12 +542,6 @@ nsBlockFrame::IsPercentageBase(PRBool& aBase) const
 //////////////////////////////////////////////////////////////////////
 // Reflow methods
 
-inline nscoord
-nsBlockFrame::GetAscent() const
-{
-  return mAscent; 
-}
-
 static void
 CalculateContainingBlock(const nsHTMLReflowState& aReflowState,
                          nscoord                  aFrameWidth,
@@ -1320,25 +1314,6 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     }
   }
 
-  // Set our desired ascent and descent.
-  // We need to check for special cases where mAscent is not yet properly set.
-  // There are two cases to consider: when the first line is a block, or
-  // when the first line is empty and is followed by a second line that
-  // is a block (e.g., <td>\n<div>). We need to fetch the ascent of the
-  // first child of the first non-empty line.
-  nsLineBox* line = mLines;
-  // see if this first line is empty. if so, move on to the second line
-  if (line && (0 == line->GetHeight())) {
-    line = line->mNext;
-  }
-  // see if the line contains a block. if so, fetch the ascent of the block
-  if (line && line->mFirstChild && line->IsBlock()) {
-    nsBlockFrame* bf;
-    nsresult res = line->mFirstChild->QueryInterface(kBlockFrameCID, (void**)&bf);
-    if (NS_SUCCEEDED(res) && bf) {
-      mAscent = bf->GetAscent();
-    }
-  }
   aMetrics.ascent = mAscent;
   aMetrics.descent = aMetrics.height - aMetrics.ascent;
 
@@ -1397,7 +1372,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 // XXX_perf: This can be done incrementally
   nscoord xa = 0, ya = 0, xb = aMetrics.width, yb = aMetrics.height;
   if (NS_STYLE_OVERFLOW_HIDDEN != aReflowState.mStyleDisplay->mOverflow) {
-    line = mLines;
+    nsLineBox* line = mLines;
     while (nsnull != line) {
       // Compute min and max x/y values for the reflowed frame's
       // combined areas
@@ -2840,7 +2815,7 @@ nsBlockFrame::GetTopBlockChild()
     while (--n >= 0) {
       nsIContent* content;
       nsresult rv = firstChild->GetContent(&content);
-      if (NS_FAILED(rv) || (nsnull == content)) {
+      if (NS_FAILED(rv) || !content || !content->IsContentOfType(nsIContent::eTEXT)) {
         return nsnull;
       }
       nsITextContent* tc;
@@ -3128,6 +3103,13 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 
       }
       PostPlaceLine(aState, aLine, maxElementSize);
+
+      // If the block frame that we just reflowed happens to be our
+      // first block, then its computed ascent is ours
+      if (frame == GetTopBlockChild()) {
+        const nsHTMLReflowMetrics& metrics = brc.GetMetrics();
+        mAscent = metrics.ascent;
+      }
 
       // Place the "marker" (bullet) frame.
       //
