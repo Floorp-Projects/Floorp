@@ -39,8 +39,8 @@ $clockTimeArg = $ARGV[2];
 $profID = $ARGV[3];
 $arg=0;
 $cmdLineArg[$arg++] = "-f ";
-$cmdLineArg[$arg++] = "S:\\mozilla\\tools\\performance\\layout\\40-url-dup.txt ";
-#$cmdLineArg[$arg++] = "S:\\mozilla\\tools\\performance\\layout\\40-url.txt ";
+##$cmdLineArg[$arg++] = "S:\\mozilla\\tools\\performance\\layout\\40-url-dup.txt ";
+$cmdLineArg[$arg++] = "S:\\mozilla\\tools\\performance\\layout\\40-url.txt ";
 if($UseViewer==0){
   $cmdLineArg[$arg++] = "-ftimeout ";
   $cmdLineArg[$arg++] = "10 ";
@@ -109,6 +109,6 @@ system( ("copy", "TrendTable.html", "Tables\\$ID-TrendTable.html") ) == 0 or die
 # save off the files
 system( ("mkdir", "Logs\\$ID") );
 system( ("copy", "Logs\\*.*", "Logs\\$ID\\*.*") ) == 0 or die "Cannot copy logfiles to Logs\\$ID\\*.*\n";
-system( ("copy", "history.txt", "Logs\\$ID_history.txt") ) == 0 or die "Cannot copy $ID_history.txt to Logs\n";
+system( ("copy", "history.txt", "Logs\\$ID-history.txt") ) == 0 or die "Cannot copy $ID_history.txt to Logs\n";
 
 print("perf.pl DONE!\n");

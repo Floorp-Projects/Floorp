@@ -49,7 +49,13 @@ while( <Logs\\*.txt> ){
     @nameParts = split( /-/, $line );
     @nameNoDir = split( /\\/, $nameParts[0] );
     print( "Name: $nameNoDir[1]\n" );
-    system( ("perl", "Averagetable2.pl", "$nameNoDir[1]", "$line", "$cnt", "$bldRoot", "$nameNoDir[1]", "$ARGV[2]" ) );
+    if ($nameNoDir[1] eq "") {
+      print ("Skipping $line\n");
+    } else {
+      system( ("perl", "Averagetable2.pl", "$nameNoDir[1]", "$line", "$cnt", "$bldRoot", "$nameNoDir[1]", "$ARGV[2]" ) );
+    }
+  } else {
+    print ("Skipping file $line\n");
   }
 }
 

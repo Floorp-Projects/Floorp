@@ -34,11 +34,11 @@ sub debug_print {
 $UrlName = $ARGV[0];
 $logFile = $ARGV[1];
 $NumOfSites = $ARGV[2];
-$buildIDFile = $ARGV[3];
+$buildRoot = $ARGV[3];
 $LinkURL = $ARGV[4];
 $useClockTime = $ARGV[5];
-$buildIDFile = '< '.$buildIDFile.'\bin\chrome\navigator\locale\en-US\navigator.dtd';
-debug_print( "Arguments:[ $UrlName | $logFile | $NumOfSites | $buildIDFile | $LinkURL | $useClockTime]\n");
+$buildIDFile = '< '.$buildRoot.'\bin\chrome\navigator\locale\navigator.dtd';
+debug_print( "Arguments:[ $UrlName | $logFile | $NumOfSites | $buildRoot | $LinkURL | $useClockTime]\n");
 
 #------------------------------------------------------------------------------
 # Open the ID file and get the build ID
@@ -51,8 +51,8 @@ while (<XUL_FILE>)
   $ThisLine = $_;
   chop ($ThisLine);
   if (/Build ID/){
-    @LineList = split (/ /, $ThisLine);
-    $BuildNo = $LineList[5];
+    @LineList = split (/\"/, $ThisLine);
+    $BuildNo = $LineList[1];
   }
 }
 $BuildNo =~ s/"//g;
@@ -121,7 +121,7 @@ $Avg_Parse_Time_Percentage = 0;
 $Avg_TotalLayout_Time_Percentage = 0;
 $Num_Entries = 0;
 $valid = 0;
-$WebShell;
+# $WebShell;
 $temp;
 $url;
 $Content_Flag = 0;
@@ -237,11 +237,11 @@ while (<LOG_FILE>)
 
   if (/Timing layout/)
   {
-    @List = split (/webshell: /, $ThisLine);
-    $WebShell = $List[1];
-    $WebShell = "(webshell=".$WebShell;
-    $WebShell = $WebShell."):";
-    debug_print( "$WebShell\n" );
+#    @List = split (/webshell: /, $ThisLine);
+#    $WebShell = $List[1];
+#    $WebShell = "(webBrowserChrome=".$WebShell;
+#    $WebShell = $WebShell."):";
+#    debug_print( "$WebShell\n" );
 
     @List = split (/'/, $ThisLine);
     $url = $List[1];
@@ -259,9 +259,9 @@ while (<LOG_FILE>)
       @List = split (/ /, $ThisLine);
       if($useClockTime){
         @clockTimeList = split(/:/, $List[6]);
-        $Content_Time = $clockTimeList[2];
+        $Content_Time += $clockTimeList[2];
       } else {
-        $Content_Time = $List[9];
+        $Content_Time += $List[9];
       }
       $Content_Flag = 1;
       debug_print( "Content Time: $Content_Time\n" );
@@ -272,9 +272,9 @@ while (<LOG_FILE>)
       @List = split (/ /, $ThisLine);
       if($useClockTime){
         @clockTimeList = split(/:/, $List[5]);
-        $Reflow_Time = $clockTimeList[2];
+        $Reflow_Time += $clockTimeList[2];
       } else {
-        $Reflow_Time = $List[8];
+        $Reflow_Time += $List[8];
       }
       $Reflow_Flag = 1;
       debug_print( "Reflow Time: $Reflow_Time\n" );
@@ -285,9 +285,9 @@ while (<LOG_FILE>)
       @List = split (/ /, $ThisLine);
       if($useClockTime){
         @clockTimeList = split(/:/, $List[9]);
-        $FrameAndStyle_Time = $clockTimeList[2];
+        $FrameAndStyle_Time += $clockTimeList[2];
       } else {
-        $FrameAndStyle_Time = $List[12];
+        $FrameAndStyle_Time += $List[12];
       }
       debug_print( "Frame and Style Time: $FrameAndStyle_Time\n" );
     }
@@ -297,9 +297,9 @@ while (<LOG_FILE>)
       @List = split (/ /, $ThisLine);
       if($useClockTime){
         @clockTimeList = split(/:/, $List[6]);
-        $Style_Time = $clockTimeList[2];
+        $Style_Time += $clockTimeList[2];
       } else {
-        $Style_Time = $List[9];
+        $Style_Time += $List[9];
       }
       $Style_Flag = 1;
       debug_print( "Style Time: $Style_Time\n" );
@@ -310,9 +310,9 @@ while (<LOG_FILE>)
       @List = split (/ /, $ThisLine);
       if($useClockTime){
         @clockTimeList = split(/:/, $List[5]);
-        $Parse_Time = $clockTimeList[2];
+        $Parse_Time += $clockTimeList[2];
       } else {
-        $Parse_Time = $List[8];
+        $Parse_Time += $List[8];
       }
       $Parse_Flag = 1;
       debug_print( "Parse Time: $Parse_Time\n" );
@@ -322,7 +322,8 @@ while (<LOG_FILE>)
     if ($IsValidURL == 1){
       @List = split (/ /, $ThisLine);
       $temp = $List[6];
-      if (($temp == $WebShell) && 
+      if (
+#          ($temp == $WebShell) && 
           ($Parse_Flag == 1) && 
           ($Content_Flag == 1) && 
           ($Reflow_Flag == 1) && 

@@ -31,8 +31,8 @@ sub debug_print {
 
 #------------------------------------------------------------------------------
 @ARGV;
-$buildIDFile = $ARGV[0];
-$buildIDFile = '< '.$buildIDFile.'\bin\chrome\navigator\locale\en-US\navigator.dtd';
+$buildRoot = $ARGV[0];
+$buildIDFile = '< '.$buildRoot.'\bin\chrome\navigator\locale\navigator.dtd';
 $PullID = $ARGV[1];
 
 #------------------------------------------------------------------------------
@@ -58,7 +58,7 @@ $count = 0;
 
 #------------------------------------------------------------------------------
 # Get the BuildID
-open (XUL_FILE, $buildIDFile) or die "Unable to open BuildID file $buildIDFile (header.pl)";
+open (XUL_FILE, $buildIDFile) or die "Unable to open BuildID file $buildIDFile (footer.pl)";
 $BuildNo = "";
 $LineList;
 while (<XUL_FILE>)
@@ -66,10 +66,8 @@ while (<XUL_FILE>)
   $ThisLine = $_;
   chop ($ThisLine);
   if (/Build ID/){
-    @LineList = split (/ /, $ThisLine);
-    $BuildNo = $LineList[3];
-    $BuildNo .= " ".$LineList[4];
-    $BuildNo .= " ".$LineList[5];
+    @LineList = split (/\"/, $ThisLine);
+    $BuildNo = $LineList[1];
   }
 }
 $BuildNo =~ s/"//g;
