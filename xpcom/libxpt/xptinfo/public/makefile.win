@@ -21,6 +21,7 @@ DEPTH=..\..\..\..
 
 EXPORTS =       nsIInterfaceInfoManager.h       \
                 nsIInterfaceInfo.h              \
+                xptinfo.h                       \
                 xpt_cpp.h                       \
 		$(NULL)
 

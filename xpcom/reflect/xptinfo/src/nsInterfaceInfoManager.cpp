@@ -27,6 +27,7 @@
 
 #include "nsInterfaceInfoManager.h"
 #include "nsInterfaceInfo.h"
+#include "xptinfo.h"
 
 // this after nsISupports, to pick up IID
 // so that xpt stuff doesn't try to define it itself...
@@ -52,7 +53,7 @@ XPTHeader *getheader() {
         return NULL;
     }
     flen = file_stat.st_size;
-    in = fopen(XPTFILE, "r");
+    in = fopen(XPTFILE, "rb");
 
     if (!in) {
         perror("FAILED: fopen");
@@ -265,8 +266,9 @@ nsInterfaceInfoManager::GetNameForIID(const nsIID* iid, char** name)
 
 // XXX this goes away; IIM should be a service.
 // ... where does decl for this go?
-XPT_PUBLIC_API(nsIInterfaceInfoManager*)
-XPT_GetInterfaceInfoManager()
+// Even if this is a service, it is cool to provide a direct accessor
+XPTI_PUBLIC_API(nsIInterfaceInfoManager*)
+XPTI_GetInterfaceInfoManager()
 {
     return nsInterfaceInfoManager::GetInterfaceInfoManager();
 }

@@ -25,6 +25,7 @@
 
 #include "nsInterfaceInfo.h"
 #include "nsInterfaceInfoManager.h"
+#include "xptinfo.h"
 
 static NS_DEFINE_IID(kIInterfaceInfoIID, NS_IINTERFACEINFO_IID);
 NS_IMPL_ISUPPORTS(nsInterfaceInfo, kIInterfaceInfoIID);

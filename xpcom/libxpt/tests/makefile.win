@@ -26,11 +26,11 @@ PROGRAMS = $(PROG1) $(PROG2)
 
 LCFLAGS=-DUSE_NSREG
 
-DEFINES=-DWIN32_LEAN_AND_MEAN -DDEBUG
+DEFINES=-DWIN32_LEAN_AND_MEAN
 
 REQUIRES=xpcom libxpt
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\libxpt
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\libxpt
 
 LLIBS=					\
  $(DIST)\lib\xpcom32.lib		\
@@ -61,10 +61,6 @@ install:: $(PROGRAMS)
         -Fo.\$(OBJDIR)\
         $(CURDIR)$(*B).c
 <<KEEP
-
-
-
-clean :: clobber
 
 clobber::
 	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p

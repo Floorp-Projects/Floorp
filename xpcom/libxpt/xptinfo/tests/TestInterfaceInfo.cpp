@@ -23,15 +23,17 @@
 #include "nsISupports.h"
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
+#include "xptinfo.h"
 
 static void RegAllocator();
 
 int main (int argc, char **argv) {
     RegAllocator();
 
-    nsIInterfaceInfoManager *iim = XPT_GetInterfaceInfoManager();
+    nsIInterfaceInfoManager *iim = XPTI_GetInterfaceInfoManager();
     nsIID *iid;
     iim->GetIIDForName("Interface", &iid);
+    return 0;
 }    
 
 
