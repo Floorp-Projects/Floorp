@@ -654,7 +654,10 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
 
     }
     else {
-      mInIndentString.Append(PRUnichar('*'));
+      static char bulletCharArray[] = "*o+#";
+      NS_ASSERTION(mULCount > 0, "mULCount should be greater than 0 here");
+      char bulletChar = bulletCharArray[(mULCount - 1) % 4];
+      mInIndentString.Append(PRUnichar(bulletChar));
     }
     
     mInIndentString.Append(PRUnichar(' '));
