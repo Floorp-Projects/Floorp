@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.64 $ $Date: 2002/07/31 18:55:59 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.65 $ $Date: 2002/08/01 05:17:49 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -433,17 +433,14 @@ nssDecodedPKIXCertificate_Destroy
 )
 {
     CERTCertificate *cert = (CERTCertificate *)dc->data;
-    PRBool freeSlot = PR_FALSE; 
-    PK11SlotInfo *slot = NULL;
-    PRArenaPool *arena;
 
     /* The decoder may only be half initialized (the case where we find we 
      * could not decode the certificate). In this case, there is not cert to
      * free, just free the dc structure. */
     if (cert) {
-	freeSlot = cert->ownSlot;
-	slot = cert->slot;
-	arena  = cert->arena;
+	PRBool freeSlot = cert->ownSlot;
+	PK11SlotInfo *slot = cert->slot;
+	PRArenaPool *arena  = cert->arena;
 	/* zero cert before freeing. Any stale references to this cert
 	 * after this point will probably cause an exception.  */
 	PORT_Memset(cert, 0, sizeof *cert);
