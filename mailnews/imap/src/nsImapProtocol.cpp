@@ -75,11 +75,8 @@ NS_IMETHODIMP nsImapProtocol::QueryInterface(const nsIID &aIID, void** aInstance
   return NS_NOINTERFACE;
 }
 
-nsImapProtocol::nsImapProtocol(PLEventQueue *aEventQueue)
+nsImapProtocol::nsImapProtocol()
 {
-	/* the following macro is used to initialize the ref counting data */
-    if (!aEventQueue)
-        NS_ASSERTION(0, "Ooooh no, null sink event queue.\n");
 	NS_INIT_REFCNT();
 	m_runningUrl = nsnull; // initialize to NULL
 	m_transport = nsnull;
@@ -90,11 +87,20 @@ nsImapProtocol::nsImapProtocol(PLEventQueue *aEventQueue)
 	m_dataBuf = nsnull;
     
     // ***** Thread support *****
-    m_sinkEventQueue = aEventQueue;
+    m_sinkEventQueue = nsnull;
     m_eventQueue = nsnull;
     m_thread = nsnull;
     m_monitor = nsnull;
     m_imapThreadIsRunning = PR_FALSE;
+}
+
+nsresult nsImapProtocol::Initialize(PLEventQueue * aSinkEventQueue)
+{
+	NS_PRECONDITION(aSinkEventQueue, "oops...trying to initalize with a null sink event queue!");
+	if (aSinkEventQueue)
+		m_sinkEventQueue = aSinkEventQueue;
+
+	return NS_OK;
 }
 
 nsImapProtocol::~nsImapProtocol()
@@ -120,7 +126,7 @@ nsImapProtocol::~nsImapProtocol()
     }
 }
 
-void nsImapProtocol::Initialize(nsIURL * aURL)
+void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 {
 	NS_PRECONDITION(aURL, "null URL passed into Imap Protocol");
 
@@ -391,7 +397,7 @@ nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 	nsIImapUrl * imapUrl = nsnull;
 	if (aURL)
 	{
-		// mscott: I used to call initialize from the constructor but we really need the url
+		// mscott: I used to call SetupWithUrl from the constructor but we really need the url
 		// in order to properly intialize the protocol instance with a transport / host / port
 		// etc. So I'm going to experiment by saying every time we load a Url, we look to see
 		// if we need to initialize the protocol....I really need to check to make sure the host
@@ -399,7 +405,7 @@ nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 		// a new connection to the imap server...
 
 		if (m_transport == nsnull) // i.e. we haven't been initialized yet....
-			Initialize(aURL);
+			SetupWithUrl(aURL);
 		
 		if (m_transport && m_runningUrl)
 		{

@@ -34,7 +34,7 @@ public:
 	
 	NS_DECL_ISUPPORTS
 
-	nsImapProtocol(PLEventQueue *aEventQueue);
+	nsImapProtocol();
 	
 	virtual ~nsImapProtocol();
 
@@ -42,6 +42,8 @@ public:
 	// we support the nsIImapProtocol interface
 	//////////////////////////////////////////////////////////////////////////////////
 	NS_IMETHOD LoadUrl(nsIURL * aURL, nsISupports * aConsumer);
+	NS_IMETHOD Initialize(PLEventQueue * aSinkEventQueue);
+    NS_IMETHOD GetThreadEventQueue(PLEventQueue **aEventQueue);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIStreamListener interface 
@@ -75,9 +77,6 @@ public:
 	void   SetFlag   (PRUint32 flag) { m_flags |= flag; }
 	void   ClearFlag (PRUint32 flag) { m_flags &= ~flag; }
 
-    // ******** Thread support *******
-    NS_IMETHOD GetThreadEventQueue(PLEventQueue **aEventQueue);
-
 private:
 	// the following flag is used to determine when a url is currently being run. It is cleared on calls
 	// to ::StopBinding and it is set whenever we call Load on a url
@@ -107,7 +106,7 @@ private:
 
 
 	// initialization function given a new url and transport layer
-	void Initialize(nsIURL * aURL);
+	void SetupWithUrl(nsIURL * aURL);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Communication methods --> Reading and writing protocol
