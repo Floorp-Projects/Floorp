@@ -53,8 +53,6 @@
 #include "nsEscape.h"
 #include "nsIURL.h"
 
-#include "nsIAppShellService.h"
-#include "nsAppShellCIDs.h"
 #include "prprf.h"
 
 #include "nsIIOService.h"
@@ -91,7 +89,6 @@
 #include "nsIBaseWindow.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsIWindowMediator.h"
 #include "nsIWindowWatcher.h"
 
 #if defined (XP_UNIX)
@@ -179,14 +176,12 @@ static nsIAtom* sApp_MessengerFolderCache50   = nsnull;
 static NS_DEFINE_CID(kIProfileIID, NS_IPROFILE_IID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
-static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kPrefMigrationCID, NS_PREFMIGRATION_CID);
 static NS_DEFINE_CID(kPrefConverterCID, NS_PREFCONVERTER_CID);
 static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
-static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 static NS_DEFINE_CID(kChromeRegistryCID,    NS_CHROMEREGISTRY_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);

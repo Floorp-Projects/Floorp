@@ -34,7 +34,6 @@ MODULE_NAME	= nsPrefMigrationModule
 REQUIRES	= xpcom \
 		  string \
 		  pref \
-		  appshell \
 		  intl \
 		  docshell \
 		  dom \

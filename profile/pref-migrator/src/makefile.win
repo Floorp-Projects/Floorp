@@ -25,7 +25,6 @@ MODULE=nsprefm
 REQUIRES	= xpcom \
 		  string \
 		  pref \
-		  appshell \
 		  intl \
 		  docshell \
 		  dom \

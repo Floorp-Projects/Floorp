@@ -61,7 +61,6 @@
 #define MAX_DRIVES 4
 
 //Interfaces Needed
-#include "nsIXULWindow.h"
 
 #ifdef XP_MAC
 #define IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x "%s Rules" 
