@@ -3239,7 +3239,7 @@ nsBookmarksService::GetAllCmds(nsIRDFResource* source,
 	{
 		cmdArray->AppendElement(kNC_BookmarkCommand_DeleteBookmark);
 	}
-	if (isBookmarkFolder)
+	if (isBookmarkFolder && (source != kNC_BookmarksRoot))
 	{
 		cmdArray->AppendElement(kNC_BookmarkCommand_DeleteBookmarkFolder);
 	}
@@ -3638,6 +3638,10 @@ nsBookmarksService::ReadBookmarks()
 
 	rv = gRDFC->MakeSeq(mInner, kNC_BookmarksRoot, nsnull);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to make NC:BookmarksRoot a sequence");
+	if (NS_FAILED(rv)) return rv;
+
+	// Make sure bookmark's root has the correct type
+	rv = mInner->Assert(kNC_BookmarksRoot, kRDF_type, kNC_Folder, PR_TRUE);
 	if (NS_FAILED(rv)) return rv;
 
 	PRBool	foundIERoot = PR_FALSE;

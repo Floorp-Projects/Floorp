@@ -205,7 +205,7 @@ function doPaste()
 
 			if (RDFC.IndexOf(IDRes) > 0)
 			{
-				dump("Unable to add ID:'" + theID + "' as its already in this folder.\n");
+				debug("Unable to add ID:'" + theID + "' as its already in this folder.\n");
 				continue;
 			}
 
@@ -506,17 +506,29 @@ function fillContextMenu(name)
 
     var select_list = treeNode.selectedItems;
 
-    debug("# of Nodes selected: " + treeNode.selectedItems.length);
+    debug("# of Nodes selected: " + treeNode.selectedItems.length + "\n");
 
     // perform intersection of commands over selected nodes
     var cmdArray = new Array();
-
-    for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++)
+    var selectLength = select_list.length;
+    if (selectLength == 0)	selectLength = 1;
+    for (var nodeIndex=0; nodeIndex < selectLength; nodeIndex++)
     {
-        var node = select_list[nodeIndex];
-        if (!node)    break;
-        var id = node.getAttribute("id");
-        if (!id)    break;
+    	var id = null;
+
+	// if nothing is selected, get commands for the "ref" of the bookmarks root
+    	if (select_list.length == 0)
+    	{
+		id = treeNode.getAttribute("ref");
+	        if (!id)    break;
+    	}
+    	else
+    	{
+	        var node = select_list[nodeIndex];
+	        if (!node)    break;
+	        id = node.getAttribute("id");
+	        if (!id)    break;
+	}
         var rdfNode = rdf.GetResource(id);
         if (!rdfNode)    break;
         var cmdEnum = db.GetAllCmds(rdfNode);
@@ -562,8 +574,10 @@ function fillContextMenu(name)
     var rdfNameResource = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
     if (!rdfNameResource)        return(false);
 
+/*
     // build up menu items
     if (cmdArray.length < 1)    return(false);
+*/
 
     for (var cmdIndex = 0; cmdIndex < cmdArray.length; cmdIndex++)
     {
@@ -604,10 +618,10 @@ function fillContextMenu(name)
 			}
 
 			// and then add a "Properties" menu items
-			var propMenuName = "Properties...";
+			var propMenuName = "Properties...";			// XXX localize
 			
 			var menuItem = document.createElement("menuitem");
-			menuItem.setAttribute("value", "Properties...");		// XXX localize
+			menuItem.setAttribute("value", propMenuName);
 			menuItem.setAttribute("oncommand", "return BookmarkProperties();");
 			popupNode.appendChild(menuItem);
 		}
