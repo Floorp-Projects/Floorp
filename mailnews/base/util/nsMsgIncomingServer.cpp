@@ -1198,7 +1198,10 @@ nsMsgIncomingServer::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **
   if (!mFilterList) 
   {
       nsCOMPtr<nsIMsgFolder> msgFolder;
-      nsresult rv = GetRootMsgFolder(getter_AddRefs(msgFolder));
+      // use GetRootFolder so for deferred pop3 accounts, we'll get the filters
+      // file from the deferred account, not the deferred to account,
+      // so that filters will still be per-server.
+      nsresult rv = GetRootFolder(getter_AddRefs(msgFolder));
       NS_ENSURE_SUCCESS(rv, rv);
       
       nsCOMPtr<nsIFileSpec> thisFolder;
