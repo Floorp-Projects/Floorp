@@ -15,6 +15,7 @@ dialogBindings.xml
 commonDialog.xul
 commonDialog.js
 strres.js
+builtinURLs.js
 about.html
 logo.gif
 credits.html

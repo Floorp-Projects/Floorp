@@ -180,7 +180,16 @@ function openTopWin( url )
     {
         dump("setting page: " + topWindowOfType.content.location.href + "\n");
         topWindowOfType.focus();
-        topWindowOfType.content.location.href = url;
+		// urn:
+		var pos = url.indexOf("urn:");
+		dump("\n ** openTopWin, url=" + url + ", pos=" + pos + "\n");
+		if (pos == 0) {
+        	topWindowOfType.content.location.href = xlateURL(url);
+		}
+		else
+		{
+        	topWindowOfType.content.location.href = url;
+		}
     }
     else
     {

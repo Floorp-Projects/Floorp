@@ -52,6 +52,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/charsetOverlay.xul \
 		$(srcdir)/charsetOverlay.js \
 		$(srcdir)/strres.js \
+		$(srcdir)/builtinURLs.js \
 		$(srcdir)/about.html \
 		$(srcdir)/logo.gif \
 		$(srcdir)/about.xul \
