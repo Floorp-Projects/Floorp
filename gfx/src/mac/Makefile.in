@@ -95,8 +95,12 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CMMSRCS = nsCocoaImageUtils.mm
 endif
 
-SHARED_LIBRARY_LIBS = $(DIST)/lib/$(LIB_PREFIX)gfxshared_s.$(LIB_SUFFIX)
-EXTRA_DSO_LIBS = mozutil_s gkgfx
+EXTRA_DSO_LIBS = \
+	mozutil_s \
+	gkgfx \
+	$(DIST)/lib/$(LIB_PREFIX)gfxshared_s.$(LIB_SUFFIX) \
+	$(NULL)
+
 EXTRA_DEPS = $(DIST)/lib/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX)
 
 EXTRA_DSO_LDOPTS = \
