@@ -22,10 +22,13 @@
 
 @namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
 
+html {
+  background-color: window;
+}
 .viewsource {
   font-family: monospace;
   font-weight: normal;
-  color: black;
+  color: windowtext;
   white-space: pre;
   font-size: 12px;
   padding-top: 8px; 
