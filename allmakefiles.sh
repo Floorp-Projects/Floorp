@@ -385,6 +385,14 @@ editor/txmgr/tests/Makefile
 editor/guimgr/Makefile
 editor/guimgr/src/Makefile
 editor/guimgr/public/Makefile
+editor/ui/Makefile
+editor/ui/composer/Makefile
+editor/ui/composer/content/Makefile
+editor/ui/composer/skin/Makefile
+editor/ui/dialogs/Makefile
+editor/ui/dialogs/content/Makefile
+editor/ui/dialogs/skin/Makefile
+
 END_EDITOR_MAKEFILES
 fi
 
