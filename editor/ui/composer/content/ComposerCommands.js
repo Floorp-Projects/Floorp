@@ -1409,7 +1409,7 @@ var gEditorOutputProgressListener =
                                       dlgTitle, text, pwObj, checkBoxLabel, savePWObj);
 
       if (!ret)
-        setTimeout(CancelPublishing(), 0);
+        setTimeout(CancelPublishing, 0);
 
       if (ret && gPublishData)
         UpdateUsernamePasswordFromPrompt(gPublishData, gPublishData.username, pwObj.value, savePWObj.value);
@@ -1421,7 +1421,7 @@ var gEditorOutputProgressListener =
   {
     var ret = PromptUsernameAndPassword(dlgTitle, text, savePWObj.value, userObj, pwObj);
     if (!ret)
-      setTimeout(CancelPublishing(), 0);
+      setTimeout(CancelPublishing, 0);
 
     return ret;
   },
@@ -1445,7 +1445,7 @@ var gEditorOutputProgressListener =
     var ret = promptServ.prompt(gProgressDialog ? gProgressDialog : window,
                                 dlgTitle, text, defaultText, pwrealm, savePWObj);
     if (!ret)
-      setTimeout(CancelPublishing(), 0);
+      setTimeout(CancelPublishing, 0);
     return ret;
   },
 
@@ -1453,7 +1453,7 @@ var gEditorOutputProgressListener =
   {
     var ret = PromptUsernameAndPassword(dlgTitle, text, savePW, userObj, pwObj);
     if (!ret)
-      setTimeout(CancelPublishing(), 0);
+      setTimeout(CancelPublishing, 0);
     return ret;
   },
 
@@ -1478,7 +1478,7 @@ var gEditorOutputProgressListener =
                                       dlgTitle, text, pwObj, GetString("SavePassword"), savePWObj);
 
       if (!ret)
-        setTimeout(CancelPublishing(), 0);
+        setTimeout(CancelPublishing, 0);
 
       if (ret && gPublishData)
         UpdateUsernamePasswordFromPrompt(gPublishData, gPublishData.username, pwObj.value, savePWObj.value);
