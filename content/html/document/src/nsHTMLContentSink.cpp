@@ -221,9 +221,11 @@ protected:
 // Note: operator new zeros our memory
 HTMLContentSink::HTMLContentSink()
 {
+#ifdef NS_DEBUG
   if (nsnull == gSinkLogModuleInfo) {
     gSinkLogModuleInfo = PR_NewLogModule("htmlcontentsink");
   }
+#endif
 
   // Set the first update delta to be 50ms
   LL_I2L(mUpdateDelta, PR_USEC_PER_MSEC * 50);
