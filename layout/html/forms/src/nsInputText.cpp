@@ -381,6 +381,9 @@ nsInputText::GetMaxNumValues()
   return 1;
 }
   
+static NS_DEFINE_IID(kITextWidgetIID,     NS_ITEXTWIDGET_IID);
+static NS_DEFINE_IID(kITextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
+
 PRBool
 nsInputText::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                             nsString* aValues, nsString* aNames)
@@ -392,7 +395,7 @@ nsInputText::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   nsITextWidget* text = nsnull;
   nsITextAreaWidget* textArea = nsnull;
 
-  if (widget != nsnull && NS_OK == widget->QueryInterface(kTextIID,(void**)text))
+  if (widget != nsnull && NS_OK == widget->QueryInterface(kITextWidgetIID,(void**)&text))
   {
     nsString value;
     PRUint32 size;
@@ -403,7 +406,7 @@ nsInputText::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
     NS_RELEASE(text);
     return PR_TRUE;
   }
-  else if (widget != nsnull && NS_OK == widget->QueryInterface(kTextAreaIID,(void**)textArea))
+  else if (widget != nsnull && NS_OK == widget->QueryInterface(kITextAreaWidgetIID,(void**)&textArea))
   {
     nsString value;
     PRUint32 size;
@@ -424,7 +427,7 @@ nsInputText::Reset()
   nsIWidget* widget = GetWidget();
   nsITextWidget* text = nsnull;
   nsITextAreaWidget* textArea = nsnull;
-  if (widget != nsnull && NS_OK == widget->QueryInterface(kTextIID,(void**)text))
+  if (widget != nsnull && NS_OK == widget->QueryInterface(kTextIID,(void**)&text))
   {
     PRUint32 size;
     if (nsnull == mValue) {
@@ -434,7 +437,7 @@ nsInputText::Reset()
     }
     NS_RELEASE(text);
   }
-  else if (widget != nsnull && NS_OK == widget->QueryInterface(kTextAreaIID,(void**)textArea))
+  else if (widget != nsnull && NS_OK == widget->QueryInterface(kTextAreaIID,(void**)&textArea))
   {
     PRUint32 size;
     if (nsnull == mValue) {

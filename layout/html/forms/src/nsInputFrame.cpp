@@ -395,7 +395,7 @@ NS_METHOD nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
   GetView(view);
   if (view) {
     nsInput* content = (nsInput *)mContent;
-    if (content->GetWidgetSupports() != aEvent->widgetSupports) {
+    if (content->GetWidget() != aEvent->widget) {
       aEventStatus = nsEventStatus_eIgnore;
       return NS_OK;
     }
