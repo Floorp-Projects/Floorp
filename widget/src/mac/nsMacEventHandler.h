@@ -54,7 +54,7 @@ protected:
 #if 1
 		virtual void InitializeKeyEvent(nsKeyEvent& aKeyEvent, EventRecord& aOSEvent, nsWindow* focusedWidget, PRUint32 message);
 		virtual PRBool IsSpecialRaptorKey(UInt32 macKeyCode);
-		virtual void ConvertKeyEventToUnicode(nsKeyEvent& aKeyEvent,EventRecord& aOSEvent);
+		virtual PRUint32 ConvertKeyEventToUnicode(EventRecord& aOSEvent);
 
 #endif
 		virtual PRBool	HandleKeyEvent(EventRecord& aOSEvent);
