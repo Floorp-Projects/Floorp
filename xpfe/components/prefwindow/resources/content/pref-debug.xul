@@ -76,6 +76,12 @@
 				&gfxScrollbars.label;
 				</html:label>
 			</html:div>
+			<html:div>
+				<html:input type="checkbox" id="pref:0:bool:nglayout.widget.debugWindow" />
+				<html:label for="pref:0:bool:nglayout.widget.debugWindow" accesskey="n" tabindex="0">
+				&debugWindow.label;
+				</html:label>
+			</html:div>
 
 		</html:fieldset>
 	</box>

@@ -291,12 +291,10 @@ protected:
 
 
 public:
-  PRBool          mIMEEnable;
-  PRUnichar*      mIMECompositionUniString;
-  PRInt32         mIMECompositionUniStringSize;
-  void            SetXICSpotLocation(nsPoint aPoint);
-
-
+  PRBool            mIMEEnable;
+  PRUnichar*        mIMECompositionUniString;
+  PRInt32           mIMECompositionUniStringSize;
+  void              SetXICSpotLocation(nsPoint aPoint);
 
 protected:
 
