@@ -92,6 +92,9 @@ public:
 
     NS_IMETHOD
     GetResource(PRInt32 aNameSpaceID, const nsString& aAttribute, nsIRDFResource** aResult) = 0;
+
+    NS_IMETHOD
+    SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElement) = 0;
 };
 
 

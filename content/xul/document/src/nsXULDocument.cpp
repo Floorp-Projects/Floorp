@@ -536,14 +536,12 @@ protected:
     static PRInt32 gRefCnt;
 
     static nsIAtom*  kCommandUpdaterAtom;
-    static nsIAtom*  kEventsAtom;
     static nsIAtom*  kIdAtom;
     static nsIAtom*  kObservesAtom;
     static nsIAtom*  kOpenAtom;
     static nsIAtom*  kPersistAtom;
     static nsIAtom*  kRefAtom;
     static nsIAtom*  kRuleAtom;
-    static nsIAtom*  kTargetsAtom;
     static nsIAtom*  kTemplateAtom;
 
     static nsIAtom** kIdentityAttrs[];
@@ -628,14 +626,12 @@ protected:
 PRInt32 XULDocumentImpl::gRefCnt = 0;
 
 nsIAtom* XULDocumentImpl::kCommandUpdaterAtom;
-nsIAtom* XULDocumentImpl::kEventsAtom;
 nsIAtom* XULDocumentImpl::kIdAtom;
 nsIAtom* XULDocumentImpl::kObservesAtom;
 nsIAtom* XULDocumentImpl::kOpenAtom;
 nsIAtom* XULDocumentImpl::kPersistAtom;
 nsIAtom* XULDocumentImpl::kRefAtom;
 nsIAtom* XULDocumentImpl::kRuleAtom;
-nsIAtom* XULDocumentImpl::kTargetsAtom;
 nsIAtom* XULDocumentImpl::kTemplateAtom;
 
 nsIRDFService* XULDocumentImpl::gRDFService;
@@ -755,14 +751,12 @@ XULDocumentImpl::~XULDocumentImpl()
 
     if (--gRefCnt == 0) {
         NS_IF_RELEASE(kCommandUpdaterAtom);
-        NS_IF_RELEASE(kEventsAtom);
         NS_IF_RELEASE(kIdAtom);
         NS_IF_RELEASE(kObservesAtom);
         NS_IF_RELEASE(kOpenAtom);
         NS_IF_RELEASE(kPersistAtom);
         NS_IF_RELEASE(kRefAtom);
         NS_IF_RELEASE(kRuleAtom);
-        NS_IF_RELEASE(kTargetsAtom);
         NS_IF_RELEASE(kTemplateAtom);
 
         if (gRDFService) {
@@ -2933,24 +2927,7 @@ XULDocumentImpl::AddSubtreeToDocument(nsIContent* aElement)
     nsAutoString value;
     rv = aElement->GetAttribute(kNameSpaceID_None, kCommandUpdaterAtom, value);
     if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && value.Equals("true")) {
-        nsAutoString events;
-        rv = aElement->GetAttribute(kNameSpaceID_None, kEventsAtom, events);
-
-        if (rv != NS_CONTENT_ATTR_HAS_VALUE)
-            events = "*";
-
-        nsAutoString targets;
-        rv = aElement->GetAttribute(kNameSpaceID_None, kTargetsAtom, targets);
-
-        if (rv != NS_CONTENT_ATTR_HAS_VALUE)
-            targets = "*";
-
-        nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(aElement);
-        NS_ASSERTION(domelement != nsnull, "not a DOM element");
-        if (! domelement)
-            return NS_ERROR_UNEXPECTED;
-
-        rv = mCommandDispatcher->AddCommandUpdater(domelement, events, targets);
+        rv = gXULUtils->SetCommandUpdater(this, aElement);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -3605,14 +3582,12 @@ XULDocumentImpl::Init(void)
 
     if (gRefCnt++ == 0) {
         kCommandUpdaterAtom             = NS_NewAtom("commandupdater");
-        kEventsAtom                     = NS_NewAtom("events");
         kIdAtom                         = NS_NewAtom("id");
         kObservesAtom                   = NS_NewAtom("observes");
         kOpenAtom                       = NS_NewAtom("open");
         kPersistAtom                    = NS_NewAtom("persist");
         kRefAtom                        = NS_NewAtom("ref");
         kRuleAtom                       = NS_NewAtom("rule");
-        kTargetsAtom                    = NS_NewAtom("targets");
         kTemplateAtom                   = NS_NewAtom("template");
 
         // Keep the RDF service cached in a member variable to make using
