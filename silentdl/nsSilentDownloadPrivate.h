@@ -42,6 +42,7 @@
 
 #include "prio.h"
 
+#include "nsFileSpec.h"
 ////////////////////////////////////////////////////////////////////////////////
 // nsSilentDownloadListener:
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,8 +125,8 @@ class nsSilentDownloadTask : public nsIScriptObjectOwner, public nsIDOMSilentDow
     
         PRInt32   mFile_size;  /* How big is the download                                   */
         
-        nsString  mErrorMsg;   /* Human readable error message                              */
-        nsString  mOutFile;    /* Where on the users system file is stored                  */
+        nsString    mErrorMsg;   /* Human readable error message                              */
+        nsFileSpec  *mOutFile;   /* Where on the users system file is stored                  */
 
         PRInt32   mState;      /* State of task                                             */
         
@@ -157,7 +158,10 @@ class nsSilentDownloadManager : public nsIScriptObjectOwner, public nsIDOMSilent
     
         nsSilentDownloadManager();
         virtual ~nsSilentDownloadManager();
-               
+
+        static nsSilentDownloadManager *GetInstance();
+
+                
         NS_DECL_ISUPPORTS
 
               NS_IMETHOD    GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
@@ -186,7 +190,8 @@ class nsSilentDownloadManager : public nsIScriptObjectOwner, public nsIDOMSilent
         nsresult LoadAllTasks(void);
 
         void  *mScriptObject;
-        
+        static nsSilentDownloadManager* mInstance;
+
 };
 
 

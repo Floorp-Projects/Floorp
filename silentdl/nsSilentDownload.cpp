@@ -30,6 +30,9 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 
+#include "nsString.h"
+#include "nsSpecialSystemDirectory.h"
+
 #include "pratom.h"
 #include "prmem.h"
 #include "prio.h"
@@ -61,12 +64,11 @@
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-
-// Globals
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 
 static NS_DEFINE_IID(kIScriptNameSetRegistryIID, NS_ISCRIPTNAMESETREGISTRY_IID);
@@ -106,32 +108,6 @@ static PRInt32          gInterval  = 0xFFFF;
 // static helper meathods
 /////////////////////////////////////////////////////////////////////////
 
-
-static int32
-GetCurrentSize(char *file)
-{
-  struct stat in_stat;
-  int stat_result = -1;
-  stat_result = stat(file, &in_stat);
-  if (stat_result == 0) {
-    return in_stat.st_size;
-  }
-  return 0;
-}
-
-static char*
-AssureDir(char* path)
-{
-  char *autoupdt_dir = PR_smprintf("%sSilentDL", path);
-  if (PR_SUCCESS != PR_Access(autoupdt_dir, PR_ACCESS_WRITE_OK)) {
-    if ((PR_MkDir(autoupdt_dir, 0777)) < 0) {
-      /* Creation of directory failed. Don't do SilentDownload. */
-      return NULL;
-    }
-  }
-  return autoupdt_dir;
-}
-
 static void
 GetSilentDownloadDirectory(char* directory)
 {
@@ -139,13 +115,6 @@ GetSilentDownloadDirectory(char* directory)
     {
         directory = NULL;
     } 
-    else 
-    {
-        if ((directory) && (XP_STRCMP(directory, "") == 0)) 
-        {
-            directory = NULL;
-        }
-    }
 }
 
 static void 
@@ -156,8 +125,8 @@ GetSilentDownloadDefaults(PRBool* enabled, PRInt32 *bytes_range, PRInt32 *interv
     *interval   = 0;
 
     PREF_GetBoolPref( "SilentDownload.enabled", enabled);
-    if (*enabled == PR_FALSE)
-       return;
+ //fix   if (*enabled == PR_FALSE)
+ //      return;
 
    
     if (PREF_OK != PREF_GetIntPref("SilentDownload.range", bytes_range)) 
@@ -173,103 +142,29 @@ GetSilentDownloadDefaults(PRBool* enabled, PRInt32 *bytes_range, PRInt32 *interv
 
 
 
-static char* 
-CreateOutFileLocation(char* url, char* directory)
+nsFileSpec * 
+CreateOutFileLocation(const nsString& url, const nsString& directory)
 {
-    /*  FIX: The outfile that this functions creates must be compatible with
-        PR_Open!
-    */
-    char* outfile = NULL;
+    nsSpecialSystemDirectory *outFileLocation =  
+        new nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+    
+    //*outFileLocation += directory;
 
-    char* autoupdt_dir;
-    char* slash;
-    char* filename;
-    char  Path[1024 + 1];
-
-    slash = PL_strrchr(url, '/');
-    if (slash != NULL) 
-    {
-        filename = ++slash;
-    } 
-    else 
-    {
-        filename = "prg";
+    PRInt32 result = url.RFind('/');
+    if (result != -1)
+    {            
+        nsString fileName;
+        url.Right(fileName, (url.Length() - result) );        
+        *outFileLocation += fileName;
+    }
+    else
+    {   
+        *outFileLocation += "sdl";
     }
 
+    outFileLocation->MakeUnique();
 
-#ifdef XP_UNIX
-        
-    if (directory) 
-    {
-        /* what if the directory already has a / appended to it? */
-        PR_snprintf( Path, MAXPATHLEN, "%s/", directory);
-        PR_FREEIF(directory);
-    } 
-    else 
-    {
-        directory = getenv("MOZILLA_FIVE_HOME");
-        if (directory) 
-        {
-           PR_snprintf( Path, MAXPATHLEN, "%s/", directory);
-        } 
-        else 
-        {
-            extern void fe_GetProgramDirectory( char *, int );
-            //fe_GetProgramDirectory( Path, MAXPATHLEN-1 );
-        }
-    }
-
-    autoupdt_dir = AssureDir(Path);
-
-    if (autoupdt_dir != NULL) 
-    {
-        outfile = PR_smprintf("%s/%s", autoupdt_dir, filename);
-        PR_FREEIF(autoupdt_dir);
-    }
-   
-#elif defined(WIN32)
-
-    if (directory) 
-    {
-        PR_snprintf( Path, MAXPATHLEN, "%s\\", directory);
-        PR_FREEIF(directory);
-    } 
-    else 
-    {
-        PR_snprintf( Path, MAXPATHLEN, "C:\\Temp\\");
-        extern char * FE_GetProgramDirectory(char *buffer, int length);
-        //FE_GetProgramDirectory( Path, _MAX_PATH );
-    }
-  
-    autoupdt_dir = AssureDir(Path);
-    if (autoupdt_dir != NULL) 
-    {
-        outfile = PR_smprintf("%s\\%s", autoupdt_dir, filename);
-        PR_FREEIF(autoupdt_dir);
-    } 
-
-#elif defined(MAC)
-  
-  /* XXX: Fix it for Mac with the correct folder */
-  
-    if (directory) 
-    {
-        PR_snprintf( Path, MAXPATHLEN, "%s:", directory);
-        PR_FREEIF(directory);
-    } 
-    else 
-    {
-        directory = XP_TempDirName();
-        PR_snprintf( Path, MAXPATHLEN, "%s:", directory);
-    }
-  
-    outfile = PR_smprintf("%s:%s", Path, filename);
-
-#else
-    outfile = NULL;
-#endif
-
-    return outfile;
+    return outFileLocation;
 }
 
 
@@ -278,6 +173,7 @@ CreateOutFileLocation(char* url, char* directory)
 /////////////////////////////////////////////////////////////////////////
 // nsSilentDownloadManager
 /////////////////////////////////////////////////////////////////////////
+nsSilentDownloadManager* nsSilentDownloadManager::mInstance = NULL;
 
 nsSilentDownloadManager::nsSilentDownloadManager()
 {
@@ -294,6 +190,16 @@ nsSilentDownloadManager::~nsSilentDownloadManager()
 {
     PR_AtomicDecrement(&gInstanceCnt);  
     Shutdown();
+}
+
+nsSilentDownloadManager *
+nsSilentDownloadManager::GetInstance()
+{
+  if (mInstance == NULL) 
+  {
+    mInstance = new nsSilentDownloadManager();
+  }
+  return mInstance;
 }
 
 nsresult
@@ -416,8 +322,8 @@ nsSilentDownloadManager::Startup()
 
     GetSilentDownloadDefaults(&enabled, &gByteRange, &gInterval);
 
-    if (enabled == PR_FALSE)
-        return -1;
+    //if (enabled == PR_FALSE)
+    // FIX ignore for now:   return -1;
 
     
     /***************************************/
@@ -627,6 +533,7 @@ nsSilentDownloadTask::nsSilentDownloadTask()
     mWebShell       = nsnull;
     mState          = nsIDOMSilentDownloadTask::SDL_NOT_INITED;
     mNextByte       = 0;
+    mOutFile        = nsnull;
 
     PR_AtomicIncrement(&gInstanceCnt);
     NS_INIT_REFCNT();
@@ -634,6 +541,9 @@ nsSilentDownloadTask::nsSilentDownloadTask()
 
 nsSilentDownloadTask::~nsSilentDownloadTask()
 {
+    if (mOutFile)
+        delete mOutFile;
+
     mListener->Release();
     PR_AtomicDecrement(&gInstanceCnt);  
 }
@@ -754,34 +664,25 @@ NS_IMETHODIMP
 nsSilentDownloadTask::Init(const nsString& aId, const nsString& aUrl, const nsString& aScript)
 {
     char *defaultDirectoryCString  = NULL;
-    char *urlCString               = NULL;
-    char *outFileCString           = NULL;
+    nsFileSpec *outFile            = NULL;
     
     GetSilentDownloadDirectory(defaultDirectoryCString);
 
     mId           = aId;
     mUrl          = aUrl;
     mScript       = aScript;
+    //Fix use silentdownload directory
+    mOutFile         = CreateOutFileLocation(aUrl, nsString("/SilentDL"));
+    // FIx need to delete defaultDirectoryCString
     
-    urlCString       = aUrl.ToNewCString();
-    outFileCString   = CreateOutFileLocation(urlCString, defaultDirectoryCString);
-    delete[] urlCString;
-
-    if (outFileCString == NULL) 
+    if (mOutFile == NULL) 
     {
         SetState(nsIDOMSilentDownloadTask::SDL_ERROR);
         SetErrorMsg("Couldn't access destination directory to save file");
         return -1;
     }
-    else
-    {
-        mOutFile = outFileCString;
-    }
     
-
-    mNextByte = GetCurrentSize(outFileCString);
-    /* FIX delete outFileCString and defaultDirectoryCString */
-
+    mNextByte = mOutFile->GetFileSize();
     
     if (mNextByte < 0) 
     {
@@ -797,10 +698,9 @@ nsSilentDownloadTask::Init(const nsString& aId, const nsString& aUrl, const nsSt
     mListener = new nsSilentDownloadListener();
     mListener->SetSilentDownloadInfo(this);
 
-    nsSilentDownloadManager* sdm = new nsSilentDownloadManager();
+    nsSilentDownloadManager* sdm = nsSilentDownloadManager::GetInstance();
     sdm->Add(this);
-    delete sdm;
-
+    
     return NS_OK;
 }
 
@@ -883,7 +783,7 @@ nsSilentDownloadTask::SetNextByte(PRInt32 aNextByte)
 NS_IMETHODIMP    
 nsSilentDownloadTask::GetOutFile(nsString& aOutFile)
 {
-    aOutFile = mOutFile;
+    aOutFile.SetString(nsprPath(*mOutFile));
     return NS_OK;
 }
 
@@ -898,10 +798,9 @@ nsSilentDownloadTask::Remove()
     mWindow->Release();
     mWindow = nsnull;
 
-    nsSilentDownloadManager* sdm = new nsSilentDownloadManager();
+    nsSilentDownloadManager* sdm = nsSilentDownloadManager::GetInstance();
     sdm->Remove(this);
-    delete sdm;
-
+    
     return NS_OK;
 }
 
@@ -1000,41 +899,7 @@ nsSilentDownloadManagerFactory::~nsSilentDownloadManagerFactory(void)
     PR_AtomicDecrement(&gInstanceCnt);
 }
 
-
-
-NS_IMETHODIMP 
-nsSilentDownloadManagerFactory::QueryInterface(REFNSIID aIID,void** aInstancePtr)
-{
-    if (aInstancePtr == NULL)
-    {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    // Always NULL result, in case of failure
-    *aInstancePtr = NULL;
-
-    if ( aIID.Equals(kISupportsIID) )
-    {
-        *aInstancePtr = (void*) this;
-    }
-    else if ( aIID.Equals(kIFactoryIID) )
-    {
-        *aInstancePtr = (void*) this;
-    }
-
-    if (aInstancePtr == NULL)
-    {
-        return NS_ERROR_NO_INTERFACE;
-    }
-
-    AddRef();
-    return NS_OK;
-}
-
-
-NS_IMPL_ADDREF(nsSilentDownloadManagerFactory)
-NS_IMPL_RELEASE(nsSilentDownloadManagerFactory)
-
+NS_IMPL_ISUPPORTS(nsSilentDownloadManagerFactory,kIFactoryIID)
 
 NS_IMETHODIMP
 nsSilentDownloadManagerFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -1046,16 +911,19 @@ nsSilentDownloadManagerFactory::CreateInstance(nsISupports *aOuter, REFNSIID aII
 
     *aResult = NULL;
 
-    /* do I have to use iSupports? */
-    nsSilentDownloadManager *inst = new nsSilentDownloadManager();
+    nsSilentDownloadManager *inst = nsSilentDownloadManager::GetInstance();
 
     if (inst == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult result =  inst->QueryInterface(aIID, aResult);
 
-    if (result != NS_OK)
-        delete inst;
+    if (NS_FAILED(result)) 
+    {
+        *aResult = NULL;
+    }
+
+    NS_ADDREF(inst);  // Are we sure that we need to addref???
 
     return result;
 
@@ -1086,41 +954,7 @@ nsSilentDownloadTaskFactory::~nsSilentDownloadTaskFactory(void)
     PR_AtomicDecrement(&gInstanceCnt);
 }
 
-
-
-NS_IMETHODIMP 
-nsSilentDownloadTaskFactory::QueryInterface(REFNSIID aIID,void** aInstancePtr)
-{
-    if (aInstancePtr == NULL)
-    {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    // Always NULL result, in case of failure
-    *aInstancePtr = NULL;
-
-    if ( aIID.Equals(kISupportsIID) )
-    {
-        *aInstancePtr = (void*) this;
-    }
-    else if ( aIID.Equals(kIFactoryIID) )
-    {
-        *aInstancePtr = (void*) this;
-    }
-
-    if (aInstancePtr == NULL)
-    {
-        return NS_ERROR_NO_INTERFACE;
-    }
-
-    AddRef();
-    return NS_OK;
-}
-
-
-NS_IMPL_ADDREF(nsSilentDownloadTaskFactory)
-NS_IMPL_RELEASE(nsSilentDownloadTaskFactory)
-
+NS_IMPL_ISUPPORTS(nsSilentDownloadTaskFactory,kIFactoryIID)
 
 NS_IMETHODIMP
 nsSilentDownloadTaskFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -1333,12 +1167,15 @@ nsSilentDownloadListener::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream
 {
     PRUint32 len;
     PRInt32 nextByte;
+    PRInt32 byteCountDown = length;
     nsresult err;
-    char buffer[80];
+    char buffer[4096];
     
     do 
     {
-        err = pIStream->Read(buffer, 80, &len);
+        err = pIStream->Read(buffer, 4096, &len);
+        byteCountDown -= len;
+
         if (err == NS_OK) 
         {
             mSilentDownloadTask->GetNextByte(&nextByte);
@@ -1360,7 +1197,7 @@ nsSilentDownloadListener::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream
 
             mSilentDownloadTask->SetNextByte(nextByte+len);
         }
-    } while (len > 0);
+    } while (len > 0 && byteCountDown > 0);
 
     return 0;
 }
@@ -1368,19 +1205,15 @@ nsSilentDownloadListener::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream
 NS_IMETHODIMP
 nsSilentDownloadListener::SetSilentDownloadInfo(nsIDOMSilentDownloadTask* con)
 {
-    nsString aString;
-    char *fileName;
-
-    con->AddRef();
+    nsString aFile;
 
     mSilentDownloadTask = con;
-    mSilentDownloadTask->GetOutFile(aString);
-    fileName = aString.ToNewCString();
+    con->AddRef();
     
-    mOutFileDesc = PR_Open(fileName,  PR_CREATE_FILE | PR_RDWR, 0644);
+    mSilentDownloadTask->GetOutFile(aFile);
     
-    delete[] fileName;
-
+    mOutFileDesc = PR_Open(nsAutoCString(aFile),  PR_CREATE_FILE | PR_RDWR, 0644);
+    
     if(mOutFileDesc == NULL)
     {
         mSilentDownloadTask->SetState(nsIDOMSilentDownloadTask::SDL_ERROR);
