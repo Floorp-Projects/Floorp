@@ -272,7 +272,7 @@ nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                                    mEventQueue,             /* event queue for this thread */
                                    mHandler,
                                    this, ctxt, mEventSinkGetter);
-    mHandler = 0; // XXX this can go away when the channel is no longer being leaked.
+    mHandler = 0;
     if (NS_FAILED(rv)) {
         NS_RELEASE(protocolInterpreter);
         return rv;
@@ -394,21 +394,27 @@ nsFTPChannel::SetOwner(nsISupports * aOwner)
 // nsIFTPChannel methods:
 NS_IMETHODIMP
 nsFTPChannel::SetConnectionQueue(nsIEventQueue *aEventQ) {
-    nsresult rv;
-    // create the proxy object so we can call into the FTP thread.
-    NS_WITH_SERVICE(nsIProxyObjectManager, proxyManager, kProxyObjectManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    nsresult rv = NS_OK;
 
-    // change the thread request over to a proxy thread request.
-    rv = proxyManager->GetProxyObject(aEventQ,
-                                      NS_GET_IID(nsIRequest),
-                                      mThreadRequest,
-                                      PROXY_SYNC | PROXY_ALWAYS,
-                                      getter_AddRefs(mProxiedThreadRequest));
-    mThreadRequest = 0;
-    if (NS_FAILED(rv)) return rv;
+    if (aEventQ) {
+        // create the proxy object so we can call into the FTP thread.
+        NS_WITH_SERVICE(nsIProxyObjectManager, proxyManager, kProxyObjectManagerCID, &rv);
+        if (NS_FAILED(rv)) return rv;
 
-    return NS_OK;
+        // change the thread request over to a proxy thread request.
+        rv = proxyManager->GetProxyObject(aEventQ,
+                                          NS_GET_IID(nsIRequest),
+                                          mThreadRequest,
+                                          PROXY_SYNC | PROXY_ALWAYS,
+                                          getter_AddRefs(mProxiedThreadRequest));
+        mThreadRequest = 0;
+    } else {
+        // no event queue means the thread has effectively gone away.
+        mThreadRequest = 0;
+        mProxiedThreadRequest = 0;
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -436,6 +442,7 @@ nsFTPChannel::OnStopRequest(nsIChannel* channel, nsISupports* context,
                             nsresult aStatus,
                             const PRUnichar* aMsg) {
     nsresult rv = NS_OK;
+    mProxiedThreadRequest = 0; // we don't want anyone trying to use this when the underlying thread has left.
     if (mEventSink) {
         nsAutoString statusMsg("FTP transaction complete.");
 #ifndef BUG_16273_FIXED //TODO
