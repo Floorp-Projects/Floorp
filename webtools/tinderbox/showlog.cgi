@@ -50,22 +50,32 @@ $buildname = $form{buildname};
 $buildtime = $form{buildtime};
 $enc_buildname = &url_encode($buildname);
 $fulltext = $form{fulltext};
+$linenum = $form{line};
+$numlines = $form{numlines};
 
 die "the \"tree\" parameter must be provided\n" unless $tree;
 require "$tree/treedata.pl";
-
-# Dynamically load the error parser
-#
-die "the \"errorparser\" parameter must be provided\n" unless $errorparser;
-require "ep_${errorparser}.pl";
 
 
 $time_str = print_time( $buildtime );
 
 $|=1;
 
+if ($linenum) {
+
+  &print_fragment;
+  
+
+  exit;
+}
+
 &print_header;
 &print_notes;
+
+# Dynamically load the error parser
+#
+die "the \"errorparser\" parameter must be provided\n" unless $errorparser;
+require "ep_${errorparser}.pl";
 
 if ($fulltext)
 {
@@ -92,6 +102,36 @@ else
 
 # end of main
 ############################################################
+
+sub print_fragment {
+  print "Content-type: text/html\n\n";
+
+  print "<META HTTP-EQUIV=\"EXPIRES\" CONTENT=\"1\">\n";
+
+  my $heading = "Build Log (Fragment)";
+  my $subheading = "$buildname on $time_str";
+  my $title = "$heading - $subheading";
+
+  EmitHtmlTitleAndHeader($title, $heading, $subheading);
+
+  print "<a href='showlog.cgi?tree=$tree&errorparser=$errorparser&logfile=$logfile&buildtime=$buildtime&buildname=$enc_buildname&fulltext=1'>Show Full Build Log</a>";
+
+  open(BUILD_IN, "$gzip -d -c $tree/$logfile|");
+
+  my $first_line = $linenum - ($numlines/2);
+  my $last_line  = $linenum + ($numlines/2);
+
+  print "<pre><b>.<br>.<br>.<br></b>";
+  while(<BUILD_IN>) {
+    next if $. < $first_line;
+    last if $. > $last_line;
+    print "<b><font color='red'>" if $. == $linenum;
+    print;
+    print "</font></b>" if $. == $linenum;
+  }
+  print "<b>.<br>.<br>.<br></b></pre>";
+
+}
 
 sub print_header {
   print "Content-type: text/html\n\n";
@@ -132,6 +172,7 @@ sub print_notes {
   $found_note = 0;
   open(NOTES,"<$tree/notes.txt") 
     or print "<h2>warning: Couldn't open $tree/notes.txt </h2>\n";
+print "$buildtime, $buildname<br>\n";
   while(<NOTES>){
     chop;
     ($nbuildtime,$nbuildname,$nwho,$nnow,$nenc_note) = split(/\|/);
@@ -164,6 +205,38 @@ sub print_summary {
   push @log_errors, 9999999;        
 
   logprint('</PRE>');
+}
+
+sub print_log_section {
+  my ($tree, $logfile, $line_of_interest, $num_lines) = shift;
+  local $_;
+
+  my $first_line = $line_of_interest - $num_lines / 2;
+  my $last_line = $first_line + $num_lines;
+
+  print "<a href='showlog.cgi?tree=$tree&logfile=$logfile&line="
+        .($line_of_interest-$num_lines)."&numlines=$num_lines'>"
+        ."Previous $num_lines</a>";
+  print "<font size='+1'><b>.<br>.<br>.<br></b></font>";
+  print "<pre>";
+  my $ii = 0;
+  open BUILD_IN, "$gzip -d -c $tree/$logfile|";
+  while (<BUILD_IN>) {
+    $ii++;
+    next if $ii < $first_line;
+    last if $ii > $last_line;
+    if ($ii == $line_of_intested) {
+      print "<b>$_</b>";
+    } else {
+      print;
+    }
+  }
+  close BUILD_IN;
+  print "</pre>";
+  print "<font size='+1'><b>.<br>.<br>.<br></b></font>";
+  print "<a href='showlog.cgi?tree=$tree&logfile=$logfile&line="
+        .($line_of_interest+$num_lines)."&numlines=$num_lines'>"
+        ."Next $num_lines</a>";
 }
 
 sub print_log {
