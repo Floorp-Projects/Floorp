@@ -130,10 +130,11 @@ public class Codegen extends Interpreter {
     public Object compile(Context cx, Scriptable scope,
                           ScriptOrFnNode scriptOrFn,
                           SecurityController securityController,
-                          Object securityDomain)
+                          Object securityDomain, String encodedSource)
     {
         ObjArray classFiles = new ObjArray();
         ObjArray names = new ObjArray();
+        this.encodedSource = encodedSource;
         generateCode(cx, scriptOrFn, names, classFiles);
 
         boolean onlySave = false;
@@ -727,48 +728,46 @@ public class Codegen extends Interpreter {
         // (per function/script, starting from 0.)
         // Change Parser if changing ordering.
 
-        if (cx.isGeneratingSource()) {
-            String source = scriptOrFn.getEncodedSource();
-            if (source != null && source.length() < 65536) {
-                short flags = ClassFileWriter.ACC_PUBLIC
-                            | ClassFileWriter.ACC_STATIC;
-                String getSourceMethodStr = "getSourcesTreeImpl";
+        if (mainCodegen.encodedSource != null) {
+            // generate
+            // public static String getEncodedSourceImpl()
+            // {
+            //     return main_class.getEncodedSourceImpl(START, END);
+            // }
+            short flags = ClassFileWriter.ACC_PUBLIC
+                        | ClassFileWriter.ACC_STATIC;
+            String getSourceMethodStr = "getEncodedSourceImpl";
+            String mainImplSig = "(II)Ljava/lang/String;";
+            classFile.startMethod(getSourceMethodStr,
+                                  "()Ljava/lang/String;",
+                                  (short)flags);
+            push(scriptOrFn.getEncodedSourceStart());
+            push(scriptOrFn.getEncodedSourceEnd());
+            classFile.addInvoke(ByteCode.INVOKESTATIC,
+                                mainCodegen.generatedClassName,
+                                getSourceMethodStr,
+                                mainImplSig);
+            addByteCode(ByteCode.ARETURN);
+            // 0: no this and no argument
+            classFile.stopMethod((short)0, null);
+            if (isMainCodegen) {
+                // generate
+                // public static String getEncodedSourceImpl(int start, int end)
+                // {
+                //     return ENCODED.substring(start, end);
+                // }
                 classFile.startMethod(getSourceMethodStr,
-                                      "()Ljava/lang/Object;",
+                                      mainImplSig,
                                       (short)flags);
-                int functionCount = scriptOrFn.getFunctionCount();
-                if (functionCount == 0) {
-                    // generate return <source-literal-string>;
-                    push(source);
-                } else {
-                    // generate
-                    // Object[] result = new Object[1 + functionCount];
-                    // result[0] = <source-literal-string>
-                    // result[1] = Class1.getSourcesTreeImpl();
-                    // ...
-                    // result[functionCount] = ClassN.getSourcesTreeImpl();
-                    // return result;
-                    push(1 + functionCount);
-                    addByteCode(ByteCode.ANEWARRAY, "java/lang/Object");
-                       addByteCode(ByteCode.DUP); // dup array reference
-                    push(0);
-                    push(source);
-                    addByteCode(ByteCode.AASTORE);
-                    for (int i = 0; i != functionCount; ++i) {
-                        OptFunctionNode fn;
-                        addByteCode(ByteCode.DUP); // dup array reference
-                        push(1 + i);
-                        fn = (OptFunctionNode)scriptOrFn.getFunctionNode(i);
-                        classFile.addInvoke(ByteCode.INVOKESTATIC,
-                                            fn.getClassName(),
-                                            getSourceMethodStr,
-                                            "()Ljava/lang/Object;");
-                        addByteCode(ByteCode.AASTORE);
-                    }
-                }
+                push(encodedSource);
+                addByteCode(ByteCode.ILOAD_0);
+                addByteCode(ByteCode.ILOAD_1);
+                classFile.addInvoke(ByteCode.INVOKEVIRTUAL,
+                                    "java/lang/String",
+                                    "substring",
+                                    "(II)Ljava/lang/String;");
                 addByteCode(ByteCode.ARETURN);
-                // 0: no this and no argument
-                classFile.stopMethod((short)0, null);
+                classFile.stopMethod((short)2, null);
             }
         }
     }
@@ -3838,6 +3837,8 @@ public class Codegen extends Interpreter {
 
     private String itsSourceFile;
     private int itsLineNumber;
+
+    private String encodedSource;
 
     private int stackDepth;
     private int stackDepthMax;

@@ -116,12 +116,13 @@ public class Interpreter
 
     public Object compile(Context cx, Scriptable scope, ScriptOrFnNode tree,
                           SecurityController securityController,
-                          Object securityDomain)
+                          Object securityDomain, String encodedSource)
     {
         scriptOrFn = tree;
         version = cx.getLanguageVersion();
         itsData = new InterpreterData(securityDomain);
         itsData.itsSourceFile = scriptOrFn.getSourceName();
+        itsData.encodedSource = encodedSource;
         if (tree instanceof FunctionNode) {
             generateFunctionICode(cx, scope);
             return createFunction(cx, scope, itsData, false);
@@ -232,7 +233,8 @@ public class Interpreter
         itsData.argNames = scriptOrFn.getParamAndVarNames();
         itsData.argCount = scriptOrFn.getParamCount();
 
-        itsData.itsSource = scriptOrFn.getEncodedSource();
+        itsData.encodedSourceStart = scriptOrFn.getEncodedSourceStart();
+        itsData.encodedSourceEnd = scriptOrFn.getEncodedSourceEnd();
 
         if (Token.printICode) dumpICode(itsData);
     }
@@ -249,6 +251,7 @@ public class Interpreter
             jsi.scriptOrFn = def;
             jsi.itsData = new InterpreterData(itsData.securityDomain);
             jsi.itsData.itsSourceFile = itsData.itsSourceFile;
+            jsi.itsData.encodedSource = itsData.encodedSource;
             jsi.itsData.itsCheckThis = def.getCheckThis();
             jsi.itsInFunctionFlag = true;
             jsi.generateFunctionICode(cx, scope);
@@ -1593,19 +1596,13 @@ public class Interpreter
         return presentLines.getKeys();
     }
 
-    static Object getSourcesTree(InterpreterData idata) {
-        InterpreterData[] nested = idata.itsNestedFunctions;
-        if (nested == null || nested.length == 0) {
-            return idata.itsSource;
-        } else {
-            int N = nested.length;
-            Object[] result = new Object[N + 1];
-            result[0] = idata.itsSource;
-            for (int i = 0; i != N; ++i) {
-                result[1 + i] = getSourcesTree(nested[i]);
-            }
-            return result;
+    static String getEncodedSource(InterpreterData idata)
+    {
+        if (idata.encodedSource == null) {
+            return null;
         }
+        return idata.encodedSource.substring(idata.encodedSourceStart,
+                                             idata.encodedSourceEnd);
     }
 
     private static InterpretedFunction createFunction(Context cx,
@@ -3064,7 +3061,6 @@ public class Interpreter
     private static final int EXCEPTION_WITH_DEPTH_SLOT = 4;
 
     private int version;
-    private boolean inLineStepMode;
 
     private static final Object DBL_MRK = new Object();
 }

@@ -1931,6 +1931,11 @@ public class Context {
         ScriptOrFnNode tree = p.parse(ts, irf, decompiler);
         if (tree == null)
             return null;
+        String encodedSource = null;
+        if (isGeneratingSource()) {
+            encodedSource = decompiler.getEncodedSource();
+        }
+        decompiler = null; // It helps GC
 
         tree = compiler.transform(this, irf, tree);
 
@@ -1944,7 +1949,8 @@ public class Context {
         }
 
         Object result = compiler.compile(this, scope, tree,
-                                         securityController, securityDomain);
+                                         securityController, securityDomain,
+                                         encodedSource);
 
         if (debugger != null) {
             if (sourceString == null) Context.codeBug();

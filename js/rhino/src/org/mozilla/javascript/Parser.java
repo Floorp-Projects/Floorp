@@ -99,9 +99,10 @@ class Parser {
                                 Decompiler decompiler)
         throws IOException
     {
-        this.decompiler = decompiler;
         this.nf = nf;
         currentScriptOrFn = nf.createScript();
+        this.decompiler = decompiler;
+        int sourceStartOffset = decompiler.getCurrentOffset();
 
         this.ok = true;
 
@@ -141,11 +142,16 @@ class Parser {
             return null;
         }
 
-        String source = decompiler.getEncodedSource();
-        this.decompiler = null; // To help GC
+        currentScriptOrFn.setSourceName(ts.getSourceName());
+        currentScriptOrFn.setBaseLineno(baseLineno);
+        currentScriptOrFn.setEndLineno(ts.getLineno());
 
-        nf.initScript(currentScriptOrFn, pn, ts.getSourceName(),
-                      baseLineno, ts.getLineno(), source);
+        int sourceEndOffset = decompiler.getCurrentOffset();
+        currentScriptOrFn.setEncodedSourceBounds(sourceStartOffset,
+                                                 sourceEndOffset);
+
+        nf.initScript(currentScriptOrFn, pn);
+
         return currentScriptOrFn;
     }
 
@@ -231,7 +237,8 @@ class Parser {
         FunctionNode fnNode = nf.createFunction(name);
         int functionIndex = currentScriptOrFn.addFunction(fnNode);
 
-        int functionSourceOffset = decompiler.startFunction();
+        int functionSourceStart = decompiler.markFunctionStart();
+        int functionSourceEnd;
 
         ScriptOrFnNode savedScriptOrFn = currentScriptOrFn;
         currentScriptOrFn = fnNode;
@@ -268,47 +275,47 @@ class Parser {
             decompiler.addEOL(Token.LC);
             body = parseFunctionBody(ts);
             mustMatchToken(ts, Token.RC, "msg.no.brace.after.body");
+
             decompiler.addToken(Token.RC);
-            // skip the last EOL so nested functions work...
-            // name might be null;
+            functionSourceEnd = decompiler.markFunctionEnd(functionSourceStart);
+            if (functionType != FunctionNode.FUNCTION_EXPRESSION) {
+                checkWellTerminatedFunction(ts);
+                if (memberExprNode == null) {
+                    // Add EOL only if function is not part of expression
+                    // since it gets SEMI + EOL from Statement in that case
+                    decompiler.addToken(Token.EOL);
+                } else {
+                    // Add ';' to make 'function x.f(){}'
+                    // and 'x.f = function(){}'
+                    // to print the same strings when decompiling
+                    decompiler.addEOL(Token.SEMI);
+                }
+            }
         }
         finally {
-            source = decompiler.stopFunction(functionSourceOffset);
             currentScriptOrFn = savedScriptOrFn;
         }
 
+        fnNode.setEncodedSourceBounds(functionSourceStart, functionSourceEnd);
+        fnNode.setSourceName(ts.getSourceName());
+        fnNode.setBaseLineno(baseLineno);
+        fnNode.setEndLineno(ts.getLineno());
+
         Object pn;
         if (memberExprNode == null) {
-            pn = nf.initFunction(fnNode, functionIndex, body,
-                                 ts.getSourceName(),
-                                 baseLineno, ts.getLineno(),
-                                 source,
-                                 functionType);
+            pn = nf.initFunction(fnNode, functionIndex, body, functionType);
             if (functionType == FunctionNode.FUNCTION_EXPRESSION_STATEMENT) {
                 // The following can be removed but then code generators should
                 // be modified not to push on the stack function expression
                 // statements
                 pn = nf.createExprStatementNoReturn(pn, baseLineno);
             }
-            // Add EOL but only if function is not part of expression, in which
-            // case it gets SEMI + EOL from Statement.
-            if (functionType != FunctionNode.FUNCTION_EXPRESSION) {
-                decompiler.addToken(Token.EOL);
-                checkWellTerminatedFunction(ts);
-            }
         } else {
             pn = nf.initFunction(fnNode, functionIndex, body,
-                                 ts.getSourceName(),
-                                 baseLineno, ts.getLineno(),
-                                 source,
                                  FunctionNode.FUNCTION_EXPRESSION);
             pn = nf.createBinary(Token.ASSIGN, Token.NOP, memberExprNode, pn);
             if (functionType != FunctionNode.FUNCTION_EXPRESSION) {
                 pn = nf.createExprStatement(pn, baseLineno);
-                // Add ';' to make 'function x.f(){}' and 'x.f = function(){}'
-                // to print the same strings when decompiling
-                decompiler.addEOL(Token.SEMI);
-                checkWellTerminatedFunction(ts);
             }
         }
         return pn;

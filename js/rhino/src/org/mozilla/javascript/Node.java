@@ -504,8 +504,8 @@ public class Node implements Cloneable {
                 sb.append(" [source name: ");
                 sb.append(sof.getSourceName());
                 sb.append("] [encoded source length: ");
-                String encodedSource = sof.getEncodedSource();
-                sb.append(encodedSource != null ? encodedSource.length() : 0);
+                sb.append(sof.getEncodedSourceEnd()
+                          - sof.getEncodedSourceStart());
                 sb.append("] [base line: ");
                 sb.append(sof.getBaseLineno());
                 sb.append("] [end line: ");

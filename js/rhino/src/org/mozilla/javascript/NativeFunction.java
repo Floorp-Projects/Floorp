@@ -57,13 +57,13 @@ public class NativeFunction extends BaseFunction
      */
     public String decompile(Context cx, int indent, boolean justbody)
     {
-        Object encodedSourcesTree = getSourcesTree();
-        if (encodedSourcesTree == null) {
+        String encodedSource = getEncodedSource();
+        if (encodedSource == null) {
             return super.decompile(cx, indent, justbody);
         } else {
             final int INDENT_GAP = 4;
             final int CASE_GAP = 2; // less how much for case labels
-            return Decompiler.decompile(encodedSourcesTree, justbody,
+            return Decompiler.decompile(encodedSource, justbody,
                                         indent, INDENT_GAP, CASE_GAP);
         }
     }
@@ -95,20 +95,17 @@ public class NativeFunction extends BaseFunction
     }
 
     /**
-     * Get encoded source as tree where node data encodes source of single
-     * function as String. If node is String, it is leaf and its data is node
-     * itself. Otherwise node is Object[] array, where array[0] holds node data
-     * and array[1..array.length) holds child nodes.
+     * Get encoded source string.
      */
-    protected Object getSourcesTree()
+    public String getEncodedSource()
     {
         // The following is used only by optimizer, but is here to avoid
         // introduction of 2 additional classes there
         Class cl = getClass();
         try {
-            Method m = cl.getDeclaredMethod("getSourcesTreeImpl",
+            Method m = cl.getDeclaredMethod("getEncodedSourceImpl",
                                             new Class[0]);
-            return m.invoke(null, ScriptRuntime.emptyArgs);
+            return (String)m.invoke(null, ScriptRuntime.emptyArgs);
         } catch (NoSuchMethodException ex) {
             // No source implementation
             return null;

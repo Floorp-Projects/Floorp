@@ -58,7 +58,6 @@ final class InterpreterData implements Serializable, DebuggableScript {
     }
 
     String itsName;
-    String itsSource;
     String itsSourceFile;
     boolean itsNeedsActivation;
     boolean itsFromEvalCode;
@@ -87,6 +86,10 @@ final class InterpreterData implements Serializable, DebuggableScript {
     int itsMaxCalleeArgs;
 
     Object securityDomain;
+
+    String encodedSource;
+    int encodedSourceStart;
+    int encodedSourceEnd;
 
     public boolean isFunction() {
         return itsFunctionType != 0;

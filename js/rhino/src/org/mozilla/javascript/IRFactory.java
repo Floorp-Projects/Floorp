@@ -56,15 +56,8 @@ public class IRFactory {
     /**
      * Script (for associating file/url names with toplevel scripts.)
      */
-    public void
-    initScript(ScriptOrFnNode scriptNode, Object body,
-               String sourceName, int baseLineno, int endLineno, String source)
+    public void initScript(ScriptOrFnNode scriptNode, Object body)
     {
-        scriptNode.setEncodedSource(source);
-        scriptNode.setSourceName(sourceName);
-        scriptNode.setBaseLineno(baseLineno);
-        scriptNode.setEndLineno(endLineno);
-
         Node children = ((Node) body).getFirstChild();
         if (children != null) { scriptNode.addChildrenToBack(children); }
         scriptNode.finishParsing(this);
@@ -213,15 +206,8 @@ public class IRFactory {
     }
 
     public Object initFunction(FunctionNode fnNode, int functionIndex,
-                               Object statements,
-                               String sourceName, int baseLineno,
-                               int endLineno, String source,
-                               int functionType)
+                               Object statements, int functionType)
     {
-        fnNode.setEncodedSource(source);
-        fnNode.setSourceName(sourceName);
-        fnNode.setBaseLineno(baseLineno);
-        fnNode.setEndLineno(endLineno);
         fnNode.setFunctionType(functionType);
         fnNode.addChildToBack((Node)statements);
         fnNode.finishParsing(this);

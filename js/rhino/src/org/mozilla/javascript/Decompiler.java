@@ -80,7 +80,9 @@ package org.mozilla.javascript;
  */
 public class Decompiler
 {
-    private static final int FUNCTION_REF = Token.LAST_TOKEN + 1;
+    // Marker to denote the last RC of function so it can be distinguished from
+    // the last RC of object literals in case of function expressions
+    private static final int FUNCTION_END = Token.LAST_TOKEN + 1;
 
     public Decompiler()
     {
@@ -91,21 +93,21 @@ public class Decompiler
         return sourceToString(0);
     }
 
-    int startFunction()
+    int getCurrentOffset()
     {
-        // Add reference to the enclosing function/script
-        append((char)FUNCTION_REF);
         return sourceTop;
     }
 
-    String stopFunction(int savedTop)
+    int markFunctionStart()
     {
-        if (!(0 <= savedTop && savedTop <= sourceTop))
-            throw new IllegalArgumentException();
+        return getCurrentOffset();
+    }
 
-        String encoded = sourceToString(savedTop);
-        sourceTop = savedTop;
-        return encoded;
+    int markFunctionEnd(int functionStart)
+    {
+        int offset = getCurrentOffset();
+        append((char)FUNCTION_END);
+        return offset;
     }
 
     void addToken(int token)
@@ -285,32 +287,14 @@ public class Decompiler
      * @param indentGap the identation offset for case labels
      *
      */
-    static String decompile(Object encodedSourcesTree,
+    static String decompile(String source,
                             boolean justFunctionBody,
                             int indent, int indentGap, int caseGap)
     {
-        StringBuffer result = new StringBuffer();
-        decompile_r(encodedSourcesTree, false, justFunctionBody,
-                    indent, indentGap, caseGap, result);
-        return result.toString();
-    }
-
-    private static void decompile_r(Object encodedSourcesTree,
-                                    boolean nested, boolean justFunctionBody,
-                                    int indent, int indentGap, int caseGap,
-                                    StringBuffer result)
-    {
-        String source;
-        Object[] childNodes = null;
-        if (encodedSourcesTree instanceof String) {
-            source = (String)encodedSourcesTree;
-        } else {
-            childNodes = (Object[])encodedSourcesTree;
-            source = (String)childNodes[0];
-        }
-
         int length = source.length();
-        if (length == 0) { return; }
+        if (length == 0) { return ""; }
+
+        StringBuffer result = new StringBuffer();
 
         // Spew tokens in source, for debugging.
         // as TYPE number char
@@ -339,25 +323,14 @@ public class Decompiler
             System.err.println();
         }
 
-        if (!nested) {
-            // add an initial newline to exactly match js.
-            result.append('\n');
-            for (int j = 0; j < indent; j++)
-                result.append(' ');
-        }
+        // add an initial newline to exactly match js.
+        result.append('\n');
+        for (int j = 0; j < indent; j++)
+            result.append(' ');
 
-        int functionCount = 0;
         int braceNesting = 0;
+        boolean afterFirstEOL = false;
         int i = 0;
-
-        boolean skipFunctionHeader = false;
-        if (source.charAt(0) == Token.FUNCTION) {
-            ++i;
-            result.append("function ");
-            if (justFunctionBody) {
-                skipFunctionHeader = true;
-            }
-        }
 
         while (i < length) {
             switch(source.charAt(i)) {
@@ -407,21 +380,12 @@ public class Decompiler
                 }
                 break;
 
-            case FUNCTION_REF:
-                ++functionCount;
-                /* decompile a FUNCTION token as an escape; call
-                 * toString on the encoded source at
-                 * childNodes[1 + functionIndex] or childNodes[functionCount]
-                 */
-                if (childNodes == null
-                    || functionCount >= childNodes.length)
-                {
-                    throw Context.reportRuntimeError(Context.getMessage1
-                        ("msg.no.function.ref.found",
-                         new Integer(functionCount - 1)));
-                }
-                decompile_r(childNodes[functionCount], true, false,
-                            indent, indentGap, caseGap, result);
+            case Token.FUNCTION:
+                result.append("function ");
+                break;
+
+            case FUNCTION_END:
+                // Do nothing
                 break;
 
             case Token.COMMA:
@@ -430,41 +394,42 @@ public class Decompiler
 
             case Token.LC:
                 ++braceNesting;
-                if (nextIs(source, length, i, Token.EOL))
+                if (Token.EOL == getNext(source, length, i))
                     indent += indentGap;
                 result.append('{');
                 break;
 
-            case Token.RC:
+            case Token.RC: {
                 --braceNesting;
                 /* don't print the closing RC if it closes the
                  * toplevel function and we're called from
                  * decompileFunctionBody.
                  */
-                if (justFunctionBody && !nested && braceNesting == 0)
+                if (justFunctionBody && braceNesting == 0)
                     break;
 
-                if (nextIs(source, length, i, Token.EOL))
-                    indent -= indentGap;
-
                 result.append('}');
-                if (nextIs(source, length, i, Token.WHILE)
-                    || nextIs(source, length, i, Token.ELSE))
-                {
-                    indent -= indentGap;
-                    result.append(' ');
+                switch (getNext(source, length, i)) {
+                    case Token.EOL:
+                    case FUNCTION_END:
+                        indent -= indentGap;
+                        break;
+                    case Token.WHILE:
+                    case Token.ELSE:
+                        indent -= indentGap;
+                        result.append(' ');
+                        break;
                 }
                 break;
-
+            }
             case Token.LP:
                 result.append('(');
                 break;
 
             case Token.RP:
-                if (nextIs(source, length, i, Token.LC))
-                    result.append(") ");
-                else
-                    result.append(')');
+                result.append(')');
+                if (Token.LC == getNext(source, length, i))
+                    result.append(' ');
                 break;
 
             case Token.LB:
@@ -475,15 +440,20 @@ public class Decompiler
                 result.append(']');
                 break;
 
-            case Token.EOL:
-                if (skipFunctionHeader) {
-                    skipFunctionHeader = false;
-                    /* throw away just added 'function name(...) {' and restore
-                     * the original indent
-                     */
-                    result.setLength(0);
-                    indent -= indentGap;
-                } else {
+            case Token.EOL: {
+                boolean newLine = true;
+                if (!afterFirstEOL) {
+                    afterFirstEOL = true;
+                    if (justFunctionBody) {
+                        /* throw away just added 'function name(...) {'
+                         * and restore the original indent
+                         */
+                        result.setLength(0);
+                        indent -= indentGap;
+                        newLine = false;
+                    }
+                }
+                if (newLine) {
                     result.append('\n');
                 }
 
@@ -515,7 +485,7 @@ public class Decompiler
                         result.append(' ');
                 }
                 break;
-
+            }
             case Token.DOT:
                 result.append('.');
                 break;
@@ -577,17 +547,15 @@ public class Decompiler
                 break;
 
             case Token.BREAK:
-                if (nextIs(source, length, i, Token.NAME))
-                    result.append("break ");
-                else
-                    result.append("break");
+                result.append("break");
+                if (Token.NAME == getNext(source, length, i))
+                    result.append(' ');
                 break;
 
             case Token.CONTINUE:
-                if (nextIs(source, length, i, Token.NAME))
-                    result.append("continue ");
-                else
-                    result.append("continue");
+                result.append("continue");
+                if (Token.NAME == getNext(source, length, i))
+                    result.append(' ');
                 break;
 
             case Token.CASE:
@@ -599,10 +567,9 @@ public class Decompiler
                 break;
 
             case Token.RETURN:
-                if (nextIs(source, length, i, Token.SEMI))
-                    result.append("return");
-                else
-                    result.append("return ");
+                result.append("return");
+                if (Token.SEMI != getNext(source, length, i))
+                    result.append(' ');
                 break;
 
             case Token.VAR:
@@ -610,12 +577,11 @@ public class Decompiler
                 break;
 
             case Token.SEMI:
-                if (nextIs(source, length, i, Token.EOL))
-                    // statement termination
-                    result.append(';');
-                else
+                result.append(';');
+                if (Token.EOL != getNext(source, length, i)) {
                     // separators in FOR
-                    result.append("; ");
+                    result.append(' ');
+                }
                 break;
 
             case Token.ASSIGN:
@@ -684,7 +650,7 @@ public class Decompiler
                 break;
 
             case Token.COLON:
-                if (nextIs(source, length, i, Token.EOL))
+                if (Token.EOL == getNext(source, length, i))
                     // it's the end of a label
                     result.append(':');
                 else
@@ -840,13 +806,15 @@ public class Decompiler
         }
 
         // add that trailing newline if it's an outermost function.
-        if (!nested && !justFunctionBody)
+        if (!justFunctionBody)
             result.append('\n');
+
+        return result.toString();
     }
 
-    private static boolean nextIs(String source, int length, int i, int token)
+    private static int getNext(String source, int length, int i)
     {
-        return (i + 1 < length) ? source.charAt(i + 1) == token : false;
+        return (i + 1 < length) ? source.charAt(i + 1) : Token.EOF;
     }
 
     private static int getSourceStringEnd(String source, int offset)
