@@ -2152,7 +2152,7 @@ void UpdateGreInstallerCmdLine(greInfo *aGre, char *aParameter, DWORD aParameter
      *
      * This path should be guaranteed to be writable because the user had
      * already created the parent path ([product path]). */
-    if(CreateDirectoriesAll(aGre->homePath, ADD_TO_UNINSTALL_LOG) != WIZ_OK)
+    if(DirHasWriteAccess(aGre->homePath) != WIZ_OK)
     {
       int rv = WIZ_OK;
 
