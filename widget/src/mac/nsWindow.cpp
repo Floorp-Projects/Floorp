@@ -1414,13 +1414,13 @@ else
     int numRects = 0;
 
 #if TARGET_CARBON
-    QDRegionToRects ( updateRgn, kQDParseRegionFromTop, sCountRectProc, &numRects );
+    QDRegionToRects ( updateRgn, kQDParseRegionFromTopLeft, sCountRectProc, &numRects );
     if ( numRects <= kMaxUpdateRects ) {
       Rect rectList[kMaxUpdateRects];
       TRectArray rectWrapper ( rectList );
        
       // compile a list of rectangles 
-      QDRegionToRects ( updateRgn, kQDParseRegionFromTop, sAddRectToArrayProc, &rectWrapper );
+      QDRegionToRects ( updateRgn, kQDParseRegionFromTopLeft, sAddRectToArrayProc, &rectWrapper );
     
       // amalgamate adjoining rects into a single rect. This 
       // may over-draw a little, but will prevent us from going down into
