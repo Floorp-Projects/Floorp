@@ -133,12 +133,13 @@
       (nreverse html-sources))))
 
 
-; Escape all content strings in the html-source, while interpreting :nowrap, :wrap, and :none pseudo-tags.
+; Escape all content strings in the html-source, while interpreting :nowrap, :wrap, :space, and :none pseudo-tags.
 ; Return a freshly consed list of html-sources.
 (defun escape-html-source (html-source space)
   (cond
    ((stringp html-source)
     (escape-html-characters html-source space))
+   ((eq html-source :space) (list 'space))
    ((or (characterp html-source) (symbolp html-source) (integerp html-source))
     (list html-source))
    ((consp html-source)
@@ -153,7 +154,7 @@
    (t (error "Bad html-source: ~S" html-source))))
 
 
-; Escape all content strings in the html-source, while interpreting :nowrap, :wrap, and :none pseudo-tags.
+; Escape all content strings in the html-source, while interpreting :nowrap, :wrap, :space, and :none pseudo-tags.
 (defun escape-html (html-source)
   (let ((results (escape-html-source html-source 'space)))
     (assert-true (= (length results) 1))
@@ -168,6 +169,7 @@
 ;;   <symbol>                                                  ;Named entity
 ;;   <integer>                                                 ;Numbered entity
 ;;   space                                                     ;Space or newline
+;;   :space                                                    ;Breaking space, regardless of enclosing :nowrap tags
 ;;   (<tag> <html-source> ... <html-source>)                   ;Tag and its contents
 ;;   ((:nest <tag> ... <tag>) <html-source> ... <html-source>) ;Equivalent to (<tag> (... (<tag> <html-source> ... <html-source>)))
 ;;
@@ -186,10 +188,11 @@
 (defparameter *html-right-margin* 120)
 (defparameter *allow-line-breaks-in-tags* nil) ;Allow line breaks in tags between attributes?
 
-(defvar *current-html-pos*)          ;Number of characters written to the current line of the stream; nil if *current-html-newlines* is nonzero
-(defvar *current-html-pending*)      ;String following a space or newline pending to be printed on the current line or nil if none
-(defvar *current-html-indent*)       ;Indent to use for emit-html-newlines-and-indent calls
-(defvar *current-html-newlines*)     ;Number of consecutive newlines just written to the stream; zero if last character wasn't a newline
+(defvar *current-html-pos*)            ;Number of characters written to the current line of the stream; nil if *current-html-newlines* is nonzero
+(defvar *current-html-indent*)         ;Indent to use for emit-html-newlines-and-indent calls
+(defvar *current-html-pending*)        ;String following a space or newline pending to be printed on the current line or nil if none
+(defvar *current-html-pending-indent*) ;Indent to use if *current-html-pending* is placed on a new line
+(defvar *current-html-newlines*)       ;Number of consecutive newlines just written to the stream; zero if last character wasn't a newline
 
 
 ; Flush *current-html-pending* onto the stream.
@@ -227,8 +230,9 @@
                                        (concatenate 'string *current-html-pending* html-string)))
         (when (>= (+ *current-html-pos* (length *current-html-pending*)) *html-right-margin*)
           (write-char #\newline stream)
+          (write-string (make-string *current-html-pending-indent* :initial-element #\space) stream)
           (write-string *current-html-pending* stream)
-          (setq *current-html-pos* (length *current-html-pending*))
+          (setq *current-html-pos* (+ *current-html-pending-indent* (length *current-html-pending*)))
           (setq *current-html-pending* nil)))
       (progn
         (write-string html-string stream)
@@ -283,7 +287,8 @@
    ((eq html-source 'space)
     (when (zerop *current-html-newlines*)
       (flush-current-html-pending stream)
-      (setq *current-html-pending* "")))
+      (setq *current-html-pending* "")
+      (setq *current-html-pending-indent* *current-html-indent*)))
    ((or (characterp html-source) (symbolp html-source))
     (let ((entity-name (gethash html-source *html-entities-hash*)))
       (cond
@@ -311,8 +316,9 @@
           (*print-escape* nil)
           (*print-case* :upcase)
           (*current-html-pos* nil)
-          (*current-html-pending* nil)
           (*current-html-indent* 0)
+          (*current-html-pending* nil)
+          (*current-html-pending-indent* nil)
           (*current-html-newlines* 9999))
       (write-string "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\" \"http://www.w3.org/TR/REC-html40/loose.dtd\">" stream)
       (write-char #\newline stream)
@@ -390,7 +396,6 @@
   '(((:new-line t) (br))
     
     ;Misc.
-    (:spc nbsp)
     (:tab2 nbsp nbsp)
     (:tab3 nbsp nbsp nbsp)
     (:nbhy "-")             ;Non-breaking hyphen
@@ -460,22 +465,28 @@
     ((:psi 1) (:script "document.write(U_psi)"))
     ((:zeta 1) (:script "document.write(U_zeta)"))
     
-    ;Block Styles
+    ;Division styles
     (:js2 (div (class "js2")))
     (:es4 (div (class "es4")))
     (:body-text p)
     (:section-heading h2)
     (:subsection-heading h3)
     (:grammar-header h4)
-    (:grammar-rule (:nest :nowrap (div (class "grammar-rule"))))
-    (:grammar-lhs (:nest :nowrap (div (class "grammar-lhs"))))
+    (:grammar-rule (div (class "grammar-rule")))
+    (:grammar-lhs (div (class "grammar-lhs")))
     (:grammar-lhs-last :grammar-lhs)
-    (:grammar-rhs (:nest :nowrap (div (class "grammar-rhs"))))
+    (:grammar-rhs (div (class "grammar-rhs")))
     (:grammar-rhs-last :grammar-rhs)
     (:grammar-argument (:nest :nowrap (div (class "grammar-argument"))))
-    (:semantics (:nest :nowrap (div (class "semantics"))))
-    (:semantics-next (:nest :nowrap (div (class "semantics-next"))))
     (:semantic-comment (div (class "semantic-comment")))
+    (:algorithm (div (class "algorithm")))
+    (:algorithm-next (div (class "algorithm-next")))
+    (:algorithm-stmt (div (class "algorithm-stmt")))
+    (:algorithm-stmt-narrow :algorithm-stmt)
+    (:algorithm-next-stmt (div (class "algorithm-next-stmt")))
+    ((:level 4) (div (class "lvl")))
+    (:statement (div (class "stmt")))
+    (:statement-last :statement)
     
     ;Inline Styles
     (:script (script (type "text/javascript")))
@@ -527,7 +538,8 @@
 ;;; HTML STREAMS
 
 (defstruct (html-stream (:include markup-stream)
-                        (:constructor allocate-html-stream (env head tail level logical-position enclosing-styles anchors))
+                        (:constructor allocate-html-stream (env head tail level logical-line-width division-length logical-position
+                                                                enclosing-styles anchors))
                         (:copier nil)
                         (:predicate html-stream?))
   (enclosing-styles nil :type list :read-only t) ;A list of enclosing styles
@@ -541,9 +553,9 @@
 
 
 ; Make a new, empty, open html-stream with the given definitions for its markup-env.
-(defun make-html-stream (markup-env level logical-position enclosing-styles anchors)
+(defun make-html-stream (markup-env level logical-line-width division-length logical-position enclosing-styles anchors)
   (let ((head (list nil)))
-    (allocate-html-stream markup-env head head level logical-position enclosing-styles anchors)))
+    (allocate-html-stream markup-env head head level logical-line-width division-length logical-position enclosing-styles anchors)))
 
 
 ; Make a new, empty, open, top-level html-stream with the given definitions
@@ -552,7 +564,7 @@
   (let ((head (list nil))
         (markup-env (make-markup-env links)))
     (markup-env-define-alist markup-env html-definitions)
-    (allocate-html-stream markup-env head head *markup-stream-top-level* nil nil nil)))
+    (allocate-html-stream markup-env head head *markup-stream-top-level* *markup-logical-line-width* nil nil nil nil)))
 
 
 ; Return the approximate width of the html item; return t if it is a line break.
@@ -569,12 +581,12 @@
 (defun depict-html-top-level (title links emitter)
   (let ((html-stream (make-top-level-html-stream *html-definitions* links)))
     (markup-stream-append1 html-stream 'html)
-    (depict-block-style (html-stream 'head)
-      (depict-block-style (html-stream 'title)
+    (depict-division-style (html-stream 'head)
+      (depict-division-style (html-stream 'title)
         (markup-stream-append1 html-stream title))
       (markup-stream-append1 html-stream '((link (rel "stylesheet") (href "../styles.css"))))
       (markup-stream-append1 html-stream '((script (type "text/javascript") (language "JavaScript1.2") (src "../unicodeCompatibility.js")))))
-    (depict-block-style (html-stream 'body)
+    (depict-division-style (html-stream 'body)
       (funcall emitter html-stream))
     (let ((links (markup-env-links (html-stream-env html-stream))))
       (warn-missing-links links))
@@ -600,43 +612,96 @@
 (defmethod markup-stream-output ((html-stream html-stream))
   (coalesce-elements
    (unnest-html-source
-    (markup-env-expand (markup-stream-env html-stream) (markup-stream-unexpanded-output html-stream) '(:none :nowrap :wrap :nest)))))
+    (markup-env-expand (markup-stream-env html-stream) (markup-stream-unexpanded-output html-stream) '(:none :nowrap :wrap :space :nest)))))
 
 
 
-(defmethod depict-block-style-f ((html-stream html-stream) block-style flatten emitter)
+(defmethod depict-division-style-f ((html-stream html-stream) division-style flatten emitter)
   (assert-true (<= (markup-stream-level html-stream) *markup-stream-paragraph-level*))
-  (assert-true (symbolp block-style))
-  (if (or (null block-style)
-          (and flatten (member block-style (html-stream-enclosing-styles html-stream))))
+  (assert-true (symbolp division-style))
+  (if (or (null division-style)
+          (and flatten (member division-style (html-stream-enclosing-styles html-stream))))
     (funcall emitter html-stream)
     (let ((inner-html-stream (make-html-stream (markup-stream-env html-stream)
                                                *markup-stream-paragraph-level*
+                                               (- (html-stream-logical-line-width html-stream) (markup-width html-stream division-style))
+                                               0
                                                nil
-                                               (cons block-style (html-stream-enclosing-styles html-stream))
+                                               (cons division-style (html-stream-enclosing-styles html-stream))
                                                nil)))
-      (markup-stream-append1 inner-html-stream block-style)
+      (markup-stream-append1 inner-html-stream division-style)
       (prog1
         (funcall emitter inner-html-stream)
         (let ((inner-output (markup-stream-unexpanded-output inner-html-stream)))
           (when (or (not flatten) (cdr inner-output))
-            (markup-stream-append1 html-stream inner-output)))))))
+            (markup-stream-append1 html-stream inner-output)
+            (increment-division-length html-stream (html-stream-division-length inner-html-stream))))))))
+
+
+; html is the output from an html-stream consisting of paragraphs and/or divisions.  Every
+; division must be one of the given division-styles and may contain other such divisions and/or
+; paragraphs.  All paragraphs must have paragraph styles that are members of the paragraph-styles list.
+; Return html flattened to a single paragraph with the given paragraph-style with spaces inserted
+; between the component paragraphs.  May destroy the original html list.
+(defun flatten-division-block (html paragraph-style paragraph-styles division-styles)
+  (labels ((flatten-item (html-item)
+             (let ((tag (first html-item))
+                   (contents (rest html-item)))
+               (cond
+                ((member tag paragraph-styles) (cons " " contents))
+                ((member tag division-styles :test #'eq)
+                 (mapcan #'flatten-item contents))
+                (t (error "Unable to flatten ~S" html-item))))))
+    (if html
+      (list (cons paragraph-style (cdr (mapcan #'flatten-item html))))
+      nil)))
+
+
+(defmethod depict-division-block-f ((html-stream html-stream) paragraph-style paragraph-styles division-styles emitter)
+  (assert-true (<= (markup-stream-level html-stream) *markup-stream-paragraph-level*))
+  (assert-true (and paragraph-style (symbolp paragraph-style)))
+  (let* ((logical-line-width (html-stream-logical-line-width html-stream))
+         (inner-html-stream (make-html-stream (markup-stream-env html-stream)
+                                              *markup-stream-paragraph-level*
+                                              logical-line-width
+                                              0
+                                              nil
+                                              (html-stream-enclosing-styles html-stream)
+                                              nil)))
+    (prog1
+      (funcall emitter inner-html-stream)
+      (let ((inner-output (markup-stream-unexpanded-output inner-html-stream))
+            (inner-length (html-stream-division-length inner-html-stream)))
+        (unless (eq inner-length t)
+          (if (> inner-length logical-line-width)
+            (setq inner-length t)
+            (setq inner-output (flatten-division-block inner-output paragraph-style paragraph-styles division-styles))))
+        (increment-division-length html-stream inner-length)
+        (markup-stream-append-list html-stream inner-output)))))
 
 
 (defmethod depict-paragraph-f ((html-stream html-stream) paragraph-style emitter)
   (assert-true (= (markup-stream-level html-stream) *markup-stream-paragraph-level*))
   (assert-true (and paragraph-style (symbolp paragraph-style)))
   (let* ((anchors (list 'anchors))
+         (logical-position (make-logical-position))
          (inner-html-stream (make-html-stream (markup-stream-env html-stream)
                                               *markup-stream-content-level*
-                                              (make-logical-position)
+                                              (- (html-stream-logical-line-width html-stream) (markup-width html-stream paragraph-style))
+                                              nil
+                                              logical-position
                                               (cons paragraph-style (html-stream-enclosing-styles html-stream))
                                               anchors)))
     (prog1
       (funcall emitter inner-html-stream)
       (markup-stream-append1 html-stream (cons paragraph-style
                                                (nreconc (cdr anchors)
-                                                        (markup-stream-unexpanded-output inner-html-stream)))))))
+                                                        (markup-stream-unexpanded-output inner-html-stream))))
+      (assert-true (and (eq logical-position (html-stream-logical-position inner-html-stream))
+                        (null (logical-position-n-soft-breaks logical-position))))
+      (increment-division-length html-stream (if (= (logical-position-n-hard-breaks logical-position) 0)
+                                               (1+ (logical-position-position logical-position))
+                                               t)))))
 
 
 (defmethod depict-char-style-f ((html-stream html-stream) char-style emitter)
@@ -646,6 +711,8 @@
       (assert-true (symbolp char-style))
       (let ((inner-html-stream (make-html-stream (markup-stream-env html-stream)
                                                  *markup-stream-content-level*
+                                                 (html-stream-logical-line-width html-stream)
+                                                 nil
                                                  (markup-stream-logical-position html-stream)
                                                  (cons char-style (html-stream-enclosing-styles html-stream))
                                                  (html-stream-anchors html-stream))))
@@ -661,17 +728,17 @@
     (cerror "Ignore" "Style ~S should not be in effect" style)))
 
 
-(defmethod save-block-style ((html-stream html-stream))
+(defmethod save-division-style ((html-stream html-stream))
   (reverse (html-stream-enclosing-styles html-stream)))
 
 
-(defmethod with-saved-block-style-f ((html-stream html-stream) saved-block-style flatten emitter)
+(defmethod with-saved-division-style-f ((html-stream html-stream) saved-division-style flatten emitter)
   (assert-true (<= (markup-stream-level html-stream) *markup-stream-paragraph-level*))
-  (if (endp saved-block-style)
+  (if (endp saved-division-style)
     (funcall emitter html-stream)
-    (depict-block-style-f html-stream (first saved-block-style) flatten
-                          #'(lambda (html-stream)
-                              (with-saved-block-style-f html-stream (rest saved-block-style) flatten emitter)))))
+    (depict-division-style-f html-stream (first saved-division-style) flatten
+                             #'(lambda (html-stream)
+                                 (with-saved-division-style-f html-stream (rest saved-division-style) flatten emitter)))))
 
 
 (defmethod depict-anchor ((html-stream html-stream) link-prefix link-name duplicate)
@@ -689,6 +756,8 @@
     (if href
       (let ((inner-html-stream (make-html-stream (markup-stream-env html-stream)
                                                  *markup-stream-content-level*
+                                                 (html-stream-logical-line-width html-stream)
+                                                 nil
                                                  (markup-stream-logical-position html-stream)
                                                  (html-stream-enclosing-styles html-stream)
                                                  (html-stream-anchors html-stream))))

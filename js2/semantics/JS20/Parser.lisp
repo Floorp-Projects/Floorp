@@ -2210,7 +2210,7 @@
        (when bin-terminals
          (depict-paragraph (markup-stream :body-text)
            (depict markup-stream bin-name)
-           (depict-list markup-stream #'depict-terminal bin-terminals :separator '(" " :spc " "))))))
+           (depict-list markup-stream #'depict-terminal bin-terminals :separator " ")))))
     
     (let* ((bins (make-array 6 :initial-element nil))
            (all-terminals (grammar-terminals grammar))

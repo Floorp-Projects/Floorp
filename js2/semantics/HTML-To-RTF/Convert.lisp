@@ -475,7 +475,7 @@
      title
      #'(lambda (markup-stream)
          (emit-html-file markup-stream element))
-     *html-to-rtf-definitions*)))
+     *rtf-definitions*)))
 
 #|
 (setq s (html-parser:file->string "Huit:Mozilla:Docs:mozilla-org:html:js:language:js20:formal:index.html"))
@@ -486,7 +486,7 @@
  "Test"
  #'(lambda (markup-stream)
      (emit-html-file markup-stream p))
- *html-to-rtf-definitions*)
+ *rtf-definitions*)
 
 (translate-html-to-rtf "Huit:Mozilla:Docs:mozilla-org:html:js:language:js20:formal:index.html" "HTML-To-RTF/Test.rtf" "Test")
 (translate-html-to-rtf "Huit:Mozilla:Docs:mozilla-org:html:js:language:js20:introduction:notation.html"

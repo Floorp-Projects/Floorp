@@ -473,17 +473,18 @@
     (let* ((production-runs (gather-productions-by-highlights general-productions))
            (rule-highlight (and (endp (rest production-runs))
                                 (check-highlight (first (first production-runs)) highlights markup-stream))))
-      (depict-block-style (markup-stream rule-highlight t)
-        (depict-block-style (markup-stream :grammar-rule)
-          (if (rest general-productions)
-            (progn
-              (depict-general-production-lhs markup-stream (general-rule-lhs general-rule))
-              (dolist (production-run production-runs)
-                (depict-block-style (markup-stream (check-highlight (first production-run) highlights markup-stream) t)
-                  (dolist (p (rest production-run))
-                    (apply #'depict-general-production-rhs markup-stream p)))))
-            (depict-paragraph (markup-stream :grammar-lhs-last)
-              (depict-general-production markup-stream (first general-productions) :definition))))))))
+      (depict-division-style (markup-stream rule-highlight t)
+        (depict-division-style (markup-stream :nowrap)
+          (depict-division-style (markup-stream :grammar-rule)
+            (if (rest general-productions)
+              (progn
+                (depict-general-production-lhs markup-stream (general-rule-lhs general-rule))
+                (dolist (production-run production-runs)
+                  (depict-division-style (markup-stream (check-highlight (first production-run) highlights markup-stream) t)
+                    (dolist (p (rest production-run))
+                      (apply #'depict-general-production-rhs markup-stream p)))))
+              (depict-paragraph (markup-stream :grammar-lhs-last)
+                (depict-general-production markup-stream (first general-productions) :definition)))))))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------

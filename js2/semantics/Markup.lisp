@@ -30,6 +30,8 @@
 (defvar *markup-logical-line-width* 90) ;Approximate maximum number of characters to display on a single logical line
 (defvar *average-space-width* 2/3)      ;Width of a space as a percentage of average character width when calculating logical line widths
 
+(defvar *compact-breaks* t)             ;If true, all hard breaks are replaced by spaces and there is no indentation
+
 (defvar *external-link-base* nil)       ;URL prefix for referring to a page with external links or nil if none
 
 
@@ -231,9 +233,11 @@
 
 ; Return a freshly consed markup list for a hard line break followed by indent spaces.
 (defun hard-break-markup (indent)
-  (if (zerop indent)
-    (list :new-line)
-    (list :new-line (make-string indent :initial-element #\space :element-type #-mcl 'character #+mcl 'base-character))))
+  (cond
+   (*compact-breaks* (list :space))
+   ((zerop indent) (list :new-line))
+   (t (list :new-line (make-string indent :initial-element #\space :element-type #-mcl 'character #+mcl 'base-character)))))
+
 
 
 ; Destructively replace any soft-break that appears in a car position in the tree
@@ -258,6 +262,8 @@
   ;                                   ; A markup-stream may destructively modify any sublists of head that contain a soft-break.
   (tail nil :type list)               ;Last cons cell of the output list; new cells are added in place to this cell's cdr; nil after markup-stream is closed.
   (pretail nil :type list)            ;Tail's predecessor if tail's car is a block that can be inlined at the end of the output list; nil otherwise.
+  (logical-line-width 0 :type integer);Logical line width for the current paragraph
+  (division-length nil)               ;Number of characters in the current division block; t if more than one line; nil if not emitting division block.
   (logical-position nil :type logical-position)) ;Information about the current logical lines or nil if not emitting paragraph contents
 
 ;                                                ;RTF                     ;HTML
@@ -265,6 +271,15 @@
 (defconstant *markup-stream-section-level* 1)    ;Sections                ;(not used)
 (defconstant *markup-stream-paragraph-level* 2)  ;Paragraphs              ;Block tags
 (defconstant *markup-stream-content-level* 3)    ;Paragraph contents      ;Inline tags
+
+
+; Add additional-length to this markup-stream's division-length.  additional-length may be t, which sets
+; division-length to t.  division-length is left alone if it was nil.
+(defun increment-division-length (markup-stream additional-length)
+  (cond
+   ((not (numberp (markup-stream-division-length markup-stream))))
+   ((eq additional-length t) (setf (markup-stream-division-length markup-stream) t))
+   (t (incf (markup-stream-division-length markup-stream) additional-length))))
 
 
 ; Return the markup accumulated in the markup-stream.
@@ -289,6 +304,16 @@
   (let ((item-cons (list item)))
     (setf (cdr (markup-stream-tail markup-stream)) item-cons)
     (setf (markup-stream-tail markup-stream) item-cons)))
+
+
+; Append a list of items to the end of the markup-stream.
+; The list becomes part of the markup-stream's structure and will be mutated by subsequent operations
+; on the markup-stream.
+(defun markup-stream-append-list (markup-stream items)
+  (when items
+    (setf (markup-stream-pretail markup-stream) nil)
+    (setf (cdr (markup-stream-tail markup-stream)) items)
+    (setf (markup-stream-tail markup-stream) (last items))))
 
 
 ; Return the approximate width of the markup item; return t if it is a line break.
@@ -340,16 +365,39 @@
 
 ; markup-stream must be a variable that names a markup-stream that is currently
 ; accepting paragraphs.  Execute body with markup-stream bound to a markup-stream
-; to which the body can emit contents.  If non-null, the given block-style is applied to all
-; paragraphs emitted by body (in the HTML emitter only; RTF has no block styles).
-; If flatten is true, do not emit the style if it is already in effect from a surrounding block
+; to which the body can emit contents.  If non-null, the given division-style is applied to all
+; paragraphs emitted by body.
+; If flatten is true, do not emit the style if it is already in effect from a surrounding division
 ; or if its contents are empty.
 ; Return the result value of body.
-(defmacro depict-block-style ((markup-stream block-style &optional flatten) &body body)
-  `(depict-block-style-f ,markup-stream ,block-style ,flatten
-                         #'(lambda (,markup-stream) ,@body)))
+(defmacro depict-division-style ((markup-stream division-style &optional flatten) &body body)
+  `(depict-division-style-f ,markup-stream ,division-style ,flatten
+                            #'(lambda (,markup-stream) ,@body)))
 
-(defgeneric depict-block-style-f (markup-stream block-style flatten emitter))
+(defgeneric depict-division-style-f (markup-stream division-style flatten emitter))
+
+
+; markup-stream must be a variable that names a markup-stream that is currently
+; accepting paragraphs.  Execute body with markup-stream bound to a markup-stream
+; to which the body can emit divisions and paragraphs.  If everything the body emits
+; could fit on one line, collapse out any sub-divisions whose styles are a member of the
+; division-styles list.  The result should be zero or more paragraphs all having
+; paragraph styles that are members of the paragraph-styles list; coalesce them into a single
+; paragraph with style paragraph-style.
+; Return the result value of body.
+(defmacro depict-division-block ((markup-stream paragraph-style paragraph-styles division-styles) &body body)
+  `(depict-division-block-f ,markup-stream ,paragraph-style ,paragraph-styles ,division-styles
+                           #'(lambda (,markup-stream) ,@body)))
+
+(defgeneric depict-division-block-f (markup-stream paragraph-style paragraph-styles division-styles emitter))
+
+
+; Prevent any enclosing depict-division-block from collapsing its contents.
+(defun depict-division-break (markup-stream)
+  (assert-true (<= (markup-stream-level markup-stream) *markup-stream-paragraph-level*))
+  (when (numberp (markup-stream-division-length markup-stream))
+    (setf (markup-stream-division-length markup-stream) t)))
+
 
 
 ; markup-stream must be a variable that names a markup-stream that is currently
@@ -381,22 +429,22 @@
 (defgeneric ensure-no-enclosing-style (markup-stream style))
 
 
-; Return a value that captures the current sequence of enclosing block styles.
-(defgeneric save-block-style (markup-stream))
+; Return a value that captures the current sequence of enclosing division styles.
+(defgeneric save-division-style (markup-stream))
 
 ; markup-stream must be a variable that names a markup-stream that is currently
 ; accepting paragraphs.  Execute body with markup-stream bound to a markup-stream
-; to which the body can emit contents.  The given saved-block-style is applied to all
-; paragraphs emitted by body (in the HTML emitter only; RTF has no block styles).
-; saved-block-style should have been obtained from a past call to save-block-style.
+; to which the body can emit contents.  The given saved-division-style is applied to all
+; paragraphs emitted by body (in the HTML emitter only; RTF has no division styles).
+; saved-division-style should have been obtained from a past call to save-division-style.
 ; If flatten is true, do not emit the style if it is already in effect from a surrounding block
 ; or if its contents are empty.
 ; Return the result value of body.
-(defmacro with-saved-block-style ((markup-stream saved-block-style &optional flatten) &body body)
-  `(with-saved-block-style-f ,markup-stream ,saved-block-style ,flatten
+(defmacro with-saved-division-style ((markup-stream saved-division-style &optional flatten) &body body)
+  `(with-saved-division-style-f ,markup-stream ,saved-division-style ,flatten
      #'(lambda (,markup-stream) ,@body)))
 
-(defgeneric with-saved-block-style-f (markup-stream saved-block-style flatten emitter))
+(defgeneric with-saved-division-style-f (markup-stream saved-division-style flatten emitter))
 
 
 ; Depict an anchor.  The concatenation of link-prefix and link-name must be a string
@@ -477,7 +525,7 @@
                 (incf (logical-position-n-hard-breaks logical-position) inner-n-hard-breaks)
                 (setf (logical-position-position logical-position) inner-position)
                 (setf (logical-position-surplus logical-position) 0))))
-           ((and (zerop inner-n-hard-breaks) (<= inner-position *markup-logical-line-width*))
+           ((and (zerop inner-n-hard-breaks) (<= inner-position (markup-stream-logical-line-width markup-stream)))
             (assert-true tree)
             (remove-soft-breaks tree)
             (incf (logical-position-position logical-position) inner-count))
