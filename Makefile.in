@@ -83,7 +83,6 @@ DIRS		+= \
 		db \
 		rdf \
 		docshell \
-#		embedding \
 		webshell \
 		editor \
 		xpinstall \
