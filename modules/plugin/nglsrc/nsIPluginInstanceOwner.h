@@ -22,6 +22,8 @@
 #include "nsISupports.h"
 #include "nsplugin.h"
 
+class nsIDocument;
+
 #define NS_IPLUGININSTANCEOWNER_IID \
 { 0x18270870, 0x32f1, 0x11d2, \
 { 0xa8, 0x30, 0x00, 0x40, 0x95, 0x9a, 0x28, 0xc9 } }
@@ -83,6 +85,12 @@ public:
    */
   NS_IMETHOD
   ShowStatus(const char *aStatusMsg) = 0;
+
+  /**
+   * Get the associated document.
+   */
+  NS_IMETHOD
+  GetDocument(nsIDocument* *aDocument) = 0;
 };
 
 #endif
