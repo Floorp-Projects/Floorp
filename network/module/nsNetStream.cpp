@@ -20,6 +20,9 @@
 #include "net.h"
 #include "mktrace.h"
 
+#if defined(XP_PC)
+#include <windows.h>  // Needed for Interlocked APIs defined in nsISupports.h
+#endif /* XP_PC */
 
 /* XXX: Declare NET_PollSockets(...) for the blocking stream hack... */
 extern "C" {

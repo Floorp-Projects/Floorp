@@ -28,9 +28,14 @@
 #include "plstr.h"
 #include "prprf.h"  /* PR_snprintf(...) */
 #include "prmem.h"  /* PR_Malloc(...) / PR_Free(...) */
-#ifdef XP_MAC
+#if defined(XP_MAC)
 #include "xp_mcom.h"	/* XP_STRDUP() */
-#endif
+#endif  /* XP_MAC */
+
+#if defined(XP_PC)
+#include <windows.h>  // Needed for Interlocked APIs defined in nsISupports.h
+#endif /* XP_PC */
+
 
 class URLImpl : public nsIURL {
 public:
