@@ -3455,7 +3455,11 @@ nsGenericHTMLFrameElement::LoadSrc()
   }
 
   rv = mFrameLoader->LoadFrame();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to load URL");
+#ifdef DEBUG
+  if (NS_FAILED(rv)) {
+    NS_WARNING("failed to load URL");
+  }
+#endif
 
   return rv;
 }
