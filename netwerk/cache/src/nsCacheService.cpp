@@ -1333,7 +1333,7 @@ nsCacheService::CacheMemoryAvailable()
     if (kbytes == 0)  return 0;
     if (kbytes < 0)   kbytes = LONG_MAX; // cap overflows
 
-    double x = log(kbytes)/log(2) - 14;
+    double x = log((double)kbytes)/log((double)2) - 14;
     if (x > 0) {
         capacity    = (PRInt32)(x * x - x + 2.001); // add .001 for rounding
         capacity   *= 1024;
