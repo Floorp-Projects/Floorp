@@ -1772,7 +1772,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_GETPROP:
                 atom = GET_ATOM(cx, jp->script, pc);
                 str = ATOM_TO_STRING(atom);
-                if (IsASCIIIdentifier(str)) {
+                if (!ATOM_KEYWORD(atom) && IsASCIIIdentifier(str)) {
                     lval = POP_STR();
                     todo = Sprint(&ss->sprinter, "%s.%s",
                                   lval, JS_GetStringBytes(str));
@@ -1787,7 +1787,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 sn = js_GetSrcNote(jp->script, pc - 1);
                 atom = GET_ATOM(cx, jp->script, pc);
                 str = ATOM_TO_STRING(atom);
-                if (IsASCIIIdentifier(str)) {
+                if (!ATOM_KEYWORD(atom) && IsASCIIIdentifier(str)) {
                     rval = POP_STR();
                     lval = POP_STR();
                     xval = JS_GetStringBytes(str);
