@@ -200,7 +200,7 @@ nsRenderingContextMac::nsRenderingContextMac()
   mP2T							= 1.0f;
   mContext					= nsnull ;
 
-  mOriginalSurface	= new nsDrawingSurfaceMac();
+	mSavePort					= nsnull;
   mFrontSurface			= new nsDrawingSurfaceMac();
 
 	mCurrentSurface		= nsnull;
@@ -219,23 +219,13 @@ nsRenderingContextMac::~nsRenderingContextMac()
 {
 	// restore stuff
   NS_IF_RELEASE(mContext);
-  if (mOriginalSurface)
+  if (mSavePort)
   {
-		GrafPtr port;
-		mOriginalSurface->GetGrafPtr(&port);
-		::SetPort(port);
-
-		::SetOrigin(0,0); 		//¥TODO? Setting to 0,0 may not really reset the state properly.
-													// Maybe we should also restore the GS from mOriginalSurface.
+		::SetPort(mSavePort);
+		::SetOrigin(mSavePortRect.left, mSavePortRect.top);
 	}
 
 	// delete surfaces
-	if (mOriginalSurface)
-	{
-		delete mOriginalSurface;
-		mOriginalSurface = nsnull;
-	}
-
 	if (mFrontSurface)
 	{
 		delete mFrontSurface;
@@ -276,11 +266,6 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsIWidget*
 
   mContext = aContext;
   NS_IF_ADDREF(mContext);
- 
-	GrafPtr port;
-	mOriginalSurface->GetGrafPtr(&port);
-	if(port == nsnull)
-		mOriginalSurface->Init(aWindow);
 
  	// select the surface
 	mFrontSurface->Init(aWindow);
@@ -292,7 +277,11 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsIWidget*
 	if (children)
 	{
 		RgnHandle myRgn = ::NewRgn();
+		if (!myRgn) return NS_ERROR_OUT_OF_MEMORY;
+
 		RgnHandle childRgn = ::NewRgn();
+		if (!childRgn) return NS_ERROR_OUT_OF_MEMORY;
+
 		::CopyRgn(mGS->mMainRegion, myRgn);
 
 		children->First();
@@ -321,7 +310,6 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsIWidget*
 		::DisposeRgn(myRgn);
 		::DisposeRgn(childRgn);
 	}
-
   return result;
 }
 
@@ -332,11 +320,6 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsDrawingS
 {
   mContext = aContext;
   NS_IF_ADDREF(mContext);
-   
-	GrafPtr port;
-	mOriginalSurface->GetGrafPtr(&port);
-	if(port==nsnull)
-		mOriginalSurface->Init(aSurface);
 
 	// select the surface
 	DrawingSurface* surface = static_cast<DrawingSurface*>(aSurface);
@@ -352,11 +335,6 @@ nsresult nsRenderingContextMac::Init(nsIDeviceContext* aContext, GrafPtr aPort)
 {
   mContext = aContext;
   NS_IF_ADDREF(mContext);
- 
-	GrafPtr port;
-	mOriginalSurface->GetGrafPtr(&port);
-	if(port==nsnull)
-		mOriginalSurface->Init(aPort);
 
  	// select the surface
 	mFrontSurface->Init(aPort);
@@ -371,6 +349,13 @@ void	nsRenderingContextMac::SelectDrawingSurface(DrawingSurface* aSurface)
 {
 	if (! aSurface)
 		return;
+
+	if (!mSavePort)
+	{
+		::GetPort(&mSavePort);
+		if (mSavePort)
+			mSavePortRect = mSavePort->portRect;
+	}
 
 	mCurrentSurface = aSurface;
 	aSurface->GetGrafPtr(&mPort);
@@ -684,7 +669,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DestroyDrawingSurface(nsDrawingSurface aS
 	// delete the offscreen
 	DrawingSurface* surface = static_cast<DrawingSurface*>(aSurface);
 	GWorldPtr offscreenGWorld;
-	mOriginalSurface->GetGrafPtr(&(GrafPtr)offscreenGWorld);
+	surface->GetGrafPtr(&(GrafPtr)offscreenGWorld);
 	::UnlockPixels(::GetGWorldPixMap(offscreenGWorld));
 	::DisposeGWorld(offscreenGWorld);
 
