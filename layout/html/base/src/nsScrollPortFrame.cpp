@@ -611,9 +611,22 @@ nsScrollPortFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowSt
    nsresult rv;
 
    aSize.Clear();
- 
+
+   nsIFrame* childFrame = mFrames.FirstChild(); 
+
+   // if incremental see if the next in chain is our child. Remove it if it is
+   // and make sure we pass it down.
+   if (aReflowState.reason == eReflowReason_Incremental) 
+   {
+      nsIFrame* incrementalChild = nsnull;
+      aReflowState.reflowCommand->GetNext(incrementalChild, PR_FALSE);
+      if (incrementalChild == childFrame) {
+        aReflowState.reflowCommand->GetNext(incrementalChild);
+        mNeedsRecalc = PR_TRUE;
+      }
+   }
+
    if (mNeedsRecalc) {
-       nsIFrame* childFrame = mFrames.FirstChild(); 
         // get the size of the child. This is the min, max, preferred, and spring constant
         // it does not include its border.
         rv = GetChildBoxInfo(aPresContext, aReflowState, childFrame, mSpring);
@@ -664,6 +677,7 @@ nsScrollPortFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowSt
 nsresult
 nsScrollPortFrame::GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsBoxInfo& aSize)
 {
+
   aSize.Clear();
 
   // see if the frame has IBox interface
