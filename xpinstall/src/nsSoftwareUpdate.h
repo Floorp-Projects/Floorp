@@ -76,11 +76,12 @@ class nsSoftwareUpdate: public nsISoftwareUpdate,
         nsSoftwareUpdate();
         virtual ~nsSoftwareUpdate();
 
+        static   PRBool             mNeedCleanup;
+
     private:
         static   nsSoftwareUpdate*  mInstance;
         static   nsCOMPtr<nsIFile>  mProgramDir;
         static   char*              mLogName;
-        static   PRBool             mNeedCleanup;
 
         nsresult RunNextInstall();
         nsresult RegisterNameset();

@@ -853,9 +853,10 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
         if ( result == SUCCESS )
         {
             if ( rebootNeeded )
-            {
                 *aReturn = SaveError( REBOOT_NEEDED );
 
+            if ( nsSoftwareUpdate::mNeedCleanup )
+            {
                 // Broadcast the fact that we have an incomplete install so
                 // parts of Mozilla can take defensive action if necessary.
                 //
