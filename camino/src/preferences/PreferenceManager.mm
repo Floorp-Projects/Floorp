@@ -411,7 +411,7 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
       homepagePref = NSLocalizedStringFromTable( @"HomePageDefault", @"WebsiteDefaults", nil);
       // and let's copy this into the homepage pref if it's not bad
       if (![homepagePref isEqualToString:@"HomePageDefault"])
-        prefs->SetCharPref("browser.startup.homepage", [homepagePref cString]);
+        prefs->SetCharPref("browser.startup.homepage", [homepagePref UTF8String]);
     }
     else {
     	homepagePref = [self getMozillaPrefString:"browser.startup.homepage"];

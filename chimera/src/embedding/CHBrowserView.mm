@@ -791,7 +791,7 @@ nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
   
   nsCOMPtr<nsIURI> referrerURI;
   if ( referrer )
-    NS_NewURI(getter_AddRefs(referrerURI), [referrer cString]);
+    NS_NewURI(getter_AddRefs(referrerURI), [referrer UTF8String]);
 
   PRUint32 navFlags = nsIWebNavigation::LOAD_FLAGS_NONE;
   if (flags & NSLoadFlagsDontPutInHistory) {
@@ -1044,13 +1044,13 @@ nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
             url: (NSString*)aURLSpec suggestedFilename: (NSString*)aFilename
 {
   nsCOMPtr<nsIURI> url;
-  nsresult rv = NS_NewURI(getter_AddRefs(url), [aURLSpec cString]);
+  nsresult rv = NS_NewURI(getter_AddRefs(url), [aURLSpec UTF8String]);
   if (NS_FAILED(rv))
     return;
   
   [self saveInternal: url.get()
         withDocument: nsnull
-   suggestedFilename: [aFilename fileSystemRepresentation]
+   suggestedFilename: (([aFilename length] > 0) ? [aFilename fileSystemRepresentation] : "")
          bypassCache: YES
           filterView: aFilterView
           filterList: aFilterList];
