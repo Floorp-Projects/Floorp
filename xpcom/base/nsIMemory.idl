@@ -34,11 +34,16 @@
 
 #include "nsISupports.idl"
 
-interface nsIMemoryPressureObserver;
-
 /**
  * nsIMemory: interface to allocate and deallocate memory. Also provides
  * for notifications in low-memory situations.
+ *
+ * A client that wishes to be notified of low memory situations (for
+ * example, because the client maintains a large memory cache that
+ * could be released when memory is tight) may register with the
+ * observer service (see nsIObserverService) using the
+ * NS_MEMORY_PRESSURE_TOPIC ("memory-pressure") as the topic for
+ * observation.
  */
 [scriptable, uuid(59e7e77a-38e4-11d4-8cf5-0060b0fc14a3)]
 interface nsIMemory : nsISupports
@@ -80,24 +85,14 @@ interface nsIMemory : nsISupports
 
     /**
      * Attempts to shrink the heap.
+     * @param immediate - if true, heap minimization will occur
+     *   immediately if the call was made on the main thread. If
+     *   false, the flush will be scheduled to happen when the app is
+     *   idle.
+     * @return NS_ERROR_FAILURE if 'immediate' is set an the call
+     *   was not on the application's main thread.
      */
-    void heapMinimize();
-
-    /**
-     * Allows a memory pressure observer to be registered to provide a
-     * callback for low-memory situations, allowing unnecessary objects to
-     * be freed (e.g. flushing caches). Observers will be called either
-     * before alloc or realloc are about to return null, or when
-     * heapMinimize is called.
-     * @param obs - the observer to register
-     */
-    void registerObserver(in nsIMemoryPressureObserver obs);
-
-    /**
-     * Allows a memory pressure observer to be unregistered.
-     * @param obs - the observer to unregister
-     */
-    void unregisterObserver(in nsIMemoryPressureObserver obs);
+    void heapMinimize(in boolean immediate);
 
     /**
      * This predicate can be used to determine if we're in a low-memory
@@ -107,23 +102,29 @@ interface nsIMemory : nsISupports
     boolean isLowMemory();
 };
 
+%{C++
 /**
- * nsIMemoryPressureObserver: interface for low-memory notification.
+ * This is the topic that a memory pressure observer
+ * should use with the observer service.
  */
-[scriptable, uuid(fe6c8bd4-38e4-11d4-8cf5-0060b0fc14a3)]
-interface nsIMemoryPressureObserver : nsISupports
-{
-    const unsigned long REASON_ALLOC_FAILURE = 0;
-    const unsigned long REASON_HEAP_MINIMIZE = 1;
+#define NS_MEMORY_PRESSURE_TOPIC (NS_LITERAL_STRING("memory-pressure").get())
 
-    /**
-     * Called in response to a low-memory condition. 
-     * @param reason - either REASON_ALLOC_FAILURE when alloc or realloc 
-     *                 fails, or REASON_HEAP_MINIMIZE when heapMinimize is
-     *                 called
-     * @param requestedAmount - either the size requested by alloc or realloc,
-     *                 or 0 if heapMinimize was called
-     */
-    void flushMemory(in unsigned long reason,
-                     in size_t requestedAmount);
-};
+/**
+ * This will be passed as the extra data when the flusher
+ * is being asked to flush for low-memory conditions.
+ */
+#define NS_MEMORY_PRESSURE_LOW_MEMORY (NS_LITERAL_STRING("low-memory").get())
+
+/**
+ * This will be passed as the extra data when the flusher
+ * is being asked to flush because of a heap minimize call.
+ */
+#define NS_MEMORY_PRESSURE_HEAP_MINIMIZE (NS_LITERAL_STRING("heap-minimize").get())
+
+/**
+ * This will be passed as the extra data when the flusher
+ * has been asked to flush because a malloc() or realloc()
+ * has failed.
+ */
+#define NS_MEMORY_PRESSURE_ALLOC_FAILURE (NS_LITERAL_STRING("alloc-failure").get())
+%}

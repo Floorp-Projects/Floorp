@@ -36,6 +36,9 @@
 #include "nsIServiceManager.h"
 #include "nsIGenericFactory.h"
 #include "nsIMemory.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
+#include "nsWeakReference.h"
 #include "nsCOMPtr.h"
 #include "pratom.h"
 #include "prclist.h"
@@ -628,15 +631,18 @@ struct bundleCacheEntry_t {
 };
 
 class nsStringBundleService : public nsIStringBundleService,
-                              public nsIMemoryPressureObserver
+                              public nsIObserver,
+                              public nsSupportsWeakReference
 {
 public:
   nsStringBundleService();
   virtual ~nsStringBundleService();
 
+  nsresult Init();
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTRINGBUNDLESERVICE
-  NS_DECL_NSIMEMORYPRESSUREOBSERVER
+  NS_DECL_NSIOBSERVER
     
 private:
   nsresult getStringBundle(const char *aUrl, nsILocale* aLocale,
@@ -678,26 +684,36 @@ nsStringBundleService::nsStringBundleService() :
   NS_ASSERTION(mScratchUri, "Couldn't create scratch URI");
   mErrorService = do_GetService(kErrorServiceCID);
   NS_ASSERTION(mErrorService, "Couldn't get error service");
-
-  nsMemory::RegisterObserver(this);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsStringBundleService,
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsStringBundleService,
                               nsIStringBundleService,
-                              nsIMemoryPressureObserver)
+                              nsIObserver,
+                              nsISupportsWeakReference)
 
 nsStringBundleService::~nsStringBundleService()
 {
-  nsMemory::UnregisterObserver(this);
-  
   flushBundleCache();
   PL_FinishArenaPool(&mCacheEntryPool);
 }
 
-NS_IMETHODIMP
-nsStringBundleService::FlushMemory(PRUint32 aReason, size_t requestedAmount)
+nsresult
+nsStringBundleService::Init()
 {
-  flushBundleCache();
+  nsCOMPtr<nsIObserverService> os = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  if (os)
+    os->AddObserver(this, NS_MEMORY_PRESSURE_TOPIC);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStringBundleService::Observe(nsISupports* aSubject,
+                               const PRUnichar* aTopic,
+                               const PRUnichar* aSomeData)
+{
+  if (nsCRT::strcmp(NS_MEMORY_PRESSURE_TOPIC, aTopic) == 0)
+    flushBundleCache();
   return NS_OK;
 }
 
@@ -1001,7 +1017,7 @@ NS_NewStringBundleService(nsISupports* aOuter, const nsIID& aIID,
   return rv;                                                     
 }
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsStringBundleService)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStringBundleService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAcceptLang)
 
 static nsModuleComponentInfo components[] =

@@ -47,6 +47,8 @@
 #include "nsHTMLAtoms.h"
 #include "nsSupportsArray.h"
 #include "nsITextContent.h"
+#include "nsIMemory.h"
+#include "nsIObserverService.h"
 
 #include "nsIXBLBinding.h"
 #include "nsIXBLDocumentInfo.h"
@@ -492,7 +494,7 @@ static const char kDisableChromeCachePref[] = "nglayout.debug.disable_xul_cache"
 PRInt32 nsXBLService::kNameSpaceID_XBL;
 
 // Implement our nsISupports methods
-NS_IMPL_ISUPPORTS2(nsXBLService, nsIXBLService, nsIMemoryPressureObserver)
+NS_IMPL_ISUPPORTS3(nsXBLService, nsIXBLService, nsIObserver, nsISupportsWeakReference)
 
 // Constructors/Destructors
 nsXBLService::nsXBLService(void)
@@ -532,10 +534,6 @@ nsXBLService::nsXBLService(void)
 
     gClassTable = new nsHashtable();
 
-    // Register the first (and only) nsXBLService as a memory pressure observer
-    // so it can flush the LRU list in low-memory situations.
-    nsMemory::RegisterObserver(this);
-
     rv = nsServiceManager::GetService("@mozilla.org/rdf/xul-content-utils;1",
                                       NS_GET_IID(nsIXULContentUtils),
                                       (nsISupports**) &gXULUtils);
@@ -562,7 +560,7 @@ nsXBLService::~nsXBLService(void)
     NS_RELEASE(kInputAtom);
 
     // Walk the LRU list removing and deleting the nsXBLJSClasses.
-    FlushMemory(REASON_HEAP_MINIMIZE, 0);
+    FlushMemory();
 
     // Any straggling nsXBLJSClass instances held by unfinalized JS objects
     // created for bindings will be deleted when those objects are finalized
@@ -573,8 +571,6 @@ nsXBLService::~nsXBLService(void)
     // XBL class structs held by unfinalized JS binding objects.
     delete gClassTable;
     gClassTable = nsnull;
-
-    nsMemory::UnregisterObserver(this);
 
     if (gXULUtils) {
       nsServiceManager::ReleaseService("@mozilla.org/rdf/xul-content-utils;1", gXULUtils);
@@ -809,7 +805,16 @@ nsXBLService::GetXBLDocumentInfo(const nsCString& aURLStr, nsIContent* aBoundEle
 }
 
 NS_IMETHODIMP
-nsXBLService::FlushMemory(PRUint32 reason, size_t requestedAmount)
+nsXBLService::Observe(nsISupports* aSubject, const PRUnichar* aTopic, const PRUnichar* aSomeData)
+{
+  if (nsCRT::strcmp(aTopic, NS_MEMORY_PRESSURE_TOPIC) == 0)
+    FlushMemory();
+
+  return NS_OK;
+}
+
+nsresult
+nsXBLService::FlushMemory()
 {
   while (!JS_CLIST_IS_EMPTY(&gClassLRUList)) {
     JSCList* lru = gClassLRUList.next;
@@ -818,12 +823,6 @@ nsXBLService::FlushMemory(PRUint32 reason, size_t requestedAmount)
     JS_REMOVE_AND_INIT_LINK(lru);
     delete c;
     gClassLRUListLength--;
-
-    if (reason == REASON_ALLOC_FAILURE) {
-      if (requestedAmount <= sizeof(nsXBLJSClass))
-        break;
-      requestedAmount -= sizeof(nsXBLJSClass);
-    }
   }
   return NS_OK;
 }
@@ -1276,10 +1275,18 @@ nsXBLService::ConstructPrototypeHandlers(nsIXBLDocumentInfo* aInfo)
 nsresult
 NS_NewXBLService(nsIXBLService** aResult)
 {
-  *aResult = new nsXBLService;
-  if (!*aResult)
+  nsXBLService* result = new nsXBLService;
+  if (! result)
     return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(*aResult);
+
+  NS_ADDREF(*aResult = result);
+
+  // Register the first (and only) nsXBLService as a memory pressure observer
+  // so it can flush the LRU list in low-memory situations.
+  nsCOMPtr<nsIObserverService> os = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  if (os)
+    os->AddObserver(result, NS_MEMORY_PRESSURE_TOPIC);
+
   return NS_OK;
 }
 

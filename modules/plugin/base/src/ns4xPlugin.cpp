@@ -805,7 +805,7 @@ ns4xPlugin::_memfree (void *ptr)
 uint32 NP_EXPORT
 ns4xPlugin::_memflush(uint32 size)
 {
-    mMalloc->HeapMinimize();
+    mMalloc->HeapMinimize(PR_TRUE);
 
     return 0;
 }
