@@ -154,6 +154,33 @@ struct nsMenuEvent : public nsGUIEvent {
 };
 
 /**
+ * Event status for D&D Event
+ */
+
+enum nsDragDropEventStatus {  
+    /// The event is a enter
+  nsDragDropEventStatus_eDragEntered,            
+    /// The event is exit
+  nsDragDropEventStatus_eDragExited, 
+    /// The event is drop
+  nsDragDropEventStatus_eDrop  
+};
+
+
+/**
+ * Drag & Drop event
+ * 
+ * When this event occurs the widget field in nsGUIEvent holds the "target"
+ * for the event
+ */
+
+struct nsDragDropEvent : public nsGUIEvent {
+  nsDragDropEventStatus mType;
+  PRBool                mIsFileURL;
+  PRUnichar *           mURL;           
+};
+
+/**
  * Event Struct Types
  */
 #define NS_EVENT            1
@@ -166,6 +193,7 @@ struct nsMenuEvent : public nsGUIEvent {
 #define NS_MOUSE_EVENT      8
 #define NS_TOOLTIP_EVENT    9
 #define NS_MENU_EVENT       10
+#define NS_DRAGDROP_EVENT   11
  
  /**
  * GUI MESSAGES
