@@ -3002,14 +3002,14 @@ nsWidget::SetXICBaseFontSize(int height)
 void
 nsWidget::SetXICSpotLocation(nsPoint aPoint)
 {
-  NS_ASSERTION( (aPoint.y >0), "strange position for XIC");
-  if(aPoint.y <= 0)
-    return;
-
   if(mIMEEnable == PR_FALSE)
   {
     return;
   }
+  NS_ASSERTION( (aPoint.y >0), "strange position for XIC");
+  if(aPoint.y <= 0)
+    return;
+
   if (!mIC) GetXIC();
   if (mIC)
   {
