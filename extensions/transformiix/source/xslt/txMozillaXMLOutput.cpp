@@ -841,9 +841,15 @@ txTransformNotifier::ScriptEvaluated(nsresult aResult,
 NS_IMETHODIMP 
 txTransformNotifier::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify)
 {
-    // aSheet might not be in our list if the load was done synchronously
-    mStylesheets.RemoveObject(aSheet);
-    SignalTransformEnd();
+    // Check that the stylesheet was in the mStylesheets array, if not it is an
+    // alternate and we don't want to call SignalTransformEnd since we don't
+    // wait on alternates before calling OnTransformDone and so the load of the
+    // alternate could finish after we called OnTransformDone already.
+    // See http://bugzilla.mozilla.org/show_bug.cgi?id=215465.
+    if (mStylesheets.RemoveObject(aSheet)) {
+        SignalTransformEnd();
+    }
+
     return NS_OK;
 }
 
