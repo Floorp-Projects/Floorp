@@ -21,7 +21,31 @@
 
   Implementation for the RDF container.
 
+  Notes
+  -----
+
+  1. RDF containers are one-indexed. This means that a lot of the loops
+     that you'd normally think you'd write like this:
+
+       for (i = 0; i < count; ++i) {}
+
+     You've gotta write like this:
+
+       for (i = 1; i <= count; ++i) {}
+
+     "Sure, right, yeah, of course.", you say. Well maybe I'm just
+     thick, but it's easy to slip up.
+
+  2. The RDF:nextVal property on the container is an
+     implementation-level hack that is used to quickly compute the
+     next value for appending to the container. It will no doubt
+     become royally screwed up in the case of aggregation.
+
+  3. The RDF:nextVal property is also used to retrieve the count of
+     elements in the container.
+
  */
+
 
 #include "nsCOMPtr.h"
 #include "nsIRDFContainer.h"
@@ -62,7 +86,7 @@ private:
     RDFContainerImpl();
     virtual ~RDFContainerImpl();
 
-    nsresult Renumber(PRInt32 aStartIndex);
+    nsresult Renumber(PRInt32 aStartIndex, PRInt32 aIncrement);
     nsresult SetNextValue(PRInt32 aIndex);
     nsresult GetNextValue(nsIRDFResource** aResult);
     
@@ -143,7 +167,13 @@ RDFContainerImpl::GetCount(PRInt32 *aCount)
     nsresult rv;
 
     // Get the next value, which hangs off of the bag via the
-    // RDF:nextVal property.
+    // RDF:nextVal property. This is the _next value_ that will get
+    // assigned in a one-indexed array. So, it's actually _one more_
+    // than the actual count of elements in the container.
+    //
+    // XXX To handle aggregation, this should probably be a
+    // GetTargets() that enumerates all of the values and picks the
+    // largest one.
     nsCOMPtr<nsIRDFNode> nextValNode;
     rv = mDataSource->GetTarget(mContainer, kRDF_nextVal, PR_TRUE, getter_AddRefs(nextValNode));
     if (NS_FAILED(rv)) return rv;
@@ -161,11 +191,13 @@ RDFContainerImpl::GetCount(PRInt32 *aCount)
 
     nsAutoString nextValStr = (const PRUnichar*) s;
 
+    PRInt32 nextVal;
     PRInt32 err;
-    *aCount = nextValStr.ToInteger(&err);
+    nextVal = nextValStr.ToInteger(&err);
     if (NS_FAILED(err))
         return NS_ERROR_UNEXPECTED;
 
+    *aCount = nextVal - 1;
     return NS_OK;
 }
 
@@ -235,7 +267,7 @@ RDFContainerImpl::RemoveElement(nsIRDFNode *aElement, PRBool aRenumber)
         // Now slide the rest of the collection backwards to fill in
         // the gap. This will have the side effect of completely
         // renumber the container from index to the end.
-        rv = Renumber(index);
+        rv = Renumber(index + 1, -1);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -260,15 +292,15 @@ RDFContainerImpl::InsertElementAt(nsIRDFNode *aElement, PRInt32 aIndex, PRBool a
     rv = GetCount(&count);
     if (NS_FAILED(rv)) return rv;
 
-    NS_ASSERTION(aIndex <= count, "illegal value");
-    if (aIndex > count)
+    NS_ASSERTION(aIndex <= count + 1, "illegal value");
+    if (aIndex > count + 1)
         return NS_ERROR_ILLEGAL_VALUE;
 
     if (aRenumber) {
         // Make a hole for the element. This will have the side effect of
         // completely renumbering the container from 'aIndex' to 'count',
         // and will spew assertions.
-        rv = Renumber(aIndex);
+        rv = Renumber(aIndex, +1);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -319,7 +351,7 @@ RDFContainerImpl::RemoveElementAt(PRInt32 aIndex, PRBool aRenumber, nsIRDFNode**
             // Now slide the rest of the collection backwards to fill in
             // the gap. This will have the side effect of completely
             // renumber the container from index to the end.
-            rv = Renumber(aIndex);
+            rv = Renumber(aIndex + 1, -1);
             if (NS_FAILED(rv)) return rv;
         }
     }
@@ -467,25 +499,51 @@ NS_NewRDFContainer(nsIRDFDataSource* aDataSource,
 
 
 nsresult
-RDFContainerImpl::Renumber(PRInt32 aStartIndex)
+RDFContainerImpl::Renumber(PRInt32 aStartIndex, PRInt32 aIncrement)
 {
-    // Renumber the elements in the container
+    // Renumber the elements in the container starting with
+    // aStartIndex, updating each element's index by aIncrement. For
+    // example,
+    //
+    //   (1:a 2:b 3:c)
+    //   Renumber(2, +1);
+    //   (1:a 3:b 4:c)
+    //   Renumber(3, -1);
+    //   (1:a 2:b 3:c)
+    //
     nsresult rv;
+
+    if (! aIncrement)
+        return NS_OK;
 
     PRInt32 count;
     rv = GetCount(&count);
     if (NS_FAILED(rv)) return rv;
 
-    PRInt32 oldIndex = aStartIndex;
-    PRInt32 newIndex = aStartIndex;
-    while (oldIndex < count) {
+
+    PRInt32 i;
+    if (aIncrement < 0) {
+        i = aStartIndex;
+    }
+    else {
+        i = count; // we're one-indexed.
+    }
+
+    while ((aIncrement < 0) ? (i <= count) : (i >= aStartIndex)) {
         nsCOMPtr<nsIRDFResource> oldOrdinal;
-        rv = gRDFContainerUtils->IndexToOrdinalResource(oldIndex, getter_AddRefs(oldOrdinal));
+        rv = gRDFContainerUtils->IndexToOrdinalResource(i, getter_AddRefs(oldOrdinal));
         if (NS_FAILED(rv)) return rv;
 
-        // Because of aggregation, we need to be paranoid about
-        // the possibility that >1 element may be present per
-        // ordinal.
+        nsCOMPtr<nsIRDFResource> newOrdinal;
+        rv = gRDFContainerUtils->IndexToOrdinalResource(i + aIncrement, getter_AddRefs(newOrdinal));
+        if (NS_FAILED(rv)) return rv;
+
+        // Because of aggregation, we need to be paranoid about the
+        // possibility that >1 element may be present per ordinal. If
+        // there _is_ in fact more than one element, they'll all get
+        // assigned to the same new ordinal; i.e., we don't make any
+        // attempt to "clean up" the duplicate numbering. (Doing so
+        // would require two passes.)
         nsCOMPtr<nsISimpleEnumerator> targets;
         rv = mDataSource->GetTargets(mContainer, oldOrdinal, PR_TRUE, getter_AddRefs(targets));
         if (NS_FAILED(rv)) return rv;
@@ -510,19 +568,15 @@ RDFContainerImpl::Renumber(PRInt32 aStartIndex)
             rv = mDataSource->Unassert(mContainer, oldOrdinal, element);
             if (NS_FAILED(rv)) return rv;
 
-            nsCOMPtr<nsIRDFResource> newOrdinal;
-            rv = gRDFContainerUtils->IndexToOrdinalResource(++newIndex, getter_AddRefs(newOrdinal));
-            if (NS_FAILED(rv)) return rv;
-
             rv = mDataSource->Assert(mContainer, newOrdinal, element, PR_TRUE);
             if (NS_FAILED(rv)) return rv;
         }
 
-        ++oldIndex;
+        i -= aIncrement;
     }
 
     // Update the container's nextVal to reflect the renumbering
-    rv = SetNextValue(++newIndex);
+    rv = SetNextValue(count + aIncrement + 1);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
