@@ -53,7 +53,7 @@ XPIDLSRCS= \
 	.\nsISocketProvider.idl \
 	.\nsISocketProviderService.idl \
 	.\nsISOCKSSocketProvider.idl \
-	.\nsISOCKSSocketInfo.idl \	
+	.\nsISOCKSSocketInfo.idl \
 	$(NULL)
 
 NO_GEN_XPT=1
