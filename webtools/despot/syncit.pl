@@ -297,7 +297,7 @@ Newsgroup:</TH><TD>";
 Peers:</TH><TD>";
                 my @peerlist;
                 foreach $i (@peers) {
-                    push @peerlist, "<a href='mailto:$i'>" . pop(@peernames) . "</a>";
+                    push @peerlist, "<a href='mailto:$i'>" . shift(@peernames) . "</a>";
                 }
                 print OWNERS join(', ', @peerlist);
                 print OWNERS "</TD></TR>
