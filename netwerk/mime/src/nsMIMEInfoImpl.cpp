@@ -203,6 +203,7 @@ NS_IMETHODIMP nsMIMEInfoImpl::SetApplicationDescription(const PRUnichar * aAppli
 NS_IMETHODIMP nsMIMEInfoImpl::GetPreferredApplicationHandler(nsIFile ** aPreferredAppHandler)
 {
   *aPreferredAppHandler = mPreferredApplication;
+  NS_IF_ADDREF(*aPreferredAppHandler);
   return NS_OK;
 }
  
