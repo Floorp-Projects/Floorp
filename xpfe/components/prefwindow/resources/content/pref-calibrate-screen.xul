@@ -40,8 +40,8 @@
   <vbox align="center">
 
     <vbox id="horizRuler" width="300" height="30" style="margin: 10px; margin-bottom: 0px">
-      <hbox height="10px" style="border-bottom: 1px solid black; border-left: 1px solid black; border-right: 1px solid black;"/>
-      <hbox height="10px" style="border-top: 1px solid black; border-left: 1px solid black; border-right: 1px solid black;"/>
+      <hbox height="10" style="border-bottom: 1px solid; border-left: 1px solid; border-right: 1px solid;"/>
+      <hbox height="10" style="border-top: 1px solid; border-left: 1px solid; border-right: 1px solid;"/>
     </vbox>
 
     <hbox align="center">
