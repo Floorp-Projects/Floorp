@@ -1413,8 +1413,8 @@ NS_IMETHODIMP nsChromeRegistry::UpdateDynamicDataSource(nsIRDFDataSource *aDataS
   rv = arcs->HasMoreElements(&moreElements);
   if (NS_FAILED(rv)) return rv;
 
-  nsXPIDLCString value;
-  rv = aResource->GetValue(getter_Copies(value));
+  const char *value;
+  rv = aResource->GetValueConst(&value);
   if (NS_FAILED(rv)) return rv;
 
   while (moreElements)
@@ -1431,7 +1431,7 @@ NS_IMETHODIMP nsChromeRegistry::UpdateDynamicDataSource(nsIRDFDataSource *aDataS
       rv = literal->GetValueConst(&valueStr);
       if (NS_FAILED(rv)) return rv;
 
-      rv = WriteInfoToDataSource((const char*)value, valueStr, aIsOverlay, aUseProfile, aRemove);
+      rv = WriteInfoToDataSource(value, valueStr, aIsOverlay, aUseProfile, aRemove);
       if (NS_FAILED(rv)) return rv;
     }
     rv = arcs->HasMoreElements(&moreElements);
