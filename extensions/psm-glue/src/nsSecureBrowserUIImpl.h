@@ -84,6 +84,8 @@ protected:
 	PRBool					mIsDocumentBroken;  // 
 	PRBool					mMixContentAlertShown;
     
+    PRBool                  mInitByLocationChange;
+
     char*                   mLastPSMStatus;
     
 

@@ -187,10 +187,10 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window, nsIDOMElement *button)
 
     wp->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*,this));
 
-    // Set up stuff the first time the window loads:
-    docShell->GetCurrentURI(getter_AddRefs(mCurrentURI));
+    
+    mInitByLocationChange = PR_TRUE;
 
-    return IsURLHTTPS(mCurrentURI, &mIsSecureDocument);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -201,9 +201,11 @@ nsSecureBrowserUIImpl::DisplayPageInfoUI()
 	if (NS_FAILED(res)) 
 		return res;
     
-    nsXPIDLCString temp;
-    mCurrentURI->GetHost(getter_Copies(temp));
-    return psm->DisplaySecurityAdvisor(mLastPSMStatus, temp);
+    nsXPIDLCString host;
+    if (mCurrentURI)
+        mCurrentURI->GetHost(getter_Copies(host));
+    
+    return psm->DisplaySecurityAdvisor(mLastPSMStatus, host);
 }
 
 
@@ -409,6 +411,13 @@ NS_IMETHODIMP
 nsSecureBrowserUIImpl::OnLocationChange(nsIURI* aLocation)
 {
     mCurrentURI = aLocation;
+    
+    if (mInitByLocationChange)
+    {
+        IsURLHTTPS(mCurrentURI, &mIsSecureDocument);
+        mInitByLocationChange = PR_FALSE;
+    }
+    
     return NS_OK;
 }
 

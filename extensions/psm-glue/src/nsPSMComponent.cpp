@@ -32,6 +32,12 @@
 
 #include "nsCRT.h"
 
+#include "nsNetUtil.h"
+#include "nsIURI.h"
+#include "nsIChannel.h"
+#include "nsIInputStream.h"
+#include "nsIStreamListener.h"
+
 #include "nsIPref.h"
 #include "nsIProfile.h"
 #include "nsILocalFile.h"
@@ -114,7 +120,9 @@ nsPSMComponent::CreatePSMComponent(nsISupports* aOuter, REFNSIID aIID, void **aR
 }
 
 /* nsISupports Implementation for the class */
-NS_IMPL_THREADSAFE_ISUPPORTS1 (nsPSMComponent, nsIPSMComponent); 
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsPSMComponent, 
+                              nsIPSMComponent, 
+                              nsIContentHandler); 
 
 #define INIT_NUM_PREFS 100
 /* preference types */
@@ -586,6 +594,169 @@ nsPSMComponent::DisplaySecurityAdvisor(const char *pickledStatus, const char *ho
         return NS_OK;
     return NS_ERROR_FAILURE;
 }
+
+class CertDownloader : public nsIStreamListener
+{
+    public:
+        CertDownloader() {NS_ASSERTION(0, "don't use this constructor."); }
+        CertDownloader(PRInt32 type);
+        virtual ~CertDownloader();
+
+        NS_DECL_ISUPPORTS
+        NS_DECL_NSISTREAMOBSERVER
+        NS_DECL_NSISTREAMLISTENER
+    protected:
+        char* mByteData;
+        PRInt32 mBufferOffset;
+        PRInt32 mContentLength;
+        PRInt32 mType;
+};
+
+
+CertDownloader::CertDownloader(PRInt32 type)
+{
+    NS_INIT_REFCNT();
+    mByteData = nsnull;
+    mType = type;
+}
+
+CertDownloader::~CertDownloader()
+{
+    if (mByteData)
+        nsAllocator::Free(mByteData);
+}
+
+NS_IMPL_ISUPPORTS(CertDownloader,NS_GET_IID(nsIStreamListener));
+
+
+NS_IMETHODIMP
+CertDownloader::OnStartRequest(nsIChannel* channel, nsISupports* context)
+{
+    channel->GetContentLength(&mContentLength);
+    if (mContentLength == -1)
+        return NS_ERROR_FAILURE;
+    
+    mBufferOffset = 0;
+    mByteData = (char*) nsAllocator::Alloc(mContentLength);
+    if (!mByteData)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CertDownloader::OnDataAvailable(nsIChannel* channel, 
+                                nsISupports* context,
+                                nsIInputStream *aIStream, 
+                                PRUint32 aSourceOffset,
+                                PRUint32 aLength)
+{
+    if (!mByteData)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    PRUint32 amt;
+    nsresult err;
+
+    do 
+    {
+        err = aIStream->Read(mByteData+mBufferOffset, mContentLength-mBufferOffset, &amt);
+        if (amt == 0) break;
+        if (NS_FAILED(err))  return err;
+        
+        aLength -= amt;
+        mBufferOffset += amt;
+
+    } while (aLength > 0);
+    
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CertDownloader::OnStopRequest(nsIChannel* channel, 
+                              nsISupports* context,
+                              nsresult aStatus,
+                              const PRUnichar* aMsg)
+{
+
+    nsCOMPtr<nsIPSMComponent> psm = do_QueryInterface(context);
+
+    if (!psm) return NS_ERROR_FAILURE;
+
+    CMT_CONTROL *controlConnection;
+    psm->GetControlConnection( &controlConnection );
+    unsigned int certID;
+                    
+    certID = CMT_DecodeAndCreateTempCert(controlConnection, mByteData, mContentLength, mType);
+
+    if (certID)
+        CMT_DestroyResource(controlConnection, certID, SSM_RESTYPE_CERTIFICATE);
+
+  return NS_OK;
+}
+
+
+/* other mime types that we should handle sometime:
+
+application/x-pkcs7-crl
+application/x-pkcs7-mime
+application/pkcs7-signature
+application/pre-encrypted
+
+*/
+
+
+NS_IMETHODIMP 
+nsPSMComponent::HandleContent(const char * aContentType, 
+                              const char * aCommand, 
+                              const char * aWindowTarget, 
+                              nsISupports* aWindowContext, 
+                              nsIChannel * aChannel)
+{
+    // We were called via CI.  We better protect ourselves and addref.
+    NS_ADDREF_THIS();
+
+    nsresult rv = NS_OK;
+    if (!aChannel) return NS_ERROR_NULL_POINTER;
+    
+    CMUint32 type = -1;
+
+    if ( nsCRT::strcasecmp(aContentType, "application/x-x509-ca-cert") == 0)
+    {
+        type = 1;  //CA cert
+    }
+    else if (nsCRT::strcasecmp(aContentType, "application/x-x509-server-cert") == 0)
+    {
+        type =  2; //Server cert
+    }
+    else if (nsCRT::strcasecmp(aContentType, "application/x-x509-user-cert") == 0)
+    {
+        type =  3; //User cert
+    }
+    else if (nsCRT::strcasecmp(aContentType, "application/x-x509-email-cert") == 0)
+    {
+        type =  4; //Someone else's email cert
+    }
+    
+    if (type != -1)
+    {
+        // I can't directly open the passed channel cause it fails :-(
+
+        nsCOMPtr<nsIURI> uri;
+        rv = aChannel->GetURI(getter_AddRefs(uri));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIChannel> channel;
+        rv = NS_OpenURI(getter_AddRefs(channel), uri);
+        if (NS_FAILED(rv)) return rv;
+
+        return channel->AsyncRead(new CertDownloader(type), NS_STATIC_CAST(nsIPSMComponent*,this));
+    }
+
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 //-----------------------------------------
 // Secure Hash Functions 
