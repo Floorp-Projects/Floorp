@@ -447,8 +447,8 @@ function fillContextMenu(name)
         dump("Command #" + cmdIndex + ": id='" + cmdResource.Value + "'  name='" + cmdName + "'\n\n");
 
         var menuItem = document.createElement("menuitem");
-        menuItem.setAttribute("name", cmdName);
-        menuItem.setAttribute("onclick", "return doContextCmd('" + cmdResource.Value + "');");
+        menuItem.setAttribute("value", cmdName);
+        menuItem.setAttribute("onaction", "return doContextCmd('" + cmdResource.Value + "');");
         
         menuNode.appendChild(menuItem);
     }
