@@ -520,9 +520,24 @@ static void ConvertSingleSelector(css_node selector, css_node pseudo_element,
         XP_FREE(str1);
         break;
 
-    case NODE_SIMPLE_SELECTOR_NAME_PSEUDO_CLASS:
+     case NODE_SIMPLE_SELECTOR_NAME_PSEUDO_CLASS:
 
         /* "document.tags.<TAG> */
+#ifdef DOM
+        /*
+         * By design, leave the pseudoclass in place by generating
+         * ``document.tags["A:visited"]'' or whatever.  Never ignore
+         * the pseudoclass name because, well, duh.
+         */
+        StyleBufferWrite("document.tags[\"", 15, sb);
+        str1 = CSS_ConvertToJSCompatibleName(str1, TRUE);
+        StyleBufferWrite(str1, 0, sb);
+        XP_FREE(str1);
+        StyleBufferWrite(":", 1, sb);
+        StyleBufferWrite(str2, 0, sb);
+        StyleBufferWrite("\"].", 3, sb);
+        break;
+#else
         /* By design, prepend the pseudoclass name to the property
          * name when the property is 'color'; otherwise, ignore the
          * pseudoclass name.
@@ -533,6 +548,7 @@ static void ConvertSingleSelector(css_node selector, css_node pseudo_element,
         XP_FREE(str1);
         SaltPseudoClass(str2, sb);
         break;
+#endif
 
     case NODE_SIMPLE_SELECTOR_NAME_CLASS_PSEUDO_CLASS:
 
