@@ -50,7 +50,6 @@
         screenX="4" screenY="4"
         persist="screenX screenY width height sizemode"> 
 
-  <script type="application/x-javascript" src="chrome://global/content/nsUserSettings.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsClipboard.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
