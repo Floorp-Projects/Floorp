@@ -84,6 +84,8 @@
 #include "EmbedStream.h"
 #ifdef MOZ_WIDGET_GTK2
 #include "GtkPromptService.h"
+#else
+#include "nsNativeCharsetUtils.h"
 #endif
 
 #ifdef MOZ_ACCESSIBILITY_ATK
@@ -390,7 +392,9 @@ void
 EmbedPrivate::SetURI(const char *aURI)
 {
 #ifdef MOZ_WIDGET_GTK
-  mURI.AssignWithConversion(aURI);
+  // XXX: Even though NS_CopyNativeToUnicode is not designed for non-filenames,
+  // we know that it will do "the right thing" on UNIX.
+  NS_CopyNativeToUnicode(nsDependentCString(aURI), mURI);
 #endif
 
 #ifdef MOZ_WIDGET_GTK2

@@ -85,7 +85,7 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
   nsXPIDLCString uriString;
   RequestToURIString(aRequest, getter_Copies(uriString));
   nsString tmpString;
-  tmpString.AssignWithConversion(uriString);
+  CopyUTF8toUTF16(uriString, tmpString);
 
   // is it the same as the current URI?
   if (mOwner->mURI.Equals(tmpString))
@@ -125,7 +125,7 @@ EmbedProgress::OnProgressChange(nsIWebProgress *aWebProgress,
   RequestToURIString(aRequest, getter_Copies(uriString));
   
   nsString tmpString;
-  tmpString.AssignWithConversion(uriString);
+  CopyUTF8toUTF16(uriString, tmpString);
 
   // is it the same as the current uri?
   if (mOwner->mURI.Equals(tmpString)) {
