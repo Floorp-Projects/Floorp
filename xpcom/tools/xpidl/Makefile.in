@@ -38,10 +38,6 @@ include $(topsrcdir)/config/rules.mk
 
 CFLAGS += $(LIBIDL_CFLAGS)
 
-# Build statically, so xpidl is available during the build
-# without setting the shared library path.
-LDFLAGS += -static
-
 # Tell the $(PROGRAM) target that we need to be recompiled when libxpt changes.
 EXTRA_DEPS = $(wildcard $(DIST)/lib/libxpt.*)
 
