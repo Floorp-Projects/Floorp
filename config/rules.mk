@@ -353,6 +353,9 @@ endif
 	+$(LOOP_OVER_DIRS)
 endif
 
+checkout:
+	cd $(topsrcdir); $(MAKE) -f client.mk checkout
+
 clean clobber::
 	rm -rf $(ALL_TRASH)
 	+$(LOOP_OVER_DIRS)
@@ -913,7 +916,14 @@ dependclean::
 -include $(OBJDIR)/depend.mk
 
 endif
+#############################################################################
+# Yet another depend system: -MD
 
+MDDEPENDENCIES		:= $(OBJS:.o=.d)
+
+ifdef MDDEPENDENCIES
+-include $(MDDEPENDENCIES)
+endif
 #############################################################################
 
 -include $(MY_RULES)
@@ -956,7 +966,7 @@ endif
 # Fake targets.  Always run these rules, even if a file/directory with that
 # name already exists.
 #
-.PHONY: all all_platforms alltags boot clean clobber clobber_all export install libs realclean $(OBJDIR) $(DIRS)
+.PHONY: all all_platforms alltags boot checkout clean clobber clobber_all export install libs realclean $(OBJDIR) $(DIRS)
 
 envirocheck::
 	@echo -----------------------------------

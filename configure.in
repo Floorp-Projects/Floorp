@@ -632,6 +632,10 @@ MOZ_ARG_WITH_STRING(wrap-malloc,
 [  --with-wrap-malloc-=\$dir location of malloc wrapper library],
   WRAP_MALLOC_LIB=$withval)
 
+MOZ_ARG_ENABLE_BOOL(md,
+[  --enable-md             use compiler-based dependencies ],
+  DEPEND_CFLAGS="-MMD")
+
 AC_SUBST(MOZ_TOOLKIT)
 AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(MOZ_SECURITY)
@@ -1063,7 +1067,12 @@ dnl End of nspr tests
 dnl ========================================================
 
 dnl Echo the CFLAGS to remove extra whitespace.
-CFLAGS=`echo $WARNINGS_CFLAGS $OPTIMIZE_CFLAGS $GPROF_CFLAGS $CFLAGS`
+CFLAGS=`echo \
+	$WARNINGS_CFLAGS \
+	$OPTIMIZE_CFLAGS \
+	$GPROF_CFLAGS \
+	$DEPEND_CFLAGS \
+	$CFLAGS`
 
 dnl Support for X11 makedepend, if found on the system
 dnl ========================================================
