@@ -36,7 +36,7 @@
 console.displayUsageError =
 function con_dusage (command)
 {
-    display (command.name + " " + command.usage, MT_ERROR);
+    display (getMsg(MSN_FMT_USAGE, [command.name, command.usage]), MT_ERROR);
 }
 
 console.doCommandNext =
@@ -189,11 +189,11 @@ function con_icommand (e)
 
 console.onInputBreak =
 function cli_ibreak(e)
-{
-    var bplist = console.breakpoints.childData;
-    
+{    
     if (!e.inputData)
     {  /* if no input data, just list the breakpoints */
+        var bplist = console.breakpoints.childData;
+
         if (bplist.length == 0)
         {
             display (MSG_NO_BREAKPOINTS_SET);
@@ -209,7 +209,7 @@ function cli_ibreak(e)
         }
         return true;
     }
-        
+
     var ary = e.inputData.match(/([^\s\:]+)\:?\s*(\d+)\s*$/);
     if (!ary)
     {
@@ -225,13 +225,7 @@ function cli_ibreak(e)
     }
     
     for (var i in matchingFiles)
-    {
-        var fileName = matchingFiles[i];
-        if (getBreakpoint (fileName, ary[2]))
-            display(MSN_BP_EXISTS, [fileName, ary[2]], MT_INFO);
-        else
-            setBreakpoint (fileName, ary[2]);
-    }
+        setBreakpoint (matchingFiles[i], ary[2]);
     
     return true;
     
@@ -350,21 +344,24 @@ function cli_ifbreak(e)
 {
     if (!e.inputData)
     {  /* if no input data, just list the breakpoints */
-        if (console._futureBreaks.length == 0)
+        var bplist = console.breakpoints.childData;
+
+        if (bplist.length == 0)
         {
             display (MSG_NO_FBREAKS_SET);
             return true;
         }
-
-        display (getMsg(MSN_FBP_HEADER, console._futureBreaks.length));
-        for (var i = 0; i < console._futureBreaks.length; ++i)
+        
+        display (getMsg(MSN_FBP_HEADER, bplist.length));
+        for (var i = 0; i < bplist.length; ++i)
         {
-            var bp = console._futureBreaks[i];
-            display (getMsg(MSN_FBP_LINE, [i, bp.filePattern, bp.line]));
+            var bpr = bplist[i];
+            if (bpr.scriptMatches == 0)
+                display (getMsg(MSN_FBP_LINE, [i, bpr.fileName, bpr.line]));
         }
         return true;
     }
-        
+
     var ary = e.inputData.match(/([^\s\:]+)\:?\s*(\d+)\s*$/);
     if (!ary)
     {
@@ -372,46 +369,10 @@ function cli_ifbreak(e)
         return false;
     }
 
-    var filePattern = ary[1];
-    var line = ary[2];
-
-    if (isFutureBreakpoint (filePattern, line))
-        display(MSN_FBP_EXISTS, [filePattern, line], MT_INFO);
-    else
-    {
-        setFutureBreakpoint (filePattern, line);
-    }
+    setFutureBreakpoint (ary[1], ary[2]);
     
     return true;
     
-}
-
-console.onInputFClear =
-function cli_ifclear (e)
-{
-    var ary = e.inputData.match(/(\d+)|([^\s\:]+)\:?\s*(\d+)\s*$/);
-    if (!ary)
-    {
-        console.displayUsageError(e.commandEntry);
-        return false;
-    }
-
-    if (ary[1])
-    {
-        /* disable by breakpoint number */
-        var idx = Number(ary[1]);
-        if (!console._futureBreaks[idx])
-        {
-            display (getMsg(MSN_ERR_BP_NOINDEX, idx, MT_ERROR));
-            return false;
-        }
-        clearFutureBreakpointByNumber(idx);
-        return true;
-    }
-
-    clearFutureBreakpoint (ary[2], ary[3]);
-    
-    return true;
 }
 
 console.onInputFinish =
@@ -451,7 +412,7 @@ function cli_ihelp (e)
 
     for (var i in ary)
     {        
-        display (ary[i].name + " " + ary[i].usage, MT_USAGE);
+        display (getMsg(MSN_FMT_USAGE, [ary[i].name, ary[i].usage], MT_USAGE));
         display (ary[i].help, MT_HELP);
     }
 
@@ -510,7 +471,7 @@ function con_iscope ()
     }
     
     if (getCurrentFrame().scope.propertyCount == 0)
-        display (getMsg (MSN_NO_PROPERTIES, MSG_WORD_SCOPE + " 0"));
+        display (getMsg (MSN_NO_PROPERTIES, MSG_WORD_SCOPE));
     else
         displayProperties (getCurrentFrame().scope);
     
@@ -781,13 +742,6 @@ function con_scptsel (e)
     row.makeCurrent();
 }
 
-console.onScriptCreated =
-function con_scptcreate (script)
-{
-    //    if (script.functionName)
-    //    console._scriptsOutlinerView.setScripts(console._scripts);
-}
-
 console.onSourceClick =
 function con_sourceclick (e)
 {
@@ -876,8 +830,7 @@ function con_tabcomplete (e)
             d = new Date();
             if ((d - console._lastTabUp) <= console.prefs["input.dtab.time"])
                 display (getMsg (MSN_CMDMATCH,
-                                 [partialCommand, "[" + cmds.join(MSG_COMMASP) +
-                                  "]"]));
+                                 [partialCommand, cmds.join(MSG_COMMASP)]));
             else
                 console._lastTabUp = d;
             
