@@ -222,6 +222,18 @@ function pasteFromClipboard()
 	 case "text/calendar":
             var calendarEventArray;
             calendarEventArray = parseIcalData( data );
+            
+            //change the date of all the events to now
+            var startDate = gCalendarWindow.currentView.getNewEventDate();
+            var MinutesToAddOn = gCalendarWindow.calendarPreferences.getPref( "defaulteventlength" );
+   
+            var endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
+   
+            for( var i = 0; i < calendarEventArray.length; i++ )
+            {
+               calendarEventArray[i].start.setTime( startDate );
+               calendarEventArray[i].end.setTime( endDateTime );
+            }
             addEventsToCalendar( calendarEventArray );
             break;
 	 case "text/unicode":
@@ -237,6 +249,18 @@ function pasteFromClipboard()
             {
                var calendarEventArray;
                calendarEventArray = parseIcalData( data );
+               //change the date of all the events to now
+               var startDate = gCalendarWindow.currentView.getNewEventDate();
+               var MinutesToAddOn = gCalendarWindow.calendarPreferences.getPref( "defaulteventlength" );
+      
+               var endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
+      
+               for( var i = 0; i < calendarEventArray.length; i++ )
+               {
+                  calendarEventArray[i].start.setTime( startDate );
+                  calendarEventArray[i].end.setTime( endDateTime );
+               }
+               
                addEventsToCalendar( calendarEventArray );
             }
             break;            
