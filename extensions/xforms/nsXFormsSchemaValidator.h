@@ -44,7 +44,6 @@ class nsXFormsSchemaValidator
 public:
 
   nsXFormsSchemaValidator();
-  ~nsXFormsSchemaValidator();
 
   nsresult LoadSchema(nsISchema* aSchema);
   PRBool ValidateString(const nsAString & aValue, const nsAString & aType,
