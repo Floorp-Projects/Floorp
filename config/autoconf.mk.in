@@ -89,7 +89,6 @@ MOZ_BUILD_XPFE = @MOZ_BUILD_XPFE@
 MOZ_NATIVE_NSPR = @MOZ_NATIVE_NSPR@
 
 NECKO = @NECKO@
-TOOLBAR_DD = @TOOLBAR_DD@
 
 # Should the extra CFLAGS only be added in Makefile.ins that need them? 
 OS_CFLAGS	= @CFLAGS@
