@@ -30,7 +30,7 @@
 //-------------------------------------------------------------------------------------------------
 var UBound = 0;
 var bug = 85880;
-var summary = 'Arguments object of g(){f()} should not be null ';
+var summary = 'Arguments object of g(){f()} should not be null';
 var cnNonNull = 'Arguments != null';
 var cnNull = 'Arguments == null';
 var cnRecurse = true;
