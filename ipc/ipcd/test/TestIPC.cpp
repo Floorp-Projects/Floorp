@@ -96,7 +96,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_IPCIMESSAGEOBSERVER
 
-    myIpcMessageObserver() { NS_INIT_ISUPPORTS(); }
+    myIpcMessageObserver() {}
 };
 
 NS_IMPL_ISUPPORTS1(myIpcMessageObserver, ipcIMessageObserver)

@@ -49,8 +49,6 @@ nsScreenPh :: nsScreenPh ( ) {
   PhRid_t           rid;
   PhRegion_t        region;
   
-	NS_INIT_ISUPPORTS();
-
 	p = NULL;
 
 	/* Initialize the data members */

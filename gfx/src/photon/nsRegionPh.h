@@ -48,14 +48,12 @@ class nsRegionPh : public nsIRegion
 public:
   inline nsRegionPh()
 		{
-		NS_INIT_ISUPPORTS();
 		mRegion = NULL;
 		mRegionType = eRegionComplexity_empty;
 		}
 
   inline nsRegionPh(PhTile_t *tiles)
 		{
-		NS_INIT_ISUPPORTS();
 		mRegion = tiles; /* assume ownership */
 		mRegionType = (mRegion == NULL) ? eRegionComplexity_empty : eRegionComplexity_complex;
 		}

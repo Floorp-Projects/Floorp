@@ -69,7 +69,6 @@ protected:
 DownloadListenerFactory::DownloadListenerFactory()
 : mControllerFactory(nil)
 {
-  NS_INIT_ISUPPORTS();
   mControllerFactory = [[ChimeraDownloadControllerFactory alloc] init];
 }
 

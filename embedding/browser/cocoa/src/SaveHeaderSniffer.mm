@@ -66,7 +66,6 @@ nsHeaderSniffer::nsHeaderSniffer(nsIWebBrowserPersist* aPersist, nsIFile* aFile,
 , mFilterView(aFilterView)
 , mFilterList(aFilterList)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsHeaderSniffer::~nsHeaderSniffer()
