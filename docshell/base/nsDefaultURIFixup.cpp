@@ -26,6 +26,7 @@
 
 #include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
+#include "nsILocalFile.h"
 
 #include "nsIURIFixup.h"
 #include "nsDefaultURIFixup.h"
@@ -70,6 +71,14 @@ NS_IMETHODIMP nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, nsI
     FileURIFixup(uriString.GetUnicode(), aURI);
     if(*aURI)
         return NS_OK;
+
+#ifdef XP_PC
+    // Not a file URL, so translate '\' to '/' except for JS
+    if (!uriString.EqualsIgnoreCase("javascript:", 11))
+    {
+        uriString.ReplaceChar(PRUnichar('\\'), PRUnichar('/'));
+    }
+#endif
 
     // Just try to create an URL out of it
     NS_NewURI(aURI, uriString, nsnull);
@@ -120,9 +129,8 @@ nsresult nsDefaultURIFixup::FileURIFixup(const PRUnichar* aStringURI,
     nsAutoString uriSpecIn(aStringURI);
     nsAutoString uriSpecOut(aStringURI);
 
-    ConvertFileToStringURI(uriSpecIn, uriSpecOut);
-
-    if(0 == uriSpecOut.Find("file:", 0))
+    nsresult rv = ConvertFileToStringURI(uriSpecIn, uriSpecOut);
+    if (NS_SUCCEEDED(rv))
     {
         // if this is file url, we need to  convert the URI
         // from Unicode to the FS charset
@@ -136,37 +144,50 @@ nsresult nsDefaultURIFixup::FileURIFixup(const PRUnichar* aStringURI,
     return NS_ERROR_FAILURE;
 }
 
-#define FILE_PROTOCOL "file://"
-
 nsresult nsDefaultURIFixup::ConvertFileToStringURI(nsString& aIn,
                                                    nsString& aOut)
 {
+    PRBool attemptFixup = PR_FALSE;
+
 #ifdef XP_PC
     // Check for \ in the url-string or just a drive (PC)
     if(kNotFound != aIn.FindChar(PRUnichar('\\')) || ((aIn.Length() == 2 ) && (aIn.Last() == PRUnichar(':') || aIn.Last() == PRUnichar('|'))))
     {
+        attemptFixup = PR_TRUE;
+    }
 #elif XP_UNIX
     // Check if it starts with / or \ (UNIX)
     const PRUnichar * up = aIn.GetUnicode();
     if((PRUnichar('/') == *up) || (PRUnichar('\\') == *up))
     {
+        attemptFixup = PR_TRUE;
+    }
 #else
-    if(0) 
-    {  
-        // Do nothing (All others for now) 
+    // Do nothing (All others for now) 
 #endif
 
-#ifdef XP_PC
-        // Translate '\' to '/'
-        aOut.ReplaceChar(PRUnichar('\\'), PRUnichar('/'));
-        aOut.ReplaceChar(PRUnichar(':'), PRUnichar('|'));
-#endif
+    if (attemptFixup)
+    {
+        // Test if this is a valid path by trying to create a local file
+        // object. The URL of that is returned if successful.
 
-        // Build the file URL
-        aOut.InsertWithConversion(FILE_PROTOCOL,0);
+        // NOTE: Please be sure to check that the call to NS_NewLocalFile
+        //       rejects bad file paths when using this code on a new
+        //       platform.
+
+        nsCOMPtr<nsILocalFile> filePath;
+        nsCAutoString file; file.AssignWithConversion(aIn);
+        nsresult rv = NS_NewLocalFile(file, PR_FALSE, getter_AddRefs(filePath));
+        if (NS_SUCCEEDED(rv))
+        {
+            nsXPIDLCString fileurl;
+            filePath->GetURL(getter_Copies(fileurl));
+            aOut.AssignWithConversion(fileurl);
+            return NS_OK;
+        }
     }
 
-    return NS_OK;
+    return NS_ERROR_FAILURE;
 }
 
 
