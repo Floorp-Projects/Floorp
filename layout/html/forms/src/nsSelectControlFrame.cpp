@@ -120,6 +120,7 @@ public:
   ///XXX: End o the temporary methods
 
   virtual void MouseClicked(nsIPresContext* aPresContext);
+  virtual void ControlChanged(nsIPresContext* aPresContext);
 
   // nsIFormControLFrame
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
@@ -1022,13 +1023,18 @@ nsSelectControlFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-// Update the locally cached selection array.
-// XXX Note, this is not sufficient.  The selected state of the widget can change
-//     with mouse clicks, key presses, and focus changes.  This problem is particularly
-//     evident for combo boxes, which don't reliably receive mouseup (therefore click)
-//     We need to register this method as a "selection changed" callback.
+// Forward this on as a control changed event - this enables onChange for
+// list boxes as ControlChanged is currently only sent for combos
 void
 nsSelectControlFrame::MouseClicked(nsIPresContext* aPresContext)
+{
+  ControlChanged(aPresContext);
+}
+
+// Update the locally cached selection array.
+// If different option(s) are selected, send a DOM onChange event.
+void
+nsSelectControlFrame::ControlChanged(nsIPresContext* aPresContext)
 {
   if (!nsFormFrame::GetDisabled(this)) {
 
