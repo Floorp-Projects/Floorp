@@ -207,7 +207,7 @@ MSG_DEF(JSMSG_BAD_PROP_ID,            131, 0, JSEXN_SYNTAXERR, "invalid property
 MSG_DEF(JSMSG_RESERVED_ID,            132, 1, JSEXN_SYNTAXERR, "{0} is a reserved identifier")
 MSG_DEF(JSMSG_SYNTAX_ERROR,           133, 0, JSEXN_SYNTAXERR, "syntax error")
 MSG_DEF(JSMSG_BAD_SHARP_VAR_DEF,      134, 0, JSEXN_SYNTAXERR, "invalid sharp variable definition")
-MSG_DEF(JSMSG_BAD_PROTOTYPE,          135, 1, JSEXN_ERR, "'prototype' property of {0} is not an object")
+MSG_DEF(JSMSG_BAD_PROTOTYPE,          135, 1, JSEXN_TYPEERR,   "'prototype' property of {0} is not an object")
 MSG_DEF(JSMSG_MISSING_EXPONENT,       136, 0, JSEXN_SYNTAXERR, "missing exponent")
 MSG_DEF(JSMSG_OUT_OF_MEMORY,          137, 0, JSEXN_ERR, "out of memory")
 MSG_DEF(JSMSG_UNTERMINATED_STRING,    138, 0, JSEXN_SYNTAXERR, "unterminated string literal")
@@ -232,3 +232,4 @@ MSG_DEF(JSMSG_UNDECLARED_VAR,         156, 1, JSEXN_TYPEERR, "assignment to unde
 MSG_DEF(JSMSG_ANON_NO_RETURN_VALUE,   157, 0, JSEXN_TYPEERR, "anonymous function does not always return a value")
 MSG_DEF(JSMSG_DEPRECATED_USAGE,       158, 1, JSEXN_REFERENCEERR, "deprecated {0} usage")
 MSG_DEF(JSMSG_BAD_URI,				  159, 0, JSEXN_URIERR, "malformed URI sequence")
+MSG_DEF(JSMSG_GETTER_ONLY,			  160, 0, JSEXN_TYPEERR, "setting a property that has only a getter")
