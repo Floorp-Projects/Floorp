@@ -247,38 +247,47 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
   ProcessShortCutKeys(aKeyEvent, keyProcessed);
   if (PR_FALSE==keyProcessed)
   {
-	PRBool ctrlKey, altKey, metaKey;
-	uiEvent->GetCtrlKey(&ctrlKey);
-	uiEvent->GetAltKey(&altKey);
-	uiEvent->GetMetaKey(&metaKey);
+    PRUint32 flags;
+	  PRBool ctrlKey, altKey, metaKey;
+	  uiEvent->GetCtrlKey(&ctrlKey);
+	  uiEvent->GetAltKey(&altKey);
+	  uiEvent->GetMetaKey(&metaKey);
 
-	if (metaKey)
-		return NS_OK;	// don't consume
+	  if (metaKey)
+		  return NS_OK;	// don't consume
 
-	nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-	if (!htmlEditor) return NS_ERROR_NO_INTERFACE;
+	  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+	  if (!htmlEditor) return NS_ERROR_NO_INTERFACE;
 
-	if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)))
-	{
-		if (nsIDOMUIEvent::VK_BACK==keyCode) {
-			mEditor->DeleteSelection(nsIEditor::eDeletePrevious);
-			return NS_ERROR_BASE; // consumed
-		}	
-		if (nsIDOMUIEvent::VK_RETURN==keyCode) {
-			htmlEditor->InsertBreak();
-			return NS_ERROR_BASE; // consumed
-		}
-	}
-	
- 	if ((PR_FALSE==altKey) && (PR_FALSE==ctrlKey) &&
-			(NS_SUCCEEDED(uiEvent->GetCharCode(&character))))
- 	{
-		if (nsIDOMUIEvent::VK_TAB==character) {
-			return NS_OK; // ignore tabs here, they're handled in keyDown if at all
-		}
- 		key += character;
- 		htmlEditor->InsertText(key);
- 	}
+	  if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)))
+	  {
+		  if (nsIDOMUIEvent::VK_BACK==keyCode) {
+			  mEditor->DeleteSelection(nsIEditor::eDeletePrevious);
+			  return NS_ERROR_BASE; // consumed
+		  }	
+		  if (nsIDOMUIEvent::VK_RETURN==keyCode) 
+      {
+        mEditor->GetFlags(&flags);
+        if (!(flags & nsIHTMLEditor::eEditorSingleLineMask))
+        {
+			    htmlEditor->InsertBreak();
+			    return NS_ERROR_BASE; // consumed
+        }
+        else {
+          return NS_OK;
+        }
+		  }
+	  }
+	  
+ 	  if ((PR_FALSE==altKey) && (PR_FALSE==ctrlKey) &&
+			  (NS_SUCCEEDED(uiEvent->GetCharCode(&character))))
+ 	  {
+		  if (nsIDOMUIEvent::VK_TAB==character) {
+			  return NS_OK; // ignore tabs here, they're handled in keyDown if at all
+		  }
+ 		  key += character;
+ 		  htmlEditor->InsertText(key);
+ 	  }
 	}
 
 	return NS_ERROR_BASE; // consumed

@@ -168,7 +168,11 @@ public:
 
   /* ------------ Overrides of nsEditor interface methods -------------- */
 
+  /** prepare the editor for use */
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell, PRUint32 aFlags);
+  
+  /** we override this here to install event listeners */
+  NS_IMETHOD PostCreate();
 
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
   NS_IMETHOD SetFlags(PRUint32 aFlags);
@@ -195,6 +199,13 @@ public:
 protected:
 
   virtual void  InitRules();
+
+  /** install the event listeners for the editor 
+    * used to be part of Init, but now broken out into a separate method
+    * called by PostCreate, giving the caller the chance to interpose
+    * their own listeners before we install our own backstops.
+    */
+  NS_IMETHOD InstallEventListeners();
 
   /** returns the layout object (nsIFrame in the real world) for aNode
     * @param aNode          the content to get a frame for
