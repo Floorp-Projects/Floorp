@@ -141,7 +141,7 @@ public:
    * @param   anIndex -- new length of string
    * @return  nada
    */
-  void Truncate(PRInt32 anIndex=0);
+  void Truncate(PRUint32 anIndex=0);
 
 
   /**
@@ -443,8 +443,8 @@ public:
    * @param   various...
    * @return  this
    */
-  nsString& operator+=(const nsStr& aString){return Append(aString,aString.mLength);}
-  nsString& operator+=(const nsString& aString){return Append(aString,aString.mLength);}
+  nsString& operator+=(const nsStr& aString){return Append(aString,(PRInt32)aString.mLength);}
+  nsString& operator+=(const nsString& aString){return Append(aString,(PRInt32)aString.mLength);}
   nsString& operator+=(const char* aCString) {return Append(aCString);}
   nsString& operator+=(const char aChar) {
     return Append((PRUnichar) (unsigned char)aChar);    
@@ -461,8 +461,8 @@ public:
    *  @param   aString is the source to be appended to this
    *  @return  number of chars copied
    */
-  nsString& Append(const nsStr& aString) {return Append(aString,aString.mLength);}
-  nsString& Append(const nsString& aString) {return Append(aString,aString.mLength);}
+  nsString& Append(const nsStr& aString) {return Append(aString,(PRInt32)aString.mLength);}
+  nsString& Append(const nsString& aString) {return Append(aString,(PRInt32)aString.mLength);}
  
 
   /*
