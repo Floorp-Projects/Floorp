@@ -1269,7 +1269,14 @@ function EditorSetDefaultPrefs()
   }
 
   // doctype
-//  var doct = domdoc.implementation.createDocumentType("html", "-//W3C//DTD HTML 4.01 Transitional//EN", "");
+  var newdoctype = domdoc.implementation.createDocumentType("html", "-//W3C//DTD HTML 4.01 Transitional//EN",
+               "");
+  if (!domdoc.doctype)
+  {
+    domdoc.insertBefore(newdoctype, domdoc.firstChild);
+  }
+  else
+    dump("doctype not added");
   
   // try to get preferences service
   var prefs = null;
