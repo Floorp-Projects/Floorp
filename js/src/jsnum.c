@@ -750,6 +750,10 @@ js_ValueToInt32(JSContext *cx, jsval v, int32 *ip)
     jsdouble d;
     JSString *str;
 
+    if (JSVAL_IS_INT(v)) {
+        *ip = JSVAL_TO_INT(v);
+        return JS_TRUE;
+    }
     if (!js_ValueToNumber(cx, v, &d))
 	return JS_FALSE;
     if (JSDOUBLE_IS_NaN(d) || d <= -2147483649.0 || 2147483648.0 <= d) {
