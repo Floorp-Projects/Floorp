@@ -24,6 +24,7 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LLIBS= $(LLIBS) \
         $(DIST)\lib\xpcom.lib \
+        $(LIBNSPR) \
         $(NULL)
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
