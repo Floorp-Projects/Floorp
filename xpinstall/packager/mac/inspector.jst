@@ -6,7 +6,7 @@ var srDest = $SpaceRequired$;
 
 if (verifyDiskSpace(fProgram, srDest))
 {
-  err = addDirectory("", "$Version$", "bin", fProgram, "", true);
+  err = addDirectory("", "$Version$", "viewer", fProgram, "", true);
   logComment("addDirectory: " + err);
   
   var jarFolder = getFolder("Chrome", "inspector.jar");
