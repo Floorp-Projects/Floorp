@@ -791,7 +791,7 @@ public: /* ----- Cell Map public methods ----- */
 public:
   static nsIAtom* gColGroupAtom;
 
-private:
+protected:
   void DebugPrintCount() const; // Debugging routine
 
 // data members
