@@ -22,7 +22,11 @@ DIRS =             \
         loader \
         $(NULL)
 
+REQUIRES=xpcom string \
+	$(NULL)
+
 DEPTH=..\..\..\..
+
 include <$(DEPTH)/config/config.mak>
 
 DLLNAME=_xpcom
@@ -46,7 +50,6 @@ CPP_OBJS= \
 	.\$(OBJDIR)\PyIID.obj \
 	.\$(OBJDIR)\PyIInterfaceInfo.obj \
 	.\$(OBJDIR)\PyIInterfaceInfoManager.obj \
-	.\$(OBJDIR)\PyIServiceManager.obj \
 	.\$(OBJDIR)\PyISimpleEnumerator.obj \
 	.\$(OBJDIR)\PyISupports.obj \
 	.\$(OBJDIR)\Pyxpt_info.obj \

@@ -153,7 +153,7 @@ class _Class:
         import xpcom.client
         return xpcom.client.Component(self.contractid, _get_good_iid(iid))
     def getService(self, iid = None):
-        return _xpcom.GetGlobalServiceManager().getService(self.contractid, _get_good_iid(iid))
+        return _xpcom.GetGlobalServiceManager().getServiceByContractID(self.contractid, _get_good_iid(iid))
 
 class _Classes(_ComponentCollection):
     def __init__(self):
@@ -185,17 +185,19 @@ ID = _xpcom.IID
 # A helper to cleanup our namespace as xpcom shuts down.
 class _ShutdownObserver:
     _com_interfaces_ = interfaces.nsIObserver
-    def Observe(self, service, topic, extra):
+    def observe(self, service, topic, extra):
         global manager
         global interfaceInfoManager
         global _shutdownObserver
         manager = interfaceInfoManager = _shutdownObserver = None
         xpcom.client._shutdown()
 
-svc = _xpcom.GetGlobalServiceManager().GetService("@mozilla.org/observer-service;1", interfaces.nsIObserverService)
+svc = _xpcom.GetGlobalServiceManager().getServiceByContractID("@mozilla.org/observer-service;1", interfaces.nsIObserverService)
 # Observers will be QI'd for a weak-reference, so we must keep the
 # observer alive ourself, and must keep the COM object alive,
 # _not_ just the Python instance!!!
 _shutdownObserver = xpcom.server.WrapObject(_ShutdownObserver(), interfaces.nsIObserver)
-svc.addObserver(_shutdownObserver, "xpcom-shutdown", false)
+# Say we want a weak ref due to an assertion failing.  If this is fixed, we can pass 0,
+# and remove the lifetime hacks above!  See http://bugzilla.mozilla.org/show_bug.cgi?id=99163
+svc.addObserver(_shutdownObserver, "xpcom-shutdown", 1)
 del svc, _ShutdownObserver
