@@ -77,7 +77,7 @@ NS_COM char* nsEscape(const char * str, nsEscapeMask mask)
 {
     if(!str)
         return NULL;
-    return nsEscapeCount(str, (PRInt32)nsCRT::strlen(str), mask, NULL);
+    return nsEscapeCount(str, (PRInt32)strlen(str), mask, NULL);
 }
 
 //----------------------------------------------------------------------------------------
@@ -204,7 +204,7 @@ NS_COM PRInt32 nsUnescapeCount(char * str)
 NS_COM char *
 nsEscapeHTML(const char * string)
 {
-  char *rv = (char *) nsMemory::Alloc(nsCRT::strlen(string)*6 + 1); /* The +1 is for the trailing null! */
+  char *rv = (char *) nsMemory::Alloc(strlen(string)*6 + 1); /* The +1 is for the trailing null! */
 	char *ptr = rv;
 
 	if(rv)

@@ -551,7 +551,7 @@ nsCStringKey::nsCStringKey(const char* str, PRInt32 strLen, Ownership own)
 {
     NS_ASSERTION(mStr, "null string key");
     if (mStrLen == PRUint32(-1))
-        mStrLen = nsCRT::strlen(str);
+        mStrLen = strlen(str);
 #ifdef DEBUG
     mKeyType = CStringKey;
 #endif
@@ -607,7 +607,7 @@ nsCStringKey::nsCStringKey(nsIObjectInputStream* aStream, nsresult *aResult)
 {
     nsresult rv = aStream->ReadStringZ(&mStr);
     if (NS_SUCCEEDED(rv))
-        mStrLen = nsCRT::strlen(mStr);
+        mStrLen = strlen(mStr);
     *aResult = rv;
     MOZ_COUNT_CTOR(nsCStringKey);
 }

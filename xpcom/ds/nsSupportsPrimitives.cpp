@@ -152,7 +152,7 @@ NS_IMETHODIMP nsSupportsStringImpl::GetData(char **aData)
 
 NS_IMETHODIMP nsSupportsStringImpl::SetData(const char *aData)
 {
-    return SetDataWithLength(aData ? nsCRT::strlen(aData) : 0, aData);
+    return SetDataWithLength(aData ? strlen(aData) : 0, aData);
 }
 
 NS_IMETHODIMP nsSupportsStringImpl::ToString(char **_retval)
@@ -193,7 +193,7 @@ NS_IMETHODIMP nsSupportsStringImpl::SetDataWithLength(PRUint32 aLength,
 
 NS_IMETHODIMP nsSupportsStringImpl::AdoptData(char *aData)
 {
-    return AdoptDataWithLength(aData ? nsCRT::strlen(aData) : 0, aData);
+    return AdoptDataWithLength(aData ? strlen(aData) : 0, aData);
 }
 
 NS_IMETHODIMP nsSupportsStringImpl::AdoptDataWithLength(PRUint32 aLength,
@@ -368,7 +368,7 @@ NS_IMETHODIMP nsSupportsPRBoolImpl::ToString(char **_retval)
     NS_ASSERTION(_retval, "Bad pointer");
     const char * str = mData ? "true" : "false";
     char* result = (char*) nsMemory::Clone(str,
-                                (nsCRT::strlen(str)+1)*sizeof(char));
+                                (strlen(str)+1)*sizeof(char));
     *_retval = result;
     return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
@@ -431,7 +431,7 @@ NS_IMETHODIMP nsSupportsPRUint8Impl::ToString(char **_retval)
     PR_snprintf(buf, size, "%u", (PRUint16) mData);
 
     char* result = (char*) nsMemory::Clone(buf,
-                                (nsCRT::strlen(buf)+1)*sizeof(char));
+                                (strlen(buf)+1)*sizeof(char));
     *_retval = result;
     return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
@@ -479,7 +479,7 @@ NS_IMETHODIMP nsSupportsPRUint16Impl::ToString(char **_retval)
     PR_snprintf(buf, size, "%u", (int) mData);
 
     char* result = (char*) nsMemory::Clone(buf,
-                                (nsCRT::strlen(buf)+1)*sizeof(char));
+                                (strlen(buf)+1)*sizeof(char));
     *_retval = result;
     return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
@@ -527,7 +527,7 @@ NS_IMETHODIMP nsSupportsPRUint32Impl::ToString(char **_retval)
     PR_snprintf(buf, size, "%lu", mData);
 
     char* result = (char*) nsMemory::Clone(buf,
-                                (nsCRT::strlen(buf)+1)*sizeof(char));
+                                (strlen(buf)+1)*sizeof(char));
     *_retval = result;
     return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
@@ -575,7 +575,7 @@ NS_IMETHODIMP nsSupportsPRUint64Impl::ToString(char **_retval)
     PR_snprintf(buf, size, "%llu", mData);
 
     char* result = (char*) nsMemory::Clone(buf,
-                                (nsCRT::strlen(buf)+1)*sizeof(char));
+                                (strlen(buf)+1)*sizeof(char));
     *_retval = result;
     return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
@@ -623,7 +623,7 @@ NS_IMETHODIMP nsSupportsPRTimeImpl::ToString(char **_retval)
     PR_snprintf(buf, size, "%llu", mData);
 
     char* result = (char*) nsMemory::Clone(buf,
-                                (nsCRT::strlen(buf)+1)*sizeof(char));
+                                (strlen(buf)+1)*sizeof(char));
     *_retval = result;
     return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
@@ -719,7 +719,7 @@ NS_IMETHODIMP nsSupportsPRInt16Impl::ToString(char **_retval)
     PR_snprintf(buf, size, "%d", mData);
 
     char* result = (char*) nsMemory::Clone(buf,
-                                (nsCRT::strlen(buf)+1)*sizeof(char));
+                                (strlen(buf)+1)*sizeof(char));
     *_retval = result;
     return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
@@ -767,7 +767,7 @@ NS_IMETHODIMP nsSupportsPRInt32Impl::ToString(char **_retval)
     PR_snprintf(buf, size, "%ld", mData);
 
     char* result = (char*) nsMemory::Clone(buf,
-                                (nsCRT::strlen(buf)+1)*sizeof(char));
+                                (strlen(buf)+1)*sizeof(char));
     *_retval = result;
     return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
@@ -815,7 +815,7 @@ NS_IMETHODIMP nsSupportsPRInt64Impl::ToString(char **_retval)
     PR_snprintf(buf, size, "%lld", mData);
 
     char* result = (char*) nsMemory::Clone(buf,
-                                (nsCRT::strlen(buf)+1)*sizeof(char));
+                                (strlen(buf)+1)*sizeof(char));
     *_retval = result;
     return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
@@ -863,7 +863,7 @@ NS_IMETHODIMP nsSupportsFloatImpl::ToString(char **_retval)
     PR_snprintf(buf, size, "%f", (double) mData);
 
     char* result = (char*) nsMemory::Clone(buf,
-                                (nsCRT::strlen(buf)+1)*sizeof(char));
+                                (strlen(buf)+1)*sizeof(char));
     *_retval = result;
     return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
@@ -911,7 +911,7 @@ NS_IMETHODIMP nsSupportsDoubleImpl::ToString(char **_retval)
     PR_snprintf(buf, size, "%f", mData);
 
     char* result = (char*) nsMemory::Clone(buf,
-                                (nsCRT::strlen(buf)+1)*sizeof(char));
+                                (strlen(buf)+1)*sizeof(char));
     *_retval = result;
     return  result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  

@@ -126,7 +126,7 @@ TestPipe(nsIInputStream* in, nsIOutputStream* out)
     for (PRUint32 i = 0; i < ITERATIONS; i++) {
         PRUint32 writeCount;
         char* buf = PR_smprintf("%d %s", i, kTestPattern);
-        rv = out->Write(buf, nsCRT::strlen(buf), &writeCount);
+        rv = out->Write(buf, strlen(buf), &writeCount);
         if (gTrace) {
             printf("wrote: ");
             for (PRUint32 j = 0; j < writeCount; j++) {
@@ -237,7 +237,7 @@ TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
     for (PRUint32 i = 0; i < ITERATIONS; i++) {
         PRUint32 writeCount;
         char* buf = PR_smprintf("%d %s", i, kTestPattern);
-        PRUint32 len = nsCRT::strlen(buf);
+        PRUint32 len = strlen(buf);
         len = len * rand() / RAND_MAX;
         len = PR_MAX(1, len);
         rv = out->Write(buf, len, &writeCount);
@@ -489,7 +489,7 @@ TestChainedPipes()
     for (PRUint32 i = 0; i < ITERATIONS; i++) {
         PRUint32 writeCount;
         char* buf = PR_smprintf("%d %s", i, kTestPattern);
-        PRUint32 len = nsCRT::strlen(buf);
+        PRUint32 len = strlen(buf);
         len = len * rand() / RAND_MAX;
         len = PR_MAX(1, len);
         rv = out1->Write(buf, len, &writeCount);

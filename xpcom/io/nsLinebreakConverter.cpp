@@ -138,8 +138,8 @@ static T* ConvertBreaks(const T* inSrc, PRInt32& ioLen, const char* srcBreak, co
     return resultString;
   }
     
-  PRInt32 srcBreakLen = nsCRT::strlen(srcBreak);
-  PRInt32 destBreakLen = nsCRT::strlen(destBreak);
+  PRInt32 srcBreakLen = strlen(srcBreak);
+  PRInt32 destBreakLen = strlen(destBreak);
 
   // handle the easy case, where the string length does not change, and the
   // breaks are only 1 char long, i.e. CR <-> LF
@@ -245,7 +245,7 @@ static T* ConvertUnknownBreaks(const T* inSrc, PRInt32& ioLen, const char* destB
   const T* src = inSrc;
   const T* srcEnd = inSrc + ioLen;		// includes null, if any
   
-  PRInt32 destBreakLen = nsCRT::strlen(destBreak);
+  PRInt32 destBreakLen = strlen(destBreak);
   PRInt32 finalLen = 0;
 
   while (src < srcEnd)
@@ -332,7 +332,7 @@ char* nsLinebreakConverter::ConvertLineBreaks(const char* aSrc,
   NS_ASSERTION(aDestBreaks != eLinebreakAny, "Invalid parameter");
   if (!aSrc) return nsnull;
   
-  PRInt32 sourceLen = (aSrcLen == kIgnoreLen) ? nsCRT::strlen(aSrc) + 1 : aSrcLen;
+  PRInt32 sourceLen = (aSrcLen == kIgnoreLen) ? strlen(aSrc) + 1 : aSrcLen;
 
   char* resultString;
   if (aSrcBreaks == eLinebreakAny)
@@ -358,15 +358,15 @@ nsresult nsLinebreakConverter::ConvertLineBreaksInSitu(char **ioBuffer, ELinebre
   
   NS_ASSERTION(aDestBreaks != eLinebreakAny, "Invalid parameter");
 
-  PRInt32 sourceLen = (aSrcLen == kIgnoreLen) ? nsCRT::strlen(*ioBuffer) + 1 : aSrcLen;
+  PRInt32 sourceLen = (aSrcLen == kIgnoreLen) ? strlen(*ioBuffer) + 1 : aSrcLen;
   
   // can we convert in-place?
   const char* srcBreaks = GetLinebreakString(aSrcBreaks);
   const char* dstBreaks = GetLinebreakString(aDestBreaks);
   
   if ( (aSrcBreaks != eLinebreakAny) &&
-       (nsCRT::strlen(srcBreaks) == 1) &&
-       (nsCRT::strlen(dstBreaks) == 1) )
+       (strlen(srcBreaks) == 1) &&
+       (strlen(dstBreaks) == 1) )
   {
     ConvertBreaksInSitu(*ioBuffer, sourceLen, *srcBreaks, *dstBreaks);
     if (outLen)
@@ -433,8 +433,8 @@ nsresult nsLinebreakConverter::ConvertUnicharLineBreaksInSitu(PRUnichar **ioBuff
   const char* dstBreaks = GetLinebreakString(aDestBreaks);
   
   if ( (aSrcBreaks != eLinebreakAny) &&
-       (nsCRT::strlen(srcBreaks) == 1) &&
-       (nsCRT::strlen(dstBreaks) == 1) )
+       (strlen(srcBreaks) == 1) &&
+       (strlen(dstBreaks) == 1) )
   {
     ConvertBreaksInSitu(*ioBuffer, sourceLen, *srcBreaks, *dstBreaks);
     if (outLen)

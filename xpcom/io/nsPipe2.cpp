@@ -562,7 +562,7 @@ nsPipe::nsPipeInputStream::Search(const char *forString,
     const char* bufSeg1;
     PRUint32 bufSegLen1;
     PRUint32 segmentPos = 0;
-    PRUint32 strLen = nsCRT::strlen(forString);
+    PRUint32 strLen = strlen(forString);
 
     rv = pipe->GetReadSegment(segmentPos, &bufSeg1, &bufSegLen1);
     if (NS_FAILED(rv) || bufSegLen1 == 0) {

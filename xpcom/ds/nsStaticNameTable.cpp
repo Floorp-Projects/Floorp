@@ -74,7 +74,7 @@ nsStaticCaseInsensitiveNameTable::Init(const char* Names[], PRInt32 Count)
 
     for (PRInt32 index = 0; index < Count; ++index) {
         char*    raw = (char*) Names[index];
-        PRUint32 len = nsCRT::strlen(raw);
+        PRUint32 len = strlen(raw);
 #ifdef DEBUG
        {
        // verify invarients of contents

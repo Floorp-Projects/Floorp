@@ -1195,7 +1195,7 @@ nsVariant::SetFromString(nsDiscriminatedUnion* data, const char *aValue)
     DATA_SETTER_PROLOGUE(data);
     if(!aValue) 
         return NS_ERROR_NULL_POINTER;
-    return SetFromStringWithSize(data, nsCRT::strlen(aValue), aValue);
+    return SetFromStringWithSize(data, strlen(aValue), aValue);
 }
 /* static */ nsresult 
 nsVariant::SetFromWString(nsDiscriminatedUnion* data, const PRUnichar *aValue)

@@ -2321,9 +2321,9 @@ MakeRegistryName(const char *aDllName, const char *prefix, char **regName)
 {
     char *registryName;
 
-    PRUint32 len = nsCRT::strlen(prefix);
+    PRUint32 len = strlen(prefix);
 
-    PRUint32 registryNameLen = nsCRT::strlen(aDllName) + len;
+    PRUint32 registryNameLen = strlen(aDllName) + len;
     registryName = (char *)nsMemory::Alloc(registryNameLen + 1);
     
     // from here on it, we want len sans terminating NUL
