@@ -1569,19 +1569,27 @@ int main(int argc, char* argv[])
   setupProfilingStuff();
 #endif
     
-  NS_TIMELINE_MARK("GRE_Startup...");
-#ifdef XPCOM_GLUE
-  nsresult rv = GRE_Startup();
-#else
-  nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
-#endif
-  NS_TIMELINE_MARK("...GRE_Startup done");
 
+#ifdef XPCOM_GLUE
+  NS_TIMELINE_MARK("GRE_Startup...");
+  nsresult rv = GRE_Startup();
+  NS_TIMELINE_MARK("...GRE_Startup done");
   if (NS_FAILED(rv)) {
        // We should be displaying a dialog here with the reason why we failed.
     NS_WARNING("GRE_Startup failed");
     return 1;
   }
+#else
+  NS_TIMELINE_MARK("NS_InitXPCOM2...");
+  nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+  NS_TIMELINE_MARK("...NS_InitXPCOM2 done");
+  if (NS_FAILED(rv)) {
+    // We should be displaying a dialog here with the reason why we failed.
+    NS_WARNING("NS_InitXPCOM2 failed");
+    return 1;
+  }
+#endif
+
 
   // Try to allocate "native app support."
   // Note: this object is not released here.  It is passed to main1 which
@@ -1648,10 +1656,11 @@ int main(int argc, char* argv[])
   }
 #ifdef XPCOM_GLUE
   rv = GRE_Shutdown();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "GRE_Shutdown failed");
 #else
   rv = NS_ShutdownXPCOM(nsnull);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
 #endif
-  NS_ASSERTION(NS_SUCCEEDED(rv), "GRE_Shutdown failed");
 
   return TranslateReturnValue(mainResult);
 }
