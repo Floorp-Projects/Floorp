@@ -53,6 +53,9 @@ interface nsIWindowMediator: nsIRDFDataSource
 	*/
 	nsIDOMWindow GetWindowForResource( in wstring inResource );
 	
+	/* */
+	nsIDOMWindow ConvertISupportsToDOMWindow( in nsISupports inWindow );
+	
 	/* Add the webshellwindow to the list */
 	void RegisterWindow( in nsIWebShellWindow inWindow);
 	

@@ -50,6 +50,7 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
 static NS_DEFINE_IID(kISimpleEnumberatorIID, NS_ISIMPLEENUMERATOR_IID);
 static NS_DEFINE_CID(kRDFContainerCID,                    NS_RDFCONTAINER_CID);
+static NS_DEFINE_IID( kISimpleEnumerator, NS_ISIMPLEENUMERATOR_IID );
 static const char kURINC_WindowMediatorRoot[] = "NC:WindowMediatorRoot";
 
 
@@ -118,12 +119,12 @@ void GetWindowType( nsIWebShellWindow* inWindow, nsString& outType )
   if ( inWindow &&
   		NS_SUCCEEDED(inWindow->GetWebShell( shell ) ) )
   {
-  		nsCOMPtr<nsIDOMNode> node = GetDOMNodeFromWebShell ( shell );
+  		nsCOMPtr<nsIDOMNode> node( GetDOMNodeFromWebShell ( shell ) );
  		
 	  if (node )
 	  {
-	  	nsCOMPtr<nsIDOMElement> webshellElement  = do_QueryInterface(node);
-  		if ( webshellElement )
+	  	nsCOMPtr<nsIDOMElement> webshellElement( do_QueryInterface(node));
+  		if ( webshellElement.get() )
   			webshellElement->GetAttribute("windowtype", outType );
   	  }
   	NS_IF_RELEASE( shell );
@@ -175,6 +176,12 @@ public:
 	NS_IMETHOD UpdateWindowTimeStamp( nsIWebShellWindow* inWindow );
 	NS_IMETHOD UpdateWindowTitle( nsIWebShellWindow* inWindow , const PRUnichar* inTitle );
 	NS_IMETHOD GetWindowForResource( const PRUnichar* inResource, nsIDOMWindow** outWindow );
+
+	NS_IMETHOD ConvertISupportsToDOMWindow( nsISupports* inInterface, nsIDOMWindow** outWindow )
+	{
+		
+		return inInterface->QueryInterface(nsIDOMWindow::GetIID()  , (void**) outWindow );
+	}
 	// COM and RDF 
 	NS_DECL_ISUPPORTS	
 
@@ -326,7 +333,7 @@ private:
 	PRInt32 FindNext();
 	void WindowRemoved( PRInt32 inIndex);
 	
-	nsCOMPtr<nsWindowMediator> mWindowMediator;
+	nsWindowMediator* mWindowMediator;
 	nsString mType;
 	PRInt32 mCurrentPosition;
 };
@@ -454,10 +461,11 @@ NS_METHOD nsWindowMediator::GetEnumerator( const PRUnichar* inType, nsISimpleEnu
 		if ( outEnumerator == NULL )
 			return NS_ERROR_INVALID_ARG;
 	
-		*outEnumerator = new nsWindowEnumerator( inType, *this );
-		if (*outEnumerator )
-			return NS_OK;
-		
+		nsWindowEnumerator* enumerator = new nsWindowEnumerator( inType, *this );
+		if (enumerator )
+		{
+			return enumerator->QueryInterface( kISimpleEnumerator , (void**)outEnumerator );
+		}
 		return NS_ERROR_OUT_OF_MEMORY;
 };	
  
@@ -501,6 +509,7 @@ NS_IMETHODIMP nsWindowMediator::GetMostRecentWindow( const PRUnichar* inType, ns
 			if( NS_SUCCEEDED ( GetDOMWindow( mostRecentWindow, DOMWindow  ) ) )
 			{	
 				*outWindow = DOMWindow;
+				(*outWindow)->AddRef();
 				return NS_OK;
 			}
 			else
@@ -591,6 +600,7 @@ NS_IMETHODIMP  nsWindowMediator::GetWindowForResource( const PRUnichar* inResour
 			if( NS_SUCCEEDED ( GetDOMWindow( windowInfo->mWindow, DOMWindow  ) ) )
 			{	
 				*outWindow = DOMWindow;
+				(*outWindow)->AddRef();
 				result = NS_OK;
 			}
 			break;
@@ -812,12 +822,13 @@ nsWindowEnumerator::nsWindowEnumerator ( const PRUnichar* inTypeString, nsWindow
 {
 	NS_INIT_REFCNT();
 	mWindowMediator->AddEnumerator( this );
-	NS_ADDREF( this );
+	mWindowMediator->AddRef();
 }
 
 nsWindowEnumerator::~nsWindowEnumerator()
 {
 	mWindowMediator->RemoveEnumerator( this );
+	mWindowMediator->Release();
 }
 
 NS_IMETHODIMP nsWindowEnumerator::HasMoreElements(PRBool *retval)
@@ -835,12 +846,14 @@ NS_IMETHODIMP nsWindowEnumerator::GetNext(nsISupports **retval)
 {
 	if ( !retval )
 		return NS_ERROR_INVALID_ARG;
-		
+	*retval = NULL;
 	PRInt32 index = FindNext();
 	if ( index >= 0 )
 	{
 		nsWindowInfo* windowInfo = (nsWindowInfo*) mWindowMediator->mWindowList[index];
-		windowInfo->mWindow->QueryInterface( kISupportsIID ,(void**)retval );
+		nsCOMPtr<nsIDOMWindow> domWindow;
+		GetDOMWindow( windowInfo->mWindow, domWindow );
+		domWindow->QueryInterface( kISupportsIID ,(void**)retval );
 		
 		mCurrentPosition++;
 	}
