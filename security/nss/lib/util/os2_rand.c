@@ -38,7 +38,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
-#include <stat.h>
+#include <sys/stat.h>
 
 static BOOL clockTickTime(unsigned long *phigh, unsigned long *plow)
 {
@@ -106,6 +106,94 @@ size_t RNG_GetNoise(void *buf, size_t maxbuf)
     return n;
 }
 
+static BOOL
+EnumSystemFiles(void (*func)(char *))
+{
+    APIRET              rc;
+    ULONG               sysInfo = 0;
+    char                bootLetter[2];
+    char                sysDir[_MAX_PATH] = "";
+    char                filename[_MAX_PATH];
+    HDIR                hdir = HDIR_CREATE;
+    ULONG               numFiles = 1;
+    FILEFINDBUF3        fileBuf = {0};
+    ULONG               buflen = sizeof(FILEFINDBUF3);
+
+    if (DosQuerySysInfo(QSV_BOOT_DRIVE, QSV_BOOT_DRIVE, (PVOID)&sysInfo,
+                        sizeof(ULONG)) == NO_ERROR)
+    {
+      bootLetter[0] = sysInfo + 'A' -1;
+      strcpy(sysDir, bootLetter);
+      strcpy(sysDir+1, ":\\OS2\\");
+
+      strcpy( filename, sysDir );
+      strcat( filename, "*.*" );
+    }
+
+    rc =DosFindFirst( filename, &hdir, FILE_NORMAL, &fileBuf, buflen,
+                      &numFiles, FIL_STANDARD );
+    if( rc == NO_ERROR )
+    {
+      do {
+        // pass the full pathname to the callback
+        sprintf( filename, "%s\\%s", sysDir, fileBuf.achName );
+        (*func)(filename);
+
+        numFiles = 1;
+        rc = DosFindNext( hdir, &fileBuf, buflen, &numFiles );
+        if( rc != NO_ERROR && rc != ERROR_NO_MORE_FILES )
+          printf( "DosFindNext errod code = %d\n", rc );
+      } while ( rc == NO_ERROR );
+
+      rc = DosFindClose(hdir);
+      if( rc != NO_ERROR )
+        printf( "DosFindClose error code = %d", rc );
+    }
+    else
+      printf( "DosFindFirst error code = %d", rc );
+
+    return TRUE;
+}
+
+static int    dwNumFiles, dwReadEvery;
+
+static void
+CountFiles(char *file)
+{
+    dwNumFiles++;
+}
+
+static void
+ReadFiles(char *file)
+{
+    if ((dwNumFiles % dwReadEvery) == 0)
+        RNG_FileForRNG(file);
+
+    dwNumFiles++;
+}
+
+static void
+ReadSystemFiles()
+{
+    // first count the number of files
+    dwNumFiles = 0;
+    if (!EnumSystemFiles(CountFiles))
+        return;
+
+    RNG_RandomUpdate(&dwNumFiles, sizeof(dwNumFiles));
+
+    // now read 10 files
+    if (dwNumFiles == 0)
+        return;
+
+    dwReadEvery = dwNumFiles / 10;
+    if (dwReadEvery == 0)
+        dwReadEvery = 1;  // less than 10 files
+
+    dwNumFiles = 0;
+    EnumSystemFiles(ReadFiles);
+}
+
 void RNG_SystemInfoForRNG(void)
 {
    unsigned long *plong = 0;
@@ -113,16 +201,17 @@ void RNG_SystemInfoForRNG(void)
    PPIB ppib;
    APIRET rc = NO_ERROR;
    DATETIME dt;
-   COUNTRYCODE cc;
-   COUNTRYINFO ci;
-   unsigned long actual;
+   COUNTRYCODE cc = {0};
+   COUNTRYINFO ci = {0};
+   unsigned long actual = 0;
    char path[_MAX_PATH]="";
+   char fullpath[_MAX_PATH]="";
    unsigned long pathlength = sizeof(path);
    FSALLOCATE fsallocate;
    FILESTATUS3 fstatus;
    unsigned long defaultdrive = 0;
    unsigned long logicaldrives = 0;
-   unsigned long counter = 0;
+   unsigned long sysInfo[QSV_MAX] = {0};
    char buffer[20];
    int nBytes = 0;
 
@@ -161,11 +250,13 @@ void RNG_SystemInfoForRNG(void)
 
    /* current directory */
    rc = DosQueryCurrentDir(0, path, &pathlength);
+   strcat(fullpath, "\\");
+   strcat(fullpath, path);
    if (rc == NO_ERROR)
    {
-      RNG_RandomUpdate(path, strlen(path));
+      RNG_RandomUpdate(fullpath, strlen(fullpath));
       // path info
-      rc = DosQueryPathInfo(path, FIL_STANDARD, &fstatus, sizeof(fstatus));
+      rc = DosQueryPathInfo(fullpath, FIL_STANDARD, &fstatus, sizeof(fstatus));
       if (rc == NO_ERROR)
       {
          RNG_RandomUpdate(&fstatus, sizeof(fstatus));
@@ -188,11 +279,14 @@ void RNG_SystemInfoForRNG(void)
    }
 
    /* system info */
-   rc = DosQuerySysInfo(QSV_MS_COUNT, QSV_MS_COUNT, &counter, sizeof(counter));
+   rc = DosQuerySysInfo(1L, QSV_MAX, (PVOID)&sysInfo, sizeof(ULONG)*QSV_MAX);
    if (rc == NO_ERROR)
    {
-      RNG_RandomUpdate(&counter, sizeof(counter));
+      RNG_RandomUpdate(&sysInfo, sizeof(sysInfo));
    }
+
+   // now let's do some files
+   ReadSystemFiles();
 
    /* more noise */
    nBytes = RNG_GetNoise(buffer, sizeof(buffer));
