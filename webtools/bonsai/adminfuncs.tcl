@@ -58,7 +58,12 @@ proc MakeHookList {} {
         set people($info(person)) 1
     }
 
-    return [lsort [array names people]]
+    set addrs {}
+    foreach i [array names people] {
+        lappend addrs [EmailFromUsername $i]
+    }
+
+    return $addrs
 }
    
 
