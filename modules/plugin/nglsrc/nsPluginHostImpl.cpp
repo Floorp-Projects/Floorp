@@ -2200,6 +2200,15 @@ nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURI* aURL,
 void nsPluginHostImpl::AddInstanceToActiveList(nsIPluginInstance* aInstance, 
                                                nsIURI* aURL)
 {
+
+  // first, determine if the plugin wants to be cached
+  PRBool doCache = PR_TRUE;
+  aInstance->GetValue(nsPluginInstanceVariable_DoCacheBool, 
+                      (void *) &doCache);
+  if (!doCache) {
+    return;
+  }
+  
   char* url;
 
   if(!aURL)

@@ -328,8 +328,32 @@ nsObjectFrame::Destroy(nsIPresContext* aPresContext)
     nsIPluginInstance *inst;
     if(NS_OK == mInstanceOwner->GetInstance(inst))
     {
-      inst->SetWindow(nsnull);
-      inst->Stop();
+      PRBool doCache = PR_TRUE;
+      PRBool doCallSetWindowAfterDestroy = PR_FALSE;
+
+      // first, determine if the plugin wants to be cached
+      inst->GetValue(nsPluginInstanceVariable_DoCacheBool, 
+                     (void *) &doCache);
+      if (!doCache) {
+        // then determine if the plugin wants Destroy to be called after
+        // Set Window.  This is for bug 50547.
+        inst->GetValue(nsPluginInstanceVariable_CallSetWindowAfterDestroyBool, 
+                       (void *) &doCallSetWindowAfterDestroy);
+        if (doCallSetWindowAfterDestroy) {
+          inst->Stop();
+          inst->Destroy();
+          inst->SetWindow(nsnull);
+        }
+        else {
+          inst->SetWindow(nsnull);
+          inst->Stop();
+          inst->Destroy();
+        }
+      }
+      else {
+        inst->SetWindow(nsnull);
+        inst->Stop();
+      }
       NS_RELEASE(inst);
     }
   }
