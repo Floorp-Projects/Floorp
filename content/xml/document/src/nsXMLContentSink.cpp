@@ -605,7 +605,7 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
     }
 
     nsCOMPtr<nsIHTMLContent> htmlContent;
-    result = NS_CreateHTMLElement(getter_AddRefs(htmlContent), nodeInfo);
+    result = NS_CreateHTMLElement(getter_AddRefs(htmlContent), nodeInfo, PR_TRUE);
     content = do_QueryInterface(htmlContent);
 
     if (tagAtom.get() == nsHTMLAtoms::textarea) {

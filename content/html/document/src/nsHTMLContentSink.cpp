@@ -830,7 +830,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
 nsresult
-NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
+NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo, PRBool aCaseSensitive)
 {
   nsresult rv = NS_OK;
 
@@ -855,11 +855,18 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
       // Create atom for tag and then create content object
       rv = parserService->HTMLIdToStringTag(id, tag);
     }
-    nsCOMPtr<nsIAtom> atom(dont_AddRef(NS_NewAtom(tag.GetUnicode())));
-    nsCOMPtr<nsINodeInfo> newName;
-    aNodeInfo->NameChanged(atom, *getter_AddRefs(newName));
 
-    rv = MakeContentObject(nsHTMLTag(id), newName, nsnull, nsnull, aResult);
+    if (aCaseSensitive && tag != tmpName) 
+    {
+      rv = MakeContentObject(eHTMLTag_unknown, aNodeInfo, nsnull, nsnull, aResult);      
+    }
+    else {
+      nsCOMPtr<nsIAtom> atom(dont_AddRef(NS_NewAtom(tag.GetUnicode())));
+      nsCOMPtr<nsINodeInfo> newName;
+      aNodeInfo->NameChanged(atom, *getter_AddRefs(newName));
+
+      rv = MakeContentObject(nsHTMLTag(id), newName, nsnull, nsnull, aResult);
+    }
   }
 
   return rv;
