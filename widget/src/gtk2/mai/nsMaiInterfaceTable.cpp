@@ -344,7 +344,7 @@ MaiInterfaceTable::GetSummary()
 gint
 MaiInterfaceTable::GetSelectedColumns(gint **aSelected)
 {
-    MAI_IFACE_RETURN_VAL_IF_FAIL(accessIface, NULL);
+    MAI_IFACE_RETURN_VAL_IF_FAIL(accessIface, 0);
 
     PRUint32 size = 0;
     PRInt32 *columns = NULL;
@@ -358,7 +358,7 @@ MaiInterfaceTable::GetSelectedColumns(gint **aSelected)
     NS_ASSERTION(atkColumns, "Fail to get memory for columns");
 
     //copy
-    for (int index = 0; index < size; ++index)
+    for (PRUint32 index = 0; index < size; ++index)
         atkColumns[index] = NS_STATIC_CAST(gint, columns[index]);
     nsMemory::Free(columns);
 
@@ -369,7 +369,7 @@ MaiInterfaceTable::GetSelectedColumns(gint **aSelected)
 gint
 MaiInterfaceTable::GetSelectedRows(gint **aSelected)
 {
-    MAI_IFACE_RETURN_VAL_IF_FAIL(accessIface, NULL);
+    MAI_IFACE_RETURN_VAL_IF_FAIL(accessIface, 0);
 
     PRUint32 size = 0;
     PRInt32 *rows = NULL;
@@ -383,7 +383,7 @@ MaiInterfaceTable::GetSelectedRows(gint **aSelected)
     NS_ASSERTION(atkRows, "Fail to get memory for rows");
 
     //copy
-    for (int index = 0; index < size; ++index)
+    for (PRUint32 index = 0; index < size; ++index)
         atkRows[index] = NS_STATIC_CAST(gint, rows[index]);
     nsMemory::Free(rows);
 

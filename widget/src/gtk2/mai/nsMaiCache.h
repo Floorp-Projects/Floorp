@@ -42,13 +42,21 @@
 #ifndef __MAI_CACHE_H__
 #define __MAI_CACHE_H__
 
+#include "plhash.h"
 #include "nsMaiObject.h"
 
-struct MaiCacheItem
-{
-    guint uid;
-    MaiObject *maiObject;
-};
+////////////////////////////////////////////////////////////////
+// Class MaiCache
+// ----------------------
+//
+// MaiCache keeps some maiObjects in memory for a longer time
+// when they are going to be released in the normal case (no cache)
+// For this aim, MaiCache increases the maiobject refcount by one,
+// thus the maiobject will reside in memory at least when MaiCache
+// releases it.
+// The cached maiobjects are not needed to be saved in cache, they are
+// in hash table. MaiCache only saves the IDs of cached objects.
+//////////////////////////////////////////////////////////////////
 
 class MaiCache
 {
@@ -56,17 +64,29 @@ public:
     MaiCache();
     ~MaiCache();
 
-    gboolean Add(MaiObject *aMaiObj);
-    gboolean Remove(MaiObject *aMaiObj);
-    MaiObject *Fetch(guint uid);
-    MaiObject *Fetch(MaiObject *aMaiObj);
-    MaiObject *Fetch(nsIAccessible *aAccess);
-    MaiObject *Fetch(AtkObject *aAtkObj);
-
+    PRBool Add(MaiObject *aMaiObj);
 private:
     enum { MAI_CACHE_SIZE = 10 };
-    MaiCacheItem mCache [MAI_CACHE_SIZE];
+    guint mCache[MAI_CACHE_SIZE];
     gint mCacheIndex;
+};
+
+class MaiHashTable
+{
+public:
+    MaiHashTable() {}
+    ~MaiHashTable() {}
+public:
+    static PRBool Init(void);
+    static void Destroy(void);
+
+    static PRBool Add(MaiObject *);
+    static PRBool Remove(MaiObject *);
+    static MaiObject *Lookup(guint uid);
+    static MaiObject *Lookup(nsIAccessible *aAcc);
+private:
+    static PLHashTable *mMaiObjectHashTable;
+    static PRBool mInitialized;
 };
 
 #endif   /* __MAI_CACHE_H__ */

@@ -156,8 +156,7 @@ MaiHyperlink::GetObject(gint aLinkIndex)
     if (NS_FAILED(rv) || !accObj)
         return NULL;
 
-    /* ??? when the new one get freed? */
-    MaiWidget *maiObj = new MaiWidget(accObj);
+    MaiWidget *maiObj = MaiWidget::CreateAndCache(accObj);
     return maiObj;
 }
 

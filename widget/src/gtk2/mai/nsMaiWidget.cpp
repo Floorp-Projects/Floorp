@@ -60,6 +60,7 @@
 #include "nsMaiInterfaceValue.h"
 
 #include "nsMaiUtil.h"
+#include "nsMaiCache.h"
 
 G_BEGIN_DECLS
 
@@ -120,6 +121,69 @@ MaiWidget::~MaiWidget()
     g_hash_table_destroy(mChildren);
 }
 
+///////////////////////////////////////////////////////////////////////
+// MaiWidget *
+// MaiWidget::Create(nsIAccessible *aAcc)
+//-------------------------------------------------------------------
+//
+// This method return a maiWidget for |aAcc|. If There is a maiWidget whose
+// ID is same with |aAcc|, the old one is returned and |aAcc| is discarded.
+// Otherwise, a new MaiWidget is created and returned, which will ADDREF
+// |aAcc|. In both cases, the atkObject for the maiWidget returned has been
+// addrefed. That is to say, a the refcount of the gobject is one for a new
+// created maiWidget, or increased by one for a already existing maiWidget.
+// The caller is REQUIRED to release the refcount.
+//
+// **Note**
+// Any active mai object is saved in the MaiHashTable, until it is deleted.
+// An Mai Object can only be deleted when its atk object refcount reachs
+// zero.
+
+MaiWidget *
+MaiWidget::Create(nsIAccessible *aAcc)
+{
+    if (!aAcc)
+        return NULL;
+
+    MaiWidget *maiWidget = NS_REINTERPRET_CAST(MaiWidget *,
+                                               MaiHashTable::Lookup(aAcc));
+    if (!maiWidget) {
+        //atkObject born with refcount=1, no need to addref it.
+        maiWidget = new MaiWidget(aAcc);
+        NS_ASSERTION(maiWidget, "Fail to create Object\n");
+        MaiHashTable::Add(maiWidget);
+    }
+    else {
+        MAI_LOG_DEBUG(("find maiWidget=0x%x in hash table for uid=0x%x\n",
+                       (guint)maiWidget, ::GetNSAccessibleUniqueID(aAcc)));
+        g_object_ref(maiWidget->GetAtkObject());
+    }
+    return maiWidget;
+}
+
+/*static*/
+//////////////////////////////////////////////////////////////////////
+// MaiWidget *
+// MaiWidget::CreateAndCache(nsIAccessible *aAcc);
+//
+// this function will call MaiWidget::Create, and cache the result.
+////////////////////////////////////////////////////////////////////////
+MaiWidget *
+MaiWidget::CreateAndCache(nsIAccessible *aAcc)
+{
+    if (!aAcc)
+        return NULL;
+
+    MaiCache *maiCache = mai_get_cache();
+    if (!maiCache)
+        return NULL;
+
+    //create one, and cache it.
+    MaiWidget *retWidget = MaiWidget::Create(aAcc);
+    maiCache->Add(retWidget);
+    return retWidget;
+}
+
 #ifdef MAI_LOGGING
 void
 MaiWidget::DumpMaiObjectInfo(gint aDepth)
@@ -167,61 +231,12 @@ MaiWidget::GetMaiInterface(MaiInterfaceType aIfaceType)
     return mMaiInterface[aIfaceType];
 }
 
-/*static*/
-//////////////////////////////////////////////////////////////////////
-// MaiWidget *
-// MaiWidget::CreateAndCache(nsIAccessible *aAcc);
-//
-// A helper to create a new MaiWidget and cache it.
-//-------------------------------------------------------------------
-// This Method gets a cached MaiWidget for the nsIAccessible, create one
-// if needed and cache it. Only when create a new MaiWidget, |aAcc| will
-// be addrefed.
-//
-// **Note**
-// The returned cached MaiWidget object is NOT guaranteed to be there when
-// you fetch it next time. Accordingly, DO NOT keep the returned pointer
-// and use it later. Typically, you pass the result of this method to a
-// callback.
-// If it is really needed to keep the result for later use, please use
-//    g_object_ref(maiWidget->GetAtkObject());
-// to ensure the |maiWidget| pointer is still valid, even when the MaiWidget
-// is removed from the cache. And when you do not need it, you have to use:
-//    g_object_unref(maiWidget->GetAtkObject());
-// to release your reference.
-////////////////////////////////////////////////////////////////////////
-MaiWidget *
-MaiWidget::CreateAndCache(nsIAccessible *aAcc)
-{
-    if (!aAcc)
-        return NULL;
-
-    MaiCache *maiCache = mai_get_cache();
-    if (!maiCache)
-        return NULL;
-
-    MaiWidget *retWidget = NS_STATIC_CAST(MaiWidget*, maiCache->Fetch(aAcc));
-    //there is a maiWidget in cache for the nsIAccessible already.
-    if (retWidget)
-        return retWidget;
-
-    //create one, and cache it.
-    retWidget = new MaiWidget(aAcc);
-    NS_ASSERTION(retWidget, "Fail to create mai object");
-
-    maiCache->Add(retWidget);
-    //cache should have add ref, release ours
-    g_object_unref(retWidget->GetAtkObject());
-
-    return retWidget;
-}
-
 void
 MaiWidget::ChildrenChange(AtkChildrenChange *event)
 {
     MaiWidget *maiChild;
     if (event && event->child &&
-        (maiChild = CreateAndCache(event->child))) {
+        (maiChild = Create(event->child))) {
         //update the specified child, but now use the easiest way.
         g_hash_table_destroy(mChildren);
         mChildren = g_hash_table_new(g_direct_hash, NULL);
@@ -407,7 +422,7 @@ MaiWidget::GetParent(void)
         return NULL;
 
     /* create a maiWidget for parent */
-    return CreateAndCache(accParent);
+    return Create(accParent);
 }
 
 gint
@@ -430,16 +445,19 @@ MaiWidget::RefChild(gint aChildIndex)
 
     MaiObject *maiChild = NULL;
     guint uid;
-    // look in cache first
-    MaiCache *maiCache = mai_get_cache();
-    if (maiCache) {
-        uid = GetChildUniqueID(aChildIndex);
-        if (uid > 0 && (maiChild = maiCache->Fetch(uid))) {
-            MAI_LOG_DEBUG(("got child 0x%x from cache\n", (guint)maiChild));
-            return maiChild;
-        }
+
+    // look in hashtable first
+    uid = GetChildUniqueID(aChildIndex);
+    if (uid > 0 && (maiChild = MaiHashTable::Lookup(uid))) {
+        MAI_LOG_DEBUG(("got child 0x%x from hash table\n", (guint)maiChild));
+        g_object_ref(maiChild->GetAtkObject());
+
+        //this will addref parent
+        atk_object_set_parent(maiChild->GetAtkObject(), GetAtkObject());
+        return maiChild;
     }
-    // :( not cached yet, get and cache it is possible
+
+    // :( not in child list or hash table yet
     // nsIAccessible child index starts with 1
     gint accChildIndex = 1;
     nsCOMPtr<nsIAccessible> accChild = NULL;
@@ -459,16 +477,12 @@ MaiWidget::RefChild(gint aChildIndex)
     // user, since they point to the same dom node.
     // So, maybe the it has been cached.
     uid = ::GetNSAccessibleUniqueID(accChild);
-    g_return_val_if_fail(uid != 0, NULL);
-    if (maiCache)
-        maiChild = maiCache->Fetch(uid);
-
-    // not cached, create one
-    if (!maiChild) {
-        maiChild = CreateAndCache(accChild);
-    }
     // update children uid list
     SetChildUniqueID(aChildIndex, uid);
+    maiChild = Create(accChild);
+
+    //this will addref parent
+    atk_object_set_parent(maiChild->GetAtkObject(), GetAtkObject());
     return maiChild;
 }
 
@@ -552,7 +566,7 @@ MaiWidget::SetChildUniqueID(gint aChildIndex, guint aChildUid)
 void
 classInitCB(AtkObjectClass *aClass)
 {
-    GObjectClass *gobject_class = G_OBJECT_CLASS(aClass);
+    //    GObjectClass *gobject_class = G_OBJECT_CLASS(aClass);
 
     parent_class = g_type_class_peek_parent(aClass);
 

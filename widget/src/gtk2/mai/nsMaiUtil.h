@@ -77,7 +77,7 @@ struct _MaiUtilClass
 };
 
 #define MAI_VERSION "0.0.6"
-#define MAI_NAME "MAI-Mozilla Atk Interface"
+#define MAI_NAME "mozilla"
 
 MaiAppRoot *mai_get_root(void);
 MaiCache *mai_get_cache(void);

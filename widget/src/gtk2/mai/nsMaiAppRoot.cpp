@@ -41,15 +41,13 @@
 
 #include "nsIAccessible.h"
 #include "nsCOMPtr.h"
-
+#include "nsMaiCache.h"
 #include "nsMaiAppRoot.h"
 
 MaiAppRoot::MaiAppRoot()
 {
     /* for mai root, mAccessible is always NULL */
     mTopLevelList = NULL;
-    mMaiCache = new MaiCache();
-    NS_ASSERTION(mMaiCache, "Fail to create MaiCache");
 }
 
 MaiAppRoot::~MaiAppRoot()
@@ -59,23 +57,23 @@ MaiAppRoot::~MaiAppRoot()
     if (mTopLevelList) {
         GList *tmp_list1, *tmp_list2;
         MaiTopLevel *maiTopLevel;
+        guint uid;
 
         tmp_list1 = tmp_list2 = mTopLevelList;
         mTopLevelList = NULL;
 
+#ifdef MAI_LOGGING
         while (tmp_list1) {
-            maiTopLevel = ((TopLevelItem*)tmp_list1->data)->maiTopLevel;
+            uid = (guint)tmp_list1->data;
+            maiTopLevel = (MaiTopLevel *) MaiHashTable::Lookup(uid);
+            if (maiTopLevel)
+                MAI_LOG_DEBUG(("##toplevel=0x%x (uid=0x%x) still exist !\n",
+                               (guint)maiTopLevel, uid));
             tmp_list1 = tmp_list1->next;
-
-            g_object_unref(maiTopLevel->GetAtkObject());
         }
-        g_list_free(tmp_list2);
-        mTopLevelList = NULL;
-    }
+#endif /* #ifdef MAI_LOGGING */
 
-    if (mMaiCache) {
-        delete mMaiCache;
-        mMaiCache = NULL;
+        g_list_free(tmp_list2);
     }
 }
 
@@ -116,107 +114,50 @@ MaiAppRoot::GetNSAccessibleUniqueID()
     return 1;
 }
 
-gboolean
+PRBool
 MaiAppRoot::AddMaiTopLevel(MaiTopLevel *aTopLevel)
 {
     g_return_val_if_fail(aTopLevel != NULL, FALSE);
     MAI_LOG_DEBUG(("MaiAppRoot: add MaiTopLevel = 0x%x", (guint)aTopLevel));
 
-    /* if the nsIAccessible with the same UniqueID is already added,
-     * we only increase the count of this item in the list.
-     * They are same.
-     */
-
-    TopLevelItem *item = FindTopLevelItem(aTopLevel->GetNSAccessible());
-
-    if (!item) {
-        MAI_LOG_DEBUG(("MaiAppRoot: new item created\n"));
-        item = new TopLevelItem();
-        NS_ASSERTION(item, "Fail to create TopLevelItem");
-        item->ref = 0;
-        item->maiTopLevel = aTopLevel;
-
-        mTopLevelList = g_list_append(mTopLevelList, item);
-        AtkObject *atkObject = aTopLevel->GetAtkObject();
-        if (atkObject) {
-            atk_object_set_parent(atkObject, GetAtkObject());
-            g_object_ref(atkObject);
-        }
-    }
-    item->ref++;
-    MAI_LOG_DEBUG(("MaiAppRoot: item ref = %d\n", item->ref));
-
-    return TRUE;
-}
-
-gboolean
-MaiAppRoot::RemoveMaiTopLevel(MaiTopLevel *aTopLevel)
-{
-    g_return_val_if_fail(aTopLevel != NULL, TRUE);
-    MAI_LOG_DEBUG(("MaiAppRoot: remove MaiTopLevel = 0x%x", (guint)aTopLevel));
-
-    TopLevelItem *item = FindTopLevelItem(aTopLevel->GetNSAccessible());
-    if (!item)
-        return FALSE;
-    item->ref--;
-    MAI_LOG_DEBUG(("MaiAppRoot: item ref = %d\n", item->ref));
-    if (item->ref == 0) {
-        mTopLevelList = g_list_remove(mTopLevelList, item);
-        g_object_unref(item->maiTopLevel->GetAtkObject());
-        delete item;
-        MAI_LOG_DEBUG(("MaiAppRoot: Toplevel deleted\n"));
+    guint uid = aTopLevel->GetNSAccessibleUniqueID();
+    g_object_ref(aTopLevel->GetAtkObject());
+    if (!LookupTopLevelID(uid)) {
+        mTopLevelList = g_list_append(mTopLevelList, GINT_TO_POINTER(uid));
+        atk_object_set_parent(aTopLevel->GetAtkObject(), GetAtkObject());
     }
     return TRUE;
 }
 
-MaiTopLevel *
-MaiAppRoot::FindMaiTopLevel(MaiTopLevel *aTopLevel)
+PRBool
+MaiAppRoot::RemoveMaiTopLevelByID(guint aID)
 {
-    g_return_val_if_fail(aTopLevel != NULL, FALSE);
-    return FindMaiTopLevel(aTopLevel->GetNSAccessible());
+    if (!LookupTopLevelID(aID))
+        return PR_FALSE;
+
+    MaiTopLevel *toplevel = (MaiTopLevel *)MaiHashTable::Lookup(aID);
+    NS_ASSERTION(toplevel, "Fail to get object from hash table");
+    MAI_LOG_DEBUG(("MaiAppRoot: remove MaiTopLevel = 0x%x", (guint)toplevel));
+
+    if (!toplevel)
+        return PR_FALSE;
+
+    g_object_unref(toplevel->GetAtkObject());
+    return TRUE;
 }
 
-MaiTopLevel *
-MaiAppRoot::FindMaiTopLevel(nsIAccessible *aTopLevel)
+PRBool
+MaiAppRoot::LookupTopLevelID(guint aID)
 {
-    g_return_val_if_fail(aTopLevel != NULL, NULL);
-    TopLevelItem *item = FindTopLevelItem(aTopLevel);
-
-    if (!item)
-        return NULL;
-
-    return item->maiTopLevel;
-}
-
-TopLevelItem *
-MaiAppRoot::FindTopLevelItem(nsIAccessible *aTopLevel)
-{
-    g_return_val_if_fail(aTopLevel != NULL, NULL);
-
-    /* use Unique ID of nsIAccessible to judge equal */
     if (mTopLevelList) {
-        GList *tmp_list;
-        TopLevelItem *item;
-
-        tmp_list = mTopLevelList;
-
+        GList *tmp_list = mTopLevelList;
         while (tmp_list) {
-            item = (TopLevelItem*)tmp_list->data;
+            if (aID == (guint)(tmp_list->data))
+                return PR_TRUE;
             tmp_list = tmp_list->next;
-            if (item && item->maiTopLevel &&
-                item->maiTopLevel->GetNSAccessibleUniqueID() ==
-                ::GetNSAccessibleUniqueID(aTopLevel))
-                return item;
         }
     }
-    return NULL;
-}
-
-MaiCache *
-MaiAppRoot::GetCache(void)
-{
-    // return "NULL" will disable the caching.
-    return mMaiCache;
+    return PR_FALSE;
 }
 
 /* virtual functions */
@@ -296,8 +237,12 @@ MaiAppRoot::RefChild(gint aChildIndex)
         return NULL;
     }
     else {
-        TopLevelItem *item = (TopLevelItem *)
-            g_list_nth_data(mTopLevelList, aChildIndex);
-        return item->maiTopLevel;
+        guint uid = GPOINTER_TO_UINT(g_list_nth_data(mTopLevelList,
+                                                     aChildIndex));
+        MaiTopLevel *maiTopLevel = (MaiTopLevel*)MaiHashTable::Lookup(uid);
+        NS_ASSERTION(maiTopLevel, "Fail to get object from hash table");
+        if (maiTopLevel)
+            g_object_ref(maiTopLevel->GetAtkObject());
+        return maiTopLevel;
     }
 }
