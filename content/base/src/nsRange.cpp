@@ -2504,7 +2504,7 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
       }
 
       if (NS_SUCCEEDED(result)) {
-        sink->GetFragment(aReturn);
+        result = sink->GetFragment(aReturn);
       }
     }
   }
