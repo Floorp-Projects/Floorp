@@ -33,12 +33,21 @@ using std::pair;
  * This will change over time, so it is treated as an opaque
  * type everywhere else but here.
  */
-#ifdef WIN32
-    class JSObject : public map<String, JSValue, less<String>, gc_allocator<JSValue> > 
-#else
-    class JSObject : public map<String, JSValue, less<String>, gc_allocator<pair<const String, JSValue> > > 
+
+#if defined(XP_MAC)
+    // copied from default template parameters in map.
+    typedef gc_allocator<pair<const String, JSValue> > gc_map_allocator;
+#elif defined(XP_UNIX)
+    // FIXME: in libg++, they assume the map's allocator is a byte allocator,
+    // which is wrapped in a simple_allocator. this is crap.
+    typedef char _Char[1];
+    typedef gc_allocator<_Char> gc_map_allocator;
+#elif defined(_WIN32)
+    // FIXME: MSVC++'s notion. this is why we had to add _Charalloc().
+    typedef gc_allocator<JSValue> gc_map_allocator;
 #endif
-        {
+
+class JSObject : public map<String, JSValue, less<String>, gc_map_allocator> {
 public:
     void* operator new(size_t) { return alloc.allocate(1, 0); }
     void operator delete(void* /* ptr */) {}
@@ -71,10 +80,10 @@ JSValue interpret(InstructionStream& iCode, const JSValues& args)
 				registers[op1(mov)] = registers[op2(mov)];
 			}
 			break;
-                case LOAD_NAME:
+        case LOAD_NAME:
 			{
 				LoadName* ln = static_cast<LoadName*>(instruction);
-                                registers[op1(ln)] = globals[*op2(ln)];
+                registers[op1(ln)] = globals[*op2(ln)];
 			}
 			break;
 		case SAVE_NAME:
@@ -84,25 +93,25 @@ JSValue interpret(InstructionStream& iCode, const JSValues& args)
 			}
 			break;
 		case NEW_OBJECT:
-		        {
-		                NewObject* no = static_cast<NewObject*>(instruction);
-		                registers[op1(no)].obj = new JSObject();
-		        }
-		        break;
+            {
+                NewObject* no = static_cast<NewObject*>(instruction);
+                registers[op1(no)].obj = new JSObject();
+            }
+            break;
 		case GET_PROP:
-		        {
-		                GetProp* gp = static_cast<GetProp*>(instruction);
-		                JSObject* obj = registers[op2(gp)].obj;
-		                registers[op1(gp)] = (*obj)[*op3(gp)];
-                        }
-		        break;
+            {
+                GetProp* gp = static_cast<GetProp*>(instruction);
+                JSObject* obj = registers[op2(gp)].obj;
+                registers[op1(gp)] = (*obj)[*op3(gp)];
+            }
+            break;
 		case SET_PROP:
-		        {
-		                SetProp* sp = static_cast<SetProp*>(instruction);
-		                JSObject* obj = registers[op2(sp)].obj;
-                                (*obj)[*op1(sp)] = registers[op3(sp)];
-                        }
-		        break;
+            {
+                SetProp* sp = static_cast<SetProp*>(instruction);
+                JSObject* obj = registers[op2(sp)].obj;
+                (*obj)[*op1(sp)] = registers[op3(sp)];
+            }
+            break;
 		case LOAD_IMMEDIATE:
 			{
 				LoadImmediate* li = static_cast<LoadImmediate*>(instruction);
@@ -225,15 +234,15 @@ JSValue interpret(InstructionStream& iCode, const JSValues& args)
 				registers[op1(nt)].i32 = !registers[op2(nt)].i32;
 			}
 			break;
-                case RETURN:
-                        {
-                                Return* ret = static_cast<Return*>(instruction);
-                                result = registers[op1(ret)];
-                                return result;
-                        }
-                        break;
-                default:
-                        break;
+        case RETURN:
+            {
+                Return* ret = static_cast<Return*>(instruction);
+                result = registers[op1(ret)];
+                return result;
+            }
+            break;
+        default:
+            break;
     	}
     	
     	// increment the program counter.
