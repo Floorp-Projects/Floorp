@@ -31,7 +31,7 @@ PROGRAM		= uninstall$(BIN_SUFFIX)
 RESFILE		= uninstall.res
 REQUIRES	= $(ZLIB_REQUIRES)
 EXTRA_DSO_LIBS	= mozz_s
-USE_NON_MT_LIBS = 1
+USE_STATIC_LIBS = 1
 
 EXPORTS		= logkeys.h
 
