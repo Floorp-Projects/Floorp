@@ -93,7 +93,8 @@ function DLManagerStartup()
   window.setTimeout(onRebuild, 0);
 
   var key;
-  if (navigator.platform.indexOf("Win") != -1)
+  if ((navigator.platform.indexOf("Win") != -1) ||
+      (navigator.platform.indexOf("OS/2") != -1))
     key = "Win";
   else if (navigator.platform.indexOf("Mac") != -1)
     key = "Mac";
@@ -220,7 +221,9 @@ var downloadViewController = {
         file = getFileForItem(selectedItem);
         
         // on unix, open a browser window rooted at the parent
-        if (navigator.platform.indexOf("Win") == -1 && navigator.platform.indexOf("Mac") == -1) {
+        if ((navigator.platform.indexOf("Win") == -1) &&
+            (navigator.platform.indexOf("Mac") == -1) &&
+            (navigator.platform.indexOf("OS/2") == -1)) {
           file = file.QueryInterface(Components.interfaces.nsIFile);
           var parent = file.parent;
           if (parent) {
