@@ -62,6 +62,8 @@ function SetUpTree()
 {
 	dump("SetUpTree()\n");
 	
+	gSubscribeTree.setAttribute('ref',null);
+
 	var folder = GetMsgFolderFromUri(gServerURI);
 	var server = folder.server;
 

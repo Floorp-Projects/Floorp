@@ -67,6 +67,10 @@
 #include "nsINntpUrl.h"
 #include "nsNewsSummarySpec.h"
 
+#include "nsIAppShellService.h"
+#include "nsIXULWindow.h"
+#include "nsAppShellCIDs.h"
+
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
@@ -78,6 +82,7 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
 #define PREF_NEWS_ABBREVIATE_PRETTY_NAMES "news.abbreviate_pretty_name"
 
@@ -1397,21 +1402,41 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
 {
     nsresult rv = NS_OK;
 
-    NS_ENSURE_ARG_POINTER(aMsgWindow);
     NS_ENSURE_ARG_POINTER(aGroupPassword);
 
     if (!mGroupPassword) {
-        // prompt the user for the password
-        nsCOMPtr<nsIWebShell> webShell;
-        rv = aMsgWindow->GetRootWebShell(getter_AddRefs(webShell));
-        if (NS_FAILED(rv)) return rv;
-        // get top level window
-        nsCOMPtr<nsIWebShellContainer> topLevelWindow;
-        rv = webShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
-        if (NS_FAILED(rv)) return rv;
-        nsCOMPtr<nsINetPrompt> dialog( do_QueryInterface( topLevelWindow, &rv ) );
-        if (NS_SUCCEEDED(rv))
-        {
+		 // prompt the user for the password
+        
+		nsCOMPtr<nsINetPrompt> dialog;
+
+		NS_ASSERTION(aMsgWindow,"no msg window, fix this, for now, use the hidden window");
+		if (aMsgWindow) {
+			nsCOMPtr<nsIWebShell> webShell;
+			rv = aMsgWindow->GetRootWebShell(getter_AddRefs(webShell));
+			if (NS_FAILED(rv)) return rv;
+
+			nsCOMPtr<nsIWebShellContainer> topLevelWindow;
+			rv = webShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
+			if (NS_FAILED(rv)) return rv;
+			dialog = do_QueryInterface(topLevelWindow, &rv);
+			if (NS_FAILED(rv)) return rv;
+		}
+		else {
+			nsCOMPtr <nsIAppShellService> appshellservice = do_GetService(kAppShellServiceCID, &rv);
+			if (NS_FAILED(rv)) return rv;
+			if (!appshellservice) return NS_ERROR_FAILURE;
+
+			nsCOMPtr<nsIXULWindow> xulWindow;
+			rv = appshellservice->GetHiddenWindow(getter_AddRefs(xulWindow));
+			if (NS_FAILED(rv)) return rv;
+			if (!xulWindow) return NS_ERROR_FAILURE;
+
+			dialog = do_QueryInterface(xulWindow, &rv);
+			if (NS_FAILED(rv)) return rv;
+		}
+ 
+		NS_ASSERTION(dialog,"we didn't get a net prompt");
+        if (dialog) {
             nsXPIDLString uniGroupPassword;
 
             PRBool okayValue = PR_TRUE;
@@ -1449,21 +1474,41 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
 {
     nsresult rv = NS_ERROR_FAILURE;;
 
-    NS_ENSURE_ARG_POINTER(aMsgWindow);
     NS_ENSURE_ARG_POINTER(aGroupUsername);
 
     if (!mGroupUsername) {
-        // prompt the user for the password
-        nsCOMPtr<nsIWebShell> webShell;
-        rv = aMsgWindow->GetRootWebShell(getter_AddRefs(webShell));
-        if (NS_FAILED(rv)) return rv;
-        // get top level window
-        nsCOMPtr<nsIWebShellContainer> topLevelWindow;
-        rv = webShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
-        if (NS_FAILED(rv)) return rv;
-        nsCOMPtr<nsINetPrompt> dialog( do_QueryInterface( topLevelWindow, &rv ) );
-        if (NS_SUCCEEDED(rv))
-        {
+        // prompt the user for the username
+        
+		nsCOMPtr<nsINetPrompt> dialog;
+
+		NS_ASSERTION(aMsgWindow,"no msg window, fix this, for now, use the hidden window");
+		if (aMsgWindow) {
+			nsCOMPtr<nsIWebShell> webShell;
+			rv = aMsgWindow->GetRootWebShell(getter_AddRefs(webShell));
+			if (NS_FAILED(rv)) return rv;
+
+			nsCOMPtr<nsIWebShellContainer> topLevelWindow;
+			rv = webShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
+			if (NS_FAILED(rv)) return rv;
+			dialog = do_QueryInterface(topLevelWindow, &rv);
+			if (NS_FAILED(rv)) return rv;
+		}
+		else {
+			nsCOMPtr <nsIAppShellService> appshellservice = do_GetService(kAppShellServiceCID, &rv);
+			if (NS_FAILED(rv)) return rv;
+			if (!appshellservice) return NS_ERROR_FAILURE;
+
+			nsCOMPtr<nsIXULWindow> xulWindow;
+			rv = appshellservice->GetHiddenWindow(getter_AddRefs(xulWindow));
+			if (NS_FAILED(rv)) return rv;
+			if (!xulWindow) return NS_ERROR_FAILURE;
+
+			dialog = do_QueryInterface(xulWindow, &rv);
+			if (NS_FAILED(rv)) return rv;
+		}
+ 
+		NS_ASSERTION(dialog,"we didn't get a net prompt");
+        if (dialog) {
             nsXPIDLString uniGroupUsername;
 
             PRBool okayValue = PR_TRUE;

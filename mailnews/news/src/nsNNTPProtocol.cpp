@@ -152,6 +152,7 @@ static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kCMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID,NS_PREF_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 typedef struct _cancelInfoEntry {
     char *from;
@@ -1195,6 +1196,9 @@ nsresult nsNNTPProtocol::ParseURL(nsIURI * aURL, PRBool * bValP, char ** aGroup,
 PRInt32 nsNNTPProtocol::SendData(nsIURI * aURL, const char * dataBuffer)
 {
 	NNTP_LOG_WRITE(dataBuffer);
+#ifdef DEBUG_sspitzer
+	printf("SEND: %s\n",dataBuffer);
+#endif
 	return nsMsgProtocol::SendData(aURL, dataBuffer); // base class actually transmits the data
 }
 
@@ -1207,6 +1211,7 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 {
 	char * line = nsnull;
 	PRUint32 status = 0;
+	nsresult rv;
 
 	NS_PRECONDITION(nsnull != inputStream, "invalid input stream");
 	
@@ -1242,33 +1247,16 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 	m_previousResponseCode = m_responseCode;
 
     PR_sscanf(line, "%d", &m_responseCode);
-
-/* fix this, it is too agressive */
-#if 1	
-    PRInt32 major_opcode = MK_NNTP_RESPONSE_TYPE(m_responseCode); 
-    if (((major_opcode == MK_NNTP_RESPONSE_TYPE_CANNOT) ||
-         (major_opcode == MK_NNTP_RESPONSE_TYPE_ERROR)) &&
-         ((m_responseCode != MK_NNTP_RESPONSE_AUTHINFO_REQUIRE) &&
-          (m_responseCode != MK_NNTP_RESPONSE_AUTHINFO_SIMPLE_REQUIRE))) {
-        nsresult rv;
-        nsCOMPtr <nsIPrompt> dialog = do_GetService(kCNetSupportDialogCID, &rv);
-        if (NS_SUCCEEDED(rv) || dialog) {
-            nsXPIDLString errorText;
-            GetNewsStringByName("errorFromServer", getter_Copies(errorText));
-            nsAutoString combinedMsg = NS_STATIC_CAST(const PRUnichar*, errorText);
-            combinedMsg.AppendWithConversion(m_responseText);
-            rv = dialog->Alert(combinedMsg.GetUnicode());  
-            // XXX:  todo, check rv?
-        }
-
-		if (m_responseCode == MK_NNTP_RESPONSE_AUTHINFO_DENIED) {
-			if (m_newsFolder) {
-				rv = m_newsFolder->ForgetGroupUsername();
-				rv = m_newsFolder->ForgetGroupPassword();	
-			}
+#ifdef DEBUG_sspitzer
+	printf("RECV: %s\n",line);
+#endif
+	
+	if (m_responseCode == MK_NNTP_RESPONSE_AUTHINFO_DENIED) {
+		if (m_newsFolder) {
+			rv = m_newsFolder->ForgetGroupUsername();
+			rv = m_newsFolder->ForgetGroupPassword();	
 		}
     }
-#endif /* 1 */
 
 	/* authentication required can come at any time
 	 */
@@ -2436,15 +2424,7 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
                 }
 			}
 
-			if (!m_msgWindow) {
-				NS_ASSERTION(m_msgWindow,"unable to get the msg window, so no password dialog");
-				NNTP_LOG_NOTE("unable to get the msg window");
-				rv = NS_ERROR_NULL_POINTER;
-			}
-
-			if (NS_SUCCEEDED(rv)) {
-				rv = m_newsFolder->GetGroupUsernameWithUI(usernamePromptText, nsnull, m_msgWindow, getter_Copies(username));
-			}
+			rv = m_newsFolder->GetGroupUsernameWithUI(usernamePromptText, nsnull, m_msgWindow, getter_Copies(username));
         }
         else {
 #ifdef DEBUG_sspitzer
@@ -2564,14 +2544,7 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
                     }
                 }
 
-				if (!m_msgWindow) {
-					rv = NS_ERROR_NULL_POINTER;
-					NNTP_LOG_NOTE("unable to get the msg window");
-				}
-
-				if (NS_SUCCEEDED(rv)) {
-	               rv = m_newsFolder->GetGroupPasswordWithUI(passwordPromptText, passwordPromptTitleText, m_msgWindow, getter_Copies(password));
-				}
+				rv = m_newsFolder->GetGroupPasswordWithUI(passwordPromptText, passwordPromptTitleText, m_msgWindow, getter_Copies(password));
             }
             else {
                 NNTP_LOG_NOTE("we don't know the folder");
@@ -2637,6 +2610,7 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 
 PRInt32 nsNNTPProtocol::PasswordResponse()
 {
+	nsresult rv;
 
     if (MK_NNTP_RESPONSE_AUTHINFO_OK == m_responseCode ||
         MK_NNTP_RESPONSE_AUTHINFO_SIMPLE_OK == m_responseCode) 
@@ -2683,8 +2657,6 @@ PRInt32 nsNNTPProtocol::PasswordResponse()
 									m_responseText ? m_responseText : ""));
 
 		if (m_newsFolder) {
-			nsresult rv;
-
 			rv = m_newsFolder->ForgetGroupUsername();
 			rv = m_newsFolder->ForgetGroupPassword();	
 		}
@@ -3304,9 +3276,6 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32
   PR_FREEIF(line);
   return !NS_SUCCEEDED(rv);
 }
-
-/* This is the next generation string retrieval call */
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #define NEWS_MSGS_URL       "chrome://messenger/locale/news.properties"
 nsresult nsNNTPProtocol::GetNewsStringByName(const char *aName, PRUnichar **aString)
