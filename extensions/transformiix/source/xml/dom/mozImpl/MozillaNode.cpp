@@ -93,7 +93,13 @@ const DOMString& Node::getNodeName()
   if (nsNode == NULL)
     return NULL_STRING;
 
+  nodeName.clear();
   nsNode->GetNodeName(nodeName.getNSString());
+  
+  /* XXX HACK (pvdb)
+     This can be removed once we have DOM Level 2 support
+     in Mozilla
+  */
   if (nsXMLContent) {
     result = nsXMLContent->GetNameSpacePrefix(*getter_AddRefs(theNamespaceAtom));
     if (theNamespaceAtom && NS_SUCCEEDED(result)) {
