@@ -568,7 +568,7 @@
         function onStatus() {
             var status = document.getElementById("Browser:Status");
             if ( status ) {
-                var text = status.getAttribute("text");
+                var text = status.getAttribute("value");
                 var statusText = document.getElementById("statusText");
                 if ( statusText ) {
                     statusText.setAttribute( "value", text );
@@ -612,6 +612,7 @@
             // Turn security on.
             securityOn();
         }
+		var startTime = 0;
         function onProgress() {
             var throbber = document.getElementById("Browser:Throbber");
             var meter    = document.getElementById("Browser:LoadingProgress");
@@ -619,6 +620,9 @@
                 var busy = throbber.getAttribute("busy");
                 if ( busy == "true" ) {
                     mode = "undetermined";
+					if ( !startTime ) {
+						startTime = (new Date()).getTime();
+					}
                 } else {
                     mode = "normal";
                 }
@@ -626,8 +630,12 @@
                 if ( mode == "normal" ) {
                     var status = document.getElementById("Browser:Status");
                     if ( status ) {
-                        status.setAttribute("text","Document: Done");
+						var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
+						var msg = "Document: Done (" + elapsed + " secs)";
+						dump( msg + "\n" );
+                        status.setAttribute("value",msg);
                     }
+					startTime = 0;
                 }
             }
         }
