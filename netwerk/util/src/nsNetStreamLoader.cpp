@@ -206,7 +206,7 @@ nsUnicharStreamLoader::OnDataAvailable(nsISupports *ctxt,
   return rv;
 }
 
-extern NS_NET nsresult 
+extern nsresult 
 NS_NewUnicharStreamLoader(nsIUnicharStreamLoader** aInstancePtrResult,
                           nsIURI* aURL,
                           nsStreamCompleteFunc aFunc,
