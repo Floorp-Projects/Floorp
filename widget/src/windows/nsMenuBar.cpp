@@ -126,7 +126,7 @@ NS_METHOD nsMenuBar::Create(nsIWidget *aParent,
       }
     }
 
-    mWnd = CreatePopupMenu();
+    mWnd = (HMENU)CreateMenu();
     
     if (aParent) {
         aParent->AddChild(this);
