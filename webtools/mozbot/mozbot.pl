@@ -2546,7 +2546,7 @@ sub Help {
 sub Told {
     my $self = shift;
     my ($event, $message) = @_;
-    return unless $self->{allowChannelAdmin} or $event->{channel} eq '';
+    return $self->SUPER::Told(@_) unless $self->{allowChannelAdmin} or $event->{channel} eq '';
     if ($message =~ /^\s*auth\s+($variablepattern)\s+($variablepattern)(\s+quiet)?\s*$/osi) {
         if (not $event->{'channel'}) {
             if (defined($users{$1})) {
