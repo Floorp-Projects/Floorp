@@ -3403,11 +3403,13 @@ CK_RV NSC_OpenSession(CK_SLOT_ID slotID, CK_FLAGS flags,
     }
 
     do {
+        PK11_USE_THREADS(PZLock *lock;)
         do {
             sessionID = (PR_AtomicIncrement(&slot->sessionIDCount) & 0xffffff)
                         | (slot->index << 24);
         } while (sessionID == CK_INVALID_HANDLE);
-        PK11_USE_THREADS(PZ_Lock(PK11_SESSION_LOCK(slot,sessionID));)
+        PK11_USE_THREADS(lock = PK11_SESSION_LOCK(slot,sessionID);)
+        PK11_USE_THREADS(PZ_Lock(lock);)
         pk11queue_find(sameID, sessionID, slot->head, slot->sessHashSize);
         if (sameID == NULL) {
             session->handle = sessionID;
@@ -3416,7 +3418,7 @@ CK_RV NSC_OpenSession(CK_SLOT_ID slotID, CK_FLAGS flags,
         } else {
             slot->sessionIDConflict++;  /* for debugging */
         }
-        PK11_USE_THREADS(PZ_Unlock(PK11_SESSION_LOCK(slot,sessionID));)
+        PK11_USE_THREADS(PZ_Unlock(lock);)
     } while (sameID != NULL);
 
     *phSession = sessionID;
@@ -3431,6 +3433,7 @@ CK_RV NSC_CloseSession(CK_SESSION_HANDLE hSession)
     PK11Session *session;
     SECItem *pw = NULL;
     PRBool sessionFound;
+    PK11_USE_THREADS(PZLock *lock;)
 
     session = pk11_SessionFromHandle(hSession);
     if (session == NULL) return CKR_SESSION_HANDLE_INVALID;
@@ -3438,14 +3441,15 @@ CK_RV NSC_CloseSession(CK_SESSION_HANDLE hSession)
     sessionFound = PR_FALSE;
 
     /* lock */
-    PK11_USE_THREADS(PZ_Lock(PK11_SESSION_LOCK(slot,hSession));)
+    PK11_USE_THREADS(lock = PK11_SESSION_LOCK(slot,hSession);)
+    PK11_USE_THREADS(PZ_Lock(lock);)
     if (pk11queue_is_queued(session,hSession,slot->head,slot->sessHashSize)) {
 	sessionFound = PR_TRUE;
 	pk11queue_delete(session,hSession,slot->head,slot->sessHashSize);
 	session->refCount--; /* can't go to zero while we hold the reference */
 	PORT_Assert(session->refCount > 0);
     }
-    PK11_USE_THREADS(PZ_Unlock(PK11_SESSION_LOCK(slot,hSession));)
+    PK11_USE_THREADS(PZ_Unlock(lock);)
 
     if (sessionFound) {
 	PK11_USE_THREADS(PZ_Lock(slot->slotLock);)
@@ -3491,8 +3495,9 @@ CK_RV NSC_CloseAllSessions (CK_SLOT_ID slotID)
      * NSC_CloseAllSessions... but any session running when this code starts
      * will guarrenteed be close, and no session will be partially closed */
     for (i=0; i < slot->sessHashSize; i++) {
+	PK11_USE_THREADS(PZLock *lock = PK11_SESSION_LOCK(slot,i);)
 	do {
-	    PK11_USE_THREADS(PZ_Lock(PK11_SESSION_LOCK(slot,i));)
+	    PK11_USE_THREADS(PZ_Lock(lock);)
 	    session = slot->head[i];
 	    /* hand deque */
 	    /* this duplicates function of NSC_close session functions, but 
@@ -3502,7 +3507,7 @@ CK_RV NSC_CloseAllSessions (CK_SLOT_ID slotID)
 		slot->head[i] = session->next;
 		if (session->next) session->next->prev = NULL;
 		session->next = session->prev = NULL;
-		PK11_USE_THREADS(PZ_Unlock(PK11_SESSION_LOCK(slot,i));)
+		PK11_USE_THREADS(PZ_Unlock(lock);)
 		PK11_USE_THREADS(PZ_Lock(slot->slotLock);)
 		--slot->sessionCount;
 		PK11_USE_THREADS(PZ_Unlock(slot->slotLock);)
@@ -3510,7 +3515,7 @@ CK_RV NSC_CloseAllSessions (CK_SLOT_ID slotID)
 		    PR_AtomicDecrement(&slot->rwSessionCount);
 		}
 	    } else {
-		PK11_USE_THREADS(PZ_Unlock(PK11_SESSION_LOCK(slot,i));)
+		PK11_USE_THREADS(PZ_Unlock(lock);)
 	    }
 	    if (session) pk11_FreeSession(session);
 	} while (session != NULL);
