@@ -155,7 +155,7 @@ function calendarInit()
 
    update_date( );
    	
-	checkMail();
+	checkForMailNews();
 }
 
 // Set the date and time on the clock and set up a timeout to refresh the clock when the 

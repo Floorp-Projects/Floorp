@@ -38,13 +38,13 @@ var gMailAccounts = false;
 var gMAILDEBUG = 1;  // 0 - no output, 1 dump to terminal, > 1 use alerts
 var gMailIdentity;
 
-/**** checkMail
+/**** checkForMailNews
  *
  * PURPOSE: if mailnews is installed return true, else false
  *
  */
  
-function checkMail()
+function checkForMailNews()
 {
 	var AccountManagerComponent;
 	var AccountManagerService;
@@ -118,7 +118,6 @@ function noMail()
  *
  * PURPOSE: function to handle the scenario where mailnews is installed but
  *          an account has not been created
- *
  */
 
 function noAccount()
@@ -146,9 +145,16 @@ function noSmtp()
 	 mdebug("You don't have an smtp account");
 }
 
+/**** sendEvent
+ *
+ * PURPOSE: implement iMip :) - that is send out a calendar event both
+ *          as an attachment of type text/calendar and as text/plain
+ */
+
 function sendEvent()
 {
 	var Event;
+	var CalendarDataFilePath;
 	var nsIMsgCompFieldsComponent;
 	var nsIMsgCompFields;
 	var nsIMsgComposeParamsComponent;
@@ -157,8 +163,15 @@ function sendEvent()
 	var nsIMsgComposeService;
 	var nsIMsgCompFormat;
 	var nsIMsgCompType;
+	var nsIMsgAttachmentComponent;
+	var nsIMsgAttachment;
 
 	Event = gCalendarWindow.EventSelection.selectedEvents[0];
+	CalendarDataFilePath = getCalendarDataFilePath();
+	if (! CalendarDataFilePath)
+	{
+		return;
+	}
 	/* Want output like
 	 * When: Thursday, November 09, 2000 11:00 PM-11:30 PM (GMT-08:00) Pacific Time
      * (US & Canada); Tijuana.
@@ -170,14 +183,24 @@ function sendEvent()
 		// lets open a composer with fields and body prefilled
 		try
 		{
+			saveCalendarObject(CalendarDataFilePath, Event.getIcalString());
+			nsIMsgAttachmentComponent = Components.classes["@mozilla.org/messengercompose/attachment;1"];
+			nsIMsgAttachment = nsIMsgAttachmentComponent.createInstance(Components.interfaces.nsIMsgAttachment);
+			nsIMsgAttachment.name = "iCal Event"
+			nsIMsgAttachment.contentType = "text/calendar;"
+			nsIMsgAttachment.temporary = true;
+			nsIMsgAttachment.url = "file://" + CalendarDataFilePath;
 			// lets setup the fields for the message
 			nsIMsgCompFieldsComponent = Components.classes["@mozilla.org/messengercompose/composefields;1"];
 			nsIMsgCompFields = nsIMsgCompFieldsComponent.createInstance(Components.interfaces.nsIMsgCompFields);
+			nsIMsgCompFields.useMultipartAlternative = true;
+			nsIMsgCompFields.attachVCard = true;
 			nsIMsgCompFields.from = gMailIdentity.email;
 			nsIMsgCompFields.replyTo = gMailIdentity.replyTo;
 			nsIMsgCompFields.subject = gMailIdentity.fullName + " would like to schedule a meeting with you";
 			nsIMsgCompFields.organization = gMailIdentity.organization;
-			nsIMsgCompFields.body = "When: " + Event.start + "-" + Event.end + "\nWhere: " + Event.location;
+			nsIMsgCompFields.body = "When: " + Event.start + "-" + Event.end + "\nWhere: " + Event.location + "\nOrganizer: " + gMailIdentity.fullName + " <" + gMailIdentity.email + ">" + "\nSummary:" + Event.description;
+			nsIMsgCompFields.addAttachment(nsIMsgAttachment);
 			/* later on we may be able to add:
 			 * returnReceipt, attachVCard
 			 */
@@ -199,6 +222,84 @@ function sendEvent()
 			mdebug("failed to get composer window\nex: " + ex);
 		}
 	}
+}
+
+/**** getCalendarDataFilePath
+ *
+ * PURPOSE: get the user's current profile directory and use it as a place
+ *          to temporarily store the iCal tempfile that I need to attach
+ *          to the email
+ */
+
+function getCalendarDataFilePath()
+{
+	var FilePath;
+	var DirUtilsComponent;
+	var DirUtilsInstance;
+	var nsIFile;
+	
+	try
+	{
+		DirUtilsComponent = Components.classes["@mozilla.org/file/directory_service;1"];
+		DirUtilsInstance = DirUtilsComponent.createInstance(Components.interfaces.nsIProperties);
+		nsIFile = Components.interfaces.nsIFile;
+		FilePath = DirUtilsInstance.get("ProfD", nsIFile).path; 
+		FilePath += "/tempIcal.ics";
+	}
+	catch(ex)
+	{
+		mdebug("No filepath has been found, ex:\n" + ex);
+		FilePath = null;
+	}
+	return(FilePath);
+}
+
+/**** saveCalendarObject
+ *
+ * PURPOSE: open a tmp file and write Ical info to it, this has
+ *          to be done until there is a way to pass an ical URL to
+ *          the messenger attachment code
+ */
+
+function saveCalendarObject(FilePath, CalendarStream)
+{
+	var LocalFileComponent;
+	var LocalFileInstance;
+	var FileChannelComponent;
+	var FileChannelInstance;
+	var FileTransportComponent;
+	var FileTransportService;
+	var FileTransport;
+	var FileOutput;
+	
+	// need LocalFile, otherwise what are we going to write to?
+	LocalFileComponent = Components.classes["@mozilla.org/file/local;1"];
+	LocalFileInstance = LocalFileComponent.createInstance(Components.interfaces.nsILocalFile);
+	LocalFileInstance.initWithPath(FilePath);
+	if (!LocalFileInstance.exists())
+	{
+		try
+		{
+			LocalFileInstance.create(LocalFileInstance.NORMAL_FILE_TYPE, 0644);
+		}
+		catch(ex)
+		{
+			mdebug("Unable to create temporary iCal file");
+		}
+	}
+	// need nsIFileChannel for ioflags
+	FileChannelComponent = Components.classes["@mozilla.org/network/local-file-channel;1"];
+	FileChannelInstance = FileChannelComponent.createInstance(Components.interfaces.nsIFileChannel);
+	// need nsIFileTransport to create a transport
+	FileTransportComponent = Components.classes["@mozilla.org/network/file-transport-service;1"];
+	FileTransportService = FileTransportComponent.getService(Components.interfaces.nsIFileTransportService);
+	// need nsITransport to open an output stream
+	FileTransport = FileTransportService.createTransport(LocalFileInstance, FileChannelInstance.NS_RDWR, 0644, true);
+	// need nsIOutputStream to write out the actual file
+	FileOutput = FileTransport.openOutputStream(0, -1, null);
+	// now lets actually write the output to the file
+	FileOutput.write(CalendarStream, CalendarStream.length);
+	FileOutput.close();
 }
 
 /**** mdebug
