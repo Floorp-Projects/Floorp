@@ -27,9 +27,6 @@
 #include "nsIDOMAppCoresManager.h"
 #include "nsIDOMDOMPropsCore.h"
 #include "nsIDOMToolkitCore.h"
-#include "nsIDOMSignonCore.h"
-#include "nsIDOMCookieCore.h"
-#include "nsIDOMWalletCore.h"
 #include "nsIDOMProfileCore.h" 
 #include "nsIDOMRDFCore.h"
 #include "nsIDOMBrowserAppCore.h"
@@ -41,9 +38,6 @@ static NS_DEFINE_IID(kIScriptExternalNameSetIID, NS_ISCRIPTEXTERNALNAMESET_IID);
 static NS_DEFINE_IID(kAppCoresCID,           NS_APPCORESMANAGER_CID);
 static NS_DEFINE_IID(kToolkitCoreCID,        NS_TOOLKITCORE_CID);
 static NS_DEFINE_IID(kDOMPropsCoreCID,       NS_DOMPROPSCORE_CID);
-static NS_DEFINE_IID(kSignonCoreCID,         NS_SIGNONCORE_CID);
-static NS_DEFINE_IID(kCookieCoreCID,         NS_COOKIECORE_CID);
-static NS_DEFINE_IID(kWalletCoreCID,         NS_WALLETCORE_CID);
 static NS_DEFINE_IID(kProfileCoreCID,        NS_PROFILECORE_CID); 
 static NS_DEFINE_IID(kRDFCoreCID,            NS_RDFCORE_CID);
 static NS_DEFINE_IID(kBrowserAppCoreCID,     NS_BROWSERAPPCORE_CID);
@@ -72,9 +66,6 @@ nsAppCoresNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
     if (NS_OK != result) return result;
 
     result = NS_InitDOMPropsCoreClass(aScriptContext, nsnull);
-    result = NS_InitSignonCoreClass(aScriptContext, nsnull);
-    result = NS_InitCookieCoreClass(aScriptContext, nsnull);
-    result = NS_InitWalletCoreClass(aScriptContext, nsnull);
       result = NS_InitProfileCoreClass(aScriptContext, nsnull); 
     result = NS_InitBrowserAppCoreClass(aScriptContext, nsnull);
     //result = NS_InitEditorAppCoreClass(aScriptContext, nsnull);
@@ -101,30 +92,6 @@ nsAppCoresNameSet::AddNameSet(nsIScriptContext* aScriptContext)
                                              PR_TRUE);
 
         if (NS_OK != result) return result;
-
-        result = manager->RegisterGlobalName("SignonCore", 
-                                             kSignonCoreCID, 
-                                             PR_TRUE);
-
-        if (NS_OK != result) return result;
-
-
-
-        result = manager->RegisterGlobalName("CookieCore", 
-                                             kCookieCoreCID, 
-                                             PR_TRUE);
-
-        if (NS_OK != result) return result;
-
-
-
-        result = manager->RegisterGlobalName("WalletCore", 
-                                             kWalletCoreCID, 
-                                             PR_TRUE);
-
-        if (NS_OK != result) return result;
-
-
 
         result = manager->RegisterGlobalName("ProfileCore", 
                                              kProfileCoreCID, 

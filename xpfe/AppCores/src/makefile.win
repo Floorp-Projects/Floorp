@@ -69,9 +69,6 @@ OBJS = \
     .\$(OBJDIR)\nsBaseAppCore.obj       \
     .\$(OBJDIR)\nsDOMPropsCore.obj       \
     .\$(OBJDIR)\nsDOMPropsCoreFactory.obj       \
-    .\$(OBJDIR)\nsSignonCore.obj       \
-    .\$(OBJDIR)\nsCookieCore.obj       \
-    .\$(OBJDIR)\nsWalletCore.obj       \
     .\$(OBJDIR)\nsProfileCore.obj       \
     .\$(OBJDIR)\nsRDFCore.obj       \
     .\$(OBJDIR)\nsRDFCoreFactory.obj       \
@@ -79,9 +76,6 @@ OBJS = \
     .\$(OBJDIR)\nsToolkitCore.obj        \
     .\$(OBJDIR)\nsToolkitCoreFactory.obj \
     .\$(OBJDIR)\nsBrowserAppCore.obj       \
-    .\$(OBJDIR)\nsSignonCoreFactory.obj       \
-    .\$(OBJDIR)\nsCookieCoreFactory.obj       \
-    .\$(OBJDIR)\nsWalletCoreFactory.obj       \
     .\$(OBJDIR)\nsProfileCoreFactory.obj       \
     .\$(OBJDIR)\nsBrowserAppCoreFactory.obj       \
     .\$(OBJDIR)\nsAppCoresManager.obj       \
@@ -89,9 +83,6 @@ OBJS = \
     .\$(OBJDIR)\nsJSBaseAppCore.obj       \
     .\$(OBJDIR)\nsJSAppCoresManager.obj       \
     .\$(OBJDIR)\nsJSDOMPropsCore.obj   \
-    .\$(OBJDIR)\nsJSSignonCore.obj   \
-    .\$(OBJDIR)\nsJSCookieCore.obj   \
-    .\$(OBJDIR)\nsJSWalletCore.obj   \
     .\$(OBJDIR)\nsJSProfileCore.obj   \
     .\$(OBJDIR)\nsJSRDFCore.obj   \
     .\$(OBJDIR)\nsJSToolkitCore.obj     \
@@ -104,10 +95,6 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(DLL)
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).lib $(DIST)\lib
-
-	$(MAKE_INSTALL) ..\xul\SignonWindow.js   $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\CookieWindow.js   $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\WalletWindow.js   $(DIST)\bin\res\samples
 
 	$(MAKE_INSTALL) ..\xul\resources\Mail_SendMsg.gif $(DIST)\bin\res\toolbar
 	$(MAKE_INSTALL) ..\xul\resources\Mail_GetMsg.gif  $(DIST)\bin\res\toolbar

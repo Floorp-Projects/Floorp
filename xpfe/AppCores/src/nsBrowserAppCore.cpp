@@ -448,7 +448,7 @@ nsBrowserAppCore::WalletEditor(nsIDOMWindow* aWin)
     window = nsnull;
 
     nsCOMPtr<nsIURL> urlObj;
-    char *urlstr = "resource:/res/samples/xpconnect-walleteditor.html";
+    char *urlstr = "resource:/res/samples/WalletEditor.html";
 #ifndef NECKO
     rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
 #else
@@ -507,7 +507,7 @@ nsBrowserAppCore::SignonViewer(nsIDOMWindow* aWin)
     window = nsnull;
 
     nsCOMPtr<nsIURL> urlObj;
-    char * urlstr = "resource:/res/samples/xpconnect-signonviewer.html";
+    char * urlstr = "resource:/res/samples/SignonViewer.html";
 #ifndef NECKO
     rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
 #else
@@ -566,7 +566,7 @@ nsBrowserAppCore::CookieViewer(nsIDOMWindow* aWin)
     window = nsnull;
 
     nsCOMPtr<nsIURL> urlObj;
-    char *urlstr = "resource:/res/samples/xpconnect-cookieviewer.html";
+    char *urlstr = "resource:/res/samples/CookieViewer.html";
 #ifndef NECKO
     rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
 #else
@@ -668,7 +668,7 @@ nsBrowserAppCore::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
     window = nsnull;
 
     nsCOMPtr<nsIURL> urlObj;
-    char * urlstr = "resource:/res/samples/xpconnect-walletpreview.html";
+    char * urlstr = "resource:/res/samples/WalletPreview.html";
 #ifndef NECKO
     rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
 #else
