@@ -186,8 +186,6 @@ public:
   NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
 protected:
-  nsIWidget* GetWindowTemp(nsIView *aView); // XXX temporary
-
   virtual PRIntn GetSkipSides() const;
 
   nsNewFrame* mTextFrame;
