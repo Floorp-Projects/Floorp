@@ -39,6 +39,8 @@
 // end of take this out
 #endif
 
+#include "prlog.h" // for PR_ASSERT
+
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
 
@@ -80,6 +82,9 @@ DocumentLoaderObserverImpl::DocumentLoaderObserverImpl(JNIEnv *env,
     if (nsnull == gVm) { // declared in jni_util.h
       ::util_GetJavaVM(env, &gVm);  // save this vm reference away for the callback!
     }
+#ifndef BAL_INTERFACE
+    PR_ASSERT(gVm);
+#endif
 
     if (-1 == maskValues[0]) {
         util_InitializeEventMaskValuesFromClass("org/mozilla/webclient/DocumentLoadEvent",
@@ -117,9 +122,35 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnStartDocumentLoad(nsIDocumentLoader*
                ("DocumentLoaderObserverImpl.cpp: OnStartDocumentLoad\n"));
     }
 #endif
+    char *urlStr = nsnull;
+    jobject urlJStr = nsnull;
+    if (nsnull != aURL) {
+
+        // IMPORTANT: do not use initContext->env here since it comes
+        // from another thread.  Use JNU_GetEnv instead.
+
+        JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
+        
+        aURL->GetSpec(&urlStr);
+        if (nsnull != urlStr) {
+            urlJStr = (jobject) ::util_NewStringUTF(env, urlStr);
+            ::Recycle(urlStr);
+        }
+    }            
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mTarget, 
-			 maskValues[START_DOCUMENT_LOAD_EVENT_MASK], nsnull);
+                         maskValues[START_DOCUMENT_LOAD_EVENT_MASK], urlJStr);
+
+#ifdef BAL_INTERFACE
+    // This violates my goal of confining all #ifdef BAL_INTERFACE to
+    // jni_util files, but this is the only part of the code that knows
+    // that eventData is a jstring.  In java, this will get garbage
+    // collected, but in non-java contexts, it will not.  Thus, we have
+    // to manually de-allocate it.
+    if (urlJStr) {
+        ::util_DeleteStringUTF(mInitContext->env, (jstring) urlJStr);
+    }
+#endif
     
     return NS_OK;
 }
@@ -186,8 +217,12 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnStatusURLLoad(nsIDocumentLoader* loa
     }
 #endif
     int length = aMsg.Length();
-    jstring statusMessage = ::util_NewString(mInitContext->env,
-                                             aMsg.GetUnicode(), length);
+
+    // IMPORTANT: do not use initContext->env here since it comes
+    // from another thread.  Use JNU_GetEnv instead.
+    
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
+    jstring statusMessage = ::util_NewString(env, aMsg.GetUnicode(), length);
     
     util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, mTarget, 
 			 maskValues[STATUS_URL_LOAD_EVENT_MASK], (jobject) statusMessage);
@@ -198,8 +233,9 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnStatusURLLoad(nsIDocumentLoader* loa
     // that eventData is a jstring.  In java, this will get garbage
     // collected, but in non-java contexts, it will not.  Thus, we have
     // to manually de-allocate it.
-    ::util_DeleteString(mInitContext->env, statusMessage);
-
+    if (statusMessage) {
+        ::util_DeleteString(mInitContext->env, statusMessage);
+    }
 #endif
 
     return NS_OK;

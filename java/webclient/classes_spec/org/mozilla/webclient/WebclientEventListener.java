@@ -25,6 +25,13 @@ package org.mozilla.webclient;
 public interface WebclientEventListener 
 {
 
+/**
+
+ * Important: do not call any webclient methods during this callback.
+ * It may caus your app to deadlock.
+
+ */
+
 public void eventDispatched(WebclientEvent event);
 
 } // end of interface WebclientEventListener

@@ -50,7 +50,7 @@ import org.mozilla.util.Assert;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.4 2000/04/20 03:16:15 ashuk%eng.sun.com Exp $
+ * @version $Id: EMWindow.java,v 1.5 2000/04/22 02:00:57 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -120,6 +120,8 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 		// Create the URL field
 		urlField = new TextField("", 30);
         urlField.addActionListener(this);        	
+        urlField.setText(url);
+
 
 		// Create the buttons sub panel
 		buttonsPanel = new Panel();
@@ -436,13 +438,24 @@ public void dialogCancelled(Dialog d) {
 // From DocumentLoadListener
 //
 
+/**
+
+ * Important: do not call any webclient methods during this callback.
+ * It may caus your app to deadlock.
+
+ */
+
 public void eventDispatched(WebclientEvent event)
 {
     if (event instanceof DocumentLoadEvent) {
-        String currentURL = currentPage.getCurrentURL();
-        System.out.println("debug: edburns: Currently Viewing: " + 
-                           currentURL);
-        urlField.setText(currentURL);
+        switch ((int) event.getType()) {
+        case ((int) DocumentLoadEvent.START_DOCUMENT_LOAD_EVENT_MASK):
+            String currentURL = (String) event.getEventData();
+            System.out.println("debug: edburns: Currently Viewing: " + 
+                               currentURL);
+            urlField.setText(currentURL);
+            break;
+        }
     }
 }
 

@@ -453,10 +453,11 @@ JNU_GetEnv(JavaVM *vm, jint version)
 {
     //    void *result;
     //vm->GetEnv(&result, version);
-
     JNIEnv *result = nsnull;
+#ifdef BAL_INTERFACE
+#else
     vm->AttachCurrentThread((void **)&result, (void *) version);
-
+#endif
     return result;
 }
 

@@ -25,14 +25,14 @@ package org.mozilla.webclient;
 public class DocumentLoadEvent extends WebclientEvent
 {
 
-public static long START_DOCUMENT_LOAD_EVENT_MASK = 1;
-public static long END_DOCUMENT_LOAD_EVENT_MASK = 1 << 2;
-public static long START_URL_LOAD_EVENT_MASK = 1 << 3;
-public static long END_URL_LOAD_EVENT_MASK = 1 << 4;
-public static long PROGRESS_URL_LOAD_EVENT_MASK = 1 << 5;
-public static long STATUS_URL_LOAD_EVENT_MASK = 1 << 6;
-public static long UNKNOWN_CONTENT_EVENT_MASK = 1 << 7;
-public static long FETCH_INTERRUPT_EVENT_MASK = 1 << 8;
+public static final long START_DOCUMENT_LOAD_EVENT_MASK = 1;
+public static final long END_DOCUMENT_LOAD_EVENT_MASK = 1 << 2;
+public static final long START_URL_LOAD_EVENT_MASK = 1 << 3;
+public static final long END_URL_LOAD_EVENT_MASK = 1 << 4;
+public static final long PROGRESS_URL_LOAD_EVENT_MASK = 1 << 5;
+public static final long STATUS_URL_LOAD_EVENT_MASK = 1 << 6;
+public static final long UNKNOWN_CONTENT_EVENT_MASK = 1 << 7;
+public static final long FETCH_INTERRUPT_EVENT_MASK = 1 << 8;
 
 //
 // Constructors
