@@ -87,3 +87,12 @@ nsresult nsMsgMailSession::GetCurrentServer(nsIMsgIncomingServer ** aServer)
 
   return rv;
 }
+
+nsresult nsMsgMailSession::GetAccountManager(nsIMsgAccountManager* *aAM)
+{
+  if (!aAM) return NS_ERROR_NULL_POINTER;
+  
+  *aAM = m_accountManager;
+  NS_ADDREF(m_accountManager);
+  return NS_OK;
+}

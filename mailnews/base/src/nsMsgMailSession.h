@@ -44,6 +44,7 @@ public:
 	// nsIMsgMailSession support
 	NS_IMETHOD GetCurrentIdentity(nsIMsgIdentity ** aIdentity);
     NS_IMETHOD GetCurrentServer(nsIMsgIncomingServer **aServer);
+    NS_IMETHOD GetAccountManager(nsIMsgAccountManager* *aAM);
   
 protected:
   nsIMsgAccountManager *m_accountManager;
