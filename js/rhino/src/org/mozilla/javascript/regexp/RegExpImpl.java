@@ -60,10 +60,9 @@ public class RegExpImpl implements RegExpProxy {
                         Scriptable thisObj, Object[] args)
         throws JavaScriptException
     {
-        MatchData mdata = new MatchData();
+        GlobData mdata = new GlobData();
         mdata.optarg = 1;
         mdata.mode = GlobData.GLOB_MATCH;
-        mdata.parent = ScriptableObject.getTopLevelScope(scope);
         Object rval = matchOrReplace(cx, scope, thisObj, args,
                                      this, mdata, false);
         return mdata.arrayobj == null ? rval : mdata.arrayobj;
@@ -73,10 +72,9 @@ public class RegExpImpl implements RegExpProxy {
                          Scriptable thisObj, Object[] args)
         throws JavaScriptException
     {
-        MatchData mdata = new MatchData();
+        GlobData mdata = new GlobData();
         mdata.optarg = 1;
         mdata.mode = GlobData.GLOB_SEARCH;
-        mdata.parent = ScriptableObject.getTopLevelScope(scope);
         return matchOrReplace(cx, scope, thisObj, args, this, mdata, false);
     }
 
@@ -93,7 +91,7 @@ public class RegExpImpl implements RegExpProxy {
             repstr = ScriptRuntime.toString(arg1);
         }
 
-        ReplaceData rdata = new ReplaceData();
+        GlobData rdata = new GlobData();
         rdata.optarg = 2;
         rdata.mode = GlobData.GLOB_REPLACE;
         rdata.lambda = lambda;
@@ -113,12 +111,12 @@ public class RegExpImpl implements RegExpProxy {
                 return rdata.str;
             }
             int leftlen = this.leftContext.length;
-            int length = leftlen + rdata.findReplen(cx, this);
+            int length = leftlen + find_replen(rdata, cx, scope, this);
             charArray = new char[length];
             SubString leftContext = this.leftContext;
             System.arraycopy(leftContext.charArray, leftContext.index,
                              charArray, 0, leftlen);
-            rdata.doReplace(cx, this, charArray, leftlen);
+            do_replace(rdata, cx, this, charArray, leftlen);
             rdata.charArray = charArray;
             rdata.length = length;
         }
@@ -185,7 +183,11 @@ public class RegExpImpl implements RegExpProxy {
                                           str, indexp, NativeRegExp.TEST);
                 if (result == null || !result.equals(Boolean.TRUE))
                     break;
-                data.doGlobal(cx, scope, count, reImpl);
+                if (data.mode == GlobData.GLOB_MATCH) {
+                    match_glob(data, cx, scope, count, reImpl);
+                } else {
+                    replace_glob(data, cx, scope, count, reImpl);
+                }
                 if (reImpl.lastMatch.length == 0) {
                     if (indexp[0] == str.length())
                         break;
@@ -290,74 +292,30 @@ public class RegExpImpl implements RegExpProxy {
         return SubString.emptySubString;
     }
 
-    String          input;         /* input string to match (perl $_, GC root) */
-    boolean         multiline;     /* whether input contains newlines (perl $*) */
-    SubString[]     parens;        /* Vector of SubString; last set of parens
-                                      matched (perl $1, $2) */
-    SubString       lastMatch;     /* last string matched (perl $&) */
-    SubString       lastParen;     /* last paren matched (perl $+) */
-    SubString       leftContext;   /* input to left of last match (perl $`) */
-    SubString       rightContext;  /* input to right of last match (perl $') */
-}
-
-
-abstract class GlobData {
-    static final int GLOB_MATCH =      1;
-    static final int GLOB_REPLACE =    2;
-    static final int GLOB_SEARCH =     3;
-
-    abstract void doGlobal(Context cx, Scriptable scope, int count,
-                           RegExpImpl reImpl)
-        throws JavaScriptException;
-
-    byte     mode;      /* input: return index, match object, or void */
-    int      optarg;    /* input: index of optional flags argument */
-    boolean  global;    /* output: whether regexp was global */
-    String   str;       /* output: 'this' parameter object as string */
-    NativeRegExp regexp;/* output: regexp parameter object private data */
-    Scriptable parent;
-}
-
-
-class MatchData extends GlobData {
-
     /*
      * Analog of match_glob() in jsstr.c
      */
-    void doGlobal(Context cx, Scriptable scope, int count, RegExpImpl reImpl)
-        throws JavaScriptException
+    private static void match_glob(GlobData mdata, Context cx,
+                                   Scriptable scope, int count,
+                                   RegExpImpl reImpl)
     {
-        MatchData mdata;
-        Object v;
-
-        mdata = this;
-        if (arrayobj == null) {
+        if (mdata.arrayobj == null) {
             Scriptable s = ScriptableObject.getTopLevelScope(scope);
-            arrayobj = ScriptRuntime.newObject(cx, s, "Array", null);
+            mdata.arrayobj = ScriptRuntime.newObject(cx, s, "Array", null);
         }
         SubString matchsub = reImpl.lastMatch;
         String matchstr = matchsub.toString();
-        arrayobj.put(count, arrayobj, matchstr);
-    }
-
-    Scriptable arrayobj;
-}
-
-
-class ReplaceData extends GlobData {
-
-    ReplaceData() {
-        dollar = -1;
+        mdata.arrayobj.put(count, mdata.arrayobj, matchstr);
     }
 
     /*
      * Analog of replace_glob() in jsstr.c
      */
-    void doGlobal(Context cx, Scriptable scope, int count, RegExpImpl reImpl)
+    private static void replace_glob(GlobData rdata, Context cx,
+                                     Scriptable scope, int count,
+                                     RegExpImpl reImpl)
         throws JavaScriptException
     {
-        ReplaceData rdata = this;
-
         SubString lc = reImpl.leftContext;
 
         char[] leftArray = lc.charArray;
@@ -365,7 +323,7 @@ class ReplaceData extends GlobData {
 
         int leftlen = reImpl.lastMatch.index - leftIndex;
         rdata.leftIndex = reImpl.lastMatch.index + reImpl.lastMatch.length;
-        int replen = findReplen(cx, reImpl);
+        int replen = find_replen(rdata, cx, scope, reImpl);
         int growth = leftlen + replen;
         char[] charArray;
         if (rdata.charArray != null) {
@@ -381,13 +339,12 @@ class ReplaceData extends GlobData {
         rdata.index += growth;
         System.arraycopy(leftArray, leftIndex, charArray, index, leftlen);
         index += leftlen;
-        doReplace(cx, reImpl, charArray, index);
+        do_replace(rdata, cx, reImpl, charArray, index);
     }
 
-    static SubString dollarStr = new SubString("$");
-
-    static SubString interpretDollar(Context cx, RegExpImpl res,
-                                     char[] da, int dp, int bp, int[] skip)
+    private static SubString interpretDollar(Context cx, RegExpImpl res,
+                                             char[] da, int dp, int bp,
+                                             int[] skip)
     {
         char[] ca;
         int cp;
@@ -395,20 +352,22 @@ class ReplaceData extends GlobData {
         int num, tmp;
 
         /* Allow a real backslash (literal "\\") to escape "$1" etc. */
-        if (da[dp] != '$')
-            throw new RuntimeException();
-        if ((cx.getLanguageVersion() != Context.VERSION_DEFAULT)
-                 && (cx.getLanguageVersion() <= Context.VERSION_1_4))
+        if (da[dp] != '$') Kit.codeBug();
+        int version = cx.getLanguageVersion();
+        if (version != Context.VERSION_DEFAULT
+            && version <= Context.VERSION_1_4)
+        {
             if (dp > bp && da[dp-1] == '\\')
                 return null;
-
+        }
         if (dp+1 >= da.length)
             return null;
         /* Interpret all Perl match-induced dollar variables. */
         dc = da[dp+1];
         if (NativeRegExp.isDigit(dc)) {
-            if ((cx.getLanguageVersion() != Context.VERSION_DEFAULT)
-                     && (cx.getLanguageVersion() <= Context.VERSION_1_4)) {
+            if (version != Context.VERSION_DEFAULT
+                && version <= Context.VERSION_1_4)
+            {
                 if (dc == '0')
                     return null;
                 /* Check for overflow to avoid gobbling arbitrary decimal digits. */
@@ -449,13 +408,13 @@ class ReplaceData extends GlobData {
         skip[0] = 2;
         switch (dc) {
           case '$':
-            return dollarStr;
+            return new SubString(da, dp, 1);
           case '&':
             return res.lastMatch;
           case '+':
             return res.lastParen;
           case '`':
-            if (cx.getLanguageVersion() == Context.VERSION_1_2) {
+            if (version == Context.VERSION_1_2) {
                 /*
                  * JS1.2 imitated the Perl4 bug where left context at each step
                  * in an iterative use of a global regexp started from last match,
@@ -478,9 +437,11 @@ class ReplaceData extends GlobData {
      * the result parameter sizep is the return value (errors are
      * propagated with exceptions).
      */
-    int findReplen(Context cx, RegExpImpl reImpl)
+    private static int find_replen(GlobData rdata, Context cx,
+                                   Scriptable scope,  RegExpImpl reImpl)
         throws JavaScriptException
     {
+        Function lambda = rdata.lambda;
         if (lambda != null) {
             // invoke lambda function with args lastMatch, $1, $2, ... $n,
             // leftContext.length, whole string.
@@ -497,27 +458,26 @@ class ReplaceData extends GlobData {
                 }
             }
             args[parenCount+1] = new Integer(reImpl.leftContext.length);
-            args[parenCount+2] = str;
-            Scriptable parent = lambda.getParentScope();
+            args[parenCount+2] = rdata.str;
+            Scriptable parent = ScriptableObject.getTopLevelScope(scope);
             Object result = lambda.call(cx, parent, parent, args);
-
-            this.repstr = ScriptRuntime.toString(result).toCharArray();
-            return this.repstr.length;
+            rdata.repstr = ScriptRuntime.toString(result).toCharArray();
+            return rdata.repstr.length;
         }
 
-        int replen = this.repstr.length;
-        if (dollar == -1)
+        int replen = rdata.repstr.length;
+        if (rdata.dollar == -1)
             return replen;
 
         int bp = 0;
-        for (int dp = dollar; dp < this.repstr.length ; ) {
-            char c = this.repstr[dp];
+        for (int dp = rdata.dollar; dp < rdata.repstr.length ; ) {
+            char c = rdata.repstr[dp];
             if (c != '$') {
                 dp++;
                 continue;
             }
             int[] skip = { 0 };
-            SubString sub = interpretDollar(cx, reImpl, this.repstr, dp,
+            SubString sub = interpretDollar(cx, reImpl, rdata.repstr, dp,
                                             bp, skip);
             if (sub != null) {
                 replen += sub.length - skip[0];
@@ -532,19 +492,19 @@ class ReplaceData extends GlobData {
     /**
      * Analog of do_replace in jsstr.c
      */
-    void doReplace(Context cx, RegExpImpl regExpImpl, char[] charArray,
-                   int arrayIndex)
+    private static void do_replace(GlobData rdata, Context cx,
+                                   RegExpImpl regExpImpl,
+                                   char[] charArray, int arrayIndex)
     {
         int cp = 0;
-        char[] da = repstr;
-        int dp = this.dollar;
+        char[] da = rdata.repstr;
+        int dp = rdata.dollar;
         int bp = cp;
         if (dp != -1) {
           outer:
             for (;;) {
                 int len = dp - cp;
-                System.arraycopy(repstr, cp, charArray, arrayIndex,
-                                 len);
+                System.arraycopy(da, cp, charArray, arrayIndex, len);
                 arrayIndex += len;
                 cp = dp;
                 int[] skip = { 0 };
@@ -562,22 +522,51 @@ class ReplaceData extends GlobData {
                 }
                 else
                     dp++;
-                if (dp >= repstr.length) break;
-                while (repstr[dp] != '$') {
+                if (dp >= da.length) break;
+                while (da[dp] != '$') {
                     dp++;
-                    if (dp >= repstr.length) break outer;
+                    if (dp >= da.length) break outer;
                 }
             }
         }
-        if (repstr.length > cp) {
-            System.arraycopy(repstr, cp, charArray, arrayIndex,
-                             repstr.length - cp);
+        if (da.length > cp) {
+            System.arraycopy(da, cp, charArray, arrayIndex,
+                             da.length - cp);
         }
     }
 
+    String          input;         /* input string to match (perl $_, GC root) */
+    boolean         multiline;     /* whether input contains newlines (perl $*) */
+    SubString[]     parens;        /* Vector of SubString; last set of parens
+                                      matched (perl $1, $2) */
+    SubString       lastMatch;     /* last string matched (perl $&) */
+    SubString       lastParen;     /* last paren matched (perl $+) */
+    SubString       leftContext;   /* input to left of last match (perl $`) */
+    SubString       rightContext;  /* input to right of last match (perl $') */
+}
+
+
+final class GlobData
+{
+    static final int GLOB_MATCH   =    1;
+    static final int GLOB_REPLACE =    2;
+    static final int GLOB_SEARCH  =    3;
+
+    byte     mode;      /* input: return index, match object, or void */
+    int      optarg;    /* input: index of optional flags argument */
+    boolean  global;    /* output: whether regexp was global */
+    String   str;       /* output: 'this' parameter object as string */
+    NativeRegExp regexp;/* output: regexp parameter object private data */
+
+    // match-specific data
+
+    Scriptable arrayobj;
+
+    // replace-specific data
+
     Function    lambda;        /* replacement function object or null */
     char[]      repstr;        /* replacement string */
-    int         dollar;        /* -1 or index of first $ in repstr */
+    int         dollar = -1;   /* -1 or index of first $ in repstr */
     char[]      charArray;     /* result characters, null initially */
     int         length;        /* result length, 0 initially */
     int         index;         /* index in result of next replacement */
