@@ -2091,13 +2091,13 @@ nsresult nsEventListenerManager::CreateEvent(nsIPresContext* aPresContext,
 {
   nsAutoString str(aEventType);
   if (!aEvent && !str.EqualsIgnoreCase("MouseEvent") && !str.EqualsIgnoreCase("KeyEvent") &&
-      !str.EqualsIgnoreCase("HTMLEvent") && !str.EqualsIgnoreCase("MutationEvent") &&
+      !str.EqualsIgnoreCase("HTMLEvent") && !str.EqualsIgnoreCase("MutationEvents") &&
       !str.EqualsIgnoreCase("Event")) {
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
   if ((aEvent && aEvent->eventStructType == NS_MUTATION_EVENT) ||
-      (!aEvent && str.EqualsIgnoreCase("MutationEvent")))
+      (!aEvent && str.EqualsIgnoreCase("MutationEvents")))
     return NS_NewDOMMutationEvent(aDOMEvent, aPresContext, aEvent);
   return NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEventType, aEvent);
 }

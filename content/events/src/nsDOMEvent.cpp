@@ -149,7 +149,7 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsAR
       mEvent = PR_NEWZAP(nsEvent);
       mEvent->eventStructType = NS_EVENT;
     }
-    else if (eventType.EqualsIgnoreCase("MutationEvent")) {
+    else if (eventType.EqualsIgnoreCase("MutationEvents")) {
       mEvent = PR_NEWZAP(nsMutationEvent);
       mEvent->eventStructType = NS_MUTATION_EVENT;
     }
@@ -1393,9 +1393,14 @@ nsDOMEvent::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
   nsresult res = NS_OK;
 
   if (nsnull == mScriptObject) {
-    nsISupports *supports = (nsISupports *)(nsIDOMMouseEvent *)this;
-
-    res = NS_NewScriptKeyEvent(aContext, supports, nsnull, (void**)&mScriptObject);
+    if (mEvent && mEvent->eventStructType == NS_MUTATION_EVENT) {
+      nsISupports *supports = (nsISupports *)(nsIDOMMutationEvent *)this;
+      res = NS_NewScriptMutationEvent(aContext, supports, nsnull, (void**)&mScriptObject);
+    }
+    else {
+      nsISupports *supports = (nsISupports *)(nsIDOMMouseEvent *)this;
+      res = NS_NewScriptKeyEvent(aContext, supports, nsnull, (void**)&mScriptObject);
+    }
   }
   *aScriptObject = mScriptObject;
 
