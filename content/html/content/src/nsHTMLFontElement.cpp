@@ -313,6 +313,7 @@ nsHTMLFontElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 a
     { &nsHTMLAtoms::size, NS_STYLE_HINT_REFLOW },
     { &nsHTMLAtoms::fontWeight, NS_STYLE_HINT_REFLOW },
     { &nsHTMLAtoms::color, NS_STYLE_HINT_VISUAL },
+    { nsnull, NS_STYLE_HINT_NONE }
   };
 
   static const AttributeImpactEntry* const map[] = {
