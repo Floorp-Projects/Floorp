@@ -2860,9 +2860,9 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
                                                 &rv);
                 if (NS_SUCCEEDED(rv))
             {
-                    nsXPIDLCString headers;
+                    char *headers;
                     PRInt32 headersSize;
-                    rv = m_msgParser->GetAllHeaders(getter_Copies(headers),
+                    rv = m_msgParser->GetAllHeaders(&headers,
                                                     &headersSize);
                     if (NS_SUCCEEDED(rv))
                     {

@@ -1681,10 +1681,10 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
             mimeHeaders = do_CreateInstance(NS_IMIMEHEADERS_CONTRACTID, &rv);
 
             if (NS_SUCCEEDED(rv) && mimeHeaders) {
-                nsXPIDLCString allHeaders;
+                char* allHeaders;
                 PRInt32 allHeadersSize = 0;
                 
-                rv = GetAllHeaders(getter_Copies(allHeaders),
+                rv = GetAllHeaders(&allHeaders,
                                    &allHeadersSize);
                 if (NS_SUCCEEDED(rv)) {
                     rv = mimeHeaders->Initialize(allHeaders, allHeadersSize);
