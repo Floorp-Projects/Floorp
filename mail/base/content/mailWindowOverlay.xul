@@ -1608,7 +1608,9 @@
       <!-- Tasks -->
       <menu id="tasksMenu" label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
         <menupopup id="taskPopup" onpopupshowing="document.commandDispatcher.updateCommands('create-menu-tasks')">
-        <menuitem id="addressBook" label="&addressBookCmd.label;" accesskey="&addressBookCmd.accesskey;"
+        <menuitem hidden="true" accesskey="&messengerCmd.accesskey;" label="&messengerCmd.label;" 
+                  key="key_mail" oncommand="toMessengerWindow();" id="tasksMenuMail" class="menuitem-iconic menu-iconic"/>
+        <menuitem id="addressBook" label="&addressBookCmd.label;" accesskey="&addressBookCmd.accesskey;" key="key_addressbook"
                   oncommand="toOpenWindowByType('mail:addressbook', 'chrome://messenger/content/addressbook/addressbook.xul');"/>
         <menuitem id="extensionsManager" label="&extensions.label;" accesskey="&extensions.accesskey;" 
                   oncommand="openExtensions('extensions');"/>

@@ -234,6 +234,7 @@ function OnLoadMessageWindow()
 function delayedOnLoadMessageWindow()
 {
 	HideMenus();
+  ShowMenus();
   AddMailOfflineObserver();
 	CreateMailWindowGlobals();
 	CreateMessageWindowGlobals();
@@ -393,6 +394,13 @@ function extractMsgKeyFromURI()
   }
 
   return msgKey;
+}
+
+function ShowMenus()
+{
+  var openMail3Pane_menuitem = document.getElementById('tasksMenuMail');
+  if (openMail3Pane_menuitem)
+    openMail3Pane_menuitem.removeAttribute("hidden");
 }
 
 function HideMenus()
