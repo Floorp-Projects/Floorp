@@ -77,7 +77,7 @@ nsFontMetricsGTK::~nsFontMetricsGTK()
   }
 
   if (mLoadedFonts) {
-    //PR_Free(mLoadedFonts);
+    PR_Free(mLoadedFonts);
     mLoadedFonts = nsnull;
   }
 
@@ -1330,7 +1330,13 @@ TryCharSet(nsFontSearch* aSearch, nsFontCharSet* aCharSet)
   }
 
   if (m->mLoadedFontsCount == m->mLoadedFontsAlloc) {
-    int newSize = 2 * (m->mLoadedFontsAlloc ? m->mLoadedFontsAlloc : 4);
+    int newSize;
+    if (m->mLoadedFontsAlloc) {
+      newSize = (2 * m->mLoadedFontsAlloc);
+    }
+    else {
+      newSize = 1;
+    }
     nsFontGTK* newPointer = (nsFontGTK*) PR_Realloc(m->mLoadedFonts,
       newSize * sizeof(nsFontGTK));
     if (newPointer) {
