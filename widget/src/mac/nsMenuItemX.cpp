@@ -256,37 +256,7 @@ nsEventStatus nsMenuItemX::SetRebuild(PRBool aNeedsRebuild)
 */
 NS_METHOD nsMenuItemX::DoCommand()
 {
-  nsresult rv = NS_ERROR_FAILURE;
- 
-  nsCOMPtr<nsIPresContext> presContext;
-  nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(mWebShellWeakRef);
-  if (!webShell)
-    return nsEventStatus_eConsumeNoDefault;
-  MenuHelpersX::WebShellToPresContext(webShell, getter_AddRefs(presContext));
-
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event;
-  event.eventStructType = NS_MOUSE_EVENT;
-  event.message = NS_XUL_COMMAND;
-
-  // See if we have a command element.  If so, we execute on the command instead
-  // of on our content element.
-  nsAutoString command;
-  mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::command, command);
-  if (!command.IsEmpty()) {
-    nsCOMPtr<nsIDocument> doc;
-    mContent->GetDocument(*getter_AddRefs(doc));
-    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
-    nsCOMPtr<nsIDOMElement> commandElt;
-    domDoc->GetElementById(command, getter_AddRefs(commandElt));
-    nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
-    if (commandContent)
-      commandContent->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-  }
-  else
-    mContent->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-  
-  return nsEventStatus_eConsumeNoDefault;
+  return MenuHelpersX::DispatchCommandTo(mWebShellWeakRef, mContent);
 }
     
    

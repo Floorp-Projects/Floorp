@@ -398,22 +398,10 @@ nsMenuBarX :: CommandEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
 nsEventStatus
 nsMenuBarX :: ExecuteCommand ( nsIContent* inDispatchTo )
 {
-  nsEventStatus status = nsEventStatus_eIgnore;
-  if ( inDispatchTo ) {
-    nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(mWebShellWeakRef);
-    if (!webShell)
-      return nsEventStatus_eConsumeNoDefault;
-    nsCOMPtr<nsIPresContext> presContext;
-    MenuHelpersX::WebShellToPresContext(webShell, getter_AddRefs(presContext));
+  if (!inDispatchTo)
+    return nsEventStatus_eIgnore;
 
-    nsMouseEvent event;
-    event.eventStructType = NS_MOUSE_EVENT;
-    event.message = NS_XUL_COMMAND;
-
-    inDispatchTo->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-	}
-	
-	return status;
+  return MenuHelpersX::DispatchCommandTo(mWebShellWeakRef, inDispatchTo);
 } // ExecuteCommand
 
 
@@ -1052,5 +1040,41 @@ MenuHelpersX::WebShellToPresContext (nsIWebShell* inWebShell, nsIPresContext** o
   
 } // WebShellToPresContext
 
+nsEventStatus
+MenuHelpersX::DispatchCommandTo(nsIWeakReference* aWebShellWeakRef,
+                                nsIContent* aTargetContent)
+{
+  NS_PRECONDITION(aTargetContent, "null ptr");
 
+  nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(aWebShellWeakRef);
+  if (!webShell)
+    return nsEventStatus_eConsumeNoDefault;
+  nsCOMPtr<nsIPresContext> presContext;
+  MenuHelpersX::WebShellToPresContext(webShell, getter_AddRefs(presContext));
 
+  nsEventStatus status = nsEventStatus_eConsumeNoDefault;
+  nsMouseEvent event;
+  event.eventStructType = NS_MOUSE_EVENT;
+  event.message = NS_XUL_COMMAND;
+
+  // See if we have a command element.  If so, we execute on the
+  // command instead of on our content element.
+  nsAutoString command;
+  aTargetContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::command, command);
+  if (!command.IsEmpty()) {
+    nsCOMPtr<nsIDocument> doc;
+    aTargetContent->GetDocument(*getter_AddRefs(doc));
+    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
+    nsCOMPtr<nsIDOMElement> commandElt;
+    domDoc->GetElementById(command, getter_AddRefs(commandElt));
+    nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
+    if (commandContent)
+      commandContent->HandleDOMEvent(presContext, &event, nsnull,
+                                     NS_EVENT_FLAG_INIT, &status);
+  }
+  else
+    aTargetContent->HandleDOMEvent(presContext, &event, nsnull,
+                                   NS_EVENT_FLAG_INIT, &status);
+
+  return status;
+}

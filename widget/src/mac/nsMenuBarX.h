@@ -65,6 +65,8 @@ namespace MenuHelpersX
 {
     // utility routine for getting a PresContext out of a webShell
   nsresult WebShellToPresContext ( nsIWebShell* inWebShell, nsIPresContext** outContext ) ;
+  nsEventStatus DispatchCommandTo(nsIWeakReference* aWebShellWeakRef,
+                                  nsIContent* aTargetContent);
 
 }
 
