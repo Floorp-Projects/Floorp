@@ -21,6 +21,7 @@
 #include "nsViewerApp.h"
 #include "nsBrowserWindow.h"
 #include "nsGtkMenu.h"
+#include "nsIServiceManager.h"
 #include "nsIImageManager.h"
 #include "plevent.h"
 
@@ -163,25 +164,32 @@ int main(int argc, char **argv)
   signal(SIGABRT, ah_crap_handler);
 #endif // CRAWL_STACK_ON_SIGSEGV
 
-  // Hack to get il_ss set so it doesn't fail in xpcompat.c
-  nsIImageManager *manager;
-  NS_NewImageManager(&manager);
+  // Initialize XPCOM
+  nsresult rv = NS_InitXPCOM(nsnull, nsnull, nsnull);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
+  if (NS_SUCCEEDED(rv)) {
+    // Hack to get il_ss set so it doesn't fail in xpcompat.c
+    nsIImageManager *manager;
+    NS_NewImageManager(&manager);
 
-  gTheApp = new nsNativeViewerApp();
+    gTheApp = new nsNativeViewerApp();
 
-  // Damn, there's no PR_PutEnv() ???
-  //PR_PutEnv("MOZ_TOOLKIT=gtk");
+    // The toolkit service in mozilla will look in the environment
+    // to determine which toolkit to use.  Yes, it is a dumb hack to
+    // force it here, but we have no choice because of toolkit specific
+    // code linked into the viewer.
+    putenv("MOZ_TOOLKIT=gtk");
 
-  // The toolkit service in mozilla will look in the environment
-  // to determine which toolkit to use.  Yes, it is a dumb hack to
-  // force it here, but we have no choice because of toolkit specific
-  // code linked into the viewer.
-  putenv("MOZ_TOOLKIT=gtk");
+    gTheApp->Initialize(argc, argv);
+    gTheApp->Run();
 
-  gTheApp->Initialize(argc, argv);
-  gTheApp->Run();
+    manager->FlushCache();
+    NS_RELEASE(manager);
+
+    // Shutdown XPCOM
+    rv = NS_ShutdownXPCOM(nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
+  }
 
   return 0;
 }
-
-
