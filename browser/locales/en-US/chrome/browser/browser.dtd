@@ -69,8 +69,6 @@
 <!ENTITY addCurPageAsCmd.commandkey "d">
 <!ENTITY manBookmarksCmd.label "Manage Bookmarks...">
 <!ENTITY manBookmarksCmd.accesskey "M">
-<!ENTITY manBookmarksCmd.commandkey "b">
-<!ENTITY manBookmarksWinCmd.commandkey "i">
 <!ENTITY emptyItem.label "(Empty)">
 
 <!ENTITY backCmd.label                "Back">
@@ -102,9 +100,16 @@
 <!-- Toolbar items --> 
 <!ENTITY  homeButton.label            "Home">
 
-<!ENTITY historyCmd.label             "History">  
-<!ENTITY historyCmd.accesskey         "i">
-<!ENTITY history.commandKey           "h">
+<!ENTITY bookmarksButton.label          "Bookmarks">
+<!ENTITY bookmarksButton.tooltip        "Display your bookmarks">
+<!ENTITY bookmarksSidebarCmd.accesskey  "B">
+<!ENTITY bookmarksSidebarCmd.commandkey "b">
+<!ENTITY bookmarksSidebarWinCmd.commandkey "i">
+
+<!ENTITY historyButton.label            "History">
+<!ENTITY historyButton.tooltip          "Display pages you've viewed recently">
+<!ENTITY historySidebarCmd.accesskey    "s">
+<!ENTITY historySidebarCmd.commandKey   "h">
 
 <!ENTITY toolsMenu.label              "Tools">
 <!ENTITY toolsMenu.accesskey          "T"> 
@@ -274,12 +279,6 @@
 <!ENTITY textZoomReduceCmd.accesskey    "D">
 <!ENTITY textZoomReduceCmd.commandkey   "-">
 <!ENTITY textZoomResetCmd.commandkey    "0">
-
-<!ENTITY bookmarksButton.label          "Bookmarks">
-<!ENTITY bookmarksButton.tooltip        "Display your bookmarks">
-
-<!ENTITY historyButton.label            "History">
-<!ENTITY historyButton.tooltip          "Display pages you've viewed recently">
 
 <!ENTITY mailMenu.label                   "Mail &amp; News">
 <!ENTITY mailMenu.accesskey               "M">

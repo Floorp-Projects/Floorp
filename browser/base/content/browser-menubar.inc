@@ -140,8 +140,8 @@
                 <menu label="&viewSidebarMenu.label;"
                       accesskey="&viewSidebarMenu.accesskey;">
                   <menupopup id="viewSidebarMenu">
-                    <menuitem key="viewBookmarksSidebarKb" observes="viewBookmarksSidebar"/>
-                    <menuitem key="key_gotoHistory" observes="viewHistorySidebar"/>
+                    <menuitem key="viewBookmarksSidebarKb" observes="viewBookmarksSidebar" accesskey="&bookmarksSidebarCmd.accesskey;"/>
+                    <menuitem key="key_gotoHistory" observes="viewHistorySidebar" accesskey="&historySidebarCmd.accesskey;"/>
                   </menupopup>
                 </menu>            
                 <menuseparator/>
@@ -294,7 +294,7 @@
                 <menuitem label="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    command="Browser:Home" key="goHome"/>
                 <menuseparator id="startHistorySeparator"/>
                 <menuseparator hidden="true" id="endHistorySeparator"/>
-                <menuitem accesskey="&historyCmd.accesskey;" command="viewHistorySidebar" key="key_gotoHistory"/>
+                <menuitem accesskey="&historySidebarCmd.accesskey;" command="viewHistorySidebar" key="key_gotoHistory"/>
               </menupopup>
             </menu>
 
