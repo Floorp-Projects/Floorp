@@ -272,7 +272,7 @@ void nsTableRowFrame::FixMinCellHeight()
 // Position and size aKidFrame and update our reflow state. The origin of
 // aKidRect is relative to the upper-left origin of our frame, and includes
 // any left/top margin.
-void nsTableRowFrame::PlaceChild(nsIPresContext*    aPresContext,
+void nsTableRowFrame::PlaceChild(nsIPresContext&    aPresContext,
 																 RowReflowState&    aState,
 																 nsIFrame*          aKidFrame,
 																 const nsRect&      aKidRect,
@@ -323,7 +323,7 @@ void nsTableRowFrame::PlaceChild(nsIPresContext*    aPresContext,
  * Called for a resize reflow. Typically because the column widths have
  * changed. Reflows all the existing table cell frames
  */
-nsresult nsTableRowFrame::ResizeReflow(nsIPresContext*  aPresContext,
+nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
                                        RowReflowState&  aState,
                                        nsReflowMetrics& aDesiredSize)
 {
@@ -399,11 +399,11 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext*  aPresContext,
       nsSize  kidAvailSize(availWidth, NS_UNCONSTRAINEDSIZE);
 
       // Reflow the child
-      kidFrame->WillReflow(*aPresContext);
+      kidFrame->WillReflow(aPresContext);
       kidFrame->MoveTo(aState.x, kidMargin.top);
       nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
                                    eReflowReason_Resize);
-      nsReflowStatus status = ReflowChild(kidFrame, aPresContext, desiredSize,
+      nsReflowStatus status = ReflowChild(kidFrame, &aPresContext, desiredSize,
                                           kidReflowState);
       NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "unexpected reflow status");
 
@@ -431,7 +431,7 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext*  aPresContext,
     nscoord specifiedHeight = 0;
     nscoord cellHeight = desiredSize.height;
     nsIStyleContextPtr kidSC;
-    kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
+    kidFrame->GetStyleContext(&aPresContext, kidSC.AssignRef());
     const nsStylePosition* kidPosition = (const nsStylePosition*)
       kidSC->GetStyleData(eStyleStruct_Position);
     switch (kidPosition->mHeight.GetUnit()) {
@@ -482,7 +482,7 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext*  aPresContext,
  * reflows it to gets its minimum and maximum sizes
  */
 nsresult
-nsTableRowFrame::InitialReflow(nsIPresContext*  aPresContext,
+nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
                                RowReflowState&  aState,
                                nsReflowMetrics& aDesiredSize)
 {
@@ -506,11 +506,11 @@ nsTableRowFrame::InitialReflow(nsIPresContext*  aPresContext,
     }
 
     // Create a child frame -- always an nsTableCell frame
-    nsIStyleContext*    kidSC = aPresContext->ResolveStyleContextFor(cell, this, PR_TRUE);
-    nsIContentDelegate* kidDel = cell->GetDelegate(aPresContext);
+    nsIStyleContext*    kidSC = aPresContext.ResolveStyleContextFor(cell, this, PR_TRUE);
+    nsIContentDelegate* kidDel = cell->GetDelegate(&aPresContext);
     nsIFrame*           kidFrame;
 
-    nsresult result = kidDel->CreateFrame(aPresContext, cell, this, kidSC, kidFrame);
+    nsresult result = kidDel->CreateFrame(&aPresContext, cell, this, kidSC, kidFrame);
     NS_RELEASE(kidDel);
     NS_RELEASE(cell);
     if (NS_FAILED(result)) {
@@ -561,8 +561,8 @@ nsTableRowFrame::InitialReflow(nsIPresContext*  aPresContext,
                                    eReflowReason_Initial);
     nsReflowStatus  status;
 
-    kidFrame->WillReflow(*aPresContext);
-    status = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
+    kidFrame->WillReflow(aPresContext);
+    status = ReflowChild(kidFrame, &aPresContext, kidSize, kidReflowState);
     ((nsTableCellFrame *)kidFrame)->SetPass1DesiredSize(kidSize);
     ((nsTableCellFrame *)kidFrame)->SetPass1MaxElementSize(kidMaxElementSize);
     NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "unexpected child reflow status");
@@ -613,7 +613,7 @@ nsTableRowFrame::InitialReflow(nsIPresContext*  aPresContext,
 // - maxCellHeight
 // - maxVertCellSpace
 // - x
-nsresult nsTableRowFrame::RecoverState(nsIPresContext* aPresContext,
+nsresult nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
                                        RowReflowState& aState,
                                        nsIFrame*       aKidFrame,
                                        nscoord&        aMaxCellTopMargin,
@@ -643,7 +643,7 @@ nsresult nsTableRowFrame::RecoverState(nsIPresContext* aPresContext,
         // See if it has a specified height that overrides the desired size
         nscoord specifiedHeight = 0;
         nsIStyleContextPtr kidSC;
-        frame->GetStyleContext(aPresContext, kidSC.AssignRef());
+        frame->GetStyleContext(&aPresContext, kidSC.AssignRef());
         const nsStylePosition* kidPosition = (const nsStylePosition*)
           kidSC->GetStyleData(eStyleStruct_Position);
         switch (kidPosition->mHeight.GetUnit()) {
@@ -697,7 +697,7 @@ nsresult nsTableRowFrame::RecoverState(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-nsresult nsTableRowFrame::IncrementalReflow(nsIPresContext*  aPresContext,
+nsresult nsTableRowFrame::IncrementalReflow(nsIPresContext&  aPresContext,
                                             RowReflowState&  aState,
                                             nsReflowMetrics& aDesiredSize)
 {
@@ -752,14 +752,14 @@ nsresult nsTableRowFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   nsSize          kidMaxElementSize;
   nsReflowMetrics desiredSize(&kidMaxElementSize);
   nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize);
-  kidFrame->WillReflow(*aPresContext);
+  kidFrame->WillReflow(aPresContext);
   kidFrame->MoveTo(aState.x, kidMargin.top);
 
   // XXX Unfortunately we need to reflow the child several times.
   // The first time is for the incremental reflow command. We can't pass in
   // a max width of NS_UNCONSTRAINEDSIZE, because the max width must match
   // the width of the previous reflow...
-  status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
+  status = ReflowChild(kidFrame, &aPresContext, desiredSize, kidReflowState);
 
   // Now do the regular pass 1 reflow and gather the max width and max element
   // size.
@@ -768,7 +768,7 @@ nsresult nsTableRowFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   kidReflowState.reason = eReflowReason_Resize;
   kidReflowState.reflowCommand = nsnull;
   kidReflowState.maxSize.width = NS_UNCONSTRAINEDSIZE;
-  status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
+  status = ReflowChild(kidFrame, &aPresContext, desiredSize, kidReflowState);
 
   // Update the cell layout data.
   ((nsTableCellFrame *)kidFrame)->SetPass1DesiredSize(desiredSize);
@@ -777,16 +777,16 @@ nsresult nsTableRowFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   // Now reflow the cell again this time constraining the width
   // XXX Ignore for now the possibility that the column width has changed...
   kidReflowState.maxSize.width = availWidth;
-  status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
+  status = ReflowChild(kidFrame, &aPresContext, desiredSize, kidReflowState);
 
   // Place the child after taking into account it's margin and attributes
   // XXX We need to ask the table (or the table layout strategy) if the column
-  // widths have changed. If so we just bail and return a status indicating
+  // widths have changed. If so, we just bail and return a status indicating
   // what happened and let the table reflow all the table cells...
   nscoord specifiedHeight = 0;
   nscoord cellHeight = desiredSize.height;
   nsIStyleContextPtr kidSC;
-  kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
+  kidFrame->GetStyleContext(&aPresContext, kidSC.AssignRef());
   const nsStylePosition* kidPosition = (const nsStylePosition*)
     kidSC->GetStyleData(eStyleStruct_Position);
   switch (kidPosition->mHeight.GetUnit()) {
@@ -864,17 +864,17 @@ nsTableRowFrame::Reflow(nsIPresContext&      aPresContext,
   switch (aReflowState.reason) {
   case eReflowReason_Initial:
     NS_ASSERTION(nsnull == mFirstChild, "unexpected reflow reason");
-    result = InitialReflow(&aPresContext, state, aDesiredSize);
+    result = InitialReflow(aPresContext, state, aDesiredSize);
     GetMinRowSpan();
     FixMinCellHeight();
     break;
 
   case eReflowReason_Resize:
-    result = ResizeReflow(&aPresContext, state, aDesiredSize);
+    result = ResizeReflow(aPresContext, state, aDesiredSize);
     break;
 
   case eReflowReason_Incremental:
-    result = IncrementalReflow(&aPresContext, state, aDesiredSize);
+    result = IncrementalReflow(aPresContext, state, aDesiredSize);
     break;
 
   }
