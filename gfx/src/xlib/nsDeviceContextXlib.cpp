@@ -258,7 +258,9 @@ NS_IMETHODIMP nsDeviceContextXlib::GetDrawingSurface(nsIRenderingContext &aConte
 NS_IMETHODIMP nsDeviceContextXlib::ConvertPixel(nscolor aColor, PRUint32 & aPixel)
 {
   PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::ConvertPixel()\n"));
-  aPixel = xlib_rgb_xpixel_from_rgb(aPixel);
+  aPixel = xlib_rgb_xpixel_from_rgb(NS_RGB(NS_GET_B(aPixel),
+                                           NS_GET_G(aPixel),
+                                           NS_GET_R(aPixel)));
   return NS_OK;
 }
 
