@@ -32,6 +32,11 @@ treeitem[container="true"][open="true"][loading="true"] > treerow > treecell > .
  list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
 }
 
+treeitem[status="new"] > treerow > treecell > .tree-icon
+{
+ list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
+}
+
 treeitem[type="http://home.netscape.com/NC-rdf#Folder"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("chrome://bookmarks/skin/bookmark-folder-closed.gif");

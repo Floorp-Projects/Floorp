@@ -34,7 +34,7 @@ function BookmarkProperties()
         if (type != "http://home.netscape.com/NC-rdf#BookmarkSeparator")
         {
 		var props = window.open("chrome://bookmarks/content/bm-props.xul",
-                                "BookmarkProperties", "chrome,menubar,resizable");
+                                "BookmarkProperties", "chrome,menubar");
 		props.BookmarkURL = select_list[0].getAttribute("id");
 	}
   } else {
