@@ -150,7 +150,7 @@ static void import(Internal_EndCentralDirectoryHeader *,
 
 /* Public functions */
 ZipArchive::ZipArchive(const char *archiveName, Pool &pool, bool &status)
-  : pool(pool), dir(0)
+  : pool(pool)
 {
   status = true;
 
@@ -164,17 +164,6 @@ ZipArchive::~ZipArchive()
 {
   if (fp)
     PR_Close(fp);
-}
-
-const DirectoryEntry *ZipArchive::lookup(const char *fileName)
-{
-  Uint32 i;
-
-  for (i = 0; i < nel; ++i)
-    if (PL_strcasecmp(dir[i].fn, fileName) == 0)
-      return &dir[i];
-  
-  return NULL;
 }
 
 bool ZipArchive::get(const DirectoryEntry *dp, char *&buf, Int32 &len)
@@ -201,36 +190,45 @@ bool ZipArchive::get(const DirectoryEntry *dp, char *&buf, Int32 &len)
 Uint32 ZipArchive::getNumElements(const char *fn_suffix)
 {
   int suf_len = strlen(fn_suffix);
-  Uint32 nelems;
-  Uint32 i;
-  
-  for (i=0, nelems=0; i < nel; i++) {
-    char *fn = dir[i].fn;
+  Uint32 nelems = 0;
+  DirectoryEntry *entry;
+
+  entry = dir.firstNode();
+  while (entry) {
+    const char *fn = entry->fn;
     int fn_len = strlen(fn);
     if (suf_len >= fn_len
         && PL_strncasecmp(&fn[fn_len - suf_len], fn_suffix, suf_len) == 0) {
       nelems++;
     }
+    entry = dir.next(entry);
   }
+
   return nelems;
 }
   
-Uint32 ZipArchive::listElements(const char *fn_suffix, char **&buf)
+Uint32 ZipArchive::listElements(const char *fn_suffix, char **&rbuf)
 {
   int suf_len = strlen(fn_suffix);
   Uint32 nelems;
   Uint32 i;
-  buf = new (pool) char *[nel];
-  
+  char **buf = new (pool) char *[nel];
+  DirectoryEntry *entry;
+
+  rbuf = buf;
+  entry = dir.firstNode();
+
   for (i=0, nelems=0; i < nel; i++) {
-    char *fn = dir[i].fn;
+    const char *fn = entry->fn;
     int fn_len = strlen(fn);
     if (fn_len >= suf_len
         && PL_strncasecmp(&fn[fn_len - suf_len], fn_suffix, suf_len) == 0) {
       buf[nelems] = dupString(fn, pool);
       nelems++;
     }
+    entry = dir.next(entry);
   }
+
   return nelems;
 }
 
@@ -244,6 +242,7 @@ bool ZipArchive::initReader()
   External_EndCentralDirectoryHeader ext_ehdr;
   Internal_EndCentralDirectoryHeader int_ehdr;
   char *central_directory, *cd_ptr;
+  DirectoryEntry *edir;
   PRInt32 pos;
   
   if (! findEnd())
@@ -271,35 +270,30 @@ bool ZipArchive::initReader()
   // Import all of the individual directory entries.
 
   nel = int_ehdr.total_entries_central_dir;
-  dir = new (pool) DirectoryEntry[nel];
+  edir = new (pool) DirectoryEntry[nel];
   cd_ptr = central_directory;
 
   for (int i = 0; i < nel; ++i) {
     Internal_CentralDirectoryHeader int_chdr;
     import(&int_chdr, *(External_CentralDirectoryHeader*)cd_ptr);
 
-    dir[i].len = int_chdr.uncompressed_size;
-    dir[i].size = int_chdr.compressed_size;
-    dir[i].method = int_chdr.compression_method;
-    dir[i].mod = 0; // FIXME
-    dir[i].off = (int_chdr.relative_offset_local_header 
-                  + sizeof(External_LocalFileHeader)
-                  + int_chdr.filename_length
-                  + int_chdr.file_comment_length
-                  + int_chdr.extra_field_length);
+    edir[i].len = int_chdr.uncompressed_size;
+    edir[i].size = int_chdr.compressed_size;
+    edir[i].method = int_chdr.compression_method;
+    edir[i].mod = 0; // FIXME
+    edir[i].off = (int_chdr.relative_offset_local_header 
+                   + sizeof(External_LocalFileHeader)
+                   + int_chdr.filename_length
+                   + int_chdr.file_comment_length
+                   + int_chdr.extra_field_length);
 
     // ??? Why is this extra 4 needed?  infozip source is less than readable.
     if (int_chdr.extra_field_length)
-      dir[i].off += 4;
+      edir[i].off += 4;
 
     cd_ptr += sizeof(External_CentralDirectoryHeader);
-    dir[i].fn = cd_ptr;
+    edir[i].fn = cd_ptr;
     cd_ptr += int_chdr.filename_length;
-    cd_ptr += int_chdr.extra_field_length;
-      
-    // Sanity check the entry.  
-    if (cd_ptr - central_directory > int_ehdr.size_central_directory)
-      return false;
 
     // Null terminate the filename at the expense of either the 
     // extra_field_length padding, or the signature on the next
@@ -308,7 +302,16 @@ bool ZipArchive::initReader()
     // FIXME -- do we care about transforming filenames as infozip
     // would have us do in the general case?
 
-    dir[i].fn[int_chdr.filename_length] = '\0';
+    *cd_ptr = '\0';
+
+    cd_ptr += int_chdr.extra_field_length;
+      
+    // Sanity check the entry.  
+    if (cd_ptr - central_directory > int_ehdr.size_central_directory)
+      return false;
+
+    // Insert the entry into the tree.
+    dir.insert(edir[i]);
   }
 
   return true;
