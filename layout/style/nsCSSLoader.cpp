@@ -56,6 +56,9 @@
 #include "nsITimelineService.h"
 #include "nsIHttpChannel.h"
 #include "nsHTMLAtoms.h"
+#include "nsIConsoleService.h"
+#include "nsIScriptError.h"
+#include "nsIStringBundle.h"
 
 #ifdef INCLUDE_XUL
 #include "nsIXULPrototypeCache.h"
@@ -65,6 +68,7 @@
 #include "nsIDOMStyleSheet.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_CID(kCStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 class CSSLoaderImpl;
 
@@ -605,6 +609,55 @@ CSSLoaderImpl::RecycleParser(nsICSSParser* aParser)
   return result;
 }
 
+/**
+ * Report an error to the error console.
+ *  @param aErrorName     The name of a string in css.properties.
+ *  @param aParams        The parameters for that string in css.properties.
+ *  @param aParamsLength  The length of aParams.
+ *  @param aErrorFlags    Error/warning flag to pass to nsIScriptError::Init.
+ *
+ * XXX This should be a static method on a class called something like
+ * nsCSSUtils, since it's a general way of accessing css.properties and
+ * will be useful for localizability work on CSS parser error reporting.
+ * However, it would need some way of reporting source file name, text,
+ * line, and column information.
+ */
+static nsresult
+ReportToConsole(const PRUnichar* aMessageName, const PRUnichar **aParams, 
+                PRUint32 aParamsLength, PRUint32 aErrorFlags)
+{
+  nsresult rv;
+  nsCOMPtr<nsIConsoleService> consoleService =
+    do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIScriptError> errorObject =
+    do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIStringBundleService> stringBundleService =
+    do_GetService(kCStringBundleServiceCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIStringBundle> bundle;
+  rv = stringBundleService->CreateBundle(
+           "chrome://global/locale/css.properties", getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLString errorText;
+  rv = bundle->FormatStringFromName(aMessageName, aParams, aParamsLength,
+                                    getter_Copies(errorText));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = errorObject->Init(errorText.get(),
+                         NS_LITERAL_STRING("").get(), /* file name */
+                         NS_LITERAL_STRING("").get(), /* source line */
+                         0, /* line number */
+                         0, /* column number */
+                         aErrorFlags,
+                         "CSS Loader");
+  NS_ENSURE_SUCCESS(rv, rv);
+  consoleService->LogMessage(errorObject);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
                                 nsISupports* aContext,
@@ -635,15 +688,32 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
   
   if (realDocument && aString && aStringLen>0) {
     nsCAutoString contentType;
-    if (mLoader->mCompatMode != eCompatibility_NavQuirks) {
-      nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
-      if (channel) {
-        channel->GetContentType(contentType);
-      }
+    nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
+    if (channel) {
+      channel->GetContentType(contentType);
     }
     if (mLoader->mCompatMode == eCompatibility_NavQuirks ||
         contentType.Equals(NS_LITERAL_CSTRING("text/css")) ||
         contentType.IsEmpty()) {
+
+      if (!contentType.IsEmpty() &&
+          contentType != NS_LITERAL_CSTRING("text/css")) {
+        nsCAutoString spec;
+        if (channel) {
+          nsCOMPtr<nsIURI> uri;
+          channel->GetURI(getter_AddRefs(uri));
+          if (uri)
+            uri->GetSpec(spec);
+        }
+
+        const nsAFlatString& specUCS2 = NS_ConvertUTF8toUCS2(spec);
+        const nsAFlatString& ctypeUCS2 = NS_ConvertASCIItoUCS2(contentType);
+        const PRUnichar *strings[] = { specUCS2.get(), ctypeUCS2.get() };
+
+        ReportToConsole(NS_LITERAL_STRING("MimeNotCssWarn").get(), strings, 2,
+                        nsIScriptError::warningFlag);
+      }
+
       /*
        * First determine the charset (if one is indicated)
        * 1)  Check nsIChannel::contentCharset
@@ -655,7 +725,6 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
        * charset)
        */
       nsAutoString strChannelCharset;
-      nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
       if (channel) {
         nsCAutoString charsetVal;
         channel->GetContentCharset(charsetVal);
@@ -746,6 +815,21 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
           }
         }
       }
+    } else {
+      nsCAutoString spec;
+      if (channel) {
+        nsCOMPtr<nsIURI> uri;
+        channel->GetURI(getter_AddRefs(uri));
+        if (uri)
+          uri->GetSpec(spec);
+      }
+
+      const nsAFlatString& specUCS2 = NS_ConvertUTF8toUCS2(spec);
+      const nsAFlatString& ctypeUCS2 = NS_ConvertASCIItoUCS2(contentType);
+      const PRUnichar *strings[] = { specUCS2.get(), ctypeUCS2.get() };
+
+      ReportToConsole(NS_LITERAL_STRING("MimeNotCss").get(), strings, 2,
+                      nsIScriptError::errorFlag);
     }
   }
 
