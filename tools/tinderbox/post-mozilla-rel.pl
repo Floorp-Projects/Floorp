@@ -63,6 +63,8 @@ sub packit {
     }
     TinderUtils::print_log "INSTALLER_URL is " . $ENV{INSTALLER_URL} . "\n";
 
+    mkdir($package_location, 0775);
+
     # the Windows installer scripts currently require Activestate Perl.
     # Put it ahead of cygwin perl in the path.
     my $save_path;

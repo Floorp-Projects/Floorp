@@ -67,13 +67,6 @@ NO_PKG_FILES = \
 
 include $(DEPTH)/xpinstall/packager/Makefile
 
-# Hack for post-mozilla-rel.pl.  Ensure that the installer directory is created
-# even if we didn't build an installer.
-libs::
-	@if [ ! -d $(DEPTH)/installer ]; then \
-	  mkdir $(DEPTH)/installer; \
-	fi
-
 # Rename the archive after it's created, so that we can differentiate between
 # the gtk1 and gtk2 packages on ftp, and so the Windows package has a
 # friendlier name.
