@@ -689,10 +689,7 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         if (NS_FAILED(rv)) return rv;
 
         NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-        nsCOMPtr<nsIProtocolHandler> protocolHandler;
         serv->NewURI(spec, nsnull, getter_AddRefs(chromeURI));
-        
-        // now fetch the converted URI
         if (NS_FAILED(rv)) return rv;
 
         rv = serv->NewChannelFromURI(chromeURI, getter_AddRefs(result));
