@@ -62,19 +62,19 @@ rpms:
 
 openjade
 jadetex
-docbook-dtd41-sgml
+docbook-dtds
 docbook-style-dsssl
-docbook-dtd31-sgml
 docbook-style-dsssl-doc
+docbook-utils
 xemacs
 psgml
 sgml-tools
 sgml-common
 
-Set up environment:
 
-in your .bashrc add this line (after installing above RPMS):
-export SGML_CATALOG_FILES=/etc/sgml/catalog
+If you're getting these from RedHat, make sure you get the ones in the
+rawhide area.  The ones in the 7.2 distribution are too old and don't
+include the XML stuff.
 
 Download "ldp.dsl" from the Resources page on linuxdoc.org.  This is the 
 stylesheet I use to get the HTML and text output.  It works well, and has a 
@@ -83,59 +83,67 @@ adjust the paths in ldp.dsl at the top of the file to reflect the actual
 locations of your docbook catalog files.  I created a directory, 
 /usr/share/sgml/docbook/ldp, and put the ldp.dsl file there.  I then edited 
 ldp.dsl and changed two lines near the top:
-<!ENTITY docbook.dsl SYSTEM "../dsssl-stylesheets-1.62/html/docbook.dsl" CDATA 
+<!ENTITY docbook.dsl SYSTEM "../dsssl-stylesheets/html/docbook.dsl" CDATA 
 dsssl>
 ...and...
-<!ENTITY docbook.dsl SYSTEM "../dsssl-stylesheets-1.62/print/docbook.dsl" CDATA
+<!ENTITY docbook.dsl SYSTEM "../dsssl-stylesheets/print/docbook.dsl" CDATA
 dsssl>
 
 Note the difference is the top one points to the HTML docbook stylesheet, 
 and the next one points to the PRINT docbook stylesheet.
 
-  You know, this sure looks awful involved.  Anyway, once you have this in 
+  You know, this sure looks awful involved.  Anyway, once you have this in
 place, add to your .bashrc:
+export SGML_CATALOG_FILES=/etc/sgml/catalog
 export LDP_HOME=/usr/share/sgml/docbook/ldp
+export JADE_PUB=/usr/share/doc/openjade-1.3.1/pubtext
+
+or in .tcshrc:
+setenv SGML_CATALOG_FILES /etc/sgml/catalog
+setenv LDP_HOME /usr/share/sgml/docbook/ldp
+setenv JADE_PUB /usr/share/doc/openjade-1.3.1/pubtext
+
+  If you have root access and want to set this up for anyone on your box,
+you can add those lines to /etc/profile for bash users and /etc/csh.login
+for tcsh users.
+
+  Make sure you edit the paths in the above environment variables if those
+folders are anywhere else on your system (for example, the openjade version
+might change if you get a new version at some point).
 
   I suggest xemacs for editing your SGML/XML Docbook documents.  The darn
-thing just works, and generally includes PSGML mode by default.  You can
-download psgml at http://www.sourceforge.net/projects/psgml.
+thing just works, and generally includes PSGML mode by default.  Not to
+mention you can validate the SGML from right within it without having to
+remember the command-line syntax for nsgml (not that it's that hard
+anyway).  If not, you can download psgml at
+http://www.sourceforge.net/projects/psgml.
 
 ==========
 NOTES:
 ==========
 
   Here are the commands I use to maintain this documentation.
-  You MUST have DocBook 4.1 set up correctly in order for this to work.
-  Substitute your own path to "ldp.dsl" for "$LDP_HOME".  Additionally,
-  there is now a dependency on "xml.dcl" since we converted the Guide
-  to XML.  Note that below, it is hard-coded to
-  /usr/share/doc/openjade-1.3/pubtext/xml.dcl.  Modify it to point to
-  openjade's xml.dcl on your system.
-
+  You MUST have DocBook 4.1.2 set up correctly in order for this to work.
 
 To create HTML documentation:
 bash$ cd html
-bash$  jade -t sgml -i html -d $LDP_HOME/ldp.dsl\#html \
-/usr/share/doc/openjade-1.3/pubtext/xml.dcl ../sgml/Bugzilla-Guide.sgml
+bash$ jade -t sgml -i html -d $LDP_HOME/ldp.dsl\#html \
+$JADE_PUB/xml.dcl ../sgml/Bugzilla-Guide.sgml
 
 To create HTML documentation as a single big HTML file:
 bash$ cd html
-bash$  jade -V nochunks -t sgml -i html -d $LDP_HOME/ldp.dsl\#html \
-/usr/share/doc/openjade-1.3/pubtext/xml.dcl ../sgml/Bugzilla-Guide.sgml
+bash$ jade -V nochunks -t sgml -i html -d $LDP_HOME/ldp.dsl\#html \
+$JADE_PUB/xml.dcl ../sgml/Bugzilla-Guide.sgml
 
 To create TXT documentation as a single big TXT file:
 bash$ cd txt
 bash$ lynx -dump -nolist ../html/Bugzilla-Guide.html >Bugzilla-Guide.txt
 
 
-## Change for XML
-There's a small change in how you use Jade now that we've converted the
-Bugzilla Guide to XML from SGML.  Now call Jade this way to compile HTML
-documentation:
-
-(I need to remove the hard-coded path to xml.dcl for openjade)
-
 Sincerely,
  Matthew P. Barnson
  The Bugzilla "Doc Knight"
- barnboy@trilobyte.net
+ mbarnson@sisna.com
+
+ with major edits by Dave Miller <justdave@syndicomm.com> based on
+ experience setting this up on the Landfill test server.
