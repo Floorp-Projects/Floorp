@@ -277,7 +277,7 @@ public:
    */
   void StripChars(const char* aSet);
   void StripChar(PRUnichar aChar,PRInt32 anOffset=0);
-  void StripChar(char aChar,PRInt32 anOffset=0) { return StripChar((PRUnichar) (unsigned char)aChar,anOffset); }
+  void StripChar(char aChar,PRInt32 anOffset=0) { StripChar((PRUnichar) (unsigned char)aChar,anOffset); }
 
   /**
    *  This method strips whitespace throughout the string
