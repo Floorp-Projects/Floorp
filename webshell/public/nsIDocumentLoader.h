@@ -87,6 +87,10 @@ public:
     NS_IMETHOD AddObserver(nsIDocumentLoaderObserver *aObserver) = 0;
 
     NS_IMETHOD RemoveObserver(nsIDocumentLoaderObserver *aObserver) = 0;
+
+    NS_IMETHOD SetContainer(nsIContentViewerContainer* aContainer) = 0;
+
+    NS_IMETHOD GetContainer(nsIContentViewerContainer** aResult) = 0;
 };
 
 /* 057b04d0-0ccf-11d2-beba-00805f8a66dc */
