@@ -215,6 +215,7 @@ NS_METHOD MRJPlugin::CreateInstance(nsISupports *aOuter, const nsIID& aIID, void
 NS_METHOD MRJPlugin::CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID, const char* aPluginMIMEType, void **aResult)
 {
 	nsresult result = NS_NOINTERFACE;
+
 	if (::strcmp(aPluginMIMEType, NS_JVM_MIME_TYPE) == 0 || ::strncmp(aPluginMIMEType, NS_APPLET_MIME_TYPE, sizeof(NS_APPLET_MIME_TYPE) - 1) == 0)
 		result = CreateInstance(aOuter, aIID, aResult);
 	else if (::strcmp(aPluginMIMEType, "application/x-java-frame") == 0) {
@@ -567,7 +568,7 @@ static const char* kGetDocumentBaseScriptURL = "javascript:window.location";
 static bool hasTagInfo(nsISupports* supports)
 {
 	nsIJVMPluginTagInfo* tagInfo;
-	if (supports->QueryInterface(nsIJVMPluginTagInfo::GetIID(), &tagInfo) == NS_OK) {
+	if (supports->QueryInterface(NS_GET_IID(nsIJVMPluginTagInfo), &tagInfo) == NS_OK) {
 		NS_RELEASE(tagInfo);
 		return true;
 	}

@@ -179,10 +179,10 @@ void MRJContext::processAppletTag()
 
 	// obtain the applet's attributes & parameters.
 	nsIPluginTagInfo* tagInfo = NULL;
-	if (mPeer->QueryInterface(nsIPluginTagInfo::GetIID(), &tagInfo) == NS_OK) {
+	if (mPeer->QueryInterface(NS_GET_IID(nsIPluginTagInfo), &tagInfo) == NS_OK) {
 		tagInfo->GetAttributes(attributes.fCount, attributes.fNames, attributes.fValues);
 		nsIPluginTagInfo2* tagInfo2 = NULL;
-		if (tagInfo->QueryInterface(nsIPluginTagInfo2::GetIID(), &tagInfo2) == NS_OK) {
+		if (tagInfo->QueryInterface(NS_GET_IID(nsIPluginTagInfo2), &tagInfo2) == NS_OK) {
 			tagInfo2->GetParameters(parameters.fCount, parameters.fNames, parameters.fValues);
 			tagInfo2->GetTagType(&pluginTagType);
 
@@ -194,7 +194,7 @@ void MRJContext::processAppletTag()
 
 				// establish a page context for this applet to run in.
 				nsIJVMPluginTagInfo* jvmTagInfo = NULL;
-				if (mPeer->QueryInterface(nsIJVMPluginTagInfo::GetIID(), &jvmTagInfo) == NS_OK) {
+				if (mPeer->QueryInterface(NS_GET_IID(nsIJVMPluginTagInfo), &jvmTagInfo) == NS_OK) {
 					PRUint32 documentID;
 					const char* codeBase;
 					const char* archive;
@@ -780,7 +780,39 @@ Boolean MRJContext::loadApplet()
 		&showDocument,					/* go to a url, optionally in a new window */
 		&setStatusMessage,				/* applet changed status message */
 	};
-	OSStatus status = ::JMNewAppletViewer(&mViewer, mContext, mLocator, 0,
+	OSStatus status;
+	
+	// Added by Mark Lin (mark.lin@eng.sun.com):
+	// This code will run the plugin using the Swing Toolkit as the AWT peer set
+	// It is commented out for now, because the implementation isn't finished yet
+	/*
+	jclass theClass;
+	jmethodID methodID;
+	JNIEnv * mainEnv = mSession->getMainEnv();
+	jvalue args[1];
+		
+	theClass = mainEnv->FindClass("javax/swing/UIManager");
+		
+	if (theClass == nil) {
+		printf("MRJContext Error: Could not find swing UIManager class\n");
+	}
+	
+	methodID = mainEnv->GetStaticMethodID(theClass, "setLookAndFeel", "(Ljava/lang/String;)V");
+
+	if (methodID == nil) {
+		printf("MRJContext Error: Could not find static method\n");
+	}
+
+	args[0].l = mainEnv->NewStringUTF("javax.swing.plaf.metal.MetalLookAndFeel");
+
+	status = JMExecJNIStaticMethodInContext(mContext, mainEnv, theClass, methodID, 1, args);
+
+	if (status != noErr) {
+		printf("MRJContext Error: method call failed..\n");
+	}
+	*/	
+	
+	status = ::JMNewAppletViewer(&mViewer, mContext, mLocator, 0,
 								 			&security, &callbacks, this);
 	if (status == noErr) {
 		status = ::JMSetAppletViewerData(mViewer, JMClientData(this));

@@ -265,7 +265,7 @@ void MessageRunnable::execute(JNIEnv* env)
 	// because a spontaneous Java thread called us, we have to switch to the JavaScript thread
 	// to handle this request.
 	nsIThreadManager* threadManager = NULL;
-	if (theServiceManager->GetService(nsIJVMManager::GetCID(), nsIThreadManager::GetIID(), (nsISupports**)&threadManager) == NS_OK) {
+	if (theServiceManager->GetService(nsIJVMManager::GetCID(), NS_GET_IID(nsIThreadManager), (nsISupports**)&threadManager) == NS_OK) {
 		threadManager->PostEvent(mThreadID, this, PR_FALSE);
 		theServiceManager->ReleaseService(nsIJVMManager::GetCID(), threadManager);
 	}
@@ -274,7 +274,7 @@ void MessageRunnable::execute(JNIEnv* env)
 NS_IMETHODIMP MessageRunnable::Run()
 {
 	nsIJVMManager* javaManager = NULL;
-	if (theServiceManager->GetService(nsIJVMManager::GetCID(), nsIJVMManager::GetIID(), (nsISupports**)&javaManager) == NS_OK) {
+	if (theServiceManager->GetService(nsIJVMManager::GetCID(), NS_GET_IID(nsIJVMManager), (nsISupports**)&javaManager) == NS_OK) {
 		JNIEnv* proxyEnv = NULL;
 		if (javaManager->GetProxyJNI(&proxyEnv) == NS_OK && proxyEnv != NULL)
 			mMessage->execute(proxyEnv);
@@ -291,7 +291,7 @@ static PRUint32 getJavaScriptThread(JNIEnv* env)
 		nsIPluginInstancePeer* peer;
 		if (pluginInstance->GetPeer(&peer) == NS_OK) {
 			nsIPluginInstancePeer2* peer2 = NULL;
-			if (peer->QueryInterface(nsIPluginInstancePeer2::GetIID(), &peer2) == NS_OK) {
+			if (peer->QueryInterface(NS_GET_IID(nsIPluginInstancePeer2), &peer2) == NS_OK) {
 				if (peer2->GetJSThread(&threadID) != NS_OK)
 					threadID = 0;
 				NS_RELEASE(peer2);

@@ -46,7 +46,7 @@ NS_METHOD EmbeddedFramePluginInstance::Initialize(nsIPluginInstancePeer* peer)
 	NS_ADDREF(mPeer);
 
 	nsIPluginTagInfo* tagInfo = NULL;
-	if (mPeer->QueryInterface(nsIPluginTagInfo::GetIID(), &tagInfo) == NS_OK) {
+	if (mPeer->QueryInterface(NS_GET_IID(nsIPluginTagInfo), &tagInfo) == NS_OK) {
 		const char* frameValue = NULL;
 		if (tagInfo->GetAttribute("JAVAFRAME", &frameValue) == NS_OK) {
 			sscanf(frameValue, "%X", &mFrame);
@@ -105,4 +105,4 @@ void EmbeddedFramePluginInstance::setFrame(EmbeddedFrame* frame)
 	mFrame = frame;
 }
 
-NS_IMPL_ISUPPORTS(EmbeddedFramePluginInstance, nsIPluginInstance::GetIID())
+NS_IMPL_ISUPPORTS(EmbeddedFramePluginInstance, NS_GET_IID(nsIPluginInstance))
