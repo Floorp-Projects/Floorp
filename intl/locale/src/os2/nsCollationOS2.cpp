@@ -156,14 +156,16 @@ nsresult nsCollationOS2::Initialize(nsILocale *locale)
 
  
 nsresult nsCollationOS2::GetSortKeyLen(const nsCollationStrength strength, 
-                                       const nsString& stringIn, PRUint32* outLen)
+                                       const nsAString& stringIn, PRUint32* outLen)
 { 
   // this may not necessary because collation key length 
   // probably will not change by this normalization
   nsresult res = NS_OK;
-  nsString stringNormalized = stringIn;
+  nsAutoString stringNormalized;
   if (strength != kCollationCaseSensitive) {
-    res = mCollation->NormalizeString(stringNormalized);
+    res = mCollation->NormalizeString(stringIn, stringNormalized);
+  } else {
+    stringNormalized = stringIn;
   }
 
   LocaleObject locObj = NULL;
@@ -186,13 +188,15 @@ nsresult nsCollationOS2::GetSortKeyLen(const nsCollationStrength strength,
 
 
 nsresult nsCollationOS2::CreateRawSortKey(const nsCollationStrength strength, 
-                                          const nsString& stringIn, PRUint8* key, PRUint32* outLen)
+                                          const nsAString& stringIn, PRUint8* key, PRUint32* outLen)
 {
   nsresult res = NS_OK;
 
-  nsString stringNormalized = stringIn;
+  nsAutoString stringNormalized;
   if (strength != kCollationCaseSensitive) {
-    res = mCollation->NormalizeString(stringNormalized);
+    res = mCollation->NormalizeString(stringIn, stringNormalized);
+  } else {
+    stringNormalized = stringIn;
   }
 
   LocaleObject locObj = NULL;

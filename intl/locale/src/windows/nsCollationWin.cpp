@@ -147,14 +147,15 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
  
 
 nsresult nsCollationWin::GetSortKeyLen(const nsCollationStrength strength, 
-                                       const nsString& stringIn, PRUint32* outLen)
+                                       const nsAString& stringIn, PRUint32* outLen)
 {
   nsresult res = NS_OK;
   // Currently, no length change by the normalization.
   // API returns number of bytes when LCMAP_SORTKEY is specified 
   if (mW_API) {
     *outLen = LCMapStringW(mLCID, LCMAP_SORTKEY, 
-                                (LPCWSTR) stringIn.get(), (int) stringIn.Length(), NULL, 0);
+                           (LPCWSTR) PromiseFlatString(stringIn).get(),
+                           (int) stringIn.Length(), NULL, 0);
   }
   else {
     char *Cstr = nsnull;
@@ -169,14 +170,16 @@ nsresult nsCollationWin::GetSortKeyLen(const nsCollationStrength strength,
 }
 
 nsresult nsCollationWin::CreateRawSortKey(const nsCollationStrength strength, 
-                                          const nsString& stringIn, PRUint8* key, PRUint32* outLen)
+                                          const nsAString& stringIn, PRUint8* key, PRUint32* outLen)
 {
   int byteLen;
   nsresult res = NS_OK;
-  nsAutoString stringNormalized; stringNormalized.Assign(stringIn);
+  nsAutoString stringNormalized;
 
   if (mCollation != NULL && strength == kCollationCaseInSensitive) {
-    mCollation->NormalizeString(stringNormalized);
+    mCollation->NormalizeString(stringIn, stringNormalized);
+  } else {
+    stringNormalized = stringIn;
   }
 
   if (mW_API) {

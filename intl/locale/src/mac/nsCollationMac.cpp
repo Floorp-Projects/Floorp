@@ -207,21 +207,24 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
  
 
 nsresult nsCollationMac::GetSortKeyLen(const nsCollationStrength strength, 
-                           const nsString& stringIn, PRUint32* outLen)
+                                       const nsAString& stringIn, PRUint32* outLen)
 {
   *outLen = stringIn.Length() * sizeof(PRUnichar);
   return NS_OK;
 }
 
 nsresult nsCollationMac::CreateRawSortKey(const nsCollationStrength strength, 
-                           const nsString& stringIn, PRUint8* key, PRUint32* outLen)
+                                          const nsAString& stringIn, PRUint8* key, PRUint32* outLen)
 {
   nsresult res = NS_OK;
 
-  nsAutoString stringNormalized(stringIn);
+  nsAutoString stringNormalized;
   if (strength != kCollationCaseSensitive) {
-    res = mCollation->NormalizeString(stringNormalized);
+    res = mCollation->NormalizeString(stringIn, stringNormalized);
+  } else {
+    stringNormalized = stringIn;
   }
+
   // convert unicode to charset
   char *str;
   int str_len;
