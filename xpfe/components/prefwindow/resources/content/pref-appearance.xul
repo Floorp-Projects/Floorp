@@ -42,21 +42,21 @@
   	<html:div>
   		<html:input type="checkbox" pref="true" preftype="bool"
                   prefstring="general.startup.browser" id="generalStartupBrowser"/>
-  		<html:label for="generalStartupBrowser" accesskey="n" tabindex="0">
+                <html:label for="generalStartupBrowser" accesskey="&navCheck.accesskey;" tabindex="0">
   		&navCheck.label;
   		</html:label>
   	</html:div>
   	<html:div>
   		<html:input type="checkbox" pref="true" preftype="bool"
                   prefstring="general.startup.mail" id="generalStartupMail"/>
-  		<html:label for="generalStartupMail" accesskey="m" tabindex="0">
+                <html:label for="generalStartupMail" accesskey="&mesCheck.accesskey;" tabindex="0">
   		&mesCheck.label;
   		</html:label>
   	</html:div>
   	<html:div>
   		<html:input type="checkbox" pref="true" preftype="bool"
                   prefstring="general.startup.editor" id="generalStartupEditor"/>
-  		<html:label for="generalStartupEditor" accesskey="c" tabindex="0">
+                <html:label for="generalStartupEditor" accesskey="&compCheck.accesskey;" tabindex="0">
   		&compCheck.label;
   		</html:label>
   	</html:div>
@@ -68,7 +68,7 @@
 			<html:input name="showtoolbar" type="radio" pref="true" preftype="int"
                   prefindex="2" prefstring="browser.chrome.toolbar_style" 
                   id="browserChromeToolbarStyle2"/>
-			<html:label for="browserChromeToolbarStyle2" accesskey="p" tabindex="0">
+                        <html:label for="browserChromeToolbarStyle2" accesskey="&picsNtextRadio.accesskey;" tabindex="0">
 			&picsNtextRadio.label;
 			</html:label>
 		</html:div>
@@ -76,7 +76,7 @@
 			<html:input name="showtoolbar" type="radio" pref="true" preftype="int"
                   prefindex="0" prefstring="browser.chrome.toolbar_style"
                   id="browserChromeToolbarStyle0"/>
-			<html:label for="browserChromeToolbarStyle0" accesskey="o" tabindex="0">
+                        <html:label for="browserChromeToolbarStyle0" accesskey="&picsOnlyRadio.accesskey;" tabindex="0">
 			&picsOnlyRadio.label;
 			</html:label>
 		</html:div>
@@ -84,7 +84,7 @@
 			<html:input name="showtoolbar" type="radio" pref="true" preftype="int"
                   prefindex="1" prefstring="browser.chrome.toolbar_style"
                   id="browserChromeToolbarStyle1"/>
-			<html:label for="browserChromeToolbarStyle1" accesskey="t" tabindex="0">
+                        <html:label for="browserChromeToolbarStyle1" accesskey="&textonlyRadio.accesskey;" tabindex="0">
 			&textonlyRadio.label;
 			</html:label>
 		</html:div>
