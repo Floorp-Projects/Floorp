@@ -28,39 +28,10 @@ use lib qw(.);
 
 require "CGI.pl";
 
-if (!defined $::FORM{'attach_id'}) {
-    print "Content-type: text/html\n";
-    print "\n";
-    PutHeader("Search by attachment number");  
-    print "<FORM METHOD=GET ACTION=\"showattachment.cgi\">\n";
-    print "You may view a single attachment by entering its id here: \n";
-    print "<INPUT NAME=attach_id>\n";   
-    print "<INPUT TYPE=\"submit\" VALUE=\"Show Me This Attachment\">\n";
-    print "</FORM>\n";
-    PutFooter();
-    exit;
-}
-
-ConnectToDatabase();
-
-quietly_check_login();
-
-if (!detaint_natural($::FORM{attach_id})) {
-    DisplayError("Attachment ID should be numeric.");
-    exit;
-}
-
-SendSQL("select bug_id, mimetype, thedata from attachments where attach_id = $::FORM{'attach_id'}");
-my ($bug_id, $mimetype, $thedata) = FetchSQLData();
-
-if (!$bug_id) {
-    DisplayError("Attachment $::FORM{attach_id} does not exist.");
-    exit;
-}
-
-# Make sure the user can see the bug to which this file is attached
-ValidateBugID($bug_id);
-
-print qq{Content-type: $mimetype\n\n$thedata};
-
-    
+# Redirect to the new interface for displaying attachments.
+detaint_natural($::FORM{'attach_id'}) if defined($::FORM{'attach_id'});
+my $id = $::FORM{'attach_id'} || "";
+print "Status: 301 Permanent Redirect\n";
+print "Location: attachment.cgi?id=$id&action=view\n\n";
+exit;
+ 

@@ -1270,7 +1270,7 @@ sub DumpBugActivity {
     while (@row = FetchSQLData()) {
         my ($field,$attachid,$when,$removed,$added,$who) = (@row);
         $field =~ s/^Attachment/<a href="attachment.cgi?id=$attachid&amp;action=view">Attachment #$attachid<\/a>/ 
-          if (Param('useattachmenttracker') && $attachid);
+          if $attachid;
         $removed = html_quote($removed);
         $added = html_quote($added);
         $removed = "&nbsp;" if $removed eq "";
@@ -1349,7 +1349,7 @@ Edit <a href="userprefs.cgi">prefs</a>
         if (UserInGroup("editcomponents")) {
             $html .= ", <a href=\"editproducts.cgi\">products</a>\n";
             $html .= ", <a href=\"editattachstatuses.cgi\">
-              attachment&nbsp;statuses</a>\n" if Param('useattachmenttracker');
+              attachment&nbsp;statuses</a>\n";
         }
         if (UserInGroup("creategroups")) {
             $html .= ", <a href=\"editgroups.cgi\">groups</a>\n";

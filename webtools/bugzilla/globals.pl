@@ -1039,7 +1039,7 @@ sub quoteUrls {
         my $num = $2;
         $item = value_quote($item); # Not really necessary, since we know
                                     # there's no special chars in it.
-        $item = qq{<A HREF="showattachment.cgi?attach_id=$num">$item</A>};
+        $item = qq{<A HREF="attachment.cgi?id=$num&action=view">$item</A>};
         $things[$count++] = $item;
     }
     while ($text =~ s/\*\*\* This bug has been marked as a duplicate of (\d+) \*\*\*/"##$count##"/ei) {
@@ -1054,7 +1054,7 @@ sub quoteUrls {
         my $item = $&;
         my $num = $1;
         if ($knownattachments->{$num}) {
-            $item = qq{<A HREF="showattachment.cgi?attach_id=$num">$item</A>};
+            $item = qq{<A HREF="attachment.cgi?id=$num&action=view">$item</A>};
         }
         $things[$count++] = $item;
     }

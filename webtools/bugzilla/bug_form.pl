@@ -25,6 +25,9 @@ use strict;
 
 use RelationSet;
 
+# Use the Attachment module to display attachments for the bug.
+use Attachment;
+
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.
 
@@ -324,28 +327,10 @@ if (@::legal_keywords) {
 };
 }
 
-# 2001-05-16 myk@mozilla.org: use the attachment tracker to display attachments
-# if this installation has enabled use of the attachment tracker.
-if (Param('useattachmenttracker')) {
-    print "</table>\n";
-    use Attachment;
-    &Attachment::list($id);
-} else {
-    print "<tr><td align=right><B>Attachments:</b></td>\n";
-    SendSQL("select attach_id, creation_ts, mimetype, description from attachments where bug_id = $id");
-    while (MoreSQLData()) {
-        my ($attachid, $date, $mimetype, $desc) = (FetchSQLData());
-        if ($date =~ /^(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/) {
-            $date = "$3/$4/$2 $5:$6";
-        }
-        my $link = "showattachment.cgi?attach_id=$attachid";
-        $desc = value_quote($desc);
-        $mimetype = html_quote($mimetype);
-        print qq{<td><a href="$link">$date</a></td><td colspan=6>$desc&nbsp;&nbsp;&nbsp;($mimetype)</td></tr><tr><td></td>};
-    }
-    print "<td colspan=7><a href=\"createattachment.cgi?id=$id\">Create a new attachment</a> (proposed patch, testcase, etc.)</td></tr></table>\n";
-}
+print "</TABLE>\n";
 
+# Display attachments for this bug (if any).
+&Attachment::list($id);
 
 sub EmitDependList {
     my ($desc, $myfield, $targetfield) = (@_);

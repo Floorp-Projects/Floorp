@@ -54,6 +54,16 @@ sub WriteParams {
             }
         }
     }
+    # If Bugzilla has been upgraded since the last time parameters were edited,
+    # and some parameters have been removed in the new version of Bugzilla,
+    # remove them from the parameters file.
+    foreach my $item (keys %::param) {
+        if (!grep($_ eq $item, @::param_list) && $item ne "version") {
+            print "The <em>$item</em> parameter is no longer used in Bugzilla
+              and has been removed from your parameters file.<br>";
+            delete $::param{$item};
+        }
+    }
     mkdir("data", 0777);
     chmod 0777, "data";
     my $tmpname = "data/params.$$";
@@ -673,11 +683,6 @@ DefParam("moved-default-component",
          "Bugs moved from other databases to here are assigned to this component.",
          "t",
          '');
-
-DefParam("useattachmenttracker",
-         "Whether or not to use the attachment tracker that adds additional features for tracking bug attachments.",
-         "b",
-         0);
 
 # The maximum size (in bytes) for patches and non-patch attachments.
 # The default limit is 1000KB, which is 24KB less than mysql's default

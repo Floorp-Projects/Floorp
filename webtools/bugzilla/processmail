@@ -160,7 +160,7 @@ sub ProcessOneBug {
             $difftext .= FormatTriple("What    ", "Removed", "Added");
             $difftext .= ('-' x 76) . "\n";
         }
-        $what =~ s/^Attachment/Attachment #$attachid/ if (Param('useattachmenttracker') && $attachid);
+        $what =~ s/^Attachment/Attachment #$attachid/ if $attachid;
         $difftext .= FormatTriple($what, $old, $new);
     }
 
@@ -737,9 +737,9 @@ sub NewProcessOnePerson ($$$$$$$$$$$$) {
     if ( $newcomments =~ /Created an attachment \(/ ) {
 
         my $showattachurlbase =
-            Param('urlbase') . "showattachment.cgi?attach_id=";
+            Param('urlbase') . "attachment.cgi?id=";
 
-        $newcomments =~ s/(Created an attachment \(id=([0-9]+)\))/$1\n --> \(${showattachurlbase}$2\)/g;
+        $newcomments =~ s/(Created an attachment \(id=([0-9]+)\))/$1\n --> \(${showattachurlbase}$2&action=view\)/g;
     }
 
     $person .= Param('emailsuffix');
