@@ -249,7 +249,6 @@ protected:
   nsSize       mPass1DesiredSize;
   nsSize       mPass1MaxElementSize;
 
-  nsresult     mCalculated;
   nsMargin     mMargin;
   nsPoint      mCollapseOffset;
 
@@ -313,12 +312,8 @@ inline nsSize nsTableCellFrame::GetPass1MaxElementSize() const
 
 inline NS_METHOD nsTableCellFrame::GetMargin(nsMargin& aMargin)
 {
-  if (mCalculated == NS_OK)
-  {
-    aMargin = mMargin;
-    return NS_OK;
-  }
-  return NS_ERROR_NOT_INITIALIZED;
+  aMargin = mMargin;
+  return NS_OK;
 }
 
 inline PRBool nsTableCellFrame::GetContentEmpty()
