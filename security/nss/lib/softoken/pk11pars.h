@@ -762,9 +762,12 @@ pk11_mkSlotString(unsigned long slotID, unsigned long defaultFlags,
     if (flags) PR_smprintf_free(flags);
     if (rootFlags) PORT_Free(rootFlags);
     if (defaultFlags & PK11_OWN_PW_DEFAULTS) {
-    	slotString = PR_smprintf("0x%08lx=[%s askpw=%s timeout=%d %s]",(PRUint32)slotID,flagPair,askpw,timeout,rootFlagsPair);
+    	slotString = PR_smprintf("0x%08lx=[%s askpw=%s timeout=%d %s]",
+				(PRUint32)slotID,flagPair,askpw,timeout,
+				rootFlagsPair);
     } else {
-    	slotString = PR_smprintf("0x%08lx=[%s %s]",(PRUint32)slotID,flagPair,rootFlagsPair);
+    	slotString = PR_smprintf("0x%08lx=[%s %s]",
+				(PRUint32)slotID,flagPair,rootFlagsPair);
     }
     pk11_freePair(flagPair);
     pk11_freePair(rootFlagsPair);
