@@ -250,7 +250,7 @@ friend class CTokenHandler;
     NS_IMETHOD OnProgress(PRInt32 Progress, PRInt32 ProgressMax, const char *msg);
     NS_IMETHOD OnStartBinding(void);
     NS_IMETHOD OnDataAvailable(nsIInputStream *pIStream, PRInt32 length);
-    NS_IMETHOD OnStopBinding(void);
+    NS_IMETHOD OnStopBinding(PRInt32 status, const char *msg);
 
 protected:
 
