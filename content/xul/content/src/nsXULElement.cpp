@@ -657,9 +657,12 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
                 }
 
                 // Check for popup attributes
-                if (attr->mNodeInfo->Equals(nsXULAtoms::popup) ||
+                if (attr->mNodeInfo->Equals(nsXULAtoms::popup) || // XXXdwh deprecated. use menu.
                     attr->mNodeInfo->Equals(nsXULAtoms::tooltip) ||
-                    attr->mNodeInfo->Equals(nsXULAtoms::context)) {
+                    attr->mNodeInfo->Equals(nsXULAtoms::menu) ||
+                    attr->mNodeInfo->Equals(nsXULAtoms::contextmenu) ||
+                    attr->mNodeInfo->Equals(nsXULAtoms::context)) // XXXdwh deprecated. use contextmenu.
+                {
                     rv = element->AddPopupListener(name);
                     if (NS_FAILED(rv)) return rv;
                 }
@@ -2462,9 +2465,11 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileE
                     }
 
                     if (! reset) {
-                        if ((attr.get() == nsXULAtoms::popup) ||
+                        if ((attr.get() == nsXULAtoms::popup) || // XXXdwh deprecated
                             (attr.get() == nsXULAtoms::tooltip) ||
-                            (attr.get() == nsXULAtoms::context) ||
+                            (attr.get() == nsXULAtoms::context) || // XXXdwh deprecated
+                            (attr.get() == nsXULAtoms::menu) ||
+                            (attr.get() == nsXULAtoms::contextmenu) ||
                             (attr.get() == nsXULAtoms::style)) {
                             reset = PR_TRUE;
                         }
@@ -2959,7 +2964,11 @@ nsXULElement::SetAttribute(nsINodeInfo* aNodeInfo,
 
     // Check to see if the POPUP attribute is being set.  If so, we need to attach
     // a new instance of our popup handler to the node.
-    if (mDocument && (aNodeInfo->Equals(nsXULAtoms::popup, kNameSpaceID_None) || aNodeInfo->Equals(nsXULAtoms::tooltip, kNameSpaceID_None) || aNodeInfo->Equals(nsXULAtoms::context, kNameSpaceID_None)))
+    if (mDocument && (aNodeInfo->Equals(nsXULAtoms::popup, kNameSpaceID_None) || // XXXdwh deprecated
+                      aNodeInfo->Equals(nsXULAtoms::menu, kNameSpaceID_None) ||
+                      aNodeInfo->Equals(nsXULAtoms::tooltip, kNameSpaceID_None) || 
+                      aNodeInfo->Equals(nsXULAtoms::contextmenu, kNameSpaceID_None) ||
+                      aNodeInfo->Equals(nsXULAtoms::context, kNameSpaceID_None))) // XXXdwh deprecated
     {
         AddPopupListener(attrName);
     }
@@ -4409,6 +4418,321 @@ nsXULElement::SetClassName(const nsAReadableString& aClassName)
 }
 
 nsresult
+nsXULElement::GetAlign(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("align"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetAlign(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("align"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetDir(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("dir"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetDir(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("dir"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetFlex(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("flex"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetFlex(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("flex"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetFlexgroup(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("flexgroup"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetFlexgroup(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("flexgroup"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetOrdinal(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("ordinal"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetOrdinal(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("ordinal"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetOrient(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("orient"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetOrient(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("orient"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetPack(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("pack"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetPack(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("pack"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetHidden(PRBool* aResult)
+{
+  *aResult = PR_FALSE;
+  nsAutoString val;
+  GetAttribute(NS_LITERAL_STRING("hidden"), val);
+  if (val.EqualsIgnoreCase("true"))
+    *aResult = PR_TRUE;
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetHidden(PRBool aAttr)
+{
+  if (aAttr)
+    SetAttribute(NS_LITERAL_STRING("hidden"), NS_LITERAL_STRING("true"));
+  else
+    RemoveAttribute(NS_LITERAL_STRING("hidden"));
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetCollapsed(PRBool* aResult)
+{
+  *aResult = PR_FALSE;
+  nsAutoString val;
+  GetAttribute(NS_LITERAL_STRING("collapsed"), val);
+  if (val.EqualsIgnoreCase("true"))
+    *aResult = PR_TRUE;
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetCollapsed(PRBool aAttr)
+{
+ if (aAttr)
+    SetAttribute(NS_LITERAL_STRING("collapsed"), NS_LITERAL_STRING("true"));
+  else
+    RemoveAttribute(NS_LITERAL_STRING("collapsed"));
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetObserves(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("observes"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetObserves(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("observes"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetMenu(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("menu"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetMenu(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("menu"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetContextmenu(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("contextmenu"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetContextmenu(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("contextmenu"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetTooltip(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("tooltip"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetTooltip(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("tooltip"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetWidth(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("width"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetWidth(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("width"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetHeight(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("height"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetHeight(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("height"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetMinwidth(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("minwidth"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetMinwidth(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("minwidth"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetMinheight(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("minheight"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetMinheight(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("minheight"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetMaxwidth(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("maxwidth"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetMaxwidth(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("maxwidth"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetMaxheight(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("maxheight"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetMaxheight(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("maxheight"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetTooltiptext(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("tooltiptext"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetTooltiptext(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("tooltiptext"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetStatustext(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("statustext"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetStatustext(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("statustext"), aAttr);
+  return NS_OK;
+}
+
+
+
+
+
+
+
+
+nsresult
 nsXULElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 {
   NS_NOTYETIMPLEMENTED("write me!");
@@ -4522,7 +4846,7 @@ nsXULElement::Click()
 }
 
 NS_IMETHODIMP
-nsXULElement::Command()
+nsXULElement::DoCommand()
 {
   nsCOMPtr<nsIDocument> doc;
   GetDocument(*getter_AddRefs(doc));
@@ -4628,7 +4952,7 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
     if (aName == nsXULAtoms::tooltip) {
         popupType = eXULPopupType_tooltip;
     }
-    else if (aName == nsXULAtoms::context) {
+    else if (aName == nsXULAtoms::context || aName == nsXULAtoms::contextmenu) {
         popupType = eXULPopupType_context;
     }
     else {

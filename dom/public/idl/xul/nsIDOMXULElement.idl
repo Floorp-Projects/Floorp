@@ -34,9 +34,42 @@ interface nsIBoxObject;
 [scriptable, uuid(0574ed81-c088-11d2-96ed-00104b7b7deb)]
 interface nsIDOMXULElement : nsIDOMElement
 {
-           attribute DOMString                 id;
-           attribute DOMString                 className;
+  attribute DOMString                 id;
+  attribute DOMString                 className;
 
+  // Layout properties
+  attribute DOMString align;
+  attribute DOMString dir;
+  attribute DOMString flex;
+  attribute DOMString flexgroup;
+  attribute DOMString ordinal;
+  attribute DOMString orient;
+  attribute DOMString pack;
+  
+  // Properties for hiding elements.
+  attribute boolean hidden;
+  attribute boolean collapsed;
+  
+  // Property for hooking up to broadcasters
+  attribute DOMString observes;
+  
+  // Properties for hooking up to popups
+  attribute DOMString menu;
+  attribute DOMString contextmenu;
+  attribute DOMString tooltip;
+  
+  // Width/height properties
+  attribute DOMString width;
+  attribute DOMString height;
+  attribute DOMString minwidth;
+  attribute DOMString minheight;
+  attribute DOMString maxwidth;
+  attribute DOMString maxheight;
+  
+  // Tooltip and status info
+  attribute DOMString tooltiptext;
+  attribute DOMString statustext;
+  
   // XXX: This doesn't belong here, nsIDOMLinkStyle has this...
   readonly attribute nsIDOMCSSStyleDeclaration style;
 
@@ -54,7 +87,7 @@ interface nsIDOMXULElement : nsIDOMElement
   void                      focus();
   void                      blur();
   void                      click();
-  void                      command();
+  void                      doCommand();
 
   nsIDOMNodeList            getElementsByAttribute(in DOMString name,
                                                    in DOMString value);
