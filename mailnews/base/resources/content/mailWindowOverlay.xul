@@ -228,7 +228,6 @@ Rights Reserved.
   <command id="button_mark"/>
   <command id="button_getNewMessages"/>
   <command id="button_print"/>
-  <command id="button_printpreview"/>
   <command id="button_next"/>
   <command id="button_file"/>
   <command id="cmd_delete"/>
@@ -1012,8 +1011,8 @@ Rights Reserved.
 
       <menuseparator/>
       <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="cmd_printSetup"/>
-      <menuitem id="printMenuItem" key="key_print" label="&printCmd.label;" accesskey="&printCmd.accesskey;" observes="cmd_print"/>
-      <menuitem id="printPreviewMenuItem" label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" observes="cmd_printpreview"/>
+      <menuitem id="printMenuItem" key="key_print" label="&printCmd.label;" accesskey="&printCmd.accesskey;" command="cmd_print"/>
+      <menuitem id="printPreviewMenuItem" label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" command="cmd_printpreview"/>
     </menupopup>
   </menu>
 
@@ -1577,9 +1576,10 @@ Rights Reserved.
       </toolbarbutton>
       <toolbarbutton id="button-print" type="menu-button" class="toolbarbutton-1" label="&printButton.label;"
                   observes="button_print" oncommand="goDoCommand('cmd_print')" tooltiptext="&printButton.tooltip;">  
-        <menupopup id="printMenu">
+        <menupopup id="printMenu" onpopupshowing="goUpdateCommand('cmd_printpreview');">
           <menuitem label="&printCmd.label;" accesskey="&printCmd.accesskey;" default="true"/>
-          </menupopup>
+          <menuitem label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" command="cmd_printpreview"/>
+        </menupopup>
       </toolbarbutton>
       <toolbarbutton class="toolbarbutton-1" id="button-stop" label="&stopButton.label;" tooltiptext="&stopButton.tooltip;" command="cmd_stop"/>
       <spacer flex="1"/>
