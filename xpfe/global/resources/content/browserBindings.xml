@@ -97,6 +97,7 @@
         </body>
       </method>
 
+      <!-- throws exception for unknown schemes -->
       <method name="loadURI">
         <parameter name="aURI"/>
         <body>
@@ -108,10 +109,10 @@
         </body>
       </method>
 
+      <!-- throws exception for unknown schemes -->
       <method name="loadURIWithFlags">
         <parameter name="aURI"/>
         <parameter name="aFlags"/>
-        <!-- throws exception if loadURI fails -->
         <body>
           <![CDATA[
             if (!aURI)
@@ -125,7 +126,11 @@
       <method name="goHome">
         <body>
           <![CDATA[
-            this.loadURI(this.homePage);
+            try {
+              this.loadURI(this.homePage);
+            }
+            catch (e) {
+            }
           ]]>
         </body>
       </method>
