@@ -6,3 +6,4 @@ httpurl.h
 cookies.h
 httpauth.h
 jscookie.h
+mkaccess.h
