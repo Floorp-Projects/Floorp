@@ -42,7 +42,7 @@
 
 #ifndef __PRUNICHAR__
 #define __PRUNICHAR__
-// typedef wchar_t PRUnichar;
+/* typedef wchar_t PRUnichar; */
 typedef PRUint16 PRUnichar;
 #endif
 
