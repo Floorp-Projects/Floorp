@@ -23,16 +23,6 @@
 
 #include "msgCore.h"    // precompiled header...
 
-/* some platforms (like Windows and Mac) use a map file, because of
- * file name length limitations. */
-#if !defined(XP_UNIX) && !defined(XP_BEOS)
-#if defined(XP_MAC) || defined(XP_WIN) 
-#define USE_NEWSRC_MAP_FILE
-#else
-#error do_you_need_a_newsrc_map_file
-#endif /* XP_MAC || XP_WIN */
-#endif /* XP_UNIX || XP_BEOS */
-
 #include "nsMsgFolderFlags.h"
 
 #include "nntpCore.h"

@@ -158,157 +158,6 @@ nsMsgNewsFolder::isNewsHost()
   return mIsNewsHost;
 }
 
-#ifdef USE_NEWSRC_MAP_FILE
-
-#define NEWSRC_MAP_FILE_COOKIE "netscape-newsrc-map-file"
-
-nsresult
-nsMsgNewsFolder::MapHostToNewsrcFile(char *newshostname, nsFileSpec &fatFile, nsFileSpec &newsrcFile)
-{
-  char *lookingFor = nsnull;
-	char buffer[512];
-	char psuedo_name[512];
-	char filename[512];
-	char is_newsgroup[512];
-  PRBool rv;
-
-#ifdef DEBUG_NEWS
-  printf("MapHostToNewsrcFile(%s,%s,%s,??)\n",newshostname,(const char *)fatFile, newshostname);
-#endif
-  lookingFor = PR_smprintf("newsrc-%s",newshostname);
-  if (!lookingFor) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsInputFileStream inputStream(fatFile);
- 
-  if (inputStream.eof()) {
-    newsrcFile = "";
-    inputStream.close();
-    PR_FREEIF(lookingFor);
-    return NS_ERROR_FAILURE;
-  }
-
-  /* we expect the first line to be NEWSRC_MAP_FILE_COOKIE */
-	rv = inputStream.readline(buffer, sizeof(buffer));
-
-  if ((!rv) || (PL_strncmp(buffer, NEWSRC_MAP_FILE_COOKIE, PL_strlen(NEWSRC_MAP_FILE_COOKIE)))) {
-    newsrcFile = "";
-    inputStream.close();
-    PR_FREEIF(lookingFor);
-    return NS_ERROR_FAILURE;
-  }   
-
-	while (!inputStream.eof()) {
-    char * p;
-    PRInt32 i;
-
-    rv = inputStream.readline(buffer, sizeof(buffer));
-    if (!rv) {
-      newsrcFile = "";
-      inputStream.close();
-      PR_FREEIF(lookingFor);
-      return NS_ERROR_FAILURE;
-    }  
-
-    /*
-      This used to be scanf() call which would incorrectly
-      parse long filenames with spaces in them.  - JRE
-    */
-    
-    filename[0] = '\0';
-    is_newsgroup[0]='\0';
-    
-    for (i = 0, p = buffer; *p && *p != '\t' && i < 500; p++, i++)
-      psuedo_name[i] = *p;
-    psuedo_name[i] = '\0';
-    if (*p) 
-      {
-        for (i = 0, p++; *p && *p != '\t' && i < 500; p++, i++)
-          filename[i] = *p;
-        filename[i]='\0';
-        if (*p) 
-          {
-            for (i = 0, p++; *p && *p != '\r' && i < 500; p++, i++)
-              is_newsgroup[i] = *p;
-            is_newsgroup[i]='\0';
-          }
-      }
-
-		if(!PL_strncmp(is_newsgroup, "TRUE", 4)) {
-#ifdef DEBUG_NEWS
-      printf("is_newsgroups_file = TRUE\n");
-#endif
-    }
-    else {
-#ifdef DEBUG_NEWS
-      printf("is_newsgroups_file = FALSE\n");
-#endif
-    }
-    
-#ifdef DEBUG_NEWS
-    printf("psuedo_name=%s,filename=%s\n", psuedo_name, filename);
-#endif
-    if (!PL_strncmp(psuedo_name,lookingFor,PL_strlen(lookingFor))) {
-#ifdef DEBUG_NEWS
-      printf("found a match for %s\n",lookingFor);
-#endif
-
-#ifdef NEWS_FAT_STORES_ABSOLUTE_NEWSRC_FILE_PATHS
-      newsrcFile = filename;
-#else
-	  // the fat file is storing the newsrc files relative to the directory the fat
-	  // file is in.  so we'll use that.
-	  newsrcFile = fatFile;
-	  newsrcFile.SetLeafName(filename);
-#endif /* NEWS_FAT_STORES_ABSOLUTE_NEWSRC_FILE_PATHS */
-      inputStream.close();
-      PR_FREEIF(lookingFor);
-      return NS_OK;
-    }
-  }
-
-  // failed to find a match in the map file
-  newsrcFile = "";
-  inputStream.close();
-  PR_FREEIF(lookingFor);
-  return NS_ERROR_FAILURE;
-}
-#endif /* USE_NEWSRC_MAP_FILE */
-
-nsresult 
-nsMsgNewsFolder::GetNewsrcFile(char *newshostname, nsFileSpec &path, nsFileSpec &newsrcFile)
-{
-  nsresult rv = NS_OK;
-  
-  if (!newshostname) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-#ifdef USE_NEWSRC_MAP_FILE
-  // the fat file lives in the same directory as
-  // the newsrc files
-  nsFileSpec fatFile(path);
-  fatFile.SetLeafName(NEWS_FAT_FILE_NAME);
-
-  rv = MapHostToNewsrcFile(newshostname, fatFile, newsrcFile);
-#else
-  char *str = nsnull;
-
-  str = PR_smprintf(".newsrc-%s", newshostname);
-  if (!str) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  newsrcFile = path;
-  newsrcFile.SetLeafName(str);
-  PR_FREEIF(str);
-  str = nsnull;
-  rv = NS_OK;
-#endif /* USE_NEWSRC_MAP_FILE */
-
-  return rv;
-}
-
 nsresult
 nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
 {
@@ -322,10 +171,7 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
 #ifdef DEBUG_NEWS
     printf("CreateSubFolders:  %s = %s\n", mURI, (const char *)path);
 #endif
-#if FATFILEINPREFS
-    nsFileSpec newsrcFile("");
-    rv = GetNewsrcFile(hostname, path, newsrcFile);
-#else
+
     char *newsrcFilePathStr = nsnull;
     
     //Are we assured this is the server for this folder?
@@ -344,7 +190,7 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
     nsFileSpec newsrcFile(newsrcFilePathStr);
     PR_FREEIF(newsrcFilePathStr);
     newsrcFilePathStr = nsnull;
-#endif /* FATFILEINPREFS */
+
     if (NS_SUCCEEDED(rv)) {
 #ifdef DEBUG_NEWS
       printf("uri = %s newsrc file = %s\n", mURI, (const char *)newsrcFile);

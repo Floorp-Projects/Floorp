@@ -178,26 +178,6 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
     return rv;
   }
 
-#if FATFILEINPREFS
-  // create pathResult if it doesn't exist
-  // at this point, pathResult should be something like
-  // .../News, ...\News, ...:News)
-  if (!pathResult.Exists())
-    pathResult.CreateDir();
-              
-  nsAutoString alteredHost ((const char *) "host-", eOneByte);
-  alteredHost += hostname;
-  
-  // can't do pathResult += "host-"; pathresult += hostname; 
-  // because += on a nsFileSpec inserts a separator
-  // so we'd end up with host-/hostname and not host-hostname
-  NS_MsgHashIfNecessary(alteredHost);
-  pathResult += alteredHost;
-
-  // create pathResult if it doesn't exist
-  // at this point, pathResult should be something like
-  // ../News/host-<hostname>, ...\News\host-<hostname>, ...:News:host-<hostname>
-#endif /* FATFILEINPREFS */
   if (!pathResult.Exists())
     pathResult.CreateDir();
   

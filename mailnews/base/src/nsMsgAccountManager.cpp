@@ -35,8 +35,9 @@
 #include "nsCRT.h"  // for nsCRT::strtok
 #include "prprf.h"
 #include "nsINetSupportDialogService.h"
-
 #include "nsIMsgFolderCache.h"
+#include "nsFileStream.h"
+#include "nsMsgUtils.h"
 
 // this should eventually be moved to the pop3 server for upgrading
 #include "nsIPop3IncomingServer.h"
@@ -44,6 +45,8 @@
 #include "nsIImapIncomingServer.h"
 // this should eventually be moved to the nntp server for upgrading
 #include "nsINntpIncomingServer.h"
+
+#define PSUEDO_NAME_PREFIX "newsrc-"
 
 #if defined(DEBUG_alecf) || defined(DEBUG_sspitzer) || defined(DEBUG_seth)
 #define DEBUG_ACCOUNTMANAGER 1
@@ -197,9 +200,15 @@ private:
   PRBool isUnique(nsIMsgIncomingServer *server);
   nsresult upgradePrefs();
   nsresult createSpecialFile(nsFileSpec & dir, const char *specialFileName);
+  
   PRInt32 MigrateImapAccounts(nsIMsgIdentity *identity);
   nsresult MigrateImapAccount(nsIMsgIdentity *identity, const char *hostname, PRInt32 accountNum);
+  
   PRInt32 MigratePopAccounts(nsIMsgIdentity *identity);
+  
+  PRInt32 MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseAccountNum);
+  nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, const char *newsrcfile, PRInt32 accountNum);
+
   nsIMsgAccount *LoadAccount(nsString& accountKey);
   nsresult SetPasswordForServer(nsIMsgIncomingServer * server);
   nsIPref *m_prefs;
@@ -254,7 +263,7 @@ nsMsgAccountManager::CreateAccountWithKey(nsIMsgIncomingServer *server,
   rv = nsComponentManager::CreateInstance(kMsgAccountCID,
                                           nsnull,
                                           nsCOMTypeInfo<nsIMsgAccount>::GetIID(),
-                                          (void **)getter_AddRefs(account));
+                                          getter_AddRefs(account));
 
   if (NS_SUCCEEDED(rv)) {
     rv = account->SetIncomingServer(server);
@@ -781,6 +790,8 @@ nsMsgAccountManager::MigratePrefs()
 #endif
 
 	// do nothing right now.
+	// right now, all the migration happens when we don't find
+	// the mail.accountmanager.accounts pref in LoadAccounts()
 	return NS_OK;
 }
 
@@ -817,13 +828,13 @@ nsMsgAccountManager::createSpecialFile(nsFileSpec & dir, const char *specialFile
 
 	nsCOMPtr <nsIFileSpec> specialFile;
 	rv = NS_NewFileSpecWithSpec(file, getter_AddRefs(specialFile));
+    if (NS_FAILED(rv)) return rv;
 
 	PRBool specialFileExists;
 	rv = specialFile->exists(&specialFileExists);
 	if (NS_FAILED(rv)) return rv;
 
-	if (!specialFileExists)
-	{
+	if (!specialFileExists) {
 		rv = specialFile->touch();
 	}
 
@@ -855,7 +866,7 @@ nsMsgAccountManager::upgradePrefs()
     rv = nsComponentManager::CreateInstance(kMsgIdentityCID,
                                             nsnull,
                                             nsCOMTypeInfo<nsIMsgIdentity>::GetIID(),
-                                            (void **)&identity);
+                                            getter_AddRefs(identity));
     identity->SetKey("identity1");
 
     // identity stuff
@@ -916,6 +927,8 @@ nsMsgAccountManager::upgradePrefs()
         printf("Unrecognized server type %d\n", oldMailType);
         return NS_ERROR_UNEXPECTED;
     }
+
+	numAccounts += MigrateNewsAccounts(identity, numAccounts);
 
     if (numAccounts == 0) return NS_ERROR_FAILURE;
     
@@ -1000,13 +1013,15 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
   rv = nsComponentManager::CreateInstance(kMsgAccountCID,
                                           nsnull,
                                           nsCOMTypeInfo<nsIMsgAccount>::GetIID(),
-                                          (void **)&account);
+                                          getter_AddRefs(account));
+  if (NS_FAILED(rv)) return 0;
 
   rv = nsComponentManager::CreateInstance("component://netscape/messenger/server&type=pop3",
                                           nsnull,
                                           nsCOMTypeInfo<nsIMsgIncomingServer>::GetIID(),
-                                          (void **)&server);
-  
+                                          getter_AddRefs(server));
+  if (NS_FAILED(rv)) return 0;
+
   account->SetKey("account1");
   server->SetKey("server1");
   
@@ -1168,12 +1183,11 @@ nsMsgAccountManager::MigrateImapAccounts(nsIMsgIdentity *identity)
     str.StripWhitespace();
     
     if (str != "") {
+	  numAccounts++;
       // str is the hostname
-      if (NS_FAILED(MigrateImapAccount(identity,str.GetBuffer(),numAccounts+1))) {
+      if (NS_FAILED(MigrateImapAccount(identity,str.GetBuffer(),numAccounts))) {
+		// failed to migrate.  bail out.
         return 0;
-      }
-      else {
-        numAccounts++;
       }
       str = "";
     }
@@ -1199,12 +1213,14 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   rv = nsComponentManager::CreateInstance(kMsgAccountCID,
                                           nsnull,
                                           nsCOMTypeInfo<nsIMsgAccount>::GetIID(),
-                                          (void **)&account);
+                                          getter_AddRefs(account));
+  if (NS_FAILED(rv)) return rv;
 
   rv = nsComponentManager::CreateInstance("component://netscape/messenger/server&type=imap",
                                           nsnull,
                                           nsCOMTypeInfo<nsIMsgIncomingServer>::GetIID(),
-                                          (void **)&server);
+                                          getter_AddRefs(server));
+  if (NS_FAILED(rv)) return rv;
 
   char accountStr[1024];
   char serverStr[1024];
@@ -1293,10 +1309,11 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   dir += hostname;
   
   rv = NS_NewFileSpecWithSpec(dir, getter_AddRefs(imapMailDir));
-  
+  if (NS_FAILED(rv)) return rv;
+
   char *str = nsnull;
   imapMailDir->GetPersistentDescriptorString(&str);
-  
+
   if (str && *str) {
     server->SetLocalPath(str);
     PR_FREEIF(str);
@@ -1304,7 +1321,7 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   }
   
   rv = imapMailDir->exists(&dirExists);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  if (NS_FAILED(rv)) return rv;
   
   if (!dirExists) {
     imapMailDir->createDir();
@@ -1313,6 +1330,315 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   return NS_OK;
 }
   
+#ifdef USE_NEWSRC_MAP_FILE
+#define NEWSRC_MAP_FILE_COOKIE "netscape-newsrc-map-file"
+#endif /* USE_NEWSRC_MAP_FILE */
+
+PRInt32
+nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseAccountNum)
+{
+	PRInt32 numAccounts = 0;
+	nsresult rv;
+
+	// there should be one imap or one pop by this point.
+	// if there isn't, bail now?
+	//if (accountNum < 1) return 0;
+
+	nsFileSpec profileDir;
+	
+	NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
+	if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+	
+	rv = profile->GetCurrentProfileDir(&profileDir);
+	if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+	nsFileSpec newsDir(profileDir);
+	PRBool dirExists;
+	
+	// turn profileDir into the News dir.
+	newsDir += "News";
+	if (!newsDir.Exists()) {
+		newsDir.CreateDir();
+	}
+
+#ifdef USE_NEWSRC_MAP_FILE	
+	// use news.directory to find the fat file
+	// for each news server in the fat file call MigrateNewsAccount();
+	
+	// use news.directory?
+	nsFileSpec fatFile(newsDir);
+	fatFile += NEWS_FAT_FILE_NAME;
+	
+	char buffer[512];
+	char psuedo_name[512];
+	char filename[512];
+	char is_newsgroup[512];
+	PRBool ok;
+
+	nsInputFileStream inputStream(fatFile);
+	
+	if (inputStream.eof()) {
+		inputStream.close();
+		return 0;
+	}
+	
+    /* we expect the first line to be NEWSRC_MAP_FILE_COOKIE */
+	ok = inputStream.readline(buffer, sizeof(buffer));
+	
+    if ((!ok) || (PL_strncmp(buffer, NEWSRC_MAP_FILE_COOKIE, PL_strlen(NEWSRC_MAP_FILE_COOKIE)))) {
+		inputStream.close();
+		return 0;
+	}   
+	
+	while (!inputStream.eof()) {
+		char * p;
+		PRInt32 i;
+		
+		ok = inputStream.readline(buffer, sizeof(buffer));
+		if (!ok) {
+			inputStream.close();
+			return 0;
+		}  
+		
+		/* sspitzer todo:  replace this with nsString code */
+
+		/*
+		This used to be scanf() call which would incorrectly
+		parse long filenames with spaces in them.  - JRE
+		*/
+		
+		filename[0] = '\0';
+		is_newsgroup[0]='\0';
+		
+		for (i = 0, p = buffer; *p && *p != '\t' && i < 500; p++, i++)
+			psuedo_name[i] = *p;
+		psuedo_name[i] = '\0';
+		if (*p) 
+		{
+			for (i = 0, p++; *p && *p != '\t' && i < 500; p++, i++)
+				filename[i] = *p;
+			filename[i]='\0';
+			if (*p) 
+			{
+				for (i = 0, p++; *p && *p != '\r' && i < 500; p++, i++)
+					is_newsgroup[i] = *p;
+				is_newsgroup[i]='\0';
+			}
+		}
+		
+		if(!PL_strncmp(is_newsgroup, "TRUE", 4)) {			
+			printf("is_newsgroups_file = TRUE\n");
+		}
+		else {
+			printf("is_newsgroups_file = FALSE\n");
+			
+			printf("psuedo_name=%s,filename=%s\n", psuedo_name, filename);
+			
+#ifdef NEWS_FAT_STORES_ABSOLUTE_NEWSRC_FILE_PATHS
+			// most likely, the fat file has been copied (or moved ) from
+			// its old location.  So the absolute file paths will be wrong.
+			// all we care about is the leaf, so use that.
+			nsFileSpec oldRcFile(filename);
+			char *leaf = oldRcFile.GetLeafName();
+
+			// use news.directory instead of newsDir?
+			nsFileSpec rcFile(newsDir);
+			rcFile += leaf;
+			nsCRT::free(leaf);
+			leaf = nsnull;
+#else
+		    // use news.directory instead of newsDir?
+			nsFileSpec rcFile(newsDir);
+			rcFile += filename;
+#endif /* NEWS_FAT_STORES_ABSOLUTE_NEWSRC_FILE_PATHS */
+
+			numAccounts++;
+				
+			// psuedo-name is of the form newsrc-<host>.  need to get the host part out.
+
+			NS_ASSERTION(PL_strncmp(PSUEDO_NAME_PREFIX,psuedo_name,PL_strlen(PSUEDO_NAME_PREFIX)) == 0, "all psuedo names should begin with newsrc-");
+			if (PL_strncmp(PSUEDO_NAME_PREFIX,psuedo_name,PL_strlen(PSUEDO_NAME_PREFIX)) != 0) {
+				return 0;
+			}
+
+			NS_ASSERTION(PL_strlen(psuedo_name) > PL_strlen(PSUEDO_NAME_PREFIX), "psuedo_name is too short");
+			if (PL_strlen(psuedo_name) <= PL_strlen(PSUEDO_NAME_PREFIX)) {
+				return 0;
+			}
+
+			char *hostname = psuedo_name + PL_strlen(PSUEDO_NAME_PREFIX);
+
+			if (NS_FAILED(MigrateNewsAccount(identity, hostname, rcFile, baseAccountNum + numAccounts))) {
+				// failed to migrate.  bail out
+				return 0;
+			}
+		}
+	}
+	
+	inputStream.close();
+
+#else
+	/*
+	get the $HOME directory
+	for each file of the form .newsrc-%, do this:
+
+	for (each file of the form .newsrc-%) {
+		numAccounts++;
+		if (NS_FAILED(MigrateNewsAccount(identity, psuedo_name, filename, baseAccountNum + numAccounts))) {
+			// failed to migrate.  bail out
+			return 0;
+		}
+	}
+
+/*
+	char *str = nsnull;
+	
+	str = PR_smprintf(".newsrc-%s", newshostname);
+	if (!str) {
+		return NS_ERROR_OUT_OF_MEMORY;
+	}
+	newsrcFile = path;
+	newsrcFile.SetLeafName(str);
+	PR_FREEIF(str);
+	str = nsnull;
+	rv = NS_OK;
+	*/
+#endif /* USE_NEWSRC_MAP_FILE */
+
+	return numAccounts;
+}
+
+nsresult
+nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, const char *newsrcfile, PRInt32 accountNum)
+{  
+	nsresult rv;
+	
+	if (!newsrcfile) return NS_ERROR_NULL_POINTER;
+	if (!hostname) return NS_ERROR_NULL_POINTER;
+	if (accountNum < 1) return NS_ERROR_FAILURE;
+	
+	nsCOMPtr<nsIMsgAccount> account;
+	nsCOMPtr<nsIMsgIncomingServer> server;
+	
+	rv = nsComponentManager::CreateInstance(kMsgAccountCID,
+		nsnull,
+		nsCOMTypeInfo<nsIMsgAccount>::GetIID(),
+		getter_AddRefs(account));
+	if (NS_FAILED(rv)) return rv;
+	
+	rv = nsComponentManager::CreateInstance("component://netscape/messenger/server&type=nntp",
+		nsnull,
+		nsCOMTypeInfo<nsIMsgIncomingServer>::GetIID(),
+		getter_AddRefs(server));
+	if (NS_FAILED(rv)) return rv;
+
+	char accountStr[1024];
+	char serverStr[1024];
+	
+	PR_snprintf(accountStr,1024,"account%d",accountNum);
+	printf("account str = %s\n",accountStr);
+	account->SetKey(accountStr);
+	PR_snprintf(serverStr,1024,"server%d",accountNum);
+	printf("server str = %s\n",serverStr);
+	server->SetKey(serverStr);
+	
+	account->SetIncomingServer(server);
+	account->addIdentity(identity);
+	
+	// adds account to the hash table.
+	AddAccount(account);
+	
+	// now upgrade all the prefs
+	char *oldstr = nsnull;
+	
+	nsFileSpec profileDir;
+	
+	NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
+	if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+	
+	rv = profile->GetCurrentProfileDir(&profileDir);
+	if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+	
+	// some of this ought to be moved out into the NNTP implementation
+	nsCOMPtr<nsINntpIncomingServer> nntpServer;
+	nntpServer = do_QueryInterface(server, &rv);
+	if (NS_FAILED(rv)) {
+		return rv;
+	}
+	
+	server->SetType("nntp");
+	server->SetHostName((char *)hostname);
+
+#ifdef SUPPORT_SNEWS
+	// we don't handle nntp servers that accept username / passwords yet
+	char prefName[1024];
+	PR_snprintf(prefName, 1024, "???nntp.server.%s.userName",hostname);
+	rv = m_prefs->CopyCharPref(prefName, &oldstr);
+	if (NS_SUCCEEDED(rv)) {
+		server->SetUsername(oldstr);
+		PR_FREEIF(oldstr);
+		oldstr = nsnull;
+	}
+
+#ifdef CAN_UPGRADE_4x_PASSWORDS
+	// upgrade the password
+	PR_snprintf(prefName, 1024, "???nntp.server.%s.password",hostname);
+	rv = m_prefs->CopyCharPref(prefName, &oldstr);
+	if (NS_SUCCEEDED(rv)) {
+		server->SetPassword("enter your clear text password here");
+		PR_FREEIF(oldstr);
+		oldstr = nsnull;
+	}
+#else
+	rv = SetPasswordForServer(server);
+	if (NS_FAILED(rv)) return rv;
+#endif /* CAN_UPGRADE_4x_PASSWORDS */
+#endif /* SUPPORT_SNEWS */
+		
+	// create the directory structure for this pop account
+	// under <profile dir>/News/host-<hostname>
+	nsCOMPtr <nsIFileSpec> newsDir;
+	nsFileSpec dir(profileDir);
+	PRBool dirExists;
+	
+	// turn profileDir into the News dir.
+	dir += "News";
+	if (!dir.Exists()) {
+		dir.CreateDir();
+	}
+
+	// can't do dir += "host-"; dir += hostname; 
+	// because += on a nsFileSpec inserts a separator
+	// so we'd end up with host-/<hostname> and not host-<hostname>
+	nsAutoString alteredHost ((const char *) "host-", eOneByte);
+	alteredHost += hostname;
+	NS_MsgHashIfNecessary(alteredHost);	
+	dir += alteredHost;
+
+	rv = NS_NewFileSpecWithSpec(dir, getter_AddRefs(newsDir));
+	if (NS_FAILED(rv)) return rv;
+
+	char *str = nsnull;
+	newsDir->GetPersistentDescriptorString(&str);
+	
+	if (str && *str) {
+		server->SetLocalPath(str);
+		PR_FREEIF(str);
+		str = nsnull;
+	}
+	
+	rv = newsDir->exists(&dirExists);
+	if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+	
+	if (!dirExists) {
+		newsDir->createDir();
+	}
+	
+	nntpServer->SetNewsrcFilePath((char *)newsrcfile);
+
+	return NS_OK;
+}
+
 NS_IMETHODIMP
 nsMsgAccountManager::GetIdentityByKey(const char *key,
                                       nsIMsgIdentity **_retval)

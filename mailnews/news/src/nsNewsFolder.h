@@ -116,11 +116,6 @@ protected:
   nsresult ForgetLine(void);
 
   PRInt32 HandleLine(char *line, PRUint32 line_size);
-  nsresult GetNewsrcFile(char *newshostname, nsFileSpec &path, nsFileSpec &newsrcFile);
-#ifdef USE_NEWSRC_MAP_FILE
-  nsresult MapHostToNewsrcFile(char *newshostname, nsFileSpec &fatFile, nsFileSpec &newsrcFile);
-#endif
-
   virtual const char *GetIncomingServerType() {return "nntp";}
   
   nsByteArray		m_inputStream;
