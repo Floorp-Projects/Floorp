@@ -44,6 +44,11 @@
   <html:script language="javascript" src="chrome://profile/content/profileSelection.js"/>
   <html:script language="javascript" src="chrome://profile/content/profileManager.js"/>
 
+
+  <keyset id="keyset">
+    <key id="fooKey" key="s" xulkey="true" shift="true" onkeydown="foo()"/>
+  </keyset>
+
   <toolbar class="decorated header" align="horizontal">
     <titledbutton id="profileIcon" class="button28"/>
     <box align="vertical">
@@ -142,8 +147,4 @@
     <spring flex="100%"/>
     <html:div id="progress"/>
   </toolbar>
-
-  <keyset>
-    <key id="fooKey" key="s" xulkey="true" shift="true" onkeydown="foo()"/>
-  </keyset>
 </window>
