@@ -40,6 +40,10 @@ CHROME_CONTENT = \
 		utilityOverlay.xul \
 		utilityOverlay.js \
 		utilityOverlay.css \
+		taskbarOverlay.xul \
+		tasksOverlay.js \
+		tasksOverlay.xul \
+		dialogBindings.xml \
 		$(NULL)
 
 DIRS 		= unix
