@@ -299,7 +299,7 @@ nsProxyObject::Release(void)
         // fire it off.
         mDestQueue->PostSynchronousEvent(event, nsnull);
         
-        delete event;
+        PR_DELETE(event);
         return 0;
   }                          
   return mRefCnt;
@@ -415,7 +415,7 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
     
     if (NS_FAILED(rv))
     {
-        delete event;
+        PR_DELETE(event);
         return rv;
     }
 
@@ -428,7 +428,7 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
     
     if (proxyInfo == nsnull)
     {
-        delete event;
+        PR_DELETE(event);
         if (fullParam)
             free(fullParam);  // allocated with malloc
         return NS_ERROR_OUT_OF_MEMORY;  
