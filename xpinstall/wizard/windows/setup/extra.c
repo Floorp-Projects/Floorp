@@ -6169,6 +6169,7 @@ void STSetVisibility(st *stSetupType)
 HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
 {
   char szBuf[MAX_BUF];
+  char szBuf2[MAX_BUF];
   char szKey[MAX_BUF];
   char szName[MAX_BUF];
   char szValue[MAX_BUF];
@@ -6445,16 +6446,20 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
       exit(1);
     }
   }
-  else if(lstrcmpi(szVariable, "JRE LIB PATH") == 0)
+  else if(  (lstrcmpi(szVariable, "JRE LIB PATH") == 0)
+         || (lstrcmpi(szVariable, "JRE BIN PATH") == 0) )
   {
     /* Locate the "c:\Program Files\JavaSoft\JRE\1.3\Bin" directory */
-    GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\javaw.Exe", NULL, szVariable, dwVariableSize);
-    if(*szVariable == '\0')
-      return(FALSE);
-    else
+    GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\javaw.Exe", NULL, szBuf, dwVariableSize);
+    if(*szBuf == '\0')
     {
-      char szVarPathOnly[MAX_BUF];
-
+      *szVariable = '\0';
+      return(FALSE);
+    }
+      
+    ParsePath(szBuf, szBuf2, sizeof(szBuf2), FALSE, PP_PATH_ONLY);
+    if(lstrcmpi(szVariable, "JRE LIB PATH") == 0)
+    {
       /* The path to javaw.exe is "...\jre\1.3.1\bin\javaw.exe", so we need to get it's
        * path only.  This should return:
        *
@@ -6474,24 +6479,13 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
        *
        *   ...\jre\1.3.1\lib
        */
-      ParsePath(szVariable, szVarPathOnly, sizeof(szVarPathOnly), FALSE, PP_PATH_ONLY);
-      RemoveBackSlash(szVarPathOnly);
-      ParsePath(szVarPathOnly, szVariable, dwVariableSize, FALSE, PP_PATH_ONLY);
+      RemoveBackSlash(szBuf2);
+      ParsePath(szBuf2, szVariable, dwVariableSize, FALSE, PP_PATH_ONLY);
       AppendBackSlash(szVariable, dwVariableSize);
       lstrcat(szVariable, "lib");
     }
-  }
-  else if(lstrcmpi(szVariable, "JRE BIN PATH") == 0)
-  {
-    /* Locate the "c:\Program Files\JavaSoft\JRE\1.3\Bin" directory */
-    GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\javaw.Exe", NULL, szVariable, dwVariableSize);
-    if(*szVariable == '\0')
-      return(FALSE);
     else
-    {
-      ParsePath(szVariable, szBuf, sizeof(szBuf), FALSE, PP_PATH_ONLY);
-      lstrcpy(szVariable, szBuf);
-    }
+      lstrcpy(szVariable, szBuf2);
   }
   else if(lstrcmpi(szVariable, "JRE PATH") == 0)
   {
