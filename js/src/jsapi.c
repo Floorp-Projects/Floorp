@@ -201,7 +201,7 @@ JS_ConvertArguments(JSContext *cx, uintN argc, jsval *argv, const char *format,
 JS_PUBLIC_API(JSBool)
 JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
 {
-    JSBool ok, b;
+    JSBool ok=JS_FALSE, b;
     JSObject *obj;
     JSFunction *fun;
     JSString *str;
@@ -324,7 +324,7 @@ JS_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp)
 JS_PUBLIC_API(JSType)
 JS_TypeOfValue(JSContext *cx, jsval v)
 {
-    JSType type;
+    JSType type = JSTYPE_VOID;
     JSObject *obj;
     JSObjectOps *ops;
     JSClass *clasp;
