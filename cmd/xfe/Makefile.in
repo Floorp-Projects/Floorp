@@ -517,7 +517,10 @@ endif
 ifndef NO_MOCHA
 # XXX To a DSO...
 #BASIC_LIBS      += $(DIST)/lib/libjs.a $(DIST)/lib/libjsj.a 
-BASIC_DSOS      += -ljs -ljsj
+BASIC_DSOS      += -ljs
+ifdef JAVA_OR_OJI
+BASIC_DSOS	+= -ljsj
+endif
 BASIC_LIBS	+= $(DIST)/lib/libmocha.a
 endif
 
