@@ -32,7 +32,19 @@ interface nsIFileSpec;
 
 typedef long nsImapAction;
 typedef long nsImapState;
+
 typedef unsigned short imapMessageFlagsType;
+
+typedef long nsImapContentModifiedType;
+
+[scriptable, uuid(2e91901e-ff6c-11d3-b9fa-00108335942a)]
+interface nsImapContentModifiedTypes
+{
+	const long IMAP_CONTENT_NOT_MODIFIED = 0;
+	const long IMAP_CONTENT_MODIFIED_VIEW_INLINE = 1;
+	const long IMAP_CONTENT_MODIFIED_VIEW_AS_LINKS = 2;
+	const long IMAP_CONTENT_FORCE_CONTENT_NOT_MODIFIED = 3;
+} ;
 
 [scriptable, uuid(AEAA246D-F9E2-11d3-98BA-001083010E9B)]
 interface nsIImapUrl : nsISupports
@@ -71,6 +83,8 @@ interface nsIImapUrl : nsISupports
 
   attribute char onlineSubDirSeparator;
   attribute boolean allowContentChange;
+  attribute boolean mimePartSelectorDetected;
+  attribute nsImapContentModifiedType contentModified;
   attribute nsISupports copyState;
   attribute nsIFileSpec msgFileSpec;
   attribute nsIImapMockChannel mockChannel;

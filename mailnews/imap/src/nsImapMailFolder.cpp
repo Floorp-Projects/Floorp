@@ -754,38 +754,40 @@ NS_IMETHODIMP nsImapMailFolder::GetHierarchyDelimiter(PRUnichar *aHierarchyDelim
 NS_IMETHODIMP nsImapMailFolder::SetBoxFlags(PRInt32 aBoxFlags)
 {
   m_boxFlags = aBoxFlags;
+  PRUint32 newFlags = mFlags;
 
-    mFlags |= MSG_FOLDER_FLAG_IMAPBOX;
+    newFlags |= MSG_FOLDER_FLAG_IMAPBOX;
 
   if (m_boxFlags & kNoinferiors)
-    mFlags |= MSG_FOLDER_FLAG_IMAP_NOINFERIORS;
+    newFlags |= MSG_FOLDER_FLAG_IMAP_NOINFERIORS;
   else
-    mFlags &= ~MSG_FOLDER_FLAG_IMAP_NOINFERIORS;
+    newFlags &= ~MSG_FOLDER_FLAG_IMAP_NOINFERIORS;
     if (m_boxFlags & kImapTrash)
-        mFlags |= MSG_FOLDER_FLAG_TRASH;
+        newFlags |= MSG_FOLDER_FLAG_TRASH;
     else
-        mFlags &= ~MSG_FOLDER_FLAG_TRASH;
+        newFlags &= ~MSG_FOLDER_FLAG_TRASH;
     if (m_boxFlags & kImapSent)
-        mFlags |= MSG_FOLDER_FLAG_SENTMAIL;
+        newFlags |= MSG_FOLDER_FLAG_SENTMAIL;
     else
-        mFlags &= ~MSG_FOLDER_FLAG_SENTMAIL;
+        newFlags &= ~MSG_FOLDER_FLAG_SENTMAIL;
     if (m_boxFlags & kNoselect)
-        mFlags |= MSG_FOLDER_FLAG_IMAP_NOSELECT;
+        newFlags |= MSG_FOLDER_FLAG_IMAP_NOSELECT;
     else
-        mFlags &= ~MSG_FOLDER_FLAG_IMAP_NOSELECT;
+        newFlags &= ~MSG_FOLDER_FLAG_IMAP_NOSELECT;
     if (m_boxFlags & kPublicMailbox)
-        mFlags |= MSG_FOLDER_FLAG_IMAP_PUBLIC;
+        newFlags |= MSG_FOLDER_FLAG_IMAP_PUBLIC;
     else
-        mFlags &= ~MSG_FOLDER_FLAG_IMAP_PUBLIC;
+        newFlags &= ~MSG_FOLDER_FLAG_IMAP_PUBLIC;
     if (m_boxFlags & kOtherUsersMailbox)
-        mFlags |= MSG_FOLDER_FLAG_IMAP_OTHER_USER;
+        newFlags |= MSG_FOLDER_FLAG_IMAP_OTHER_USER;
     else
-        mFlags &= ~MSG_FOLDER_FLAG_IMAP_OTHER_USER;
+        newFlags &= ~MSG_FOLDER_FLAG_IMAP_OTHER_USER;
     if (m_boxFlags & kPersonalMailbox)
-        mFlags |= MSG_FOLDER_FLAG_IMAP_PERSONAL;
+        newFlags |= MSG_FOLDER_FLAG_IMAP_PERSONAL;
     else
-        mFlags &= ~MSG_FOLDER_FLAG_IMAP_PERSONAL;
+        newFlags &= ~MSG_FOLDER_FLAG_IMAP_PERSONAL;
 
+    SetFlags(newFlags);
   return NS_OK;
 }
 

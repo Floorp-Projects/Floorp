@@ -56,6 +56,7 @@ nsImapUrl::nsImapUrl()
 	m_idsAreUids = PR_FALSE;
 	m_mimePartSelectorDetected = PR_FALSE;
 	m_allowContentChange = PR_TRUE;	// assume we can do MPOD.
+	m_contentModified = IMAP_CONTENT_NOT_MODIFIED;
 	m_validUrl = PR_TRUE;	// assume the best.
 	m_flags = 0;
 	m_onlineSubDirSeparator = '/'; 
@@ -841,6 +842,35 @@ NS_IMETHODIMP nsImapUrl::SetAllowContentChange(PRBool allowContentChange)
 	m_allowContentChange = allowContentChange;
 	return NS_OK;
 }
+
+NS_IMETHODIMP nsImapUrl::SetContentModified(nsImapContentModifiedType contentModified)
+{
+	m_contentModified = contentModified;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::GetContentModified(nsImapContentModifiedType *contentModified)
+{
+	if (!contentModified) return NS_ERROR_NULL_POINTER;
+
+	*contentModified = m_contentModified;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::SetMimePartSelectorDetected(PRBool mimePartSelectorDetected)
+{
+	m_mimePartSelectorDetected = mimePartSelectorDetected;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::GetMimePartSelectorDetected(PRBool *mimePartSelectorDetected)
+{
+	if (!mimePartSelectorDetected) return NS_ERROR_NULL_POINTER;
+
+	*mimePartSelectorDetected = m_mimePartSelectorDetected;
+	return NS_OK;
+}
+
 
 // this method is only called from the UI thread.
 NS_IMETHODIMP nsImapUrl::SetCopyState(nsISupports* copyState)

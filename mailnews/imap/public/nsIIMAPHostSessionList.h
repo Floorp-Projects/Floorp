@@ -115,7 +115,7 @@ public:
 
 	// Message Body Shells
 	 NS_IMETHOD		AddShellToCacheForHost(const char *serverKey, nsIMAPBodyShell *shell) = 0;
-	 NS_IMETHOD		FindShellInCacheForHost(const char *serverKey, const char *mailboxName, const char *UID, nsIMAPBodyShell	&result) = 0;
+	 NS_IMETHOD		FindShellInCacheForHost(const char *serverKey, const char *mailboxName, const char *UID, IMAP_ContentModifiedType modType, nsIMAPBodyShell	**result) = 0;
 
 };
 

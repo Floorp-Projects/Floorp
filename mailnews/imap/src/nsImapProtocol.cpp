@@ -20,7 +20,7 @@
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
-
+#define DOING_MPOD
 // sorry, this has to be before the pre-compiled header
 #define FORCE_PR_LOG /* Allow logging in the release build */
 // as does this
@@ -91,6 +91,8 @@ static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 #define IMAP_DB_HEADERS "Priority X-Priority References Newsgroups"
 static const PRInt32 kImapSleepTime = 1000000;
 static PRInt32 gPromoteNoopToCheckCount = 0;
+static PRInt32 gMIMEOnDemandThreshold = 15000;
+static PRBool gMIMEOnDemand = PR_FALSE;
 
 // **** helper class for downloading line ****
 TLineDownloadCache::TLineDownloadCache()
@@ -176,6 +178,8 @@ nsresult nsImapProtocol::GlobalInitialization()
     prefs->GetIntPref("mail.imap.chunk_size", &gChunkSize);
     prefs->GetIntPref("mail.imap.min_chunk_size_threshold", &gChunkThreshold);
     prefs->GetIntPref("mail.imap.max_chunk_size", &gMaxChunkSize);
+	prefs->GetBoolPref("mail.imap.mime_parts_on_demand", &gMIMEOnDemand);
+	prefs->GetIntPref("mail.imap.mime_parts_on_demand_threshold", &gMIMEOnDemandThreshold);
   }
   gInitialized = PR_TRUE;
   return rv;
@@ -1682,8 +1686,9 @@ void nsImapProtocol::ProcessSelectedStateURL()
                   IMAP_CONTENT_MODIFIED_VIEW_INLINE :
                   IMAP_CONTENT_MODIFIED_VIEW_AS_LINKS;
 
-                nsIMAPBodyShell *foundShell = TIMAPHostInfo::FindShellInCacheForHost(m_runningUrl->GetUrlHost(),
-                  GetServerStateParser().GetSelectedMailboxName(), messageIdString, modType);
+                nsIMAPBodyShell *foundShell = nsnull;
+                res = m_hostSessionList->FindShellInCacheForHost(GetImapHostName(),
+                    GetServerStateParser().GetSelectedMailboxName(), messageIdString, modType, &foundShell);
                 if (!foundShell)
                 {
                   // The shell wasn't in the cache.  Deal with this case later.
@@ -1722,14 +1727,17 @@ void nsImapProtocol::ProcessSelectedStateURL()
               // to do it by parts:  when viewing a message, or its source
               // Some times when we're NOT allowed:  when forwarding a message, saving it, moving it, etc.
   #ifdef DOING_MPOD
-              PRBool allowedToBreakApart = (ce  && !DeathSignalReceived()) ? ce->URL_s->allow_content_change : PR_FALSE;
+              // need to set a flag in the url, I guess, equiv to allow_content_changed.
+              PRBool allowedToBreakApart = PR_TRUE; // (ce  && !DeathSignalReceived()) ? ce->URL_s->allow_content_change : PR_FALSE;
+              PRBool mimePartSelectorDetected;
+              m_runningUrl->GetMimePartSelectorDetected(&mimePartSelectorDetected);
 
               if (gMIMEOnDemand &&
                 allowedToBreakApart && 
                 !GetShouldFetchAllParts() &&
                 GetServerStateParser().ServerHasIMAP4Rev1Capability() &&
                 (messageSize > (uint32) gMIMEOnDemandThreshold) &&
-                !m_runningUrl->MimePartSelectorDetected())  // if a ?part=, don't do BS.
+                !mimePartSelectorDetected)  // if a ?part=, don't do BS.
               {
                 // OK, we're doing bodystructure
 
@@ -1743,8 +1751,8 @@ void nsImapProtocol::ProcessSelectedStateURL()
                 SetContentModified(modType);  // This will be looked at by the cache
                 if (bMessageIdsAreUids)
                 {
-                  foundShell = TIMAPHostInfo::FindShellInCacheForHost(m_runningUrl->GetUrlHost(),
-                    GetServerStateParser().GetSelectedMailboxName(), messageIdString, modType);
+                  res = m_hostSessionList->FindShellInCacheForHost(GetImapHostName(),
+                    GetServerStateParser().GetSelectedMailboxName(), messageIdString, modType, &foundShell);
                   if (foundShell)
                   {
                     Log("SHELL",NULL,"Loading message, using cached shell.");
@@ -2268,7 +2276,7 @@ void nsImapProtocol::Bodystructure(const char *messageId, PRBool idIsUid)
     commandString.Append(" fetch ");
 
   commandString.Append(messageId);
-  commandString.Append("  (BODYSTRUCTURE)" CRLF);
+  commandString.Append(" (BODYSTRUCTURE)" CRLF);
 
               
     nsresult rv = SendData(commandString.GetBuffer());
@@ -3473,6 +3481,17 @@ void nsImapProtocol::SetContentModified(PRBool modified)
   // ### DMB this used to poke the content_modified member of the url struct...
 }
 
+
+PRBool	nsImapProtocol::GetShouldFetchAllParts()
+{
+	if (m_runningUrl  && !DeathSignalReceived())
+	{
+		nsImapContentModifiedType contentModified;
+		if (NS_SUCCEEDED(m_runningUrl->GetContentModified(&contentModified)))
+			return (contentModified == IMAP_CONTENT_FORCE_CONTENT_NOT_MODIFIED);
+	}
+	return PR_TRUE;
+}
 
 PRInt32 nsImapProtocol::OpenTunnel (PRInt32 maxNumberOfBytesToRead)
 {
