@@ -1746,6 +1746,9 @@ sub AddFDef ($$$) {
 }
 
 
+# Note that all of these entries are unconditional, from when GetFieldID
+# used to create an entry if it wasn't found. New fielddef columns should
+# be created with their associated schema change.
 AddFDef("bug_id", "Bug \#", 1);
 AddFDef("short_desc", "Summary", 1);
 AddFDef("product", "Product", 1);
@@ -1779,9 +1782,10 @@ AddFDef("(to_days(now()) - to_days(bugs.delta_ts))", "Days since bug changed",
         0);
 AddFDef("longdesc", "Comment", 0);
 AddFDef("alias", "Alias", 0);
-    
-    
-
+AddFDef("everconfirmed", "Ever Confirmed", 0);
+AddFDef("groupset", "Groupset", 0);
+AddFDef("reporter_accessible", "Reporter Accessible", 0);
+AddFDef("cc_accessible", "CC Accessible", 0);
 
 ###########################################################################
 # Detect changed local settings

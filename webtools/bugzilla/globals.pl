@@ -349,12 +349,7 @@ sub GetFieldID {
     my ($f) = (@_);
     SendSQL("SELECT fieldid FROM fielddefs WHERE name = " . SqlQuote($f));
     my $fieldid = FetchOneColumn();
-    if (!$fieldid) {
-        my $q = SqlQuote($f);
-        SendSQL("REPLACE INTO fielddefs (name, description) VALUES ($q, $q)");
-        SendSQL("SELECT LAST_INSERT_ID()");
-        $fieldid = FetchOneColumn();
-    }
+    die "Unknown field id: $f" if !$fieldid;
     return $fieldid;
 }
         
