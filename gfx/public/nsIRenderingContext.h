@@ -765,6 +765,15 @@ public:
 #endif
 
 
+#ifdef IBMBIDI
+  /**
+   * Let the device context know whether we want text reordered with
+   * right-to-left base direction
+   */
+  NS_IMETHOD SetRightToLeftText(PRBool aIsRTL) = 0;
+#endif // IBMBIDI
+
+
 #ifdef USE_IMG2
   /* [noscript] void drawImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsPoint aDestPoint); */
   NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint) = 0;
@@ -802,6 +811,18 @@ public:
  * remotely.
  */
 #define NS_RENDERING_HINT_REMOTE_RENDERING 0x2
+
+/**
+ * This bit, when set, indicates that the system provides support for
+ * the reordering of bidirectional text
+ */
+#define NS_RENDERING_HINT_BIDI_REORDERING 0x4
+
+/**
+ * This bit, when set, indicates that the system provides support for
+ * Arabic shaping
+ */
+#define NS_RENDERING_HINT_ARABIC_SHAPING 0x8
 
 //flags for copy CopyOffScreenBits
 

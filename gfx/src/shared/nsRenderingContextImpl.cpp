@@ -427,6 +427,18 @@ PRInt32 flag = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES;
   } 
 }
 
+#ifdef IBMBIDI
+/**
+ * Let the device context know whether we want text reordered with
+ * right-to-left base direction
+ */
+NS_IMETHODIMP
+nsRenderingContextImpl::SetRightToLeftText(PRBool aIsRTL)
+{
+  return NS_OK;
+}
+#endif // IBMBIDI
+
 /** ---------------------------------------------------
  *  See documentation in nsRenderingContextImpl.h
  *	@update 3/29/00 dwc
