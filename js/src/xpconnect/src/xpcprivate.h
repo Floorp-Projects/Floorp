@@ -78,6 +78,7 @@
 #include "jsinterp.h"
 #include "jscntxt.h"
 #include "jsdbgapi.h"
+#include "jsgc.h"
 #include "xptinfo.h"
 #include "xpcforwards.h"
 #include "xpclog.h"
@@ -2172,6 +2173,9 @@ private:
     nsXPCWrappedJS* mRoot;
     nsXPCWrappedJS* mNext;
     nsISupports* mOuter;    // only set in root
+#ifdef GC_MARK_DEBUG
+    char *mGCRootName;
+#endif
 };
 
 /***************************************************************************/
