@@ -196,6 +196,7 @@ static const nsModuleComponentInfo components[] =
 PR_STATIC_CALLBACK(void)
 nsGfxOS2ModuleDtor(nsIModule *self)
 {
+  OS2Uni::FreeUconvObjects();
 //  nsRenderingContextOS2::Shutdown();
 }
 
