@@ -35,7 +35,7 @@
 
 void main(int argc, char **argv)
 {
-	char *args[6];
+	char *args[7];
 	int n = 0 ;
 	int rc = 0 ;
 
