@@ -166,7 +166,7 @@
   {
     var url = readFromClipboard();
     if (url) {
-      loadShortcutOrURI(url);
+      loadURI(getShortcutOrURI(url));
       return true;
     }
     return false;

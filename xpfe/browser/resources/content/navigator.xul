@@ -87,7 +87,6 @@ Contributor(s): ______________________________________. -->
 
 <!-- broadcasters are appended from the overlay -->
 <broadcasterset id="broadcasterset">
-  <broadcaster id="canReload" oncommand="BrowserReallyReload(event);"/>
   <broadcaster id="canPrint"/>
   <broadcaster id="args" value=""/>
   <broadcaster id="cmd_pageSetup"/>
@@ -140,9 +139,9 @@ Contributor(s): ______________________________________. -->
       	  <menupopup context="" oncreate="BrowserForwardMenu(event);"/>
         </menubutton>
 
-        <button class="button-toolbar-1 top" id="reload-button" crop="right" observes="canReload" value="&reloadButton.label;" 
+        <button class="button-toolbar-1 top" id="reload-button" crop="right" oncommand="if (event.shiftKey) BrowserReloadSkipCache(); else BrowserReload();" value="&reloadButton.label;" 
                 tooltip="aTooltip" tooltiptext="&reloadButton.tooltip;"/>
-        <button class="button-toolbar-1 top" id="stop-button" crop="right" observes="canStop" onclick="BrowserStop()" value="&stopButton.label;" 
+        <button class="button-toolbar-1 top" id="stop-button" crop="right" observes="canStop" oncommand="BrowserStop();" value="&stopButton.label;" 
                 tooltip="aTooltip" tooltiptext="&stopButton.tooltip;"/>
       </box>
                 
@@ -151,7 +150,7 @@ Contributor(s): ______________________________________. -->
           <box autostretch="never" valign="middle" flex="1" id="urlbar-container">
     	      <image id="page-proxy-button" ondraggesture="nsDragAndDrop.startDrag(event, proxyIconDNDObserver);"/> 
 	          <textfield autocomplete="true" timeout="300" class="plain" 
-	                     searchSessionType="urlbar" id="urlbar" tooltip="aTooltip" tooltiptext="&locationBar.tooltip;"
+	                     searchSessionType="urlbar,addrbook" id="urlbar" tooltip="aTooltip" tooltiptext="&locationBar.tooltip;"
                          onclick="if (event.button==1) URLBarLeftClickHandler(event);"
                          onblur="URLBarBlurHandler(event);"
 						 onkeypress="if( event.keyCode == 13 ) { addToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>  
@@ -172,7 +171,7 @@ Contributor(s): ______________________________________. -->
                 oncommand="OpenSearch('internet',false, document.getElementById('urlbar').value);" 
                 tooltip="aTooltip" tooltiptext="&searchButton.tooltip;"/> 
       </box>
-
+/* foo */
       <menubutton class="menubutton-dual toolbar top" id="print-button" persist="hidden" value="&printButton.label;" 
                   crop="right" buttonaction="BrowserPrint()" tooltip="aTooltip" buttontooltiptext="&printButton.tooltip;">  
         <menupopup id="printMenu" popupalign="topright" popupanchor="bottomright">

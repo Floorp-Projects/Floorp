@@ -68,8 +68,8 @@
 	<key id="key_selectAll"/>
 	
         <!-- View Menu -->
-	<key id="key_reload"  key="&reloadCmd.commandkey;" observes="canReload" modifiers="accel"/>
-	<key id="key_reallyReload" key="&reloadCmd.commandkey;" observes="canReload" modifiers="accel,shift"/>
+	<key id="key_reload"  key="&reloadCmd.commandkey;" oncommand="BrowserReload();" modifiers="accel"/>
+	<key id="key_reallyReload" key="&reloadCmd.commandkey;" oncommand="BrowserReloadSkipCache();" modifiers="accel,shift"/>
 	<key id="key_viewSource" key="&pageSourceCmd.commandkey;" observes="View:PageSource" modifiers="accel"/>
 	<key id="key_viewInfo"   key="&pageInfoCmd.commandkey;"   observes="View:PageInfo"   modifiers="accel"/>
 
@@ -211,7 +211,7 @@
         </menupopup>
       </menu>
       <menuseparator />
-      <menuitem id="menuitem-reload" accesskey="&reloadCmd.accesskey;" key="key_reload" value="&reloadCmd.label;" observes="canReload" />
+      <menuitem id="menuitem-reload" accesskey="&reloadCmd.accesskey;" key="key_reload" value="&reloadCmd.label;" oncommand="BrowserReload();"/>
       <menuitem value="&showImagesCmd.label;" accesskey="&showImagesCmd.accesskey;" disabled="true" oncommand="BrowserReload();"/>
       <menuitem value="&stopCmd.label;" accesskey="&stopCmd.accesskey;" id="menuitem-stop" oncommand="BrowserStop();" key="key_stop"/>
       <menuseparator />

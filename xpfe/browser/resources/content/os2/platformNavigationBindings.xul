@@ -15,7 +15,7 @@
     <key id="goForwardKbIE"  keycode="VK_BACK" observes="Browser:Forward" modifiers="shift"/>
 
     <!-- Supporting IE 'refresh' shortcut key -->
-    <key id="reloadIE" keycode="VK_F5" observes="canReload"/>
+    <key id="reloadIE" keycode="VK_F5" oncommand="BrowserReload();"/>
 
     <key id="goHome" keycode="VK_HOME" observes="Browser:Home" modifiers="alt"/>
   </keyset>  
