@@ -81,6 +81,7 @@ void RDF_DisposeCursor (RDF_Cursor c) {
 
 char** RDF_processPathQuery(char* query) {
   //  return processRDFQuery (query) ;
+  return 0;
 }
 
 

@@ -16,6 +16,9 @@
  * Reserved.
  */
 
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 #include "rdf.h"
 
 RDF_Resource 
@@ -30,7 +33,7 @@ getNodeFromQuery (char* query) {
 
 void 
 AnswerOpenDirQuery (WriteClientProc callBack, void* obj, char *query) {
-  char *buff = malloc(10000);
+  char *buff = (char*) malloc(10000);
   RDF_Resource items[300];
   RDF_Resource topics[100];
   RDF_Resource child = RDF_GetResource("child", 1);
@@ -44,8 +47,8 @@ AnswerOpenDirQuery (WriteClientProc callBack, void* obj, char *query) {
 
   if (node) {
     RDF_Cursor c = RDF_GetTargets(0, node, child, RDF_RESOURCE_TYPE);
-    RDF_Resource ans = 0;
-    while (c && (ans = RDF_NextValue(c))) {
+    RDF_Resource ans ;
+    while (c && (ans = (RDF_Resource) RDF_NextValue(c))) {
       int   subjectp = RDF_HasAssertion(0, ans, type, topic, RDF_RESOURCE_TYPE); 
       if (subjectp) {
         topics[topicCount++] = ans;
@@ -63,7 +66,7 @@ AnswerOpenDirQuery (WriteClientProc callBack, void* obj, char *query) {
         (*callBack)(obj, "<tr>");
         while ((w < ROW_WIDTH) && (n < topicCount)) {
           RDF_Resource u = topics[n];
-          char* nm = RDF_OnePropValue(0, u, name, RDF_STRING_TYPE);
+          char* nm = (char*) RDF_OnePropValue(0, u, name, RDF_STRING_TYPE);
           char* id = RDF_ResourceID(u);
           sprintf(buff, "<td><li><a href=\"OpenDir?%s\">%s</a></td>", id, (nm ? nm : id));
           (*callBack)(obj, buff);
@@ -82,7 +85,7 @@ AnswerOpenDirQuery (WriteClientProc callBack, void* obj, char *query) {
         int w = 0;
         
           RDF_Resource u = items[n];
-          char* nm = RDF_OnePropValue(0, u, name, RDF_STRING_TYPE);
+          char* nm = (char*) RDF_OnePropValue(0, u, name, RDF_STRING_TYPE);
           char* id = RDF_ResourceID(u);
           sprintf(buff, "<li><a href=\"%s\">%s</a>", id, (nm ? nm : id));
           (*callBack)(obj, buff);

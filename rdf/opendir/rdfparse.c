@@ -18,6 +18,7 @@
 
 
 #include "rdf-int.h"
+#include <stdio.h>
 
 char* error_string = NULL;
 int lineNumber = 0;
@@ -26,7 +27,7 @@ static HashTable resourceHash = NULL;
 
 RDF_Resource 
 getResource (char* key, int createp) {
-  RDF_Resource existing = HashLookup(resourceHash, key);
+  RDF_Resource existing = (RDF_Resource) HashLookup(resourceHash, key);
   if (existing) {
     return existing;
   } else if (createp){
@@ -47,8 +48,9 @@ size_t allocated = 0;
 #define MEM_BLOCK_SIZE 10000
 
 char*
-fgetMem (size_t size) {
+fgetMem (size_t rsize) {
   char* ans = 0;
+  size_t size = rsize + (4 - ldiv(rsize, 4).rem);  
   if (!MemBlock || (size >= (MEM_BLOCK_SIZE  - allocated))) {
 	  MemBlock = getMem(MEM_BLOCK_SIZE);
 	  allocated = 0;
@@ -62,20 +64,22 @@ fgetMem (size_t size) {
 void readRDFFile (char* file) {
   FILE* f = fopen(file, "r");	
   if (f) {
-	RDFT rf = (RDFT)getRDFT(file, 1) ; 
+    RDFT rf = (RDFT)getRDFT(file, 1) ; 
     int ok = 1;
-    char* buff  = malloc(100 * 1024);
+    char* buff  = (char*) malloc(100 * 1024);
     int len ;
-	int i = 0;
+    int i = 0;
     memset(buff, '\0', (100 * 1024));
-	memset(rf, '\0', sizeof(RDF_FileStruct));
+    memset(rf, '\0', sizeof(RDF_FileStruct));
+
     rf->line = (char*)getMem(RDF_BUF_SIZE);
     rf->holdOver = (char*)getMem(RDF_BUF_SIZE);
     rf->depth = 1;
     rf->lastItem = rf->stack[0] ;
     while ((len = fread(buff, 1, (100 * 1024) -1, f)) > 0) {
       buff[len] = '\0';
-	  printf("[%i] ", i++);
+      printf("[%i] ", i++);
+      fflush(0);
       if (!(ok = parseNextRDFXMLBlobInt(rf, buff, len))) {
         printf("Error in RDF File\n");
       }
@@ -93,7 +97,7 @@ static HashTable rdftHash = NULL;
 
 RDFT
 getRDFT (char* key, int createp) {
-  RDFT existing = HashLookup(rdftHash, key);
+  RDFT existing = (RDFT) HashLookup(rdftHash, key);
   if (existing) {
     return existing;
   } else if (createp){
@@ -259,8 +263,8 @@ parseNextRDFXMLBlobInt(RDFT f, char* blob, int size) {
         if (c == '<') f->holdOver[0] = '<'; 
         if (somethingseenp == 1) {
           int ok = parseNextRDFToken(f, f->line);
-          if (!ok) 
-			  return 0;
+          if (!ok)
+	       return 0;
         }
       } else if (size > last) {
         memcpy(f->holdOver, f->line, m);
@@ -327,6 +331,8 @@ parseNextRDFToken (RDFT f, char* token)
 {
   char* attlist[2*MAX_ATTRIBUTES+1];
   char* elementName;
+
+  fflush(0);
   
         
   if (token[0] != '<')   {
@@ -337,7 +343,7 @@ parseNextRDFToken (RDFT f, char* token)
       remoteStoreAdd(f, u, s, val , RDF_STRING_TYPE, 1);
 	  return 1;
     } else  {
-      sprintf(error_string, "Did not expect \n\"%s\".\n Was expecting a tag.", token);
+      printf(error_string, "Did not expect \n\"%s\".\n Was expecting a tag.", token);
       return 0;
     } 
   } else if  (startsWith("<!--", token)) {
@@ -346,7 +352,7 @@ parseNextRDFToken (RDFT f, char* token)
     return 1;
   } else if (token[1] == '/') {
     if ((f->status != EXPECTING_OBJECT) && (f->status != EXPECTING_PROPERTY)) {
-      sprintf(error_string, "Did not expect %s. Something pretty screwed up", token);
+      printf(error_string, "Did not expect %s. Something pretty screwed up", token);
       return 0;
     }
     if (f->depth > 0) f->depth--;
@@ -367,9 +373,9 @@ parseNextRDFToken (RDFT f, char* token)
       url = getID(attlist);
       if (!url) {
         if (f->tagDepth > 2) {
-          sprintf(error_string, "Unbalanced tags ");
+          printf(error_string, "Unbalanced tags ");
         } else {
-          sprintf(error_string, "Require a \"about\" attribute on %s", token);
+          printf(error_string, "Require a \"about\" attribute on %s", token);
         }
         return 0;
       }
@@ -405,6 +411,7 @@ parseNextRDFToken (RDFT f, char* token)
         f->status = EXPECTING_OBJECT;
       }
     }
+    return 1;
   }
 }	
 

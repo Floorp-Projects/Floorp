@@ -27,7 +27,7 @@ asEqual(RDFT r, Assertion as, RDF_Resource u, RDF_Resource s, void* v,
 	  (as->s == s) && 
 	  (as->type == type) && 
 	  ((as->value == v) || 
-	   ((type == RDF_STRING_TYPE) && (strcmp(v, as->value) == 0))));
+	   ((type == RDF_STRING_TYPE) && (strcmp((char*)v, (char*)as->value) == 0))));
 }
 
 
@@ -50,7 +50,7 @@ void
 addToAssertionList (RDFT f, Assertion as)
 {
   if (f->assertionListCount >= f->assertionListSize) {
-    f->assertionList = realloc(f->assertionList, 
+    f->assertionList = (Assertion*) realloc(f->assertionList, 
 			       (sizeof(Assertion*) *
 				    (f->assertionListSize = 
 				     f->assertionListSize + GROW_LIST_INCR)));
