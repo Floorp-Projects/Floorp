@@ -85,21 +85,32 @@ public class NativeMath extends IdScriptable
         return null;
     }
 
-    public int methodArity(int methodId, IdFunction function) {
+    public int methodArity(int methodId) {
         switch (methodId) {
-            case Id_atan2:
-            case Id_max:
-            case Id_min:
-            case Id_pow:
-                return 2;
-            case Id_random:
-                return 0;
+            case Id_abs:      return 1;
+            case Id_acos:     return 1;
+            case Id_asin:     return 1;
+            case Id_atan:     return 1;
+            case Id_atan2:    return 2;
+            case Id_ceil:     return 1;
+            case Id_cos:      return 1;
+            case Id_exp:      return 1;
+            case Id_floor:    return 1;
+            case Id_log:      return 1;
+            case Id_max:      return 2;
+            case Id_min:      return 2;
+            case Id_pow:      return 2;
+            case Id_random:   return 0;
+            case Id_round:    return 1;
+            case Id_sin:      return 1;
+            case Id_sqrt:     return 1;
+            case Id_tan:      return 1;
         }
-        return 1;
+        return super.methodArity(methodId);
     }
 
     public Object execMethod
-        (int methodId, IdFunction function,
+        (int methodId, IdFunction f,
          Context cx, Scriptable scope, Scriptable thisObj, Object[] args)
         throws JavaScriptException
     {
@@ -160,7 +171,7 @@ public class NativeMath extends IdScriptable
             case Id_tan: return wrap_double
                 (js_tan(ScriptRuntime.toNumber(args, 0)));
         }
-        return null;
+        return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
     private double js_abs(double x) {

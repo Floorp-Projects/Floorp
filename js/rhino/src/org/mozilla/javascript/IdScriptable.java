@@ -286,15 +286,22 @@ public abstract class IdScriptable extends ScriptableObject
     }
 
     /** 'thisObj' will be null if invoked as constructor, in which case
-     ** instance of Scriptable should be returned.
-     */
-    public abstract Object execMethod(int methodId, IdFunction function,
+     ** instance of Scriptable should be returned. */
+    public Object execMethod(int methodId, IdFunction function,
                              Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
-        throws JavaScriptException;
+        throws JavaScriptException
+    {
+        throw IdFunction.onBadMethodId(this, methodId);
+    }
 
-    public abstract int methodArity(int methodId, IdFunction function);
-
+    /** Get arity or defined argument count for method with given id. 
+     ** Should return -1 if methodId is not known or can not be used
+     ** with execMethod call. */
+    public int methodArity(int methodId) {
+        return -1;
+    }
+    
     /** Do scope initialization. 
      ** Default implementation calls activateIdMap() and then if 
      ** mapNameToId("constructor") returns positive id, defines EcmaScript

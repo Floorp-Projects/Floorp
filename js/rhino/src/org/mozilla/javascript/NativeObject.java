@@ -49,15 +49,17 @@ public class NativeObject extends IdScriptable {
         return "Object";
     }
 
-    public int methodArity(int methodId, IdFunction function) {
+    public int methodArity(int methodId) {
         switch (methodId) {
-        case Id_constructor:
-        case Id_hasOwnProperty:
-        case Id_propertyIsEnumerable:
-        case Id_isPrototypeOf:
-            return 1;
+        case Id_constructor:           return 1;
+        case Id_toString:              return 0;
+        case Id_toLocaleString:        return 0;
+        case Id_valueOf:               return 0;
+        case Id_hasOwnProperty:        return 1;
+        case Id_propertyIsEnumerable:  return 1;
+        case Id_isPrototypeOf:         return 1;
         }
-        return 0;
+        return super.methodArity(methodId);
     }
 
     public Object execMethod
@@ -81,7 +83,7 @@ public class NativeObject extends IdScriptable {
         case Id_isPrototypeOf:
             return jsFunction_isPrototypeOf(cx, thisObj, args);
         }
-        return Scriptable.NOT_FOUND;
+        return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
     private static Object jsConstructor(Context cx, Object[] args,

@@ -51,11 +51,10 @@ public class NativeError extends IdScriptable {
         super.scopeInit(cx, scope, sealed);
     }
     
-    public int methodArity(int methodId, IdFunction function) {
-        if (methodId == Id_constructor) {
-            return 1;
-        }
-        return 0;
+    public int methodArity(int methodId) {
+        if (methodId == Id_constructor) return 1;
+        if (methodId == Id_toString) return 0;
+        return super.methodArity(methodId);
     }
 
     public Object execMethod
@@ -71,7 +70,7 @@ public class NativeError extends IdScriptable {
             return realThis(thisObj, f).jsFunction_toString();
         }
 
-        return Scriptable.NOT_FOUND;
+        return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
     private NativeError realThis(Scriptable thisObj, IdFunction f) {

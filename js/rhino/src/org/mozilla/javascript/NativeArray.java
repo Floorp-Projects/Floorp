@@ -118,11 +118,23 @@ public class NativeArray extends IdScriptable {
         return this;
     }
 
-    public int methodArity(int methodId, IdFunction function) {
-        if (methodId == Id_reverse || methodId == Id_toString) {
-            return 0;
+    public int methodArity(int methodId) {
+        switch (methodId) {
+        case Id_constructor:     return 1;
+        case Id_toString:        return 0;
+        case Id_toLocaleString:  return 1;
+        case Id_join:            return 1;
+        case Id_reverse:         return 0;
+        case Id_sort:            return 1;
+        case Id_push:            return 1;
+        case Id_pop:             return 1;
+        case Id_shift:           return 1;
+        case Id_unshift:         return 1;
+        case Id_splice:          return 1;
+        case Id_concat:          return 1;
+        case Id_slice:           return 1;
         }
-        return 1;
+        return super.methodArity(methodId);
     }
 
     public Object execMethod
@@ -171,7 +183,7 @@ public class NativeArray extends IdScriptable {
             return jsFunction_slice(cx, thisObj, args);
         }
 
-        return Scriptable.NOT_FOUND;
+        return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
     public Object get(int index, Scriptable start) {

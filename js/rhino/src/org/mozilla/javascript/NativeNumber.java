@@ -82,17 +82,17 @@ public class NativeNumber extends IdScriptable {
         super.fillConstructorProperties(cx, ctor, sealed);
     }
 
-    public int methodArity(int methodId, IdFunction function) {
+    public int methodArity(int methodId) {
         switch (methodId) {
-        case Id_constructor:
-        case Id_toString:
-        case Id_toLocaleString:
-        case Id_toFixed:
-        case Id_toExponential:
-        case Id_toPrecision:
-            return 1;
+        case Id_constructor:     return 1; 
+        case Id_toString:        return 1; 
+        case Id_valueOf:         return 0; 
+        case Id_toLocaleString:  return 1; 
+        case Id_toFixed:         return 1;
+        case Id_toExponential:   return 1;
+        case Id_toPrecision:     return 1;
         }
-        return 0;
+        return super.methodArity(methodId);
     }
 
     public Object execMethod
@@ -125,7 +125,7 @@ public class NativeNumber extends IdScriptable {
 
         }
 
-        return Scriptable.NOT_FOUND;
+        return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
     private NativeNumber realThis(Scriptable thisObj, IdFunction f) {

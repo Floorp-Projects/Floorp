@@ -54,7 +54,7 @@ public class NativeGlobal implements ScopeInitializer, IdFunction.Master {
 
     public void scopeInit(Context cx, Scriptable scope, boolean sealed) {
 
-        for (int id = 1; id <= LAST_METHOD_ID; ++id) {
+        for (int id = 1; id <= MAX_ID; ++id) {
             String name = getMethodName(id);
             IdFunction f = new IdFunction(this, name, id);
             f.setParentScope(scope);
@@ -129,12 +129,26 @@ public class NativeGlobal implements ScopeInitializer, IdFunction.Master {
             case Id_new_CommonError:    
                 return new_CommonError(function, cx, scope, args);
         }
-        return null;
+        throw IdFunction.onBadMethodId(this, methodId);
     }
 
-    public int methodArity(int methodId, IdFunction function) {
-        if (methodId == Id_parseInt) { return 2; }
-        return 1;
+    public int methodArity(int methodId) {
+        switch (methodId) {
+            case Id_new_CommonError:     return 1;
+
+            case Id_decodeURI:           return 1;
+            case Id_decodeURIComponent:  return 1;
+            case Id_encodeURI:           return 1;
+            case Id_encodeURIComponent:  return 1;
+            case Id_escape:              return 1;
+            case Id_eval:                return 1;
+            case Id_isFinite:            return 1;
+            case Id_isNaN:               return 1;
+            case Id_parseFloat:          return 1;
+            case Id_parseInt:            return 2;
+            case Id_unescape:            return 1;
+        }
+        return -1;
     }
 
     public Scriptable getParentScope() { return null; }
@@ -773,7 +787,14 @@ public class NativeGlobal implements ScopeInitializer, IdFunction.Master {
         return ucs4Char;
     }
 
+    protected int getMinimumId() { return MIN_ID; }
+
+    protected int getMaximumId() { return MAX_ID; }
+
     private static final int    
+        MIN_ID                 = -1,
+        Id_new_CommonError     = -1,
+
         Id_decodeURI           =  1,
         Id_decodeURIComponent  =  2,
         Id_encodeURI           =  3,
@@ -786,7 +807,6 @@ public class NativeGlobal implements ScopeInitializer, IdFunction.Master {
         Id_parseInt            = 10,
         Id_unescape            = 11,
         
-        LAST_METHOD_ID         = 11,
+        MAX_ID                 = 11;
         
-        Id_new_CommonError     = 12;
 }

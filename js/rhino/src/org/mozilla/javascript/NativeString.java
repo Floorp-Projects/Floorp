@@ -97,29 +97,44 @@ public class NativeString extends IdScriptable {
         return this;
     }
 
-    public int methodArity(int methodId, IdFunction function) {
+    public int methodArity(int methodId) {
         switch (methodId) {
-        case ConstructorId_fromCharCode:
-        case Id_constructor:
-        case Id_charAt:
-        case Id_charCodeAt:
-        case Id_concat:
-        case Id_equals:
-        case Id_equalsIgnoreCase:
-        case Id_match:
-        case Id_search:
-        case Id_split:
-        case Id_replace:
-            return 1;
+        case ConstructorId_fromCharCode:   return 1;
 
-        case Id_indexOf:
-        case Id_lastIndexOf:
-        case Id_substring:
-        case Id_substr:
-        case Id_slice:
-            return 2;
+        case Id_constructor:               return 1;
+        case Id_toString:                  return 0;
+        case Id_valueOf:                   return 0;
+        case Id_charAt:                    return 1;
+        case Id_charCodeAt:                return 1;
+        case Id_indexOf:                   return 2;
+        case Id_lastIndexOf:               return 2;
+        case Id_split:                     return 1;
+        case Id_substring:                 return 2;
+        case Id_toLowerCase:               return 0;
+        case Id_toUpperCase:               return 0;
+        case Id_substr:                    return 2;
+        case Id_concat:                    return 1;
+        case Id_slice:                     return 2;
+        case Id_bold:                      return 0;
+        case Id_italics:                   return 0;
+        case Id_fixed:                     return 0;
+        case Id_strike:                    return 0;
+        case Id_small:                     return 0;
+        case Id_big:                       return 0;
+        case Id_blink:                     return 0;
+        case Id_sup:                       return 0;
+        case Id_sub:                       return 0;
+        case Id_fontsize:                  return 0;
+        case Id_fontcolor:                 return 0;
+        case Id_link:                      return 0;
+        case Id_anchor:                    return 0;
+        case Id_equals:                    return 1;
+        case Id_equalsIgnoreCase:          return 1;
+        case Id_match:                     return 1;
+        case Id_search:                    return 1;
+        case Id_replace:                   return 1;
         }
-        return 0;
+        return super.methodArity(methodId);
     }
 
     public Object execMethod
@@ -232,7 +247,7 @@ public class NativeString extends IdScriptable {
 
         }
 
-        return Scriptable.NOT_FOUND;
+        return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
     private NativeString realThis(Scriptable thisObj, IdFunction f) {
