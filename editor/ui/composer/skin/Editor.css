@@ -1,6 +1,14 @@
-box#outer-box {
-  width: 100%;
-  height: 100%;
+iframe#content-frame { 
+  min-width: 100px; 
+  min-height: 400px; 
+} 
+
+toolbox#EditorToolbars {
+  min-width: 20px;
+}
+
+box#EditorStatusBar {
+  min-width: 50px;
 }
 
 window.popup {
@@ -80,3 +88,10 @@ a[name][href=""] {
   line-height: 10px;
   min-width: 10px;
 }
+
+titledbutton.PopupButton {
+  min-width: 50px;
+  min-height: 10px;
+  list-style-image: url(chrome://editor/skin/images/ED_Left.gif); 
+}
+

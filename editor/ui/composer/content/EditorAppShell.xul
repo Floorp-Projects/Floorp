@@ -317,7 +317,7 @@
   <broadcaster id="Editor:Style:IsItalic"/>
   <broadcaster id="Editor:Style:IsUnderline"/>
 
-    <toolbox>
+    <toolbox id="EditorToolbars">
       <toolbar id="EditToolbar">
 	      <titledbutton src="chrome://editor/skin/images/ED_NewFile.gif" align="bottom" value="New" class="popup" onclick="EditorNew()"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_OpenFile.gif" align="bottom" value="Open" class="popup" onclick="EditorOpen()"/>
@@ -364,9 +364,9 @@
     <html:iframe type="content-primary" id="content-frame" src="about:blank" flex="100%"/>
 
     <!-- Ripped off from navigator.xul; this should be a XUL fragment! -->
-    <box align="horizontal" id="status-bar">
+    <box align="horizontal" id="EditorStatusBar">
       <titledbutton value="[Notification Component]" onclick="doTests()"/>
-	    <box align="vertical" style="width:100px">
+	    <box align="vertical" style="min-width:10px" flex="100%">
 		    <spring flex="100%"/>
 		    <progressmeter mode="normal" value="0">
 		    </progressmeter>
@@ -478,6 +478,11 @@
      <html:button class="PopupButton" onclick="opener.EditorAlign('right'); window.close();"><html:img align="middle" src="chrome://editor/skin/images/ED_Right.gif"/>    <html:span>Right</html:span>  </html:button>
      <html:button class="PopupButton" onclick="opener.EditorAlign('justify'); window.close();"><html:img align="middle" src="chrome://editor/skin/images/ED_Justify.gif"/><html:span>Justify</html:span></html:button>
      </html:div>
+<!--  Trying to use autosizing and boxes
+    <titledbutton class="PopupButton" value="Left"   style="min-width: 40px" onclick="opener.EditorAlign('left'); window.close();"/>
+    <titledbutton class="PopupButton" value="Center" style="min-width: 40px" onclick="opener.EditorAlign('left'); window.close();"/>
+    <titledbutton class="PopupButton" value="Right"  style="min-width: 40px" onclick="opener.EditorAlign('left'); window.close();"/>
+ -->
    </window>
 </popup>
 
