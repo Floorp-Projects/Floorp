@@ -409,11 +409,19 @@ xpctestEcho::ThrowArg(void)
 NS_IMETHODIMP
 xpctestEcho::CallReceiverSometimeLater(void)
 {
+    // Mac does not even compile this code and Unix build systems
+    // have build order problems with linking to the static timer lib
+    // as it is built today. This is only test code and we can stand to 
+    // have it only work on Win32 for now.
+#ifdef WIN32
     nsITimer *timer;
     if(NS_FAILED(NS_NewTimer(&timer)))
         return NS_ERROR_FAILURE;
     timer->Init(NS_STATIC_CAST(nsITimerCallback*,this), 2000);
     return NS_OK;
+#else
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 void 
