@@ -106,7 +106,7 @@ interface nsIDocShellTreeItem : nsISupports
 		a resursive state does not occur by not again asking the requestor to find
 		a shell by the specified name.  Inversely the child uses it to ensure it
 		does not ask it's parent to do the search if it's parent is the one that
-		asked it to search.  Children also use this to test against the requestor
+		asked it to search.  Children also use this to test against the treeOwner;
 	*/
 	nsIDocShellTreeItem findItemWithName(in wstring name, in nsISupports aRequestor);
 
