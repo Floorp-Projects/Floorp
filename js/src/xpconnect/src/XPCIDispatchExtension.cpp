@@ -134,11 +134,15 @@ ActiveXConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 JSBool XPCIDispatchExtension::Initialize(JSContext * aJSContext,
                                          JSObject * aGlobalJSObj)
 {
-    JSBool result = JS_DefineFunction(aJSContext, aGlobalJSObj, "ActiveXObject", 
+    JSBool result = JS_DefineFunction(aJSContext, aGlobalJSObj, 
+                                      nsXPConnect::GetRuntime()->GetStringName(
+                                          XPCJSRuntime::IDX_ACTIVEX_OBJECT),
                                       ActiveXConstructor, 1, 0) != nsnull;
 #ifdef XPC_COMOBJECT
     if(result)
-       result = JS_DefineFunction(aJSContext, aGlobalJSObj, "COMObject", 
+       result = JS_DefineFunction(aJSContext, aGlobalJSObj, 
+                                  nsXPConnect::GetRuntime()->GetStringName(
+                                      XPCJSRuntime::IDX_COM_OBJECT),
                                   COMObjectConstructor, 1, 0) != nsnull;
 #endif
     return result;
