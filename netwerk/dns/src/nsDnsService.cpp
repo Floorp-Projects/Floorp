@@ -32,16 +32,21 @@
 #include "nsIServiceManager.h"
 #include "netCore.h"
 
-#if defined(XP_PC)
-#define WM_DNS_SHUTDOWN         (WM_USER + 1)
-#endif
-
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
+////////////////////////////////////////////////////////////////////////////////
+// Platform specific defines and includes
+////////////////////////////////////////////////////////////////////////////////
+// PC
+#if defined(XP_PC)
+#define WM_DNS_SHUTDOWN         (WM_USER + 1)
+#endif /* XP_PC */
+
+// MAC
 #if defined(XP_MAC)
 #include "pprthred.h"
 
-static pascal void  DNSNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie);
+static pascal void  nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie);
 
 #if TARGET_CARBON
 
@@ -57,15 +62,6 @@ static pascal void  DNSNotifierRoutine(void * contextPtr, OTEventCode code, OTRe
 #define OT_OPEN_INTERNET_SERVICES(config, flags, err)	OTOpenInternetServices(config, flags, err)
 #define OT_OPEN_ENDPOINT(config, flags, info, err)		OTOpenEndpoint(config, flags, info, err)
 #endif /* TARGET_CARBON */
-#endif /* XP_MAC */
-
-////////////////////////////////////////////////////////////////////////////////
-
-class nsDNSRequest;
-class nsDNSLookup;
-
-
-#if defined(XP_MAC)
 
 typedef struct nsInetHostInfo {
     InetHostInfo    hostInfo;
@@ -77,90 +73,45 @@ typedef struct nsLookupElement {
 	nsDNSLookup *    lookup;
 	
 } nsLookupElement;
+#endif /* XP_MAC */
 
-#endif
+// UNIX
+// XXX needs implementation
 
 class nsDNSLookup
 {
 public:
+    nsDNSLookup(nsISupports * clientContext, const char * hostName, nsIDNSListener* listener);
+    virtual ~nsDNSLookup(void);
 
-	nsDNSLookup(nsISupports * clientContext, const char * hostName, nsIDNSListener* listener);
-    	virtual ~nsDNSLookup(void);
-
-    nsresult            AddDNSRequest(nsDNSRequest* request);
     nsresult            FinishHostEntry(void);
     nsresult            CallOnFound(void);
     const char *        HostName(void)  { return mHostName; }
     nsresult            InitiateDNSLookup(nsDNSService * dnsService);
 
-
 protected:
-#if defined(XP_MAC)
-    friend pascal void  nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie);
-#elif defined(XP_PC)
-    friend static LRESULT CALLBACK nsDNSEventProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-#endif
+    // Input when creating a nsDNSLookup
+    nsCOMPtr<nsIDNSListener>    mListener;
+    nsCOMPtr<nsISupports>       mContext;
     char *                      mHostName;
+    // Result of the DNS Lookup
     nsHostEnt                   mHostEntry;
-    PRBool                      mComplete;
     nsresult                    mResult;
+    PRBool                      mComplete;
 
-    PRIntn                      mCount;
-    PRIntn                      mIndex;            // XXX - for round robin
-    nsCOMPtr<nsISupportsArray>  mRequestQueue;     // XXX - maintain a list of nsDNSRequests.
-
+    // Platform specific portions
 #if defined(XP_MAC)
+    friend pascal void nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie);
     nsLookupElement             mLookupElement;
     nsInetHostInfo              mInetHostInfo;
 #endif
 
 #if defined(XP_PC)
+    friend static LRESULT CALLBACK nsDNSEventProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     HANDLE                      mLookupHandle;
 #endif
-    nsCOMPtr<nsIDNSListener>    mListener;        // belongs with nsDNSRequest
-    nsCOMPtr<nsISupports>       mContext;         // belongs with nsDNSRequest
 };
 
-
-
-class nsDNSRequest : public nsIRequest
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIREQUEST
-    virtual ~nsDNSRequest(void) {};
-
-protected:
-    nsCOMPtr<nsIDNSListener>    mListener;
-    nsCOMPtr<nsISupports>       mContext;
-    nsDNSLookup*                mHostNameLookup;
-};
-
-NS_IMPL_ISUPPORTS1(nsDNSRequest, nsIRequest)
-
-NS_IMETHODIMP
-nsDNSRequest::IsPending(PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-nsDNSRequest::Cancel(void)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-nsDNSRequest::Suspend(void)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-nsDNSRequest::Resume(void)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // utility routines:
@@ -196,24 +147,23 @@ static char *BufAlloc(PRIntn amount, char **bufp, PRIntn *buflenp, PRIntn align)
 
 nsDNSLookup::nsDNSLookup(nsISupports * clientContext, const char * hostName, nsIDNSListener* listener)
 {
+    // Store input into member variables
     mHostName = new char [PL_strlen(hostName) + 1];
     PL_strcpy(mHostName, hostName);
+    mContext = clientContext;
+    mListener = listener;
 
-	mHostEntry.bufLen = PR_NETDB_BUF_SIZE;
-	mHostEntry.bufPtr = mHostEntry.buffer;
-	
-	mCount = 0;
-	mComplete = PR_FALSE;
+    // Initialize result holders
+    mHostEntry.bufLen = PR_NETDB_BUF_SIZE;
+    mHostEntry.bufPtr = mHostEntry.buffer;
+    mComplete = PR_FALSE;
     mResult = NS_OK;
-	mIndex = 0;
-	mRequestQueue = nsnull;
 
+    // Platform specific initializations
 #if defined(XP_MAC)
     mInetHostInfo.lookup = this;
     mLookupElement.lookup = this;
 #endif
-    mContext = clientContext;			// belongs with nsDNSRequest
-    mListener = listener;               // belongs with nsDNSRequest
 }
 
 
@@ -225,13 +175,6 @@ nsDNSLookup::~nsDNSLookup(void)
 
 
 nsresult
-nsDNSLookup::AddDNSRequest(nsDNSRequest* request)
-{
-    return NS_OK;
-}
-
-
-nsresult
 nsDNSLookup::FinishHostEntry(void)
 {
 #if defined(XP_MAC)
@@ -239,20 +182,20 @@ nsDNSLookup::FinishHostEntry(void)
 
     // convert InetHostInfo to PRHostEnt
     
-	// copy name
+    // copy name
     len = nsCRT::strlen(mInetHostInfo.hostInfo.name);
-	mHostEntry.hostEnt.h_name = BufAlloc(len, &mHostEntry.bufPtr, &mHostEntry.bufLen, 0);
-	NS_ASSERTION(nsnull != mHostEntry.hostEnt.h_name,"nsHostEnt buffer full.");
-	if (mHostEntry.hostEnt.h_name == nsnull)
-		return NS_ERROR_OUT_OF_MEMORY;
-	nsCRT::memcpy(mHostEntry.hostEnt.h_name, mInetHostInfo.hostInfo.name, len);
+    mHostEntry.hostEnt.h_name = BufAlloc(len, &mHostEntry.bufPtr, &mHostEntry.bufLen, 0);
+    NS_ASSERTION(nsnull != mHostEntry.hostEnt.h_name,"nsHostEnt buffer full.");
+    if (mHostEntry.hostEnt.h_name == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    nsCRT::memcpy(mHostEntry.hostEnt.h_name, mInetHostInfo.hostInfo.name, len);
     
     // set aliases to nsnull
     mHostEntry.hostEnt.h_aliases = (char **)BufAlloc(sizeof(char *), &mHostEntry.bufPtr, &mHostEntry.bufLen, sizeof(char *));
-	NS_ASSERTION(nsnull != mHostEntry.hostEnt.h_aliases,"nsHostEnt buffer full.");
+    NS_ASSERTION(nsnull != mHostEntry.hostEnt.h_aliases,"nsHostEnt buffer full.");
     if (mHostEntry.hostEnt.h_aliases == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-	*mHostEntry.hostEnt.h_aliases = nsnull;
+    *mHostEntry.hostEnt.h_aliases = nsnull;
     
     // fill in address type
     mHostEntry.hostEnt.h_addrtype = AF_INET;
@@ -262,25 +205,26 @@ nsDNSLookup::FinishHostEntry(void)
     
     // count addresses and allocate storage for the pointers
     for (count = 1; count < kMaxHostAddrs && mInetHostInfo.hostInfo.addrs[count] != nsnull; count++){;}
-	mHostEntry.hostEnt.h_addr_list = (char **)BufAlloc(count * sizeof(char *), &mHostEntry.bufPtr, &mHostEntry.bufLen, sizeof(char *));
-	NS_ASSERTION(nsnull != mHostEntry.hostEnt.h_addr_list,"nsHostEnt buffer full.");
+    mHostEntry.hostEnt.h_addr_list = (char **)BufAlloc(count * sizeof(char *), &mHostEntry.bufPtr, &mHostEntry.bufLen, sizeof(char *));
+    NS_ASSERTION(nsnull != mHostEntry.hostEnt.h_addr_list,"nsHostEnt buffer full.");
     if (mHostEntry.hostEnt.h_addr_list == nsnull)
-    	return NS_ERROR_OUT_OF_MEMORY;
+        return NS_ERROR_OUT_OF_MEMORY;
 
     // copy addresses one at a time
     len = mHostEntry.hostEnt.h_length;
-    for (i = 0; i < kMaxHostAddrs && mInetHostInfo.hostInfo.addrs[i] != nsnull; i++) {
+    for (i = 0; i < kMaxHostAddrs && mInetHostInfo.hostInfo.addrs[i] != nsnull; i++)
+    {
         mHostEntry.hostEnt.h_addr_list[i] = BufAlloc(len, &mHostEntry.bufPtr, &mHostEntry.bufLen, len);
-	    NS_ASSERTION(nsnull != mHostEntry.hostEnt.h_addr_list[i],"nsHostEnt buffer full.");
-	    if (mHostEntry.hostEnt.h_addr_list[i] == nsnull)
-	        return NS_ERROR_OUT_OF_MEMORY;
-    	*(InetHost *)mHostEntry.hostEnt.h_addr_list[i] = mInetHostInfo.hostInfo.addrs[i];
+        NS_ASSERTION(nsnull != mHostEntry.hostEnt.h_addr_list[i],"nsHostEnt buffer full.");
+        if (mHostEntry.hostEnt.h_addr_list[i] == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+        *(InetHost *)mHostEntry.hostEnt.h_addr_list[i] = mInetHostInfo.hostInfo.addrs[i];
     }
 #endif
 
     mComplete = PR_TRUE;
 
-	return NS_OK;
+    return NS_OK;
 }
 
 
@@ -291,13 +235,14 @@ nsDNSLookup::CallOnFound(void)
     // iterate through request queue calling listeners
     
     // but for now just do this
-    if (NS_SUCCEEDED(mResult)) {
+    if (NS_SUCCEEDED(mResult))
+    {
         result = mListener->OnFound(mContext, mHostName, &mHostEntry);
     }
     result = mListener->OnStopLookup(mContext, mHostName, mResult);
 
-	mListener = 0;
-	mContext = 0;
+    mListener = 0;
+    mContext = 0;
 	
     return result;
 }
@@ -314,29 +259,37 @@ nsDNSLookup::InitiateDNSLookup(nsDNSService * dnsService)
     err = OTInetStringToAddress(dnsService->mServiceRef, (char *)mHostName, (InetHostInfo *)&mInetHostInfo);
     if (err != noErr)
         rv = NS_ERROR_UNEXPECTED;
-#endif
+#endif /* XP_MAC */
 
 #if defined(XP_PC)
     mLookupHandle = WSAAsyncGetHostByName(dnsService->mDNSWindow, dnsService->mMsgFoundDNS,
-                                     mHostName, (char *)&mHostEntry.hostEnt, PR_NETDB_BUF_SIZE);
-
+                                          mHostName, (char *)&mHostEntry.hostEnt, PR_NETDB_BUF_SIZE);
     // check for error conditions
     if (mLookupHandle == nsnull) {
         rv = NS_ERROR_UNEXPECTED;  // or call WSAGetLastError() for details;
     }
-#endif
+#endif /* XP_PC */
 
-	return rv;
+#ifdef XP_UNIX
+    // temporary SYNC version
+    PRStatus status = PR_GetHostByName(mHostName, mHostEntry.buffer, 
+                                       PR_NETDB_BUF_SIZE, 
+                                       &(mHostEntry.hostEnt));
+    if (PR_SUCCESS != status) rv = NS_ERROR_UNKNOWN_HOST;
+    mResult = rv;
+
+    CallOnFound();
+#endif /* XP_UNIX */
+
+    return rv;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsDNSService methods:
+// Platform specific helper routines
 ////////////////////////////////////////////////////////////////////////////////
 
 #if defined(XP_MAC)
-pascal void  nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie);
-
 pascal void  nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie)
 {
 #pragma unused(contextPtr)
@@ -358,7 +311,7 @@ pascal void  nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OT
     }
 	// or else we don't handle the event
 }
-#endif
+#endif /* XP_MAC */
 
 #if defined(XP_PC)
 
@@ -411,8 +364,15 @@ nsDNSEventProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     return result;
 }
+#endif /* XP_PC */
 
-#endif
+#ifdef XP_UNIX
+
+#endif /* XP_UNIX */
+
+////////////////////////////////////////////////////////////////////////////////
+// nsDNSService methods:
+////////////////////////////////////////////////////////////////////////////////
 
 nsDNSService::nsDNSService()
 {
@@ -444,14 +404,12 @@ nsDNSService::Init()
 //    create Open Transport Service Provider for DNS Lookups
     OSStatus    errOT;
 
-
 #if TARGET_CARBON
     nsDnsServiceNotifierRoutineUPP	=  NewOTNotifyUPP(nsDnsServiceNotifierRoutine);
 
     errOT = OTAllocClientContext((UInt32)0, &clientContext);
     NS_ASSERTION(err == kOTNoError, "error allocating OTClientContext.");
-#endif
-
+#endif /* TARGET_CARBON */
 
     errOT = INIT_OPEN_TRANSPORT();
     NS_ASSERTION(errOT == kOTNoError, "InitOpenTransport failed.");
@@ -465,14 +423,14 @@ nsDNSService::Init()
     NS_ASSERTION(errOT == kOTNoError, "error installing dns notification routine.");
 
     /* Put us into async mode */
-	if (errOT == kOTNoError) {
-	    errOT = OTSetAsynchronous(mServiceRef);
-	    NS_ASSERTION(errOT == kOTNoError, "error setting service to async mode.");
-	} else {
-	// if either of the two previous calls failed then dealloc service ref and return NS_ERROR_UNEXPECTED
-		OSStatus status = OTCloseProvider((ProviderRef)mServiceRef);
-		return NS_ERROR_UNEXPECTED;
-	}
+    if (errOT == kOTNoError) {
+        errOT = OTSetAsynchronous(mServiceRef);
+        NS_ASSERTION(errOT == kOTNoError, "error setting service to async mode.");
+    } else {
+        // if either of the two previous calls failed then dealloc service ref and return NS_ERROR_UNEXPECTED
+        OSStatus status = OTCloseProvider((ProviderRef)mServiceRef);
+        return NS_ERROR_UNEXPECTED;
+    }
 #endif
 
 #if defined(XP_PC)
@@ -564,7 +522,7 @@ nsDNSService::InitDNSThread(void)
     mState = NS_OK;
     status = PR_CNotify(this);
     status = PR_CExitMonitor(this);
-#endif
+#endif /* XP_PC */
 
     return NS_OK;
 }
@@ -588,7 +546,7 @@ nsDNSService::Run(void)
         // no TranslateMessage() because we're not expecting input
         DispatchMessage(&msg);
     }
-#endif
+#endif /* XP_PC */
 
 #if defined(XP_MAC)
     OSErr			    err;
@@ -620,12 +578,8 @@ nsDNSService::Run(void)
             delete lookup;  // until we start caching them
             
         }
-        
-
 	}
-#endif
-
-
+#endif /* XP_MAC */
 
     return rv;
 }
@@ -652,11 +606,7 @@ nsDNSService::Lookup(nsISupports*    clientContext,
     if (offline) return NS_ERROR_OFFLINE;
 
     PRStatus    status = PR_SUCCESS;
-    nsHostEnt*  hostentry = new nsHostEnt;
-    if (!hostentry) return NS_ERROR_OUT_OF_MEMORY;
 
-    (void)listener->OnStartLookup(clientContext, hostName);
-	
     PRBool numeric = PR_TRUE;
     for (const char *hostCheck = hostName; *hostCheck; hostCheck++) {
         if (!nsString2::IsDigit(*hostCheck) && (*hostCheck != '.') ) {
@@ -666,6 +616,11 @@ nsDNSService::Lookup(nsISupports*    clientContext,
     }
 
     if (numeric) {
+        nsHostEnt*  hostentry = new nsHostEnt;
+        if (!hostentry) return NS_ERROR_OUT_OF_MEMORY;
+
+        (void)listener->OnStartLookup(clientContext, hostName);
+
         // If it is numeric then try to convert it into an IP-Address
         PRNetAddr *netAddr = (PRNetAddr*)nsAllocator::Alloc(sizeof(PRNetAddr));
         if (!netAddr) {
@@ -679,27 +634,27 @@ nsDNSService::Lookup(nsISupports*    clientContext,
             PRIntn bufLen = hostentry->bufLen = PR_NETDB_BUF_SIZE;
             char *buffer = hostentry->buffer;
             ent->h_name = (char*)BufAlloc(PL_strlen(hostName) + 1,
-                                       &buffer,
-                                       &bufLen,
-                                       0);
+                                          &buffer,
+                                          &bufLen,
+                                          0);
             memcpy(ent->h_name, hostName, PL_strlen(hostName) + 1);
 
             ent->h_aliases = (char**)BufAlloc(1 * sizeof(char*),
-                                           &buffer,
-                                           &bufLen,
-                                           sizeof(char **));
+                                              &buffer,
+                                              &bufLen,
+                                              sizeof(char **));
             ent->h_aliases[0] = '\0';
 
             ent->h_addrtype = 2;
             ent->h_length = 4;
             ent->h_addr_list = (char**)BufAlloc(2 * sizeof(char*),
-                                             &buffer,
-                                             &bufLen,
-                                             sizeof(char **));
+                                                &buffer,
+                                                &bufLen,
+                                                sizeof(char **));
             ent->h_addr_list[0] = (char*)BufAlloc(ent->h_length,
-                                               &buffer,
-                                               &bufLen,
-                                               0);
+                                                  &buffer,
+                                                  &bufLen,
+                                                  0);
             memcpy(ent->h_addr_list[0], &netAddr->inet.ip, ent->h_length);
             ent->h_addr_list[1] = '\0';
 
@@ -712,32 +667,9 @@ nsDNSService::Lookup(nsISupports*    clientContext,
             return listener->OnStopLookup(clientContext, hostName, NS_OK);
         }
     }
-#if defined(XP_MAC) || defined (XP_PC) /* ASYNC version of DNS Lookup */	
-        delete hostentry;		// not used by async case
 
-    //    initateLookupNeeded = false;
-    //    lock dns service
-    //    search cache for existing nsDNSLookup with matching hostname
-    //    if (exists) {
-    //        if (complete) {
-    //            AddRef lookup
-    //            unlock cache
-    //            OnStartLookup
-    //            OnFound
-    //            OnStopLookup
-    //            Release lookup
-    //            return
-    //        }
-    //    } else {
-    //        create nsDNSLookup
-    //        iniateLookupNeeded = true
-    //    }
-    //    create nsDNSRequest & queue on nsDNSLookup
-    //    unlock dns service
-    //    OnStartLookup
-    //    if (iniateLookupNeeded) {
-    //        initiate async lookup
-    //    }
+    // Incomming hostname is not a numeric ip address. Need to do the actual
+    // dns lookup.
 
     // create nsDNSLookup
     nsDNSLookup * lookup = new nsDNSLookup(clientContext, hostName, listener);
@@ -748,33 +680,12 @@ nsDNSService::Lookup(nsISupports*    clientContext,
 #if defined(XP_PC)
     // save on outstanding lookup queue
     mCompletionQueue.AppendElement(lookup);
-#endif
+#endif /* XP_PC */
+
     (void)listener->OnStartLookup(clientContext, hostName);
 
     // initiate async lookup
     return lookup->InitiateDNSLookup(this);	
-
-#else /* SYNC version of DNS Lookup */
-    status = PR_GetHostByName(hostName, 
-                              hostentry->buffer, 
-                              PR_NETDB_BUF_SIZE, 
-                              &hostentry->hostEnt);
-    
-    if (PR_SUCCESS == status) {
-        (void)listener->OnFound(clientContext, hostName, hostentry);
-        rv = NS_OK;
-    }
-    else {
-        rv = NS_ERROR_UNKNOWN_HOST;
-    }
-    // XXX: The hostentry should really be reference counted so the 
-    //      listener does not need to copy it...
-    delete hostentry;
-	
-    (void)listener->OnStopLookup(clientContext, hostName, NS_OK);
-	
-    return rv;
-#endif
 }
 
 NS_IMETHODIMP
