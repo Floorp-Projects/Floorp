@@ -203,7 +203,7 @@ Contributor(s):
 
         <button id="search-button" class="button-toolbar chromeclass-location"
                 label="&searchButton.label;" persist="hidden"
-                oncommand="OpenSearch('internet',false, document.getElementById('urlbar').value);" 
+                oncommand="OpenSearch('internet',false, QualifySearchTerm());" 
                 ondragover="nsDragAndDrop.dragOver(event, searchButtonObserver);"
                 ondragdrop="nsDragAndDrop.drop(event, searchButtonObserver);"
                 ondragexit="nsDragAndDrop.dragExit(event, searchButtonObserver);"
