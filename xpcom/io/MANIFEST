@@ -9,5 +9,6 @@ nsLocalFile.h
 nsLocalFileMac.h
 nsDirectoryService.h
 nsDirectoryServiceDefs.h
+nsDirectoryServiceUtils.h
 nsStringIO.h
 nsAppDirectoryServiceDefs.h

@@ -305,32 +305,7 @@ interface nsIFile : nsISupports
 %{C++
 #define NS_FILE_CONTRACTID "@mozilla.org/file;1"
 #define NS_FILE_CLASSNAME "File Specification"
-
-////////////////////////////////////////////////////////////////////////////////
-// Special Directories
-
-#include "nsIServiceManager.h"
-#include "nsIProperties.h"
-#include "nsCOMPtr.h"
-
-#define NS_DIRECTORY_SERVICE_CID  {0xf00152d0,0xb40b,0x11d3,{0x8c, 0x9c, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74}}
-
-inline nsresult
-NS_GetSpecialDirectory(const char* specialDirName, nsIFile* *result)
-{
-    nsresult rv;
-    static NS_DEFINE_CID(kDirectoryServiceCID, NS_DIRECTORY_SERVICE_CID);
-    nsCOMPtr<nsIProperties> serv(do_GetService(kDirectoryServiceCID, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsISupports> dir;
-    rv = serv->Get(specialDirName, NS_GET_IID(nsIFile), getter_AddRefs(dir));
-    if (NS_FAILED(rv)) return rv;
-
-    *result = NS_STATIC_CAST(nsIFile*, NS_STATIC_CAST(nsISupports*, dir));
-    if (*result)
-        NS_ADDREF(*result);
-    return NS_OK;
-}
-
+#ifndef MOZILLA_STRICT_API
+#include "nsDirectoryServiceUtils.h" 
+#endif
 %}

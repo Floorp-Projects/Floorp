@@ -78,6 +78,7 @@ EXPORTS		= \
 		nsAppDirectoryServiceDefs.h \
 		nsDirectoryService.h \
 		nsDirectoryServiceDefs.h \
+		nsDirectoryServiceUtils.h \
 		nsEscape.h \
 		nsFastLoadPtr.h \
 		nsFastLoadService.h \
