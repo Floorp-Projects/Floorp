@@ -617,7 +617,7 @@ displayVerifyLog(CERTVerifyLog *log)
 		/* Get a name for this cert */
 		if(cert->nickname != NULL) {
 			name = cert->nickname;
-		} else if(cert->emailAddr != NULL) {
+		} else if(cert->emailAddr && cert->emailAddr[0]) {
 			name = cert->emailAddr;
 		} else {
 			name = cert->subjectName;
