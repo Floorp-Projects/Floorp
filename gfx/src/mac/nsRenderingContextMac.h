@@ -120,6 +120,9 @@ public:
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
 
+  NS_IMETHOD InvertRect(const nsRect& aRect);
+  NS_IMETHOD InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+
   //locals
   NS_IMETHOD SetPortTextState();
   nsresult   Init(nsIDeviceContext* aContext, GrafPtr aPort);
