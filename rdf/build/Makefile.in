@@ -56,6 +56,12 @@ SHARED_LIBRARY_LIBS =			 \
 	$(DIST)/lib/librdfutil_s.a	 \
 	$(NULL)
 
+ifdef NECKO
+SHARED_LIBRARY_LIBS += \
+	$(DIST)/lib/libneckoutil_s.a	    \
+	$(NULL)
+endif
+
 ifeq ($(OS_ARCH),HP-UX)
 EXTRA_DSO_LDOPTS = -c objs/objslist
 else
