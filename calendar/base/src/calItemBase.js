@@ -277,7 +277,6 @@ calItemBase.prototype = {
         "METHOD": true,
         "STATUS": true,
         "CLASS": true,
-        "DTALARM": true,
         "DTSTAMP": true,
         "X-MOZILLA-GENERATION": true,
         "RRULE": true,
