@@ -618,10 +618,13 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
   } else {
     nsIView* view = nsnull;
     menuPopup->GetView(mPresContext, &view);
-    nsCOMPtr<nsIViewManager> viewManager;
-    view->GetViewManager(*getter_AddRefs(viewManager));
-    viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
-    viewManager->ResizeView(view, 0, 0);
+    NS_ASSERTION(view, "View is gone, looks like someone forgot to rollup the popup!");
+    if (view) {
+      nsCOMPtr<nsIViewManager> viewManager;
+      view->GetViewManager(*getter_AddRefs(viewManager));
+      viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
+      viewManager->ResizeView(view, 0, 0);
+    }
     // set here so hide chain can close the menu as well.
     mMenuOpen = PR_FALSE;
   }
