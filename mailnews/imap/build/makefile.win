@@ -42,7 +42,6 @@ LLIBS=\
 	$(DIST)\lib\msgimap.lib			\
     $(DIST)\lib\plc3.lib			\
     $(DIST)\lib\rdfutil_s.lib		\
-	$(DIST)\lib\msglocal.lib		\
     $(LIBNSPR)						\
 	$(NULL)
 
