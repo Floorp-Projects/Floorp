@@ -243,10 +243,8 @@ ssl_ds_dist_stress()
                trex-10
                compaqtor-10"
 
-  #clientlist="  box-200 washer-50 charm-10 jordan-10 louie-10 smarch-10 phaedrus-10 charm-10 hbombaix-20 box-200 washer-50 "
-  #clientlist=" box-200 washer-50 louie-10 hbombaix-10 charm-10 trex-20 jordan-10 box-200 compaqtor-10 "
   #clientlist=" box-2 washer-5" #FIXME ADJUST
-  clientlist="  box-200 charm-10 jordan-10 louie-10 smarch-10 phaedrus-10 charm-10 "
+  clientlist="  box-200 washer-200"
 
   html_head "SSL Distributed Stress Test"
 
@@ -289,9 +287,9 @@ ssl_ds_dist_stress()
   sleep 300 # give the clients time to finish #FIXME ADJUST
  
   echo "GET /stop HTTP/1.0\n\n" > stdin.txt #check to make sure it has /r/n
-  echo "tstclnt -h clio.red.iplanet.com -p  8443 -d ${CLIENTDIR} -n TestUser0 "
+  echo "tstclnt -h $HOSTADDR -p  8443 -d ${CLIENTDIR} -n TestUser0 "
   echo "        -w nss -f < stdin.txt"
-  tstclnt -h clio.red.iplanet.com -p  8443 -d ${CLIENTDIR} -n TestUser0 \
+  tstclnt -h $HOSTADDR -p  8443 -d ${CLIENTDIR} -n TestUser0 \
 	  -w nss -f < stdin.txt
   
   html_msg 0 0 "${testname}"
