@@ -15,6 +15,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nspr.h"
+#include "net.h"
+
 #include <stdio.h>
 #include "nscore.h"
 
@@ -28,7 +31,6 @@
 #include "nsIShellInstance.h"
 #include "nsShellInstance.h"
 #include "nsITimer.h"
-#include "net.h"
 
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
