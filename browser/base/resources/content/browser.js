@@ -49,7 +49,6 @@ var gSearchService = null;
 var gNavigatorBundle;
 var gNavigatorRegionBundle;
 var gLastValidURLStr = "";
-var gLastValidURL = null;
 var gHaveUpdatedToolbarState = false;
 var gClickSelectsAll = -1;
 
@@ -85,13 +84,6 @@ const gButtonPrefListener =
       button.setAttribute("hidden","false");
     else
       button.setAttribute("hidden", "true");
-
-    // If all buttons before the separator are hidden, also hide the separator
-    if (allLeftButtonsAreHidden())
-      document.getElementById("home-bm-separator").setAttribute("hidden", "true");
-    else
-      document.getElementById("home-bm-separator").removeAttribute("hidden");
-  }
 };
 
 const gTabStripPrefListener =
@@ -422,21 +414,6 @@ function UpdateBackForwardButtons()
   }
 }
 
-// Function allLeftButtonsAreHidden
-// Returns true if all the buttons left of the separator in the personal
-// toolbar are hidden, false otherwise.
-// Used by nsButtonPrefListener to hide the separator if needed
-function allLeftButtonsAreHidden()
-{
-  var buttonNode = document.getElementById("PersonalToolbar").firstChild;
-  while(buttonNode.tagName != "toolbarseparator") {
-    if(!buttonNode.hasAttribute("hidden") || buttonNode.getAttribute("hidden") == "false")
-      return false;
-    buttonNode = buttonNode.nextSibling;
-  }
-  return true;
-}
-
 function Startup()
 {
   // init globals
@@ -677,20 +654,6 @@ function Shutdown()
   // Close the app core.
   if (appCore)
     appCore.close();
-}
-
-function Translate()
-{
-  var service = pref.getCharPref("browser.translation.service");
-  var serviceDomain = pref.getCharPref("browser.translation.serviceDomain");
-  var targetURI = getWebNavigation().currentURI.spec;
-
-  // if we're already viewing a translated page, then just reload
-  if (targetURI.indexOf(serviceDomain) >= 0)
-    BrowserReload();
-  else {
-    loadURI(service + escape(targetURI));
-  }
 }
 
 function gotoHistoryIndex(aEvent)
@@ -2083,5 +2046,3 @@ function FillInHTMLTooltip(tipElement)
 
   return retVal;
 }
-
-
