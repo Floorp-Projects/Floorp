@@ -26,6 +26,7 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsHTMLIIDs.h"
+#include "nsFrame.h"
 
 static NS_DEFINE_IID(kIReflowCommandIID, NS_IREFLOWCOMMAND_IID);
 
@@ -73,7 +74,7 @@ nsHTMLReflowCommand::~nsHTMLReflowCommand()
 
 NS_IMPL_ISUPPORTS(nsHTMLReflowCommand, kIReflowCommandIID);
 
-nsIFrame* nsHTMLReflowCommand::GetContainingBlock(nsIFrame* aFloater)
+nsIFrame* nsHTMLReflowCommand::GetContainingBlock(nsIFrame* aFloater) const
 {
   nsIFrame* containingBlock;
   aFloater->GetParent(&containingBlock);
@@ -206,3 +207,71 @@ NS_IMETHODIMP nsHTMLReflowCommand::GetPrevSiblingFrame(nsIFrame*& aSiblingFrame)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsHTMLReflowCommand::List(FILE* out) const
+{
+#ifdef DEBUG
+  static const char* kReflowCommandType[] = {
+    "ContentChanged",
+    "StyleChanged",
+    "PullupReflow",
+    "PushReflow",
+    "CheckPullupReflow",
+    "ReflowDirty",
+    "UserDefined",
+  };
+
+  fprintf(out, "ReflowCommand@%p[%s]:",
+          this, kReflowCommandType[mType]);
+  if (mTargetFrame) {
+    fprintf(out, " target=");
+    nsFrame::ListTag(out, mTargetFrame);
+  }
+  if (mChildFrame) {
+    fprintf(out, " child=");
+    nsFrame::ListTag(out, mChildFrame);
+  }
+  if (mPrevSiblingFrame) {
+    fprintf(out, " prevSibling=");
+    nsFrame::ListTag(out, mPrevSiblingFrame);
+  }
+  if (mAttribute) {
+    fprintf(out, " attr=");
+    nsAutoString attr;
+    mAttribute->ToString(attr);
+    fputs(attr, out);
+  }
+  if (mListName) {
+    fprintf(out, " list=");
+    nsAutoString attr;
+    mListName->ToString(attr);
+    fputs(attr, out);
+  }
+  fprintf(out, "\n");
+
+  // Show the path, but without using mPath which is in an undefined
+  // state at this point.
+  if (mTargetFrame) {
+    // Floating frames are handled differently. The path goes from the target
+    // frame to the containing block, and then up the hierarchy
+    PRBool didOne = PR_FALSE;
+    nsIFrame* start = mTargetFrame;
+    const nsStyleDisplay* display;
+    mTargetFrame->GetStyleData(eStyleStruct_Display,
+                               (const nsStyleStruct*&) display);
+    if (NS_STYLE_FLOAT_NONE != display->mFloats) {
+      start = GetContainingBlock(mTargetFrame);
+    }
+    for (nsIFrame* f = start; nsnull != f; f->GetParent(&f)) {
+      if (f != mTargetFrame) {
+        fprintf(out, " ");
+        nsFrame::ListTag(out, f);
+        didOne = PR_TRUE;
+      }
+    }
+    if (didOne) {
+      fprintf(out, "\n");
+    }
+  }
+#endif
+  return NS_OK;
+}

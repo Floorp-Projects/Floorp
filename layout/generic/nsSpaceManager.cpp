@@ -21,6 +21,8 @@
 #include "nsSize.h"
 #include <stdlib.h>
 #include "nsVoidArray.h"
+#include "nsIFrame.h"
+#include "nsString.h"
 
 static NS_DEFINE_IID(kISpaceManagerIID, NS_ISPACEMANAGER_IID);
 
@@ -59,10 +61,10 @@ nsSpaceManager::BandList::Clear()
     BandRect* bandRect = Head();
   
     while (bandRect != this) {
-      BandRect* next = bandRect->Next();
+      BandRect* nxt = bandRect->Next();
   
       delete bandRect;
-      bandRect = next;
+      bandRect = nxt;
     }
   
     PR_INIT_CLIST(this);
@@ -915,6 +917,57 @@ nsSpaceManager::ClearRegions()
 {
   ClearFrameInfo();
   mBandList.Clear();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSpaceManager::List(FILE* out)
+{
+#ifdef DEBUG
+  nsAutoString tmp;
+
+  fprintf(out, "SpaceManager@%p", this);
+  if (mFrame) {
+    mFrame->GetFrameName(tmp);
+    fprintf(out, " frame=");
+    fputs(tmp, out);
+    fprintf(out, "@%p", mFrame);
+  }
+  fprintf(out, " xy=%d,%d <\n", mX, mY);
+  if (mBandList.IsEmpty()) {
+    fprintf(out, "  no bands\n");
+  }
+  else {
+    BandRect* band = mBandList.Head();
+    do {
+      fprintf(out, "  left=%d top=%d right=%d bottom=%d numFrames=%d",
+              band->mLeft, band->mTop, band->mRight, band->mBottom,
+              band->mNumFrames);
+      if (1 == band->mNumFrames) {
+        band->mFrame->GetFrameName(tmp);
+        fprintf(out, " frame=");
+        fputs(tmp, out);
+        fprintf(out, "@%p", band->mFrame);
+      }
+      else if (1 < band->mNumFrames) {
+        fprintf(out, "\n    ");
+        nsVoidArray* a = band->mFrames;
+        PRInt32 i, n = a->Count();
+        for (i = 0; i < n; i++) {
+          nsIFrame* frame = (nsIFrame*) a->ElementAt(i);
+          if (frame) {
+            frame->GetFrameName(tmp);
+            fputs(tmp, out);
+            fprintf(out, "@%p ", frame);
+          }
+        }
+      }
+      fprintf(out, "\n");
+      band = band->Next();
+    } while (band != mBandList.Head());
+  }
+  fprintf(out, ">\n");
+#endif
   return NS_OK;
 }
 
