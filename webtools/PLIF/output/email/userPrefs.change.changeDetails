@@ -23,8 +23,8 @@ If you wish to confirm this change, you should visit
 ...with the following arguments:
 
    command=userPrefsConfirmSet
-   changeID=[% token %]
-   changePassword=[% password %]
+   changeID=[% token | uri %]
+   changePassword=[% password | uri %]
 
 If you do nothing, or if the change is cancelled using the password
 sent to the old address, then your account's e-mail address will stay
