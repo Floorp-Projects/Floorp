@@ -538,6 +538,18 @@ searchterm {
   border-left         : 1px solid #000000;
 }
 
+#subscribeWindow > statusbar
+{
+  color: #000000;
+}
+
+#subscribeWindow > statusbar,
+#subscribeWindow > statusbar > :first-child
+{
+  background-color: transparent;
+  border-left: none;
+}
+
 /******
  * Adjusting the borders on splitters so they seem to join where vertical meets horizontal
  ******/
