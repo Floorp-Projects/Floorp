@@ -395,8 +395,6 @@ NS_IMETHODIMP nsMetaCharsetObserver::Observe(nsISupports *aSubject,
   nsresult rv = NS_OK;
   if (!nsCRT::strcmp(aTopic, APPSTARTUP_CATEGORY))
     rv = Start();
-  else if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
-    rv = End();
   return rv;
 }
 
@@ -408,10 +406,6 @@ NS_IMETHODIMP nsMetaCharsetObserver::Start()
   if (bMetaCharsetObserverStarted == PR_FALSE)  {
     bMetaCharsetObserverStarted = PR_TRUE;
 
-    nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1", &res);
-    if (NS_SUCCEEDED(res))
-      obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
-    
     nsCOMPtr<nsIParserService> parserService(do_GetService(kParserServiceCID));
     
     if (!parserService) {

@@ -74,7 +74,6 @@ static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
 static NS_DEFINE_CID(kStdURLParserCID, NS_STDURLPARSER_CID);
-static NS_DEFINE_CID(kNoAuthParserCID, NS_NOAUTHURLPARSER_CID);
 
 // A general port blacklist.  Connections to these ports will not be avoided unless 
 // the protocol overrides.
@@ -231,7 +230,6 @@ nsIOService::Init()
         do_GetService("@mozilla.org/observer-service;1");
     NS_ASSERTION(observerService, "Failed to get observer service");
     if (observerService) {
-        observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
         observerService->AddObserver(this, kProfileChangeNetTeardownTopic, PR_TRUE);
         observerService->AddObserver(this, kProfileChangeNetRestoreTopic, PR_TRUE);
     }
@@ -249,6 +247,7 @@ nsIOService::~nsIOService()
         temp = NS_STATIC_CAST(nsISupports*, mURLParsers[i]);
         NS_IF_RELEASE(temp);
     }
+    (void)SetOffline(PR_TRUE);
     if (mFileTransportService)
         (void)mFileTransportService->Shutdown();
 }   
@@ -1040,10 +1039,6 @@ nsIOService::Observe(nsISupports *subject,
             SetOffline(PR_FALSE);
             mOfflineForProfileChange = PR_FALSE;
         }    
-    }
-    else if (!nsCRT::strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-        // go offline to shutdown certain services before actual destruction
-        SetOffline(PR_TRUE);
     }
     return NS_OK;
 }
