@@ -1256,6 +1256,12 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       if (computedWidth < computedMinWidth) {
         computedWidth = computedMinWidth;
       }
+      if (aState.GetFlag(BRS_COMPUTEMAXELEMENTWIDTH) && 
+          maxElementWidth < computedMinWidth &&
+          GetStylePosition()->mMinWidth.GetUnit() != eStyleUnit_Percent) {
+          maxElementWidth = computedMinWidth;
+      }
+
     }
     aMetrics.width = computedWidth;
 
