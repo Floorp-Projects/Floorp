@@ -30,6 +30,7 @@
 #include "nsIScrollableView.h"
 #include "nsLayoutAtoms.h"
 
+
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
 #define BORDER_FULL    0        //entire side
@@ -1389,6 +1390,8 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
     case eStyleUnit_Coord:
       theRadius = borderRadius.GetCoordValue();
       break;
+    default:
+      break;
   }
 
   // rounded version of the border
@@ -1421,11 +1424,12 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
 
   // Draw all the other sides
 
-  /* XXX something is misnamed here!!!! */
-  nscoord twipsPerPixel;/* XXX */
-  float p2t;/* XXX */
-  aPresContext.GetPixelsToTwips(&p2t);/* XXX */
-  twipsPerPixel = (nscoord) p2t;/* XXX */
+  /* Get our conversion values */
+  nscoord twipsPerPixel;
+  float p2t;
+  aPresContext.GetScaledPixelsToTwips(&p2t);
+  twipsPerPixel = NSIntPixelsToTwips(1,p2t);
+
 
   nscolor sideColor;
   if (0 == (aSkipSides & (1<<NS_SIDE_BOTTOM))) {
@@ -1477,10 +1481,8 @@ void nsCSSRendering::PaintOutline(nsIPresContext& aPresContext,
                                  PRIntn aSkipSides,
                                  nsRect* aGap)
 {
-  PRIntn    cnt;
   nsMargin  border;
   const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext); 
-  PRInt16       theRadius;
   nsStyleCoord  borderRadius;
 
   nscoord width;
@@ -2151,6 +2153,8 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
         case eStyleUnit_Coord:
           theRadius = borderRadius.GetCoordValue();
           break;
+        default:
+          break;
       }
 
       // rounded version of the border
@@ -2158,7 +2162,6 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
         PaintRoundedBackground(aPresContext,aRenderingContext,aForFrame,aDirtyRect,aBorderArea,aColor,aSpacing,aDX,aDY,theRadius);
         return;
       }
-
 
       aRenderingContext.SetColor(aColor.mBackgroundColor);
       aRenderingContext.FillRect(aBorderArea);
@@ -2493,8 +2496,8 @@ PRInt16   r,g,b;
         sideColor = NS_RGB(r,g,b);
 
         aRenderingContext.SetColor(sideColor);
-        AntiAliasPoly(aRenderingContext,polypath,0,c1Index,aSide,1);
-        AntiAliasPoly(aRenderingContext,polypath,c1Index+1,c2Index,aSide,2);
+        //AntiAliasPoly(aRenderingContext,polypath,0,c1Index,aSide,1);
+        //AntiAliasPoly(aRenderingContext,polypath,c1Index+1,c2Index,aSide,2);
 
        break;
       case NS_STYLE_BORDER_STYLE_DOUBLE:
@@ -2603,7 +2606,6 @@ PRInt32 x0,y0,x1,y1,offsetx,offsety;
     break;
   } 
 
-
   for(i=aStartIndex+1;i<aCurIndex;i++) {
     x0 = aPoints[i-1].x+offsetx;
     y0 = aPoints[i-1].y+offsety;
@@ -2611,7 +2613,6 @@ PRInt32 x0,y0,x1,y1,offsetx,offsety;
     y1 = aPoints[i].y+offsety;
     aRenderingContext.DrawLine(x0,y0,x1,y1); 
   }
-
 }
 
 
@@ -2654,6 +2655,7 @@ RoundedRect::Set(nscoord aLeft,nscoord aTop,PRInt32  aWidth,PRInt32 aHeight,PRIn
 {
 PRInt32 width;
 
+  printf("Starting Button\n");
   width = aLeft+aWidth;
 
   if( aRadius > (aWidth>>1) )
@@ -2673,7 +2675,6 @@ PRInt32 width;
   mInnerRight = mOuterRight - mRoundness;
   mInnerTop = mOuterTop + mRoundness;
   mInnerBottom = mOuterBottom - mRoundness;
-
 
 }
 
@@ -2774,7 +2775,7 @@ PRInt16		fx,fy,smag;
 	smag = fx+fy-(PR_MIN(fx,fy)>>1);
   //smag = fx*fx + fy*fy;
  
-	if (smag>2){
+	if (smag>1){
 		// split the curve again
     curve1.SubDivide(aRenderingContext,aPointArray,aCurIndex);
     curve2.SubDivide(aRenderingContext,aPointArray,aCurIndex);
@@ -2789,6 +2790,10 @@ PRInt16		fx,fy,smag;
       (*aCurIndex)++;
     }else{
 		  // draw the curve 
+
+      nsTransform2D *aTransform;
+      aRenderingContext->GetCurrentTransform(aTransform);
+
       aRenderingContext->DrawLine(curve1.mAnc1.x,curve1.mAnc1.y,curve1.mAnc2.x,curve1.mAnc2.y);
       aRenderingContext->DrawLine(curve1.mAnc2.x,curve1.mAnc2.y,curve2.mAnc2.x,curve2.mAnc2.y);
     }
@@ -2802,23 +2807,25 @@ PRInt16		fx,fy,smag;
 void 
 QBCurve::MidPointDivide(QBCurve *A,QBCurve *B)
 {
+double  c1x,c1y,c2x,c2y;
 nsPoint	a1,control1,control2;
 
-  // do the math (averages inline)
-  control1.x = (PRInt32)((mAnc1.x + mCon.x)>>1);
-	control1.y = (PRInt32)((mAnc1.y + mCon.y)>>1);
 
-  control2.x = (PRInt32)((mAnc2.x + mCon.x)>>1);
-	control2.y = (PRInt32)((mAnc2.y + mCon.y)>>1);
+  c1x = (mAnc1.x+mCon.x)/2.0;
+  c1y = (mAnc1.y+mCon.y)/2.0;
+  c2x = (mAnc2.x+mCon.x)/2.0;
+  c2y = (mAnc2.y+mCon.y)/2.0;
 
-  a1.x = (PRInt32)((control1.x + control2.x)>>1);
-	a1.y = (PRInt32)((control1.y + control2.y)>>1);
+  a1.x = (PRInt32)((c1x + c2x)/2.0);
+	a1.y = (PRInt32)((c1y + c2y)/2.0);
 
   // put the math into our 2 new curves
   A->mAnc1 = this->mAnc1;
-  A->mCon = control1;
+  A->mCon.x = (PRInt16)c1x;
+  A->mCon.y = (PRInt16)c1y;
   A->mAnc2 = a1;
   B->mAnc1 = a1;
-  B->mCon = control2;
+  B->mCon.x = (PRInt16)c2x;
+  B->mCon.y = (PRInt16)c2y;
   B->mAnc2 = this->mAnc2;
 }
