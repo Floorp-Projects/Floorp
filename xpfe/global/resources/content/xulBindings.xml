@@ -154,7 +154,7 @@
     <handlers>
       <handler type="click">
       <![CDATA[
-        if (!this.disabled && this.button == 1) this.checked = !this.checked; 
+        if (!this.disabled) this.checked = !this.checked; 
       ]]>
       </handler>
       <handler type="keypress" key=" " value="if (!this.disabled) this.checked = !this.checked;"/>
