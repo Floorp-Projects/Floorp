@@ -63,7 +63,7 @@ jsj_InitJavaObjReflectionsTable(void)
 
     java_obj_reflections =
         JSJ_NewHashTable(512, jsj_HashJavaObject, jsj_JavaObjectComparator,
-                         NULL, NULL, NULL);
+                         jsj_JavaObjectComparator, NULL, NULL);
     if (!java_obj_reflections)
         return JS_FALSE;
 

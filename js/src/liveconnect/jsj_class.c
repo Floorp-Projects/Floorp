@@ -675,7 +675,7 @@ jsj_InitJavaClassReflectionsTable()
 {
     java_class_reflections =
         JSJ_NewHashTable(64, jsj_HashJavaObject, jsj_JavaObjectComparator,
-                         NULL, NULL, NULL);
+                         jsj_JavaObjectComparator, NULL, NULL);
 
     if (!java_class_reflections)
         return JS_FALSE;
