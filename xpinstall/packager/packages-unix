@@ -80,6 +80,7 @@ bin/components/caps.xpt
 bin/components/cookie.xpt
 bin/components/dom.xpt
 bin/components/editor.xpt
+bin/components/find.xpt
 bin/components/gfx.xpt
 bin/components/gfx2.xpt
 bin/components/intl.xpt
