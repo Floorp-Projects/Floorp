@@ -252,17 +252,28 @@ button.calendar-management-button:hover:active
   }
 
 
-/*--------------------------------------------------------------------
- *   Deck containing the three views, month, day week
- *-------------------------------------------------------------------*/
-
-#calendar-deck
+/*
+**  U N I F I N D E R  S T U F F
+*/
+.unifinder-calendar-event-icon-class
 {
+   list-style-image         : url( "chrome://calendar/skin/event.png" );
 }
 
+.unifinder-calendar-event-icon-class[alarm="true"]
+{
+   list-style-image         : url( "chrome://calendar/skin/event_alarm.png" );
+}
 
+.unifinder-calendar-event-icon-class[recur="true"]
+{
+   list-style-image         : url( "chrome://calendar/skin/event_repeating.png" );
+}
 
-
+.unifinder-treecell-box-class
+{
+   -moz-box-align           : start;
+}
 
 
 /*--------------------------------------------------------------------

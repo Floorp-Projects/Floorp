@@ -325,26 +325,39 @@ function onOKCommand()
    gEvent.recurEnd.hour = gEvent.start.hour;
    gEvent.recurEnd.minute = gEvent.start.minute;
 
-   if( gEvent.recurUnits == "weeks" && gEvent.recur == true )
+   if( gEvent.recur == true )
    {
-      /*
-      ** advanced weekly repeating, choosing the days to repeat
-      */
-      gEvent.recurWeekdays = getAdvancedWeekRepeat();
-   }
-   else if( gEvent.recurUnits == "months" && gEvent.recur == true )
-   {
-      /*
-      ** advanced month repeating, either every day or every date
-      */
-      if( getFieldValue( "advanced-repeat-dayofweek", "checked" ) == true )
+      alert( gEvent.recurForever );
+      //check that the repeat end time is later than the end time
+      if( recurEndDate.getTime() < gEvent.end.getTime() && gEvent.recurForever != false )
       {
-         gEvent.recurWeekNumber = getWeekNumberOfMonth();
+         alert( neRecurErrorAlertMessage );
+         return( false );
       }
-      else
-         gEvent.recurWeekNumber = 0;
-   
+
+      if( gEvent.recurUnits == "weeks" )
+      {
+         /*
+         ** advanced weekly repeating, choosing the days to repeat
+         */
+         gEvent.recurWeekdays = getAdvancedWeekRepeat();
+      }
+      else if( gEvent.recurUnits == "months" )
+      {
+         /*
+         ** advanced month repeating, either every day or every date
+         */
+         if( getFieldValue( "advanced-repeat-dayofweek", "checked" ) == true )
+         {
+            gEvent.recurWeekNumber = getWeekNumberOfMonth();
+         }
+         else
+            gEvent.recurWeekNumber = 0;
+      
+      }
    }
+
+   
    
    // :TODO: REALLY only do this if the alarm or start settings change.?
    //if the end time is later than the start time... alert the user using text from the dtd.

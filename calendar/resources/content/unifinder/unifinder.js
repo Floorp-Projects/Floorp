@@ -515,7 +515,6 @@ function refreshEventTree( eventArray, childrenName )
       treeCell.setAttribute( "crop", "right" );
       
       var image = document.createElement( "image" );
-      
       image.setAttribute( "class", "unifinder-calendar-event-icon-class" );
       
       if ( calendarEvent.alarm ) 
@@ -534,11 +533,9 @@ function refreshEventTree( eventArray, childrenName )
       ** There is a mysterious child of the HBox, with a flex of one, so set the flex on the HBox really high to hide the child. 
       */
       treeCellHBox.setAttribute( "flex" , "1000" );
-      treeCellHBox.setAttribute( "id", "unifinder-treecell-box" );
+      treeCellHBox.setAttribute( "class", "unifinder-treecell-box-class" );
       treeCellHBox.setAttribute( "crop", "right" );
       
-
-
       var treeCellVBox = document.createElement( "vbox" );
       treeCellVBox.setAttribute( "crop", "right" );
       treeCellVBox.setAttribute( "flex", "1" );
