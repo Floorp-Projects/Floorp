@@ -843,9 +843,10 @@ nsPop3Sink::IncorporateComplete(nsIMsgWindow *aMsgWindow, PRInt32 aSize)
         m_newMailParser->m_mailDB->RemoveHeaderMdbRow(hdr);
       }
       m_newMailParser->m_newMsgHdr = nsnull;
-      m_outFileStream->close(); // close so we can delete temp file.
-      m_tmpDownloadFileSpec.Delete(PR_FALSE);
-
+      m_outFileStream->close(); // close so we can truncate.
+      m_tmpDownloadFileSpec.Truncate(0);
+      m_outFileStream->Open(m_tmpDownloadFileSpec, (PR_RDWR | PR_CREATE_FILE));
+      m_outFileStream->seek(PR_SEEK_END, 0);
     }
     if (aSize)
       hdr->SetUint32Property("onlineSize", aSize);
