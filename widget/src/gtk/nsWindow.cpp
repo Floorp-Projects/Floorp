@@ -204,6 +204,9 @@ static void printDepth(int depth) {
 }
 #endif
 
+static int is_parent_ungrab_enter(GdkEventCrossing *aEvent);
+static int is_parent_grab_leave(GdkEventCrossing *aEvent);
+
 
 // This function will check if a button event falls inside of a
 // window's bounds.
@@ -1752,6 +1755,7 @@ nsWindow::InstallFocusOutSignal(GtkWidget * aWidget)
 				GTK_SIGNAL_FUNC(nsWindow::FocusOutSignal));
 }
 
+
 void 
 nsWindow::HandleGDKEvent(GdkEvent *event)
 {
@@ -1775,9 +1779,15 @@ nsWindow::HandleGDKEvent(GdkEvent *event)
     OnButtonReleaseSignal (&event->button);
     break;
   case GDK_ENTER_NOTIFY:
+    if(is_parent_ungrab_enter(&event->crossing))
+      return;
+
     OnEnterNotifySignal (&event->crossing);
     break;
   case GDK_LEAVE_NOTIFY:
+    if(is_parent_grab_leave(&event->crossing))
+      return;
+
     OnLeaveNotifySignal (&event->crossing);
     break;
 
@@ -4528,4 +4538,22 @@ nsWindow::ClearIconEntry(PLDHashTable* aTable, PLDHashEntryHdr* aHdr)
   if (entry->string)
     free((void*) entry->string);
   PL_DHashClearEntryStub(aTable, aHdr);
+}
+
+/* static */
+int
+is_parent_ungrab_enter(GdkEventCrossing *event)
+{
+  return (GDK_CROSSING_UNGRAB == event->mode) &&
+    ((GDK_NOTIFY_ANCESTOR == event->detail) ||
+     (GDK_NOTIFY_VIRTUAL == event->detail));
+}
+
+/* static */
+int
+is_parent_grab_leave(GdkEventCrossing *event)
+{
+  return (GDK_CROSSING_GRAB == event->mode) &&
+    ((GDK_NOTIFY_ANCESTOR == event->detail) ||
+     (GDK_NOTIFY_VIRTUAL == event->detail));
 }

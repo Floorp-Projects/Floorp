@@ -1047,12 +1047,32 @@ nsAppShell::HandleFocusOutEvent(XEvent *event, nsWidget *aWidget)
   NS_RELEASE(aWidget);
 }
 
+/* Identify pointer grab/ungrab events due to window manager activity */
+static inline int
+is_wm_ungrab_enter(XCrossingEvent *event)
+{
+  return (NotifyGrab == event->mode) &&
+    ((NotifyAncestor == event->detail) ||
+     (NotifyVirtual == event->detail));
+}
+
+static inline int
+is_wm_grab_leave(XCrossingEvent *event)
+{
+  return (NotifyGrab == event->mode) &&
+    ((NotifyAncestor == event->detail) ||
+     (NotifyVirtual == event->detail));
+}
+
 void
 nsAppShell::HandleEnterEvent(XEvent *event, nsWidget *aWidget)
 {
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Enter event for window 0x%lx\n",
                                        event->xcrossing.window));
   nsMouseEvent enterEvent;
+
+  if(is_wm_ungrab_enter(&event->xcrossing))
+    return;
 
   if (mDragging) {
     HandleDragEnterEvent(event, aWidget);
@@ -1084,6 +1104,9 @@ nsAppShell::HandleLeaveEvent(XEvent *event, nsWidget *aWidget)
 
   nsMouseEvent leaveEvent;
   
+  if(is_wm_grab_leave(&event->xcrossing))
+    return;
+
   if (mDragging) {
     HandleDragLeaveEvent(event, aWidget);
   }
