@@ -70,6 +70,8 @@ struct nsFindFrameHint
   nsFindFrameHint() : mPrimaryFrameForPrevSibling(nsnull) { }
 };
 
+struct nsFrameConstructorState;
+  
 class nsCSSFrameConstructor
 {
 public:
@@ -244,7 +246,7 @@ private:
                                          nsIContent*            aDocElement,
                                          nsIFrame*              aParentFrame,
                                          nsIFrame*&             aNewTableFrame,
-                                         nsILayoutHistoryState* aFrameState);
+                                         nsFrameConstructorState& aState);
 
   nsresult CreateGeneratedFrameFor(nsPresContext*       aPresContext,
                                    nsIDocument*          aDocument,
@@ -272,8 +274,16 @@ private:
                         nsIFrame*        aFrameList);
 
   // BEGIN TABLE SECTION
+  /**
+   * ConstructTableFrame will construct the outer and inner table frames and
+   * return them.  Unless aIsPseudo is PR_TRUE, it will put the inner frame in
+   * the child list of the outer frame, and will put any pseudo frames it had
+   * to create into aChildItems.  The newly-created outer frame will either be
+   * in aChildItems or a descendant of a pseudo in aChildItems (unless it's
+   * positioned, in which case its placeholder will be in aChildItems).
+   */ 
   nsresult ConstructTableFrame(nsIPresShell*            aPresShell, 
-                               nsPresContext*          aPresContext,
+                               nsPresContext*           aPresContext,
                                nsFrameConstructorState& aState,
                                nsIContent*              aContent,
                                nsIFrame*                aGeometricParent,
@@ -283,8 +293,7 @@ private:
                                PRBool                   aIsPseudo,
                                nsFrameItems&            aChildItems,
                                nsIFrame*&               aNewOuterFrame,
-                               nsIFrame*&               aNewInnerFrame,
-                               PRBool&                  aIsPseudoParent);
+                               nsIFrame*&               aNewInnerFrame);
 
   nsresult ConstructTableCaptionFrame(nsIPresShell*            aPresShell, 
                                       nsPresContext*          aPresContext,
@@ -364,6 +373,13 @@ private:
                                   nsIContent*      aContent,
                                   nsStyleContext*  aContext);
 
+  /**
+   * ConstructTableForeignFrame constructs the frame for a non-table-element
+   * child of a table-element frame (where "table-element" can mean rows,
+   * cells, etc).  This function will insert the new frame in the right child
+   * list automatically, create placeholders for it in the right places as
+   * needed, etc (hence does not return the new frame).
+   */
   nsresult ConstructTableForeignFrame(nsIPresShell*            aPresShell, 
                                       nsPresContext*          aPresContext,
                                       nsFrameConstructorState& aState,
@@ -371,9 +387,7 @@ private:
                                       nsIFrame*                aParentFrameIn,
                                       nsStyleContext*          aStyleContext,
                                       nsTableCreator&          aTableCreator,
-                                      nsFrameItems&            aChildItems,
-                                      nsIFrame*&               aNewFrame,
-                                      PRBool&                  aIsPseudoParent);
+                                      nsFrameItems&            aChildItems);
 
   nsresult CreatePseudoTableFrame(nsIPresShell*            aPresShell,
                                   nsPresContext*          aPresContext,
@@ -469,15 +483,17 @@ private:
 
   // END TABLE SECTION
 
-  nsresult CreatePlaceholderFrameFor(nsIPresShell*    aPresShell, 
-                                     nsPresContext*  aPresContext,
-                                     nsFrameManager*  aFrameManager,
-                                     nsIContent*      aContent,
-                                     nsIFrame*        aFrame,
-                                     nsStyleContext*  aStyleContext,
-                                     nsIFrame*        aParentFrame,
-                                     nsIFrame**       aPlaceholderFrame);
+protected:
+  static nsresult CreatePlaceholderFrameFor(nsIPresShell*    aPresShell, 
+                                            nsPresContext*  aPresContext,
+                                            nsFrameManager*  aFrameManager,
+                                            nsIContent*      aContent,
+                                            nsIFrame*        aFrame,
+                                            nsStyleContext*  aStyleContext,
+                                            nsIFrame*        aParentFrame,
+                                            nsIFrame**       aPlaceholderFrame);
 
+private:
   nsresult ConstructAlternateFrame(nsIPresShell*    aPresShell, 
                                    nsPresContext*  aPresContext,
                                    nsIContent*      aContent,
@@ -498,6 +514,7 @@ private:
                                          nsIContent*      aContent,
                                          nsStyleContext*  aStyleContext);
 
+  // ConstructSelectFrame puts the new frame in aFrameItems
   nsresult ConstructSelectFrame(nsIPresShell*            aPresShell, 
                                 nsPresContext*          aPresContext,
                                 nsFrameConstructorState& aState,
@@ -511,6 +528,7 @@ private:
                                 PRBool&                  aFrameHasBeenInitialized,
                                 nsFrameItems&            aFrameItems);
 
+  // ConstructFieldSetFrame puts the new frame in aFrameItems
   nsresult ConstructFieldSetFrame(nsIPresShell*            aPresShell, 
                                   nsPresContext*          aPresContext,
                                   nsFrameConstructorState& aState,
@@ -519,6 +537,7 @@ private:
                                   nsIAtom*                 aTag,
                                   nsStyleContext*          aStyleContext,
                                   nsIFrame*&               aNewFrame,
+                                  nsFrameItems&            aFrameItems,
                                   PRBool&                  aProcessChildren,
                                   const nsStyleDisplay*    aStyleDisplay,
                                   PRBool&                  aFrameHasBeenInitialized);
@@ -770,6 +789,7 @@ private:
                      nsIFrame*                aScrollPort = nsnull);
 
 
+  // InitializeSelectFrame puts scrollFrame in aFrameItems if aBuildCombobox is false
   nsresult
   InitializeSelectFrame(nsIPresShell*            aPresShell, 
                         nsPresContext*          aPresContext,
@@ -779,7 +799,8 @@ private:
                         nsIContent*              aContent,
                         nsIFrame*                aParentFrame,
                         nsStyleContext*          aStyleContext,
-                        PRBool                   aCreateBlock);
+                        PRBool                   aBuildCombobox,
+                        nsFrameItems&            aFrameItems);
 
   nsresult MaybeRecreateFramesForContent(nsPresContext*  aPresContext,
                                          nsIContent*      aContent);
@@ -841,8 +862,9 @@ private:
 
   // |aContentParentFrame| should be null if it's really the same as
   // |aParentFrame|.
+  // aFrameItems is where we want to put the block in case it's in-flow
   nsresult ConstructBlock(nsIPresShell*            aPresShell, 
-                          nsPresContext*          aPresContext,
+                          nsPresContext*           aPresContext,
                           nsFrameConstructorState& aState,
                           const nsStyleDisplay*    aDisplay,
                           nsIContent*              aContent,
@@ -850,6 +872,7 @@ private:
                           nsIFrame*                aContentParentFrame,
                           nsStyleContext*          aStyleContext,
                           nsIFrame**               aNewFrame,
+                          nsFrameItems&            aFrameItems,
                           PRBool                   aRelPos);
 
   nsresult ConstructInline(nsIPresShell*            aPresShell, 
@@ -860,9 +883,7 @@ private:
                            nsIFrame*                aParentFrame,
                            nsStyleContext*          aStyleContext,
                            PRBool                   aIsPositioned,
-                           nsIFrame*                aNewFrame,
-                           nsIFrame**               aNewBlockFrame,
-                           nsIFrame**               aNextInlineFrame);
+                           nsIFrame*                aNewFrame);
 
   nsresult ProcessInlineChildren(nsIPresShell*            aPresShell, 
                                  nsPresContext*          aPresContext,
@@ -1083,7 +1104,9 @@ public:
     ~RestyleEvent() { }
     void HandleEvent();
   };
-  
+
+  friend struct nsFrameConstructorState;
+
 protected:
   nsCOMPtr<nsIEventQueue>        mRestyleEventQueue;
   
