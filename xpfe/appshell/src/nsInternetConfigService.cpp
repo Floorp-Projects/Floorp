@@ -175,8 +175,11 @@ nsresult nsInternetConfigService::GetMappingForMIMEType(const char *mimetype, co
   PRBool domimecheck = PR_TRUE, gotmatch = PR_FALSE;
   ICMapEntry ent;
   
-  if ((strcmp(mimetype, UNKNOWN_CONTENT_TYPE) == 0) ||
-      (strcmp(mimetype, APPLICATION_OCTET_STREAM) == 0))
+  // if mime type is "unknown" or "octet stream" *AND* we have a file extension,
+  // then disable match on mime type
+  if (((nsCRT::strcasecmp(mimetype, UNKNOWN_CONTENT_TYPE) == 0) ||
+       (nsCRT::strcasecmp(mimetype, APPLICATION_OCTET_STREAM) == 0)) &&
+       fileextension)
     domimecheck = PR_FALSE;
   
   entry->totalLength = 0;
