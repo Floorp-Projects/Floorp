@@ -269,16 +269,7 @@ nsSplashScreenOS2::~nsSplashScreenOS2() {
 NS_IMETHODIMP
 nsSplashScreenOS2::Show() {
     //Spawn new thread to display real splash screen.
-#ifdef XP_OS2
     int handle = _beginthread( ThreadProc, NULL, 16384, (void *)this );
-    DosClose (handle);
-    return NS_OK;
-#else
-    DWORD threadID = 0;
-    HANDLE handle = CreateThread( 0, 0, (LPTHREAD_START_ROUTINE)ThreadProc, this, 0, &threadID );
-    CloseHandle(handle);
-#endif
-
     return NS_OK;
 }
 
@@ -354,22 +345,19 @@ MRESULT EXPENTRY DialogProc( HWND dlg, ULONG msg, MPARAM mp1, MPARAM mp2 ) {
          * dialog template do not do the right thing if the user's 
          * machine is using large fonts.
          */ 
-        HWND bitmapControl = WinWindowFromID( dlg, IDB_SPLASH );
-        if ( bitmapControl ) {
-            HBITMAP hbitmap = splashScreen->mBitmap;
-            if ( hbitmap ) {
-                BITMAPINFOHEADER bitmap;
-                bitmap.cbFix = sizeof (BITMAPINFOHEADER);
-                GpiQueryBitmapParameters (splashScreen->mBitmap, &bitmap);
-                WinSetWindowPos( dlg,
-                                 HWND_TOP,
-                                 WinQuerySysValue( HWND_DESKTOP, SV_CXSCREEN )/2 - bitmap.cx/2,
-                                 WinQuerySysValue( HWND_DESKTOP, SV_CYSCREEN )/2 - bitmap.cy/2,
-                                 bitmap.cx,
-                                 bitmap.cy,
-                                 SWP_ACTIVATE | SWP_MOVE | SWP_SIZE );
-                WinShowWindow( dlg, TRUE );
-            }
+        HBITMAP hbitmap = splashScreen->mBitmap;
+        if ( hbitmap ) {
+            BITMAPINFOHEADER bitmap;
+            bitmap.cbFix = sizeof (BITMAPINFOHEADER);
+            GpiQueryBitmapParameters (splashScreen->mBitmap, &bitmap);
+            WinSetWindowPos( dlg,
+                             HWND_TOP,
+                             WinQuerySysValue( HWND_DESKTOP, SV_CXSCREEN )/2 - bitmap.cx/2,
+                             WinQuerySysValue( HWND_DESKTOP, SV_CYSCREEN )/2 - bitmap.cy/2,
+                             bitmap.cx,
+                             bitmap.cy,
+                             SWP_ACTIVATE | SWP_MOVE | SWP_SIZE );
+            WinShowWindow( dlg, TRUE );
         }
         return (MRESULT)FALSE;
     }
@@ -408,6 +396,7 @@ void _Optlink ThreadProc(void *splashScreen) {
     WinDlgBox( HWND_DESKTOP, HWND_DESKTOP, (PFNWP)DialogProc, NULLHANDLE, IDD_SPLASH, (MPARAM)splashScreen );
     WinDestroyMsgQueue( hmq );
     WinTerminate( hab );
+//    _endthread();
 }
 
 #ifndef XP_OS2
