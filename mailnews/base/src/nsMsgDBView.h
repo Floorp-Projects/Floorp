@@ -75,6 +75,7 @@ enum eFieldType {
 // reserve the top 8 bits in the msg flags for the view-only flags.
 #define MSG_VIEW_FLAGS 0xEE000000
 #define MSG_VIEW_FLAG_HASCHILDREN 0x40000000
+#define MSG_VIEW_FLAG_DUMMY 0x20000000
 #define MSG_VIEW_FLAG_ISTHREAD 0x8000000
 
 /* There currently only 5 labels defined */
@@ -139,6 +140,8 @@ protected:
 
   static nsIAtom* kJunkMsgAtom;
   static nsIAtom* kNotJunkMsgAtom;
+
+  static nsIAtom* kDummyMsgAtom;
 
   static PRUnichar* kReadString;
   static PRUnichar* kRepliedString;
@@ -206,16 +209,18 @@ protected:
   nsresult		GetThreadCount(nsMsgKey messageKey, PRUint32 *pThreadCount);
   nsMsgViewIndex GetIndexOfFirstDisplayedKeyInThread(nsIMsgThread *threadHdr);
   nsresult GetFirstMessageHdrToDisplayInThread(nsIMsgThread *threadHdr, nsIMsgDBHdr **result);
-  nsMsgViewIndex ThreadIndexOfMsg(nsMsgKey msgKey, 
+  virtual nsMsgViewIndex ThreadIndexOfMsg(nsMsgKey msgKey, 
 				  nsMsgViewIndex msgIndex = nsMsgViewIndex_None,
 				  PRInt32 *pThreadCount = nsnull,
 				  PRUint32 *pFlags = nsnull);
+  virtual nsresult GetThreadContainingMsgHdr(nsIMsgDBHdr *msgHdr, nsIMsgThread **pThread);
   nsMsgKey GetKeyOfFirstMsgInThread(nsMsgKey key);
   PRInt32 CountExpandedThread(nsMsgViewIndex index);
   nsresult ExpansionDelta(nsMsgViewIndex index, PRInt32 *expansionDelta);
   nsresult ReverseSort();
   nsresult ReverseThreads();
   nsresult SaveSortInfo(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder);
+  nsresult PersistFolderInfo(nsIDBFolderInfo **dbFolderInfo);
 
   nsMsgKey		GetAt(nsMsgViewIndex index) ;
   nsMsgViewIndex	FindViewIndex(nsMsgKey  key) 
@@ -302,7 +307,7 @@ protected:
   nsresult InitLabelPrefs(void);
   nsresult CopyDBView(nsMsgDBView *aNewMsgDBView, nsIMessenger *aMessengerInstance, nsIMsgWindow *aMsgWindow, nsIMsgDBViewCommandUpdater *aCmdUpdater);
   void InitializeAtomsAndLiterals();
-  PRInt32 FindLevelInThread(nsIMsgDBHdr *msgHdr, nsMsgViewIndex startOfThread, nsMsgViewIndex viewIndex);
+  virtual PRInt32 FindLevelInThread(nsIMsgDBHdr *msgHdr, nsMsgViewIndex startOfThread, nsMsgViewIndex viewIndex);
   nsresult GetImapDeleteModel(nsIMsgFolder *folder);
   nsresult UpdateDisplayMessage(nsMsgViewIndex viewPosition);
 

@@ -542,7 +542,8 @@ nsMsgSearchDBView::GetHdrForFirstSelectedMessage(nsIMsgDBHdr **hdr)
 {
   NS_ENSURE_ARG_POINTER(hdr);
   PRInt32 index;
-
+  if (!mTreeSelection)
+    return NS_ERROR_NULL_POINTER;
   nsresult rv = mTreeSelection->GetCurrentIndex(&index);
   NS_ENSURE_SUCCESS(rv,rv);
 

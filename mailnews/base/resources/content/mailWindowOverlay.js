@@ -210,19 +210,29 @@ function InitViewSortByMenu()
     setSortByMenuItemCheckState("sortByRecipientMenuitem", (sortType == nsMsgViewSortType.byRecipient));
 
     var sortOrder = gDBView.sortOrder;
+    var sortTypeSupportsGrouping = (sortType == nsMsgViewSortType.byAuthor 
+        || sortType == nsMsgViewSortType.byDate || sortType == nsMsgViewSortType.byPriority
+        || sortType == nsMsgViewSortType.bySubject || sortType == nsMsgViewSortType.byLabel
+        || sortType == nsMsgViewSortType.byRecipient);
 
     setSortByMenuItemCheckState("sortAscending", (sortOrder == nsMsgViewSortOrder.ascending));
     setSortByMenuItemCheckState("sortDescending", (sortOrder == nsMsgViewSortOrder.descending));
 
-    var threaded = ((gDBView.viewFlags & nsMsgViewFlagsType.kThreadedDisplay) != 0);
+    var grouped = ((gDBView.viewFlags & nsMsgViewFlagsType.kGroupBySort) != 0);
+    var threaded = ((gDBView.viewFlags & nsMsgViewFlagsType.kThreadedDisplay) != 0 && !grouped);
     var sortThreadedMenuItem = document.getElementById("sortThreaded");
     var sortUnthreadedMenuItem = document.getElementById("sortUnthreaded");
 
     sortThreadedMenuItem.setAttribute("checked", threaded);
-    sortUnthreadedMenuItem.setAttribute("checked", !threaded);
+    sortUnthreadedMenuItem.setAttribute("checked", !threaded && !grouped);
 
     sortThreadedMenuItem.setAttribute("disabled", !gDBView.supportsThreading);
     sortUnthreadedMenuItem.setAttribute("disabled", !gDBView.supportsThreading);
+
+    var groupBySortOrderMenuItem = document.getElementById("groupBySort");
+
+    groupBySortOrderMenuItem.setAttribute("disabled", !gDBView.supportsThreading || !sortTypeSupportsGrouping);
+    groupBySortOrderMenuItem.setAttribute("checked", grouped);
 }
 
 function InitViewMessagesMenu()

@@ -51,17 +51,24 @@ nsMsgGroupView::~nsMsgGroupView()
 {
 }
 
-NS_IMETHODIMP nsMsgGroupView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder, nsMsgViewFlagsTypeValue viewFlags, PRInt32 *pCount)
+NS_IMETHODIMP nsMsgGroupView::Open(nsIMsgFolder *aFolder, nsMsgViewSortTypeValue aSortType, nsMsgViewSortOrderValue aSortOrder, nsMsgViewFlagsTypeValue aViewFlags, PRInt32 *aCount)
 {
   nsCOMPtr <nsISimpleEnumerator> headers;
-  nsresult rv = folder->GetMsgDatabase(nsnull, getter_AddRefs(m_db));
+  nsresult rv = aFolder->GetMsgDatabase(nsnull, getter_AddRefs(m_db));
   NS_ENSURE_SUCCESS(rv, rv);
   m_db->AddListener(this);
 
+  m_viewFlags = aViewFlags;
+  m_sortOrder = aSortOrder;
+  m_sortType = aSortType;
+
+  nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
+  PersistFolderInfo(getter_AddRefs(dbFolderInfo));
+
   rv = m_db->EnumerateMessages(getter_AddRefs(headers));
   NS_ENSURE_SUCCESS(rv, rv);
-  m_folder = folder;
-  return OpenWithHdrs(headers, sortType, sortOrder, viewFlags, pCount);
+  m_folder = aFolder;
+  return OpenWithHdrs(headers, aSortType, aSortOrder, aViewFlags, aCount);
 }
 
 /* static */PRIntn PR_CALLBACK ReleaseThread (nsHashKey *aKey, void *thread, void *closure)
@@ -104,6 +111,27 @@ nsHashKey *nsMsgGroupView::AllocHashKeyForHdr(nsIMsgDBHdr *msgHdr)
 
       }
       break;
+    case nsMsgViewSortType::byLabel:
+      {
+        nsMsgLabelValue label;
+        msgHdr->GetLabel(&label);
+        return new nsPRUint32Key(label);
+      }
+      break;
+    case nsMsgViewSortType::byPriority:
+      {
+        nsMsgPriorityValue priority;
+        msgHdr->GetPriority(&priority);
+        return new nsPRUint32Key(priority);
+      }
+      break;
+    case nsMsgViewSortType::byStatus:
+      {
+        PRUint32 status = 0;
+
+        GetStatusSortValue(msgHdr, &status);
+        return new nsPRUint32Key(status);
+      }
     case nsMsgViewSortType::byDate:
     {
       PRUint32 ageBucket;
@@ -202,7 +230,10 @@ nsMsgGroupThread *nsMsgGroupView::AddHdrToThread(nsIMsgDBHdr *msgHdr)
     m_groupsTable.Put(hashKey, foundThread);
     foundThread->AddRef();
     if (m_sortType == nsMsgViewSortType::byDate)
+    {
       foundThread->m_dummy = PR_TRUE;
+      msgFlags |=  MSG_VIEW_FLAG_DUMMY | MSG_VIEW_FLAG_HASCHILDREN;
+    }
 
     nsMsgViewIndex insertIndex = GetInsertIndex(msgHdr);
     if (insertIndex == nsMsgViewIndex_None)
@@ -334,9 +365,25 @@ NS_IMETHODIMP nsMsgGroupView::OnHdrDeleted(nsIMsgDBHdr *aHdrDeleted, nsMsgKey aP
 
   nsresult rv = GetThreadContainingMsgHdr(aHdrDeleted, getter_AddRefs(thread));
   NS_ENSURE_SUCCESS(rv, rv);
+  nsMsgViewIndex viewIndexOfThread = GetIndexOfFirstDisplayedKeyInThread(thread);
+  nsHashKey *hashKey = AllocHashKeyForHdr(aHdrDeleted);
   thread->RemoveChildHdr(aHdrDeleted, nsnull);
 
-  return nsMsgDBView::OnHdrDeleted(aHdrDeleted, aParentKey, aFlags, aInstigator);
+  nsMsgGroupThread *groupThread = NS_STATIC_CAST(nsMsgGroupThread *, (nsIMsgThread *) thread);
+  rv = nsMsgDBView::OnHdrDeleted(aHdrDeleted, aParentKey, aFlags, aInstigator);
+  if (groupThread->m_dummy && !groupThread->NumRealChildren())
+  {
+    thread->RemoveChildAt(0); // get rid of dummy
+    nsMsgDBView::RemoveByIndex(viewIndexOfThread);
+    NoteChange(viewIndexOfThread, -1, nsMsgViewNotificationCode::insertOrDelete); // an example where view is not the listener - D&D messages
+  }
+  if (!groupThread->m_keys.GetSize())
+  {
+    nsHashKey *hashKey = AllocHashKeyForHdr(aHdrDeleted);
+    m_groupsTable.Remove(hashKey);
+    delete hashKey;
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgGroupView::GetCellProperties(PRInt32 aRow, nsITreeColumn *aCol, nsISupportsArray *aProperties)

@@ -1224,6 +1224,7 @@
           <menuseparator/>
           <menuitem id="sortThreaded" type="radio" name="threaded" label="&sortThreaded.label;" accesskey="&sortThreaded.accesskey;" oncommand="MsgSortThreaded();"/>
           <menuitem id="sortUnthreaded" type="radio" name="threaded" label="&sortUnthreaded.label;" accesskey="&sortUnthreaded.accesskey;" oncommand="MsgSortUnthreaded();"/>
+          <menuitem id="groupBySort" type="radio" name="group" label="&groupBySort.label;" accesskey="&groupBySort.accesskey;" oncommand="MsgGroupBySort();"/>
         </menupopup>
       </menu>
       <menu label="&msgsMenu.label;" id="viewMessageViewMenu" accesskey="&msgsMenu.accesskey;">

@@ -400,6 +400,7 @@ NS_IMETHODIMP nsMsgGroupThread::GetChildHdrAt(PRInt32 aIndex, nsIMsgDBHdr **aRes
 
 NS_IMETHODIMP nsMsgGroupThread::RemoveChildAt(PRInt32 aIndex)
 {
+  m_keys.RemoveAt(aIndex);
   return NS_OK;
 }
 

@@ -409,6 +409,9 @@
 #define NS_MSGXFVFDBVIEW_CONTRACTID \
   NS_MSGDBVIEW_CONTRACTID_PREFIX "xfvf"
 
+#define NS_MSGGROUPDBVIEW_CONTRACTID \
+  NS_MSGDBVIEW_CONTRACTID_PREFIX "group"
+
 /* 52f860e0-1dd2-11b2-aa72-bb751981bd00 */
 #define NS_MSGTHREADEDDBVIEW_CID \
   {0x52f860e0, 0x1dd2, 0x11b2, \
@@ -438,6 +441,11 @@
 #define NS_MSG_XFVFDBVIEW_CID \
   {0x2af6e050, 0x04f6, 0x495a, \
     {0x83, 0x87, 0x86, 0xb0, 0xae, 0xb1, 0x86, 0x3c}}
+
+/* e4603d6c-0a74-47c5-b69e-2f8876990304 */
+#define NS_MSG_GROUPDBVIEW_CID \
+  {0xe4603d6c, 0x0a74, 0x47c5, \
+    {0xb6, 0x9e, 0x2f, 0x88, 0x76, 0x99, 0x03, 0x04}}
 //
 // nsMsgAccountManager
 // 

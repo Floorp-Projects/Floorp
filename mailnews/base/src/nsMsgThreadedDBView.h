@@ -57,7 +57,7 @@ public:
   NS_IMETHOD GetViewType(nsMsgViewTypeValue *aViewType);
   NS_IMETHOD GetSupportsThreading(PRBool *aResult);
 
-	NS_IMETHOD OnParentChanged (nsMsgKey aKeyChanged, nsMsgKey oldParent, nsMsgKey newParent, nsIDBChangeListener *aInstigator);
+  NS_IMETHOD OnParentChanged (nsMsgKey aKeyChanged, nsMsgKey oldParent, nsMsgKey newParent, nsIDBChangeListener *aInstigator);
 
 protected:
   virtual const char * GetViewName(void) {return "ThreadedDBView"; }
@@ -70,16 +70,16 @@ protected:
   nsresult SortThreads(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder);
   virtual void  OnExtraFlagChanged(nsMsgViewIndex index, PRUint32 extraFlag);
   virtual void OnHeaderAddedOrDeleted();
-	void    ClearPrevIdArray();
+  void    ClearPrevIdArray();
   virtual nsresult RemoveByIndex(nsMsgViewIndex index);
   nsMsgViewIndex GetInsertInfoForNewHdr(nsIMsgDBHdr *newHdr, nsMsgViewIndex threadIndex, PRInt32 targetLevel);
 
   // these are used to save off the previous view so that bopping back and forth
   // between two views is quick (e.g., threaded and flat sorted by date).
-	PRBool		m_havePrevView;
-	nsMsgKeyArray		m_prevKeys;   //this is used for caching non-threaded view.
-	nsUInt32Array m_prevFlags;
-	nsUint8Array m_prevLevels;
+  PRBool          m_havePrevView;
+  nsMsgKeyArray   m_prevKeys;   //this is used for caching non-threaded view.
+  nsUInt32Array   m_prevFlags;
+  nsUint8Array    m_prevLevels;
   nsCOMPtr <nsISimpleEnumerator> m_threadEnumerator;
 };
 

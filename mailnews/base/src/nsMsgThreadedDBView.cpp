@@ -67,17 +67,11 @@ NS_IMETHODIMP nsMsgThreadedDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeV
   // Preset msg hdr cache size for performance reason.
   PRInt32 totalMessages, unreadMessages;
   nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
-  rv = m_db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+  PersistFolderInfo(getter_AddRefs(dbFolderInfo));
   NS_ENSURE_SUCCESS(rv, rv);
   // save off sort type and order, view type and flags
-  dbFolderInfo->SetSortType(m_sortType);
-  dbFolderInfo->SetSortOrder(m_sortOrder);
-  dbFolderInfo->SetViewFlags(m_viewFlags);
   dbFolderInfo->GetNumUnreadMessages(&unreadMessages);
   dbFolderInfo->GetNumMessages(&totalMessages);
-  nsMsgViewTypeValue viewType;
-  GetViewType(&viewType);
-  dbFolderInfo->SetViewType(viewType);
   if (m_viewFlags & nsMsgViewFlagsType::kUnreadOnly)
   { 
     // Set unread msg size + extra entries to avoid reallocation on new mail.
@@ -289,7 +283,8 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
     return NS_OK;
   }
 
-  PRBool sortThreads = m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay; // sort threads by sort order
+  // sort threads by sort order
+  PRBool sortThreads = m_viewFlags & (nsMsgViewFlagsType::kThreadedDisplay | nsMsgViewFlagsType::kGroupBySort);
   
   // if sort type is by thread, but we're not threaded, change sort type to byId
   if (sortType == nsMsgViewSortType::byThread && (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay) != 0)
@@ -308,6 +303,7 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
     {
       m_sortType = sortType;
       m_viewFlags |= nsMsgViewFlagsType::kThreadedDisplay;
+      m_viewFlags &= nsMsgViewFlagsType::kGroupBySort;
       if ( m_havePrevView)
       {
         // restore saved id array and flags array
@@ -365,7 +361,7 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
         m_prevLevels.InsertAt(0, &m_levels);
         // do this before we sort, so that we'll use the cheap method
         // of expanding.
-        m_viewFlags &= ~nsMsgViewFlagsType::kThreadedDisplay;
+        m_viewFlags &= ~(nsMsgViewFlagsType::kThreadedDisplay | nsMsgViewFlagsType::kGroupBySort);
         ExpandAll();
         //			m_idArray.RemoveAll();
         //			m_flags.RemoveAll();
@@ -554,6 +550,7 @@ nsresult nsMsgThreadedDBView::InitSort(nsMsgViewSortTypeValue sortType, nsMsgVie
     nsMsgDBView::Sort(nsMsgViewSortType::byId, sortOrder); // sort top level threads by id.
     m_sortType = nsMsgViewSortType::byThread;
     m_viewFlags |= nsMsgViewFlagsType::kThreadedDisplay;
+    m_viewFlags &= ~nsMsgViewFlagsType::kGroupBySort;
     SetViewFlags(m_viewFlags); // persist the view flags.
     //		m_db->SetSortInfo(m_sortType, sortOrder);
   }

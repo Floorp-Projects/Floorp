@@ -650,7 +650,10 @@ function CreateBareDBView(originalView, msgFolder, viewType, viewFlags, sortType
           break;
       case nsMsgViewType.eShowAllThreads:
       default:
-          dbviewContractId += "threaded";
+          if (viewFlags & nsMsgViewFlagsType.kGroupBySort)
+            dbviewContractId += "group";
+          else
+            dbviewContractId += "threaded";
           break;
   }
 
