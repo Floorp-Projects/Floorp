@@ -87,6 +87,7 @@ static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
 #define HTTP_PREF_PREFIX        "network.http."
 #define INTL_ACCEPT_LANGUAGES   "intl.accept_languages"
 #define INTL_ACCEPT_CHARSET     "intl.charset.default"
+#define NETWORK_ENABLEIDN       "network.enableIDN"
 
 #define UA_PREF(_pref) UA_PREF_PREFIX _pref
 #define HTTP_PREF(_pref) HTTP_PREF_PREFIX _pref
@@ -208,6 +209,7 @@ nsHttpHandler::Init()
             pbi->AddObserver(UA_PREF_PREFIX, this);
             pbi->AddObserver(INTL_ACCEPT_LANGUAGES, this); 
             pbi->AddObserver(INTL_ACCEPT_CHARSET, this);
+            pbi->AddObserver(NETWORK_ENABLEIDN, this);
         }
         PrefsChanged(prefBranch);
     }
@@ -1071,8 +1073,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     // Gather misc value.
     if (PREF_CHANGED(UA_PREF("misc"))) {
-        prefs->GetCharPref(UA_PREF("misc"),
-            getter_Copies(mMisc));
+        prefs->GetCharPref(UA_PREF("misc"), getter_Copies(mMisc));
         mUserAgentIsDirty = PR_TRUE;
     }
 
@@ -1103,12 +1104,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(UA_PREF("override"))) {
         prefs->GetCharPref(UA_PREF("override"),
                             getter_Copies(mUserAgentOverride));
-        mUserAgentIsDirty = PR_TRUE;
-    }
-
-    // general.useragent.misc
-    if (PREF_CHANGED(UA_PREF("misc"))) {
-        prefs->GetCharPref(UA_PREF("misc"), getter_Copies(mMisc));
         mUserAgentIsDirty = PR_TRUE;
     }
 
@@ -1292,6 +1287,24 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
             if (uval)
                 SetAcceptCharsets(NS_ConvertUCS2toUTF8(uval).get());
         } 
+    }
+
+    //
+    // IDN options
+    //
+
+    if (PREF_CHANGED(NETWORK_ENABLEIDN)) {
+        PRBool enableIDN = PR_FALSE;
+        prefs->GetBoolPref(NETWORK_ENABLEIDN, &enableIDN);
+        // No locking is required here since this method runs in the main
+        // UI thread, and so do all the methods in nsHttpChannel.cpp
+        // (mIDNConverter is used by nsHttpChannel)
+        if (enableIDN && !mIDNConverter) {
+            mIDNConverter = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "idnSDK not installed");
+        }
+        else if (!enableIDN && mIDNConverter)
+            mIDNConverter = nsnull;
     }
 
 #undef PREF_CHANGED
@@ -1822,6 +1835,7 @@ nsHttpHandler::Observe(nsISupports *subject,
                 pbi->RemoveObserver(UA_PREF_PREFIX, this);
                 pbi->RemoveObserver(INTL_ACCEPT_LANGUAGES, this); 
                 pbi->RemoveObserver(INTL_ACCEPT_CHARSET, this);
+                pbi->RemoveObserver(NETWORK_ENABLEIDN, this);
             }
         }
     }

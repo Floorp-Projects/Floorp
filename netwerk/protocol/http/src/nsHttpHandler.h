@@ -41,6 +41,7 @@
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 #include "nsVoidArray.h"
+#include "nsIIDNService.h"
 
 class nsHttpConnection;
 class nsHttpConnectionInfo;
@@ -86,6 +87,7 @@ public:
     PRUint8       ReferrerLevel()      { return mReferrerLevel; }
     PRUint16      IdleTimeout()        { return mIdleTimeout; }
     PRUint16      MaxRequestAttempts() { return mMaxRequestAttempts; }
+    nsIIDNService *IDNConverter()      { return mIDNConverter; }
 
     nsHttpAuthCache *AuthCache() { return mAuthCache; }
 
@@ -202,6 +204,7 @@ private:
     nsCOMPtr<nsINetModuleMgr>           mNetModuleMgr;
     nsCOMPtr<nsIStreamConverterService> mStreamConvSvc;
     nsCOMPtr<nsIMIMEService>            mMimeService;
+    nsCOMPtr<nsIIDNService>             mIDNConverter;
 
     // the authentication credentials cache
     nsHttpAuthCache *mAuthCache;

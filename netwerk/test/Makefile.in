@@ -53,6 +53,7 @@ CPPSRCS		= \
 		TestDBMAccess.cpp \
 		TestMCTransport.cpp \
 		TestPageLoad.cpp \
+		TestIDN.cpp \
 		$(NULL)
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))

@@ -52,6 +52,7 @@
 #include <Winsock2.h>
 #endif
 #include "nsCOMPtr.h"
+#include "nsIIDNService.h"
 #include "prclist.h"
 #include "prcvar.h"
 #include "pldhash.h"
@@ -95,6 +96,10 @@ public:
 
     static nsDNSService *   gService;
 
+    // helper method to check for non-Ascii hostnames (should really be in
+    // nsCRT or something)
+    static PRBool           IsAsciiString(const char *s);
+
 private:
     nsresult                LateInit();
     nsresult                InstallPrefObserver();
@@ -120,6 +125,7 @@ private:
     char *                  mMyIPAddress;
     nsCOMPtr<nsIThread>     mThread;
     PRUint32                mState;
+    nsCOMPtr<nsIIDNService> mIDNConverter;
 
     enum {
         DNS_NOT_INITIALIZED = 0,

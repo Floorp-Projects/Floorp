@@ -45,6 +45,7 @@ PROGC = .\$(OBJDIR)\TestWriteStream.exe
 PROGD = .\$(OBJDIR)\TestWriteSpeed.exe
 PROGE = .\$(OBJDIR)\TestCallbacks.exe
 PROGF = .\$(OBJDIR)\TestHttp.exe
+PROGG = .\$(OBJDIR)\TestIDN.exe
 
 PROGRAMS = \
 $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) $(PROG6) $(PROG7) $(PROG8)\
@@ -100,6 +101,7 @@ $(PROGE): $(OBJDIR) TestCallbacks.cpp
 
 $(PROGF): $(OBJDIR) TestHttp.cpp
 
+$(PROGG): $(OBJDIR) TestIDN.cpp
 
 
 

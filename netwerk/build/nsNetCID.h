@@ -279,4 +279,13 @@
 }
 
 
+/******************************************************************************
+ * netwerk/dns/ classes
+ */
+
+/* ContractID of the XPCOM package that implements nsIIDNService */
+#define NS_IDNSERVICE_CONTRACTID \
+    "@i-dns.net/IDNService;1"
+
+
 #endif // nsNetCID_h__

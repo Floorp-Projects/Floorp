@@ -39,6 +39,7 @@
 #include "nsNetUtil.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsIIDNService.h"
 #include "plstr.h"
 #include "prprf.h"
 #include "nsEscape.h"
@@ -115,9 +116,6 @@ nsHttpChannel::Init(nsIURI *uri,
     mOriginalURI = uri;
     mCapabilities = caps;
 
-    rv = mURI->GetSpec(getter_Copies(mSpec));
-    if (NS_FAILED(rv)) return rv;
-
     LOG(("uri=%s\n", mSpec.get()));
 
     //
@@ -137,6 +135,25 @@ nsHttpChannel::Init(nsIURI *uri,
     if (NS_FAILED(rv)) return rv;
 
     LOG(("host=%s port=%d\n", host.get(), port));
+
+    nsCOMPtr<nsIIDNService> converter;
+    if ((converter = nsHttpHandler::get()->IDNConverter()) &&
+        !IsAsciiString(host))
+    {
+        nsXPIDLCString hostACE;
+        rv = converter->UTF8ToIDNHostName(host.get(), getter_Copies(hostACE));
+        if (NS_FAILED(rv)) return rv;
+
+        // replace the host portion in the URL
+        nsCOMPtr<nsIURL> url = do_QueryInterface(mURI);
+        NS_ASSERTION(url, "mURI is not an nsIURL");
+        if (url)
+            url->SetHost(hostACE.get());
+        // overwrite |host|
+        host = hostACE;
+    }
+    rv = mURI->GetSpec(getter_Copies(mSpec));
+    if (NS_FAILED(rv)) return rv;
 
     mConnectionInfo = new nsHttpConnectionInfo(host, port,
                                                proxyInfo, usingSSL);
@@ -1640,6 +1657,15 @@ nsHttpChannel::GetCurrentPath(char **path)
     else
         rv = mURI->GetPath(path);
     return rv;
+}
+
+PRBool
+nsHttpChannel::IsAsciiString(const char *s)
+{
+    for (const char *c = s; *c; c++) {
+        if (!nsCRT::IsAscii(*c)) return PR_FALSE;
+    }
+    return PR_TRUE;
 }
 
 //-----------------------------------------------------------------------------
