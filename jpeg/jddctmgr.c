@@ -19,7 +19,7 @@
 #include "jinclude.h"
 #include "jpeglib.h"
 #include "jdct.h"		/* Private declarations for DCT subsystem */
-
+extern int SSE2Available;
 
 /*
  * The decompressor input side (jdinput.c) saves away the appropriate
@@ -78,6 +78,14 @@ typedef union {
 #endif
 #endif
 
+GLOBAL(void)
+jpeg_idct_islow_sse2 (
+	j_decompress_ptr cinfo, 
+	jpeg_component_info * compptr,
+	JCOEFPTR coef_block,
+	JSAMPARRAY output_buf, 
+	JDIMENSION output_col);
+
 
 /*
  * Prepare for an output pass.
@@ -117,15 +125,43 @@ start_pass (j_decompress_ptr cinfo)
       switch (cinfo->dct_method) {
 #ifdef DCT_ISLOW_SUPPORTED
       case JDCT_ISLOW:
-	method_ptr = jpeg_idct_islow;
-	method = JDCT_ISLOW;
+#ifdef HAVE_SSE2_INTEL_MNEMONICS
+		if(SSE2Available == 1)
+		{
+			method_ptr = jpeg_idct_islow_sse2;
+			method = JDCT_ISLOW;
+		}
+		else
+		{
+			method_ptr = jpeg_idct_islow;
+			method = JDCT_ISLOW;
+		}
+#else
+		method_ptr = jpeg_idct_islow;
+		method = JDCT_ISLOW;
+		  
+#endif /* HAVE_SSE2_INTEL_MNEMONICS */
 	break;
 #endif
 #ifdef DCT_IFAST_SUPPORTED
       case JDCT_IFAST:
-	method_ptr = jpeg_idct_ifast;
-	method = JDCT_IFAST;
+#ifdef HAVE_SSE2_INTEL_MNEMONICS
+		if (SSE2Available==1) 
+		{
+			method_ptr = jpeg_idct_islow_sse2;
+			method = JDCT_ISLOW;
+		}
+		else
+		{
+			method_ptr = jpeg_idct_ifast;
+			method = JDCT_IFAST;
+		}
+#else
+		method_ptr = jpeg_idct_ifast;
+		method = JDCT_IFAST;
+#endif /* HAVE_SSE2_INTEL_MNEMONICS */
 	break;
+
 #endif
 #ifdef DCT_FLOAT_SUPPORTED
       case JDCT_FLOAT:
