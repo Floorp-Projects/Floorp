@@ -16,14 +16,8 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-#ifdef XP_MAC
-#include "nsIPref.h"
-#define NS_IMPL_IDS
-#else
 #define NS_IMPL_IDS
 #include "nsIPref.h"
-#endif
-
 #include "nsRepository.h"
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
@@ -60,7 +54,19 @@
 
 #ifdef XP_MAC
 
-#include "nsMacRepository.h"
+#define WIDGET_DLL		"WIDGET_DLL"
+#define GFXWIN_DLL		"GFXWIN_DLL"
+#define VIEW_DLL			"VIEW_DLL"
+#define WEB_DLL				"WEB_DLL"
+#define PLUGIN_DLL		"PLUGIN_DLL"
+#define PREF_DLL			"PREF_DLL"
+#define PARSER_DLL		"PARSER_DLL"
+#define DOM_DLL    		"DOM_DLL"
+#define LAYOUT_DLL		"LAYOUT_DLL"
+#define NETLIB_DLL		"NETLIB_DLL"
+#define APPSHELL_DLL "APPSHELL_DLL"
+//#define EDITOR_DLL	"EDITOR_DLL"	// temporary
+
 
 #else
 
@@ -140,6 +146,7 @@ static NS_DEFINE_IID(kCMenuCID, NS_MENU_CID);
 static NS_DEFINE_IID(kCMenuItemCID, NS_MENUITEM_CID);
 
 static NS_DEFINE_IID(kCAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
+
 
 extern "C" void
 NS_SetupRegistry()
