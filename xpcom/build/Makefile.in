@@ -32,6 +32,10 @@ REQUIRES	= libreg unicharutil
 
 CPPSRCS		= nsXPComInit.cpp
 
+ifdef XPCOM_USE_LEA
+CPPSRCS += malloc.c
+endif
+
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libxpcomds_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libxpcomio_s.$(LIB_SUFFIX) \
