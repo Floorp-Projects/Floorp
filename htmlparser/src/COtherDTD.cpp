@@ -2033,4 +2033,5 @@ nsresult COtherDTD::WillInterruptParse(void){
   return result;
 }
 
-#endif
+#endif /* From #if 0 at the begining */
+
