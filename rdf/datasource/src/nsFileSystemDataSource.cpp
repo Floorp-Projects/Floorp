@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; c-file-style: "stroustrup" -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; c-file-style: "stroustrup" -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -125,17 +125,16 @@ public:
 	NS_IMETHOD	AddObserver(nsIRDFObserver *n);
 	NS_IMETHOD	RemoveObserver(nsIRDFObserver *n);
 	NS_IMETHOD	Flush();
-    NS_IMETHOD GetAllCommands(nsIRDFResource* source,
-                              nsIEnumerator/*<nsIRDFResource>*/** commands);
 
-    NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
-                                nsIRDFResource*   aCommand,
-                                nsISupportsArray/*<nsIRDFResource>*/* aArguments,
-                                PRBool* aResult);
-
-    NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
-                         nsIRDFResource*   aCommand,
-                         nsISupportsArray/*<nsIRDFResource>*/* aArguments);
+	NS_IMETHOD	GetAllCommands(nsIRDFResource* source,
+				nsIEnumerator/*<nsIRDFResource>*/** commands);
+	NS_IMETHOD	IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+				nsIRDFResource*   aCommand,
+				nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+				PRBool* aResult);
+	NS_IMETHOD	DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+				nsIRDFResource*   aCommand,
+				nsISupportsArray/*<nsIRDFResource>*/* aArguments);
 
 
     // helper methods
@@ -734,13 +733,17 @@ FileSystemDataSource::Flush()
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
+
 NS_IMETHODIMP
 FileSystemDataSource::GetAllCommands(nsIRDFResource* source,
                                      nsIEnumerator/*<nsIRDFResource>*/** commands)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+	NS_NOTYETIMPLEMENTED("write me!");
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+
 
 NS_IMETHODIMP
 FileSystemDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
@@ -748,17 +751,19 @@ FileSystemDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSo
                                        nsISupportsArray/*<nsIRDFResource>*/* aArguments,
                                        PRBool* aResult)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+	NS_NOTYETIMPLEMENTED("write me!");
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+
 
 NS_IMETHODIMP
 FileSystemDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                 nsIRDFResource*   aCommand,
                                 nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+	NS_NOTYETIMPLEMENTED("write me!");
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
