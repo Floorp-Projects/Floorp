@@ -29,21 +29,30 @@
 // get handle to the BrowserAppCore in the content area.
 var appCore = window._content.appCore;
 
+
+
 function clicked(event, target)
 {
 	if ((event.button != 1) || (event.detail != 2) || (target.nodeName != "treeitem"))
 		return(false);
 
+    if (event.altKey)
+    {
+        // if altKey is down then just open the Bookmark Properties dialog
+        BookmarkProperties();
+        return(true);
+    }
+
 	if (target.getAttribute("container") == "true")
 		return(false);
 
-	OpenBookmarkURL(target, document.getElementById('bookmarksTree').database);
+	OpenBookmarkURL(event, target, document.getElementById('bookmarksTree').database);
 	return(true);
 }
 
 
 
-function OpenBookmarkURL(node, datasources)
+function OpenBookmarkURL(event, node, datasources)
 {
 	if (node.getAttribute("container") == "true")
 	{
@@ -75,8 +84,10 @@ function OpenBookmarkURL(node, datasources)
 		return(false);
 	}
   
-	// Check if we have a browser window
-	if (window._content == null)
+	// If we don't have a browser window or metaKey is down,
+	// then open a new browser window
+	if ((window._content == null) || (event.metaKey))
+
 	{
 		window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url ); 
 	}
