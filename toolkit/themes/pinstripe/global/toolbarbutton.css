@@ -49,7 +49,6 @@ toolbarbutton {
   padding: 0px;
   text-align: center;
   vertical-align: middle;
-  
 }
 
 toolbarbutton:hover:active[buttonstyle="text"],
@@ -92,6 +91,7 @@ toolbarbutton[checked="true"] {
 
 toolbarbutton[type="menu-button"] {
   -moz-box-align: stretch;
+  -moz-box-orient: horizontal !important;
 }
 
 toolbarbutton[type="menu-button"],
@@ -107,7 +107,7 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
 .toolbarbutton-menubutton-button {
   -moz-box-align: center;
   -moz-box-pack: center;
-
+  -moz-box-orient: vertical;
 }
 
 

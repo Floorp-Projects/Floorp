@@ -75,16 +75,10 @@ tab
   margin: 0 !important;
 }
 
-tab[selected="true"] 
-{
-  -moz-user-focus: normal;
+tab[selected="true"] {
   margin-top: 0;
   border-bottom-color: transparent;
   padding: 1px 6px 4px 6px;
-}
-
-tab:focus > .tab-middle {
-  -moz-outline: 1px dotted invert;
 }
 
 tab[beforeselected="true"] {

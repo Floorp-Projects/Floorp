@@ -20,7 +20,7 @@
 # Contributor(s): 
 #  Stuart Parmenter <pavlov@netscape.com>
 #  Brian Ryner <bryner@brianryner.com>
-#  Jan Varga <varga@ku.sk>
+#  Jan Varga <varga@nixcorp.com>
 #  Peter Annema <disttsc@bart.nl>
 #  Johann Petrak <johann@ai.univie.ac.at>
 #  Akkana Peck <akkana@netscape.com>
@@ -72,7 +72,7 @@ function filepickerLoad() {
     const filterTypes = o.filters.types;
     const numFilters = filterTitles.length;
 
-    document.title = title;
+    window.title = title;
 
     if (initialText) {
       textInput.value = initialText;

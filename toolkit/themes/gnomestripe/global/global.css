@@ -139,8 +139,8 @@ statusbarpanel {
   border: none;
 }
 
-.statusbarpanel-iconic {
-  padding: 0px;
+.statusbarpanel-iconic,  .statusbarpanel-iconic-text, .statusbarpanel-menu-iconic {
+  padding: 0px 1px 0px 1px;
 }
 
 resizer[dir="bottomright"] {

@@ -50,10 +50,7 @@ wizard {
 }
 
 .wizard-label-box {
-  border: 1px solid #777777;
-  padding: 0 6px;
-  background-color: #BBBBBB;
-  font-weight: bold;
+  display: none;
 }
 
 .wizard-button {

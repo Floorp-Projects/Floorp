@@ -8,15 +8,12 @@
     </RDF:Seq>
 
     <!-- Package Information -->
-    <RDF:Description RDF:about="urn:mozilla:locale:en-US">
+    <RDF:Description RDF:about="urn:mozilla:locale:en-US"
+                     chrome:name="en-US">
         <chrome:packages>
             <RDF:Seq RDF:about="urn:mozilla:locale:en-US:packages">
                 <RDF:li RDF:resource="urn:mozilla:locale:en-US:help"/>
             </RDF:Seq>
         </chrome:packages>
     </RDF:Description>
-
-    <!-- Version Information -->
-    <RDF:Description RDF:about="urn:mozilla:locale:en-US:help"
-        chrome:localeVersion="0.6"/>
 </RDF:RDF>

@@ -77,6 +77,8 @@ interface nsIExtensionManager : nsISupports
   // Installing Themes
   void installTheme(in nsIFile aJARFile, in unsigned long aFlags);
   void uninstallTheme(in string aThemeID);
+  void enableTheme(in string aThemeID);
+  void disableTheme(in string aThemeID);
 
   // Downloads
   void addDownloads([array, size_is(aItemCount)] in nsIUpdateItem aItems,
@@ -88,12 +90,9 @@ interface nsIExtensionManager : nsISupports
   readonly attribute boolean inSafeMode;
 
   // Updates
-  const unsigned long UPDATE_MODE_VERSION = 0x01;
-  const unsigned long UPDATE_MODE_NORMAL  = 0x02;
   void update([array, size_is(aItemCount)] in nsIUpdateItem aItems,
                in unsigned long aItemCount, 
-               in unsigned long aUpdateMode,
-               in boolean aWriteVersionUpdates);
+               in unsigned long aVersionUpdateOnly);
 
   // Management
   void getItemList(in string aItemID, 
@@ -113,8 +112,7 @@ interface nsIExtensionItemUpdater : nsISupports
 {
   void checkForUpdates([array, size_is(aItemCount)] in nsIUpdateItem aItems,
                        in unsigned long aItemCount, 
-                       in unsigned long aUpdateMode,
-                       in boolean aWriteVersionUpdates);
+                       in boolean aVersionUpdateOnly);
 
   readonly attribute unsigned short sourceEvent;
   readonly attribute unsigned short updateTypes;

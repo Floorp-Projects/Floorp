@@ -40,7 +40,7 @@ EXTRA_DSO_LIBS	= \
 		xpnet_s \
 		$(NULL)
 
-USE_STATIC_LIBS = 1
+USE_NON_MT_LIBS = 1
 
 CSRCS		= \
 		dialogs.c \

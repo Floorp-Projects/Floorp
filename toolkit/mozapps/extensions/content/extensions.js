@@ -13,18 +13,45 @@ var gGetMoreURL       = "";
 var gCurrentTheme     = "";
 var gDownloadManager  = null;
 var gObserverIndex    = -1;
+var gItemType         = -1;
 
 const PREF_APP_ID                           = "app.id";
 const PREF_EXTENSIONS_GETMORETHEMESURL      = "extensions.getMoreThemesURL";
 const PREF_EXTENSIONS_GETMOREEXTENSIONSURL  = "extensions.getMoreExtensionsURL";
+const PREF_EXTENSIONS_DSS_ENABLED           = "extensions.dss.enabled";
+const PREF_EXTENSIONS_DSS_SWITCHPENDING     = "extensions.dss.switchPending";
 const PREF_EM_LAST_SELECTED_SKIN            = "extensions.lastSelectedSkin";
 const PREF_GENERAL_SKINS_SELECTEDSKIN       = "general.skins.selectedSkin";
 
+const KEY_DEFAULT_THEME = "classic/1.0";
+
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions 
-function stripPrefix(aResourceURI)
+
+const PREFIX_EXTENSION  = "urn:mozilla:extension:";
+const PREFIX_THEME      = "urn:mozilla:theme:";
+
+function getItemPrefix(aItemType)
 {
-  return aResourceURI.substr(gURIPrefix.length, aResourceURI.length);
+  var prefix = "";
+  if (aItemType & nsIUpdateItem.TYPE_EXTENSION) 
+    prefix = PREFIX_EXTENSION;
+  else if (aItemType & nsIUpdateItem.TYPE_THEME)
+    prefix = PREFIX_THEME;
+  return prefix;
+}
+
+function stripPrefix(aURI, aItemType)
+{
+  var val = aURI;
+  if (aItemType == nsIUpdateItem.TYPE_ADDON)
+    val = stripPrefix(aURI, getItemType(aURI));
+  else {
+    var prefix = getItemPrefix(aItemType);
+    if (prefix && aURI.substr(0, prefix.length) == prefix)  
+      val = aURI.substr(prefix.length, aURI.length);
+  }
+  return val;
 }
 
 function openURL(aURL)
@@ -51,6 +78,19 @@ function flushDataSource()
     rds.Flush();
 }
 
+function setRestartMessage(aItem)
+{
+  var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                      .getService(Components.interfaces.nsIStringBundleService);
+  var extensionStrings = sbs.createBundle("chrome://mozapps/locale/extensions/extensions.properties");
+  var brandStrings = sbs.createBundle("chrome://global/locale/brand.properties");
+  var brandShortName = brandStrings.GetStringFromName("brandShortName");
+  var themeName = aItem.getAttribute("name");
+  var restartMessage = extensionStrings.formatStringFromName("dssSwitchAfterRestart", 
+                                                             [brandShortName], 1);
+  aItem.setAttribute("creator", restartMessage);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Event Handlers
 function onExtensionSelect(aEvent)
@@ -70,6 +110,7 @@ function Startup()
   var isExtensions = gWindowState == "extensions";
   gURIPrefix  = isExtensions ? "urn:mozilla:extension:" : "urn:mozilla:theme:";
   gDSRoot     = isExtensions ? "urn:mozilla:extension:root" : "urn:mozilla:theme:root";
+  gItemType   = isExtensions ? nsIUpdateItem.TYPE_EXTENSION : nsIUpdateItem.TYPE_THEME;
   
   document.documentElement.setAttribute("windowtype", document.documentElement.getAttribute("windowtype") + "-" + gWindowState);
 
@@ -94,10 +135,30 @@ function Startup()
   if (!isExtensions) {
     gExtensionsView.addEventListener("richview-select", onThemeSelect, false);
 
-    gCurrentTheme = pref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
-    
+    if (pref.prefHasUserValue(PREF_GENERAL_SKINS_SELECTEDSKIN))
+      gCurrentTheme = pref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
+    else
+      gCurrentTheme = KEY_DEFAULT_THEME;
+      
     var useThemeButton = document.getElementById("useThemeButton");
     useThemeButton.hidden = false;
+
+    var optionsButton = document.getElementById("optionsButton");
+    optionsButton.hidden = true;
+    
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    if (!pref.getBoolPref(PREF_EXTENSIONS_DSS_ENABLED) && 
+        pref.getBoolPref(PREF_EXTENSIONS_DSS_SWITCHPENDING)) {
+      var lastSelectedSkin = pref.getCharPref(PREF_EM_LAST_SELECTED_SKIN);
+      for (var i = 0; i < gExtensionsView.childNodes.length; ++i) {
+        var item = gExtensionsView.childNodes[i];
+        if (item.getAttribute("internalName") == lastSelectedSkin) {
+          setRestartMessage(item);
+          break;
+        }
+      }
+    }
   }
   
   // Restore the last-selected extension
@@ -110,7 +171,7 @@ function Startup()
     gExtensionsView.selected = lastSelected;
 
   var extensionsStrings = document.getElementById("extensionsStrings");
-  document.title = extensionsStrings.getString(gWindowState + "Title");
+  document.documentElement.setAttribute("title", extensionsStrings.getString(gWindowState + "Title"));
   
   gExtensionsViewController.onCommandUpdate(); 
   
@@ -238,7 +299,7 @@ XPInstallDownloadManager.prototype = {
       // gExtensionManager.addDownload(displayName, url, iconURL, type);
       var item = Components.classes["@mozilla.org/updates/item;1"]
                            .createInstance(Components.interfaces.nsIUpdateItem);
-      item.init(url, " ", "", "", displayName, -1, url, iconURL, "", "", type);
+      item.init(url, " ", "", "", displayName, -1, url, iconURL, "", type);
       items.push(item);
 
       // Advance the enumerator
@@ -424,7 +485,8 @@ var gExtensionContextMenus = ["menuitem_options", "menuitem_homepage", "menuitem
                               "menuitem_enable", "menuitem_disable", "menuseparator_2", 
                               "menuitem_moveTop", "menuitem_moveUp", "menuitem_moveDn"];
 var gThemeContextMenus = ["menuitem_useTheme", "menuitem_homepage", "menuitem_about", 
-                          "menuseparator_1", "menuitem_uninstall", "menuitem_update"];
+                          "menuseparator_1", "menuitem_uninstall", "menuitem_update",
+                          "menuitem_enable"];
 
 function buildContextMenu(aEvent)
 {
@@ -451,7 +513,7 @@ function buildContextMenu(aEvent)
   menuitem_about.setAttribute("label", extensionsStrings.getFormattedString("aboutExtension", [name]));
   
   if (isExtensions) {
-    var canEnable = gExtensionsViewController.isCommandEnabled("cmd_enable");
+    var canEnable = gExtensionsViewController.isCommandEnabled("cmd_reallyEnable");
     var menuitemToShow, menuitemToHide;
     if (canEnable) {
       menuitemToShow = document.getElementById("menuitem_enable_clone");
@@ -463,6 +525,17 @@ function buildContextMenu(aEvent)
     }
     menuitemToShow.hidden = false;
     menuitemToHide.hidden = true;
+  }
+  else {
+    var enableMenu = document.getElementById("menuitem_enable_clone");
+    if (gExtensionsView.selected.getAttribute("compatible") == "false" ||
+        gExtensionsView.selected.disabled) 
+      // don't let the user activate incompatible themes, but show a (disabled) Enable
+      // menuitem to give visual feedback; it's disabled because cmd_enable returns false
+      enableMenu.hidden = false;
+    else {
+      enableMenu.hidden = true;
+    }
   }
     
   return true;
@@ -578,21 +651,51 @@ var gExtensionsViewController = {
     case "cmd_close":
       return true;
     case "cmd_useTheme":
-      return selectedItem && gCurrentTheme != selectedItem.getAttribute("internalName");
+      return selectedItem &&
+             !selectedItem.disabled &&
+             selectedItem.getAttribute("toBeUninstalled") != "true" &&
+             gCurrentTheme != selectedItem.getAttribute("internalName");
     case "cmd_options":
-      return selectedItem && !selectedItem.disabled && selectedItem.getAttribute("optionsURL") != "";
+      return selectedItem &&
+             !selectedItem.disabled &&
+             selectedItem.getAttribute("toBeUninstalled") != "true" &&
+             selectedItem.getAttribute("optionsURL") != "";
     case "cmd_about":
       return selectedItem && (selectedItem.disabled ? selectedItem.getAttribute("aboutURL") == "" : true);
     case "cmd_homepage":
       return selectedItem && selectedItem.getAttribute("homepageURL") != "";
     case "cmd_uninstall":
-      return selectedItem && selectedItem.getAttribute("locked") != "true";
+      if (gWindowState != "extensions") {
+        // uninstall is only available if the selected item isn't the 
+        // default theme.
+        return (selectedItem && 
+                selectedItem.getAttribute("internalName") != KEY_DEFAULT_THEME);
+      }
+      return selectedItem &&
+             selectedItem.getAttribute("toBeUninstalled") != "true" &&
+             selectedItem.getAttribute("locked") != "true";
     case "cmd_update":
-      return true;
+      return !selectedItem ||
+             (selectedItem &&
+              selectedItem.getAttribute("toBeUninstalled") != "true" &&
+              selectedItem.getAttribute("toBeInstalled") != "true");
+    case "cmd_reallyEnable":
+    // controls whether to show Enable or Disable in extensions' context menu
+      return selectedItem && 
+             selectedItem.disabled && 
+             !gExtensionManager.inSafeMode;
     case "cmd_enable":
-      return selectedItem && selectedItem.disabled && !gExtensionManager.inSafeMode;
+    //controls wheter the Enable/Disable menuitem is enabled
+      return selectedItem && 
+             selectedItem.disabled && 
+             !gExtensionManager.inSafeMode && 
+             selectedItem.getAttribute("toBeUninstalled") != "true" &&
+             selectedItem.getAttribute("compatible") != "false";
     case "cmd_disable":
-      return selectedItem && selectedItem.getAttribute("locked") != "true" && !selectedItem.disabled;
+      return selectedItem &&
+             !selectedItem.disabled &&
+             selectedItem.getAttribute("toBeUninstalled") != "true" &&
+             selectedItem.getAttribute("locked") != "true";
     case "cmd_movetop":
       return selectedItem && (gExtensionsView.children[0] != selectedItem);
     case "cmd_moveup":
@@ -637,10 +740,21 @@ var gExtensionsViewController = {
       var pref = Components.classes["@mozilla.org/preferences-service;1"]
                            .getService(Components.interfaces.nsIPrefBranch);
       gCurrentTheme = aSelectedItem.getAttribute("internalName");
-
       // Set this pref so the user can reset the theme in safe mode
       pref.setCharPref(PREF_EM_LAST_SELECTED_SKIN, gCurrentTheme);
-      pref.setCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN, gCurrentTheme);
+
+      if (pref.getBoolPref(PREF_EXTENSIONS_DSS_ENABLED)) {
+        pref.setCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN, gCurrentTheme);
+      }
+      else {
+        // Theme change will happen on next startup, this flag tells
+        // the Theme Manager that it needs to show "This theme will
+        // be selected after a restart" text in the selected theme
+        // item.
+        pref.setBoolPref(PREF_EXTENSIONS_DSS_SWITCHPENDING, true);
+        // Update the view
+        setRestartMessage(aSelectedItem);
+      }
       
       // disable the useThemeButton
       gExtensionsViewController.onCommandUpdate();
@@ -675,27 +789,27 @@ var gExtensionsViewController = {
     cmd_movetop: function (aSelectedItem)
     {
       var movingID = aSelectedItem.id;
-      gExtensionManager.moveTop(stripPrefix(movingID));
+      gExtensionManager.moveTop(stripPrefix(movingID, gItemType));
       gExtensionsView.selected = document.getElementById(movingID);
     },
     
     cmd_moveup: function (aSelectedItem)
     {
       var movingID = aSelectedItem.id;
-      gExtensionManager.moveUp(stripPrefix(movingID));
+      gExtensionManager.moveUp(stripPrefix(movingID, gItemType));
       gExtensionsView.selected = document.getElementById(movingID);
     },
     
     cmd_movedn: function (aSelectedItem)
     {
       var movingID = aSelectedItem.id;
-      gExtensionManager.moveDown(stripPrefix(movingID));
+      gExtensionManager.moveDown(stripPrefix(movingID, gItemType));
       gExtensionsView.selected = document.getElementById(movingID);
     },
     
     cmd_update: function (aSelectedItem)
     { 
-      var id = aSelectedItem ? stripPrefix(aSelectedItem.id) : null;
+      var id = aSelectedItem ? stripPrefix(aSelectedItem.id, gItemType) : null;
       var itemType = gWindowState == "extensions" ? nsIUpdateItem.TYPE_EXTENSION : nsIUpdateItem.TYPE_THEME;
       var items = gExtensionManager.getItemList(id, itemType, { });
       var updates = Components.classes["@mozilla.org/updates/update-service;1"]
@@ -732,21 +846,33 @@ var gExtensionsViewController = {
       nextElement = nextElement.id;
       
       if (gWindowState == "extensions")
-        gExtensionManager.uninstallExtension(stripPrefix(selectedID));
-      else if (gWindowState == "themes")
-        gExtensionManager.uninstallTheme(stripPrefix(selectedID));
+        gExtensionManager.uninstallExtension(stripPrefix(selectedID, gItemType));
+      else if (gWindowState == "themes") {
+        // If the theme being uninstalled is the current theme, we need to reselect
+        // the default. 
+        var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                             .getService(Components.interfaces.nsIPrefBranch);
+        var currentTheme = pref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
+        if (aSelectedItem.getAttribute("internalName") == currentTheme)
+          this.cmd_useTheme(document.getElementById("urn:mozilla:theme:{972ce4c6-7e08-4474-a285-3208198ce6fd}"));
+        gExtensionManager.uninstallTheme(stripPrefix(selectedID, gItemType));
+
+      }
       
       gExtensionsView.selected = document.getElementById(nextElement);
     },
     
     cmd_disable: function (aSelectedItem)
     {
-      gExtensionManager.disableExtension(stripPrefix(aSelectedItem.id));
+      gExtensionManager.disableExtension(stripPrefix(aSelectedItem.id, gItemType));
     },
     
     cmd_enable: function (aSelectedItem)
     {
-      gExtensionManager.enableExtension(stripPrefix(aSelectedItem.id));
+      if (gWindowState == "extensions")
+        gExtensionManager.enableExtension(stripPrefix(aSelectedItem.id, gItemType));
+      else
+        gExtensionManager.enableTheme(stripPrefix(aSelectedItem.id, gItemType));
     },
 #ifdef MOZ_THUNDERBIRD
     cmd_install: function(aSelectedItem)

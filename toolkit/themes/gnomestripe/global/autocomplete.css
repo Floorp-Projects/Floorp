@@ -40,6 +40,7 @@ textbox {
 
 .autocomplete-textbox-container {
   -moz-appearance: menulist-textfield;
+  -moz-box-align: center;
   border: 2px solid;
   -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
   -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
@@ -142,5 +143,9 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
 /* ::::: textboxes inside toolbarpaletteitems ::::: */
 
 toolbarpaletteitem > toolbaritem > textbox > hbox > hbox > html|*.textbox-input {
+  visibility: hidden;
+}
+
+toolbarpaletteitem > toolbaritem > * > textbox > hbox > hbox > html|*.textbox-input {
   visibility: hidden;
 }

@@ -198,3 +198,8 @@ toolbarbutton[observes="Console:clear"]:hover:active {
   -moz-image-region: rect(32px, 160px, 64px, 128px);
 }
 
+#ConsoleBox {
+  margin-bottom: 14px;
+  border-bottom: 1px solid #bebebe; 
+}
+

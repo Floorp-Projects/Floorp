@@ -41,7 +41,7 @@ toolbarbutton {
 }
 
 .toolbarbutton-icon {
-  margin-right: 2px;
+  margin-right: 5px;
 }
 
 .toolbarbutton-text {
@@ -66,7 +66,7 @@ toolbarbutton[disabled="true"]:hover:active,
 toolbarbutton[disabled="true"][open="true"] {
   border-color: transparent;
   padding: 3px;
-  color: GrayText;
+  color: GrayText !important;
 }
 
 /* ..... checked state ..... */
@@ -75,7 +75,7 @@ toolbarbutton[checked="true"] {
   border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow !important;
   padding: 4px 2px 2px 4px !important;
   background-image: url("chrome://global/skin/toolbar/Lighten.png");
-  color: ButtonText !important;
+  color: ButtonText;
 }
 
 /* ::::: toolbarbutton menu ::::: */

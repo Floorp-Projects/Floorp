@@ -94,6 +94,10 @@ protected:
   
   PR_STATIC_CALLBACK(int) SortComparison(const void *v1, const void *v2, void *closureVoid);
 
+  nsresult EntriesExistInternal(const nsAString *aName, const nsAString *aValue, PRBool *_retval);
+
+  nsresult RemoveEntriesInternal(const nsAString *aName);
+
   static PRBool FormHistoryEnabled();
 
   static nsFormHistory *gFormHistory;

@@ -46,8 +46,7 @@ menuitem[default="true"] {
 
 menu[_moz-menuactive="true"],
 menuitem[_moz-menuactive="true"] {
-  color: -moz-menuhovertext;
-  background-color: -moz-menuhover;
+  color: HighlightText;
 }
 
 menu[disabled="true"],
@@ -64,8 +63,7 @@ menubar > menu[_moz-menuactive="true"] {
 }
 
 menubar > menu[open] {
-  color: -moz-menuhovertext;
-  background-color: -moz-menuhover;
+  color: HighlightText;
 }
 
 /* ::::: menu/menuitems in menulist popups ::::: */

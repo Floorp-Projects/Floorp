@@ -13,6 +13,8 @@ tabpanels {
 	padding-top: 1px;
         background: transparent url("chrome://global/skin/icons/tabstrip-bottom.png") repeat-x bottom center !important;
         	padding-left: 2px;
+        border-bottom: 2px solid;
+        -moz-border-bottom-colors: threedshadow threedlightshadow;
 }
 
 .tabs-left,
@@ -30,7 +32,7 @@ tabpanels {
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
-tab[busy] > .tab-middle > .tab-icon {
+tab[busy] > .tab-icon {
   list-style-image: url("chrome://browser/skin/Throbber-small.gif");
   -moz-opacity: 0.5;
 }
@@ -43,3 +45,31 @@ tab[selected="true"] {
 tab {
   margin-bottom: 1px;
 }
+
+browsermessage {
+  background-color: InfoBackground;
+  color: InfoText;
+  padding: 3px;
+}
+
+browsermessage[type="top"] {
+  border-bottom: 1px solid ThreeDDarkShadow;
+}
+
+browsermessage[type="bottom"] {
+  border-top: 1px solid ThreeDDarkShadow;
+}
+
+.messageImage {
+  width: 16px;
+  height: 16px;
+}
+
+.messageText {
+  margin-left: 5px;
+}
+
+.messageButton {
+  margin: 0px 5px 0px 5px;
+}
+

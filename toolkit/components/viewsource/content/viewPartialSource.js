@@ -74,6 +74,8 @@ function onLoadViewPartialSource()
   } else {
     document.getElementById("menu_highlightSyntax").setAttribute("hidden", "true");
   }
+  
+  initFindBar();
 
   // disable menu items that don't work since the selection is munged and
   // the editor doesn't work for MathML
@@ -87,6 +89,11 @@ function onLoadViewPartialSource()
     viewPartialSourceForFragment(window.arguments[2], window.arguments[3]);
 
   window._content.focus();
+}
+
+function onUnloadViewPartialSource()
+{
+  uninitFindBar();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -42,6 +42,16 @@ tree {
   -moz-appearance: listbox;
 }
 
+/* ::::: tree focusring ::::: */
+
+.focusring > .tree-rows > .tree-bodybox {
+  border: 1px solid transparent;  
+}
+
+.focusring:focus > .tree-rows > .tree-bodybox {
+  border: 1px solid #000000;
+}
+
 /* ::::: tree rows ::::: */
 
 treechildren::-moz-tree-row {

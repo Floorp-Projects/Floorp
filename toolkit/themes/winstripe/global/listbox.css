@@ -52,8 +52,8 @@ listbox:focus > listitem[selected="true"][current="true"] {
 }
 
 listitem[selected="true"] {
-  background-color: -moz-cellhighlight;
-  color: -moz-cellhighlighttext;
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
 }
 
 listbox:focus > listitem[selected="true"] {

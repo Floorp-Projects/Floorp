@@ -83,10 +83,12 @@
 # is a web browser).
 #ifndef MOZ_THUNDERBIRD
 #ifndef XP_UNIX
+#ifndef XP_OS2
         <menuitem label="&helpForIEUsers.label;"
             position="2"
             accesskey="&helpForIEUsers.accesskey;"
             oncommand="openHelp('ieusers');"/>
+#endif
 #endif
 #endif
     </menupopup>

@@ -8,7 +8,6 @@ $exe_suffix = '.exe';
 		 "setup.exe",
 		 "setuprsc.dll"
 		 );
-@extra_ini_files = ("install.ini");
 
 sub BuildPlatformInstaller
 {

@@ -50,38 +50,46 @@ treechildren::-moz-tree-image(FilenameColumn, file) {
   -moz-image-region: rect(16px, 16px, 32px, 0px);
 }
 
-/* ::::: focus rules ::::: */
-
-#directoryTree > treerows > .tree-bodybox {
-  border: 1px solid transparent;
-}
-
-#directoryTree:focus > treerows > .tree-bodybox {
-  border-color: #000000;
-}
-
 /* ::::: button items ::::: */
+
+/* up-button */
 
 .up-button {
   list-style-image: url("chrome://global/skin/Filepicker.png");
   -moz-image-region: rect(0px 24px 24px 0px);
-  min-width: 0%; // don't let XUL layout min-size override our max-width setting
-  min-height: 0%;
   max-width: 36px;
 }
+
+.up-button:hover {
+  list-style-image: url("chrome://global/skin/Filepicker.png");
+  -moz-image-region: rect(24px 24px 48px 0px);
+  max-width: 36px;
+}
+
+/* home-button */
 
 .home-button {
   list-style-image: url("chrome://global/skin/Filepicker.png");
   -moz-image-region: rect(0px 48px 24px 24px);
-  min-width: 0%; // don't let XUL layout min-size override our max-width setting
-  min-height: 0%;
   max-width: 36px;
 }
 
+.home-button:hover {
+  list-style-image: url("chrome://global/skin/Filepicker.png");
+  -moz-image-region: rect(24px 48px 48px 24px);
+  max-width: 36px;
+}
+
+/* new-dir-button */
+
 .new-dir-button {
   list-style-image: url("chrome://global/skin/Filepicker.png");
-  -moz-image-region: rect(0px, 72px, 24x, 48px);
-  min-width: 0%; // don't let XUL layout min-size override our max-width setting
-  min-height: 0%;
+  -moz-image-region: rect(0px 72px 24px 48px);
+  max-width: 36px;
+}
+
+.new-dir-button:hover {
+  list-style-image: url("chrome://global/skin/Filepicker.png");
+  -moz-image-region: rect(24px 72px 48px 48px);
   max-width: 36px;
 }

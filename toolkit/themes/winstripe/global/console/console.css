@@ -115,7 +115,7 @@
 }
 
 .console-row[type="message"] {
-  list-style-image: url("chrome://global/skin/icons/Message.png");
+  list-style-image: url("chrome://global/skin/icons/Question.png");
 }
 
 /* ::::: toolbars ::::: */

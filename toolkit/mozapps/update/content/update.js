@@ -39,22 +39,19 @@
 //    performed again. 
 //
 
-const nsIUpdateItem                     = Components.interfaces.nsIUpdateItem;
-const nsIUpdateService                  = Components.interfaces.nsIUpdateService;
-const nsIExtensionManager               = Components.interfaces.nsIExtensionManager;
+const nsIUpdateItem       = Components.interfaces.nsIUpdateItem;
+const nsIUpdateService    = Components.interfaces.nsIUpdateService;
+const nsIExtensionManager = Components.interfaces.nsIExtensionManager;
 
-const PREF_APP_ID                           = "app.id";
-const PREF_UPDATE_EXTENSIONS_ENABLED        = "update.extensions.enabled";
-const PREF_UPDATE_APP_ENABLED               = "update.app.enabled";
-const PREF_UPDATE_APP_UPDATESAVAILABLE      = "update.app.updatesAvailable";
-const PREF_UPDATE_APP_UPDATEVERSION         = "update.app.updateVersion";
-const PREF_UPDATE_APP_UPDATEDESCRIPTION     = "update.app.updateDescription";
-const PREF_UPDATE_APP_UPDATEURL             = "update.app.updateURL";
-const PREF_UPDATE_APP_PERFORMED             = "update.app.performed";
+const PREF_APP_ID                               = "app.id";
+const PREF_UPDATE_APP_UPDATESAVAILABLE          = "app.update.updatesAvailable";
+const PREF_UPDATE_APP_PERFORMED                 = "app.update.performed";
 
-const PREF_UPDATE_EXTENSIONS_COUNT          = "update.extensions.count";
-const PREF_UPDATE_EXTENSIONS_SEVERITY_THRESHOLD = "update.extensions.severity.threshold";
-const PREF_UPDATE_SEVERITY                  = "update.severity";
+const PREF_UPDATE_EXTENSIONS_AUTOUPDATEENABLED  = "extensions.update.autoUpdateEnabled";
+const PREF_UPDATE_EXTENSIONS_COUNT              = "extensions.update.count";
+const PREF_UPDATE_EXTENSIONS_SEVERITY_THRESHOLD = "extensions.update.severity.threshold";
+
+const PREF_UPDATE_SEVERITY                      = "update.severity";
 
 var gSourceEvent = null;
 var gUpdateTypes = null;
@@ -74,6 +71,12 @@ var gUpdateWizard = {
   
   updatingApp: false,
   remainingExtensionUpdateCount: 0,
+  
+  succeeded: true,
+  
+#ifdef MOZ_PHOENIX
+  offeredResetHomepage: false,
+#endif
 
   appComps: {
     upgraded: { 
@@ -98,50 +101,48 @@ var gUpdateWizard = {
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
     this.shouldSuggestAutoChecking = (gSourceEvent == nsIUpdateService.SOURCE_EVENT_MISMATCH) && 
-                                      !pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED);
+                                      !pref.getBoolPref(PREF_UPDATE_EXTENSIONS_AUTOUPDATEENABLED);
 
-    if (gSourceEvent == nsIUpdateService.SOURCE_EVENT_MISMATCH) {
-      var version = document.getElementById("version")
-      version.setAttribute("next", "mismatch");
-    }
-    
-    gMismatchPage.init();
-
-    // If the user has disabled Extension/Theme update checking, don't bother
-    // doing version compatibility updates first. 
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    if (!pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED))
+    if (gSourceEvent != nsIUpdateService.SOURCE_EVENT_MISMATCH)
       document.documentElement.advance();
+    else 
+      gMismatchPage.init();
   },
   
   uninit: function ()
   {
     // Ensure all observers are unhooked, just in case something goes wrong or the
     // user aborts. 
-    gVersionPage.uninit();
     gUpdatePage.uninit();  
   },
   
   onWizardFinish: function ()
   {
-    if (this.shouldSuggestAutoChecking) {
-      var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                           .getService(Components.interfaces.nsIPrefBranch);
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    if (this.shouldSuggestAutoChecking)
       pref.setBoolPref("update.extensions.enabled", this.shouldAutoCheck); 
-    }
     
-    if (this.updatingApp) {
-      // Clear the "app update available" pref as an interim amnesty assuming
-      // the user actually does install the new version. If they don't, a subsequent
-      // update check will poke them again.
-      this.clearAppUpdatePrefs();
-    }
-    else {
-      // Downloading and Installed Extension
-      this.clearExtensionUpdatePrefs();
+    if (this.succeeded) {
+      if (this.updatingApp) {
+        // Clear the "app update available" pref as an interim amnesty assuming
+        // the user actually does install the new version. If they don't, a subsequent
+        // update check will poke them again.
+        this.clearAppUpdatePrefs();
+      }
+      else {
+        // Downloading and Installed Extension
+        this.clearExtensionUpdatePrefs();
+      }
     }
 
+#ifdef MOZ_PHOENIX
+    if (this.offeredResetHomepage) {
+      pref.setBoolPref("browser.update.resetHomepage", 
+                       document.getElementById("resetHomepage").checked); 
+    }
+#endif
+    
     // Send an event to refresh any FE notification components. 
     var os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
@@ -166,12 +167,6 @@ var gUpdateWizard = {
     // Unset prefs used by the update service to signify application updates
     if (pref.prefHasUserValue(PREF_UPDATE_APP_UPDATESAVAILABLE))
       pref.clearUserPref(PREF_UPDATE_APP_UPDATESAVAILABLE);
-    if (pref.prefHasUserValue(PREF_UPDATE_APP_UPDATEVERSION))
-      pref.clearUserPref(PREF_UPDATE_APP_UPDATEVERSION);
-    if (pref.prefHasUserValue(PREF_UPDATE_APP_UPDATEURL))
-      pref.clearUserPref(PREF_UPDATE_APP_UPDATEDESCRIPTION);
-    if (pref.prefHasUserValue(PREF_UPDATE_APP_UPDATEURL)) 
-      pref.clearUserPref(PREF_UPDATE_APP_UPDATEURL);
 
     // Lower the severity to reflect the fact that there are now only Extension/
     // Theme updates available
@@ -258,134 +253,13 @@ var gUpdateWizard = {
   
   onWizardClose: function (aEvent)
   {
-    if (gInstallingPage._installing)
+    if (gInstallingPage._installing) {
+      var os = Components.classes["@mozilla.org/observer-service;1"]
+                        .getService(Components.interfaces.nsIObserverService);
+      os.notifyObservers(null, "xpinstall-progress", "cancel");
       return false;
+    }    
     return true;
-  }
-};
-
-var gVersionPage = {
-  _completeCount: 0,
-  _messages: ["Version:Extension:Started", 
-              "Version:Extension:Ended", 
-              "Version:Extension:Item-Started", 
-              "Version:Extension:Item-Ended",
-              "Version:Extension:Item-Error"],
-  
-  onPageShow: function ()
-  {
-    gUpdateWizard.setButtonLabels(null, true, 
-                                  "nextButtonText", true, 
-                                  "cancelButtonText", true);
-    document.documentElement.getButton("next").focus();
-    
-    var os = Components.classes["@mozilla.org/observer-service;1"]
-                       .getService(Components.interfaces.nsIObserverService);
-    for (var i = 0; i < this._messages.length; ++i)
-      os.addObserver(this, this._messages[i], false);
-
-    var em = Components.classes["@mozilla.org/extensions/manager;1"]
-                       .getService(Components.interfaces.nsIExtensionManager);
-    em.update(gUpdateWizard.items, gUpdateWizard.items.length, 
-              nsIExtensionManager.UPDATE_MODE_VERSION, true);
-  },
-
-  _destroyed: false,  
-  uninit: function ()
-  {
-    if (this._destroyed)
-      return;
-  
-    var os = Components.classes["@mozilla.org/observer-service;1"]
-                       .getService(Components.interfaces.nsIObserverService);
-    for (var i = 0; i < this._messages.length; ++i)
-      os.removeObserver(this, this._messages[i]);
-
-    this._destroyed = true;
-  },
-
-  _totalCount: 0,
-  get totalCount()
-  {
-    if (!this._totalCount) {
-      this._totalCount = gUpdateWizard.items.length;
-      if (this._totalCount == 0) {
-        var em = Components.classes["@mozilla.org/extensions/manager;1"]
-                            .getService(Components.interfaces.nsIExtensionManager);
-        var extensionCount = em.getItemList(null, nsIUpdateItem.TYPE_EXTENSION, {}).length;
-        var themeCount = em.getItemList(null, nsIUpdateItem.TYPE_THEME, {}).length;
-
-        this._totalCount = extensionCount + themeCount;
-      }
-    }
-    return this._totalCount;
-  },  
-  
-  observe: function (aSubject, aTopic, aData)
-  {
-    var canFinish = false;
-    switch (aTopic) {
-    case "Version:Extension:Started":
-      break;
-    case "Version:Extension:Item-Started":
-      break;
-    case "Version:Extension:Item-Ended":
-      if (aSubject) {
-        var item = aSubject.QueryInterface(Components.interfaces.nsIUpdateItem);
-        var updateStrings = document.getElementById("updateStrings");
-        var status = document.getElementById("checking.status");
-        var statusString = updateStrings.getFormattedString("checkingPrefix", [item.name]);
-        status.setAttribute("value", statusString);
-        
-        if (gSourceEvent == nsIUpdateService.SOURCE_EVENT_MISMATCH) {
-          // In mismatch mode it is sufficient to perform a version update
-          // on Extensions and Themes - a proper update check can occur later.
-          var ary = [];
-          for (var i = 0; i < gUpdateWizard.items.length; ++i) {
-            if (gUpdateWizard.items[i].id != item.id)
-              ary.push(gUpdateWizard.items[i]);
-          }
-          gUpdateWizard.items = ary;
-        }
-      }
-      ++this._completeCount;
-
-      // Update the Progress Bar            
-      var progress = document.getElementById("checking.progress");
-      progress.value = Math.ceil((this._completeCount / this.totalCount) * 100);
-      
-      break;
-    case "Version:Extension:Item-Error":
-      ++this._completeCount;
-      var progress = document.getElementById("checking.progress");
-      progress.value = Math.ceil((this._completeCount / this.totalCount) * 100);
-
-      break;
-    case "Version:Extension:Ended":
-      gVersionPage.uninit();
-      
-      if (gUpdateWizard.items.length == 0 && 
-          gSourceEvent == nsIUpdateService.SOURCE_EVENT_MISMATCH) {
-        // We've resolved all compatibilities in this Version Update, so
-        // close up.
-        var updateStrings = document.getElementById("updateStrings");
-        var status = document.getElementById("checking.status");
-        status.setAttribute("value", updateStrings.getString("versionUpdateComplete"));
-
-        var closeTimer = Components.classes["@mozilla.org/timer;1"]
-                                   .createInstance(Components.interfaces.nsITimer);
-        closeTimer.initWithCallback(this, 2000, 
-                                    Components.interfaces.nsITimer.TYPE_ONE_SHOT);
-        break;
-      }
-      document.documentElement.advance();
-      break;
-    }
-  },
-  
-  notify: function (aTimer)
-  {
-    window.close();
   }
 };
 
@@ -424,7 +298,7 @@ var gUpdatePage = {
   {
     gUpdateWizard.setButtonLabels(null, true, 
                                   "nextButtonText", true, 
-                                  "cancelButtonText", true);
+                                  "cancelButtonText", false);
     document.documentElement.getButton("next").focus();
 
     var os = Components.classes["@mozilla.org/observer-service;1"]
@@ -544,7 +418,8 @@ var gUpdatePage = {
       gUpdatePage.uninit();
       var updates = Components.classes["@mozilla.org/updates/update-service;1"]
                               .getService(Components.interfaces.nsIUpdateService);
-      if (gUpdateWizard.itemsToUpdate.length > 0 || updates.appUpdatesAvailable)
+      if ((gUpdateTypes & nsIUpdateItem.TYPE_ADDON && gUpdateWizard.itemsToUpdate.length > 0) || 
+          (gUpdateTypes & nsIUpdateItem.TYPE_APP && updates.appUpdatesAvailable))
         document.getElementById("checking").setAttribute("next", "found");
       document.documentElement.advance();
     }
@@ -741,89 +616,92 @@ var gFoundPage = {
   {
     gUpdateWizard.setButtonLabels(null, true, 
                                   "installButtonText", false, 
-                                  null, true);
+                                  null, false);
     document.documentElement.getButton("next").focus();
     
-    if (this._initialized)
-      return;
-    this._initialized = true;
-    
     var updates = document.getElementById("found.updates");
-    updates.computeSizes();
-
-    // Don't show the app update option or critical updates if the user has 
-    // already installed an app update but has not yet restarted. 
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    var updatePerformed = pref.getBoolPref(PREF_UPDATE_APP_PERFORMED);
-    if (pref.getBoolPref(PREF_UPDATE_APP_ENABLED)) {
-      var updatesvc = Components.classes["@mozilla.org/updates/update-service;1"]
-                                .getService(Components.interfaces.nsIUpdateService);
-      this._currentInfo = updatesvc.currentVersion;
-      if (this._currentInfo) {
-        var patches = this._currentInfo.getCollection("patches", { });
-        if (patches.length > 0 && !updatePerformed)
-          this.buildPatches(patches);
-          
-        var components = this._currentInfo.getCollection("optional", { });
-        if (components.length > 0)
-          this.buildOptional(components);
-
-        var languages = this._currentInfo.getCollection("languages", { });
-        if (languages.length > 0)
-          this.buildLanguages(languages);
-      }
+    if (!this._initialized) {
+      this._initialized = true;
       
-      this._newestInfo = updatesvc.newestVersion;
-      if (this._newestInfo) {
-        var languages = this._newestInfo.getCollection("languages", { });
-        var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                          .getService(Components.interfaces.nsIXULChromeRegistry);
-        var selectedLocale = cr.getSelectedLocale("global");
-        var haveLanguage = false;
-        for (var i = 0; i < languages.length; ++i) {
-          if (languages[i].internalName == selectedLocale)
-            haveLanguage = true;
-        }
+      updates.computeSizes();
 
-        var files = this._newestInfo.getCollection("files", { });
-        if (files.length > 0 && haveLanguage && !updatePerformed) 
-          this.buildApp(files);
-          
-        // When the user upgrades the application, any optional components that
-        // they have installed are automatically installed. If there are remaining
-        // optional components that are not currently installed, then these
-        // are offered as an option.
-        var components = this._newestInfo.getCollection("optional", { });
-        for (var i = 0; i < components.length; ++i) {
-          if (InstallTrigger.getVersion(components[i].internalName))
-            gUpdateWizard.appComps.upgraded.optional.push(components[i]);
-          else
-            gUpdateWizard.appComps.optional.optional.push(components[i]);
+      // Don't show the app update option or critical updates if the user has 
+      // already installed an app update but has not yet restarted. 
+      var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefBranch);
+      var updatePerformed = pref.getBoolPref(PREF_UPDATE_APP_PERFORMED);
+      if (gUpdateTypes & nsIUpdateItem.TYPE_APP) {
+        var updatesvc = Components.classes["@mozilla.org/updates/update-service;1"]
+                                  .getService(Components.interfaces.nsIUpdateService);
+        this._currentInfo = updatesvc.currentVersion;
+        if (this._currentInfo) {
+          var patches = this._currentInfo.getCollection("patches", { });
+          if (patches.length > 0 && !updatePerformed)
+            this.buildPatches(patches);
+
+          // Turning this off until we can better determine what is and is not installed. 
+          // var components = this._currentInfo.getCollection("optional", { });
+          // if (components.length > 0)
+          //   this.buildOptional(components);
+ 
+          var languages = this._currentInfo.getCollection("languages", { });
+          if (languages.length > 0)
+            this.buildLanguages(languages);
         }
         
-        var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                          .getService(Components.interfaces.nsIXULChromeRegistry);
-        var selectedLocale = cr.getSelectedLocale("global");
-        gUpdateWizard.selectedLocaleAvailable = false;
-        var languages = this._newestInfo.getCollection("languages", { });
-        for (i = 0; i < languages.length; ++i) {
-          if (languages[i].internalName == selectedLocale) {
-            gUpdateWizard.selectedLocaleAvailable = true;
-            gUpdateWizard.appComps.upgraded.languages.push(languages[i]);
+        this._newestInfo = updatesvc.newestVersion;
+        if (this._newestInfo) {
+          var languages = this._newestInfo.getCollection("languages", { });
+          var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                            .getService(Components.interfaces.nsIXULChromeRegistry);
+          var selectedLocale = cr.getSelectedLocale("global");
+          var haveLanguage = false;
+          for (var i = 0; i < languages.length; ++i) {
+            if (languages[i].internalName == selectedLocale)
+              haveLanguage = true;
           }
-        }
-        
-        if (!gUpdateWizard.selectedLocaleAvailable)
-          gUpdateWizard.appComps.optional.languages = gUpdateWizard.appComps.optional.languages.concat(languages);
-          
-        gUpdateWizard.appComps.upgraded.core = gUpdateWizard.appComps.upgraded.core.concat(files);
-      }
-    }
 
-    if (pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED))
-      this.buildAddons();
-    
+          var files = this._newestInfo.getCollection("files", { });
+#ifndef XP_MACOSX
+          if (files.length > 0 && haveLanguage && !updatePerformed) 
+            this.buildApp(files);
+#endif
+            
+          // When the user upgrades the application, any optional components that
+          // they have installed are automatically installed. If there are remaining
+          // optional components that are not currently installed, then these
+          // are offered as an option.
+          var components = this._newestInfo.getCollection("optional", { });
+          for (var i = 0; i < components.length; ++i) {
+            if (InstallTrigger.getVersion(components[i].internalName))
+              gUpdateWizard.appComps.upgraded.optional.push(components[i]);
+            else
+              gUpdateWizard.appComps.optional.optional.push(components[i]);
+          }
+          
+          var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                            .getService(Components.interfaces.nsIXULChromeRegistry);
+          var selectedLocale = cr.getSelectedLocale("global");
+          gUpdateWizard.selectedLocaleAvailable = false;
+          var languages = this._newestInfo.getCollection("languages", { });
+          for (i = 0; i < languages.length; ++i) {
+            if (languages[i].internalName == selectedLocale) {
+              gUpdateWizard.selectedLocaleAvailable = true;
+              gUpdateWizard.appComps.upgraded.languages.push(languages[i]);
+            }
+          }
+          
+          if (!gUpdateWizard.selectedLocaleAvailable)
+            gUpdateWizard.appComps.optional.languages = gUpdateWizard.appComps.optional.languages.concat(languages);
+            
+          gUpdateWizard.appComps.upgraded.core = gUpdateWizard.appComps.upgraded.core.concat(files);
+        }
+      }
+
+      if (gUpdateTypes & nsIUpdateItem.TYPE_ADDON)
+        this.buildAddons();
+    }
+        
     var kids = updates._getRadioChildren();
     for (var i = 0; i < kids.length; ++i) {
       if (kids[i].collapsed == false) {
@@ -854,7 +732,7 @@ var gFoundPage = {
       if (gUpdateWizard.appComps.optional.optional.length > 0) {
         gUpdateWizard.setButtonLabels(null, true, 
                                       "nextButtonText", true, 
-                                      null, true);
+                                      null, false);
           
         text = strings.getString("foundInstructionsAppComps");
         document.getElementById("found").setAttribute("next", "optional"); 
@@ -864,7 +742,7 @@ var gFoundPage = {
     else {
       gUpdateWizard.setButtonLabels(null, true, 
                                     "installButtonText", true, 
-                                    null, true);
+                                    null, false);
       text = strings.getString("foundInstructions");
       document.getElementById("found").setAttribute("next", "installing"); 
       
@@ -883,17 +761,22 @@ var gFoundPage = {
 var gOptionalPage = {
   onPageShow: function ()
   {
-    gUpdateWizard.setButtonLabels(null, true, 
+    gUpdateWizard.setButtonLabels(null, false, 
                                   "installButtonText", false, 
                                   null, false);
 
     var optionalItemsList = document.getElementById("optionalItemsList");
+    while (optionalItemsList.hasChildNodes())
+      optionalItemsList.removeChild(optionalItemsList.firstChild);
+
     for (var i = 0; i < gUpdateWizard.appComps.optional.optional.length; ++i) {
       var checkbox = document.createElement("checkbox");
       checkbox.setAttribute("label", gUpdateWizard.appComps.optional.optional[i].name);
       checkbox.setAttribute("index", i);
       optionalItemsList.appendChild(checkbox);
     }
+    
+    document.documentElement.getButton("next").focus(); 
   },
   
   onCommand: function (aEvent)
@@ -937,6 +820,7 @@ var gOptionalPage = {
 var gInstallingPage = {
   _installing       : false,
   _restartRequired  : false,
+  _objs             : [],
   
   onPageShow: function ()
   {
@@ -947,6 +831,7 @@ var gInstallingPage = {
     // Get XPInstallManager and kick off download/install 
     // process, registering us as an observer. 
     var items = [];
+    this._objs = [];
     
     this._restartRequired = false;
     
@@ -1049,6 +934,7 @@ var gErrorsPage = {
   onPageShow: function ()
   {
     document.documentElement.getButton("finish").focus();
+    gUpdateWizard.succeeded = false;
   },
   
   onShowErrors: function ()
@@ -1092,6 +978,25 @@ var gRestartPage = {
     gUpdateWizard.setButtonLabels(null, true, null, true, null, true);
     
     // XXXben - we should really have a way to restart the app now from here!
+    
+#ifdef MOZ_PHOENIX
+    gUpdateWizard.offeredResetHomepage = true;
+#endif
+
+    document.documentElement.getButton("finish").focus();
+
+    // Create a re-reg chrome marker to tell the Chrome Registry to rebuild the
+    // Chrome Reg Datasource and overlayinfo directory on the next start since 
+    // we've upgraded in-place (and thus chrome.rdf's mtime is newer than the
+    // installed-chrome.txt file that was installed by the update process since
+    // chrome.rdf was flushed when the browser started, AFTER installed-chrome.txt
+    // was created.
+    var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
+                                .getService(Components.interfaces.nsIProperties);
+    var file = fileLocator.get("AChrom", Components.interfaces.nsIFile);
+    file.append(".reregchrome");
+    if (!file.exists())
+      file.create(Components.interfaces.nsIFile.FILE_TYPE, 0644);
   }
 };
 
@@ -1112,6 +1017,7 @@ var gNoUpdatesPage = {
       }
     }
 
+    gUpdateWizard.succeeded = false;
     gUpdateWizard.checkForErrors("updateCheckErrorNotFound");
   }
 };

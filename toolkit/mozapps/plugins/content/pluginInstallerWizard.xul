@@ -1,0 +1,147 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Plugin Finder Service code.
+   -
+   - The Initial Developer of the Original Code is
+   - IBM Corporation.
+   - Portions created by IBM Corporation are Copyright (C) 2004
+   - IBM Corporation. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Doron Rosenberg <doronr@us.ibm.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://mozapps/content/plugins/pluginInstallerWizard.css"?>
+<?xml-stylesheet href="chrome://mozapps/skin/plugins/pluginInstallerWizard.css"?>
+
+<!DOCTYPE wizard [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+%brandDTD;
+<!ENTITY % pluginsDTD SYSTEM "chrome://mozapps/locale/plugins/plugins.dtd">
+%pluginsDTD;
+]>
+
+<wizard id="plugin-installer-wizard" title="&pluginWizard.title;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        persist="width height screenX screenY sizeMode"
+        style="width: 50em; min-height: 40em;"
+        onload="wizardInit()"
+        onwizardfinish="return wizardFinish();">
+
+  <script type="application/x-javascript" src="chrome://mozapps/content/plugins/pluginInstallerWizard.js"/>
+  <script type="application/x-javascript" src="chrome://mozapps/content/plugins/pluginInstallerDatasource.js"/>
+  <script type="application/x-javascript" src="chrome://mozapps/content/plugins/pluginInstallerService.js"/>
+
+  <stringbundleset id="pluginSet">
+    <stringbundle id="brandStrings" src="chrome://global/locale/brand.properties"/>
+    <stringbundle id="xpinstallStrings" src="chrome://global/locale/xpinstall/xpinstall.properties"/>
+    <stringbundle id="pluginWizardString" src="chrome://mozapps/locale/plugins/plugins.properties"/>
+  </stringbundleset>
+
+  <wizardpage>
+    <description value="&pluginWizard.checkingForPlugins.description.label;"/>
+    <separator />
+    <progressmeter id="ws_request_progress" mode="undetermined"/>
+  </wizardpage>
+
+ <wizardpage label="&pluginWizard.availablePluginsPage.title;"  
+              onpageshow="gPluginInstaller.showPluginList()">
+
+    <description value="&pluginWizard.availablePluginsPage.description.label;"/>
+
+    <vbox id="pluginList" flex="1" align="left" style="overflow: auto;"/>
+
+    <vbox id="installerUI" hidden="true">
+      <separator />
+      <description>&pluginWizard.availablePluginsPage.installerUI;</description>
+    </vbox>
+
+    <separator />
+    <description value="&pluginWizard.availablePluginsPage.continueMsg.label;"/>
+  </wizardpage>
+
+  <wizardpage label="&pluginWizard.licensePage.title;" 
+              onpageshow="gPluginInstaller.showLicenses()"
+              onpageadvanced="return gPluginInstaller.showNextLicense();"
+              onpagerewound="return gPluginInstaller.showPreviousLicense();">
+    <description id="pluginLicenseLabel"> </description>
+
+    <vbox id="licenseContainer" flex="1">
+      <iframe id="licenseIFrame" flex="1" src="" />
+    </vbox>
+
+    <radiogroup id="licenseRadioGroup">
+      <radio id="licenseRadioGroup1" disabled="true"
+             label="&pluginWizard.licensePage.accept.label;"/>
+      <radio id="licenseRadioGroup2" disabled="true" selected="true"
+             label="&pluginWizard.licensePage.deny.label;"/>
+    </radiogroup>    
+  </wizardpage>
+
+  <wizardpage label="&pluginWizard.installPluginsPage.title;" 
+              onpageshow="gPluginInstaller.startPluginInstallation()">
+    <description value="&pluginWizard.installPluginsPage.description.label;"/>
+
+    <separator />
+
+    <description id="plugin_install_progress_message" value=""/>
+    <progressmeter id="plugin_install_progress" mode="undetermined"/>
+  </wizardpage>
+
+  <wizardpage id="lastpage" pageid="lastpage" 
+              onpageshow="gPluginInstaller.showPluginResults()">
+
+    <description id="pluginSummaryDescription" 
+                 value="&pluginWizard.finalPage.description.label;"/>
+
+    <separator />
+
+    <grid class="indent">
+      <columns>
+        <column/>
+        <column style="margin-right:15px;"/>
+        <column style="margin-right:15px;"/>
+        <column />
+      </columns>
+
+      <rows id="pluginResultList">
+      </rows>
+    </grid>
+
+    <description id="pluginSummaryRestartNeeded" style="padding-top:10px;"
+                 value="&pluginWizard.finalPage.restart.label;"/>
+    <spacer flex="1" />
+    <description id="moreInfoLink" 
+      onclick="gPluginInstaller.loadURL('https://update.mozilla.org/plugins/')"
+      style="color:rgb(0, 0, 255); cursor:pointer; text-decoration:underline;"
+      value="&pluginWizard.finalPage.moreInfo.label;"/>
+  </wizardpage>
+
+</wizard>

@@ -11,6 +11,7 @@ classic.jar:
         skin/classic/global/dialog.css
         skin/classic/global/expander.css
         skin/classic/global/filepicker.css
+        skin/classic/global/findBar.css
         skin/classic/global/formatting.css
         skin/classic/global/global.css
         skin/classic/global/globalBindings.xml
@@ -62,23 +63,31 @@ classic.jar:
         skin/classic/global/console/console-error-dash.gif          (console/console-error-dash.gif)
         skin/classic/global/Filepicker.png                          (filepicker/Filepicker.png)
         skin/classic/global/icons/Close.gif                         (icons/Close.gif)
+        skin/classic/global/icons/close.png                         (icons/close.png)
         skin/classic/global/icons/close-button.gif                  (icons/close-button.gif)
         skin/classic/global/icons/Error.png                         (icons/Error.png)
+        skin/classic/global/icons/find.png                          (icons/find.png)
         skin/classic/global/icons/folder-item.png                   (icons/folder-item.png)
         skin/classic/global/icons/Minimize.gif                      (icons/Minimize.gif)
+        skin/classic/global/icons/notfound.png                      (icons/notfound.png)
         skin/classic/global/icons/pg-landscape.gif                  (icons/pg-landscape.gif)
         skin/classic/global/icons/pg-landscape-small.gif            (icons/pg-landscape-small.gif)
         skin/classic/global/icons/pg-portrait.gif                   (icons/pg-portrait.gif)
-        skin/classic/global/icons/Question.png                      (icons/Question.png)
+        skin/classic/global/icons/Print-preview.png                 (icons/Print-preview.png)
+        skin/classic/global/icons/Question.png                      (icons/Question.png)        
         skin/classic/global/icons/Restore.gif                       (icons/Restore.gif)
         skin/classic/global/icons/tabstrip-bottom.png               (icons/tabstrip-bottom.png)
         skin/classic/global/icons/Warning.png                       (icons/Warning.png)
+        skin/classic/global/icons/wrap.png                          (icons/wrap.png)
         skin/classic/global/menu/menu-arrow.gif                     (menu/menu-arrow.gif)
         skin/classic/global/menu/Menu-arrow.png                     (menu/Menu-arrow.png)
+        skin/classic/global/menu/Menu-arrow-rtl.png                 (menu/Menu-arrow-rtl.png)
         skin/classic/global/menu/menu-arrow-disabled.gif            (menu/menu-arrow-disabled.gif)
         skin/classic/global/menu/Menu-arrow-disabled.png            (menu/Menu-arrow-disabled.png)
+        skin/classic/global/menu/Menu-arrow-disabled-rtl.png        (menu/Menu-arrow-disabled-rtl.png)
         skin/classic/global/menu/menu-arrow-hover.gif               (menu/menu-arrow-hover.gif)
         skin/classic/global/menu/Menu-arrow-hover.png               (menu/Menu-arrow-hover.png)
+        skin/classic/global/menu/Menu-arrow-hover-rtl.png           (menu/Menu-arrow-hover-rtl.png)
         skin/classic/global/menu/menu-check.gif                     (menu/menu-check.gif)
         skin/classic/global/menu/menu-check-disabled.gif            (menu/menu-check-disabled.gif)
         skin/classic/global/menu/menu-check-hover.gif               (menu/menu-check-hover.gif)
@@ -90,6 +99,7 @@ classic.jar:
         skin/classic/global/scrollbar/slider.gif                    (scrollbar/slider.gif)
         skin/classic/global/toolbar/chevron.gif                     (toolbar/chevron.gif)
         skin/classic/global/toolbar/Lighten.png                     (toolbar/Lighten.png)
+        skin/classic/global/toolbar/spring.gif                     (toolbar/spring.gif)
         skin/classic/global/tree/columnpicker.gif                   (tree/columnpicker.gif)
         skin/classic/global/tree/sort-asc.gif                       (tree/sort-asc.gif)
         skin/classic/global/tree/sort-dsc.gif                       (tree/sort-dsc.gif)

@@ -37,7 +37,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(48E227EC-1897-418f-A40B-C15EA18BBC4A)]
+[scriptable, uuid(fa5a871d-29f5-489e-aaa4-c266def52b79)]
 interface nsIFormHistory : nsISupports
 {
   /**
@@ -79,6 +79,11 @@ interface nsIFormHistory : nsISupports
    * Removes all entries in the entire form history.
    */
   void removeAllEntries();
+
+  /**
+   * Returns true if there is no entry that is paired with a name.
+   */
+  boolean nameExists(in AString name);
 
   /**
    * Gets whether a name and value pair exists in the form history.

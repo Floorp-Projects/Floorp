@@ -63,11 +63,20 @@ function APP_URI(aType)
 function ArrayEnumerator(aItems)
 {
   this._index = 0;
+  
+  if (aItems) {
+    for (var i = 0; i < aItems.length; ++i) {    
+      if (!aItems[i])
+        aItems.splice(i, 1);      
+    }
+  }
+  
   this._contents = aItems || [];
 
   this.push = function (aElement) 
   {
-    this._contents.push(aElement);
+    if (aElement)
+      this._contents.push(aElement);
   };
   
   this.hasMoreElements = function ()
@@ -77,7 +86,7 @@ function ArrayEnumerator(aItems)
   
   this.getNext = function ()
   {
-    return this._contents[this._index++];
+    return this._contents[this._index++];      
   };
 };
 
@@ -132,7 +141,7 @@ HelperApps.prototype = {
       while (extEnumerator.hasMore()) {
           entry.addExtension(extEnumerator.getNext());
       }
-      entry.description = aMIMEInfo.description;
+      entry.description = aMIMEInfo.Description;
       entry.appDisplayName = "";
     }
     
@@ -224,7 +233,7 @@ HelperApps.prototype = {
           }
         }
         else if (aProperty.EqualsNode(this._fileTypeArc)) {
-          if (typeInfo.description == "") {
+          if (typeInfo.Description == "") {
             try {
               var literal = bundle.getFormattedString("fileEnding", [typeInfo.primaryExtension.toUpperCase()]);
               return gRDF.GetLiteral(literal);
@@ -235,7 +244,7 @@ HelperApps.prototype = {
               return gRDF.GetLiteral(typeInfo.MIMEType);
             }
           }
-          return gRDF.GetLiteral(typeInfo.description);
+          return gRDF.GetLiteral(typeInfo.Description);
         }
         else if (aProperty.EqualsNode(this._fileHandlerArc)) {
           var handler = this.GetTarget(aSource, this._handlerPropArc, true);

@@ -639,7 +639,7 @@ nsPasswordManager::ReadPasswords(nsIFile* aPasswordFile)
   if (NS_FAILED(rv))
     return NS_OK;
 
-  if (!utf8Buffer.Equals(NS_LITERAL_CSTRING("#2c"))) {
+  if (!utf8Buffer.Equals("#2c")) {
     NS_ERROR("Unexpected version header in signon file");
     return NS_OK;
   }
@@ -1059,13 +1059,13 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
         userFieldElement->GetAttribute(NS_LITERAL_STRING("autocomplete"),
                                        autocomplete);
 
-        if (autocomplete.LowerCaseEqualsLiteral("off"))
+        if (autocomplete.EqualsIgnoreCase("off"))
           return NS_OK;
       }
 
       nsCOMPtr<nsIDOMElement> formDOMEl = do_QueryInterface(aFormNode);
       formDOMEl->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
-      if (autocomplete.LowerCaseEqualsLiteral("off"))
+      if (autocomplete.EqualsIgnoreCase("off"))
         return NS_OK;
 
       nsCOMPtr<nsIDOMElement> passFieldElement = do_QueryInterface(passFields.ObjectAt(0));
@@ -1919,7 +1919,7 @@ nsPasswordManager::GetPasswordRealm(nsIURI* aURI, nsACString& aRealm)
   aURI->GetScheme(buffer);
 
   aRealm.Append(buffer);
-  aRealm.AppendLiteral("://");
+  aRealm.Append(NS_LITERAL_CSTRING("://"));
 
   aURI->GetHostPort(buffer);
   if (buffer.IsEmpty()) {

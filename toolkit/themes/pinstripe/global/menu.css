@@ -113,6 +113,7 @@ menupopup > menuitem,
 popup > menuitem {
   padding: 1px 8px 1px 8px !important;
   max-width: 42em;
+  min-height: 20px;
 }
 
 menupopup > menu[_moz-menuactive="true"],

@@ -46,7 +46,6 @@
 #include "nsIServiceManager.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIDocument.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIChromeEventHandler.h"
 #include "nsPIDOMWindow.h"
@@ -57,6 +56,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
+#include "nsIDocument.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
@@ -130,7 +130,7 @@ GetScreenOrigin(nsIDOMElement* aElement)
     nsIPresShell* presShell = doc->GetShellAt(0);
     
     if (presShell) {
-      nsPresContext *presContext = presShell->GetPresContext();
+      nsPresContext* presContext = presShell->GetPresContext();
 
       if (presContext) {
         // Get the scale from that Presentation Context
@@ -519,18 +519,18 @@ nsFormFillController::Focus(nsIDOMEvent* aEvent)
 
     PRBool isReadOnly = PR_FALSE;
     input->GetReadOnly(&isReadOnly);
-
+                                  
     nsAutoString autocomplete; 
     input->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
-    if (type.EqualsLiteral("text") && !isReadOnly &&
-        !autocomplete.LowerCaseEqualsLiteral("off")) {
+    if (type.Equals(NS_LITERAL_STRING("text")) && !isReadOnly &&
+        !autocomplete.EqualsIgnoreCase("off")) {
 
       nsCOMPtr<nsIDOMHTMLFormElement> form;
       input->GetForm(getter_AddRefs(form));
       if (form)
         form->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
 
-      if (!form || !autocomplete.LowerCaseEqualsLiteral("off"))
+      if (!form || !autocomplete.EqualsIgnoreCase("off"))
         StartControllingInput(input);
     }
     
@@ -664,7 +664,7 @@ nsFormFillController::Select(nsIDOMEvent* aEvent)
 NS_IMETHODIMP
 nsFormFillController::Input(nsIDOMEvent* aEvent)
 {
-  if (mSuppressOnInput || !mController || !mFocusedInput)
+  if (mSuppressOnInput || !mController)
     return NS_OK;
 
   return mController->HandleText(PR_FALSE);
@@ -817,7 +817,7 @@ nsFormFillController::AddWindowListeners(nsIDOMWindow *aWindow)
     return;
 
   nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(aWindow));
-  nsIChromeEventHandler *chromeEventHandler = nsnull;
+  nsIChromeEventHandler* chromeEventHandler = nsnull;
   if (privateDOMWindow)
     chromeEventHandler = privateDOMWindow->GetChromeEventHandler();
 
@@ -860,10 +860,10 @@ nsFormFillController::RemoveWindowListeners(nsIDOMWindow *aWindow)
   StopControllingInput();
   
   nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(aWindow));
-  nsIChromeEventHandler *chromeEventHandler = nsnull;
+  nsIChromeEventHandler* chromeEventHandler;
   if (privateDOMWindow)
     chromeEventHandler = privateDOMWindow->GetChromeEventHandler();
-
+  
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(chromeEventHandler));
 
   if (!target)

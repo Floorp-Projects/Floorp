@@ -47,9 +47,10 @@
 %brandDTD;
 ]>
 
-<wizard id="migrationWizard"
+<wizard id="updateWizard"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&updateWizard.title;"
+        windowtype="Update:Wizard"
         onload="gUpdateWizard.init();"
         onunload="gUpdateWizard.uninit();"
         onwizardfinish="gUpdateWizard.onWizardFinish();"
@@ -64,22 +65,6 @@
     <stringbundle id="updateStrings" src="chrome://mozapps/locale/update/update.properties"/>
   </stringbundleset>
 
-  <wizardpage id="version" pageid="version" next="checking"
-              label="&version.title;"
-              onpageshow="gVersionPage.onPageShow();">
-
-    <label>&version.intro.label;</label>
-    
-    <separator class="thin"/>
-    
-    <progressmeter id="version.progress"/>
-    <hbox align="center">
-      <image id="version.throbber" class="throbber"/>
-      <label id="version.status" flex="1" crop="right">&version.status;</label>
-    </hbox>
-    
-  </wizardpage>
-    
   <wizardpage id="mismatch" pageid="mismatch" next="checking"
               label="&mismatch.title;"
               onpageshow="gMismatchPage.onPageShow();">
@@ -225,7 +210,8 @@
   
   <wizardpage id="errors" pageid="errors"
               label="&errors.title;"
-              align="right">
+              align="right"
+              onpageshow="gErrorsPage.onPageShow();">
     <label>&errors.intro.label;</label>
     <separator/>
     <button label="&errors.details.label;" accesskey="&errors.details.accesskey;"
@@ -258,6 +244,15 @@
               onpageshow="gRestartPage.onPageShow();">
 
     <label>&restart.updated.label;</label>
+
+#ifdef MOZ_PHOENIX
+    <separator/>
+
+    <vbox align="start">
+      <checkbox id="resetHomepage" checked="true"
+                label="&resetHomepage.label;" accesskey="&resetHomepage.accesskey;"/>
+    </vbox>
+#endif
 
   </wizardpage>
   

@@ -33,7 +33,7 @@
 #include "nsXIOptions.h"
 #include "nsINIParser.h"
 
-#define RES_FILE "installer"
+#define RES_FILE "install"
 #define RES_SECT "String Resources"
 
 class nsXInstaller;

@@ -53,23 +53,20 @@ interface nsIUpdateItem : nsISupports
   readonly attribute wstring  xpiURL;
   readonly attribute wstring  iconURL;
   readonly attribute wstring  updateRDF;
-  readonly attribute wstring  updateService;
-
-  const unsigned short TYPE_ANY         = 0x01;
-  const unsigned short TYPE_APP         = 0x02;
-  const unsigned short TYPE_ADDON       = 0x04;
-
-  const unsigned short TYPE_EXTENSION   = 0x08;
-  const unsigned short TYPE_THEME       = 0x10;
-  const unsigned short TYPE_LOCALE      = 0x20;
+  
+  const unsigned short TYPE_APP         = 0x01;
+  const unsigned short TYPE_EXTENSION   = 0x02;
+  const unsigned short TYPE_THEME       = 0x04;
+  const unsigned short TYPE_LOCALE      = 0x08;
+  const unsigned short TYPE_ADDON       = TYPE_EXTENSION + TYPE_THEME + TYPE_LOCALE;
+  const unsigned short TYPE_ANY         = TYPE_APP + TYPE_ADDON;
 
   readonly attribute long     type;
 
   void init(in string aID, in string aVersion, in string aMinAppVersion, 
             in string aMaxAppVersion, in wstring aName, 
             in long aRow, in wstring aUpdateURL, in wstring aIconURL, 
-            in wstring aUpdateRDF, in wstring aUpdateService,
-            in long aType);
+            in wstring aUpdateRDF, in long aType);
 
   readonly attribute wstring objectSource;
 };

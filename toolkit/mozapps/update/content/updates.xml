@@ -7,17 +7,11 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="updateStatusbarNotification" extends="chrome://global/content/bindings/general.xml#statusbarpanel">
+  <binding id="updateStatusbarNotification" 
+           extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-image">
     <resources>
       <stylesheet src="chrome://mozapps/skin/update/update.css"/>
     </resources>
-    <content>
-      <xul:hbox flex="1" class="updateIndicator" xbl:inherits="updateCount"
-                anonid="infoPanel">
-        <xul:image xbl:inherits="severity" class="updateIcon"/>
-        <xul:label xbl:inherits="value=updateCount" flex="1" crop="right"/>
-      </xul:hbox>
-    </content>
     <implementation implements="nsIObserver">
       <destructor>
       <![CDATA[
@@ -28,7 +22,7 @@
         os.removeObserver(this, "Update:App:Ended");       
       ]]>  
       </destructor>
-      
+
       <method name="init">
         <body>
         <![CDATA[
@@ -99,10 +93,9 @@
                                     onget="return this.getAttribute('updateCount');"/>
     </implementation>
     <handlers>
-      <handler event="dblclick">
+      <handler event="command">
       <![CDATA[
-        if (event.button == 0)
-          this.showUpdates();
+        this.showUpdates();
       ]]>
       </handler>
     </handlers>

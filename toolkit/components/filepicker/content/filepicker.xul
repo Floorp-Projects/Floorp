@@ -19,7 +19,7 @@
 #  Contributor(s): 
 #   Stuart Parmenter <pavlov@netscape.com>
 #   Brian Ryner <bryner@brianryner.com>
-#   Jan Varga <varga@ku.sk>
+#   Jan Varga <varga@nixcorp.com>
 #   Peter Annema <disttsc@bart.nl>
 #   Johann Petrak <johann@ai.univie.ac.at>
 
@@ -52,7 +52,7 @@
 
 <hbox flex="1">
   <deck id="errorShower" flex="1">
-    <tree id="directoryTree" flex="1" seltype="single"
+    <tree id="directoryTree" flex="1" class="focusring" seltype="single"
               onclick="onClick(event);"
               ondblclick="onDblClick(event);"
               onkeypress="onKeypress(event);"

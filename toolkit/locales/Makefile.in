@@ -46,7 +46,7 @@ include $(DEPTH)/config/autoconf.mk
 # you don't understand what this means, talk to bsmedberg before
 # altering this makefile.
 
-AB_CD = en-US
+AB_CD = $(MOZ_UI_LOCALE)
 
 DEFINES += -DAB_CD=$(AB_CD)
 

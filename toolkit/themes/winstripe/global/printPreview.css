@@ -30,9 +30,11 @@
 /* ..... orientation ..... */
 
 .toolbar-portrait-page {
-  list-style-image: url("chrome://global/skin/Portrait-small.png");
+  list-style-image: url("chrome://global/skin/icons/Print-preview.png");
+  -moz-image-region: rect(0px 16px 16px 0px);
 }
 
 .toolbar-landscape-page {
-  list-style-image: url("chrome://global/skin/Landscape-small.png");
+  list-style-image: url("chrome://global/skin/icons/Print-preview.png");
+  -moz-image-region: rect(0px 32px 16px 16px);
 }

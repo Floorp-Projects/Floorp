@@ -50,38 +50,22 @@ treechildren::-moz-tree-image(FilenameColumn, file) {
   -moz-image-region: rect(16px, 16px, 32px, 0px);
 }
 
-/* ::::: focus rules ::::: */
-
-#directoryTree > treerows > .tree-bodybox {
-  border: 1px solid transparent;
-}
-
-#directoryTree:focus > treerows > .tree-bodybox {
-  border-color: #000000;
-}
-
 /* ::::: button items ::::: */
 
 .up-button {
   list-style-image: url("chrome://global/skin/Filepicker.png");
   -moz-image-region: rect(0px 16px 16px 0px);
-  min-width: 0%; // don't let XUL layout min-size override our max-width setting
-  min-height: 0%;
   max-width: 36px;
 }
 
 .home-button {
   list-style-image: url("chrome://global/skin/Filepicker.png");
   -moz-image-region: rect(0px 32px 16px 16px);
-  min-width: 0%; // don't let XUL layout min-size override our max-width setting
-  min-height: 0%;
   max-width: 36px;
 }
 
 .new-dir-button {
   list-style-image: url("chrome://global/skin/Filepicker.png");
   -moz-image-region: rect(0px, 48px, 16px, 32px);
-  min-width: 0%; // don't let XUL layout min-size override our max-width setting
-  min-height: 0%;
   max-width: 36px;
 }

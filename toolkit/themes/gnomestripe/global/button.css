@@ -78,8 +78,7 @@ button[default="true"] {
 /* .......... hover state .......... */
 
 button:hover {
-  color: -moz-buttonhovertext;
-  background-color: -moz-buttonhoverface;
+  color: -moz-gtk2-hovertext;
 }
 
 /* .......... active/open/checked state .......... */

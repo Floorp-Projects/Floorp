@@ -77,6 +77,7 @@ public class VersionCheck
                                        String aUserCookie,
                                        String aSessionCookie)
   {
+    System.out.println("*** getNewestExtension Called");
     return getExtensionUpdates(aInstalledItem, aTargetApp, aTargetAppVersion, true);
   }
     
@@ -86,6 +87,7 @@ public class VersionCheck
                                      String aUserCookie,
                                      String aSessionCookie)
   {
+    System.out.println("*** getVersionUpdate Called");
     return getExtensionUpdates(aInstalledItem, aTargetApp, aTargetAppVersion, false);
   }
     

@@ -47,6 +47,20 @@
 // commdlg.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <commdlg.h>
 
+// re-define PSH_WIZARD97 as per latest Platform SDK (below)
+#ifdef PSH_WIZARD97
+#undef PSH_WIZARD97
+#endif
+
+#if (_WIN32_IE >= 0x0400)
+//----- New flags for wizard97 -----------
+#if (_WIN32_IE < 0x0500)
+#define PSH_WIZARD97            0x00002000
+#else
+#define PSH_WIZARD97            0x01000000
+#endif
+#endif
+
 // Turn off default to safe upgrade for 0.8... until we can guarantee that we won't be deleting other files. 
 #define DEFAULT_SAFE_UPGRADE FALSE
 
@@ -2340,5 +2354,10 @@ void InitPathDisplay (HWND aWindow, char* aPath, int aFolderIcon, int aFolderFie
                  aPath, buf, sizeof(buf));
   SetDlgItemText(aWindow, aFolderField, buf);
 }
+
+
+
+
+
 
 

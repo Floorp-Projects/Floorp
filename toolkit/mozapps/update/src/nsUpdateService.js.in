@@ -37,26 +37,25 @@
 
 const PREF_APP_ID                           = "app.id";
 const PREF_APP_VERSION                      = "app.version";
-const PREF_UPDATE_APP_ENABLED               = "update.app.enabled";
-const PREF_UPDATE_APP_URI                   = "update.app.url";
-const PREF_UPDATE_APP_UPDATESAVAILABLE      = "update.app.updatesAvailable";
-const PREF_UPDATE_APP_UPDATEVERSION         = "update.app.updateVersion";
-const PREF_UPDATE_APP_UPDATEDESCRIPTION     = "update.app.updateDescription";
-const PREF_UPDATE_APP_UPDATEURL             = "update.app.updateURL";
-const PREF_UPDATE_APP_INTERVAL              = "update.app.interval";
-const PREF_UPDATE_APP_LASTUPDATEDATE        = "update.app.lastUpdateDate";
-const PREF_UPDATE_SHOW_SLIDING_NOTIFICATION = "update.showSlidingNotification";
+const PREF_UPDATE_APP_ENABLED               = "app.update.enabled";
+const PREF_UPDATE_APP_AUTOUPDATEENABLED     = "app.update.autoUpdateEnabled";
+const PREF_UPDATE_APP_URI                   = "app.update.url";
+const PREF_UPDATE_APP_UPDATESAVAILABLE      = "app.update.updatesAvailable";
+const PREF_UPDATE_APP_INTERVAL              = "app.update.interval";
+const PREF_UPDATE_APP_LASTUPDATEDATE        = "app.update.lastUpdateDate";
+const PREF_UPDATE_APP_PERFORMED             = "app.update.performed";
 
-const PREF_UPDATE_EXTENSIONS_ENABLED        = "update.extensions.enabled";
-const PREF_UPDATE_EXTENSIONS_AUTOUPDATE     = "update.extensions.autoUpdate";
-const PREF_UPDATE_EXTENSIONS_COUNT          = "update.extensions.count";
-const PREF_UPDATE_EXTENSIONS_INTERVAL       = "update.extensions.interval";
-const PREF_UPDATE_EXTENSIONS_LASTUPDATEDATE = "update.extensions.lastUpdateDate";
-const PREF_UPDATE_EXTENSIONS_SEVERITY_THRESHOLD = "update.extensions.severity.threshold";
+const PREF_UPDATE_EXTENSIONS_ENABLED            = "extensions.update.enabled";
+const PREF_UPDATE_EXTENSIONS_AUTOUPDATEENABLED  = "extensions.update.autoUpdateEnabled";
+const PREF_UPDATE_EXTENSIONS_AUTOUPDATE         = "extensions.update.autoUpdate";
+const PREF_UPDATE_EXTENSIONS_COUNT              = "extensions.update.count";
+const PREF_UPDATE_EXTENSIONS_INTERVAL           = "extensions.update.interval";
+const PREF_UPDATE_EXTENSIONS_LASTUPDATEDATE     = "extensions.update.lastUpdateDate";
+const PREF_UPDATE_EXTENSIONS_SEVERITY_THRESHOLD = "extensions.update.severity.threshold";
 
 const PREF_UPDATE_INTERVAL                  = "update.interval";
 const PREF_UPDATE_SEVERITY                  = "update.severity";
-const PREF_UPDATE_APP_PERFORMED             = "update.app.performed";
+const PREF_UPDATE_SHOW_SLIDING_NOTIFICATION = "update.showSlidingNotification";
 
 const nsIExtensionManager = Components.interfaces.nsIExtensionManager;
 const nsIUpdateService    = Components.interfaces.nsIUpdateService;
@@ -74,12 +73,12 @@ function getOSKey()
 {
 #ifdef XP_UNIX
 #ifdef XP_MACOSX
-  return "mac";
+  return "macosx";
 #else
-  return "lin";
+  return "linux";
 #endif
 #else
-  return "win";
+  return "windows";
 #endif
 }
 
@@ -126,7 +125,9 @@ function nsUpdateService()
   this.watchForUpdates();
 
   var pbi = gPref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+  pbi.addObserver(PREF_UPDATE_APP_AUTOUPDATEENABLED, this, false);
   pbi.addObserver(PREF_UPDATE_APP_ENABLED, this, false);
+  pbi.addObserver(PREF_UPDATE_EXTENSIONS_AUTOUPDATEENABLED, this, false);
   pbi.addObserver(PREF_UPDATE_EXTENSIONS_ENABLED, this, false);
   pbi.addObserver(PREF_UPDATE_INTERVAL, this, false);
   pbi.addObserver(PREF_UPDATE_APP_INTERVAL, this, false);
@@ -143,8 +144,8 @@ function nsUpdateService()
 
 nsUpdateService.prototype = {
   _updateObserver: null,
-  _appUpdatesEnabled: true,
-  _extUpdatesEnabled: true,
+  _appAutoUpdateEnabled: true,
+  _extAutoUpdateEnabled: true,
     
   /////////////////////////////////////////////////////////////////////////////
   // nsIUpdateService
@@ -153,16 +154,54 @@ nsUpdateService.prototype = {
     // This is called when the app starts, so check to see if the time interval
     // expired between now and the last time an automated update was performed.
     // now is the same one that was started last time. 
-    this._appUpdatesEnabled = gPref.getBoolPref(PREF_UPDATE_APP_ENABLED);
-    this._extUpdatesEnabled = gPref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED);
-    if (!this._appUpdatesEnabled && !this._extUpdatesEnabled)
+    this._appAutoUpdateEnabled = gPref.getBoolPref(PREF_UPDATE_APP_AUTOUPDATEENABLED);
+    this._extAutoUpdateEnabled = gPref.getBoolPref(PREF_UPDATE_EXTENSIONS_AUTOUPDATEENABLED);
+    if (!this._appAutoUpdateEnabled && !this._extAutoUpdateEnabled)
       return;
 
     this._makeTimer(gPref.getIntPref(PREF_UPDATE_INTERVAL));
   },
   
+  _getAllowedTypes: function nsUpdateService__getAllowedTypes(aRequestedTypes)
+  {
+    // Figure out what types we're allowed to update. These options
+    // differ from PREF_UPDATE_*_AUTOUPDATEENABLED since they effectively
+    // shut down the update UI if the administrator/distributor has configured
+    // a build to have disallowed these types of update.
+    var extUpdateEnabled = gPref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED);
+    var appUpdateEnabled = gPref.getBoolPref(PREF_UPDATE_APP_ENABLED);
+    
+    var types = 0;
+    if (extUpdateEnabled) {
+      if (aRequestedTypes & nsIUpdateItem.TYPE_EXTENSION)
+        types |= nsIUpdateItem.TYPE_EXTENSION;
+      if (aRequestedTypes & nsIUpdateItem.TYPE_THEME)
+        types |= nsIUpdateItem.TYPE_THEME;
+    }
+    if (appUpdateEnabled && 
+        (aRequestedTypes & nsIUpdateItem.TYPE_APP))
+      types |= nsIUpdateItem.TYPE_APP;
+
+    return types;
+  },
+  
   checkForUpdates: function nsUpdateService_checkForUpdates (aItems, aItemCount, aUpdateTypes, aSourceEvent, aParentWindow)
   {
+    var types = this._getAllowedTypes(aUpdateTypes);
+    
+    // Nothing to update
+    if (!types) {
+      var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                          .getService(Components.interfaces.nsIStringBundleService);
+      var bundle = sbs.createBundle("chrome://mozapps/locale/update/update.properties");
+      var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                         .getService(Components.interfaces.nsIPromptService);
+      ps.alert(aParentWindow, 
+               bundle.GetStringFromName("updatesdisabledtitle"), 
+               bundle.GetStringFromName("updatesdisabledmessage"));
+      return;
+    }
+  
     switch (aSourceEvent) {
     case nsIUpdateService.SOURCE_EVENT_MISMATCH:
     case nsIUpdateService.SOURCE_EVENT_USER:
@@ -182,37 +221,44 @@ nsUpdateService.prototype = {
                  message);
         return;
       }
-    
-      var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                         .getService(Components.interfaces.nsIWindowWatcher);
-      var ary = Components.classes["@mozilla.org/supports-array;1"]
-                          .createInstance(Components.interfaces.nsISupportsArray);
-      var updateTypes = Components.classes["@mozilla.org/supports-PRUint8;1"]
-                                  .createInstance(Components.interfaces.nsISupportsPRUint8);
-      updateTypes.data = aUpdateTypes;
-      ary.AppendElement(updateTypes);
-      var sourceEvent = Components.classes["@mozilla.org/supports-PRUint8;1"]
-                                  .createInstance(Components.interfaces.nsISupportsPRUint8);
-      sourceEvent.data = aSourceEvent;
-      ary.AppendElement(sourceEvent);
-      for (var i = 0; i < aItems.length; ++i)
-        ary.AppendElement(aItems[i]);
+      
+      var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                         .getService(Components.interfaces.nsIWindowMediator);
+      var wizard = wm.getMostRecentWindow("Update:Wizard");
+      if (wizard)
+        wizard.focus();
+      else {
+        var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                          .getService(Components.interfaces.nsIWindowWatcher);
+        var ary = Components.classes["@mozilla.org/supports-array;1"]
+                            .createInstance(Components.interfaces.nsISupportsArray);
+        var updateTypes = Components.classes["@mozilla.org/supports-PRUint8;1"]
+                                    .createInstance(Components.interfaces.nsISupportsPRUint8);
+        updateTypes.data = types;
+        ary.AppendElement(updateTypes);
+        var sourceEvent = Components.classes["@mozilla.org/supports-PRUint8;1"]
+                                    .createInstance(Components.interfaces.nsISupportsPRUint8);
+        sourceEvent.data = aSourceEvent;
+        ary.AppendElement(sourceEvent);
+        for (var i = 0; i < aItems.length; ++i)
+          ary.AppendElement(aItems[i]);
 
-      var features = "chrome,centerscreen";
-      if (aSourceEvent == nsIUpdateService.SOURCE_EVENT_MISMATCH) {
-        features += ",modal"; // Must block in mismatch mode since there's 
-                              // no main evt loop yet. 
+        var features = "chrome,centerscreen";
+        if (aSourceEvent == nsIUpdateService.SOURCE_EVENT_MISMATCH) {
+          features += ",modal"; // Must block in mismatch mode since there's 
+                                // no main evt loop yet. 
+        }
+        // This *must* be modal so as not to break startup! This code is invoked before
+        // the main event loop is initiated (via checkForMismatches).
+        ww.openWindow(aParentWindow, "chrome://mozapps/content/update/update.xul", 
+                      "", features, ary);
       }
-      // This *must* be modal so as not to break startup! This code is invoked before
-      // the main event loop is initiated (via checkForMismatches).
-      ww.openWindow(aParentWindow, "chrome://mozapps/content/update/update.xul", 
-                    "", features, ary);
       break;
     case nsIUpdateService.SOURCE_EVENT_BACKGROUND:
       // Rather than show a UI, call the checkForUpdates function directly here. 
       // The Browser's inline front end update notification system listens for the
       // updates that this function broadcasts.
-      this.checkForUpdatesInternal([], 0, aUpdateTypes, aSourceEvent);
+      this.checkForUpdatesInternal([], 0, types, aSourceEvent);
 
       break;
     }  
@@ -220,27 +266,25 @@ nsUpdateService.prototype = {
   
   _canUpdate: function (aPreference, aSourceEvent, aUpdateTypes)
   {
-    var canUpdate = false;
-    if (aPreference) 
-      canUpdate = true;
-    else if (!(aUpdateTypes & nsIUpdateItem.TYPE_ANY)) {
-      // If app updates are disabled, then still proceed if this is a mismatch or user generated
-      // event (if the user asks to update, then we should update, regardless of preference setting)
-      canUpdate = aSourceEvent != Components.interfaces.nsIUpdateService.SOURCE_EVENT_BACKGROUND;
-    }
-    return canUpdate;
+    // Always can update if the autoupdate preference is set, otherwise, 
+    // allow updates only when not in backround update mode, i.e. when the user
+    // explicitly asked. 
+    return aPreference ? true 
+                       : aSourceEvent != nsIUpdateService.SOURCE_EVENT_BACKGROUND;
   },
   
   checkForUpdatesInternal: function nsUpdateService_checkForUpdatesInternal (aItems, aItemCount, aUpdateTypes, aSourceEvent)
   {
+    var types = this._getAllowedTypes(aUpdateTypes);
+
     // Listen for notifications sent out by the app updater (implemented here) and the
     // extension updater (implemented in nsExtensionItemUpdater)
     var canUpdate;
-    this._updateObserver = new nsUpdateObserver(aUpdateTypes, aSourceEvent, this);
+    this._updateObserver = new nsUpdateObserver(types, aSourceEvent, this);
     var os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
-    if ((aUpdateTypes & nsIUpdateItem.TYPE_ANY) || (aUpdateTypes & nsIUpdateItem.TYPE_APP)) {
-      if (this._canUpdate(this._appUpdatesEnabled, aSourceEvent, aUpdateTypes)) {
+    if (types & nsIUpdateItem.TYPE_APP) {
+      if (this._canUpdate(this._appAutoUpdateEnabled, aSourceEvent, types)) {
         gOS.addObserver(this._updateObserver, "Update:App:Ended", false);
         
         this._currentVersion  = new nsAppUpdateInfo();
@@ -252,30 +296,23 @@ nsUpdateService.prototype = {
         }
       }
     }
-    if (!(aUpdateTypes & nsIUpdateItem.TYPE_APP)) { // TYPE_EXTENSION, TYPE_ANY, etc.
-      if (this._canUpdate(this._extUpdatesEnabled, aSourceEvent, aUpdateTypes)) {
+    if (types & nsIUpdateItem.TYPE_ADDON) { // TYPE_EXTENSION, TYPE_ANY, etc.
+      if (this._canUpdate(this._extAutoUpdateEnabled, aSourceEvent, types)) {
         gOS.addObserver(this._updateObserver, "Update:Extension:Started", false);
         gOS.addObserver(this._updateObserver, "Update:Extension:Item-Ended", false);
         gOS.addObserver(this._updateObserver, "Update:Extension:Ended", false);
 
         var em = Components.classes["@mozilla.org/extensions/manager;1"]
                            .getService(Components.interfaces.nsIExtensionManager);
-        // We have to explicitly perform the Version update here in background
-        // mode because there is no update UI to kick it off.
-        if (aSourceEvent == nsIUpdateService.SOURCE_EVENT_BACKGROUND) {
-          em.update(aItems, aItems.length, 
-                    nsIExtensionManager.UPDATE_MODE_VERSION, true);
-        }
-        em.update(aItems, aItems.length, 
-                  nsIExtensionManager.UPDATE_MODE_NORMAL, false);
+        em.update(aItems, aItems.length, false);
       }
     }
     
     if (aSourceEvent == nsIUpdateService.SOURCE_EVENT_BACKGROUND && 
-        (this._appUpdatesEnabled || this._extUpdatesEnabled)) {
-      if (aUpdateTypes & nsIUpdateItem.TYPE_ADDON)
+        (this._appAutoUpdateEnabled || this._extAutoUpdateEnabled)) {
+      if (types & nsIUpdateItem.TYPE_ADDON)
         gPref.setIntPref(PREF_UPDATE_EXTENSIONS_LASTUPDATEDATE, this._nowInMilliseconds / 1000);
-      if (aUpdateTypes & nsIUpdateItem.TYPE_APP)
+      if (types & nsIUpdateItem.TYPE_APP)
         gPref.setIntPref(PREF_UPDATE_APP_LASTUPDATEDATE, this._nowInMilliseconds / 1000);
     }
   },
@@ -367,9 +404,10 @@ nsUpdateService.prototype = {
     case "nsPref:changed":
       var needsNotification = false;
       switch (aData) {
+      case PREF_UPDATE_APP_AUTOUPDATEENABLED:
       case PREF_UPDATE_APP_ENABLED:
-        this._appUpdatesEnabled = gPref.getBoolPref(PREF_UPDATE_APP_ENABLED);
-        if (!this._appUpdatesEnabled) {
+        this._appAutoUpdateEnabled = gPref.getBoolPref(PREF_UPDATE_APP_AUTOUPDATEENABLED);
+        if (!this._appAutoUpdateEnabled) {
           this._clearAppUpdatePrefs();
           needsNotification = true;
         }
@@ -380,9 +418,10 @@ nsUpdateService.prototype = {
                                        nsIUpdateService.SOURCE_EVENT_BACKGROUND);
         }
         break;
+      case PREF_UPDATE_EXTENSIONS_AUTOUPDATEENABLED:
       case PREF_UPDATE_EXTENSIONS_ENABLED:
-        this._extUpdatesEnabled = gPref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED);
-        if (!this._extUpdatesEnabled) {
+        this._extAutoUpdateEnabled = gPref.getBoolPref(PREF_UPDATE_EXTENSIONS_AUTOUPDATEENABLED);
+        if (!this._extAutoUpdateEnabled) {
           // Unset prefs used by the update service to signify extension updates
           if (gPref.prefHasUserValue(PREF_UPDATE_EXTENSIONS_COUNT))
             gPref.clearUserPref(PREF_UPDATE_EXTENSIONS_COUNT);
@@ -410,13 +449,13 @@ nsUpdateService.prototype = {
       }
       break;
     case "xpcom-shutdown":
-      var os = Components.classes["@mozilla.org/observer-service;1"]
-                         .getService(Components.interfaces.nsIObserverService);
       gOS.removeObserver(this, "xpcom-shutdown");    
       
       // Clean up held observers etc to avoid leaks. 
       var pbi = gPref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+      pbi.removeObserver(PREF_UPDATE_APP_AUTOUPDATEENABLED, this);
       pbi.removeObserver(PREF_UPDATE_APP_ENABLED, this);
+      pbi.removeObserver(PREF_UPDATE_EXTENSIONS_AUTOUPDATEENABLED, this);
       pbi.removeObserver(PREF_UPDATE_EXTENSIONS_ENABLED, this);
       pbi.removeObserver(PREF_UPDATE_INTERVAL, this);
       pbi.removeObserver(PREF_UPDATE_EXTENSIONS_INTERVAL, this);
@@ -463,12 +502,6 @@ nsUpdateService.prototype = {
     // Unset prefs used by the update service to signify application updates
     if (gPref.prefHasUserValue(PREF_UPDATE_APP_UPDATESAVAILABLE))
       gPref.clearUserPref(PREF_UPDATE_APP_UPDATESAVAILABLE);
-    if (gPref.prefHasUserValue(PREF_UPDATE_APP_UPDATEVERSION))
-      gPref.clearUserPref(PREF_UPDATE_APP_UPDATEVERSION);
-    if (gPref.prefHasUserValue(PREF_UPDATE_APP_UPDATEURL))
-      gPref.clearUserPref(PREF_UPDATE_APP_UPDATEDESCRIPTION);
-    if (gPref.prefHasUserValue(PREF_UPDATE_APP_UPDATEURL)) 
-      gPref.clearUserPref(PREF_UPDATE_APP_UPDATEURL);
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -500,15 +533,19 @@ nsUpdateObserver.prototype = {
   
   get _doneUpdating()
   {
-    var appUpdatesEnabled = this._service._appUpdatesEnabled;
-    var extUpdatesEnabled = this._service._extUpdatesEnabled;
-  
+    var notBackground = this._sourceEvent != nsIUpdateService.SOURCE_EVENT_BACKGROUND;
+    var canUpdateApp = this._service._appAutoUpdateEnabled || 
+                        (notBackground ? gPref.getBoolPref(PREF_UPDATE_APP_ENABLED) 
+                                       : false);
+    var canUpdateExt = this._service._extAutoUpdateEnabled || 
+                        (notBackground ? gPref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED) 
+                                       : false);
+   
     var test = 0;
-    var updatingApp = (this._updateTypes & nsIUpdateItem.TYPE_ANY || 
-                       this._updateTypes & nsIUpdateItem.TYPE_APP) && 
-                       appUpdatesEnabled;
-    var updatingExt = !(this._updateTypes & nsIUpdateItem.TYPE_APP) &&
-                      extUpdatesEnabled;
+    var updatingApp = (this._updateTypes & nsIUpdateItem.TYPE_APP) && 
+                       canUpdateApp;
+    var updatingExt = (this._updateTypes & nsIUpdateItem.TYPE_ADDON) &&
+                       canUpdateExt;
     
     if (updatingApp)
       test |= UPDATED_APP;
@@ -758,7 +795,8 @@ nsAppUpdater.prototype = {
           newestVersionObj.resource = update;
         }
       }
-      this._parseVersionData(aDataSource, newestVersionObj.resource, this._service._newestVersion);
+      if (newestVersionObj.resource)
+        this._parseVersionData(aDataSource, newestVersionObj.resource, this._service._newestVersion);
       
       // There is a newer version of the app available or there are any critical
       // patches available update the severity and available updates preferences.
@@ -766,19 +804,21 @@ nsAppUpdater.prototype = {
       //        preference if they previously installed an app update when a 
       //        langpack for their language was not available and they used another
       //        in the meantime. 
+      var haveLanguage = false;
       var patches = this._service._currentVersion.patches;
       var languages = this._service._newestVersion.languages;
-      var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                        .getService(Components.interfaces.nsIXULChromeRegistry);
-      var selectedLocale = cr.getSelectedLocale("global");
-      var haveLanguage = false;
-      for (var i = 0; i < languages.length; ++i) {
-        if (languages[i].internalName == selectedLocale)
-          haveLanguage = true;
+      if (languages) {
+        var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                           .getService(Components.interfaces.nsIXULChromeRegistry);
+        var selectedLocale = cr.getSelectedLocale("global");
+        for (var i = 0; i < languages.length; ++i) {
+          if (languages[i].internalName == selectedLocale)
+            haveLanguage = true;
+        }
       }
-
-      if (haveLanguage && 
-          (newestVersionObj.version != appVersion || (patches && patches.length > 0))) {
+      
+      if ((haveLanguage && (newestVersionObj.version != appVersion)) || 
+          (patches && patches.length > 0)) {
         gPref.setIntPref(PREF_UPDATE_SEVERITY, 2);
         gPref.setBoolPref(PREF_UPDATE_APP_UPDATESAVAILABLE, true);
       }
@@ -836,7 +876,7 @@ nsAppUpdater.prototype = {
     try {
       collectionResource = collectionResource.QueryInterface(Components.interfaces.nsIRDFResource);
     }
-    catch (e) { return; }
+    catch (e) { return null; }
     
     var cu = Components.classes["@mozilla.org/rdf/container-utils;1"]
                        .getService(Components.interfaces.nsIRDFContainerUtils);
@@ -844,14 +884,31 @@ nsAppUpdater.prototype = {
       var c = Components.classes["@mozilla.org/rdf/container;1"]
                         .getService(Components.interfaces.nsIRDFContainer);
       c.Init(aDataSource, collectionResource);
-
+      
       var elements = c.GetElements();
+      var fileArc = gRDF.GetResource(APP_NS("file"));
+      var platform = getOSKey();
       while (elements.hasMoreElements()) {
         var element = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
         var info = new nsAppUpdateInfoItem();
         info.name          = this._getPropertyFromResource(aDataSource, element, "name");
         info.internalName  = this._getPropertyFromResource(aDataSource, element, "internalName");
-        info.URL           = this._getPropertyFromResource(aDataSource, element, getOSKey() + "URL");
+        
+        // Each Component has a set of app:file arcs out, which reference resources with two 
+        // properties: app:platform and app:URL. If we find a resource whose app:platform value
+        // matches the platform we're running on, we use the app:URL property on that resource
+        // as the XPI URL, otherwise we use the default app:URL property on the Component
+        // resource. (It must be a cross-platform piece, e.g. a language pack)
+        // XXXben - what to do when platform not supported? We need some way to abort 
+        //          and tell the app that this update is not available. 
+        var files = aDataSource.GetTargets(element, fileArc, true);
+        while (files.hasMoreElements()) {
+          var file = files.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+          if (platform == this._getPropertyFromResource(aDataSource, file, "platform")) {
+            info.URL = this._getPropertyFromResource(aDataSource, file, "URL");
+            break;
+          }
+        }
         if (!info.URL)
           info.URL         = this._getPropertyFromResource(aDataSource, element, "URL");
         info.infoURL       = this._getPropertyFromResource(aDataSource, element, "infoURL");
@@ -859,7 +916,7 @@ nsAppUpdater.prototype = {
         result.push(info);
       }
     }
-    
+
     return result;
   },
   
@@ -883,14 +940,20 @@ nsAppUpdater.prototype = {
   
   onEndLoad: function(aSink)
   {
-    this._ds = aSink.QueryInterface(Components.interfaces.nsIRDFDataSource);
-    this.onDatasourceLoaded(this._ds);
+    try {
+      this._ds = aSink.QueryInterface(Components.interfaces.nsIRDFDataSource);
+      this.onDatasourceLoaded(this._ds);
+    }
+    catch (e) { }
   },
   
   onError: function(aSink, aStatus, aErrorMsg)
   {
-    this._ds = aSink.QueryInterface(Components.interfaces.nsIRDFDataSource);
-    this.onDatasourceError(aStatus, aErrorMsg);
+    try {
+      this._ds = aSink.QueryInterface(Components.interfaces.nsIRDFDataSource);
+      this.onDatasourceError(aStatus, aErrorMsg);
+    }
+    catch (e) { }
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -918,7 +981,6 @@ UpdateItem.prototype = {
                                   aXPIURL, 
                                   aIconURL, 
                                   aUpdateRDF, 
-                                  aUpdateService,
                                   aType)
   {
     this._id            = aID;
@@ -930,7 +992,6 @@ UpdateItem.prototype = {
     this._xpiURL        = aXPIURL;
     this._iconURL       = aIconURL;
     this._updateRDF     = aUpdateRDF;
-    this._updateService = aUpdateService;
     this._type          = aType;
   },
   
@@ -943,7 +1004,6 @@ UpdateItem.prototype = {
   get xpiURL()        { return this._xpiURL;        },
   get iconURL()       { return this._iconURL        },
   get updateRDF()     { return this._updateRDF;     },
-  get updateService() { return this._updateService; },
   get type()          { return this._type;          },
 
   get objectSource()
@@ -957,7 +1017,6 @@ UpdateItem.prototype = {
              xpiURL         : this._xpiURL, 
              iconURL        : this._iconURL, 
              updateRDF      : this._updateRDF,
-             updateService  : this._updateService,
              type           : this._type 
            }.toSource();
   },

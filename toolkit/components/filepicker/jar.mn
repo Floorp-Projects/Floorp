@@ -2,6 +2,3 @@ toolkit.jar:
 * content/global/filepicker.xul                     (content/filepicker.xul)
 * content/global/filepicker.js                      (content/filepicker.js)
 
-en-US.jar:
-  locale/en-US/global/filepicker.dtd                (locale/filepicker.dtd)
-  locale/en-US/global/filepicker.properties         (locale/filepicker.properties)

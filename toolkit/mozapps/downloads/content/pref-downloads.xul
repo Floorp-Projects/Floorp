@@ -49,6 +49,7 @@
 
   <script type="application/x-javascript" src="chrome://mozapps/content/downloads/helperApps.js"/>
   <script type="application/x-javascript" src="chrome://mozapps/content/downloads/pref-downloads.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   
   <groupbox>
     <caption label="&askOnSave.label;"/>
@@ -90,7 +91,7 @@
         <tree id="fileHandlersList" flex="1" hidecolumnpicker="true"
               datasources="rdf:null"
               onselect="fileHandlerListSelectionChanged();"
-              ondblclick="editFileHandler();">
+              ondblclick="if (isValidLeftClick(event, 'treechildren')) editFileHandler();">
 
           <template>
             <rule>

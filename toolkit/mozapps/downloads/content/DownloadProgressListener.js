@@ -9,6 +9,10 @@ function DownloadProgressListener (aDocument, aStringBundle)
   this._statusFormatKBMB = aStringBundle.getString("statusFormatKBMB");
   this._statusFormatKBKB = aStringBundle.getString("statusFormatKBKB");
   this._statusFormatMBMB = aStringBundle.getString("statusFormatMBMB");
+  this._statusFormatUnknownMB = aStringBundle.getString("statusFormatUnknownMB");
+  this._statusFormatUnknownKB = aStringBundle.getString("statusFormatUnknownKB");
+  this._remain = aStringBundle.getString("remain");
+  this._unknownFilesize = aStringBundle.getString("unknownFilesize");
   this._longTimeFormat = aStringBundle.getString("longTimeFormat");
   this._shortTimeFormat = aStringBundle.getString("shortTimeFormat");
   
@@ -130,10 +134,10 @@ DownloadProgressListener.prototype =
       var rem = (aMaxTotalProgress - aCurTotalProgress) / rate;
       rem = parseInt(rem + .5);
       
-      status = this._replaceInsert(status, 3, this._formatSeconds(rem, this.doc));
+      status = this._replaceInsert(status, 3, this._formatSeconds(rem, this.doc) + " " + this._remain);
     }
     else
-      status = this._replaceInsert(status, 3, "???");
+      status = this._replaceInsert(status, 3, this._unknownFilesize);
     
     if (download)
       download.setAttribute("status", status);
@@ -175,9 +179,8 @@ DownloadProgressListener.prototype =
     
     var format = "";
     if (!progressHasMB && !totalHasMB) {
-      format = this._statusFormatKBKB;
+      format = this._statusFormatUnknownKB;
       format = this._replaceInsert(format, 1, aKBytes);
-      format = this._replaceInsert(format, 2, aTotalKBytes);
     }
     else if (progressHasMB && totalHasMB) {
       format = this._statusFormatMBMB;
@@ -188,6 +191,10 @@ DownloadProgressListener.prototype =
       format = this._statusFormatKBMB;
       format = this._replaceInsert(format, 1, aKBytes);
       format = this._replaceInsert(format, 2, (aTotalKBytes / 1000).toFixed(1));
+    }
+    else if (progressHasMB && !totalHasMB) {
+      format = this._statusFormatUnknownMB;
+      format = this._replaceInsert(format, 1, (aKBytes / 1000).toFixed(1));
     }
     else {
       // This is an undefined state!
