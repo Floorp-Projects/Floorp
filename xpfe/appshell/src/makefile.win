@@ -31,7 +31,6 @@ CPP_OBJS=                               \
  .\$(OBJDIR)\nsChromeTreeOwner.obj      \
  .\$(OBJDIR)\nsContentTreeOwner.obj      \
  .\$(OBJDIR)\nsXULWindow.obj      \
- .\$(OBJDIR)\nsXULCommand.obj      \
  .\$(OBJDIR)\nsAppShellService.obj      \
  .\$(OBJDIR)\nsWebShellWindow.obj       \
  .\$(OBJDIR)\nsAppShellFactory.obj      \

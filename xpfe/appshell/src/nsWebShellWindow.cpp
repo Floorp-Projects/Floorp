@@ -58,7 +58,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
 
-#include "nsXULCommand.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMNodeList.h"
 
@@ -560,6 +559,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
   return result;
 }
 
+#if 0
 //----------------------------------------
 NS_IMETHODIMP nsWebShellWindow::CreateMenu(nsIMenuBar * aMenuBar, 
                                            nsIDOMNode * aMenuNode, 
@@ -849,6 +849,7 @@ void nsWebShellWindow::LoadSubMenu(
     NS_RELEASE(pnsMenu);
   }     
 }
+#endif
 
 //----------------------------------------
 void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow) 
@@ -935,6 +936,7 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
   } // end if (menuBar)
 } // nsWebShellWindow::DynamicLoadMenus
 
+#if 0
 //----------------------------------------
 void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow) 
 {
@@ -1045,6 +1047,7 @@ void nsWebShellWindow::DoContextMenu(
     }
   } // end if (aMenuNode)
 }
+#endif
 
 //------------------------------------------------------------------------------
 NS_IMETHODIMP
@@ -1571,6 +1574,7 @@ nsWebShellWindow::AttributeChanged(nsIDocument *aDocument,
                                    nsIAtom*     aAttribute,
                                    PRInt32      aHint)
 {
+#if 0
   //printf("AttributeChanged\n");
   PRInt32 i;
   for (i=0;i<mMenuDelegates.Count();i++) {
@@ -1589,7 +1593,7 @@ nsWebShellWindow::AttributeChanged(nsIDocument *aDocument,
       NS_RELEASE(content);
     }
   }
-  
+#endif  
   return NS_OK;
 }
 
