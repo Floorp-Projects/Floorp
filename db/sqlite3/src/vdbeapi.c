@@ -622,3 +622,15 @@ int sqlite3_bind_parameter_index(sqlite3_stmt *pStmt, const char *zName){
   }
   return 0;
 }
+
+int sqlite3_bind_parameter_indexes(
+    sqlite3_stmt *pStmt,
+    const char *zName,
+    int **pIndexes
+){
+    return 0;
+}
+
+void sqlite3_free_parameter_indexes(int *pIndexes)
+{
+}

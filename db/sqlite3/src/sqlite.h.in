@@ -687,6 +687,20 @@ const char *sqlite3_bind_parameter_name(sqlite3_stmt*, int);
 int sqlite3_bind_parameter_index(sqlite3_stmt*, const char *zName);
 
 /*
+** Given a wildcard parameter name, return the set of indexes of the
+** variables with that name.  If there are no variables with the given
+** name, return 0.  Otherwise, return the number of indexes returned
+** in *pIndexes.  The array should be freed with
+** sqlite3_free_parameter_indexes.
+*/
+int sqlite3_bind_parameter_indexes(
+    sqlite3_stmt *pStmt,
+    const char *zName,
+    int **pIndexes
+);
+void sqlite3_free_parameter_indexes(int *pIndexes);
+
+/*
 ** Set all the parameters in the compiled SQL statement to NULL.
 **
 ******* THIS IS AN EXPERIMENTAL API AND IS SUBJECT TO CHANGE ******

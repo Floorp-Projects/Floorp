@@ -133,3 +133,14 @@
 #define OP_NotUsed_127                        127
 #define OP_NotUsed_128                        128
 #define OP_NotUsed_129                        129
+
+#define NOPUSH_MASK_0 65144
+#define NOPUSH_MASK_1 59007
+#define NOPUSH_MASK_2 63483
+#define NOPUSH_MASK_3 48975
+#define NOPUSH_MASK_4 65535
+#define NOPUSH_MASK_5 52991
+#define NOPUSH_MASK_6 60410
+#define NOPUSH_MASK_7 32421
+#define NOPUSH_MASK_8 0
+#define NOPUSH_MASK_9 0
