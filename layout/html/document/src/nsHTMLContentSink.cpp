@@ -3032,91 +3032,184 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
 
   const nsString& docTypeStr = aNode.GetText(); 
 
-  PRInt32 publicStart = docTypeStr.Find("public", PR_TRUE);
-  nsAutoString name, publicId;
+  PRInt32 publicStart = docTypeStr.Find("PUBLIC", PR_TRUE);
+  PRInt32 systemStart = docTypeStr.Find("SYSTEM", PR_TRUE);
+  nsAutoString name, publicId, systemId;
 
-  if (publicStart >= 0) {
+  if (publicStart >= 0 || systemStart >= 0) {
     /*
-     * We found 'PUBLIC' in the doctype, put everything before that in
-     * the name, and then cut out "DOCTYPE" from the name.
+     * If we find the keyword 'PUBLIC' after the keyword 'SYSTEM' we assume
+     * that we got a system id that happens to contain the string "PUBLIC"
+     * and we ignore that as the start of the public id.
      */
-    docTypeStr.Mid(name, 0, publicStart);
-
-    if (name.EqualsWithConversion("DOCTYPE", PR_TRUE, 7))
-      name.Cut(0, 7);
-
-    name.CompressWhitespace();
+    if (systemStart >= 0 && (publicStart > systemStart))
+      publicStart = -1;
 
     /*
-     * Check if name contains whitespace chars, if it does we simply
-     * ignore averything that follows the whitespace.
+     * We found 'PUBLIC' or 'SYSTEM' in the doctype, put everything before
+     * the first one of those in name.
      */
-    PRInt32 nameEnd = name.FindCharInSet(" \n\r\t");
-    if (nameEnd > 0) {
-      name.Truncate(nameEnd);
+    docTypeStr.Mid(name, 0, publicStart >= 0 ? publicStart : systemStart);
+
+    if (publicStart >= 0) {
+      // We did find 'PUBLIC'
+      docTypeStr.Mid(publicId, publicStart + 6,
+                     docTypeStr.Length() - publicStart);
+      publicId.Trim(" \t\n\r");
+
+      // Strip quotes
+      PRUnichar ch = publicId.First();
+
+      if (ch == '"' || ch == '\'') {
+        publicId.Cut(0, 1);
+
+        PRInt32 end = publicId.FindChar(ch);
+
+        if (end < 0) {
+          /*
+           * We didn't find an end quote, then we just make sure we cut of
+           * the '>' on the end of the doctype declaration
+           */
+
+          end = publicId.FindChar('>');
+        }
+
+        /*
+         * If we didn't find an closing quote nor a '>' we leave publicId as
+         * it is.
+         */
+        if (end >= 0) {
+          publicId.Truncate(end);
+        }
+      } else {
+        // No quotes, ignore the public id
+        publicId.Truncate();
+      }
+
+      /*
+       * Make sure the 'SYSTEM' word we found is not inside the pubilc id
+       */
+      PRInt32 pos = docTypeStr.Find(publicId);
+
+      if (systemStart > 0) {
+        if (systemStart < pos + (PRInt32)publicId.Length()) {
+          systemStart = docTypeStr.Find("SYSTEM", PR_TRUE,
+                                        pos + publicId.Length());
+        }
+      }
+
+      /*
+       * If we didn't find 'SYSTEM' we tread everything after the public id
+       * as the system id.
+       */
+      if (systemStart < 0) {
+        systemStart = pos + publicId.Length() + 1; // 1 is the end quote
+      }
     }
 
-    docTypeStr.Mid(publicId, publicStart + 6,
-                   docTypeStr.Length() - publicStart);
-    publicId.CompressWhitespace();
+    if (systemStart >= 0) {
+      // We either found 'SYSTEM' or we have data after the public id
+      docTypeStr.Mid(systemId, systemStart,
+                     docTypeStr.Length() - systemStart);
+
+      // Strip off 'SYSTEM' if we have it.
+      if (systemId.EqualsWithConversion("SYSTEM", PR_TRUE, 6))
+        systemId.Cut(0, 6);
+
+      systemId.Trim(" \t\n\r");
+
+      // Strip quotes
+      PRUnichar ch = systemId.First();
+
+      if (ch == '"' || ch == '\'') {
+        systemId.Cut(0, 1);
+
+        PRInt32 end = systemId.FindChar(ch);
+
+        if (end < 0) {
+          /*
+           * We didn't find an end quote, then we just make sure we cut of the
+           * '>' on the end of the doctype declaration
+           */
+
+          end = systemId.FindChar('>');
+        }
+
+        /*
+         * If we found an closing quote nor a '>' we truncate systemId at
+         * that length.
+         */
+        if (end >= 0) {
+          systemId.Truncate(end);
+        }
+      } else {
+        systemId.Truncate();
+      }
+    }
+  } else {
+    name.Assign(docTypeStr);
+  }
+
+  /*
+   * Cut out "DOCTYPE" or "<!DOCTYPE" from the name.
+   */
+  if (name.EqualsWithConversion("<!DOCTYPE", PR_TRUE, 9))
+    name.Cut(0, 9);
+  else if (name.EqualsWithConversion("DOCTYPE", PR_TRUE, 7))
+    name.Cut(0, 7);
+
+  name.Trim(" \t\n\r");
+
+  /*
+   * Check if name contains whitespace chars, if it does and the first char
+   * is not a quote, we make set the name to contain the characters before
+   * the whitespace
+   */
+  PRInt32 nameEnd = 0;
+
+  if (name.First() != '"' && name.First() != '\'') {
+    nameEnd = name.FindCharInSet(" \n\r\t");
+  }
+
+  /*
+   * If we didn't find a public id we grab everything after the name and
+   * use that as public id.
+   */
+  if (publicStart < 0) {
+    name.Mid(publicId, nameEnd, name.Length() - nameEnd);
+    publicId.Trim(" \t\n\r");
 
     PRUnichar ch = publicId.First();
 
     if (ch == '"' || ch == '\'') {
       publicId.Cut(0, 1);
 
-      PRInt32 end = publicId.FindChar(ch);
+      PRInt32 publicEnd = publicId.FindChar(ch);
 
-      if (end < 0) {
-        /*
-         * We didn't find an end quote, then we just make sure we cut of the
-         * '>' on the end of the doctype declaration
-         */
-
-        end = publicId.FindChar('>');
+      if (publicEnd < 0) {
+        publicEnd = publicId.FindChar('>');
       }
 
-      /*
-       * If we didn't find an closing quote nor a '>' we leave publicId as
-       * it is.
-       */
-      if (end >= 0) {
-        publicId.Truncate(end);
+      if (publicEnd < 0) {
+        publicEnd = publicId.Length();
       }
-    }
-  } else {
-    /*
-     * No 'PUBLIC' found, we assume we got a '<!DOCTYPE HTML "...">'
-     */
-    name.Assign(docTypeStr);
 
-    if (name.EqualsWithConversion("DOCTYPE", PR_TRUE, 7))
-      name.Cut(0, 7);
-
-    name.CompressWhitespace();
-
-    /*
-     * Check if the name contains whitespace chars, if it does we simply
-     * replace it with "HTML".
-     */
-    PRInt32 nameEnd = name.FindCharInSet(" \n\r\t");
-
-    if (nameEnd > 0) {
-      /*
-       * We found whitespace after the '<!DOCTYPE HTML' string, we put the
-       * following text, up to the '>' and put it in the public id, and then
-       * we remove quotes.
-       */
-      name.Mid(publicId, nameEnd, name.Length() - nameEnd);
-      publicId.Trim(">", PR_FALSE, PR_TRUE); // Remove trailing '>'
-      publicId.CompressWhitespace();
-      publicId.Trim("\"'");
-
-      name.Truncate(nameEnd);
+      publicId.Truncate(publicEnd);
+    } else {
+      publicId.Truncate(); // No quotes, no public id
     }
   }
 
-  if (publicId.Length() || name.Length()) {
+  if (nameEnd >= 0)
+    name.Truncate(nameEnd);
+  else {
+    nameEnd = name.FindChar('>');
+
+    if (nameEnd >= 0)
+      name.Truncate(nameEnd);
+  }
+
+  if (publicId.Length() || systemId.Length() || name.Length()) {
     nsCOMPtr<nsIDOMDocumentType> oldDocType;
     nsCOMPtr<nsIDOMDocumentType> docType;
 
@@ -3134,7 +3227,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
       name.AssignWithConversion("HTML");
     }
 
-    rv = domImpl->CreateDocumentType(name, publicId, nsString(),
+    rv = domImpl->CreateDocumentType(name, publicId, systemId,
                                      getter_AddRefs(docType));
 
     if (NS_FAILED(rv) || !docType) {
