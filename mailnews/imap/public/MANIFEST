@@ -20,8 +20,6 @@
 # This is a list of local files which get copied to the mozilla:dist:mailnews directory
 #
 
-nsIImapUrl.h
-nsIImapLog.h
 nsIIMAPHostSessionList.h
 nsIImapExtensionSink.h
 nsIImapMiscellaneousSink.h
