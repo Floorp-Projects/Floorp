@@ -1002,6 +1002,8 @@ nsPluginHostImpl::nsPluginHostImpl(nsIServiceManager *serviceMgr)
   NS_INIT_REFCNT();
   mPluginsLoaded = PR_FALSE;
   mServiceMgr = serviceMgr;
+  mNumActivePlugins = 0;
+  mOldestActivePlugin = 0;
 }
 
 nsPluginHostImpl::~nsPluginHostImpl()
@@ -1342,10 +1344,18 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType, 
   nsresult  rv;
   nsIPluginInstance *instance = nsnull;
 
+  if(FindStoppedPluginForURL(aURL, aOwner) == NS_OK)
+  {
+	  aOwner->GetInstance(instance);
+    if(!aMimeType || PL_strcasecmp(aMimeType, "application/x-java-vm"))
+	    rv = NewEmbededPluginStream(aURL, nsnull, instance);
+    return NS_OK;
+  }
+
   rv = SetUpPluginInstance(aMimeType, aURL, aOwner);
-	
+
   if(rv == NS_OK)
-	rv = aOwner->GetInstance(instance);
+	  rv = aOwner->GetInstance(instance);
 
   // if we have a failure error, it means we found a plugin for the mimetype,
   // but we had a problem with the entry point
@@ -1378,7 +1388,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType, 
 
       // don't make an initial steam if it's a java applet
       if(!aMimeType || PL_strcasecmp(aMimeType, "application/x-java-vm"))
-	rv = NewEmbededPluginStream(aURL, nsnull, instance);
+	      rv = NewEmbededPluginStream(aURL, nsnull, instance);
 
       NS_RELEASE(instance);
     }
@@ -1403,7 +1413,16 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
 
   if (rv != NS_OK)
     url = nsnull;
-  
+
+  if(FindStoppedPluginForURL(url, aOwner) == NS_OK)
+  {
+    nsIPluginInstance* instance;
+	  aOwner->GetInstance(instance);
+    if(!aMimeType || PL_strcasecmp(aMimeType, "application/x-java-vm"))
+	    rv = NewFullPagePluginStream(aStreamListener, instance);
+    return NS_OK;
+  }  
+
   rv = SetUpPluginInstance(aMimeType, url, aOwner);
 
   NS_IF_RELEASE(url);
@@ -1431,6 +1450,72 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
   }
 
   return rv;
+}
+
+nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURL* aURL, nsIPluginInstanceOwner *aOwner)
+{
+  PRUint32 i;
+  const char* url;
+  (void)aURL->GetSpec(&url);
+
+  for(i=0; i<mNumActivePlugins; i++)
+  {
+    if(!PL_strcmp(url, mActivePluginList[i].mURL))
+    {
+      nsIPluginInstance* instance = mActivePluginList[i].mInstance;
+      nsIPluginInstancePeer* peer;
+      nsPluginWindow    *window = nsnull;
+      aOwner->GetWindow(window);
+
+      aOwner->SetInstance(instance);
+
+      // we have to reset the owner and instance in the plugin instance peer
+      //instance->GetPeer(&peer);
+      ((nsPluginInstancePeerImpl*)mActivePluginList[i].mPeer)->SetOwner(aOwner);
+
+      aOwner->CreateWidget();
+      instance->SetWindow(window);
+      instance->Start();
+
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
+void nsPluginHostImpl::AddInstanceToActiveList(nsIPluginInstance* aInstance, nsIURL* aURL)
+{
+  const char* url;
+  (void)aURL->GetSpec(&url);
+
+  if(mNumActivePlugins < MAX_ACTIVE_PLUGINS)
+  {
+    mActivePluginList[mNumActivePlugins].mURL = PL_strdup(url);
+    mActivePluginList[mNumActivePlugins].mInstance = aInstance;
+
+    aInstance->GetPeer(&(mActivePluginList[mNumActivePlugins].mPeer));
+    ++mNumActivePlugins;
+  }
+  else
+  {
+    // XXX - TODO: we need to make sure that this plugin is currently not active
+    
+    // destroy the oldest plugin on the list
+    mActivePluginList[mOldestActivePlugin].mInstance->Destroy();
+    NS_RELEASE(mActivePluginList[mOldestActivePlugin].mInstance);
+    NS_RELEASE(mActivePluginList[mOldestActivePlugin].mPeer);
+    PL_strfree(mActivePluginList[mOldestActivePlugin].mURL);
+    
+    // replace it with the new one
+    mActivePluginList[mOldestActivePlugin].mURL = PL_strdup(url);
+    mActivePluginList[mOldestActivePlugin].mInstance = aInstance;
+    aInstance->GetPeer(&(mActivePluginList[mOldestActivePlugin].mPeer));
+
+    ++mOldestActivePlugin;
+    if(mOldestActivePlugin == MAX_ACTIVE_PLUGINS)
+      mOldestActivePlugin = 0;
+
+  }
 }
 
 NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType, 
@@ -1461,10 +1546,12 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
 		mimetype = aMimeType;
 
 
-	if (GetPluginFactory(mimetype, &plugin) == NS_OK) {
+	if(GetPluginFactory(mimetype, &plugin) == NS_OK)
+  {
 		// instantiate a plugin.
 		nsIPluginInstance* instance = NULL;
-        if (plugin->CreateInstance(NULL, kIPluginInstanceIID, (void **)&instance) == NS_OK) {
+    if(plugin->CreateInstance(NULL, kIPluginInstanceIID, (void **)&instance) == NS_OK) 
+    {
 			aOwner->SetInstance(instance);
 
 			nsPluginInstancePeerImpl *peer = new nsPluginInstancePeerImpl();
@@ -1474,10 +1561,12 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
 
 			// tell the plugin instance to initialize itself and pass in the peer.
 			instance->Initialize(peer);
-			NS_RELEASE(instance);
+
+      AddInstanceToActiveList(instance, aURL);
+      //NS_RELEASE(instance);
 			result = NS_OK;
-        }
-        NS_RELEASE(plugin);
+     }
+    NS_RELEASE(plugin);
 	}
 	return result;
 }
@@ -1750,13 +1839,13 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 			// need to get the plugin factory from this plugin.
 			nsFactoryProc nsGetFactory = nsnull;
 			nsGetFactory = (nsFactoryProc) PR_FindSymbol(pluginTag->mLibrary, "NSGetFactory");
-			if (nsGetFactory != nsnull)
+			if(nsGetFactory != nsnull)
 			{
-                rv = nsGetFactory(mServiceMgr, kPluginCID, nsnull, nsnull,    // XXX fix ClassName/ProgID
-                                   (nsIFactory**)&pluginTag->mEntryPoint);
-				plugin = pluginTag->mEntryPoint;
-				if (plugin != NULL)
-					plugin->Initialize();
+			    rv = nsGetFactory(mServiceMgr, kPluginCID, nsnull, nsnull,    // XXX fix ClassName/ProgID
+                            (nsIFactory**)&pluginTag->mEntryPoint);
+			    plugin = pluginTag->mEntryPoint;
+			    if (plugin != NULL)
+				    plugin->Initialize();
 			}
 			else
 			{
@@ -1764,6 +1853,8 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 											  (nsIPlugin **)&pluginTag->mEntryPoint,
 											  mServiceMgr);
 				plugin = pluginTag->mEntryPoint;
+        pluginTag->mFlags |= NS_PLUGIN_FLAG_OLDSCHOOL;
+
 				// no need to initialize, already done by CreatePlugin()
 			}
 		}
@@ -1825,57 +1916,6 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 	
 	return NS_ERROR_FAILURE;
 }
-
-// private methods
-
-PRLibrary* nsPluginHostImpl::LoadPluginLibrary(const nsFileSpec &pluginSpec)
-{
-	PRLibrary* plugin = NULL;
-
-#ifdef XP_PC
-	plugin = PR_LoadLibrary((const char*)pluginSpec);
-#endif
-
-#ifdef XP_MAC
-	char* pluginName = pluginSpec.GetLeafName();
-	if (pluginName != NULL) {
-		plugin = PR_LoadLibrary(pluginName);
-		delete[] pluginName;
-	}
-#endif
-
-	return plugin;
-}
-
-
-PRLibrary* nsPluginHostImpl::LoadPluginLibrary(const char* pluginPath, const char* path)
-{
-#ifdef XP_PC
-	BOOL restoreOrigDir = FALSE;
-	char aOrigDir[MAX_PATH + 1];
-	DWORD dwCheck = ::GetCurrentDirectory(sizeof(aOrigDir), aOrigDir);
-	PR_ASSERT(dwCheck <= MAX_PATH + 1);
-
-	if (dwCheck <= MAX_PATH + 1)
-		{
-		restoreOrigDir = ::SetCurrentDirectory(pluginPath);
-		PR_ASSERT(restoreOrigDir);
-		}
-
-	PRLibrary* plugin = PR_LoadLibrary(path);
-
-	if (restoreOrigDir)
-		{
-		BOOL bCheck = ::SetCurrentDirectory(aOrigDir);
-		PR_ASSERT(bCheck);
-		}
-
-	return plugin;
-#else
-	return NULL;
-#endif
-}
-
 
 /* Called by GetURL and PostURL */
 

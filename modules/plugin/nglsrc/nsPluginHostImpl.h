@@ -54,6 +54,15 @@ public:
   PRUint32      mFlags;
 };
 
+#define MAX_ACTIVE_PLUGINS 10
+
+typedef struct nsActivePlugin
+{
+  char*               mURL;
+  nsIPluginInstancePeer* mPeer;
+  nsIPluginInstance*  mInstance;
+} nsActivePlugin;
+
 #define NS_PLUGIN_FLAG_ENABLED    0x0001    //is this plugin enabled?
 #define NS_PLUGIN_FLAG_OLDSCHOOL  0x0002    //is this a pre-xpcom plugin?
 
@@ -224,17 +233,23 @@ private:
   nsresult
   NewFullPagePluginStream(nsIStreamListener *&aStreamListener, nsIPluginInstance *aInstance);
 
-  PRLibrary* LoadPluginLibrary(const nsFileSpec &pluginSpec);
-
-  PRLibrary* LoadPluginLibrary(const char* pluginPath, const char* path);
-
   nsresult
   FindPluginEnabledForType(const char* aMimeType, nsPluginTag* &aPlugin);
+
+  nsresult
+  FindStoppedPluginForURL(nsIURL* aURL, nsIPluginInstanceOwner *aOwner);
+
+  void
+  AddInstanceToActiveList(nsIPluginInstance* aInstance, nsIURL* aURL);
 
   char        *mPluginPath;
   nsPluginTag *mPlugins;
   PRBool      mPluginsLoaded;
   nsIServiceManager *mServiceMgr;
+
+  PRUint32 mNumActivePlugins;
+  PRUint32 mOldestActivePlugin;
+  nsActivePlugin mActivePluginList[MAX_ACTIVE_PLUGINS];
 };
 
 #endif

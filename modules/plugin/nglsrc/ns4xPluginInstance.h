@@ -112,6 +112,8 @@ public:
 
 protected:
 
+    nsresult InitializePlugin(nsIPluginInstancePeer* peer);
+    
     /**
      * The plugin instance peer for this instance.
      */
@@ -135,6 +137,7 @@ protected:
 
     PRBool  mWindowless;
     PRBool  mTransparent;
+    PRBool  mStarted;
 };
 
 
