@@ -1459,7 +1459,38 @@ NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const PRUnichar *aString,
 
   aWidth = 0;
 
-  if (((nsFontMetricsOS2*)mFontMetrics)->mCodePage != 1252) {
+  if (((nsFontMetricsOS2*)mFontMetrics)->mCodePage == 1252) {
+    for (PRUint32 i = 0; i < aLength; i++) {
+      PRUnichar c = pstr[i];
+      if (c > 0x00FF) {
+        if (!createdFont) {
+           nsFontHandle fh = nsnull;
+           if (mFontMetrics) {
+             mFontMetrics->GetFontHandle(fh);
+           } /* endif */
+           nsFontHandleOS2 *pHandle = (nsFontHandleOS2 *) fh;
+           FATTRS fattrs = pHandle->fattrs;
+           fattrs.usCodePage = 1208;
+           strcpy(fattrs.szFacename, "Times New Roman MT 30");
+           GFX (::GpiCreateLogFont (mPS, 0, 1, &fattrs), GPI_ERROR);
+           createdFont = TRUE;
+        } /* endif */
+        convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, &pstr[start], i-start, buf, sizeof(buf));
+        GetWidth((const char*)buf,convertedLength,tWidth);
+        aWidth += tWidth;
+        start = i;
+        convertedLength = WideCharToMultiByte( 1208, &pstr[start], 1, buf, sizeof(buf));
+        LONG oldLcid = GpiQueryCharSet(mPS);
+        GpiSetCharSet(mPS, 1);
+        doSetupFontAndTextColor = PR_FALSE;
+        GetWidth((const char*)buf,convertedLength,tWidth);
+        aWidth+=tWidth;
+        doSetupFontAndTextColor = PR_TRUE;
+        GpiSetCharSet(mPS, oldLcid);
+        start++;
+      } /* endif */
+    } /* endfor */
+  } else {
     for (PRUint32 i = 0; i < aLength; i++) {
       PRUnichar c = pstr[i];
       if ((c >= 0x0080) && (c <= 0x00FF)) {
@@ -1489,10 +1520,11 @@ NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const PRUnichar *aString,
         start++;
       } /* endif */
     } /* endfor */
-    if (createdFont) {
-       GpiDeleteSetId(mPS, 1);
-       createdFont = FALSE;
-    } /* endif */
+  } /* endif */
+
+  if (createdFont) {
+     GpiDeleteSetId(mPS, 1);
+     createdFont = FALSE;
   } /* endif */
 
   convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, &pstr[start], aLength-start, buf, sizeof(buf));
@@ -1561,7 +1593,40 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const PRUnichar *aString, PRUi
   LONG oldLcid;
   int convertedLength = 0;
 
-  if (((nsFontMetricsOS2*)mFontMetrics)->mCodePage != 1252) {
+  if (((nsFontMetricsOS2*)mFontMetrics)->mCodePage == 1252) {
+    for (PRUint32 i = 0; i < aLength; i++) {
+      PRUnichar c = pstr[i];
+      if (c > 0x00FF) {
+        if (!createdFont) {
+           nsFontHandle fh = nsnull;
+           if (mFontMetrics) {
+             mFontMetrics->GetFontHandle(fh);
+           } /* endif */
+           nsFontHandleOS2 *pHandle = (nsFontHandleOS2 *) fh;
+           FATTRS fattrs = pHandle->fattrs;
+           fattrs.usCodePage = 1208;
+           strcpy(fattrs.szFacename, "Times New Roman MT 30");
+           GFX (::GpiCreateLogFont (mPS, 0, 1, &fattrs), GPI_ERROR);
+           createdFont = TRUE;
+        } /* endif */
+        convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, &pstr[start], i-start, buf, sizeof(buf));
+        DrawString( buf, convertedLength, x, y, aSpacing);
+        GetWidth((const char*)buf,convertedLength,tWidth);
+        x+=tWidth;
+        start = i;
+        convertedLength = WideCharToMultiByte( 1208, &pstr[start], 1, buf, sizeof(buf));
+        LONG oldLcid = GpiQueryCharSet(mPS);
+        GpiSetCharSet(mPS, 1);
+        doSetupFontAndTextColor = PR_FALSE;
+        DrawString( buf, convertedLength, x, y, aSpacing);
+        GetWidth((const char*)buf,convertedLength,tWidth);
+        doSetupFontAndTextColor = PR_TRUE;
+        GpiSetCharSet(mPS, oldLcid);
+        x+=tWidth;
+        start++;
+      } /* endif */
+    } /* endfor */
+  } else {
     for (PRUint32 i = 0; i < aLength; i++) {
       PRUnichar c = pstr[i];
       if ((c >= 0x0080) && (c <= 0x00FF)) {
@@ -1593,10 +1658,10 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const PRUnichar *aString, PRUi
         start++;
       } /* endif */
     } /* endfor */
-    if (createdFont) {
-       GpiDeleteSetId(mPS, 1);
-       createdFont = FALSE;
-    } /* endif */
+  } /* endif */
+  if (createdFont) {
+     GpiDeleteSetId(mPS, 1);
+     createdFont = FALSE;
   } /* endif */
 
   convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, &pstr[start], aLength-start, buf, sizeof(buf));
