@@ -25,8 +25,7 @@
 <!ENTITY openUsing.label       "Open using #1">
 <!ENTITY openUsing.accesskey   "o">
 
-<!-- LOCALIZATION NOTE:  do not localize "&lt;" and "&gt;" -->
-<!ENTITY noApplicationSpecified.label " &lt;no application specified&gt;">
+<!ENTITY noApplicationSpecified.label " an application">
 
 <!ENTITY chooseApp.label       "Choose...">
 <!ENTITY chooseApp.accesskey   "c">
