@@ -1660,15 +1660,8 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(content));
 
     if (ssle) {
-      // We stopped supporting <style src="..."> for XHTML as it is
-      // non-standard.
-      if (isHTML && tagAtom.get() == nsHTMLAtoms::style) {
-        ssle->InitStyleLinkElement(nsnull, PR_TRUE);
-      }
-      else {
-        ssle->InitStyleLinkElement(mParser, PR_FALSE);
-        ssle->SetEnableUpdates(PR_FALSE);
-      }
+      ssle->InitStyleLinkElement(mParser, PR_FALSE);
+      ssle->SetEnableUpdates(PR_FALSE);
     }
 
     content->SetDocument(mDocument, PR_FALSE, PR_TRUE);
@@ -1701,17 +1694,6 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
       nsCOMPtr<nsIAtom> IDAttr = dont_AddRef(NS_NewAtom((const PRUnichar *) aAtts[aIndex]));
       if (IDAttr && NS_SUCCEEDED(result)) {
         result = nodeInfo->SetIDAttributeAtom(IDAttr);
-      }
-    }
-     
-    if (ssle) {
-      ssle->SetEnableUpdates(PR_TRUE);
-      result = ssle->UpdateStyleSheet(nsnull, mStyleSheetCount);
-      if (NS_SUCCEEDED(result) || (result == NS_ERROR_HTMLPARSER_BLOCK)) {
-        if (result == NS_ERROR_HTMLPARSER_BLOCK && mParser) {
-          mParser->BlockParser();
-        }
-        mStyleSheetCount++;
       }
     }
   }
@@ -1785,6 +1767,19 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
   }
   nsINameSpace* nameSpace = PopNameSpaces();
   NS_IF_RELEASE(nameSpace);
+
+  nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(content));
+
+  if (ssle) {
+    ssle->SetEnableUpdates(PR_TRUE);
+    result = ssle->UpdateStyleSheet(nsnull, mStyleSheetCount);
+    if (NS_SUCCEEDED(result) || (result == NS_ERROR_HTMLPARSER_BLOCK)) {
+      if (result == NS_ERROR_HTMLPARSER_BLOCK && mParser) {
+        mParser->BlockParser();
+      }
+      mStyleSheetCount++;
+    }
+  }
 
   if (mNeedToBlockParser || (mParser && !mParser->IsParserEnabled())) {
     if (mParser) mParser->BlockParser();
