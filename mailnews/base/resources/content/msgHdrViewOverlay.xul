@@ -117,15 +117,17 @@ Rights Reserved.
      <spacer class="buttonSpacer"/> 
    </vbox> 
 
-   <hbox id="expandedAttachmentBox" class="header-part1">
-     <label id="attachmentText" value="&attachmentsTree.label;" crop="right"/>
-       <tree id="attachmentTree" class="inset" flex="2" onclick="attachmentTreeClick(event);" context="attachmentTreeContext">
-         <treecolgroup>
-           <treecol flex="1"/>
-         </treecolgroup>
-         <treechildren id="attachmentsBody" flex="1">
-         </treechildren>
-       </tree>
+   <hbox id="expandedAttachmentBox" class="header-part1" collapsed="true">
+     <vbox id="attachmentGrouping">
+       <label id="attachmentText" value="&attachmentsTree.label;" crop="right"/>
+     </vbox>
+     <tree id="attachmentTree" class="inset" flex="2" onclick="attachmentTreeClick(event);" context="attachmentTreeContext">
+       <treecolgroup>
+         <treecol flex="1"/>
+       </treecolgroup>
+       <treechildren id="attachmentsBody" flex="1">
+       </treechildren>
+     </tree>
    </hbox>
 
   </hbox>

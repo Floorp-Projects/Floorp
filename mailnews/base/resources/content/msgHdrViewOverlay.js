@@ -22,7 +22,7 @@
    message pane live. */
 
 ////////////////////////////////////////////////////////////////////////////////////
-// Warning: if you go to modify any of these JS routines please get a code review from either
+// Warning: if you go to modify any of these JS routines please get a code review from
 // mscott@netscape.com. It's critical that the code in here for displaying
 // the message headers for a selected message remain as fast as possible. In particular, 
 // right now, we only introduce one reflow per message. i.e. if you click on a message in the thread
@@ -50,6 +50,12 @@ var gSaveLabel;
 
 var msgHeaderParser = Components.classes[msgHeaderParserContractID].getService(Components.interfaces.nsIMsgHeaderParser);
 var abAddressCollector = Components.classes[abAddressCollectorContractID].getService(Components.interfaces.nsIAbAddressCollecter);
+
+
+// other components may listen to on start header & on end header notifications for each message we display
+// to do that you need to add yourself to our gMessageListeners array with object that has two properties:
+// onStartHeaders and onEndHeaders.
+var gMessageListeners = new Array;
 
 // For every possible "view" in the message pane, you need to define the header names you want to
 // see in that view. In addition, include information describing how you want that header field to be
@@ -196,6 +202,12 @@ function OnLoadMsgHeaderPane()
   var initialCollapsedSetting = toggleHeaderView.getAttribute("state");
   if (initialCollapsedSetting == "true")
     gCollapsedHeaderViewMode = true;   
+
+  // dispatch an event letting any listeners know that we have loaded the message pane
+  var event = document.createEvent('Events');
+  event.initEvent('messagepane-loaded', false, true);
+  var headerViewElement = document.getElementById("msgHeaderView");
+  headerViewElement.dispatchEvent(event);
 }
 
 // The messageHeaderSink is the class that gets notified of a message's headers as we display the message
@@ -229,6 +241,9 @@ var messageHeaderSink = {
       gBuildAttachmentPopupForCurrentMsg = true;
       ClearAttachmentTreeList();
       ClearEditMessageButton();
+
+      for (index in gMessageListeners)
+        gMessageListeners[index].onStartHeaders();
     },
 
     onEndHeaders: function() 
@@ -276,7 +291,7 @@ var messageHeaderSink = {
         if (lowerCaseHeaderName == "from")
         {
           if (foo.headerValue && abAddressCollector && ((gCollectIncoming && !dontCollectAddress) || (gCollectNewsgroup && dontCollectAddress)))
-           abAddressCollector.collectUnicodeAddress(foo.headerValue);  
+            abAddressCollector.collectUnicodeAddress(foo.headerValue);  
         }
        
         index++;
@@ -312,6 +327,16 @@ var messageHeaderSink = {
         displayAttachmentsForCollapsedView();
       else
         displayAttachmentsForExpandedView();
+    },
+
+    mSecurityInfo  : null,
+    getSecurityInfo: function()
+    {
+      return this.mSecurityInfo;
+    },
+    setSecurityInfo: function(aSecurityInfo)
+    {
+      this.mSecurityInfo = aSecurityInfo;
     }
 };
 
@@ -777,11 +802,20 @@ function displayAttachmentsForExpandedView()
     gBuildAttachmentsForCurrentMsg = true;
   }
 
-  var attachmentNode = document.getElementById('expandedAttachmentBox');
+  var attachmentNode = document.getElementById('attachmentTree');
+  var attachmentText = document.getElementById('attachmentText');
+  var expandedAttachmentBox = document.getElementById('expandedAttachmentBox');
   if (numAttachments > 0)  // make sure the attachment button is visible
+  {
     attachmentNode.removeAttribute('collapsed');
+    attachmentText.removeAttribute('collapsed');
+    expandedAttachmentBox.removeAttribute('collapsed');
+  }
   else
+  {
     attachmentNode.setAttribute('collapsed', true);
+    attachmentText.setAttribute('collapsed', true);
+  }
 }
 
 // attachment --> the attachment struct containing all the information on the attachment
