@@ -543,14 +543,15 @@ nsRangeUpdater::DidRemoveContainer(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt
       item->startNode = aParent;
       item->startOffset += aOffset;
     }
+    else if ((item->startNode.get() == aParent) && (item->startOffset > aOffset))
+      item->startOffset += (PRInt32)aNodeOrigLen-1;
+      
     if (item->endNode.get() == aNode)
     {
       item->endNode = aParent;
       item->endOffset += aOffset;
     }
-    if ((item->startNode.get() == aParent) && (item->startOffset > aOffset))
-      item->startOffset += (PRInt32)aNodeOrigLen-1;
-    if ((item->endNode.get() == aParent) && (item->endOffset > aOffset))
+    else if ((item->endNode.get() == aParent) && (item->endOffset > aOffset))
       item->endOffset += (PRInt32)aNodeOrigLen-1;
   }
   return NS_OK;

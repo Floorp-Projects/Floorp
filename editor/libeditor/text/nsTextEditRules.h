@@ -165,7 +165,10 @@ protected:
   /** replaces newllines with breaks, if needed.  acts on doc portion in aRange */
   nsresult ReplaceNewlines(nsIDOMRange *aRange);
   
-  /** creates a bogus text node if the document has no editable content */
+  /** creates a trailing break in the text doc if there is not one already */
+ nsresult CreateTrailingBRIfNeeded();
+  
+ /** creates a bogus text node if the document has no editable content */
   nsresult CreateBogusNodeIfNeeded(nsISelection *aSelection);
 
   /** returns a truncated insertion string if insertion would place us
