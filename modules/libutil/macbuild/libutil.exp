@@ -1,0 +1,10 @@
+XP_NewObserverList
+XP_DisposeObserverList
+XP_GetObserverListObservable
+XP_SetObserverListObservable
+XP_AddObserver
+XP_RemoveObserver
+XP_NotifyObservers
+XP_DisableObserverNotification
+XP_EnableObserverNotification
+XP_IsObserverNotificationEnabled
