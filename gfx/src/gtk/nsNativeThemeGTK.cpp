@@ -39,9 +39,7 @@
 #include "nsNativeThemeGTK.h"
 #include "nsThemeConstants.h"
 #include "nsDrawingSurfaceGTK.h"
-extern "C" {
 #include "gtkdrawing.h"
-}
 
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
@@ -54,6 +52,8 @@ extern "C" {
 #include "nsTransform2D.h"
 
 #include <gdk/gdkprivate.h>
+
+#undef DEBUG_NATIVE_THEME
 
 NS_IMPL_ISUPPORTS1(nsNativeThemeGTK, nsITheme)
 
@@ -246,6 +246,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
     break;
 
   case NS_THEME_CHECKBOX:
+  case NS_THEME_RADIO:
     {
       EnsureCheckBoxWidget();
       
@@ -262,6 +263,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
       GetGtkWidgetState(aFrame, (GtkWidgetState*)&checkBoxState);
       checkBoxState.selected = CheckBooleanAttr(aFrame, mCheckedAtom);
       
+#ifdef DEBUG_NATIVE_THEME
       printf("paint checkbox: aRect=(%d,%d,%d,%d), aClipRect=(%d,%d,%d,%d)\n",
              aRect.x, aRect.y, aRect.width, aRect.height, aClipRect.x,
              aClipRect.y, aClipRect.width, aClipRect.height);
@@ -269,8 +271,11 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
       printf("          gdk_rect=(%d,%d,%d,%d), gdk_clip=(%d,%d,%d,%d)\n",
              gdk_rect.x, gdk_rect.y, gdk_rect.width, gdk_rect.height,
              gdk_clip.x, gdk_clip.y, gdk_clip.width, gdk_clip.height);
+#endif
 
-      moz_gtk_checkbox_paint(window, gCheckboxWidget->style, &gdk_rect, &gdk_clip, &checkBoxState);
+      moz_gtk_checkbox_paint(window, gCheckboxWidget->style, &gdk_rect,
+                             &gdk_clip, &checkBoxState,
+                             (aWidgetType==NS_THEME_RADIO) ? "radiobutton" : "checkbutton");
     }
     break;
 
@@ -287,9 +292,11 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
       
       GtkArrowType arrowType = GtkArrowType(aWidgetType - NS_THEME_SCROLLBAR_BUTTON_UP);
       
+#ifdef DEBUG_NATIVE_THEME
       printf("paint scrollbar button, rect=(%d,%d,%d,%d), clip=(%d,%d,%d,%d)\n",
              gdk_rect.x, gdk_rect.y, gdk_rect.width, gdk_rect.height,
              gdk_clip.x, gdk_clip.y, gdk_clip.width, gdk_clip.height);
+#endif
       moz_gtk_scrollbar_button_paint(window, gScrollbarWidget->style, &gdk_rect, &gdk_clip,
                                      &buttonState, arrowType);
     }
@@ -316,9 +323,11 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
       GtkWidgetState thumbState;
       GetGtkWidgetState(aFrame, &thumbState);
 
+#ifdef DEBUG_NATIVE_THEME
       printf("paint thumb, rect=(%d,%d,%d,%d), clip=(%d,%d,%d,%d)\n",
              gdk_rect.x, gdk_rect.y, gdk_rect.width, gdk_rect.height,
              gdk_clip.x, gdk_clip.y, gdk_clip.width, gdk_clip.height);
+#endif
       moz_gtk_scrollbar_thumb_paint(window, gScrollbarWidget->style,
                                     &gdk_rect, &gdk_clip, &thumbState);
     }
@@ -331,7 +340,6 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
       GtkWidgetState state;
       GetGtkWidgetState(aFrame, &state);
 
-      printf("painting gripper\n");
       moz_gtk_gripper_paint(window, gGripperWidget->style, &gdk_rect,
                             &gdk_clip, &state);
     }
@@ -436,12 +444,13 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
           aResult->height = slider_width;
         }
 
-        *aIsOverridable = PR_FALSE;
+#ifdef DEBUG_NATIVE_THEME
         printf("scrollbar thumb min size: (%d,%d)\n", aResult->width,
                aResult->height);
+#endif
+        *aIsOverridable = PR_FALSE;
       }
       break;
-
   }
 
   return NS_OK;
@@ -508,6 +517,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsIPresContext* aPresContext,
   case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
   case NS_THEME_TOOLBAR_BUTTON:
   case NS_THEME_TOOLBAR_GRIPPER:
+  case NS_THEME_RADIO:
     return PR_TRUE;
   }
 

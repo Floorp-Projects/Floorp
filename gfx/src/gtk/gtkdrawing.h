@@ -69,12 +69,7 @@ moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
 void
 moz_gtk_checkbox_paint(GdkWindow* window, GtkStyle* style,
                        GdkRectangle* boxRect, GdkRectangle* clipRect,
-                       GtkToggleButtonState* aState);
-
-void
-moz_gtk_radio_paint(GdkWindow* window, GtkStyle* style,
-                    GdkRectangle* boxRect, GdkRectangle* clipRect,
-                    GtkToggleButtonState* aState);
+                       GtkToggleButtonState* aState, const char* detail);
 
 void
 moz_gtk_scrollbar_button_paint(GdkWindow* window, GtkStyle* style,
