@@ -1145,12 +1145,6 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
   nsRect fakeClipRect;
   OptimizeDisplayListClipping(PR_FALSE, fakeClipRect, index, anyRendered);
 
-#ifdef DEBUG_roc
-  printf("*** mTranslucentArea=%d,%d,%d,%d\n", mTranslucentArea.x, mTranslucentArea.y,
-         mTranslucentArea.width, mTranslucentArea.height);
-  printf("*** gOffscreenSize=%d,%d\n", gOffScreenSize.width, gOffScreenSize.height);
-#endif
-    
   // We keep a list of all the rendering contexts whose clip rects
   // need to be updated.
   nsIRenderingContext* RCList[4];
