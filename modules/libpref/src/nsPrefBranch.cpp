@@ -523,7 +523,9 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCou
       return NS_ERROR_OUT_OF_MEMORY;
 
     for (dwIndex = 0; dwIndex < numPrefs; ++dwIndex) {
-      theElement = (char *)prefArray.ElementAt(dwIndex);
+      // we need to lop off mPrefRoot in case the user is planning to pass this
+      // back to us because if they do we are going to add mPrefRoot again.
+      theElement = ((char *)prefArray.ElementAt(dwIndex)) + mPrefRootLength;
       outArray[dwIndex] = (char *)nsMemory::Clone(theElement, strlen(theElement) + 1);
  
       if (!outArray[dwIndex]) {
