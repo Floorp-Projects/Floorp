@@ -1679,7 +1679,7 @@ lose_internationally (void)
 		  char buf[64];
 
 # if defined (__linux)
-# if defined (MKLINUX)
+# if defined (__powerpc__)
 		  XP_SPRINTF(buf,"/usr/X11/lib/X11/locale/");
 # else
 		  XP_SPRINTF(buf,"/usr/X386/lib/X11/nls/");
@@ -1951,11 +1951,7 @@ build_user_agent_string(char *versionLocale)
 #elif defined(_HPUX_SOURCE)
 	strcat (buf, "HP-UX");
 #elif defined(__linux)
-#if defined(MKLINUX)
-	strcat (buf, "MkLinux");
-#else
 	strcat (buf, "Linux");
-#endif
 #elif defined(_ATT4)
 	strcat (buf, "NCR/ATT");
 #elif defined(__USLC__)

@@ -85,7 +85,7 @@ XP_END_PROTOS
 #endif
 
 
-#if !defined(XP_WIN) && !defined(XP_OS2)
+#if !defined(XP_WIN) && !defined(XP_OS2) && !(defined(__GLIBC__) && __GLIBC__ >= 2)
 /* strdup is not an ANSI function */
 XP_BEGIN_PROTOS
 extern char * strdup (const char * s);

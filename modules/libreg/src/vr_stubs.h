@@ -163,7 +163,7 @@ XP_BEGIN_PROTOS
 extern XP_File vr_fileOpen (const char *name, const char * mode);
 extern void vr_findGlobalRegName ();
 
-#ifndef XP_PC
+#if !defined(XP_PC) && !(defined(__GLIBC__) && __GLIBC__ >= 2)
 extern char * strdup (const char * s);
 #endif
 

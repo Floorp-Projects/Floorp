@@ -56,15 +56,21 @@ void XP_Trace1 (const char* message, ...)
 #endif /* DEBUG */
 }
 
-#if defined(XP_UNIX)
-FILE *real_stderr = stderr;
-#endif /* XP_UNIX */
-
 #if defined(XP_UNIX) && defined(DEBUG)
+#if defined(__GLIBC__) && __GLIBC__ >= 2
+FILE *real_stderr = 0;
+#else
+FILE *real_stderr = stderr;
+#endif
+
 void FE_Trace (const char* buffer)
 {
 #if defined(DEBUG_warren)
 	int len = XP_STRLEN(buffer); /* vsprintf does not return length */
+#if defined(__GLIBC__) && __GLIBC__ >=2 
+    if (real_stderr == 0)
+        real_stderr = stderr;
+#endif
     fwrite(buffer, 1, len, real_stderr);
 #endif
 }
