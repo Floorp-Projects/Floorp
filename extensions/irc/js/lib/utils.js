@@ -908,7 +908,22 @@ function getFileFromURLSpec(url)
 
     var service = getService("@mozilla.org/network/io-service;1", 
                              "nsIIOService");
-    
+
+    /* In sept 2002, bug 166792 moved this method to the nsIFileProtocolHandler
+     * interface, but we need to support older versions too. */
+    if ("getFileFromURLSpec" in service)
+        return service.getFileFromURLSpec(url);
+
+    /* In builds before 2002-08-15, there is no getFileFromURLSpec at all.
+     * Instead, we have nsIIOservice.initFileFromURLSpec(nsIFile, string).
+     */
+    if ("initFileFromURLSpec" in service)
+    {
+        var file = newObject("@mozilla.org/file/local;1", "nsILocalFile");
+        service.initFileFromURLSpec(file, url);
+        return file;
+    }
+
     var handler = service.getProtocolHandler("file");
     handler = handler.QueryInterface(nsIFileProtocolHandler);
     return handler.getFileFromURLSpec(url);

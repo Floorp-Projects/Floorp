@@ -548,6 +548,9 @@ function sl_dataavail (request, ctxt, inStr, sourceOffset, count)
         return;
     }
 
+    if (!("_sInputStream" in ctxt))
+        ctxt._sInputStream = toSInputStream(inStr, false);
+
     if (this._observer)
         this._observer.onStreamDataAvailable(request, inStr, sourceOffset,
                                              count);
