@@ -330,7 +330,7 @@ nsXBLDocumentInfo::nsXBLDocumentInfo(const char* aDocURI, nsIDocument* aDocument
   mDocument->GetDocumentURL(getter_AddRefs(uri));
   if (IsChromeOrResourceURI(uri)) {
     // Cache whether or not this chrome XBL can execute scripts.
-    nsCOMPtr<nsIChromeRegistry> reg(do_GetService(kChromeRegistryCID));
+    nsCOMPtr<nsIXULChromeRegistry> reg(do_GetService(kChromeRegistryCID));
     if (reg) {
       PRBool allow = PR_TRUE;
       reg->AllowScriptsForSkin(uri, &allow);
