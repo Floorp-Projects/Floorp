@@ -312,6 +312,7 @@ bin\components\pippki.dll
 bin\components\pippki.xpt
 bin\nss3.dll
 bin\smime3.dll
+bin\softokn3.chk
 bin\softokn3.dll
 bin\ssl3.dll
 bin\chrome\pipnss.jar
