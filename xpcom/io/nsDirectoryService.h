@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *     IBM Corp.
  */
 
 #ifndef nsDirectoryService_h___
@@ -76,6 +77,10 @@ private:
     static nsIAtom *sPreferencesDirectory;
     static nsIAtom *sDocumentsDirectory;
     static nsIAtom *sInternetSearchDirectory;
+#elif defined (XP_OS2)
+    static nsIAtom *sSystemDirectory;
+    static nsIAtom *sOS2Directory;
+    static nsIAtom *sDesktopDirectory;
 #elif defined (XP_PC) 
     static nsIAtom *sSystemDirectory;
     static nsIAtom *sWindowsDirectory;
@@ -111,8 +116,6 @@ private:
     static nsIAtom *sSettingsDirectory;
     static nsIAtom *sHomeDirectory;
     static nsIAtom *sDesktopDirectory;
-    static nsIAtom *sSystemDirectory;
-#elif defined (XP_OS2)
     static nsIAtom *sSystemDirectory;
 #endif
 
