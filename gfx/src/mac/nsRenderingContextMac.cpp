@@ -414,6 +414,7 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsIWidget*
 
 	// clip out the children from the GS main region
 	nsCOMPtr<nsIEnumerator> children ( dont_AddRef(aWindow->GetChildren()) );
+  nsresult result = NS_OK;
 	if (children)
 	{
 		RgnHandle myRgn = ::NewRgn();
@@ -428,7 +429,8 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsIWidget*
 			{	
 				// thanks to sdr@camsoft.com for pointing out a memory leak here,
 				// leading to the use of nsCOMPtr
-				nsCOMPtr<nsIWidget> childWidget ( child );
+				nsCOMPtr<nsIWidget> childWidget;
+        childWidget = do_QueryInterface( child, &result);
 				if ( childWidget ) {
 					nsRect childRect;
 					Rect macRect;
@@ -446,7 +448,7 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsIWidget*
 		::DisposeRgn(childRgn);
 	}
 
-  return NS_OK;
+  return result;
 }
 
 //------------------------------------------------------------------------
