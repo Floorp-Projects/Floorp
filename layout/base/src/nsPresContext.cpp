@@ -1765,12 +1765,6 @@ nsPresContext::SysColorChanged()
 
   // Clear out all of the style data since it may contain RGB values
   // which originated from system colors.
-  if (mShell) {
-    // Clear out all our style data.
-    nsCOMPtr<nsIStyleSet> set;
-    mShell->GetStyleSet(getter_AddRefs(set));
-    set->ClearStyleData(this, nsnull, nsnull);
-  }
   nsCOMPtr<nsISelectionImageService> imageService;
   nsresult result;
   imageService = do_GetService(kSelectionImageService, &result);
@@ -1778,7 +1772,12 @@ nsPresContext::SysColorChanged()
   {
     imageService->Reset();
   }
-  return NS_OK;
+
+  // We need to do a full reflow (and view update) here. Clearing the style
+  // data without reflowing/updating views will lead to incorrect change hints
+  // later, because when generating change hints, any style structs which have
+  // been cleared and not reread are assumed to not be used at all.
+  return ClearStyleDataAndReflow();
 }
 
 #ifdef MOZ_REFLOW_PERF
