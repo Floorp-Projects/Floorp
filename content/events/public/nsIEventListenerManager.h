@@ -45,12 +45,6 @@ class nsIEventListenerManager : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IEVENTLISTENERMANAGER_IID; return iid; }
 
- /**
-  * Retrieves events listeners of all types.
-  * @param
-  */
-  virtual nsresult GetEventListeners(nsVoidArray **aListeners, const nsIID& aIID) = 0;
-
   /**
   * Sets events listeners of all types.
   * @param an event listener

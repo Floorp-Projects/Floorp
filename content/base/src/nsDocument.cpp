@@ -2790,11 +2790,17 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext* aPresContext,
                                     nsEventStatus* aEventStatus)
 {
   nsresult mRet = NS_OK;
+  PRBool externalDOMEvent = PR_FALSE;
 
   nsIDOMEvent* domEvent = nsnull;
 
   if (NS_EVENT_FLAG_INIT & aFlags) {
-    if (!aDOMEvent) {
+    if (aDOMEvent) {
+      if (*aDOMEvent) {
+        externalDOMEvent = PR_TRUE;   
+      }
+    }
+    else {
       aDOMEvent = &domEvent;
     }
     aEvent->flags = aFlags;
@@ -2821,7 +2827,7 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext* aPresContext,
 
   if (NS_EVENT_FLAG_INIT & aFlags) {
     // We're leaving the DOM event loop so if we created a DOM event, release here.
-    if (nsnull != *aDOMEvent) {
+    if (*aDOMEvent && !externalDOMEvent) {
       nsrefcnt rc;
       NS_RELEASE2(*aDOMEvent, rc);
       if (0 != rc) {
@@ -2833,8 +2839,8 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext* aPresContext,
           NS_RELEASE(mPrivateEvent);
         }
       }
+      aDOMEvent = nsnull;
     }
-    aDOMEvent = nsnull;
   }
 
   return mRet;

@@ -32,6 +32,7 @@
 #include "nsIPrivateTextEvent.h"
 #include "nsIPrivateTextRange.h"
 #include "nsIDOMEvent.h"
+#include "nsIScriptObjectOwner.h"
 
 #include "nsIPresContext.h"
 #include "nsPoint.h"
@@ -44,7 +45,8 @@ class nsDOMEvent : public nsIDOMKeyEvent,
                    public nsIDOMNSUIEvent, 
                    public nsIPrivateDOMEvent, 
                    public nsIPrivateTextEvent, 
-                   public nsIPrivateCompositionEvent {
+                   public nsIPrivateCompositionEvent,
+                   public nsIScriptObjectOwner {
 
 public:
   // Note: this enum must be kept in sync with mEventNames in nsDOMEvent.cpp
@@ -173,6 +175,10 @@ public:
   NS_IMETHOD GetCompositionReply(nsTextEventReply** aReply);
   NS_IMETHOD GetReconversionReply(nsReconversionEventReply** aReply);
 
+  // nsIScriptObjectOwner interface
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+  NS_IMETHOD SetScriptObject(void* aScriptObject);
+
   /** Overloaded new operator. Initializes the memory to 0. 
    *  Relies on a recycler to perform the allocation, 
    *  optionally from a pool.
@@ -202,6 +208,7 @@ protected:
   //Internal helper funcs
   nsresult GetScrollInfo(nsIScrollableView** aScrollableView, float* aP2T, float* aT2P);
   nsresult SetEventType(const nsAReadableString& aEventTypeArg);
+  const char* GetEventName(PRUint32 aEventType);
 
   nsEvent* mEvent;
   PRBool mEventIsInternal;
@@ -211,7 +218,13 @@ protected:
   nsIDOMEventTarget* mOriginalTarget;
   nsString*	mText;
   nsIPrivateTextRangeList*	mTextRange;
-  const char* GetEventName(PRUint32 aEventType);
+
+  //These are use for internal data for user created events
+  PRInt16 mButton;
+  nsPoint mScreenPoint;               
+  nsPoint mClientPoint;               
+
+  void* mScriptObject;
 };
 
 #endif // nsDOMEvent_h__

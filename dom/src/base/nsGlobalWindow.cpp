@@ -501,6 +501,7 @@ NS_IMETHODIMP GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
                                                nsEventStatus* aEventStatus)
 {
   nsresult ret = NS_OK;
+  PRBool externalDOMEvent = PR_FALSE;
   nsIDOMEvent *domEvent = nsnull;
 
   /* mChromeEventHandler and mContext go dangling in the middle of this
@@ -528,7 +529,12 @@ NS_IMETHODIMP GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
   }
 
   if (NS_EVENT_FLAG_INIT & aFlags) {
-    if (!aDOMEvent) {
+    if (aDOMEvent) {
+      if (*aDOMEvent) {
+        externalDOMEvent = PR_TRUE;   
+      }
+    }
+    else {
       aDOMEvent = &domEvent;
     }
     aEvent->flags = aFlags;
@@ -584,7 +590,7 @@ NS_IMETHODIMP GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
 
   if (NS_EVENT_FLAG_INIT & aFlags) {
     // We're leaving the DOM event loop so if we created an event, release here.
-    if (*aDOMEvent) {
+    if (*aDOMEvent && !externalDOMEvent) {
       nsrefcnt rc;
       NS_RELEASE2(*aDOMEvent, rc);
       if (rc) {
@@ -596,8 +602,8 @@ NS_IMETHODIMP GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
         if (privateEvent)
           privateEvent->DuplicatePrivateData();
       }
+      aDOMEvent = nsnull;
     }
-    aDOMEvent = nsnull;
   }
 
   return ret;
