@@ -361,7 +361,7 @@ PR_DSTOffset(int64 time)
     int64  maxtimet;
     struct tm tm;
     PRTime prtm;
-#if defined( XP_PC ) || defined( FREEBSD ) || defined ( HPUX9 )
+#if defined( XP_PC ) || defined( FREEBSD ) || defined ( HPUX9 ) || defined ( SNI )
     struct tm *ptm;
 #endif
 
@@ -379,7 +379,7 @@ PR_DSTOffset(int64 time)
     }
     LL_L2UI(local,time);
     PR_basetime(time,&prtm);
-#if defined( XP_PC ) || defined( FREEBSD ) || defined ( HPUX9 )
+#if defined( XP_PC ) || defined( FREEBSD ) || defined ( HPUX9 ) || defined ( SNI )
     ptm = localtime(&local);
     if (!ptm)
 	return LL_ZERO;
