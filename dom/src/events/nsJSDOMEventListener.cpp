@@ -91,13 +91,31 @@ nsresult nsJSDOMEventListener::HandleEvent(nsIDOMEvent* aEvent)
   return jsBoolResult ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult nsJSDOMEventListener::CheckIfEqual(nsIScriptEventListener *aListener)
+NS_IMETHODIMP
+nsJSDOMEventListener::CheckIfEqual(nsIScriptEventListener *aListener, PRBool *aResult)
 {
-  /*
-   * This should be rewritten to use a PRBool out parameter in stead of
-   * using the return value to show if this equals aListener...
-   */
-  return NS_ERROR_FAILURE;
+  *aResult = PR_FALSE;
+
+  JSObject *otherTarget, *otherHandler;
+
+  if (NS_SUCCEEDED(aListener->GetInternals((void**)&otherTarget, (void**)&otherHandler))) {
+    if (otherTarget == mTarget && otherHandler == mHandler) {
+      *aResult = PR_TRUE;
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSDOMEventListener::GetInternals(void** aTarget, void** aHandler)
+{
+  NS_ENSURE_ARG_POINTER(aTarget);
+  NS_ENSURE_ARG_POINTER(aHandler);
+
+  *aTarget = (void*)mTarget;
+  *aHandler = (void*)mHandler;
+  return NS_OK;
 }
 
 /*

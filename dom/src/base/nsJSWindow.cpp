@@ -123,7 +123,8 @@ enum Window_slots {
   WINDOW_PAGEYOFFSET = -35,
   WINDOW_SCROLLX = -36,
   WINDOW_SCROLLY = -37,
-  ABSTRACTVIEW_DOCUMENT = -38
+  WINDOW_LENGTH = -38,
+  ABSTRACTVIEW_DOCUMENT = -39
 };
 
 /***********************************************************************/
@@ -555,6 +556,18 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_SUCCEEDED(rv)) {
           PRInt32 prop;
           rv = a->GetScrollY(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
+        }
+        break;
+      }
+      case WINDOW_LENGTH:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_LENGTH, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRUint32 prop;
+          rv = a->GetLength(&prop);
           if (NS_SUCCEEDED(rv)) {
             *vp = INT_TO_JSVAL(prop);
           }
@@ -2852,6 +2865,7 @@ static JSPropertySpec WindowProperties[] =
   {"pageYOffset",    WINDOW_PAGEYOFFSET,    JSPROP_ENUMERATE},
   {"scrollX",    WINDOW_SCROLLX,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"scrollY",    WINDOW_SCROLLY,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"length",    WINDOW_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"document",    ABSTRACTVIEW_DOCUMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };

@@ -44,8 +44,12 @@ public:
  /**
   * Checks equality of internal script function pointer with the one passed in.
   */
+  NS_IMETHOD CheckIfEqual(nsIScriptEventListener *aListener, PRBool* aResult) = 0;
 
-  virtual nsresult CheckIfEqual(nsIScriptEventListener *aListener) = 0;
+ /**
+  * Gets internal data for equality checking..
+  */
+  NS_IMETHOD GetInternals(void** aTarget, void** aHandler) = 0;
 
 };
 

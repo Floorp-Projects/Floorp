@@ -55,7 +55,7 @@ public:
 
   NS_IMETHOD    IntersectsNode(nsIDOMNode* aN, PRBool* aReturn)=0;
 
-  NS_IMETHOD    CompareNode(nsIDOMNode* aN, PRInt16* aReturn)=0;
+  NS_IMETHOD    CompareNode(nsIDOMNode* aN, PRUint16* aReturn)=0;
 };
 
 
@@ -65,7 +65,7 @@ public:
   NS_IMETHOD    IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset, PRBool* aReturn);  \
   NS_IMETHOD    ComparePoint(nsIDOMNode* aParent, PRInt32 aOffset, PRInt16* aReturn);  \
   NS_IMETHOD    IntersectsNode(nsIDOMNode* aN, PRBool* aReturn);  \
-  NS_IMETHOD    CompareNode(nsIDOMNode* aN, PRInt16* aReturn);  \
+  NS_IMETHOD    CompareNode(nsIDOMNode* aN, PRUint16* aReturn);  \
 
 
 
@@ -75,7 +75,7 @@ public:
   NS_IMETHOD    IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset, PRBool* aReturn) { return _to IsPointInRange(aParent, aOffset, aReturn); }  \
   NS_IMETHOD    ComparePoint(nsIDOMNode* aParent, PRInt32 aOffset, PRInt16* aReturn) { return _to ComparePoint(aParent, aOffset, aReturn); }  \
   NS_IMETHOD    IntersectsNode(nsIDOMNode* aN, PRBool* aReturn) { return _to IntersectsNode(aN, aReturn); }  \
-  NS_IMETHOD    CompareNode(nsIDOMNode* aN, PRInt16* aReturn) { return _to CompareNode(aN, aReturn); }  \
+  NS_IMETHOD    CompareNode(nsIDOMNode* aN, PRUint16* aReturn) { return _to CompareNode(aN, aReturn); }  \
 
 
 #endif // nsIDOMNSRange_h__

@@ -1259,7 +1259,7 @@ NSRangeCompareNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
     return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
   }
 
-  PRInt16 nativeRet;
+  PRUint16 nativeRet;
   nsCOMPtr<nsIDOMNode> b0;
   // If there's no private data, this must be the prototype, so ignore
   if (!nativeThis) {
