@@ -606,7 +606,6 @@ Rights Reserved.
                   accesskey="&saveLinkCmd.accesskey;"
                   oncommand="contextMenu.saveLink();"/>
         <menuitem id="context-saveimage"
-                  value="&saveImageCmd.label;"
                   accesskey="&saveImageCmd.accesskey;"
                   oncommand="contextMenu.saveImage();"/>
         <menuitem id="context-bookmarklink"
