@@ -267,33 +267,34 @@ if (!JSVAL_IS_NUMBER(v)) {                                               \
 
 static jsint jlong_to_jsint(jlong lvalue)
 {
-	SInt64 val = WideToSInt64(lvalue);
-	return S32Set(val);
+    SInt64 val = WideToSInt64(lvalue);
+    return S32Set(val);
 }
 
 static jlong jsint_to_jlong(jsint ivalue)
 {
-	SInt64 val = S64Set(ivalue);
-	return SInt64ToWide(val);
+    SInt64 val = S64Set(ivalue);
+    return SInt64ToWide(val);
 }
 
 static jdouble jlong_to_jdouble(lvalue)
 {
-	SInt64 val = WideToSInt64(lvalue);
-	return SInt64ToLongDouble(val);
+    SInt64 val = WideToSInt64(lvalue);
+    return SInt64ToLongDouble(val);
 }
 
 static jlong jdouble_to_jlong(jdouble dvalue)
 {
-	SInt64 val = LongDoubleToSInt64(dvalue);
-	return SInt64ToWide(val);
+    SInt64 val = LongDoubleToSInt64(dvalue);
+    return SInt64ToWide(val);
 }
 
+/* Mac utility macro for jsj_ConvertJSValueToJavaValue(), below */
 #define JSVAL_TO_JLONG_JVALUE(member_name, member_type, jsvalue, java_value) \
 if (!JSVAL_IS_NUMBER(jsvalue)) {                                         \
         if (!JS_ConvertValue(cx, jsvalue, JSTYPE_NUMBER, &jsvalue))      \
-	    goto conversion_error;                                           \
-	(*cost)++;                                                           \
+        goto conversion_error;                                           \
+    (*cost)++;                                                           \
     }                                                                    \
     {                                                                    \
         member_type member_name;                                         \
@@ -302,17 +303,14 @@ if (!JSVAL_IS_NUMBER(jsvalue)) {                                         \
             jsint ival = JSVAL_TO_INT(jsvalue);                          \
             member_name = jsint_to_jlong(ival);                          \
                                                                          \
-            /* Check to see if the jsval's magnitude is too large to be  \
-               representable in the target java type */                  \
-            if (jlong_to_jsint(member_name) != ival)                     \
-                goto conversion_error;                                   \
         } else {                                                         \
             jdouble dval = *JSVAL_TO_DOUBLE(jsvalue);                    \
             member_name = jdouble_to_jlong(dval);                        \
                                                                          \
             /* Don't allow a non-integral number */                      \
+            /* Should this be an error ? */                              \
             if (jlong_to_jdouble(member_name) != dval)                   \
-                goto conversion_error;                                   \
+                (*cost)++;                                               \
         }                                                                \
         if (java_value)                                                  \
             java_value->member_name = member_name;                       \
@@ -320,11 +318,7 @@ if (!JSVAL_IS_NUMBER(jsvalue)) {                                         \
 
 #else
 
-#define jlong_to_jsint(lvalue) ((jsint) lvalue)
-#define jsint_to_jlong(ivalue) ((jlong) ivalue)
-
 #define jlong_to_jdouble(lvalue) ((jdouble) lvalue)
-#define jdouble_to_jlong(dvalue) ((jlong) dvalue)
 
 #endif
 
@@ -380,7 +374,7 @@ jsj_ConvertJSValueToJavaValue(JSContext *cx, JNIEnv *jEnv, jsval v,
 
     case JAVA_SIGNATURE_LONG:
 #if XP_MAC
-		JSVAL_TO_JLONG_JVALUE(j, jlong, v, java_value);
+        JSVAL_TO_JLONG_JVALUE(j, jlong, v, java_value);
 #else
         JSVAL_TO_INTEGRAL_JVALUE(long, j, jlong, v, java_value);
 #endif
@@ -710,7 +704,7 @@ jsj_ConvertJavaValueToJSValue(JSContext *cx, JNIEnv *jEnv,
         return JS_TRUE;
 
     case JAVA_SIGNATURE_LONG:
-    	return JS_NewDoubleValue(cx, jlong_to_jdouble(java_value->j), vp);
+        return JS_NewDoubleValue(cx, jlong_to_jdouble(java_value->j), vp);
   
     case JAVA_SIGNATURE_FLOAT:
         return JS_NewDoubleValue(cx, java_value->f, vp);

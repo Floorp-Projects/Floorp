@@ -2,7 +2,7 @@
 <HEAD>
    <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
    <META NAME="Author" CONTENT="Scott Furman">
-   <META NAME="GENERATOR" CONTENT="Mozilla/4.05 (Macintosh; U; PPC) [Netscape]">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.05 [en] (WinNT; I) [Netscape]">
    <TITLE>README for LiveConnect</TITLE>
 </HEAD>
 <BODY>
@@ -84,33 +84,37 @@ and appears in the output directory.</LI>
 You must have the JVM DLL in your <TT><FONT SIZE=+1>PATH</FONT></TT> environment
 variable in order to run.&nbsp; If you are using the Sun JDK, the DLL appears
 in the JDK's bin directory.</LI>
+
+<LI>
+Use any Java compiler to compile the java source files in the <TT><FONT SIZE=+1>js/ref/liveconnect/classes/netscape/javascript</FONT></TT>
+directory.<BR>
+<BR></LI>
 </UL>
 <B>Mac OS</B>
 <UL>
 <LI>
-Use CodeWarrior Pro 2 or Pro 3 (recommended).</LI>
+Use CodeWarrior Pro 3 is recommended.&nbsp; CodeWarrior Pro 2 should work
+but has not been tested.&nbsp; The CodeWarrior project file is <TT><FONT SIZE=+1>js/ref/liveconnect/macbuild/LiveConnect.mcp</FONT></TT></LI>
 
 <LI>
-I've added macbuild subdirectories to <TT>js/ref</TT> and <TT>js/ref/liveconnect</TT>.</LI>
-
-<LI>
-Install the <A HREF="ftp://dev.apple.com/devworld/Java/MRJSDK2.0.1EarlyAccess4.hqx">MRJ
+Install Apple's JVM, <A HREF="ftp://dev.apple.com/devworld/Java/MRJSDK2.0.1EarlyAccess4.hqx">MRJ
 SDK 2.0.1ea4</A>.</LI>
 
 <LI>
 Copy the folders CIncludes &amp; Libraries from Interfaces&amp;Libraries
-to js/ref/macbuild/JavaSession.</LI>
+to <TT><FONT SIZE=+1>js/ref/macbuild/JavaSession</FONT></TT>.</LI>
 
 <LI>
-Build the test application <TT>JSRef</TT> with <TT>js/ref/macbuild/JSRef.mcp</TT>.</LI>
+Build the test application <TT><FONT SIZE=+1>JSRef</FONT></TT> with <TT><FONT SIZE=+1>js/ref/macbuild/JSRef.mcp</FONT></TT>.</LI>
 
 <LI>
-Build <TT>liveconnect.jar</TT> with <TT>js/ref/liveconnect/macbuild/LiveConnect.mcp</TT>.</LI>
+Build <TT><FONT SIZE=+1>liveconnect.jar</FONT></TT> with <TT><FONT SIZE=+1>js/ref/liveconnect/macbuild/LiveConnect.mcp</FONT></TT>.</LI>
 
 <LI>
-Make an alias to <TT>liveconnect.jar</TT> and place it in "<TT>{SystemFolder}Extensions:MRJ
-Libraries:MRJClasses</TT>".</LI>
-</UL>
+Make an alias to <TT><FONT SIZE=+1>liveconnect.jar</FONT></TT> and place
+it in "<TT><FONT SIZE=+1>{SystemFolder}Extensions:MRJ Libraries:MRJClasses</FONT></TT>".</LI>
+
+<BR>&nbsp;</UL>
 <B>Unix</B>
 <UL>
 <LI>
@@ -307,7 +311,7 @@ and argument/return-value conversion code.</TD>
 <TR>
 <TD>jsj_utils.c</TD>
 
-<TD>Low-level utility code fo reporting errors, etc.</TD>
+<TD>Low-level utility code for reporting errors, etc.</TD>
 </TR>
 </TABLE>
 &nbsp;
