@@ -70,7 +70,7 @@ struct OnLinkClickEvent : public PLEvent {
   LinkHandlerImpl* mHandler;
   nsString*    mURLSpec;
   nsString*    mTargetSpec;
-  nsIPostData *mPostData;
+  nsIPostData* mPostData;
 };
 
 static void PR_CALLBACK HandleEvent(OnLinkClickEvent* aEvent)
@@ -92,10 +92,8 @@ OnLinkClickEvent::OnLinkClickEvent(LinkHandlerImpl* aHandler,
   NS_ADDREF(aHandler);
   mURLSpec = new nsString(aURLSpec);
   mTargetSpec = new nsString(aTargetSpec);
-  mPostData = nsnull;
-  if (aPostData) {
-    NS_NewPostData(aPostData, &mPostData);
-  }
+  mPostData = aPostData;
+  NS_IF_ADDREF(mPostData);
 
 #ifdef XP_PC
   PL_InitEvent(this, nsnull,
@@ -111,9 +109,9 @@ OnLinkClickEvent::OnLinkClickEvent(LinkHandlerImpl* aHandler,
 OnLinkClickEvent::~OnLinkClickEvent()
 {
   NS_IF_RELEASE(mHandler);
+  NS_IF_RELEASE(mPostData);
   if (nsnull != mURLSpec) delete mURLSpec;
   if (nsnull != mTargetSpec) delete mTargetSpec;
-  if (nsnull != mPostData) delete mPostData;
 }
 
 void OnLinkClickEvent::HandleEvent()
