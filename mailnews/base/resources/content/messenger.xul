@@ -255,7 +255,16 @@ Rights Reserved.
 			  accesskey=""
 			  oncommand="MsgAddAllToAddressBook();"/>
 	</popup>
+
+  <popup id="emailAddressPopup"  popupanchor="bottomleft">
+      <menuitem value="&AddToAddressBook.label;"
+                oncommand="AddNodeToAddressBook(document.popupNode)"/>
+      <menuitem value="&SendMailTo.label;"
+                oncommand="SendMailToNode(document.popupNode)"/>
+  </popup>
+
 </popupset>
+
         <menubar>
           <menu id="menu_File">
             <menupopup id="menu_FilePopup">
