@@ -1830,7 +1830,11 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
         break;
     }
     PR_LOG(nsExternalHelperAppService::mLog, PR_LOG_ERROR,
-        ("Error: %s, listener=0x%p, rv=0x%08X\n", NS_LossyConvertUCS2toASCII(msgId).get(), mWebProgressListener.get(), rv));
+        ("Error: %s, type=%i, listener=0x%p, rv=0x%08X\n",
+         NS_LossyConvertUTF16toASCII(msgId).get(), type, mWebProgressListener.get(), rv));
+    PR_LOG(nsExternalHelperAppService::mLog, PR_LOG_ERROR,
+        ("       path='%s'\n", NS_ConvertUTF16toUTF8(path).get()));
+
     // Get properties file bundle and extract status string.
     nsCOMPtr<nsIStringBundleService> s = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
     if (s)
