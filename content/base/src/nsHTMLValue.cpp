@@ -67,7 +67,7 @@ nsHTMLValue::nsHTMLValue(const nsString& aValue, nsHTMLUnit aUnit)
                (eHTMLUnit_ColorName == aUnit), "not a string value");
   if ((eHTMLUnit_String == aUnit) ||
       (eHTMLUnit_ColorName == aUnit)) {
-    mValue.mString = aValue.ToNewString();
+    mValue.mString = aValue.ToNewUnicode();
   }
   else {
     mUnit = eHTMLUnit_Null;
@@ -93,7 +93,7 @@ nsHTMLValue::nsHTMLValue(const nsHTMLValue& aCopy)
 {
   if ((eHTMLUnit_String == mUnit) || (eHTMLUnit_ColorName == mUnit)) {
     if (nsnull != aCopy.mValue.mString) {
-      mValue.mString = aCopy.mValue.mString->ToNewString();
+      mValue.mString = nsCRT::strdup(aCopy.mValue.mString);
     }
     else {
       mValue.mString = nsnull;
@@ -125,7 +125,7 @@ nsHTMLValue& nsHTMLValue::operator=(const nsHTMLValue& aCopy)
   mUnit = aCopy.mUnit;
   if ((eHTMLUnit_String == mUnit) || (eHTMLUnit_ColorName == mUnit)) {
     if (nsnull != aCopy.mValue.mString) {
-      mValue.mString = aCopy.mValue.mString->ToNewString();
+      mValue.mString = nsCRT::strdup(aCopy.mValue.mString);
     }
   }
   else if (eHTMLUnit_ISupports == mUnit) {
@@ -154,7 +154,7 @@ PRBool nsHTMLValue::operator==(const nsHTMLValue& aOther) const
         }
       }
       else if (nsnull != aOther.mValue.mString) {
-        return mValue.mString->EqualsIgnoreCase(*(aOther.mValue.mString));
+        return 0 == nsCRT::strcasecmp(mValue.mString, aOther.mValue.mString);
       }
     }
     else if (eHTMLUnit_ISupports == mUnit) {
@@ -178,7 +178,7 @@ PRUint32 nsHTMLValue::HashValue(void) const
   return PRUint32(mUnit) ^ 
          ((((eHTMLUnit_String == mUnit) || (eHTMLUnit_ColorName == mUnit)) && 
            (nsnull != mValue.mString)) ? 
-          nsCRT::HashValue(mValue.mString->GetUnicode()) : 
+          nsCRT::HashValue(mValue.mString) : 
           mValue.mInt);
 }
 
@@ -187,7 +187,7 @@ void nsHTMLValue::Reset(void)
 {
   if ((eHTMLUnit_String == mUnit) || (eHTMLUnit_ColorName == mUnit)) {
     if (nsnull != mValue.mString) {
-      delete mValue.mString;
+      nsCRT::free(mValue.mString);
     }
   }
   else if (eHTMLUnit_ISupports == mUnit) {
@@ -231,7 +231,7 @@ void nsHTMLValue::SetStringValue(const nsString& aValue, nsHTMLUnit aUnit)
   Reset();
   if ((eHTMLUnit_String == aUnit) || (eHTMLUnit_ColorName == aUnit)) {
     mUnit = aUnit;
-    mValue.mString = aValue.ToNewString();
+    mValue.mString = aValue.ToNewUnicode();
   }
 }
 
@@ -267,7 +267,7 @@ void nsHTMLValue::AppendToString(nsString& aBuffer) const
   else if ((eHTMLUnit_String == mUnit) || (eHTMLUnit_ColorName == mUnit)) {
     if (nsnull != mValue.mString) {
       aBuffer.AppendWithConversion('"');
-      aBuffer.Append(*(mValue.mString));
+      aBuffer.Append(mValue.mString);
       aBuffer.AppendWithConversion('"');
     }
     else {

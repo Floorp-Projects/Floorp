@@ -70,7 +70,7 @@ nsCSSValue::nsCSSValue(const nsString& aValue, nsCSSUnit aUnit)
 {
   NS_ASSERTION((eCSSUnit_String <= aUnit) && (aUnit <= eCSSUnit_Counters), "not a string value");
   if ((eCSSUnit_String <= aUnit) && (aUnit <= eCSSUnit_Counters)) {
-    mValue.mString = aValue.ToNewString();
+    mValue.mString = aValue.ToNewUnicode();
   }
   else {
     mUnit = eCSSUnit_Null;
@@ -89,7 +89,7 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
 {
   if ((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Counters)) {
     if (nsnull != aCopy.mValue.mString) {
-      mValue.mString = (aCopy.mValue.mString)->ToNewString();
+      mValue.mString = nsCRT::strdup(aCopy.mValue.mString);
     }
     else {
       mValue.mString = nsnull;
@@ -117,7 +117,7 @@ nsCSSValue& nsCSSValue::operator=(const nsCSSValue& aCopy)
   mUnit = aCopy.mUnit;
   if ((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Counters)) {
     if (nsnull != aCopy.mValue.mString) {
-      mValue.mString = (aCopy.mValue.mString)->ToNewString();
+      mValue.mString = nsCRT::strdup(aCopy.mValue.mString);
     }
   }
   else if ((eCSSUnit_Integer <= mUnit) && (mUnit <= eCSSUnit_Enumerated)) {
@@ -142,7 +142,7 @@ PRBool nsCSSValue::operator==(const nsCSSValue& aOther) const
         }
       }
       else if (nsnull != aOther.mValue.mString) {
-        return mValue.mString->Equals(*(aOther.mValue.mString));
+        return (nsCRT::strcmp(mValue.mString, aOther.mValue.mString) == 0);
       }
     }
     else if ((eCSSUnit_Integer <= mUnit) && (mUnit <= eCSSUnit_Enumerated)) {
@@ -200,7 +200,7 @@ void nsCSSValue::Reset(void)
 {
   if ((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Counters) &&
       (nsnull != mValue.mString)) {
-    delete mValue.mString;
+    nsCRT::free(mValue.mString);
   }
   mUnit = eCSSUnit_Null;
   mValue.mInt = 0;
@@ -241,7 +241,7 @@ void nsCSSValue::SetStringValue(const nsString& aValue, nsCSSUnit aUnit)
   Reset();
   if ((eCSSUnit_String <= aUnit) && (aUnit <= eCSSUnit_Counters)) {
     mUnit = aUnit;
-    mValue.mString = aValue.ToNewString();
+    mValue.mString = aValue.ToNewUnicode();
   }
 }
 
@@ -297,7 +297,7 @@ void nsCSSValue::AppendToString(nsString& aBuffer, nsCSSProperty aPropID) const
     }
     if (nsnull != mValue.mString) {
       aBuffer.AppendWithConversion('"');
-      aBuffer.Append(*(mValue.mString));
+      aBuffer.Append(mValue.mString);
       aBuffer.AppendWithConversion('"');
     }
     else {
