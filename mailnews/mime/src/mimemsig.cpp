@@ -600,7 +600,7 @@ MimeMultipartSigned_emit_child (MimeObject *obj)
   int status = 0;
   MimeObject *body;
 
-  PR_ASSERT(sig->crypto_closure);
+  NS_ASSERTION(sig->crypto_closure, "no crypto closure");
 
   /* Emit some HTML saying whether the signature was cool.
 	 But don't emit anything if in FO_QUOTE_MESSAGE mode.
