@@ -53,7 +53,9 @@
 
 // If some platform(s) can't handle our template that matches literal strings,
 // then we'll disable it on those platforms.
-// #define NS_DISABLE_LITERAL_TEMPLATE
+#if !defined(NS_DISABLE_LITERAL_TEMPLATE) && defined(_MSC_VER)
+#define NS_DISABLE_LITERAL_TEMPLATE
+#endif
 
 #include <string.h>
 
