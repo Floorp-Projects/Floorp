@@ -236,7 +236,7 @@ $(TOPSRCDIR)/configure: $(TOPSRCDIR)/configure.in $(EXTRA_CONFIG_DEPS)
 	cd $(TOPSRCDIR); $(AUTOCONF)
 endif
 
-$(OBJDIR)/Makefile:  $(TOPSRCDIR)/configure $(TOPSRCDIR)/allmakefiles.sh
+$(OBJDIR)/Makefile: nspr $(TOPSRCDIR)/configure $(TOPSRCDIR)/allmakefiles.sh
 	@if test ! -d $(OBJDIR); then $(MKDIR) $(OBJDIR); fi
 	@echo cd $(OBJDIR); 
 	@echo ../configure $(CONFIG_FLAGS)
@@ -255,7 +255,7 @@ endif
 # Build it
 #
 
-build:  nspr $(OBJDIR)/Makefile 
+build:  $(OBJDIR)/Makefile 
 	cd $(OBJDIR); $(MAKE);
 
 # Build & install nspr.  Classic build, no autoconf.
