@@ -734,7 +734,7 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint base, j
             digit = c - 'A' + 10;
         else
             break;
-        if (digit >= base)
+        if (digit >= (uintN)base)
             break;
         value = value*base + digit;
         s1++;
