@@ -503,6 +503,12 @@ nsPopupSetFrame::OnCreate(nsIContent* aPopupContent)
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
   event.message = NS_MENU_CREATE;
+  event.isShift = false;
+  event.isControl = false;
+  event.isAlt = false;
+  event.isMeta = false;
+  event.clickCount = 0;
+  event.widget = nsnull;
 
   if (aPopupContent) {
     nsresult rv = aPopupContent->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
@@ -520,6 +526,12 @@ nsPopupSetFrame::OnDestroy()
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
   event.message = NS_MENU_DESTROY;
+  event.isShift = false;
+  event.isControl = false;
+  event.isAlt = false;
+  event.isMeta = false;
+  event.clickCount = 0;
+  event.widget = nsnull;
 
   nsCOMPtr<nsIContent> content;
   GetActiveChildElement(getter_AddRefs(content));
