@@ -26,6 +26,7 @@
 #include "nsCacheEntry.h"
 #include "nsCacheEntryDescriptor.h"
 #include "nsCacheDevice.h"
+#include "nsCacheRequest.h"
 #include "nsMemoryCacheDevice.h"
 #include "nsAutoLock.h"
 #include "nsVoidArray.h"
@@ -149,10 +150,10 @@ nsCacheService::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 
 
 NS_IMETHODIMP
-nsCacheService::CreateSession(const char *      clientID,
-                              PRInt32           storagePolicy, 
-                              PRBool            streamBased,
-                              nsICacheSession **result)
+nsCacheService::CreateSession(const char *          clientID,
+                              nsCacheStoragePolicy  storagePolicy, 
+                              PRBool                streamBased,
+                              nsICacheSession     **result)
 {
     *result = nsnull;
 

@@ -24,6 +24,7 @@
  */
 
 #include "nsISupports.idl"
+#include "nsICache.idl"
 
 interface nsISimpleEnumerator;
 interface nsICacheListener;
@@ -63,9 +64,9 @@ interface nsICacheService : nsISupports
      *   based cache entry can only have a storage policy of STORE_IN_MEMORY.
      * @return new cache session.
      */
-    nsICacheSession createSession(in string  clientID,
-                                  in long    storagePolicy,
-                                  in boolean streamBased);
+    nsICacheSession createSession(in string                 clientID,
+                                  in nsCacheStoragePolicy   storagePolicy,
+                                  in boolean                streamBased);
 
     /*
      * Visit entries stored in the cache.  Used to implement about:cache.

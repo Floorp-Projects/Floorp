@@ -30,9 +30,9 @@
 
 NS_IMPL_ISUPPORTS1(nsCacheSession, nsICacheSession)
 
-nsCacheSession::nsCacheSession(const char * clientID,
-                               PRInt32 storagePolicy,
-                               PRBool streamBased)
+nsCacheSession::nsCacheSession(const char *         clientID,
+                               nsCacheStoragePolicy storagePolicy,
+                               PRBool               streamBased)
     : mClientID(clientID),
       mStoragePolicy(storagePolicy),
       mStreamBased(streamBased)
