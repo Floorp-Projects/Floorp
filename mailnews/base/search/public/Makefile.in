@@ -28,6 +28,8 @@ EXPORTS= \
 		nsMsgFilterCore.h \
 		nsIMsgFilterList.h \
 		nsIMsgSearchSession.h \
+		nsIMsgSearchAdapter.h \
+		nsMsgSearchAdapter.h \
 		nsMsgSearchCore.h \
 		$(NULL)
 
