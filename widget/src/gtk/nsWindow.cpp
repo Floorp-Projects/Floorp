@@ -246,9 +246,9 @@ static guint n_targets = sizeof(target_table) / sizeof(target_table[0]);
 
 GdkWMDecoration nsWindow::ConvertBorderStyles(nsBorderStyle bs)
 {
-  GdkWMDecoration w;
+  GdkWMDecoration w = eBorderStyle_none; // eBorderStyle_none == 0
 
-  if (bs & eBorderStyle_default)
+  if (bs == eBorderStyle_default)
     return -1;
 
   if (bs & eBorderStyle_all)
@@ -353,8 +353,6 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 
   if (mIsToplevel)
   {
-
-
     if (parentWidget)
     {
       GtkWidget *tlw = gtk_widget_get_toplevel(parentWidget);
@@ -772,7 +770,7 @@ NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
 
 NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 {
-#ifndef DEBUG_pavlov
+#if 0
   g_print("     nsWindow::Invalidate(nr)  (this=%p , aIsSynchronous=%i)\n",
           this, aIsSynchronous);
 #endif
@@ -814,7 +812,7 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 
 NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
-#ifndef DEBUG_pavlov
+#if 0
   g_print("     nsWindow::Invalidate(wr)  (this=%p, x=%i , y=%i , width=%i , height = %i , aIsSynchronous=%i)\n",
           this, aRect.x, aRect.y, aRect.width, aRect.height, aIsSynchronous);
 #endif
