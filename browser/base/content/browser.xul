@@ -883,7 +883,7 @@
                 tooltiptext="&throbber.tooltip;"/>
       </toolbaritem>
       
-        <toolbaritem id="personal-bookmarks" title="&bookmarksItem.title;" flex="1">
+        <toolbaritem id="personal-bookmarks" title="&bookmarksItem.title;" flex="0.01">
           <bookmarks-toolbar id="bookmarks-toolbar" flex="1"/>
         </toolbaritem>
 
