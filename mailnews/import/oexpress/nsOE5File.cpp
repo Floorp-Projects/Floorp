@@ -388,15 +388,16 @@ nsresult nsOE5File::ImportMailbox( PRUint32 *pBytesDone, PRBool *pAbort, nsStrin
             {
               while ((pStart < pEnd) && (*pStart != nsCRT::CR) && (*(pStart+1) != nsCRT::LF))
                 pStart++;
-              tempLine.Assign(pBuffer, pStart - pBuffer + 2);
+              if (pStart < pEnd)  // if we found a CRLF ..
+                pStart += 2;      // .. then copy that too.
+              tempLine.Assign(pBuffer, pStart - pBuffer);
               partialLine.Append(tempLine);
               rv = EscapeFromSpaceLine(pDestination, (char *)partialLine.get(), (partialLine.get()+partialLine.Length()));
               if (NS_FAILED(rv))
                 break;
               
               // Adjust where data start and size (since some of the data has been processed).
-              size -= (pStart - pBuffer + 2);
-              pStart += 2;
+              size -= (pStart - pBuffer);
             }
           }
           else
