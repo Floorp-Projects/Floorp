@@ -1008,8 +1008,8 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
   // positioned. We need to explicitly position its child views as
   // well, since we're moving the float after flowing it.
   floatFrame->SetPosition(nsPoint(x, y));
-  nsContainerFrame::PositionFrameView(mPresContext, floatFrame);
-  nsContainerFrame::PositionChildViews(mPresContext, floatFrame);
+  nsContainerFrame::PositionFrameView(floatFrame);
+  nsContainerFrame::PositionChildViews(floatFrame);
 
   // Update the float combined area state
   nsRect combinedArea = aFloatCache->mCombinedArea;

@@ -311,8 +311,7 @@ protected:
   
   PRUint8 GetCaptionVerticalAlign();
 
-  void SetDesiredSize(nsPresContext* aPresContext,
-                      PRUint8         aCaptionSide,
+  void SetDesiredSize(PRUint8         aCaptionSide,
                       const nsMargin& aInnerMargin,
                       const nsMargin& aCaptionMargin,
                       nscoord         aAvailWidth,
@@ -324,8 +323,7 @@ protected:
                                 PRUint8                   aCaptionSide,
                                 nscoord&                  capMin);
 
-  void BalanceLeftRightCaption(nsPresContext* aPresContext,
-                               PRUint8         aCaptionSide,
+  void BalanceLeftRightCaption(PRUint8         aCaptionSide,
                                const nsMargin& aInnerMargin, 
                                const nsMargin& aCaptionMargin,
                                nscoord&        aInnerWidth,
@@ -384,8 +382,7 @@ protected:
   // Set the reflow metrics,  aInnerMarginNoAuto is  aInnerMargin, but with 
   // auto margins set to 0
   // aCaptionMargionNoAuto is aCaptionMargin, but with auto margins set to 0
-  void UpdateReflowMetrics(nsPresContext*      aPresContext,
-                           PRUint8              aCaptionSide,
+  void UpdateReflowMetrics(PRUint8              aCaptionSide,
                            nsHTMLReflowMetrics& aMet,
                            const nsMargin&      aInnerMargin,
                            const nsMargin&      aInnerMarginNoAuto,
@@ -394,8 +391,7 @@ protected:
                            const nsMargin&      aCaptionMargionNoAuto,
                            const nscoord        aAvailWidth);
 
-  void InvalidateDamage(nsPresContext* aPresContext,
-                        PRUint8         aCaptionSide,
+  void InvalidateDamage(PRUint8         aCaptionSide,
                         const nsSize&   aOuterSize,
                         PRBool          aInnerChanged,
                         PRBool          aCaptionChanged,

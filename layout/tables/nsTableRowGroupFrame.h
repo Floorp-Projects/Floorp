@@ -314,8 +314,7 @@ protected:
                              nsRowGroupReflowState& aReflowState,
                              nsReflowStatus&        aStatus);
 
-  nsresult AdjustSiblingsAfterReflow(nsPresContext*        aPresContext,
-                                     nsRowGroupReflowState& aReflowState,
+  nsresult AdjustSiblingsAfterReflow(nsRowGroupReflowState& aReflowState,
                                      nsIFrame*              aKidFrame,
                                      nscoord                aDeltaY);
   

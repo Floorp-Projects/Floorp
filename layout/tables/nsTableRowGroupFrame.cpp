@@ -413,7 +413,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*        aPresContext,
       // Adjust the running y-offset so we know where the next row should be placed
       aReflowState.y += kidFrame->GetSize().height + cellSpacingY;
     }
-    ConsiderChildOverflow(aPresContext, aDesiredSize.mOverflowArea, kidFrame);
+    ConsiderChildOverflow(aDesiredSize.mOverflowArea, kidFrame);
   }
 
   // adjust the rows after the ones that were reflowed
@@ -423,7 +423,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*        aPresContext,
       nscoord deltaY = cellSpacingY + lastReflowedRow->GetRect().YMost()
         - nextRow->GetPosition().y;
       if (deltaY != 0) {
-        AdjustSiblingsAfterReflow(aPresContext, aReflowState, lastReflowedRow, deltaY);
+        AdjustSiblingsAfterReflow(aReflowState, lastReflowedRow, deltaY);
       }
     }
   }
@@ -487,7 +487,7 @@ nsTableRowGroupFrame::DidResizeRows(nsPresContext&          aPresContext,
   }
   for (rowFrame = startRowFrame, rowIndex = 0; rowFrame; rowFrame = rowFrame->GetNextRow(), rowIndex++) {
     rowFrame->DidResize(&aPresContext, aReflowState);
-    ConsiderChildOverflow(&aPresContext, aDesiredSize.mOverflowArea, rowFrame);
+    ConsiderChildOverflow(aDesiredSize.mOverflowArea, rowFrame);
   }
 }
 
@@ -787,7 +787,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
       rowFrame->SetRect(rowBounds);
     }
     if (movedFrame) {
-      nsTableFrame::RePositionViews(aPresContext, rowFrame);
+      nsTableFrame::RePositionViews(rowFrame);
     }
     yOrigin += rowHeight + cellSpacingY;
   }
@@ -811,8 +811,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
 // cells that span into it and no cells that span across it. That way
 // we don't have to deal with rowspans
 nsresult
-nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsPresContext*        aPresContext,
-                                                nsRowGroupReflowState& aReflowState,
+nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsRowGroupReflowState& aReflowState,
                                                 nsIFrame*              aKidFrame,
                                                 nscoord                aDeltaY)
 {
@@ -826,7 +825,7 @@ nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsPresContext*        aPresConte
     // Move the frame if we need to
     if (aDeltaY != 0) {
       kidFrame->SetPosition(kidFrame->GetPosition() + nsPoint(0, aDeltaY));
-      nsTableFrame::RePositionViews(aPresContext, kidFrame);
+      nsTableFrame::RePositionViews(kidFrame);
     }
 
     // Remember the last frame
@@ -1684,7 +1683,7 @@ nsTableRowGroupFrame::IR_TargetIsChild(nsPresContext*        aPresContext,
           }
 
           // Adjust the frames that follow
-          AdjustSiblingsAfterReflow(aPresContext, aReflowState, aNextFrame,
+          AdjustSiblingsAfterReflow(aReflowState, aNextFrame,
                                     desiredSize.height - oldKidSize.height);
           aDesiredSize.height = aReflowState.y;
         }
@@ -1715,7 +1714,7 @@ nsTableRowGroupFrame::IR_TargetIsChild(nsPresContext*        aPresContext,
     else {
       // need to recover the  OverflowArea
       for (nsTableRowFrame* rowFrame = GetFirstRow(); rowFrame; rowFrame = rowFrame->GetNextRow()) {
-        ConsiderChildOverflow(aPresContext, aDesiredSize.mOverflowArea, rowFrame);
+        ConsiderChildOverflow(aDesiredSize.mOverflowArea, rowFrame);
       }
       FinishAndStoreOverflow(&aDesiredSize);
     }

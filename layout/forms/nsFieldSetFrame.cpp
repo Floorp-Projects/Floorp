@@ -544,11 +544,11 @@ nsFieldSetFrame::Reflow(nsPresContext*          aPresContext,
       // only if the origin changed
       if ((curOrigin.x != mLegendRect.x) || (curOrigin.y != mLegendRect.y)) {
           mLegendFrame->SetPosition(nsPoint(actualLegendRect.x , actualLegendRect.y));
-          nsContainerFrame::PositionFrameView(aPresContext, mLegendFrame);
+          nsContainerFrame::PositionFrameView(mLegendFrame);
 
           // We need to recursively process the legend frame's
           // children since we're moving the frame after Reflow.
-          nsContainerFrame::PositionChildViews(aPresContext, mLegendFrame);
+          nsContainerFrame::PositionChildViews(mLegendFrame);
       }
     }
 
@@ -579,9 +579,9 @@ nsFieldSetFrame::Reflow(nsPresContext*          aPresContext,
                                           borderPadding.left + borderPadding.right);
     }
     if (mLegendFrame)
-      ConsiderChildOverflow(aPresContext, aDesiredSize.mOverflowArea, mLegendFrame);
+      ConsiderChildOverflow(aDesiredSize.mOverflowArea, mLegendFrame);
     if (mContentFrame)
-      ConsiderChildOverflow(aPresContext, aDesiredSize.mOverflowArea, mContentFrame);
+      ConsiderChildOverflow(aDesiredSize.mOverflowArea, mContentFrame);
     FinishAndStoreOverflow(&aDesiredSize);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;

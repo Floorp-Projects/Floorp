@@ -439,8 +439,7 @@ nsContainerFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
  * but before |Reflow|.
  */
 void
-nsContainerFrame::PositionFrameView(nsPresContext* aPresContext,
-                                    nsIFrame*       aKidFrame)
+nsContainerFrame::PositionFrameView(nsIFrame* aKidFrame)
 {
   if (aKidFrame->HasView()) {
     nsIView* view = aKidFrame->GetView();
@@ -737,7 +736,7 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsPresContext* aPresContext,
 
   // Make sure the view is sized and positioned correctly
   if (0 == (aFlags & NS_FRAME_NO_MOVE_VIEW)) {
-    PositionFrameView(aPresContext, aFrame);
+    PositionFrameView(aFrame);
   }
 
   if (0 == (aFlags & NS_FRAME_NO_SIZE_VIEW)) {
@@ -949,7 +948,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
   }
 
   if (0 == (aFlags & NS_FRAME_NO_MOVE_VIEW)) {
-    PositionFrameView(aPresContext, aKidFrame);
+    PositionFrameView(aKidFrame);
   }
 
   // Reflow the child frame
@@ -988,8 +987,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
  * should call this method if it moves a frame after |Reflow|.
  */
 void
-nsContainerFrame::PositionChildViews(nsPresContext* aPresContext,
-                                     nsIFrame*       aFrame)
+nsContainerFrame::PositionChildViews(nsIFrame* aFrame)
 {
   if (!(aFrame->GetStateBits() & NS_FRAME_HAS_CHILD_WITH_VIEW)) {
     return;
@@ -1005,9 +1003,9 @@ nsContainerFrame::PositionChildViews(nsPresContext* aPresContext,
       // Position the frame's view (if it has one) otherwise recursively
       // process its children
       if (childFrame->HasView()) {
-        PositionFrameView(aPresContext, childFrame);
+        PositionFrameView(childFrame);
       } else {
-        PositionChildViews(aPresContext, childFrame);
+        PositionChildViews(childFrame);
       }
 
       // Get the next sibling child frame
@@ -1063,7 +1061,7 @@ nsContainerFrame::FinishReflowChild(nsIFrame*                 aKidFrame,
     if (!aKidFrame->HasView()) {
       // If the frame has moved, then we need to make sure any child views are
       // correctly positioned
-      PositionChildViews(aPresContext, aKidFrame);
+      PositionChildViews(aKidFrame);
     }
 
     // We also need to redraw everything associated with the frame

@@ -392,7 +392,7 @@ nsTableRowFrame::DidResize(nsPresContext*          aPresContext,
         //ReflowChild(cellFrame, aPresContext, desiredSize, kidReflowState, status);
 
         cellFrame->VerticallyAlignChild(aPresContext, aReflowState, mMaxCellAscent);
-        ConsiderChildOverflow(aPresContext, desiredSize.mOverflowArea, cellFrame);
+        ConsiderChildOverflow(desiredSize.mOverflowArea, cellFrame);
       }
     }
     // Get the next child
@@ -1009,7 +1009,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
             // Because we may have moved the frame we need to make sure any views are
             // positioned properly. We have to do this, because any one of our parent
             // frames could have moved and we have no way of knowing...
-            nsTableFrame::RePositionViews(aPresContext, kidFrame);
+            nsTableFrame::RePositionViews(kidFrame);
           }
         }
         
@@ -1057,7 +1057,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
       // we need to account for the cell's width even if it isn't reflowed
       x += kidFrame->GetSize().width;
     }
-    ConsiderChildOverflow(aPresContext, aDesiredSize.mOverflowArea, kidFrame);
+    ConsiderChildOverflow(aDesiredSize.mOverflowArea, kidFrame);
     kidFrame = iter.Next(); // Get the next child
     x += cellSpacingX;
   }
@@ -1320,7 +1320,7 @@ nsTableRowFrame::IR_TargetIsChild(nsPresContext*          aPresContext,
         cellFrame->VerticallyAlignChild(aPresContext, aReflowState, mMaxCellAscent);
         nsRect dirtyRect = cellFrame->GetRect();
         dirtyRect.height = mRect.height;
-        ConsiderChildOverflow(aPresContext, aDesiredSize.mOverflowArea, cellFrame);
+        ConsiderChildOverflow(aDesiredSize.mOverflowArea, cellFrame);
         dirtyRect.UnionRect(dirtyRect, aDesiredSize.mOverflowArea);
         Invalidate(dirtyRect);
       }
@@ -1335,7 +1335,7 @@ nsTableRowFrame::IR_TargetIsChild(nsPresContext*          aPresContext,
         // Make sure the overflow area includes the width and height, in any case.
         cellMet.mOverflowArea.UnionRect(cellMet.mOverflowArea,
                                         nsRect(0, 0, cellMet.width, cellMet.height));
-        cellFrame->ConsiderChildOverflow(aPresContext, cellMet.mOverflowArea, cellKidFrame);
+        cellFrame->ConsiderChildOverflow(cellMet.mOverflowArea, cellKidFrame);
         cellFrame->FinishAndStoreOverflow(&cellMet);
         if (cellFrame->HasView()) {
           nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, cellFrame, cellFrame->GetView(), &cellMet.mOverflowArea, 0);
@@ -1351,7 +1351,7 @@ nsTableRowFrame::IR_TargetIsChild(nsPresContext*          aPresContext,
   // recover the overflow area
   aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width, aDesiredSize.height);
   for (nsIFrame* cell = mFrames.FirstChild(); cell; cell = cell->GetNextSibling()) {
-    ConsiderChildOverflow(aPresContext, aDesiredSize.mOverflowArea, cell);
+    ConsiderChildOverflow(aDesiredSize.mOverflowArea, cell);
   }
   FinishAndStoreOverflow(&aDesiredSize);
   // When returning whether we're complete we need to look at each of our cell

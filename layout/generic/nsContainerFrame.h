@@ -95,8 +95,7 @@ public:
   }
 
   // Positions the frame's view based on the frame's origin
-  static void PositionFrameView(nsPresContext* aPresContext,
-                                nsIFrame*       aKidFrame);
+  static void PositionFrameView(nsIFrame* aKidFrame);
 
   // Set the view's size and position after its frame has been reflowed.
   //
@@ -183,8 +182,7 @@ public:
                                     PRUint32                  aFlags);
 
   
-  static void PositionChildViews(nsPresContext* aPresContext,
-                                 nsIFrame*       aFrame);
+  static void PositionChildViews(nsIFrame* aFrame);
 
 protected:
   nsContainerFrame();

@@ -1998,7 +1998,7 @@ DirtyLinesWithDirtyContinuations(const nsLineList::iterator& aLineStart,
   }
 }
 
-static void PlaceFrameView(nsPresContext* aPresContext, nsIFrame* aFrame);
+static void PlaceFrameView(nsIFrame* aFrame);
 static void CollectFloats(nsIFrame* aFrame, nsIFrame* aBlockParent,
                           nsIFrame** aHead, nsIFrame** aTail);
 
@@ -2356,7 +2356,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
   // Should we really have to do this?
   if (repositionViews)
-    ::PlaceFrameView(aState.mPresContext, this);
+    ::PlaceFrameView(this);
 
   // We can skip trying to pull up the next line if there is no next
   // in flow or if the next in flow is not changing and we cannot have
@@ -2909,13 +2909,12 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
 }
 
 static void
-PlaceFrameView(nsPresContext* aPresContext,
-               nsIFrame*       aFrame)
+PlaceFrameView(nsIFrame* aFrame)
 {
   if (aFrame->HasView())
-    nsContainerFrame::PositionFrameView(aPresContext, aFrame);
+    nsContainerFrame::PositionFrameView(aFrame);
   else
-    nsContainerFrame::PositionChildViews(aPresContext, aFrame);
+    nsContainerFrame::PositionChildViews(aFrame);
 }
 
 void
@@ -2943,7 +2942,7 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
     }
 
     // Make sure the frame's view and any child views are updated
-    ::PlaceFrameView(aState.mPresContext, kid);
+    ::PlaceFrameView(kid);
   }
   else {
     // Adjust the Y coordinate of the frames in the line.
@@ -2958,7 +2957,7 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
         kid->SetPosition(p);
       }
       // Make sure the frame's view and any child views are updated
-      ::PlaceFrameView(aState.mPresContext, kid);
+      ::PlaceFrameView(kid);
       kid = kid->GetNextSibling();
     }
   }

@@ -881,7 +881,7 @@ IncrementalReflow::Dispatch(nsPresContext      *aPresContext,
     nsIFrame* root = aPresContext->PresShell()->FrameManager()->GetRootFrame();
 
     first->WillReflow(aPresContext);
-    nsContainerFrame::PositionFrameView(aPresContext, first);
+    nsContainerFrame::PositionFrameView(first);
 
     // If the first frame in the path is the root of the frame
     // hierarchy, then use all the available space. If it's simply a
@@ -2753,7 +2753,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     nsHTMLReflowState reflowState(mPresContext, rootFrame,
                                   eReflowReason_Initial, rcx, maxSize);
     rootFrame->WillReflow(mPresContext);
-    nsContainerFrame::PositionFrameView(mPresContext, rootFrame);
+    nsContainerFrame::PositionFrameView(rootFrame);
     rootFrame->Reflow(mPresContext, desiredSize, reflowState, status);
     rootFrame->SetSize(nsSize(desiredSize.width, desiredSize.height));
     mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
@@ -2892,7 +2892,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
                                   eReflowReason_Resize, rcx, maxSize);
 
     rootFrame->WillReflow(mPresContext);
-    nsContainerFrame::PositionFrameView(mPresContext, rootFrame);
+    nsContainerFrame::PositionFrameView(rootFrame);
     rootFrame->Reflow(mPresContext, desiredSize, reflowState, status);
     rootFrame->SetSize(nsSize(desiredSize.width, desiredSize.height));
     mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
@@ -3332,7 +3332,7 @@ PresShell::StyleChangeReflow()
                                   eReflowReason_StyleChange, rcx, maxSize);
 
     rootFrame->WillReflow(mPresContext);
-    nsContainerFrame::PositionFrameView(mPresContext, rootFrame);
+    nsContainerFrame::PositionFrameView(rootFrame);
     rootFrame->Reflow(mPresContext, desiredSize, reflowState, status);
     rootFrame->SetSize(nsSize(desiredSize.width, desiredSize.height));
     mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));

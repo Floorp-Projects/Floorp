@@ -601,12 +601,12 @@ void nsTableCellFrame::VerticallyAlignChild(nsPresContext*          aPresContext
   desiredSize.width = mRect.width;
   desiredSize.height = mRect.height;
   desiredSize.mOverflowArea = nsRect(0, 0, mRect.width, mRect.height);
-  ConsiderChildOverflow(aPresContext, desiredSize.mOverflowArea, firstKid);
+  ConsiderChildOverflow(desiredSize.mOverflowArea, firstKid);
   FinishAndStoreOverflow(&desiredSize);
   if (kidYTop != kidRect.y) {
     // Make sure any child views are correctly positioned. We know the inner table
     // cell won't have a view
-    nsContainerFrame::PositionChildViews(aPresContext, firstKid);
+    nsContainerFrame::PositionChildViews(firstKid);
   }
   if (HasView()) {
     nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, this, GetView(), &desiredSize.mOverflowArea, 0);

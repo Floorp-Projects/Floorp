@@ -4330,9 +4330,8 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
 }
 
 void
-nsFrame::ConsiderChildOverflow(nsPresContext* aPresContext,
-                               nsRect&         aOverflowArea,
-                               nsIFrame*       aChildFrame)
+nsFrame::ConsiderChildOverflow(nsRect&   aOverflowArea,
+                               nsIFrame* aChildFrame)
 {
   const nsStyleDisplay* disp = GetStyleDisplay();
   // check here also for hidden as table frames (table, tr and td) currently 

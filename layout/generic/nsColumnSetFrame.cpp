@@ -303,9 +303,9 @@ static void
 PlaceFrameView(nsIFrame* aFrame)
 {
   if (aFrame->HasView())
-    nsContainerFrame::PositionFrameView(aFrame->GetPresContext(), aFrame);
+    nsContainerFrame::PositionFrameView(aFrame);
   else
-    nsContainerFrame::PositionChildViews(aFrame->GetPresContext(), aFrame);
+    nsContainerFrame::PositionChildViews(aFrame);
 }
 
 static void MoveChildTo(nsIFrame* aParent, nsIFrame* aChild, nsPoint aOrigin) {
@@ -485,7 +485,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
 
     contentRect.UnionRect(contentRect, child->GetRect());
 
-    ConsiderChildOverflow(GetPresContext(), overflowRect, child);
+    ConsiderChildOverflow(overflowRect, child);
 
     // Build a continuation column if necessary
     nsIFrame* kidNextInFlow = child->GetNextInFlow();
@@ -559,7 +559,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
 #endif
     for (child = mFrames.FirstChild(); child; child = child->GetNextSibling()) {
       MoveChildTo(this, child, child->GetPosition() + nsPoint(deltaX, 0));
-      ConsiderChildOverflow(GetPresContext(), overflowRect, child);
+      ConsiderChildOverflow(overflowRect, child);
       contentRect.UnionRect(contentRect, child->GetRect());
     }
   }

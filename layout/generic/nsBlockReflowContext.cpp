@@ -502,7 +502,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   // Note: Use "x" and "y" and not "mX" and "mY" because they more accurately
   // represents where we think the block will be placed
   mFrame->SetPosition(nsPoint(x, y));
-  nsContainerFrame::PositionFrameView(mPresContext, mFrame);
+  nsContainerFrame::PositionFrameView(mFrame);
 
 #ifdef DEBUG
   mMetrics.width = nscoord(0xdeadbeef);
