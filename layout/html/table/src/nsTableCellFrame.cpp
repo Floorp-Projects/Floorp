@@ -518,8 +518,14 @@ void nsTableCellFrame::SetBorderEdge(PRUint8       aSide,
   * Align the cell's child frame within the cell
   *
   */
+#ifndef MOZ_MATHML
 void nsTableCellFrame::VerticallyAlignChild(nsIPresContext*          aPresContext,
                                             const nsHTMLReflowState& aReflowState)
+#else
+void nsTableCellFrame::VerticallyAlignChild(nsIPresContext*          aPresContext,
+                                            const nsHTMLReflowState& aReflowState,
+                                            nscoord                  aMaxAscent)
+#endif
 {
   const nsStyleText* textStyle =
       (const nsStyleText*)mStyleContext->GetStyleData(eStyleStruct_Text);
@@ -533,10 +539,29 @@ void nsTableCellFrame::VerticallyAlignChild(nsIPresContext*          aPresContex
   
   nscoord topInset = borderPadding.top;
   nscoord bottomInset = borderPadding.bottom;
+#ifndef MOZ_MATHML
   PRUint8 verticalAlignFlags = NS_STYLE_VERTICAL_ALIGN_MIDDLE;
   if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
     verticalAlignFlags = textStyle->mVerticalAlign.GetIntValue();
   }
+#else
+  // As per bug 10207, we map 'sub', 'super', 'text-top', 'text-bottom', 
+  // length and percentage values to 'baseline'
+  // XXX It seems that we don't get to see length and percentage values here
+  //     because the Style System has already fixed the error and mapped them
+  //     to whatever is inherited from the parent, i.e, 'middle' in most cases.
+  PRUint8 verticalAlignFlags = NS_STYLE_VERTICAL_ALIGN_BASELINE;
+  if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
+    verticalAlignFlags = textStyle->mVerticalAlign.GetIntValue();
+    if (verticalAlignFlags != NS_STYLE_VERTICAL_ALIGN_TOP &&
+        verticalAlignFlags != NS_STYLE_VERTICAL_ALIGN_MIDDLE &&
+        verticalAlignFlags != NS_STYLE_VERTICAL_ALIGN_BOTTOM)
+    {
+      verticalAlignFlags = NS_STYLE_VERTICAL_ALIGN_BASELINE;
+    }
+  }                                         
+#endif
+
   nscoord height = mRect.height;
   nsRect kidRect;  
   nsIFrame* firstKid = mFrames.FirstChild();
@@ -550,8 +575,11 @@ void nsTableCellFrame::VerticallyAlignChild(nsIPresContext*          aPresContex
   {
     case NS_STYLE_VERTICAL_ALIGN_BASELINE:
       // Align the baselines of the child frame with the baselines of 
-      // other children in the same row which have align = baseline 
-      // XXX Not yet implemented, so fall through to top
+      // other children in the same row which have 'vertical-align: baseline'
+#ifdef MOZ_MATHML
+      kidYTop = topInset + aMaxAscent - GetDesiredAscent();
+    break;
+#endif
 
     case NS_STYLE_VERTICAL_ALIGN_TOP:
       // Align the top of the child frame with the top of the content area, 
@@ -575,6 +603,30 @@ void nsTableCellFrame::VerticallyAlignChild(nsIPresContext*          aPresContex
     nsContainerFrame::PositionChildViews(aPresContext, firstKid);
   }
 }
+
+#ifdef MOZ_MATHML
+// As per bug 10207, we map 'sub', 'super', 'text-top', 'text-bottom', 
+// length and percentage values to 'baseline'
+// XXX It seems that we don't get to see length and percentage values here
+//     because the Style System has already fixed the error and mapped them
+//     to whatever is inherited from the parent, i.e, 'middle' in most cases.
+PRBool
+nsTableCellFrame::HasVerticalAlignBaseline()
+{
+  const nsStyleText* textStyle;
+  GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)textStyle);
+  if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
+    PRUint8 verticalAlignFlags = textStyle->mVerticalAlign.GetIntValue();
+    if (verticalAlignFlags == NS_STYLE_VERTICAL_ALIGN_TOP ||
+        verticalAlignFlags == NS_STYLE_VERTICAL_ALIGN_MIDDLE ||
+        verticalAlignFlags == NS_STYLE_VERTICAL_ALIGN_BOTTOM)
+    {
+      return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
+}
+#endif
 
 PRInt32 nsTableCellFrame::GetRowSpan()
 {  
@@ -864,6 +916,10 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.height  = cellHeight;
   aDesiredSize.ascent  = topInset;
   aDesiredSize.descent = bottomInset;
+#ifdef MOZ_MATHML
+  aDesiredSize.ascent  += kidSize.ascent;
+  aDesiredSize.descent += kidSize.descent;
+#endif
   if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
     aDesiredSize.mMaximumWidth = kidSize.mMaximumWidth + leftInset + rightInset;
   }
@@ -878,8 +934,10 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   // remember my desired size for this reflow
   SetDesiredSize(aDesiredSize);
 
+#ifndef MOZ_MATHML
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
+#endif
 
   if (nsDebugTable::gRflCell) nsTableFrame::DebugReflow("TC::Rfl ex", this, nsnull, &aDesiredSize, aStatus);
 
