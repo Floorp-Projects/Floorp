@@ -312,16 +312,26 @@ sub modify {
         my $flag = get($id);
 
         my $status = $data->{"flag-$id"};
-        my $requestee_email = $data->{"requestee-$id"};
-
-        # Ignore flags the user didn't change.
-        next if ($status eq $flag->{'status'} && $flag->{'requestee'}
-                 && $requestee_email eq $flag->{'requestee'}->{'email'});
-
+        my $requestee_email = &::trim($data->{"requestee-$id"});
+        
+        # Ignore flags the user didn't change.  A flag hasn't changed
+        # if its status and requestee remain the same.  Status is easy;
+        # we just compare the existing status with the submitted one.
+        # For requestee, however, we have to be careful not to compare
+        # the two if the flag isn't specifically requestable or isn't 
+        # being requested, otherwise we'll get false positives and think 
+        # the user changed the flag when they didn't.
+        next if 
+          $status eq $flag->{'status'}    # the flag's status hasn't changed, and
+          && (!$flag->{'is_requesteeble'} # the flag isn't specifically requestable, or
+              || $status ne "?"           # the flag isn't being requested, or
+              || ($flag->{'requestee'}    # the requestee hasn't changed
+                  && ($requestee_email eq $flag->{'requestee'}->{'email'})));
+        
         # Since the status is validated, we know it's safe, but it's still
         # tainted, so we have to detaint it before using it in a query.
         &::trick_taint($status);
-                
+        
         if ($status eq '+' || $status eq '-') {
             &::SendSQL("UPDATE flags 
                         SET    setter_id = $::userid , 

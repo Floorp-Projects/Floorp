@@ -314,8 +314,12 @@ sub match_field {
             if ((scalar(@{$users}) == 1)
                 && (@{$users}[0]->{'email'} eq $query))
             {
-                $vars->{'form'}->{$field} .= @{$users}[0]->{'email'} . " ";
-                push @{$vars->{'mform'}->{$field}}, @{$users}[0]->{'email'} . " ";
+                # delimit with spaces if necessary
+                if ($vars->{'form'}->{$field}) {
+                    $vars->{'form'}->{$field} .= " ";
+                }
+                $vars->{'form'}->{$field} .= @{$users}[0]->{'email'};
+                push @{$vars->{'mform'}->{$field}}, @{$users}[0]->{'email'};
                 next;
             }
 
@@ -324,10 +328,13 @@ sub match_field {
 
             # here is where it checks for multiple matches
 
-            if (scalar(@{$users}) == 1) {
-                # exactly one match
-                $vars->{'form'}->{$field} .= @{$users}[0]->{'email'} . " ";
-                push @{$vars->{'mform'}->{$field}}, @{$users}[0]->{'email'} . " ";
+            if (scalar(@{$users}) == 1) { # exactly one match
+                # delimit with spaces if necessary
+                if ($vars->{'form'}->{$field}) {
+                    $vars->{'form'}->{$field} .= " ";
+                }
+                $vars->{'form'}->{$field} .= @{$users}[0]->{'email'};
+                push @{$vars->{'mform'}->{$field}}, @{$users}[0]->{'email'};
                 $need_confirm = 1 if &::Param('confirmuniqueusermatch');
 
             }
