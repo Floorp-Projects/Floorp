@@ -47,6 +47,7 @@
 #include "nsHTMLFormControlAccessible.h"
 #include "nsILink.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIDOMDocument.h"
 
 // IFrame
 #include "nsIDocShell.h"
@@ -86,7 +87,7 @@ nsAccessibilityService::CreateRootAccessible(nsISupports* aPresContext, nsISuppo
 
   NS_ASSERTION(presShell,"Error not presshell!!");
 
-  nsCOMPtr<nsIWeakReference> weakShell = do_GetWeakReference(presShell);
+  nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
 
   *_retval = new nsRootAccessible(weakShell);
   if (! *_retval) 
@@ -470,7 +471,6 @@ nsAccessibilityService::CreateHTMLIFrameAccessible(nsIDOMNode* aDOMNode, nsISupp
   return NS_ERROR_FAILURE;
 }
 
-
 //-----------------------------------------------------------------------
  // This method finds the content node in the parent document
  // corresponds to the docshell
@@ -509,7 +509,6 @@ nsAccessibilityService::CreateHTMLIFrameAccessible(nsIDOMNode* aDOMNode, nsISupp
    }
    return nsnull;
  }
-
 
 void nsAccessibilityService::GetOwnerFor(nsIPresShell *aPresShell, nsIPresShell **aOwnerShell, nsIContent **aOwnerContent)
 {
@@ -560,24 +559,47 @@ void nsAccessibilityService::GetOwnerFor(nsIPresShell *aPresShell, nsIPresShell 
   }
 }
 
-/* nsIAccessible GetAccessibleFor (in nsISupports aPresShell, in nsIDOMNode aNode); */
-NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIWeakReference *aPresShell, nsIDOMNode *aNode, 
+/* -------------------------------------------------------
+ * GetAccessibleFor - get an nsIAccessible from a DOM node
+ * ------------------------------------------------------- */
+
+NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode, 
                                                        nsIAccessible **_retval) 
 {
   *_retval = nsnull;
 
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(aPresShell));
+  if (!aNode)
+    return NS_ERROR_NULL_POINTER;
 
+  // ---- Get the document for this node  ----
+  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<nsIDocument> nodeIsDoc(do_QueryInterface(aNode));
+  if (nodeIsDoc)
+    doc = nodeIsDoc;
+  else {
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    aNode->GetOwnerDocument(getter_AddRefs(domDoc));
+    if (!domDoc)
+      return NS_ERROR_INVALID_ARG;
+    doc = do_QueryInterface(domDoc);
+  }
+  if (!doc)
+    return NS_ERROR_INVALID_ARG;
+
+  // ---- Get the pres shell ----
+  nsCOMPtr<nsIPresShell> shell;
+  doc->GetShellAt(0, getter_AddRefs(shell));
   if (!shell)
     return NS_ERROR_FAILURE;
 
+  // ---- Check if area node ----
   nsCOMPtr<nsIDOMHTMLAreaElement> areaContent(do_QueryInterface(aNode));
   if (areaContent)   // Area elements are implemented in nsHTMLImageAccessible as children of the image
     return PR_FALSE; // Return, otherwise the image frame looks like an accessible object in the wrong place
 
+  // ---- Check if we need outer owning doc ----
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(aNode));
-  if (!content && doc) {
+  if (!content && nodeIsDoc) {
     // This happens when we're on the document node, which will not QI to an nsIContent, 
     // When that happens, we try to get the outer, parent document node that contains the document
     // For example, a <browser> or <iframe> element
@@ -587,9 +609,12 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIWeakReference *aPresSh
     shell = ownerShell;
     content = ownerContent;
   }
+
+  // ---- If still no nsIContent, return ----
   if (!content)
     return PR_FALSE;
 
+  // ---- Try using frame to get IAccessible ----
   nsIFrame* frame = nsnull;
   shell->GetPrimaryFrameFor(content, &frame);
   if (!frame)
@@ -598,14 +623,17 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIWeakReference *aPresSh
   nsCOMPtr<nsIAccessible> newAcc;
   frame->GetAccessible(getter_AddRefs(newAcc));
 
+  // ---- Try QI'ing node to get nsIAccessible ----
   if (!newAcc)
     newAcc = do_QueryInterface(aNode);
 
+  // ---- If link, create link accessible ----
   if (!newAcc) {
     // is it a link?
     nsCOMPtr<nsILink> link(do_QueryInterface(aNode));
     if (link) {
-      newAcc = new nsHTMLLinkAccessible(aNode, aPresShell);
+      nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(shell));
+      newAcc = new nsHTMLLinkAccessible(aNode, weakShell);
     }
   }
 

@@ -50,7 +50,7 @@ interface nsIAccessibilityService : nsISupports
   nsIAccessible createHTMLIFrameAccessible(in nsIDOMNode aNode, in nsISupports aPresContext);
   nsIAccessible createHTMLBlockAccessible(in nsIDOMNode aNode, in nsISupports aDocument);
   nsIAccessible createAccessible(in nsIDOMNode aNode, in nsISupports aDocument);
-  nsIAccessible GetAccessibleFor(in nsIWeakReference aPresShell, in nsIDOMNode aNode);
+  nsIAccessible getAccessibleFor(in nsIDOMNode aNode);
 };
 
 
@@ -63,4 +63,5 @@ interface nsIAccessibilityService : nsISupports
 
 extern nsresult
 NS_NewAccessibilityService(nsIAccessibilityService** aResult);
+
 %}
