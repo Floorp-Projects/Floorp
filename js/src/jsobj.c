@@ -2616,7 +2616,9 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         if ((attrs & JSPROP_READONLY) || SCOPE_IS_SEALED(scope)) {
             /* XXXbe ECMA violation: readonly proto-property stops set cold. */
             OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
-            goto read_only;
+            if ((attrs & JSPROP_READONLY) && JSVERSION_IS_ECMA(cx->version))
+                return JS_TRUE;
+            goto read_only_error;
         }
 
         if (pobj != obj) {
@@ -2650,21 +2652,18 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     }
 
     if (!sprop) {
-        if (SCOPE_IS_SEALED(OBJ_SCOPE(obj))) {
-read_only:
-            if (!JSVERSION_IS_ECMA(cx->version)) {
-                JSString *str = js_DecompileValueGenerator(cx,
-                                                           JSDVG_IGNORE_STACK,
-                                                           ID_TO_VALUE(id),
-                                                           NULL);
-                if (str) {
-                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                         JSMSG_READ_ONLY,
-                                         JS_GetStringBytes(str));
-                }
-                return JS_FALSE;
+        if (SCOPE_IS_SEALED(OBJ_SCOPE(obj)))
+read_only_error: {
+            JSString *str = js_DecompileValueGenerator(cx,
+                                                       JSDVG_IGNORE_STACK,
+                                                       ID_TO_VALUE(id),
+                                                       NULL);
+            if (str) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                     JSMSG_READ_ONLY,
+                                     JS_GetStringBytes(str));
             }
-            return JS_TRUE;
+            return JS_FALSE;
         }
 
         /* Find or make a property descriptor with the right heritage. */
