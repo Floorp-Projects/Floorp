@@ -77,7 +77,8 @@ function getScopeFromFilterList(filterList)
     if (!filterList) return;
     var type = filterList.folder.server.type;
     if (type == "nntp") return nsIMsgSearchValidityManager.news;
-    return nsIMsgSearchValidityManager.onlineMail;
+	if (type == "pop3") return nsIMsgSearchValidityManager.offlineMail;
+    return nsIMsgSearchValidityManager.onlineMailFilter;
 }
 
 function getScope(filter) {
