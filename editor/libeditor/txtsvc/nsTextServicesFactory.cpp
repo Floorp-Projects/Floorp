@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#error This file is no longer used.
+
 #include "nsIGenericFactory.h"
 
 #include "nsTextServicesDocument.h"
