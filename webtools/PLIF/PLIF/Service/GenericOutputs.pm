@@ -73,7 +73,7 @@ sub outputReportFatalError {
 # dispatcher.output
 sub strings {
     return (
-            'acknowledge' => 'A blank output merely acknowledging that something happened',
+            'acknowledge' => 'A generic output merely acknowledging that something happened',
             'request' => 'A prompt for user input (only required for interactive protocols, namely stdout)',
             'error' => 'The message given to the user when something goes horribly wrong',
             );
