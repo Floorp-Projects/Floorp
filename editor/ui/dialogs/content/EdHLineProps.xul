@@ -59,8 +59,7 @@
           <!-- menupopup and menuitems added by JS -->
         </row>
         <row valign="middle" autostretch="never">
-          <text class="label" value="&heightEditField.label;"
-              tooltip="aTooltip"    tooltiptext="&heightEditField.tooltip;" />
+          <text class="label" value="&heightEditField.label;" />
           <textfield class="narrow" id="height" onkeyup="forceInteger('height')"/>
           <text class="label" value="&pixelsPopup.value;" />
         </row>
