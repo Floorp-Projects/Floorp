@@ -220,6 +220,9 @@ public:
                           nsIContent* aContent);
 
 private:
+  static nsrefcnt gInstances;
+  static nsIURI *gQuirkURI;
+
   // These are not supported and are not implemented!
   StyleSetImpl(const StyleSetImpl& aCopy);
   StyleSetImpl& operator=(const StyleSetImpl& aCopy);
@@ -276,6 +279,9 @@ protected:
 
 };
 
+nsrefcnt StyleSetImpl::gInstances = 0;
+nsIURI *StyleSetImpl::gQuirkURI = 0;
+
 StyleSetImpl::StyleSetImpl()
   : mOverrideSheets(nsnull),
     mDocSheets(nsnull),
@@ -299,6 +305,12 @@ StyleSetImpl::StyleSetImpl()
 #endif
 {
   NS_INIT_REFCNT();
+  if (gInstances++ == 0)
+  {
+    const char kQuirk_href[] = "resource:/res/quirk.css";
+    NS_NewURI (&gQuirkURI, kQuirk_href);
+    NS_ASSERTION (gQuirkURI != 0, "Cannot allocate nsStyleSetImpl::gQuirkURI");
+  }  
 }
 
 StyleSetImpl::~StyleSetImpl()
@@ -320,6 +332,10 @@ StyleSetImpl::~StyleSetImpl()
   }
  #endif
 #endif
+  if (--gInstances == 0)
+  {
+    NS_IF_RELEASE (gQuirkURI);
+  }
 }
 
 #ifndef MOZ_PERF_METRICS
@@ -647,7 +663,6 @@ PRInt32 StyleSetImpl::GetNumberOfBackstopStyleSheets()
 
 NS_IMETHODIMP StyleSetImpl::EnableQuirkStyleSheet(PRBool aEnable)
 {
-  const char kQuirk_href[] = "resource:/res/quirk.css";
   nsresult rv = NS_OK;
   if (nsnull == mQuirkStyleSheet) {
     // first find the quirk sheet:
@@ -661,11 +676,13 @@ NS_IMETHODIMP StyleSetImpl::EnableQuirkStyleSheet(PRBool aEnable)
         nsCOMPtr<nsICSSStyleSheet> cssSheet;
         sheet->QueryInterface(nsICSSStyleSheet::GetIID(), getter_AddRefs(cssSheet));
         if (cssSheet) {
-          static nsIURI *url = nsnull;
-          if (url == nsnull) NS_NewURI(&url, kQuirk_href);
           nsCOMPtr<nsIStyleSheet> quirkSheet;
           PRBool bHasSheet = PR_FALSE;
-          if (NS_SUCCEEDED(cssSheet->ContainsStyleSheet(url, bHasSheet, getter_AddRefs(quirkSheet))) && url && bHasSheet) {
+          NS_ASSERTION(gQuirkURI != nsnull, "StyleSetImpl::gQuirkStyleSet is not initialized!");
+          if (gQuirkURI != nsnull
+              && NS_SUCCEEDED(cssSheet->ContainsStyleSheet(gQuirkURI, bHasSheet, 
+                                                           getter_AddRefs(quirkSheet))) 
+              && bHasSheet) {
             NS_ASSERTION(quirkSheet, "QuirkSheet must be set: ContainsStyleSheet is hosed");
             // cache the sheet for faster lookup next time
             mQuirkStyleSheet = quirkSheet.get();
