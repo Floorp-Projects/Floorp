@@ -180,9 +180,12 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeEncoder(
 
 #ifdef MOZ_USE_NATIVE_UCONV
   if (mNativeUC) {
+    nsCOMPtr<nsISupports> supports;
     mNativeUC->GetNativeConverter("UCS-2", 
                                   NS_LossyConvertUCS2toASCII(*aDest).get(),
-                                  getter_AddRefs(encoder));
+                                  getter_AddRefs(supports));
+
+    encoder = do_QueryInterface(supports);
 
     if (encoder) {
       NS_ADDREF(*aResult = encoder);
@@ -218,9 +221,12 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeDecoder(
 
 #ifdef MOZ_USE_NATIVE_UCONV
   if (mNativeUC) {
+    nsCOMPtr<nsISupports> supports;
     mNativeUC->GetNativeConverter(NS_LossyConvertUCS2toASCII(*aSrc).get(),
                                   "UCS-2", 
-                                  getter_AddRefs(decoder));
+                                  getter_AddRefs(supports));
+    
+    decoder = do_QueryInterface(supports);
 
     if (decoder) {
       NS_ADDREF(*aResult = decoder);
