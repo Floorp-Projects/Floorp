@@ -18,6 +18,11 @@
 
 #include "nsTimerXlib.h"
 
+#ifdef TOOLKIT_EXORCISM
+#include "nsIXlibWindowService.h"
+#include "nsIServiceManager.h"
+#endif /* TOOLKIT_EXORCISM */
+
 #include <unistd.h>
 #include <stdio.h>
 
@@ -25,8 +30,13 @@
 
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
+#ifdef TOOLKIT_EXORCISM
+static int  NS_TimeToNextTimeout(struct timeval *aTimer);
+static void NS_ProcessTimeouts(void);
+#else
 extern "C" int  NS_TimeToNextTimeout(struct timeval *aTimer);
 extern "C" void NS_ProcessTimeouts(void);
+#endif /* TOOLKIT_EXORCISM */
 
 nsTimerXlib *nsTimerXlib::gTimerList = NULL;
 struct timeval nsTimerXlib::gTimer = {0, 0};
@@ -117,6 +127,9 @@ nsTimerXlib::Init(PRUint32 aDelay)
     }
   }
   NS_ADDREF(this);
+
+  EnsureWindowService();
+
   return NS_OK;
 }
 
@@ -200,7 +213,53 @@ nsTimerXlib::ProcessTimeouts(struct timeval *aNow)
   }
 }
 
-int NS_TimeToNextTimeout(struct timeval *aTimer) {
+#ifdef TOOLKIT_EXORCISM
+static NS_DEFINE_IID(kWindowServiceCID,NS_XLIB_WINDOW_SERVICE_CID);
+static NS_DEFINE_IID(kWindowServiceIID,NS_XLIB_WINDOW_SERVICE_IID);
+#endif /* TOOLKIT_EXORCISM */
+
+nsresult
+nsTimerXlib::EnsureWindowService()
+{
+#ifdef TOOLKIT_EXORCISM
+  nsIXlibWindowService * xlibWindowService = nsnull;
+
+  nsresult rv = nsServiceManager::GetService(kWindowServiceCID,
+                                             kWindowServiceIID,
+                                             (nsISupports **)&xlibWindowService);
+
+  NS_ASSERTION(NS_SUCCEEDED(rv),"Couldn't obtain window service.");
+
+  if (NS_OK == rv && nsnull != xlibWindowService)
+  {
+    xlibWindowService->SetTimeToNextTimeoutFunc(NS_TimeToNextTimeout);
+    xlibWindowService->SetProcessTimeoutsProc(NS_ProcessTimeouts);
+
+    NS_RELEASE(xlibWindowService);
+  }
+#endif /* TOOLKIT_EXORCISM */
+
+  return NS_OK;
+}
+
+#ifdef TOOLKIT_EXORCISM
+static
+#else
+extern "C"
+#endif /* TOOLKIT_EXORCISM */
+int NS_TimeToNextTimeout(struct timeval *aTimer) 
+{
+#ifdef TOOLKIT_EXORCISM
+  static int once = 1;
+
+  if (once)
+  {
+    once = 0;
+
+    printf("NS_TimeToNextTimeout() lives!\n");
+  }
+#endif /* TOOLKIT_EXORCISM */
+
   nsTimerXlib *timer;
   timer = nsTimerXlib::gTimerList;
   if (timer) {
@@ -231,24 +290,44 @@ int NS_TimeToNextTimeout(struct timeval *aTimer) {
   }
 }
 
-void NS_ProcessTimeouts(void) {
+#ifdef TOOLKIT_EXORCISM
+static
+#else
+extern "C"
+#endif /* TOOLKIT_EXORCISM */
+void
+NS_ProcessTimeouts(void) 
+{
+#ifdef TOOLKIT_EXORCISM
+  static int once = 1;
+
+  if (once)
+  {
+    once = 0;
+
+    printf("NS_ProcessTimeouts() lives!\n");
+  }
+#endif /* TOOLKIT_EXORCISM */
+
   struct timeval now;
   now.tv_sec = 0;
   now.tv_usec = 0;
   nsTimerXlib::ProcessTimeouts(&now);
 }
 
+#ifndef TOOLKIT_EXORCISM
 nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 {
-    NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-    if (nsnull == aInstancePtrResult) {
-      return NS_ERROR_NULL_POINTER;
-    }  
-
-    nsTimerXlib *timer = new nsTimerXlib();
-    if (nsnull == timer) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }  
+  
+  nsTimerXlib *timer = new nsTimerXlib();
+  if (nsnull == timer) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
 }
+#endif /* TOOLKIT_EXORCISM */

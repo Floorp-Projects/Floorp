@@ -29,7 +29,11 @@ include $(DEPTH)/config/autoconf.mk
 ## multiple implementations of widget can be built on the same
 ##  source tree.
 ##
+ifdef TOOLKIT_EXORCISM
+DIRS = xpwidgets gtk xlib motif unix_services
+else
 DIRS = xpwidgets $(MOZ_WIDGET_TOOLKIT)
+endif
 
 include $(topsrcdir)/config/config.mk
 

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indentT-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -19,7 +19,7 @@
 
 #include "nsTimerGtk.h"
 
-#include "nsTimerCIID.h"
+#include "nsUnixTimerCIID.h"
 
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"

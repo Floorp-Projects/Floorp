@@ -55,12 +55,21 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 BEOS_PROGRAM_RESOURCE = $(srcdir)/apprunner-beos.rsrc
 endif
 
+ifndef TOOLKIT_EXORCISM
+	UN_EXORCISED_WIDGET_FLAGS=$(MOZ_WIDGET_TOOLKIT_LDFLAGS)
+	UN_EXORCISED_GFX_FLAGS=$(MOZ_GFX_TOOLKIT_LDFLAGS)
+endif
+
+ifndef TOOLKIT_EXORCISM
+	UN_EXORCISED_TK_FLAGS=$(TK_LIBS)
+endif
+
 LIBS		+= \
 		-lnsappshell \
 		-lxpcom \
-		$(MOZ_WIDGET_TOOLKIT_LDFLAGS) \
+		$(UN_EXORCISED_WIDGET_FLAGS) \
 		-lraptorgfx \
-		$(MOZ_GFX_TOOLKIT_LDFLAGS) \
+		$(UN_EXORCISED_GFX_FLAGS) \
 		$(TIMER_LIBS) \
 		-lmozreg \
 		-lraptorwebwidget \
@@ -80,7 +89,7 @@ LIBS		+= \
 		-lxpcom \
 		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \
-		$(TK_LIBS) \
+		$(UN_EXORCISED_TK_FLAGS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

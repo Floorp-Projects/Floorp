@@ -18,9 +18,13 @@
  */
 
 #include "nsXlibWindowService.h"
-// yes, these are from the parent directory.
-#include "nsWidget.h"
-#include "nsAppShell.h"
+
+//
+// NO!  This is evil.  It creates a link time dependency with libwidget_xlib.so.
+//
+// // yes, these are from the parent directory.
+// #include "nsWidget.h"
+// #include "nsAppShell.h"
 
 nsXlibWindowService::nsXlibWindowService()
 {
@@ -34,16 +38,123 @@ NS_IMPL_ADDREF(nsXlibWindowService)
 NS_IMPL_RELEASE(nsXlibWindowService)
 NS_IMPL_QUERY_INTERFACE(nsXlibWindowService, nsCOMTypeInfo<nsIXlibWindowService>::GetIID())
 
-NS_IMETHODIMP
-nsXlibWindowService::SetCreateCallback(nsXlibWindowCallback *aFunc)
-{
-  nsWidget::SetXlibWindowCallback(aFunc);
-  return NS_OK;
-}
+/* static */ nsXlibWindowCallback         nsXlibWindowService::gsWindowCreateCallback = nsnull;
+/* static */ nsXlibWindowCallback         nsXlibWindowService::gsWindowDestroyCallback = nsnull;
+/* static */ nsXlibEventDispatcher        nsXlibWindowService::gsEventDispatcher = nsnull;
+/* static */ nsXlibTimeToNextTimeoutFunc  nsXlibWindowService::gsTimeToNextTimeoutFunc = nsnull;
+/* static */ nsXlibProcessTimeoutsProc    nsXlibWindowService::gsProcessTimeoutsProc = nsnull;
+
+// NS_IMETHODIMP
+// nsXlibWindowService::SetCreateCallback(nsXlibWindowCallback *aFunc)
+// {
+//   nsWidget::SetXlibWindowCallback(aFunc);
+//   return NS_OK;
+// }
+
+// NS_IMETHODIMP
+// nsXlibWindowService::DispatchNativeXlibEvent(void *aNativeEvent)
+// {
+//   nsAppShell::DispatchXEvent((XEvent *)aNativeEvent);
+//   return NS_OK;
+// }
 
 NS_IMETHODIMP
-nsXlibWindowService::DispatchNativeXlibEvent(void *aNativeEvent)
+nsXlibWindowService::SetWindowCreateCallback(nsXlibWindowCallback aCallback)
 {
-  nsAppShell::DispatchXEvent((XEvent *)aNativeEvent);
+  NS_ASSERTION(nsnull != aCallback,"null in ptr.");
+
+  gsWindowCreateCallback = aCallback;
+
   return NS_OK;
 }
+//////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP
+nsXlibWindowService::SetWindowDestroyCallback(nsXlibWindowCallback aCallback)
+{
+  NS_ASSERTION(nsnull != aCallback,"null in ptr.");
+
+  gsWindowDestroyCallback = aCallback;
+
+  return NS_OK;
+}
+//////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP
+nsXlibWindowService::SetEventDispatcher(nsXlibEventDispatcher aDispatcher)
+{
+  NS_ASSERTION(nsnull != aDispatcher,"null in ptr.");
+
+  gsEventDispatcher = aDispatcher;
+
+  return NS_OK;
+}
+//////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP
+nsXlibWindowService::GetWindowCreateCallback(nsXlibWindowCallback * aCallbackOut)
+{
+  NS_ASSERTION(nsnull != aCallbackOut,"null out ptr.");
+
+  *aCallbackOut = gsWindowCreateCallback;
+
+  return NS_OK;
+}
+//////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP
+nsXlibWindowService::GetWindowDestroyCallback(nsXlibWindowCallback * aCallbackOut)
+{
+  NS_ASSERTION(nsnull != aCallbackOut,"null out ptr.");
+
+  *aCallbackOut = gsWindowDestroyCallback;
+
+  return NS_OK;
+}
+//////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP
+nsXlibWindowService::GetEventDispatcher(nsXlibEventDispatcher * aDispatcherOut)
+{
+  NS_ASSERTION(nsnull != aDispatcherOut,"null out ptr.");
+
+  *aDispatcherOut = gsEventDispatcher;
+
+  return NS_OK;
+}
+//////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP
+nsXlibWindowService::SetTimeToNextTimeoutFunc(nsXlibTimeToNextTimeoutFunc aFunc)
+{
+  NS_ASSERTION(nsnull != aFunc,"null in ptr.");
+
+  gsTimeToNextTimeoutFunc = aFunc;
+
+  return NS_OK;
+}
+//////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP
+nsXlibWindowService::GetTimeToNextTimeoutFunc(nsXlibTimeToNextTimeoutFunc * aFuncOut)
+{
+  NS_ASSERTION(nsnull != aFuncOut,"null out ptr.");
+
+  *aFuncOut = gsTimeToNextTimeoutFunc;
+
+  return NS_OK;
+}
+//////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP
+nsXlibWindowService::SetProcessTimeoutsProc(nsXlibProcessTimeoutsProc aProc)
+{
+  NS_ASSERTION(nsnull != aProc,"null in ptr.");
+
+  gsProcessTimeoutsProc = aProc;
+
+  return NS_OK;
+}
+//////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP
+nsXlibWindowService::GetProcessTimeoutsProc(nsXlibProcessTimeoutsProc * aProcOut)
+{
+  NS_ASSERTION(nsnull != aProcOut,"null out ptr.");
+
+  *aProcOut = gsProcessTimeoutsProc;
+
+  return NS_OK;
+}
+//////////////////////////////////////////////////////////////////////////

@@ -56,6 +56,10 @@
 #include "nsISound.h"
 #include "nsIFileSpecWithUI.h"
 
+#if defined(XP_UNIX) && defined(TOOLKIT_EXORCISM)
+#include "nsIUnixToolkitService.h"
+#endif
+
 #include "prprf.h"
 #include "prmem.h"
 #include "prlog.h"	// PR_ASSERT
@@ -208,6 +212,123 @@ static NS_DEFINE_CID(kCJVMManagerCID,              NS_JVMMANAGER_CID);
 extern "C" void
 NS_SetupRegistry()
 {
+#if defined(XP_UNIX) && defined(TOOLKIT_EXORCISM)
+  // On unix, the widget and gfx toolkit are not linked into the app.
+  //
+  // Instead, they are loaded at runtime courtesy of xpcom.
+  //
+  // Loading the toolkit specific dlls at runtime has many benefits:
+  //
+  // o Simplifies linking of the "app" since it no longer needs to 
+  //   pull in the toolkit world.
+  //
+  // o Makes it possible to embed the xlib gfx/widget backends into
+  //   other high level x toolkit such as motif and gtk.  This is
+  //   highly desirable in the long run as a means to increase code
+  //   reuse and eyeball focus.
+  //
+  // o Makes it possible to run X Mozilla using different toolkits
+  //   without having to hack the application bits.  This in turn
+  //   simplifies everyone's life, since only one binary is needed.
+  //   The only platform specific bits are:
+  //
+  //   mozilla/gfx/src
+  //   mozilla/widget/src/
+  //   mozilla/widget/timer/
+  //
+  // o It bypasses (yeah right) the toolkit inquisitions and crusades.
+  // 
+  // o It makes you breakfast, lunch and dinner.
+  //
+
+
+  //
+  // Note1:
+  //
+  // The following code assumes that:
+  //
+  // + Some kind of auto registration has occurred for components.
+  //   For example, NS_AutoRegister() or nsComponentManager::AutoRegister().
+  //
+  //   -or-
+  //
+  // + The "app" was installed and a registry with information on the
+  //   toolkit_service component has been populated.  The master plan
+  //   is that this occurs at install time.  Otherwise bad things will
+  //   happen.
+  //
+  // During the development of mozilla, this usually occurs in the
+  // main() of the "app" (viewer/apprunner).  It is always the first
+  // thing that happens on the NS_SetupRegistry() function.
+  //
+  // If for some reason that changes in the future, the following code
+  // might have to be moved.
+  //
+  // Note2:
+  //
+  // The WIDGET_DLL and GFX_DLL macros will be redefined from the 
+  // hard coded values set in this file above.  They will point
+  // to strings valid only in the scope of this function.  
+  //
+  // If for some reason, the nsComponentManager::RegisterComponentLib()
+  // calls below are moved to a different scope, this unix specific code
+  // will have to deal.
+
+  static NS_DEFINE_CID(kCUnixToolkitServiceCID, NS_UNIX_TOOLKIT_SERVICE_CID);
+
+  nsresult   rv;
+
+  nsIUnixToolkitService * unixToolkitService = nsnull;
+    
+  rv = nsComponentManager::CreateInstance(kCUnixToolkitServiceCID,
+                                          nsnull,
+                                          nsIUnixToolkitService::GetIID(),
+                                          (void **) &unixToolkitService);
+  
+  NS_ASSERTION(rv == NS_OK,"Cannot obtain unix toolkit service.");
+
+  nsString unixToolkitName = "error";
+  nsString unixWidgetDllName = "error";
+  nsString unixGfxDllName = "error";
+  
+  if (NS_OK == rv && nsnull != unixToolkitService)
+  {
+    nsresult rv2;
+
+    rv2 = unixToolkitService->GetToolkitName(unixToolkitName);
+
+    NS_ASSERTION(rv2 == NS_OK,"Cannot get unix toolkit name context.");
+
+    rv2 = unixToolkitService->GetWidgetDllName(unixWidgetDllName);
+
+    NS_ASSERTION(rv2 == NS_OK,"Cannot get unix toolkit widget dll name.");
+
+    rv2 = unixToolkitService->GetGfxDllName(unixGfxDllName);
+
+    NS_ASSERTION(rv2 == NS_OK,"Cannot get unix toolkit gfx dll name.");
+
+    NS_RELEASE(unixToolkitService);
+  }
+
+#ifdef NS_DEBUG
+  printf("NS_SetupRegistry() MOZ_TOOLKIT=%s, WIDGET_DLL=%s, GFX_DLL=%s\n",
+         (const char *) nsAutoCString(unixToolkitName),
+         (const char *) nsAutoCString(unixWidgetDllName),
+         (const char *) nsAutoCString(unixGfxDllName));
+#endif
+  
+#undef WIDGET_DLL
+#undef GFXWIN_DLL
+
+#define WIDGET_DLL (const char *) nsAutoCString(unixWidgetDllName)
+#define GFXWIN_DLL (const char *) nsAutoCString(unixGfxDllName)
+
+#endif /* defined(XP_UNIX) && defined(TOOLKIT_EXORCISM) */
+
+
+  
+
+
   // WIDGET
   nsComponentManager::RegisterComponentLib(kCLookAndFeelCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCWindowCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -289,3 +410,4 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCJVMManagerCID,  NULL, NULL, OJI_DLL, PR_FALSE, PR_FALSE);
 #endif
 }
+

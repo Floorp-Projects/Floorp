@@ -65,6 +65,10 @@ ifdef DEBUG_ramiro
 DEFINES += -DXLIB_WIDGET_NOISY
 endif
 
+DIRS =\
+	window_service \
+	$(NULL)
+
 include $(topsrcdir)/config/config.mk
 
 CXXFLAGS += $(TK_CFLAGS)
@@ -80,7 +84,11 @@ EXTRA_DSO_LDOPTS+=	       \
 	$(MKSHLIB_UNFORCE_ALL) \
 	$(NULL)
 
+ifdef TOOLKIT_EXORCISM
+EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb -L/usr/X11R6/lib -lXext -lX11
+else
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
+endif
 
 include $(topsrcdir)/config/rules.mk
 

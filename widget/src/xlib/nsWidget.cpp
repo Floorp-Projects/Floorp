@@ -16,10 +16,14 @@
  * Reserved.
  */
 
-#include <X11/cursorfont.h>
-#include "nsIXlibWindowService.h"
-
 #include "nsWidget.h"
+
+#include "nsIServiceManager.h"
+
+#include "nsAppShell.h"
+
+#include <X11/cursorfont.h>
+
 #include "nsIEventListener.h"
 #include "nsIMenuListener.h"
 #include "nsIMouseListener.h"
@@ -31,7 +35,7 @@ PRLogModuleInfo *XlibWidgetsLM = PR_NewLogModule("XlibWidgets");
 PRLogModuleInfo *XlibScrollingLM = PR_NewLogModule("XlibScrolling");
 
 // set up our static members here.
-nsHashtable *nsWidget::window_list = nsnull;
+nsHashtable *nsWidget::gsWindowList = nsnull;
 
 // this is a class for generating keys for
 // the list of windows managed by mozilla.
@@ -39,7 +43,11 @@ nsHashtable *nsWidget::window_list = nsnull;
 // this is possibly the class impl that will be
 // called whenever a new window is created/destroyed
 
-nsXlibWindowCallback *nsWidget::mWindowCallback = nsnull;
+//nsXlibWindowCallback *nsWidget::mWindowCallback = nsnull;
+
+/* static */ nsXlibWindowCallback  nsWidget::gsWindowCreateCallback = nsnull;
+/* static */ nsXlibWindowCallback  nsWidget::gsWindowDestroyCallback = nsnull;
+/* static */ nsXlibEventDispatcher nsWidget::gsEventDispatcher = nsnull;
 
 // this is for implemention the WM_PROTOCOL code
 PRBool nsWidget::WMProtocolsInitialized = PR_FALSE;
@@ -140,6 +148,9 @@ NS_IMETHODIMP nsWidget::Create(nsNativeWidget aParent,
                               aParent));
 }
 
+static NS_DEFINE_IID(kWindowServiceCID,NS_XLIB_WINDOW_SERVICE_CID);
+static NS_DEFINE_IID(kWindowServiceIID,NS_XLIB_WINDOW_SERVICE_IID);
+
 nsresult
 nsWidget::StandardWidgetCreate(nsIWidget *aParent,
                                const nsRect &aRect,
@@ -174,6 +185,31 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
   }
   // set the bounds
   mBounds = aRect;
+
+
+#ifdef TOOLKIT_EXORCISM
+  nsIXlibWindowService * xlibWindowService = nsnull;
+
+   nsresult rv = nsServiceManager::GetService(kWindowServiceCID,
+                                             kWindowServiceIID,
+                                             (nsISupports **)&xlibWindowService);
+
+  NS_ASSERTION(NS_SUCCEEDED(rv),"Couldn't obtain window service.");
+
+  if (NS_OK == rv && nsnull != xlibWindowService)
+  {
+    xlibWindowService->GetWindowCreateCallback(&gsWindowCreateCallback);
+    xlibWindowService->GetWindowDestroyCallback(&gsWindowDestroyCallback);
+    
+//     NS_ASSERTION(nsnull != gsWindowCreateCallback,"Window create callback is null.");
+//     NS_ASSERTION(nsnull != gsWindowDestroyCallback,"Window destroy callback is null.");
+    
+    xlibWindowService->SetEventDispatcher((nsXlibEventDispatcher) nsAppShell::DispatchXEvent);
+
+    NS_RELEASE(xlibWindowService);
+  }
+#endif /* TOOLKIT_EXORCISM */
+
   // call the native create function
   CreateNative(parent, mBounds);
   // set up our wm hints if it's appropriate
@@ -647,11 +683,11 @@ void nsWidget::CreateNativeWindow(Window aParent, nsRect aRect,
 nsWidget *
 nsWidget::GetWidgetForWindow(Window aWindow)
 {
-  if (window_list == nsnull) {
+  if (gsWindowList == nsnull) {
     return nsnull;
   }
   nsWindowKey *window_key = new nsWindowKey(aWindow);
-  nsWidget *retval = (nsWidget *)window_list->Get(window_key);
+  nsWidget *retval = (nsWidget *)gsWindowList->Get(window_key);
   delete window_key;
   return retval;
 }
@@ -660,18 +696,21 @@ void
 nsWidget::AddWindowCallback(Window aWindow, nsWidget *aWidget)
 {
   // make sure that the list has been initialized
-  if (window_list == nsnull) {
-    window_list = new nsHashtable();
+  if (gsWindowList == nsnull) {
+    gsWindowList = new nsHashtable();
   }
   nsWindowKey *window_key = new nsWindowKey(aWindow);
-  window_list->Put(window_key, aWidget);
+  gsWindowList->Put(window_key, aWidget);
   // add a new ref to this widget
   NS_ADDREF(aWidget);
+
   // make sure that if someone is listening that we inform
   // them of the new window
-  if (mWindowCallback) {
-    mWindowCallback->WindowCreated(aWindow);
+  if (gsWindowCreateCallback) 
+  {
+    (*gsWindowCreateCallback)(aWindow);
   }
+
   delete window_key;
 }
 
@@ -679,12 +718,15 @@ void
 nsWidget::DeleteWindowCallback(Window aWindow)
 {
   nsWindowKey *window_key = new nsWindowKey(aWindow);
-  nsWidget *widget = (nsWidget *)window_list->Get(window_key);
+  nsWidget *widget = (nsWidget *)gsWindowList->Get(window_key);
   NS_RELEASE(widget);
-  window_list->Remove(window_key);
-  if (mWindowCallback) {
-    mWindowCallback->WindowDestroyed(aWindow);
+  gsWindowList->Remove(window_key);
+
+  if (gsWindowDestroyCallback) 
+  {
+    (*gsWindowDestroyCallback)(aWindow);
   }
+
   delete window_key;
 }
 
@@ -1020,33 +1062,33 @@ void nsWidget::SetMapStatus(PRBool aState)
   mIsMapped = aState;
 }
 
-nsresult
-nsWidget::SetXlibWindowCallback(nsXlibWindowCallback *aCallback)
-{
-  if (aCallback == nsnull) {
-    return NS_ERROR_FAILURE;
-  }
-  else {
-    mWindowCallback = aCallback;
-  }
-  return NS_OK;
-}
+// nsresult
+// nsWidget::SetXlibWindowCallback(nsXlibWindowCallback *aCallback)
+// {
+//   if (aCallback == nsnull) {
+//     return NS_ERROR_FAILURE;
+//   }
+//   else {
+//     mWindowCallback = aCallback;
+//   }
+//   return NS_OK;
+// }
 
-nsresult
-nsWidget::XWindowCreated(Window aWindow) {
-  if (mWindowCallback) {
-    mWindowCallback->WindowCreated(aWindow);
-  }
-  return NS_OK;
-}
+// nsresult
+// nsWidget::XWindowCreated(Window aWindow) {
+//   if (mWindowCallback) {
+//     mWindowCallback->WindowCreated(aWindow);
+//   }
+//   return NS_OK;
+// }
 
-nsresult
-nsWidget::XWindowDestroyed(Window aWindow) {
-  if (mWindowCallback) {
-    mWindowCallback->WindowDestroyed(aWindow);
-  }
-  return NS_OK;
-}
+// nsresult
+// nsWidget::XWindowDestroyed(Window aWindow) {
+//   if (mWindowCallback) {
+//     mWindowCallback->WindowDestroyed(aWindow);
+//   }
+//   return NS_OK;
+// }
 
 void
 nsWidget::SetUpWMHints(void) {

@@ -57,6 +57,7 @@ public:
 
 private:
   nsresult Init(PRUint32 aDelay);
+  nsresult EnsureWindowService();
 
   nsTimerCallbackFunc  mFunc;
   void *               mClosure;

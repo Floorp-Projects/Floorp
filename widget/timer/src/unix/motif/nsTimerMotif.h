@@ -53,7 +53,7 @@ public:
 
 private:
   nsresult Init(PRUint32 aDelay);
-  nsresult InitAppContext();
+  nsresult EnsureAppContext();
 
   PRUint32             mDelay;
   nsTimerCallbackFunc  mFunc;

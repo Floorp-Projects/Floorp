@@ -50,6 +50,10 @@ CPPSRCS = \
 CSRCS = \
 	nsPrintdGTK.c
 
+ifdef TOOLKIT_EXORCISM
+EXTRA_DSO_LDOPTS += $(TK_LIBS)
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 

@@ -24,19 +24,30 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
+ifdef TOOLKIT_EXORCISM
+
 DIRS = $(MOZ_WIDGET_TOOLKIT)
-### XXX ### DIRS = gtk motif xlib
-### XXX ### 
-### XXX ### LIBRARY_NAME = timer_s
-### XXX ### 
-### XXX ### REQUIRES=xpcom
-### XXX ### 
-### XXX ### CPPSRCS =\
-### XXX ### 		nsNewTimer.cpp \
-### XXX ### 		$(NULL)
-### XXX ### 
-### XXX ### MKSHLIB =
-### XXX ### override NO_SHARED_LIB=1
-### XXX ### override NO_STATIC_LIB=
+DIRS = gtk motif xlib
+
+LIBRARY_NAME = timer_s
+
+REQUIRES=xpcom
+
+CPPSRCS =\
+		nsNewTimer.cpp \
+		$(NULL)
+
+EXPORTS =\
+		nsUnixTimerCIID.h \
+		$(NULL)
+
+MKSHLIB =
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
+
+else
+DIRS = $(MOZ_WIDGET_TOOLKIT)
+
+endif # TOOLKIT_EXORCISM
 
 include $(topsrcdir)/config/rules.mk
