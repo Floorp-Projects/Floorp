@@ -68,9 +68,11 @@ sub decodeHTTPArguments {
 
     # parse the MIME body
     local $/ = undef;
-    my $entity = $parser->parse_data('Content-Type: '   . $self->CONTENT_TYPE   . "\n" .
-                                     'Content-Length: ' . $self->CONTENT_LENGTH . "\n" .
-                                     "\n" . <STDIN>);
+    my $data = 'Content-Type: '   . $self->CONTENT_TYPE   . "\n" .
+               'Content-Length: ' . $self->CONTENT_LENGTH . "\n" .
+               "\n" . <STDIN>;
+    $self->dump(9, "Data was:\n==============================\n$data\n==============================");
+    my $entity = $parser->parse_data($data);
 
     # handle the parts of the MIME body
     # read up to 16KB, no more
