@@ -66,6 +66,9 @@ public:
   NS_IMETHOD
   GetJSThread(PRUint32 *outThreadID);
 
+  NS_IMETHOD
+  GetJSContext(JSContext* *outContext);
+
   // nsIWindowlessPluginInstancePeer
 
   // (Corresponds to NPN_InvalidateRect.)

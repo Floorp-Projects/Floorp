@@ -22,6 +22,7 @@
 #include "nsIPluginInstancePeer.h"
 
 struct JSObject;
+struct JSContext;
 
 // {e7d48c00-e1f1-11d2-8360-fbc8abc4ae7c}
 #define NS_IPLUGININSTANCEPEER2_IID \
@@ -54,6 +55,15 @@ public:
 	 */
 	NS_IMETHOD
 	GetJSThread(PRUint32 *outThreadID) = 0;
+
+	/**
+	 * Get the JavaScript context to this plugin instance.
+	 *
+	 * @param outContext - the resulting JavaScript context
+	 * @result - NS_OK if this operation was successful
+	 */
+	NS_IMETHOD
+	GetJSContext(JSContext* *outContext) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
