@@ -296,7 +296,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char* 
    
 
 #ifdef NS_DEBUG
-  printf("composer registering from %s\n",path);
+  printf("Message Compose registering from %s\n",path);
 #endif
 
   return finalResult;
