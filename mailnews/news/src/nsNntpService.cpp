@@ -929,6 +929,10 @@ nsNntpService::CreateNewsAccount(const char *username, const char *hostname, PRB
 	if (NS_FAILED(rv)) return rv;
 	if (!identity) return NS_ERROR_FAILURE;
 
+    // by default, news accounts should be composing in plain text
+    rv = identity->SetComposeHtml(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv,rv);
+
 	// the identity isn't filled in, so it is not valid.
 	rv = (*server)->SetValid(PR_FALSE);
 	if (NS_FAILED(rv)) return rv;
