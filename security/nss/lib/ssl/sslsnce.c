@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsnce.c,v 1.16 2001/11/02 04:24:21 nelsonb%netscape.com Exp $
+ * $Id: sslsnce.c,v 1.17 2001/11/22 00:46:48 jpierre%netscape.com Exp $
  */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
@@ -69,7 +69,7 @@
 #include "nssrenam.h"
 #include "seccomon.h"
 
-#if defined(XP_UNIX) || defined(XP_WIN32)
+#if defined(XP_UNIX) || defined(XP_WIN32) || defined (XP_OS2)
 
 #include "cert.h"
 #include "ssl.h"
@@ -89,10 +89,14 @@
 #include <signal.h>
 #include "unix_err.h"
 
-#else /* XP_WIN32 */
+#else
+
+#ifdef XP_WIN32
 #include <wtypes.h>
 #include "win32err.h"
-#endif /* XP_WIN32 */
+#endif
+
+#endif 
 #include <sys/types.h>
 
 #define SET_ERROR_CODE /* reminder */
@@ -100,6 +104,10 @@
 #include "nspr.h"
 #include "nsslocks.h"
 #include "sslmutex.h"
+
+#ifdef XP_OS2_VACPP
+#pragma pack(1)
+#endif
 
 /*
 ** Format of a cache entry in the shared memory.
@@ -269,7 +277,7 @@ struct inheritanceStr {
 
 typedef struct inheritanceStr inheritance;
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(XP_OS2)
 
 #define DEFAULT_CACHE_DIRECTORY "\\temp"
 
@@ -872,6 +880,20 @@ ServerSessionIDUncache(sslSessionID *sid)
     PORT_SetError(err);
 }
 
+#ifdef XP_OS2
+
+#define INCL_DOSPROCESS
+#include <os2.h>
+
+long gettid(void)
+{
+    PTIB ptib;
+    PPIB ppib;
+    DosGetInfoBlocks(&ptib, &ppib);
+    return ((long)ptib->tib_ordinal); /* thread id */
+}
+#endif
+
 static SECStatus
 InitCache(cacheDesc *cache, int maxCacheEntries, PRUint32 ssl2_timeout, 
           PRUint32 ssl3_timeout, const char *directory)
@@ -977,10 +999,17 @@ InitCache(cacheDesc *cache, int maxCacheEntries, PRUint32 ssl2_timeout,
     cfn = PR_smprintf("%s/.sslsvrcache.%d", directory, myPid);
     */
     cfn = PR_smprintf("%s", directory);
-#else /* XP_WIN32 */
+#endif
+ 
+#ifdef XP_WIN32
     cfn = PR_smprintf("%s/svrcache_%d_%x.ssl", directory, myPid, 
     			GetCurrentThreadId());
-#endif /* XP_WIN32 */
+#endif
+
+#ifdef XP_OS2
+    cfn = PR_smprintf("%s/svrcache_%d_%x.ssl", directory, myPid, 
+    			gettid());
+#endif
     if (!cfn) {
 	goto loser;
     }
@@ -1091,7 +1120,9 @@ SSL_ConfigServerSessionIDCacheInstance(	cacheDesc *cache,
     printf("sizeof(sidCacheEntry) == %u\n", sizeof(sidCacheEntry));
 #endif
 #if !(defined(SOLARIS) && defined(i386))
+#ifndef XP_OS2
     PORT_Assert(sizeof(sidCacheEntry) % 8 == 0);
+#endif
 #endif
     PORT_Assert(sizeof(certCacheEntry) == 4096);
 
@@ -1176,8 +1207,8 @@ SSL_ConfigMPServerSIDCache(	int      maxCacheEntries,
         result = SECFailure;
     }
 
-#if !defined(WIN32)
-    /* Launch thread to poll cache for expired locks */
+#if defined(XP_UNIX)
+    /* Launch thread to poll cache for expired locks on Unix */
     LaunchLockPoller(cache);
 #endif
     return result;
@@ -1329,7 +1360,7 @@ SSL_InheritMPServerSIDCache(const char * envString)
     return SSL_InheritMPServerSIDCacheInstance(&globalCache, envString);
 }
 
-#if !defined(WIN32)
+#if defined(XP_UNIX)
 
 #define SID_LOCK_EXPIRATION_TIMEOUT  30 /* seconds */
 
