@@ -548,6 +548,7 @@ nsStyleContext::SetStyle(nsStyleStructID aSID, const nsStyleStruct& aStruct)
 NS_IMETHODIMP
 nsStyleContext::RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse)
 {
+#if 0 // Commenting out until we figure out why this crashes only on opt builds.
   // First we need to clear out all of our style data.
   if (mCachedStyleData.mResetData || mCachedStyleData.mInheritedData)
     mCachedStyleData.Destroy(mBits, aPresContext);
@@ -579,7 +580,7 @@ nsStyleContext::RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse)
       child = child->mNextSibling;
     } while (mEmptyChild != child);
   }
-
+#endif
   return NS_OK;
 }
 
