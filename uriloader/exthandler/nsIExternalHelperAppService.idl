@@ -96,6 +96,7 @@ interface nsIHelperAppLauncher : nsISupports
   void closeProgressWindow();
 
   // aSourceUrl--> the url we are downloading....and the file we are saving too
-  nsIFile getDownloadInfo(out nsIURI aSourceUrl);
+  // aTimeDownloadStarted --> time in ms that the download actually began
+  nsIFile getDownloadInfo(out nsIURI aSourceUrl, out long long aTimeDownloadStarted);
   
 };
