@@ -21,17 +21,24 @@
 #include "plevent.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
-#include "nsICmdLineService.h"
 #include "nsXPComCIID.h"
 #include <stdlib.h>
 
 #include "nsIWidget.h"
 
+//#define CMDLINEARGS
+
+#ifdef CMDLINEARGS
+#include "nsICmdLineService.h"
+#endif
+
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
+#ifdef CMDLINEARGS
 static NS_DEFINE_IID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_IID(kICmdLineServiceIID, NS_ICOMMANDLINE_SERVICE_IID);
+#endif
 
 //-------------------------------------------------------------------------
 //
@@ -83,31 +90,32 @@ static void event_processor_callback(gpointer data,
 //
 //-------------------------------------------------------------------------
 
+#ifdef CMDLINEARGS
 NS_METHOD nsAppShell::Create(int *bac, char **bav)
+#else
+NS_METHOD nsAppShell::Create(int *argc, char **argv)
+#endif
+
 {
   gchar *home;
   gchar *path;
+  
+#ifdef CMDLINEARGS
   int *argc;
   char **argv;
-  // why do i get an error if this is defined here??
-  //  nsICmdLineService *cmdLineArgs=nsnull;
-  nsresult rv = NS_OK;
+  nsICmdLineService *cmdLineArgs=nsnull;
+  nsresult   rv = NS_OK;
 
   NS_WITH_SERVICE(nsICmdLineService, cmdLineArgs, kCmdLineServiceCID, &rv);
-  if (NS_SUCCEEDED(rv))
-  {
-    rv = cmdLineArgs->GetArgc(argc);
-    if(NS_FAILED(rv))
-      argc = bac;
+  if (NS_FAILED(rv)) return rv;
 
-    rv = cmdLineArgs->GetArgv(&argv);
-    if(NS_FAILED(rv))
-      argv = bav;
-  } else {
-    argc = bac;
-    argv = bav;
-  }
+  rv = cmdLineArgs->GetArgc(argc);
+  if(NS_FAILED(rv)) return rv;
 
+  rv = cmdLineArgs->GetArgv(&argv);
+  if(NS_FAILED(rv)) return rv;
+
+#endif
   gtk_set_locale ();
 
   gtk_init (argc, &argv);
@@ -117,12 +125,12 @@ NS_METHOD nsAppShell::Create(int *bac, char **bav)
   gdk_rgb_init();
 
   home = g_get_home_dir();
-  if ((char*)nsnull != home) {
-    path = g_strdup_printf("%s%c%s", home, G_DIR_SEPARATOR, ".gtkrc");
-    if ((char *)nsnull != path) {
-      gtk_rc_parse(path);
-      g_free(path);
-    }
+  if ( (char *) NULL != home ) {
+	path = g_strdup_printf("%s%c%s", home, G_DIR_SEPARATOR, ".gtkrc");
+	if ( (char *) NULL != path ) {
+		gtk_rc_parse(path);
+		g_free( path );
+	}
   }
 
   return NS_OK;
@@ -175,7 +183,7 @@ NS_METHOD nsAppShell::Run()
 
   // If a queue already present use it.
   if (EQueue)
-    goto done;
+     goto done;
 
   // Create the event queue for the thread
   rv = mEventQService->CreateThreadEventQueue();
@@ -186,8 +194,8 @@ NS_METHOD nsAppShell::Run()
   //Get the event queue for the thread
   rv = mEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &EQueue);
   if (NS_OK != rv) {
-    NS_ASSERTION("Could not obtain the thread event queue", PR_FALSE);
-    return rv;
+      NS_ASSERTION("Could not obtain the thread event queue", PR_FALSE);
+      return rv;
   }    
 
 
@@ -226,9 +234,10 @@ NS_METHOD nsAppShell::Exit()
 void* nsAppShell::GetNativeData(PRUint32 aDataType)
 {
   if (aDataType == NS_NATIVE_SHELL) {
-    // this isn't accually used, but if it was, we need to gtk_widget_ref() it.
+  // this isn't accually used, but if it was, we need to gtk_widget_ref() it.
 
-    //  return mTopLevel;
+
+//    return mTopLevel;
   }
   return nsnull;
 }
@@ -240,66 +249,59 @@ NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *& aEvent)
   aEvent = 0;
   aRealEvent = PR_FALSE;
   event = gdk_event_peek();
-
-  if ((GdkEvent *) nsnull != event ) { 
-    aRealEvent = PR_TRUE;
-    aEvent = event;
+  if ( (GdkEvent *) NULL != event ) { 
+	aRealEvent = PR_TRUE;
+	aEvent = event;
   } else 
-    g_main_iteration (PR_TRUE);
-
+        g_main_iteration (TRUE);
   return NS_OK;
 }
 
 NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 {
 	if ( aRealEvent == PR_TRUE )
-    g_main_iteration (PR_TRUE);
+        	g_main_iteration (TRUE);
 	return NS_OK;
 }
 
-NS_METHOD nsAppShell::EventIsForModalWindow(PRBool aRealEvent,
-                                            void *aEvent,
-                                            nsIWidget *aWidget,
-                                            PRBool *aForWindow)
+NS_METHOD nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent,
+    nsIWidget *aWidget, PRBool *aForWindow)
 {
   PRBool isInWindow, isMouseEvent;
   GdkEventAny *msg = (GdkEventAny *) aEvent;
 
   if (aRealEvent == PR_FALSE) {
-    *aForWindow = PR_FALSE;
-    return NS_OK;
+     *aForWindow = PR_FALSE;
+     return NS_OK;
   }
 
   isInWindow = PR_FALSE;
   if (aWidget != nsnull) {
-    // Get Native Window for dialog window
-    GdkWindow *win;
-    win = (GdkWindow *)aWidget->GetNativeData(NS_NATIVE_WINDOW);
+     // Get Native Window for dialog window
+     GdkWindow *win;
+     win = (GdkWindow *)aWidget->GetNativeData(NS_NATIVE_WINDOW);
 
-    // Find top most window of event window
-    GdkWindow *eWin = msg->window;
-    if (nsnull != eWin) {
-      if (win == eWin) {
-        isInWindow = PR_TRUE;
-      }
-    }
+     // Find top most window of event window
+     GdkWindow *eWin = msg->window;
+     if (NULL != eWin) {
+       if (win == eWin) {
+         isInWindow = PR_TRUE;
+       }
+     }
   }
 
   isMouseEvent = PR_FALSE;
-  switch (msg->type)
-  {
-    case GDK_MOTION_NOTIFY:
-    case GDK_BUTTON_PRESS:
-    case GDK_2BUTTON_PRESS:
-    case GDK_3BUTTON_PRESS:
-    case GDK_BUTTON_RELEASE:
-      isMouseEvent = PR_TRUE;
-    default:
-      isMouseEvent = PR_FALSE;
+  switch (msg->type) {
+     case GDK_MOTION_NOTIFY:
+     case GDK_BUTTON_PRESS:
+     case GDK_2BUTTON_PRESS:
+     case GDK_3BUTTON_PRESS:
+     case GDK_BUTTON_RELEASE:
+       isMouseEvent = PR_TRUE;
   }
 
   *aForWindow = isInWindow == PR_TRUE || 
-    isMouseEvent == PR_FALSE ? PR_TRUE : PR_FALSE;
+	isMouseEvent == PR_FALSE ? PR_TRUE : PR_FALSE;
 
   gdk_event_free( (GdkEvent *) aEvent );
   return NS_OK;
