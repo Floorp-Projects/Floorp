@@ -34,12 +34,13 @@
 /*
  * CMS signerInfo methods.
  *
- * $Id: cmssiginfo.c,v 1.14 2002/12/12 06:05:38 nelsonb%netscape.com Exp $
+ * $Id: cmssiginfo.c,v 1.15 2002/12/17 01:39:46 wtc%netscape.com Exp $
  */
 
 #include "cmslocal.h"
 
 #include "cert.h"
+#include "certdb.h"
 #include "key.h"
 #include "secasn1.h"
 #include "secitem.h"
@@ -575,6 +576,7 @@ CERTCertificate *
 NSS_CMSSignerInfo_GetSigningCertificate(NSSCMSSignerInfo *signerinfo, CERTCertDBHandle *certdb)
 {
     CERTCertificate *cert;
+    NSSCMSSignerIdentifier *sid;
 
     if (signerinfo->cert != NULL)
 	return signerinfo->cert;
@@ -589,16 +591,13 @@ NSS_CMSSignerInfo_GetSigningCertificate(NSSCMSSignerInfo *signerinfo, CERTCertDB
      * we leave this function -- we let the clean-up of the entire
      * cinfo structure later do the destroy of this cert.
      */
-    switch (signerinfo->signerIdentifier.identifierType) {
+    sid = &signerinfo->signerIdentifier;
+    switch (sid->identifierType) {
     case NSSCMSSignerID_IssuerSN:
-	cert = CERT_FindCertByIssuerAndSN(certdb, signerinfo->signerIdentifier.id.issuerAndSN);
+	cert = CERT_FindCertByIssuerAndSN(certdb, sid->id.issuerAndSN);
 	break;
     case NSSCMSSignerID_SubjectKeyID:
-#if 0 /* not yet implemented */
-	cert = CERT_FindCertBySubjectKeyID(certdb, signerinfo->signerIdentifier.id.subjectKeyID);
-#else
-	cert = NULL;
-#endif
+	cert = CERT_FindCertBySubjKeyID(certdb, sid->id.subjectKeyID);
 	break;
     default:
 	cert = NULL;

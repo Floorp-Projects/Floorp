@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.47 2002/12/12 06:05:25 nelsonb%netscape.com Exp $
+ * $Id: certdb.c,v 1.48 2002/12/17 01:39:36 wtc%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -669,7 +669,7 @@ cert_GetKeyID(CERTCertificate *cert)
     cert->subjectKeyID.len = 0;
 
     /* see of the cert has a key identifier extension */
-    rv = CERT_FindSubjectKeyIDExten(cert, &tmpitem);
+    rv = CERT_FindSubjectKeyIDExtension(cert, &tmpitem);
     if ( rv == SECSuccess ) {
 	cert->subjectKeyID.data = (unsigned char*) PORT_ArenaAlloc(cert->arena, tmpitem.len);
 	if ( cert->subjectKeyID.data != NULL ) {
@@ -746,7 +746,7 @@ cert_IsRootCert(CERTCertificate *cert)
 	/* authority key identifier is present */
 	if (cert->authKeyID->keyID.len > 0) {
 	    /* the keyIdentifier field is set, look for subjectKeyID */
-	    rv = CERT_FindSubjectKeyIDExten(cert, &tmpitem);
+	    rv = CERT_FindSubjectKeyIDExtension(cert, &tmpitem);
 	    if (rv == SECSuccess) {
 		PRBool match;
 		/* also present, they MUST match for it to be a root */
@@ -2735,4 +2735,160 @@ CERT_SetStatusConfig(CERTCertDBHandle *handle, CERTStatusConfig *statusConfig)
 {
   PORT_Assert(handle->statusConfig == NULL);
   handle->statusConfig = statusConfig;
+}
+
+/*
+ * Code for dealing with subjKeyID to cert mappings.
+ */
+
+static PLHashTable *gSubjKeyIDHash = NULL;
+static PRLock      *gSubjKeyIDLock = NULL;
+
+static void *cert_AllocTable(void *pool, PRSize size)
+{
+    return PORT_Alloc(size);
+}
+
+static void cert_FreeTable(void *pool, void *item)
+{
+    PORT_Free(item);
+}
+
+static PLHashEntry* cert_AllocEntry(void *pool, const void *key)
+{
+    return PORT_New(PLHashEntry);
+}
+
+static void cert_FreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
+{
+    SECITEM_FreeItem((SECItem*)(he->value), PR_TRUE);
+    if (flag == HT_FREE_ENTRY) {
+        SECITEM_FreeItem((SECItem*)(he->key), PR_TRUE);
+        PORT_Free(he);
+    }
+}
+
+static PLHashAllocOps cert_AllocOps = {
+    cert_AllocTable, cert_FreeTable, cert_AllocEntry, cert_FreeEntry
+};
+
+SECStatus
+CERT_CreateSubjKeyIDHashTable(void)
+{
+    gSubjKeyIDHash = PL_NewHashTable(0, SECITEM_Hash, SECITEM_HashCompare,
+                                    SECITEM_HashCompare,
+                                    &cert_AllocOps, NULL);
+    if (!gSubjKeyIDHash) {
+        PORT_SetError(SEC_ERROR_NO_MEMORY);
+        return SECFailure;
+    }
+    gSubjKeyIDLock = PR_NewLock();
+    if (!gSubjKeyIDLock) {
+        PL_HashTableDestroy(gSubjKeyIDHash);
+        gSubjKeyIDHash = NULL;
+        PORT_SetError(SEC_ERROR_NO_MEMORY);
+        return SECFailure;
+    }
+    return SECSuccess;
+
+}
+
+SECStatus
+CERT_AddSubjKeyIDMapping(SECItem *subjKeyID, CERTCertificate *cert)
+{
+    SECItem *newKeyID, *oldVal, *newVal;
+    SECStatus rv = SECFailure;
+
+    if (!gSubjKeyIDLock) {
+	/* If one is created, then both are there.  So only check for one. */
+	return SECFailure;
+    }
+
+    newVal = SECITEM_DupItem(&cert->derCert);
+    if (!newVal) {
+        PORT_SetError(SEC_ERROR_NO_MEMORY);
+        goto done;
+    }
+    newKeyID = SECITEM_DupItem(subjKeyID);
+    if (!newKeyID) {
+        SECITEM_FreeItem(newVal, PR_TRUE);
+        PORT_SetError(SEC_ERROR_NO_MEMORY);
+        goto done;
+    }
+
+    PR_Lock(gSubjKeyIDLock);
+    /* The hash table implementation does not free up the memory 
+     * associated with the key of an already existing entry if we add a 
+     * duplicate, so we would wind up leaking the previously allocated 
+     * key if we don't remove before adding.
+     */
+    oldVal = (SECItem*)PL_HashTableLookup(gSubjKeyIDHash, subjKeyID);
+    if (oldVal) {
+        PL_HashTableRemove(gSubjKeyIDHash, subjKeyID);
+    }
+
+    rv = (PL_HashTableAdd(gSubjKeyIDHash, newKeyID, newVal)) ? SECSuccess :
+                                                               SECFailure;
+    PR_Unlock(gSubjKeyIDLock);
+done:
+    return rv;
+}
+
+SECStatus
+CERT_RemoveSubjKeyIDMapping(SECItem *subjKeyID)
+{
+    SECStatus rv;
+    if (!gSubjKeyIDLock)
+        return SECFailure;
+
+    PR_Lock(gSubjKeyIDLock);
+    rv = (PL_HashTableRemove(gSubjKeyIDHash, subjKeyID)) ? SECSuccess :
+                                                           SECFailure;
+    PR_Unlock(gSubjKeyIDLock);
+    return rv;
+}
+
+SECStatus
+CERT_DestroySubjKeyIDHashTable(void)
+{
+    if (gSubjKeyIDHash) {
+        PR_Lock(gSubjKeyIDLock);
+        PL_HashTableDestroy(gSubjKeyIDHash);
+        gSubjKeyIDHash = NULL;
+        PR_Unlock(gSubjKeyIDLock);
+        PR_DestroyLock(gSubjKeyIDLock);
+        gSubjKeyIDLock = NULL;
+    }
+    return SECSuccess;
+}
+
+SECItem*
+CERT_FindDERCertBySubjKeyID(SECItem *subjKeyID)
+{
+    SECItem   *val;
+ 
+    if (!gSubjKeyIDLock)
+        return NULL;
+
+    PR_Lock(gSubjKeyIDLock);
+    val = (SECItem*)PL_HashTableLookup(gSubjKeyIDHash, subjKeyID);
+    if (val) {
+        val = SECITEM_DupItem(val);
+    }
+    PR_Unlock(gSubjKeyIDLock);
+    return val;
+}
+
+CERTCertificate*
+CERT_FindCertBySubjKeyID(CERTCertDBHandle *handle, SECItem *subjKeyID)
+{
+    CERTCertificate *cert = NULL;
+    SECItem *derCert;
+
+    derCert = CERT_FindDERCertBySubjKeyID(subjKeyID);
+    if (derCert) {
+        cert = CERT_FindCertByDERCert(handle, derCert);
+        SECITEM_FreeItem(derCert, PR_TRUE);
+    }
+    return cert;
 }

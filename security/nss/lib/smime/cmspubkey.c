@@ -34,7 +34,7 @@
 /*
  * CMS public key crypto
  *
- * $Id: cmspubkey.c,v 1.4 2001/12/07 01:36:13 relyea%netscape.com Exp $
+ * $Id: cmspubkey.c,v 1.5 2002/12/17 01:39:46 wtc%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -56,29 +56,43 @@
  * according to PKCS#1 and RFC2633 (S/MIME)
  */
 SECStatus
-NSS_CMSUtil_EncryptSymKey_RSA(PLArenaPool *poolp, CERTCertificate *cert, PK11SymKey *bulkkey,
-			SECItem *encKey)
+NSS_CMSUtil_EncryptSymKey_RSA(PLArenaPool *poolp, CERTCertificate *cert, 
+                              PK11SymKey *bulkkey,
+                              SECItem *encKey)
 {
-    SECOidTag certalgtag;	/* the certificate's encryption algorithm */
-    SECOidTag encalgtag;	/* the algorithm used for key exchange/agreement */
     SECStatus rv;
     SECKEYPublicKey *publickey;
-    int data_len;
-    void *mark = NULL;
 
-    /* sanity check */
-    certalgtag = SECOID_GetAlgorithmTag(&(cert->subjectPublicKeyInfo.algorithm));
-    PORT_Assert(certalgtag == SEC_OID_PKCS1_RSA_ENCRYPTION);
-
-    encalgtag = SEC_OID_PKCS1_RSA_ENCRYPTION;
     publickey = CERT_ExtractPublicKey(cert);
     if (publickey == NULL)
-	goto loser;
-	
+	return SECFailure;
+
+    rv = NSS_CMSUtil_EncryptSymKey_RSAPubKey(poolp, publickey, bulkkey, encKey);
+    SECKEY_DestroyPublicKey(publickey);
+    return rv;
+}
+
+SECStatus
+NSS_CMSUtil_EncryptSymKey_RSAPubKey(PLArenaPool *poolp, 
+                                    SECKEYPublicKey *publickey, 
+                                    PK11SymKey *bulkkey, SECItem *encKey)
+{
+    SECStatus rv;
+    int data_len;
+    KeyType keyType;
+    void *mark = NULL;
+
+
     mark = PORT_ArenaMark(poolp);
     if (!mark)
 	goto loser;
 
+    /* sanity check */
+    keyType = SECKEY_GetPublicKeyType(publickey);
+    PORT_Assert(keyType == rsaKey);
+    if (keyType != rsaKey) {
+	goto loser;
+    }
     /* allocate memory for the encrypted key */
     data_len = SECKEY_PublicKeyStrength(publickey);	/* block size (assumed to be > keylen) */
     encKey->data = (unsigned char*)PORT_ArenaAlloc(poolp, data_len);
@@ -90,7 +104,6 @@ NSS_CMSUtil_EncryptSymKey_RSA(PLArenaPool *poolp, CERTCertificate *cert, PK11Sym
     rv = PK11_PubWrapSymKey(PK11_AlgtagToMechanism(SEC_OID_PKCS1_RSA_ENCRYPTION),
 				publickey, bulkkey, encKey);
 
-    SECKEY_DestroyPublicKey(publickey);
     if (rv != SECSuccess)
 	goto loser;
 

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.71 $ $Date: 2002/10/22 14:43:08 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.72 $ $Date: 2002/12/17 01:39:43 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -248,7 +248,7 @@ nss3certificate_matchIdentifier(nssDecodedCert *dc, void *id)
 
     /* keyIdentifier */
     if (authKeyID->keyID.len > 0) {
-	if (CERT_FindSubjectKeyIDExten(c, &skid) == SECSuccess) {
+	if (CERT_FindSubjectKeyIDExtension(c, &skid) == SECSuccess) {
 	    PRBool skiEqual;
 	    skiEqual = SECITEM_ItemsAreEqual(&authKeyID->keyID, &skid);
 	    PORT_Free(skid.data);

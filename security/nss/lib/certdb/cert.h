@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.30 2002/12/10 17:41:16 relyea%netscape.com Exp $
+ * $Id: cert.h,v 1.31 2002/12/17 01:39:36 wtc%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -477,6 +477,9 @@ CERT_FindCertByKeyID (CERTCertDBHandle *handle, SECItem *name, SECItem *keyID);
 */
 extern CERTCertificate *
 CERT_FindCertByIssuerAndSN (CERTCertDBHandle *handle, CERTIssuerAndSN *issuerAndSN);
+
+extern CERTCertificate *
+CERT_FindCertBySubjKeyID (CERTCertDBHandle *handle, SECItem *subjKeyID);
 
 /*
 ** Find a certificate in the database by a nickname
@@ -922,7 +925,7 @@ extern SECStatus CERT_FindKeyUsageExtension (CERTCertificate *cert,
 /* Return the decoded value of the subjectKeyID extension. The caller should 
 ** free up the storage allocated in retItem->data.
 */
-extern SECStatus CERT_FindSubjectKeyIDExten (CERTCertificate *cert, 
+extern SECStatus CERT_FindSubjectKeyIDExtension (CERTCertificate *cert, 
 							   SECItem *retItem);
 
 /*

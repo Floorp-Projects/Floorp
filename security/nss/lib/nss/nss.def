@@ -718,6 +718,8 @@ SECKEY_CopyPublicKey;
 ;+    global:
 CERT_CRLCacheRefreshIssuer;
 CERT_EncodeAltNameExtension;
+CERT_FindCertBySubjKeyID;
+CERT_FindSubjectKeyIDExtension;
 CERT_GetFirstEmailAddress;
 CERT_GetNextEmailAddress;
 CERT_VerifySignedDataWithPubKeyInfo;

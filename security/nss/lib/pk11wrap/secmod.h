@@ -148,6 +148,22 @@ extern unsigned long SECMOD_InternaltoPubMechFlags(unsigned long internalFlags);
 extern unsigned long SECMOD_PubCipherFlagstoInternal(unsigned long publicFlags);
 extern unsigned long SECMOD_InternaltoPubCipherFlags(unsigned long internalFlags);
 
+typedef struct SECMODCallOnceType {
+    PRIntn initialized;
+    PRInt32 inProgress;
+    SECStatus status;
+} SECMODCallOnceType;
+
+typedef SECStatus (PR_CALLBACK *SECMODCallOnceFN)(void *arg);
+
+extern void SECMOD_InitCallOnce();
+
+extern SECStatus SECMOD_CallOnce(SECMODCallOnceType *once,
+                                 SECMODCallOnceFN    func,
+                                 void               *arg);
+
+extern void SECMOD_CleanupCallOnce();
+
 SEC_END_PROTOS
 
 #endif
