@@ -332,7 +332,7 @@ nsContextMenu.prototype = {
         if ( item ) {
             // Change id so it doesn't interfere with this menu
             // the next time it is displayed.
-            item.setAttribute( "id", "_dead" );
+            //item.setAttribute( "id", "_dead" );
             this.menu.removeChild( item );
         }
     },
