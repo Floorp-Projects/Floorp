@@ -15,35 +15,27 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-#######################################################################
-# (1) Include manifest file                                           #
-#######################################################################
+DEPTH = ../..
 
-include manifest.mn
+CPPSRCS = 	HeaderGenerator.cpp		\
+		JNIHeaderGenerator.cpp		\
+		NetscapeHeaderGenerator.cpp	\
+		main.cpp			\
+		$(NULL)
 
-#######################################################################
-# (2) Include "component" configuration information.                  #
-#######################################################################
+PROGRAM = javah
 
 include $(DEPTH)/config/config.mk
 
-#######################################################################
-# (3) Include "local" platform-dependent assignments (OPTIONAL).      #
-#######################################################################
+CFLAGS += -DIMPORTING_VM_FILES
+LDFLAGS += $(EF_LIBS) $(NSPR_LIBS) 
 
-include config.mk
-
-
-#######################################################################
-# (4) Execute "component" rules. (OPTIONAL)                           #
-#######################################################################
+ifneq ($(OS_ARCH),WINNT)
+LDFLAGS += -lm
+endif
 
 include $(DEPTH)/config/rules.mk
 
-#######################################################################
-# (7) Execute "local" rules. (OPTIONAL).                              #
-#######################################################################
+libs:: $(PROGRAM)
 
-
-include rules.mk
-
+$(PROGRAM) : $(EF_LIB_FILES) 

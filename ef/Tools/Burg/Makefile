@@ -15,34 +15,67 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-#######################################################################
-# (1) Include manifest file                                           #
-#######################################################################
+DEPTH = ../..
 
-include manifest.mn
 
-#######################################################################
-# (2) Include "component" configuration information.                  #
-#######################################################################
+CSRCS = 	be.c			\
+		burs.c			\
+		closure.c		\
+		delta.c			\
+		fe.c			\
+		item.c			\
+		lex.c			\
+		list.c			\
+		main.c			\
+		map.c			\
+		nonterminal.c		\
+		operator.c		\
+		pattern.c		\
+		plank.c			\
+		queue.c			\
+		rule.c			\
+		string.c		\
+		symtab.c		\
+		table.c			\
+		trim.c			\
+		zalloc.c		\
+		y.tab.c			\
+		$(NULL)
+
+PROGRAM = burg
 
 include $(DEPTH)/config/config.mk
 
-#######################################################################
-# (3) Include "local" platform-dependent assignments (OPTIONAL).      #
-#######################################################################
-
-
-
-#######################################################################
-# (4) Execute "component" rules. (OPTIONAL)                           #
-#######################################################################
-
 include $(DEPTH)/config/rules.mk
 
-#######################################################################
-# (7) Execute "local" rules. (OPTIONAL).                              #
-#######################################################################
+#
+# Rules to generate y.tab.h and y.tab.c
+#
+# Redefine this rule because of the warnings. !!!!
+$(OBJDIR)/y.tab.$(OBJ_SUFFIX): y.tab.c
+	@$(MAKE_OBJDIR)
+ifeq ($(OS_ARCH), WINNT)
+	$(CC) -Fo$@ -c $(CFLAGS) $<
+else
+	$(CC) -o $@ -c $(CFLAGS) $<
+endif
 
-include rules.mk
+#
+# Extra dependencies.
+#
+lex.c: y.tab.h
 
+y.tab.c y.tab.h: gram.y
+	$(YACC) $(YACC_FLAGS) -d $<
 
+#
+# Extra cleaning.
+#
+
+clobber:: 
+	rm -f y.tab.c y.tab.h
+
+realclean clobber_all::
+	rm -f y.tab.c y.tab.h
+
+export:: $(PROGRAM)
