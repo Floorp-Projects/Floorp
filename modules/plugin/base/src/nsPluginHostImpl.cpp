@@ -192,7 +192,8 @@ static const char *kPluginTmpDirName = "plugtmp";
 // 0.01 first implementation
 // 0.02 added caching of CanUnload to fix bug 105935
 // 0.03 changed name, description and mime desc from string to bytes, bug 108246
-static const char *kPluginInfoVersion = "0.03";
+// 0.04 added new mime entry point on Mac, bug 113464
+static const char *kPluginInfoVersion = "0.04";
 ////////////////////////////////////////////////////////////////////////
 // CID's && IID's
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
