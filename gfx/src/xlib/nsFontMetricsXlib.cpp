@@ -63,6 +63,7 @@ static PRLogModuleInfo * FontMetricsXlibLM = PR_NewLogModule("FontMetricsXlib");
 #endif /* PR_LOGGING */
 
 #define UCS2_NOMAPPING 0XFFFD
+
 #undef  USER_DEFINED
 #define USER_DEFINED "x-user-def"
 
@@ -90,7 +91,7 @@ struct nsFontCharSetXlibInfo
   const char*            mCharSet;
   nsFontCharSetXlibConverter Convert;
   PRUint8                mSpecialUnderline;
-  PRUint32*              mMap;
+  PRUint16*              mCCMap;
   nsIUnicodeEncoder*     mConverter;
   nsIAtom*               mLangGroup;
   PRBool                 mInitedSizeInfo;
@@ -555,9 +556,9 @@ static nsFontPropertyNameXlib gWeightNames[] =
   { nsnull,     0 }
 };
 
-static PRUint32 gUserDefinedMap[2048];
-static PRUint32 gEmptyMap[2048];
-static PRUint32 gDoubleByteSpecialCharsMap[2048];
+static PRUint16* gUserDefinedCCMap = nsnull;
+static PRUint16* gEmptyCCMap = nsnull;
+static PRUint16* gDoubleByteSpecialCharsCCMap = nsnull;
 
 //
 // smart quotes (and other special chars) in Asian (double byte)
@@ -579,7 +580,7 @@ FreeCharSetMap(nsHashKey* aKey, void* aData, void* aClosure)
   nsFontCharSetMapXlib* charsetMap = (nsFontCharSetMapXlib*) aData;
   NS_IF_RELEASE(charsetMap->mInfo->mConverter);
   NS_IF_RELEASE(charsetMap->mInfo->mLangGroup);
-  PR_FREEIF(charsetMap->mInfo->mMap);
+  FreeCCMap(charsetMap->mInfo->mCCMap);
 
   return PR_TRUE;
 }
@@ -745,6 +746,9 @@ nsFontMetricsXlib::FreeGlobals(void)
     NS_IF_RELEASE(charSetMap->mFontLangGroup->mFontLangGroupAtom);
     charSetMap->mFontLangGroup->mFontLangGroupAtom = nsnull;
   }
+  FreeCCMap(gUserDefinedCCMap);
+  FreeCCMap(gEmptyCCMap);
+  FreeCCMap(gDoubleByteSpecialCharsCCMap);
   
   gXlibRgbHandle = nsnull;
 }
@@ -773,9 +777,10 @@ nsFontMetricsXlib::InitGlobals(void)
   }
 
   PRUint32 i; // XXX no local scope in |for| on some compilers
-  // clear the "empty" char map
-  for (i = 0; i < (sizeof(gEmptyMap) / sizeof(gEmptyMap[0])); i++)
-    gEmptyMap[i] = 0;
+  nsCompressedCharMap empty_ccmapObj;
+  gEmptyCCMap = empty_ccmapObj.NewCCMap();
+  if (!gEmptyCCMap)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // get the "disable double byte font special chars" setting
   PRBool val = PR_TRUE;
@@ -784,8 +789,13 @@ nsFontMetricsXlib::InitGlobals(void)
     gAllowDoubleByteSpecialChars = val;
 
   // setup the double byte font special chars glyph map
-  for (i = 0; gDoubleByteSpecialChars[i]; i++)
-    SET_REPRESENTABLE(gDoubleByteSpecialCharsMap, gDoubleByteSpecialChars[i]);
+  nsCompressedCharMap specialchars_ccmapObj;
+  for (int i=0; gDoubleByteSpecialChars[i]; i++) {
+    specialchars_ccmapObj.SetChar(gDoubleByteSpecialChars[i]);
+  }
+  gDoubleByteSpecialCharsCCMap = specialchars_ccmapObj.NewCCMap();
+  if (!gDoubleByteSpecialCharsCCMap)
+    return NS_ERROR_OUT_OF_MEMORY;    
 
   PRInt32 scale_minimum = 0;
   rv = gPref->GetIntPref("font.scale.outline.min", &scale_minimum);
@@ -1123,8 +1133,11 @@ nsFontMetricsXlib::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
           nsCOMPtr<nsICharRepresentable> mapper =
             do_QueryInterface(gUserDefinedConverter);
-          if (mapper)
-            res = mapper->FillInfo(gUserDefinedMap);
+          if (mapper) {
+            gUserDefinedCCMap = MapperToCCMap(mapper);
+            if (!gUserDefinedCCMap)
+              return NS_ERROR_OUT_OF_MEMORY;
+          }  
         }
         else
           return res;
@@ -1682,22 +1695,25 @@ SetUpFontCharSetInfo(nsFontCharSetXlibInfo* aSelf)
           nsnull, '?');
       nsCOMPtr<nsICharRepresentable> mapper = do_QueryInterface(converter);
       if (mapper) {
-        res = mapper->FillInfo(aSelf->mMap);
+        aSelf->mCCMap = MapperToCCMap(mapper);
+        if (!aSelf->mCCMap)
+          return;
 
         /*
-         * XXX This is a bit of a hack. Documents containing the CP1252
-         * extensions of Latin-1 (e.g. smart quotes) will display with those
-         * special characters way too large. This is because they happen to
-         * be in these large double byte fonts. So, we disable those
-         * characters here. Revisit this decision later.
-         */
+         * We used to disable special characters like smart quotes
+         * in CJK fonts because if they are quite a bit larger than
+         * western glyphs and we did not want glyph fill-in to use them
+         * in single byte documents.
+         *
+         * Now, single byte documents find these special chars before
+         * the CJK fonts are searched so this is no longer needed
+         * and should be removed, as requested in bug 100233
+          */
         if ((aSelf->Convert == DoubleByteConvert)
             && (!gAllowDoubleByteSpecialChars)) {
-          PRUint32* map = aSelf->mMap;
-#undef REMOVE_CHAR
-#define REMOVE_CHAR(map, c)  (map)[(c) >> 5] &= ~(1L << ((c) & 0x1f))
+          PRUint16* ccmap = aSelf->mCCMap;
           for (int i=0; gDoubleByteSpecialChars[i]; i++)
-            REMOVE_CHAR(map, gDoubleByteSpecialChars[i]);
+            CCMAP_UNSET_CHAR(ccmap, gDoubleByteSpecialChars[i]);
         }
       }
       else
@@ -1809,35 +1825,30 @@ GetUnderlineInfo(XFontStruct* aFont, unsigned long* aPositionX2,
 }
 #endif /* 0 */
 
-static PRUint32*
+static PRUint16*
 GetMapFor10646Font(XFontStruct* aFont)
 {
-  PRUint32* map = (PRUint32*) PR_Calloc(2048, 4);
-  if (map) {
-    if (aFont->per_char) {
-      PRInt32 minByte1 = aFont->min_byte1;
-      PRInt32 maxByte1 = aFont->max_byte1;
-      PRInt32 minByte2 = aFont->min_char_or_byte2;
-      PRInt32 maxByte2 = aFont->max_char_or_byte2;
-      PRInt32 charsPerRow = maxByte2 - minByte2 + 1;
-      for (PRInt32 row = minByte1; row <= maxByte1; row++) {
-        PRInt32 offset = (((row - minByte1) * charsPerRow) - minByte2);
-        for (PRInt32 cell = minByte2; cell <= maxByte2; cell++) {
-          XCharStruct* bounds = &aFont->per_char[offset + cell];
-          if (bounds->ascent || bounds->descent) {
-            SET_REPRESENTABLE(map, (row << 8) | cell);
-          }
-        }
+  if (!aFont->per_char)
+    return nsnull;
+
+  nsCompressedCharMap ccmapObj;
+  PRInt32 minByte1 = aFont->min_byte1;
+  PRInt32 maxByte1 = aFont->max_byte1;
+  PRInt32 minByte2 = aFont->min_char_or_byte2;
+  PRInt32 maxByte2 = aFont->max_char_or_byte2;
+  PRInt32 charsPerRow = maxByte2 - minByte2 + 1;
+  for (PRInt32 row = minByte1; row <= maxByte1; row++) {
+    PRInt32 offset = (((row - minByte1) * charsPerRow) - minByte2);
+    for (PRInt32 cell = minByte2; cell <= maxByte2; cell++) {
+      XCharStruct* bounds = &aFont->per_char[offset + cell];
+      if (bounds->ascent || bounds->descent) {
+        ccmapObj.SetChar((row << 8) | cell);
       }
     }
-    else {
-      // XXX look at glyph ranges property, if any
-      PR_Free(map);
-      map = nsnull;
-    }
-  }
+  }    
 
-  return map;
+  PRUint16 *ccmap = ccmapObj.NewCCMap();
+  return ccmap;
 }
 
 PRBool
@@ -1906,9 +1917,8 @@ nsFontXlib::LoadFont(void)
 
   if (xlibFont) {
     if (mCharSetInfo == &ISO106461) {
-      mMap = GetMapFor10646Font(xlibFont);
-      NS_ASSERTION(!mMap, "GetMapFor10646Font() failed.\n");
-      if (!mMap) {
+      mCCMap = GetMapFor10646Font(xlibFont);
+      if (!mCCMap) {
         ::XFreeFont(aDisplay, xlibFont);
         return;
       }
@@ -1958,7 +1968,7 @@ nsFontXlib::nsFontXlib()
 {
   MOZ_COUNT_CTOR(nsFontXlib);
   mFont                  = nsnull;
-  mMap                   = nsnull;
+  mCCMap                 = nsnull;
   mCharSetInfo           = nsnull;
   mName                  = nsnull;
   mUserDefinedFont       = nsnull;
@@ -1972,7 +1982,7 @@ nsFontXlib::~nsFontXlib()
     XFreeFont(xxlib_rgb_get_display(gXlibRgbHandle), mFont);
 
   if (mCharSetInfo == &ISO106461)
-    PR_FREEIF(mMap);
+    FreeCCMap(mCCMap);
 
   if (mName)
     PR_smprintf_free(mName);
@@ -2357,12 +2367,14 @@ nsFontXlibUserDefined::Init(nsFontXlib* aFont)
 {
   if(!aFont->mFont) {
     aFont->LoadFont();
-    if (!aFont->mFont)
+    if (!aFont->mFont) {
+      mCCMap = gEmptyCCMap;
       return PR_FALSE;
+    }  
   }
 
   mFont = aFont->mFont;
-  mMap = gUserDefinedMap;
+  mCCMap = gUserDefinedCCMap;
   mName = aFont->mName;
 
   return PR_TRUE;
@@ -2620,8 +2632,8 @@ nsFontMetricsXlib::PickASizeAndLoad(nsFontStretchXlib* aStretch,
   }
 
   if (aCharSet->mCharSet) {
-    font->mMap = aCharSet->mMap;
-    if (FONT_HAS_GLYPH(font->mMap, aChar)) {
+    font->mCCMap = aCharSet->mCCMap;
+    if (CCMAP_HAS_CHAR(font->mCCMap, aChar)) {
       font->LoadFont();
         if (!font->mFont)
           return nsnull;
@@ -2898,27 +2910,24 @@ nsFontMetricsXlib::SearchNode(nsFontNodeXlib* aNode, PRUnichar aChar)
 
   /*
    * mCharSet is set if we know which glyphs will be found in these fonts.
-   * If mMap has already been created for this charset, we compare it with
-   * the mMaps of the previously loaded fonts. If it is the same as any of
+   * If mCCMap has already been created for this charset, we compare it with
+   * the mCCMaps of the previously loaded fonts. If it is the same as any of
    * the previous ones, we return nsnull because there is no point in
    * loading a font with the same map.
    */
   if (charSetInfo->mCharSet) {
-    PRUint32* map = charSetInfo->mMap;
-    if (map) {
+    PRUint16* ccmap = charSetInfo->mCCMap;
+    if (ccmap) {
       for (int i = 0; i < mLoadedFontsCount; i++) {
-        if (mLoadedFonts[i]->mMap == map) {
+        if (mLoadedFonts[i]->mCCMap == ccmap) {
           return nsnull;
         }
       }
     }
     else {
-      map = (PRUint32*) PR_Calloc(2048, 4);
-      if (!map) {
-        return nsnull;
-      }
-      charSetInfo->mMap = map;
       SetUpFontCharSetInfo(charSetInfo);
+      if (!charSetInfo->mCCMap)
+        return nsnull;
     }
   }
   else {
@@ -3350,7 +3359,7 @@ GetFontNames(const char* aPattern, nsFontNodeArrayXlib* aNodes)
     size->mFont = nsnull;
     size->mSize = pixels;
     size->mBaselineAdjust = 0;
-    size->mMap = nsnull;
+    size->mCCMap = nsnull;
     size->mCharSetInfo = charSetInfo;
   }
   XFreeFontNames(list);
@@ -3752,16 +3761,16 @@ nsFontMetricsXlib::FindStyleSheetGenericFont(PRUnichar aChar)
         nsFontXlib* sub_font = FindSubstituteFont(aChar);
         NS_ASSERTION(sub_font, "failed to get a special chars substitute font");
         if (sub_font) {
-          sub_font->mMap = gDoubleByteSpecialCharsMap;
+          sub_font->mCCMap = gDoubleByteSpecialCharsCCMap;
           AddToLoadedFontsList(sub_font);
         }
-        if (western_font && FONT_HAS_GLYPH(western_font->mMap, aChar)) {
+        if (western_font && CCMAP_HAS_CHAR(western_font->mCCMap, aChar)) {
           return western_font;
         }
-        else if (symbol_font && FONT_HAS_GLYPH(symbol_font->mMap, aChar)) {
+        else if (symbol_font && CCMAP_HAS_CHAR(symbol_font->mCCMap, aChar)) {
           return symbol_font;
         }
-        else if (sub_font && FONT_HAS_GLYPH(sub_font->mMap, aChar)) {
+        else if (sub_font && CCMAP_HAS_CHAR(sub_font->mCCMap, aChar)) {
           return sub_font;
         }
       }
@@ -3855,7 +3864,7 @@ nsFontMetricsXlib::FindSubstituteFont(PRUnichar aChar)
 {
   if (!mSubstituteFont) {
     for (int i = 0; i < mLoadedFontsCount; i++) {
-      if (FONT_HAS_GLYPH(mLoadedFonts[i]->mMap, 'a')) {
+      if (CCMAP_HAS_CHAR(mLoadedFonts[i]->mCCMap, 'a')) {
         mSubstituteFont = new nsFontXlibSubstitute(mLoadedFonts[i]);
         break;
       }
@@ -3866,11 +3875,11 @@ nsFontMetricsXlib::FindSubstituteFont(PRUnichar aChar)
     // Thus we reparse *all* font glyph maps every time we see
     // a character that ends up using a substitute font.
     // future work:
-    // create an empty mMap and every time we determine a
+    // create an empty mCCMap and every time we determine a
     // character will get its "glyph" from the substitute font
-    // mark that character in the mMap.
-  }
-  // mark the mMap to indicate that this character has a "glyph"
+    // mark that character in the mCCMap.
+   }
+  // mark the mCCMap to indicate that this character has a "glyph"
 
   // If we know that mLoadedFonts has every font's glyph map loaded
   // then we can now set all the bit in the substitute font's glyph map
@@ -3878,7 +3887,7 @@ nsFontMetricsXlib::FindSubstituteFont(PRUnichar aChar)
   // font (without the font search).
   // if tried all glyphs {
   //   create a substitute font with all bits set
-  //   set all bits in mMap
+  //   set all bits in mCCMap
   // }
 
   return mSubstituteFont;

@@ -35,6 +35,7 @@
 #include "nsCOMPtr.h"
 #include "nsRenderingContextGTK.h"
 #include "nsICharRepresentable.h"
+#include "nsCompressedCharMap.h"
 
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
@@ -67,7 +68,7 @@ public:
   PRBool IsEmptyFont(GdkFont*);
 
   inline int SupportsChar(PRUnichar aChar)
-    { return mFont && FONT_HAS_GLYPH(mMap, aChar); };
+    { return mFont && CCMAP_HAS_CHAR(mCCMap, aChar); };
 
   virtual GdkFont* GetGDKFont(void);
   virtual PRBool   GetGDKFontIs10646(void);
@@ -86,7 +87,7 @@ public:
                      nsBoundingMetrics& aBoundingMetrics) = 0;
 #endif
 
-  PRUint32*              mMap;
+  PRUint16*              mCCMap;
   nsFontCharSetInfo*     mCharSetInfo;
   char*                  mName;
   nsFontGTKUserDefined*  mUserDefinedFont;
