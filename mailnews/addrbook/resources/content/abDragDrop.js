@@ -165,8 +165,8 @@ var abDirTreeObserver = {
         directory.dropCard(card, needToCopyCard);
       }
 
-        var cardsCopiedText = (numrows == 1 ? gAddressBookBundle.getString("cardCopied")
-                                            : gAddressBookBundle.getFormattedString("cardsCopied", [numrows]));
+        var cardsCopiedText = numrows == 1 ? gAddressBookBundle.getString("cardCopied")
+                                           : gAddressBookBundle.getFormattedString("cardsCopied", [numrows]);
 
         var statusText = document.getElementById("statusText");
         statusText.setAttribute("label", cardsCopiedText);        
