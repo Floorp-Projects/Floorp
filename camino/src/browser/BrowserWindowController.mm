@@ -2912,7 +2912,7 @@ enum BWCOpenDest {
   nsCOMPtr<nsIWebBrowser> webBrowser = getter_AddRefs([[[self getBrowserWrapper] getBrowserView] getWebBrowser]);
 
   // nsIClipboardCommands::CopyImageContents() copies both the location and the image
-  // by default, which we don't want. Thus se need to go directly to the command manger
+  // by default, which we don't want. Thus we need to go directly to the command manger
   // to send the command with params to just copy the image.
   nsCOMPtr<nsICommandManager> commandMgr(do_GetInterface(webBrowser));
   if (!commandMgr)
