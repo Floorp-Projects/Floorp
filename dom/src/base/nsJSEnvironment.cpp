@@ -617,6 +617,61 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
 
 }
 
+// Helper function to convert a jsval to an nsAString, and set
+// exception flags if the conversion fails.
+static nsresult
+JSValueToAString(JSContext *cx, jsval val, nsAString *result,
+                 PRBool *isUndefined)
+{
+  if (isUndefined) {
+    *isUndefined = JSVAL_IS_VOID(val);
+  }
+
+  if (!result) {
+    return NS_OK;
+  }
+
+  JSString* jsstring = ::JS_ValueToString(cx, val);
+  if (jsstring) {
+    result->Assign(NS_REINTERPRET_CAST(const PRUnichar*,
+                                       ::JS_GetStringChars(jsstring)),
+                   ::JS_GetStringLength(jsstring));
+  } else {
+    result->Truncate();
+
+    // We failed to convert val to a string. We're either OOM, or the
+    // security manager denied access to .toString(), or somesuch, on
+    // an object. Treat this case as if the result were undefined.
+
+    if (isUndefined) {
+      *isUndefined = PR_TRUE;
+    }
+
+    if (!::JS_IsExceptionPending(cx)) {
+      // JS_ValueToString() returned null w/o an exception
+      // pending. That means we're OOM.
+
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // We've got a pending exception. Tell XPConnect's current native
+    // call context (if any) about this exception so that it doesn't
+    // keep going as if nothing happened.
+
+    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
+
+    if (xpc) {
+      nsCOMPtr<nsIXPCNativeCallContext> nccx;
+      xpc->GetCurrentNativeCallContext(getter_AddRefs(nccx));
+      if (nccx) {
+        nccx->SetExceptionWasThrown(PR_TRUE);
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsJSContext::EvaluateString(const nsAString& aScript,
                             void *aScopeObject,
@@ -720,18 +775,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
 
   // If all went well, convert val to a string (XXXbe unless undefined?).
   if (ok) {
-    if (aIsUndefined) {
-      *aIsUndefined = JSVAL_IS_VOID(val);
-    }
-
-    JSString* jsstring = ::JS_ValueToString(mContext, val);
-    if (jsstring) {
-      aRetValue.Assign(NS_REINTERPRET_CAST(const PRUnichar*,
-                                           ::JS_GetStringChars(jsstring)),
-                       ::JS_GetStringLength(jsstring));
-    } else {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
+    rv = JSValueToAString(mContext, val, &aRetValue, aIsUndefined);
   }
   else {
     if (aIsUndefined) {
@@ -869,20 +913,8 @@ nsJSContext::ExecuteScript(void* aScriptObject,
 
   if (ok) {
     // If all went well, convert val to a string (XXXbe unless undefined?).
-    if (aIsUndefined) {
-      *aIsUndefined = JSVAL_IS_VOID(val);
-    }
 
-    if (aRetValue) {
-      JSString* jsstring = ::JS_ValueToString(mContext, val);
-      if (jsstring) {
-        aRetValue->Assign(NS_REINTERPRET_CAST(const PRUnichar*,
-                                              ::JS_GetStringChars(jsstring)),
-                          ::JS_GetStringLength(jsstring));
-      } else {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
+    rv = JSValueToAString(mContext, val, aRetValue, aIsUndefined);
   } else {
     if (aIsUndefined) {
       *aIsUndefined = PR_TRUE;

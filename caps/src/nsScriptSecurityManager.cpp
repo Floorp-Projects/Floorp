@@ -2047,7 +2047,7 @@ nsScriptSecurityManager::SavePrincipal(nsIPrincipal* aToSave)
 ///////////////// Capabilities API /////////////////////
 NS_IMETHODIMP
 nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
-                                                 PRBool *result)
+                                             PRBool *result)
 {
     nsresult rv;
     JSStackFrame *fp = nsnull;
@@ -2097,9 +2097,12 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
 
     if (!previousPrincipal)
     {
-        // No principals on the stack, all native code.  Allow execution.
-        *result = PR_TRUE;
+        // No principals on the stack, all native code.  Allow
+        // execution if the subject principal is the system principal.
+
+        return SubjectPrincipalIsSystem(result);
     }
+
     return NS_OK;
 }
 
