@@ -48,7 +48,7 @@ PRUint32 nsWidget::sWidgetCount = 0;
 
 static nsIRollupListener *gRollupListener = nsnull;
 static nsIWidget *gRollupWidget = nsnull;
-
+static PRBool gRollupConsumeRollupEvent = PR_FALSE;
 
 //
 // Keep track of the last widget being "dragged"
@@ -323,12 +323,54 @@ NS_IMETHODIMP nsWidget::Show(PRBool bState)
 
 NS_IMETHODIMP nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent)
 {
-  //  printf("nsWindow::CaptureRollupEvents() this = %p , doCapture = %i\n", this, aDoCapture);
-  
+#ifdef DEBUG_pavlov
+  printf("nsWindow::CaptureRollupEvents() this = %p , doCapture = %i\n", this, aDoCapture);
+#endif
+  GtkWidget *grabWidget;
+
+  grabWidget = mWidget;
+  // XXX we need a visible widget!!
+
+  if (aDoCapture)
+  {
+#ifdef DEBUG_pavlov
+    printf("grabbing widget\n");
+#endif
+    GdkCursor *cursor = gdk_cursor_new (GDK_ARROW);
+    if (!GTK_LAYOUT(mWidget)->bin_window)
+    {
+#ifdef DEBUG_pavlov
+      printf("no window for the widget\n");
+#endif
+      //      gtk_widget_show_now(mWidget);
+    }
+    else
+    {
+      int ret = gdk_pointer_grab (GTK_LAYOUT(mWidget)->bin_window, PR_TRUE,(GdkEventMask)
+                                  (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+                                   GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
+                                   GDK_POINTER_MOTION_MASK),
+                                  (GdkWindow*)NULL, cursor, GDK_CURRENT_TIME);
+#ifdef DEBUG_pavlov
+      printf("pointer grab returned %i\n", ret);
+#endif
+      gdk_cursor_destroy(cursor);
+    }
+  }
+  else
+  {
+#ifdef DEBUG_pavlov
+    printf("ungrabbing widget\n");
+#endif
+    gdk_pointer_ungrab(GDK_CURRENT_TIME);
+    //    gtk_grab_remove(grabWidget);
+  }
+
   if (aDoCapture) {
     //    gtk_grab_add(mWidget);
     NS_IF_RELEASE(gRollupListener);
     NS_IF_RELEASE(gRollupWidget);
+    gRollupConsumeRollupEvent = PR_TRUE;
     gRollupListener = aListener;
     NS_ADDREF(aListener);
     gRollupWidget = this;
@@ -526,7 +568,10 @@ NS_IMETHODIMP nsWidget::Enable(PRBool bState)
 NS_IMETHODIMP nsWidget::SetFocus(void)
 {
   if (mWidget)
-    gtk_widget_grab_focus(mWidget);
+  {
+    if (!GTK_WIDGET_HAS_FOCUS(mWidget))
+      gtk_widget_grab_focus(mWidget);
+  }
 
   return NS_OK;
 }
@@ -963,7 +1008,6 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   gtk_widget_pop_colormap();
   gtk_widget_pop_visual();
 
-
   InstallButtonPressSignal(mWidget);
   InstallButtonReleaseSignal(mWidget);
 
@@ -977,7 +1021,6 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
                      GTK_DEST_DEFAULT_ALL,
                      target_table, n_targets - 1, /* no rootwin */
                      GdkDragAction(GDK_ACTION_COPY | GDK_ACTION_MOVE));
-
 
   // Drag & Drop events.
   InstallDragBeginSignal(mWidget);
@@ -1643,7 +1686,7 @@ nsWidget::OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
   //
   // XXX ramiro - Same as above.
   //
-  if (nsnull != sButtonMotionTarget)
+  if (sButtonMotionTarget)
   {
     return;
   }
@@ -1709,20 +1752,31 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
   nsMouseEvent event;
   PRUint32 eventType = 0;
 
+#ifdef DEBUG_pavlov
+  printf("button press\n");
+#endif
+
   if (gRollupWidget && gRollupListener)
   {
     GtkWidget *rollupWidget = GTK_WIDGET(gRollupWidget->GetNativeData(NS_NATIVE_WIDGET));
-    GtkWidget *thisWidget = GTK_WIDGET(GetNativeData(NS_NATIVE_WIDGET));
-    if (rollupWidget != thisWidget && gtk_widget_get_toplevel(thisWidget) != rollupWidget)
+
+    gint x, y;
+    gint w, h;
+    gdk_window_get_origin(rollupWidget->window, &x, &y);
+
+    gdk_window_get_size(rollupWidget->window, &w, &h);
+
+
+    if (!(aGdkButtonEvent->x_root > x &&
+          aGdkButtonEvent->x_root < x + w &&
+          aGdkButtonEvent->y_root > y &&
+          aGdkButtonEvent->y_root < y + h))
     {
       gRollupListener->Rollup();
+      printf("rolling up\n");
       return;
     }
   }
-
-#ifdef DEBUG_pavlov
-  //  printf("button press\n");
-#endif
 
   // Switch on single, double, triple click.
   switch (aGdkButtonEvent->type) 
@@ -1850,6 +1904,8 @@ nsWidget::OnFocusInSignal(GdkEventFocus * aGdkFocusEvent)
   if (mIsDestroying)
     return;
 
+  GTK_WIDGET_SET_FLAGS(mWidget, GTK_HAS_FOCUS);
+
   nsGUIEvent event;
   
   event.message = NS_GOTFOCUS;
@@ -1913,6 +1969,8 @@ nsWidget::OnFocusOutSignal(GdkEventFocus * aGdkFocusEvent)
   if (mIsDestroying)
     return;
 
+  GTK_WIDGET_UNSET_FLAGS(mWidget, GTK_HAS_FOCUS);
+
   nsGUIEvent event;
   
   event.message = NS_LOSTFOCUS;
@@ -1968,9 +2026,9 @@ nsWidget::OnFocusOutSignal(GdkEventFocus * aGdkFocusEvent)
 }
 //////////////////////////////////////////////////////////////////////
 /* virtual */ void
-nsWidget::OnRealize()
+nsWidget::OnRealize(GtkWidget *aWidget)
 {
-  //  printf("nsWidget::OnRealize(%p)\n",this);
+  printf("nsWidget::OnRealize(%p)\n",this);
 }
 //////////////////////////////////////////////////////////////////////
 
@@ -2076,10 +2134,12 @@ nsWidget::DropEvent(GtkWidget * aWidget,
 
     if (aEventWindow != layout->bin_window)
     {
+#ifdef DEBUG_pavlov
+      printf("dropping event!!!!!!!\n");
+#endif
       return PR_TRUE;
     }
   }
-
   return PR_FALSE;
 }
 //////////////////////////////////////////////////////////////////////
@@ -2285,7 +2345,7 @@ nsWidget::RealizeSignal(GtkWidget *      aWidget,
 
   NS_ASSERTION( nsnull != widget, "instance pointer is null");
   
-  widget->OnRealize();
+  widget->OnRealize(aWidget);
 
   return PR_TRUE;
 }

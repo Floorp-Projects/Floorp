@@ -241,6 +241,7 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 
     mShell = gtk_window_new(GTK_WINDOW_DIALOG);
     gtk_window_set_policy(GTK_WINDOW(mShell), PR_TRUE, PR_TRUE, PR_FALSE);
+    gtk_widget_set_app_paintable(mShell, PR_TRUE);
     InstallRealizeSignal(mShell);
 
     gtk_container_add(GTK_CONTAINER(mShell), mWidget);
@@ -254,12 +255,14 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
   case eWindowType_popup:
     mIsToplevel = PR_TRUE;
     mShell = gtk_window_new(GTK_WINDOW_POPUP);
+    gtk_widget_set_app_paintable(mShell, PR_TRUE);
     gtk_container_add(GTK_CONTAINER(mShell), mWidget);
     break;
 
   case eWindowType_toplevel:
     mIsToplevel = PR_TRUE;
     mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_widget_set_app_paintable(mShell, PR_TRUE);
     gtk_window_set_policy(GTK_WINDOW(mShell), PR_TRUE, PR_TRUE, PR_FALSE);
     InstallRealizeSignal(mShell);
     gtk_container_add(GTK_CONTAINER(mShell), mWidget);
@@ -281,14 +284,15 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
     break;
   }
 
-
   if (mIsToplevel)
   {
     if (parentWidget)
     {
       GtkWidget *tlw = gtk_widget_get_toplevel(parentWidget);
       if (GTK_IS_WINDOW(tlw))
+      {
         gtk_window_set_transient_for(GTK_WINDOW(mShell), GTK_WINDOW(tlw));
+      }
     }
   }
 
@@ -699,7 +703,6 @@ NS_IMETHODIMP nsWindow::CaptureMouse(PRBool aCapture)
   if (aCapture)
   {
     printf("grabbing widget\n");
-    mGrabTime = gdk_time_get();
     GdkCursor *cursor = gdk_cursor_new (GDK_ARROW);
     gdk_pointer_grab (GTK_WIDGET(grabWidget)->window, PR_TRUE,(GdkEventMask)
                       (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
@@ -864,24 +867,23 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
 }
 
 /* virtual */ void
-nsWindow::OnRealize()
+nsWindow::OnRealize(GtkWidget *aWidget)
 {
-  SetIcon();
-
-  if (!mShell)
-    return;
-
-  // we were just realized, so we better have a window, but we will make sure...
-  if (mShell->window)
+  if (aWidget == mShell)
   {
-    // XXX bug 8002
-    //    gdk_window_raise(mShell->window);
+    SetIcon();
 
-    gint wmd = ConvertBorderStyles(mBorderStyle);
-    if (wmd != -1)
-      gdk_window_set_decorations(mShell->window, (GdkWMDecoration)wmd);
+    // we were just realized, so we better have a window, but we will make sure...
+    if (mShell->window)
+    {
+      // XXX bug 8002
+      //    gdk_window_raise(mShell->window);
+
+      gint wmd = ConvertBorderStyles(mBorderStyle);
+      if (wmd != -1)
+        gdk_window_set_decorations(mShell->window, (GdkWMDecoration)wmd);
+    }
   }
-
 }
 
 //////////////////////////////////////////////////////////////////////
