@@ -91,15 +91,34 @@ nsUserInfo::GetUsername(char * *aUsername)
 NS_IMETHODIMP 
 nsUserInfo::GetDomain(char * *aDomain)
 {
+    nsresult rv = NS_ERROR_FAILURE;
+
     struct utsname buf;
     
     if (uname(&buf)) { 
-        return NS_ERROR_FAILURE; 
+        return rv;
     }
     
-    *aDomain = nsCRT::strdup(buf.__domainname);
-
-    return NS_OK;
+ 
+    if (buf.__domainname && nsCRT::strlen(buf.__domainname)) {   
+        *aDomain = nsCRT::strdup(buf.__domainname);
+        rv = NS_OK;
+    }
+    else {
+        // try to get the hostname from the nodename
+        // on machines that use DHCP, domainname may not be set
+        // but the nodename might.
+        if (buf.nodename && nsCRT::strlen(buf.nodename)) {
+            // if the nodename is foo.bar.org, use bar.org as the domain
+            char *pos = strchr(buf.nodename,'.');
+            if (pos) {
+                *aDomain = nsCRT::strdup(pos+1);
+                rv = NS_OK;
+            }
+        }
+    }
+    
+    return rv;
 }
 
 NS_IMETHODIMP 
