@@ -126,7 +126,7 @@ static JSValue String_match(Context *cx, const JSValue& thisValue, JSValue *argv
     else {
         JSArrayInstance *A = (JSArrayInstance *)Array_Type->newInstance(cx);
         parseResult->lastIndex = 0;
-        uint32 index = 0;
+        int32 index = 0;
         while (true) {
             REState *regexp_result = REExecute(parseResult, S.string->begin(), S.string->length());
             if (regexp_result == NULL)
