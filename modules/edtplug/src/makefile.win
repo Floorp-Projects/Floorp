@@ -87,7 +87,7 @@ LINCS= $(LINCS) -I_jri       \
 #// Include the common makefile rules
 #//
 #//------------------------------------------------------------------------
-include <$(DEPTH)/sun-java/config/rules.mak>
+include <$(DEPTH)/config/rules.mak>
 
 CFLAGS=$(CFLAGS) $(JAVA_DEFINES)
 
