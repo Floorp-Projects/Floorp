@@ -423,9 +423,9 @@ GetTypeAndDescriptionFromMimetypesFile(const nsAString& aFilename,
           extensions.EndReading(end_iter);
           match_end = end_iter;
           
-          while (FindInReadable(aFileExtension,
-                                match_start,
-                                match_end)) {
+          while (CaseInsensitiveFindInReadable(aFileExtension,
+                                               match_start,
+                                               match_end)) {
             if (match_end == end_iter ||
                 *match_end == ',') {
               // it's a match.  Assign the type and description and run
