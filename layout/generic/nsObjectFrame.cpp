@@ -545,7 +545,11 @@ void nsObjectFrame::IsSupportedDocument(nsIContent* aContent, PRBool* aDoc)
     rv = catman->GetCategoryEntry("Gecko-Content-Viewers",buf, getter_Copies(value));
     nsMemory::Free(buf);
 
-    if (NS_SUCCEEDED(rv) && value && *value && (value.Length() > 0))
+    // If we have a content viewer entry in the catagory manager for this mime type
+    // and it's not the full-page plugin one, return PR_TRUE to act like an IFRAME.
+    if (NS_SUCCEEDED(rv) && 
+        !value.IsEmpty() &&
+        !value.Equals("@mozilla.org/content/plugin/document-loader-factory;1"))
       *aDoc = PR_TRUE;
     return;
   }
