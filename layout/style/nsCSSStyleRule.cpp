@@ -410,7 +410,8 @@ void CSSStyleRuleImpl::SetWeight(PRInt32 aWeight)
   mWeight = aWeight;
 }
 
-nscoord CSSStyleRuleImpl::CalcLength(const nsCSSValue& aValue, nsStyleFont* aFont, 
+nscoord CSSStyleRuleImpl::CalcLength(const nsCSSValue& aValue,
+                                     nsStyleFont* aFont, 
                                      nsIPresContext* aPresContext)
 {
   NS_ASSERTION(aValue.IsLengthUnit(), "not a length unit");
@@ -556,23 +557,66 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
           parentText = (nsStyleText*)parentContext->GetData(kStyleTextSID);
         }
 
-        // letter-spacing XXX
+        // letter-spacing
+        if (ourText->mLetterSpacing.IsLengthUnit()) {
+          text->mLetterSpacing.coord = CalcLength(ourText->mLetterSpacing,
+                                                  font, aPresContext);
+          text->mLetterSpacingFlags = NS_STYLE_POSITION_VALUE_LENGTH;
+        }
+        else if (ourText->mLetterSpacing.GetUnit() == eCSSUnit_Enumerated) {
+          text->mLetterSpacing.coord = 0;
+          text->mLetterSpacingFlags = NS_STYLE_POSITION_VALUE_AUTO;
+        }
+        else {
+          // Get letter-spacing from parent if we don't specify it
+          text->mLetterSpacingFlags = parentText->mLetterSpacingFlags;
+          text->mLetterSpacing = parentText->mLetterSpacing;
+        }
 
-        // line-height XXX
+        // line-height
+        if (ourText->mLineHeight.IsLengthUnit()) {
+          text->mLineHeight.coord = CalcLength(ourText->mLineHeight,
+                                               font, aPresContext);
+          text->mLineHeightFlags = NS_STYLE_POSITION_VALUE_LENGTH;
+        }
+        else if (ourText->mLineHeight.GetUnit() == eCSSUnit_Enumerated) {
+          text->mLineHeight.coord = 0;
+          text->mLineHeightFlags = NS_STYLE_POSITION_VALUE_AUTO;
+        }
+        else if (ourText->mLineHeight.GetUnit() == eCSSUnit_Percent) {
+          text->mLineHeight.percent = ourText->mLineHeight.GetFloatValue();
+          text->mLineHeightFlags = NS_STYLE_POSITION_VALUE_PERCENT;
+        }
+        else {
+          // Get line-height from parent if we don't specify it
+          text->mLineHeightFlags = parentText->mLineHeightFlags;
+          text->mLineHeight = parentText->mLineHeight;
+        }
 
         // text-align
-        if (ourText->mTextAlign.GetUnit() != eCSSUnit_Null) {
-          if (ourText->mTextAlign.GetUnit() == eCSSUnit_Enumerated) {
-            text->mTextAlign = ourText->mTextAlign.GetIntValue();
-          }
-          // [CSS2: inherit, string]
+        if (ourText->mTextAlign.GetUnit() == eCSSUnit_Enumerated) {
+          text->mTextAlign = ourText->mTextAlign.GetIntValue();
         }
         else {
           // Get alignment from parent if we don't specify it
           text->mTextAlign = parentText->mTextAlign;
         }
 
-        // text-indent XXX
+        // text-indent
+        if (ourText->mTextIndent.IsLengthUnit()) {
+          text->mTextIndent.coord = CalcLength(ourText->mTextIndent,
+                                               font, aPresContext);
+          text->mTextIndentFlags = NS_STYLE_POSITION_VALUE_LENGTH;
+        }
+        else if (ourText->mTextIndent.GetUnit() == eCSSUnit_Percent) {
+          text->mTextIndent.percent = ourText->mTextIndent.GetFloatValue();
+          text->mTextIndentFlags = NS_STYLE_POSITION_VALUE_PERCENT;
+        }
+        else {
+          // Get text-indent from parent if we don't specify it
+          text->mTextIndentFlags = parentText->mTextIndentFlags;
+          text->mTextIndent = parentText->mTextIndent;
+        }
 
         // text-decoration: enum, absolute (bit field)
         if ((ourText->mDecoration.GetUnit() == eCSSUnit_Enumerated) ||
@@ -582,29 +626,55 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
           text->mTextDecoration = td;
         }
 
+        // text-transform
+        if (ourText->mTextTransform.GetUnit() == eCSSUnit_Enumerated) {
+          text->mTextTransform = ourText->mTextTransform.GetIntValue();
+        }
+        else {
+          // Get alignment from parent if we don't specify it
+          text->mTextTransform = parentText->mTextTransform;
+        }
+
         // vertical-align
-        switch (ourText->mVertAlign.GetUnit()) {
-        case eCSSUnit_Absolute:/* XXX */
-        case eCSSUnit_Percent:/* XXX */
-          break;
-        case eCSSUnit_Enumerated:
-          text->mVerticalAlign = ourText->mVertAlign.GetIntValue();
-          break;
+        if (ourText->mVerticalAlign.IsLengthUnit()) {
+          text->mVerticalAlign.coord = CalcLength(ourText->mVerticalAlign,
+                                                  font, aPresContext);
+          text->mVerticalAlignFlags = NS_STYLE_VERTICAL_ALIGN_LENGTH;
+        }
+        else if (ourText->mVerticalAlign.GetUnit() == eCSSUnit_Enumerated) {
+          text->mVerticalAlign.coord = 0;
+          text->mVerticalAlignFlags = ourText->mVerticalAlign.GetIntValue();
+        }
+        else if (ourText->mVerticalAlign.GetUnit() == eCSSUnit_Percent) {
+          text->mVerticalAlign.percent =
+            ourText->mVerticalAlign.GetFloatValue();
+          text->mVerticalAlignFlags = NS_STYLE_VERTICAL_ALIGN_PERCENT;
         }
 
         // white-space
-        if (ourText->mWhiteSpace.GetUnit() != eCSSUnit_Null) {
-          if (ourText->mWhiteSpace.GetUnit() == eCSSUnit_Enumerated) {
-            text->mWhiteSpace = ourText->mWhiteSpace.GetIntValue();
-          }
-          // [CSS2: inherit, string]
+        if (ourText->mWhiteSpace.GetUnit() == eCSSUnit_Enumerated) {
+          text->mWhiteSpace = ourText->mWhiteSpace.GetIntValue();
         }
         else {
           // Get white-space from parent if we don't specify it
           text->mWhiteSpace = parentText->mWhiteSpace;
         }
 
-        // word-spacing XXX
+        // word-spacing
+        if (ourText->mWordSpacing.IsLengthUnit()) {
+          text->mWordSpacing.coord = CalcLength(ourText->mWordSpacing,
+                                                font, aPresContext);
+          text->mWordSpacingFlags = NS_STYLE_POSITION_VALUE_LENGTH;
+        }
+        else if (ourText->mWordSpacing.GetUnit() == eCSSUnit_Enumerated) {
+          text->mWordSpacing.coord = 0;
+          text->mWordSpacingFlags = NS_STYLE_POSITION_VALUE_AUTO;
+        }
+        else {
+          // Get letter-spacing from parent if we don't specify it
+          text->mWordSpacingFlags = parentText->mWordSpacingFlags;
+          text->mWordSpacing = parentText->mWordSpacing;
+        }
 
         NS_IF_RELEASE(parentContext);
       }
@@ -704,25 +774,25 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
         // background-position: length, percent (flags)
         if (ourColor->mBackPositionX.GetUnit() == eCSSUnit_Percent) {
           color->mBackgroundXPosition = (nscoord)(TWIPS_CONST_FLOAT * ourColor->mBackPositionX.GetFloatValue());
-          color->mBackgroundFlags |= NS_STYLE_BG_X_POSITION_PCT;
+          color->mBackgroundFlags |= NS_STYLE_BG_X_POSITION_PERCENT;
           color->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_LENGTH;
         }
         else if (ourColor->mBackPositionX.IsLengthUnit()) {
           color->mBackgroundXPosition = CalcLength(ourColor->mBackPositionX,
                                                    font, aPresContext);
           color->mBackgroundFlags |= NS_STYLE_BG_X_POSITION_LENGTH;
-          color->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_PCT;
+          color->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_PERCENT;
         }
         if (ourColor->mBackPositionY.GetUnit() == eCSSUnit_Percent) {
           color->mBackgroundYPosition = (nscoord)(TWIPS_CONST_FLOAT * ourColor->mBackPositionY.GetFloatValue());
-          color->mBackgroundFlags |= NS_STYLE_BG_Y_POSITION_PCT;
+          color->mBackgroundFlags |= NS_STYLE_BG_Y_POSITION_PERCENT;
           color->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_LENGTH;
         }
         else if (ourColor->mBackPositionY.IsLengthUnit()) {
           color->mBackgroundYPosition = CalcLength(ourColor->mBackPositionY,
                                                    font, aPresContext);
           color->mBackgroundFlags |= NS_STYLE_BG_Y_POSITION_LENGTH;
-          color->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_PCT;
+          color->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_PERCENT;
         }
 
   // XXX: NYI        nsCSSValue mBackFilter;
@@ -917,28 +987,28 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
           position->mLeftOffsetFlags = NS_STYLE_POSITION_VALUE_LENGTH;
         } else if (ourPosition->mHeight.GetUnit() == eCSSUnit_Percent) {
           position->mLeftOffset = (nscoord)(100 * ourPosition->mLeft.GetFloatValue());
-          position->mLeftOffsetFlags = NS_STYLE_POSITION_VALUE_PCT;
+          position->mLeftOffsetFlags = NS_STYLE_POSITION_VALUE_PERCENT;
         }
         if (ourPosition->mTop.IsLengthUnit()) {
           position->mTopOffset = CalcLength(ourPosition->mTop, font, aPresContext);
           position->mTopOffsetFlags = NS_STYLE_POSITION_VALUE_LENGTH;
         } else if (ourPosition->mHeight.GetUnit() == eCSSUnit_Percent) {
           position->mTopOffset = (nscoord)(100 * ourPosition->mTop.GetFloatValue());
-          position->mTopOffsetFlags = NS_STYLE_POSITION_VALUE_PCT;
+          position->mTopOffsetFlags = NS_STYLE_POSITION_VALUE_PERCENT;
         }
         if (ourPosition->mWidth.IsLengthUnit()) {
           position->mWidth = CalcLength(ourPosition->mWidth, font, aPresContext);
           position->mWidthFlags = NS_STYLE_POSITION_VALUE_LENGTH;
         } else if (ourPosition->mWidth.GetUnit() == eCSSUnit_Percent) {
           position->mWidth = (nscoord)(100 * ourPosition->mWidth.GetFloatValue());
-          position->mWidthFlags = NS_STYLE_POSITION_VALUE_PCT;
+          position->mWidthFlags = NS_STYLE_POSITION_VALUE_PERCENT;
         }
         if (ourPosition->mHeight.IsLengthUnit()) {
           position->mHeight = CalcLength(ourPosition->mHeight, font, aPresContext);
           position->mHeightFlags = NS_STYLE_POSITION_VALUE_LENGTH;
         } else if (ourPosition->mHeight.GetUnit() == eCSSUnit_Percent) {
           position->mHeight = (nscoord)(100 * ourPosition->mHeight.GetFloatValue());
-          position->mHeightFlags = NS_STYLE_POSITION_VALUE_PCT;
+          position->mHeightFlags = NS_STYLE_POSITION_VALUE_PERCENT;
         }
 
         // z-index
