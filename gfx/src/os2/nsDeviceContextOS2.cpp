@@ -151,7 +151,7 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
   long dpi;
   GFX (::DevQueryCaps(mPrintDC, CAPS_VERTICAL_FONT_RES, 1, &dpi), FALSE);
 
-  mPixelsToTwips = NSToIntRound((float)NSIntPointsToTwips(72) / ((float)dpi));
+  mPixelsToTwips = ((float)NSIntPointsToTwips(72)) / ((float)dpi);
   mTwipsToPixels = 1.0 / mPixelsToTwips;
 
   GetTwipsToDevUnits(newscale);
