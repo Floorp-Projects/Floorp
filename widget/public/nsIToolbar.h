@@ -165,6 +165,11 @@ public:
   */
   virtual nsEventStatus HandleEvent(nsGUIEvent *aEvent) = 0;
 
+ /**
+  * Create a Tab on this toolbar
+  *
+  */
+  NS_IMETHOD CreateTab(nsIWidget *& aTab) = 0;
 
 };
 

@@ -1442,6 +1442,11 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
 	toolbarWidget->Show(PR_TRUE);
   mToolbarMgr->AddToolbar(mBtnToolbar);
 
+  nsIWidget * tab = nsnull;
+  mBtnToolbar->CreateTab(tab);
+  NS_IF_RELEASE(tab);
+
+
   gBtnWidth  = 54;
   gBtnHeight = 42;
 
@@ -1537,6 +1542,11 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
 	urlToolbarWidget->SetBackgroundColor(windowBGColor);
 	urlToolbarWidget->Show(PR_TRUE);
   mToolbarMgr->AddToolbar(mURLToolbar);
+
+  tab = nsnull;
+  mURLToolbar->CreateTab(tab);
+  NS_IF_RELEASE(tab);
+
 
   //------
   // Create and place Bookmark button
@@ -1674,6 +1684,11 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
 	personalToolbarWidget->SetBackgroundColor(windowBGColor);
 	personalToolbarWidget->Show(PR_TRUE);
   mToolbarMgr->AddToolbar(personalToolbar);
+
+  tab = nsnull;
+  personalToolbar->CreateTab(tab);
+  NS_IF_RELEASE(tab);
+
 
   // Count number of buttons and create array to hold them
   mNumPersonalToolbarBtns = 0;

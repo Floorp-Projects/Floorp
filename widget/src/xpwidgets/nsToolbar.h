@@ -98,6 +98,7 @@ public:
 
   NS_IMETHOD GetPreferredConstrainedSize(PRInt32& aSuggestedWidth, PRInt32& aSuggestedHeight, 
                                          PRInt32& aWidth,          PRInt32& aHeight);
+  NS_IMETHOD CreateTab(nsIWidget *& aTab);
 
 protected:
   void GetMargins(PRInt32 &aX, PRInt32 &aY);
