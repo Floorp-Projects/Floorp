@@ -454,8 +454,6 @@ nsHTMLTableRowElement::InsertCell(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
 
         cells->Item(refIndex, getter_AddRefs(refCell));
 
-        nsCOMPtr<nsIDOMNode> retChild;
-
         rv = InsertBefore(cellNode, refCell, getter_AddRefs(retChild));
       } else {
         rv = AppendChild(cellNode, getter_AddRefs(retChild));
