@@ -31,6 +31,6 @@ function updateAlias() {
 function removeAlias() {
   var sqlService = getSqlService();
   var alias = getSelectedAlias();
-  sqlkService.removeAlias(alias);  
+  sqlService.removeAlias(alias);  
   updateButtons();
 }
