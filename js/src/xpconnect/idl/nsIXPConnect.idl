@@ -185,8 +185,6 @@ interface nsIXPCNativeCallContext : nsISupports
     readonly attribute nsISupports                  Callee;
     readonly attribute PRUint16                     CalleeMethodIndex;
     readonly attribute nsIXPConnectWrappedNative    CalleeWrapper;
-    readonly attribute nsIInterfaceInfo             CalleeInterface;
-    readonly attribute nsIClassInfo                 CalleeClassInfo;
     readonly attribute JSContextPtr                 JSContext;
     readonly attribute PRUint32                     Argc;
     readonly attribute JSValPtr                     ArgvPtr;
@@ -207,6 +205,11 @@ interface nsIXPCNativeCallContext : nsISupports
     * to overwrite it with the converted retval from the C++ callee.
     */
     attribute PRBool                                ReturnValueWasSet;
+
+    // Methods added since mozilla 0.6....
+
+    readonly attribute nsIInterfaceInfo             CalleeInterface;
+    readonly attribute nsIClassInfo                 CalleeClassInfo;
 };
 
 /***************************************************************************/
@@ -453,16 +456,6 @@ interface nsIXPConnect : nsISupports
     getWrappedNativeOfJSObject(in JSContextPtr aJSContext,
                                in JSObjectPtr  aJSObj);
 
-    /**
-    * This only succeeds if the native object is already wrapped by xpconnect.
-    * A new wrapper is *never* constructed.
-    */
-    nsIXPConnectWrappedNative
-    getWrappedNativeOfNativeObject(in JSContextPtr aJSContext,
-                                   in JSObjectPtr  aScope,
-                                   in nsISupports  aCOMObj,
-                                   in nsIIDRef     aIID);
-
     void setSecurityManagerForJSContext(in JSContextPtr aJSContext,
                                         in nsIXPCSecurityManager aManager,
                                         in PRUint16 flags);
@@ -511,6 +504,15 @@ interface nsIXPConnect : nsISupports
                                      in string aSourceText);
 
     /**
+    * Set fallback JSContext to use when xpconnect can't find an appropriate
+    * context to use to execute JavaScript.
+    *
+    * NOTE: This method is DEPRECATED. 
+    *       Use nsIThreadJSContextStack::safeJSContext instead.
+    */
+    void setSafeJSContextForCurrentThread(in JSContextPtr cx);
+
+    /**
     * wrapJSAggregatedToNative is just like wrapJS except it is used in cases
     * where the JSObject is also aggregated to some native xpcom Object.
     * At present XBL is the only system that might want to do this.
@@ -530,6 +532,18 @@ interface nsIXPConnect : nsISupports
                              in JSObjectPtr  aJSObj,
                              in nsIIDRef     aIID,
                              [iid_is(aIID),retval] out nsQIResult result);
+
+    // Methods added since mozilla 0.6....
+
+    /**
+    * This only succeeds if the native object is already wrapped by xpconnect.
+    * A new wrapper is *never* constructed.
+    */
+    nsIXPConnectWrappedNative
+    getWrappedNativeOfNativeObject(in JSContextPtr aJSContext,
+                                   in JSObjectPtr  aScope,
+                                   in nsISupports  aCOMObj,
+                                   in nsIIDRef     aIID);
 
     nsIXPCFunctionThisTranslator
     getFunctionThisTranslator(in nsIIDRef aIID);
