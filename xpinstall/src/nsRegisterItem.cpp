@@ -165,7 +165,7 @@ PRInt32 nsRegisterItem::Complete()
         if ( NS_SUCCEEDED(rv) && fd )
         {
             PR_Seek(fd, 0, PR_SEEK_END);
-            char* location = (mChromeType & CHROME_PROFILE) ? "profile" : "install";
+            const char* location = (mChromeType & CHROME_PROFILE) ? "profile" : "install";
 
             nsXPIDLCString path;
             rv = mChrome->GetPath(getter_Copies(path));
