@@ -687,6 +687,9 @@ main(int argc, char **argv)
     result = ProcessArgs(jscontext, glob, argv, argc);
 
     xpc->AbandonJSContext(jscontext);
+    JSContext *cx;
+    cxstack->Pop(&cx);
+    NS_ASSERTION(cx == jscontext, "JS thread context push/pop mismatch");
     NS_RELEASE(xpc);
     js_ForceGC(jscontext);
     JS_DestroyContext(jscontext);
