@@ -1269,9 +1269,24 @@ BookmarksService::PerformBookmarkDrop(BookmarkItem* parent, int index, NSArray* 
   return true;
 }
 
-void
-BookmarksService::DropURL(NSString* title, NSURL* url, BookmarkItem* parent, int index) 
+bool
+BookmarksService::PerformURLDrop(BookmarkItem* parentItem, BookmarkItem* beforeItem, NSString* inTitle, NSString* inUrl) 
 {
-  NSLog(@"DropURL not implemented yet");
+  if ( !inUrl || [inUrl length] == 0 )
+    return NO;
+
+  nsCOMPtr<nsIDOMElement> parentElt;
+  parentElt = do_QueryInterface([parentItem contentNode]);
+
+  nsCOMPtr<nsIDOMElement> beforeElt;
+  beforeElt = do_QueryInterface([beforeItem contentNode]);
+
+  nsAutoString url;   [inUrl assignTo_nsAString:url];
+  nsAutoString title; [inTitle assignTo_nsAString:title];
+  if (title.Length() == 0)
+    [inUrl assignTo_nsAString:title];
+
+  BookmarksService::AddBookmarkToFolder(url, title, parentElt, beforeElt);
+  return YES;  
 }
 
