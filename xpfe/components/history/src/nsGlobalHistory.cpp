@@ -1068,7 +1068,7 @@ nsGlobalHistory::GetHistoryDir(nsFileSpec* aDirectory)
 #ifdef  XP_MAC
   {
     PRBool  wasAlias = PR_FALSE;
-    aDirectory->ResolveAlias(wasAlias);
+    aDirectory->ResolveSymlink(wasAlias);
   }
 #endif
 
