@@ -1051,62 +1051,74 @@ static PRBool GeorgianToText(PRInt32 ordinal, nsString& result)
 
 // Convert ordinal to Ethiopic numeric representation.
 // The detail is available at http://www.ethiopic.org/Numerals/
-// The algorithm used here was almost a verbatim copy of 
-// the pseudo-code put up there by Daniel Yacob <yacob@geez.org>.
-// Another reference is Unicode 3.0 standard section 11.1. 
+// The algorithm used here is based on the pseudo-code put up there by
+// Daniel Yacob <yacob@geez.org>.
+// Another reference is Unicode 3.0 standard section 11.1.
+#define ETHIOPIC_ONE             0x1369
+#define ETHIOPIC_TEN             0x1372
+#define ETHIOPIC_HUNDRED         0x137B
+#define ETHIOPIC_TEN_THOUSAND    0x137C
 
 static PRBool EthiopicToText(PRInt32 ordinal, nsString& result)
-{  
+{
   nsAutoString asciiNumberString;      // decimal string representation of ordinal
   DecimalToText(ordinal, asciiNumberString);
   if (ordinal < 1) {
     result.Append(asciiNumberString);
     return PR_FALSE;
   }
-  PRInt32 n = asciiNumberString.Length() - 1;
+  PRUint8 asciiStringLength = asciiNumberString.Length();
 
-  // Iterate from the lowest digit to higher digits
-  for (PRInt32 place = 0; place <= n; place++) {
-    PRUnichar asciiTen = '0'; 
-    PRUnichar asciiOne = asciiNumberString.CharAt(n - place);
+  // If number length is odd, add a leading "0"
+  // the leading "0" preconditions the string to always have the
+  // leading tens place populated, this avoids a check within the loop.
+  // If we didn't add the leading "0", decrement asciiStringLength so
+  // it will be equivalent to a zero-based index in both cases.
+  if (asciiStringLength & 1) {
+    asciiNumberString.Insert(NS_LITERAL_STRING("0"), 0);
+  } else {
+    asciiStringLength--;
+  }
 
-    place++;
+  // Iterate from the highest digits to lowest
+  // indexFromLeft       indexes digits (0 = most significant)
+  // groupIndexFromRight indexes pairs of digits (0 = least significant)
+  for (PRUint8 indexFromLeft = 0, groupIndexFromRight = asciiStringLength >> 1;
+       indexFromLeft <= asciiStringLength;
+       indexFromLeft += 2, groupIndexFromRight--) {
+    PRUint8 tensValue  = asciiNumberString.CharAt(indexFromLeft) & 0x0F;
+    PRUint8 unitsValue = asciiNumberString.CharAt(indexFromLeft + 1) & 0x0F;
+    PRUint8 groupValue = tensValue * 10 + unitsValue;
 
-    if (place <= n) 
-      asciiTen = asciiNumberString.CharAt(n - place);
+    PRBool oddGroup = (groupIndexFromRight & 1);
 
-    // '00' is not represented and has to be skipped.
-    if (asciiOne == '0' && asciiTen == '0' && place < n) 
-      continue;
-
-    nsAutoString ethioNumber;
-
-    // calculate digits at  10^(2*place) and 10^(2*place+1) 
-    if (asciiTen > '0' || asciiOne > '1' || place == 1) 
-    {
-      if (asciiTen > '0') 
-      {
-        // map onto Ethiopic "tens": U+1372=Ethiopic number ten
-        ethioNumber += (PRUnichar) ((PRInt32) asciiTen +  0x1372 - 0x31); 
-      }
-      if (asciiOne > '0') 
-      {
-        //map onto Ethiopic "ones": 0x1369=Ethiopic digit one
-        ethioNumber += (PRUnichar) ((PRInt32) asciiOne + 0x1369 - 0x31); 
-      }
+    // we want to clear ETHIOPIC_ONE when it is superfluous
+    if (ordinal > 1 &&
+        groupValue == 1 &&                  // one without a leading ten
+        (oddGroup || indexFromLeft == 0)) { // preceding (100) or leading the sequence
+      unitsValue = 0;
     }
 
-   // Now add 'cental-place' specifiers in terms of power of hundred
-
-   // if (place > 1) : The lowest two digits don't need 'cental-place' specifier
-     if (place & 2)   // if odd power of hundred 
-       ethioNumber += (PRUnichar) 0x137B;   // append Ethiopic number hundred 
-
-     // append Ethiopic number ten thousand every four decimal digits
-     for (PRInt32 j = 0; j < place / 4; j++) 
-       ethioNumber += (PRUnichar) 0x137C;   // 0x137C = Ethiopic number ten thousand
-
-     result.Insert(ethioNumber, 0);
+    // put it all together...
+    if (tensValue) {
+      // map onto Ethiopic "tens":
+      result.Append((PRUnichar) (tensValue +  ETHIOPIC_TEN - 1));
+    }
+    if (unitsValue) {
+      //map onto Ethiopic "units":
+      result.Append((PRUnichar) (unitsValue + ETHIOPIC_ONE - 1));
+    }
+    // Add a separator for all even groups except the last,
+    // and for odd groups with non-zero value.
+    if (oddGroup) {
+      if (groupValue) {
+        result.Append((PRUnichar) ETHIOPIC_HUNDRED);
+      }
+    } else {
+      if (groupIndexFromRight) {
+        result.Append((PRUnichar) ETHIOPIC_TEN_THOUSAND);
+      }
+    }
   }
   return PR_TRUE;
 }
