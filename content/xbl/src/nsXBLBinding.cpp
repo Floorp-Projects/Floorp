@@ -1490,6 +1490,31 @@ nsXBLBinding::WalkRules(nsISupportsArrayEnumFunc aFunc, void* aData)
   return rv;
 }
 
+NS_IMETHODIMP
+nsXBLBinding::AttributeAffectsStyle(nsISupportsArrayEnumFunc aFunc, void* aData, PRBool* aAffects)
+{
+  nsresult rv = NS_OK;
+  if (mNextBinding) {
+    rv = mNextBinding->AttributeAffectsStyle(aFunc, aData, aAffects);
+    if (NS_FAILED(rv))
+      return rv;
+
+    if (*aAffects)
+      return NS_OK;
+  }
+
+  nsCOMPtr<nsISupportsArray> sheets;
+  mPrototypeBinding->GetStyleSheets(getter_AddRefs(sheets));
+  if (sheets) {
+    if (!sheets->EnumerateForwards(aFunc, aData))
+      *aAffects = PR_TRUE;
+    else
+      *aAffects = PR_FALSE;
+  }
+  
+  return rv;
+}
+
 // Internal helper methods ////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP

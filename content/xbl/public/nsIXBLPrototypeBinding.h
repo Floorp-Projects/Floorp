@@ -77,6 +77,7 @@ public:
   NS_IMETHOD SetInitialAttributes(nsIContent* aBoundElement, nsIContent* aAnonymousContent)=0;
 
   NS_IMETHOD GetRuleProcessors(nsISupportsArray** aResult)=0;
+  NS_IMETHOD GetStyleSheets(nsISupportsArray** aResult)=0;
 
   NS_IMETHOD HasInsertionPoints(PRBool* aResult)=0;
   NS_IMETHOD HasStyleSheets(PRBool* aResult)=0; 

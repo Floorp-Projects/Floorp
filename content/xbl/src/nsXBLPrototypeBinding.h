@@ -81,6 +81,7 @@ class nsXBLPrototypeBinding: public nsIXBLPrototypeBinding, public nsICSSLoaderO
   NS_IMETHOD SetInitialAttributes(nsIContent* aBoundElement, nsIContent* aAnonymousContent);
 
   NS_IMETHOD GetRuleProcessors(nsISupportsArray** aResult);
+  NS_IMETHOD GetStyleSheets(nsISupportsArray** aResult);
 
   NS_IMETHOD HasInsertionPoints(PRBool* aResult) { *aResult = (mInsertionPointTable != nsnull); return NS_OK; };
   NS_IMETHOD HasStyleSheets(PRBool* aResult) { *aResult = (mStyleSheetList != nsnull); return NS_OK; };

@@ -1044,6 +1044,14 @@ nsXBLPrototypeBinding::GetRuleProcessors(nsISupportsArray** aResult)
 }
 
 NS_IMETHODIMP
+nsXBLPrototypeBinding::GetStyleSheets(nsISupportsArray** aResult)
+{
+  *aResult = mStyleSheetList;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXBLPrototypeBinding::ShouldBuildChildFrames(PRBool* aResult)
 {
   *aResult = PR_TRUE;

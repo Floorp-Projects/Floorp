@@ -1937,15 +1937,22 @@ StyleSetImpl::AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
   pair.attribute = aAttribute;
   pair.content = aContent;
 
-  /* check until we find a sheet that will be affected */
-  if ((mDocSheets && !mDocSheets->EnumerateForwards(EnumAffectsStyle, &pair)) ||
-      (mOverrideSheets && !mOverrideSheets->EnumerateForwards(EnumAffectsStyle,
-                                                              &pair)) ||
-      (mBackstopSheets && !mBackstopSheets->EnumerateForwards(EnumAffectsStyle,
-                                                              &pair))) {
-    aAffects = PR_TRUE;
-  } else {
-    aAffects = PR_FALSE;
+  /* scoped sheets should be checked first, since - if present - they will contain
+     the bulk of the applicable rules for the content node. */
+  if (mStyleRuleSupplier)
+    mStyleRuleSupplier->AttributeAffectsStyle(EnumAffectsStyle, &pair, aContent, &aAffects);
+
+  if (!aAffects) {
+    /* check until we find a sheet that will be affected */
+    if ((mDocSheets && !mDocSheets->EnumerateForwards(EnumAffectsStyle, &pair)) ||
+        (mOverrideSheets && !mOverrideSheets->EnumerateForwards(EnumAffectsStyle,
+                                                                &pair)) ||
+        (mBackstopSheets && !mBackstopSheets->EnumerateForwards(EnumAffectsStyle,
+                                                                &pair))) {
+      aAffects = PR_TRUE;
+    } else {
+      aAffects = PR_FALSE;
+    }
   }
 
   return NS_OK;

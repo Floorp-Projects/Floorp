@@ -95,6 +95,7 @@ class nsXBLBinding: public nsIXBLBinding
 
   NS_IMETHOD InheritsStyle(PRBool* aResult);
   NS_IMETHOD WalkRules(nsISupportsArrayEnumFunc aFunc, void* aData);
+  NS_IMETHOD AttributeAffectsStyle(nsISupportsArrayEnumFunc aFunc, void* aData, PRBool* aAffects);
 
   NS_IMETHOD MarkForDeath();
   NS_IMETHOD MarkedForDeath(PRBool* aResult);
