@@ -193,6 +193,31 @@ nsresult nsRange::QueryInterface(const nsIID& aIID,
 
 
 /******************************************************
+ * Public helper routines
+ ******************************************************/
+
+//
+// Returns -1 if point1 < point2, 1, if point1 > point2,
+// 0 if error or if point1 == point2.
+//
+PRInt32 ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
+                      nsIDOMNode* aParent2, PRInt32 aOffset2)
+{
+  if (aParent1 == aParent2 && aOffset1 == aOffset2)
+    return 0;
+  nsRange* range = new nsRange;
+  nsresult res = range->SetStart(aParent1, aOffset1);
+  if (!NS_SUCCEEDED(res))
+    return 0;
+  res = range->SetEnd(aParent2, aOffset2);
+  delete range;
+  if (NS_SUCCEEDED(res))
+    return -1;
+  else
+    return 1;
+}
+
+/******************************************************
  * Private helper routines
  ******************************************************/
 
