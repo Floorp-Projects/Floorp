@@ -33,6 +33,7 @@ package Bugzilla::BugMail;
 use RelationSet;
 
 use Bugzilla::Config qw(:DEFAULT $datadir);
+use Bugzilla::Util;
 
 # This code is really ugly. It was a commandline interface, then it was moved
 # There are package-global variables which we rely on ProcessOneBug to clean
