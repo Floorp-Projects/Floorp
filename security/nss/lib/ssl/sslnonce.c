@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslnonce.c,v 1.3 2000/09/12 20:15:43 jgmyers%netscape.com Exp $
+ * $Id: sslnonce.c,v 1.4 2000/10/05 23:10:14 nelsonb%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -220,7 +220,7 @@ CacheSID(sslSessionID *sid)
 
     /* XXX should be different trace for version 2 vs. version 3 */
     if (sid->version < SSL_LIBRARY_VERSION_3_0) {
-	expirationPeriod = ssl3_sid_timeout;
+	expirationPeriod = ssl_sid_timeout;
 	PRINT_BUF(8, (0, "sessionID:",
 		  sid->u.ssl2.sessionID, sizeof(sid->u.ssl2.sessionID)));
 	PRINT_BUF(8, (0, "masterKey:",
@@ -230,7 +230,7 @@ CacheSID(sslSessionID *sid)
     } else {
 	if (sid->u.ssl3.sessionIDLength == 0) 
 	    return;
-	expirationPeriod = ssl_sid_timeout;
+	expirationPeriod = ssl3_sid_timeout;
 	PRINT_BUF(8, (0, "sessionID:",
 		      sid->u.ssl3.sessionID, sid->u.ssl3.sessionIDLength));
     }
