@@ -26,5 +26,6 @@
 [scriptable, uuid(abd6c760-f396-11d3-b9fa-00108335942a)]    
 interface nsIAbUpgrader : nsISupports {
 
-	void Upgrade4xAddrBook(in nsIFileSpec sourceAddrBook, in nsIFileSpec destAddrBook);
+	void StartUpgrade4xAddrBook(in nsIFileSpec sourceAddrBook, in nsIFileSpec destAddrBook);
+	void ContinueExport(out boolean done);
 };
