@@ -300,12 +300,29 @@ CancelFun(nsIRequest* req)
 NS_IMETHODIMP
 nsLoadGroup::Cancel()
 {
+    nsresult rv = NS_OK;
+    PRBool isActive = mIsActive;
+
     mForegroundCount = 0;
     mIsActive = PR_FALSE;
+
     if (mChannels) {
         mChannels->Clear();
     }
-    return PropagateDown(CancelFun);
+    (void) PropagateDown(CancelFun);
+
+    if (isActive) {
+        nsCOMPtr<nsIStreamObserver> observer = do_QueryReferent(mObserver);
+
+        PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
+               ("LOADGROUP: %x Firing OnStopRequest(...).\n", 
+                   this));
+        if (observer) {
+            rv = observer->OnStopRequest(mDefaultLoadChannel, nsnull, 
+                                         NS_BINDING_ABORTED, nsnull);
+        }
+    }
+    return rv;
 }
 
 static nsresult
