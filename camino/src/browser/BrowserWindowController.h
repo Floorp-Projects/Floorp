@@ -251,6 +251,7 @@ typedef enum
 - (IBAction)manageHistory: (id)aSender;
 
 - (BOOL)bookmarkManagerIsVisible;
+- (BOOL)canHideBookmarks;
 - (BOOL)singleBookmarkIsSelected;
 
 - (void)createNewTab:(ENewTabContents)contents;

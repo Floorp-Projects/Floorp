@@ -68,6 +68,8 @@ class nsISupportsArray;
 
 - (BOOL)userChangedLocationField;
 
+- (void)contentViewChangedTo:(NSView*)inView forURL:(NSString*)inURL;
+
 @end
 
 

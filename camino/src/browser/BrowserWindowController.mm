@@ -1311,6 +1311,12 @@ enum BWCOpenDest {
   return [mURLBar userHasTyped];
 }
 
+- (void)contentViewChangedTo:(NSView*)inView forURL:(NSString*)inURL
+{
+  // update bookmarks menu
+  [[NSApp delegate] adjustBookmarksMenuItemsEnabling:[[self window] isMainWindow]];
+}
+
 - (void)updateFromFrontmostTab
 {
   [[self window] setTitle:  [mBrowserView windowTitle]];
@@ -1466,7 +1472,9 @@ enum BWCOpenDest {
   if ([self bookmarkManagerIsVisible])
     [self back:aSender];
   else
-    [self loadURL:@"about:bookmarks" referrer:nil activate:YES allowPopups:YES];
+    [self loadURL:@"about:bookmarks" referrer:nil activate:YES allowPopups:NO];
+
+  [[NSApp delegate] adjustBookmarksMenuItemsEnabling:[[self window] isMainWindow]];
 }
 
 //
@@ -1845,6 +1853,11 @@ enum BWCOpenDest {
 {
   NSString* currentURL = [[[self getBrowserWrapper] getCurrentURLSpec] lowercaseString];
   return [currentURL isEqualToString:@"about:bookmarks"] || [currentURL isEqualToString:@"about:history"];
+}
+
+- (BOOL)canHideBookmarks
+{
+  return [self bookmarkManagerIsVisible] && [[mBrowserView getBrowserView] canGoBack];
 }
 
 - (BOOL)singleBookmarkIsSelected

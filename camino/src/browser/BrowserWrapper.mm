@@ -391,15 +391,14 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 - (void)checkForCustomViewOnLoad:(NSString*)inURL
 {
-  NSView* newView = [self contentProviderViewForURL:inURL];
-  if (newView)
+  NSView* newContentView = [self contentProviderViewForURL:inURL];
+  if (!newContentView)
+    newContentView = mBrowserView;  // put the browser view back
+
+  if ([self firstSubview] != newContentView)
   {
-    [self swapFirstSubview:newView];
-  }
-  else
-  {
-    // put the browser view back
-    [self swapFirstSubview:mBrowserView];
+    [self swapFirstSubview:newContentView];
+    [mDelegate contentViewChangedTo:newContentView forURL:inURL];
   }
 }
 
