@@ -216,7 +216,7 @@ function openRename()
 		if (migrate == "true")
 			dump("Migrate the profile before renaming it.\n");
 		else
-			var win = window.openDialog('pmRename.xul', 'Renamer', 'chrome');
+			var win = window.openDialog('pmrename.xul', 'Renamer', 'chrome');
 	}
 }
 
