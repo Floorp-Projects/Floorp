@@ -324,7 +324,7 @@ GetFileLocation(const char* aPrefName,
                                      NS_GET_IID(nsISupportsString),
                                      getter_AddRefs(prefFileName));
     if (NS_SUCCEEDED(rv)) {
-      return prefFileName->GetData(aFileLocation);
+      return prefFileName->ToString(aFileLocation);
     }
   }
 
@@ -356,7 +356,7 @@ GetFileLocation(const char* aPrefName,
                                    NS_GET_IID(nsISupportsString),
                                    getter_AddRefs(prefFileName));
   if (NS_SUCCEEDED(rv)) {
-    return prefFileName->GetData(aFileLocation);
+    return prefFileName->ToString(aFileLocation);
   }
   
   return rv;
