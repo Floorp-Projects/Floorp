@@ -12544,36 +12544,44 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell*            aPresShell,
   // list3's frames belong to another inline frame
   nsIFrame* inlineFrame = nsnull;
 
-  if (aIsPositioned) {
-    NS_NewPositionedInlineFrame(aPresShell, &inlineFrame);
-  }
-  else {
-    NS_NewInlineFrame(aPresShell, &inlineFrame);
-  }
-
-  InitAndRestoreFrame(aPresContext, aState, aContent, 
-                      aParentFrame, aStyleContext, nsnull, inlineFrame);
-
-  if (aIsPositioned) {
-    // Relatively positioned frames need a view
-    nsHTMLContainerFrame::CreateViewForFrame(aPresContext, inlineFrame,
-                                             aStyleContext, nsnull, PR_FALSE);
-  }
-
   if (list3) {
+    if (aIsPositioned) {
+      NS_NewPositionedInlineFrame(aPresShell, &inlineFrame);
+    }
+    else {
+      NS_NewInlineFrame(aPresShell, &inlineFrame);
+    }
+
+    InitAndRestoreFrame(aPresContext, aState, aContent, 
+                        aParentFrame, aStyleContext, nsnull, inlineFrame);
+
+    if (aIsPositioned) {
+      // Relatively positioned frames need a view
+      nsHTMLContainerFrame::CreateViewForFrame(aPresContext, inlineFrame,
+                                               aStyleContext, nsnull, PR_FALSE);
+
+      // Move list3's frames into the new view
+      nsIFrame* oldParent;
+      list3->GetParent(&oldParent);
+      nsHTMLContainerFrame::ReparentFrameViewList(aPresContext, list3, oldParent, inlineFrame);
+    }
+
     // Reparent (cheaply) the frames in list3 - we don't have to futz
     // with their style context because they already have the right one.
     nsFrameList list;
     list.AppendFrames(inlineFrame, list3);
+
+    inlineFrame->SetInitialChildList(aPresContext, nsnull, list3);
   }
-  inlineFrame->SetInitialChildList(aPresContext, nsnull, list3);
 
   // Mark the 3 frames as special. That way if any of the
   // append/insert/remove methods try to fiddle with the children, the
   // containing block will be reframed instead.
   SetFrameIsSpecial(aState.mFrameManager, aNewFrame, blockFrame);
   SetFrameIsSpecial(aState.mFrameManager, blockFrame, inlineFrame);
-  SetFrameIsSpecial(aState.mFrameManager, inlineFrame, nsnull);
+
+  if (inlineFrame)
+    SetFrameIsSpecial(aState.mFrameManager, inlineFrame, nsnull);
 
 #ifdef DEBUG
   if (gNoisyInlineConstruction) {
@@ -12588,7 +12596,7 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell*            aPresShell,
       printf("  ==> block frame:\n");
       frameDebug->List(aPresContext, stdout, 2);
     }
-    if (NS_SUCCEEDED(inlineFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
+    if (inlineFrame && NS_SUCCEEDED(inlineFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
       printf("  ==> trailing inline frame:\n");
       frameDebug->List(aPresContext, stdout, 2);
     }
