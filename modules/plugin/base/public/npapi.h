@@ -22,7 +22,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.10 $
+ *  npapi.h $Revision: 3.11 $
  *  Netscape client plug-in API spec
  */
 
@@ -158,7 +158,7 @@ typedef unsigned long uint32;
 /*
  * AIX defines these in sys/inttypes.h included from sys/types.h
  */
-#if defined(_PR_AIX_HAVE_BSD_INT_TYPES)
+#ifndef AIX
 #ifndef _INT16
 typedef short int16;
 #endif
