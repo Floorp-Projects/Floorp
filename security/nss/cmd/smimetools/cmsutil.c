@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.19 2000/12/11 18:42:58 mcgreer%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.20 2000/12/14 23:59:33 mcgreer%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -1142,7 +1142,8 @@ main(int argc, char **argv)
 	}
     }
 
-    SECU_FileToItem(&input, inFile);
+    if (mode != CERTSONLY)
+	SECU_FileToItem(&input, inFile);
     if (inFile != PR_STDIN)
 	PR_Close(inFile);
 #ifdef DEBUG
