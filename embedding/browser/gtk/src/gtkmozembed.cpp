@@ -1006,6 +1006,7 @@ gtk_moz_embed_create_offscreen_window(void)
 {
   GdkWindowAttr attributes;
 
+  attributes.window_type = GDK_WINDOW_TOPLEVEL;
   attributes.width = 1;
   attributes.height = 1;
   attributes.wclass = GDK_INPUT_OUTPUT;
