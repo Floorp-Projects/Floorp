@@ -28,13 +28,20 @@ static void raw_draw_container_dflts( PtWidget_t *widget )
 static void raw_draw_container_draw( PtWidget_t *widget, PhTile_t *damage )
 {
 	RawDrawContainerWidget	*rdc = ( RawDrawContainerWidget * ) widget;
-	PtContainerWidget_t		  *container = ( PtContainerWidget_t * ) widget;
-	PhRect_t 			          rect;
+//	PtBasicWidget_t		      *basic = ( PtBasicWidget_t * ) widget;
+//	PtContainerWidget_t		  *container = ( PtContainerWidget_t * ) widget;
+//	PhRect_t 			          rect;
 
 	// we don't want to draw outside our canvas! So we clip.
 //	PtBasicWidgetCanvas( widget, &rect );
 //  PgSetTranslation( &rect.ul, Pg_RELATIVE );
 //	PtClipAdd( widget, &rect );
+
+//  PgSetFillColor( basic->fill_color );
+//  rect.ul = widget->area.pos;
+//  rect.lr.x = rect.ul.x + widget->area.size.w - 1;
+//  rect.lr.y = rect.ul.y + widget->area.size.h - 1;
+//  PgDrawRect( &rect, Pg_DRAW_FILL );
 
   if( rdc->draw_f )
     rdc->draw_f( widget, damage );	

@@ -40,6 +40,9 @@ typedef struct DamageQueueEntry_s
   DamageQueueEntry_s  *next;
 }DamageQueueEntry;
 
+#define NS_TO_PH_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
+#define PH_TO_NS_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
+
 
 /**
  * Base of all Photon native widgets.
@@ -84,6 +87,8 @@ class nsWidget : public nsBaseWidget
 
     virtual PRBool OnResize(nsRect &aRect);
     virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
+
+    NS_IMETHOD SetBackgroundColor(const nscolor &aColor);
 
     nsIFontMetrics *GetFont(void);
     NS_IMETHOD SetFont(const nsFont &aFont);
@@ -157,6 +162,8 @@ class nsWidget : public nsBaseWidget
     static int        WorkProc( void *data );
     void              InitDamageQueue();
     void              GetParentClippedArea( nsRect &rect );
+    static int        GotFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
+    static int        LostFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
 
     PtWidget_t *mWidget;
     nsIWidget  *mParent;
