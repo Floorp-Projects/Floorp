@@ -9,19 +9,18 @@
 <html:script language="JavaScript"
   src="chrome://sidebar/content/sidebarOverlay.js"/>
 
-  <box id="sidebarbox" align="vertical" persist="hidden width">
-    <!--box id="sidebarpanels" align="vertical"-->
-      <box id="titlebox">
-        <spring flex="100%"/>
-        <titledbutton class="borderless"
-          value="&sidebar.reload.label;"
-          onclick="reloadSidebar()" />
-        <titledbutton class="borderless"
-          value="&sidebar.customize.label;" 
-          onclick="customizeSidebar();" />
-        <spring flex="100%"/>
-      </box>
-    <!--/box-->
+  <box id="sidebarbox" align="vertical" persist="hidden style width">
+    <box id="titlebox">
+      <spring flex="100%"/>
+      <titledbutton class="borderless"
+        value="&sidebar.reload.label;"
+        onclick="reloadSidebar()" />
+      <titledbutton class="borderless"
+        value="&sidebar.customize.label;" 
+        onclick="customizeSidebar();" />
+      <spring flex="100%"/>
+    </box>
+    <box id="sidebarpanels" align="vertical" flex='100%'/>
   </box>
 
 </overlay>
