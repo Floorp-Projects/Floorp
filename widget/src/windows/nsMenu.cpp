@@ -81,7 +81,7 @@ nsMenu::nsMenu() : nsIMenu()
   mMenuBarParent = nsnull;
   mMenuParent    = nsnull;
   mListener      = nsnull;
-  mItems         = new nsVoidArray(8);
+  mItems         = new nsVoidArray;
 }
 
 //-------------------------------------------------------------------------

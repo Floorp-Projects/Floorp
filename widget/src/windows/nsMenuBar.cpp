@@ -90,7 +90,7 @@ nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
   mMenu     = nsnull;
   mParent   = nsnull;
   mIsMenuBarAdded = PR_FALSE;
-  mItems = new nsVoidArray(16);
+  mItems = new nsVoidArray;
 }
 
 //-------------------------------------------------------------------------
