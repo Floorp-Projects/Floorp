@@ -124,8 +124,8 @@ nsXPathEvaluator::Evaluate(const nsAString & aExpression,
                            nsIDOMNode *aContextNode,
                            nsIDOMXPathNSResolver *aResolver,
                            PRUint16 aType,
-                           nsIDOMXPathResult *aInResult,
-                           nsIDOMXPathResult **aResult)
+                           nsISupports *aInResult,
+                           nsISupports **aResult)
 {
     // XXX Need to check document of aContextNode if created by
     //     QI'ing a document.
@@ -154,23 +154,24 @@ nsXPathEvaluator::SetDocument(nsIDOMDocument* aDocument)
 nsresult nsXPathEvaluator::ParseContextImpl::resolveNamespacePrefix
     (nsIAtom* aPrefix, PRInt32& aID)
 {
+    aID = kNameSpaceID_Unknown;
+
+    if (!mResolver) {
+        return NS_ERROR_DOM_NAMESPACE_ERR;
+    }
+
     nsAutoString prefix;
     if (aPrefix) {
         aPrefix->ToString(prefix);
     }
-    nsAutoString ns;
-    nsresult rv = NS_OK;
-    if (mResolver) {
-        mResolver->LookupNamespaceURI(prefix, ns);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
 
-    aID = kNameSpaceID_None;
+    nsAutoString ns;
+    nsresult rv = mResolver->LookupNamespaceURI(prefix, ns);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     if (ns.IsEmpty()) {
-        return NS_OK;
-    }
-    if (!mResolver) {
-        aID = kNameSpaceID_Unknown;
+        aID = kNameSpaceID_None;
+
         return NS_OK;
     }
 

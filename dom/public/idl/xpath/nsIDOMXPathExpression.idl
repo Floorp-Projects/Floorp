@@ -49,9 +49,9 @@ interface XPathException;
 [scriptable, uuid(75506f82-b504-11d5-a7f2-ca108ab8b6fc)]
 interface nsIDOMXPathExpression : nsISupports
 {
-  nsIDOMXPathResult        evaluate(in nsIDOMNode contextNode, 
+  nsISupports              evaluate(in nsIDOMNode contextNode, 
                                     in unsigned short type, 
-                                    in nsIDOMXPathResult result)
+                                    in nsISupports result)
                                       raises(XPathException,
                                              DOMException);
 };
