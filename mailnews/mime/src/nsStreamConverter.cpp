@@ -220,7 +220,7 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
       // the old split display quoting.
       //
       nsresult    rv;
-      PRBool      mimeXULOutput = PR_FALSE;
+      PRBool      mimeXULOutput = PR_TRUE;
 
       NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
       if (NS_SUCCEEDED(rv) && prefs) 
