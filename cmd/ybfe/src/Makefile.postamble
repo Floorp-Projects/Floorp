@@ -101,4 +101,7 @@
 
 
 # From gmake -f Makefile.mozilla, courtesy REQUIRES magic.
-HEADER_PATHS += -I../../../dist/public/nsprpub -I../../../dist/public/js -I../../../dist/public/img -I../../../dist/public/layer -I../../../dist/public/xp -I../../../dist/public/util -I../../../include   -I../../../dist/Rhapsody5.1_DBG.OBJ/include
+HEADER_PATHS += -I../../../dist/public/nsprpub -I../../../dist/public/js -I../../../dist/public/img -I../../../dist/public/layer -I../../../dist/public/xp -I../../../dist/public/util -I../../../dist/public/java -I../../../dist/public/plugimpl -I../../../dist/public/security -I../../../include   -I../../../dist/Rhapsody5.1_DBG.OBJ/include
+
+# From gmake -f Makefile.mozilla
+NEXTSTEP_PB_CFLAGS += -DXP_UNIX -pipe -DSW_THREADS -DHAVE_STDDEF_H -DHAVE_STDLIB_H -DHAVE_FILIO_H -DNTOHL_ENDIAN_H -DMACHINE_ENDIAN_H -DNO_REGEX -DNO_REGCOMP -DHAS_PGNO_T -DNO_TZNAME -DNO_X11 -DNEEDS_GETCWD -DHAVE_STRERROR  -DDEBUG -UNDEBUG -DDEBUG_mcafee -DTRACING -DNSPR20 -DNETSCAPE -DOSTYPE=\"Rhapsody5.1\" -DMOZILLA_CLIENT -DMOZ_COMMUNICATOR_IIDS -DEDITOR  -DSingleSignon -DCookieManagement -DENDER -DNO_SECURITY -DEDITOR -DEDITOR_UI -DLAYERS -DUNIX_LDAP -DNSPR -DOJI -DMOCHA -DSHACK -DUNIX_ASYNC_DNS -DDEVELOPER_DEBUG
