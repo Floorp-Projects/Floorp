@@ -132,6 +132,45 @@ BEGIN
     DEFPUSHBUTTON   "Btn3",IDC_BTN3,224,89,50,14
 END
 
+IDD_PROGRESS_DIALOG DIALOG DISCARDABLE  0, 0, 285, 95
+STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Saving File"
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Cancel",IDCANCEL,115,73,50,14
+    LTEXT           "Action:",IDC_STATIC,27,23,26,9
+    CONTROL         "",IDC_ACTION,"Static",SS_LEFTNOWORDWRAP | 
+                    WS_GROUP,59,23,211,8
+    LTEXT           "Saving From:",IDC_STATIC,7,6,42,8
+    LTEXT           "",IDC_SAVING_FROM,59,6,213,8
+    LTEXT           "Progress:",IDC_STATIC,19,41,30,8
+    CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",PBS_SMOOTH | 
+                    WS_BORDER,59,41,166,10
+    LTEXT           "100%",IDC_STATIC,229,42,18,8
+END
+
+IDD_CHOOSE_ACTION_DIALOG DIALOG DISCARDABLE  0, 0, 285, 114
+STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Choose An Action"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "You have chosen to download a file of type: ",
+                    IDC_STATIC,8,9,142,8
+    LTEXT           "Static",IDC_CONTENT_TYPE,152,10,123,8
+    GROUPBOX        "What would you like MfcEmbed to do with this file?",
+                    IDC_STATIC,8,24,268,61
+    CONTROL         "O&pen using",IDC_OPEN_USING,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,19,41,60,10
+    CONTROL         "&Save this file to disk",IDC_SAVE_TO_DISK,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,19,69,103,10
+    LTEXT           "Static",IDC_APP_NAME,31,53,186,9,SS_SUNKEN
+    PUSHBUTTON      "&Choose...",IDC_CHOOSE_APP,222,51,50,12
+    PUSHBUTTON      "Ok",IDOK,94,94,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,150,94,50,14
+END
+
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
