@@ -56,6 +56,15 @@ interface nsIStorageStream : nsISupports
      *
      * Initialize the stream, setting up the amount of space that will be
      * allocated for the stream's backing-store.
+     *
+     * @param segmentSize
+     *        Size of each segment. Must be a power of two.
+     * @param maxSize
+     *        Maximum total size of this stream. length will always be less
+     *        than or equal to this value. Passing PR_UINT32_MAX is safe.
+     * @param segmentAllocator
+     *        Which allocator to use for the segments. May be null, in which
+     *        case a default allocator will be used.
      */
     void init(in PRUint32 segmentSize, in PRUint32 maxSize, in nsIMemory segmentAllocator);
 
