@@ -59,6 +59,10 @@
 #include <io.h>
 #include <fcntl.h>
 
+#ifdef NS_TRACE_MALLOC
+#include "nsTraceMalloc.h"
+#endif
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -83,6 +87,96 @@ static NS_DEFINE_CID(kPrintingPromptServiceCID, NS_PRINTINGPROMPTSERVICE_CID);
 #define NS_HELPERAPPLAUNCHERDIALOG_CID \
     {0xf68578eb, 0x6ec2, 0x4169, {0xae, 0x19, 0x8c, 0x62, 0x43, 0xf0, 0xab, 0xe1}}
 static NS_DEFINE_CID(kHelperAppLauncherDialogCID, NS_HELPERAPPLAUNCHERDIALOG_CID);
+
+class CMfcEmbedCommandLine : public CCommandLineInfo
+{
+public:
+
+    CMfcEmbedCommandLine(CMfcEmbedApp& app) : CCommandLineInfo(),
+                                              mApp(app)
+    {
+    }
+
+    // generic parser which bundles up flags and their parameters, to
+    // pass to HandleFlag() or HandleNakedParameter()
+    // if you're adding new parameters, please don't touch this
+    // function and instead add your own handler below
+    virtual void ParseParam(LPCTSTR szParam, BOOL bFlag, BOOL bLast)
+    {
+        CCommandLineInfo::ParseParam(szParam, bFlag, bLast);
+        if (bFlag) {
+            // advance past extra stuff like --foo
+            while (*szParam && *szParam == '-')
+                szParam++;
+
+            // previous argument was a flag too, so process that first
+            if (!mLastFlag.IsEmpty())
+                HandleFlag(mLastFlag);
+            
+            mLastFlag = szParam;
+
+            // oops, no more arguments coming, so handle this now
+            if (bLast)
+                HandleFlag(mLastFlag);
+            
+        } else {
+            if (!mLastFlag.IsEmpty())
+                HandleFlag(mLastFlag, szParam);
+                
+            mLastFlag.Truncate();
+        }
+    }
+
+    // handle flag-based parameters
+    void HandleFlag(const nsACString& flag, const char* param=nsnull)
+    {
+        if (flag.Equals("console"))
+            DoConsole();
+        else if (flag.Equals("chrome"))
+            DoChrome();
+#ifdef NS_TRACE_MALLOC
+        else if (flag.Equals("trace-malloc"))
+            DoTraceMalloc(flag, param);
+#endif
+        // add new flag handlers here (please add a DoFoo() method below!)
+    }
+
+    void HandleNakedParameter(const char* flag) {
+        // handle non-flag arguments here
+    }
+
+    // add your specific handlers here
+    void DoConsole() {
+        mApp.ShowDebugConsole();
+    }
+
+    void DoChrome() {
+        mApp.m_bChrome = TRUE;
+    }
+
+#ifdef NS_TRACE_MALLOC
+    void DoTraceMalloc(const nsACString& flag, const char* param)
+    {
+        if (!param) {
+            NS_WARNING("--trace-malloc needs a filename as a parameter");
+            return;
+        }
+
+        // build up fake argv/argc arguments for tracemalloc stuff
+        char* argv[] = { "mfcembed", "--trace-malloc",
+                         NS_CONST_CAST(char*, param) };
+        
+        NS_TraceMallocStartupArgs(3, argv);
+    }
+#endif
+    
+private:
+    // autostring is fine, this is a stack based object anyway
+    nsCAutoString mLastFlag;
+
+    CMfcEmbedApp& mApp;
+};
+
 
 BEGIN_MESSAGE_MAP(CMfcEmbedApp, CWinApp)
 	//{{AFX_MSG_MAP(CMfcEmbedApp)
@@ -109,48 +203,6 @@ CMfcEmbedApp::CMfcEmbedApp() :
 }
 
 CMfcEmbedApp theApp;
-
-BOOL CMfcEmbedApp::IsCmdLineSwitch(const char *pSwitch, BOOL bRemove)
-{
-    //  Search for the switch in the command line.
-    //  Don't take it out of m_lpCmdLine by default
-    char *pFound = PL_strcasestr(m_lpCmdLine, pSwitch);
-    if(pFound == NULL ||
-        // Switch must be at beginning of command line
-        // or have a space in front of it to avoid
-        // mangling filenames
-        ( (pFound != m_lpCmdLine) &&
-          *(pFound-1) != ' ' ) ) 
-    {
-        return(FALSE);
-    }
-
-    if (bRemove) 
-    {
-        // remove the flag from the command line
-        char *pTravEnd = pFound + strlen(pSwitch);
-        char *pTraverse = pFound;
-
-        *pTraverse = *pTravEnd;
-        while(*pTraverse != '\0')   
-        {
-            pTraverse++;
-            pTravEnd++;
-            *pTraverse = *pTravEnd;
-        }
-    }
-
-    return(TRUE);
-}
-
-void CMfcEmbedApp::ParseCmdLine()
-{
-    // Show Debug Console?
-    if(IsCmdLineSwitch("-console"))
-        ShowDebugConsole();
-    if(IsCmdLineSwitch("-chrome"))
-        m_bChrome = TRUE;
-}
 
 /* Some Gecko interfaces are implemented as components, automatically
    registered at application initialization. nsIPrompt is an example:
@@ -283,6 +335,7 @@ void CMfcEmbedApp::ShowDebugConsole()
 #endif
 }
 
+
 // Initialize our MFC application and also init
 // the Gecko embedding APIs
 // Note that we're also init'ng the profile switching
@@ -292,8 +345,10 @@ void CMfcEmbedApp::ShowDebugConsole()
 //
 BOOL CMfcEmbedApp::InitInstance()
 {
-    ParseCmdLine();
-
+    
+    CMfcEmbedCommandLine cmdLine(*this);
+    ParseCommandLine(cmdLine);
+    
 	Enable3dControls();
 
 	//
