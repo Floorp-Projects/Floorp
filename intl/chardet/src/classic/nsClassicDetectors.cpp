@@ -26,6 +26,7 @@
 #include "nsICharsetDetector.h"
 #include "nsICharsetDetectionObserver.h"
 #include "nsIStringCharsetDetector.h"
+#include "nsClassicDetectors.h"
 
 //==========================================================
 
