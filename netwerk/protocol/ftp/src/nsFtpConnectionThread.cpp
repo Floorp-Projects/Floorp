@@ -1333,13 +1333,13 @@ nsFtpConnectionThread::R_pasv() {
 
     port = ((PRInt32) (p0<<8)) + p1;
     nsCAutoString host;
-    host.Append(h0);
+    host.AppendInt(h0);
     host.Append('.');
-    host.Append(h1);
+    host.AppendInt(h1);
     host.Append('.');
-    host.Append(h2);
+    host.AppendInt(h2);
     host.Append('.');
-    host.Append(h3);
+    host.AppendInt(h3);
 
     nsAllocator::Free(response);
 
@@ -1626,7 +1626,7 @@ nsFtpConnectionThread::Init(nsIProtocolHandler* aHandler,
         mPort = port;
 
     mCacheKey.Assign(host);
-    mCacheKey.Append(port);
+    mCacheKey.AppendInt(port);
 
     NS_WITH_SERVICE(nsIEventQueueService, eqs, kEventQueueServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
