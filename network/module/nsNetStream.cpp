@@ -44,50 +44,30 @@ nsConnectionInfo::nsConnectionInfo(nsIURL *aURL,
     pURL       = aURL;
     pNetStream = aStream;
     pConsumer  = aNotify;
+
+    NS_IF_ADDREF(pURL);
+    NS_IF_ADDREF(pNetStream);
+    NS_IF_ADDREF(pConsumer);
+
+    NS_VERIFY_THREADSAFE_INTERFACE(pURL);
+    NS_VERIFY_THREADSAFE_INTERFACE(pNetStream);
+    NS_VERIFY_THREADSAFE_INTERFACE(pConsumer);
+
     pContainer = nsnull;
-
-    if (NULL != pURL) {
-        pURL->AddRef();
-    }
-
-    if (NULL != pNetStream) {
-        pNetStream->AddRef();
-    }
-
-    if (NULL != pConsumer) {
-        pConsumer->AddRef();
-    }
 }
 
 
-NS_IMPL_ISUPPORTS(nsConnectionInfo, kIConnectionInfoIID);
+NS_IMPL_THREADSAFE_ISUPPORTS(nsConnectionInfo, kIConnectionInfoIID);
 
 
 nsConnectionInfo::~nsConnectionInfo()
 {
     TRACEMSG(("nsConnectionInfo is being destroyed...\n"));
 
-    if (NULL != pURL) {
-        pURL->Release();
-    }
-
-    if (NULL != pNetStream) {
-        pNetStream->Close();
-        pNetStream->Release();
-    }
-
-    if (NULL != pConsumer) {
-        pConsumer->Release();
-    }
-
-    if (nsnull != pContainer) {
-        NS_RELEASE(pContainer);
-    }
-
-    pURL       = NULL;
-    pNetStream = NULL;
-    pConsumer  = NULL;
-    pContainer = nsnull;
+    NS_IF_RELEASE(pURL);
+    NS_IF_RELEASE(pNetStream);
+    NS_IF_RELEASE(pConsumer);
+    NS_IF_RELEASE(pContainer);
 }
 
 NS_IMETHODIMP 
@@ -135,8 +115,8 @@ nsNetlibStream::nsNetlibStream(void)
 }
 
 
-NS_IMPL_ADDREF(nsNetlibStream)
-NS_IMPL_RELEASE(nsNetlibStream)
+NS_IMPL_THREADSAFE_ADDREF(nsNetlibStream)
+NS_IMPL_THREADSAFE_RELEASE(nsNetlibStream)
 
 nsresult nsNetlibStream::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 {
@@ -161,6 +141,17 @@ nsresult nsNetlibStream::QueryInterface(const nsIID &aIID, void** aInstancePtr)
         AddRef();
         return NS_OK;
     }
+
+#if defined(NS_DEBUG) 
+    /*
+     * Check for the debug-only interface indicating thread-safety
+     */
+    static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);
+    if (aIID.Equals(kIsThreadsafeIID)) {
+        return NS_OK;
+    }
+#endif /* NS_DEBUG */
+
     return NS_NOINTERFACE;
 }
 
@@ -564,6 +555,21 @@ nsBlockingStream::~nsBlockingStream()
 }
 
 
+nsresult nsBlockingStream::Close()
+{
+    LockStream();
+    m_bIsClosed = PR_TRUE;
+
+#if defined(NETLIB_THREAD)
+    /* Wake up any waiting threads... */
+    PR_Notify(m_Lock);
+#endif /* NETLIB_THREAD */
+
+    UnlockStream();
+
+    return NS_OK;
+}
+
 PRInt32 nsBlockingStream::GetAvailableSpace(PRInt32 *aErrorCode)
 {
     PRInt32 size = 0;
@@ -642,6 +648,11 @@ nsresult nsBlockingStream::Write(const char *aBuf,
 
         *aWriteCount = aLen;
         m_DataLength += aLen;
+
+#if defined(NETLIB_THREAD)
+        /* Wake up any waiting threads... */
+        PR_Notify(m_Lock);
+#endif /* NETLIB_THREAD */
     }
 
 done:
@@ -679,8 +690,16 @@ nsresult nsBlockingStream::Read(char *aBuf,
             aBuf += aOffset;
         }
 
+        /* 
+         * There is either enough data, or some data left in the stream
+         * after it has been closed...  So, read it and return.
+         */
+        if ((aCount <= m_DataLength) || m_bIsClosed) {
+            *aReadCount = ReadBuffer(aBuf, aCount);
+        }
         /* Not enough data is available... Must block. */
-        if (aCount > m_DataLength) {
+        else {
+#if !defined(NETLIB_THREAD)
             UnlockStream();
             do {
                 NET_PollSockets();
@@ -688,6 +707,12 @@ nsresult nsBlockingStream::Read(char *aBuf,
                 /* XXX m_bIsClosed is checked outside of the lock! */
             } while ((aCount > *aReadCount) && !m_bIsClosed); 
             LockStream();
+#else
+            do {
+                PR_Wait(m_Lock, PR_INTERVAL_NO_TIMEOUT);
+                *aReadCount += ReadBuffer(aBuf + *aReadCount, aCount - *aReadCount);
+            } while ((aCount > *aReadCount) && !m_bIsClosed); 
+#endif /* NETLIB_THREAD */
             /* 
              * It is possible that the stream was closed during 
              * NET_PollSockets(...)...  In this case, return EOF if no data 
@@ -696,9 +721,7 @@ nsresult nsBlockingStream::Read(char *aBuf,
             if ((0 == *aReadCount) && m_bIsClosed) {
                 rv = NS_BASE_STREAM_EOF;
             }
-        } else {
-            *aReadCount = ReadBuffer(aBuf, aCount);
-        }
+        } 
     }
     
 done:

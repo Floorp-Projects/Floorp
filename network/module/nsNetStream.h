@@ -74,10 +74,8 @@ protected:
     inline void UnlockStream(void) { if (m_Lock) PR_ExitMonitor (m_Lock); }
 
 protected:
-    PRBool m_bIsClosed;
-
-private:
-    PRMonitor *m_Lock;
+    PRBool     m_bIsClosed;
+    PRMonitor* m_Lock;
 
 };
 
@@ -165,6 +163,9 @@ public:
     nsBlockingStream(void);
 
     virtual PRInt32 GetAvailableSpace(PRInt32 *aErrorCode);
+
+    /* nsIBaseStream interface */
+    NS_IMETHOD Close(void);
 
     /* nsIInputStream interface */
     NS_IMETHOD GetLength(PRInt32 *aLength);
