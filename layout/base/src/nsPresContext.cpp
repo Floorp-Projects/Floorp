@@ -33,8 +33,7 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK ***** */
-#include "nsCOMPtr.h"
+ * ***** END LICENSE BLOCK ***** */#include "nsCOMPtr.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIPref.h"
@@ -77,6 +76,9 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIImageFrame.h"
 
+//needed for resetting of image service color
+#include "nsLayoutCID.h"
+#include "nsISelectionImageService.h"
 
 static nscolor
 MakeColorPref(const char *colstr)
@@ -130,6 +132,8 @@ PR_STATIC_CALLBACK(PRBool) destroy_loads(nsHashKey *aKey, void *aData, void* clo
 static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 #include "nsContentCID.h"
 static NS_DEFINE_CID(kEventStateManagerCID, NS_EVENTSTATEMANAGER_CID);
+static NS_DEFINE_CID(kSelectionImageService, NS_SELECTIONIMAGESERVICE_CID);
+
 
 nsPresContext::nsPresContext()
   : mDefaultVariableFont("serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
@@ -1733,6 +1737,13 @@ nsPresContext::SysColorChanged()
     nsCOMPtr<nsIStyleSet> set;
     mShell->GetStyleSet(getter_AddRefs(set));
     set->ClearStyleData(this, nsnull, nsnull);
+  }
+  nsCOMPtr<nsISelectionImageService> imageService;
+  nsresult result;
+  imageService = do_GetService(kSelectionImageService, &result);
+  if (NS_SUCCEEDED(result) && imageService)
+  {
+    imageService->Reset();
   }
   return NS_OK;
 }

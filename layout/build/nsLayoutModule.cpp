@@ -62,6 +62,7 @@
 #include "nsColorNames.h"   // to addref/release table
 #include "nsCSSFrameConstructor.h"
 #include "nsSpaceManager.h"
+#include "nsISelectionImageService.h"
 
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
@@ -188,6 +189,7 @@ extern nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
 extern nsresult NS_CreateCSSFrameConstructor(nsICSSFrameConstructor** aResult);
 extern nsresult NS_NewLayoutHistoryState(nsILayoutHistoryState** aResult);
 extern nsresult NS_NewAutoCopyService(nsIAutoCopyService** aResult);
+extern nsresult NS_NewSelectionImageService(nsISelectionImageService** aResult);
 
 #define MAKE_CTOR(ctor_, iface_, func_)                   \
 static NS_IMETHODIMP                                      \
@@ -228,6 +230,7 @@ MAKE_CTOR(CreateNewIFrameBoxObject,     nsIBoxObject,           NS_NewIFrameBoxO
 MAKE_CTOR(CreateNewScrollBoxObject,     nsIBoxObject,           NS_NewScrollBoxObject)
 MAKE_CTOR(CreateNewTreeBoxObject,       nsIBoxObject,           NS_NewTreeBoxObject)
 MAKE_CTOR(CreateNewAutoCopyService,     nsIAutoCopyService,     NS_NewAutoCopyService)
+MAKE_CTOR(CreateSelectionImageService,  nsISelectionImageService,NS_NewSelectionImageService)
 
 // The list of components we register
 static const nsModuleComponentInfo gComponents[] = {
@@ -257,6 +260,11 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_LAYOUT_HISTORY_STATE_CID,
     nsnull,
     CreateNewLayoutHistoryState },
+
+  { "selection image storage",
+    NS_SELECTIONIMAGESERVICE_CID,
+    nsnull,
+    CreateSelectionImageService},
 
   // XXX ick
   { "Presentation shell",

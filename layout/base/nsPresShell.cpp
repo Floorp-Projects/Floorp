@@ -1566,7 +1566,7 @@ PresShell::PresShell():
   if (! gLog)
     gLog = PR_NewLogModule("PresShell");
 #endif
-  mSelectionFlags = nsISelectionDisplay::DISPLAY_TEXT;
+  mSelectionFlags = nsISelectionDisplay::DISPLAY_TEXT | nsISelectionDisplay::DISPLAY_IMAGES;
 }
 
 NS_IMPL_ADDREF(PresShell)
