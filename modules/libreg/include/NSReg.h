@@ -100,7 +100,7 @@ typedef struct _reginfo
 #define UNIX_GLOBAL_FLAG     "MOZILLA_SHARED_REGISTRY"
 
 /* Platform-dependent declspec for library interface */
-#if defined(XP_WIN) || defined(XP_OS2_VACPP)
+#if defined(XP_WIN)
   #if defined(WIN32)
     #if defined (STANDALONE_REGISTRY)
        #define VR_INTERFACE(type)     __declspec(dllexport) type __cdecl
@@ -108,8 +108,6 @@ typedef struct _reginfo
        #define VR_INTERFACE(type)     __declspec(dllexport) type __stdcall
     #endif
 
-  #elif defined(XP_OS2_VACPP)
-  #define VR_INTERFACE(type)     type _Optlink
   #else
   #define VR_INTERFACE(type)     type _far _pascal _export
   #endif
