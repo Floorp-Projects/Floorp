@@ -46,6 +46,9 @@ TEST_FILES      = \
 		xifstuff.out \
 		htmltable.html \
 		htmltable.out \
+		doctype.xif \
+		xifdtplain.out \
+		xifdthtml.out \
 		$(NULL)
 
 LINCS=					\

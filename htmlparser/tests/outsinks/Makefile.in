@@ -54,6 +54,9 @@ TEST_FILES      = \
 		htmltable.out \
 		xifstuff.xif \
 		xifstuff.out \
+		doctype.xif \
+		xifdtplain.out \
+		xifdthtml.out \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

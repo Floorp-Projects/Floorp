@@ -603,11 +603,6 @@ nsresult nsXIFDTD::HandleStartToken(CToken* aToken) {
         ProcessEncodeTag(node);
       break;
 
-      case eXIFTag_document_info:
-        ProcessDocumentInfoTag(node);
-      break;
-
-
       case eXIFTag_attr:
         AddAttribute(node);
       break;
@@ -632,6 +627,11 @@ nsresult nsXIFDTD::HandleStartToken(CToken* aToken) {
       case eXIFTag_css_declaration:
         AddCSSDeclaration(node);
       break;
+
+      case eXIFTag_document_info:
+        // This is XIF only tag. For HTML it's userdefined.
+        node.mToken->SetTypeID(eHTMLTag_userdefined);
+        // fall through to call OpenContainer:
 
       case eXIFTag_markupDecl:
         mSink->OpenContainer(node);
@@ -1435,28 +1435,6 @@ void nsXIFDTD::ProcessEntityTag(const nsIParserNode& aNode)
     mSink->AddLeaf(node);
   }
 }
-
-
-void nsXIFDTD::ProcessDocumentInfoTag(const nsIParserNode& aNode)
-{
-  nsString value;
-  nsString key("charset");
-
-  if (GetAttribute(aNode,key,value))
-  {
-    nsString tmpString("document_info");
-    PushNodeAndToken(tmpString);
-    nsIParserNode* top = PeekNode();
-    if (top != nsnull)
-    {
-      CAttributeToken* attribute = new CAttributeToken(key,value);
-      ((nsCParserNode*)top)->AddAttribute(attribute);
-    }
-  }
-}
-
-
-
 
 /*** CSS Methods ****/
 

@@ -426,7 +426,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
   printf("OpenContainer: %d    ", type);
 #endif  
   const nsString&   name = aNode.GetText();
-  if (name.Equals("XIF_DOC_INFO"))
+  if (name.Equals("document_info"))
   {
     nsString value;
     if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "charset", value)))
