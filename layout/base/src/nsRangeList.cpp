@@ -34,7 +34,7 @@
 #include "nsRange.h"
 #include "nsISupportsArray.h"
 #include "nsIDOMEvent.h"
-
+#include "nsIDOMSelectionListener.h"
 
 static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -85,6 +85,10 @@ public:
   NS_IMETHOD AddRange(nsIDOMRange* aRange);
   NS_IMETHOD GetAnchorNodeAndOffset(nsIDOMNode** outAnchorNode, PRInt32 *outAnchorOffset);
   NS_IMETHOD GetFocusNodeAndOffset(nsIDOMNode** outFocusNode, PRInt32 *outFocusOffset);
+
+  NS_IMETHOD AddSelectionListener(nsIDOMSelectionListener* inNewListener);
+  NS_IMETHOD RemoveSelectionListener(nsIDOMSelectionListener* inListenerToRemove);
+
 /*END nsIDOMSelection interface implementations*/
 
   nsRangeList();
@@ -104,12 +108,14 @@ private:
 
   void ResizeBuffer(PRUint32 aNewBufSize);
 
-  nsIDOMNode* GetAnchorNode(); //where did the selection begin
-  PRInt32 GetAnchorOffset();
-  void setAnchor(nsIDOMNode*, PRInt32);
-  nsIDOMNode* GetFocusNode();  //where is the carret
-  PRInt32 GetFocusOffset();
-  void setFocus(nsIDOMNode*, PRInt32);
+  nsIDOMNode*  GetAnchorNode(); //where did the selection begin
+  PRInt32      GetAnchorOffset();
+  void         setAnchor(nsIDOMNode*, PRInt32);
+  nsIDOMNode*  GetFocusNode();  //where is the carret
+  PRInt32      GetFocusOffset();
+  void         setFocus(nsIDOMNode*, PRInt32);
+
+  nsresult     NotifySelectionListeners();			// add parameters to say collapsed etc?
 
   nsCOMPtr<nsISupportsArray> mRangeArray;
 
@@ -117,6 +123,9 @@ private:
   PRInt32 mAnchorOffset;
   nsCOMPtr<nsIDOMNode> mFocusNode; //where is the carret
   PRInt32 mFocusOffset;
+
+  nsCOMPtr<nsISupportsArray> mSelectionListeners;
+
 };
 
 class nsRangeListIterator : public nsIEnumerator
@@ -327,18 +336,29 @@ nsRangeList::nsRangeList()
 {
   NS_INIT_REFCNT();
   NS_NewISupportsArray(getter_AddRefs(mRangeArray));
+  NS_NewISupportsArray(getter_AddRefs(mSelectionListeners));
 }
 
 
 
 nsRangeList::~nsRangeList()
 {
-  if (!mRangeArray)
-    return;
-  for (PRInt32 i=0;i < mRangeArray->Count(); i++)
+  if (mRangeArray)
   {
-    mRangeArray->RemoveElementAt(i);
+	  for (PRInt32 i=0;i < mRangeArray->Count(); i++)
+	  {
+	    mRangeArray->RemoveElementAt(i);
+	  }
   }
+  
+  if (mSelectionListeners)
+  {
+	  for (PRInt32 i=0;i < mSelectionListeners->Count(); i++)
+	  {
+	    mSelectionListeners->RemoveElementAt(i);
+	  }
+  }
+  
 }
 
 
@@ -834,7 +854,8 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
   }
   else
     return NS_ERROR_FAILURE;
-  return NS_OK;
+    
+  return NotifySelectionListeners();
 }
 
 
@@ -942,6 +963,46 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
   return NS_OK;
 }
 
+
+NS_METHOD nsRangeList::AddSelectionListener(nsIDOMSelectionListener* inNewListener)
+{
+  if (!mSelectionListeners)
+    return NS_ERROR_FAILURE;
+  if (!inNewListener)
+    return NS_ERROR_NULL_POINTER;
+  mSelectionListeners->AppendElement(inNewListener);		// addrefs
+  return NS_OK;
+}
+
+
+
+NS_METHOD nsRangeList::RemoveSelectionListener(nsIDOMSelectionListener* inListenerToRemove)
+{
+  if (!mSelectionListeners)
+    return NS_ERROR_FAILURE;
+  if (!inListenerToRemove )
+    return NS_ERROR_NULL_POINTER;
+    
+  return mSelectionListeners->RemoveElement(inListenerToRemove);		// releases
+}
+
+
+nsresult nsRangeList::NotifySelectionListeners()
+{
+  if (!mSelectionListeners)
+    return NS_ERROR_FAILURE;
+
+  for (PRInt32 i = 0; i < mSelectionListeners->Count();i++)
+  {
+  	nsCOMPtr<nsISupports>	thisEntry(mSelectionListeners->ElementAt(i));
+    nsCOMPtr<nsIDOMSelectionListener> thisListener(thisEntry);
+    if (thisListener)
+    	thisListener->NotifySelectionChanged();
+  }
+
+	return NS_OK;
+}
+
 //END nsIFrameSelection methods
 
 //BEGIN nsIDOMSelection interface implementations
@@ -952,7 +1013,11 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
 NS_IMETHODIMP
 nsRangeList::ClearSelection()
 {
-  return Clear();
+  nsresult	result = Clear();
+  if (NS_FAILED(result))
+  	return result;
+  	
+  return NotifySelectionListeners();
   // Also need to notify the frames!
   // PresShell::ContentChanged should do that on DocumentChanged
 }
@@ -963,7 +1028,13 @@ nsRangeList::ClearSelection()
 NS_IMETHODIMP
 nsRangeList::AddRange(nsIDOMRange* aRange)
 {
-  return AddItem(aRange);
+  nsresult	result = AddItem(aRange);
+  
+	if (NS_FAILED(result))
+		return result;
+	
+	return NotifySelectionListeners();
+	
   // Also need to notify the frames!
 }
 
@@ -1002,7 +1073,8 @@ nsRangeList::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
   res = AddItem(range);
   if (!NS_SUCCEEDED(res))
     return res;
-  return NS_OK;
+    
+	return NotifySelectionListeners();
 }
 
 /*
@@ -1095,7 +1167,8 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
       if (NS_SUCCEEDED(res))
         setFocus(aParentNode, aOffset);
 
-      return res;
+      if (NS_FAILED(res)) return res;
+      return NotifySelectionListeners();
     }
     
     if ((GetFocusNode() == startNode) && (GetFocusOffset() == startOffset))
@@ -1109,7 +1182,9 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
       }
       if (NS_SUCCEEDED(res))
         setFocus(aParentNode, aOffset);
-      return res;
+
+      if (NS_FAILED(res)) return res;
+      return NotifySelectionListeners();
     }
   }
 

@@ -34,6 +34,7 @@
 //----------------------------------------------------------------------
 
 class nsIDOMRange;
+class nsIDOMSelectionListener;
 
 // Selection interface
 class nsIDOMSelection : public nsISupports {
@@ -79,6 +80,9 @@ public:
    *  will return NS_OK if it handles the event or NS_COMFALSE if not.
    */
   NS_IMETHOD DeleteFromDocument() = 0;
+
+  NS_IMETHOD AddSelectionListener(nsIDOMSelectionListener* inNewListener) = 0;
+  NS_IMETHOD RemoveSelectionListener(nsIDOMSelectionListener* inListenerToRemove) = 0;
 
 };
 
