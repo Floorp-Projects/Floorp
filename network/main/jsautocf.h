@@ -37,5 +37,10 @@ NET_JavaScriptAutoConfig(int fmt, void *data_obj, URL_Struct *URL_s, MWContext *
 
 MODULE_PRIVATE int NET_LoadJavaScriptConfig(char *autoconf_url,MWContext *window_id);
 
+void jsacf_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id);
+PUBLIC char * NET_GetJavaScriptConfigSource(void);
+PUBLIC XP_Bool NET_InitPacfContext(void);
+
+
 #endif /* ! MK_JAVASCRIPT_AUTO_CONFIG */
 
