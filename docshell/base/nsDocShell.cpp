@@ -134,7 +134,7 @@ NS_IMETHODIMP nsDocShell::LoadURIVia(nsIURI* aUri,
    NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
    mContentListener->SetPresContext(aPresContext);
 
-   NS_ENSURE_SUCCESS(uriLoader->OpenURIVia(aUri, nsnull, 
+   NS_ENSURE_SUCCESS(uriLoader->OpenURIVia(aUri, nsIURILoader::viewNormal, nsnull, 
       NS_STATIC_CAST(nsIDocShell*, this), nsnull, mLoadCookie, 
       getter_AddRefs(mLoadCookie), aAdapterBinding), NS_ERROR_FAILURE);
 
