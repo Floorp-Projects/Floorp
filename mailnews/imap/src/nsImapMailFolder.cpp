@@ -2164,6 +2164,8 @@ nsImapMailFolder::ParseAdoptedMsgLine(nsIImapProtocol* aProtocol,
                                       msg_line_info* aMsgLineInfo)
 {
 	PRUint32 count = 0;
+	// remember the uid of the message we're downloading.
+	m_curMsgUid = aMsgLineInfo->uidOfMessage;
 	if (m_tempMessageStream)
 	   m_tempMessageStream->Write(aMsgLineInfo->adoptedMessageLine, 
 								  PL_strlen(aMsgLineInfo->adoptedMessageLine), &count);
@@ -2193,6 +2195,15 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsIImapProtocol* aProtocol)
                 
                 res = webShell->LoadURL(nsAutoString(message_path_url).GetUnicode(), nsnull, PR_TRUE, nsURLReloadBypassCache, 0);
                 
+				if (NS_SUCCEEDED(res))
+				{
+					// now mark the message as read in the db.
+					nsCOMPtr<nsIMsgDBHdr> msgHdr;
+
+					res = GetMessageHeader(getter_AddRefs(msgHdr));
+					if (NS_SUCCEEDED(res))
+						msgHdr->MarkRead(PR_TRUE);
+				}
                 PR_FREEIF(message_path_url);
             }
             else
@@ -2231,6 +2242,26 @@ nsImapMailFolder::AbortMsgWriteStream(nsIImapProtocol* aProtocol)
 {
     return NS_ERROR_FAILURE;
 }
+
+nsresult nsImapMailFolder::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
+{
+	nsresult rv = NS_OK;
+	if (aMsgHdr)
+	{
+		rv = GetDatabase();
+		// In theory, there shouldn't be contention over
+		// m_curMsgUid, but it currently describes both the most
+		// recent header we downloaded, and most recent message we've
+		// downloaded. We may want to break this up.
+		if (NS_SUCCEEDED(rv) && mDatabase) // did we get a db back?
+			rv = mDatabase->GetMsgHdrForKey(m_curMsgUid, aMsgHdr);
+	}
+	else
+		rv = NS_ERROR_NULL_POINTER;
+
+	return rv;
+}
+
     
     // message move/copy related methods
 NS_IMETHODIMP 

@@ -360,6 +360,8 @@ protected:
     nsresult BuildIdsAndKeyArray(nsISupportsArray* messages,
                                  nsString2& msgIds, nsMsgKeyArray& keyArray);
 
+	nsresult GetMessageHeader(nsIMsgDBHdr ** aMsgHdr);
+
     nsNativeFileSpec *m_pathName;
     PRBool m_initialized;
     PRBool m_haveDiscoverAllFolders;
