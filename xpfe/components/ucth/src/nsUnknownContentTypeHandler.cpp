@@ -239,7 +239,7 @@ nsUnknownContentTypeHandler::PromptForSaveToFile(nsISupports * aWindowContext, c
                     NS_ERROR_FAILURE);
 
     nsXPIDLString windowTitle;
-    stringBundle->GetStringFromName(NS_LITERAL_STRING("saveDialogTitle"), getter_Copies(windowTitle));
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("saveDialogTitle").get(), getter_Copies(windowTitle));
 
     nsCOMPtr<nsIDOMWindowInternal> parent( do_GetInterface( aWindowContext ) );
     filePicker->Init(parent, windowTitle, nsIFilePicker::modeSave);
