@@ -129,7 +129,7 @@ public:
 
   /// Compare s1 and s2.
   static PRInt32 strcmp(const char* s1, const char* s2) {
-    return PRUint32(PL_strcmp(s1, s2));
+    return PRInt32(PL_strcmp(s1, s2));
   }
 
   static PRInt32 strncmp(const char* s1, const char* s2,
@@ -156,7 +156,7 @@ public:
     // inline the first test (assumes strings are not null):
     PRInt32 diff = ((const unsigned char*)s1)[0] - ((const unsigned char*)s2)[0];
     if (diff != 0) return diff;
-    return PRInt32(PL_strncmp(s1,s2,aMaxLen));
+    return PRInt32(PL_strncmp(s1,s2,unsigned(aMaxLen)));
   }
   
   static char* strdup(const char* str) {
