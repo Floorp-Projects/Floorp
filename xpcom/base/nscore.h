@@ -427,6 +427,11 @@ typedef PRUint32 nsresult;
 #define NS_INT32_TO_PTR(x) ((void *)((char *)0 + (x)))
 
 /*
+ * Use this macro to form a string literal from an identifier.
+ */
+#define NS_STRINGIFY(x) #x
+
+/*
  * These macros allow you to give a hint to the compiler about branch
  * probability so that it can better optimize.  Use them like this:
  *
@@ -449,4 +454,3 @@ typedef PRUint32 nsresult;
 #endif
 
 #endif /* nscore_h___ */
-

@@ -104,9 +104,6 @@ CPPSRCS = \
 	nsNativeAppSupportBase.cpp \
 	$(NULL)
 
-BUILD_ID = $(shell cat $(DEPTH)/config/build_number)
-DEFINES += -DBUILD_ID=\"$(BUILD_ID)\"
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS += nsNativeAppSupportWin.cpp
 DEFINES += -DWIN32_LEAN_AND_MEAN
