@@ -190,7 +190,7 @@ NS_IMETHODIMP nsXULWindow::GetContentShellById(const PRUnichar* aID,
    for(PRInt32 i = 0; i < count; i++)
       {
       nsContentShellInfo* shellInfo = (nsContentShellInfo*)mContentShells.ElementAt(i);
-      if(shellInfo->id == aID)
+      if(shellInfo->id.Equals(aID))
          {
          *aDocShellTreeItem = shellInfo->child;
          NS_ADDREF(*aDocShellTreeItem);
