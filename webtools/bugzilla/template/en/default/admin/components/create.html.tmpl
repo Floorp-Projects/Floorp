@@ -45,13 +45,30 @@
       </td>
     </tr>
     <tr>
-      <th align="right">Initial Owner:</th>
-      <td><input size="64" maxlength="64" name="initialowner" value=""></td>
+      <th align="right"><label for="initialowner">Initial Owner:</label></th>
+      <td>
+        [% INCLUDE global/userselect.html.tmpl
+           name => "initialowner"
+           id => "initialowner"
+           value => ""
+           size => 64
+           emptyok => 1
+         %]
+      </td>
     </tr>
 [% IF Param('useqacontact') %]
     <tr>
-      <th align="right">Initial QA Contact:</th>
-      <td><input size="64" maxlength="64" name="initialqacontact" value=""></td>
+      <th align="right">
+        <label for="initialqacontact">Initial QA Contact:</label></th>
+      <td>
+        [% INCLUDE global/userselect.html.tmpl
+           name => "initialqacontact"
+           id => "initialqacontact"
+           value => ""
+           size => 64
+           emptyok => 1
+         %]
+      </td>
     </tr>
 [% END %]
   </table>

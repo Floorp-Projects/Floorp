@@ -18,6 +18,7 @@
   # userlist: select only; array reference with list of users and identities
   #                        userlist is built by Bugzilla::User::get_userlist()
   # name: mandatory; field name
+  # id: optional; field id
   # value: optional; default field value/selection
   # onchange: optional; onchange attribute value
   # disabled: optional; if true, the field is disabled
@@ -30,6 +31,7 @@
 
 [% IF Param("usemenuforusers") %]
 <select name="[% name FILTER html %]"
+  [% IF id %] id="[% id FILTER html %]" [% END %]
   [% IF onchange %] onchange="[% onchange FILTER html %]" [% END %]
   [% IF disabled %] disabled="[% disabled FILTER html %]" [% END %]
   [% IF accesskey %] accesskey="[% accesskey FILTER html %]" [% END %]
@@ -54,6 +56,7 @@
   [% IF disabled %] disabled="[% disabled FILTER html %]" [% END %]
   [% IF accesskey %] accesskey="[% accesskey FILTER html %]" [% END %]
   [% IF size %] size="[% size FILTER html %]" [% END %]
+  [% IF id %] id="[% id FILTER html %]" [% END %]
 >
 [% END %]
 
