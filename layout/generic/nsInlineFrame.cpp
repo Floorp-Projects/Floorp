@@ -229,6 +229,7 @@ PRBool nsInlineFrame::ReflowMappedChildrenFrom(nsIPresContext* aPresContext,
     nsReflowStatus  status;
 
     // Reflow the child into the available space
+    kidFrame->WillReflow(*aPresContext);
     status = ReflowChild(kidFrame, aPresContext, kidSize, aState.availSize,
                          pKidMaxElementSize);
 
@@ -397,6 +398,7 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
       mLastContentIsComplete = prevLastContentIsComplete;
       break;
     }
+    kidFrame->WillReflow(*aPresContext);
     status = ReflowChild(kidFrame, aPresContext, kidSize, aState.availSize,
                          pKidMaxElementSize);
 
@@ -628,7 +630,8 @@ nsReflowStatus nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContex
     // Try to reflow the child into the available space. It might not
     // fit or might need continuing.
     nsReflowMetrics kidSize;
-    nsReflowStatus  status = ReflowChild(kidFrame,aPresContext, kidSize,
+    kidFrame->WillReflow(*aPresContext);
+    nsReflowStatus  status = ReflowChild(kidFrame, aPresContext, kidSize,
                                          aState.availSize, pKidMaxElementSize);
 
     // Did the child fit?
