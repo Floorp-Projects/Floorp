@@ -4,8 +4,8 @@
 # Tracking system and its relationship to the tinderbox trees.
 
 
-# $Revision: 1.2 $ 
-# $Date: 2000/10/18 20:26:04 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/11/29 19:47:19 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Attic/BTData.pm,v $ 
 # $Name:  $ 
@@ -189,7 +189,8 @@ sub update2bug_url {
   my ($tinderbox_ref) = @_;
 
   # AIM can not accept bug numbers as URLS without encoding lots of
-  # other junk. Just give a mailto:
+  # other junk (logged in user name, session id info). Just give a
+  # 'mailto: ' for the link instead.
 
   #  $out = (
   #	  'mailto: '.

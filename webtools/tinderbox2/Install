@@ -12,30 +12,35 @@ To install:
 	TinderConfig.pm: general configuration settings
 	TreeData.pm: version control configuration
 
+   These modules will take some programming experiance to configure
+
 	Error_Parse.pm: the regular expressions for highlighting errors
 	FileStructure.pm: filesystem (storage) and global/per-project settings
 	BTData.pm: bug tracking configuration
 
-    configure: destdir
+2) Run configure. You may wish to change the default directories in
+configure for some of the makefile variables.  When configure is done
+you will have a Makefile and a config.out.  Please read config.out and
+make any changes which need to be made for your system.
 
-2) run ./configure to generate a Makefile.  Although Tinderbox
+3) run ./configure to generate a Makefile.  Although Tinderbox
 consists entirely of perl scripts we must substitute some values into
 the source code to make it executable.
 
-3) run make to create executable versions of the source code.
+4) run make to create executable versions of the source code.
 
-4) run the test programs as described in /build/test/ReadMe to ensure
+5) run the test programs as described in /build/test/ReadMe to ensure
 that you have configured the program correctly.
 
-5) run make install
+6) run make install
 
-6) set up a cron job to run $prefix/bin/tinder.cgi --daemon-mode 
+7) set up a cron job to run $prefix/bin/tinder.cgi --daemon-mode 
 	every five minutes.
    set up a cron job to run $prefix/bin/tinder.cgi/rmlogs once a day.
      six am is a good time to run this as the machine load is usually light
       and will avoids any day light savings problems.
 
-7) set up the $prefix/bin/processmail* programs to receive the
+8) set up the $prefix/bin/processmail* programs to receive the
 incoming tinderbox mail.  The process id which receives and process
 the mail must be the the same id which runs the tinderbox cron job to
 prepare the web pages.  Usually this set up is accomplished by having
@@ -80,7 +85,7 @@ the script processmail_bugs.
 
 
 
-8) if you are using VC_CVS.pm then you will need to put a ~/.cvspass
+9) if you are using VC_CVS.pm then you will need to put a ~/.cvspass
 for tinderbox to use.  Log into the CVS repository yourself, once for
 each tree you have defined.  The login command must use the
 hostname/modules exactly as you wrote it in TreeData.  Then copy your
@@ -90,7 +95,7 @@ must be the REAL home of the Tinderbox daemon, as listed in
 tinder.cgi.
 
 
-9) setup the build machines to mail their build logs (with tinderbox
+10) setup the build machines to mail their build logs (with tinderbox
 variables on the top) to the web server machine.  New builds must not
 start earlier then 6 minutes after the last build started.  Each build
 machine mails the build log of each build and puts some build data at
@@ -100,14 +105,14 @@ this is.  The mail processing program has a help file (--help) which
 details the format it knows how to accept.
 
 
-10) Set up the bug tracking system to send mail to 'tinderbox_bugs' on
+11) Set up the bug tracking system to send mail to 'tinderbox_bugs' on
 the webserver machine whenever a Bug ticket changes state. It is not
 interesting to see which tickets are being worked on, so restrict
 mailing to changes in ticket state not updates (edit) of a ticket.
 
 
-11) Check that the time on your webserver, your version control
+12) Check that the time on your webserver, your version control
 machine, your bug tracking machine and your build machines are all in
-sync.  Check that mail if build mail bounces on any of the aboce
+sync.  Check that mail if build mail bounces on any of the above
 machines that it will be recieved by someone who can act on it.
 
