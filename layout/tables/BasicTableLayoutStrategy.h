@@ -23,6 +23,7 @@
 #include "nsITableLayoutStrategy.h"
 #include "nsCoord.h"
 
+class nsVoidArray;
 class nsTableFrame;
 struct nsStylePosition;
 
@@ -164,18 +165,31 @@ public:
                                            nscoord aMinTableWidth, 
                                            nscoord aMaxTableWidth);
 
+  /** post-process to AssignFixedColumnWidths
+    *
+    * @param aColSpanList         a list of fixed-width columns that have colspans
+    * @param aColWidths           the effective column widths (ignoring col span cells)
+    *
+    * NOTE: does not yet properly handle overlapping col spans
+    *
+    * @return void
+    */  
+  virtual void DistributeFixedSpace(nsVoidArray *aColSpanList, nscoord *aColWidths);
+
   /** starting with a partially balanced table, compute the amount
     * of space to pad each column by to completely balance the table.
     * set the column widths in mTableFrame based on these computations.
     *
-    * @param aTableFixedWidth     the specified width of the table.  If there is none,
-    *                             this param is 0
-    * @param aComputedTableWidth  the width of the table before this final step.
+    * @param aAvailWidth          the space still to be allocated within the table
+    * @param aTableWidth          the sum of all columns widths
+    * @param aWidthOfFixedTableColumns the sum of the widths of fixed-width columns
+    * @param aColWidths           the effective column widths (ignoring col span cells)
     *
     * @return void
     */
-  virtual void DistributeExcessSpace(nscoord  aTableFixedWidth,
-                                     nscoord  aComputedTableWidth,
+  virtual void DistributeExcessSpace(nscoord  aAvailWidth,
+                                     nscoord  aTableWidth, 
+                                     nscoord  aWidthOfFixedTableColumns,
                                      nscoord *aColWidths);
 
   /** starting with a partially balanced table, compute the amount
@@ -192,6 +206,11 @@ public:
                                         nscoord  aComputedTableWidth,
                                         nscoord *aMinColWidths,
                                         nscoord *aMaxColWidths);
+
+  /** force all cells to be at least their minimum width, removing any excess space
+    * created in the process from fat cells that can afford to lose a little tonnage.
+    */
+  virtual void EnsureCellMinWidths(nscoord *aMinColWidths);
 
   /** return true if the style indicates that the width is a specific width 
     * for the purposes of column width determination.

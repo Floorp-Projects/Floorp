@@ -16,7 +16,6 @@
  * Reserved.
  */
 #include "nsTableCellFrame.h"
-#include "nsCellLayoutData.h"
 #include "nsBodyFrame.h"
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
@@ -53,21 +52,24 @@ static const PRBool gsDebugNT = PR_FALSE;
   */
 nsTableCellFrame::nsTableCellFrame(nsIContent* aContent,
                                    nsIFrame*   aParentFrame)
-  : nsContainerFrame(aContent, aParentFrame),
-  mCellLayoutData(nsnull)
+  : nsContainerFrame(aContent, aParentFrame)
 {
   mRowSpan=1;
   mColSpan=1;
   mColIndex=0;
   mPriorAvailWidth=0;
-  mPriorDesiredSize.width=0;
-  mPriorDesiredSize.height=0;
+  mDesiredSize.width=0;
+  mDesiredSize.height=0;
+  mMaxElementSize.width=0;
+  mMaxElementSize.height=0;
+  mPass1DesiredSize.width=0;
+  mPass1DesiredSize.height=0;
+  mPass1MaxElementSize.width=0;
+  mPass1MaxElementSize.height=0;
 }
 
 nsTableCellFrame::~nsTableCellFrame()
 {
-  if (nsnull!=mCellLayoutData)
-    delete mCellLayoutData;
 }
 
 NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
@@ -291,7 +293,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
   mFirstChild->WillReflow(*aPresContext);
   mFirstChild->MoveTo(leftInset, topInset);
   aStatus = ReflowChild(mFirstChild, aPresContext, kidSize, kidReflowState);
-  SetPriorDesiredSize(kidSize);
 
   if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT)
   {
@@ -325,10 +326,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
   // first, compute the height
   // the height can be set w/o being restricted by aMaxSize.height
   nscoord cellHeight = kidSize.height;
-  if (NS_UNCONSTRAINEDSIZE!=aReflowState.maxSize.height)
-  {
-    cellHeight += topInset + bottomInset;
-  }
+  cellHeight += topInset + bottomInset;
   if (PR_TRUE==gsDebugNT)
     printf("  %p cellFrame height set to %d from kidSize=%d and insets %d,%d\n",
              this, cellHeight, kidSize.height, topInset, bottomInset);
@@ -369,6 +367,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
     aDesiredSize.maxElementSize->height += topInset + bottomInset;
     aDesiredSize.maxElementSize->width += leftInset + rightInset;
   }
+  SetDesiredSize(aDesiredSize);
+  if (nsnull!=aDesiredSize.maxElementSize)
+    SetMaxElementSize(*(aDesiredSize.maxElementSize));
   
   if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT)
     printf("  %p cellFrame returning aDesiredSize=%d,%d\n",
@@ -588,6 +589,505 @@ nsresult nsTableCellFrame::NewFrame(nsIFrame** aInstancePtrResult,
   *aInstancePtrResult = it;
   return NS_OK;
 }
+
+
+
+/* ----- methods from CellLayoutData ----- */
+
+/**
+  * Given a frame and an edge, find the margin
+  *
+  **/
+nscoord nsTableCellFrame::GetMargin(nsIFrame* aFrame, PRUint8 aEdge) const
+{
+  nscoord result = 0;
+
+  if (aFrame)
+  {
+    const nsStyleSpacing* spacing;
+    aFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+    nsMargin  margin;
+    spacing->CalcMarginFor(aFrame, margin);
+    switch (aEdge)
+    {
+      case NS_SIDE_TOP:
+        result = margin.top;
+      break;
+
+      case NS_SIDE_RIGHT:
+        result = margin.right;
+      break;
+
+      case NS_SIDE_BOTTOM:
+        result = margin.bottom;
+      break;
+
+      case NS_SIDE_LEFT:
+        result = margin.left;
+      break;
+
+    }
+  }
+  return result;
+}
+
+
+/**
+  * Given a style context and an edge, find the border width
+  *
+  **/
+nscoord nsTableCellFrame::GetBorderWidth(nsIFrame* aFrame, PRUint8 aEdge) const
+{
+  nscoord result = 0;
+
+  if (aFrame)
+  {
+    const nsStyleSpacing* spacing;
+    aFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+    nsMargin  border;
+    spacing->CalcBorderFor(aFrame, border);
+    switch (aEdge)
+    {
+      case NS_SIDE_TOP:
+        result = border.top;
+      break;
+
+      case NS_SIDE_RIGHT:
+        result = border.right;
+      break;
+
+      case NS_SIDE_BOTTOM:
+        result = border.bottom;
+      break;
+
+      case NS_SIDE_LEFT:
+        result = border.left;
+      break;
+
+    }
+  }
+  return result;
+}
+
+
+/**
+  * Given a style context and an edge, find the padding
+  *
+  **/
+nscoord nsTableCellFrame::GetPadding(nsIFrame* aFrame, PRUint8 aEdge) const
+{
+  nscoord result = 0;
+
+  if (aFrame)
+  {
+    const nsStyleSpacing* spacing;
+    aFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+    nsMargin  padding;
+    spacing->CalcPaddingFor(aFrame, padding);
+    switch (aEdge)
+    {
+      case NS_SIDE_TOP:
+        result = padding.top;
+      break;
+
+      case NS_SIDE_RIGHT:
+        result = padding.right;
+      break;
+
+      case NS_SIDE_BOTTOM:
+        result = padding.bottom;
+      break;
+
+      case NS_SIDE_LEFT:
+        result = padding.left;
+      break;
+
+    }
+  }
+  return result;
+}
+
+
+
+/**
+  * Given an Edge, find the opposing edge (top<-->bottom, left<-->right)
+  *
+  **/
+PRUint8 nsTableCellFrame::GetOpposingEdge(PRUint8 aEdge)
+{
+   PRUint8 result;
+
+   switch (aEdge)
+    {
+   case NS_SIDE_LEFT:
+        result = NS_SIDE_RIGHT;
+        break;
+
+   case NS_SIDE_RIGHT:
+        result = NS_SIDE_LEFT;
+        break;
+
+   case NS_SIDE_TOP:
+        result = NS_SIDE_BOTTOM;
+        break;
+
+   case NS_SIDE_BOTTOM:
+        result = NS_SIDE_TOP;
+        break;
+
+      default:
+        result = NS_SIDE_TOP;
+     }
+  return result;
+}
+
+
+/*
+*
+* Determine border style for two cells.
+*
+  1.If the adjacent elements are of the same type, the wider of the two borders is used. 
+    "Wider" takes into account the border-style of 'none', so a "1px solid" border 
+    will take precedence over a "20px none" border. 
+
+  2.If there are two or more with the same width, but different style, 
+    then the one with a style near the start of the following list will be drawn:
+
+      'blank', 'double', 'solid', 'dashed', 'dotted', 'ridge', 'groove', 'none'
+
+  3.If the borders are of the same width, the border on the element occurring first is used. 
+  
+    First is defined as aStyle for this method.
+
+  NOTE: This assumes left-to-right, top-to-bottom bias. -- gpk
+
+*
+*/
+
+
+nsIFrame* nsTableCellFrame::CompareCellBorders(nsIFrame* aFrame1,
+                                               PRUint8 aEdge1,
+                                               nsIFrame* aFrame2,
+                                               PRUint8 aEdge2)
+{
+  PRInt32 width1 = GetBorderWidth(aFrame1,aEdge1);
+  PRInt32 width2 = GetBorderWidth(aFrame2,aEdge2);
+
+  nsIFrame* result = nsnull;
+  
+  if (width1 > width2)
+    result =  aFrame1;
+  else if (width1 < width2)
+    result = aFrame2;
+  else // width1 == width2
+  {
+    const nsStyleSpacing*  border1;
+    const nsStyleSpacing*  border2;
+    aFrame1->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)border1);
+    aFrame2->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)border2);
+    if (border1->mBorderStyle[aEdge1] >= border2->mBorderStyle[aEdge2])
+      result = aFrame1;
+    else
+      result = aFrame2;
+  }
+  return result;
+}
+
+
+/**
+  * Given a List of cell layout data, compare the edges to see which has the
+  * border with the highest precidence. 
+  *
+  **/
+
+nsIFrame* nsTableCellFrame::FindHighestPrecedentBorder(nsVoidArray* aList,
+                                                       PRUint8 aEdge)
+{
+  nsIFrame* result = nsnull;
+  PRInt32 index = 0;
+  PRInt32 count = 0;
+
+
+  NS_ASSERTION(aList,"a List must be valid");
+  count = aList->Count();
+  if (count)
+  {
+    nsIFrame* frame1;
+    nsIFrame* frame2;
+    
+    frame1 = (nsIFrame*)(aList->ElementAt(index++));
+    while (index < count)
+    {
+      frame2 = (nsIFrame*)(aList->ElementAt(index++));
+      if (GetMargin(frame2,aEdge) == 0) {
+        frame1 = CompareCellBorders(frame1, aEdge, frame2, aEdge);
+      }
+    }
+    if ((nsnull != frame1) && (GetMargin(frame1, aEdge) != 0))
+      result = frame1;
+  }
+  return result;
+}
+  
+
+
+
+nsIFrame* nsTableCellFrame::FindInnerBorder(nsVoidArray*  aList, PRUint8 aEdge)
+{
+  nsIFrame* result = nsnull;
+  PRUint8   opposite = GetOpposingEdge(aEdge);
+
+  if (GetMargin(this, aEdge) == 0)
+  {
+    nsIFrame* altFrame = FindHighestPrecedentBorder(aList,opposite);
+    if (nsnull != altFrame)
+      result = CompareCellBorders(this, aEdge, altFrame, opposite);
+    else
+      result = this;
+  }
+
+  return result;
+}
+
+
+/*
+*
+* FindRelevantBorder recursively searches up the frame hierarchy for the border
+* style that is applicable to the cell. If at any point the frame has a margin
+* or the parent frame has padding, then the outer frame for this object takes
+* presendence over the inner frame. 
+
+1.Borders on 'table' elements take precedence over borders on any other table elements. 
+2.Borders on 'row-groups' take precedence over borders on 'rows', 
+  and likewise borders on 'column-groups' take precedence over borders on 'columns'. 
+3.Borders on any other type of table element take precedence over 'table-cell' elements. 
+ 
+*
+* NOTE: This method assumes that the table cell potentially shares a border.
+* It should not be called for internal cells
+*
+* NOTE: COLUMNS AND COLGROUPS NEED TO BE FIGURED INTO THE ALGORITHM -- GPK!!!
+* 
+*
+*/
+nsIFrame* nsTableCellFrame::FindOuterBorder( nsTableFrame* aTableFrame,
+                                             PRUint8 aEdge)
+{
+  nsIFrame* frame = this;   // By default, return our frame 
+  PRBool    done = PR_FALSE;
+    
+
+  // The table frame is the outer most frame we test against
+  while (done == PR_FALSE)
+  {
+    done = PR_TRUE; // where done unless the frame's margin is zero
+                    // and the parent's padding is zero
+
+    nscoord margin = GetMargin(frame,aEdge);
+
+    // if the margin for this style is zero then check to see if the paddding
+    // for the parent frame is also zero
+    if (margin == 0)
+    { 
+      nsIFrame* parentFrame;
+
+      frame->GetGeometricParent(parentFrame);
+
+      // if the padding for the parent style is zero just
+      // recursively call this routine
+      PRInt32 padding = GetPadding(parentFrame,aEdge);
+      if ((nsnull != parentFrame) && (padding == 0))
+      {
+        frame = parentFrame;
+        // If this frame represents the table frame then
+        // the table style is used
+        done = PRBool(frame != (nsIFrame*)aTableFrame);
+        continue;
+      }
+
+    }
+  }
+  return frame;
+}
+
+
+
+/*
+
+  Border Resolution
+  1.Borders on 'table' elements take precedence over borders on any other table elements. 
+  2.Borders on 'row-groups' take precedence over borders on 'rows', and likewise borders on 'column-groups' take
+    precedence over borders on 'columns'. 
+  3.Borders on any other type of table element take precedence over 'table-cell' elements. 
+  4.If the adjacent elements are of the same type, the wider of the two borders is used. "Wider" takes into account
+    the border-style of 'none', so a "1px solid" border will take precedence over a "20px none" border. 
+  5.If the borders are of the same width, the border on the element occurring first is used. 
+
+
+  How to compare
+  1.Those of the one or two cells that have an edge here. 
+    Less than two can occur at the edge of the table, but also
+    at the edges of "holes" (unoccupied grid cells).
+  2.Those of the columns that have an edge here.
+  3.Those of the column groups that have an edge here.
+  4.Those of the rows that have an edge here.
+  5.Those of the row groups that have an edge here.
+  6.Those of the table, if this is the edge of the table.
+
+*
+* @param aIsFirst -- TRUE if this is the first cell in the row
+* @param aIsLast  -- TRUE if this is the last cell in the row
+* @param aIsTop -- TRUE if this is the top cell in the column
+* @param aIsBottom  -- TRUE if this is the last cell in the column
+*/
+
+nsIFrame* nsTableCellFrame::FindBorderFrame(nsTableFrame*    aTableFrame,
+                                            nsVoidArray*     aList,
+                                            PRUint8          aEdge)
+{
+  nsIFrame*  frame = nsnull;
+
+  if (aList && aList->Count() == 0)
+    frame = FindOuterBorder(aTableFrame, aEdge);
+  else
+    frame = FindInnerBorder(aList, aEdge);
+
+  if (! frame) 
+    frame = this;
+
+  return frame;
+}
+
+
+/**
+  * Given a List of cell layout data, compare the edges to see which has the
+  * border with the highest precidence. 
+  *
+  **/
+nscoord nsTableCellFrame::FindLargestMargin(nsVoidArray* aList,PRUint8 aEdge)
+{
+  nscoord result = 0;
+  PRInt32 index = 0;
+  PRInt32 count = 0;
+
+
+  NS_ASSERTION(aList,"a List must be valid");
+  count = aList->Count();
+  if (count)
+  {
+    nsIFrame* frame;
+    
+    nscoord value = 0;
+    while (index < count)
+    {
+      frame = (nsIFrame*)(aList->ElementAt(index++));
+      value = GetMargin(frame, aEdge);
+      if (value > result)
+        result = value;
+    }
+  }
+  return result;
+}
+
+
+
+
+void nsTableCellFrame::CalculateMargins(nsTableFrame*     aTableFrame,
+                                        nsVoidArray*      aBoundaryCells[4])
+{ 
+  // By default the margin is just the margin found in the 
+  // table cells style 
+  const nsStyleSpacing* spacing;
+  GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+  spacing->CalcMarginFor(this, mMargin);
+
+  // Left and Top Margins are collapsed with their neightbors
+  // Right and Bottom Margins are simple left as they are
+  nscoord value;
+
+  // The left and top sides margins are the difference between
+  // their inherint value and the value of the margin of the 
+  // object to the left or right of them.
+
+  value = FindLargestMargin(aBoundaryCells[NS_SIDE_LEFT],NS_SIDE_RIGHT);
+  if (value > mMargin.left)
+    mMargin.left = 0;
+  else
+    mMargin.left -= value;
+
+  value = FindLargestMargin(aBoundaryCells[NS_SIDE_TOP],NS_SIDE_BOTTOM);
+  if (value > mMargin.top)
+    mMargin.top = 0;
+  else
+    mMargin.top -= value;
+}
+
+
+void nsTableCellFrame::RecalcLayoutData(nsTableFrame* aTableFrame,
+                                        nsVoidArray* aBoundaryCells[4])
+
+{
+  CalculateBorders(aTableFrame, aBoundaryCells);
+  CalculateMargins(aTableFrame, aBoundaryCells);
+  mCalculated = NS_OK;
+}
+
+#if 0       //QQQ
+void nsTableCellFrame::List(FILE* out, PRInt32 aIndent) const
+{
+  PRInt32 indent;
+
+  nsIContent* cell;
+
+  this->GetContent(cell);
+  if (cell != nsnull)
+  {
+    /*
+    for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
+    fprintf(out,"RowSpan = %d ColSpan = %d \n",cell->GetRowSpan(),cell->GetColSpan());
+    */
+    for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
+    fprintf(out,"Margin -- Top: %d Left: %d Bottom: %d Right: %d \n",  
+                NS_TWIPS_TO_POINTS_INT(mMargin.top),
+                NS_TWIPS_TO_POINTS_INT(mMargin.left),
+                NS_TWIPS_TO_POINTS_INT(mMargin.bottom),
+                NS_TWIPS_TO_POINTS_INT(mMargin.right));
+
+
+    for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
+
+    nscoord top,left,bottom,right;
+    
+    top = (mBorderFrame[NS_SIDE_TOP] ? GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_TOP], NS_SIDE_TOP) : 0);
+    left = (mBorderFrame[NS_SIDE_LEFT] ? GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_LEFT], NS_SIDE_LEFT) : 0);
+    bottom = (mBorderFrame[NS_SIDE_BOTTOM] ? GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_BOTTOM], NS_SIDE_BOTTOM) : 0);
+    right = (mBorderFrame[NS_SIDE_RIGHT] ? GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_RIGHT], NS_SIDE_RIGHT) : 0);
+
+
+    fprintf(out,"Border -- Top: %d Left: %d Bottom: %d Right: %d \n",  
+                NS_TWIPS_TO_POINTS_INT(top),
+                NS_TWIPS_TO_POINTS_INT(left),
+                NS_TWIPS_TO_POINTS_INT(bottom),
+                NS_TWIPS_TO_POINTS_INT(right));
+
+
+
+    cell->List(out,aIndent);
+    NS_RELEASE(cell);
+  }
+}
+
+#endif
+
+
+
+
+
+
+
+
+
+/* ----- debug only methods, to be removed ----- */
 
 
 // For Debugging ONLY

@@ -19,8 +19,11 @@
 #define nsCellMap_h__
 
 #include "nscore.h"
+#include "CellData.h"
 
-class CellData;
+class nsVoidArray;
+class nsTableColFrame;
+class nsTableCellFrame;
 
 /** nsCellMap is a support class for nsTablePart.  
   * It maintains an Rows x Columns grid onto which the cells of the table are mapped.
@@ -40,55 +43,94 @@ protected:
   /** storage for CellData pointers */
   PRInt32 *mCells;       ///XXX CellData *?
 
+  /** a cache of the column frames, by col index */
+  nsVoidArray * mColFrames;
+
   /** the number of rows */
-  int mRowCount;      // in java, we could just do fCellMap.length;
+  PRInt32 mRowCount;      // in java, we could just do fCellMap.length;
 
   /** the number of columns (the max of all row lengths) */
-  int mColCount;      // in java, we could just do fCellMap[i].length
+  PRInt32 mColCount;
 
 public:
-  nsCellMap(int aRows, int aColumns);
+  nsCellMap(PRInt32 aRows, PRInt32 aColumns);
 
   // NOT VIRTUAL BECAUSE THIS CLASS SHOULD **NEVER** BE SUBCLASSED  
   ~nsCellMap();
 
   /** initialize the CellMap to (aRows x aColumns) */
-  void Reset(int aRows, int aColumns);
+  void Reset(PRInt32 aRows, PRInt32 aColumns);
 
-  /** return the CellData for the cell at (aRow,aColumn) */
-  CellData * GetCellAt(int aRow, int aColumn) const;
+  /** return the CellData for the cell at (aRowIndex,aColIndex) */
+  CellData * GetCellAt(PRInt32 aRowIndex, PRInt32 aColIndex) const;
+
+  /** return the nsTableCellFrame for the cell at (aRowIndex, aColIndex) */
+  nsTableCellFrame * GetCellFrameAt(PRInt32 aRowIndex, PRInt32 aColIndex) const;
 
   /** assign aCellData to the cell at (aRow,aColumn) */
-  void SetCellAt(CellData *aCellData, int aRow, int aColumn);
+  void SetCellAt(CellData *aCellData, PRInt32 aRow, PRInt32 aColumn);
 
   /** expand the CellMap to have aColCount columns.  The number of rows remains the same */
-  void GrowTo(int aColCount);
+  void GrowTo(PRInt32 aColCount);
 
   /** return the total number of columns in the table represented by this CellMap */
-  int GetColCount() const;
+  PRInt32 GetColCount() const;
 
   /** return the total number of rows in the table represented by this CellMap */
-  int GetRowCount() const;
+  PRInt32 GetRowCount() const;
 
-  /** for debugging, print out this CellMap */
+  nsTableColFrame * GetColumnFrame(PRInt32 aColIndex);
+
+  void AppendColumnFrame(nsTableColFrame *aColFrame);
+
+  PRBool RowImpactedBySpanningCell(PRInt32 aRowIndex);
+
+  PRBool ColumnImpactedBySpanningCell(PRInt32 aColIndex);
+
+  /** for debugging */
   void DumpCellMap() const;
 
 };
 
-inline CellData * nsCellMap::GetCellAt(int aRow, int aColumn) const
+/* ----- inline methods ----- */
+
+inline CellData * nsCellMap::GetCellAt(PRInt32 aRowIndex, PRInt32 aColIndex) const
 {
-  int index = (aRow*mColCount)+aColumn;
+  NS_PRECONDITION(0<=aRowIndex && aRowIndex < mRowCount, "bad aRowIndex arg");
+  NS_PRECONDITION(0<=aColIndex && aColIndex < mColCount, "bad aColIndex arg");
+
+  PRInt32 index = (aRowIndex*mColCount)+aColIndex;
   return (CellData *)mCells[index];
 }
 
-inline int nsCellMap::GetColCount() const
+inline nsTableCellFrame * nsCellMap::GetCellFrameAt(PRInt32 aRowIndex, PRInt32 aColIndex) const
+{
+  NS_PRECONDITION(0<=aRowIndex && aRowIndex < mRowCount, "bad aRowIndex arg");
+  NS_PRECONDITION(0<=aColIndex && aColIndex < mColCount, "bad aColIndex arg");
+
+  nsTableCellFrame *result = nsnull;
+  CellData * cellData = GetCellAt(aRowIndex, aColIndex);
+  if (nsnull!=cellData)
+    result = cellData->mCell;
+  return result;
+}
+
+inline PRInt32 nsCellMap::GetColCount() const
 { 
   return mColCount; 
 }
 
-inline int nsCellMap::GetRowCount() const
+inline PRInt32 nsCellMap::GetRowCount() const
 { 
   return mRowCount; 
 }
+
+inline void nsCellMap::AppendColumnFrame(nsTableColFrame *aColFrame)
+{
+  mColFrames->AppendElement(aColFrame);
+  // sanity check
+  NS_ASSERTION(mColFrames->Count()<=mColCount, "too many columns appended to CellMap");
+}
+
 
 #endif

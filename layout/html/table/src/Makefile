@@ -24,18 +24,17 @@ LIBRARY_NAME = raptorhtmltable_s
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS =				\
     BasicTableLayoutStrategy.cpp \
-	nsCellLayoutData.cpp		\
 	nsCellMap.cpp			\
-	nsColLayoutData.cpp		\
 	nsTableCaption.cpp		\
 	nsTableCell.cpp			\
-	nsTableCellFrame.cpp		\
+	nsTableCellFrame.cpp	\
 	nsTableCol.cpp			\
+	nsTableColFrame.cpp		\
 	nsTableColGroup.cpp		\
 	nsTableColGroupFrame.cpp	\
 	nsTableContent.cpp		\
 	nsTableFrame.cpp		\
-	nsTableOuterFrame.cpp		\
+	nsTableOuterFrame.cpp	\
 	nsTablePart.cpp			\
 	nsTableRow.cpp			\
 	nsTableRowFrame.cpp		\

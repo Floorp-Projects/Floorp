@@ -21,8 +21,8 @@
 #include "nscore.h"
 #include "nsContainerFrame.h"
 #include "nsTableFrame.h"
+#include "nsTableRowFrame.h"  // need to actually include this here to inline GetRowIndex
 
-class nsCellLayoutData;
 struct nsStyleSpacing;
 
 /* eb42f7b0-079e-11d2-8f37-006008159b0c */
@@ -72,33 +72,123 @@ public:
   /** return the mapped cell's row span.  Always >= 1. */
   virtual PRInt32 GetRowSpan();
 
+  // there is no set row index because row index depends on the cell's parent row only
+
+  /** return the mapped cell's row index (starting at 0 for the first row) */
+  virtual PRInt32 GetRowIndex();
+
   /** return the mapped cell's col span.  Always >= 1. */
   virtual PRInt32 GetColSpan();
-
+  
   /** return the mapped cell's column index (starting at 0 for the first column) */
   virtual PRInt32 GetColIndex();
 
+  /** set the index of the column belonging to this cell */
+  // XXX should be removed, use cell map?
   virtual void SetColIndex (int aColIndex);
 
+  /** return the available width given to this frame during its last reflow */
   virtual nscoord GetPriorAvailWidth();
   
+  /** set the available width given to this frame during its last reflow */
   virtual void SetPriorAvailWidth(nscoord aPriorAvailWidth);
 
-  virtual nsSize GetPriorDesiredSize();
+  /** return the desired size returned by this frame during its last reflow */
+  virtual nsSize GetDesiredSize();
 
-  virtual void SetPriorDesiredSize(const nsReflowMetrics & aDesiredSize);
+  /** set the desired size returned by this frame during its last reflow */
+  virtual void SetDesiredSize(const nsReflowMetrics & aDesiredSize);
 
-  virtual ~nsTableCellFrame();
+  /** return the MaxElement size returned by this frame during its last reflow 
+    * not counting reflows where MaxElementSize is not requested.  
+    * That is, the cell frame will always remember the last non-null MaxElementSize
+    */
+  virtual nsSize GetMaxElementSize();
 
-  // Get the TableFrame that contains this cell frame
+  /** set the MaxElement size returned by this frame during its last reflow.
+    * should never be called with a null MaxElementSize
+    */
+  virtual void SetMaxElementSize(const nsSize & aMaxElementSize);
+
+  /** return the desired size returned by this frame during its last reflow */
+  virtual nsSize GetPass1DesiredSize();
+
+  /** set the desired size returned by this frame during its last reflow */
+  virtual void SetPass1DesiredSize(const nsReflowMetrics & aDesiredSize);
+
+  /** return the MaxElement size returned by this frame during its last reflow 
+    * not counting reflows where MaxElementSize is not requested.  
+    * That is, the cell frame will always remember the last non-null MaxElementSize
+    */
+  virtual nsSize GetPass1MaxElementSize();
+
+  /** set the MaxElement size returned by this frame during its last reflow.
+    * should never be called with a null MaxElementSize
+    */
+  virtual void SetPass1MaxElementSize(const nsSize & aMaxElementSize);
+
+
+
+  /** Get the TableFrame that contains this cell frame */
   virtual nsTableFrame* GetTableFrame();
 
-  nsCellLayoutData * GetCellLayoutData();
-  void SetCellLayoutData(nsCellLayoutData *aData);
+  void RecalcLayoutData(nsTableFrame* aTableFrame,
+                        nsVoidArray*  aBoundaryCells[4]);
 
-  // For DEBUGGING Purposes Only
+  
+  NS_IMETHOD GetMargin(nsMargin& aMargin);
+
+
+  /** destructor */
+  virtual ~nsTableCellFrame();
+
+
+  // For DEBUGGING Purposes Only, to be removed
   NS_IMETHOD  MoveTo(nscoord aX, nscoord aY);
   NS_IMETHOD  SizeTo(nscoord aWidth, nscoord aHeight);
+
+private:  
+
+  // All these methods are support methods for RecalcLayoutData
+  nsIFrame* GetFrameAt(nsVoidArray* aList,  PRInt32 aIndex);
+
+  nscoord GetMargin(nsIFrame* aFrame, PRUint8 aEdge) const;
+
+  nscoord GetBorderWidth(nsIFrame* aFrame, PRUint8 aEdge) const;
+
+  nscoord GetPadding(nsIFrame* aFrame, PRUint8 aEdge) const;
+
+  PRUint8 GetOpposingEdge(PRUint8 aEdge);
+
+  nsIFrame* CompareCellBorders(nsIFrame* aFrame1,
+                               PRUint8 aEdge1,
+                               nsIFrame* aFrame2,
+                               PRUint8 aEdge2);
+
+  
+  nsIFrame* FindHighestPrecedentBorder(nsVoidArray* aList,
+                                       PRUint8 aEdge);
+          
+  
+
+  nsIFrame* FindInnerBorder( nsVoidArray*  aList,
+                             PRUint8 aEdge);
+
+  nsIFrame* FindOuterBorder( nsTableFrame* aTableFrame,
+                             PRUint8 aEdge);
+  
+  nsIFrame* FindBorderFrame(nsTableFrame*    aTableFrame,
+                            nsVoidArray*     aCellList,
+                            PRUint8          aEdge);
+
+  void CalculateBorders(nsTableFrame* aTableFrame,
+                        nsVoidArray*  aBoundaryCells[4]);
+
+  nscoord FindLargestMargin(nsVoidArray* aList,PRUint8 aEdge);
+
+
+  void CalculateMargins(nsTableFrame* aTableFrame,
+                        nsVoidArray*  aBoundaryCells[4]);
 
 protected:
 
@@ -132,9 +222,17 @@ protected:
   /** the available width we were given in our previous reflow */
   nscoord      mPriorAvailWidth;
 
-  nsSize       mPriorDesiredSize;
+  /** these are the last computed desired and max element sizes */
+  nsSize       mDesiredSize;
+  nsSize       mMaxElementSize;
 
-  nsCellLayoutData *mCellLayoutData;
+  /** these are the Pass 1 unconstrained desired and max element sizes */
+  nsSize       mPass1DesiredSize;
+  nsSize       mPass1MaxElementSize;
+
+  nsresult     mCalculated;
+  nsMargin     mMargin;
+  nsIFrame*    mBorderFrame[4];  // the frame whose border is used
 
 };
 
@@ -151,6 +249,16 @@ inline void nsTableCellFrame::Init(PRInt32 aRowSpan, PRInt32 aColSpan, PRInt32 a
 inline PRInt32 nsTableCellFrame::GetRowSpan()
 {  return mRowSpan;}
 
+inline PRInt32 nsTableCellFrame::GetRowIndex()
+{
+  nsTableRowFrame * row;
+  GetContentParent((nsIFrame *&)row);
+  if (nsnull!=row)
+    return row->GetRowIndex();
+  else
+    return 0;
+}
+
 inline PRInt32 nsTableCellFrame::GetColSpan()
 {  return mColSpan;}
 
@@ -163,25 +271,64 @@ inline void nsTableCellFrame::SetColIndex (int aColIndex)
   mColIndex = aColIndex;
 }
 
-inline nsCellLayoutData * nsTableCellFrame::GetCellLayoutData()
-{ return mCellLayoutData;}
-  
-inline void nsTableCellFrame::SetCellLayoutData(nsCellLayoutData *aData)
-{ mCellLayoutData = aData;}
-
 inline nscoord nsTableCellFrame::GetPriorAvailWidth()
 { return mPriorAvailWidth;}
 
 inline void nsTableCellFrame::SetPriorAvailWidth(nscoord aPriorAvailWidth)
 { mPriorAvailWidth = aPriorAvailWidth;}
 
-inline nsSize nsTableCellFrame::GetPriorDesiredSize()
-{ return mPriorDesiredSize; }
+inline nsSize nsTableCellFrame::GetDesiredSize()
+{ return mDesiredSize; }
 
-inline void nsTableCellFrame::SetPriorDesiredSize(const nsReflowMetrics & aDesiredSize)
+inline void nsTableCellFrame::SetDesiredSize(const nsReflowMetrics & aDesiredSize)
 { 
-  mPriorDesiredSize.width = aDesiredSize.width;
-  mPriorDesiredSize.height = aDesiredSize.height;
+  mDesiredSize.width = aDesiredSize.width;
+  mDesiredSize.height = aDesiredSize.height;
 }
+
+inline nsSize nsTableCellFrame::GetMaxElementSize()
+{ return mMaxElementSize; }
+
+inline void nsTableCellFrame::SetMaxElementSize(const nsSize & aMaxElementSize)
+{ 
+  mMaxElementSize.width = aMaxElementSize.width;
+  mMaxElementSize.height = aMaxElementSize.height;
+}
+
+inline nsSize nsTableCellFrame::GetPass1DesiredSize()
+{ return mPass1DesiredSize; }
+
+inline void nsTableCellFrame::SetPass1DesiredSize(const nsReflowMetrics & aDesiredSize)
+{ 
+  mPass1DesiredSize.width = aDesiredSize.width;
+  mPass1DesiredSize.height = aDesiredSize.height;
+}
+
+inline nsSize nsTableCellFrame::GetPass1MaxElementSize()
+{ return mPass1MaxElementSize; }
+
+inline void nsTableCellFrame::SetPass1MaxElementSize(const nsSize & aMaxElementSize)
+{ 
+  mPass1MaxElementSize.width = aMaxElementSize.width;
+  mPass1MaxElementSize.height = aMaxElementSize.height;
+}
+
+inline void nsTableCellFrame::CalculateBorders(nsTableFrame* aTableFrame,
+                                               nsVoidArray*  aBoundaryCells[4])
+{ 
+  for (PRInt32 edge = 0; edge < 4; edge++)
+    mBorderFrame[edge] = FindBorderFrame(aTableFrame, aBoundaryCells[edge], edge);
+}
+
+inline NS_METHOD nsTableCellFrame::GetMargin(nsMargin& aMargin)
+{
+  if (mCalculated == NS_OK)
+  {
+    aMargin = mMargin;
+    return NS_OK;
+  }
+  return NS_ERROR_NOT_INITIALIZED;
+}
+
 
 #endif
