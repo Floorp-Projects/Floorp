@@ -526,7 +526,11 @@ nsHTMLFormElement::NamedItem(JSContext* cx, jsval* argv, PRUint32 argc,
   // If we couldn't find it in our controls list, it may be
   // a different type of element (IMG, OBJECT, etc.)
   if (!*aReturn && mDocument && (argc > 0)) {
-    jschar* str = JS_GetStringChars(JS_ValueToString(cx, argv[0]));
+    PRUnichar* str;
+
+    str = NS_STATIC_CAST(PRUnichar *,
+                         JS_GetStringChars(JS_ValueToString(cx, argv[0])));
+
     nsCOMPtr<nsIScriptContext> scriptContext;
     nsCOMPtr<nsIScriptGlobalObject> globalObject;
 
@@ -589,7 +593,11 @@ nsHTMLFormElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
 
   PRBool ret;
   JSObject* obj;
-  jschar* str = JS_GetStringChars(JS_ValueToString(aContext, aID));
+  PRUnichar* str;
+
+  str = NS_STATIC_CAST(PRUnichar *,
+                       JS_GetStringChars(JS_ValueToString(aContext, aID)));
+
   size_t str_len = JS_GetStringLength(JS_ValueToString(aContext, aID));
   nsCOMPtr<nsIScriptContext> scriptContext;
   nsresult rv = NS_OK;
