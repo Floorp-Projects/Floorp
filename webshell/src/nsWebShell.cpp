@@ -2484,7 +2484,7 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
     rv = DoLoadURL(uri,       // URL string
                    "view",        // Command
                    nsnull,        // Post Data
-                   nsIChannel::LOAD_NORMAL,   // the reload type
+                   LOAD_HISTORY,  // the reload type
                    0,            // load attributes
                    nsnull);      // referrer
   }
@@ -2528,6 +2528,9 @@ nsWebShell::GetURL(PRInt32 aHistoryIndex, const PRUnichar** aURLResult)
 {
   nsresult rv = NS_ERROR_ILLEGAL_VALUE;
 #ifdef OLD_HISTORY
+  // XXX Ownership rules for the string passed back from this
+  // method are not XPCOM compliant. If they were correct, 
+  // the caller would deallocate the string.
   if ((aHistoryIndex >= 0) &&
       (aHistoryIndex <= mHistory.Count() - 1)) {
     nsString* s = (nsString*) mHistory.ElementAt(aHistoryIndex);
