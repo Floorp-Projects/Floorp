@@ -31,50 +31,38 @@
 
 #include "nsFileSpec.h"  // evil ftang hack
 
-#ifdef XP_WIN
-#include "nsLocalFileWin.h"
-#endif
-
-#ifdef XP_OS2
-#include "nsLocalFileOS2.h"
-#endif
-
-#ifdef XP_MAC
-#include "nsLocalFileMac.h"
-#endif
-
-#if defined(XP_UNIX) || defined(XP_BEOS)
-#include "nsLocalFileUnix.h"
-#endif
+#include "nsLocalFile.h" // includes platform-specific headers
 
 #include "nsString.h"
 #include "nsCOMPtr.h"
 
 class nsFSStringConversion {
 public:
-     nsFSStringConversion();
-     virtual ~nsFSStringConversion(){};
-     NS_IMETHOD UCSToNewFS( const PRUnichar* aIn, char** aOut);  
-     NS_IMETHOD FSToNewUCS( const char* aIn, PRUnichar** aOut);  
+     static void CleanUp();
+     static nsresult UCSToNewFS( const PRUnichar* aIn, char** aOut);  
+     static nsresult FSToNewUCS( const char* aIn, PRUnichar** aOut);  
 
 private:
-     NS_IMETHOD PrepareFSCharset();
-     NS_IMETHOD PrepareEncoder();
-     NS_IMETHOD PrepareDecoder();
-     nsAutoString mFSCharset;
+     static nsresult PrepareFSCharset();
+     static nsresult PrepareEncoder();
+     static nsresult PrepareDecoder();
+     static nsString* mFSCharset;
 #ifndef XPCOM_STANDALONE
-     nsCOMPtr<nsIUnicodeEncoder> mEncoder;
-     nsCOMPtr<nsIUnicodeDecoder> mDecoder;
+     static nsIUnicodeEncoder* mEncoder;
+     static nsIUnicodeDecoder* mDecoder;
 #endif /* XPCOM_STANDALONE */
 };
 
+nsString* nsFSStringConversion::mFSCharset = nsnull;
+nsIUnicodeEncoder* nsFSStringConversion::mEncoder = nsnull;
+nsIUnicodeDecoder* nsFSStringConversion::mDecoder = nsnull;
 
 #define GET_UCS( func , arg)                                    \
 {                                                               \
    char* tmp;                                                   \
    nsresult res;                                                \
    if(NS_SUCCEEDED(res = (func)(&tmp))) {                       \
-     if(NS_SUCCEEDED(res = gConverter.FSToNewUCS(tmp, (arg)))){ \
+     if(NS_SUCCEEDED(res = nsFSStringConversion::FSToNewUCS(tmp, (arg)))){ \
        nsMemory::Free(tmp);                                     \
      }                                                          \
    }                                                            \
@@ -84,7 +72,7 @@ private:
  {                                                              \
    char* tmp;                                                   \
    nsresult res;                                                \
-   if(NS_SUCCEEDED(res = gConverter.UCSToNewFS((arg), &tmp))) { \
+   if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((arg), &tmp))) { \
      (func)(tmp);                                               \
      nsMemory::Free(tmp);                                       \
    }                                                            \
@@ -94,7 +82,7 @@ private:
  {                                                              \
    char* tmp;                                                   \
    nsresult res;                                                \
-   if(NS_SUCCEEDED(res = gConverter.UCSToNewFS((arg), &tmp))) { \
+   if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((arg), &tmp))) { \
      res = (func)(tmp);                                         \
      nsMemory::Free(tmp);                                       \
    }                                                            \
@@ -104,7 +92,7 @@ private:
  {                                                              \
    char* tmp;                                                   \
    nsresult res;                                                \
-   if(NS_SUCCEEDED(res = gConverter.UCSToNewFS((arg2), &tmp))){ \
+   if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((arg2), &tmp))){ \
      res = (func)(arg1, tmp);                                   \
      nsMemory::Free(tmp);                                       \
    }                                                            \
@@ -114,37 +102,42 @@ private:
  {                                                              \
    char* tmp;                                                   \
    nsresult res;                                                \
-   if(NS_SUCCEEDED(res = gConverter.UCSToNewFS((path), &tmp))){ \
+   if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((path), &tmp))){ \
      res = (func)(tmp, followLinks, result);                    \
      nsMemory::Free(tmp);                                       \
    }                                                            \
    return res;                                                  \
 }
-nsFSStringConversion gConverter; 
 
-nsFSStringConversion::nsFSStringConversion()
+void
+nsFSStringConversion::CleanUp()
 {
-#ifndef XPCOM_STANDALONE
-   mEncoder = nsnull;
-   mDecoder = nsnull;
-#endif /* XPCOM_STANDALONE */
+  NS_IF_RELEASE(mEncoder);
+  NS_IF_RELEASE(mDecoder);
 }
+
 NS_IMETHODIMP 
 nsFSStringConversion::PrepareFSCharset()
 {
    nsresult res = NS_ERROR_NOT_IMPLEMENTED;
 #ifndef XPCOM_STANDALONE
    res = NS_OK;
-   if(mFSCharset.Length() == 0)
+   if(!mFSCharset)
    { 
      // lazy eval of the file system charset
      NS_WITH_SERVICE(nsIPlatformCharset, pcharset, NS_PLATFORMCHARSET_CONTRACTID, &res);
-     if (!(NS_SUCCEEDED(res) && pcharset)) {
+     if (NS_SUCCEEDED(res) && !pcharset) res = NS_ERROR_NULL_POINTER;
+     if (NS_SUCCEEDED(res)) {
+        mFSCharset = new nsString();
+        if (!mFSCharset)
+          res = NS_ERROR_OUT_OF_MEMORY;
+     }
+     if(NS_SUCCEEDED(res)) {
+        res = pcharset->GetCharset(kPlatformCharsetSel_FileName, *mFSCharset);
+     } 
+     if (NS_FAILED(res)) {
        NS_WARNING("cannot get platform charset");
      }
-     if(NS_SUCCEEDED(res) && pcharset) {
-        res = pcharset->GetCharset(kPlatformCharsetSel_FileName, mFSCharset);
-     } 
    }
 #endif /* XPCOM_STANDALONE */
    return res;
@@ -164,7 +157,7 @@ nsFSStringConversion::PrepareEncoder()
            NS_ASSERTION((NS_SUCCEEDED(res) && ucmgr), 
                    "cannot get charset converter manager ");
            if(NS_SUCCEEDED(res) && ucmgr) 
-               res = ucmgr->GetUnicodeEncoder( &mFSCharset, getter_AddRefs(mEncoder));
+               res = ucmgr->GetUnicodeEncoder( mFSCharset, &mEncoder);
            NS_ASSERTION((NS_SUCCEEDED(res) && mEncoder), 
                    "cannot find the unicode encoder");
        }
@@ -187,7 +180,7 @@ nsFSStringConversion::PrepareDecoder()
            NS_ASSERTION((NS_SUCCEEDED(res) && ucmgr), 
                    "cannot get charset converter manager ");
            if(NS_SUCCEEDED(res) && ucmgr) 
-               res = ucmgr->GetUnicodeDecoder( &mFSCharset, getter_AddRefs(mDecoder));
+               res = ucmgr->GetUnicodeDecoder( mFSCharset, &mDecoder);
            NS_ASSERTION((NS_SUCCEEDED(res) && mDecoder), 
                    "cannot find the unicode decoder");
        }
@@ -252,6 +245,17 @@ nsFSStringConversion::FSToNewUCS( const char* aIn, PRUnichar** aOut)
    }
 #endif /* XPCOM_STANDALONE */
    return res;
+}
+
+void NS_StartupLocalFile()
+{
+}
+
+void NS_ShutdownLocalFile()
+{
+#ifndef XPCOM_STANDALONE
+  nsFSStringConversion::CleanUp();
+#endif /* XPCOM_STANDALONE */
 }
 
 // Unicode interface Wrapper
@@ -387,7 +391,7 @@ void nsFileSpec::operator = (const nsString& inNativePath)
 {
    char* tmp;                                                   
    nsresult res;                                                
-   if(NS_SUCCEEDED(res = gConverter.UCSToNewFS((inNativePath.GetUnicode()), &tmp))) { 
+   if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((inNativePath.GetUnicode()), &tmp))) { 
      *this = tmp;
      nsMemory::Free(tmp);                                    
    }                                                            
@@ -399,7 +403,7 @@ nsFileSpec nsFileSpec::operator + (const nsString& inRelativeUnixPath) const
    nsFileSpec resultSpec;
    char* tmp;                                                   
    nsresult res;                                                
-   if(NS_SUCCEEDED(res = gConverter.UCSToNewFS((inRelativeUnixPath.GetUnicode()), &tmp))) { 
+   if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((inRelativeUnixPath.GetUnicode()), &tmp))) { 
      resultSpec = *this;
      resultSpec += tmp;
      nsMemory::Free(tmp);                                    
@@ -411,7 +415,7 @@ void nsFileSpec::operator += (const nsString& inRelativeUnixPath)
 {
    char* tmp;                                                   
    nsresult res;                                                
-   if(NS_SUCCEEDED(res = gConverter.UCSToNewFS((inRelativeUnixPath.GetUnicode()), &tmp))) { 
+   if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((inRelativeUnixPath.GetUnicode()), &tmp))) { 
      *this += tmp;
      nsMemory::Free(tmp);                                    
    }                                                            

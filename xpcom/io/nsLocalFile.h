@@ -50,4 +50,6 @@
 #error NOT_IMPLEMENTED
 #endif
 
+void NS_StartupLocalFile();
+void NS_ShutdownLocalFile();
 #endif
