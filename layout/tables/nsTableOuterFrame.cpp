@@ -168,8 +168,9 @@ nsIFrame::ReflowStatus nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresCont
                                                        const nsSize& aMaxSize,
                                                        nsSize* aMaxElementSize)
 {
-  if (PR_TRUE==gsDebug) printf ("***table outer frame reflow \t\t%d\n", this);
-  if (gsDebug==PR_TRUE)
+  if (PR_TRUE==gsDebug) 
+    printf ("***table outer frame reflow \t\t%p\n", this);
+  if (PR_TRUE==gsDebug)
     printf("nsTableOuterFrame::ResizeReflow : maxSize=%d,%d\n",
            aMaxSize.width, aMaxSize.height);
 
