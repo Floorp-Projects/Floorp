@@ -3268,6 +3268,14 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
 
 void nsEventStateManager::TabIndexFrom(nsIContent *aFrom, PRInt32 *aOutIndex)
 {
+  if (aFrom->IsContentOfType(nsIContent::eHTML)) {
+    nsCOMPtr<nsIAtom> tag;
+    aFrom->GetTag(*getter_AddRefs(tag));
+    if (nsHTMLAtoms::a != tag && nsHTMLAtoms::area != tag && nsHTMLAtoms::button != tag && 
+      nsHTMLAtoms::input != tag && nsHTMLAtoms::object != tag && nsHTMLAtoms::select != tag && nsHTMLAtoms::textarea != tag)
+      return;
+  }
+
   nsAutoString tabIndexStr;
   aFrom->GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabIndexStr);
   if (!tabIndexStr.IsEmpty()) {
