@@ -48,9 +48,10 @@ import java.text.SimpleDateFormat;
  * See ECMA 15.9.
  * @author Mike McCabe
  */
-final class NativeDate extends IdScriptable {
-
-    static void init(Context cx, Scriptable scope, boolean sealed) {
+final class NativeDate extends IdScriptable
+{
+    static void init(Context cx, Scriptable scope, boolean sealed)
+    {
         NativeDate obj = new NativeDate();
         obj.prototypeFlag = true;
 
@@ -60,7 +61,8 @@ final class NativeDate extends IdScriptable {
         obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
     }
 
-    private NativeDate() {
+    private NativeDate()
+    {
         if (thisTimeZone == null) {
             // j.u.TimeZone is synchronized, so setting class statics from it
             // should be OK.
@@ -69,17 +71,20 @@ final class NativeDate extends IdScriptable {
         }
     }
 
-    public String getClassName() {
+    public String getClassName()
+    {
         return "Date";
     }
 
-    public Object getDefaultValue(Class typeHint) {
+    public Object getDefaultValue(Class typeHint)
+    {
         if (typeHint == null)
             typeHint = ScriptRuntime.StringClass;
         return super.getDefaultValue(typeHint);
     }
 
-    double getJSTimeValue() {
+    double getJSTimeValue()
+    {
         return date;
     }
 
@@ -91,7 +96,8 @@ final class NativeDate extends IdScriptable {
         super.fillConstructorProperties(cx, ctor, sealed);
     }
 
-    public int methodArity(int methodId) {
+    public int methodArity(int methodId)
+    {
         if (prototypeFlag) {
             switch (methodId) {
                 case ConstructorId_UTC:     return 1;
@@ -362,11 +368,13 @@ final class NativeDate extends IdScriptable {
     private static final double msPerHour      = (SecondsPerHour * msPerSecond);
     private static final double msPerMinute    = (SecondsPerMinute * msPerSecond);
 
-    private static double Day(double t) {
+    private static double Day(double t)
+    {
         return Math.floor(t / msPerDay);
     }
 
-    private static double TimeWithinDay(double t) {
+    private static double TimeWithinDay(double t)
+    {
         double result;
         result = t % msPerDay;
         if (result < 0)
@@ -374,7 +382,8 @@ final class NativeDate extends IdScriptable {
         return result;
     }
 
-    private static int DaysInYear(int y) {
+    private static int DaysInYear(int y)
+    {
         if (y % 4 == 0 && (y % 100 != 0 || y % 400 == 0))
             return 366;
         else
@@ -385,16 +394,19 @@ final class NativeDate extends IdScriptable {
     /* math here has to be f.p, because we need
      *  floor((1968 - 1969) / 4) == -1
      */
-    private static double DayFromYear(double y) {
+    private static double DayFromYear(double y)
+    {
         return ((365 * ((y)-1970) + Math.floor(((y)-1969)/4.0)
                  - Math.floor(((y)-1901)/100.0) + Math.floor(((y)-1601)/400.0)));
     }
 
-    private static double TimeFromYear(double y) {
+    private static double TimeFromYear(double y)
+    {
         return DayFromYear(y) * msPerDay;
     }
 
-    private static int YearFromTime(double t) {
+    private static int YearFromTime(double t)
+    {
         int lo = (int) Math.floor((t / msPerDay) / 366) + 1970;
         int hi = (int) Math.floor((t / msPerDay) / 365) + 1970;
         int mid;
@@ -426,20 +438,19 @@ final class NativeDate extends IdScriptable {
         return lo;
     }
 
-    private static boolean InLeapYear(double t) {
+    private static boolean InLeapYear(double t)
+    {
         return DaysInYear(YearFromTime(t)) == 366;
     }
 
-    private static int DayWithinYear(double t) {
+    private static int DayWithinYear(double t)
+    {
         int year = YearFromTime(t);
         return (int) (Day(t) - DayFromYear(year));
     }
-    /*
-     * The following array contains the day of year for the first day of
-     * each month, where index 0 is January, and day 0 is January 1.
-     */
 
-    private static double DayFromMonth(int m, boolean leap) {
+    private static double DayFromMonth(int m, boolean leap)
+    {
         int day = m * 30;
 
         if (m >= 7) { day += m / 2 - 1; }
@@ -451,7 +462,8 @@ final class NativeDate extends IdScriptable {
         return day;
     }
 
-    private static int MonthFromTime(double t) {
+    private static int MonthFromTime(double t)
+    {
         int d, step;
 
         d = DayWithinYear(t);
@@ -489,7 +501,8 @@ final class NativeDate extends IdScriptable {
         return 11;
     }
 
-    private static int DateFromTime(double t) {
+    private static int DateFromTime(double t)
+    {
         int d, step, next;
 
         d = DayWithinYear(t);
@@ -538,7 +551,8 @@ final class NativeDate extends IdScriptable {
         return d - step;
     }
 
-    private static int WeekDay(double t) {
+    private static int WeekDay(double t)
+    {
         double result;
         result = Day(t) + 4;
         result = result % 7;
@@ -547,7 +561,8 @@ final class NativeDate extends IdScriptable {
         return (int) result;
     }
 
-    private static double Now() {
+    private static double Now()
+    {
         return (double) System.currentTimeMillis();
     }
 
@@ -559,7 +574,8 @@ final class NativeDate extends IdScriptable {
      * most recent betas of the JRE - seems to work in 1.1.7.
      */
     private final static boolean TZO_WORKAROUND = false;
-    private static double DaylightSavingTA(double t) {
+    private static double DaylightSavingTA(double t)
+    {
         if (!TZO_WORKAROUND) {
             Date date = new Date((long) t);
             if (thisTimeZone.inDaylightTime(date))
@@ -594,15 +610,18 @@ final class NativeDate extends IdScriptable {
         }
     }
 
-    private static double LocalTime(double t) {
+    private static double LocalTime(double t)
+    {
         return t + LocalTZA + DaylightSavingTA(t);
     }
 
-    private static double internalUTC(double t) {
+    private static double internalUTC(double t)
+    {
         return t - LocalTZA - DaylightSavingTA(t - LocalTZA);
     }
 
-    private static int HourFromTime(double t) {
+    private static int HourFromTime(double t)
+    {
         double result;
         result = Math.floor(t / msPerHour) % HoursPerDay;
         if (result < 0)
@@ -610,7 +629,8 @@ final class NativeDate extends IdScriptable {
         return (int) result;
     }
 
-    private static int MinFromTime(double t) {
+    private static int MinFromTime(double t)
+    {
         double result;
         result = Math.floor(t / msPerMinute) % MinutesPerHour;
         if (result < 0)
@@ -618,7 +638,8 @@ final class NativeDate extends IdScriptable {
         return (int) result;
     }
 
-    private static int SecFromTime(double t) {
+    private static int SecFromTime(double t)
+    {
         double result;
         result = Math.floor(t / msPerSecond) % SecondsPerMinute;
         if (result < 0)
@@ -626,7 +647,8 @@ final class NativeDate extends IdScriptable {
         return (int) result;
     }
 
-    private static int msFromTime(double t) {
+    private static int msFromTime(double t)
+    {
         double result;
         result =  t % msPerSecond;
         if (result < 0)
@@ -641,7 +663,8 @@ final class NativeDate extends IdScriptable {
             * msPerSecond + ms;
     }
 
-    private static double MakeDay(double year, double month, double date) {
+    private static double MakeDay(double year, double month, double date)
+    {
         double result;
         boolean leap;
         double yearday;
@@ -664,11 +687,13 @@ final class NativeDate extends IdScriptable {
         return result;
     }
 
-    private static double MakeDate(double day, double time) {
+    private static double MakeDate(double day, double time)
+    {
         return day * msPerDay + time;
     }
 
-    private static double TimeClip(double d) {
+    private static double TimeClip(double d)
+    {
         if (d != d ||
             d == Double.POSITIVE_INFINITY ||
             d == Double.NEGATIVE_INFINITY ||
@@ -702,7 +727,8 @@ final class NativeDate extends IdScriptable {
 
 
     private static final int MAXARGS = 7;
-    private static double jsStaticFunction_UTC(Object[] args) {
+    private static double jsStaticFunction_UTC(Object[] args)
+    {
         double array[] = new double[MAXARGS];
         int loop;
         double d;
@@ -735,7 +761,8 @@ final class NativeDate extends IdScriptable {
         //        return new Double(d);
     }
 
-    private static double date_parseString(String s) {
+    private static double date_parseString(String s)
+    {
         int year = -1;
         int mon = -1;
         int mday = -1;
@@ -942,7 +969,8 @@ final class NativeDate extends IdScriptable {
         }
     }
 
-    private static String date_format(double t, int methodId) {
+    private static String date_format(double t, int methodId)
+    {
         if (t != t)
             return js_NaN_date_str;
 
@@ -1108,7 +1136,8 @@ final class NativeDate extends IdScriptable {
         return formatter.format(new Date((long) t));
     }
 
-    private static String js_toUTCString(double date) {
+    private static String js_toUTCString(double date)
+    {
         StringBuffer result = new StringBuffer(60);
 
         appendWeekDayName(result, WeekDay(date));
@@ -1421,7 +1450,8 @@ final class NativeDate extends IdScriptable {
         return this.date;
     }
 
-    protected String getIdName(int id) {
+    protected String getIdName(int id)
+    {
         if (prototypeFlag) {
             switch (id) {
                 case ConstructorId_UTC:     return "UTC";
@@ -1478,7 +1508,8 @@ final class NativeDate extends IdScriptable {
 
 // #string_id_map#
 
-    protected int mapNameToId(String s) {
+    protected int mapNameToId(String s)
+    {
         if (!prototypeFlag) { return 0; }
         int id;
 // #generated# Last update: 2004-03-17 13:33:23 CET
