@@ -839,7 +839,7 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
     }
     else {
       ip[mContentLength] = ip[mContentLength-1];
-      if (ip[mContentLength] < textLength)//must set up last one for selection beyond edge if in boundary
+      if ((ip[mContentLength]-mContentOffset) < textLength)//must set up last one for selection beyond edge if in boundary
         ip[mContentLength]++;
         
       nscoord textWidth;
@@ -1325,7 +1325,7 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
     }
     else {
       ip[mContentLength] = ip[mContentLength-1];
-      if (ip[mContentLength] < textLength)//must set up last one for selection beyond edge if in boundary
+      if ((ip[mContentLength]-mContentOffset) < textLength)//must set up last one for selection beyond edge if in boundary
         ip[mContentLength]++;
       nscoord textWidth;
       if (mSelectionOffset < 0)
@@ -1477,7 +1477,7 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
     }
     else {
       ip[mContentLength] = ip[mContentLength-1];
-      if (ip[mContentLength] < textLength)//must set up last one for selection beyond edge if in boundary
+	  if ((ip[mContentLength]-mContentOffset) < textLength)//must set up last one for selection beyond edge if in boundary
         ip[mContentLength]++;
       nscoord textWidth;
       if (mSelectionOffset < 0)
@@ -1686,7 +1686,7 @@ TextFrame::GetPosition(nsIPresContext& aCX,
   PrepareUnicodeText(tx,
                      ip, paintBuf, textLength, width);
   ip[mContentLength] = ip[mContentLength-1];
-  if (ip[mContentLength] < textLength)//must set up last one for selection beyond edge if in boundary
+  if ((ip[mContentLength]-mContentOffset) < textLength)//must set up last one for selection beyond edge if in boundary
     ip[mContentLength]++;
 
   PRInt32 offset = mContentOffset + mContentLength;
@@ -1711,7 +1711,7 @@ TextFrame::GetPosition(nsIPresContext& aCX,
       index++;
     }
 
-    offset = 0;
+/*    offset = 0;
     PRInt32 j;
     PRInt32* ptr = ip;
     for (j=0;j<=PRInt32(mContentLength);j++) {
@@ -1720,7 +1720,7 @@ TextFrame::GetPosition(nsIPresContext& aCX,
         break;
       }
       ptr++;
-    }      
+    }      */
   }
 
   if (ip != indicies) {
@@ -1912,7 +1912,7 @@ TextFrame::GetPointFromOffset(nsIPresContext* inPresContext, nsIRenderingContext
                      ip,
                      paintBuf, textLength, width);
   ip[mContentLength] = ip[mContentLength-1];
-  if (ip[mContentLength] < textLength)//must set up last one for selection beyond edge if in boundary
+  if ((ip[mContentLength]-mContentOffset) < textLength)//must set up last one for selection beyond edge if in boundary
     ip[mContentLength]++;
   if (inOffset > mContentLength){
     NS_ASSERTION(0, "invalid offset passed to GetPointFromOffset");
@@ -2005,7 +2005,7 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
   case eSelectCharacter : {
     PrepareUnicodeText(tx, ip, paintBuf, textLength, width);
     ip[mContentLength] = ip[mContentLength-1];
-    if (ip[mContentLength] < textLength)//must set up last one for selection beyond edge if in boundary
+    if ((ip[mContentLength]-mContentOffset) < textLength)//must set up last one for selection beyond edge if in boundary
       ip[mContentLength]++;
     nsIFrame *frameUsed = nsnull;
     PRInt32 start;
