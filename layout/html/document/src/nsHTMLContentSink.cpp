@@ -1501,6 +1501,7 @@ HTMLContentSink::FlushText()
     nsIContent* content = nsnull;
     mCurrentText->QueryInterface(kIContentIID, (void**) &content);
     content->SetDocument(mDocument);
+    NS_RELEASE(content);
     NS_RELEASE(mCurrentText);
     return PR_TRUE;
   }
