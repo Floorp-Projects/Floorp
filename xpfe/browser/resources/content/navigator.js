@@ -1732,7 +1732,7 @@ function URLBarMouseDownHandler(aEvent)
 
 function URLBarClickHandler(aEvent)
 {
-  if (!gIgnoreClick && gClickSelectsAll && gURLBar.selectionStart == gURLBar.selectionEnd)
+  if (!gIgnoreClick && gClickSelectsAll && gURLBar.selectionStart == gURLBar.selectionEnd && gURLBar.selectionStart < gURLBar.value.length)
     gURLBar.select();
 }
 
