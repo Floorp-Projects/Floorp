@@ -55,6 +55,9 @@ public:
 
 #ifdef CookieManagement
     NS_IMETHOD NET_DisplayCookieInfoAsHTML();
+#ifndef HTMLDialogs
+    NS_IMETHOD NET_CookieViewerReturn();
+#endif
 #ifdef PrivacySiteInfo
     NS_IMETHOD 	NET_DisplayCookieInfoOfSiteAsHTML(char * URLName);
     NS_IMETHOD  NET_CookiePermission(char* URLName, PRInt32* permission);

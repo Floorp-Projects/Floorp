@@ -753,6 +753,13 @@ nsNetlibService::NET_DisplayCookieInfoAsHTML(){
     return NS_OK;
 }
 
+#ifndef HTMLDialogs
+NS_IMETHODIMP nsNetlibService::NET_CookieViewerReturn(){
+    ::NET_CookieViewerReturn();
+    return NS_OK;
+}
+#endif
+
 #ifdef PrivacySiteInfo
 NS_IMETHODIMP
 nsNetlibService::NET_DisplayCookieInfoOfSiteAsHTML(char * URLName){
