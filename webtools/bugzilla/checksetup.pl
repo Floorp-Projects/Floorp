@@ -138,7 +138,7 @@ if ($ARGV[0] && ($ARGV[0] !~ /^--/)) {
     do $ARGV[0] 
         or ($@ && die("Error $@ processing $ARGV[0]"))
         or die("Error $! processing $ARGV[0]");
-    $silent = 1;
+    $silent = !grep(/^--no-silent$/, @ARGV);
 }
 
 ###########################################################################
