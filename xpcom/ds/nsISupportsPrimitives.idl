@@ -32,22 +32,23 @@
 [scriptable, uuid(d0d4b136-1dd1-11b2-9371-f0727ef827c0)]
 interface nsISupportsPrimitive : nsISupports
 {
-    const unsigned short TYPE_ID         = 1;
-    const unsigned short TYPE_STRING     = 2;
-    const unsigned short TYPE_WSTRING    = 3;
-    const unsigned short TYPE_PRBOOL     = 4;
-    const unsigned short TYPE_PRUINT8    = 5;
-    const unsigned short TYPE_PRUINT16   = 6;
-    const unsigned short TYPE_PRUINT32   = 7;
-    const unsigned short TYPE_PRUINT64   = 8;
-    const unsigned short TYPE_PRTIME     = 9;
-    const unsigned short TYPE_CHAR       = 10;
-    const unsigned short TYPE_PRINT16    = 11;
-    const unsigned short TYPE_PRINT32    = 12;
-    const unsigned short TYPE_PRINT64    = 13;
-    const unsigned short TYPE_FLOAT      = 14;
-    const unsigned short TYPE_DOUBLE     = 15;
-    const unsigned short TYPE_VOID       = 16;
+    const unsigned short TYPE_ID                = 1;
+    const unsigned short TYPE_STRING            = 2;
+    const unsigned short TYPE_WSTRING           = 3;
+    const unsigned short TYPE_PRBOOL            = 4;
+    const unsigned short TYPE_PRUINT8           = 5;
+    const unsigned short TYPE_PRUINT16          = 6;
+    const unsigned short TYPE_PRUINT32          = 7;
+    const unsigned short TYPE_PRUINT64          = 8;
+    const unsigned short TYPE_PRTIME            = 9;
+    const unsigned short TYPE_CHAR              = 10;
+    const unsigned short TYPE_PRINT16           = 11;
+    const unsigned short TYPE_PRINT32           = 12;
+    const unsigned short TYPE_PRINT64           = 13;
+    const unsigned short TYPE_FLOAT             = 14;
+    const unsigned short TYPE_DOUBLE            = 15;
+    const unsigned short TYPE_VOID              = 16;
+    const unsigned short TYPE_INTERFACE_POINTER = 17;
 
     readonly attribute unsigned short type;
 };
@@ -183,6 +184,15 @@ interface nsISupportsVoid : nsISupportsPrimitive
     string toString();
 };
 
+[scriptable, uuid(995ea724-1dd1-11b2-9211-c21bdd3e7ed0)]
+interface nsISupportsInterfacePointer : nsISupportsPrimitive
+{
+    attribute nsISupports data;
+    attribute nsIDPtr dataIID;
+
+    string toString();
+};
+
 /////////////////////////////////////////////////////////////////////////
 
 %{C++
@@ -297,6 +307,14 @@ interface nsISupportsVoid : nsISupportsPrimitive
     { 0xba, 0xf8, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
 #define NS_SUPPORTS_VOID_CONTRACTID "@mozilla.org/supports-void;1"
 #define NS_SUPPORTS_VOID_CLASSNAME "Supports void"
+
+// {A99FEBBA-1DD1-11B2-A943-B02334A6D083}
+#define NS_SUPPORTS_INTERFACE_POINTER_CID \
+{ 0xA99FEBBA, 0x1DD1, 0x11B2, \
+    { 0xA9, 0x43, 0xB0, 0x23, 0x34, 0xA6, 0xD0, 0x83 } }
+#define NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID \
+  "@mozilla.org/supports-interface-pointer;1"
+#define NS_SUPPORTS_INTERFACE_POINTER_CLASSNAME "Supports interface pointer"
 
 extern	NS_COM nsresult NS_NewISupportsPRBool (nsISupportsPRBool ** aResult);
 

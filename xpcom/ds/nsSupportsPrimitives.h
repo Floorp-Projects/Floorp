@@ -24,6 +24,7 @@
 #define nsSupportsPrimitives_h__
 
 #include "nsISupportsPrimitives.h"
+#include "nsCOMPtr.h"
 
 class nsSupportsIDImpl : public nsISupportsID
 {
@@ -277,6 +278,23 @@ public:
 
 private:
     void* mData;
+};
+
+/***************************************************************************/
+
+class nsSupportsInterfacePointerImpl : public nsISupportsInterfacePointer
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISUPPORTSPRIMITIVE
+    NS_DECL_NSISUPPORTSINTERFACEPOINTER
+
+    nsSupportsInterfacePointerImpl();
+    virtual ~nsSupportsInterfacePointerImpl();
+
+private:
+    nsCOMPtr<nsISupports> mData;
+    nsID *mIID;
 };
 
 /***************************************************************************/
