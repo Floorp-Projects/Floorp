@@ -111,3 +111,6 @@ include $(topsrcdir)/config/rules.mk
 DEFINES	+= -DLIBART_COMPILATION
 
 LIBS += -L. -l$(LIBRARY_NAME)
+
+$(SIMPLE_PROGRAMS): $(SHARED_LIBRARY)
+
