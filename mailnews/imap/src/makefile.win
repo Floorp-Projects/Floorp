@@ -53,6 +53,7 @@ EXPORTS=	nsImapUrl.h									\
 			nsImapProtocol.h							\
 			nsImapCore.h							\
 			nsImapProxyEvent.h							\
+			nsImapHostSessionList.h						\
             $(NULL)
 
 LINCS=													\

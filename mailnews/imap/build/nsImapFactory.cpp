@@ -20,6 +20,7 @@
 #include "nsIServiceManager.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
+#include "nsIMAPHostSessionList.h"
 #include "nsMsgLocalCID.h"
 #include "pratom.h"
 #include "nsCOMPtr.h"
@@ -31,7 +32,7 @@
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kCImapUrl, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kCImapProtocol, NS_IMAPPROTOCOL_CID);
-static NS_DEFINE_CID(kCImapHostSessionList, NS_IMAPPROTOCOL_CID);
+static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 
 
 ////////////////////////////////////////////////////////////
@@ -123,6 +124,10 @@ nsresult nsImapFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, v
 		inst = NS_STATIC_CAST(nsIImapProtocol *, new nsImapProtocol());
 	}
 
+	if (mClassID.Equals(kCImapHostSessionList))
+	{
+		inst = NS_STATIC_CAST(nsIImapHostSessionList *, new nsIMAPHostSessionList());
+	}
 	if (inst == nsnull)
 		return NS_ERROR_OUT_OF_MEMORY;
 
@@ -187,6 +192,10 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 									path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) goto done;
 
+	rv = compMgr->RegisterComponent(kCImapHostSessionList, nsnull, nsnull,
+									path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) goto done;
+
 	done:
 		(void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
@@ -210,6 +219,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 	if (NS_FAILED(rv)) goto done;
 
 	rv = compMgr->UnregisterFactory(kCImapProtocol, path);
+	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->UnregisterFactory(kCImapHostSessionList, path);
 	if (NS_FAILED(rv)) goto done;
 
 done:

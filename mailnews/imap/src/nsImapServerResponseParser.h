@@ -172,7 +172,7 @@ protected:
 	virtual PRBool		GetNextLineForParser(char **nextLine);
 	virtual void    end_of_line();
 
-	nsIMAPHostSessionList *GetHostSessionList();
+	nsIMAPHostSessionList *GetHostSessionList() {return fHostSessionList;}
 private:
     PRBool                   fProcessingTaggedResponse;
     PRBool                   fCurrentCommandFailed;
@@ -240,6 +240,8 @@ private:
 
 	// The connection object
     nsImapProtocol &fServerConnection;
+
+	nsIMAPHostSessionList *fHostSessionList;
 };
 
 #endif

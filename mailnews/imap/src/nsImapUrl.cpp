@@ -638,7 +638,7 @@ NS_IMETHODIMP nsImapUrl::ToString(PRUnichar* *aString) const
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::GetImapPartToFetch(const char **result) const
+NS_IMETHODIMP nsImapUrl::GetImapPartToFetch(char **result) const
 {
     NS_LOCK_INSTANCE();
 	//  here's the old code:

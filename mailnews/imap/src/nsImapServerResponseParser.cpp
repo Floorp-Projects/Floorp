@@ -46,7 +46,8 @@ nsImapServerResponseParser::nsImapServerResponseParser(nsImapProtocol &imapProto
 	fReportingErrors(PR_TRUE),
 	fLastChunk(PR_FALSE),
 	fServerIsNetscape3xServer(PR_FALSE),
-	m_shell(nsnull)
+	m_shell(nsnull),
+	fHostSessionList(nsnull)
 {
 	fSearchResults = nsImapSearchResultSequence::CreateSearchResultSequence();
 	fMailAccountUrl = nsnull;

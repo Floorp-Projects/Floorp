@@ -24,7 +24,10 @@
 #include "nsImapProxyEvent.h"
 #include "nsIMAPHostSessionList.h"
 #include "nsIMAPBodyShell.h"
+#include "nsImapServerResponseParser.h"
 #include "nspr.h"
+
+PRLogModuleInfo *IMAP;
 
 // netlib required files
 #include "nsIStreamListener.h"
@@ -107,13 +110,15 @@ nsImapProtocol::nsImapProtocol()
     m_consumer = nsnull;
 	// not right, I'm just putting this in to find undefined symbols
 	// there should be just one of these 
-	nsIMAPHostSessionList *hostList = new nsIMAPHostSessionList;
-
+	nsImapServerResponseParser *parser = new nsImapServerResponseParser(*this);
     m_imapState = nsImapProtocol::NOT_CONNECTED;
 	m_currentServerCommandTagNumber = 0;
 	m_active = PR_FALSE;
 	m_threadShouldDie = PR_FALSE;
 	m_pseudoInterrupted = PR_FALSE;
+	// where should we do this? Perhaps in the factory object?
+	if (!IMAP)
+		IMAP = PR_NewLogModule("IMAP");
 }
 
 nsresult nsImapProtocol::Initialize(PLEventQueue * aSinkEventQueue)
