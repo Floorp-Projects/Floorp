@@ -30,6 +30,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIComponentManager.h"
+#include "nsIJSNativeInitializer.h"
 #include "nsDOMCID.h"
 
 
@@ -197,6 +198,39 @@ BrowserAppCoreForward(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
 
 //
+// Native method Stop
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreStop(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Stop()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function stop requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method LoadUrl
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -233,14 +267,14 @@ BrowserAppCoreLoadUrl(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
 
 //
-// Native method LoadUrl
+// Native method LoadInitialPage
 //
 PR_STATIC_CALLBACK(JSBool)
 BrowserAppCoreLoadInitialPage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
- 
+
   *rval = JSVAL_NULL;
 
   // If there's no private data, this must be the prototype, so ignore
@@ -263,6 +297,7 @@ BrowserAppCoreLoadInitialPage(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 
   return JS_TRUE;
 }
+
 
 //
 // Native method WalletEditor
@@ -970,12 +1005,13 @@ static JSFunctionSpec BrowserAppCoreMethods[] =
 {
   {"back",          BrowserAppCoreBack,     0},
   {"forward",          BrowserAppCoreForward,     0},
+  {"stop",          BrowserAppCoreStop,     0},
   {"loadUrl",          BrowserAppCoreLoadUrl,     1},
   {"loadInitialPage",          BrowserAppCoreLoadInitialPage,     0},
   {"walletEditor",          BrowserAppCoreWalletEditor,     0},
   {"walletChangePassword",          BrowserAppCoreWalletChangePassword,     0},
-  {"walletSafeFillin",          BrowserAppCoreWalletSafeFillin,     0},
-  {"walletQuickFillin",          BrowserAppCoreWalletQuickFillin,     0},
+  {"walletSafeFillin",          BrowserAppCoreWalletSafeFillin,     1},
+  {"walletQuickFillin",          BrowserAppCoreWalletQuickFillin,     1},
   {"walletSamples",          BrowserAppCoreWalletSamples,     0},
   {"signonViewer",          BrowserAppCoreSignonViewer,     0},
   {"cookieViewer",          BrowserAppCoreCookieViewer,     0},
@@ -1007,8 +1043,10 @@ BrowserAppCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   nsIScriptNameSpaceManager* manager;
   nsIDOMBrowserAppCore *nativeThis;
   nsIScriptObjectOwner *owner = nsnull;
+  nsIJSNativeInitializer* initializer = nsnull;
 
   static NS_DEFINE_IID(kIDOMBrowserAppCoreIID, NS_IDOMBROWSERAPPCORE_IID);
+  static NS_DEFINE_IID(kIJSNativeInitializerIID, NS_IJSNATIVEINITIALIZER_IID);
 
   result = context->GetNameSpaceManager(&manager);
   if (NS_OK != result) {
@@ -1029,7 +1067,16 @@ BrowserAppCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
     return JS_FALSE;
   }
 
-  // XXX We should be calling Init() on the instance
+  result = nativeThis->QueryInterface(kIJSNativeInitializerIID, (void **)&initializer);
+  if (NS_OK == result) {
+    result = initializer->Initialize(cx, argc, argv);
+    NS_RELEASE(initializer);
+
+    if (NS_OK != result) {
+      NS_RELEASE(nativeThis);
+      return JS_FALSE;
+    }
+  }
 
   result = nativeThis->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner);
   if (NS_OK != result) {
