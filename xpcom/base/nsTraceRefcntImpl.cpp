@@ -203,12 +203,12 @@ TypesToLogFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
     }
 }
 
-static PLHashAllocOps serialNumberHashAllocOps = {
+static const PLHashAllocOps serialNumberHashAllocOps = {
     DefaultAllocTable, DefaultFreeTable,
     DefaultAllocEntry, SerialNumberFreeEntry
 };
 
-static PLHashAllocOps typesToLogHashAllocOps = {
+static const PLHashAllocOps typesToLogHashAllocOps = {
     DefaultAllocTable, DefaultFreeTable,
     DefaultAllocEntry, TypesToLogFreeEntry
 };
@@ -430,7 +430,7 @@ BloatViewFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
     }
 }
 
-static PLHashAllocOps bloatViewHashAllocOps = {
+const static PLHashAllocOps bloatViewHashAllocOps = {
     DefaultAllocTable, DefaultFreeTable,
     DefaultAllocEntry, BloatViewFreeEntry
 };

@@ -84,7 +84,7 @@ clearHashEntry(PLDHashTable* table, PLDHashEntryHdr* entry)
 }
 
 
-static PLDHashTableOps hashtableOps = {
+static const PLDHashTableOps hashtableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
     PL_DHashGetKeyStub,

@@ -89,7 +89,7 @@ getNameKey(PLDHashTable*, PLDHashEntryHdr* aHdr)
   return entry->mKey;
 }
 
-struct PLDHashTableOps nametable_CaseInsensitiveHashTableOps = {
+static const struct PLDHashTableOps nametable_CaseInsensitiveHashTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
     getNameKey,

@@ -105,7 +105,7 @@ getPropertyKey(PLDHashTable*, PLDHashEntryHdr* aHdr)
   return entry->mKey;
 }
 
-struct PLDHashTableOps property_HashTableOps = {
+static const struct PLDHashTableOps property_HashTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
     getPropertyKey,

@@ -127,7 +127,7 @@ static const char gIDFormat[] =
 
 // Nonexistent factory entry
 // This is used to mark non-existent contractid mappings
-static nsFactoryEntry * kNonExistentContractID = (nsFactoryEntry*) 1;
+static const nsFactoryEntry * const kNonExistentContractID = (nsFactoryEntry*) 1;
 
 
 #define NS_EMPTY_IID                                 \
@@ -303,7 +303,7 @@ factory_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
     PL_DHashClearEntryStub(aTable, aHdr);
 }
 
-static PLDHashTableOps factory_DHashTableOps = {
+static const PLDHashTableOps factory_DHashTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
     factory_GetKey,
@@ -352,7 +352,7 @@ contractID_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
     PL_DHashClearEntryStub(aTable, aHdr);
 }
 
-static PLDHashTableOps contractID_DHashTableOps = {
+static const PLDHashTableOps contractID_DHashTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
     contractID_GetKey,

@@ -50,7 +50,7 @@ static PRUintn      LockStackTPI = (PRUintn)-1;
 static PLHashTable* OrderTable = 0;
 static PRLock*      OrderTableLock = 0;
 
-static const char* LockTypeNames[] = {"Lock", "Monitor", "CMonitor"};
+static const char* const LockTypeNames[] = {"Lock", "Monitor", "CMonitor"};
 
 struct nsNamedVector : public nsVoidArray {
     const char* mName;
@@ -110,7 +110,7 @@ _hash_free_entry(void *pool, PLHashEntry *entry, PRUintn flag)
         delete entry;
 }
 
-static PLHashAllocOps _hash_alloc_ops = {
+static const PLHashAllocOps _hash_alloc_ops = {
     _hash_alloc_table, _hash_free_table,
     _hash_alloc_entry, _hash_free_entry
 };

@@ -209,7 +209,7 @@ AtomTableClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
   he->ClearAtom();
 }
 
-static PLDHashTableOps AtomTableOps = {
+static const PLDHashTableOps AtomTableOps = {
   PL_DHashAllocTable,
   PL_DHashFreeTable,
   AtomTableGetKey,

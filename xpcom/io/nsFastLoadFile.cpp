@@ -345,7 +345,7 @@ strmap_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
     PL_DHashClearEntryStub(aTable, aHdr);
 }
 
-static PLDHashTableOps strmap_DHashTableOps = {
+static const PLDHashTableOps strmap_DHashTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
     PL_DHashGetKeyStub,
@@ -381,7 +381,7 @@ objmap_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
     PL_DHashClearEntryStub(aTable, aHdr);
 }
 
-static PLDHashTableOps objmap_DHashTableOps = {
+static const PLDHashTableOps objmap_DHashTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
     PL_DHashGetKeyStub,
@@ -1212,7 +1212,7 @@ idmap_MatchEntry(PLDHashTable *aTable,
     return memcmp(&entry->mSlowID, idp, sizeof(nsID)) == 0;
 }
 
-static PLDHashTableOps idmap_DHashTableOps = {
+static const PLDHashTableOps idmap_DHashTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
     idmap_GetKey,
