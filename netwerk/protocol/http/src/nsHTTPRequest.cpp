@@ -46,23 +46,13 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_pURL, HTTPMethod i_Method, nsIChannel* i_
 
 nsHTTPRequest::~nsHTTPRequest()
 {
-    if (m_Request)
-    {
-        delete[] m_Request;
-        m_Request = 0;
-    }
     if (m_pArray)
     {
         delete m_pArray;
         m_pArray = 0;
     }
-    if (m_Request)
-    {
-        delete m_Request;
-        m_Request = 0;
-    }
-    if (m_pTransport)
-        NS_RELEASE(m_pTransport);
+    NS_IF_RELEASE(m_Request);
+    NS_IF_RELEASE(m_pTransport);
 /*
     if (m_pConnection)
         NS_RELEASE(m_pConnection);
