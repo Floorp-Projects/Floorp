@@ -88,6 +88,16 @@ if ($::FORM{'format'} && $::FORM{'format'} eq "rdf" && !$::FORM{'ctype'}) {
     delete($::FORM{'format'});
 }
 
+# The js ctype presents a security risk; a malicious site could use it  
+# to gather information about secure bugs. So, we only allow public bugs to be
+# retrieved with this format.
+#
+# Note that if and when this call clears cookies or has other persistent 
+# effects, we'll need to do this another way instead.
+if ($::FORM{'ctype'} eq "js") {
+    Bugzilla->logout();
+}
+
 # Determine the format in which the user would like to receive the output.
 # Uses the default format if the user did not specify an output format;
 # otherwise validates the user's choice against the list of available formats.
