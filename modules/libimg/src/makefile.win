@@ -55,7 +55,7 @@ LLIBS=$(DIST)\lib\png.lib \
 	$(DIST)\lib\zip$(MOZ_BITS)$(VERSION_NUMBER).lib \
 	$(DIST)\lib\xpcom32.lib \
 !ifdef NU_CACHE
-	$(DIST)\lib\cachelib.lib \
+	$(DIST)\lib\cache.lib \
 !endif
 	$(NULL)
 !else
