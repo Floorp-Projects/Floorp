@@ -326,6 +326,19 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 // 8-bit alpha composite drawing...
 // Most of this will disappear with gtk+-1.4
 
+// Compositing code consists of these functions:
+//  * findIndex32() - helper function to convert mask into bitshift offset
+//  * findIndex24() - helper function to convert mask into bitshift offset
+//  * nsImageGTK::DrawComposited32() - 32-bit (888) truecolor convert/composite
+//  * nsImageGTK::DrawComposited24() - 24-bit (888) truecolor convert/composite
+//  * nsImageGTK::DrawComposited16() - 16-bit ([56][56][56]) truecolor 
+//                                     convert/composite
+//  * nsImageGTK::DrawCompositedGeneral() - convert/composite for any visual
+//                                          not handled by the above methods
+//  * nsImageGTK::DrawComposited() - compositing master method; does region
+//                                   clipping, calls one of the above, then
+//                                   writes out the composited image
+
 static unsigned
 findIndex32(unsigned mask)
 {
@@ -649,11 +662,6 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
                            PRInt32 aX, PRInt32 aY,
                            PRInt32 aWidth, PRInt32 aHeight)
 {
-  if ((aWidth != mWidth) || (aHeight != mHeight)) {
-    aWidth = mWidth;
-    aHeight = mHeight;
-  }
-
   nsDrawingSurfaceGTK* drawing = (nsDrawingSurfaceGTK*) aSurface;
   GdkVisual *visual = gdk_rgb_get_visual();
     
@@ -670,7 +678,7 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
   readX = aX; readY = aY;
   destX = 0;  destY = 0;
   if ((readY>=(int)surfaceHeight) || (readX>=(int)surfaceWidth) ||
-      (readY+aHeight<0) || (readX+aWidth<0)) {
+      (readY+mHeight<0) || (readX+mWidth<0)) {
     // This should never happen if the layout engine is sane,
     // as it means we're trying to draw an image which is outside
     // the drawing surface.  Bulletproof gfx for now...
@@ -684,11 +692,11 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
     destX = -readX;
     readX = 0;
   }
-  readHeight = aHeight-destY;
-  readWidth = aWidth-destX;
-  if (aY+aHeight>(int)surfaceHeight)
+  readHeight = mHeight-destY;
+  readWidth = mWidth-destX;
+  if (aY+mHeight>(int)surfaceHeight)
     readHeight = surfaceHeight-readY;
-  if (aX+aWidth>(int)surfaceWidth)
+  if (aX+mWidth>(int)surfaceWidth)
     readWidth = surfaceWidth-readX;
 
 
@@ -733,9 +741,13 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
     DrawCompositedGeneral(isLSB, flipBytes, destX, destY, readWidth, readHeight, 
                           ximage, readData);
 
-  GdkGC *imageGC = gdk_gc_new(drawing->GetDrawable());
+  unsigned targetWidth, targetHeight;
+  targetWidth = aWidth-(readX-aX);
+  targetHeight = aHeight-(readY-aY);
+
+  GdkGC *imageGC = ((nsRenderingContextGTK&)aContext).GetGC();
   gdk_draw_rgb_image(drawing->GetDrawable(), imageGC,
-                     readX, readY, readWidth, readHeight,
+                     readX, readY, targetWidth, targetHeight,
                      GDK_RGB_DITHER_MAX,
                      readData, 3*readWidth);
   gdk_gc_unref(imageGC);
@@ -1077,8 +1089,10 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
 
             for (PRInt32 y = aY0; y < aY1; y+=aSrcRect.height)
               for (PRInt32 x = aX0; x < aX1; x+=aSrcRect.width)
-                Draw(aContext,aSurface,x,y,aSrcRect.width,aSrcRect.height);
-  
+                Draw(aContext,aSurface,x,y,
+                     PR_MIN(aSrcRect.width, aX1-x),
+                     PR_MIN(aSrcRect.height, aY1-y));
+   
     return NS_OK;
   }
 
@@ -1209,7 +1223,8 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
 
     for (PRInt32 y = aY0; y < aY1; y+=validHeight)
       for (PRInt32 x = aX0; x < aX1; x+=validWidth)
-        Draw(aContext,aSurface,x,y,validWidth,validHeight);
+        Draw(aContext,aSurface,x,y, PR_MIN(validWidth, aX1-x),
+             PR_MIN(validHeight, aY1-y));
 
     aContext.PopState(clipState);
 
