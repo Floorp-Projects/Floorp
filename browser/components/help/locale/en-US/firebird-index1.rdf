@@ -73,7 +73,7 @@
     <rdf:Description about="#block-popups">
         <nc:subheadings>
             <rdf:Seq>
-                <rdf:li><rdf:Description ID="block-popups:options" nc:name="Options (Preferences)" nc:link="popup.xhtml#popup_blocker_preferences"/></rdf:li>
+                <rdf:li><rdf:Description ID="block-popups:options" nc:name="Options" nc:link="popup.xhtml#popup_blocker_preferences"/></rdf:li>
                 <rdf:li><rdf:Description ID="block-popups:what-are" nc:name="What are Popups?" nc:link="popup.xhtml#what_are_popups"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
@@ -113,7 +113,7 @@
         <nc:subheadings>
             <rdf:Seq>
                 <rdf:li><rdf:Description ID="controlling-popups:what-are" nc:name="What are Popups?" nc:link="popup.xhtml#what_are_popups"/></rdf:li>
-                <rdf:li><rdf:Description ID="controlling-popups:options" nc:name="Options (Preferences)" nc:link="popup.xhtml#popup_blocker_preferences"/></rdf:li>
+                <rdf:li><rdf:Description ID="controlling-popups:options" nc:name="Options" nc:link="popup.xhtml#popup_blocker_preferences"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
     </rdf:Description>
@@ -255,7 +255,7 @@
         <nc:subheadings>
             <rdf:Seq>
                 <rdf:li><rdf:Description ID="home-page:general" nc:name="general" nc:link="using_firebird.xhtml#viewing_your_home_page"/></rdf:li>
-                <rdf:li><rdf:Description ID="home-page:options" nc:name="Options (Preferences)" nc:link="prefs.xhtml#home_page"/></rdf:li>
+                <rdf:li><rdf:Description ID="home-page:options" nc:name="Options" nc:link="prefs.xhtml#home_page"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
     </rdf:Description>
@@ -342,7 +342,7 @@
     <rdf:Description about="#o">
         <nc:subheadings>
             <rdf:Seq>
-                <rdf:li><rdf:Description ID="preferences" nc:name="Options (Preferences)" nc:link="prefs.xhtml"/></rdf:li>
+                <rdf:li><rdf:Description ID="preferences" nc:name="Options" nc:link="prefs.xhtml"/></rdf:li>
 	    </rdf:Seq>
         </nc:subheadings>
     </rdf:Description>
