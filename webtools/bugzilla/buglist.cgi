@@ -246,9 +246,9 @@ sub GetGroupsByUserId {
     SendSQL("
         SELECT DISTINCT  groups.id, name, description, isactive
                    FROM  groups, user_group_map
-                  WHERE  user_id = $userid AND NOT isbless
+                  WHERE  user_id = $userid AND isbless = 0
                     AND  user_group_map.group_id = groups.id
-                    AND  isbuggroup
+                    AND  isbuggroup = 1
                ORDER BY  description ");
 
     my @groups;

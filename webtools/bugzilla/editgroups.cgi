@@ -274,7 +274,7 @@ if ($action eq 'changeform') {
              " LEFT JOIN group_group_map as B" .
              " ON B.member_id = groups.id" .
              " AND B.grantor_id = $group_id" .
-             " AND B.isbless" .
+             " AND B.isbless = 1" .
              " WHERE groups.id != $group_id ORDER by name");
 
     while (MoreSQLData()) {

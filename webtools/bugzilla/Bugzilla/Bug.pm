@@ -342,11 +342,11 @@ sub groups {
              " LEFT JOIN user_group_map" .
              " ON user_group_map.group_id = groups.id" .
              " AND user_id = $::userid" .
-             " AND NOT isbless" .
+             " AND isbless = 0" .
              " LEFT JOIN group_control_map" .
              " ON group_control_map.group_id = groups.id" .
              " AND group_control_map.product_id = " . $self->{'product_id'} .
-             " WHERE isbuggroup");
+             " WHERE isbuggroup = 1");
 
     while (&::MoreSQLData()) {
         my ($groupid, $name, $description, $ison, $ingroup, $isactive,

@@ -81,8 +81,8 @@ sub queue {
     # should not have access.
     "            COUNT(DISTINCT ugmap.group_id) AS cntuseringroups, 
                 COUNT(DISTINCT bgmap.group_id) AS cntbugingroups, 
-                ((COUNT(DISTINCT ccmap.who) AND cclist_accessible) 
-                  OR ((bugs.reporter = $::userid) AND bugs.reporter_accessible) 
+                ((COUNT(DISTINCT ccmap.who) AND cclist_accessible = 1) 
+                  OR ((bugs.reporter = $::userid) AND bugs.reporter_accessible = 1) 
                   OR bugs.assigned_to = $::userid ) AS canseeanyway 
     " . 
     # Use the flags and flagtypes tables for information about the flags,
