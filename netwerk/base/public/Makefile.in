@@ -60,6 +60,9 @@ XPIDLSRCS	= \
 		nsIURLParser.idl \
 		nsIWebFilters.idl \
 		nsISecurityEventSink.idl \
+		nsISecretDecoderRing.idl \
+		nsISecureBrowserUI.idl \
+		nsISecurityManagerComponent.idl \
 		$(NULL)
 
 EXPORTS		= \
@@ -68,6 +71,8 @@ EXPORTS		= \
 		nsUnixColorPrintf.h \
 		nsIPasswordManagerUtils.h \
 		$(NULL)
+
+PREF_JS_EXPORTS = $(srcdir)/security-prefs.js
 
 include $(topsrcdir)/config/rules.mk
 

@@ -4,3 +4,5 @@
 
 nsISocketProvider.idl
 nsISocketProviderService.idl
+nsISSLSocketProvider.idl
+nsISecureSocketInfo.idl

@@ -24,8 +24,6 @@ nsIURL.idl
 nsIURLParser.idl
 nsIWebFilters.idl
 nsISecurityEventSink.idl
-
-
-
-
-
+nsISecretDecoderRing.idl
+nsISecureBrowserUI.idl
+nsISecurityManagerComponent.idl
