@@ -89,6 +89,7 @@ class UTF8traits
 #endif
 
 class nsISizeOfHandler;
+class nsCString;
 
 
 class NS_COM nsString :
