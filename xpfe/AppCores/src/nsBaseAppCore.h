@@ -41,7 +41,7 @@ class nsBaseAppCore : public nsIScriptObjectOwner, public nsIDOMBaseAppCore
   public:
 
     nsBaseAppCore();
-    ~nsBaseAppCore();
+    virtual ~nsBaseAppCore();
                  
 
     NS_DECL_ISUPPORTS
