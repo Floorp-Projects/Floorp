@@ -50,6 +50,14 @@ public class RunScript3 {
         // Use the Counter class to define a Counter constructor
         // and prototype in JavaScript.
         ScriptableObject.defineClass(scope, Counter.class);
+
+        // Create an instance of Counter and assign it to
+        // the top-level variable "myCounter". This is
+        // equivalent to the JavaScript code 
+        //    myCounter = new Counter(7);
+        Object[] arg = { new Integer(7) };
+        Scriptable myCounter = cx.newObject(scope, "Counter", arg);
+        scope.put("myCounter", scope, myCounter);
         
         String s = "";
         for (int i=0; i < args.length; i++)
