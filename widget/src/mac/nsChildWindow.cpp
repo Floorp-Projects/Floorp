@@ -73,7 +73,7 @@ nsresult nsChildWindow::StandardCreate(nsIWidget *aParent,
 //
 //-------------------------------------------------------------------------
 
-void nsChildWindow::CalcWindowRegions(nsIWidget* aParent, nsRect& aBounds)
+void nsChildWindow::CalcWindowRegions()
 {
 	Inherited::CalcWindowRegions();
 
