@@ -1,16 +1,16 @@
 
-<!ENTITY enbJsCheckMailNews.label     "Messenger">
+<!ENTITY enbJsCheckMailNews.label     "Mail &amp; Newsgroups">
 <!ENTITY enbJsCheckMailNews.accesskey "m">
-<!ENTITY enbPluginCheckMailNews.label     "Messenger">
-<!ENTITY enbPluginCheckMailNews.accesskey "r">
+<!ENTITY enbPluginCheckMailNews.label     "Mail &amp; Newsgroups">
+<!ENTITY enbPluginCheckMailNews.accesskey "p">
 
-<!ENTITY disableCookieForMailNews.label "Disable cookies in mail and news messages">
+<!ENTITY disableCookieForMailNews.label "Disable cookies in Mail &amp; Newsgroups">
 <!ENTITY disableCookieForMailNews.accesskey "m">
 
-<!ENTITY disableImageInMailNews.label       "Do not load remote images in mail and news messages">
+<!ENTITY disableImageInMailNews.label       "Do not load remote images in Mail &amp; Newsgroup messages">
 <!ENTITY disableImageInMailNews.accesskey   "i">
 
-<!ENTITY mail.label "Messenger">
+<!ENTITY mail.label "Mail &amp; Newsgroups">
 <!ENTITY mail.accesskey "m">
 <!ENTITY windows.label "Windows">
 <!ENTITY viewingMessages.label "Message Display">

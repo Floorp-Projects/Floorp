@@ -1,6 +1,6 @@
 <!-- extracted from AccountManager.xul -->
 
-<!ENTITY accountManagerTitle.label "Account Settings">
+<!ENTITY accountManagerTitle.label "Mail &amp; Newsgroups Account Settings">
 
 <!ENTITY addAccountButton.label "Add Account...">
 <!ENTITY setDefaultButton.label "Set as Default">
