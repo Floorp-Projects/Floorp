@@ -3239,31 +3239,35 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
   // border-size: length, enum, inherit
   nsStyleCoord  coord;
   nsStyleCoord  parentCoord;
-  FOR_CSS_SIDES(side) {
-    const nsCSSValue &value = marginData.mBorderWidth.*(nsCSSRect::sides[side]);
-    if (SetCoord(value, coord, parentCoord, SETCOORD_LE, aContext,
-                 mPresContext, inherited))
-      border->mBorder.Set(side, coord);
-    else if (eCSSUnit_Inherit == value.GetUnit()) {
-      inherited = PR_TRUE;
-      border->mBorder.Set(side, parentBorder->mBorder.Get(side, coord));
+  { // scope for compilers with broken |for| loop scoping
+    FOR_CSS_SIDES(side) {
+      const nsCSSValue &value = marginData.mBorderWidth.*(nsCSSRect::sides[side]);
+      if (SetCoord(value, coord, parentCoord, SETCOORD_LE, aContext,
+                   mPresContext, inherited))
+        border->mBorder.Set(side, coord);
+      else if (eCSSUnit_Inherit == value.GetUnit()) {
+        inherited = PR_TRUE;
+        border->mBorder.Set(side, parentBorder->mBorder.Get(side, coord));
+      }
     }
   }
 
   // border-style: enum, none, inhert
   const nsCSSRect& ourStyle = marginData.mBorderStyle;
-  FOR_CSS_SIDES(side) {
-    const nsCSSValue &value = ourStyle.*(nsCSSRect::sides[side]);
-    nsCSSUnit unit = value.GetUnit();
-    if (eCSSUnit_Enumerated == unit) {
-      border->SetBorderStyle(side, value.GetIntValue());
-    }
-    else if (eCSSUnit_None == unit) {
-      border->SetBorderStyle(side, NS_STYLE_BORDER_STYLE_NONE);
-    }
-    else if (eCSSUnit_Inherit == unit) {
-      inherited = PR_TRUE;
-      border->SetBorderStyle(side, parentBorder->GetBorderStyle(side));
+  { // scope for compilers with broken |for| loop scoping
+    FOR_CSS_SIDES(side) {
+      const nsCSSValue &value = ourStyle.*(nsCSSRect::sides[side]);
+      nsCSSUnit unit = value.GetUnit();
+      if (eCSSUnit_Enumerated == unit) {
+        border->SetBorderStyle(side, value.GetIntValue());
+      }
+      else if (eCSSUnit_None == unit) {
+        border->SetBorderStyle(side, NS_STYLE_BORDER_STYLE_NONE);
+      }
+      else if (eCSSUnit_Inherit == unit) {
+        inherited = PR_TRUE;
+        border->SetBorderStyle(side, parentBorder->GetBorderStyle(side));
+      }
     }
   }
 
@@ -3271,21 +3275,23 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
   nscolor borderColor;
   nscolor unused = NS_RGB(0,0,0);
   
-  FOR_CSS_SIDES(side) {
-    nsCSSValueList* list =
-        marginData.mBorderColors.*(nsCSSValueListRect::sides[side]);
-    if (list) {
-      // Some composite border color information has been specified for this
-      // border side.
-      border->EnsureBorderColors();
-      border->ClearBorderColors(side);
-      while (list) {
-        if (SetColor(list->mValue, unused, mPresContext, borderColor, inherited))
-          border->AppendBorderColor(side, borderColor, PR_FALSE);
-        else if (eCSSUnit_Enumerated == list->mValue.GetUnit() &&
-                 NS_STYLE_COLOR_TRANSPARENT == list->mValue.GetIntValue())
-          border->AppendBorderColor(side, nsnull, PR_TRUE);
-        list = list->mNext;
+  { // scope for compilers with broken |for| loop scoping
+    FOR_CSS_SIDES(side) {
+      nsCSSValueList* list =
+          marginData.mBorderColors.*(nsCSSValueListRect::sides[side]);
+      if (list) {
+        // Some composite border color information has been specified for this
+        // border side.
+        border->EnsureBorderColors();
+        border->ClearBorderColors(side);
+        while (list) {
+          if (SetColor(list->mValue, unused, mPresContext, borderColor, inherited))
+            border->AppendBorderColor(side, borderColor, PR_FALSE);
+          else if (eCSSUnit_Enumerated == list->mValue.GetUnit() &&
+                   NS_STYLE_COLOR_TRANSPARENT == list->mValue.GetIntValue())
+            border->AppendBorderColor(side, nsnull, PR_TRUE);
+          list = list->mNext;
+        }
       }
     }
   }
@@ -3295,46 +3301,50 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
   PRBool transparent;
   PRBool foreground;
 
-  FOR_CSS_SIDES(side) {
-    const nsCSSValue &value = ourBorderColor.*(nsCSSRect::sides[side]);
-    if (eCSSUnit_Inherit == value.GetUnit()) {
-      inherited = PR_TRUE;
-      parentBorder->GetBorderColor(side, borderColor,
-                                   transparent, foreground);      
-      if (transparent)
-        border->SetBorderTransparent(side);
-      else if (foreground) {
-        // We want to inherit the color from the parent, not use the
-        // color on the element where this chunk of style data will be
-        // used.  We can ensure that the data for the parent are fully
-        // computed (unlike for the element where this will be used, for
-        // which the color could be specified on a more specific rule).
-        border->SetBorderColor(side, parentContext->GetStyleColor()->mColor);
-      } else
-        border->SetBorderColor(side, borderColor);
-    }
-    else if (SetColor(value, unused, mPresContext, borderColor, inherited)) {
-      border->SetBorderColor(side, borderColor);
-    }
-    else if (eCSSUnit_Enumerated == value.GetUnit()) {
-      switch (value.GetIntValue()) {
-        case NS_STYLE_COLOR_TRANSPARENT:
+  { // scope for compilers with broken |for| loop scoping
+    FOR_CSS_SIDES(side) {
+      const nsCSSValue &value = ourBorderColor.*(nsCSSRect::sides[side]);
+      if (eCSSUnit_Inherit == value.GetUnit()) {
+        inherited = PR_TRUE;
+        parentBorder->GetBorderColor(side, borderColor,
+                                     transparent, foreground);      
+        if (transparent)
           border->SetBorderTransparent(side);
-          break;
-        case NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR:
-          border->SetBorderToForeground(side);
-          break;
+        else if (foreground) {
+          // We want to inherit the color from the parent, not use the
+          // color on the element where this chunk of style data will be
+          // used.  We can ensure that the data for the parent are fully
+          // computed (unlike for the element where this will be used, for
+          // which the color could be specified on a more specific rule).
+          border->SetBorderColor(side, parentContext->GetStyleColor()->mColor);
+        } else
+          border->SetBorderColor(side, borderColor);
+      }
+      else if (SetColor(value, unused, mPresContext, borderColor, inherited)) {
+        border->SetBorderColor(side, borderColor);
+      }
+      else if (eCSSUnit_Enumerated == value.GetUnit()) {
+        switch (value.GetIntValue()) {
+          case NS_STYLE_COLOR_TRANSPARENT:
+            border->SetBorderTransparent(side);
+            break;
+          case NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR:
+            border->SetBorderToForeground(side);
+            break;
+        }
       }
     }
   }
 
   // -moz-border-radius: length, percent, inherit
-  FOR_CSS_SIDES(side) {
-    parentBorder->mBorderRadius.Get(side, parentCoord);
-    if (SetCoord(marginData.mBorderRadius.*(nsCSSRect::sides[side]), coord,
-                 parentCoord, SETCOORD_LPH, aContext, mPresContext,
-                 inherited))
-      border->mBorderRadius.Set(side, coord);
+  { // scope for compilers with broken |for| loop scoping
+    FOR_CSS_SIDES(side) {
+      parentBorder->mBorderRadius.Get(side, parentCoord);
+      if (SetCoord(marginData.mBorderRadius.*(nsCSSRect::sides[side]), coord,
+                   parentCoord, SETCOORD_LPH, aContext, mPresContext,
+                   inherited))
+        border->mBorderRadius.Set(side, coord);
+    }
   }
 
   // float-edge: enum, inherit
