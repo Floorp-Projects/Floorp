@@ -46,6 +46,7 @@
 #include "nsHashtableEnumerator.h"
 #include "nsPipe2.h"
 #include "nsWeakReference.h"
+#include "nsISizeOfHandler.h"
 
 class dummyComparitor: public nsAVLNodeComparitor {
 public:
@@ -104,4 +105,5 @@ void XXXNeverCalled()
 #ifdef DEBUG
     TestSegmentedBuffer();
 #endif
+    NS_NewSizeOfHandler(0);
 }
