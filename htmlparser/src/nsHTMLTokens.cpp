@@ -129,6 +129,7 @@ HTMLTagEntry gHTMLTagTable[] =
   {"DT",          eHTMLTag_dt},
 
   {"EM",          eHTMLTag_em},           {"EMBED",     eHTMLTag_embed},
+  {"ENTITY",      eHTMLTag_entity}, //a pseudo tag
 
   {"FIELDSET",    eHTMLTag_fieldset},     {"FONT",       eHTMLTag_font},
   {"FOOTER",      eHTMLTag_footer},       {"FORM",       eHTMLTag_form},
@@ -968,6 +969,7 @@ PRInt32 CWhitespaceToken::Consume(PRUnichar aChar, CScanner& aScanner) {
  */
 CEntityToken::CEntityToken(const nsString& aName) : CHTMLToken(aName) {
   mOrdinalValue=eToken_entity;
+  mTagType=eHTMLTag_entity;
 #ifdef VERBOSE_DEBUG
   if(!VerifyEntityTable())  {
     cout<<"Entity table is invalid!" << endl;

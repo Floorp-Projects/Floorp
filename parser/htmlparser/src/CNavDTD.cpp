@@ -485,7 +485,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       {
         static char  okTags[]={ 
           eHTMLTag_caption, eHTMLTag_col, eHTMLTag_colgroup,eHTMLTag_tbody,   
-          eHTMLTag_tfoot,   eHTMLTag_tr,  eHTMLTag_thead,   0};
+          eHTMLTag_tfoot,  /* eHTMLTag_tr,*/  eHTMLTag_thead,   0};
         result=PRBool(0!=strchr(okTags,aChild));
       }
       break;
@@ -620,6 +620,17 @@ PRBool CNavDTD::CanOmit(PRInt32 aParent,PRInt32 aChild) const {
         case eHTMLTag_thead:    case eHTMLTag_tfoot:  
         case eHTMLTag_tbody:    case eHTMLTag_col:    
         case eHTMLTag_colgroup: case eHTMLTag_unknown:
+          result=PR_TRUE;
+        default:
+          break;
+      } //switch
+      break;
+
+    case eHTMLTag_entity:
+      switch((eHTMLTags)aParent) {
+        case eHTMLTag_tr:       case eHTMLTag_table:  
+        case eHTMLTag_thead:    case eHTMLTag_tfoot:  
+        case eHTMLTag_tbody:    case eHTMLTag_col:    
           result=PR_TRUE;
         default:
           break;
@@ -848,6 +859,15 @@ PRBool CNavDTD::ForwardPropagate(nsString& aVector,PRInt32 aParentTag,PRInt32 aC
 
   switch(aParentTag) {
     case eHTMLTag_table:
+      {
+        static char  tableTags[]={eHTMLTag_tr,eHTMLTag_td,0};
+        if(strchr(tableTags,aChildTag)) {
+          //if you're here, we know we can correctly backward propagate.
+          result=BackwardPropagate(aVector,aParentTag,aChildTag);
+        }
+      }
+      break;
+
     case eHTMLTag_tr:
       if(PR_TRUE==CanContain(eHTMLTag_td,aChildTag)) {
         aVector.Append((PRUnichar)eHTMLTag_td);

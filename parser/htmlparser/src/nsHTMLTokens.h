@@ -61,7 +61,7 @@ enum eHTMLTags
   eHTMLTag_code,        eHTMLTag_col,         eHTMLTag_colgroup,  eHTMLTag_comment,
   eHTMLTag_dd,          eHTMLTag_del,         eHTMLTag_dfn,       eHTMLTag_dir,       
   eHTMLTag_div,         eHTMLTag_dl,          eHTMLTag_dt,        
-  eHTMLTag_em,          eHTMLTag_embed,
+  eHTMLTag_em,          eHTMLTag_embed,       eHTMLTag_entity,
   eHTMLTag_fieldset,    eHTMLTag_font,        eHTMLTag_footer,  
   eHTMLTag_form,        eHTMLTag_frame,       eHTMLTag_frameset,  //39
   eHTMLTag_h1,          eHTMLTag_h2,          eHTMLTag_h3,        eHTMLTag_h4,
