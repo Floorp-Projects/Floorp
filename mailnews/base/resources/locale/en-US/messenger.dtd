@@ -270,3 +270,7 @@ Rights Reserved.
 <!ENTITY contextDelete.label "Delete">
 <!ENTITY contextAddSenderToAddressBook.label "Add Sender To Address Book">
 <!ENTITY contextAddAllToAddressBook.label "Add All To Address Book">
+
+<!-- Message Header View Popup -->
+<!ENTITY AddToAddressBook.label "Add Address To Address Book">
+<!ENTITY SendMailTo.label "Send Mail To">
