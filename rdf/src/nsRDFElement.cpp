@@ -154,7 +154,9 @@ private:
     nsIAtom* mAttr;
 
 public:
-    AttributeKey(const nsString& s) {
+    AttributeKey(const nsString& attr) {
+        nsAutoString s;
+        attr.ToUpperCase(s); // just be case-insensitive
         mAttr = NS_NewAtom(s);
     }
 
@@ -897,14 +899,14 @@ nsRDFElement::SetAttribute(const nsString& aName,
 NS_IMETHODIMP
 nsRDFElement::GetAttribute(const nsString& aName, nsString& aResult) const
 {
-    nsresult rv = NS_ERROR_FAILURE; // XXX is this right?
+    nsresult rv = NS_CONTENT_ATTR_NO_VALUE;
 
     if (mAttributes) {
         AttributeKey key(aName);
         nsString* value = NS_STATIC_CAST(nsString*, mAttributes->Get(&key));
         if (value) {
             aResult = *value;
-            return NS_OK;
+            return NS_CONTENT_ATTR_HAS_VALUE;
         }
     }
 
