@@ -47,7 +47,7 @@
 #include "nsNSSCertTrust.h"
 
 
-nsresult
+static nsresult
 GetIntValue(SECItem *versionItem, 
             unsigned long *version)
 {
@@ -67,13 +67,12 @@ ProcessVersion(SECItem         *versionItem,
                nsIASN1PrintableItem **retItem)
 {
   nsresult rv;
-  nsString text;
+  nsAutoString text;
   nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
   if (printableItem == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
  
-  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpVersion").get(),
-                                      text);
+  nssComponent->GetPIPNSSBundleString("CertDumpVersion", text);
   rv = printableItem->SetDisplayName(text);
   if (NS_FAILED(rv))
     return rv;
@@ -93,16 +92,13 @@ ProcessVersion(SECItem         *versionItem,
 
   switch (version){
   case 0:
-    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpVersion1").get(),
-                                             text);
+    rv = nssComponent->GetPIPNSSBundleString("CertDumpVersion1", text);
     break;
   case 1:
-    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpVersion2").get(),
-                                             text);
+    rv = nssComponent->GetPIPNSSBundleString("CertDumpVersion2", text);
     break;
   case 2:
-    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpVersion3").get(),
-                                             text);
+    rv = nssComponent->GetPIPNSSBundleString("CertDumpVersion3", text);
     break;
   default:
     NS_ASSERTION(0,"Bad value for cert version");
@@ -127,14 +123,13 @@ ProcessSerialNumberDER(SECItem         *serialItem,
                        nsIASN1PrintableItem **retItem)
 {
   nsresult rv;
-  nsString text;
+  nsAutoString text;
   nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
 
   if (printableItem == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSerialNo").get(),
-                                           text); 
+  rv = nssComponent->GetPIPNSSBundleString("CertDumpSerialNo", text); 
   if (NS_FAILED(rv))
     return rv;
 
@@ -153,9 +148,9 @@ ProcessSerialNumberDER(SECItem         *serialItem,
   return rv;
 }
 
-nsresult
+static nsresult
 GetDefaultOIDFormat(SECItem *oid,
-                    nsString &outString)
+                    nsAString &outString)
 {
   char buf[300];
   unsigned int len;
@@ -197,7 +192,7 @@ GetDefaultOIDFormat(SECItem *oid,
 }
 
 nsresult
-GetOIDText(SECItem *oid, nsINSSComponent *nssComponent, nsString &text)
+GetOIDText(SECItem *oid, nsINSSComponent *nssComponent, nsAString &text)
 { 
   nsresult rv;
   SECOidTag oidTag = SECOID_FindOIDTag(oid);
@@ -343,19 +338,16 @@ GetOIDText(SECItem *oid, nsINSSComponent *nssComponent, nsString &text)
   }
 
   if (bundlekey) {
-    rv = nssComponent->GetPIPNSSBundleString(NS_ConvertASCIItoUTF16(bundlekey).get(),
-                                             text);
+    rv = nssComponent->GetPIPNSSBundleString(bundlekey, text);
   } else {
-    rv = GetDefaultOIDFormat(oid, text);
+    nsAutoString text2;
+    rv = GetDefaultOIDFormat(oid, text2);
     if (NS_FAILED(rv))
       return rv;
 
-    const PRUnichar *params[1] = {text.get()};
-    nsXPIDLString text2;
-    rv = nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("CertDumpDefOID").get(),
-                                                     params, 1,
-                                                     getter_Copies(text2));
-    text = text2;
+    const PRUnichar *params[1] = {text2.get()};
+    rv = nssComponent->PIPBundleFormatStringFromName("CertDumpDefOID",
+                                                     params, 1, text);
   }
   return rv;  
 }
@@ -363,7 +355,7 @@ GetOIDText(SECItem *oid, nsINSSComponent *nssComponent, nsString &text)
 #define SEPARATOR "\n"
 
 nsresult
-ProcessRawBytes(SECItem *data, nsString &text)
+ProcessRawBytes(SECItem *data, nsAString &text)
 {
   // This function is used to display some DER bytes
   // that we have not added support for decoding.
@@ -383,9 +375,9 @@ ProcessRawBytes(SECItem *data, nsString &text)
   return NS_OK;
 }    
 
-nsresult
+static nsresult
 ProcessNSCertTypeExtensions(SECItem  *extData, 
-                            nsString &text,
+                            nsAString &text,
                             nsINSSComponent *nssComponent)
 {
   nsAutoString local;
@@ -394,60 +386,52 @@ ProcessNSCertTypeExtensions(SECItem  *extData,
   decoded.len  = 0;
   if (SECSuccess != SEC_ASN1DecodeItem(nsnull, &decoded, 
 		SEC_ASN1_GET(SEC_BitStringTemplate), extData)) {
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpExtensionFailure").get(),
-                                        local);
+    nssComponent->GetPIPNSSBundleString("CertDumpExtensionFailure", local);
     text.Append(local.get());
     return NS_OK;
   }
   unsigned char nsCertType = decoded.data[0];
   nsMemory::Free(decoded.data);
   if (nsCertType & NS_CERT_TYPE_SSL_CLIENT) {
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("VerifySSLClient").get(),
-                                        local);
+    nssComponent->GetPIPNSSBundleString("VerifySSLClient", local);
     text.Append(local.get());
     text.Append(NS_LITERAL_STRING(SEPARATOR).get());
   }
   if (nsCertType & NS_CERT_TYPE_SSL_SERVER) {
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("VerifySSLServer").get(),
-                                        local);
+    nssComponent->GetPIPNSSBundleString("VerifySSLServer", local);
     text.Append(local.get());
     text.Append(NS_LITERAL_STRING(SEPARATOR).get());
   }
   if (nsCertType & NS_CERT_TYPE_EMAIL) {
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpCertTypeEmail").get(),
-                                        local);
+    nssComponent->GetPIPNSSBundleString("CertDumpCertTypeEmail", local);
     text.Append(local.get());
     text.Append(NS_LITERAL_STRING(SEPARATOR).get());
   }
   if (nsCertType & NS_CERT_TYPE_OBJECT_SIGNING) {
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("VerifyObjSign").get(),
-                                        local);
+    nssComponent->GetPIPNSSBundleString("VerifyObjSign", local);
     text.Append(local.get());
     text.Append(NS_LITERAL_STRING(SEPARATOR).get());
   }
   if (nsCertType & NS_CERT_TYPE_SSL_CA) {
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("VerifySSLCA").get(),
-                                        local);
+    nssComponent->GetPIPNSSBundleString("VerifySSLCA", local);
     text.Append(local.get());
     text.Append(NS_LITERAL_STRING(SEPARATOR).get());
   }
   if (nsCertType & NS_CERT_TYPE_EMAIL_CA) {
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpEmailCA").get(),
-                                        local);
+    nssComponent->GetPIPNSSBundleString("CertDumpEmailCA", local);
     text.Append(local.get());
     text.Append(NS_LITERAL_STRING(SEPARATOR).get());
   }
   if (nsCertType & NS_CERT_TYPE_OBJECT_SIGNING_CA) {
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("VerifyObjSign").get(),
-                                        local);
+    nssComponent->GetPIPNSSBundleString("VerifyObjSign", local);
     text.Append(local.get());
     text.Append(NS_LITERAL_STRING(SEPARATOR).get());
   }
   return NS_OK;
 }
 
-nsresult
-ProcessKeyUsageExtension(SECItem *extData, nsString &text,
+static nsresult
+ProcessKeyUsageExtension(SECItem *extData, nsAString &text,
                          nsINSSComponent *nssComponent)
 {
   nsAutoString local;
@@ -456,52 +440,44 @@ ProcessKeyUsageExtension(SECItem *extData, nsString &text,
   decoded.len  = 0;
   if (SECSuccess != SEC_ASN1DecodeItem(nsnull, &decoded, 
 				SEC_ASN1_GET(SEC_BitStringTemplate), extData)) {
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpExtensionFailure").get(),
-                                        local);
+    nssComponent->GetPIPNSSBundleString("CertDumpExtensionFailure", local);
     text.Append(local.get());
     return NS_OK;
   }
   unsigned char keyUsage = decoded.data[0];
   nsMemory::Free(decoded.data);  
   if (keyUsage & KU_DIGITAL_SIGNATURE) {
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpKUSign").get(),
-                                        local);
+    nssComponent->GetPIPNSSBundleString("CertDumpKUSign", local);
     text.Append(local.get());
     text.Append(NS_LITERAL_STRING(SEPARATOR).get());
   }
   if (keyUsage & KU_NON_REPUDIATION) {
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpKUNonRep").get(),
-                                        local);
+    nssComponent->GetPIPNSSBundleString("CertDumpKUNonRep", local);
     text.Append(local.get());
     text.Append(NS_LITERAL_STRING(SEPARATOR).get());
   }
   if (keyUsage & KU_KEY_ENCIPHERMENT) {
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpKUEnc").get(),
-                                        local);
+    nssComponent->GetPIPNSSBundleString("CertDumpKUEnc", local);
     text.Append(local.get());
     text.Append(NS_LITERAL_STRING(SEPARATOR).get());
   }
   if (keyUsage & KU_DATA_ENCIPHERMENT) {
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpKUDEnc").get(),
-                                        local);
+    nssComponent->GetPIPNSSBundleString("CertDumpKUDEnc", local);
     text.Append(local.get());
     text.Append(NS_LITERAL_STRING(SEPARATOR).get());
   }
   if (keyUsage & KU_KEY_AGREEMENT) {
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpKUKA").get(),
-                                        local);
+    nssComponent->GetPIPNSSBundleString("CertDumpKUKA", local);
     text.Append(local.get());
     text.Append(NS_LITERAL_STRING(SEPARATOR).get());
   }
   if (keyUsage & KU_KEY_CERT_SIGN) {
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpKUCertSign").get(),
-                                        local);
+    nssComponent->GetPIPNSSBundleString("CertDumpKUCertSign", local);
     text.Append(local.get());
     text.Append(NS_LITERAL_STRING(SEPARATOR).get());
   }
   if (keyUsage & KU_CRL_SIGN) {
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpKUCRLSign").get(),
-                                        local);
+    nssComponent->GetPIPNSSBundleString("CertDumpKUCRLSign", local);
     text.Append(local.get());
     text.Append(NS_LITERAL_STRING(SEPARATOR).get());
   }
@@ -509,9 +485,9 @@ ProcessKeyUsageExtension(SECItem *extData, nsString &text,
   return NS_OK;
 }
 
-nsresult
+static nsresult
 ProcessExtensionData(SECOidTag oidTag, SECItem *extData, 
-                     nsString &text, nsINSSComponent *nssComponent)
+                     nsAString &text, nsINSSComponent *nssComponent)
 {
   nsresult rv;
   switch (oidTag) {
@@ -533,7 +509,7 @@ ProcessSingleExtension(CERTCertExtension *extension,
                        nsINSSComponent *nssComponent,
                        nsIASN1PrintableItem **retExtension)
 {
-  nsString text;
+  nsAutoString text;
   GetOIDText(&extension->id, nssComponent, text);
   nsCOMPtr<nsIASN1PrintableItem>extensionItem = new nsNSSASN1PrintableItem();
   if (extensionItem == nsnull)
@@ -544,15 +520,12 @@ ProcessSingleExtension(CERTCertExtension *extension,
   text.Truncate();
   if (extension->critical.data != nsnull) {
     if (extension->critical.data[0]) {
-      nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpCritical").get(),
-                                          text);
+      nssComponent->GetPIPNSSBundleString("CertDumpCritical", text);
     } else {
-      nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpNonCritical").get(),
-                                         text);
+      nssComponent->GetPIPNSSBundleString("CertDumpNonCritical", text);
     }
   } else {
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpNonCritical").get(),
-                                        text);
+    nssComponent->GetPIPNSSBundleString("CertDumpNonCritical", text);
   }
   text.Append(NS_LITERAL_STRING(SEPARATOR).get());
   nsresult rv = ProcessExtensionData(oidTag, &extension->value, text, 

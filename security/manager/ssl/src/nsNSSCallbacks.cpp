@@ -163,16 +163,16 @@ PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
                               getter_AddRefs(proxyPrompt));
 
 
-  nsXPIDLString promptString;
+  nsAutoString promptString;
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
 
   if (NS_FAILED(rv))
     return nsnull; 
 
   const PRUnichar* formatStrings[1] = { ToNewUnicode(NS_ConvertUTF8toUCS2(PK11_GetTokenName(slot))) };
-  rv = nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("CertPassPrompt").get(),
+  rv = nssComponent->PIPBundleFormatStringFromName("CertPassPrompt",
                                       formatStrings, 1,
-                                      getter_Copies(promptString));
+                                      promptString);
   nsMemory::Free(NS_CONST_CAST(PRUnichar*, formatStrings[0]));
 
   if (NS_FAILED(rv))
@@ -241,19 +241,19 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
     caName = PL_strdup("Verisign, Inc.");
   }
 
-  nsXPIDLString shortDesc;
+  nsAutoString shortDesc;
   const PRUnichar* formatStrings[1] = { ToNewUnicode(NS_ConvertUTF8toUCS2(caName)) };
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
   if (NS_SUCCEEDED(rv)) {
-    rv = nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("SignedBy").get(),
+    rv = nssComponent->PIPBundleFormatStringFromName("SignedBy",
                                                    formatStrings, 1,
-                                                   getter_Copies(shortDesc));
+                                                   shortDesc);
 
     nsMemory::Free(NS_CONST_CAST(PRUnichar*, formatStrings[0]));
 
     nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
     infoObject->SetSecurityState(secStatus);
-    infoObject->SetShortSecurityDescription((const PRUnichar*)shortDesc);
+    infoObject->SetShortSecurityDescription(shortDesc.get());
 
     /* Set the SSL Status information */
     nsCOMPtr<nsSSLStatus> status = new nsSSLStatus();

@@ -1708,16 +1708,13 @@ nsP12Runnable::Run()
 
   //Build up the message that let's the user know we're trying to 
   //make PKCS12 backups of the new certs.
-  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("ForcedBackup1").get(),
-                                      final);
+  nssComponent->GetPIPNSSBundleString("ForcedBackup1", final);
   final.Append(NS_LITERAL_STRING("\n\n").get());
-  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("ForcedBackup2").get(),
-                                      temp);
+  nssComponent->GetPIPNSSBundleString("ForcedBackup2", temp);
   final.Append(temp.get());
   final.Append(NS_LITERAL_STRING("\n\n").get());
 
-  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("ForcedBackup3").get(),
-                                      temp);
+  nssComponent->GetPIPNSSBundleString("ForcedBackup3", temp);
 
   final.Append(temp.get());
   alertUser(final.get());
@@ -1730,7 +1727,7 @@ nsP12Runnable::Run()
   }
 
   nsString filePickMessage;
-  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("chooseP12BackupFileDialog").get(),
+  nssComponent->GetPIPNSSBundleString("chooseP12BackupFileDialog",
                                       filePickMessage);
   filePicker->Init(nsnull, filePickMessage.get(), nsIFilePicker::modeSave);
   filePicker->AppendFilter(NS_LITERAL_STRING("PKCS12").get(),
@@ -2177,22 +2174,19 @@ nsPkcs11::Deletemodule(const nsAString& aModuleName, PRInt32* aReturn)
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
   if (aModuleName.IsEmpty()) {
     *aReturn = JS_ERR_BAD_MODULE_NAME;
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("DelModuleBadName").get(),
-                                        errorMessage);
+    nssComponent->GetPIPNSSBundleString("DelModuleBadName", errorMessage);
     alertUser(errorMessage.get());
     return NS_OK;
   }
   nsString final;
-  nsXPIDLString temp;
+  nsAutoString temp;
   //Make sure the user knows we're trying to do this.
-  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("DelModuleWarning").get(),
-                                      final);
+  nssComponent->GetPIPNSSBundleString("DelModuleWarning", final);
   final.Append(NS_LITERAL_STRING("\n").get());
   PRUnichar *tempUni = ToNewUnicode(aModuleName);
   const PRUnichar *formatStrings[1] = { tempUni };
-  rv = nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("AddModuleName").get(),
-                                                   formatStrings, 1,
-                                                   getter_Copies(temp));
+  rv = nssComponent->PIPBundleFormatStringFromName("AddModuleName",
+                                                   formatStrings, 1, temp);
   nsMemory::Free(tempUni);
   final.Append(temp);
   if (!confirm_user(final.get())) {
@@ -2205,18 +2199,15 @@ nsPkcs11::Deletemodule(const nsAString& aModuleName, PRInt32* aReturn)
   SECStatus srv = SECMOD_DeleteModule(modName, &modType);
   if (srv == SECSuccess) {
     if (modType == SECMOD_EXTERNAL) {
-      nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("DelModuleExtSuccess").get(),
-                                          errorMessage);
+      nssComponent->GetPIPNSSBundleString("DelModuleExtSuccess", errorMessage);
       *aReturn = JS_OK_DEL_EXTERNAL_MOD;
     } else {
-      nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("DelModuleIntSuccess").get(),
-                                          errorMessage);
+      nssComponent->GetPIPNSSBundleString("DelModuleIntSuccess", errorMessage);
       *aReturn = JS_OK_DEL_INTERNAL_MOD;
     }
   } else {
     *aReturn = JS_ERR_DEL_MOD;
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("DelModuleError").get(),
-                                        errorMessage);
+    nssComponent->GetPIPNSSBundleString("DelModuleError", errorMessage);
   }
   alertUser(errorMessage.get());
   return NS_OK;
@@ -2233,10 +2224,9 @@ nsPkcs11::Addmodule(const nsAString& aModuleName,
   nsresult rv;
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
   nsString final;
-  nsXPIDLString temp;
+  nsAutoString temp;
 
-  rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("AddModulePrompt").get(),
-                                           final);
+  rv = nssComponent->GetPIPNSSBundleString("AddModulePrompt", final);
   if (NS_FAILED(rv))
     return rv;
 
@@ -2244,9 +2234,8 @@ nsPkcs11::Addmodule(const nsAString& aModuleName,
   
   PRUnichar *tempUni = ToNewUnicode(aModuleName); 
   const PRUnichar *formatStrings[1] = { tempUni };
-  rv = nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("AddModuleName").get(),
-                                                   formatStrings, 1,
-                                                   getter_Copies(temp));
+  rv = nssComponent->PIPBundleFormatStringFromName("AddModuleName",
+                                                   formatStrings, 1, temp);
   nsMemory::Free(tempUni);
 
   if (NS_FAILED(rv))
@@ -2257,9 +2246,8 @@ nsPkcs11::Addmodule(const nsAString& aModuleName,
 
   tempUni = ToNewUnicode(aLibraryFullPath);
   formatStrings[0] = tempUni;
-  rv = nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("AddModulePath").get(),
-                                                   formatStrings, 1,
-                                                   getter_Copies(temp));
+  rv = nssComponent->PIPBundleFormatStringFromName("AddModulePath",
+                                                   formatStrings, 1, temp);
   nsMemory::Free(tempUni);
   if (NS_FAILED(rv))
     return rv;
@@ -2286,18 +2274,15 @@ nsPkcs11::Addmodule(const nsAString& aModuleName,
   // what the return value for SEDMOD_AddNewModule is
   switch (srv) {
   case SECSuccess:
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("AddModuleSuccess").get(),
-                                        final);
+    nssComponent->GetPIPNSSBundleString("AddModuleSuccess", final);
     *aReturn = JS_OK_ADD_MOD;
     break;
   case SECFailure:
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("AddModuleFailure").get(),
-                                        final);
+    nssComponent->GetPIPNSSBundleString("AddModuleFailure", final);
     *aReturn = JS_ERR_ADD_MOD;
     break;
   case -2:
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("AddModuleDup").get(),
-                                        final);
+    nssComponent->GetPIPNSSBundleString("AddModuleDup", final);
     *aReturn = JS_ERR_ADD_DUPLICATE_MOD;
     break;
   default:

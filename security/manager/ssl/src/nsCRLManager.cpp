@@ -150,27 +150,27 @@ loser:
   errorCode = PR_GetError();
   switch (errorCode) {
     case SEC_ERROR_CRL_EXPIRED:
-      nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportFailureExpired").get(), errorMessage);
+      nssComponent->GetPIPNSSBundleString("CrlImportFailureExpired", errorMessage);
       break;
 
 	case SEC_ERROR_CRL_BAD_SIGNATURE:
-      nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportFailureBadSignature").get(), errorMessage);
+      nssComponent->GetPIPNSSBundleString("CrlImportFailureBadSignature", errorMessage);
       break;
 
 	case SEC_ERROR_CRL_INVALID:
-      nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportFailureInvalid").get(), errorMessage);
+      nssComponent->GetPIPNSSBundleString("CrlImportFailureInvalid", errorMessage);
       break;
 
 	case SEC_ERROR_OLD_CRL:
-      nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportFailureOld").get(), errorMessage);
+      nssComponent->GetPIPNSSBundleString("CrlImportFailureOld", errorMessage);
       break;
 
 	case SEC_ERROR_CRL_NOT_YET_VALID:
-      nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportFailureNotYetValid").get(), errorMessage);
+      nssComponent->GetPIPNSSBundleString("CrlImportFailureNotYetValid", errorMessage);
       break;
 
     default:
-      nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportFailureReasonUnknown").get(), errorMessage);
+      nssComponent->GetPIPNSSBundleString("CrlImportFailureReasonUnknown", errorMessage);
       errorMessage.AppendInt(errorCode,16);
       break;
   }
@@ -185,10 +185,10 @@ done:
       nsCOMPtr<nsIPrompt> prompter;
       if (wwatch){
         wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
-        nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportFailure1").get(), message);
+        nssComponent->GetPIPNSSBundleString("CrlImportFailure1", message);
         message.Append(NS_LITERAL_STRING("\n").get());
         message.Append(errorMessage);
-        nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportFailure2").get(), temp);
+        nssComponent->GetPIPNSSBundleString("CrlImportFailure2", temp);
         message.Append(NS_LITERAL_STRING("\n").get());
         message.Append(temp);
      

@@ -275,22 +275,27 @@ nsNSSComponent::~nsNSSComponent()
 static void setOCSPOptions(nsIPref * pref);
 
 NS_IMETHODIMP
-nsNSSComponent::PIPBundleFormatStringFromName(const PRUnichar *name,
+nsNSSComponent::PIPBundleFormatStringFromName(const char *name,
                                               const PRUnichar **params,
                                               PRUint32 numParams,
-                                              PRUnichar **outString)
+                                              nsAString &outString)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
   if (mPIPNSSBundle && name) {
-    rv = mPIPNSSBundle->FormatStringFromName(name, params, 
-                                             numParams, outString);
+    nsXPIDLString result;
+    rv = mPIPNSSBundle->FormatStringFromName(NS_ConvertASCIItoUTF16(name).get(),
+                                             params, numParams,
+                                             getter_Copies(result));
+    if (NS_SUCCEEDED(rv)) {
+      outString = result;
+    }
   }
   return rv;
 }
 
 NS_IMETHODIMP
-nsNSSComponent::GetPIPNSSBundleString(const PRUnichar *name,
+nsNSSComponent::GetPIPNSSBundleString(const char *name,
                                       nsAString &outString)
 {
   nsresult rv = NS_ERROR_FAILURE;
@@ -298,7 +303,8 @@ nsNSSComponent::GetPIPNSSBundleString(const PRUnichar *name,
   outString.SetLength(0);
   if (mPIPNSSBundle && name) {
     nsXPIDLString result;
-    rv = mPIPNSSBundle->GetStringFromName(name, getter_Copies(result));
+    rv = mPIPNSSBundle->GetStringFromName(NS_ConvertASCIItoUTF16(name).get(),
+                                          getter_Copies(result));
     if (NS_SUCCEEDED(rv)) {
       outString = result;
       rv = NS_OK;
@@ -308,17 +314,6 @@ nsNSSComponent::GetPIPNSSBundleString(const PRUnichar *name,
   return rv;
 }
 
-NS_IMETHODIMP
-nsNSSComponent::GetPIPNSSBundleString(const PRUnichar *name,
-                                      PRUnichar **outString)
-{
-  if (!mPIPNSSBundle || !name) {
-    *outString = nsnull;
-    return NS_ERROR_FAILURE;
-  }
-
-  return mPIPNSSBundle->GetStringFromName(name, outString);
-}
 
 NS_IMETHODIMP
 nsNSSComponent::SkipOcsp()
@@ -401,8 +396,7 @@ nsNSSComponent::InstallLoadableRoots()
   
     nsresult rv;
     nsAutoString modName;
-    rv = GetPIPNSSBundleString(NS_LITERAL_STRING("RootCertModuleName").get(),
-                               modName);
+    rv = GetPIPNSSBundleString("RootCertModuleName", modName);
     if (NS_FAILED(rv)) return;
 
     nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
@@ -457,46 +451,38 @@ nsresult
 nsNSSComponent::ConfigureInternalPKCS11Token()
 {
   nsNSSShutDownPreventionLock locker;
-  nsXPIDLString manufacturerID;
-  nsXPIDLString libraryDescription;
-  nsXPIDLString tokenDescription;
-  nsXPIDLString privateTokenDescription;
-  nsXPIDLString slotDescription;
-  nsXPIDLString privateSlotDescription;
-  nsXPIDLString fipsSlotDescription;
-  nsXPIDLString fipsPrivateSlotDescription;
+  nsAutoString manufacturerID;
+  nsAutoString libraryDescription;
+  nsAutoString tokenDescription;
+  nsAutoString privateTokenDescription;
+  nsAutoString slotDescription;
+  nsAutoString privateSlotDescription;
+  nsAutoString fipsSlotDescription;
+  nsAutoString fipsPrivateSlotDescription;
 
   nsresult rv;
-  rv = GetPIPNSSBundleString(NS_LITERAL_STRING("ManufacturerID").get(),
-                             getter_Copies(manufacturerID));
+  rv = GetPIPNSSBundleString("ManufacturerID", manufacturerID);
   if (NS_FAILED(rv)) return rv;
 
-  rv = GetPIPNSSBundleString(NS_LITERAL_STRING("LibraryDescription").get(),
-                             getter_Copies(libraryDescription));
+  rv = GetPIPNSSBundleString("LibraryDescription", libraryDescription);
   if (NS_FAILED(rv)) return rv;
 
-  rv = GetPIPNSSBundleString(NS_LITERAL_STRING("TokenDescription").get(),
-                             getter_Copies(tokenDescription));
+  rv = GetPIPNSSBundleString("TokenDescription", tokenDescription);
   if (NS_FAILED(rv)) return rv;
 
-  rv = GetPIPNSSBundleString(NS_LITERAL_STRING("PrivateTokenDescription").get(),
-                             getter_Copies(privateTokenDescription));
+  rv = GetPIPNSSBundleString("PrivateTokenDescription", privateTokenDescription);
   if (NS_FAILED(rv)) return rv;
 
-  rv = GetPIPNSSBundleString(NS_LITERAL_STRING("SlotDescription").get(),
-                             getter_Copies(slotDescription));
+  rv = GetPIPNSSBundleString("SlotDescription", slotDescription);
   if (NS_FAILED(rv)) return rv;
 
-  rv = GetPIPNSSBundleString(NS_LITERAL_STRING("PrivateSlotDescription").get(),
-                             getter_Copies(privateSlotDescription));
+  rv = GetPIPNSSBundleString("PrivateSlotDescription", privateSlotDescription);
   if (NS_FAILED(rv)) return rv;
 
-  rv = GetPIPNSSBundleString(NS_LITERAL_STRING("FipsSlotDescription").get(),
-                            getter_Copies(fipsSlotDescription));
+  rv = GetPIPNSSBundleString("FipsSlotDescription", fipsSlotDescription);
   if (NS_FAILED(rv)) return rv;
 
-  rv = GetPIPNSSBundleString(NS_LITERAL_STRING("FipsPrivateSlotDescription").get(),
-                             getter_Copies(fipsPrivateSlotDescription));
+  rv = GetPIPNSSBundleString("FipsPrivateSlotDescription", fipsPrivateSlotDescription);
   if (NS_FAILED(rv)) return rv;
 
   PK11_ConfigurePKCS11(NS_ConvertUCS2toUTF8(manufacturerID).get(),
@@ -1709,16 +1695,16 @@ void nsNSSComponent::ShowAlert(AlertIdentifier ai)
 
   switch (ai) {
     case ai_nss_init_problem:
-      rv = GetPIPNSSBundleString(NS_LITERAL_STRING("NSSInitProblem").get(), message);
+      rv = GetPIPNSSBundleString("NSSInitProblem", message);
       break;
     case ai_sockets_still_active:
-      rv = GetPIPNSSBundleString(NS_LITERAL_STRING("ProfileSwitchSocketsStillActive").get(), message);
+      rv = GetPIPNSSBundleString("ProfileSwitchSocketsStillActive", message);
       break;
     case ai_crypto_ui_active:
-      rv = GetPIPNSSBundleString(NS_LITERAL_STRING("ProfileSwitchCryptoUIActive").get(), message);
+      rv = GetPIPNSSBundleString("ProfileSwitchCryptoUIActive", message);
       break;
     case ai_incomplete_logout:
-      rv = GetPIPNSSBundleString(NS_LITERAL_STRING("LogoutIncompleteUIActive").get(), message);
+      rv = GetPIPNSSBundleString("LogoutIncompleteUIActive", message);
       break;
     default:
       return;
@@ -2090,7 +2076,7 @@ PSMContentDownloader::handleContentDownloadError(nsresult errCode)
 
     //TO DO: Handle network errors in details
     //XXXXXXXXXXXXXXXXXX
-    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportFailureNetworkProblem").get(), tmpMessage);
+    nssComponent->GetPIPNSSBundleString("CrlImportFailureNetworkProblem", tmpMessage);
       
     if(mDoSilentDownload == PR_TRUE){
       //This is the case for automatic download. Update failure history
@@ -2124,10 +2110,10 @@ PSMContentDownloader::handleContentDownloadError(nsresult errCode)
       nsCOMPtr<nsIPrompt> prompter;
       if (wwatch){
         wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
-        nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportFailure1").get(), message);
+        nssComponent->GetPIPNSSBundleString("CrlImportFailure1", message);
         message.Append(NS_LITERAL_STRING("\n").get());
         message.Append(tmpMessage);
-        nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportFailure2").get(), tmpMessage);
+        nssComponent->GetPIPNSSBundleString("CrlImportFailure2", tmpMessage);
         message.Append(NS_LITERAL_STRING("\n").get());
         message.Append(tmpMessage);
 

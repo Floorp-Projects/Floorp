@@ -1279,14 +1279,10 @@ nsNSSCertificateDB::default_nickname(CERTCertificate *cert, nsIInterfaceRequesto
     goto loser;
   
   count = 1;
-  nssComponent->GetPIPNSSBundleString(
-                              NS_LITERAL_STRING("nick_template").get(),
-                              tmpNickFmt);
+  nssComponent->GetPIPNSSBundleString("nick_template", tmpNickFmt);
   nickFmt = ToNewUTF8String(tmpNickFmt);
 
-  nssComponent->GetPIPNSSBundleString(
-                              NS_LITERAL_STRING("nick_template_with_num").get(),
-                              tmpNickFmtWithNum);
+  nssComponent->GetPIPNSSBundleString("nick_template_with_num", tmpNickFmtWithNum);
   nickFmtWithNum = ToNewUTF8String(tmpNickFmtWithNum);
 
 

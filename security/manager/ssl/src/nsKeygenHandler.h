@@ -58,9 +58,9 @@ public:
   static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
 
 protected:
-  nsresult GetPublicKey(nsString& aValue, nsString& aChallenge, 
-			nsString& akeyType, nsString& aOutPublicKey,
-			nsString& aPqg);
+  nsresult GetPublicKey(nsAString& aValue, nsAString& aChallenge, 
+			nsAString& akeyType, nsAString& aOutPublicKey,
+			nsAString& aPqg);
   nsresult GetSlot(PRUint32 aMechanism, PK11SlotInfo** aSlot);
 private:
   nsCOMPtr<nsIInterfaceRequestor> m_ctx;

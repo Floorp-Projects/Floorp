@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.37 2003/03/25 02:17:02 darin%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.38 2004/02/26 04:07:23 jgmyers%speakeasy.net Exp $
  */
 
 #include "prmem.h"
@@ -446,10 +446,10 @@ void
 nsPKCS12Blob::unicodeToItem(const PRUnichar *uni, SECItem *item)
 {
   int len = 0;
-  int i = 0;
   while (uni[len++] != 0);
   SECITEM_AllocItem(NULL, item, sizeof(PRUnichar) * len);
 #ifdef IS_LITTLE_ENDIAN
+  int i = 0;
   for (i=0; i<len; i++) {
     item->data[2*i  ] = (unsigned char )(uni[i] << 8);
     item->data[2*i+1] = (unsigned char )(uni[i]);
@@ -668,10 +668,8 @@ nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
   if (NS_FAILED(rv)) return nsnull;
   int count = 1;
   nsCString nickname;
-  nsString nickFromProp;
-  nssComponent->GetPIPNSSBundleString(
-                                 NS_LITERAL_STRING("P12DefaultNickname").get(),
-                                 nickFromProp);
+  nsAutoString nickFromProp;
+  nssComponent->GetPIPNSSBundleString("P12DefaultNickname", nickFromProp);
   nsXPIDLCString nickFromPropC;
   nickFromPropC.Adopt(ToNewUTF8String(nickFromProp));
   // The user is trying to import a PKCS#12 file that doesn't have the
@@ -785,39 +783,29 @@ nsPKCS12Blob::handleError(int myerr)
   nsAutoString errorMsg;
   switch (myerr) {
   case PIP_PKCS12_RESTORE_OK:
-    rv = nssComponent->GetPIPNSSBundleString(
-                              NS_LITERAL_STRING("SuccessfulP12Restore").get(), 
-                              errorMsg);
+    rv = nssComponent->GetPIPNSSBundleString("SuccessfulP12Restore", errorMsg);
     if (NS_FAILED(rv)) return rv;
     errPrompt->Alert(nsnull, errorMsg.get());
     return PR_TRUE;
   case PIP_PKCS12_BACKUP_OK:
-    rv = nssComponent->GetPIPNSSBundleString(
-                              NS_LITERAL_STRING("SuccessfulP12Backup").get(), 
-                              errorMsg);
+    rv = nssComponent->GetPIPNSSBundleString("SuccessfulP12Backup", errorMsg);
     if (NS_FAILED(rv)) return rv;
     errPrompt->Alert(nsnull, errorMsg.get());
     return PR_TRUE;
   case PIP_PKCS12_USER_CANCELED:
     return PR_TRUE;  /* Just ignore it for now */
   case PIP_PKCS12_NOSMARTCARD_EXPORT:
-    rv = nssComponent->GetPIPNSSBundleString(
-                              NS_LITERAL_STRING("PKCS12InfoNoSmartcardBackup").get(), 
-                              errorMsg);
+    rv = nssComponent->GetPIPNSSBundleString("PKCS12InfoNoSmartcardBackup", errorMsg);
     if (NS_FAILED(rv)) return rv;
     errPrompt->Alert(nsnull, errorMsg.get());
     return PR_TRUE;
   case PIP_PKCS12_RESTORE_FAILED:
-    rv = nssComponent->GetPIPNSSBundleString(
-                              NS_LITERAL_STRING("PKCS12UnknownErrRestore").get(), 
-                              errorMsg);
+    rv = nssComponent->GetPIPNSSBundleString("PKCS12UnknownErrRestore", errorMsg);
     if (NS_FAILED(rv)) return rv;
     errPrompt->Alert(nsnull, errorMsg.get());
     return PR_TRUE;
   case PIP_PKCS12_BACKUP_FAILED:
-    rv = nssComponent->GetPIPNSSBundleString(
-                              NS_LITERAL_STRING("PKCS12UnknownErrBackup").get(), 
-                              errorMsg);
+    rv = nssComponent->GetPIPNSSBundleString("PKCS12UnknownErrBackup", errorMsg);
     if (NS_FAILED(rv)) return rv;
     errPrompt->Alert(nsnull, errorMsg.get());
     return PR_TRUE;
@@ -836,49 +824,37 @@ nsPKCS12Blob::handleError(int myerr)
       //     but the PKCS12 lib never throws this error
       //     but then again, how would it?  anyway, convey the info below
     case SEC_ERROR_PKCS12_PRIVACY_PASSWORD_INCORRECT:
-      rv = nssComponent->GetPIPNSSBundleString(
-                              NS_LITERAL_STRING("PKCS12PasswordInvalid").get(), 
-                              errorMsg);
+      rv = nssComponent->GetPIPNSSBundleString("PKCS12PasswordInvalid", errorMsg);
       if (NS_FAILED(rv)) return rv;
       errPrompt->Alert(nsnull, errorMsg.get());
     break;
 #endif
     case SEC_ERROR_BAD_PASSWORD:
-      rv = nssComponent->GetPIPNSSBundleString(
-                              NS_LITERAL_STRING("PK11BadPassword").get(), 
-                              errorMsg);
+      rv = nssComponent->GetPIPNSSBundleString("PK11BadPassword", errorMsg);
       if (NS_FAILED(rv)) return rv;
       errPrompt->Alert(nsnull, errorMsg.get());
       break;
     case SEC_ERROR_BAD_DER:
     case SEC_ERROR_PKCS12_CORRUPT_PFX_STRUCTURE:
     case SEC_ERROR_PKCS12_INVALID_MAC:
-      rv = nssComponent->GetPIPNSSBundleString(
-                              NS_LITERAL_STRING("PKCS12DecodeErr").get(), 
-                              errorMsg);
+      rv = nssComponent->GetPIPNSSBundleString("PKCS12DecodeErr", errorMsg);
       if (NS_FAILED(rv)) return rv;
       errPrompt->Alert(nsnull, errorMsg.get());
       break;
     case SEC_ERROR_PKCS12_DUPLICATE_DATA:
-      rv = nssComponent->GetPIPNSSBundleString(
-                            NS_LITERAL_STRING("PKCS12DupData").get(),
-                            errorMsg);
+      rv = nssComponent->GetPIPNSSBundleString("PKCS12DupData", errorMsg);
       if (NS_FAILED(rv)) return rv;
       errPrompt->Alert(nsnull, errorMsg.get());
       break;
     default:
-      rv = nssComponent->GetPIPNSSBundleString(
-                            NS_LITERAL_STRING("PKCS12UnknownErr").get(), 
-                            errorMsg);
+      rv = nssComponent->GetPIPNSSBundleString("PKCS12UnknownErr", errorMsg);
       if (NS_FAILED(rv)) return rv;
       errPrompt->Alert(nsnull, errorMsg.get());
     }
     break;
   case 0: 
   default:
-    rv = nssComponent->GetPIPNSSBundleString(
-                            NS_LITERAL_STRING("PKCS12UnknownErr").get(), 
-                            errorMsg);
+    rv = nssComponent->GetPIPNSSBundleString("PKCS12UnknownErr", errorMsg);
     if (NS_FAILED(rv)) return rv;
     errPrompt->Alert(nsnull, errorMsg.get());
     break;

@@ -101,14 +101,12 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
  public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_INSSCOMPONENT_IID)
 
-  NS_IMETHOD GetPIPNSSBundleString(const PRUnichar *name,
+  NS_IMETHOD GetPIPNSSBundleString(const char *name,
                                    nsAString &outString) = 0;
-  NS_IMETHOD GetPIPNSSBundleString(const PRUnichar *name,
-                                   PRUnichar **outString) = 0;
-  NS_IMETHOD PIPBundleFormatStringFromName(const PRUnichar *name,
+  NS_IMETHOD PIPBundleFormatStringFromName(const char *name,
                                            const PRUnichar **params,
                                            PRUint32 numParams,
-                                           PRUnichar **outString) = 0;
+                                           nsAString &outString) = 0;
 
   // This method will just disable OCSP in NSS, it will not
   // alter the respective pref values.
@@ -155,14 +153,12 @@ public:
 
   NS_METHOD Init();
 
-  NS_IMETHOD GetPIPNSSBundleString(const PRUnichar *name,
+  NS_IMETHOD GetPIPNSSBundleString(const char *name,
                                    nsAString &outString);
-  NS_IMETHOD GetPIPNSSBundleString(const PRUnichar *name,
-                                   PRUnichar **outString);
-  NS_IMETHOD PIPBundleFormatStringFromName(const PRUnichar *name,
+  NS_IMETHOD PIPBundleFormatStringFromName(const char *name,
                                            const PRUnichar **params,
                                            PRUint32 numParams,
-                                           PRUnichar **outString);
+                                           nsAString &outString);
   NS_IMETHOD SkipOcsp();
   NS_IMETHOD SkipOcspOff();
   nsresult InitializeCRLUpdateTimer();
