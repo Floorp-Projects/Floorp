@@ -117,11 +117,7 @@ void nsWindow::Create(nsIWidget *aParent,
                       nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
-{
-	// if we have a parent, add this widget to the parents list
-	if (aParent)
-	  aParent->AddChild(this);
-	 
+{	 
 	 mParent = aParent;
 	  
 	// now create our stuff
@@ -268,10 +264,10 @@ void nsWindow::CreateChildWindow(nsNativeWidget  aNativeParent,
 		mWindowRecord = (WindowRecord*)aNativeParent;
 		mWindowPtr = (WindowPtr)aNativeParent;
 		
-		mWindowRegion = NewRgn();
-		SetRectRgn(mWindowRegion,aRect.x,aRect.y,aRect.x+aRect.width,aRect.y+aRect.height);		
 		}
-  
+ 
+	mWindowRegion = NewRgn();
+	SetRectRgn(mWindowRegion,aRect.x,aRect.y,aRect.x+aRect.width,aRect.y+aRect.height);		 
   InitDeviceContext(aContext,aNativeParent);
 
   // Force cursor to default setting
@@ -589,7 +585,6 @@ nscolor nsWindow::GetBackgroundColor(void)
 void nsWindow::SetBackgroundColor(const nscolor &aColor)
 {
   mBackground = aColor ;
-  //XtVaSetValues(mWidget, 
 }
 
     
@@ -674,9 +669,18 @@ void nsWindow::SetCursor(nsCursor aCursor)
 //-------------------------------------------------------------------------
 void nsWindow::Invalidate(PRBool aIsSynchronous)
 {
+GrafPtr	curport;
+
+	if(mWindowRegion)
+		{
+		::GetPort(&curport);
+		::SetPort(mWindowPtr);
+		::InvalRgn(mWindowRegion);
+		::SetPort(curport);
+		}
+
   
 }
-
 
 //-------------------------------------------------------------------------
 //
@@ -953,20 +957,7 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
     static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
     
     printf("Painting the Widget\n");
-    
-    if (mChildren)
-    {
-    	mChildren->Reset();
-    	nsWindow* child = nsnull;
-    	do
-    	{
-    		child = (nsWindow*)mChildren->Next();
-    		if (child)
-    			child->OnPaint(event);
-    	} while (child != nsnull);
-    }
-    
-    /*
+        
     if (NS_OK == NSRepository::CreateInstance(kRenderingContextCID, 
 					      nsnull, 
 					      kRenderingContextIID, 
@@ -976,7 +967,7 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
         result = DispatchEvent(&event);
         NS_RELEASE(event.renderingContext);
       }
-    else */
+    else 
       {
         result = PR_FALSE;
       }
@@ -1222,18 +1213,18 @@ nsRect		rect;
     	aThePoint.h -= bounds.x;
     	aThePoint.v -= bounds.y;
 	    while(child)
-	    	{
-		    if (child->PtInWindow(aThePoint.h,aThePoint.v) ) 
-		    {
-		    	// go down this windows list
-		    	deeperWindow = child->FindWidgetHit(aThePoint);
-		    	if (deeperWindow)
-		    		return(deeperWindow);
-		    	else
-		    		return(child);
-		    	}
-		    child = (nsWindow*)mChildren->Previous();	
-		    }
+        {
+        if (child->PtInWindow(aThePoint.h,aThePoint.v) ) 
+          {
+          // go down this windows list
+          deeperWindow = child->FindWidgetHit(aThePoint);
+          if (deeperWindow)
+            return(deeperWindow);
+          else
+            return(child);
+          }
+        child = (nsWindow*)mChildren->Previous();	
+        }
 			}
 			return this;
 		}
@@ -1242,9 +1233,81 @@ nsRect		rect;
 
 //-------------------------------------------------------------------------
 //
-// 
+// This window got a paint event, this will find out which children should also get the paint event
 //
 //-------------------------------------------------------------------------
+void 
+nsWindow::DoPaintWidgets(RgnHandle	aTheRegion)
+{
+nsWindow			*child = this;
+nsRect				rect;
+RgnHandle			thergn;
+Rect					bounds;
+nsPaintEvent 	pevent;
+
+
+	thergn = NewRgn();
+	::SectRgn(aTheRegion,this->mWindowRegion,thergn);
+	
+	if (!::EmptyRgn(thergn))
+		{
+		// traverse through all the nsWindows to find who needs to be painted
+		if (mChildren) 
+			{
+	    mChildren->ResetToLast();
+	    child = (nsWindow*)mChildren->Previous();
+	    while(child)
+        { 
+        if (child->RgnIntersects(aTheRegion,thergn) ) 
+          {
+          // go down this windows list
+          child->DoPaintWidgets(aTheRegion);
+          
+          bounds = (**thergn).rgnBBox;
+          rect.x = bounds.left;
+          rect.y = bounds.top;
+          rect.width = bounds.left + (bounds.right-bounds.left);
+          rect.height = bounds.top + (bounds.bottom-bounds.top);
+          
+					// generate a paint event
+					pevent.message = NS_PAINT;
+					pevent.widget = child;
+					pevent.eventStructType = NS_PAINT_EVENT;
+					pevent.point.x = 0;
+			    pevent.point.y = 0;
+			    pevent.rect = &rect;
+			    pevent.time = 0; 
+			    child->OnPaint(pevent);
+          }
+        child = (nsWindow*)mChildren->Previous();	
+        }
+			}
+		}
+	DisposeRgn(thergn);
+}
+
+//-------------------------------------------------------------------------
+/*
+ *  @update  dc 08/28/98
+ *  @param   aTheRegion -- The region to intersect with for this widget
+ *  @return  PR_TRUE if the these regions intersect
+ */
+
+PRBool
+nsWindow::RgnIntersects(RgnHandle aTheRegion,RgnHandle	aIntersectRgn)
+{
+PRBool			result = PR_FALSE;
+
+
+	::SectRgn(aTheRegion,this->mWindowRegion,aIntersectRgn);
+	if (!::EmptyRgn(aIntersectRgn))
+		result = TRUE;
+	return(result);
+}
+
+
+//-------------------------------------------------------------------------
+
 void nsWindow::UpdateVisibilityFlag()
 {
   //Widget parent = XtParent(mWidget);
@@ -1437,6 +1500,7 @@ void nsWindow::RemoveTooltips()
 nsWindow::Enumerator::Enumerator()
 {
     mArraySize = INITIAL_SIZE;
+    mNumChildren = 0;
     mChildrens = (nsIWidget**)new PRInt32[mArraySize];
     memset(mChildrens, 0, sizeof(PRInt32) * mArraySize);
     mCurrentPosition = 0;
@@ -1466,10 +1530,10 @@ nsIWidget* nsWindow::Enumerator::Next()
 {
 	NS_ASSERTION(mChildrens != nsnull,"it is not valid to call this method on an empty list");
 	if (mChildrens != nsnull)
-	{
+		{
 		if (mCurrentPosition < mArraySize && mChildrens[mCurrentPosition]) 
 			return mChildrens[mCurrentPosition++];
-	}
+		}
   return nsnull;
 }
 
@@ -1482,10 +1546,10 @@ nsIWidget* nsWindow::Enumerator::Previous()
 {
 	NS_ASSERTION(mChildrens != nsnull,"it is not valid to call this method on an empty list");
 	if (mChildrens != nsnull)
-	{
+		{
 		if ((mCurrentPosition >=0) && (mCurrentPosition < mArraySize) && (mChildrens[mCurrentPosition])) 
 			return mChildrens[mCurrentPosition--];
-	}
+		}
   return NULL;
 }
 
@@ -1506,9 +1570,7 @@ void nsWindow::Enumerator::Reset()
 //-------------------------------------------------------------------------
 void nsWindow::Enumerator::ResetToLast()
 {
-    mCurrentPosition = mArraySize-1;
-    while (mCurrentPosition > 0 && mChildrens[mCurrentPosition] == nsnull)
-			mCurrentPosition--;    	
+    mCurrentPosition = mNumChildren-1;
 }
 
 //-------------------------------------------------------------------------
@@ -1518,15 +1580,15 @@ void nsWindow::Enumerator::ResetToLast()
 //-------------------------------------------------------------------------
 void nsWindow::Enumerator::Append(nsIWidget* aWinWidget)
 {
-PRInt32	pos;
 
   if (aWinWidget) 
   	{
-    for (pos = 0; pos < mArraySize && mChildrens[pos]; pos++){};
-    if (pos == mArraySize) 
+    if (mNumChildren == mArraySize) 
         GrowArray();
-    mChildrens[pos] = aWinWidget;
-  }
+    mChildrens[mNumChildren] = aWinWidget;
+    mNumChildren++;
+    NS_ADDREF(aWinWidget);
+  	}
 }
 
 
@@ -1537,13 +1599,17 @@ PRInt32	pos;
 //-------------------------------------------------------------------------
 void nsWindow::Enumerator::Remove(nsIWidget* aWinWidget)
 {
-    int pos;
-    for(pos = 0; mChildrens[pos] && (mChildrens[pos] != aWinWidget); pos++){};
-    if (mChildrens[pos] == aWinWidget) 
-    	{
-      memcpy(mChildrens + pos, mChildrens + pos + 1, mArraySize - pos - 1);
-    	}
+int	pos;
 
+		if(mNumChildren)
+			{
+	    for(pos = 0; mChildrens[pos] && (mChildrens[pos] != aWinWidget); pos++){};
+	    if (mChildrens[pos] == aWinWidget) 
+	    	{
+	      memcpy(mChildrens + pos, mChildrens + pos + 1, mArraySize - pos - 1);
+	    	}
+			mNumChildren--;
+			}
 }
 
 //-------------------------------------------------------------------------

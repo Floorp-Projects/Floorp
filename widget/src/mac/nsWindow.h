@@ -144,6 +144,9 @@ public:
 	  virtual void SetBounds(const Rect& aMacRect);
     void MacRectToNSRect(const Rect& aMacRect, nsRect& aRect) const;
     void nsRectToMacRect(const nsRect& aRect, Rect& aMacRect) const;
+    void DoPaintWidgets(RgnHandle	aTheRegion);
+    PRBool RgnIntersects(RgnHandle aTheRegion,RgnHandle aIntersectRgn);
+
 
 
 
@@ -220,6 +223,7 @@ protected:
 	    nsIWidget  	**mChildrens;
 	    PRInt32     mCurrentPosition;
 	    PRInt32     mArraySize;
+	    PRInt32			mNumChildren;
 
 	public:
 	    Enumerator();

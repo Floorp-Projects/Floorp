@@ -229,7 +229,6 @@ void nsButton::GetLabel(nsString& aBuffer)
 //-------------------------------------------------------------------------
 PRBool nsButton::OnPaint(nsPaintEvent &aEvent)
 {
-  //printf("** nsButton:OnPaint **\n");
   if (mControl)
 	  Draw1Control(mControl);
   return PR_FALSE;
@@ -275,16 +274,27 @@ nsButton::PtInWindow(PRInt32 aX,PRInt32 aY)
 PRBool 
 nsButton::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
-	PRBool result = nsWindow::DispatchMouseEvent(aEvent);
+Point 	pt;
+PRBool 	result;
 	
-	if (aEvent.message == NS_MOUSE_LEFT_BUTTON_DOWN)
-	{
-		Point pt;		
-		pt.h = aEvent.point.x;
-		pt.v = aEvent.point.y;
-		if (mControl)
-			TrackControl(mControl,pt,nsnull);
-	}
+	result = nsWindow::DispatchMouseEvent(aEvent);
+	
+	switch (aEvent.message)
+		{
+		case NS_MOUSE_LEFT_BUTTON_DOWN:
+			pt.h = aEvent.point.x;
+			pt.v = aEvent.point.y;
+			if (mControl)
+				{
+				//TrackControl(mControl,pt,nsnull);
+				nsWindow::DispatchMouseEvent(aEvent);
+				}
+			break;
+		case NS_MOUSE_LEFT_BUTTON_UP:
+			nsWindow::DispatchMouseEvent(aEvent);
+			break;
+		}
+	
 	return result;
 }
 
