@@ -139,7 +139,7 @@ XFE_RDFImage::RDFDisplayPixmap(IL_Pixmap * image, IL_Pixmap * mask, PRInt32 widt
        client_data->width = width;
        client_data->height = height;
        completelyLoaded = True;
-       if (isrequestorAlive)
+       if (isrequestorAlive(client_data->widget))
           (*completeCallback)(client_data);
 
     }
