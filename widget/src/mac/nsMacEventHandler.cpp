@@ -199,6 +199,7 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 	keyEvent.isShift		= ((aOSEvent.modifiers & shiftKey) != 0);
 	keyEvent.isControl	= ((aOSEvent.modifiers & controlKey) != 0);
 	keyEvent.isAlt			= ((aOSEvent.modifiers & optionKey) != 0);
+	keyEvent.isCommand	= ((aOSEvent.modifiers & cmdKey) != 0);
 
 	// nsKeyEvent
   keyEvent.keyCode		= (aOSEvent.message & charCodeMask);	//¥TODO: do special keys conversions for NS_VK_F1 etc...

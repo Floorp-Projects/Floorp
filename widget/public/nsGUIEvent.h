@@ -106,6 +106,12 @@ struct nsInputEvent : public nsGUIEvent {
     PRBool          isControl;      
                 /// PR_TRUE indicates the alt key in down
     PRBool          isAlt;          
+#ifdef XP_MAC
+                /// PR_TRUE indicates the command key in down
+                /// For now, it's only used in Widget: not for export
+                /// in nsIDOMEvent.h or nsJSEvent.cpp (later maybe)
+    PRBool          isCommand;          
+#endif
 };
 
 /**
