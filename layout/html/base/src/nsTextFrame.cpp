@@ -1804,7 +1804,7 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
   nscolor overColor;
   nscolor underColor;
   nscolor strikeColor;
-  nsIStyleContext*  context = aStyleContext;
+  nsCOMPtr<nsIStyleContext> context = aStyleContext;
   
   PRBool useOverride = PR_FALSE;
   nscolor overrideColor;
@@ -1814,7 +1814,6 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
                       NS_STYLE_TEXT_DECORATION_LINE_THROUGH; // A mask of all possible decorations.
   PRBool hasDecorations = context->HasTextDecorations();
 
-  NS_ADDREF(context);
   do {  // find decoration colors
     const nsStyleTextReset* styleText = 
       (const nsStyleTextReset*)context->GetStyleData(eStyleStruct_TextReset);
@@ -1848,13 +1847,12 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
       }
     }
     if (0 != decorMask) {
-      nsIStyleContext*  lastContext = context;
       context = context->GetParent();
-      hasDecorations = context->HasTextDecorations();
-      NS_RELEASE(lastContext);
+      if (context) {
+        hasDecorations = context->HasTextDecorations();
+      }
     }
-  } while ((nsnull != context) && hasDecorations && (0 != decorMask));
-  NS_IF_RELEASE(context);
+  } while (context && hasDecorations && (0 != decorMask));
 
   nscoord offset;
   nscoord size;

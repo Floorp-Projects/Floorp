@@ -345,14 +345,13 @@ nsTextBoxFrame::PaintTitle(nsIPresContext*      aPresContext,
     nscolor overColor;
     nscolor underColor;
     nscolor strikeColor;
-    nsIStyleContext*  context = mStyleContext;
+    nsCOMPtr<nsIStyleContext> context = mStyleContext;
   
     PRUint8 decorations = NS_STYLE_TEXT_DECORATION_NONE; // Begin with no decorations
     PRUint8 decorMask = NS_STYLE_TEXT_DECORATION_UNDERLINE | NS_STYLE_TEXT_DECORATION_OVERLINE |
                         NS_STYLE_TEXT_DECORATION_LINE_THROUGH; // A mask of all possible decorations.
     PRBool hasDecorations = context->HasTextDecorations();
 
-    NS_ADDREF(context);
     do {  // find decoration colors
       const nsStyleTextReset* styleText = 
         (const nsStyleTextReset*)context->GetStyleData(eStyleStruct_TextReset);
@@ -378,13 +377,12 @@ nsTextBoxFrame::PaintTitle(nsIPresContext*      aPresContext,
         }
       }
       if (0 != decorMask) {
-        nsIStyleContext*  lastContext = context;
         context = context->GetParent();
-        hasDecorations = context->HasTextDecorations();
-        NS_RELEASE(lastContext);
+        if (context) {
+          hasDecorations = context->HasTextDecorations();
+        }
       }
-    } while ((nsnull != context) && hasDecorations && (0 != decorMask));
-    NS_IF_RELEASE(context);
+    } while (context && hasDecorations && (0 != decorMask));
 
     nsStyleFont* fontStyle = (nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
     

@@ -73,7 +73,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual nsIStyleContext*  GetParent(void) const;
+  virtual already_AddRefed<nsIStyleContext> GetParent(void) const;
   NS_IMETHOD GetFirstChild(nsIStyleContext** aContext);
 
   NS_IMETHOD GetPseudoType(nsIAtom*& aPseudoTag) const;
@@ -189,7 +189,7 @@ NS_IMPL_ADDREF(nsStyleContext)
 NS_IMPL_RELEASE_WITH_DESTROY(nsStyleContext, Destroy())
 NS_IMPL_QUERY_INTERFACE1(nsStyleContext, nsIStyleContext)
 
-nsIStyleContext* nsStyleContext::GetParent(void) const
+already_AddRefed<nsIStyleContext> nsStyleContext::GetParent(void) const
 {
   NS_IF_ADDREF(mParent);
   return mParent;

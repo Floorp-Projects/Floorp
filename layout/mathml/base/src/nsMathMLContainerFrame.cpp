@@ -596,7 +596,7 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIPresContext* aPresContext,
 
     nsCOMPtr<nsIStyleContext> oldStyleContext;
     aFrame->GetStyleContext(getter_AddRefs(oldStyleContext));
-    nsCOMPtr<nsIStyleContext> parentContext(dont_AddRef(oldStyleContext->GetParent()));
+    nsCOMPtr<nsIStyleContext> parentContext(oldStyleContext->GetParent());
 
     nsCOMPtr<nsIContent> content;
     aFrame->GetContent(getter_AddRefs(content));

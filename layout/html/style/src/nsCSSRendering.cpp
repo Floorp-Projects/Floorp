@@ -2377,12 +2377,11 @@ nsCSSRendering::FindNonTransparentBackground(nsIStyleContext* aContext,
                                              PRBool aStartAtParent /*= PR_FALSE*/)
 {
   const nsStyleBackground* result = nsnull;
-  nsIStyleContext* context;
+  nsCOMPtr<nsIStyleContext> context;
   if (aStartAtParent) {
-    context = aContext->GetParent();  // balance ending release
+    context = aContext->GetParent();
   } else {
     context = aContext;
-    NS_IF_ADDREF(context);  // balance ending release
   }
   NS_ASSERTION(context, "Cannot find NonTransparentBackground in a null context" );
   
@@ -2391,11 +2390,8 @@ nsCSSRendering::FindNonTransparentBackground(nsIStyleContext* aContext,
     if (0 == (result->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT))
       break;
 
-    nsIStyleContext* last = context;
     context = context->GetParent();
-    NS_RELEASE(last);
   }
-  NS_IF_RELEASE(context);
   return result;
 }
 

@@ -794,21 +794,17 @@ nsStyleUnit
 nsBlockReflowContext::GetRealMarginLeftUnit()
 {
   nsStyleUnit unit = eStyleUnit_Inherit;
-  nsIStyleContext* sc;
-  mFrame->GetStyleContext(&sc);
-  while ((nsnull != sc) && (eStyleUnit_Inherit == unit)) {
+  nsCOMPtr<nsIStyleContext> sc;
+  mFrame->GetStyleContext(getter_AddRefs(sc));
+  while (sc && eStyleUnit_Inherit == unit) {
     // Get parent style context
-    nsIStyleContext* psc;
-    psc = sc->GetParent();
-    NS_RELEASE(sc);
-    sc = psc;
-    if (nsnull != sc) {
+    sc = sc->GetParent();
+    if (sc) {
       const nsStyleMargin* margin = (const nsStyleMargin*)
         sc->GetStyleData(eStyleStruct_Margin);
       unit = margin->mMargin.GetLeftUnit();
     }
   }
-  NS_IF_RELEASE(sc);
   return unit;
 }
 
@@ -819,20 +815,16 @@ nsStyleUnit
 nsBlockReflowContext::GetRealMarginRightUnit()
 {
   nsStyleUnit unit = eStyleUnit_Inherit;
-  nsIStyleContext* sc;
-  mFrame->GetStyleContext(&sc);
-  while ((nsnull != sc) && (eStyleUnit_Inherit == unit)) {
+  nsCOMPtr<nsIStyleContext> sc;
+  mFrame->GetStyleContext(getter_AddRefs(sc));
+  while (sc && eStyleUnit_Inherit == unit) {
     // Get parent style context
-    nsIStyleContext* psc;
-    psc = sc->GetParent();
-    NS_RELEASE(sc);
-    sc = psc;
-    if (nsnull != sc) {
+    sc = sc->GetParent();
+    if (sc) {
       const nsStyleMargin* margin = (const nsStyleMargin*)
         sc->GetStyleData(eStyleStruct_Margin);
       unit = margin->mMargin.GetRightUnit();
     }
   }
-  NS_IF_RELEASE(sc);
   return unit;
 }

@@ -1575,8 +1575,7 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
               NS_NewInlineFrame(aPresShell, aWrapperFrame);
               wrapperPseudo = nsCSSAtoms::mozGCWrapperInline;
             }        
-            nsCOMPtr<nsIStyleContext> parentSC =
-              dont_AddRef(aStyleContext->GetParent()); 
+            nsCOMPtr<nsIStyleContext> parentSC = aStyleContext->GetParent(); 
             nsCOMPtr<nsIStyleContext> wrapperSC;
             aPresContext->ResolvePseudoStyleContextFor(nsnull, wrapperPseudo,
                                           parentSC, getter_AddRefs(wrapperSC));
@@ -4004,8 +4003,7 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*    aPresShell,
   if (NS_SUCCEEDED(rv)) {
     // The placeholder frame gets a pseudo style context
     nsCOMPtr<nsIStyleContext>  placeholderStyle;
-    nsCOMPtr<nsIStyleContext> parentContext =
-        dont_AddRef(aStyleContext->GetParent());
+    nsCOMPtr<nsIStyleContext> parentContext = aStyleContext->GetParent();
     aPresContext->ResolveStyleContextForNonElement(parentContext,
                                              getter_AddRefs(placeholderStyle));
     placeholderFrame->Init(aPresContext, aContent, aParentFrame,

@@ -135,7 +135,7 @@ nsInspectorCSSUtils::GetStyleContextForFrame(nsIFrame* aFrame,
     nsCOMPtr<nsIAtom> frameType;
     aFrame->GetFrameType(getter_AddRefs(frameType));
     if (frameType == nsLayoutAtoms::tableOuterFrame) {
-        *aStyleContext = styleContext->GetParent();
+        *aStyleContext = styleContext->GetParent().get();
     } else {
         *aStyleContext = styleContext;
         NS_ADDREF(*aStyleContext);
