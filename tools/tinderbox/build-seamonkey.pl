@@ -10,7 +10,7 @@ use Sys::Hostname;
 use POSIX qw(sys_wait_h strftime);
 use Cwd;
 
-$Version = '$Revision: 1.54 $ ';
+$Version = '$Revision: 1.55 $ ';
 
 
 sub PrintUsage {
@@ -209,18 +209,23 @@ sub BuildIt {
     
     chdir $Topsrcdir or die "chdir $Topsrcdir: $!\n";
     
-    # Delete the binary before rebuilding
-    unless ($TestOnly) {
       
-	  # Only delete if it exists.
-	  if (&BinaryExists($mozillaBinary)) {
+	# Delete the binary before rebuilding
+	if (&BinaryExists($mozillaBinary)) {
+	  # Don't delete binary if we're only running tests.
+	  unless ($TestOnly) {
 		print LOG "deleting existing binary: $mozillaBinary\n";
 		&DeleteBinary($mozillaBinary);
-	  } else {
-		print LOG "no binary detected, can't delete.\n";
 	  }
+	} else {
+	  print LOG "no binary detected, can't delete.\n";
 
-    }
+	  # If we're only running tests and have no binary, bail.
+	  unless ($TestOnly) {
+		$EarlyExit++;
+	  }
+	}
+
     
     $ENV{MOZ_CO_DATE} = "$BuildStart" if $UseTimeStamp;
     
@@ -288,7 +293,7 @@ sub BuildIt {
 		  $BuildStatus = 
 			&RunFileBasedTest("MailNewsTest", 
 							  "mozilla-bin http://www.mozilla.org/quality/mailnews/APITest.html", 
-							  120, "enablePrivilege456");  # enablePrivilege456 is hack to test status.
+							  90, "removeAccount:	Passed", 1);  # Hack: testing some partial success string for now.
 		}
 
         # Run Editor test.
@@ -296,7 +301,7 @@ sub BuildIt {
 		  $BuildStatusStr = 'success';
 		  print LOG "Running  DomToTextConversionTest ...\n";
           print "Running DomToTextConversionTest ...\n";
-		  $BuildStatus = &RunFileBasedTest("DomToTextConversionTest", "TestOutSinks", 15, "FAILED");
+		  $BuildStatus = &RunFileBasedTest("DomToTextConversionTest", "TestOutSinks", 15, "FAILED", 0);
 		}
         
 
@@ -567,14 +572,18 @@ sub RunAliveTest {
 #       testName = Name of test we're gonna run, in dist/bin.
 # testExecString = How to run the test
 # testTimeoutSec = Timeout for hung tests, minimum test time.
-#   failureToken = What string to look for in test output to 
-#                  determine failure.
+#    statusToken = What string to look for in test output to 
+#                  determine test status.
+#
+# statusTokenMeansPass = Default use of status token is to look for failure string.
+#                        If this is set to 1, then invert logic to look for success
+#                        string.
 #
 # Note: I tried to merge this function with RunAliveTest(),
 #       the process flow control got too confusing :(  -mcafee
 #
 sub RunFileBasedTest {
-  my ($testName, $testExecString, $testTimeoutSec, $failureToken) = @_;
+  my ($testName, $testExecString, $testTimeoutSec, $statusToken, $statusTokenMeansPass) = @_;
   my $Binary;
 
   print LOG "testExecString = ", $testExecString, "\n";
@@ -673,9 +682,27 @@ sub RunFileBasedTest {
   }
 
   open TESTLOG, "<$BinaryLog" or die "Can't open $!";
-  $status = parse_file_for_token(*TESTLOG, $failureToken);
+  # Return 1 if we find statusToken in output.
+  $status = parse_file_for_token(*TESTLOG, $statusToken);
+
+  if($status) {
+	print LOG "found statusToken $statusToken!\n";
+  } else {
+	print LOG "statusToken $statusToken not found\n";
+  }
+
   close TESTLOG;
 
+  # If we're using success string, invert status logic.
+  if($statusTokenMeansPass == 1) {
+	# Invert $status.  This is probably sloppy perl, help me!
+	if($status == 0) {
+	  $status = 1;
+	} else {
+	  $status = 0;
+	}
+  }
+  
 
   #
   # Write test output to log.
