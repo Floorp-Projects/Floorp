@@ -326,15 +326,18 @@ nsHTMLImageElement::GetImageFrame(nsImageFrame** aImageFrame)
 NS_IMETHODIMP    
 nsHTMLImageElement::GetComplete(PRBool* aComplete)
 {
+  NS_ENSURE_ARG_POINTER(aComplete);
+  *aComplete = PR_FALSE;
+
   nsresult result;
   nsImageFrame* imageFrame;
-  
+
   result = GetImageFrame(&imageFrame);
   if (NS_SUCCEEDED(result)) {
     result = imageFrame->IsImageComplete(aComplete);
   }
 
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
