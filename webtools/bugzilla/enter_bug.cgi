@@ -18,6 +18,7 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Dave Miller <dave@intrec.com>
 
 
 ########################################################################
@@ -35,11 +36,17 @@ use strict;
 
 require "CGI.pl";
 
-# Shut up misguided -w warnings about "used only once":
-use vars @::legal_platform,
-    @::legal_severity,
-    @::legal_opsys,
-    @::legal_priority;
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for me.
+
+sub sillyness {
+    my $zz;
+    $zz = $::unconfirmedstate;
+    $zz = @::legal_opsys;
+    $zz = @::legal_platform;
+    $zz = @::legal_priority;
+    $zz = @::legal_severity;
+}
 
 
 if (!defined $::FORM{'product'}) {
@@ -320,6 +327,29 @@ print "
     <td colspan=5><TEXTAREA WRAP=HARD NAME=comment ROWS=10 COLS=80>" .
     value_quote(formvalue('comment')) .
     "</TEXTAREA><BR></td>
+  </tr>
+  <tr>
+   <td></td><td colspan=5>
+";
+
+if ($::usergroupset ne '0') {
+    SendSQL("SELECT bit, description FROM groups " .
+            "WHERE bit & $::usergroupset != 0 " .
+            "  AND isbuggroup != 0 ORDER BY bit");
+     while (MoreSQLData()) {
+        my ($bit, $description) = (FetchSQLData());
+        print BuildPulldown("bit-$bit",
+                            [["0",
+                             "People not in the \"$description\" group can see this bug"],
+                             ["1",
+                              "Only people in the \"$description\" group can see this bug"]],
+                            0);
+        print "<BR>\n";
+    }
+}
+
+print "
+   </td>
   </tr>
   <tr>
     <td></td>

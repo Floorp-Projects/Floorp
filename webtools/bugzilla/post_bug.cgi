@@ -150,11 +150,10 @@ if (exists $::FORM{'bug_status'} && $::FORM{'bug_status'} ne $::unconfirmedstate
     $::FORM{'everconfirmed'} = 1;
 }
 
-my $query = "insert into bugs (\n" . join(",\n", @used_fields) . ",
-creation_ts )
-values (
+my $query = "INSERT INTO bugs (\n" . join(",\n", @used_fields) . ",
+creation_ts, groupset)
+VALUES (
 ";
-
 
 foreach my $field (@used_fields) {
     $query .= SqlQuote($::FORM{$field}) . ",\n";
@@ -165,7 +164,20 @@ $comment =~ s/\r\n/\n/g;     # Get rid of windows-style line endings.
 $comment =~ s/\r/\n/g;       # Get rid of mac-style line endings.
 $comment = trim($comment);
 
-$query .= "now())\n";
+$query .= "now(), 0";
+
+foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
+    if ($::FORM{$b}) {
+        my $v = substr($b, 4);
+        $query .= " + $v";    # Carefully written so that the math is
+                                # done by MySQL, which can handle 64-bit math,
+                                # and not by Perl, which I *think* can not.
+    }
+}
+
+
+
+$query .= ")\n";
 
 
 my %ccids;
