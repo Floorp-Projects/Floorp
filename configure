@@ -5038,7 +5038,7 @@ case "$host" in
         CYGWIN_WRAPPER="${_pwd}/${srcdir}/build/cygwin-wrapper"
     fi
     if test "`${PERL} -v | grep -c cygwin  2>/dev/null`" = 0; then
-        _AS_PERL=1
+        AS_PERL=1
         PERL="${CYGWIN_WRAPPER} $PERL"
     fi
     ;;
@@ -17667,6 +17667,7 @@ fi
 
 
 
+
 if test "$MOZ_BYPASS_PROFILE_AT_STARTUP"; then
   cat >> confdefs.h <<\EOF
 #define MOZ_BYPASS_PROFILE_AT_STARTUP 1
@@ -17790,7 +17791,7 @@ if test -n "$MOZ_X11"; then
                 _SAVE_CFLAGS=$CFLAGS
     CFLAGS="$CFLAGS $XCFLAGS"
     cat > conftest.$ac_ext <<EOF
-#line 17794 "configure"
+#line 17795 "configure"
 #include "confdefs.h"
 
         #include <stdio.h>
@@ -17806,7 +17807,7 @@ int main() {
     
 ; return 0; }
 EOF
-if { (eval echo configure:17810: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:17811: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   :
 else
   echo "configure: failed program was:" >&5
@@ -18053,7 +18054,7 @@ rm -f confdefs.h
 mv confdefs.h.save confdefs.h
 
 . ${srcdir}/allmakefiles.sh
-if test -z "${_AS_PERL}"; then
+if test -z "${AS_PERL}"; then
 echo $MAKEFILES | ${PERL} $srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
 else
 echo $MAKEFILES | ${PERL} $srcdir/build/autoconf/acoutput-fast.pl -nowrap --cygwin-srcdir=$srcdir > conftest.sh
@@ -18505,6 +18506,7 @@ s%@MOZ_MAPINFO@%$MOZ_MAPINFO%g
 s%@MOZ_BROWSE_INFO@%$MOZ_BROWSE_INFO%g
 s%@MOZ_TOOLS_DIR@%$MOZ_TOOLS_DIR%g
 s%@CYGWIN_WRAPPER@%$CYGWIN_WRAPPER%g
+s%@AS_PERL@%$AS_PERL%g
 s%@SYSTEM_JPEG@%$SYSTEM_JPEG%g
 s%@SYSTEM_PNG@%$SYSTEM_PNG%g
 s%@SYSTEM_ZLIB@%$SYSTEM_ZLIB%g
