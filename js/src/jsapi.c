@@ -1699,7 +1699,7 @@ JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type)
 JS_PUBLIC_API(intN)
 JS_GetExternalStringGCType(JSRuntime *rt, JSString *str)
 {
-    uint8 type = *js_GetGCThingFlags(str) & GCF_TYPEMASK;
+    uint8 type = (uint8) (*js_GetGCThingFlags(str) & GCF_TYPEMASK);
 
     JS_ASSERT(type == GCX_STRING || type >= GCX_EXTERNAL_STRING);
     if (type == GCX_STRING)
