@@ -3161,21 +3161,19 @@ PLDHashTableEnumeratorImpl::Prev()
 NS_IMETHODIMP
 PLDHashTableEnumeratorImpl::Next()
 {
-    if (!mCount || (mCurrent == mCount - 1))
+    // If empty or we're past the end, or we are at the end return error
+    if (!mCount || (mCurrent == mCount) || (++mCurrent == mCount))
         return NS_ERROR_FAILURE;
     
-    mCurrent++;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 PLDHashTableEnumeratorImpl::CurrentItem(nsISupports **retval)
 {
-    if (!mCount)
+    if (!mCount || mCurrent == mCount)
         return NS_ERROR_FAILURE;
 
-    NS_ASSERTION(mCurrent < mCount, "mCurrent too high");
-    
     *retval = NS_REINTERPRET_CAST(nsISupports *, mElements[mCurrent]);
     if (*retval)
         NS_ADDREF(*retval);
