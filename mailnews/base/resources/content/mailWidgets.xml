@@ -8,6 +8,573 @@
 
   <!-- dummy widget to force this file to load -->
   <binding id="dummy" extends="xul:box"/>
+
+  <!-- temporary holding place for horizontal list -->
+
+  <binding id="extdescription" extends="chrome://global/content/bindings/text.xml#text-base">
+    <implementation implements="nsIDOMXULMultiSelectControlElement, nsIDOMXULSelectControlElement">
+      <field name="_isUpSelection">0</field>
+      <field name="_isDownSelection">0</field>
+      <field name="_suppressOnSelect">false</field>
+      <field name="_selectionStart">null</field>
+      <field name="_currentItem">null</field>
+      <field name="_selectTimeout">null</field>
+      <field name="_lastKeyTime">0</field>
+      <field name="_incrementalString">""</field>
+
+      <constructor>
+        <![CDATA[
+          var els = this.getElementsByAttribute("selected", "true");
+          this.selectedItems = [];
+          for (var i = 0; i < els.length; ++i)
+            this.selectedItems.push(els[i]);
+        ]]>
+      </constructor>
+           
+      <!-- ///////////////// public members ///////////////// -->
+      <property name="_selectDelay" 
+                onset="this.setAttribute('_selectDelay', val);"
+                onget="return this.getAttribute('_selectDelay') || 50;"/>
+      
+      <method name="timedSelect">
+        <parameter name="item"/>
+        <parameter name="timeout"/>
+        <body>
+        <![CDATA[
+          var suppress = this._suppressOnSelect;
+          if (timeout != -1)
+            this._suppressOnSelect = true;
+          
+          this.selectItem(item);
+          
+          this._suppressOnSelect = suppress;         
+          
+          if (timeout != -1) {
+            if (this._selectTimeout)
+              window.clearTimeout(this._selectTimeout);
+              
+            this._selectTimeout = window.setTimeout(this._selectTimeoutHandler, timeout, this); 
+          }
+        ]]>
+        </body>
+      </method>  
+
+      <method name="appendItem">
+        <parameter name="label"/>
+        <body>
+        <![CDATA[
+          var XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          var item = document.createElementNS(XULNS, "descriptionitem");
+          item.setAttribute("label", label);
+          this.appendChild(item);
+          return item;
+        ]]>
+        </body>
+      </method>
+      
+      <!-- ///////////////// private members ///////////////// -->
+
+      <method name="_fireOnSelect">
+        <body>
+        <![CDATA[
+          if (!this._suppressOnSelect && this.getAttribute("suppressonselect") != "true") {
+            var event = document.createEvent("Events");
+            event.initEvent("select", false, true);
+            this.dispatchEvent(event);
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="_selectTimeoutHandler">
+        <parameter name="me"/>
+        <body>
+        <![CDATA[
+          me._fireOnSelect();
+          me._selectTimeout = null;
+        ]]>
+        </body>
+      </method>
+
+      <!-- ///////////////// nsIDOMXULSelectControlElement ///////////////// -->
+
+      <property name="selType"
+                onget="return this.getAttribute('seltype')"
+                onset="this.setAttribute('seltype', val); return val;"/>
+
+      <property name="selectedIndex">
+        <getter><![CDATA[
+          return this.selectedItems.length > 0 ? this.getIndexOfItem(this.selectedItems[0]) : -1;
+        ]]></getter>
+        <setter><![CDATA[
+          if (val >= 0)
+            this.selectItem(this.getItemAtIndex(val));
+          else
+            this.clearSelection();
+        ]]></setter>
+      </property>
+
+      <property name="selectedItem">
+        <getter><![CDATA[
+          return this.selectedItems.length > 0 ? this.selectedItems[0] : null;
+        ]]></getter>
+        <setter><![CDATA[
+          this.selectItem(val);
+        ]]></setter>
+      </property>
+
+      <!-- ///////////////// nsIDOMXULSelectMultipleControlElement ///////////////// -->
+
+      <property name="currentItem" onget="return this._currentItem;">
+        <setter>
+        <![CDATA[
+          if (this._currentItem)
+            this._currentItem.removeAttribute("current");
+          this._currentItem = val;
+          if (val)
+            val.setAttribute("current", "true");          
+          return val;
+        ]]>
+        </setter>
+      </property>
+      
+      <property name="selectedCount" onget="return this.selectedItems.length;"/>
+      
+      <method name="getSelectedItem">
+        <parameter name="index"/>
+        <body>
+        <![CDATA[
+          return index < this.selectedItems.length ? this.selectedItems[index] : null;
+        ]]>
+        </body>
+      </method>      
+      
+      <method name="addItemToSelection">
+        <parameter name="item"/>
+        <body>
+        <![CDATA[
+          if (this.selType != "multiple" && this.selectedCount)
+            return;
+          if (item.hasAttribute("selected"))
+            return;            
+          this.selectedItems.push(item);
+          item.setAttribute("selected", "true");       
+          this._fireOnSelect();
+        ]]>
+        </body>
+      </method>      
+      
+      <method name="removeItemFromSelection">
+        <parameter name="item"/>
+        <body>
+        <![CDATA[
+          if (!item.hasAttribute("selected"))
+            return;
+            
+          for (var i = 0; i < this.selectedItems.length; ++i) {
+            if (this.selectedItems[i] == item) {
+              this.selectedItems.splice(i, 1);
+              item.removeAttribute("selected"); 
+              break;
+            }
+          }
+              
+          this._fireOnSelect();
+        ]]>
+        </body>
+      </method>      
+      
+      <method name="toggleItemSelection">
+        <parameter name="item"/>
+        <body>
+        <![CDATA[
+          if (item.hasAttribute("selected"))
+            this.removeItemFromSelection(item);
+          else
+            this.addItemToSelection(item);
+        ]]>
+        </body>
+      </method>      
+      
+      <method name="selectItem">
+        <parameter name="item"/>
+        <body>
+        <![CDATA[
+          if (!item)
+            return;
+            
+          if (this.selectedItems.length == 1 && this.selectedItems[0] == item)
+            return;
+          
+          this._selectionStart = null;
+          
+          var suppress = this._suppressOnSelect;
+          this._suppressOnSelect = true;
+
+          this.clearSelection();
+          this.addItemToSelection(item);
+          this.currentItem = item;
+          
+          this._suppressOnSelect = suppress;
+          this._fireOnSelect();
+        ]]>
+        </body>
+      </method>      
+      
+      <method name="selectItemRange">
+        <parameter name="startItem"/>
+        <parameter name="endItem"/>
+        <body>
+        <![CDATA[
+          if (this.selType != "multiple")
+            return;
+
+          if (!startItem)
+            startItem = this._selectionStart ? this._selectionStart : this.currentItem;
+          if (!startItem)
+            startItem = endItem;
+                      
+          var suppressSelect = this._suppressOnSelect;
+          this._suppressOnSelect = true;
+          this.clearSelection();
+
+          this._selectionStart = startItem;
+          
+          var currentItem;
+          var startIndex = this.getIndexOfItem(startItem);
+          var endIndex = this.getIndexOfItem(endItem);
+          if (endIndex < startIndex) {
+            currentItem = endItem;
+            endItem = startItem;
+            startItem = currentItem;            
+          } else {
+            currentItem = startItem;
+          }
+            
+          while (currentItem) {
+            if (currentItem.localName == "descriptionitem")
+              this.addItemToSelection(currentItem);
+            if (currentItem == endItem)
+              break;
+            currentItem = this.getNextItem(currentItem, 1);
+          }
+
+          this._suppressOnSelect = suppressSelect;
+          
+          this._fireOnSelect();
+        ]]>
+        </body>
+      </method>      
+      
+      <method name="selectAll">
+        <body>
+        <![CDATA[
+          var suppress = this._suppressOnSelect;
+          this._suppressOnSelect = true;
+          
+          var item = this.getItemAtIndex(0);
+          while (item) {
+            this.addItemToSelection(item);
+            item = this.getNextItem(item, 1);  
+          }
+          
+          this._suppressOnSelect = suppress;
+          this._fireOnSelect();
+        ]]>
+        </body>
+      </method>      
+      
+      <method name="invertSelection">
+        <body>
+        <![CDATA[
+          var suppress = this._suppressOnSelect;
+          this._suppressOnSelect = true;
+          
+          var item = this.getItemAtIndex(0);
+          while (item) {
+            if (item.hasAttribute("selected"))
+              this.removeItemFromSelection(item);
+            else
+              this.addItemToSelection(item);
+            item = this.getNextItem(item, 1);  
+          }
+          
+          this._suppressOnSelect = suppress;
+          this._fireOnSelect();
+        ]]>
+        </body>
+      </method>      
+      
+      <method name="clearSelection">
+        <body>
+        <![CDATA[
+          if (this.selectedItems)
+          {
+            for (var i = this.selectedItems.length-1; i >= 0; --i)
+              this.selectedItems[i].removeAttribute("selected");
+          
+            this.selectedItems.splice(0, this.selectedItems.length);
+          }
+          this._selectionStart = null;
+          this._fireOnSelect();
+        ]]>
+        </body>
+      </method>
+
+      <method name="getNextItem">
+        <parameter name="startItem"/>
+        <parameter name="delta"/>
+        <body><![CDATA[
+          while (startItem) {
+            startItem = startItem.nextSibling;
+            if (startItem && startItem.localName == "descriptionitem") {
+              --delta;
+              if (delta == 0)
+                return startItem;
+            }
+          }
+          return null;
+        ]]></body>
+      </method>
+      
+      <method name="getPreviousItem">
+        <parameter name="startItem"/>
+        <parameter name="delta"/>
+        <body><![CDATA[
+          while (startItem) {
+            startItem = startItem.previousSibling;
+            if (startItem && startItem.localName == "descriptionitem") {
+              --delta;
+              if (delta == 0)
+                return startItem;
+            }
+          }
+          return null;
+        ]]></body>
+      </method>
+
+      <!-- selection navigation --> 
+      <method name="navigateToPreviousItem">
+        <parameter name="event"/>
+        <body>
+        <![CDATA[  
+           if (event.target != this)
+             return;                
+          this._isUpSelection=0;
+          this._isDownSelection=0;
+          var n = this.getPreviousItem(this.selectedItems[this.selectedItems.length-1], 1);
+          if (n)
+            this.timedSelect(n, this._selectDelay);
+          ]]>
+        </body>
+      </method>
+
+      <method name="navigateToNextItem">
+        <parameter name="event"/>
+        <body>
+          <![CDATA[  
+           if (event.target != this)
+             return;                
+           var n;
+           if (this.selectedItems.length == 0) {
+             n = this.getItemAtIndex(0);
+           }
+           else 
+           {
+             this._isUpSelection=0;
+             this._isDownSelection=0;
+             n = this.getNextItem(this.selectedItems[this.selectedItems.length-1], 1);
+           }
+
+           if (n) 
+             this.timedSelect(n, this._selectDelay);
+          ]]>
+        </body>
+      </method>
+      
+      <method name="navigateAndSelectNextItem">
+        <parameter name="event"/>
+        <body>
+          <![CDATA[ 
+            var l=this.selectedItems.length;
+            if (event.target != this || l < 1 || this.selType != "multiple")
+              return;
+            var n = this.getNextItem(this.selectedItems[l-1], 1);
+            if (n) 
+            {
+              if ( this._isUpSelection) 
+              {
+                if ( l > 1 )
+                  this.removeItemFromSelection(this.selectedItems[l-1]);
+                if ( l <= 2 )
+                  this._isUpSelection=0;
+              }
+              else 
+              {
+                this.addItemToSelection(n);
+                this._isDownSelection=1;
+              }
+            }
+          ]]>
+        </body>
+      </method>
+      <method name="navigateAndSelectPreviousItem">
+        <parameter name="event"/>
+        <body>
+          <![CDATA[ 
+            var l = this.selectedItems.length;
+            if (event.target != this || l < 1 || this.selType != "multiple")
+              return;
+            var n = this.getPreviousItem(this.selectedItems[l-1], 1);
+            if (n) 
+            {
+              if ( this._isDownSelection) 
+              {
+                if ( l > 1 )
+                  this.removeItemFromSelection(this.selectedItems[l-1]);
+                if ( l <= 2 )
+                  this._isDownSelection=0;
+              } else 
+              {
+                this.addItemToSelection(n);
+                this._isUpSelection=1;
+              }
+            }          
+          ]]>
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>     
+      
+      <handler event="keypress" modifiers="shift" keycode="vk_down">
+        <![CDATA[
+          this.navigateAndSelectNextItem(event);
+        ]]>
+      </handler>
+
+      <handler event="keypress" modifiers="shift" keycode="vk_right">
+        <![CDATA[
+          this.navigateAndSelectNextItem(event);
+        ]]>
+      </handler>
+      <handler event="keypress" modifiers="shift" keycode="vk_up">
+        <![CDATA[
+          this.navigateAndSelectPreviousItem(event);
+        ]]>
+      </handler>
+
+      <handler event="keypress" modifiers="shift" keycode="vk_left">
+        <![CDATA[
+          this.navigateAndSelectPreviousItem(event);
+        ]]>
+      </handler>
+           
+      <handler event="keypress" keycode="vk_up">
+        <![CDATA[
+          this.navigateToPreviousItem(event);
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="vk_left">
+        <![CDATA[
+          if (event.target != this)
+            return;
+          this.navigateToPreviousItem(event);
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="vk_down">
+        <![CDATA[
+          this.navigateToNextItem(event);
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="vk_right">
+        <![CDATA[
+          this.navigateToNextItem(event);
+        ]]>
+      </handler>
+      <handler event="mousedown">
+      <![CDATA[
+        var targetItem = event.target;
+        if (targetItem.localName == "descriptionitem" && !event.ctrlKey && !event.shiftKey && !event.metaKey) 
+        {
+          if (!targetItem.hasAttribute('selected')) 
+            this.selectItem(targetItem);
+          this.currentItem = targetItem;
+        }
+        if (document.commandDispatcher.focusedElement != this) 
+          this.focus(); // make sure the description has focus...
+      ]]>
+      </handler>
+      <handler event="click">
+      <![CDATA[
+        if (event.button != 0) return;
+
+        var targetItem = event.target;
+        if (targetItem.localName == "descriptionitem") 
+        {
+          if (this.selType != "multiple")
+            this.selectItem(targetItem);
+          else if (event.ctrlKey || event.metaKey) {
+            this.toggleItemSelection(targetItem);
+            this.currentItem = targetItem;
+          }
+          else if (event.shiftKey) {
+            this.selectItemRange(null, targetItem);
+            this.currentItem = targetItem;
+          }
+          else {
+            /* We want to deselect all the selected items except what was
+               clicked, UNLESS it was a right-click.  We have to do this
+               in click rather than mousedown so that you can drag a
+               selected group of items */
+            
+            var selectedItems = this.selectedItems;
+            var didSuppressSelect = false;
+            var i = 0;
+            while (i < selectedItems.length) 
+            {
+              if (selectedItems[i] != targetItem) 
+              {
+                if (!didSuppressSelect) 
+                {
+                  this._suppressOnSelect = true;
+                  didSuppressSelect = true;
+                }
+                this.removeItemFromSelection(selectedItems[i]);
+              }
+              else
+                i++;
+            }
+            if (didSuppressSelect)
+              this._suppressOnSelect = false;
+          }
+        }
+        else 
+        {
+          if (this.selType != "multiple" || (!event.ctrlKey && !event.shiftKey && !event.metaKey))
+            this.clearSelection();
+        }
+      ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="descriptionitem">
+    <content>
+      <xul:hbox class="attachmentBox" xbl:inherits="orient" align="start">
+        <xul:label class="descriptioncell-label" xbl:inherits="value=label,flex=flexlabel,crop,disabled,context" flex="1" crop="right"/>
+      </xul:hbox>
+    </content>
+  </binding>
+
+  <binding id="descriptionitem-iconic">
+    <content>
+      <xul:hbox class="attachmentBox" xbl:inherits="orient" align="center">
+        <xul:image class="descriptioncell-icon" xbl:inherits="src=image"/>
+        <xul:label class="descriptioncell-label" xbl:inherits="value=label,flex=flexlabel,crop,contextdisabled" flex="1" crop="right"/>
+      </xul:hbox>
+    </content>
+  </binding>
  
   <!-- Message Pane Widgets -->
 
