@@ -42,8 +42,11 @@
 
 @interface CHIconTabViewItem : NSTabViewItem
 {
-  NSImage *mTabIcon;
-  NSDictionary* mLabelAttributes;
+  NSImage          *mTabIcon;
+  NSDictionary     *mLabelAttributes;
+  NSString         *mLabelString;
+  NSMutableString  *mTruncLabelString;
+  int              mLabelStringWidth;
 }
 
 // The designated initializer

@@ -42,6 +42,7 @@
 #import "NSString+Utils.h"
 
 #import "CHIconTabViewItem.h"
+#import "NSString+Utils.h"
 
 //
 // NSParagraphStyle has a line break mode which will automatically
@@ -51,7 +52,6 @@
 #define BROKEN_NSLineBreakByTruncatingMiddle
 
 static const int kMinTabsForSpacing = 4;		// with 1-4 tabs, each tab is 1/4 the tab view width
-static const int kEllipseSpaces = 4; //yes, i know it's 3 ...'s
 
 @interface CHIconTabViewItem(Private)
 - (void)setupLabelAttributes;
@@ -64,6 +64,8 @@ static const int kEllipseSpaces = 4; //yes, i know it's 3 ...'s
   if ( (self = [super initWithIdentifier:identifier]) ) {
     [self setTabIcon:tabIcon];
     [self setupLabelAttributes];
+    mLabelString = @"";
+    mLabelStringWidth = -1;
   }
   return self;
 }
@@ -77,6 +79,7 @@ static const int kEllipseSpaces = 4; //yes, i know it's 3 ...'s
 {
   [mTabIcon release];
   [mLabelAttributes release];
+  [mTruncLabelString release];
   [super dealloc];
 }
 
@@ -111,7 +114,7 @@ static const int kEllipseSpaces = 4; //yes, i know it's 3 ...'s
 
   //if we've got text, size for # of tabs & amount of text. 
   // Accounts for icon size, if one present.
-  if ([[self label] length] > 0) {
+  if ([mLabelString length] > 0) {
     numTabs = [[self tabView] numberOfTabViewItems];
     if (numTabs < kMinTabsForSpacing)
       numTabs = kMinTabsForSpacing;
@@ -146,36 +149,22 @@ static const int kEllipseSpaces = 4; //yes, i know it's 3 ...'s
                          NSHeight(tabRect));
   }
   
-  NSMutableAttributedString* labelString = [[NSMutableAttributedString alloc] initWithString:[self label] attributes:mLabelAttributes];
+  // Check if we have to rebuild the cached label string - either because the
+  // size changed, or the label changed, or because we never set the label before.
+  int width = NSWidth(tabRect);
+  if (mLabelStringWidth != width || !mTruncLabelString) {
+    [mTruncLabelString release];
+    mTruncLabelString = [[NSMutableString alloc] initWithString:mLabelString];
+    mLabelStringWidth = width;
 
 #ifdef BROKEN_NSLineBreakByTruncatingMiddle
-  //
-  // ****************************************************************
-  // Beginning of LineBreakByTruncatingTail workaround code.
-  // When it starts working, this can be removed.
-  // ****************************************************************
-  //
-  NSSize stringSize = [labelString size];
-  if (stringSize.width > NSWidth(tabRect))
-  {
-    int   labelLength = [[labelString string] length];    
-    float spacePerChar = stringSize.width/labelLength;
-    int   allowableCharacters = floor(NSWidth(tabRect)/spacePerChar) - kEllipseSpaces;
-    if (allowableCharacters < labelLength)
-    {
-      if (allowableCharacters < 0)
-        allowableCharacters = 0;
-      [labelString replaceCharactersInRange:NSMakeRange(allowableCharacters, labelLength - allowableCharacters) withString:[NSString ellipsisString]];
-    }
-  }
-  //
-  // ****************************************************************
-  // End of LineBreakByTruncatingTail workaround code.
-  // ****************************************************************
-  //
+    // Do our own truncating until Apple implements LineBreakByTruncatingTail/Middle.
+    // Then we can remove this code.
+    [mTruncLabelString truncateToWidth:width at:kTruncateAtEnd withAttributes:mLabelAttributes];
 #endif
-  [labelString drawInRect:tabRect];
-  [labelString release];
+  }
+
+  [mTruncLabelString drawInRect:tabRect withAttributes:mLabelAttributes];
 }
 
 -(NSImage *)tabIcon
@@ -189,5 +178,25 @@ static const int kEllipseSpaces = 4; //yes, i know it's 3 ...'s
   mTabIcon = [newIcon copy];
 }
 
+- (void)setLabel:(NSString *)label
+{
+  // We use our complete own label storage, since for some reasons NSTabViewItem
+  // will start to slow us down a *lot* if the label becomes very long
+  // (even though we don't use the original drawing/size code at all).
+  if (![label isEqual:mLabelString]) {
+    [mLabelString release];
+    mLabelString = [label copy];
+    mLabelStringWidth = -1;
+    
+    // we need to call setLabel on super to make some stuff happen, but the string
+    // doesn't matter.
+    [super setLabel:@"foo"];
+  }
+}
+
+- (NSString *)label
+{
+	return mLabelString;
+}
 
 @end
