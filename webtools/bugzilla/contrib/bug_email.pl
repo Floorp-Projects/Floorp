@@ -37,7 +37,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.15 2003/01/25 04:39:14 jake%bugzilla.org Exp $
+# $Id: bug_email.pl,v 1.16 2003/08/22 14:59:13 justdave%syndicomm.com Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -75,6 +75,11 @@ push @INC, ".";
 
 require "globals.pl";
 require "BugzillaEmail.pm";
+
+use lib ".";
+use lib "../";
+use Bugzilla::Constants;
+use Bugzilla::BugMail;
 
 my @mailerrors = ();       # Buffer for Errors in the mail
 my @mailwarnings = ();     # Buffer for Warnings found in the mail
@@ -555,52 +560,6 @@ END
     return( $ret );
 
 }
-###############################################################
-# groupBitToString( $ )
-# converts a given number back to the groupsetting-names
-# This function accepts single numbers as added bits or 
-# Strings with +-Signs
-sub groupBitToString( $ )
-{
-    my ($bits) = @_;
-    my $type;
-    my @bitlist = ();
-    my $ret = "";
-
-    if( $bits =~ /^\d+$/ ) {  # only numbers
-	$type = 1;
-
-    } elsif( $bits =~ /^(\s*\d+\s*\+\s*)+/ ) { 
-	$type = 2;
-    } else {
-	# Error: unknown format !
-	$type = 0;
-    }
-
-    $bits =~ s/\s*//g;
-    #
-    # Query for groupset-Information
-    SendSQL( "Select Bit,Name, Description from groups where isbuggroup=1" );
-    my @line;
-    while( MoreSQLData() ){
-	@line = FetchSQLData();
-	
-	if( $type == 1 ) { 
-	    if( ((0+$bits) & (0+$line[0])) == 0+$line[0] ) {
-		$ret .= sprintf( "%s ", $line[1] );
-	    }
-	} elsif( $type == 2 ) {
-	    if( $bits =~ /$line[0]/ ) {
-		$ret .= sprintf( "%s ", $line[1] );
-	    }
-	}
-    }
-
-    return( $ret );
-}
-
-
-
 #------------------------------
 #
 # dump_entity ENTITY, NAME
@@ -763,12 +722,10 @@ $SenderShort =~ s/^.*?([a-zA-Z0-9_.-]+?\@[a-zA-Z0-9_.-]+\.[a-zA-Z0-9_.-]+).*$/$1
 
 $SenderShort = findUser($SenderShort);
 
-print "SenderShort is $SenderShort\n";
 if (!defined($SenderShort)) {
   $SenderShort = $Sender;
   $SenderShort =~ s/^.*?([a-zA-Z0-9_.-]+?\@[a-zA-Z0-9_.-]+\.[a-zA-Z0-9_.-]+).*$/$1/;
 }
-print "The sendershort is now $SenderShort\n";
 
 my $Subject = "";
 $Subject = $entity->get( 'Subject' );
@@ -1011,97 +968,29 @@ $Control{'version'} = $Version;
 # GroupsSet: Protections for Bug info. This paramter controls the visiblility of the 
 # given bug. An Error in the given Buggroup is not a blocker, a default is taken.
 #
-# The GroupSet is accepted in three ways: As single number like 65536
-# As added numbers like 65536 + 6 +8
-# As literals linked with whitespaces, plus-signs or kommas
+# The GroupSet is accepted only as literals linked with whitespaces, plus-signs or kommas
 #
 my $GroupSet = "";
+my %GroupArr = ();
 $GroupSet = $Control{'groupset'} if( defined( $Control{ 'groupset' }));
 #
 # Fetch the default value for groupsetting
-SendSQL("select bit from groups where name=" . SqlQuote( "ReadInternal" ));
+my $DefaultGroup = 'ReadInternal';
+SendSQL("select id from groups where name=" . SqlQuote( $DefaultGroup ));
 my $default_group = FetchOneColumn();
 
 if( $GroupSet eq "" ) {
-    # To bad: Groupset does not contain anything -> set to default
-    $GroupSet = $default_group;
+    # Too bad: Groupset does not contain anything -> set to default
+    $GroupArr{$DefaultGroup} = $default_group if(defined( $default_group ));
     #
     # Give the user a hint
     my $Text = "You did not send a value for optional key \@groupset, which controls\n";
-    $Text .= "the Permissions of the bug. It was set to a default value 'Internal Bug'\n";
-    $Text .= "Probably the QA will change that if desired.\n";
+    $Text .= "the Permissions of the bug. It will be set to a default value 'Internal Bug'\n";
+    $Text .= "if the group '$DefaultGroup' exists.  The QA may change that.\n";
     
     BugMailError( 0, $Text );
-} elsif( $GroupSet =~ /^\d+$/ ) {
-    # Numerical Groups (no +-signs), the GroupSet must be the sum of the bits
-    # 
-    my $grp_num = $GroupSet;
-    # print "Numeric: $GroupSet\n";
-    SendSQL("select bit from groups where isbuggroup=1 order by bit");
-    my @Groups = FetchAllSQLData();
-    
-    # DANGEROUS: This code implies, that perl *CAN* cope with large numbers
-    # Its probably better to allow only one default-group when mailing !
-    my $Val = "0";
-    foreach ( @Groups ) {
-	# print 0+$grp_num & 0+$_ , "\n";
-	if ( ( (0+$grp_num) & (0+$_) ) == 0+$_ ) {
-	    $Val .= sprintf( "+%d", $_ );
-	}
-    }
-    if( $Val eq "0" ) { 
-	# No valid group found
-	my $Text = "The number you sent for the groupset of the bug was wrong.\n" .
-	    "It was not the sum of valid bits, which are:\n\t";
-	$Text .= join( "\n\t", @Groups ) . "\n";
-	$Text .= "The groupset for your bug is set to default $default_group, which\n" .
-	    "means 'ReadInternal'";
-	
-	BugMailError( 0, $Text );
-	$GroupSet = $default_group;
-    } else {
-	$GroupSet = $Val;
-    }
-	
-} elsif( $GroupSet =~ /^(\s*\d+\s*\+\s*)+/ ) {
-    #
-    # Groupset given as String with added numbers like 65536+131072
-    # The strings are splitted and checked if the numbers are in the DB
-    my @bits = split( /\s*\+\s*/, $GroupSet );
-    my $new_groupset = "0";
-    # Get all bits for groupsetting
-    SendSQL("select bit from groups where isbuggroup=1" );
-    my @db_bits = FetchAllSQLData();
-
-    # ... and check, if the given bits and the one in the DB fit together
-    foreach my $bit ( @bits ) {
-	# print "The Bit is: $bit \n";
-	if( lsearch( \@db_bits, $bit ) == -1 ) {
-	    # Bit not found !
-	    my $Text = "Checking the Group-Settings: You sent the Groupset-Bit $bit\n" .
-		"which is not a valid Groupset-Bit. It will be skipped !\n\n";
-	    BugMailError( 0, $Text );
-	} else {
-	    # Cool bit, add to the result-String
-	    $new_groupset .= "+" . $bit;
-	}
-    }
-
-    # Is the new-String larger than 0
-    if( $new_groupset eq "0" ) {
-	$new_groupset = $default_group;
-	
-	my $Text = "All given Groupsetting-Bits are invalid. Setting Groupsetting to\n" .
-	    "default-Value $new_groupset, what means 'ReadInternal'\n\n";
-	
-	BugMailError( 0, $Text );
-    }
-    # Restore to Groupset-Variable
-    $GroupSet = $new_groupset;
-
 } else {
     # literal  e.g. 'ReadInternal'
-    my $Value = "0";
     my $gserr = 0;
     my $Text = "";
 
@@ -1109,37 +998,29 @@ if( $GroupSet eq "" ) {
     # Split literal Groupsettings either on Whitespaces, +-Signs or ,
     # Then search for every Literal in the DB - col name
     foreach ( split /\s+|\s*\+\s*|\s*,\s*/, $GroupSet ) {
-	SendSQL("select bit, Name from groups where name=" . SqlQuote($_));
+      SendSQL("select id, Name from groups where name=" . SqlQuote($_));
 	my( $bval, $bname ) = FetchSQLData();
 
 	if( defined( $bname ) && $_ eq $bname ) {
-	    $Value .= sprintf( "+%d", $bval );
+        $GroupArr{$bname} = $bval;
 	} else {
 	    $Text .= "You sent the wrong GroupSet-String $_\n";
 	    $gserr = 1;
 	}
     }
+    
     #
     # Give help if wrong GroupSet-String came
     if( $gserr > 0 ) {
 	# There happend errors 
 	$Text .= "Here are all valid literal Groupsetting-strings:\n\t";
-	SendSQL( "select name from groups where isbuggroup=1" );
+      SendSQL( "select g.name from groups g, user_group_map u where u.user_id=".$Control{'reporter'}.
+            " and g.isbuggroup=1 and g.id = u.group_id group by g.name;" );
 	$Text .= join( "\n\t", FetchAllSQLData()) . "\n";
 	BugMailError( 0, $Text );
     }
-		
-    #
-    # Check if anything was right, if not -> set default
-    if( $Value eq "0" ) {
-	$Value = $default_group;
-	$Text .= "\nThe group will be set to $default_group, what means 'ReadInternal'\n\n";
-    }
-    
-    $GroupSet = $Value;
 } # End of checking groupsets
-
-$Control{'groupset'} = $GroupSet;
+delete $Control{'groupset'};
 
 # ###################################################################################
 # Checking is finished
@@ -1198,7 +1079,6 @@ END
       $val = $Control{ $field };
       
       $val = DBID_to_name( $val ) if( $field =~ /reporter|assigned_to|qa_contact/ );
-      $val = groupBitToString( $val ) if( $field =~ /groupset/ );
       
       $tmp_reply .= sprintf( "     \@%-15s = %-15s\n", $field, $val );
 
@@ -1206,6 +1086,10 @@ END
 	$reporter = $val;
       }
     }
+    #
+    # Display GroupArr
+    #
+    $tmp_reply .= sprintf( "     \@%-15s = %-15s\n", 'groupset', join(',', keys %GroupArr) );
     
     $tmp_reply .= "      ... and your error-description !\n";
 
@@ -1227,7 +1111,6 @@ END
       $state = SqlQuote("NEW");
     }
 
-
     $query .=  $state . ", \'$bug_when\', $ever_confirmed)\n";
 #    $query .=  SqlQuote( "NEW" ) . ", now(), " . SqlQuote($comment) . " )\n";
 
@@ -1246,11 +1129,22 @@ END
 	SendSQL($long_desc_query);
 
 	# Cool, the mail was successful
-        system("./processmail", $id, $SenderShort);
+        # system("./processmail", $id, $SenderShort);
     } else {
-	$id = 0xFFFF;  # TEST !
+        $id = 0xFFFFFFFF;  # TEST !
 	print "\n-------------------------------------------------------------------------\n";
 	print "$query\n";
+    }
+
+    #
+    # Handle GroupArr
+    #
+    foreach my $grp (keys %GroupArr) {
+      if( ! $test) {
+        SendSQL("INSERT INTO bug_group_map SET bug_id=$id, group_id=$GroupArr{$grp}");
+      } else {
+        print "INSERT INTO bug_group_map SET bug_id=$id, group_id=$GroupArr{$grp}\n";
+      }
     }
 
     #
@@ -1266,6 +1160,8 @@ END
     #
     # Send the 'you did it'-reply
     Reply( $SenderShort, $Message_ID,"Bugzilla success (ID $id)", $reply );
+
+    Bugzilla::BugMail::Send($id) if( ! $test);
     
 } else {
     # There were critical errors in the mail - the bug couldnt be inserted. !
