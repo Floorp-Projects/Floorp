@@ -716,7 +716,7 @@ void bcJavaMarshalToolkit::InitializeStatic() {
 
     if (!(clazz = env->FindClass("java/lang/Boolean"))
         || !(booleanClass = (jclass) env->NewGlobalRef(clazz))
-        || !(clazz = env->FindClass("[Ljava/lang/Boolean;"))
+        || !(clazz = env->FindClass("[Z"))
         || !(booleanArrayClass = (jclass) env->NewGlobalRef(clazz))
         ) {
         DeInitializeStatic();
@@ -725,7 +725,7 @@ void bcJavaMarshalToolkit::InitializeStatic() {
 
     if (!(clazz = env->FindClass("java/lang/Character"))
         || !(charClass = (jclass) env->NewGlobalRef(clazz))
-        || !(clazz = env->FindClass("[Ljava/lang/Character;"))
+        || !(clazz = env->FindClass("[C"))
         || !(charArrayClass = (jclass) env->NewGlobalRef(clazz))
         ) {
         DeInitializeStatic();
@@ -733,7 +733,7 @@ void bcJavaMarshalToolkit::InitializeStatic() {
     }
     if (!(clazz = env->FindClass("java/lang/Byte"))
         || !(byteClass = (jclass) env->NewGlobalRef(clazz))
-        || !(clazz = env->FindClass("[Ljava/lang/Byte;"))
+        || !(clazz = env->FindClass("[B"))
         || !(byteArrayClass = (jclass) env->NewGlobalRef(clazz))
         ) {
         DeInitializeStatic();
@@ -741,7 +741,7 @@ void bcJavaMarshalToolkit::InitializeStatic() {
     }
     if (!(clazz = env->FindClass("java/lang/Short"))
         || !(shortClass = (jclass) env->NewGlobalRef(clazz))
-        || !(clazz = env->FindClass("[Ljava/lang/Short;"))
+        || !(clazz = env->FindClass("[[S"))
         || !(shortArrayClass = (jclass) env->NewGlobalRef(clazz))
         ) {
         DeInitializeStatic();
@@ -749,7 +749,7 @@ void bcJavaMarshalToolkit::InitializeStatic() {
     }
     if (!(clazz = env->FindClass("java/lang/Integer"))
         || !(intClass = (jclass) env->NewGlobalRef(clazz))
-        || !(clazz = env->FindClass("[Ljava/lang/Integer;"))
+        || !(clazz = env->FindClass("[I"))
         || !(intArrayClass = (jclass) env->NewGlobalRef(clazz))
         ) {
         DeInitializeStatic();
@@ -757,14 +757,14 @@ void bcJavaMarshalToolkit::InitializeStatic() {
     }
     if (!(clazz = env->FindClass("java/lang/Long"))
         || !(longClass = (jclass) env->NewGlobalRef(clazz))
-        || !(clazz = env->FindClass("[Ljava/lang/Long;"))
+        || !(clazz = env->FindClass("[J"))
         ) {
         DeInitializeStatic();
         return;
     }
     if (!(clazz = env->FindClass("java/lang/Float"))
         || !(floatClass = (jclass) env->NewGlobalRef(clazz))
-        || !(clazz = env->FindClass("[Ljava/lang/Float;"))
+        || !(clazz = env->FindClass("[F"))
         || !(floatArrayClass = (jclass) env->NewGlobalRef(clazz))
         ) {
         DeInitializeStatic();
@@ -772,7 +772,7 @@ void bcJavaMarshalToolkit::InitializeStatic() {
     }
     if (!(clazz = env->FindClass("java/lang/Double"))
         || !(doubleClass = (jclass) env->NewGlobalRef(clazz))
-        || !(clazz = env->FindClass("[Ljava/lang/Double;"))
+        || !(clazz = env->FindClass("[D"))
         || !(doubleArrayClass = (jclass) env->NewGlobalRef(clazz))
         ) {
         DeInitializeStatic();

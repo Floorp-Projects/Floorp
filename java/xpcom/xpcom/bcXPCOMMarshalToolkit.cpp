@@ -410,7 +410,7 @@ bcXPCOMMarshalToolkit::UnMarshalElement(void *data, bcIUnMarshaler *um, nsXPTPar
                     return NS_ERROR_FAILURE;
                 }
                 PRUint32 arraySize;
-                PRInt16 elemSize = GetSimpleSize(type);
+                PRInt16 elemSize = GetSimpleSize(datumType);
                 um->ReadSimple(&arraySize,bc_T_U32);
                 
                 char * current;
