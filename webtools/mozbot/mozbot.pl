@@ -152,7 +152,7 @@ my $last_uuid = 0;
 
 # leave @trees empty if you don't want tinderbox details
 
-my @trees = qw (SeaMonkey);
+my @trees = qw (SeaMonkey SeaMonkey-Ports);
 if ($nick =~ /grend/) {
     @trees = qw (Grendel);
 }
