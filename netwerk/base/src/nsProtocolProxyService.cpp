@@ -48,6 +48,7 @@
 #include "nsIObserverService.h"
 #include "nsIProtocolHandler.h"
 #include "nsIProtocolProxyCallback.h"
+#include "nsICancelable.h"
 #include "nsIDNSService.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch2.h"
@@ -78,21 +79,14 @@ struct nsProtocolInfo {
 
 //----------------------------------------------------------------------------
 
-#define NS_ASYNCRESOLVECONTEXT_IID                   \
-{ /* c5fb0580-0cea-4d6a-8f76-ae61dc644d3a */         \
-    0xc5fb0580,                                      \
-    0x0cea,                                          \
-    0x4d6a,                                          \
-    {0x8f, 0x76, 0xae, 0x61, 0xdc, 0x64, 0x4d, 0x3a} \
-}
-
-class nsAsyncResolveContext : public PLEvent, public nsPACManCallback 
+class nsAsyncResolveRequest : public PLEvent
+                            , public nsPACManCallback 
+                            , public nsICancelable
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ASYNCRESOLVECONTEXT_IID)
     NS_DECL_ISUPPORTS
 
-    nsAsyncResolveContext(nsProtocolProxyService *pps, nsIURI *uri,
+    nsAsyncResolveRequest(nsProtocolProxyService *pps, nsIURI *uri,
                           nsIProtocolProxyCallback *callback)
         : mStatus(NS_OK)
         , mDispatched(PR_FALSE)
@@ -100,43 +94,52 @@ public:
         , mURI(uri)
         , mCallback(callback)
     {
+        NS_ASSERTION(mCallback, "null callback");
         PL_InitEvent(this, nsnull, HandleEvent, CleanupEvent);
     }
 
-    // Called on the main thread
     void SetResult(nsresult status, nsIProxyInfo *pi)
     {
         mStatus = status;
         mProxyInfo = pi;
     }
 
-    // Called on the main thread
-    void Cancel()
+    NS_IMETHOD Cancel(nsresult reason)
     {
-        if (mDispatched)
-            return;
-        SetResult(NS_ERROR_ABORT, nsnull);
-        DispatchCallback();
+        NS_ENSURE_ARG(NS_FAILED(reason));
+
+        // If we've already called DoCallback then, nothing more to do.
+        if (!mCallback)
+            return NS_OK;
+
+        SetResult(reason, nsnull);
+        return DispatchCallback();
     }
 
-    // Called on any thread
     nsresult DispatchCallback()
     {
+        if (mDispatched)  // Only need to dispatch once
+            return NS_OK;
+
         nsCOMPtr<nsIEventQueue> eventQ;
         nsresult rv = NS_GetCurrentEventQ(getter_AddRefs(eventQ));
-        if (NS_FAILED(rv)) {
+        if (NS_FAILED(rv))
             NS_WARNING("could not get current event queue");
-            return rv;
+        else {
+            NS_ADDREF_THIS();
+            rv = eventQ->PostEvent(this);
+            if (NS_FAILED(rv)) {
+                NS_WARNING("unable to dispatch callback event");
+                PL_DestroyEvent(this);
+            }
+            else {
+                mDispatched = PR_TRUE;
+                return NS_OK;
+            }
         }
-        NS_ADDREF_THIS();
-        rv = eventQ->PostEvent(this);
-        if (NS_FAILED(rv)) {
-            NS_WARNING("unable to dispatch callback event");
-            PL_DestroyEvent(this);
-            return rv;
-        }
-        mDispatched = PR_TRUE;
-        return NS_OK;
+
+        mCallback = nsnull;  // break possible reference cycle
+        return rv;
     }
 
 private:
@@ -145,16 +148,22 @@ private:
     // before calling DoCallback.
     void OnQueryComplete(nsresult status, const nsCString &pacString)
     {
-        if (mDispatched)
+        // If we've already called DoCallback then, nothing more to do.
+        if (!mCallback)
             return;
 
-        mDispatched = PR_TRUE;
-        mStatus = status;
-        mPACString = pacString;
+        // Provided we haven't been canceled...
+        if (mStatus == NS_OK) {
+            mStatus = status;
+            mPACString = pacString;
+        }
+
+        // In the cancelation case, we may still have another PLEvent in
+        // the queue that wants to call DoCallback.  No need to wait for
+        // it, just run the callback now.
         DoCallback();
     }
 
-    // Called on the main thread
     void DoCallback()
     {
         // Generate proxy info from the PAC string if appropriate
@@ -177,8 +186,8 @@ private:
 
     PR_STATIC_CALLBACK(void *) HandleEvent(PLEvent *ev)
     {
-        nsAsyncResolveContext *self =
-                NS_STATIC_CAST(nsAsyncResolveContext *, ev);
+        nsAsyncResolveRequest *self =
+                NS_STATIC_CAST(nsAsyncResolveRequest *, ev);
         if (self->mCallback)
             self->DoCallback();
         return nsnull;
@@ -186,8 +195,8 @@ private:
 
     PR_STATIC_CALLBACK(void) CleanupEvent(PLEvent *ev)
     {
-        nsAsyncResolveContext *self =
-                NS_STATIC_CAST(nsAsyncResolveContext *, ev);
+        nsAsyncResolveRequest *self =
+                NS_STATIC_CAST(nsAsyncResolveRequest *, ev);
         NS_RELEASE(self);  // balance AddRef in DispatchCallback
     }
 
@@ -203,7 +212,7 @@ private:
     nsCOMPtr<nsIProxyInfo>             mProxyInfo;
 };
 
-NS_IMPL_ISUPPORTS1(nsAsyncResolveContext, nsAsyncResolveContext)
+NS_IMPL_ISUPPORTS1(nsAsyncResolveRequest, nsICancelable)
 
 //----------------------------------------------------------------------------
 
@@ -806,10 +815,10 @@ nsProtocolProxyService::Resolve(nsIURI *uri, PRUint32 flags,
 NS_IMETHODIMP
 nsProtocolProxyService::AsyncResolve(nsIURI *uri, PRUint32 flags,
                                      nsIProtocolProxyCallback *callback,
-                                     nsISupports **result)
+                                     nsICancelable **result)
 {
-    nsCOMPtr<nsAsyncResolveContext> ctx =
-            new nsAsyncResolveContext(this, uri, callback);
+    nsRefPtr<nsAsyncResolveRequest> ctx =
+            new nsAsyncResolveRequest(this, uri, callback);
     if (!ctx)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -828,8 +837,7 @@ nsProtocolProxyService::AsyncResolve(nsIURI *uri, PRUint32 flags,
         ApplyFilters(uri, info, pi);
 
         ctx->SetResult(NS_OK, pi);
-        ctx->DispatchCallback();
-        return NS_OK;
+        return ctx->DispatchCallback();
     }
 
     // else kick off a PAC query
@@ -839,15 +847,6 @@ nsProtocolProxyService::AsyncResolve(nsIURI *uri, PRUint32 flags,
         NS_ADDREF(*result);
     }
     return rv;
-}
-
-NS_IMETHODIMP
-nsProtocolProxyService::CancelAsyncResolve(nsISupports *context)
-{
-    nsCOMPtr<nsAsyncResolveContext> ctx = do_QueryInterface(context);
-    NS_ENSURE_ARG(ctx);
-    ctx->Cancel();
-    return NS_OK;
 }
 
 NS_IMETHODIMP
