@@ -38,7 +38,7 @@
 
 
 /*
- *  npupp.h $Revision: 3.8 $
+ *  npupp.h $Revision: 3.9 $
  *  function call mecahnics needed by platform specific glue code.
  */
 
@@ -1189,7 +1189,7 @@ OSErr BP_GetSupportedMIMETypes(BPSupportedMIMETypes *mimeInfo, UInt32 flags);
 
 #if _NPUPP_USE_UPP_
 
-#define NP_GETMIMEDESCRIPTION_NAME "NP_GetSupportedMIMETypesRD"
+#define NP_GETMIMEDESCRIPTION_NAME "NP_GetMIMEDescriptionRD"
 typedef UniversalProcPtr NP_GetMIMEDescriptionUPP;
 enum {
 	uppNP_GetMIMEDescEntryProc = kThinkCStackBased
@@ -1204,7 +1204,7 @@ enum {
 #else  // !_NPUPP_USE_UPP_
 
  // NP_GetMIMEDescription
-#define NP_GETMIMEDESCRIPTION_NAME "NP_GetSupportedMIMETypes"
+#define NP_GETMIMEDESCRIPTION_NAME "NP_GetMIMEDescription"
 typedef const char* (* NP_LOADDS NP_GetMIMEDescriptionUPP)();
 #define NewNP_GetMIMEDescEntryProc(FUNC)		\
 		((NP_GetMIMEDescriptionUPP) (FUNC))
