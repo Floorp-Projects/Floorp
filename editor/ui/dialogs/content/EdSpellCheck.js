@@ -362,7 +362,7 @@ function SelectLanguage()
   var item = dialog.LanguageMenulist.selectedItem;
 
   try {
-    spellChecker.SetCurrentDictionary(item.data);
+    spellChecker.SetCurrentDictionary(item.value);
   } catch (ex) {
     dump(ex);
   }
