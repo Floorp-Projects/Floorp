@@ -16,6 +16,7 @@ pref-fonts.dtd
 pref-history.dtd
 pref-images.dtd
 pref-languages.dtd
+pref-languages.properties
 pref-navigator.dtd
 pref-offline.dtd
 pref-policies.dtd

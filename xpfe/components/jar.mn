@@ -119,6 +119,7 @@ en-US.jar:
     locale/en-US/communicator/pref/pref-history.dtd             (prefwindow/resources/locale/en-US/pref-history.dtd)
     locale/en-US/communicator/pref/pref-images.dtd              (prefwindow/resources/locale/en-US/pref-images.dtd)
     locale/en-US/communicator/pref/pref-languages.dtd           (prefwindow/resources/locale/en-US/pref-languages.dtd)
+    locale/en-US/communicator/pref/pref-languages.properties    (prefwindow/resources/locale/en-US/pref-languages.properties)
     locale/en-US/communicator/pref/pref-navigator.dtd           (prefwindow/resources/locale/en-US/pref-navigator.dtd)
     locale/en-US/communicator/pref/pref-offline.dtd             (prefwindow/resources/locale/en-US/pref-offline.dtd)
     locale/en-US/communicator/pref/pref-policies.dtd            (prefwindow/resources/locale/en-US/pref-policies.dtd)
