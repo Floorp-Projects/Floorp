@@ -116,6 +116,8 @@ static NS_DEFINE_IID(kIDomXulElementIID,      NS_IDOMXULELEMENT_IID);
 static NS_DEFINE_CID(kCollationFactoryCID,    NS_COLLATIONFACTORY_CID);
 static NS_DEFINE_IID(kICollationFactoryIID,   NS_ICOLLATIONFACTORY_IID);
 
+static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
+
 static NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
 static NS_DEFINE_IID(kILocaleFactoryIID, NS_ILOCALEFACTORY_IID);
 static NS_DEFINE_CID(kLocaleCID, NS_LOCALE_CID);
@@ -139,6 +141,7 @@ typedef	struct	_sortStruct	{
 	PRBool				descendingSort;
 	PRBool				naturalOrderSort;
 	nsCOMPtr<nsISupportsArray>	resCache;
+	nsCOMPtr<nsIRDFDataSource>	mInner;
 } sortStruct, *sortPtr;
 
 
@@ -201,6 +204,7 @@ nsresult	RemoveAllChildren(nsIContent *node);
 nsresult	SortTreeChildren(nsIContent *container, PRInt32 colIndex, sortPtr sortInfo);
 nsresult	DoSort(nsIDOMNode* node, const nsString& sortResource, const nsString& sortDirection);
 
+static nsresult	GetCachedTarget(sortPtr sortInfo, nsIRDFResource* aSource, nsIRDFResource *aProperty, PRBool aTruthValue, nsIRDFNode **aResult);
 static nsresult	GetCachedResource(sortPtr sortInfo, nsIRDFResource *sortProperty, const char *suffix, nsIRDFResource **res);
 static nsresult	GetResourceValue(nsIRDFResource *res1, nsIRDFResource *sortProperty, sortPtr sortInfo, nsIRDFNode **, PRBool &isCollationKey);
 static nsresult	GetNodeValue(nsIContent *node1, nsIRDFResource *sortProperty, sortPtr sortInfo, nsIRDFNode **, PRBool &isCollationKey);
@@ -804,6 +808,38 @@ openSortCallback(const void *data1, const void *data2, void *privateData)
 
 
 nsresult
+XULSortServiceImpl::GetCachedTarget(sortPtr sortInfo, nsIRDFResource* aSource,
+		nsIRDFResource *aProperty, PRBool aTruthValue, nsIRDFNode **aResult)
+{
+	nsresult	rv = NS_OK, rvTemp;
+
+	if (!(sortInfo->mInner))
+	{
+		// if we don't have a mInner, create one
+		rvTemp = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
+			nsnull, nsIRDFDataSource::GetIID(), (void **)&(sortInfo->mInner));
+	}
+	if (sortInfo->mInner)
+	{
+		// else, if we do have a mInner, look for the resource in it
+		rv = sortInfo->mInner->GetTarget(aSource, aProperty, aTruthValue, aResult);
+	}
+	if (NS_SUCCEEDED(rv) && (rv == NS_RDF_NO_VALUE) && (sortInfo->db))
+	{
+		// if we don't have a cached value, look it up in the document's DB
+		if (NS_SUCCEEDED(rv = (sortInfo->db)->GetTarget(aSource, aProperty,
+			aTruthValue, aResult)) && (rv != NS_RDF_NO_VALUE))
+		{
+			// and if we have a value, cache it away in our mInner also
+			rvTemp = sortInfo->mInner->Assert(aSource, aProperty, *aResult, PR_TRUE);
+		}
+	}
+	return(rv);
+}
+
+
+
+nsresult
 XULSortServiceImpl::GetCachedResource(sortPtr sortInfo, nsIRDFResource *sortProperty, const char *suffix, nsIRDFResource **res)
 {
 	nsresult		rv;
@@ -900,7 +936,7 @@ XULSortServiceImpl::GetResourceValue(nsIRDFResource *res1, nsIRDFResource *sortP
 		if (NS_SUCCEEDED(rv = GetCachedResource(sortInfo, sortInfo->sortProperty, "?collation=true",
 			getter_AddRefs(modSortRes))) && (modSortRes))
 		{
-			if (NS_SUCCEEDED(rv = (sortInfo->db)->GetTarget(res1, modSortRes,
+			if (NS_SUCCEEDED(rv = GetCachedTarget(sortInfo, res1, modSortRes,
 				PR_TRUE, target)) && (rv != NS_RDF_NO_VALUE))
 			{
 				isCollationKey = PR_TRUE;
@@ -915,7 +951,7 @@ XULSortServiceImpl::GetResourceValue(nsIRDFResource *res1, nsIRDFResource *sortP
 			if (NS_SUCCEEDED(rv = GetCachedResource(sortInfo, sortInfo->sortProperty, "?sort=true",
 				getter_AddRefs(modSortRes))) && (modSortRes))
 			{
-				if (NS_SUCCEEDED(rv = (sortInfo->db)->GetTarget(res1, modSortRes,
+				if (NS_SUCCEEDED(rv = GetCachedTarget(sortInfo, res1, modSortRes,
 					PR_TRUE, target)) && (rv != NS_RDF_NO_VALUE))
 				{
 				}
@@ -924,7 +960,7 @@ XULSortServiceImpl::GetResourceValue(nsIRDFResource *res1, nsIRDFResource *sortP
 		if (!(*target))
 		{
 			// if no collation key and no special sorting value, just get the property value
-			if (NS_SUCCEEDED(rv = (sortInfo->db)->GetTarget(res1, sortProperty,
+			if (NS_SUCCEEDED(rv = GetCachedTarget(sortInfo, res1, sortProperty,
 				PR_TRUE, target) && (rv != NS_RDF_NO_VALUE)))
 			{
 			}
@@ -1273,6 +1309,7 @@ XULSortServiceImpl::OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *con
 	sortInfo.rdfService = gRDFService;
 	sortInfo.db = db;
 	sortInfo.resCache = nsnull;
+	sortInfo.mInner = nsnull;
 	sortInfo.kNaturalOrderPosAtom = kNaturalOrderPosAtom;
 	sortInfo.kTreeCellAtom = kTreeCellAtom;
 	sortInfo.kNameSpaceID_XUL = kNameSpaceID_XUL;
@@ -1323,6 +1360,7 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node,
 	sortInfo.rdfService = gRDFService;
 	sortInfo.db = nsnull;
 	sortInfo.resCache = nsnull;
+	sortInfo.mInner = nsnull;
 
 	// Maintain an nsCOMPtr to _here_ to the composite datasource so
 	// that we're sure that we'll hold a reference to it (and actually
@@ -1526,6 +1564,7 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	sortInfo.rdfService = gRDFService;
 	sortInfo.db = nsnull;
 	sortInfo.resCache = nsnull;
+	sortInfo.mInner = nsnull;
 
 	nsCOMPtr<nsIDOMXULElement>	domXulTree = do_QueryInterface(treeNode);
 	if (!domXulTree)	return(NS_ERROR_FAILURE);
