@@ -281,6 +281,9 @@ public class leaksoup {
 			printLeaks(out, leaks);
 			
 			out.close();
+			
+			// quit the application.
+			System.exit(0);
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 		}
