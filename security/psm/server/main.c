@@ -216,6 +216,29 @@ enable_SMIME_cipher_prefs(void)
     SECMIME_EnableCipher(CIPHER_FAMILYID_MASK, 0);
 }
 
+#define SHORT_PK11_STRING 33
+#define LONG_PK11_STRING  65
+
+static char*
+ssm_ConverToLength(char *origString, PRUint32 newLen)
+{
+    char *newString;
+    PRUint32 origLen;
+    PRUint32 copyLen;
+
+    newString = SSM_NEW_ARRAY(char,newLen+1);
+    if (newString == NULL) {
+        return origString;
+    }
+    origLen = PL_strlen(origString);
+    copyLen = (origLen > newLen) ? newLen : origLen;
+    memcpy(newString, origString, copyLen);
+    memset(newString+copyLen, ' ' ,newLen - copyLen);
+    newString[newLen]='\0';
+    PR_Free(origString);
+    return newString;
+}
+
 SECStatus
 ssm_InitializePKCS11Strings(void)
 {
@@ -239,39 +262,70 @@ ssm_InitializePKCS11Strings(void)
     if (rv != SSM_SUCCESS) {
         goto loser;
     }
+    if (PL_strlen(manufacturerID) != SHORT_PK11_STRING) {
+        manufacturerID = ssm_ConverToLength(manufacturerID, SHORT_PK11_STRING);
+    }
     rv = SSM_FindUTF8StringInBundles(cx, "libraryDescription", 
                                      &libraryDescription);
     if (rv != SSM_SUCCESS) {
         goto loser;
+    }
+    if (PL_strlen(libraryDescription) != SHORT_PK11_STRING) {
+        libraryDescription = ssm_ConverToLength(libraryDescription, 
+                                                SHORT_PK11_STRING);
     }
     rv = SSM_FindUTF8StringInBundles(cx, "tokenDescription", 
                                      &tokenDescription);
     if (rv != SSM_SUCCESS) {
         goto loser;
     }
+    if (PL_strlen(tokenDescription) != SHORT_PK11_STRING) {
+        tokenDescription = ssm_ConverToLength(tokenDescription, 
+                                              SHORT_PK11_STRING);
+    }
     rv = SSM_FindUTF8StringInBundles(cx, "privateTokenDescription",
                                      &privateTokenDescription);
     if (rv != SSM_SUCCESS) {
         goto loser;
     }
+    if (PL_strlen(privateTokenDescription) != SHORT_PK11_STRING) {
+        privateTokenDescription = ssm_ConverToLength(privateTokenDescription,
+                                                     SHORT_PK11_STRING);
+    }
     rv = SSM_FindUTF8StringInBundles(cx, "slotDescription", &slotDescription);
     if (rv != SSM_SUCCESS) {
         goto loser;
+    }
+    if (PL_strlen(slotDescription) != LONG_PK11_STRING) {
+        slotDescription = ssm_ConverToLength(slotDescription,
+                                             LONG_PK11_STRING);
     }
     rv = SSM_FindUTF8StringInBundles(cx, "privateSlotDescription",
                                      &privateSlotDescription);
     if (rv != SSM_SUCCESS) {
         goto loser;
     }
+    if (PL_strlen(privateSlotDescription) != LONG_PK11_STRING) {
+        privateSlotDescription = ssm_ConverToLength(privateSlotDescription,
+                                                    LONG_PK11_STRING);
+    }
     rv = SSM_FindUTF8StringInBundles(cx, "fipsSlotDescription",
                                      &fipsSlotDescription);
     if (rv != SSM_SUCCESS) {
         goto loser;
     }
+    if (PL_strlen(fipsSlotDescription) != LONG_PK11_STRING) {
+        fipsSlotDescription = ssm_ConverToLength(fipsSlotDescription,
+                                                 LONG_PK11_STRING);
+    }
     rv = SSM_FindUTF8StringInBundles(cx, "fipsPrivateSlotDescription",
                                      &fipsPrivateSlotDescription);
     if (rv != SSM_SUCCESS) {
         goto loser;
+    }
+    if (PL_strlen(fipsPrivateSlotDescription) != LONG_PK11_STRING) {
+        fipsPrivateSlotDescription = 
+            ssm_ConverToLength(fipsPrivateSlotDescription, LONG_PK11_STRING);
     }
     if (cx != NULL) {
         SSMTextGen_DestroyContext(cx);
