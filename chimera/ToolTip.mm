@@ -42,96 +42,109 @@
 
 @end
 
+const float kBorderPadding = 2.0;
 
 @implementation ToolTip
 
 - (id)init
 {
-	self = [super init];
-	if (self) {
-		mPanel = [[NSPanel alloc] initWithContentRect: NSMakeRect(0.0, 0.0, 200.0, 200.0) styleMask: NSBorderlessWindowMask backing: NSBackingStoreBuffered defer: YES];
-		mTextField = [[[NSTextField alloc] initWithFrame: NSMakeRect(0.0, 0.0, 200.0, 200.0)] autorelease];
-		
-		[[mPanel contentView] addSubview: mTextField];
-		[mPanel setHasShadow: YES];
-		
-		[mTextField setAutoresizingMask: NSViewWidthSizable | NSViewHeightSizable];
-		[mTextField setBackgroundColor: [NSColor colorWithCalibratedRed: 1.0 green: 1.0 blue: .81 alpha: 1.0]];
-		[mTextField setDrawsBackground: YES];
-		[mTextField setEditable: NO];
-		[mTextField setSelectable: NO];
-		[mTextField setFont: [NSFont toolTipsFontOfSize: [NSFont smallSystemFontSize]]];
-		[mTextField setBezeled: NO];
-		[mTextField setBordered: NO];
-	}
-	return self;
+  
+  self = [super init];
+  if (self) {
+    mPanel = [[NSPanel alloc] initWithContentRect: NSMakeRect(0.0, 0.0, 200.0, 200.0) styleMask: NSBorderlessWindowMask backing: NSBackingStoreBuffered defer: YES];
+    
+    // Create a textfield as the content of our new window. Autorelease it because the window will
+    // hold a ref when we add it as a subview. Field occupies all but the top 2 and bottom
+    // 2 pixels of the panel (bug 149635)
+    mTextField = [[[NSTextField alloc] initWithFrame: NSMakeRect(0.0, kBorderPadding, 200.0, 200 - 2*kBorderPadding)] autorelease];
+    
+    [[mPanel contentView] addSubview: mTextField];
+    [mPanel setHasShadow: YES];
+    [mPanel setBackgroundColor: [NSColor colorWithCalibratedRed: 1.0 green: 1.0 blue: .81 alpha: 1.0]];
+    
+    [mTextField setAutoresizingMask: NSViewWidthSizable | NSViewHeightSizable];
+    [mTextField setDrawsBackground: NO];
+    [mTextField setEditable: NO];
+    [mTextField setSelectable: NO];
+    [mTextField setFont: [NSFont toolTipsFontOfSize: [NSFont smallSystemFontSize]]];
+    [mTextField setBezeled: NO];
+    [mTextField setBordered: NO];
+  }
+  return self;
 }
 
 - (void)dealloc
 {
-	[mPanel close];
-	[mPanel release];
-	[super dealloc];
+  [mPanel close];
+  [mPanel release];
+  [super dealloc];
 }
 
 - (void)showToolTipAtPoint:(NSPoint)point withString:(NSString*)string
-{	
-	if ([string length] == 0)
-		return;
-		
-	NSScreen* screen = [NSScreen screenForPoint: point];
-	if (!screen)
-		screen = [NSScreen mainScreen];
-	
-	if (screen) {
-		NSRect screenFrame = [screen visibleFrame];
-		NSSize screenSize = screenFrame.size;
-		NSTextView* textView = [[NSTextView alloc] initWithFrame: screenFrame];
-		
-		//  find out how large the tooltip needs to be
-		
-		[textView setString: string];
-    [textView setMinSize: NSMakeSize(0.0, 0.0)];
-		[textView setMaxSize: screenSize];
-		[textView setVerticallyResizable: YES];
-		[textView setHorizontallyResizable: YES];
-		[textView setFont: [NSFont toolTipsFontOfSize: [NSFont smallSystemFontSize]]];
-		[textView sizeToFit];
-		NSSize textSize = NSMakeSize( ceil( NSWidth([textView frame]) ), ceil( NSHeight([textView frame]) ) );
-		
-		//  set up the panel
-		
-		[mTextField setStringValue: string];
-		[mPanel setContentSize: textSize];
+{
+  if ([string length] == 0)
+    return;
 
-		// the given point is right where the mouse pointer is.  We want the tooltip's
-		// top left corner somewhere below that, but not if that'll put it off the monitor. There
+  NSScreen* screen = [NSScreen screenForPoint: point];
+  if (!screen)
+    screen = [NSScreen mainScreen];
+
+  if (screen) {
+    NSRect screenFrame = [screen visibleFrame];
+    NSSize screenSize = screenFrame.size;
+    NSTextView* textView = [[[NSTextView alloc] initWithFrame: screenFrame] autorelease];
+    
+    //  find out how large the tooltip needs to be
+    
+    [textView setString: string];
+    [textView setMinSize: NSMakeSize(0.0, 0.0)];
+    [textView setMaxSize: screenSize];
+    [textView setVerticallyResizable: YES];
+    [textView setHorizontallyResizable: YES];
+    [textView setFont: [NSFont toolTipsFontOfSize: [NSFont smallSystemFontSize]]];
+    [textView sizeToFit];
+    NSSize textSize = NSMakeSize( ceil( NSWidth([textView frame]) ), ceil( NSHeight([textView frame]) ) );
+    
+    //  adjust the size of the tooltip by a constant amount, as illustrated in bug 149635
+    //  specifically, add padding above and below the text, and remove 6 from the right side
+    // (six!? we're still not sure why it's six pixels too big. ideas are welcome).
+    
+    textSize.width -= 6;
+    textSize.height += kBorderPadding + kBorderPadding;
+    
+    //  set up the panel
+    
+    [mTextField setStringValue: string];
+    [mPanel setContentSize: textSize];
+    
+    // the given point is right where the mouse pointer is.  We want the tooltip's
+    // top left corner somewhere below that, but not if that'll put it off the monitor. There
     // is no way that we can go off the top of the monitor because cocoa won't let us position a window
     // that way
     const int kVOffset = 20;
-		if ( point.y - kVOffset - textSize.height > NSMinY(screenFrame) )
+    if ( point.y - kVOffset - textSize.height > NSMinY(screenFrame) )
       point.y -= kVOffset;
     else
       point.y += kVOffset;
-		[mPanel setFrameTopLeftPoint: point];
-		
-		//  if it goes off the edge of the screen, shift around to put it all on the screen
-		
-		float amountOffScreenX = NSMaxX(screenFrame) - NSMaxX([mPanel frame]);
-		if (amountOffScreenX < 0) {
-			NSRect movedFrame = [mPanel frame];
-			movedFrame.origin.x += amountOffScreenX;
-			[mPanel setFrame: movedFrame display: NO];
-		}
-				
-		//  show the panel
-		[mPanel orderFront: nil];
-	}
+    [mPanel setFrameTopLeftPoint: point];
+    
+    //  if it goes off the edge of the screen, shift around to put it all on the screen
+
+    float amountOffScreenX = NSMaxX(screenFrame) - NSMaxX([mPanel frame]);
+    if (amountOffScreenX < 0) {
+      NSRect movedFrame = [mPanel frame];
+      movedFrame.origin.x += amountOffScreenX;
+      [mPanel setFrame: movedFrame display: NO];
+    }
+    
+    //  show the panel
+    [mPanel orderFront: nil];
+  }
 }
 
 - (void)closeToolTip
 {
-	[mPanel close];
+  [mPanel close];
 }
 
 @end
