@@ -1620,7 +1620,7 @@
 
         <menuitem id="filtersCmd" label="&filtersCmd.label;"
                   accesskey="&filtersCmd.accesskey;"
-                  oncommand="MsgFilters(null);"/>
+                  oncommand="MsgFilters(null, null);"/>
         <menuitem id="applyFilters"
                   label="&filtersApply.label;"
                   accesskey="&filtersApply.accesskey;"

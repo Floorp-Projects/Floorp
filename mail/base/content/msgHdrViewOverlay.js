@@ -1016,10 +1016,9 @@ function CreateFilter(emailAddressNode)
 {
   if (emailAddressNode)
   {
-     var preselectedFolder = GetFirstSelectedMsgFolder();
      var emailAddress = emailAddressNode.getAttribute("emailAddress");
      if (emailAddress){
-         top.MsgFilters(emailAddress, preselectedFolder);
+         top.MsgFilters(emailAddress, GetFirstSelectedMsgFolder());
      }
   }
 }

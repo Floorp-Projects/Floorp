@@ -538,7 +538,7 @@ function getSelectedServerForFilters()
         var msgFolder = selectedFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
         try
         {
-            var rootFolder = msgFolder.rootFolder;
+            var rootFolder = msgFolder.server.rootFolder;
             if (rootFolder.isServer)
             {
                 var server = rootFolder.server;

@@ -884,7 +884,7 @@ function CreateFilter(emailAddressNode)
   {
      var emailAddress = emailAddressNode.getAttribute("emailAddress");
      if (emailAddress){
-         top.MsgFilters(emailAddress);
+         top.MsgFilters(emailAddress, GetFirstSelectedMsgFolder());
      }
   }
 }

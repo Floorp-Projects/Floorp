@@ -1011,24 +1011,8 @@ function MsgCreateFilter()
   var msgHdr = gDBView.hdrForFirstSelectedMessage;
   var headerParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);
   var emailAddress = headerParser.extractHeaderAddressMailboxes(null, msgHdr.author);
-  var accountKey = msgHdr.accountKey;
-  var folder;
-  if (accountKey.length > 0)
-  {
-    var account = accountManager.getAccount(accountKey);
-    if (account)
-    {
-      server = account.incomingServer;
-      if (server)
-        folder = server.rootFolder;
-    }
-  }
-  if (!folder)
-    folder = GetFirstSelectedMsgFolder();
-
-
   if (emailAddress)
-    top.MsgFilters(emailAddress, folder);
+    top.MsgFilters(emailAddress, null);
 }
 
 
@@ -1393,6 +1377,43 @@ function MsgCanFindAgain()
 
 function MsgFilters(emailAddress, folder)
 {
+    if (!folder)
+    {
+      // try to determine the folder from the selected message. 
+      if (gDBView)
+      {
+        try
+        {
+          var msgHdr = gDBView.hdrForFirstSelectedMessage;
+          var accountKey = msgHdr.accountKey;
+          if (accountKey.length > 0)
+          {
+            var account = accountManager.getAccount(accountKey);
+            if (account)
+            {
+              server = account.incomingServer;
+              if (server)
+                folder = server.rootFolder;
+            }
+          }
+        }
+        catch (ex) {}
+      }
+      if (!folder)
+      {
+        folder = GetFirstSelectedMsgFolder();
+        // if this is the local folders account, check if the default account
+        // defers to it; if so, we'll use the default account so the simple case
+        // of one pop3 account with the global inbox creates filters for the right server.
+        if (folder && folder.server.type == "none" && folder.server.isDeferredTo)
+        {
+          var defaultServer = accountManager.defaultAccount.incomingServer;
+          if (defaultServer.rootMsgFolder == folder.server.rootFolder)
+            folder = defaultServer.rootFolder;
+        }
+      }
+
+    }
     var args;
     if (emailAddress)
     {
