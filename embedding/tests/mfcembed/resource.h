@@ -25,6 +25,7 @@
 #define IDS_ENCRYPTION_HIGH_GRADE       147
 #define IDS_ENCRYPTION_LOW_GRADE        148
 #define IDS_ENCRYPTION_NONE             149
+#define IDS_SRCH_STR_NOT_FOUND          150
 #define ID_URL_BAR                      1001
 #define ID_PROG_BAR                     1002
 #define IDC_PROMPT_ANSWER               1003
