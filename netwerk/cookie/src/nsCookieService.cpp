@@ -334,7 +334,7 @@ nsCookieService::GetSingleton()
     return gCookieService;
   }
 
-  // Create a new singleton nsCookieService (note: the ctor AddRefs for us).
+  // Create a new singleton nsCookieService.
   // We AddRef only once since XPCOM has rules about the ordering of module
   // teardowns - by the time our module destructor is called, it's too late to
   // Release our members (e.g. nsIObserverService and nsIPrefBranch), since GC
