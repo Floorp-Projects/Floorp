@@ -1,6 +1,0 @@
-<!-- extracted from content/NetSupportConfirmCheck.xul -->
-
-<!ENTITY m.label "m"> 
-<!ENTITY cancel.label "cancel">
-<!ENTITY backwards.label "Backwards"> 
-<!ENTITY ok.label "ok"> 
