@@ -4180,22 +4180,34 @@ NS_IMETHODIMP nsWindow::ResetInputState()
       return NS_OK;
     }
 
+    // if no composed text, should just return
+    if(xic->IsPreeditComposing() == PR_FALSE) {
+      IMEComposeEnd(nsnull);
+      return NS_OK;
+    }
+
+    // when composed text exists,
     PRInt32 uniCharSize = 
       xic->ResetIC(&(mIMECompositionUniString),
                     &(mIMECompositionUniStringSize));
 
-    if (uniCharSize) {
+    if (uniCharSize == 0) {
+      // ResetIC() returns 0, need to erase existing composed text
+      // in GDK_IM_PREEDIT_CALLBACKS style
+      if (xic->mInputStyle & GDK_IM_PREEDIT_CALLBACKS) {
+        IMEComposeStart(nsnull);
+        IMEComposeText(nsnull, nsnull, 0, nsnull);
+        IMEComposeEnd(nsnull);
+      }
+    } else {
       mIMECompositionUniString[uniCharSize] = 0;
-    }
-
-    IMEComposeStart(nsnull);
-    IMEComposeText(nsnull,
-                   uniCharSize ? mIMECompositionUniString : nsnull,
+      IMEComposeStart(nsnull);
+      IMEComposeText(nsnull,
+                   mIMECompositionUniString,
                    uniCharSize,
                    nsnull);
-
-    // Call IMEComposeEnd() to reset the state of field
-    IMEComposeEnd(nsnull);
+      IMEComposeEnd(nsnull);
+    }
     if (xic->mInputStyle & GDK_IM_PREEDIT_POSITION) {
       UpdateICSpot(xic);
     }
