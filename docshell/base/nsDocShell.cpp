@@ -49,7 +49,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocumentLoaderFactory.h"
-#include "nsIPluginHost.h"
 #include "nsCURILoader.h"
 #include "nsDocShellCID.h"
 #include "nsLayoutCID.h"
@@ -165,7 +164,6 @@
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kDocumentCharsetInfoCID, NS_DOCUMENTCHARSETINFO_CID);
-static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
@@ -4832,7 +4830,6 @@ nsDocShell::NewContentViewerObj(const char *aContentType,
                                 nsIStreamListener ** aContentHandler,
                                 nsIContentViewer ** aViewer)
 {
-    nsCOMPtr<nsIPluginHost> pluginHost (do_GetService(kPluginManagerCID));
     nsCOMPtr<nsIChannel> aOpenedChannel = do_QueryInterface(request);
 
     nsresult rv;
@@ -4849,26 +4846,7 @@ nsDocShell::NewContentViewerObj(const char *aContentType,
         docLoaderFactory = do_GetService(contractId.get());
 
     if (!docLoaderFactory) {
-        // try again after loading plugins
-        nsCOMPtr<nsIPluginManager> pluginManager = do_QueryInterface(pluginHost);
-        if (!pluginManager)
-            return NS_ERROR_FAILURE;
-
-        // no need to do anything if plugins have not been changed
-        // PR_FALSE will ensure that currently running plugins will not be shut down
-        // but the plugin list will still be updated with newly installed plugins
-        if (NS_ERROR_PLUGINS_PLUGINSNOTCHANGED == pluginManager->ReloadPlugins(PR_FALSE))
-            return NS_ERROR_FAILURE;
-
-        rv = catMan->GetCategoryEntry("Gecko-Content-Viewers", aContentType,
-                                 getter_Copies(contractId));
-        if (NS_FAILED(rv))
-          return rv;
-
-        docLoaderFactory = do_GetService(contractId.get());
-
-        if (!docLoaderFactory)
-            return NS_ERROR_FAILURE;
+        return NS_ERROR_FAILURE;
     }
 
     // Now create an instance of the content viewer

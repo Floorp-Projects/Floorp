@@ -42,6 +42,7 @@
 #include "nsIChannel.h"
 #include "nsXPIDLString.h"
 #include "nsIServiceManager.h"
+#include "nsIPluginManager.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsAutoPtr.h"
 
@@ -201,8 +202,30 @@ nsDSURIContentListener::CanHandleContent(const char* aContentType,
         if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE)
             return rv;
 
-        if (value && *value)
-            *aCanHandleContent = PR_TRUE;
+        *aCanHandleContent = value && *value;
+        // XXXbz should we check that this service actually exists?  May be a
+        // good idea...
+        
+        if (!*aCanHandleContent) {
+            // Try loading plugins to see whether someone neglected to do so
+            nsCOMPtr<nsIPluginManager> pluginManager =
+                do_GetService("@mozilla.org/plugin/manager;1");
+            if (pluginManager) {
+                // PR_FALSE will ensure that currently running plugins will not
+                // be shut down
+                rv = pluginManager->ReloadPlugins(PR_FALSE);
+                if (NS_SUCCEEDED(rv)) {
+                    // OK, we reloaded plugins and there were new ones
+                    // (otherwise NS_ERROR_PLUGINS_PLUGINSNOTCHANGED would have
+                    // been returned).  Try checking whether we can handle the
+                    // content now.
+                    return CanHandleContent(aContentType,
+                                            aIsContentPreferred,
+                                            aDesiredContentType,
+                                            aCanHandleContent);
+                }
+            }
+        }
     }
 
     return NS_OK;
