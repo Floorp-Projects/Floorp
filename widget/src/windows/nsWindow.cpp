@@ -110,6 +110,7 @@
 #include "nsIFile.h"
 
 #include "prprf.h"
+#include "prmem.h"
 
 static const char *kMozHeapDumpMessageString = "MOZ_HeapDump";
 
@@ -410,6 +411,16 @@ static PRBool is_vk_down(int vk)
     } \
   }
 
+#define NS_IMM_GETDEFAULTIMEWND(hWnd, phDefWnd) \
+  { \
+    if (nsToolkit::gAIMMApp) \
+      return nsToolkit::gAIMMApp->GetDefaultIMEWnd(hWnd, phDefWnd); \
+    else { \
+      nsIMM& theIMM = nsIMM::LoadModule(); \
+      *(phDefWnd) = (HWND)theIMM.GetDefaultIMEWnd(hWnd);  \
+    } \
+  }
+
 #else /* !MOZ_AIMM */
 
 #define NS_IMM_GETCOMPOSITIONSTRING(hIMC, dwIndex, pBuf, dwBufLen, compStrLen) \
@@ -496,6 +507,11 @@ static PRBool is_vk_down(int vk)
     dwProp = (DWORD)theIMM.GetProperty(hKL, dwIndex);  \
   }
 
+#define NS_IMM_GETDEFAULTIMEWND(hWnd, phDefWnd) \ 
+  { \
+    nsIMM& theIMM = nsIMM::LoadModule(); \
+    *(phDefWnd) = theIMM.GetDefaultIMEWnd(hWnd);  \
+  }
 #endif /* MOZ_AIMM */
 
 //
@@ -777,19 +793,20 @@ nsWindow::nsWindow() : nsBaseWidget()
     mOldStyle           = 0;
     mOldExStyle         = 0;
 
-	  mIMEProperty		= 0;
-	  mIMEIsComposing		= PR_FALSE;
+    mIMEProperty		= 0;
+    mIMEIsComposing		= PR_FALSE;
     mIMEIsStatusChanged = PR_FALSE;
-	  mIMECompString = NULL;
-	  mIMECompUnicode = NULL;
-	  mIMEAttributeString = NULL;
-	  mIMEAttributeStringSize = 0;
-	  mIMEAttributeStringLength = 0;
-	  mIMECompClauseString = NULL;
-	  mIMECompClauseStringSize = 0;
-	  mIMECompClauseStringLength = 0;
-	  mIMEReconvertUnicode = NULL;
-	  mLeadByte = '\0';
+    mIMECompString = NULL;
+    mIMECompUnicode = NULL;
+    mIMEAttributeString = NULL;
+    mIMEAttributeStringSize = 0;
+    mIMEAttributeStringLength = 0;
+    mIMECompClauseString = NULL;
+    mIMECompClauseStringSize = 0;
+    mIMECompClauseStringLength = 0;
+    mIMEReconvertUnicode = NULL;
+    mLeadByte = '\0';
+    mIMECompCharPos = nsnull;
 
   static BOOL gbInitGlobalValue = FALSE;
   if(! gbInitGlobalValue) {
@@ -3946,17 +3963,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             //SetFocus(); // this is bad
             //RelayMouseEvent(msg,wParam, lParam); 
             {
-#if IME_MOUSE_EVENT_SUPPORT
             // check whether IME window do mouse operation
-            if (mIMEIsComposing && nsWindow::uWM_MSIME_MOUSE) {
-							POINT ptPos;
-							ptPos.x = (short)LOWORD(lParam);
-							ptPos.y = (short)HIWORD(lParam);
-							if (IMECompositionHitTest(NS_MOUSE_LEFT_BUTTON_DOWN, &ptPos))
-								if (HandleMouseActionOfIME(IMEMOUSE_LDOWN))
-									break;
-            }
-#endif
+            if (IMEMouseHandling(NS_MOUSE_LEFT_BUTTON_DOWN, IMEMOUSE_LDOWN, lParam))
+              break;
             result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_DOWN, wParam);
             DispatchPendingEvents();
             } break;
@@ -3982,17 +3991,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
         case WM_MBUTTONDOWN:
             { 
-#if IME_MOUSE_EVENT_SUPPORT
             // check whether IME window do mouse operation
-            if (mIMEIsComposing && nsWindow::uWM_MSIME_MOUSE) {
-							POINT ptPos;
-							ptPos.x = (short)LOWORD(lParam);
-							ptPos.y = (short)HIWORD(lParam);
-							if (IMECompositionHitTest(NS_MOUSE_MIDDLE_BUTTON_DOWN, &ptPos))
-	              if (HandleMouseActionOfIME(IMEMOUSE_MDOWN))
-		              break;
-            }
-#endif
+            if (IMEMouseHandling(NS_MOUSE_MIDDLE_BUTTON_DOWN, IMEMOUSE_MDOWN, lParam))
+              break;
             result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_DOWN, wParam);
             DispatchPendingEvents();
             } break;
@@ -4008,17 +4009,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
         case WM_RBUTTONDOWN:
             {
-#if IME_MOUSE_EVENT_SUPPORT
             // check whether IME window do mouse operation
-            if (mIMEIsComposing && nsWindow::uWM_MSIME_MOUSE) {
-							POINT ptPos;
-							ptPos.x = (short)LOWORD(lParam);
-							ptPos.y = (short)HIWORD(lParam);
-							if (IMECompositionHitTest(NS_MOUSE_RIGHT_BUTTON_DOWN, &ptPos))
-	              if (HandleMouseActionOfIME(IMEMOUSE_RDOWN))
-                break;
-            }
-#endif
+            if (IMEMouseHandling(NS_MOUSE_RIGHT_BUTTON_DOWN, IMEMOUSE_RDOWN, lParam))
+              break;
             result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_DOWN, wParam);
             DispatchPendingEvents();
             } break;
@@ -5753,6 +5746,24 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
       SetCaretPos( candForm.ptCurrentPos.x, candForm.ptCurrentPos.y);
       DestroyCaret();
     }
+
+    // Record previous composing char position
+    // The cursor is always on the right char before it, but not nessarily on the 
+    // left of next char, as what happens in wrapping.
+    if (mIMECursorPosition && 
+        mIMECompCharPos &&
+        mIMECursorPosition < IME_MAX_CHAR_POS) {
+      mIMECompCharPos[mIMECursorPosition-1].right = event.theReply.mCursorPosition.x;
+      mIMECompCharPos[mIMECursorPosition-1].top = event.theReply.mCursorPosition.y;
+      mIMECompCharPos[mIMECursorPosition-1].bottom = event.theReply.mCursorPosition.YMost();
+      if (mIMECompCharPos[mIMECursorPosition-1].top != event.theReply.mCursorPosition.y) {
+        // wrapping, invalidate left position
+        mIMECompCharPos[mIMECursorPosition-1].left = -1;
+      }
+      mIMECompCharPos[mIMECursorPosition].left = event.theReply.mCursorPosition.x;
+      mIMECompCharPos[mIMECursorPosition].top = event.theReply.mCursorPosition.y;
+      mIMECompCharPos[mIMECursorPosition].bottom = event.theReply.mCursorPosition.YMost();
+    }
   } else {
     // for some reason we don't know yet, theReply may contains invalid result
     // need more debugging in nsCaret to find out the reason
@@ -5803,11 +5814,20 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
     }
 
     NS_IMM_SETCANDIDATEWINDOW(hIMEContext, &candForm);
+
+    mIMECompCharPos = (RECT*)PR_MALLOC(IME_MAX_CHAR_POS*sizeof(RECT));
+    if (mIMECompCharPos) {
+      memset(mIMECompCharPos, -1, sizeof(RECT)*IME_MAX_CHAR_POS);
+      mIMECompCharPos[0].left = event.theReply.mCursorPosition.x;
+      mIMECompCharPos[0].top = event.theReply.mCursorPosition.y;
+      mIMECompCharPos[0].bottom = event.theReply.mCursorPosition.YMost();
+    }
   } else {
     // for some reason we don't know yet, theReply may contains invalid result
     // need more debugging in nsCaret to find out the reason
     // the best we can do now is to ignore the invalid result
   }
+
 	NS_RELEASE(event.widget);
 
 	if(nsnull == mIMECompString)
@@ -5840,6 +5860,8 @@ nsWindow::HandleEndComposition(void)
 	event.compositionMessage = NS_COMPOSITION_END;
 	(void)DispatchWindowEvent(&event);
 	NS_RELEASE(event.widget);
+	PR_FREEIF(mIMECompCharPos);
+	mIMECompCharPos = nsnull;
 	mIMEIsComposing = PR_FALSE;
 }
 
@@ -6586,10 +6608,37 @@ NS_IMETHODIMP nsWindow::ResetInputState()
 }
 
 
-#if IME_MOUSE_EVENT_SUPPORT
+#define PT_IN_RECT(pt, rc)  ((pt).x>(rc).left && (pt).x <(rc).right && (pt).y>(rc).top && (pt).y<(rc).bottom)
+
 // Mouse operation of IME
+PRBool 
+nsWindow::IMEMouseHandling(PRUint32 aEventType, PRInt32 aAction, LPARAM lParam)
+{
+  POINT ptPos;
+  ptPos.x = (short)LOWORD(lParam);
+  ptPos.y = (short)HIWORD(lParam);
+
+  if (mIMEIsComposing && nsWindow::uWM_MSIME_MOUSE) {
+    if (IMECompositionHitTest(aEventType, &ptPos))
+      if (HandleMouseActionOfIME(aAction, &ptPos))
+        return PR_TRUE;
+  } else {
+    HWND parentWnd = ::GetParent(mWnd);
+    if (parentWnd) {
+      nsWindow* parentWidget = GetNSWindowPtr(parentWnd);
+      if (parentWidget->mIMEIsComposing && nsWindow::uWM_MSIME_MOUSE) {
+        if (parentWidget->IMECompositionHitTest(aEventType, &ptPos))
+          if (parentWidget->HandleMouseActionOfIME(aAction, &ptPos))
+            return PR_TRUE;
+      }
+    }
+  }
+  return PR_FALSE;
+}
+
+
 PRBool
-nsWindow::HandleMouseActionOfIME(int aAction)
+nsWindow::HandleMouseActionOfIME(int aAction, POINT *ptPos)
 {
   PRBool IsHandle = PR_FALSE;
 
@@ -6600,15 +6649,32 @@ nsWindow::HandleMouseActionOfIME(int aAction)
       int positioning = 0;
       int offset = 0;
 
-      // get location of each compositon charactors
-
       // calcurate positioning and offset
+      // char :            JCH1|JCH2|JCH3
+      // offset:           0011 1122 2233
+      // positioning:      2301 2301 2301
+
+      // Note: hitText has been done, so no check of mIMECompCharPos
+      // and composing char maximum limit is necessary.
+      for (PRInt32 i = 0; i < mIMECompUnicode->Length(); i++) {
+        if (PT_IN_RECT(*ptPos, mIMECompCharPos[i]))
+          break;
+      }
+      offset = i;
+      if (ptPos->x - mIMECompCharPos[i].left > mIMECompCharPos[i].right - ptPos->x)
+        offset++;
+ 
+      positioning = (ptPos->x - mIMECompCharPos[i].left) * 4 /
+                    (mIMECompCharPos[i].right - mIMECompCharPos[i].left);
+      positioning = (positioning + 2) % 4;
 
       // send MS_MSIME_MOUSE message to default IME window.
+      HWND imeWnd;
+      NS_IMM_GETDEFAULTIMEWND(mWnd, &imeWnd);
 #ifdef MOZ_UNICODE
-      if (nsToolkit::mSendMessage(mWnd, nsWindow::uWM_MSIME_MOUSE, MAKELONG(MAKEWORD(aAction, positioning), offset), (LPARAM) hIMC) == 1)
+      if (nsToolkit::mSendMessage(imeWnd, nsWindow::uWM_MSIME_MOUSE, MAKELONG(MAKEWORD(aAction, positioning), offset), (LPARAM) hIMC) == 1)
 #else
-      if (::SendMessage(mWnd, nsWindow::uWM_MSIME_MOUSE, MAKELONG(MAKEWORD(aAction, positioning), offset), (LPARAM) hIMC) == 1)
+      if (::SendMessage(imeWnd, nsWindow::uWM_MSIME_MOUSE, MAKELONG(MAKEWORD(aAction, positioning), offset), (LPARAM) hIMC) == 1)
 #endif
         IsHandle = PR_TRUE;
       }
@@ -6623,18 +6689,45 @@ PRBool nsWindow::IMECompositionHitTest(PRUint32 aEventType, POINT * ptPos)
 {
   PRBool IsHit = PR_FALSE;
 
-	COMPOSITIONFORM cpForm;
+  if (mIMECompCharPos){
+    // figure out how many char in composing string, 
+    // but keep it below the limit we can handle
+    PRInt32 len = mIMECompUnicode->Length();
+    if (len > IME_MAX_CHAR_POS)
+      len = IME_MAX_CHAR_POS;
+    
+    PRInt32 i;
+    PRInt32 aveWidth = 0;
+    // found per char width
+    for (i = 0; i < len; i++) {
+      if (mIMECompCharPos[i].left >= 0 && mIMECompCharPos[i].right > 0) {
+        aveWidth = mIMECompCharPos[i].right - mIMECompCharPos[i].left;
+        break;
+      }
+    }
 
-  if (mWnd) {
-    HIMC hIMC = NULL;
-    NS_IMM_GETCONTEXT(mWnd, hIMC);
-    if (hIMC) {
-			GetCompositionWindowPos(hIMC, aEventType, &cpForm);
-			if (PtInRect(&cpForm.rcArea, *ptPos))
-				IsHit = PR_TRUE;
-		}
-    NS_IMM_RELEASECONTEXT(mWnd, hIMC);
-	}
+    // validate each rect and test
+    for (i = 0; i < len; i++) {
+      if (mIMECompCharPos[i].left < 0) {
+        if (i != 0 && mIMECompCharPos[i-1].top == mIMECompCharPos[i].top)
+          mIMECompCharPos[i].left = mIMECompCharPos[i-1].right;
+        else 
+          mIMECompCharPos[i].left = mIMECompCharPos[i].right - aveWidth;
+      }
+      if (mIMECompCharPos[i].right < 0)
+        mIMECompCharPos[i].right = mIMECompCharPos[i].left + aveWidth;
+      if (mIMECompCharPos[i].top < 0) {
+        mIMECompCharPos[i].top = mIMECompCharPos[i-1].top;
+        mIMECompCharPos[i].bottom = mIMECompCharPos[i-1].bottom;
+      }
+
+      if (PT_IN_RECT(*ptPos, mIMECompCharPos[i])) {
+        IsHit = PR_TRUE;
+        break;
+      }
+    }
+  }
+
   return IsHit;
 }
 
@@ -6668,8 +6761,6 @@ void nsWindow::GetCompositionWindowPos(HIMC hIMC, PRUint32 aEventType, COMPOSITI
 	cpForm->rcArea.right = cpForm->ptCurrentPos.x + event.theReply.mCursorPosition.width;
 	cpForm->rcArea.bottom = cpForm->ptCurrentPos.y + event.theReply.mCursorPosition.height;
 }
-
-#endif
 
 // This function is called on a timer to do the flashing.  It simply toggles the flash
 // status until the window comes to the foreground.
