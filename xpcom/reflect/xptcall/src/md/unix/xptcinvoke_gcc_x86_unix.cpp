@@ -134,7 +134,6 @@ __asm__ (
 	".align 2\n\t"
 #ifdef XP_WIN32
 	".globl " SYMBOL_UNDERSCORE "_XPTC_InvokeByIndex\n\t"
-	".type  " SYMBOL_UNDERSCORE "_XPTC_InvokeByIndex,@function\n"
 	SYMBOL_UNDERSCORE "_XPTC_InvokeByIndex:\n\t"
 #else
 	".globl " SYMBOL_UNDERSCORE "XPTC_InvokeByIndex\n\t"
@@ -193,9 +192,7 @@ __asm__ (
 	"movl  %ebp, %esp\n\t"
 	"popl  %ebp\n\t"
 	"ret\n"
-#ifdef XP_WIN32
-	".size " SYMBOL_UNDERSCORE "_XPTC_InvokeByIndex, . -" SYMBOL_UNDERSCORE "_XPTC_InvokeByIndex\n\t"
-#else
+#ifndef XP_WIN32
 	".size " SYMBOL_UNDERSCORE "XPTC_InvokeByIndex, . -" SYMBOL_UNDERSCORE "XPTC_InvokeByIndex\n\t"
 #endif
 );
