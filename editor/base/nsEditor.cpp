@@ -664,7 +664,7 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
     {
       PRUint32 count;
       nodeList->GetLength(&count);
-      NS_VERIFY(PRBool(1==count), "there is not exactly 1 body in the document!");
+      if (1!=count) { return NS_ERROR_UNEXPECTED; }
       nsCOMPtr<nsIDOMNode> bodyNode;
       result = nodeList->Item(0, getter_AddRefs(bodyNode));
       if ((NS_SUCCEEDED(result)) && bodyNode)
@@ -1452,8 +1452,6 @@ nsEditor::GetBodyElement(nsIDOMElement **aBodyElement)
 
   PRUint32 count; 
   nodeList->GetLength(&count);
-
-  NS_ASSERTION(1==count, "More than one body found in document!"); 
 
   if (count < 1)
     return NS_ERROR_FAILURE;
