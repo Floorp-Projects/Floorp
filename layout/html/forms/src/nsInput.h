@@ -20,6 +20,7 @@
 #define nsInput_h___
 
 #include "nsHTMLContainer.h"
+#include "nsIDOMHTMLInputElement.h"
 #include "nsIFormControl.h"
 #include "nsPoint.h"
 class nsIFormManager;
@@ -33,7 +34,7 @@ class nsIPresContext;
   * the various Input types (button, checkbox, file, hidden, password,
   * reset, radio, submit, text)
   */
-class nsInput : public nsHTMLContainer {
+class nsInput : public nsHTMLContainer, public nsIDOMHTMLInputElement {
 public:
   typedef nsHTMLContainer nsInputSuper;
   /** 
@@ -53,6 +54,7 @@ public:
 
   virtual void MapAttributesInto(nsIStyleContext* aContext, 
                                  nsIPresContext* aPresContext);
+
   /**
     * @see nsISupports QueryInterface
     */
@@ -62,6 +64,11 @@ public:
     * @see nsISupports Release
     */
   NS_IMETHOD_(nsrefcnt) Release(void);
+
+  /**
+    * @see nsISupports Release
+    */
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
 
   // nsIFormControl methods
 
@@ -78,11 +85,6 @@ public:
     * @see nsIFormControl GetFormManager
     */
   virtual PRInt32 GetMaxNumValues();
-
-  /**
-    * @see nsIFormControl GetFormManager
-    */
-  virtual PRBool GetName(nsString& aName) const;
 
   /**
     * @see nsIFormControl GetFormManager
@@ -130,6 +132,13 @@ public:
     */
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
 
+  NS_FORWARD_IDOMNODE(nsHTMLContainer)
+  NS_FORWARD_IDOMELEMENT(nsHTMLContainer)
+  NS_FORWARD_IDOMHTMLELEMENT(nsHTMLContainer)
+
+  NS_DECL_IDOMHTMLINPUTELEMENT
+
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
 
   // misc methods
 
@@ -200,7 +209,7 @@ protected:
     // nsIFormControl
     virtual PRBool GetCanSubmit() const;
     virtual PRBool GetContent(nsString& aResult) const;
-    virtual PRBool GetName(nsString& aName) const;
+    virtual nsresult GetName(nsString& aName);
     virtual void GetType(nsString& aType) const;
     virtual PRInt32 GetMaxNumValues();
     virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,

@@ -42,6 +42,7 @@
 #include "nsDocument.h"
 #include "nsHTMLContainer.h"
 #include "nsIDOMHTMLFormElement.h"
+#include "nsIDOMNSHTMLFormElement.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIScriptObjectOwner.h"
 
@@ -103,9 +104,14 @@ nsString* URLEncode(nsString& aString)
 //----------------------------------------------------------------------
 
 static NS_DEFINE_IID(kIFormManagerIID, NS_IFORMMANAGER_IID);
+static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
+static NS_DEFINE_IID(kIDOMNSHTMLFormElementIID, NS_IDOMNSHTMLFORMELEMENT_IID);
+static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 
 class nsFormElementList;
-class nsForm : public nsHTMLContainer, public nsIFormManager, public nsIDOMHTMLFormElement
+class nsForm : public nsHTMLContainer, public nsIFormManager, public nsIDOMHTMLFormElement, public nsIDOMNSHTMLFormElement
 {
 public:
   // Construct a new Form Element with no attributes. This needs to be
@@ -163,6 +169,7 @@ public:
   NS_FORWARD_IDOMHTMLELEMENT(nsHTMLContainer)
 
   NS_DECL_IDOMHTMLFORMELEMENT
+  NS_DECL_IDOMNSHTMLFORMELEMENT
 
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
 
@@ -266,6 +273,16 @@ nsresult nsForm::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NS_NOINTERFACE == res) {
     if (aIID.Equals(kIFormManagerIID)) {
       *aInstancePtr = (void*)(nsIFormManager*)this;
+      AddRef();
+      return NS_OK;
+    }
+    if (aIID.Equals(kIDOMHTMLFormElementIID)) {
+      *aInstancePtr = (void*)(nsIDOMHTMLFormElement*)this;
+      AddRef();
+      return NS_OK;
+    }
+    if (aIID.Equals(kIDOMNSHTMLFormElementIID)) {
+      *aInstancePtr = (void*)(nsIDOMNSHTMLFormElement*)this;
       AddRef();
       return NS_OK;
     }
@@ -384,16 +401,8 @@ void nsForm::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame,
   if (NS_OK == aPresContext->GetLinkHandler(&handler)) {
     // Resolve url to an absolute url
     nsIURL* docURL = nsnull;
-    nsIContent* content;
-    aFrame->GetContent(content);
-    if (nsnull != content) {
-      nsIDocument* doc = nsnull;
-      content->GetDocument(doc);
-      if (nsnull != doc) {
-        docURL = doc->GetDocumentURL();
-        NS_RELEASE(doc);
-      }
-      NS_RELEASE(content);
+    if (nsnull != mDocument) {
+      docURL = mDocument->GetDocumentURL();
     }
 
     nsAutoString target;
@@ -925,7 +934,8 @@ void nsForm::Init(PRBool aReinit)
   for (int i = 0; i < numControls; i++) {
     nsIFormControl* control = (nsIFormControl *)GetFormControlAt(i);
     nsString name;
-    PRBool hasName = control->GetName(name);
+    control->GetName(name);
+    PRBool hasName = name.Length() > 0;
     nsString type;
     control->GetType(type);
     if (type.EqualsIgnoreCase("submit")) { // XXX make constant
@@ -976,7 +986,8 @@ void
 nsForm::OnRadioChecked(nsIFormControl& aControl)
 {
   nsString radioName;
-  if (!aControl.GetName(radioName)) { // don't consider a radio without a name 
+  aControl.GetName(radioName);
+  if (0 == radioName.Length()) { // don't consider a radio without a name 
     return;
   }
  
@@ -1095,6 +1106,85 @@ nsForm::SetTarget(const nsString& aTarget)
   ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::target, aTarget);
 
   return NS_OK;  
+}
+
+NS_IMETHODIMP    
+nsForm::Reset()
+{
+  OnReset();
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsForm::Submit()
+{
+  // XXX Need to do something special with mailto: or news: URLs
+  if (nsnull != mDocument) {
+    nsIPresShell *shell = mDocument->GetShellAt(0);
+    if (nsnull != shell) {
+      nsIPresContext *context = shell->GetPresContext();
+      if (nsnull != context) {
+        // XXX We're currently passing in null for the frame and
+        // the submitter. It works for now, but might not always
+        // be correct. In the future, we might not need the 
+        // frame to be passed to the link handler.
+        OnSubmit(context, nsnull, nsnull);
+        NS_RELEASE(context);
+      }
+      NS_RELEASE(shell);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsForm::GetEncoding(nsString& aEncoding)
+{
+  return GetEnctype(aEncoding);
+}
+
+NS_IMETHODIMP    
+nsForm::GetLength(PRUint32* aLength)
+{
+  *aLength = mChildren.Count();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsForm::NamedItem(const nsString& aName, nsIDOMElement** aReturn)
+{
+  // XXX For now we just search our element list. When forms become
+  // real content, we'll have to look at all our children, similar
+  // to the way HTMLDocuments do this.
+  PRInt32 i, count = GetFormControlCount();
+  nsresult result = NS_OK;
+
+  *aReturn = nsnull;
+  for (i = 0; i < count && *aReturn == nsnull; i++) {
+    nsIFormControl *control = (nsIFormControl *)GetFormControlAt(i);
+    if (nsnull != control) {
+      nsIContent *content;
+      
+      result = control->QueryInterface(kIContentIID, (void **)&content);
+      if (NS_OK == result) {
+        nsAutoString name;
+        // XXX Should it be an EqualsIgnoreCase?
+        if (((content->GetAttribute("NAME", name) == eContentAttr_HasValue) &&
+             (aName.Equals(name))) ||
+            ((content->GetAttribute("ID", name) == eContentAttr_HasValue) &&
+             (aName.Equals(name)))) {
+          result = control->QueryInterface(kIDOMElementIID, (void **)aReturn);
+        }
+        NS_RELEASE(content);
+      }
+      NS_RELEASE(control);
+    }
+  }
+  
+  return result;  
 }
 
 nsresult 
@@ -1291,8 +1381,6 @@ char* nsForm::Temp_GenerateTempFileName(PRInt32 aMaxSize, char* file_buf)
 //
 // Implementation of nsFormElementList
 //
-static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 
 nsFormElementList::nsFormElementList(nsForm *aForm) : mForm(aForm)
 {
@@ -1395,7 +1483,7 @@ nsFormElementList::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
   nsresult result = NS_OK;
 
   *aReturn = nsnull;
-  for (i = 0; i < count, *aReturn == nsnull; i++) {
+  for (i = 0; i < count && *aReturn == nsnull; i++) {
     nsIFormControl *control = (nsIFormControl *)mForm->GetFormControlAt(i);
     if (nsnull != control) {
       nsIContent *content;

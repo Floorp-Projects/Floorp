@@ -50,10 +50,6 @@ public:
   // XXX
   // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
  
-  NS_IMETHOD AddNamedItem(const nsString& aName, nsIContent *aContent) = 0;
-
-  NS_IMETHOD RemoveNamedItem(const nsString& aName) = 0;
-
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aStyleSheet) = 0;
 };
 

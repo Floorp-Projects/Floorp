@@ -35,6 +35,7 @@
 #include "nsIWidget.h"
 #include "nsHTMLForms.h"
 #include "nsStyleConsts.h"
+#include "nsIDOMHTMLFormElement.h"
 
 #define ALIGN_UNSET PRUint8(-1)
 
@@ -123,15 +124,26 @@ void nsInput::MapAttributesInto(nsIStyleContext* aContext,
 
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
+static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
 nsresult nsInput::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (aIID.Equals(kIFormControlIID)) {
     AddRef();
-    *aInstancePtr = (void**) &mControl;
+    *aInstancePtr = (void*) (nsIFormControl *)&mControl;
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMHTMLInputElementIID)) {
+    AddRef();
+    *aInstancePtr = (void*) (nsIDOMHTMLInputElement *)this;
     return NS_OK;
   }
   return nsHTMLContainer::QueryInterface(aIID, aInstancePtr);
+}
+
+nsrefcnt nsInput::AddRef(void)
+{
+  return nsHTMLContainer::AddRef(); 
 }
 
 PRBool nsInput::IsSuccessful(nsIFormControl* aSubmitter) const
@@ -241,17 +253,20 @@ nsInput::GetFormManager() const
 }
 
 /**
- * Get the name associated with this form element. If there is no name
- * then return PR_FALSE (form elements without names are not submitable).
+ * Get the name associated with this form element. 
+ * (note that form elements without names are not submitable).
  */
-PRBool
-nsInput::GetName(nsString& aName) const
+NS_IMETHODIMP
+nsInput::GetName(nsString& aName)
 {
   if ((nsnull != mName) && (0 != mName->Length())) {
     aName = *mName;
-    return PR_TRUE;
   }
-  return PR_FALSE;
+  else {
+    aName.SetLength(0);
+  }
+
+  return NS_OK;
 }
 
 void
@@ -420,6 +435,338 @@ void nsInput::SetChecked(PRBool aState, PRBool aSetInitialValue)
 {
 }
 
+NS_IMETHODIMP    
+nsInput::GetDefaultValue(nsString& aDefaultValue)
+{
+  ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::value, aDefaultValue);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::SetDefaultValue(const nsString& aDefaultValue)
+{
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::value, aDefaultValue);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::GetDefaultChecked(PRBool* aDefaultChecked)
+{
+  *aDefaultChecked = GetChecked(PR_TRUE);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::SetDefaultChecked(PRBool aDefaultChecked)
+{
+  SetChecked(aDefaultChecked, PR_TRUE);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::GetForm(nsIDOMHTMLFormElement** aForm)
+{
+  static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
+  if (nsnull != mFormMan) {
+    return mFormMan->QueryInterface(kIDOMHTMLFormElementIID, (void **)aForm);
+  }
+  
+  *aForm = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::GetAccept(nsString& aAccept)
+{
+  ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::accept, aAccept);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::SetAccept(const nsString& aAccept)
+{
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::accept, aAccept);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::GetAccessKey(nsString& aAccessKey)
+{
+  ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::accesskey, aAccessKey);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::SetAccessKey(const nsString& aAccessKey)
+{
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::accesskey, aAccessKey);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::GetAlign(nsString& aAlign)
+{
+  ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::align, aAlign);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::SetAlign(const nsString& aAlign)
+{
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::align, aAlign);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::GetAlt(nsString& aAlt)
+{
+  ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::alt, aAlt);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::SetAlt(const nsString& aAlt)
+{
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::alt, aAlt);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::GetChecked(PRBool* aChecked)
+{
+  *aChecked = GetChecked(PR_FALSE);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::SetChecked(PRBool aChecked)
+{
+  SetChecked(aChecked, PR_FALSE);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::GetDisabled(PRBool* aDisabled)
+{
+  nsAutoString result;
+
+  *aDisabled = (PRBool)(eContentAttr_HasValue == ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::disabled, result)); 
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::SetDisabled(PRBool aDisabled)
+{
+  if (PR_TRUE == aDisabled) {
+    ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::disabled, "");
+  }
+  else {
+    UnsetAttribute(nsHTMLAtoms::disabled);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::GetMaxLength(PRInt32* aMaxLength)
+{
+  nsHTMLValue val;
+
+  ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::maxlength, val);
+  *aMaxLength = val.GetIntValue();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::SetMaxLength(PRInt32 aMaxLength)
+{
+  nsHTMLValue val;
+  
+  val.SetIntValue(aMaxLength, eHTMLUnit_Integer);
+  ((nsHTMLTagContent *)this)->SetAttribute(nsHTMLAtoms::maxlength, val);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::SetName(const nsString& aName)
+{
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::name, aName);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::GetReadOnly(PRBool* aReadOnly)
+{
+  nsAutoString result;
+
+  *aReadOnly = (PRBool)(eContentAttr_HasValue == ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::readonly, result)); 
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::SetReadOnly(PRBool aReadOnly)
+{
+  if (PR_TRUE == aReadOnly) {
+    ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::readonly, "");
+  }
+  else {
+    UnsetAttribute(nsHTMLAtoms::readonly);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::GetSize(nsString& aSize)
+{
+  ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::size, aSize);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::SetSize(const nsString& aSize)
+{
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::size, aSize);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::GetSrc(nsString& aSrc)
+{
+  ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::src, aSrc);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::SetSrc(const nsString& aSrc)
+{
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::src, aSrc);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::GetTabIndex(PRInt32* aTabIndex)
+{
+  nsHTMLValue val;
+
+  ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::tabindex, val);
+  *aTabIndex = val.GetIntValue();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::SetTabIndex(PRInt32 aTabIndex)
+{
+  nsHTMLValue val;
+  
+  val.SetIntValue(aTabIndex, eHTMLUnit_Integer);
+  ((nsHTMLTagContent *)this)->SetAttribute(nsHTMLAtoms::tabindex, val);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::GetType(nsString& aType)
+{
+  ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::type, aType);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::GetUseMap(nsString& aUseMap)
+{
+  ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::usemap, aUseMap);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::SetUseMap(const nsString& aUseMap)
+{
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::usemap, aUseMap);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::GetValue(nsString& aValue)
+{
+  ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::value, aValue);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::SetValue(const nsString& aValue)
+{
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::value, aValue);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInput::Blur()
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsInput::Focus()
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsInput::Select()
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsInput::Click()
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsInput::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
+{
+  nsresult res = NS_OK;
+  if (nsnull == mScriptObject) {
+    res = NS_NewScriptHTMLInputElement(aContext, this, mParent, (void**)&mScriptObject);
+  }
+  *aScriptObject = mScriptObject;
+  return res;  
+}
 
 //----------------------------------------------------------------------
 
@@ -448,7 +795,7 @@ nsresult nsInput::AggInputControl::QueryInterface(REFNSIID aIID, void** aInstanc
   return GET_OUTER()->QueryInterface(aIID, aInstancePtr);
 }
 
-PRBool nsInput::AggInputControl::GetName(nsString& aName) const
+nsresult nsInput::AggInputControl::GetName(nsString& aName)
 {
   return GET_OUTER()->GetName(aName);
 }

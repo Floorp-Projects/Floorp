@@ -22,6 +22,7 @@
 #include "nsMarkupDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsIDOMHTMLDocument.h"
+#include "nsIDOMNSHTMLDocument.h"
 #include "plhash.h"
 
 class nsIHTMLStyleSheet;
@@ -29,7 +30,7 @@ class nsContentList;
 class nsIContentViewerContainer;
 class nsIParser;
 
-class nsHTMLDocument : public nsMarkupDocument, public nsIHTMLDocument, public nsIDOMHTMLDocument {
+class nsHTMLDocument : public nsMarkupDocument, public nsIHTMLDocument, public nsIDOMHTMLDocument, public nsIDOMNSHTMLDocument {
 public:
   nsHTMLDocument();
   virtual ~nsHTMLDocument();
@@ -45,8 +46,6 @@ public:
 
   NS_IMETHOD EndLoad();
 
-  NS_IMETHOD SetTitle(const nsString& aTitle);
-
   NS_IMETHOD AddImageMap(nsIImageMap* aMap);
 
   NS_IMETHOD GetImageMap(const nsString& aMapName, nsIImageMap** aResult);
@@ -61,10 +60,6 @@ public:
   NS_IMETHOD GetFormAt(PRInt32 aIndex, nsIFormManager **aForm) const;
   // XXX
   // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
-  NS_IMETHOD AddNamedItem(const nsString& aName, nsIContent *aContent);
-
-  NS_IMETHOD RemoveNamedItem(const nsString& aName);
 
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aStyleSheet);
 
@@ -97,35 +92,18 @@ public:
   NS_FORWARD_IDOMNODE(nsDocument)
 
   // nsIDOMHTMLDocument interface
-  NS_IMETHOD    GetTitle(nsString& aTitle);
-  NS_IMETHOD    GetReferrer(nsString& aReferrer);
-  NS_IMETHOD    GetFileSize(nsString& aFileSize);
-  NS_IMETHOD    GetFileCreatedDate(nsString& aFileCreatedDate);
-  NS_IMETHOD    GetFileModifiedDate(nsString& aFileModifiedDate);
-  NS_IMETHOD    GetFileUpdatedDate(nsString& aFileUpdatedDate);
-  NS_IMETHOD    GetDomain(nsString& aDomain);
-  NS_IMETHOD    GetURL(nsString& aURL);
-  NS_IMETHOD    GetBody(nsIDOMHTMLElement** aBody);
-  NS_IMETHOD    SetBody(nsIDOMHTMLElement* aBody);
-  NS_IMETHOD    GetImages(nsIDOMHTMLCollection** aImages);
-  NS_IMETHOD    GetApplets(nsIDOMHTMLCollection** aApplets);
-  NS_IMETHOD    GetLinks(nsIDOMHTMLCollection** aLinks);
-  NS_IMETHOD    GetForms(nsIDOMHTMLCollection** aForms);
-  NS_IMETHOD    GetAnchors(nsIDOMHTMLCollection** aAnchors);
-  NS_IMETHOD    GetCookie(nsString& aCookie);
-  NS_IMETHOD    SetCookie(const nsString& aCookie);
-  NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc);
-  NS_IMETHOD    Close();
-  NS_IMETHOD    Write(JSContext *cx, jsval *argv, PRUint32 argc);
-  NS_IMETHOD    Writeln(JSContext *cx, jsval *argv, PRUint32 argc);
-  NS_IMETHOD    GetElementById(const nsString& aElementId, nsIDOMElement** aReturn);
-  NS_IMETHOD    GetElementsByName(const nsString& aElementName, nsIDOMNodeList** aReturn);
-  NS_IMETHOD    GetNamedItem(const nsString& aName, nsIDOMElement **aReturn);
+  NS_DECL_IDOMHTMLDOCUMENT
+  NS_DECL_IDOMNSHTMLDOCUMENT
 
   // From nsIScriptObjectOwner interface, implemented by nsDocument
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
 
 protected:
+  static PRIntn RemoveStrings(PLHashEntry *he, PRIntn i, void *arg);
+  void RegisterNamedItems(nsIContent *aContent, PRBool aInForm);
+  void DeleteNamedItems();
+  nsIContent *MatchName(nsIContent *aContent, const nsString& aName);
+
   virtual void AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet);
   static PRBool MatchLinks(nsIContent *aContent);
   static PRBool MatchAnchors(nsIContent *aContent);
