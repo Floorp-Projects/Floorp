@@ -47,6 +47,7 @@ GFX_DSO_FLAGS = $(addprefix -lgfx, $(MOZ_TOOLKIT))
 BASE_DSO_FLAGS= $(addprefix -lgmbase, $(MOZ_TOOLKIT))
 
 EXTRA_DSO_LDOPTS = \
+	-L$(DIST)/bin	\
 	-L$(DIST)/lib \
 	-ljsdombase_s	\
 	-ljsdomcore_s	\
@@ -55,7 +56,6 @@ EXTRA_DSO_LDOPTS = \
 	-ljsdomcss_s	\
 	-ljsdomcore_s	\
 	-ljsurl		\
-	-L$(DIST)/bin	\
 	-lraptorbase	\
 	-lraptorgfx	\
 	$(GFX_DSO_FLAGS) \
@@ -65,5 +65,7 @@ EXTRA_DSO_LDOPTS = \
 	-lxpcom		\
 	$(NSPR_LIBS)	\
 	$(NULL)
+
+NO_STATIC_LIB=1
 
 include $(topsrcdir)/config/rules.mk
