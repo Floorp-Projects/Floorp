@@ -38,13 +38,19 @@ XPCJSThrower::Verbosify(nsXPCWrappedNativeClass* clazz,
                         const XPCNativeMemberDescriptor* desc,
                         char** psz, PRBool own)
 {
-    char* sz = JS_smprintf("%s [%s.%s]",
-                           *psz,
-                           clazz->GetInterfaceName(),
-                           clazz->GetMemberName(desc));
-    if(own)
-        JS_smprintf_free(*psz);
-    *psz = sz;
+    char* sz = NULL;
+
+    if(clazz && desc)
+        sz = JS_smprintf("%s [%s.%s]", 
+                         *psz, 
+                         clazz->GetInterfaceName(),
+                         clazz->GetMemberName(desc));
+    if(sz)
+    {
+        if(own)
+            JS_smprintf_free(*psz);
+        *psz = sz;
+    }
 }
 
 void 

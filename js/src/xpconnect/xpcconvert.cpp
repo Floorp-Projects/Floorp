@@ -176,12 +176,16 @@ XPCConvert::IsMethodReflectable(const nsXPTMethodInfo& info)
 // static
 JSBool
 XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
-                          const nsXPTType& type, const nsID* iid)
+                          const nsXPTType& type, const nsID* iid,
+                          uintN* pErr)
 {
     NS_PRECONDITION(s, "bad param");
     NS_PRECONDITION(d, "bad param");
 
     jsdouble* dbl;
+
+    if(pErr)
+        *pErr = XPCJSError::BAD_CONVERT_NATIVE;
 
     switch(type.TagPart())
     {
@@ -327,7 +331,8 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
 JSBool
 XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
                           const nsXPTType& type,
-                          nsIAllocator* al, const nsID* iid)
+                          nsIAllocator* al, const nsID* iid,
+                          uintN* pErr)
 {
     NS_PRECONDITION(d, "bad param");
 
@@ -336,64 +341,80 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
     jsdouble td;
     JSBool   r;
 
+    if(pErr)
+        *pErr = XPCJSError::BAD_CONVERT_JS;
+
     switch(type.TagPart())
     {
     case nsXPTType::T_I8     :
-        r = JS_ValueToECMAInt32(cx, s, &ti);
+        if(!JS_ValueToECMAInt32(cx, s, &ti))
+            return JS_FALSE;
         *((int8*)d)  = (int8) ti;
         break;
     case nsXPTType::T_I16    :
-        r = JS_ValueToECMAInt32(cx, s, &ti);
+        if(!JS_ValueToECMAInt32(cx, s, &ti))
+            return JS_FALSE;
         *((int16*)d)  = (int16) ti;
         break;
     case nsXPTType::T_I32    :
-        r = JS_ValueToECMAInt32(cx, s, (int32*)d);
+        if(!JS_ValueToECMAInt32(cx, s, (int32*)d))
+            return JS_FALSE;
         break;
     case nsXPTType::T_I64    :
         if(JSVAL_IS_INT(s))
         {
-            r = JS_ValueToECMAInt32(cx, s, &ti);
+            if(!JS_ValueToECMAInt32(cx, s, &ti))
+                return JS_FALSE;
             *((int64*)d) = (int64) ti;
         }
         else
         {
-            r = JS_ValueToNumber(cx, s, &td);
-            if(r) *((int64*)d) = (int64) td;
+            if(!JS_ValueToNumber(cx, s, &td))
+                return JS_FALSE;
+            *((int64*)d) = (int64) td;
         }
         break;
     case nsXPTType::T_U8     :
-        r = JS_ValueToECMAUint32(cx, s, &tu);
+        if(!JS_ValueToECMAUint32(cx, s, &tu))
+            return JS_FALSE;
         *((uint8*)d)  = (uint8) tu;
         break;
     case nsXPTType::T_U16    :
-        r = JS_ValueToECMAUint32(cx, s, &tu);
+        if(!JS_ValueToECMAUint32(cx, s, &tu))
+            return JS_FALSE;
         *((uint16*)d)  = (uint16) tu;
         break;
     case nsXPTType::T_U32    :
-        r = JS_ValueToECMAUint32(cx, s, (uint32*)d);
+        if(!JS_ValueToECMAUint32(cx, s, (uint32*)d))
+            return JS_FALSE;
         break;
     case nsXPTType::T_U64    :
         if(JSVAL_IS_INT(s))
         {
-            r = JS_ValueToECMAUint32(cx, s, &tu);
+            if(!JS_ValueToECMAUint32(cx, s, &tu))
+                return JS_FALSE;
             *((uint64*)d) = (uint64) tu;
         }
         else
         {
-            r = JS_ValueToNumber(cx, s, &td);
+            if(!JS_ValueToNumber(cx, s, &td))
+                return JS_FALSE;
             // XXX Win32 can't handle double to uint64 directly
-            if(r) *((uint64*)d) = (uint64)((int64) td);
+            *((uint64*)d) = (uint64)((int64) td);
         }
         break;
     case nsXPTType::T_FLOAT  :
-        r = JS_ValueToNumber(cx, s, &td);
-        if(r) *((float*)d) = (float) td;
+        if(!JS_ValueToNumber(cx, s, &td))
+            return JS_FALSE;
+        *((float*)d) = (float) td;
         break;
     case nsXPTType::T_DOUBLE :
-        r = JS_ValueToNumber(cx, s, (double*)d);
+        if(!JS_ValueToNumber(cx, s, (double*)d))
+            return JS_FALSE;
         break;
     case nsXPTType::T_BOOL   :
-        r = JS_ValueToBoolean(cx, s, (PRBool*)d);
+        if(!JS_ValueToBoolean(cx, s, (PRBool*)d))
+            return JS_FALSE;
         break;
     case nsXPTType::T_CHAR   :
         {
@@ -403,7 +424,6 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             if(!(str = JS_ValueToString(cx, s))||
                !(bytes = JS_GetStringBytes(str)))
             {
-                // XXX should report error
                 return JS_FALSE;
             }
             *((char*)d) = bytes[0];
@@ -416,7 +436,6 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             if(!(str = JS_ValueToString(cx, s))||
                !(chars = JS_GetStringChars(str)))
             {
-                // XXX should report error
                 return JS_FALSE;
             }
             *((uint16*)d)  = (uint16) chars[0];
@@ -444,14 +463,12 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
                (!(obj = JSVAL_TO_OBJECT(s))) ||
                (!(pid = xpc_JSObjectToID(cx, obj))))
             {
-                // XXX should report error
                 return JS_FALSE;
             }
             if(al)
             {
                 if(!(*((void**)d) = al->Alloc(sizeof(nsID))))
                 {
-                    // XXX should report error
                     return JS_FALSE;
                 }
                 memcpy(*((void**)d), pid, sizeof(nsID));
@@ -475,7 +492,6 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             if(!(str = JS_ValueToString(cx, s))||
                !(bytes = JS_GetStringBytes(str)))
             {
-                // XXX should report error
                 return JS_FALSE;
             }
             if(al)
@@ -483,7 +499,6 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
                 int len = strlen(bytes)+1;
                 if(!(*((void**)d) = al->Alloc(len)))
                 {
-                    // XXX should report error
                     return JS_FALSE;
                 }
                 memcpy(*((void**)d), bytes, len);
@@ -502,7 +517,6 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             if(!(str = JS_ValueToString(cx, s))||
                !(chars = JS_GetStringChars(str)))
             {
-                // XXX should report error
                 return JS_FALSE;
             }
             if(al)
@@ -528,11 +542,10 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             JSObject* obj;
             nsISupports* iface = NULL;
 
-            // only wrpa JSObjects
+            // only wrap JSObjects
             if(!JSVAL_IS_OBJECT(s) ||
                (!(obj = JSVAL_TO_OBJECT(s))))
             {
-                // XXX should report error
                 return JS_FALSE;
             }
 

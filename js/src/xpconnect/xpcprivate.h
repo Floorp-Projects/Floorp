@@ -455,8 +455,6 @@ private:
     nsXPCWrappedNativeClass(XPCContext* xpcc, REFNSIID aIID,
                            nsIInterfaceInfo* aInfo);
 
-    void ReportError(const XPCNativeMemberDescriptor* desc, const char* msg);
-
     void ThrowBadResultException(JSContext* cx, 
                                  const XPCNativeMemberDescriptor* desc,
                                  nsresult result)
@@ -573,11 +571,13 @@ public:
     static JSBool IsMethodReflectable(const nsXPTMethodInfo& info);
 
     static JSBool NativeData2JS(JSContext* cx, jsval* d, const void* s,
-                                const nsXPTType& type, const nsID* iid);
+                                const nsXPTType& type, const nsID* iid,
+                                uintN* pErr);
 
     static JSBool JSData2Native(JSContext* cx, void* d, jsval s,
                                 const nsXPTType& type,
-                                nsIAllocator* al, const nsID* iid);
+                                nsIAllocator* al, const nsID* iid,
+                                uintN* pErr);
 private:
     XPCConvert(); // not implemented
 };
