@@ -2653,7 +2653,7 @@ nsresult nsMsgDatabase::RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token co
                err = m_collationKeyGenerator->GetSortKeyLen(kCollationCaseInSensitive, sourceStr, &aLength);
                if (NS_SUCCEEDED(err)) 
                {
-                       aKey = (PRUint8 *) PR_Malloc(aLength + 2);    // plus two for null termination
+                       aKey = (PRUint8 *) PR_Malloc(aLength + 3);    // plus three for null termination
                        if (aKey) 
                        {
                                err = m_collationKeyGenerator->CreateRawSortKey(kCollationCaseInSensitive, sourceStr, aKey, &aLength);
@@ -2663,6 +2663,7 @@ nsresult nsMsgDatabase::RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token co
                                        // Note using PRUnichar* to store collation key is not recommented since the key may contains 0x0000.
                                        aKey[aLength] = 0;
                                        aKey[aLength+1] = 0;
+                                       aKey[aLength+2] = 0;
                                        *resultString = (PRUnichar *) aKey;
                                }
                                else

@@ -4091,7 +4091,7 @@ nsresult nsAddrDatabase::GetCollationKeyGenerator()
                rv = m_collationKeyGenerator->GetSortKeyLen(kCollationCaseInSensitive, sourceString, &aLength);
                if (NS_SUCCEEDED(rv))
                {
-                       aKey = (PRUint8 *) PR_Malloc(aLength + 2);    // plus two for null termination
+                       aKey = (PRUint8 *) PR_Malloc(aLength + 3);    // plus three for null termination
                        if (aKey) 
                        {
                                rv = m_collationKeyGenerator->CreateRawSortKey(kCollationCaseInSensitive, sourceString, aKey, &aLength);
@@ -4101,6 +4101,7 @@ nsresult nsAddrDatabase::GetCollationKeyGenerator()
                                        // Note using PRUnichar* to store collation key is not recommented since the key may contains 0x0000.
                                        aKey[aLength] = 0;
                                        aKey[aLength+1] = 0;
+                                       aKey[aLength+2] = 0;
                                        resultStr.Assign((PRUnichar *) aKey);
                                }
                                else
