@@ -17,9 +17,11 @@
  */
 
 /*
-  This file provides the implementation for the sort service manager.
+  This file provides the implementation for xul popup listener which
+  tracks xul popups, context menus, and tooltips
  */
 
+#include "nsHTMLAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMElement.h"
 #include "nsIXULPopupListener.h"
@@ -43,8 +45,6 @@ static NS_DEFINE_IID(kXULPopupListenerCID,      NS_XULPOPUPLISTENER_CID);
 static NS_DEFINE_IID(kIXULPopupListenerIID,     NS_IXULPOPUPLISTENER_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 
-static NS_DEFINE_IID(kIDomNodeIID,            NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIDomElementIID,         NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDomEventListenerIID,   NS_IDOMEVENTLISTENER_IID);
 
 
@@ -103,7 +103,8 @@ private:
       // a timer for determining if a tooltip should be displayed. 
     static void sTooltipCallback ( nsITimer *aTimer, void *aClosure ) ;
     nsCOMPtr<nsITimer> mTooltipTimer;
-    PRInt32 mMouseLocX, mMouseLocY;       // mouse coordinates for tooltip event
+    PRInt32 mMouseScreenX, mMouseScreenY;       // mouse coordinates for tooltip event
+    PRInt32 mMouseClientX, mMouseClientY;
       // The node hovered over that fired the timer. This may turn into the node that
       // triggered the tooltip, but only if the timer ever gets around to firing.
     nsIDOMNode* mPossibleTooltipNode;     // weak ref.
@@ -113,7 +114,8 @@ private:
 ////////////////////////////////////////////////////////////////////////
 
 XULPopupListenerImpl::XULPopupListenerImpl(void)
-  : mElement(nsnull), mPossibleTooltipNode(nsnull), mMouseLocX(0), mMouseLocY(0)
+  : mElement(nsnull), mPossibleTooltipNode(nsnull), mMouseScreenX(0),
+     mMouseScreenY(0), mMouseClientX(0), mMouseClientY(0)
 {
 	NS_INIT_REFCNT();
 	
@@ -212,6 +214,12 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
         LaunchPopup(aMouseEvent);
       }
       break;
+    
+    case eXULPopupType_tooltip:
+    case eXULPopupType_blur:
+      // ignore
+      break;
+
   }
   return NS_OK;
 }
@@ -236,6 +244,8 @@ XULPopupListenerImpl::MouseOver(nsIDOMEvent* aMouseEvent)
   //XXX the element for which we are currently displaying the tip.
   //XXX
   //XXX for now, just be stupid to get things working.
+  if ( mPopup )
+    return NS_OK;
   
   // Kill off an old timer and create a new one.
   if ( mTooltipTimer ) {
@@ -252,10 +262,10 @@ XULPopupListenerImpl::MouseOver(nsIDOMEvent* aMouseEvent)
       nsCOMPtr<nsIDOMNode> eventTarget;
       aMouseEvent->GetTarget(getter_AddRefs(eventTarget));
       mPossibleTooltipNode = eventTarget.get();
-// BUG: 8598, widget and mouse coords not set for MouseOver events.
-//      uiEvent->GetScreenX(&mMouseLocX);
-//      uiEvent->GetScreenY(&mMouseLocY);
-      mMouseLocX = 50; mMouseLocY = 50;  // XXX until bug 8598 fixed
+      uiEvent->GetScreenX(&mMouseScreenX);
+      uiEvent->GetScreenY(&mMouseScreenY);
+      uiEvent->GetClientX(&mMouseClientX);
+      uiEvent->GetClientY(&mMouseClientY);
       mTooltipTimer->Init(sTooltipCallback, this, 1000);   // one second delay
     }
   }
@@ -353,7 +363,7 @@ XULPopupListenerImpl::LaunchPopup ( nsIDOMEvent* anEvent )
   PRInt32 xPos, yPos;
   uiEvent->GetScreenX(&xPos); 
   uiEvent->GetScreenY(&yPos); 
-              
+
   PRInt32 offsetX, offsetY;
   uiEvent->GetClientX(&offsetX);
   uiEvent->GetClientY(&offsetY);
@@ -377,6 +387,11 @@ nsresult
 XULPopupListenerImpl::LaunchPopup( nsIDOMElement* aElement, PRInt32 aScreenX, PRInt32 aScreenY, 
                                       PRInt32 aOffsetX, PRInt32 aOffsetY )
 {
+#ifdef NS_DEBUG
+printf("screen coords %ld %ld\n", aScreenX, aScreenY);
+printf("client coords %ld %ld\n", aOffsetX, aOffsetY);
+#endif
+
   nsresult rv = NS_OK;
 
   nsAutoString type("popup");
@@ -446,6 +461,7 @@ XULPopupListenerImpl::LaunchPopup( nsIDOMElement* aElement, PRInt32 aScreenX, PR
           xPos -= aOffsetX;
           yPos -= aOffsetY;
         }
+printf("***creating XUL popup at %ld %ld\n", xPos, yPos);
         domWindow->CreatePopup(mElement, popupContent, 
                                xPos, yPos, 
                                type, anchorAlignment, popupAlignment,
@@ -545,8 +561,14 @@ XULPopupListenerImpl :: sTooltipCallback (nsITimer *aTimer, void *aClosure)
     if ( doc ) {
       nsCOMPtr<nsIDOMElement> element ( do_QueryInterface(self->mPossibleTooltipNode) );
       if ( element ) {
-        doc->SetTooltipElement ( element );        
-        self->LaunchPopup ( element, self->mMouseLocX, self->mMouseLocY, 0, 0 );
+        // check that node is enabled before showing tooltip
+        nsAutoString disabledState;
+        element->GetAttribute ( "disabled", disabledState );
+        if ( disabledState != "true" ) {
+          doc->SetTooltipElement ( element );        
+          self->LaunchPopup ( element, self->mMouseScreenX, self->mMouseScreenY, 
+                               self->mMouseClientX, self->mMouseClientY );
+        } // if node enabled
       }
     } // if document
   } // if "self" data valid
