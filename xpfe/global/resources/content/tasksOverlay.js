@@ -99,17 +99,15 @@ function toOpenWindowByType( inType, uri )
 				}
           			break;
     		case 2:
-                		var history = Components.classes['component://netscape/browser/global-history'];
-    			if (history) {
-                   			history = history.getService();
-    	    		}
-    	    		if (history) {
-                  			history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
-    	    		}
-    	    		if (history) {
-    				startpage = history.GetLastPageVisted();
-    	    		}
-          			break;
+			try {
+				var history = Components.classes["component://netscape/browser/global-history"].getService();
+                  		history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
+				startpage = history.GetLastPageVisted();
+			}
+			catch (ex) {
+				dump(ex +"\n");
+			}
+          		break;
        		default:
                 		startpage = "about:blank";
     	  }
