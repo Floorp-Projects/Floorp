@@ -191,4 +191,12 @@ map {
   display: inline;
 }
 
+/* Quirk: Make floated images have a margin  (b=58899) */
+img[align=left] {
+  margin-right: 3px;
+}
+
+img[align=right] {
+  margin-left: 3px;
+}
 
