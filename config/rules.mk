@@ -436,7 +436,7 @@ endif
 #
 pure:	$(PROGRAM)
 ifeq ($(CPP_PROG_LINK),1)
-	$(PURIFY) g++ $(CFLAGS) -o $^.pure $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(PURIFY) $(CCC) $(CFLAGS) -o $^.pure $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 else
 	$(PURIFY) $(CCF) -o $^.pure $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
