@@ -402,6 +402,11 @@ void CBrowserWindow::FindCommandStatus(
 		case cmd_LoadImages:
 		case cmd_Reload:
 		{
+			// Need to be very careful what gets delegated here, in order to aviod infinite
+			// recursion a la bug #313498.  Handling the command status in CBrowserView is not
+			// sufficient - it also needs to be handled in CHTMLView, which is the class that
+			// will receive this if it's a Composer window instead of a Browser window.
+
 			// Delegate this to the view.
 			GetHTMLView()->FindCommandStatus(inCommand, outEnabled, outUsesMark, outMark, outName);
 			break;
