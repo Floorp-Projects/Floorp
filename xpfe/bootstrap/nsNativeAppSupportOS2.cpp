@@ -2306,7 +2306,6 @@ nsNativeAppSupportOS2::StartServerMode() {
     }
 
     // Create the array for the arguments.
-    nsCOMPtr<nsISupportsArray>   argArray;
     nsCOMPtr<nsISupportsArray> argArray = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
     if ( !argArray ) {
         return NS_OK;
