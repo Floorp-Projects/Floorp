@@ -29,6 +29,7 @@
 
 nsInternetCiter::nsInternetCiter()
 {
+  NS_INIT_REFCNT();
 }
 
 nsInternetCiter::~nsInternetCiter()

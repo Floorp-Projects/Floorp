@@ -29,6 +29,7 @@
 
 nsAOLCiter::nsAOLCiter()
 {
+  NS_INIT_REFCNT();
 }
 
 nsAOLCiter::~nsAOLCiter()
