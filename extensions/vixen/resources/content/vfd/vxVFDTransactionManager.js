@@ -24,6 +24,10 @@
 function vxVFDTransactionManager() 
 {
   this.mTxnStack = new vxVFDTransactionStack();
+
+  // a record of transaction execution listeners that have attached
+  // themselves to us.
+  this.mTransactionListeners = [];
 }
 
 vxVFDTransactionManager.prototype = 
@@ -35,6 +39,14 @@ vxVFDTransactionManager.prototype =
 
   doTransaction: function (aTransaction) 
   {
+    for (var i = 0; i < this.mTransactionListeners.length; i++) {
+      var interruptRequest = {};
+      if ("willDo" in this.mTransactionListeners[i]) {
+        this.mTransactionListeners[i].willDo(this, aTransaction, interruptRequest);
+        // do something with irq here once we figure out what it does.
+      }
+    }
+
     // perform the transaction
     aTransaction.doTransaction();
     
@@ -49,7 +61,7 @@ vxVFDTransactionManager.prototype =
       
       // likewise with the RDF Seq.
       var seqCount = this.mTxnSeq.GetCount();
-      for (var i = this.mTxnStack.index; i < seqCount; i++)
+      for (i = this.mTxnStack.index; i < seqCount; i++)
         this.mTxnSeq.RemoveElementAt(i);
     }
     
@@ -59,10 +71,26 @@ vxVFDTransactionManager.prototype =
     // add the transaction to the stack
     this.mTxnSeq.AppendElement(new RDFLiteral(this.mTxnStack.index-1));
     
+    for (i = 0; i < this.mTransactionListeners.length; i++) {
+      interruptRequest = {};
+      if ("didDo" in this.mTransactionListeners[i]) {
+        _ddf("transaction listener " + i, this.mTransactionListeners[i].commandString);
+        this.mTransactionListeners[i].didDo(this, aTransaction, interruptRequest);
+        // do something with irq here once we figure out what it does.
+      }
+    }
   },
   
   undoTransaction: function ()
   {  
+    for (var i = 0; i < this.mTransactionListeners.length; i++) {
+      var interruptRequest = {};
+      if ("willUndo" in this.mTransactionListeners[i]) {
+        this.mTransactionListeners[i].willUndo(this, aTransaction, interruptRequest);
+        // do something with irq here once we figure out what it does.
+      }
+    }
+    
     // retrieve the previous transaction
     var txn = this.mTxnStack.mStack[this.mTxnStack.index-1];
 
@@ -72,17 +100,41 @@ vxVFDTransactionManager.prototype =
       txn.undoTransaction();
       this.mTxnStack.index--;
     }
+
+    for (i = 0; i < this.mTransactionListeners.length; i++) {
+      interruptRequest = {};
+      if ("didUndo" in this.mTransactionListeners[i]) {
+        this.mTransactionListeners[i].didUndo(this, aTransaction, interruptRequest);
+        // do something with irq here once we figure out what it does.
+      }
+    }
   },
   
   redoTransaction: function (aTransaction)
   {
+    for (var i = 0; i < this.mTransactionListeners.length; i++) {
+      var interruptRequest = {};
+      if ("willRedo" in this.mTransactionListeners[i]) {
+        this.mTransactionListeners[i].willRedo(this, aTransaction, interruptRequest);
+        // do something with irq here once we figure out what it does.
+      }
+    }
+
     // retrieve the previous transaction
-    var txn = this.mTxnStack.mStack[this.mTxnStack.index+1];
+    var txn = this.mTxnStack.mStack[this.mTxnStack.index];
 
     // redo the transaction
     if (txn) { 
       txn.redoTransaction();
       this.mTxnStack.index++;
+    }
+
+    for (i = 0; i < this.mTransactionListeners.length; i++) {
+      interruptRequest = {};
+      if ("didRedo" in this.mTransactionListeners[i]) {
+        this.mTransactionListeners[i].didRedo(this, aTransaction, interruptRequest);
+        // do something with irq here once we figure out what it does.
+      }
     }
   },
   
@@ -92,8 +144,34 @@ vxVFDTransactionManager.prototype =
     const kContainerUtilsIID = "nsIRDFContainerUtils";
     var utils = nsJSComponentManager.getServiceByID(kContainerUtilsCID, kContainerUtilsIID);
     return utils.MakeSeq(vxVFDTransactionDS, aResource);
-  }
+  },
+
+  /**
+   * add and remove nsITransactionListeners
+   */
+  addListener: function (aTransactionListener)
+  {
+    if ("splice" in aTransactionListener) {
+      for (var i = 0; i < aTransactionListener.length; i++)
+        this.mTransactionListeners.push(aTransactionListener[i]);
+    }
+    else
+      this.mTransactionListeners.join(aTransactionListener);
+    _ddf("transaction listeners :: ", this.mTransactionListeners.length);
+  },
   
+  removeListener: function (aTransactionListeners)
+  {
+    var listeners = [].join(aTransactionListeners)
+    for (var i = 0; i < this.mTransactionListeners.length; i++) {
+      for (var k = 0; k < listeners.length; k++) {
+        if (this.mTransactionListeners[i] == listeners[k]) {
+          this.mTransactionListeners.splice(i, 1);
+          break;
+        }
+      }
+    }
+  }
 };
 
 /** 
@@ -161,7 +239,7 @@ var vxVFDTransactionDS =
   mObservers: [],
   AddObserver: function (aObserver) 
   {
-    this.mObservers.push(aObserver);
+    this.mObservers[this.mObservers.length] = aObserver;
   },
   
   RemoveObserver: function (aObserver)

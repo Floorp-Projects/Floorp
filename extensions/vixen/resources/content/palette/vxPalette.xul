@@ -19,7 +19,13 @@
   <script src="chrome://vixen/content/vfd/vxCreateElementTxn.js"></script>
   
   
-  <button value="Button" oncommand="vxPalette.insertButtonElement('button');"/>
-        
+  <button value="Button" 
+          oncommand="vxPalette.insertButtonElement();"/>
+  <button value="TextField" 
+          oncommand="vxPalette.insertTextFieldElement();"/>
+  <button value="RadioGroup" 
+          oncommand="vxPalette.insertRadioGroup();"/>
+          
+          
 </window>        
 

@@ -31,24 +31,40 @@ function vxCreateElementTxn(aDocument, aLocalName, aParentNode, aChildOffset)
 {
   this.mDocument    = aDocument;
   this.mLocalName   = aLocalName;
+
+  this.mElementCreated = false;
+  if (typeof(aParentNode) === "string" && aParentNode.indexOf("create-element") >= 0)
+    this.mElementTxnID = aParentNode;
+  else
+    this.mElementCreated = true;
+
   this.mParentNode  = aParentNode;
   this.mChildOffset = aChildOffset;
-  this.mElement     = this.mDocument.createElement(this.mLocalName);
+  
+  this.mID          = "create-element::";
 } 
  
 vxCreateElementTxn.prototype = {
+  init: function () 
+  {
+    this.mID += generateID();
+  },
+
   doTransaction: function ()
   {
+    _ddf("creating element", this.mLocalName);
+    if (!this.mElementCreated) {
+      _dd("aParentNode is an id, bailing early");
+      _ddf("localname is", this.mLocalName);
+      return;
+    }
+      
+    this.mElement = this.mDocument.createElement(this.mLocalName);
     this.insertNode();
   },
 
   undoTransaction: function ()
   {
-    _ddf("element", this.mElement.localName);
-    _ddf("parent", this.mParentNode.localName);
-    for (var i = 0; i < this.mParentNode.childNodes.length; i++) {
-      _ddf("childnode at " + i, this.mParentNode.childNodes[i]);
-    }
     this.mParentNode.removeChild(this.mElement);
   },
   
@@ -72,12 +88,22 @@ vxCreateElementTxn.prototype = {
   get commandString()
   {
     var commandString = "create-element";
-    commandString = this.mRemoveFlag ? "remove," : "set,";
-    commandString += this.mElement.id + ",";
-    commandString += this.mAttribute + ",";
-    commandString += this.mValue;
     return commandString;    
+  },
+
+  /** 
+   * Implementation of nsITransactionListener
+   */
+  didDo: function (aTransactionManager, aTransaction, aInterrupt) 
+  {
+    var createElementTxn = aTransaction.mTransactionList[this.mElementTxnID];
+    if (createElementTxn.commandString.indexOf("create-element") >= 0) {
+      this.mElement = createElementTxn.mElement;
+      this.mElementCreated = true;
+      this.doTransaction();
+    }
   }
+  
 };
 
 /** 

@@ -39,18 +39,35 @@
 
 function vxChangeAttributeTxn(aElement, aAttribute, aValue, aRemoveFlag)
 {
+  if (!aElement) throw Components.results.NS_ERROR_NULL_POINTER;
+
+  this.mElementCreated = false;
+  if (typeof(aElement) === "string" && aElement.indexOf("create-element") >= 0)
+    this.mElementTxnID = aElement;
+  else
+    this.mElementCreated = true;
+  
   this.mElement     = aElement;
-  this.mAttributes  = aAttribute.splice ? aAttribute : [aAttribute];
-  this.mValues      = aValue.splice ? aValue : [aValue];
-  this.mRemoveFlags = aRemoveFlag.splice ? aRemoveFlag : [aRemoveFlag];
+  this.mAttributes  = [].concat(aAttribute);
+  this.mValues      = [].concat(aValue);
+  this.mRemoveFlags = [].concat(aRemoveFlag);
   this.mUndoValues  = [];
+
+  this.mID          = "create-element::";
 } 
- 
+
 vxChangeAttributeTxn.prototype = {
+  init: function ()
+  {
+    this.mID += generateID();
+  },
+  
   doTransaction: function ()
   {
+    if (!this.mElementCreated) 
+      return;
+      
     for (var i = 0; i < this.mAttributes.length; i++) {
-      _ddf("this attribute", this.mAttributes[i]);
       this.mUndoValues[i] = this.mElement.getAttribute(this.mAttributes[i]);
       if (!this.mRemoveFlags[i])
         this.mElement.setAttribute(this.mAttributes[i], this.mValues[i]);
@@ -83,11 +100,26 @@ vxChangeAttributeTxn.prototype = {
   get commandString()
   {
     var commandString = "change-attribute,";
-    commandString += this.mRemoveFlag ? "remove," : "set,";
+/*    commandString += this.mRemoveFlag ? "remove," : "set,";
     commandString += this.mElement.id + ",";
     commandString += this.mAttribute + ",";
-    commandString += this.mValue;
+    commandString += this.mValue;*/
     return commandString;    
+  },
+  
+  /** 
+   * Implementation of nsITransactionListener
+   */
+  didDo: function (aTransactionManager, aTransaction, aInterrupt) 
+  {
+    var createElementTxn = aTransaction.mTransactionList[this.mElementTxnID];
+    _ddf("the transaction ahead of us is", createElementTxn.commandString);
+    _ddf("and its element is", createElementTxn.mLocalName);
+    if (createElementTxn.commandString.indexOf("create-element") >= 0) {
+      this.mElement = createElementTxn.mElement;
+      this.mElementCreated = true;
+      this.doTransaction();
+    }
   }
 };
 
