@@ -29,11 +29,6 @@
   An implementation for the XUL document. This implementation serves
   as the basis for generating an NGLayout content model.
 
-  To Do
-  -----
-
-  1. Implement DOM range constructors.
-
   Notes
   -----
 
@@ -64,6 +59,7 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsIDOMRange.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIDOMStyleSheetList.h"
 #include "nsIDOMText.h"
@@ -161,6 +157,7 @@ static NS_DEFINE_CID(kXULContentUtilsCID,        NS_XULCONTENTUTILS_CID);
 static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 static NS_DEFINE_CID(kXULTemplateBuilderCID,     NS_XULTEMPLATEBUILDER_CID);
 static NS_DEFINE_CID(kDOMImplementationCID,      NS_DOM_IMPLEMENTATION_CID);
+static NS_DEFINE_CID(kRangeCID,                  NS_RANGE_CID);
 
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 
@@ -2653,8 +2650,9 @@ nsXULDocument::GetCharacterSet(nsAWritableString& aCharacterSet)
 NS_IMETHODIMP
 nsXULDocument::CreateRange(nsIDOMRange** aRange)
 {
-    NS_NOTREACHED("nsXULDocument::CreateRange");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsComponentManager::CreateInstance(kRangeCID, nsnull,
+                                              NS_GET_IID(nsIDOMRange),
+                                              (void **)aRange);
 }
 
 NS_IMETHODIMP
