@@ -50,7 +50,7 @@ public:
   virtual ~nsPlatformCharset();
 
   NS_IMETHOD Init();
-  NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsAWritableString& oResult);
+  NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsAString& oResult);
   NS_IMETHOD GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue);
 
 private:
@@ -58,10 +58,10 @@ private:
   nsString mLocale; // remember the locale & charset
 
   nsresult InitInfo();
-  nsresult MapToCharset(short script, short region, nsAWritableString& outCharset); 
-  nsresult MapToCharset(nsString& inANSICodePage, nsAWritableString& outCharset);
-  nsresult InitGetCharset(nsAWritableString& oString);
-  nsresult ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& locale, nsAWritableString& oResult);
+  nsresult MapToCharset(short script, short region, nsAString& outCharset); 
+  nsresult MapToCharset(nsString& inANSICodePage, nsAString& outCharset);
+  nsresult InitGetCharset(nsAString& oString);
+  nsresult ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& locale, nsAString& oResult);
   nsresult VerifyCharset(nsString &aCharset);
 };
 

@@ -1062,7 +1062,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
 #endif
 
 nsresult
-nsWebShell::GetControllerForCommand ( const nsAReadableString & inCommand, nsIController** outController )
+nsWebShell::GetControllerForCommand ( const nsAString & inCommand, nsIController** outController )
 {
   NS_ENSURE_ARG_POINTER(outController);
   *outController = nsnull;
@@ -1083,7 +1083,7 @@ nsWebShell::GetControllerForCommand ( const nsAReadableString & inCommand, nsICo
 
 
 nsresult
-nsWebShell::IsCommandEnabled ( const nsAReadableString & inCommand, PRBool* outEnabled )
+nsWebShell::IsCommandEnabled ( const nsAString & inCommand, PRBool* outEnabled )
 {
   NS_ENSURE_ARG_POINTER(outEnabled);
   *outEnabled = PR_FALSE;
@@ -1100,7 +1100,7 @@ nsWebShell::IsCommandEnabled ( const nsAReadableString & inCommand, PRBool* outE
 
 
 nsresult
-nsWebShell::DoCommand ( const nsAReadableString & inCommand )
+nsWebShell::DoCommand ( const nsAString & inCommand )
 {
   nsresult rv = NS_ERROR_FAILURE;
   

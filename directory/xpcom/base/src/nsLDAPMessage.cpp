@@ -552,14 +552,14 @@ nsLDAPMessage::ToUnicode(PRUnichar* *aString)
 }
 
 NS_IMETHODIMP
-nsLDAPMessage::GetErrorMessage(nsAWritableString & aErrorMessage)
+nsLDAPMessage::GetErrorMessage(nsAString & aErrorMessage)
 {
     aErrorMessage = NS_ConvertUTF8toUCS2(mErrorMessage);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLDAPMessage::GetMatchedDn(nsAWritableString & aMatchedDn)
+nsLDAPMessage::GetMatchedDn(nsAString & aMatchedDn)
 {
     aMatchedDn = NS_ConvertUTF8toUCS2(mMatchedDn);
     return NS_OK;

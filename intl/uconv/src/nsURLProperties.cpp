@@ -100,7 +100,7 @@ nsURLProperties::~nsURLProperties()
   }
 }
 
-NS_IMETHODIMP nsURLProperties::Get(const nsAReadableString& aKey, nsAWritableString& oValue)
+NS_IMETHODIMP nsURLProperties::Get(const nsAString& aKey, nsAString& oValue)
 {
   if(mDelegate)
      return mDelegate->GetStringProperty(aKey, oValue);

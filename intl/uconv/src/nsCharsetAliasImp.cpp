@@ -66,7 +66,7 @@ nsCharsetAlias2::~nsCharsetAlias2()
      delete mDelegate;
 }
 //--------------------------------------------------------------
-NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsAReadableString& aAlias, nsAWritableString& oResult)
+NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsAString& aAlias, nsAString& oResult)
 {
    if (aAlias.IsEmpty()) return NS_ERROR_NULL_POINTER;
    NS_TIMELINE_START_TIMER("nsCharsetAlias2:GetPreferred");
@@ -120,7 +120,7 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const char* aAlias, char* oResult, P
    return NS_ERROR_NOT_IMPLEMENTED;
 }
 //--------------------------------------------------------------
-NS_IMETHODIMP nsCharsetAlias2::Equals(const nsAReadableString& aCharset1, const nsAReadableString& aCharset2, PRBool* oResult)
+NS_IMETHODIMP nsCharsetAlias2::Equals(const nsAString& aCharset1, const nsAString& aCharset2, PRBool* oResult)
 {
    nsresult res = NS_OK;
 

@@ -862,12 +862,12 @@ nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
 
 /* AString createFilter (in unsigned long aMaxSize, in AString aPattern, in AString aPrefix, in AString aSuffix, in AString aAttr, in AString aValue); */
 NS_IMETHODIMP nsLDAPService::CreateFilter(PRUint32 aMaxSize, 
-                                          const nsAReadableString & aPattern,
-                                          const nsAReadableString & aPrefix,
-                                          const nsAReadableString & aSuffix,
-                                          const nsAReadableString & aAttr,
-                                          const nsAReadableString & aValue,
-                                          nsAWritableString & _retval)
+                                          const nsAString & aPattern,
+                                          const nsAString & aPrefix,
+                                          const nsAString & aSuffix,
+                                          const nsAString & aAttr,
+                                          const nsAString & aValue,
+                                          nsAString & _retval)
 {
     if (!aMaxSize) {
         return NS_ERROR_INVALID_ARG;
@@ -1028,7 +1028,7 @@ nsLDAPService::NextToken(nsReadingIterator<PRUnichar> & aIter,
 //
 // string UCS2ToUTF8 (in AString aString);
 NS_IMETHODIMP
-nsLDAPService::UCS2toUTF8(const nsAReadableString &aString,
+nsLDAPService::UCS2toUTF8(const nsAString &aString,
                                         char **_retval)
 {
     char *str;
@@ -1051,7 +1051,7 @@ nsLDAPService::UCS2toUTF8(const nsAReadableString &aString,
 // AString UTF8ToUCS2 (in string aString);
 NS_IMETHODIMP
 nsLDAPService::UTF8toUCS2(const char *aString,
-                                        nsAWritableString &_retval)
+                                        nsAString &_retval)
 {
     _retval = NS_ConvertUTF8toUCS2(aString);
     return NS_OK;

@@ -110,7 +110,7 @@ protected:
   // functional decomposition of the funitions repeatively called 
   //
   nsresult GetStringFromID(PRInt32 aID, nsAString& aResult);
-  nsresult GetStringFromName(const nsAReadableString& aName, nsAString& aResult);
+  nsresult GetStringFromName(const nsAString& aName, nsAString& aResult);
 
 private:
   nsCString              mPropertiesURL;
@@ -309,7 +309,7 @@ nsStringBundle::GetStringFromID(PRInt32 aID, nsAString& aResult)
 }
 
 nsresult
-nsStringBundle::GetStringFromName(const nsAReadableString& aName,
+nsStringBundle::GetStringFromName(const nsAString& aName,
                                   nsAString& aResult)
 {
   nsresult rv;
