@@ -133,7 +133,6 @@ unless ($action) {
     print "</table>\n";
     print "<input type=hidden name=\"action\" value=\"update\">";
     print "<input type=submit value=\"Submit changes\">\n";
-    print "</form>\n";
 
     print "<p>";
     print "<b>Name</b> is what is used with the UserInGroup() function in any
@@ -147,31 +146,41 @@ to others in the same group.<p>";
 grant membership to this group to anyone creating a new account with an
 email address that matches this regular expression.<p>";
     print "In addition, the following groups that determine user privileges
-exist.  You can not edit these, but you need to know they are here, because
-you can't duplicate the Names of any of them in your user groups either.<p>";
+exist.  You can only edit the User rexexp on these groups.  You should also take
+care not to duplicate the Names of any of them in your user groups.<p>";
+    print "Also please note that both of the Submit Changes buttons on this page
+will submit the changes in both tables.  There are two buttons simply for the
+sake of convience.<p>";
 
     print "<table border=1>\n";
     print "<tr>";
     print "<th>Bit</th>";
     print "<th>Name</th>";
     print "<th>Description</th>";
+    print "<th>User RegExp</th>";
     print "</tr>\n";
 
-    SendSQL("SELECT bit,name,description " .
+    SendSQL("SELECT bit,name,description,userregexp " .
             "FROM groups " .
             "WHERE isbuggroup = 0 " .
             "ORDER BY bit");
 
     while (MoreSQLData()) {
-        my ($bit, $name, $desc) = FetchSQLData();
+        my ($bit, $name, $desc, $regexp) = FetchSQLData();
         print "<tr>\n";
         print "<td>$bit</td>\n";
         print "<td>$name</td>\n";
+        print "<input type=hidden name=\"name-$bit\" value=\"$name\">\n";
+        print "<input type=hidden name=\"oldname-$bit\" value=\"$name\">\n";
         print "<td>$desc</td>\n";
+        print "<td><input type=text size=30 name=\"regexp-$bit\" value=\"$regexp\"></td>\n";
+        print "<input type=hidden name=\"oldregexp-$bit\" value=\"$regexp\">\n";
         print "</tr>\n";
     }
 
     print "</table><p>\n";
+    print "<input type=submit value=\"Submit changes\">\n";
+    print "</form>\n";
 
     PutFooter();
     exit;
@@ -523,10 +532,18 @@ if ($action eq 'update') {
                 SendSQL("SELECT name FROM groups WHERE name=" .
                          SqlQuote($::FORM{"name-$v"}));
                 if (!FetchOneColumn()) {
-                    SendSQL("UPDATE groups SET name=" .
-                            SqlQuote($::FORM{"name-$v"}) .
-                            " WHERE bit=" . SqlQuote($v));
-                    print "Group $v name updated.<br>\n";
+                    SendSQL("SELECT name FROM groups WHERE name=" .
+                             SqlQuote($::FORM{"oldname-$v"}) .
+                             " && isbuggroup = 0");
+                    if (FetchOneColumn()) {
+                        ShowError("You cannot update the name of a " .
+                                  "system group. Skipping $v");
+                    } else {
+                        SendSQL("UPDATE groups SET name=" .
+                                SqlQuote($::FORM{"name-$v"}) .
+                                " WHERE bit=" . SqlQuote($v));
+                        print "Group $v name updated.<br>\n";
+                    }
                 } else {
                     ShowError("Duplicate name '" . $::FORM{"name-$v"} .
                               "' specified for group $v.<BR>" .
