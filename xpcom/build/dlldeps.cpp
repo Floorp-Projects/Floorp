@@ -64,6 +64,7 @@
 #include "nsIByteArrayInputStream.h"
 #include "nsReadableUtils.h"
 #include "nsStaticNameTable.h"
+#include "nsProcessWin.h"
 #include "nsSlidingString.h"
 #ifdef DEBUG
 #include "pure.h"
@@ -145,6 +146,7 @@ void XXXNeverCalled()
     nsLinebreakConverter::ConvertStringLineBreaks(foo, 
     nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakContent);
     NS_NewLocalFile(NULL, PR_FALSE, NULL);
+    nsProcess();
     NS_NewByteArrayInputStream (NULL, NULL, 0);
     nsStaticCaseInsensitiveNameTable();
     nsAutoString str1;

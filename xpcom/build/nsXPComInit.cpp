@@ -57,6 +57,7 @@
 #include "nsIInterfaceInfoManager.h"
 
 #include "nsThread.h"
+#include "nsProcess.h"
 
 #include "nsFileSpecImpl.h"
 #include "nsSpecialSystemDirectory.h"
@@ -125,6 +126,10 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
 static NS_DEFINE_CID(kThreadCID, NS_THREAD_CID);
 static NS_DEFINE_CID(kThreadPoolCID, NS_THREADPOOL_CID);
+static NS_DEFINE_CID(kProcessCID, NS_PROCESS_CID);
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsProcess);
+
 // proxy
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
@@ -589,6 +594,12 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
                                 NS_DIRECTORY_SERVICE_CLASSNAME,
                                 NS_DIRECTORY_SERVICE_CONTRACTID,
                                 nsDirectoryService::Create);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = RegisterGenericFactory(compMgr, kProcessCID,
+                                NS_PROCESS_CLASSNAME,
+                                NS_PROCESS_CONTRACTID,
+                                nsProcessConstructor);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kFileSpecCID,
