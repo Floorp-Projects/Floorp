@@ -39,7 +39,10 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
@@ -250,6 +253,7 @@ public class CompositionPanel extends GeneralPanel {
   public static final String sendNowTag               ="sendNow";
   public static final String sendLaterTag             ="sendLater";
   public static final String quoteOriginalTextTag     ="quoteOriginalText";
+  public static final String addSignatureTag          ="addSignature";
   public static final String selectAddressesTag       ="selectAddresses";
   public static final String goOfflineTag             ="goOffline";
   public static final String closeWindowTag           ="closeWindow";
@@ -569,6 +573,46 @@ public class CompositionPanel extends GeneralPanel {
     }
   }
 
+  /**
+   * Add a signature
+   */
+  class AddSignature extends UIAction {
+    AddSignature() {
+      super(addSignatureTag);
+      this.setEnabled(true);
+    }
+    public void actionPerformed(ActionEvent event) {
+
+      int ident = mAddressBar.getOptionsPanel().getSelectedIdentity();
+      Preferences prefs = PreferencesFactory.Get();
+      String sigFileName = prefs.getString("mail.identity-" + ident + ".signature", "");
+
+      Document doc = mEditor.getDocument();
+      //int position = mEditor.getCaretPosition();
+      int position = doc.getEndPosition().getOffset() - 1;
+      
+      try {
+        BufferedReader sigReader = new BufferedReader(new FileReader(sigFileName));
+
+        String s = "-- ";
+        while (s != null) {
+          System.out.println(s);
+          s = s + "\n";
+          doc.insertString(position, s, null);
+          position += s.length();
+      	  s = sigReader.readLine();
+        }
+      } catch (FileNotFoundException fnfe) {
+        fnfe.printStackTrace();
+      } catch (IOException ioe) {
+        ioe.printStackTrace();
+      } catch (BadLocationException ble) {
+        ble.printStackTrace();
+      }
+
+    }
+  }
+
   class SelectAddresses extends UIAction {
     SelectAddresses() {
       super(selectAddressesTag);
@@ -738,6 +782,8 @@ public class CompositionPanel extends GeneralPanel {
                      "security",   "Show security Information");
     addToolbarButton(toolBar, null,
                      "stop",       "Stop the current Transfer (ESC)" );
+    addToolbarButton(toolBar, new AddSignature(),
+                     "signature",  "Add the signature of the current personality" );
 
     return toolBar;
   }
