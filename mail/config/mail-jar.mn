@@ -39,6 +39,7 @@ content/communicator/platformBrowserBindings.xul,     comm/content/communicator/
 content/communicator/platformEditorBindings.xul,      comm/content/communicator/platformEditorBindings.xul 
 content/communicator/platformCommunicatorOverlay.xul, comm/content/communicator/platformCommunicatorOverlay.xul 
 content/communicator/contentAreaUtils.js,             comm/content/communicator/contentAreaUtils.js 
+content/communicator/builtinURLs.js,                  comm/content/communicator/builtinURLs.js
 content/communicator/contentAreaDD.js,                comm/content/communicator/contentAreaDD.js 
 content/communicator/contentAreaClick.js,             comm/content/communicator/contentAreaClick.js 
 content/communicator/contentAreaContextOverlay.xul,   comm/content/communicator/contentAreaContextOverlay.xul 
