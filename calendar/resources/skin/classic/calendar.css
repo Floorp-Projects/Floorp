@@ -1382,7 +1382,7 @@ treechildren::-moz-tree-cell-text(overdue)
 
 treechildren::-moz-tree-row 
 { 
-   border-top             : 1px dotted #AAA; 
+   border-bottom             : 1px dotted #AAA; 
 }
 
 treechildren::-moz-tree-row(overdue,selected)

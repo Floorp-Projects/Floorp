@@ -1393,7 +1393,7 @@ treechildren::-moz-tree-row(overdue,selected)
 
 treechildren::-moz-tree-row 
 { 
-   border-top             : 1px dotted #AAA; 
+   border-bottom             : 1px dotted #AAA; 
 }
 
 treechildren::-moz-tree-cell-text(duetoday)
