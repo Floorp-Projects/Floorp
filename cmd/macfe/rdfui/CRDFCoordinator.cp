@@ -459,7 +459,7 @@ CRDFCoordinator::ListenToMessage ( MessageT inMessage, void *ioParam )
 
 		case CNavCenterCommandStrip::msg_ModeSwitch:
 			// this will cause us to get a HT_EVENT_VIEW_MODECHANGED event above
-			HT_ToggleTreeMode ( HT_GetSelectedView(HTPane()) );
+//			HT_ToggleTreeMode ( HT_GetSelectedView(HTPane()) );
 			break;
 			
 #if 0
