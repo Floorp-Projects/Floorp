@@ -70,5 +70,4 @@ install:: $(EXE)
 
 clobber::
 	rm -f $(DIST)\lib\$(DLLNAME).$(LIB_SUFFIX)
-# rm -f $(DIST)\bin\$(DLLNAME).$(DLL_SUFFIX)
 
