@@ -1961,20 +1961,20 @@ XULDocumentImpl::CreateContents(nsIContent* aElement)
     aElement->ChildCount(childCount);
     for (PRInt32 j = 0; j < childCount; j++)
     {
-        nsIContent* pChildContent = nsnull;
-        aElement->ChildAt(j, pChildContent);
+        nsIContent* childContent = nsnull;
+        aElement->ChildAt(j, childContent);
       
-        if (!pChildContent)
+        if (!childContent)
           break;
 
-        nsIAtom* pTag = nsnull;
-        pChildContent->GetTag(pTag);
+        nsIAtom* tag = nsnull;
+        childContent->GetTag(tag);
 
-        if (!pTag)
+        if (!tag)
           break;
 
         nsString tagName;
-        pTag->ToString(tagName);
+        tag->ToString(tagName);
 
         if (tagName.EqualsIgnoreCase("observes"))
         {
@@ -1983,36 +1983,36 @@ XULDocumentImpl::CreateContents(nsIContent* aElement)
             nsString elementValue;
             nsString attributeValue;
 
-            pChildContent->GetAttribute(kNameSpaceID_None, 
+            childContent->GetAttribute(kNameSpaceID_None, 
                                         kElementAtom,
                                         elementValue);
             
-            pChildContent->GetAttribute(kNameSpaceID_None, 
+            childContent->GetAttribute(kNameSpaceID_None, 
                                         kAttributeAtom,
                                         attributeValue);
 
-            nsIDOMElement* pDOMNode = nsnull;
-            GetElementById(elementValue, &pDOMNode);
+            nsIDOMElement* domElement = nsnull;
+            GetElementById(elementValue, &domElement);
             
-            if (!pDOMNode)
+            if (!domElement)
               break;
 
-            // We have a DOM node to bind to.  Add a broadcast
-            // listener to that node, but only if it's a XUL node.
+            // We have a DOM element to bind to.  Add a broadcast
+            // listener to that element, but only if it's a XUL element.
             // XXX: Handle context nodes.
-            nsCOMPtr<nsIDOMNode> pListener( do_QueryInterface(aElement) );
-            nsCOMPtr<nsIDOMXULElement> pBroadcaster( do_QueryInterface(pDOMNode) );
-            if (pListener)
+            nsCOMPtr<nsIDOMElement> listener( do_QueryInterface(aElement) );
+            nsCOMPtr<nsIDOMXULElement> broadcaster( do_QueryInterface(domElement) );
+            if (listener)
             {
-                pBroadcaster->AddBroadcastListener(attributeValue,
-                                                   pListener);
+                broadcaster->AddBroadcastListener(attributeValue,
+                                                  listener);
             }
 
-            NS_RELEASE(pDOMNode);
+            NS_RELEASE(domElement);
         }
 
-        NS_RELEASE(pChildContent);
-        NS_RELEASE(pTag);
+        NS_RELEASE(childContent);
+        NS_RELEASE(tag);
     }
 
     return NS_OK;
@@ -2930,7 +2930,7 @@ XULDocumentImpl::StartLayout(void)
 
         // Start observing the document _after_ we do the initial
         // reflow. Otherwise, we'll get into an trouble trying to
-        // creat kids before the root frame is established.
+        // create kids before the root frame is established.
         shell->BeginObservingDocument();
 
         NS_RELEASE(shell);
