@@ -46,7 +46,6 @@ XPIDLSRCS	= \
 		gfxIFormats.idl \
 		gfxIImageFrame.idl \
 		gfxtypes.idl \
-		gfx2types.idl \
 		$(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_GFX_TOOLKIT)))

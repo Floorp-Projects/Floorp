@@ -96,6 +96,9 @@ endif
 CFLAGS		+= $(TK_CFLAGS)
 CXXFLAGS	+= $(TK_CFLAGS)
 
+LOCAL_INCLUDES = -I$(srcdir)/.. \
+                 $(NULL)
+
 libs::
 	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res
 

@@ -28,7 +28,32 @@
 
 #include "nsrootidl.idl"
 
-#include "gfx2types.idl"
+/*! @verbatim */
+%{C++
+#include "nsCoord.h"
+%}
+/*! @endverbatim */
+
+/**
+ * A color is a 32 bit unsigned integer with
+ * four components: R, G, B and A.
+ *
+ * @var typedef PRUint32 gfx_color
+ */
+typedef PRUint32            gfx_color;
+
+/**
+ * typedef that should be used for bit depths
+ * @var typedef unsigned short gfx_depth
+ */
+typedef unsigned short      gfx_depth; // is short ok?
+
+/**
+ * typedef that should be used for image formats
+ * @var typedef long gfx_format
+ * @see gfxIFormats
+ */
+typedef long                gfx_format;
 
 typedef PRInt32             nscoord;
 

@@ -29,8 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= gfx
 
 EXPORTS		= \
-		imgScaler.h \
-		gfxcompat.h \
 		nsColor.h \
 		nsColorNames.h \
 		nsColorNameList.h \
@@ -38,14 +36,12 @@ EXPORTS		= \
 		nsCoord.h \
 		nsFont.h \
 		nsRect.h \
-		nsRepeater.h \
+		nsRegion.h \
 		nsPoint.h \
 		nsSize.h \
 		nsMargin.h \
-		nsNameValuePairDB.h \
 		nsTransform2D.h \
 		nsIRenderingContext.h \
-		nsRenderingContextImpl.h \
 		nsIFontMetrics.h \
 		nsIDeviceContext.h \
 		nsIImage.h \
@@ -64,6 +60,7 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 EXPORTS		+= \
           nsIPrintingContext.h \
           nsPDECommon.h \
+          nsRepeater.h \
           $(NULL)
 endif
 
