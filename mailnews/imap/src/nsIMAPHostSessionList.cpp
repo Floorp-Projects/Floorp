@@ -53,7 +53,7 @@ nsIMAPHostInfo::nsIMAPHostInfo(const char *hostName, const char *userName)
 	fShouldAlwaysListInbox = PR_TRUE;
 	fShellCache = nsIMAPBodyShellCache::Create();
 	fPasswordVerifiedOnline = PR_FALSE;
-    fDeleteIsMoveToTrash = PR_FALSE;
+    fDeleteIsMoveToTrash = PR_TRUE;
     fGotNamespaces = PR_FALSE;
 	fNamespacesOverridable = PR_TRUE;
 }
