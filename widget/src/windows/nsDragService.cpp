@@ -257,11 +257,24 @@ NS_IMETHODIMP nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBo
     if ( mDataObject->QueryGetData(&fe) == S_OK )
       *_retval = PR_TRUE;                 // found it!
     else {
-      // try again, this time looking for plain text.
-      format = nsClipboard::GetFormat(kTextMime);
-      SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
-      if ( mDataObject->QueryGetData(&fe) == S_OK )
-        *_retval = PR_TRUE;                 // found it!
+      // We haven't found the exact flavor the client asked for, but maybe we can
+      // still find it from something else that's on the clipboard
+      if ( strcmp(aDataFlavor, kUnicodeMime) == 0 ) {
+        // client asked for unicode and it wasn't present, check if we have CF_TEXT.
+        // We'll handle the actual data substitution in the data object.
+        format = nsClipboard::GetFormat(kTextMime);
+        SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
+        if ( mDataObject->QueryGetData(&fe) == S_OK )
+          *_retval = PR_TRUE;                 // found it!
+      }
+      else if ( strcmp(aDataFlavor, kURLMime) == 0 ) {
+        // client asked for a url and it wasn't present, but if we have a file, then
+        // we have a URL to give them (the path, or the internal URL if an InternetShortcut).
+        format = nsClipboard::GetFormat(kFileMime);
+        SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
+        if ( mDataObject->QueryGetData(&fe) == S_OK )
+          *_retval = PR_TRUE;                 // found it!
+      }
     } // else try again
   }
 

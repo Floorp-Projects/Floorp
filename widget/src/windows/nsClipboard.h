@@ -49,27 +49,25 @@ public:
   // Internal Native Routines
   static nsresult CreateNativeDataObject(nsITransferable * aTransferable, 
                                          IDataObject ** aDataObj);
-
   static nsresult SetupNativeDataObject(nsITransferable * aTransferable, 
                                         IDataObject * aDataObj);
-
   static nsresult GetDataFromDataObject(IDataObject     * aDataObject,
                                         UINT              anIndex,
                                         nsIWidget       * aWindow,
                                         nsITransferable * aTransferable);
-
   static nsresult GetNativeDataOffClipboard(nsIWidget * aWindow, UINT aIndex, UINT aFormat, void ** aData, PRUint32 * aLen);
-
   static nsresult GetNativeDataOffClipboard(IDataObject * aDataObject, UINT aIndex, UINT aFormat, void ** aData, PRUint32 * aLen);
-
   static nsresult GetGlobalData(HGLOBAL aHGBL, void ** aData, PRUint32 * aLen);
-
   static UINT     GetFormat(const char* aMimeStr);
-
 
 protected:
   NS_IMETHOD SetNativeClipboardData ( PRInt32 aWhichClipboard );
   NS_IMETHOD GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32 aWhichClipboard );
+
+  static PRBool IsInternetShortcut ( const char* inFileName ) ;
+  static PRBool FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen ) ;
+  static PRBool FindUnicodeFromPlainText ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen ) ;
+  static void ResolveShortcut ( const char* inFileName, char* outURL ) ;
 
   nsIWidget         * mWindow;
   IDataObject       * mDataObj;
