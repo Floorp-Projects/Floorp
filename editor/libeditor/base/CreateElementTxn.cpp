@@ -65,8 +65,14 @@ CreateElementTxn::~CreateElementTxn()
 
 NS_IMETHODIMP CreateElementTxn::Do(void)
 {
-  if (gNoisy) { printf("Do Create Element parent = %p, offset = %d\n", 
-                        mParent.get(), mOffsetInParent); }
+  if (gNoisy)
+  {
+    char* nodename = mTag.ToNewCString();
+    printf("Do Create Element parent = %p <%s>, offset = %d\n", 
+           mParent.get(), nodename, mOffsetInParent);
+    nsAllocator::Free(nodename);
+  }
+
   NS_ASSERTION(mEditor && mParent, "bad state");
 	if (!mEditor || !mParent) return NS_ERROR_NOT_INITIALIZED;
   nsresult result;
