@@ -833,24 +833,28 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
 
   nscoord topEdge = mTopEdge;
   if (0 != lineHeight) {
-    nscoord newLineHeight = CalcLineHeightFor(mPresContext, mOuterFrame,
-                                              lineHeight);
-    // If the newLineHeight is larger then just use; otherwise if the
-    // outer frame is an inline frame then use it as well (line-height
-    // on block frames specify the minimal height while on inline
-    // frames it specifies the precise height).
-    if (mOuterIsBlock) {/* XXX temporary until line-height inheritance issue is resolved */
-    if ((newLineHeight > lineHeight) || !mOuterIsBlock) {
-      topEdge += (newLineHeight - lineHeight) / 2;
-      lineHeight = newLineHeight;
-#ifdef NOISY_VERTICAL_ALIGN
-      printf("  *lineHeight=newLineHeight=%d topEdgeDelta=%d\n",
-             lineHeight, topEdge - mTopEdge);
-#endif
-    }
+    // CSS2 10.8.1 says that line-height, as applied to blocks, will
+    // adjust the height of the line (line-height as applied to a
+    // non-replaced inline element defines the exact height of the
+    // inline element). Therefore, we only adjust the line-height here
+    // if the outer container is a block (because if the outer
+    // container is an inline then its line-height will be applied by
+    // itself).
+    if (mOuterIsBlock) {
+      nscoord newLineHeight = mOuterReflowState.mLineHeight;
+      if (newLineHeight >= 0) {
+        // Apply half of the changed line-height to the top and bottom
+        // positioning of each frame.
+        topEdge += (newLineHeight - lineHeight) / 2;
+        lineHeight = newLineHeight;
+      }
     }
   }
   aLineBox.height = lineHeight;
+#ifdef NOISY_VERTICAL_ALIGN
+          printf("  *lineHeight=newLineHeight=%d topEdgeDelta=%d\n",
+                 lineHeight, topEdge - mTopEdge);
+#endif
 
   // Pass2 - position each of the frames
   for (pfd = pfd0; pfd < end; pfd++) {
@@ -1018,82 +1022,6 @@ nsInlineReflow::RelativePositionFrames(nsRect& aCombinedArea)
   aCombinedArea.y = y0;
   aCombinedArea.width = x1 - x0;
   aCombinedArea.height = y1 - y0;
-}
-
-// XXX performance todo: this computation can be cached,
-// but not in the style-context
-nscoord
-nsInlineReflow::CalcLineHeightFor(nsIPresContext& aPresContext,
-                                  nsIFrame* aFrame,
-                                  nscoord aBaseLineHeight)
-{
-  nscoord lineHeight = aBaseLineHeight;
-
-  nsIStyleContext* sc;
-  aFrame->GetStyleContext(sc);
-  const nsStyleFont* elementFont = nsnull;
-  if (nsnull != sc) {
-    elementFont = (const nsStyleFont*)sc->GetStyleData(eStyleStruct_Font);
-    for (;;) {
-      const nsStyleText* text = (const nsStyleText*)
-        sc->GetStyleData(eStyleStruct_Text);
-      if (nsnull != text) {
-        nsStyleUnit unit = text->mLineHeight.GetUnit();
-#ifdef NOISY_VERTICAL_ALIGN
-        printf("  styleUnit=%d\n", unit);
-#endif
-        if (eStyleUnit_Enumerated == unit) {
-          // Normal value; we use 1.0 for normal
-          // XXX could come from somewhere else
-          break;
-        } else if (eStyleUnit_Factor == unit) {
-          if (nsnull != elementFont) {
-            // CSS2 spec says that the number is inherited, not the
-            // computed value. Therefore use the font size of the
-            // element times the inherited number.
-            nscoord size = elementFont->mFont.size;
-            lineHeight = nscoord(size * text->mLineHeight.GetFactorValue());
-          }
-          break;
-        }
-        else if (eStyleUnit_Coord == unit) {
-          lineHeight = text->mLineHeight.GetCoordValue();
-          // CSS2 spec 10.8.1: negative length values are illegal.
-          if (lineHeight < 0) {
-            lineHeight = aBaseLineHeight;
-          }
-          break;
-        }
-        else if (eStyleUnit_Percent == unit) {
-          // XXX This could arguably be the font-metrics actual height
-          // instead since the spec says use the computed height.
-          const nsStyleFont* font = (const nsStyleFont*)
-            sc->GetStyleData(eStyleStruct_Font);
-          nscoord size = font->mFont.size;
-          lineHeight = nscoord(size * text->mLineHeight.GetPercentValue());
-          break;
-        }
-        else if (eStyleUnit_Inherit == unit) {
-          nsIStyleContext* parentSC;
-          parentSC = sc->GetParent();
-          if (nsnull == parentSC) {
-            // Note: Break before releasing to avoid double-releasing sc
-            break;
-          }
-          NS_RELEASE(sc);
-          sc = parentSC;
-        }
-        else {
-          // other units are not part of the spec so don't bother
-          // looping
-          break;
-        }
-      }
-    }
-    NS_RELEASE(sc);
-  }
-
-  return lineHeight;
 }
 
 void
