@@ -3480,9 +3480,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
           }
         }
         else if (nsHTMLAtoms::img==tag) {
-          // Images are treated like links for tab focus purposes.
-          disabled = !(sTabFocusModel & eTabFocus_linksMask);
-          if (!disabled) {
+          if (sTabFocusModel & eTabFocus_linksMask) {
             nsCOMPtr<nsIDOMHTMLImageElement> nextImage(do_QueryInterface(child));
             nsAutoString usemap;
             if (nextImage) {
