@@ -23,7 +23,7 @@ mySample.prototype = {
      * properties on the JS object, follow the expected rules for prototype
      * delegation, and make a mean cup of coffee.
      */
-    get value() { return this.val; },
+    get value()       { return this.val; },
     set value(newval) { return this.val = newval; },
 
     writeValue: function (aPrefix) {
