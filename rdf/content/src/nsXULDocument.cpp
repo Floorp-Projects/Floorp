@@ -779,7 +779,7 @@ nsXULDocument::GetPrincipal(nsIPrincipal **aPrincipal)
 }
 
 NS_IMETHODIMP
-nsXULDocument::UpdatePrincipal(nsIPrincipal **aPrincipal)
+nsXULDocument::AddPrincipal(nsIPrincipal *aPrincipal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

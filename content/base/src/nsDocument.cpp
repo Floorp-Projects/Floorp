@@ -927,35 +927,30 @@ nsDocument::GetPrincipal(nsIPrincipal **aPrincipal)
                                                              &mPrincipal)))
         return rv;
   }
-  *aPrincipal = mPrincipal;
-  NS_ADDREF(*aPrincipal);
+
+  if(aPrincipal)
+  {
+    *aPrincipal = mPrincipal;
+    NS_ADDREF(*aPrincipal);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocument::UpdatePrincipal(nsIPrincipal **aNewPrincipal)
+nsDocument::AddPrincipal(nsIPrincipal *aNewPrincipal)
 {
   nsresult rv;
-  if (!mPrincipal) {
-    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) 
-        return rv;
-    if (NS_FAILED(rv = securityManager->GetCodebasePrincipal(mDocumentURL, 
-                                                             &mPrincipal)))
-        return rv;
-  }
+  if (!mPrincipal)
+    GetPrincipal(nsnull);
 
   nsCOMPtr<nsIAggregatePrincipal> agg =
     do_QueryInterface(mPrincipal, &rv);
   if (NS_SUCCEEDED(rv))
   {
-    rv = agg->Intersect(*aNewPrincipal);
+    rv = agg->Intersect(aNewPrincipal);
     if (NS_FAILED(rv)) return rv;
   }
 
-  *aNewPrincipal = mPrincipal;
-  NS_ADDREF(*aNewPrincipal);
   return NS_OK;
 }
 

@@ -120,7 +120,7 @@ public:
 
     NS_IMETHOD GetPrincipal(nsIPrincipal **aPrincipal);
 
-    NS_IMETHOD UpdatePrincipal(nsIPrincipal **aPrincipal);
+    NS_IMETHOD AddPrincipal(nsIPrincipal *aPrincipal);
 
     NS_IMETHOD GetDocumentLoadGroup(nsILoadGroup **aGroup) const;
 
