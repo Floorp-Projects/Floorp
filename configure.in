@@ -94,7 +94,6 @@ dnl  overridden by each platform.
 dnl ========================================================
 USE_PTHREADS=
 _PTHREAD_LDFLAGS=""
-MOZ_DISABLE_JAR_PACKAGING=
 
 dnl Do not allow a separate objdir build if a srcdir build exists.
 dnl ==============================================================
