@@ -438,20 +438,20 @@ nsresult CScanner::ReadWhile(nsString& aString,
 nsresult CScanner::ReadUntil(nsString& aString,
                              nsString& aTerminalSet,
                              PRBool addTerminal){
-  PRUnichar ch=0;
-  nsresult   result=NS_OK;
+  PRUnichar theChar=0;
+  nsresult  result=NS_OK;
 
   while(NS_OK == result) {
-    result=GetChar(ch);
+    result=GetChar(theChar);
     if(NS_OK==result) {
-      PRInt32 pos=aTerminalSet.Find(ch);
+      PRInt32 pos=aTerminalSet.Find(theChar);
       if(kNotFound!=pos) {
         if(addTerminal)
-          aString+=ch;
-        else PutBack(ch);
+          aString+=theChar;
+        else PutBack(theChar);
         break;
       }
-      else aString+=ch;
+      else aString+=theChar;
     }
   }
   return result;

@@ -207,29 +207,7 @@ class COtherDTD : public CNavDTD {
      */
     virtual eHTMLTags GetDefaultParentTagFor(eHTMLTags aTag) const;
 
-    /**
-     * This method tries to design a context map (without actually
-     * changing our parser state) from the parent down to the
-     * child. 
-     *
-     * @update  gess4/6/98
-     * @param   aParent -- tag type of parent
-     * @param   aChild -- tag type of child
-     * @return  True if closure was achieved -- other false
-     */
-    virtual PRBool ForwardPropagate(nsString& aVector,eHTMLTags aParentTag,eHTMLTags aChildTag);
-
-    /**
-     * This method tries to design a context map (without actually
-     * changing our parser state) from the child up to the parent.
-     *
-     * @update  gess4/6/98
-     * @param   aParent -- tag type of parent
-     * @param   aChild -- tag type of child
-     * @return  True if closure was achieved -- other false
-     */
-    virtual PRBool BackwardPropagate(nsString& aVector,eHTMLTags aParentTag,eHTMLTags aChildTag) const;
-
+   
     /**
      * This method gets called when a start token has been consumed and needs 
      * to be handled (possibly added to content model via sink).

@@ -443,39 +443,6 @@ eHTMLTags COtherDTD::GetDefaultParentTagFor(eHTMLTags aTag) const{
 }
 
 
-/**
- * This method tries to design a context vector (without actually
- * changing our parser state) from the parent down to the
- * child. 
- *
- * @update  gess4/6/98
- * @param   aVector is the string where we store our output vector
- *          in bottom-up order.
- * @param   aParent -- tag type of parent
- * @param   aChild -- tag type of child
- * @return  TRUE if propagation closes; false otherwise
- */
-PRBool COtherDTD::ForwardPropagate(nsString& aVector,eHTMLTags aParentTag,eHTMLTags aChildTag) {
-  return CNavDTD::ForwardPropagate(aVector,aParentTag,aChildTag);
-}
-
-
-/**
- * This method tries to design a context map (without actually
- * changing our parser state) from the child up to the parent.
- *
- * @update  gess4/6/98
- * @param   aVector is the string where we store our output vector
- *          in bottom-up order.
- * @param   aParent -- tag type of parent
- * @param   aChild -- tag type of child
- * @return  TRUE if propagation closes; false otherwise
- */
-PRBool COtherDTD::BackwardPropagate(nsString& aVector,eHTMLTags aParentTag,eHTMLTags aChildTag) const {
-  return CNavDTD::BackwardPropagate(aVector,aParentTag,aChildTag);
-}
-
-
 /*********************************************
   Here comes code that handles the interface
   to our content sink.

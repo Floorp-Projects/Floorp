@@ -141,6 +141,14 @@ CTagStack::~CTagStack() {
   }
 
 /**
+ * Resets state of stack to be empty.
+ * @update  gess7/9/98
+ */
+void CTagStack::Empty(void) {
+  mCount=0;
+}
+
+/**
  * 
  * @update  gess7/9/98
  * @param 
@@ -1013,8 +1021,11 @@ nsresult CNavDTD::HandleScriptToken(CToken* aToken, nsCParserNode& aNode) {
     if(NS_OK==result) {
       CollectSkippedContent(aNode,attrCount);
       if(NS_OK==result) {
+          //Boy is this an evil hack...
+        mContextStack.Pop();
         result=AddLeaf(aNode);
-        if(NS_OK==result)
+          mContextStack.Push(eHTMLTag_head);
+          if(NS_OK==result)
           result=CloseHead(aNode);
       }
     }
@@ -1997,7 +2008,7 @@ eHTMLTags CNavDTD::GetDefaultParentTagFor(eHTMLTags aTag) const{
  * @param   aChild -- tag type of child
  * @return  TRUE if propagation closes; false otherwise
  */
-PRBool CNavDTD::ForwardPropagate(nsString& aVector,eHTMLTags aParentTag,eHTMLTags aChildTag)  {
+PRBool CNavDTD::ForwardPropagate(CTagStack& aStack,eHTMLTags aParentTag,eHTMLTags aChildTag)  {
   PRBool result=PR_FALSE;
 
   switch(aParentTag) {
@@ -2006,15 +2017,15 @@ PRBool CNavDTD::ForwardPropagate(nsString& aVector,eHTMLTags aParentTag,eHTMLTag
         static char  tableTags[]={eHTMLTag_tr,eHTMLTag_td,0};
         if(strchr(tableTags,aChildTag)) {
           //if you're here, we know we can correctly backward propagate.
-          return BackwardPropagate(aVector,aParentTag,aChildTag);
+          return BackwardPropagate(aStack,aParentTag,aChildTag);
         }
       }
       //otherwise, intentionally fall through...
 
     case eHTMLTag_tr:
       if(PR_TRUE==CanContain((PRInt32)eHTMLTag_td,(PRInt32)aChildTag)) {
-        aVector.Append((PRUnichar)eHTMLTag_td);
-        result=BackwardPropagate(aVector,aParentTag,eHTMLTag_td);
+        aStack.Push(eHTMLTag_td);
+        result=BackwardPropagate(aStack,aParentTag,eHTMLTag_td);
 //        result=PR_TRUE;
       }
 
@@ -2041,20 +2052,14 @@ PRBool CNavDTD::ForwardPropagate(nsString& aVector,eHTMLTags aParentTag,eHTMLTag
  * @param   aChild -- tag type of child
  * @return  TRUE if propagation closes; false otherwise
  */
-PRBool CNavDTD::BackwardPropagate(nsString& aVector,eHTMLTags aParentTag,eHTMLTags aChildTag) const {
+PRBool CNavDTD::BackwardPropagate(CTagStack& aStack,eHTMLTags aParentTag,eHTMLTags aChildTag) const {
 
-  eHTMLTags theParentTag=(eHTMLTags)aChildTag;
+  eHTMLTags theParentTag=aChildTag;
 
-//  aVector.Truncate();
-
-    //create the necessary stack of parent tags...
-    //continue your search until you run out of known parents,
-    //or you find the specific parent you were given (aParentTag).
-//  aVector.Append((PRUnichar)aChildTag);
   do {
     theParentTag=(eHTMLTags)GetDefaultParentTagFor(theParentTag);
     if(theParentTag!=eHTMLTag_unknown) {
-      aVector.Append((PRUnichar)theParentTag);
+      aStack.Push(theParentTag);
     }
   } while((theParentTag!=eHTMLTag_unknown) && (theParentTag!=aParentTag));
   
@@ -2350,11 +2355,9 @@ nsresult CNavDTD::OpenBody(const nsIParserNode& aNode){
 
       result=CloseContainersTo(0,eHTMLTag_html,PR_TRUE);  //close current stack containers.
 
-      CHTMLToken    token(gEmpty);
+      CHTMLToken    token(gEmpty,eHTMLTag_html);
       nsCParserNode htmlNode(&token,mLineNumber);
-
-      token.SetTypeID(eHTMLTag_html);  //open the html container...
-      result=OpenHTML(htmlNode);
+      result=OpenHTML(htmlNode);  //open the html container...
     }
   }
 
@@ -2682,6 +2685,8 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode& aNode){
   return result;
 }
 
+CTagStack kPropagationStack;
+
 /**
  *  This method gets called to create a valid context stack
  *  for the given child. We compare the current stack to the
@@ -2694,60 +2699,58 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode& aNode){
  *  @return  true if we succeeded, otherwise false
  */
 nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
-  nsAutoString  theVector;
   
-  nsresult  result=NS_OK;
-  PRInt32   pos=0;
+  kPropagationStack.Empty();
+  
+  nsresult  result=(nsresult)kContextMismatch;
   PRInt32   cnt=0;
   eHTMLTags theTop=GetTopNode();
+  PRBool    bResult=ForwardPropagate(kPropagationStack,theTop,aChildTag);
   
-  if(PR_TRUE==ForwardPropagate(theVector,theTop,aChildTag)){
-    //add code here to build up context stack based on forward propagated context vector...
-    pos=0;
-    cnt=theVector.Length()-1;
-    if(mContextStack.Last()==(eHTMLTags)theVector[cnt])
-      result=NS_OK;
-    else result=(nsresult)kContextMismatch;
-  }
-  else {
-    PRBool tempResult;
+  if(PR_FALSE==bResult){
+
     if(eHTMLTag_unknown!=theTop) {
-      tempResult=BackwardPropagate(theVector,theTop,aChildTag);
-      if(eHTMLTag_html!=theTop)
-        BackwardPropagate(theVector,eHTMLTag_html,theTop);
-    }
-    else tempResult=BackwardPropagate(theVector,eHTMLTag_html,aChildTag);
+      bResult=BackwardPropagate(kPropagationStack,theTop,aChildTag);
 
-    if(PR_TRUE==tempResult) {
+     /*****************************************************************************
+        OH NOOOO!...
 
-      //propagation worked, so pop unwanted containers, push new ones, then exit...
-      pos=0;
-      cnt=theVector.Length();
-      result=NS_OK;
-      while(pos<mContextStack.mCount) {
-        if(mContextStack.mTags[pos]==(eHTMLTags)theVector[cnt-1-pos]) {
-          pos++;
-        }
-        else {
-          //if you're here, you have something on the stack
-          //that doesn't match your needed tags order.
-          result=CloseContainersTo(pos,eHTMLTag_unknown,PR_TRUE);
-          break;
-        }
-      } //while
-    } //elseif
-    else result=(nsresult)kCantPropagate;
+        We found a pretty fundamental flaw in the backward propagation code.
+        The previous version propagated from a child to a target parent, and
+        then again from the target parent to the root. 
+        Only thing is, that won't work in cases where a container exists that's 
+        not in the usual hiearchy:
+          
+          <html><body>
+            <div>
+              <table>
+                <!--missing TR>
+                  <td>cell text</td>
+                </tr>
+              </table> ...etc...
+
+        In this case, we'd propagate fine from the <TD> to the <TABLE>, and
+        then from the table to the <html>. Unfortunately, the <DIV> won't show
+        up in the propagated form, and then we get out of sync with the actual
+        context stack when it comes to autogenerate containers.
+      ******************************************************************************/
+      
+    } //if
+    else bResult=BackwardPropagate(kPropagationStack,eHTMLTag_html,aChildTag);
   } //elseif
 
-    //now, build up the stack according to the tags 
-    //you have that aren't in the stack...
-  if(NS_OK==result){
-    int i=0;
-    for(i=pos;i<cnt;i++) {
-//      CStartToken* st=new CStartToken((eHTMLTags)theVector[cnt-1-i]);
-      CToken* theToken=gTokenRecycler.CreateTokenOfType(eToken_start,(eHTMLTags)theVector[cnt-1-i],gEmpty);
+  if((0==mContextStack.mCount) || (mContextStack.Last()==kPropagationStack.Pop()))
+    result=NS_OK;
+
+  //now, build up the stack according to the tags 
+  //you have that aren't in the stack...
+  if(PR_TRUE==bResult){
+    while(kPropagationStack.mCount>0) {
+      eHTMLTags theTag=kPropagationStack.Pop();
+      CToken* theToken=gTokenRecycler.CreateTokenOfType(eToken_start,theTag,gEmpty);
       HandleStartToken(theToken);
     }
+    result=NS_OK;
   }
   return result;
 }
@@ -3018,16 +3021,14 @@ CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
     
           if((NS_OK==result) && skippedToken){
               //now we strip the ending sequence from our new SkippedContent token...
-            PRInt32 slen=str.Length()+3;
-            nsString& skippedText=skippedToken->GetStringValueXXX();
-    
-            skippedText.Cut(skippedText.Length()-slen,slen);
+            //PRInt32 slen=str.Length()+3;
+            nsString& skippedText=((CSkippedContentToken*)skippedToken)->GetKey();    
             mTokenDeque.Push(skippedToken);
   
             //In the case that we just read a given tag, we should go and
             //consume all the tag content itself (and throw it all away).
 
-            CToken* endtoken=gTokenRecycler.CreateTokenOfType(eToken_end,theTag,gEmpty);
+            CToken* endtoken=gTokenRecycler.CreateTokenOfType(eToken_end,theTag,skippedToken->GetStringValueXXX());
             mTokenDeque.Push(endtoken);
           } //if
         } //if

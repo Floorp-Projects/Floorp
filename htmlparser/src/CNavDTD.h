@@ -124,6 +124,7 @@ public:
   eHTMLTags Pop();
   eHTMLTags First() const;
   eHTMLTags Last() const;
+  void      Empty(void); 
 
   int       mSize;
   int       mCount;
@@ -368,7 +369,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param   aChild -- tag type of child
      * @return  True if closure was achieved -- other false
      */
-    virtual PRBool ForwardPropagate(nsString& aVector,eHTMLTags aParentTag,eHTMLTags aChildTag);
+    virtual PRBool ForwardPropagate(CTagStack& aTagStack,eHTMLTags aParentTag,eHTMLTags aChildTag);
 
     /**
      * This method tries to design a context map (without actually
@@ -379,7 +380,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param   aChild -- tag type of child
      * @return  True if closure was achieved -- other false
      */
-    virtual PRBool BackwardPropagate(nsString& aVector,eHTMLTags aParentTag,eHTMLTags aChildTag) const;
+    virtual PRBool BackwardPropagate(CTagStack& aTagStack,eHTMLTags aParentTag,eHTMLTags aChildTag) const;
 
     /**
      * Ask parser if a given container is open ANYWHERE on stack
