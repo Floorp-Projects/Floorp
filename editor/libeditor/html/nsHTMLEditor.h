@@ -242,6 +242,8 @@ public:
   NS_IMETHOD AddInsertionListener(nsIContentFilter *aFilter);
   NS_IMETHOD RemoveInsertionListener(nsIContentFilter *aFilter);
 
+  NS_IMETHOD IsAnonymousElement(nsIDOMElement * aElement, PRBool * aReturn);
+
   /* ------------ nsIEditorIMESupport overrides -------------- */
   
   NS_IMETHOD SetCompositionString(const nsAString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply);
