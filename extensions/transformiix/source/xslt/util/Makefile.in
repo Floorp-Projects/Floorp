@@ -27,9 +27,11 @@ VPATH           = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = transformiix
+LIBRARY_NAME = txxsltutil_s
 REQUIRES	= string \
 		  xpcom \
 		  $(NULL)
+
 ifndef TX_EXE
 REQUIRES +=	  dom \
 		  content \
@@ -43,10 +45,12 @@ endif
 
 CPPSRCS = txNodeSorter.cpp txXPathResultComparator.cpp
 
+# we don't want the shared lib, but we want to force the creation of a
+# static lib.
+FORCE_STATIC_LIB = 1
+
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I$(srcdir) -I$(srcdir)/../../base -I$(srcdir)/../../xpath \
   -I$(srcdir)/../../xml -I$(srcdir)/../../xml/dom \
   -I$(srcdir)/.. -I$(srcdir)/../functions
-
-libs:: $(OBJS)
