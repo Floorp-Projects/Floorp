@@ -23,6 +23,7 @@
 #include "nsIPipe.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "prmem.h"
 
 // nsIInputStream interface
 
@@ -82,10 +83,27 @@ NS_IMETHODIMP GtkMozEmbedStream::Close(void)
 }
 
 NS_IMETHODIMP
-GtkMozEmbedStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
+GtkMozEmbedStream::ReadSegments(nsWriteSegmentFun aWriter, void * aClosure,
+				PRUint32 aCount, PRUint32 *_retval)
 {
-    NS_NOTREACHED("ReadSegments");
-    return NS_ERROR_NOT_IMPLEMENTED;
+  char *readBuf = (char *)PR_Malloc(aCount);
+  PRUint32 nBytes;
+
+  if (!readBuf)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  nsresult rv = mInputStream->Read(readBuf, aCount, &nBytes);
+
+  *_retval = 0;
+
+  if (NS_SUCCEEDED(rv)) {
+    PRUint32 writeCount = 0;
+    rv = aWriter(this, aClosure, readBuf, 0, nBytes, &writeCount);
+  }
+
+  PR_Free(readBuf);
+
+  return rv;
 }
 
 NS_IMETHODIMP
