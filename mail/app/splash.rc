@@ -38,6 +38,8 @@
 #include <windows.h>
 #include "nsINativeAppSupportWin.h"
 
+1 24 "thunderbird.exe.manifest" 
+
 // Splash screen dialog ID.
 #define IDD_SPLASH  100
  
