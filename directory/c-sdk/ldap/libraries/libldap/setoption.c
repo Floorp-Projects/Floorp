@@ -224,6 +224,16 @@ ldap_set_option( LDAP *ld, int option, const void *optdata )
 	  }
 	  break;
 
+	 /* set Socket Arg in extended socket i/o functions*/
+	case LDAP_X_OPT_SOCKETARG:
+	  if ( ber_sockbuf_set_option( ld->ld_sbp,
+	    LBER_SOCKBUF_OPT_SOCK_ARG, (void *)optdata ) != 0 ) {
+		LDAP_SET_LDERRNO( ld, LDAP_LOCAL_ERROR, NULL, NULL );
+		rc = -1;
+	  }
+		
+	  break;
+	  
 	/* thread function pointers */
 	case LDAP_OPT_THREAD_FN_PTRS:
 		/*

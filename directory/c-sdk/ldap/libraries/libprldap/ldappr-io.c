@@ -75,7 +75,6 @@ static void LDAP_CALLBACK prldap_shared_disposehandle( LDAP *ld,
 	struct lextiof_session_private *sessionarg );
 static PRLDAPIOSessionArg *prldap_session_arg_alloc( void );
 static void prldap_session_arg_free( PRLDAPIOSessionArg **prsesspp );
-static PRLDAPIOSocketArg *prldap_socket_arg_alloc( PRLDAPIOSessionArg *sessionarg );
 static void prldap_socket_arg_free( PRLDAPIOSocketArg **prsockpp );
 static void *prldap_safe_realloc( void *ptr, PRUint32 size );
 
@@ -593,7 +592,7 @@ prldap_session_arg_from_ld( LDAP *ld, PRLDAPIOSessionArg **sessargpp )
 /*
  * Allocate a socket argument.
  */
-static PRLDAPIOSocketArg *
+PRLDAPIOSocketArg *
 prldap_socket_arg_alloc( PRLDAPIOSessionArg *sessionarg )
 {
     PRLDAPIOSocketArg		*prsockp;
@@ -667,3 +666,24 @@ prldap_get_io_max_timeout( PRLDAPIOSessionArg *prsessp, int *io_max_timeoutp )
 
     return( rc );
 }
+
+/* Check if NSPR layer has been installed for a LDAP session.
+ * Simply check whether prldap_connect() I/O function is installed 
+ */
+PRBool
+prldap_is_installed( LDAP *ld )
+{
+    struct ldap_x_ext_io_fns iofns;
+
+    /* Retrieve current I/O functions */
+    memset( &iofns, 0, sizeof(iofns));
+    iofns.lextiof_size = LDAP_X_EXTIO_FNS_SIZE;
+    if ( ld == NULL || ldap_get_option( ld, LDAP_X_OPT_EXTIO_FN_PTRS, (void *)&iofns )
+	 != 0 ||  iofns.lextiof_connect != prldap_connect ) 
+    {
+	return( PR_FALSE );
+    }
+    
+    return( PR_TRUE );
+}
+

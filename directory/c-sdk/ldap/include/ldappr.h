@@ -228,6 +228,19 @@ int LDAP_CALL prldap_set_socket_info( int fd, void *socketarg,
 int LDAP_CALL prldap_get_socket_info( int fd, void *socketarg,
 					PRLDAPSocketInfo *soip );
 
+/* Function: prldap_is_installed()
+ * Check if NSPR routine is installed 
+ */
+PRBool prldap_is_installed( LDAP *ld );
+
+/* Function: prldap_import_connection().
+ * Given a ldap handle with connection already done with ldap_init()
+ * installs NSPR routines and imports the original connection info.
+ *
+ * Returns an LDAP API error code (LDAP_SUCCESS if all goes well).
+ */
+int LDAP_CALL prldap_import_connection (LDAP *ld);
+
 #ifdef __cplusplus
 }
 #endif

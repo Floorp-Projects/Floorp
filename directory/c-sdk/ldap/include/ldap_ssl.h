@@ -53,6 +53,11 @@ extern "C" {
 #define LDAPSSL_AUTH_CERT       1
 #define LDAPSSL_AUTH_CNCHECK    2
 
+/*
+ * an ExtendedRequest [LDAPv3] specifying the OID for the
+ * Start TLS operation: RFC 2830
+ */
+#define LDAP_EXOP_START_TLS			"1.3.6.1.4.1.1466.20037"
 
 /*
  * Initialize LDAP library for SSL
@@ -60,6 +65,12 @@ extern "C" {
 LDAP * LDAP_CALL ldapssl_init( const char *defhost, int defport,
 	int defsecure );
 
+/* Initialize LDAP library for TLS(SSL) and sends StartTLS extended
+ * operation to the Directory Server.
+ * Returns LDAP_SUCCESS if all goes well.
+ */
+int LDAP_CALL ldap_start_tls_s( LDAP *ld, LDAPControl **serverctrls,
+ 					  LDAPControl **clientctrls );
 /*
  * Install I/O routines to make SSL over LDAP possible.
  * Use this after ldap_init() or just use ldapssl_init() instead.

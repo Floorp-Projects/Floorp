@@ -108,6 +108,7 @@ extern "C" {
 #define LBER_SOCKBUF_OPT_WRITE_FN		0x080
 #define LBER_SOCKBUF_OPT_EXT_IO_FNS		0x100
 #define	LBER_SOCKBUF_OPT_VALID_TAG		0x200
+#define LBER_SOCKBUF_OPT_SOCK_ARG		0x400
 
 #define LBER_OPT_ON	((void *) 1)
 #define LBER_OPT_OFF	((void *) 0)

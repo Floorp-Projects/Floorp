@@ -49,5 +49,7 @@
 	prldap_get_socket_info		@2015
 	prldap_set_session_option		@2016
 	prldap_get_session_option		@2017
+	prldap_is_installed				@2018
+	prldap_import_connection		@2019
 ; 
 ; end of generated exports list.

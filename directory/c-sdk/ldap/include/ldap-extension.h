@@ -327,6 +327,10 @@ struct ldap_thread_fns {
 #define LDAP_X_OPT_EXTIO_FN_PTRS   (LDAP_OPT_PRIVATE_EXTENSION_BASE + 0x0F00)
         /* 0x4000 + 0x0F00 = 0x4F00 = 20224 - API extension */
 
+/* Additional Extended I/O function callback option (for Extended Socket Arg callback) */
+#define LDAP_X_OPT_SOCKETARG	(LDAP_OPT_PRIVATE_EXTENSION_BASE + 0x0F02)
+        /* 0x4000 + 0x0F02 = 0x4F02 = 20226 - API extension */
+	
 /*
  * These extended I/O function callbacks echo the BSD socket API but accept
  * an extra pointer parameter at the end of their argument list that can

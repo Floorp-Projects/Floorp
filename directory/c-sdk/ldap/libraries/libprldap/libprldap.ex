@@ -42,3 +42,5 @@
 2015	prldap_get_socket_info
 2016	prldap_set_session_option
 2017	prldap_get_session_option
+2018	prldap_is_installed
+2019	prldap_import_connection

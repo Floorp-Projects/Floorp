@@ -209,6 +209,15 @@ ldap_get_option( LDAP *ld, int option, void *optdata )
 	    rc = -1;
 	  }
 	  break;
+	  
+	/* get socketargp in extended i/o function */
+	case LDAP_X_OPT_SOCKETARG:
+	  if ( ber_sockbuf_get_option( ld->ld_sbp,LBER_SOCKBUF_OPT_SOCK_ARG, optdata)	    
+		 != 0 ) {
+		LDAP_SET_LDERRNO( ld, LDAP_LOCAL_ERROR, NULL, NULL );
+		rc = -1;
+	   }
+	   	break;
 
 	/* thread function pointers */
 	case LDAP_OPT_THREAD_FN_PTRS:

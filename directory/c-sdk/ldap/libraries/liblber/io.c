@@ -977,6 +977,11 @@ ber_sockbuf_set_option( Sockbuf *sb, int option, void *value )
 			return( -1 );
 		}
 		break;
+	case LBER_SOCKBUF_OPT_SOCK_ARG:
+		sb->sb_ext_io_fns.lbextiofn_socket_arg = 
+		(struct lextiof_socket_private *) value;
+		break;
+		
 	default:
 		return( -1 );
 	}
@@ -1041,6 +1046,10 @@ ber_sockbuf_get_option( Sockbuf *sb, int option, void *value )
 			return( -1 );
 		}
 		break;
+	case LBER_SOCKBUF_OPT_SOCK_ARG:
+		*((struct lextiof_socket_private **)value) = sb->sb_ext_io_fns.lbextiofn_socket_arg;
+		break;
+		
 	default:
 		return( -1 );
 	}
