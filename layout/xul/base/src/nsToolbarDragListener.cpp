@@ -133,7 +133,7 @@ static void ForceDrawFrame(nsIFrame * aFrame)
     nsCOMPtr<nsIViewManager> viewMgr;
     view->GetViewManager(*getter_AddRefs(viewMgr));
     if (viewMgr)
-      viewMgr->UpdateView(view, rect, NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
+      viewMgr->UpdateView(view, rect, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_IMMEDIATE);
   }
 
 }
