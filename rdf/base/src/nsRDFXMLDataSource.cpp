@@ -269,12 +269,12 @@ public:
         return mInner->HasAssertion(source, property, target, tv, hasAssertion);
     }
 
-    NS_IMETHOD AddObserver(nsIRDFObserver* n) {
-        return mInner->AddObserver(n);
+    NS_IMETHOD AddObserver(nsIRDFObserver* aObserver) {
+        return mInner->AddObserver(aObserver);
     }
 
-    NS_IMETHOD RemoveObserver(nsIRDFObserver* n) {
-        return mInner->RemoveObserver(n);
+    NS_IMETHOD RemoveObserver(nsIRDFObserver* aObserver) {
+        return mInner->RemoveObserver(aObserver);
     }
 
     NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
@@ -1097,7 +1097,7 @@ RDFXMLDataSourceImpl::MakeQName(nsIRDFResource* resource,
     // Take whatever is to the right of the '#' and call it the
     // property.
     property.Truncate();
-    nameSpaceURI.Right(property, uri.Length() - (i + 1));
+    uri.Right(property, uri.Length() - (i + 1));
 
     // Truncate the namespace URI down to the string up to and
     // including the '#'.
@@ -1196,10 +1196,9 @@ RDFXMLDataSourceImpl::SerializeAssertion(nsIOutputStream* aStream,
         resource->GetValue(getter_Copies(s));
 
         nsXPIDLCString docURI;
-        mInner->GetURI(getter_Copies(docURI));
 
         nsAutoString uri(s);
-        rdf_MakeRelativeRef((const char*) docURI, uri);
+        rdf_MakeRelativeRef(mURLSpec, uri);
         rdf_EscapeAmpersands(uri);
 
 static const char kRDFResource1[] = " resource=\"";
@@ -1287,12 +1286,8 @@ static const char kRDFDescription3[] = "  </RDF:Description>\n";
     rv = aResource->GetValue(getter_Copies(s));
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString docURI;
-    rv = mInner->GetURI(getter_Copies(docURI));
-    if (NS_FAILED(rv)) return rv;
-
     nsAutoString uri(s);
-    rdf_MakeRelativeRef((const char*) docURI, uri);
+    rdf_MakeRelativeRef(mURLSpec, uri);
     rdf_EscapeAmpersands(uri);
 
     rdf_BlockingWrite(aStream, kRDFDescription1, sizeof(kRDFDescription1) - 1);
@@ -1339,9 +1334,6 @@ RDFXMLDataSourceImpl::SerializeMember(nsIOutputStream* aStream,
 {
     nsresult rv;
 
-    nsXPIDLCString docURI;
-    mInner->GetURI(getter_Copies(docURI));
-
     // If it's a resource, then output a "<RDF:li resource=... />"
     // tag, because we'll be dumping the resource separately. (We
     // iterate thru all the resources in the datasource,
@@ -1357,7 +1349,7 @@ static const char kRDFLIResource1[] = "    <RDF:li resource=\"";
 static const char kRDFLIResource2[] = "\"/>\n";
 
             nsAutoString uri(s);
-            rdf_MakeRelativeRef((const char*) docURI, uri);
+            rdf_MakeRelativeRef(mURLSpec, uri);
             rdf_EscapeAmpersands(uri);
 
             rdf_BlockingWrite(aStream, kRDFLIResource1, sizeof(kRDFLIResource1) - 1);
@@ -1422,13 +1414,10 @@ static const char kRDFAlt[] = "RDF:Alt";
     // this because we never really know who else might be referring
     // to it...
 
-    nsXPIDLCString docURI;
-    mInner->GetURI( getter_Copies(docURI) );
-
     nsXPIDLCString s;
     if (NS_SUCCEEDED(aContainer->GetValue( getter_Copies(s) ))) {
         nsAutoString uri(s);
-        rdf_MakeRelativeRef((const char*) docURI, uri);
+        rdf_MakeRelativeRef(mURLSpec, uri);
 
         rdf_EscapeAmpersands(uri);
 
