@@ -125,7 +125,7 @@ static gint window_realize_callback(GtkWidget *window, gpointer data)
   if (window->window)
     set_icon(window->window);
 
-  return FALSE;
+  return PR_FALSE;
 }
 
 static void set_icon (GdkWindow * w)
@@ -181,7 +181,7 @@ static void set_icon (GdkWindow * w)
   ic_win = gdk_window_new (nsnull, &att, GDK_WA_VISUAL | GDK_WA_COLORMAP);
   gdk_window_set_icon (w, ic_win, nsnull, nsnull);
   pmap = gdk_pixmap_create_from_xpm_d(w, &mask, 0, mozilla_icon_xpm);
-  gdk_window_set_back_pixmap (ic_win, pmap, FALSE);
+  gdk_window_set_back_pixmap (ic_win, pmap, PR_FALSE);
   gdk_window_clear (ic_win);
   gdk_window_shape_combine_mask (ic_win, mask, 0, 0);
   gdk_pixmap_unref(pmap);
@@ -196,7 +196,7 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 {
   GtkWidget *mainWindow;
 
-  mWidget = gtk_layout_new(FALSE, FALSE);
+  mWidget = gtk_layout_new(PR_FALSE, PR_FALSE);
   gtk_widget_set_events (mWidget,
                          GDK_BUTTON_PRESS_MASK |
                          GDK_BUTTON_RELEASE_MASK |
@@ -216,10 +216,10 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 		       NULL);
 
 // VBox for the menu, etc.
-    mVBox = gtk_vbox_new(FALSE, 0);
+    mVBox = gtk_vbox_new(PR_FALSE, 0);
     gtk_widget_show (mVBox);
     gtk_container_add(GTK_CONTAINER(mainWindow), mVBox);
-    gtk_box_pack_start(GTK_BOX(mVBox), mWidget, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(mVBox), mWidget, PR_TRUE, PR_TRUE, 0);
   }
   gtk_widget_show(mWidget);
   // Force cursor to default setting
@@ -379,7 +379,7 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
   GdkEventExpose event;
 
   event.type = GDK_EXPOSE;
-  event.send_event = TRUE;
+  event.send_event = PR_TRUE;
   event.window = GTK_WIDGET(mWidget)->window;
   event.area.width = mBounds.width;
   event.area.height = mBounds.height;
@@ -418,7 +418,7 @@ NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   GdkEventExpose event;
 
   event.type = GDK_EXPOSE;
-  event.send_event = TRUE;
+  event.send_event = PR_TRUE;
   event.window = GTK_WIDGET(mWidget)->window;
 
   event.area.width = aRect.width;
@@ -646,7 +646,7 @@ PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
     return DispatchWindowEvent(&aEvent);
   }
 */
-  return FALSE;
+  return PR_FALSE;
 }
 
 PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent)
@@ -655,7 +655,7 @@ PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEven
     return DispatchWindowEvent(aEvent);
   }
   else
-   return FALSE;
+   return PR_FALSE;
 }
 
 
@@ -664,12 +664,12 @@ PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
   if (mEventCallback) {
     return DispatchWindowEvent(&aEvent);
   }
- return FALSE;
+ return PR_FALSE;
 }
 
 PRBool nsWindow::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
 {
-  return FALSE;
+  return PR_FALSE;
 }
 
 void nsWindow::SetIgnoreResize(PRBool aIgnore)
@@ -777,7 +777,7 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
 
   gtk_menu_bar_set_shadow_type (GTK_MENU_BAR(menubar), GTK_SHADOW_NONE);
 
-  gtk_box_pack_start(GTK_BOX(mVBox), menubar, FALSE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(mVBox), menubar, PR_FALSE, PR_FALSE, 0);
   gtk_box_reorder_child(GTK_BOX(mVBox), menubar, 0);
   return NS_OK;
 }

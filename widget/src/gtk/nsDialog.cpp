@@ -50,7 +50,7 @@ NS_METHOD  nsDialog::CreateNative(GtkWidget *parentWindow)
   mShell = gtk_dialog_new();
   gtk_widget_set_name(mShell, "nsDialog");
   gtk_widget_show(mShell);
-  mWidget = gtk_layout_new(FALSE, FALSE);
+  mWidget = gtk_layout_new(PR_FALSE, PR_FALSE);
   gtk_container_add(GTK_CONTAINER(GTK_DIALOG(mShell)->vbox), mWidget);
 
   return NS_OK;

@@ -56,8 +56,10 @@ nsTextAreaWidget::~nsTextAreaWidget()
 //-------------------------------------------------------------------------
 NS_METHOD nsTextAreaWidget::CreateNative(GtkWidget *parentWindow)
 {
-  mWidget = gtk_text_new(FALSE, FALSE);
+  PRBool old;
+  mWidget = gtk_text_new(PR_FALSE, PR_FALSE);
   gtk_widget_set_name(mWidget, "nsTextAreaWidget");
+  SetReadOnly(PR_FALSE,old);
   return NS_OK;
 }
 
