@@ -51,6 +51,8 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 			     PRInt32         aStateFlags,
 			     PRUint32        aStatus)
 {
+  // give the widget a chance to attach any listeners
+  mOwner->ContentStateChange();
   // if we've got the start flag, emit the signal
   if ((aStateFlags & GTK_MOZ_EMBED_FLAG_IS_DOCUMENT) && 
       (aStateFlags & GTK_MOZ_EMBED_FLAG_START))
@@ -99,9 +101,6 @@ EmbedProgress::OnProgressChange(nsIWebProgress *aWebProgress,
 				PRInt32         aMaxTotalProgress)
 {
 
-  // give the widget a chance to attach any listeners
-  mOwner->ContentProgressChange();
-  
   nsXPIDLCString uriString;
   RequestToURIString(aRequest, getter_Copies(uriString));
   

@@ -396,6 +396,11 @@ EmbedPrivate::AppendToStream(const char *aData, PRInt32 aLen)
 {
   if (!mStream)
     return NS_ERROR_FAILURE;
+
+  // Attach listeners to this document since in some cases we don't
+  // get updates for content added this way.
+  ContentStateChange();
+
   return mStream->AppendToStream(aData, aLen);
 }
 
@@ -441,7 +446,7 @@ EmbedPrivate::FindPrivateForBrowser(nsIWebBrowserChrome *aBrowser)
 }
 
 void
-EmbedPrivate::ContentProgressChange(void)
+EmbedPrivate::ContentStateChange(void)
 {
   // we don't attach listeners to chrome
   if (mListenersAttached && !mIsChrome)

@@ -73,9 +73,9 @@ class EmbedPrivate {
   static EmbedPrivate *FindPrivateForBrowser(nsIWebBrowserChrome *aBrowser);
 
   // This is an upcall that will come from the progress listener
-  // whenever there is a progress change.  We need this so we can
+  // whenever there is a content state change.  We need this so we can
   // attach event listeners.
-  void        ContentProgressChange (void);
+  void        ContentStateChange    (void);
 
   // This is an upcall from the progress listener when content is
   // finished loading.  We have this so that if it's chrome content
