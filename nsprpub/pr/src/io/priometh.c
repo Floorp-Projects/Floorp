@@ -352,31 +352,20 @@ PR_IMPLEMENT(PRInt32) PR_EmulateSendFile(
         file_bytes = info.size - sfd->file_offset;
 
     alignment = PR_GetMemMapAlignment();
+
+    /* number of initial bytes to skip in mmap'd segment */
+    addr_offset = sfd->file_offset % alignment;
+
+    /* find previous mmap alignment boundary */
+    file_mmap_offset = sfd->file_offset - addr_offset;
+
     /*
      * If the file is large, mmap and send the file in chunks so as
      * to not consume too much virtual address space
      */
-    if (!sfd->file_offset || !(sfd->file_offset & (alignment - 1))) {
-        /*
-         * case 1: page-aligned file offset
-         */
-        mmap_len = PR_MIN(file_bytes, SENDFILE_MMAP_CHUNK);
-        len = mmap_len;
-        file_mmap_offset = sfd->file_offset;
-        addr_offset = 0;
-    } else {
-        /*
-         * case 2: non page-aligned file offset
-         */
-        /* find previous page boundary */
-        file_mmap_offset = (sfd->file_offset & ~(alignment - 1));
+    mmap_len = PR_MIN(file_bytes + addr_offset, SENDFILE_MMAP_CHUNK);
+    len = mmap_len - addr_offset;
 
-        /* number of initial bytes to skip in mmap'd segment */
-        addr_offset = sfd->file_offset - file_mmap_offset;
-        PR_ASSERT(addr_offset > 0);
-        mmap_len = PR_MIN(file_bytes + addr_offset, SENDFILE_MMAP_CHUNK);
-        len = mmap_len - addr_offset;
-    }
     /*
      * Map in (part of) file. Take care of zero-length files.
      */
