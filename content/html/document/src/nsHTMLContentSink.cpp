@@ -279,7 +279,7 @@ public:
 protected:
   PRBool IsTimeToNotify();
 
-  nsresult SetDocumentTitle(const nsAString& aTitle);
+  nsresult SetDocumentTitle(const nsAString& aTitle, const nsIParserNode* aNode);
   // If aCheckIfPresent is true, will only set an attribute in cases
   // when it's not already set.
   nsresult AddAttributes(const nsIParserNode& aNode, nsIContent* aContent,
@@ -2600,7 +2600,7 @@ HTMLContentSink::SetTitle(const nsString& aValue)
 
   nsresult rv = OpenHeadContext();
   if (NS_SUCCEEDED(rv)) {
-    rv = SetDocumentTitle(aValue);
+    rv = SetDocumentTitle(aValue, nsnull);
   }
   CloseHeadContext();
 
@@ -3072,7 +3072,7 @@ HTMLContentSink::AddHeadContent(const nsIParserNode& aNode)
         nsAutoString title;
         PRInt32 lineNo = 0;
         dtd->CollectSkippedContent(eHTMLTag_title, title, lineNo);
-        rv = SetDocumentTitle(title);
+        rv = SetDocumentTitle(title, &aNode);
       }
     }
     else {
@@ -3139,7 +3139,7 @@ HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
 }
 
 nsresult 
-HTMLContentSink::SetDocumentTitle(const nsAString& aTitle)
+HTMLContentSink::SetDocumentTitle(const nsAString& aTitle, const nsIParserNode* aNode)
 {
   MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::SetDocumentTitle()\n"));
   MOZ_TIMER_START(mWatch);
@@ -3169,6 +3169,10 @@ HTMLContentSink::SetDocumentTitle(const nsAString& aTitle)
   nsRefPtr<nsGenericHTMLElement> it = NS_NewHTMLTitleElement(nodeInfo);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (aNode) {
+    AddAttributes(*aNode, it);
   }
 
   nsCOMPtr<nsITextContent> text;

@@ -3620,29 +3620,13 @@ nsresult CNavDTD::AddHeadLeaf(nsIParserNode *aNode){
   }
   
   if (mSink) {
-    if (eHTMLTag_title == theTag) {
-      nsAutoString title;
-      PRInt32 lineNo;
-      result = CollectSkippedContent(theTag, title, lineNo);
-      NS_ENSURE_SUCCESS(result, result);
-      
-      STOP_TIMER();
-      MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
-
-      result = mSink->SetTitle(title);
-
-      MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
-      START_TIMER();
-    }
-    else {
-      STOP_TIMER();
-      MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
-      
-      result = mSink->AddHeadContent(*aNode);
-           
-      MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
-      START_TIMER();
-    }
+    STOP_TIMER();
+    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
+    
+    result = mSink->AddHeadContent(*aNode);
+          
+    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
+    START_TIMER();
   }
   return result;
 }
