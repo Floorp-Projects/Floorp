@@ -16,9 +16,6 @@
   --> 
 
 <!-- Values for newserver.xul -->
-<!ENTITY newserver.title  "Security Error: Unknown CA">
-<!ENTITY newserver.message2  "Although the Certificate Authority is unrecognized, you can choose to explicitly accept the certificate used by this web site.">
-<!ENTITY newserver.message3  "Before accepting this certificate, you should examine this site's certificate carefully.">
-<!ENTITY newserver.acceptperm  "Accept this certificate permanently">
-<!ENTITY newserver.accepttemp  "Accept this certificate temporarily for this session">
-<!ENTITY newserver.reject  "Do not accept this certificate and do not connect to this web site">
+<!ENTITY newserver.title  "">
+<!ENTITY alwaysAccept.label "Remember this certificate permanently">
+<!ENTITY continue.label "Continue">

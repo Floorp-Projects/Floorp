@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Javier Delgadillo <javi@netscape.com>
+ *  Håkan Waara <hwaara@chello.se>
  */
 
 
@@ -43,23 +44,35 @@ function onLoad()
   var gBundleBrand = srGetStrBundle("chrome://global/locale/brand.properties");
 
   var brandName = gBundleBrand.GetStringFromName("brandShortName");
-  var message1 = bundle.formatStringFromName("newServerMessage1",
-                                             [ cert.commonName, brandName ],
-                                             2);
-  var message4 = bundle.formatStringFromName("newServerMessage4",
-                                             [ cert.commonName ],
-                                              1);
-  setText("message1", message1);
-  setText("message4", message4);
-  //Set the focus so key press events work
-  document.getElementById('ok-button').focus();
+  var continueButton = bundle.GetStringFromName("continueButton");
+
+  document.getElementById("ok").label = continueButton;
+
+  var message = 
+    bundle.formatStringFromName("newServerMessage",
+                                 [cert.commonName],
+                                 1);
+  var notRecognized = 
+    bundle.formatStringFromName("certNotRecognized", 
+                                 [brandName], 
+                                 1);
+
+  setText("message", message);
+  setText("notRecognized", notRecognized);
+}
+
+function doHelpButton()
+{
+  openHelp('chrome://help/content/help.xul?new_web_cert');
 }
 
 function doOK()
 {
   dialogParams.SetInt(1,1);
-  var radioGroup = document.getElementById("trustSiteCert");
-  dialogParams.SetInt(2,parseInt(radioGroup.selectedItem.value));
+  var checkbox = document.getElementById("alwaysAccept");
+  var alwaysAccept = checkbox.getAttribute("checked");
+
+  dialogParams.SetInt(2, (alwaysAccept ? 0 : 1));
   window.close();
 }
 
