@@ -2505,6 +2505,8 @@ NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
 NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
   PRBool nNeedToShow = PR_FALSE;
+  PRInt32 sizeHeight = aHeight;
+  PRInt32 sizeWidth = aWidth;
 
 #if 0
   printf("nsWindow::Resize %s (%p) to %d %d\n",
@@ -2596,11 +2598,11 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     sevent.message = NS_SIZE;
     sevent.widget = this;
     sevent.eventStructType = NS_SIZE_EVENT;
-    sevent.windowSize = new nsRect (0, 0, aWidth, aHeight);
+    sevent.windowSize = new nsRect (0, 0, sizeWidth, sizeHeight);
     sevent.point.x = 0;
     sevent.point.y = 0;
-    sevent.mWinWidth = aWidth;
-    sevent.mWinHeight = aHeight;
+    sevent.mWinWidth = sizeWidth;
+    sevent.mWinHeight = sizeHeight;
     // XXX fix this
     sevent.time = 0;
     AddRef();
