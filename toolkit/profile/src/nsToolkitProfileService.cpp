@@ -234,7 +234,7 @@ nsToolkitProfile::Remove(PRBool removeFiles)
     mNext = nsnull;
 
     if (nsToolkitProfileService::gService->mChosen == this)
-        nsToolkitProfileService::gService = nsnull;
+        nsToolkitProfileService::gService->mChosen = nsnull;
 
     nsToolkitProfileService::gService->mDirty = PR_TRUE;
 
