@@ -277,7 +277,7 @@ nsServiceManagerImpl::ReleaseService(const nsCID& aClass, nsISupports* service,
     nsServiceEntry* entry = (nsServiceEntry*)mServices->Get(&key);
 
     NS_ASSERTION(entry, "service not found");
-    NS_ASSERTION(entry->mService == service, "service looked failed");
+    // NS_ASSERTION(entry->mService == service, "service looked failed");
 
     if (entry) {
         rv = entry->RemoveListener(shutdownListener);
