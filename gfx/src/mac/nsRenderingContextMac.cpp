@@ -1015,7 +1015,7 @@ void nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUint32 aLen
 	nsString nsStr;
 	nsStr.SetString(aString, aLength);
 	char* cStr = nsStr.ToNewCString();
-		DrawString(cStr, aLength, aX, aY, aWidth);
+		DrawString(cStr, aLength, aX, aY, aWidth,aSpacing);
 	delete[] cStr;
 }
 
