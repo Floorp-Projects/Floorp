@@ -68,14 +68,12 @@ static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 // for temp message hack
 #ifdef XP_UNIX
 #define MESSAGE_PATH "/usr/tmp/tempMessage.eml"
-#endif
-
-#ifdef XP_PC
+#elif XP_PC
 #define MESSAGE_PATH  "c:\\temp\\tempMessage.eml"
-#endif
-
-#ifdef XP_MAC
+#elif XP_MAC
 #define MESSAGE_PATH  "tempMessage.eml"
+#elif XP_BEOS
+#define MESSAGE_PATH "/tmp/tempMessage.eml"
 #endif
 
 nsImapMailFolder::nsImapMailFolder() :
