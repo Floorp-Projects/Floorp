@@ -29,7 +29,6 @@
 // pane, we batch up all the changes for displaying the header pane (to, cc, attachements button, etc.) 
 // and we make a single pass to display them. It's critical that we maintain this one reflow per message
 // view in the message header pane. 
-//
 ////////////////////////////////////////////////////////////////////////////////////
 
 var msgHeaderParserContractID		   = "@mozilla.org/messenger/headerparser;1";
@@ -41,6 +40,8 @@ var gShowUserAgent = false;
 var gCollectIncoming = false;
 var gCollectNewsgroup = false;
 var gCollapsedHeaderViewMode = false;
+var gCollectAddressTimer = null;
+var gCollectAddess = null;
 var gBuildAttachmentsForCurrentMsg = false;
 var gBuildAttachmentPopupForCurrentMsg = true;
 var gBuiltExpandedView = false;
@@ -216,6 +217,15 @@ function OnLoadMsgHeaderPane()
 var messageHeaderSink = {
     onStartHeaders: function()
     {
+
+      // clear out any pending collected address timers...
+      if (gCollectAddressTimer)
+      {
+        gCollectAddess = "";        
+        clearTimeout(gCollectAddressTimer);
+        gCollectAddressTimer = null;
+      }
+
       // every time we start to redisplay a message, check the view all headers pref....
       var showAllHeadersPref = pref.getIntPref("mail.show_headers");
       if (showAllHeadersPref == 2)
@@ -291,7 +301,10 @@ var messageHeaderSink = {
         if (lowerCaseHeaderName == "from")
         {
           if (foo.headerValue && abAddressCollector && ((gCollectIncoming && !dontCollectAddress) || (gCollectNewsgroup && dontCollectAddress)))
-            abAddressCollector.collectUnicodeAddress(foo.headerValue);  
+          {
+            gCollectAddess = foo.headerValue;
+            gCollectAddressTimer = setTimeout('abAddressCollector.collectUnicodeAddress(gCollectAddess);', 2000);
+          }
         }
        
         index++;
@@ -852,7 +865,7 @@ function FillInAttachmentTooltip(cellNode)
 // Public method called when we create the attachments file menu
 function FillAttachmentListPopup(popup)
 {
-  // the FE sometimes call this routie TWICE...I haven't been able to figure out why yet...
+  // the FE sometimes call this routine TWICE...I haven't been able to figure out why yet...
   // protect against it...
 
   if (!gBuildAttachmentPopupForCurrentMsg) return; 
