@@ -178,11 +178,6 @@ interface nsIEditorShell : nsISupports
 
   /* General Utilities */
 
-  /* UI updating
-   * tagToUpdate can be null or "" to update everything  
-  */
-  void UpdateInterfaceState(in wstring tagToUpdate);
-
   /* Get string from the Editor's localized string bundle */
   wstring GetString(in wstring name);
 

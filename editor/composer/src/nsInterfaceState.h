@@ -52,10 +52,6 @@ public:
   
   NS_IMETHOD    Init(nsIHTMLEditor* aEditor, nsIDOMDocument *aChromeDoc);
 
-  // force an update of the UI. At some point, we could pass flags
-  // here to target certain things for updating.
-  NS_IMETHOD    ForceUpdate(const PRUnichar *tagToUpdate);
-  
   // nsISelectionListener interface
   NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, short aReason);
 
@@ -92,18 +88,7 @@ protected:
   };
   
   PRBool        SelectionIsCollapsed();
-  
-  PRBool        XULNodeExists(const char* nodeID);
-  
-  nsresult      SetNodeAttribute(const char* nodeID, const char* attributeName, const nsString& newValue);
-  nsresult      UnsetNodeAttribute(const char* nodeID, const char* attributeName);
-
-  nsresult      UpdateParagraphState(const char* observerName, const char* attributeName);
-  nsresult      UpdateListState(const char* observerName);
-  nsresult      UpdateTextState(const char* tagName, const char* observerName, const char* attributeName, PRInt8& ioState);
-  nsresult      UpdateFontFace(const char* observerName, const char* attributeName);
-  nsresult      UpdateDirtyState(PRBool aNowDirty);
-  
+  nsresult      UpdateDirtyState(PRBool aNowDirty);  
   nsresult      CallUpdateCommands(const nsString& aCommand);
   
   nsresult      PrimeUpdateTimer();
@@ -112,37 +97,17 @@ protected:
   // this class should not hold references to the editor or editorShell. Doing
   // so would result in cirular reference chains.
   
-  nsIHTMLEditor*      mEditor;		 // the HTML editor
+  nsIHTMLEditor*   mEditor;		 // the HTML editor
   nsIDOMDocument*  mChromeDoc;  // XUL document for the chrome area
 
   nsIDOMWindowInternal*       mDOMWindow;   // nsIDOMWindowInternal used for calling UpdateCommands
   
   nsCOMPtr<nsITimer>  mUpdateTimer;
-  
-  // what we need to update
-  PRPackedBool  mUpdateParagraph;
-  PRPackedBool  mUpdateFont;
-  PRPackedBool  mUpdateList;
-  
-  PRPackedBool  mUpdateBold;
-  PRPackedBool  mUpdateItalics;
-  PRPackedBool  mUpdateUnderline;
     
-  // current state
-  PRInt8        mBoldState;
-  PRInt8        mItalicState;
-  PRInt8        mUnderlineState;
-  
-  PRInt8        mDirtyState;
-  
-  PRInt8        mSelectionCollapsed;
-  
+  PRInt8        mDirtyState;  
+  PRInt8        mSelectionCollapsed;  
   PRPackedBool  mFirstDoOfFirstUndo;
-  
-  nsString      mParagraphFormat;
-  nsString      mFontString;
-  nsString      mListTag;				// contains "" for none, "ol" or "ul"
-  
+    
 };
 
 extern "C" nsresult NS_NewInterfaceState(nsIHTMLEditor* aEditor, nsIDOMDocument* aChromeDoc, nsISelectionListener** aInstancePtrResult);
