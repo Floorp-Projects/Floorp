@@ -137,9 +137,9 @@
 
   <binding id="select-size" extends="xul:outliner">
     <content>
-      <xul:outlinercols class="select-outlinercols">
+      <xul:hbox>
         <xul:outlinercol class="select-outlinercol" flex="1"/>
-      </xul:outlinercols>
+      </xul:hbox>
       <xul:outlinerrows class="select-outlinerrows outliner-rows" flex="1">
         <xul:hbox flex="1" class="outliner-bodybox">
           <xul:outlinerchildren class="select-outlinerbody">

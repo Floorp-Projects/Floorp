@@ -1110,9 +1110,11 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
     nsCOMPtr<nsIAtom> tagName;
     if (aBoundElement)
       aBoundElement->GetTag(*getter_AddRefs(tagName));
-    if (!info && bindingManager && (tagName.get() != nsXULAtoms::scrollbar) &&
-        (tagName.get() != nsXULAtoms::thumb) && (tagName.get() != kInputAtom) 
-        && !aForceSyncLoad) {
+    if (!info && bindingManager &&
+        (tagName != nsXULAtoms::scrollbar) &&
+        (tagName != nsXULAtoms::thumb) &&
+        (tagName != kInputAtom) &&
+        (tagName != nsHTMLAtoms::select) && !aForceSyncLoad) {
       // The third line of defense is to investigate whether or not the
       // document is currently being loaded asynchronously.  If so, there's no
       // document yet, but we need to glom on our request so that it will be
@@ -1315,8 +1317,9 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   if (aBoundElement)
     aBoundElement->GetTag(*getter_AddRefs(tagName)); 
 
-  if (tagName.get() == nsXULAtoms::scrollbar || tagName.get() == nsXULAtoms::thumb || 
-      IsResourceURI(aURI))
+  if (tagName == nsXULAtoms::scrollbar ||
+      tagName == nsXULAtoms::thumb || 
+      tagName == nsHTMLAtoms::select || IsResourceURI(aURI))
     aForceSyncLoad = PR_TRUE;
 
   nsCOMPtr<nsIStreamListener> listener;

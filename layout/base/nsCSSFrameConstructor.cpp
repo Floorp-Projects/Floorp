@@ -4478,15 +4478,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
     rv = ConstructTextControlFrame(aPresShell, aPresContext, newFrame, aContent);
   }
   else if (nsHTMLAtoms::select == aTag) {
-    if (UseXBLForms()) {
-      static PRBool loadedSelectBinding = PR_FALSE;
-      if (!loadedSelectBinding) {
-        loadedSelectBinding = PR_TRUE;
-        nsCOMPtr<nsIXBLBinding> binding;
-        nsCAutoString bindingUrl("chrome://forms/content/select.xml#select");
-        gXBLService->GetBinding(aContent, bindingUrl, getter_AddRefs(binding));
-      }
-    } else {
+    if (!UseXBLForms()) {
       if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
         ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
       }
