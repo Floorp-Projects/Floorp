@@ -28,6 +28,7 @@
 */ 
 
 #include "nsISupports.idl"
+#include "nsIURILoader.idl"
 
 interface nsIProtocolHandler;
 interface nsIChannel;
@@ -64,7 +65,8 @@ interface nsIURIContentListener : nsISupports
 					   this parameter. 
   */
 
-   void doContent(in string aContentType, in string aCommand, 
+   void doContent(in string aContentType, 
+			      in nsURILoadCommand aCommand, 
                   in string aWindowTarget, 
 				  in nsIChannel aOpenedChannel,
                   out nsIStreamListener aContentHandler,
@@ -74,6 +76,8 @@ interface nsIURIContentListener : nsISupports
       aDesiredContentType --> yes, we can accept aContentType but we would
 	  like it converted to aDesiredContentType. This argument can be null if
 	  you want the content directly as aContentType */
-   boolean canHandleContent(in string aContentType, in string aCommand, 
-							in string aWindowTarget, out string aDesiredContentType);
+   boolean canHandleContent(in string aContentType, 
+							in nsURILoadCommand aCommand, 
+							in string aWindowTarget, 
+							out string aDesiredContentType);
 };

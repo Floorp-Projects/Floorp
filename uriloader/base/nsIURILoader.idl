@@ -49,6 +49,8 @@ interface nsIChannel;
 interface nsIStreamListener;
 interface nsIInputStream;
 
+typedef long nsURILoadCommand;
+
 [scriptable, uuid(40AECB53-8B65-11d3-989D-001083010E9B)]
 interface nsIURILoader : nsISupports
 {
@@ -64,6 +66,9 @@ interface nsIURILoader : nsISupports
 
   /* OpenURI requires the following parameters.....
      aURI --> the uri you wish to open
+	 aCommand --> describes the context of the url. most often, you want to pass viewNormal here.
+				  but if it the action was from a user click or you want to view source, or you want
+				  a new window, these are all passed in via aCommand.
 	 aWindowTarget -> the name of the desired target window (can be null)
 	 aWindowContext --> if you are running the url from a doc shell or a web shell,
 					    this is your window context. If you have a content listener
@@ -81,6 +86,7 @@ interface nsIURILoader : nsISupports
   */ 
 
   void openURI(in nsIURI aURI, 
+			   in nsURILoadCommand aCommand,
 			   in string aWindowTarget,
 			   in nsISupports aWindowContext,
 			   in nsIURI aReferringURI,
@@ -92,6 +98,7 @@ interface nsIURILoader : nsISupports
      adapterBinding -> the local IP address to bind to*/			   
 
   void openURIVia(in nsIURI aURI,
+				  in nsURILoadCommand aCommand,
 				  in string aWindowTarget,
 				  in nsISupports aWindowContext,
 			      in nsIURI aReferringURI,
@@ -99,10 +106,17 @@ interface nsIURILoader : nsISupports
 			      out nsISupports aCurrentOpenContext,
 				  in unsigned long adapterBinding); 
 
+
+    /* these are nsURILoadCommand */
+	const long viewNormal = 0;
+    const long viewSource = 1;
+    const long viewUserClick = 2;
+	const long viewNewWindow = 3;
+
   /* mscott -> I'm going to move this out into a separate private interface
    */
   void dispatchContent(in string aContentType,
-					   in string aCommand,
+					   in nsURILoadCommand aCommand,
 					   in string aWindowTarget,
 					   in nsIChannel aChannel, 
 					   in nsISupports aCtxt,
@@ -120,6 +134,7 @@ interface nsIURILoader : nsISupports
 interface nsPIURILoaderWithPostData : nsISupports
 {
   void openURIWithPostData(in nsIURI aURI, 
+			   in nsURILoadCommand aCommand,
 			   in string aWindowTarget,
 			   in nsISupports aWindowContext,
 			   in nsIURI aReferringURI,
@@ -132,6 +147,7 @@ interface nsPIURILoaderWithPostData : nsISupports
      adapterBinding -> the local IP address to bind to*/			   
 
   void openURIWithPostDataVia(in nsIURI aURI,
+				  in nsURILoadCommand aCommand,
 				  in string aWindowTarget,
 				  in nsISupports aWindowContext,
 			      in nsIURI aReferringURI,
