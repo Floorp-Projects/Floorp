@@ -676,6 +676,7 @@ xpfe/components/urlbarhistory/src/Makefile
 xpfe/components/urlwidget/Makefile
 xpfe/components/winhooks/Makefile
 xpfe/components/console/Makefile
+xpfe/components/resetPref/Makefile
 xpfe/components/build/Makefile
 xpfe/appshell/Makefile
 xpfe/appshell/src/Makefile

@@ -48,5 +48,5 @@ libs::
 	$(INSTALL) $(srcdir)/nsResetPref.js $(DIST)/bin/components
 
 clean::
-	$(INSTALL) $(DIST)/bin/components/nsResetPref.js
+	rm -f $(DIST)/bin/components/nsResetPref.js
 
