@@ -508,10 +508,7 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
 
     if (!aPrefix.IsEmpty())
     {
-      if (aHTMLEditor && htmlEditor)
-        htmlEditor->InsertHTML(aPrefix);
-      else if (textEditor)
-        textEditor->InsertText(aPrefix);
+      textEditor->InsertText(aPrefix);
       m_editor->EndOfDocument();
     }
 
@@ -1801,7 +1798,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
       PRInt32 reply_on_top = 0;
       mIdentity->GetReplyOnTop(&reply_on_top);
       if (reply_on_top == 1)
-        mCitePrefix += NS_LITERAL_STRING("<br><br>");
+        mCitePrefix += NS_LITERAL_STRING("\n\n");
 
       
       PRBool header, headerDate;
@@ -1942,7 +1939,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
         else
           mCitePrefix.Append(citePrefixAuthor);
         mCitePrefix.Append(replyHeaderColon);
-        mCitePrefix.Append(NS_LITERAL_STRING("<br><html>"));
+        mCitePrefix.Append(NS_LITERAL_STRING("\n"));
       }
     }
 
@@ -1965,9 +1962,9 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
                                 getter_Copies(replyHeaderColon),
                                 getter_Copies(replyHeaderOriginalmessage));
       }
-      mCitePrefix.Append(NS_LITERAL_STRING("<br><br>"));
+      mCitePrefix.Append(NS_LITERAL_STRING("\n\n"));
       mCitePrefix.Append(replyHeaderOriginalmessage);
-      mCitePrefix.Append(NS_LITERAL_STRING("<br><html>"));
+      mCitePrefix.Append(NS_LITERAL_STRING("\n"));
     }
   }
 }
@@ -1980,12 +1977,10 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
 nsresult
 QuotingOutputStreamListener::ConvertToPlainText(PRBool formatflowed /* = PR_FALSE */)
 {
-  nsresult  rv = NS_OK;
-
-  rv += ConvertBufToPlainText(mCitePrefix, formatflowed);
-  rv += ConvertBufToPlainText(mMsgBody, formatflowed);
-  rv += ConvertBufToPlainText(mSignature, formatflowed);
-  return rv;
+  nsresult rv = ConvertBufToPlainText(mMsgBody, formatflowed);
+  if (NS_FAILED(rv))
+    return rv;
+  return ConvertBufToPlainText(mSignature, formatflowed);
 }
 
 NS_IMETHODIMP QuotingOutputStreamListener::OnStartRequest(nsIRequest *request, nsISupports * /* ctxt */)
@@ -2361,18 +2356,9 @@ QuotingOutputStreamListener::InsertToCompose(nsIEditor *aEditor,
   {
     if (!mCitePrefix.IsEmpty())
     {
-      if (aHTMLEditor)
-      {
-        nsCOMPtr<nsIHTMLEditor> htmlEditor (do_QueryInterface(aEditor));
-        if (htmlEditor)
-          htmlEditor->InsertHTML(mCitePrefix);
-      }
-      else
-      {
-        nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(aEditor));
-        if (textEditor)
-          textEditor->InsertText(mCitePrefix);
-      }
+      nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(aEditor));
+      if (textEditor)
+        textEditor->InsertText(mCitePrefix);
     }
 
     nsCOMPtr<nsIEditorMailSupport> mailEditor (do_QueryInterface(aEditor));
