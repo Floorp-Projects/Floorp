@@ -17,6 +17,7 @@
  */
 
 #include "pratom.h"
+#include "nsUUDll.h"
 #include "nsISupports.h"
 #include "nsRepository.h"
 #include "nsIFactory.h"
@@ -29,17 +30,17 @@ NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
 NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 NS_DEFINE_IID(kICaseConversionIID, NS_ICASECONVERSION_IID);
 
-static PRInt32 g_FactoryCount = 0;
-static PRInt32 g_LockCount = 0;
+extern "C" PRInt32 g_InstanceCount = 0;
+extern "C" PRInt32 g_LockCount = 0;
 
 class nsUnicharUtilFactory : public nsIFactory {
   NS_DECL_ISUPPORTS
   nsUnicharUtilFactory() {
     NS_INIT_REFCNT();
-    PR_AtomicIncrement(&g_FactoryCount);
+    PR_AtomicIncrement(&g_InstanceCount);
   };
   ~nsUnicharUtilFactory() {
-    PR_AtomicDecrement(&g_FactoryCount);
+    PR_AtomicDecrement(&g_InstanceCount);
   };
 
   NS_IMETHOD CreateInstance(nsISupports *aDelegate,
@@ -100,12 +101,9 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* servi
 }
 
 extern "C" NS_EXPORT PRBool NSCanUnload() {
-  return PRBool(g_FactoryCount == 0 && g_LockCount == 0);
+  return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
 
-// somehow  UNIX have problem to link against nsRepository::RegisterFactory
-// temporary turn it off untill XPCOM folks fix it
-#ifndef XP_UNIX 
 extern "C" NS_EXPORT nsresult NSRegisterSelf(const char *path)
 {
   return nsRepository::RegisterFactory(kUnicharUtilCID, path,
@@ -116,4 +114,3 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char *path)
 {
   return nsRepository::UnregisterFactory(kUnicharUtilCID, path);
 }
-#endif
