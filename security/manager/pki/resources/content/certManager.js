@@ -225,8 +225,14 @@ function editCerts()
   for (var t=0; t<numcerts; t++) {
     var cert = selected_certs[t];
     var certkey = cert.dbKey;
-    window.open('chrome://pippki/content/editcerts.xul', certkey,
-                'chrome,width=500,height=400,resizable=1');
+    var ca_tab = document.getElementById("ca_tab");
+    if (ca_tab.selected) {
+      window.open('chrome://pippki/content/editcacert.xul', certkey,
+                  'chrome,width=500,height=400,resizable=1');
+    } else {
+      window.open('chrome://pippki/content/editsslcert.xul', certkey,
+                  'chrome,width=500,height=400,resizable=1');
+    }
   }
 }
 

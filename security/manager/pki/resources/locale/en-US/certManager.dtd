@@ -22,17 +22,18 @@
 
 <!ENTITY certmgr.title "Certificate Manager">
 
-<!ENTITY certmgr.tab.mine "My Certificates">
-<!ENTITY certmgr.tab.others "Other People's Certificates">
-<!ENTITY certmgr.tab.websites "Web Site Certificates">
-<!ENTITY certmgr.tab.ca "CA Certificates">
+<!ENTITY certmgr.tab.mine "Your Certificates">
+<!ENTITY certmgr.tab.others "Other People's">
+<!ENTITY certmgr.tab.websites "Web Sites">
+<!ENTITY certmgr.tab.ca "Authorities">
 
 <!ENTITY certmgr.ca.builtins "Built-in CAs">
 <!ENTITY certmgr.ca.mycas "CAs Managed By You">
 
-<!ENTITY certmgr.websites "You have certificates on file for these web sites:">
-
-<!ENTITY certmgr.mine "These are your certificates:">
+<!ENTITY certmgr.mine "You have certificates from these organizations that identify you:">
+<!ENTITY certmgr.others "You have certificates on file that identify these people:">
+<!ENTITY certmgr.websites "You have certificates on file that identify these web sites:">
+<!ENTITY certmgr.cas "You have certificates on file that identify these Certificate Authories:">
 
 <!ENTITY certmgr.detail.general_tab.title "General">
 <!ENTITY certmgr.detail.prettyprint_tab.title "Details">
@@ -49,12 +50,13 @@
 <!ENTITY certmgr.certdetail.md5fingerprint "MD5 Fingerprint">
 
 <!ENTITY certmgr.editcert.title "Edit Security Certificate Settings">
-<!ENTITY certmgr.editcert.beforename "This certificate:">
-<!ENTITY certmgr.editcert.aftername "represents a Certificate Authority.">
 <!ENTITY certmgr.editcert.edittrust "Edit trust settings:">
 <!ENTITY certmgr.editcert.trustssl "This certificate can identify web sites.">
 <!ENTITY certmgr.editcert.trustemail "This certificate can identify mail users.">
 <!ENTITY certmgr.editcert.trustobjsign "This certificate can identify software makers.">
+<!ENTITY certmgr.editsslcert.edittrust "Edit certificate trust settings:">
+<!ENTITY certmgr.editsslcert.dotrust "Trust the authenticity of this certificate.">
+<!ENTITY certmgr.editsslcert.donttrust "Do not trust the authenticity of this certificate.">
 
 <!ENTITY certmgr.deletecert.title "Delete Certificate">
 <!ENTITY certmgr.deletecert.beforename "You have requested to delete this certificate:">

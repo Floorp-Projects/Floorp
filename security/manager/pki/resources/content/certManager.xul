@@ -35,22 +35,19 @@
 <!DOCTYPE window SYSTEM "chrome://pippki/locale/certManager.dtd">
 
 <window id="certmanager" 
-	xmlns:html="http://www.w3.org/1999/xhtml" 	
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-	style="width: 40em;"
         title="&certmgr.title;"
-	debug="0"
         onload="LoadCerts()">
 
   <script src="chrome://global/content/strres.js" />
   <script src="certManager.js"/>
 
-<box orient="horizontal">
+<box flex="1">
   <grid flex="1">
     <column flex="1"/>
     <rows>
       <row flex="1">
-        <tabbox flex="0" orient="vertical">
+        <tabbox flex="1" orient="vertical">
           <tabs orient="horizontal">
             <tab id="mine_tab" label="&certmgr.tab.mine;" />
 <!--
