@@ -707,6 +707,15 @@ function OpenBookmarkURL(node, datasources)
     openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
 }
 
+function addBookmarkAs()
+{
+  const browsers = gBrowser.browsers;
+  if (browsers.length > 1)
+    BookmarksUtils.addBookmarkForTabBrowser(gBrowser);
+  else
+    BookmarksUtils.addBookmarkForBrowser(gBrowser.webNavigation, true);
+}
+
 function readRDFString(aDS,aRes,aProp)
 {
   var n = aDS.GetTarget(aRes, aProp, true);

@@ -64,6 +64,9 @@
  *                        URL. (Usually the charset of the current 
  *                        document when launching this window). 
  *   window.arguments[4]: The mode of operation. See notes for details.
+ *   window.arguments[5]: If the mode is "addGroup", this is an array
+ *                        of objects with name, URL and charset
+ *                        properties, one for each group member.
  *
  * Mode of Operation Notes:
  * ------------------------
@@ -82,11 +85,17 @@
  *      Opens the dialog as in (1) above except the Name/Location section
  *      is hidden, and the dialog takes on the utility of a Folder chooser.
  *      Used when the user must select a Folder for some purpose. 
+ * 4) "addGroup" (fifth open parameter = String("addGroup"))
+ *      Opens the dialog like <default>, with a checkbox to select between
+ *      filing a single bookmark or a group. For the single bookmark the
+ *      values are taken from the name, URL and charset arguments.
+ *      For the group, the values are taken from the sixth argument.
  */
 
 var gFld_Name   = null;
 var gFld_URL    = null; 
 var gFolderTree = null;
+var gCB_AddGroup = null;
 
 var gBookmarkCharset = null;
 
@@ -102,6 +111,7 @@ function Startup()
 {
   gFld_Name = document.getElementById("name");
   gFld_URL = document.getElementById("url");
+  gCB_AddGroup = document.getElementById("addgroup");
   var bookmarkView = document.getElementById("bookmarks-view");
 
   var shouldSetOKButton = true;
@@ -134,11 +144,12 @@ function Startup()
       if (window.arguments[2])
         gCreateInFolder = window.arguments[2];
       document.getElementById("folderbox").setAttribute("hidden", "true");
-      dialogElement.removeAttribute("persist");
-      dialogElement.removeAttribute("height");
-      dialogElement.removeAttribute("width");
-      dialogElement.setAttribute("style", dialogElement.getAttribute("style"));
-      sizeToContent();
+      sizeToFit();
+      break;
+    case "addGroup":
+      document.getElementById("showaddgroup").setAttribute("hidden", "false");
+      setupFields();
+      sizeToFit();
       break;
     default:
       // Regular Add Bookmark
@@ -167,6 +178,16 @@ function Startup()
   }
 } 
 
+function sizeToFit()
+{
+  var dialogElement = document.documentElement;
+  dialogElement.removeAttribute("persist");
+  dialogElement.removeAttribute("height");
+  dialogElement.removeAttribute("width");
+  dialogElement.setAttribute("style", dialogElement.getAttribute("style"));
+  sizeToContent();
+}
+
 function setupFields()
 {
   // New bookmark in predetermined folder. 
@@ -180,8 +201,9 @@ function setupFields()
 
 function onFieldInput()
 {
-  var ok = document.documentElement.getButton("accept");
-  ok.disabled = gFld_URL.value == "" || gFld_Name.value == "";
+  const ok = document.documentElement.getButton("accept");
+  ok.disabled = gFld_URL.value == "" && !addingGroup() ||
+                gFld_Name.value == "";
 }    
 
 function onOK()
@@ -215,27 +237,46 @@ function onOK()
       rFolder = kRDF.GetResource("NC:BookmarksRoot", true);
       kRDFC.Init(kBMDS, rFolder);
     }
-    if (!gFld_URL.value) return;
-    
-    // Check to see if the item is a local directory path, and if so, convert
-    // to a file URL so that aggregation with rdf:files works
-    var url = gFld_URL.value;
-    try {
-      const kLFContractID = "@mozilla.org/file/local;1";
-      const kLFIID = Components.interfaces.nsILocalFile;
-      const kLF = Components.classes[kLFContractID].createInstance(kLFIID);
-      kLF.initWithUnicodePath(url);
-      if (kLF.exists()) {
-          var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.classes.nsIIOService);
-          
-          url = ioService.getURLSpecFromFile(kLF);
+
+    // if no URL was provided and we're not filing as a group, do nothing
+    if (!gFld_URL.value && !addingGroup())
+      return;
+
+    var url;
+    if (addingGroup()) {
+      const group = kBMS.createGroup(gFld_Name.value, rFolder);
+      const groups = window.arguments[5];
+      for (var i = 0; i < groups.length; ++i) {
+        url = getNormalizedURL(groups[i].url);
+        kBMS.createBookmarkWithDetails(groups[i].name, url,
+                                       groups[i].charset, group, -1);
       }
+    } else {
+      url = getNormalizedURL(gFld_URL.value);
+      kBMS.createBookmarkWithDetails(gFld_Name.value, url, gBookmarkCharset, rFolder, -1);
     }
-    catch (e) {
-    }
-    
-    kBMS.createBookmarkWithDetails(gFld_Name.value, url, gBookmarkCharset, rFolder, -1);
   }
+}
+
+function getNormalizedURL(url)
+{
+  // Check to see if the item is a local directory path, and if so, convert
+  // to a file URL so that aggregation with rdf:files works
+  try {
+    const kLF = Components.classes["@mozilla.org/file/local;1"]
+                          .createInstance(Components.interfaces.nsILocalFile);
+    kLF.initWithUnicodePath(url);
+    if (kLF.exists()) {
+      var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                                .getService(Components.classes.nsIIOService);
+
+      url = ioService.getURLSpecFromFile(kLF);
+    }
+  }
+  catch (e) {
+  }
+
+  return url;
 }
 
 var gBookmarksShell = null;
@@ -266,4 +307,29 @@ function useDefaultFolder ()
   }
 }
 
+var gOldNameValue = "";
+var gOldURLValue = "";
 
+function toggleGroup()
+{
+  // swap between single bookmark and group name
+  var temp = gOldNameValue;
+  gOldNameValue = gFld_Name.value;
+  gFld_Name.value = temp;
+
+  // swap between single bookmark and group url
+  temp = gOldURLValue;
+  gOldURLValue = gFld_URL.value;
+  gFld_URL.value = temp;
+  gFld_URL.disabled = gCB_AddGroup.checked;
+
+  gFld_Name.select();
+  gFld_Name.focus();
+  onFieldInput();
+}
+
+function addingGroup()
+{
+  const showAddGroup = document.getElementById("showaddgroup");
+  return showAddGroup.getAttribute("hidden") != "true" && gCB_AddGroup.checked;
+}

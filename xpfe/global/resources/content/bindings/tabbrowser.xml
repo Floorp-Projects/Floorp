@@ -849,6 +849,15 @@
         </setter>
       </property>
 
+      <property name="selectedBrowser"
+                onget="return this.mCurrentBrowser;"
+                readonly="true"/>
+
+
+      <property name="browsers"
+                onget="return this.mPanelContainer.childNodes;"
+                readonly="true"/>
+
       <!-- Drag and drop observer API -->
       <!--<method name="onDragStart">
         <parameter name="aEvent"/>

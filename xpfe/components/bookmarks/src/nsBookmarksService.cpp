@@ -2613,18 +2613,10 @@ NS_IMPL_QUERY_INTERFACE8(nsBookmarksService,
 ////////////////////////////////////////////////////////////////////////
 // nsIBookmarksService
 
-NS_IMETHODIMP
-nsBookmarksService::CreateFolder(const PRUnichar* aName, 
-                                 nsIRDFResource* aParentFolder,
-                                 nsIRDFResource** aResult)
-{
-  return CreateFolderWithDetails(aName, aParentFolder, -1, aResult);
-}
-
-NS_IMETHODIMP
+nsresult
 nsBookmarksService::CreateFolderWithDetails(const PRUnichar* aName, 
                                             nsIRDFResource* aParentFolder, PRInt32 aIndex,
-                                            nsIRDFResource** aResult)
+                                            nsIRDFResource** aResult, PRBool aIsGroup)
 {
   nsresult rv;
 
@@ -2677,6 +2669,12 @@ nsBookmarksService::CreateFolderWithDetails(const PRUnichar* aName,
   if (NS_FAILED(rv)) 
     return rv;
 
+  if (aIsGroup) {
+    rv = mInner->Assert(folderResource, kNC_FolderGroup, kTrueLiteral, PR_TRUE);
+    if (NS_FAILED(rv)) 
+      return rv;
+  }
+
   // Add to container. 
   if (aIndex >= 0) 
     rv = container->InsertElementAt(folderResource, !aIndex ? 1 : aIndex + 1, PR_TRUE);
@@ -2687,6 +2685,38 @@ nsBookmarksService::CreateFolderWithDetails(const PRUnichar* aName,
   NS_ADDREF(*aResult);
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsBookmarksService::CreateFolder(const PRUnichar* aName, 
+                                 nsIRDFResource* aParentFolder,
+                                 nsIRDFResource** aResult)
+{
+  return CreateFolderWithDetails(aName, aParentFolder, -1, aResult, PR_FALSE);
+}
+
+NS_IMETHODIMP
+nsBookmarksService::CreateFolderWithDetails(const PRUnichar* aName, 
+                                            nsIRDFResource* aParentFolder, PRInt32 aIndex,
+                                            nsIRDFResource** aResult)
+{
+  return CreateFolderWithDetails(aName, aParentFolder, aIndex, aResult, PR_FALSE);
+}
+
+NS_IMETHODIMP
+nsBookmarksService::CreateGroup(const PRUnichar* aName, 
+                                nsIRDFResource* aParentFolder,
+                                nsIRDFResource** aResult)
+{
+  return CreateFolderWithDetails(aName, aParentFolder, -1, aResult, PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsBookmarksService::CreateGroupWithDetails(const PRUnichar* aName, 
+                                           nsIRDFResource* aParentFolder, PRInt32 aIndex,
+                                           nsIRDFResource** aResult)
+{
+  return CreateFolderWithDetails(aName, aParentFolder, aIndex, aResult, PR_TRUE);
 }
 
 NS_IMETHODIMP

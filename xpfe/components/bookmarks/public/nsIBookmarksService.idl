@@ -60,6 +60,10 @@ interface nsIBookmarksService : nsISupports
     nsIRDFResource createFolderWithDetails(in wstring aName, in nsIRDFResource aParentFolder, 
                                            in long aIndex);
 
+    nsIRDFResource createGroup(in wstring aName, in nsIRDFResource aParentFolder);
+    nsIRDFResource createGroupWithDetails(in wstring aName, in nsIRDFResource aParentFolder, 
+                                          in long aIndex);
+
     nsIRDFResource createBookmark(in wstring aName, in string aURL, in nsIRDFResource aParentFolder);
     nsIRDFResource createBookmarkWithDetails(in wstring aName, in string aURI, in wstring docCharSet, 
                                              in nsIRDFResource aFolder, in long aIndex);
