@@ -30,6 +30,7 @@ class nsIURL;
 class nsIWidget;
 class nsString;
 class nsIStreamObserver;
+class nsIXULWindowCallbacks;
 
 // e5e5af70-8a38-11d2-9938-0080c7cb1080
 #define NS_IAPPSHELL_SERVICE_IID \
@@ -48,14 +49,17 @@ public:
   NS_IMETHOD DispatchNativeEvent(void * aEvent) = 0;
   NS_IMETHOD Shutdown(void) = 0;
 
-  NS_IMETHOD CreateTopLevelWindow(nsIURL* aUrl, 
+  NS_IMETHOD CreateTopLevelWindow(nsIWidget * aParent,
+                                  nsIURL* aUrl, 
                                   nsString& aControllerIID,
                                   nsIWidget*& aResult, nsIStreamObserver* anObserver,
+                                  nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight) = 0;
-  NS_IMETHOD CreateDialogWindow(nsIWidget * aParent,
-                                nsIURL* aUrl, 
-                                nsString& aControllerIID,
-                                nsIWidget*& aResult, nsIStreamObserver* anObserver,
+  NS_IMETHOD CreateDialogWindow(  nsIWidget * aParent,
+                                  nsIURL* aUrl, 
+                                  nsString& aControllerIID,
+                                  nsIWidget*& aResult, nsIStreamObserver* anObserver,
+                                  nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight) = 0;
   NS_IMETHOD CloseTopLevelWindow(nsIWidget* aWindow) = 0;
   NS_IMETHOD RegisterTopLevelWindow(nsIWidget* aWindow) = 0;

@@ -46,6 +46,7 @@ class nsIDOMHTMLImageElement;
 class nsIDOMElement;
 class nsIStreamObserver;
 class nsIDocument;
+class nsIXULWindowCallbacks;
 
 class nsIContent;
 
@@ -93,9 +94,9 @@ public:
   NS_IMETHOD GetWidget(nsIWidget *& aWidget);
 
   // nsWebShellWindow methods...
-  nsresult Initialize(nsIAppShell* aShell, nsIURL* aUrl, nsString& aControllerIID, nsIStreamObserver* anObserver,
-                      PRInt32 aInitialWidth, PRInt32 aInitialHeight);
-  nsresult Initialize(nsIWidget * aParent, nsIAppShell* aShell, nsIURL* aUrl, nsString& aControllerIID, nsIStreamObserver* anObserver,
+  nsresult Initialize(nsIWidget * aParent, nsIAppShell* aShell, nsIURL* aUrl,
+                      nsString& aControllerIID, nsIStreamObserver* anObserver,
+                      nsIXULWindowCallbacks *aCallbacks,
                       PRInt32 aInitialWidth, PRInt32 aInitialHeight);
   nsIWidget* GetWidget(void) { return mWindow; }
 
@@ -177,6 +178,7 @@ protected:
   nsIWidget*              mWindow;
   nsIWebShell*            mWebShell;
   nsIWidgetController*    mController;
+  nsIXULWindowCallbacks*  mCallbacks;
 
   nsVoidArray mMenuDelegates;
 };

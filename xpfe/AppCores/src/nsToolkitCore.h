@@ -20,6 +20,7 @@
 
 //#include "nsAppCores.h"
 
+#include "nsCOMPtr.h"
 #include "nscore.h"
 #include "nsString.h"
 #include "nsISupports.h"
@@ -27,7 +28,9 @@
 #include "nsIDOMToolkitCore.h"
 #include "nsBaseAppCore.h"
 
+class nsIDOMWindow;
 class nsIScriptContext;
+class nsIWebShellWindow;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsToolbarCore:
@@ -48,6 +51,11 @@ class nsToolkitCore : public nsBaseAppCore,
     NS_IMETHOD    GetId(nsString& aId) { return nsBaseAppCore::GetId(aId); } 
 
     NS_DECL_IDOMTOOLKITCORE
+
+  private:
+
+    nsCOMPtr<nsIWebShellWindow>
+                  DOMWindowToWebShellWindow(nsIDOMWindow *DOMWindow) const;
 };
 
 #endif // nsToolkitCorePrivate_h___

@@ -28,6 +28,7 @@
 #include "nsWidgetsCID.h"
 #include "nsIWidget.h"
 #include "nsIAppShell.h"
+#include "nsIXULWindowCallbacks.h"
 
 #include "nsIAppShellService.h"
 #include "nsIWidgetController.h"
@@ -109,6 +110,7 @@ nsWebShellWindow::nsWebShellWindow()
   mWebShell = nsnull;
   mWindow   = nsnull;
   mController = nsnull;
+  mCallbacks = nsnull;
 }
 
 
@@ -121,6 +123,7 @@ nsWebShellWindow::~nsWebShellWindow()
 
   NS_IF_RELEASE(mWindow);
   NS_IF_RELEASE(mController);
+  NS_IF_RELEASE(mCallbacks);
 }
 
 
@@ -159,17 +162,10 @@ nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 
-nsresult nsWebShellWindow::Initialize(nsIAppShell* aShell, nsIURL* aUrl, 
-                                      nsString& aControllerIID, nsIStreamObserver* anObserver,
-                                      PRInt32 aInitialWidth, PRInt32 aInitialHeight)
-{
-  return Initialize(nsnull, aShell, aUrl, aControllerIID, anObserver,
-                    aInitialWidth, aInitialHeight);
-}
-
 nsresult nsWebShellWindow::Initialize(nsIWidget* aParent,
                                       nsIAppShell* aShell, nsIURL* aUrl, 
                                       nsString& aControllerIID, nsIStreamObserver* anObserver,
+                                      nsIXULWindowCallbacks *aCallbacks,
                                       PRInt32 aInitialWidth, PRInt32 aInitialHeight)
 {
   nsresult rv;
@@ -238,6 +234,10 @@ nsresult nsWebShellWindow::Initialize(nsIWidget* aParent,
     docLoader->AddObserver((nsIDocumentLoaderObserver *)this);
   }
 ///  webShell->SetPrefs(aPrefs);
+
+  NS_IF_RELEASE(mCallbacks);
+  mCallbacks = aCallbacks;
+  NS_IF_ADDREF(mCallbacks);
 
   if (nsnull != aUrl)  {
     mWebShell->LoadURL(urlString);
@@ -813,7 +813,7 @@ NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
 
 
 /**
- * Get nsIDOMElement corresponding to a given webshell
+ * Get nsIDOMNode corresponding to a given webshell
  * @param aShell the given webshell
  * @return the corresponding DOM element, null if for some reason there is none
  */
@@ -874,20 +874,23 @@ void nsWebShellWindow::ExecuteJavaScriptString(nsString& aJavaScript)
  */
 void nsWebShellWindow::ExecuteStartupCode()
 {
-//  NS_PRECONDITION(aNode, "null argument to LoadCommandsInElement");
-
   nsCOMPtr<nsIDOMNode> webshellNode = GetDOMNodeFromWebShell(mWebShell);
-  if (!webshellNode)
-    return;
+  nsCOMPtr<nsIDOMElement> webshellElement;
 
-  nsCOMPtr<nsIDOMElement> webshellElement(do_QueryInterface(webshellNode));
-  if (!webshellElement)
-    return;
+  if (webshellNode)
+    webshellElement = do_QueryInterface(webshellNode);
 
-   // Get the onConstruction attribute of the webshellElement.
+  if (mCallbacks)
+    mCallbacks->ConstructBeforeJavaScript(mWebShell);
+
+  // Execute the string in the onConstruction attribute of the webshellElement.
   nsString startupCode;
-  if (NS_SUCCEEDED(webshellElement->GetAttribute("onConstruction", startupCode))) 
+  if (webshellElement && NS_SUCCEEDED(webshellElement->GetAttribute("onConstruction", startupCode))) 
     ExecuteJavaScriptString(startupCode);
+
+  if (mCallbacks)
+    mCallbacks->ConstructAfterJavaScript(mWebShell);
+
 }
 
 

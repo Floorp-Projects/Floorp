@@ -22,11 +22,12 @@ IGNORE_MANIFEST=1
 MODULE=raptor 
 
 EXPORTS =                         \
-        nsIWebShellWindow.h          \
+        nsIWebShellWindow.h       \
         nsAppShellCIDs.h          \
         nsIAppShellService.h      \
         nsICmdLineService.h	  \
         nsIWidgetController.h     \
+        nsIXULWindowCallbacks.h   \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
