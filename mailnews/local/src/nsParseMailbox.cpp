@@ -75,6 +75,8 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartBinding(nsIURL* aURL, const char *aCont
 			NS_ASSERTION(m_mailDB, "failed to open mail db parsing folder");
 			printf("url file = %s\n", fileName);
 		}
+
+		NS_RELEASE(runningUrl);
 	}
 
 	// need to get the mailbox name out of the url and call SetMailboxName with it.
