@@ -91,10 +91,10 @@ static NS_DEFINE_IID(kCClipboard,     NS_CLIPBOARD_CID);
 static NS_DEFINE_IID(kCGenericTransferable,  NS_GENERICTRANSFERABLE_CID);
 static NS_DEFINE_IID(kCDataFlavor,    NS_DATAFLAVOR_CID);
 static NS_DEFINE_IID(kCXIFFormatConverter,  NS_XIFFORMATCONVERTER_CID);
-static NS_DEFINE_IID(kCDragService,   NS_DRAGSERVICE_CID);
-static NS_DEFINE_IID(kCDragSource,    NS_DRAGSOURCE_CID);
-static NS_DEFINE_IID(kCDragTarget,    NS_DRAGTARGET_CID);
-static NS_DEFINE_IID(kCDraggedObject, NS_DRAGGEDOBJECT_CID);
+// static NS_DEFINE_IID(kCDragService,   NS_DRAGSERVICE_CID);
+// static NS_DEFINE_IID(kCDragSource,    NS_DRAGSOURCE_CID);
+// static NS_DEFINE_IID(kCDragTarget,    NS_DRAGTARGET_CID);
+// static NS_DEFINE_IID(kCDraggedObject, NS_DRAGGEDOBJECT_CID);
 
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
