@@ -25,35 +25,76 @@
 #include "nsIInputStream.h"
 #include "nsMsgLocalFolderHdrs.h"
 #include "libi18n.h"
+#include "nsIMailboxUrl.h"
 
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
+static NS_DEFINE_IID(kIMailboxURLIID, NS_IMAILBOXURL_IID);
+
 /* the following macros actually implement addref, release and query interface for our component. */
-NS_IMPL_ADDREF(nsParseMailboxProtocol)
-NS_IMPL_RELEASE(nsParseMailboxProtocol)
-NS_IMPL_QUERY_INTERFACE(nsParseMailboxProtocol, kIStreamListenerIID); /* we need to pass in the interface ID of this interface */
+NS_IMPL_ADDREF(nsMsgMailboxParser)
+NS_IMPL_RELEASE(nsMsgMailboxParser)
+NS_IMPL_QUERY_INTERFACE(nsMsgMailboxParser, kIStreamListenerIID); /* we need to pass in the interface ID of this interface */
+
+NS_BEGIN_EXTERN_C
+
+nsresult NS_NewMsgParser(nsIStreamListener ** aInstancePtr)
+{
+	nsresult rv = NS_OK;
+	if (aInstancePtr)
+	{
+		nsMsgMailboxParser * parser = new nsMsgMailboxParser();
+		if (parser)
+			rv =parser->QueryInterface(kIStreamListenerIID, (void **) aInstancePtr);		
+	}
+
+	return rv;
+}
+
+NS_END_EXTERN_C
+
 
 // Whenever data arrives from the connection, core netlib notifices the protocol by calling
 // OnDataAvailable. We then read and process the incoming data from the input stream. 
-NS_IMETHODIMP nsParseMailboxProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength)
+NS_IMETHODIMP nsMsgMailboxParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength)
 {
 	// right now, this really just means turn around and process the url
 	ProcessMailboxInputStream(aURL, aIStream, aLength);
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsParseMailboxProtocol::OnStartBinding(nsIURL* aURL, const char *aContentType)
+NS_IMETHODIMP nsMsgMailboxParser::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
 	// extract the appropriate event sinks from the url and initialize them in our protocol data
 	// the URL should be queried for a nsIMailboxURL. If it doesn't support a mailbox URL interface then
 	// we have an error.
+	nsIMailboxUrl *runningUrl;
+	printf("\n+++ nsMsgMailboxParserStub::OnStartBinding: URL: %p, Content type: %s\n", aURL, aContentType);
 
+	nsresult rv = aURL->QueryInterface(kIMailboxURLIID, (void **)&runningUrl);
+	if (NS_SUCCEEDED(rv) && runningUrl)
+	{
+		// okay, now fill in our event sinks...Note that each getter ref counts before
+		// it returns the interface to us...we'll release when we are done
+		const char	*fileName;
+		runningUrl->GetFile(&fileName);
+		if (fileName)
+		{	
+			nsFilePath dbName(fileName);
+
+			nsMailDatabase::Open(dbName, PR_TRUE, &m_mailDB, PR_FALSE);
+			printf("url file = %s\n", fileName);
+		}
+	}
+
+	// need to get the mailbox name out of the url and call SetMailboxName with it.
+	// then, we need to open the mail db for this parser.
 	return NS_OK;
 
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsParseMailboxProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsMsgMailboxParser::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
 	// what can we do? we can close the stream?
 	m_urlInProgress = PR_FALSE;  // don't close the connection...we may be re-using it.
@@ -66,10 +107,13 @@ NS_IMETHODIMP nsParseMailboxProtocol::OnStopBinding(nsIURL* aURL, nsresult aStat
 
 }
 
-nsParseMailboxProtocol::nsParseMailboxProtocol(const char *mailboxName) : nsMsgLineBuffer(NULL, PR_FALSE)
+nsMsgMailboxParser::nsMsgMailboxParser() : nsMsgLineBuffer(NULL, PR_FALSE)
 {
+  /* the following macro is used to initialize the ref counting data */
+	NS_INIT_REFCNT();
+
 	m_mailDB = NULL;
-	m_mailboxName = XP_STRDUP(mailboxName);
+	m_mailboxName = NULL;
 	m_obuffer = NULL;
 	m_obuffer_size = 0;
 	m_ibuffer = NULL;
@@ -82,12 +126,12 @@ nsParseMailboxProtocol::nsParseMailboxProtocol(const char *mailboxName) : nsMsgL
 	m_isRealMailFolder = PR_TRUE;
 }
 
-nsParseMailboxProtocol::~nsParseMailboxProtocol()
+nsMsgMailboxParser::~nsMsgMailboxParser()
 {
 	XP_FREE(m_mailboxName);
 }
 
-void nsParseMailboxProtocol::UpdateStatusText ()
+void nsMsgMailboxParser::UpdateStatusText ()
 {
 #ifdef WE_HAVE_PROGRESS
 	char *leafName = XP_STRRCHR (m_mailboxName, '/');
@@ -105,7 +149,7 @@ void nsParseMailboxProtocol::UpdateStatusText ()
 #endif
 }
 
-void nsParseMailboxProtocol::UpdateProgressPercent ()
+void nsMsgMailboxParser::UpdateProgressPercent ()
 {
 #ifdef WE_HAVE_PROGRESS
 	XP_ASSERT(m_context != NULL);
@@ -117,7 +161,7 @@ void nsParseMailboxProtocol::UpdateProgressPercent ()
 #endif
 }
 
-int nsParseMailboxProtocol::ProcessMailboxInputStream(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength)
+int nsMsgMailboxParser::ProcessMailboxInputStream(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength)
 {
 	nsresult ret = NS_OK;
 
@@ -141,7 +185,7 @@ int nsParseMailboxProtocol::ProcessMailboxInputStream(nsIURL* aURL, nsIInputStre
 }
 
 
-void nsParseMailboxProtocol::DoneParsingFolder()
+void nsMsgMailboxParser::DoneParsingFolder()
 {
 	/* End of file.  Flush out any partial line remaining in the buffer. */
 	FlushLastLine();
@@ -156,7 +200,7 @@ void nsParseMailboxProtocol::DoneParsingFolder()
 	FreeBuffers();
 }
 
-void nsParseMailboxProtocol::FreeBuffers()
+void nsMsgMailboxParser::FreeBuffers()
 {
 	/* We're done reading the folder - we don't need these things
 	 any more. */
@@ -166,13 +210,13 @@ void nsParseMailboxProtocol::FreeBuffers()
 	m_obuffer_size = 0;
 }
 
-void nsParseMailboxProtocol::UpdateDBFolderInfo()
+void nsMsgMailboxParser::UpdateDBFolderInfo()
 {
 	UpdateDBFolderInfo(m_mailDB, m_mailboxName);
 }
 
 // update folder info in db so we know not to reparse.
-void nsParseMailboxProtocol::UpdateDBFolderInfo(nsMailDatabase *mailDB, const char *mailboxName)
+void nsMsgMailboxParser::UpdateDBFolderInfo(nsMailDatabase *mailDB, const char *mailboxName)
 {
 	nsDBFolderInfo *folderInfo = mailDB->GetDBFolderInfo();
 
@@ -183,12 +227,12 @@ void nsParseMailboxProtocol::UpdateDBFolderInfo(nsMailDatabase *mailDB, const ch
 }
 
 // By default, do nothing
-void nsParseMailboxProtocol::FolderTypeSpecificTweakMsgHeader(nsMsgHdr * /* tweakMe */)
+void nsMsgMailboxParser::FolderTypeSpecificTweakMsgHeader(nsMsgHdr * /* tweakMe */)
 {
 }
 
 // Tell the world about the message header (add to db, and view, if any)
-PRInt32 nsParseMailboxProtocol::PublishMsgHeader()
+PRInt32 nsMsgMailboxParser::PublishMsgHeader()
 {
 	FinishHeader();
 	if (m_newMsgHdr)
@@ -223,7 +267,7 @@ PRInt32 nsParseMailboxProtocol::PublishMsgHeader()
 	return 0;
 }
 
-void nsParseMailboxProtocol::AbortNewHeader()
+void nsMsgMailboxParser::AbortNewHeader()
 {
 	if (m_newMsgHdr && m_mailDB)
 	{
@@ -232,7 +276,7 @@ void nsParseMailboxProtocol::AbortNewHeader()
 	}
 }
 
-PRInt32 nsParseMailboxProtocol::HandleLine(char *line, PRUint32 lineLength)
+PRInt32 nsMsgMailboxParser::HandleLine(char *line, PRUint32 lineLength)
 {
 	int status = 0;
 
@@ -253,7 +297,7 @@ PRInt32 nsParseMailboxProtocol::HandleLine(char *line, PRUint32 lineLength)
 //						 folder_name);
 			m_isRealMailFolder = FALSE;
 			if (m_ignoreNonMailFolder)
-				return MK_CONNECTED;
+				return 0;
 //			else if (!FE_Confirm (m_context, buf))
 //				return NS_MSG_NOT_A_MAIL_FOLDER; /* #### NOT_A_MAIL_FILE */
 		}
@@ -1345,7 +1389,7 @@ int ParseNewMailState::MoveIncorporatedMessage(nsMsgHdr *mailHdr,
 
 ParseNewMailState::ParseNewMailState(MSG_Master *master, MSG_FolderInfoMail
 									 *folder) :
-	nsParseMailboxProtocol(folder->GetPathname())
+	nsMsgMailboxParser(folder->GetPathname())
 {
 	SetMaster(master);
 	if (MSG_FilterList::Open(master, filterInbox, NULL, folder, &m_filterList)
@@ -1740,7 +1784,7 @@ void ParseIMAPMailboxState::SetPublishByteLength(PRUint32 byteLength)
 
 void ParseIMAPMailboxState::DoneParsingFolder()
 {
-	nsParseMailboxProtocol::DoneParsingFolder();
+	nsMsgMailboxParser::DoneParsingFolder();
 	if (m_mailDB)
 	{
 		// make sure the highwater mark is correct

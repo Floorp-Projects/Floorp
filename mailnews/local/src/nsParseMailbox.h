@@ -149,11 +149,11 @@ inline int	nsParseMailMessageState::msg_UnHex(char C)
 }
 
 // This class is part of the mailbox parsing state machine 
-class nsParseMailboxProtocol : public nsIStreamListener, public nsParseMailMessageState, public nsMsgLineBuffer, public nsMsgLineBufferHandler 
+class nsMsgMailboxParser : public nsIStreamListener, public nsParseMailMessageState, public nsMsgLineBuffer, public nsMsgLineBufferHandler 
 {
 public:
-	nsParseMailboxProtocol(const char *mailboxName);
-	virtual ~nsParseMailboxProtocol();
+	nsMsgMailboxParser();
+	virtual ~nsMsgMailboxParser();
 
 	PRBool  IsRunningUrl() { return m_urlInProgress;} // returns true if we are currently running a url and false otherwise...
 	NS_DECL_ISUPPORTS
