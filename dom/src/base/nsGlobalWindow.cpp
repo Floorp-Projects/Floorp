@@ -133,6 +133,7 @@
 #include "nsIFullScreen.h"
 #include "nsIStringBundle.h"
 #include "nsIScriptEventManager.h" // For GetInterface()
+#include "nsIConsoleService.h"
 
 #include "plbase64.h"
 
