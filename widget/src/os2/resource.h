@@ -43,8 +43,6 @@
 
 // Icons
 #define ID_ICO_FRAME         500
-#define ID_ICO_FOLDER        501
-#define ID_ICO_DRAGITEM      502
 
 // OS2TODO HCT temporary bug fix
 

@@ -24,8 +24,6 @@
 
 /* icons */
 ICON ID_ICO_FRAME         res\frame.ico
-ICON ID_ICO_FOLDER        res\folder.ico
-ICON ID_ICO_DRAGITEM      res\dragitem.ico
 
 /* pointers */
 POINTER IDC_SELECTANCHOR   res\select.ptr
