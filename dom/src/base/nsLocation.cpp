@@ -103,7 +103,7 @@ NS_IMETHODIMP_(void) LocationImpl::SetDocShell(nsIDocShell *aDocShell)
 }
 
 nsresult 
-LocationImpl::CheckURL(nsIURI* aURL, nsString &aReferrerResult)
+LocationImpl::CheckURL(nsIURI* aURL, nsIURI** aReferrer)
 {
   nsresult result;
   // Get JSContext from stack.
@@ -131,13 +131,8 @@ LocationImpl::CheckURL(nsIURI* aURL, nsString &aReferrerResult)
     return NS_ERROR_FAILURE;
   nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
   if (codebase) {
-    nsCOMPtr<nsIURI> codebaseURI;
-    if (NS_FAILED(result = codebase->GetURI(getter_AddRefs(codebaseURI))))
+    if (NS_FAILED(result = codebase->GetURI(aReferrer)))
       return result;
-    nsXPIDLCString spec;
-    if (NS_FAILED(result = codebaseURI->GetSpec(getter_Copies(spec))))
-      return result;
-    aReferrerResult = spec;
   }
 
   return NS_OK;
@@ -148,21 +143,11 @@ nsresult
 LocationImpl::SetURL(nsIURI* aURL)
 {
   if (mDocShell) {
-    char* spec;
-    aURL->GetSpec(&spec);
-    nsAutoString s = spec;
-    nsCRT::free(spec);
-
-    nsAutoString referrer;
-    if (NS_FAILED(CheckURL(aURL, referrer)))
+    nsCOMPtr<nsIURI> referrer;
+    if(NS_FAILED(CheckURL(aURL, getter_AddRefs(referrer))))
       return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-    return webShell->LoadURL(s.GetUnicode(), nsnull, PR_TRUE, 
-                             nsIChannel::LOAD_NORMAL, 0, nsnull, 
-                             referrer.Length() > 0
-                             ? referrer.GetUnicode()
-                             : nsnull);
+    return mDocShell->LoadURI(aURL, referrer);
   }
   else {
     return NS_OK;
@@ -386,16 +371,20 @@ LocationImpl::SetHrefWithBase(const nsString& aHref,
 
   if ((NS_OK == result) && (mDocShell)) {
 
-    nsAutoString referrer;
-    if (NS_FAILED(CheckURL(newUrl, referrer)))
+    nsCOMPtr<nsIURI> referrer;
+    if (NS_FAILED(CheckURL(newUrl, getter_AddRefs(referrer))))
       return NS_ERROR_FAILURE;
+
+    nsXPIDLCString referrerCSpec;
+    referrer->GetSpec(getter_Copies(referrerCSpec));
+    nsAutoString referrerSpec = referrerCSpec;
 
     // Load new URI.
     nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
     result = webShell->LoadURL(newHref.GetUnicode(), nsnull, aReplace, 
                                nsIChannel::LOAD_NORMAL, 0, nsnull, 
-                               referrer.Length() > 0
-                               ? referrer.GetUnicode()
+                               referrerSpec.Length() > 0
+                               ? referrerSpec.GetUnicode()
                                : nsnull);
   }
   
