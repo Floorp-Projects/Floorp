@@ -831,9 +831,6 @@ nsTextTransformer::ScanNormalUnicodeText_B(PRBool aForLineBreak,
   PRInt32 offset = mOffset - 1;
 
   PRUnichar firstChar = frag->CharAt(offset);
-  if (CH_NBSP == firstChar) {
-    firstChar = ' ';
-  }
   mTransformBuf.mBuffer[mTransformBuf.mBufferLen - 1] = firstChar;
   if (firstChar > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
 
@@ -892,6 +889,8 @@ nsTextTransformer::ScanNormalUnicodeText_B(PRBool aForLineBreak,
       numChars =  mTransformBuf.GetBufferEnd() - bp;
     }
   }
+  else 
+	  offset--;
 
   *aWordLen = numChars;
   return offset;
