@@ -23,7 +23,7 @@ Contributor(s):
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
-<!ENTITY % prefMailnewsOverlayDTD SYSTEM "chrome://messenger/locale/pref-mailnewsOverlay.dtd" >
+<!ENTITY % prefMailnewsOverlayDTD SYSTEM "chrome://messenger-mapi/locale/pref-mailnewsOverlay.dtd" >
 %prefMailnewsOverlayDTD;
 ]>
 <overlay id="prefMailnewsOverlay"
@@ -34,7 +34,7 @@ Contributor(s):
       _elementIDs.push("mailnewsEnableMapi");
   ]]>
 </script>         
-<script type="application/x-javascript" src="chrome://messenger/content/pref-mailnewsOverlay.js"/>
+<script type="application/x-javascript" src="chrome://messenger-mapi/content/pref-mailnewsOverlay.js"/>
 <hbox align="center" id="mapi">
   <checkbox id="mailnewsEnableMapi" label="&enableMapi.label;"
             accesskey="&enableMapi.accesskey;" 

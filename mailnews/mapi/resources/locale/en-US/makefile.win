@@ -23,4 +23,18 @@
 
 DEPTH=..\..\..\..\..
 
+
+CHROME_DIR=locales\en-US
+CHROME_L10N_DIR=messenger\locale
+
+CHROME_L10N = \
+	.\pref-mailnewsOverlay.dtd \
+    .\mapi.properties \
+    .\contents.rdf            \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
+
+chrome::
+   $(REGCHROME) locale en-US/messenger-mapi en-US.jar
+
