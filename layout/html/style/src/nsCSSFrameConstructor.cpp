@@ -2965,21 +2965,22 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy(nsIPresContext* aPresConte
             if (NS_SUCCEEDED(rv)) {
               nsIFrame*                 newChild;
               nsCOMPtr<nsIStyleContext> rootPseudoStyle;
-              nsAbsoluteItems           fixedItems(nsnull);  // XXX FIX ME...
+              nsAbsoluteItems           fixedItems(mFixedContainingBlock);
           
               docParentFrame->GetStyleContext(getter_AddRefs(rootPseudoStyle));
               rv = ConstructDocElementFrame(aPresContext, rootContent,
-                                            docParentFrame, 
-                                            rootPseudoStyle, newChild,
-                                            fixedItems);
+                                            docParentFrame, rootPseudoStyle,
+                                            newChild, fixedItems);
 
-              // XXX Do something with the fixed items...
               if (NS_SUCCEEDED(rv)) {
-                rv = docParentFrame->InsertFrames(*aPresContext, 
-                                                  *shell,
-                                                  nsnull, 
-                                                  nsnull, 
-                                                  newChild);
+                rv = docParentFrame->InsertFrames(*aPresContext, *shell, nsnull,
+                                                  nsnull, newChild);
+
+                // Tell the fixed containing block about its 'fixed' frames
+                if (nsnull != fixedItems.childList) {
+                  mFixedContainingBlock->InsertFrames(*aPresContext, *shell,
+                    nsLayoutAtoms::fixedList, nsnull, fixedItems.childList);
+                }
               }
             }
           }
