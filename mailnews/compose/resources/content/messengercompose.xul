@@ -197,6 +197,7 @@
 <keyset id="tasksKeys">
   <!-- File Menu -->
   <key id="key_newNavigator"/>
+  <key id="key_newBlankPage"/>
   <key id="key_close"/>
   <key id="key_save"  key="&saveCmd.key;" command="cmd_saveDefault" modifiers="accel"/>
   <!-- key id="key_sendNow" xulkey="true" keycode="&sendNowCmd.keycode;" command="cmd_sendNow"/ -->
@@ -216,24 +217,12 @@
   <key id="key_find"  key="&findCmd.key;"  observes="cmd_find" modifiers="accel"/>
   <key id="key_findNext"  key="&findAgainCmd.key;" observes="cmd_findNext" modifiers="accel"/>
   
-  <!-- Format Menu -->
-  <key id="boldkb"/>
-  <key id="italickb"/>
-  <key id="underlinekb"/>
-
-  <key id="fontfixedwidthkb"/>
-  <key id="increaseindentkb"/>
-  <key id="decreaseindentkb"/>
-
-  <key id="removestyleskb"/>
-  <key id="decreasefontsizekb"/>
-  <key id="increasefontsizekb"/>
-
   <!-- Options Menu -->
   <!-- key id="key_selectAddresses" xulkey="true" key="&selectAddressCmd.key;" command="cmd_selectAddress"/ -->
   <key id="key_checkspelling"  key="&checkSpellingCmd.key;" observes="cmd_spelling"  modifiers="accel"/>
   
 </keyset>
+<keyset id="editorKeys"/>
 
 <popupset>
   <popup id="TextColorPopup"/>
@@ -288,7 +277,7 @@
           <menuseparator/>
           <menuitem label="&findCmd.label;"      key="key_find"      accesskey="&findCmd.accesskey;"      observes="cmd_find"/>
           <menuitem label="&findAgainCmd.label;" key="key_findNext" accesskey="&findAgainCmd.accesskey;" observes="cmd_findNext"/>
-          <menuitem label="&replaceCmd.label;" observes="cmd_replace"/>
+          <menuitem label="&replaceCmd.label;" accesskey="&replaceCmd.accesskey;" observes="cmd_replace"/>
           <menuseparator/>
           <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" command="cmd_account"/>
           <menuitem id="menu_preferences" oncommand="goDoCommand('cmd_preferences')"/>

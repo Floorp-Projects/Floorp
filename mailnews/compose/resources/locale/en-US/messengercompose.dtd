@@ -49,6 +49,7 @@
 	<!ENTITY findAgainCmd.key "G">
 	<!ENTITY findAgainCmd.accesskey "g">
 <!ENTITY replaceCmd.label "Replace...">
+<!ENTITY replaceCmd.accesskey "l">
 <!ENTITY accountManagerCmd.label "Mail/News Account Settings...">
 	<!ENTITY accountManagerCmd.accesskey "m">
 

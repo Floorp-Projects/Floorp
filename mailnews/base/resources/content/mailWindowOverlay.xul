@@ -239,6 +239,7 @@ Rights Reserved.
 
 	<!-- File Menu -->
 	<key id="key_newNavigator"/>
+  <key id="key_newBlankPage"/>
 	<key id="key_close"/>
 	<key id="key_quit"/>
 	<!-- Edit Menu -->

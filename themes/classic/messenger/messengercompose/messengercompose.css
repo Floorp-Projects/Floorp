@@ -298,7 +298,4 @@
 	list-style-image:url("chrome://global/skin/question-icon.gif");
 } /* Workaround for bug 50217. Please remove this rule, when this bug is fixed. */
 
-#navprintplus {
-  display: none !important;                                                    
-}
- 
+
