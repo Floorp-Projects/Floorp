@@ -38,7 +38,7 @@ endif
 
 DIRS		+= fdlibm xpconnect
 
-GARBAGE		+= $(JSMATH_PRELINK) $(OBJDIR)/jscpucfg.o $(OBJDIR)/jsautocfg.h
+GARBAGE		+= $(JSMATH_PRELINK) $(OBJDIR)/jscpucfg.o $(OBJDIR)/jsautocfg.h $(OBJDIR)/jsautocfg.tmp
 
 ifeq ($(OS_ARCH),OS2)
 ifndef XCFLAGS
@@ -256,8 +256,9 @@ $(FDLIBM_LIBRARY):
 jsopcode.h jsopcode.c: jsopcode.tbl
 
 $(OBJDIR)/jsautocfg.h: $(OBJDIR)/jscpucfg
-	rm -f $@
-	$(OBJDIR)/jscpucfg > $@
+	@rm -f $@ $(OBJDIR)/jsautocfg.tmp
+	$(OBJDIR)/jscpucfg > $(OBJDIR)/jsautocfg.tmp
+	mv $(OBJDIR)/jsautocfg.tmp $@
 
 export:: $(OBJDIR)/jsautocfg.h
 	$(INSTALL) -m 444 $< $(DIST)/include
