@@ -69,7 +69,7 @@ function buildDialog()
   var newToolbar = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                             "toolbar");
   newToolbar.id = "cloneToolbar";
-  if (useSmallIcons)
+  if (useSmallIcons.checked)
     newToolbar.setAttribute("iconsize", "small");
 
   // Walk through and manually clone the children of the to-be-customized toolbar.
