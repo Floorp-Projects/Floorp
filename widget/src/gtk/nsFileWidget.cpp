@@ -116,6 +116,14 @@ NS_METHOD  nsFileWidget::GetFile(nsFileSpec& aFile)
 
 
 //-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
+NS_METHOD  nsFileWidget::GetSelectedType(PRInt16& theType)
+{
+  theType = mSelectedType;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
 //
 // Get the file + path
 //

@@ -73,6 +73,9 @@ public:
                                    const nsString &promptString,
                                    nsFileSpec &theFileSpec);
 
+
+  NS_IMETHOD            GetSelectedType(PRInt16& theType);
+
 protected:
   static gint DestroySignal(GtkWidget *  aGtkWidget,
                             nsFileWidget* aWidget);
@@ -87,6 +90,7 @@ protected:
   const nsString*	mFilters;
   nsString		mDefault;
   nsFileSpec    mDisplayDirectory;
+  PRInt16       mSelectedType;
 };
 
 #endif // nsFileWidget_h__

@@ -94,6 +94,7 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
 	    const nsString   & promptString,    // Window title for the dialog
 	    nsFileSpec       & theFileSpec);     // Populate with initial path for file dialog 
 
+    NS_IMETHOD            GetSelectedType(PRInt16& theType);
 
   protected:
     NS_IMETHOD            OnOk();
@@ -121,6 +122,7 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
      void GetFilterListArray(nsString& aFilterList);
      
      NavTypeListPtr			mTypeLists[kMaxTypeListCount];
+     PRInt16				mSelectedType;
           
 };
 
