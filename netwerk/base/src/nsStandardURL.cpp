@@ -521,7 +521,7 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
     //
     // generate the normalized URL string
     //
-    char *buf = (char *) malloc(approxLen + 32);
+    char *buf = (char *) nsMemory::Alloc(approxLen + 32);
     if (!buf)
         return NS_ERROR_OUT_OF_MEMORY;
     PRUint32 i = 0;
