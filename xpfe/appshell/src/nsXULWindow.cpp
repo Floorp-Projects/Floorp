@@ -325,6 +325,12 @@ NS_IMETHODIMP nsXULWindow::Destroy()
    if(!mWindow)
       return NS_OK;
 
+#ifdef XP_PC
+   /* must activate parent before unregistering, since unregistering
+      affects the topmost window status, which activateparent uses. */
+   ActivateParent();
+#endif
+
    {
     /* unregister before setting mBeingDestroyed because -turbo code
         wants to be able to pose a dialog. */
@@ -359,10 +365,6 @@ NS_IMETHODIMP nsXULWindow::Destroy()
    nsCOMPtr<nsIXULWindow> parentWindow(do_QueryReferent(mParentWindow));
    if (parentWindow)
      parentWindow->RemoveChildWindow(this);
-
-#ifdef XP_PC
-   ActivateParent();
-#endif
 
 // Anyone still using native menus should add themselves here.
 #if defined(XP_MAC) || defined(XP_MACOSX)
