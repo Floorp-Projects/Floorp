@@ -188,7 +188,6 @@ typedef struct _SignonUserStruct {
 typedef struct _SignonURLStruct {
     char * URLName;
     si_SignonUserStruct* chosen_user; /* this is a state variable */
-    Bool firsttime_chosing_user; /* this too is a state variable */
     XP_List * signonUser_list;
 } si_SignonURLStruct;
 
@@ -203,7 +202,6 @@ PRIVATE XP_List * si_reject_list=0;
 
 PRIVATE Bool si_signon_list_changed = FALSE;
 PRIVATE int si_TagCount = 0;
-PRIVATE si_SignonURLStruct * lastURL = NULL;
 PRIVATE Bool si_NoticeGiven = FALSE;
 
 
@@ -448,7 +446,9 @@ si_CheckForUser(char *URLName, char *userName) {
  * This routine is called only if signon pref is enabled!!!
  */
 PRIVATE si_SignonUserStruct*
-si_GetUser(MWContext *context, char* URLName, Bool pickFirstUser) {
+si_GetUser(
+	MWContext *context, char* URLName, Bool pickFirstUser,
+	char* userText) {
     si_SignonURLStruct* url;
     si_SignonUserStruct* user;
     si_SignonDataStruct* data;
@@ -467,12 +467,11 @@ si_GetUser(MWContext *context, char* URLName, Bool pickFirstUser) {
 	    /* only one set of data exists for this URL so select it */
 	    user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr);
 	    url->chosen_user = user;
-	    url->firsttime_chosing_user = FALSE;
 
 	} else if (pickFirstUser) {
 	    user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr);
 
-	} else if (url->firsttime_chosing_user) {
+	} else {
 	    /* multiple users for this URL so a choice needs to be made */
 	    char ** list;
 	    char ** list2;
@@ -489,16 +488,25 @@ si_GetUser(MWContext *context, char* URLName, Bool pickFirstUser) {
 	     * most-recently-used so the first one in the list is the most
 	     * likely one to be chosen.
 	     */
+	    user_count = 0;
 	    while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
 		data_ptr = user->signonData_list;
 		/* consider first item in data list to be the identifying item */
 		data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
+		if (PL_strcmp(data->name, userText)) {
+		    /* current user is not from the form that was saved */
+		    continue;
+		}
 		*(list2++) = data->value;
 		*(users2++) = user;
+		user_count++;
 	    }
 
 	    /* have user select a username from the list */
-	    if (FE_SelectDialog(
+	    if (user_count == 1) {
+		/* only one user for this form at this url, so select it */
+		user = users[0];
+	    } else if ((user_count > 1) && FE_SelectDialog(
 		    context, XP_GetString(MK_SIGNON_SELECTUSER),
 		    list, &user_count)) {
 		/* user pressed OK */
@@ -523,15 +531,6 @@ si_GetUser(MWContext *context, char* URLName, Bool pickFirstUser) {
 	    NET_RemoveURLFromCache
 		(NET_CreateURLStruct((char *)URLName, NET_DONT_RELOAD));
 
-	    /* the following assignment must come after (rather than before)
-	     * calling FE_SelectDialog because during that dialog a call to
-	     * NET_GetURL could be made which will call SI_LogNewURL
-	     * which sets firsttime_chosing_user to TRUE
-	     */
-	    url->firsttime_chosing_user = FALSE;
-
-	} else {
-	    user = url->chosen_user;
 	}
     } else {
 	user = NULL;
@@ -852,7 +851,6 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
 #endif
 
     /* initialize state variables in URL node */
-    url->firsttime_chosing_user = TRUE;
     url->chosen_user = NULL;
 
     /*
@@ -1433,19 +1431,6 @@ SI_RememberSignonData(MWContext *context, LO_FormSubmitData * submit)
 }
 
 /*
- * if we leave a form without submitting it, the URL's state variable
- * will not get reset.	So we test for that case now and reset the
- * state variables if necessary
- */
-PUBLIC void
-SI_LogNewURL() {
-    if (lastURL) {
-	lastURL -> firsttime_chosing_user = TRUE;
-	lastURL = NULL;
-    }
-}
-
-/*
  * Check for remembered data from a previous signon submission and
  * restore it if so
  */
@@ -1466,7 +1451,6 @@ SI_RestoreOldSignonData
     /* get URL */
     si_lock_signon_list();
     url = si_GetURL(URLName);
-    lastURL = url;
 
     /* see if this is first item in form and is a password */
     si_TagCount++;
@@ -1503,8 +1487,10 @@ SI_RestoreOldSignonData
 
     /* get the data from previous time this URL was visited */
 
-    if ((si_TagCount == 1) || (url && url->firsttime_chosing_user)) {
-	user = si_GetUser(context, URLName, FALSE);
+    if (si_TagCount == 1) {
+	user = si_GetUser(
+	    context, URLName, FALSE,
+	    (char*)(form_element->element_data->ele_text.name));
     } else {
 	if (url) {
 	    user = url->chosen_user;
@@ -1595,7 +1581,7 @@ si_RestoreOldSignonDataFromBrowser
 
     /* get the data from previous time this URL was visited */
     si_lock_signon_list();
-    user = si_GetUser(context, URLName, pickFirstUser);
+    user = si_GetUser(context, URLName, pickFirstUser, "username");
     if (!user) {
 	/* leave original username and password from caller unchanged */
 	/* username = 0; */
