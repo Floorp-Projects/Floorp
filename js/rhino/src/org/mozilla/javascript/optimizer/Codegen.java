@@ -439,9 +439,7 @@ public class Codegen extends Interpreter {
         Scriptable directConstruct(<directCallArgs>) {
             Scriptable newInstance = createObject(cx, scope);
             Object val = callDirect(cx, scope, newInstance, <directCallArgs>);
-            if (val != null && val != Undefined.instance &&
-                val instanceof Scriptable)
-            {
+            if (val instanceof Scriptable && val != Undefined.instance) {
                 return (Scriptable) val;
             }
             return newInstance;
@@ -478,18 +476,14 @@ public class Codegen extends Interpreter {
         addVirtualInvoke(generatedClassName,
                          "callDirect",
                          fnCurrent.getDirectCallMethodSignature());
-        astore((short)(firstLocal + 1));
-
         int exitLabel = acquireLabel();
-        aload((short)(firstLocal + 1));
-        addByteCode(ByteCode.IFNULL, exitLabel);
-        aload((short)(firstLocal + 1));
-        pushUndefined();
-        addByteCode(ByteCode.IF_ACMPEQ, exitLabel);
-        aload((short)(firstLocal + 1));
+        addByteCode(ByteCode.DUP); // make a copy of callDirect result
         addByteCode(ByteCode.INSTANCEOF, "org/mozilla/javascript/Scriptable");
         addByteCode(ByteCode.IFEQ, exitLabel);
-        aload((short)(firstLocal + 1));
+        addByteCode(ByteCode.DUP); // make a copy of callDirect result
+        pushUndefined();
+        addByteCode(ByteCode.IF_ACMPEQ, exitLabel);
+        // cast callDirect result
         addByteCode(ByteCode.CHECKCAST, "org/mozilla/javascript/Scriptable");
         addByteCode(ByteCode.ARETURN);
         markLabel(exitLabel);
@@ -497,7 +491,7 @@ public class Codegen extends Interpreter {
         aload((short)firstLocal);
         addByteCode(ByteCode.ARETURN);
 
-        classFile.stopMethod((short)(firstLocal + 2), null);
+        classFile.stopMethod((short)(firstLocal + 1), null);
 
     }
 
