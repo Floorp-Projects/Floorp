@@ -279,6 +279,9 @@
 #define NS_ERROR_CACHE_WRITE_ACCESS_DENIED \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 67)
 
+#define NS_ERROR_CACHE_IN_USE \
+    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 68)
+
 /**
  * Error passed through onStopRequest if the document could not be fetched
  * from the cache.
