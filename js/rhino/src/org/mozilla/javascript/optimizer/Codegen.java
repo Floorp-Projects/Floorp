@@ -2974,7 +2974,7 @@ if (true) {
     }
     
     private void visitGOTOingRelOp(Node node, Node child, Node parent,
-                                               int trueGOTO, int falseGOTO)
+                                   int trueGOTO, int falseGOTO)
     {
         int op = node.getInt();
         Integer childNumberFlag = (Integer)(node.getProp(Node.ISNUMBER_PROP));
@@ -2986,10 +2986,12 @@ if (true) {
         }
         else {
             if (op == TokenStream.INSTANCEOF) {
+                aload(variableObjectLocal);
                 generateCodeFromNode(child, node, -1, -1);
                 generateCodeFromNode(child.getNextSibling(), node, -1, -1);
                 addScriptRuntimeInvoke("instanceOf",
-                              "(Ljava/lang/Object;Ljava/lang/Object;)", "Z");
+                              "(Lorg/mozilla/javascript/Scriptable;"+
+                               "Ljava/lang/Object;Ljava/lang/Object;)", "Z");
                 addByteCode(ByteCode.IFNE, trueGOTO);
                 addByteCode(ByteCode.GOTO, falseGOTO);
             } else if (op == TokenStream.IN) {
@@ -3124,13 +3126,15 @@ if (true) {
                     && (childNumberFlag.intValue() == Node.BOTH))
                 || (op == TokenStream.INSTANCEOF)
                 || (op == TokenStream.IN)) {
+            aload(variableObjectLocal);
             generateCodeFromNode(child, node, -1, -1);
             generateCodeFromNode(child.getNextSibling(), node, -1, -1);
             int trueGOTO = acquireLabel();
             int skip = acquireLabel();
             if (op == TokenStream.INSTANCEOF) {
                 addScriptRuntimeInvoke("instanceOf",
-                              "(Ljava/lang/Object;Ljava/lang/Object;)", "Z");
+                              "(Lorg/mozilla/javascript/Scriptable;"+
+                               "Ljava/lang/Object;Ljava/lang/Object;)", "Z");
                 addByteCode(ByteCode.IFNE, trueGOTO);
             }
             else {

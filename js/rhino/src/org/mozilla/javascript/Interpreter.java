@@ -1398,8 +1398,8 @@ public class Interpreter extends LabelTable {
                     case TokenStream.INSTANCEOF :
                         rhs = stack[stackTop--];
                         lhs = stack[stackTop];
-                        stack[stackTop]
-                             = new Boolean(ScriptRuntime.instanceOf(lhs, rhs));
+                        stack[stackTop] = new Boolean(
+                            ScriptRuntime.instanceOf(scope, lhs, rhs));
                         break;
                     case TokenStream.EQ :
                         rhs = stack[stackTop--];

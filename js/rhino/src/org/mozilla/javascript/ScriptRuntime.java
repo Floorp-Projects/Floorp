@@ -1763,23 +1763,22 @@ public class ScriptRuntime {
      *
      * @return a instanceof b
      */
-    public static boolean instanceOf(Object a, Object b) {
+    public static boolean instanceOf(Scriptable scope, Object a, Object b) {
+        // Check RHS is an object
+        if (! (b instanceof Scriptable)) {
+            throw NativeGlobal.constructError(
+                Context.getContext(), "TypeError",
+                ScriptRuntime.getMessage("msg.instanceof.not.object", null),
+                scope);
+        }
 
-      // Check RHS is an object
-      if (! (b instanceof Scriptable)) {
-        throw NativeGlobal.constructError(
-                    Context.getContext(), "TypeError",
-                    ScriptRuntime.getMessage("msg.instanceof.not.object", null),
-                    a);
-      }
+        // for primitive values on LHS, return false
+        // XXX we may want to change this so that
+        // 5 instanceof Number == true
+        if (! (a instanceof Scriptable))	
+            return false;
 
-      // for primitive values on LHS, return false
-      // XXX we may want to change this so that
-      // 5 instanceof Number == true
-      if (! (a instanceof Scriptable))	
-          return false;
-
-      return ((Scriptable)b).hasInstance((Scriptable)a);
+        return ((Scriptable)b).hasInstance((Scriptable)a);
     }
 
     /**
@@ -1788,14 +1787,14 @@ public class ScriptRuntime {
      * @return true iff rhs appears in lhs' proto chain
      */
     protected static boolean jsDelegatesTo(Scriptable lhs, Scriptable rhs) {
-	Scriptable proto = lhs.getPrototype();
+        Scriptable proto = lhs.getPrototype();
 
-	while (proto != null) {
-	    if (proto.equals(rhs)) return true;
-	    proto = proto.getPrototype();
-	}
+        while (proto != null) {
+            if (proto.equals(rhs)) return true;
+            proto = proto.getPrototype();
+        }
 
-	return false;
+        return false;
     }
 
     /**
