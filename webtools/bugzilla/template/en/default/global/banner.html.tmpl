@@ -24,17 +24,14 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
-    <table bgcolor="#000000" width="100%" border="0" cellpadding="0"
-           cellspacing="0">
-      <tr>
-        <td>
-          <center><font color="#FFFFFF" size="8">
-            This is [% terms.Bugzilla %]
-          </font></center>
-        </td>
-      </tr>
-    </table>
-
-    <center><font size="-1">
-      <a href="http://www.bugzilla.org/">Bugzilla</a> Version [% VERSION %]
-    </font></center>
+    <div id="banner">
+    <div class="intro"></div>
+      <p id="banner-name">
+        <span>This is [% terms.Bugzilla %]</span>
+      </p>
+      <p id="banner-version">
+        <a href="http://www.bugzilla.org/"><span>Bugzilla</span></a>
+        <span>Version [% VERSION %]</span>
+      </p>
+    <div class="outro"></div>
+    </div>

@@ -19,6 +19,58 @@
   *                 Christian Reis <kiko@async.com.br>
   */
 
+/* banner (begin) */
+    #banner
+    {
+        text-align: center;        
+
+        width: 100%;
+        background: #000;
+
+        /* for Netscape 4 only */
+        border: 1px solid #fff;
+        border-bottom-width: 0.65em;
+    }
+
+    /* hide from NN4 */
+    div#banner
+    {
+        border-bottom-width: 0.2em;
+    }
+
+    #banner p
+    {
+        margin: 0;
+        padding: 0;
+    }
+
+    #banner-name
+    {
+        font-family: serif;
+        font-size: 255%;
+
+        color: #fff;
+    }
+
+    /* hide from NN4 */
+    p#banner-name
+    {
+        font-size: 300%;
+    }
+
+    #banner-version
+    {
+        font-size: 75%;
+        background: #fff;
+    }
+
+    /* hide from NN4 */
+    p#banner-version
+    {
+        font-size: 85%;
+    }
+/* banner (end) */
+
 .bz_obsolete { text-decoration: line-through; }
 .bz_inactive { text-decoration: line-through; }
 .bz_closed { text-decoration: line-through; }
