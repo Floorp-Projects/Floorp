@@ -67,7 +67,7 @@
         <row align="center">
           <label class="align-right" value="&widthEditField.label;" />
           <textbox class="narrow" id="widthInput" oninput="forceInteger(this.id)" />
-          <menulist id="widthPixelOrPercentMenulist"><menupopup/></menulist>
+          <menulist id="widthPixelOrPercentMenulist" flex="1"/>
             <!-- child elements are appended by JS -->
         </row>
       </rows>
