@@ -17,21 +17,16 @@
  */
 
 #include "msgCore.h"    // precompiled header...
+#include "nntpCore.h"
 
 #include "nsNNTPArticleSet.h"
 #include "nsINNTPHost.h"
 
-// #include "mkutils.h"
 #include <ctype.h>
 #include "prmem.h"
 #include "prlog.h"
 #include "prprf.h"
 #include "plstr.h"
-
-extern "C" {
-	extern int MK_OUT_OF_MEMORY;
-}
-
 
 /* A compressed encoding for sets of article.  This is usually for lines from
    the newsrc, which have article lists like
