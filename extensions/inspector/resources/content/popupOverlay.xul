@@ -26,7 +26,7 @@
     </popup>
   </popupset>
 
-  <menupopup id="menu_FilePopup">
+  <menupopup id="menu_FilePopup" oncommand="inspector.goToWindow(event.target);">
 
     <menu 
       id="mnWindowsFile" label="&mnWindows.label;" accesskey="&mnWindows.accesskey;"
@@ -34,14 +34,10 @@
       <template>
         <rule>
           <menupopup>
-            <menuitem uri="rdf:*"
-                      label="rdf:http://home.netscape.com/NC-rdf#KeyIndex rdf:http://home.netscape.com/NC-rdf#Name"
-                      accesskey="rdf:http://home.netscape.com/NC-rdf#KeyIndex"
-                      oncommand="inspector.goToWindow(this);"/>
+            <menuitem uri="rdf:*" label="&NC-rdf;KeyIndex &NC-rdf;Name" accesskey="&NC-rdf;KeyIndex"/>
           </menupopup>
         </rule>
       </template>
-      <menupopup/>
     </menu>
     <menuitem label="&cmdShowOpenURLDialog.label;" accesskey="&cmdShowOpenURLDialog.accesskey;"
               observes="cmdShowOpenURLDialog"/>
