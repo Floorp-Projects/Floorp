@@ -76,9 +76,7 @@ CPPSRCS		= \
 #	nsPushbutton.cpp \
 #	nsRadiobutton.cpp \
 #	nsTextArea.cpp \
-# 	nsTooltipManager.cpp \
 #       nsTabWidget.cpp \
-#       nsTooltipWidget.cpp \
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.$(LIB_SUFFIX)
 
