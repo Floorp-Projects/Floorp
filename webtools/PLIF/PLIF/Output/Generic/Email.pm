@@ -61,8 +61,22 @@ sub init {
 
 sub open {
     my $self = shift;
-    { local $^W = 0; # XXX shut up warnings in Net::SMTP
-    $self->handle(Net::SMTP->new($self->host, 'Timeout' => 5)); } # XXX hard coded timeout
+    my($app, $session, $string) = @_;
+    eval {
+        local $SIG{ALRM} = sub { die "alarm\n" }; # NB: \n required (so it says in man perlfunc)
+        local $^W = 0; # XXX shut up warnings in Net::SMTP
+        $self->handle(Net::SMTP->new($self->host, 'Timeout' => 15));  # XXX hard coded timeout
+        alarm(0);
+    };
+    if ($@) {
+        if ($@ ne "alarm\n") {
+            # propagate unexpected errors
+            die($@);
+        }
+        # timed out
+    } else {
+        # everything ok
+    }
     if (not defined($self->handle)) {
         $self->warn(4, 'Could not create the SMTP handle');
     }
@@ -80,9 +94,23 @@ sub output {
     my $self = shift;
     my($app, $session, $string) = @_;
     $self->assert(defined($self->handle), 1, 'No SMTP handle, can\'t send mail');
-    $self->assert($self->handle->mail($self->from), 1, 'Could not start sending mail');
-    $self->assert($self->handle->to($session->getAddress('email')), 1, 'Could not set mail recipient (was going to send to '.($session->getAddress('email')).')');
-    $self->assert($self->handle->data($string), 1, 'Could not send mail body');
+    eval {
+        local $SIG{ALRM} = sub { die "alarm\n" }; # NB: \n required (so it says in man perlfunc)
+        $self->assert($self->handle->mail($self->from), 1, 'Could not start sending mail');
+        $self->assert($self->handle->to($session->getAddress('email')), 1, 'Could not set mail recipient (was going to send to '.($session->getAddress('email')).')');
+        $self->assert($self->handle->data($string), 1, 'Could not send mail body');
+        alarm(0);
+    };
+    if ($@) {
+        if ($@ ne "alarm\n") {
+            # propagate unexpected errors
+            die($@);
+        }
+        # timed out
+        $self->error(1, 'Timed out while trying to send e-mail');
+    } else {
+        # everything ok
+    }
 }
 
 # protocol.email
