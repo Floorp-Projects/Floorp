@@ -238,7 +238,18 @@ if {[info exists FORM(sql)]} {
   }
 
   if {[lookup FORM changedin] != ""} {
-    qadd "and to_days(now()) - to_days(bugs.delta_ts) <= $FORM(changedin) "
+      set c [string trim $FORM(changedin)]
+      if {$c != ""} {
+          if {![regexp {^[0-9]*$} $c]} {
+              puts "
+The 'changed in last ___ days' field must be a simple number.  You entered 
+\"$c\", which doesn't cut it.
+
+Click the Back button and try again."
+              exit
+          }
+          qadd "and to_days(now()) - to_days(bugs.delta_ts) <= $FORM(changedin) "
+      }
   }
 }
 
