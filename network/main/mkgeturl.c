@@ -57,6 +57,7 @@
 #include "mkmocha.h"
 #endif /* 0 */
 
+#ifdef XP_MAC
 #ifdef MOZ_MAIL_NEWS
 #ifdef MOZ_SECURITY
 #include "mkcertld.h"
@@ -68,6 +69,7 @@
 #include "mkimap4.h"
 #include "mkldap.h"
 #endif /* MOZ_MAIL_NEWS */
+#endif /* XP_MAC */
 
 #include "glhist.h"
 #include "mkautocf.h"
@@ -760,7 +762,9 @@ NET_InitNetLib(int socket_buffer_size, int max_number_of_connections)
 	NET_InitMsgSearchProtocol();
 	NET_InitPop3Protocol();
 	NET_InitLDAPProtocol();
+#ifdef MOZ_SECURITY
 	NET_InitCertLdapProtocol();
+#endif /* MOZ_SECURITY */
 	NET_InitAddressBookProtocol();
 	NET_InitIMAP4Protocol();
 #endif /* MOZ_MAIL_NEWS */
