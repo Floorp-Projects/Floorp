@@ -5,7 +5,7 @@
 <!ENTITY newAccountButton.label "New Account">
 <!ENTITY setDefaultButton.label "Set as Default">
 <!ENTITY duplicateButton.label "Duplicate">
-<!ENTITY deleteButton.label "Delete">
+<!ENTITY deleteButton.label "Remove Account">
 
 <!ENTITY nameCol.label "Name">
 <!ENTITY duplicate.label "Duplicate">
