@@ -18,6 +18,9 @@
 DEPTH=..\..\..
 MODULE= msgimap
 
+XPIDLSRCS =	\
+			.\nsIImapServerSink.idl
+
 ################################################################################
 ## exports
 

@@ -23,6 +23,10 @@ MODULE		= msgimap
 
 include $(DEPTH)/config/autoconf.mk
 
+XPIDLSRCS =				  \
+		nsIImapServerSink.idl	\
+		$(NULL)
+
 EXPORTS= 								\
 			nsIImapUrl.h				\
 			nsIImapProtocol.h			\
