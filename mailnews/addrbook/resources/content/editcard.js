@@ -1,10 +1,12 @@
 var card;
 var newCard = -1;
+var okCallback;
 var editCardTitlePrefix = "Card for ";
 
 function OnLoadNewCard()
 {
 	top.card = newCard;
+	top.okCallback = 0;
 }
 
 
@@ -14,14 +16,13 @@ function OnLoadEditCard()
 	if (window.arguments && window.arguments[0])
 	{
 		if ( window.arguments[0].card )
-		{
-			// keep card in global for later
 			top.card = window.arguments[0].card;
+		if ( window.arguments[0].okCallback )
+			top.okCallback = window.arguments[0].okCallback;
 			
-			GetCardValues(top.card, frames["browser.editcard"].document);
-			
-			//top.window.setAttribute('title', editCardTitlePrefix + top.card.DisplayName);
-		}
+		GetCardValues(top.card, frames["browser.editcard"].document);
+		
+		//top.window.setAttribute('title', editCardTitlePrefix + top.card.DisplayName);
 	}
 }
 
@@ -47,15 +48,17 @@ function EditCardOKButton()
 {
 	SetCardValues(top.card, frames["browser.editcard"].document);
 	
-	// Need to commit changes here Candice.
 	top.card.EditCardToDatabase();
+	
+	// callback to allow caller to update
+	if ( top.okCallback )
+		top.okCallback();
 	
 	top.window.close();
 }
 
 
 // Move the data from the cardproperty to the dialog
-
 function GetCardValues(cardproperty, doc)
 {
 	if ( cardproperty )
@@ -104,7 +107,6 @@ function GetCardValues(cardproperty, doc)
 
 
 // Move the data from the dialog to the cardproperty to be stored in the database
-
 function SetCardValues(cardproperty, doc)
 {
 	if (cardproperty)

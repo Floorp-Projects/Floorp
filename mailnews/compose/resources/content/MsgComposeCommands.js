@@ -18,7 +18,7 @@
  * Rights Reserved.
  */
 
-var msgComposeService = Components.classes['component://netscape/messengercompose'].getService();
+var msgComposeService = Components.classes["component://netscape/messengercompose"].getService();
 msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
 var msgCompose = null;
 var MAX_RECIPIENTS = 0;
@@ -113,12 +113,27 @@ function ComposeStartup()
 			// Now that we have an Editor AppCore, we can finish to initialize the Compose AppCore
 			msgCompose.editor = window.editorShell;
 			
-			//Now we are ready to load all the fields (to, cc, subject, body, etc...)
-			msgCompose.LoadFields();
 			
 	    	var msgCompFields = msgCompose.compFields;
 	    	if (msgCompFields)
 	    	{
+	    		if (args.body) //We need to set the body before calling LoadFields();
+	    			msgCompFields.SetBody(args.body);
+
+				//Now we are ready to load all the fields (to, cc, subject, body, etc...)  depending of the type of the message
+				msgCompose.LoadFields();
+
+	    		if (args.to)
+	    			msgCompFields.SetTo(args.to);
+	    		if (args.cc)
+	    			msgCompFields.SetCc(args.cc);
+	    		if (args.bcc)
+	    			msgCompFields.SetBcc(args.bcc);
+	    		if (args.newsgroups)
+	    			msgCompFields.SetNewsgroups(args.newsgroups);
+	    		if (args.subject)
+	    			msgCompFields.SetSubject(args.subject);
+
 				CompFields2Recipients(msgCompFields);
 				var subjectValue = msgCompFields.GetSubject();
 				if (subjectValue != "")
@@ -220,9 +235,24 @@ function SaveAsTemplate()
 
 function SelectAddress() 
 {
+	var msgCompFields = msgCompose.compFields;
+	
+	Recipients2CompFields(msgCompFields);
+	
+	var toAddress = msgCompFields.GetTo();
+	var ccAddress = msgCompFields.GetCc();
+	var bccAddress = msgCompFields.GetBcc();
+	
+	dump("toAddress: " + toAddress + "\n");
 	var dialog = window.openDialog("chrome://addressbook/content/selectaddress.xul",
 								   "selectAddress",
-								   "chrome");
+								   "chrome",
+								   {composeWindow:top.window,
+								    msgCompFields:msgCompFields,
+								    toAddress:toAddress,
+								    ccAddress:ccAddress,
+								    bccAddress:bccAddress});
+	
 	return dialog;
 }
 
@@ -285,8 +315,9 @@ function FillRecipientTypeCombobox()
 	    	for (var j = 0; j < originalCombo.length; j ++)
 				combo.add(new Option(originalCombo.options[j].text,
 									 originalCombo.options[j].value), null);
-			MAX_RECIPIENTS ++;
+			MAX_RECIPIENTS++;
 		}
+		MAX_RECIPIENTS--;
 	}
 }
 
@@ -361,9 +392,14 @@ function CompFields2Recipients(msgCompFields)
 		if (fieldValue != "" && i <= MAX_RECIPIENTS)
 		{
 			document.getElementById("msgRecipient#" + i).value = fieldValue;
-			document.getElementById("msgRecipientType#" + i).value = "addr_newsgroup";
+			document.getElementById("msgRecipientType#" + i).value = "addr_newsgroups";
 			i ++;
+		}
+		
+		for (; i <= MAX_RECIPIENTS; i++) 
+		{ 
+			document.getElementById("msgRecipient#" + i).value = ""; 
+			document.getElementById("msgRecipientType#" + i).value = "addrTo"; 
 		}
 	}
 }
-

@@ -37,7 +37,7 @@ Rights Reserved.
 	<!ENTITY editButton.label	"Edit..."> 
 	<!ENTITY viewButton.label	".View"> 
 	<!ENTITY removeButton.label	"Remove"> 
-	<!ENTITY okButton.label		".OK"> 
+	<!ENTITY okButton.label		"OK"> 
 	<!ENTITY cancelButton.label	"Cancel"> 
 	<!ENTITY helpButton.label	".Help"> 
 
@@ -58,16 +58,19 @@ Rights Reserved.
         class="dialog"
         width="640" height="480"
         style="width:100%; height:100%; padding:0px"
+        onload="OnLoadSelectAddress()"
         align="vertical">
 
 <html:script language="JavaScript" src="chrome://addressbook/content/addressbook.js"/>
 <html:script language="JavaScript" src="chrome://addressbook/content/selectaddress.js"/>
 <html:script language="JavaScript" src="chrome://addressbook/content/resultPane.js"/>
+<html:script language="JavaScript" src="chrome://messengercompose/content/MsgComposeCommands.js"/>
+<!--
 <html:script language="JavaScript" src="resource://res/samples/DumpDOM.js"/>
-
+-->
 	<!-- Thin box across top, show names containing & stop, search buttons -->
-	<box align="horizontal" style="width:100%; padding:0.5em; padding-top:0px;">
-		<html:div style="vertical-align: middle;">
+	<box align="horizontal" style="width:100%; padding:0px; padding-top:2px; padding-bottom:2px">
+		<html:div flex="100%" style="vertical-align: middle;">
 			<html:label for="searchtext" tabindex="0">&search.label;</html:label>
 			<html:input type="text" id="searchtext" flex="100%"/>
 		</html:div>
@@ -75,7 +78,7 @@ Rights Reserved.
 		<spring style="width: 1em;"/>
 		
 		<titledbutton id="stop" value="&stopButton.label;" class="push" onclick="SelectAddressStopButton()"/>	
-		<spring style="width:10px"/>
+		<spring style="width:5px"/>
 		<titledbutton id="search" value="&searchButton.label;" class="push" onclick="SelectAddressSearchButton()"/>	
 	</box>
 

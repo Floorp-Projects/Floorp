@@ -116,8 +116,8 @@ Rights Reserved.
   
 
 <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js"/>
-<html:script language="JavaScript" src="MsgComposeCommands.js"/>
-<html:script language="JavaScript" src="addressAutoComplete.js"/>
+<html:script language="JavaScript" src="chrome://messengercompose/content/MsgComposeCommands.js"/>
+<html:script language="JavaScript" src="chrome://messengercompose/content/addressAutoComplete.js"/>
 
 <broadcaster id="args" value="editorType=default"/>
 
@@ -263,16 +263,43 @@ Rights Reserved.
 						<box align="vertical" flex="100%">
 							<html:select id="msgRecipientType#3" flex="100%"/>
 						</box>
+						<box align="vertical" flex="100%">
+							<html:select id="msgRecipientType#4" flex="100%"/>
+						</box>
+						<box align="vertical" flex="100%">
+							<html:select id="msgRecipientType#5" flex="100%"/>
+						</box>
 					</box>
 					<box align="vertical" flex="80%">
 						<box align="vertical" flex="100%">
-							<html:input type="text" id="msgRecipient#1" flex="100%" onkeyup="if (event.which == 13) { AutoCompleteAddress('msgRecipientType#1','msgRecipient#1'); }"/>
+							<html:input type="text" id="msgRecipient#1" flex="100%"
+										onkeyup="if (event.which == 13)
+										{ AutoCompleteAddress('msgRecipientType#1',
+															  'msgRecipient#1'); }"/>
 						</box>					
 						<box align="vertical" flex="100%">
-							<html:input type="text" id="msgRecipient#2" flex="100%" onkeyup="if (event.which == 13) { AutoCompleteAddress('msgRecipientType#2','msgRecipient#2'); }"/>
+							<html:input type="text" id="msgRecipient#2" flex="100%"
+										onkeyup="if (event.which == 13)
+										{ AutoCompleteAddress('msgRecipientType#2',
+															  'msgRecipient#2'); }"/>
 						</box>					
 						<box align="vertical" flex="100%">
-							<html:input type="text" id="msgRecipient#3" flex="100%" onkeyup="if (event.which == 13) { AutoCompleteAddress('msgRecipientType#3','msgRecipient#3'); }"/>
+							<html:input type="text" id="msgRecipient#3" flex="100%"
+										onkeyup="if (event.which == 13)
+										{ AutoCompleteAddress('msgRecipientType#3',
+															  'msgRecipient#3'); }"/>
+						</box>					
+						<box align="vertical" flex="100%">
+							<html:input type="text" id="msgRecipient#4" flex="100%"
+										onkeyup="if (event.which == 13)
+										{ AutoCompleteAddress('msgRecipientType#4',
+															  'msgRecipient#4'); }"/>
+						</box>					
+						<box align="vertical" flex="100%">
+							<html:input type="text" id="msgRecipient#5" flex="100%"
+										onkeyup="if (event.which == 13)
+										{ AutoCompleteAddress('msgRecipientType#5',
+															  'msgRecipient#5'); }"/>
 						</box>					
 					</box>					
 				</box>
