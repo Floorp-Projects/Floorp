@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  * Seth Spitzer <sspitzer@netscape.com>
+ * Shane Culpepper <pepper@netscape.com>
  */
 
 var remoteControlProgID	= "component://netscape/browser/remote-browser-control";
@@ -48,19 +49,63 @@ var browserRemoteControl = {
     saveAs: function(aURL)
     {
         dump("saveAs(" + aURL + ")\n");
-        return;
+        var saveAsDialog = Components.classes["component://xfer"].getService();
+        saveAsDialog = saveAsDialog.QueryInterface(Components.interfaces.nsIMsgComposeService);
+        if ( !saveAsDialog ) return(false);
+       
+        saveAsDialog.SelectFileAndTransferLocation(aURL, null); 
+        return(true);
     },
 
-    mailto: function(mailToList)
+    mailTo: function(mailToList)
     {
         dump("mailto(" + mailToList + ")\n");
-        return;
+        var msgComposeService = Components.classes["component://netscape/messengercompose"].getService();
+        msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
+        if ( !msgComposeService ) return(false);
+
+        if ( mailToList )
+        {
+            msgComposeService.OpenComposeWindowWithValues(null,
+                                                          Components.interfaces.nsIMsgCompType.New,
+                                                          Components.interfaces.nsIMsgCompFormat.Default,
+                                                          mailToList,
+                                                          null,
+                                                          null,
+                                                          null,
+                                                          null,
+                                                          null,
+                                                          null,
+                                                          null);
+        }
+        else
+        {
+            msgComposeService.OpenComposeWindow(null,
+                                                null,
+                                                Components.interfaces.nsIMsgCompType.New,
+                                                Components.interfaces.nsIMsgCompFormat.Default,
+                                                null);
+        }
+        return(true);
     },
 
     addBookmark: function(aURL, aTitle)
     {
         dump("addBookmark(" + aURL + "," + aTitle + ")\n");
-        return;
+        var bookmarkService = Components.classes["component://netscape/browser/bookmarks-service"].getService();
+        bookmarkService = bookmarkService.QueryInterface(Components.interfaces.nsIBookmarksService);
+        if ( !bookmarkService ) return(false);
+
+        if ( !aURL ) return(false);
+        if ( aTitle )
+        {
+            bookmarkService.AddBookmark(aURL, aTitle);
+        }
+        else
+        {
+            bookmarkService.AddBookmark(aURL, null);
+        }
+        return(true);
     }
 };
 
