@@ -3669,7 +3669,6 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 {
     JSTokenType tt;
     JSParseNode *pn, *pn2, *pn3;
-    char *badWord;
 #if JS_HAS_GETTER_SETTER
     JSAtom *atom;
     JSRuntime *rt;
@@ -4032,15 +4031,6 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
       case TOK_EXPORT:
       case TOK_IMPORT:
 #endif
-      case TOK_RESERVED:
-        badWord = js_DeflateString(cx, CURRENT_TOKEN(ts).ptr,
-                                   (size_t) CURRENT_TOKEN(ts).pos.end.index
-                                          - CURRENT_TOKEN(ts).pos.begin.index);
-        js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
-                                    JSMSG_RESERVED_ID, badWord);
-        JS_free(cx, badWord);
-        return NULL;
-
       case TOK_ERROR:
         /* The scanner or one of its subroutines reported the error. */
         return NULL;
