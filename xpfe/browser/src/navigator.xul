@@ -260,7 +260,9 @@
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="Startup()" title="&mainWindow.title;" titlemodifier="&mainWindow.titlemodifier;"> 
+        onload="Startup()"
+        onunload="if (appCore) appCore.close()"
+        title="&mainWindow.title;" titlemodifier="&mainWindow.titlemodifier;"> 
 
   <html:script language="javascript" src="navigator.js">
   </html:script>
