@@ -59,8 +59,11 @@ interface nsIAppShellService : nsISupports
    */
   void Run();
 
+
+// Exit the event loop
+  void Quit();
   /**
-   * Required exit routine.  Stops the event loop and cleanly shuts down
+   * Required exit routine.  Cleanly shuts down
    * the appshell components.
    */
   void Shutdown();
