@@ -65,11 +65,11 @@ sub SendSQL {
 
     $_current_sth = Bugzilla->dbh->prepare($str);
 
+    $_current_sth->execute;
+
     # This is really really ugly, but its what we get for not doing
     # error checking for 5 years. See bug 189446 and bug 192531
     $_current_sth->{RaiseError} = 0;
-
-    return $_current_sth->execute;
 }
 
 # Its much much better to use bound params instead of this
