@@ -123,6 +123,17 @@ function LoadPreviouslySelectedAB()
   ChangeDirectoryByURI(abPopup.selectedItem.id);
 }
 
+function AddressBookMenuListChange()
+{
+  if (gSearchInput.value && !gSearchInput.showingSearchCriteria) 
+    onEnterInSearchBar();
+  else 
+  {
+    var abPopup = document.getElementById('addressbookList');
+    ChangeDirectoryByURI(abPopup.selectedItem.id);
+  }
+}
+
 function AbPanelLoad() 
 {
   InitCommonJS();
