@@ -764,7 +764,6 @@ Contributor(s): ______________________________________. -->
                        tooltiptext="&stopButton.tooltip;"/>
         <toolbarbutton id="home-button" class="toolbarbutton-1"
                        label="&homeButton.label;" persist="hidden"
-                       ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver);"
                        ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
                        ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
                        ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
