@@ -493,13 +493,13 @@ nsHTMLSelectElement::SetLength(PRUint32 aLength)
 
     nsCOMPtr<nsIDOMNode> node(do_QueryInterface(element));
 
-    for (i = curlen; i < aLength; i++) {
+    for (i = curlen; i < (PRInt32)aLength; i++) {
       nsCOMPtr<nsIDOMNode> tmpNode;
 
       rv = AppendChild(node, getter_AddRefs(tmpNode));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      if (i < (aLength - 1)) {
+      if (i < ((PRInt32)aLength - 1)) {
         nsCOMPtr<nsIDOMNode> newNode;
         rv = node->CloneNode(PR_TRUE, getter_AddRefs(newNode));
         NS_ENSURE_SUCCESS(rv, rv);
