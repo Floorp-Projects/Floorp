@@ -1965,6 +1965,7 @@ void nsWindow::Notify(nsITimer* aTimer)
     //printf("********\n****** got an expose for 0x0 window?? - ignoring paint for 0x0\n");
     NS_RELEASE(aTimer);
     mExposeTimer = nsnull;
+    delete event.rect;
     return;
   }
 
@@ -2023,6 +2024,8 @@ void nsWindow::Notify(nsITimer* aTimer)
 
   NS_RELEASE(aTimer);
   mExposeTimer = nsnull;
+
+  delete event.rect;
 }
 
 
