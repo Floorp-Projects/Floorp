@@ -346,6 +346,27 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
     // bugs. 
     dir.append(defaultString);
     file = dir;
+    
+    // Since we're automatically downloading, we don't get the file picker's 
+    // logic to check for existing files, so we need to do that here.
+    //
+    // Note - this code is identical to that in 
+    //   browser/components/downloads/content/nsHelperAppDlg.js. 
+    // If you are updating this code, update that code too! We can't share code
+    // here since that code is called in a js component. 
+    while (file.exists()) {
+      var parts = /.+-(\d+)(\..*)?$/.exec(file.leafName);
+      if (parts) {
+        file.leafName = file.leafName.replace(/((\d+)\.)/, 
+                                              function (str, p1, part, s) { 
+                                                return (parseInt(part) + 1) + "."; 
+                                              });
+      }
+      else {
+        file.leafName = file.leafName.replace(/\./, "-1$&");
+      }
+    }
+    
   }
 
   if (isDocument) 
