@@ -49,6 +49,7 @@ XPIDLSRCS =					\
 	nsIDOMWindowCollection.idl		\
 	nsIDOMWindowInternal.idl		\
 	nsIDOMJSWindow.idl			\
+	nsIDOMChromeWindow.idl			\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
