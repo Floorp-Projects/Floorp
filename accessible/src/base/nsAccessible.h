@@ -119,7 +119,7 @@ public:
   static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
 
 protected:
-  PRUint32 MappedAttrState(nsIContent *aContent, nsStateMapEntry *aStateMapEntry);
+  PRUint32 MappedAttrState(nsIContent *aContent, PRUint32 aStartState,nsStateMapEntry *aStateMapEntry);
   virtual nsIFrame* GetBoundsFrame();
   virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
   PRBool IsPartiallyVisible(PRBool *aIsOffscreen); 
