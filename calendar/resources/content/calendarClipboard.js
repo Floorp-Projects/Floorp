@@ -129,7 +129,7 @@ function cutToClipboard( /* calendarEventArray */)
 
    if( copyToClipboard( calendarEventArray ) )
    {
-      unifinderDeleteCommand( true ); // deletes all selected events without prompting.
+      deleteEventCommand( true ); // deletes all selected events without prompting.
    }
 }
 
