@@ -92,7 +92,7 @@ NS_IMETHODIMP nsNewsDownloader::OnStartRunningUrl(nsIURI* url)
 NS_IMETHODIMP nsNewsDownloader::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
 {
   nsresult rv = exitCode;
-  if (NS_SUCCEEDED(exitCode))
+  if (NS_SUCCEEDED(exitCode) || exitCode == NS_MSG_NEWS_ARTICLE_NOT_FOUND)
     rv = DownloadNext(PR_FALSE);
 
   return rv;
@@ -367,7 +367,7 @@ NS_IMETHODIMP
 nsMsgDownloadAllNewsgroups::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
 {
   nsresult rv = exitCode;
-  if (NS_SUCCEEDED(exitCode))
+  if (NS_SUCCEEDED(exitCode) || exitCode == NS_MSG_NEWS_ARTICLE_NOT_FOUND)
     rv = ProcessNextGroup();
   else if (m_listener)  // notify main observer.
     m_listener->OnStopRunningUrl(url, exitCode);
@@ -379,10 +379,14 @@ nsMsgDownloadAllNewsgroups::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
 // might have folders to download for offline use. If no more servers,
 // m_currentServer will be left at nsnull.
 // Also, sets up m_serverEnumerator to enumerate over the server
-nsresult nsMsgDownloadAllNewsgroups::AdvanceToNextServer()
+// If no servers found, m_serverEnumerator will be left at null,
+nsresult nsMsgDownloadAllNewsgroups::AdvanceToNextServer(PRBool *done)
 {
   nsresult rv;
 
+  NS_ENSURE_ARG(done);
+
+  *done = PR_TRUE;
   if (!m_allServers)
   {
     NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
@@ -407,7 +411,7 @@ nsresult nsMsgDownloadAllNewsgroups::AdvanceToNextServer()
     nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(serverSupports);
     NS_RELEASE(serverSupports);
     nsCOMPtr <nsINntpIncomingServer> newsServer = do_QueryInterface(server);
-    if (!newsServer) // news servers aren't involved in offline imap
+    if (!newsServer) // we're only looking for news servers
       continue;
     if (server)
     {
@@ -423,7 +427,10 @@ nsresult nsMsgDownloadAllNewsgroups::AdvanceToNextServer()
         {
           rv = m_serverEnumerator->First();
           if (NS_SUCCEEDED(rv))
+          {
+            *done = PR_FALSE;
             break;
+          }
         }
       }
     }
@@ -431,9 +438,11 @@ nsresult nsMsgDownloadAllNewsgroups::AdvanceToNextServer()
   return rv;
 }
 
-nsresult nsMsgDownloadAllNewsgroups::AdvanceToNextGroup()
+nsresult nsMsgDownloadAllNewsgroups::AdvanceToNextGroup(PRBool *done)
 {
   nsresult rv;
+  NS_ENSURE_ARG(done);
+  *done = PR_TRUE;
 
   if (m_currentFolder)
   {
@@ -444,18 +453,21 @@ nsresult nsMsgDownloadAllNewsgroups::AdvanceToNextGroup()
     m_currentFolder = nsnull;
   }
 
+  *done = PR_FALSE;
+
   if (!m_currentServer)
-     rv = AdvanceToNextServer();
+     rv = AdvanceToNextServer(done);
   else
     rv = m_serverEnumerator->Next();
   if (!NS_SUCCEEDED(rv))
-    rv = AdvanceToNextServer();
+    rv = AdvanceToNextServer(done);
 
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv) && !*done && m_serverEnumerator)
   {
     nsCOMPtr <nsISupports> supports;
     rv = m_serverEnumerator->CurrentItem(getter_AddRefs(supports));
     m_currentFolder = do_QueryInterface(supports);
+    *done = PR_FALSE;
   }
   return rv;
 }
@@ -478,10 +490,11 @@ nsresult DownloadMatchingNewsArticlesToNewsDB::RunSearch(nsIMsgFolder *folder, n
 nsresult nsMsgDownloadAllNewsgroups::ProcessNextGroup()
 {
   nsresult rv = NS_OK;
+  PRBool done = PR_FALSE;
 
-  while (NS_SUCCEEDED(rv))
+  while (NS_SUCCEEDED(rv) && !done)
   {
-    rv = AdvanceToNextGroup(); 
+    rv = AdvanceToNextGroup(&done); 
     if (m_currentFolder)
     {
       PRUint32 folderFlags;
@@ -490,7 +503,7 @@ nsresult nsMsgDownloadAllNewsgroups::ProcessNextGroup()
         break;
     }
   }
-  if (!NS_SUCCEEDED(rv))
+  if (!NS_SUCCEEDED(rv) || done)
   {
     if (m_listener)
       return m_listener->OnStopRunningUrl(nsnull, NS_OK);

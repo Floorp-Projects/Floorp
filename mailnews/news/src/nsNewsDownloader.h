@@ -118,8 +118,8 @@ public:
   nsresult ProcessNextGroup();
 
 protected:
-  nsresult AdvanceToNextServer();
-  nsresult AdvanceToNextGroup();
+  nsresult AdvanceToNextServer(PRBool *done);
+  nsresult AdvanceToNextGroup(PRBool *done);
 
   DownloadMatchingNewsArticlesToNewsDB *m_downloaderForGroup;
 

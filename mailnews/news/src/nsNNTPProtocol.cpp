@@ -2214,7 +2214,11 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
         else
           m_nextState = NNTP_ERROR;
 
-        if (NS_SUCCEEDED(rv) && group_name) {
+        PRBool savingArticleOffline = PR_FALSE;
+        if (m_newsFolder)
+          m_newsFolder->GetSaveArticleOffline(&savingArticleOffline);
+
+        if (NS_SUCCEEDED(rv) && group_name && !savingArticleOffline) {
             nsXPIDLString titleStr;
 			rv = GetNewsStringByName("htmlNewsErrorTitle", getter_Copies(titleStr));
             NS_ENSURE_SUCCESS(rv,rv);
@@ -5242,8 +5246,11 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 				m_nextState = NEWS_FREE;
 				break;
 	        case NEWS_ERROR:
-				NNTP_LOG_NOTE("NEWS_ERROR");
-				mailnewsurl->SetUrlState(PR_FALSE, NS_ERROR_FAILURE);
+				NNTP_LOG_NOTE("NEWS_ERROR"); 
+        if (m_responseCode == MK_NNTP_RESPONSE_ARTICLE_NOTFOUND || m_responseCode == MK_NNTP_RESPONSE_ARTICLE_NONEXIST)
+				  mailnewsurl->SetUrlState(PR_FALSE, NS_MSG_NEWS_ARTICLE_NOT_FOUND);
+        else
+          mailnewsurl->SetUrlState(PR_FALSE, NS_ERROR_FAILURE);
 				m_nextState = NEWS_FREE;
 	            break;
 	        case NNTP_ERROR:
