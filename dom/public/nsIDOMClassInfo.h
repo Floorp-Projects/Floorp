@@ -248,6 +248,7 @@ enum nsDOMClassInfoID {
 
   // SVG element classes
   eDOMClassInfo_SVGCircleElement_id,
+  eDOMClassInfo_SVGClipPathElement_id,
   eDOMClassInfo_SVGDefsElement_id,
   eDOMClassInfo_SVGDescElement_id,
   eDOMClassInfo_SVGEllipseElement_id,

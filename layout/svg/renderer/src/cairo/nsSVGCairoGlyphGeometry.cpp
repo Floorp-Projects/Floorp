@@ -173,8 +173,17 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
 
   cairo_font_t *font = metrics->GetFont();
 
-  /* save/pop the state so we don't screw up the xform */
-  cairo_save(ctx);
+  PRUint16 renderMode;
+  cairo_matrix_t *matrix;
+  canvas->GetRenderMode(&renderMode);
+  if (renderMode == nsISVGRendererCanvas::SVG_RENDER_MODE_NORMAL) {
+    /* save/pop the state so we don't screw up the xform */
+    cairo_save(ctx);
+  }
+  else {
+    matrix = cairo_matrix_create();
+    cairo_current_matrix(ctx, matrix);
+  }
 
   cairo_set_font(ctx, font);
 
@@ -184,6 +193,24 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
   mSource->GetX(&x);
   mSource->GetY(&y);
   cairo_move_to(ctx, x, y);
+
+  if (renderMode != nsISVGRendererCanvas::SVG_RENDER_MODE_NORMAL) {
+    PRUint16 rule;
+    mSource->GetClipRule(&rule);
+    if (rule == nsISVGGeometrySource::FILL_RULE_EVENODD)
+      cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_EVEN_ODD);
+    else
+      cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_WINDING);
+
+    nsAutoString text;
+    mSource->GetCharacterData(text);
+    cairo_text_path(ctx, (unsigned char*)NS_ConvertUCS2toUTF8(text).get());
+
+    cairo_set_matrix(ctx, matrix);
+    cairo_matrix_destroy(matrix);
+
+    return NS_OK;
+  }
 
   PRBool hasFill = PR_FALSE;
   PRUint16 filltype;

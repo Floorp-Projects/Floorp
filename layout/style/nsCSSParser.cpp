@@ -4232,6 +4232,11 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_box_ordinal_group:
     return ParseVariant(aErrorCode, aValue, VARIANT_INTEGER, nsnull);
 #ifdef MOZ_SVG
+  case eCSSProperty_clip_path:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HUO, nsnull);
+  case eCSSProperty_clip_rule:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HK,
+                        nsCSSProps::kFillRuleKTable);
   case eCSSProperty_dominant_baseline:
     return ParseVariant(aErrorCode, aValue, VARIANT_AHK,
                         nsCSSProps::kDominantBaselineKTable);

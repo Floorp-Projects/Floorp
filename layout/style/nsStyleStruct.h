@@ -1251,24 +1251,27 @@ struct nsStyleSVG : public nsStyleStruct {
 #endif
 
   nsStyleSVGPaint  mFill;             // [inherited]
-  float            mFillOpacity;      // [inherited]
-  PRUint8          mFillRule;         // [inherited] see nsStyleConsts.h
+  nsStyleSVGPaint  mStopColor;        // [inherited]
+  nsStyleSVGPaint  mStroke;           // [inherited]
   nsCOMPtr<nsIURI> mMarkerEnd;        // [inherited]
   nsCOMPtr<nsIURI> mMarkerMid;        // [inherited]
   nsCOMPtr<nsIURI> mMarkerStart;      // [inherited]
-  PRUint8          mPointerEvents;    // [inherited] see nsStyleConsts.h
-  PRUint8          mShapeRendering;   // [inherited] see nsStyleConsts.h
-  nsStyleSVGPaint  mStopColor;        // [inherited]
-  float            mStopOpacity;      // [inherited]
-  nsStyleSVGPaint  mStroke;           // [inherited]
   float           *mStrokeDasharray;  // [inherited]
-  PRUint32         mStrokeDasharrayLength;
+
+  float            mFillOpacity;      // [inherited]
+  float            mStopOpacity;      // [inherited]
   float            mStrokeDashoffset; // [inherited]
-  PRUint8          mStrokeLinecap;    // [inherited] see nsStyleConsts.h
-  PRUint8          mStrokeLinejoin;   // [inherited] see nsStyleConsts.h
   float            mStrokeMiterlimit; // [inherited]
   float            mStrokeOpacity;    // [inherited]
   float            mStrokeWidth;      // [inherited] in pixels
+
+  PRUint32         mStrokeDasharrayLength;
+  PRUint8          mClipRule;         // [inherited]
+  PRUint8          mFillRule;         // [inherited] see nsStyleConsts.h
+  PRUint8          mPointerEvents;    // [inherited] see nsStyleConsts.h
+  PRUint8          mShapeRendering;   // [inherited] see nsStyleConsts.h
+  PRUint8          mStrokeLinecap;    // [inherited] see nsStyleConsts.h
+  PRUint8          mStrokeLinejoin;   // [inherited] see nsStyleConsts.h
   PRUint8          mTextAnchor;       // [inherited] see nsStyleConsts.h
   PRUint8          mTextRendering;    // [inherited] see nsStyleConsts.h
 };
@@ -1293,6 +1296,7 @@ struct nsStyleSVGReset : public nsStyleStruct {
   static nsChangeHint MaxDifference();
 #endif
 
+  nsCOMPtr<nsIURI> mClipPath;         // [reset]
   PRUint8          mDominantBaseline; // [reset] see nsStyleConsts.h
 };
 #endif

@@ -58,6 +58,7 @@
 #include "nsTextFragment.h"
 #include "nsSVGRect.h"
 #include "nsSVGPoint.h"
+#include "nsSVGAtoms.h"
 
 typedef nsFrame nsSVGGlyphFrameBase;
 
@@ -620,6 +621,14 @@ nsSVGGlyphFrame::GetFillRule(PRUint16 *aFillRule)
   return NS_OK;
 }
 
+/* readonly attribute unsigned short clipRule; */
+NS_IMETHODIMP
+nsSVGGlyphFrame::GetClipRule(PRUint16 *aClipRule)
+{
+  *aClipRule = GetStyleSVG()->mClipRule;
+  return NS_OK;
+}
+
 /* readonly attribute unsigned short strokePaintType; */
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetStrokePaintType(PRUint16 *aStrokePaintType)
@@ -676,7 +685,25 @@ nsSVGGlyphFrame::GetFillGradient(nsISVGGradient **aGrad)
   return NS_GetSVGGradient(aGrad, aServer, mContent, nsSVGGlyphFrameBase::GetPresContext()->PresShell());
 }
 
-/* readonly attribute unsigned short fillPaintType; */
+
+/* [noscript] boolean isClipChild; */
+NS_IMETHODIMP
+nsSVGGlyphFrame::IsClipChild(PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  nsCOMPtr<nsIContent> node(mContent);
+
+  do {
+    if (node->Tag() == nsSVGAtoms::clipPath) {
+      *_retval = PR_TRUE;
+      break;
+    }
+    node = node->GetParent();
+  } while (node);
+    
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------
 // nsISVGGlyphMetricsSource methods:
 

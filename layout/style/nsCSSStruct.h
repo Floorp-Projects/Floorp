@@ -574,6 +574,8 @@ struct nsCSSSVG : public nsCSSStruct {
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
+  nsCSSValue mClipPath;
+  nsCSSValue mClipRule;
   nsCSSValue mDominantBaseline;
   nsCSSValue mFill;
   nsCSSValue mFillOpacity;

@@ -14,17 +14,15 @@
  *
  * The Original Code is the Mozilla SVG project.
  *
- * The Initial Developer of the Original Code is
- * Crocodile Clips Ltd..
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,47 +34,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_ISVGGDIPLUS_CANVAS_H__
-#define __NS_ISVGGDIPLUS_CANVAS_H__
+#include "nsSVGDefsFrame.h"
 
-#include <windows.h>
+#define NS_SVGCLIPPATHFRAME_CID \
+{0xb497bbe2, 0x4434, 0x4d96, {0x9c, 0xe8, 0xf2, 0xad, 0xd1, 0x1f, 0x1d, 0x26}}
 
-// unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
-#include <unknwn.h>
+typedef nsSVGDefsFrame nsSVGClipPathFrameBase;
 
-#include <Gdiplus.h>
-using namespace Gdiplus;
-
-#include "nsISVGRendererCanvas.h"
-
-// {c4cd849e-a0aa-405b-bc75-ba8982319fe4}
-#define NS_ISVGGDIPLUSCANVAS_IID \
-{ 0xc4cd849e, 0xa0aa, 0x405b, { 0xbc, 0x75, 0xba, 0x89, 0x82, 0x31, 0x9f, 0xe4} }
-
-/**
- * \addtogroup gdiplus_renderer GDI+ Rendering Engine
- * @{
- */
-
-/**
- * 'Private' rendering engine interface
- */
-class nsISVGGDIPlusCanvas : public nsISVGRendererCanvas
+class nsSVGClipPathFrame : public nsSVGClipPathFrameBase
 {
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGGDIPLUSCANVAS_IID)
+  friend nsresult
+  NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 
-  /**
-   * Obtain the Gdiplus::Graphics object for this canvas.
-   */
-  NS_IMETHOD_(Graphics*) GetGraphics()=0;
+  virtual ~nsSVGClipPathFrame();
+  virtual nsresult Init();
 
-  /**
-   * Obtain the GdiPlus::Region clip path.
-   */
-  NS_IMETHOD_(Region*) GetClipRegion()=0;
+ public:
+  NS_DECL_ISUPPORTS
+
+  NS_DEFINE_STATIC_CID_ACCESSOR(NS_SVGCLIPPATHFRAME_CID)
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_SVGCLIPPATHFRAME_CID)
+
+  NS_IMETHOD ClipPaint(nsISVGRendererCanvas* canvas,
+                       nsISVGChildFrame* aParent,
+                       nsCOMPtr<nsIDOMSVGMatrix> aMatrix);
+
+  NS_IMETHOD ClipHitTest(nsISVGChildFrame* aParent,
+                         nsCOMPtr<nsIDOMSVGMatrix> aMatrix,
+                         float aX, float aY, PRBool *aHit);
+
+ private:
+  nsISVGChildFrame *mClipParent;
+  nsCOMPtr<nsIDOMSVGMatrix> mClipParentMatrix;
+
+  // nsISVGContainerFrame interface:
+  already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
 };
 
-/** @} */
-
-#endif //__NS_ISVGGDIPLUS_CANVAS_H__
+nsresult
+NS_GetSVGClipPathFrame(nsSVGClipPathFrame **aResult, nsIURI *aURI, nsIContent *aContent);

@@ -93,6 +93,8 @@ nsresult
 NS_NewSVGMarkerElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGTitleElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGClipPathElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
 NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
@@ -149,6 +151,8 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     return NS_NewSVGMarkerElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::title)
     return NS_NewSVGTitleElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::clipPath)
+    return NS_NewSVGClipPathElement(aResult, aNodeInfo);
 
   // if we don't know what to create, just create a standard xml element:
   return NS_NewXMLElement(aResult, aNodeInfo);

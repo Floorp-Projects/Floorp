@@ -108,6 +108,13 @@ interface nsISVGRendererCanvas : nsISupports
   void flush();
 
   /**
+   * Set render mode (clipping or normal draw)
+   */
+  const unsigned short SVG_RENDER_MODE_NORMAL = 0;
+  const unsigned short SVG_RENDER_MODE_CLIP = 1;
+  attribute unsigned short renderMode;
+
+  /**
    * Push/Pop clip path.
    */
   void pushClip();

@@ -262,10 +262,35 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
 
   cairo_t *ctx = cairoCanvas->GetContext();
 
-  /* save/pop the state so we don't screw up the xform */
-  cairo_save(ctx);
+  PRUint16 renderMode;
+  canvas->GetRenderMode(&renderMode);
+  cairo_matrix_t *matrix;
+
+  if (renderMode == nsISVGRendererCanvas::SVG_RENDER_MODE_NORMAL) {
+    cairo_new_path(ctx);
+
+    /* save/pop the state so we don't screw up the xform */
+    cairo_save(ctx);
+  } else {
+    matrix = cairo_matrix_create();
+    cairo_current_matrix(ctx, matrix);
+  }
 
   GeneratePath(ctx);
+
+  if (renderMode != nsISVGRendererCanvas::SVG_RENDER_MODE_NORMAL) {
+    PRUint16 rule;
+    mSource->GetClipRule(&rule);
+    if (rule == nsISVGGeometrySource::FILL_RULE_EVENODD)
+      cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_EVEN_ODD);
+    else
+      cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_WINDING);
+
+    cairo_set_matrix(ctx, matrix);
+    cairo_matrix_destroy(matrix);
+
+    return NS_OK;
+  }
 
   PRUint16 strokeType, fillType;
 
@@ -449,6 +474,17 @@ nsSVGCairoPathGeometry::ContainsPoint(float x, float y, PRBool *_retval)
 
   GeneratePath(ctx);
   cairo_default_matrix(ctx);
+
+  PRBool isClip;
+  mSource->IsClipChild(&isClip);
+  if (isClip) {
+    PRUint16 rule;
+    mSource->GetClipRule(&rule);
+    if (rule == nsISVGGeometrySource::FILL_RULE_EVENODD)
+      cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_EVEN_ODD);
+    else
+      cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_WINDING);
+  }
 
   PRUint16 mask = 0;
   mSource->GetHittestMask(&mask);

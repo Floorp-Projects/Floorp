@@ -1204,7 +1204,9 @@ nsCSSSVG::nsCSSSVG(void) : mStrokeDasharray(nsnull)
 }
 
 nsCSSSVG::nsCSSSVG(const nsCSSSVG& aCopy)
-    : mDominantBaseline(aCopy.mDominantBaseline),
+    : mClipPath(aCopy.mClipPath),
+      mClipRule(aCopy.mClipRule),
+      mDominantBaseline(aCopy.mDominantBaseline),
       mFill(aCopy.mFill),
       mFillOpacity(aCopy.mFillOpacity),
       mFillRule(aCopy.mFillRule),
@@ -1243,6 +1245,8 @@ void nsCSSSVG::List(FILE* out, PRInt32 aIndent) const
 
   nsAutoString buffer;
 
+  mClipPath.AppendToString(buffer, eCSSProperty_clip_path);
+  mClipRule.AppendToString(buffer, eCSSProperty_clip_rule);
   mDominantBaseline.AppendToString(buffer, eCSSProperty_dominant_baseline);
   mFill.AppendToString(buffer, eCSSProperty_fill);
   mFillOpacity.AppendToString(buffer, eCSSProperty_fill_opacity);

@@ -52,6 +52,7 @@
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
 #include "imgIRequest.h"
+#include "nsSVGClipPathFrame.h"
 
 #define NS_GET_BIT(rowptr, x) (rowptr[(x)>>3] &  (1<<(7-(x)&0x7)))
 
@@ -284,6 +285,9 @@ NS_IMETHODIMP nsSVGImageFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuil
 NS_IMETHODIMP
 nsSVGImageFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
 {
+  if (!GetStyleVisibility()->IsVisible())
+    return NS_OK;
+
   if (mSurfaceInvalid) {
     nsCOMPtr<imgIRequest> currentRequest;
     nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
@@ -304,6 +308,21 @@ nsSVGImageFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwip
       mSurfaceInvalid = PR_FALSE;
     } else {
       return NS_OK;
+    }
+  }
+
+  /* check for a clip path */
+  nsIURI *aURI;
+  nsSVGClipPathFrame *clip = NULL;
+  aURI = GetStyleSVGReset()->mClipPath;
+  if (aURI) {
+    NS_GetSVGClipPathFrame(&clip, aURI, mContent);
+
+    if (clip) {
+      nsCOMPtr<nsIDOMSVGMatrix> matrix;
+      GetCanvasTM(getter_AddRefs(matrix));
+      canvas->PushClip();
+      clip->ClipPaint(canvas, this, matrix);
     }
   }
 
@@ -401,6 +420,9 @@ nsSVGImageFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwip
                                    fini,
                                    mStyleContext->GetStyleDisplay()->mOpacity);
   }
+
+  if (clip)
+    canvas->PopClip();
 
   return NS_OK;
 }

@@ -44,6 +44,8 @@
 #include "nsISVGRendererCanvas.h"
 #include "nsIFrame.h"
 #include "nsSVGMatrix.h"
+#include "nsSVGClipPathFrame.h"
+#include "nsISVGRendererCanvas.h"
 #include <math.h>
 
 //----------------------------------------------------------------------
@@ -83,6 +85,19 @@ nsSVGGFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
   if (display->mOpacity == 0.0)
     return NS_OK;
 
+  nsIURI *aURI;
+  nsSVGClipPathFrame *clip = NULL;
+  aURI = GetStyleSVGReset()->mClipPath;
+  if (aURI) {
+    NS_GetSVGClipPathFrame(&clip, aURI, mContent);
+
+    if (clip) {
+      nsCOMPtr<nsIDOMSVGMatrix> matrix = GetCanvasTM();
+      canvas->PushClip();
+      clip->ClipPaint(canvas, this, matrix);
+    }
+  }
+
   if (display->mOpacity != 1.0) {
     nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
     if (outerSVGFrame) {
@@ -119,6 +134,9 @@ nsSVGGFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
     canvas->PopSurface();
     canvas->CompositeSurface(surface, 0, 0, display->mOpacity);
   }
+
+  if (clip)
+    canvas->PopClip();
 
   return NS_OK;
 }
