@@ -295,7 +295,7 @@ function ValidateData()
 
 function doHelpButton()
 {
-  openHelp("chrome://help/content/help.xul?link_properties");
+  openHelp("link_properties");
   return true;
 }
 

@@ -554,9 +554,9 @@ function ShowErrorInPanel(panelId, errorMsgId, widgetWithError)
 function doHelpButton()
 {
   if (gCurrentPanel == gPublishPanel)
-    openHelp("chrome://help/content/help.xul?publish_tab");
+    openHelp("publish_tab");
   else
-    openHelp("chrome://help/content/help.xul?settings_tab");
+    openHelp("settings_tab");
 }
 
 function onAccept()
