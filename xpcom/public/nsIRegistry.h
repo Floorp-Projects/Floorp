@@ -20,6 +20,17 @@
 
 #include "nsISupports.h"
 
+// {5D41A440-8E37-11d2-8059-00600811A9C3}
+#define NS_IREGISTRY_IID { 0x5d41a440, 0x8e37, 0x11d2, { 0x80, 0x59, 0x0, 0x60, 0x8, 0x11, 0xa9, 0xc3 } }
+#define NS_REGISTRY_PROGID "component://netscape/registry"
+#define NS_REGISTRY_CLASSNAME "Mozilla Registry"
+
+// {D1B54831-AC07-11d2-805E-00600811A9C3}
+#define NS_IREGISTRYNODE_IID { 0xd1b54831, 0xac07, 0x11d2, { 0x80, 0x5e, 0x0, 0x60, 0x8, 0x11, 0xa9, 0xc3 } }
+// {5316C380-B2F8-11d2-A374-0080C6F80E4B}
+#define NS_IREGISTRYVALUE_IID { 0x5316c380, 0xb2f8, 0x11d2, { 0xa3, 0x74, 0x0, 0x80, 0xc6, 0xf8, 0xe, 0x4b } }
+
+
 class nsIEnumerator;
 
 /*-------------------------------- nsIRegistry ---------------------------------
@@ -128,6 +139,8 @@ struct nsIRegistry : public nsISupports {
         DataType type;
         uint32   length;
     };
+
+  static const nsIID& GetIID() { static nsIID iid = NS_IREGISTRY_IID; return iid; }
 
     /*--------------------------- Opening/Closing ------------------------------
     | These functions open the specified registry file (Open() with a non-null |
@@ -315,12 +328,5 @@ struct nsIRegistryValue : public nsISupports {
 #define NS_ERROR_REG_NO_PATH          NS_ERROR_GENERATE_FAILURE( NS_ERROR_MODULE_REG, 7 )
 #define NS_ERROR_REG_READ_ONLY        NS_ERROR_GENERATE_FAILURE( NS_ERROR_MODULE_REG, 8 )
 #define NS_ERROR_REG_BAD_UTF8         NS_ERROR_GENERATE_FAILURE( NS_ERROR_MODULE_REG, 9 )
-
-// {5D41A440-8E37-11d2-8059-00600811A9C3}
-#define NS_IREGISTRY_IID { 0x5d41a440, 0x8e37, 0x11d2, { 0x80, 0x59, 0x0, 0x60, 0x8, 0x11, 0xa9, 0xc3 } }
-// {D1B54831-AC07-11d2-805E-00600811A9C3}
-#define NS_IREGISTRYNODE_IID { 0xd1b54831, 0xac07, 0x11d2, { 0x80, 0x5e, 0x0, 0x60, 0x8, 0x11, 0xa9, 0xc3 } }
-// {5316C380-B2F8-11d2-A374-0080C6F80E4B}
-#define NS_IREGISTRYVALUE_IID { 0x5316c380, 0xb2f8, 0x11d2, { 0xa3, 0x74, 0x0, 0x80, 0xc6, 0xf8, 0xe, 0x4b } }
 
 #endif
