@@ -466,12 +466,6 @@ BodyFixupRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresCont
   const nsStyleColor* styleColor;
   styleColor = (const nsStyleColor*)aContext->GetStyleData(eStyleStruct_Color);
 
-  // Fixup default presentation colors (NAV QUIRK)
-  if (nsnull != styleColor) {
-    aPresContext->SetDefaultColor(styleColor->mColor);
-    aPresContext->SetDefaultBackgroundColor(styleColor->mBackgroundColor);
-  }
-  
   // Use the CSS precedence rules for dealing with BODY background: if the value
   // of the 'background' property for the HTML element is different from
   // 'transparent' then use it, else use the value of the 'background' property
@@ -510,6 +504,29 @@ BodyFixupRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresCont
     }
     NS_RELEASE(parentContext);
   }
+
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  if (presShell) {
+    nsCOMPtr<nsIDocument> doc;
+    presShell->GetDocument(getter_AddRefs(doc));
+    if (doc) {
+      nsIHTMLContentContainer*  htmlContainer;
+      if (NS_OK == doc->QueryInterface(kIHTMLContentContainerIID,
+                                       (void**)&htmlContainer)) {
+        nsIHTMLStyleSheet* styleSheet;
+        if (NS_OK == htmlContainer->GetAttributeStyleSheet(&styleSheet)) {
+          styleSheet->SetDocumentForegroundColor(styleColor->mColor);
+          if (!(styleColor->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
+            styleSheet->SetDocumentBackgroundColor(styleColor->mBackgroundColor);
+          }
+          NS_RELEASE(styleSheet);
+        }
+        NS_RELEASE(htmlContainer);
+      }
+    }
+  }
+
 
 
   return NS_OK;

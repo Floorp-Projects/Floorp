@@ -693,6 +693,10 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
         nsCompatibility mode;
         aPresContext->GetCompatibilityMode(&mode);
         if (eCompatibility_NavQuirks == mode) {
+          if (mDocumentColorRule) {
+            aResults->AppendElement(mDocumentColorRule);
+            matchCount++;
+          }
           aResults->AppendElement(mTableBackgroundRule);
           matchCount++;
         }
