@@ -46,6 +46,7 @@ REQUIRES	= xpcom \
 		  xuldoc \
 		  xultmpl \
 		  webshell \
+		  view \
 		  $(NULL)
 
 CPPSRCS		= \
