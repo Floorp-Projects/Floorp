@@ -40,6 +40,12 @@
 [ptr] native nsAString(nsAString);
 [ptr] native nsACString(nsACString);
 
+/**
+ * nsIStringService - A factory for nsAString and nsACString objects.
+ *
+ * UNDER_REVIEW
+ */
+
 [uuid(1e66d70c-d649-441b-ac90-bf6429ead7da)]
 interface nsIStringService : nsISupports 
 {
