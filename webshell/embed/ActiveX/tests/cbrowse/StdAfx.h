@@ -19,7 +19,17 @@
 #include <afxcmn.h>			// MFC support for Windows Common Controls
 #endif // _AFX_NO_AFXCMN_SUPPORT
 
+// ATL headers
+#include <atlbase.h>
+//You may derive a class from CComModule and use it if you want to override
+//something, but do not change the name of _Module
+extern CComModule _Module;
+#include <atlcom.h>
+#include <atlctl.h>
+
 #include <exdisp.h>
+
+#include "..\..\ControlSite.h"
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Developer Studio will insert additional declarations immediately before the previous line.

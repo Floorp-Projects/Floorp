@@ -4,3 +4,6 @@
 
 #include "stdafx.h"
 
+#include <atlimpl.cpp>
+#include <atlctl.cpp>
+#include <atlwin.cpp>

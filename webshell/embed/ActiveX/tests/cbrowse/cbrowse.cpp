@@ -11,6 +11,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+CComModule _Module;
+
 /////////////////////////////////////////////////////////////////////////////
 // CBrowseApp
 
@@ -41,6 +43,11 @@ CBrowseApp theApp;
 
 BOOL CBrowseApp::InitInstance()
 {
+	// Initialize OLE libraries
+	if (!AfxOleInit())
+	{
+		return FALSE;
+	}
 	AfxEnableControlContainer();
 
 	// Standard initialization
