@@ -71,7 +71,7 @@
 <!ENTITY newevent.location.label     "Ort" >
 <!ENTITY newevent.start.label        "Beginn" >
 <!ENTITY newevent.date.label         "Datum" >
-<!ENTITY newevent.startdate.label    "Beginn" >
+<!ENTITY newevent.startdate.label    "Begin" >
 <!ENTITY newevent.enddate.label      "Ende" >
 <!ENTITY newevent.end.label          "Ende" >
 <!ENTITY newevent.alldayevent.label  "Dieses Ereignis dauert den ganzen Tag." >
@@ -85,7 +85,7 @@
 <!ENTITY newevent.invite.label       "Einladen" >
 <!ENTITY newevent.email.label        "Alarm per E-Mail senden an..." >
 <!ENTITY newevent.beforealarm.label  "bevor das Ereignis startet" >
-<!ENTITY newevent.beforealarmends.label  "bevor das Ereignis endet" >
+<!ENTITY newevent.beforealarmends.label  "bevor das Eregnis endet" >
 <!ENTITY newevent.repeat.label       "Wiederhole jeden" >
 <!ENTITY newevent.until.label        "Bis" >
 <!ENTITY newevent.forever.label      "Immer" >
@@ -97,9 +97,9 @@
 <!ENTITY newevent.endtime.warning    "Ihr Beginn ist nach dem Ende.">
 <!ENTITY newevent.enddate.warning    "Ihre Beginnzeit ist nach Ihrer Endzeit.">
 <!ENTITY newevent.repeatdate.tooltip    "Wählen Sie einen Endzeitpunkt" >
-<!ENTITY newevent.recurend.warning    "Ihre Wiederholungszeit endet vor dem Ende des Ereignisses.">
+<!ENTITY newevent.recurend.warning    "Ihre Wiederholen-Bis-Zeit ist vor Ihrer Endzeit.">
 <!ENTITY newevent.endtime.tooltip    "Wählen Sie einen Endzeitpunkt für dieses Ereignis" >
-<!ENTITY newevent.starttimeerror.alertmessage "Ihr Ereignis kann nicht enden bevor es begonnen hat. Bitte korrigieren Sie den Beginn oder das Ende." >
+<!ENTITY newevent.starttimeerror.alertmessage "Ihr Ereignis kann nicht enden bevor es begonnen hat. Bitte korrigierern Sie den Begin oder das Ende." >
 <!ENTITY newevent.recurendtimeerror.alertmessage "Ihre Ereignis-Wiederholungszeit kann nicht vor dem Ereignisende sein. Bitte beheben Sie das Problem, oder schalten Sie die Wiederhoung ab." >
 <!ENTITY newevent.newevent.tab.label "Ereignis" >
 <!ENTITY newevent.recurrence.tab.label "Wiederholung" >
@@ -148,7 +148,7 @@
 <!ENTITY newtodo.status.longlabel "Aufgaben-Status">
 <!ENTITY newtodo.duetime.warning    "Ihre Startzeit ist nach Ihrer Endzeit.">
 <!ENTITY newtodo.duedate.warning    "Ihr Startdatum ist nach Ihrem Enddatum.">
-<!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
+<!ENTITY newtodo.repeatstart.warning "Beginnzeit wird für Wiederholung benötigt.">
 
 <!ENTITY calendar.confirm.deleteevent "Wollen Sie dieses Ereignis wirklich löschen: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Wollen Sie dieses unbenannte Ereignis wirklich löschen?" >
@@ -158,7 +158,7 @@
 <!ENTITY event.title.alarm         "Alarm" >
 <!ENTITY event.title.new         "Neues Ereignis" >
 <!ENTITY event.title.edit        "Ereignis bearbeiten" >
-<!ENTITY event.title.heading        "Calendar Alarm" >
+<!ENTITY event.title.heading        "Kalender-Alarm" >
 
 <!ENTITY onthe-text            "Am ">
 <!ENTITY last-text             "Letzten ">
@@ -249,32 +249,32 @@
 
 <!ENTITY calendar.choosedate.button.label       "Datum wählen" >
 
-<!ENTITY calendar.cut.button.tooltip            "Cut" >
-<!ENTITY calendar.copy.button.tooltip           "Copy" >
-<!ENTITY calendar.paste.button.tooltip          "Paste" >
-<!ENTITY calendar.print.button.tooltip          "Print Calendar" >
+<!ENTITY calendar.cut.button.tooltip            "Ausschneiden" >
+<!ENTITY calendar.copy.button.tooltip           "Kopieren" >
+<!ENTITY calendar.paste.button.tooltip          "Einfügen" >
+<!ENTITY calendar.print.button.tooltip          "Kalender drucken" >
 
-<!ENTITY calendar.cut.button.label              "Cut" >
-<!ENTITY calendar.copy.button.label             "Copy" >
-<!ENTITY calendar.paste.button.label            "Paste" >
-<!ENTITY calendar.print.button.label            "Print" >
+<!ENTITY calendar.cut.button.label              "Ausschneiden" >
+<!ENTITY calendar.copy.button.label             "Kopieren" >
+<!ENTITY calendar.paste.button.label            "Einfügen" >
+<!ENTITY calendar.print.button.label            "Drucken" >
 
-<!ENTITY calendar.import.button.tooltip            "Import: Import events from a local file." >
-<!ENTITY calendar.export.button.tooltip            "Export: Export events to a local file." >
-<!ENTITY calendar.subscribe.button.tooltip         "Subscribe: Subscribe to a calendar file on a remote machine." >
-<!ENTITY calendar.publish.button.tooltip            "Publish: Publish events to a remote machine." >
+<!ENTITY calendar.import.button.tooltip            "Importiert Ereignisse aus einer lokalen Datei." >
+<!ENTITY calendar.export.button.tooltip            "Exportiert Ereignisse in eine lokale Datei." >
+<!ENTITY calendar.subscribe.button.tooltip         "Eine Kalenderdatei auf einem entfernten Rechner abonnieren." >
+<!ENTITY calendar.publish.button.tooltip            "Ereignisse auf einem entfernten Rechner publizieren." >
 
-<!ENTITY calendar.import.button.label              "Import" >
-<!ENTITY calendar.export.button.label              "Export" >
-<!ENTITY calendar.subscribe.button.label           "Subscribe" >
-<!ENTITY calendar.publish.button.label             "Publish" >
+<!ENTITY calendar.import.button.label              "Importieren" >
+<!ENTITY calendar.export.button.label              "Exportieren" >
+<!ENTITY calendar.subscribe.button.label           "Abonnieren" >
+<!ENTITY calendar.publish.button.label             "Publizieren" >
 
 <!ENTITY calendar.dayview.button.label          "Tagesansicht" >
 <!ENTITY calendar.weekview.button.label         "Wochenansicht" >
 <!ENTITY calendar.monthview.button.label        "Monatsansicht" >
 <!ENTITY calendar.multiweekview.button.label        "Mehrwochen" >
-<!ENTITY calendar.onlyworkday.checkbox.label    "Nur Montag-Freitag" >
-<!ENTITY calendar.onlyworkday.checkbox.accesskey  "f" >
+<!ENTITY calendar.onlyworkday.checkbox.label    "Nur Werktage" >
+<!ENTITY calendar.onlyworkday.checkbox.accesskey  "r" >
 <!ENTITY calendar.displaytodos.checkbox.label   "Aufgaben in der Ansicht" >
 <!ENTITY calendar.displaytodos.checkbox.accesskey "z" >
 
@@ -313,12 +313,12 @@
 <!ENTITY window.title            "Mozilla-Kalender">
 
 <!-- customizable toolbars -->
-<!ENTITY calendar.context.customize.label             "Customize">
-<!ENTITY calendar.context.customize.accesskey         "C">
-<!ENTITY calendar.menu.customize.label                "Customize Toolbars">
-<!ENTITY calendar.menu.customize.accesskey            "C">
-<!ENTITY calendar.maintoolbar.name                    "Main Toolbar">
-<!ENTITY calendar.maintoolbar.accesskey               "M">
+<!ENTITY calendar.context.customize.label             "Anpassen">
+<!ENTITY calendar.context.customize.accesskey         "A">
+<!ENTITY calendar.menu.customize.label                "Symbolleisten anpassen">
+<!ENTITY calendar.menu.customize.accesskey            "p">
+<!ENTITY calendar.maintoolbar.name                    "Haupt-Symbolleiste">
+<!ENTITY calendar.maintoolbar.accesskey               "H">
 
 <!-- Context Menu -->
 <!ENTITY calendar.context.newevent.label              "Neues Ereignis">
@@ -411,7 +411,7 @@
 <!ENTITY calendar.server.dialog.name.label          "Name">
 <!ENTITY calendar.server.dialog.publish.label       "Änderungen automatisch publizieren? Bei entfernten Kalendern lädt dies eine neue Version herunter, bevor Sie ein Ereignis hinzufügen, bearbeiten oder löschen. Dann wird Ihre Aktion ausgeführt und die neue Datei auf den Server geladen.">
 <!ENTITY calendar.server.dialog.location.label      "Adresse">
-<!ENTITY calendar.server.dialog.local.location.label "Lokale Datei-Adresse">
+<!ENTITY calendar.server.dialog.local.location.label "Loake Datei-Adresse">
 <!ENTITY calendar.server.dialog.browse.label        "Durchsuchen...">
 <!ENTITY calendar.local.calendar.dialog.help.label  "Sie können optional eine Datei-Adresse angeben, auf der der Kalender erstellt werden soll.">
 <!ENTITY calendar.server.dialog.help.label          "Sie können einen lokalen oder einen entfernten Dateipfad angeben. Wie: http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
@@ -441,24 +441,24 @@
 <!-- Calendar Import Outlook CSV Dialog -->
 <!-- TRANSLATORS: all outlook*.label -fields should be translated word to word (or if possible
                   copied from outlook csv file headers -->
-<!ENTITY calendar.importoutlook.dialog.title "Outlook CSV Import" >
-<!ENTITY calendar.importoutlook.mapconcepts.label "Please map the following calendar concepts to their Outlook CSV equivalents:" >
-<!ENTITY calendar.importoutlook.outlooksubject.label "Subject" >
-<!ENTITY calendar.importoutlook.outlookstartdate.label "Start date" >
-<!ENTITY calendar.importoutlook.outlookstarttime.label "Start time" >
-<!ENTITY calendar.importoutlook.outlookenddate.label "End date" >
-<!ENTITY calendar.importoutlook.outlookendtime.label "End time" >
-<!ENTITY calendar.importoutlook.outlooklocation.label "Location" >
-<!ENTITY calendar.importoutlook.outlookdescription.label "Description" >
-<!ENTITY calendar.importoutlook.outlookallday.label "All-day event" >
-<!ENTITY calendar.importoutlook.outlookprivate.label "Private" >
-<!ENTITY calendar.importoutlook.outlookalarm.label "Alarm on/off" >
-<!ENTITY calendar.importoutlook.outlookalarmdate.label "Alarm date" >
-<!ENTITY calendar.importoutlook.outlookalarmtime.label "Alarm time" >
-<!ENTITY calendar.importoutlook.outlookcategories.label "Categories" >
-<!ENTITY calendar.importoutlook.selectmeaning.label "Select the meaning of the following word: " >
-<!ENTITY calendar.importoutlook.true.label "True" >
-<!ENTITY calendar.importoutlook.false.label "False" >
+<!ENTITY calendar.importoutlook.dialog.title "Outlook-CSV-Import" >
+<!ENTITY calendar.importoutlook.mapconcepts.label "Bitte verbinden Sie folgende Kalenderkonzepte mit ihren Outlook-CSV-Äquivalenten:" >
+<!ENTITY calendar.importoutlook.outlooksubject.label "Betreff" >
+<!ENTITY calendar.importoutlook.outlookstartdate.label "Startdatum" >
+<!ENTITY calendar.importoutlook.outlookstarttime.label "Startzeit" >
+<!ENTITY calendar.importoutlook.outlookenddate.label "Enddatum" >
+<!ENTITY calendar.importoutlook.outlookendtime.label "Endzeit" >
+<!ENTITY calendar.importoutlook.outlooklocation.label "Ort" >
+<!ENTITY calendar.importoutlook.outlookdescription.label "Beschreibung" >
+<!ENTITY calendar.importoutlook.outlookallday.label "Ganztagsereignis" >
+<!ENTITY calendar.importoutlook.outlookprivate.label "Privat" >
+<!ENTITY calendar.importoutlook.outlookalarm.label "Alarm ein/aus" >
+<!ENTITY calendar.importoutlook.outlookalarmdate.label "Alarmdatum" >
+<!ENTITY calendar.importoutlook.outlookalarmtime.label "Alarmzeit" >
+<!ENTITY calendar.importoutlook.outlookcategories.label "Kategorien" >
+<!ENTITY calendar.importoutlook.selectmeaning.label "Wählen Sie die Bedeutung des folgenden Wortes aus:" >
+<!ENTITY calendar.importoutlook.true.label "Wahr" >
+<!ENTITY calendar.importoutlook.false.label "Falsch" >
 
 <!-- Calendar Printing -->
 <!ENTITY calendar.print.window.title "Einen Kalender drucken">

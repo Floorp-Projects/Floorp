@@ -107,6 +107,6 @@
 <!ENTITY more.label "MEHR" >
 <!ENTITY less.label "WENIGER" >
 
-<!ENTITY add.label     "Add">
-<!ENTITY edit.label    "Edit">
-<!ENTITY remove.label  "Remove">
+<!ENTITY add.label     "Hinzufügen">
+<!ENTITY edit.label    "Bearbeiten">
+<!ENTITY remove.label  "Entfernen">

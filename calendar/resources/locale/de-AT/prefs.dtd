@@ -55,7 +55,7 @@
 <!ENTITY pref.alarmbox.label    "Alarme" >
 <!ENTITY pref.showalarmbox    "Eine Alarmnachricht anzeigen" >
 <!ENTITY pref.defaultemail.label "Standardadresse, an die Alarme gesendet werden:">
-<!ENTITY pref.defaulttext.label "Standardtext für Alarme:">
+<!ENTITY pref.defaulttext.label "Stadradtext für Alarme:">
 <!ENTITY pref.missedalarms    "Versäumte Alarme anzeigen" >
 <!ENTITY pref.defalarm4events.label "Standard-Alarmeinstellung für Ereignisse:">
 <!ENTITY pref.defalarm4todos.label "Standard-Alarmeinstellung für Aufgaben:">
@@ -67,12 +67,12 @@
 <!ENTITY pref.dateformat.label      "Datums-Textformat:" >
 <!ENTITY pref.dateformat.long       "Lang" >
 <!ENTITY pref.dateformat.short      "Kurz"  >
-<!ENTITY pref.dateformat.storeingmt "Store dates in Universal Time" >
+<!ENTITY pref.dateformat.storeingmt "Dates in Universal Time speichern" >
 <!ENTITY pref.defaultlength.label   "Standard-Ereignislänge:" >
 <!ENTITY pref.defaultsnoozelength.label   "Standard-Zeit bis Erinnerung:" >
 
 <!ENTITY pref.weekstarts.label     "Erster Tag der Woche:" >
-<!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
+<!ENTITY pref.daysoff.label     "Freie Tag(e) in jeder Woche:" >
 
 <!ENTITY pref.numberofweeks.label     "Standard-Gesamtanzahl der Wochen:" >
 <!ENTITY pref.numberofweeks.0      "Keine" >
@@ -118,16 +118,16 @@
 <!ENTITY pref.calendar.view.multiweekview.caption "Mehrwochen-Ansicht">
 
 <!ENTITY pref.calendar.view.restrict.label "Ansichten beschränken auf">
-<!ENTITY pref.calendar.view.starttime.label "Startzeit:">
+<!ENTITY pref.calendar.view.starttime.label "Beginnzeit:">
 <!ENTITY pref.calendar.view.endtime.label   "Endzeit:">
 
 <!ENTITY pref.categories.label   "Kategorien" >
 
 <!ENTITY pref.categories.help.description   "Verwenden Sie ein Komma zwischen allen Kategorien, die Sie hinzufügen wollen.">
 
-<!ENTITY pref.categories.add.title    "Add Category">
-<!ENTITY pref.categories.add.prompt   "Enter the name of the category">
-<!ENTITY pref.categories.edit.title   "Edit Category">
+<!ENTITY pref.categories.add.title    "Kategorie hinzufügen">
+<!ENTITY pref.categories.add.prompt   "Geben Sie den Namen der Kategorie ein">
+<!ENTITY pref.categories.edit.title   "Kategorie bearbeiten">
 
 
 <!ENTITY pref.reloadonlaunch       "Entfernte Kalender beim Start neu laden">
@@ -140,7 +140,7 @@
 <!-- Calendar Timezone preferences information -->
 <!ENTITY pref.calendar.timezone.label "Meine Zeitzone">
 <!ENTITY pref.calendar.timezone.caption "Zeitzone">
-<!ENTITY pref.calendar.timezone.description "Timezone ID is (continent or ocean)/(largest city in legal timezone region).">
+<!ENTITY pref.calendar.timezone.description "Zeitzonen-ID ist (Kontinent oder Ozean)/(Größte Stadt in der legalen Zeitzonen-Region).">
 <!ENTITY pref.defaultzone.label     "Standard-Zeitzone:" >
 
 <!ENTITY pref.timezone.Africa.Abidjan "Africa/Abidjan" >
