@@ -76,6 +76,9 @@
 
 #include "prefapi.h"
 #include "NSReg.h"
+#ifdef MOZ_SMARTUPDATE
+#include "softupdt.h"
+#endif
 
 #if defined(_HPUX_SOURCE)
 /* I don't know where this is coming from...  "ld -y Error" says
@@ -2574,6 +2577,9 @@ fe_MinimalNoUICleanup()
 
   PREF_SavePrefFile();
   NR_ShutdownRegistry();
+#ifdef MOZ_SMARTUPDATE
+  SU_Shutdown();
+#endif
 
   RDF_Shutdown();
   GH_SaveGlobalHistory ();

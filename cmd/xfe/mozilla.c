@@ -41,6 +41,9 @@
 #ifdef NSPR20
 #include "private/prpriv.h"	/* for PR_NewNamedMonitor */
 #endif /* NSPR20 */
+#ifdef MOZ_SMARTUPDATE
+#include "softupdt.h"
+#endif
 
 #include "libimg.h"             /* Image Library public API. */
 
@@ -2797,6 +2800,9 @@ main
     fe_splashUpdateText(XP_GetString(XFE_SPLASH_REGISTERING_CONVERTERS));
 #endif
 
+#ifdef MOZ_SMARTUPDATE
+  SU_Startup();
+#endif
   NR_StartupRegistry();
   fe_RegisterConverters ();  /* this must be before InstallPreferences(),
 				and after fe_InitializeGlobalResources(). */
