@@ -377,6 +377,20 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsStyleBorder& aBorderStyle, nscoord a
 }
 
 
+PRBool nsTableCellFrame::ConvertToIntValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult)
+{
+  PRInt32 result = 0;
+
+  if (aValue.GetUnit() == eHTMLUnit_Integer)
+    aResult = aValue.GetIntValue();
+  else if (aValue.GetUnit() == eHTMLUnit_Pixel)
+    aResult = aValue.GetPixelValue();
+  else if (aValue.GetUnit() == eHTMLUnit_Empty)
+    aResult = aDefault;
+  else
+    return PR_FALSE;
+  return PR_TRUE;
+}
 
 void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
 {
@@ -414,11 +428,13 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   if (spacing_result == eContentAttr_HasValue || padding_result == eContentAttr_HasValue)
   {
   
-    if (padding_result == eContentAttr_HasValue)
-      padding = (nscoord)(p2t*(float)padding_value.GetPixelValue()); 
+    PRInt32 value;
+
+    if (padding_result == eContentAttr_HasValue && ConvertToIntValue(padding_value,0,value))
+      padding = (nscoord)(p2t*(float)value); 
     
-    if (spacing_result == eContentAttr_HasValue)
-      spacing = (nscoord)(p2t*(float)spacing_value.GetPixelValue()); 
+    if (spacing_result == eContentAttr_HasValue && ConvertToIntValue(spacing_value,0,value))
+      spacing = (nscoord)(p2t*(float)value); 
 
     nsStyleSpacing* spacingData = (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
     spacingData->mMargin.SizeTo(spacing,spacing,spacing,spacing);
@@ -430,13 +446,15 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   }
   if (border_result == eContentAttr_HasValue)
   {
-    PRInt32 intValue = border_value.GetPixelValue();
-    if (intValue > 0)
-      intValue = 1;
-    border = nscoord(p2t*(float)intValue); 
+    PRInt32 intValue = 0;
+
+    if (ConvertToIntValue(border_value,1,intValue))
+    {    
+      if (intValue > 0)
+        intValue = 1;
+      border = nscoord(p2t*(float)intValue); 
+    }
   }
-
-
   nsStyleBorder& borderData = *(nsStyleBorder*)mStyleContext->GetData(kStyleBorderSID);
   MapHTMLBorderStyle(borderData,border);
 }
