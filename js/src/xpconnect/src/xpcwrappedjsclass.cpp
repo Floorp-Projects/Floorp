@@ -102,7 +102,9 @@ nsXPCWrappedJSClass::GetNewOrUsed(XPCCallContext& ccx, REFNSIID aIID,
             nsCOMPtr<nsIInterfaceInfo> info;
             if(NS_SUCCEEDED(iimgr->GetInfoForIID(&aIID, getter_AddRefs(info))))
             {
-                if(nsXPConnect::IsISupportsDescendant(info))
+                PRBool canScript;
+                if(NS_SUCCEEDED(info->IsScriptable(&canScript)) && canScript &&
+                   nsXPConnect::IsISupportsDescendant(info))
                 {
                     clazz = new nsXPCWrappedJSClass(ccx, aIID, info);
                     if(!clazz->mDescriptors)
@@ -197,6 +199,25 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
     funid = mRuntime->GetStringID(XPCJSRuntime::IDX_QUERY_INTERFACE);
     if(!OBJ_GET_PROPERTY(cx, jsobj, funid, &fun) || JSVAL_IS_PRIMITIVE(fun))
         return nsnull;
+
+    // Ensure that we are asking for a scriptable interface.
+    // We so often ask for nsISupports that we can short-circuit the test...
+    if(!aIID.Equals(NS_GET_IID(nsISupports)))
+    {
+        nsCOMPtr<nsIInterfaceInfoManager> iimgr;
+        nsXPConnect::GetInterfaceInfoManager(getter_AddRefs(iimgr));
+        if(!iimgr)
+            return nsnull;
+        nsCOMPtr<nsIInterfaceInfo> info;
+        iimgr->GetInfoForIID(&aIID, getter_AddRefs(info));
+        if(!info)
+            return nsnull;
+        PRBool canScript;
+        if(NS_FAILED(info->IsScriptable(&canScript)) || !canScript)
+            return nsnull;
+    }
+
+    // OK, it looks like we'll be calling into JS code.
 
     DoPreScriptEvaluated(cx);
 

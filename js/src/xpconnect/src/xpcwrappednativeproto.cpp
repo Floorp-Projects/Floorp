@@ -157,7 +157,7 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
     NS_ASSERTION(Scope, "bad param");
     NS_ASSERTION(ClassInfo, "bad param");
 
-    XPCWrappedNativeProto* proto;
+    AutoMarkingWrappedNativeProtoPtr proto(ccx);
     ClassInfo2WrappedNativeProtoMap* map;
     XPCLock* lock;
     JSBool shared;
@@ -196,7 +196,8 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
         }
     }
 
-    XPCNativeSet* set = XPCNativeSet::GetNewOrUsed(ccx, ClassInfo);
+    AutoMarkingNativeSetPtr set(ccx);
+    set = XPCNativeSet::GetNewOrUsed(ccx, ClassInfo);
     if(!set)
         return nsnull;
 

@@ -346,7 +346,8 @@ XPCPerThreadData::XPCPerThreadData()
         mMostRecentXPCContext(nsnull),
         mExceptionManager(nsnull),
         mException(nsnull),
-        mExceptionManagerNotAvailable(JS_FALSE)
+        mExceptionManagerNotAvailable(JS_FALSE),
+        mAutoRoots(nsnull)
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
       , mWrappedNativeThreadsafetyReportDepth(0)
 #endif
@@ -362,6 +363,8 @@ XPCPerThreadData::XPCPerThreadData()
 void
 XPCPerThreadData::Cleanup()
 {
+    while(mAutoRoots)
+        mAutoRoots->Unlink();
     NS_IF_RELEASE(mExceptionManager);
     NS_IF_RELEASE(mException);
     delete mJSContextStack;
@@ -409,6 +412,18 @@ xpc_ThreadDataDtorCB(void* ptr)
     XPCPerThreadData* data = (XPCPerThreadData*) ptr;
     if(data)
         delete data;
+}
+
+void XPCPerThreadData::MarkAutoRootsBeforeJSFinalize(JSContext* cx)
+{
+    if(mAutoRoots)
+        mAutoRoots->MarkBeforeJSFinalize(cx);
+}
+
+void XPCPerThreadData::MarkAutoRootsAfterJSFinalize()
+{
+    if(mAutoRoots)
+        mAutoRoots->MarkAfterJSFinalize();
 }
 
 // static
@@ -513,4 +528,3 @@ XPCPerThreadData::IterateThreads(XPCPerThreadData** iteratorp)
     *iteratorp = (*iteratorp == nsnull) ? gThreads : (*iteratorp)->mNextThread;
     return *iteratorp;
 }
-

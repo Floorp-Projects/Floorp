@@ -224,6 +224,27 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
             {
                 NS_ASSERTION(!self->mDoingFinalization, "bad state");
 
+                // Skip this part if XPConnect is shutting down. We get into
+                // bad locking problems with the thread iteration otherwise.
+                if(!self->GetXPConnect()->IsShuttingDown())
+                {
+                    PRLock* threadLock = XPCPerThreadData::GetLock();
+                    if(threadLock)
+                    { // scoped lock
+                        nsAutoLock lock(threadLock);
+
+                        XPCPerThreadData* iterp = nsnull;
+                        XPCPerThreadData* thread;
+
+                        while(nsnull != (thread =
+                                     XPCPerThreadData::IterateThreads(&iterp)))
+                        {
+                            // Mark those AutoMarkingPtr lists!
+                            thread->MarkAutoRootsBeforeJSFinalize(cx);
+                        }
+                    }
+                }
+
                 dyingWrappedJSArray = &self->mWrappedJSToReleaseArray;
                 {
                     XPCLock* lock = self->GetMainThreadOnlyGC() ?
@@ -242,7 +263,10 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                         Enumerate(WrappedJSDyingJSObjectFinder, &data);
                 }
 
-                // Do cleanup in NativeInterfaces
+                // Do cleanup in NativeInterfaces. This part just finds 
+                // member cloned function objects that are about to be 
+                // collected. It does not deal with collection of interfaces or
+                // sets at this point.
                 CX_AND_XPCRT_Data data = {cx, self};
 
                 self->mIID2NativeInterfaceMap->
@@ -293,9 +317,12 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                         while(nsnull != (thread =
                                      XPCPerThreadData::IterateThreads(&iterp)))
                         {
+                            // Mark those AutoMarkingPtr lists!
+                            thread->MarkAutoRootsAfterJSFinalize();
+
                             XPCCallContext* ccxp = thread->GetCallContext();
                             while(ccxp)
-                                {
+                            {
                                 // Deal with the strictness of callcontext that
                                 // complains if you ask for a set when
                                 // it is in a state where the set could not
@@ -305,6 +332,12 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                                     XPCNativeSet* set = ccxp->GetSet();
                                     if(set)
                                         set->Mark();
+                                }
+                                if(ccxp->CanGetInterface())
+                                {
+                                    XPCNativeInterface* iface = ccxp->GetInterface();
+                                    if(iface)
+                                        iface->Mark();
                                 }
                                 ccxp = ccxp->GetPrevCallContext();
                             }
@@ -601,16 +634,25 @@ XPCJSRuntime::~XPCJSRuntime()
 
     if(mThisTranslatorMap)
     {
+#ifdef XPC_DUMP_AT_SHUTDOWN
+        uint32 count = mThisTranslatorMap->Count();
+        if(count)
+            printf("deleting XPCJSRuntime with %d live ThisTranslator\n", (int)count);
+#endif
+        delete mThisTranslatorMap;
+    }
+
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
+    if(DEBUG_WrappedNativeHashtable)
+    {
         int LiveWrapperCount = 0;
         JS_DHashTableEnumerate(DEBUG_WrappedNativeHashtable,
                                DEBUG_WrapperChecker, &LiveWrapperCount);
         if(LiveWrapperCount)
             printf("deleting XPCJSRuntime with %d live XPCWrappedNative (found in wrapper check)\n", (int)LiveWrapperCount);
         JS_DHashTableDestroy(DEBUG_WrappedNativeHashtable);
-#endif
-        delete mThisTranslatorMap;
     }
+#endif
 
     if(mNativeScriptableSharedMap)
     {

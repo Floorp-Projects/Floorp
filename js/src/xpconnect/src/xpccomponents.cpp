@@ -1731,9 +1731,8 @@ nsXPCComponents::AttachNewComponentsObject(XPCCallContext& ccx,
 
     nsCOMPtr<nsIXPCComponents> cholder(components);
 
-    // XXX this should not be needed when we get a nsIClassInfo
-    XPCNativeInterface* iface =
-        XPCNativeInterface::GetNewOrUsed(ccx, &NS_GET_IID(nsIXPCComponents));
+    AutoMarkingNativeInterfacePtr iface(ccx);
+    iface = XPCNativeInterface::GetNewOrUsed(ccx, &NS_GET_IID(nsIXPCComponents));
 
     if(!iface)
         return JS_FALSE;

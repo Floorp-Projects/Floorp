@@ -494,8 +494,8 @@ nsJSIID::NewResolve(nsIXPConnectWrappedNative *wrapper,
 {
     XPCCallContext ccx(JS_CALLER, cx);
 
-    XPCNativeInterface* iface =
-        XPCNativeInterface::GetNewOrUsed(ccx, mDetails.GetID());
+    AutoMarkingNativeInterfacePtr iface(ccx);
+    iface = XPCNativeInterface::GetNewOrUsed(ccx, mDetails.GetID());
 
     if(!iface)
         return NS_OK;
@@ -532,8 +532,8 @@ nsJSIID::Enumerate(nsIXPConnectWrappedNative *wrapper,
 
     XPCCallContext ccx(JS_CALLER, cx);
 
-    XPCNativeInterface* iface =
-        XPCNativeInterface::GetNewOrUsed(ccx, mDetails.GetID());
+    AutoMarkingNativeInterfacePtr iface(ccx);
+    iface = XPCNativeInterface::GetNewOrUsed(ccx, mDetails.GetID());
 
     if(!iface)
         return NS_OK;
@@ -591,8 +591,8 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
         // Otherwise, we'll end up Querying the native object to be sure.
         XPCCallContext ccx(JS_CALLER, cx);
 
-        XPCNativeInterface* iface =
-            XPCNativeInterface::GetNewOrUsed(ccx, mDetails.GetID());
+        AutoMarkingNativeInterfacePtr iface(ccx);
+        iface = XPCNativeInterface::GetNewOrUsed(ccx, mDetails.GetID());
 
         if(iface && other_wrapper->FindTearOff(ccx, iface))
             *bp = JS_TRUE;

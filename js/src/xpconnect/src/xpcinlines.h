@@ -190,6 +190,12 @@ XPCCallContext::GetSet() const
     return mSet;
 }
 
+inline JSBool
+XPCCallContext::CanGetInterface() const
+{
+    return mState >= HAVE_NAME;
+}
+
 inline XPCNativeInterface*
 XPCCallContext::GetInterface() const
 {
