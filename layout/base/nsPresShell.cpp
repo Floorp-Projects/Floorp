@@ -4246,6 +4246,7 @@ NS_IMETHODIMP PresShell::DoCopyLinkLocation(nsIDOMNode* aNode)
   NS_ENSURE_ARG_POINTER(aNode);
   nsresult rv;
   nsAutoString anchorText;
+  static char strippedChars[] = {'\t','\r','\n'};
 
   // are we an anchor?
   nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(aNode));
@@ -4308,6 +4309,9 @@ NS_IMETHODIMP PresShell::DoCopyLinkLocation(nsIDOMNode* aNode)
     nsCOMPtr<nsIClipboardHelper>
       clipboard(do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
     NS_ENSURE_SUCCESS(rv, rv);
+     
+    //Remove all the '\t', '\r' and '\n' from 'anchorText'
+    anchorText.StripChars(strippedChars);
 
     // copy the href onto the clipboard
     return clipboard->CopyString(anchorText);
