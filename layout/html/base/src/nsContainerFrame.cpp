@@ -592,22 +592,38 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
   // Output the rect
   out << mRect;
 
+  if (0 != mState) {
+    fprintf(out, " [state=%08x]", mState);
+  }
+
   // Output the children
-  if (mFrames.NotEmpty()) {
-    if (0 != mState) {
-      fprintf(out, " [state=%08x]", mState);
+  nsIAtom* listName = nsnull;
+  PRInt32 listIndex = 0;
+  PRBool outputOneList = PR_FALSE;
+  do {
+    nsIFrame* kid;
+    FirstChild(listName, kid);
+    if (nsnull != kid) {
+      outputOneList = PR_TRUE;
+      IndentBy(out, aIndent);
+      nsAutoString tmp;
+      if (nsnull != listName) {
+        listName->ToString(tmp);
+        fputs(tmp, out);
+      }
+      fputs("<\n", out);
+      while (nsnull != kid) {
+        kid->List(out, aIndent + 1);
+        kid->GetNextSibling(kid);
+      }
+      IndentBy(out, aIndent);
+      fputs(">\n", out);
     }
-    fputs("<\n", out);
-    for (nsIFrame* child = mFrames.FirstChild(); child;
-         child->GetNextSibling(child)) {
-      child->List(out, aIndent + 1);
-    }
-    IndentBy(out, aIndent);
-    fputs(">\n", out);
-  } else {
-    if (0 != mState) {
-      fprintf(out, " [state=%08x]", mState);
-    }
+    NS_IF_RELEASE(listName);
+    GetAdditionalChildListName(listIndex++, listName);
+  } while(nsnull != listName);
+
+  if (!outputOneList) {
     fputs("<>\n", out);
   }
 
