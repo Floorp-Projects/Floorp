@@ -16,138 +16,254 @@
  * Reserved.
  */
  
-/* Mac implementation of the timer interface */
+//
+// Mac implementation of the nsITimer interface
+//
+
+// nsMacTimerPeriodical idles, 
+
+
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
-#include "nsCRT.h"
 #include "prlog.h"
-#include <stdio.h>
+#include <LPeriodical.h>
+#include <LArray.h>
+#include <LArrayIterator.h>
+#include <LComparator.h>
 
-static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
+#pragma mark class TimerImpl
+//
+// TimerImpl implements nsITimer API
+// 
+class TimerImpl : public nsITimer 
+{
+	private:
+		nsTimerCallbackFunc mCallbackFunc;
+		nsITimerCallback * mCallbackObject;
+  	void * mClosure;
+  	PRUint32 mDelay;
+  	UInt32 mFireTime;	// Timer should fire when TickCount >= this number
+	
+	public:
 
-#if 0
-/*
- * Implementation of timers using Xt timer facility 
- */
-class TimerImpl : public nsITimer {
-public:
+	// constructors
 
-public:
-  TimerImpl();
-  virtual ~TimerImpl();
+	  TimerImpl();
 
-  virtual nsresult Init(nsTimerCallbackFunc aFunc,
-                void *aClosure,
-//              PRBool aRepeat, 
-                PRUint32 aDelay);
+	  virtual ~TimerImpl();
 
-  virtual nsresult Init(nsITimerCallback *aCallback,
-//              PRBool aRepeat, 
-                PRUint32 aDelay);
+	 	NS_DECL_ISUPPORTS
 
-  NS_DECL_ISUPPORTS
+		UInt32 GetFireTime() { return mFireTime; }
 
-  virtual void Cancel();
-  virtual PRUint32 GetDelay() { return mDelay; }
-  virtual void SetDelay(PRUint32 aDelay) { mDelay=aDelay; };
+		void Fire();
 
-  void FireTimeout();
+	// nsITimer overrides
 
-private:
-  nsresult Init(PRUint32 aDelay);
+	  virtual nsresult Init(nsTimerCallbackFunc aFunc,
+	                        void *aClosure,
+	                        PRUint32 aDelay);
 
-  PRUint32 mDelay;
-  nsTimerCallbackFunc mFunc;
-  void *mClosure;
-  nsITimerCallback *mCallback;
-  // PRBool mRepeat;
-  TimerImpl *mNext;
-  XtIntervalId mTimerId; 
+		virtual nsresult Init(nsITimerCallback *aCallback,
+	                        PRUint32 aDelay);
+
+	  virtual void Cancel();
+
+	  virtual PRUint32 GetDelay();
+
+	  virtual void SetDelay(PRUint32 aDelay);
+	
+	private:
+	// Calculates mFireTime too
+		void SetDelaySelf( PRUint32 aDelay );
 };
 
-void TimerImpl::FireTimeout()
+#pragma mark class TimerPeriodical
+//
+// TimerPeriodical is a singleton LPeriodical subclass that fires
+// off TimerImpl. The firing is done on idle
+// 
+class TimerPeriodical	: public LPeriodical
 {
-  if (mFunc != NULL) {
-    (*mFunc)(this, mClosure);
-  }
-  else if (mCallback != NULL) {
-    mCallback->Notify(this); // Fire the timer
-  }
+		static TimerPeriodical * sPeriodical;
+		
+		LArray * mTimers;	// List of TimerImpl *
+	
+	public:
+		// Returns the singleton instance
+		static TimerPeriodical * GetPeriodical();
 
-// Always repeating here
+		TimerPeriodical();
 
-// if (mRepeat)
-//  mTimerId = XtAppAddTimeOut(gAppContext, GetDelay(),(XtTimerCallbackProc)nsTimerExpired, this);
-}
+		virtual ~TimerPeriodical();
+		
+		nsresult AddTimer( TimerImpl * aTimer);
+		
+		nsresult RemoveTimer( TimerImpl * aTimer);
 
+		virtual	void	SpendTime( const EventRecord &inMacEvent);
+};
+
+#pragma mark class TimerImplComparator
+// 
+// TimerImplComparator compares two TimerImpl
+//
+class TimerImplComparator	: public LComparator
+{
+	virtual Int32		Compare(
+								const void*			inItemOne,
+								const void* 		inItemTwo,
+								Uint32				inSizeOne,
+								Uint32				inSizeTwo) const;
+};
+
+
+// 
+// TimerImpl implementation
+//
+
+static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
+NS_IMPL_ISUPPORTS(TimerImpl, kITimerIID)
 
 TimerImpl::TimerImpl()
 {
-  NS_INIT_REFCNT();
-  mFunc = NULL;
-  mCallback = NULL;
-  mNext = NULL;
-  mTimerId = 0;
-  mDelay = 0;
+	NS_INIT_REFCNT();
+	mCallbackFunc = NULL;
+	mCallbackObject = NULL;
+	mClosure = NULL;
+	mDelay = 0;
+	mFireTime = 0;
 }
 
-TimerImpl::~TimerImpl()
+nsresult TimerImpl::Init(nsTimerCallbackFunc aFunc,
+	                        void *aClosure,
+	                        PRUint32 aDelay)
 {
+	mCallbackFunc = aFunc;
+	mClosure = aClosure;
+	SetDelaySelf(aDelay);
+	return TimerPeriodical::GetPeriodical()->AddTimer(this);
 }
 
-nsresult 
-TimerImpl::Init(nsTimerCallbackFunc aFunc,
-                void *aClosure,
-//              PRBool aRepeat, 
-                PRUint32 aDelay)
+nsresult TimerImpl::Init(nsITimerCallback *aCallback,
+	                        PRUint32 aDelay)
 {
-    mFunc = aFunc;
-    mClosure = aClosure;
-    // mRepeat = aRepeat;
-
-    mTimerId = XtAppAddTimeOut(gAppContext, aDelay,(XtTimerCallbackProc)nsTimerExpired, this);
-
-    return Init(aDelay);
+	mCallbackObject = aCallback;
+	SetDelaySelf(aDelay);
+	return TimerPeriodical::GetPeriodical()->AddTimer(this);
 }
 
-nsresult 
-TimerImpl::Init(nsITimerCallback *aCallback,
-//              PRBool aRepeat, 
-                PRUint32 aDelay)
+void TimerImpl::Cancel()
 {
-    mCallback = aCallback;
-    // mRepeat = aRepeat;
-
-    mTimerId = XtAppAddTimeOut(gAppContext, aDelay, (XtTimerCallbackProc)nsTimerExpired, this);
-
-    return Init(aDelay);
+	TimerPeriodical::GetPeriodical()->RemoveTimer(this);
 }
 
-nsresult
-TimerImpl::Init(PRUint32 aDelay)
+PRUint32 TimerImpl::GetDelay()
 {
-    mDelay = aDelay;
-    NS_ADDREF(this);
-
-    return NS_OK;
+	return mDelay;
 }
 
-NS_IMPL_ISUPPORTS(TimerImpl, kITimerIID)
-
-
-void
-TimerImpl::Cancel()
+void TimerImpl::SetDelay(PRUint32 aDelay)
 {
-  XtRemoveTimeOut(mTimerId);
+	SetDelaySelf(aDelay);
+	// Make sure that timer was sorted
+	NS_ADDREF(this);
+	TimerPeriodical::GetPeriodical()->RemoveTimer(this);
+	TimerPeriodical::GetPeriodical()->AddTimer(this);
+	NS_RELEASE(this);
 }
 
+void TimerImpl::SetDelaySelf( PRUint32 aDelay )
+{
+	mDelay = aDelay;
+	mFireTime = TickCount() + mDelay / 100 * 6;	// We need mFireTime in ticks, 1/60th of a second
+}
+
+TimerPeriodical * TimerPeriodical::sPeriodical = NULL;
+
+TimerPeriodical * TimerPeriodical::GetPeriodical()
+{
+	if (sPeriodical == NULL)
+		sPeriodical = new TimerPeriodical();
+	return sPeriodical;
+}
+
+TimerPeriodical::TimerPeriodical()
+{
+	mTimers = new LArray( sizeof(TimerImpl*));
+	mTimers->SetComparator( new TimerImplComparator());
+	mTimers->SetKeepSorted( true );
+}
+
+TimerPeriodical::~TimerPeriodical()
+{
+	PR_ASSERT(mTimers->GetCount() == 0);
+	delete mTimers;
+}
+
+nsresult TimerPeriodical::AddTimer( TimerImpl * aTimer)
+{
+	try
+	{
+		NS_ADDREF(aTimer);
+		mTimers->AddItem( aTimer );
+		StartRepeating();
+	}
+	catch(...)
+	{
+		return NS_ERROR_UNEXPECTED;
+	}
+	return NS_OK;
+}
+
+nsresult TimerPeriodical::RemoveTimer( TimerImpl * aTimer)
+{
+	mTimers->Remove( aTimer );
+	NS_RELEASE( aTimer );
+	if ( mTimers->GetCount() == 0 )
+		StopRepeating();
+	return NS_OK;
+}
+
+// Called through every event loop
+// Loops through the list of available timers, and 
+// fires off the available ones
+void	TimerPeriodical::SpendTime( const EventRecord &inMacEvent)
+{
+	LArrayIterator iter( *mTimers, LArrayIterator::from_Start);
+	TimerImpl * timer;
+	while (iter.Next( &timer))
+	{
+		if ( timer->GetFireTime() <= inMacEvent.when )
+		{
+			NS_ADDREF(timer);
+			RemoveTimer(timer);
+			timer->Fire();
+			NS_RELEASE(timer);
+		}
+		else
+			break;	// Items are sorted, so we do not need to iterate until the end
+	}
+}
+
+//
+//  class TimerImplComparator implementation
+//
+Int32 TimerImplComparator::Compare(
+								const void*			inItemOne,
+								const void* 		inItemTwo,
+								Uint32				inSizeOne,
+								Uint32				inSizeTwo) const
+{
+	return (( TimerImpl *) inItemOne)->GetFireTime() - (( TimerImpl *) inItemTwo)->GetFireTime();
+}
+								
 NS_BASE nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 {
     NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
     if (nsnull == aInstancePtrResult) {
       return NS_ERROR_NULL_POINTER;
     }  
-
     TimerImpl *timer = new TimerImpl();
     if (nsnull == timer) {
         return NS_ERROR_OUT_OF_MEMORY;
@@ -155,16 +271,3 @@ NS_BASE nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 
     return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
 }
-
-
-void nsTimerExpired(XtPointer aCallData)
-{
-  TimerImpl* timer = (TimerImpl *)aCallData;
-  timer->FireTimeout();
-}
-#else
-NS_BASE nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
-{
-	PR_ASSERT(FALSE);
-}
-#endif
