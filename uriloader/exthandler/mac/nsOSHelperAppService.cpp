@@ -34,6 +34,8 @@
 
 #include "nsIInternetConfigService.h"
 
+#include <LaunchServices.h>
+
 // chrome URL's
 #define HELPERAPPLAUNCHER_BUNDLE_URL "chrome://global/locale/helperAppLauncher.properties"
 #define BRAND_BUNDLE_URL "chrome://global/locale/brand.properties"
@@ -52,31 +54,51 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
   nsresult rv = NS_OK;
   if (aMIMEInfo)
   {
-    nsCOMPtr<nsIFile> application;   
+    nsCOMPtr<nsIFile> application;
 
     nsMIMEInfoHandleAction action = nsIMIMEInfo::useSystemDefault;
     aMIMEInfo->GetPreferredAction(&action);
 
     if (action==nsIMIMEInfo::useHelperApp)
-    {
       aMIMEInfo->GetPreferredApplicationHandler(getter_AddRefs(application));
-    }
     else
-    {
       aMIMEInfo->GetDefaultApplicationHandler(getter_AddRefs(application));
-    }
 
     if (!application)
         return NS_ERROR_FAILURE;
 
-    nsCOMPtr <nsILocalFileMac> app = do_QueryInterface(application, &rv);
+    nsCOMPtr<nsILocalFileMac> app = do_QueryInterface(application, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr <nsILocalFile> docToLoad = do_QueryInterface(aTempFile, &rv);
+    nsCOMPtr<nsILocalFile> docToLoad = do_QueryInterface(aTempFile, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = app->LaunchWithDoc(docToLoad, PR_FALSE); 
   }
+#ifdef XP_MACOSX
+  else
+  { // We didn't get an application to handle the file from aMIMEInfo, ask LaunchServices directly
+    nsCOMPtr <nsILocalFileMac> tempFile = do_QueryInterface(aTempFile, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    FSRef tempFileRef;
+    tempFile->GetFSRef(&tempFileRef);
+
+    FSRef appFSRef;
+    if (::LSGetApplicationForItem(&tempFileRef, kLSRolesAll, &appFSRef, nsnull) == noErr)
+    {
+      nsCOMPtr<nsILocalFileMac> app(do_CreateInstance("@mozilla.org/file/local;1"));
+      if (!app) return NS_ERROR_FAILURE;
+      app->InitWithFSRef(&appFSRef);
+      
+      nsCOMPtr <nsILocalFile> docToLoad = do_QueryInterface(aTempFile, &rv);
+      if (NS_FAILED(rv)) return rv;
+      
+      rv = app->LaunchWithDoc(docToLoad, PR_FALSE); 
+    }
+  }
+#endif    
+
   return rv;
 }
 
