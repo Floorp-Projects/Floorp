@@ -77,6 +77,7 @@
 #include "nsIServiceManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsITimelineService.h"
+#include "nsIToolkitChromeRegistry.h"
 #include "nsIToolkitProfile.h"
 #include "nsIToolkitProfileService.h"
 #include "nsIURI.h"
@@ -673,6 +674,11 @@ ScopedXPCOMStartup::SetWindowCreator(nsINativeAppSupport* native)
                                   NS_NATIVEAPPSUPPORT_CONTRACTID,
                                   nativeFactory);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Inform the chrome registry about OS accessibility
+  nsCOMPtr<nsIToolkitChromeRegistry> cr (do_GetService(NS_CHROMEREGISTRY_CONTRACTID));
+  if (cr)
+    cr->CheckForOSAccessibility();
 
   nsCOMPtr<nsIWindowCreator> creator (do_GetService(NS_APPSTARTUP_CONTRACTID));
   if (!creator) return NS_ERROR_UNEXPECTED;

@@ -58,9 +58,10 @@ nsSimpleChromeRegistry::Canonify(nsIURI *aChromeURL)
 }
 
 NS_IMETHODIMP 
-nsSimpleChromeRegistry::ConvertChromeURL(nsIURI *aChromeURL, nsACString & _retval)
+nsSimpleChromeRegistry::ConvertChromeURL(nsIURI *aChromeURL, nsIURI* *aResult)
 {
-    return aChromeURL->GetSpec(_retval);
+  NS_WARNING("Who is calling ConvertChromeURL?");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsSimpleChromeRegistry::CheckForNewChrome()

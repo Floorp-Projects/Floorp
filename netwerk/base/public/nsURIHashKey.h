@@ -39,6 +39,7 @@
 #include "pldhash.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
+#include "nsIURI.h"
 
 /**
  * Hashtable key class to use with nsTHashtable/nsBaseHashtable
