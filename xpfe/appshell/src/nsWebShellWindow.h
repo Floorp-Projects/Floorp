@@ -23,14 +23,19 @@
 #include "nsISupports.h"
 #include "nsGUIEvent.h"
 #include "nsIWebShell.h"  
+#include "nsIDocumentLoaderObserver.h"
+#include "nsVoidArray.h"
 
 /* Forward declarations.... */
 class nsIURL;
 class nsIAppShell;
 class nsIWidget;
 class nsIWidgetController;
+class nsIDOMDocument;
+class nsIDOMNode;
 
-class nsWebShellWindow : public nsIWebShellContainer
+class nsWebShellWindow : public nsIWebShellContainer,
+                         public nsIDocumentLoaderObserver
 {
 public:
   nsWebShellWindow();
@@ -70,7 +75,14 @@ public:
   
   nsIWidget* GetWidget(void) { return mWindow; }
 
+  // nsIDocumentLoaderObserver
+  NS_IMETHOD OnStartURLLoad(nsIURL* aURL, const char* aContentType, nsIContentViewer* aViewer);
+  NS_IMETHOD OnConnectionsComplete();
+
 protected:
+  void LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aDOMDoc);
+  nsIDOMNode * FindNamedParentFromDoc(nsIDOMDocument * aDomDoc, const nsString &aName) ;
+
   virtual ~nsWebShellWindow();
 
   static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
@@ -78,6 +90,8 @@ protected:
   nsIWidget*   mWindow;
   nsIWebShell* mWebShell;
   nsIWidgetController* mController;
+
+  nsVoidArray mCommands;
 };
 
 
