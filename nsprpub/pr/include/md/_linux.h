@@ -131,7 +131,7 @@ extern PRInt32 _PR_x86_64_AtomicSet(PRInt32 *val, PRInt32 newval);
 #define _PR_HAVE_ATOMIC_OPS
 #define _MD_INIT_ATOMIC()
 #define _MD_ATOMIC_ADD(ptr, i) ({               \
-    unsigned long __atomic_tmp, __atomic_ret;   \
+    PRInt32 __atomic_tmp, __atomic_ret;   \
     __asm__ __volatile__(                       \
     "1: ldl_l   %[ret], %[val]          \n"     \
     "   addl    %[ret], %[inc], %[tmp]  \n"     \
@@ -149,7 +149,7 @@ extern PRInt32 _PR_x86_64_AtomicSet(PRInt32 *val, PRInt32 newval);
 })
 #define _MD_ATOMIC_INCREMENT(ptr) _MD_ATOMIC_ADD(ptr, 1)
 #define _MD_ATOMIC_DECREMENT(ptr) ({            \
-    unsigned long __atomic_tmp, __atomic_ret;   \
+    PRInt32 __atomic_tmp, __atomic_ret;   \
     __asm__ __volatile__(                       \
     "1: ldl_l   %[ret], %[val]          \n"     \
     "   subl    %[ret], 1, %[tmp]       \n"     \
@@ -166,7 +166,7 @@ extern PRInt32 _PR_x86_64_AtomicSet(PRInt32 *val, PRInt32 newval);
     __atomic_ret;                               \
 })
 #define _MD_ATOMIC_SET(ptr, n) ({               \
-    unsigned long __atomic_tmp, __atomic_ret;   \
+    PRInt32 __atomic_tmp, __atomic_ret;   \
     __asm__ __volatile__(                       \
     "1: ldl_l   %[ret], %[val]          \n"     \
     "   mov     %[newval], %[tmp]       \n"     \
