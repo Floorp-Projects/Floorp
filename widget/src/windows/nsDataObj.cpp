@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsDataObj.h"
+#include "nsClipboard.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsVoidArray.h"
@@ -640,9 +641,6 @@ HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
   aSTG.tymed          = TYMED_HGLOBAL;
   aSTG.pUnkForRelease = NULL;
 
-  // oddly, this isn't in the MSVC headers anywhere.
-  static int CF_HTML = ::RegisterClipboardFormat("HTML Format");
-
   // We play games under the hood and advertise flavors that we know we
   // can support, only they require a bit of conversion or munging of the data.
   // Do that here.
@@ -672,7 +670,7 @@ HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
       return ResultFromScode(S_OK);
     }
   }
-  else if ( aFE.cfFormat == CF_HTML ) {
+  else if ( aFE.cfFormat == nsClipboard::CF_HTML ) {
     // Someone is asking for win32's HTML flavor. Convert our html fragment
     // from unicode to UTF-8 then put it into a format specified by msft.
     NS_ConvertUCS2toUTF8 converter ( NS_REINTERPRET_CAST(PRUnichar*, data) );
@@ -901,9 +899,6 @@ nsDataObj :: BuildPlatformHTML ( const char* inOurHTML, char** outPlatformHTML )
   char *buf = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(400 + strlen(inOurHTML)));
   if( !buf )
     return NS_ERROR_FAILURE;
-
-  // Get clipboard id for HTML format...
-  static int cfid = RegisterClipboardFormat("HTML Format");;
 
   // Create a template string for the HTML header...
   strcpy(buf,

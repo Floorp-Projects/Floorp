@@ -64,6 +64,10 @@
 #include "nsIImage.h"
 
 
+// oddly, this isn't in the MSVC headers anywhere.
+UINT nsClipboard::CF_HTML = ::RegisterClipboardFormat("HTML Format");
+
+
 //-------------------------------------------------------------------------
 //
 // nsClipboard constructor
@@ -101,6 +105,8 @@ UINT nsClipboard::GetFormat(const char* aMimeStr)
     format = CF_HDROP;
   else if (mimeStr.Equals(kURLMime))
     format = CF_UNICODETEXT;
+  else if (mimeStr.Equals(kHTMLMime))
+    format = nsClipboard::CF_HTML;
   else
     format = ::RegisterClipboardFormat(aMimeStr);
 
@@ -181,7 +187,7 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
         // if we find text/html, also advertise win32's html flavor (which we will convert
         // on our own in nsDataObj::GetText().
         FORMATETC htmlFE;
-        SET_FORMATETC(htmlFE, ::RegisterClipboardFormat("HTML Format"), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
+        SET_FORMATETC(htmlFE, CF_HTML, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
         dObj->AddDataFlavor(kHTMLMime, &htmlFE);     
       }
       else if ( strcmp(flavorStr, kURLMime) == 0 ) {
@@ -571,6 +577,31 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
 	        if ( NS_SUCCEEDED(NS_NewNativeLocalFile(filepath, PR_FALSE, getter_AddRefs(file))) )
 	          genericDataWrapper = do_QueryInterface(file);
 	      }
+        else if ( strcmp(flavorStr, kHTMLMime) == 0 ) {
+          // CF_HTML is different from what we want as html. Munge the data appropriately.
+       
+          // convert the win32 line endings to DOM line endings. We do this first to 
+          // avoid another copy since we can't replace the converter's buffer in situ.
+          // CF_HTML is UTF8, so tell the converter we have text/plain so that it does
+          // single byte conversion.
+          PRInt32 signedLen = NS_STATIC_CAST(PRInt32, dataLen);
+          nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks ( kTextMime, &data, &signedLen );
+        
+          // Convert from CF_HTML to gecko's html data flavor. Details of the CF_HTML format
+          // can be found at:
+          //   http://msdn.microsoft.com/workshop/networking/clipboard/htmlclipboard.asp
+          //
+          // Essentially, we strip off all the header info and return everything else. I think
+          // it's safe to assume that the fragment will always contain <!DOCTYPE> at the beginning
+          // of the actual data, so look for that.
+          char* headerStart = strchr((char*)data, '<');
+          if ( headerStart ) {
+            // gecko expects HTML in unicode, but CF_HTML is in UTF8. Convert it 
+            NS_ConvertUTF8toUCS2 converter ( headerStart );
+            dataLen = converter.Length() * sizeof(PRUnichar);
+            nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, (void*)converter.get(), dataLen, getter_AddRefs(genericDataWrapper) );
+          }  
+        }
 	      else {
           // we probably have some form of text. The DOM only wants LF, so convert from Win32 line 
           // endings to DOM line endings.
