@@ -2506,26 +2506,29 @@ static NSArray* sToolbarDefaults = nil;
   [[self getBrowserWrapper] getBlockedSites:getter_AddRefs(blockedSites)];
   PRUint32 siteCount = 0;
   blockedSites->Count(&siteCount);
-  for ( PRUint32 i = 0; i < siteCount; ++i ) {
+  for ( PRUint32 i = 0, insertAt = 1; i < siteCount; ++i ) {
     nsCOMPtr<nsISupports> genericURI = dont_AddRef(blockedSites->ElementAt(i));
     nsCOMPtr<nsIURI> uri = do_QueryInterface(genericURI);
     if ( uri ) {
       // extract the host
       nsCAutoString host;
       uri->GetHost(host);
-      NSString* hostString = [NSString stringWithCString:host.get()];
-      
-      // create a new menu item and set its tag to the position in the menu so
-      // the action can know which site we want to unblock. Insert it at |i+1|
-      // because we had to pad with one item above, but set the tag to |i| because
-      // that's the index in the array.
-      const PRUint32 insertAt = i + 1;
+      NSString* hostString = [NSString stringWithCString:host.get()];      
       NSString* itemTitle = [NSString stringWithFormat:NSLocalizedString(@"Unblock %@", @"Unblock %@"), hostString];
-      [popup insertItemWithTitle:itemTitle atIndex:insertAt];
-      NSMenuItem* currItem = [popup itemAtIndex:insertAt];
-      [currItem setAction:@selector(unblockSite:)];
-      [currItem setTarget:self];
-      [currItem setTag:i];
+
+      // ensure that duplicate hosts aren't inserted
+      if ([popup indexOfItemWithTitle:itemTitle] == -1) {
+        // create a new menu item and set its tag to the position in the menu so
+        // the action can know which site we want to unblock. Insert it at |i+1|
+        // because we had to pad with one item above, but set the tag to |i| because
+        // that's the index in the array.
+        [popup insertItemWithTitle:itemTitle atIndex:insertAt];
+        NSMenuItem* currItem = [popup itemAtIndex:insertAt];
+        [currItem setAction:@selector(unblockSite:)];
+        [currItem setTarget:self];
+        [currItem setTag:i];
+        ++insertAt;              // only increment insert pos if we inserted something
+      }
     }
   }
 }
