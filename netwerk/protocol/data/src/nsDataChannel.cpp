@@ -192,7 +192,6 @@ nsDataChannel::ParseData() {
     nsCOMPtr<nsIInputStream> bufInStream;
     nsCOMPtr<nsIOutputStream> bufOutStream;
     writeData* dataToWrite = nsnull;
-    PRUint32 dataLen = PL_strlen(dataBuffer);
     
     // create an unbounded pipe.
     rv = NS_NewPipe(getter_AddRefs(bufInStream),
@@ -209,6 +208,8 @@ nsDataChannel::ParseData() {
         goto cleanup;
     }
 
+    PRUint32 dataLen;
+    dataLen = nsUnescapeCount(dataBuffer);
     if (lBase64) {
         *base64 = ';';
         PRInt32 resultLen = 0;
@@ -238,7 +239,7 @@ nsDataChannel::ParseData() {
 
         nsMemory::Free(decodedData);
     } else {
-        dataToWrite->dataLen = nsUnescapeCount(dataBuffer);
+        dataToWrite->dataLen = dataLen;
         dataToWrite->data = dataBuffer;
 
         rv = bufOutStream->WriteSegments(nsReadData, dataToWrite, dataLen, &wrote);
