@@ -2139,18 +2139,11 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
     if (NS_FAILED(rv))
       return rv;
 
-    PRInt32 nameSpaceID;
-
-    rv = mContent->GetNameSpaceID(nameSpaceID);
-
-    if (NS_FAILED(rv))
-      return rv;
-
     nsAutoString resultValue;
 
     // Check if the readonly attribute is set.
 
-    rv = mContent->GetAttr(nameSpaceID, nsHTMLAtoms::readonly, resultValue);
+    rv = mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::readonly, resultValue);
 
     if (NS_FAILED(rv))
       return rv;
@@ -2160,7 +2153,7 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
 
     // Check if the disabled attribute is set.
 
-    rv = mContent->GetAttr(nameSpaceID, nsHTMLAtoms::disabled, resultValue);
+    rv = mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, resultValue);
 
     if (NS_FAILED(rv))
       return rv;
@@ -2276,10 +2269,6 @@ nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 
   PropagateDebug(aState);
 
-  // navquirk can only happen if we are in the HTML namespace. It does not apply in XUL.
-  PRInt32 nameSpaceID;
-  mContent->GetNameSpaceID(nameSpaceID);
-  
   aSize.width = 0;
   aSize.height = 0;
 
