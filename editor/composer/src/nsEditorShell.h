@@ -178,14 +178,6 @@ class nsEditorShell :   public nsIEditorShell,
 
     nsresult        GetDocumentURI(nsIDOMDocument *aDoc, nsIURI **aDocumentURI);
 
-    nsresult        PromptAndSetTitleIfNone(nsIDOMHTMLDocument *aHTMLDocument, 
-                                            PRBool *titleChanged, PRBool *retVal);
-
-    nsresult        ShowSaveFilePicker(PRBool aDoSaveAsText, nsIURI *aDocumentURI,
-                                       nsIDOMHTMLDocument *aHTMLDocument, 
-                                       const char *aMIMEType,
-                                       PRInt16 *aDialogResult, nsIFile **aSaveLocation);
-
     // Helper method which is called at the beginning of a new page load
     nsresult        StartPageLoad(nsIChannel *aChannel);
 
