@@ -4774,9 +4774,9 @@ NS_IMETHODIMP nsPluginHostImpl::NewTempFileName(const char* prefix, PRUint32 buf
 NS_IMETHODIMP nsPluginHostImpl::GetCookie(const char* inCookieURL, void* inOutCookieBuffer, PRUint32& inOutCookieSize)
 {
   nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
-  nsString cookieString;
+  nsXPIDLCString cookieString;
+  PRUint32 cookieStringLen = 0;
   nsCOMPtr<nsIURI> uriIn;
-  char *bufPtr;
   
   if ((nsnull == inCookieURL) || (0 >= inOutCookieSize)) {
     return NS_ERROR_INVALID_ARG;
@@ -4800,15 +4800,15 @@ NS_IMETHODIMP nsPluginHostImpl::GetCookie(const char* inCookieURL, void* inOutCo
     return rv;
   }
 
-  rv = cookieService->GetCookieString(uriIn, &bufPtr);
+  rv = cookieService->GetCookieString(uriIn, getter_Copies(cookieString));
   
-  if (NS_FAILED(rv) || (nsnull == bufPtr) ||
-      (inOutCookieSize < PL_strlen(bufPtr))) {
+  if (NS_FAILED(rv) || (!cookieString) ||
+      (inOutCookieSize <= (cookieStringLen = PL_strlen(cookieString.get())))) {
     return NS_ERROR_FAILURE;
   }
-  bufPtr = cookieString.ToCString((char *) inOutCookieBuffer, 
-                                  inOutCookieSize);
-  inOutCookieSize = PL_strlen(bufPtr);
+
+  PL_strcpy((char *) inOutCookieBuffer, cookieString.get());
+  inOutCookieSize = cookieStringLen;
   rv = NS_OK;
   
   return rv;
