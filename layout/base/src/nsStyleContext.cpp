@@ -46,17 +46,23 @@ struct StyleFontImpl : public nsStyleFont {
     : nsStyleFont(aFont)
   {}
 
-  void InheritFrom(const nsStyleFont& aCopy);
+  void ResetFrom(const nsStyleFont* aParent, nsIPresContext* aPresContext);
 
 private:  // These are not allowed
   StyleFontImpl(const StyleFontImpl& aOther);
   StyleFontImpl& operator=(const StyleFontImpl& aOther);
 };
 
-void StyleFontImpl::InheritFrom(const nsStyleFont& aCopy)
+void StyleFontImpl::ResetFrom(const nsStyleFont* aParent, nsIPresContext* aPresContext)
 {
-  mFont = aCopy.mFont;
-  mThreeD = aCopy.mThreeD;
+  if (nsnull != aParent) {
+    mFont = aParent->mFont;
+    mThreeD = aParent->mThreeD;
+  }
+  else {
+    mFont = aPresContext->GetDefaultFont();
+    mThreeD = PR_FALSE;
+  }
 }
 
 // --------------------
@@ -66,49 +72,39 @@ nsStyleColor::nsStyleColor(void) { }
 nsStyleColor::~nsStyleColor(void) { }
 
 struct StyleColorImpl: public nsStyleColor {
-  StyleColorImpl(void)
-  {
-    mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
-    mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT;
-    mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
+  StyleColorImpl(void)  { }
 
-    mBackgroundColor = NS_RGB(192,192,192);
-    mCursor = NS_STYLE_CURSOR_INHERIT;
-  }
-
-  void InheritFrom(const nsStyleColor& aCopy);
+  void ResetFrom(const nsStyleColor* aParent, nsIPresContext* aPresContext);
 
 private:  // These are not allowed
   StyleColorImpl(const StyleColorImpl& aOther);
   StyleColorImpl& operator=(const StyleColorImpl& aOther);
 };
 
-void StyleColorImpl::InheritFrom(const nsStyleColor& aCopy)
+void StyleColorImpl::ResetFrom(const nsStyleColor* aParent, nsIPresContext* aPresContext)
 {
-  mColor = aCopy.mColor;
+  if (nsnull != aParent) {
+    mColor = aParent->mColor;
+  }
+  else {
+    mColor = NS_RGB(0, 0, 0);
+  }
+
+  mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
+  mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT;
+  mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
+  mBackgroundColor = NS_RGB(192,192,192);
+  mBackgroundXPosition = 0;
+  mBackgroundYPosition = 0;
+
+  mCursor = NS_STYLE_CURSOR_INHERIT;
 }
 
 
 // --------------------
 // nsStyleSpacing
 //
-nsStyleSpacing::nsStyleSpacing(void)
-  : mMargin(),
-    mPadding(),
-    mBorder(),
-    mHasCachedMargin(PR_FALSE),
-    mHasCachedPadding(PR_FALSE),
-    mHasCachedBorder(PR_FALSE)
-{
-  mBorderStyle[0] = NS_STYLE_BORDER_STYLE_NONE;
-  mBorderStyle[1] = NS_STYLE_BORDER_STYLE_NONE;
-  mBorderStyle[2] = NS_STYLE_BORDER_STYLE_NONE;
-  mBorderStyle[3] = NS_STYLE_BORDER_STYLE_NONE;
-  mBorderColor[0] = NS_RGB(0, 0, 0);
-  mBorderColor[1] = NS_RGB(0, 0, 0);
-  mBorderColor[2] = NS_RGB(0, 0, 0);
-  mBorderColor[3] = NS_RGB(0, 0, 0);
-}
+nsStyleSpacing::nsStyleSpacing(void) { }
 
 #define NS_SPACING_MARGIN   0
 #define NS_SPACING_PADDING  1
@@ -267,13 +263,28 @@ struct StyleSpacingImpl: public nsStyleSpacing {
     : nsStyleSpacing()
   {}
 
-  void InheritFrom(const nsStyleSpacing& aCopy);
+  void ResetFrom(const nsStyleSpacing* aParent, nsIPresContext* aPresContext);
   void RecalcData(nsIPresContext* aPresContext);
 };
 
-void StyleSpacingImpl::InheritFrom(const nsStyleSpacing& aCopy)
+void StyleSpacingImpl::ResetFrom(const nsStyleSpacing* aParent, nsIPresContext* aPresContext)
 {
   // spacing values not inherited
+  mMargin.Reset();
+  mPadding.Reset();
+  mBorder.Reset();
+  mBorderStyle[0] = NS_STYLE_BORDER_STYLE_NONE;
+  mBorderStyle[1] = NS_STYLE_BORDER_STYLE_NONE;
+  mBorderStyle[2] = NS_STYLE_BORDER_STYLE_NONE;
+  mBorderStyle[3] = NS_STYLE_BORDER_STYLE_NONE;
+  mBorderColor[0] = NS_RGB(0, 0, 0);
+  mBorderColor[1] = NS_RGB(0, 0, 0);
+  mBorderColor[2] = NS_RGB(0, 0, 0);
+  mBorderColor[3] = NS_RGB(0, 0, 0);
+
+  mHasCachedMargin = PR_FALSE;
+  mHasCachedPadding = PR_FALSE;
+  mHasCachedBorder = PR_FALSE;
 }
 
 inline PRBool IsFixedUnit(nsStyleUnit aUnit, PRBool aEnumOK)
@@ -374,20 +385,23 @@ nsStyleList::nsStyleList(void) { }
 nsStyleList::~nsStyleList(void) { }
 
 struct StyleListImpl: public nsStyleList {
-  StyleListImpl(void)
-  {
-    mListStyleType = NS_STYLE_LIST_STYLE_BASIC;
-    mListStylePosition = NS_STYLE_LIST_STYLE_POSITION_OUTSIDE;
-  }
+  StyleListImpl(void) { }
 
-  void InheritFrom(const nsStyleList& aCopy);
+  void ResetFrom(const nsStyleList* aParent, nsIPresContext* aPresContext);
 };
 
-void StyleListImpl::InheritFrom(const nsStyleList& aCopy)
+void StyleListImpl::ResetFrom(const nsStyleList* aParent, nsIPresContext* aPresContext)
 {
-  mListStyleType = aCopy.mListStyleType;
-  mListStyleImage = aCopy.mListStyleImage;
-  mListStylePosition = aCopy.mListStylePosition;
+  if (nsnull != aParent) {
+    mListStyleType = aParent->mListStyleType;
+    mListStyleImage = aParent->mListStyleImage;
+    mListStylePosition = aParent->mListStylePosition;
+  }
+  else {
+    mListStyleType = NS_STYLE_LIST_STYLE_BASIC;
+    mListStylePosition = NS_STYLE_LIST_STYLE_POSITION_OUTSIDE;
+    mListStyleImage.Truncate();
+  }
 }
 
 // --------------------
@@ -396,29 +410,24 @@ void StyleListImpl::InheritFrom(const nsStyleList& aCopy)
 nsStylePosition::nsStylePosition(void) { }
 
 struct StylePositionImpl: public nsStylePosition {
-  StylePositionImpl(void)
-  {
-    mPosition = NS_STYLE_POSITION_NORMAL;
-    mOverflow = NS_STYLE_OVERFLOW_VISIBLE;
-    mLeftOffset.SetAutoValue();
-    mTopOffset.SetAutoValue();
-    mWidth.SetAutoValue();
-    mHeight.SetAutoValue();
-    mZIndex.SetAutoValue();
-    mClipFlags = NS_STYLE_CLIP_AUTO;
-    mClip.SizeTo(0,0,0,0);
-  }
+  StylePositionImpl(void) { }
 
-  void InheritFrom(const nsStylePosition& aCopy);
+  void ResetFrom(const nsStylePosition* aParent, nsIPresContext* aPresContext);
 
 private:  // These are not allowed
   StylePositionImpl(const StylePositionImpl& aOther);
   StylePositionImpl& operator=(const StylePositionImpl& aOther);
 };
 
-void StylePositionImpl::InheritFrom(const nsStylePosition& aCopy)
+void StylePositionImpl::ResetFrom(const nsStylePosition* aParent, nsIPresContext* aPresContext)
 {
   // positioning values not inherited
+  mPosition = NS_STYLE_POSITION_NORMAL;
+  mLeftOffset.SetAutoValue();
+  mTopOffset.SetAutoValue();
+  mWidth.SetAutoValue();
+  mHeight.SetAutoValue();
+  mZIndex.SetAutoValue();
 }
 
 // --------------------
@@ -428,9 +437,29 @@ void StylePositionImpl::InheritFrom(const nsStylePosition& aCopy)
 nsStyleText::nsStyleText(void) { }
 
 struct StyleTextImpl: public nsStyleText {
-  StyleTextImpl(void) {
+  StyleTextImpl(void) { }
+
+  void ResetFrom(const nsStyleText* aParent, nsIPresContext* aPresContext);
+};
+
+void StyleTextImpl::ResetFrom(const nsStyleText* aParent, nsIPresContext* aPresContext)
+{
+  // These properties not inherited
+  mTextDecoration = NS_STYLE_TEXT_DECORATION_NONE;
+  mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated);
+
+  if (nsnull != aParent) {
+    mTextAlign = aParent->mTextAlign;
+    mTextTransform = aParent->mTextTransform;
+    mWhiteSpace = aParent->mWhiteSpace;
+
+    mLetterSpacing = aParent->mLetterSpacing;
+    mLineHeight = aParent->mLineHeight;
+    mTextIndent = aParent->mTextIndent;
+    mWordSpacing = aParent->mWordSpacing;
+  }
+  else {
     mTextAlign = NS_STYLE_TEXT_ALIGN_LEFT;
-    mTextDecoration = NS_STYLE_TEXT_DECORATION_NONE;
     mTextTransform = NS_STYLE_TEXT_TRANSFORM_NONE;
     mWhiteSpace = NS_STYLE_WHITESPACE_NORMAL;
 
@@ -438,24 +467,8 @@ struct StyleTextImpl: public nsStyleText {
     mLineHeight.SetNormalValue();
     mTextIndent.SetCoordValue(0);
     mWordSpacing.SetNormalValue();
-    mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated);
   }
 
-  void InheritFrom(const nsStyleText& aCopy);
-};
-
-void StyleTextImpl::InheritFrom(const nsStyleText& aCopy)
-{
-  // Properties not listed here are not inherited: mVerticalAlign,
-  // mTextDecoration
-  mTextAlign = aCopy.mTextAlign;
-  mTextTransform = aCopy.mTextTransform;
-  mWhiteSpace = aCopy.mWhiteSpace;
-
-  mLetterSpacing = aCopy.mLetterSpacing;
-  mLineHeight = aCopy.mLineHeight;
-  mTextIndent = aCopy.mTextIndent;
-  mWordSpacing = aCopy.mWordSpacing;
 }
 
 // --------------------
@@ -465,21 +478,29 @@ void StyleTextImpl::InheritFrom(const nsStyleText& aCopy)
 nsStyleDisplay::nsStyleDisplay(void) { }
 
 struct StyleDisplayImpl: public nsStyleDisplay {
-  StyleDisplayImpl(void) {
-    mDirection = NS_STYLE_DIRECTION_LTR;
-    mDisplay = NS_STYLE_DISPLAY_INLINE;
-    mFloats = NS_STYLE_FLOAT_NONE;
-    mBreakType = NS_STYLE_CLEAR_NONE;
-    mBreakBefore = PR_FALSE;
-    mBreakAfter = PR_FALSE;
-  }
+  StyleDisplayImpl(void) { }
 
-  void InheritFrom(const nsStyleDisplay& aCopy);
+  void ResetFrom(const nsStyleDisplay* aParent, nsIPresContext* aPresContext);
 };
 
-void StyleDisplayImpl::InheritFrom(const nsStyleDisplay& aCopy)
+void StyleDisplayImpl::ResetFrom(const nsStyleDisplay* aParent, nsIPresContext* aPresContext)
 {
-  mDirection = aCopy.mDirection;
+  if (nsnull != aParent) {
+    mDirection = aParent->mDirection;
+    mVisible = aParent->mVisible;
+  }
+  else {
+    mDirection = NS_STYLE_DIRECTION_LTR;
+    mVisible = PR_TRUE;
+  }
+  mDisplay = NS_STYLE_DISPLAY_INLINE;
+  mFloats = NS_STYLE_FLOAT_NONE;
+  mBreakType = NS_STYLE_CLEAR_NONE;
+  mBreakBefore = PR_FALSE;
+  mBreakAfter = PR_FALSE;
+  mOverflow = NS_STYLE_OVERFLOW_VISIBLE;
+  mClipFlags = NS_STYLE_CLIP_AUTO;
+  mClip.SizeTo(0,0,0,0);
 }
 
 // --------------------
@@ -489,18 +510,18 @@ void StyleDisplayImpl::InheritFrom(const nsStyleDisplay& aCopy)
 nsStyleTable::nsStyleTable(void) { }
 
 struct StyleTableImpl: public nsStyleTable {
-  StyleTableImpl(void) {
-    mFrame = NS_STYLE_TABLE_FRAME_NONE;
-    mRules = NS_STYLE_TABLE_RULES_NONE;
-    mCellPadding.Reset();
-    mCellSpacing.Reset();
-  }
+  StyleTableImpl(void) { }
 
-  void InheritFrom(const nsStyleTable& aCopy);
+  void ResetFrom(const nsStyleTable* aParent, nsIPresContext* aPresContext);
 };
 
-void StyleTableImpl::InheritFrom(const nsStyleTable& aCopy)
+void StyleTableImpl::ResetFrom(const nsStyleTable* aParent, nsIPresContext* aPresContext)
 {
+  // values not inherited
+  mFrame = NS_STYLE_TABLE_FRAME_NONE;
+  mRules = NS_STYLE_TABLE_RULES_NONE;
+  mCellPadding.Reset();
+  mCellSpacing.Reset();
 }
 
 
@@ -523,17 +544,27 @@ public:
   virtual nsISupportsArray* GetStyleRules(void) const;
   virtual PRInt32 GetStyleRuleCount(void) const;
 
+  virtual nsIStyleContext* FindChildWithRules(nsISupportsArray* aRules);
+
   virtual PRBool    Equals(const nsIStyleContext* aOther) const;
   virtual PRUint32  HashValue(void) const;
 
+  virtual void RemapStyle(nsIPresContext* aPresContext);
+
   virtual nsStyleStruct* GetData(nsStyleStructID aSID);
 
-  virtual void InheritFrom(const StyleContextImpl& aParent);
   virtual void RecalcAutomaticData(nsIPresContext* aPresContext);
 
   virtual void  List(FILE* out, PRInt32 aIndent);
 
-  nsIStyleContext*  mParent;
+protected:
+  void AddChild(StyleContextImpl* aChild);
+
+  StyleContextImpl* mParent;
+  StyleContextImpl* mChild;
+  StyleContextImpl* mPrev;
+  StyleContextImpl* mNext;
+
   PRUint32          mHashValid: 1;
   PRUint32          mHashValue: 31;
   nsISupportsArray* mRules;
@@ -561,7 +592,8 @@ static PRInt32 gInstrument = 6;
 StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
                                    nsISupportsArray* aRules, 
                                    nsIPresContext* aPresContext)
-  : mParent(aParent), // weak ref
+  : mParent((StyleContextImpl*)aParent), // weak ref
+    mChild(nsnull),
     mRules(aRules),
     mFont(aPresContext->GetDefaultFont()),
     mColor(),
@@ -575,18 +607,14 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
   NS_INIT_REFCNT();
   NS_IF_ADDREF(mRules);
 
-  if (nsnull != aParent) {
-    InheritFrom((StyleContextImpl&)*aParent);
+  mNext = this;
+  mPrev = this;
+  if (nsnull != mParent) {
+    mParent->AddChild(this);
   }
 
-  if (nsnull != mRules) {
-    PRInt32 index = mRules->Count();
-    while (0 < index) {
-      nsIStyleRule* rule = (nsIStyleRule*)mRules->ElementAt(--index);
-      rule->MapStyleInto(this, aPresContext);
-      NS_RELEASE(rule);
-    }
-  }
+  RemapStyle(aPresContext);
+
 #ifdef DEBUG_REFS
   mInstance = ++gInstanceCount;
   fprintf(stdout, "%d of %d + StyleContext\n", mInstance, gInstanceCount);
@@ -596,6 +624,17 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
 StyleContextImpl::~StyleContextImpl()
 {
   mParent = nsnull; // weak ref
+
+  if (nsnull != mChild) {
+    StyleContextImpl* child = mChild;
+    do {
+      StyleContextImpl* goner = child;
+      child = child->mNext;
+      NS_RELEASE(goner);
+    } while (child != mChild);
+    mChild = nsnull;
+  }
+
   NS_IF_RELEASE(mRules);
   if (nsnull != mTable) {
     delete mTable;
@@ -644,6 +683,20 @@ nsIStyleContext* StyleContextImpl::GetParent(void) const
   return mParent;
 }
 
+void StyleContextImpl::AddChild(StyleContextImpl* aChild)
+{
+  if (nsnull == mChild) {
+    mChild = aChild;
+  }
+  else {
+    aChild->mNext = mChild;
+    aChild->mPrev = mChild->mPrev;
+    mChild->mPrev->mNext = aChild;
+    mChild->mPrev = aChild;
+  }
+  NS_ADDREF(aChild);
+}
+
 nsISupportsArray* StyleContextImpl::GetStyleRules(void) const
 {
   NS_IF_ADDREF(mRules);
@@ -656,6 +709,27 @@ PRInt32 StyleContextImpl::GetStyleRuleCount(void) const
     return mRules->Count();
   }
   return 0;
+}
+
+nsIStyleContext* StyleContextImpl::FindChildWithRules(nsISupportsArray* aRules)
+{
+  nsIStyleContext* result = nsnull;
+
+  if (nsnull != mChild) {
+    StyleContextImpl* child = mChild;
+    PRInt32 ruleCount = aRules->Count();
+    do {
+      if (child->GetStyleRuleCount() == ruleCount) {
+        if (child->mRules->Equals(aRules)) {
+          result = child;
+          NS_ADDREF(result);
+          break;
+        }
+      }
+      child = child->mNext;
+    } while (child != mChild);
+  }
+  return result;
 }
 
 
@@ -729,9 +803,8 @@ nsStyleStruct* StyleContextImpl::GetData(nsStyleStructID aSID)
       if (nsnull == mTable) {
         mTable = new StyleTableImpl();
         if (nsnull != mParent) {
-          StyleContextImpl* parent = (StyleContextImpl*)mParent;
-          if (nsnull != parent->mTable) {
-            mTable->InheritFrom(*(parent->mTable));
+          if (nsnull != mParent->mTable) {
+            mTable->ResetFrom(mParent->mTable, nsnull);
           }
         }
       }
@@ -744,15 +817,49 @@ nsStyleStruct* StyleContextImpl::GetData(nsStyleStructID aSID)
   return result;
 }
 
-void StyleContextImpl::InheritFrom(const StyleContextImpl& aParent)
+struct MapStyleData {
+  MapStyleData(nsIStyleContext* aStyleContext, nsIPresContext* aPresContext)
+  {
+    mStyleContext = aStyleContext;
+    mPresContext = aPresContext;
+  }
+  nsIStyleContext*  mStyleContext;
+  nsIPresContext*   mPresContext;
+};
+
+PRBool MapStyleRule(nsISupports* aRule, void* aData)
 {
-  mFont.InheritFrom(aParent.mFont);
-  mColor.InheritFrom(aParent.mColor);
-  mSpacing.InheritFrom(aParent.mSpacing);
-  mList.InheritFrom(aParent.mList);
-  mText.InheritFrom(aParent.mText);
-  mPosition.InheritFrom(aParent.mPosition);
-  mDisplay.InheritFrom(aParent.mDisplay);
+  nsIStyleRule* rule = (nsIStyleRule*)aRule;
+  MapStyleData* data = (MapStyleData*)aData;
+  rule->MapStyleInto(data->mStyleContext, data->mPresContext);
+  return PR_TRUE;
+}
+
+void StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
+{
+  if (nsnull != mParent) {
+    mFont.ResetFrom(&(mParent->mFont), aPresContext);
+    mColor.ResetFrom(&(mParent->mColor), aPresContext);
+    mSpacing.ResetFrom(&(mParent->mSpacing), aPresContext);
+    mList.ResetFrom(&(mParent->mList), aPresContext);
+    mText.ResetFrom(&(mParent->mText), aPresContext);
+    mPosition.ResetFrom(&(mParent->mPosition), aPresContext);
+    mDisplay.ResetFrom(&(mParent->mDisplay), aPresContext);
+  }
+  else {
+    mFont.ResetFrom(nsnull, aPresContext);
+    mColor.ResetFrom(nsnull, aPresContext);
+    mSpacing.ResetFrom(nsnull, aPresContext);
+    mList.ResetFrom(nsnull, aPresContext);
+    mText.ResetFrom(nsnull, aPresContext);
+    mPosition.ResetFrom(nsnull, aPresContext);
+    mDisplay.ResetFrom(nsnull, aPresContext);
+  }
+
+  if ((nsnull != mRules) && (0 < mRules->Count())) {
+    MapStyleData  data(this, aPresContext);
+    mRules->EnumerateBackwards(MapStyleRule, &data);
+  }
 }
 
 void StyleContextImpl::RecalcAutomaticData(nsIPresContext* aPresContext)
@@ -786,23 +893,16 @@ void StyleContextImpl::List(FILE* out, PRInt32 aIndent)
 
 NS_LAYOUT nsresult
 NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
+                   nsIStyleContext* aParentContext,
                    nsISupportsArray* aRules,
-                   nsIPresContext* aPresContext,
-                   nsIFrame* aParentFrame)
+                   nsIPresContext* aPresContext)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsIStyleContext* parent = nsnull;
-  if (nsnull != aParentFrame) {
-    aParentFrame->GetStyleContext(aPresContext, parent);
-    NS_ASSERTION(nsnull != parent, "parent frame must have style context");
-  }
-
-  StyleContextImpl* context = new StyleContextImpl(parent, aRules, aPresContext);
-  NS_IF_RELEASE(parent);
+  StyleContextImpl* context = new StyleContextImpl(aParentContext, aRules, aPresContext);
   if (nsnull == context) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
