@@ -229,19 +229,25 @@ that, too, then the magic is to do run "mysql mysql", and feed it commands like
 this (replace all instances of HOSTNAME with the name of the machine mysql is
 running on):
 
-	DELETE * FROM host;
-	DELETE * FROM user;
-	INSERT INTO host VALUES ('localhost','%','Y','Y','Y','Y','Y','Y');
-	INSERT INTO host VALUES (HOSTNAME,'%','Y','Y','Y','Y','Y','Y');
-	INSERT INTO user VALUES ('localhost','root','','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y');
-	INSERT INTO user VALUES (HOSTNAME,'','','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y');
-	INSERT INTO user VALUES (HOSTNAME,'root','','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y');
-	INSERT INTO user VALUES ('localhost','','','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y');
+	DELETE FROM host;
+	DELETE FROM user;
+	INSERT INTO host VALUES ('localhost','%','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y');
+	INSERT INTO host VALUES (HOSTNAME,'%','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y');
+	INSERT INTO user VALUES ('localhost','root','','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y');
+	INSERT INTO user VALUES (HOSTNAME,'','','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y');
+	INSERT INTO user VALUES (HOSTNAME,'root','','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y');
+	INSERT INTO user VALUES ('localhost','','','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y');
+
+The number of 'Y' entries to use varies with the version of MySQL; they keep
+adding columns.  The list here should work with version 3.22.23b.
 
 This run of "mysql mysql" may need some extra parameters to deal with whatever
 database permissions were set up previously.  In particular, you might have to say "mysql -uroot mysql", and give it an appropriate password.
 
 For much more information about MySQL permissions, see the MySQL documentation.
+
+After you've tweaked the permissions, run "mysqladmin reload" to make sure that
+the database server knows to look at your new permission list.
 
    Next we'll create the bugs database in MySQL.  This is done using the
 'mysql' command line client.  This client allows one to funnel SQL
@@ -266,14 +272,16 @@ scripts load data into the database by piping input into the mysql
 command.  Order does not matter, but this one is fine:
 
 	./makeactivitytable.sh
+	./makeattachmenttable.sh
 	./makebugtable.sh
 	./makecctable.sh
 	./makecomponenttable.sh
+	./makedependenciestable.sh
+	./makegroupstable.sh
 	./makelogincookiestable.sh
 	./makeproducttable.sh
 	./makeprofilestable.sh
 	./makeversiontable.sh
-	./makegroupstable.sh
 
 You may want to edit the scripts; once bugs are entered it gets very hard to
 make changes. Think carefully about how you want database users to describe bugs.  Here's one
