@@ -49,6 +49,11 @@
             OUTLETS = {_firstKeyView = id; _initialKeyView = id; _lastKeyView = id; _window = id; }; 
             SUPERCLASS = NSObject; 
         }, 
+        {
+            CLASS = OrgMozillaChimeraPreferencePersonal; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSPreferencePane; 
+        }, 
         {CLASS = PersonalPane; LANGUAGE = ObjC; SUPERCLASS = NSPreferencePane; }
     ); 
     IBVersion = 1; 
