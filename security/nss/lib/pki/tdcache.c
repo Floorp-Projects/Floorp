@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.33 $ $Date: 2002/09/23 21:32:34 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.34 $ $Date: 2002/11/06 18:53:55 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -362,13 +362,12 @@ remove_email_entry (
 }
 
 NSS_IMPLEMENT void
-nssTrustDomain_RemoveCertFromCache (
+nssTrustDomain_RemoveCertFromCacheLOCKED (
   NSSTrustDomain *td,
   NSSCertificate *cert
 )
 {
     nssList *subjectList;
-    PRStatus nssrv;
     cache_entry *ce;
     NSSArena *arena;
     NSSUTF8 *nickname;
@@ -376,37 +375,22 @@ nssTrustDomain_RemoveCertFromCache (
 #ifdef DEBUG_CACHE
     log_cert_ref("attempt to remove cert", cert);
 #endif
-    PZ_Lock(td->cache->lock);
     ce = (cache_entry *)nssHash_Lookup(td->cache->issuerAndSN, cert);
     if (!ce || ce->entry.cert != cert) {
 	/* If it's not in the cache, or a different cert is (this is really
 	 * for safety reasons, though it shouldn't happen), do nothing 
 	 */
-	PZ_Unlock(td->cache->lock);
 #ifdef DEBUG_CACHE
 	PR_LOG(s_log, PR_LOG_DEBUG, ("but it wasn't in the cache"));
 #endif
 	return;
     }
-    nssrv = remove_issuer_and_serial_entry(td->cache, cert);
-    if (nssrv != PR_SUCCESS) {
-	goto loser;
-    }
-    nssrv = remove_subject_entry(td->cache, cert, &subjectList, 
-							&nickname, &arena);
-    if (nssrv != PR_SUCCESS) {
-	goto loser;
-    }
+    (void)remove_issuer_and_serial_entry(td->cache, cert);
+    (void)remove_subject_entry(td->cache, cert, &subjectList, 
+                               &nickname, &arena);
     if (nssList_Count(subjectList) == 0) {
-	PRStatus nssrv2;
-	nssrv = remove_nickname_entry(td->cache, nickname, subjectList);
-	nssrv2 = remove_email_entry(td->cache, cert, subjectList);
-#ifndef NSS_3_4_CODE
-	/* XXX Again, 3.4 allows for certs w/o either nickname or email */
-	if (nssrv != PR_SUCCESS && nssrv2 != PR_SUCCESS) {
-	    goto loser;
-	}
-#endif
+	(void)remove_nickname_entry(td->cache, nickname, subjectList);
+	(void)remove_email_entry(td->cache, cert, subjectList);
 	(void)nssList_Destroy(subjectList);
 	nssHash_Remove(td->cache->subject, &cert->subject);
 	/* there are no entries left for this subject, free the space used
@@ -416,29 +400,22 @@ nssTrustDomain_RemoveCertFromCache (
 	    nssArena_Destroy(arena);
 	}
     }
-    PZ_Unlock(td->cache->lock);
-    NSSCertificate_Destroy(cert); /* release the reference */
-    return;
-loser:
-    /* if here, then the cache is inconsistent.  For now, flush it. */
-    PZ_Unlock(td->cache->lock);
-#ifdef DEBUG_CACHE
-    PR_LOG(s_log, PR_LOG_DEBUG, ("remove cert failed, flushing"));
-#endif
-    nssTrustDomain_FlushCache(td, -1.0);
-    NSSCertificate_Destroy(cert); /* release the reference */
 }
 
-/* This is used to remove all certs below a certain threshold, where
- * the value is determined by how many times the cert has been requested
- * and when the last request was.
- */
 NSS_IMPLEMENT void
-nssTrustDomain_FlushCache (
-  NSSTrustDomain *td,
-  PRFloat64 threshold
+nssTrustDomain_LockCertCache (
+  NSSTrustDomain *td
 )
 {
+    PZ_Lock(td->cache->lock);
+}
+
+NSS_IMPLEMENT void
+nssTrustDomain_UnlockCertCache (
+  NSSTrustDomain *td
+)
+{
+    PZ_Unlock(td->cache->lock);
 }
 
 struct token_cert_dtor {
@@ -462,7 +439,7 @@ remove_token_certs(const void *k, void *v, void *a)
 	    object->instances[i] = object->instances[object->numInstances-1];
 	    object->instances[object->numInstances-1] = NULL;
 	    object->numInstances--;
-	    dtor->certs[dtor->numCerts++] = nssCertificate_AddRef(c);
+	    dtor->certs[dtor->numCerts++] = c;
 	    if (dtor->numCerts == dtor->arrSize) {
 		dtor->arrSize *= 2;
 		dtor->certs = nss_ZREALLOCARRAY(dtor->certs, 
@@ -500,15 +477,14 @@ nssTrustDomain_RemoveTokenCertsFromCache (
     dtor.arrSize = arrSize;
     PZ_Lock(td->cache->lock);
     nssHash_Iterate(td->cache->issuerAndSN, remove_token_certs, (void *)&dtor);
-    PZ_Unlock(td->cache->lock);
     for (i=0; i<dtor.numCerts; i++) {
 	if (dtor.certs[i]->object.numInstances == 0) {
-	    nssTrustDomain_RemoveCertFromCache(td, dtor.certs[i]);
+	    nssTrustDomain_RemoveCertFromCacheLOCKED(td, dtor.certs[i]);
 	} else {
 	    STAN_ForceCERTCertificateUpdate(dtor.certs[i]);
 	}
-	nssCertificate_Destroy(dtor.certs[i]);
     }
+    PZ_Unlock(td->cache->lock);
     nss_ZFreeIf(dtor.certs);
     return PR_SUCCESS;
 }
@@ -808,7 +784,7 @@ add_cert_to_cache (
 	}
 #endif
     }
-    rvCert = nssCertificate_AddRef(cert);
+    rvCert = cert;
     PZ_Unlock(td->cache->lock);
     return rvCert;
 loser:
