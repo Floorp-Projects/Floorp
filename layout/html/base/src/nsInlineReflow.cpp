@@ -387,7 +387,18 @@ nsInlineReflow::ReflowFrame(nsReflowMetrics& aMetrics,
   nsIInlineReflow* inlineReflow;
   aBounds.x = x;
   aBounds.y = y;
-  mSpaceManager->Translate(x, y);
+
+  // Adjust spacemanager coordinate system for the frame. The
+  // spacemanager coordinates are <b>inside</b> the mOuterFrame's
+  // border+padding, but the x/y coordinates are not (recall that
+  // frame coordinates are relative to the parents origin and that the
+  // parents border/padding is <b>inside</b> the parent
+  // frame. Therefore we have to subtract out the parents
+  // border+padding before translating.
+  nscoord tx = x - mOuterReflowState.mBorderPadding.left;
+  nscoord ty = y - mOuterReflowState.mBorderPadding.top;
+  mSpaceManager->Translate(tx, ty);
+
   if ((nsnull != mSpaceManager) &&
       (NS_OK == mFrame->QueryInterface(kIRunaroundIID, (void**)&runAround))) {
     nsRect r;
@@ -412,7 +423,7 @@ nsInlineReflow::ReflowFrame(nsReflowMetrics& aMetrics,
     aBounds.width = aMetrics.width;
     aBounds.height = aMetrics.height;
   }
-  mSpaceManager->Translate(-x, -y);
+  mSpaceManager->Translate(-tx, -ty);
 
   // Now that frame has been reflowed at least one time make sure that
   // the NS_FRAME_FIRST_REFLOW bit is cleared so that never give it an
