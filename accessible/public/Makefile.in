@@ -26,8 +26,12 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+DIRS = atk
+else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 DIRS = msaa
+endif
 endif
 
 MODULE    = accessibility
@@ -37,18 +41,11 @@ GRE_MODULE	= 1
 XPIDLSRCS = \
       nsIAccessibilityService.idl \
       nsIAccessible.idl \
-      nsIAccessibleAction.idl \
       nsIAccessibleCaret.idl \
       nsIAccessibleDocument.idl \
-      nsIAccessibleEditableText.idl \
       nsIAccessibleEventReceiver.idl \
-      nsIAccessibleHyperLink.idl \
-      nsIAccessibleHyperText.idl \
       nsIAccessibleProvider.idl \
       nsIAccessibleSelectable.idl \
-      nsIAccessibleTable.idl \
-      nsIAccessibleText.idl \
-      nsIAccessibleValue.idl \
       nsIAccessNode.idl \
       $(NULL)
 

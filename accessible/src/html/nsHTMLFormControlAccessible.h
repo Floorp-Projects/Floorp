@@ -41,7 +41,6 @@
 #define _nsHTMLFormControlAccessible_H_
 
 #include "nsFormControlAccessible.h"
-#include "nsTextAccessible.h"
 
 class nsHTMLCheckboxAccessible : public nsFormControlAccessible
 {
@@ -90,12 +89,7 @@ public:
   NS_IMETHOD AccDoAction(PRUint8 index);
 };
 
-#ifndef MOZ_ACCESSIBILITY_ATK
 class nsHTMLTextFieldAccessible : public nsFormControlAccessible
-#else
-class nsHTMLTextFieldAccessible : public nsFormControlAccessible,
-                                  public nsAccessibleEditableText
-#endif
 {
 
 public:

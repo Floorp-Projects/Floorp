@@ -38,11 +38,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHTMLLinkAccessible.h"
-#include "nsILink.h"
-#include "nsIURI.h"
-#include "nsNetUtil.h"
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLLinkAccessible, nsLinkableAccessible, nsIAccessibleHyperLink)
+NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLLinkAccessible, nsLinkableAccessible)
 
 nsHTMLLinkAccessible::nsHTMLLinkAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
 nsLinkableAccessible(aDomNode, aShell)
@@ -74,73 +71,3 @@ NS_IMETHODIMP nsHTMLLinkAccessible::GetAccState(PRUint32 *_retval)
   return NS_OK;
 }
 
-//-------------------------- nsIAccessibleHyperLink -------------------------
-/* readonly attribute long anchors; */
-NS_IMETHODIMP nsHTMLLinkAccessible::GetAnchors(PRInt32 *aAnchors)
-{
-  if (!IsALink())
-    return NS_ERROR_FAILURE;
-  
-  *aAnchors = 1;
-  return NS_OK;
-}
-
-/* readonly attribute long startIndex; */
-NS_IMETHODIMP nsHTMLLinkAccessible::GetStartIndex(PRInt32 *aStartIndex)
-{
-  //not see the value to implement this attributes
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* readonly attribute long endIndex; */
-NS_IMETHODIMP nsHTMLLinkAccessible::GetEndIndex(PRInt32 *aEndIndex)
-{
-  //not see the value to implement this attributes
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* nsIURI getURI (in long i); */
-NS_IMETHODIMP nsHTMLLinkAccessible::GetURI(PRInt32 i, nsIURI **aURI)
-{
-  //I do not know why we have to return a nsIURI instead of
-  //nsILink or just a string of url. Anyway, maybe nsIURI is
-  //more powerful for the future.
-  *aURI = nsnull;
-
-  nsCOMPtr<nsILink> link(do_QueryInterface(mLinkContent));
-  if (link) {
-    nsXPIDLCString hrefValue;
-    if (NS_SUCCEEDED(link->GetHrefCString(*getter_Copies(hrefValue)))) {
-      return NS_NewURI(aURI, hrefValue, nsnull, nsnull);
-    }
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
-/* nsIAccessible getObject (in long i); */
-NS_IMETHODIMP nsHTMLLinkAccessible::GetObject(PRInt32 aIndex,
-                                              nsIAccessible **aAccessible)
-{
-  if (0 != aIndex)
-    return NS_ERROR_FAILURE;
-  
-  return QueryInterface(NS_GET_IID(nsIAccessible), (void **)aAccessible);
-}
-
-/* boolean isValid (); */
-NS_IMETHODIMP nsHTMLLinkAccessible::IsValid(PRBool *aIsValid)
-{
-  // I have not found the cause which makes this attribute false.
-  *aIsValid = PR_TRUE;
-  return NS_OK;
-}
-
-/* boolean isSelected (); */
-NS_IMETHODIMP nsHTMLLinkAccessible::IsSelected(PRBool *aIsSelected)
-{
-  nsCOMPtr<nsIDOMNode> focusedNode;
-  GetFocusedNode(getter_AddRefs(focusedNode));
-  *aIsSelected = (focusedNode == mDOMNode);
-  return NS_OK;
-}

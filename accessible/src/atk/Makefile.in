@@ -46,6 +46,7 @@ LIBRARY_NAME = accessibility_toolkit_s
 REQUIRES	= content \
 		  docshell \
 		  dom \
+		  editor \
 		  gfx \
 		  htmlparser \
 		  intl \
@@ -68,7 +69,20 @@ CPPSRCS = \
   nsAccessibleWrap.cpp \
   nsDocAccessibleWrap.cpp \
   nsRootAccessibleWrap.cpp \
+  nsAccessibleText.cpp \
+  nsAccessibleHyperText.cpp \
+  nsHTMLFormControlAccessibleWrap.cpp \
+  nsHTMLLinkAccessibleWrap.cpp \
+  nsHTMLTableAccessibleWrap.cpp \
+  nsHTMLBlockAccessible.cpp \
   $(NULL)
+
+#ifdef MOZ_XUL
+CPPSRCS += \
+  nsXULFormControlAccessibleWrap.cpp \
+  nsXULTreeAccessibleWrap.cpp \
+  $(NULL)
+#endif
 
 EXPORTS = \
   nsAccessNodeWrap.h \

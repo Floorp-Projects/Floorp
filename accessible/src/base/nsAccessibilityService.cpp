@@ -40,7 +40,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 // NOTE: alphabetically ordered
+#include "nsAccessibilityAtoms.h"
 #include "nsAccessibilityService.h"
+#include "nsCaretAccessible.h"
+#include "nsDocAccessible.h"
 #include "nsHTMLAreaAccessible.h"
 #include "nsHTMLFormControlAccessible.h"
 #include "nsHTMLImageAccessible.h"
@@ -50,27 +53,28 @@
 #include "nsHTMLTextAccessible.h"
 #include "nsIAccessibilityService.h"
 #include "nsIAccessibleProvider.h"
-#include "nsIContent.h"
-#include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLAreaElement.h"
-#include "nsIDOMHTMLObjectElement.h"
-#include "nsIDOMHTMLOptionElement.h"
-#include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMHTMLLegendElement.h"
-#include "nsIDOMHTMLTableElement.h"
-#include "nsIDOMNode.h"
-#include "nsIDOMXULCheckboxElement.h"
+#include "nsIDOMHTMLObjectElement.h"
+#include "nsIDOMHTMLOptGroupElement.h"
+#include "nsIDOMHTMLOptionElement.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMXULElement.h"
+#include "nsIDocShell.h"
 #include "nsIFrame.h"
 #include "nsILink.h"
-#include "nsIObjectFrame.h"
+#include "nsIObserverService.h"
 #include "nsIPluginInstance.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsITextContent.h"
+#include "nsIWebNavigation.h"
 #include "nsObjectFrame.h"
-#include "nsString.h"
+#include "nsOuterDocAccessible.h"
+#include "nsRootAccessibleWrap.h"
 #include "nsTextFragment.h"
+
 #ifdef MOZ_XUL
 #include "nsXULColorPickerAccessible.h"
 #include "nsXULFormControlAccessible.h"
@@ -80,23 +84,20 @@
 #include "nsXULTextAccessible.h"
 #include "nsXULTreeAccessible.h"
 #endif
-#include "nsRootAccessibleWrap.h"
-#include "nsCaretAccessible.h"
-#include "nsIAccessibleCaret.h"
-#include "nsAccessibilityAtoms.h"
-#include "nsIObserverService.h"
-#include "nsIWebNavigation.h"
-#include "nsIDOMWindow.h"
 
 // For native window support for object/embed/applet tags
 #ifdef XP_WIN
 #include "nsHTMLWin32ObjectAccessible.h"
 #endif
 
-// IFrame
-#include "nsIDocShell.h"
-#include "nsDocAccessible.h"
-#include "nsOuterDocAccessible.h"
+#ifdef MOZ_ACCESSIBILITY_ATK
+#include "nsHTMLBlockAccessible.h"
+#include "nsHTMLLinkAccessibleWrap.h"
+#include "nsHTMLFormControlAccessibleWrap.h"
+#include "nsHTMLTableAccessibleWrap.h"
+#include "nsXULFormControlAccessibleWrap.h"
+#include "nsXULTreeAccessibleWrap.h"
+#endif
 
 /**
   * nsAccessibilityService
@@ -485,6 +486,7 @@ nsAccessibilityService::CreateHTMLImageAccessible(nsISupports *aFrame, nsIAccess
   *_retval = nsnull;
   nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(node));
   if (domElement) {
+#ifdef MOZ_ACCESSIBILITY_ATK
     PRBool hasAttribute;
     rv = domElement->HasAttribute(NS_LITERAL_STRING("usemap"), &hasAttribute);
     if (NS_SUCCEEDED(rv) && hasAttribute) {
@@ -492,6 +494,7 @@ nsAccessibilityService::CreateHTMLImageAccessible(nsISupports *aFrame, nsIAccess
       *_retval = new nsHTMLImageMapAccessible(node, weakShell);
     }
     else
+#endif //MOZ_ACCESSIBILITY_ATK
       *_retval = new nsHTMLImageAccessible(node, weakShell);
   }
 
@@ -669,7 +672,7 @@ nsAccessibilityService::CreateHTMLTableAccessible(nsISupports *aFrame, nsIAccess
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = new nsHTMLTableAccessible(node, weakShell);
+  *_retval = new nsHTMLTableAccessibleWrap(node, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -736,7 +739,7 @@ nsAccessibilityService::CreateHTMLTableCellAccessible(nsISupports *aFrame, nsIAc
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = new nsHTMLTableCellAccessible(node, weakShell);
+  *_retval = new nsHTMLTableCellAccessibleWrap(node, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -795,7 +798,7 @@ nsAccessibilityService::CreateHTMLTextFieldAccessible(nsISupports *aFrame, nsIAc
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = new nsHTMLTextFieldAccessible(node, weakShell);
+  *_retval = new nsHTMLTextFieldAccessibleWrap(node, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1120,7 +1123,7 @@ nsAccessibilityService::CreateXULProgressMeterAccessible(nsIDOMNode *aNode, nsIA
   nsCOMPtr<nsIWeakReference> weakShell;
   GetShellFromNode(aNode, getter_AddRefs(weakShell));
 
-  *_retval = new nsXULProgressMeterAccessible(aNode, weakShell);
+  *_retval = new nsXULProgressMeterAccessibleWrap(aNode, weakShell);
   if (! *_retval)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1373,7 +1376,7 @@ NS_IMETHODIMP nsAccessibilityService::CreateXULTreeAccessible(nsIDOMNode *aNode,
   nsCOMPtr<nsIWeakReference> weakShell;
   GetShellFromNode(aNode, getter_AddRefs(weakShell));
 
-  *_retval = new nsXULTreeAccessible(aNode, weakShell);
+  *_retval = new nsXULTreeAccessibleWrap(aNode, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1390,7 +1393,7 @@ NS_IMETHODIMP nsAccessibilityService::CreateXULTreeColumnsAccessible(nsIDOMNode 
   nsCOMPtr<nsIWeakReference> weakShell;
   GetShellFromNode(aNode, getter_AddRefs(weakShell));
 
-  *_retval = new nsXULTreeColumnsAccessible(aNode, weakShell);
+  *_retval = new nsXULTreeColumnsAccessibleWrap(aNode, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 

@@ -53,4 +53,13 @@ class nsAccessibleWrap : public nsAccessible
     virtual ~nsAccessibleWrap();
 };
 
+// Define unsupported wrap classes here
+typedef class nsHTMLTextFieldAccessible    nsHTMLTextFieldAccessibleWrap;
+typedef class nsHTMLLinkAccessible         nsHTMLLinkAccessibleWrap;
+typedef class nsHTMLTableCellAccessible    nsHTMLTableCellAccessibleWrap;
+typedef class nsHTMLTableAccessible        nsHTMLTableAccessibleWrap;
+typedef class nsXULTreeAccessible          nsXULTreeAccessibleWrap;
+typedef class nsXULTreeColumnsAccessible   nsXULTreeColumnsAccessibleWrap;
+typedef class nsXULProgressMeterAccessible nsXULProgressMeterAccessibleWrap;
+
 #endif

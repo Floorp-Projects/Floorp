@@ -42,19 +42,16 @@
 #include "nsBaseWidgetAccessible.h"
 #include "nsITreeBoxObject.h"
 #include "nsITreeView.h"
-#include "nsIAccessibleTable.h"
 #include "nsXULSelectAccessible.h"
 
 /*
  * A class the represents the XUL Tree widget.
  */
-class nsXULTreeAccessible : public nsXULSelectableAccessible,
-                            public nsIAccessibleTable
+class nsXULTreeAccessible : public nsXULSelectableAccessible
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLESELECTABLE
-  NS_DECL_NSIACCESSIBLETABLE
 
   nsXULTreeAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
   virtual ~nsXULTreeAccessible() {}
@@ -70,11 +67,9 @@ public:
 
   static void GetTreeBoxObject(nsIDOMNode* aDOMNode, nsITreeBoxObject** aBoxObject);
 
-private:
+protected:
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsCOMPtr<nsITreeView> mTreeView;
-  nsCOMPtr<nsIAccessible> mCaption;
-  nsString mSummary;
 
   NS_IMETHOD ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState);
 };
@@ -118,12 +113,10 @@ private:
   nsString mColumn;
 };
 
-class nsXULTreeColumnsAccessible : public nsAccessibleWrap,
-                                   public nsIAccessibleTable
+class nsXULTreeColumnsAccessible : public nsAccessibleWrap
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIACCESSIBLETABLE
 
   nsXULTreeColumnsAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
   virtual ~nsXULTreeColumnsAccessible() {}
@@ -138,10 +131,6 @@ public:
   NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval); 
 
   NS_IMETHOD AccDoAction(PRUint8 index);
-
-private:
-  nsCOMPtr<nsIAccessible> mCaption;
-  nsString mSummary;
 };
 
 class nsXULTreeColumnitemAccessible : public nsLeafAccessible

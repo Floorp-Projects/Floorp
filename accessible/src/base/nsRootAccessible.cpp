@@ -41,7 +41,6 @@
 #include "nsAccessibleEventData.h"
 #include "nsHTMLSelectAccessible.h"
 #include "nsIAccessibleCaret.h"
-#include "nsIAccessibleHyperText.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
@@ -73,6 +72,10 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsAccessibleEventData.h"
 #include "nsIDOMDocument.h"
+
+#ifdef MOZ_ACCESSIBILITY_ATK
+#include "nsIAccessibleHyperText.h"
+#endif
 
 NS_INTERFACE_MAP_BEGIN(nsRootAccessible)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)

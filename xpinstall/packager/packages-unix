@@ -73,6 +73,7 @@ bin/libgtkembedmoz.so
 bin/libxlibrgb.so
 bin/components/libaccessibility.so
 bin/components/accessibility.xpt
+bin/components/accessibility-atk.xpt
 bin/components/libappcomps.so
 bin/components/bookmarks.xpt
 bin/components/directory.xpt
