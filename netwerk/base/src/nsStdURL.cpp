@@ -225,7 +225,8 @@ nsStdURL::Clone(nsIURI **o_URI)
 nsresult 
 nsStdURL::GetURLParser(nsIURLParser* *aURLParser)
 {
-    *aURLParser = mURLParser;
+    *aURLParser = mURLParser.get();
+    NS_ADDREF(*aURLParser);
     return NS_OK;
 }
 
