@@ -82,128 +82,21 @@ nsTransactionManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsTransactionManager::Do(nsITransaction *aTransaction)
 {
-  nsTransactionItem *tx;
-  nsresult result = NS_OK;
+  nsresult result;
 
   if (!aTransaction)
     return NS_ERROR_NULL_POINTER;
 
-  NS_ADDREF(aTransaction);
-
-  // XXX: POSSIBLE OPTIMIZATION
-  //      We could use a factory that pre-allocates/recycles transaction items.
-  tx = new nsTransactionItem(aTransaction);
-
-  if (!tx) {
-    NS_RELEASE(aTransaction);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   LOCK_TX_MANAGER(this);
 
-  result = mDoStack.Push(tx);
+  result = BeginTransaction(aTransaction);
 
-  if (! NS_SUCCEEDED(result)) {
-    delete tx;
+  if (NS_FAILED(result)) {
     UNLOCK_TX_MANAGER(this);
     return result;
   }
 
-  result = tx->Do();
-
-  if (! NS_SUCCEEDED(result)) {
-    mDoStack.Pop(&tx);
-    delete tx;
-    UNLOCK_TX_MANAGER(this);
-    return result;
-  }
-
-  mDoStack.Pop(&tx);
-
-  // Check if the transaction is transient. If it is, there's nothing
-  // more to do, just return.
-
-  PRBool isTransient = PR_FALSE;
-
-  result = aTransaction->GetIsTransient(&isTransient);
-
-  if (! NS_SUCCEEDED(result) || isTransient || !mMaxTransactionCount) {
-    delete tx;
-    UNLOCK_TX_MANAGER(this);
-    return result;
-  }
-
-  nsTransactionItem *top = 0;
-
-  // Check if there is a transaction on the do stack. If there is,
-  // the current transaction is a "sub" transaction, and should
-  // be added to the transaction at the top of the do stack.
-
-  result = mDoStack.Peek(&top);
-  if (top) {
-    result = top->AddChild(tx);
-
-    // XXX: What do we do if this fails?
-
-    UNLOCK_TX_MANAGER(this);
-    return result;
-  }
-
-  // The transaction succeeded, so clear the redo stack.
-
-  result = ClearRedoStack();
-
-  // Check if we can coalesce this transaction with the one at the top
-  // of the undo stack.
-
-  top = 0;
-  result = mUndoStack.Peek(&top);
-
-  if (top) {
-    PRBool didMerge = PR_FALSE;
-    nsITransaction *topTransaction = 0;
-
-    result = top->GetTransaction(&topTransaction);
-
-    if (topTransaction) {
-      result = topTransaction->Merge(&didMerge, aTransaction);
-
-      // XXX: What do we do if this fails?
-
-      if (didMerge) {
-        delete tx;
-        UNLOCK_TX_MANAGER(this);
-        return result;
-      }
-    }
-  }
-
-  // Check to see if we've hit the max level of undo. If so,
-  // pop the bottom transaction off the undo stack and release it!
-
-  PRInt32 sz = 0;
-
-  result = mUndoStack.GetSize(&sz);
-
-  if (mMaxTransactionCount > 0 && sz >= mMaxTransactionCount) {
-    nsTransactionItem *overflow = 0;
-
-    result = mUndoStack.PopBottom(&overflow);
-
-    // XXX: What do we do in the case where this fails?
-
-    if (overflow)
-      delete overflow;
-  }
-
-  // Push the transaction on the undo stack:
-
-  result = mUndoStack.Push(tx);
-
-  if (! NS_SUCCEEDED(result)) {
-    // XXX: What do we do in the case where a clear fails?
-    //      Remove the transaction from the stack, and release it?
-  }
+  result = EndTransaction();
 
   UNLOCK_TX_MANAGER(this);
 
@@ -327,6 +220,67 @@ nsTransactionManager::Clear()
   }
 
   result = ClearUndoStack();
+
+  UNLOCK_TX_MANAGER(this);
+
+  return result;
+}
+
+nsresult
+nsTransactionManager::BeginBatch()
+{
+  nsresult result;
+
+  // We can batch independent transactions together by simply pushing
+  // a dummy transaction item on the do stack. This dummy transaction item
+  // will be popped off the do stack, and then pushed on the undo stack
+  // in EndBatch().
+
+  LOCK_TX_MANAGER(this);
+
+  result = BeginTransaction(0);
+  
+  UNLOCK_TX_MANAGER(this);
+
+  return result;
+}
+
+nsresult
+nsTransactionManager::EndBatch()
+{
+  nsTransactionItem *tx = 0;
+  nsITransaction *ti    = 0;
+  nsresult result;
+
+  LOCK_TX_MANAGER(this);
+
+  // XXX: Need to add some mechanism to detect the case where the transaction
+  //      at the top of the do stack isn't the dummy transaction, so we can
+  //      throw an error!! This can happen if someone calls EndBatch() within
+  //      the Do() method of a transaction.
+  //
+  //      For now, we can detect this case by checking the value of the
+  //      dummy transaction's mTransaction field. If it is our dummy
+  //      transaction, it should be NULL. This may not be true in the
+  //      future when we allow users to execute a transaction when beginning
+  //      a batch!!!!
+
+  result = mDoStack.Peek(&tx);
+
+  if (NS_FAILED(result)) {
+    UNLOCK_TX_MANAGER(this);
+    return result;
+  }
+
+  if (tx)
+    tx->GetTransaction(&ti);
+
+  if (!tx || ti) {
+    UNLOCK_TX_MANAGER(this);
+    return NS_ERROR_FAILURE;
+  }
+
+  result = EndTransaction();
 
   UNLOCK_TX_MANAGER(this);
 
@@ -564,6 +518,174 @@ nsTransactionManager::ClearRedoStack()
   LOCK_TX_MANAGER(this);
   result = mRedoStack.Clear();
   UNLOCK_TX_MANAGER(this);
+
+  return result;
+}
+
+nsresult
+nsTransactionManager::BeginTransaction(nsITransaction *aTransaction)
+{
+  nsTransactionItem *tx;
+  nsresult result = NS_OK;
+
+  // No need for LOCK/UNLOCK_TX_MANAGER() calls since the calling routine
+  // should have done this already!
+
+  NS_IF_ADDREF(aTransaction);
+
+  // XXX: POSSIBLE OPTIMIZATION
+  //      We could use a factory that pre-allocates/recycles transaction items.
+  tx = new nsTransactionItem(aTransaction);
+
+  if (!tx) {
+    NS_IF_RELEASE(aTransaction);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  result = mDoStack.Push(tx);
+
+  if (NS_FAILED(result)) {
+    delete tx;
+    return result;
+  }
+
+  result = tx->Do();
+
+  if (NS_FAILED(result)) {
+    mDoStack.Pop(&tx);
+    delete tx;
+    return result;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsTransactionManager::EndTransaction()
+{
+  nsITransaction *tint = 0;
+  nsTransactionItem *tx        = 0;
+  nsresult result              = NS_OK;
+
+  // No need for LOCK/UNLOCK_TX_MANAGER() calls since the calling routine
+  // should have done this already!
+
+  result = mDoStack.Pop(&tx);
+
+  if (NS_FAILED(result) || !tx)
+    return result;
+
+  result = tx->GetTransaction(&tint);
+
+  if (NS_FAILED(result)) {
+    // XXX: What do we do with the transaction item at this point?
+    return result;
+  }
+
+  if (!tint) {
+    PRInt32 nc = 0;
+
+    // If we get here, the transaction must be a dummy batch transaction
+    // created by BeginBatch(). If it contains no children, get rid of it!
+
+    tx->GetNumberOfChildren(&nc);
+
+    if (!nc) {
+      delete tx;
+      return result;
+    }
+  }
+
+  // Check if the transaction is transient. If it is, there's nothing
+  // more to do, just return.
+
+  PRBool isTransient = PR_FALSE;
+
+  if (tint)
+    result = tint->GetIsTransient(&isTransient);
+
+  if (NS_FAILED(result) || isTransient || !mMaxTransactionCount) {
+    // XXX: Should we be clearing the redo stack if the transaction
+    //      is transient and there is nothing on the do stack?
+    delete tx;
+    return result;
+  }
+
+  nsTransactionItem *top = 0;
+
+  // Check if there is a transaction on the do stack. If there is,
+  // the current transaction is a "sub" transaction, and should
+  // be added to the transaction at the top of the do stack.
+
+  result = mDoStack.Peek(&top);
+  if (top) {
+    result = top->AddChild(tx);
+
+    // XXX: What do we do if this fails?
+
+    return result;
+  }
+
+  // The transaction succeeded, so clear the redo stack.
+
+  result = ClearRedoStack();
+
+  if (NS_FAILED(result)) {
+    // XXX: What do we do if this fails?
+  }
+
+  // Check if we can coalesce this transaction with the one at the top
+  // of the undo stack.
+
+  top = 0;
+  result = mUndoStack.Peek(&top);
+
+  if (tint && top) {
+    PRBool didMerge = PR_FALSE;
+    nsITransaction *topTransaction = 0;
+
+    result = top->GetTransaction(&topTransaction);
+
+    if (topTransaction) {
+      result = topTransaction->Merge(&didMerge, tint);
+
+      if (NS_FAILED(result)) {
+        // XXX: What do we do if this fails?
+      }
+
+      if (didMerge) {
+        delete tx;
+        return result;
+      }
+    }
+  }
+
+  // Check to see if we've hit the max level of undo. If so,
+  // pop the bottom transaction off the undo stack and release it!
+
+  PRInt32 sz = 0;
+
+  result = mUndoStack.GetSize(&sz);
+
+  if (mMaxTransactionCount > 0 && sz >= mMaxTransactionCount) {
+    nsTransactionItem *overflow = 0;
+
+    result = mUndoStack.PopBottom(&overflow);
+
+    // XXX: What do we do in the case where this fails?
+
+    if (overflow)
+      delete overflow;
+  }
+
+  // Push the transaction on the undo stack:
+
+  result = mUndoStack.Push(tx);
+
+  if (NS_FAILED(result)) {
+    // XXX: What do we do in the case where a clear fails?
+    //      Remove the transaction from the stack, and release it?
+  }
 
   return result;
 }

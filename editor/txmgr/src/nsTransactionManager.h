@@ -52,6 +52,8 @@ public:
   virtual nsresult Undo(void);
   virtual nsresult Redo(void);
   virtual nsresult Clear(void);
+  virtual nsresult BeginBatch(void);
+  virtual nsresult EndBatch(void);
   virtual nsresult GetNumberOfUndoItems(PRInt32 *aNumItems);
   virtual nsresult GetNumberOfRedoItems(PRInt32 *aNumItems);
   virtual nsresult SetMaxTransactionCount(PRInt32 aMaxCount);
@@ -64,6 +66,12 @@ public:
   /* nsTransactionManager specific methods. */
   virtual nsresult ClearUndoStack(void);
   virtual nsresult ClearRedoStack(void);
+
+private:
+
+  /* nsTransactionManager specific private methods. */
+  virtual nsresult BeginTransaction(nsITransaction *aTransaction);
+  virtual nsresult EndTransaction(void);
 };
 
 #endif // nsTransactionManager_h__
