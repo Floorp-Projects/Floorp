@@ -49,6 +49,8 @@
 class ipcStringNode
 {
 public:
+    ipcStringNode() {}
+
     const char *Value() const { return mData; }
 
     PRBool Equals(const char *val) const { return strcmp(mData, val) == 0; }
