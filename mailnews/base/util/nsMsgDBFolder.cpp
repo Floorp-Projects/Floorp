@@ -601,6 +601,9 @@ nsMsgDBFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 		{
 			NotifyFolderLoaded();
 		}
+
+    // be sure to remove ourselves as a url listener
+    mailUrl->UnRegisterListener(this);
 	}
     return NS_OK;
 }
