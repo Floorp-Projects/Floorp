@@ -47,20 +47,21 @@
 #include <kernel/OS.h>
 #endif
 
-#if defined(XP_MACOSX)
-#undef XP_UNIX
-#define XP_MAC 1
+#if defined(XP_MAC) || defined(XP_MACOSX)
+#if !defined(MOZ_WIDGET_COCOA) && TARGET_CARBON
+#include <CarbonEvents.h>
+#define MAC_USE_CARBON_EVENT
+#else
+#include <Processes.h>
+#define MAC_USE_WAKEUPPROCESS
+#endif
 #endif
 
 #if defined(XP_MAC)
-#include <AppleEvents.h>
-#include <Processes.h>
-#if !defined(XP_MACOSX)
 #include "pprthred.h"
-#endif
 #else
 #include "private/pprthred.h"
-#endif /* XP_MAC */
+#endif /* defined(XP_MAC) */
 
 #if defined(VMS)
 /*
@@ -134,7 +135,7 @@ struct PLEventQueue {
     PRPackedBool   timerSet;
 #endif
 
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
 #if defined(VMS)
     int		 efn;
 #else
@@ -147,8 +148,13 @@ struct PLEventQueue {
     PRBool       removeMsg;
 #elif defined(XP_BEOS)
     port_id      eventport;
-#elif defined(XP_MAC)
+#elif defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(MAC_USE_CARBON_EVENT)
+    EventHandlerUPP eventHandlerUPP;
+    EventHandlerRef eventHandlerRef;
+#elif defined(MAC_USE_WAKEUPPROCESS)
     ProcessSerialNumber psn;
+#endif
 #endif
 };
 
@@ -181,6 +187,18 @@ static LPCTSTR _md_GetEventQueuePropName() {
   }
   return MAKEINTATOM(atom);
 }
+#endif
+
+#if defined(MAC_USE_CARBON_EVENT)
+enum {
+  kEventClassPL         = FOUR_CHAR_CODE('PLEC'),
+  
+  kEventProcessPLEvents = 1,
+  
+  kEventParamPLEventQueue = FOUR_CHAR_CODE('OWNQ')
+};
+
+static pascal Boolean _md_CarbonEventComparator(EventRef inEvent, void *inCompareData);
 #endif
 
 /*******************************************************************************
@@ -220,10 +238,11 @@ static PLEventQueue * _pl_CreateEventQueue(char *name,
 #if defined(_WIN32) || defined(XP_OS2)
     self->removeMsg = PR_TRUE;
 #endif
-    self->notified = PR_FALSE;
-#if defined (XP_MAC)
+#if defined(MAC_USE_WAKEUPPROCESS)
     self->psn.lowLongOfPSN = kNoProcess;
 #endif
+
+    self->notified = PR_FALSE;
 
     PR_INIT_CLIST(&self->queue);
     if ( qtype == EventQueueIsNative ) {
@@ -304,7 +323,7 @@ PL_PostEvent(PLEventQueue* self, PLEvent* event)
     mon = self->monitor;
     PR_EnterMonitor(mon);
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
     if (self->idFunc && event)
       event->id = self->idFunc(self->idFuncClosure);
 #endif
@@ -620,7 +639,7 @@ PL_InitEvent(PLEvent* self, void* owner,
     PR_ASSERT(self->lock);
     self->condVar = PR_NewCondVar(self->lock);
     PR_ASSERT(self->condVar);
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
     self->id = 0;
 #endif
 }
@@ -813,7 +832,7 @@ _pl_SetupNativeNotifier(PLEventQueue* self)
     PR_LOG(event_lm, PR_LOG_DEBUG,
        ("$$$ Allocated event flag %d", self->efn));
     return PR_SUCCESS;
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) && !defined(XP_MACOSX)
     int err;
     int flags;
 
@@ -889,7 +908,7 @@ _pl_CleanupNativeNotifier(PLEventQueue* self)
            ("$$$ Freeing event flag %d", self->efn));
         status = LIB$FREE_EF(&self->efn);
     }
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) && !defined(XP_MACOSX)
     close(self->eventPipe[0]);
     close(self->eventPipe[1]);
 #elif defined(_WIN32) 
@@ -901,6 +920,15 @@ _pl_CleanupNativeNotifier(PLEventQueue* self)
     DestroyWindow(self->eventReceiverWindow);
 #elif defined(XP_OS2)
     WinDestroyWindow(self->eventReceiverWindow);
+#elif defined(MAC_USE_CARBON_EVENT)
+    EventComparatorUPP comparator = NewEventComparatorUPP(_md_CarbonEventComparator);
+    PR_ASSERT(comparator != NULL);
+    if (comparator) {
+      FlushSpecificEventsFromQueue(GetMainEventQueue(), comparator, self);
+      DisposeEventComparatorUPP(comparator);
+    }
+    DisposeEventHandlerUPP(self->eventHandlerUPP);
+    RemoveEventHandler(self->eventHandlerRef);
 #endif
 }
 
@@ -1131,7 +1159,7 @@ _pl_NativeNotify(PLEventQueue* self)
         else
             return PR_FAILURE;
 }/* --- end _pl_NativeNotify() --- */
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) && !defined(XP_MACOSX)
 
 static PRStatus
 _pl_NativeNotify(PLEventQueue* self)
@@ -1151,7 +1179,7 @@ _pl_NativeNotify(PLEventQueue* self)
 	} else
 		return PR_FAILURE;
 }/* --- end _pl_NativeNotify() --- */
-#endif /* XP_UNIX */
+#endif /* defined(XP_UNIX) && !defined(XP_MACOSX) */
 
 #if defined(XP_BEOS)
 struct ThreadInterfaceData
@@ -1172,14 +1200,30 @@ _pl_NativeNotify(PLEventQueue* self)
 }
 #endif /* XP_BEOS */
 
-#if defined(XP_MAC)
+#if defined(XP_MAC) || defined(XP_MACOSX)
 static PRStatus
 _pl_NativeNotify(PLEventQueue* self)
 {
+#if defined(MAC_USE_CARBON_EVENT)
+    OSErr err;
+    EventRef newEvent;
+    if (CreateEvent(NULL, kEventClassPL, kEventProcessPLEvents,
+                    0, kEventAttributeNone, &newEvent) != noErr)
+        return PR_FAILURE;
+    err = SetEventParameter(newEvent, kEventParamPLEventQueue,
+                            typeUInt32, sizeof(PREventQueue*), &self);
+    if (err == noErr) {
+        err = PostEventToQueue(GetMainEventQueue(), newEvent, kEventPriorityLow);
+        ReleaseEvent(newEvent);
+    }
+    if (err != noErr)
+        return PR_FAILURE;
+#elif defined(MAC_USE_WAKEUPPROCESS)
     WakeUpProcess(&self->psn);
-    return PR_SUCCESS;    /* XXX can fail? */
+#endif
+    return PR_SUCCESS;
 }
-#endif /* XP_MAC */
+#endif /* defined(XP_MAC) || defined(XP_MACOSX) */
 
 static PRStatus
 _pl_AcknowledgeNativeNotify(PLEventQueue* self)
@@ -1222,7 +1266,7 @@ _pl_AcknowledgeNativeNotify(PLEventQueue* self)
     */
     sys$clref(self->efn);
     return PR_SUCCESS;
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) && !defined(XP_MACOSX)
 
     PRInt32 count;
     unsigned char c;
@@ -1256,7 +1300,7 @@ PL_GetEventQueueSelectFD(PLEventQueue* self)
 
 #if defined(VMS)
     return -(self->efn);
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) && !defined(XP_MACOSX)
     return self->eventPipe[0];
 #else
     return -1;    /* other platforms don't handle this (yet) */
@@ -1457,7 +1501,7 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 } /* end _md_CreateEventQueue() */
 #endif /* XP_OS2 */
 
-#if defined(XP_UNIX) || defined(XP_BEOS)
+#if (defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_BEOS) 
 /*
 ** _md_CreateEventQueue() -- ModelDependent initializer
 */
@@ -1469,22 +1513,77 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
     */
     return;    
 } /* end _md_CreateEventQueue() */
-#endif /* XP_UNIX */
+#endif /* (defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_BEOS) */
 
-#if defined(XP_MAC)
+#if defined(MAC_USE_CARBON_EVENT)
 /*
 ** _md_CreateEventQueue() -- ModelDependent initializer
 */
+
+static pascal OSStatus _md_EventReceiverProc(EventHandlerCallRef nextHandler,
+                                             EventRef inEvent, 
+                                             void* userData)
+{
+    if (GetEventClass(inEvent) == kEventClassPL &&
+        GetEventKind(inEvent) == kEventProcessPLEvents)
+    {
+        PREventQueue *queue;
+        if (GetEventParameter(inEvent, kEventParamPLEventQueue,
+                              typeUInt32, NULL, sizeof(PREventQueue*), NULL,
+                              &queue) == noErr)
+        {
+            PL_ProcessPendingEvents(queue);
+            return noErr;
+        }
+    }
+    return eventNotHandledErr;
+}
+
+static pascal Boolean _md_CarbonEventComparator(EventRef inEvent,
+                                                void *inCompareData)
+{
+    Boolean match = false;
+    
+    if (GetEventClass(inEvent) == kEventClassPL &&
+        GetEventKind(inEvent) == kEventProcessPLEvents)
+    {
+        PREventQueue *queue;
+        match = ((GetEventParameter(inEvent, kEventParamPLEventQueue,
+                                    typeUInt32, NULL, sizeof(PREventQueue*), NULL,
+                                    &queue) == noErr) && (queue == inCompareData));
+    }
+    return match;
+}
+
+#endif /* defined(MAC_USE_CARBON_EVENT) */
+
+#if defined(XP_MAC) || defined(XP_MACOSX)
 static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 {
+#if defined(MAC_USE_CARBON_EVENT)
+    eventQueue->eventHandlerUPP = NewEventHandlerUPP(_md_EventReceiverProc);
+    PR_ASSERT(eventQueue->eventHandlerUPP);
+    if (eventQueue->eventHandlerUPP)
+    {
+      EventTypeSpec     eventType;
+
+      eventType.eventClass = kEventClassPL;
+      eventType.eventKind  = kEventProcessPLEvents;    
+                              
+      InstallApplicationEventHandler(eventQueue->eventHandlerUPP, 1, &eventType,
+                                     eventQueue, &eventQueue->eventHandlerRef);
+      PR_ASSERT(eventQueue->eventHandlerRef);
+    }
+#elif defined(MAC_USE_WAKEUPPROCESS)
     OSErr err = GetCurrentProcess(&eventQueue->psn);
     PR_ASSERT(err == noErr);
+#endif
 } /* end _md_CreateEventQueue() */
-#endif /* XP_MAC */
+#endif /* defined(XP_MAC) || defined(XP_MACOSX) */
 
 /* extra functions for unix */
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
 
 PR_IMPLEMENT(PRInt32)
 PL_ProcessEventsBeforeID(PLEventQueue *aSelf, unsigned long aID)
@@ -1578,6 +1677,6 @@ PL_UnregisterEventIDFunc(PLEventQueue *aSelf)
   aSelf->idFuncClosure = 0;
 }
 
-#endif /* XP_UNIX */
+#endif /* defined(XP_UNIX) && !defined(XP_MACOSX) */
 
 /* --- end plevent.c --- */
