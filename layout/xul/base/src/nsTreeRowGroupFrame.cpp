@@ -102,8 +102,8 @@ NS_NewTreeRowGroupFrame (nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 // Constructor
 nsTreeRowGroupFrame::nsTreeRowGroupFrame()
 : nsTableRowGroupFrame(), mTopFrame(nsnull), mBottomFrame(nsnull),
-  mLinkupFrame(nsnull), mIsLazy(PR_FALSE), mIsFull(PR_FALSE),
-  mScrollbar(nsnull), mShouldHaveScrollbar(PR_FALSE),
+  mLinkupFrame(nsnull), mIsFull(PR_FALSE),
+  mScrollbar(nsnull), mOuterFrame(nsnull),
   mContentChain(nsnull), mFrameConstructor(nsnull),
   mRowGroupHeight(0), mCurrentIndex(0), mRowCount(0),
   mYDropLoc(-1), mDropOnContainer(PR_FALSE)
@@ -178,6 +178,20 @@ nsTreeRowGroupFrame::Init ( nsIPresContext*  aPresContext, nsIContent* aContent,
                              nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow)
 {
   nsresult rv = nsTableRowGroupFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+
+  // Set our outer frame variable.
+  // See what kind of frame we have
+  const nsStyleDisplay *display;
+  aParent->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+
+  if ((NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == display->mDisplay) ||
+      (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == display->mDisplay) ||
+      (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    == display->mDisplay)) {
+    nsTreeRowGroupFrame* rg = (nsTreeRowGroupFrame*)aParent;
+    mOuterFrame = rg->mOuterFrame;  
+  }
+  else mOuterFrame = this;
+
   if ( NS_SUCCEEDED(rv) ) {
     nsCOMPtr<nsIContent> content;
     GetContent(getter_AddRefs(content));
@@ -1059,7 +1073,7 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext*       aPresContext,
     }
   }
 
-  if (mShouldHaveScrollbar && (mRowGroupHeight != NS_UNCONSTRAINEDSIZE) &&
+  if ((mOuterFrame == this) && (mRowGroupHeight != NS_UNCONSTRAINEDSIZE) &&
       (mIsFull || mScrollbar)) {
 
     PRBool createdScrollbar = PR_FALSE;
@@ -1161,10 +1175,6 @@ void nsTreeRowGroupFrame::LocateFrame(nsIFrame* aStartFrame, nsIFrame** aResult)
 nsIFrame*
 nsTreeRowGroupFrame::GetFirstFrame()
 {
-  // We may just be a normal row group.
-  if (!mIsLazy)
-    return mFrames.FirstChild();
-
   LocateFrame(nsnull, &mTopFrame);
   return mTopFrame;
 }
@@ -1179,9 +1189,7 @@ nsTreeRowGroupFrame::GetLastFrame()
 void
 nsTreeRowGroupFrame::GetNextFrame(nsIFrame* aPrevFrame, nsIFrame** aResult)
 {
-  if (!mIsLazy)
-    aPrevFrame->GetNextSibling(aResult);
-  else LocateFrame(aPrevFrame, aResult);
+  LocateFrame(aPrevFrame, aResult);
 }
 
 nsIFrame* 
@@ -1192,12 +1200,6 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext* aPresContext)
   mBottomFrame = mTopFrame;
   mIsFull = PR_FALSE;
 
-  // We may just be a normal row group.
-  if (!mIsLazy)
-  {
-    return mFrames.FirstChild();
-  }
-   
   // If we have a frame and no content chain (e.g., unresolved/uncreated content)
   if (mTopFrame && !mContentChain)
   {
@@ -1303,79 +1305,73 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext* aPresContext)
 void 
 nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext* aPresContext, nsIFrame* aFrame, nsIFrame** aResult) 
 { 
-
-   if (mIsLazy) {
-    // We're ultra-cool. We build our frames on the fly.
-    LocateFrame(aFrame, aResult);
-    if (*aResult && (*aResult == mLinkupFrame)) {
-      // We haven't really found a result. We've only found a result if
-      // the linkup frame is really the next frame following the
-      // previous frame.
-      nsCOMPtr<nsIContent> prevContent;
-      aFrame->GetContent(getter_AddRefs(prevContent));
-      nsCOMPtr<nsIContent> linkupContent;
-      mLinkupFrame->GetContent(getter_AddRefs(linkupContent));
-      PRInt32 i, j;
-      mContent->IndexOf(prevContent, i);
-      mContent->IndexOf(linkupContent, j);
-      if (i+1==j) {
-        // We have found a match and successfully linked back up with our
-        // old frame. 
-        mBottomFrame = mLinkupFrame;
-        mLinkupFrame = nsnull;
-		return;
-      }
-      else *aResult = nsnull; // No true linkup. We need to make a frame.
+  // We're ultra-cool. We build our frames on the fly.
+  LocateFrame(aFrame, aResult);
+  if (*aResult && (*aResult == mLinkupFrame)) {
+    // We haven't really found a result. We've only found a result if
+    // the linkup frame is really the next frame following the
+    // previous frame.
+    nsCOMPtr<nsIContent> prevContent;
+    aFrame->GetContent(getter_AddRefs(prevContent));
+    nsCOMPtr<nsIContent> linkupContent;
+    mLinkupFrame->GetContent(getter_AddRefs(linkupContent));
+    PRInt32 i, j;
+    mContent->IndexOf(prevContent, i);
+    mContent->IndexOf(linkupContent, j);
+    if (i+1==j) {
+      // We have found a match and successfully linked back up with our
+      // old frame. 
+      mBottomFrame = mLinkupFrame;
+      mLinkupFrame = nsnull;
+		  return;
     }
+    else *aResult = nsnull; // No true linkup. We need to make a frame.
+  }
 
-    if (!*aResult) {
-      // No result found. See if there's a content node that wants a frame.
-      PRInt32 i, childCount;
-      nsCOMPtr<nsIContent> prevContent;
-      aFrame->GetContent(getter_AddRefs(prevContent));
-      nsCOMPtr<nsIContent> parentContent;
-      mContent->IndexOf(prevContent, i);
-      mContent->ChildCount(childCount);
-      if (i+1 < childCount) {
-        nsTableFrame* tableFrame;
-        nsTableFrame::GetTableFrame(this, tableFrame);
+  if (!*aResult) {
+    // No result found. See if there's a content node that wants a frame.
+    PRInt32 i, childCount;
+    nsCOMPtr<nsIContent> prevContent;
+    aFrame->GetContent(getter_AddRefs(prevContent));
+    nsCOMPtr<nsIContent> parentContent;
+    mContent->IndexOf(prevContent, i);
+    mContent->ChildCount(childCount);
+    if (i+1 < childCount) {
+      nsTableFrame* tableFrame;
+      nsTableFrame::GetTableFrame(this, tableFrame);
 
-        // There is a content node that wants a frame.
-        nsCOMPtr<nsIContent> nextContent;
-        mContent->ChildAt(i+1, *getter_AddRefs(nextContent));
-        nsIFrame* prevFrame = nsnull; // Default is to append
-        PRBool isAppend = PR_TRUE;
-        if (mLinkupFrame) {
-          // This will be an insertion, since we have frames on the end.
-          prevFrame = aFrame;
-          isAppend = PR_FALSE;
+      // There is a content node that wants a frame.
+      nsCOMPtr<nsIContent> nextContent;
+      mContent->ChildAt(i+1, *getter_AddRefs(nextContent));
+      nsIFrame* prevFrame = nsnull; // Default is to append
+      PRBool isAppend = PR_TRUE;
+      if (mLinkupFrame) {
+        // This will be an insertion, since we have frames on the end.
+        prevFrame = aFrame;
+        isAppend = PR_FALSE;
+      }
+      mFrameConstructor->CreateTreeWidgetContent(aPresContext, this, prevFrame, nextContent,
+                                                 aResult, isAppend, PR_FALSE,
+                                                 GetStateStorageObject(this, tableFrame));
+
+      // XXX Can be optimized if we detect that we're appending a row to the end of the tree.
+      // Also the act of appending or inserting a row group is harmless.
+      if (IsTableRowFrame(*aResult)) {
+        
+        nsCOMPtr<nsIContent> topRowContent;
+        PRInt32 delta = 1;
+        FindPreviousRowContent(delta, nextContent, nsnull, getter_AddRefs(topRowContent));
+        PRInt32 numColsAdded = AddRowToMap(tableFrame, *aPresContext, topRowContent, (*aResult));
+        if (numColsAdded > 0) {
+          MarkTreeAsDirty(aPresContext, (nsTreeFrame*) tableFrame);
         }
-        mFrameConstructor->CreateTreeWidgetContent(aPresContext, this, prevFrame, nextContent,
-                                                   aResult, isAppend, PR_FALSE,
-                                                   GetStateStorageObject(this, tableFrame));
-
-        // XXX Can be optimized if we detect that we're appending a row to the end of the tree.
-        // Also the act of appending or inserting a row group is harmless.
-        if (IsTableRowFrame(*aResult)) {
-          
-          nsCOMPtr<nsIContent> topRowContent;
-          PRInt32 delta = 1;
-          FindPreviousRowContent(delta, nextContent, nsnull, getter_AddRefs(topRowContent));
-          PRInt32 numColsAdded = AddRowToMap(tableFrame, *aPresContext, topRowContent, (*aResult));
-          if (numColsAdded > 0) {
-            MarkTreeAsDirty(aPresContext, (nsTreeFrame*) tableFrame);
-          }
-          //PostAppendRow(*aResult, aPresContext, tableFrame->GetColCount());
-        }
+        //PostAppendRow(*aResult, aPresContext, tableFrame->GetColCount());
       }
     }
 
     mBottomFrame = *aResult;
     return;
   }
-  
-  // Ho-hum. Move along, nothing to see here.
-  aFrame->GetNextSibling(aResult);
 } 
 
 NS_IMETHODIMP
@@ -1396,7 +1392,7 @@ PRBool nsTreeRowGroupFrame::ContinueReflow(nsIPresContext* aPresContext, nscoord
 { 
   //printf("Y is: %d\n", y);
   //printf("Height is: %d\n", height); 
-  if (height <= 0 && IsLazy()) {
+  if (height <= 0) {
     mIsFull = PR_TRUE;
     nsIFrame* lastChild = GetLastFrame();
     nsIFrame* startingPoint = mBottomFrame;
@@ -1605,15 +1601,9 @@ void nsTreeRowGroupFrame::InitSubContentChain(nsTreeRowGroupFrame* aRowGroupFram
   }
 }
 
-void nsTreeRowGroupFrame::SetShouldHaveScrollbar()
-{
-  mShouldHaveScrollbar = PR_TRUE;
-  mIsLazy = PR_TRUE;
-}
-
 void nsTreeRowGroupFrame::CreateScrollbar(nsIPresContext* aPresContext)
 {
-  if (mShouldHaveScrollbar && !mScrollbar) {
+  if ((mOuterFrame == this) && !mScrollbar) {
     // Create an anonymous scrollbar node.
     nsCOMPtr<nsIDocument> idocument;
     mContent->GetDocument(*getter_AddRefs(idocument));
@@ -1816,7 +1806,7 @@ void nsTreeRowGroupFrame::ScrollByLines(nsIPresContext* aPresContext,
 void
 nsTreeRowGroupFrame::MarkTreeAsDirty(nsIPresContext* aPresContext, nsTreeFrame* aTreeFrame)
 {
-  if (IsLazy() && !aTreeFrame->IsSlatedForReflow()) {
+  if (!aTreeFrame->IsSlatedForReflow()) {
     aTreeFrame->SlateForReflow();
 
     // Mark the table frame as dirty
@@ -1856,7 +1846,7 @@ nsTreeRowGroupFrame::AddRowToMap(nsTableFrame*   aTableFrame,
 
   PRInt32 numNewCols = 0;
   if (aCurrentFrame) {
-    numNewCols = aTableFrame->InsertRow(aPresContext, *this, *aCurrentFrame, 
+    numNewCols = aTableFrame->InsertRow(aPresContext, *mOuterFrame, *aCurrentFrame, 
                                         insertionIndex, PR_FALSE);
   }
 

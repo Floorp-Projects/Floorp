@@ -48,12 +48,8 @@ public:
 
   void SetScrollbarFrame(nsIFrame* aFrame);
   void SetFrameConstructor(nsCSSFrameConstructor* aFrameConstructor) { mFrameConstructor = aFrameConstructor; };
-  void SetShouldHaveScrollbar();
-
+  
   void CreateScrollbar(nsIPresContext* aPresContext);
-
-  void MakeLazy() { mIsLazy = PR_TRUE; };
-  PRBool IsLazy() { return mIsLazy; };
 
   NS_IMETHOD  TreeAppendFrames(nsIFrame*       aFrameList);
 
@@ -208,7 +204,8 @@ protected: // Data Members
   
   nsIFrame* mScrollbar; // Our scrollbar.
   nsFrameList mScrollbarList; // A frame list that holds our scrollbar.
-  PRBool mShouldHaveScrollbar; // Whether or not we could potentially have a scrollbar.
+  
+  nsTreeRowGroupFrame* mOuterFrame; // A pointer to our outermost row group frame.
 
   nsISupportsArray* mContentChain; // Our content chain
 
