@@ -3211,6 +3211,15 @@ nsEditor::GetPriorNode(nsIDOMNode  *aCurrentNode,
   
   *aResultNode = nsnull;  // init out-param
 
+  if (IsRootNode(aCurrentNode))
+  {
+    // Don't allow traversal above the root node! This helps
+    // prevent us from accidentally editing browser content
+    // when the editor is in a text widget.
+
+    return NS_OK;
+  }
+
   // if aCurrentNode has a left sibling, return that sibling's rightmost child (or itself if it has no children)
   nsCOMPtr<nsIDOMNode> prevSibling;
   result = aCurrentNode->GetPreviousSibling(getter_AddRefs(prevSibling));
@@ -3300,7 +3309,16 @@ nsEditor::GetNextNode(nsIDOMNode  *aCurrentNode,
   if (!aCurrentNode || !aResultNode) { return NS_ERROR_NULL_POINTER; }
   
   *aResultNode = nsnull;  // init out-param
-  
+
+  if (IsRootNode(aCurrentNode))
+  {
+    // Don't allow traversal above the root node! This helps
+    // prevent us from accidentally editing browser content
+    // when the editor is in a text widget.
+
+    return NS_OK;
+  }
+
   // if aCurrentNode has a right sibling, return that sibling's leftmost child (or itself if it has no children)
   nsCOMPtr<nsIDOMNode> nextSibling;
   result = aCurrentNode->GetNextSibling(getter_AddRefs(nextSibling));
