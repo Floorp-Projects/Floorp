@@ -3973,7 +3973,7 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsCSSRuleProcessor::ClearRuleCascades(void)
 {
   RuleCascadeData *data = mRuleCascades;
