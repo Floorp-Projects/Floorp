@@ -1789,7 +1789,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             result = OnPaint();
             break;
 
-        case WM_CHAR:
+        /*case WM_CHAR:
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
             mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
             mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
@@ -1798,7 +1798,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 				      result = OnKey(NS_KEY_UP, FALSE, wParam, vkKeyCached, LOWORD(lParam), HIWORD(lParam));
 			      else
 				      result = PR_FALSE;
-          break;
+          break;*/
 
         case WM_KEYUP: 
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
@@ -1813,8 +1813,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
         case WM_KEYDOWN: 
             {
-            vkKeyCached = (UINT)wParam;
-            if (vkKeyCached < 32 || vkKeyCached > 126) {
+            //vkKeyCached = (UINT)wParam;
+            //if (vkKeyCached < 32 || vkKeyCached > 126) {
               mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
               mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
               mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
@@ -1823,10 +1823,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 				        result = OnKey(NS_KEY_DOWN, TRUE, 0, wParam, LOWORD(lParam), HIWORD(lParam));
 			        else
 				        result = PR_FALSE;
-            } else {
+            //} else {
               // thse are handled by WM_CHAR
-  				    result = PR_FALSE;
-            }
+  				    //result = PR_FALSE;
+            //}
             }
             break;
 
