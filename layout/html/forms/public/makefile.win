@@ -21,8 +21,7 @@
 
 DEPTH=..\..\..\.. 
 
-EXPORTS=nsIFormManager.h \
-  nsIListControlFrame.h \
+EXPORTS=nsIListControlFrame.h \
   nsIImageControlFrame.h \
   nsIComboboxControlFrame.h \
   nsIRadioControlFrame.h \

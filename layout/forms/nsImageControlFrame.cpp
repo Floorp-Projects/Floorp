@@ -57,10 +57,10 @@
 #include "nsIImage.h"
 #include "nsStyleUtil.h"
 #include "nsStyleConsts.h"
-#include "nsFormFrame.h"
 #include "nsFormControlFrame.h"
 #include "nsGUIEvent.h"
 #include "nsLayoutAtoms.h"
+#include "nsIServiceManager.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
@@ -121,8 +121,6 @@ public:
 
   virtual void MouseClicked(nsIPresContext* aPresContext);
 
-  virtual void SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
-
   NS_IMETHOD GetType(PRInt32* aType) const;
 
   NS_IMETHOD GetName(nsAString* aName);
@@ -159,7 +157,6 @@ protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
-  nsFormFrame* mFormFrame;
   nsMouseState mLastMouseState;
   nsPoint mLastClickPoint; 
   nsCursor mPreviousCursor;
@@ -176,7 +173,6 @@ nsImageControlFrame::nsImageControlFrame()
   mPreviousCursor = eCursor_standard;
   mTranslatedRect = nsRect(0,0,0,0);
   mGotFocus       = PR_FALSE;
-  mFormFrame      = nsnull;
 }
 
 nsImageControlFrame::~nsImageControlFrame()
@@ -188,10 +184,6 @@ nsImageControlFrame::Destroy(nsIPresContext *aPresContext)
 {
   nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
 
-  if (mFormFrame) {
-    mFormFrame->RemoveFormControlFrame(*this);
-    mFormFrame = nsnull;
-  }
   return nsImageControlFrameSuper::Destroy(aPresContext);
 }
 
@@ -313,10 +305,8 @@ nsImageControlFrame::Reflow(nsIPresContext*         aPresContext,
 {
   DO_GLOBAL_REFLOW_COUNT("nsImageControlFrame", aReflowState.reason);
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
-  if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
+  if (aReflowState.reason == eReflowReason_Initial) {
     nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
-    // add ourself as an nsIFormControlFrame
-    nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
   return nsImageControlFrameSuper::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
@@ -339,7 +329,7 @@ nsImageControlFrame::HandleEvent(nsIPresContext* aPresContext,
   if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE || uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
     return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 
-  if (nsFormFrame::GetDisabled(this)) { // XXX cache disabled
+  if (nsFormControlHelper::GetDisabled(mContent)) { // XXX cache disabled
     return NS_OK;
   }
 
@@ -414,7 +404,7 @@ nsImageControlFrame::GetName(nsAString* aResult)
   if (nsnull == aResult) {
     return NS_OK;
   } else {
-    return nsFormFrame::GetName(this, *aResult);
+    return nsFormControlHelper::GetName(mContent, aResult);
   }
 }
 

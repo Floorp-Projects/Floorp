@@ -49,6 +49,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
 #include "nsLayoutAtoms.h"
+#include "nsReflowPath.h"
 // MouseEvent suppression in PP
 #include "nsGUIEvent.h"
 
@@ -538,13 +539,7 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsGfxButtonControlFrame", aReflowState.reason);
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
-   // The mFormFrame is set in the initial reflow within nsHTMLButtonControlFrame
   nsresult rv = NS_OK;
-  if (eReflowReason_Initial == aReflowState.reason) {
-    if (!mFormFrame) {
-      nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
-    }
-  }
 
 #if 0
   nsresult skiprv = nsFormControlFrame::SkipResizeReflow(mCacheSize, mCachedMaxElementSize, aPresContext, 

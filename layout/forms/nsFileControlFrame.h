@@ -50,7 +50,6 @@
 typedef   nsGfxTextControlFrame2 nsNewFrame;
 
 class nsIPresState;
-class nsFormFrame;
 class nsISupportsArray;
 
 class nsFileControlFrame : public nsAreaFrame,
@@ -73,8 +72,6 @@ public:
   }
 
   virtual void MouseClicked(nsIPresContext* aPresContext) {}
-  virtual void SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
-  virtual nsFormFrame* GetFromFrame() { return mFormFrame; }
 
   NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -184,7 +181,6 @@ protected:
   virtual PRIntn GetSkipSides() const;
 
   nsNewFrame* mTextFrame;
-  nsFormFrame*        mFormFrame;
   nsIHTMLContent*     mTextContent;
   nsCOMPtr<nsIHTMLContent> mBrowse;
   nsString*           mCachedState;

@@ -40,7 +40,6 @@
 
 #include "nsIFormControlFrame.h"
 #include "nsFormControlHelper.h"
-#include "nsIFormManager.h"
 #include "nsISupports.h"
 #include "nsIWidget.h"
 #include "nsLeafFrame.h"
@@ -52,7 +51,6 @@
 class nsIView;
 class nsIPresContext;
 class nsStyleCoord;
-class nsFormFrame;
 
 #define CSS_NOTSET -1
 #define ATTR_NOTSET -1
@@ -199,8 +197,6 @@ public:
   NS_IMETHOD GetMaxLength(PRInt32* aSize);
 
   virtual void SetClickPoint(nscoord aX, nscoord aY);
-  nsFormFrame* GetFormFrame() { return mFormFrame; }
-  virtual void SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
 
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
                      const nsFont*&  aFont);
@@ -326,7 +322,6 @@ protected:
   nsSize       mWidgetSize;
   PRBool       mDidInit;
   nsPoint      mLastClickPoint;
-  nsFormFrame* mFormFrame;
   nscoord      mSuggestedWidth;
   nscoord      mSuggestedHeight;
 

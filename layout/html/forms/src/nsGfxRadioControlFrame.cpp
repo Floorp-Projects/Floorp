@@ -38,7 +38,6 @@
 #include "nsGfxRadioControlFrame.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLParts.h"
-#include "nsFormFrame.h"
 #include "nsIFormControl.h"
 #include "nsIContent.h"
 #include "nsWidgetsCID.h"

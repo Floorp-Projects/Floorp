@@ -44,7 +44,6 @@
 #include "nsIFormControlFrame.h"
 #include "nsHTMLParts.h"
 #include "nsIFormControl.h"
-#include "nsFormFrame.h"
 
 #include "nsIRenderingContext.h"
 #include "nsIPresContext.h"
@@ -132,7 +131,6 @@ public:
   NS_IMETHOD GetName(nsAString* aName);
   NS_IMETHOD GetValue(nsAString* aName);
   virtual void MouseClicked(nsIPresContext* aPresContext);
-  virtual void SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
   NS_IMETHOD OnContentReset();
 
   void SetFocus(PRBool aOn, PRBool aRepaint);
@@ -168,7 +166,6 @@ protected:
 
   PRIntn GetSkipSides() const;
   PRBool mInline;
-  nsFormFrame* mFormFrame;
   nsCursor mPreviousCursor;
   nsRect mTranslatedRect;
   PRBool mDidInit;
