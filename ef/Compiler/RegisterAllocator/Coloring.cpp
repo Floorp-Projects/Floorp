@@ -62,6 +62,7 @@ simplify(FastBitMatrix interferenceMatrix, PRUint32* stackPtr)
   FastBitSet low(pool, nRegisters);
   FastBitSet high(pool, nRegisters);
   FastBitSet stack(pool, nRegisters);
+  bool all_low = true;
 
   for (VirtualRegisterManager::iterator i = vRegManager.begin(); !vRegManager.done(i); i = vRegManager.advance(i))
 	{
@@ -74,10 +75,12 @@ simplify(FastBitMatrix interferenceMatrix, PRUint32* stackPtr)
 		}
 	  else
 		{
-		  if (vReg.colorInfo.interferenceDegree < NUMBER_OF_REGISTERS)
+		  if (vReg.colorInfo.interferenceDegree < NUMBER_OF_REGISTERS) {
 			low.set(i);
-		  else // if (!vReg.spillInfo.infiniteSpillCost)
+		  } else {
 			high.set(i);
+			all_low = false;
+		  }
 
 		  // Set coloring info.
 		  vReg.spillInfo.willSpill = false;
@@ -100,13 +103,30 @@ simplify(FastBitMatrix interferenceMatrix, PRUint32* stackPtr)
   // push the stack registers
   PRInt32 j;
   for (j = stack.firstOne(); j != -1; j = stack.nextOne(j))
-	*stackPtr++ = j;
+	  *stackPtr++ = j;
+  
+  /* Simplify handling when every node in the interference graph has degree less
+   * than K and is therefore trivially K-colorable.  In this case, no spilling
+   * code is necessary.
+   */
+  if (all_low)
+  {
+	  for (j = low.firstOne(); j != -1; j = low.nextOne(j))
+		  *stackPtr++ = j;
+	  return stackPtr;
+  }
+
 
   // simplify
+  PRInt32 r = low.firstOne();
   while (true)
 	{
-	  PRInt32 r;
-	  while ((r = getLowestSpillCostRegister(low)) != -1)
+	  /*
+	   * Remove any node of degree less than K from the graph, since that node is 
+	   * K-colorable. That deletion may, in turn, cause the degree of other nodes
+	   * in the graph to fall below K and these nodes are then removed.
+	   */
+	  while (r != -1)
 		{
 		  VirtualRegister& vReg = vRegManager.getVirtualRegister(r);
 
@@ -144,11 +164,18 @@ simplify(FastBitMatrix interferenceMatrix, PRUint32* stackPtr)
 
 		  // Push this register.
 		  *stackPtr++ = r;
+
+		  r = low.firstOne();
 		}
+
+	  /*
+	   * The absence of any node with degree less than K means that a spill might be
+	   * necessary.  Use spill cost heurestics to choose the register node to be
+	   * removed from the graph.
+	   */
 	  if ((r = getLowestSpillCostRegister(high)) != -1)
 		{
 		  high.clear(r);
-		  low.set(r);
 		}
 	  else
 		break;
