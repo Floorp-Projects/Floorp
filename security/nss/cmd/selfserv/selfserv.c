@@ -42,30 +42,6 @@
 
 #include "secutil.h"
 
-#if defined(XP_UNIX)
-#include <unistd.h>
-#endif
-
-#if defined(IRIX) && !defined(environ)
-/* This is supposed to be in unistd.h, but isn't. */
-extern char **_environ;
-#define environ     _environ
-#endif
-
-#if defined(SOLARIS)
-extern char ** environ;
-#endif
-
-#if defined(LINUX) && !defined(__USE_GNU)
-#define environ __environ
-#endif
-
-#ifdef _WIN32
-#define ENVP_ARG NULL
-#else
-#define ENVP_ARG environ
-#endif
-
 #if defined(_WINDOWS)
 #include <process.h>	/* for getpid() */
 #endif
@@ -1110,7 +1086,7 @@ haveAChild(int argc, char **argv, PRProcessAttr * attr)
 {
     PRProcess *  newProcess;
 
-    newProcess = PR_CreateProcess(argv[0], argv, ENVP_ARG, attr);
+    newProcess = PR_CreateProcess(argv[0], argv, NULL, attr);
     if (!newProcess) {
 	errWarn("Can't create new process.");
     } else {
