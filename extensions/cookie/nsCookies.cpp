@@ -1585,11 +1585,23 @@ COOKIE_SetCookieStringFromHttp(nsIURI * curURL, nsIURI * firstURL, nsIPrompt *aP
 
 
   /* If max-age attribute is present, it overrides expires attribute */
-#define MAXAGE "max-age="
+#define MAXAGE "max-age"
   ptr = PL_strcasestr(setCookieHeader, MAXAGE);
   if(ptr) {
     ptr += PL_strlen(MAXAGE);
-    time_t delta = atoi(ptr);
+    while (isspace(*ptr)) { // skip over white space
+      ptr++;
+    }
+    if (*ptr++ != '=') {
+      return;  // invalid syntax: max-age but no equal sign
+    }
+    while (isspace(*ptr)) { // skip over white space again
+      ptr++;
+    }
+    if (*ptr == '"' || *ptr == '\'') { // skip over quote or apostrophe
+      ptr++;
+    }
+    time_t delta = atoi(ptr); // obtain numeric value of argument
     if (delta == 0) {
       gmtCookieExpires = 1; // force cookie to expire immediately
     } else if (delta > 0) { // negative max-age is not allowed -- see rfc 2109
