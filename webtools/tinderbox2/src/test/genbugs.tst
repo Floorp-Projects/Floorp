@@ -5,9 +5,9 @@
 # current time.
 
 
-# $Revision: 1.7 $ 
-# $Date: 2002/03/19 04:30:07 $ 
-# $Author: timeless%mac.com $ 
+# $Revision: 1.8 $ 
+# $Date: 2002/04/24 03:20:31 $ 
+# $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbugs.tst,v $ 
 # $Name:  $ 
 #
@@ -165,7 +165,7 @@ foreach $tree (@TREES) {
 		   );
  
       my ($update_file) = ("$TINDERBOX_DATA_DIR/$tree/db/".
-			   "BT.Update.$timenow.$bug_id");
+			   "BT_Generic.Update.$timenow.$bug_id");
       
       # first we try and make the file name leagal, then we check by using
       # the definiative legal filename checker.

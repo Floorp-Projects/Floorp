@@ -23,8 +23,8 @@
 
 
 
-# $Revision: 1.11 $ 
-# $Date: 2001/10/10 15:06:48 $ 
+# $Revision: 1.12 $ 
+# $Date: 2002/04/24 03:20:34 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_bugs,v $ 
 # $Name:  $ 
@@ -411,7 +411,7 @@ sub set_tinderbox_variables {
                          $TINDERBOX{'tinderbox_mailfrom'},
                         );
     
-    MailProcess::write_update_file('BT', $uniq_id, $tree, %TINDERBOX );
+    MailProcess::write_update_file('BT_Generic', $uniq_id, $tree, %TINDERBOX );
 
   } # foreach $tree
 
