@@ -36,7 +36,7 @@
 
 /** Document Zoom Management Code
  *
- * To use this, you'll need to have a <menuitem id="view_textZoomMenu"/>
+ * To use this, you'll need to have a <menu id="menu_textZoom"/>
  * and a getMarkupDocumentViewer() function which returns a
  * nsIMarkupDocumentViewer.
  *
@@ -218,36 +218,36 @@ function registerZoomManager()
   if (navigator.platform.indexOf("Mac") != -1)
     return; // Macs suck ;-)
 
-  var zoom = ZoomManager.prototype.getInstance();
-
   var textZoomMenu = document.getElementById("menu_textZoom");
   if (textZoomMenu) {
+    var zoom = ZoomManager.prototype.getInstance();
+
     textZoomMenu.removeAttribute("hidden");
 
     var parentMenu = textZoomMenu.parentNode;
     parentMenu.addEventListener("create", updateViewMenu, false);
-  }
 
-  var insertBefore = document.getElementById("menu_textZoomInsertBefore");
-  var popup = insertBefore.parentNode;
-  var accessKeys = zoom.bundle.getString("accessKeys").split(",");
-  var zoomFactors = zoom.getZoomFactors();
-  for (var i = 0; i < zoomFactors.length; ++i) {
-    var menuItem = document.createElement("menuitem");
-    menuItem.setAttribute("type", "radio");
-    menuItem.setAttribute("name", "textZoom");
+    var insertBefore = document.getElementById("menu_textZoomInsertBefore");
+    var popup = insertBefore.parentNode;
+    var accessKeys = zoom.bundle.getString("accessKeys").split(",");
+    var zoomFactors = zoom.getZoomFactors();
+    for (var i = 0; i < zoomFactors.length; ++i) {
+      var menuItem = document.createElement("menuitem");
+      menuItem.setAttribute("type", "radio");
+      menuItem.setAttribute("name", "textZoom");
 
-    var label;
-    if (zoomFactors[i] == 100)
-      label = zoom.bundle.getString("labelOriginal");
-    else
-      label = zoom.bundle.getString("label");
+      var label;
+      if (zoomFactors[i] == 100)
+        label = zoom.bundle.getString("labelOriginal");
+      else
+        label = zoom.bundle.getString("label");
 
-    menuItem.setAttribute("value", label.replace(/%zoom%/, zoomFactors[i]));
-    menuItem.setAttribute("accesskey", accessKeys[i]);
-    menuItem.setAttribute("oncommand", "ZoomManager.prototype.getInstance().textZoom = this.data;");
-    menuItem.setAttribute("data", zoomFactors[i]);
-    popup.insertBefore(menuItem, insertBefore);
+      menuItem.setAttribute("value", label.replace(/%zoom%/, zoomFactors[i]));
+      menuItem.setAttribute("accesskey", accessKeys[i]);
+      menuItem.setAttribute("oncommand", "ZoomManager.prototype.getInstance().textZoom = this.data;");
+      menuItem.setAttribute("data", zoomFactors[i]);
+      popup.insertBefore(menuItem, insertBefore);
+    }
   }
 }
 
