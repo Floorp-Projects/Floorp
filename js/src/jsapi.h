@@ -556,7 +556,7 @@ JS_DumpNamedRoots(JSRuntime *rt,
 typedef intN
 (* JS_DLL_CALLBACK JSGCRootMapFun)(void *rp, const char *name, void *data);
 
-extern JS_PUBLIC_API(intN)
+extern JS_PUBLIC_API(uint32)
 JS_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data);
 
 extern JS_PUBLIC_API(JSBool)
