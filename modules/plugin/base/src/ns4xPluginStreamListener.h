@@ -63,7 +63,7 @@ public:
   ns4xPluginStreamListener(nsIPluginInstance* inst, void* notifyData);
   virtual ~ns4xPluginStreamListener();
   PRBool IsStarted();
-  nsresult CleanUpStream();
+  nsresult CleanUpStream(NPReason reason);
 
 protected:
   void* mNotifyData;
