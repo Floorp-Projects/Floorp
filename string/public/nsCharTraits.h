@@ -23,8 +23,8 @@
  * Contributor(s):
  */
 
-#ifndef _nsCharTraits_h__
-#define _nsCharTraits_h__
+#ifndef nsCharTraits_h___
+#define nsCharTraits_h___
 
 #include <ctype.h>
   // for |EOF|, |WEOF|
@@ -632,4 +632,4 @@ struct nsCharSinkTraits<PRUnichar*>
 
 #endif
 
-#endif // !defined(_nsCharTraits_h__)
+#endif // !defined(nsCharTraits_h___)

@@ -23,11 +23,13 @@
  * Contributor(s):
  */
 
-#ifndef _nsAWritableString_h__
-#define _nsAWritableString_h__
+#ifndef nsAWritableString_h___
+#define nsAWritableString_h___
 
   // See also...
+#ifndef nsAReadableString_h___
 #include "nsAReadableString.h"
+#endif
 
 
 template <class CharT>
@@ -684,4 +686,4 @@ basic_nsAWritableString<CharT>::ReplaceFromPromise( PRUint32 cutStart, PRUint32 
 typedef basic_nsAWritableString<PRUnichar>  nsAWritableString;
 typedef basic_nsAWritableString<char>       nsAWritableCString;
 
-#endif // !defined(_nsAWritableString_h__)
+#endif // !defined(nsAWritableString_h___)

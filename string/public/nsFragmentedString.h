@@ -23,12 +23,14 @@
  * Contributor(s):
  */
 
-#ifndef _nsFragmentedString_h__
-#define _nsFragmentedString_h__
+#ifndef nsFragmentedString_h___
+#define nsFragmentedString_h___
 
   // WORK IN PROGRESS
 
+#ifndef nsAWritableString_h___
 #include "nsAWritableString.h"
+#endif
 
 template <class CharT>
 class basic_nsFragmentedString
@@ -41,4 +43,4 @@ class basic_nsFragmentedString
       // ...
   };
 
-#endif // !defined(_nsFragmentedStrign_h__)
+#endif // !defined(nsFragmentedString_h___)
