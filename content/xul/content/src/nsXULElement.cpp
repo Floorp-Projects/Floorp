@@ -373,7 +373,7 @@ static EventHandlerMapEntry kEventHandlerMap[] = {
 
     { "oncreate",      nsnull, &kIDOMMenuListenerIID        },
     { "ondestroy",     nsnull, &kIDOMMenuListenerIID        },
-    { "onaction",      nsnull, &kIDOMMenuListenerIID        },
+    { "oncommand",     nsnull, &kIDOMMenuListenerIID        },
 
     { "onfocus",       nsnull, &kIDOMFocusListenerIID       },
     { "onblur",        nsnull, &kIDOMFocusListenerIID       },

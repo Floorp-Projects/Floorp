@@ -51,44 +51,44 @@ Rights Reserved.
 		  <menupopup id="fileMenu">
 			<menu value="&newMenu.label;">
 				<menupopup>
-				<menuitem value="&newNavCmd.label;" onaction="NewBrowserWindow();"/>
-				<menuitem value="&newMessageCmd.label;" onaction="AbNewMessage();"/>
+				<menuitem value="&newNavCmd.label;" oncommand="NewBrowserWindow();"/>
+				<menuitem value="&newMessageCmd.label;" oncommand="AbNewMessage();"/>
 				</menupopup>
 			</menu>
-			<menuitem value="&newCardCmd.label;" onaction="AbNewCardDialog()"/>
-			<menuitem value="&newListCmd.label;" onaction="AbNewList()"/>
-			<menuitem value="&newAddressBookCmd.label;" onaction="AbNewAddressBook()"/>
-			<menuitem value="&newDirectoryCmd.label;" onaction="AbNewDirectoryt()"/>
+			<menuitem value="&newCardCmd.label;" oncommand="AbNewCardDialog()"/>
+			<menuitem value="&newListCmd.label;" oncommand="AbNewList()"/>
+			<menuitem value="&newAddressBookCmd.label;" oncommand="AbNewAddressBook()"/>
+			<menuitem value="&newDirectoryCmd.label;" oncommand="AbNewDirectoryt()"/>
 			<menuseparator/>
-			<menuitem value="&importCmd.label;" onaction="AbImport()"/>
-			<menuitem value="&exportCmd.label;" onaction="AbExport()"/>
+			<menuitem value="&importCmd.label;" oncommand="AbImport()"/>
+			<menuitem value="&exportCmd.label;" oncommand="AbExport()"/>
 			<menuseparator/>
 			<menuitem id="pageSetup"/>
-			<menuitem value="&printPreviewCmd.label;" onaction="AbPrintPreview()"/>
-			<menuitem value="&printCardViewCmd.label;" onaction="AbPrintCard()"/>
-			<menuitem value="&printAddressBook.label;" onaction="AbPrintAddressBook()"/>
+			<menuitem value="&printPreviewCmd.label;" oncommand="AbPrintPreview()"/>
+			<menuitem value="&printCardViewCmd.label;" oncommand="AbPrintCard()"/>
+			<menuitem value="&printAddressBook.label;" oncommand="AbPrintAddressBook()"/>
 			<menuseparator/>
-			<menuitem value="&closeCmd.label;" onaction="AbClose()"/>
+			<menuitem value="&closeCmd.label;" oncommand="AbClose()"/>
 			</menupopup>
 		</menu>
 		
 		<menu value="&editMenu.label;">
 		  <menupopup>
-			<menuitem value="&undoCmd.label;" onaction="AbEditUndo()"/>
-			<menuitem value="&redoCmd.label;" onaction="AbEditRedo()"/>
+			<menuitem value="&undoCmd.label;" oncommand="AbEditUndo()"/>
+			<menuitem value="&redoCmd.label;" oncommand="AbEditRedo()"/>
 			<menuseparator/>
-			<menuitem value="&cutCmd.label;" onaction="AbEditCut();"/>
-			<menuitem value="&copyCmd.label;" onaction="AbEditCopy();"/>
-			<menuitem value="&pasteCmd.label;" onaction="AbEditPaste();"/>
-			<menuitem value="&deleteCmd.label;" onaction="AbDelete();"/>
-			<menuitem value="&selectAllCmd.label;" onaction="AbSelectAll();"/>
+			<menuitem value="&cutCmd.label;" oncommand="AbEditCut();"/>
+			<menuitem value="&copyCmd.label;" oncommand="AbEditCopy();"/>
+			<menuitem value="&pasteCmd.label;" oncommand="AbEditPaste();"/>
+			<menuitem value="&deleteCmd.label;" oncommand="AbDelete();"/>
+			<menuitem value="&selectAllCmd.label;" oncommand="AbSelectAll();"/>
 			<menuseparator/>
-			<menuitem value="&searchCmd.label;" onaction="AbSearch();"/>
+			<menuitem value="&searchCmd.label;" oncommand="AbSearch();"/>
 			<menuseparator/>
-			<menuitem value="&htmlDomainCmd.label;" onaction="AbHTMLDomain();"/>
-			<menuitem value="&abPropsCmd.label;" onaction="EditCard();"/>
+			<menuitem value="&htmlDomainCmd.label;" oncommand="AbHTMLDomain();"/>
+			<menuitem value="&abPropsCmd.label;" oncommand="EditCard();"/>
 			<menuseparator/>
-			<menuitem value="&prefsCmd.label;" onaction="MsgPreferences();"/>
+			<menuitem value="&prefsCmd.label;" oncommand="MsgPreferences();"/>
 		  </menupopup>
 		</menu>
 	    
@@ -96,22 +96,22 @@ Rights Reserved.
 		    <menupopup>
 			<menu value="&showMenu.label;">
 				<menupopup>
-				<menuitem value="&showAbToolbarCmd.label;" onaction="AbShowToolbar()"/>
-				<menuitem value="&showCardPane.label;" onaction="AbShowCardPane()"/>
-				<menuitem value="&showTaskbar.label;" onaction="AbShowTaskbar()"/>
+				<menuitem value="&showAbToolbarCmd.label;" oncommand="AbShowToolbar()"/>
+				<menuitem value="&showCardPane.label;" oncommand="AbShowCardPane()"/>
+				<menuitem value="&showTaskbar.label;" oncommand="AbShowTaskbar()"/>
 				</menupopup>
 			</menu>
 			<menu value="&sortMenu.label;">
 			    <menupopup>
-				<menuitem value="&sortByNameCmd.label;" onaction="AbSortByName()"/>
-				<menuitem value="&sortByEmailCmd.label;" onaction="AbSortByEmail()"/>
-				<menuitem value="&sortByOrganizationCmd.label;" onaction="AbSortByOrganization()"/>
-				<menuitem value="&sortByNicknameCmd.label;" onaction="AbSortByNickname()"/>
-				<menuitem value="&sortByPhoneCmd.label;" onaction="AbSortByPhoneNumber()"/>
-				<menuitem value="&sortByCityCmd.label;" onaction="AbSortByCity()"/>
+				<menuitem value="&sortByNameCmd.label;" oncommand="AbSortByName()"/>
+				<menuitem value="&sortByEmailCmd.label;" oncommand="AbSortByEmail()"/>
+				<menuitem value="&sortByOrganizationCmd.label;" oncommand="AbSortByOrganization()"/>
+				<menuitem value="&sortByNicknameCmd.label;" oncommand="AbSortByNickname()"/>
+				<menuitem value="&sortByPhoneCmd.label;" oncommand="AbSortByPhoneNumber()"/>
+				<menuitem value="&sortByCityCmd.label;" oncommand="AbSortByCity()"/>
 				<menuseparator/>
-				<menuitem value="&sortAscendingCmd.label;" onaction="AbSortAscending()"/>
-				<menuitem value="&sortDescendingCmd.label;" onaction="AbSortDescending()"/>
+				<menuitem value="&sortAscendingCmd.label;" oncommand="AbSortAscending()"/>
+				<menuitem value="&sortDescendingCmd.label;" oncommand="AbSortDescending()"/>
 				</menupopup>
 			</menu>
 		  </menupopup>

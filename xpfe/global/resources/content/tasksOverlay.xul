@@ -14,7 +14,7 @@
 <html:script language="JavaScript" src="chrome://global/content/tasksOverlay.js"/>
 
 	<!-- Tasks Menu -->
-	<menu id="tasksMenu" value="&tasksMenu.label;" onaction="ShowWindowFromResource(event.target)" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
+	<menu id="tasksMenu" value="&tasksMenu.label;" oncommand="ShowWindowFromResource(event.target)" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
         <template>
           <rule iscontainer="true" isempty="false">
 		    <menupopup>
@@ -34,21 +34,21 @@
         </template>
 
        <menupopup>
-		<menuitem value="&navigatorCmd.label;" onaction="toNavigator()"/>
-		<menuitem value="&messengerCmd.label;" onaction="toMessengerWindow()"/>
-		<menuitem value="&editorCmd.label;"    onaction="toEditor();" />
-        <menuitem value="&textEditorCmd.label;"    onaction="toNewTextEditorWindow();" />
+		<menuitem value="&navigatorCmd.label;" oncommand="toNavigator()"/>
+		<menuitem value="&messengerCmd.label;" oncommand="toMessengerWindow()"/>
+		<menuitem value="&editorCmd.label;"    oncommand="toEditor();" />
+        <menuitem value="&textEditorCmd.label;"    oncommand="toNewTextEditorWindow();" />
 		<menuseparator/>
-		<menuitem value="&addressBookCmd.label;" onaction="toAddressBook()"/>
-		<menuitem value="&newsgroupsCmd.label;" onaction="toNewsgroups()"/>
+		<menuitem value="&addressBookCmd.label;" oncommand="toAddressBook()"/>
+		<menuitem value="&newsgroupsCmd.label;" oncommand="toNewsgroups()"/>
 		<menuseparator/>
 		<menu value="&toolsMenu.label;">
 		  <menupopup>
-			<menuitem value="&historyCmd.label;" onaction="toHistory()"/>
-			<menuitem value="&securityInfoCmd.label;" onaction="toSecurityInfo()"/>
-			<menuitem value="&messageCenterCmd.label;" onaction="toMessengerCenter()"/>
-			<menuitem value="&importUtilCmd.label;" onaction="toImport()"/>
-			<menuitem value="&javaConsoleCmd.label;" onaction="toJavaConsole()"/>
+			<menuitem value="&historyCmd.label;" oncommand="toHistory()"/>
+			<menuitem value="&securityInfoCmd.label;" oncommand="toSecurityInfo()"/>
+			<menuitem value="&messageCenterCmd.label;" oncommand="toMessengerCenter()"/>
+			<menuitem value="&importUtilCmd.label;" oncommand="toImport()"/>
+			<menuitem value="&javaConsoleCmd.label;" oncommand="toJavaConsole()"/>
 		  </menupopup>
 		</menu>
 		<menuseparator/>
@@ -60,21 +60,21 @@
 
 			  <popup id="mozillaPopup">
 			    <menu>
-			    	<menuitem value="&bonsai.label;" onaction="OpenTaskURL('http://cvs-mirror.mozilla.org/webtools/bonsai/toplevel.cgi?treeid=SeaMonkey');"/>
-			    	<menuitem value="&bugzillaButton.label;" onaction="OpenTaskURL('http://bugzilla.mozilla.org');"/>
+			    	<menuitem value="&bonsai.label;" oncommand="OpenTaskURL('http://cvs-mirror.mozilla.org/webtools/bonsai/toplevel.cgi?treeid=SeaMonkey');"/>
+			    	<menuitem value="&bugzillaButton.label;" oncommand="OpenTaskURL('http://bugzilla.mozilla.org');"/>
 			    </menu>
 			  </popup>
 			  
 			  <popup id="shoppingPopup">
 			    <menu>
-			    	<menuitem value="&booksButton.label;" onaction="OpenTaskURL('http://www.fatbrain.com' );"/>
-			    	<menuitem value="&cdButton.label;" onaction="OpenTaskURL('http://www.cdnow.com');" />
-			    	<menuitem value="&lifeButton.label;" onaction="OpenTaskURL('http://www.match.com');"/>
+			    	<menuitem value="&booksButton.label;" oncommand="OpenTaskURL('http://www.fatbrain.com' );"/>
+			    	<menuitem value="&cdButton.label;" oncommand="OpenTaskURL('http://www.cdnow.com');" />
+			    	<menuitem value="&lifeButton.label;" oncommand="OpenTaskURL('http://www.match.com');"/>
 			    </menu>
 			  </popup>
 			  
 			   <popup id="windowPopup" >
-			    <menu onaction="ShowWindowFromResource(event.target)" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot" >
+			    <menu oncommand="ShowWindowFromResource(event.target)" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot" >
                   <template>
                     <rule iscontainer="true" isempty="false">
                       <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>

@@ -37,15 +37,15 @@
     <menu value="&menu.file.label;">
 	  <menupopup>
       <menuitem value="&menuitem.newWindow.label;"
-                onaction="window.open('chrome://bookmarks/content/',
+                oncommand="window.open('chrome://bookmarks/content/',
                                      'ManageBookmarks',
                                      'chrome,menubar,resizable');" />
-      <menuitem value="&menuitem.newBookmark.label;" onaction="return doContextCmd('http://home.netscape.com/NC-rdf#bookmarkcommand?newbookmark');" />
-      <menuitem value="&menuitem.newFolder.label;" onaction="return doContextCmd('http://home.netscape.com/NC-rdf#bookmarkcommand?newfolder');"/>
-      <menuitem value="&menuitem.newSeparator.label;" onaction="return doContextCmd('http://home.netscape.com/NC-rdf#bookmarkcommand?newseparator');"/>
+      <menuitem value="&menuitem.newBookmark.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#bookmarkcommand?newbookmark');" />
+      <menuitem value="&menuitem.newFolder.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#bookmarkcommand?newfolder');"/>
+      <menuitem value="&menuitem.newSeparator.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#bookmarkcommand?newseparator');"/>
       <menuseparator/>
       <menuitem value="&menuitem.close.label;"
-                onaction="window.close()" />
+                oncommand="window.close()" />
 	  </menupopup>
     </menu>
     <menu value="&menu.edit.label;">
@@ -59,9 +59,9 @@
       <menuitem value="x&menuitem.delete.label;"/>
       <menuitem value="x&menuitem.selectAll.label;"/>
       <menuseparator/>
-      <menuitem value="&menuitem.find.label;" onaction="OpenSearch('find');"/>
+      <menuitem value="&menuitem.find.label;" oncommand="OpenSearch('find');"/>
       <menuseparator/>
-      <menuitem value="&menuitem.properties.label;" onaction="BookmarkProperties();"/>
+      <menuitem value="&menuitem.properties.label;" oncommand="BookmarkProperties();"/>
 	  </menupopup>
     </menu>
   </menubar>

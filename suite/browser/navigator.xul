@@ -129,217 +129,217 @@ Contributor(s): ______________________________________. -->
     <menubar chromeclass="menubar">
       <menu accesskey="f" value="&fileMenu.label;">
         <menupopup>
-          <menuitem value="&browserCmd.label;" onaction="BrowserNewWindow();"/>
+          <menuitem value="&browserCmd.label;" oncommand="BrowserNewWindow();"/>
 		           <menu value="New">
               <menupopup>
-                <menuitem value="&newMailCmd.label;" onaction="MsgNewMessage();"/>
+                <menuitem value="&newMailCmd.label;" oncommand="MsgNewMessage();"/>
                   <menuseparator />
-                  <menuitem value="&newBlankPageCmd.label;" onaction="BrowserNewEditorWindow();"/>
-                  <menuitem value="&newPageFromTemplateCmd.label;" onaction="BrowserNewWindow();"/>
-                  <menuitem value="&newPageFromDraftCmd.label;" onaction="BrowserNewWindow();"/>
+                  <menuitem value="&newBlankPageCmd.label;" oncommand="BrowserNewEditorWindow();"/>
+                  <menuitem value="&newPageFromTemplateCmd.label;" oncommand="BrowserNewWindow();"/>
+                  <menuitem value="&newPageFromDraftCmd.label;" oncommand="BrowserNewWindow();"/>
               </menupopup>
             </menu>
-          <menuitem value="&openCmd.label;" onaction="BrowserOpenWindow();"/>
+          <menuitem value="&openCmd.label;" oncommand="BrowserOpenWindow();"/>
           <menuseparator/>
-          <menuitem value="&sendPageCmd.label;" onaction="BrowserReload();"/>
-          <menuitem value="&editPageCmd.label;" onaction="BrowserEditPage(window.content.location.href);" />
+          <menuitem value="&sendPageCmd.label;" oncommand="BrowserReload();"/>
+          <menuitem value="&editPageCmd.label;" oncommand="BrowserEditPage(window.content.location.href);" />
           <menuseparator />
           <menu value="&offlineMenu.label;">
             <menupopup>
-              <menuitem value="&offlineGoOfflineCmd.label;" onaction="BrowserReload();"/>
+              <menuitem value="&offlineGoOfflineCmd.label;" oncommand="BrowserReload();"/>
               <menuseparator />
-              <menuitem value="&offlineSynchronizeCmd.label;" onaction="BrowserReload();"/>
+              <menuitem value="&offlineSynchronizeCmd.label;" oncommand="BrowserReload();"/>
             </menupopup>
           </menu>
           <menuseparator/>
-          <menuitem value="&printSetupCmd.label;" onaction=";"/>
-          <menuitem value="&printPreviewCmd.label;" onaction=""/>
-          <menuitem value="&printCmd.label;" onaction="BrowserPrint()"/>
+          <menuitem value="&printSetupCmd.label;" oncommand=";"/>
+          <menuitem value="&printPreviewCmd.label;" oncommand=""/>
+          <menuitem value="&printCmd.label;" oncommand="BrowserPrint()"/>
           <menuseparator />
-          <menuitem value="&closeCmd.label;" onaction="BrowserClose();"/>
-          <menuitem value="&quitCmd.label;" onaction="BrowserExit();"/>
+          <menuitem value="&closeCmd.label;" oncommand="BrowserClose();"/>
+          <menuitem value="&quitCmd.label;" oncommand="BrowserExit();"/>
       </menupopup>
     </menu>
 
 	<menu accesskey="e" value="&editMenu.label;">
 	  <menupopup>
-		  <menuitem value="&undoCmd.label;" onaction="BrowserReload();"/> 
-		  <menuitem value="&redoCmd.label;" onaction="BrowserReload();"/> 
+		  <menuitem value="&undoCmd.label;" oncommand="BrowserReload();"/> 
+		  <menuitem value="&redoCmd.label;" oncommand="BrowserReload();"/> 
 		  <menuseparator /> 
-		  <menuitem value="&cutCmd.label;" onaction="BrowserReload();"/> 
-		  <menuitem value="&copyCmd.label;" onaction="BrowserCopy();"/> 
-		  <menuitem value="&pasteCmd.label;" onaction="BrowserReload();"/> 
-		  <menuitem value="&deleteCmd.label;" onaction="BrowserReload();"/> 
+		  <menuitem value="&cutCmd.label;" oncommand="BrowserReload();"/> 
+		  <menuitem value="&copyCmd.label;" oncommand="BrowserCopy();"/> 
+		  <menuitem value="&pasteCmd.label;" oncommand="BrowserReload();"/> 
+		  <menuitem value="&deleteCmd.label;" oncommand="BrowserReload();"/> 
 		  <menuseparator /> 
 		  <menu value="&walletMenu.label;">
 		    <menupopup> 
-			  <menuitem value="&walletSafeFillCmd.label;" onaction="WalletSafeFillin();"/> 
-			  <menuitem value="&walletQuickFillCmd.label;" onaction="WalletQuickFillin();"/> 
+			  <menuitem value="&walletSafeFillCmd.label;" oncommand="WalletSafeFillin();"/> 
+			  <menuitem value="&walletQuickFillCmd.label;" oncommand="WalletQuickFillin();"/> 
 			  <menuseparator /> 
-			  <menuitem value="&walletContentsCmd.label;" onaction="WalletEditor();"/> 
-			  <menuitem value="&walletDisplaySignonsCmd.label;" onaction="SignonViewer();"/> 
-			  <menuitem value="&walletDisplayCookiesCmd.label;" onaction="CookieViewer();"/> 
+			  <menuitem value="&walletContentsCmd.label;" oncommand="WalletEditor();"/> 
+			  <menuitem value="&walletDisplaySignonsCmd.label;" oncommand="SignonViewer();"/> 
+			  <menuitem value="&walletDisplayCookiesCmd.label;" oncommand="CookieViewer();"/> 
 			  <menuseparator /> 
-			  <menuitem value="&walletSamplesCmd.label;" onaction="WalletSamples();"/> 
-			  <menuitem value="&walletChangePasswordCmd.label;" onaction="WalletChangePassword();"/>
+			  <menuitem value="&walletSamplesCmd.label;" oncommand="WalletSamples();"/> 
+			  <menuitem value="&walletChangePasswordCmd.label;" oncommand="WalletChangePassword();"/>
 			</menupopup> 
 		  </menu> 
 		  <menuseparator /> 
-		  <menuitem value="&selectAllCmd.label;" onaction="BrowserReload();"/> 
+		  <menuitem value="&selectAllCmd.label;" oncommand="BrowserReload();"/> 
 		  <menuseparator /> 
-		  <menuitem value="&preferences.label;" onaction="DoPreferences();"/>
+		  <menuitem value="&preferences.label;" oncommand="DoPreferences();"/>
 	  </menupopup>
     </menu> 
 
     <menu accesskey="v" value="&viewMenu.label;">
 	  <menupopup>
-		  <menuitem value="&toolbarsCmd.label;" onaction="toolbar.visible=true"/>
-		  <menuitem value="&sidebarCmd.label;" onaction="BrowserReload();"/>
+		  <menuitem value="&toolbarsCmd.label;" oncommand="toolbar.visible=true"/>
+		  <menuitem value="&sidebarCmd.label;" oncommand="BrowserReload();"/>
 		  <menuseparator />
-		  <menuitem value="&enlargeTextSizeCmd.label;" onaction="BrowserReload();"/>
-		  <menuitem value="&reduceTextSizeCmd.label;" onaction="BrowserReload();"/>
+		  <menuitem value="&enlargeTextSizeCmd.label;" oncommand="BrowserReload();"/>
+		  <menuitem value="&reduceTextSizeCmd.label;" oncommand="BrowserReload();"/>
 		  <menuseparator />
-		  <menu value="&useStyleSheetMenu.label;" onaction="BrowserReload();">
+		  <menu value="&useStyleSheetMenu.label;" oncommand="BrowserReload();">
 		    <menupopup>
-			  <menuitem value="&useStyleSheetDefaultCmd.label;" onaction="BrowserReload();"/>
+			  <menuitem value="&useStyleSheetDefaultCmd.label;" oncommand="BrowserReload();"/>
 			  <menuseparator />
-			  <menuitem value="&useStyleSheetEasyReadingCmd.label;" onaction="BrowserReload();"/>
-			  <menuitem value="&useStyleSheetMaxInfoCmd.label;" onaction="BrowserReload();"/>
-			  <menuitem value="&useStlyleSheetBizarreCmd.label;" onaction="BrowserReload();"/>
+			  <menuitem value="&useStyleSheetEasyReadingCmd.label;" oncommand="BrowserReload();"/>
+			  <menuitem value="&useStyleSheetMaxInfoCmd.label;" oncommand="BrowserReload();"/>
+			  <menuitem value="&useStlyleSheetBizarreCmd.label;" oncommand="BrowserReload();"/>
 			</menupopup>
 		  </menu>
 		  <menuseparator />
-		  <menuitem value="&reloadCmd.label;" id="menuitem-reload" onaction="BrowserReallyReload(0);"/>
+		  <menuitem value="&reloadCmd.label;" id="menuitem-reload" oncommand="BrowserReallyReload(0);"/>
        
-		  <menuitem value="&showImagesCmd.label;" onaction="BrowserReload();"/>
-		  <menuitem value="&stopCmd.label;" id="menuitem-stop" onaction="BrowserStop();"/>
+		  <menuitem value="&showImagesCmd.label;" oncommand="BrowserReload();"/>
+		  <menuitem value="&stopCmd.label;" id="menuitem-stop" oncommand="BrowserStop();"/>
         
 		  <menuseparator />
-		  <menuitem value="&pageSourceCmd.label;" onaction="BrowserViewSource();"/>
-		  <menuitem value="&pageInfoCmd.label;" onaction="BrowserReload();"/>
+		  <menuitem value="&pageSourceCmd.label;" oncommand="BrowserViewSource();"/>
+		  <menuitem value="&pageInfoCmd.label;" oncommand="BrowserReload();"/>
 		  <menuseparator />
 		  <menu value="&translateMenu.label;">
 		    <menupopup>
-			  <menuitem value="&translateEngtoFrenCmd.label;" onaction="Translate('en', 'fr', 'SSI');"/>
-			  <menuitem value="&translateEngtoGermCmd.label;" onaction="Translate('en', 'de', 'SSI');"/>
-			  <menuitem value="&translateEngtoItalianCmd.label;" onaction="Translate('en', 'it', 'SSI');"/>
-			  <menuitem value="&translateEngtoJapaneseCmd.label;" onaction="Translate('en', 'ja', 'Neocortech');"/>
-			  <menuitem value="&translateEngtoPortCmd.label;" onaction="Translate('en', 'po', 'SSI');"/>
-			  <menuitem value="&translateEngtoSpanCmd.label;" onaction="Translate('en', 'es', 'SSI');"/>
+			  <menuitem value="&translateEngtoFrenCmd.label;" oncommand="Translate('en', 'fr', 'SSI');"/>
+			  <menuitem value="&translateEngtoGermCmd.label;" oncommand="Translate('en', 'de', 'SSI');"/>
+			  <menuitem value="&translateEngtoItalianCmd.label;" oncommand="Translate('en', 'it', 'SSI');"/>
+			  <menuitem value="&translateEngtoJapaneseCmd.label;" oncommand="Translate('en', 'ja', 'Neocortech');"/>
+			  <menuitem value="&translateEngtoPortCmd.label;" oncommand="Translate('en', 'po', 'SSI');"/>
+			  <menuitem value="&translateEngtoSpanCmd.label;" oncommand="Translate('en', 'es', 'SSI');"/>
 			  <menuseparator />
-			  <menuitem value="&translateFrentoEngCmd.label; " onaction="Translate('fr', 'en', 'SSI');"/>
-			  <menuitem value="&translateFrentoGermCmd.label;" onaction="Translate('fr', 'de', 'SSI');"/>
-			  <menuitem value="&translateFrentoSpanCmd.label;" onaction="Translate('fr', 'es', 'SSI');"/>
+			  <menuitem value="&translateFrentoEngCmd.label; " oncommand="Translate('fr', 'en', 'SSI');"/>
+			  <menuitem value="&translateFrentoGermCmd.label;" oncommand="Translate('fr', 'de', 'SSI');"/>
+			  <menuitem value="&translateFrentoSpanCmd.label;" oncommand="Translate('fr', 'es', 'SSI');"/>
 			  <menuseparator />
-			  <menuitem value="&translateGermtoEngCmd.label;" onaction="Translate('de', 'en', 'SSI');"/>
-			  <menuitem value="&translateGermtoFrenCmd.label;" onaction="Translate('de', 'fr', 'SSI');"/>
-			  <menuitem value="&translateGermtoSpanCmd.label;" onaction="Translate('de', 'es', 'SSI');"/>
+			  <menuitem value="&translateGermtoEngCmd.label;" oncommand="Translate('de', 'en', 'SSI');"/>
+			  <menuitem value="&translateGermtoFrenCmd.label;" oncommand="Translate('de', 'fr', 'SSI');"/>
+			  <menuitem value="&translateGermtoSpanCmd.label;" oncommand="Translate('de', 'es', 'SSI');"/>
 			  <menuseparator />
-			  <menuitem value="&translateItaliantoEngCmd.label;" onaction="Translate('it', 'en', 'SSI');"/>
+			  <menuitem value="&translateItaliantoEngCmd.label;" oncommand="Translate('it', 'en', 'SSI');"/>
 			  <menuseparator />
-			  <menuitem value="&tanslateJapanesetoEngCmd.label;" onaction="Translate('ja', 'en', 'SSI');"/>
+			  <menuitem value="&tanslateJapanesetoEngCmd.label;" oncommand="Translate('ja', 'en', 'SSI');"/>
 			  <menuseparator />
-			  <menuitem value="&translatePorttoEngCmd.label;" onaction="Translate('po', 'en', 'SSI');"/>
+			  <menuitem value="&translatePorttoEngCmd.label;" oncommand="Translate('po', 'en', 'SSI');"/>
 			  <menuseparator />
-			  <menuitem value="&tanslateSpantoEngCmd.label;" onaction="Translate('es', 'en', 'SSI');"/>
-			  <menuitem value="&translateSpantoFrenCmd.label;" onaction="Translate('es', 'fr', 'SSI');"/>
-			  <menuitem value="&translateSpantoGermCmd.label;" onaction="Translate('es', 'de', 'SSI');"/>
+			  <menuitem value="&tanslateSpantoEngCmd.label;" oncommand="Translate('es', 'en', 'SSI');"/>
+			  <menuitem value="&translateSpantoFrenCmd.label;" oncommand="Translate('es', 'fr', 'SSI');"/>
+			  <menuitem value="&translateSpantoGermCmd.label;" oncommand="Translate('es', 'de', 'SSI');"/>
            </menupopup>
 		 </menu>
 
 		 <menu value="&dcharMenu.label;">
 		     <menupopup>
-				 <menuitem value="&dcharIso1Cmd.label;" onaction="BrowserSetDefaultCharacterSet('ISO-8859-1');"/>
-				 <menuitem value="&dcharIso2Cmd.label;" onaction="BrowserSetDefaultCharacterSet('ISO-8859-2');"/>
-				 <menuitem value="&dcharIso3Cmd.label;" onaction="BrowserSetDefaultCharacterSet('ISO-8859-3');"/>
-				 <menuitem value="&dcharIso4Cmd.label;" onaction="BrowserSetDefaultCharacterSet('ISO-8859-4');"/>
-				 <menuitem value="&dcharIso9Cmd.label;" onaction="BrowserSetDefaultCharacterSet('ISO-8859-9');"/>
-				 <menuitem value="&dcharIso10Cmd.label;" onaction="BrowserSetDefaultCharacterSet('ISO-8859-10');"/>
-				 <menuitem value="&dcharIso13Cmd.label;" onaction="BrowserSetDefaultCharacterSet('ISO-8859-13');"/>
-				 <menuitem value="&dcharIso14Cmd.label;" onaction="BrowserSetDefaultCharacterSet('ISO-8859-14');"/>
-				 <menuitem value="&dcharIso15Cmd.label;" onaction="BrowserSetDefaultCharacterSet('ISO-8859-15');"/>
-				 <menuitem value="&dcharWinLat2Cmd.label;" onaction="BrowserSetDefaultCharacterSet('windows-1250');"/>
-				 <menuitem value="&dcharWinLat1Cmd.label;" onaction="BrowserSetDefaultCharacterSet('windows-1252');"/>
-				 <menuitem value="&dcharWinLat5Cmd.label;" onaction="BrowserSetDefaultCharacterSet('windows-1254');"/>
-				 <menuitem value="&dcharWinBalRimCmd.label;" onaction="BrowserSetDefaultCharacterSet('windows-1257');"/>
-				 <menuitem value="&dcharMacRomCmd.label;" onaction="BrowserSetDefaultCharacterSet('x-mac-roman');"/>
-				 <menuitem value="&dcharMacCenEuroCmd.label;" onaction="BrowserSetDefaultCharacterSet('x-mac-ce');"/>
-				 <menuitem value="&dcharMacTurCmd.label;" onaction="BrowserSetDefaultCharacterSet('x-mac-turkish');"/>
-				 <menuitem value="&dcharMacCroaCmd.label;" onaction="BrowserSetDefaultCharacterSet('x-mac-croatian');"/>
-				 <menuitem value="&dcharMacRomanianCmd.label;" onaction="BrowserSetDefaultCharacterSet('x-mac-romanian');"/>
-				 <menuitem value="&dcharMacIceCmd.label;" onaction="BrowserSetDefaultCharacterSet('x-mac-icelandic');"/>
+				 <menuitem value="&dcharIso1Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-1');"/>
+				 <menuitem value="&dcharIso2Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-2');"/>
+				 <menuitem value="&dcharIso3Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-3');"/>
+				 <menuitem value="&dcharIso4Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-4');"/>
+				 <menuitem value="&dcharIso9Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-9');"/>
+				 <menuitem value="&dcharIso10Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-10');"/>
+				 <menuitem value="&dcharIso13Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-13');"/>
+				 <menuitem value="&dcharIso14Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-14');"/>
+				 <menuitem value="&dcharIso15Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-15');"/>
+				 <menuitem value="&dcharWinLat2Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('windows-1250');"/>
+				 <menuitem value="&dcharWinLat1Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('windows-1252');"/>
+				 <menuitem value="&dcharWinLat5Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('windows-1254');"/>
+				 <menuitem value="&dcharWinBalRimCmd.label;" oncommand="BrowserSetDefaultCharacterSet('windows-1257');"/>
+				 <menuitem value="&dcharMacRomCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-mac-roman');"/>
+				 <menuitem value="&dcharMacCenEuroCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-mac-ce');"/>
+				 <menuitem value="&dcharMacTurCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-mac-turkish');"/>
+				 <menuitem value="&dcharMacCroaCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-mac-croatian');"/>
+				 <menuitem value="&dcharMacRomanianCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-mac-romanian');"/>
+				 <menuitem value="&dcharMacIceCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-mac-icelandic');"/>
 					 <menuseparator />
-				 <menuitem value="&dcharJapanCmd.label;" onaction="BrowserSetDefaultCharacterSet('ISO-2022-JP');"/>
-				 <menuitem value="&dcharJapanShiftjsCmd.label;" onaction="BrowserSetDefaultCharacterSet('Shift_JIS');"/>
-				 <menuitem value="&dcharJapanEucCmd.label;" onaction="BrowserSetDefaultCharacterSet('EUC-JP');"/>
+				 <menuitem value="&dcharJapanCmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-2022-JP');"/>
+				 <menuitem value="&dcharJapanShiftjsCmd.label;" oncommand="BrowserSetDefaultCharacterSet('Shift_JIS');"/>
+				 <menuitem value="&dcharJapanEucCmd.label;" oncommand="BrowserSetDefaultCharacterSet('EUC-JP');"/>
 					 <menuseparator />
-				 <menuitem value="&dcharTradChiBigCmd.label;" onaction="BrowserSetDefaultCharacterSet('Big5');"/>
-				 <menuitem value="&dcharTriChiEucCmd.label;" onaction="BrowserSetDefaultCharacterSet('x-euc-tw');"/>
-				 <menuitem value="&dcharSimpChiGbCmd.label;" onaction="BrowserSetDefaultCharacterSet('GB2312');"/>
+				 <menuitem value="&dcharTradChiBigCmd.label;" oncommand="BrowserSetDefaultCharacterSet('Big5');"/>
+				 <menuitem value="&dcharTriChiEucCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-euc-tw');"/>
+				 <menuitem value="&dcharSimpChiGbCmd.label;" oncommand="BrowserSetDefaultCharacterSet('GB2312');"/>
 					 <menuseparator />
-				 <menuitem value="&dcharKoreanCmd.label;" onaction="BrowserSetDefaultCharacterSet('EUC-KR');"/>
+				 <menuitem value="&dcharKoreanCmd.label;" oncommand="BrowserSetDefaultCharacterSet('EUC-KR');"/>
 					 <menuseparator />
-				 <menuitem value="&dcharUtf7Cmd.label;" onaction="BrowserSetDefaultCharacterSet('UTF-7');"/>
-				 <menuitem value="&dcharUtf8Cmd.label;" onaction="BrowserSetDefaultCharacterSet('UTF-8');"/>
+				 <menuitem value="&dcharUtf7Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('UTF-7');"/>
+				 <menuitem value="&dcharUtf8Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('UTF-8');"/>
 					 <menuseparator />
-				 <menuitem value="&dcharIsoCyrCmd.label;" onaction="BrowserSetDefaultCharacterSet('ISO-8859-5');"/>
-				 <menuitem value="&dcharEcmaCyrCmd.label;" onaction="BrowserSetDefaultCharacterSet('ISO-IR-111');"/>
-				 <menuitem value="&dcharWinCyrCmd.label;" onaction="BrowserSetDefaultCharacterSet('windows-1251');"/>
-				 <menuitem value="&dcharDosCyrCmd.label;" onaction="BrowserSetDefaultCharacterSet('IBM866');"/>
-				 <menuitem value="&dcharMacCyrCmd.label;" onaction="BrowserSetDefaultCharacterSet('x-mac-cyrillic');"/>
-				 <menuitem value="&dcharMacUkrCmd.label;" onaction="BrowserSetDefaultCharacterSet('x-mac-ukrainian');"/>
-				 <menuitem value="&dcharRusCmd.label; " onaction="BrowserSetDefaultCharacterSet('KOI8-R');"/>
-				 <menuitem value="&dcharUkrCmd.label;" onaction="BrowserSetDefaultCharacterSet('KOI8-U');"/>
+				 <menuitem value="&dcharIsoCyrCmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-5');"/>
+				 <menuitem value="&dcharEcmaCyrCmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-IR-111');"/>
+				 <menuitem value="&dcharWinCyrCmd.label;" oncommand="BrowserSetDefaultCharacterSet('windows-1251');"/>
+				 <menuitem value="&dcharDosCyrCmd.label;" oncommand="BrowserSetDefaultCharacterSet('IBM866');"/>
+				 <menuitem value="&dcharMacCyrCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-mac-cyrillic');"/>
+				 <menuitem value="&dcharMacUkrCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-mac-ukrainian');"/>
+				 <menuitem value="&dcharRusCmd.label; " oncommand="BrowserSetDefaultCharacterSet('KOI8-R');"/>
+				 <menuitem value="&dcharUkrCmd.label;" oncommand="BrowserSetDefaultCharacterSet('KOI8-U');"/>
 					 <menuseparator />
-				 <menuitem value="&dcharIsoGreekCmd.label;" onaction="BrowserSetDefaultCharacterSet('ISO-8859-7');"/>
-				 <menuitem value="&dcharWinGreekCmd.label;" onaction="BrowserSetDefaultCharacterSet('windows-1253');"/>
-				 <menuitem value="&dcharMacGreekCmd.label;" onaction="BrowserSetDefaultCharacterSet('x-mac-greek');"/>
+				 <menuitem value="&dcharIsoGreekCmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-7');"/>
+				 <menuitem value="&dcharWinGreekCmd.label;" oncommand="BrowserSetDefaultCharacterSet('windows-1253');"/>
+				 <menuitem value="&dcharMacGreekCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-mac-greek');"/>
 					 <menuseparator />
-				 <menuitem value="&dcharWinVietCmd.label;" onaction="BrowserSetDefaultCharacterSet('windows-1258');"/>
-				 <menuitem value="&dcharVietTcnCmd.label;" onaction="BrowserSetDefaultCharacterSet('x-viet-tcvn5712');"/>
-				 <menuitem value="&dcharVietViCmd.label;" onaction="BrowserSetDefaultCharacterSet('VISCII');"/>
-				 <menuitem value="&dcharVieVpCmd.label;" onaction="BrowserSetDefaultCharacterSet('x-viet-vps');"/>
+				 <menuitem value="&dcharWinVietCmd.label;" oncommand="BrowserSetDefaultCharacterSet('windows-1258');"/>
+				 <menuitem value="&dcharVietTcnCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-viet-tcvn5712');"/>
+				 <menuitem value="&dcharVietViCmd.label;" oncommand="BrowserSetDefaultCharacterSet('VISCII');"/>
+				 <menuitem value="&dcharVieVpCmd.label;" oncommand="BrowserSetDefaultCharacterSet('x-viet-vps');"/>
 					 <menuseparator />
-				 <menuitem value="&dcharThaiCmd.label;" onaction="BrowserSetDefaultCharacterSet('TIS-620');"/>
+				 <menuitem value="&dcharThaiCmd.label;" oncommand="BrowserSetDefaultCharacterSet('TIS-620');"/>
 					 <menuseparator />
-				 <menuitem value="&dcharArmCmd.label;" onaction="BrowserSetDefaultCharacterSet('ARMSCII-8');"/>
+				 <menuitem value="&dcharArmCmd.label;" oncommand="BrowserSetDefaultCharacterSet('ARMSCII-8');"/>
 					 <menuseparator />
-				 <menuitem value="&dcharIso6Cmd.label;" onaction="BrowserSetDefaultCharacterSet('ISO-8859-6');"/>
-				 <menuitem value="&dcharCp1256Cmd.label;" onaction="BrowserSetDefaultCharacterSet('windows-1256');"/>
+				 <menuitem value="&dcharIso6Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-6');"/>
+				 <menuitem value="&dcharCp1256Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('windows-1256');"/>
 					 <menuseparator />
-				 <menuitem value="&dcharIso8Cmd.label;" onaction="BrowserSetDefaultCharacterSet('ISO-8859-8');"/>
-				 <menuitem value="&dcharCp1255Cmd.label;" onaction="BrowserSetDefaultCharacterSet('windows-1255');"/>
+				 <menuitem value="&dcharIso8Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-8');"/>
+				 <menuitem value="&dcharCp1255Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('windows-1255');"/>
 			</menupopup>
 		 </menu>
 	  </menupopup>
     </menu>
     <menu accesskey="s" value="&searchMenu.label;">
 	  <menupopup>
-		  <menuitem value="&findOnCmd.label;" onaction="BrowserFind();"/>
-		  <menuitem value="&findAgainCmd.label;" onaction="BrowserFindAgain();"/>
+		  <menuitem value="&findOnCmd.label;" oncommand="BrowserFind();"/>
+		  <menuitem value="&findAgainCmd.label;" oncommand="BrowserFindAgain();"/>
 		  <menuseparator />
-		  <menuitem value="&searchParentCmd.label;" onaction="BrowserReload();"/>
-		  <menuitem value="&searchParenet2Cmd.label;" onaction="BrowserReload();"/>
-		  <menuitem value="&appSpecificCmd.label;" onaction="BrowserReload();"/>
-		  <menuitem value="&appSpecificCmd.label;" onaction="BrowserReload();"/>
+		  <menuitem value="&searchParentCmd.label;" oncommand="BrowserReload();"/>
+		  <menuitem value="&searchParenet2Cmd.label;" oncommand="BrowserReload();"/>
+		  <menuitem value="&appSpecificCmd.label;" oncommand="BrowserReload();"/>
+		  <menuitem value="&appSpecificCmd.label;" oncommand="BrowserReload();"/>
 		  <menuseparator />
-		  <menuitem value="&searchBookmarksHistoryCmd.label;" onaction="OpenSearch('find', null);"/>
-		  <menuitem value="&searchInternetCmd.label;" onaction="OpenSearch('internet', null);"/>
-		  <menuitem value="&searchAllMailCmd.label;" onaction="OpenSearch('mail', null);"/>
-		  <menuitem value="&searchAddressbookCmd.label;" onaction="OpenSearch('addressbook', null);"/>
+		  <menuitem value="&searchBookmarksHistoryCmd.label;" oncommand="OpenSearch('find', null);"/>
+		  <menuitem value="&searchInternetCmd.label;" oncommand="OpenSearch('internet', null);"/>
+		  <menuitem value="&searchAllMailCmd.label;" oncommand="OpenSearch('mail', null);"/>
+		  <menuitem value="&searchAddressbookCmd.label;" oncommand="OpenSearch('addressbook', null);"/>
 		  <menuseparator />
-		  <menuitem value="&searchComputerCmd.label;" onaction="BrowserReload();"/>
+		  <menuitem value="&searchComputerCmd.label;" oncommand="BrowserReload();"/>
 	  </menupopup>
     </menu>
     <menu accesskey="g" value="&goMenu.label;">
 	  <menupopup>
-		  <menuitem id="menuitem-back" value="&goBackCmd.label;" onaction="BrowserBack();"/>
-		  <menuitem id="menuitem-forward" value="&goForwardCmd.label;" onaction="BrowserForward();" />
-		  <menuitem value="&goHomeCmd.label;" onaction="BrowserHome();"/>
+		  <menuitem id="menuitem-back" value="&goBackCmd.label;" oncommand="BrowserBack();"/>
+		  <menuitem id="menuitem-forward" value="&goForwardCmd.label;" oncommand="BrowserForward();" />
+		  <menuitem value="&goHomeCmd.label;" oncommand="BrowserHome();"/>
 		  <menuseparator />
-		  <menuitem value="&goPrev1Cmd.label;" onaction="BrowserBack();"/>
-		  <menuitem value="&goPrev2Cmd.label;" onaction="BrowserBack();"/>
-		  <menuitem value="&goPrevnCmd.label;" onaction="BrowserBack();"/>
+		  <menuitem value="&goPrev1Cmd.label;" oncommand="BrowserBack();"/>
+		  <menuitem value="&goPrev2Cmd.label;" oncommand="BrowserBack();"/>
+		  <menuitem value="&goPrevnCmd.label;" oncommand="BrowserBack();"/>
 	  </menupopup>
     </menu>
     <menu accesskey="b" value="&bookmarksMenu.label;"
@@ -357,13 +357,13 @@ Contributor(s): ______________________________________. -->
 			</rule>
 			<rule>
 			  <menupopup>
-				<menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" onaction="OpenBookmarkURL(event.target)" />
+				<menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="OpenBookmarkURL(event.target)" />
 			  </menupopup>
 			</rule>
 		</template>
 		<menupopup>
-			<menuitem value="&addCurPageCmd.label;" onaction="BrowserAddBookmark(window.content.location.href,window.content.document.title);"/>
-			<menuitem value="&manBookmarksCmd.label;" onaction="BrowserEditBookmarks();"/>
+			<menuitem value="&addCurPageCmd.label;" oncommand="BrowserAddBookmark(window.content.location.href,window.content.document.title);"/>
+			<menuitem value="&manBookmarksCmd.label;" oncommand="BrowserEditBookmarks();"/>
 			<menuseparator/>
 		</menupopup>
     </menu>
@@ -376,69 +376,69 @@ Contributor(s): ______________________________________. -->
     <menupopup>
       <menu value="&debugVerCmd.label;">
 	   <menupopup>
-        <menuitem value="&ver1Cmd.label;"   onaction="window.content.location.href='http://www.mozilla.org'"/>
-        <menuitem value="&ver2Cmd.label;"     onaction="window.content.location.href='http://www.yahoo.com'"/>
-        <menuitem value="&ver3Cmd.label;"  onaction="window.content.location.href='http://www.netscape.com'"/>
-        <menuitem value="&ver4Cmd.label;"    onaction="window.content.location.href='http://www.excite.com'"/>
-        <menuitem value="&ver5Cmd.label;" onaction="window.content.location.href='http://www.microsoft.com'"/>
-        <menuitem value="&ver6Cmd.label;"  onaction="window.content.location.href='http://www.city.net'"/>
-        <menuitem value="&ver7Cmd.label;" onaction="window.content.location.href='http://www.mirabilis.com'"/>
-        <menuitem value="&ver8Cmd.label;" onaction="window.content.location.href='http://www.pathfinder.com/welcome'"/>
-        <menuitem value="&ver9Cmd.label;" onaction="window.content.location.href='http://www.warnerbros.com/home_moz3_day.html'"/>
-        <menuitem value="&ver10Cmd.label;"          onaction="window.content.location.href='http://www.cnn.com'"/>
-        <menuitem value="&ver11Cmd.label;" onaction="window.content.location.href='http://www.usatoday.com'"/>
-        <menuitem value="&ver12Cmd.label;"    onaction="window.content.location.href='http://www.disney.go.com'"/>
-        <menuitem value="&ver13Cmd.label;"  onaction="window.content.location.href='http://www.hotwired.com'"/>
-        <menuitem value="&ver14Cmd.label;"    onaction="window.content.location.href='http://www.hotbot.com'"/>
+        <menuitem value="&ver1Cmd.label;"   oncommand="window.content.location.href='http://www.mozilla.org'"/>
+        <menuitem value="&ver2Cmd.label;"     oncommand="window.content.location.href='http://www.yahoo.com'"/>
+        <menuitem value="&ver3Cmd.label;"  oncommand="window.content.location.href='http://www.netscape.com'"/>
+        <menuitem value="&ver4Cmd.label;"    oncommand="window.content.location.href='http://www.excite.com'"/>
+        <menuitem value="&ver5Cmd.label;" oncommand="window.content.location.href='http://www.microsoft.com'"/>
+        <menuitem value="&ver6Cmd.label;"  oncommand="window.content.location.href='http://www.city.net'"/>
+        <menuitem value="&ver7Cmd.label;" oncommand="window.content.location.href='http://www.mirabilis.com'"/>
+        <menuitem value="&ver8Cmd.label;" oncommand="window.content.location.href='http://www.pathfinder.com/welcome'"/>
+        <menuitem value="&ver9Cmd.label;" oncommand="window.content.location.href='http://www.warnerbros.com/home_moz3_day.html'"/>
+        <menuitem value="&ver10Cmd.label;"          oncommand="window.content.location.href='http://www.cnn.com'"/>
+        <menuitem value="&ver11Cmd.label;" oncommand="window.content.location.href='http://www.usatoday.com'"/>
+        <menuitem value="&ver12Cmd.label;"    oncommand="window.content.location.href='http://www.disney.go.com'"/>
+        <menuitem value="&ver13Cmd.label;"  oncommand="window.content.location.href='http://www.hotwired.com'"/>
+        <menuitem value="&ver14Cmd.label;"    oncommand="window.content.location.href='http://www.hotbot.com'"/>
         <menuseparator />
-        <menuitem value="&ver15Cmd.label;"  onaction="window.content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_frame_index.html'"/>
-        <menuitem value="&ver16Cmd.label;"  onaction="window.content.location.href='resource:/res/samples/test6.html'"/>
-        <menuitem value="&ver17Cmd.label;" onaction="window.content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_applet.html'"/>
-        <menuitem value="&ver18Cmd.label;" onaction="window.content.location.href='http://www.abcnews.com'"/>
-        <menuitem value="&ver19Cmd.label;" onaction="window.content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_imagemap.html'"/>
-        <menuitem value="&ver20Cmd.label;" onaction="window.content.location.href='resource:/res/samples/test2.html'"/>
-        <menuitem value="&ver21Cmd.label;" onaction="window.content.location.href='http://www.cdrom.com/pub/png/png-MagnoliaAlpha.html'"/>
-        <menuitem value="&ver22Cmd.label;" onaction="window.content.location.href='resource:/res/samples/test13.html'"/>
-        <menuitem value="&ver23Cmd.label;" onaction="window.content.location.href='resource:/res/samples/test2.html'"/>
-        <menuitem value="&ver24Cmd.label;" onaction="window.content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_html_mix3.html'"/>
-        <menuitem value="&ver25Cmd.label;" onaction="window.content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_link.html'"/>
+        <menuitem value="&ver15Cmd.label;"  oncommand="window.content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_frame_index.html'"/>
+        <menuitem value="&ver16Cmd.label;"  oncommand="window.content.location.href='resource:/res/samples/test6.html'"/>
+        <menuitem value="&ver17Cmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_applet.html'"/>
+        <menuitem value="&ver18Cmd.label;" oncommand="window.content.location.href='http://www.abcnews.com'"/>
+        <menuitem value="&ver19Cmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_imagemap.html'"/>
+        <menuitem value="&ver20Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/test2.html'"/>
+        <menuitem value="&ver21Cmd.label;" oncommand="window.content.location.href='http://www.cdrom.com/pub/png/png-MagnoliaAlpha.html'"/>
+        <menuitem value="&ver22Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/test13.html'"/>
+        <menuitem value="&ver23Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/test2.html'"/>
+        <menuitem value="&ver24Cmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_html_mix3.html'"/>
+        <menuitem value="&ver25Cmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_link.html'"/>
        </menupopup>
 	  </menu>
 
       <menu value="&viewDemoMenu.label;">
 	   <menupopup>
-        <menuitem value="&demo0Cmd.label;"  onaction="window.content.location.href='resource:/res/samples/test0.html'"/>
-        <menuitem value="&demo1Cmd.label;"  onaction="window.content.location.href='resource:/res/samples/test1.html'"/>
-        <menuitem value="&demo2Cmd.label;"  onaction="window.content.location.href='resource:/res/samples/test2.html'"/>
-        <menuitem value="&demo3Cmd.label;"  onaction="window.content.location.href='resource:/res/samples/test3.html'"/>
-        <menuitem value="&demo4Cmd.label;"  onaction="window.content.location.href='resource:/res/samples/test4.html'"/>
-        <menuitem value="&demo5Cmd.label;"  onaction="window.content.location.href='resource:/res/samples/test5.html'"/>
-        <menuitem value="&demo6Cmd.label;"  onaction="window.content.location.href='resource:/res/samples/test6.html'"/>
-        <menuitem value="&demo7Cmd.label;"  onaction="window.content.location.href='resource:/res/samples/test7.html'"/>
-        <menuitem value="&demo8Cmd.label;"  onaction="window.content.location.href='resource:/res/samples/test8.html'"/>
-        <menuitem value="&demo9Cmd.label;"  onaction="window.content.location.href='resource:/res/samples/test9.html'"/>
-        <menuitem value="&demo10Cmd.label;" onaction="window.content.location.href='resource:/res/samples/test10.html'"/>
-        <menuitem value="&demo11Cmd.label;" onaction="window.content.location.href='resource:/res/samples/test11.html'"/>
-        <menuitem value="&demo12Cmd.label;" onaction="window.content.location.href='resource:/res/samples/test12.html'"/>
-        <menuitem value="&demo13Cmd.label;" onaction="window.content.location.href='resource:/res/samples/test13.html'"/>
-        <menuitem value="&demo14Cmd.label;" onaction="window.content.location.href='resource:/res/samples/test14.html'"/>
-        <menuitem value="&demo15Cmd.label;" onaction="window.content.location.href='resource:/res/samples/test15.html'"/>
-        <menuitem value="&demo16Cmd.label;" onaction="window.content.location.href='resource:/res/samples/test16.html'"/>
+        <menuitem value="&demo0Cmd.label;"  oncommand="window.content.location.href='resource:/res/samples/test0.html'"/>
+        <menuitem value="&demo1Cmd.label;"  oncommand="window.content.location.href='resource:/res/samples/test1.html'"/>
+        <menuitem value="&demo2Cmd.label;"  oncommand="window.content.location.href='resource:/res/samples/test2.html'"/>
+        <menuitem value="&demo3Cmd.label;"  oncommand="window.content.location.href='resource:/res/samples/test3.html'"/>
+        <menuitem value="&demo4Cmd.label;"  oncommand="window.content.location.href='resource:/res/samples/test4.html'"/>
+        <menuitem value="&demo5Cmd.label;"  oncommand="window.content.location.href='resource:/res/samples/test5.html'"/>
+        <menuitem value="&demo6Cmd.label;"  oncommand="window.content.location.href='resource:/res/samples/test6.html'"/>
+        <menuitem value="&demo7Cmd.label;"  oncommand="window.content.location.href='resource:/res/samples/test7.html'"/>
+        <menuitem value="&demo8Cmd.label;"  oncommand="window.content.location.href='resource:/res/samples/test8.html'"/>
+        <menuitem value="&demo9Cmd.label;"  oncommand="window.content.location.href='resource:/res/samples/test9.html'"/>
+        <menuitem value="&demo10Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/test10.html'"/>
+        <menuitem value="&demo11Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/test11.html'"/>
+        <menuitem value="&demo12Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/test12.html'"/>
+        <menuitem value="&demo13Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/test13.html'"/>
+        <menuitem value="&demo14Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/test14.html'"/>
+        <menuitem value="&demo15Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/test15.html'"/>
+        <menuitem value="&demo16Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/test16.html'"/>
        </menupopup>
 	  </menu>
 
       <menu value="&xptkMenu.label;">
 	   <menupopup>
-        <menuitem value="&xptk1Cmd.label;" onaction="window.content.location.href='resource:/res/samples/checkboxTest.xul'"/>
-        <menuitem value="&xptk2Cmd.label;" onaction="window.content.location.href='resource:/res/samples/toolbarTest1.xul'"/>
-        <menuitem value="&xptk3Cmd.label;" onaction="window.content.location.href='resource:/res/samples/treeTest1.xul'"/>
-        <menuitem value="&xptk4Cmd.label;" onaction="window.content.location.href='resource:/res/samples/dexsimplemaster.xul'"/>
-        <menuitem value="&xptk5Cmd.label;" onaction="window.content.location.href='resource:/res/samples/dexanimmaster.xul'"/>
-        <menuitem value="&xptk6Cmd.label;" onaction="window.content.location.href='resource:/res/samples/dexopenchrome.xul'"/>
-        <menuitem value="&xptk7Cmd.label;" onaction="BrowserReallyReload(0)"/>
-        <menuitem value="&xptk8Cmd.label;" onaction="window.content.location.href='resource:/res/samples/beeptest.html'"/>
-        <menuitem value="&xptk9Cmd.label;" onaction="window.content.location.href='resource:/res/samples/soundtest.html'"/>
-        <menuitem value="&xptk10Cmd.label;" onaction="window.content.location.href='resource:/res/samples/xpmenu.xul'"/>
+        <menuitem value="&xptk1Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/checkboxTest.xul'"/>
+        <menuitem value="&xptk2Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/toolbarTest1.xul'"/>
+        <menuitem value="&xptk3Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/treeTest1.xul'"/>
+        <menuitem value="&xptk4Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/dexsimplemaster.xul'"/>
+        <menuitem value="&xptk5Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/dexanimmaster.xul'"/>
+        <menuitem value="&xptk6Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/dexopenchrome.xul'"/>
+        <menuitem value="&xptk7Cmd.label;" oncommand="BrowserReallyReload(0)"/>
+        <menuitem value="&xptk8Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/beeptest.html'"/>
+        <menuitem value="&xptk9Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/soundtest.html'"/>
+        <menuitem value="&xptk10Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/xpmenu.xul'"/>
        </menupopup>
 	  </menu>
      </menupopup>
@@ -446,20 +446,20 @@ Contributor(s): ______________________________________. -->
 
   <menu accesskey="q" value="&QA.label;">
     <menupopup>
-        <menuitem value="&QABugCmd.label;" onaction="window.content.location.href='http://www.mozilla.org/quality/bug-writing-guidelines.html'"/>
-        <menuitem value="&QATempCmd.label;" onaction="window.content.location.href='http://www.mozilla.org/quality/bug-template.html'"/>
-        <menuitem value="&QASmokeCmd.label;" onaction="window.content.location.href='http://www.mozilla.org/quality/smoketests/'"/>
-        <menuitem value="&QAKnownBugCmd.label;" onaction="window.content.location.href='http://www.mozilla.org/quality/most-frequent-bugs/'"/>
+        <menuitem value="&QABugCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/quality/bug-writing-guidelines.html'"/>
+        <menuitem value="&QATempCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/quality/bug-template.html'"/>
+        <menuitem value="&QASmokeCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/quality/smoketests/'"/>
+        <menuitem value="&QAKnownBugCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/quality/most-frequent-bugs/'"/>
         <menuseparator />
-        <menuitem value="&strresCmd.label;" onaction="window.content.location.href='resource:/res/strres-test.xul'"/>
+        <menuitem value="&strresCmd.label;" oncommand="window.content.location.href='resource:/res/strres-test.xul'"/>
 		<menu value="&languages.label;">
 	    	<menupopup>
         		<menuitem value="&en-US.label;" 
-			          onaction="localeTo('', 'en-US');" />
+			          oncommand="localeTo('', 'en-US');" />
         		<menuitem value="&da-DK-file.label;" 
-			          onaction="localeTo('', 'da-DK');" />
+			          oncommand="localeTo('', 'da-DK');" />
         		<menuitem value="&da-DK-http.label;" 
-			          onaction="localeTo('http://www.mozilla.org/projects/intl/chrome/', 'da-DK');" />
+			          oncommand="localeTo('http://www.mozilla.org/projects/intl/chrome/', 'da-DK');" />
 			</menupopup>
 
 		</menu>

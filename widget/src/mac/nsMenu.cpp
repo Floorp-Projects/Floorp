@@ -934,7 +934,7 @@ void nsMenu::LoadMenuItem(
 		return;
     }
     
-    nsAutoString cmdAtom("onaction");
+    nsAutoString cmdAtom("oncommand");
     nsString cmdName;
 
     domElement->GetAttribute(cmdAtom, cmdName);

@@ -311,6 +311,10 @@ menuitem[disabled="true"] {
 	color: #999999;
 }
 
+menupopupset {
+  display: block;
+}
+
 menupopup {
   display: none;
 }

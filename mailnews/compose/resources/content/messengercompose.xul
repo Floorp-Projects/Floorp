@@ -88,28 +88,28 @@ Rights Reserved.
 	    <menupopup id="fileMenu">
 		<menuitem value="&newCmd.label;" cmd="nsCmd:ComposeNew"/>
 		<menuitem value="&saveCmd.label;" cmd="nsCmd:ComposeSave"/>
-		<menuitem value="&saveAsCmd.label;" onaction="SaveAsDraft()"/>
-		<menuitem value="&saveAsTemplateCmd.label;" onaction="SaveAsTemplate()"/>
+		<menuitem value="&saveAsCmd.label;" oncommand="SaveAsDraft()"/>
+		<menuitem value="&saveAsTemplateCmd.label;" oncommand="SaveAsTemplate()"/>
       		<menu value="&attachMenu.label;">
 			<menupopup>
-			<menuitem value="&attachFileCmd.label;" onaction="AttachFile()"/>
-			<menuitem value="&attachPageCmd.label;" onaction="AttachPage()"/>
-			<menuitem value="&removeLastAttachmentCmd.label;" onaction="RemoveLastAttachment()"/>
+			<menuitem value="&attachFileCmd.label;" oncommand="AttachFile()"/>
+			<menuitem value="&attachPageCmd.label;" oncommand="AttachPage()"/>
+			<menuitem value="&removeLastAttachmentCmd.label;" oncommand="RemoveLastAttachment()"/>
 			<menuseparator/>
-			<menuitem value="&attachVCardCmd.label;" onaction="AttachVCard()"/>
+			<menuitem value="&attachVCardCmd.label;" oncommand="AttachVCard()"/>
 			</menupopup>
 		</menu>
 		<menuseparator/>
-		<menuitem value="&sendNowCmd.label;" onaction="SendMessage()"/>
-		<menuitem value="&sendLaterCmd.label;" onaction="SendMessageLater()"/>
+		<menuitem value="&sendNowCmd.label;" oncommand="SendMessage()"/>
+		<menuitem value="&sendLaterCmd.label;" oncommand="SendMessageLater()"/>
 		<menuitem value="&quoteOrigCmd.label;" cmd="nsCmd:ComposeQuote"/>
-		<menuitem value="&selectAddressCmd.label;" onaction="SelectAddress()"/>
+		<menuitem value="&selectAddressCmd.label;" oncommand="SelectAddress()"/>
 		<menuseparator/>
 		<menuitem id="pageSetup"/>
 		<menuitem value="&printPreviewCmd.label;" cmd="nsCmd:BrowserPrintPreview"/>
 		<menuitem value="&printCmd.label;" cmd="nsCmd:BrowserPrint"/>
 		<menuseparator/>
-		<menuitem value="&closeCmd.label;" onaction="CloseWindow();"/>
+		<menuitem value="&closeCmd.label;" oncommand="CloseWindow();"/>
 		</menupopup>
 	</menu>
     <menu value="&editMenu.label;">
@@ -143,34 +143,34 @@ Rights Reserved.
 		<menuseparator/>
       		<menu value="&dcharMenu.label;">
 			<menupopup>
-			<menuitem value="&dcharIso1Cmd.label;" onaction="SetDocumentCharacterSet('ISO-8859-1');"/>
-			<menuitem value="&dcharIso2Cmd.label;" onaction="SetDocumentCharacterSet('ISO-8859-2');"/>
-			<menuitem value="&dcharIso3Cmd.label;" onaction="SetDocumentCharacterSet('ISO-8859-3');"/>
-			<menuitem value="&dcharIso4Cmd.label;" onaction="SetDocumentCharacterSet('ISO-8859-4');"/>
-			<menuitem value="&dcharIso9Cmd.label;" onaction="SetDocumentCharacterSet('ISO-8859-9');"/>
-			<menuitem value="&dcharIso10Cmd.label;" onaction="SetDocumentCharacterSet('ISO-8859-10');"/>
-			<menuitem value="&dcharIso14Cmd.label;" onaction="SetDocumentCharacterSet('ISO-8859-14');"/>
-			<menuitem value="&dcharIso15Cmd.label;" onaction="SetDocumentCharacterSet('ISO-8859-15');"/>
+			<menuitem value="&dcharIso1Cmd.label;" oncommand="SetDocumentCharacterSet('ISO-8859-1');"/>
+			<menuitem value="&dcharIso2Cmd.label;" oncommand="SetDocumentCharacterSet('ISO-8859-2');"/>
+			<menuitem value="&dcharIso3Cmd.label;" oncommand="SetDocumentCharacterSet('ISO-8859-3');"/>
+			<menuitem value="&dcharIso4Cmd.label;" oncommand="SetDocumentCharacterSet('ISO-8859-4');"/>
+			<menuitem value="&dcharIso9Cmd.label;" oncommand="SetDocumentCharacterSet('ISO-8859-9');"/>
+			<menuitem value="&dcharIso10Cmd.label;" oncommand="SetDocumentCharacterSet('ISO-8859-10');"/>
+			<menuitem value="&dcharIso14Cmd.label;" oncommand="SetDocumentCharacterSet('ISO-8859-14');"/>
+			<menuitem value="&dcharIso15Cmd.label;" oncommand="SetDocumentCharacterSet('ISO-8859-15');"/>
 			 <menuseparator />
-			<menuitem value="&dcharJapanCmd.label;" onaction="SetDocumentCharacterSet('ISO-2022-JP');"/>
+			<menuitem value="&dcharJapanCmd.label;" oncommand="SetDocumentCharacterSet('ISO-2022-JP');"/>
 			 <menuseparator />
-			<menuitem value="&dcharTradChiBigCmd.label;" onaction="SetDocumentCharacterSet('Big5');"/>
-			<menuitem value="&dcharSimpChiGbCmd.label;" onaction="SetDocumentCharacterSet('GB2312');"/>
+			<menuitem value="&dcharTradChiBigCmd.label;" oncommand="SetDocumentCharacterSet('Big5');"/>
+			<menuitem value="&dcharSimpChiGbCmd.label;" oncommand="SetDocumentCharacterSet('GB2312');"/>
 			 <menuseparator />
-			<menuitem value="&dcharKoreanCmd.label;" onaction="SetDocumentCharacterSet('EUC-KR');"/>
+			<menuitem value="&dcharKoreanCmd.label;" oncommand="SetDocumentCharacterSet('EUC-KR');"/>
 			 <menuseparator />
-			<menuitem value="&dcharUtf8Cmd.label;" onaction="SetDocumentCharacterSet('UTF-8');"/>
+			<menuitem value="&dcharUtf8Cmd.label;" oncommand="SetDocumentCharacterSet('UTF-8');"/>
 			 <menuseparator />
-			<menuitem value="&dcharRusCmd.label; " onaction="SetDocumentCharacterSet('KOI8-R');"/>
-			<menuitem value="&dcharUkrCmd.label;" onaction="SetDocumentCharacterSet('KOI8-U');"/>
+			<menuitem value="&dcharRusCmd.label; " oncommand="SetDocumentCharacterSet('KOI8-R');"/>
+			<menuitem value="&dcharUkrCmd.label;" oncommand="SetDocumentCharacterSet('KOI8-U');"/>
 			 <menuseparator />
-			<menuitem value="&dcharIsoGreekCmd.label;" onaction="SetDocumentCharacterSet('ISO-8859-7');"/>
+			<menuitem value="&dcharIsoGreekCmd.label;" oncommand="SetDocumentCharacterSet('ISO-8859-7');"/>
 			 <menuseparator />
-			<menuitem value="&dcharVietViCmd.label;" onaction="SetDocumentCharacterSet('VISCII');"/>
+			<menuitem value="&dcharVietViCmd.label;" oncommand="SetDocumentCharacterSet('VISCII');"/>
 			 <menuseparator />
-			<menuitem value="&dcharThaiCmd.label;" onaction="SetDocumentCharacterSet('TIS-620');"/>
+			<menuitem value="&dcharThaiCmd.label;" oncommand="SetDocumentCharacterSet('TIS-620');"/>
 			 <menuseparator />
-			<menuitem value="&dcharArmCmd.label;" onaction="SetDocumentCharacterSet('ARMSCII-8');"/>
+			<menuitem value="&dcharArmCmd.label;" oncommand="SetDocumentCharacterSet('ARMSCII-8');"/>
 			</menupopup>
 	   </menu>
 	   </menupopup>
@@ -181,7 +181,7 @@ Rights Reserved.
     </menu>
     <menu value="&messageMenu.label;">
 	   	<menupopup>
-		<menu value="&priorityMenu.label;" onaction="PriorityMenuSelect(event.target);">
+		<menu value="&priorityMenu.label;" oncommand="PriorityMenuSelect(event.target);">
     		<menupopup>
 			<menuitem value="&lowestPriorityCmd.label;" id="lowest"/>
     		<menuitem value="&lowPriorityCmd.label;" id="low"/>
@@ -190,9 +190,9 @@ Rights Reserved.
     		<menuitem value="&highestPriorityCmd.label;" id="highest"/>
 			</menupopup>
 	   	</menu>
-    	<menuitem value="&returnReceiptCmd.label;" onaction="ReturnReceiptMenuSelect();"/>
-	   	<menuitem value="&uuEncodeCmd.label;" onaction="UUEncodeMenuSelect();"/>
-	   	<menu value="&outputFormatMenu.label;" onaction="OutputFormatMenuSelect(event.target);">
+    	<menuitem value="&returnReceiptCmd.label;" oncommand="ReturnReceiptMenuSelect();"/>
+	   	<menuitem value="&uuEncodeCmd.label;" oncommand="UUEncodeMenuSelect();"/>
+	   	<menu value="&outputFormatMenu.label;" oncommand="OutputFormatMenuSelect(event.target);">
     		<menupopup>
 			<menuitem value="&askmeFormatCmd.label;" id="1"/>
     		<menuitem value="&plainTextFormatCmd.label;" id="2"/>
@@ -202,7 +202,7 @@ Rights Reserved.
 	   	</menu>
     	<menuseparator/>
 		<menu value="&fileCarbonCopyCmd.label;" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild" 
-			onaction="MessageFcc(event.target)">
+			oncommand="MessageFcc(event.target)">
 			<menupopup/>
                   <template>
                     <rule iscontainer="true" isempty="false">
@@ -212,7 +212,7 @@ Rights Reserved.
                     </rule>
                     <rule>
                       <menupopup>
-					  <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" onaction="MsgCopyMessage(event.target)" />
+					  <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgCopyMessage(event.target)" />
 					  </menupopup>
                     </rule>
                   </template>

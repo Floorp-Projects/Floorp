@@ -717,7 +717,7 @@ nsMimeXULEmitter::DumpAttachmentMenu()
 
       UtilityWrite("<menuitem value=\"");
       UtilityWrite(attachInfo->displayName);
-      UtilityWrite("\" onaction=\"OpenAttachURL('");
+      UtilityWrite("\" oncommand=\"OpenAttachURL('");
       UtilityWrite(attachInfo->urlSpec);
       UtilityWriteCRLF("' );\"  />");
     }
