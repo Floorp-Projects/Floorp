@@ -1583,12 +1583,13 @@ PR_ParseTimeString(
                   secs = mktime(&localTime);
                   if (secs != (time_t) -1)
                     {
-#if defined(XP_MAC)
+#if defined(XP_MAC) && (__MSL__ < 0x6000)
                       /*
                        * The mktime() routine in MetroWerks MSL C
                        * Runtime library returns seconds since midnight,
-                       * 1 Jan. 1900, not 1970.  So we need to adjust
-                       * its return value to the NSPR epoch.
+                       * 1 Jan. 1900, not 1970 - in versions of MSL (Metrowerks Standard
+                       * Library) prior to version 6.  Only for older versions of
+                       * MSL do we adjust the value of secs to the NSPR epoch
                        */
                       secs -= ((365 * 70UL) + 17) * 24 * 60 * 60;
 #endif
