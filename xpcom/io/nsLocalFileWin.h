@@ -79,8 +79,8 @@ private:
     
     IPersistFile* mPersistFile; 
     IShellLink*   mShellLink;
-
-    WIN32_FILE_ATTRIBUTE_DATA mFileAttrData;    
+    
+    PRFileInfo64  mFileInfo64;
     
     void MakeDirty();
     nsresult ResolveAndStat(PRBool resolveTerminal);
@@ -89,6 +89,7 @@ private:
     nsresult CopyMove(nsIFile *newParentDir, const char *newName, PRBool followSymlinks, PRBool move);
     nsresult CopySingleFile(nsIFile *source, nsIFile* dest, const char * newName, PRBool followSymlinks, PRBool move);
 
+    nsresult SetModDate(PRInt64 aLastModificationDate, PRBool resolveTerminal);
 };
 
 #endif

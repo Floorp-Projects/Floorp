@@ -55,6 +55,14 @@
 
 
 
+#ifdef XP_MAC
+#define COMPONENT_REGISTRY_NAME "Component Registry"
+#define COMPONENT_DIRECTORY     "Components"
+#else
+#define COMPONENT_REGISTRY_NAME "component.reg"  
+#define COMPONENT_DIRECTORY     "components"    
+#endif 
+
 
 
 
@@ -225,25 +233,31 @@ static nsresult GetCurrentProcessDirectory(nsILocalFile** aFile)
 
 nsDirectoryService* nsDirectoryService::mService = nsnull;
 
-nsDirectoryService::nsDirectoryService(nsISupports* outer)
+nsDirectoryService::nsDirectoryService()
 {
-    NS_INIT_AGGREGATED(outer);
+    NS_INIT_REFCNT();
+    mHashtable = new nsHashtable(256, PR_TRUE);
+    NS_ASSERTION(mHashtable != NULL, "hashtable null error");
+    
+    NS_NewISupportsArray(getter_AddRefs(mProviders));
+    NS_ASSERTION(mProviders != NULL, "providers null error");
+
+	RegisterProvider(NS_STATIC_CAST(nsIDirectoryServiceProvider*, this));
 }
 
 NS_METHOD
 nsDirectoryService::Create(nsISupports *outer, REFNSIID aIID, void **aResult)
 {
-    NS_ENSURE_ARG_POINTER(aResult);
-	 NS_ENSURE_PROPER_AGGREGATION(outer, aIID);
-
+   NS_ENSURE_ARG_POINTER(aResult);
+	 
     if (mService == nsnull)
     {
-        mService = new nsDirectoryService(outer);
+        mService = new nsDirectoryService();
         if (mService == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    return  mService->AggregatedQueryInterface(aIID, aResult);
+    return  mService->QueryInterface(aIID, aResult);
 }
 
 PRBool
@@ -256,102 +270,87 @@ nsDirectoryService::ReleaseValues(nsHashKey* key, void* data, void* closure)
 
 nsDirectoryService::~nsDirectoryService()
 {
-    Enumerate(ReleaseValues);
+    if (mHashtable)
+        mHashtable->Enumerate(ReleaseValues);
 }
 
-NS_IMPL_AGGREGATED(nsDirectoryService);
+NS_IMPL_ISUPPORTS3(nsDirectoryService, nsIProperties, nsIDirectoryService, nsIDirectoryServiceProvider)
 
-NS_METHOD
-nsDirectoryService::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr) 
-{
-    NS_ENSURE_ARG_POINTER(aInstancePtr);
-
-	 if (aIID.Equals(NS_GET_IID(nsISupports)))
-	     *aInstancePtr = GetInner();
-	 else if (aIID.Equals(NS_GET_IID(nsIProperties)))
-	     *aInstancePtr = NS_STATIC_CAST(nsIProperties*, this);
-	 else {
-	     *aInstancePtr = nsnull;
-		  return NS_NOINTERFACE;
-    } 
-
-	 NS_ADDREF((nsISupports*)*aInstancePtr);
-    return NS_OK;
-}
 
 NS_IMETHODIMP
 nsDirectoryService::Define(const char* prop, nsISupports* initialValue)
 {
-    nsStringKey key(prop);
-    if (Exists(&key))
-        return NS_ERROR_FAILURE;
-
-    nsISupports* prevValue = (nsISupports*)Put(&key, initialValue);
-    NS_ASSERTION(prevValue == NULL, "hashtable error");
-    NS_IF_ADDREF(initialValue);
-    return NS_OK;
+    return Set(prop, initialValue);
 }
 
 NS_IMETHODIMP
 nsDirectoryService::Undefine(const char* prop)
 {
     nsStringKey key(prop);
-    if (!Exists(&key))
+    if (!mHashtable->Exists(&key))
         return NS_ERROR_FAILURE;
 
-    nsISupports* prevValue = (nsISupports*)Remove(&key);
+    nsISupports* prevValue = (nsISupports*)mHashtable->Remove(&key);
     NS_IF_RELEASE(prevValue);
     return NS_OK;
+}
+
+typedef struct FileData
+
+{
+  const char* property;
+  nsIFile*    file;
+  PRBool	  persistant;
+
+} FileData;
+
+static PRBool FindProviderFile(nsISupports* aElement, void *aData)
+{
+  nsCOMPtr<nsIDirectoryServiceProvider> prov = do_QueryInterface(aElement);
+  if (!prov)
+    return PR_FALSE;
+
+  FileData* fileData = (FileData*)aData;
+  prov->GetFile(fileData->property, &fileData->persistant, &(fileData->file) );
+  if (fileData->file)
+    return PR_FALSE;
+
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP
 nsDirectoryService::Get(const char* prop, const nsIID & uuid, void* *result)
 {
     nsStringKey key(prop);
-    if (!Exists(&key))
+    if (!mHashtable->Exists(&key))
     {
-        // check to see if it is one of our defaults
-        
-        if (strncmp(prop, "xpcom.currentProcess.componentRegistry", 38) == 0)
-        {
-            nsILocalFile* localFile;
-            
-            nsresult rv = GetCurrentProcessDirectory(&localFile);
-            if (NS_FAILED(rv)) 
-                return rv;
- 
-#ifdef XP_MAC
-            localFile->Append("Component Registry");           
-#else
-            localFile->Append("component.reg");           
-#endif /* XP_MAC */
-    
-            Set(prop, NS_STATIC_CAST(nsILocalFile*, localFile));
-        }
-        else if (strncmp(prop, "xpcom.currentProcess.componentDirectory", 39) == 0)
-        {
-            nsILocalFile* localFile;
+      // it is not one of our defaults, lets check any providers
+      FileData fileData;
+      fileData.property   = prop;
+      fileData.file       = nsnull;
+      fileData.persistant = PR_TRUE;
 
-            nsresult rv = GetCurrentProcessDirectory(&localFile);
-            if (NS_FAILED(rv)) 
-                return rv;
- 
-#ifdef XP_MAC
-            localFile->Append("Components");           
-#else
-            localFile->Append("components");           
-#endif /* XP_MAC */
-    
-           Set(prop, NS_STATIC_CAST(nsILocalFile*, localFile));
-        }
+      mProviders->EnumerateForwards(FindProviderFile, &fileData);
+      
+      if (fileData.file)
+      {
+        if (!fileData.persistant)
+		{
+			nsresult rv = (fileData.file)->QueryInterface(uuid, result);
+			NS_RELEASE(fileData.file);
+			return rv;
+		}
+		Set(prop, NS_STATIC_CAST(nsIFile*, fileData.file));
+        NS_RELEASE(fileData.file);
+      } 
     }
 
     
     // now check again to see if it was added above.
-    if (Exists(&key))
+    if (mHashtable->Exists(&key))
     {
       nsCOMPtr<nsIFile> ourFile;
-      nsISupports* value = (nsISupports*)nsHashtable::Get(&key);
+      nsISupports* value = (nsISupports*)mHashtable->Get(&key);
       
       if (value && NS_SUCCEEDED(value->QueryInterface(NS_GET_IID(nsIFile), getter_AddRefs(ourFile))))
       {
@@ -368,7 +367,7 @@ NS_IMETHODIMP
 nsDirectoryService::Set(const char* prop, nsISupports* value)
 {
     nsStringKey key(prop);
-    if (Exists(&key) || value == nsnull)
+    if (mHashtable->Exists(&key) || value == nsnull)
         return NS_ERROR_FAILURE;
     
     nsCOMPtr<nsIFile> ourFile;
@@ -378,7 +377,8 @@ nsDirectoryService::Set(const char* prop, nsISupports* value)
         nsIFile* cloneFile;
         ourFile->Clone(&cloneFile);
 
-        nsISupports* prevValue = (nsISupports*)Put(&key, value);
+        nsISupports* prevValue = (nsISupports*)mHashtable->Put(&key, 
+			                                                   NS_STATIC_CAST(nsISupports*,cloneFile));
         NS_IF_RELEASE(prevValue);
         return NS_OK;
     }
@@ -401,3 +401,52 @@ nsDirectoryService::Has(const char *prop, PRBool *_retval)
     
     return rv;
 }
+
+NS_IMETHODIMP
+nsDirectoryService::RegisterProvider(nsIDirectoryServiceProvider *prov)
+{
+  if (!prov)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISupports> supports = do_QueryInterface(prov);
+  if (supports)
+    return mProviders->AppendElement(supports);
+  return NS_ERROR_FAILURE;
+}
+
+
+
+
+NS_IMETHODIMP
+nsDirectoryService::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
+{
+	nsCOMPtr<nsILocalFile> localFile;
+	nsresult rv;
+
+	*_retval = nsnull;
+	*persistant = PR_TRUE;
+
+	// check to see if it is one of our defaults
+        
+    if (strncmp(prop, "xpcom.currentProcess.componentRegistry", 38) == 0)
+    {
+        rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
+        if (NS_FAILED(rv)) return rv;
+		localFile->Append(COMPONENT_REGISTRY_NAME);           
+    }
+    else if (strncmp(prop, "xpcom.currentProcess.componentDirectory", 39) == 0)
+    {
+        rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
+        if (NS_FAILED(rv)) return rv;
+		localFile->Append(COMPONENT_DIRECTORY);           
+    }
+
+	if (localFile)
+		return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
+
+	return NS_OK;
+}
+
+
+
+
