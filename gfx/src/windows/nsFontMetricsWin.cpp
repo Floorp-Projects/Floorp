@@ -1403,13 +1403,15 @@ ReadCMAPTableFormat4(PRUint8* aBuf, PRInt32 aLength, PRUint32* aMap, PRUint8* aI
       PRUint16 endC = endCode[i];
       for (PRUint32 c = startCode[i]; c <= endC; ++c) {
         PRUint16 glyph = idDelta[i] + c;
-        if (aIsSpace[glyph]) {
-          if (SHOULD_BE_SPACE_CHAR(c)) {
+        if (glyph < aMaxGlyph) {
+          if (aIsSpace[glyph]) {
+            if (SHOULD_BE_SPACE_CHAR(c)) {
+              ADD_GLYPH(aMap, c);
+            }
+          }
+          else {
             ADD_GLYPH(aMap, c);
           }
-        }
-        else {
-          ADD_GLYPH(aMap, c);
         }
       }
       //printf("0x%04X-0x%04X ", startCode[i], endC);
