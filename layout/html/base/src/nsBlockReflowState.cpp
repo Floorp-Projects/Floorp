@@ -3220,7 +3220,7 @@ nsBlockFrame::CalculateMargins(nsBlockReflowState& aState,
   // Compute the collapsed top margin value (this is a generational
   // margin collapse not a sibling margin collapse).
   nscoord collapsedTopMargin = 
-    nsInlineReflow::MaxMargin(childsCarriedOutBottomMargin, childsTopMargin);
+    nsInlineReflow::MaxMargin(childsCarriedOutTopMargin, childsTopMargin);
 
   // Now perform sibling to sibling margin collapsing.
   collapsedTopMargin = nsInlineReflow::MaxMargin(aState.mPrevBottomMargin,
