@@ -251,11 +251,16 @@ pref("capability.policy.default.Window.closed", "allAccess");
 pref("capability.policy.default.Window.Components", "allAccess");
 pref("capability.policy.default.Window.document", "allAccess");
 pref("capability.policy.default.Window.focus", "allAccess");
+pref("capability.policy.default.Window.frames", "allAccess");
 pref("capability.policy.default.Window.history", "allAccess");
+pref("capability.policy.default.Window.length", "allAccess");
 pref("capability.policy.default.Window.location", "allAccess");
 // window.openDialog is insecure and must be made inaccessible from web scripts - see bug 56009
 pref("capability.policy.default.Window.openDialog", "noAccess");
+pref("capability.policy.default.Window.opener", "allAccess");
+pref("capability.policy.default.Window.parent", "allAccess");
 pref("capability.policy.default.Window.self", "allAccess");
+pref("capability.policy.default.Window.top", "allAccess");
 pref("capability.policy.default.Window.window", "allAccess");
 
 // Restrictions on the DOM for mail/news - see bugs 66938 and 84545
