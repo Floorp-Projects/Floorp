@@ -406,6 +406,8 @@ nsHttpResponseHead::ParseContentType(char *type)
 {
     char *p = PL_strchr(type, '(');
 
+    LOG(("nsHttpResponseHead::ParseContentType [type=%s]\n", type));
+
     if (p) {
         // we don't care about comments
         *p = 0;

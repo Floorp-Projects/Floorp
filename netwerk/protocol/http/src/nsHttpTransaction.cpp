@@ -125,6 +125,9 @@ nsHttpTransaction::SetupRequest(nsHttpRequestHead *requestHead,
     if (requestHead->Method() == nsHttp::Head)
         mNoContent = PR_TRUE;
 
+    // grab a weak reference to the request head
+    mRequestHead = requestHead;
+
     mReqHeaderBuf.SetLength(0);
     requestHead->Flatten(mReqHeaderBuf);
 
@@ -256,6 +259,9 @@ nsHttpTransaction::OnStopTransaction(nsresult status)
 		}
 		mListener->OnStopRequest(this, nsnull, status);
         mListener = 0;
+
+        // from this point forward we can't access the request head.
+        mRequestHead = nsnull;
 	}
     return NS_OK;
 }

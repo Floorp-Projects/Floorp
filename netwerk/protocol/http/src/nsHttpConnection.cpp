@@ -100,7 +100,7 @@ nsHttpConnection::~nsHttpConnection()
 nsresult
 nsHttpConnection::Init(nsHttpConnectionInfo *info)
 {
-    LOG(("nsHttpConnection::Init [this=%x]\n"));
+    LOG(("nsHttpConnection::Init [this=%x]\n", this));
 
     NS_ENSURE_ARG_POINTER(info);
     NS_ENSURE_TRUE(!mConnectionInfo, NS_ERROR_ALREADY_INITIALIZED);
@@ -453,6 +453,7 @@ nsresult
 nsHttpConnection::SetupSSLProxyConnect()
 {
     nsresult rv;
+    const char *val;
 
     LOG(("nsHttpConnection::SetupSSLProxyConnect [this=%x]\n", this));
 
@@ -469,6 +470,20 @@ nsHttpConnection::SetupSSLProxyConnect()
     request.SetVersion(nsHttpHandler::get()->DefaultVersion());
     request.SetRequestURI(buf.get());
     request.SetHeader(nsHttp::User_Agent, nsHttpHandler::get()->UserAgent());
+    
+    val = mTransaction->RequestHead()->PeekHeader(nsHttp::Host);
+    if (val) {
+        // all HTTP/1.1 requests must include a Host header (even though it
+        // may seem redundant in this case; see bug 82388).
+        request.SetHeader(nsHttp::Host, val);
+    }
+
+    val = mTransaction->RequestHead()->PeekHeader(nsHttp::Proxy_Authorization);
+    if (val) {
+        // we don't know for sure if this authorization is intended for the
+        // SSL proxy, so we add it just in case.
+        request.SetHeader(nsHttp::Proxy_Authorization, val);
+    }
 
     buf.Truncate(0);
     request.Flatten(buf);

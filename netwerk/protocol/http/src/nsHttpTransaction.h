@@ -65,6 +65,7 @@ public:
 
     nsIStreamListener     *Listener()     { return mListener; }
     nsHttpConnection      *Connection()   { return mConnection; }
+    nsHttpRequestHead     *RequestHead()  { return mRequestHead; }
     nsHttpResponseHead    *ResponseHead() { return mResponseHead; }
     nsIInterfaceRequestor *Callbacks()    { return mCallbacks; } 
 
@@ -102,7 +103,8 @@ private:
     nsCOMPtr<nsIInputStream>        mReqUploadStream; // upload data stream
 
     nsCOMPtr<nsIInputStream>        mSource;
-    nsHttpResponseHead             *mResponseHead;
+    nsHttpRequestHead              *mRequestHead;     // weak ref
+    nsHttpResponseHead             *mResponseHead;    // hard ref
 
     nsCString                       mLineBuf;         // may contain a partial line
 
