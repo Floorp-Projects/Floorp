@@ -3,7 +3,7 @@
 <RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://chrome.mozilla.org/rdf#"> 
 
-	<chrome about="chrome://global/">
+  <chrome about="chrome://global/">
 	
     <skin> 
       <RDF:Description about="chrome://global/skin/">
@@ -12,7 +12,14 @@
       </RDF:Description> 
     </skin> 
 	
-	</chrome>
+    <content> 
+      <RDF:Description about="chrome://global/content/">
+	    <base>resource:/chrome/global/content/default/</base>
+        <main>globalOverlay.xul</main> 
+      </RDF:Description> 
+    </content> 
+
+  </chrome>
 	
 
   <chrome about="chrome://navigator/"> 
