@@ -2717,14 +2717,13 @@ switch (op) {
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.delete(cx, frame.scope, lhs, rhs);
+        stack[stackTop] = ScriptRuntime.delete(lhs, rhs, cx);
         continue Loop;
     }
     case Token.GETPROP : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.getObjectProp(lhs, stringReg,
-                                                      cx, frame.scope);
+        stack[stackTop] = ScriptRuntime.getObjectProp(lhs, stringReg, cx);
         continue Loop;
     }
     case Token.SETPROP : {
@@ -2734,15 +2733,14 @@ switch (op) {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.setObjectProp(lhs, stringReg, rhs,
-                                                      cx, frame.scope);
+                                                      cx);
         continue Loop;
     }
     case Icode_PROP_INC_DEC : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.propIncrDecr(lhs, stringReg,
-                                                     frame.scope,
-                                                     iCode[frame.pc]);
+                                                     cx, iCode[frame.pc]);
         ++frame.pc;
         continue Loop;
     }
@@ -2755,10 +2753,10 @@ switch (op) {
         Object value;
         Object id = stack[stackTop + 1];
         if (id != DBL_MRK) {
-            value = ScriptRuntime.getObjectElem(lhs, id, cx, frame.scope);
+            value = ScriptRuntime.getObjectElem(lhs, id, cx);
         } else {
             double d = sDbl[stackTop + 1];
-            value = ScriptRuntime.getObjectIndex(lhs, d, cx, frame.scope);
+            value = ScriptRuntime.getObjectIndex(lhs, d, cx);
         }
         stack[stackTop] = value;
         continue Loop;
@@ -2776,10 +2774,10 @@ switch (op) {
         Object value;
         Object id = stack[stackTop + 1];
         if (id != DBL_MRK) {
-            value = ScriptRuntime.setObjectElem(lhs, id, rhs, cx, frame.scope);
+            value = ScriptRuntime.setObjectElem(lhs, id, rhs, cx);
         } else {
             double d = sDbl[stackTop + 1];
-            value = ScriptRuntime.setObjectIndex(lhs, d, rhs, cx, frame.scope);
+            value = ScriptRuntime.setObjectIndex(lhs, d, rhs, cx);
         }
         stack[stackTop] = value;
         continue Loop;
@@ -2790,7 +2788,7 @@ switch (op) {
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.elemIncrDecr(lhs, rhs, cx, frame.scope,
+        stack[stackTop] = ScriptRuntime.elemIncrDecr(lhs, rhs, cx,
                                                      iCode[frame.pc]);
         ++frame.pc;
         continue Loop;
@@ -2843,7 +2841,7 @@ switch (op) {
         if (obj == DBL_MRK) obj = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         // stringReg: property
         stack[stackTop] = ScriptRuntime.getPropFunctionAndThis(obj, stringReg,
-                                                               cx, frame.scope);
+                                                               cx);
         ++stackTop;
         stack[stackTop] = ScriptRuntime.lastStoredScriptable(cx);
         continue Loop;
@@ -2853,9 +2851,7 @@ switch (op) {
         if (obj == DBL_MRK) obj = ScriptRuntime.wrapNumber(sDbl[stackTop - 1]);
         Object id = stack[stackTop];
         if (id == DBL_MRK) id = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        stack[stackTop - 1] = ScriptRuntime.getElemFunctionAndThis(obj, id,
-                                                                   cx,
-                                                                   frame.scope);
+        stack[stackTop - 1] = ScriptRuntime.getElemFunctionAndThis(obj, id, cx);
         stack[stackTop] = ScriptRuntime.lastStoredScriptable(cx);
         continue Loop;
     }
@@ -3169,7 +3165,7 @@ switch (op) {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         --stackTop;
-        frame.scope = ScriptRuntime.enterWith(lhs, frame.scope);
+        frame.scope = ScriptRuntime.enterWith(lhs, cx, frame.scope);
         continue Loop;
     }
     case Token.LEAVEWITH :
@@ -3196,20 +3192,14 @@ switch (op) {
         ++frame.pc;
         continue Loop;
     }
-    case Token.ENUM_INIT_KEYS : {
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        --stackTop;
-        indexReg += frame.localShift;
-        stack[indexReg] = ScriptRuntime.enumInit(lhs, frame.scope);
-        continue Loop;
-    }
+    case Token.ENUM_INIT_KEYS :
     case Token.ENUM_INIT_VALUES : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         --stackTop;
         indexReg += frame.localShift;
-        stack[indexReg] = ScriptRuntime.enumValuesInit(lhs, frame.scope);
+        stack[indexReg] = ScriptRuntime.enumInit(
+                              lhs, cx, (op == Token.ENUM_INIT_VALUES));
         continue Loop;
     }
     case Token.ENUM_NEXT :
@@ -3226,8 +3216,7 @@ switch (op) {
         //stringReg: name of special property
         Object obj = stack[stackTop];
         if (obj == DBL_MRK) obj = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.specialRef(obj, stringReg,
-                                                   cx, frame.scope);
+        stack[stackTop] = ScriptRuntime.specialRef(obj, stringReg, cx);
         continue Loop;
     }
     case Token.REF_MEMBER: {

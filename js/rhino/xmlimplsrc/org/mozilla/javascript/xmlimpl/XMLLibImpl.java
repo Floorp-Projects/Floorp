@@ -637,39 +637,4 @@ public final class XMLLibImpl extends XMLLib
         return constructNamespace(cx, uriValue);
     }
 
-    /**
-     * This method exists in order to handle the difference between a XML element property
-     * and a method on an XML Object that might have the same name.
-     *
-     * @param obj
-     * @param id
-     * @param scope
-     * @param thisObj
-     * @return
-     */
-    static Object getXmlMethod(Object obj, String id, Scriptable scope,
-                               Scriptable thisObj)
-    {
-        Scriptable start;
-
-        if (obj instanceof Scriptable) {
-            start = (Scriptable) obj;
-        } else {
-            start = ScriptRuntime.toObject(scope, obj);
-        }
-
-        Scriptable m = start;
-        do {
-            if (m instanceof XMLObjectImpl) {
-                XMLObjectImpl xmlObject = (XMLObjectImpl) m;
-                Object result = xmlObject.getMethod(id);
-                if (result != Scriptable.NOT_FOUND) {
-                    return result;
-                }
-            }
-            m = m.getPrototype();
-        } while (m != null);
-
-        return Undefined.instance;
-    }
 }

@@ -852,7 +852,10 @@ public class ScriptRuntime {
     public static Scriptable toObject(Scriptable scope, Object val,
                                       Class staticClass)
     {
-        return toObject(scope, val);
+        if (val instanceof Scriptable && val != Undefined.instance) {
+            return (Scriptable)val;
+        }
+        return toObject(Context.getContext(), scope, val);
     }
 
     /**
@@ -1276,18 +1279,12 @@ public class ScriptRuntime {
     /**
      * Call obj.[[Get]](id)
      */
-    public static Object getObjectElem(Object obj, Object elem,
-                                       Context cx, Scriptable scope)
+    public static Object getObjectElem(Object obj, Object elem, Context cx)
     {
         if (obj == null || obj == Undefined.instance) {
             throw undefReadError(obj, elem);
         }
-        Scriptable sobj;
-        if (obj instanceof Scriptable) {
-            sobj = (Scriptable)obj;
-        } else {
-            sobj = toObject(cx, obj);
-        }
+        Scriptable sobj = toObject(cx, obj);
         return getObjectElem(sobj, elem, cx);
     }
 
@@ -1320,17 +1317,12 @@ public class ScriptRuntime {
      * Version of getObjectElem when elem is a valid JS identifier name.
      */
     public static Object getObjectProp(Object obj, String property,
-                                       Context cx, Scriptable scope)
+                                       Context cx)
     {
         if (obj == null || obj == Undefined.instance) {
             throw undefReadError(obj, property);
         }
-        Scriptable sobj;
-        if (obj instanceof Scriptable) {
-            sobj = (Scriptable)obj;
-        } else {
-            sobj = toObject(cx, obj);
-        }
+        Scriptable sobj = toObject(cx, obj);
         return getObjectProp(sobj, property, cx);
     }
 
@@ -1355,17 +1347,12 @@ public class ScriptRuntime {
      * types.
      */
     public static Object getObjectIndex(Object obj, double dblIndex,
-                                        Context cx, Scriptable scope)
+                                        Context cx)
     {
         if (obj == null || obj == Undefined.instance) {
             throw undefReadError(obj, toString(dblIndex));
         }
-        Scriptable sobj;
-        if (obj instanceof Scriptable) {
-            sobj = (Scriptable)obj;
-        } else {
-            sobj = toObject(cx, obj);
-        }
+        Scriptable sobj = toObject(cx, obj);
 
         int index = (int)dblIndex;
         if ((double)index == dblIndex) {
@@ -1396,17 +1383,12 @@ public class ScriptRuntime {
      * Call obj.[[Put]](id, value)
      */
     public static Object setObjectElem(Object obj, Object elem, Object value,
-                                       Context cx, Scriptable scope)
+                                       Context cx)
     {
         if (obj == null || obj == Undefined.instance) {
             throw undefWriteError(obj, elem, value);
         }
-        Scriptable sobj;
-        if (obj instanceof Scriptable) {
-            sobj = (Scriptable)obj;
-        } else {
-            sobj = toObject(cx, obj);
-        }
+        Scriptable sobj = toObject(cx, obj);
         return setObjectElem(sobj, elem, value, cx);
     }
 
@@ -1434,18 +1416,12 @@ public class ScriptRuntime {
      * Version of setObjectElem when elem is a valid JS identifier name.
      */
     public static Object setObjectProp(Object obj, String property,
-                                       Object value,
-                                       Context cx, Scriptable scope)
+                                       Object value, Context cx)
     {
         if (obj == null || obj == Undefined.instance) {
             throw undefWriteError(obj, property, value);
         }
-        Scriptable sobj;
-        if (obj instanceof Scriptable) {
-            sobj = (Scriptable)obj;
-        } else {
-            sobj = toObject(cx, obj);
-        }
+        Scriptable sobj = toObject(cx, obj);
         return setObjectProp(sobj, property, value, cx);
     }
 
@@ -1466,18 +1442,12 @@ public class ScriptRuntime {
      * types.
      */
     public static Object setObjectIndex(Object obj, double dblIndex,
-                                        Object value,
-                                        Context cx, Scriptable scope)
+                                        Object value, Context cx)
     {
         if (obj == null || obj == Undefined.instance) {
             throw undefWriteError(obj, String.valueOf(dblIndex), value);
         }
-        Scriptable sobj;
-        if (obj instanceof Scriptable) {
-            sobj = (Scriptable)obj;
-        } else {
-            sobj = toObject(cx, obj);
-        }
+        Scriptable sobj = toObject(cx, obj);
 
         int index = (int)dblIndex;
         if ((double)index == dblIndex) {
@@ -1561,9 +1531,9 @@ public class ScriptRuntime {
     }
 
     public static Reference specialRef(Object obj, String specialProperty,
-                                       Context cx, Scriptable scope)
+                                       Context cx)
     {
-        return SpecialRef.createSpecial(cx, scope, obj, specialProperty);
+        return SpecialRef.createSpecial(cx, obj, specialProperty);
     }
 
     /**
@@ -1577,8 +1547,7 @@ public class ScriptRuntime {
      * define a return value. Here we assume that the [[Delete]]
      * method doesn't return a value.
      */
-    public static Object delete(Context cx, Scriptable scope,
-                                Object obj, Object id)
+    public static Object delete(Object obj, Object id, Context cx)
     {
         Scriptable sobj = toObject(cx, obj);
         boolean result = deleteObjectElem(sobj, id, cx);
@@ -1809,22 +1778,12 @@ public class ScriptRuntime {
         boolean enumValues;
     }
 
-    public static Object enumValuesInit(Object value, Scriptable scope)
+    public static Object enumInit(Object value, Context cx, boolean enumValues)
     {
         IdEnumeration x = new IdEnumeration();
         if (!(value == null || value == Undefined.instance)) {
-            x.obj = toObject(scope, value);
-            x.enumValues = true;
-            enumChangeObject(x);
-        }
-        return x;
-    }
-
-    public static Object enumInit(Object value, Scriptable scope)
-    {
-        IdEnumeration x = new IdEnumeration();
-        if (!(value == null || value == Undefined.instance)) {
-            x.obj = toObject(scope, value);
+            x.obj = toObject(cx, value);
+            x.enumValues = enumValues;
             // enumInit should read all initial ids before returning
             // or "for (a.i in a)" would wrongly enumerate i in a as well
             enumChangeObject(x);
@@ -1950,12 +1909,11 @@ public class ScriptRuntime {
      */
     public static Function getElemFunctionAndThis(Object obj,
                                                   Object elem,
-                                                  Context cx,
-                                                  Scriptable scope)
+                                                  Context cx)
     {
         String s = toStringIdOrIndex(cx, elem);
         if (s != null) {
-            return getPropFunctionAndThis(obj, s, cx, scope);
+            return getPropFunctionAndThis(obj, s, cx);
         }
         int index = lastIndexResult(cx);
 
@@ -1998,8 +1956,7 @@ public class ScriptRuntime {
      */
     public static Function getPropFunctionAndThis(Object obj,
                                                   String property,
-                                                  Context cx,
-                                                  Scriptable scope)
+                                                  Context cx)
     {
         if (obj == null || obj == Undefined.instance) {
             throw undefReadError(obj, property);
@@ -2358,9 +2315,9 @@ public class ScriptRuntime {
     }
 
     public static Object propIncrDecr(Object obj, String id,
-                                      Scriptable scope, int incrDecrMask)
+                                      Context cx, int incrDecrMask)
     {
-        Scriptable start = toObject(scope, obj);
+        Scriptable start = toObject(cx, obj);
         Scriptable target = start;
         Object value;
       search: {
@@ -2410,10 +2367,9 @@ public class ScriptRuntime {
     }
 
     public static Object elemIncrDecr(Object obj, Object index,
-                                      Context cx, Scriptable scope,
-                                      int incrDecrMask)
+                                      Context cx, int incrDecrMask)
     {
-        Object value = getObjectElem(obj, index, cx, scope);
+        Object value = getObjectElem(obj, index, cx);
         boolean post = ((incrDecrMask & Node.POST_FLAG) != 0);
         double number;
         if (value instanceof Number) {
@@ -2431,7 +2387,7 @@ public class ScriptRuntime {
             --number;
         }
         Number result = wrapNumber(number);
-        setObjectElem(obj, index, result, cx, scope);
+        setObjectElem(obj, index, result, cx);
         if (post) {
             return value;
         } else {
@@ -3003,13 +2959,14 @@ public class ScriptRuntime {
         return catchScopeObject;
     }
 
-    public static Scriptable enterWith(Object value, Scriptable scope)
+    public static Scriptable enterWith(Object value, Context cx,
+                                       Scriptable scope)
     {
         if (value instanceof XMLObject) {
             XMLObject object = (XMLObject)value;
             return object.enterWith(scope);
         }
-        return new NativeWith(scope, toObject(scope, value));
+        return new NativeWith(scope, toObject(cx, value));
     }
 
     public static Scriptable leaveWith(Scriptable scope)

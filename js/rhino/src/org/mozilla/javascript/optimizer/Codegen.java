@@ -1544,10 +1544,12 @@ class BodyCodegen
 
               case Token.ENTERWITH:
                 generateExpression(child, node);
+                cfw.addALoad(contextLocal);
                 cfw.addALoad(variableObjectLocal);
                 addScriptRuntimeInvoke(
                     "enterWith",
                     "(Ljava/lang/Object;"
+                    +"Lorg/mozilla/javascript/Context;"
                     +"Lorg/mozilla/javascript/Scriptable;"
                     +")Lorg/mozilla/javascript/Scriptable;");
                 cfw.addAStore(variableObjectLocal);
@@ -1565,11 +1567,12 @@ class BodyCodegen
               case Token.ENUM_INIT_KEYS:
               case Token.ENUM_INIT_VALUES:
                 generateExpression(child, node);
-                cfw.addALoad(variableObjectLocal);
-                addScriptRuntimeInvoke((type == Token.ENUM_INIT_KEYS)
-                                       ? "enumInit" : "enumValuesInit",
+                cfw.addALoad(contextLocal);
+                cfw.addPush(type == Token.ENUM_INIT_VALUES);
+                addScriptRuntimeInvoke("enumInit",
                                        "(Ljava/lang/Object;"
-                                       +"Lorg/mozilla/javascript/Scriptable;"
+                                       +"Lorg/mozilla/javascript/Context;"
+                                       +"Z"
                                        +")Ljava/lang/Object;");
                 cfw.addAStore(getLocalBlockRegister(node));
                 break;
@@ -2000,13 +2003,11 @@ class BodyCodegen
                 generateExpression(child, node); // object
                 generateExpression(child.getNext(), node);  // id
                 cfw.addALoad(contextLocal);
-                cfw.addALoad(variableObjectLocal);
                 if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
                     addScriptRuntimeInvoke(
                         "getObjectIndex",
                         "(Ljava/lang/Object;D"
                         +"Lorg/mozilla/javascript/Context;"
-                        +"Lorg/mozilla/javascript/Scriptable;"
                         +")Ljava/lang/Object;");
                 }
                 else {
@@ -2015,7 +2016,6 @@ class BodyCodegen
                         "(Ljava/lang/Object;"
                         +"Ljava/lang/Object;"
                         +"Lorg/mozilla/javascript/Context;"
-                        +"Lorg/mozilla/javascript/Scriptable;"
                         +")Ljava/lang/Object;");
                 }
                 break;
@@ -2087,16 +2087,14 @@ class BodyCodegen
                 break;
 
               case Token.DELPROP:
-                cfw.addALoad(contextLocal);
-                cfw.addALoad(variableObjectLocal);
                 generateExpression(child, node);
                 child = child.getNext();
                 generateExpression(child, node);
+                cfw.addALoad(contextLocal);
                 addScriptRuntimeInvoke("delete",
-                                       "(Lorg/mozilla/javascript/Context;"
-                                       +"Lorg/mozilla/javascript/Scriptable;"
+                                       "(Ljava/lang/Object;"
                                        +"Ljava/lang/Object;"
-                                       +"Ljava/lang/Object;"
+                                       +"Lorg/mozilla/javascript/Context;"
                                        +")Ljava/lang/Object;");
                 break;
 
@@ -2129,13 +2127,11 @@ class BodyCodegen
                     generateExpression(child, node);
                     cfw.addPush(special);
                     cfw.addALoad(contextLocal);
-                    cfw.addALoad(variableObjectLocal);
                     addScriptRuntimeInvoke(
                         "specialRef",
                         "(Ljava/lang/Object;"
                         +"Ljava/lang/String;"
                         +"Lorg/mozilla/javascript/Context;"
-                        +"Lorg/mozilla/javascript/Scriptable;"
                         +")Lorg/mozilla/javascript/Reference;");
                 }
                 break;
@@ -2825,13 +2821,11 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
                 String property = id.getString();
                 cfw.addPush(property);
                 cfw.addALoad(contextLocal);
-                cfw.addALoad(variableObjectLocal);
                 addScriptRuntimeInvoke(
                     "getPropFunctionAndThis",
                     "(Ljava/lang/Object;"
                     +"Ljava/lang/String;"
                     +"Lorg/mozilla/javascript/Context;"
-                    +"Lorg/mozilla/javascript/Scriptable;"
                     +")Lorg/mozilla/javascript/Function;");
             } else {
                 // Optimizer do not optimize this case for now
@@ -2839,13 +2833,11 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
                     throw Codegen.badTree();
                 generateExpression(id, node);  // id
                 cfw.addALoad(contextLocal);
-                cfw.addALoad(variableObjectLocal);
                 addScriptRuntimeInvoke(
                     "getElemFunctionAndThis",
                     "(Ljava/lang/Object;"
                     +"Ljava/lang/Object;"
                     +"Lorg/mozilla/javascript/Context;"
-                    +"Lorg/mozilla/javascript/Scriptable;"
                     +")Lorg/mozilla/javascript/Function;");
             }
             break;
@@ -3147,12 +3139,12 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
             Node getPropChild = child.getFirstChild();
             generateExpression(getPropChild, node);
             generateExpression(getPropChild.getNext(), node);
-            cfw.addALoad(variableObjectLocal);
+            cfw.addALoad(contextLocal);
             cfw.addPush(incrDecrMask);
             addScriptRuntimeInvoke("propIncrDecr",
                                    "(Ljava/lang/Object;"
                                    +"Ljava/lang/String;"
-                                   +"Lorg/mozilla/javascript/Scriptable;"
+                                   +"Lorg/mozilla/javascript/Context;"
                                    +"I)Ljava/lang/Object;");
             break;
           }
@@ -3161,14 +3153,13 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
             generateExpression(elemChild, node);
             generateExpression(elemChild.getNext(), node);
             cfw.addALoad(contextLocal);
-            cfw.addALoad(variableObjectLocal);
             cfw.addPush(incrDecrMask);
             addScriptRuntimeInvoke("elemIncrDecr",
                                    "(Ljava/lang/Object;"
                                    +"Ljava/lang/Object;"
                                    +"Lorg/mozilla/javascript/Context;"
-                                   +"Lorg/mozilla/javascript/Scriptable;"
-                                   +"I)Ljava/lang/Object;");
+                                   +"I"
+                                   +")Ljava/lang/Object;");
             break;
           }
           case Token.GET_REF: {
@@ -3655,13 +3646,11 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
                 +")Ljava/lang/Object;");
         } else {
             cfw.addALoad(contextLocal);
-            cfw.addALoad(variableObjectLocal);
             addScriptRuntimeInvoke(
                 "getObjectProp",
                 "(Ljava/lang/Object;"
                 +"Ljava/lang/String;"
                 +"Lorg/mozilla/javascript/Context;"
-                +"Lorg/mozilla/javascript/Scriptable;"
                 +")Ljava/lang/Object;");
         }
     }
@@ -3694,26 +3683,22 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
                     +")Ljava/lang/Object;");
             } else {
                 cfw.addALoad(contextLocal);
-                cfw.addALoad(variableObjectLocal);
                 addScriptRuntimeInvoke(
                     "getObjectProp",
                     "(Ljava/lang/Object;"
                     +"Ljava/lang/String;"
                     +"Lorg/mozilla/javascript/Context;"
-                    +"Lorg/mozilla/javascript/Scriptable;"
                     +")Ljava/lang/Object;");
             }
         }
         generateExpression(child, node);
         cfw.addALoad(contextLocal);
-        cfw.addALoad(variableObjectLocal);
         addScriptRuntimeInvoke(
             "setObjectProp",
             "(Ljava/lang/Object;"
             +"Ljava/lang/String;"
             +"Ljava/lang/Object;"
             +"Lorg/mozilla/javascript/Context;"
-            +"Lorg/mozilla/javascript/Scriptable;"
             +")Ljava/lang/Object;");
     }
 
@@ -3733,31 +3718,26 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
                 //        -> ... object number object number
                 cfw.add(ByteCode.DUP2_X1);
                 cfw.addALoad(contextLocal);
-                cfw.addALoad(variableObjectLocal);
                 addOptRuntimeInvoke(
                     "getObjectIndex",
                     "(Ljava/lang/Object;D"
                     +"Lorg/mozilla/javascript/Context;"
-                    +"Lorg/mozilla/javascript/Scriptable;"
                     +")Ljava/lang/Object;");
             } else {
                 // stack: ... object object indexObject
                 //        -> ... object indexObject object indexObject
                 cfw.add(ByteCode.DUP_X1);
                 cfw.addALoad(contextLocal);
-                cfw.addALoad(variableObjectLocal);
                 addScriptRuntimeInvoke(
                     "getObjectElem",
                     "(Ljava/lang/Object;"
                     +"Ljava/lang/Object;"
                     +"Lorg/mozilla/javascript/Context;"
-                    +"Lorg/mozilla/javascript/Scriptable;"
                     +")Ljava/lang/Object;");
             }
         }
         generateExpression(child, node);
         cfw.addALoad(contextLocal);
-        cfw.addALoad(variableObjectLocal);
         if (indexIsNumber) {
             addScriptRuntimeInvoke(
                 "setObjectIndex",
@@ -3765,7 +3745,6 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
                 +"D"
                 +"Ljava/lang/Object;"
                 +"Lorg/mozilla/javascript/Context;"
-                +"Lorg/mozilla/javascript/Scriptable;"
                 +")Ljava/lang/Object;");
         } else {
             addScriptRuntimeInvoke(
@@ -3774,7 +3753,6 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
                 +"Ljava/lang/Object;"
                 +"Ljava/lang/Object;"
                 +"Lorg/mozilla/javascript/Context;"
-                +"Lorg/mozilla/javascript/Scriptable;"
                 +")Ljava/lang/Object;");
         }
     }

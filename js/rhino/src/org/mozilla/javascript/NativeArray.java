@@ -548,7 +548,7 @@ public class NativeArray extends IdScriptableObject
                             Function fun;
                             Scriptable funThis;
                             fun = ScriptRuntime.getPropFunctionAndThis(
-                                      elem, "toLocaleString", cx, scope);
+                                      elem, "toLocaleString", cx);
                             funThis = ScriptRuntime.lastStoredScriptable(cx);
                             elem = fun.call(cx, scope, funThis,
                                             ScriptRuntime.emptyArgs);

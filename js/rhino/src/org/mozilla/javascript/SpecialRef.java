@@ -42,23 +42,19 @@ class SpecialRef extends Reference
     private static final int SPECIAL_PARENT = 2;
 
     private int type;
-    private Scriptable scope;
     private Scriptable target;
     private String name;
 
-    private SpecialRef(int type, Scriptable scope, Scriptable target,
-                       String name)
+    private SpecialRef(int type, Scriptable target, String name)
     {
         this.type = type;
-        this.scope = scope;
         this.target = target;
         this.name = name;
     }
 
-    static Reference createSpecial(Context cx, Scriptable scope, Object object,
-                                   String name)
+    static Reference createSpecial(Context cx, Object object, String name)
     {
-        Scriptable target = ScriptRuntime.toObject(scope, object);
+        Scriptable target = ScriptRuntime.toObject(cx, object);
 
         int type;
         if (name.equals("__proto__")) {
@@ -74,7 +70,7 @@ class SpecialRef extends Reference
             type = SPECIAL_NONE;
         }
 
-        return new SpecialRef(type, scope, target, name);
+        return new SpecialRef(type, target, name);
     }
 
     public Object get(Context cx)
@@ -103,7 +99,7 @@ class SpecialRef extends Reference
                 if (value == null) {
                     obj = null;
                 } else {
-                    obj = ScriptRuntime.toObject(scope, value);
+                    obj = ScriptRuntime.toObject(cx, value);
                     // Check that obj does not contain on its prototype/scope
                     // chain to prevent cycles
                     Scriptable search = obj;

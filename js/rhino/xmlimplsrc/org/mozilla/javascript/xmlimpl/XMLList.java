@@ -1563,8 +1563,7 @@ class XMLList extends XMLObjectImpl implements Function
         // This XMLList is being called as a Function.
         // Let's find the real Function object.
         if(targetProperty == null)
-            throw ScriptRuntime.typeError1("msg.isnt.function",
-                                           ScriptRuntime.toString(this));
+            throw ScriptRuntime.notFunctionError(this);
 
         String methodName = targetProperty.getLocalPart();
 
@@ -1572,22 +1571,12 @@ class XMLList extends XMLObjectImpl implements Function
         if(isApply || methodName.equals("call"))
             return applyOrCall(isApply, cx, scope, thisObj, args);
 
-        Object methodObj = XMLLibImpl.getXmlMethod(targetObject, methodName, scope, targetObject);
-
-        if(!(methodObj instanceof Function))
-        {
-            if(thisObj instanceof XMLObjectImpl &&
-               ((XMLObjectImpl)thisObj).hasSimpleContent())
-            {
-                thisObj = ScriptRuntime.toObject(cx, scope, thisObj.toString());
-                methodObj = ScriptableObject.getProperty(thisObj, methodName);
-            }
-        }
-
-        if(!(methodObj instanceof Function))
-            throw ScriptRuntime.typeError1("msg.isnt.function", methodName);
-
-        Function method = (Function)methodObj;
+        Function method = ScriptRuntime.getElemFunctionAndThis(
+                              this, methodName, cx);
+        // Call lastStoredScriptable to clear stored thisObj
+        // but ignore the result as the method should use the supplied
+        // thisObj, not one from redirected call
+        ScriptRuntime.lastStoredScriptable(cx);
         return method.call(cx, scope, thisObj, args);
     }
 
