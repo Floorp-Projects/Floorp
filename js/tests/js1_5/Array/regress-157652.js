@@ -53,6 +53,10 @@
 *   js> var arr = new Array(0x100000000)
 *   RangeError: invalid array length
 *
+*
+* We'll try the largest possible array first, then a couple others.
+* Try to be good about memory by nulling each array variable afterwards.
+* This will tell the garbage collector the memory is no longer needed.
 */
 //-----------------------------------------------------------------------------
 var bug = 157652;
@@ -86,14 +90,17 @@ else
   expectExitCode(3);
 
 
+
 /*
- * Try the largest possible array first (see above), then a couple others.
- * Try to be good about memory by nulling each array variable afterwards.
- * This will tell the garbage collector the memory is no longer needed.
+ * Rhino can't seem to handle the largest array: it hangs...
+ * So we'll skip this case in Rhino -
  */
-var a1=Array(0xFFFFFFFF);
-a1.sort();
-a1 = null;
+if (!(inRhino()))
+{
+  var a1=Array(0xFFFFFFFF);
+  a1.sort();
+  a1 = null;
+}
 
 var a2 = Array(0x40000000);
 a2.sort();
