@@ -52,6 +52,27 @@ static PRBool GetState(PRFileDesc *fd, PRBool *readReady, PRBool *writeReady, PR
 extern void WaitOnThisThread(PRThread *thread, PRIntervalTime timeout);
 extern void DoneWaitingOnThisThread(PRThread *thread);
 
+#ifdef TARGET_CARBON
+OTClientContextPtr  clientContext = NULL;
+
+OTNotifyUPP	DNSNotifierRoutineUPP;
+OTNotifyUPP notifierRoutineUPP;
+
+#define DNS_NOTIFIER_ROUTINE	DNSNotifierRoutineUPP
+#define NOTIFIER_ROUTINE		notifierRoutineUPP
+#define INIT_OPEN_TRANSPORT()	InitOpenTransport(clientContext, kInitOTForExtensionMask)
+#define OT_OPEN_INTERNET_SERVICES(config, flags, err)	OTOpenInternetServices(config, flags, err, clientContext)
+#define OT_OPEN_ENDPOINT(config, flags, info, err)		OTOpenEndpoint(config, flags, info, err, clientContext)
+
+#else
+
+#define DNS_NOTIFIER_ROUTINE	DNSNotifierRoutine
+#define NOTIFIER_ROUTINE		NotifierRoutine
+#define INIT_OPEN_TRANSPORT()	InitOpenTransport()
+#define OT_OPEN_INTERNET_SERVICES(config, flags, err)	OTOpenInternetServices(config, flags, err)
+#define OT_OPEN_ENDPOINT(config, flags, info, err)		OTOpenEndpoint(config, flags, info, err)
+#endif /* TARGET_CARBON */
+
 
 void _MD_InitNetAccess()
 {
@@ -60,7 +81,7 @@ void _MD_InitNetAccess()
     PRBool      hasOTTCPIP = PR_FALSE;
     PRBool      hasOT = PR_FALSE;
     long        gestaltResult;
-    
+
     err = Gestalt(gestaltOpenTpt, &gestaltResult);
     if (err == noErr)
         if (gestaltResult & GESTALT_OPEN_TPT_PRESENT)
@@ -72,21 +93,30 @@ void _MD_InitNetAccess()
         
     PR_ASSERT(hasOTTCPIP == PR_TRUE);
 
-    errOT = InitOpenTransport();
+#ifdef TARGET_CARBON
+    DNSNotifierRoutineUPP	=  NewOTNotifyUPP(DNSNotifierRoutine);
+    notifierRoutineUPP		=  NewOTNotifyUPP(NotifierRoutine);
+
+    errOT = OTAllocClientContext((UInt32)0, &clientContext);
     PR_ASSERT(err == kOTNoError);
-	
+#endif
+
+
+    errOT = INIT_OPEN_TRANSPORT();
+    PR_ASSERT(err == kOTNoError);
+
 	dnsContext.lock = PR_NewLock();
 	PR_ASSERT(dnsContext.lock != NULL);
 
 	dnsContext.thread = _PR_MD_CURRENT_THREAD();
 	dnsContext.cookie = NULL;
 	
-    dnsContext.serviceRef = OTOpenInternetServices(kDefaultInternetServicesPath, NULL, &errOT);
+    dnsContext.serviceRef = OT_OPEN_INTERNET_SERVICES(kDefaultInternetServicesPath, NULL, &errOT);
     if (errOT != kOTNoError) return;    /* no network -- oh well */
     PR_ASSERT((dnsContext.serviceRef != NULL) && (errOT == kOTNoError));
 
     /* Install notify function for DNR Address To String completion */
-    errOT = OTInstallNotifier(dnsContext.serviceRef, DNSNotifierRoutine, &dnsContext);
+    errOT = OTInstallNotifier(dnsContext.serviceRef, DNS_NOTIFIER_ROUTINE, &dnsContext);
     PR_ASSERT(errOT == kOTNoError);
 
     /* Put us into async mode */
@@ -364,7 +394,7 @@ static OSErr CreateSocket(int type, EndpointRef *endpoint)
         case SOCK_DGRAM:    configName = kUDPName;  break;
     }
     config = OTCreateConfiguration(configName);
-    ep = OTOpenEndpoint(config, 0, NULL, &err);
+    ep = OT_OPEN_ENDPOINT(config, 0, NULL, &err);
     if (err != kOTNoError)
         goto ErrorExit;
 
@@ -1523,7 +1553,7 @@ void _MD_makenonblock(PRFileDesc *fd)
 	OSStatus	err;
 	
 	// Install the PRFileDesc as the contextPtr for the Notifier function associated with this Endpoint.
-	err = OTInstallNotifier(endpointRef, NotifierRoutine, fd);
+	err = OTInstallNotifier(endpointRef, NOTIFIER_ROUTINE, fd);
 	PR_ASSERT(err == kOTNoError);
 	
 	// Now that we have a NotifierRoutine installed, we can make the endpoint asynchronous

@@ -107,7 +107,7 @@ static void InstallStackSpacePatch(void)
 	Ptr					interfaceLibAddr;
 	CFragSymbolClass	symClass;
 	UniversalProcPtr	(*getOSTrapAddressProc)(UInt16);
-	void				(*setOSTrapAddressProc)(UniversalProcPtr, UInt16);
+	void				(*setOSTrapAddressProc)(StackSpacePatchUPP, UInt16);
 	UniversalProcPtr	(*newRoutineDescriptorProc)(ProcPtr,ProcInfoType,ISAType);
 	
 
@@ -341,13 +341,20 @@ void PR_InitMemory(void) {
 //	done then we will randomly crash at later times when the
 //	task is called after the app heap is gone.
 
-extern TMTask		gTimeManagerTaskElem;
+#if TARGET_CARBON
+extern OTClientContextPtr	clientContext;
+#define CLOSE_OPEN_TRANSPORT()	CloseOpenTransport(clientContext)
+
+#else
+
+#define CLOSE_OPEN_TRANSPORT()	CloseOpenTransport()
+#endif /* TARGET_CARBON */
 
 void CleanupTermProc(void)
 {
-	_MD_StopInterrupts();	
+	_MD_StopInterrupts();	// deactive Time Manager task
 
-	CloseOpenTransport();
+	CLOSE_OPEN_TRANSPORT();
 	
 	__terminate();
 }
