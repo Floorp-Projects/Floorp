@@ -53,6 +53,8 @@ EXPORT_RESOURCE = \
 		$(srcdir)/tasksOverlay.css \
 		$(srcdir)/dialogOverlay.css \
 		$(srcdir)/prefpanels.css \
+		$(srcdir)/content-large.gif \
+		$(srcdir)/content-small.gif \
 		$(NULL)
 
 DIRS = search xpinstall sidebar bookmarks directory profile regviewer related 
