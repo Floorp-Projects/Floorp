@@ -440,9 +440,26 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
   
     case eStyleContentType_Attr:
       {  // XXX for now, prefetch the attr value, this needs to be a special content node
-        nsIAtom* attrName = NS_NewAtom(contentString);
-        aContent->GetAttribute(kNameSpaceID_None, attrName, contentString);  // XXX need attr namespace from style
-        NS_RELEASE(attrName);
+        nsIAtom* attrName = nsnull;
+        PRInt32 attrNameSpace = kNameSpaceID_None;
+        PRInt32 barIndex = contentString.Find('|'); // CSS namespace delimiter
+        if (-1 != barIndex) {
+          nsAutoString  nameSpaceVal;
+          contentString.Left(nameSpaceVal, barIndex);
+          PRInt32 error;
+          attrNameSpace = nameSpaceVal.ToInteger(&error, 10);
+          contentString.Cut(0, barIndex + 1);
+          if (contentString.Length()) {
+            attrName = NS_NewAtom(contentString);
+          }
+        }
+        else {
+          attrName = NS_NewAtom(contentString);
+        }
+        if (attrName) {
+          aContent->GetAttribute(attrNameSpace, attrName, contentString);  // XXX need attr namespace from style
+          NS_RELEASE(attrName);
+        }
       }
       break;
   
@@ -4290,11 +4307,13 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
 }
 
 static void
-UpdateViewsForTree(nsIFrame* aFrame, nsIViewManager* aViewManager)
+UpdateViewsForTree(nsIFrame* aFrame, nsIViewManager* aViewManager, nsRect& aBoundsRect)
 {
   nsIView* view;
   aFrame->GetView(&view);
 
+  nsFrameState  state;
+  aFrame->GetFrameState(&state);
   if (view) {
     const nsStyleColor* color;
     const nsStyleDisplay* disp; 
@@ -4314,7 +4333,10 @@ UpdateViewsForTree(nsIFrame* aFrame, nsIViewManager* aViewManager)
     nsIFrame* child = nsnull;
     aFrame->FirstChild(childList, &child);
     while (child) {
-      UpdateViewsForTree(child, aViewManager);
+      nsRect childRect;
+      if (state & NS_FRAME_OUTSIDE_CHILDREN) {  // update bounds rect to include children
+      }
+      UpdateViewsForTree(child, aViewManager, childRect);
       child->GetNextSibling(&child);
     }
     NS_IF_RELEASE(childList);
@@ -4347,7 +4369,7 @@ ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
     // update there.
     nsIView* view;
     aFrame->GetView(&view);
-    if (nsnull != view) {
+    if (view) { // XXX can view have children outside it?
     } else {
       nsPoint offset;
       aFrame->GetOffsetFromView(offset, &view);
@@ -4357,7 +4379,7 @@ ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
     if (nsnull == viewManager) {
       view->GetViewManager(viewManager);
     }
-    UpdateViewsForTree(aFrame, viewManager);
+    UpdateViewsForTree(aFrame, viewManager, r);
     viewManager->UpdateView(view, r, NS_VMREFRESH_NO_SYNC);
 
     aFrame->GetNextInFlow(&aFrame);
