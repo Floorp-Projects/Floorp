@@ -206,22 +206,6 @@ NS_IMETHODIMP nsContentTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    return mXULWindow->SizeShellTo(aShellItem, aCX, aCY);
 }
 
-NS_IMETHODIMP nsContentTreeOwner::ShowModal()
-{
-   return mXULWindow->ShowModal();   
-}
-
-NS_IMETHODIMP nsContentTreeOwner::IsModal(PRBool *_retval)
-{
-  *_retval = mXULWindow->mContinueModalLoop;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsContentTreeOwner::ExitModalLoop(nsresult aStatus)
-{
-   return mXULWindow->ExitModalLoop(aStatus);   
-}
-
 NS_IMETHODIMP nsContentTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
    nsIDocShellTreeItem** aDocShellTreeItem)
 {
@@ -400,17 +384,18 @@ NS_IMETHODIMP nsContentTreeOwner::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 
 NS_IMETHODIMP nsContentTreeOwner::ShowAsModal()
 {
-   return ShowModal();
+   return mXULWindow->ShowModal();   
 }
 
 NS_IMETHODIMP nsContentTreeOwner::IsWindowModal(PRBool *_retval)
 {
-  return IsModal(_retval);
+  *_retval = mXULWindow->mContinueModalLoop;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::ExitModalEventLoop(nsresult aStatus)
 {
-   return ExitModalLoop(aStatus);   
+   return mXULWindow->ExitModalLoop(aStatus);   
 }
 
 //*****************************************************************************

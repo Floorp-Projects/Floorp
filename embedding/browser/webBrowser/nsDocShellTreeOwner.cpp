@@ -369,30 +369,6 @@ NS_IMETHODIMP nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    return mWebBrowserChrome->SizeBrowserTo(browserCX, browserCY);
 }
 
-NS_IMETHODIMP nsDocShellTreeOwner::ShowModal()
-{
-   if(mTreeOwner)
-      return mTreeOwner->ShowModal();
-
-   return mWebBrowserChrome->ShowAsModal();
-}
-
-NS_IMETHODIMP nsDocShellTreeOwner::IsModal(PRBool *_retval)
-{
-   if(mTreeOwner)
-      return mTreeOwner->IsModal(_retval);
-
-   return mWebBrowserChrome->IsWindowModal(_retval);
-}
-
-NS_IMETHODIMP nsDocShellTreeOwner::ExitModalLoop(nsresult aStatus)
-{
-   if(mTreeOwner)
-      return mTreeOwner->ExitModalLoop(aStatus);
-
-   return mWebBrowserChrome->ExitModalEventLoop(aStatus);
-}
-
 NS_IMETHODIMP nsDocShellTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
    nsIDocShellTreeItem** aDocShellTreeItem)
 {

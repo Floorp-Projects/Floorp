@@ -72,15 +72,15 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP nsChromeTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
 {
-   NS_ENSURE_ARG_POINTER(aSink);
+  NS_ENSURE_ARG_POINTER(aSink);
 
-   if(aIID.Equals(NS_GET_IID(nsIPrompt)))
-      return mXULWindow->GetInterface(aIID, aSink);
-   else
-      return QueryInterface(aIID, aSink);
+  if(aIID.Equals(NS_GET_IID(nsIPrompt)))
+    return mXULWindow->GetInterface(aIID, aSink);
 
-   NS_IF_ADDREF(((nsISupports*)*aSink));
-   return NS_OK;   
+  if(aIID.Equals(NS_GET_IID(nsIWebBrowserChrome)))
+    return mXULWindow->GetInterface(aIID, aSink);
+
+  return QueryInterface(aIID, aSink);
 }
 
 //*****************************************************************************
@@ -176,21 +176,6 @@ NS_IMETHODIMP nsChromeTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    PRInt32 aCX, PRInt32 aCY)
 {
    return mXULWindow->SizeShellTo(aShellItem, aCX, aCY);
-}
-NS_IMETHODIMP nsChromeTreeOwner::ShowModal()
-{
-   return mXULWindow->ShowModal();   
-}
-
-NS_IMETHODIMP nsChromeTreeOwner::IsModal(PRBool *_retval)
-{
-  *_retval = mXULWindow->mContinueModalLoop;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsChromeTreeOwner::ExitModalLoop(nsresult aStatus)
-{
-   return mXULWindow->ExitModalLoop(aStatus);   
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::GetNewWindow(PRInt32 aChromeFlags,

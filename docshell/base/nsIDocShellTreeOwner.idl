@@ -27,7 +27,6 @@
  */
 
 interface nsIDocShellTreeItem;
-interface nsIWebBrowserChrome;
 
 [scriptable, uuid(80F30E10-A7CF-11d3-AFC5-00A024FFC08C)]
 interface nsIDocShellTreeOwner : nsISupports
@@ -65,23 +64,6 @@ interface nsIDocShellTreeOwner : nsISupports
 	that the shell passed along will be the size specified.
 	*/
 	void sizeShellTo(in nsIDocShellTreeItem shell, in long cx, in long cy);
-
-	/*
-	Shows the window as a modal window.
-	*/
-	void showModal();	
-    
-	/**
-	Is the window modal (that is, currently executing a modal loop)?
-        @return true if it's a modal window
-	*/
-	boolean isModal();
-
-	/**
-	Exit a modal loop if we're in one
-	@param aStatus - the result code to return from showModal
-	*/
-	void exitModalLoop(in nsresult aStatus);
 
 	/*
 	Tells the implementer of this interface to create a new window.  This is

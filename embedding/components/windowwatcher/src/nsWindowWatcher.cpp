@@ -436,9 +436,18 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
   // no extant window? make a new one.
   if (!newDocShellItem) {
     windowIsNew = PR_TRUE;
+
+    // is the parent (if any) modal? if so, we must be, too.
     PRBool weAreModal = PR_FALSE;
-    if (parentTreeOwner)
-      parentTreeOwner->IsModal(&weAreModal);
+    if (parentTreeOwner) {
+      nsCOMPtr<nsIInterfaceRequestor> parentRequestor(do_QueryInterface(parentTreeOwner));
+      if (parentRequestor) {
+        nsCOMPtr<nsIWebBrowserChrome> parentChrome;
+        parentRequestor->GetInterface(NS_GET_IID(nsIWebBrowserChrome), getter_AddRefs(parentChrome));
+        if (parentChrome)
+          parentChrome->IsWindowModal(&weAreModal);
+      }
+    }
     if (weAreModal || (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL)) {
       rv = queueGuard.Push();
       if (NS_SUCCEEDED(rv)) {
@@ -592,12 +601,21 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
 
   if (windowIsNew)
     SizeOpenedDocShellItem(newDocShellItem, aParent, features, chromeFlags);
+
   if (windowIsModal) {
     nsCOMPtr<nsIDocShellTreeOwner> newTreeOwner;
-    newDocShellItem->GetTreeOwner(getter_AddRefs(newTreeOwner));
+    nsCOMPtr<nsIInterfaceRequestor> newRequestor;
+    nsCOMPtr<nsIWebBrowserChrome> newChrome;
 
+    newDocShellItem->GetTreeOwner(getter_AddRefs(newTreeOwner));
     if (newTreeOwner)
-      newTreeOwner->ShowModal();
+      newRequestor = do_QueryInterface(newTreeOwner);
+    if (newRequestor)
+      newRequestor->GetInterface(NS_GET_IID(nsIWebBrowserChrome), getter_AddRefs(newChrome));
+
+    if (newChrome)
+      newChrome->ShowAsModal();
+    NS_ASSERTION(newChrome, "show modal window failed: no available chrome");
   }
 
   return NS_OK;
