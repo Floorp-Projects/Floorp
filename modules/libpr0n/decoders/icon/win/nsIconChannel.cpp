@@ -44,6 +44,7 @@
 // Takes a bitmap from the windows registry and converts it into 4 byte RGB data.
 void ConvertColorBitMap(unsigned char * aBitmapBuffer, PBITMAPINFO pBitMapInfo, nsCString& iconBuffer);
 void ConvertMaskBitMap(unsigned char * aBitMaskBuffer, PBITMAPINFOHEADER pBitMapInfo, nsCString& iconBuffer);
+PRUint32 CalcWordAlignedRowSpan(PRUint32  aWidth, PRUint32 aBitCount);
 
 // nsIconChannel methods
 nsIconChannel::nsIconChannel()
@@ -187,8 +188,15 @@ void ConvertColorBitMap(unsigned char * buffer, PBITMAPINFO pBitMapInfo, nsCStri
   // windows invers the row order in their bitmaps. So we need to invert the rows back into a top-down order.
 
   PRUint32 bytesPerPixel = pBitMapInfo->bmiHeader.biBitCount / 8;
+  PRUint32 unalignedBytesPerRow = pBitMapInfo->bmiHeader.biWidth * 3;
   InvertRows(buffer, pBitMapInfo->bmiHeader.biSizeImage, pBitMapInfo->bmiHeader.biWidth * bytesPerPixel);
   
+  PRUint32 alignedBytesPerRow = CalcWordAlignedRowSpan(pBitMapInfo->bmiHeader.biWidth, 24);
+  PRInt32 numBytesPaddingPerRow = alignedBytesPerRow - unalignedBytesPerRow;
+  PRUint32 pos = 0;
+  if (numBytesPaddingPerRow < 0)  // this should never happen.....
+    numBytesPaddingPerRow = 0;
+
   PRUint32 index = 0;
   // if each pixel uses 16 bits to describe the color then each R, G, and B value uses 5 bites. Use some fancy
   // bit operations to blow up the 16 bit case into 1 byte per component color. Actually windows
@@ -222,6 +230,15 @@ void ConvertColorBitMap(unsigned char * buffer, PBITMAPINFO pBitMapInfo, nsCStri
       iconBuffer.Append((char) blueValue);
       iconBuffer.Append((char) greenValue);
       iconBuffer.Append((char) redValue);
+      pos += bytesPerPixel;
+      if (pos == unalignedBytesPerRow && numBytesPaddingPerRow) // if we have reached the end of a current row, add padding to force dword alignment
+      {
+        pos = 0;
+        for (PRUint32 i = 0; i < numBytesPaddingPerRow; i++)
+        {
+          iconBuffer.Append((char) 0);
+        }
+      }
       index += bytesPerPixel;
     }
   }
@@ -232,9 +249,32 @@ void ConvertColorBitMap(unsigned char * buffer, PBITMAPINFO pBitMapInfo, nsCStri
       iconBuffer.Append((char) buffer[index]);
       iconBuffer.Append((char) buffer[index+1]);
       iconBuffer.Append((char) buffer[index+2]);
+      pos += 3;
+      if (pos == unalignedBytesPerRow && numBytesPaddingPerRow) // if we have reached the end of a current row, add padding to force dword alignment
+      {
+        pos = 0;
+        for (PRUint32 i = 0; i < numBytesPaddingPerRow; i++)
+        {
+          iconBuffer.Append((char) 0);
+        }
+      }
       index += bytesPerPixel;
     }
   }
+}
+
+PRUint32 CalcWordAlignedRowSpan(PRUint32  aWidth, PRUint32 aBitCount)
+{
+  PRUint32 spanBytes;
+
+  spanBytes = (aWidth * aBitCount) >> 5;
+
+  if (((PRUint32) aWidth * aBitCount) & 0x1F) 
+    spanBytes++;
+
+  spanBytes <<= 2;
+
+  return spanBytes;
 }
 
 void ConvertMaskBitMap(unsigned char * aBitMaskBuffer, PBITMAPINFOHEADER pBitMapHeaderInfo, nsCString& iconBuffer)
