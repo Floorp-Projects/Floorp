@@ -725,7 +725,7 @@ nsTitledButtonFrame::PaintTitle(nsIPresContext& aPresContext,
                             accesskey);
 
      /* XXX are attribute values always two byte? */
-     PRUnichar *titleString, *accessString;
+     const PRUnichar *titleString, *accessString;
      titleString = mCroppedTitle.GetUnicode();
      if (accesskey != "") {
        PRInt32 idx = mCroppedTitle.Find(accesskey, PR_TRUE);
