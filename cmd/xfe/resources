@@ -472,7 +472,7 @@
 *mailNewsMoreButton.labelString:		More...
 
 !====================================================================
-  Menubar stuff
+! Menubar stuff
 !====================================================================
 !
 ! The file menus for all the components come first.
@@ -510,7 +510,7 @@
 !*menuBar.helpMenu.mnemonic:		H
 
 !=======================
-  File Menu - Navigator 
+! File Menu - Navigator 
 !=======================
 
 *menuBar*newSubmenu.labelString:	New
@@ -692,7 +692,7 @@ Paste text from the original page in quoted form
 *menuBar*floatingTaskBarClose.labelString:  Floating Component Bar
 
 !============================
-  File Menu - Message Center
+! File Menu - Message Center
 !============================
 
 *newFolder.labelString:							New Folder...
@@ -736,7 +736,7 @@ Get new mail and discussion group messages
 ! File/Get Messages Submenu
 *menuBar*getNewMessages.labelString:       	Get New Messages
 *menuBar*getNewMessages.mnemonic: 		M
-		
+
 ! This label is generated dynamically from the preferences
 !*menuBar*getNextNNewMsgs.labelString:       Next 500
 *menuBar*getNextNNewMsgs.mnemonic: 			x
@@ -758,9 +758,9 @@ Update number of unread messages
 *menuBar*addNewsgroup.labelString:		Subscribe...
 *menuBar*addNewsgroup.mnemonic:			b
 *addNewsgroup.documentationString:		Subscribe...
- 
+
 !=============================
-  File Menu - Message Threads
+! File Menu - Message Threads
 !=============================
 
 *menuBar*openSelected.labelString:				Open Message
@@ -787,7 +787,7 @@ Open the selected attachment
 *MailThread*menuBar*saveMessageAs.mnemonic:  F
 *MailThread*menuBar*saveMessageAs.acceleratorText:	Alt+S
 !==========================
-  File Menu - Address Book
+! File Menu - Address Book
 !==========================
 
 *addToAddressBook.labelString:	Card...
@@ -830,7 +830,7 @@ Import a file into the address book
 Place a call with Mozilla Conference 
 
 !=======================
-  File Menu - Bookmarks
+! File Menu - Bookmarks
 !=======================
 
 *newBookmark.labelString:							New Bookmark...
@@ -879,7 +879,7 @@ Create an Internet Shortcut to the selected bookmark
 Make a bookmark alias to the selected bookmark
 
 !=====================
-  File Menu - History
+! File Menu - History
 !=====================
 
 *history*menuBar*openSelected.labelString:		Go to Page
@@ -895,31 +895,31 @@ Add the selected page to the Personal Toolbar
 *history*menuBar*print.labelString:             Print History...
 
 !=======================
-  Edit Menu - Navigator
+! Edit Menu - Navigator
 !=======================
- 
+
 *undo.labelString:              Undo
 *undo.mnemonic:                 U
 *undo.acceleratorText:          Alt+Z
 *undo.documentationString:      Undo the previous action
- 
+
 *redo.labelString:              Redo
 *redo.mnemonic:                 R
 *redo.acceleratorText:          Alt+Y
 *redo.documentationString:      Redo the next action
- 
+
 *cut.labelString:               Cut
 *cut.mnemonic:                  t
 *cut.acceleratorText:           Alt+X
 *cut.documentationString:	\
 Cut the selected text and put it on the clipboard
- 
+
 *copy.labelString:              Copy
 *copy.mnemonic:                 C
 *copy.acceleratorText:          Alt+C
 *copy.documentationString:	\
 Copy the selected text and put it on the clipboard
- 
+
 *paste.labelString:             Paste
 *paste.mnemonic:                P
 *paste.acceleratorText:         Alt+V
@@ -979,9 +979,9 @@ Search a directory to find a person
 Change user preferences for the application
 
 !===========================
-  Edit Menu - Page Composer
+! Edit Menu - Page Composer
 !===========================
- 
+
 *deleteTableMenu.labelString:                   Delete Table
 *deleteTableMenu.mnemonic:		                b
 
@@ -1038,7 +1038,7 @@ Select all cells in the table at the current cursor location
 Edit the HTML source for the current page
 
 !=============================
-  Edit Menu - Compose Message
+! Edit Menu - Compose Message
 !=============================
 
 *menuBar*pasteAsQuoted.labelString:			Paste as Quotation
@@ -1047,7 +1047,7 @@ Edit the HTML source for the current page
 Paste clipboard contents in quoted form
 
 !============================
-  Edit Menu - Message Center
+! Edit Menu - Message Center
 !============================
 
 *menuBar*search.labelString:            Search Messages...
@@ -1075,7 +1075,7 @@ Set rules for filtering mail into folders
 View mail folder or discussion group properties
 
 !=============================
-  Edit Menu - Message Threads
+! Edit Menu - Message Threads
 !=============================
 
 *deleteMessageCmdString:  Delete Message
@@ -1104,7 +1104,7 @@ View mail folder or discussion group properties
 ! end Edit/Select Submenu
 
 !==========================
-  Edit Menu - Address Book
+! Edit Menu - Address Book
 !==========================
 
 *menuBar*abDeleteEntry.labelString:    	Delete
@@ -1127,7 +1127,7 @@ Edit the list of domains that can receive HTML messages
 Place a call with Mozilla Conference
 
 !=======================
-  Edit Menu - Bookmarks
+! Edit Menu - Bookmarks
 !=======================
 
 *bookmarks*menuBar*findInObject.labelString:		Find in Bookmarks...
@@ -1140,7 +1140,7 @@ Find a bookmark in the list
 View the properties of the selected bookmark
 
 !=======================
-  Edit Menu - History
+! Edit Menu - History
 !=======================
 
 *history*menuBar*search.labelString:            Search History List
@@ -1149,7 +1149,7 @@ View the properties of the selected bookmark
 Search for one or more items in the History List
 
 !=======================
-  View Menu - Navigator
+! View Menu - Navigator
 !=======================
 
 *hideNavToolbarCmdString:			Hide Navigation Toolbar
@@ -1268,7 +1268,7 @@ Set the Global Default Documentation Encoding
 ! end View/Encoding Submenu
 
 !==============================
-  View Menu - Page Composer
+! View Menu - Page Composer
 !==============================
 
 *Editor*hideNavToolbarCmdString:		Hide Composition Toolbar
@@ -1289,7 +1289,7 @@ Show or hide the Formatting toolbar
 Show or hide the paragraph marks
 
 !=============================
-  View Menu - Compose Message
+! View Menu - Compose Message
 !=============================
 
 *Composition*toggleAddressArea.showLabelString:   Show Addressing Area
@@ -1340,7 +1340,7 @@ View the message body and hide the adresses
 Wrap long lines when the message is sent
 
 !============================
-  View Menu - Message Center
+! View Menu - Message Center
 !============================
 
 *menuBar*showSubmenu.labelString:   Show
@@ -1351,7 +1351,7 @@ Show or hide the Message Center toolbar
 *menuBar*moveSubmenu.labelString: Move Folder
 
 !=============================
-  View Menu - Message Threads
+! View Menu - Message Threads
 !=============================
 
 *MailThread*hideNavToolbarCmdString:   Hide Message Toolbar
@@ -1481,14 +1481,14 @@ Unscramble naughty jokes
 Wrap long lines when displaying message
 
 !============================
-  View Menu - Message Window
+! View Menu - Message Window
 !============================
 
 *MailMsg*hideNavToolbarCmdString:   Hide Message Toolbar
 *MailMsg*showNavToolbarCmdString:   Show Message Toolbar
 
 !==========================
-  View Menu - Address Book
+! View Menu - Address Book
 !==========================
 
 *AddressBook*hideNavToolbarCmdString:   Hide Address Book Toolbar
@@ -1544,7 +1544,7 @@ Sort address book entries in descending order
 Create and edit my address book card
 
 !=======================
-  View Menu - Bookmarks 
+! View Menu - Bookmarks 
 !=======================
 
 bookmarks*menuBar*sortByTitle.labelString:	by Name
@@ -1600,7 +1600,7 @@ Set selected folder as the folder for adding new bookmarks
 Set selected folder as the folder for the Bookmark menu
 
 !=====================
-  View Menu - History
+! View Menu - History
 !=====================
 
 *menuBar*sortByTitle.labelString:			by Title
@@ -1624,7 +1624,7 @@ Sort history list by expiration date
 Sort history list by visit count
 
 !=====================
-  Go Menu - Navigator
+! Go Menu - Navigator
 !=====================
 
 *back.labelString:			Back
@@ -1642,7 +1642,7 @@ Sort history list by visit count
 !xxx dynamic *home.documentationString:
 
 !===========================
-  Go Menu - Message Threads
+! Go Menu - Message Threads
 !===========================
 
 *menuBar*nextSubmenu.labelString:				Next 
@@ -1732,7 +1732,7 @@ Go to the first flagged message
 *MailMsg*forward.documentationString:	Go forward to the next message
 
 !================================
-  Message Menu - Message Threads
+! Message Menu - Message Threads
 !================================
 
 *menuBar*replySubmenu.labelString:				Reply
@@ -1876,7 +1876,7 @@ Show when new messages arrive in this thread
 *MailMsg*mommy.tipString: Open Folder
 
 !=============================
-  Insert Menu - Page Composer
+! Insert Menu - Page Composer
 !=============================
 
 *menuBar*insert.labelString:				Insert
@@ -1925,7 +1925,7 @@ Insert break to continue text to the left and right
 Insert a non-breaking space character at cursor location 
 
 !=============================
-  Format Menu - Page Composer
+! Format Menu - Page Composer
 !=============================
 
 *menuBar*formatMenu.labelString:            Format
@@ -2104,7 +2104,7 @@ Center-justify the current paragraph
 Right-justify the current paragraph
 
 !=============================
-  Table Menu - Page Composer
+! Table Menu - Page Composer
 !=============================
 
 *menuBar*tableMenu.labelString:		Table
@@ -2122,7 +2122,7 @@ Right-justify the current paragraph
 *convertTableToText.labelString:			Convert Table to Text
 
 !============================
-  Tools Menu - Page Composer
+! Tools Menu - Page Composer
 !============================
 
 *menuBar*toolsMenu.labelString:             Tools
@@ -2133,7 +2133,7 @@ Right-justify the current paragraph
 Check spelling errors in the message
 
 !===================
-  Communicator Menu
+! Communicator Menu
 !===================
 
 *menuBar*openNavCenter.labelString:		Navigation Center
@@ -2315,7 +2315,7 @@ Show security information for this page
 ! end Communicator/Bookmarks Submenu
 
 !===========
-  Help Menu
+! Help Menu
 !===========
 
 *menuBar*manual.labelString:	Help Contents
@@ -2374,7 +2374,7 @@ Information about your plug-ins
 Show product information, version number, and copyright
 
 !==============
-  end of menus
+! end of menus
 !==============
 
 ! Leftovers, old, and duplicates...
@@ -2723,7 +2723,7 @@ Insert an arbitrary HTML Tag at the insertion location
 *menuBar*netBrowser.labelString:	Mozilla Browser
 
 !=============
-  Popup Menus
+! Popup Menus
 !=============
 
 *popup*composeMessage.labelString:	New Message
@@ -3521,9 +3521,9 @@ by @NAME@'s plug-ins or @NAME@'s helper applications.
 *history.iconName:          History
 *MailMsg.iconName:          Message
 
-;========================
-  Popup Menu - Navigator
-;========================
+!========================
+! Popup Menu - Navigator
+!========================
 
 *popup.title.labelString:		@NAME@ Commands:
 *popup.openURLNewWindow.labelString:	Open Link in New Window
@@ -4472,7 +4472,7 @@ from the network, or save to a file and then play from the file?
 !*bookmark*fontList:	      -*-helvetica-medium-r-*-*-*-120-*-*-*-*-iso8859-*
 !*bookmark*fontList:	        -*-helvetica-bold-r-*-*-*-120-*-*-*-*-iso8859-*
 !*bookmark*selectedLabel.fontList:\
-			      -*-helvetica-medium-r-*-*-*-120-*-*-*-*-iso8859-*
+				-*-helvetica-medium-r-*-*-*-120-*-*-*-*-iso8859-*
 !*bookmark*XmTextField.fontList:	-*-courier-medium-r-*-*-*-120-*-*-*-*-iso8859-*
 !*bookmark*XmText.fontList:	-*-courier-medium-r-*-*-*-120-*-*-*-*-iso8859-*
 
