@@ -32,7 +32,6 @@ EXPORTS =                               \
         nsIDocumentLoader.h             \
         nsIDocumentLoaderObserver.h     \
         nsILinkHandler.h                \
-        nsIModalWindowSupport.h         \
         nsIUrlDispatcher.h    \
         nsIWebShell.h                   \
         nsIWebShellServices.h           \
