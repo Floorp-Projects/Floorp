@@ -84,13 +84,17 @@ function prefNavSelectFile(folderFieldId, stringId, useNative)
 
 function setHomePageToCurrentPage(folderFieldId)
 {
-  if( !parent.opener.appCore )
-    return false;
-  var homePageField = document.getElementById(folderFieldId);
-  var url = parent.opener._content.location.href;
-  if( url )
-    homePageField.value = url;
-  return true;
+  var windowManager = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"]
+                                .getService(Components.interfaces.nsIWindowMediator);
+  var browserWindow = windowManager.getMostRecentWindow("navigator:browser");
+  if (browserWindow) {
+    var browser = browserWindow.document.getElementById("content");
+    var url = browser.webNavigation.currentURI.spec;
+    if (url) {
+      var homePageField = document.getElementById(folderFieldId);
+      homePageField.value = url;
+    }
+  }
 }
 
 function prefClearGlobalHistory()
@@ -107,8 +111,8 @@ function prefClearUrlbarHistory()
   "nsIUrlbarHistory");
   if ( urlBarHist )
   {
-  	urlBarHist.clearHistory();
-  	dump("Now history should be empty. \n");
+    urlBarHist.clearHistory();
+    dump("Now history should be empty. \n");
     button.setAttribute("disabled","true");
   }
 }  
