@@ -59,7 +59,7 @@
     <outlinerbody id="olbStyleRules" flex="1"/>
   </outliner>
   
-  <splitter orient="horizontal" collapse="after">
+  <splitter collapse="after">
     <grippy/>
   </splitter>
 

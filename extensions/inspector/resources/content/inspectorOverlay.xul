@@ -33,7 +33,7 @@
       <domi:panel id="bxDocPanel" title="&bxDocPanel.title;" 
                   flex="1" persist="width"/>
 
-      <splitter id="splPanels" orient="vertical"/>
+      <splitter id="splPanels"/>
       
       <domi:panel id="bxObjectPanel" title="&bxObjectPanel.title;" linkedpanel="bxDocPanel"
                   flex="1" persist="width"/>
