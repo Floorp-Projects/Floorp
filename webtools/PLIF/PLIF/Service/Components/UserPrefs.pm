@@ -463,7 +463,7 @@ sub strings {
 sub setupInstall {
     my $self = shift;
     my($app) = @_;
-    $self->output->setProgress('userPrefs');
+    $app->output->setupProgress('userPrefs');
     my $userDataSource = $app->getService('dataSource.user');
     # XXX field categories should have generic way of indicating
     # whether the user is allowed to edit either his own or other
