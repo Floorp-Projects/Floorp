@@ -29,7 +29,8 @@ Rights Reserved.
 <!ENTITY autoQuote.label "Automatically quote the original message when replying">
 <!ENTITY aboveQuote.label "start my reply above the quoted text">
 <!ENTITY belowQuote.label "start my reply below the quoted text">
-<!ENTITY selectquote.label "select the quoted text">
+<!ENTITY selectAndAboveQuote.label "start my reply above, and select the quoted text">
+<!ENTITY selectAndBelowQuote.label "start my reply below, and select the quoted text">
 <!ENTITY spellCheck.label "Spell check messages before sending">
 <!ENTITY msgWrapping.label "Message Wrapping">
 <!ENTITY wrapInMsg.label "Wrap incoming, plain text messages to window width">
@@ -38,4 +39,5 @@ Rights Reserved.
 <!ENTITY use8Bits.label "Send messages that use 8-bit characters">
 <!ENTITY cleanupMsg.label "When it's time to clean up messages:">
 <!ENTITY asIs.label "As is (does not work well with some mail servers)">
-<!ENTITY useMIME.label "Using the 'quoted printable' MIME encoding (does not work well with some mail or newsgroups readers)">
+<!ENTITY useMIMEpart1.label "Using the 'quoted printable' MIME encoding">
+<!ENTITY useMIMEpart2.label "(does not work well with some mail or newsgroups readers)">
