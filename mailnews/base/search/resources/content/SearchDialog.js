@@ -142,7 +142,7 @@ var gSearchNotificationListener =
             gNumOfSearchHits = 0;
         }
 
-        gStatusFeedback.showProgress(100);
+        gStatusFeedback.showProgress(0);
         gStatusFeedback.showStatusString(statusMsg);
         gStatusBar.setAttribute("mode","normal");
     },
