@@ -28,6 +28,7 @@
 var LIB_PATH = "../lib/";
 
 bot = new Object();
+bot.ownerPatterns = new Array();
 bot.personality = new Object();
 bot.personality.hooks = new Array();
 bot.prefix = "!js ";
@@ -152,10 +153,39 @@ function rego()
 
 }
 
+function addOwner (pattern)
+{
+    bot.ownerPatterns.push (pattern);
+}
+
 function userIsOwner (user)
 {
-    /*XXX implement this*/
-    return true;
+    if (!user.host)
+    {
+        /* we havn't got any information on this user yet.  They havn't spoken
+         * yet, and we havn't /whoi's them yet.  Say no for now, but do the 
+         * /whois so we'll know for sure next time.
+         */
+        if (user.TYPE == "IRCChanUser")
+            user.parent.parent.sendData ("WHOIS " + user.nick + "\n");
+        else
+            user.parent.sendData ("WHOIS " + user.nick + "\n");
+        return false;
+    }
+    
+    var userString = user.nick + "!" + user.name + "@" + user.host;
+    dd ("userIsOwner: checking userString `" + userString + "' against:");
+    
+    for (var p in bot.ownerPatterns)
+        if (userString.search(bot.ownerPatterns[p]) != -1)
+        {
+            dd (String(bot.ownerPatterns[p]) + " passed.");
+            return true;
+        }
+        else
+            dd (String(bot.ownerPatterns[p]) + " fails.");
+    
+    return false;
 }
 
 function psn_isAddressedToMe (e)
@@ -250,36 +280,38 @@ function my_chan_privmsg (e)
 {
     var user = e.user;
     var meat = e.meat;
-    if (meat.indexOf(bot.prefix) == 0)
-    {
-        /* if last char is a continuation character, then... */
-    	if (meat[meat.length - 1] == '\\') {
-            user.accumulatedScript = meat.substring(bot.prefix.length,
-                                                    meat.length - 1);
-            return false; // prevent other hooks from processing this... 
-    	}
+    if (userIsOwner(user))
+        if (meat.indexOf(bot.prefix) == 0)
+        {
+            /* if last char is a continuation character, then... */
+            if (meat[meat.length - 1] == '\\') {
+                user.accumulatedScript = meat.substring(bot.prefix.length,
+                                                        meat.length - 1);
+                return false; // prevent other hooks from processing this... 
+            }
+            else
+            {
+                return bot_eval(e, meat.substring(bot.prefix.length,
+                                                  meat.length));
+            }
+        }
         else
         {
-            return bot_eval(e, meat.substring(bot.prefix.length, meat.length));
-        }
-    }
-    else
-    {
-        /* if we were accumulating a message, add here,
-         * and finish if not ends with '\'. */
-    	if (typeof(user.accumulatedScript) != "undefined")
-        {
-            var lastLine = (meat[meat.length - 1] != '\\');
-            var line = meat.substring(0, meat.length - (lastLine ?  0 : 1));
-            user.accumulatedScript += line;
-            if (lastLine)
+            /* if we were accumulating a message, add here,
+             * and finish if not ends with '\'. */
+            if (typeof(user.accumulatedScript) != "undefined")
             {
-                var script = user.accumulatedScript;
-                delete user.accumulatedScript;
-                return bot_eval(e, script);
+                var lastLine = (meat[meat.length - 1] != '\\');
+                var line = meat.substring(0, meat.length - (lastLine ?  0 : 1));
+                user.accumulatedScript += line;
+                if (lastLine)
+                {
+                    var script = user.accumulatedScript;
+                    delete user.accumulatedScript;
+                    return bot_eval(e, script);
+                }
             }
-    	}
-    }
+        }
 }
 
 /*
