@@ -36,7 +36,7 @@ SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
 
 LIBS		= \
 		-lraptorgfx \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		-lmozjs \
 		$(MOZ_TIMER_LIBS) \
 		$(TK_LIBS) \

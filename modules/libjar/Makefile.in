@@ -51,7 +51,7 @@ XPIDLSRCS	= \
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		$(ZLIB_LIBS) \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

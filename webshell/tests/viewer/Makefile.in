@@ -103,7 +103,7 @@ endif
 XP_DIST_LIBS		= \
 			-lraptorgfx \
 			-lmozjs \
-			-lxpcom \
+			$(XPCOM_LIBS) \
 			$(JSJ_LIB) \
 			$(NULL)
 
@@ -135,8 +135,10 @@ QT_LIBS			= -lviewer_qt_s $(XP_LIBS) $(MOZ_QT_LDFLAGS)
 XLIB_LIBS		= -lviewer_xlib_s $(XP_LIBS) $(MOZ_XLIB_LDFLAGS)
 GTK_LIBS		= -lviewer_gtk_s -lgtksuperwin $(XP_LIBS) $(MOZ_GTK_LDFLAGS)
 
+XP_DIST_DEP_LIBS	:= $(filter-out -L$(DIST)/bin -L$(DIST)/lib, $(XP_DIST_LIBS))
+
 EXTRA_DEPS		= \
-			$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%$(DLL_SUFFIX),$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a))) \
+			$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%$(DLL_SUFFIX),$(XP_DIST_DEP_LIBS:-l%_s=lib/lib%_s.a))) \
 			$(UNIX_VIEWER_TK_LIBS) \
 			$(XP_NS_UNDERBAR_CRAP) \
 			$(NULL)

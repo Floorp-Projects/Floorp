@@ -34,7 +34,7 @@ CPPSRCS		= nsRelatedLinksHandler.cpp
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

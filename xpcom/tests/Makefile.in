@@ -71,7 +71,7 @@ endif
 LIBS		+= \
 		$(MOZ_TIMER_LIBS) \
 		-lmozjs \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		$(TK_LIBS) \
 		$(LOST_SYM_LIBS) \
 		$(NSPR_LIBS) \

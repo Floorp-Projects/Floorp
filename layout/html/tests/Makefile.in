@@ -47,7 +47,7 @@ LIBS		= \
 		$(MOZ_TIMER_LIBS) \
 		-lmozjs \
 		-lraptorgfx \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		$(TK_LIBS) \
 		$(LOST_SYM_LIBS) \
 		$(NSPR_LIBS) \

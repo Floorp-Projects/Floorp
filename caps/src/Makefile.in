@@ -48,7 +48,7 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
 		$(ZLIB_LIBS) \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		-lmozjs \
 		$(NSPR_LIBS) \
 		$(NULL)

@@ -35,7 +35,7 @@ SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
 
 LOCAL_INCLUDES	= -I$(srcdir)/../src
 
-LIBS		= -lxpcom $(NSPR_LIBS)
+LIBS		= $(XPCOM_LIBS) $(NSPR_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 

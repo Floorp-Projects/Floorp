@@ -42,7 +42,7 @@ EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_UNFORCE_ALL) \
 		-L$(DIST)/lib	\
 		-L$(DIST)/bin \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

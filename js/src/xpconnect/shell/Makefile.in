@@ -45,7 +45,7 @@ CPPSRCS		= xpcshell.cpp
 
 LIBS		= \
 		-lmozjs \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

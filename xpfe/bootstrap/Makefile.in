@@ -38,7 +38,7 @@ CPPSRCS		= \
 XP_DIST_LIBS	= \
 		-lraptorgfx \
 		-lmozjs \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		$(OJI_LIBS) \
 		$(NULL)
 
@@ -82,8 +82,10 @@ ifdef GC_LEAK_DETECTOR
 LIBS += -lboehm
 endif
 
+XP_DIST_DEP_LIBS := $(filter-out -L$(DIST)/bin -L$(DIST)/lib, $(XP_DIST_LIBS))
+
 EXTRA_DEPS	= \
-		$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%$(DLL_SUFFIX),$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a))) \
+		$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%$(DLL_SUFFIX),$(XP_DIST_DEP_LIBS:-l%_s=lib/lib%_s.a))) \
 		$(XP_NS_UNDERBAR_CRAP) \
 		$(NULL)
 

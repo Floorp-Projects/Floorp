@@ -33,7 +33,7 @@ CPPSRCS		= TestPICS.cpp
 REQUIRES	= js pics pref xpcom include
 
 LIBS		= \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		-lpics \
 		$(NSPR_LIBS) \
 		$(NULL)

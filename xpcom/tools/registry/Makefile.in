@@ -35,7 +35,7 @@ LOST_SYM_LIBS	= -lxpcomds_s -lmozreg_s
 endif
 
 LIBS		= \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		$(LOST_SYM_LIBS) \
 		$(TK_LIBS) \
 		$(NSPR_LIBS) \

@@ -32,7 +32,7 @@ CPPSRCS		= logparse.cpp
 
 LIBS		= \
 		-lraptorhtmlpars \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

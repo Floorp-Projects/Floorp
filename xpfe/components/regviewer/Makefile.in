@@ -47,7 +47,7 @@ CHROME_L10N	= locale/en-US/regviewer.dtd
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

@@ -31,7 +31,7 @@ CPPSRCS		= TestCookie.cpp
 
 REQUIRES	= js cookie pref xpcom include
 
-LIBS		= -lxpcom $(NSPR_LIBS)
+LIBS		= $(XPCOM_LIBS) $(NSPR_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 

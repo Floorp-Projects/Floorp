@@ -40,7 +40,7 @@ EXPORT_RESOURCE	= \
 
 LIBS		= \
 		-lmozjs \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		$(MOZ_TIMER_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
