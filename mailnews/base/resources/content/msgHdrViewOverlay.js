@@ -96,8 +96,8 @@ var gExpandedHeaderList = [ {name:"subject"},
 // Now, for each view the message pane can generate, we need a global table of headerEntries. These
 // header entry objects are generated dynamically based on the static date in the header lists (see above)
 // and elements we find in the DOM based on properties in the header lists. 
-var gCollapsedHeaderView = {};
-var gExpandedHeaderView = {};
+var gCollapsedHeaderView = new Array;
+var gExpandedHeaderView = new Array;
 
 // currentHeaderData --> this is an array of header name and value pairs for the currently displayed message.
 //                       it's purely a data object and has no view information. View information is contained in the view objects.
