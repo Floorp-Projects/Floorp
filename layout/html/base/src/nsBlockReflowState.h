@@ -48,6 +48,7 @@
 static NS_DEFINE_IID(kIRunaroundIID, NS_IRUNAROUND_IID);
 static NS_DEFINE_IID(kIFloaterContainerIID, NS_IFLOATERCONTAINER_IID);
 static NS_DEFINE_IID(kIAnchoredItemsIID, NS_IANCHOREDITEMS_IID);
+static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
 static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
 static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
 
@@ -1293,10 +1294,11 @@ nsBlockFrame::ReflowAppendedChildren(nsIPresContext* aCX,
 
     // Resolve style for the kid
     nsIStyleContextPtr kidSC = aCX->ResolveStyleContextFor(kid, this);
+    nsStylePosition* kidPosition = (nsStylePosition*)kidSC->GetData(kStylePositionSID);
     nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
 
     // Check whether it wants to floated or absolutely positioned
-    if (NS_STYLE_POSITION_ABSOLUTE == kidMol->positionFlags) {
+    if (NS_STYLE_POSITION_ABSOLUTE == kidPosition->mPosition) {
       AbsoluteFrame::NewFrame(&kidFrame, kid, kidIndex, this);
       kidFrame->SetStyleContext(kidSC);
     } else if (kidMol->floats != NS_STYLE_FLOAT_NONE) {
