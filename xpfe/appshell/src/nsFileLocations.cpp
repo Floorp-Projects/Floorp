@@ -199,44 +199,15 @@ static void GetDefaultUserProfileRoot(nsFileSpec& outSpec)
 
 //----------------------------------------------------------------------------------------
 static void GetProfileDefaultsFolder(nsFileSpec& outSpec)
-// UNIX    : ~/.mozilla/ProfileDefaults
-// WIN    : Program Files\Netscape\ProfileDefaults
-// Mac    : :Documents:Mozilla:ProfileDefaults:
 //----------------------------------------------------------------------------------------
 {
-#if defined(XP_MAC)
-    nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::Mac_DocumentsDirectory);
-    cwd += "Mozilla";
-    if (!cwd.Exists())
-        cwd.CreateDir();
-
-#elif defined(XP_UNIX)  
-    nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::Unix_HomeDirectory);
-    cwd += ".mozilla";
-    if (!cwd.Exists())
-        cwd.CreateDir();
-
-#elif defined(XP_PC)
-    // set its directory an aunt of the executable.
     nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    // That's "program files\Netscape\Communicator\Program"
-    nsFileSpec parent;
-    cwd.GetParent(parent); // "program files\Netscape\Communicator"
-    parent.GetParent(cwd); // "program files\Netscape\"
 
-#elif defined(XP_BEOS)
-    nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::BeOS_SettingsDirectory);
-    cwd += "mozilla";
-    if (!cwd.Exists())
-        cwd.CreateDir();
-
+#if defined(XP_MAC)
+    cwd += "Defaults";
 #else
-#error dont_know_how_to_do_profiles_on_your_platform
+    cwd += "defaults";
 #endif
-
-    cwd += "ProfileDefaults";
-    if (!cwd.Exists())
-        cwd.CreateDir();
 
     outSpec = cwd;
 } // GetProfileDefaultsFolder
