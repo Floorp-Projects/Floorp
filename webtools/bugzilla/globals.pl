@@ -535,7 +535,7 @@ sub RemoveVotes {
             close SENDMAIL;
         }
         SendSQL("delete from votes where bug_id = $id");
-        SendSQL("update bugs set votes = 0 where bug_id = $id");
+        SendSQL("update bugs set votes = 0, delta_ts=delta_ts where bug_id = $id");
     }
 }
 

@@ -63,7 +63,7 @@ PutHeader("Bugzilla Sanity Check");
 if (exists $::FORM{'rebuildvotecache'}) {
     Status("OK, now rebuilding vote cache.");
     SendSQL("lock tables bugs write, votes read");
-    SendSQL("update bugs set votes = 0");
+    SendSQL("update bugs set votes = 0, delta_ts=delta_ts");
     SendSQL("select bug_id, sum(count) from votes group by bug_id");
     my %votes;
     while (@row = FetchSQLData()) {
@@ -71,10 +71,10 @@ if (exists $::FORM{'rebuildvotecache'}) {
         $votes{$id} = $v;
     }
     foreach my $id (keys %votes) {
-        SendSQL("update bugs set votes = $votes{$id} where bug_id = $id");
+        SendSQL("update bugs set votes = $votes{$id}, delta_ts=delta_ts where bug_id = $id");
     }
     SendSQL("unlock tables");
-    Status("Vote cache has been rebuild.");
+    Status("Vote cache has been rebuilt.");
 }
 
 print "OK, now running sanity checks.<P>\n";

@@ -103,7 +103,7 @@ foreach my $id (@buglist) {
 foreach my $id (keys %affected) {
     SendSQL("select sum(count) from votes where bug_id = $id");
     my $v = FetchOneColumn();
-    SendSQL("update bugs set votes = $v where bug_id = $id");
+    SendSQL("update bugs set votes = $v, delta_ts=delta_ts where bug_id = $id");
 }
 SendSQL("unlock tables");
 
