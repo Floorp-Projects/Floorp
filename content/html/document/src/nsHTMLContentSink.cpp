@@ -4699,9 +4699,6 @@ HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAReadableString& aVa
   else if (aHeader == nsHTMLAtoms::headerContentBase) {
     ProcessBaseHref(aValue);
   }
-  else if (aHeader == nsHTMLAtoms::headerWindowTarget) {
-    ProcessBaseTarget(aValue);
-  }
   else if (mParser) {
     // we also need to report back HTTP-EQUIV headers to the channel
     // so that it can process things like pragma: no-cache or other
