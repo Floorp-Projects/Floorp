@@ -570,7 +570,7 @@ nsPop3Protocol::Load(nsIURL* aURL)
 		m_pop3ConData->next_state = POP3_READ_PASSWORD;
     m_isRunning = PR_TRUE;
 
-    m_transport->LoadURL(aURL);
+    m_transport->Open(aURL);
 
     return ProcessPop3State(aURL, NULL, NULL);
 }
