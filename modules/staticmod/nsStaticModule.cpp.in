@@ -95,7 +95,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsStaticModuleImpl)
 static NS_METHOD nsStaticModuleRegistrationProc(nsIComponentManager *aCompMgr,
                                           nsIFile *aPath,
                                           const char *registryLocation,
-                                          const char *componentType)
+                                          const char *componentType,
+                                          const nsModuleComponentInfo *info)
 {
     NS_RegisterStaticModules(aPath);
     return NS_OK;
@@ -103,7 +104,8 @@ static NS_METHOD nsStaticModuleRegistrationProc(nsIComponentManager *aCompMgr,
 
 static NS_METHOD nsStaticModuleUnregistrationProc(nsIComponentManager *aCompMgr,
                                             nsIFile *aPath,
-                                            const char *registryLocation)
+                                            const char *registryLocation,
+                                            const nsModuleComponentInfo *info)
 {
     return NS_OK;
 }
