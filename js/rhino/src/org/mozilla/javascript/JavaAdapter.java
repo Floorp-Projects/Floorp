@@ -158,8 +158,9 @@ public class JavaAdapter extends ScriptableObject {
             synchronized (generatedClasses) {
                 adapterName = "adapter" + serial++;
             }
+            Context cx = Context.enter();
             try {
-                adapterClass = createAdapterClass(Context.enter(), obj,
+                adapterClass = createAdapterClass(cx, obj,
                                                   adapterName, superClass,
                                                   interfaces, null, null);
                 generatedClasses.put(sig, adapterClass);
@@ -302,13 +303,12 @@ public class JavaAdapter extends ScriptableObject {
                     continue;
                 Object f = o.get(id, o);
                 int length;
-                if (f instanceof Scriptable) {
-                    Scriptable p = (Scriptable) f;
-                    if (!(p instanceof Function))
-                        continue;
+                if (f instanceof Function) {
+                    Function p = (Function) f;
                     length = (int) Context.toNumber(
                                 ScriptableObject.getProperty(p, "length"));
                 } else if (f instanceof FunctionNode) {
+                    // This is used only by optimizer/Codegen
                     length = ((FunctionNode) f).getVariableTable()
                                 .getParameterCount();
                 } else {
@@ -353,8 +353,8 @@ public class JavaAdapter extends ScriptableObject {
     public static Object callMethod(Scriptable object, Object thisObj,
                                     String methodId, Object[] args)
     {
+        Context cx = Context.enter();
         try {
-            Context cx = Context.enter();
             Object fun = ScriptableObject.getProperty(object,methodId);
             if (fun == Scriptable.NOT_FOUND) {
                 // This method used to swallow the exception from calling
