@@ -159,11 +159,16 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   if (aApplyTopMargin) {
     // Compute the childs collapsed top margin (its margin collpased
     // with its first childs top-margin -- recursively).
+    topMargin = ComputeCollapsedTopMargin(mPresContext, reflowState);
+
 #ifdef NOISY_VERTICAL_MARGINS
     nsFrame::ListTag(stdout, mOuterReflowState.frame);
-    printf(": prevBottomMargin=%d\n", aPrevBottomMargin);
+    printf(": reflowing ");
+    nsFrame::ListTag(stdout, aFrame);
+    printf(" prevBottomMargin=%d, collapsedTopMargin=%d => %d\n",
+           aPrevBottomMargin, topMargin,
+           MaxMargin(topMargin, aPrevBottomMargin));
 #endif
-    topMargin = ComputeCollapsedTopMargin(mPresContext, reflowState);
 
     // Collapse that value with the previous bottom margin to perform
     // the sibling to sibling collaspe.
@@ -345,8 +350,9 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
   if ((0 == mMetrics.height) && (0 == mMetrics.mCombinedArea.height)) {
     if (IsHTMLParagraph(mFrame)) {
       // Special "feature" for HTML compatability - empty paragraphs
-      // collapse into nothingness, including their margins.
-      *aBottomMarginResult = 0;
+      // collapse into nothingness, including their margins. Signal
+      // the special nature here by returning -1.
+      *aBottomMarginResult = -1;
 #ifdef NOISY_VERTICAL_MARGINS
       printf("  ");
       nsFrame::ListTag(stdout, mOuterReflowState.frame);

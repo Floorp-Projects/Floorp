@@ -758,7 +758,7 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
     }
   }
   else {
-    // Recover the top and bottom marings for this line
+    // Recover the top and bottom margins for this line
     nscoord topMargin, bottomMargin;
     RecoverVerticalMargins(aLine, aApplyTopMargin,
                            &topMargin, &bottomMargin);
@@ -2844,10 +2844,32 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         // flow block. Since we just continued the child block frame,
         // we know that line->mFirstChild is not the last flow block
         // therefore zero out the running margin value.
+#ifdef NOISY_VERTICAL_MARGINS
+        ListTag(stdout);
+        printf(": reflow incomplete, frame=");
+        nsFrame::ListTag(stdout, frame);
+        printf(" prevBottomMargin=%d, setting to zero\n",
+               aState.mPrevBottomMargin);
+#endif
         aState.mPrevBottomMargin = 0;
       }
       else {
-        aState.mPrevBottomMargin = collapsedBottomMargin;
+#ifdef NOISY_VERTICAL_MARGINS
+        ListTag(stdout);
+        printf(": reflow complete for ");
+        nsFrame::ListTag(stdout, frame);
+        printf(" prevBottomMargin=%d collapsedBottomMargin=%d\n",
+               aState.mPrevBottomMargin, collapsedBottomMargin);
+#endif
+        if (collapsedBottomMargin >= 0) {
+          aState.mPrevBottomMargin = collapsedBottomMargin;
+        }
+        else {
+          // Leave margin alone: it was a collapsed paragraph that
+          // must not interfere with the running margin calculations
+          // (in other words it should act like an empty line of
+          // whitespace).
+        }
       }
 #ifdef NOISY_VERTICAL_MARGINS
       ListTag(stdout);
@@ -4620,6 +4642,9 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
                             nsMargin& aMarginResult,
                             nsMargin& aComputedOffsetsResult)
 {
+  // XXX update this just
+  aState.GetAvailableSpace();
+
   // Reflow the floater. Since floaters are continued we given them an
   // unbounded height. Floaters with an auto width are sized to zero
   // according to the css2 spec.
@@ -4690,23 +4715,24 @@ nsBlockReflowState::AddFloater(nsLineLayout& aLineLayout,
   // Now place the floater immediately if possible. Otherwise stash it
   // away in mPendingFloaters and place it later.
   if (aLineLayout.CanPlaceFloaterNow()) {
+    // Because we are in the middle of reflowing a placeholder frame
+    // within a line (and possibly nested in an inline frame or two
+    // that's a child of our block) we need to restore the space
+    // manager's translation to the space that the block resides in
+    // before placing the floater.
+    nscoord ox, oy;
+    mSpaceManager->GetTranslation(ox, oy);
+    nscoord dx = ox - mSpaceManagerX;
+    nscoord dy = oy - mSpaceManagerY;
+    mSpaceManager->Translate(-dx, -dy);
+
     nsRect combinedArea;
     nsMargin floaterMargins;
     nsMargin floaterOffsets;
     mBlock->ReflowFloater(*this, aPlaceholder, combinedArea, floaterMargins,
                           floaterOffsets);
 
-    // Because we are in the middle of reflowing a placeholder frame
-    // within a line (and possibly nested in an inline frame or two
-    // that's a child of our block) we need to restore the space
-    // manager's translation to the space that the block resides in
-    // before placing the floater.
     PRBool isLeftFloater;
-    nscoord ox, oy;
-    mSpaceManager->GetTranslation(ox, oy);
-    nscoord dx = ox - mSpaceManagerX;
-    nscoord dy = oy - mSpaceManagerY;
-    mSpaceManager->Translate(-dx, -dy);
     nsPoint origin;
     PlaceFloater(aPlaceholder, floaterMargins, floaterOffsets,
                  &isLeftFloater, &origin);
