@@ -42,39 +42,49 @@ public:
   virtual ~nsFilePicker();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIFILEPICKER
+   
+    // nsIFilePicker (less what's in nsBaseFilePicker)
+  NS_IMETHOD GetDefaultString(PRUnichar * *aDefaultString);
+  NS_IMETHOD SetDefaultString(const PRUnichar * aDefaultString);
+  NS_IMETHOD GetDisplayDirectory(nsILocalFile * *aDisplayDirectory);
+  NS_IMETHOD SetDisplayDirectory(nsILocalFile * aDisplayDirectory);
+  NS_IMETHOD GetFile(nsILocalFile * *aFile);
+  NS_IMETHOD GetFileURL(nsIFileURL * *aFileURL);
+  NS_IMETHOD Show(PRInt16 *_retval); 
+  NS_IMETHOD AppendFilter(const PRUnichar *aTitle,  const PRUnichar *aFilter) ;
 
 protected:
-  /* method from nsBaseFilePicker */
-  NS_IMETHOD InitNative(nsIWidget *aParent,
-                        const PRUnichar *aTitle,
-                        PRInt16 aMode);
 
+  NS_IMETHOD InitNative(nsIWidget *aParent, const PRUnichar *aTitle, PRInt16 aMode);
 
   NS_IMETHOD            OnOk();
   NS_IMETHOD            OnCancel();
 
-  // actual implementations of get/put dialogs using NavServices
+    // actual implementations of get/put dialogs using NavServices
   PRInt16 PutLocalFile(Str255 & inTitle, Str255 & inDefaultName, FSSpec* outFileSpec) ;
   PRInt16 GetLocalFile(Str255 & inTitle, FSSpec* outFileSpec);
   PRInt16 GetLocalFolder(Str255 & inTitle, FSSpec* outFileSpec);
 
-  PRBool                 mIOwnEventLoop;
+  void MapFilterToFileTypes ( ) ;
+  Boolean IsFileInFilterList ( ResType inType ) ;
+  
+    // filter routine for file types
+  static pascal Boolean FileDialogFilterProc ( AEDesc* theItem, void* info,
+                                                NavCallBackUserData callbackUD,
+                                                NavFilterModes filterMode ) ;
+                                                
   PRBool                 mWasCancelled;
+  PRBool                 mAllFilesDisplayed;
   nsString               mTitle;
   PRInt16                mMode;
   nsCOMPtr<nsILocalFile> mFile;
-  PRUint32               mNumberOfFilters;  
-  const PRUnichar**      mTitles;
-  const PRUnichar**      mFilters;
   nsString               mDefault;
   nsCOMPtr<nsILocalFile> mDisplayDirectory;
-  PRInt16                mSelectResult;
-  
-  void GetFilterListArray(nsString& aFilterList);
+
+  nsStringArray          mFilters; 
+  nsStringArray          mTitles;
   
   NavTypeListPtr         mTypeLists[kMaxTypeListCount];
-  PRInt16				 mSelectedType;
 
 };
 
