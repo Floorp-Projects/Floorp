@@ -4289,7 +4289,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          */
         pn2 = pn->pn_head;
 #if JS_HAS_XML_SUPPORT
-        if (JS_HAS_XML_OPTION(cx) && pn2->pn_type == TOK_DOT) {
+        if (JS_HAS_XML_OPTION(cx) &&
+            pn2->pn_type == TOK_DOT &&
+            pn2->pn_op != JSOP_GETMETHOD) {
             JS_ASSERT(pn2->pn_op == JSOP_GETPROP);
             pn2->pn_op = JSOP_GETMETHOD;
         }
