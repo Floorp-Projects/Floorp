@@ -49,8 +49,9 @@
   <titledbox orient="horizontal"><title value="&pageColors.label;" flex="1"/>
     <box orient="vertical">
       <radiogroup id="pageColorGroup" orient="vertical" autostretch="never">
-        <radio group="pageColorGroup" id="DefaultColorsRadio" value="fuck you" oncommand="UseDefaultColors()"
+        <radio group="pageColorGroup" id="DefaultColorsRadio" value="&defaultColorsRadio.label;" oncommand="UseDefaultColors()"
           tooltip="aTooltip"     tooltiptext="&defaultColorsRadio.tooltip;" />
+        <text class="label" value="&defaultColorsMsg.label;" style="text-align: right"/>
         <radio group="pageColorGroup" id="CustomColorsRadio" value="&customColorsRadio.label;" oncommand="UseCustomColors()"
           tooltip="aTooltip"     tooltiptext="&customColorsRadio.tooltip;" />
       </radiogroup>
