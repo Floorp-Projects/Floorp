@@ -56,6 +56,10 @@ CPPSRCS		= \
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
+CHROME_DIR	= communicator
+CHROME_L10N_DIR	= locale/layout
+CHROME_L10N	= ./HtmlForm.properties
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_HTML
@@ -66,6 +70,3 @@ INCLUDES	+= \
 		-I$(srcdir)/../../style/src \
 		-I$(srcdir)/../../content/src \
 		$(NULL)
-
-install:: $(TARGETS)
-	$(INSTALL) $(srcdir)/HtmlForm.properties $(DIST)/bin/chrome/communicator/locale/layout
