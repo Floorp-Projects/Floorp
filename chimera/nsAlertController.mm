@@ -40,21 +40,23 @@
 
 #include "nsIBadCertListener.h"
 
+enum { kOKButton = 0, kCancelButton = 1, kOtherButton = 2 };
+
 @implementation nsAlertController
 
 - (IBAction)hitButton1:(id)sender
 {
-  [NSApp stopModalWithCode:1];
+  [NSApp stopModalWithCode:kOKButton];
 }
 
 - (IBAction)hitButton2:(id)sender
 {
-  [NSApp stopModalWithCode:2];
+  [NSApp stopModalWithCode:kCancelButton];
 }
 
 - (IBAction)hitButton3:(id)sender
 {
-  [NSApp stopModalWithCode:3];
+  [NSApp stopModalWithCode:kOtherButton];
 }
 
 
@@ -96,7 +98,7 @@
   
   [confirmPanel close];
 
-  return (result == 1);
+  return (result == kOKButton);
 }
 
 - (BOOL)confirmCheck:(NSWindow*)parent title:(NSString*)title text:(NSString*)text checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue
@@ -112,7 +114,7 @@
   *checkValue = ([confirmCheckPanelCheck state] == NSOnState);
   [confirmCheckPanel close];
 
-  return (result == 1);
+  return (result == kOKButton);
 }
 
 - (int)confirmEx:(NSWindow*)parent title:(NSString*)title text:(NSString*)text
@@ -129,7 +131,7 @@
   
   [confirmPanel close];
 
-  return (result == 1);
+  return result;
 }
 
 - (int)confirmCheckEx:(NSWindow*)parent title:(NSString*)title text:(NSString*)text 
@@ -151,7 +153,7 @@
   *checkValue = ([confirmCheckPanelCheck state] == NSOnState);
   [confirmCheckPanel close];
 
-  return (result == 1);
+  return result;
 }
 
 - (BOOL)prompt:(NSWindow*)parent title:(NSString*)title text:(NSString*)text promptText:(NSMutableString*)promptText checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue doCheck:(BOOL)doCheck
@@ -185,7 +187,7 @@
 
   [promptPanel close];
 
-  return (result == 1);	
+  return (result == kOKButton);	
 }
 
 - (BOOL)promptUserNameAndPassword:(NSWindow*)parent title:(NSString*)title text:(NSString*)text userNameText:(NSMutableString*)userNameText passwordText:(NSMutableString*)passwordText checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue doCheck:(BOOL)doCheck
@@ -230,7 +232,7 @@
 
   [usernamePanel close];
 
-  return (result == 1);	
+  return (result == kOKButton);	
 }
 
 - (BOOL)promptPassword:(NSWindow*)parent title:(NSString*)title text:(NSString*)text passwordText:(NSMutableString*)passwordText checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue doCheck:(BOOL)doCheck
@@ -264,7 +266,7 @@
 
   [passwordPanel close];
 
-  return (result == 1);	
+  return (result == kOKButton);	
 }
 
 
@@ -273,7 +275,7 @@
   int result = [NSApp runModalForWindow:postToInsecureFromSecurePanel relativeToWindow:parent];
   [postToInsecureFromSecurePanel close];
 
-  return (result == 1);
+  return (result == kOKButton);
 }
 
 
@@ -282,7 +284,7 @@
   int result = [NSApp runModalForWindow:securityMismatchPanel relativeToWindow:parent];
   [securityMismatchPanel close];
 
-  return (result == 1);
+  return (result == kOKButton);
 }
 
 - (BOOL)expiredCert:(NSWindow*)parent
@@ -290,12 +292,14 @@
   int result = [NSApp runModalForWindow:expiredCertPanel relativeToWindow:parent];
   [expiredCertPanel close];
 
-  return (result == 1);
+  return (result == kOKButton);
 }
 
 
 - (int)unknownCert:(NSWindow*)parent
 {
+  // this dialog is a little backward, with "Stop" returning 0, and the default returning
+  // 1. That's just how nsIBadCertListener defines its constants. *shrug*
   int result = [NSApp runModalForWindow:securityUnknownPanel relativeToWindow:parent];
   [securityUnknownPanel close];
 

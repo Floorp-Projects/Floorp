@@ -414,14 +414,14 @@ nsCocoaBrowserService::ConfirmEx(nsIDOMWindow *parent,
   if (checkValue) {
     BOOL valueBool = *checkValue ? YES : NO;
     
-    *buttonPressed = (PRInt32)[controller confirmCheckEx:window title:titleStr text:textStr 
+    *buttonPressed = [controller confirmCheckEx:window title:titleStr text:textStr 
                                button1: btn1Str button2: btn2Str button3: btn3Str
                                checkMsg:msgStr checkValue:&valueBool];
     
     *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
   }
   else {
-    *buttonPressed = (PRInt32)[controller confirmEx:window title:titleStr text:textStr
+    *buttonPressed = [controller confirmEx:window title:titleStr text:textStr
                                button1: btn1Str button2: btn2Str button3: btn3Str];
   }
 
