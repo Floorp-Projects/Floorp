@@ -642,9 +642,9 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     _FreeAutoLockStatics();
 #endif
 
-    NS_PurgeAtomTable();
-    nsMemoryImpl::Shutdown();
     nsThread::Shutdown();
+    nsMemoryImpl::Shutdown();
+    NS_PurgeAtomTable();
 
 #ifdef DEBUG
     nsTraceRefcnt::DumpStatistics();
