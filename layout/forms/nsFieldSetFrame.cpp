@@ -616,10 +616,31 @@ nsFieldSetFrame::RemoveFrame(nsIPresContext* aPresContext,
                      nsIAtom*        aListName,
                      nsIFrame*       aOldFrame)
 {
-  return mContentFrame->RemoveFrame (aPresContext,
-                                     aPresShell,
-                                     aListName,
-                                     aOldFrame);
+  // XXX XXX
+  // XXX temporary fix for bug 70648
+  if (aOldFrame == mLegendFrame) {   
+#ifdef DEBUG
+    nsIFrame* sibling;
+    mContentFrame->GetNextSibling(&sibling);
+    NS_ASSERTION(sibling == mLegendFrame, "legendFrame is not next sibling");
+    nsIFrame* legendParent;
+    mLegendFrame->GetParent(&legendParent);
+    NS_ASSERTION(legendParent == this, "Legend Parent has wrong parent");
+#endif
+    nsIFrame* legendSibling;
+    sibling->GetNextSibling(&legendSibling);
+    // replace the legend, which is the next sibling, with any siblings of the legend (XXX always null?)
+    mContentFrame->SetNextSibling(legendSibling);
+    // OK, the legend is now removed from the sibling list, but who has ownership of it?
+    mLegendFrame->Destroy(aPresContext);
+    mLegendFrame = nsnull;
+    return NS_OK;
+  } else {
+    return mContentFrame->RemoveFrame (aPresContext,
+                                       aPresShell,
+                                       aListName,
+                                       aOldFrame);
+  }
 }
 
 
