@@ -1907,27 +1907,22 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
     return NS_ERROR_FAILURE;
 
   nsresult result;
-  static nsIUnicodeEncoder* converter = nsnull;
+  static nsCOMPtr<nsIUnicodeEncoder> converter;
   static int initialized = 0;
   if (!initialized) {
     initialized = 1;
     result = NS_ERROR_FAILURE;
-    NS_WITH_SERVICE(nsIPlatformCharset, platform, NS_PLATFORMCHARSET_PROGID,
-      &result);
-    if (platform && NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIPlatformCharset> platform = do_GetService(NS_PLATFORMCHARSET_PROGID);
+    if (platform) {
       nsAutoString charset;
-      charset.AssignWithConversion("");
       result = platform->GetCharset(kPlatformCharsetSel_WindowManager, charset);
       if (NS_SUCCEEDED(result) && (charset.Length() > 0)) {
-        NS_WITH_SERVICE(nsICharsetConverterManager, manager,
-                        NS_CHARSETCONVERTERMANAGER_PROGID, &result);
-        if (manager && NS_SUCCEEDED(result)) {
-          result = manager->GetUnicodeEncoder(&charset, &converter);
+        nsCOMPtr<nsICharsetConverterManager> manager = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID);
+        if (manager) {
+          result = manager->GetUnicodeEncoder(&charset, getter_AddRefs(converter));
           if (NS_FAILED(result) && converter) {
-            NS_RELEASE(converter);
             converter = nsnull;
-          }
-          else if (converter) {
+          } else if (converter) {
             result = converter->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
           }
         }
