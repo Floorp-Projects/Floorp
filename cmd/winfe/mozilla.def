@@ -24,8 +24,8 @@ EXPORTS
 ;    ===List your explicitly exported functions here===
         _GET_APPLICATION_PALETTE
         SEC_GetHookTable
-        DISPT_GetDispatchTable
-        DISPT_NumDispatchPoints
+	DISPT_InitializeTable
+	DISPT_LookupSymbol
 
 IMPORTS
 	CTL3DV2.CTL3DREGISTER
