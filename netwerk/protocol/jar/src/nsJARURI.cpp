@@ -335,12 +335,27 @@ nsJARURI::Resolve(const nsACString &relativePath, nsACString &result)
     }
 
     nsCAutoString path(mJAREntry);
-    PRInt32 pos = path.RFind("/");
-    if (pos >= 0)
-        path.Truncate(pos + 1);
-    else
-        path = "";
+    PRInt32 pos = 0;
 
+    char first = relativePath.Length() > 0 ? relativePath.First() : '#';
+
+    switch (first) {
+    case '/':
+        path = "";
+        break;
+    case '?':
+    case '#':
+        pos = path.RFindChar(first);
+        if (pos >= 0)
+            path.Truncate(pos);
+        break;
+    default:
+        pos = path.RFindChar('/');
+        if (pos >= 0)
+            path.Truncate(pos + 1);
+        else
+            path = "";
+    }
     nsCAutoString resolvedEntry;
     rv = net_ResolveRelativePath(relativePath, path,
                                  resolvedEntry);
