@@ -63,8 +63,8 @@
 ## + All the other unices
 ##
 #
-cmdname=`basename $0`
-MOZ_DIST_BIN=`dirname $0`
+cmdname=`basename "$0"`
+MOZ_DIST_BIN=`dirname "$0"`
 MOZ_DEFAULT_NAME="./${cmdname}-bin"
 MOZ_APPRUNNER_NAME="./mozilla-bin"
 MOZ_VIEWER_NAME="./viewer"
@@ -191,7 +191,7 @@ moz_run_program()
 	##
 	## Run the program
 	##
-	$prog ${1+"$@"}
+	"$prog" ${1+"$@"}
 	exitcode=$?
 	if [ "$DEBUG_CORE_FILES" ]
 	then
@@ -217,7 +217,7 @@ moz_run_program()
 				# For why LD_BIND_NOW is needed
 				LD_BIND_NOW=1; export LD_BIND_NOW
 
-				$debugger $prog core
+				$debugger "$prog" core
 			else
 				echo "Could not find a debugger on your system."
 			fi
@@ -254,15 +254,15 @@ moz_debug_program()
 # over to the prog then add that here- Gagan Saksena 03/15/00
         case `basename $debugger` in
             gdb) echo "$debugger $prog -x /tmp/mozargs$$"
-                $debugger $prog -x /tmp/mozargs$$
+                $debugger "$prog" -x /tmp/mozargs$$
 		exitcode=$?
                 ;;
             ddd) echo "$debugger --debugger \"gdb -x /tmp/mozargs$$\" $prog"
-                $debugger --debugger "gdb -x /tmp/mozargs$$" $prog
+                $debugger --debugger "gdb -x /tmp/mozargs$$" "$prog"
 		exitcode=$?
                 ;;
             *) echo "$debugger $prog ${1+"$@"}"
-                $debugger $prog ${1+"$@"}
+                $debugger "$prog" ${1+"$@"}
 		exitcode=$?
                 ;;
         esac
