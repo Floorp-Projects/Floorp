@@ -75,6 +75,8 @@ public:
                               void              * menuNode,
                               void              * aWebShell);
   nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
+
+  static GtkWidget* CreateLocalized(const nsString& aLabel);
  
 protected:
   nsIWidget    *GetMenuBarParent(nsISupports * aParentSupports);
