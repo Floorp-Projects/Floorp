@@ -40,7 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
 #include "nsIContentSink.h"
-#include "nsICSSParser.h"
+#include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIDOMNode.h"
 #include "nsIDocument.h"
@@ -70,6 +70,7 @@
 #include "prmem.h"
 #include "rdfutil.h"
 #include "nsIXULChildDocument.h"
+#include "nsIHTMLContentContainer.h"
 
 #include "nsHTMLTokens.h" // XXX so we can use nsIParserNode::GetTokenType()
 
@@ -107,8 +108,8 @@ static NS_DEFINE_IID(kIRDFServiceIID,          NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kISupportsIID,            NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIXMLContentSinkIID,      NS_IXMLCONTENT_SINK_IID);
 static NS_DEFINE_IID(kIXULContentSinkIID,      NS_IXULCONTENTSINK_IID);
+static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 
-static NS_DEFINE_CID(kCSSParserCID,             NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,     NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
@@ -222,19 +223,10 @@ protected:
 
 
     // Style sheets
-    nsresult
-    LoadStyleSheet(nsIURL* aURL,
-                   nsIUnicharInputStream* aUIN,
-                   PRBool aActive,
-                   const nsString& aTitle,
-                   const nsString& aMedia,
-                   nsIContent* aOwner); 
-
-    static void
-    DoneLoadingStyle(nsIUnicharStreamLoader* aLoader,
-                     nsString& aData,
-                     void* aRef,
-                     nsresult aStatus);
+    nsresult ProcessStyleLink(nsIContent* aElement,
+                              const nsString& aHref, PRBool aAlternate,
+                              const nsString& aTitle, const nsString& aType,
+                              const nsString& aMedia);
     
     // Miscellaneous RDF junk
     nsIRDFDataSource*      mDataSource;
@@ -248,6 +240,7 @@ protected:
     nsVoidArray* mContextStack;
 
     nsIURL*      mDocumentURL;
+    nsIURL*      mDocumentBaseURL;
 
     PRBool       mHaveSetRootResource;
 
@@ -256,6 +249,9 @@ protected:
     
     nsIRDFResource*  mFragmentRoot;
 
+    nsString      mPreferredStyle;
+    PRInt32       mStyleSheetCount;
+    nsICSSLoader* mCSSLoader;
 };
 
 nsrefcnt             XULContentSinkImpl::gRefCnt = 0;
@@ -270,6 +266,7 @@ nsIRDFResource*      XULContentSinkImpl::kXUL_element;
 
 XULContentSinkImpl::XULContentSinkImpl()
     : mDocumentURL(nsnull),
+      mDocumentBaseURL(nsnull),
       mDataSource(nsnull),
       mContextStack(nsnull),
       mText(nsnull),
@@ -279,7 +276,9 @@ XULContentSinkImpl::XULContentSinkImpl()
       mHaveSetRootResource(PR_FALSE),
       mDocument(nsnull),
       mParser(nsnull),
-      mFragmentRoot(nsnull)
+      mFragmentRoot(nsnull),
+      mStyleSheetCount(0),
+      mCSSLoader(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -401,6 +400,7 @@ XULContentSinkImpl::~XULContentSinkImpl()
 
     NS_IF_RELEASE(mNameSpaceManager);
     NS_IF_RELEASE(mDocumentURL);
+    NS_IF_RELEASE(mDocumentBaseURL);
     NS_IF_RELEASE(mDataSource);
     NS_IF_RELEASE(mDocument);
     NS_IF_RELEASE(mParser);
@@ -701,92 +701,84 @@ XULContentSinkImpl::AddComment(const nsIParserNode& aNode)
     return result;
 }
 
-nsresult
-XULContentSinkImpl::LoadStyleSheet(nsIURL* aURL,
-                                   nsIUnicharInputStream* aUIN,
-                                   PRBool aActive,
-                                   const nsString& aTitle,
-                                   const nsString& aMedia,
-                                   nsIContent* aOwner)
+static void SplitMimeType(const nsString& aValue, nsString& aType, nsString& aParams)
 {
-    nsresult rv;
-    nsCOMPtr<nsICSSParser> parser;
-    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kCSSParserCID,
-                                                    nsnull,
-                                                    nsICSSParser::GetIID(),
-                                                    (void**) getter_AddRefs(parser)))) {
-        NS_ERROR("unable to create CSS parser");
-        return rv;
-    }
-
-    nsCOMPtr<nsICSSStyleSheet> sheet;
-
-    // XXX note: we are ignoring rv until the error code stuff in the
-    // input routines is converted to use nsresult's
-    parser->SetCaseSensitive(PR_TRUE);
-    parser->Parse(aUIN, aURL, *getter_AddRefs(sheet));
-
-    if (! sheet)
-        return NS_ERROR_OUT_OF_MEMORY; // XXX
-
-    sheet->SetTitle(aTitle);
-    sheet->SetEnabled(aActive);
-    mDocument->AddStyleSheet(sheet);
-
-    if (nsnull != aOwner) {
-        nsIDOMNode* domNode;
-        if (NS_SUCCEEDED(aOwner->QueryInterface(nsIDOMNode::GetIID(), (void**)&domNode))) {
-            sheet->SetOwningNode(domNode);
-            NS_RELEASE(domNode);
-        }
-    }
-
-    return NS_OK;
+  aType.Truncate();
+  aParams.Truncate();
+  PRInt32 semiIndex = aValue.Find(PRUnichar(';'));
+  if (-1 != semiIndex) {
+    aValue.Left(aType, semiIndex);
+    aValue.Right(aParams, (aValue.Length() - semiIndex) - 1);
+  }
+  else {
+    aType = aValue;
+  }
 }
 
-struct AsyncStyleProcessingData {
-    nsString            mTitle;
-    nsString            mMedia;
-    PRBool              mIsActive;
-    nsIURL*             mURL;
-    nsIContent*         mElement;
-    XULContentSinkImpl* mSink;
-};
-
-void
-XULContentSinkImpl::DoneLoadingStyle(nsIUnicharStreamLoader* aLoader,
-                                     nsString& aData,
-                                     void* aRef,
-                                     nsresult aStatus)
+nsresult
+XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
+                                     const nsString& aHref, PRBool aAlternate,
+                                     const nsString& aTitle, const nsString& aType,
+                                     const nsString& aMedia)
 {
-    nsresult rv = NS_OK;
-    AsyncStyleProcessingData* d = (AsyncStyleProcessingData*)aRef;
-    nsIUnicharInputStream* uin = nsnull;
+  static const char kCSSType[] = "text/css";
 
-    if ((NS_OK == aStatus) && (0 < aData.Length())) {
-        // wrap the string with the CSS data up in a unicode
-        // input stream.
-        rv = NS_NewStringUnicharInputStream(&uin, new nsString(aData));
-        if (NS_OK == rv) {
-            // XXX We have no way of indicating failure. Silently fail?
-            rv = d->mSink->LoadStyleSheet(d->mURL, uin, d->mIsActive, 
-                                          d->mTitle, d->mMedia, d->mElement);
-            NS_RELEASE(uin);
+  nsresult result = NS_OK;
+
+  if (aAlternate) { // if alternate, does it have title?
+    if (0 == aTitle.Length()) { // alternates must have title
+      return NS_OK; //return without error, for now
+    }
+  }
+
+  nsAutoString  mimeType;
+  nsAutoString  params;
+  SplitMimeType(aType, mimeType, params);
+
+  if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase(kCSSType)) {
+    nsIURL* url = nsnull;
+    nsIURLGroup* urlGroup = nsnull;
+    mDocumentBaseURL->GetURLGroup(&urlGroup);
+    if (urlGroup) {
+      result = urlGroup->CreateURL(&url, mDocumentBaseURL, aHref, nsnull);
+      NS_RELEASE(urlGroup);
+    }
+    else {
+      result = NS_NewURL(&url, aHref, mDocumentBaseURL);
+    }
+    if (NS_OK != result) {
+      return NS_OK; // The URL is bad, move along, don't propogate the error (for now)
+    }
+
+    PRBool blockParser = PR_FALSE;
+    if (! aAlternate) {
+      if (0 < aTitle.Length()) {  // possibly preferred sheet
+        if (0 == mPreferredStyle.Length()) {
+          mPreferredStyle = aTitle;
+          mCSSLoader->SetPreferredSheet(aTitle);
+          nsIAtom* defaultStyle = NS_NewAtom("default-style");
+          if (defaultStyle) {
+            mDocument->SetHeaderData(defaultStyle, aTitle);
+            NS_RELEASE(defaultStyle);
+          }
         }
-    }
-    
-    if (d->mSink->mParser) {
-        d->mSink->mParser->EnableParser(PR_TRUE);
+      }
+      else {  // persistent sheet, block
+        blockParser = PR_TRUE;
+      }
     }
 
-    NS_RELEASE(d->mURL);
-    NS_IF_RELEASE(d->mElement);
-    NS_RELEASE(d->mSink);
-    delete d;
-
-    // We added a reference when the loader was created. This
-    // release should destroy it.
-    NS_RELEASE(aLoader);
+    PRBool doneLoading;
+    result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia,
+                                       mStyleSheetCount++, 
+                                       ((blockParser) ? mParser : nsnull),
+                                       doneLoading);
+    NS_RELEASE(url);
+    if (NS_SUCCEEDED(result) && blockParser && (! doneLoading)) {
+      result = NS_ERROR_HTMLPARSER_BLOCK;
+    }
+  }
+  return result;
 }
 
 
@@ -795,7 +787,6 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
 {
 
     static const char kStyleSheetPI[] = "<?xml-stylesheet";
-    static const char kCSSType[] = "text/css";
 
     nsresult rv;
     FlushText();
@@ -832,54 +823,15 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
         if (NS_FAILED(rv =  nsRDFParserUtils::GetQuotedAttributeValue(text, "media", media)))
             return rv;
 
-        media.ToUpperCase();
+        media.ToLowerCase();
 
-        if (type.Equals(kCSSType)) {
-            // Use the SRC attribute value to load the URL
-            nsCOMPtr<nsIURL> url;
-            nsAutoString absURL;
+        nsAutoString alternate;
+        if (NS_FAILED(rv =  nsRDFParserUtils::GetQuotedAttributeValue(text, "alternate", alternate)))
+            return rv;
 
-            nsCOMPtr<nsIURLGroup> urlGroup; 
-            if (NS_SUCCEEDED(rv = mDocumentURL->GetURLGroup(getter_AddRefs(urlGroup)))) {
-                if (NS_FAILED(rv = urlGroup->CreateURL(getter_AddRefs(url),
-                                                       mDocumentURL,
-                                                       href,
-                                                       nsnull))) {
-                    NS_ERROR("unable to create URL for style sheet");
-                    return rv;
-                }
-            }
-            else {
-                if (NS_FAILED(rv = NS_NewURL(getter_AddRefs(url), absURL))) {
-                    NS_ERROR("unable to create URL for style sheet");
-                    return rv;
-                }
-            }
-
-            AsyncStyleProcessingData* d = new AsyncStyleProcessingData;
-            if (! d)
-                return NS_ERROR_OUT_OF_MEMORY;
-
-            d->mTitle=title;
-            d->mMedia=media;
-            d->mIsActive = PR_TRUE;
-            d->mURL      = url;
-            NS_ADDREF(d->mURL);
-            // XXX Need to create PI node
-            d->mElement  = nsnull;
-            d->mSink     = this;
-            NS_ADDREF(this);
-
-            nsIUnicharStreamLoader* loader;
-            if (NS_FAILED(rv = NS_NewUnicharStreamLoader(&loader,
-                                                         url, 
-                                                         (nsStreamCompleteFunc)DoneLoadingStyle, 
-                                                         (void *)d))) {
-                return rv;
-            }
-
-            return NS_ERROR_HTMLPARSER_BLOCK;
-        }
+        return ProcessStyleLink(nsnull /* XXX need a node here */,
+                                href, alternate.Equals("yes"),  /* XXX ignore case? */
+                                title, type, media);
     }
 
     return NS_OK;
@@ -1048,6 +1000,8 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIRDFDataSource* aDataSource)
 
     NS_IF_RELEASE(mDocumentURL);
     mDocumentURL = mDocument->GetDocumentURL();
+    NS_IF_RELEASE(mDocumentBaseURL);
+    mDocumentBaseURL = mDocument->GetDocumentURL(); // base URL can be reset by HTTP header
 
     if (NS_FAILED(rv = mDocument->GetNameSpaceManager(mNameSpaceManager))) {
         NS_ERROR("unable to get document namespace manager");
@@ -1060,6 +1014,21 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIRDFDataSource* aDataSource)
         rv = mNameSpaceManager->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XUL namespace");
     }
+
+    // XXX this presumes HTTP header info is already set in document
+    // XXX if it isn't we need to set it here...
+    nsIAtom* defaultStyle = NS_NewAtom("default-style");
+    if (defaultStyle) {
+      mDocument->GetHeaderData(defaultStyle, mPreferredStyle);
+      NS_RELEASE(defaultStyle);
+    }
+
+    nsIHTMLContentContainer* htmlContainer = nsnull;
+    if (NS_SUCCEEDED(mDocument->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer))) {
+      htmlContainer->GetCSSLoader(mCSSLoader);
+      NS_RELEASE(htmlContainer);
+    }
+
 
     mState = eXULContentSinkState_InProlog;
 
@@ -1421,7 +1390,11 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
         else if (key.EqualsIgnoreCase("type")) {
             nsAutoString  type(aNode.GetValueAt(i));
             nsRDFParserUtils::StripAndConvert(type);
-            isJavaScript = type.EqualsIgnoreCase("text/javascript");
+            nsAutoString  mimeType;
+            nsAutoString  params;
+            SplitMimeType(type, mimeType, params);
+
+            isJavaScript = mimeType.EqualsIgnoreCase("text/javascript");
         }
         else if (key.EqualsIgnoreCase("language")) {
             nsAutoString  lang(aNode.GetValueAt(i));
@@ -1441,10 +1414,10 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
             nsAutoString absURL;
             nsIURLGroup* urlGroup;
 
-            rv = mDocumentURL->GetURLGroup(&urlGroup);
+            rv = mDocumentBaseURL->GetURLGroup(&urlGroup);
       
             if ((NS_OK == rv) && urlGroup) {
-                rv = urlGroup->CreateURL(&url, mDocumentURL, src, nsnull);
+                rv = urlGroup->CreateURL(&url, mDocumentBaseURL, src, nsnull);
                 NS_RELEASE(urlGroup);
             }
             else {
