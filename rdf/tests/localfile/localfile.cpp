@@ -172,7 +172,7 @@ main(int argc, char** argv)
 
     // XXX This is really gross. I need to figure out the right way to do it...
     for (i = 0; i < 1000000; ++i) {
-		PLEvent* event = PL_GetEvent(mainQueue);
+        PLEvent* event = PL_GetEvent(mainQueue);
         PL_HandleEvent(event);
     }
 
