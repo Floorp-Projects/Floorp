@@ -35,7 +35,7 @@
  * Types for encoding/decoding of ASN.1 using BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1t.h,v 1.2 2001/01/07 08:13:12 nelsonb%netscape.com Exp $
+ * $Id: secasn1t.h,v 1.3 2001/01/07 09:21:25 nelsonb%netscape.com Exp $
  */
 
 #ifndef _SECASN1T_H_
@@ -207,7 +207,7 @@ static const SEC_ASN1TemplateChooserPtr p_NSS_Get_##x = &NSS_Get_##x;
 #endif
 
 #define SEC_ASN1_CHOOSER_DECLARE(x) \
-extern SEC_ASN1TemplateChooser NSS_Get_##x;
+extern const SEC_ASN1Template * NSS_Get_##x (void *arg, PRBool enc);
 
 #define SEC_ASN1_CHOOSER_IMPLEMENT(x) \
 const SEC_ASN1Template * NSS_Get_##x(void * arg, PRBool enc) \
