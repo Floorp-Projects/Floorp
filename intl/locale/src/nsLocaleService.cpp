@@ -219,7 +219,7 @@ nsLocaleService::nsLocaleService(void)
     nsresult result = nsComponentManager::CreateInstance(kPosixLocaleFactoryCID,
                            NULL,kIPosixLocaleIID,(void**)&posixConverter);
     if (NS_SUCCEEDED(result) && posixConverter!=nsnull) {
-        char* lc_all = setlocale(LC_ALL,NULL);
+        char* lc_all = setlocale(LC_ALL,"");
         char* lang = getenv("LANG");
 
         if (lc_all!=nsnull) {

@@ -256,7 +256,7 @@ nsLocaleFactory::GetSystemLocale(nsILocale** systemLocale)
 	
 #elif defined(XP_UNIX)
  
-  char* lc_all = setlocale(LC_ALL,NULL);
+  char* lc_all = setlocale(LC_ALL,"");
   char* lc_temp;
   char* tempvalue;
   char* lang = getenv("LANG");
