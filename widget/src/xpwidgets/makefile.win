@@ -29,6 +29,7 @@ CPPSRCS = \
 	nsBaseClipboard.cpp         \
 	nsTransferable.cpp         \
 	nsXIFFormatConverter.cpp         \
+	nsPrimitiveHelpers.cpp         \
 	$(NULL)
 
 MODULE=raptor 
@@ -40,6 +41,7 @@ OBJS= \
 	.\$(OBJDIR)\nsBaseClipboard.obj  \
 	.\$(OBJDIR)\nsTransferable.obj  \
 	.\$(OBJDIR)\nsXIFFormatConverter.obj  \
+	.\$(OBJDIR)\nsPrimitiveHelpers.obj  \
 	$(NULL)
 
 LINCS=                                  \
