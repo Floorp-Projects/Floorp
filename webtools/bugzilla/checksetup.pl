@@ -3702,7 +3702,7 @@ if (!$series_exists) {
         }
         
         # The query for statuses is different to that for resolutions.
-        $queries{$_} = ($query_prod . "status=$_") foreach (@statuses);
+        $queries{$_} = ($query_prod . "bug_status=$_") foreach (@statuses);
         $queries{$_} = ($query_prod . "resolution=$_") foreach (@resolutions);
         
         foreach my $field (@fields) {            
