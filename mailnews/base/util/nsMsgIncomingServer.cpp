@@ -30,7 +30,8 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 nsMsgIncomingServer::nsMsgIncomingServer():
     m_prefs(0),
-    m_serverKey(0)
+    m_serverKey(0),
+    m_rootFolder(0)
 {
   NS_INIT_REFCNT();
 }
@@ -76,8 +77,12 @@ nsMsgIncomingServer::GetRootFolder(nsIFolder * *aRootFolder)
 {
 	if (!aRootFolder)
 		return NS_ERROR_NULL_POINTER;
-	*aRootFolder = m_rootFolder;
-	NS_ADDREF(*aRootFolder);
+    if (m_rootFolder) {
+      *aRootFolder = m_rootFolder;
+      NS_ADDREF(*aRootFolder);
+    } else {
+      *aRootFolder = nsnull;
+    }
 	return NS_OK;
 }
     
@@ -119,6 +124,10 @@ nsMsgIncomingServer::getDefaultBoolPref(const char *prefname,
   nsresult rv = m_prefs->GetBoolPref(fullPrefName, val);
   PR_Free(fullPrefName);
 
+  if (NS_FAILED(rv)) {
+    *val = PR_FALSE;
+    rv = NS_OK;
+  }
   return rv;
 }
 
@@ -165,6 +174,11 @@ nsMsgIncomingServer::getDefaultIntPref(const char *prefname,
   nsresult rv = m_prefs->GetIntPref(fullPrefName, val);
   PR_Free(fullPrefName);
 
+  if (NS_FAILED(rv)) {
+    *val = 0;
+    rv = NS_OK;
+  }
+  
   return rv;
 }
 
@@ -210,6 +224,10 @@ nsMsgIncomingServer::getDefaultCharPref(const char *prefname,
   nsresult rv = m_prefs->CopyCharPref(fullPrefName, val);
   PR_Free(fullPrefName);
 
+  if (NS_FAILED(rv)) {
+    *val = nsnull;
+    rv = NS_OK;
+  }
   return rv;
 }
 
