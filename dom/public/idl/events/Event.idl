@@ -3,17 +3,17 @@
   { 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0x8a, 0xdd, 0x32 } } */
 
 
-		const unsigned short	BUBBLING_PHASE	= 1;
-		const unsigned short	CAPTURING_PHASE = 2;
-		const unsigned short	AT_TARGET		= 3;
+		    const unsigned short	BUBBLING_PHASE	= 1;
+		    const unsigned short	CAPTURING_PHASE = 2;
+		    const unsigned short	AT_TARGET		= 3;
 
 	      readonly  attribute   wstring	        type;
 	      readonly  attribute   Node	        target;
 	      readonly  attribute   Node	        currentNode;
 	      readonly  attribute   unsigned short	eventPhase;
 
-		void					preventBubble();
-		void					preventCapture();
-		void					preventDefault();
+		    void					preventBubble();
+		    void					preventCapture();
+		    void					preventDefault();
       };
 

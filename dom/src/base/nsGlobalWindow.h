@@ -28,11 +28,11 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMNavigator.h"
 #include "nsIDOMLocation.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIDOMNSLocation.h"
 #include "nsIDOMScreen.h"
 #include "nsITimer.h"
 #include "nsIJSScriptObject.h"
-#include "nsIDOMEventCapturer.h"
 #include "nsGUIEvent.h"
 #include "nsFrameList.h"
 #include "nsIScriptGlobalObjectData.h"
@@ -64,7 +64,7 @@ class HistoryImpl;
 
 // Global object for scripting
 class GlobalWindowImpl : public nsIScriptObjectOwner, public nsIScriptGlobalObject, public nsIDOMWindow, 
-                         public nsIJSScriptObject, public nsIDOMEventCapturer, public nsIScriptGlobalObjectData
+                         public nsIJSScriptObject, public nsIScriptGlobalObjectData, public nsIDOMEventReceiver
 {
 public:
   GlobalWindowImpl();
@@ -169,15 +169,17 @@ public:
   NS_IMETHOD    OpenDialog(JSContext *cx, jsval *argv, PRUint32 argc, 
                             nsIDOMWindow** aReturn);
 
+  NS_IMETHOD    CaptureEvents(PRInt32 aEventFlags);
+  NS_IMETHOD    ReleaseEvents(PRInt32 aEventFlags);
+  NS_IMETHOD    RouteEvent(nsIDOMEvent* aEvt);
+  NS_IMETHOD    EnableExternalCapture();
+  NS_IMETHOD    DisableExternalCapture();
+
   NS_IMETHOD    CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
                             PRInt32 aXPos, PRInt32 aYPos, 
                             const nsString& aPopupType, const nsString& anAnchorAlignment,
                             const nsString& aPopupAlignment, nsIDOMWindow** outPopup);
   
-  // nsIDOMEventCapturer interface
-  NS_IMETHOD    CaptureEvent(const nsString& aType);
-  NS_IMETHOD    ReleaseEvent(const nsString& aType);
-
   // nsIDOMEventReceiver interface
   NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
   NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);

@@ -417,7 +417,6 @@ NS_IMPL_ADDREF(nsRangeListIterator)
 
 NS_IMPL_RELEASE(nsRangeListIterator)
 
-
 NS_IMETHODIMP 
 nsRangeListIterator::CurrentItem(nsIDOMRange **aItem)
 {
@@ -742,12 +741,12 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
     nsKeyEvent *keyEvent = (nsKeyEvent *)aGuiEvent; //this is ok. It really is a keyevent
     switch (keyEvent->keyCode)
     {
-        case nsIDOMUIEvent::VK_LEFT  : 
-        case nsIDOMUIEvent::VK_UP    :
-        case nsIDOMUIEvent::VK_DOWN  : 
-        case nsIDOMUIEvent::VK_RIGHT    :
-        case nsIDOMUIEvent::VK_HOME  : 
-        case nsIDOMUIEvent::VK_END    :
+        case nsIDOMUIEvent::DOM_VK_LEFT  : 
+        case nsIDOMUIEvent::DOM_VK_UP    :
+        case nsIDOMUIEvent::DOM_VK_DOWN  : 
+        case nsIDOMUIEvent::DOM_VK_RIGHT    :
+        case nsIDOMUIEvent::DOM_VK_HOME  : 
+        case nsIDOMUIEvent::DOM_VK_END    :
           break;
         default:
            return NS_ERROR_FAILURE;
@@ -764,7 +763,7 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
     result = mDomSelections[SELECTION_NORMAL]->GetIsCollapsed(&isCollapsed);
     if (NS_FAILED(result))
       return result;
-    if (keyEvent->keyCode == nsIDOMUIEvent::VK_UP || keyEvent->keyCode == nsIDOMUIEvent::VK_DOWN)
+    if (keyEvent->keyCode == nsIDOMUIEvent::DOM_VK_UP || keyEvent->keyCode == nsIDOMUIEvent::DOM_VK_DOWN)
     {
       desiredX= FetchDesiredX();
       SetDesiredX(desiredX);
@@ -772,8 +771,8 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
 
     if (!isCollapsed && !keyEvent->isShift) {
       switch (keyEvent->keyCode){
-        case nsIDOMUIEvent::VK_LEFT  : 
-        case nsIDOMUIEvent::VK_UP    : {
+        case nsIDOMUIEvent::DOM_VK_LEFT  : 
+        case nsIDOMUIEvent::DOM_VK_UP    : {
             if ((mDomSelections[SELECTION_NORMAL]->GetDirection() == eDirPrevious)) { //f,a
               offsetused = mDomSelections[SELECTION_NORMAL]->FetchFocusOffset();
               weakNodeUsed = mDomSelections[SELECTION_NORMAL]->FetchFocusNode();
@@ -785,8 +784,8 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
             result = mDomSelections[SELECTION_NORMAL]->Collapse(weakNodeUsed,offsetused);
 
            } break;
-        case nsIDOMUIEvent::VK_RIGHT : 
-        case nsIDOMUIEvent::VK_DOWN  : {
+        case nsIDOMUIEvent::DOM_VK_RIGHT : 
+        case nsIDOMUIEvent::DOM_VK_DOWN  : {
             if ((mDomSelections[SELECTION_NORMAL]->GetDirection() == eDirPrevious)) { //f,a
               offsetused = mDomSelections[SELECTION_NORMAL]->FetchAnchorOffset();
               weakNodeUsed = mDomSelections[SELECTION_NORMAL]->FetchAnchorNode();
@@ -799,7 +798,7 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
            } break;
         
       }
-      if (keyEvent->keyCode == nsIDOMUIEvent::VK_UP || keyEvent->keyCode == nsIDOMUIEvent::VK_DOWN)
+      if (keyEvent->keyCode == nsIDOMUIEvent::DOM_VK_UP || keyEvent->keyCode == nsIDOMUIEvent::DOM_VK_DOWN)
         SetDesiredX(desiredX);
       return NS_OK;
     }
@@ -814,23 +813,23 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
     pos.SetData(mTracker, desiredX, amount, eDirPrevious, offsetused, PR_FALSE,PR_TRUE);
     mHint = HINTRIGHT;//stick to opposite of movement
     switch (keyEvent->keyCode){
-      case nsIDOMUIEvent::VK_RIGHT : 
+      case nsIDOMUIEvent::DOM_VK_RIGHT : 
           pos.mDirection = eDirNext;
           mHint = HINTLEFT;//stick to this line
-      case nsIDOMUIEvent::VK_LEFT  : //no break
+      case nsIDOMUIEvent::DOM_VK_LEFT  : //no break
           InvalidateDesiredX();
         break;
-      case nsIDOMUIEvent::VK_DOWN : 
+      case nsIDOMUIEvent::DOM_VK_DOWN : 
           pos.mDirection = eDirNext;//no break here
           mHint = HINTLEFT;//stick to this line
-      case nsIDOMUIEvent::VK_UP : 
+      case nsIDOMUIEvent::DOM_VK_UP : 
           pos.mAmount = eSelectLine;
         break;
-      case nsIDOMUIEvent::VK_HOME :
+      case nsIDOMUIEvent::DOM_VK_HOME :
           pos.mAmount = eSelectBeginLine;
           InvalidateDesiredX();
         break;
-      case nsIDOMUIEvent::VK_END :
+      case nsIDOMUIEvent::DOM_VK_END :
           pos.mAmount = eSelectEndLine;
           InvalidateDesiredX();
           mHint = HINTLEFT;//stick to this line

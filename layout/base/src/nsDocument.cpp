@@ -89,7 +89,6 @@ static NS_DEFINE_IID(kIDOMNSDocumentIID, NS_IDOMNSDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
 static NS_DEFINE_IID(kIDOMAttrIID, NS_IDOMATTR_IID);
 static NS_DEFINE_IID(kIScriptEventListenerIID, NS_ISCRIPTEVENTLISTENER_IID);
-static NS_DEFINE_IID(kIDOMEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIPostDataIID, NS_IPOSTDATA_IID);
@@ -766,12 +765,6 @@ nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIJSScriptObjectIID)) {
     nsIJSScriptObject* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIDOMEventCapturerIID)) {
-    nsIDOMEventCapturer* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -2424,27 +2417,6 @@ nsresult nsDocument::RemoveEventListener(const nsString& aType, nsIDOMEventListe
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsDocument::CaptureEvent(const nsString& aType)
-{
-  nsIEventListenerManager *mManager;
-
-  if (NS_OK == GetListenerManager(&mManager)) {
-    //mManager->CaptureEvent(aListener);
-    NS_RELEASE(mManager);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-nsresult nsDocument::ReleaseEvent(const nsString& aType)
-{
-  if (nsnull != mListenerManager) {
-    //mListenerManager->ReleaseEvent(aListener);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
 PRBool    nsDocument::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
   return PR_TRUE;
@@ -2664,6 +2636,7 @@ void nsDocument::FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNod
     NS_RELEASE(content);
   }
 }
+
 
 NS_IMETHODIMP
 nsDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)

@@ -24,10 +24,10 @@
 #include "nsVoidArray.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNSDocument.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIDiskDocument.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptContextOwner.h"
-#include "nsIDOMEventCapturer.h"
 #include "nsIDOMEventTarget.h"
 #include "nsXIFConverter.h"
 #include "nsIJSScriptObject.h"
@@ -107,9 +107,9 @@ class nsDocument : public nsIDocument,
                    public nsIDOMNSDocument,
                    public nsIDiskDocument,
                    public nsIScriptObjectOwner, 
-                   public nsIDOMEventCapturer, 
                    public nsIJSScriptObject,
-                   public nsSupportsWeakReference
+                   public nsSupportsWeakReference,
+                   public nsIDOMEventReceiver
 {
 public:
   NS_DECL_ISUPPORTS
@@ -356,10 +356,6 @@ public:
   NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
   NS_IMETHOD    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn);
   NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
-
-  // nsIDOMEventCapturer interface
-  NS_IMETHOD    CaptureEvent(const nsString& aType);
-  NS_IMETHOD    ReleaseEvent(const nsString& aType);
 
   // nsIDOMEventReceiver interface
   NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);

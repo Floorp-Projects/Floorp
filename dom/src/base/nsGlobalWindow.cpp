@@ -101,7 +101,6 @@ static NS_DEFINE_IID(kIDOMDragListenerIID, NS_IDOMDRAGLISTENER_IID);
 static NS_DEFINE_IID(kIDOMPaintListenerIID, NS_IDOMPAINTLISTENER_IID);
 static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
-static NS_DEFINE_IID(kIDOMEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIDOMEventTargetIID, NS_IDOMEVENTTARGET_IID);
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
@@ -205,11 +204,6 @@ GlobalWindowImpl::QueryInterface(const nsIID& aIID,
   }
   if (aIID.Equals(kIJSScriptObjectIID)) {
     *aInstancePtrResult = (void*)(nsISupports*)(nsIJSScriptObject*)this;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIDOMEventCapturerIID)) {
-    *aInstancePtrResult = (void*)(nsISupports*)(nsIDOMEventCapturer*)this;
     AddRef();
     return NS_OK;
   }
@@ -1981,6 +1975,7 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
   JSString* str;
   char* options;
   *aReturn = nsnull;
+  PRBool nameSpecified = PR_FALSE;
 
   if (argc > 0) {
     JSString *mJSStrURL = JS_ValueToString(cx, argv[0]);
@@ -2023,14 +2018,12 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
       return NS_ERROR_FAILURE;
     }
     name.SetString(JS_GetStringChars(mJSStrName));
+    nameSpecified = PR_TRUE;
 
     if (NS_OK != CheckWindowName(cx, name)) {
       return NS_ERROR_FAILURE;
     }
   } 
-  else {
-    name.SetString("");
-  }
 
   options = nsnull;
   if (argc > 2) {
@@ -2057,7 +2050,9 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
     // Check for existing window of same name.
     windowIsNew = PR_FALSE;
     windowIsModal = PR_FALSE;
-    webShellContainer->FindWebShellWithName(name.GetUnicode(), newOuterShell);
+    if (nameSpecified) {
+      webShellContainer->FindWebShellWithName(name.GetUnicode(), newOuterShell);
+    }
     if (nsnull == newOuterShell) {
       windowIsNew = PR_TRUE;
       if (chromeFlags & NS_CHROME_MODAL) {
@@ -2089,7 +2084,12 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
           return NS_ERROR_FAILURE;
         }
 
-        newOuterShell->SetName(name.GetUnicode());
+        if (nameSpecified) {
+          newOuterShell->SetName(name.GetUnicode());
+        }
+        else {
+          newOuterShell->SetName(nsnull);
+        }
         newOuterShell->LoadURL(mAbsURL.GetUnicode());
         SizeAndShowOpenedWebShell(newOuterShell, options, windowIsNew, aDialog);
         if (windowIsModal) {
@@ -2787,15 +2787,15 @@ GlobalWindowImpl::GetListenerManager(nsIEventListenerManager **aInstancePtrResul
     return mListenerManager->QueryInterface(kIEventListenerManagerIID, (void**) aInstancePtrResult);;
   }
   //This is gonna get ugly.  Can't use NS_NewEventListenerManager because of a circular link problem.
-  nsIDOMEventCapturer *mDoc;
-  if (nsnull != mDocument && NS_OK == mDocument->QueryInterface(kIDOMEventCapturerIID, (void**)&mDoc)) {
-    if (NS_OK == mDoc->GetNewListenerManager(aInstancePtrResult)) {
+  nsIDOMEventReceiver *doc = nsnull;
+  if (nsnull != mDocument && NS_OK == mDocument->QueryInterface(kIDOMEventReceiverIID, (void**)&doc)) {
+    if (NS_OK == doc->GetNewListenerManager(aInstancePtrResult)) {
       mListenerManager = *aInstancePtrResult;
       NS_ADDREF(mListenerManager);
-      NS_RELEASE(mDoc);
+      NS_RELEASE(doc);
       return NS_OK;
     }
-    NS_IF_RELEASE(mDoc);
+    NS_IF_RELEASE(doc);
   }
   return NS_ERROR_FAILURE;
 }
@@ -2918,25 +2918,44 @@ GlobalWindowImpl::RemoveEventListener(const nsString& aType, nsIDOMEventListener
 }
 
 nsresult 
-GlobalWindowImpl::CaptureEvent(const nsString& aType)
+GlobalWindowImpl::CaptureEvents(PRInt32 aEventFlags)
 {
-  nsIEventListenerManager *mManager;
+  nsIEventListenerManager *manager;
 
-  if (NS_OK == GetListenerManager(&mManager)) {
+  if (NS_OK == GetListenerManager(&manager)) {
     //mManager->CaptureEvent(aListener);
-    NS_RELEASE(mManager);
+    NS_RELEASE(manager);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
 }
 
 nsresult 
-GlobalWindowImpl::ReleaseEvent(const nsString& aType)
+GlobalWindowImpl::ReleaseEvents(PRInt32 aEventFlags)
 {
   if (nsnull != mListenerManager) {
     //mListenerManager->ReleaseEvent(aListener);
     return NS_OK;
   }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult 
+GlobalWindowImpl::RouteEvent(nsIDOMEvent* aEvt)
+{
+  //XXX Not the best solution -joki
+  return NS_OK;
+}
+
+nsresult
+GlobalWindowImpl::EnableExternalCapture()
+{
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+GlobalWindowImpl::DisableExternalCapture()
+{
   return NS_ERROR_FAILURE;
 }
 
