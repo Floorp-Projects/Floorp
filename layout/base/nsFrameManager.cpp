@@ -2011,6 +2011,13 @@ FrameManager::AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
   nsresult rv = NS_OK;
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
 
+  if (aAttribute == nsHTMLAtoms::style) {
+    // Perhaps should check that it's XUL, SVG, (or HTML) namespace, but
+    // it doesn't really matter.
+    aAffects = PR_TRUE;
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIXMLContent> xml(do_QueryInterface(aContent));
   if (xml) {
     rv = mStyleSet->AttributeAffectsStyle(aAttribute, aContent, aAffects);
