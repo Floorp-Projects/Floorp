@@ -527,9 +527,9 @@ var BookmarksMenuDNDObserver = {
     }
 
     if (aDragSession.dragAction & kCopyAction)
-      BookmarksUtils.insertSelection("drag", selection, selTarget);
+      BookmarksUtils.insertAndCheckSelection("drag", selection, selTarget);
     else
-      BookmarksUtils.moveSelection("drag", selection, selTarget);
+      BookmarksUtils.moveAndCheckSelection("drag", selection, selTarget);
 
     // show again the menuseparator
     if (menuTarget.hasChildNodes() &&
@@ -896,8 +896,11 @@ var BookmarksToolbarRDFObserver =
   onChange: function (aDataSource, aSource, aProperty, aOldTarget, aNewTarget) {},
   onMove: function (aDataSource, aOldSource, aNewSource, aProperty, aTarget) {},
   onBeginUpdateBatch: function (aDataSource) {},
-  onEndUpdateBatch:   function (aDataSource) {},
-
+  onEndUpdateBatch: function (aDataSource)
+  {
+    this._overflowTimerInEffect = true;
+    setTimeout(BookmarksToolbar.resizeFunc, 0);
+  },
   _overflowTimerInEffect: false,
   setOverflowTimeout: function (aSource, aProperty)
   {

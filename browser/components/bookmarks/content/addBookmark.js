@@ -261,7 +261,7 @@ function onOK()
     }
     var selection = BookmarksUtils.getSelectionFromResource(rSource);
     var target    = BookmarksUtils.getTargetFromFolder(rFolder);
-    BookmarksUtils.insertSelection("newbookmark", selection, target);
+    BookmarksUtils.insertAndCheckSelection("newbookmark", selection, target);
   }
 }
 
