@@ -273,7 +273,7 @@ PRUint32 nsConvertCharCodeToUnicode(GdkEventKey* aEvent)
             case GDK_KP_Add:
                 return '+';
             case GDK_KP_Separator:
-                return '|';
+                return ',';
             case GDK_KP_Subtract:
                 return '-';
             case GDK_KP_Decimal:
