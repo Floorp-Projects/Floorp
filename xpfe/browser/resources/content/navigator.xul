@@ -284,7 +284,7 @@ Contributor(s): ______________________________________. -->
 
     <!-- Form toolbar items -->
     <toolbar id="FormToolbar" class="chromeclass-directories"
-             persist="collapsed" onload="alert('hi');">
+             persist="collapsed" hidden="true">
         <button class="button-toolbar-3 top" id="formPrefill" crop="right"
                 oncommand="formPrefill();"
                 value="&formPrefill.label;" tooltip="aTooltip" tooltiptext="&formPrefill.tooltip;"/>
