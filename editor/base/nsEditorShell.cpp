@@ -52,6 +52,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
+#include "nsIWebNavigation.h"
 #include "nsCOMPtr.h"
 
 #include "nsIServiceManager.h"
@@ -59,6 +60,7 @@
 #include "nsIWidget.h"
 #include "nsIWindowMediator.h"
 #include "plevent.h"
+#include "nsXPIDLString.h"
 
 #include "nsIAppShell.h"
 #include "nsIAppShellService.h"
@@ -80,6 +82,7 @@
 #include "nsEditorController.h"
 #include "nsIControllers.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsITransactionManager.h"
 
 ///////////////////////////////////////
@@ -137,9 +140,10 @@ static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
 static nsresult
 GetDocument(nsIWebShell *aWebShell, nsIDocument **aDoc ) 
 {
+   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aWebShell));
   // Get content viewer from the web shell.
   nsCOMPtr<nsIContentViewer> contentViewer;
-  nsresult res = (aWebShell && aDoc)? aWebShell->GetContentViewer(getter_AddRefs(contentViewer))
+  nsresult res = (docShell && aDoc)? docShell->GetContentViewer(getter_AddRefs(contentViewer))
                    : NS_ERROR_NULL_POINTER;
 
   if ( NS_SUCCEEDED(res) && contentViewer )
@@ -321,8 +325,9 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
   mStateMaintainer->AddRef();      // the owning reference
 
   // get the XULDoc from the webshell
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
   nsCOMPtr<nsIContentViewer> cv;
-  rv = mWebShell->GetContentViewer(getter_AddRefs(cv));
+  rv = docShell->GetContentViewer(getter_AddRefs(cv));
   if (NS_FAILED(rv)) return rv;
     
   nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(cv, &rv);
@@ -483,7 +488,7 @@ nsEditorShell::SetContentWindow(nsIDOMWindow* aWin)
     return NS_ERROR_FAILURE;
     
   mContentAreaWebShell = webShell;      // dont AddRef
-  return mContentAreaWebShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
+  return docShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
 }
 
 
@@ -511,8 +516,9 @@ nsEditorShell::SetWebShellWindow(nsIDOMWindow* aWin)
   //NS_ADDREF(mWebShell);
   
 #ifdef APP_DEBUG
-  const PRUnichar * name;
-  webShell->GetName( &name);
+  nsXPIDLString name;
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+  docShellAsItem->GetName(getter_Copies(name));
   nsAutoString str(name);
 
   char* cstr = str.ToNewCString();
@@ -537,7 +543,8 @@ nsEditorShell::GetPresShellFor(nsIWebShell* aWebShell)
   nsIPresShell* shell = nsnull;
   if (nsnull != aWebShell) {
     nsIContentViewer* cv = nsnull;
-    aWebShell->GetContentViewer(&cv);
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aWebShell));
+    docShell->GetContentViewer(&cv);
     if (nsnull != cv) {
       nsIDocumentViewer* docv = nsnull;
       cv->QueryInterface(NS_GET_IID(nsIDocumentViewer), (void**) &docv);
@@ -1102,10 +1109,13 @@ nsEditorShell::SetBodyAttribute(const PRUnichar *attr, const PRUnichar *value)
 NS_IMETHODIMP    
 nsEditorShell::LoadUrl(const PRUnichar *url)
 {
-  if (!mContentAreaWebShell)
-    return NS_ERROR_NOT_INITIALIZED;
-      
-  return mContentAreaWebShell->LoadURL(url);
+   if(!mContentAreaWebShell)
+      return NS_ERROR_NOT_INITIALIZED;
+
+   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mContentAreaWebShell));
+   NS_ENSURE_SUCCESS(webNav->LoadURI(url), NS_ERROR_FAILURE);
+
+   return NS_OK;
 }
 
 
@@ -1518,8 +1528,9 @@ nsEditorShell::Print()
   if (!mContentAreaWebShell)
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsCOMPtr<nsIContentViewer> viewer;    
-  mContentAreaWebShell->GetContentViewer(getter_AddRefs(viewer));    
+  nsCOMPtr<nsIContentViewer> viewer;
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mContentAreaWebShell));    
+  docShell->GetContentViewer(getter_AddRefs(viewer));    
   if (nsnull != viewer) 
   {
     nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
@@ -3925,15 +3936,6 @@ nsEditorShell::OnStatusURLLoad(nsIDocumentLoader* loader,
 NS_IMETHODIMP
 nsEditorShell::OnEndURLLoad(nsIDocumentLoader* loader,
                                nsIChannel* channel, nsresult aStatus)
-{
-   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsEditorShell::HandleUnknownContentType(nsIDocumentLoader* loader, 
-                                           nsIChannel* channel,
-                                           const char *aContentType,
-                                           const char *aCommand )
 {
    return NS_OK;
 }
