@@ -1087,7 +1087,7 @@ NS_IMETHODIMP pluginInstanceOwner :: CreateWidget(void)
           // start a periodic timer to provide null events to the plugin instance.
           mPluginTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
           if (rv == NS_OK)
-            rv = mPluginTimer->Init(this, 1020 / 60);
+            rv = mPluginTimer->Init(this, 1020 / 60, PR_TRUE, NS_TYPE_REPEATING_SLACK);
 #endif
 
 
