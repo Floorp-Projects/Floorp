@@ -40,7 +40,7 @@
 
 [scriptable, uuid(38f8f784-b092-11d6-ba4b-00108335942a)]
 interface nsIImapHeaderInfo : nsISupports {
-    readonly attribute nsMsgKey  msgUid;
+    attribute nsMsgKey  msgUid;
     attribute long      msgSize;
     [noscript] void getMsgHdrs ([shared] out string aMsgHdrs); // this doesn't copy the msgHdrs
     void cacheLine(in string line, in unsigned long uid);

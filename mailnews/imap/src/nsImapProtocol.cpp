@@ -269,6 +269,11 @@ NS_IMETHODIMP nsMsgImapLineDownloadCache::GetMsgUid(nsMsgKey *aMsgUid)
     *aMsgUid = fLineInfo->uidOfMessage;
     return NS_OK;
 }
+NS_IMETHODIMP nsMsgImapLineDownloadCache::SetMsgUid(nsMsgKey aMsgUid)
+{
+    fLineInfo->uidOfMessage = aMsgUid;
+    return NS_OK;
+}
 
 /* attribute long msgSize; */
 NS_IMETHODIMP nsMsgImapLineDownloadCache::GetMsgSize(PRInt32 *aMsgSize)
@@ -2492,7 +2497,16 @@ nsresult nsImapProtocol::BeginMessageDownLoad(
     m_fromHeaderSeen = PR_FALSE;
     if (GetServerStateParser().GetDownloadingHeaders())
     {
-      m_hdrDownloadCache.StartNewHdr(getter_AddRefs(m_curHdrInfo));
+      // if we get multiple calls to BeginMessageDownload w/o intervening
+      // calls to NormalEndMessageDownload or Abort, then we're just
+      // going to fake a NormalMessageEndDownload. This will most likely 
+      // cause an empty header to get written to the db, and the user
+      // will have to delete the empty header themselves, which
+      // should remove the message from the server as well.
+      if (m_curHdrInfo)
+        NormalMessageEndDownload();
+      if (!m_curHdrInfo)
+        m_hdrDownloadCache.StartNewHdr(getter_AddRefs(m_curHdrInfo));
       if (m_curHdrInfo)
         m_curHdrInfo->SetMsgSize(total_message_size);
       return NS_OK;
@@ -3318,6 +3332,7 @@ void nsImapProtocol::NormalMessageEndDownload()
   if (m_imapMailFolderSink && GetServerStateParser().GetDownloadingHeaders())
   {
     m_curHdrInfo->SetMsgSize(GetServerStateParser().SizeOfMostRecentMessage());
+    m_curHdrInfo->SetMsgUid(GetServerStateParser().CurrentResponseUID());
     m_hdrDownloadCache.FinishCurrentHdr();
     PRInt32 numHdrsCached;
     m_hdrDownloadCache.GetNumHeaders(&numHdrsCached);
@@ -3363,6 +3378,7 @@ void nsImapProtocol::NormalMessageEndDownload()
       }
     }
   }
+  m_curHdrInfo = nsnull;
 }
 
 void nsImapProtocol::AbortMessageDownLoad()
@@ -3386,6 +3402,7 @@ void nsImapProtocol::AbortMessageDownLoad()
   else if (m_imapMessageSink)
         m_imapMessageSink->AbortMsgWriteStream();
 
+  m_curHdrInfo = nsnull;
 }
 
 
@@ -7850,8 +7867,6 @@ nsImapMockChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry, nsCache
           entry->MarkValid();
         return NS_OK; // kick out if reading from the cache succeeded...
       }
-      nsCOMPtr <nsIImapUrl> imapUrl = do_QueryInterface(m_url);
-
       entry->Doom(); // doom entry if we failed to read from mem cache
       mailnewsUrl->SetMemCacheEntry(nsnull); // we aren't going to be reading from the cache
     }
