@@ -175,6 +175,7 @@ private:
     void             ClearActiveEntries(void);
     void             DoomActiveEntries(void);
 
+    PRInt32         CacheMemoryAvailable();
 
     static
     PLDHashOperator PR_CALLBACK  DeactivateAndClearEntry(PLDHashTable *    table,
