@@ -188,9 +188,9 @@ function UpdateMenus(event)
     // when onmenucomplete is ready then use it instead of oncreate
     // see bug 78290 for the detail
     UpdateCurrentCharset();
-    setTimeout("UpdateCurrentCharset()", 0);
+    setTimeout(UpdateCurrentCharset, 0);
     UpdateCharsetDetector();
-    setTimeout("UpdateCharsetDetector()", 0);
+    setTimeout(UpdateCharsetDetector, 0);
 }
 
 function CreateMenu(node)
@@ -205,9 +205,9 @@ function UpdateMailMenus(event)
     // when onmenucomplete is ready then use it instead of oncreate
     // see bug 78290 for the detail
     UpdateCurrentMailCharset();
-    setTimeout("UpdateCurrentMailCharset()", 0);
+    setTimeout(UpdateCurrentMailCharset, 0);
     UpdateCharsetDetector();
-    setTimeout("UpdateCharsetDetector()", 0);
+    setTimeout(UpdateCharsetDetector, 0);
 }
 
 var gCharsetMenu = Components.classes['@mozilla.org/rdf/datasource;1?name=charset-menu'].getService().QueryInterface(Components.interfaces.nsICurrentCharsetListener);

@@ -267,7 +267,7 @@ var MigrationWizard = {
       if (this._autoMigrate) {
         // We're done now.
         this._wiz.advance();
-        setTimeout("close()", 5000);
+        setTimeout(close, 5000);
       }
       else {
         var nextButton = this._wiz.getButton("next");

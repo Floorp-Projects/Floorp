@@ -74,7 +74,7 @@ var BookmarksMenu = {
   hideOpenInTabsMenuItem: function (aTarget)
   {
     gOpenInTabsParent = aTarget;
-    setTimeout("BookmarksMenu.delayedHideOpenInTabsMenuItem()", 0);
+    setTimeout(function() { BookmarksMenu.delayedHideOpenInTabsMenuItem(); }, 0);
   },
 
 #else

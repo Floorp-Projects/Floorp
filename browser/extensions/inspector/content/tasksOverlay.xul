@@ -11,7 +11,7 @@
   <![CDATA[
     function inspectorWindowLoad()
     {
-      setTimeout("initWindowMediator()", 0);
+      setTimeout(initWindowMediator, 0);
     }
     
     function initWindowMediator()
