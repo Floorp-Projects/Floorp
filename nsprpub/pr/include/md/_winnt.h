@@ -47,6 +47,9 @@
 
 #include <windows.h>
 #include <winsock.h>
+#ifdef __MINGW32__
+#include <mswsock.h>
+#endif
 #include <errno.h>
 
 #include "prio.h"

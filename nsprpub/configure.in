@@ -419,9 +419,6 @@ if test "$target" != "$host"; then
     if test -z "$STRIP"; then
 	    AC_CHECK_PROGS(STRIP, "${target_alias}-strip" "${target}-strip", echo)
     fi
-    if test -z "$DLLTOOL"; then
-	    AC_CHECK_PROGS(DLLTOOL, "${target_alias}-dlltool" "${target}-dlltool", echo)
-    fi
     if test -z "$WINDRES"; then
 	    AC_CHECK_PROGS(WINDRES, "${target_alias}-windres" "${target}-windres", echo)
     fi
@@ -439,7 +436,6 @@ else
     AC_PATH_PROGS(AR, ar, echo not_ar)
     AC_PATH_PROGS(LD, ld link, echo not_ld)
     AC_PATH_PROGS(STRIP, strip, echo not_strip)
-    AC_PATH_PROGS(DLLTOOL, dlltool, echo not_dlltool)
     AC_PATH_PROGS(WINDRES, windres, echo not_windres)
     if test -z "$HOST_CC"; then
 	    HOST_CC="$CC"
@@ -1217,28 +1213,28 @@ case "$target" in
     PR_MD_ARCH_DIR=windows
     RESOLVE_LINK_SYMBOLS=1
     NSINSTALL='$(CYGWIN_WRAPPER) nsinstall'
+    CYGWIN_WRAPPER='sh $(topsrcdir)/build/cygwin-wrapper'
 
     if test -n "$GNU_CC"; then
-        AC_DEFINE(NONAMELESSUNION)
-        MKSHLIB='$(DLLTOOL) --as=$(AS) -k --dllname $*.dll --output-lib $@'
+        CC="$CC -mno-cygwin"
+        CXX="$CXX -mno-cygwin"
+        DLL_SUFFIX=dll
+        MKSHLIB='$(CC) -shared -Wl,--export-all-symbols -Wl,--out-implib -Wl,$(IMPORT_LIBRARY) $(DLLBASE) -o $(subst $(OBJDIR)/,,$(SHARED_LIBRARY))'
+        RC=$WINDRES
+        RCFLAGS='-O coff'
     else
-        case "$target" in
-        *-mingw*|*-cygwin*)
-            CYGWIN_WRAPPER='sh $(topsrcdir)/build/cygwin-wrapper'
-            ;;
-        esac
-        CC='$(CYGWIN_WRAPPER) cl'
-        CXX='$(CYGWIN_WRAPPER) cl'
+        CC=cl
+        CXX=cl
         LD=link
         AR='lib -NOLOGO -OUT:"$@"'
         AR_FLAGS=
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
-        RC='$(CYGWIN_WRAPPER) rc.exe'
+        RC=rc.exe
         GARBAGE='$(OBJDIR)/vc20.pdb $(OBJDIR)/vc40.pdb'
-	    OBJ_SUFFIX=obj
-	    LIB_SUFFIX=lib
-	    DLL_SUFFIX=dll
+        OBJ_SUFFIX=obj
+        LIB_SUFFIX=lib
+        DLL_SUFFIX=dll
         
         CFLAGS="$CFLAGS -W3 -nologo -GF -Gy"
 
@@ -1298,6 +1294,8 @@ case "$target" in
         AC_DEFINE(WINNT)
     else
         AC_DEFINE(WIN95)
+        # undefine WINNT as some versions of mingw gcc define it by default
+        DEFINES="$DEFINES -UWINNT"
         AC_DEFINE(_PR_GLOBAL_THREADS_ONLY)
     fi
 
@@ -1748,7 +1746,6 @@ mips-sony-newsos*)
     LIB_SUFFIX=lib
     DLL_SUFFIX=dll
     ASM_SUFFIX=asm
-    DLLTOOL=''
     RC=rc.exe
     PR_MD_ARCH_DIR=os2
     PROG_SUFFIX=.exe
@@ -2315,6 +2312,17 @@ fi
 RELEASE_OBJDIR_NAME="${OS_CONFIG}${CPU_ARCH_TAG}${COMPILER_TAG}${IMPL_STRATEGY}${OBJDIR_TAG}.${OBJDIR_SUFFIX}"
 
 dnl ========================================================
+dnl Use cygwin wrapper for win32 builds
+dnl ========================================================
+case "$target_os" in
+mingw*|cygwin*|msvc*|mksnt*)
+    CC="\$(CYGWIN_WRAPPER) $CC"
+    CXX="\$(CYGWIN_WRAPPER) $CXX"
+    RC="\$(CYGWIN_WRAPPER) $RC"
+    ;;
+esac
+
+dnl ========================================================
 dnl Substitution of found variables.
 dnl ========================================================
 AC_SUBST(SHELL_OVERRIDE)
@@ -2381,8 +2389,6 @@ AC_SUBST(AR_FLAGS)
 AC_SUBST(AS)
 AC_SUBST(ASFLAGS)
 AC_SUBST(LD)
-AC_SUBST(DLLTOOL)
-AC_SUBST(WINDRES)
 AC_SUBST(RANLIB)
 AC_SUBST(PERL)
 AC_SUBST(STRIP)
@@ -2402,6 +2408,7 @@ AC_SUBST(RELEASE_OBJDIR_NAME)
 AC_SUBST(NSINSTALL)
 AC_SUBST(OPTIMIZER)
 AC_SUBST(RC)
+AC_SUBST(RCFLAGS)
 AC_SUBST(DLLFLAGS)
 AC_SUBST(EXEFLAGS)
 AC_SUBST(OS_DLLFLAGS)

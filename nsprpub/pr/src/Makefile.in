@@ -181,7 +181,11 @@ OS_LIBS		= -lsocket -lnsl -lgen -lresolv
 endif
 
 ifeq ($(OS_ARCH),WINNT)
+ifdef NS_USE_GCC
+OS_LIBS		= -ladvapi32 -lws2_32
+else
 OS_LIBS		= advapi32.lib wsock32.lib
+endif
 endif
 
 ifeq ($(OS_TARGET),MacOSX)
@@ -296,7 +300,11 @@ OBJS += memory/$(OBJDIR)/prgcleak.$(OBJ_SUFFIX)
 endif
 
 ifeq ($(OS_ARCH), WINNT)
+ifdef NS_USE_GCC
+DLLBASE=-Wl,--image-base -Wl,0x30000000
+else
 DLLBASE=/BASE:0x30000000
+endif # GCC
 RES=$(OBJDIR)/nspr.res
 RESNAME=nspr.rc
 endif # WINNT
@@ -335,7 +343,7 @@ NOW = $(MOD_DEPTH)/config/$(OBJDIR)/now
 SH_DATE = $(shell date "+%Y-%m-%d %T")
 SH_NOW = $(shell $(NOW))
 
-ifeq ($(OS_ARCH), WINNT)
+ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINNT)
 	SUF = i64
 else
 	SUF = LL
@@ -357,7 +365,7 @@ $(TINC):
 
 
 $(OBJDIR)/prvrsion.$(OBJ_SUFFIX): prvrsion.c $(TINC)
-ifeq ($(OS_ARCH), WINNT)
+ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINNT)
 	$(CC) -Fo$@ -c $(CFLAGS) -I$(OBJDIR) $<
 else
 ifeq ($(MOZ_OS2_TOOLS), VACPP)

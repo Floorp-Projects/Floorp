@@ -95,8 +95,13 @@ int main(int argc, char **argv)
      * 116444736000000000 is the number of 100-nanosecond intervals
      * between Jan. 1, 1601 and Jan. 1, 1970.
      */
+#ifdef __GNUC__
+    now = (now - 116444736000000000LL) / 10LL;
+    fprintf(stdout, "%lld", now);
+#else
     now = (now - 116444736000000000i64) / 10i64;
     fprintf(stdout, "%I64d", now);
+#endif
 
 #elif defined(XP_OS2_VACPP)
 /* no long long or i64 so we use a string */

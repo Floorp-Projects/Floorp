@@ -786,7 +786,7 @@ PRInt32 _PR_MD_ATOMIC_DECREMENT(PRInt32 *val)
   PRInt32 result;
   asm volatile ("lock ; xadd %0, %1" 
                 : "=r"(result), "=m"(*val)
-                : "0"(1), "m"(*val));
+                : "0"(-1), "m"(*val));
   //asm volatile("lock ; xadd %0, %1" : "=m" (val), "=a" (result) : "-1" (1));
   return result - 1;
 #else
@@ -808,8 +808,8 @@ PRInt32 _PR_MD_ATOMIC_ADD(PRInt32 *intp, PRInt32 val)
   PRInt32 result;
   //asm volatile("lock ; xadd %1, %0" : "=m" (intp), "=a" (result) : "1" (val));
   asm volatile ("lock ; xadd %0, %1" 
-                : "=r"(result), "=m"(intp)
-                : "0"(val), "m"(intp));
+                : "=r"(result), "=m"(*intp)
+                : "0"(val), "m"(*intp));
   return result + val;
 #else
     __asm

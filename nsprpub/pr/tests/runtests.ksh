@@ -255,7 +255,7 @@ else
 		fi
 		wait $test_pid
 		test_rval=$?
-		[ sleep_pid -eq 0 ] || kill $sleep_pid >/dev/null 2>&1
+		[ $sleep_pid -eq 0 ] || kill $sleep_pid >/dev/null 2>&1
 		if [ 0 = $test_rval ] ; then
 			echo "\t\t\tPassed";
 		else

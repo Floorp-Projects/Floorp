@@ -108,8 +108,10 @@ export:: $(TARGETS)
 # Bug 122433 workaround: disable global optimization (-Og-) on ntio.c.
 ifdef BUILD_OPT
 ifeq ($(OS_TARGET), WINNT)
+ifndef NS_USE_GCC
 $(OBJDIR)/ntio.$(OBJ_SUFFIX): ntio.c
 	@$(MAKE_OBJDIR)
 	$(CC) -Fo$@ -c $(CFLAGS) -Og- $<
+endif
 endif
 endif

@@ -65,7 +65,11 @@ EXTRA_LIBS += $(OS_LIBS)
 endif
 
 ifeq ($(OS_ARCH), WINNT)
+ifdef NS_USE_GCC
+DLLBASE=-Wl,--image-base -Wl,0x30000000
+else
 DLLBASE=/BASE:0x30000000
+endif # GCC
 #RES=$(OBJDIR)/ds.res
 #RESNAME=$(MOD_DEPTH)/pr/src/nspr.rc
 #OS_LIBS = user32.lib
