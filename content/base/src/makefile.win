@@ -60,6 +60,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPP_OBJS=					\
+	.\$(OBJDIR)\nsPrintPreviewListener.obj	\
 	.\$(OBJDIR)\nsPrintProgress.obj	\
 	.\$(OBJDIR)\nsPrintProgressParams.obj	\
 	.\$(OBJDIR)\nsStyleContext.obj		\
