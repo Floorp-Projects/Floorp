@@ -27,6 +27,7 @@
 #include "extra.h"
 #include "xpistub.h"
 #include "xpi.h"
+#include "xperr.h"
 
 #define BDIR_RIGHT 1
 #define BDIR_LEFT  2
@@ -236,7 +237,31 @@ HRESULT SmartUpdateJars()
         {
           if(NS_LoadString(hSetupRscInst, IDS_ERROR_XPI_INSTALL, szEXpiInstall, MAX_BUF) == WIZ_OK)
           {
-            wsprintf(szBuf, "%d: %s", hrResult, szEXpiInstall);
+            int  i = 0;
+            char szErrorString[MAX_BUF];
+            char szErrorNumber[MAX_BUF];
+
+            ZeroMemory(szErrorString, MAX_BUF);
+            itoa(hrResult, szErrorNumber, 10);
+
+            /* map the error value to a string */
+            while(TRUE)
+            {
+              if(*XpErrorList[i] == '\0')
+                break;
+
+              if(lstrcmpi(szErrorNumber, XpErrorList[i]) == 0)
+              {
+                if(*XpErrorList[i + 1] != '\0')
+                  lstrcpy(szErrorString, XpErrorList[i + 1]);
+
+                break;
+              }
+
+              ++i;
+            }
+
+            wsprintf(szBuf, "%s: %d %s", szEXpiInstall, hrResult, szErrorString);
             PrintError(szBuf, ERROR_CODE_HIDE);
           }
 
