@@ -232,7 +232,6 @@ public:
 private:
 
   nsIBox* GetScrollbar();
-  void GetContentOf(nsIBox* aBox, nsIContent** aContent);
 
   void PageUpDown(nsIFrame* aThumbFrame, nscoord change);
   void SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, nscoord pos, PRBool aIsSmooth);
