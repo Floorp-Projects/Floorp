@@ -1638,8 +1638,8 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
 // -(aTileWidth - 1) <= anchor.x <= 0
 // -(aTileHeight - 1) <= anchor.y <= 0
 //
-// i.e., they are either 0 or a negative number which is less than the
-// tile size in that dimension
+// i.e., they are either 0 or a negative number whose absolute value is
+// less than the tile size in that dimension
 static void
 ComputeBackgroundAnchorPoint(const nsStyleColor& aColor,
                              const nsRect& aBounds,
