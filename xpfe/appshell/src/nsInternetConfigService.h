@@ -36,7 +36,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIINTERNETCONFIGSERVICE
 
-  OSStatus GetMappingForMIMEType(const char *mimetype, const char *fileextension, ICMapEntry *entry);
+  nsresult GetMappingForMIMEType(const char *mimetype, const char *fileextension, ICMapEntry *entry);
 
   nsInternetConfigService();
   virtual ~nsInternetConfigService();
