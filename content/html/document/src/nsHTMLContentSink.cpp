@@ -707,7 +707,7 @@ public:
   // a little weird to me....
   void SetPreAppend(PRBool aPreAppend)
   {
-    mPreAppend = aPreAppend;
+    // mPreAppend = aPreAppend;
   }
 
   nsresult Begin(nsHTMLTag aNodeType, nsGenericHTMLElement* aRoot,
@@ -1077,7 +1077,7 @@ MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
 MOZ_DECL_CTOR_COUNTER(SinkContext)
 
 SinkContext::SinkContext(HTMLContentSink* aSink)
-  : mSink(aSink), mPreAppend(PR_FALSE), mNotifyLevel(0),
+  : mSink(aSink), mPreAppend(PR_TRUE), mNotifyLevel(0),
     mLastTextNodeSize(0), mStack(nsnull), mStackSize(0), mStackPos(0),
     mText(nsnull), mTextLength(0), mTextSize(0)
 {
