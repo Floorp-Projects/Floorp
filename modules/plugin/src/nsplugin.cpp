@@ -46,7 +46,11 @@
 #include "prthread.h"
 /* This is a private NSPR header - cls */
 #ifdef OJI
-#include "private/pprthred.h"
+	#ifdef XP_MAC
+		#include "pprthred.h"
+	#else
+		#include "private/pprthred.h"
+	#endif
 #endif
 #include "prtypes.h"
 #include "nsHashtable.h"
