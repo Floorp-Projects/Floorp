@@ -37,7 +37,7 @@ interface nsIPrefMigration: nsISupports
   void AddProfilePaths(in string oldProfilePathStr, in string newProfilePathStr);
   void ProcessPrefs(in boolean showProgressAsModalWindow);
   void ProcessPrefsFromJS();
-  void GetError(out PRUint32 error);
+  void GetError();
 
   /**
    * this should be in a seperate interface
