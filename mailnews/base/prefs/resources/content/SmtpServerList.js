@@ -147,7 +147,7 @@ function refreshServerList()
     fillSmtpServers(treeChildren,smtpService.smtpServers, defaultServer);
 
     // restore selection
-    for (var i=0; i< oldSelectedIds.length; i++) {
+    for (i=0; i< oldSelectedIds.length; i++) {
         var element = document.getElementById(oldSelectedIds[i]);
         if (element)
             serverList.selectItem(element);
