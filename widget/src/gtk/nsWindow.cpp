@@ -197,10 +197,25 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 
 //  mainWindow = gtk_window_new(mBorderStyle);
     mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_default_size(GTK_WINDOW(mShell),
-    				mBounds.width,
-				mBounds.height);
+    gtk_window_set_default_size(GTK_WINDOW(mShell), 
+                                mBounds.width,
+                                mBounds.height);
     gtk_widget_show (mShell);
+
+    // Now that the window is up, change the window manager hints
+    // associated with it so that its resizable (smaller). Note that
+    // the numbers chosen here are arbitrary. The application really
+    // needs a hand in this.
+    GdkGeometry geom;
+    geom.min_width = 50;
+    geom.min_height = 50;
+    geom.base_width = mBounds.width;
+    geom.base_height = mBounds.height;
+    geom.width_inc = 1;
+    geom.height_inc = 1;
+    gtk_window_set_geometry_hints(GTK_WINDOW(mShell), mShell, &geom,
+                                  (GdkWindowHints) (GDK_HINT_MIN_SIZE |
+                                                    GDK_HINT_RESIZE_INC));
 
 // VBox for the menu, etc.
     mVBox = gtk_vbox_new(PR_FALSE, 0);
