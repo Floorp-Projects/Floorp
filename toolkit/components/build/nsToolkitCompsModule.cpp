@@ -41,7 +41,7 @@
 #include "nsCommandLineService.h"
 #include "nsXPFEComponentsCID.h"
 
-#ifdef MOZ_PHOENIX
+#if defined(MOZ_PHOENIX) || defined(MOZ_SUNBIRD)
 #ifdef XP_WIN
 #include "nsAlertsService.h"
 #endif
@@ -64,7 +64,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAppStartup, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCmdLineService)
 
-#ifdef MOZ_PHOENIX
+#if defined(MOZ_PHOENIX) || defined(MOZ_SUNBIRD)
 #ifdef XP_WIN
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 #endif
@@ -109,7 +109,7 @@ static const nsModuleComponentInfo components[] =
     NS_COMMANDLINESERVICE_CONTRACTID,
     nsCmdLineServiceConstructor },
 
-#ifdef MOZ_PHOENIX
+#if defined(MOZ_PHOENIX) || defined(MOZ_SUNBIRD)
 #ifdef XP_WIN
   { "Alerts Service",
     NS_ALERTSSERVICE_CID, 
