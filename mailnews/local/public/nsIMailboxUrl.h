@@ -39,10 +39,13 @@ typedef enum {
 	nsMailboxActionParseMailbox = 0,
 	nsMailboxActionDisplayMessage,
 	nsMailboxActionCopyMessage,
-	nsMailboxActionMoveMessage
+	nsMailboxActionMoveMessage,
+	nsMailboxActionSaveMessageToDisk,
+	nsMailboxActionAppendMessageToDisk
 } nsMailboxAction;
 
 class nsIMsgDBHdr;
+class nsIFileSpec;
 
 class nsIMailboxUrl : public nsIMsgMailNewsUrl
 {
@@ -65,7 +68,6 @@ public:
 	// the data written to as well? Hmm....
 	
 	NS_IMETHOD SetMailboxParser(nsIStreamListener * aConsumer) = 0;
-
 	NS_IMETHOD GetMailboxParser(nsIStreamListener ** aConsumer) = 0;
 
 
@@ -93,6 +95,10 @@ public:
 
 	NS_IMETHOD GetMailboxAction(nsMailboxAction * aMailboxAction) = 0;
 	NS_IMETHOD SetMailboxAction(nsMailboxAction aMailboxAction) = 0;
+
+	// used by save message to disk....
+	NS_IMETHOD SetMessageFile(nsIFileSpec * aFileSpec) = 0;
+	NS_IMETHOD GetMessageFile(nsIFileSpec ** aFileSpec) = 0;
 };
 
 #endif /* nsIMailboxUrl_h___ */
