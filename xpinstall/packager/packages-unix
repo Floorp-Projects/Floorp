@@ -36,7 +36,6 @@ bin/components/libjar50.so
 [browser]
 bin/mozilla
 bin/mozilla-bin
-bin/libdocshell.so
 bin/icons/*
 bin/libcmt.so
 bin/libgtksuperwin.so
@@ -47,7 +46,6 @@ bin/libmsgbaseutil.so
 bin/libprotocol.so
 bin/libgkgfx.so
 bin/libgkplugin.so
-bin/libwebshell.so
 bin/run-mozilla.sh
 bin/regExport
 bin/regxpcom
@@ -72,6 +70,7 @@ bin/components/libchardet.so
 bin/components/libchrome.so
 bin/components/libcookie.so
 bin/components/libdirectory.so
+bin/components/libdocshell.so
 bin/components/libeditor.so
 bin/components/libgfx_gtk.so
 bin/components/libgfxps.so
