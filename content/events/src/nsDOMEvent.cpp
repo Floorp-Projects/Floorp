@@ -178,7 +178,7 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMNode** aTarget)
   nsIContent *targetContent;
 
   if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
-    manager->GetEventTargetContent(&targetContent);
+    manager->GetEventTargetContent(mEvent, &targetContent);
     NS_RELEASE(manager);
   }
   

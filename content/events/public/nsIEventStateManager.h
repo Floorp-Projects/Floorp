@@ -62,13 +62,14 @@ public:
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame) = 0;
 
   NS_IMETHOD GetEventTarget(nsIFrame **aFrame) = 0;
-  NS_IMETHOD GetEventTargetContent(nsIContent** aContent) = 0;
+  NS_IMETHOD GetEventTargetContent(nsEvent* aEvent, nsIContent** aContent) = 0;
   NS_IMETHOD GetEventRelatedContent(nsIContent** aContent) = 0;
 
   NS_IMETHOD GetContentState(nsIContent *aContent, PRInt32& aState) = 0;
   NS_IMETHOD SetContentState(nsIContent *aContent, PRInt32 aState) = 0;
 
   NS_IMETHOD GetFocusedContent(nsIContent **aContent) = 0;
+  NS_IMETHOD SetFocusedContent(nsIContent* aContent) = 0;
 
   // Cross ESM methods, doesn't matter what instance you call it from
   NS_IMETHOD GetFocusedEventTarget(nsIFrame **aFrame) = 0;
