@@ -102,7 +102,7 @@ sub expand {
                     my $order = $self->evaluateExpression($attributes->{'order'}, $scope);
                     my $source = $self->evaluateExpression($attributes->{'source'}, $scope);
                     if ($order or $source) {
-                        my @items = $self->sort($order, $self->keys($value, $source));
+                        my @items = $self->genericSort($order, $self->genericKeys($value, $source));
                         if (@items) {
                             push(@index, $index);
                             push(@stack, $stack);
@@ -429,7 +429,7 @@ sub evaluateCondition {
     return 0;
 }
 
-sub keys {
+sub genericKeys {
     my $self = shift;
     my($value, $source) = @_;
     if (ref($value) eq 'HASH') {
@@ -453,7 +453,7 @@ sub keys {
     }
 }
 
-sub sort {
+sub genericSort {
     my $self = shift;
     my($order, @list) = @_;
     # sort the list (in reverse order!)
