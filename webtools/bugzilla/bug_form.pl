@@ -52,7 +52,7 @@ sub quoteUrls {
     # which can happen if you do multiple s///g operations.
 
     my @things;
-    while ($text =~ s%((mailto:)?([\w\.\-\+\=]+\@\w+(?:\.\w+)+)\b|
+    while ($text =~ s%((mailto:)?([\w\.\-\+\=]+\@[\w\-]+(?:\.[\w\-]+)+)\b|
                        (\b((?:$protocol):\S+[\w/])))%"##$count##"%exo) {
         my $item = $&;
 
