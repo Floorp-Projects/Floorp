@@ -131,7 +131,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
 
     // Check for the JS strict option, which enables extra error checks
     nsresult rv;
-    PRBool strict;
+    PRBool strict, werror;
     NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
     if (NS_SUCCEEDED(rv)) {
       uint32 options = 0;
@@ -143,7 +143,6 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
       }
 #endif
 #ifdef JSOPTION_WERROR
-      nsresult werror;
       if (NS_SUCCEEDED(prefs->GetBoolPref("javascript.options.werror",
                                           &werror)) &&
           werror) {
