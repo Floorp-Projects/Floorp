@@ -220,7 +220,7 @@ private:
 
 	/* for group command */
     char     *m_path;			  /* message id */
-    char     *m_currentGroup;     /* current group */
+    nsCString m_currentGroup;     /* current group */
 
     PRInt32   m_firstArticle;
     PRInt32   m_lastArticle;

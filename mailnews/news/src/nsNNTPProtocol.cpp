@@ -458,7 +458,6 @@ nsNNTPProtocol::nsNNTPProtocol(nsIURI * aURL, nsIMsgWindow *aMsgWindow)
     m_responseText = nsnull;
     m_dataBuf = nsnull;
     m_path = nsnull;
-    m_currentGroup = nsnull;
     
 	m_cancelFromHdr = nsnull;
 	m_cancelNewsgroups = nsnull;
@@ -485,7 +484,6 @@ nsNNTPProtocol::~nsNNTPProtocol()
         m_nntpServer->WriteNewsrcFile();
         m_nntpServer->RemoveConnection(this);
     }
-	PR_FREEIF(m_currentGroup);
     if (m_lineStreamBuffer) {
         delete m_lineStreamBuffer;
     }
@@ -591,8 +589,9 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
 	m_previousResponseCode = 0;
 	m_responseText = nsnull;
 
-	m_path = NULL;
-	m_currentGroup = NULL;
+	m_currentGroup = "";
+	m_path = nsnull;
+
 	m_firstArticle = 0;
 	m_lastArticle = 0;
 	m_firstPossibleArticle = 0;
@@ -605,6 +604,7 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
 	
 	PR_FREEIF(m_messageID);
 	m_messageID = nsnull;
+
 
 	m_articleNumber = 0;
 	m_originalContentLength = 0;
@@ -1640,26 +1640,19 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
 
 	if (m_typeWanted == ARTICLE_WANTED)
 	  {
-		const char *group = 0;
-		PRUint32 number = 0;
+		nsresult rv1,rv2;
+       
+		nsMsgKey key = nsMsgKey_None;
+		rv1 = m_runningURL->GetMessageKey(&key);
 
-		nsresult rv;
-        nsCOMPtr <nsINNTPNewsgroup> newsgroup;
-		if (!m_newsHost) {
-#ifdef DEBUG_NEWS
-			printf("m_newsHost is null, panic!\n");
-#endif
-			return -1;
-		}
-        rv = m_newsHost->GetNewsgroupAndNumberOfID(m_path,
-                                                   getter_AddRefs(newsgroup),
-                                                   &number);
-		if (NS_SUCCEEDED(rv) && newsgroup && number)
+        nsXPIDLCString newsgroupName;
+        rv2 = m_runningURL->GetNewsgroupName(getter_Copies(newsgroupName));
+		
+		if (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2) && ((const char *)newsgroupName) && (key != nsMsgKey_None))
 		  {
-			m_articleNumber = number;
-            m_newsgroup = newsgroup;
-
-			if (m_currentGroup && !PL_strcmp (m_currentGroup, group))
+			m_articleNumber = key;
+     
+			if (((const char *)m_currentGroup) && !PL_strcmp ((const char *)m_currentGroup, (const char *)newsgroupName))
 			  m_nextState = NNTP_SEND_ARTICLE_NUMBER;
 			else
 			  m_nextState = NNTP_SEND_GROUP_FOR_ARTICLE;
@@ -1797,9 +1790,8 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
             (void) PR_sscanf(slash+1, "%d-%d", &m_firstArticle, &m_lastArticle);
 		}
 
-		PR_FREEIF(m_currentGroup);
-        NET_SACopy (&m_currentGroup, group_name);
-        NET_SACat(&command, m_currentGroup);
+        m_currentGroup = group_name;
+        NET_SACat(&command, (const char *)m_currentGroup);
 		PR_FREEIF(group_name);
       }
 	else if (m_typeWanted == SEARCH_WANTED)
@@ -1946,7 +1938,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
 #ifdef UNREADY_CODE
         MSG_GroupNotFound(cd->pane, cd->host, cd->control_con->current_group, PR_TRUE /* opening group */);
 #else
-            m_newsHost->GroupNotFound(m_currentGroup,
+            m_newsHost->GroupNotFound((const char *)m_currentGroup,
                                           PR_TRUE /* opening */);
 #endif
         }
@@ -2031,15 +2023,19 @@ PRInt32 nsNNTPProtocol::SendGroupForArticle()
   nsresult rv;
   PRInt32 status = 0; 
 
-  PR_FREEIF(m_currentGroup);
-  rv = m_newsgroup->GetName(&m_currentGroup);
+  // todo, don't do this copy
+  char *groupname = nsnull;
+  rv = m_newsgroup->GetName(&groupname);
   NS_ASSERTION(NS_SUCCEEDED(rv), "GetName failed");
+  m_currentGroup = groupname;
+  PR_FREEIF(groupname);
+
   char outputBuffer[OUTPUT_BUFFER_SIZE];
   
   PR_snprintf(outputBuffer, 
 			OUTPUT_BUFFER_SIZE, 
 			"GROUP %.512s" CRLF, 
-			m_currentGroup);
+			(const char *)m_currentGroup);
 
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
   if (mailnewsurl)
@@ -2087,7 +2083,6 @@ PRInt32 nsNNTPProtocol::BeginArticle()
 
   /*  Set up the HTML stream
    */ 
-  PL_strfree (m_currentGroup);
 #ifdef UNREADY_CODE
   ce->URL_s->content_type = nsCRT::strdup (MESSAGE_RFC822);
 #endif
@@ -3576,12 +3571,12 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 	rv = currFolder->GetName(getter_Copies(name));
 	if (NS_FAILED(rv)) return -1;
 	if (!name) return -1;
+
+	// do I need asciiName?
 	nsCAutoString asciiName(name);
+	m_currentGroup = (const char *)asciiName;
 
-	PR_FREEIF(m_currentGroup);
-	m_currentGroup = nsCRT::strdup((const char *)asciiName);
-
-	if(NS_SUCCEEDED(rv) && m_currentGroup)
+	if(NS_SUCCEEDED(rv) && ((const char *)m_currentGroup))
     {
 		/* send group command to server
 		 */
@@ -3589,7 +3584,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 
 		char outputBuffer[OUTPUT_BUFFER_SIZE];
 
-		PR_snprintf(outputBuffer, OUTPUT_BUFFER_SIZE, "GROUP %.512s" CRLF, m_currentGroup);
+		PR_snprintf(outputBuffer, OUTPUT_BUFFER_SIZE, "GROUP %.512s" CRLF, (const char *)m_currentGroup);
 		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
 		if (mailnewsurl)
 			status = SendData(mailnewsurl, outputBuffer);
@@ -3719,7 +3714,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRCResponse()
 	  }
 	  else if (m_responseCode == MK_NNTP_RESPONSE_GROUP_NO_GROUP)
 	  {
-          m_newsHost->GroupNotFound(m_currentGroup, PR_FALSE);
+          m_newsHost->GroupNotFound((const char *)m_currentGroup, PR_FALSE);
 	  }
 	  /* it turns out subscribe ui depends on getting this displaysubscribedgroup call,
 	     even if there was an error.
