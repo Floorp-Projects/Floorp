@@ -38,7 +38,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- * $Id: mpi-test.c,v 1.6 2000/09/12 00:41:08 nelsonb%netscape.com Exp $
+ * $Id: mpi-test.c,v 1.7 2000/09/14 00:30:49 nelsonb%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -371,9 +371,15 @@ char *v_mp9[] = {
 };
 
 unsigned char b_mp4[] = {
-  0x01, 0x63, 0xDB, 0xC2, 0x26, 0x5B, 0x88, 0x26,
-  0x8D, 0xC8, 0x01, 0xC1, 0x0E, 0xA6, 0x84, 0x76,
-  0xB7, 0xBD, 0xE0, 0x09, 0x0F
+  0x01, 
+#if MP_DIGIT_MAX > MP_32BIT_MAX
+  0x00, 0x00, 0x00, 0x00,
+#endif
+  0x63, 0xDB, 0xC2, 0x26, 
+  0x5B, 0x88, 0x26, 0x8D, 
+  0xC8, 0x01, 0xC1, 0x0E, 
+  0xA6, 0x84, 0x76, 0xB7, 
+  0xBD, 0xE0, 0x09, 0x0F
 };
 
 /* Search for a test suite name in the names table  */
@@ -990,14 +996,14 @@ int test_div(void)
   mp_toradix(&a, g_intbuf, 16);
 
   if(strcmp(g_intbuf, q_mp42) != 0) {
-    reason("error: computed quot %s, expected %s\n", g_intbuf, q_mp42);
+    reason("error: test 1 computed quot %s, expected %s\n", g_intbuf, q_mp42);
     ++err;
   }
 
   mp_toradix(&r, g_intbuf, 16);
 
   if(strcmp(g_intbuf, r_mp42) != 0) {
-    reason("error: computed rem %s, expected %s\n", g_intbuf, r_mp42);
+    reason("error: test 1 computed rem %s, expected %s\n", g_intbuf, r_mp42);
     ++err;
   }
 
@@ -1006,14 +1012,14 @@ int test_div(void)
   mp_toradix(&a, g_intbuf, 16);
 
   if(strcmp(g_intbuf, q_mp45a) != 0) {
-    reason("error: computed quot %s, expected %s\n", g_intbuf, q_mp45a);
+    reason("error: test 2 computed quot %s, expected %s\n", g_intbuf, q_mp45a);
     ++err;
   }
 
   mp_toradix(&r, g_intbuf, 16);
 
   if(strcmp(g_intbuf, r_mp45a) != 0) {
-    reason("error: computed rem %s, expected %s\n", g_intbuf, r_mp45a);
+    reason("error: test 2 computed rem %s, expected %s\n", g_intbuf, r_mp45a);
     ++err;
   }
 
@@ -1022,14 +1028,14 @@ int test_div(void)
   mp_toradix(&a, g_intbuf, 16);
 
   if(strcmp(g_intbuf, q_mp1404) != 0) {
-    reason("error: computed quot %s, expected %s\n", g_intbuf, q_mp1404);
+    reason("error: test 3 computed quot %s, expected %s\n", g_intbuf, q_mp1404);
     ++err;
   }
 
   mp_toradix(&r, g_intbuf, 16);
   
   if(strcmp(g_intbuf, r_mp1404) != 0) {
-    reason("error: computed rem %s, expected %s\n", g_intbuf, r_mp1404);
+    reason("error: test 3 computed rem %s, expected %s\n", g_intbuf, r_mp1404);
     ++err;
   }
 
@@ -1622,7 +1628,7 @@ int test_raw(void)
 
   len = mp_raw_size(&a);
   if(len != sizeof(b_mp4)) {
-    reason("error: expected length %d, computed %d\n", sizeof(b_mp4),
+    reason("error: test_raw: expected length %d, computed %d\n", sizeof(b_mp4),
 	   len);
     mp_clear(&a);
     return 1;
@@ -1631,8 +1637,8 @@ int test_raw(void)
   buf = calloc(len, sizeof(char));
   mp_toraw(&a, buf);
 
-  if(memcmp(buf, b_mp4, len) != 0) {
-    reason("error: binary output does not match test vector\n");
+  if(memcmp(buf, b_mp4, sizeof(b_mp4)) != 0) {
+    reason("error: test_raw: binary output does not match test vector\n");
     out = 1;
   }
 

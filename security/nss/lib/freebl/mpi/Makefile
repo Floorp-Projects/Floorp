@@ -36,7 +36,7 @@
 ## GPL.
 ## 
 ##
-## $Id: Makefile,v 1.8 2000/08/31 02:43:56 nelsonb%netscape.com Exp $
+## $Id: Makefile,v 1.9 2000/09/14 00:30:47 nelsonb%netscape.com Exp $
 ##
 
 ## Define CC to be the C compiler you wish to use.  The GNU cc
@@ -62,7 +62,6 @@ PERL=perl
 MPICMN = -I. -DMP_API_COMPATIBLE -DMP_IOFUNC
 CFLAGS= -O $(MPICMN)
 #CFLAGS=-ansi -fullwarn -woff 1521 -O3 $(MPICMN)
-#CFLAGS=-ansi -fullwarn -woff 1521 -L/usr/linguist/lib -g -DMP_DEBUG=1 $(MPICMN)
 #CFLAGS=-ansi -pedantic -Wall -O3 $(MPICMN)
 #CFLAGS=-ansi -pedantic -Wall -g -O2 -DMP_DEBUG=1 $(MPICMN)
 
@@ -70,20 +69,31 @@ CFLAGS= -O $(MPICMN)
 #MPICMN += -DMP_MONT_USE_MP_MUL
 #MPICMN += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
 #AS_OBJS = mpi_mips.o
-#ASFLAGS = -O -OPT:Olimit=4000 -dollar -fullwarn -xansi -n32 -mips3 -exceptions -mips3 
+#ASFLAGS = -O -OPT:Olimit=4000 -dollar -fullwarn -xansi -n32 -mips3 -exceptions
+#ASFLAGS = -O -OPT:Olimit=4000 -dollar -fullwarn -xansi -n32 -mips3 
 #CFLAGS=-ansi -n32 -O3 -fullwarn -woff 1429 -D_SGI_SOURCE $(MPICMN)
 #CFLAGS=-ansi -n32 -O2 -fullwarn -woff 1429 -D_SGI_SOURCE $(MPICMN)
 #CFLAGS=-ansi -n32 -g -fullwarn -woff 1429 -D_SGI_SOURCE $(MPICMN)
 #CFLAGS=-ansi -n32 -g -fullwarn -woff 1429 -D_SGI_SOURCE -DMP_NO_MP_WORD \
  $(MPICMN)
+#CFLAGS=-ansi -64 -O2 -fullwarn -woff 1429 -D_SGI_SOURCE -DMP_NO_MP_WORD \
+ $(MPICMN)
 
 #Alpha/OSF1
 #CFLAGS= -O -Olimit 4000 -ieee_with_inexact -std1 -DOSF1 -D_REENTRANT $(MPICMN)
+#CFLAGS= -O -Olimit 4000 -ieee_with_inexact -std1 -DOSF1 -D_REENTRANT \
+ -DMP_NO_MP_WORD $(MPICMN)
 
 #Solaris
 #CFLAGS= -O -KPIC -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS -D_REENTRANT \
  -DSOLARIS2_8 -D_SVID_GETTOD -xarch=v9 -DXP_UNIX -D_PR_GLOBAL_THREADS_ONLY \
  -DNSS_USE_64 $(MPICMN)
+#CFLAGS= -g -KPIC -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS -D_REENTRANT \
+ -DSOLARIS2_8 -D_SVID_GETTOD -xarch=v9 -DXP_UNIX -D_PR_GLOBAL_THREADS_ONLY \
+ -DNSS_USE_64 $(MPICMN)
+#CFLAGS=-O -KPIC -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS -D_REENTRANT \
+ -DSOLARIS2_6 -D_SVID_GETTOD -xarch=v8 -DXP_UNIX -D_PR_GLOBAL_THREADS_ONLY \
+ -DMP_NO_MP_WORD $(MPICMN)
 #CFLAGS=-O -KPIC -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS -D_REENTRANT \
  -DSOLARIS2_6 -D_SVID_GETTOD -xarch=v8 -DXP_UNIX -D_PR_GLOBAL_THREADS_ONLY \
  $(MPICMN)
@@ -93,7 +103,7 @@ CFLAGS= -O $(MPICMN)
  -D_HPUX_SOURCE -Aa +e +DA2.0W +DS2.0 +DChpux -DHPUX11  -DXP_UNIX \
  -DNSS_USE_64 $(MPICMN)
 #CFLAGS= -O -DHPUX10 -D_POSIX_C_SOURCE=199506L -Ae +Z -DHPUX -Dhppa \
- -D_HPUX_SOURCE +DAportable +DS1.1 -DHPUX11 -DXP_UNIX $(MPICMN)
+ -D_HPUX_SOURCE +DAportable +DS1.1 -DHPUX11 -DXP_UNIX -DMP_NO_MP_WORD $(MPICMN)
 
 #Linux
 #AS_OBJS = mpi_x86.o
@@ -208,6 +218,8 @@ libmpi.a: $(LIBOBJS)
 	ar -cvr libmpi.a $(LIBOBJS)
 	$(RANLIB) libmpi.a
 
+mpi.i: mpi.h
+
 #---------------------------------------
 
 MPTESTOBJS = mptest1.o mptest2.o mptest3.o mptest3a.o mptest4.o mptest4a.o \
@@ -279,7 +291,7 @@ doc:
 	(cd doc; ./build)
 
 clean:
-	rm -f *.o *.a 
+	rm -f *.o *.a *.i
 	rm -f core
 	rm -f *~ .*~
 	rm -f utils/*.o

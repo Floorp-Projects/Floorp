@@ -36,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- *  $Id: mpi.h,v 1.10 2000/08/31 03:59:48 nelsonb%netscape.com Exp $
+ *  $Id: mpi.h,v 1.11 2000/09/14 00:30:50 nelsonb%netscape.com Exp $
  */
 
 #ifndef _H_MPI_
@@ -55,6 +55,7 @@
 #endif
 
 #include <limits.h>
+#include <sys/types.h>
 
 #define  MP_NEG    1
 #define  MP_ZPOS   0
@@ -72,10 +73,30 @@ typedef unsigned int      mp_sign;
 typedef unsigned int      mp_size;
 typedef int               mp_err;
 
+#define MP_32BIT_MAX 4294967295U
+
+#if !defined(ULONG_MAX) 
+#error "ULONG_MAX not defined"
+#elif !defined(UINT_MAX)
+#error "UINT_MAX not defined"
+#elif !defined(USHRT_MAX)
+#error "USHRT_MAX not defined"
+#endif
+
+#if !defined(MP_USE_UINT_DIGIT) && ULONG_MAX > MP_32BIT_MAX
+typedef unsigned long     mp_digit;
+#define MP_DIGIT_MAX      ULONG_MAX
+#define MP_HALF_DIGIT_MAX UINT_MAX
+#undef MP_NO_MP_WORD
+#define MP_NO_MP_WORD 1
+#else
 typedef unsigned int      mp_digit;
 #define MP_DIGIT_MAX      UINT_MAX
+#define MP_HALF_DIGIT_MAX USHRT_MAX
+#endif
 
 #ifndef MP_NO_MP_WORD
+
 #if defined(ULONG_LONG_MAX)			/* GCC, HPUX */
 #define MP_ULONG_LONG_MAX ULONG_LONG_MAX
 #elif defined(ULLONG_MAX)			/* Solaris */
@@ -84,7 +105,8 @@ typedef unsigned int      mp_digit;
 #define MP_ULONG_LONG_MAX ULONGLONG_MAX
 #endif
 
-#if defined(MP_ULONG_LONG_MAX) && MP_ULONG_LONG_MAX > UINT_MAX
+#if defined(MP_ULONG_LONG_MAX)
+#if MP_ULONG_LONG_MAX > UINT_MAX
 #if MP_ULONG_LONG_MAX == ULONG_MAX
 typedef unsigned long     mp_word;
 typedef          long     mp_sword;
@@ -94,9 +116,13 @@ typedef unsigned long long mp_word;
 typedef          long long mp_sword;
 #define MP_WORD_MAX       MP_ULONG_LONG_MAX
 #endif
+#else /* MP_ULONG_LONG_MAX <= UINT_MAX */
+#define MP_NO_MP_WORD 1
+#endif
 #else /* MP_ULONG_LONG_MAX not defined */
 #define MP_NO_MP_WORD 1
 #endif
+
 #endif /* !MP_NO_MP_WORD */
 
 #if !defined(MP_WORD_MAX) && defined(MP_DEFINE_SMALL_WORD)
@@ -110,7 +136,6 @@ typedef          int      mp_sword;
 #define MP_RADIX          (1+(mp_word)MP_DIGIT_MAX)
 
 #define MP_HALF_DIGIT_BIT (MP_DIGIT_BIT/2)
-#define MP_HALF_DIGIT_MAX USHRT_MAX
 #define MP_HALF_RADIX     (1+(mp_digit)MP_HALF_DIGIT_MAX)
 /* MP_HALF_RADIX really ought to be called MP_SQRT_RADIX, but it's named 
 ** MP_HALF_RADIX because it's the radix for MP_HALF_DIGITs, and it's 
@@ -119,8 +144,12 @@ typedef          int      mp_sword;
 
 #if MP_DIGIT_MAX == USHRT_MAX
 #define MP_DIGIT_FMT      "%04X"     /* printf() format for 1 digit */
-#else
+#elif MP_DIGIT_MAX == UINT_MAX
 #define MP_DIGIT_FMT      "%08X"     /* printf() format for 1 digit */
+#elif MP_DIGIT_MAX == ULONG_MAX
+#define MP_DIGIT_FMT      "%016lX"   /* printf() format for 1 digit */
+#else
+#define MP_DIGIT_FMT      "%016llX"  /* printf() format for 1 digit */
 #endif
 
 /* Macros for accessing the mp_int internals           */

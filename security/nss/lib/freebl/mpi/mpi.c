@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.23 2000/09/12 00:41:09 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.24 2000/09/14 00:30:49 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -533,7 +533,7 @@ mp_err mp_div_d(const mp_int *a, mp_digit d, mp_int *q, mp_digit *r)
   if((pow = s_mp_ispow2d(d)) >= 0) {
     mp_digit  mask;
 
-    mask = (1 << pow) - 1;
+    mask = ((mp_digit)1 << pow) - 1;
     rem = DIGIT(a, 0) & mask;
 
     if(q) {
@@ -2021,13 +2021,17 @@ CLEANUP:
 ** This technique from the paper "Fast Modular Reciprocals" (unpublished)
 ** by Richard Schroeppel (a.k.a. Captain Nemo).
 */
-mp_digit  s_mp_invmod_32b(mp_digit P)
+mp_digit  s_mp_invmod_radix(mp_digit P)
 {
   mp_digit T = P;
   T *= 2 - (P * T);
   T *= 2 - (P * T);
   T *= 2 - (P * T);
   T *= 2 - (P * T);
+#if MP_DIGIT_MAX > MP_32BIT_MAX
+  T *= 2 - (P * T);
+  T *= 2 - (P * T);
+#endif
   return T;
 }
 
@@ -2054,7 +2058,7 @@ mp_err  s_mp_fixup_reciprocal(const mp_int *c, const mp_int *p, int k, mp_int *x
   ix = MP_MAX(ix, MP_USED(x));
   MP_CHECKOK( s_mp_pad(x, ix) );
 
-  r = 0 - s_mp_invmod_32b(MP_DIGIT(p,0));
+  r = 0 - s_mp_invmod_radix(MP_DIGIT(p,0));
 
   for (ix = 0; k > 0; ix++) {
     int      j = MP_MIN(k, MP_DIGIT_BIT);
@@ -2791,7 +2795,7 @@ void     s_mp_mod_2d(mp_int *mp, mp_digit d)
     return;
 
   /* Flush all the bits above 2^d in its digit */
-  dmask = (1 << nbit) - 1;
+  dmask = ((mp_digit)1 << nbit) - 1;
   DIGIT(mp, ndig) &= dmask;
 
   /* Flush all digits above the one with 2^d in it */
@@ -2819,7 +2823,7 @@ void     s_mp_div_2d(mp_int *mp, mp_digit d)
   s_mp_rshd(mp, d / DIGIT_BIT);
   d %= DIGIT_BIT;
   if (d) {
-    mask = (1 << d) - 1;
+    mask = ((mp_digit)1 << d) - 1;
     save = 0;
     for(ix = USED(mp) - 1; ix >= 0; ix--) {
       next = DIGIT(mp, ix) & mask;
@@ -3192,7 +3196,8 @@ mp_err   s_mp_add(mp_int *a, const mp_int *b)  /* magnitude addition      */
   }
 #else
   while (carry && ix < used) {
-    *pa++ = sum = carry + *pa;
+    sum = carry + *pa;
+    *pa++ = sum;
     carry = !sum;
     ++ix;
   }
@@ -3544,7 +3549,7 @@ mp_err   s_mp_mul(mp_int *a, const mp_int *b)
 
 /* }}} */
 
-#if defined(SOLARIS)
+#if defined(SOLARIS) && (ULONG_MAX == UINT_MAX)
 /* This trick works on Sparc V8 CPUs with the Workshop compilers. */
 #define MP_MUL_DxD(a, b, Phi, Plo) \
   { unsigned long long product = (unsigned long long)a * b; \
@@ -3736,8 +3741,8 @@ void s_mpv_sqr_add_prop(const mp_digit *pa, mp_size a_len, mp_digit *ps)
     a1a1 = a1 * a1;
     a0a1 = a0 * a1;
 
-    a1a1 += a0a1 >> 15;
-    a0a1 <<= 17;
+    a1a1 += a0a1 >> (MP_HALF_DIGIT_BIT - 1);
+    a0a1 <<= (MP_HALF_DIGIT_BIT + 1);
     a0a0 += a0a1;
     if (a0a0 < a0a1)
       ++a1a1;
@@ -3985,7 +3990,7 @@ mp_err   s_mp_2expt(mp_int *a, mp_digit k)
   if((res = s_mp_pad(a, dig + 1)) != MP_OKAY)
     return res;
   
-  DIGIT(a, dig) |= (1 << bit);
+  DIGIT(a, dig) |= ((mp_digit)1 << bit);
 
   return MP_OKAY;
 
@@ -4162,6 +4167,7 @@ int      s_mp_ispow2d(mp_digit d)
 {
   if ((d != 0) && ((d & (d-1)) == 0)) { /* d is a power of 2 */
     int pow = 0;
+#if MP_DIGIT_MAX == MP_32BIT_MAX
     if (d & 0xffff0000)
       pow += 16;
     if (d & 0xff00ff00)
@@ -4172,6 +4178,20 @@ int      s_mp_ispow2d(mp_digit d)
       pow += 2;
     if (d & 0xaaaaaaaa)
       pow += 1;
+#else
+    if (d & 0xffffffff00000000UL)
+      pow += 32;
+    if (d & 0xffff0000ffff0000UL)
+      pow += 16;
+    if (d & 0xff00ff00ff00ff00UL)
+      pow += 8;
+    if (d & 0xf0f0f0f0f0f0f0f0UL)
+      pow += 4;
+    if (d & 0xccccccccccccccccUL)
+      pow += 2;
+    if (d & 0xaaaaaaaaaaaaaaaaUL)
+      pow += 1;
+#endif
     return pow;
   }
   return -1;
