@@ -36,7 +36,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.35 2003/12/19 23:24:48 relyea%netscape.com Exp $
+ * $Id: keydb.c,v 1.36 2003/12/23 02:09:55 wchang0222%aol.com Exp $
  */
 
 #include "lowkeyi.h"
@@ -52,6 +52,7 @@
 #include "lowpbe.h"
 #include "secerr.h"
 #include "cdbhdl.h"
+#include "nsslocks.h"
 
 #include "keydbi.h"
 
