@@ -30,7 +30,7 @@
 #ifndef nsIFormSubmitObserver_h__
 #define nsIFormSubmitObserver_h__
 
-#include "nsIObserver.h"
+#include "nsISupports.h"
 #include "prtypes.h"
 #include "nsIDOMWindow.h"
 #include "nsIURI.h"
@@ -43,7 +43,7 @@ class nsString;
 
 #define NS_FORMSUBMIT_SUBJECT "formsubmit"
 
-class nsIFormSubmitObserver : public nsIObserver {
+class nsIFormSubmitObserver : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFORMSUBMITOBSERVER_IID)
 
