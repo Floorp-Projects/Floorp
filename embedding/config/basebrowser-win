@@ -70,7 +70,6 @@ components\gkview.dll
 
 ; layout
 moz_art_lgpl.dll
-components\gkcontent.dll
 components\gklayout.dll                   
 components\gkparser.dll                 
 components\layout_base.xpt              
