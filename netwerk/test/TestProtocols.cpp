@@ -197,16 +197,23 @@ public:
 
     NS_IMETHOD GetEventSink(const char* verb, const nsIID& eventSinkIID,
                             nsISupports* *result) {
+        nsresult rv = NS_ERROR_FAILURE;
+
         if (nsCRT::strcmp(verb, "load") == 0) { // makeshift verb for now
             if (eventSinkIID.Equals(nsIHTTPEventSink::GetIID())) {
-                *result = new InputTestConsumer();
-                if (*result)
-                    return NS_OK;
-                else
-                    return NS_ERROR_OUT_OF_MEMORY;
+                InputTestConsumer *sink;
+
+                sink = new InputTestConsumer();
+                if (sink) {
+                    NS_ADDREF(sink);
+                    rv = sink->QueryInterface(eventSinkIID, (void**)result);
+                    NS_RELEASE(sink);
+                } else {
+                    rv = NS_ERROR_OUT_OF_MEMORY;
+                }
             }
         }
-        return NS_ERROR_FAILURE;
+        return rv;
     }
 };
 
