@@ -36,6 +36,7 @@
 #include "nsTagHandler.h"
 #include "nsViewSourceHTML.h"
 #include "nsHTMLTokenizer.h"
+#include "nsTime.h"
 
 #ifdef XP_PC
 #include <direct.h> //this is here for debug reasons...
@@ -437,9 +438,6 @@ eAutoDetectResult CNavDTD::CanParse(nsString& aContentType, nsString& aCommand, 
     if(PR_TRUE==aContentType.Equals(kHTMLTextContentType)) {
       result=ePrimaryDetect;
     }
-    else if(PR_TRUE==aContentType.Equals(kPlainTextContentType)) {
-      result=eValidDetect;
-    }
     else {
       //otherwise, look into the buffer to see if you recognize anything...
       if(BufferContainsHTML(aBuffer)){
@@ -453,24 +451,32 @@ eAutoDetectResult CNavDTD::CanParse(nsString& aContentType, nsString& aCommand, 
 }
 
 
+PRTime  gStartTime;
+
 /**
  * 
  * @update  gess5/18/98
  * @param 
  * @return
  */
-nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
+nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString& aSourceType,nsIContentSink* aSink){
   nsresult result=NS_OK;
 
   mFilename=aFilename;
-  if(aParser){
-    mHasOpenBody=PR_FALSE;
-    mHadBodyOrFrameset=PR_FALSE;
-    mLineNumber=1;
-    mSink=(nsIHTMLContentSink*)aSink;
-    if((aNotifySink) && (mSink)) {
-      result = mSink->WillBuildModel();
-    }
+  mHasOpenBody=PR_FALSE;
+  mHadBodyOrFrameset=PR_FALSE;
+  mLineNumber=1;
+  mIsPlaintext=aSourceType.Equals(kPlainTextContentType);
+  mSink=(nsIHTMLContentSink*)aSink;
+  if((aNotifySink) && (mSink)) {
+
+#ifdef RGESS_DEBUG
+    gStartTime = PR_Now();
+    printf("Begin parsing...\n");
+#endif
+
+    result = mSink->WillBuildModel();
+
     mComputedCRC32=0;
     mExpectedCRC32=0;
   }
@@ -535,6 +541,15 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
       if((NS_OK==anErrorCode) && (mBodyContext->GetCount()>0)) {
         result = CloseContainersTo(0,eHTMLTag_unknown,PR_FALSE);
       }
+
+#ifdef RGESS_DEBUG
+      PRTime theEnd= PR_Now();
+      PRTime creates, ustoms;
+      LL_I2L(ustoms, 1000);
+      LL_SUB(creates, theEnd, gStartTime);
+      LL_DIV(creates, creates, ustoms);
+      printf("End parse elapsed: %lldms\n",creates);
+#endif
 
         //let's only grab this state once!
       if(!gShowCRC) {
@@ -822,78 +837,83 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
 
     //Sick as it sounds, I have to make sure the body has been
     //opened before other tags can be added to the content sink...
+
+  PRBool rickgSkip=PR_FALSE;
+  if(!rickgSkip) {
+    static eHTMLTags gBodyBlockers[]={eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_map};
+    PRInt32 theBodyBlocker=GetTopmostIndexOf(gBodyBlockers,sizeof(gBodyBlockers)/sizeof(eHTMLTag_unknown));
+    if((kNotFound==theBodyBlocker) && (!mHasOpenHead)){
+      if(CanPropagate(eHTMLTag_body,aChildTag)) {
+        mHasOpenBody=PR_TRUE;
+        CStartToken theToken(eHTMLTag_body);  //open the body container...
+        result=HandleStartToken(&theToken);
+      } 
+    }//if                      
+
+    /***********************************************************************
+      Subtlety alert: 
+
+      The REAL story on when tags are opened is somewhat confusing, but it's
+      important to understand. Since this is where we deal with it, it's time
+      for a quick disseration. Here goes:
+
+      Given a stack of open tags, a new (child) tag comes along and we need 
+      to see if it can be opened in place. There are at least 2 reasons why
+      it cannot be opened: 1) the parent says so; 2) the child says so.
+
+      Parents refuse to take children they KNOW they can't contain. Consider
+      that the <HTML> tag is only *supposed* to contain certain tags -- 
+      no one would expect it to accept a rogue <LI> tag (for example). 
+
+      After the parent decides it CAN accept a child (usually based on the class
+      of the tag, the child decides it if agrees. For example, consider this stack:
+        <HTML><BODY>
+          <DL> 
+            <DT> 
+              <DD>
+                <LI>
+                  <DT>
  
-  static eHTMLTags gBodyBlockers[]={eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_map};
-  PRInt32 theBodyBlocker=GetTopmostIndexOf(gBodyBlockers,sizeof(gBodyBlockers)/sizeof(eHTMLTag_unknown));
-  if((kNotFound==theBodyBlocker) && (!mHasOpenHead)){
-    if(CanPropagate(eHTMLTag_body,aChildTag)) {
-      mHasOpenBody=PR_TRUE;
-      CStartToken theToken(eHTMLTag_body);  //open the body container...
-      result=HandleStartToken(&theToken);
-    } 
-  }//if                      
+      Technically, the <LI> *can* contain the <DT> tag, but the <DT> knows that 
+      this isn't appropriate, since another <DT> is already open on the stack.
+      Therefore the child will refuse the placement.
 
-  /***********************************************************************
-    Subtlety alert: 
+     ***********************************************************************/
 
-    The REAL story on when tags are opened is somewhat confusing, but it's
-    important to understand. Since this is where we deal with it, it's time
-    for a quick disseration. Here goes:
+    eHTMLTags theParentTag=mBodyContext->Last();
+    PRBool theCanContainResult=CanContain(theParentTag,aChildTag);
+    PRBool theChildAgrees=CanBeContained(aChildTag,mBodyContext->mTags);
 
-    Given a stack of open tags, a new (child) tag comes along and we need 
-    to see if it can be opened in place. There are at least 2 reasons why
-    it cannot be opened: 1) the parent says so; 2) the child says so.
-
-    Parents refuse to take children they KNOW they can't contain. Consider
-    that the <HTML> tag is only *supposed* to contain certain tags -- 
-    no one would expect it to accept a rogue <LI> tag (for example). 
-
-    After the parent decides it CAN accept a child (usually based on the class
-    of the tag, the child decides it if agrees. For example, consider this stack:
-      <HTML><BODY>
-        <DL> 
-          <DT> 
-            <DD>
-              <LI>
-                <DT>
- 
-    Technically, the <LI> *can* contain the <DT> tag, but the <DT> knows that 
-    this isn't appropriate, since another <DT> is already open on the stack.
-    Therefore the child will refuse the placement.
-
-   ***********************************************************************/
-
-  eHTMLTags theParentTag=mBodyContext->Last();
-  PRBool theCanContainResult=CanContain(theParentTag,aChildTag);
-  PRBool theChildAgrees=CanBeContained(aChildTag,mBodyContext->mTags);
-
-  if(!(theCanContainResult && theChildAgrees)) {
-    eHTMLTags theTarget=FindAutoCloseTargetForStartTag(aChildTag,mBodyContext->mTags);
-    if(eHTMLTag_unknown!=theTarget){
-      result=CloseContainersTo(theTarget,PR_TRUE);
-      theParentTag=mBodyContext->Last();
-      theCanContainResult=CanContain(theParentTag,aChildTag);
-    }
-  }
-
-  if(PR_FALSE==theCanContainResult){
-    if(CanPropagate(theParentTag,aChildTag))
-      result=CreateContextStackFor(aChildTag);
-    else result=kCantPropagate;
-    if(NS_OK!=result) { 
-      //if you're here, then the new topmost container can't contain aToken.
-      //You must determine what container hierarchy you need to hold aToken,
-      //and create that on the parsestack.
-      result=ReduceContextStackFor(aChildTag);
-
-      PRBool theCanContainResult=CanContain(mBodyContext->Last(),aChildTag);
-
-      if(PR_FALSE==theCanContainResult) {
-        //we unwound too far; now we have to recreate a valid context stack.
-        result=CreateContextStackFor(aChildTag);
+    if(!(theCanContainResult && theChildAgrees)) {
+      eHTMLTags theTarget=FindAutoCloseTargetForStartTag(aChildTag,mBodyContext->mTags);
+      if(eHTMLTag_unknown!=theTarget){
+        result=CloseContainersTo(theTarget,PR_TRUE);
+        theParentTag=mBodyContext->Last();
+        theCanContainResult=CanContain(theParentTag,aChildTag);
       }
     }
-  }
+
+
+    if(PR_FALSE==theCanContainResult){
+      if(CanPropagate(theParentTag,aChildTag))
+        result=CreateContextStackFor(aChildTag);
+      else result=kCantPropagate;
+      if(NS_OK!=result) { 
+        //if you're here, then the new topmost container can't contain aToken.
+        //You must determine what container hierarchy you need to hold aToken,
+        //and create that on the parsestack.
+        result=ReduceContextStackFor(aChildTag);
+
+        PRBool theCanContainResult=CanContain(mBodyContext->Last(),aChildTag);
+
+        if(PR_FALSE==theCanContainResult) {
+          //we unwound too far; now we have to recreate a valid context stack.
+          result=CreateContextStackFor(aChildTag);
+        }
+      }
+    }
+
+  }//if(!rickGSkip)...
 
   if(IsContainer(aChildTag)){
       //first, let's see if it's a style element...
@@ -992,7 +1012,7 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
         if(!gHTMLElements[eHTMLTag_head].IsChildOfHead(aTag)){      
           CEndToken     theToken(eHTMLTag_head);
           nsCParserNode theNode(&theToken,mLineNumber);
-          result=CloseContainer(theNode,eHTMLTag_head,PR_FALSE);
+          result=CloseHead(theNode);
         }
       }
     }
@@ -1024,59 +1044,26 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
   PRInt16       attrCount=aToken->GetAttributeCount();
   nsresult      result=(0==attrCount) ? NS_OK : CollectAttributes(attrNode,attrCount);
   eHTMLTags     theParent=mBodyContext->Last();
- 
+
   if(NS_OK==result) {
     if(NS_OK==WillHandleStartTag(aToken,theChildTag,attrNode)) {
+      PRBool theHeadIsParent=nsHTMLElement::IsChildOfHead(theChildTag);
+
       switch(theChildTag) { 
-        case eHTMLTag_title: 
-          result=OpenHead(attrNode);
-          if(NS_OK==result) {
-            // result=CollectSkippedContent(attrNode,theAttrCount);
-            if(mSink) {
-              mSink->SetTitle(attrNode.GetSkippedContent());
-            }
-            if(NS_OK==result)
-              result=CloseHead(attrNode);
-          }
-          break;
-
-        case eHTMLTag_base:
-        case eHTMLTag_link:
-        case eHTMLTag_meta:
-          result=AddHeadLeaf(attrNode);
-          break;
-
-        case eHTMLTag_style:
-          result=OpenHead(attrNode);
-          if(NS_OK==result) {
-            // CollectSkippedContent(attrNode,theCount);
-            if(NS_OK==result) {
-              result=AddLeaf(attrNode);
-              // XXX If the return value tells us to block, go
-              // ahead and close the tag out anyway, since its
-              // contents will be consumed.
-              if (NS_SUCCEEDED(result)) {
-                nsresult rv=CloseHead(attrNode);
-                // XXX Only send along a failure. If the close 
-                // succeeded we still may need to indicate that the
-                // parser has blocked (i.e. return the result of
-                // the AddLeaf.
-                if (rv != NS_OK) {
-                  result = rv;
-                }
-              }
-            }  
-          } 
-          break;
 
         case eHTMLTag_area:
           if (mHasOpenMap && mSink)
             result=mSink->AddLeaf(attrNode);
           break;
 
+        case eHTMLTag_script:
+          theHeadIsParent=(!mHasOpenBody); //intentionally fall through...
+
         default:
-          if(PR_FALSE==CanOmit(theParent,theChildTag)) {
-            result=HandleDefaultStartToken(aToken,theChildTag,attrNode);
+          if(theHeadIsParent)
+            result=AddHeadLeaf(attrNode);
+          else if(PR_FALSE==CanOmit(theParent,theChildTag)) {
+            result=HandleDefaultStartToken(aToken,theChildTag,attrNode); 
           }
           break;
       } //switch
@@ -1308,7 +1295,9 @@ nsresult CNavDTD::HandleCommentToken(CToken* aToken) {
     case eHTMLTag_td:
       break;
     default:
-      result=(mSink) ? mSink->AddComment(aNode) : NS_OK; 
+      if(mHasOpenBody){
+        result=(mSink) ? mSink->AddComment(aNode) : NS_OK; 
+      }
   }
   return result;
 }
@@ -2149,6 +2138,13 @@ nsresult CNavDTD::OpenBody(const nsIParserNode& aNode){
   if(NS_OK==result) {
     result=(mSink) ? mSink->OpenBody(aNode) : NS_OK; 
     mBodyContext->Push((eHTMLTags)aNode.GetNodeType());
+
+    //now THIS is a hack to support plaintext documents in this DTD...
+    if((NS_OK==result) && mIsPlaintext) {
+
+      CStartToken theToken(eHTMLTag_pre);  //open the body container...
+      result=HandleStartToken(&theToken);      
+    }
   }
   return result;
 }
@@ -2194,6 +2190,7 @@ nsresult CNavDTD::OpenForm(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 nsresult CNavDTD::CloseForm(const nsIParserNode& aNode){
+  NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
   nsresult result=NS_OK;
   if(mHasOpenForm) {
     mHasOpenForm=PR_FALSE;
@@ -2230,6 +2227,7 @@ nsresult CNavDTD::OpenMap(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 nsresult CNavDTD::CloseMap(const nsIParserNode& aNode){
+  NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
   nsresult result=NS_OK;
   if(mHasOpenMap) {
     mHasOpenMap=PR_FALSE;
@@ -2367,7 +2365,6 @@ CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
 nsresult
 CNavDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,
                         PRBool aUpdateStyles){
-  NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
   nsresult   result=NS_OK;
   eHTMLTags nodeType=(eHTMLTags)aNode.GetNodeType();
   
@@ -2519,7 +2516,7 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode& aNode){
  * Call this method ONLY when you want to write a leaf
  * into the head container.
  * 
- * @update  vidur 11/14/98
+ * @update  gess 03/14/99
  * @param   aNode -- next node to be added to model
  * @return  error code; 0 means OK
  */
@@ -2530,19 +2527,34 @@ nsresult CNavDTD::AddHeadLeaf(const nsIParserNode& aNode){
   
   //this code has been added to prevent <meta> tags from being processed inside
   //the document if the <meta> tag itself was found in a <noframe>, <nolayer>, or <noscript> tag.
-  if(eHTMLTag_meta==aNode.GetNodeType())
+  eHTMLTags theTag=(eHTMLTags)aNode.GetNodeType();
+  if(eHTMLTag_meta==theTag)
     if(HasOpenContainer(gNoXTags,sizeof(gNoXTags)/sizeof(eHTMLTag_unknown))) {
       return result;
     }
 
-  result=OpenHead(aNode);
-  if(NS_OK==result) {
-    result=AddLeaf(aNode);
-    // XXX If the return value tells us to block, go
-    // ahead and close the tag out anyway, since its
-    // contents will be consumed.
-    CloseHead(aNode);
+  if(mSink) {
+    result=OpenHead(aNode);
+    if(NS_OK==result) {
+      if(eHTMLTag_title==theTag)
+        mSink->SetTitle(aNode.GetSkippedContent());
+      else result=AddLeaf(aNode);
+        // XXX If the return value tells us to block, go
+        // ahead and close the tag out anyway, since its
+        // contents will be consumed.
+      if (NS_SUCCEEDED(result)) {
+        nsresult rv=CloseHead(aNode);
+        // XXX Only send along a failure. If the close 
+        // succeeded we still may need to indicate that the
+        // parser has blocked (i.e. return the result of
+        // the AddLeaf.
+        if (rv != NS_OK) {
+          result = rv;
+        }
+      }
+    }  
   }
+
   return result;
 }
 

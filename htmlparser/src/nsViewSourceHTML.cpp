@@ -221,7 +221,11 @@ nsresult CViewSourceHTML::CreateNewInstance(nsIDTD** aInstancePtrResult){
  */
 eAutoDetectResult CViewSourceHTML::CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion) {
   eAutoDetectResult result=eUnknownDetect;
-  if(aCommand.Equals(kViewSourceCommand)) {
+
+  if(PR_TRUE==aContentType.Equals(kPlainTextContentType)) {
+    result=eValidDetect;
+  }
+  else if(aCommand.Equals(kViewSourceCommand)) {
     if(aContentType.Equals(kXMLTextContentType) ||
        aContentType.Equals(kRDFTextContentType) ||
        aContentType.Equals(kHTMLTextContentType) ||
@@ -240,32 +244,36 @@ eAutoDetectResult CViewSourceHTML::CanParse(nsString& aContentType, nsString& aC
  * @param 
  * @return
  */
-NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
+NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString& aSourceType,nsIContentSink* aSink){
   nsresult result=NS_OK;
   mFilename=aFilename;
 
-  if(aParser){
-    mSink=(nsIHTMLContentSink*)aParser->GetContentSink();
-    if((aNotifySink) && (mSink)) {
-      mLineNumber=0;
-      result = mSink->WillBuildModel();
+  mSink=(nsIHTMLContentSink*)aSink;
+  if((aNotifySink) && (mSink)) {
+    mLineNumber=0;
+    result = mSink->WillBuildModel();
 
-      /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
-      mIsHTML=(0<aFilename.RFind(".htm",PR_TRUE)); 
+    mIsHTML=aSourceType.Equals(kHTMLTextContentType);
+    mIsPlaintext=aSourceType.Equals(kPlainTextContentType);
 
-      //now let's automatically open the html...
-      CStartToken theHTMLToken(eHTMLTag_html);
-      nsCParserNode theHTMLNode(&theHTMLToken,0);
-      mSink->OpenHTML(theHTMLNode);
+    //now let's automatically open the html...
+    CStartToken theHTMLToken(eHTMLTag_html);
+    nsCParserNode theHTMLNode(&theHTMLToken,0);
+    mSink->OpenHTML(theHTMLNode);
 
-        //now let's automatically open the body...
-      CStartToken theBodyToken(eHTMLTag_body);
-      nsCParserNode theBodyNode(&theBodyToken,0);
-      mSink->OpenBody(theBodyNode);
+      //now let's automatically open the body...
+    CStartToken theBodyToken(eHTMLTag_body);
+    nsCParserNode theBodyNode(&theBodyToken,0);
+    mSink->OpenBody(theBodyNode);
 
-      SetFont("courier","-1",PR_TRUE,*mSink);
-
+     //now let's automatically open the body...
+    if(mIsPlaintext) {
+      CStartToken thePREToken(eHTMLTag_pre);
+      nsCParserNode thePRENode(&thePREToken,0);
+      mSink->OpenContainer(thePRENode);
     }
+    else SetFont("courier","-1",PR_TRUE,*mSink);
+
   }
   return result;
 }
@@ -322,7 +330,9 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
     if((aNotifySink) && (mSink)) {
         //now let's automatically close the pre...
 
-      SetStyle(eHTMLTag_font,PR_FALSE,*mSink);
+      if(!mIsPlaintext){
+        SetStyle(eHTMLTag_font,PR_FALSE,*mSink);
+      }
   
       //now let's automatically close the body...
       CEndToken theBodyToken(eHTMLTag_body);
@@ -535,7 +545,7 @@ nsresult CViewSourceHTML::WriteText(const nsString& aTextString,nsIContentSink& 
  *  @return  result status
  */
 static
-PRBool WriteTag(nsCParserNode& aNode,nsIContentSink& aSink,PRBool anEndToken,PRBool aIsHTML) {
+PRBool WriteTag(nsCParserNode& aNode,nsIContentSink& aSink,PRBool anEndToken,PRBool aIsHTML,PRBool aIsPlaintext) {
   static nsString     theString;
   static nsAutoString theLTEntity("lt");
   static nsAutoString theGTEntity("gt");
@@ -547,8 +557,10 @@ PRBool WriteTag(nsCParserNode& aNode,nsIContentSink& aSink,PRBool anEndToken,PRB
   nsCParserNode theStartNode(&theStartEntityToken,aNode.GetSourceLineNumber());
   aSink.AddLeaf(theStartNode);
 
-  SetStyle(eHTMLTag_b,PR_TRUE,aSink);
-  SetColor(theColors[aIsHTML][eHTMLTag_userdefined==aNode.GetNodeType()],PR_TRUE,aSink);
+  if(!aIsPlaintext) {
+    SetStyle(eHTMLTag_b,PR_TRUE,aSink);
+    SetColor(theColors[aIsHTML][eHTMLTag_userdefined==aNode.GetNodeType()],PR_TRUE,aSink);
+  }
 
   if(anEndToken)
     theString="/";
@@ -559,8 +571,11 @@ PRBool WriteTag(nsCParserNode& aNode,nsIContentSink& aSink,PRBool anEndToken,PRB
     nsCParserNode theNode(&theToken,aNode.GetSourceLineNumber());
     aSink.AddLeaf(theNode);
   }
-  SetStyle(eHTMLTag_font,PR_FALSE,aSink);
-  SetStyle(eHTMLTag_b,PR_FALSE,aSink);
+
+  if(!aIsPlaintext){
+    SetStyle(eHTMLTag_font,PR_FALSE,aSink);
+    SetStyle(eHTMLTag_b,PR_FALSE,aSink);
+  }
 
   PRInt32 theCount=aNode.GetAttributeCount();
   if(0<theCount){
@@ -569,26 +584,34 @@ PRBool WriteTag(nsCParserNode& aNode,nsIContentSink& aSink,PRBool anEndToken,PRB
       
        //begin by writing the key...
       {
-        SetStyle(eHTMLTag_b,PR_TRUE,aSink);
+        if(!aIsPlaintext){
+          SetStyle(eHTMLTag_b,PR_TRUE,aSink);
+        }
         theString=" ";
         theString.Append(aNode.GetKeyAt(theIndex));
         CTextToken theToken(theString);  
         nsCParserNode theNode(&theToken,aNode.GetSourceLineNumber());
         aSink.AddLeaf(theNode);
-        SetStyle(eHTMLTag_b,PR_FALSE,aSink);
+        if(!aIsPlaintext){
+          SetStyle(eHTMLTag_b,PR_FALSE,aSink);
+        }
       }
 
        //begin by writing the value...
       {
-        SetColor("blue",PR_TRUE,aSink);
+        if(!aIsPlaintext){
+          SetColor("blue",PR_TRUE,aSink);
+        }
         theString=aNode.GetValueAt(theIndex);
         if(0<theString.Length()){
           theString.Insert('=',0);
           CTextToken theToken(theString);  
           nsCParserNode theNode(&theToken,aNode.GetSourceLineNumber());
-          aSink.AddLeaf(theNode);
+          aSink.AddLeaf(theNode);        
         }
-        SetStyle(eHTMLTag_font,PR_FALSE,aSink);
+        if(!aIsPlaintext){
+          SetStyle(eHTMLTag_font,PR_FALSE,aSink);
+        }
       }
     }
   }
@@ -665,7 +688,9 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
 
     case eToken_entity:
       {
-        SetColor("maroon",PR_TRUE,*mSink);
+        if(!mIsPlaintext){
+          SetColor("maroon",PR_TRUE,*mSink);
+        }
         nsAutoString theStr("&");
         nsString& theEntity=aToken->GetStringValueXXX();
         if(!theEntity.EqualsIgnoreCase("XI",2)) {
@@ -677,18 +702,24 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
         theStr.Append(aToken->GetStringValueXXX());
         theStr.Append(";");
         WriteText(theStr,*mSink,PR_FALSE);
-        SetStyle(eHTMLTag_font,PR_FALSE,*mSink);
+        if(!mIsPlaintext){
+          SetStyle(eHTMLTag_font,PR_FALSE,*mSink);
+        }
       }
       break;
 
     case eToken_comment:
       {
-        SetColor("green",PR_TRUE,*mSink);
-        SetStyle(eHTMLTag_i,PR_TRUE,*mSink);
+        if(!mIsPlaintext){
+          SetColor("green",PR_TRUE,*mSink);
+          SetStyle(eHTMLTag_i,PR_TRUE,*mSink);
+        }
         nsString& theText=aToken->GetStringValueXXX();
         WriteText(theText,*mSink,PR_TRUE);
-        SetStyle(eHTMLTag_i,PR_FALSE,*mSink);
-        SetStyle(eHTMLTag_font,PR_FALSE,*mSink);
+        if(!mIsPlaintext){
+          SetStyle(eHTMLTag_i,PR_FALSE,*mSink);
+          SetStyle(eHTMLTag_font,PR_FALSE,*mSink);
+        }
       }
       break;
 
@@ -710,13 +741,17 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
 
     case eToken_instruction:
       {
-        SetColor("orange",PR_TRUE,*mSink);
-        SetStyle(eHTMLTag_i,PR_TRUE,*mSink);
+        if(!mIsPlaintext){
+          SetColor("orange",PR_TRUE,*mSink);
+          SetStyle(eHTMLTag_i,PR_TRUE,*mSink);
+        }
         CTextToken theTextToken(aToken->GetStringValueXXX());
         nsCParserNode theTextNode(&theTextToken,mLineNumber);
         result=mSink->AddLeaf(theTextNode); 
-        SetStyle(eHTMLTag_i,PR_FALSE,*mSink);
-        SetStyle(eHTMLTag_font,PR_FALSE,*mSink);
+        if(!mIsPlaintext){
+          SetStyle(eHTMLTag_i,PR_FALSE,*mSink);
+          SetStyle(eHTMLTag_font,PR_FALSE,*mSink);
+        }
       }
       break;
     
@@ -741,7 +776,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
         }
       }
       
-      WriteTag(theNode,*mSink,theEndTag,mIsHTML);
+      WriteTag(theNode,*mSink,theEndTag,mIsHTML,mIsPlaintext);
       
       // We make sure to display the title on the view source window.
       
@@ -767,7 +802,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       }
       break;
     case eToken_end:
-      WriteTag(theNode,*mSink,theEndTag,mIsHTML);
+      WriteTag(theNode,*mSink,theEndTag,mIsHTML,mIsPlaintext);
       break;
     default:
       result=NS_OK;

@@ -101,7 +101,7 @@ class CViewSourceHTML: public nsIDTD {
       * @param	aFilename is the name of the file being parsed.
       * @return	error code (almost always 0)
       */
-    NS_IMETHOD WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink=0);
+    NS_IMETHOD WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString& aSourceType,nsIContentSink* aSink=0);
 
     /**
       * The parser uses a code sandwich to wrap the parsing process. Before
@@ -244,6 +244,7 @@ protected:
     PRBool              mIsHTML;
     nsITokenizer*       mTokenizer;
     PRInt32             mHasOpenHead;
+    PRBool              mIsPlaintext;
 
 };
 

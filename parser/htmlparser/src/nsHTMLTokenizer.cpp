@@ -485,6 +485,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
         }
       }
     } //if
+    else theRecycler->RecycleToken(aToken);
   } //if
   return result;
 }
