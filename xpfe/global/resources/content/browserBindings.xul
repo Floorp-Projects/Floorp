@@ -10,13 +10,26 @@
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollPageUp');
-            dump('foo\n');
-            if(controller) dump('yeah, it is a controller\n');
             controller.doCommand('cmd_scrollPageUp');"/>
     <key id="key_page_down" keycode="VK_PAGE_DOWN" shift="false" control="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollPageDown');
             controller.doCommand('cmd_scrollPageDown');"/>
+    <key id="space" keycode="VK_SPACE" shift="false" control="false"
+        onkeypress="
+            var controller =
+            document.commandDispatcher.getControllerForCommand('cmd_scrollPageDown');
+            controller.doCommand('cmd_scrollPageDown');"/>
+    <key id="key_page_up" keycode="VK_UP" shift="false" control="false"
+        onkeypress="
+            var controller =
+            document.commandDispatcher.getControllerForCommand('cmd_scrollLineUp');
+            controller.doCommand('cmd_scrollLineUp');"/>
+    <key id="key_page_down" keycode="VK_DOWN" shift="false" control="false"
+        onkeypress="
+            var controller =
+            document.commandDispatcher.getControllerForCommand('cmd_scrollLineDown');
+            controller.doCommand('cmd_scrollLineDown');"/>
   </keyset>
 </window>
