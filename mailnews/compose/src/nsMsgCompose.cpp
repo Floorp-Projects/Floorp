@@ -87,6 +87,7 @@
 #include "nsIMIMEService.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
+#include "nsIWindowMediator.h"
 #include "nsISupportsArray.h"
 #include "nsIIOService.h"
 #include "nsIFileURL.h"
@@ -1076,6 +1077,31 @@ NS_IMETHODIMP nsMsgCompose::SetRecycledWindow(PRBool aRecycledWindow)
   return NS_OK;
 }
 
+#if !defined(XP_MAC)
+PRBool nsMsgCompose::IsLastWindow()
+{
+  nsresult rv;
+  PRBool more;
+  nsCOMPtr<nsIWindowMediator> windowMediator =
+              do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+    rv = windowMediator->GetEnumerator(nsnull,
+               getter_AddRefs(windowEnumerator));
+    if (NS_SUCCEEDED(rv))
+    {
+      nsCOMPtr<nsISupports> isupports;
+
+      if (NS_SUCCEEDED(windowEnumerator->GetNext(getter_AddRefs(isupports))))
+        if (NS_SUCCEEDED(windowEnumerator->HasMoreElements(&more)))
+          return !more;
+    }
+  }
+  return PR_TRUE;
+}
+#endif /* XP_MAC */
+
 NS_IMETHODIMP nsMsgCompose::CloseWindow(PRBool recycleIt)
 {
   nsresult rv;
@@ -1083,6 +1109,9 @@ NS_IMETHODIMP nsMsgCompose::CloseWindow(PRBool recycleIt)
   nsCOMPtr<nsIMsgComposeService> composeService = do_GetService(NS_MSGCOMPOSESERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
   
+#if !defined(XP_MAC)
+  recycleIt = recycleIt && !IsLastWindow();
+#endif /* XP_MAC */
   if (recycleIt)
   {
     rv = composeService->CacheWindow(m_window, m_composeHTML, mRecyclingListener);

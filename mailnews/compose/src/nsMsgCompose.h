@@ -124,6 +124,9 @@ private:
   nsresult _BodyConvertible(nsIDOMNode *node, PRInt32 *_retval);
   nsresult SetBodyAttribute(nsIEditor* editor, nsIDOMElement* element, nsString& name, nsString& value);
   nsresult SetBodyAttributes(nsString& attributes);
+#if !defined(XP_MAC)
+  PRBool IsLastWindow();
+#endif /* XP_MAC */
  
        // Helper function. Parameters are not checked.
   PRBool                                    mConvertStructs;    // for TagConvertible
