@@ -114,8 +114,8 @@ XP_END_PROTOS
 			extern void debugstr(const char* s);
 		#endif
 		#ifndef XP_ASSERT
-			// Carbon doesn't support debugstr(), so we have to do it ourselves. Also, Carbon
-			// may have read-only strings so that we need a temp buffer to use c2pstr().
+			/* Carbon doesn't support debugstr(), so we have to do it ourselves. Also, Carbon */
+			/* may have read-only strings so that we need a temp buffer to use c2pstr(). */
 			#define XP_ASSERT(X) do {if (!(X)) {char buff[500]; strcpy(buff,#X); DebugStr(c2pstr(buff));} } while (PR_FALSE)
 		#endif
 	#else
