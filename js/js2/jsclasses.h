@@ -77,6 +77,9 @@ namespace JSClasses {
         JSScope* mScope;        
         uint32 mSlotCount;
         JSSlots mSlots;
+        uint32 mStaticCount;
+        JSSlots mStaticSlots;
+        JSValue* mStaticData;
         ICodeModule* mConstructor;
         // typedef std::vector<ICodeModule*, gc_allocator<ICodeModule*> > JSMethods;
         // JSMethods mMethods;
@@ -85,7 +88,10 @@ namespace JSClasses {
             :   JSType(name, superClass),
                 mSuperClass(superClass),
                 mScope(new JSScope(scope)),
-                mSlotCount(superClass ? superClass->mSlotCount : 0)
+                mSlotCount(superClass ? superClass->mSlotCount : 0),
+                mStaticCount(0),
+                mStaticData(0),
+                mConstructor(0)
         {
             // to "inherit" superClass methods.
             if (superClass)
@@ -112,16 +118,16 @@ namespace JSClasses {
             return mConstructor;
         }
         
-        JSSlot& defineSlot(const String& name, JSType* type)
+        const JSSlot& defineSlot(const String& name, JSType* type)
         {
             JSSlot& slot = mSlots[name];
             ASSERT(slot.mType == 0);
             slot.mType = type;
-            slot.mIndex = ++mSlotCount;
+            slot.mIndex = mSlotCount++; // starts at 0.
             return slot;
         }
         
-        JSSlot& getSlot(const String& name)
+        const JSSlot& getSlot(const String& name)
         {
             return mSlots[name];
         }
@@ -144,9 +150,34 @@ namespace JSClasses {
         /**
          * Define a static/class variable.
          */
-        JSValue& defineStatic(const String& name, JSType* type)
+        const JSSlot& defineStatic(const String& name, JSType* type)
         {
-            return mScope->defineVariable(name, type);
+            JSSlot& slot = mStaticSlots[name];
+            ASSERT(slot.mType == 0);
+            slot.mType = type;
+            slot.mIndex = mStaticCount++;
+            return slot;
+        }
+        
+        const JSSlot& getStatic(const String& name)
+        {
+            return mStaticSlots[name];
+        }
+        
+        bool hasStatic(const String& name)
+        {
+            return (mStaticSlots.find(name) != mStaticSlots.end());
+        }
+
+        bool complete()
+        {
+            mStaticData = new JSValue[mStaticCount];
+            return (mStaticData != 0);
+        }
+
+        JSValue& operator[] (uint32 index)
+        {
+            return mStaticData[index];
         }
     };
 
@@ -164,22 +195,21 @@ namespace JSClasses {
     public:
         void* operator new(size_t n, JSClass* thisClass)
         {
-            return gc_base::operator new(thisClass->getSlotCount() * sizeof(JSValue) + n);
+            return gc_base::operator new((n - sizeof(JSValue)) + thisClass->getSlotCount() * sizeof(JSValue));
         }
         
         JSInstance(JSClass* thisClass)
         {
-            // slot 0 is always the class.
-            mSlots[0] = mType = thisClass;           
-            // initialize rest of slots with undefined.
-            std::uninitialized_fill(&mSlots[1], &mSlots[1] + thisClass->getSlotCount(), JSValue());
+            mType = thisClass;
+            // initialize all slots with undefined.
+            std::uninitialized_fill(&mSlots[1], &mSlots[0] + thisClass->getSlotCount(), JSTypes::kUndefinedValue);
             // for grins, use the prototype link to access methods.
             setPrototype(thisClass->getScope());
         }
         
         JSClass* getClass()
         {
-            return static_cast<JSClass*>(mSlots[0].object);
+            return static_cast<JSClass*>(mType);
         }
         
         JSValue& operator[] (uint32 index)
