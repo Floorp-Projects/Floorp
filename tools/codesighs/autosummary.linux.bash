@@ -106,21 +106,20 @@ SUMMARYFILE="$3"
 #
 #   Create our temporary directory.
 #
-TMPDIR="codesighs/$PPID"
-mkdir -p $TMPDIR
+MYTMPDIR=`mktemp -d ./codesighs.tmp.XXXXXXXX`
 
 
 #
 #   Find all relevant files.
 #
-ALLFILES="$TMPDIR/allfiles.list"
+ALLFILES="$MYTMPDIR/allfiles.list"
 find ./mozilla/dist/bin -not -type d $EXCLUDE_NAMES > $ALLFILES
 
 
 #
 #   Reduce the files to a revelant set.
 #
-THEFILES="$TMPDIR/files.list"
+THEFILES="$MYTMPDIR/files.list"
 grep -vi $EXCLUDE_PATTERN_01 < $ALLFILES | grep -vi $EXCLUDE_PATTERN_02 > $THEFILES
 
 
@@ -129,14 +128,14 @@ grep -vi $EXCLUDE_PATTERN_01 < $ALLFILES | grep -vi $EXCLUDE_PATTERN_02 > $THEFI
 #   We are very particular on what switches to use.
 #   nm --format=bsd --size-sort --print-file-name --demangle
 #
-NMRESULTS="$TMPDIR/nm.txt"
+NMRESULTS="$MYTMPDIR/nm.txt"
 xargs -n 1 nm --format=bsd --size-sort --print-file-name --demangle < $THEFILES > $NMRESULTS 2> /dev/null
 
 
 #
 #   Produce the TSV output.
 #
-RAWTSVFILE="$TMPDIR/raw.tsv"
+RAWTSVFILE="$MYTMPDIR/raw.tsv"
 ./mozilla/dist/bin/nm2tsv --input $NMRESULTS > $RAWTSVFILE
 
 
@@ -152,7 +151,7 @@ sort -r $RAWTSVFILE > $COPYSORTTSV
 #       level report.
 #
 rm -f $SUMMARYFILE
-DIFFFILE="$TMPDIR/diff.txt"
+DIFFFILE="$MYTMPDIR/diff.txt"
 if [ -e $OLDTSVFILE ]; then
   diff $OLDTSVFILE $COPYSORTTSV > $DIFFFILE
   ./mozilla/dist/bin/maptsvdifftool --input $DIFFFILE >> $SUMMARYFILE
@@ -190,4 +189,4 @@ fi
 #
 #   Remove our temporary directory.
 #
-\rm -rf $TMPDIR
+\rm -rf $MYTMPDIR
