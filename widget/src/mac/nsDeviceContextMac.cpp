@@ -18,6 +18,7 @@
 
 #include "nsDeviceContextMac.h"
 #include "nsRenderingContextMac.h"
+#include "nsDeviceContextSpecMac.h"
 //XXX#include "../nsGfxCIID.h"
 
 
@@ -219,7 +220,14 @@ NS_IMETHODIMP nsDeviceContextMac::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PR
 NS_IMETHODIMP nsDeviceContextMac::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                                       nsIDeviceContext *&aContext)
 {
-  return NS_ERROR_FAILURE;
+GrafPtr	curPort;
+	
+	aContext = new nsDeviceContextMac();
+	((nsDeviceContextMac*)aContext)->mSpec = aDevice;
+	NS_ADDREF(aDevice);
+
+	::GetPort(&curPort);
+  return ((nsDeviceContextMac*)aContext)->Init(curPort);
 }
 
 
@@ -227,6 +235,9 @@ NS_IMETHODIMP nsDeviceContextMac::GetDeviceContextFor(nsIDeviceContextSpec *aDev
 
 NS_IMETHODIMP nsDeviceContextMac::BeginDocument(void)
 {
+ 
+ 	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen) 
+  	((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort = ::PrOpenDoc(((nsDeviceContextSpecMac*)(this->mSpec))->mPrtRec,nsnull,nsnull);
   return NS_OK;
 }
 
@@ -235,6 +246,8 @@ NS_IMETHODIMP nsDeviceContextMac::BeginDocument(void)
 
 NS_IMETHODIMP nsDeviceContextMac::EndDocument(void)
 {
+ 	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen) 
+		::PrCloseDoc(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort);
   return NS_OK;
 }
 
@@ -243,6 +256,8 @@ NS_IMETHODIMP nsDeviceContextMac::EndDocument(void)
 
 NS_IMETHODIMP nsDeviceContextMac::BeginPage(void)
 {
+ 	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen) 
+		::PrOpenPage(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort,nsnull);
   return NS_OK;
 }
 
@@ -251,6 +266,8 @@ NS_IMETHODIMP nsDeviceContextMac::BeginPage(void)
 
 NS_IMETHODIMP nsDeviceContextMac::EndPage(void)
 {
+ 	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen) 
+		::PrClosePage(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort);
   return NS_OK;
 }
 
@@ -269,8 +286,7 @@ bool nsDeviceContextMac :: GetMacFontNumber(const nsString& aFontName, short &aF
 	static short			lastFontNum;
 	static bool				lastFontExists;
 
-	if (lastFontName == aFontName)
-	{
+	if (lastFontName == aFontName){
 		aFontNum = lastFontNum;
 		return lastFontExists;
 	}
@@ -279,13 +295,11 @@ bool nsDeviceContextMac :: GetMacFontNumber(const nsString& aFontName, short &aF
 	aFontName.ToCString((char*)&aStr[1], sizeof(aStr)-1);
 
 	::GetFNum(aStr, &aFontNum);
-	if (aFontNum == 0)
-	{
+	if (aFontNum == 0){
 		// Either we didn't find the font, or we were looking for the system font
 		::GetFontName(0, systemFontName);
 		fontExists = ::EqualString(aStr, systemFontName, FALSE, FALSE );
-	}
-	else
+	}else
 		fontExists = true;
 
 	lastFontExists = fontExists;
