@@ -62,6 +62,9 @@ private:
   static PRInt32          gRefCnt;
   static PRInt32          gBrowserSearchMode;
   static PRBool           gEngineListBuilt;
+#ifdef MOZ_PHOENIX
+  static PRBool           gReorderedEngineList;
+#endif
 
   // pseudo-constants
   static nsIRDFResource    *kNC_SearchResult;
@@ -175,6 +178,9 @@ friend  int  PR_CALLBACK  searchModePrefCallback(const char *pref, void *aClosur
   nsresult  filterSite(nsIRDFResource *src);
   nsresult  clearFilters(void);
   PRBool    isSearchResultFiltered(const nsString &href);
+#ifdef MOZ_PHOENIX
+  void      ReorderEngineList();
+#endif
 
 static  void    FireTimer(nsITimer* aTimer, void* aClosure);
 
