@@ -619,7 +619,8 @@ if (open (COMMENTS, "<data/comments")) {
     }
     close COMMENTS;
     $quip = $cdata[int(rand($#cdata + 1))];
-} else {
+}
+if (!defined $quip) {
     $quip = "Bugzilla would like to put a random quip here, but nobody has entered any.";
 }
         
