@@ -51,6 +51,7 @@ sub globals_pl_sillyness {
     $zz = @main::milestoneurl;
     $zz = @main::prodmaxvotes;
     $zz = $main::superusergroupset;
+    $zz = $main::userid;
 }
 
 #
