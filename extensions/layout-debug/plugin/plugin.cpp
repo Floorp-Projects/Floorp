@@ -175,7 +175,7 @@ void nsPluginInstance::getVersion(char* *aVersion)
 
 //-----------------------------------------------------
  
-void nsPluginInstance::OutPutLayoutFrames(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName, PRInt32 *aRetVal)
+void nsPluginInstance::OutPutLayoutFrames(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName, PRUint32 aFlags , PRInt32 *aRetVal)
 {
   nsIDebugObject *theDebugObject=NULL;
 
@@ -185,7 +185,7 @@ void nsPluginInstance::OutPutLayoutFrames(nsISupports *aWindow, const PRUnichar 
     // get service using its contract id and use it to allocate the memory
     gServiceManager->GetServiceByContractID("@mozilla.org/debug/debugobject;1", NS_GET_IID(nsIDebugObject), (void **)&theDebugObject);
     if(theDebugObject){
-      *aRetVal = theDebugObject->DumpContent(aWindow,aFilePath,aFileName);
+      *aRetVal = theDebugObject->DumpContent(aWindow,aFilePath,aFileName,aFlags);
     }
   }
 }
