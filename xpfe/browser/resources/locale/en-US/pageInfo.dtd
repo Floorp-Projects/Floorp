@@ -79,6 +79,7 @@
 <!ENTITY  linkAddress           "Address">
 <!ENTITY  linkType              "Type">
 <!ENTITY  linkTarget            "Target">
+<!ENTITY  linkAccessKey         "Access Key">
 
 <!ENTITY  mediaTab              "Media">
 <!ENTITY  mediaHeader           "Images on this page">
