@@ -173,24 +173,14 @@ calDateTime::AddDuration(calIDateTime *aDuration)
 {
     NS_ENSURE_ARG_POINTER(aDuration);
 
-    PRInt16 y, mo, d, h, m, s;
-    aDuration->GetYear(&y);
-    aDuration->GetMonth(&mo);
-    aDuration->GetDay(&d);
-    aDuration->GetHour(&h);
-    aDuration->GetMinute(&m);
-    aDuration->GetSecond(&s);
-
-    mYear += y;
-    mMonth += mo;
-    mDay += d;
-    mHour += h;
-    mMinute += m;
-    mSecond += s;
+    PRTime nativeDur;
+    nsresult rv = aDuration->GetNativeTime(&nativeDur);
+    if (NS_FAILED(rv))
+        return rv;
 
     mLastModified = PR_Now();
 
-    return Normalize();
+    return SetNativeTime(mNativeTime + nativeDur);
 }
 
 NS_IMETHODIMP

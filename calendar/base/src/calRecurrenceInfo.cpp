@@ -39,6 +39,7 @@
 #include "calRecurrenceInfo.h"
 #include "calDateTime.h"
 #include "calIItemBase.h"
+#include "calIEvent.h"
 
 #include "calICSService.h"
 
@@ -392,7 +393,8 @@ calRecurrenceInfo::GetNextOccurrence(calIItemBase *aItem, calIDateTime *aStartTi
 
     struct icaltimetype next = icalrecur_iterator_next(recur_iter);
     if (!icaltime_is_null_time(next)) {
-        calDateTime *cdt = new calDateTime(&next);
+        nsCOMPtr<calIDateTime> cdt = new calDateTime(&next);
+
         if (!cdt) {
             rv = NS_ERROR_OUT_OF_MEMORY;
         } else {
@@ -400,7 +402,21 @@ calRecurrenceInfo::GetNextOccurrence(calIItemBase *aItem, calIDateTime *aStartTi
             if (!item) {
                 rv = NS_ERROR_FAILURE;
             } else {
-                rv = item->Initialize(aItem, cdt, cdt); // XXX Fixme duration!
+                nsCOMPtr<calIEvent> event = do_QueryInterface(item);
+                if (event) {
+                    nsCOMPtr<calIDateTime> duration;
+                    rv = event->GetDuration(getter_AddRefs(duration));
+                    if (NS_FAILED(rv)) return rv;
+
+                    nsCOMPtr<calIDateTime> endt = new calDateTime(&next);
+                    rv = endt->AddDuration(duration);
+                    if (NS_FAILED(rv)) return rv;
+
+                    rv = item->Initialize(aItem, cdt, endt);
+                } else {
+                    rv = item->Initialize(aItem, cdt, cdt);
+                }
+
                 if (NS_SUCCEEDED(rv))
                     NS_ADDREF (*_retval = item);
             }
@@ -471,7 +487,8 @@ calRecurrenceInfo::GetOccurrencesBetween(calIItemBase *aItem,
             break;
 
         nsresult rv = NS_OK;
-        calDateTime *cdt = new calDateTime(&next);
+        nsCOMPtr<calIDateTime> cdt = new calDateTime(&next);
+
         if (!cdt) {
             rv = NS_ERROR_OUT_OF_MEMORY;
         } else {
@@ -479,7 +496,21 @@ calRecurrenceInfo::GetOccurrencesBetween(calIItemBase *aItem,
             if (!item) {
                 rv = NS_ERROR_FAILURE;
             } else {
-                rv = item->Initialize(aItem, cdt, cdt); // XXX Fixme duration!
+                nsCOMPtr<calIEvent> event = do_QueryInterface(aItem);
+                if (event) {
+                    nsCOMPtr<calIDateTime> duration;
+                    rv = event->GetDuration(getter_AddRefs(duration));
+                    if (NS_FAILED(rv)) return rv;
+
+                    nsCOMPtr<calIDateTime> endt = new calDateTime(&next);
+                    rv = endt->AddDuration(duration);
+                    if (NS_FAILED(rv)) return rv;
+
+                    rv = item->Initialize(aItem, cdt, endt);
+                } else {
+                    rv = item->Initialize(aItem, cdt, cdt);
+                }
+
                 if (NS_SUCCEEDED(rv)) {
                     items.AppendObject(item);
                 }
