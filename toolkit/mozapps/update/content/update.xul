@@ -51,7 +51,6 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&updateWizard.title;"
         onload="gUpdateWizard.init()"
-        onunload="gUpdateWizard.uninit()"
         onwizardfinish="gUpdateWizard.onWizardFinish();"
         style="width: 40em;"
         buttons="accept,cancel">
