@@ -47,6 +47,7 @@
 #include "nsString.h"
 #include "nsISupportsArray.h"
 #include "nsIAbDirectory.h"
+#include "nsIAtom.h"
 
 class nsAbView : public nsIAbView, public nsIOutlinerView
 {
@@ -65,6 +66,7 @@ private:
   nsresult EnumerateCards(nsIAbDirectory* directory);
   nsCString mURI;
   nsCOMPtr<nsISupportsArray> cards;
+  nsCOMPtr<nsIAtom> mMailListAtom;
 };
 
 #endif /* _nsAbView_H_ */

@@ -55,6 +55,8 @@ NS_INTERFACE_MAP_END
 nsAbView::nsAbView()
 {
   NS_INIT_ISUPPORTS();
+
+  mMailListAtom = getter_AddRefs(NS_NewAtom("MailList"));
 }
 
 
@@ -62,17 +64,17 @@ nsAbView::~nsAbView()
 {
 }
 
-NS_IMETHODIMP nsAbView::Init(const char *uri)
+NS_IMETHODIMP nsAbView::Init(const char *aURI)
 {
   nsresult rv;
 
-  mURI = uri;
+  mURI = aURI;
 
   nsCOMPtr <nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr <nsIRDFResource> resource;
-  rv = rdfService->GetResource(uri, getter_AddRefs(resource));
+  rv = rdfService->GetResource(aURI, getter_AddRefs(resource));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIAbDirectory> directory = do_QueryInterface(resource, &rv);
@@ -137,7 +139,22 @@ NS_IMETHODIMP nsAbView::GetRowProperties(PRInt32 index, nsISupportsArray *proper
 
 NS_IMETHODIMP nsAbView::GetCellProperties(PRInt32 row, const PRUnichar *colID, nsISupportsArray *properties)
 {
+  // this is only for the DisplayName column (ignore Department)
+  if (colID[0] != 'D' || colID[1] != 'i')
     return NS_OK;
+
+  nsresult rv;
+  nsCOMPtr <nsIAbCard> card = do_QueryInterface(cards->ElementAt(row), &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  PRBool isMailList = PR_FALSE;
+  rv = card->GetIsMailList(&isMailList);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (isMailList)
+    properties->AppendElement(mMailListAtom);  
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAbView::GetColumnProperties(const PRUnichar *colID, nsIDOMElement *colElt, nsISupportsArray *properties)
@@ -211,23 +228,8 @@ NS_IMETHODIMP nsAbView::GetCellText(PRInt32 row, const PRUnichar *colID, PRUnich
   nsCOMPtr <nsIAbCard> card = do_QueryInterface(cards->ElementAt(row), &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  switch (colID[0]) {
-  case 'e':
-    rv = card->GetPrimaryEmail(_retval);
-    break;
-  case 'n':
-    rv = card->GetDisplayName(_retval);
-    break;
-  case 'w':
-    rv = card->GetWorkPhone(_retval);
-    break;
-  case 'o':
-    rv = card->GetCompany(_retval);
-    break;
-  default:
-    *_retval = nsnull;
-    rv = NS_ERROR_UNEXPECTED;
-  }
+  rv = card->GetCardUnicharValue(colID, _retval);
+  NS_ENSURE_SUCCESS(rv,rv);
 
   return rv;
 }
@@ -281,4 +283,16 @@ NS_IMETHODIMP nsAbView::PerformActionOnRow(const PRUnichar *action, PRInt32 row)
 NS_IMETHODIMP nsAbView::PerformActionOnCell(const PRUnichar *action, PRInt32 row, const PRUnichar *colID)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsAbView::GetCardFromRow(PRInt32 row, nsIAbCard **aCard)
+{
+  nsresult rv;
+  
+  nsCOMPtr <nsIAbCard> card = do_QueryInterface(cards->ElementAt(row), &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  *aCard = card;
+  NS_IF_ADDREF(*aCard);
+  return NS_OK;
 }

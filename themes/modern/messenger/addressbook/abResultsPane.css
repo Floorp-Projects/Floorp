@@ -23,12 +23,12 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-outlinerbody:-moz-outliner-image(nameCol) {
+outlinerbody:-moz-outliner-image(DisplayName) {
   padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/addressbook/icons/person.gif");
 }
 
-outlinerbody:-moz-outliner-image(nameCol, mailList) {
+outlinerbody:-moz-outliner-image(DisplayName, MailList) {
   padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/addressbook/icons/list.gif");
 }

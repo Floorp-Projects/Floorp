@@ -1,4 +1,12 @@
-<!ENTITY nameCol.label                     "Name">
-<!ENTITY emailCol.label                    "Email">
-<!ENTITY workPhoneCol.label                "Phone">
-<!ENTITY organizationCol.label             "Company">
+<!ENTITY DisplayName.label "Name">
+<!ENTITY PrimaryEmail.label "Email">
+<!ENTITY Company.label "Organization">
+<!ENTITY NickName.label "Nick Name">
+<!ENTITY SecondEmail.label "Additional Email">
+<!ENTITY Department.label "Department">
+<!ENTITY JobTitle.label "Title">
+<!ENTITY CellularNumber.label "Cellular">
+<!ENTITY PagerNumber.label "Pager">
+<!ENTITY FaxNumber.label "Fax">
+<!ENTITY HomePhone.label "Work Phone">
+<!ENTITY WorkPhone.label "Home Phone">
