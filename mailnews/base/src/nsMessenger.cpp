@@ -2011,10 +2011,10 @@ nsSaveAllAttachmentsState::~nsSaveAllAttachmentsState()
         nsCRT::free(m_displayNameArray[i]);
         nsCRT::free(m_messageUriArray[i]);
     }
-    delete m_contentTypeArray;
-    delete m_urlArray;
-    delete m_displayNameArray;
-    delete m_messageUriArray;
+    delete[] m_contentTypeArray;
+    delete[] m_urlArray;
+    delete[] m_displayNameArray;
+    delete[] m_messageUriArray;
     nsCRT::free(m_directoryName);
 }
 
