@@ -3403,22 +3403,10 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         nsHTMLReflowMetrics metrics(nsnull);
         ReflowBullet(aState, metrics);
 
-        // For bullets that are placed next to a child block, there will
-        // be no correct ascent value. Therefore, make one up...
-        // XXXldb We should be able to get the correct ascent value now.
-        nscoord ascent = 0;
-        const nsStyleFont* font;
-        frame->GetStyleData(eStyleStruct_Font,
-                            (const nsStyleStruct*&) font);
-        nsIRenderingContext& rc = *aState.mReflowState.rendContext;
-        rc.SetFont(font->mFont);
-        nsIFontMetrics* fm;
-        rv = rc.GetFontMetrics(fm);
-        if (NS_SUCCEEDED(rv) && (nsnull != fm)) {
-          fm->GetMaxAscent(ascent);
-          NS_RELEASE(fm);
-        }
-        rv = NS_OK;
+        // Doing the alignment using |mAscent| will also cater for bullets
+        // that are placed next to a child block (bug 92896)
+        // (Note that mAscent should be set by now, otherwise why would
+        // we be placing the bullet yet?)
 
         // Tall bullets won't look particularly nice here...
         nsRect bbox;
@@ -3426,7 +3414,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         nscoord bulletTopMargin = applyTopMargin
                                     ? collapsedBottomMargin.get()
                                     : 0;
-        bbox.y = aState.BorderPadding().top + ascent -
+        bbox.y = aState.BorderPadding().top + mAscent -
           metrics.ascent + bulletTopMargin;
         mBullet->SetRect(aState.mPresContext, bbox);
       }
