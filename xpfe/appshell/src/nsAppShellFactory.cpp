@@ -24,7 +24,8 @@
 #include "nsICmdLineService.h"
 #include "nsIFileLocator.h"
 #include "nsINetSupportDialogService.h"
-
+#include "nsIWindowMediator.h"
+#include "rdf.h"
 /* extern the factory entry points for each component... */
 nsresult NS_NewAppShellServiceFactory(nsIFactory** aFactory);
 nsresult NS_NewXPConnectFactoryFactory(nsIFactory** aResult);
@@ -39,7 +40,7 @@ static NS_DEFINE_IID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
 static NS_DEFINE_IID(kXPConnectFactoryCID, NS_XPCONNECTFACTORY_CID);
 static NS_DEFINE_IID(kFileLocatorCID,     NS_FILELOCATOR_CID);
 static NS_DEFINE_IID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
-
+static NS_DEFINE_CID(kWindowMediatorCID,				  NS_WINDOWMEDIATOR_CID);
 /*
  * Global entry point to register all components in the registry...
  */
@@ -53,6 +54,9 @@ NSRegisterSelf(nsISupports* serviceMgr, const char *path)
     nsComponentManager::RegisterComponent(kXPConnectFactoryCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
    	nsComponentManager::RegisterComponent(kNetSupportDialogCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
 
+    nsComponentManager::RegisterComponent(kWindowMediatorCID,
+                                         "window-mediator", NS_RDF_DATASOURCE_PROGID_PREFIX "window-mediator",
+                                         path, PR_TRUE, PR_TRUE);
    return NS_OK;
 }
 
@@ -68,7 +72,8 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
     nsComponentManager::UnregisterComponent(kProtocolHelperCID,  path);
     nsComponentManager::UnregisterComponent(kXPConnectFactoryCID, path);
     nsComponentManager::UnregisterComponent(kNetSupportDialogCID, path);
-
+    nsComponentManager::UnregisterComponent(kWindowMediatorCID, path);
+     
     return NS_OK;
 }
 
@@ -117,6 +122,10 @@ NSGetFactory(nsISupports* serviceMgr,
   else if ( aClass.Equals( kNetSupportDialogCID ) )
   {
   	 rv = NS_NewNetSupportDialogFactory(aFactory);
+  } 
+  else if ( aClass.Equals( kWindowMediatorCID ) )
+  {
+  	rv = NS_NewWindowMediatorFactory( aFactory );
   }
 
 

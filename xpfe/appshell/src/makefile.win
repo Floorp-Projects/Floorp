@@ -33,6 +33,7 @@ CPPSRCS=                                \
  nsFileLocations.cpp                    \
  nsNetSupportDialog.cpp		\
  nsDefaultHelper.cpp	\
+ nsWindowMediator.cpp \
  $(NULL)
 
 CPP_OBJS=                               \
@@ -47,6 +48,7 @@ CPP_OBJS=                               \
  .\$(OBJDIR)\nsFileLocations.obj        \
   .\$(OBJDIR)\nsNetSupportDialog.obj        \
    .\$(OBJDIR)\nsDefaultHelper.obj        \
+     .\$(OBJDIR)\nsWindowMediator.obj        \
  $(NULL)
 
 LINCS=-I$(PUBLIC)\raptor                \
