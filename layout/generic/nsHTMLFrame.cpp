@@ -145,6 +145,7 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   PRBool  isChildInitialReflow = PR_FALSE;
+  PRBool  isStyleChange = PR_FALSE;
 
   // Check for an incremental reflow
   if (eReflowReason_Incremental == aReflowState.reason) {
@@ -154,13 +155,14 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
     if (this == targetFrame) {
       nsIReflowCommand::ReflowType  reflowType;
       nsIFrame*                     childFrame;
+      nsIFrame*                     deletedFrame;
 
       // Get the reflow type
       aReflowState.reflowCommand->GetType(reflowType);
 
-      if ((nsIReflowCommand::FrameAppended == reflowType) ||
-          (nsIReflowCommand::FrameInserted == reflowType)) {
-
+      switch (reflowType) {
+      case nsIReflowCommand::FrameAppended:
+      case nsIReflowCommand::FrameInserted:
         NS_ASSERTION(mFrames.IsEmpty(), "only one child frame allowed");
 
         // Insert the frame into the child list
@@ -169,10 +171,9 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
 
         // It's the child frame's initial reflow
         isChildInitialReflow = PR_TRUE;
+        break;
 
-      } else if (nsIReflowCommand::FrameRemoved == reflowType) {
-        nsIFrame* deletedFrame;
-
+      case nsIReflowCommand::FrameRemoved:
         // Get the child frame we should delete
         aReflowState.reflowCommand->GetChildFrame(deletedFrame);
         NS_ASSERTION(deletedFrame == mFrames.FirstChild(), "not a child frame");
@@ -186,6 +187,15 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
 
           mFrames.DeleteFrame(aPresContext, deletedFrame);
         }
+        break;
+
+      case nsIReflowCommand::StyleChanged:
+        // Remember it's a style change so we can set the reflow reason below
+        isStyleChange = PR_TRUE;
+        break;
+
+      default:
+        NS_ASSERTION(PR_FALSE, "unexpected reflow command type");
       }
 
     } else {
@@ -213,6 +223,9 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
                                             NS_UNCONSTRAINEDSIZE));
     if (isChildInitialReflow) {
       kidReflowState.reason = eReflowReason_Initial;
+      kidReflowState.reflowCommand = nsnull;
+    } else if (isStyleChange) {
+      kidReflowState.reason = eReflowReason_StyleChange;
       kidReflowState.reflowCommand = nsnull;
     }
 
