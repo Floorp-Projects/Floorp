@@ -139,7 +139,8 @@ public:
                                  PRInt32 aNameSpaceID,
                                  nsIAtom* aAttribute);
 
-  NS_IMETHOD FlushPendingNotifications(PRBool aFlushReflows = PR_TRUE);
+  NS_IMETHOD FlushPendingNotifications(PRBool aFlushReflows = PR_TRUE,
+                                       PRBool aUpdateViews = PR_FALSE);
 
   // nsIDOMDocument interface
   NS_DECL_NSIDOMDOCUMENT
