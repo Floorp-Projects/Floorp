@@ -505,12 +505,6 @@ select:-moz-dummy-option {
   -moz-user-select: none;
 }
 
-:focus:-moz-display-comboboxcontrol-frame {
-  background-color: Highlight;
-  color: HighlightText;
-  -moz-outline: 1px dotted HighlightText;
-}
-
 option {
   min-height: 1em;
   display: block;
