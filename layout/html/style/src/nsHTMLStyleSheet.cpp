@@ -969,7 +969,8 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
     aPresContext->ResolvePseudoStyleContextFor (aContent, 
                                                 nsHTMLAtoms::tablePseudo,
                                                 aStyleContext);
-  innerFrame->SetStyleContext(aPresContext, aStyleContext);//innerTableStyleContext);
+  innerFrame->SetStyleContext(aPresContext, aStyleContext);
+  // this should be "innerTableStyleContext" but I haven't tested that thoroughly yet
 
   // Iterate the child content
   nsIFrame* lastChildFrame = nsnull;
@@ -1677,9 +1678,6 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
     // any frame at all.
     const nsStyleDisplay* display = (const nsStyleDisplay*)
       styleContext->GetStyleData(eStyleStruct_Display);
-    if (NS_STYLE_DISPLAY_TABLE==display->mDisplay)  {
-      printf ("HELP!!!\n");
-    }
     if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
       aFrameSubTree = nsnull;
       rv = NS_OK;
