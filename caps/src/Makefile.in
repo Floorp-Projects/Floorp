@@ -41,9 +41,6 @@ CPPSRCS		= \
 		nsSecurityManagerFactory.cpp \
 		$(NULL)
 
-CHROME_FILES    = \
-                $(srcdir)/security.properties
-
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
@@ -53,10 +50,14 @@ EXTRA_DSO_LDOPTS = \
 		$(NSPR_LIBS) \
 		$(NULL)
 
+CHROME_DIR = locale/en-US
+CHROME_L10N_DIR = communicator/locale/security
+
+CHROME_L10N    = \
+		security.properties \
+		$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= -I$(topsrcdir)/include -I$(srcdir)/../include
-
-install::
-	$(INSTALL) $(CHROME_FILES) $(DIST)/bin/chrome/communicator/locale/security
 
