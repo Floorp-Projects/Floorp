@@ -30,7 +30,6 @@ const nsMsgViewIndex_None = 0xFFFFFFFF;
 
 var gFolderTree; 
 var gMessagePane;
-var gMessagePaneFrame;
 var gThreadTree;
 var gSearchInput;
 
@@ -783,9 +782,7 @@ function GetMessagePane()
 
 function GetMessagePaneFrame()
 {
-    if (gMessagePaneFrame) return gMessagePaneFrame;
-    gMessagePaneFrame = document.getElementById("messagepane").contentWindow;
-    return gMessagePaneFrame;
+    return window.content;
 }
 
 function FindInSidebar(currentWindow, id)
