@@ -56,8 +56,6 @@ LLIBS= $(MYLIBS)				\
 
 include <$(DEPTH)\config\rules.mak>
 
-all::	clobber install
-
 install:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 
