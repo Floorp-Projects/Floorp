@@ -353,7 +353,7 @@ nsHTMLStyleElement::GetStyleSheetURL(PRBool* aIsInline,
   if (*aIsInline) {
     return;
   }
-  if (mNodeInfo->NamespaceEquals(kNameSpaceID_HTML)) {
+  if (mNodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
     // We stopped supporting <style src="..."> for XHTML as it is
     // non-standard.
     *aIsInline = PR_TRUE;
