@@ -288,10 +288,6 @@ private:
 protected:
 
   friend class nsTableRowFrame;
-  void      MapBorderPadding(nsIPresContext* aPresContext);
-
-  void      MapVAlignAttribute(nsIPresContext* aPresContext, nsTableFrame *aTableFrame);
-  void      MapHAlignAttribute(nsIPresContext* aPresContext, nsTableFrame *aTableFrame);
 
   // paint backgrounds and borders (in separate border model) if aVisibleBackground, always set aPaintChildren
   virtual void PaintUnderlay(nsIPresContext&           aPresContext,
