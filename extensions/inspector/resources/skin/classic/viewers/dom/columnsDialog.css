@@ -51,7 +51,7 @@
 
 .attr-column-selector,
 .attr-column-selector[focused="true"] {
-  margin: none;
+  margin: 0;
   border: none;
 }
 
