@@ -26,6 +26,7 @@ MODULE=iiextras
 XPIDLSRCS = \
 	    .\nsIGenericInterfaceInfoSet.idl \
 	    .\nsIScriptableInterfaceInfo.idl \
+	    .\nsIInterfaceInfoToIDL.idl \
 	    $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
