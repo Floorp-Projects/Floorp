@@ -18,9 +18,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.4 $
+ *  Version: $Revision: 1.5 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.4 2000/05/08 14:17:02 mj%digicool.com Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.5 2000/05/08 15:21:25 mj%digicool.com Exp $
  */
 
 /*
@@ -36,7 +36,7 @@ const XMLRPCFAULT_CID =
     Components.ID('{691cb864-0a7e-448c-98ee-4a7f359cf145}');
 const XMLRPCFAULT_IID = Components.interfaces.nsIXmlRpcFault;
 
-const DEBUG = false;
+const DEBUG = true;
 const DEBUGPARSE = false;
 
 /*
@@ -266,7 +266,8 @@ nsXmlRpcClient.prototype = {
         this._inProgress = false;
         this._parser = null;
         
-        if (status != Components.results.NS_OK) {
+        if (status) {
+            debug('Non-zero status: (' + status.toString(16) + ') ' + errorMsg);
             this._status = status;
             this._errorMsg = errorMsg;
             try { ctxt.listener.onError(this, ctxt.context, status, errorMsg); }
@@ -369,6 +370,7 @@ nsXmlRpcClient.prototype = {
         try {
             this._parser.parse(count);
         } catch(ex) {
+            debug('Parser exception: ' + ex);
             this._status = ex.result;
             this._errorMsg = ex.message;
             ctxt.listener.onError(this, ctxt.context, ex.result, ex.message);
