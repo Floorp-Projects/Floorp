@@ -45,7 +45,6 @@
 #include "nsIDocument.h"
 #include "nsISupportsArray.h"
 #include "nsDocument.h"
-#include "nsMarkupDocument.h"
 #include "nsIURL.h"
 #include "nsIDOMText.h"
 #include "nsINameSpaceManager.h"
@@ -188,7 +187,7 @@ void testStrings(nsIDocument* aDoc) {
   printf("string tests complete\n");
 }
 
-class MyDocument : public nsMarkupDocument {
+class MyDocument : public nsDocument {
 public:
   MyDocument();
   NS_IMETHOD StartDocumentLoad(const char* aCommand,

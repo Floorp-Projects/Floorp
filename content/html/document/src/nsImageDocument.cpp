@@ -180,15 +180,16 @@ ImageListener::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
   return nsMediaDocumentStreamListener::OnStopRequest(request, ctxt, status);
 }
 
+
+  // NOTE! nsDocument::operator new() zeroes out all members, so don't
+  // bother initializing members to 0.
+
 nsImageDocument::nsImageDocument()
-  : mVisibleWidth(0),
-    mVisibleHeight(0),
-    mImageWidth(0),
-    mImageHeight(0),
-    mImageResizingEnabled(PR_FALSE),
-    mImageIsOverflowing(PR_FALSE),
-    mImageIsResized(PR_FALSE)
 {
+
+  // NOTE! nsDocument::operator new() zeroes out all members, so don't
+  // bother initializing members to 0.
+
 }
 
 nsImageDocument::~nsImageDocument()
@@ -198,8 +199,8 @@ nsImageDocument::~nsImageDocument()
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(nsImageDocument, nsHTMLDocument)
-NS_IMPL_RELEASE_INHERITED(nsImageDocument, nsHTMLDocument)
+NS_IMPL_ADDREF_INHERITED(nsImageDocument, nsMediaDocument)
+NS_IMPL_RELEASE_INHERITED(nsImageDocument, nsMediaDocument)
 
 NS_INTERFACE_MAP_BEGIN(nsImageDocument)
   NS_INTERFACE_MAP_ENTRY(nsIImageDocument)
@@ -207,7 +208,7 @@ NS_INTERFACE_MAP_BEGIN(nsImageDocument)
   NS_INTERFACE_MAP_ENTRY(imgIContainerObserver)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(ImageDocument)
-NS_INTERFACE_MAP_END_INHERITING(nsHTMLDocument)
+NS_INTERFACE_MAP_END_INHERITING(nsMediaDocument)
 
 
 nsresult
@@ -243,9 +244,10 @@ nsImageDocument::StartDocumentLoad(const char*         aCommand,
                                    PRBool              aReset,
                                    nsIContentSink*     aSink)
 {
-  nsresult rv = nsMediaDocument::StartDocumentLoad(aCommand, aChannel, aLoadGroup,
-                                                   aContainer, aDocListener, aReset,
-                                                   aSink);
+  nsresult rv =
+    nsMediaDocument::StartDocumentLoad(aCommand, aChannel, aLoadGroup,
+                                       aContainer, aDocListener, aReset,
+                                       aSink);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -278,7 +280,8 @@ nsImageDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObjec
 
       target = do_QueryInterface(mScriptGlobalObject);
       target->RemoveEventListener(NS_LITERAL_STRING("resize"), this, PR_FALSE);
-      target->RemoveEventListener(NS_LITERAL_STRING("keypress"), this, PR_FALSE);
+      target->RemoveEventListener(NS_LITERAL_STRING("keypress"), this,
+                                  PR_FALSE);
     }
   }
 
@@ -288,7 +291,7 @@ nsImageDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObjec
   if (NS_FAILED(rv)) {
     return rv;
   }
-  
+
   if (aScriptGlobalObject) {
     // Create synthetic document
     rv = CreateSyntheticDocument();
@@ -512,8 +515,9 @@ nsImageDocument::CreateSyntheticDocument()
   if (mStringBundle) {
     const PRUnichar* formatString[1] = { srcString.get() };
     nsXPIDLString errorMsg;
-    rv = mStringBundle->FormatStringFromName(NS_LITERAL_STRING("InvalidImage").get(),
-      formatString, 1, getter_Copies(errorMsg));
+    NS_NAMED_LITERAL_STRING(str, "InvalidImage");
+    mStringBundle->FormatStringFromName(str.get(), formatString, 1,
+                                        getter_Copies(errorMsg));
 
     image->SetAttr(kNameSpaceID_None, nsHTMLAtoms::alt, errorMsg, PR_FALSE);
   }
@@ -539,7 +543,8 @@ nsImageDocument::CheckOverflowing()
   context->GetVisibleArea(visibleArea);
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(mBodyContent);
-  nsRefPtr<nsStyleContext> styleContext = context->ResolveStyleContextFor(content, nsnull);
+  nsRefPtr<nsStyleContext> styleContext =
+    context->ResolveStyleContextFor(content, nsnull);
 
   const nsStyleMargin* marginData =
     (const nsStyleMargin*)styleContext->GetStyleData(eStyleStruct_Margin);
@@ -557,7 +562,8 @@ nsImageDocument::CheckOverflowing()
   mVisibleWidth = NSTwipsToIntPixels(visibleArea.width, t2p);
   mVisibleHeight = NSTwipsToIntPixels(visibleArea.height, t2p);
 
-  mImageIsOverflowing = mImageWidth > mVisibleWidth || mImageHeight > mVisibleHeight;
+  mImageIsOverflowing =
+    mImageWidth > mVisibleWidth || mImageHeight > mVisibleHeight;
 
   if (mImageIsOverflowing) {
     ShrinkToFit();
@@ -569,8 +575,8 @@ nsImageDocument::CheckOverflowing()
   return NS_OK;
 }
 
-
-nsresult nsImageDocument::UpdateTitle()
+nsresult
+nsImageDocument::UpdateTitle()
 {
   if (mStringBundle) {
     nsXPIDLString fileStr;
@@ -584,12 +590,13 @@ nsresult nsImageDocument::UpdateTitle()
       nsresult rv;
       nsCAutoString fileName;
       url->GetFileName(fileName);
-      nsCOMPtr<nsITextToSubURI> textToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
+      nsCOMPtr<nsITextToSubURI> textToSubURI =
+        do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
       if (NS_SUCCEEDED(rv))
       {
         nsCAutoString originCharset;
         rv = url->GetOriginCharset(originCharset);
-        if (NS_SUCCEEDED(rv)) 
+        if (NS_SUCCEEDED(rv))
           rv = textToSubURI->UnEscapeURIForUI(originCharset, fileName, fileStr);
       }
       if (NS_FAILED(rv))
@@ -607,7 +614,8 @@ nsresult nsImageDocument::UpdateTitle()
       mimeType.BeginReading(start);
       mimeType.EndReading(end);
       nsXPIDLCString::const_iterator iter = end;
-      if (FindInReadable(NS_LITERAL_CSTRING("IMAGE/"), start, iter) && iter != end) {
+      if (FindInReadable(NS_LITERAL_CSTRING("IMAGE/"), start, iter) &&
+          iter != end) {
         // strip out "X-" if any
         if (*iter == 'X') {
           ++iter;
@@ -631,20 +639,46 @@ nsresult nsImageDocument::UpdateTitle()
     if (!fileStr.IsEmpty()) {
       // if we got a valid size (sometimes we do not) then display it
       if (mImageWidth != 0 && mImageHeight != 0){
-        const PRUnichar *formatStrings[4]  = {fileStr.get(), typeStr.get(), widthStr.get(), heightStr.get()};
-        mStringBundle->FormatStringFromName(NS_LITERAL_STRING("ImageTitleWithDimensionsAndFile").get(), formatStrings, 4, getter_Copies(valUni));
+        const PRUnichar *formatStrings[4] =
+          {
+            fileStr.get(),
+            typeStr.get(),
+            widthStr.get(),
+            heightStr.get()
+          };
+        NS_NAMED_LITERAL_STRING(str, "ImageTitleWithDimensionsAndFile");
+        mStringBundle->FormatStringFromName(str.get(), formatStrings, 4,
+                                            getter_Copies(valUni));
       } else {
-        const PRUnichar *formatStrings[2] = {fileStr.get(), typeStr.get()};
-        mStringBundle->FormatStringFromName(NS_LITERAL_STRING("ImageTitleWithoutDimensions").get(), formatStrings, 2, getter_Copies(valUni));
+        const PRUnichar *formatStrings[2] =
+          {
+            fileStr.get(),
+            typeStr.get()
+          };
+        NS_NAMED_LITERAL_STRING(str, "ImageTitleWithoutDimensions");
+        mStringBundle->FormatStringFromName(str.get(), formatStrings, 2,
+                                            getter_Copies(valUni));
       }
     } else {
       // if we got a valid size (sometimes we do not) then display it
       if (mImageWidth != 0 && mImageHeight != 0){
-        const PRUnichar *formatStrings[3]  = {typeStr.get(), widthStr.get(), heightStr.get()};
-        mStringBundle->FormatStringFromName(NS_LITERAL_STRING("ImageTitleWithDimensions").get(), formatStrings, 3, getter_Copies(valUni));
+        const PRUnichar *formatStrings[3] =
+          {
+            typeStr.get(),
+            widthStr.get(),
+            heightStr.get()
+          };
+        NS_NAMED_LITERAL_STRING(str, "ImageTitleWithDimensions");
+        mStringBundle->FormatStringFromName(str.get(), formatStrings, 3,
+                                            getter_Copies(valUni));
       } else {
-        const PRUnichar *formatStrings[1]  = {typeStr.get()};
-        mStringBundle->FormatStringFromName(NS_LITERAL_STRING("ImageTitleWithNeitherDimensionsNorFile").get(), formatStrings, 1, getter_Copies(valUni));
+        const PRUnichar *formatStrings[1] =
+          {
+            typeStr.get()
+          };
+        NS_NAMED_LITERAL_STRING(str, "ImageTitleWithNeitherDimensionsNorFile");
+        mStringBundle->FormatStringFromName(str.get(), formatStrings, 1,
+                                            getter_Copies(valUni));
       }
     }
 

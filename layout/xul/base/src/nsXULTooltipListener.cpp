@@ -39,6 +39,7 @@
 
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDocument.h"
@@ -579,14 +580,15 @@ nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
           } else {
             if (!tooltipId.IsEmpty()) {
               // tooltip must be an id, use getElementById to find it
-              nsCOMPtr<nsIDOMXULDocument> xulDocument = do_QueryInterface(document);
-              if (!xulDocument) {
-                NS_ERROR("tooltip attached to an element that isn't in XUL!");
+              nsCOMPtr<nsIDOMDocument> domDocument =
+                do_QueryInterface(document);
+              if (!domDocument) {
                 return NS_ERROR_FAILURE;
               }
 
               nsCOMPtr<nsIDOMElement> tooltipEl;
-              xulDocument->GetElementById(tooltipId, getter_AddRefs(tooltipEl));
+              domDocument->GetElementById(tooltipId,
+                                          getter_AddRefs(tooltipEl));
 
               if (tooltipEl) {
                 mNeedTitletip = PR_FALSE;

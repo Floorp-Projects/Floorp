@@ -60,7 +60,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMXULDocument.h"
 #include "nsIDOMElement.h"
 #include "nsISupportsArray.h"
 #include "nsIDOMText.h"
@@ -1523,13 +1522,13 @@ nsMenuFrame::BuildAcceleratorText()
   nsCOMPtr<nsIDocument> document;
   mContent->GetDocument(*getter_AddRefs(document));
 
-  // Turn the document into a XUL document so we can use getElementById
-  nsCOMPtr<nsIDOMXULDocument> xulDocument(do_QueryInterface(document));
-  if (!xulDocument)
+  // Turn the document into a DOM document so we can use getElementById
+  nsCOMPtr<nsIDOMDocument> domDocument(do_QueryInterface(document));
+  if (!domDocument)
     return;
 
   nsCOMPtr<nsIDOMElement> keyDOMElement;
-  xulDocument->GetElementById(keyValue, getter_AddRefs(keyDOMElement));
+  domDocument->GetElementById(keyValue, getter_AddRefs(keyDOMElement));
   if (!keyDOMElement)
     return;
 

@@ -40,7 +40,7 @@
 #include "nsButtonBoxFrame.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsIDOMXULDocument.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsHTMLAtoms.h"
 #include "nsINameSpaceManager.h"

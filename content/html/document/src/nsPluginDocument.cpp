@@ -62,25 +62,34 @@ public:
                                nsIContentSink*     aSink = nsnull);
 
 protected:
-  nsresult CreateSyntheticDocument(nsACString &aMimeType);
+  nsresult CreateSyntheticPluginDocument(nsACString &aMimeType);
 
   nsCOMPtr<nsIHTMLContent>                 mPluginContent;
   nsRefPtr<nsMediaDocumentStreamListener>  mStreamListener;
 };
 
+
+  // NOTE! nsDocument::operator new() zeroes out all members, so don't
+  // bother initializing members to 0.
+
 nsPluginDocument::nsPluginDocument()
 {
+
+  // NOTE! nsDocument::operator new() zeroes out all members, so don't
+  // bother initializing members to 0.
+
 }
+
 nsPluginDocument::~nsPluginDocument()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(nsPluginDocument, nsHTMLDocument)
-NS_IMPL_RELEASE_INHERITED(nsPluginDocument, nsHTMLDocument)
+NS_IMPL_ADDREF_INHERITED(nsPluginDocument, nsMediaDocument)
+NS_IMPL_RELEASE_INHERITED(nsPluginDocument, nsMediaDocument)
 
 NS_INTERFACE_MAP_BEGIN(nsPluginDocument)
   NS_INTERFACE_MAP_ENTRY(nsIPluginDocument)
-NS_INTERFACE_MAP_END_INHERITING(nsHTMLDocument)
+NS_INTERFACE_MAP_END_INHERITING(nsMediaDocument)
 
 
 NS_IMETHODIMP
@@ -92,9 +101,10 @@ nsPluginDocument::StartDocumentLoad(const char*         aCommand,
                                     PRBool              aReset,
                                     nsIContentSink*     aSink)
 {
-  nsresult rv = nsMediaDocument::StartDocumentLoad(aCommand, aChannel, aLoadGroup,
-                                                   aContainer, aDocListener, aReset,
-                                                   aSink);
+  nsresult rv =
+    nsMediaDocument::StartDocumentLoad(aCommand, aChannel, aLoadGroup,
+                                       aContainer, aDocListener, aReset,
+                                       aSink);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -106,7 +116,7 @@ nsPluginDocument::StartDocumentLoad(const char*         aCommand,
   }
 
   // Create synthetic document
-  rv = CreateSyntheticDocument(mimeType);
+  rv = CreateSyntheticPluginDocument(mimeType);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -120,7 +130,8 @@ nsPluginDocument::StartDocumentLoad(const char*         aCommand,
   return rv;
 }
 
-nsresult nsPluginDocument::CreateSyntheticDocument(nsACString &aMimeType)
+nsresult
+nsPluginDocument::CreateSyntheticPluginDocument(nsACString &aMimeType)
 {
   // do not allow message panes to host full-page plugins
   // returning an error causes helper apps to take over

@@ -832,7 +832,7 @@ nsHTMLFragmentContentSink::AddTextToContent(nsIHTMLContent* aContent,const nsStr
       if (NS_SUCCEEDED(result)) {
         text->SetText(aText, PR_TRUE);
 
-        result=aContent->AppendChildTo(text, PR_FALSE, PR_FALSE);
+        result = aContent->AppendChildTo(text, PR_FALSE, PR_FALSE);
       }
     }
   }

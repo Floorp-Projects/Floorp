@@ -510,6 +510,7 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
 #endif
     nsCOMPtr<nsIDOMDocument> domDoc;
     aTrustedNode->GetOwnerDocument(getter_AddRefs(domDoc));
+
     if (!domDoc) {
       // In theory this should never happen. But since theory and reality are
       // different for XUL elements we'll try to get the principal from the
@@ -530,8 +531,7 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
 
         return NS_ERROR_UNEXPECTED;
       }
-    }
-    else {
+    } else {
       trustedDoc = do_QueryInterface(domDoc);
       NS_ASSERTION(trustedDoc, "QI to nsIDocument failed");
     }
@@ -560,13 +560,16 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
    */
 
   // If they are in the same document then everything is just fine
-  if (trustedDoc == unTrustedDoc && trustedDoc)
+  if (trustedDoc == unTrustedDoc && trustedDoc) {
     return NS_OK;
+  }
 
   if (!trustedPrincipal) {
     trustedDoc->GetPrincipal(getter_AddRefs(trustedPrincipal));
+
     if (!trustedPrincipal) {
-      // If the trusted node doesn't have a principal we can't check security against it
+      // If the trusted node doesn't have a principal we can't check
+      // security against it
 
       return NS_ERROR_DOM_SECURITY_ERR;
     }

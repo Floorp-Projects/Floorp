@@ -444,7 +444,6 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
                            *getter_AddRefs(attrPrefix));
     
     if (namespaceID == kNameSpaceID_XMLNS) {
-      PRBool hasPrefix = attrPrefix ? PR_TRUE : PR_FALSE;
       content->GetAttr(namespaceID, attrName, uriStr);
 
       if (!attrPrefix) {

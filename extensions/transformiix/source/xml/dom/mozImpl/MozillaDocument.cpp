@@ -38,6 +38,7 @@
 #include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
+#include "nsString.h"
 
 // Need to determine if these are well-chosen.
 #define WRAPPER_INITIAL_SIZE 256

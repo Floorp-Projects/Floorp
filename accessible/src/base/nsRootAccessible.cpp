@@ -926,9 +926,7 @@ NS_IMETHODIMP nsDocAccessibleMixin::GetURL(nsAString& aURL)
 
 NS_IMETHODIMP nsDocAccessibleMixin::GetTitle(nsAString& aTitle)
 {
-  // This doesn't leak - we don't own the const pointer that's returned
-  aTitle = *(mDocument->GetDocumentTitle());
-  return NS_OK;
+  return mDocument->GetDocumentTitle(aTitle);
 }
 
 NS_IMETHODIMP nsDocAccessibleMixin::GetMimeType(nsAString& aMimeType)

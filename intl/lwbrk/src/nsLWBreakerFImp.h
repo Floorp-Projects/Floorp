@@ -58,8 +58,8 @@ public:
   nsLWBreakerFImp();
   virtual ~nsLWBreakerFImp();
   
-  NS_IMETHOD GetBreaker(nsString& aParam, nsILineBreaker** breaker);
-  NS_IMETHOD GetBreaker(nsString& aParam, nsIWordBreaker** breaker);
+  NS_IMETHOD GetBreaker(const nsAString& aParam, nsILineBreaker** breaker);
+  NS_IMETHOD GetBreaker(const nsAString& aParam, nsIWordBreaker** breaker);
 };
 
 

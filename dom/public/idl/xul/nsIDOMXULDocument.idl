@@ -38,13 +38,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMDocument.idl"
+#include "domstubs.idl"
 
 interface nsIDOMXULCommandDispatcher;
 
 
 [scriptable, uuid(17ddd8c0-c5f8-11d2-a6ae-00104bde6048)]
-interface nsIDOMXULDocument : nsIDOMDocument
+interface nsIDOMXULDocument : nsISupports
 {
            attribute nsIDOMNode                 popupNode;
            attribute nsIDOMNode                 tooltipNode;

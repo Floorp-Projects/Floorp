@@ -50,6 +50,7 @@
 #include "nsCRT.h"
 #include "nsIPrefBranchInternal.h"
 #include "nsIObserverService.h"
+#include "nsString.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 

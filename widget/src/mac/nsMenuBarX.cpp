@@ -56,7 +56,7 @@
 #include "nsIDocumentViewer.h"
 #include "nsIDocumentObserver.h"
 
-#include "nsIDOMXULDocument.h"
+#include "nsIDOMDocument.h"
 #include "nsWidgetAtoms.h"
 
 #include <Menus.h>
@@ -339,13 +339,15 @@ nsMenuBarX :: CommandEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
         
         case kHICommandAbout:
         {
-          // the 'about' command is special because we don't have a nsIMenu or nsIMenuItem
-          // for the apple menu. Grovel for the content node with an id of "aboutName" 
-          // and call it directly.
-          nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(self->mDocument);
-	        if ( xulDoc ) {
+          // the 'about' command is special because we don't have a
+          // nsIMenu or nsIMenuItem for the apple menu. Grovel for the
+          // content node with an id of "aboutName" and call it
+          // directly.
+          nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(self->mDocument);
+	        if ( domDoc ) {
       	    nsCOMPtr<nsIDOMElement> domElement;
-      	    xulDoc->GetElementById(NS_LITERAL_STRING("aboutName"), getter_AddRefs(domElement));
+      	    domDoc->GetElementById(NS_LITERAL_STRING("aboutName"),
+                                   getter_AddRefs(domElement));
       	    nsCOMPtr<nsIContent> aboutContent ( do_QueryInterface(domElement) );
       	    self->ExecuteCommand(aboutContent);
           }

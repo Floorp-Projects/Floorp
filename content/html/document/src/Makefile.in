@@ -68,7 +68,6 @@ CPPSRCS		= \
 		nsMediaDocument.cpp \
 		nsPluginDocument.cpp \
 		nsImageDocument.cpp \
-		nsMarkupDocument.cpp \
 		nsWyciwygChannel.cpp \
 		nsWyciwygProtocolHandler.cpp \
 		$(NULL)

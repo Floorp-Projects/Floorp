@@ -183,12 +183,15 @@ NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
   return NS_OK;
 }
 
+  // NOTE! nsDocument::operator new() zeroes out all members, so don't
+  // bother initializing members to 0.
+
 nsXMLDocument::nsXMLDocument() 
-  : mCountCatalogSheets(0), mCrossSiteAccessEnabled(PR_FALSE),
-    mLoadedAsData(PR_FALSE), mAsync(PR_TRUE), 
-    mLoopingForSyncLoad(PR_FALSE), mXMLDeclarationBits(0)
+  : mAsync(PR_TRUE)
 {
-  mEventQService = do_GetService(kEventQueueServiceCID);
+
+  // NOTE! nsDocument::operator new() zeroes out all members, so don't
+  // bother initializing members to 0.
 }
 
 nsXMLDocument::~nsXMLDocument()
@@ -222,6 +225,17 @@ NS_INTERFACE_MAP_END_INHERITING(nsDocument)
 NS_IMPL_ADDREF_INHERITED(nsXMLDocument, nsDocument)
 NS_IMPL_RELEASE_INHERITED(nsXMLDocument, nsDocument)
 
+
+nsresult
+nsXMLDocument::Init()
+{
+  nsresult rv = nsDocument::Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mEventQService = do_GetService(kEventQueueServiceCID, &rv);
+
+  return rv;
+}
 
 NS_IMETHODIMP 
 nsXMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
@@ -390,19 +404,20 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
 
   // Partial Reset, need to restore principal for security reasons and
   // event listener manager so that load listeners etc. will remain.
-  nsCOMPtr<nsIPrincipal> principal = mPrincipal;
-  nsCOMPtr<nsIEventListenerManager> elm = mListenerManager;
+
+  nsCOMPtr<nsIPrincipal> principal(mPrincipal);
+  nsCOMPtr<nsIEventListenerManager> elm(mListenerManager);
 
   Reset(nsnull, nsnull);
   
   mPrincipal = principal;
   mListenerManager = elm;
-  NS_IF_ADDREF(mListenerManager);
   
   SetDocumentURL(uri);
   SetBaseURL(uri);
 
-  // Store script context, if any, in case we encounter redirect (because we need it there)
+  // Store script context, if any, in case we encounter redirect
+  // (because we need it there)
   nsCOMPtr<nsIJSContextStack> stack =
     do_GetService("@mozilla.org/js/xpc/ContextStack;1");
   if (stack) {
@@ -415,10 +430,11 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
     }
   }
 
-  // Find out if UniversalBrowserRead privileges are enabled - we will need this
-  // in case of a redirect
+  // Find out if UniversalBrowserRead privileges are enabled - we will
+  // need this in case of a redirect
   PRBool crossSiteAccessEnabled;
-  rv = secMan->IsCapabilityEnabled("UniversalBrowserRead", &crossSiteAccessEnabled);
+  rv = secMan->IsCapabilityEnabled("UniversalBrowserRead",
+                                   &crossSiteAccessEnabled);
   if (NS_FAILED(rv)) return rv;
 
   mCrossSiteAccessEnabled = crossSiteAccessEnabled;
@@ -428,15 +444,15 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   if (NS_FAILED(rv)) return rv;
 
   // Set a principal for this document
-  mPrincipal = nsnull;
   nsCOMPtr<nsISupports> channelOwner;
   rv = channel->GetOwner(getter_AddRefs(channelOwner));
-  if (NS_SUCCEEDED(rv) && channelOwner) {
-    mPrincipal = do_QueryInterface(channelOwner, &rv);
-  }
 
-  if (NS_FAILED(rv) || !channelOwner)
-  {
+  // We don't care if GetOwner() succeeded here, if it failed,
+  // channelOwner will be null, which is what we want in that case.
+
+  mPrincipal = do_QueryInterface(channelOwner);
+
+  if (NS_FAILED(rv) || !mPrincipal) {
     rv = secMan->GetCodebasePrincipal(uri, getter_AddRefs(mPrincipal));
     NS_ENSURE_TRUE(mPrincipal, rv);
   }
@@ -661,19 +677,20 @@ nsXMLDocument::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult)
 }
 
 // subclass hook for sheet ordering
-void nsXMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags)
+void
+nsXMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags)
 {
   // XXXbz this catalog stuff should be in the UA level in the cascade!
   if (aFlags & NS_STYLESHEET_FROM_CATALOG) {
     // always after other catalog sheets
-    mStyleSheets.InsertObjectAt(aSheet, mCountCatalogSheets);
-    ++mCountCatalogSheets;
+    mStyleSheets.InsertObjectAt(aSheet, mCatalogSheetCount);
+    ++mCatalogSheetCount;
   }
   else if (aSheet == mAttrStyleSheet) {  // always after catalog sheets
     NS_ASSERTION(mStyleSheets.Count() == 0 ||
                  mAttrStyleSheet != mStyleSheets[0],
                  "Adding attr sheet twice!");
-    mStyleSheets.InsertObjectAt(aSheet, mCountCatalogSheets);
+    mStyleSheets.InsertObjectAt(aSheet, mCatalogSheetCount);
   }
   else if (aSheet == mInlineStyleSheet) {  // always last
     NS_ASSERTION(mStyleSheets.Count() == 0 ||
@@ -702,13 +719,13 @@ nsXMLDocument::InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex)
                           /* Don't count Attribute stylesheet */
                           - 1
                           /* Don't count catalog sheets */
-                          - mCountCatalogSheets
+                          - mCatalogSheetCount
                           /* No insertion allowed after StyleAttr stylesheet */
                           - (mInlineStyleSheet ? 1: 0)
                           ),
                "index out of bounds");
   // offset w.r.t. catalog style sheets and the attr style sheet
-  mStyleSheets.InsertObjectAt(aSheet, aIndex + mCountCatalogSheets + 1);
+  mStyleSheets.InsertObjectAt(aSheet, aIndex + mCatalogSheetCount + 1);
 }
 
 already_AddRefed<nsIStyleSheet>
@@ -717,7 +734,7 @@ nsXMLDocument::InternalGetStyleSheetAt(PRInt32 aIndex)
   PRInt32 count = InternalGetNumberOfStyleSheets();
 
   if (aIndex >= 0 && aIndex < count) {
-    nsIStyleSheet* sheet = mStyleSheets[aIndex + mCountCatalogSheets + 1];
+    nsIStyleSheet* sheet = mStyleSheets[aIndex + mCatalogSheetCount + 1];
     NS_ADDREF(sheet);
     return sheet;
   } else {
@@ -730,10 +747,21 @@ PRInt32
 nsXMLDocument::InternalGetNumberOfStyleSheets()
 {
   PRInt32 count = mStyleSheets.Count();
-  if (count != 0 && mInlineStyleSheet == mStyleSheets[count - 1])
+
+  if (count != 0 && mInlineStyleSheet == mStyleSheets[count - 1]) {
+    // subtract the inline style sheet
     --count;
-  count -= (mCountCatalogSheets + 1); // +1 for the attr sheet
-  NS_ASSERTION(count >= 0, "Why did we end up with a negative count?");
+  }
+
+  if (count != 0 && mAttrStyleSheet == mStyleSheets[mCatalogSheetCount]) {
+    // subtract the attr sheet
+    --count;
+  }
+
+  count -= mCatalogSheetCount;
+
+  NS_ASSERTION(count >= 0, "How did we get a negative count?");
+
   return count;
 }
 
@@ -745,7 +773,8 @@ nsXMLDocument::GetDoctype(nsIDOMDocumentType** aDocumentType)
 }
  
 NS_IMETHODIMP    
-nsXMLDocument::CreateCDATASection(const nsAString& aData, nsIDOMCDATASection** aReturn)
+nsXMLDocument::CreateCDATASection(const nsAString& aData,
+                                  nsIDOMCDATASection** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
@@ -769,7 +798,8 @@ nsXMLDocument::CreateCDATASection(const nsAString& aData, nsIDOMCDATASection** a
 }
  
 NS_IMETHODIMP    
-nsXMLDocument::CreateEntityReference(const nsAString& aName, nsIDOMEntityReference** aReturn)
+nsXMLDocument::CreateEntityReference(const nsAString& aName,
+                                     nsIDOMEntityReference** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
 
@@ -1085,18 +1115,19 @@ nsXMLDocument::GetBaseTarget(nsAString &aBaseTarget)
 NS_IMETHODIMP
 nsXMLDocument::GetCSSLoader(nsICSSLoader*& aLoader)
 {
-  nsresult result = NS_OK;
-  if (! mCSSLoader) {
-    result = NS_NewCSSLoader(this, getter_AddRefs(mCSSLoader));
-    if (mCSSLoader) {
-      mCSSLoader->SetCaseSensitive(PR_TRUE);
-      // No quirks in XML
-      mCSSLoader->SetCompatibilityMode(eCompatibility_FullStandards);
-    }
+  if (!mCSSLoader) {
+    nsresult rv = NS_NewCSSLoader(this, getter_AddRefs(mCSSLoader));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mCSSLoader->SetCaseSensitive(PR_TRUE);
+    // no quirks in XML
+    mCSSLoader->SetCompatibilityMode(eCompatibility_FullStandards);
   }
+
   aLoader = mCSSLoader;
   NS_IF_ADDREF(aLoader);
-  return result;
+
+  return NS_OK;
 }
 
 nsresult

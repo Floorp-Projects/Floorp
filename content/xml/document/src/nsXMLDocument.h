@@ -39,7 +39,7 @@
 #ifndef nsXMLDocument_h___
 #define nsXMLDocument_h___
 
-#include "nsMarkupDocument.h"
+#include "nsDocument.h"
 #include "nsIXMLDocument.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsIInterfaceRequestor.h"
@@ -61,7 +61,7 @@ class nsIURI;
 #define XML_DECLARATION_BITS_STANDALONE_EXISTS    4
 #define XML_DECLARATION_BITS_STANDALONE_YES       8
 
-class nsXMLDocument : public nsMarkupDocument,
+class nsXMLDocument : public nsDocument,
                       public nsIXMLDocument,
                       public nsIHTMLContentContainer,
                       public nsIInterfaceRequestor,
@@ -78,8 +78,7 @@ public:
 
   NS_IMETHOD Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
 
-  NS_IMETHOD StartDocumentLoad(const char* aCommand,
-                               nsIChannel* channel,
+  NS_IMETHOD StartDocumentLoad(const char* aCommand, nsIChannel* channel,
                                nsILoadGroup* aLoadGroup,
                                nsISupports* aContainer,
                                nsIStreamListener **aDocListener,
@@ -95,23 +94,25 @@ public:
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 
   // nsIDOMDocument interface
-  NS_IMETHOD    GetDoctype(nsIDOMDocumentType** aDocumentType);
-  NS_IMETHOD    CreateCDATASection(const nsAString& aData, nsIDOMCDATASection** aReturn);
-  NS_IMETHOD    CreateEntityReference(const nsAString& aName, nsIDOMEntityReference** aReturn);
-  NS_IMETHOD    CreateProcessingInstruction(const nsAString& aTarget, const nsAString& aData, nsIDOMProcessingInstruction** aReturn);
-  NS_IMETHOD    CreateElement(const nsAString& aTagName, 
-                              nsIDOMElement** aReturn);
-  NS_IMETHOD    ImportNode(nsIDOMNode* aImportedNode,
-                           PRBool aDeep,
-                           nsIDOMNode** aReturn);
-  NS_IMETHOD    CreateElementNS(const nsAString& aNamespaceURI,
+  NS_IMETHOD GetDoctype(nsIDOMDocumentType** aDocumentType);
+  NS_IMETHOD CreateCDATASection(const nsAString& aData,
+                                nsIDOMCDATASection** aReturn);
+  NS_IMETHOD CreateEntityReference(const nsAString& aName,
+                                   nsIDOMEntityReference** aReturn);
+  NS_IMETHOD CreateProcessingInstruction(const nsAString& aTarget,
+                                         const nsAString& aData,
+                                         nsIDOMProcessingInstruction** aReturn);
+  NS_IMETHOD CreateElement(const nsAString& aTagName, nsIDOMElement** aReturn);
+  NS_IMETHOD ImportNode(nsIDOMNode* aImportedNode, PRBool aDeep,
+                        nsIDOMNode** aReturn);
+  NS_IMETHOD CreateElementNS(const nsAString& aNamespaceURI,
+                             const nsAString& aQualifiedName,
+                             nsIDOMElement** aReturn);
+  NS_IMETHOD CreateAttributeNS(const nsAString& aNamespaceURI,
                                const nsAString& aQualifiedName,
-                               nsIDOMElement** aReturn);
-  NS_IMETHOD    CreateAttributeNS(const nsAString& aNamespaceURI,
-                                  const nsAString& aQualifiedName,
-                                  nsIDOMAttr** aReturn);
-  NS_IMETHOD    GetElementById(const nsAString& aElementId,
-                               nsIDOMElement** aReturn);
+                               nsIDOMAttr** aReturn);
+  NS_IMETHOD GetElementById(const nsAString& aElementId,
+                            nsIDOMElement** aReturn);
 
   // nsIXMLDocument interface
   NS_IMETHOD SetDefaultStylesheets(nsIURI* aUrl);
@@ -128,13 +129,15 @@ public:
   NS_IMETHOD GetCSSLoader(nsICSSLoader*& aLoader);
 
   // nsIInterfaceRequestor
-  NS_IMETHOD GetInterface(const nsIID& aIID, void** aSink);
+  NS_DECL_NSIINTERFACEREQUESTOR
 
   // nsIHTTPEventSink
   NS_DECL_NSIHTTPEVENTSINK
 
   // nsIDOMXMLDocument
   NS_DECL_NSIDOMXMLDOCUMENT
+
+  virtual nsresult Init();
 
 protected:
   // subclass hooks for sheet ordering
@@ -144,7 +147,7 @@ protected:
   virtual PRInt32 InternalGetNumberOfStyleSheets();
 
   nsresult CreateElement(nsINodeInfo *aNodeInfo, nsIDOMElement** aResult);
-  
+
   // For HTML elements in our content model
   // XXX This is not clean, but is there a better way? 
   nsCOMPtr<nsIHTMLStyleSheet> mAttrStyleSheet;
@@ -152,7 +155,7 @@ protected:
   // For additional catalog sheets (if any) needed to layout the XML vocabulary
   // of the document. Catalog sheets are kept at the beginning of our array of
   // style sheets and this counter is used as an offset to distinguish them
-  PRInt32 mCountCatalogSheets;
+  PRInt32 mCatalogSheetCount;
   nsString mBaseTarget;
 
   nsCOMPtr<nsIEventQueueService> mEventQService;

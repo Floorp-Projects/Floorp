@@ -792,7 +792,7 @@ nsXBLPrototypeBinding::InitClass(const nsCString& aClassName,
                                  nsIScriptContext * aContext,
                                  void * aScriptObject, void ** aClassObject)
 {
-  NS_ENSURE_ARG_POINTER (aClassObject); 
+  NS_ENSURE_ARG_POINTER(aClassObject); 
 
   *aClassObject = nsnull;
 

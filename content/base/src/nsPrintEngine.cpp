@@ -1873,9 +1873,10 @@ nsPrintEngine::GetWebShellTitleAndURL(nsIWebShell* aWebShell,
   *aTitle  = nsnull;
   *aURLStr = nsnull;
 
-  const nsString* docTitle = aDoc->GetDocumentTitle();
-  if (docTitle && !docTitle->IsEmpty()) {
-    *aTitle = ToNewUnicode(*docTitle);
+  nsAutoString docTitle;
+  aDoc->GetDocumentTitle(docTitle);
+  if (!docTitle.IsEmpty()) {
+    *aTitle = ToNewUnicode(docTitle);
   }
 
   nsCOMPtr<nsIURI> url;

@@ -66,7 +66,8 @@ CPPSRCS		= \
 		nsXULPrototypeDocument.cpp \
 		$(NULL)
 
-# we don't want the shared lib, but we want to force the creation of a static lib.
+# we don't want the shared lib, but we want to force the creation of a
+# static lib.
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
@@ -74,5 +75,6 @@ include $(topsrcdir)/config/rules.mk
 LOCAL_INCLUDES	= -I$(srcdir)/../../../base/src \
 		   -I$(srcdir)/../../content/src \
 		   -I$(srcdir)/../../templates/src \
+		   -I$(srcdir)/../../../xml/document/src \
 		   $(NULL)
 

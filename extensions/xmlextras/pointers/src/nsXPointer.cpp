@@ -126,7 +126,7 @@ nsXPointerResult::Item(PRUint32 aIndex, nsIDOMRange** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
 
-  if (aIndex >= mArray.Count()) {
+  if (aIndex >= (PRUint32)mArray.Count()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -255,7 +255,7 @@ nsXPointerSchemeContext::GetSchemeData(PRUint32 aIndex,
                                        nsAString &aScheme,
                                        nsAString &aData)
 {
-  if (aIndex >= mSchemes.Count()) {
+  if (aIndex >= (PRUint32)mSchemes.Count()) {
     aScheme.Truncate();
     aData.Truncate();
 
