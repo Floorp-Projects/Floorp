@@ -1,0 +1,75 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is mozilla.org code.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are 
+ * Copyright (C) 2001 Netscape Communications Corporation.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ * Rajiv Dayal <rdayal@netscape.com>
+ *
+ *  nsIAbLDAPReplicationQuery.idl
+ */
+
+#include "nsISupports.idl"
+
+%{ C++
+#include "nsDirPrefs.h"
+%}
+[ptr] native DIR_ReplicationInfo(DIR_ReplicationInfo);
+
+interface nsIWebProgressListener;
+interface nsILDAPURL;
+interface nsILDAPConnection;
+interface nsILDAPOperation;
+
+
+/**
+ * this interface provides methods to perform LDAP Replication Queries
+ */
+[scriptable, uuid(00D568A1-3C3B-11d6-B7B9-00B0D06E5F27)]
+interface nsIAbLDAPReplicationQuery : nsISupports {
+
+   readonly attribute nsILDAPURL replicationURL;
+   readonly attribute nsILDAPConnection connection;
+   readonly attribute nsILDAPOperation operation;
+   [noscript] readonly attribute DIR_ReplicationInfo replicationInfo;
+
+   /**
+     * initialize for the query
+     */
+    void init (in ACString aPrefName, in nsIWebProgressListener aProgressListener);
+     
+   /**
+     * Starts an LDAP query to do replication as needed
+     */
+    void doReplicationQuery();
+
+  /**
+    * Starts an LDAP query to replicate all entries
+    */
+    void queryAllEntries();
+   
+   /**
+     * Cancels the currently executing query
+     */
+    void cancelQuery();
+
+   /**
+     * this method is the callback when query is done, failed or successful
+     */
+    void done(in PRBool aSuccess);
+};
+
