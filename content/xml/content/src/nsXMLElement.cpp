@@ -62,8 +62,6 @@
 #include "nsIPresShell.h"
 #include "nsGUIEvent.h"
 #include "nsIPresContext.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIXBLService.h"
@@ -239,22 +237,13 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
 
         // XXX Should probably do this using atoms 
         if (value.Equals(NS_LITERAL_STRING("new"))) {
-          nsCOMPtr<nsIPrefBranch> prefBranch =
-            do_GetService(NS_PREFSERVICE_CONTRACTID);
+          if (nsContentUtils::GetBoolPref("dom.disable_open_during_load")) {
+            // disabling open during load
 
-          PRBool boolPref = PR_FALSE;
-          if (prefBranch) {
-            prefBranch->GetBoolPref("dom.disable_open_during_load", &boolPref);
-            if (boolPref) {
-              // disabling open during load
-
-              return NS_OK;
-            }
-
-            prefBranch->GetBoolPref("browser.block.target_new_window",
-                                    &boolPref);
+            return NS_OK;
           }
-          if (!boolPref) {
+
+          if (!nsContentUtils::GetBoolPref("browser.block.target_new_window")) {
             // not blocking new windows
             verb = eLinkVerb_New;
           }
@@ -347,15 +336,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
           // XXX Should probably do this using atoms 
           if (show.Equals(NS_LITERAL_STRING("new"))) {
-            nsCOMPtr<nsIPrefBranch> prefBranch =
-              do_GetService(NS_PREFSERVICE_CONTRACTID);
-
-            PRBool blockNewWindow = PR_FALSE;
-            if (prefBranch) {
-              prefBranch->GetBoolPref("browser.block.target_new_window",
-                                      &blockNewWindow);
-            }
-            if (!blockNewWindow) {
+            if (!nsContentUtils::GetBoolPref("browser.block.target_new_window")) {
               verb = eLinkVerb_New;
             }
           } else if (show.Equals(NS_LITERAL_STRING("replace"))) {

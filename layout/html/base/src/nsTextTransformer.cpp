@@ -37,6 +37,7 @@
 #include <ctype.h>
 #include "nsCOMPtr.h"
 #include "nsTextTransformer.h"
+#include "nsContentUtils.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsITextContent.h"
@@ -48,29 +49,22 @@
 #include "nsUnicharUtils.h"
 #include "nsICaseConversion.h"
 #include "prenv.h"
-#include "nsIPrefBranchInternal.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #ifdef IBMBIDI
 #include "nsLayoutAtoms.h"
 #endif
 
 
-nsTextTransformer::WordSelectListener *nsTextTransformer::sWordSelectListener = nsnull;
+PRBool nsTextTransformer::sWordSelectListenerPrefChecked = PR_FALSE;
 PRBool nsTextTransformer::sWordSelectStopAtPunctuation = PR_FALSE;
 static const char kWordSelectPref[] = "layout.word_select.stop_at_punctuation";
 
-NS_IMPL_ISUPPORTS1(nsTextTransformer::WordSelectListener, nsIObserver)
-
-NS_IMETHODIMP
-nsTextTransformer::WordSelectListener::Observe(nsISupports *aSubject,
-                                                 const char *aTopic,
-                                                 const PRUnichar *aData)
+// static
+int
+nsTextTransformer::WordSelectPrefCallback(const char* aPref, void* aClosure)
 {
-  NS_ASSERTION(!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID),
-               "wrong topic");
-  nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(aSubject);
-  return prefBranch->GetBoolPref(kWordSelectPref, &sWordSelectStopAtPunctuation);
+  sWordSelectStopAtPunctuation = nsContentUtils::GetBoolPref(kWordSelectPref);
+
+  return 0;
 }
 
 nsAutoTextBuffer::nsAutoTextBuffer()
@@ -125,17 +119,14 @@ nsresult
 nsTextTransformer::Initialize()
 {
   // read in our global word selection prefs
-  if ( !sWordSelectListener ) {
-    nsCOMPtr<nsIPrefBranchInternal> prefBranch =
-        do_GetService( NS_PREFSERVICE_CONTRACTID );
-    if ( prefBranch ) {
-      prefBranch->GetBoolPref(kWordSelectPref, &sWordSelectStopAtPunctuation);
-      sWordSelectListener = new WordSelectListener();
-      if (sWordSelectListener) {
-        NS_ADDREF(sWordSelectListener);
-        prefBranch->AddObserver(kWordSelectPref, sWordSelectListener, PR_FALSE);
-      }
-    }
+  if ( !sWordSelectListenerPrefChecked ) {
+    sWordSelectListenerPrefChecked = PR_TRUE;
+
+    sWordSelectStopAtPunctuation =
+      nsContentUtils::GetBoolPref(kWordSelectPref);
+
+    nsContentUtils::RegisterPrefCallback(kWordSelectPref,
+                                         WordSelectPrefCallback, nsnull);
   }
 
   return NS_OK;
@@ -155,7 +146,6 @@ static nsresult EnsureCaseConv()
 void
 nsTextTransformer::Shutdown()
 {
-  NS_IF_RELEASE(sWordSelectListener);
   if (gCaseConv) {
     nsServiceManager::ReleaseService(kUnicharUtilCID, gCaseConv);
     gCaseConv = nsnull;

@@ -65,8 +65,6 @@
 #include "nsGUIEvent.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIDOMWindow.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 
 #include "imgIContainer.h"
 #include "imgILoader.h"
@@ -593,14 +591,9 @@ nsHTMLImageElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
     // If caller is not chrome and dom.disable_image_src_set is true,
     // prevent setting image.src by exiting early
-    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (prefBranch) {
-      PRBool disableImageSrcSet = PR_FALSE;
-      prefBranch->GetBoolPref("dom.disable_image_src_set", &disableImageSrcSet);
-
-      if (disableImageSrcSet && !nsContentUtils::IsCallerChrome()) {
-        return NS_OK;
-      }
+    if (nsContentUtils::GetBoolPref("dom.disable_image_src_set") &&
+        !nsContentUtils::IsCallerChrome()) {
+      return NS_OK;
     }
 
     nsCOMPtr<imgIRequest> oldCurrentRequest = mCurrentRequest;

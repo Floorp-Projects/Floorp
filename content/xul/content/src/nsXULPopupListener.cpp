@@ -67,8 +67,6 @@
 #include "nsIDOMNSUIEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMNSEvent.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsIServiceManagerUtils.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
@@ -233,18 +231,9 @@ XULPopupListenerImpl::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
   if (preventDefault && targetNode && popupType == eXULPopupType_context) {
     // Someone called preventDefault on a context menu.
     // Let's make sure they are allowed to do so.
-    nsCOMPtr<nsIPrefService> prefService =
-      do_GetService(NS_PREFSERVICE_CONTRACTID);
-
-    NS_ENSURE_TRUE(prefService, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
-
-    PRBool eventEnabled;
-    nsresult rv = prefBranch->GetBoolPref("dom.event.contextmenu.enabled",
-                                          &eventEnabled);
-    if (NS_SUCCEEDED(rv) && !eventEnabled) {
+    PRBool eventEnabled =
+      nsContentUtils::GetBoolPref("dom.event.contextmenu.enabled", PR_TRUE);
+    if (!eventEnabled) {
       // The user wants his contextmenus.  Let's make sure that this is a website
       // and not chrome since there could be places in chrome which don't want
       // contextmenus.

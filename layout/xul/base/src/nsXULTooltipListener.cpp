@@ -47,9 +47,6 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsIPopupBoxObject.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
-#include "nsIPrefService.h"
 #include "nsIServiceManager.h"
 #ifdef MOZ_XUL
 #include "nsITreeView.h"
@@ -60,6 +57,7 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsContentUtils.h"
 
 //////////////////////////////////////////////////////////////////////////
 //// nsISupports
@@ -82,11 +80,9 @@ nsXULTooltipListener::~nsXULTooltipListener()
 {
   HideTooltip();
 
-  nsCOMPtr<nsIPrefBranchInternal> prefInternal(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (prefInternal) {
-    // Unregister our pref observer
-    prefInternal->RemoveObserver("browser.chrome.toolbar_tips", this);
-  }
+  // Unregister our pref observer
+  nsContentUtils::UnregisterPrefCallback("browser.chrome.toolbar_tips",
+                                         ToolbarTipsPrefChanged, this);
 }
 
 NS_IMPL_ADDREF(nsXULTooltipListener)
@@ -97,7 +93,6 @@ NS_INTERFACE_MAP_BEGIN(nsXULTooltipListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseMotionListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMKeyListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMXULListener)
-  NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMMouseListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMouseMotionListener)
 NS_INTERFACE_MAP_END
@@ -243,27 +238,18 @@ nsXULTooltipListener::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 //////////////////////////////////////////////////////////////////////////
-//// nsIObserver
-
-NS_IMETHODIMP
-nsXULTooltipListener::Observe(nsISupports* aSubject, 
-                              const char* aTopic,
-                              const PRUnichar* aData)
-{
-  if (nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-    NS_ERROR("unknown nsIObserver topic!");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_QueryInterface(aSubject));
-  NS_ASSERTION(prefBranch, "Pref change topic with no pref subject?");
-  prefBranch->GetBoolPref("browser.chrome.toolbar_tips", &sShowTooltips);
-
-  return NS_OK;
-}
-
-//////////////////////////////////////////////////////////////////////////
 //// nsXULTooltipListener
+
+// static
+int
+nsXULTooltipListener::ToolbarTipsPrefChanged(const char *aPref,
+                                             void *aClosure)
+{
+  sShowTooltips = nsContentUtils::GetBoolPref("browser.chrome.toolbar_tips",
+                                              sShowTooltips);
+
+  return 0;
+}
 
 NS_IMETHODIMP
 nsXULTooltipListener::PopupHiding(nsIDOMEvent* aEvent)
@@ -277,6 +263,7 @@ nsXULTooltipListener::PopupHiding(nsIDOMEvent* aEvent)
 
 PRBool nsXULTooltipListener::sShowTooltips = PR_FALSE;
 
+// XXX: This could all be done in the ctor.
 nsresult
 nsXULTooltipListener::Init(nsIContent* aSourceNode, nsIRootBox* aRootBox)
 {
@@ -290,22 +277,13 @@ nsXULTooltipListener::Init(nsIContent* aSourceNode, nsIRootBox* aRootBox)
   mIsSourceTree = mSourceNode->Tag() == nsXULAtoms::treechildren;
 #endif
 
-  static PRBool prefChangeRegistered = PR_FALSE;
+  // get the initial value of the pref
+  sShowTooltips =
+    nsContentUtils::GetBoolPref("browser.chrome.toolbar_tips", sShowTooltips);
 
-  // Only the first time, register the callback and get the initial value of the pref
-  if (!prefChangeRegistered) {
-    nsCOMPtr<nsIPrefBranchInternal> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));  
-    if (prefBranch) {
-      // get the initial value of the pref
-      nsresult rv = prefBranch->GetBoolPref("browser.chrome.toolbar_tips", &sShowTooltips);
-      if (NS_SUCCEEDED(rv)) {
-        // register the callback so we get notified of updates
-        rv = prefBranch->AddObserver("browser.chrome.toolbar_tips", this, PR_FALSE);
-        if (NS_SUCCEEDED(rv))
-          prefChangeRegistered = PR_TRUE;
-      }
-    }
-  }
+  // register the callback so we get notified of updates
+  nsContentUtils::RegisterPrefCallback("browser.chrome.toolbar_tips",
+                                       ToolbarTipsPrefChanged, this);
 
   return NS_OK;
 }

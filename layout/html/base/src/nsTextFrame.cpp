@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -80,13 +81,12 @@
 #include "nsIDOMRange.h"
 #include "nsILookAndFeel.h"
 #include "nsCSSRendering.h"
+#include "nsContentUtils.h"
 
 #include "nsILineIterator.h"
 
 #include "nsCompressedCharMap.h"
 
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "nsIServiceManager.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessible.h"
@@ -961,8 +961,8 @@ private:
     PRUnichar *mUniStr;
     char *mCStr;
   };
-	PRUint32  mLength;
-	PRUint32  mCurrentIdx;
+  PRUint32  mLength;
+  PRUint32  mCurrentIdx;
   PRUint32  mCurrentLength;
   nsTextFrame::TextStyle &mOldStyle;//base new styles on this one???
   const SelectionDetails *mDetails;
@@ -1004,8 +1004,8 @@ DrawSelectionIterator::DrawSelectionIterator(nsIContent *aContent,
     if (aContent) {
       nsRefPtr<nsStyleContext> sc;
       sc = aPresContext->StyleSet()->
-	ProbePseudoStyleFor(aContent->GetParent(),
-			    nsCSSPseudoElements::mozSelection, aStyleContext);
+        ProbePseudoStyleFor(aContent->GetParent(),
+                            nsCSSPseudoElements::mozSelection, aStyleContext);
       if (sc) {
         mSelectionPseudoStyle = PR_TRUE;
         const nsStyleBackground* bg = sc->GetStyleBackground();
@@ -1062,12 +1062,12 @@ DrawSelectionIterator::DrawSelectionIterator(nsIContent *aContent,
         }
         details= details->mNext;
       }
-	    if (!mInit && mTypes) //we have details but none that we care about.
-	    {
-          delete mTypes;
-    		  mTypes = nsnull;
-		      mDone = PR_TRUE;//we are finished
-	    }
+      if (!mInit && mTypes) //we have details but none that we care about.
+      {
+        delete mTypes;
+        mTypes = nsnull;
+        mDone = PR_TRUE;//we are finished
+      }
     }
     else if (details->mStart == details->mEnd)//no collapsed selections here!
     {
@@ -1203,7 +1203,7 @@ DrawSelectionIterator::CurrentForeGroundColor()
   else if (mTypes[mCurrentIdx] | nsISelectionController::SELECTION_NORMAL)//Find color based on mTypes[mCurrentIdx];
   {
     foreColor = mOldStyle.mSelectionTextColor;
-   	colorSet = PR_TRUE;
+    colorSet = PR_TRUE;
   }
 
   if (colorSet && (foreColor != NS_DONT_CHANGE_COLOR)) {
@@ -1305,12 +1305,9 @@ nsTextFrame::nsTextFrame()
 {
   // read in our global word selection prefs
   if ( !sWordSelectPrefInited ) {
-    nsCOMPtr<nsIPrefBranch> prefBranch ( do_GetService(NS_PREFSERVICE_CONTRACTID) );
-    if ( prefBranch ) {
-      PRBool temp = PR_FALSE;
-      prefBranch->GetBoolPref("layout.word_select.eat_space_to_next_word", &temp);
-      sWordSelectEatSpaceAfter = temp;
-    }
+    sWordSelectEatSpaceAfter =
+      nsContentUtils::GetBoolPref("layout.word_select.eat_space_to_next_word");
+
     sWordSelectPrefInited = PR_TRUE;
   }
 }
@@ -1565,7 +1562,7 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
         // XXX This is a one to many mapping that I think isn't handled well
         if (nsnull != indexp) {
           *indexp++ = strInx;
-        	strInx += wordLen;
+          strInx += wordLen;
         }
       }
       else if ('\n' == bp[0]) {
@@ -1681,7 +1678,7 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
 }
 
 
-//#define SHOW_SELECTION_CURSOR			// should be turned off when the caret code is activated
+//#define SHOW_SELECTION_CURSOR   // should be turned off when the caret code is activated
 
 #ifdef SHOW_SELECTION_CURSOR
 
@@ -1905,7 +1902,7 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
               aRenderingContext.SetColor(NS_RGB(255,255,128));
               aRenderingContext.DrawRect(aX + startOffset, aY, textWidth, rect.height);
 #endif        
-			  aTextStyle.mNormalFont->GetUnderline(offset, size);
+              aTextStyle.mNormalFont->GetUnderline(offset, size);
               aRenderingContext.SetColor(IME_CONVERTED_COLOR);
               aRenderingContext.FillRect(aX + startOffset+size, aY + baseline - offset, textWidth-2*size, size);
                                 }break;
@@ -1952,7 +1949,7 @@ nsTextFrame::GetContentAndOffsetsForSelection(nsIPresContext *aPresContext, nsIC
       nsIFrame *grandParent = parent->GetParent();
       if (grandParent)
       {
-	nsIFrame *firstParent = grandParent->GetFirstChild(nsnull);
+        nsIFrame *firstParent = grandParent->GetFirstChild(nsnull);
         if (firstParent)
         {
           *aLength = 0;
@@ -2392,7 +2389,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
 #ifdef IBMBIDI
           if (!isRightToLeftOnBidiPlatform)
 #endif
-          currentX+=newWidth;//increment twips X start
+          currentX += newWidth; // increment twips X start
 
           iter.Next();
         }
@@ -2517,23 +2514,22 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
   ComputeExtraJustificationSpacing(*aRendContext, ts, paintBuffer.mBuffer, textLength, numSpaces);
 
 //IF STYLE SAYS TO SELECT TO END OF FRAME HERE...
-  nsCOMPtr<nsIPrefBranch> prefBranch( do_GetService(NS_PREFSERVICE_CONTRACTID) );
-  PRInt32 prefInt = 0;
+  PRInt32 prefInt =
+    nsContentUtils::GetIntPref("browser.drag_out_of_frame_style");
+
   PRBool outofstylehandled = PR_FALSE;
-  if (prefBranch) 
-  { 
-    if (NS_SUCCEEDED(prefBranch->GetIntPref("browser.drag_out_of_frame_style", &prefInt)) && prefInt)
+
+  if (prefInt)
+  {
+    if (aPoint.y < origin.y)//above rectangle
     {
-      if (aPoint.y < origin.y)//above rectangle
-      {
-        aOffset = mContentOffset;
-        outofstylehandled = PR_TRUE;
-      }
-      else if ((aPoint.y - origin.y) > mRect.height)
-      {
-        aOffset = mContentOffset + mContentLength;
-        outofstylehandled = PR_TRUE;
-      }
+      aOffset = mContentOffset;
+      outofstylehandled = PR_TRUE;
+    }
+    else if ((aPoint.y - origin.y) > mRect.height)
+    {
+      aOffset = mContentOffset + mContentLength;
+      outofstylehandled = PR_TRUE;
     }
   }
 
@@ -2995,19 +2991,19 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
       DrawSelectionIterator iter(content, details,text,(PRUint32)textLength,aTextStyle, selectionValue, aPresContext, mStyleContext);
       if (!iter.IsDone() && iter.First())
       {
-	      nscoord currentX = dx;
-	      nsTextDimensions newDimensions;//temp
-	      while (!iter.IsDone())
-	      {
-	      PRUnichar *currenttext  = iter.CurrentTextUnicharPtr();
-	      PRUint32   currentlength= iter.CurrentLength();
-	      //TextStyle &currentStyle = iter.CurrentStyle();
-	      nscolor    currentFGColor = iter.CurrentForeGroundColor();
-	      nscolor    currentBKColor;
-	      PRBool     isCurrentBKColorTransparent;
-	      GetTextDimensions(aRenderingContext,aTextStyle,currenttext, (PRInt32)currentlength,&newDimensions);
-	      if (newDimensions.width)
-	      {
+        nscoord currentX = dx;
+        nsTextDimensions newDimensions;//temp
+        while (!iter.IsDone())
+        {
+          PRUnichar *currenttext  = iter.CurrentTextUnicharPtr();
+          PRUint32   currentlength= iter.CurrentLength();
+          //TextStyle &currentStyle = iter.CurrentStyle();
+          nscolor    currentFGColor = iter.CurrentForeGroundColor();
+          nscolor    currentBKColor;
+          PRBool     isCurrentBKColorTransparent;
+          GetTextDimensions(aRenderingContext,aTextStyle,currenttext, (PRInt32)currentlength,&newDimensions);
+          if (newDimensions.width)
+          {
             if (iter.CurrentBackGroundColor(currentBKColor, &isCurrentBKColorTransparent))
             {//DRAW RECT HERE!!!
               if (!isCurrentBKColorTransparent) {
@@ -3016,25 +3012,26 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
               }
               currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
             }
-	      }
+          }
 
-        if (isPaginated && !iter.IsBeforeOrAfter()) {
-          aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
-          RenderString(aRenderingContext, aStyleContext, aPresContext,
-                       aTextStyle, currenttext, currentlength,
-                       currentX, dy, width, details);
-        } else if (!isPaginated) {
-          aRenderingContext.SetColor(nsCSSRendering::TransformColor(currentFGColor,canDarkenColor));
-          RenderString(aRenderingContext,aStyleContext, aPresContext,
-                       aTextStyle, currenttext, currentlength, currentX,
-                       dy, width, details);
+          if (isPaginated && !iter.IsBeforeOrAfter()) {
+            aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor, canDarkenColor));
+            RenderString(aRenderingContext, aStyleContext, aPresContext,
+                         aTextStyle, currenttext, currentlength,
+                         currentX, dy, width, details);
+          } else if (!isPaginated) {
+            aRenderingContext.SetColor(nsCSSRendering::TransformColor(currentFGColor, canDarkenColor));
+            RenderString(aRenderingContext,aStyleContext, aPresContext,
+                         aTextStyle, currenttext, currentlength, currentX,
+                         dy, width, details);
+          }
+
+          // increment twips X start but remember to get ready for
+          // next draw by reducing current x by letter spacing amount
+          currentX += newDimensions.width; // + aTextStyle.mLetterSpacing;
+
+          iter.Next();
         }
-
-          //increment twips X start but remember to get ready for next draw by reducing current x by letter spacing amount
-	      currentX+=newDimensions.width;// + aTextStyle.mLetterSpacing;
-
-	      iter.Next();
-	      }
       }
       else if (!isPaginated) 
       {
@@ -3393,25 +3390,23 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
       GetOffsetFromView(aCX, origin, &view);
 
 //IF STYLE SAYS TO SELECT TO END OF FRAME HERE...
-      nsCOMPtr<nsIPrefBranch> prefBranch( do_GetService(NS_PREFSERVICE_CONTRACTID) );
-      PRInt32 prefInt = 0;
+      PRInt32 prefInt =
+        nsContentUtils::GetIntPref("browser.drag_out_of_frame_style");
       PRBool outofstylehandled = PR_FALSE;
-      if (prefBranch) 
-      { 
-        if (NS_SUCCEEDED(prefBranch->GetIntPref("browser.drag_out_of_frame_style", &prefInt)) && prefInt)
+
+      if (prefInt)
+      {
+        if ((aPoint.y - origin.y) < 0)//above rectangle
         {
-          if ((aPoint.y - origin.y) < 0)//above rectangle
-          {
-            aContentOffset = mContentOffset;
-            aContentOffsetEnd = aContentOffset;
-            outofstylehandled = PR_TRUE;
-          }
-          else if ((aPoint.y - origin.y) > mRect.height)
-          {
-            aContentOffset = mContentOffset + mContentLength;
-            aContentOffsetEnd = aContentOffset;
-            outofstylehandled = PR_TRUE;
-          }
+          aContentOffset = mContentOffset;
+          aContentOffsetEnd = aContentOffset;
+          outofstylehandled = PR_TRUE;
+        }
+        else if ((aPoint.y - origin.y) > mRect.height)
+        {
+          aContentOffset = mContentOffset + mContentLength;
+          aContentOffsetEnd = aContentOffset;
+          outofstylehandled = PR_TRUE;
         }
       }
 
@@ -3613,7 +3608,7 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
     if (shell) {
       nsCOMPtr<nsISelectionController> selCon;
       nsresult rv = GetSelectionController(aPresContext,
-					   getter_AddRefs(selCon));
+                                           getter_AddRefs(selCon));
       if (NS_SUCCEEDED(rv) && selCon)
       {
         frameSelection = do_QueryInterface(selCon); //this MAY implement

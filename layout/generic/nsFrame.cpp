@@ -41,6 +41,7 @@
 #include "nsFrameList.h"
 #include "nsLineLayout.h"
 #include "nsIContent.h"
+#include "nsContentUtils.h"
 #include "nsIAtom.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -92,8 +93,6 @@
 #include "nsIPercentHeightObserver.h"
 
 // For triple-click pref
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "nsIServiceManager.h"
 #include "nsISelectionImageService.h"
 #include "imgIContainer.h"
@@ -1610,9 +1609,8 @@ nsFrame::HandleMultiplePress(nsIPresContext* aPresContext,
     selectPara = PR_TRUE;
   else if (me->clickCount == 3)
   {
-    nsCOMPtr<nsIPrefBranch> prefBranch( do_GetService(NS_PREFSERVICE_CONTRACTID) );
-    if (prefBranch)
-      prefBranch->GetBoolPref("browser.triple_click_selects_paragraph", &selectPara);
+    selectPara =
+      nsContentUtils::GetBoolPref("browser.triple_click_selects_paragraph");
   }
   else
     return NS_OK;

@@ -114,7 +114,6 @@
 #include "nsICharsetDetectionAdaptor.h"
 #include "nsCharsetDetectionAdaptorCID.h"
 #include "nsICharsetAlias.h"
-#include "nsIPref.h"
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
 #include "nsIDocumentCharsetInfo.h"
@@ -170,20 +169,8 @@ PRUint32       nsHTMLDocument::gWyciwygSessionCnt = 0;
 static int PR_CALLBACK
 MyPrefChangedCallback(const char*aPrefName, void* instance_data)
 {
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs =
-    do_GetService("@mozilla.org/preferences;1", &rv);
-  if (NS_FAILED(rv)) {
-    return 0;
-  }
-
-  nsXPIDLString detector_name;
-
-  rv = prefs->GetLocalizedUnicharPref("intl.charset.detector",
-                                      getter_Copies(detector_name));
-  if (NS_FAILED(rv)) {
-    return 0;
-  }
+  const nsAdoptingString& detector_name =
+    nsContentUtils::GetLocalizedStringPref("intl.charset.detector");
 
   if (detector_name.Length() > 0) {
     PL_strncpy(g_detector_contractid, NS_CHARSET_DETECTOR_CONTRACTID_BASE,
@@ -592,15 +579,13 @@ nsHTMLDocument::UseWeakDocTypeDefault(PRInt32& aCharsetSource,
     return PR_TRUE;
   // fallback value in case docshell return error
   aCharset = NS_LITERAL_CSTRING("ISO-8859-1");
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-  if (prefs) {
-    nsXPIDLString defCharset;
-    nsresult rv = prefs->GetLocalizedUnicharPref("intl.charset.default",
-                                                 getter_Copies(defCharset));
-    if (NS_SUCCEEDED(rv) && !defCharset.IsEmpty()) {
-      CopyUCS2toASCII(defCharset, aCharset);
-      aCharsetSource = kCharsetFromWeakDocTypeDefault;
-    }
+
+  const nsAdoptingString& defCharset =
+    nsContentUtils::GetLocalizedStringPref("intl.charset.default");
+
+  if (!defCharset.IsEmpty()) {
+    LossyCopyUTF16toASCII(defCharset, aCharset);
+    aCharsetSource = kCharsetFromWeakDocTypeDefault;
   }
   return PR_TRUE;
 }
@@ -663,24 +648,23 @@ nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell, nsACString& aCharset,
   nsCOMPtr <nsIParserFilter> cdetflt;
 
   nsresult rv_detect;
-  if(! gInitDetector) {
-    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
-    if(pref) {
-      PRUnichar* detector_name = nsnull;
-      rv_detect = pref->GetLocalizedUnicharPref("intl.charset.detector",
-                                                &detector_name);
-      if(NS_SUCCEEDED(rv_detect)) {
-        PL_strncpy(g_detector_contractid, NS_CHARSET_DETECTOR_CONTRACTID_BASE,
-                   DETECTOR_CONTRACTID_MAX);
-        PL_strncat(g_detector_contractid,
-                   NS_ConvertUCS2toUTF8(detector_name).get(),
-                   DETECTOR_CONTRACTID_MAX);
-        gPlugDetector = PR_TRUE;
-        PR_FREEIF(detector_name);
-      }
-      pref->RegisterCallback("intl.charset.detector", MyPrefChangedCallback,
-                             nsnull);
+  if(!gInitDetector) {
+    const nsAdoptingString& detector_name =
+      nsContentUtils::GetLocalizedStringPref("intl.charset.detector");
+
+    if(!detector_name.IsEmpty()) {
+      PL_strncpy(g_detector_contractid, NS_CHARSET_DETECTOR_CONTRACTID_BASE,
+                 DETECTOR_CONTRACTID_MAX);
+      PL_strncat(g_detector_contractid,
+                 NS_ConvertUTF16toUTF8(detector_name).get(),
+                 DETECTOR_CONTRACTID_MAX);
+      gPlugDetector = PR_TRUE;
     }
+
+    nsContentUtils::RegisterPrefCallback("intl.charset.detector",
+                                         MyPrefChangedCallback,
+                                         nsnull);
+
     gInitDetector = PR_TRUE;
   }
 

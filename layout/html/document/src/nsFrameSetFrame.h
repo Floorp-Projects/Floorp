@@ -103,8 +103,7 @@ struct nsFramesetDrag {
 /*******************************************************************************
  * nsHTMLFramesetFrame
  ******************************************************************************/
-class nsHTMLFramesetFrame : public nsHTMLContainerFrame,
-                            public nsIObserver
+class nsHTMLFramesetFrame : public nsHTMLContainerFrame
 {
 public:
   // Woohoo, concrete class with an IID!
@@ -114,8 +113,7 @@ public:
 
   virtual ~nsHTMLFramesetFrame();
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
@@ -243,6 +241,8 @@ protected:
 
   PRBool ChildIsFrameset(nsIFrame* aChild); 
 
+  static int FrameResizePrefCallback(const char* aPref, void* aClosure);
+
   PRInt32          mNumRows;
   nscoord*         mRowSizes;  // currently computed row sizes 
   PRInt32          mNumCols;
@@ -271,7 +271,6 @@ protected:
   nsBorderColor*   mChildBorderColors;
   
   PRBool mForceFrameResizability;
-  nsWeakPtr mPrefBranchWeakRef;
 };
 
 

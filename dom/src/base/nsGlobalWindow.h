@@ -302,6 +302,7 @@ protected:
   nsTimeoutImpl*                mRunningTimeout;
   PRUint32                      mTimeoutPublicIdCounter;
   PRUint32                      mTimeoutFiringDepth;
+  PRUint32                      mMutationBits;
   PRPackedBool                  mFirstDocumentLoad;
   PRPackedBool                  mIsScopeClear;
   PRPackedBool                  mIsDocumentLoaded; // true between onload and onunload events
@@ -316,7 +317,6 @@ protected:
   nsIScriptGlobalObjectOwner*   mGlobalObjectOwner; // Weak Reference
   nsIDocShell*                  mDocShell;  // Weak Reference
   nsEvent*                      mCurrentEvent;
-  PRUint32                      mMutationBits;
   nsCOMPtr<nsIChromeEventHandler> mChromeEventHandler; // [Strong] We break it when we get torn down.
   nsCOMPtr<nsIDOMCrypto>        mCrypto;
   nsCOMPtr<nsIDOMPkcs11>        mPkcs11;
@@ -370,7 +370,7 @@ struct nsTimeoutImpl
   {
 #ifdef DEBUG_jst
     {
-      extern gTimeoutCnt;
+      extern int gTimeoutCnt;
 
       ++gTimeoutCnt;
     }
@@ -385,7 +385,7 @@ struct nsTimeoutImpl
   {
 #ifdef DEBUG_jst
     {
-      extern gTimeoutCnt;
+      extern int gTimeoutCnt;
 
       --gTimeoutCnt;
     }

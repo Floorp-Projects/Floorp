@@ -57,7 +57,6 @@
 #include "nsIXPConnect.h"
 #include "nsIJSContextStack.h"
 #include "nsIJSRuntimeService.h"
-#include "nsIPref.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsJSUtils.h"
@@ -76,8 +75,7 @@
 #include "nsITimer.h"
 #include "nsDOMClassInfo.h"
 #include "nsIAtom.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
+#include "nsContentUtils.h"
 
 // For locale aware string methods
 #include "nsUnicharUtils.h"
@@ -482,38 +480,30 @@ static const char js_werror_option_str[] = JS_OPTIONS_DOT_STR "werror";
 int PR_CALLBACK
 nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 {
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    nsJSContext *context = NS_REINTERPRET_CAST(nsJSContext *, data);
-    PRUint32 oldDefaultJSOptions = context->mDefaultJSOptions;
-    PRUint32 newDefaultJSOptions = oldDefaultJSOptions;
+  nsJSContext *context = NS_REINTERPRET_CAST(nsJSContext *, data);
+  PRUint32 oldDefaultJSOptions = context->mDefaultJSOptions;
+  PRUint32 newDefaultJSOptions = oldDefaultJSOptions;
 
-    PRBool strict;
-    if (NS_SUCCEEDED(prefs->GetBoolPref(js_strict_option_str, &strict))) {
-      if (strict)
-        newDefaultJSOptions |= JSOPTION_STRICT;
-      else
-        newDefaultJSOptions &= ~JSOPTION_STRICT;
-    }
+  PRBool strict = nsContentUtils::GetBoolPref(js_strict_option_str);
+  if (strict)
+    newDefaultJSOptions |= JSOPTION_STRICT;
+  else
+    newDefaultJSOptions &= ~JSOPTION_STRICT;
 
-    PRBool werror;
-    if (NS_SUCCEEDED(prefs->GetBoolPref(js_werror_option_str, &werror))) {
-      if (werror)
-        newDefaultJSOptions |= JSOPTION_WERROR;
-      else
-        newDefaultJSOptions &= ~JSOPTION_WERROR;
-    }
+  PRBool werror = nsContentUtils::GetBoolPref(js_werror_option_str);
+  if (werror)
+    newDefaultJSOptions |= JSOPTION_WERROR;
+  else
+    newDefaultJSOptions &= ~JSOPTION_WERROR;
 
-    if (newDefaultJSOptions != oldDefaultJSOptions) {
-      // Set options only if we used the old defaults; otherwise the page has
-      // customized some via the options object and we defer to its wisdom.
-      if (::JS_GetOptions(context->mContext) == oldDefaultJSOptions)
-        ::JS_SetOptions(context->mContext, newDefaultJSOptions);
+  if (newDefaultJSOptions != oldDefaultJSOptions) {
+    // Set options only if we used the old defaults; otherwise the page has
+    // customized some via the options object and we defer to its wisdom.
+    if (::JS_GetOptions(context->mContext) == oldDefaultJSOptions)
+      ::JS_SetOptions(context->mContext, newDefaultJSOptions);
 
-      // Save the new defaults for the next page load (InitContext).
-      context->mDefaultJSOptions = newDefaultJSOptions;
-    }
+    // Save the new defaults for the next page load (InitContext).
+    context->mDefaultJSOptions = newDefaultJSOptions;
   }
   return 0;
 }
@@ -573,12 +563,10 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
     ::JS_SetOptions(mContext, mDefaultJSOptions);
 
     // Check for the JS strict option, which enables extra error checks
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv)) {
-      prefs->RegisterCallback(js_options_dot_str, JSOptionChangedCallback,
-                              this);
-      JSOptionChangedCallback(js_options_dot_str, this);
-    }
+    nsContentUtils::RegisterPrefCallback(js_options_dot_str,
+                                         JSOptionChangedCallback,
+                                         this);
+    JSOptionChangedCallback(js_options_dot_str, this);
 
     ::JS_SetBranchCallback(mContext, DOMBranchCallback);
 
@@ -616,11 +604,9 @@ nsJSContext::~nsJSContext()
   ::JS_SetBranchCallback(mContext, nsnull);
 
   // Unregister our "javascript.options.*" pref-changed callback.
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-  if (prefs) {
-    prefs->UnregisterCallback(js_options_dot_str, JSOptionChangedCallback,
-                              this);
-  }
+  nsContentUtils::UnregisterPrefCallback(js_options_dot_str,
+                                         JSOptionChangedCallback,
+                                         this);
 
   // Release mGlobalWrapperRef before the context is destroyed
   mGlobalWrapperRef = nsnull;
@@ -1939,16 +1925,11 @@ nsJSEnvironment::Init()
 
   // Initialize limit on script run time to 5 seconds
   PRInt32 maxtime = 5;
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs) {
-    PRInt32 time;
-    if (NS_SUCCEEDED(prefs->GetIntPref("dom.max_script_run_time", &time))) {
+  PRInt32 time = nsContentUtils::GetIntPref("dom.max_script_run_time");
 
-      // Force the default for unreasonable values
-      if (time > 0)
-        maxtime = time;
-    }
-  }
+  // Force the default for unreasonable values
+  if (time > 0)
+    maxtime = time;
 
   PRTime usec_per_sec;
   LL_I2L(usec_per_sec, PR_USEC_PER_SEC);

@@ -49,9 +49,9 @@
 #include "nsBlockFrame.h"
 #include "nsLineBox.h"
 #include "nsImageFrame.h"
-#include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsIPercentHeightObserver.h"
+#include "nsContentUtils.h"
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
 #endif
@@ -1519,14 +1519,12 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(nsIPresContext*          aPre
 }
 
 // Prefs callback to pick up changes
-static int PR_CALLBACK PrefsChanged(const char *aPrefName, void *instance)
+PR_STATIC_CALLBACK(int)
+PrefsChanged(const char *aPrefName, void *instance)
 {
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-  if (prefs) {
-    PRBool boolPref;
-    if (NS_SUCCEEDED(prefs->GetBoolPref("browser.blink_allowed", &boolPref)))
-      sBlinkIsAllowed = boolPref;
-  }
+  sBlinkIsAllowed =
+    nsContentUtils::GetBoolPref("browser.blink_allowed", sBlinkIsAllowed);
+
   return 0; /* PREF_OK */
 }
 
@@ -1537,11 +1535,8 @@ static PRBool BlinkIsAllowed(void)
 {
   if (!sPrefIsLoaded) {
     // Set up a listener and check the initial value
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-    if (prefs) {
-      prefs->RegisterCallback("browser.blink_allowed", PrefsChanged, 
-                              nsnull);
-    }
+    nsContentUtils::RegisterPrefCallback("browser.blink_allowed", PrefsChanged,
+                                         nsnull);
     PrefsChanged(nsnull, nsnull);
     sPrefIsLoaded = PR_TRUE;
   }
@@ -1552,15 +1547,11 @@ static PRBool BlinkIsAllowed(void)
 static eNormalLineHeightControl GetNormalLineHeightCalcControl(void)
 {
   if (sNormalLineHeightControl == eUninitialized) {
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-    PRInt32 intPref;
-    // browser.display.normal_lineheight_calc_control is not user changable, so 
-    // no need to register callback for it.
-    if (prefs && NS_SUCCEEDED(prefs->GetIntPref(
-                 "browser.display.normal_lineheight_calc_control", &intPref)))
-      sNormalLineHeightControl = NS_STATIC_CAST(eNormalLineHeightControl, intPref);
-    else
-      sNormalLineHeightControl = eNoExternalLeading;
+    // browser.display.normal_lineheight_calc_control is not user
+    // changable, so no need to register callback for it.
+    sNormalLineHeightControl =
+      NS_STATIC_CAST(eNormalLineHeightControl,
+                     nsContentUtils::GetIntPref("browser.display.normal_lineheight_calc_control", eNoExternalLeading));
   }
   return sNormalLineHeightControl;
 }

@@ -91,8 +91,6 @@
 #include "nsISupportsArray.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsFrameManager.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "nsLegendFrame.h"
 #include "nsIContentIterator.h"
 #include "nsBoxLayoutState.h"
@@ -101,6 +99,7 @@
 #include "nsIElementFactory.h"
 #include "nsITheme.h"
 #include "nsContentCID.h"
+#include "nsContentUtils.h"
 #include "nsIDocShell.h"
 #include "nsFormControlHelper.h"
 #include "nsObjectFrame.h"
@@ -1265,12 +1264,8 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument)
   if (!gGotXBLFormPrefs) {
     gGotXBLFormPrefs = PR_TRUE;
 
-    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (prefBranch) {
-      prefBranch->GetBoolPref("nglayout.debug.enable_xbl_forms",
-                              &gUseXBLForms);
-
-    }
+    gUseXBLForms =
+      nsContentUtils::GetBoolPref("nglayout.debug.enable_xbl_forms");
   }
 
 #ifdef DEBUG
@@ -12513,7 +12508,7 @@ nsCSSFrameConstructor::ConstructBlock(nsIPresShell*            aPresShell,
   // ...and that we're the absolute containing block.
   nsFrameConstructorSaveState absoluteSaveState;
   if (aRelPos || !aState.mAbsoluteItems.containingBlock) {
-    NS_ASSERTION(aRelPos, "should have made area frame for this");
+    //    NS_ASSERTION(aRelPos, "should have made area frame for this");
     aState.PushAbsoluteContainingBlock(aPresContext, aNewFrame, absoluteSaveState);
   }
 

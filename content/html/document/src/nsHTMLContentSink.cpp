@@ -105,9 +105,6 @@
 #include "nsISelectElement.h"
 #include "nsITextAreaElement.h"
 
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
-
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsTimer.h"
 #include "nsITimer.h"
@@ -2154,18 +2151,12 @@ HTMLContentSink::Init(nsIDocument* aDoc,
     mFlags |= NS_SINK_FLAG_SCRIPT_ENABLED;
   }
 
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  mNotifyOnTimer =
+    nsContentUtils::GetBoolPref("content.notify.ontimer", PR_TRUE);
 
-  PRBool notifyPref = PR_TRUE;
-  if (prefBranch) {
-    prefBranch->GetBoolPref("content.notify.ontimer", &notifyPref);
-  }
-  mNotifyOnTimer = notifyPref;
-
-  mBackoffCount = -1; // never
-  if (prefBranch) {
-    prefBranch->GetIntPref("content.notify.backoffcount", &mBackoffCount);
-  }
+  // -1 means never
+  mBackoffCount =
+    nsContentUtils::GetIntPref("content.notify.backoffcount", -1);
 
   // The mNotificationInterval has a dramatic effect on how long it
   // takes to initially display content for slow connections.
@@ -2174,10 +2165,8 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   // in page load time. If this value is set below 1/10 of second
   // it starts to impact page load performance.
   // see bugzilla bug 72138 for more info.
-  mNotificationInterval = 120000;
-  if (prefBranch) {
-    prefBranch->GetIntPref("content.notify.interval", &mNotificationInterval);
-  }
+  mNotificationInterval =
+    nsContentUtils::GetIntPref("content.notify.interval", 120000);
 
   // The mMaxTokenProcessingTime controls how long we stay away from
   // the event loop when processing token. A lower value makes the app
@@ -2193,32 +2182,21 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   // mMaxTokenProcessingTime which does not impact page load
   // performance.  See bugzilla bug 76722 for details.
 
-  mMaxTokenProcessingTime = mNotificationInterval * 3;
+  mMaxTokenProcessingTime =
+    nsContentUtils::GetIntPref("content.max.tokenizing.time",
+                               mNotificationInterval * 3);
 
-  PRBool enableInterruptParsing = PR_TRUE;
+  // 3/4 second (750000us) default for switching
+  mDynamicIntervalSwitchThreshold =
+    nsContentUtils::GetIntPref("content.switch.threshold", 750000);
 
-  // 3/4 second default for switching
-  mDynamicIntervalSwitchThreshold = 750000;
-
-  if (prefBranch) {
-    prefBranch->GetBoolPref("content.interrupt.parsing",
-                            &enableInterruptParsing);
-    prefBranch->GetIntPref("content.max.tokenizing.time",
-                           &mMaxTokenProcessingTime);
-    prefBranch->GetIntPref("content.switch.threshold",
-                           &mDynamicIntervalSwitchThreshold);
-  }
-
-  if (enableInterruptParsing) {
+  if (nsContentUtils::GetBoolPref("content.interrupt.parsing", PR_TRUE)) {
     mFlags |= NS_SINK_FLAG_CAN_INTERRUPT_PARSER;
   }
 
   // Changed from 8192 to greatly improve page loading performance on
   // large pages.  See bugzilla bug 77540.
-  mMaxTextRun = 8191;
-  if (prefBranch) {
-    prefBranch->GetIntPref("content.maxtextrun", &mMaxTextRun);
-  }
+  mMaxTextRun = nsContentUtils::GetIntPref("content.maxtextrun", 8191);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::html, nsnull,

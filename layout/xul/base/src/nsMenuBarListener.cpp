@@ -64,9 +64,7 @@
 #include "nsIViewManager.h"
 #include "nsIView.h"
 #include "nsISupportsArray.h"
-
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
+#include "nsContentUtils.h"
 
 /*
  * nsMenuBarListener implementation
@@ -117,17 +115,9 @@ void nsMenuBarListener::InitAccessKey()
 #endif
 
   // Get the menu access key value from prefs, overriding the default:
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (prefBranch)
-  {
-    nsresult rv = prefBranch->GetIntPref("ui.key.menuAccessKey", &mAccessKey);
-    rv |= prefBranch->GetBoolPref("ui.key.menuAccessKeyFocuses",
-                                  &mAccessKeyFocuses);
-#ifdef DEBUG_akkana
-    NS_ASSERTION(NS_SUCCEEDED(rv) && prefBranch,
-                 "Menubar listener couldn't get accel key from prefs!\n");
-#endif
-  }
+  mAccessKey = nsContentUtils::GetIntPref("ui.key.menuAccessKey", mAccessKey);
+  mAccessKeyFocuses =
+    nsContentUtils::GetBoolPref("ui.key.menuAccessKeyFocuses");
 }
 
 ////////////////////////////////////////////////////////////////////////

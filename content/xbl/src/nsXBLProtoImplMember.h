@@ -49,7 +49,7 @@
 #include "nsReadableUtils.h"
 
 class nsIScriptContext;
-class JSRuntime;
+struct JSRuntime;
 class nsIJSRuntimeService;
 
 MOZ_DECL_CTOR_COUNTER(nsXBLTextWithLineNumber)

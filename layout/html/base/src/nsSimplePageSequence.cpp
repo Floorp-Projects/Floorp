@@ -52,10 +52,7 @@
 #include "nsRegion.h"
 #include "nsLayoutAtoms.h"
 #include "nsCSSFrameConstructor.h"
-
-// for header/footer gap & ExtraMargin for Print Preview
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
+#include "nsContentUtils.h"
 
 // DateTime Includes
 #include "nsDateTimeFormatCID.h"
@@ -298,18 +295,14 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
   nsRect  adjSize;
   aPresContext->GetPageDim(&pageSize, &adjSize);
 
-  nscoord extraGap = 0;
-  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefBranch) {
-    GetEdgePaperMargin(mPageData->mEdgePaperMargin);
-    nscoord extraThreshold = PR_MAX(pageSize.width, pageSize.height)/10;
-    PRInt32 gapInTwips;
-    if (NS_SUCCEEDED(prefBranch->GetIntPref("print.print_extra_margin", &gapInTwips))) {
-      gapInTwips = PR_MAX(gapInTwips, 0);
-      gapInTwips = PR_MIN(gapInTwips, extraThreshold); // clamp to 1/10 of the largest dim of the page
-      extraGap   = nscoord(gapInTwips);
-    }
-  }
+  GetEdgePaperMargin(mPageData->mEdgePaperMargin);
+  nscoord extraThreshold = PR_MAX(pageSize.width, pageSize.height)/10;
+  PRInt32 gapInTwips = nsContentUtils::GetIntPref("print.print_extra_margin");
+
+  gapInTwips = PR_MAX(gapInTwips, 0);
+  gapInTwips = PR_MIN(gapInTwips, extraThreshold); // clamp to 1/10 of the largest dim of the page
+
+  nscoord extraGap = nscoord(gapInTwips);
 
   nscoord  deadSpaceGap;
   GetDeadSpaceValue(&deadSpaceGap);
