@@ -29,7 +29,6 @@
 
 #include "nsHTMLToTXTSinkStream.h"
 #include "nsHTMLTokens.h"
-#include <iostream.h>
 #include "nsString.h"
 #include "nsIParser.h"
 #include "nsHTMLEntities.h"

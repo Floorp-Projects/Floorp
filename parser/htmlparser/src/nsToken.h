@@ -37,7 +37,6 @@
 
 #include "prtypes.h"
 #include "nsString.h"
-#include <iostream.h>
 #include "nsError.h"
 
 class nsScanner;
@@ -54,6 +53,8 @@ class nsScanner;
  */
 class CToken {
   public:
+
+    enum  eTokenOrigin {eSource,eResidualStyle};
 
     /**
      * Default constructor
@@ -194,6 +195,9 @@ class CToken {
     virtual void SelfTest(void);
 
     static int GetTokenCount();
+
+    eTokenOrigin  mOrigin;
+    PRBool        mRecycle;
 
 protected:
     PRInt32				mTypeID;

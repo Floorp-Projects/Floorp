@@ -35,7 +35,6 @@
 #include "nsIContentSink.h"
 #include "nsHTMLTokens.h"
 #include "nsVoidArray.h"
-#include <fstream.h>
 
 
 #define NS_XIF_DTD_IID      \

@@ -477,7 +477,7 @@ nsHTMLElement gHTMLElements[] = {
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
-    /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kNone,	
+    /*parent,incl,exclgroups*/          kBlock, kSelf|kFlowEntity, kNone,	
     /*special props, prop-range*/       kOmitWS, kNoPropRange,
     /*special parents,kids,skip*/       0,&gDLKids,eHTMLTag_unknown},
 
@@ -623,7 +623,7 @@ nsHTMLElement gHTMLElements[] = {
 	  /*rootnodes,endrootnodes*/          &gHTMLRootTags,	&gHTMLRootTags,
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kHTMLContent, kNone,	
-    /*special props, prop-range*/       kOmitEndTag|kOmitWS|kNoStyleLeaksIn, kDefaultPropRange,
+    /*special props, prop-range*/       kSaveMisplaced|kOmitEndTag|kOmitWS|kNoStyleLeaksIn, kDefaultPropRange,
     /*special parents,kids,skip*/       0,&gHtmlKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_i,
@@ -1712,6 +1712,7 @@ PRBool nsHTMLElement::HasSpecialProperty(PRInt32 aProperty) const{
 }
 
 void nsHTMLElement::DebugDumpContainment(const char* aFilename,const char* aTitle){
+#ifdef  RICKG_DEBUG
 
   PRBool t=CanContain(eHTMLTag_address,eHTMLTag_object);
 
@@ -1761,9 +1762,12 @@ void nsHTMLElement::DebugDumpContainment(const char* aFilename,const char* aTitl
       linenum++;
     }
   } //for
+#endif
 }
 
 void nsHTMLElement::DebugDumpMembership(const char* aFilename){
+#ifdef  RICKG_DEBUG
+
   const char* prefix="             ";
   const char* suffix="       ";
   const char* shortSuffix="     ";
@@ -1815,10 +1819,13 @@ void nsHTMLElement::DebugDumpMembership(const char* aFilename){
     out << answer[gHTMLElements[eHTMLTags(i)].mParentBits==kPreformatted] << suffix << endl;
 */
   } //for
-    out<<endl<<endl;
+  out<<endl<<endl;
+#endif
 }
 
 void nsHTMLElement::DebugDumpContainType(const char* aFilename){
+#ifdef RICKG_DEBUG
+
   const char* prefix="             ";
   const char* suffix="       ";
   const char* shortSuffix="     ";
@@ -1857,5 +1864,6 @@ void nsHTMLElement::DebugDumpContainType(const char* aFilename){
     out << answer[gHTMLElements[eHTMLTags(i)].CanContainType(kPreformatted)] << suffix << endl;
 
   } //for
-    out<<endl<<endl;
+  out<<endl<<endl;
+#endif
 }

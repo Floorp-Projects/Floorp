@@ -30,7 +30,6 @@
 
 #include "nsHTMLContentSinkStream.h"
 #include "nsHTMLTokens.h"
-#include <iostream.h>
 #include <ctype.h>
 #include "nsString.h"
 #include "nsIParser.h"

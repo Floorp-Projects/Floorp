@@ -36,7 +36,6 @@
 #include "prio.h"
 #include "plstr.h"
 #include "prstrm.h"
-#include <fstream.h>
 #include <time.h>
 #include "prmem.h"
 #include "nsQuickSort.h"

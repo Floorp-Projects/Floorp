@@ -25,7 +25,6 @@
 #include "nsScanner.h"
 #include "prenv.h"  //this is here for debug reasons...
 #include "plstr.h"
-#include <fstream.h>
 #include "nsIParserFilter.h"
 #include "nshtmlpars.h"
 #include "CNavDTD.h"
@@ -711,13 +710,6 @@ nsresult nsParser::Parse(nsIInputStream& aStream,PRBool aVerifyEnabled, void* aK
  */
 nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aVerifyEnabled,PRBool aLastCall){
  
-#ifdef _rickgdebug
-  {
-    fstream out("c:/temp/parseout.file",ios::trunc);
-    aSourceBuffer.DebugDump(out);
-  }
-#endif
-
   //NOTE: Make sure that updates to this method don't cause 
   //      bug #2361 to break again!
 
@@ -1024,6 +1016,7 @@ nsParser::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 }
 
 #ifdef rickgdebug
+#include <fstream.h>
   fstream* gDumpFile;
 #endif
 

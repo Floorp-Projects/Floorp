@@ -820,13 +820,15 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
               aString+=aChar;
             }
           
-            theRightChars.Truncate(0);
-            aString.Right(theRightChars,5);
-            theRightChars.StripChars(" ");
+            if(NS_OK==result){
+              theRightChars.Truncate(0);
+              aString.Right(theRightChars,5);
+              theRightChars.StripChars(" ");
             
-            findpos=theRightChars.RFind("-->");
-            if(kNotFound==findpos)
-              findpos=theRightChars.RFind("!>");
+              findpos=theRightChars.RFind("-->");
+              if(kNotFound==findpos)
+                findpos=theRightChars.RFind("!>");
+            }
           } //while
           return result;
         } //if

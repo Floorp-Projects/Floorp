@@ -42,7 +42,6 @@
 #include "nsToken.h"
 #include "nsHTMLTags.h"
 #include "nsParserError.h"
-#include <iostream.h>
 #include "nsString.h"
 
 class nsScanner;

@@ -20,7 +20,6 @@
 #include "nsHTMLTokens.h"
 #include "nsIParser.h"
 #include "prtypes.h" 
-#include <iostream.h>  
 
 #define VERBOSE_DEBUG
 

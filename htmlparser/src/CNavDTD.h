@@ -509,7 +509,8 @@ protected:
     PRBool              mHasOpenMap;
     PRInt32             mHasOpenHead;
     PRBool              mHasOpenBody;
-    PRBool              mHadBodyOrFrameset;
+    PRBool              mHadFrameset;
+    PRBool              mHadBody;
     nsString            mFilename;
     nsIDTDDebug*		    mDTDDebug;
     PRInt32             mLineNumber;
