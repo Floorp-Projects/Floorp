@@ -94,3 +94,5 @@
 * locale/@AB_CD@/passwordmgr/contents.rdf           (generic/chrome/passwordmgr/contents.rdf)
 * locale/@AB_CD@/passwordmgr/passwordmgr.properties (%chrome/passwordmgr/passwordmgr.properties)
 * locale/@AB_CD@/passwordmgr/passwordManager.dtd    (%chrome/passwordmgr/passwordManager.dtd)
+* locale/@AB_CD@/autoconfig/contents.rdf            (generic/chrome/autoconfig/contents.rdf)
+  locale/@AB_CD@/autoconfig/autoconfig.properties   (%chrome/autoconfig/autoconfig.properties)
