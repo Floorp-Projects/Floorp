@@ -80,8 +80,10 @@ LOCAL_INCLUDES	= \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
+		$(LIBS_DIR) \
                 -lgkgfx \
 		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_GTK_LDFLAGS) \
 		$(NULL)
 
 include $(srcdir)/../config/xmlterm_config.mk
