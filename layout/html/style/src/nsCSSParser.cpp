@@ -2147,6 +2147,7 @@ PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
   case PROP_TOP:
   case PROP_LEFT:
   case PROP_RIGHT:
+	  return ParseVariant(aErrorCode, aDeclaration, aPropID, VARIANT_AHLP, nsnull, parsed);
   case PROP_HEIGHT:
   case PROP_WIDTH:
     return ParsePositiveVariant(aErrorCode, aDeclaration, aPropID, VARIANT_AHLP, nsnull, parsed);
