@@ -146,7 +146,7 @@ function createAlarmBox( Event )
    var EventDescription = document.createTextNode( Event.description );
    OuterBox.getElementsByAttribute( "name", "Description" )[0].appendChild( EventDescription );
 
-   var startDate = new Date( Event.start.getTime() );
+   var startDate = getNextOrPreviousRecurrence( Event );
 
    var EventStartDate = document.createTextNode( getFormatedDate( startDate ) );
    OuterBox.getElementsByAttribute( "name", "StartDate" )[0].appendChild( EventStartDate );

@@ -106,11 +106,11 @@ function CalendarWindow( calendarDataSource )
    {
       case "1":
          this.currentView = this.weekView;
-
+         document.getElementById( "week-tree-hour-0" ).focus();
          break;
       case "2":
          this.currentView = this.dayView;
-
+         document.getElementById( "day-tree-item-0" ).focus();
          break;
       default:
          this.currentView = this.monthView;
