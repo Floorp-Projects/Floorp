@@ -621,6 +621,17 @@ NS_METHOD nsFileSpecImpl::Create(nsISupports* outer, const nsIID& aIID, void* *a
 }
 
 //----------------------------------------------------------------------------------------
+nsresult NS_NewFileSpecWithSpec(nsFileSpec aSrcFileSpec, nsIFileSpec **result)
+//----------------------------------------------------------------------------------------
+{
+	nsresult rv = NS_OK;
+	if (!result)
+		return NS_ERROR_NULL_POINTER;
+
+	return nsFileSpecImpl::MakeInterface(aSrcFileSpec, result);
+}
+
+//----------------------------------------------------------------------------------------
 nsresult NS_NewFileSpec(nsIFileSpec** result)
 //----------------------------------------------------------------------------------------
 {
