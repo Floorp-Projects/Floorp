@@ -58,7 +58,6 @@
 
 #include "nsSpecialSystemDirectory.h"
 
-
 #ifdef XP_MAC
 #define COMPONENT_REGISTRY_NAME "Component Registry"
 #define COMPONENT_DIRECTORY     "Components"
@@ -67,16 +66,41 @@
 #define COMPONENT_DIRECTORY     "components"    
 #endif 
 
+#ifdef XP_MAC
+#define APP_REGISTRY_NAME "Application Registry"
+#elif defined(XP_PC)
+#define APP_REGISTRY_NAME "registry.dat"
+#else
+#define APP_REGISTRY_NAME "appreg"
+#endif 
 
+// define home directory
+#ifdef XP_PC
+#define HOME_DIR NS_WIN_HOME_DIR
+#elif defined (XP_MAC)
+#define HOME_DIR NS_MAC_HOME_DIR
+#elif defined (XP_UNIX)
+#define HOME_DIR NS_UNIX_HOME_DIR
+#endif
 
+// define default product directory
+#if defined(XP_PC) || defined(XP_MAC)
+#define DEFAULT_PRODUCT_DIR "Mozilla"
+#elif defined (XP_UNIX)
+#define DEFAULT_PRODUCT_DIR ".mozilla"
+#endif
 
 //----------------------------------------------------------------------------------------
-static nsresult GetCurrentProcessDirectory(nsILocalFile** aFile)
+nsresult 
+nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
 //----------------------------------------------------------------------------------------
 {
    //  Set the component registry location:
-    nsresult rv;
+    if (!mService)
+        return NS_ERROR_FAILURE;
 
+    nsresult rv; 
+ 
     nsCOMPtr<nsIProperties> dirService;
     rv = nsDirectoryService::Create(nsnull, 
                                     NS_GET_IID(nsIProperties), 
@@ -234,6 +258,8 @@ static nsresult GetCurrentProcessDirectory(nsILocalFile** aFile)
 
 
 nsIAtom*  nsDirectoryService::sCurrentProcess = nsnull;
+nsIAtom*  nsDirectoryService::sAppRegistryDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sAppRegistry = nsnull;
 nsIAtom*  nsDirectoryService::sComponentRegistry = nsnull;
 nsIAtom*  nsDirectoryService::sComponentDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sOS_DriveDirectory = nsnull;
@@ -253,6 +279,7 @@ nsIAtom*  nsDirectoryService::sFontsDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sPreferencesDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sDocumentsDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sInternetSearchDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sHomeDirectory = nsnull;
 #elif defined (XP_OS2)
 nsIAtom*  nsDirectoryService::sSystemDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sOS2Directory = nsnull;
@@ -307,30 +334,17 @@ NS_METHOD
 nsDirectoryService::Create(nsISupports *outer, REFNSIID aIID, void **aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
-	nsresult rv;
-
     if (mService == nsnull)
     {
         mService = new nsDirectoryService();
         if (mService == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
- 
-        // use this to temporarily hold a reference to mService:
-        nsCOMPtr<nsIDirectoryService> serv = mService;
-
-        rv = mService->Init();
-        if (NS_FAILED(rv)) return rv;
-        rv = mService->QueryInterface(aIID, aResult);
     }
-    else 
-    {
-        rv = mService->QueryInterface(aIID, aResult);
-    }
-    return rv;
+    return mService->QueryInterface(aIID, aResult);
 }
 
 nsresult
-nsDirectoryService::Init()
+nsDirectoryService::Init(const char *productName)
 {
     nsresult rv;
     mHashtable = new nsSupportsHashtable(256, PR_TRUE);
@@ -340,10 +354,13 @@ nsDirectoryService::Init()
     rv = NS_NewISupportsArray(getter_AddRefs(mProviders));
     if (NS_FAILED(rv)) return rv;
     
-    
+    mProductName = productName;
+
     nsDirectoryService::sCurrentProcess             = NS_NewAtom(NS_XPCOM_CURRENT_PROCESS_DIR);
     nsDirectoryService::sComponentRegistry          = NS_NewAtom(NS_XPCOM_COMPONENT_REGISTRY_FILE);
     nsDirectoryService::sComponentDirectory         = NS_NewAtom(NS_XPCOM_COMPONENT_DIR);
+    nsDirectoryService::sAppRegistryDirectory       = NS_NewAtom(NS_XPCOM_APPLICATION_REGISTRY_DIR);
+    nsDirectoryService::sAppRegistry                = NS_NewAtom(NS_XPCOM_APPLICATION_REGISTRY_FILE);
     
     nsDirectoryService::sOS_DriveDirectory          = NS_NewAtom(NS_OS_DRIVE_DIR);
     nsDirectoryService::sOS_TemporaryDirectory      = NS_NewAtom(NS_OS_TEMP_DIR);
@@ -362,6 +379,7 @@ nsDirectoryService::Init()
     nsDirectoryService::sPreferencesDirectory       = NS_NewAtom(NS_MAC_PREFS_DIR);
     nsDirectoryService::sDocumentsDirectory         = NS_NewAtom(NS_MAC_DOCUMENTS_DIR);
     nsDirectoryService::sInternetSearchDirectory    = NS_NewAtom(NS_MAC_INTERNET_SEARCH_DIR);
+    nsDirectoryService::sHomeDirectory              = NS_NewAtom(NS_MAC_HOME_DIR);
 #elif defined (XP_OS2)
     nsDirectoryService::sSystemDirectory            = NS_NewAtom(NS_OS_SYSTEM_DIR);
     nsDirectoryService::sOS2Directory               = NS_NewAtom(NS_OS2_DIR);  
@@ -404,10 +422,6 @@ nsDirectoryService::Init()
     nsDirectoryService::sDesktopDirectory           = NS_NewAtom(NS_BEOS_DESKTOP_DIR);
 #endif
 
-    rv = RegisterProvider(NS_STATIC_CAST(nsIDirectoryServiceProvider*, this));
-    // don't let RegisterProvider keep a reference to ourself, otherwise 
-    // we'll never be freed:
-    NS_RELEASE_THIS();
     return rv;
 }
 
@@ -421,20 +435,11 @@ nsDirectoryService::ReleaseValues(nsHashKey* key, void* data, void* closure)
 
 nsDirectoryService::~nsDirectoryService()
 {
-     nsresult rv;
-     // Now we need to carefully remove the weak reference to ourself that we added
-     // when Init called RegisterProvider. Otherwise, we'll crash trying to delete
-     // this nsDirectoryService twice:
-     mRefCnt = 99999;
-     nsIDirectoryService* serv = NS_STATIC_CAST(nsIDirectoryService*, this);
-     nsISupports* supports = NS_STATIC_CAST(nsISupports*, serv);
- 
-     rv = mProviders->RemoveElement(supports);
-     NS_ASSERTION(NS_SUCCEEDED(rv), "RemoveElement failed");
- 
      delete mHashtable;
 
      NS_IF_RELEASE(nsDirectoryService::sCurrentProcess);
+     NS_IF_RELEASE(nsDirectoryService::sAppRegistryDirectory);
+     NS_IF_RELEASE(nsDirectoryService::sAppRegistry);
      NS_IF_RELEASE(nsDirectoryService::sComponentRegistry);
      NS_IF_RELEASE(nsDirectoryService::sComponentDirectory);
      NS_IF_RELEASE(nsDirectoryService::sOS_DriveDirectory);
@@ -454,6 +459,7 @@ nsDirectoryService::~nsDirectoryService()
      NS_IF_RELEASE(nsDirectoryService::sPreferencesDirectory);
      NS_IF_RELEASE(nsDirectoryService::sDocumentsDirectory);
      NS_IF_RELEASE(nsDirectoryService::sInternetSearchDirectory);
+     NS_IF_RELEASE(nsDirectoryService::sHomeDirectory);
 #elif defined (XP_OS2)
      NS_IF_RELEASE(nsDirectoryService::sSystemDirectory);
      NS_IF_RELEASE(nsDirectoryService::sOS2Directory);
@@ -525,7 +531,7 @@ typedef struct FileData
 {
   const char* property;
   nsIFile*    file;
-  PRBool	  persistant;
+  PRBool	  persistent;
 
 } FileData;
 
@@ -536,7 +542,7 @@ static PRBool FindProviderFile(nsISupports* aElement, void *aData)
     return PR_FALSE;
 
   FileData* fileData = (FileData*)aData;
-  prov->GetFile(fileData->property, &fileData->persistant, &(fileData->file) );
+  prov->GetFile(fileData->property, &fileData->persistent, &(fileData->file) );
   if (fileData->file)
     return PR_FALSE;
 
@@ -567,20 +573,31 @@ nsDirectoryService::Get(const char* prop, const nsIID & uuid, void* *result)
       FileData fileData;
       fileData.property   = prop;
       fileData.file       = nsnull;
-      fileData.persistant = PR_TRUE;
+      fileData.persistent = PR_TRUE;
 
       mProviders->EnumerateForwards(FindProviderFile, &fileData);
-      
       if (fileData.file)
       {
-        if (fileData.persistant)
+        if (fileData.persistent)
 		{
 			Set(prop, NS_STATIC_CAST(nsIFile*, fileData.file));
 		}
         nsresult rv = (fileData.file)->QueryInterface(uuid, result);
 		NS_RELEASE(fileData.file);  // addref occurs in FindProviderFile()
 		return rv;
-      } 
+      }
+      
+      FindProviderFile(NS_STATIC_CAST(nsIDirectoryServiceProvider*, this), &fileData);
+      if (fileData.file)
+      {
+        if (fileData.persistent)
+		{
+			Set(prop, NS_STATIC_CAST(nsIFile*, fileData.file));
+		}
+        nsresult rv = (fileData.file)->QueryInterface(uuid, result);
+		NS_RELEASE(fileData.file);  // addref occurs in FindProviderFile()
+		return rv;
+      }
     }
 
     return NS_ERROR_FAILURE;
@@ -647,13 +664,13 @@ nsDirectoryService::RegisterProvider(nsIDirectoryServiceProvider *prov)
 // your application.  
 
 NS_IMETHODIMP
-nsDirectoryService::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
+nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_retval)
 {
 	nsCOMPtr<nsILocalFile> localFile;
 	nsresult rv = NS_ERROR_FAILURE;
 
 	*_retval = nsnull;
-	*persistant = PR_TRUE;
+	*persistent = PR_TRUE;
 
     nsIAtom* inAtom = NS_NewAtom(prop);
 
@@ -662,6 +679,62 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistant, nsIFile **_ret
     if (inAtom == nsDirectoryService::sCurrentProcess)
     {
         rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
+    }
+    else if (inAtom == nsDirectoryService::sAppRegistryDirectory)
+    {
+        nsCOMPtr<nsIFile> homeDir;
+        GetFile(HOME_DIR, persistent, getter_AddRefs(homeDir));
+        
+#ifdef XP_PC
+        PRBool dirExists = PR_FALSE;
+        if (homeDir)
+        {
+            homeDir->Exists(&dirExists);
+            if (!dirExists)
+                 GetFile(NS_WIN_WINDOWS_DIR,persistent, getter_AddRefs(homeDir));
+        }
+#endif
+        if (homeDir)
+        {
+            localFile = do_QueryInterface(homeDir);
+
+            nsCString productName = mProductName;
+
+            if (!(productName.mLength))
+                productName = DEFAULT_PRODUCT_DIR;
+
+            nsCString temp = productName;
+            if (localFile)
+                rv = localFile->Append(temp);           
+
+            if (NS_SUCCEEDED(rv))
+            {
+
+                // Create the new directory
+                PRBool newDirExists = PR_FALSE;
+                localFile->Exists(&newDirExists);
+
+                if (!newDirExists)
+                {
+                    rv = localFile->Create(nsIFile::DIRECTORY_TYPE, 0755);
+                }
+            }
+        }
+        else
+          rv = NS_ERROR_FAILURE;
+    }
+    else if (inAtom == nsDirectoryService::sAppRegistry)
+    {
+        nsCOMPtr<nsIFile> registryDir;
+        GetFile(NS_XPCOM_APPLICATION_REGISTRY_DIR, persistent, getter_AddRefs(registryDir));
+        
+        if (registryDir)
+        {
+            localFile = do_QueryInterface(registryDir);
+            rv = localFile->Append(APP_REGISTRY_NAME);    
+        } 
+        else
+            rv = NS_ERROR_FAILURE;
     }
     else if (inAtom == nsDirectoryService::sComponentRegistry)
     {
@@ -705,6 +778,11 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistant, nsIFile **_ret
     else if (inAtom == nsDirectoryService::sDesktopDirectory)
     {
         nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_DesktopDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+    }
+    else if (inAtom == nsDirectoryService::sHomeDirectory)
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_DocumentsDirectory); 
         rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
     }
     else if (inAtom == nsDirectoryService::sTrashDirectory)

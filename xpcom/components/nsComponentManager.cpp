@@ -419,56 +419,6 @@ nsComponentManagerImpl::PlatformInit(void)
         }
     }
 
-#ifdef XP_UNIX
-    // Create ~/.mozilla as that is the default place for the registry file
-
-    /* The default registry on the unix system is $HOME/.mozilla/registry per
-     * vr_findGlobalRegName(). vr_findRegFile() will create the registry file
-     * if it doesn't exist. But it wont create directories.
-     *
-     * Hence we need to create the directory if it doesn't exist already.
-     *
-     * Why create it here as opposed to the app ?
-     * ------------------------------------------
-     * The app cannot create the directory in main() as most of the registry
-     * and initialization happens due to use of static variables.
-     * And we dont want to be dependent on the order in which
-     * these static stuff happen.
-     *
-     * Permission for the $HOME/.mozilla will be Read,Write,Execute
-     * for user only. Nothing to group and others.
-     */
-    char *home = getenv("HOME");
-    if (home != NULL)
-    {
-        char dotMozillaDir[1024];
-        PR_snprintf(dotMozillaDir, sizeof(dotMozillaDir),
-                    "%s/" NS_MOZILLA_DIR_NAME, home);
-        if (PR_Access(dotMozillaDir, PR_ACCESS_EXISTS) != PR_SUCCESS)
-        {
-            PR_MkDir(dotMozillaDir, NS_MOZILLA_DIR_PERMISSION);
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsComponentManager: Creating Directory %s", dotMozillaDir));
-        }
-    }
-#endif /* XP_UNIX */
-
-#ifdef XP_BEOS
-    BPath p;
-    const char *settings = "/boot/home/config/settings";
-    if(find_directory(B_USER_SETTINGS_DIRECTORY, &p) == B_OK)
-        settings = p.Path();
-    char settingsMozillaDir[1024];
-    PR_snprintf(settingsMozillaDir, sizeof(settingsMozillaDir),
-                "%s/" NS_MOZILLA_DIR_NAME, settings);
-    if (PR_Access(settingsMozillaDir, PR_ACCESS_EXISTS) != PR_SUCCESS) {
-        PR_MkDir(settingsMozillaDir, NS_MOZILLA_DIR_PERMISSION);
-        printf("nsComponentManager: Creating Directory %s\n", settingsMozillaDir);
-        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-               ("nsComponentManager: Creating Directory %s", settingsMozillaDir));
-    }
-#endif
-
     // Open the App Components registry. We will keep it open forever!
     rv = mRegistry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
     if (NS_FAILED(rv)) return rv;

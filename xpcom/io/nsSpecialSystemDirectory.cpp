@@ -585,6 +585,20 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
         case Win_HomeDirectory:
         {    
             char path[_MAX_PATH];
+            if (GetEnvironmentVariable(TEXT("HOME"), path, _MAX_PATH) >= 0)
+            {
+                PRInt32 len = PL_strlen(path);
+                // Need enough space to add the trailing backslash
+                if (len > _MAX_PATH - 2)
+                    break;
+               
+                path[len]   = '\\';
+                path[len+1] = '\0';
+                
+                *this = MakeUpperCase(path);
+                break;
+            }
+
             if (GetEnvironmentVariable(TEXT("HOMEDRIVE"), path, _MAX_PATH) >= 0)
             {
                 char temp[_MAX_PATH];
@@ -599,10 +613,10 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             
                 path[len]   = '\\';
                 path[len+1] = '\0';
+                
+                *this = MakeUpperCase(path);
+                break;
             }
-            
-            *this = MakeUpperCase(path);
-            break;
         }
         case Win_Desktop:
         {

@@ -40,6 +40,8 @@
 #define NS_XPCOM_CURRENT_PROCESS_DIR            "CurProcD"
 #define NS_XPCOM_COMPONENT_REGISTRY_FILE        "ComRegF"
 #define NS_XPCOM_COMPONENT_DIR                  "ComsD"
+#define NS_XPCOM_APPLICATION_REGISTRY_FILE      "AppRegF"
+#define NS_XPCOM_APPLICATION_REGISTRY_DIR       "AppRegD"
 
 #define NS_OS_DRIVE_DIR                         "DrvD"
 #define NS_OS_TEMP_DIR                          "TmpD"
@@ -62,6 +64,7 @@
     #define NS_MAC_PREFS_DIR                    "Prfs"
     #define NS_MAC_DOCUMENTS_DIR                "Docs"
     #define NS_MAC_INTERNET_SEARCH_DIR          "ISrch"
+    #define NS_MAC_HOME_DIR                     "Home"
 #elif defined (XP_OS2)
     #define NS_OS2_DIR                          "0S2Dir"
     #define NS_OS2_DESKTOP_DIR                  "Desk"    

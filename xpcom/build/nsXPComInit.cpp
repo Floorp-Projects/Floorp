@@ -193,7 +193,16 @@ nsIProperties     *gDirectoryService = NULL;
 extern nsIServiceManager* gServiceManager;
 extern PRBool gShuttingDown;
 
+
 nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result, 
+                             nsIFile* binDirectory)
+{
+    return NS_InitXPCOM2(nsnull, result, binDirectory);
+}
+
+
+nsresult NS_COM NS_InitXPCOM2(const char* productName,
+                             nsIServiceManager* *result, 
                              nsIFile* binDirectory
 )
 {
@@ -231,6 +240,16 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
         rv = nsDirectoryService::Create(nsnull, 
                                         NS_GET_IID(nsIProperties), 
                                         (void**)&gDirectoryService);
+        
+        if (NS_FAILED(rv))
+            return rv;
+        
+        nsCOMPtr<nsIDirectoryService> dirService = do_QueryInterface(gDirectoryService);
+        
+        if (!dirService)
+            return NS_ERROR_NO_INTERFACE;
+
+        rv = dirService->Init(productName);
         
         if (NS_FAILED(rv))
             return rv;
