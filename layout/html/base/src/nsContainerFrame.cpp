@@ -367,8 +367,13 @@ NS_METHOD nsContainerFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
                                         nsIContent**    aContent,
                                         PRInt32&        aCursor)
 {
-  aCursor = NS_STYLE_CURSOR_INHERIT;
+  const nsStyleColor* color = (const nsStyleColor*)
+      mStyleContext->GetStyleData(eStyleStruct_Color);
+  if (NS_STYLE_CURSOR_AUTO != color->mCursor) {
+    aCursor = color->mCursor;
+  }
   *aContent = mContent;
+  *aFrame = this;
 
   nsIFrame* kid;
   FirstChild(nsnull, kid);

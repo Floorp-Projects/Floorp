@@ -98,11 +98,6 @@ public:
 
   void GetDefaultLabel(nsString& aLabel);
 
-  NS_IMETHOD  GetCursorAndContentAt(nsIPresContext& aPresContext,
-                          const nsPoint&  aPoint,
-                          nsIFrame**      aFrame,
-                          nsIContent**    aContent,
-                          PRInt32&        aCursor);
 protected:
   virtual  ~nsHTMLButtonControlFrame();
   NS_IMETHOD_(nsrefcnt) AddRef(void);
@@ -673,18 +668,6 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLButtonControlFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
-                                                const nsPoint&  aPoint,
-                                                nsIFrame**      aFrame,
-                                                nsIContent**    aContent,
-                                                PRInt32&        aCursor)
-{
-  nsresult result = nsHTMLContainerFrame::GetCursorAndContentAt(aPresContext, aPoint, aFrame, aContent, aCursor);
-  aCursor = eCursor_standard;
-  return result;
 }
 
 PRIntn

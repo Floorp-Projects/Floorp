@@ -117,52 +117,6 @@ nsHTMLContainerFrame::HandleEvent(nsIPresContext& aPresContext,
   return nsContainerFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
-NS_IMETHODIMP
-nsHTMLContainerFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
-                                            const nsPoint& aPoint,
-                                            nsIFrame** aFrame,
-                                            nsIContent** aContent,
-                                            PRInt32& aCursor)
-{
-  // Set content here, child will override if found.
-  *aContent = mContent;
-  
-  // Get my cursor
-  const nsStyleColor* styleColor = (const nsStyleColor*)
-    mStyleContext->GetStyleData(eStyleStruct_Color);
-  PRInt32 myCursor = styleColor->mCursor;
-
-  if (NS_STYLE_CURSOR_INHERIT != myCursor) {
-    // If this container has a particular cursor, use it, otherwise
-    // let the child decide.
-    *aFrame = this;
-    aCursor = myCursor;
-    return NS_OK;
-  }
-
-  // Get child's cursor, if any
-  nsContainerFrame::GetCursorAndContentAt(aPresContext, aPoint, aFrame, aContent, aCursor);
-  if (aCursor != NS_STYLE_CURSOR_INHERIT) {
-    if (nsnull != mContent) {
-      nsIAtom* tag;
-      mContent->GetTag(tag);
-      if (nsHTMLAtoms::a == tag) {
-        // Anchor tags override their child cursors in some cases.
-        if ((NS_STYLE_CURSOR_TEXT == aCursor) &&
-            (NS_STYLE_CURSOR_INHERIT != myCursor)) {
-          aCursor = myCursor;
-        }
-      }
-      NS_RELEASE(tag);
-    }
-    return NS_OK;
-  }
-
-  // No specific cursor for us
-  aCursor = NS_STYLE_CURSOR_INHERIT;
-  return NS_OK;
-}
-
 nsPlaceholderFrame*
 nsHTMLContainerFrame::CreatePlaceholderFrame(nsIPresContext& aPresContext,
                                              nsIFrame*       aFloatedFrame)

@@ -1127,7 +1127,12 @@ NS_IMETHODIMP nsFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
                                PRInt32&        aCursor)
 {
   *aContent = mContent;
-  aCursor = NS_STYLE_CURSOR_INHERIT;
+  *aFrame = this;
+  const nsStyleColor* color = (const nsStyleColor*)
+      mStyleContext->GetStyleData(eStyleStruct_Color);
+  if (NS_STYLE_CURSOR_AUTO != color->mCursor) {
+    aCursor = color->mCursor;
+  }
   return NS_OK;
 }
 

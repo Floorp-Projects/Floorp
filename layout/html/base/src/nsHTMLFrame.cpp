@@ -262,9 +262,6 @@ RootFrame::HandleEvent(nsIPresContext& aPresContext,
         PRInt32 cursor;
        
         GetCursorAndContentAt(aPresContext, aEvent->point, &target, &mContent, cursor);
-        if (cursor == NS_STYLE_CURSOR_INHERIT) {
-          cursor = NS_STYLE_CURSOR_DEFAULT;
-        }
         nsCursor c;
         switch (cursor) {
         default:

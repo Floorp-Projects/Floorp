@@ -841,30 +841,28 @@ ImageFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
                                   nsIContent** aContent,
                                   PRInt32& aCursor)
 {
-  // The default cursor is to have no cursor
-  aCursor = NS_STYLE_CURSOR_INHERIT;
   *aContent = mContent;
-
   const nsStyleColor* styleColor = (const nsStyleColor*)
     mStyleContext->GetStyleData(eStyleStruct_Color);
-  if (styleColor->mCursor != NS_STYLE_CURSOR_INHERIT) {
-    // If we have a particular cursor, use it
-    *aFrame = this;
+  *aFrame = this;
+  if (NS_STYLE_CURSOR_AUTO != styleColor->mCursor) {
     aCursor = (PRInt32) styleColor->mCursor;
   }
 
-  nsIImageMap* map = GetImageMap();
-  if (nsnull != map) {
-    nsRect inner;
-    GetInnerArea(&aPresContext, inner);
-    aCursor = NS_STYLE_CURSOR_DEFAULT;
-    float t2p = aPresContext.GetTwipsToPixels();
-    PRInt32 x = NSTwipsToIntPixels((aPoint.x - inner.x), t2p);
-    PRInt32 y = NSTwipsToIntPixels((aPoint.y - inner.y), t2p);
-    if (NS_OK == map->IsInside(x, y)) {
-      aCursor = NS_STYLE_CURSOR_POINTER;
+  if (NS_STYLE_CURSOR_AUTO == styleColor->mCursor) {  // image map wins over local auto
+    nsIImageMap* map = GetImageMap();
+    if (nsnull != map) {
+      nsRect inner;
+      GetInnerArea(&aPresContext, inner);
+      aCursor = NS_STYLE_CURSOR_DEFAULT;
+      float t2p = aPresContext.GetTwipsToPixels();
+      PRInt32 x = NSTwipsToIntPixels((aPoint.x - inner.x), t2p);
+      PRInt32 y = NSTwipsToIntPixels((aPoint.y - inner.y), t2p);
+      if (NS_OK == map->IsInside(x, y)) {
+        aCursor = NS_STYLE_CURSOR_POINTER;
+      }
+      NS_RELEASE(map);
     }
-    NS_RELEASE(map);
   }
 
   return NS_OK;

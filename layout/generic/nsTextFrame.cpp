@@ -459,8 +459,11 @@ TextFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
                                  nsIContent** aContent,
                                  PRInt32& aCursor)
 {
-  *aContent = mContent;
-  aCursor = NS_STYLE_CURSOR_TEXT;
+  if (NS_STYLE_CURSOR_AUTO == aCursor) {
+    *aContent = mContent;
+    *aFrame = this;
+    aCursor = NS_STYLE_CURSOR_TEXT;
+  }
   return NS_OK;
 }
 
