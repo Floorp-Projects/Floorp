@@ -203,6 +203,17 @@ nsMacMessagePump::nsMacMessagePump(nsToolkit *aToolkit)
   // added to support Menu Sharing API.  Initializes the Menu Sharing API.
   InitSharedMenus (ErrorDialog, EventFilter);
 #endif
+
+  // To handle middle-button clicks we must use Carbon Events
+  const EventTypeSpec eventTypes[] = {
+    { kEventClassMouse, kEventMouseDown },
+    { kEventClassMouse, kEventMouseUp }
+  };
+
+  EventHandlerUPP handlerUPP =
+                     ::NewEventHandlerUPP(nsMacMessagePump::CarbonMouseHandler);
+  ::InstallApplicationEventHandler(handlerUPP, GetEventTypeCount(eventTypes),
+                                   eventTypes, (void*)this, NULL);
 }
 
 //=================================================================
@@ -1017,3 +1028,43 @@ PRBool nsMacMessagePump::DispatchMenuCommandToRaptor(
 }
 
 #endif
+
+pascal OSStatus nsMacMessagePump::CarbonMouseHandler(
+                          EventHandlerCallRef nextHandler,
+                          EventRef theEvent, void *userData)
+{
+  EventMouseButton button;
+  OSErr err = ::GetEventParameter(theEvent, kEventParamMouseButton,
+                                  typeMouseButton, NULL,
+                                  sizeof(EventMouseButton), NULL, &button);
+  if (err != noErr)
+    return eventNotHandledErr;
+
+  EventRecord theRecord;
+  if (!::ConvertEventRefToEventRecord(theEvent, &theRecord)) {
+    if (button == kEventMouseButtonTertiary) {
+      // This will return FALSE on a middle click event; that's to let us know
+      // it's giving us a nullEvent, which is expected since Classic events
+      // don't support the middle button normally.
+      //
+      // We know better, so let's restore the actual event kind.
+      UInt32 kind = ::GetEventKind(theEvent);
+      theRecord.what = (kind == kEventMouseDown) ? mouseDown : mouseUp;
+    } else {
+      // Or maybe it's the tenth swirlygig button wheel being twist-clicked.
+      // Just pretend we never saw it...
+      return eventNotHandledErr;
+    }
+  }
+
+  // Classic mouse events don't record the button specifier. The message
+  // parameter is unused in mouse click events, so let's stuff it there.
+  // We'll pick it up in nsMacEventHandler::HandleMouseDownEvent().
+  theRecord.message = (UInt32)button;
+
+  // Process the modified event internally
+  nsMacMessagePump *pump = (nsMacMessagePump*)userData;
+  pump->DispatchEvent(PR_TRUE, &theRecord);
+  return noErr;
+}
+
