@@ -3401,7 +3401,7 @@ dnl ========================================================
 dnl Installer
 dnl ========================================================
 case "$target_os" in
-    solaris*|linux*|msvc*|mksnt*|cygwin*|mingw*)
+    solaris*|linux*|msvc*|mksnt*|cygwin*|mingw*|os2*)
         MOZ_INSTALLER=1
         ;;
 esac
