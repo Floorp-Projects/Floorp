@@ -41,6 +41,9 @@ static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 nsFileChannel::nsFileChannel()
     : mIOFlags(-1),
       mPerm(-1),
+#ifdef DEBUG
+      mInitiator(nsnull),
+#endif
       mLoadAttributes(LOAD_NORMAL),
       mBufferSegmentSize(0),
       mBufferMaxSize(0),
@@ -125,6 +128,10 @@ nsFileChannel::GetStatus(nsresult *status)
 NS_IMETHODIMP
 nsFileChannel::Cancel(nsresult status)
 {
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == PR_CurrentThread(),
+                 "wrong thread calling this routine");
+#endif
     mStatus = status;
     if (mFileTransport)
         return mFileTransport->Cancel(status);
@@ -134,6 +141,10 @@ nsFileChannel::Cancel(nsresult status)
 NS_IMETHODIMP
 nsFileChannel::Suspend()
 {
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == PR_CurrentThread(),
+                 "wrong thread calling this routine");
+#endif
     if (mFileTransport)
         return mFileTransport->Suspend();
     return NS_OK;
@@ -142,6 +153,10 @@ nsFileChannel::Suspend()
 NS_IMETHODIMP
 nsFileChannel::Resume()
 {
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == PR_CurrentThread(),
+                 "wrong thread calling this routine");
+#endif
     if (mFileTransport)
         return mFileTransport->Resume();
     return NS_OK;
@@ -275,6 +290,12 @@ nsFileChannel::AsyncRead(nsIStreamListener *listener,
 {
     nsresult rv;
 
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == nsnull || mInitiator == PR_CurrentThread(),
+                 "wrong thread calling this routine");
+    mInitiator = PR_CurrentThread();
+#endif
+
     if (mFileTransport)
         return NS_ERROR_IN_PROGRESS;
 
@@ -318,6 +339,12 @@ nsFileChannel::AsyncWrite(nsIInputStream *fromStream,
                           nsISupports *ctxt)
 {
     nsresult rv;
+
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == nsnull || mInitiator == PR_CurrentThread(),
+                 "wrong thread calling this routine");
+    mInitiator = PR_CurrentThread();
+#endif
 
     if (mFileTransport)
         return NS_ERROR_IN_PROGRESS;
@@ -550,6 +577,10 @@ nsFileChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 NS_IMETHODIMP
 nsFileChannel::OnStartRequest(nsIChannel* transportChannel, nsISupports* context)
 {
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == PR_CurrentThread(),
+                 "wrong thread calling this routine");
+#endif
     NS_ASSERTION(mRealListener, "No listener...");
     return mRealListener->OnStartRequest(this, context);
 }
@@ -558,6 +589,11 @@ NS_IMETHODIMP
 nsFileChannel::OnStopRequest(nsIChannel* transportChannel, nsISupports* context,
                              nsresult aStatus, const PRUnichar* aMsg)
 {
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == PR_CurrentThread(),
+                 "wrong thread calling this routine");
+#endif
+
     nsresult rv;
 
     rv = mRealListener->OnStopRequest(this, context, aStatus, aMsg);
@@ -579,8 +615,12 @@ nsFileChannel::OnDataAvailable(nsIChannel* transportChannel, nsISupports* contex
                                nsIInputStream *aIStream, PRUint32 aSourceOffset,
                                PRUint32 aLength)
 {
-    nsresult rv;
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == PR_CurrentThread(),
+                 "wrong thread calling this routine");
+#endif
 
+    nsresult rv;
     rv = mRealListener->OnDataAvailable(this, context, aIStream,
                                         aSourceOffset, aLength);
 

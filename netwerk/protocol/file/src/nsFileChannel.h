@@ -82,6 +82,9 @@ protected:
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;
     nsresult                            mStatus;
+#ifdef DEBUG
+    PRThread*                           mInitiator;
+#endif
 };
 
 #endif // nsFileChannel_h__
