@@ -1,7 +1,0 @@
-<!-- extracted from pmDelete.xul -->
-
-<!ENTITY title "Delete Profile">
-<!ENTITY intro "Confirm delete?">
-<!ENTITY delete.yes.label "Delete Files">
-<!ENTITY delete.no.label "Don't Delete Files">
-<!ENTITY cancel.label "Cancel">
