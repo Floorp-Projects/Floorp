@@ -621,6 +621,8 @@ function _awSetFocus()
         tree.scrollToIndex(top.awRow - numOfVisibleRows);
 
     top.awInputElement.focus();
+    // stop supressing command updating and update the toolbar, since focus has changed
+    SuppressComposeCommandUpdating(false);
   }
   catch(ex)
   {

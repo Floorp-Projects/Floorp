@@ -89,8 +89,7 @@
 
   <commandset id="commonEditorMenuItems"/>
   <commandset id="composerMenuItems"/>
-  <commandset id="composerEditMenuItems"/>
-  <commandset id="composerSaveMenuItems"/>    
+  <commandset id="composerEditMenuItems"/> 
   <commandset id="composerStyleMenuItems"/>
   <commandset id="composerTableMenuItems"/>
   <commandset id="composerListMenuItems"/>

@@ -78,6 +78,9 @@ var sendFormat = msgCompSendFormat.AskUser;
 var prefs = null;
 var gPrefBranchInternal = null;
 
+var gLastElementToHaveFocus;  
+var gSuppressCommandUpdating = false;
+
 function disableEditableFields()
 {
   editorShell.editor.SetFlags(plaintextEditor.eEditorReadonlyMask);
@@ -499,7 +502,24 @@ function SetupCommandUpdateHandlers()
 
 function CommandUpdate_MsgCompose()
 {
-  window.setTimeout("updateComposeItems()", 0);
+  if (gSuppressCommandUpdating) {
+    //dump("XXX supressing\n");
+    return;
+  }
+
+  var element = top.document.commandDispatcher.focusedElement;
+
+  // we're just setting focus to where it was before
+  if (element == gLastElementToHaveFocus) {
+    //dump("XXX skip\n");
+    return;
+  }
+
+  gLastElementToHaveFocus = element;
+
+  //dump("XXX update, focus on " + element + "\n");
+  
+  updateComposeItems();
 }
 
 function updateComposeItems() {
@@ -1073,6 +1093,22 @@ function ComposeStartup()
       if (args.body)
          composeFields.body = args.body;
     }
+  }
+
+  // when editor has focus, top.document.commandDispatcher.focusedElement is null,
+  // it's also null during a blur.
+  // if we are doing a new message, originalMsgURI is null, so
+  // we'll default gLastElementToHaveFocus to null, to skip blurs, since we're
+  // going to be setting focus to the addressing widget.
+  //
+  // for reply or fwd, originalMsgURI is non-null, so we'll
+  // default gLastElementToHaveFocus to 1, so that when focus gets set on editor
+  // we'll do an update.
+  if (params.originalMsgURI) {
+    gLastElementToHaveFocus = 1;
+  }
+  else {
+    gLastElementToHaveFocus = null;
   }
 
   if (!params.identity) {
@@ -1745,28 +1781,38 @@ function getIdentityForKey(key)
     return accountManager.getIdentity(key);
 }
 
+
+function SuppressComposeCommandUpdating(suppress)
+{
+  gSuppressCommandUpdating = suppress;
+  if (!gSuppressCommandUpdating)
+    CommandUpdate_MsgCompose();
+}
+
 function AdjustFocus()
 {
-    var element = document.getElementById("msgRecipient#" + awGetNumberOfRecipients());
-  if (element.value == "")
-  {
-    dump("set focus on the recipient\n");
-    awSetFocus(awGetNumberOfRecipients(), element);
+  //dump("XXX adjusting focus\n");
+  SuppressComposeCommandUpdating(true);
+
+  var element = document.getElementById("msgRecipient#" + awGetNumberOfRecipients());
+  if (element.value == "") {
+      //dump("XXX focus on address\n");
+      awSetFocus(awGetNumberOfRecipients(), element);
+      //awSetFocus() will call SuppressComposeCommandUpdating(false);
   }
   else
   {
       element = document.getElementById("msgSubject");
-      if (element.value == "")
-      {
-        dump("set focus on the subject\n");
+      if (element.value == "") {
+        //dump("XXX focus on subject\n");
         element.focus();
       }
-      else
-      {
-        dump("set focus on the body\n");
+      else {
+        //dump("XXX focus on body\n");
         editorShell.contentWindow.focus();
       }
-    }
+      SuppressComposeCommandUpdating(false);
+  }
 }
 
 function SetComposeWindowTitle(event)
