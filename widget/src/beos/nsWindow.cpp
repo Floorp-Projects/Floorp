@@ -2081,7 +2081,7 @@ PRBool nsWindow::OnKeyDown(PRUint32 aEventType, const char *bytes,
 
 	mIsShiftDown   = (mod & B_SHIFT_KEY) ? PR_TRUE : PR_FALSE;
 	mIsControlDown = (mod & B_CONTROL_KEY) ? PR_TRUE : PR_FALSE;
-	mIsAltDown     = (mod & B_COMMAND_KEY) ? PR_TRUE : PR_FALSE;
+	mIsAltDown     = ((mod & B_COMMAND_KEY) && !(mod & B_RIGHT_OPTION_KEY))? PR_TRUE : PR_FALSE;
 	mIsMetaDown    = (mod & B_OPTION_KEY) ? PR_TRUE : PR_FALSE;	
 	bool IsNumLocked = ((mod & B_NUM_LOCK) != 0);
 
@@ -2175,7 +2175,7 @@ PRBool nsWindow::OnKeyUp(PRUint32 aEventType, const char *bytes,
 
 	mIsShiftDown   = (mod & B_SHIFT_KEY) ? PR_TRUE : PR_FALSE;
 	mIsControlDown = (mod & B_CONTROL_KEY) ? PR_TRUE : PR_FALSE;
-	mIsAltDown     = (mod & B_COMMAND_KEY) ? PR_TRUE : PR_FALSE;
+	mIsAltDown     = ((mod & B_COMMAND_KEY) && !(mod & B_RIGHT_OPTION_KEY))? PR_TRUE : PR_FALSE;
 	mIsMetaDown    = (mod & B_OPTION_KEY) ? PR_TRUE : PR_FALSE;	
 
 	aTranslatedKeyCode = TranslateBeOSKeyCode(bekeycode, IsNumLocked);
