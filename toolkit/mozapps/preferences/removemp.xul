@@ -4,7 +4,7 @@
 
 <!DOCTYPE dialog [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
-<!ENTITY % removempDTD SYSTEM "chrome://browser/locale/preferences/removemp.dtd" >
+<!ENTITY % removempDTD SYSTEM "chrome://mozapps/locale/preferences/removemp.dtd" >
 %brandDTD;
 %removempDTD;
 ]>
@@ -15,9 +15,9 @@
         ondialogaccept="gRemovePasswordDialog.removePassword();" 
         onload="gRemovePasswordDialog.init()">
 
-  <script type="application/x-javascript" src="chrome://browser/content/preferences/removemp.js"/>
+  <script type="application/x-javascript" src="chrome://mozapps/content/preferences/removemp.js"/>
 
-  <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
+  <stringbundle id="bundlePreferences" src="chrome://mozapps/locale/preferences/preferences.properties"/>
 
   <description>&removeWarning1.label;</description>
   <description class="header">&removeWarning2.label;</description>

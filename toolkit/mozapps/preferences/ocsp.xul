@@ -40,7 +40,7 @@
 
 <!DOCTYPE prefwindow [
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-  <!ENTITY % ocspDTD SYSTEM "chrome://browser/locale/preferences/ocsp.dtd">
+  <!ENTITY % ocspDTD SYSTEM "chrome://toolkit/locale/mozapps/preferences/ocsp.dtd">
   %brandDTD;
   %ocspDTD;
 ]>
@@ -52,7 +52,7 @@
             style="width: 38em !important;">
 
   <prefpane id="OCSPDialogPane" onpaneload="gOCSPDialog.init();">
-    <script type="application/x-javascript" src="chrome://browser/content/preferences/ocsp.js"/>
+    <script type="application/x-javascript" src="chrome://toolkit/content/mozapps/preferences/ocsp.js"/>
 
     <preferences>
       <preference id="security.OCSP.enabled"    name="security.OCSP.enabled"   type="int"/>
