@@ -2331,10 +2331,14 @@ permission_Load() {
    */
   permission_LockList();
   while(cookie_GetLine(strm,buffer) != -1) {
-    if (buffer.CharAt(0) == '#' || buffer.CharAt(0) == CR ||
-        buffer.CharAt(0) == LF || buffer.CharAt(0) == 0) {
-      continue;
+    if ( !buffer.IsEmpty() ) {
+      PRUnichar firstChar = buffer.CharAt(0);
+      if (firstChar == '#' || firstChar == CR ||
+          firstChar == LF || firstChar == 0) {
+        continue;
+      }
     }
+
     int hostIndex, permissionIndex, nextPermissionIndex;
     hostIndex = 0;
 
