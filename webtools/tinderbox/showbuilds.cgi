@@ -25,8 +25,6 @@ require 'imagelog.pl';
 require 'header.pl';
 $|=1;
 
-print "Content-type: text/html\n\n<HTML>\n";
-
 
 #
 # show 36 hours by default
@@ -55,8 +53,17 @@ $colormap = {
 #$form{'tree'} = DogbertTip;
 $tree = $form{'tree'};
 
+if ($form{'quickparse'}) {
+    print "Content-type: text/plain\n\n";
+    &do_quickparse;
+    exit();
+}
+
+
+print "Content-type: text/html\n\n<HTML>\n";
 if( $form{'tree'} eq '' ){
     &show_tree_selector;
+    exit;
 }
 else {
     if( $form{'express'} ) {
@@ -71,6 +78,17 @@ else {
 }
 
 
+
+sub make_tree_list {
+    my @result;
+    while(<*>) {
+        if( -d $_ && $_ ne 'data' && $_ ne 'CVS' && -f "$_/treedata.pl"){
+            push @result, $_;
+        }
+    }
+    return @result;
+}
+
 sub show_tree_selector {
 
     EmitHtmlHeader("tinderbox");
@@ -80,10 +98,10 @@ sub show_tree_selector {
     print "<TR><TD ALIGN=CENTER>\n";
     print " <TABLE><TR><TD><UL>\n";
 
-    while(<*>) {
-        if( -d $_ && $_ ne 'data' && $_ ne 'CVS' ){
-            print "<LI><a href=showbuilds.cgi?tree=$_>$_</a>\n";
-        }
+    my @list = make_tree_list();
+
+    foreach (@list) {
+        print "<LI><a href=showbuilds.cgi?tree=$_>$_</a>\n";
     }
     print "<//UL></TD></TR></TABLE></TD></TR></TABLE>";
 
@@ -92,12 +110,10 @@ sub show_tree_selector {
     print "<TR><TD ALIGN=CENTER>\n";
     print " <TABLE><TR><TD><UL>\n";
 
-    while(<*>) {
-        if( -d $_ && $_ ne 'data' && $_ ne 'CVS' ){
-            print "<LI><a href=admintree.cgi?tree=$_>$_</a>\n";
-         }
-     }
-     print "<//UL></TD></TR></TABLE></TD></TR></TABLE>";
+    foreach (@list) {
+        print "<LI><a href=admintree.cgi?tree=$_>$_</a>\n";
+    }
+    print "<//UL></TD></TR></TABLE></TD></TR></TABLE>";
 
 }
 
@@ -641,4 +657,47 @@ sub do_express {
         print "$buildname";
     }
     print "</tr></table>\n";
+}
+
+
+sub do_quickparse {
+    if ($tree eq '') {
+        foreach my $t (make_tree_list()) {
+            print "$t\n";
+        }
+        exit;
+    }
+    my @treelist = split(/,/, $tree);
+    foreach my $t (@treelist) {
+        my %build;
+        my %times;
+        open(BUILDLOG, "<$t/build.dat" ) || die "Bad treename $t";
+        while( <BUILDLOG> ){
+            chop;
+            ($mailtime, $buildtime, $buildname, $errorparser,
+             $buildstatus, $logfile) = 
+                 split( /\|/ );
+            if( $buildstatus eq 'success' || $buildstatus eq 'busted'){
+                $build{$buildname} = $buildstatus;
+                $times{$buildname} = $buildtime;
+            }
+        }
+        close( BUILDLOG );
+        my @keys = sort keys %build;
+        my $keycount = @keys;
+        my $maxtime = 0;
+        for my $buildname (@keys) {
+            if ($maxtime < $times{$buildname}) {
+                $maxtime = $times{$buildname};
+            }
+        }
+        
+        for my $buildname (@keys ){
+            if ($times{$buildname} < $maxtime - 12*60*60) {
+                # This build is more than 12 hours old.  Ignore it.
+                next;
+            }
+            print "$t|$buildname|$build{$buildname}\n";
+        }
+    }
 }
