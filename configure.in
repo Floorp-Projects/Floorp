@@ -808,6 +808,8 @@ case "$target" in
     MOZ_ZLIB_LIBS='$(DIST)/lib/z.$(LIB_SUFFIX)'
     MOZ_PNG_LIBS='$(DIST)/lib/png.$(LIB_SUFFIX)'
     MOZ_JS_LIBS='$(DIST)/lib/mozjs.lib'
+    OS_ARCH=OS2
+    OS_TARGET=OS2
 
     case "$target" in
     *-*-os2_emx)
@@ -4000,7 +4002,7 @@ fi # $no_x
 dnl Set various defines and substitutions
 dnl ========================================================
 
-if test "$OS_TARGET" = "OS/2" || test "$OS_TARGET" = "OS_2"; then
+if test "$OS_TARGET" = "OS2"; then
   AC_DEFINE(XP_PC)
   AC_DEFINE(XP_OS2)
   AC_DEFINE(BSD_SELECT)
