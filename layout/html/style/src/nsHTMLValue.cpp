@@ -276,7 +276,7 @@ void nsHTMLValue::AppendToString(nsString& aBuffer) const
     aBuffer.Append(')');
   }
   else if (eHTMLUnit_Percent == mUnit) {
-    aBuffer.Append(mValue.mFloat);
+    aBuffer.Append(mValue.mFloat * 100.0f);
   }
   else {
     aBuffer.Append(mValue.mInt, 10);
