@@ -25,6 +25,7 @@
 #include "nsIDOMElement.h"
 #include "nsIContent.h"
 #include "nsString.h"
+#include "nsCRT.h"
 #import "BookmarksService.h"
 
 @implementation CHBookmarksButton

@@ -51,6 +51,7 @@
 #include "nsIContentViewer.h"
 #include "nsCocoaBrowserService.h"
 #include "nsString.h"
+#include "nsCRT.h"
 #include "CHGeckoUtils.h"
 
 static NSString *BrowserToolbarIdentifier	= @"Browser Window Toolbar";
