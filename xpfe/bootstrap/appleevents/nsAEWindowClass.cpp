@@ -25,7 +25,10 @@
 #include <string.h>
 #include <AEPackObject.h>
 
+#include "nsMemory.h"
 #include "nsWindowUtils.h"
+
+#include "nsAppleEvents.h"
 
 #include "nsAEUtils.h"
 #include "nsAETokens.h"
@@ -130,7 +133,7 @@ AEClassIterator::ItemRef AEWindowIterator::GetReferenceFromID(const AEDesc* cont
 ----------------------------------------------------------------------------*/
 AEClassIterator::ItemID AEWindowIterator::GetItemIDFromToken(const AEDesc* token)
 {
-	AETokenDesc	tokenDesc(token);
+	ConstAETokenDesc	tokenDesc(token);
 	return (ItemID)tokenDesc.GetWindowPtr();
 }
 
@@ -392,7 +395,7 @@ void AEWindowClass::GetDataFromObject(const AEDesc *token, AEDesc *desiredTypes,
 {
 	OSErr			err				= noErr;
 	
-	AETokenDesc		tokenDesc(token);
+	ConstAETokenDesc		tokenDesc(token);
 	DescType			aType = mClass;
 	Rect				aRect;
 	
@@ -400,6 +403,7 @@ void AEWindowClass::GetDataFromObject(const AEDesc *token, AEDesc *desiredTypes,
 	Boolean			aBoolean;
 	long				index;
 	CStr255			windowTitle;
+	char*				urlString = NULL;
 	
 	DescType 			propertyCode 		= tokenDesc.GetPropertyCode();
 	Boolean			usePropertyCode	= tokenDesc.UsePropertyCode();
@@ -415,6 +419,13 @@ void AEWindowClass::GetDataFromObject(const AEDesc *token, AEDesc *desiredTypes,
 
 			GetCleanedWindowName(window, windowTitle, 255);
 			err = AEPutKeyPtr(data, pTitle,  typeChar, windowTitle, strlen(windowTitle));
+			
+			GetWindowUrlString(window, &urlString);
+			if (urlString)
+			{
+				err = AEPutKeyPtr(data, AE_www_typeWindowURL,  typeChar, urlString, strlen(urlString));
+				nsMemory::Free(urlString); urlString = NULL;
+			}
 			
 			index = GetWindowIndex(GetThisWindowKind(), window);
 			err = AEPutKeyPtr(data, pIndex, typeLongInteger, &index, sizeof(long));
@@ -536,6 +547,15 @@ void AEWindowClass::GetDataFromObject(const AEDesc *token, AEDesc *desiredTypes,
 			err = AECreateDesc(typeChar, windowTitle, strlen(windowTitle), data);
 			break;
 							
+		case AE_www_typeWindowURL:
+		   GetWindowUrlString(window, &urlString);
+		   if (urlString)
+		   {
+			   err = AECreateDesc(typeChar, urlString, strlen(urlString), data);
+			   nsMemory::Free(urlString); urlString = NULL;
+			 }
+		   break;
+							
 		default:
 			Inherited::GetDataFromObject(token, desiredTypes, data);
 			break;
@@ -553,7 +573,7 @@ void AEWindowClass::SetDataForObject(const AEDesc *token, AEDesc *data)
 {
 	OSErr		err;
 	
-	AETokenDesc	tokenDesc(token);
+	ConstAETokenDesc	tokenDesc(token);
 
 	Boolean		usePropertyCode 	= tokenDesc.UsePropertyCode();
 	WindowPtr	window 			= tokenDesc.GetWindowPtr();
@@ -620,7 +640,9 @@ Boolean AEWindowClass::CanSetProperty(DescType propertyCode)
 			break;
 		
 		// Properties we should be able to set, but not implemented yet:
-
+		case AE_www_typeWindowURL:
+			result = false;
+			break;
 
 		// Properties we can't set:
 
@@ -676,6 +698,8 @@ Boolean AEWindowClass::CanGetProperty(DescType propertyCode)
 		
 		case pTitle:
 		case pName:	// Synonym for pTitle
+		
+		case AE_www_typeWindowURL:
 		
 		case pIsModeless:
 		case pIsMovableModal:
@@ -876,7 +900,7 @@ void AEWindowClass::MakeWindowObjectSpecifier(WindowPtr wind, AEDesc *outSpecifi
 ----------------------------------------------------------------------------*/
 void AEWindowClass::CreateSelfSpecifier(const AEDesc *token, AEDesc *outSpecifier)
 {
-	AETokenDesc	tokenDesc(token);
+	ConstAETokenDesc	tokenDesc(token);
 	WindowPtr	window = tokenDesc.GetWindowPtr();
 	long			position = GetWindowIndex(mWindowKind, window);
 	AEDesc		selfDesc = { typeNull, nil };

@@ -34,8 +34,22 @@ typedef long TAEListIndex;    // a 1-based list index
 typedef short TWindowKind;
 
 
+/*
+	We don't (yet) actually set these window kinds on the Mac windows
+	that Mozilla creates. These values are derived from the windowtype
+	strings that XUL windows have. See functions in nsWindowUtils.cpp.
+*/
 enum {
-	kAnyWindowKind = 99
+	kAnyWindowKind = 99,
+	
+	// custom window kinds should start at 9 or above
+	kBrowserWindowKind = 100,
+	kMailWindowKind,
+	kMailComposeWindowKind,
+	kComposerWindowKind,
+	kAddressBookWindowKind,
+	kOtherWindowKind
+	
 };
 
 

@@ -95,8 +95,8 @@ void AEClassIterator::GetItemFromContainer(		DescType			desiredClass,
 					{
 						ProcessFormRange((AEDesc *)keyData, &startObject, &stopObject);
 						
-						AETokenDesc	startToken(&startObject);
-						AETokenDesc	stopToken(&stopObject);
+						ConstAETokenDesc	startToken(&startObject);
+						ConstAETokenDesc	stopToken(&stopObject);
 						DescType 		startType = startToken.GetDispatchClass();
 						DescType 		stopType  = stopToken.GetDispatchClass();
 	 
@@ -150,8 +150,8 @@ void AEClassIterator::GetItemFromContainer(		DescType			desiredClass,
 	}
 	else if (keyForm == formRange)
 	{
-		AETokenDesc		startToken(&startObject);
-		AETokenDesc		stopToken(&stopObject);
+		ConstAETokenDesc		startToken(&startObject);
+		ConstAETokenDesc		stopToken(&stopObject);
 		
 		ItemID			beginItemID 	= GetItemIDFromToken(&startObject);
 		ItemID			endItemID	 	= GetItemIDFromToken(&stopObject);

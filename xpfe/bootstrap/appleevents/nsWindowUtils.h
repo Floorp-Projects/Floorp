@@ -42,7 +42,10 @@ WindowPtr GetIndexedWindowOfKind(TWindowKind windowKind, TAEListIndex index);
 TAEListIndex GetWindowIndex(TWindowKind windowKind, WindowPtr theWindow);
 
 void GetCleanedWindowName(WindowPtr wind, char* outName, long maxLen);
+void GetWindowUrlString(WindowPtr wind, char** outUrlStringPtr);
 void GetWindowGlobalBounds(WindowPtr wind, Rect* outRect);
+
+void LoadURLInWindow(WindowPtr wind, const char* urlString);
 
 Boolean WindowIsResizeable(WindowPtr wind);
 Boolean WindowIsZoomable(WindowPtr wind);

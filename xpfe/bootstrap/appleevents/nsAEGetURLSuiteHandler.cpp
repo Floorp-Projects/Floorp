@@ -24,6 +24,9 @@
 
 #include "nsMemory.h"
 
+#include "nsWindowUtils.h"
+#include "nsAETokens.h"
+
 #include "nsAEGetURLSuiteHandler.h"
 #include "nsCommandLineServiceMac.h"
 
@@ -99,22 +102,42 @@ void AEGetURLSuiteHandler::HandleGetURLSuiteEvent(const AppleEvent *appleEvent, 
 void AEGetURLSuiteHandler::HandleGetURLEvent(const AppleEvent *appleEvent, AppleEvent *reply)
 {
 	StAEDesc		directParameter;
-	OSErr		err;
+	WindowPtr		targetWindow = NULL;
+	OSErr				err;
 	
 	// extract the direct parameter (an object specifier)
 	err = ::AEGetKeyDesc(appleEvent, keyDirectObject, typeWildCard, &directParameter);
 	ThrowIfOSErr(err);
 
 	// we need to look for other parameters, to do with destination etc.
-
 	long		dataSize = directParameter.GetDataSize();
 	char*	urlString = (char *)nsMemory::Alloc(dataSize + 1);
-	ThrowIfNil(urlString);
-	
+	ThrowIfNil(urlString);	
 	directParameter.GetCString(urlString, dataSize + 1);
+
+	// get the destination window, if applicable
+	StAEDesc		openInWindowDesc;
+	err = ::AEGetKeyDesc(appleEvent, kInsideWindowParameter, typeObjectSpecifier, &openInWindowDesc);
+	if (err != errAEDescNotFound)
+	{
+		// resolve the object specifier into a token record
+		StAEDesc		tokenDesc;
+		err = ::AEResolve(&openInWindowDesc, kAEIDoMinimum, &tokenDesc);
+		ThrowIfOSErr(err);
+		
+		ConstAETokenDesc	tokenContainer(&tokenDesc);
+		targetWindow = tokenContainer.GetWindowPtr();		
+	}
 	
-	nsMacCommandLine&  cmdLine = nsMacCommandLine::GetMacCommandLine();
-	cmdLine.DispatchURLToNewBrowser(urlString);
+	if (targetWindow)
+	{
+		LoadURLInWindow(targetWindow, urlString);
+	}
+	else
+	{
+		nsMacCommandLine&  cmdLine = nsMacCommandLine::GetMacCommandLine();
+		cmdLine.DispatchURLToNewBrowser(urlString);
+	}
 	
 	nsMemory::Free(urlString);	
 }

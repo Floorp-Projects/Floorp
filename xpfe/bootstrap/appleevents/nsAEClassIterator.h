@@ -182,8 +182,8 @@ public:
 
 protected:
 
-	virtual ItemRef			GetNamedItemReference(const AEDesc* containerToken, const char *itemName) { ThrowOSErr(errAEEventNotHandled); }
-	virtual ItemID			GetNamedItemID(const AEDesc* containerToken, const char *itemName) { ThrowOSErr(errAEEventNotHandled); }
+	virtual ItemRef			GetNamedItemReference(const AEDesc* containerToken, const char *itemName) { ThrowOSErr(errAEEventNotHandled); return 0; }
+	virtual ItemID			GetNamedItemID(const AEDesc* containerToken, const char *itemName) { ThrowOSErr(errAEEventNotHandled); return 0; }
 	virtual void			GetIndexedItemName(const AEDesc* containerToken, TAEListIndex itemIndex, char *outName, long maxLen) { ThrowOSErr(errAEEventNotHandled); }
 
 };

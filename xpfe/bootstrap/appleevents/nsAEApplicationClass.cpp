@@ -492,7 +492,7 @@ void AEApplicationClass::GetDataFromObject(const AEDesc *token, AEDesc *desiredT
 	Str255					applicationName = "\p";
 	Str255					versionString;
 	
-	AETokenDesc				tokenDesc(token);
+	ConstAETokenDesc				tokenDesc(token);
 	
 	ProcessSerialNumber		applicationProcessNumber;
 	ProcessInfoRec				applicationInfo;
@@ -655,7 +655,7 @@ void AEApplicationClass::SetDataForObject(const AEDesc *token, AEDesc *data)
 	long					index;
 	AEKeyword 			theAEKeyword;
 	
-	AETokenDesc			tokenDesc(token);
+	ConstAETokenDesc			tokenDesc(token);
 	Boolean				usePropertyCode     = tokenDesc.UsePropertyCode();
 	DescType				propertyCode;
 	

@@ -258,7 +258,7 @@ void AEGenericClass::HandleClose(AEDesc *token, const AppleEvent *appleEvent, Ap
 ----------------------------------------------------------------------------*/
 void AEGenericClass::HandleCount(AEDesc *token, const AppleEvent *appleEvent, AppleEvent *reply)
 {
-	AETokenDesc	tokenDesc(token);
+	ConstAETokenDesc	tokenDesc(token);
 	long 			numberOfObjects = 0;
 	DescType		objectClass;
 	OSErr		err = noErr;	
@@ -634,7 +634,7 @@ void AEGenericClass::SetDataForListOrObject(const AEDesc *tokenOrTokenList, cons
 				
 		case cProperty:
 			{
-				AETokenDesc	tokenDesc(tokenOrTokenList);
+				ConstAETokenDesc	tokenDesc(tokenOrTokenList);
 				DescType		propertyCode = tokenDesc.GetPropertyCode();
 				//DescType		objectClass    = tokenDesc.GetObjectClass();
 				
@@ -699,7 +699,7 @@ void AEGenericClass::GetDataFromList(const AEDesc *srcList, AEDesc *desiredTypes
 ----------------------------------------------------------------------------*/
 void AEGenericClass::GetDataFromObject(const AEDesc *token, AEDesc *desiredTypes, AEDesc *data)
 {
-	AETokenDesc		tokenDesc(token);
+	ConstAETokenDesc		tokenDesc(token);
 	DescType 			propertyCode 		= tokenDesc.GetPropertyCode();
 	OSErr			err				= noErr;
 

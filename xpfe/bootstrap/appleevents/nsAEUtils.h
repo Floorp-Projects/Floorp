@@ -42,11 +42,12 @@
 #include "nsMacUtils.h"
 
 
-#define ThrowIfNil(a)      		{ if (a == nil) { throw((OSErr)memFullErr); } }
-#define ThrowErrIfNil(a, err)	{ if (a == nil) { OSErr theErr = (err); throw((OSErr)theErr); } }
-#define ThrowIfOSErr(err)       { OSErr theErr = (err); if (theErr != noErr) { throw((OSErr)theErr); } }
-#define ThrowOSErr(err)         { throw((OSErr)err); }
-#define ThrowNoErr()		{ throw((OSErr)noErr); }
+#define ThrowIfNil(a)      			do { if (a == nil) { throw((OSErr)memFullErr); } } while (0)
+#define ThrowErrIfNil(a, err)		do { if (a == nil) { OSErr theErr = (err); throw((OSErr)theErr); } } while (0)
+#define ThrowErrIfTrue(a, err)		do { if (a) { OSErr theErr = (err); throw((OSErr)theErr); } } while (0)
+#define ThrowIfOSErr(err)      		do { OSErr theErr = (err); if (theErr != noErr) { throw((OSErr)theErr); } } while (0)
+#define ThrowOSErr(err)        		do { throw((OSErr)err); } while (0)
+#define ThrowNoErr()				do { throw((OSErr)noErr); } while (0)
 
 
 #define pObjectType				'pObT'
@@ -97,6 +98,7 @@ OSErr ResumeThreadAE(TThreadAEInfo *threadAEInfo, OSErr threadError);
 
 OSErr AEGetDescData(const AEDesc *theAEDesc,  void * dataPtr, Size maximumSize);
 Size AEGetDescDataSize(const AEDesc *theAEDesc);
+OSErr AEReplaceDescData(DescType typeCode, const void *dataPtr, Size dataSize, AEDesc* theAEDesc);
 
 #endif /* TARGET_CARBON */
 
