@@ -1770,6 +1770,13 @@
               (cons type2 (merge-type-lists types1 (rest types2))))))))))
 
 
+; Intersect the two lists of types sorted by ascending serial numbers, except that types with kind :-> are given the serial number -1
+; and :vector and :list-set -2.
+; The result is also sorted by ascending serial numbers and contains no duplicates.
+(defun intersect-type-lists (types1 types2)
+  (remove-if-not #'(lambda (type1) (member type1 types2)) types1))
+
+
 ; Return true if the list of types is sorted by serial number, except that types with kind :-> are given the serial number -1
 ; and :vector and :list-set -2.
 (defun type-list-sorted (types)
@@ -1848,9 +1855,8 @@
 
 ; Return the intersection I of type1 and type2.  Note that a value of type I might need to be coerced to
 ; be treated as a member of type1 or type2.
-; Not all intersections have been implemented yet.
+; Not all intersections have been implemented yet, and some are too conservative, returning a smaller type than the exact intersection.
 (defun type-intersection (world type1 type2)
-  (declare (ignore world))
   (if (type= type1 type2)
     type1
     (let ((kind1 (type-kind type1))
@@ -1858,6 +1864,9 @@
       (cond
        ((eq kind1 :bottom) type1)
        ((eq kind2 :bottom) type2)
+       ((and (or (eq kind1 :union) (eq kind2 :union))
+             (coercable-to-union-kind kind1) (coercable-to-union-kind kind2))
+        (reduce-union-type world (intersect-type-lists (type-to-union world type1) (type-to-union world type2)) t))
        (t (error "No intersection of types ~A and ~A" (print-type-to-string type1) (print-type-to-string type2)))))))
 
 
@@ -2820,7 +2829,7 @@
 
 
 ; live1 and live2 are either :dead or lists of :uninitialized variables that have been initialized.
-; Return :dead of both live1 and live2 are dead or a list of initialized variables that would be valid
+; Return :dead if both live1 and live2 are dead or a list of initialized variables that would be valid
 ; on a merge point between code paths resulting in live1 and live2.
 (defun merge-live-lists (live1 live2)
   (cond
@@ -5246,10 +5255,10 @@
     (let* ((nested-last (and last (null rest-statements)))
            (arg-symbol (scan-name world (first arg-binding-expr)))
            (arg-type (scan-type world *semantic-exception-type-name*))
-           (type-env (type-env-add-binding type-env arg-symbol arg-type :const)))
-      (multiple-value-bind (handler-codes handler-live handler-annotated-stmts) (scan-statements world type-env handler-statements nested-last)
+           (local-type-env (type-env-add-binding type-env arg-symbol arg-type :const)))
+      (multiple-value-bind (handler-codes handler-live handler-annotated-stmts) (scan-statements world local-type-env handler-statements nested-last)
         (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
-                             (scan-statements world (and (or (listp body-live) (listp handler-live)) type-env) rest-statements last)
+                             (scan-statements world (substitute-live type-env (merge-live-lists body-live handler-live)) rest-statements last)
           (let ((code
                  `(block nil
                     (let ((,arg-symbol (catch :semantic-exception ,@body-codes ,@(when (listp body-live) '((return))))))
