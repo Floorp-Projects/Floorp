@@ -17,10 +17,12 @@
 
 DEPTH		= ../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
 
 DIRS		= jri include
 
-include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
+

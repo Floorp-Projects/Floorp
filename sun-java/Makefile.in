@@ -22,24 +22,43 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifndef MOZ_JAVA
 DIRS		= stubs
-
-OTHER_DIRS	= javac javadoc doc javap
-
-ifdef MOZ_JAVA
-ifeq ($(STAND_ALONE_JAVA),1)
-DIRS		= javah $(AWT11DIRS) classsrc include md-include md \
-		  runtime awt mmedia jpegwrap zipwrap bn jdbc netscape/console
 else
-DIRS		= md-include $(AWT11DIRS) classsrc javah jtools include \
-		  runtime md awt mmedia netscape jpegwrap zipwrap bn jdbc
+DIRS		= \
+		md-include \
+		include \
+		javah \
+		$(AWT11DIRS) \
+		classsrc \
+		$(JTOOLS) \
+		md \
+		runtime \
+		awt \
+		mmedia \
+		jpegwrap \
+		zipwrap \
+		bn \
+		jdbc \
+		$(NETSCAPEDIR) \
+		$(NULL)
+
+ifeq ($(STAND_ALONE_JAVA),1)
+NETSCAPEDIR	= netscape/console
+else
+JTOOLS		= jtools
+NETSCAPEDIR	= netscape
 endif
+
 ifeq ($(AWT_11),1)
 AWT11DIRS	= classsrc11
 endif
+
 endif
 
-LOOP_OVER_OTHER_DIRS =						\
+OTHER_DIRS	= javac javadoc doc javap
+
+LOOP_OVER_OTHER_DIRS = \
 	@for d in $(OTHER_DIRS); do \
 		if test -d $$d; then \
 			set -e; \
@@ -67,3 +86,4 @@ $(OTHER_DIRS)::
 
 other_dirs::
 	+$(LOOP_OVER_OTHER_DIRS)
+
