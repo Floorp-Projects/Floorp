@@ -68,21 +68,21 @@ function SetButtons()
 	nextTag = testMap[currentPageTag].next;
 	//dump("nextTag == " + nextTag + "\n");
 	if (nextTag) {
-		nextButton.setAttribute("disabled", false);
-		finishButton.setAttribute("disabled", true);
+		nextButton.setAttribute("disabled", "false");
+		finishButton.setAttribute("disabled", "true");
 	}
 	else {
-		nextButton.setAttribute("disabled", true);
-		finishButton.setAttribute("disabled", false);
+		nextButton.setAttribute("disabled", "true");
+		finishButton.setAttribute("disabled", "false");
 	}
 
 	prevTag = testMap[currentPageTag].previous;
 	//dump("prevTag == " + prevTag + "\n");
 	if (prevTag) {
-		backButton.setAttribute("disabled", false);
+		backButton.setAttribute("disabled", "false");
 	}
 	else {
-		backButton.setAttribute("disabled", true); 
+		backButton.setAttribute("disabled", "true"); 
 	}
 }
 
