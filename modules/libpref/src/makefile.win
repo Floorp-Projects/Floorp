@@ -112,9 +112,9 @@ libs:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 	$(MAKE_INSTALL) .\init\netscape.cfg $(DIST)\bin
-    $(MAKE_INSTALL) .\initpref.js $(DIST)\bin\components
-    $(MAKE_INSTALL) .\init\all.js $(DIST)\bin\components
-    $(MAKE_INSTALL) .\init\mailnews.js $(DIST)\bin\components
-    $(MAKE_INSTALL) .\init\editor.js $(DIST)\bin\components
-    $(MAKE_INSTALL) .\init\config.js $(DIST)\bin\components
-    $(MAKE_INSTALL) .\win\winpref.js $(DIST)\bin\components
+    $(MAKE_INSTALL) .\initpref.js $(DIST)\bin\defaults\pref
+    $(MAKE_INSTALL) .\init\all.js $(DIST)\bin\defaults\pref
+    $(MAKE_INSTALL) .\init\mailnews.js $(DIST)\bin\defaults\pref
+    $(MAKE_INSTALL) .\init\editor.js $(DIST)\bin\defaults\pref
+    $(MAKE_INSTALL) .\init\config.js $(DIST)\bin\defaults\pref
+    $(MAKE_INSTALL) .\win\winpref.js $(DIST)\bin\defaults\pref
