@@ -130,7 +130,8 @@ NS_IMETHODIMP nsImapMailFolder::QueryInterface(REFNSIID aIID, void** aInstancePt
 {
 	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
 	*aInstancePtr = nsnull;
-	if (aIID.Equals(nsIMsgImapMailFolder::GetIID()))
+
+    if (aIID.Equals(nsIMsgImapMailFolder::GetIID()))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIMsgImapMailFolder*, this);
 	}              
@@ -420,6 +421,60 @@ nsresult nsImapMailFolder::GetDatabase()
 	return folderOpen;
 }
 
+PRBool
+nsImapMailFolder::FindAndSelectFolder(nsISupports* aElement,
+                                      void* aData)
+{
+    const char *target = (const char*) aData;
+    NS_ASSERTION (target && *target, "Opps ... null target folder name");
+    if (!target || !*target) return PR_FALSE; // stop everything
+
+    nsresult rv = NS_ERROR_FAILURE;
+    PRBool keepGoing = PR_TRUE;
+    nsCOMPtr<nsIMsgFolder> aImapMailFolder(do_QueryInterface(aElement,
+                                                             &rv));
+    if (NS_FAILED(rv)) return keepGoing;
+    char *folderName = nsnull;
+    PRUint32 depth = 0;
+    aImapMailFolder->GetDepth(&depth);
+    // Get current thread envent queue
+    nsIEventQueueService* pEventQService;
+    PLEventQueue* eventQueue = nsnull;
+
+    rv = nsServiceManager::GetService(kEventQueueServiceCID,
+                                      nsIEventQueueService::GetIID(),
+                                      (nsISupports**)&pEventQService);
+    if (NS_SUCCEEDED(rv) && pEventQService)
+        pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
+                                            &eventQueue);
+    if (pEventQService)
+        nsServiceManager::ReleaseService(kEventQueueServiceCID,
+                                         pEventQService);
+
+    rv = aImapMailFolder->GetName(&folderName);
+    if (folderName && *folderName && PL_strcasecmp(folderName, target) == 0 &&
+        depth == 1)
+    {
+        nsIImapService* imapService = nsnull;
+        nsCOMPtr<nsIUrlListener>aUrlListener(do_QueryInterface(aElement, &rv));
+
+        rv = nsServiceManager::GetService(kCImapService,
+                                          nsIImapService::GetIID(),
+                                          (nsISupports **) &imapService);
+        if (NS_SUCCEEDED(rv) && imapService)
+        {
+            rv = imapService->SelectFolder(eventQueue,
+                                           aImapMailFolder, aUrlListener,
+                                           nsnull);
+        }
+        if (imapService)
+            nsServiceManager::ReleaseService(kCImapService, imapService);
+
+        keepGoing = PR_FALSE;
+    }
+    delete [] folderName;
+    return keepGoing;
+}
 
 NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
 {
@@ -459,7 +514,19 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
     }
     if (imapService && m_eventQueue)
     {
-        rv = imapService->SelectFolder(m_eventQueue, this, this, nsnull);
+        if (mDepth == 0)
+        {
+            rv = imapService->DiscoverAllFolders(m_eventQueue, this, this,
+                                                 nsnull);
+            mSubFolders->EnumerateForwards(FindAndSelectFolder, 
+                                           (void*) "Inbox");
+        }
+        else
+        {
+            rv = imapService->DiscoverChildren(m_eventQueue, this, this,
+                                               nsnull);
+            rv = imapService->SelectFolder(m_eventQueue, this, this, nsnull);
+        }
         m_urlRunning = PR_TRUE;
     }
     if (imapService)
