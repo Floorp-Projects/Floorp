@@ -1781,7 +1781,8 @@ nsSelection::SelectLines(nsPresContext *aPresContext,
   nsresult result;
 
   // normalize the order before we start to avoid piles of conditions later
-  relativePosition = ComparePoints(aAnchorNode, aAnchorOffset, aCurrentNode, aCurrentOffset);
+  relativePosition = nsRange::ComparePoints(aAnchorNode, aAnchorOffset,
+                                            aCurrentNode, aCurrentOffset);
   if (0 == relativePosition)
     return NS_ERROR_FAILURE;
   else if (relativePosition < 0)
@@ -1829,7 +1830,7 @@ nsSelection::SelectLines(nsPresContext *aPresContext,
   startNode = do_QueryInterface(startContent);
 
   // If we have already overshot the endpoint, back out
-  if (ComparePoints(startNode, startOffset, endNode, endOffset) >= 0)
+  if (nsRange::ComparePoints(startNode, startOffset, endNode, endOffset) >= 0)
     return NS_ERROR_FAILURE;
 
   aPos.mStartOffset = endOffset;
@@ -1854,7 +1855,7 @@ nsSelection::SelectLines(nsPresContext *aPresContext,
   endContent = aPos.mResultContent;
   endNode = do_QueryInterface(endContent);
 
-  if (ComparePoints(startNode, startOffset, endNode, endOffset) < 0)
+  if (nsRange::ComparePoints(startNode, startOffset, endNode, endOffset) < 0)
   {
     TakeFocus(startContent, startOffset, startOffset, PR_FALSE, PR_TRUE);
     return TakeFocus(endContent, endOffset, endOffset, PR_TRUE, PR_TRUE);
@@ -2424,7 +2425,8 @@ nsSelection::AdjustForMaintainedSelection(nsIContent *aContent, PRInt32 aOffset)
       }
     }
 
-    PRInt32 relativePosition = ComparePoints(rangenode, rangeOffset, domNode, aOffset);
+    PRInt32 relativePosition = nsRange::ComparePoints(rangenode, rangeOffset,
+                                                      domNode, aOffset);
     // if == 0 or -1 do nothing if < 0 then we need to swap direction
     if (relativePosition > 0
         && (mDomSelections[index]->GetDirection() == eDirNext))
@@ -5040,14 +5042,19 @@ nsTypedSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, 
       }
       else { //then we MUST be completely selected! unless someone needs us to check to make sure with slowcheck
 
-        if (cnt > 1 || aSlowCheck){ //if more than 1 selection or we need to do slow check see if farther than start or less than end.
-          //we only have to look at start offset because anything else would have been in the range
-          PRInt32 resultnum = ComparePoints(startNode, startOffset 
-                                  ,passedInNode, aContentOffset);
+        if (cnt > 1 || aSlowCheck){ //if more than 1 selection or we need to do
+                                    //slow check see if farther than start or
+                                    //less than end.
+          //we only have to look at start offset because anything else would
+          //have been in the range
+          PRInt32 resultnum = nsRange::ComparePoints(startNode,
+                                                     startOffset,
+                                                     passedInNode,
+                                                     aContentOffset);
           if (resultnum > 0)
             continue; 
-          resultnum = ComparePoints(endNode, endOffset,
-                              passedInNode, aContentOffset );
+          resultnum = nsRange::ComparePoints(endNode, endOffset,
+                                             passedInNode, aContentOffset);
           if (resultnum <0)
             continue;
         }
@@ -6229,14 +6236,18 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
 
   if (NS_FAILED(res))
     return res;
-  PRInt32 result1 = ComparePoints(FetchAnchorNode(), FetchAnchorOffset() 
-                                  ,FetchFocusNode(), FetchFocusOffset());
+  PRInt32 result1 = nsRange::ComparePoints(FetchAnchorNode(),
+                                           FetchAnchorOffset(),
+                                           FetchFocusNode(),
+                                           FetchFocusOffset());
   //compare old cursor to new cursor
-  PRInt32 result2 = ComparePoints(FetchFocusNode(), FetchFocusOffset(),
-                            aParentNode, aOffset );
+  PRInt32 result2 = nsRange::ComparePoints(FetchFocusNode(),
+                                           FetchFocusOffset(),
+                                           aParentNode, aOffset);
   //compare anchor to new cursor
-  PRInt32 result3 = ComparePoints(FetchAnchorNode(), FetchAnchorOffset(),
-                            aParentNode , aOffset );
+  PRInt32 result3 = nsRange::ComparePoints(FetchAnchorNode(),
+                                           FetchAnchorOffset(),
+                                           aParentNode, aOffset);
 
   if (result2 == 0) //not selecting anywhere
     return NS_OK;
@@ -6570,7 +6581,7 @@ nsTypedSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYe
     nsCOMPtr<nsIContent> content (do_QueryInterface(aNode));
     if (content)
     {
-      if (IsNodeIntersectsRange(content, range))
+      if (nsRange::IsNodeIntersectsRange(content, range))
       {
         // If recursive, then we're done -- IsNodeIntersectsRange does the right thing
         if (aRecursive)

@@ -351,7 +351,7 @@ nsGeneratedContentIterator::Init(nsIDOMRange* aRange)
     // no content.  In this case, we want the iterator to
     // be empty
 
-    if (!IsNodeIntersectsRange(mFirst, aRange))
+    if (!nsRange::IsNodeIntersectsRange(mFirst, aRange))
     {
       MakeEmpty();
       return NS_OK;

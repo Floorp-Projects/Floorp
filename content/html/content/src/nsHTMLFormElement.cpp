@@ -1070,7 +1070,7 @@ nsHTMLFormElement::CompareNodes(nsIDOMNode* a, nsIDOMNode* b, PRInt32* retval)
     indexB = parentB->IndexOf(bContent);
   }
 
-  *retval = ComparePoints(parentANode, indexA, parentBNode, indexB);
+  *retval = nsRange::ComparePoints(parentANode, indexA, parentBNode, indexB);
   return NS_OK;
 }
 

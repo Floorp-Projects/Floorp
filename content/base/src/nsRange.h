@@ -158,6 +158,19 @@ public:
                                       nsIDOMNode** closestAncestor,
                                       nsIDOMNode** farthestAncestor);
 
+  /**
+   *  Utility routine to compare two "points", were a point is a node/offset pair
+   *  Returns -1 if point1 < point2, 1, if point1 > point2,
+   *  0 if error or if point1 == point2.
+   */
+  static PRInt32 ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
+                               nsIDOMNode* aParent2, PRInt32 aOffset2);
+
+  /**
+   *  Utility routine to detect if a content node intersects a range
+   */
+  static PRBool IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange);
+
 /******************************************************************************
  *  Utility routine to detect if a content node starts before a range and/or 
  *  ends after a range.  If neither it is contained inside the range.
@@ -182,7 +195,7 @@ protected:
   nsresult      DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
                              nsIDOMNode* aEndN, PRInt32 aEndOffset);
 
-  PRBool        IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOff,
+  static PRBool IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOff,
                              nsIDOMNode* aEndN, PRInt32 aEndOff);
   PRBool        IsDetached(){return mIsDetached;}
                        
@@ -203,21 +216,6 @@ nsresult NS_NewRange(nsIDOMRange** aInstancePtrResult);
 
 // Make a new nsIRangeUtils object
 nsresult NS_NewRangeUtils(nsIRangeUtils** aInstancePtrResult);
-
-
-/*************************************************************************************
- *  Utility routine to compare two "points", were a point is a node/offset pair
- *  Returns -1 if point1 < point2, 1, if point1 > point2,
- *  0 if error or if point1 == point2.
- ************************************************************************************/
-PRInt32 ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
-                      nsIDOMNode* aParent2, PRInt32 aOffset2);
-
-
-/*************************************************************************************
- *  Utility routine to detect if a content node intersects a range
- ************************************************************************************/
-PRBool IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange);
 
 
 /*************************************************************************************

@@ -185,8 +185,9 @@ ContentIsInTraversalRange(nsIContent *aContent,   PRBool aIsPreMode,
   if (!aIsPreMode)
     ++indx;
 
-  return (ComparePoints(aStartNode, aStartOffset, parentNode, indx) <= 0) &&
-         (ComparePoints(aEndNode,   aEndOffset,   parentNode, indx) >= 0);
+  return (nsRange::ComparePoints(aStartNode, aStartOffset,
+                                 parentNode, indx) <= 0) &&
+         (nsRange::ComparePoints(aEndNode, aEndOffset, parentNode, indx) >= 0);
 }
 
 
