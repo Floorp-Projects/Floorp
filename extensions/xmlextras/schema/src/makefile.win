@@ -58,6 +58,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsSchemaParticles.obj	\
 	.\$(OBJDIR)\nsSchemaAttributes.obj	\
 	.\$(OBJDIR)\nsSchemaLoader.obj		\
+	.\$(OBJDIR)\nsSOAPTypes.obj		\
 	$(NULL)
 
 EXPORTS =					\

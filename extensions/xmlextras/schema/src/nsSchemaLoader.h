@@ -217,6 +217,9 @@ protected:
                             nsISchemaType** aType);
   nsresult GetBuiltinType(const nsAReadableString& aName,
                           nsISchemaType** aType);
+  nsresult GetSOAPType(const nsAReadableString& aName,
+                       const nsAReadableString& aNamespace,
+                       nsISchemaType** aType);
 
   void GetUse(nsIDOMElement* aElement, 
               PRUint16* aUse);
@@ -228,6 +231,9 @@ protected:
 
   nsresult GetResolvedURI(const nsAReadableString& aSchemaURI,
                           const char* aMethod, nsIURI** aURI);
+
+  static PRBool IsSchemaNamespace(const nsAReadableString& aNamespace);
+  static PRBool IsSOAPNamespace(const nsAReadableString& aNamespace);
 
 protected:
   nsSupportsHashtable mBuiltinTypesHash;

@@ -48,7 +48,7 @@ NS_IMPL_ISUPPORTS4_CI(nsSchemaBuiltinType,
 NS_IMETHODIMP 
 nsSchemaBuiltinType::GetTargetNamespace(nsAWritableString& aTargetNamespace)
 {
-  aTargetNamespace.Assign(NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE));
+  aTargetNamespace.Assign(NS_LITERAL_STRING(NS_SCHEMA_1999_NAMESPACE));
   
   return NS_OK;
 }

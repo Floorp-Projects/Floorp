@@ -462,14 +462,42 @@ nsSchemaLoader::GetAttribute(const nsAReadableString & aName,
   return schema->GetAttributeByName(aName, _retval);
 }
 
+PRBool
+nsSchemaLoader::IsSchemaNamespace(const nsAReadableString& aNamespace)
+{
+  if (aNamespace.Equals(NS_LITERAL_STRING(NS_SCHEMA_2001_NAMESPACE)) ||
+      aNamespace.Equals(NS_LITERAL_STRING(NS_SCHEMA_1999_NAMESPACE))) {
+    return PR_TRUE;
+  }
+  else {
+    return PR_FALSE;
+  }
+}
+
+PRBool
+nsSchemaLoader::IsSOAPNamespace(const nsAReadableString& aNamespace)
+{
+  if (aNamespace.Equals(NS_LITERAL_STRING(NS_SOAP_1_1_ENCODING_NAMESPACE)) ||
+      aNamespace.Equals(NS_LITERAL_STRING(NS_SOAP_1_2_ENCODING_NAMESPACE))) {
+    return PR_TRUE;
+  }
+  else {
+    return PR_FALSE;
+  }  
+}
+
 /* nsISchemaType getType (in AString name, in AString namespace); */
 NS_IMETHODIMP 
 nsSchemaLoader::GetType(const nsAReadableString & aName, 
                         const nsAReadableString & aNamespace, 
                         nsISchemaType **_retval)
 {
-  if (aNamespace.Equals(NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE))) {
+  if (IsSchemaNamespace(aNamespace)) {
     return GetBuiltinType(aName, _retval);
+  }
+
+  if (IsSOAPNamespace(aNamespace)) {
+    return GetSOAPType(aName, aNamespace, _retval);
   }
 
   nsCOMPtr<nsISchema> schema;
@@ -514,7 +542,7 @@ nsSchemaLoader::GetResolvedURI(const nsAReadableString& aSchemaURI,
     rv = NS_NewURI(aURI, aSchemaURI, baseURI);
     if (NS_FAILED(rv)) return rv;
     
-    rv = secMan->CheckConnect(cx, *aURI, "nsSchemaLoader", aMethod);
+    rv = secMan->CheckLoadURIFromScript(cx, *aURI);
     if (NS_FAILED(rv))
     {
       // Security check failed. The above call set a JS exception. The
@@ -638,6 +666,10 @@ nsSchemaLoader::LoadAsync(const nsAReadableString& schemaURI,
   return rv;
 }
 
+static const char* kSchemaNamespaces[] = {NS_SCHEMA_1999_NAMESPACE, 
+                                          NS_SCHEMA_2001_NAMESPACE};
+static PRUint32 kSchemaNamespacesLength = sizeof(kSchemaNamespaces) / sizeof(const char*);
+
 /* nsISchema processSchemaElement (in nsIDOMElement element); */
 NS_IMETHODIMP 
 nsSchemaLoader::ProcessSchemaElement(nsIDOMElement *element, 
@@ -659,7 +691,7 @@ nsSchemaLoader::ProcessSchemaElement(nsIDOMElement *element,
   }
 
   nsChildElementIterator iterator(element, 
-                                  NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE));
+                                  kSchemaNamespaces, kSchemaNamespacesLength);
   nsCOMPtr<nsIDOMElement> childElement;
   nsCOMPtr<nsIAtom> tagName;
 
@@ -767,8 +799,50 @@ ParseQualifiedName(nsIDOMElement* aContext,
   return node->LookupNamespaceURI(aPrefix, aNamespaceURI);
 }
 
+nsresult
+nsSchemaLoader::GetSOAPType(const nsAReadableString& aName,
+                            const nsAReadableString& aNamespace,
+                            nsISchemaType** aType)
+{
+  nsresult rv = NS_OK;
+  nsAutoString concat(aNamespace);
+  concat.Append(aName);
+  nsStringKey key(aName);
+  nsCOMPtr<nsISupports> sup = dont_AddRef(mSOAPTypeHash.Get(&key));
+  if (sup) {
+    rv = CallQueryInterface(sup, aType);
+  }
+  else {
+    if (aName.Equals(NS_LITERAL_STRING("Array"))) {
+      nsSOAPArray* array = new nsSOAPArray(aNamespace);
+      if (!array) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      sup = array;
+      mSOAPTypeHash.Put(&key, sup);
+    
+      *aType = array;
+      NS_ADDREF(*aType);
+    }
+    else if (aName.Equals(NS_LITERAL_STRING("arrayType"))) {
+      nsSOAPArrayType* arrayType = new nsSOAPArrayType(aNamespace);
+      if (!arrayType) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      sup = arrayType;
+      mSOAPTypeHash.Put(&key, sup);
+    
+      *aType = arrayType;
+      NS_ADDREF(*aType);
+    }
+    else {
+      rv = NS_ERROR_SCHEMA_UNKNOWN_TYPE;
+    }
+  }
 
-/* nsISchemaType getBuiltinType(in AString type); */
+  return rv;
+}
+
 nsresult
 nsSchemaLoader::GetBuiltinType(const nsAReadableString& aName,
                                nsISchemaType** aType)
@@ -954,7 +1028,7 @@ nsSchemaLoader::GetNewOrUsedType(nsSchema* aSchema,
     return NS_ERROR_SCHEMA_UNKNOWN_PREFIX;
   }
 
-#if 0
+  *aType = nsnull;
   nsAutoString targetNamespace;
   aSchema->GetTargetNamespace(targetNamespace);
   if (namespaceURI.IsEmpty() || namespaceURI.Equals(targetNamespace)) {
@@ -963,11 +1037,14 @@ nsSchemaLoader::GetNewOrUsedType(nsSchema* aSchema,
   }
   else {
     rv = GetType(localName, namespaceURI, aType);
+    if (!*aType) {
+      return NS_ERROR_SCHEMA_UNKNOWN_TARGET_NAMESPACE;
+    }
   }
-#endif
 
+#if 0
   if (namespaceURI.Length() > 0) {
-    if (namespaceURI.Equals(NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE))) {
+    if (IsSchemaNamespace(namespaceURI)) {
       return GetBuiltinType(localName, aType);
     }
 
@@ -983,6 +1060,7 @@ nsSchemaLoader::GetNewOrUsedType(nsSchema* aSchema,
   
   // We don't have a namespace, so get the local type 
   rv = aSchema->GetTypeByName(localName, aType);
+#endif
   
   // If we didn't get a type, we need to create a placeholder
   if (NS_SUCCEEDED(rv) && !*aType) {
@@ -1062,7 +1140,8 @@ nsSchemaLoader::ProcessElement(nsSchema* aSchema,
     // Look for the type as a child of the element 
     else {
       nsChildElementIterator iterator(aElement, 
-                                      NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE));
+                                      kSchemaNamespaces, 
+                                      kSchemaNamespacesLength);
       nsCOMPtr<nsIDOMElement> childElement;
       nsCOMPtr<nsIAtom> tagName;
 
@@ -1135,7 +1214,8 @@ nsSchemaLoader::ProcessComplexType(nsSchema* aSchema,
   complexType = typeInst;
 
   nsChildElementIterator iterator(aElement, 
-                                  NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE));
+                                  kSchemaNamespaces, 
+                                  kSchemaNamespacesLength);
   nsCOMPtr<nsIDOMElement> childElement;
   nsCOMPtr<nsIAtom> tagName;
 
@@ -1198,7 +1278,8 @@ nsSchemaLoader::ProcessComplexTypeBody(nsSchema* aSchema,
 {
   nsresult rv = NS_OK;
   nsChildElementIterator iterator(aElement, 
-                                  NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE));
+                                  kSchemaNamespaces, 
+                                  kSchemaNamespacesLength);
   nsCOMPtr<nsIDOMElement> childElement;
   nsCOMPtr<nsIAtom> tagName;
 
@@ -1292,7 +1373,8 @@ nsSchemaLoader::ProcessSimpleContent(nsSchema* aSchema,
   nsCOMPtr<nsISchemaType> baseType;
 
   nsChildElementIterator iterator(aElement, 
-                                  NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE));
+                                  kSchemaNamespaces, 
+                                  kSchemaNamespacesLength);
   nsCOMPtr<nsIDOMElement> childElement;
   nsCOMPtr<nsIAtom> tagName;
   
@@ -1388,7 +1470,8 @@ nsSchemaLoader::ProcessSimpleContentRestriction(nsSchema* aSchema,
   nsresult rv = NS_OK;
 
   nsChildElementIterator iterator(aElement, 
-                                  NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE));
+                                  kSchemaNamespaces, 
+                                  kSchemaNamespacesLength);
   nsCOMPtr<nsIDOMElement> childElement;
   nsCOMPtr<nsIAtom> tagName;
   
@@ -1496,7 +1579,8 @@ nsSchemaLoader::ProcessSimpleContentExtension(nsSchema* aSchema,
   nsresult rv = NS_OK;
 
   nsChildElementIterator iterator(aElement, 
-                                  NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE));
+                                  kSchemaNamespaces, 
+                                  kSchemaNamespacesLength);
   nsCOMPtr<nsIDOMElement> childElement;
   nsCOMPtr<nsIAtom> tagName;
 
@@ -1548,7 +1632,8 @@ nsSchemaLoader::ProcessComplexContent(nsSchema* aSchema,
 
   nsCOMPtr<nsISchemaType> baseType;
   nsChildElementIterator iterator(aElement, 
-                                  NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE));
+                                  kSchemaNamespaces, 
+                                  kSchemaNamespacesLength);
   nsCOMPtr<nsIDOMElement> childElement;
   nsCOMPtr<nsIAtom> tagName;
   
@@ -1703,7 +1788,8 @@ nsSchemaLoader::ProcessSimpleType(nsSchema* aSchema,
   aElement->GetAttribute(NS_LITERAL_STRING("name"), name);
 
   nsChildElementIterator iterator(aElement, 
-                                  NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE));
+                                  kSchemaNamespaces, 
+                                  kSchemaNamespacesLength);
   nsCOMPtr<nsIDOMElement> childElement;
   nsCOMPtr<nsIAtom> tagName;
 
@@ -1765,7 +1851,8 @@ nsSchemaLoader::ProcessSimpleTypeRestriction(nsSchema* aSchema,
   }
 
   nsChildElementIterator iterator(aElement, 
-                                  NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE));
+                                  kSchemaNamespaces, 
+                                  kSchemaNamespacesLength);
   nsCOMPtr<nsIDOMElement> childElement;
   nsCOMPtr<nsIAtom> tagName;
 
@@ -1854,7 +1941,8 @@ nsSchemaLoader::ProcessSimpleTypeList(nsSchema* aSchema,
   }
   else {
     nsChildElementIterator iterator(aElement, 
-                                    NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE));
+                                    kSchemaNamespaces, 
+                                    kSchemaNamespacesLength);
     nsCOMPtr<nsIDOMElement> childElement;
     nsCOMPtr<nsIAtom> tagName;
     
@@ -1940,7 +2028,8 @@ nsSchemaLoader::ProcessSimpleTypeUnion(nsSchema* aSchema,
   }
   
   nsChildElementIterator iterator(aElement, 
-                                  NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE));
+                                  kSchemaNamespaces, 
+                                  kSchemaNamespacesLength);
   nsCOMPtr<nsIDOMElement> childElement;
   nsCOMPtr<nsIAtom> tagName;
   
@@ -2001,7 +2090,8 @@ nsSchemaLoader::ProcessModelGroup(nsSchema* aSchema,
     aElement->GetAttribute(NS_LITERAL_STRING("name"), name);
 
     nsChildElementIterator iterator(aElement, 
-                                    NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE));
+                                    kSchemaNamespaces, 
+                                    kSchemaNamespacesLength);
     nsCOMPtr<nsIDOMElement> childElement;
     nsCOMPtr<nsIAtom> tagName = aTagName;
 
@@ -2239,7 +2329,8 @@ nsSchemaLoader::ProcessAttribute(nsSchema* aSchema,
     nsCOMPtr<nsISchemaSimpleType> simpleType;
 
     nsChildElementIterator iterator(aElement, 
-                                    NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE));
+                                    kSchemaNamespaces, 
+                                    kSchemaNamespacesLength);
     nsCOMPtr<nsIDOMElement> childElement;
     nsCOMPtr<nsIAtom> tagName;
 
@@ -2316,7 +2407,8 @@ nsSchemaLoader::ProcessAttributeGroup(nsSchema* aSchema,
     attributeGroup = attrInst;
 
     nsChildElementIterator iterator(aElement, 
-                                    NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE));
+                                    kSchemaNamespaces, 
+                                    kSchemaNamespacesLength);
     nsCOMPtr<nsIDOMElement> childElement;
     nsCOMPtr<nsIAtom> tagName;
 

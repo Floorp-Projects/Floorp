@@ -32,7 +32,12 @@
 #include "nsHashtable.h"
 #include "nsString.h"
 
-#define NS_SCHEMA_NAMESPACE "http://www.w3.org/2001/XMLSchema"
+#define NS_SCHEMA_2001_NAMESPACE "http://www.w3.org/2001/XMLSchema"
+#define NS_SCHEMA_1999_NAMESPACE "http://www.w3.org/1999/XMLSchema"
+#define NS_SOAP_1_1_ENCODING_NAMESPACE \
+   "http://schemas.xmlsoap.org/soap/encoding/"
+#define NS_SOAP_1_2_ENCODING_NAMESPACE \
+   "http://www.w3.org/2001/09/soap-encoding"
 
 class nsSchema : public nsISchema 
 {
@@ -482,6 +487,36 @@ protected:
   PRUint16 mWhitespaceValue;
 };
 
+class nsSOAPArray : public nsISchemaComplexType
+{
+public:
+  nsSOAPArray(const nsAReadableString& aTargetNamespace);
+  virtual ~nsSOAPArray();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISCHEMACOMPONENT
+  NS_DECL_NSISCHEMATYPE
+  NS_DECL_NSISCHEMACOMPLEXTYPE
+
+protected:
+  nsString mTargetNamespace;
+};
+
+class nsSOAPArrayType : public nsISchemaRestrictionType
+{
+public:
+  nsSOAPArrayType(const nsAReadableString& aTargetNamespace);
+  virtual ~nsSOAPArrayType();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISCHEMACOMPONENT
+  NS_DECL_NSISCHEMATYPE
+  NS_DECL_NSISCHEMASIMPLETYPE
+  NS_DECL_NSISCHEMARESTRICTIONTYPE
+
+protected:
+  nsString mTargetNamespace;
+};
 
 #define NS_SCHEMA_CID                              \
 { /* 58870ef5-cb65-4220-8317-dbe236059c58 */       \
@@ -626,6 +661,22 @@ protected:
 
 #define NS_SCHEMAFACET_CONTRACTID    \
 "@mozilla.org/xmlextras/schemas/schemafacet;1"
+
+#define NS_SOAPARRAY_CID                         \
+{ /* 0df92b09-36d6-4bed-ac6f-dbc195e35218 */       \
+ 0x0df92b09, 0x36d6, 0x4bed,                       \
+ {0xac, 0x6f, 0xdb, 0xc1, 0x95, 0xe3, 0x52, 0x18}}
+
+#define NS_SOAPARRAY_CONTRACTID    \
+"@mozilla.org/xmlextras/schemas/soaparray;1"
+
+#define NS_SOAPARRAYTYPE_CID                       \
+{ /* 9df7bcdb-3676-49dd-b5b9-4257dc326231 */       \
+ 0x9df7bcdb, 0x3676, 0x49dd,                       \
+ {0xb5, 0xb9, 0x42, 0x57, 0xdc, 0x32, 0x62, 0x31}}
+
+#define NS_SOAPARRAYTYPE_CONTRACTID    \
+"@mozilla.org/xmlextras/schemas/soaparraytype;1"
 
 #endif // __nsSchemaPrivate_h__
 
