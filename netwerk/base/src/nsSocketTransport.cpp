@@ -456,9 +456,11 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
             LOG(("nsSocketTransport: Transport [host=%s:%d this=%x] is in WaitDNS state.\n",
                 mHostName, mPort, this));
             mStatus = doResolveHost();
-
             // Send status message
-            OnStatus(NS_NET_STATUS_RESOLVING_HOST);
+            // only send a status if doResolveHost is going to do some
+            // resolution
+            if (mStatus != NS_OK)
+                OnStatus(NS_NET_STATUS_RESOLVING_HOST);
             break;
 
         case eSocketState_WaitConnect:
