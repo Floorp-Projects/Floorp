@@ -22,7 +22,7 @@
 
 #ifdef sparc
 
-static nsresult
+extern "C" nsresult
 PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, uint32* args)
 {
 #define PARAM_BUFFER_COUNT     16
