@@ -1392,6 +1392,16 @@ nsTableRowFrame::Reflow(nsIPresContext&          aPresContext,
   switch (aReflowState.reason) {
   case eReflowReason_Initial:
     rv = InitialReflow(aPresContext, aDesiredSize, state, aStatus, nsnull, PR_TRUE);
+    if (PR_FALSE==tableFrame->RequiresPass1Layout())
+    { // this resize reflow is necessary to place the cells correctly in the case of rowspans and colspans.  
+      // It is very efficient.  It does not actually need to pass a reflow down to the cells.
+      nsHTMLReflowState  resizeReflowState(aPresContext, (nsIFrame *)this,
+                                           (const nsHTMLReflowState&)(*(aReflowState.parentReflowState)),
+                                           (const nsSize&)(aReflowState.maxSize),
+                                           eReflowReason_Resize);
+      RowReflowState rowResizeReflowState(resizeReflowState, tableFrame);
+      rv = ResizeReflow(aPresContext, aDesiredSize, rowResizeReflowState, aStatus);
+    }
     GetMinRowSpan(tableFrame);
     FixMinCellHeight(tableFrame);
     aStatus = NS_FRAME_COMPLETE;
@@ -1478,14 +1488,9 @@ nsTableRowFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
  */
 PRBool nsTableRowFrame::Contains(const nsPoint& aPoint)
 {
-  if (gsDebug) printf("Row %p index %d ::Contains aPoint(%d,%d) and row rect (%d,%d,%d,%d)\n",
-                         this, mRowIndex, 
-                         aPoint.x, aPoint.y,
-                         mRect.x, mRect.y, mRect.width, mRect.height);
   PRBool result = PR_FALSE;
   // first, check the row rect and see if the point is in their
   if (mRect.Contains(aPoint)) {
-    if (gsDebug) printf("%p Row::Contains point.\n");
     result = PR_TRUE;
   }
   // if that fails, check the cells, they might span outside the row rect
@@ -1497,18 +1502,13 @@ PRBool nsTableRowFrame::Contains(const nsPoint& aPoint)
       kid->GetRect(kidRect);
       nsPoint point(aPoint);
       point.MoveBy(-mRect.x, -mRect.y); // offset the point to check by the row container
-      if (gsDebug) printf("Row %p checking point (%d,%d) vs. cell rect (%d,%d,%d,%d)\n",
-                         point.x, point.y,
-                         kidRect.x, kidRect.y, kidRect.width, kidRect.height);
       if (kidRect.Contains(point)) {
-        if (gsDebug) printf("cell contains point.\n");
         result = PR_TRUE;
         break;
       }
       kid->GetNextSibling(kid);
     }
   }
-  if (gsDebug) printf("%p Row::Contains returning %d\n", this, result);
   return result;
 }
 
