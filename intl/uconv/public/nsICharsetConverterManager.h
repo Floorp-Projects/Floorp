@@ -70,7 +70,7 @@
 
 #ifdef DEBUG
 #define REGSELF_PRINTF(x,y)                                             \
-  printf("RegSelf %s to %s converter complete\n",                       \
+  fprintf(stderr,"RegSelf %s to %s converter complete\n",                       \
          x, y)                                                         
 #else
 #define REGSELF_PRINTF(x,y)

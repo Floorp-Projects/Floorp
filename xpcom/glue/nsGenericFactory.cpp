@@ -363,7 +363,7 @@ nsGenericModule::GetClassObject(nsIComponentManager *aCompMgr,
     // not found in descriptions
 #ifdef DEBUG
     char* cs = aClass.ToString();
-    printf("+++ nsGenericModule %s: unable to create factory for %s\n", mModuleName, cs);
+    fprintf(stderr, "+++ nsGenericModule %s: unable to create factory for %s\n", mModuleName, cs);
     // leak until we resolve the nsID Allocator. 
     // nsCRT::free(cs);
 #endif        // XXX put in stop-gap so that we don't search for this one again
@@ -379,7 +379,7 @@ nsGenericModule::RegisterSelf(nsIComponentManager *aCompMgr,
     nsresult rv = NS_OK;
 
 #ifdef DEBUG
-    printf("*** Registering %s components (all right -- a generic module!)\n", mModuleName);
+    fprintf(stderr, "*** Registering %s components (all right -- a generic module!)\n", mModuleName);
 #endif
 
     const nsModuleComponentInfo* cp = mComponents;
@@ -396,7 +396,7 @@ nsGenericModule::RegisterSelf(nsIComponentManager *aCompMgr,
                                                         componentType);
             if (NS_FAILED(rv)) {
 #ifdef DEBUG
-                printf("nsGenericModule %s: unable to register %s component => %x\n",
+                fprintf(stderr, "nsGenericModule %s: unable to register %s component => %x\n",
                        mModuleName?mModuleName:"(null)", cp->mDescription?cp->mDescription:"(null)", rv);
 #endif
                 break;
@@ -409,7 +409,7 @@ nsGenericModule::RegisterSelf(nsIComponentManager *aCompMgr,
                                        componentType, cp);
             if (NS_FAILED(rv)) {
 #ifdef DEBUG
-                printf("nsGenericModule %s: Register hook for %s component returned error => %x\n",
+                fprintf(stderr, "nsGenericModule %s: Register hook for %s component returned error => %x\n",
                        mModuleName?mModuleName:"(null)", cp->mDescription?cp->mDescription:"(null)", rv);
 #endif
                 break;
@@ -427,7 +427,7 @@ nsGenericModule::UnregisterSelf(nsIComponentManager* aCompMgr,
                             const char* registryLocation)
 {
 #ifdef DEBUG
-    printf("*** Unregistering %s components (all right -- a generic module!)\n", mModuleName);
+    fprintf(stderr, "*** Unregistering %s components (all right -- a generic module!)\n", mModuleName);
 #endif
     const nsModuleComponentInfo* cp = mComponents;
     for (PRUint32 i = 0; i < mComponentCount; i++) {
@@ -444,7 +444,7 @@ nsGenericModule::UnregisterSelf(nsIComponentManager* aCompMgr,
              rv = registrar->UnregisterFactoryLocation(cp->mCID, aPath);
         if (NS_FAILED(rv)) {
 #ifdef DEBUG
-            printf("nsGenericModule %s: unable to unregister %s component => %x\n",
+            fprintf(stderr, "nsGenericModule %s: unable to unregister %s component => %x\n",
                    mModuleName, cp->mDescription, rv);
 #endif
         }

@@ -547,6 +547,9 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     // will cause servicemanager to become inaccessible.
     gXPCOMShuttingDown = PR_TRUE;
 
+#ifdef DEBUG_dougt
+    fprintf(stderr, "* * * * XPCOM shutdown. Access will be denied * * * * \n");
+#endif
     // We may have AddRef'd for the caller of NS_InitXPCOM, so release it
     // here again:
     NS_IF_RELEASE(servMgr);
