@@ -48,7 +48,7 @@
 		<html:tr>
 			<html:td><html:input name="choose" type="button" value="&addButton.label;" /></html:td>
 			<html:td>
-				<html:input name="choose" type="button" value="deleteButton.label"/>
+				<html:input name="choose" type="button" value="&deleteButton.label;"/>
 			</html:td>
 		</html:tr>
 	</html:table>
