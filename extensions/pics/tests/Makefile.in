@@ -30,10 +30,14 @@ REQUIRES	= js pics pref xpcom include
 
 LIBS		= \
 	-lxpcom \
+	-lreg \
 	-lpics \
+	-lraptorbase \
 	$(NSPR_LIBS) \
 	$(NULL)
 
 PROGRAM		= testPICS
+
+include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
