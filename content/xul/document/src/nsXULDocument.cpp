@@ -4524,8 +4524,9 @@ nsXULFastLoadFileIO::GetOutputStream(nsIOutputStream** aResult)
 }
 
 
-static PRBool gDisableXULFastLoad = PR_TRUE;    // disabled by default, for now
-static PRBool gChecksumXULFastLoadFile = PR_TRUE;
+static PRBool gDisableXULFastLoad = PR_FALSE;           // enabled by default
+static PRBool gChecksumXULFastLoadFile = PR_TRUE;       // XXXbe too paranoid
+
 static const char kDisableXULFastLoadPref[] = "nglayout.debug.disable_xul_fastload";
 static const char kChecksumXULFastLoadFilePref[] = "nglayout.debug.checksum_xul_fastload_file";
 
