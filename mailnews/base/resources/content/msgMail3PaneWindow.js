@@ -100,7 +100,7 @@ var folderListener = {
 			if(resource)
 			{
 				var uri = resource.Value;
-				dump("In OnFolderLoaded for " + uri +"\n");
+				//dump("In OnFolderLoaded for " + uri +"\n");
 				if(uri == gCurrentFolderToReroot)
 				{
 					gCurrentFolderToReroot="";
