@@ -35,15 +35,17 @@
 
 #include "nsVoidArray.h"
 
+//#define DRAG_DROP
+#if DRAG_DROP
 class CfDropTarget;
 class CfDropSource;
 class CfDragDrop;
 //class nsDropTarget;
+#endif
 
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
 
-//#define DRAG_DROP 
 
 /**
  * Native WIN32 window wrapper. 
