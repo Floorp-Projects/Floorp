@@ -71,6 +71,12 @@ CPPSRCS		= \
 		nsMacCyrillicToUnicode.cpp \
 		nsMacUkrainianToUnicode.cpp \
 		nsMacIcelandicToUnicode.cpp \
+		nsMacHebrewToUnicode.cpp \
+		nsMacArabicToUnicode.cpp \
+		nsMacDevanagariToUnicode.cpp \
+		nsMacFarsiToUnicode.cpp \
+		nsMacGujaratiToUnicode.cpp \
+		nsMacGurmukhiToUnicode.cpp \
 		nsARMSCII8ToUnicode.cpp \
 		nsTCVN5712ToUnicode.cpp \
 		nsVISCIIToUnicode.cpp \
@@ -124,6 +130,12 @@ CPPSRCS		= \
 		nsUnicodeToMacCyrillic.cpp \
 		nsUnicodeToMacUkrainian.cpp \
 		nsUnicodeToMacIcelandic.cpp \
+		nsUnicodeToMacHebrew.cpp \
+		nsUnicodeToMacArabic.cpp \
+		nsUnicodeToMacDevanagari.cpp \
+		nsUnicodeToMacFarsi.cpp \
+		nsUnicodeToMacGujarati.cpp \
+		nsUnicodeToMacGurmukhi.cpp \
 		nsUnicodeToARMSCII8.cpp \
 		nsUnicodeToTCVN5712.cpp \
 		nsUnicodeToVISCII.cpp \
