@@ -39,8 +39,8 @@
 #include "nsIProtocolProxyService.h"
 #include "nsIIOService.h"
 #include "nsIObserver.h"
+#include "nsIObserverService.h"
 #include "nsIProxyObjectManager.h"
-#include "nsINetModuleMgr.h"
 #include "nsIProxy.h"
 #include "nsIStreamConverterService.h"
 #include "nsICacheSession.h"
@@ -183,8 +183,8 @@ private:
     nsCOMPtr<nsIIOService>              mIOService;
     nsCOMPtr<nsIProxyObjectManager>     mProxyMgr;
     nsCOMPtr<nsIEventQueueService>      mEventQueueService;
-    nsCOMPtr<nsINetModuleMgr>           mNetModuleMgr;
     nsCOMPtr<nsIStreamConverterService> mStreamConvSvc;
+    nsCOMPtr<nsIObserverService>        mObserverService;
     nsCOMPtr<nsICookieService>          mCookieService;
     nsCOMPtr<nsIMIMEService>            mMimeService;
     nsCOMPtr<nsIIDNService>             mIDNConverter;

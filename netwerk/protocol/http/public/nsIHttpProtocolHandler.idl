@@ -105,10 +105,32 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
 };
 
 %{C++
-// HTTP protocol handler will do_GetService() on each ContractId that is
-// registered under this category when it comes alive.
+/**
+ * At initialization time, the HTTP handler will initialize each service
+ * registered under this category:
+ */
 #define NS_HTTP_STARTUP_CATEGORY "http-startup-category"
-// If the resulting service implements nsIObserver, then its Observer
-// method will be invoked with the following topic.
+
+/**
+ * nsIObserver notification corresponding to startup category.  Services
+ * registered under the startup category will receive this observer topic at
+ * startup if they implement nsIObserver.  The "subject" of the notification
+ * is the nsIHttpProtocolHandler instance.
+ */
 #define NS_HTTP_STARTUP_TOPIC "http-startup"
+
+/**
+ * Before an HTTP request is sent to the server, this observer topic is
+ * notified.  The observer of this topic can then choose to set any additional
+ * headers for this request before the request is actually sent to the server.
+ * The "subject" of the notification is the nsIHttpChannel instance.
+ */
+#define NS_HTTP_ON_MODIFY_REQUEST_TOPIC "http-on-modify-request"
+
+/**
+ * After an HTTP server response is received, this observer topic is notified.
+ * The observer of this topic can interrogate the response.  The "subject" of
+ * the notification is the nsIHttpChannel instance.
+ */
+#define NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC "http-on-examine-response"
 %}

@@ -43,7 +43,6 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
-#include "nsNetModuleMgr.h"
 #include "nsSocketProviderService.h"
 #include "nscore.h"
 #include "nsSimpleURI.h"
@@ -592,10 +591,6 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_SIMPLEURI_CID,
       NS_SIMPLEURI_CONTRACTID,
       nsSimpleURI::Create },
-    { "External Module Manager", 
-      NS_NETMODULEMGR_CID,
-      "@mozilla.org/network/net-extern-mod;1",
-      nsNetModuleMgr::Create },
     { NS_ASYNCSTREAMCOPIER_CLASSNAME,
       NS_ASYNCSTREAMCOPIER_CID,
       NS_ASYNCSTREAMCOPIER_CONTRACTID,

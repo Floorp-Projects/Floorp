@@ -50,8 +50,6 @@ CPPSRCS		= \
 		nsIOService.cpp \
 		nsLoadGroup.cpp \
 		nsMIMEInputStream.cpp \
-		nsNetModRegEntry.cpp \
-		nsNetModuleMgr.cpp \
 		nsProtocolProxyService.cpp \
 		nsRequestObserverProxy.cpp \
 		nsResumableEntityID.cpp \
