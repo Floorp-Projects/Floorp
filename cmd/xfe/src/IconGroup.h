@@ -142,11 +142,11 @@ ICONGROUP(MNAB_Properties)
 /* MNC_Directory */
 ICONGROUP(MNAB_Call)
 /* MNTB_Trash */
+HG10282
 
 #endif /* MOZ_MAIL_NEWS || !WANT_GROUPS */
 
 #if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE) || !defined(WANT_GROUPS)
-HG10282
 
 /* Compose Window. */
 ICONGROUP(MNTB_Next)
