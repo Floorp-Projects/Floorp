@@ -122,8 +122,6 @@ static NS_DEFINE_CID(kRDFContainerUtilsCID,      NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
-nsIChromeRegistry* gChromeRegistry = nsnull;
-
 #define CHROME_URI "http://www.mozilla.org/rdf/chrome#"
 
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, baseURL);
@@ -175,8 +173,6 @@ DatasourceEnumerator(nsHashKey *aKey, void *aData, void* closure)
 
 nsChromeRegistry::~nsChromeRegistry()
 {
-  gChromeRegistry = nsnull;
-  
   if (mDataSourceTable) {
       mDataSourceTable->Enumerate(DatasourceEnumerator, mChromeDataSource);
       delete mDataSourceTable;
@@ -194,10 +190,11 @@ nsChromeRegistry::~nsChromeRegistry()
 
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS5(nsChromeRegistry,
+NS_IMPL_THREADSAFE_ISUPPORTS6(nsChromeRegistry,
                               nsIChromeRegistry,
                               nsIXULChromeRegistry,
                               nsIXULOverlayProvider,
+                              nsIProtocolHandler,
                               nsIObserver,
                               nsISupportsWeakReference)
 
@@ -248,8 +245,6 @@ nsChromeRegistry::Init()
   if (!mSelectedLocales.Init()) return NS_ERROR_FAILURE;
   if (!mSelectedSkins.Init()) return NS_ERROR_FAILURE;
 
-  gChromeRegistry = this;
-  
   nsresult rv;
   rv = nsServiceManager::GetService(kRDFServiceCID,
                                     NS_GET_IID(nsIRDFService),
@@ -363,8 +358,6 @@ nsChromeRegistry::Init()
       prefs->AddObserver(SELECTED_LOCALE_PREF, this, PR_TRUE);
     }
   }
-
-  CheckForNewChrome();
 
   return NS_OK;
 }
@@ -2603,7 +2596,11 @@ nsresult nsChromeRegistry::LoadInstallDataSource()
   NS_ENSURE_SUCCESS(rv, rv);
   
   mInstallInitialized = PR_TRUE;
-  return AddToCompositeDataSource(PR_FALSE);
+  rv = AddToCompositeDataSource(PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  (void) RealCheckForNewChrome();
+  return NS_OK;
 }
 
 nsresult nsChromeRegistry::LoadProfileDataSource()
@@ -2615,7 +2612,9 @@ nsresult nsChromeRegistry::LoadProfileDataSource()
     mProfileInitialized = mInstallInitialized = PR_TRUE;
     mChromeDataSource = nsnull;
     rv = AddToCompositeDataSource(PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    (void) RealCheckForNewChrome();
   }
 
   nsCOMPtr<nsIPrefBranch> pref (do_GetService(NS_PREFSERVICE_CONTRACTID));
@@ -2696,9 +2695,18 @@ nsChromeRegistry::CheckForNewChrome()
 {
   nsresult rv;
 
-  rv = LoadInstallDataSource();
-  if (NS_FAILED(rv))
-    return rv;
+  if (mInstallInitialized) {
+    return RealCheckForNewChrome();
+  }
+
+  // LoadInstallDataSource calls RealCheckForNewChrome internally
+  return LoadInstallDataSource();
+}
+
+nsresult
+nsChromeRegistry::RealCheckForNewChrome()
+{
+  nsresult rv;
 
   nsCOMPtr<nsIProperties> dirSvc =
            do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
