@@ -122,7 +122,14 @@ BOOL CInterpret::NewConfig(WIDGET *curWidget, CString globalsName, CString Dialo
 BOOL CInterpret::BrowseFile(WIDGET *curWidget) 
 {
 	// This is to browse to a file
-	CFileDialog fileDlg(TRUE, NULL, NULL, OFN_OVERWRITEPROMPT, NULL, NULL);
+	WIDGET* tmpWidget = findWidget((char*) (LPCTSTR)curWidget->target);
+
+	CString filePath = tmpWidget->value;
+	int fileLength = filePath.GetLength();
+	int dotPlace = filePath.ReverseFind('.');
+	CString fileExt = filePath.Right(fileLength - dotPlace - 1);
+
+	CFileDialog fileDlg(TRUE, NULL, filePath, OFN_OVERWRITEPROMPT|OFN_FILEMUSTEXIST|OFN_PATHMUSTEXIST|OFN_LONGNAMES, NULL, NULL);
 	int retVal = fileDlg.DoModal();
 	CString fullFileName="";
 
@@ -132,11 +139,11 @@ BOOL CInterpret::BrowseFile(WIDGET *curWidget)
 	if (fileDlg.GetPathName() != "")
 	{	
 		fullFileName = fileDlg.GetPathName();
-		WIDGET* tmpWidget = findWidget((char*) (LPCTSTR)curWidget->target);
-		if (tmpWidget && (CEdit*)tmpWidget->control)
+		if ((fullFileName.Right(fileLength - dotPlace -1) == fileExt) && (tmpWidget && (CEdit*)tmpWidget->control))
 			((CEdit*)tmpWidget->control)->SetWindowText(fullFileName);
 	}
 	return TRUE;
+
 }
 
 CString CInterpret::BrowseDir(WIDGET *curWidget) 
