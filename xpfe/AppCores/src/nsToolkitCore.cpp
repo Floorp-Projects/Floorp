@@ -143,7 +143,7 @@ printf("in toolkitcore::ShowWindow\n");
   if (NS_SUCCEEDED(rv)) {
     // hardwired temporary hack.  See nsAppRunner.cpp at main()
     controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
-    appShell->CreateTopLevelWindow(url, controllerCID, window, nsnull);
+    appShell->CreateTopLevelWindow(url, controllerCID, window, nsnull, 615, 650);
     nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
   }
   if (window != nsnull) {
