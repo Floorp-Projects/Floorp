@@ -80,6 +80,8 @@ pref("browser.toolbars.showbutton.net2phone", true);
 pref("browser.toolbars.showbutton.print",   true);
 pref("browser.toolbars.showbutton.search",  true);
 
+pref("browser.helperApps.alwaysAsk.force",  false);
+
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.usetexttospeech", "");
 pref("accessibility.usebrailledisplay", "");
