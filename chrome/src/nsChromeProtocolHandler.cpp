@@ -37,6 +37,7 @@
 #include "nsIIOService.h"
 #include "nsILoadGroup.h"
 #include "nsIResChannel.h"
+#include "nsIJARChannel.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIStreamListener.h"
 #include "nsIServiceManager.h"
@@ -699,10 +700,17 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         if (NS_FAILED(rv)) return rv;
 
         // XXX Will be removed someday when we handle remote chrome.
-        nsCOMPtr<nsIResChannel> res(do_QueryInterface(result));
-        nsCOMPtr<nsIFileChannel> file(do_QueryInterface(result));
-        if (!res && !file) {
-          NS_WARNING("Remote chrome not allowed! Only file: and resource: are valid.\n");
+        nsCOMPtr<nsIJARChannel> jar;
+        nsCOMPtr<nsIResChannel> res;
+        nsCOMPtr<nsIFileChannel> file;
+        res = do_QueryInterface(result);
+        if (!res) {
+          file = do_QueryInterface(result);
+          if (!file)
+            jar = do_QueryInterface(result);
+        }
+        if (!res && !file && !jar) {
+          NS_WARNING("Remote chrome not allowed! Only file:, resource:, and jar: are valid.\n");
           result = nsnull;
           return NS_ERROR_FAILURE;
         }
