@@ -59,12 +59,13 @@ NSPR_DIR	= $(patsubst %lib,%bin,$(subst -L,,$(word 1,$(NSPR_LIBS))))
 endif
 endif
 
-NOT_IN_PACKAGE	= \
+EXCLUDE_LIST	= \
 		$(DIST)/bin/core \
 		$(DIST)/bin/bsdecho \
 		$(DIST)/bin/gtscc \
 		$(DIST)/bin/jscpucfg \
 		$(DIST)/bin/nsinstall \
+		$(DIST)/bin/viewer \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
@@ -82,7 +83,7 @@ ifneq ($(NSPR_DIR),$(DIST)/bin)
 	@chmod 755 $(NSPR_DIR)/*
 	@cp -p $(NSPR_DIR)/* $(DIST)/bin/.
 endif
-	@rm -f $(DIST)/package $(DIST)/$(PKG_BASENAME).tar $@ $(NOT_IN_PACKAGE)
+	@rm -f $(DIST)/package $(DIST)/$(PKG_BASENAME).tar $@ $(EXCLUDE_LIST)
 	@ln -s bin $(DIST)/package
 	@cd $(DIST)/bin; find . ! -type d -exec strip $(STRIP_FLAGS) {} \;
 ifeq ($(MOZ_PKG_FORMAT),TGZ)
