@@ -107,38 +107,38 @@
  
      <treeitem>
        
-      <treecell name="resource://res/mailnews/preference/pref-mailnews.html"><treeindentation/>&mail.label;</treecell>
+      <treecell name="chrome://messenger/content/pref-mailnews.html"><treeindentation/>&mail.label;</treecell>
        
 	  <treechildren>
         <treeitem>
-          <treecell name="resource://res/mailnews/preference/pref-identity.html"><treeindentation/>&identity.label;</treecell>
+          <treecell name="chrome://messenger/content/pref-identity.html"><treeindentation/>&identity.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="resource://res/mailnews/preference/pref-mailservers.html"><treeindentation/>&mailServer.label;</treecell>
+          <treecell name="chrome://messenger/content/pref-mailservers.html"><treeindentation/>&mailServer.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="resource://res/mailnews/preference/pref-newsservers.html"><treeindentation/>&newsServer.label;</treecell>
+          <treecell name="chrome://messenger/content/pref-newsservers.html"><treeindentation/>&newsServer.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="resource://res/mailnews/preference/pref-addressing.html"><treeindentation/>&address.label;</treecell>
+          <treecell name="chrome://addressbook/content/pref-addressing.html"><treeindentation/>&address.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="resource://res/mailnews/preference/pref-messages.html"><treeindentation/>&mess.label;</treecell>
+          <treecell name="chrome://messengercompose/content/pref-messages.html"><treeindentation/>&mess.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="resource://res/mailnews/preference/pref-winsetting.html"><treeindentation/>&windowSet.label;</treecell>
+          <treecell name="chrome://messenger/content/pref-winsetting.html"><treeindentation/>&windowSet.label;</treecell>
 	    </treeitem>
         <treeitem>
-        <treecell name="resource://res/mailnews/preference/pref-copiesfolders.html"><treeindentation/>&copyFolder.label;</treecell>
+        <treecell name="chrome://messengercompose/content/pref-copiesfolders.html"><treeindentation/>&copyFolder.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="resource://res/mailnews/preference/pref-formatting.html"><treeindentation/>&format.label;</treecell>
+          <treecell name="chrome://messengercompose/content/pref-formatting.html"><treeindentation/>&format.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="resource://res/mailnews/preference/pref-receipts.html"><treeindentation/>&return.label;</treecell>
+          <treecell name="chrome://messenger/content/pref-receipts.html"><treeindentation/>&return.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="resource://res/mailnews/preference/pref-diskspace.html"><treeindentation/>&disk.label;</treecell>
+          <treecell name="chrome://messenger/content/pref-diskspace.html"><treeindentation/>&disk.label;</treecell>
 	    </treeitem>
       </treechildren>
     
