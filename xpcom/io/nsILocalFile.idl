@@ -93,6 +93,14 @@ interface nsILocalFile : nsIFile
      */
     void appendRelativePath([const] in string relativeFilePath);
     void appendRelativeUnicodePath([const] in wstring relativeFilePath);
+    
+    
+    /**
+     *   Accessor to a null terminated string which will specify
+     *   the file in a persistent manner for disk storage.
+     */
+    attribute string persistentDescriptor;
+
 };
 
 %{C++
