@@ -57,7 +57,7 @@ const String& Notation::getPublicId()
 
     publicId.clear();
     if (nsNotation)
-        nsNotation->GetPublicId(publicId.getNSString());
+        nsNotation->GetPublicId(publicId);
     return publicId;
 }
 
@@ -72,6 +72,6 @@ const String& Notation::getSystemId()
 
     systemId.clear();
     if (nsNotation)
-        nsNotation->GetSystemId(systemId.getNSString());
+        nsNotation->GetSystemId(systemId);
     return systemId;
 }

@@ -60,7 +60,7 @@ Node* NamedNodeMap::getNamedItem(const String& aName)
     NSI_FROM_TX_NULL_CHECK(NamedNodeMap)
     nsCOMPtr<nsIDOMNode> node;
 
-    if (NS_SUCCEEDED(nsNamedNodeMap->GetNamedItem(aName.getConstNSString(),
+    if (NS_SUCCEEDED(nsNamedNodeMap->GetNamedItem(aName,
                 getter_AddRefs(node))))
         return ownerDocument->createWrapper(node);
     else
@@ -100,7 +100,7 @@ Node* NamedNodeMap::removeNamedItem(const String& aName)
     NSI_FROM_TX_NULL_CHECK(NamedNodeMap)
     nsCOMPtr<nsIDOMNode> node;
 
-    if (NS_SUCCEEDED(nsNamedNodeMap->RemoveNamedItem(aName.getConstNSString(),
+    if (NS_SUCCEEDED(nsNamedNodeMap->RemoveNamedItem(aName,
                 getter_AddRefs(node))))
         return ownerDocument->createWrapper(node);
     else

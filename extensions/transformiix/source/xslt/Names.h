@@ -35,69 +35,17 @@
 #include "TxString.h"
 
 //-- Global Strings
-extern const String HTML;
-extern const String HTML_NS;
 extern const String STYLESHEET_PI;
 extern const String STYLESHEET_PI_OLD;
-extern const String XML_SPACE;
 extern const String XSL_MIME_TYPE;
-extern const String XSLT_NS;
-
-//-- Elements
-extern const String APPLY_IMPORTS;
-extern const String APPLY_TEMPLATES;
-extern const String ATTRIBUTE;
-extern const String ATTRIBUTE_SET;
-extern const String CALL_TEMPLATE;
-extern const String CHOOSE;
-extern const String COMMENT;
-extern const String COPY;
-extern const String COPY_OF;
-extern const String DECIMAL_FORMAT;
-extern const String ELEMENT;
-extern const String FOR_EACH;
-extern const String IF;
-extern const String IMPORT;
-extern const String INCLUDE;
-extern const String KEY;
-extern const String MESSAGE;
-extern const String NUMBER;
-extern const String OTHERWISE;
-extern const String OUTPUT;
-extern const String PARAM;
-extern const String PROC_INST;
-extern const String PRESERVE_SPACE;
-extern const String STRIP_SPACE;
-extern const String SORT;
-extern const String TEMPLATE;
-extern const String TEXT;
-extern const String VALUE_OF;
-extern const String VARIABLE;
-extern const String WHEN;
-extern const String WITH_PARAM;
-
-
-//-- Attributes
-extern const String ELEMENTS_ATTR;
-extern const String HREF_ATTR;
-extern const String MATCH_ATTR;
-extern const String MODE_ATTR;
-extern const String NAME_ATTR;
-extern const String SELECT_ATTR;
-extern const String TEST_ATTR;
-extern const String USE_ATTR;
 
 //-- Attribute Values
-extern const String ANY_VALUE;
 extern const String ASCENDING_VALUE;
 extern const String DESCENDING_VALUE;
 extern const String LOWER_FIRST_VALUE;
 extern const String MULTIPLE_VALUE;
-extern const String NO_VALUE;
 extern const String NUMBER_VALUE;
 extern const String PRESERVE_VALUE;
-extern const String SINGLE_VALUE;
-extern const String STRIP_VALUE;
 extern const String TEXT_VALUE;
 extern const String UPPER_FIRST_VALUE;
 extern const String YES_VALUE;
@@ -116,29 +64,5 @@ extern const String PARENT_AXIS;
 extern const String PRECEDING_AXIS;
 extern const String PRECEDING_SIBLING_AXIS;
 extern const String SELF_AXIS;
-
-
-//-- NodeTest Operators
-extern const String ATTRIBUTE_FNAME;
-extern const String COMMENT_FNAME;
-extern const String PI_FNAME;
-extern const String TEXT_FNAME;
-extern const String NODE_FNAME;
-extern const String IDENTITY_OP;
-extern const String PARENT_OP;
-
-//-- XSLT additional functions
-extern const String DOCUMENT_FN;
-extern const String KEY_FN;
-extern const String FORMAT_NUMBER_FN;
-extern const String CURRENT_FN;
-extern const String UNPARSED_ENTITY_URI_FN;
-extern const String GENERATE_ID_FN;
-extern const String SYSTEM_PROPERTY_FN;
-extern const String ELEMENT_AVAILABLE_FN;
-extern const String FUNCTION_AVAILABLE_FN;
-
-//-- MISC
-extern const String WILD_CARD;
 
 #endif

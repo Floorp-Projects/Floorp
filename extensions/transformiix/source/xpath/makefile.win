@@ -67,7 +67,6 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\UnionExpr.obj			\
 	.\$(OBJDIR)\UnaryExpr.obj			\
 	.\$(OBJDIR)\VariableRefExpr.obj			\
-	.\$(OBJDIR)\XPathNames.obj			\
 !if !defined(TX_EXE)
 	.\$(OBJDIR)\nsXPathEvaluator.obj	\
 	.\$(OBJDIR)\nsXPathException.obj	\

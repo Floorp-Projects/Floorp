@@ -87,6 +87,7 @@ class XSLTProcessor
   public nsIScriptLoaderObserver
 #endif
 {
+    friend class ProcessorState;
 
 public:
 #ifndef TX_EXE
@@ -251,18 +252,17 @@ private:
      */
     Expr* mNodeExpr;
 
-    /**
-     * Binds the given Variable
-    **/
-    void bindVariable(String& name,
-                      ExprResult* value,
-                      MBool allowShadowing,
-                      ProcessorState* ps);
-
-    /**
-     * Processes the xsl:with-param elements of the given xsl action
-    **/
-    NamedMap* processParameters(Element* xslAction, Node* context, ProcessorState* ps);
+    /*
+     * Processes the xsl:with-param child elements of the given xsl action.
+     * @param aAction  the action node that takes parameters (xsl:call-template
+     *                 or xsl:apply-templates
+     * @param aContext the current context node
+     * @param aMap     map to place parsed variables in
+     * @param aPs      the current ProcessorState
+     * @return         errorcode
+     */
+    nsresult processParameters(Element* aAction, Node* aContext,
+                               txVariableMap* aMap, ProcessorState* aPs);
 
 #ifdef TX_EXE
     /**
@@ -281,23 +281,35 @@ private:
      * Processes the attribute sets specified in the use-attribute-sets attribute
      * of the element specified in aElement
     **/
-    void processAttributeSets(Element* aElement, Node* node, ProcessorState* ps);
+    void processAttributeSets(Element* aElement, Node* node,
+                              ProcessorState* ps, Stack* aRecursionStack = 0);
 
     /**
      * Processes the children of the specified element using the given context node
      * and ProcessorState
-     * @param node the context node
-     * @param xslElement the template to be processed. Must be != NULL
-     * @param ps the current ProcessorState
+     * @param aContext    context node
+     * @param aXslElement template to be processed. Must be != NULL
+     * @param aPs         current ProcessorState
     **/
-    void processChildren(Node* node, Element* xslElement, ProcessorState* ps);
+    void processChildren(Node* aContext,
+                         Element* aXslElement,
+                         ProcessorState* aPs);
 
-    void processTemplate(Node* node, Node* xslTemplate, ProcessorState* ps, NamedMap* actualParams = NULL);
-    void processTemplateParams(Node* xslTemplate, Node* context, ProcessorState* ps, NamedMap* actualParams);
+    /*
+     * Processes the specified template using the given context,
+     * ProcessorState, and parameters.
+     * @param aContext  the current context node
+     * @param aTemplate the node in the xslt document that contains the
+     *                  template
+     * @param aParams   map with parameters to the template
+     * @param aPs       the current ProcessorState
+     */
+    void processTemplate(Node* aContext, Node* aTemplate,
+                         txVariableMap* aParams, ProcessorState* aPs);
 
     void processMatchedTemplate(Node* aXslTemplate,
                                 Node* aNode,
-                                NamedMap* aParams,
+                                txVariableMap* aParams,
                                 const txExpandedName& aMode,
                                 ProcessorState::ImportFrame* aFrame,
                                 ProcessorState* aPs);
@@ -369,7 +381,6 @@ private:
 #endif
     txXMLEventHandler* mResultHandler;
     MBool mHaveDocumentElement;
-    Stack mAttributeSetStack;
 #ifndef TX_EXE
     void SignalTransformEnd();
 

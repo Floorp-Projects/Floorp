@@ -62,8 +62,7 @@ MBool DOMImplementation::hasFeature(const String& aFeature,
     MBool bHasFeature = MB_FALSE;
 
     if (nsDOMImplementation)
-        nsDOMImplementation->HasFeature(aFeature.getConstNSString(), aVersion.getConstNSString(),
-                &bHasFeature);
+        nsDOMImplementation->HasFeature(aFeature, aVersion, &bHasFeature);
 
     return bHasFeature;
 }

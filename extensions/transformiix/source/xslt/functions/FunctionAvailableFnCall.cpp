@@ -37,11 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "XSLTFunctions.h"
-#include "FunctionLib.h"
-#include "XMLUtils.h"
-#include "Names.h"
 #include "txIXPathContext.h"
+#include "txAtoms.h"
+#include "XMLUtils.h"
+#include "XSLTFunctions.h"
 
 /*
   Implementation of XSLT 1.0 extension function: function-available
@@ -50,8 +49,8 @@
 /**
  * Creates a new function-available function call
 **/
-FunctionAvailableFunctionCall::FunctionAvailableFunctionCall() :
-        FunctionCall(FUNCTION_AVAILABLE_FN)
+FunctionAvailableFunctionCall::FunctionAvailableFunctionCall(Node* aQNameResolveNode)
+    : mQNameResolveNode(aQNameResolveNode)
 {
 }
 
@@ -75,48 +74,47 @@ ExprResult* FunctionAvailableFunctionCall::evaluate(txIEvalContext* aContext)
             exprResult->getResultType() == ExprResult::STRING) {
             String property;
             exprResult->stringValue(property);
-            if (XMLUtils::isValidQName(property)) {
-                String prefix;
-                XMLUtils::getPrefix(property, prefix);
-                if (prefix.isEmpty() &&
-                    (property.isEqual(XPathNames::BOOLEAN_FN) ||
-                     property.isEqual(XPathNames::CONCAT_FN) ||
-                     property.isEqual(XPathNames::CONTAINS_FN) ||
-                     property.isEqual(XPathNames::COUNT_FN ) ||
-                     property.isEqual(XPathNames::FALSE_FN) ||
-                     property.isEqual(XPathNames::ID_FN) ||
-                     property.isEqual(XPathNames::LANG_FN) ||
-                     property.isEqual(XPathNames::LAST_FN) ||
-                     property.isEqual(XPathNames::LOCAL_NAME_FN) ||
-                     property.isEqual(XPathNames::NAME_FN) ||
-                     property.isEqual(XPathNames::NAMESPACE_URI_FN) ||
-                     property.isEqual(XPathNames::NORMALIZE_SPACE_FN) ||
-                     property.isEqual(XPathNames::NOT_FN) ||
-                     property.isEqual(XPathNames::POSITION_FN) ||
-                     property.isEqual(XPathNames::STARTS_WITH_FN) ||
-                     property.isEqual(XPathNames::STRING_FN) ||
-                     property.isEqual(XPathNames::STRING_LENGTH_FN) ||
-                     property.isEqual(XPathNames::SUBSTRING_FN) ||
-                     property.isEqual(XPathNames::SUBSTRING_AFTER_FN) ||
-                     property.isEqual(XPathNames::SUBSTRING_BEFORE_FN) ||
-                     property.isEqual(XPathNames::SUM_FN) ||
-                     property.isEqual(XPathNames::TRANSLATE_FN) ||
-                     property.isEqual(XPathNames::TRUE_FN) ||
-                     property.isEqual(XPathNames::NUMBER_FN) ||
-                     property.isEqual(XPathNames::ROUND_FN) ||
-                     property.isEqual(XPathNames::CEILING_FN) ||
-                     property.isEqual(XPathNames::FLOOR_FN) ||
-                     property.isEqual(DOCUMENT_FN) ||
-                     property.isEqual(KEY_FN) ||
-                     property.isEqual(FORMAT_NUMBER_FN) ||
-                     property.isEqual(CURRENT_FN) ||
-                     // property.isEqual(UNPARSED_ENTITY_URI_FN) ||
-                     property.isEqual(GENERATE_ID_FN) ||
-                     property.isEqual(SYSTEM_PROPERTY_FN) ||
-                     property.isEqual(ELEMENT_AVAILABLE_FN) ||
-                     property.isEqual(FUNCTION_AVAILABLE_FN))) {
-                    result = new BooleanResult(MB_TRUE);
-                }
+            txExpandedName qname;
+            nsresult rv = qname.init(property, mQNameResolveNode, MB_FALSE);
+            if (NS_SUCCEEDED(rv) &&
+                qname.mNamespaceID == kNameSpaceID_None &&
+                (qname.mLocalName == txXPathAtoms::boolean ||
+                 qname.mLocalName == txXPathAtoms::ceiling ||
+                 qname.mLocalName == txXPathAtoms::concat ||
+                 qname.mLocalName == txXPathAtoms::contains ||
+                 qname.mLocalName == txXPathAtoms::count ||
+                 qname.mLocalName == txXPathAtoms::_false ||
+                 qname.mLocalName == txXPathAtoms::floor ||
+                 qname.mLocalName == txXPathAtoms::id ||
+                 qname.mLocalName == txXPathAtoms::lang ||
+                 qname.mLocalName == txXPathAtoms::last ||
+                 qname.mLocalName == txXPathAtoms::localName ||
+                 qname.mLocalName == txXPathAtoms::name ||
+                 qname.mLocalName == txXPathAtoms::namespaceUri ||
+                 qname.mLocalName == txXPathAtoms::normalizeSpace ||
+                 qname.mLocalName == txXPathAtoms::_not ||
+                 qname.mLocalName == txXPathAtoms::number ||
+                 qname.mLocalName == txXPathAtoms::position ||
+                 qname.mLocalName == txXPathAtoms::round ||
+                 qname.mLocalName == txXPathAtoms::startsWith ||
+                 qname.mLocalName == txXPathAtoms::string ||
+                 qname.mLocalName == txXPathAtoms::stringLength ||
+                 qname.mLocalName == txXPathAtoms::substring ||
+                 qname.mLocalName == txXPathAtoms::substringAfter ||
+                 qname.mLocalName == txXPathAtoms::substringBefore ||
+                 qname.mLocalName == txXPathAtoms::sum ||
+                 qname.mLocalName == txXPathAtoms::translate ||
+                 qname.mLocalName == txXPathAtoms::_true ||
+                 qname.mLocalName == txXSLTAtoms::current ||
+                 qname.mLocalName == txXSLTAtoms::document ||
+                 qname.mLocalName == txXSLTAtoms::elementAvailable ||
+                 qname.mLocalName == txXSLTAtoms::formatNumber ||
+                 qname.mLocalName == txXSLTAtoms::functionAvailable ||
+                 qname.mLocalName == txXSLTAtoms::generateId ||
+                 qname.mLocalName == txXSLTAtoms::key ||
+//                 qname.mLocalName == txXSLTAtoms::unparsedEntityUri ||
+                 qname.mLocalName == txXSLTAtoms::systemProperty)) {
+                result = new BooleanResult(MB_TRUE);
             }
         }
         else {
@@ -134,3 +132,9 @@ ExprResult* FunctionAvailableFunctionCall::evaluate(txIEvalContext* aContext)
     return result;
 }
 
+nsresult FunctionAvailableFunctionCall::getNameAtom(txAtom** aAtom)
+{
+    *aAtom = txXSLTAtoms::functionAvailable;
+    TX_ADDREF_ATOM(*aAtom);
+    return NS_OK;
+}

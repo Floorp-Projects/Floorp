@@ -155,7 +155,7 @@ private:
 typedef nsIAtom txAtom;
 
 #define TX_GET_ATOM(str) \
-    NS_NewAtom((str).getConstNSString())
+    NS_NewAtom(str)
 
 #define TX_ADDREF_ATOM(atom) NS_ADDREF(atom)
 
@@ -166,7 +166,7 @@ typedef nsIAtom txAtom;
 #define TX_IF_RELEASE_ATOM(atom) NS_IF_RELEASE(atom)
 
 #define TX_GET_ATOM_STRING(atom, string) \
-    NS_SUCCEEDED((atom)->ToString(string.getNSString()))
+    NS_SUCCEEDED((atom)->ToString(string))
 
 #endif  // TX_EXE
 

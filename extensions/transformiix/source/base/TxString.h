@@ -51,12 +51,12 @@ public:
      */
     String();
 
-#ifdef TX_EXE
     /*
      * Copying constructor.
      */
     String(const String& aSource);
 
+#ifdef TX_EXE
     /*
      * Constructor, allocates a buffer and copies the supplied string buffer.
      * If aLength is zero it computes the length from the supplied string.
@@ -173,12 +173,12 @@ public:
     /*
      * Return a reference to this string's nsString.
      */
-    nsString& getNSString();
+    operator nsAString&();
 
     /*
      * Return a const reference to this string's nsString.
      */
-    const nsString& getConstNSString() const;
+    operator const nsAString&() const;
 #endif
 
 private:
@@ -201,10 +201,8 @@ private:
      */
     static PRUint32 unicodeLength(const UNICODE_CHAR* aData);
 
-    /*
-     * Translate UNICODE_CHARs to Chars and output to the provided stream.
-     */
     friend ostream& operator << (ostream& aOutput, const String& aSource);
+    friend class txCharBuffer;
 
     UNICODE_CHAR* mBuffer;
     PRUint32 mBufferLength;
@@ -217,11 +215,59 @@ public:
     explicit String(const char* aSource); // XXX Used for literal strings
     void append(const char* aSource);
     MBool isEqual(const char* aData) const;
-    char* toCharArray() const;
+#ifndef TX_EXE
+    nsString& getNSString();
+    const nsString& getConstNSString() const;
+#endif
 // XXX DEPRECATED
 };
 
 #ifdef TX_EXE
+/*
+ * A helper class for getting a char* buffer out of a String.
+ * Don't use this directly, use NS_LossyConvertUCS2toASCII which
+ * is typedef'ed to this class on standalone and will fall back
+ * on the Mozilla implementation for the Mozilla module.
+ */
+class txCharBuffer
+{
+public:
+    txCharBuffer(const String& aString) : mString(aString),
+                                          mBuffer(0)
+    {
+    };
+
+    ~txCharBuffer()
+    {
+        delete [] mBuffer;
+    };
+
+    const char* get()
+    {
+        if (!mBuffer) {
+            mBuffer = new char[mString.mLength + 1];
+            NS_ASSERTION(mBuffer, "out of memory");
+            if (mBuffer) {
+                PRUint32 loop;
+                for (loop = 0; loop < mString.mLength; ++loop) {
+                    mBuffer[loop] = (char)mString.mBuffer[loop];
+                }
+                mBuffer[mString.mLength] = 0;
+            }
+        }
+        return mBuffer;
+    }
+
+private:
+    const String& mString;
+    char* mBuffer;
+};
+
+typedef txCharBuffer NS_LossyConvertUCS2toASCII;
+
+/*
+ * Translate UNICODE_CHARs to Chars and output to the provided stream.
+ */
 ostream& operator << (ostream& aOutput, const String& aSource);
 
 inline UNICODE_CHAR String::charAt(PRUint32 aIndex) const

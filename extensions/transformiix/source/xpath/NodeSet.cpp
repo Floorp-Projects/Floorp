@@ -348,6 +348,15 @@ Node* NodeSet::get(int aIndex) const
 }
 
 /*
+ * Clones this ExprResult
+ * @return clone of this ExprResult
+ */
+ExprResult* NodeSet::clone()
+{
+    return new NodeSet(*this);
+}
+
+/*
  * Returns the type of ExprResult represented
  * @return the type of ExprResult represented
  */

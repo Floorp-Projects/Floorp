@@ -436,18 +436,3 @@ MBool String::isEqual(const char* aData) const
   }
   return MB_TRUE;
 }
-
-char* String::toCharArray() const
-{
-  char* tmpBuffer = new char[mLength + 1];
-  NS_ASSERTION(tmpBuffer, "out of memory");
-  if (tmpBuffer) {
-    PRUint32 conversionLoop;
-
-    for (conversionLoop = 0; conversionLoop < mLength; ++conversionLoop) {
-      tmpBuffer[conversionLoop] = (char)mBuffer[conversionLoop];
-    }
-    tmpBuffer[mLength] = 0;
-  }
-  return tmpBuffer;
-}

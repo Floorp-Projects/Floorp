@@ -32,6 +32,7 @@
 #include "FunctionLib.h"
 #include "XMLDOMUtils.h"
 #include "XMLUtils.h"
+#include "txAtoms.h"
 #include "txIXPathContext.h"
 #include <math.h>
 
@@ -40,35 +41,6 @@
 **/
 StringFunctionCall::StringFunctionCall(StringFunctions aType) : mType(aType)
 {
-    switch (aType) {
-        case CONCAT:
-            name = XPathNames::CONCAT_FN;
-            break;
-        case CONTAINS:
-            name = XPathNames::CONTAINS_FN;
-            break;
-        case STARTS_WITH:
-            name = XPathNames::STARTS_WITH_FN;
-            break;
-        case STRING_LENGTH:
-            name = XPathNames::STRING_LENGTH_FN;
-            break;
-        case SUBSTRING:
-            name = XPathNames::SUBSTRING_FN;
-            break;
-        case SUBSTRING_AFTER:
-            name = XPathNames::SUBSTRING_AFTER_FN;
-            break;
-        case SUBSTRING_BEFORE:
-            name = XPathNames::SUBSTRING_BEFORE_FN;
-            break;
-        case TRANSLATE:
-            name = XPathNames::TRANSLATE_FN;
-            break;
-        default:
-            name = XPathNames::STRING_FN;
-            break;
-    }
 }
 
 /**
@@ -277,4 +249,67 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
     String err("Internal error");
     aContext->receiveError(err, NS_ERROR_UNEXPECTED);
     return new StringResult("error");
+}
+
+nsresult StringFunctionCall::getNameAtom(txAtom** aAtom)
+{
+    switch (mType) {
+        case CONCAT:
+        {
+            *aAtom = txXPathAtoms::concat;
+            break;
+        }
+        case CONTAINS:
+        {
+            *aAtom = txXPathAtoms::contains;
+            break;
+        }
+        case NORMALIZE_SPACE:
+        {
+            *aAtom = txXPathAtoms::normalizeSpace;
+            break;
+        }
+        case STARTS_WITH:
+        {
+            *aAtom = txXPathAtoms::startsWith;
+            break;
+        }
+        case STRING:
+        {
+            *aAtom = txXPathAtoms::string;
+            break;
+        }
+        case STRING_LENGTH:
+        {
+            *aAtom = txXPathAtoms::stringLength;
+            break;
+        }
+        case SUBSTRING:
+        {
+            *aAtom = txXPathAtoms::substring;
+            break;
+        }
+        case SUBSTRING_AFTER:
+        {
+            *aAtom = txXPathAtoms::substringAfter;
+            break;
+        }
+        case SUBSTRING_BEFORE:
+        {
+            *aAtom = txXPathAtoms::substringBefore;
+            break;
+        }
+        case TRANSLATE:
+        {
+            *aAtom = txXPathAtoms::translate;
+            break;
+        }
+        default:
+        {
+            *aAtom = 0;
+            return NS_ERROR_FAILURE;
+        }
+    }
+    TX_ADDREF_ATOM(*aAtom);
+    return NS_OK;
 }

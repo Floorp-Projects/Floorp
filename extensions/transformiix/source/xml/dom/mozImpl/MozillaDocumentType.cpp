@@ -57,7 +57,7 @@ const String& DocumentType::getName()
 
     nodeName.clear();
     if (nsDocumentType)
-        nsDocumentType->GetName(nodeName.getNSString());
+        nsDocumentType->GetName(nodeName);
     return nodeName;
 }
 

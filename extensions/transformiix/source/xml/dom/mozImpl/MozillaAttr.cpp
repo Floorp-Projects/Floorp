@@ -73,7 +73,7 @@ const String& Attr::getName()
 
     nodeName.clear();
     if (nsAttr)
-        nsAttr->GetName(nodeName.getNSString());
+        nsAttr->GetName(nodeName);
     return nodeName;
 }
 
@@ -104,7 +104,7 @@ const String& Attr::getValue()
 
     nodeValue.clear();
     if (nsAttr)
-        nsAttr->GetValue(nodeValue.getNSString());
+        nsAttr->GetValue(nodeValue);
     return nodeValue;
 }
 
@@ -118,7 +118,7 @@ void Attr::setValue(const String& aNewValue)
     NSI_FROM_TX(Attr)
 
     if (nsAttr)
-        nsAttr->SetValue(aNewValue.getConstNSString());
+        nsAttr->SetValue(aNewValue);
 }
 
 /*

@@ -44,6 +44,69 @@
 #include "txAtoms.h"
 #include "txIXPathContext.h"
 
+// XXX This is ugly, but this is the last file to use them,
+//     once we convert the parser to directly compare with
+//     atoms we should remove these.
+class XPathNames {
+public:
+    static const String BOOLEAN_FN;
+    static const String CONCAT_FN;
+    static const String CONTAINS_FN;
+    static const String COUNT_FN ;
+    static const String FALSE_FN;
+    static const String ID_FN;
+    static const String LANG_FN;
+    static const String LAST_FN;
+    static const String LOCAL_NAME_FN;
+    static const String NAME_FN;
+    static const String NAMESPACE_URI_FN;
+    static const String NORMALIZE_SPACE_FN;
+    static const String NOT_FN;
+    static const String POSITION_FN;
+    static const String STARTS_WITH_FN;
+    static const String STRING_FN;
+    static const String STRING_LENGTH_FN;
+    static const String SUBSTRING_FN;
+    static const String SUBSTRING_AFTER_FN;
+    static const String SUBSTRING_BEFORE_FN;
+    static const String SUM_FN;
+    static const String TRANSLATE_FN;
+    static const String TRUE_FN;
+    static const String NUMBER_FN;
+    static const String ROUND_FN;
+    static const String CEILING_FN;
+    static const String FLOOR_FN;
+};
+
+const String XPathNames::BOOLEAN_FN("boolean");
+const String XPathNames::CONCAT_FN("concat");
+const String XPathNames::CONTAINS_FN("contains");
+const String XPathNames::COUNT_FN("count");
+const String XPathNames::FALSE_FN("false");
+const String XPathNames::ID_FN("id");
+const String XPathNames::LAST_FN("last");
+const String XPathNames::LOCAL_NAME_FN("local-name");
+const String XPathNames::NAME_FN("name");
+const String XPathNames::NAMESPACE_URI_FN("namespace-uri");
+const String XPathNames::NORMALIZE_SPACE_FN("normalize-space");
+const String XPathNames::NOT_FN("not");
+const String XPathNames::POSITION_FN("position");
+const String XPathNames::STARTS_WITH_FN("starts-with");
+const String XPathNames::STRING_FN("string");
+const String XPathNames::STRING_LENGTH_FN("string-length");
+const String XPathNames::SUBSTRING_FN("substring");
+const String XPathNames::SUBSTRING_AFTER_FN("substring-after");
+const String XPathNames::SUBSTRING_BEFORE_FN("substring-before");
+const String XPathNames::SUM_FN("sum");
+const String XPathNames::TRANSLATE_FN("translate");
+const String XPathNames::TRUE_FN("true");
+const String XPathNames::NUMBER_FN("number");
+const String XPathNames::ROUND_FN("round");
+const String XPathNames::CEILING_FN("ceiling");
+const String XPathNames::FLOOR_FN("floor");
+const String XPathNames::LANG_FN("lang");
+
+
 /**
  * Creates an Attribute Value Template using the given value
  * This should move to XSLProcessor class

@@ -64,7 +64,7 @@ const String& ProcessingInstruction::getTarget()
 
     target.clear();
     if (nsProcessingInstruction)
-        nsProcessingInstruction->GetTarget(target.getNSString());
+        nsProcessingInstruction->GetTarget(target);
     return target;
 }
 
@@ -80,7 +80,7 @@ const String& ProcessingInstruction::getData()
 
     data.clear();
     if (nsProcessingInstruction)
-        nsProcessingInstruction->GetData(data.getNSString());
+        nsProcessingInstruction->GetData(data);
     return data;
 }
 
@@ -95,7 +95,7 @@ void ProcessingInstruction::setData(const String& aData)
     NSI_FROM_TX(ProcessingInstruction)
 
     if (nsProcessingInstruction)
-        nsProcessingInstruction->SetData(aData.getConstNSString());
+        nsProcessingInstruction->SetData(aData);
 }
 
 /*
