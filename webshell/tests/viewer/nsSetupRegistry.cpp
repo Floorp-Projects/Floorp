@@ -46,6 +46,12 @@
 #include "nsUCVJACID.h"
 // #include "nsUCVJA2CID.h"
 
+#include "nsIStringBundle.h"
+#include "nsUnicharUtilCIID.h"
+#include "nsIProperties.h"
+#include "nsCollationCID.h"
+#include "nsDateTimeFormatCID.h"
+#include "nsLocaleCID.h"
 
 #include "nsIEditor.h"
 
@@ -70,6 +76,10 @@
 #define UCVLATIN_DLL "ucvlatin.dll"
 #define UCVJA_DLL    "ucvja.dll"
 #define UCVJA2_DLL   "ucvja2.dll"
+#define STRRES_DLL   "strres.dll"
+#define UNICHARUTIL_DLL   "unicharutil.dll"
+#define BASE_DLL   "raptorbase.dll"
+#define NSLOCALE_DLL "nslocale.dll"
 #else
 #ifdef XP_MAC
 #define XPCOM_DLL   "XPCOM_DLL"
@@ -92,6 +102,10 @@
 #define UCVLATIN_DLL "UCVLATIN_DLL"
 #define UCVJA_DLL    "UCVJA_DLL"
 #define UCVJA2_DLL   "UCVJA2_DLL"
+#define STRRES_DLL   "STRRES_DLL"
+#define UNICHARUTIL_DLL   "UNICHARUTIL_DLL"
+#define BASE_DLL   "base.shlb"
+#define NSLOCALE_DLL "NSLOCALE_DLL"
 #else
 #define XPCOM_DLL  "libxpcom.so"
 /** Currently CFLAGS  defines WIDGET_DLL and GFXWIN_DLL. If, for some 
@@ -118,6 +132,10 @@
 #define UCVLATIN_DLL "libucvlatin.so"
 #define UCVJA_DLL    "libucvja.so"
 #define UCVJA2_DLL   "libucvja2.so"
+#define STRRES_DLL   "libstrres.so"
+#define UNICHARUTIL_DLL   "libunicharutil.so"
+#define BASE_DLL     "libraptorbase.so"
+#define NSLOCALE_DLL "libnslocale.so"
 #endif
 #endif
 
@@ -203,6 +221,18 @@ static NS_DEFINE_IID(kCMenuBarCID,                NS_MENUBAR_CID);
 static NS_DEFINE_IID(kCMenuCID,                   NS_MENU_CID);
 static NS_DEFINE_IID(kCMenuItemCID,               NS_MENUITEM_CID);
 
+
+static NS_DEFINE_IID(kStringBundleCID,            NS_STRINGBUNDLE_CID);
+static NS_DEFINE_IID(kStringBundleFactoryCID,     NS_STRINGBUNDLEFACTORY_CID); // do we need this ???
+
+static NS_DEFINE_IID(kUnicharUtilCID,             NS_UNICHARUTIL_CID);
+
+static NS_DEFINE_IID(kCollationCID,               NS_COLLATION_CID);
+static NS_DEFINE_IID(kCollationFactoryCID,        NS_COLLATIONFACTORY_CID); // do we need this ???
+static NS_DEFINE_IID(kDateTimeFormatCID,          NS_DATETIMEFORMAT_CID);
+static NS_DEFINE_IID(kLocaleCID,                  NS_LOCALE_CID);
+static NS_DEFINE_IID(kLocaleFactoryCID,           NS_LOCALEFACTORY_CID); // do we need this ???
+
 extern "C" void
 NS_SetupRegistry()
 {
@@ -283,6 +313,19 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kSJIS2UnicodeCID,         UCVJA_DLL, PR_FALSE, PR_FALSE);
   // nsRepository::RegisterFactory(kEUCJPToUnicodeCID,       UCVJA2_DLL, PR_FALSE, PR_FALSE);
   // nsRepository::RegisterFactory(kISO2022JPToUnicodeCID,   UCVJA2_DLL, PR_FALSE, PR_FALSE);
+
+  nsRepository::RegisterFactory(kStringBundleCID,         STRRES_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kStringBundleFactoryCID,  STRRES_DLL, PR_FALSE, PR_FALSE);
+
+  nsRepository::RegisterFactory(kUnicharUtilCID,          UNICHARUTIL_DLL, PR_FALSE, PR_FALSE);
+
+  nsRepository::RegisterFactory(kPropertiesCID,           BASE_DLL, PR_FALSE, PR_FALSE);
+
+  nsRepository::RegisterFactory(kCollationCID,            NSLOCALE_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCollationFactoryCID,     NSLOCALE_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kDateTimeFormatCID,       NSLOCALE_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kLocaleCID,               NSLOCALE_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kLocaleFactoryCID,        NSLOCALE_DLL, PR_FALSE, PR_FALSE);
 
   nsRepository::RegisterFactory(kCPluginManagerCID, PLUGIN_DLL,      PR_FALSE, PR_FALSE);
 #if defined(XP_PC) && defined(XP_MAC)
