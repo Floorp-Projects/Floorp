@@ -195,18 +195,26 @@ void nsCString::SetLength(PRUint32 anIndex) {
 
 
 /**
- * Call this method if you want to force the string to a certain capacity
- * @update  gess 1/4/99
- * @param   aLength -- contains new length for mStr
+ * Call this method if you want to force the string to a certain capacity;
+ * |SetCapacity(0)| discards associated storage.
+ *
+ * @param   aNewCapacity -- desired minimum capacity
  */
-void nsCString::SetCapacity(PRUint32 aLength) {
-  if(aLength) {
-    if(aLength>mCapacity) {
-      GrowCapacity(*this,aLength);
-    }
-    AddNullTerminator(*this);
+void
+nsCString::SetCapacity( PRUint32 aNewCapacity )
+  {
+    if ( aNewCapacity )
+      {
+        if( aNewCapacity > mCapacity )
+          GrowCapacity(*this,aNewCapacity);
+        AddNullTerminator(*this);
+      }
+    else
+      {
+        nsStr::Destroy(*this);
+        nsStr::Initialize(*this, eOneByte);
+      }
   }
-}
 
 /**********************************************************************
   Accessor methods...
@@ -742,7 +750,6 @@ PRInt32 nsCString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
     PRBool done=PR_FALSE;
     
     while((cp<endcp) && (!done)){
-      theChar=*cp;
       switch(*cp++) {
         case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
         case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
@@ -767,14 +774,13 @@ PRInt32 nsCString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
     theRadix = (kAutoDetect==aRadix) ? theRadix : aRadix;
 
       //if you don't have any valid chars, return 0, but set the error;
-    if(cp<=endcp) {
+    *anErrorCode = NS_OK;
 
-      *anErrorCode = NS_OK;
-
+    if (done) {
         //now iterate the numeric chars and build our result
       char* first=--cp;  //in case we have to back up.
 
-      while(cp<=endcp){
+      while(cp<endcp){
         theChar=*cp++;
         if(('0'<=theChar) && (theChar<='9')){
           result = (theRadix * result) + (theChar-'0');

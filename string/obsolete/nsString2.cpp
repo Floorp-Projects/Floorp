@@ -207,19 +207,26 @@ void nsString::SetLength(PRUint32 anIndex) {
 
 
 /**
- * Call this method if you want to force the string to a certain capacity
- * @update  gess 1/4/99
- * @param   aLength -- contains new length for mStr
- * @return
+ * Call this method if you want to force the string to a certain capacity;
+ * |SetCapacity(0)| discards associated storage.
+ *
+ * @param   aNewCapacity -- desired minimum capacity
  */
-void nsString::SetCapacity(PRUint32 aLength) {
-  if(aLength) {
-    if(aLength>mCapacity) {
-      GrowCapacity(*this,aLength);
-    }
-    AddNullTerminator(*this);
+void
+nsString::SetCapacity( PRUint32 aNewCapacity )
+  {
+    if ( aNewCapacity )
+      {
+        if( aNewCapacity > mCapacity )
+          GrowCapacity(*this, aNewCapacity);
+        AddNullTerminator(*this);
+      }
+    else
+      {
+        nsStr::Destroy(*this);
+        nsStr::Initialize(*this, eTwoByte);
+      }
   }
-}
 
 /**********************************************************************
   Accessor methods...
