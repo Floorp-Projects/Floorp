@@ -78,9 +78,12 @@ function onLoad()
     }
     if (arguments.preselectedURI)
     {
-      gSearchFolderURIs = arguments.preselectedURI;
       var folderToSearch = GetMsgFolderFromUri(arguments.preselectedURI, false);
-      SetFolderPicker(folderToSearch.parent ? folderToSearch.parent.URI : gSearchFolderURIs, "msgNewFolderPicker");
+      SetFolderPicker(folderToSearch.parent ? folderToSearch.parent.URI : arguments.preselectedURI, "msgNewFolderPicker");
+
+      // if the passed in URI is not a server then pre-select it as the folder to search
+      if (!folderToSearch.isServer)
+        gSearchFolderURIs = arguments.preselectedURI;
     }
     if (arguments.newFolderName) 
       document.getElementById("name").value = arguments.newFolderName;
