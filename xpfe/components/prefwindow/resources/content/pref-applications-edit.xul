@@ -131,7 +131,7 @@
         gOldMIME = gOldDesc = gOldExtensions = "";
         
         // Make default "use system default."
-        gHandlerGroup.selectedItem = gHandlerGroup.getElementsByAttribute("value",nsIMIMEInfo.useSystemDefault)[0];
+        gHandlerGroup.value = nsIMIMEInfo.useSystemDefault;
         
         // Always ask box default depends on pref.
         gAskBeforeOpen.checked = forceAlwaysAsk;
@@ -163,7 +163,7 @@
       else 
         data = nsIMIMEInfo.useHelperApp;
         
-      gHandlerGroup.selectedItem = gHandlerGroup.getElementsByAttribute("value", data)[0];
+      gHandlerGroup.value = data;
       doEnabling();
       
       var appPath = handlerInfo.appPath;
@@ -230,7 +230,7 @@
     function selectAppRadio()
     {
       if (gHandlerGroup.value != nsIMIMEInfo.useHelperApp) 
-        gHandlerGroup.selectedItem = gHandlerGroup.getElementsByAttribute("value", nsIMIMEInfo.useHelperApp)[0];
+        gHandlerGroup.value = nsIMIMEInfo.useHelperApp;
       doEnabling();
     }
 
