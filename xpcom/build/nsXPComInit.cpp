@@ -577,12 +577,19 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
             nsCOMPtr<nsIFile> greDir;
             PRBool persistent = PR_TRUE;
 
-            appFileLocationProvider->GetFile(NS_GRE_DIR, &persistent, getter_AddRefs(greDir));
+            appFileLocationProvider->GetFile(NS_GRE_COMPONENT_DIR, &persistent, getter_AddRefs(greDir));
 
             if (greDir)
             {
+#ifdef DEBUG_dougt
+	printf("start - Registering GRE components\n");
+#endif
                 rv = nsComponentManagerImpl::gComponentManager->AutoRegister(greDir);
-                if (NS_FAILED(rv))
+
+#ifdef DEBUG_dougt
+	printf("end - Registering GRE components\n");
+#endif          
+				if (NS_FAILED(rv))
                 {
                     NS_ERROR("Could not AutoRegister GRE components");
                     return rv;
