@@ -89,6 +89,8 @@ interface nsIHTTPChannel : nsIChannel
 
     attribute PRBool authTriedWithPrehost;
 
+    attribute string authRealm;
+
 	/* 
 		We need a way to switch off gzip, etc. compression on the fly 
 		so that SaveAs would work as expected. Eventually this needs to 

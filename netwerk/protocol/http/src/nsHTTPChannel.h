@@ -181,6 +181,7 @@ protected:
        And so we need to throw a dialog box!
     */
     PRBool                              mAuthTriedWithPrehost;
+    char*                               mAuthRealm;
 
     char*                               mProxy;
     PRInt32                             mProxyPort;
