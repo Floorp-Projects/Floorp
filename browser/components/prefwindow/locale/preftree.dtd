@@ -3,8 +3,7 @@
 <!ENTITY category.label "Category">
 
 <!--LOCALIZATION NOTE : FILE Lists preferences categories that appear on the left of the preferences dialog -->
-<!ENTITY fonts.label "Fonts">
-<!ENTITY colors.label "Colors">
+<!ENTITY fonts.label "Fonts & Colors">
 <!ENTITY themes.label "Themes">
 <!--LOCALIZATION NOTE (navigator.label): DONT_TRANSLATE -->
 <!ENTITY navigator.label "Navigator">
@@ -22,6 +21,4 @@
 <!ENTITY debug.label  "Debug">
 <!ENTITY debug1.label "Events">
 <!ENTITY debug2.label "Networking">
-<!ENTITY download.label "Downloads">
-<!ENTITY search.label "Internet Search">
 <!ENTITY scriptsAndWindows.label "Scripts &amp; Plugins">
