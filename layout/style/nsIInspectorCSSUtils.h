@@ -46,6 +46,9 @@ class nsRuleNode;
 class nsIStyleRule;
 class nsIFrame;
 struct nsRect;
+class nsIPresShell;
+class nsIContent;
+class nsIStyleContext;
 
 // 0252892b-419a-49f4-981d-4c6716099451
 #define NS_IINSPECTORCSSUTILS_IID \
@@ -74,6 +77,11 @@ public:
 
     // Hooks to avoid having to use nsStyleCoord.
     NS_IMETHOD AdjustRectForMargins(nsIFrame* aFrame, nsRect& aRect) = 0;
+
+    // Hooks to methods that need layout atoms (static vars in layout)
+    NS_IMETHOD GetStyleContextForContent(nsIPresShell* aPresShell,
+                                         nsIContent* aContent,
+                                         nsIStyleContext** aStyleContext) = 0;
 };
 
 #endif /* nsIInspectorCSSUtils_h___ */

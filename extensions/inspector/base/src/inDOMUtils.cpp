@@ -86,12 +86,11 @@ inDOMUtils::GetStyleRules(nsIDOMElement *aElement, nsISupportsArray **_retval)
   // query to a content node
   nsCOMPtr<nsIContent> content;
   content = do_QueryInterface(aElement);
-
-  nsIFrame* frame = nsnull;
   nsCOMPtr<nsIStyleContext> styleContext;
-  nsresult rv = shell->GetPrimaryFrameFor(content, &frame);
-  if (NS_FAILED(rv) || !frame) return rv;
-  shell->GetStyleContextFor(frame, getter_AddRefs(styleContext));
+
+  nsresult rv = mCSSUtils->GetStyleContextForContent(shell, content,
+                                                     getter_AddRefs(styleContext));
+
   if (NS_FAILED(rv) || !styleContext) return rv;
 
   // create a resource for all the style rules from the 
