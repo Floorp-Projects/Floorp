@@ -416,6 +416,18 @@ pref("security.policy.default.nshtmldocument.writeln", "sameOrigin");
 
 pref("security.policy.default.eventtarget.addeventlistener", "sameOrigin");
 
+pref("security.policy.default.element.getattribute", "sameOrigin");
+pref("security.policy.default.element.getattributenode", "sameOrigin");
+pref("security.policy.default.element.getelementsbytagname", "sameOrigin");
+pref("security.policy.default.element.normalize", "sameOrigin");
+pref("security.policy.default.element.removeattribute", "sameOrigin");
+pref("security.policy.default.element.removeattributenode", "sameOrigin");
+pref("security.policy.default.element.setattribute", "sameOrigin");
+pref("security.policy.default.element.setattributenode", "sameOrigin");
+pref("security.policy.default.element.tagname", "sameOrigin");
+
+pref("security.policy.default.nshtmlformelement.nameditem", "sameOrigin");
+
 pref("security.policy.default.history.current.read", "UniversalBrowserRead");
 pref("security.policy.default.history.next.read", "UniversalBrowserRead");
 pref("security.policy.default.history.previous.read", "UniversalBrowserRead");

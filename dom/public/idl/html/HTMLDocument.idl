@@ -37,7 +37,7 @@
      readonly attribute HTMLCollection plugins;
 
      wstring getSelection();
-     Element namedItem(in wstring name);
+     jsval namedItem(/* ... */);
 
      void                      open(/* ... */);
      void                      write(/* ... */);
