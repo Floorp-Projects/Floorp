@@ -337,7 +337,7 @@ nsMsgSendMimeDeliveryState::~nsMsgSendMimeDeliveryState()
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS(nsMsgSendMimeDeliveryState, NS_IMSGSEND_IID);
+NS_IMPL_ISUPPORTS(nsMsgSendMimeDeliveryState, nsIMsgSend::IID());
 
 nsresult nsMsgSendMimeDeliveryState::SendMessage(const nsIMsgCompFields *fields)
 {
@@ -2950,13 +2950,8 @@ mime_generate_headers (nsMsgCompFields *fields,
 			  localtime (&now));
 #else
 	int gmtoffset = XP_LocalZoneOffset();
-#ifndef NSPR20
-    PRTime now;
-    PR_ExplodeTime(&now, PR_Now());
-#else
     PRExplodedTime now;
     PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &now);
-#endif /* NSPR20 */
 
 	/* Use PR_FormatTimeUSEnglish() to format the date in US English format,
 	   then figure out what our local GMT offset is, and append it (since

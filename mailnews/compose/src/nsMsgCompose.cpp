@@ -382,7 +382,7 @@ msg_delete_attached_files(struct MSG_AttachedFile *attachments)
 	}
 	PR_FREEIF(attachments);
 }
-#endif 0 //JFD
+#endif //JFD
 
 nsMsgCompose::nsMsgCompose()
 {
@@ -2398,7 +2398,7 @@ PRInt32 nsMsgCompose::SetCompHeader(MSG_HEADER_SET header,
 {
 	PRInt32 retVal;
 
-	PR_ASSERT(header != MSG_ATTACHMENTS_HEADER_MASK, "Don't use this fuction for setting the attachment!");
+	PR_ASSERT(header != MSG_ATTACHMENTS_HEADER_MASK); // "Don't use this fuction for setting the attachment!");
 	ClearCompositionMessageID();
 	m_fields->SetHeader(header, value, &retVal);
 
@@ -4153,6 +4153,6 @@ HJ27863
 
 HJ75043
 
-#endif 0 //JFD
+#endif //JFD
 
 
