@@ -217,6 +217,7 @@ SetupAVAValue(PRArenaPool *arena, int valueType, char *value, SECItem *it,
       case SEC_ASN1_PRINTABLE_STRING:
       case SEC_ASN1_IA5_STRING:
       case SEC_ASN1_T61_STRING:
+      case SEC_ASN1_UTF8_STRING: /* no conversion required */
 	valueLen = PORT_Strlen(value);
 	break;
       case SEC_ASN1_UNIVERSAL_STRING:
