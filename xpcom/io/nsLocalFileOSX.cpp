@@ -997,13 +997,11 @@ NS_IMETHODIMP nsLocalFile::IsSpecial(PRBool *_retval)
 /* nsIFile clone (); */
 NS_IMETHODIMP nsLocalFile::Clone(nsIFile **_retval)
 {
-    NS_ENSURE_ARG_POINTER(_retval);
-    *_retval = nsnull;
-    
-    nsLocalFile *newFile = new nsLocalFile(*this);
-    if (!newFile)
-        return NS_ERROR_OUT_OF_MEMORY;
-    *_retval = newFile;
+    // Just copy-construct ourselves
+    *_retval = new nsLocalFile(*this);
+    if (!*_retval)
+      return NS_ERROR_OUT_OF_MEMORY;
+
     NS_ADDREF(*_retval);
     
     return NS_OK;

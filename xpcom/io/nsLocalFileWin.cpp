@@ -438,6 +438,16 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsLocalFile, nsILocalFile, nsIFile)
 // nsLocalFile <private>
 //-----------------------------------------------------------------------------
 
+nsLocalFile::nsLocalFile(const nsLocalFile& other)
+  : mDirty(other.mDirty)
+  , mLastResolution(other.mLastResolution)
+  , mFollowSymlinks(other.mFollowSymlinks)
+  , mWorkingPath(other.mWorkingPath)
+  , mResolvedPath(other.mResolvedPath)
+  , mFileInfo64(other.mFileInfo64)
+{
+}
+
 // This function resets any cached information about the file.
 void
 nsLocalFile::MakeDirty()
@@ -693,21 +703,13 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
 NS_IMETHODIMP  
 nsLocalFile::Clone(nsIFile **file)
 {
-    NS_ENSURE_ARG(file);
-    *file = nsnull;
-    
     // Just copy-construct ourselves
-    nsLocalFile *localFile = new nsLocalFile(*this);
-    if (localFile == NULL)
-        return NS_ERROR_OUT_OF_MEMORY;
+    *file = new nsLocalFile(*this);
+    if (!*file)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-    // don't forget to re-initialize mRefCnt
-    // or the new object will have the old refcnt
-    localFile->mRefCnt = 0;
-    
-    *file = localFile;
     NS_ADDREF(*file);
-        
+    
     return NS_OK;
 }
 

@@ -1084,15 +1084,11 @@ nsLocalFile::ResolveAndStat()
 NS_IMETHODIMP  
 nsLocalFile::Clone(nsIFile **file)
 {
-    NS_ENSURE_ARG(file);
-    *file = nsnull;
-    
     // Just copy-construct ourselves
-    nsCOMPtr<nsILocalFile> localFile = new nsLocalFile(*this);
-    if (localFile == NULL)
+    *file = new nsLocalFile(*this);
+    if (!*file)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    *file = localFile;
     NS_ADDREF(*file);
     
     return NS_OK;
