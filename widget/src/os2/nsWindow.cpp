@@ -2385,25 +2385,28 @@ PRUint32 WMChar2KeyCode( MPARAM mp1, MPARAM mp2)
    if( !(flags & (KC_VIRTUALKEY | KC_DEADKEY)))
    {
       rc = SHORT1FROMMP(mp2);
-      // Need nls-correct way of doing this...
-      if( isalnum( rc))
-         rc = toupper( rc); // no lower case
-      else switch( rc)
+      if( rc < 0xFF)
       {
-         case ';':  rc = NS_VK_SEMICOLON;     break;
-         case '=':  rc = NS_VK_EQUALS;        break;
-         case '*':  rc = NS_VK_MULTIPLY;      break;
-         case '+':  rc = NS_VK_ADD;           break;
-         case '-':  rc = NS_VK_SUBTRACT;      break;
-         case '.':  rc = NS_VK_PERIOD;        break; // NS_VK_DECIMAL ?
-         case '|':  rc = NS_VK_SEPARATOR;     break;
-         case ',':  rc = NS_VK_COMMA;         break;
-         case '/':  rc = NS_VK_SLASH;         break; // NS_VK_DIVIDE ?
-         case '`':  rc = NS_VK_BACK_QUOTE;    break;
-         case '(':  rc = NS_VK_OPEN_BRACKET;  break;
-         case '\\': rc = NS_VK_BACK_SLASH;    break;
-         case ')':  rc = NS_VK_CLOSE_BRACKET; break;
-         case '\'': rc = NS_VK_QUOTE;         break;
+         // Need nls-correct way of doing this...
+         if( isalnum( rc))
+            rc = toupper( rc); // no lower case
+         else switch( rc)
+         {
+            case ';':  rc = NS_VK_SEMICOLON;     break;
+            case '=':  rc = NS_VK_EQUALS;        break;
+            case '*':  rc = NS_VK_MULTIPLY;      break;
+            case '+':  rc = NS_VK_ADD;           break;
+            case '-':  rc = NS_VK_SUBTRACT;      break;
+            case '.':  rc = NS_VK_PERIOD;        break; // NS_VK_DECIMAL ?
+            case '|':  rc = NS_VK_SEPARATOR;     break;
+            case ',':  rc = NS_VK_COMMA;         break;
+            case '/':  rc = NS_VK_SLASH;         break; // NS_VK_DIVIDE ?
+            case '`':  rc = NS_VK_BACK_QUOTE;    break;
+            case '(':  rc = NS_VK_OPEN_BRACKET;  break;
+            case '\\': rc = NS_VK_BACK_SLASH;    break;
+            case ')':  rc = NS_VK_CLOSE_BRACKET; break;
+            case '\'': rc = NS_VK_QUOTE;         break;
+         }
       }
    }
    else if( flags & KC_VIRTUALKEY)

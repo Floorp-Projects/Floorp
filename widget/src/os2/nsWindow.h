@@ -149,6 +149,7 @@ class nsWindow : public nsBaseWidget,
    USHORT GetNextCmdID() { return mNextCmdID++; }
    void   NS2PM_PARENT( POINTL &ptl);
    void   NS2PM( POINTL &ptl);
+   void   NS2PM( RECTL &rcl);
 //   void   SetContextMenu( nsContextMenu *aMenu);
 
  protected:
