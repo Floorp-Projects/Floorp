@@ -59,7 +59,7 @@
   
   'name' entries *must* use only lowercase characters.
 
-  ** Break these invarient and bad things will happen. **    
+  ** Break these invariants and bad things will happen. **    
 
  ******/
 
@@ -92,8 +92,8 @@ CSS_KEY(-moz-dragtargetzone, _moz_dragtargetzone)
 CSS_KEY(-moz-ethiopic-halehame, _moz_ethiopic_halehame)
 CSS_KEY(-moz-ethiopic-numeric, _moz_ethiopic_numeric)
 CSS_KEY(-moz-ethiopic-halehame-am, _moz_ethiopic_halehame_am)
-CSS_KEY(-moz-ethiopic-halehame-ti_er, _moz_ethiopic_halehame_ti_er)
-CSS_KEY(-moz-ethiopic-halehame-ti_et, _moz_ethiopic_halehame_ti_et)
+CSS_KEY(-moz-ethiopic-halehame-ti-er, _moz_ethiopic_halehame_ti_er)
+CSS_KEY(-moz-ethiopic-halehame-ti-et, _moz_ethiopic_halehame_ti_et)
 CSS_KEY(-moz-field, _moz_field)
 CSS_KEY(-moz-fieldtext, _moz_fieldtext)
 CSS_KEY(-moz-grabbing, _moz_grabbing)
