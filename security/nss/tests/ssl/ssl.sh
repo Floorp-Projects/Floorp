@@ -262,9 +262,10 @@ ssl_stress()
           echo "         ${HOSTADDR}"
           echo "strsclnt started at `date`"
           strsclnt -p ${PORT} -d . -w nss $cparam $verbose ${HOSTADDR}
+          ret=$?
           echo "strsclnt completed at `date`"
 
-          html_msg $? $value "${testname}"
+          html_msg $ret $value "${testname}"
           kill_selfserv
       fi
   done
