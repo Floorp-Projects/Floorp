@@ -37,8 +37,6 @@ REQUIRES	= xpcom \
 		  util \
 		  $(NULL)
 
-SHARED_LIBRARY_LIBS = $(DIST)/lib/libmozdbm_s.$(LIB_SUFFIX)
-
 CPPSRCS		= \
 		TestSocketIO.cpp \
 		TestSocketInput.cpp \
@@ -46,7 +44,7 @@ CPPSRCS		= \
 		TestFileInput.cpp \
 		TestFileTransport.cpp \
 		TestProtocols.cpp \
-        TestHttp.cpp \
+		TestHttp.cpp \
 		urltest.cpp \
 		TestFileInput2.cpp \
 		TestCallbacks.cpp \
@@ -54,9 +52,9 @@ CPPSRCS		= \
 		TestMCTransport.cpp \
 		TestPageLoad.cpp \
 		TestIDN.cpp \
-        TestURLParser.cpp \
-        TestStandardURL.cpp \
-        TestPerf.cpp \
+		TestURLParser.cpp \
+		TestStandardURL.cpp \
+		TestPerf.cpp \
 		$(NULL)
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
@@ -64,17 +62,21 @@ SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 include $(topsrcdir)/config/config.mk
 
 LIBS		= \
+		$(DIST)/lib/$(LIB_PREFIX)mozdbm_s.$(LIB_SUFFIX) \
 		$(MOZ_JS_LIBS) \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
-		$(SHARED_LIBRARY_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DUSE_NSREG
 
-libs:: $(TARGETS)
-	$(INSTALL) $(srcdir)/urlparse.dat $(DIST)/bin/res
-	$(INSTALL) $(srcdir)/urlparse_unx.dat $(DIST)/bin/res
-	$(INSTALL) $(srcdir)/jarlist.dat $(DIST)/bin/res
+_RES_FILES = \
+		urlparse.dat \
+		urlparse_unx.dat \
+		jarlist.dat \
+		$(NULL)
+
+libs:: $(_RES_FILES)
+		$(INSTALL) $^ $(DIST)/bin/res

@@ -1099,12 +1099,20 @@ case "$target" in
         BIN_FLAGS='-Zlinker /PM:VIO -Zlinker /ST:0x30000'
         IMPLIB='emximp -o'
         FILTER='emxexp'
+        LIB_PREFIX=lib
         AC_DEFINE(OS2)
         AC_DEFINE(XP_OS2_EMX)
         AC_DEFINE(OS2EMX_PLAIN_CHAR)
         MOZ_COMPONENT_NSPR_LIBS='-L$(DIST)/lib $(NSPR_LIBS)'
         MOZ_COMPONENT_XPCOM_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcom.lib'
         XPCOM_LIBS='-L$(DIST)/lib -lxpcom'
+        MOZ_JS_LIBS='$(DIST)/lib/libmozjs.lib'
+        MOZ_COMPONENT_XPCOM_LIBS='$(DIST)/lib/libxpcom.lib'
+        XPCOM_LIBS='$(DIST)/lib/libxpcom.lib'
+        MOZ_JPEG_LIBS='$(DIST)/lib/libmozjpeg.$(LIB_SUFFIX)'
+        MOZ_ZLIB_LIBS='$(DIST)/lib/libmozz.$(LIB_SUFFIX)'
+        MOZ_PNG_LIBS='$(DIST)/lib/libmozpng.$(LIB_SUFFIX)'
+        MOZ_MNG_LIBS='$(DIST)/lib/libmozmng.$(LIB_SUFFIX)'
     fi
 
     # Visual Age C++ build
@@ -1130,6 +1138,7 @@ case "$target" in
         DSO_LDOPTS=''
         IMPLIB='implib /NOL /NOI'
         FILTER='cppfilt -q -B -P'
+        LIB_PREFIX=
         AC_DEFINE(NO_ANSI_KEYWORDS)
         AC_DEFINE(OS2,4)
         AC_DEFINE(_X86_)
@@ -1140,6 +1149,13 @@ case "$target" in
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
         MKSHLIB='$(LD) $(DSO_LDOPTS)'
         MKCSHLIB='$(LD) $(DSO_LDOPTS)'
+        MOZ_JS_LIBS='$(DIST)/lib/mozjs.lib'
+        MOZ_COMPONENT_XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
+        XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
+        MOZ_JPEG_LIBS='$(DIST)/lib/mozjpeg.$(LIB_SUFFIX)'
+        MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.$(LIB_SUFFIX)'
+        MOZ_PNG_LIBS='$(DIST)/lib/mozpng.$(LIB_SUFFIX)'
+        MOZ_MNG_LIBS='$(DIST)/lib/mozmng.$(LIB_SUFFIX)'
     fi
     ;;
 
@@ -1757,10 +1773,10 @@ then
 			AC_DEFINE(_REENTRANT) 
 			;;
 
-        *-*-os2*)
-            USE_PTHREADS=
-            _PTHREAD_LDFLAGS=
-            ;;
+	    *-*-os2*)
+	    USE_PTHREADS=
+	    _PTHREAD_LDFLAGS=
+	    ;;
 
 	    alpha*-*-osf*)
 			AC_DEFINE(_REENTRANT)
@@ -3929,26 +3945,6 @@ case "$target" in
 	    fi
 	fi
 	AC_SUBST(AIX_SHLIB_BIN)
-	;;
-
-*-os2*)
-  if test "${BUILD_STATIC_LIBS}" = "1"; then
-    MOZ_JS_LIBS='$(DIST)/lib/libmozjs.lib'
-    MOZ_COMPONENT_XPCOM_LIBS='$(DIST)/lib/libxpcom.lib'
-    XPCOM_LIBS='$(DIST)/lib/libxpcom.lib'
-    MOZ_JPEG_LIBS='$(DIST)/lib/libmozjpeg.$(LIB_SUFFIX)'
-    MOZ_ZLIB_LIBS='$(DIST)/lib/libmozz.$(LIB_SUFFIX)'
-    MOZ_PNG_LIBS='$(DIST)/lib/libmozpng.$(LIB_SUFFIX)'
-    MOZ_MNG_LIBS='$(DIST)/lib/libmozmng.$(LIB_SUFFIX)'
-  else
-    MOZ_JS_LIBS='$(DIST)/lib/mozjs.lib'
-    MOZ_COMPONENT_XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
-    XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
-    MOZ_JPEG_LIBS='$(DIST)/lib/libmozjpeg.$(LIB_SUFFIX)'
-    MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.$(LIB_SUFFIX)'
-    MOZ_PNG_LIBS='$(DIST)/lib/libmozpng.$(LIB_SUFFIX)'
-    MOZ_MNG_LIBS='$(DIST)/lib/libmozmng.$(LIB_SUFFIX)'
-  fi
 	;;
 
 esac

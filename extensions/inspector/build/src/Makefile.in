@@ -57,7 +57,7 @@ LOCAL_INCLUDES += -I$(srcdir)/../../base/src
 EXTRA_DSO_LIBS = rdfutil_s gkgfx gkconshared_s
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libinspector_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)inspector_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += \

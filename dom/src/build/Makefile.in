@@ -55,8 +55,8 @@ CPPSRCS		= \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libjsdombase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libjsdomevents_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)jsdombase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)jsdomevents_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

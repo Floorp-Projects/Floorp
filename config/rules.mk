@@ -105,12 +105,6 @@ endif
 #	the static library will  be built.
 #
 
-ifeq ($(OS_ARCH),OS2)
-STATIC_LIBS		= $(filter %_s, $(EXTRA_DSO_LIBS))
-SHARED_LIBS		= $(filter-out %_s, $(EXTRA_DSO_LIBS))
-EXTRA_DSO_LIBS		:= $(addprefix lib,$(STATIC_LIBS)) $(SHARED_LIBS)
-endif
-
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 _EXTRA_DSO_RELATIVE_PATHS=1
 else
@@ -123,7 +117,7 @@ ifdef _EXTRA_DSO_RELATIVE_PATHS
 EXTRA_DSO_LIBS		:= $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/,$(EXTRA_DSO_LIBS)))
 EXTRA_DSO_LIBS		:= $(filter-out %/bin %/lib,$(EXTRA_DSO_LIBS))
 EXTRA_DSO_LDOPTS    := $(patsubst -l%,$(DIST)/lib/%.$(LIB_SUFFIX),$(EXTRA_DSO_LDOPTS))
-LIBS                := $(patsubst -l%,$(DIST)/lib/lib%.$(LIB_SUFFIX),$(LIBS))
+LIBS                := $(patsubst -l%,$(DIST)/lib/$(LIB_PREFIX)%.$(LIB_SUFFIX),$(LIBS))
 else
 EXTRA_DSO_LIBS		:= $(addprefix -l,$(EXTRA_DSO_LIBS))
 endif
@@ -163,7 +157,6 @@ DEF_OBJS		= $(OBJS)
 ifneq ($(EXPORT_OBJS),1)
 DEF_OBJS		+= $(SHARED_LIBRARY_LIBS)
 endif
-SHARED_LIBRARY		:= $(LIBRARY_NAME)$(DLL_SUFFIX)
 DEF_FILE		:= $(SHARED_LIBRARY:.dll=.def)
 endif
 
