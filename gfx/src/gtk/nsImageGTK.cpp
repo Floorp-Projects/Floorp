@@ -161,6 +161,11 @@ nsresult nsImageGTK::Init(PRInt32 aWidth, PRInt32 aHeight,
   // Assumed: Init only gets called once by gfxIImageFrame
   g_return_val_if_fail ((aWidth != 0) || (aHeight != 0), NS_ERROR_FAILURE);
 
+  // X Protocol limits us to image dimensions less than 32767
+  // unless we want to go through lots of pain and suffering.
+  if (aWidth > SHRT_MAX || aHeight > SHRT_MAX)
+    return NS_ERROR_FAILURE;
+
   if (24 == aDepth) {
     mNumBytesPixel = 3;
   } else {
