@@ -45,6 +45,7 @@ function WidgetStateManager( frame_id, panelPrefix, panelSuffix )
   // member functions
   this.SavePageData      = WSM_SavePageData;
   this.SetPageData       = WSM_SetPageData;
+  this.PageIsValid       = WSM_PageIsValid;
   this.GetTagFromURL     = WSM_GetTagFromURL;
   this.GetURLFromTag     = WSM_GetURLFromTag;
   this.toString          = WSM_toString;
@@ -91,7 +92,7 @@ function WSM_SavePageData( currentPageTag, optAttributes, exclElements, inclElem
       string += "element: " + i + "\n";
     }
   }
-  else {
+  else if (doc.controls) {
     var fields = doc.controls;
     var data = [];
     for( var i = 0; i < fields.length; i++ ) 
@@ -129,7 +130,9 @@ function WSM_SavePageData( currentPageTag, optAttributes, exclElements, inclElem
               }
           }
       }
-      else if( formElement.getAttribute("type") && ( formElement.type.toLowerCase() == "checkbox" || formElement.type.toLowerCase() == "radio" ) ) {
+      else if( formElement.getAttribute("type") &&
+               ( formElement.type.toLowerCase() == "checkbox" ||
+                 formElement.type.toLowerCase() == "radio" ) ) {
         // XXX 11/04/99
         this.AddAttributes( formElement, elementEntry, "checked", optAttributes );
       }
@@ -146,7 +149,7 @@ function WSM_SavePageData( currentPageTag, optAttributes, exclElements, inclElem
         filespec.nativePath = formElement.value;
         this.AddAttributes( formElement, elementEntry, "filespec", optAttributes )
       }
-      else 
+      else
         this.AddAttributes( formElement, elementEntry, "value", optAttributes );  // generic
 
       elementEntry.id       = formElement.id;
@@ -201,7 +204,8 @@ function WSM_SetPageData( currentPageTag, hasExtraAttributes )
         
         // default "value" attributes        
         if( formElement && formElement.nodeName.toLowerCase() == "input" ) {
-          if( formElement.type.toLowerCase() == "checkbox" || formElement.type.toLowerCase() == "radio" ) {
+          if( formElement.type.toLowerCase() == "checkbox" ||
+              formElement.type.toLowerCase() == "radio" ) {
             if( value == undefined )
               formElement.checked = formElement.defaultChecked;
             else 
@@ -237,7 +241,8 @@ function WSM_SetPageData( currentPageTag, hasExtraAttributes )
         } 
         else if( formElement && formElement.nodeName.toLowerCase() == "select" ) {
           /* commenting this out until select widgets work properly */
-            if( formElement.getAttribute("multiple") && typeof(value) == "object" ) {
+            if( formElement.getAttribute("multiple") &&
+                typeof(value) == "object" ) {
               // multiple selected items
               for( var j = 0; j < value.length; j++ )
               {
@@ -263,7 +268,28 @@ function WSM_SetPageData( currentPageTag, hasExtraAttributes )
       }
     }
   }
+  // initialize the pane
+  if (this.content_frame.onInit) {
+    dump("Calling custom onInit()\n");
+    this.content_frame.onInit();
+  }
+    
 }   
+
+/** boolean PageIsValid()
+ * - purpose: returns whether the given page is in a valid state
+ * - in:
+ * - out: 
+ */
+function WSM_PageIsValid()
+{
+  if( this.content_frame.validate )
+    return this.content_frame.validate();
+
+  // page is valid by default
+  return true;
+}
+
 
 /** string GetTagFromURL( string tag, string prefix, string postfix ) ;
  *  - purpose: fetches a tag from a URL
@@ -343,6 +369,7 @@ function WSM_AddAttributes( formElement, elementEntry, valueAttribute, optAttrib
  **/
 function WSM_ElementIsIgnored( element, exclElements )
 {
+  if (!exclElements) return false;
   for( var i = 0; i < exclElements.length; i++ )
   {
     if( element.nodeName.toLowerCase() == exclElements[i] )
