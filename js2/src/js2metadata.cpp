@@ -3042,7 +3042,13 @@ rescan:
         if (argc) {
             if (!JS2VAL_IS_STRING(argv[0]))
                 return argv[0];
-            return meta->readEvalString(*meta->toString(argv[0]), widenCString("Eval Source"));
+            // need to reset the environment to the one in operation when eval was called so
+            // that eval code can affect the apppropriate scopes.
+            Environment *e = meta->env;
+            meta->env = meta->engine->activationStackTop[-1].env;
+            js2val result = meta->readEvalString(*meta->toString(argv[0]), widenCString("Eval Source"));
+            meta->env = e;
+            return result;
         }
         else
             return JS2VAL_UNDEFINED;

@@ -873,17 +873,19 @@ namespace MetaData {
         activationStackTop->env = meta->env;    // save current env.
         activationStackTop->topFrame = env->getTopFrame();  // remember how big the new env. is supposed to be
         activationStackTop++;
-        bCon = new_bCon;
-        if ((int32)bCon->getMaxStack() >= (execStackLimit - sp)) {
-            uint32 curDepth = sp - execStack;
-            uint32 newDepth = curDepth + bCon->getMaxStack();
-            js2val *newStack = new js2val[newDepth];
-            ::memcpy(newStack, execStack, curDepth * sizeof(js2val));
-            execStack = newStack;
-            sp = execStack + curDepth;
-            execStackLimit = execStack + newDepth;
+        if (new_bCon) {
+            bCon = new_bCon;
+            if ((int32)bCon->getMaxStack() >= (execStackLimit - sp)) {
+                uint32 curDepth = sp - execStack;
+                uint32 newDepth = curDepth + bCon->getMaxStack();
+                js2val *newStack = new js2val[newDepth];
+                ::memcpy(newStack, execStack, curDepth * sizeof(js2val));
+                execStack = newStack;
+                sp = execStack + curDepth;
+                execStackLimit = execStack + newDepth;
+            }
+            pc = new_bCon->getCodeStart();
         }
-        pc = new_bCon->getCodeStart();
         phase = execPhase;
         meta->env = env;
     }

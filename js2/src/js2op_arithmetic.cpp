@@ -335,6 +335,8 @@
                 astr = meta->toString(a);
                 bstr = meta->toString(b);
                 push(STRING_TO_JS2VAL(concatStrings(astr, bstr)));
+                astr = NULL;
+                bstr = NULL;
             }
             else {
                 a = meta->toGeneralNumber(a);
