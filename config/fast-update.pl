@@ -135,7 +135,7 @@ foreach $dir (sort @uniquedirs) {
   $dirlist .= "$dir ";
   $i++;
   if ($i == 5) {
-    system "cvs up -l $dirlist\n";
+    system "cvs up -l -d $dirlist\n";
     $dirlist = "";
     $i=0;
   }
