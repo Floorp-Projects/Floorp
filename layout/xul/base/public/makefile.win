@@ -23,6 +23,7 @@ DEPTH=..\..\..\..
 
 EXPORTS =				\
 	nsIPopupSetFrame.h	\
+	nsITreeFrame.h	\
     $(NULL)
 
 MODULE=raptor 

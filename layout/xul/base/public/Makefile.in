@@ -28,7 +28,11 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 
-EXPORTS		= nsIPopupSetFrame.h
+EXPORTS		= \
+		nsIPopupSetFrame.h \
+		nsITreeFrame.h \
+		$(NULL)
+
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk

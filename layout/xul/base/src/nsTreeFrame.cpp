@@ -97,6 +97,11 @@ NS_IMETHODIMP nsTreeFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
 
+  if (aIID.Equals(NS_GET_IID(nsITreeFrame))) {
+    *aInstancePtr = (void*)(nsITreeFrame*) this;
+    return NS_OK;
+  }
+
   return nsTableFrame::QueryInterface(aIID, aInstancePtr);
 }
 
@@ -613,3 +618,15 @@ nsTreeFrame::GetFrameStateStorageObject(nsILayoutHistoryState** aState)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsTreeFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
+{
+  // Get our treechildren child frame.
+  nsTreeRowGroupFrame* treeRowGroup = nsnull;
+  GetTreeBody(&treeRowGroup);
+
+  if (!treeRowGroup) return NS_OK;
+  
+  treeRowGroup->EnsureRowIsVisible(aRowIndex);
+  return NS_OK;
+}

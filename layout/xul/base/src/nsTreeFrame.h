@@ -23,6 +23,7 @@
 #include "nsTableFrame.h"
 #include "nsVoidArray.h"
 #include "nsISelfScrollingFrame.h"
+#include "nsITreeFrame.h"
 #include "nsILayoutHistoryState.h"
 #include "nsCOMPtr.h"
 
@@ -31,7 +32,9 @@ class nsTreeRowGroupFrame;
 class nsTreeTwistyListener;
 class nsILayoutHistoryState;
 
-class nsTreeFrame : public nsTableFrame, public nsISelfScrollingFrame
+class nsTreeFrame : public nsTableFrame,
+                    public nsITreeFrame,
+                    public nsISelfScrollingFrame
 {
 public:
   friend nsresult NS_NewTreeFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
@@ -91,6 +94,9 @@ public:
 
   // nsISelfScrollingFrame interface
   NS_IMETHOD ScrollByLines(nsIPresContext* aPresContext, PRInt32 lines);
+
+  // nsITreeFrame.h
+  NS_IMETHOD EnsureRowIsVisible(PRInt32 aRowIndex);
 
   // Getter for the frame state storage object
   nsresult GetFrameStateStorageObject(nsILayoutHistoryState** aState);
