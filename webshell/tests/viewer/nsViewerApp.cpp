@@ -27,6 +27,7 @@
 #include "nsWebCrawler.h"
 #include "prprf.h"
 #include "plstr.h"
+#include "prenv.h"
 
 #ifdef XP_PC
 #include "JSConsole.h"
