@@ -30,7 +30,7 @@ var charsetWasChanged = false;
 var insertNewContentType = false;
 var contenttypeElement;
 var initDone = false;
-
+var dialog;
 
 //Cancel() is in EdDialogCommon.js
 
@@ -116,9 +116,8 @@ function LoadAvailableCharSets()
     if (ccm) {
       ccm = ccm.getService();
       ccm = ccm.QueryInterface(Components.interfaces.nsICharsetConverterManager2);
-      charsetList = ccm.GetDecoderList();
+      var charsetList = ccm.GetDecoderList();
       charsetList = charsetList.QueryInterface(Components.interfaces.nsISupportsArray);
-      charsetList.sort;
     }
   } catch(ex)
   {
@@ -127,7 +126,12 @@ function LoadAvailableCharSets()
   if (charsetList) 
   {
     var j=0;
-    for (i = 0; i < charsetList.Count(); i++) 
+    var atom;
+    var str;
+    var tit;
+    var visible;
+
+    for (var i = 0; i < charsetList.Count(); i++) 
     {
       atom = charsetList.GetElementAt(i);
       atom = atom.QueryInterface(Components.interfaces.nsIAtom);
