@@ -162,8 +162,9 @@ interface nsIContentPolicy : nsISupports
    *                          initiated this load request; can be null if
    *                          inapplicable
    *
-   * @param aRequestingNode   OPTIONAL. the DOM node that initiated the
-   *                          request; can be null if inapplicable
+   * @param aContext          OPTIONAL. the nsIDOMNode or nsIDOMWindow that
+   *                          initiated the request, or something that can QI
+   *                          to one of those; can be null if inapplicable.
    *
    * @param aMimeTypeGuess    OPTIONAL. a guess for the requested content's
    *                          MIME type, based on information available to
@@ -179,7 +180,7 @@ interface nsIContentPolicy : nsISupports
   short shouldLoad(in unsigned long aContentType,
                    in nsIURI        aContentLocation,
                    in nsIURI        aRequestOrigin,
-                   in nsIDOMNode    aRequestingNode,
+                   in nsISupports   aContext,
                    in ACString      aMimeTypeGuess,
                    in nsISupports   aExtra);
 
@@ -200,8 +201,9 @@ interface nsIContentPolicy : nsISupports
    *                          initiated this load request; can be null if
    *                          inapplicable
    *
-   * @param aRequestingNode   OPTIONAL. the DOM node that initiated the
-   *                          request; can be null if inapplicable
+   * @param aContext          OPTIONAL. the nsIDOMNode or nsIDOMWindow that
+   *                          initiated the request, or something that can QI
+   *                          to one of those; can be null if inapplicable.
    *
    * @param aMimeType         the MIME type of the requested resource (e.g.,
    *                          image/png), as reported by the networking library,
@@ -216,7 +218,7 @@ interface nsIContentPolicy : nsISupports
   short shouldProcess(in unsigned long aContentType,
                       in nsIURI        aContentLocation,
                       in nsIURI        aRequestOrigin,
-                      in nsIDOMNode    aRequestingNode,
+                      in nsISupports   aContext,
                       in ACString      aMimeType,
                       in nsISupports   aExtra);
 

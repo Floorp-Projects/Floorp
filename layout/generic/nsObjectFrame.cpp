@@ -1253,8 +1253,6 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext* aPresContext,
   if(aURI)
   {
     nsresult rv;
-    nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(mContent, &rv);
-    if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIDocument> document;
     rv = aPresContext->PresShell()->GetDocument(getter_AddRefs(document));
@@ -1270,7 +1268,7 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext* aPresContext,
     rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OBJECT,
                                    aURI,
                                    docURI,
-                                   domNode,
+                                   mContent,
                                    nsDependentCString(aMimetype ? aMimetype : ""),
                                    nsnull, //extra
                                    &shouldLoad);

@@ -59,14 +59,14 @@ class nsContentPolicy : public nsIContentPolicy
     typedef
     NS_STDCALL_FUNCPROTO(nsresult, CPMethod, nsIContentPolicy,
                          ShouldProcess,
-                         (PRUint32, nsIURI*, nsIURI*, nsIDOMNode*,
+                         (PRUint32, nsIURI*, nsIURI*, nsISupports*,
                            const nsACString &, nsISupports*, PRInt16*));
 
     //Helper method that applies policyMethod across all policies in mPolicies
     // with the given parameters
     nsresult CheckPolicy(CPMethod policyMethod, PRUint32 contentType,
                          nsIURI *aURI, nsIURI *origURI,
-                         nsIDOMNode *requestingNode,
+                         nsISupports *requestingContext,
                          const nsACString &mimeGuess, nsISupports *extra,
                          PRInt16 *decision);
 };

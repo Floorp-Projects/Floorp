@@ -147,7 +147,7 @@ NS_CP_ContentTypeName(PRUint32 contentType)
         return NS_ERROR_FAILURE;                                              \
                                                                               \
     return policy-> action (contentType, contentLocation, requestOrigin,      \
-                            content, mimeType, extra, decision);
+                            context, mimeType, extra, decision);
 
 /**
  * Alias for calling ShouldLoad on the content policy service.
@@ -157,7 +157,7 @@ inline nsresult
 NS_CheckContentLoadPolicy(PRUint32          contentType,
                           nsIURI           *contentLocation,
                           nsIURI           *requestOrigin,
-                          nsIDOMNode       *content,
+                          nsISupports      *context,
                           const nsACString &mimeType,
                           nsISupports      *extra,
                           PRInt16          *decision)
@@ -173,7 +173,7 @@ inline nsresult
 NS_CheckContentProcessPolicy(PRUint32          contentType,
                              nsIURI           *contentLocation,
                              nsIURI           *requestOrigin,
-                             nsIDOMNode       *content,
+                             nsISupports      *context,
                              const nsACString &mimeType,
                              nsISupports      *extra,
                              PRInt16          *decision)
@@ -184,36 +184,44 @@ NS_CheckContentProcessPolicy(PRUint32          contentType,
 #undef CHECK_CONTENT_POLICY
 
 /**
- * Helper function to get an nsIDocShell given an nsIDOMNode.
- * If the node is a document, the corresponding docshell will be returned.
- * If the node is not a document, the docshell of its ownerDocument will be
+ * Helper function to get an nsIDocShell given a context.
+ * If the context is a document or window, the corresponding docshell will be
  * returned.
+ * If the context is a non-document DOM node, the docshell of its ownerDocument
+ * will be returned.
  *
- * @param node the nsIDOMNode to find a docshell for (can be null)
+ * @param aContext the context to find a docshell for (can be null)
  * @return a WEAK pointer to the docshell, or nsnull if it could
  *     not be obtained
  */
 static nsIDocShell*
-NS_CP_GetDocShellFromDOMNode(nsIDOMNode *aNode)
+NS_CP_GetDocShellFromContext(nsISupports *aContext)
 {
-    if (!aNode) {
+    if (!aContext) {
         return nsnull;
     }
 
-    nsIScriptGlobalObject *scriptGlobal = nsnull;
+    nsCOMPtr<nsIScriptGlobalObject> scriptGlobal = do_QueryInterface(aContext);
 
-    // our node might really be a document, so try that first
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aNode);
-    if (!doc) {
-        // we were not a document after all, get our ownerDocument
-        nsCOMPtr<nsIDOMDocument> ownerDoc;
-        aNode->GetOwnerDocument(getter_AddRefs(ownerDoc));
-        // and turn it into an nsIDocument
-        doc = do_QueryInterface(ownerDoc);
-    }
+    if (!scriptGlobal) {
+        // our context might be a document (which also QIs to nsIDOMNode), so
+        // try that first
+        nsCOMPtr<nsIDocument> doc = do_QueryInterface(aContext);
+        if (!doc) {
+            // we were not a document after all, get our ownerDocument,
+            // hopefully
+            nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aContext);
+            if (node) {
+                nsCOMPtr<nsIDOMDocument> ownerDoc;
+                node->GetOwnerDocument(getter_AddRefs(ownerDoc));
+                // and turn it into an nsIDocument
+                doc = do_QueryInterface(ownerDoc);
+            }
+        }
 
-    if (doc) {
-        scriptGlobal = doc->GetScriptGlobalObject();
+        if (doc) {
+            scriptGlobal = doc->GetScriptGlobalObject();
+        }
     }
 
     if (!scriptGlobal) {

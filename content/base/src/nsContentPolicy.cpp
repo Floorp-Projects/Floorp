@@ -46,6 +46,8 @@
 #include "nsContentPolicy.h"
 #include "nsICategoryManager.h"
 #include "nsIURI.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMWindow.h"
 
 NS_IMPL_ISUPPORTS1(nsContentPolicy, nsIContentPolicy)
 
@@ -156,7 +158,7 @@ nsContentPolicy::CheckPolicy(CPMethod          policyMethod,
                              PRUint32          contentType,
                              nsIURI           *contentLocation,
                              nsIURI           *requestingLocation,
-                             nsIDOMNode       *requestingNode,
+                             nsISupports      *requestingContext,
                              const nsACString &mimeType,
                              nsISupports      *extra,
                              PRInt16           *decision)
@@ -165,6 +167,15 @@ nsContentPolicy::CheckPolicy(CPMethod          policyMethod,
     NS_PRECONDITION(decision, "Null out pointer");
     WARN_IF_URI_UNINITIALIZED(contentLocation, "Request URI");
     WARN_IF_URI_UNINITIALIZED(requestingLocation, "Requesting URI");
+
+#ifdef DEBUG
+    {
+        nsCOMPtr<nsIDOMNode> node(do_QueryInterface(requestingContext));
+        nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(requestingContext));
+        NS_ASSERTION(!requestingContext || node || window,
+                     "Context should be a DOM node or a DOM window!");
+    }
+#endif
 
     PRInt32 count = mPolicies.Count();
     nsresult rv = NS_OK;
@@ -182,7 +193,7 @@ nsContentPolicy::CheckPolicy(CPMethod          policyMethod,
 
         /* check the appropriate policy */
         rv = (policy->*policyMethod)(contentType, contentLocation,
-                                     requestingLocation, requestingNode,
+                                     requestingLocation, requestingContext,
                                      mimeType, extra, decision);
 
         if (NS_SUCCEEDED(rv) && NS_CP_REJECTED(*decision)) {
@@ -235,7 +246,7 @@ NS_IMETHODIMP
 nsContentPolicy::ShouldLoad(PRUint32          contentType,
                             nsIURI           *contentLocation,
                             nsIURI           *requestingLocation,
-                            nsIDOMNode       *requestingNode,
+                            nsISupports      *requestingContext,
                             const nsACString &mimeType,
                             nsISupports      *extra,
                             PRInt16          *decision)
@@ -244,7 +255,7 @@ nsContentPolicy::ShouldLoad(PRUint32          contentType,
     NS_PRECONDITION(contentLocation, "Must provide request location");
     nsresult rv = CheckPolicy(&nsIContentPolicy::ShouldLoad, contentType,
                               contentLocation, requestingLocation,
-                              requestingNode, mimeType, extra, decision);
+                              requestingContext, mimeType, extra, decision);
     LOG_CHECK("ShouldLoad");
 
     return rv;
@@ -254,14 +265,14 @@ NS_IMETHODIMP
 nsContentPolicy::ShouldProcess(PRUint32          contentType,
                                nsIURI           *contentLocation,
                                nsIURI           *requestingLocation,
-                               nsIDOMNode       *requestingNode,
+                               nsISupports      *requestingContext,
                                const nsACString &mimeType,
                                nsISupports      *extra,
                                PRInt16          *decision)
 {
     nsresult rv = CheckPolicy(&nsIContentPolicy::ShouldProcess, contentType,
                               contentLocation, requestingLocation,
-                              requestingNode, mimeType, extra, decision);
+                              requestingContext, mimeType, extra, decision);
     LOG_CHECK("ShouldProcess");
 
     return rv;

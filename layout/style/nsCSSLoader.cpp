@@ -935,13 +935,13 @@ CSSLoaderImpl::IsAlternate(const nsAString& aTitle)
  *
  * @param aSourceURI the uri of the document or parent sheet loading the sheet
  * @param aTargetURI the uri of the sheet to be loaded
- * @param aNode the node owning the sheet.  This is the element or document
- *              owning the stylesheet (possibly indirectly, for child sheets)
+ * @param aContext the node owning the sheet.  This is the element or document
+ *                 owning the stylesheet (possibly indirectly, for child sheets)
  */
 nsresult
 CSSLoaderImpl::CheckLoadAllowed(nsIURI* aSourceURI,
                                 nsIURI* aTargetURI,
-                                nsIDOMNode* aNode)
+                                nsISupports* aContext)
 {
   LOG(("CSSLoaderImpl::CheckLoadAllowed"));
   
@@ -961,7 +961,7 @@ CSSLoaderImpl::CheckLoadAllowed(nsIURI* aSourceURI,
   rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_STYLESHEET,
                                  aTargetURI,
                                  aSourceURI,
-                                 aNode,
+                                 aContext,
                                  NS_LITERAL_CSTRING("text/css"),
                                  nsnull,                        //extra param
                                  &shouldLoad);
@@ -1687,12 +1687,11 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
   nsIURI *docURI = mDocument->GetDocumentURI();
   if (!docURI) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aElement));
-  if (!node) {
-    node = do_QueryInterface(mDocument);
+  nsISupports* context = aElement;
+  if (!context) {
+    context = mDocument;
   }
-
-  nsresult rv = CheckLoadAllowed(docURI, aURL, node);
+  nsresult rv = CheckLoadAllowed(docURI, aURL, context);
   if (NS_FAILED(rv)) return rv;
 
   LOG(("  Passed load check"));
@@ -1789,12 +1788,12 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
     topSheet->GetOwnerNode(getter_AddRefs(owningNode));
   }
 
-  if (!owningNode) {
-    //failed to get owning node, revert to document
-    owningNode = do_QueryInterface(mDocument);
+  nsISupports* context = owningNode;
+  if (!context) {
+    context = mDocument;
   }
-
-  rv = CheckLoadAllowed(sheetURI, aURL, owningNode);
+  
+  rv = CheckLoadAllowed(sheetURI, aURL, context);
   if (NS_FAILED(rv)) return rv;
 
   LOG(("  Passed load check"));
