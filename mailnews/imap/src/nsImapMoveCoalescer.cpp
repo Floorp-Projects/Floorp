@@ -105,18 +105,28 @@ nsresult nsImapMoveCoalescer::PlaybackMoves(nsIEventQueue *eventQueue)
 				nsCOMPtr <nsISupports> sourceSupports = do_QueryInterface((nsIMsgImapMailFolder *) m_sourceFolder, &rv);
 				nsCOMPtr <nsIUrlListener> urlListener(do_QueryInterface(sourceSupports));
 
-	  nsCOMPtr<nsISupportsArray> messages;
-      NS_NewISupportsArray(getter_AddRefs(messages));
-//				rv = destFolder->CopyMessages(m_sourceFolder,
-  //                             nsISupportsArray* messages,
-    //                           PR_TRUE, nsnull,
-      //                         nsIMsgCopyServiceListener* listener)
-
-
-							   rv = imapService->OnlineMessageCopy(eventQueue,
-												m_sourceFolder, messageIds.GetBuffer(),
-												destFolder, PR_TRUE, PR_TRUE,
-												urlListener, nsnull, nsnull);
+				nsCOMPtr<nsISupportsArray> messages;
+				NS_NewISupportsArray(getter_AddRefs(messages));
+				for (PRUint32 keyIndex = 0; i < keysToAdd->GetSize(); i++)
+				{
+					nsCOMPtr<nsIMessage> message;
+					nsCOMPtr<nsIMsgDBHdr> mailHdr = nsnull;
+					rv = m_sourceFolder->GetMessageHeader(keysToAdd->ElementAt(keyIndex), getter_AddRefs(mailHdr));
+					if (NS_SUCCEEDED(rv) && mailHdr)
+					{
+						nsCOMPtr<nsISupports> iSupports;
+	  					m_sourceFolder->CreateMessageFromMsgDBHdr(mailHdr, getter_AddRefs(message)) ;
+						iSupports = do_QueryInterface(message);
+						messages->AppendElement(iSupports);
+					}
+				}
+				rv = destFolder->CopyMessages(m_sourceFolder,
+                               messages, PR_TRUE, nsnull,
+                               /*nsIMsgCopyServiceListener* listener*/ nsnull);
+//			   rv = imapService->OnlineMessageCopy(eventQueue,
+//						m_sourceFolder, messageIds.GetBuffer(),
+//						destFolder, PR_TRUE, PR_TRUE,
+//						urlListener, nsnull, nsnull);
 			}
 		}
 	}

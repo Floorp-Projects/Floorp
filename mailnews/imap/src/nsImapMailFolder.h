@@ -253,6 +253,8 @@ public:
     // overriding nsMsgDBFolder::GetMsgDatabase()
     NS_IMETHOD GetMsgDatabase(nsIMsgDatabase** aMsgDatabase);
 
+	nsresult GetMessageHeader(nsMsgKey key, nsIMsgDBHdr ** aMsgHdr);
+
 	nsresult MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
 									   nsIMsgDatabase *sourceDB, 
 									   char *destFolder,
@@ -272,6 +274,7 @@ protected:
 
 	nsresult SyncFlags(nsImapFlagAndUidState *flagState);
 
+	void UpdatePendingCounts(PRBool countUnread, PRBool missingAreRead);
 	void SetIMAPDeletedFlag(nsIMsgDatabase *mailDB, const nsMsgKeyArray &msgids, PRBool markDeleted);
 	virtual PRBool ShowDeletedMessages();
 	virtual PRBool DeleteIsMoveToTrash();
@@ -307,8 +310,6 @@ protected:
     nsresult SetTransactionManager(nsITransactionManager* txnMgr);
     nsresult BuildIdsAndKeyArray(nsISupportsArray* messages,
                                  nsCString& msgIds, nsMsgKeyArray& keyArray);
-
-	nsresult GetMessageHeader(nsIMsgDBHdr ** aMsgHdr);
 
     nsNativeFileSpec *m_pathName;
     PRBool m_initialized;

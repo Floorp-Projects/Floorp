@@ -2240,7 +2240,7 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage)
 	nsCOMPtr<nsIMsgDBHdr> msgHdr;
 
 	m_curMsgUid = uidOfMessage;
-	res = GetMessageHeader(getter_AddRefs(msgHdr));
+	res = GetMessageHeader(m_curMsgUid, getter_AddRefs(msgHdr));
 	if (NS_SUCCEEDED(res))
 		msgHdr->MarkRead(PR_TRUE);
 
@@ -2253,7 +2253,7 @@ nsImapMailFolder::AbortMsgWriteStream()
     return NS_ERROR_FAILURE;
 }
 
-nsresult nsImapMailFolder::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
+nsresult nsImapMailFolder::GetMessageHeader(nsMsgKey key, nsIMsgDBHdr ** aMsgHdr)
 {
 	nsresult rv = NS_OK;
 	if (aMsgHdr)
@@ -2264,7 +2264,7 @@ nsresult nsImapMailFolder::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
 		// recent header we downloaded, and most recent message we've
 		// downloaded. We may want to break this up.
 		if (NS_SUCCEEDED(rv) && mDatabase) // did we get a db back?
-			rv = mDatabase->GetMsgHdrForKey(m_curMsgUid, aMsgHdr);
+			rv = mDatabase->GetMsgHdrForKey(key, aMsgHdr);
 	}
 	else
 		rv = NS_ERROR_NULL_POINTER;
@@ -2508,6 +2508,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
 	nsresult rv = NS_OK;
 	m_urlRunning = PR_FALSE;
+    NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
 	if (aUrl)
 	{
         nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(aUrl);
@@ -2550,7 +2551,15 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                     }
                     ClearCopyState(aExitCode);
                 }
-                UpdateFolder();
+				if (session)
+				{
+					PRBool folderOpen = PR_FALSE;
+					session->IsFolderOpenInWindow(this, &folderOpen);
+					if (folderOpen)
+						UpdateFolder();
+					else
+						UpdatePendingCounts(PR_TRUE, PR_FALSE);
+				}
                 break;
             case nsIImapUrl::nsImapAppendMsgFromFile:
             case nsIImapUrl::nsImapAppendDraftFromFile:
@@ -2579,6 +2588,47 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 	}
 	return rv;
 }
+
+void nsImapMailFolder::UpdatePendingCounts(PRBool countUnread, PRBool missingAreRead)
+{
+	nsresult rv;
+	if (m_copyState)
+	{
+		ChangeNumPendingTotalMessages(m_copyState->m_totalCount);
+
+		if (countUnread)
+		{
+			// count the moves that were unread
+			int numUnread = 0;
+			nsCOMPtr <nsIMsgFolder> srcFolder = do_QueryInterface(m_copyState->m_srcSupport);
+			for (int keyIndex=0; keyIndex < m_copyState->m_totalCount; keyIndex++)
+			{
+				nsCOMPtr<nsIMessage> message;
+
+				nsCOMPtr<nsISupports> aSupport =
+					getter_AddRefs(m_copyState->m_messages->ElementAt(keyIndex));
+				message = do_QueryInterface(aSupport, &rv);
+				// if the key is not there, then assume what the caller tells us to.
+				PRBool isRead = missingAreRead;
+				PRUint32 flags;
+				if (message )
+				{
+					message->GetFlags(&flags);
+					isRead = flags & MSG_FLAG_READ;
+				}
+
+				if (!isRead)
+					numUnread++;
+			}
+		
+			if (numUnread)
+				ChangeNumPendingUnread(numUnread);
+		}
+		SummaryChanged();
+	}
+} 
+
+
 
     // nsIImapExtensionSink methods
 
