@@ -124,7 +124,13 @@ function processCreateProfileData( aProfName, aProfDir )
     //       dropout layery thing. yeah. something like that to tell them when 
     //       it happens, not when the whole wizard is complete. blah. 
     if( profile.profileExists( aProfName ) )	{
-      alert( bundle.GetStringFromName( "profileExists" ) );
+      try {
+        alert( bundle.GetStringFromName( "profileExists" ) );
+      }
+      catch(e) {
+        // mac stringbundle failure. put up a ridiculous hard coded message.
+        alert( "Oh Yah, the profile name you chose already exists, yah!");
+      }
       // this is a bad but probably acceptable solution for now. 
       // when we add more panels, we will want a better solution. 
       window.frames["content"].document.getElementById("ProfileName").focus();

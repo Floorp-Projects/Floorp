@@ -112,7 +112,13 @@ function getProfileDir(folder, showPopup)
       folderText.setAttribute( "rootFolder", folder );
     if(!detect) {
       var useDefault = document.createElement("titledbutton");
-      useDefault.setAttribute("value",bundle.GetStringFromName("useDefaultFolder"));
+      try {
+        useDefault.setAttribute("value",bundle.GetStringFromName("useDefaultFolder"));
+      }
+      catch(e) {
+        // mac string bundle hack
+        useDefault.setAttribute("value", "Use default folder, yah");
+      }
       useDefault.setAttribute("class","dialog push");
       useDefault.setAttribute("id","useDefaultButton");
       useDefault.setAttribute("onclick","UseDefaultFolder();");
@@ -136,7 +142,13 @@ function UseDefaultFolder()
   if(FolderButtons.childNodes.length > 1)
     FolderButtons.removeChild(FolderButtons.lastChild);
   var span = document.getElementById("deffoldername")
-  var text = document.createTextNode(bundle.GetStringFromName("defaultString"));
+  try {
+    var text = document.createTextNode(bundle.GetStringFromName("defaultString"));
+  }
+  catch(e) {
+    // mac string bundle hack
+    var text = document.createTextNode("the default folder, yah.");
+  }
   span.appendChild(text);
   detect = false;
 
