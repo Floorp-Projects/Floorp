@@ -1198,10 +1198,12 @@ nsWebShellWindow::FirePersistenceTimer(nsITimer *aTimer, void *aClosure)
 {
   nsWebShellWindow *win = NS_STATIC_CAST(nsWebShellWindow *, aClosure);
   PR_Lock(win->mSPTimerLock);
-  win->mSPTimer = nsnull;
-  PR_Unlock(win->mSPTimerLock);
   win->PersistPositionAndSize(win->mSPTimerPosition, win->mSPTimerSize,
                               win->mSPTimerMode);
+  win->mSPTimerSize = PR_FALSE;
+  win->mSPTimerPosition = PR_FALSE;
+  win->mSPTimerMode = PR_FALSE;
+  PR_Unlock(win->mSPTimerLock);
 }
 
 
