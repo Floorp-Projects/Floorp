@@ -35,7 +35,9 @@
 *
 *
 * Date:    23 October 2003
-* SUMMARY: An unescaped, unbalanced parens in regexp should cause SyntaxError
+* SUMMARY: Unescaped, unbalanced parens in a regexp should cause SyntaxError.
+* The same should also be true for unescaped, unbalanced brackets or braces.
+*
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=223273
 *
 */
@@ -97,6 +99,67 @@ checkThis(' /(abc(\))def)g/ ');
 
 status = inSection(10);
 checkThis(' /(abc([x\)yz]+)def)g/ ');
+
+
+
+/*
+ * Run similar tests as above for unbalanced brackets -
+ */
+status = inSection(11);
+testThis(' /[/ ');
+
+status = inSection(12);
+testThis(' /]/ ');
+
+status = inSection(13);
+testThis(' /[abc\]def[g/ ');
+
+status = inSection(14);
+testThis(' /\[abc]def]g/ ');
+
+
+/*
+ * These regexp patterns are correct and should not generate
+ * any errors. Note we use checkThis() instead of testThis().
+ */
+status = inSection(15);
+checkThis(' /\[/ ');
+
+status = inSection(16);
+checkThis(' /\]/ ');
+
+status = inSection(17);
+checkThis(' /[abc]def\[g/ ');
+
+status = inSection(18);
+checkThis(' /[abc\]def]g/ ');
+
+status = inSection(19);
+checkThis(' /(abc[\]]def)g/ ');
+
+status = inSection(20);
+checkThis(' /[abc(x\]yz+)def]g/ ');
+
+
+/*
+ * Run the some tests for unbalanced braces -
+ */
+status = inSection(21);
+testThis(' /abc{def/ ');
+
+status = inSection(22);
+testThis(' /abc}def/ ');
+
+
+/*
+ * These regexp patterns are correct and should not generate
+ * any errors. Note we use checkThis() instead of testThis().
+ */
+status = inSection(23);
+checkThis(' /abc\{def/ ');
+
+status = inSection(24);
+checkThis(' /abc\}def/ ');
 
 
 
