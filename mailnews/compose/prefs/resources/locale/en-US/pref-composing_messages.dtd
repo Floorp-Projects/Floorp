@@ -62,3 +62,7 @@ Rights Reserved.
 <!ENTITY useMIME.accesskey                    "m">
 
 <!ENTITY sendDefaultCharset.label             "Default Character Coding:">
+
+<!-- Tooltips -->  
+<!ENTITY convertStructs.tooltip "Convert Structs">  
+

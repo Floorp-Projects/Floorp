@@ -28,3 +28,9 @@ Rights Reserved.
 <!ENTITY unreadColumn.label "Unread">
 <!ENTITY totalColumn.label "Total">
 <!ENTITY orderReceivedColumn.label "Order Received">
+
+<!--Tooltips-->
+<!ENTITY threadColumnHeader.tooltip "Threads">
+<!ENTITY columnChooser.tooltip "Press this to choose columns">
+
+

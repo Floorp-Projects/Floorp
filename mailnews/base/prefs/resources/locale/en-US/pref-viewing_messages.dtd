@@ -48,3 +48,9 @@ Rights Reserved.
 <!ENTITY convertEmoticons.accesskey       "c">
 <!ENTITY convertStructs.label             "Add HTML styles to structured phrases. For example, format text contained within asterisks as bold.">
 <!ENTITY convertStructs.accesskey         "s">
+
+<!-- Tooltips  -->  
+<!ENTITY convertEmoticons.tooltip "Convert Emoticons">  
+<!ENTITY convertStructs.tooltip "Convert Structs">  
+
+

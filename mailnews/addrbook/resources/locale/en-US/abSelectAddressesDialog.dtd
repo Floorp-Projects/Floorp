@@ -34,3 +34,9 @@ Rights Reserved.
 
 <!-- Toolbar items -->  
 	<!ENTITY search.label "Show names containing:">  
+
+<!-- Tooltips items -->  
+	<!ENTITY addressPickerSearchButton.tooltip "Search address books">  
+	<!ENTITY addressPickerNewButton.tooltip "Create a new address book card">  
+	<!ENTITY addressPickerEditButton.tooltip "Edit the selected address book card">  
+

@@ -150,6 +150,11 @@ function AddDataSources()
 
 	//To FileButton menu
 	SetupMoveCopyMenus('FileButtonMenu', accountManagerDataSource, folderDataSource);
+
+	//To move and copy menus in message pane context
+	SetupMoveCopyMenus("messagePaneContext-copyMenu", accountManagerDataSource, folderDataSource);
+	SetupMoveCopyMenus("messagePaneContext-moveMenu", accountManagerDataSource, folderDataSource);
+
 	//Add statusFeedback
 
 	var msgDS = folderDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);

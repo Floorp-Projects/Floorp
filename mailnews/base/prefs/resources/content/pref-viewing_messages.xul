@@ -2,6 +2,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-viewing_messages.dtd">
 
@@ -10,6 +11,7 @@
         class="color-dialog"
         onload="parent.initPanel('chrome://messenger/content/pref-viewing_messages.xul');"
         orient="vertical">
+  <popupset id="aTooltipSet"/>
 
   <script language="javascript">
   <![CDATA[
@@ -110,10 +112,10 @@
               prefattribute="checked"/>
     <checkbox id="displayGlyph" value="&convertEmoticons.label;" accesskey="&convertEmoticons.accesskey;"
               pref="true" preftype="bool" prefstring="mail.display_glyph"
-              prefattribute="checked"/>		
+              prefattribute="checked" tooltip="aTooltip" tooltiptext="&convertEmoticons.tooltip;"/>		
     <checkbox id="displayStruct" value="&convertStructs.label;" accesskey="&convertStructs.accesskey;" 
               pref="true" preftype="bool" prefstring="mail.display_struct"
-              prefattribute="checked"/>
+              prefattribute="checked" tooltip="aTooltip" tooltiptext="&convertStructs.tooltip;"/>
   </titledbox>
 
   

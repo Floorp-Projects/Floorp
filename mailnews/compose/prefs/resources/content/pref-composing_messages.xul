@@ -2,6 +2,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/pref-composing_messages.dtd">
 
@@ -10,6 +11,8 @@
         onload="parent.initPanel('chrome://messenger/content/messengercompose/pref-composing_messages.xul');"
         orient="vertical"
         class="color-dialog">
+
+  <popupset id="aTooltipSet"/>
     
   <script language="JavaScript">
   <![CDATA[
@@ -80,7 +83,7 @@
               prefattribute="checked"/>
     <checkbox id="sendStruct" value="&convertStructs.label;" accesskey="&convertStructs.accesskey;"
               pref="true" preftype="bool" prefstring="mail.send_struct"
-              prefattribute="checked"/>
+              prefattribute="checked" tooltip="aTooltip" tooltiptext="&convertStructs.tooltip;"/>
 
     <box autostretch="never">
     <text class="label" value="&sendDefaultCharset.label;" for="sendDefaultCharsetList"/>

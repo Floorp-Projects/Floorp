@@ -24,6 +24,7 @@ Rights Reserved.
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/addressbook/abDirTreeOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/addressbook/abResultsTreeOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abSelectAddressesDialog.dtd">
@@ -45,6 +46,7 @@ Rights Reserved.
 
 
 	<keyset id="keyset"/>
+	<popupset id="aTooltipSet"/>
 
 	<!-- Thin box across top, show names containing & stop, search buttons -->
 	<box align="horizontal" style="padding:0px; padding-top:2px; padding-bottom:2px">
@@ -55,7 +57,7 @@ Rights Reserved.
 		
 		<button id="stop" value="&stopButton.label;" class="dialog" disabled="true" oncommand="SelectAddressStopButton()"/>	
 		<spring style="width:5px"/>
-		<button id="search" value="&searchButton.label;" class="dialog" disabled="true" oncommand="SelectAddressSearchButton()"/>	
+		<button id="search" value="&searchButton.label;" class="dialog" disabled="true" tooltip="aTooltip" tooltiptext="&addressPickerSearchButton.tooltip;" oncommand="SelectAddressSearchButton()"/>	
 	</box>
 
 	<!-- Main box, 3 pane and majority of buttons -->
@@ -109,9 +111,9 @@ Rights Reserved.
 		<box align="vertical" style="padding: .5em; padding-right: 0px">
 			<box align="vertical" flex="50%">
 				<spring style="height:10px"/>
-				<button id="new" value="&newButton.label;" class="dialog" oncommand="AbNewCard()"/>	
+				<button id="new" value="&newButton.label;" class="dialog" tooltip="aTooltip" tooltiptext="&addressPickerNewButton.tooltip;" oncommand="AbNewCard()"/>	
 				<spring style="height:10px"/>
-				<button id="edit" value="&editButton.label;" class="dialog" oncommand="AbEditCard()"/>	
+				<button id="edit" value="&editButton.label;" class="dialog" tooltip="aTooltip" tooltiptext="&addressPickerEditButton.tooltip;" oncommand="AbEditCard()"/>	
 				<spring flex="100%"/>
 			</box>
 			<box align="vertical" flex="50%">
