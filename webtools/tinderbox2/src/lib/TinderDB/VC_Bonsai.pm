@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.61 $ 
-# $Date: 2002/05/10 22:42:08 $ 
+# $Revision: 1.62 $ 
+# $Date: 2002/05/10 23:00:41 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -102,7 +102,7 @@ use VCDisplay;
 use TinderDB::Notice;
 
 
-$VERSION = ( qw $Revision: 1.61 $ )[1];
+$VERSION = ( qw $Revision: 1.62 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -444,6 +444,9 @@ sub render_authors {
             my ($num_rows) = 0;
             my ($max_length) = 0;
             
+            my $mailto_author=$author;
+            $mailto_author =~ s/\%/\@/;
+            
             $table .= (
                        "Checkins by <b>$author</b> <br> for $vc_info \n".
                        "<table border cellspacing=2>\n".
@@ -493,7 +496,7 @@ sub render_authors {
                                'maxdate' => $maxdate,
                                'who' => $author,
                                
-                               "linktxt" => "\t\t<tt>This check-in</tt>\n",
+                               "linktxt" => "This check-in",
                                );
 
             $link_choices .= 
@@ -503,7 +506,7 @@ sub render_authors {
                                'maxdate' => $maxdate - $main::SECONDS_PER_DAY,
                                'who' => $author,
                                
-                               "linktxt" => "\t\t<tt>Check-ins within 24 hours</tt>\n",
+                               "linktxt" => "Check-ins within 24 hours",
                                );
 
             $link_choices .= 
@@ -513,13 +516,13 @@ sub render_authors {
                                'maxdate' => $maxdate - $main::SECONDS_PER_WEEK,
                                'who' => $author,
                                
-                               "linktxt" => "\t\t<tt>Check-ins within 7 days</tt>\n",
+                               "linktxt" => "Check-ins within 7 days",
                                );
 
             $link_choices .= 
               HTMLPopUp::Link(
                               "href" => "mailto: $mailto_author",
-                              "linktxt" => "\t\t<tt>$display_author</tt>\n",
+                              "linktxt" => $display_author,
                               );
 
 
@@ -549,9 +552,6 @@ sub render_authors {
                                 "windowheight" => ($num_rows * 50) + 100,
                                 "windowwidth" => ($max_length * 10) + 100,
                                 );
-            
-            my $mailto_author=$author;
-            $mailto_author =~ s/\%/\@/;
             
             # If you have a VCDisplay implementation you should make the
             # link point to its query method otherwise you want a 'mailto:'
