@@ -51,6 +51,7 @@ CPP_OBJS = \
   .\$(OBJDIR)\nsGenericAccessible.obj \
   .\$(OBJDIR)\nsRootAccessible.obj \
   .\$(OBJDIR)\nsSelectAccessible.obj \
+  .\$(OBJDIR)\nsTextAccessible.obj \
   $(NULL)
 
 EXPORTS = \

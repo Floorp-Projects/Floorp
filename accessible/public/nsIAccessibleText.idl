@@ -44,17 +44,13 @@ interface nsIAccessibleText : nsISupports
   const nsAccessibleCoordType COORD_TYPE_SCREEN = 0;
   const nsAccessibleCoordType COORD_TYPE_WINDOW = 1;
 
-  readonly attribute long caretOffset;
-    /**
-      * This needs a return value for success/failure
-      *   Not all text fields may support this
-      */
-  boolean setCaretOffset (in long offset);
+  attribute long caretOffset;
 
   readonly attribute long characterCount;
+  readonly attribute long selectionCount;
 
     /**
-   * String methods may need to return multibyte-encoded strings,
+      * String methods may need to return multibyte-encoded strings,
       * since some locales can't be encoded using 16-bit chars.
       * So the methods below might return UTF-16 strings, or they could
       * return "string" values which are UTF-8.
@@ -100,27 +96,13 @@ interface nsIAccessibleText : nsISupports
                            out long startOffset,
                            out long endOffset);
 
-    /**
-      * This needs a return value for success/failure
-      *   Not all text fields may support this
-      */
-  boolean setSelectionBounds (in long selectionNum,
+  void setSelectionBounds (in long selectionNum,
                               in long startOffset,
                               in long endOffset);
 
-    /**
-      * This needs a return value for success/failure
-      *   Not all text fields may support this
-      */
-  boolean addSelection (in long selectionNum,
-                        in long startOffset,
-                        in long endOffset);
+  void addSelection (in long startOffset, in long endOffset);
 
-    /**
-      * This needs a return value for success/failure
-      *   Not all text fields may support this
-      */
-  boolean removeSelection (in long selectionNum);
+  void removeSelection (in long selectionNum);
 };
 
 /*
