@@ -268,14 +268,14 @@ nsMsgNewsFolder::MapHostToNewsrcFile(char *newshostname, nsFileSpec &fatFile, ns
       printf("found a match for %s\n",lookingFor);
 #endif
 
-#ifdef FAT_STORES_ABSOLUTE_NEWSRC_FILE_PATHS
+#ifdef NEWS_FAT_STORES_ABSOLUTE_NEWSRC_FILE_PATHS
       newsrcFile = filename;
 #else
 	  // the fat file is storing the newsrc files relative to the directory the fat
 	  // file is in.  so we'll use that.
 	  newsrcFile = fatFile;
 	  newsrcFile.SetLeafName(filename);
-#endif /* FAT_STORES_ABSOLUTE_NEWSRC_FILE_PATHS */
+#endif /* NEWS_FAT_STORES_ABSOLUTE_NEWSRC_FILE_PATHS */
       inputStream.close();
       PR_FREEIF(lookingFor);
       return NS_OK;
@@ -303,7 +303,7 @@ nsMsgNewsFolder::GetNewsrcFile(char *newshostname, nsFileSpec &path, nsFileSpec 
   // the fat file lives in the same directory as
   // the newsrc files
   nsFileSpec fatFile(path);
-  fatFile.SetLeafName(FAT_FILE_NAME);
+  fatFile.SetLeafName(NEWS_FAT_FILE_NAME);
 
   rv = MapHostToNewsrcFile(newshostname, fatFile, newsrcFile);
 #else

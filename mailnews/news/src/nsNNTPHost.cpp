@@ -1162,7 +1162,7 @@ nsNNTPHost::GetNewsrcFile(char *newshostname, nsFileSpec &path, nsFileSpec &news
   // the fat file lives in the same directory as
   // the newsrc files
   nsFileSpec fatFile(path);
-  fatFile.SetLeafName("fat");
+  fatFile.SetLeafName(NEWS_FAT_FILE_NAME);
 
   rv = MapHostToNewsrcFile(newshostname, fatFile, newsrcFile);
 #else

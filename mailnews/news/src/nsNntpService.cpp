@@ -253,7 +253,7 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject,
 												&nntpUrl);
 		
 		if (NS_SUCCEEDED(rv) && nntpUrl) {
-			// todo:  don't hardcode the server name.
+            printf("hardcoding the server name.  right now, we can only post to news.mozilla.org\n");
 			char *urlstr = PR_smprintf("news://%s/%s","news.mozilla.org",newsgroupName);
 			nntpUrl->SetSpec(urlstr);
 			PR_FREEIF(urlstr);
