@@ -77,11 +77,11 @@ static char gHeadingTags[]={
   0};
 
 static char  gStyleTags[]={
-  eHTMLTag_a,       eHTMLTag_bold,    eHTMLTag_big,
+  eHTMLTag_a,       eHTMLTag_b,    eHTMLTag_big,
   eHTMLTag_blink,   eHTMLTag_cite,    eHTMLTag_em, 
-  eHTMLTag_font,    eHTMLTag_italic,  eHTMLTag_kbd,     
+  eHTMLTag_font,    eHTMLTag_i,  eHTMLTag_kbd,     
   eHTMLTag_s,       eHTMLTag_small,   
-  eHTMLTag_spell,   eHTMLTag_strike,  
+  eHTMLTag_strike,  
   eHTMLTag_strong,  eHTMLTag_sub,     eHTMLTag_sup,     
   eHTMLTag_tt,      eHTMLTag_u,       eHTMLTag_var,     
   0};
@@ -894,21 +894,21 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     //tagset1 has 65 members...
   static char  gTagSet1[]={ 
     eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_address,   eHTMLTag_applet,
-    eHTMLTag_blink,     eHTMLTag_bold,      eHTMLTag_basefont,  eHTMLTag_bdo,
+    eHTMLTag_blink,     eHTMLTag_b,      eHTMLTag_basefont,  eHTMLTag_bdo,
     eHTMLTag_big,
     eHTMLTag_blockquote,eHTMLTag_br,        eHTMLTag_button,    eHTMLTag_center,
     eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,       eHTMLTag_dir,
     eHTMLTag_div,       eHTMLTag_dl,        eHTMLTag_em,        eHTMLTag_fieldset,
     eHTMLTag_font,      eHTMLTag_form,      eHTMLTag_h1,        eHTMLTag_h2,
     eHTMLTag_h3,        eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
-    eHTMLTag_hr,        eHTMLTag_italic,    eHTMLTag_iframe,    eHTMLTag_img,
+    eHTMLTag_hr,        eHTMLTag_i,    eHTMLTag_iframe,    eHTMLTag_img,
     eHTMLTag_input,     eHTMLTag_isindex,   
     
-    eHTMLTag_kbd,       eHTMLTag_label,     eHTMLTag_listitem,
+    eHTMLTag_kbd,       eHTMLTag_label,     eHTMLTag_li,
     eHTMLTag_map,       eHTMLTag_menu,      eHTMLTag_newline,   eHTMLTag_nobr,
     eHTMLTag_noframes,  eHTMLTag_noscript,
-    eHTMLTag_object,    eHTMLTag_ol,        eHTMLTag_paragraph, eHTMLTag_pre,
-    eHTMLTag_quotation, eHTMLTag_s,         eHTMLTag_strike,    
+    eHTMLTag_object,    eHTMLTag_ol,        eHTMLTag_p, eHTMLTag_pre,
+    eHTMLTag_q, eHTMLTag_s,         eHTMLTag_strike,    
     eHTMLTag_samp,      eHTMLTag_script,
     eHTMLTag_select,    eHTMLTag_small,     eHTMLTag_span,      eHTMLTag_strong,
     eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_table,     eHTMLTag_text,
@@ -921,16 +921,16 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     //tagset2 has 44 members...
   static char  gTagSet2[]={ 
     eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_blink,
-    eHTMLTag_bold,
+    eHTMLTag_b,
     eHTMLTag_basefont,  eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,
     eHTMLTag_button,    eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,
     eHTMLTag_div,       eHTMLTag_em,        eHTMLTag_font,      eHTMLTag_hr,        
-    eHTMLTag_italic,    eHTMLTag_iframe,    eHTMLTag_img,       eHTMLTag_input,     
+    eHTMLTag_i,    eHTMLTag_iframe,    eHTMLTag_img,       eHTMLTag_input,     
     eHTMLTag_kbd,       
 
     eHTMLTag_label,     eHTMLTag_map,       eHTMLTag_newline,   eHTMLTag_nobr,
-    eHTMLTag_object,    eHTMLTag_paragraph, 
-    eHTMLTag_quotation, eHTMLTag_s,         eHTMLTag_strike,    
+    eHTMLTag_object,    eHTMLTag_p, 
+    eHTMLTag_q, eHTMLTag_s,         eHTMLTag_strike,    
     eHTMLTag_samp,      eHTMLTag_script,    
     eHTMLTag_select,    eHTMLTag_small,     eHTMLTag_span,      eHTMLTag_strong,    
     eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_text,      eHTMLTag_textarea,  
@@ -941,21 +941,21 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     //tagset3 has 57 members...
   static char  gTagSet3[]={ 
     eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_blink,
-    eHTMLTag_bold,
+    eHTMLTag_b,
     eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,        eHTMLTag_blockquote,
     eHTMLTag_body,      eHTMLTag_caption,   eHTMLTag_center,    eHTMLTag_cite,
     eHTMLTag_code,      eHTMLTag_dd,        eHTMLTag_del,       eHTMLTag_dfn,        
     eHTMLTag_div,       eHTMLTag_dt,        eHTMLTag_em,        eHTMLTag_fieldset,    
     eHTMLTag_font,      eHTMLTag_form,      eHTMLTag_h1,        eHTMLTag_h2,
     eHTMLTag_h3,        eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
-    eHTMLTag_italic,    eHTMLTag_iframe,    eHTMLTag_ins,       eHTMLTag_kbd,       
+    eHTMLTag_i,    eHTMLTag_iframe,    eHTMLTag_ins,       eHTMLTag_kbd,       
 
     eHTMLTag_label,     eHTMLTag_legend,    
-    eHTMLTag_listitem,  eHTMLTag_newline,   //JUST ADDED!
+    eHTMLTag_li,  eHTMLTag_newline,   //JUST ADDED!
         
     eHTMLTag_noframes,
-    eHTMLTag_noscript,  eHTMLTag_object,    eHTMLTag_paragraph, eHTMLTag_pre,
-    eHTMLTag_quotation, eHTMLTag_s,         eHTMLTag_strike,    
+    eHTMLTag_noscript,  eHTMLTag_object,    eHTMLTag_p, eHTMLTag_pre,
+    eHTMLTag_q, eHTMLTag_s,         eHTMLTag_strike,    
     eHTMLTag_samp,      eHTMLTag_small,
     eHTMLTag_span,      eHTMLTag_strong,    eHTMLTag_sub,       eHTMLTag_sup,   
     eHTMLTag_td,        eHTMLTag_text,
@@ -982,12 +982,12 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     case eHTMLTag_applet:
       {
         static char okTags[]={  
-          eHTMLTag_a,       eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_bold,
+          eHTMLTag_a,       eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_b,
           eHTMLTag_basefont,eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,
           eHTMLTag_button,  eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,
-          eHTMLTag_em,      eHTMLTag_font,      eHTMLTag_italic,    eHTMLTag_iframe,
+          eHTMLTag_em,      eHTMLTag_font,      eHTMLTag_i,    eHTMLTag_iframe,
           eHTMLTag_img,     eHTMLTag_input,     eHTMLTag_kbd,       eHTMLTag_label,
-          eHTMLTag_map,     eHTMLTag_object,    eHTMLTag_param,     eHTMLTag_quotation,
+          eHTMLTag_map,     eHTMLTag_object,    eHTMLTag_param,     eHTMLTag_q,
           eHTMLTag_s,       eHTMLTag_samp,      eHTMLTag_script,    
           eHTMLTag_select,  eHTMLTag_small,
           eHTMLTag_span,    eHTMLTag_strike,    eHTMLTag_strong,    eHTMLTag_sub,
@@ -1014,19 +1014,19 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     case eHTMLTag_bdo:
     case eHTMLTag_big:
     case eHTMLTag_blink:
-    case eHTMLTag_bold:
+    case eHTMLTag_b:
     case eHTMLTag_cite:
     case eHTMLTag_code:
     case eHTMLTag_del:
     case eHTMLTag_dfn:
     case eHTMLTag_em:
     case eHTMLTag_font:
-    case eHTMLTag_italic:
+    case eHTMLTag_i:
     case eHTMLTag_ins:
     case eHTMLTag_kbd:
+    case eHTMLTag_q:
     case eHTMLTag_small:
     case eHTMLTag_span:
-    case eHTMLTag_spell:
     case eHTMLTag_strike:
     case eHTMLTag_sub:
     case eHTMLTag_sup:
@@ -1127,8 +1127,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     case eHTMLTag_link:
       break;    //singletons can't contain anything...
 
-    case eHTMLTag_listitem:
-      if (eHTMLTag_listitem == aChild) {
+    case eHTMLTag_li:
+      if (eHTMLTag_li == aChild) {
         return PR_FALSE;
       }
       result=PRBool(!strchr(gHeadingTags,aChild)); break;
@@ -1138,14 +1138,6 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
 
     case eHTMLTag_map:
       result=PRBool(eHTMLTag_area==aChild); break;
-
-    case eHTMLTag_marquee:
-      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
-
-    case eHTMLTag_math:
-      break; //nothing but plain text...
-
-      break;  //singletons can't contain other tags
 
     case eHTMLTag_menu:
     case eHTMLTag_dir:
@@ -1166,8 +1158,6 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     case eHTMLTag_noscript:
       result=PRBool(0!=strchr(gTagSet1,aChild)); break;
 
-    case eHTMLTag_note:
-
     case eHTMLTag_object:
       result=PRBool(0!=strchr(gTagSet2,aChild)); break;
 
@@ -1175,8 +1165,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
       //for now, allow an option to contain anything but another option...
       result=PRBool(eHTMLTag_option!=aChild); break;
 
-    case eHTMLTag_paragraph:
-      if(eHTMLTag_paragraph==aChild)
+    case eHTMLTag_p:
+      if(eHTMLTag_p==aChild)
         result=PR_FALSE;
       else result=PRBool(0!=strchr(gTagSet2,aChild)); 
       break;
@@ -1188,7 +1178,6 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
       break;
 
     case eHTMLTag_pre:
-    case eHTMLTag_quotation:
       result=PRBool(0!=strchr(gTagSet2,aChild)); break;
 
     case eHTMLTag_script:
@@ -1263,8 +1252,7 @@ PRBool CNavDTD::CanContainIndirect(eHTMLTags aParent,eHTMLTags aChild) const {
     case eHTMLTag_html:
       {
         static char  okTags[]={
-          eHTMLTag_head,    eHTMLTag_body,
-          eHTMLTag_header,  eHTMLTag_footer,0
+          eHTMLTag_head,    eHTMLTag_body, 0
         };
         result=PRBool(0!=strchr(okTags,aChild));
       }
@@ -1439,7 +1427,7 @@ PRBool CNavDTD::IsContainer(eHTMLTags aTag) const {
     case eHTMLTag_hr:         case eHTMLTag_img:
     case eHTMLTag_input:      case eHTMLTag_isindex:
     case eHTMLTag_link:
-    case eHTMLTag_math:       case eHTMLTag_meta:
+    case eHTMLTag_meta:
 //    case eHTMLTag_option:     
     case eHTMLTag_param:
     case eHTMLTag_style:      case eHTMLTag_spacer:
@@ -1470,15 +1458,13 @@ eHTMLTags CNavDTD::GetDefaultParentTagFor(eHTMLTags aTag) const{
   switch(aTag) {
 
     case eHTMLTag_text:
-      result=eHTMLTag_paragraph; break;
+      result=eHTMLTag_p; break;
 
     case eHTMLTag_html:
       result=eHTMLTag_unknown; break;
 
     case eHTMLTag_body:
     case eHTMLTag_head:
-    case eHTMLTag_header:
-    case eHTMLTag_footer:
     case eHTMLTag_frameset:
       result=eHTMLTag_html; break;
 
@@ -2294,18 +2280,18 @@ PRInt32 CNavDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualTag
   
   switch (aTag) {
 
-    case eHTMLTag_a:
-    case eHTMLTag_bold:
+    case eHTMLTag_a:/* XXX consolidate with other switch statements by having a lookup table: "IsStyleTag[enum]" */
+    case eHTMLTag_b:
     case eHTMLTag_big:
     case eHTMLTag_blink:
     case eHTMLTag_cite:
     case eHTMLTag_em:
     case eHTMLTag_font:
-    case eHTMLTag_italic:
+    case eHTMLTag_i:
     case eHTMLTag_kbd:
+    case eHTMLTag_q:
     case eHTMLTag_s:
     case eHTMLTag_small:
-    case eHTMLTag_spell:
     case eHTMLTag_strike:
     case eHTMLTag_strong:
     case eHTMLTag_sub:
@@ -2343,16 +2329,15 @@ PRInt32 CNavDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActualTa
     switch (aTag) {
 
       case eHTMLTag_a:
-      case eHTMLTag_bold:
+      case eHTMLTag_b:
       case eHTMLTag_big:
       case eHTMLTag_blink:
       case eHTMLTag_cite:
       case eHTMLTag_em:
       case eHTMLTag_font:
-      case eHTMLTag_italic:
+      case eHTMLTag_i:
       case eHTMLTag_kbd:
       case eHTMLTag_small:
-      case eHTMLTag_spell:
       case eHTMLTag_s:
       case eHTMLTag_strike:
       case eHTMLTag_strong:

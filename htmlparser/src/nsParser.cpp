@@ -388,7 +388,7 @@ PRInt32 nsParser::WillBuildModel(eProcessType aProcessType, const char* aFilenam
 #ifdef DEBUG_SAVE_SOURCE_DOC
 #if defined(XP_UNIX) && (defined(IRIX) || defined(MKLINUX))
   /* XXX: IRIX does not support ios::binary */
-  gTempStream =new fstream("c:/temp/out.html",ios::out);
+  gTempStream =new fstream("/tmp/out.html",ios::out);
 #else
   gTempStream = new fstream("c:/temp/out.html",ios::out|ios::binary);
 #endif
