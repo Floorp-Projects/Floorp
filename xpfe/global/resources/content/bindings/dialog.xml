@@ -242,9 +242,9 @@
     </implementation>
     
     <handlers>
-      <handler event="keypress" keycode="VK_ENTER" phase="capturing" action="this._hitEnter();"/>
-      <handler event="keypress" keycode="VK_RETURN" phase="capturing" action="this._hitEnter();"/>
-      <handler event="keypress" keycode="VK_ESCAPE" phase="capturing" action="this.cancelDialog();"/>
+      <handler event="keypress" keycode="VK_ENTER" action="this._hitEnter();"/>
+      <handler event="keypress" keycode="VK_RETURN" action="this._hitEnter();"/>
+      <handler event="keypress" keycode="VK_ESCAPE" action="this.cancelDialog();"/>
     </handlers>
 
   </binding>
