@@ -108,7 +108,7 @@ struct PRMethodCallbackStr {
     void    (PR_CALLBACK *free)( void *ptr );
     void *  (PR_CALLBACK *getenv)( const char *name);
     int     (PR_CALLBACK *putenv)( const char *assoc);
-//    void *  (PR_CALLBACK *perror)( const char *prefix );
+/*    void *  (PR_CALLBACK *perror)( const char *prefix ); */
 };
 
 NSPR_API(void) PR_MDRegisterCallbacks(struct PRMethodCallbackStr *);
