@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: loader.c,v 1.7 2001/12/03 19:51:57 relyea%netscape.com Exp $
+ * $Id: loader.c,v 1.8 2002/11/02 01:51:44 nelsonb%netscape.com Exp $
  */
 
 #include "loader.h"
@@ -957,3 +957,279 @@ BL_Cleanup(void)
       return;
   (vector->p_BL_Cleanup)();
 }
+
+/* ============== New for 3.003 =============================== */
+
+SECStatus 
+SHA256_Hash(unsigned char *dest, const char *src)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_SHA256_Hash)(dest, src);
+}
+
+SECStatus 
+SHA256_HashBuf(unsigned char *dest, const unsigned char *src, uint32 src_length)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_SHA256_HashBuf)(dest, src, src_length);
+}
+
+SHA256Context *
+SHA256_NewContext(void)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return NULL;
+  return (vector->p_SHA256_NewContext)();
+}
+
+void 
+SHA256_DestroyContext(SHA256Context *cx, PRBool freeit)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return ;
+  (vector->p_SHA256_DestroyContext)(cx, freeit);
+}
+
+void 
+SHA256_Begin(SHA256Context *cx)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return ;
+  (vector->p_SHA256_Begin)(cx);
+}
+
+void 
+SHA256_Update(SHA256Context *cx, const unsigned char *input,
+			unsigned int inputLen)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return ;
+  (vector->p_SHA256_Update)(cx, input, inputLen);
+}
+
+void 
+SHA256_End(SHA256Context *cx, unsigned char *digest,
+		     unsigned int *digestLen, unsigned int maxDigestLen)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return ;
+  (vector->p_SHA256_End)(cx, digest, digestLen, maxDigestLen);
+}
+
+void 
+SHA256_TraceState(SHA256Context *cx)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return ;
+  (vector->p_SHA256_TraceState)(cx);
+}
+
+unsigned int 
+SHA256_FlattenSize(SHA256Context *cx)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return 0;
+  return (vector->p_SHA256_FlattenSize)(cx);
+}
+
+SECStatus 
+SHA256_Flatten(SHA256Context *cx,unsigned char *space)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_SHA256_Flatten)(cx, space);
+}
+
+SHA256Context * 
+SHA256_Resurrect(unsigned char *space, void *arg)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return NULL;
+  return (vector->p_SHA256_Resurrect)(space, arg);
+}
+
+SECStatus 
+SHA512_Hash(unsigned char *dest, const char *src)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_SHA512_Hash)(dest, src);
+}
+
+SECStatus 
+SHA512_HashBuf(unsigned char *dest, const unsigned char *src, uint32 src_length)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_SHA512_HashBuf)(dest, src, src_length);
+}
+
+SHA512Context *
+SHA512_NewContext(void)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return NULL;
+  return (vector->p_SHA512_NewContext)();
+}
+
+void 
+SHA512_DestroyContext(SHA512Context *cx, PRBool freeit)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return ;
+  (vector->p_SHA512_DestroyContext)(cx, freeit);
+}
+
+void 
+SHA512_Begin(SHA512Context *cx)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return ;
+  (vector->p_SHA512_Begin)(cx);
+}
+
+void 
+SHA512_Update(SHA512Context *cx, const unsigned char *input,
+			unsigned int inputLen)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return ;
+  (vector->p_SHA512_Update)(cx, input, inputLen);
+}
+
+void 
+SHA512_End(SHA512Context *cx, unsigned char *digest,
+		     unsigned int *digestLen, unsigned int maxDigestLen)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return ;
+  (vector->p_SHA512_End)(cx, digest, digestLen, maxDigestLen);
+}
+
+void 
+SHA512_TraceState(SHA512Context *cx)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return ;
+  (vector->p_SHA512_TraceState)(cx);
+}
+
+unsigned int 
+SHA512_FlattenSize(SHA512Context *cx)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return 0;
+  return (vector->p_SHA512_FlattenSize)(cx);
+}
+
+SECStatus 
+SHA512_Flatten(SHA512Context *cx,unsigned char *space)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_SHA512_Flatten)(cx, space);
+}
+
+SHA512Context * 
+SHA512_Resurrect(unsigned char *space, void *arg)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return NULL;
+  return (vector->p_SHA512_Resurrect)(space, arg);
+}
+
+
+SECStatus 
+SHA384_Hash(unsigned char *dest, const char *src)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_SHA384_Hash)(dest, src);
+}
+
+SECStatus 
+SHA384_HashBuf(unsigned char *dest, const unsigned char *src, uint32 src_length)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_SHA384_HashBuf)(dest, src, src_length);
+}
+
+SHA384Context *
+SHA384_NewContext(void)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return NULL;
+  return (vector->p_SHA384_NewContext)();
+}
+
+void 
+SHA384_DestroyContext(SHA384Context *cx, PRBool freeit)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return ;
+  (vector->p_SHA384_DestroyContext)(cx, freeit);
+}
+
+void 
+SHA384_Begin(SHA384Context *cx)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return ;
+  (vector->p_SHA384_Begin)(cx);
+}
+
+void 
+SHA384_Update(SHA384Context *cx, const unsigned char *input,
+			unsigned int inputLen)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return ;
+  (vector->p_SHA384_Update)(cx, input, inputLen);
+}
+
+void 
+SHA384_End(SHA384Context *cx, unsigned char *digest,
+		     unsigned int *digestLen, unsigned int maxDigestLen)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return ;
+  (vector->p_SHA384_End)(cx, digest, digestLen, maxDigestLen);
+}
+
+void 
+SHA384_TraceState(SHA384Context *cx)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return ;
+  (vector->p_SHA384_TraceState)(cx);
+}
+
+unsigned int 
+SHA384_FlattenSize(SHA384Context *cx)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return 0;
+  return (vector->p_SHA384_FlattenSize)(cx);
+}
+
+SECStatus 
+SHA384_Flatten(SHA384Context *cx,unsigned char *space)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_SHA384_Flatten)(cx, space);
+}
+
+SHA384Context * 
+SHA384_Resurrect(unsigned char *space, void *arg)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return NULL;
+  return (vector->p_SHA384_Resurrect)(space, arg);
+}
+
+
+

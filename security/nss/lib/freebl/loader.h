@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: loader.h,v 1.4 2001/11/30 23:21:48 relyea%netscape.com Exp $
+ * $Id: loader.h,v 1.5 2002/11/02 01:51:44 nelsonb%netscape.com Exp $
  */
 
 #ifndef _LOADER_H_
@@ -40,7 +40,7 @@
 
 #include "blapi.h"
 
-#define FREEBL_VERSION 0x0302
+#define FREEBL_VERSION 0x0303
 
 struct FREEBLVectorStr {
 
@@ -250,6 +250,8 @@ struct FREEBLVectorStr {
  SECStatus (* p_PQG_VerifyParams)(const PQGParams *params, 
                                   const PQGVerify *vfy, SECStatus *result);
 
+  /* Version 3.001 came to here */
+
   SECStatus (* p_RSA_PrivateKeyOpDoubleChecked)(RSAPrivateKey *key,
                               unsigned char *output,
                               const unsigned char *input);
@@ -257,6 +259,55 @@ struct FREEBLVectorStr {
   SECStatus (* p_RSA_PrivateKeyCheck)(RSAPrivateKey *key);
 
   void (* p_BL_Cleanup)(void);
+
+  /* Version 3.002 came to here */
+
+ SHA256Context *(* p_SHA256_NewContext)(void);
+ void (* p_SHA256_DestroyContext)(SHA256Context *cx, PRBool freeit);
+ void (* p_SHA256_Begin)(SHA256Context *cx);
+ void (* p_SHA256_Update)(SHA256Context *cx, const unsigned char *input,
+			unsigned int inputLen);
+ void (* p_SHA256_End)(SHA256Context *cx, unsigned char *digest,
+		     unsigned int *digestLen, unsigned int maxDigestLen);
+ SECStatus (* p_SHA256_HashBuf)(unsigned char *dest, const unsigned char *src,
+			      uint32 src_length);
+ SECStatus (* p_SHA256_Hash)(unsigned char *dest, const char *src);
+ void (* p_SHA256_TraceState)(SHA256Context *cx);
+ unsigned int (* p_SHA256_FlattenSize)(SHA256Context *cx);
+ SECStatus (* p_SHA256_Flatten)(SHA256Context *cx,unsigned char *space);
+ SHA256Context * (* p_SHA256_Resurrect)(unsigned char *space, void *arg);
+
+ SHA512Context *(* p_SHA512_NewContext)(void);
+ void (* p_SHA512_DestroyContext)(SHA512Context *cx, PRBool freeit);
+ void (* p_SHA512_Begin)(SHA512Context *cx);
+ void (* p_SHA512_Update)(SHA512Context *cx, const unsigned char *input,
+			unsigned int inputLen);
+ void (* p_SHA512_End)(SHA512Context *cx, unsigned char *digest,
+		     unsigned int *digestLen, unsigned int maxDigestLen);
+ SECStatus (* p_SHA512_HashBuf)(unsigned char *dest, const unsigned char *src,
+			      uint32 src_length);
+ SECStatus (* p_SHA512_Hash)(unsigned char *dest, const char *src);
+ void (* p_SHA512_TraceState)(SHA512Context *cx);
+ unsigned int (* p_SHA512_FlattenSize)(SHA512Context *cx);
+ SECStatus (* p_SHA512_Flatten)(SHA512Context *cx,unsigned char *space);
+ SHA512Context * (* p_SHA512_Resurrect)(unsigned char *space, void *arg);
+
+ SHA384Context *(* p_SHA384_NewContext)(void);
+ void (* p_SHA384_DestroyContext)(SHA384Context *cx, PRBool freeit);
+ void (* p_SHA384_Begin)(SHA384Context *cx);
+ void (* p_SHA384_Update)(SHA384Context *cx, const unsigned char *input,
+			unsigned int inputLen);
+ void (* p_SHA384_End)(SHA384Context *cx, unsigned char *digest,
+		     unsigned int *digestLen, unsigned int maxDigestLen);
+ SECStatus (* p_SHA384_HashBuf)(unsigned char *dest, const unsigned char *src,
+			      uint32 src_length);
+ SECStatus (* p_SHA384_Hash)(unsigned char *dest, const char *src);
+ void (* p_SHA384_TraceState)(SHA384Context *cx);
+ unsigned int (* p_SHA384_FlattenSize)(SHA384Context *cx);
+ SECStatus (* p_SHA384_Flatten)(SHA384Context *cx,unsigned char *space);
+ SHA384Context * (* p_SHA384_Resurrect)(unsigned char *space, void *arg);
+
+  /* Version 3.003 came to here */
 
 };
 
