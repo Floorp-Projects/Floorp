@@ -75,7 +75,7 @@
                                      tabbrowser.removeAllTabsBut(tabbrowser.mContextTab);"/>
           </xul:menupopup>
 
-          <xul:tabs class="tabbrowser-tabs" closebutton="true" flex="1"
+          <xul:tabs class="tabbrowser-tabs" closebutton="true" disableclose="true" flex="1"
                     onclick="if (event.button != 1 || event.target.localName != 'tab') return; 
                              this.parentNode.parentNode.parentNode.removeTab(event.target);"
                     ondragover="nsDragAndDrop.dragOver(event, this.parentNode.parentNode.parentNode);
@@ -572,6 +572,9 @@
         <parameter name="aReferrerURI"/>
         <body>
           <![CDATA[
+            // Enable the close box
+            this.mTabContainer.removeAttribute("disableclose");
+
             var blank = (aURI == "about:blank");
 
             if (!this.mTabbedMode)
@@ -668,6 +671,9 @@
               var autohide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
               if (autohide)
                 this.setStripVisibilityTo(false);
+              else
+                // Disable the close box
+                this.mTabContainer.setAttribute("disableclose", "true");
             }
 
             var index = -1;
