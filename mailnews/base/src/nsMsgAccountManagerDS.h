@@ -76,6 +76,7 @@ public:
   NS_IMETHOD HasAssertion(nsIRDFResource *aSource, nsIRDFResource *aProperty,
                           nsIRDFNode *aTarget, PRBool aTruthValue,
                           PRBool *_retval);
+  NS_IMETHOD HasArcOut(nsIRDFResource *source, nsIRDFResource *aArc, PRBool *result);
     
 protected:
 

@@ -640,6 +640,24 @@ nsMsgAccountManagerDataSource::getAccountRootArcs(nsISupportsArray **aResult)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgAccountManagerDataSource::HasArcOut(nsIRDFResource *source, nsIRDFResource *aArc, PRBool *result)
+{
+    nsresult rv = NS_OK;
+    if (aArc == kNC_Settings) {
+      // based on createSettingsResources()
+      // we only have settings for servers with identities
+      nsCOMPtr<nsIMsgIncomingServer> server;
+      rv = getServerForFolderNode(source, getter_AddRefs(server));
+      if (server) {
+          return serverHasIdentities(server, result);
+      }
+	}
+	
+	*result = PR_FALSE;
+	return NS_OK;
+}
+
 /* nsISimpleEnumerator ArcLabelsOut (in nsIRDFResource aSource); */
 NS_IMETHODIMP
 nsMsgAccountManagerDataSource::ArcLabelsOut(nsIRDFResource *source,
