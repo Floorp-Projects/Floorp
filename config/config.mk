@@ -713,6 +713,13 @@ endif
 
 GARBAGE		+= $(DEPENDENCIES) $(MKDEPENDENCIES) $(MKDEPENDENCIES).bak core $(wildcard core.[0-9]*) $(wildcard *.err) $(wildcard *.pure) $(wildcard *_pure_*.o) Templates.DB
 
+ifeq ($(OS_ARCH),Darwin)
+ifndef NSDISTMODE
+NSDISTMODE=absolute_symlink
+endif
+PWD := $(shell pwd)
+endif
+
 ifeq (,$(filter-out WINNT OS2, $(OS_ARCH)))
 ifeq ($(OS_ARCH),WINNT)
 NSINSTALL	= $(CYGWIN_WRAPPER) $(MOZ_TOOLS_DIR)/bin/nsinstall
@@ -729,7 +736,11 @@ INSTALL		= $(NSINSTALL) -t
 else
 ifeq ($(NSDISTMODE),absolute_symlink)
 # install using absolute symbolic links
+ifeq ($(OS_ARCH),Darwin)
+INSTALL		= $(NSINSTALL) -L $(PWD)
+else
 INSTALL		= $(NSINSTALL) -L `$(NFSPWD)`
+endif
 else
 # install using relative symbolic links
 INSTALL		= $(NSINSTALL) -R
