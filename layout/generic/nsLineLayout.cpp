@@ -332,6 +332,36 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
   }
   psd->mDirection = mBlockReflowState->mStyleVisibility->mDirection;
   psd->mChangedFrameDirection = PR_FALSE;
+
+  // If this is the first line of a block then see if the text-indent
+  // property amounts to anything.
+  
+  if (0 == mLineNumber) {
+    // XXX this test is not ideal, since in print media mLineNumber is
+    // zero on the first line of a paragraph that has been split over a
+    // page break, and this causes bug 45694
+    nscoord indent = 0;
+    nsStyleUnit unit = mStyleText->mTextIndent.GetUnit();
+    if (eStyleUnit_Coord == unit) {
+      indent = mStyleText->mTextIndent.GetCoordValue();
+    }
+    else if (eStyleUnit_Percent == unit) {
+      nscoord width =
+        nsHTMLReflowState::GetContainingBlockContentWidth(mBlockReflowState->parentReflowState);
+      if (0 != width) {
+        indent = nscoord(mStyleText->mTextIndent.GetPercentValue() * width);
+      }
+    }
+
+    if (NS_STYLE_DIRECTION_RTL == psd->mDirection) {
+      if (NS_UNCONSTRAINEDSIZE != psd->mRightEdge) {
+        psd->mRightEdge -= indent;
+      }
+    }
+    else {
+      psd->mX += indent;
+    }
+  }
 }
 
 void
@@ -849,7 +879,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 #endif
 
   // Compute the available size for the frame. This available width
-  // includes room for the side margins and for the text-indent.
+  // includes room for the side margins.
   nsSize availSize;
   if (NS_UNCONSTRAINEDSIZE == psd->mRightEdge) {
     availSize.width = NS_UNCONSTRAINEDSIZE;
@@ -965,6 +995,13 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   if (pfd->GetFlag(PFD_RELATIVEPOS)) {
     pfd->mOffsets = reflowState.mComputedOffsets;
   }
+
+  // NOTE: While the x coordinate remains relative to the parent span,
+  // the y coordinate is fixed at the top edge for the line. During
+  // VerticalAlignFrames we will repair this so that the y coordinate
+  // is properly set and relative to the appropriate span.
+  pfd->mBounds.x = psd->mX;
+  pfd->mBounds.y = mTopEdge;
 
   // We want to guarantee that we always make progress when
   // formatting. Therefore, if the object being placed on the line is
@@ -1374,36 +1411,10 @@ void
 nsLineLayout::ApplyLeftMargin(PerFrameData* pfd,
                               nsHTMLReflowState& aReflowState)
 {
-  // If this is the first frame in the block, and its the first line
-  // of a block then see if the text-indent property amounts to
-  // anything.
-  nscoord indent = 0;
-  if (InBlockContext() && (0 == mLineNumber) && CanPlaceFloaterNow()) {
-    nsStyleUnit unit = mStyleText->mTextIndent.GetUnit();
-    if (eStyleUnit_Coord == unit) {
-      indent = mStyleText->mTextIndent.GetCoordValue();
-    }
-    else if (eStyleUnit_Percent == unit) {
-      nscoord width =
-        nsHTMLReflowState::GetContainingBlockContentWidth(mBlockReflowState->parentReflowState);
-      if (0 != width) {
-        indent = nscoord(mStyleText->mTextIndent.GetPercentValue() * width);
-      }
-    }
-  }
-
-  // Adjust available width to account for the indent and the margins
+  // Adjust available width to account for the margins
   if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth) {
-    aReflowState.availableWidth -= indent + pfd->mMargin.left +
-      pfd->mMargin.right;
+    aReflowState.availableWidth -= pfd->mMargin.left + pfd->mMargin.right;
   }
-  // NOTE: While the x coordinate remains relative to the parent span,
-  // the y coordinate is fixed at the top edge for the line. During
-  // VerticalAlignFrames we will repair this so that the y coordinate
-  // is properly set and relative to the appropriate span.
-  PerSpanData* psd = mCurrentSpan;
-  pfd->mBounds.x = psd->mX + indent;
-  pfd->mBounds.y = mTopEdge;
 
   // Compute left margin
   nsIFrame* prevInFlow;
