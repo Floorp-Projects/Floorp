@@ -348,7 +348,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext& aPresContext,
                                               nsMouseEvent *aEvent,
                                               nsEventStatus& aStatus)
 {
-  nsresult ret;
+  nsresult ret = NS_OK;
   nsMouseEvent event;
   PRBool fireClick = PR_FALSE;
 
