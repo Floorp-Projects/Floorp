@@ -36,18 +36,12 @@ CPPSRCS		= \
 	color.cpp \
 	colormap.cpp \
 	dither.cpp \
-	gif.cpp \
 	if.cpp \
 	ilclient.cpp \
 	il_util.cpp \
-	jpeg.cpp \
 	scale.cpp \
-	xbm.cpp \
-	ipng.cpp \
-	png_png.cpp \
 	$(NULL)
 
-ifdef STANDALONE_IMAGE_LIB
 
 CPPSRCS		+= xpcompat.cpp \
 		  $(NULL)
@@ -56,20 +50,6 @@ REQUIRES	+= util img xpcom
 
 EXTRA_LIBS	+= $(NSPR_LIBS)
 
-else
-CPPSRCS		+= dummy_nc.cpp \
-		  external.cpp \
-		  $(NULL)
-
-#
-# Generate MIMGCB.c (and similar sources) here.
-# MIMGCB.h is generated in ../public/_jmc/
-#
-JMC_GEN		= MIMGCB MPSIMGCB
-JMC_GEN_FLAGS	= -cimpl -noexc -module
-endif
-
-EXPORTS		= PIMGCB.h PPSIMGCB.h
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
