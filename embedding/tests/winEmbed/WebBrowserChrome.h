@@ -38,7 +38,23 @@
 #include "nsIWebBrowser.h"
 #include "nsVoidArray.h"
 
+class WebBrowserChromeUI
+{
+public:
+    virtual nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome) = 0;
+    virtual void UpdateStatusBarText(nsIWebBrowserChrome *aChrome, const PRUnichar* aStatusText) = 0;
+    virtual void UpdateCurrentURI(nsIWebBrowserChrome *aChrome) = 0;
+    virtual void UpdateBusyState(nsIWebBrowserChrome *aChrome, PRBool aBusy) = 0;
+    virtual void UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aCurrent, PRInt32 aMax) = 0;
+};
 
+#define NS_DECL_WEBBROWSERCHROMEUI \
+  public: \
+    virtual nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome); \
+    virtual void UpdateStatusBarText(nsIWebBrowserChrome *aChrome, const PRUnichar* aStatusText); \
+    virtual void UpdateCurrentURI(nsIWebBrowserChrome *aChrome); \
+    virtual void UpdateBusyState(nsIWebBrowserChrome *aChrome, PRBool aBusy); \
+    virtual void UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aCurrent, PRInt32 aMax);
 
 class WebBrowserChrome   : public nsIWebBrowserChrome,
                            public nsIWebProgressListener,
@@ -50,6 +66,7 @@ public:
     WebBrowserChrome();
     virtual ~WebBrowserChrome();
 
+    void SetUI(WebBrowserChromeUI *aUI);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBBROWSERCHROME
@@ -62,6 +79,7 @@ protected:
    
    nativeWindow mNativeWindow;
    
+   WebBrowserChromeUI *mUI;
    nsCOMPtr<nsIWebBrowser> mWebBrowser;
    nsCOMPtr<nsIBaseWindow> mBaseWindow;
    nsCOMPtr<nsIWebBrowserChrome> mTopWindow;

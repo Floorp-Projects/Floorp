@@ -44,20 +44,33 @@ BEGIN
     POPUP "&File"
     BEGIN
         MENUITEM "New Browser...",              MOZ_NewBrowser
-        MENUITEM "Goto...",                     MOZ_Open
         MENUITEM SEPARATOR
-        MENUITEM "Save...",                     MOZ_Save
+        MENUITEM "&Save As...",                 MOZ_Save
         MENUITEM "Print Page",                  MOZ_Print
         MENUITEM "E&xit",                       IDM_EXIT
     END
     POPUP "&Edit"
     BEGIN
-        MENUITEM "Cut",                         MOZ_Cut
-        MENUITEM "Copy",                        MOZ_Copy
-        MENUITEM "Paste",                       MOZ_Paste, GRAYED
-        MENUITEM "Delete",                      MOZ_Delete, GRAYED
+        MENUITEM "Cu&t",                        MOZ_Cut
+        MENUITEM "&Copy",                       MOZ_Copy
+        MENUITEM "&Paste",                      MOZ_Paste
         MENUITEM SEPARATOR
         MENUITEM "Select All",                  MOZ_SelectAll
+        MENUITEM "Select None",                 MOZ_SelectNone
+    END
+    POPUP "&Go"
+    BEGIN
+        MENUITEM "&Back",                       MOZ_GoBack
+        MENUITEM "&Forward",                    MOZ_GoForward
+    END
+    POPUP "&Debug"
+    BEGIN
+        MENUITEM "&This space for rent",        ID_DEBUG_THISSPACEFORRENT
+        , GRAYED
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About winEmbed...",          MOZ_About
     END
 END
 
@@ -67,16 +80,15 @@ END
 // Dialog
 //
 
-MOZ_GetURI DIALOG DISCARDABLE  22, 17, 230, 75
+MOZ_GetURI DIALOG DISCARDABLE  22, 17, 210, 40
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Enter A URL"
-FONT 8, "System"
+CAPTION "New address"
+FONT 8, "MS Sans Serif"
 BEGIN
-    EDITTEXT        MOZ_EDIT_URI,34,33,182,14,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,182,55,30,11,WS_GROUP
-    PUSHBUTTON      "Cancel",IDNO,146,55,30,11,WS_GROUP
-    ICON            IDI_WINEMBED,IDC_MYICON,8,4,20,20
-    LTEXT           "URL:",IDC_STATIC,13,34,17,8
+    EDITTEXT        MOZ_EDIT_URI,34,6,171,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,74,23,30,13,WS_GROUP
+    PUSHBUTTON      "Cancel",IDNO,109,23,30,13,WS_GROUP
+    LTEXT           "Address:",IDC_STATIC,4,7,30,8
 END
 
 
@@ -117,11 +129,70 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_APP_TITLE           "winEmbed"
-    IDS_HELLO               "Embedding Mozilla is fun!!"
-    IDC_WINEMBED            "WINEMBED"
+    IDS_HELLO               "Embedding Mozilla is so much fun!!"
+    IDS_ABOUT               "winEmbed - Gecko embedding sample"
+    IDS_ABOUT_TITLE         "About winEmbed"
 END
 
 #endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.K.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_BROWSER DIALOG DISCARDABLE  0, 0, 400, 217
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | 
+    WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "winEmbed sample"
+MENU IDC_WINEMBED
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Back",IDC_BACK,1,1,21,13
+    PUSHBUTTON      "Forward",IDC_FORWARD,23,1,30,13
+    PUSHBUTTON      "Reload",IDC_RELOAD,57,1,28,13
+    PUSHBUTTON      "Stop",IDC_STOP,86,1,25,13
+    LTEXT           "Address:",IDC_STATIC,115,3,28,8
+    COMBOBOX        IDC_ADDRESS,145,1,193,52,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP
+    DEFPUSHBUTTON   "Go",IDC_GO,340,1,25,13
+    CONTROL         "Embedded Browser",IDC_BROWSER,"WINEMBED",WS_TABSTOP,0,
+                    16,400,192
+    CONTROL         "Status",IDC_STATUS,"Static",SS_LEFTNOWORDWRAP | 
+                    SS_SUNKEN | WS_GROUP,0,208,316,9
+    CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
+                    316,208,84,9
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_BROWSER, DIALOG
+    BEGIN
+        RIGHTMARGIN, 292
+        BOTTOMMARGIN, 216
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.K.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

@@ -40,10 +40,20 @@ WebBrowserChrome::WebBrowserChrome()
 {
 	NS_INIT_REFCNT();
     mNativeWindow = nsnull;
+    mUI = nsnull;
 }
 
 WebBrowserChrome::~WebBrowserChrome()
 {
+    if (mUI)
+    {
+        delete mUI;
+    }
+}
+
+void WebBrowserChrome::SetUI(WebBrowserChromeUI *aUI)
+{
+    mUI = aUI;
 }
 
 //*****************************************************************************
@@ -58,7 +68,7 @@ NS_INTERFACE_MAP_BEGIN(WebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
-   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)  //optional
+   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener) // optional
 //   NS_INTERFACE_MAP_ENTRY(nsIPrompt)
 NS_INTERFACE_MAP_END
 
@@ -77,6 +87,7 @@ NS_IMETHODIMP WebBrowserChrome::GetInterface(const nsIID &aIID, void** aInstance
 
 NS_IMETHODIMP WebBrowserChrome::SetStatus(PRUint32 aType, const PRUnichar* aStatus)
 {
+   mUI->UpdateStatusBarText(this, aStatus);
    return NS_OK;
 }
 
@@ -111,10 +122,6 @@ NS_IMETHODIMP WebBrowserChrome::SetChromeFlags(PRUint32 aChromeMask)
    return NS_ERROR_FAILURE;
 }
 
-
-// in winEmbed.cpp
-extern nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome);
-
 NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask, PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser **aWebBrowser)
 {
    static int gCount = 0;
@@ -137,14 +144,14 @@ NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask, PRInt32
 
     
     mBaseWindow = do_QueryInterface(mWebBrowser);
-    mNativeWindow = CreateNativeWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
+    mNativeWindow = mUI->CreateNativeWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
 
     if (!mNativeWindow)
         return NS_ERROR_FAILURE;
 
     mBaseWindow->InitWindow( mNativeWindow,
                              nsnull, 
-                             0, 0, 450, 450);
+                             aX, aY, aCX, aCY);
     mBaseWindow->Create();
     
     NS_IF_ADDREF(*aWebBrowser = mWebBrowser);
@@ -215,17 +222,26 @@ NS_IMETHODIMP WebBrowserChrome::OnProgressChange(nsIWebProgress *progress, nsIRe
                                                   PRInt32 curSelfProgress, PRInt32 maxSelfProgress,
                                                   PRInt32 curTotalProgress, PRInt32 maxTotalProgress)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mUI->UpdateProgress(this, curTotalProgress, maxTotalProgress);
+    return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowserChrome::OnStateChange(nsIWebProgress *progress, nsIRequest *request,
                                                PRInt32 progressStateFlags, PRUint32 status)
 {
-
-    if ((progressStateFlags & STATE_STOP) && (progressStateFlags & STATE_IS_REQUEST))
+    if ((progressStateFlags & STATE_START) && (progressStateFlags & STATE_IS_DOCUMENT))
     {
+        mUI->UpdateBusyState(this, PR_TRUE);
     }
-    return NS_ERROR_NOT_IMPLEMENTED;
+
+    if ((progressStateFlags & STATE_STOP) && (progressStateFlags & STATE_IS_DOCUMENT))
+    {
+        mUI->UpdateBusyState(this, PR_FALSE);
+        mUI->UpdateProgress(this, 0, 100);
+        mUI->UpdateStatusBarText(this, nsnull);
+    }
+
+    return NS_OK;
 }
 
 
@@ -233,7 +249,8 @@ NS_IMETHODIMP WebBrowserChrome::OnLocationChange(nsIWebProgress* aWebProgress,
                                                  nsIRequest* aRequest,
                                                  nsIURI *location)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mUI->UpdateCurrentURI(this);
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -242,6 +259,7 @@ WebBrowserChrome::OnStatusChange(nsIWebProgress* aWebProgress,
                                  nsresult aStatus,
                                  const PRUnichar* aMessage)
 {
+    mUI->UpdateStatusBarText(this, aMessage);
     return NS_OK;
 }
 
