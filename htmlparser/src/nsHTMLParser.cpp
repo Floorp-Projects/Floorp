@@ -512,6 +512,7 @@ void GetDelegateAndDTD(eParseMode aMode,ITokenizerDelegate*& aDelegate,nsIDTD*& 
  */
 PRInt32 nsHTMLParser::WillBuildModel(void) {
   mIteration=-1;
+  mHasSeenOpenTag=PR_FALSE;
   if(mSink)
     mSink->WillBuildModel();
   return kNoError;
@@ -824,7 +825,7 @@ PRInt32 nsHTMLParser::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag
 
   if(PR_FALSE==contains){
     result=CreateContextStackFor(aChildTag);
-    if(PR_FALSE==result) {
+    if(kNoError!=result) {
       //if you're here, then the new topmost container can't contain aToken.
       //You must determine what container hierarchy you need to hold aToken,
       //and create that on the parsestack.
@@ -1096,9 +1097,24 @@ PRInt32 nsHTMLParser::HandleAttributeToken(CToken* aToken) {
 PRInt32 nsHTMLParser::HandleScriptToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
-  CScriptToken*  st = (CScriptToken*)(aToken);
-  PRInt32 result=kNoError;
-  return result;
+  CScriptToken*   st = (CScriptToken*)(aToken);
+
+  eHTMLTokenTypes subtype=eToken_attribute;
+  nsDeque&        deque=mTokenizer->GetDeque();
+  nsDequeIterator end=deque.End();
+
+  if(*mCurrentPos!=end) {
+    CHTMLToken* tkn=(CHTMLToken*)(++(*mCurrentPos));
+    subtype=eHTMLTokenTypes(tkn->GetTokenType());
+    if(eToken_skippedcontent==subtype) {
+      //WE INTENTIONALLY DROP THE TOKEN ON THE FLOOR!
+      //LATER, we'll pass this onto the javascript system.
+      return kNoError;
+    } 
+    else (*mCurrentPos)--;
+  }
+  return kInterrupted;
+
 }
 
 /**
@@ -1531,6 +1547,7 @@ PRInt32 nsHTMLParser::CreateContextStackFor(PRInt32 aChildTag){
         }
       } //while
     } //elseif
+    else result=kCantPropagate;
   } //elseif
 
     //now, build up the stack according to the tags 
@@ -1539,8 +1556,7 @@ PRInt32 nsHTMLParser::CreateContextStackFor(PRInt32 aChildTag){
     nsAutoString  empty;
     int i=0;
     for(i=pos;i<cnt;i++) {
-      CStartToken* st=new CStartToken(empty);
-      st->SetHTMLTag((eHTMLTags)theVector[cnt-1-i]);
+      CStartToken* st=new CStartToken((eHTMLTags)theVector[cnt-1-i]);
       HandleStartToken(st);
     }
   }
@@ -1616,19 +1632,39 @@ nsresult nsHTMLParser::OnStartBinding(void){
  *  
  *  
  *  @update  gess 5/12/98
- *  @param   
- *  @return  
+ *  @param   pIStream contains the input chars
+ *  @param   length is the number of bytes waiting input
+ *  @return  error code (usually 0)
  */
 nsresult nsHTMLParser::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length){
 
   int len=0;
+  int offset=0;
 
   do {
       PRInt32 err;
       len = pIStream->Read(&err, mTransferBuffer, 0, gTransferBufferSize);
       if(len>0) {
+
+        //Ok -- here's the problem.
+        //Just because someone throws you some data, doesn't mean that it's
+        //actually GOOD data. Recently, I encountered a problem where netlib
+        //was prepending an otherwise valid buffer with a few garbage characters.
+        //To solve this, I'm adding some debug code here that protects us from
+        //propagating the bad data upwards.
+
         mTransferBuffer[len]=0;
-        mTokenizer->Append(mTransferBuffer,len);
+        if(PR_FALSE==mHasSeenOpenTag) {
+          for(offset=0;offset<len;offset++) {
+            if(kLessThan==mTransferBuffer[offset]){
+              mHasSeenOpenTag=PR_TRUE;
+              break;
+            } 
+          }
+        }
+
+        if(len-offset)
+          mTokenizer->Append(&mTransferBuffer[offset],len);
       }
   } while (len > 0);
 

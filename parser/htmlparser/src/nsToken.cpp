@@ -29,6 +29,17 @@ CToken::CToken(const nsString& aName) : mTextValue(aName) {
   mOrdinalValue=0;
   mAttrCount=0;
 }
+
+/**
+ *  constructor from char*
+ *  
+ *  @update gess 3/25/98
+ *  @param  aName--char* containing name of token
+ */
+CToken::CToken(const char* aName) : mTextValue(aName) {
+  mOrdinalValue=0;
+  mAttrCount=0;
+}
  
 /**
  *  Decstructor
