@@ -3188,7 +3188,7 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresShell*            aPresShell,
       aChildContent->GetTag(*getter_AddRefs(tag));
       // A form doesn't get a psuedo frame parent, but it needs a frame, so just use the current parent
       // XXX now that form is a normal frame, do we need to do this?
-      if (nsHTMLAtoms::form == tag.get()) {
+      if (tag == nsHTMLAtoms::form) {
         nsFrameItems items;
         rv = ConstructFrame(aPresShell, aPresContext, aState, aChildContent,         
                             aParentFrame, items);
@@ -3404,7 +3404,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
       contentFrame->GetStyleContext(getter_AddRefs(styleContext));
   } else {
         // otherwise build a box or a block
-#if defined(INCLUDE_XUL) || defined(MOZ_SVG)
+#if defined(MOZ_SVG)
         PRInt32 nameSpaceID;
 #endif
 #ifdef INCLUDE_XUL
@@ -6188,6 +6188,8 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
                                                    nsFrameConstructorState& aState,
                                                    const nsStyleDisplay*    aDisplay,
                                                    nsIContent*              aContent,
+                                                   PRInt32                  aNameSpaceID,
+                                                   nsIAtom*                 aTag,
                                                    nsIFrame*                aParentFrame,
                                                    nsIStyleContext*         aStyleContext,
                                                    nsFrameItems&            aFrameItems)
@@ -6222,7 +6224,9 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
   if (adjParentFrame) {
     nsCOMPtr<nsIAtom> parentType;
     adjParentFrame->GetFrameType(getter_AddRefs(parentType));
-    if (!IsTableRelated(aDisplay->mDisplay, PR_TRUE) && IsTableRelated(parentType.get(), PR_FALSE)) {
+    if (!IsTableRelated(aDisplay->mDisplay, PR_TRUE) &&
+        IsTableRelated(parentType.get(), PR_FALSE) &&
+        aTag != nsHTMLAtoms::form) {
       GetPseudoCellFrame(aPresShell, aPresContext, tableCreator, aState, *adjParentFrame);
       if (aState.mPseudoFrames.mCellInner.mFrame) {
         adjParentFrame = aState.mPseudoFrames.mCellInner.mFrame;
@@ -7397,7 +7401,8 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
                            (lastChild == aFrameItems.lastChild))) {
     // When there is no explicit frame to create, assume it's a
     // container and let display style dictate the rest
-    rv = ConstructFrameByDisplayType(aPresShell, aPresContext, aState, display, aContent,
+    rv = ConstructFrameByDisplayType(aPresShell, aPresContext, aState, display,
+                                     aContent, aNameSpaceID, aTag,
                                      aParentFrame, styleContext, aFrameItems);
   }
 
@@ -11112,18 +11117,22 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
                                                  nsIPresContext* aPresContext,
                                                  nsIFrame*       aFrame)
 {
-  nsIFrame*                 parentFrame;
-  nsCOMPtr<nsIStyleContext> styleContext;
-  nsCOMPtr<nsIContent>      content;
-  nsCOMPtr<nsIAtom>         tag;
   nsresult                  rv = NS_OK;
 
+  // Get parent frame and style context
+  nsIFrame*                 parentFrame;
+  nsCOMPtr<nsIStyleContext> styleContext;
   aFrame->GetParent(&parentFrame);
   aFrame->GetStyleContext(getter_AddRefs(styleContext));
 
   // Get aFrame's content object and the tag name
+  nsCOMPtr<nsIContent>      content;
+  PRInt32                   nameSpaceID;
+  nsCOMPtr<nsIAtom>         tag;
+
   aFrame->GetContent(getter_AddRefs(content));
   NS_ASSERTION(content, "null content object");
+  content->GetNameSpaceID(nameSpaceID);
   content->GetTag(*getter_AddRefs(tag));
 
   // Get the child list name that the frame is contained in
@@ -11145,6 +11154,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
   
   // See whether it's an IMG or an INPUT element (for image buttons)
   // or if it is an applet with no displayable children
+  // XXX need to check nameSpaceID in these spots
   if (nsHTMLAtoms::img == tag.get() || nsHTMLAtoms::input == tag.get() ||
       (nsHTMLAtoms::applet == tag.get() && !HasDisplayableChildren(aPresContext, aFrame))) {
     // Try and construct an alternate frame to use when the
@@ -11231,7 +11241,8 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
     // Create a new frame based on the display type.
     // Note: if the old frame was out-of-flow, then so will the new frame
     // and we'll get a new placeholder frame
-    rv = ConstructFrameByDisplayType(aPresShell, aPresContext, state, display, content,
+    rv = ConstructFrameByDisplayType(aPresShell, aPresContext, state, display,
+                                     content, nameSpaceID, tag,
                                      inFlowParent, styleContext, frameItems);
 
     if (NS_FAILED(rv)) return rv;

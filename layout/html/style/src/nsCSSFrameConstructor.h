@@ -629,6 +629,8 @@ protected:
                                        nsFrameConstructorState& aState,
                                        const nsStyleDisplay*    aDisplay,
                                        nsIContent*              aContent,
+                                       PRInt32                  aNameSpaceID,
+                                       nsIAtom*                 aTag,
                                        nsIFrame*                aParentFrame,
                                        nsIStyleContext*         aStyleContext,
                                        nsFrameItems&            aFrameItems);
