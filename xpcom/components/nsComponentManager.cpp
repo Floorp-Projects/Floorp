@@ -27,7 +27,6 @@
 #include "prsystem.h"
 #include "prprf.h"
 #include "xcDll.h"
-#include "prlog.h"
 #include "prerror.h"
 #include "prmem.h"
 
@@ -35,7 +34,8 @@
 #include "prthread.h" /* XXX: only used for the NSPR initialization hack (rick) */
 
 // Logging of debug output
-#define FORCE_PR_LOG		// Allow logging in release builds
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#include "prlog.h"
 PRLogModuleInfo* nsComponentManagerLog = NULL;
 
 // Enable printing of critical errors on screen even for release builds
