@@ -4640,6 +4640,16 @@ done:
 char * nsImapProtocol::OnCreateServerSourceFolderPathString()
 {
   char *sourceMailbox = nsnull;
+  char hierarchyDelimiter = 0;
+  char *onlineDelimiter = nsnull;
+  m_runningUrl->GetOnlineSubDirSeparator(&hierarchyDelimiter);
+  if (m_imapMailFolderSink)
+      m_imapMailFolderSink->GetOnlineDelimiter(&onlineDelimiter);
+  if (onlineDelimiter && *onlineDelimiter != hierarchyDelimiter)
+      m_runningUrl->SetOnlineSubDirSeparator (*onlineDelimiter);
+  if (onlineDelimiter)
+      nsCRT::free(onlineDelimiter);
+
   m_runningUrl->CreateServerSourceFolderPathString(&sourceMailbox);
   if (sourceMailbox)
   {
@@ -4655,6 +4665,16 @@ char * nsImapProtocol::OnCreateServerSourceFolderPathString()
 char * nsImapProtocol::OnCreateServerDestinationFolderPathString()
 {
   char *destinationMailbox = nsnull;
+  char hierarchyDelimiter = 0;
+  char *onlineDelimiter = nsnull;
+  m_runningUrl->GetOnlineSubDirSeparator(&hierarchyDelimiter);
+  if (m_imapMailFolderSink)
+      m_imapMailFolderSink->GetOnlineDelimiter(&onlineDelimiter);
+  if (onlineDelimiter && *onlineDelimiter != hierarchyDelimiter)
+      m_runningUrl->SetOnlineSubDirSeparator (*onlineDelimiter);
+  if (onlineDelimiter)
+      nsCRT::free(onlineDelimiter);
+
   m_runningUrl->CreateServerDestinationFolderPathString(&destinationMailbox);
   if (destinationMailbox)
   {

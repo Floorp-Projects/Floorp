@@ -79,6 +79,19 @@ nsImapService::~nsImapService()
 {
 }
 
+PRUnichar nsImapService::GetHierarchyDelimiter(nsIMsgFolder* aMsgFolder)
+{
+    PRUnichar delimiter = '/';
+    if (aMsgFolder)
+    {
+        nsCOMPtr<nsIMsgImapMailFolder> imapFolder =
+            do_QueryInterface(aMsgFolder); 
+        if (imapFolder)
+            imapFolder->GetHierarchyDelimiter(&delimiter);
+    }
+    return delimiter;
+}
+
 // N.B., this returns an escaped folder name, appropriate for putting in a url.
 nsresult
 nsImapService::GetFolderName(nsIMsgFolder* aImapFolder,
@@ -126,7 +139,7 @@ nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue,
 	nsCOMPtr<nsIImapUrl> imapUrl;
 	nsCAutoString urlSpec;
     nsresult rv;
-	PRUnichar hierarchySeparator = '/';
+	PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder);
 	rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), aImapMailFolder, aUrlListener, urlSpec, hierarchySeparator);
 
 	if (NS_SUCCEEDED(rv) && imapUrl)
@@ -181,7 +194,7 @@ nsImapService::LiteSelectFolder(nsIEventQueue * aClientEventQueue,
 
 	nsresult rv;
     
-	PRUnichar hierarchySeparator = '/';
+	PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder);
     rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), aImapMailFolder, aUrlListener, urlSpec, hierarchySeparator);
 
 	if (NS_SUCCEEDED(rv))
@@ -222,7 +235,7 @@ NS_IMETHODIMP nsImapService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL
     {
       nsCOMPtr<nsIImapUrl> imapUrl;
       nsCAutoString urlSpec;
-	    PRUnichar hierarchySeparator = '/';
+      PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);;
       rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), folder, nsnull, urlSpec, hierarchySeparator);
       if (NS_FAILED(rv)) return rv;
     	  imapUrl->SetImapMessageSink(imapMessageSink);
@@ -268,7 +281,7 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
     {
       nsCOMPtr<nsIImapUrl> imapUrl;
       nsCAutoString urlSpec;
-      PRUnichar hierarchySeparator = '/';
+      PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
       rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
       if (NS_FAILED(rv)) return rv;
       nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(imapUrl));
@@ -304,7 +317,7 @@ nsImapService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener *
 		  {
             nsCOMPtr<nsIImapUrl> imapUrl;
             nsCAutoString urlSpec;
-			      PRUnichar hierarchySeparator = '/';
+			      PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
             rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
 
             // now try to download the message
@@ -362,7 +375,7 @@ nsImapService::CopyMessages(nsMsgKeyArray *keys, nsIMsgFolder *srcFolder, nsIStr
 			AllocateImapUidString(keys->GetArray(), keys->GetSize(), messageIds);
             nsCOMPtr<nsIImapUrl> imapUrl;
             nsCAutoString urlSpec;
-			PRUnichar hierarchySeparator = '/';
+			PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
             rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
 			nsIImapUrl::nsImapAction action;
 			if (moveMessage)
@@ -425,7 +438,7 @@ NS_IMETHODIMP nsImapService::SaveMessageToDisk(const char *aMessageURI,
     if (NS_FAILED(rv)) return rv;
     
     nsCAutoString urlSpec;
-  	PRUnichar hierarchySeparator = '/';
+  	PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
     rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
     if (NS_SUCCEEDED(rv)) 
     {
@@ -476,10 +489,8 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
       url->GetSpec(getter_Copies(currentSpec));
       urlSpec = currentSpec;
 
-      PRUnichar hierarchySeparator = '/'; 
-      nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(aImapMailFolder);
-	  if (imapFolder)
-			imapFolder->GetHierarchyDelimiter(&hierarchySeparator);
+      PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder); 
+
 	  urlSpec.Append("fetch>");
 	  urlSpec.Append(messageIdsAreUID ? uidString : sequenceString);
 	  urlSpec.Append(">");
@@ -647,7 +658,7 @@ nsImapService::GetHeaders(nsIEventQueue * aClientEventQueue,
 	
 	nsCOMPtr<nsIImapUrl> imapUrl;
 	nsCAutoString urlSpec;
-	PRUnichar hierarchySeparator = '/'; // ### fixme - should get from folder
+	PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder);
 
 	nsresult rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl),aImapMailFolder, aUrlListener, urlSpec, hierarchySeparator);
 	if (NS_SUCCEEDED(rv) && imapUrl)
@@ -698,7 +709,7 @@ nsImapService::Noop(nsIEventQueue * aClientEventQueue,
 	nsCOMPtr<nsIImapUrl> imapUrl;
 	nsCAutoString urlSpec;
 
-	PRUnichar hierarchySeparator = '/';
+	PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder);
 	nsresult rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl),
                                           aImapMailFolder,
                                           aUrlListener, urlSpec, hierarchySeparator);
@@ -742,7 +753,7 @@ nsImapService::Expunge(nsIEventQueue * aClientEventQueue,
 	nsCOMPtr<nsIImapUrl> imapUrl;
 	nsCAutoString urlSpec;
 
-	PRUnichar hierarchySeparator = '/'; // ### fixme - should get from folder
+	PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder);
 	nsresult rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl),
                                           aImapMailFolder,
                                           aUrlListener, urlSpec, hierarchySeparator);
@@ -791,7 +802,7 @@ nsImapService::Biff(nsIEventQueue * aClientEventQueue,
 	nsCOMPtr<nsIImapUrl> imapUrl;
 	nsCAutoString urlSpec;
 
-	PRUnichar hierarchySeparator = '/';
+	PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder);
 	nsresult rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl),
                                           aImapMailFolder,
                                           aUrlListener, urlSpec, hierarchySeparator);
@@ -837,7 +848,7 @@ nsImapService::DeleteFolder(nsIEventQueue* eventQueue,
     nsCOMPtr<nsIImapUrl> imapUrl;
     nsCAutoString urlSpec;
 
-	PRUnichar hierarchySeparator = '/';
+	PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
     rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), folder, urlListener, urlSpec, hierarchySeparator);
     if (NS_SUCCEEDED(rv))
     {
@@ -888,7 +899,7 @@ nsImapService::DeleteMessages(nsIEventQueue * aClientEventQueue,
 	nsCOMPtr<nsIImapUrl> imapUrl;
 	nsCAutoString urlSpec;
 
-	PRUnichar hierarchySeparator = '/';
+	PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder);
 	nsresult rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl),
                                           aImapMailFolder,
                                           aUrlListener, urlSpec, hierarchySeparator);
@@ -938,7 +949,7 @@ nsImapService::DeleteAllMessages(nsIEventQueue * aClientEventQueue,
 	nsCOMPtr<nsIImapUrl> imapUrl;
 	nsCAutoString urlSpec;
 
-	PRUnichar hierarchySeparator = '/';
+	PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder);
 	nsresult rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl),
                                           aImapMailFolder,
                                           aUrlListener, urlSpec, hierarchySeparator);
@@ -1029,7 +1040,7 @@ nsresult nsImapService::DiddleFlags(nsIEventQueue * aClientEventQueue,
 	nsCOMPtr<nsIImapUrl> imapUrl;
 	nsCAutoString urlSpec;
 
-	PRUnichar hierarchySeparator = '/';
+	PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder);
 	nsresult rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl),
                                           aImapMailFolder,
                                           aUrlListener, urlSpec, hierarchySeparator); 
@@ -1136,7 +1147,7 @@ nsImapService::DiscoverAllFolders(nsIEventQueue* aClientEventQueue,
     nsCOMPtr<nsIImapUrl> aImapUrl;
     nsCAutoString urlSpec;
 
-	PRUnichar hierarchySeparator = '/';
+	PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder);
     nsresult rv = CreateStartOfImapUrl(getter_AddRefs(aImapUrl),
                                           aImapMailFolder,
                                           aUrlListener, urlSpec, hierarchySeparator);
@@ -1173,7 +1184,7 @@ nsImapService::DiscoverAllAndSubscribedFolders(nsIEventQueue* aClientEventQueue,
     nsCOMPtr<nsIImapUrl> aImapUrl;
     nsCAutoString urlSpec;
 
-	PRUnichar hierarchySeparator = '/';
+	PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder);
     nsresult rv = CreateStartOfImapUrl(getter_AddRefs(aImapUrl),
                                           aImapMailFolder,
                                           aUrlListener, urlSpec, hierarchySeparator);
@@ -1209,7 +1220,7 @@ nsImapService::DiscoverChildren(nsIEventQueue* aClientEventQueue,
     nsCOMPtr<nsIImapUrl> aImapUrl;
     nsCAutoString urlSpec;
 
-	PRUnichar hierarchySeparator = '/';
+	PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder);
     nsresult rv = CreateStartOfImapUrl(getter_AddRefs(aImapUrl),
                                           aImapMailFolder,
                                           aUrlListener, urlSpec, hierarchySeparator);
@@ -1261,7 +1272,7 @@ nsImapService::DiscoverLevelChildren(nsIEventQueue* aClientEventQueue,
     nsCOMPtr<nsIImapUrl> aImapUrl;
     nsCAutoString urlSpec;
 
-	PRUnichar hierarchySeparator = '/';
+	PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder);
     nsresult rv = CreateStartOfImapUrl(getter_AddRefs(aImapUrl),
                                           aImapMailFolder,aUrlListener, urlSpec, hierarchySeparator);
     if (NS_SUCCEEDED (rv) && aImapUrl)
@@ -1333,7 +1344,7 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
     nsCOMPtr<nsIImapUrl> imapUrl;
     nsCAutoString urlSpec;
 
-	PRUnichar hierarchySeparator = '/';
+	PRUnichar hierarchySeparator = GetHierarchyDelimiter(aSrcFolder);
     rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), aSrcFolder, aUrlListener, urlSpec, hierarchySeparator);
     if (NS_SUCCEEDED(rv))
     {
@@ -1393,7 +1404,7 @@ nsImapService::AppendMessageFromFile(nsIEventQueue* aClientEventQueue,
     nsCOMPtr<nsIImapUrl> imapUrl;
     nsCAutoString urlSpec;
 
-	PRUnichar hierarchySeparator = '/';
+	PRUnichar hierarchySeparator = GetHierarchyDelimiter(aDstFolder);
     rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), aDstFolder, aListener, urlSpec, hierarchySeparator);
     if (NS_SUCCEEDED(rv))
     {
@@ -1496,7 +1507,7 @@ nsImapService::MoveFolder(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
     nsCAutoString urlSpec;
     nsresult rv;
 
-	PRUnichar default_hierarchySeparator = '/';
+	PRUnichar default_hierarchySeparator = GetHierarchyDelimiter(dstFolder);
     rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), dstFolder, urlListener, urlSpec, default_hierarchySeparator);
     if (NS_SUCCEEDED(rv) && imapUrl)
     {
@@ -1544,7 +1555,7 @@ nsImapService::RenameLeaf(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
     nsCAutoString urlSpec;
     nsresult rv;
 
-	PRUnichar hierarchySeparator = '/';
+	PRUnichar hierarchySeparator = GetHierarchyDelimiter(srcFolder);
     rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), srcFolder, urlListener, urlSpec, hierarchySeparator);
     if (NS_SUCCEEDED(rv))
     {
@@ -1595,7 +1606,7 @@ nsImapService::CreateFolder(nsIEventQueue* eventQueue, nsIMsgFolder* parent,
     nsCAutoString urlSpec;
     nsresult rv;
 
-	PRUnichar hierarchySeparator = '/';
+	PRUnichar hierarchySeparator = GetHierarchyDelimiter(parent);
     rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), parent, urlListener, urlSpec, hierarchySeparator);
     if (NS_SUCCEEDED(rv) && imapUrl)
     {
@@ -1642,7 +1653,7 @@ nsImapService::ListFolder(nsIEventQueue* aClientEventQueue,
     nsCAutoString urlSpec;
     nsresult rv;
 
-	PRUnichar hierarchySeparator = '/';
+	PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder);
     rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), aImapMailFolder, aUrlListener, urlSpec, hierarchySeparator);
     if (NS_SUCCEEDED(rv) && imapUrl)
     {

@@ -201,6 +201,7 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////
 
 protected:
+    PRUnichar GetHierarchyDelimiter(nsIMsgFolder* aMsgFolder);
     nsresult GetFolderName(nsIMsgFolder* aImapFolder,
                            char **folderName);
 	nsresult CreateStartOfImapUrl(nsIImapUrl  **imapUrl,

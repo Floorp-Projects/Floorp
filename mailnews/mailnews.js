@@ -370,6 +370,7 @@ pref("mail.server.default.delete_mail_left_on_server", false);
 pref("mail.server.default.valid", true);
 pref("mail.server.default.abbreviate",true);
 pref("mail.server.default.isSecure", false);
+pref("mail.server.default.override_namespaces", true);
 
 pref("mail.convert_emoticons",true);
 pref("mail.convert_structs",true);

@@ -117,8 +117,6 @@ NS_IMETHODIMP nsImapIncomingServer::SetKey(const char * aKey)  // override nsMsg
 	char *otherUsersNamespace = nsnull;
 
 	rv = GetPersonalNamespace(&personalNamespace);
-	rv = GetPublicNamespace(&publicNamespace);
-	rv = GetOtherUsersNamespace(&otherUsersNamespace);
 
 	if (!personalNamespace && !publicNamespace && !otherUsersNamespace)
 		personalNamespace = PL_strdup("\"\"");
@@ -129,11 +127,15 @@ NS_IMETHODIMP nsImapIncomingServer::SetKey(const char * aKey)  // override nsMsg
 		PR_FREEIF(personalNamespace);
 	}
 
+	rv = GetPublicNamespace(&publicNamespace);
+
 	if (NS_SUCCEEDED(rv))
 	{
 		hostSession->SetNamespaceFromPrefForHost(aKey, publicNamespace, kPublicNamespace);
 		PR_FREEIF(publicNamespace);
 	}
+
+	rv = GetOtherUsersNamespace(&otherUsersNamespace);
 
 	if (NS_SUCCEEDED(rv))
 	{
