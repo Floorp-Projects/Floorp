@@ -116,7 +116,7 @@ public:
 // Prefs
 
 static const char *c_szPrefsHomePage = "browser.startup.homepage";
-static const char *c_szDefaultPage   = "resource:/res/MozillaControl.html";
+static const char *c_szDefaultPage   = "data:text/html,<html><body bgcolor=\"#00FF00\"><p>Mozilla Control</p></body></html>";
 
 // Registry keys and values
 
@@ -2623,14 +2623,14 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Visible(VARIANT_BOOL __RPC_FAR *p
         RETURN_E_UNEXPECTED();
     }
 
-    NG_ASSERT_POINTER(pBool, int);
+    NG_ASSERT_POINTER(pBool, VARIANT_BOOL);
     if (pBool == NULL)
     {
         RETURN_E_INVALIDARG();
     }
 
-    //TODO: Implement get_Visible
-    *pBool = VARIANT_FALSE;
+    //TODO: Implement get_Visible?
+    *pBool = VARIANT_TRUE;
     return S_OK;
 }
 
@@ -2645,7 +2645,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Visible(VARIANT_BOOL Value)
         RETURN_E_UNEXPECTED();
     }
 
-    //TODO: Implement put_Visible
+    //TODO: Implement put_Visible?
     return S_OK;
 }
 

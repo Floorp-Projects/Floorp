@@ -7,11 +7,6 @@
 
 [Embed]
 
-;
-; ActiveX control
-;
-res\MozillaControl.html
-
 ; layout
 res\dtd\*
 
