@@ -99,7 +99,7 @@ CPP_OBJS =                                       \
         .\$(OBJDIR)\nsByteArrayInputStream.obj	 \
         .\$(OBJDIR)\nsAppFileLocationProvider.obj \
         .\$(OBJDIR)\nsInputStreamTee.obj \
-		$(NULL)
+        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
