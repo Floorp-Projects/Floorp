@@ -373,7 +373,7 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
       if(NS_SUCCEEDED(result)) {
         nsString& key=((CAttributeToken*)theToken)->GetKey();
         nsString& text=theToken->GetStringValueXXX();
-        if((mDoXMLEmptyTags) && (key[0]==kForwardSlash) && (0==text.Length())){
+        if((mDoXMLEmptyTags) && (kForwardSlash==key.CharAt(0)) && (0==text.Length())){
           //tada! our special case! Treat it like an empty start tag...
           aToken->SetEmpty(PR_TRUE);
           theRecycler->RecycleToken(theToken);

@@ -298,7 +298,7 @@ FTPDataSource::GetName(nsIRDFResource *source, nsVoidArray **array)
 	PRInt32		len = url.Length();
 	if (len > 0)
 	{
-		if (url[len-1] == '/')
+		if (url.CharAt(len-1) == '/')
 		{
 			url.Cut(len-1, 1);
 		}

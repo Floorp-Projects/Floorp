@@ -129,7 +129,8 @@ NS_IMETHODIMP nsMsgNewsFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr
 static PRBool
 nsShouldIgnoreFile(nsString& name)
 {
-  if (name[0] == '.' || name[0] == '#' || name[name.Length() - 1] == '~')
+  PRUnichar theFirstChar=name.CharAt(0);
+  if (theFirstChar == '.' || theFirstChar == '#' || name.CharAt(name.Length() - 1) == '~')
     return PR_TRUE;
 
   if (name.EqualsIgnoreCase("rules.dat"))

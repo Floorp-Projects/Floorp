@@ -515,7 +515,7 @@ nsresult CViewSourceHTML::WriteText(const nsString& aTextString,nsIContentSink& 
   PRInt32 theOffset=0;
 
   while(theOffset<theEnd){
-    switch(aTextString[theOffset]){
+    switch(aTextString.CharAt(theOffset)){
       case kCR: break;
       case kLF:
         {
@@ -526,7 +526,7 @@ nsresult CViewSourceHTML::WriteText(const nsString& aTextString,nsIContentSink& 
         temp="";
         break;
       case kSpace:
-        if((PR_TRUE==aPreserveSpace) && (kSpace==aTextString[theOffset+1])) {
+        if((PR_TRUE==aPreserveSpace) && (kSpace==aTextString.CharAt(theOffset+1))) {
           if(temp.Length())
             result=aSink.AddLeaf(theTextNode); //just dump the whole string...
           WriteNBSP(1,aSink);
@@ -536,7 +536,7 @@ nsresult CViewSourceHTML::WriteText(const nsString& aTextString,nsIContentSink& 
         //fall through...
       default:
           //scan ahead looking for valid chars...
-        temp+=aTextString[theOffset];
+        temp+=aTextString.CharAt(theOffset);
         break;
     }//switch...
     theOffset++;

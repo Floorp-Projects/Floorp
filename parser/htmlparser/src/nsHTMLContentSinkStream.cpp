@@ -449,7 +449,7 @@ void nsHTMLContentSinkStream::UnicodeToHTMLString(const nsString& aSrc)
     EnsureBufferSize(length);
     for (PRInt32 i = 0; i < length; i++)
     {
-      ch = aSrc[i];
+      ch = aSrc.CharAt(i);
       
       entity = UnicodeToEntity(ch);
       if (entity)
