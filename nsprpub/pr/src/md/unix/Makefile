@@ -201,6 +201,9 @@ endif
 ifeq ($(OS_ARCH),DGUX)
 CSRCS += $(DGUX_CSRCS)
 endif
+ifeq ($(OS_ARCH),NTO)
+CSRCS += $(NTO_CSRCS)
+endif
 ifeq ($(OS_ARCH),QNX)
 ifeq ($(OS_TARGET),NTO)
 CSRCS += $(NTO_CSRCS)
