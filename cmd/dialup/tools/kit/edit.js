@@ -221,6 +221,7 @@ function customize()
 	
 	//alert("acctset.ini is: " + acctsetFile);  
 	document.setupPlugin.SetNameValuePair( acctsetFile, "Mode Selection", "EditMode", "yes" );
+	document.setupPlugin.SetCacheState( acctsetFile, true );
 
 	//debug ("Acct file = " + acctsetFile);
 	//debug ("Set the Edit Mode to " + document.setupPlugin.GetNameValuePair( acctsetFile, "Mode Selection", "EditMode") );
