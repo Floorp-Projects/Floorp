@@ -76,7 +76,7 @@ p, br, td {
   margin-bottom: 4px
 }
 
-p.smallmargin { margin-bottom: 2px }
+p.smallmargin { margin-bottom: 2px } /* should deprecate in favor of labels */
 
 fieldset {
   border-width: 2px;
@@ -92,6 +92,16 @@ legend {
   font-size: 10pt;
   border-width: 0;
   text-align: left;
+}
+
+label[class="enabled"] {
+  color: black;
+  margin-bottom: 2px
+}
+
+label[class="disabled"] {
+  color: gray;
+  margin-bottom: 2px
 }
 
 /* CLASSES */
