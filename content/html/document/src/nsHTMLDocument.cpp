@@ -2629,7 +2629,7 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
 
   // Save the data in cache
   if (mWyciwygChannel) {
-    mWyciwygChannel->WriteToCache(NS_ConvertUCS2toUTF8(text).get());
+    mWyciwygChannel->WriteToCacheEntry(NS_ConvertUCS2toUTF8(text));
   } 
 
   rv = mParser->Parse(text ,
@@ -3981,9 +3981,10 @@ nsHTMLDocument::CreateAndAddWyciwygChannel(void)
   nsCOMPtr<nsIChannel> channel;
   // Create a wyciwyg Channel
   rv = NS_NewChannel(getter_AddRefs(channel), wcwgURI);
-  if (NS_SUCCEEDED(rv) && channel) {    
+  if (NS_SUCCEEDED(rv) && channel) {
     mWyciwygChannel = do_QueryInterface(channel);
-    mWyciwygChannel->CreateCacheEntry(url.get());
+    // inherit load flags from the original document's channel
+    channel->SetLoadFlags(mLoadFlags);
   }
 
   nsCOMPtr<nsILoadGroup> loadGroup;

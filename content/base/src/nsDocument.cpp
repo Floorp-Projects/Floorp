@@ -567,6 +567,7 @@ nsDocument::~nsDocument()
   }
 
   mPrincipal = nsnull;
+  mLoadFlags = nsIRequest::LOAD_NORMAL; // XXX maybe not required
   mDocumentLoadGroup = nsnull;
 
   mParentDocument = nsnull;
@@ -752,6 +753,7 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
     aChannel->GetOwner(getter_AddRefs(owner));
     if (owner)
       mPrincipal = do_QueryInterface(owner);
+    aChannel->GetLoadFlags(&mLoadFlags);
   }
 
   return rv;
@@ -766,6 +768,7 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
 
   NS_IF_RELEASE(mDocumentURL);
   mPrincipal = nsnull;
+  mLoadFlags = nsIRequest::LOAD_NORMAL;
   mDocumentLoadGroup = nsnull;
 
   // Delete references to sub-documents and kill the subdocument map,

@@ -345,32 +345,30 @@ nsWyciwygChannel::AsyncOpen(nsIStreamListener * aListener, nsISupports  * aConte
 //////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsWyciwygChannel::CreateCacheEntry(const char * aCacheKey)
+nsWyciwygChannel::WriteToCacheEntry(const nsACString &aScript)
 {
-  return OpenCacheEntry(aCacheKey, nsICache::ACCESS_WRITE);
-}
+  nsresult rv;
 
-NS_IMETHODIMP
-nsWyciwygChannel::WriteToCache(const char * aScript)
-{
-  if (!mCacheEntry)
-    return NS_ERROR_FAILURE;
-  PRUint32 len = strlen(aScript);
-  nsresult rv = NS_ERROR_FAILURE;
-  PRUint32 out;
-
-  if (!mCacheTransport && !mCacheOutputStream) {
-    //Get the transport from cache
-    rv = mCacheEntry->GetTransport(getter_AddRefs(mCacheTransport)); 
-  
-    // Get the outputstream from the transport.
-    if (mCacheTransport)
-      rv = mCacheTransport->OpenOutputStream(0, PRUint32(-1), 0, getter_AddRefs(mCacheOutputStream));    
+  if (!mCacheEntry) {
+    nsCAutoString spec;
+    rv = mURI->GetAsciiSpec(spec);
+    if (NS_FAILED(rv)) return rv;
+    rv = OpenCacheEntry(spec.get(), nsICache::ACCESS_WRITE);
+    if (NS_FAILED(rv)) return rv;
   }
 
-  if (mCacheOutputStream)
-    rv = mCacheOutputStream->Write(aScript, len, &out);
-  return rv;
+  if (!mCacheOutputStream) {
+    //Get the transport from cache
+    rv = mCacheEntry->GetTransport(getter_AddRefs(mCacheTransport)); 
+    if (NS_FAILED(rv)) return rv;
+  
+    // Get the outputstream from the transport.
+    rv = mCacheTransport->OpenOutputStream(0, PRUint32(-1), 0, getter_AddRefs(mCacheOutputStream));    
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  PRUint32 out;
+  return mCacheOutputStream->Write(PromiseFlatCString(aScript).get(), aScript.Length(), &out);
 }
 
 
@@ -533,9 +531,16 @@ nsWyciwygChannel::OpenCacheEntry(const char * aCacheKey, nsCacheAccessMode aAcce
     nsXPIDLCString spec;    
     nsAutoString newURIString;    
     nsCOMPtr<nsICacheSession> cacheSession;
+
+    // honor security settings
+    nsCacheStoragePolicy storagePolicy;
+    if (mLoadFlags & INHIBIT_PERSISTENT_CACHING)
+      storagePolicy = nsICache::STORE_IN_MEMORY;
+    else
+      storagePolicy = nsICache::STORE_ANYWHERE;
  
-      // Open a stream based cache session.
-    rv = cacheService->CreateSession("wyciwyg", nsICache::STORE_ANYWHERE, PR_TRUE, getter_AddRefs(cacheSession));
+    // Open a stream based cache session.
+    rv = cacheService->CreateSession("wyciwyg", storagePolicy, PR_TRUE, getter_AddRefs(cacheSession));
     if (!cacheSession) 
       return NS_ERROR_FAILURE;
 

@@ -48,13 +48,13 @@
 [scriptable, uuid (c36730c0-a3b9-4732-9973-c5e7dbe0dabe)]
 interface nsIWyciwygChannel : nsIChannel
 {
-    /* Open a cache stream */
-    void createCacheEntry(in string cacheKey);
+    /**
+     * Append data to the cache entry; opens the cache entry if necessary.
+     */
+    void writeToCacheEntry(in ACString aScript);
 
-    /* write to the cache stream */
-    void writeToCache(in string aScript);
-
-    /* Close a cache stream */
+    /**
+     * Close the cache entry; subsequent writes have undefined behavior.
+     */
     void closeCacheEntry();
-
 };

@@ -616,6 +616,7 @@ protected:
   nsIURI* mDocumentURL;
   nsCOMPtr<nsIURI> mDocumentBaseURL;
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  PRUint32 mLoadFlags; // load flags of the document's channel
   nsWeakPtr mDocumentLoadGroup;
   nsWeakPtr mDocumentContainer;
 
