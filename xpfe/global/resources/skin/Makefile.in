@@ -60,6 +60,11 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/menuCheck_dis.gif \
 	$(srcdir)/opentwisty.gif \
 	$(srcdir)/closedtwisty.gif \
+	$(srcdir)/alert-icon.gif \
+	$(srcdir)/error-icon.gif \
+	$(srcdir)/message-icon.gif \
+	$(srcdir)/question-icon.gif \
+	$(srcdir)/return.gif \
 	$(NULL)
 
 install:: 
