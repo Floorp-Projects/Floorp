@@ -4319,6 +4319,9 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
     }
   }
 
+  // Flush out pending reflows to make sure we scroll to the right place
+  mDocument->FlushPendingNotifications(Flush_OnlyReflow);
+  
   // This is a two-step process.
   // Step 1: Find the bounds of the rect we want to scroll into view.  For
   //         example, for an inline frame we may want to scroll in the whole

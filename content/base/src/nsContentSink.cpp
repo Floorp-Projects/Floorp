@@ -861,13 +861,9 @@ nsContentSink::ScrollToRef(PRBool aReallyScroll)
   for (i = 0; i < ns; i++) {
     nsIPresShell* shell = mDocument->GetShellAt(i);
     if (shell) {
-      // Scroll to the anchor
-      if (aReallyScroll) {
-        shell->FlushPendingNotifications(Flush_Layout);
-      }
-
       // Check an empty string which might be caused by the UTF-8 conversion
       if (!ref.IsEmpty()) {
+        // Note that GoToAnchor will handle flushing layout as needed.
         rv = shell->GoToAnchor(ref, aReallyScroll);
       } else {
         rv = NS_ERROR_FAILURE;

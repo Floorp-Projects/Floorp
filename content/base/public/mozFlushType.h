@@ -47,8 +47,9 @@ enum mozFlushType {
   Flush_StyleReresolves   = 0x4,   /* flush style reresolution */
   Flush_OnlyReflow        = 0x8,   /* flush reflows */
   Flush_OnlyPaint         = 0x10,  /* flush painting */
-  Flush_Frames            = (Flush_Content | Flush_SinkNotifications),
   Flush_ContentAndNotify  = (Flush_Content | Flush_SinkNotifications),
+  Flush_Frames            = (Flush_Content | Flush_SinkNotifications |
+                             Flush_StyleReresolves),
   Flush_Style             = (Flush_Content | Flush_SinkNotifications |
                              Flush_StyleReresolves),
   Flush_Layout            = (Flush_Content | Flush_SinkNotifications |
