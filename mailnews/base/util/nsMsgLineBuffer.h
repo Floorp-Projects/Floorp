@@ -81,13 +81,13 @@ class nsIInputStream;
 class nsMsgLineStreamBuffer
 {
 public:
-	nsMsgLineStreamBuffer(PRUint32 aBufferSize); // specify the size of the buffer you want the class to use....
+	nsMsgLineStreamBuffer(PRUint32 aBufferSize, PRBool aEatCRLFs = PR_TRUE); // specify the size of the buffer you want the class to use....
 	virtual ~nsMsgLineStreamBuffer();
 
 	// Caller must free the line returned using PR_Free
 	char * ReadNextLine(nsIInputStream * aInputStream, PRBool &aPauseForMoreData);
 protected:
-
+	PRBool m_eatCRLFs;
 	char * m_dataBuffer;
 	char * m_startPos;
 	PRUint32 m_dataBufferSize;

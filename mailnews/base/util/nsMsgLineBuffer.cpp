@@ -245,7 +245,7 @@ PRInt32 nsMsgLineBuffer::FlushLastLine()
 // read but unprocessed stream data in a buffer. 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-nsMsgLineStreamBuffer::nsMsgLineStreamBuffer(PRUint32 aBufferSize)
+nsMsgLineStreamBuffer::nsMsgLineStreamBuffer(PRUint32 aBufferSize, PRBool aEatCRLFs) : m_eatCRLFs(aEatCRLFs)
 {
 	NS_PRECONDITION(aBufferSize > 0, "invalid buffer size!!!");
 	m_dataBuffer = nsnull;
@@ -326,13 +326,18 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRBool
 	// okay, now check again for endOfLine.
 	if (endOfLine)
 	{
-		endOfLine += 2; // count for CRLF
+		if (!m_eatCRLFs)
+			endOfLine += 2; // count for CRLF
+
 		// PR_CALLOC zeros out the allocated line
 		char* newLine = (char*) PR_CALLOC(endOfLine-m_startPos+1);
 		if (!newLine)
 			return nsnull;
 
 		nsCRT::memcpy(newLine, m_startPos, endOfLine-m_startPos); // copy the string into the new line buffer
+
+		if (m_eatCRLFs)
+			endOfLine += 2; // advance past CRLF if we haven't already done so...
 
 		// now we need to update the data buffer to go past the line we just read out. 
 		if (PL_strlen(endOfLine) <= 0) // if no more data in the buffer, then just zero out the buffer...
