@@ -938,30 +938,16 @@ sub DBname_to_id {
 
 
 sub DBNameToIdAndCheck {
-    my ($name, $forceok) = (@_);
-    $name = html_quote($name);
+    my ($name) = (@_);
     my $result = DBname_to_id($name);
     if ($result > 0) {
         return $result;
     }
-    if ($forceok) {
-        if(ValidateNewUser($name)) {
-            InsertNewUser($name, "");
-            $result = DBname_to_id($name);
-            if ($result > 0) {
-                return $result;
-            }
-        }
-        print "Yikes; couldn't create user $name.  Please report problem to " .
-            Param("maintainer") ."\n";
-    } else {
-        print "\n";  # http://bugzilla.mozilla.org/show_bug.cgi?id=80045
-        print "The name <TT>$name</TT> is not a valid username.  Either you\n";
-        print "misspelled it, or the person has not registered for a\n";
-        print "Bugzilla account.\n";
-        print "<P>Please hit the <B>Back</B> button and try again.\n";
-    }
-    exit(0);
+
+    $name = html_quote($name);
+    ThrowUserError("The name <TT>$name</TT> is not a valid username.  
+                    Either you misspelled it, or the person has not
+                    registered for a Bugzilla account.");
 }
 
 # Use trick_taint() when you know that there is no way that the data
