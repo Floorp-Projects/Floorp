@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.16 $';
+$Version = '$Revision: 1.17 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -18,7 +18,7 @@ sub InitVars {
     $BuildOnce = 0;	# Build once, don't send results to server
     $BuildClassic = 0;	# Build classic source
     $RunTest = 1;	# Run the smoke test on successful build, or not
-    $UseTimeStamp = 1;	# Use the CVS 'pull-by-timestamp' option, or not
+    $UseTimeStamp = 0;	# Use the CVS 'pull-by-timestamp' option, or not
 
     # Relative path to binary
     $BinaryName{'x'} = 'mozilla-export';
@@ -31,7 +31,7 @@ sub InitVars {
     $Make = 'gmake'; # Must be GNU make
     $MakeOverrides = '';
     $mail = '/bin/mail';
-    $CVS = 'cvs -q -z3';
+    $CVS = 'cvs -q';
     $CVSCO = 'checkout -P';
 
     # Set these proper values for your tinderbox server
@@ -340,12 +340,6 @@ sub GetSystemInfo {
     } else {
 	$logfile = "${DirName}.log";
     }
-
-    if ( $UseTimeStamp ) {
-	$BuildStart = `date '+%D %H:%M'`;
-	chop($BuildStart);
-	$CVSCO .= " -D '$BuildStart'";
-    }
 }
 
 sub BuildIt {
@@ -599,7 +593,7 @@ sub BuildIt {
 		$Output =~ s/\n//g;
 		print OUTLOG "$Output\n";
 		$q++;
-	    } #EndFor
+	    }
 
 	} #EndWhile
 
@@ -621,6 +615,12 @@ sub CVSTime {
 
     ($sec,$minute,$hour,$mday,$mon,$year) = localtime($StartTimeArg);
     $mon++; # month is 0 based.
+
+    if ( $UseTimeStamp ) {
+	$BuildStart = `date '+%D %H:%M'`;
+	chop($BuildStart);
+	$CVSCO .= " -D '$BuildStart'";
+    }
 
     sprintf("%02d/%02d/%02d %02d:%02d:00", $mon,$mday,$year,$hour,$minute );
 }
@@ -695,15 +695,15 @@ sub ParseArgs {
 	    $BuildDepend = 0;
 	    $manArg++;
 	}
+	elsif ( $ARGV[$i] eq '--compress' ) {
+	    $CVS = 'cvs -q -z3';
+	}
 	elsif ( $ARGV[$i] eq '--depend' ) {
 	    $BuildDepend = 1;
  	    $manArg++;
 	}
 	elsif ( $ARGV[$i] eq '--help' || $ARGV[$i] eq '-h' ) {
 	    $PrintUsage;
-	}
-	elsif ( $ARGV[$i] eq '--nocompress' ) {
-	    $CVS = 'cvs -q';
 	}
 	elsif ( $ARGV[$i] eq '--nodeps' ) {
 	    $ConfigureArgs .= '--enable-md=no ';
@@ -714,9 +714,6 @@ sub ParseArgs {
 	elsif ( $ARGV[$i] eq '--notest' ) {
 	    $RunTest = 0;
 	}
-	elsif ( $ARGV[$i] eq '--notime' ) {
-	    $UseTimeStamp = 0;
-	}
 	elsif ( $ARGV[$i] eq '--once' ) {
 	    $BuildOnce = 1;
 	}
@@ -726,6 +723,9 @@ sub ParseArgs {
 	    if ( $BuildTag eq '' || $BuildTag eq '-t' ) {
 		&PrintUsage;
 	    }
+	}
+	elsif ( $ARGV[$i] eq '--timestamp' ) {
+	    $UseTimeStamp = 1;
 	}
 	elsif ( $ARGV[$i] eq '-t' ) {
 	    $i++;
@@ -754,7 +754,7 @@ sub ParseArgs {
 }
 
 sub PrintUsage {
-    die "usage: $0 --depend | --clobber [ -v | --version ] [ --once --classic --noreport --notest -tag TREETAG -t TREENAME ]\n";
+    die "usage: $0 --depend | --clobber [ --once --classic --compress --noreport --notest --timestamp -tag TREETAG -t TREENAME --version ]\n";
 }
 
 sub PrintEnv {
