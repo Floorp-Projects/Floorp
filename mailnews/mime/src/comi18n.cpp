@@ -1416,37 +1416,20 @@ PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 i
       }
       else {
         // convert from unicode
-        PRUnichar *currentUStringPtr = unichars;
-        PRInt32 currentUnicharLength = unicharLength;
-        char *currentCStringPtr = dstPtr;
-        PRInt32 totalCLength = 0;
-        while (1) {
-          res = encoder->Convert(currentUStringPtr, &currentUnicharLength, currentCStringPtr, &dstLength);
-
-          // increment for destination
-          currentCStringPtr += dstLength;
-          totalCLength += dstLength;
-
-          // break: this is usually the case
-          // source length <= zero and no error or unrecoverable error
-          if (0 >= currentUnicharLength || NS_ERROR_UENC_NOMAPPING != res) {
-            break;
+        res = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
+        if (NS_SUCCEEDED(res)) {
+          res = encoder->Convert(unichars, &unicharLength, dstPtr, &dstLength);
+          if (NS_SUCCEEDED(res)) {
+            PRInt32 finLen;
+            res = encoder->Finish((char *)(*dstPtr+dstLength), &finLen);
+            if (NS_SUCCEEDED(res)) {
+              dstLength += finLen;
+            }
+            dstPtr[dstLength] = '\0';
+            *outBuffer = dstPtr;       // set the result string
+            *outLength = dstLength;
           }
-          // could not map unicode to the destination charset
-          // increment for source unicode and continue
-          if (NULL != numUnConverted) {
-            (*numUnConverted)++;
-          }
-          currentUStringPtr += currentUnicharLength;
-          unicharLength -= currentUnicharLength;   // adjust availabe buffer size
-          currentUnicharLength = unicharLength;
-
-          // reset the encoder
-          encoder->Reset();
         }
-         dstPtr[totalCLength] = '\0';
-         *outBuffer = dstPtr;      // set the result string
-         *outLength = totalCLength;
       }
     }
     delete [] unichars;
