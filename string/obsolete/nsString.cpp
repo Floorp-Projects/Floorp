@@ -41,8 +41,9 @@ const char* kFoolMsg = "Error: Some fool overwrote the shared buffer.";
 
 PRUnichar kCommonEmptyBuffer[100];   //shared by all strings; NEVER WRITE HERE!!!
 
+#ifdef  NS_DEBUG
 PRBool nsString::mSelfTested = PR_FALSE;   
-
+#endif
 
 
 #define NOT_USED 0xfffd
@@ -171,10 +172,12 @@ nsString::nsString() {
   NS_ASSERTION(kCommonEmptyBuffer[0]==0,kFoolMsg);
   mLength = mCapacity = 0;
   mStr = kCommonEmptyBuffer;
+#ifdef NS_DEBUG
   if(!mSelfTested) {
     mSelfTested=PR_TRUE;
 		SelfTest();
   }
+#endif
 }
 
 
@@ -2208,7 +2211,9 @@ void nsString::SelfTest(void) {
   static const char* kComparisonError  = "Comparision error!";
   static const char* kEqualsError = "Equals error!";
 
+#ifdef  NS_DEBUG
 	mSelfTested=PR_TRUE;
+#endif
   
   nsAutoString as("Hello there");
   as.SelfTest();
