@@ -75,27 +75,6 @@ public:
   virtual nsIDeviceContext* GetDeviceContext() const;
   NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager);
 
-  NS_IMETHOD  ConstructFrame(nsIContent* aContent,
-                             nsIFrame*   aParentFrame,
-                             nsIFrame*&  aFrameSubTree);
-
-  NS_IMETHOD  ContentAppended(nsIDocument* aDocument,
-                              nsIContent*  aContainer,
-                              PRInt32      aNewIndexInContainer);
-  NS_IMETHOD  ContentInserted(nsIDocument* aDocument,
-                              nsIContent*  aContainer,
-                              nsIContent*  aChild,
-                              PRInt32      aIndexInContainer);
-  NS_IMETHOD  ContentReplaced(nsIDocument *aDocument,
-                              nsIContent* aContainer,
-                              nsIContent* aOldChild,
-                              nsIContent* aNewChild,
-                              PRInt32     aIndexInContainer);
-  NS_IMETHOD  ContentRemoved(nsIDocument* aDocument,
-                             nsIContent*  aContainer,
-                             nsIContent*  aChild,
-                             PRInt32      aIndexInContainer);
-
 protected:
   nsPresContext();
   virtual ~nsPresContext();
