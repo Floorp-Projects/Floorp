@@ -44,7 +44,7 @@ write_header(gpointer key, gpointer value, gpointer user_data)
 {
     char *ident = (char *)value;
     TreeState *state = (TreeState *)user_data;
-    fprintf(state->file, "#include \"%s.h\" /* interface %s */\n",
+    fprintf(state->file, "#include \"%s.h\"\n",
             ident, ident);
 }
 
