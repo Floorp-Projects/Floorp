@@ -44,7 +44,6 @@ nsPop3URL::nsPop3URL(nsISupports* aContainer, nsIURLGroup* aGroup)
     NS_INIT_REFCNT();
 
 	// nsIPop3URL specific code...
-    m_pop3Sink = nsnull;
 	m_errorMessage = nsnull;
 	
 	// nsINetLibUrl specific state
@@ -62,7 +61,7 @@ nsPop3URL::nsPop3URL(nsISupports* aContainer, nsIURLGroup* aGroup)
 	m_runningUrl = PR_FALSE;
 
 	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, nsIUrlListenerManager::GetIID(), 
-									   (void **) &m_urlListeners);
+									   (void **) getter_AddRefs(m_urlListeners));
  
     m_container = aContainer;
     NS_IF_ADDREF(m_container);
@@ -71,7 +70,6 @@ nsPop3URL::nsPop3URL(nsISupports* aContainer, nsIURLGroup* aGroup)
 nsPop3URL::~nsPop3URL()
 {
     NS_IF_RELEASE(m_container);
-	NS_IF_RELEASE(m_urlListeners);
 	PR_FREEIF(m_errorMessage);
 
     PR_FREEIF(m_spec);
@@ -80,10 +78,6 @@ nsPop3URL::~nsPop3URL()
     PR_FREEIF(m_file);
     PR_FREEIF(m_ref);
     PR_FREEIF(m_search);
-    if (nsnull != m_URL_s) 
-	{
-//        NET_DropURLStruct(m_URL_s);
-    }
 }
   
 NS_IMPL_THREADSAFE_ADDREF(nsPop3URL);
@@ -133,11 +127,7 @@ nsresult nsPop3URL::SetPop3Sink(nsIPop3Sink* aPop3Sink)
 {
     NS_LOCK_INSTANCE();
     if (aPop3Sink)
-    {
-        NS_IF_RELEASE(m_pop3Sink);
-        m_pop3Sink = aPop3Sink;
-        NS_ADDREF(m_pop3Sink);
-    }
+        m_pop3Sink = dont_QueryInterface(aPop3Sink);
     NS_UNLOCK_INSTANCE();
     return NS_OK;
 }
@@ -146,10 +136,10 @@ nsresult nsPop3URL::GetPop3Sink(nsIPop3Sink** aPop3Sink) const
 {
     NS_LOCK_INSTANCE();
     if (aPop3Sink)
-    {
+	{
         *aPop3Sink = m_pop3Sink;
-        NS_IF_ADDREF(m_pop3Sink);
-    }
+		NS_IF_ADDREF(*aPop3Sink);
+	}
     NS_UNLOCK_INSTANCE();
     return NS_OK;
 }

@@ -21,6 +21,7 @@
 
 #include "nsIPop3URL.h"
 #include "nsIUrlListenerManager.h"
+#include "nsCOMPtr.h"
 #include "nsINetlibURL.h" /* this should be temporary until Network N2 project lands */
 
 class nsPop3URL : public nsIPop3URL, public nsINetlibURL
@@ -105,10 +106,10 @@ protected:
 	PRBool		m_runningUrl;
 
 	// manager of all of current url listeners....
-	nsIUrlListenerManager * m_urlListeners;
+	nsCOMPtr<nsIUrlListenerManager> m_urlListeners;
 
 	/* Pop3 specific event sinks */
-    nsIPop3Sink* m_pop3Sink;
+    nsCOMPtr<nsIPop3Sink> m_pop3Sink;
 
 	void ReconstructSpec(void);
 };

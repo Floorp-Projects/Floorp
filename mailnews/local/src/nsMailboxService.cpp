@@ -245,7 +245,7 @@ nsresult nsMailboxService::DisplayMessageNumber(const char *url,
 	nsMsgKeyArray msgKeys;
 	nsresult rv = NS_OK;
 	// extract the message key for this message number and turn around and call the other displayMessage method on it...
-	nsIMsgDatabase * mailDB = nsnull;
+	nsCOMPtr<nsIMsgDatabase> mailDB;
 	nsCOMPtr<nsIMsgDatabase> mailDBFactory;
 
 	rv = nsComponentManager::CreateInstance(kCMailDB,
@@ -256,7 +256,7 @@ nsresult nsMailboxService::DisplayMessageNumber(const char *url,
     // ALECF: convert uri->mailboxPath with nsLocalURI2Path
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 		rv = mailDBFactory->Open((nsFileSpec&) mailboxPath, PR_FALSE, 
-								 (nsIMsgDatabase **) mailDB, PR_FALSE);
+								 (nsIMsgDatabase **) getter_AddRefs(mailDB), PR_FALSE);
 
 	if (NS_SUCCEEDED(rv) && mailDB)
 	{
@@ -280,8 +280,8 @@ nsresult nsMailboxService::DisplayMessageNumber(const char *url,
 			rv = NS_ERROR_FAILURE;
 	}
 
-	if (mailDB) // in case we slipped through the cracks without releasing the db...
-		mailDB->Close(PR_TRUE); // does close implicitly release the db?
+	if (mailDB)
+		mailDB->Close(PR_TRUE); 
 
 	return rv;
 }
