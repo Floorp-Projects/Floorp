@@ -210,6 +210,7 @@ int main(int argc, char *argv[])
     {
       ret = ProcessArgs(registrar, argc, argv);
     }
+    eventQService = 0;
 
     NS_ShutdownXPCOM(NULL);
     return ret;
