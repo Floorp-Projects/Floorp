@@ -55,7 +55,12 @@ Rights Reserved.
 	<script src="chrome://navigator/content/navigator.js"/>
 	<script src="chrome://messenger/content/mailContextMenus.js"/>
 	
-
+	<commands id="commands">
+		<commandset id="CommandUpdate_Mail"
+					commandupdater="true"
+					events="focus,tree-select"
+					oncommandupdate="CommandUpdate_Mail()"/>
+	</commands>
 	
 
 	<broadcasterset id="broadcasterset"/>

@@ -63,6 +63,17 @@ var startTime = 0;
 
 function OnMailWindowUnload()
 {
+	dump("we get here\n");
+	var mailSession = Components.classes[mailSessionProgID].getService();
+	if(mailSession)
+	{
+		mailSession = mailSession.QueryInterface(Components.interfaces.nsIMsgMailSession);
+		if(mailSession)
+		{
+			mailSession.RemoveFolderListener(folderListener);
+		}
+	}
+
 	mailSession.RemoveMsgWindow(msgWindow);
 	messenger.SetWindow(null, null);
 

@@ -111,6 +111,13 @@ NS_IMETHODIMP nsMsgWindow::CloseWindow()
   if (mStatusFeedback)
     mStatusFeedback->CloseWindow(); 
 
+	if(mRootDocShell)
+	{
+		mRootDocShell->SetParentURIContentListener(nsnull);
+		mRootDocShell = nsnull;
+		mMessageWindowDocShell = nsnull;
+	}
+
   return NS_OK;
 }
 

@@ -244,7 +244,8 @@ NS_IMETHODIMP nsMsgMailSession::OnItemEvent(nsIFolder *aFolder,
 	for(PRUint32 i = 0; i < count; i++)
 	{
 		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
-		listener->OnItemEvent(aFolder, aEvent);
+		if(listener)
+			listener->OnItemEvent(aFolder, aEvent);
 	}
 	return NS_OK;
 }

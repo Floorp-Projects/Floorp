@@ -30,6 +30,68 @@ var gCurrentFolderUri;
 
 var gCurrentMessageIsDeleted = false;
 
+// the folderListener object
+var folderListener = {
+    OnItemAdded: function(parentItem, item, view) {},
+
+	OnItemRemoved: function(parentItem, item, view)
+	{
+		var parentFolderResource = parentItem.QueryInterface(Components.interfaces.nsIRDFResource);
+		if(!parentFolderResource)
+			return;
+
+		var parentURI = parentFolderResource.Value;
+		if(parentURI != gCurrentFolderUri)
+			return;
+
+		var deletedMessageResource = item.QueryInterface(Components.interfaces.nsIRDFResource);
+		var deletedUri = deletedMessageResource.Value;
+
+		//If the deleted message is our message then we know we're about to be deleted.
+		if(deletedUri == gCurrentMessageUri)
+		{
+			gCurrentMessageIsDeleted = true;
+		}
+
+	},
+
+	OnItemPropertyChanged: function(item, property, oldValue, newValue) {},
+
+	OnItemIntPropertyChanged: function(item, property, oldValue, newValue)
+	{
+	},
+
+	OnItemBoolPropertyChanged: function(item, property, oldValue, newValue) {},
+
+    OnItemUnicharPropertyChanged: function(item, property, oldValue, newValue){},
+	OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) {},
+
+    OnItemEvent: function(folder, event) {
+		if (event.GetUnicode() == "DeleteOrMoveMsgCompleted") {
+			HandleDeleteOrMoveMsgCompleted(folder);
+		}     
+    }
+}
+
+function HandleDeleteOrMoveMsgCompleted(folder)
+{
+	dump("In HandleDeleteOrMoveMsgCompleted\n");
+	var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
+	if(!folderResource)
+		return;
+
+	var folderUri = folderResource.Value;
+	if((folderUri == gCurrentFolderUri) && gCurrentMessageIsDeleted)
+	{
+		//If we knew we were going to be deleted and the deletion has finished, close the window.
+		gCurrentMessageIsDeleted = false;
+		//Use timeout to make sure all folder listeners get event before removing them.  Messes up
+		//folder listener iterator if we don't do this.
+		setTimeout("window.close();",0);
+
+	}
+}
+
 function OnLoadMessageWindow()
 {
 	HideMenus();
@@ -43,6 +105,12 @@ function OnLoadMessageWindow()
 	InitializeDataSources();
 	// FIX ME - later we will be able to use onload from the overlay
 	OnLoadMsgHeaderPane();
+
+    try {
+        mailSession.AddFolderListener(folderListener);
+	} catch (ex) {
+        dump("Error adding to session\n");
+    }
 
 	if(window.arguments && window.arguments.length == 2)
 	{
@@ -66,6 +134,7 @@ function OnLoadMessageWindow()
 	}	
 
   setTimeout("OpenURL(gCurrentMessageUri);", 0);
+  SetupCommandUpdateHandlers();
 
 }
 
@@ -74,9 +143,14 @@ function HideMenus()
 	var message_menuitem=document.getElementById('menu_showMessage');
 	if(message_menuitem)
 		message_menuitem.setAttribute("hidden", "true");
+
 	var expandOrCollapseMenu = document.getElementById('menu_expandOrCollapse');
 	if(expandOrCollapseMenu)
 		expandOrCollapseMenu.setAttribute("hidden", "true");
+
+	var renameFolderMenu = document.getElementById('menu_renameFolder');
+	if(renameFolderMenu)
+		renameFolderMenu.setAttribute("hidden", "true");
 
 }
 
@@ -173,4 +247,79 @@ function SelectMessage(messageUri)
 function ReloadMessage()
 {
 	OpenURL(gCurrentMessageUri);
+}
+
+// MessageWindowController object (handles commands when one of the trees does not have focus)
+var MessageWindowController =
+{
+   supportsCommand: function(command)
+	{
+
+		switch ( command )
+		{
+			case "cmd_delete":
+			case "button_delete":
+			case "cmd_shiftDelete":
+				return true;
+			default:
+				return false;
+		}
+	},
+
+	isCommandEnabled: function(command)
+	{
+		switch ( command )
+		{
+			case "cmd_delete":
+			case "button_delete":
+			case "cmd_shiftDelete":
+				if ( command == "cmd_delete")
+				{
+					goSetMenuValue(command, 'valueMessage');
+				}
+				return ( gCurrentMessageUri != null);
+			default:
+				return false;
+		}
+	},
+
+	doCommand: function(command)
+	{
+   		//dump("MessageWindowController.doCommand(" + command + ")\n");
+
+		switch ( command )
+		{
+			case "cmd_delete":
+				MsgDeleteMessage(false, false);
+				break;
+			case "cmd_shiftDelete":
+				MsgDeleteMessage(true, false);
+				break;
+			case "button_delete":
+				MsgDeleteMessage(false, true);
+				break;
+		}
+	},
+	
+	onEvent: function(event)
+	{
+	}
+};
+
+
+function CommandUpdate_Mail()
+{
+	goUpdateCommand('cmd_delete');
+	goUpdateCommand('button_delete');
+	goUpdateCommand('cmd_shiftDelete');
+}
+
+function SetupCommandUpdateHandlers()
+{
+	top.controllers.insertControllerAt(0, MessageWindowController);
+}
+
+function CommandUpdate_UndoRedo()
+{
+
 }

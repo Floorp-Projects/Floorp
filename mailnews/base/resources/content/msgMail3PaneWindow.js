@@ -275,15 +275,6 @@ function OnLoadMessenger()
 function OnUnloadMessenger()
 {
 	dump("\nOnUnload from XUL\nClean up ...\n");
-	var mailSession = Components.classes[mailSessionProgID].getService();
-	if(mailSession)
-	{
-		mailSession = mailSession.QueryInterface(Components.interfaces.nsIMsgMailSession);
-		if(mailSession)
-		{
-			mailSession.RemoveFolderListener(folderListener);
-		}
-	}
 	
 	OnMailWindowUnload();
 }
