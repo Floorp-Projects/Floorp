@@ -62,15 +62,8 @@ public:
   void      SetOpion() {};
 
 protected:
-  void      GetDistribution(PRUint32 aCharLen, const char* aStr);
-  
   nsCodingStateMachine* mCodingSM;
   nsProbingState mState;
-  PRUint32 mNumOfRoman;
-  PRUint32 mNumOfHankaku;
-  PRUint32 mNumOfKana;
-  PRUint32 mNumOfKanji;
-  PRUint32 mNumOfMisc;
 
   EUCJPContextAnalysis mContextAnalyser;
   EUCJPDistributionAnalysis mDistributionAnalyser;

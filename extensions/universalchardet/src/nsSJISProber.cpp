@@ -46,11 +46,6 @@
 void  nsSJISProber::Reset(void)
 {
   mCodingSM->Reset(); 
-  mNumOfRoman = 0;
-  mNumOfHankaku = 0;
-  mNumOfKana = 0;
-  mNumOfKanji = 0;
-  mNumOfMisc = 0;
   mState = eDetecting;
   mContextAnalyser.Reset();
   mDistributionAnalyser.Reset();
@@ -79,13 +74,11 @@ nsProbingState nsSJISProber::HandleData(const char* aBuf, PRUint32 aLen)
       if (i == 0)
       {
         mLastChar[1] = aBuf[0];
-        GetDistribution(mCodingSM->GetCurrentCharLen(), mLastChar);
         mContextAnalyser.HandleOneChar(mLastChar+2-charLen, charLen);
         mDistributionAnalyser.HandleOneChar(mLastChar, charLen);
       }
       else
       {
-        GetDistribution(mCodingSM->GetCurrentCharLen(), aBuf+i-1);
         mContextAnalyser.HandleOneChar(aBuf+i+1-charLen, charLen);
         mDistributionAnalyser.HandleOneChar(aBuf+i-1, charLen);
       }
@@ -99,31 +92,6 @@ nsProbingState nsSJISProber::HandleData(const char* aBuf, PRUint32 aLen)
       mState = eFoundIt;
 
   return mState;
-}
-
-void nsSJISProber::GetDistribution(PRUint32 aCharLen, const char* aStr)
-{
-  if (aCharLen >= 2)
-  {
-    if ((unsigned char)*aStr == (unsigned char)0x82 && 
-        (unsigned char)*(aStr+1) >= (unsigned char)0x9f && 
-        (unsigned char)*(aStr+1) <= (unsigned char)0xf1 ||
-        (unsigned char)*aStr == (unsigned char)0x83 && 
-        (unsigned char)*(aStr+1) >= (unsigned char)0x40 && 
-        (unsigned char)*(aStr+1) <= (unsigned char)0x96)
-      mNumOfKana++;
-    else if ((unsigned char)*aStr >= (unsigned char)0x88)
-      mNumOfKanji++;
-    else
-      mNumOfMisc++;
-  }
-  else
-  {
-    if ((unsigned char)*(aStr+1) >= (unsigned char)0xa1)
-      mNumOfHankaku++;
-    else
-      mNumOfRoman++;
-  }
 }
 
 float nsSJISProber::GetConfidence(void)
