@@ -89,9 +89,10 @@ nsIFileSpec*      nsSoftwareUpdate::mProgramDir = nsnull;
 nsSoftwareUpdate *
 nsSoftwareUpdate::GetInstance()
 {
-    if (mInstance == NULL) 
+    if (mInstance == nsnull) 
     {
         mInstance = new nsSoftwareUpdate();
+        NS_IF_ADDREF(mInstance);
     }
     return mInstance;
 }
@@ -241,23 +242,18 @@ nsSoftwareUpdate::QueryInterface( REFNSIID anIID, void **anInstancePtr )
 NS_IMETHODIMP
 nsSoftwareUpdate::Initialize( nsIAppShellService *anAppShell, nsICmdLineService  *aCmdLineService ) 
 {
-    nsresult rv;
-
     mStubLockout = PR_TRUE;  // prevent use of nsPIXPIStubHook by browser
 
-    rv = nsServiceManager::RegisterService( NS_IXPINSTALLCOMPONENT_PROGID, ( (nsISupports*) (nsISoftwareUpdate*) this ) );
-
-    return rv;
+//    rv = nsServiceManager::RegisterService( NS_IXPINSTALLCOMPONENT_PROGID, ( (nsISupports*) (nsISoftwareUpdate*) this ) );
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSoftwareUpdate::Shutdown()
 {
-    nsresult rv;
-
-    rv = nsServiceManager::UnregisterService( NS_IXPINSTALLCOMPONENT_PROGID );
-
-    return rv;
+//    rv = nsServiceManager::UnregisterService( NS_IXPINSTALLCOMPONENT_PROGID );
+    NS_IF_RELEASE(mInstance);
+    return NS_OK;
 }
 
 

@@ -47,22 +47,13 @@ static NS_DEFINE_IID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 
 
 
-
-static JSClass global_class = 
-{
-    "global", JSCLASS_HAS_PRIVATE,
-    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
-};
-
-
 extern JSObject *InitXPInstallObjects(JSContext *jscontext, JSObject *global, const char* jarfile, const PRUnichar* url, const PRUnichar* args);
 extern nsresult InitInstallVersionClass(JSContext *jscontext, JSObject *global, void** prototype);
 extern nsresult InitInstallTriggerGlobalClass(JSContext *jscontext, JSObject *global, void** prototype);
 
 // Defined in this file:
 static void     XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
-static nsresult GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *scriptLength);
+static PRInt32  GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *scriptLength);
 static nsresult SetupInstallContext(const char* jarFile, const PRUnichar* url, const PRUnichar* args, JSRuntime **jsRT, JSContext **jsCX, JSObject **jsGlob);
 
 extern "C" void RunInstallOnThread(void *data);
@@ -119,17 +110,17 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Function name	: GetInstallScriptFromJarfile
 // Description	    : Extracts and reads in a install.js file from a passed jar file.
-// Return type		: static nsresult 
+// Return type		: static PRInt32 
 // Argument         : const char* jarFile     - **NSPR** filepath
 // Argument         : char** scriptBuffer     - must be deleted via delete []
 // Argument         : PRUint32 *scriptLength
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-static nsresult 
+static PRInt32
 GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *scriptLength)
 {
     nsIJAR* hZip = nsnull;
-    PRInt32 result;
+    PRInt32 result = NS_OK;
     
     *scriptBuffer = nsnull;
     *scriptLength = 0;
@@ -139,19 +130,17 @@ GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *
     nsresult rv = nsComponentManager::CreateInstance(kJARCID, nsnull, kIJARIID, 
                                                      (void**) &hZip);
     // Open the jarfile
-    if (hZip)
+    if ( NS_SUCCEEDED(rv) && hZip)
         rv = hZip->Open( jarFile, &result );
 
     if ( NS_FAILED(rv) || result != 0 )
     {
+        // early bail-out
         NS_IF_RELEASE(hZip);
         return nsInstall::CANT_READ_ARCHIVE;
     }
 
 
-    // Read manifest file for Install Script filename.
-    //FIX:  need to do.
-    
     // Extract the install.js file to the temporary directory
     nsSpecialSystemDirectory installJSFileSpec(nsSpecialSystemDirectory::OS_TemporaryDirectory);
     installJSFileSpec += "install.js";
@@ -159,42 +148,51 @@ GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *
 
     // Extract the install.js file.
     rv = hZip->Extract( "install.js", nsNSPRPath(installJSFileSpec), &result );
-    if ( NS_FAILED(rv) || result != 0 )
+    if ( NS_SUCCEEDED(rv) && result == 0 )
     {
-        NS_IF_RELEASE( hZip );
-        return nsInstall::NO_INSTALL_SCRIPT;
-    }
+        // Read it into a buffer
+        char* buffer;
+        PRUint32 bufferLength;
+        PRUint32 readLength;
+        result = nsInstall::CANT_READ_ARCHIVE;
 
-    // Read it into a buffer
-    char* buffer;
-    PRUint32 bufferLength;
-    PRUint32 readLength;
+        nsInputFileStream fileStream(installJSFileSpec);
+        nsCOMPtr<nsIInputStream> istream = fileStream.GetIStream();
 
-    nsInputFileStream fileStream(installJSFileSpec);
-    (fileStream.GetIStream())->Available(&bufferLength);
-    buffer = new char[bufferLength + 1];
+        if ( istream )
+        {
+            istream->Available(&bufferLength);
+            buffer = new char[bufferLength + 1];
     
-    if (buffer == nsnull)
-        return nsInstall::CANT_READ_ARCHIVE;
+            if (buffer != nsnull)
+            {
+                rv = istream->Read(buffer, bufferLength, &readLength);
 
-    rv = (fileStream.GetIStream())->Read(buffer, bufferLength, &readLength);
+                if (NS_SUCCEEDED(rv) && readLength > 0)
+                {
+                    *scriptBuffer = buffer;
+                    *scriptLength = readLength;
+                    result = NS_OK;
+                }
+                else
+                {
+                    delete [] buffer;
+                }
+            }
 
-    if (NS_SUCCEEDED(rv) && readLength > 0)
-    {
-        *scriptBuffer = buffer;
-        *scriptLength = readLength;
+            fileStream.close();
+        }
+
+        installJSFileSpec.Delete(PR_FALSE);
     }
     else
     {
-        rv = nsInstall::CANT_READ_ARCHIVE;
-        delete [] buffer;
+        result = nsInstall::NO_INSTALL_SCRIPT;
     }
 
     NS_IF_RELEASE( hZip );
-    fileStream.close();
-    installJSFileSpec.Delete(PR_FALSE);
         
-    return rv;   
+    return result;   
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -296,15 +294,17 @@ extern "C" void RunInstallOnThread(void *data)
 {
     nsInstallInfo *installInfo = (nsInstallInfo*)data;
     
-    char        *scriptBuffer;
+    char        *scriptBuffer = nsnull;
     PRUint32    scriptLength;
 
     JSRuntime   *rt;
 	JSContext   *cx;
     JSObject    *glob;
 
+    // we will plan on sending a failure status back from here unless we
+    // find positive acknowledgement that the script sent the status
     PRInt32     finalStatus;
-    PRBool      sendStatus = PR_FALSE;
+    PRBool      sendStatus = PR_TRUE;
 
     nsIXPINotifier *notifier;
     nsresult    rv;
@@ -333,11 +333,11 @@ extern "C" void RunInstallOnThread(void *data)
     installInfo->GetLocalFile(&jarpath);
     if (jarpath)
     {
-        rv = GetInstallScriptFromJarfile( jarpath, 
-                                          &scriptBuffer, 
-                                          &scriptLength);
+        finalStatus = GetInstallScriptFromJarfile( jarpath, 
+                                                   &scriptBuffer, 
+                                                   &scriptLength);
 
-        if ( rv == NS_OK && scriptBuffer )
+        if ( finalStatus == NS_OK && scriptBuffer )
         {
             rv = SetupInstallContext( jarpath, 
                                       url.GetUnicode(),
@@ -360,17 +360,19 @@ extern "C" void RunInstallOnThread(void *data)
                 if (!ok)
                 {
                     // problem compiling or running script
-                    sendStatus = PR_TRUE;
                     finalStatus = nsInstall::SCRIPT_ERROR;
                 }
                 else
                 {
                     // check to make sure the script sent back a status
                     jsval sent;
-                    if ( !JS_GetProperty( cx, glob, "_statusSent", &sent ) ||
-                         ! JSVAL_TO_BOOLEAN(sent) )
+                    if ( JS_GetProperty( cx, glob, "_statusSent", &sent ) &&
+                         JSVAL_TO_BOOLEAN(sent) )
                     {
-                        sendStatus = PR_TRUE;
+                        sendStatus = PR_FALSE;
+                    }
+                    else
+                    {
                         finalStatus = nsInstall::SCRIPT_ERROR;
                     }
                 }
@@ -381,21 +383,13 @@ extern "C" void RunInstallOnThread(void *data)
             else
             {
                 // couldn't initialize install context
-                sendStatus = PR_TRUE;
                 finalStatus = nsInstall::UNEXPECTED_ERROR;
             }
-        }
-        else
-        {
-            // could not extract script
-            sendStatus = PR_TRUE;
-            finalStatus = (rv != NS_OK) ? rv : nsInstall::NO_INSTALL_SCRIPT;
         }
     }
     else 
     {
         // no path to local jar archive
-        sendStatus = PR_TRUE;
         finalStatus = nsInstall::DOWNLOAD_ERROR;
     }
 
