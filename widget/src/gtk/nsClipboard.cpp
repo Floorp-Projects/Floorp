@@ -523,7 +523,7 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
 {
   mBlocking = PR_FALSE;
 
-  if (aSD->length < 0)
+  if (aSD->length <= 0)
   {
 #ifdef DEBUG_CLIPBOARD
     g_print("        Error retrieving selection: length was %d\n", aSD->length);
