@@ -2,8 +2,8 @@ Welcome to the Bugzilla documentation project!
 You'll find these directories and files here:
 
 README.docs	# This README file
-html/		# The compiled HTML docs from SGML sources (do not edit)
-txt/		# The compiled text docs from SGML sources
+html/		# The compiled HTML docs from XML sources (do not edit)
+txt/		# The compiled text docs from XML sources (do not edit)
 xml/		# The original XML doc sources (edit these)
 
 A note about the XML:
