@@ -46,23 +46,34 @@ pairs associated with each key. Each key also keeps a default value.
 <br><tt>&nbsp;&nbsp;&nbsp; Classes</tt>
 <br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CLSID</tt>
 <br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-"<i>CLSID-string"</i>&nbsp;&nbsp;&nbsp; "<i>class name"</i></tt>
-<br><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</i>ProgID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "<i>component.class.version"</i></tt>
-<br><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</i>InprocServer&nbsp; "<i>full-path-name"</i></tt>
-<br><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</i>&nbsp;&nbsp;&nbsp;
-LastModTimeStamp<sup><font color="#990000">*</font></sup>&nbsp;&nbsp; <i>time-value</i></tt>
-<br><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</i>FileSize<sup><font color="#990000">*</font></sup>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<i>nbytes</i></tt><tt></tt>
-<p><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "<i>component.class.version"&nbsp;&nbsp;&nbsp;
-"class name"</i></tt>
-<br><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"<i>CLSID-string"</i></tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
-</i>CLSID<i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "CLSID-string"</i></tt><i><tt></tt></i>
-<p><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </i>DefaultPathList&nbsp;&nbsp;&nbsp;
-<i>"semicolon separated path list"</i></tt></blockquote>
+ClassName&nbsp;&nbsp;&nbsp; "<i>class name</i>"</tt>
+<br><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</i>
+ProgID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "<i>component.class.version"</i></tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<i>
+</i>InprocServer&nbsp; "<i>full-path-name"</i></tt>
+<p><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "<i>component.class.version"</i></tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+CLSID&nbsp;&nbsp;&nbsp; <i>"CLSID-string"</i></tt>
+<p><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </i>DefaultPathList&nbsp;
+
+<i>"semicolon separated path list"</i></tt>
+<br><tt><i>&nbsp;&nbsp;&nbsp; </i>Software</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Netscape</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+XPCOM</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"<i>full-path-name"</i></tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+LastModTimeStamp&nbsp;&nbsp;&nbsp; <i>time-value</i></tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+FileSize&nbsp;&nbsp;&nbsp; <i>nbytes</i></tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ComponentsCount&nbsp;&nbsp;&nbsp; "<i>components-count"</i></tt></blockquote>
 
 <p><br><tt><sup><font color="#990000">*</font> </sup></tt>Automatically
 added by the Repository
@@ -90,7 +101,8 @@ Load the dll associated with the CLSID after consulting the Registry</li>
 <li>
 Instantiate the class factory by calling a globally exported dll function
 <tt>NSGetFactory()</tt>.
-This returns an instance of the class factory that implements the <tt>nsIFactory</tt>
+This
+returns an instance of the class factory that implements the <tt>nsIFactory</tt>
 interface.</li>
 
 <li>
