@@ -24,6 +24,7 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsCRT.h"
+#include "nsXPIDLString.h"
 
 ///////////////////////////////////
 // nsISupports
@@ -72,12 +73,12 @@ nsCookieHTTPNotify::ModifyRequest(nsISupports *aContext) {
     NS_RELEASE(pHTTPConnection);
     return rv;
   }
-  char *url;
+  nsXPIDLCString url;
   if (pURL == nsnull) {
     NS_RELEASE(pHTTPConnection);
     return rv;
   }
-  rv = pURL->GetSpec(&url);
+  rv = pURL->GetSpec(getter_Copies(url));
   if (NS_FAILED(rv)) {
     NS_RELEASE(pURL);
     NS_RELEASE(pHTTPConnection);
@@ -92,7 +93,6 @@ nsCookieHTTPNotify::ModifyRequest(nsISupports *aContext) {
   if (cookie == nsnull) {
     NS_RELEASE(pURL);
     NS_RELEASE(pHTTPConnection);
-    nsCRT::free(url);
     return rv;
   }
   nsCOMPtr<nsIAtom> cookieHeader;
@@ -107,12 +107,10 @@ nsCookieHTTPNotify::ModifyRequest(nsISupports *aContext) {
   if (NS_FAILED(rv)) {
     NS_RELEASE(pURL);
     NS_RELEASE(pHTTPConnection);
-    nsCRT::free(url);
     return rv;
   }
   NS_RELEASE(pURL);
   NS_RELEASE(pHTTPConnection);
-  nsCRT::free(url);
   return NS_OK;
 }
 
@@ -151,13 +149,13 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext) {
       nsCRT::free(cookie);
       return rv;
     }
-    char *url;
+    nsXPIDLCString url;
     if (pURL == nsnull) {
       NS_RELEASE(pHTTPConnection);
       nsCRT::free(cookie);
       return rv;
     }
-    rv = pURL->GetSpec(&url);
+    rv = pURL->GetSpec(getter_Copies(url));
     if (NS_FAILED(rv)) {
       NS_RELEASE(pURL);
       NS_RELEASE(pHTTPConnection);
@@ -185,7 +183,6 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext) {
       }
     }
     NS_RELEASE(pURL);
-    nsCRT::free(url);
     nsCRT::free(cookie);
   }
   NS_RELEASE(pHTTPConnection);
