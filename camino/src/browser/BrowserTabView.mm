@@ -80,7 +80,6 @@
 {
     if ( (self = [super initWithFrame:frameRect]) ) {
       autoHides = YES;
-      maxNumberOfTabs = 0;		// no max
       //mVisible = YES;
     }
     return self;
@@ -178,21 +177,6 @@
 - (void)setAutoHides:(BOOL)newSetting
 {
     autoHides = newSetting;
-}
-
-- (int)maxNumberOfTabs
-{
-  return maxNumberOfTabs;
-}
-
-- (void)setMaxNumberOfTabs:(int)maxTabs
-{
-  maxNumberOfTabs = maxTabs;
-}
-
-- (BOOL)canMakeNewTabs
-{
-  return maxNumberOfTabs == 0 || [self numberOfTabViewItems]  < maxNumberOfTabs;
 }
 
 /******************************************/
@@ -298,7 +282,7 @@
     [[[self selectedTabViewItem] view] loadURI: url referrer:nil flags: NSLoadFlagsNone activate:NO allowPopups:NO];
     return YES;
   }
-  else if ([self canMakeNewTabs])
+  else
   {
     [self addTabForURL:url referrer:nil];
     return YES;
@@ -348,9 +332,6 @@
 
   if (overTabViewItem)
     return NSDragOperationNone;	// the tab will handle it
-
-  if (!overContentArea && ![self canMakeNewTabs])
-    return NSDragOperationNone;
   
   [self showDragDestinationIndicator];	// XXX optimize
   return NSDragOperationGeneric;
@@ -364,12 +345,6 @@
 
   if (overTabViewItem)
     return NSDragOperationNone;	// the tab will handle it
-
-  if (!overContentArea && ![self canMakeNewTabs])
-  {
-    [self hideDragDestinationIndicator];
-    return NSDragOperationNone;
-  }
 
   [self showDragDestinationIndicator];
   return NSDragOperationGeneric;

@@ -191,7 +191,6 @@ typedef enum
 - (void)dealloc;
 
 - (id)getTabBrowser;
-- (BOOL)newTabsAllowed;
 - (BrowserWrapper*)getBrowserWrapper;
 
 - (void)loadURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer activate:(BOOL)activate allowPopups:(BOOL)inAllowPopups;

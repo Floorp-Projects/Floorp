@@ -108,7 +108,7 @@ ContentClickListener::MouseClick(nsIDOMEvent* aEvent)
     
     if (shiftKey)
       loadInBackground = !loadInBackground;
-    if (useTab && [mBrowserController newTabsAllowed])
+    if (useTab)
       [mBrowserController openNewTabWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground allowPopups:NO];
     else
       [mBrowserController openNewWindowWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground allowPopups:NO];

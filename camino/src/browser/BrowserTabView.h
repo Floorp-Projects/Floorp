@@ -27,7 +27,6 @@
   BOOL mIsDropTarget;
   BOOL mLastClickIsPotentialDrag;
   BOOL mVisible; // YES if the view is in the hierarchy
-  int  maxNumberOfTabs;			// 0 means 'no max'
   IBOutlet BrowserTabBarView * mTabBar;
 }
 
@@ -38,10 +37,6 @@
 //			  Initial value is read from defaults.
 - (BOOL)autoHides;
 - (void)setAutoHides:(BOOL)newSetting;
-
-- (int)maxNumberOfTabs;
-- (void)setMaxNumberOfTabs:(int)maxTabs;
-- (BOOL)canMakeNewTabs;
 
 - (void)addTabForURL:(NSString*)aURL referrer:(NSString*)aReferrer;
 

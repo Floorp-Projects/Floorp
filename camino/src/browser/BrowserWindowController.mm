@@ -128,8 +128,6 @@ static NSString *NavigatorWindowFrameSaveName = @"NavigatorWindow";
 // hardcoded defaults.
 static NSArray* sToolbarDefaults = nil;
 
-#define kMaxBrowserWindowTabs 0
-
 enum BWCOpenDest {
   kDestinationNewWindow = 0,
   kDestinationNewTab,
@@ -677,9 +675,7 @@ enum BWCOpenDest {
     [[self window] setAcceptsMouseMovedEvents: YES];
     
     [self setupToolbar];
-    
-    // set an upper limit on the number of tabs per window
-    [mTabBrowser setMaxNumberOfTabs: kMaxBrowserWindowTabs];
+
 
 //  03/03/2002 mlj Changing strategy a bit here.  The addTab: method was
 //  duplicating a lot of the code found here.  I have moved it to that method.
@@ -1194,7 +1190,7 @@ enum BWCOpenDest {
   else if ( action == @selector(smallerTextSize:))
     return ![mBrowserView isEmpty] && [[mBrowserView getBrowserView] canMakeTextSmaller];
   else if (action == @selector(newTab:))
-    return [self newTabsAllowed];
+    return YES;
   else if (action == @selector(closeCurrentTab:))
     return ([mTabBrowser numberOfTabViewItems] > 1);
   else if (action == @selector(sendURL:))
@@ -1454,10 +1450,7 @@ enum BWCOpenDest {
       nsCAutoString spec;
       uri->GetSpec(spec);
       if ([urlStr isEqualToString:[NSString stringWithUTF8String:spec.get()]]) {
-        if ([self newTabsAllowed])
-          [self openNewTabWithDescriptor:desc displayType:nsIWebPageDescriptor::DISPLAY_AS_SOURCE loadInBackground:loadInBackground];
-        else
-          [self openNewWindowWithDescriptor:desc displayType:nsIWebPageDescriptor::DISPLAY_AS_SOURCE loadInBackground:loadInBackground];
+        [self openNewTabWithDescriptor:desc displayType:nsIWebPageDescriptor::DISPLAY_AS_SOURCE loadInBackground:loadInBackground];
         return;
       }
     }
@@ -1465,10 +1458,7 @@ enum BWCOpenDest {
 
   //otherwise reload it from the server
   NSString* viewSource = [@"view-source:" stringByAppendingString: urlStr];
-  if ([self newTabsAllowed])
-    [self openNewTabWithURL: viewSource referrer:nil loadInBackground: loadInBackground allowPopups:NO];
-  else
-    [self openNewWindowWithURL: viewSource referrer:nil loadInBackground: loadInBackground allowPopups:NO];
+  [self openNewTabWithURL: viewSource referrer:nil loadInBackground: loadInBackground allowPopups:NO];
 }
 
 - (IBAction)viewSource:(id)aSender
@@ -2273,11 +2263,6 @@ enum BWCOpenDest {
   return mTabBrowser;
 }
 
-- (BOOL)newTabsAllowed
-{
-  return [mTabBrowser canMakeNewTabs];
-}
-
 -(BrowserWrapper*)getBrowserWrapper
 {
   return mBrowserView;
@@ -2399,8 +2384,6 @@ enum BWCOpenDest {
     [[tabViewItem view] loadURI: thisURL referrer:nil
                         flags: NSLoadFlagsNone activate:(i == 0) allowPopups:inAllowPopups];
                         
-    if (![mTabBrowser canMakeNewTabs])
-      break;		// we'll throw away the rest of the items. Too bad.
   }
  
   // Select the first tab.
@@ -2693,7 +2676,7 @@ enum BWCOpenDest {
 
   NSString* referrer = [[mBrowserView getBrowserView] getFocusedURLString];
 
-  if (aUseWindow || ![self newTabsAllowed])
+  if (aUseWindow)
     [self openNewWindowWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground allowPopups:NO];
   else
     [self openNewTabWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground allowPopups:NO];

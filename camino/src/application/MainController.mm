@@ -825,13 +825,7 @@ const int kReuseWindowOnAE = 2;
   BrowserWindowController* controller = (BrowserWindowController*)[[self getFrontmostBrowserWindow] windowController];
   if (reuseWindow > kOpenNewWindowOnAE && controller) {
     if (reuseWindow == kOpenNewTabOnAE) {
-      // if we have room for a new tab, open one, otherwise open a new window. if
-      // we don't do this, and just reuse the current tab, people will lose the urls
-      // as they get replaced in the current tab.
-      if ([controller newTabsAllowed])
-        [controller openNewTabWithURL:inURLString referrer:aReferrer loadInBackground:loadInBackground allowPopups:NO];
-      else
-        controller = [self openBrowserWindowWithURL: inURLString andReferrer:aReferrer behind:nil allowPopups:NO];
+      [controller openNewTabWithURL:inURLString referrer:aReferrer loadInBackground:loadInBackground allowPopups:NO];
     }
     else
       [controller loadURL: inURLString referrer:nil activate:YES allowPopups:NO];
@@ -1077,7 +1071,7 @@ const int kReuseWindowOnAE = 2;
   }
   
   if (action == @selector(newTab:))
-    return (browserController && [browserController newTabsAllowed]);
+    return (browserController);
   
   // check if someone has previously done a find before allowing findAgain to be enabled
   if (action == @selector(findAgain:) || action == @selector(findPrevious:))
