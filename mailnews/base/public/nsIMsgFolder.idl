@@ -46,6 +46,8 @@ interface nsIMsgFolderCacheElement;
 interface nsAutoString;
 
 typedef long nsMsgBiffState;
+// enumerated type for determining if a message has been replied to, forwarded, etc.
+typedef long nsMsgDispositionState;
 
 [scriptable, uuid(85e39ff0-b248-11d2-b7ef-00805f05ffa5)]
 interface nsIMsgFolder : nsIFolder {
@@ -322,12 +324,16 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    */
 	attribute nsIFileSpec path;
 
+	const nsMsgDispositionState nsMsgDispositionState_Replied = 0;
+	const nsMsgDispositionState nsMsgDispositionState_Forwarded = 1;	
+	void addMessageDispositionState(in nsIMessage aMessage, in nsMsgDispositionState aDispositionFlag);
+
 	void markMessagesRead(in nsISupportsArray messages, in boolean markRead);
 	void markAllMessagesRead();
 	void markMessagesFlagged(in nsISupportsArray messages, in boolean markFlagged);
 	void markThreadRead(in nsIMsgThread thread);
-  nsIMsgDatabase getMsgDatabase(in nsIMsgWindow msgWindow);
-  nsIMsgDatabase getDBFolderInfoAndDB(out nsIDBFolderInfo folderInfo);
+    nsIMsgDatabase getMsgDatabase(in nsIMsgWindow msgWindow);
+    nsIMsgDatabase getDBFolderInfoAndDB(out nsIDBFolderInfo folderInfo);
 
 	nsIMsgFolder getChildWithURI(in string uri, in boolean deep);
 
