@@ -88,11 +88,37 @@ NS_IMETHODIMP nsDeviceContextMac :: Init(nsNativeWidget aNativeWidget)
   return NS_OK;
 }
 
-//------------------------------------------------------------------------
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
 
 NS_IMETHODIMP nsDeviceContextMac :: CreateRenderingContext(nsIRenderingContext *&aContext)
 {
-  return NS_ERROR_FAILURE;
+nsIRenderingContext   *pContext;
+nsresult              rv;
+GrafPtr								thePort;
+
+	pContext = new nsRenderingContextMac();
+  if (nsnull != pContext){
+    NS_ADDREF(pContext);
+
+   	::GetPort(&thePort);
+
+    if (nsnull != thePort){
+      rv = pContext->Init(this,thePort);
+    }
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+  else
+    rv = NS_ERROR_OUT_OF_MEMORY;
+
+  if (NS_OK != rv){
+    NS_IF_RELEASE(pContext);
+  }
+  aContext = pContext;
+  return rv;
 }
 
 //------------------------------------------------------------------------
@@ -118,7 +144,10 @@ NS_IMETHODIMP nsDeviceContextMac :: SupportsNativeWidgets(PRBool &aSupportsWidge
   // Raptor currently doesn't work this way and needs to be fixed.
   // (please remove this comment when this situation is rectified)
   
-  aSupportsWidgets = PR_TRUE;
+  //if (nsnull == mSurface)
+    aSupportsWidgets = PR_TRUE;
+  //else
+   //aSupportsWidgets = PR_FALSE;
 
   return NS_OK;
 }
@@ -232,9 +261,15 @@ GrafPtr	curPort;
 
 NS_IMETHODIMP nsDeviceContextMac::BeginDocument(void)
 {
+GrafPtr	thePort;
  
- 	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen) 
-  	((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort = ::PrOpenDoc(((nsDeviceContextSpecMac*)(this->mSpec))->mPrtRec,nsnull,nsnull);
+ 	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen) {
+ 		::GetPort(&mOldPort);
+ 		thePort = (GrafPtr)::PrOpenDoc(((nsDeviceContextSpecMac*)(this->mSpec))->mPrtRec,nsnull,nsnull);
+  	((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort = (TPrPort*)thePort;
+  	SetDrawingSurface(((nsDeviceContextSpecMac*)(this->mSpec))->mPrtRec);
+  	SetPort(thePort);
+  }
   return NS_OK;
 }
 
@@ -243,8 +278,10 @@ NS_IMETHODIMP nsDeviceContextMac::BeginDocument(void)
 
 NS_IMETHODIMP nsDeviceContextMac::EndDocument(void)
 {
- 	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen) 
+ 	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen){
+ 		::SetPort(mOldPort);
 		::PrCloseDoc(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort);
+	}
   return NS_OK;
 }
 
@@ -263,8 +300,16 @@ NS_IMETHODIMP nsDeviceContextMac::BeginPage(void)
 
 NS_IMETHODIMP nsDeviceContextMac::EndPage(void)
 {
- 	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen) 
+ 	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen) {
+ 		Rect	theRect;
+ 		
+ 		::SetPort((GrafPtr)(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort));
+ 		::SetRect(&theRect,0,0,100,100);
+ 		::PenNormal();
+ 		::PaintRect(&theRect);
+ 		
 		::PrClosePage(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort);
+	}
   return NS_OK;
 }
 
