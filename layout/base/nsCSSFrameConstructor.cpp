@@ -1187,6 +1187,10 @@ NS_NewGeneratedContentIterator(nsIPresContext*      aPresContext,
   if (!aIterator) {
     return NS_ERROR_NULL_POINTER;
   }
+  NS_ENSURE_ARG_POINTER(aFrame);
+  if (!aFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
   
   // Make sure the frame corresponds to generated content
 #ifdef DEBUG

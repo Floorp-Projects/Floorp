@@ -3694,12 +3694,13 @@ nsDOMSelection::selectFrames(nsIPresContext* aPresContext,
     while (NS_ENUMERATOR_FALSE == aInnerIter->IsDone())
     {
       result = aInnerIter->CurrentNode(getter_AddRefs(innercontent));
-      if (NS_FAILED(result) || !innercontent)
-        continue;
-      result = mFrameSelection->GetTracker()->GetPrimaryFrameFor(innercontent, &frame);
-      if (NS_SUCCEEDED(result) && frame)
-        //NOTE: aRange and eSpreadDown are now IGNORED. Selected state is set only for given frame
-        frame->SetSelected(aPresContext, aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
+      if (NS_SUCCEEDED(result) && innercontent)
+      {
+        result = mFrameSelection->GetTracker()->GetPrimaryFrameFor(innercontent, &frame);
+        if (NS_SUCCEEDED(result) && frame)
+          //NOTE: aRange and eSpreadDown are now IGNORED. Selected state is set only for given frame
+          frame->SetSelected(aPresContext, aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
+      }
       result = aInnerIter->Next();
       if (NS_FAILED(result))
         return result;
