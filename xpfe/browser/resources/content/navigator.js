@@ -1093,6 +1093,12 @@ function OpenSearch(tabName, searchStr)
 	window.open("chrome://addressbook/content/", "_blank", "chrome,menubar,toolbar,resizable");
   }
 
+  function BrowserSendLink(pageUrl, pageTitle)
+  {
+    window.openDialog( "chrome://messengercompose/content/", "_blank", "chrome,all,dialog=no",
+    	"body=" + pageUrl + ",subject='" + pageTitle + "'");
+  }
+
   function BrowserSendPage(pageUrl, pageTitle)
   {
     window.openDialog( "chrome://messengercompose/content/", "_blank", "chrome,all,dialog=no",
