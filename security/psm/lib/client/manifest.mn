@@ -31,8 +31,8 @@
 # GPL.
 # 
 
-CORE_DEPTH = ../../../..
-DEPTH = ../../../..
+CORE_DEPTH = ../../..
+DEPTH = ../../..
 
 EXPORTS = \
 	cmtcmn.h \
