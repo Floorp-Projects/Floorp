@@ -470,52 +470,44 @@ nsFtpState::OnDataAvailable(nsIRequest *request,
 
     // Sometimes we can get two responses in the same packet, eg from LIST.
     // So we need to parse the response line by line
-    // See bug 110241
-    char* currLine = buffer;
-    while (currLine < (buffer+aCount)) {
+    nsCString lines(mControlReadCarryOverBuf);
+    lines.Append(buffer, aCount);
+    // Clear the carryover buf - if we still don't have a line, then it will
+    // be reappended below
+    mControlReadCarryOverBuf.Truncate();
+
+    const char* currLine = lines.get();
+    while (*currLine) {
         char* eol = strstr(currLine, CRLF);
         if (!eol) {
-            mControlReadCarryOverBuf += currLine;
+            mControlReadCarryOverBuf.Assign(currLine);
             break;
         }
 
-        // Append the current segment
-        mControlReadCarryOverBuf.Append(currLine, eol - currLine + 1);
-
+        // Append the current segment, including the CRLF
+        nsCAutoString line;
+        line.Assign(currLine, eol - currLine + 2);
+        
         // Does this start with a response code?
-        PRBool startNum = (mControlReadCarryOverBuf.Length() >= 3 &&
-                           isdigit(mControlReadCarryOverBuf.get()[0]) &&
-                           isdigit(mControlReadCarryOverBuf.get()[1]) &&
-                           isdigit(mControlReadCarryOverBuf.get()[2]));
+        PRBool startNum = (line.Length() >= 3 &&
+                           isdigit(line[0]) &&
+                           isdigit(line[1]) &&
+                           isdigit(line[2]));
 
         if (mResponseMsg.IsEmpty()) {
             // If we get here, then we know that we have a complete line, and
             // that it is the first one
 
-            NS_ASSERTION(mControlReadCarryOverBuf.Length() > 4 && startNum,
+            NS_ASSERTION(line.Length() > 4 && startNum,
                          "Read buffer doesn't include response code");
             
-            // I can't use Substring + PromiseFlatCString - see bug 122727
-            //mResponseCode = atoi(PromiseFlatCString(Substring(mResponseReadCarryOverBuf,0,3)).get());
-
-            char buf[4];
-            buf[3] = 0;
-            memcpy(buf, mControlReadCarryOverBuf.get(), 3);
-            mResponseCode = atoi(buf);
+            mResponseCode = atoi(PromiseFlatCString(Substring(line,0,3)).get());
         }
 
-        // Append this line, but remove the response code if it was present
-        if (startNum) {
-            mResponseMsg.Append(Substring(mControlReadCarryOverBuf,
-                                          4,
-                                          mControlReadCarryOverBuf.Length()-4));
-        } else {
-            mResponseMsg.Append(mControlReadCarryOverBuf);
-        }
-        mControlReadCarryOverBuf.Truncate();
+        mResponseMsg.Append(line);
 
         // This is the last line if its 3 numbers followed by a space
-        if (startNum && mControlReadCarryOverBuf.get()[3] == ' ') {
+        if (startNum && line[3] == ' ') {
             // yup. last line, let's move on.
             if (mState == mNextState) {
                 NS_ASSERTION(0, "ftp read state mixup");
