@@ -28,11 +28,13 @@
 #include "nsVoidArray.h"
 #include "nsCRT.h"
 
+
 class nsITextWidget;
 class nsIButton;
 class nsIThrobber;
 class nsViewerApp;
 class nsIPresShell;
+class nsIPref;
 
 #define SAMPLES_BASE_URL "resource:/res/samples"
 
