@@ -189,7 +189,7 @@ function InitDialog()
   dump("Current HREF: "+hrefInput.value+"\n");
 }
 
-function ChooseFile()
+function chooseFile()
 {
   // Get a local file, converted into URL format
   fileName = editorShell.GetLocalFileURL(window, "html");

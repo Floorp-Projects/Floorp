@@ -59,6 +59,11 @@
   <broadcasterset id="broadcasterset">
     <broadcaster id="Editor:Throbber" busy="false"/>
 	</broadcasterset>
+
+  <popupset>
+    <popup id="TextColorPicker"/>
+    <popup id="BackColorPicker"/>
+  </popupset>
 	
 	<!-- keys are appended from the overlay -->
   <keyset id="defaultKeySet"/>
@@ -68,9 +73,10 @@
     <menu id="editMenu"/>
 
     <menu value="&viewMenu.label;" accesskey="&viewmenu.accesskey;">
-    <menupopup>
-      <menuitem id="compToolbarMenuitem"/>
-      <menuitem id="formatToolbarMenuitem"/>
+    <!-- id pulls in "Show Sidebar" item from sidebarOverlay -->
+    <menupopup id="menu_View_Popup">
+      <menu id="viewToolbar"/>
+
       <!-- menuseparator /> Put this back when it works.
       <menuitem id="viewSourceMenuitem"/ -->
       <menuseparator />
@@ -99,10 +105,17 @@
       
       <menu id="headingMenu"/>
       <menu id="paragraphMenu"/>
-      <!-- This brings up dialog. Alternative is: <menu id="listMenu"> -->
       <menuitem id="listProps"/>
       <menuseparator />
       <menu id="stylesheetMenu"/>
+      <menu id="alignMenu"/>
+      <menuseparator />
+      <menuitem id="increaseIndent"/>
+      <menuitem id="decreaseIndent"/>
+      <menuseparator />
+      <!-- PROPERTY ITEMS HERE -->
+      <menuitem id="pageProperties"/>
+      <menuitem id="colorsAndBackground"/>
     </menupopup>
     </menu>
 
@@ -164,17 +177,7 @@
         <html:select id="FontFaceSelect"/>
       </html:div>
 
-      <menu>
-        <titledbutton id="TextColorPopupButton"/>
-        <menupopup id="TextColorPopup"/>
-      </menu>
-      <menu>
-        <titledbutton id="BackColorPopupButton"/>
-        <menupopup id="BackColorPopup"/>
-      </menu>
-<!-- The new Color Picker
-      <box id="ColorButtons"/>
--->
+      <html:div id="ColorButtons"/>
       
       <titledbutton id="DecreaseFontSizeButton"/>
       <titledbutton id="IncreaseFontSizeButton"/>
@@ -198,8 +201,8 @@
 <box id="sidebar-parent" align="horizontal" flex="100%">
   <!-- toolbar/content/status -->
 
-  <box id="sidebar-box" chromeclass="extrachrome" style="display:none"/>
-  <splitter id="sidebar-splitter" chromeclass="extrachrome" style="display:none"/>
+  <box id="sidebar-box" chromeclass="extrachrome"/>
+  <splitter id="sidebar-splitter" chromeclass="extrachrome"/>
   
   <box id="appcontent" align="vertical" flex="100%">
     <editor type="content-primary" id="content-frame" src="about:blank" flex="100%"/>
@@ -227,7 +230,7 @@ Use this when implemented...
 
     <!-- status bar, from editorOverlay.xul -->
     <box id="status-bar" />
-  </box>
-</box>
-
+  </box> <!-- appcontent -->
+</box><!-- sidebar-parent -->
+<toolbar id="taskbar" chromeclass="extrachrome" />
 </window>

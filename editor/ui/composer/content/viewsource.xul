@@ -95,39 +95,38 @@
     </menu> 
 
     <menu value="&viewMenu.label;">
-	  <menupopup>
-      <menuitem value="&toolbarsCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
-      <menuitem value="&sidebarCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
-      <menuseparator />
-      <menuitem value="&enlargeTextSizeCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
-      <menuitem value="Reduce Text Size" oncommand="NotImplementedYet();" disabled=""/>
-      <menuseparator />
-      <menu value="&useStyleSheetMenu.label;" oncommand="NotImplementedYet();">
-	      <menupopup>
-		  <menuitem value="&useStyleSheetDefaultCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
-	      <menuseparator />
-	      <menuitem value="&useStyleSheetEasyReadingCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
-	      <menuitem value="&useStyleSheetMaximumInformationCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
-	      <menuitem value="&useStlyleSheetBizarreCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+    <menupopup id="menu_View_Popup">
+      <menu id="viewToolbar"/>
+        <menuseparator />
+        <menuitem value="&enlargeTextSizeCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+        <menuitem value="Reduce Text Size" oncommand="NotImplementedYet();" disabled=""/>
+        <menuseparator />
+        <menu value="&useStyleSheetMenu.label;" oncommand="NotImplementedYet();">
+	        <menupopup>
+		        <menuitem value="&useStyleSheetDefaultCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+	          <menuseparator />
+	          <menuitem value="&useStyleSheetEasyReadingCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+	          <menuitem value="&useStyleSheetMaximumInformationCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+	          <menuitem value="&useStlyleSheetBizarreCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
           </menupopup>
-	  </menu>
-      <menuseparator />
-      <menuitem value="&reloadCmd.label;" oncommand="BrowserReload();" disabled=""/>
-      <menuitem value="&showImagesCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
-      <menuitem value="&stopCmd.label;" oncommand="NotImplementedYet();"/>
-      <menuseparator />
-      <menuitem value="&pageSourceCmd.label;" oncommand="BrowserViewSource();" disabled=""/>
-      <menuitem value="&pageInfoCmd.label;" oncommand="NotImplementedYet();"/>
-      <menuseparator />
-      <menu value="&charSetMenu.label;">
-	      <menupopup>
-		  <menuitem value="&charWesternCmd.label;" oncommand="BrowserSetDocumentCharacterSet('ISO-8859-1');"/>
-	      <menuitem value="&charJapaneseCmd.label;" oncommand="BrowserSetDocumentCharacterSet('ISO-2022-JP');"/>
-	      <menuitem value="&charShiftJisCmd.label;" oncommand="BrowserSetDocumentCharacterSet('Shift_JIS');"/>
-	      <menuitem value="&charEupCmd.label;" oncommand="BrowserSetDocumentCharacterSet('EUC-JP');"/>
-	      </menupopup>
-	   </menu>
-	   </menupopup>
+	      </menu>
+        <menuseparator />
+        <menuitem value="&reloadCmd.label;" oncommand="BrowserReload();" disabled=""/>
+        <menuitem value="&showImagesCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+        <menuitem value="&stopCmd.label;" oncommand="NotImplementedYet();"/>
+        <menuseparator />
+        <menuitem value="&pageSourceCmd.label;" oncommand="BrowserViewSource();" disabled=""/>
+        <menuitem value="&pageInfoCmd.label;" oncommand="NotImplementedYet();"/>
+        <menuseparator />
+        <menu value="&charSetMenu.label;">
+	        <menupopup>
+            <menuitem value="&charWesternCmd.label;" oncommand="BrowserSetDocumentCharacterSet('ISO-8859-1');"/>
+            <menuitem value="&charJapaneseCmd.label;" oncommand="BrowserSetDocumentCharacterSet('ISO-2022-JP');"/>
+            <menuitem value="&charShiftJisCmd.label;" oncommand="BrowserSetDocumentCharacterSet('Shift_JIS');"/>
+            <menuitem value="&charEupCmd.label;" oncommand="BrowserSetDocumentCharacterSet('EUC-JP');"/>
+          </menupopup>
+	    </menu>
+    </menupopup>
     </menu>
     <menu value="&searchMenu.label;">
 	  <menupopup>

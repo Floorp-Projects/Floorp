@@ -32,7 +32,6 @@
 <!ENTITY locationFieldset.label "Image Information">
 <!ENTITY locationEditField.label "Image URL">
 <!ENTITY altTextEditField.label "Alternative Text">
-<!ENTITY chooseButton.label "Choose File...">
 
 <!-- These controls are in the Dimensions Fieldset of the expanded area -->
 <!ENTITY dimensionsFieldset.label "Dimensions">

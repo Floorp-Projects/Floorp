@@ -52,8 +52,25 @@ div.spacer [align~=horizontal] {
 
 div#message {
   width:       20em; 
-  margin-left: 10px
+  margin-left: 10px;
+}
 
+div.color-well {
+  width:30px; 
+  border: 1px inset white;
+  /* Background color is set at runtime */
+  background-color:white;
+}
+
+div#TextSampleWindow {
+  border: 1px inset white;
+  width: 100px; 
+  height: 100px; 
+  background-color:white;
+}
+
+div.middle-align {
+  vertical-align: middle;
 }
 
 /* XUL ELEMENTS */
@@ -94,12 +111,24 @@ titledbutton#MoreFewerButton[more="1"] {
   width: 10em;
 }
 
+titledbutton.color-well {
+	list-style-image:url("chrome://editor/skin/images/color.gif");
+  border: 1px solid #CCCCCC;
+  padding: 0px;
+  margin: 0px;
+  background-color: #AA0000;
+}
+
+titledbutton.color-well:hover {
+  border: 1px solid white;
+}
+
 /* THIS SHOULD BE IN GLOBAL.CSS */
 label.dialog[disabled],legend.dialog[disabled] {
     color: gray;
 }
 
-titledbutton[class~=SizeToParent] {
+titledbutton.SizeToParent {
   width: 100%;
 }
 

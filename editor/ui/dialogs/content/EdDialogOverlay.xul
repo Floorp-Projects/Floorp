@@ -36,6 +36,7 @@
   </box>
   <html:div class="separator" align="horizontal"/>
 </box>
+
 <!-- Extra buttons to use in Image Properties Dialog,
      which switches position between 2 locations
      Placed here to use same attributes as regular button -->
@@ -49,4 +50,11 @@
   class   = "push dialog" 
   onclick = "onAdvancedEdit()" 
   value   = "&AdvancedEditButton.label;"/>
+
+<titledbutton 
+  id      = "ChooseFile" 
+  class   = "push dialog" 
+  onclick = "chooseFile()"
+  value   = "&chooseButton.label;"/>
+
 </overlay>		

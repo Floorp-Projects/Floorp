@@ -29,11 +29,10 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorPageProperties.dtd">
 
-<window class="dialog" title="&tableWindow.title;"
+<window class="dialog" title="&windowTitle.label;"
     xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="Startup()"
-    width="450" height="430"
     align="vertical">
 
   <!-- Methods common to all editor dialogs -->
@@ -45,22 +44,137 @@
   <keyset id="keyset"/>
     <tabcontrol align="vertical">
 	    <tabbox align="horizontal" flex="100%">
-		    <tab>&tableTab.label;</tab>
-		    <tab>&cellTab.label;</tab>
+		    <tab>&generalTab.label;</tab>
+		    <tab>&backgroundTab.label;</tab>
+		    <tab>&metaTagsTab.label;</tab>
 	    </tabbox>
  
     	<tabpanel flex="100%">
-        <!-- table tab -->
-    		<box align="vertical" class="panel">
+        <!-- general tab -->
+    		<box align="vertical">
+          <html:table>
+            <html:tr>
+              <html:td>
+                &location.label;
+              </html:td>
+              <html:td id="location">
+                <!-- fill in URL at runtime -->
+              </html:td>
+            </html:tr>
+            <html:tr>
+              <html:td>
+                &lastModified.label;
+              </html:td>
+              <html:td id="lastModified">
+                <!-- fill in date at runtime -->
+              </html:td>
+            </html:tr>
+            <html:tr>
+              <html:td>
+                &titleInput.label;
+              </html:td>
+              <html:td id="titleInput">
+                <html:input type="text" id="titleInput"/>
+              </html:td>
+            </html:tr>
+            <html:tr>
+              <html:td>
+                &authorInput.label;
+              </html:td>
+              <html:td id="authorInput">
+                <html:input type="text" id="titleInput"/>
+              </html:td>
+            </html:tr>
+            <html:tr>
+              <html:td>
+                &descriptionInput.label;
+              </html:td>
+              <html:td id="title">
+                <html:input type="text" id="descriptionInput"/>
+              </html:td>
+            </html:tr>
+          </html:table>
         </box>
   
-        <!-- cell tab -->
-    		<box align="vertical" class="panel">
+        <!-- colors/background tab -->
+    		<box align="vertical">
+          <html:fieldset><html:legend class = "dialog" align = "left">&pageColors.label;</html:legend>
+            <html:input type="radio" name="ColorMode" id="DefaultColorsRadio"/>
+            <html:label for="DefaultColorsRadio">&defaultColorsRadio.label;</html:label>
+            <html:br/>
+            <html:input type="radio" name="ColorMode" id="CustomColorsRadio"/>
+            <html:label for="CustomColorsRadio">&customColorsRadio.label;</html:label>
+            <html:br/>
+            <html:div>
+              <html:label for="ColorScheme">&colorScheme.label;</html:label>
+              <!-- TODO: COLOR SCHEME SELECT LIST -->
+            </html:div>
+            <html:br/>
+            <box align="horizontal" flex="100%">
+              <box align="vertical" flex="100%">
+                <html:div class="middle-align">
+                  <titledbutton class="color-well" id="textCW" popup="textPopup"/>
+                  <titledbutton value="&normalText.label;" class="push dialog popup" align="right" popup="textPopup"/>
+                </html:div>
+                <html:div class="middle-align">
+                  <titledbutton class="color-well" id="linkCW" popup="linkPopup"/>
+                  <titledbutton value="&linkText.label;" class="push dialog popup" align="right" popup="linkPopup"/>
+                </html:div>
+                <html:div class="middle-align">
+                  <titledbutton class="color-well" id="activeCW" popup="activePopup"/>
+                  <titledbutton value="&activeLinkText.label;" class="push dialog popup" align="right" popup="activePopup"/>
+                </html:div>
+                <html:div class="middle-align">
+                  <titledbutton class="color-well" id="followedCW" popup="followedPopup"/>
+                  <titledbutton value="&followedLinkText.label;" class="push dialog popup" align="right" popup="followedPopup"/>
+                </html:div>
+                <html:div class="middle-align">
+                  <titledbutton class="color-well" id="backgroundCW" popup="backgroundPopup"/>
+                  <titledbutton value="&background.label;" class="push dialog popup" align="right" popup="backgroundPopup"/>
+                </html:div>
+              </box>
+              <!-- SAMPLE WINDOW -->
+              <div id="TextSampleWindow"/>
+            </box>
+          </html:fieldset>
+          <box align="horizontal">
+            <html:input type="checkbox" id="BackgroundImageCheckbox"/>
+            <html:label for="BackgroundImageCheckbox">
+              &backgroundImage.label;
+            </html:label>
+          </box>
+          <box align="horizontal">
+            <html:input type="text" id="BackgroundImageInput" size="10"/>
+            <spring class="spacer"/>
+            <!-- from EdDialogOverlay.xul -->
+            <titledbutton id="ChooseFile"/>
+          </box>
+        </box> <!-- end of colors tab -->
+
+        <!-- meta tags tab -->
+    		<box align="vertical">
         </box>
     	</tabpanel> 
     </tabcontrol>
-    <!-- from EdDialogOverlay -->
-    <box id="AdvancedEdit"/>
-    <spring flex="100%"/>
-	  <box id="okCancelButtons"/> 
+    <html:div class="separator" align="horizontal"/>
+    <box id="okCancelButtons"/> 
+
+<popupset>
+  <popup id="textPopup">
+    <colorpicker id="textCP" palettename="standard" onclick="getColor('textCP', 'textCW');"/>
+  </popup>
+  <popup id="linkPopup">
+    <colorpicker id="linkCP" palettename="standard" onclick="getColor('linkCP', 'linkCW');"/>
+  </popup>
+  <popup id="activePopup">
+    <colorpicker id="activeCP" palettename="standard" onclick="getColor('activeCP', 'activeCW');"/>
+  </popup>
+  <popup id="followedPopup">
+    <colorpicker id="followedCP" palettename="standard" onclick="getColor('followedCP', 'followedCW');"/>
+  </popup>
+  <popup id="backgroundPopup">
+    <colorpicker id="backgroundCP" palettename="standard" onclick="getColor('backgroundCP', 'backgroundCW');"/>
+  </popup>
+</popupset>
+
 </window>

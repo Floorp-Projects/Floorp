@@ -70,11 +70,11 @@ toolbar#FormatToolbar titledbutton.format:hover {
   /* global class="plain" should do this! */
 }
 
-toolbar#FormatToolbar titledbutton[class~=format]:active {
+toolbar#FormatToolbar titledbutton.format:active {
   margin: 2px 0px 0px 2px;
 }
 
-toolbar#FormatToolbar titledbutton[class~=TextAttribute] {
+toolbar#FormatToolbar titledbutton.TextAttribute {
 	/* Make these buttons narrower */
   padding: 2px 0px;
   min-width: 16px; 
@@ -259,33 +259,6 @@ titledbutton#AlignPopupButton {
 	list-style-image:url("chrome://editor/skin/images/align.gif");
 }
 
-/* Use negative margins to bring buttons together to look like one */
-titledbutton#TextColorPopupButton {
-	list-style-image:url("chrome://editor/skin/images/text-color.gif");
-  border: 1px solid transparent;
-  margin: 1px -1px 1px 1px;
-  padding: 0px;
-}
-titledbutton#TextColorPopupButton:hover {
-  border: 1px solid white;
-}
-
-titledbutton#BackColorPopupButton {
-	list-style-image:url("chrome://editor/skin/images/backcolor.gif");
-  border: 1px solid transparent;
-  margin: 1px 1px 1px -1px;
-  padding: 0px;
-}
-titledbutton#BackColorPopupButton:hover {
-  border: 1px solid white;
-}
-
-box#ColorButtons {
-  border: 1px solid transparent;
-  margin:  1px;
-  padding: 0px;
-}
-
 /* Doesn't work! */
 box#ColorButtons:hover {
   border: 1px solid white;
@@ -294,31 +267,47 @@ div.color-caption {
   border: 1px inset white;
 }
 
-titledbutton#TextColorPopupButton1 {
-	list-style-image:url("chrome://editor/skin/images/text-color1.gif");
-  border: 0px;
-  margin: 2px 0px 0px 2px;
+div#ColorButtons {
+  /* This needs to be >= 2x color button width 
+     (color.gif=12px + 2 for border) */
+  width:  28px;
+  height: 19px;
+}
+
+titledbutton#TextColorPopupButton {
+	list-style-image:url("chrome://editor/skin/images/color.gif");
+  border: 1px solid #CCCCCC;
   padding: 0px;
+  margin: 0px;
+  position: relative;
+  top: 2px;
+  left: 2px;
+  z-index: 2;
+
   /* TEMP: Set color here. TODO: Set color from page */
   background-color: #AA0000;
 }
-titledbutton#BackColorPopupButton1 {
-	list-style-image:url("chrome://editor/skin/images/back-color1.gif");
-  border: 0px;
-  /* Top margin important to lower the button */
-  margin: 8px 2px 2px 0px;
+
+titledbutton#TextColorPopupButton:hover {
+  border: 1px solid white;
+}
+
+titledbutton#BackColorPopupButton {
+	list-style-image:url("chrome://editor/skin/images/color.gif");
+  border: 1px solid #CCCCCC;
   padding: 0px;
+  margin: 0px;
+  position: relative;
+  top: 9px;
+  left:-4px;
+  z-index: 1;
+
   /* TEMP: Set color here. TODO: Set color from page */
   background-color: yellow;
 }
-titledbutton#BackColorPopupButton2 {
-	list-style-image:url("chrome://editor/skin/images/back-color2.gif");
-  border: 0px;
-  /* Left margin important to "indent" the button */
-  margin: 0px 0px 2px 8px;
-  padding: 0px;
-  /* TEMP: Set color here. TODO: Set color from page */
-  background-color: yellow;
+
+titledbutton#BackColorPopupButton:hover {
+  border: 1px solid white;
 }
 
 titledbutton#text-align-left {

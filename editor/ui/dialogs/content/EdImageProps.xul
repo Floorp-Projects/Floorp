@@ -72,11 +72,8 @@
           onchange   = "doOverallEnabling()" />
       </td>  
       <td>  
-        <xul:titledbutton 
-          class   = "push dialog" 
-          id      = "ChooseFile" 
-          onclick = "chooseFile()"
-          value   = "&chooseButton.label;"/>
+        <!-- from EdDialogOverlay.xul -->
+        <xul:titledbutton id="ChooseFile"/>
       </td>  
     </tr>  
     <tr>  
