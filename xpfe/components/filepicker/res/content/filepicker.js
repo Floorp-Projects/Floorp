@@ -320,7 +320,7 @@ function openSelectedFile() {
   if (file.isDirectory())
     gotoDirectory(file);
   else if (file.isFile())
-    doOKButton();
+    document.documentElement.acceptDialog();
 }
 
 function onClick(e) {
