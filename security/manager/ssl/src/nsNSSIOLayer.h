@@ -57,6 +57,9 @@ public:
 
   nsresult SetUseTLS(PRBool useTLS);
   nsresult GetUseTLS(PRBool *useTLS);
+
+  nsresult GetFileDescPtr(PRFileDesc** aFilePtr);
+  nsresult SetFileDescPtr(PRFileDesc* aFilePtr);
   
 protected:
   nsString mHostName;
@@ -67,6 +70,7 @@ protected:
   
   nsIChannel* mChannel; // note, don't use an owning reference
                         // to avoid circular references
+  PRFileDesc* mFd;
   PRInt32 mSecurityState;
   nsString mShortDesc;
   PRBool mForceHandshake;
