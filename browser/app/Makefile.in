@@ -70,6 +70,10 @@ EXTRA_LIBS = \
 	$(TK_LIBS) \
 	$(NULL)
 
+ifdef MOZ_JPROF
+EXTRA_LIBS += -ljprof
+endif
+
 ifndef MOZ_WINCONSOLE
 ifdef MOZ_DEBUG
 MOZ_WINCONSOLE = 1
