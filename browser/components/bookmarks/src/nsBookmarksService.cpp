@@ -3442,17 +3442,16 @@ nsBookmarksService::GetURI(char* *aURI)
 }
 
 static PRBool
-isBookmarkCommand(nsIRDFResource *r)
+isBookmarkCommand(nsIRDFResource *aResource)
 {
+
     PRBool      isBookmarkCommandFlag = PR_FALSE;
     const char  *uri = nsnull;
     
-    if (NS_SUCCEEDED(r->GetValueConst( &uri )) && (uri))
+    if (NS_SUCCEEDED(aResource->GetValueConst(&uri)) && (uri))
     {
         if (!strncmp(uri, kBookmarkCommand, sizeof(kBookmarkCommand) - 1))
-        {
             isBookmarkCommandFlag = PR_TRUE;
-        }
     }
     return isBookmarkCommandFlag;
 }
@@ -3463,6 +3462,13 @@ nsBookmarksService::GetTarget(nsIRDFResource* aSource,
                               PRBool aTruthValue,
                               nsIRDFNode** aTarget)
 {
+    NS_PRECONDITION(aSource != nsnull, "null ptr");
+    if (! aSource)
+        return NS_ERROR_NULL_POINTER;
+    NS_PRECONDITION(aProperty != nsnull, "null ptr");
+    if (! aProperty)
+        return NS_ERROR_NULL_POINTER;
+
     *aTarget = nsnull;
 
     nsresult rv;

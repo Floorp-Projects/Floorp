@@ -35,29 +35,22 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-// XXX MAKE SURE that the "url" field is LAST!
-// This is important for what happens if/when the URL itself is changed.
-// Ask rjc@netscape.com if you want to know why exactly this is.
-
+// This is the RDF Resource we're dealing with.
+var gResource;
 // This is the set of fields that are visible in the window.
 var gFields;
-
 // ...and this is a parallel array that contains the RDF properties
 // that they are associated with.
 var gProperties;
-
-var Bookmarks;
-var gBookmarkID;
 
 function showDescription()
 {
   initServices();
   initBMService();
 
-  gBookmarkID = window.arguments[0];
-  var resource = RDF.GetResource(gBookmarkID);
+  gResource = RDF.GetResource(window.arguments[0]);
  
-  if (BookmarksUtils.isPersonalToolbarFolder(resource)) {
+  if (BookmarksUtils.isPersonalToolbarFolder(gResource)) {
     var description = BookmarksUtils.getLocaleString("description_PersonalToolbarFolder");
     var box = document.getElementById("description-box");
     box.hidden = false;
@@ -73,22 +66,19 @@ function Init()
 
   // ...and this is a parallel array that contains the RDF properties
   // that they are associated with.
-  gProperties = [NC_NS + "Name",
-                 NC_NS + "URL",
-                 NC_NS + "ShortcutURL",
-                 NC_NS + "Description",
-                 NC_NS + "WebPanel"];
-
-  Bookmarks = RDF.GetDataSource("rdf:bookmarks");
+  gProperties = [RDF.GetResource(NC_NS+"Name"),
+                 RDF.GetResource(NC_NS+"URL"),
+                 RDF.GetResource(NC_NS+"ShortcutURL"),
+                 RDF.GetResource(NC_NS+"Description"),
+                 RDF.GetResource(NC_NS+"WebPanel")];
 
   var x;
-  var resource = RDF.GetResource(gBookmarkID);
   // Initialize the properties panel by copying the values from the
   // RDF graph into the fields on screen.
 
-  for (var i = 0; i < gFields.length; ++i) {
+  for (var i=0; i<gFields.length; ++i) {
     var field = document.getElementById(gFields[i]);
-    var value = Bookmarks.GetTarget(resource, RDF.GetResource(gProperties[i]), true);
+    var value = BMDS.GetTarget(gResource, gProperties[i], true);
     
     if (value)
       value = value.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
@@ -106,8 +96,8 @@ function Init()
   propsWindow.setAttribute("title", title);
 
   // check bookmark schedule
-  var scheduleArc = RDF.GetResource("http://home.netscape.com/WEB-rdf#Schedule");
-  value = Bookmarks.GetTarget(resource, scheduleArc, true);
+  var scheduleArc = RDF.GetResource(WEB_NS+"Schedule");
+  value = BMDS.GetTarget(gResource, scheduleArc, true);
 
   if (value) {
     value = value.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
@@ -179,7 +169,7 @@ function Init()
   }
 
   // if its a container, disable some things
-  var isContainerFlag = RDFCU.IsContainer(Bookmarks, resource);
+  var isContainerFlag = RDFCU.IsContainer(BMDS, gResource);
   if (!isContainerFlag) {
     // XXX To do: the "RDFCU.IsContainer" call above only works for RDF sequences;
     //            if its not a RDF sequence, we should to more checking to see if
@@ -187,7 +177,7 @@ function Init()
     //            of this is the "File System" container.
   }
 
-  var isSeparator = BookmarksUtils.resolveType(resource) == "BookmarkSeparator";
+  var isSeparator = BookmarksUtils.resolveType(gResource) == "BookmarkSeparator";
 
   if (isContainerFlag || isSeparator) {
     // Hide the "Load in sidebar" checkbox unless it's a bookmark.
@@ -203,14 +193,13 @@ function Init()
   }
 
   var showScheduling = false;
-  var url = Bookmarks.GetTarget(resource, RDF.GetResource(gProperties[1]), true);
+  var url = BMDS.GetTarget(gResource, gProperties[1], true);
   if (url) {
     url = url.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-    if (!url                                        || 
-        url.substr(0, 7).toLowerCase() == "http://" ||
-        url.substr(0, 8).toLowerCase() == "https://") {
+    if (!url                                       || 
+        url.substr(0,7).toLowerCase() == "http://" ||
+        url.substr(0,8).toLowerCase() == "https://")
       showScheduling = true;
-    }
   }
 
   if (!showScheduling) {
@@ -238,39 +227,35 @@ function Commit()
   // Grovel through the fields to see if any of the values have
   // changed. If so, update the RDF graph and force them to be saved
   // to disk.
-  for (var i = 0; i < gFields.length; ++i) {
+  for (var i=0; i<gFields.length; ++i) {
     var field = document.getElementById(gFields[i]);
 
-    if (field) {
-      // Get the new value as a literal, using 'null' if the value is empty.
-      var newvalue = field.value;
-      if (gFields[i] == "webpanel")
-        newvalue = field.checked ? "true" : undefined;
-              
-      var oldvalue = Bookmarks.GetTarget(RDF.GetResource(gBookmarkID),
-                                         RDF.GetResource(gProperties[i]),
-                                         true);
+    if (! field)
+      continue
 
-      if (oldvalue)
-        oldvalue = oldvalue.QueryInterface(Components.interfaces.nsIRDFLiteral);
+    // Get the new value as a literal, using 'null' if the value is empty.
+    var newValue = field.value;
+    if (gFields[i] == "webpanel")
+      newValue = field.checked ? "true" : undefined;
+ 
+    var oldValue = BMDS.GetTarget(gResource, gProperties[i], true);
 
-      if (newvalue && gProperties[i] == (NC_NS + "ShortcutURL")) {
-        // shortcuts are always lowercased internally
-        newvalue = newvalue.toLowerCase();
-      }
-      else if (newvalue && gProperties[i] == (NC_NS + "URL")) {
-        if (newvalue.indexOf(":") < 0)
-          // we're dealing with the URL attribute;
-          // if a scheme isn't specified, use "http://"
-          newvalue = "http://" + newvalue;
-      }
+    if (oldValue)
+      oldValue = oldValue.QueryInterface(Components.interfaces.nsIRDFLiteral);
 
-      if (newvalue)
-        newvalue = RDF.GetLiteral(newvalue);
+    if (newValue && gFields[i] == "shortcut")
+      // shortcuts are always lowercased internally
+      newValue = newValue.toLowerCase();
+    else if (newValue && gFields[i] == "url") {
+      if (newValue.indexOf(":") < 0)
+        // we're dealing with the URL attribute;
+        // if a scheme isn't specified, use "http://"
+        newValue = "http://" + newValue;
+    }
 
-      if (updateAttribute(gProperties[i], oldvalue, newvalue)) {
-        changed = true;
-      }
+    if (newValue) {
+      newValue = RDF.GetLiteral(newValue);
+      changed |= updateAttribute(gProperties[i], oldValue, newValue);
     }
   }
 
@@ -278,10 +263,9 @@ function Commit()
   // if the tab was removed, just skip it
   var scheduleTab = document.getElementById("ScheduleTab");
   if (scheduleTab) {
-    var scheduleRes = "http://home.netscape.com/WEB-rdf#Schedule";
-    oldvalue = Bookmarks.GetTarget(RDF.GetResource(gBookmarkID),
-                                   RDF.GetResource(scheduleRes), true);
-    newvalue = "";
+    var scheduleArc = RDF.GetResource(WEB_NS+"Schedule");
+    oldValue = BMDS.GetTarget(gResource, scheduleArc, true);
+    newValue = null;
     var dayRangeNode = document.getElementById("dayRange");
     var dayRange = dayRangeNode.selectedItem.getAttribute("value");
 
@@ -321,18 +305,17 @@ function Commit()
 
       var method = methods.join(); // join string in array with ","
 
-      newvalue = dayRange + "|" + startHourRange + "-" + endHourRange + "|" + duration + "|" + method;
+      newValue = dayRange + "|" + startHourRange + "-" + endHourRange + "|" + duration + "|" + method;
     }
 
-    if (newvalue)
-      newvalue = RDF.GetLiteral(newvalue);
+    if (newValue)
+      newValue = RDF.GetLiteral(newValue);
 
-    if (updateAttribute(scheduleRes, oldvalue, newvalue))
-      changed = true;
+    changed |= updateAttribute(scheduleArc, oldValue, newValue);   
   }
 
   if (changed) {
-    var remote = Bookmarks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+    var remote = BMDS.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
     if (remote)
       remote.Flush();
   }
@@ -341,33 +324,18 @@ function Commit()
   return true;
 }
 
-function updateAttribute(prop, oldvalue, newvalue)
+function updateAttribute(aProperty, aOldValue, aNewValue)
 {
-  var changed = false;
-
-  if (prop && (oldvalue || newvalue) && oldvalue != newvalue) {
-    if (oldvalue && !newvalue) {
-      Bookmarks.Unassert(RDF.GetResource(gBookmarkID),
-                         RDF.GetResource(prop),
-                         oldvalue);
-    }
-    else if (!oldvalue && newvalue) {
-      Bookmarks.Assert(RDF.GetResource(gBookmarkID),
-                       RDF.GetResource(prop),
-                       newvalue,
-                       true);
-    }
-    else /* if (oldvalue && newvalue) */ {
-      Bookmarks.Change(RDF.GetResource(gBookmarkID),
-                       RDF.GetResource(prop),
-                       oldvalue,
-                       newvalue);
-    }
-
-    changed = true;
+  if ((aOldValue || aNewValue) && aOldValue != aNewValue) {
+    if (aOldValue && !aNewValue)
+      BMDS.Unassert(gResource, aProperty, aOldValue);
+    else if (!aOldValue && aNewValue)
+      BMDS.Assert(gResource, aProperty, aNewValue, true);
+    else /* if (aOldValue && aNewValue) */
+      BMDS.Change(gResource, aProperty, aOldValue, aNewValue);
+    return true;
   }
-
-  return changed;
+  return false;
 }
 
 function setEndHourRange()
@@ -383,10 +351,8 @@ function setEndHourRange()
 
   var endHourItemNode = endHourRangeNode.firstChild.firstChild;
 
-  var index = 0;
-
   // disable all those end-times before the start-time
-  for (; index < startHourRangeInt; ++index) {
+  for (var index=0; index<startHourRangeInt; ++index) {
     endHourItemNode.setAttribute("disabled", "true");
     endHourItemNode = endHourItemNode.nextSibling;
   }
@@ -407,7 +373,7 @@ function dayRangeChange (aMenuList)
   var controls = ["startHourRange", "endHourRange", "duration", "bookmarkIcon", 
                   "showAlert", "openWindow", "playSound", "durationSubLabel", 
                   "durationLabel", "startHourRangeLabel", "endHourRangeLabel"];
-  for (var i = 0; i < controls.length; ++i)
+  for (var i=0; i<controls.length; ++i)
     document.getElementById(controls[i]).disabled = !aMenuList.value;
 }
 
