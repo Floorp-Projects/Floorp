@@ -200,7 +200,8 @@ nsNNTPNewsgroupList::GetDatabase(const char *uri, nsIMsgDatabase **db)
                     printf ("newsDBFactory->Open() failed\n");
                 }
 #endif /* DEBUG_NEWS */
-                return rv;
+// return the error 
+                return newsDBOpen; 
         }
 #ifdef DEBUG_NEWS
         else {
@@ -284,6 +285,9 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow * aMsgWindow,
 	if (!m_newsDB) {
 		nsresult err;
 		if ((err = GetDatabase(GetURI(), &m_newsDB)) != NS_OK) {
+            // set the status to -1 to tell state machine to stop 
+            // processing
+            if (status) *status=-1;
             return err;
         }
 		else {
