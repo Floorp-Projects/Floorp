@@ -6,6 +6,7 @@ dnl
 builtin(include, build/autoconf/glib.m4)dnl
 builtin(include, build/autoconf/gtk.m4)dnl
 builtin(include, build/autoconf/libIDL.m4)dnl
+builtin(include, build/autoconf/libIDL-2.m4)dnl
 builtin(include, build/autoconf/nspr.m4)dnl
 builtin(include, build/autoconf/libart.m4)dnl
 builtin(include, build/autoconf/pkg.m4)dnl

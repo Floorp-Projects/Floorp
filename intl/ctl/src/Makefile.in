@@ -50,11 +50,16 @@ include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES += -I$(srcdir)/pangoLite
 
-CXXFLAGS  += $(GLIB_CFLAGS)
+ifdef MOZ_ENABLE_GTK2
+  CXXFLAGS        += $(MOZ_GTK2_CFLAGS)
+  EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS)
+else
+  CXXFLAGS  += $(GLIB_CFLAGS)
+  EXTRA_DSO_LDOPTS += $(GLIB_GMODULE_LIBS)
+endif
 
 EXTRA_DSO_LDOPTS += \
 	$(MOZ_COMPONENT_LIBS) \
 	-L$(DIST)/lib \
 	$(EXTRA_DSO_LIBS) \
-	$(GLIB_GMODULE_LIBS) \
 	$(NULL)
