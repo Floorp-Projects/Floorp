@@ -110,6 +110,33 @@
 
   } // DropPersonalToolbar
   
+  
+  function DragOverPersonalToolbar ( event )
+  {
+    var validFlavor = false;
+
+    var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
+    if ( dragService ) dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
+    if ( dragService ) {
+      var dragSession = dragService.getCurrentSession();
+      if ( dragSession ) {
+        if ( dragSession.isDataFlavorSupported("mozilla/toolbaritem") )
+          validFlavor = true;
+        //XXX other flavors here...
+      }
+    }
+
+    // touch the attribute to trigger the repaint with the drop feedback.
+    if ( validFlavor ) {
+      //XXX this is really slow and likes to refresh N times per second.
+      var toolbar = document.getElementById("PersonalToolbar");
+      toolbar.setAttribute ( "tb-triggerrepaint", 0 );
+    }
+
+    return true;
+
+  } // DragOverPersonalToolbar
+
 
   function UpdateHistory(event)
   {
