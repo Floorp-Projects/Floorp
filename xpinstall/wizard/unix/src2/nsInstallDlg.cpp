@@ -996,6 +996,8 @@ nsInstallDlg::ShowProxySettings(GtkWidget *aWidget, gpointer aData)
         okButton);
     gtk_signal_connect(GTK_OBJECT(okButton), "clicked",
                    GTK_SIGNAL_FUNC(PSDlgOK), psDlg);
+    GTK_WIDGET_SET_FLAGS(okButton, GTK_CAN_DEFAULT);
+    gtk_widget_grab_default(okButton);
     gtk_widget_show(okButton);
 
     cancelButton = gtk_button_new_with_label(gCtx->Res("CANCEL_LABEL"));
@@ -1188,6 +1190,8 @@ nsInstallDlg::ShowCRCDlg()
                              okButton);
            gtk_signal_connect(GTK_OBJECT(okButton), "clicked",
                               GTK_SIGNAL_FUNC(CRCOKCb), crcDlg);
+           GTK_WIDGET_SET_FLAGS(okButton, GTK_CAN_DEFAULT);
+           gtk_widget_grab_default(okButton);
            gtk_widget_show_all(crcDlg);
        }
     }
@@ -1225,6 +1229,8 @@ nsInstallDlg::ShowCRCFailedDlg()
                           okButton);
         gtk_signal_connect(GTK_OBJECT(okButton), "clicked",
                            GTK_SIGNAL_FUNC(CRCFailedOK), crcFailedDlg);
+        GTK_WIDGET_SET_FLAGS(okButton, GTK_CAN_DEFAULT);
+        gtk_widget_grab_default(okButton);
         gtk_widget_show_all(crcFailedDlg);
     }
     XI_GTK_UPDATE_UI();
@@ -1263,6 +1269,8 @@ nsInstallDlg::ShowCxnDroppedDlg()
                           okButton);
         gtk_signal_connect(GTK_OBJECT(okButton), "clicked",
                            GTK_SIGNAL_FUNC(CxnDroppedOK), cxnDroppedDlg);
+        GTK_WIDGET_SET_FLAGS(okButton, GTK_CAN_DEFAULT);
+        gtk_widget_grab_default(okButton);
         gtk_widget_show_all(cxnDroppedDlg);
     }
     XI_GTK_UPDATE_UI();

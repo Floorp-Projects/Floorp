@@ -789,6 +789,9 @@ nsSetupTypeDlg::VerifyDestination()
           gtk_box_pack_start(GTK_BOX(
             GTK_DIALOG(noPermsDlg)->vbox), label, FALSE, FALSE, 10);
 
+          GTK_WIDGET_SET_FLAGS(okButton, GTK_CAN_DEFAULT);
+          gtk_widget_grab_default(okButton);
+
           gtk_widget_show_all(noPermsDlg);
         }
 
@@ -819,6 +822,9 @@ nsSetupTypeDlg::VerifyDestination()
                        GTK_SIGNAL_FUNC(CreateDestYes), sCreateDestDlg);
     gtk_signal_connect(GTK_OBJECT(noButton), "clicked",
                        GTK_SIGNAL_FUNC(CreateDestNo), sCreateDestDlg);
+
+    GTK_WIDGET_SET_FLAGS(yesButton, GTK_CAN_DEFAULT);
+    gtk_widget_grab_default(yesButton);
 
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(sCreateDestDlg)->vbox), label);
     
@@ -947,6 +953,9 @@ nsSetupTypeDlg::DeleteOldInst()
                          GTK_SIGNAL_FUNC(DeleteInstDelete), sDelInstDlg);
           gtk_signal_connect(GTK_OBJECT(cancelBtn), "clicked",
                          GTK_SIGNAL_FUNC(DeleteInstCancel), sDelInstDlg);
+
+          GTK_WIDGET_SET_FLAGS(cancelBtn, GTK_CAN_DEFAULT);
+          gtk_widget_grab_default(cancelBtn);
 
           snprintf(msg, sizeof(msg), currLC->GetMessage(), gCtx->opt->mDestination);
           msgPtr = msg;
@@ -1135,6 +1144,9 @@ nsSetupTypeDlg::VerifyDiskSpace(void)
                 GTK_SIGNAL_FUNC(NoDiskSpaceOK), noDSDlg);
             gtk_box_pack_start(GTK_BOX(
                 GTK_DIALOG(noDSDlg)->vbox), packer, FALSE, FALSE, 10);
+
+            GTK_WIDGET_SET_FLAGS(okButton, GTK_CAN_DEFAULT);
+            gtk_widget_grab_default(okButton);
 
             gtk_widget_show_all(noDSDlg);
         }
