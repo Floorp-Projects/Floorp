@@ -517,14 +517,20 @@ nsLDAPAutoCompleteSession::OnLDAPInit(nsresult aStatus)
                                      UNBOUND);
             return rv;
         }
-        const PRUnichar *hostArray[1] = { NS_ConvertASCIItoUCS2(host).get() };
+
+        // hostTemp is only necessary to work around a code-generation 
+        // bug in egcs 1.1.2 (the version of gcc that comes with Red Hat 6.2),
+        // which is the default compiler for Mozilla on linux at the moment.
+        //
+        NS_ConvertASCIItoUCS2 hostTemp(host);
+        const PRUnichar *hostArray[1] = { hostTemp.get() };
 
         // format the hostname into the authprompt text string
         //
         nsXPIDLString authPromptText;
         rv = ldapBundle->FormatStringFromName(
             NS_LITERAL_STRING("authPromptText").get(),
-            hostArray, sizeof(hostArray),
+            hostArray, sizeof(hostArray) / sizeof(const PRUnichar *),
             getter_Copies(authPromptText));
         if (NS_FAILED(rv)) {
             NS_ERROR("nsLDAPAutoCompleteSession::OnLDAPInit():"
