@@ -1030,8 +1030,8 @@ GetOSDPI(void)
                  NULL);
   }
 
-  if (dpi)
-    return NSToCoordRound(dpi / PANGO_SCALE);
+  if (dpi > 0)
+    return NSToCoordRound(dpi / 1024.0);
 
   // try to get it from xft
   PRInt32 xftdpi = GetXftDPI();
