@@ -209,13 +209,10 @@ sub Cancel {
     # Get the email address of the Bugzilla maintainer.
     my $maintainer = Param('maintainer');
 
-    # Format the user's real name and email address into a single string.
-    my $username = $realname ? $realname . " <" . $loginname . ">" : $loginname;
-
     my $template = $::template;
     my $vars = $::vars;
 
-    $vars->{'emailaddress'} = $username;
+    $vars->{'emailaddress'} = $loginname . Param('emailsuffix');
     $vars->{'maintainer'} = $maintainer;
     $vars->{'remoteaddress'} = $::ENV{'REMOTE_ADDR'};
     $vars->{'token'} = $token;
