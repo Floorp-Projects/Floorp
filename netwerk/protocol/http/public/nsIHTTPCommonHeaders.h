@@ -49,89 +49,89 @@ public:
 
     // Entity headers.
     NS_IMETHOD          SetAllow(const char* i_Value) = 0;
-    NS_IMETHOD          GetAllow(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetAllow(char* *o_Value) = 0;
 
     NS_IMETHOD          SetContentBase(const char* i_Value) = 0;
-    NS_IMETHOD          GetContentBase(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetContentBase(char* *o_Value) = 0;
 
     NS_IMETHOD          SetContentEncoding(const char* i_Value) = 0;
-    NS_IMETHOD          GetContentEncoding(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetContentEncoding(char* *o_Value) = 0;
 
     NS_IMETHOD          SetContentLanguage(const char* i_Value) = 0;
-    NS_IMETHOD          GetContentLanguage(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetContentLanguage(char* *o_Value) = 0;
 
     NS_IMETHOD          SetContentLength(const char* i_Value) = 0;
-    NS_IMETHOD          GetContentLength(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetContentLength(char* *o_Value) = 0;
 
     NS_IMETHOD          SetContentLocation(const char* i_Value) = 0;
-    NS_IMETHOD          GetContentLocation(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetContentLocation(char* *o_Value) = 0;
 
     NS_IMETHOD          SetContentMD5(const char* i_Value) = 0;
-    NS_IMETHOD          GetContentMD5(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetContentMD5(char* *o_Value) = 0;
 
     NS_IMETHOD          SetContentRange(const char* i_Value) = 0;
-    NS_IMETHOD          GetContentRange(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetContentRange(char* *o_Value) = 0;
 
     NS_IMETHOD          SetContentTransferEncoding(const char* i_Value) = 0;
-    NS_IMETHOD          GetContentTransferEncoding(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetContentTransferEncoding(char* *o_Value) = 0;
 
     NS_IMETHOD          SetContentType(const char* i_Value) = 0;
-    NS_IMETHOD          GetContentType(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetContentType(char* *o_Value) = 0;
 
     NS_IMETHOD          SetDerivedFrom(const char* i_Value) = 0;
-    NS_IMETHOD          GetDerivedFrom(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetDerivedFrom(char* *o_Value) = 0;
 
     NS_IMETHOD          SetETag(const char* i_Value) = 0;
-    NS_IMETHOD          GetETag(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetETag(char* *o_Value) = 0;
 
     NS_IMETHOD          SetExpires(const char* i_Value) = 0;
-    NS_IMETHOD          GetExpires(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetExpires(char* *o_Value) = 0;
 
     NS_IMETHOD          SetLastModified(const char* i_Value) = 0;
-    NS_IMETHOD          GetLastModified(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetLastModified(char* *o_Value) = 0;
 
     /*
         To set multiple link headers, call set link again.
     */
     NS_IMETHOD          SetLink(const char* i_Value) = 0;
-    NS_IMETHOD          GetLink(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetLink(char* *o_Value) = 0;
     NS_IMETHOD          GetLinkMultiple(
                             const char** *o_ValueArray, 
                             int count) const = 0;
 
     NS_IMETHOD          SetTitle(const char* i_Value) = 0;
-    NS_IMETHOD          GetTitle(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetTitle(char* *o_Value) = 0;
 
     NS_IMETHOD          SetURI(const char* i_Value) = 0;
-    NS_IMETHOD          GetURI(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetURI(char* *o_Value) = 0;
 
     NS_IMETHOD          SetVersion(const char* i_Value) = 0;
-    NS_IMETHOD          GetVersion(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetVersion(char* *o_Value) = 0;
 
     // Common Transaction headers
     NS_IMETHOD          SetConnection(const char* i_Value) = 0;
-    NS_IMETHOD          GetConnection(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetConnection(char* *o_Value) = 0;
 
     NS_IMETHOD          SetDate(const char* i_Value) = 0;
-    NS_IMETHOD          GetDate(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetDate(char* *o_Value) = 0;
 
     NS_IMETHOD          SetPragma(const char* i_Value) = 0;
-    NS_IMETHOD          GetPragma(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetPragma(char* *o_Value) = 0;
 
     NS_IMETHOD          SetForwarded(const char* i_Value) = 0;
-    NS_IMETHOD          GetForwarded(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetForwarded(char* *o_Value) = 0;
 
     NS_IMETHOD          SetMessageID(const char* i_Value) = 0;
-    NS_IMETHOD          GetMessageID(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetMessageID(char* *o_Value) = 0;
 
     NS_IMETHOD          SetMIME(const char* i_Value) = 0;
-    NS_IMETHOD          GetMIME(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetMIME(char* *o_Value) = 0;
 
     NS_IMETHOD          SetTrailer(const char* i_Value) = 0;
-    NS_IMETHOD          GetTrailer(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetTrailer(char* *o_Value) = 0;
 
     NS_IMETHOD          SetTransfer(const char* i_Value) = 0;
-    NS_IMETHOD          GetTransfer(const char* *o_Value) const = 0;
+    NS_IMETHOD          GetTransfer(char* *o_Value) = 0;
 
     static const nsIID& GetIID() { 
         // {C81A4600-EBC0-11d2-B018-006097BFC036}

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -27,7 +27,7 @@
 #include "nsISocketTransportService.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
-#include "nsITransport.h"
+#include "nsIChannel.h"
 #include "nsIStreamObserver.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
@@ -96,7 +96,7 @@ protected:
   InputConsumer*  mInputConsumer;
   OutputObserver* mOutputObserver;
 
-  nsITransport*   mTransport;
+  nsIChannel*   mTransport;
 
   PRBool  mIsAsync;
   PRInt32 mBufferLength;
@@ -131,6 +131,16 @@ public:
   NS_IMETHOD OnStopBinding(nsISupports* context,
                            nsresult aStatus,
                            nsIString* aMsg);
+
+  NS_IMETHOD OnStartRequest(nsISupports* context) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  NS_IMETHOD OnStopRequest(nsISupports* context,
+                           nsresult aStatus,
+                           nsIString* aMsg) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
 
   TestConnection* mConnection;
   PRInt32 mBytesRead;
@@ -227,6 +237,17 @@ public:
   NS_IMETHOD OnStopBinding(nsISupports* context,
                            nsresult aStatus,
                            nsIString* aMsg);
+
+  NS_IMETHOD OnStartRequest(nsISupports* context) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  NS_IMETHOD OnStopRequest(nsISupports* context,
+                           nsresult aStatus,
+                           nsIString* aMsg) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
 protected:
   TestConnection* mConnection;
 };
@@ -370,7 +391,7 @@ TestConnection::Run(void)
       //
       // Initiate an async read...
       //
-      rv = mTransport->AsyncRead(mTransport, gEventQ, mInputConsumer);
+      rv = mTransport->AsyncRead(0, -1, mTransport, gEventQ, mInputConsumer);
 
       if (NS_FAILED(rv)) {
         printf("Error: AsyncRead failed...");
@@ -425,7 +446,9 @@ nsresult TestConnection::WriteBuffer(void)
 
       // Write the buffer to the server...
       if (NS_SUCCEEDED(rv)) {
-        rv = mTransport->AsyncWrite(mStream, mTransport, gEventQ, /* mOutputObserver */ nsnull);
+        PRUint32 count;
+        rv = mStream->GetLength(&count);
+        rv = mTransport->AsyncWrite(mStream, 0, count, mTransport, gEventQ, /* mOutputObserver */ nsnull);
       } 
       // Wait for the write to complete...
       if (NS_SUCCEEDED(rv)) {

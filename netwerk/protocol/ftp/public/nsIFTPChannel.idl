@@ -16,33 +16,23 @@
  * Reserved.
  */
 
-#ifndef nsIFtpProtocolConnection_h___
-#define nsIFtpProtocolConnection_h___
+#include "nsIChannel.idl"
 
-#include "nsIProtocolConnection.h"
-#include "nsIStreamListener.h"
+interface nsIStreamListener;
 
-// {25029495-F132-11d2-9588-00805F369F95}
-#define NS_IFTPPROTOCOLCONNECTION_IID               \
-    { 0x25029495, 0xf132, 0x11d2, { 0x95, 0x88, 0x0, 0x80, 0x5f, 0x36, 0x9f, 0x95 } }
-
-
-class nsIFtpProtocolConnection : public nsIProtocolConnection
+[scriptable, uuid(64718e40-18c2-11d3-9337-00104ba0fd40)]
+interface nsIFTPChannel : nsIChannel
 {
-public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFTPPROTOCOLCONNECTION_IID);
-
     // PRE connect
 
     // POST connect
 
     // Initiate connect
-    NS_IMETHOD Get(void) = 0;
+    void Get();
 
-    NS_IMETHOD Put(void) = 0;
+    void Put();
 
-    NS_IMETHOD SetStreamListener(nsIStreamListener* aListener) = 0;
-
+    void SetStreamListener(in nsIStreamListener aListener);
 };
 
-#endif /* nsIIFtpProtocolConnection_h___ */
+

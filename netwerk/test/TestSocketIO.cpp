@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -26,7 +26,7 @@
 #include "nsISocketTransportService.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
-#include "nsITransport.h"
+#include "nsIChannel.h"
 #include "nsIStreamObserver.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
@@ -62,6 +62,17 @@ public:
   NS_IMETHOD OnStopBinding(nsISupports* context,
                            nsresult aStatus,
                            nsIString* aMsg);
+
+  NS_IMETHOD OnStartRequest(nsISupports* context) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  NS_IMETHOD OnStopRequest(nsISupports* context,
+                           nsresult aStatus,
+                           nsIString* aMsg) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
 };
 
 
@@ -121,7 +132,7 @@ class TestWriteObserver : public nsIStreamObserver
 {
 public:
 
-  TestWriteObserver(nsITransport* aTransport);
+  TestWriteObserver(nsIChannel* aTransport);
   virtual ~TestWriteObserver();
 
   // ISupports interface...
@@ -133,12 +144,24 @@ public:
   NS_IMETHOD OnStopBinding(nsISupports* context,
                            nsresult aStatus,
                            nsIString* aMsg);
+
+  NS_IMETHOD OnStartRequest(nsISupports* context) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  NS_IMETHOD OnStopRequest(nsISupports* context,
+                           nsresult aStatus,
+                           nsIString* aMsg) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+
 protected:
-  nsITransport* mTransport;
+  nsIChannel* mTransport;
 };
 
 
-TestWriteObserver::TestWriteObserver(nsITransport* aTransport)
+TestWriteObserver::TestWriteObserver(nsIChannel* aTransport)
 {
   NS_INIT_REFCNT();
   mTransport = aTransport;
@@ -170,7 +193,7 @@ TestWriteObserver::OnStopBinding(nsISupports* context,
   printf("\n+++ TestWriteObserver::OnStopBinding (status = %x) +++\n", aStatus);
 
   if (NS_SUCCEEDED(aStatus)) {
-    mTransport->AsyncRead(nsnull, gEventQ, new InputTestConsumer);
+    mTransport->AsyncRead(0, -1, nsnull, gEventQ, new InputTestConsumer);
   } else {
     gKeepRunning = 0;
   }
@@ -223,7 +246,7 @@ main(int argc, char* argv[])
   printf("\n+++ Request is: %s\n", buffer);
 
   // Create the socket transport...
-  nsITransport* transport;
+  nsIChannel* transport;
   rv = sts->CreateTransport(hostName, port, &transport);
 
 // This stuff is used to test the output stream
@@ -245,7 +268,9 @@ main(int argc, char* argv[])
     TestWriteObserver* observer = new TestWriteObserver(transport);
 
     gElapsedTime = PR_Now();
-    transport->AsyncWrite(stream, nsnull, gEventQ, observer);
+    PRUint32 count;
+    rv = stream->GetLength(&count);
+    transport->AsyncWrite(stream, 0, count, nsnull, gEventQ, observer);
 
     NS_RELEASE(transport);
   }

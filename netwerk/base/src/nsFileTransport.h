@@ -19,7 +19,7 @@
 #ifndef nsFileTransport_h___
 #define nsFileTransport_h___
 
-#include "nsITransport.h"
+#include "nsIChannel.h"
 #include "nsIThread.h"
 #include "nsIEventQueue.h"
 #include "prmon.h"
@@ -30,26 +30,27 @@ class nsIString;
 class nsIBuffer;
 class nsIInputStream;
 
-class nsFileTransport : public nsITransport, public nsIRunnable
+class nsFileTransport : public nsIChannel, public nsIRunnable
 {
 public:
     NS_DECL_ISUPPORTS
 
-    // nsICancelable methods:
+    // nsIChannel methods:
+    NS_IMETHOD GetURI(nsIURI * *aURL);
+    NS_IMETHOD OpenInputStream(nsIInputStream **_retval);
+    NS_IMETHOD OpenOutputStream(nsIOutputStream **_retval);
+    NS_IMETHOD AsyncRead(PRUint32 startPosition, PRInt32 readCount,
+                         nsISupports *ctxt,
+                         nsIEventQueue *eventQueue,
+                         nsIStreamListener *listener);
+    NS_IMETHOD AsyncWrite(nsIInputStream *fromStream, 
+                          PRUint32 startPosition, PRInt32 writeCount,
+                          nsISupports *ctxt,
+                          nsIEventQueue *eventQueue,
+                          nsIStreamObserver *observer);
     NS_IMETHOD Cancel(void);
     NS_IMETHOD Suspend(void);
     NS_IMETHOD Resume(void);
-
-    // nsITransport methods:
-    NS_IMETHOD AsyncRead(nsISupports* context,
-                         nsIEventQueue* appEventQueue,
-                         nsIStreamListener* listener);
-    NS_IMETHOD AsyncWrite(nsIInputStream* fromStream,
-                          nsISupports* context,
-                          nsIEventQueue* appEventQueue,
-                          nsIStreamObserver* observer);
-    NS_IMETHOD OpenInputStream(nsIInputStream* *result);
-    NS_IMETHOD OpenOutputStream(nsIOutputStream* *result);
 
     // nsIRunnable methods:
     NS_IMETHOD Run(void);
@@ -71,7 +72,7 @@ public:
                   nsFileTransportService* service);
     nsresult Init(nsISupports* context,
                   nsIStreamListener* listener,
-                  State state);
+                  State state, PRUint32 startPosition, PRInt32 count);
     void Process(void);
 
 protected:
@@ -88,6 +89,7 @@ protected:
     nsIInputStream*             mBufferStream;
     nsresult                    mStatus;
     PRUint32                    mSourceOffset;
+    PRInt32                     mAmount;
 
 private:
     PRMonitor*                  mMonitor;

@@ -21,7 +21,7 @@
 
 #include "nsISupports.h"
 
-class nsITransport;
+class nsIChannel;
 
 #define NS_ISOCKETTRANSPORTSERVICE_IID               \
 { /* 9610f120-ef12-11d2-92b6-00105a1b0d64 */         \
@@ -46,7 +46,7 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISOCKETTRANSPORTSERVICE_IID);
 
   NS_IMETHOD CreateTransport(const char* host, PRInt32 port,
-                             nsITransport* *result) = 0;
+                             nsIChannel* *result) = 0;
 
   NS_IMETHOD Shutdown(void) = 0;
 };

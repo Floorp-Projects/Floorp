@@ -21,7 +21,7 @@
 
 #include "nsISupports.h"
 
-class nsITransport;
+class nsIChannel;
 
 #define NS_IFILETRANSPORTSERVICE_IID                 \
 { /* 2355dca0-ea35-11d2-931b-00104ba0fd40 */         \
@@ -45,7 +45,7 @@ public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFILETRANSPORTSERVICE_IID);
 
     NS_IMETHOD CreateTransport(const char* path, 
-                               nsITransport* *result) = 0;
+                               nsIChannel* *result) = 0;
 
     NS_IMETHOD ProcessPendingRequests(void) = 0;
 };

@@ -1,0 +1,122 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+
+/**
+ * URIs are essentially structured names for things -- anything.
+ * This interface provides accessors to destructure those names.
+ *
+ * This interface follows Tim Berners-Lee's URI spec:
+ *
+ *     http://www.w3.org/Addressing/URI/URI_Overview.html
+ *  
+ * essentially:
+ *  
+ *      ftp://username:password@hostname:portnumber/pathname
+ *      \ /   \               / \      / \        /\       /
+ *       -     ---------------   ------   --------  -------
+ *       |            |             |        |         |
+ *       |            |             |        |        Path
+ *       |            |             |       Port         
+ *       |            |            Host
+ *       |         PreHost            
+ *     Scheme
+ *
+ * The subclass nsIURL provides a means to open an input or output
+ * stream to a URI as a source/destination, as well as providing additional
+ * accessors to destructure the path, query and reference portions typically
+ * associated with URLs.
+ */
+
+[scriptable, uuid(07a22cc0-0ce5-11d3-9331-00104ba0fd40)]
+interface nsIURI : nsISupports
+{
+    /**
+     * Returns a string representation of the URI. Setting the spec 
+     * causes the new spec to be parsed, initializing the URI. Setting
+     * the spec (or any of the accessors) causes also any currently
+     * open streams on the URI's channel to be closed.
+     */
+    attribute string Spec;
+
+    /**
+     * The Scheme is the protocol to which this URI refers. Setting
+     * the scheme is a special operation that builds up an equivalent
+     * URI string from the new scheme and all the other URI attributes
+     * and passes the it to the nsIOService to create a new URI for
+     * the new scheme.
+     */
+    attribute string Scheme;
+
+    /**
+     * The PreHost portion includes elements like the optional 
+     * username:password, or maybe other scheme specific items. 
+     */
+    attribute string PreHost;
+
+    /**
+     * The Host is the internet domain name to which this URI refers. 
+     * Note that it could be an IP address as well. 
+     */
+    attribute string Host;
+
+    /**
+     * A return value of -1 indicates that no port value is set and the 
+     * implementor of the specific scheme will use its default port. 
+     * Similarly setting a value of -1 indicates that the default is to be used.
+     * Thus as an example:
+     *     for HTTP, Port 80 is same as a return value of -1. 
+     * However after setting a port (even if its default), the port number will
+     * appear in the ToNewCString function.
+     */
+    attribute long Port;
+
+    /**
+     * Note that the path includes the leading '/' Thus if no path is 
+     * available the Path accessor will return a "/" 
+     * For SetPath if none is provided, one would be prefixed to the path. 
+     */
+    attribute string Path;
+
+    /**
+     * Note that this comparison is only on char* level. Use 
+     * the scheme specific URI to do a more thorough check. For example,
+     * in HTTP:
+     *     http://foo.com:80 == http://foo.com
+     * but this function through nsIURI alone will not return equality
+     * for this case.
+     */
+    boolean Equals(in nsIURI other);
+
+    /**
+     * Clones the current URI. The newly created URI will be in a closed
+     * state even if the underlying channel of the cloned URI is open.
+     * Cloning allows the current location to be retained since once the
+     * channel is opened the URI may get redirected to a new location.
+     */
+    nsIURI Clone();
+
+    /**
+     * Returns a new URI string that merges the relative part with defaults
+     * from the current URI's location. If the relative part actually
+     * specifies an absolute URI, the string is returned as is.
+     */
+    string MakeAbsolute(in string relativePart);
+};
+

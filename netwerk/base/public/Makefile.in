@@ -22,22 +22,26 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-EXPORTS =                         \
-        nsICancelable.h           \
-        nsIConnectionGroup.h      \
-        nsIFileTransportService.h \
-        nsINetService.h           \
-        nsIProtocolConnection.h   \
-        nsIProtocolHandler.h      \
-        nsISocketTransportService.h \
-        nsIStreamListener.h       \
-        nsIStreamObserver.h       \
-        nsITransport.h            \
-        nsIUrl.h                  \
-		nsIHeader.h				  \
-		nsIProxy.h				  \
-		netCore.h		  \
+XPIDLSRCS =                      \
+        nsIChannel.idl           \
+        nsIURI.idl               \
+        nsIURL.idl               \
+        nsIStreamObserver.idl    \
+        nsIStreamListener.idl    \
+        nsIIOService.idl         \
+        nsIEventSinkGetter.idl   \
+        nsIPrompt.idl            \
+        nsIProtocolHandler.idl   \
+        nsIProgressEventSink.idl \
         $(NULL)
+
+EXPORTS =			    \
+	netCore.h		    \
+        nsIFileTransportService.h   \
+        nsISocketTransportService.h \
+	nsIHeader.h		    \
+	nsIProxy.h		    \
+	$(NULL)
 
 include $(DEPTH)/config/autoconf.mk
 

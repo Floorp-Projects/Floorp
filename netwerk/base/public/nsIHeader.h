@@ -49,7 +49,7 @@ public:
         Note that if you expect the possibility of multiple values, you 
         should use GetHeaderMultiple() version.
     */
-    NS_IMETHOD          GetHeader(const char* i_Header, const char* *o_Value) const = 0;
+    NS_IMETHOD          GetHeader(const char* i_Header, char* *o_Value) = 0;
 
     /*
         This version returns an array of values associated with this
@@ -57,8 +57,8 @@ public:
     */
     NS_IMETHOD          GetHeaderMultiple(
                             const char* i_Header, 
-                            const char** *o_ValueArray,
-                            int o_Count) const = 0;
+                            char** *o_ValueArray,
+                            int *o_Count) = 0;
 
     static const nsIID& GetIID() { 
         // {4CD2C720-D5CF-11d2-B013-006097BFC036}

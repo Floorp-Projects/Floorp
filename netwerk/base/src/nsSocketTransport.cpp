@@ -840,12 +840,12 @@ nsresult nsSocketTransport::CloseConnection(void)
 // --------------------------------------------------------------------------
 //
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsSocketTransport, nsITransport::GetIID());
+NS_IMPL_THREADSAFE_ISUPPORTS(nsSocketTransport, nsIChannel::GetIID());
 
 
 //
 // --------------------------------------------------------------------------
-// nsICancelable implementation...
+// nsIChannel implementation...
 // --------------------------------------------------------------------------
 //
 NS_IMETHODIMP
@@ -926,19 +926,19 @@ nsSocketTransport::Resume(void)
   return rv;
 }
 
-
-
-//
-// --------------------------------------------------------------------------
-// nsITransport implementation...
-// --------------------------------------------------------------------------
-//
+NS_IMETHODIMP
+nsSocketTransport::GetURI(nsIURI * *aURL)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP
-nsSocketTransport::AsyncRead(nsISupports* aContext, 
+nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
+                             nsISupports* aContext, 
                              nsIEventQueue* aAppEventQueue,
                              nsIStreamListener* aListener)
 {
+  // XXX deal with startPosition and readCount parameters
   nsresult rv = NS_OK;
 
   // Enter the socket transport lock...
@@ -992,10 +992,12 @@ nsSocketTransport::AsyncRead(nsISupports* aContext,
 
 NS_IMETHODIMP
 nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream, 
+                              PRUint32 startPosition, PRInt32 writeCount,
                               nsISupports* aContext,
                               nsIEventQueue* aAppEventQueue,
                               nsIStreamObserver* aObserver)
 {
+  // XXX deal with startPosition and writeCount parameters
   nsresult rv = NS_OK;
 
   // Enter the socket transport lock...

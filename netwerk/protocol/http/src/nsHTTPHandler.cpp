@@ -17,15 +17,16 @@
  */
 
 #include "nsHTTPHandler.h"
-#include "nsHTTPConnection.h"
+#include "nsHTTPChannel.h"
 //#include "nsITimer.h" 
 #include "nsIProxy.h"
 #include "plstr.h" // For PL_strcasecmp maybe DEBUG only... TODO check
-#include "nsIUrl.h"
+#include "nsIURL.h"
 #include "nsSocketKey.h"
-#include "nsITransport.h"
+#include "nsIChannel.h"
 #include "nsISocketTransportService.h"
 #include "nsIServiceManager.h"
+#include "nsIEventSinkGetter.h"
 #include "nsIHttpEventSink.h"
 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
@@ -64,21 +65,23 @@ nsHTTPHandler::~nsHTTPHandler()
 NS_IMPL_ADDREF(nsHTTPHandler);
 
 NS_METHOD
-nsHTTPHandler::NewConnection(nsIURL* i_URL,
-                                nsISupports* i_eventSink,
-                                nsIEventQueue* i_eventQueue,
-                                nsIProtocolConnection* *o_Instance)
+nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
+                          nsIEventSinkGetter *eventSinkGetter,
+                          nsIEventQueue *i_eventQueue,
+                          nsIChannel **o_Instance)
 {
     //Assert that iURL's scheme is HTTP
     //This should only happen in debug checks... TODO
-    const char* scheme = 0;
+    char* scheme = 0;
     if (i_URL)
     {
         i_URL->GetScheme(&scheme);
-        if (0 == PL_strcasecmp(scheme, "http"))
+        PRBool isHttp = PL_strcasecmp(scheme, "http") == 0;
+        nsCRT::free(scheme);
+        if (isHttp)
         {
-            nsHTTPConnection* pConn = nsnull;
-            nsIURL* pURL = nsnull;
+            nsHTTPChannel* pConn = nsnull;
+            nsIURI* pURL = nsnull;
             //Check to see if an instance already exists in the active list
             PRUint32 count;
             PRInt32 index;
@@ -86,9 +89,9 @@ nsHTTPHandler::NewConnection(nsIURL* i_URL,
             for (index=count-1; index >= 0; --index) 
             {
                 //switch to static_cast...
-                pConn = (nsHTTPConnection*)((nsIHTTPConnection*) m_pConnections->ElementAt(index));
+                pConn = (nsHTTPChannel*)((nsIHTTPChannel*) m_pConnections->ElementAt(index));
                 //Do other checks here as well... TODO
-                if ((NS_OK == pConn->GetURL(&pURL)) && (pURL == i_URL))
+                if ((NS_OK == pConn->GetURI(&pURL)) && (pURL == i_URL))
                 {
                     NS_ADDREF(pConn);
                     *o_Instance = pConn;
@@ -97,21 +100,20 @@ nsHTTPHandler::NewConnection(nsIURL* i_URL,
             }
 
             // Verify that the event sink is http
-            nsCOMPtr<nsIHTTPEventSink>  httpEventSink (do_QueryInterface(i_eventSink));
-            // This doesn't seem right... a caller cant know if its going to be http!  
-            // so how do we do this right?
-            NS_ASSERTION(httpEventSink, "Bad interface passed for httpEventSink");
+            nsCOMPtr<nsIHTTPEventSink>  httpEventSink;
+            nsresult rv = eventSinkGetter->GetEventSink(verb, nsIHTTPEventSink::GetIID(),
+                                                        (nsISupports**)(nsIHTTPEventSink**)getter_AddRefs(httpEventSink));
+            if (NS_FAILED(rv)) return rv;
 
             // Create one
-            nsHTTPConnection* pNewInstance = new nsHTTPConnection(
-                    i_URL, 
-                    i_eventQueue,
-                    httpEventSink,
-                    this);
+            nsHTTPChannel* pNewInstance = new nsHTTPChannel(i_URL, 
+                                                            i_eventQueue,
+                                                            httpEventSink,
+                                                            this);
             if (pNewInstance)
             {
                 NS_ADDREF(pNewInstance);
-                pNewInstance->QueryInterface(nsIProtocolConnection::GetIID(), (void**)o_Instance);
+                pNewInstance->QueryInterface(nsIChannel::GetIID(), (void**)o_Instance);
                 // add this instance to the active list of connections
                 // TODO!
                 NS_RELEASE(pNewInstance);
@@ -162,34 +164,35 @@ nsHTTPHandler::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMPL_RELEASE(nsHTTPHandler);
 
 NS_METHOD
-nsHTTPHandler::MakeAbsoluteUrl(const char* i_URL,
-                        nsIURL* i_BaseURL,
-                        char* *o_Result) const
+nsHTTPHandler::MakeAbsolute(const char *aRelativeSpec, nsIURI *aBaseURI,
+                            char **_retval)
 {
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD
-nsHTTPHandler::NewUrl(const char* i_URL,
-                        nsIURL* *o_Result,
-                        nsIURL* i_BaseURL) const
+nsHTTPHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
+                      nsIURI **result)
 {
     //todo clean this up...
     nsresult rv;
 
-    nsIUrl* url;
-    rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsIUrl::GetIID(), (void**)&url);
+    nsIURI* url;
+    if (aBaseURI)
+        rv = aBaseURI->Clone(&url);
+    else
+        rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsIURI::GetIID(), (void**)&url);
     if (NS_FAILED(rv)) return rv;
 
-    rv = url->Init(i_URL, i_BaseURL);
+    rv = url->SetSpec((char*)aSpec);
 
-    nsIUrl* realUrl = nsnull;
+    nsIURI* realUrl = nsnull;
     
-    rv = url->QueryInterface(nsIUrl::GetIID(), (void**)&realUrl);
+    rv = url->QueryInterface(nsIURI::GetIID(), (void**)&realUrl);
     if (NS_FAILED(rv)) return rv;
 
-    *o_Result= realUrl;
-    NS_ADDREF(*o_Result);
+    *result= realUrl;
+    NS_ADDREF(*result);
 
     return rv;
 }
@@ -197,11 +200,11 @@ nsHTTPHandler::NewUrl(const char* i_URL,
 NS_METHOD
 nsHTTPHandler::GetTransport(const char* i_Host, 
                             PRUint32& i_Port, 
-                            nsITransport** o_pTrans)
+                            nsIChannel** o_pTrans)
 {
     // Check in the table...
     nsSocketKey key(i_Host, i_Port);
-    nsITransport* trans = (nsITransport*) m_pTransportTable->Get(&key);
+    nsIChannel* trans = (nsIChannel*) m_pTransportTable->Get(&key);
     if (trans)
     {
         *o_pTrans = trans;
@@ -230,10 +233,10 @@ nsHTTPHandler::GetTransport(const char* i_Host,
 NS_METHOD
 nsHTTPHandler::ReleaseTransport(const char* i_Host, 
                                 PRUint32& i_Port, 
-                                nsITransport* i_pTrans)
+                                nsIChannel* i_pTrans)
 {
     nsSocketKey key(i_Host, i_Port);
-    nsITransport* value = (nsITransport*) m_pTransportTable->Remove(&key);
+    nsIChannel* value = (nsIChannel*) m_pTransportTable->Remove(&key);
     if (value == nsnull)
         return NS_ERROR_FAILURE;
     NS_ASSERTION(i_pTrans == value, "m_pTransportTable is out of sync");

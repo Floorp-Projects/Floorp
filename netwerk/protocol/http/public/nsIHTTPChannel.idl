@@ -1,0 +1,54 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsIChannel.idl"
+
+interface nsIHTTPEventSink;
+interface nsIStreamListener;
+
+[scriptable, uuid(35c00430-1938-11d3-933a-000064657374)]
+interface nsIHTTPChannel : nsIChannel
+{
+    /*
+        Request functions-
+        These functions set/get parameters on the outbound request and may only
+        be set before Load() function gets called. Calling them after 
+        the Load() method will result in a NS_ERROR_ALREADY_CONNECTED
+    */
+    string GetRequestHeader(in string headerName);
+    void SetRequestHeader(in string headerName, in string value);
+
+    void SetRequestMethod(in unsigned long method);
+//    NS_IMETHOD          SetRequestMethod(HTTPMethod i_Method=HM_GET) = 0;
+
+    /* 
+        Response funtions. A call to any of these implicitly calls Load() on this
+        protocol instance. 
+    */
+    string GetResponseHeader(in string headerName);
+
+    readonly attribute nsresult ResponseStatus;
+
+    readonly attribute string ResponseString;
+
+    readonly attribute nsIHTTPEventSink EventSink;
+    
+    readonly attribute nsIStreamListener ResponseDataListener;
+};
+
+

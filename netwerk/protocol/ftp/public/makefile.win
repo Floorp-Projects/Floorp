@@ -19,10 +19,12 @@ MODULE = netwerk
 
 DEPTH = ..\..\..\..
 
-EXPORTS =                           \
-        nsIFtpEventSink.h          \
-        nsIFtpProtocolConnection.h \
-	ftpCore.h			\
+XPIDLSRCS =                 \
+        .\nsIFTPChannel.idl \
+        $(NULL)
+
+EXPORTS =                 \
+	ftpCore.h         \
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>

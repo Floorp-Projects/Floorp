@@ -21,8 +21,7 @@
 #include "nsHTTPResponseListener.h"
 #include "nsITransport.h"
 #include "nsIInputStream.h"
-#include "nsIHTTPConnection.h"
-#include "nsHTTPConnection.h"
+#include "nsHTTPChannel.h"
 #include "nsHTTPResponse.h"
 #include "nsIHttpEventSink.h"
 #include "nsCRT.h"
@@ -59,8 +58,7 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
 
     // Should I save this as a member variable? yes... todo
     nsIHTTPEventSink* pSink= nsnull;
-    // XXX:  EventSink(...) should AddRef the returned pointer...
-    m_pConnection->EventSink(&pSink);
+    m_pConnection->GetEventSink(&pSink);
     NS_VERIFY(pSink, "No HTTP Event Sink!");
 
     NS_ASSERTION(i_pStream, "Fake stream!");
@@ -76,7 +74,7 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
             return NS_ERROR_OUT_OF_MEMORY;
         }
         NS_ADDREF(m_pResponse);
-        nsHTTPConnection* pTestCon = NS_STATIC_CAST(nsHTTPConnection*, m_pConnection);
+        nsHTTPChannel* pTestCon = NS_STATIC_CAST(nsHTTPChannel*, m_pConnection);
         pTestCon->SetResponse(m_pResponse);
     }
  
@@ -202,7 +200,7 @@ nsHTTPResponseListener::OnStartBinding(nsISupports* i_pContext)
     m_bFirstLineParsed = PR_FALSE;
 
     if (i_pContext) {
-        rv = i_pContext->QueryInterface(nsIHTTPConnection::GetIID(), 
+        rv = i_pContext->QueryInterface(nsIHTTPChannel::GetIID(), 
                                         (void**)&m_pConnection);
     } else {
         rv = NS_ERROR_NULL_POINTER;
@@ -210,7 +208,7 @@ nsHTTPResponseListener::OnStartBinding(nsISupports* i_pContext)
 
     if (NS_SUCCEEDED(rv)) {
         // XXX:  EventSink(...) should AddRef the returned pointer...
-        rv = m_pConnection->EventSink(&pSink);
+        rv = m_pConnection->GetEventSink(&pSink);
 
         if (NS_FAILED(rv)) {
             NS_ERROR("No HTTP Event Sink!");
@@ -233,7 +231,7 @@ nsHTTPResponseListener::OnStopBinding(nsISupports* i_pContext,
     //NS_ASSERTION(m_pResponse, "Response object not created yet or died?!");
     // Should I save this as a member variable? yes... todo
     nsIHTTPEventSink* pSink= nsnull;
-    nsresult rv = m_pConnection->EventSink(&pSink);
+    nsresult rv = m_pConnection->GetEventSink(&pSink);
     if (NS_FAILED(rv))
         NS_ERROR("No HTTP Event Sink!");
     
@@ -241,3 +239,18 @@ nsHTTPResponseListener::OnStopBinding(nsISupports* i_pContext,
 
     return rv;
 }
+
+NS_IMETHODIMP
+nsHTTPResponseListener::OnStartRequest(nsISupports* i_pContext)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPResponseListener::OnStopRequest(nsISupports* i_pContext,
+                                      nsresult iStatus,
+                                      nsIString* i_pMsg)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+

@@ -16,14 +16,16 @@
  * Reserved.
  */
 
+#include "nsFTPChannel.h"
 #include "nsFtpProtocolHandler.h"
-#include "nsFtpProtocolConnection.h"
-#include "nsIUrl.h"
+#include "nsIURL.h"
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsIEventSinkGetter.h"
+#include "nsIProgressEventSink.h"
 
-static NS_DEFINE_CID(kStandardUrlCID,            NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -40,7 +42,7 @@ NS_IMPL_ISUPPORTS(nsFtpProtocolHandler, nsIProtocolHandler::GetIID());
 // nsIProtocolHandler methods:
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::GetScheme(const char* *result) const
+nsFtpProtocolHandler::GetScheme(char* *result)
 {
     *result = nsCRT::strdup("ftp");
     if (*result == nsnull)
@@ -49,79 +51,92 @@ nsFtpProtocolHandler::GetScheme(const char* *result) const
 }
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::GetDefaultPort(PRInt32 *result) const
+nsFtpProtocolHandler::GetDefaultPort(PRInt32 *result)
 {
     *result = 21; 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::MakeAbsoluteUrl(const char* aSpec,
-                                       nsIUrl* aBaseUrl,
-                                       char* *result) const
+nsFtpProtocolHandler::MakeAbsolute(const char* aSpec,
+                                   nsIURI* aBaseURI,
+                                   char* *result)
 {
     // XXX optimize this to not needlessly construct the URL
 
     nsresult rv;
-    nsIUrl* url;
-    rv = NewUrl(aSpec, &url, aBaseUrl);
+    nsIURI* url;
+    rv = NewURI(aSpec, aBaseURI, &url);
     if (NS_FAILED(rv)) return rv;
 
-    rv = url->ToNewCString(result);
+    rv = url->GetSpec(result);
     NS_RELEASE(url);
     return rv;
 }
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::NewUrl(const char* aSpec,
-                              nsIUrl* *result,
-                              nsIUrl* aBaseUrl) const
+nsFtpProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
+                             nsIURI **result)
 {
     nsresult rv;
 
     // Ftp URLs (currently) have no additional structure beyond that provided by standard
     // URLs, so there is no "outer" given to CreateInstance 
 
-    nsIUrl* url;
-    rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull,
-                                            nsIUrl::GetIID(),
-                                            (void**)&url);
+    nsIURI* url;
+    if (aBaseURI) {
+        rv = aBaseURI->Clone(&url);
+    }
+    else {
+        rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
+                                                nsIURI::GetIID(),
+                                                (void**)&url);
+    }
     if (NS_FAILED(rv)) return rv;
 
-    rv = url->Init(aSpec, aBaseUrl);
-
-    nsIUrl* realUrl = nsnull;
-    
-    rv = url->QueryInterface(nsIUrl::GetIID(), (void**)&realUrl);
-    if (NS_FAILED(rv)) return rv;
+    rv = url->SetSpec((char*)aSpec);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(url);
+        return rv;
+    }
 
     // XXX this is the default port for ftp. we need to strip out the actual
     // XXX requested port.
-    realUrl->SetPort(21);
+    rv = url->SetPort(21);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(url);
+        return rv;
+    }
 
-    *result = realUrl;
-    NS_ADDREF(*result);
-
+    *result = url;
     return rv;
 }
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::NewConnection(nsIUrl* url,
-                                    nsISupports* eventSink,
-                                    nsIEventQueue* eventQueue,
-                                    nsIProtocolConnection* *result)
+nsFtpProtocolHandler::NewChannel(const char* verb, nsIURI* url,
+                                 nsIEventSinkGetter* eventSinkGetter,
+                                 nsIEventQueue* eventQueue,
+                                 nsIChannel* *result)
 {
     nsresult rv;
-    nsFtpProtocolConnection* connection = new nsFtpProtocolConnection();
-    if (connection == nsnull)
+
+    nsIProgressEventSink* eventSink;
+    rv = eventSinkGetter->GetEventSink(verb, nsIProgressEventSink::GetIID(), 
+                                       (nsISupports**)&eventSink);
+    if (NS_FAILED(rv)) return rv;
+
+    nsFTPChannel* channel = new nsFTPChannel();
+    if (channel == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    rv = connection->Init(url, eventSink, eventQueue);
+    NS_ADDREF(channel);
+
+    rv = channel->Init((nsIURI*)url, eventSink, eventQueue);    // XXX bogus cast -- fix
     if (NS_FAILED(rv)) {
-        delete connection;
+        NS_RELEASE(channel);
         return rv;
     }
-    NS_ADDREF(connection);
-    *result = connection;
+
+    *result = channel;
     return NS_OK;
 }
 

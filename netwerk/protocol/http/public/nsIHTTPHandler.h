@@ -21,11 +21,8 @@
 
 #include "nsIProtocolHandler.h"
 
-class nsITransport;
+class nsIChannel;
 
-#ifndef nsIURL
-#define nsIURL nsIUrl // style compatibility hacks... will clean later.
-#endif
 /* 
     The nsIHTTPHandler class is the bare minimum interface expected for 
     an HTTP handler. The set of interfaces this handler is derived from decides
@@ -46,11 +43,11 @@ public:
         Pull out an existing transport from the hashtable, or if none exists
         create one. 
     */
-    NS_IMETHOD       GetTransport(const char* i_Host, PRUint32& i_Port, nsITransport* *o_pTrans) = 0;
+    NS_IMETHOD       GetTransport(const char* i_Host, PRUint32& i_Port, nsIChannel* *o_pTrans) = 0;
     /*
         Remove this transport from the hashtable.
     */
-    NS_IMETHOD       ReleaseTransport(const char* i_Host, PRUint32& i_Port, nsITransport* i_pTrans) = 0;
+    NS_IMETHOD       ReleaseTransport(const char* i_Host, PRUint32& i_Port, nsIChannel* i_pTrans) = 0;
 
 
     static const nsIID& GetIID() { 

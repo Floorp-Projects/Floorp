@@ -37,6 +37,7 @@ MISCDEP=$(LLIBS)
 LINCS=  -I$(PUBLIC)\netwerk \
         -I$(PUBLIC)\xpcom   \
         -I$(PUBLIC)\raptor  \
+        -I..\base\src       \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -16,132 +16,23 @@
  * Reserved.
  */
 
-#include "nsIFactory.h"
+#include "nsIGenericFactory.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsNetService.h"
+#include "nsIOService.h"
 #include "nsFileTransportService.h"
 #include "nsSocketTransportService.h"
 #include "nscore.h"
 #include "nsStandardUrl.h"
 
-static NS_DEFINE_CID(kComponentManagerCID,      NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kNetServiceCID,            NS_NETSERVICE_CID);
-static NS_DEFINE_CID(kFileTransportServiceCID,  NS_FILETRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kStandardUrlCID,           NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kComponentManagerCID,       NS_COMPONENTMANAGER_CID);
+static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kFileTransportServiceCID,   NS_FILETRANSPORTSERVICE_CID);
+static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsNetFactory : public nsIFactory
-{
-public:
-    nsNetFactory(const nsCID &aClass);
-
-    // nsISupports methods
-    NS_DECL_ISUPPORTS
-
-    // nsIFactory methods
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                              const nsIID &aIID,
-                              void **aResult);
-
-    NS_IMETHOD LockFactory(PRBool aLock);
-
-protected:
-    virtual ~nsNetFactory();
-
-protected:
-    nsCID       mClassID;
-};
-
-////////////////////////////////////////////////////////////////////////
-
-nsNetFactory::nsNetFactory(const nsCID &aClass)
-    : mClassID(aClass)
-{
-    NS_INIT_REFCNT();
-}
-
-nsNetFactory::~nsNetFactory()
-{
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
-}
-
-NS_IMPL_ISUPPORTS(nsNetFactory, nsIFactory::GetIID());
-
-NS_IMETHODIMP
-nsNetFactory::CreateInstance(nsISupports *aOuter,
-                             const nsIID &aIID,
-                             void **aResult)
-{
-    nsresult rv = NS_OK;
-
-    if (aResult == nsnull)
-        return NS_ERROR_NULL_POINTER;
-
-    nsISupports *inst = nsnull;
-    if (mClassID.Equals(kNetServiceCID)) {
-        if (aOuter) return NS_ERROR_NO_AGGREGATION;
-
-        nsNetService* net = new nsNetService();
-        if (net == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-        rv = net->Init();
-        if (NS_FAILED(rv)) {
-            delete net;
-            return rv;
-        }
-        inst = net;
-    }
-    else if (mClassID.Equals(kFileTransportServiceCID)) {
-        if (aOuter) return NS_ERROR_NO_AGGREGATION;
-
-        nsFileTransportService* trans = new nsFileTransportService();
-        if (trans == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-        rv = trans->Init();
-        if (NS_FAILED(rv)) {
-            delete trans;
-            return rv;
-        }
-        inst = trans;
-    }
-    else if (mClassID.Equals(kSocketTransportServiceCID)) {
-        nsSocketTransportService* trans = new nsSocketTransportService();
-        if (trans == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-        rv = trans->Init();
-        if (NS_FAILED(rv)) {
-            delete trans;
-            return rv;
-        }
-        inst = NS_STATIC_CAST(nsISocketTransportService*, trans); 
-    }
-    else if (mClassID.Equals(kStandardUrlCID)) {
-        nsStandardUrl* url = new nsStandardUrl(aOuter);
-        if (url == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-        inst = NS_STATIC_CAST(nsIUrl*, url);
-    }
-    else {
-        return NS_ERROR_NO_INTERFACE;
-    }
-
-    NS_ADDREF(inst);
-    *aResult = inst;
-    return rv;
-}
-
-nsresult nsNetFactory::LockFactory(PRBool aLock)
-{
-    // Not implemented in simplest case.
-    return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-// return the proper factory to the caller
 extern "C" PR_IMPLEMENT(nsresult)
 NSGetFactory(nsISupports* aServMgr,
              const nsCID &aClass,
@@ -149,16 +40,30 @@ NSGetFactory(nsISupports* aServMgr,
              const char *aProgID,
              nsIFactory **aFactory)
 {
+    nsresult rv;
     if (aFactory == nsnull)
         return NS_ERROR_NULL_POINTER;
 
-    nsNetFactory* factory = new nsNetFactory(aClass);
-    if (factory == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
+    nsIGenericFactory* fact;
+    if (aClass.Equals(kIOServiceCID)) {
+        rv = NS_NewGenericFactory(&fact, nsIOService::Create);
+    }
+    else if (aClass.Equals(kFileTransportServiceCID)) {
+        rv = NS_NewGenericFactory(&fact, nsFileTransportService::Create);
+    }
+    else if (aClass.Equals(kSocketTransportServiceCID)) {
+        rv = NS_NewGenericFactory(&fact, nsSocketTransportService::Create);
+    }
+    else if (aClass.Equals(kStandardURLCID)) {
+        rv = NS_NewGenericFactory(&fact, nsStandardURL::Create);
+    }
+    else {
+        rv = NS_ERROR_FAILURE;
+    }
 
-    NS_ADDREF(factory);
-    *aFactory = factory;
-    return NS_OK;
+    if (NS_SUCCEEDED(rv))
+        *aFactory = fact;
+    return rv;
 }
 
 extern "C" PR_IMPLEMENT(nsresult)
@@ -169,7 +74,7 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
     NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = compMgr->RegisterComponent(kNetServiceCID,  
+    rv = compMgr->RegisterComponent(kIOServiceCID,  
                                     "Network Service",
                                     "component://netscape/network/net-service",
                                     aPath, PR_TRUE, PR_TRUE);
@@ -187,7 +92,7 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                     aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;;
 
-    rv = compMgr->RegisterComponent(kStandardUrlCID, 
+    rv = compMgr->RegisterComponent(kStandardURLCID, 
                                     "Standard URL Implementation",
                                     "component://netscape/network/standard-url",
                                     aPath, PR_TRUE, PR_TRUE);
@@ -202,7 +107,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = compMgr->UnregisterComponent(kNetServiceCID, aPath);
+    rv = compMgr->UnregisterComponent(kIOServiceCID, aPath);
     if (NS_FAILED(rv)) return rv;
 
     rv = compMgr->UnregisterComponent(kFileTransportServiceCID, aPath);
@@ -211,7 +116,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     rv = compMgr->UnregisterComponent(kSocketTransportServiceCID, aPath);
     if (NS_FAILED(rv)) return rv;;
 
-    rv = compMgr->UnregisterComponent(kStandardUrlCID, aPath);
+    rv = compMgr->UnregisterComponent(kStandardURLCID, aPath);
     return rv;
 }
 

@@ -22,7 +22,8 @@
 #include "nsIHTTPCommonHeaders.h"
 #include "nsIHTTPResponse.h"
 #include "nsCOMPtr.h"
-#include "nsIHTTPConnection.h"
+#include "nsIHTTPChannel.h"
+#include "nsHTTPEnums.h"
 
 class nsIUrl;
 class nsVoidArray;
@@ -42,7 +43,7 @@ class nsHTTPResponse : public nsIHTTPResponse
 
 public:
     // Constructor and destructor
-    nsHTTPResponse(nsIHTTPConnection* i_pConnection, nsIInputStream* i_InputStream);
+    nsHTTPResponse(nsIHTTPChannel* i_pConnection, nsIInputStream* i_InputStream);
     virtual ~nsHTTPResponse();
 
     // Methods from nsISupports
@@ -61,95 +62,94 @@ public:
         TODO change to get the list.
     */
     NS_IMETHOD          SetHeader(const char* i_Header, const char* i_Value);
-    NS_IMETHOD          GetHeader(const char* i_Header, const char* *o_Value) const;
+    NS_IMETHOD          GetHeader(const char* i_Header, char* *o_Value);
     //This will be a no-op initially
-    NS_IMETHOD          GetHeaderMultiple(
-                            const char* i_Header, 
-                            const char** *o_ValueArray,
-                            int o_Count) const;
+    NS_IMETHOD          GetHeaderMultiple(const char* i_Header, 
+                                          char** *o_ValueArray,
+                                          int *o_Count);
 
     // Methods from nsIHTTPCommonHeaders
     NS_IMETHOD          SetAllow(const char* i_Value);
-    NS_IMETHOD          GetAllow(const char* *o_Value) const;
+    NS_IMETHOD          GetAllow(char* *o_Value);
 
     NS_IMETHOD          SetContentBase(const char* i_Value);
-    NS_IMETHOD          GetContentBase(const char* *o_Value) const;
+    NS_IMETHOD          GetContentBase(char* *o_Value);
 
     NS_IMETHOD          SetContentEncoding(const char* i_Value);
-    NS_IMETHOD          GetContentEncoding(const char* *o_Value) const;
+    NS_IMETHOD          GetContentEncoding(char* *o_Value);
 
     NS_IMETHOD          SetContentLanguage(const char* i_Value);
-    NS_IMETHOD          GetContentLanguage(const char* *o_Value) const;
+    NS_IMETHOD          GetContentLanguage(char* *o_Value);
 
     NS_IMETHOD          SetContentLength(const char* i_Value);
-    NS_IMETHOD          GetContentLength(const char* *o_Value) const;
+    NS_IMETHOD          GetContentLength(char* *o_Value);
     
     NS_IMETHOD          SetContentLocation(const char* i_Value);
-    NS_IMETHOD          GetContentLocation(const char* *o_Value) const;
+    NS_IMETHOD          GetContentLocation(char* *o_Value);
 
     NS_IMETHOD          SetContentMD5(const char* i_Value);
-    NS_IMETHOD          GetContentMD5(const char* *o_Value) const;
+    NS_IMETHOD          GetContentMD5(char* *o_Value);
 
     NS_IMETHOD          SetContentRange(const char* i_Value);
-    NS_IMETHOD          GetContentRange(const char* *o_Value) const;
+    NS_IMETHOD          GetContentRange(char* *o_Value);
 
     NS_IMETHOD          SetContentTransferEncoding(const char* i_Value);
-    NS_IMETHOD          GetContentTransferEncoding(const char* *o_Value) const;
+    NS_IMETHOD          GetContentTransferEncoding(char* *o_Value);
 
     NS_IMETHOD          SetContentType(const char* i_Value);
-    NS_IMETHOD          GetContentType(const char* *o_Value) const;
+    NS_IMETHOD          GetContentType(char* *o_Value);
 
     NS_IMETHOD          SetDerivedFrom(const char* i_Value);
-    NS_IMETHOD          GetDerivedFrom(const char* *o_Value) const;
+    NS_IMETHOD          GetDerivedFrom(char* *o_Value);
 
     NS_IMETHOD          SetETag(const char* i_Value);
-    NS_IMETHOD          GetETag(const char* *o_Value) const;
+    NS_IMETHOD          GetETag(char* *o_Value);
 
     NS_IMETHOD          SetExpires(const char* i_Value);
-    NS_IMETHOD          GetExpires(const char* *o_Value) const;
+    NS_IMETHOD          GetExpires(char* *o_Value);
 
     NS_IMETHOD          SetLastModified(const char* i_Value);
-    NS_IMETHOD          GetLastModified(const char* *o_Value) const;
+    NS_IMETHOD          GetLastModified(char* *o_Value);
 
     NS_IMETHOD          SetLink(const char* i_Value);
-    NS_IMETHOD          GetLink(const char* *o_Value) const;
+    NS_IMETHOD          GetLink(char* *o_Value);
     NS_IMETHOD          GetLinkMultiple(
                             const char** *o_ValueArray, 
                             int count) const;
 
     NS_IMETHOD          SetTitle(const char* i_Value);
-    NS_IMETHOD          GetTitle(const char* *o_Value) const;
+    NS_IMETHOD          GetTitle(char* *o_Value);
 
     NS_IMETHOD          SetURI(const char* i_Value);
-    NS_IMETHOD          GetURI(const char* *o_Value) const;
+    NS_IMETHOD          GetURI(char* *o_Value);
 
     NS_IMETHOD          SetVersion(const char* i_Value);
-    NS_IMETHOD          GetVersion(const char* *o_Value) const;
+    NS_IMETHOD          GetVersion(char* *o_Value);
 
     // Common Transaction headers
     NS_IMETHOD          SetConnection(const char* i_Value);
-    NS_IMETHOD          GetConnection(const char* *o_Value) const;
+    NS_IMETHOD          GetConnection(char* *o_Value);
 
     NS_IMETHOD          SetDate(const char* i_Value);
-    NS_IMETHOD          GetDate(const char* *o_Value) const;
+    NS_IMETHOD          GetDate(char* *o_Value);
 
     NS_IMETHOD          SetPragma(const char* i_Value);
-    NS_IMETHOD          GetPragma(const char* *o_Value) const;
+    NS_IMETHOD          GetPragma(char* *o_Value);
 
     NS_IMETHOD          SetForwarded(const char* i_Value);
-    NS_IMETHOD          GetForwarded(const char* *o_Value) const;
+    NS_IMETHOD          GetForwarded(char* *o_Value);
 
     NS_IMETHOD          SetMessageID(const char* i_Value);
-    NS_IMETHOD          GetMessageID(const char* *o_Value) const;
+    NS_IMETHOD          GetMessageID(char* *o_Value);
 
     NS_IMETHOD          SetMIME(const char* i_Value);
-    NS_IMETHOD          GetMIME(const char* *o_Value) const;
+    NS_IMETHOD          GetMIME(char* *o_Value);
 
     NS_IMETHOD          SetTrailer(const char* i_Value);
-    NS_IMETHOD          GetTrailer(const char* *o_Value) const;
+    NS_IMETHOD          GetTrailer(char* *o_Value);
 
     NS_IMETHOD          SetTransfer(const char* i_Value);
-    NS_IMETHOD          GetTransfer(const char* *o_Value) const;
+    NS_IMETHOD          GetTransfer(char* *o_Value);
 
     // Stuff from nsIHTTPResponse
     NS_IMETHOD          GetContentLength(PRInt32* o_Value) const;
@@ -170,7 +170,7 @@ protected:
 
     char*                       m_Buffer; /* Used for holding header data */
     nsVoidArray*                m_pArray;
-    nsCOMPtr<nsIHTTPConnection> m_pConn;
+    nsCOMPtr<nsIHTTPChannel>    m_pConn;
     HTTPVersion                 m_ServerVersion;
     char*                       m_pStatusString;
     PRUint32                    m_Status;

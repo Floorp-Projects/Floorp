@@ -16,24 +16,29 @@
  * Reserved.
  */
 
-#ifndef nsIHttpProtocolHandler_h___
-#define nsIHttpProtocolHandler_h___
+#include "nsISupports.idl"
 
-#include "nsIProtocolHandler.h"
+interface nsIURI;
+interface nsIString;
 
-#define NS_IHTTPPROTOCOLHANDLER_IID                  \
-{ /* c7a0a160-ea35-11d2-931b-00104ba0fd40 */         \
-    0xc7a0a160,                                      \
-    0xea35,                                          \
-    0x11d2,                                          \
-    {0x93, 0x1b, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
-}
-
-class nsIHttpProtocolHandler : public nsIProtocolHandler
+/**
+ * An instance of nsIFfpEventSink should be passed as the eventSink
+ * argument of nsINetService::NewConnection for ftp URLs. It defines
+ * the callbacks to the application program (the html parser).
+ */
+[scriptable, uuid(dd47ee00-18c2-11d3-9337-00104ba0fd40)]
+interface nsIProgressEventSink : nsISupports
 {
-public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTTPPROTOCOLHANDLER_IID);
+    /**
+     * Notify the EventSink that progress as occurred for the URL load.<BR>
+     */
+    void OnProgress(in nsISupports ctxt,
+                    in unsigned long aProgress,
+                    in unsigned long aProgressMax);
+
+    /**
+     * Notify the EventSink with a status message for the URL load.<BR>
+     */
+    void OnStatus(in nsISupports ctxt, in nsIString aMsg);
 
 };
-
-#endif /* nsIIHttpProtocolHandler_h___ */

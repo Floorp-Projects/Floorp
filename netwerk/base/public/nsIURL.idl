@@ -1,0 +1,83 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsIURI.idl"
+
+interface nsIChannel;
+interface nsIEventSinkGetter;
+
+[scriptable, uuid(78406350-0ce5-11d3-9331-00104ba0fd40)]
+interface nsIURL : nsIURI
+{
+    // The following 4 attributes breakdown the Path attribute 
+    // into its constituents...
+
+    /**
+     * Returns the directory portion of a URL. 
+     * If the URL denotes a path to a directory and not a file,
+     * e.g. http://foo/bar/, then the Directory attribute accesses
+     * the complete /foo/bar/ portion, and the FileName is the 
+     * empty string. If the trailing slash is omitted, then the
+     * Directory is /foo/ and the file is bar (i.e. this is a 
+     * syntactic, not a semantic breakdown of the Path).
+     */
+    attribute string Directory;
+
+    /**
+     * Returns the file name portion of a URL.
+     * If the URL denotes a path to a directory and not a file,
+     * e.g. http://foo/bar/, then the Directory attribute accesses
+     * the complete /foo/bar/ portion, and the FileName is the 
+     * empty string.
+     */
+    attribute string FileName;
+
+    /**
+     * Returns the query portion (the part after the "?") of the URL.
+     * If there isn't one, the empty string is returned.
+     */
+    attribute string Query;
+
+    /**
+     * Returns the reference portion (the part after the "#") of the URL.
+     * If there isn't one, the empty string is returned.
+     */
+    attribute string Ref;
+
+};
+
+%{C++
+
+
+/**
+ * Protocol writers can obtain a default nsIURL implementation by calling the
+ * component manager with NS_STANDARDURL_CID. The implementation returned will 
+ * only implement the set of accessors specified by nsIURL. After obtaining the
+ * instance from the component manager, the Init routine must be called on it
+ * to initialize it from the user's URL spec. 
+ */
+
+#define NS_STANDARDURL_CID                           \
+{ /* 46fc2a26-ff66-11d2-8ccb-0060b0fc14a3 */         \
+    0x46fc2a26,                                      \
+    0xff66,                                          \
+    0x11d2,                                          \
+    {0x8c, 0xcb, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
+
+%}

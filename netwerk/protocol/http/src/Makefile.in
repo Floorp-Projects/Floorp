@@ -25,14 +25,14 @@ IS_COMPONENT = 1
 
 include $(DEPTH)/config/autoconf.mk
 
-CPPSRCS =                              \
-        nsHTTPHandler.cpp      \
-        nsHTTPHandlerFactory.cpp              \
-        nsHTTPConnection.cpp   \
-        nsHTTPRequest.cpp              \
-        nsHTTPRequestObserver.cpp              \
-        nsHTTPResponseListener.cpp              \
-        nsHTTPResponse.cpp              \
+CPPSRCS =			   \
+        nsHTTPHandler.cpp	   \
+        nsHTTPHandlerFactory.cpp   \
+        nsHTTPChannel.cpp	   \
+        nsHTTPRequest.cpp	   \
+        nsHTTPRequestObserver.cpp  \
+        nsHTTPResponseListener.cpp \
+        nsHTTPResponse.cpp	   \
         $(NULL)
 
 REQUIRES = xpcom netwerk raptor

@@ -26,7 +26,7 @@
 #------------------------------------------------------------------------
 
 DEPTH=..\..\..\..
-MODULE=plughttp 
+MODULE=netwerk
 
 IS_COMPONENT=1
 MAKE_OBJ_TYPE=DLL
@@ -47,7 +47,7 @@ EXPORTS= 	\
 CPP_OBJS=   \
 	.\$(OBJDIR)\nsHTTPHandler.obj				\
 	.\$(OBJDIR)\nsHTTPHandlerFactory.obj		\
-	.\$(OBJDIR)\nsHTTPConnection.obj			\
+	.\$(OBJDIR)\nsHTTPChannel.obj			\
 	.\$(OBJDIR)\nsHTTPRequest.obj				\
 	.\$(OBJDIR)\nsHTTPResponseListener.obj		\
 	.\$(OBJDIR)\nsHTTPResponse.obj				\

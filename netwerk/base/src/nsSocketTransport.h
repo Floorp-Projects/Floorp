@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -23,7 +23,9 @@
 #include "prio.h"
 #include "prnetdb.h"
 
-#include "nsITransport.h"
+#include "nsIChannel.h"
+#include "nsIInputStream.h"
+#include "nsIByteBufferInputStream.h"
 
 //
 // This is the size of the global buffer used by all nsSocketTransport 
@@ -59,28 +61,28 @@ enum nsSocketOperation {
 class nsSocketTransportService;
 class nsSocketTransportStream;
 
-class nsSocketTransport : public nsITransport
+class nsSocketTransport : public nsIChannel
 {
 public:
   // nsISupports methods:
   NS_DECL_ISUPPORTS
 
-  // nsICancelable methods:
+  // nsIChannel methods:
+  NS_IMETHOD GetURI(nsIURI * *aURL);
+  NS_IMETHOD OpenInputStream(nsIInputStream **_retval);
+  NS_IMETHOD OpenOutputStream(nsIOutputStream **_retval);
+  NS_IMETHOD AsyncRead(PRUint32 startPosition, PRInt32 readCount,
+                       nsISupports *ctxt,
+                       nsIEventQueue *eventQueue,
+                       nsIStreamListener *listener);
+  NS_IMETHOD AsyncWrite(nsIInputStream *fromStream, 
+                        PRUint32 startPosition, PRInt32 writeCount,
+                        nsISupports *ctxt,
+                        nsIEventQueue *eventQueue,
+                        nsIStreamObserver *observer);
   NS_IMETHOD Cancel(void);
   NS_IMETHOD Suspend(void);
   NS_IMETHOD Resume(void);
-
-  // nsITransport methods:
-  NS_IMETHOD AsyncRead(nsISupports* context,
-                       nsIEventQueue* appEventQueue,
-                       nsIStreamListener* listener);
-  NS_IMETHOD AsyncWrite(nsIInputStream* fromStream,
-                        nsISupports* context,
-                        nsIEventQueue* appEventQueue,
-                        nsIStreamObserver* observer);
-  NS_IMETHOD OpenInputStream(nsIInputStream* *result);
-  NS_IMETHOD OpenOutputStream(nsIOutputStream* *result);
-
 
   // nsSocketTransport methods:
   nsSocketTransport();

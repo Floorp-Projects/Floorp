@@ -77,6 +77,23 @@ nsSocketTransportService::~nsSocketTransportService()
   }
 }
 
+NS_METHOD
+nsSocketTransportService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+
+    nsSocketTransportService* trans = new nsSocketTransportService();
+    if (trans == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(trans);
+    nsresult rv = trans->Init();
+    if (NS_SUCCEEDED(rv)) {
+        rv = trans->QueryInterface(aIID, aResult);
+    }
+    NS_RELEASE(trans);
+    return rv;
+}
 
 nsresult nsSocketTransportService::Init(void)
 {
@@ -404,7 +421,7 @@ nsSocketTransportService::Run(void)
 NS_IMETHODIMP
 nsSocketTransportService::CreateTransport(const char* aHost, 
                                           PRInt32 aPort,
-                                          nsITransport** aResult)
+                                          nsIChannel** aResult)
 {
   nsresult rv = NS_OK;
   nsSocketTransport* transport = nsnull;

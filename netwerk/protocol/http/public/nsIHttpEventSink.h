@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -20,7 +20,9 @@
 #define _nsIHTTPEventSink_h_
 
 #include "nsIStreamListener.h"
+
 class nsIString;
+
 /* 
     The nsIHTTPEventSink class is the interface thru which the
     HTTP handler reports specific http events back to a client. 
@@ -47,14 +49,14 @@ public:
     
     // OnRedirect gets fired only if you have set FollowRedirects on the handler!
     NS_IMETHOD      OnRedirect(nsISupports* i_Context, 
-                            nsIUrl* i_NewLocation) =0;
+                               nsIURI* i_NewLocation) =0;
 
     static const nsIID& GetIID() { 
         // {E4F981C0-098F-11d3-B01A-006097BFC036}
         static const nsIID NS_IHTTPEventSink_IID = 
-            { 0xe4f981c0, 0x98f, 0x11d3, { 0xb0, 0x1a, 0x0, 0x60, 0x97, 0xbf, 0xc0, 0x36 } };
-		return NS_IHTTPEventSink_IID; 
-	};
+        { 0xe4f981c0, 0x98f, 0x11d3, { 0xb0, 0x1a, 0x0, 0x60, 0x97, 0xbf, 0xc0, 0x36 } };
+        return NS_IHTTPEventSink_IID; 
+    };
 
 };
 

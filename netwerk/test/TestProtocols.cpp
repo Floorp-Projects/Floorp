@@ -32,17 +32,18 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsIEventQueueService.h"
-#include "nsINetService.h"
+#include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamObserver.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIByteBufferInputStream.h"
 #include "nsCRT.h"
-#include "nsIProtocolConnection.h"
+#include "nsIChannel.h"
 #include "nsIUrl.h"
-#include "nsIHTTPConnection.h"
+#include "nsIHTTPChannel.h"
 #include "nsIHttpEventSink.h" 
+#include "nsIEventSinkGetter.h" 
 
 #ifdef XP_PC
 #define XPCOM_DLL  "xpcom32.dll"
@@ -55,7 +56,7 @@
 #endif
 
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kNetServiceCID,             NS_NETSERVICE_CID);
+static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 
 static PRTime gElapsedTime;
 static int gKeepRunning = 1;
@@ -71,18 +72,18 @@ public:
   // ISupports interface...
   NS_DECL_ISUPPORTS
 
-    // nsIHTTPEventSink interface...
-    NS_IMETHOD      OnAwaitingInput(nsISupports* i_Context);
+  // nsIHTTPEventSink interface...
+  NS_IMETHOD      OnAwaitingInput(nsISupports* i_Context);
 
-    NS_IMETHOD      OnHeadersAvailable(nsISupports* i_Context);
+  NS_IMETHOD      OnHeadersAvailable(nsISupports* i_Context);
 
-    NS_IMETHOD      OnProgress(nsISupports* i_Context, 
-                            PRUint32 i_Progress, 
-                            PRUint32 i_ProgressMax);
+  NS_IMETHOD      OnProgress(nsISupports* i_Context, 
+                             PRUint32 i_Progress, 
+                             PRUint32 i_ProgressMax);
 
-    // OnRedirect gets fired only if you have set FollowRedirects on the handler!
-    NS_IMETHOD      OnRedirect(nsISupports* i_Context, 
-                            nsIUrl* i_NewLocation);
+  // OnRedirect gets fired only if you have set FollowRedirects on the handler!
+  NS_IMETHOD      OnRedirect(nsISupports* i_Context, 
+                             nsIURI* i_NewLocation);
 
   // IStreamListener interface...
   NS_IMETHOD OnStartBinding(nsISupports* context);
@@ -95,6 +96,17 @@ public:
   NS_IMETHOD OnStopBinding(nsISupports* context,
                            nsresult aStatus,
                            nsIString* aMsg);
+
+  NS_IMETHOD OnStartRequest(nsISupports* context) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  NS_IMETHOD OnStopRequest(nsISupports* context,
+                           nsresult aStatus,
+                           nsIString* aMsg) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
 };
 
 
@@ -140,8 +152,8 @@ InputTestConsumer::OnDataAvailable(nsISupports* context,
 
 NS_IMETHODIMP
 InputTestConsumer::OnStopBinding(nsISupports* context,
-                         nsresult aStatus,
-                         nsIString* aMsg)
+                                 nsresult aStatus,
+                                 nsIString* aMsg)
 {
   gKeepRunning = 0;
   printf("\n+++ InputTestConsumer::OnStopBinding (status = %x) +++\n", aStatus);
@@ -159,14 +171,16 @@ NS_IMETHODIMP
 InputTestConsumer::OnHeadersAvailable(nsISupports* context)
 {
     printf("\n+++ InputTestConsumer::OnHeadersAvailable +++\n");
-    nsCOMPtr<nsIHTTPConnection> pHTTPCon(do_QueryInterface(context));
+    nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(context));
     if (pHTTPCon)
     {
-        const char* type;
-        //optimize later TODO allow atoms here...! intead of just the header strings
-        pHTTPCon->GetResponseHeader("Content-type", &type);
-        if (type)
-            printf("\nRecieving ... %s\n", type);
+      char* type;
+      //optimize later TODO allow atoms here...! intead of just the header strings
+      pHTTPCon->GetResponseHeader("Content-type", &type);
+      if (type) {
+        printf("\nRecieving ... %s\n", type);
+        nsCRT::free(type);
+      }
     }
     return NS_OK;
 }
@@ -179,12 +193,36 @@ InputTestConsumer::OnProgress(nsISupports* context, PRUint32 i_Progress, PRUint3
 }
 
 NS_IMETHODIMP
-InputTestConsumer::OnRedirect(nsISupports* context, nsIUrl* i_NewLocation)
+InputTestConsumer::OnRedirect(nsISupports* context, nsIURI* i_NewLocation)
 {
     printf("\n+++ InputTestConsumer::OnRedirect +++\n");
     return NS_OK;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+class nsEventSinkGetter : public nsIEventSinkGetter {
+public:
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD GetEventSink(const char* verb, const nsIID& eventSinkIID,
+                            nsISupports* *result) {
+        if (nsCRT::strcmp(verb, "load") == 0) { // makeshift verb for now
+            if (eventSinkIID.Equals(nsIHTTPEventSink::GetIID())) {
+                *result = new InputTestConsumer();
+                if (*result)
+                    return NS_OK;
+                else
+                    return NS_ERROR_OUT_OF_MEMORY;
+            }
+        }
+        return NS_ERROR_FAILURE;
+    }
+};
+
+NS_IMPL_ISUPPORTS(nsEventSinkGetter, nsIEventSinkGetter::GetIID());
+
+////////////////////////////////////////////////////////////////////////////////
 
 int
 main(int argc, char* argv[])
@@ -216,7 +254,7 @@ main(int argc, char* argv[])
     eventQService->GetThreadEventQueue(PR_CurrentThread(), &gEventQ);
 
     //Create the nsINetService...
-    NS_WITH_SERVICE(nsINetService, pService, kNetServiceCID, &rv);
+    NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &rv);
 
     if (NS_FAILED(rv)) return rv;
 
@@ -226,49 +264,23 @@ main(int argc, char* argv[])
     if (pService)
     {
 
-        nsCOMPtr<nsIUrl> pURL;
+        nsCOMPtr<nsIURI> pURL;
 
-        if (NS_OK == pService->NewUrl(argv[1], getter_AddRefs(pURL)))
+        if (NS_OK == pService->NewURI(argv[1], nsnull, getter_AddRefs(pURL)))
         {
             if (pURL)
             {
-                nsCOMPtr<nsIProtocolConnection> pConnection;
-#if 0 // remove once the blocking io issues are worked out
-                if (NS_OK == pService->NewConnection(pURL, nsnull, nsnull, getter_AddRefs(pConnection)))
-                {
-                    /* Flavour One! */
-                    // Plain vanilla getting a file... in blocking mode
-                    nsCOMPtr<nsIInputStream> pStream;
-                    if (NS_OK == pConnection->GetInputStream(getter_AddRefs(pStream)))
-                    {
-                        if (pStream)
-                        {
-                            char buffer[1024];
-                            PRUint32 readCount;
-                            do 
-                            {
-                                if (NS_OK == pStream->Read(buffer, 1024, &readCount))
-                                {
-                                    printf(buffer);
-                                }
-                            }
-                            while (readCount != 0);
-                        }
-                    }
-                }
-
-#endif
-//#if 0
+                nsCOMPtr<nsIChannel> pConnection;
                 /* Flavour Two */
-                InputTestConsumer* pMyConsumer = new InputTestConsumer();
+                nsEventSinkGetter* pMyConsumer = new nsEventSinkGetter();
                 if (!pMyConsumer)
                 {
                     NS_ERROR("Failed to create a new consumer!");
                     return -1;
                 }
                 // Async reading thru the calls of the event sink interface
-                if (NS_OK == pService->NewConnection(pURL, pMyConsumer, 
-                                       nsnull, getter_AddRefs(pConnection)))
+                if (NS_OK == pService->NewChannelFromURI("load", pURL, pMyConsumer, 
+                                                         getter_AddRefs(pConnection)))
                 {
                     if (pConnection)
                     {
@@ -277,7 +289,7 @@ main(int argc, char* argv[])
                             request object. This is done by QI for the specific
                             protocolConnection.
                         */
-                        nsCOMPtr<nsIHTTPConnection> pHTTPCon(do_QueryInterface(pConnection));
+                        nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(pConnection));
 
                         if (pHTTPCon)
                         {
@@ -288,10 +300,9 @@ main(int argc, char* argv[])
                         }
                     
                         // But calling the open is required!
-                        pConnection->Open();
+//                        pConnection->Open();
                     }
                 }
-//#endif
 
             }
         }

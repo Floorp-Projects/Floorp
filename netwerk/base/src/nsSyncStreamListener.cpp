@@ -29,15 +29,21 @@ class nsSyncStreamListener : public nsIStreamListener
 public:
     NS_DECL_ISUPPORTS
 
-    // nsIStreamListener methods:
+    // nsIStreamObserver methods:
     NS_IMETHOD OnStartBinding(nsISupports* context);
+    NS_IMETHOD OnStopBinding(nsISupports* context,
+                             nsresult aStatus,
+                             nsIString* aMsg);
+    NS_IMETHOD OnStartRequest(nsISupports* context);
+    NS_IMETHOD OnStopRequest(nsISupports* context,
+                             nsresult aStatus,
+                             nsIString* aMsg);
+
+    // nsIStreamListener methods:
     NS_IMETHOD OnDataAvailable(nsISupports* context,
                                nsIInputStream *aIStream, 
                                PRUint32 aSourceOffset,
                                PRUint32 aLength);
-    NS_IMETHOD OnStopBinding(nsISupports* context,
-                             nsresult aStatus,
-                             nsIString* aMsg);
 
     // nsSyncStreamListener methods:
     nsSyncStreamListener()
@@ -96,6 +102,30 @@ nsSyncStreamListener::OnStartBinding(nsISupports* context)
 }
 
 NS_IMETHODIMP 
+nsSyncStreamListener::OnStopBinding(nsISupports* context,
+                                    nsresult aStatus,
+                                    nsIString* aMsg)
+{
+    // XXX what do we do with the status and error message?
+    return mOutputStream->Close();
+}
+
+NS_IMETHODIMP 
+nsSyncStreamListener::OnStartRequest(nsISupports* context)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsSyncStreamListener::OnStopRequest(nsISupports* context,
+                                    nsresult aStatus,
+                                    nsIString* aMsg)
+{
+    // XXX what do we do with the status and error message?
+    return mOutputStream->Close();
+}
+
+NS_IMETHODIMP 
 nsSyncStreamListener::OnDataAvailable(nsISupports* context,
                                       nsIInputStream *aIStream, 
                                       PRUint32 aSourceOffset,
@@ -110,15 +140,6 @@ nsSyncStreamListener::OnDataAvailable(nsISupports* context,
         count -= amt;
     }
     return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsSyncStreamListener::OnStopBinding(nsISupports* context,
-                                    nsresult aStatus,
-                                    nsIString* aMsg)
-{
-    // XXX what do we do with the status and error message?
-    return mOutputStream->Close();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
