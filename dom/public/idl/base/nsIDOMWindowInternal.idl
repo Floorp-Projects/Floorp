@@ -88,6 +88,8 @@ interface nsIDOMWindowInternal : nsIDOMWindow
   /* [replaceable] controllers */
   readonly attribute nsIControllers              controllers;
            attribute nsIDOMWindowInternal        opener;
+
+  /* [replaceable] */
            attribute DOMString                   status;
            attribute DOMString                   defaultStatus;
 
@@ -96,6 +98,8 @@ interface nsIDOMWindowInternal : nsIDOMWindow
   readonly attribute nsIDOMLocation              location;
            attribute DOMString                   title;
 
+  
+  /* [replaceable] */
            attribute long                        innerWidth;
            attribute long                        innerHeight;
            attribute long                        outerWidth;

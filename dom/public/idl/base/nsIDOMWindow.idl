@@ -57,7 +57,7 @@ interface nsIDOMWindow : nsISupports
 
   [noscript] readonly attribute nsIDOMWindowCollection  frames;
 
-  /* XXX: Shouldn't name be replaceable? */
+  /* [replaceable] */
            attribute DOMString                          name;
   readonly attribute long                               scrollX;
   readonly attribute long                               scrollY;
