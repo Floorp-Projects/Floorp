@@ -1385,7 +1385,7 @@ PR_IMPLEMENT(PRStatus) PR_NewTCPSocketPair(PRFileDesc *f[])
      */
     SOCKET listenSock;
     SOCKET osfd[2];
-    struct sockaddr_in selfAddr;
+    struct sockaddr_in selfAddr, peerAddr;
     int addrLen;
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
@@ -1429,8 +1429,22 @@ PR_IMPLEMENT(PRStatus) PR_NewTCPSocketPair(PRFileDesc *f[])
             addrLen) == SOCKET_ERROR) {
         goto failed;
     }
-    osfd[1] = accept(listenSock, NULL, NULL);
+    /*
+     * A malicious local process may connect to the listening
+     * socket, so we need to verify that the accepted connection
+     * is made from our own socket osfd[0].
+     */
+    if (getsockname(osfd[0], (struct sockaddr *) &selfAddr,
+            &addrLen) == SOCKET_ERROR) {
+        goto failed;
+    }
+    osfd[1] = accept(listenSock, (struct sockaddr *) &peerAddr, &addrLen);
     if (osfd[1] == INVALID_SOCKET) {
+        goto failed;
+    }
+    if (peerAddr.sin_port != selfAddr.sin_port) {
+        /* the connection we accepted is not from osfd[0] */
+        PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
         goto failed;
     }
     closesocket(listenSock);
