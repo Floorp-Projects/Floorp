@@ -709,6 +709,14 @@ button.calendar-management-button:hover:active
    border-color         :  #003366;
 }
 
+.month-view-header-days
+{
+   color                   : #3f7d91;
+   font-size               : 11pt;
+   font-family             : Arial, Helvetica;
+   text-align              : center; 
+   font-weight             : bold;
+}
 
 /*--------------------------------------------------------------------
  * Text item for events in month view
@@ -1014,25 +1022,22 @@ button.calendar-management-button:hover:active
    -moz-box-align       : center;
    width                :78px;
 }
+
 #week-view-header
 {
-   background-image        : url("chrome://calendar/skin/week_top_bar.png");
-   background-repeat       : repeat-x;
-   min-height              : 40px;
-   max-height              : 40px;
-   color                   : #EAEBD2;
+	border						: 1px solid #2085c4;
+	border-bottom				: none;
+   color                   : #3f7d91;
    font-size               : 11pt;
    font-family             : Arial, Helvetica;
    text-align              : center; 
    font-weight             : bold;
-   
 }
 
 .week-header-class
 {
    max-width               : 80px;
    max-height              : 40px;
-   
 }
 
 
