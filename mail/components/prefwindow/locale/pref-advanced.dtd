@@ -7,21 +7,21 @@
 
 <!-- Privacy Settings -->
 <!ENTITY privacyTitle.label "Privacy">
-<!ENTITY privacyFeature.label "Allow the following features:">
-<!ENTITY enbJsCheckMailNews.label     "JavaScript">
-<!ENTITY enbJsCheckMailNews.accesskey "s">
-<!ENTITY enbPluginCheckMailNews.label     "Plugins">
-<!ENTITY enbPluginCheckMailNews.accesskey "p">
-<!ENTITY disableImageInMailNews.label       "Loading of remote images">
-<!ENTITY disableImageInMailNews.accesskey   "L">
+<!ENTITY privacyFeature.label "Configure features to protect your privacy:">
+<!ENTITY disableImageInMailNews.label       "Block loading of remote images in mail messages.">
+<!ENTITY disableImageInMailNews.accesskey   "B">
 <!ENTITY disableCookieForMailNews.label "Cookies">
 <!ENTITY disableCookieForMailNews.accesskey "C">
+<!ENTITY enbJsCheckMailNews.label     "Enable JavaScript in mail messages.">
+<!ENTITY enbJsCheckMailNews.accesskey "J">
+<!ENTITY enbPluginCheckMailNews.label     "Plugins">
+<!ENTITY enbPluginCheckMailNews.accesskey "p">
 
 <!ENTITY returnReceiptsDescription.label "Configure Return Receipts.">
 
 <!--LOCALIZATION NOTE : FILE The Proxies preferences dialog -->
 <!ENTITY  lHeader.label                 "Connection">
-<!ENTITY  proxyTitle.label              "Configure Proxies to Access the Internet.">
+<!ENTITY  proxyTitle.label              "Configure Proxies to Access the Internet:">
 <!ENTITY  directTypeRadio.label         "Direct connection to the Internet">
 <!ENTITY  directTypeRadio.accesskey     "d">
 <!ENTITY  manualTypeRadio.label         "Manual proxy configuration">

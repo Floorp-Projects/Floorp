@@ -158,20 +158,27 @@
       <label class="expanderDescription" value="&privacyFeature.label;" flex="1"/>
 
       <vbox id="contentEnablingBox" class="indent">
-        <checkbox id="javascriptAllowMailNews" 
+
+        <checkbox id="networkImageDisableImagesInMailNews" 
+                  label="&disableImageInMailNews.label;" accesskey="&disableImageInMailNews.accesskey;"
+                  pref="true" preftype="bool" prefstring="mailnews.message_display.disable_remote_image"
+                  prefattribute="checked"/>
+        
+        <checkbox id="javascriptAllowMailNews"
                   label="&enbJsCheckMailNews.label;" accesskey="&enbJsCheckMailNews.accesskey;"
                   prefstring="javascript.allow.mailnews"/>
+
+        <!-- thunderbird doesn't support cookies or plugins so these options don't make sense 
+        
+        <checkbox id="networkDisableCookieForMailNews"
+                  label="&disableCookieForMailNews.label;" accesskey="&disableCookieForMailNews.accesskey;"
+                  preftype="bool" prefinverted="true" prefstring="network.cookie.disableCookieForMailNews"/>
         <checkbox id="pluginAllowMailNews"
                   label="&enbPluginCheckMailNews.label;" accesskey="&enbPluginCheckMailNews.accesskey;"
                   pref="true" preftype="bool" prefstring="mailnews.message_display.allow.plugins"
                   prefattribute="checked"/>
-        <checkbox id="networkImageDisableImagesInMailNews" 
-                  label="&disableImageInMailNews.label;" accesskey="&disableImageInMailNews.accesskey;"
-                  pref="true" preftype="bool" prefstring="mailnews.message_+"
-                  prefinverted="true" prefattribute="checked"/>
-        <checkbox id="networkDisableCookieForMailNews"
-                  label="&disableCookieForMailNews.label;" accesskey="&disableCookieForMailNews.accesskey;"
-                  preftype="bool" prefinverted="true" prefstring="network.cookie.disableCookieForMailNews"/>
+        -->
+
       </vbox>      
     </expander>  
 
