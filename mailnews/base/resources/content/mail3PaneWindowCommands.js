@@ -221,6 +221,7 @@ var DefaultController =
 			case "cmd_expandAllThreads":
 			case "cmd_collapseAllThreads":
 			case "cmd_renameFolder":
+			case "cmd_sendUnsentMsgs":
 			case "cmd_openMessage":
       case "button_print":
 			case "cmd_print":
@@ -380,7 +381,9 @@ var DefaultController =
       case "cmd_redo":
           return SetupUndoRedoCommand(command);
       case "cmd_renameFolder":
-        return IsRenameFolderEnabled(); 
+        return IsRenameFolderEnabled();
+      case "cmd_sendUnsentMsgs":
+        return IsSendUnsentMsgsEnabled(null);
       case "button_getNewMessages":
       case "cmd_getNewMessages":
       case "cmd_properties":
@@ -526,6 +529,9 @@ var DefaultController =
 			case "cmd_renameFolder":
 				MsgRenameFolder();
 				return;
+			case "cmd_sendUnsentMsgs":
+				MsgSendUnsentMsgs();
+				return
 			case "cmd_openMessage":
                 MsgOpenSelectedMessages();
 				return;
@@ -755,6 +761,46 @@ function SetupCommandUpdateHandlers()
 	top.controllers.insertControllerAt(0, DefaultController);
 }
 
+function IsSendUnsentMsgsEnabled(folderNode)
+{
+  var identity;
+  try {
+    if (folderNode) {
+      // if folderNode is non-null, it is
+      // is the XULElement for the "Unsent Messages" folder
+      // we're here because we've done a right click on the "Unsent Messages"
+      // folder (context menu)
+      var folder = GetMsgFolderFromNode(folderNode);
+      return (folder.getTotalMessages(false) > 0);
+    }
+    else {
+      var folders = GetSelectedMsgFolders();
+      if (folders.length > 0) {
+        identity = getIdentityForServer(folders[0].server);
+      }
+    }
+  }
+  catch (ex) {
+    dump("ex = " + ex + "\n");
+    identity = null;
+  }
+
+  try {
+    if (!identity) {
+      var am = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
+      identity = am.defaultAccount.defaultIdentity;
+    }
+
+    var msgSendlater = Components.classes["@mozilla.org/messengercompose/sendlater;1"].getService(Components.interfaces.nsIMsgSendLater);
+    var unsentMsgsFolder = msgSendlater.getUnsentMessagesFolder(identity);
+    return (unsentMsgsFolder.getTotalMessages(false) > 0);
+  }
+  catch (ex) {
+    dump("ex = " + ex + "\n");
+  }
+  return false;
+}
+
 function IsRenameFolderEnabled()
 {     
     var tree = GetFolderTree();
@@ -769,7 +815,6 @@ function IsRenameFolderEnabled()
     }
     else
         return false;
-    
 }
 
 function IsFolderCharsetEnabled()

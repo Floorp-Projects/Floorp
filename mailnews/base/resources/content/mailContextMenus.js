@@ -167,19 +167,19 @@ function fillFolderPaneContextMenu()
   var selectedItems = tree.selectedItems;
   var numSelected = selectedItems.length;
 
-    var popupNode = document.getElementById('folderPaneContext');
+  var popupNode = document.getElementById('folderPaneContext');
 
   var targetFolder = document.popupNode.parentNode.parentNode;
   if (targetFolder.getAttribute('selected') != 'true')
   {
-      tree.selectItem(targetFolder);
-    }
+    tree.selectItem(targetFolder);
+  }
 
   var isServer = targetFolder.getAttribute('IsServer') == 'true';
   var serverType = targetFolder.getAttribute('ServerType');
   var specialFolder = targetFolder.getAttribute('SpecialFolder');
   var canSubscribeToFolder = (serverType == "nntp") || (serverType == "imap");
-    var isNewsgroup = !isServer && serverType == 'nntp';
+  var isNewsgroup = !isServer && serverType == 'nntp';
   var canGetMessages =  (isServer && (serverType != "nntp") && (serverType !="none")) || isNewsgroup;
 
   EnableMenuItem("folderPaneContext-properties", !isServer);
@@ -191,13 +191,16 @@ function fillFolderPaneContextMenu()
 
   SetupRenameMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder);
   SetupRemoveMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder);
-    SetupCompactMenuItem(targetFolder, numSelected);
+  SetupCompactMenuItem(targetFolder, numSelected);
 
   ShowMenuItem("folderPaneContext-emptyTrash", (numSelected <= 1) && (specialFolder == 'Trash'));
   EnableMenuItem("folderPaneContext-emptyTrash", true);
 
-  ShowMenuItem("folderPaneContext-sendUnsentMessages", (numSelected <= 1) && (specialFolder == 'Unsent Messages'));
-  EnableMenuItem("folderPaneContext-sendUnsentMessages", true);
+  var showSendUnsentMessages = (numSelected <= 1) && (specialFolder == 'Unsent Messages');
+  ShowMenuItem("folderPaneContext-sendUnsentMessages", showSendUnsentMessages);
+  if (showSendUnsentMessages) {
+    EnableMenuItem("folderPaneContext-sendUnsentMessages", IsSendUnsentMsgsEnabled(targetFolder));
+  }
 
   ShowMenuItem("folderPaneContext-sep-edit", (numSelected <= 1));
 

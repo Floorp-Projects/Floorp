@@ -349,9 +349,9 @@ function GetMessagesForInboxOnServer(server)
   GetNewMessages(folders, compositeDataSource);
 }
 
-// if offline, prompt for getting messages
 function MsgGetMessage()
 {
+  // if offline, prompt for getting messages
   if(CheckOnline()) {
     GetFolderMessages();
   }
@@ -934,11 +934,11 @@ function MsgStop()
     StopUrls();
 }
 
-// if offline, prompt for sendUnsentMessages
-function MsgSendUnsentMsg()
+function MsgSendUnsentMsgs()
 {
+  // if offline, prompt for sendUnsentMessages
   if(CheckOnline()) {
-    SendFolderUnsentMessages();    
+    SendUnsentMessages();    
   }
   else {
     var option = PromptSendMessagesOffline();
@@ -948,7 +948,7 @@ function MsgSendUnsentMsg()
       gOfflineManager.goOnline(false /* sendUnsentMessages */, 
                                false /* playbackOfflineImapOperations */, 
                                msgWindow);
-      SendFolderUnsentMessages();
+      SendUnsentMessages();
     }
   }
 }
@@ -1218,7 +1218,6 @@ function PromptSendMessagesOffline()
   }
 }
 
-// gets called from MsgGetMessage()
 function GetFolderMessages()
 {
   var folders = GetSelectedMsgFolders();
@@ -1226,8 +1225,7 @@ function GetFolderMessages()
   GetNewMessages(folders, compositeDataSource);
 }
 
-// gets called from MsgSendUnsentMsg()
-function SendFolderUnsentMessages()
+function SendUnsentMessages()
 {
   var am = Components.classes["@mozilla.org/messenger/account-manager;1"]
                .getService(Components.interfaces.nsIMsgAccountManager);
@@ -1242,16 +1240,20 @@ function SendFolderUnsentMessages()
       currentIdentity = allIdentities.QueryElementAt(i, Components.interfaces.nsIMsgIdentity);
       msgFolder = msgSendlater.getUnsentMessagesFolder(currentIdentity);
       if(msgFolder) {
-        // if true, descends into all subfolders 
-        numMessages = msgFolder.getTotalMessages(false);
-        if(numMessages > 0) 
+        numMessages = msgFolder.getTotalMessages(false /* include subfolders */);
+        if(numMessages > 0) {
           messenger.SendUnsentMessages(currentIdentity);
+          // right now, all identities point to the same unsent messages
+          // folder, so to avoid sending multiple copies of the
+          // unsent messages, we only call messenger.SendUnsentMessages() once
+          // see bug #89150 for details
+          break;
+        }
       }
     } 
   }
 }
 
-// gets called from MsgGetMessagesForAllAuthenticatedAccounts()
 function GetMessagesForAllAuthenticatedAccounts()
 {
    try {
@@ -1271,7 +1273,6 @@ function GetMessagesForAllAuthenticatedAccounts()
   }
 }
 
-// gets called from MsgGetMessagesForAccount(aEvent)
 function GetMessagesForAccount(aEvent)
 {
   var uri = aEvent.target.id;

@@ -123,14 +123,6 @@ function getIdentityForServer(server)
     return identity;
 }
 
-function SendUnsentMessages(folder)
-{
-	if(folder) {	
-		var identity = getIdentityForServer(folder.server);
-		messenger.SendUnsentMessages(identity);
-	}
-}
-
 function GetNextNMessages(folder)
 {
 	if (folder) {

@@ -78,6 +78,7 @@ Rights Reserved.
     <command id="cmd_saveAsTemplate" oncommand="goDoCommand('cmd_saveAsTemplate')" disabled="true"/>    
     <command id="cmd_getNextNMessages" oncommand="goDoCommand('cmd_getNextNMessages')" disabled="true"/>
     <command id="cmd_renameFolder" oncommand="goDoCommand('cmd_renameFolder')" />
+    <command id="cmd_sendUnsentMsgs" oncommand="goDoCommand('cmd_sendUnsentMsgs')" />
 </commandset>
 
 <commandset id="mailCommands">
@@ -505,7 +506,7 @@ Rights Reserved.
     <menuitem id="folderPaneContext-sendUnsentMessages"
         label="&folderContextSendUnsentMessages.label;"
         accesskey="&folderContextSendUnsentMessages.accesskey;"
-        oncommand="MsgSendUnsentMsg();"/>
+        oncommand="goDoCommand('cmd_sendUnsentMsgs')"/>
     <menuseparator id="folderPaneContext-sep-edit"/>
     <menuitem id="folderPaneContext-searchMessages"
         label="&folderContextSearchMessages.label;"
@@ -803,9 +804,9 @@ Rights Reserved.
                         </menu>
       <menuitem id="menu_getnextnmsg" label="&getNextNMsgCmd.label;"
        observes="cmd_getNextNMessages"/>
-      <menuitem label="&sendUnsentCmd.label;"
+      <menuitem id="menu_sendunsentmsgs" label="&sendUnsentCmd.label;"
        accesskey="&sendUnsentCmd.accesskey;"
-       oncommand="MsgSendUnsentMsg();"/>
+       observes="cmd_sendUnsentMsgs"/>
       <menuitem label="&subscribeCmd.label;"
        accesskey="&subscribeCmd.accesskey;"
        oncommand="MsgSubscribe();"/>
