@@ -3095,9 +3095,11 @@ NS_IMETHODIMP nsPluginHostImpl::FindProxyForURL(const char* url, char* *result)
   PRInt32 port = -1;
 
   // These won't fail, and even if they do... we'll be ok.
-  pi->GetType(type);
-  pi->GetHost(host);
-  pi->GetPort(&port);
+  if (pi) {
+    pi->GetType(type);
+    pi->GetHost(host);
+    pi->GetPort(&port);
+  }
 
   if (!pi || host.IsEmpty() || port <= 0 || host.EqualsLiteral("direct")) {
     *result = PL_strdup("DIRECT");
