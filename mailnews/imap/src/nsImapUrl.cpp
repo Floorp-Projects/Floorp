@@ -53,7 +53,6 @@ nsImapUrl::nsImapUrl()
 	m_allowContentChange = PR_TRUE;	// assume we can do MPOD.
 	m_validUrl = PR_TRUE;	// assume the best.
 	m_flags = 0;
-	m_userName = nsnull;
 	m_onlineSubDirSeparator = '/'; 
 
     // ** jt - the following are not ref counted
@@ -67,15 +66,9 @@ nsImapUrl::nsImapUrl()
     m_addDummyEnvelope = PR_FALSE;
 }
 
-nsresult nsImapUrl::Initialize(const char * aUserName)
+nsresult nsImapUrl::Initialize()
 {
 	nsresult rv = NS_OK;
-    PR_FREEIF(m_userName);
-	if (aUserName)
-		m_userName = PL_strdup(aUserName);
-	else
-		rv = NS_ERROR_NULL_POINTER;
-
     rv = nsComponentManager::CreateInstance(kCImapMockChannel, nsnull, NS_GET_IID(nsIImapMockChannel), getter_AddRefs(m_mockChannel));
     if (NS_SUCCEEDED(rv) && m_mockChannel)
         m_mockChannel->SetURI(this);
@@ -86,7 +79,6 @@ nsresult nsImapUrl::Initialize(const char * aUserName)
 nsImapUrl::~nsImapUrl()
 {
 	PR_FREEIF(m_listOfMessageIds);
-	PR_FREEIF(m_userName);
 	PR_FREEIF(m_destinationCanonicalFolderPathSubString);
 	PR_FREEIF(m_sourceCanonicalFolderPathSubString);
 }
@@ -271,6 +263,9 @@ nsresult nsImapUrl::ParseUrl()
 {
 	nsresult rv = NS_OK;
 	NS_LOCK_INSTANCE();
+
+    // extract the user name
+    GetPreHost(getter_Copies(m_userName));
 
 	char * imapPartOfUrl = nsnull;
 	rv = GetPath(&imapPartOfUrl);
@@ -964,7 +959,7 @@ nsImapUrl::GetURI(char** aURI)
 #else
         // jefft -- indeed that is wrong 
         CreateCanonicalSourceFolderPathString(getter_Copies(theFile));
-        nsCString fullFolderPath = m_userName;
+        nsCString fullFolderPath = (const char *) m_userName;
         char *hostName = nsnull;
         rv = GetHost(&hostName);
         fullFolderPath += '@';

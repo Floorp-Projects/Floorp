@@ -25,6 +25,7 @@
 #include "nsMsgMailNewsUrl.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsIImapServerSink.h"
+#include "nsXPIDLString.h"
 
 class nsImapUrl : public nsIImapUrl, public nsMsgMailNewsUrl, public nsIMsgMessageUrl
 {
@@ -39,7 +40,7 @@ public:
 	// we support the nsIImapUrl interface
 	///////////////////////////////////////////////////////////////////////////////
 
-	NS_IMETHOD Initialize(const char * aUserName);
+	NS_IMETHOD Initialize();
 
 	NS_IMETHOD GetImapLog(nsIImapLog ** aImapLog);
 	NS_IMETHOD SetImapLog(nsIImapLog  * aImapLog);
@@ -131,7 +132,7 @@ protected:
 	PRBool					m_allowContentChange;	// if PR_FALSE, we can't use Mime parts on demand
 	PRInt32					m_discoveryDepth;
 
-	char *		m_userName;
+	nsXPIDLCString  m_userName;
 
 	// event sinks
 	imapMessageFlagsType	m_flags;
