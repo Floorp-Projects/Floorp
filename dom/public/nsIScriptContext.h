@@ -140,6 +140,15 @@ public:
    * @return NS_OK if the method is successful
    */
   NS_IMETHOD GetSecurityManager(nsIScriptSecurityManager** aInstancePtr) = 0;
+
+  /**
+   * Inform the context that a script was evaluated.
+   * A GC may be done if "necessary."
+   * This call is necessary if script evaluation is done
+   * without using the EvaluateScript method.
+   * @return NS_OK if the method is successful
+   */
+  NS_IMETHOD ScriptEvaluated(void) = 0;
 };
 
 /**
