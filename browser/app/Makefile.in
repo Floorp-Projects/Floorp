@@ -49,9 +49,9 @@ PREF_JS_EXPORTS = \
     $(NULL)
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
-PROGRAM = phoenix$(BIN_SUFFIX)
+PROGRAM = MozillaFirebird$(BIN_SUFFIX)
 else
-PROGRAM = phoenix-bin$(BIN_SUFFIX)
+PROGRAM = MozillaFirebird-bin$(BIN_SUFFIX)
 endif
 
 REQUIRES = \
@@ -175,11 +175,7 @@ endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 
-ifdef MOZ_DEBUG
-APP_NAME = PhoenixDebug
-else
-APP_NAME = Phoenix
-endif
+APP_NAME = Mozilla\ Firebird
 
 libs:: $(PROGRAM)
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS

@@ -68,7 +68,7 @@
 		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
-	<string>phoenix-bin</string>
+	<string>MozillaFirebird-bin</string>
 	<key>CFBundleGetInfoString</key>
 	<string>Mozilla 1.4a, © 1998-2003 The Mozilla Organization</string>
 	<key>CFBundleIconFile</key>
@@ -78,7 +78,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Phoenix</string>
+	<string>MozillaFirebird</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
