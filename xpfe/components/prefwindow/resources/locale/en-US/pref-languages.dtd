@@ -1,19 +1,23 @@
 <!-- extracted from content/pref-languages.xul -->
 
 <!-- LOCALIZATION NOTE : FILE 'Languages' preferences dialog -->
-<!ENTITY  window.title "Languages">
-<!ENTITY  lHeader "Languages">
-<!ENTITY  rHeader "Languages in which webpages are displayed">
-<!ENTITY  prefLangDecript "Choose in order of preference the language(s) 
-			in which you prefer to view web pages. Web pages are sometimes 
-			available in several languages.  Navigator presents pages in 
-			the available language you most prefer.">
+<!ENTITY  window.title                  "Languages">
+<!ENTITY  lHeader                       "Languages">
+<!ENTITY  rHeader                       "Languages in which webpages are displayed">
+<!ENTITY  prefLangDecript               "Choose in order of preference the language(s) in which you prefer to view web pages. Web pages are sometimes available in several languages.  Navigator presents pages in the available language you most prefer.">
 <!-- LOCALIZATION NOTE (engOption.label): DONT_TRANSLATE -->
-<!ENTITY engOrder.label "1">
-<!ENTITY engOption.label  "English">
-<!ENTITY addButton.label  "Add...">
-<!ENTITY deleteButton.label  "Delete...">
+<!ENTITY engOrder.label                 "1">
+<!ENTITY engOption.label                "English">
+<!ENTITY addButton.label                "Add...">
+<!ENTITY addButton.accesskey            "a">
+<!ENTITY deleteButton.label             "Remove">
+<!ENTITY deleteButton.accesskey         "r">
+<!ENTITY moveUp.label                   "Move Up">
+<!ENTITY moveUp.accesskey               "u">
+<!ENTITY moveDown.label                 "Move Down">
+<!ENTITY moveDown.accesskey             "d">
 <!-- LOCALIZATION NOTE (orderColumnHeader): This column heading refers to the sequence in which the chosen items appear. -->
-<!ENTITY orderColumnHeader.label "Order">
-<!ENTITY languageColumnHeader.label "Language">
+<!ENTITY orderColumnHeader.label        "Order">
+<!ENTITY languageColumnHeader.label     "Language">
  
+
