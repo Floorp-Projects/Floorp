@@ -299,7 +299,6 @@ static char * WH_TempName(XP_FileType /*type*/, const char * prefix)
 nsresult NS_NewMsgSend(nsIMsgSend** aInstancePtrResult)
 {
 	/* note this new macro for assertions...they can take a string describing the assertion */
-	nsresult result = NS_OK;
 	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
 	if (nsnull != aInstancePtrResult)
 	{
@@ -696,24 +695,24 @@ RFC2231ParmFolding(const char *parmName, const char *charset,
 				// check to see if we are in the middle of escaped char
 				if (*end == '%')
 				{
-					tmp = '%'; *end = NULL;
+					tmp = '%'; *end = nsnull;
 				}
 				else if (end-1 > start && *(end-1) == '%')
 				{
-					end -= 1; tmp = '%'; *end = NULL;
+					end -= 1; tmp = '%'; *end = nsnull;
 				}
 				else if (end-2 > start && *(end-2) == '%')
 				{
-					end -= 2; tmp = '%'; *end = NULL;
+					end -= 2; tmp = '%'; *end = nsnull;
 				}
 				else
 				{
-					tmp = *end; *end = NULL;
+					tmp = *end; *end = nsnull;
 				}
 			}
 			else
 			{
-				tmp = *end; *end = NULL;
+				tmp = *end; *end = nsnull;
 			}
 			StrAllocCat(foldedParm, start);
 			if (!needEscape)
@@ -4843,7 +4842,8 @@ void nsMsgSendMimeDeliveryState::DeliverMessage ()
 		return;
 	}
 
-#ifdef XP_UNIX //JFD - ???
+    
+#if 0 //JFD - was XP_UNIX only
 {
 	int status = msg_DeliverMessageExternally(GetContext(), m_msg_file_name);
 	if (status != 0) {
@@ -5465,7 +5465,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 		  goto FAIL;
 		}
 
-	  n = msg_LineBuffer (ibuffer, n,
+	  n = (PRInt32)msg_LineBuffer (ibuffer, n,
 						  &obuffer, (PRUint32 *)&obuffer_size,
 						  (PRUint32*)&obuffer_fp,
 						  PR_TRUE, msg_do_fcc_handle_line,
