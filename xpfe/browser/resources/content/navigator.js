@@ -103,6 +103,14 @@ function contentAreaFrameFocus()
   }
 }
 
+function editPageOrFrame()
+{
+  if (gFocusedURL)
+    editPage(gFocusedURL, window, false);
+  else
+    editPage(window._content.location.href, window, false);
+}
+
 //////////////////////////////// BOOKMARKS ////////////////////////////////////
 
 function UpdateBookmarksLastVisitedDate(event)
