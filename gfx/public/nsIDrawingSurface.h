@@ -44,7 +44,7 @@
 
 // a memory area that can be rendered to
 
-typedef struct
+struct nsPixelFormat
 {
   PRUint32  mRedZeroMask;     //red color mask in zero position
   PRUint32  mGreenZeroMask;   //green color mask in zero position
@@ -62,7 +62,23 @@ typedef struct
   PRUint8   mGreenShift;      //number to shift value into green position
   PRUint8   mBlueShift;       //number to shift value into blue position
   PRUint8   mAlphaShift;      //number to shift value into alpha position
-} nsPixelFormat;
+
+  nsPixelFormat() : mRedZeroMask(0),
+                    mGreenZeroMask(0),
+                    mBlueZeroMask(0),
+                    mAlphaZeroMask(0),
+                    mRedMask(0),
+                    mGreenMask(0),
+                    mBlueMask(0),
+                    mAlphaMask(0),
+                    mRedCount(0),
+                    mGreenCount(0),
+                    mBlueCount(0),
+                    mAlphaCount(0),
+                    mGreenShift(0),
+                    mBlueShift(0),
+                    mAlphaShift(0) {}
+};
 
 #define RASWIDTH(width, bpp) ((((width) * (bpp) + 31) >> 5) << 2)
 
