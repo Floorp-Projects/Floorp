@@ -431,8 +431,8 @@ nsHTMLInputElement::GetValue(nsAWritableString& aValue)
 {
   PRInt32 type;
   GetType(&type);
-  if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type ||
-      NS_FORM_INPUT_FILE == type) {
+  if (type == NS_FORM_INPUT_TEXT || type == NS_FORM_INPUT_PASSWORD ||
+      type == NS_FORM_INPUT_FILE) {
     nsIFormControlFrame* formControlFrame = nsnull;
 
     // No need to flush here, if there's no frame created for this
@@ -454,8 +454,9 @@ nsHTMLInputElement::GetValue(nsAWritableString& aValue)
                                                       nsHTMLAtoms::value,
                                                       aValue);
 
-  if (rv == NS_CONTENT_ATTR_NOT_THERE && type == NS_FORM_INPUT_RADIO) {
-    // The defauly value of a radio input is "on".
+  if (rv == NS_CONTENT_ATTR_NOT_THERE &&
+      (type == NS_FORM_INPUT_RADIO || type == NS_FORM_INPUT_CHECKBOX)) {
+    // The default value of a radio or checkbox input is "on".
     aValue.Assign(NS_LITERAL_STRING("on"));
 
     return NS_OK;
