@@ -28,16 +28,21 @@ var statsuffix = ',  match=$';
 var ERR_LENGTH = '\nERROR !!! Match arrays have different lengths:';
 var ERR_NO_MATCH = '\nregexp FAILED to match anything !!!\n';
 var ERR_UNEXP_MATCH = '\nregexp MATCHED when we expected it to fail !!!\n';
-var cnExpect =  '\nExpect: ';
-var cnActual =  '\nActual: ';
+var cnExpect = '\nExpect: ';
+var cnActual = '\nActual: ';
 var cnSingleQuote = "'";
+var cnBracketL =  '[';
+var cnBracketR =  ']';
+
 
 
 // Compares ouput from multiple applications of RegExp(pattern).exec(string)
 function testRegExp(patterns, strings, actualmatches, expectedmatches)
 {
-  var actualmatch = [ ];
   var expectedmatch = [ ];
+  var actualmatch = [ ];
+  var lExpect = -1;
+  var lActual = -1;
 
   for (var i=0; i != patterns.length; i++)
   {
@@ -49,14 +54,21 @@ function testRegExp(patterns, strings, actualmatches, expectedmatches)
       if(expectedmatch)
       {
         // expectedmatch and actualmatch are arrays -
-        if (actualmatch.length != expectedmatch.length)
+        lExpect = expectedmatch.length;
+        lActual = actualmatch.length;
+ 
+        if (lActual != lExpect)
         {
-          reportFailure(getStatus(i) + ERR_LENGTH + cnExpect + expectedmatch + cnActual + actualmatch);
-          return;
+          reportFailure( 
+                        getStatus(i) + ERR_LENGTH +
+                        cnExpect + format(expectedmatch) +
+                        cnActual + format(actualmatch)
+                       );
+          continue;
         }
 
         // OK, the arrays have same length. Compare them element-by-element -
-        for (var j=0; j !=actualmatch.length; j++)
+        for (var j=0; j != lActual; j++)
         {
           reportCompare (expectedmatch[j],  actualmatch[j], getStatus(i, j));
         }
@@ -86,16 +98,22 @@ function getStatus(i, j)
 {
   if ( j )
   {
-    return (statprefix  +  patterns[i]  +  statmiddle  +  quote(strings[i])  +  statsuffix  +  j );
+    return (statprefix + patterns[i] + statmiddle + quote(strings[i]) + statsuffix + j);
   }
   else
   {
-    return (statprefix  +  patterns[i]  +  statmiddle  +  quote(strings[i]));
+    return (statprefix + patterns[i] + statmiddle + quote(strings[i]));
   }
+}
+
+
+function format(text)
+{
+  return (cnBracketL + text + cnBracketR);
 }
 
 
 function quote(text)
 {
-  return (cnSingleQuote  +  text  +  cnSingleQuote);
+  return (cnSingleQuote + text + cnSingleQuote);
 }
