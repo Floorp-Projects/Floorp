@@ -161,7 +161,7 @@
             <textbox wsm_persist="true" id="incomingServer" flex="1" class="uri-element"/>
           </hbox>
         </vbox>
-        <separator class="groove"/>
+        <separator class="groove" id="incomingServerSeparator"/>
         <vbox id="deferStorageBox">
             <description> &deferStorageDesc.label;</description>
             <hbox>

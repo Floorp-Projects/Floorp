@@ -40,11 +40,15 @@ function setAccountTypeData()
 {
   var rg = document.getElementById("acctyperadio");
   var selectedItemId = rg.selectedItem.id;
+  var mail = selectedItemId == "mailaccount";
+  var news = selectedItemId == "newsaccount";
 
-  if (selectedItemId == "mailaccount")
-    setMailAccountTypeData();
-  else if (selectedItemId == "newsaccount")
-    setNewsAccountTypeData();
+  var pageData = parent.GetPageData();
+  setPageData(pageData, "accounttype", "mailaccount", mail);
+  setPageData(pageData, "accounttype", "newsaccount", news);
+
+  // Other account type, e.g. Movemail
+  setPageData(pageData, "accounttype", "otheraccount", !(news || mail));
 }
 
 function acctTypePageUnload() {
@@ -127,16 +131,4 @@ function initializeIspData()
     if (!ispName || ispName == "") return;
 
     parent.PrefillAccountForIsp(ispName);
-}
-
-function setMailAccountTypeData() {
-  var pageData = parent.GetPageData();
-  setPageData(pageData, "accounttype", "mailaccount", true);
-  setPageData(pageData, "accounttype", "newsaccount", false);
-}
-
-function setNewsAccountTypeData() {
-  var pageData = parent.GetPageData();
-  setPageData(pageData, "accounttype", "newsaccount", true);
-  setPageData(pageData, "accounttype", "mailaccount", false);
 }

@@ -129,8 +129,9 @@ function serverPageInit() {
   
   // Server type selection (pop3 or imap) is for mail accounts only
   var pageData = parent.GetPageData();
-  var isMailAccount = pageData.accounttype.mailaccount;
-  if (isMailAccount && isMailAccount.value && !gHideIncoming){
+  var isMailAccount = pageData.accounttype.mailaccount.value;
+  var isOtherAccount = pageData.accounttype.otheraccount.value;
+  if (isMailAccount && !gHideIncoming) {
     var serverTypeRadioGroup = document.getElementById("servertype");
     /* 
      * Check to see if the radiogroup has any value. If there is no
@@ -148,6 +149,10 @@ function serverPageInit() {
     }
     setServerType();
     setDeferStorage(); // set the initial value correctly
+  }
+  else if (isOtherAccount) {
+    document.getElementById("incomingServerSeparator").hidden = true;
+    document.getElementById("deferStorageBox").hidden = true;
   }
 
   gPrefsBundle = document.getElementById("bundle_prefs");
@@ -204,6 +209,7 @@ function setServerType()
   var serverType = document.getElementById("servertype").value;
   var deferStorageBox = document.getElementById("deferStorageBox");
   deferStorageBox.hidden = serverType == "imap";
+  document.getElementById("incomingServerSeparator").hidden = false;
   setPageData(pageData, "server", "servertype", serverType);
 }
 
