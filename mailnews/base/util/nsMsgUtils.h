@@ -18,6 +18,8 @@
 
 #include "nsIMsgMessageService.h"
 #include "nsString.h"
+#include "nsIEnumerator.h"
+#include "nsIMsgFolder.h"
 
 //These are utility functions that can used throughout the mailnews code
 
@@ -26,3 +28,26 @@ nsresult GetMessageServiceProgIDForURI(const char *uri, nsString &progID);
 //Use ReleaseMessageServiceFromURI to release the service.
 nsresult GetMessageServiceFromURI(const char *uri, nsIMsgMessageService **messageService);
 nsresult ReleaseMessageServiceFromURI(const char *uri, nsIMsgMessageService *messageService);
+
+
+//An enumerator for converting nsIMsgHdrs to nsIMessages.
+class nsMessageFromMsgHdrEnumerator: public nsIEnumerator
+{
+protected:
+	nsIEnumerator *mSrcEnumerator;
+	nsIMsgFolder *mFolder;
+
+public:
+	NS_DECL_ISUPPORTS
+	nsMessageFromMsgHdrEnumerator(nsIEnumerator *srcEnumerator, nsIMsgFolder *folder);
+	~nsMessageFromMsgHdrEnumerator();
+
+	NS_IMETHOD First(void);
+	NS_IMETHOD Next(void);
+	NS_IMETHOD CurrentItem(nsISupports **aItem);
+	NS_IMETHOD IsDone(void);
+};
+
+nsresult NS_NewMessageFromMsgHdrEnumerator(nsIEnumerator *srcEnumerator,
+										   nsIMsgFolder *folder,	
+										   nsMessageFromMsgHdrEnumerator **messageEnumerator);

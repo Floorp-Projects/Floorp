@@ -72,3 +72,80 @@ nsresult ReleaseMessageServiceFromURI(const char *uri, nsIMsgMessageService *mes
 	}
 	return rv;
 }
+
+
+NS_IMPL_ISUPPORTS(nsMessageFromMsgHdrEnumerator, nsIEnumerator::GetIID())
+
+nsMessageFromMsgHdrEnumerator::nsMessageFromMsgHdrEnumerator(nsIEnumerator *srcEnumerator,
+															 nsIMsgFolder *folder)
+{
+    NS_INIT_REFCNT();
+	mSrcEnumerator = srcEnumerator;
+	if(mSrcEnumerator)
+		NS_ADDREF(mSrcEnumerator);
+
+	mFolder = folder;
+	if(mFolder)
+		NS_ADDREF(mFolder);
+
+}
+
+nsMessageFromMsgHdrEnumerator::~nsMessageFromMsgHdrEnumerator()
+{
+	NS_IF_RELEASE(mSrcEnumerator);
+	NS_IF_RELEASE(mFolder);
+
+}
+
+NS_IMETHODIMP nsMessageFromMsgHdrEnumerator::First(void)
+{
+	return mSrcEnumerator->First();
+
+}
+
+NS_IMETHODIMP nsMessageFromMsgHdrEnumerator::Next(void)
+{
+	return mSrcEnumerator->Next();
+}
+
+NS_IMETHODIMP nsMessageFromMsgHdrEnumerator::CurrentItem(nsISupports **aItem)
+{
+	nsISupports *currentItem = nsnull;
+	nsIMsgDBHdr *msgDBHdr = nsnull;
+	nsIMessage *message = nsnull;
+	nsresult rv;
+
+	rv = mSrcEnumerator->CurrentItem(&currentItem);
+	if(NS_SUCCEEDED(rv))
+		rv = currentItem->QueryInterface(nsIMsgDBHdr::GetIID(), (void**)&msgDBHdr);
+
+	if(NS_SUCCEEDED(rv))
+		rv = mFolder->CreateMessageFromMsgDBHdr(msgDBHdr, &message);
+
+	if(NS_SUCCEEDED(rv))
+		*aItem = message;
+
+	return rv;
+}
+
+NS_IMETHODIMP nsMessageFromMsgHdrEnumerator::IsDone(void)
+{
+	return mSrcEnumerator->IsDone();
+}
+
+nsresult NS_NewMessageFromMsgHdrEnumerator(nsIEnumerator *srcEnumerator,
+										   nsIMsgFolder *folder,	
+										   nsMessageFromMsgHdrEnumerator **messageEnumerator)
+{
+	if(!messageEnumerator)
+		return NS_ERROR_NULL_POINTER;
+
+	*messageEnumerator =	new nsMessageFromMsgHdrEnumerator(srcEnumerator, folder);
+
+	if(!messageEnumerator)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	NS_ADDREF(*messageEnumerator);
+	return NS_OK;
+
+}
