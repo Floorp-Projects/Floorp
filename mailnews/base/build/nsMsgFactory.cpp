@@ -189,19 +189,23 @@ nsMsgFactory::CreateInstance(nsISupports *aOuter,
 	{
 		nsUrlListenerManager * listener = nsnull;
 		listener = new nsUrlListenerManager();
-    if (listener == nsnull)
-      return NS_ERROR_OUT_OF_MEMORY;
+		if (listener == nsnull)
+			return NS_ERROR_OUT_OF_MEMORY;
+		listener->QueryInterface(nsIUrlListenerManager::GetIID(), (void **) &inst);
 	}
 	else if (mClassID.Equals(kCMsgMailSessionCID))
 	{
 		nsMsgMailSession * session = new nsMsgMailSession();
-    if (session == nsnull)
-      return NS_ERROR_OUT_OF_MEMORY;
+		if (session == nsnull)
+			return NS_ERROR_OUT_OF_MEMORY;
+		session->QueryInterface(nsIMsgMailSession::GetIID(),  (void **) &inst);		
+
 	}
-  else if (mClassID.Equals(kCMsgAppCoreCID)) {
-    res = NS_NewMsgAppCore((nsIDOMMsgAppCore **)&inst);
-    if (NS_FAILED(res)) return res;
-  }
+	else if (mClassID.Equals(kCMsgAppCoreCID)) 
+	{
+		res = NS_NewMsgAppCore((nsIDOMMsgAppCore **)&inst);
+		if (NS_FAILED(res)) return res;
+	}
 
 	// End of checking the interface ID code....
 	if (inst) 
