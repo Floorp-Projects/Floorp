@@ -45,6 +45,7 @@
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 #include "nsDebug.h"
+#include "nsNetUtil.h"
 #include "nsIAppShellService.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
@@ -199,11 +200,8 @@ nsresult nsMacCommandLine::AddToCommandLine(const char* inOptionString, const FS
   nsresult rv = NS_NewLocalFileWithFSSpec(&nonConstSpec, PR_TRUE, getter_AddRefs(inFile));
   if (NS_FAILED(rv))
     return rv;
-  nsCOMPtr<nsIIOService> ioService(do_GetService(NS_IOSERVICE_CONTRACTID));
-  if (!ioService)
-    return NS_ERROR_FAILURE;
   nsCAutoString specBuf;
-  rv = ioService->GetURLSpecFromFile(inFile, specBuf);
+  rv = NS_GetURLSpecFromFile(inFile, specBuf);
   if (NS_FAILED(rv))
     return rv;
   mTempArgsString.Append(" ");
@@ -283,11 +281,8 @@ OSErr nsMacCommandLine::HandleOpenOneDoc(const FSSpec& inFileSpec, OSType inFile
   rv = NS_NewLocalFileWithFSSpec(&nonConstSpec, PR_TRUE, getter_AddRefs(inFile));
   if (NS_FAILED(rv))
     return errAEEventNotHandled;
-  nsCOMPtr<nsIIOService> ioService(do_GetService(NS_IOSERVICE_CONTRACTID));
-  if (!ioService)
-    return errAEEventNotHandled;
   nsCAutoString specBuf;
-  rv = ioService->GetURLSpecFromFile(inFile, specBuf);
+  rv = NS_GetURLSpecFromFile(inFile, specBuf);
   if (NS_FAILED(rv))
     return errAEEventNotHandled;
   nsAutoString urlString;
