@@ -51,3 +51,7 @@ find . -type f -exec cp '{}' . \;
 rm -rf skin content locale
 
 popd
+
+cp all.js $MOZ_OBJDIR/dist/Embed/defaults/pref/
+cp unix.js $MOZ_OBJDIR/dist/Embed/defaults/pref/ 
+
