@@ -165,13 +165,41 @@ function AbCreateNewAddressBook(name)
 
 function AbPrintCard()
 {
-        dump("print card\n");
-        try {
-                addressbook.printCard();
-        }
-        catch (ex) {
-                dump("failed to print card\n");
-        }
+	dump("print card\n");
+
+	var selectedItems = resultsTree.selectedItems;
+	var numSelected = selectedItems.length;
+
+	if (numSelected == 0)
+	{
+		dump("AbPrintCard(): No card selected.\n");
+		return false;
+	}  
+	var statusFeedback;
+	statusFeedback = Components.classes["component://netscape/messenger/statusfeedback"].createInstance();
+	statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
+
+	var selectionArray = new Array(numSelected);
+
+	var totalCard = 0;
+	for(var i = 0; i < numSelected; i++)
+	{
+		var uri = selectedItems[i].getAttribute("id");
+		var cardResource = top.rdf.GetResource(uri);
+		var card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
+		if (card.printCardUrl.length)
+		{
+			selectionArray[totalCard++] = card.printCardUrl;
+			dump("printCardUrl = " + card.printCardUrl + "\n");
+		}
+	}
+
+	printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul",
+										"",
+										"chrome,dialog=no,all",
+										totalCard, selectionArray, statusFeedback);
+
+	return true;
 }
 
 function AbPrintAddressBook()

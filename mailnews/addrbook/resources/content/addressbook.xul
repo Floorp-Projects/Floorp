@@ -46,6 +46,7 @@ Rights Reserved.
 <html:script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
 <html:script language="JavaScript" src="chrome://addressbook/content/addressbook.js"/>
 <html:script language="JavaScript" src="chrome://addressbook/content/abCommon.js"/>
+<html:script language="JavaScript" src="chrome://messenger/content/msgPrintEngine.js"/>
 <!--html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/-->
 
 <commands id="commands">
@@ -62,7 +63,7 @@ Rights Reserved.
 	<broadcaster id="cmd_newNavigator"/>
 	<broadcaster id="cmd_newEditor"/>
 	<broadcaster id="cmd_newMessage"/>
-	<broadcaster id="cmd_PrintCard" oncommand="AbPrintCard()" disabled="true"/>
+	<broadcaster id="cmd_PrintCard" oncommand="AbPrintCard()"/>
  	<broadcaster id="cmd_close" oncommand="AbClose()"/>
  	<broadcaster id="cmd_quit"/>
 	<!-- Edit Menu -->
@@ -124,7 +125,7 @@ Rights Reserved.
 				<menuseparator/>
 				<menuitem id="menu_pageSetup"/>
 				<menuitem value="&printPreviewCmd.label;" disabled="true" oncommand="AbPrintPreview()"/>
-				<menuitem value="&printCardViewCmd.label;" key="key_PrintCard" disabled="true" observes="cmd_PrintCard"/>
+				<menuitem value="&printCardViewCmd.label;" key="key_PrintCard" observes="cmd_PrintCard"/>
 				<menuitem value="&printAddressBook.label;" disabled="true" oncommand="AbPrintAddressBook()"/>
 				<menuseparator/>
 			</menupopup>

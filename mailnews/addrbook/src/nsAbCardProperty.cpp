@@ -1255,16 +1255,26 @@ nsAbCardProperty::GetPrintCardUrl(char * *aPrintCardUrl)
 static const char *kAbPrintUrlFormat = "addbook:printone?email=%s&folder=%s";
 
 	if (!aPrintCardUrl)
-		return NS_ERROR_NULL_POINTER;
+		return NS_OK;
 
 	PRUnichar *email = nsnull;
 	GetPrimaryEmail(&email);
 	nsString emailStr(email);
 
+	if (emailStr.Length() == 0)
+	{
+		*aPrintCardUrl = PR_smprintf("");
+		return NS_OK;
+	}
 	PRUnichar *dirName = nsnull;
 	if (mCardDatabase)
 		mCardDatabase->GetDirectoryName(&dirName);
 	nsString dirNameStr(dirName);
+	if (dirNameStr.Length() == 0)
+	{
+		*aPrintCardUrl = PR_smprintf("");
+		return NS_OK;
+	}
 	dirNameStr.ReplaceSubstring(" ", "%20");
 
 	char *emailCharStr = emailStr.ToNewCString();

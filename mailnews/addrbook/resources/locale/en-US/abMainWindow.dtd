@@ -39,7 +39,7 @@ Rights Reserved.
 <!ENTITY importCmd.label					"Import..."> 
 <!ENTITY exportCmd.label					".Export...">  
 <!ENTITY printPreviewCmd.label				".Print Preview">  
-<!ENTITY printCardViewCmd.label				".Print Card View...">
+<!ENTITY printCardViewCmd.label				"Print Card View...">
 <!-- LOCALIZATION NOTE (printCardViewCmd.key) : DONT_TRANSLATE -->  
 <!ENTITY printCardViewCmd.key				"P">
 <!ENTITY printAddressBook.label				".Print Address Book...">  
