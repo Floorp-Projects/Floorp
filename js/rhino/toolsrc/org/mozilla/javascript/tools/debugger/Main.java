@@ -2585,6 +2585,8 @@ public class Main extends JFrame implements Debugger, ContextListener {
             if (si == null) {
                 si = new SourceInfo(sourceUrl, source);
                 sourceNames.put(sourceUrl, si);
+            } else {
+                si.setSource(source);
             }
         }
         return si;
@@ -2593,15 +2595,9 @@ public class Main extends JFrame implements Debugger, ContextListener {
     private ScriptItem registerScript(SourceInfo si,
                                       DebuggableScript fnOrScript)
     {
-        ScriptItem item;
-        synchronized (scriptItems) {
-            item = (ScriptItem)scriptItems.get(fnOrScript);
-            if (item == null) {
-                item = new ScriptItem(fnOrScript, si);
-                si.updateLineInfo(item);
-                scriptItems.put(fnOrScript, item);
-            }
-        }
+        ScriptItem item = new ScriptItem(fnOrScript, si);
+        si.updateLineInfo(item);
+        scriptItems.put(fnOrScript, item);
 
         String name = fnOrScript.getFunctionName();
         if (name != null && name.length() > 0 && !name.equals("anonymous")) {
