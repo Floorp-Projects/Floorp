@@ -19,7 +19,7 @@
 #include "msgCore.h"
 #include "nsMsgStatusFeedback.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIDomWindow.h"
+#include "nsIDOMWindow.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDOMElement.h"
