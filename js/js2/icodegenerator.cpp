@@ -69,7 +69,9 @@ ICodeGenerator::ICodeGenerator(World *world)
         exceptionRegister(NotARegister),
         variableList(new VariableList()),
         mWorld(world),
-        mInstructionMap(new InstructionMap())
+        mInstructionMap(new InstructionMap()),
+        mWithinWith(false)
+
 { 
     iCode = new InstructionStream();
     iCodeOwner = true;
@@ -192,6 +194,22 @@ Register ICodeGenerator::nameDec(const StringAtom &name)
 {
     Register dest = getRegister();
     NameXcr *instr = new NameXcr(dest, &name, -1.0);
+    iCode->push_back(instr);
+    return dest;
+}
+
+Register ICodeGenerator::varInc(Register var)
+{
+    Register dest = getRegister();
+    VarXcr *instr = new VarXcr(dest, var, 1.0);
+    iCode->push_back(instr);
+    return dest;
+}
+
+Register ICodeGenerator::varDec(Register var)
+{
+    Register dest = getRegister();
+    VarXcr *instr = new VarXcr(dest, var, -1.0);
     iCode->push_back(instr);
     return dest;
 }
@@ -543,7 +561,7 @@ Register ICodeGenerator::genExpr(ExprNode *p,
         break;
     case ExprNode::identifier :
         {
-            if (mWithinWith) {
+            if (!mWithinWith) {
                 Register v = findVariable((static_cast<IdentifierExprNode *>(p))->name);
                 if (v != NotARegister)
                     ret = v;
@@ -560,6 +578,45 @@ Register ICodeGenerator::genExpr(ExprNode *p,
     case ExprNode::string :
         ret = loadString(mWorld->identifiers[(static_cast<StringExprNode *>(p))->str]);
         break;
+    case ExprNode::preIncrement: 
+        {
+            UnaryExprNode *u = static_cast<UnaryExprNode *>(p);
+            if (u->op->getKind() == ExprNode::dot) {
+                BinaryExprNode *b = static_cast<BinaryExprNode *>(u->op);
+                Register base = genExpr(b->op1);
+                ret = getProperty(base, static_cast<IdentifierExprNode *>(b->op2)->name);
+                ret = op(ADD, ret, loadImmediate(1.0));
+                setProperty(base, static_cast<IdentifierExprNode *>(b->op2)->name, ret);
+            }
+            else
+                if (u->op->getKind() == ExprNode::identifier) {
+                    if (!mWithinWith) {
+                        Register v = findVariable((static_cast<IdentifierExprNode *>(u->op))->name);
+                        if (v != NotARegister)
+                            ret = op(ADD, ret, loadImmediate(1.0));
+                        else {
+                            ret = loadName((static_cast<IdentifierExprNode *>(u->op))->name);
+                            ret = op(ADD, ret, loadImmediate(1.0));
+                            saveName((static_cast<IdentifierExprNode *>(u->op))->name, ret);
+                        }
+                    }
+                    else {
+                        ret = loadName((static_cast<IdentifierExprNode *>(u->op))->name);
+                        ret = op(ADD, ret, loadImmediate(1.0));
+                        saveName((static_cast<IdentifierExprNode *>(u->op))->name, ret);
+                    }
+                }
+                else
+                    if (u->op->getKind() == ExprNode::index) {
+                        BinaryExprNode *b = static_cast<BinaryExprNode *>(u->op);
+                        Register base = genExpr(b->op1);
+                        Register index = genExpr(b->op2);
+                        ret = getElement(base, index);
+                        ret = op(ADD, ret, loadImmediate(1.0));
+                        setElement(base, index, ret);
+                    }
+        }
+        break;
     case ExprNode::postIncrement: 
         {
             UnaryExprNode *u = static_cast<UnaryExprNode *>(p);
@@ -570,8 +627,15 @@ Register ICodeGenerator::genExpr(ExprNode *p,
             }
             else
                 if (u->op->getKind() == ExprNode::identifier) {
-                    // variable or name? see above
-                    ret = nameInc((static_cast<IdentifierExprNode *>(u->op))->name);
+                    if (!mWithinWith) {
+                        Register v = findVariable((static_cast<IdentifierExprNode *>(u->op))->name);
+                        if (v != NotARegister)
+                            ret = varInc(v);
+                        else
+                            ret = nameInc((static_cast<IdentifierExprNode *>(u->op))->name);
+                    }
+                    else
+                        ret = nameInc((static_cast<IdentifierExprNode *>(u->op))->name);
                 }
                 else
                     if (u->op->getKind() == ExprNode::index) {
@@ -579,6 +643,45 @@ Register ICodeGenerator::genExpr(ExprNode *p,
                         Register base = genExpr(b->op1);
                         Register index = genExpr(b->op2);
                         ret = elementInc(base, index);
+                    }
+        }
+        break;
+    case ExprNode::preDecrement: 
+        {
+            UnaryExprNode *u = static_cast<UnaryExprNode *>(p);
+            if (u->op->getKind() == ExprNode::dot) {
+                BinaryExprNode *b = static_cast<BinaryExprNode *>(u->op);
+                Register base = genExpr(b->op1);
+                ret = getProperty(base, static_cast<IdentifierExprNode *>(b->op2)->name);
+                ret = op(SUBTRACT, ret, loadImmediate(1.0));
+                setProperty(base, static_cast<IdentifierExprNode *>(b->op2)->name, ret);
+            }
+            else
+                if (u->op->getKind() == ExprNode::identifier) {
+                    if (!mWithinWith) {
+                        Register v = findVariable((static_cast<IdentifierExprNode *>(u->op))->name);
+                        if (v != NotARegister)
+                            ret = op(SUBTRACT, ret, loadImmediate(1.0));
+                        else {
+                            ret = loadName((static_cast<IdentifierExprNode *>(u->op))->name);
+                            ret = op(SUBTRACT, ret, loadImmediate(1.0));
+                            saveName((static_cast<IdentifierExprNode *>(u->op))->name, ret);
+                        }
+                    }
+                    else {
+                        ret = loadName((static_cast<IdentifierExprNode *>(u->op))->name);
+                        ret = op(SUBTRACT, ret, loadImmediate(1.0));
+                        saveName((static_cast<IdentifierExprNode *>(u->op))->name, ret);
+                    }
+                }
+                else
+                    if (u->op->getKind() == ExprNode::index) {
+                        BinaryExprNode *b = static_cast<BinaryExprNode *>(u->op);
+                        Register base = genExpr(b->op1);
+                        Register index = genExpr(b->op2);
+                        ret = getElement(base, index);
+                        ret = op(SUBTRACT, ret, loadImmediate(1.0));
+                        setElement(base, index, ret);
                     }
         }
         break;
@@ -592,8 +695,15 @@ Register ICodeGenerator::genExpr(ExprNode *p,
             }
             else
                 if (u->op->getKind() == ExprNode::identifier) {
-                    // variable or name? see above
-                    ret = nameDec((static_cast<IdentifierExprNode *>(u->op))->name);
+                    if (!mWithinWith) {
+                        Register v = findVariable((static_cast<IdentifierExprNode *>(u->op))->name);
+                        if (v != NotARegister)
+                            ret = varDec(v);
+                        else
+                            ret = nameDec((static_cast<IdentifierExprNode *>(u->op))->name);
+                    }
+                    else
+                        ret = nameDec((static_cast<IdentifierExprNode *>(u->op))->name);
                 }
                 else
                     if (u->op->getKind() == ExprNode::index) {
@@ -636,9 +746,13 @@ Register ICodeGenerator::genExpr(ExprNode *p,
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
             ret = genExpr(b->op2);
             if (b->op1->getKind() == ExprNode::identifier) {
-                Register v = findVariable((static_cast<IdentifierExprNode *>(b->op1))->name);
-                if (v != NotARegister)
-                    move(v, ret);
+                if (!mWithinWith) {
+                    Register v = findVariable((static_cast<IdentifierExprNode *>(b->op1))->name);
+                    if (v != NotARegister)
+                        move(v, ret);
+                    else
+                        saveName((static_cast<IdentifierExprNode *>(b->op1))->name, ret);
+                }
                 else
                     saveName((static_cast<IdentifierExprNode *>(b->op1))->name, ret);
             }
@@ -789,6 +903,21 @@ Register ICodeGenerator::genExpr(ExprNode *p,
             ret = r1;
         }
         break;
+
+    case ExprNode::objectLiteral:
+        {
+            ret = newObject();
+
+            PairListExprNode *plen = static_cast<PairListExprNode *>(p);
+            ExprPairList *e = plen->pairs;
+            while (e) {
+                if (e->field && e->value && (e->field->getKind() == ExprNode::identifier))
+                    setProperty(ret, (static_cast<IdentifierExprNode *>(e->field))->name, genExpr(e->value));
+                e = e->next;
+            }
+        }
+        break;
+
     default:
         {
             NOT_REACHED("Unsupported ExprNode kind");
@@ -815,6 +944,104 @@ bool LabelEntry::containsLabel(const StringAtom *label)
     return false;
 }
 
+void ICodeGenerator::preprocess(StmtNode *p)
+{
+    switch (p->getKind()) {
+    case StmtNode::block:
+        {
+            BlockStmtNode *b = static_cast<BlockStmtNode *>(p);
+            StmtNode *s = b->statements;
+            while (s) {
+                preprocess(s);
+                s = s->next;
+            }            
+        }
+        break;
+    case StmtNode::Var:
+        {
+            VariableStmtNode *vs = static_cast<VariableStmtNode *>(p);
+            VariableBinding *v = vs->bindings;
+            while (v)  {
+                if (v->name && (v->name->getKind() == ExprNode::identifier))
+                    allocateVariable((static_cast<IdentifierExprNode *>(v->name))->name);
+                v = v->next;
+            }
+        }
+        break;
+    case StmtNode::DoWhile:
+        {
+            UnaryStmtNode *d = static_cast<UnaryStmtNode *>(p);
+            preprocess(d->stmt);
+        }
+        break;
+    case StmtNode::While:
+        {
+            UnaryStmtNode *w = static_cast<UnaryStmtNode *>(p);
+            preprocess(w->stmt);
+        }
+        break;
+    case StmtNode::For:
+        {
+            ForStmtNode *f = static_cast<ForStmtNode *>(p);
+            if (f->initializer) 
+                preprocess(f->initializer);
+            preprocess(f->stmt);
+        }
+        break;
+    case StmtNode::If:
+        {
+            UnaryStmtNode *i = static_cast<UnaryStmtNode *>(p);
+            preprocess(i->stmt);
+        }
+        break;
+    case StmtNode::IfElse:
+        {
+            BinaryStmtNode *i = static_cast<BinaryStmtNode *>(p);
+            preprocess(i->stmt);
+            preprocess(i->stmt2);
+        }
+        break;
+    case StmtNode::With:
+        {
+            UnaryStmtNode *w = static_cast<UnaryStmtNode *>(p);
+            preprocess(w->stmt);
+        }
+        break;
+    case StmtNode::Switch:
+        {
+            SwitchStmtNode *sw = static_cast<SwitchStmtNode *>(p);
+            StmtNode *s = sw->statements;
+            while (s) {
+                if (s->getKind() != StmtNode::Case)
+                    preprocess(s);
+                s = s->next;
+            }
+        }
+        break;
+    case StmtNode::label:
+        {
+            LabelStmtNode *l = static_cast<LabelStmtNode *>(p);
+            preprocess(l->stmt);
+        }
+        break;
+    case StmtNode::Try:
+        {
+            TryStmtNode *t = static_cast<TryStmtNode *>(p);
+            genStmt(t->stmt);
+            if (t->catches) {
+                CatchClause *c = t->catches;
+                while (c) {
+                    preprocess(c->stmt);
+                    c = c->next;
+                }
+            }
+            if (t->finally)
+                genStmt(t->finally);
+        }
+        break;
+   }
+}
+
 Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
 {
     Register ret = NotARegister;
@@ -825,6 +1052,47 @@ Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
     }
 
     switch (p->getKind()) {
+    case StmtNode::Function:
+        {
+            FunctionStmtNode *f = static_cast<FunctionStmtNode *>(p);
+            ICodeGenerator icg(mWorld);
+            VariableBinding *v = f->function.parameters;
+            while (v) {
+                if (v->name && (v->name->getKind() == ExprNode::identifier))
+                    icg.allocateParameter((static_cast<IdentifierExprNode *>(v->name))->name);
+                v = v->next;
+            }
+            icg.preprocess(f->function.body);
+            icg.genStmt(f->function.body);
+            stdOut << icg;
+            ICodeModule *icm = icg.complete();
+            if (f->function.name->getKind() == ExprNode::identifier)
+                defFunction((static_cast<IdentifierExprNode *>(f->function.name))->name, icm);
+        }
+        break;
+    case StmtNode::Var:
+        {
+            VariableStmtNode *vs = static_cast<VariableStmtNode *>(p);
+            VariableBinding *v = vs->bindings;
+            while (v)  {
+                if (v->name && v->initializer) {
+                    if (v->name->getKind() == ExprNode::identifier) {
+                        if (!mWithinWith) {
+                            Register r = genExpr(v->name);
+                            Register val = genExpr(v->initializer);
+                            move(r, val);
+                        }
+                        else {
+                            Register val = genExpr(v->initializer);
+                            saveName((static_cast<IdentifierExprNode *>(v->name))->name, val);
+                        }
+                    }
+                    // XXX what's the else case here, when does a VariableBinding NOT have an identifier child?
+                }
+                v = v->next;
+            }
+        }
+        break;
     case StmtNode::expression:
         {
             ExprStmtNode *e = static_cast<ExprStmtNode *>(p);
@@ -840,7 +1108,10 @@ Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
     case StmtNode::Return:
         {
             ExprStmtNode *e = static_cast<ExprStmtNode *>(p);
-            returnStmt(ret = genExpr(e->expr));
+            if (e->expr)
+                returnStmt(ret = genExpr(e->expr));
+            else
+                returnStmt(NotARegister);
         }
         break;
     case StmtNode::If:
@@ -866,6 +1137,7 @@ Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
             branch(beyondLabel);
             setLabel(falseLabel);
             genStmt(i->stmt2);
+            setLabel(beyondLabel);
         }
         break;
     case StmtNode::With:
