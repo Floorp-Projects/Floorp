@@ -26,12 +26,14 @@
 %{C++
 #include "nscore.h"
 #include "nsCom.h"
+#include "nsISplashScreen.h"
 %}
 
 interface nsIWebShellWindow;
 interface nsIURI;
 interface nsIXULWindowCallbacks;
 interface nsICmdLineService;
+interface nsISplashScreen;
 
 [ptr] native JSContext(JSContext);
 
@@ -58,7 +60,7 @@ interface nsIAppShellService : nsISupports
    * @param aCmdLineService is stored and passed to appshell components as
    *                        they are initialized.
    */
-  void Initialize(in nsICmdLineService aCmdLineService);
+  void Initialize(in nsICmdLineService aCmdLineService, in nsISplashScreen splashScreen );
 
   /**
    * Runs an application event loop: normally the main event pump which
@@ -176,4 +178,10 @@ interface nsIAppShellService : nsISupports
    * @param aWindow you see the pattern
    */
   void UnregisterTopLevelWindow(in nsIWebShellWindow aWindow);
+
+  /**
+   * Remove the splash screen (if visible).  This need be called
+   * only once per application session.
+   */
+  void HideSplashScreen();
 };

@@ -26,30 +26,96 @@
 #include <Resources.h>
  
  
-static DialogPtr splashDialog = NULL;
-static PicHandle picHandle;
 #define rSplashDialog 512
 
-void NS_ShowSplashScreen()
-{
-	
-	splashDialog = ::GetNewDialog( rSplashDialog, nil, (WindowPtr)-1L );
-	picHandle = GetPicture( rSplashDialog );
-	SetWindowPic( splashDialog, picHandle );
-	::ShowWindow( splashDialog );
-	::SetPort( splashDialog );
-	Rect rect = (**picHandle).picFrame;
-	::DrawPicture( picHandle, &rect ); 
+class nsSplashScreenMac : public nsISplashScreen {
+public:
+    nsSplashScreenMac()
+        : mDialog( 0 ), mPicHandle( 0 ), mRefCnt( 0 ) {
+    }
+    ~nsSplashScreenMac() {
+        Hide();
+    }
+
+    NS_IMETHOD Show();
+    NS_IMETHOD Hide();
+
+    // nsISupports methods
+    NS_IMETHOD_(nsrefcnt) AddRef() {
+        mRefCnt++;
+        return mRefCnt;
+    }
+    NS_IMETHOD_(nsrefcnt) Release() {
+        --mRefCnt;
+        if ( !mRefCnt ) {
+            delete this;
+            return 0;
+        }
+        return mRefCnt;
+    }
+    NS_IMETHOD QueryInterface( const nsIID &iid, void**p ) {
+        nsresult rv = NS_OK;
+        if ( p ) {
+            *p = 0;
+            if ( iid.Equals( NS_GET_IID( nsISplashScreen ) ) ) {
+                nsISplashScreen *result = this;
+                *p = result;
+                NS_ADDREF( result );
+            } else if ( iid.Equals( NS_GET_IID( nsISupports ) ) ) {
+                nsISupports *result = NS_STATIC_CAST( nsISupports*, this );
+                *p = result;
+                NS_ADDREF( result );
+            } else {
+                rv = NS_NOINTERFACE;
+            }
+        } else {
+            rv = NS_ERROR_NULL_POINTER;
+        }
+        return rv;
+    }
+
+    DialogPtr mDialog;
+    PicHandle mPicHandle;
+    nsrefcnt mRefCnt;
+}; // class nsSplashScreenMac
+
+NS_IMETHODIMP
+nsSplashScreenMac::Show() {
+	mDialog = ::GetNewDialog( rSplashDialog, nil, (WindowPtr)-1L );
+	mPicHandle = GetPicture( rSplashDialog );
+	SetWindowPic( mDialog, mPicHandle );
+	::ShowWindow( mDialog );
+	::SetPort( mDialog );
+	Rect rect = (**mPicHandle).picFrame;
+	::DrawPicture( mPicHandle, &rect ); 
+    return NS_OK;
 }
 
-void NS_HideSplashScreen()
-{
-	if ( splashDialog )
-	{
-		ReleaseResource( (Handle)picHandle );
-		SetWindowPic( splashDialog, NULL );
-		DisposeWindow( splashDialog );
+NS_IMETHODIMP
+nsSplashScreenMac::Hide() {
+	if ( mDialog ) {
+		ReleaseResource( (Handle)mPicHandle );
+        mPicHandle = 0;
+		SetWindowPic( mDialog, NULL );
+		DisposeWindow( mDialog );
+        mDialog = 0;
 	}
+    return NS_OK;
+}
+
+nsresult NS_CreateSplashScreen(nsISplashScreen**aResult)
+{
+  if ( aResult ) {	
+      *aResult = new nsSplashScreenMac;
+      if ( *aResult ) {
+          NS_ADDREF( *aResult );
+          return NS_OK;
+      } else {
+          return NS_ERROR_OUT_OF_MEMORY;
+      }
+  } else {
+      return NS_ERROR_NULL_POINTER;
+  }
 }
 
 PRBool NS_CanRun() 

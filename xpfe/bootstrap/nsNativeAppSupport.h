@@ -21,9 +21,9 @@
  */
  
 #include "prtypes.h"
+#include "nsISplashScreen.h"
  
-void NS_ShowSplashScreen();
-void NS_HideSplashScreen();
+nsresult NS_CreateSplashScreen( nsISplashScreen **aResult );
 
 PRBool NS_CanRun();
 

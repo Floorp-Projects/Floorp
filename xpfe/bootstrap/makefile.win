@@ -30,21 +30,19 @@ MODULE=raptor
 CPPSRCS=                                \
  nsAppRunner.cpp                        \
  nsSetupRegistry.cpp                    \
+ nsNativeAppSupportWin.cpp              \
  $(NULL)
 
 CPP_OBJS=                               \
  .\$(OBJDIR)\nsAppRunner.obj            \
  .\$(OBJDIR)\nsSetupRegistry.obj        \
+ .\$(OBJDIR)\nsNativeAppSupportWin.obj  \
  $(NULL)
 
 LINCS=-I$(PUBLIC)\raptor                \
       -I$(PUBLIC)\xpcom                 \
       -I$(PUBLIC)\base                  \
-!ifdef NECKO
       -I$(PUBLIC)\necko                 \
-!else
-      -I$(PUBLIC)\netlib                \
-!endif
       -I$(PUBLIC)\pref                  \
       -I$(PUBLIC)\js                    \
       -I$(PUBLIC)\dom                   \
@@ -72,11 +70,29 @@ LINCS=-I$(PUBLIC)\raptor                \
 
 MAKE_OBJ_TYPE = EXE
 PROGRAM = .\$(OBJDIR)\mozilla.exe
+RESFILE = splash.res
 
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
         $(NULL)
+
+# This code removes the console from release builds
+# (unless you've set MOZ_WINCONSOLE=1).
+!ifndef MOZ_WINCONSOLE
+!if $(MOZ_DEBUG)
+MOZ_WINCONSOLE=1
+!else
+MOZ_WINCONSOLE=0
+!endif
+!endif
+
+# Set subsystem type according to whether we want a console.
+!if $(MOZ_WINCONSOLE)
+LFLAGS= $(LFLAGS) /subsystem:console
+!else
+LFLAGS= $(LFLAGS) /subsystem:windows
+!endif
 
 # These are the libraries we need to link with to create the exe
 LLIBS=                          \
