@@ -2445,7 +2445,7 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
       return res;
     }
 
-    if (!do_notify && mDocument) {
+    if (count && !do_notify && mDocument) {
       mDocument->ContentAppended(this, old_count);
     }
 
