@@ -93,7 +93,7 @@ interface(TreeState *state)
 
     fprintf(state->file, "/* starting interface %s */\n",
             className);
-    iid = IDL_interface_get_property(iface, "uuid");
+    iid = IDL_tree_property_get(iface, "uuid");
     if (iid) {
         char *iidName, *iidStruct;
         /* XXX use nsID parsing routines to validate? */

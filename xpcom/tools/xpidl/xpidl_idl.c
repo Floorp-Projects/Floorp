@@ -112,15 +112,26 @@ msg_callback(int level, int num, int line, const char *file,
 #define INPUT_BUF_CHUNK		8192
 
 struct input_callback_data {
-    FILE *input;
-    char *filename;
-    int lineno;
-    char *buf;
-    char *point;
-    int len;
-    int max;
-    struct input_callback_data *next;
+    FILE *input;                /* stream for getting data */
+    char *filename;             /* where did I come from? */
+    int lineno;                 /* last lineno processed */
+    char *buf;                  /* buffer for data */
+    char *point;                /* next char to feed to libIDL */
+    int len;                    /* amount of data read into the buffer */
+    int max;                    /* size of the buffer */
+    struct input_callback_data *next; /* file from which we were included */
+    char f_raw : 2,             /* in a raw block when starting next block */
+         f_comment : 2,         /* in a comment when starting next block */
+         f_include : 2;         /* in an #include when starting next block */
+    char last_read[2];          /* last 1/2 chars read, for spanning blocks */
 };
+
+/* values for f_{raw,comment,include} */
+#define INPUT_IN_NONE   0x0
+#define INPUT_IN_FULL   0x1     /* we've already started one */
+#define INPUT_IN_START  0x2     /* we're about to start one */
+#define INPUT_IN_PART   0x3     /* we might be about to start one (check
+                                   last_read to be sure) */
 
 struct input_callback_stack {
     struct input_callback_data *top;
@@ -138,7 +149,7 @@ fopen_from_includes(const char *filename, const char *mode,
         filebuf = g_strdup_printf("%s/%s", include_path->directory, filename);
         if (!filebuf)
             return NULL;
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_bufmgmt
         fprintf(stderr, "looking for %s as %s\n", filename, filebuf);
 #endif
         file = fopen(filebuf, mode);
@@ -150,13 +161,13 @@ fopen_from_includes(const char *filename, const char *mode,
 static struct input_callback_data *
 new_input_callback_data(const char *filename, IncludePathEntry *include_path)
 {
-    struct input_callback_data *new_data = malloc(sizeof *new_data);
+    struct input_callback_data *new_data = calloc(1, sizeof *new_data);
     if (!new_data)
         return NULL;
     new_data->input = fopen_from_includes(filename, "r", include_path);
     if (!new_data->input)
         return NULL;
-    new_data->buf = malloc(INPUT_BUF_CHUNK);
+    new_data->buf = malloc(INPUT_BUF_CHUNK + 1); /* trailing NUL */
     if (!new_data->buf) {
         fclose(new_data->input);
         return NULL;
@@ -182,7 +193,8 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
     struct input_callback_stack *stack = user_data;
     struct input_callback_data *data = stack->top, *new_data = NULL;
     int rv, avail, copy;
-    char *include_start, *ptr;
+    char *search, *check_point, *ptr, *end_copy, *raw_start, *comment_start,
+        *include_start;
 
     switch(reason) {
       case IDL_INPUT_REASON_INIT:
@@ -203,7 +215,6 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
         assert(avail >= 0);
 
         if (!avail) {
-            char *comment_start = NULL, *include_start = NULL, *ptr;
             data->point = data->buf;
 
             /* fill the buffer */
@@ -222,124 +233,136 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
                     stack->top = data;
                     IDL_file_set(data->filename, ++data->lineno);
                     IDL_inhibit_pop();
+                    data->f_include = INPUT_IN_NONE;
                     goto fill_start;
                 }
                 return 0;
             }
-
-            /*
-             * strip comments
-             */
-
-            /*
-             * XXX
-             * What if the last char in this block is '/' and the first in the
-             * next block is '*'?  I'm not sure it matters, because I don't
-             * think there are any legal IDL syntaxes with '/' in them.
-             *
-             * XXX what about "/* " appearing in the IDL?
-             */
-            if (!comment_start)
-                comment_start = strstr(data->buf, "/*");
-            while (comment_start) {
-                char *end = strstr(comment_start, "*/");
-                int comment_length;
-                int bytes_after_comment;
-		    
-                if (!end)
-                    goto fill_buffer;
-
-                end += 2; /* star-slash */
-                comment_length = end - comment_start;
-                bytes_after_comment = data->buf + data->len - end;
-
-                /* found the end, move data around */
-#ifdef DEBUG_shaver_bufmgmt
-                fprintf(stderr,
-                        "FOUND COMMENT: (%d) %.*s, moving %d back\n",
-                        comment_length, comment_length, 
-                        comment_start, bytes_after_comment);
-#endif			
-
-                memmove(comment_start, end, bytes_after_comment);
-                comment_start[bytes_after_comment] = '\0';
-                data->len -= comment_length;
-
-#ifdef DEBUG_shaver_bufmgmt
-                fprintf(stderr, "new buffer:\n---\n%.*s\n---\n",
-                        data->len, data->buf);
-#endif
-
-                /* look for the next comment */
-                comment_start = strstr(data->buf, "/*");
-
-            } /* while(comment_start) */
-
-            /* we set avail here, because data->len is changed above */
-                
-            avail = data->buf + data->len - data->point;
+            data->buf[data->len] = 0;
         }
-    
+
+        check_point = data->point;
+        end_copy = data->buf + data->len;
         /*
-         * process includes
+         * When we're stripping comments and processing #includes,
+         * we need to be sure that we don't process anything inside
+         * \n%{ and \n%}.  In order to simplify things, we only process
+         * comment, include or raw-block stuff when they're at the
+         * beginning of the block we're about to send (data->point).
+         * This makes the processing much simpler, since we can skip
+         * data->point ahead for comments and #include, and skip
+         * check_point ahead for raw blocks.
          */
-        
-        /*
-         * we only do #include magic at the beginning of the buffer.
-         * otherwise, we just set avail to cap the amount of data sent
-         * on this pass.
-         */
-        include_start = strstr(data->point, "#include \"");
-        if (include_start == data->point) {
-            /* time to process the #include */
-            const char *scratch;
-            char *filename = include_start + 10;
-            ptr = strchr(filename, '\"');
-            if (!ptr) {
-                /* XXX report error */
-                return -1;
+
+        if (!(data->f_raw || data->f_comment || data->f_include)) {
+            /* look for first raw/comment/include */
+
+            /* raw block */
+            if ((raw_start = strstr(check_point, "\n%{"))) {
+                end_copy = raw_start;
             }
-            data->point = ptr+1;
-            
-            *ptr = 0;
-            ptr = strrchr(filename, '.');
-            /* XXX is this a safe optimization? */
-            if (!g_hash_table_lookup(stack->includes, filename)) {
-                char *basename = filename;
-#ifdef DEBUG_shaver_includes
-                fprintf(stderr, "processing #include %s\n", filename);
+
+            /* comment */
+            if ((comment_start = strstr(check_point, "/*")) &&
+                (!raw_start || comment_start < raw_start)) {
+                end_copy = comment_start;
+            }
+
+            /* include */
+            if ((include_start = strstr(check_point, "#include")) &&
+                (!raw_start || include_start < raw_start) &&
+                (!comment_start || include_start < comment_start)) {
+                end_copy = include_start;
+            }
+
+            if (end_copy == raw_start)
+                data->f_raw = INPUT_IN_START;
+
+            else if (end_copy == comment_start)
+                data->f_comment = INPUT_IN_START;
+
+            else if (end_copy == include_start)
+                data->f_include = INPUT_IN_START;
+        }
+        
+        if ((end_copy == data->buf || /* just found one at the start */
+             end_copy == data->buf + data->len /* left over */) &&
+            (data->f_raw || data->f_comment || data->f_include)) {
+
+            if (data->f_raw) {
+                ptr = strstr(check_point, "\n%}");
+                if (ptr) {
+                    data->f_raw = INPUT_IN_NONE;
+                    end_copy = ptr + 3;
+#ifdef DEBUG_shaver_bufmgmt
+                    fprintf(stderr, "RAW->%.*s<-RAW\n", end_copy - data->point,
+                            data->point);
 #endif
-                filename = strdup(filename);
-                ptr = strrchr(basename, '.');
-                if (ptr)
-                    *ptr = 0;
-                basename = strdup(basename);
-                g_hash_table_insert(stack->includes, filename, basename);
-                new_data = new_input_callback_data(filename,
-                                                   stack->include_path);
-                if (!new_data) {
-                    free(filename);
+                }
+                assert(!data->f_comment && !data->f_include);
+            } else if (data->f_comment) {
+                /* XXX process doc comment */
+                ptr = strstr(check_point, "*/");
+                if (ptr) {
+                    data->point = ptr + 2; /* star-slash */
+#ifdef DEBUG_shaver_bufmgmt
+                    fprintf(stderr, "COMMENT->%.*s<-COMMENT\n",
+                            data->point - check_point, check_point);
+#endif
+                }
+                assert(!data->f_raw && !data->f_include);
+            } else if (data->f_include) {
+                /* process include */
+                const char *scratch;
+                char *filename;
+                include_start = data->buf;
+
+                assert(!strncmp(include_start, "#include \"", 10));
+                filename = include_start + 10; /* skip #include " */
+
+                assert(filename < data->buf + data->len);
+                ptr = strchr(filename, '\"');
+                if (!ptr) {
+                    /* XXX report error */
                     return -1;
                 }
-                new_data->next = stack->top;
-                IDL_inhibit_push();
-                IDL_file_get(&scratch, &data->lineno);
-                data = stack->top = new_data;
-                IDL_file_set(data->filename, data->lineno);
-                /* now continue getting data from new file */
-                goto fill_start;
-            } else {
-#ifdef DEBUG_shaver_includes
-                fprintf(stderr, "not processing #include %s again\n",
-                        filename);
+                data->point = ptr+1;
+                
+                *ptr = 0;
+                ptr = strrchr(filename, '.');
+
+#ifdef DEBUG_shaver_bufmgmt
+                fprintf(stderr, "found #include %s\n", filename);
 #endif
+                if (!g_hash_table_lookup(stack->includes, filename)) {
+                    char *basename = filename;
+                    filename = strdup(filename);
+                    ptr = strrchr(basename, '.');
+                    if (ptr)
+                        *ptr = 0;
+                    basename = strdup(basename);
+                    g_hash_table_insert(stack->includes, filename, basename);
+                    new_data = new_input_callback_data(filename,
+                                                       stack->include_path);
+                    if (!new_data) {
+                        free(filename);
+                        return -1;
+                    }
+                    new_data->next = stack->top;
+                    IDL_inhibit_push();
+                    IDL_file_get(&scratch, &data->lineno);
+                    data = stack->top = new_data;
+                    IDL_file_set(data->filename, data->lineno);
+#ifdef DEBUG_shaver_bufmgmt
+                    fprintf(stderr, "processing #include %s\n", filename);
+#endif
+                    /* now continue getting data from new file */
+                    goto fill_start;
+                }
             }
-        } else if (include_start) {
-#ifdef DEBUG_shaver_includes
-            fprintf(stderr, "not processing #include yet\n");
-#endif
-            avail = include_start - data->point;
-        }
+        } else
+        
+        avail = MIN(data->buf + data->len, end_copy) - data->point;
         copy = MIN(avail, cb_data->fill.max_size);
         memcpy(cb_data->fill.buffer, data->point, copy);
         data->point += copy;

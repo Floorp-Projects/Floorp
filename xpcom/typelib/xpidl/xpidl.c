@@ -33,7 +33,7 @@ gboolean generate_nothing  = FALSE;
 static char xpidl_usage_str[] = 
 "Usage: %s [-i] [-d] [-h] [-w] [-v] [-I path] [-n] filename.idl\n"
 "       -i generate InterfaceInfo data (filename.int) (NYI)\n"
-"       -d generate HTML documenation  (filename.html) (NYI)\n"
+"       -d generate HTML documentation (filename.html) (NYI)\n"
 "       -h generate C++ headers	       (filename.h)\n"
 "       -w turn on warnings (recommended)\n"
 "       -v verbose mode (NYI)\n"
