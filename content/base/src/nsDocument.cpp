@@ -3351,12 +3351,6 @@ nsDocument::GetXmlEncoding(nsAString& aXmlEncoding)
 }
 
 NS_IMETHODIMP
-nsDocument::SetXmlEncoding(const nsAString& aXmlEncoding)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsDocument::GetXmlStandalone(PRBool *aXmlStandalone)
 {
   *aXmlStandalone = 
@@ -3370,7 +3364,7 @@ nsDocument::GetXmlStandalone(PRBool *aXmlStandalone)
 NS_IMETHODIMP
 nsDocument::SetXmlStandalone(PRBool aXmlStandalone)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -3387,7 +3381,7 @@ nsDocument::GetXmlVersion(nsAString& aXmlVersion)
 NS_IMETHODIMP
 nsDocument::SetXmlVersion(const nsAString& aXmlVersion)
 {
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
