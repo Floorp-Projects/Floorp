@@ -422,7 +422,7 @@ nsProtocolProxyService::ExtractProxyInfo(const char *start, PRBool permitHttp, n
         break;
     }
     if (type) {
-        const char *host = nsnull, *hostEnd;
+        const char *host = nsnull, *hostEnd = nsnull;
         PRInt32 port = -1;
         // extract host:port
         start = sp;
