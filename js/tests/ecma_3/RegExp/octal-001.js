@@ -62,6 +62,11 @@ actualmatch = string.match(pattern);
 expectedmatch = null;
 addThis();
 
+/*
+ * In the following sections, we test the octal escape sequence '\052'.
+ * This is character code 42, representing the asterisk character '*'.
+ * The Unicode escape for it would be '\u002A', the hex escape '\x2A'.
+ */
 status = inSection(2);
 pattern = /ab\052c/;
 string = 'ab*c';
