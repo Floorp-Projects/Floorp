@@ -1767,6 +1767,7 @@ MOZ_DECL_CTOR_COUNTER(CSSStyleSheetImpl)
 
 CSSStyleSheetImpl::CSSStyleSheetImpl()
   : nsICSSStyleSheet(),
+    mRefCnt(0),
     mTitle(), 
     mMedia(nsnull),
     mFirstChild(nsnull), 
@@ -1788,6 +1789,7 @@ CSSStyleSheetImpl::CSSStyleSheetImpl()
 
 CSSStyleSheetImpl::CSSStyleSheetImpl(const CSSStyleSheetImpl& aCopy)
   : nsICSSStyleSheet(),
+    mRefCnt(0),
     mTitle(aCopy.mTitle), 
     mMedia(nsnull),
     mFirstChild(nsnull), 
