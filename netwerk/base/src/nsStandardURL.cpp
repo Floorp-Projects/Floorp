@@ -1876,7 +1876,7 @@ nsStandardURL::GetRelativeSpec(nsIURI *uri2, nsACString &aResult)
     while (*thisIndex)
     {
         if (*thisIndex == '/')
-            aResult.Append("../");
+            aResult.AppendLiteral("../");
 
         thisIndex++;
     }

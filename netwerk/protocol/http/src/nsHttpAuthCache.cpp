@@ -46,10 +46,10 @@
 static inline void
 GetAuthKey(const char *scheme, const char *host, PRInt32 port, nsCString &key)
 {
-    key.Assign(nsDependentCString(scheme) +
-               NS_LITERAL_CSTRING("://") +
-               nsDependentCString(host) +
-               NS_LITERAL_CSTRING(":"));
+    key.Assign(scheme);
+    key.AppendLiteral("://");
+    key.Append(host);
+    key.Append(':');
     key.AppendInt(port);
 }
 

@@ -451,12 +451,12 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsCStringArray 
 
         // build out the CONTRACTID.
         nsCAutoString newContractID(ContractIDPrefix);
-        newContractID.Append("?from=");
+        newContractID.AppendLiteral("?from=");
 
         nsCStringKey *predecessorKey = predecessorData->key;
         newContractID.Append(predecessorKey->GetString());
 
-        newContractID.Append("&to=");
+        newContractID.AppendLiteral("&to=");
         newContractID.Append(key->GetString());
     
         // Add this CONTRACTID to the chain.
@@ -484,11 +484,11 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
 
     // first determine whether we can even handle this covnversion
     // build a CONTRACTID
-    nsCAutoString contractID(
-        NS_LITERAL_CSTRING(NS_ISTREAMCONVERTER_KEY "?from=") +
-        nsDependentCString(aFromType) +
-        NS_LITERAL_CSTRING("&to=") +
-        nsDependentCString(aToType));
+    nsCAutoString contractID;
+    contractID.AssignLiteral(NS_ISTREAMCONVERTER_KEY "?from=");
+    contractID.Append(aFromType);
+    contractID.AppendLiteral("&to=");
+    contractID.Append(aToType);
     const char *cContractID = contractID.get();
 
     nsCOMPtr<nsIStreamConverter> converter(do_CreateInstance(cContractID, &rv));
@@ -570,11 +570,11 @@ nsStreamConverterService::AsyncConvertData(const char *aFromType,
 
     // first determine whether we can even handle this covnversion
     // build a CONTRACTID
-    nsCAutoString contractID(
-        NS_LITERAL_CSTRING(NS_ISTREAMCONVERTER_KEY "?from=") +
-        nsDependentCString(aFromType) +
-        NS_LITERAL_CSTRING("&to=") +
-        nsDependentCString(aToType));
+    nsCAutoString contractID;
+    contractID.AssignLiteral(NS_ISTREAMCONVERTER_KEY "?from=");
+    contractID.Append(aFromType);
+    contractID.AppendLiteral("&to=");
+    contractID.Append(aToType);
     const char *cContractID = contractID.get();
 
     nsCOMPtr<nsIStreamConverter> listener(do_CreateInstance(cContractID, &rv));

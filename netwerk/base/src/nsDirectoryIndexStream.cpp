@@ -212,14 +212,14 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
     mArray.Sort(compare, nsnull);
 #endif
 
-    mBuf.Append("300: ");
+    mBuf.AppendLiteral("300: ");
     nsCAutoString url;
     rv = net_GetURLSpecFromFile(aDir, url);
     if (NS_FAILED(rv)) return rv;
     mBuf.Append(url);
     mBuf.Append('\n');
 
-    mBuf.Append("200: filename content-length last-modified file-type\n");
+    mBuf.AppendLiteral("200: filename content-length last-modified file-type\n");
 
     if (mFSCharset.IsEmpty()) {
         // OK, set up the charset
@@ -234,7 +234,7 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
     }
     
     if (!mFSCharset.IsEmpty()) {
-        mBuf.Append("301: ");
+        mBuf.AppendLiteral("301: ");
         mBuf.Append(mFSCharset);
         mBuf.Append('\n');
     }
@@ -357,7 +357,7 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
         // Why does nsIFile give this back in milliseconds?
         LL_MUL(fileInfoModifyTime, tmpTime, PR_USEC_PER_MSEC);
 
-        mBuf += "201: ";
+        mBuf.AppendLiteral("201: ");
 
         // The "filename" field
         {
@@ -408,21 +408,21 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
             PRBool isFile = PR_TRUE;
             current->IsFile(&isFile);
             if (isFile) {
-                mBuf += "FILE ";
+                mBuf.AppendLiteral("FILE ");
             }
             else {
                 PRBool isDir;
                 rv = current->IsDirectory(&isDir);
                 if (NS_FAILED(rv)) return rv; 
                 if (isDir) {
-                    mBuf += "DIRECTORY ";
+                    mBuf.AppendLiteral("DIRECTORY ");
                 }
                 else {
                     PRBool isLink;
                     rv = current->IsSymlink(&isLink);
                     if (NS_FAILED(rv)) return rv; 
                     if (isLink) {
-                        mBuf += "SYMBOLIC-LINK ";
+                        mBuf.AppendLiteral("SYMBOLIC-LINK ");
                     }
                 }
             }

@@ -200,7 +200,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
                  titleUri.Append('/');
         }
 
-        if (!path.Equals("//") && !path.LowerCaseEqualsLiteral("/%2f")) {
+        if (!path.EqualsLiteral("//") && !path.LowerCaseEqualsLiteral("/%2f")) {
             rv = uri->Resolve(NS_LITERAL_CSTRING(".."),parentStr);
             if (NS_FAILED(rv)) return rv;
         }
@@ -250,7 +250,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
             path.Append('/');
             uri->SetPath(path);
         }
-        if (!path.Equals("/")) {
+        if (!path.EqualsLiteral("/")) {
             rv = uri->Resolve(NS_LITERAL_CSTRING(".."), parentStr);
             if (NS_FAILED(rv)) return rv;
         }
@@ -271,9 +271,9 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
 
     AppendASCIItoUTF16(encoding, buffer);
 
-    buffer.Append(NS_LITERAL_STRING("\"?>\n") +
-                  NS_LITERAL_STRING("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" ") +
-                  NS_LITERAL_STRING("\"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">\n"));
+    buffer.AppendLiteral("\"?>\n"
+                         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" "
+                         "\"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">\n");
 
     // Anything but a gopher url needs to end in a /,
     // otherwise we end up linking to file:///foo/dirfile
@@ -314,17 +314,15 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
 
     buffer.AppendLiteral("</title><base href=\"");    
     AppendASCIItoUTF16(baseUri, buffer);
-    buffer.AppendLiteral("\"/>\n");
-
-    buffer.Append(NS_LITERAL_STRING("<style type=\"text/css\">\n") +
-                  NS_LITERAL_STRING("img { border: 0; padding: 0 2px; vertical-align: text-bottom; }\n") +
-                  NS_LITERAL_STRING("td  { font-family: monospace; padding: 2px 3px; text-align: right; vertical-align: bottom; white-space: pre; }\n") +
-                  NS_LITERAL_STRING("td:first-child { text-align: left; padding: 2px 10px 2px 3px; }\n") +
-                  NS_LITERAL_STRING("table { border: 0; }\n") +
-                  NS_LITERAL_STRING("a.symlink { font-style: italic; }\n") +
-                  NS_LITERAL_STRING("</style>\n"));
-
-    buffer.AppendLiteral("</head>\n<body>\n<h1>");
+    buffer.AppendLiteral("\"/>\n"
+                         "<style type=\"text/css\">\n"
+                         "img { border: 0; padding: 0 2px; vertical-align: text-bottom; }\n"
+                         "td  { font-family: monospace; padding: 2px 3px; text-align: right; vertical-align: bottom; white-space: pre; }\n"
+                         "td:first-child { text-align: left; padding: 2px 10px 2px 3px; }\n"
+                         "table { border: 0; }\n"
+                         "a.symlink { font-style: italic; }\n"
+                         "</style>\n"
+                         "</head>\n<body>\n<h1>");
     
     const PRUnichar* formatHeading[] = {
         htmlEscSpec.get()
@@ -351,9 +349,9 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
         ConvertNonAsciiToNCR(parentText, strNCR);
         buffer.AppendLiteral("<tr><td colspan=\"3\"><a href=\"");
         AppendASCIItoUTF16(parentStr, buffer);
-        buffer.Append(NS_LITERAL_STRING("\">") +
-                      strNCR +
-                      NS_LITERAL_STRING("</a></td></tr>\n"));
+        buffer.AppendLiteral("\">");
+        buffer.Append(strNCR);
+        buffer.AppendLiteral("</a></td></tr>\n");
     }
 
     // Push buffer to the listener now, so the initial HTML will not
@@ -606,15 +604,15 @@ nsIndexedToHTML::OnInformationAvailable(nsIRequest *aRequest,
     PRUnichar* escaped = nsEscapeHTML2(PromiseFlatString(aInfo).get());
     if (!escaped)
         return NS_ERROR_OUT_OF_MEMORY;
-    pushBuffer.Append(NS_LITERAL_STRING("<tr>\n <td>"));
+    pushBuffer.AppendLiteral("<tr>\n <td>");
     pushBuffer.Append(escaped);
     nsMemory::Free(escaped);
-    pushBuffer.Append(NS_LITERAL_STRING("</td>\n <td></td>\n <td></td>\n <td></td>\n</tr>\n"));
+    pushBuffer.AppendLiteral("</td>\n <td></td>\n <td></td>\n <td></td>\n</tr>\n");
     
     // Split this up to avoid slow layout performance with large tables
     // - bug 85381
     if (++mRowCount > ROWS_PER_TABLE) {
-        pushBuffer.Append(NS_LITERAL_STRING("</table>\n<table>\n"));
+        pushBuffer.AppendLiteral("</table>\n<table>\n");
         mRowCount = 0;
     }   
     return FormatInputStream(aRequest, aCtxt, pushBuffer);

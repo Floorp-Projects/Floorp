@@ -26,9 +26,10 @@ nsHttpConnectionInfo::SetOriginServer(const nsACString &host, PRInt32 port)
         keyPort = Port();
     }
 
-    mHashKey.Assign(NS_LITERAL_CSTRING("..") +
-                    nsDependentCString(keyHost) +
-                    nsPrintfCString(":%d", keyPort));
+    mHashKey.AssignLiteral("..");
+    mHashKey.Append(keyHost);
+    mHashKey.Append(';');
+    mHashKey.AppendInt(keyPort);
 
     if (mUsingHttpProxy)
         mHashKey.SetCharAt('P', 0);
@@ -38,8 +39,9 @@ nsHttpConnectionInfo::SetOriginServer(const nsACString &host, PRInt32 port)
     // NOTE: for transparent proxies (e.g., SOCKS) we need to encode the proxy
     // type in the hash key (this ensures that we will continue to speak the
     // right protocol even if our proxy preferences change).
-    if (!mUsingHttpProxy && ProxyHost())
-        mHashKey.Append(NS_LITERAL_CSTRING(" (") +
-                        nsDependentCString(ProxyType()) +
-                        NS_LITERAL_CSTRING(")"));
+    if (!mUsingHttpProxy && ProxyHost()) {
+        mHashKey.AppendLiteral(" (");
+        mHashKey.Append(ProxyType());
+        mHashKey.Append(')');
+    }
 }

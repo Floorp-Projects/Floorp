@@ -89,7 +89,7 @@ nsGopherDirListingConv::Convert(nsIInputStream *aFromStream,
     rv = mUri->GetAsciiSpec(spec);
     if (NS_FAILED(rv)) return rv;
 
-    convertedData.Append("300: ");
+    convertedData.AppendLiteral("300: ");
     convertedData.Append(spec);
     convertedData.Append(char(nsCRT::LF));
     // END 300:
@@ -101,7 +101,7 @@ nsGopherDirListingConv::Convert(nsIInputStream *aFromStream,
 
     // Should also possibly use different hosts as a symlink, but the directory
     // viewer stuff doesn't support SYM-FILE or SYM-DIRECTORY
-    convertedData.Append("200: description filename file-type\n");
+    convertedData.AppendLiteral("200: description filename file-type\n");
 
     // build up the body
     while (1) {
@@ -195,13 +195,13 @@ nsGopherDirListingConv::OnDataAvailable(nsIRequest *request,
 
         //printf("spec is %s\n",spec.get());
         
-        indexFormat.Append("300: ");
+        indexFormat.AppendLiteral("300: ");
         indexFormat.Append(spec);
         indexFormat.Append(char(nsCRT::LF));
         // END 300:
 
         // build up the column heading; 200:
-        indexFormat.Append("200: description filename file-type\n");
+        indexFormat.AppendLiteral("200: description filename file-type\n");
         // END 200:
         
         mSentHeading = PR_TRUE;
@@ -345,7 +345,7 @@ nsGopherDirListingConv::DigestBufferLines(char* aBuffer, nsCAutoString& aString)
         // Now create the url
         nsCAutoString filename;
         if (type != '8' && type != 'T') {
-            filename.Assign("gopher://");
+            filename.AssignLiteral("gopher://");
             filename.Append(host);
             if (port != GOPHER_PORT) {
                 filename.Append(':');
@@ -360,10 +360,10 @@ nsGopherDirListingConv::DigestBufferLines(char* aBuffer, nsCAutoString& aString)
             // (I do get the correct error message though)
             if (type == '8')
                 // telnet
-                filename.Assign("telnet://");
+                filename.AssignLiteral("telnet://");
             else
                 // tn3270
-                filename.Assign("tn3270://");
+                filename.AssignLiteral("tn3270://");
             if (!selector.IsEmpty()) {
                 filename.Append(selector);
                 filename.Append('@');
@@ -383,18 +383,18 @@ nsGopherDirListingConv::DigestBufferLines(char* aBuffer, nsCAutoString& aString)
                same method to display these
             */
             if (type != '3' && type != 'i') {
-                aString.Append("201: ");
+                aString.AppendLiteral("201: ");
                 aString.Append(desc);
                 aString.Append(' ');
                 aString.Append(filename);
                 aString.Append(' ');
                 if (type == '1')
-                    aString.Append("DIRECTORY");
+                    aString.AppendLiteral("DIRECTORY");
                 else
-                    aString.Append("FILE");
+                    aString.AppendLiteral("FILE");
                 aString.Append(char(nsCRT::LF));
             } else if(type == 'i'){
-                aString.Append("101: ");
+                aString.AppendLiteral("101: ");
                 aString.Append(desc);
                 aString.Append(char(nsCRT::LF));
             }

@@ -537,16 +537,16 @@ nsHttpHandler::BuildUserAgent()
     // Application comment
     mUserAgent += '(';
     mUserAgent += mPlatform;
-    mUserAgent += "; ";
+    mUserAgent.AppendLiteral("; ");
     mUserAgent += mSecurity;
-    mUserAgent += "; ";
+    mUserAgent.AppendLiteral("; ");
     mUserAgent += mOscpu;
     if (!mLanguage.IsEmpty()) {
-        mUserAgent += "; ";
+        mUserAgent.AppendLiteral("; ");
         mUserAgent += mLanguage;
     }
     if (!mMisc.IsEmpty()) {
-        mUserAgent += "; ";
+        mUserAgent.AppendLiteral("; ");
         mUserAgent += mMisc;
     }
     mUserAgent += ')';
@@ -560,7 +560,7 @@ nsHttpHandler::BuildUserAgent()
             mUserAgent += mProductSub;
         }
         if (!mProductComment.IsEmpty()) {
-            mUserAgent += " (";
+            mUserAgent.AppendLiteral(" (");
             mUserAgent += mProductComment;
             mUserAgent += ')';
         }
@@ -575,7 +575,7 @@ nsHttpHandler::BuildUserAgent()
             mUserAgent += mVendorSub;
         }
         if (!mVendorComment.IsEmpty()) {
-            mUserAgent += " (";
+            mUserAgent.AppendLiteral(" (");
             mUserAgent += mVendorComment;
             mUserAgent += ')';
         }
@@ -587,7 +587,7 @@ nsHttpHandler::InitUserAgentComponents()
 {
 
       // Gather platform.
-    mPlatform.Adopt(nsCRT::strdup(
+    mPlatform.AssignLiteral(
 #if defined(MOZ_WIDGET_PHOTON)
     "Photon"
 #elif defined(XP_OS2)
@@ -603,7 +603,7 @@ nsHttpHandler::InitUserAgentComponents()
 #else
     "X11"
 #endif
-    ));
+    );
 
     // Gather OS/CPU.
 #if defined(XP_OS2)
@@ -611,63 +611,63 @@ nsHttpHandler::InitUserAgentComponents()
     DosQuerySysInfo(QSV_VERSION_MINOR, QSV_VERSION_MINOR,
                     &os2ver, sizeof(os2ver));
     if (os2ver == 11)
-        mOscpu.Adopt(nsCRT::strdup("2.11"));
+        mOscpu.AssignLiteral("2.11");
     else if (os2ver == 30)
-        mOscpu.Adopt(nsCRT::strdup("Warp 3"));
+        mOscpu.AssignLiteral("Warp 3");
     else if (os2ver == 40)
-        mOscpu.Adopt(nsCRT::strdup("Warp 4"));
+        mOscpu.AssignLiteral("Warp 4");
     else if (os2ver == 45)
-        mOscpu.Adopt(nsCRT::strdup("Warp 4.5"));
+        mOscpu.AssignLiteral("Warp 4.5");
 
 #elif defined(XP_WIN)
     OSVERSIONINFO info = { sizeof(OSVERSIONINFO) };
     if (GetVersionEx(&info)) {
         if (info.dwPlatformId == VER_PLATFORM_WIN32_NT) {
             if (info.dwMajorVersion      == 3)
-                mOscpu.Adopt(nsCRT::strdup("WinNT3.51"));
+                mOscpu.AssignLiteral("WinNT3.51");
             else if (info.dwMajorVersion == 4)
-                mOscpu.Adopt(nsCRT::strdup("WinNT4.0"));
+                mOscpu.AssignLiteral("WinNT4.0");
             else {
                 char *buf = PR_smprintf("Windows NT %ld.%ld",
                                         info.dwMajorVersion,
                                         info.dwMinorVersion);
                 if (buf) {
-                    mOscpu.Adopt(nsCRT::strdup(buf));
+                    mOscpu = buf;
                     PR_smprintf_free(buf);
                 }
             }
         } else if (info.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS &&
                    info.dwMajorVersion == 4) {
             if (info.dwMinorVersion == 90)
-                mOscpu.Adopt(nsCRT::strdup("Win 9x 4.90"));  // Windows Me
+                mOscpu.AssignLiteral("Win 9x 4.90");  // Windows Me
             else if (info.dwMinorVersion > 0)
-                mOscpu.Adopt(nsCRT::strdup("Win98"));
+                mOscpu.AssignLiteral("Win98");
             else
-                mOscpu.Adopt(nsCRT::strdup("Win95"));
+                mOscpu.AssignLiteral("Win95");
         } else {
             char *buf = PR_smprintf("Windows %ld.%ld",
                                     info.dwMajorVersion,
                                     info.dwMinorVersion);
             if (buf) {
-                mOscpu.Adopt(nsCRT::strdup(buf));
+                mOscpu = buf;
                 PR_smprintf_free(buf);
             }
         }
     }
 #elif defined (XP_MACOSX)
-    mOscpu.Adopt(nsCRT::strdup("PPC Mac OS X Mach-O"));
+    mOscpu.AssignLiteral("PPC Mac OS X Mach-O");
 #elif defined (XP_MAC)
     long version;
     if (::Gestalt(gestaltSystemVersion, &version) == noErr && version >= 0x00001000)
-        mOscpu.Adopt(nsCRT::strdup("PPC Mac OS X"));
+        mOscpu.AssignLiteral("PPC Mac OS X"));
     else
-        mOscpu.Adopt(nsCRT::strdup("PPC"));
+        mOscpu.AssignLiteral("PPC"));
 #elif defined (XP_UNIX) || defined (XP_BEOS)
     struct utsname name;
     
     int ret = uname(&name);
     if (ret >= 0) {
-        nsCString buf;  
+        nsCAutoString buf;
         buf =  (char*)name.sysname;
         buf += ' ';
         buf += (char*)name.machine;
@@ -697,14 +697,14 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         prefs->GetCharPref(UA_PREF("appName"),
             getter_Copies(mAppName));
         if (mAppName.IsEmpty())
-            mAppName.Adopt(nsCRT::strdup(UA_APPNAME));
+            mAppName.AssignLiteral(UA_APPNAME);
         mUserAgentIsDirty = PR_TRUE;
     }
     if (PREF_CHANGED(UA_PREF("appVersion"))) {
         prefs->GetCharPref(UA_PREF("appVersion"),
             getter_Copies(mAppVersion));
         if (mAppVersion.IsEmpty())
-            mAppVersion.Adopt(nsCRT::strdup(UA_APPVERSION));
+            mAppVersion.AssignLiteral(UA_APPVERSION);
         mUserAgentIsDirty = PR_TRUE;
     }
 
@@ -746,7 +746,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(UA_PREF("security"))) {
         prefs->GetCharPref(UA_PREF("security"), getter_Copies(mSecurity));
         if (!mSecurity)
-            mSecurity.Adopt(nsCRT::strdup(UA_APPSECURITY_FALLBACK));
+            mSecurity.AssignLiteral(UA_APPSECURITY_FALLBACK);
         mUserAgentIsDirty = PR_TRUE;
     }
 
@@ -1135,7 +1135,7 @@ PrepareAcceptLanguages(const char *i_AcceptLanguages, nsACString &o_AcceptLangua
 nsresult
 nsHttpHandler::SetAcceptLanguages(const char *aAcceptLanguages) 
 {
-    nsCString buf;
+    nsCAutoString buf;
     nsresult rv = PrepareAcceptLanguages(aAcceptLanguages, buf);
     if (NS_SUCCEEDED(rv))
         mAcceptLanguages.Assign(buf);

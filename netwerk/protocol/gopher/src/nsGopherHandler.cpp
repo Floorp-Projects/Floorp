@@ -94,7 +94,7 @@ nsGopherHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult) 
 
 NS_IMETHODIMP
 nsGopherHandler::GetScheme(nsACString &result) {
-    result = "gopher";
+    result.AssignLiteral("gopher");
     return NS_OK;
 }
 

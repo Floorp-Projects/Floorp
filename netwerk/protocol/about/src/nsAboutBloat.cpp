@@ -73,11 +73,11 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
     if (pos > 0) {
         nsCAutoString param;
         (void)path.Right(param, path.Length() - (pos+1));
-        if (param.Equals("new"))
+        if (param.EqualsLiteral("new"))
             statType = nsTraceRefcntImpl::NEW_STATS;
-        else if (param.Equals("clear"))
+        else if (param.EqualsLiteral("clear"))
             clear = PR_TRUE;
-        else if (param.Equals("leaks"))
+        else if (param.EqualsLiteral("leaks"))
             leaks = PR_TRUE;
     }
 
@@ -120,9 +120,9 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
 
         nsCAutoString dumpFileName;
         if (statType == nsTraceRefcntImpl::ALL_STATS)
-            dumpFileName += "all-";
+            dumpFileName.AssignLiteral("all-");
         else
-            dumpFileName += "new-";
+            dumpFileName.AssignLiteral("new-");
         PRExplodedTime expTime;
         PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &expTime);
         char time[128];

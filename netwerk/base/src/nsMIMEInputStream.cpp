@@ -146,9 +146,9 @@ nsMIMEInputStream::AddHeader(const char *aName, const char *aValue)
 {
     NS_ENSURE_FALSE(mStartedReading, NS_ERROR_FAILURE);
     mHeaders.Append(aName);
-    mHeaders.Append(": ");
+    mHeaders.AppendLiteral(": ");
     mHeaders.Append(aValue);
-    mHeaders.Append("\r\n");
+    mHeaders.AppendLiteral("\r\n");
 
     // Just in case someone somehow uses our stream, lets at least
     // let the stream have a valid pointer. The stream will be properly
@@ -187,12 +187,12 @@ void nsMIMEInputStream::InitStreams()
         if (mData) {
             mData->Available(&cl);
         }
-        mContentLength = "Content-Length: ";
+        mContentLength.AssignLiteral("Content-Length: ");
         mContentLength.AppendInt((PRInt32)cl);
-        mContentLength.Append("\r\n\r\n");
+        mContentLength.AppendLiteral("\r\n\r\n");
     }
     else {
-        mContentLength = "\r\n";
+        mContentLength.AssignLiteral("\r\n");
     }
     mCLStream->ShareData(mContentLength.get(), -1);
     mHeaderStream->ShareData(mHeaders.get(), -1);

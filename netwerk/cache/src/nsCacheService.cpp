@@ -737,7 +737,7 @@ nsCacheService::CreateRequest(nsCacheSession *   session,
     nsCString * key = new nsCString(*session->ClientID());
     if (!key)
         return NS_ERROR_OUT_OF_MEMORY;
-    key->Append(":");
+    key->Append(':');
     key->Append(clientKey);
 
     if (mMaxKeyLength < key->Length()) mMaxKeyLength = key->Length();

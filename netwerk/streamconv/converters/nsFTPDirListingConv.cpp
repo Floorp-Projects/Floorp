@@ -276,7 +276,7 @@ nsFTPDirListingConv::GetHeaders(nsACString& headers,
 {
     nsresult rv = NS_OK;
     // build up 300 line
-    headers.Append("300: ");
+    headers.AppendLiteral("300: ");
 
     // Bug 111117 - don't print the password
     nsCAutoString pw;
@@ -300,7 +300,7 @@ nsFTPDirListingConv::GetHeaders(nsACString& headers,
     // END 300:
 
     // build up the column heading; 200:
-    headers.Append("200: filename content-length last-modified file-type\n");
+    headers.AppendLiteral("200: filename content-length last-modified file-type\n");
     // END 200:
     return rv;
 }
@@ -343,7 +343,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
         }
 
         // blast the index entry into the indexFormat buffer as a 201: line.
-        aString.Append("201: ");
+        aString.AppendLiteral("201: ");
         // FILENAME
 
 
@@ -353,11 +353,11 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
         }
 
         nsCAutoString buf;
-        aString.Append(NS_LITERAL_CSTRING("\"") + 
-                       NS_EscapeURL(Substring(result.fe_fname, 
+        aString.Append('\"');
+        aString.Append(NS_EscapeURL(Substring(result.fe_fname, 
                                               result.fe_fname+result.fe_fnlen),
-                                    esc_Minimal|esc_OnlyASCII|esc_Forced,buf)
-                       + NS_LITERAL_CSTRING("\" "));
+                                    esc_Minimal|esc_OnlyASCII|esc_Forced,buf));
+        aString.AppendLiteral("\" ");
  
         // CONTENT LENGTH
         
@@ -372,7 +372,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
             aString.Append(' ');
         }
         else
-            aString.Append("0 ");
+            aString.AppendLiteral("0 ");
 
 
         // MODIFIED DATE
@@ -391,11 +391,11 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
 
         // ENTRY TYPE
         if (type == 'd')
-            aString.Append("DIRECTORY");
+            aString.AppendLiteral("DIRECTORY");
         else if (type == 'l')
-            aString.Append("SYMBOLIC-LINK");
+            aString.AppendLiteral("SYMBOLIC-LINK");
         else
-            aString.Append("FILE");
+            aString.AppendLiteral("FILE");
         
         aString.Append(' ');
 

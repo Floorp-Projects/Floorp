@@ -99,7 +99,8 @@ nsAboutCacheEntry::OnCacheEntryAvailable(nsICacheEntryDescriptor *descriptor,
     rv = storageStream->GetOutputStream(0, getter_AddRefs(outputStream));
     if (NS_FAILED(rv)) return rv;
 
-    buffer.Assign("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+    buffer.AssignLiteral(
+                  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                   "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\"\n"
                   "    \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">\n"
                   "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n"
@@ -115,7 +116,7 @@ nsAboutCacheEntry::OnCacheEntryAvailable(nsICacheEntryDescriptor *descriptor,
         rv = WriteCacheEntryUnavailable(outputStream, status);
     if (NS_FAILED(rv)) return rv;
 
-    buffer.Assign("</body>\n</html>\n");
+    buffer.AssignLiteral("</body>\n</html>\n");
     outputStream->Write(buffer.get(), buffer.Length(), &n);
         
     nsCOMPtr<nsIInputStream> inStr;
@@ -368,11 +369,11 @@ static void PrintTimeString(char *buf, PRUint32 bufsize, PRUint32 t_sec)
 
 #define APPEND_ROW(label, value) \
     PR_BEGIN_MACRO \
-    buffer.Append("<tr><td><tt><b>"); \
-    buffer.Append(label); \
-    buffer.Append(":</b></tt></td>\n<td><pre>"); \
+    buffer.AppendLiteral("<tr><td><tt><b>"); \
+    buffer.AppendLiteral(label); \
+    buffer.AppendLiteral(":</b></tt></td>\n<td><pre>"); \
     buffer.Append(value); \
-    buffer.Append("</pre></td></tr>\n"); \
+    buffer.AppendLiteral("</pre></td></tr>\n"); \
     PR_END_MACRO
 
 nsresult
@@ -380,17 +381,17 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
                                               nsICacheEntryDescriptor *descriptor)
 {
     nsresult rv;
-    nsCAutoString buffer;
+    nsCString buffer;
     PRUint32 n;
 
     nsXPIDLCString str;
 
     rv = descriptor->GetKey(getter_Copies(str));
     if (NS_FAILED(rv)) return rv;
-    
-    buffer.Assign("<table>");
 
-    buffer.Append("<tr><td><tt><b>key:</b></tt></td><td>");
+    buffer.SetCapacity(4096);
+    buffer.AssignLiteral("<table>"
+                         "<tr><td><tt><b>key:</b></tt></td><td>");
 
     // Test if the key is actually a URI
     nsCOMPtr<nsIURI> uri;
@@ -406,17 +407,17 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
     }
     char* escapedStr = nsEscapeHTML(str);
     if (NS_SUCCEEDED(rv) && !(isJS || isData)) {
-        buffer.Append("<a href=\"");
+        buffer.AppendLiteral("<a href=\"");
         buffer.Append(escapedStr);
-        buffer.Append("\">");
+        buffer.AppendLiteral("\">");
         buffer.Append(escapedStr);
-        buffer.Append("</a>");
+        buffer.AppendLiteral("</a>");
         uri = 0;
     }
     else
         buffer.Append(escapedStr);
     nsMemory::Free(escapedStr);
-    buffer.Append("</td></tr>\n");
+    buffer.AppendLiteral("</td></tr>\n");
 
 
     // temp vars for reporting
@@ -481,7 +482,6 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
         APPEND_ROW("file on disk", "none");
 
     // Security Info
-    str.Adopt(0);
     nsCOMPtr<nsISupports> securityInfo;
     descriptor->GetSecurityInfo(getter_AddRefs(securityInfo));
     if (securityInfo) {
@@ -491,15 +491,15 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
                    "This document does not have any security info associated with it.");
     }
 
-    buffer.Append("</table>\n");
+    buffer.AppendLiteral("</table>\n"
+                         "<hr />\n<table>");
     // Meta Data
     // let's just look for some well known (HTTP) meta data tags, for now.
-    buffer.Append("<hr />\n<table>");
 
     // Client ID
-    str.Adopt(0);
+    str.Truncate();
     descriptor->GetClientID(getter_Copies(str));
-    if (str)  APPEND_ROW("Client", str);
+    if (!str.IsEmpty())  APPEND_ROW("Client", str);
 
 
     mBuffer = &buffer;  // make it available for VisitMetaDataElement()
@@ -507,7 +507,7 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
     mBuffer = nsnull;
     
 
-    buffer.Append("</table>\n");
+    buffer.AppendLiteral("</table>\n");
 
     outputStream->Write(buffer.get(), buffer.Length(), &n);
     return NS_OK;
@@ -518,8 +518,7 @@ nsAboutCacheEntry::WriteCacheEntryUnavailable(nsIOutputStream *outputStream,
                                               nsresult reason)
 {
     PRUint32 n;
-    nsCAutoString buffer;
-    buffer.Assign("The cache entry you selected is no longer available.");
+    NS_NAMED_LITERAL_CSTRING(buffer, "The cache entry you selected is no longer available.");
     outputStream->Write(buffer.get(), buffer.Length(), &n);
     return NS_OK;
 }
@@ -581,13 +580,13 @@ nsAboutCacheEntry::VisitMetaDataElement(const char * key,
                                         const char * value,
                                         PRBool *     keepGoing)
 {
-    mBuffer->Append("<tr><td><tt><b>");
+    mBuffer->AppendLiteral("<tr><td><tt><b>");
     mBuffer->Append(key);
-    mBuffer->Append(":</b></tt></td>\n<td><pre>");
+    mBuffer->AppendLiteral(":</b></tt></td>\n<td><pre>");
     char* escapedValue = nsEscapeHTML(value);
     mBuffer->Append(escapedValue);
     nsMemory::Free(escapedValue);
-    mBuffer->Append("</pre></td></tr>\n");
+    mBuffer->AppendLiteral("</pre></td></tr>\n");
 
     *keepGoing = PR_TRUE;
     return NS_OK;
