@@ -84,6 +84,20 @@ NS_IMETHODIMP nsSHEntry::SetURI(nsIURI* aURI)
    return NS_OK;
 }
 
+NS_IMETHODIMP nsSHEntry::GetReferrerURI(nsIURI **aReferrerURI)
+{
+   NS_ENSURE_ARG_POINTER(aReferrerURI);
+   *aReferrerURI = mReferrerURI;
+   NS_IF_ADDREF(*aReferrerURI);
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsSHEntry::SetReferrerURI(nsIURI *aReferrerURI)
+{
+   mReferrerURI = aReferrerURI;
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsSHEntry::SetDocument(nsIDOMDocument* aDocument)
 {
    mDocument = aDocument;
