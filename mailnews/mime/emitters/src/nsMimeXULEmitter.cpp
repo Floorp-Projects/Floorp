@@ -763,6 +763,9 @@ nsMimeXULEmitter::DumpAddBookIcon(char *fromLine)
   nsresult    rv;
   char        *newName;
 
+  if (!fromLine)
+	  return NS_OK;
+
   UtilityWriteCRLF("<box align=\"horizontal\">");
 
   if (mHeaderParser)
@@ -1242,9 +1245,8 @@ char      *workAddr = nsnull;
     UtilityWrite(workName);
   else
     UtilityWrite(curName);
-  UtilityWrite(" ");
 
-  UtilityWrite("&lt;");
+  UtilityWrite(" &lt;");
   UtilityWrite(curAddress);
   UtilityWrite("&gt;");
   
