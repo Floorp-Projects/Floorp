@@ -126,7 +126,7 @@ nsUnknownDecoder::OnDataAvailable(nsIChannel *aChannel,
                                   PRUint32 aSourceOffset, 
                                   PRUint32 aCount)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   if (!mNextListener) return NS_ERROR_FAILURE;
 

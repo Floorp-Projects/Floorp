@@ -169,7 +169,7 @@ NS_IMETHODIMP
 nsJARChannel::Cancel(nsresult status)
 {
     NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
-    nsresult rv;
+    nsresult rv = NS_OK;
     nsAutoMonitor monitor(mMonitor);
 
     if (mJarExtractionTransport) {
