@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tracker.c,v $ $Revision: 1.3 $ $Date: 2001/01/31 18:01:45 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tracker.c,v $ $Revision: 1.4 $ $Date: 2001/12/06 21:25:32 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -298,7 +298,6 @@ nssPointerTracker_finalize
 )
 {
   PZLock *lock;
-  PRIntn count;
 
   if( (nssPointerTracker *)NULL == tracker ) {
     nss_SetError(NSS_ERROR_INVALID_POINTER);
