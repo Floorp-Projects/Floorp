@@ -33,6 +33,7 @@
 #include "nsISelectControlFrame.h"
 #include "nsIStatefulFrame.h"
 #include "nsIRollupListener.h"
+#include "nsIPresState.h"
 
 class nsButtonControlFrame;
 class nsTextControlFrame;
@@ -41,7 +42,6 @@ class nsIView;
 class nsStyleContext;
 class nsIHTMLContent;
 class nsIListControlFrame;
-class nsIPresState;
 
 /**
  * Child list name indices
@@ -214,6 +214,9 @@ protected:
   nsIFrame*             mDropdownFrame;           // dropdown list frame
   nsIListControlFrame * mListControlFrame;        // ListControl Interface for the dropdown frame
   PRBool                mIgnoreFocus;             // Tells the combo to ignore all focus notifications
+
+  
+  nsCOMPtr<nsIPresState> mPresState;               // Need cache state when list is null
 
   // Resize Reflow Optimization
   nsSize                mCacheSize;
