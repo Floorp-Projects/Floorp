@@ -124,7 +124,6 @@ EXTRA_DSO_LDOPTS += \
 	$(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)appleevents_s.$(LIB_SUFFIX)
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 endif
 

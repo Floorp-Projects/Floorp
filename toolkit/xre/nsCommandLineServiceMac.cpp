@@ -70,9 +70,6 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "prenv.h"
-#ifdef XP_MAC
-#include "pprio.h"  // PR_Init_Log
-#endif
 
 // the static instance
 nsMacCommandLine nsMacCommandLine::sMacCommandLine;
@@ -140,15 +137,10 @@ nsresult nsMacCommandLine::Initialize(int& argc, char**& argv)
   mArgsAllocated = kArgsGrowSize;
   mArgsUsed = 0;
   
-#if defined(XP_MACOSX)
   // Here, we may actually get useful args.
   // Copy them first to mArgv.
   for (int arg = 0; arg < argc; arg++)
     AddToCommandLine(argv[arg]);
-#else
-  // init the args buffer with the program name
-  AddToCommandLine("mozilla");
-#endif
 
   // Set up AppleEvent handling.
   OSErr err = CreateAEHandlerClasses(false);
@@ -277,12 +269,6 @@ OSErr nsMacCommandLine::HandleOpenOneDoc(const FSSpec& inFileSpec, OSType inFile
         }
 
         fclose(fp);
-#ifndef XP_MACOSX
-        // If we found any environment vars we need to re-init NSPR's logging
-        // so that it knows what the new vars are
-        if (foundEnv)
-          PR_Init_Log();
-#endif
         // If we found a command line or environment vars we want to return now
         // raather than trying to open the file as a URL
         if (foundArgs || foundEnv)

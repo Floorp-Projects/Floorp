@@ -78,13 +78,7 @@ ifeq (WINNT,$(OS_ARCH))
 CPPSRCS += nsUserInfoWin.cpp
 else
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-CPPSRCS += \
-	nsUserInfoMac.cpp \
-	nsCommandLineServiceMac.cpp \
-	$(NULL)
-
-LOCAL_INCLUDES += -I$(topsrcdir)/xpfe/bootstrap/appleevents
-OS_CXXFLAGS += -fexceptions
+CPPSRCS += nsUserInfoMac.cpp
 else
 CPPSRCS += nsUserInfoUnix.cpp
 endif
