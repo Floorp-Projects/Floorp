@@ -32,8 +32,6 @@
 <!DOCTYPE window [
 <!ENTITY % messengercomposeDTD SYSTEM "chrome://messenger/locale/messengercompose/messengercompose.dtd" >
 %messengercomposeDTD;
-<!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd" >
-%messengerDTD;
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
 <!ENTITY % charsetDTD SYSTEM "chrome://global/locale/charset.dtd" >
@@ -176,7 +174,6 @@
   <key keycode="&findPrevCmd.key2;"  command="cmd_findPrev" modifiers="shift"/>
   
   <!-- Options Menu -->
-  <!-- key id="key_selectAddresses" xulkey="true" key="&selectAddressCmd.key;" command="cmd_selectAddress"/ -->
   <key id="key_checkspelling"  key="&checkSpellingCmd.key;" command="cmd_spelling"  modifiers="accel"/>
 
    <!-- Tools Menu -->
@@ -408,11 +405,7 @@
                 </menupopup>
               </rule>
             </template>
-          </menu>     
-
-          <!--menuseparator/>
-          <menuitem label="&addSignatureCmd.label;" disabled="true" oncommand=""/>      
-          <menuitem label="&attachVCardCmd.label;" disabled="true" accesskey="&attachVCardCmd.accesskey;" oncommand="AttachVCard()"/-->     
+          </menu>    
         </menupopup>
       </menu>
 
