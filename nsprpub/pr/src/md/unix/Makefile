@@ -146,7 +146,7 @@ endif
 ifeq ($(OS_ARCH),NCR)
 CSRCS += $(NCR_CSRCS)
 endif
-ifeq ($(OS_ARCH),SCO_SV)
+ifeq ($(OS_ARCH),SCOOS)
 CSRCS += $(SCOOS_CSRCS)
 endif
 
@@ -191,11 +191,13 @@ endif
 ifeq ($(OS_ARCH),SunOS)
 	ifneq ($(OS_RELEASE),4.1.3_U1)
     	ifeq ($(OS_TEST),sun4u)
-			LIBRARY_NAME = $(ULTRASPARC_LIBRARY)
-			LIBRARY_VERSION = $(MOD_VERSION)
-            ULTRASPARC_ASFILES = os_$(OS_ARCH)_ultrasparc.s
-            ULTRASPARC_ASOBJS = $(addprefix $(OBJDIR)/,$(ULTRASPARC_ASFILES:.s=.$(OBJ_SUFFIX)))
-			TARGETS		+= $(ULTRASPARC_ASOBJS) $(SHARED_LIBRARY)
+			ifneq ($(NS_USE_GCC),1)
+				LIBRARY_NAME = $(ULTRASPARC_LIBRARY)
+				LIBRARY_VERSION = $(MOD_VERSION)
+				ULTRASPARC_ASFILES = os_$(OS_ARCH)_ultrasparc.s
+				ULTRASPARC_ASOBJS = $(addprefix $(OBJDIR)/,$(ULTRASPARC_ASFILES:.s=.$(OBJ_SUFFIX)))
+				TARGETS		+= $(ULTRASPARC_ASOBJS) $(SHARED_LIBRARY)
+			endif
 		endif
 	endif
 endif
@@ -212,9 +214,11 @@ export:: $(TARGETS)
 #endif
 #endif
 #endif
+
 ifeq ($(OS_ARCH),SunOS)
 ifneq ($(OS_RELEASE),4.1.3_U1)
 ifeq ($(OS_TEST),sun4u)
+ifneq ($(NS_USE_GCC),1)
 $(SHARED_LIBRARY): $(ULTRASPARC_ASOBJS)
 	$(LD) -G -z text -o $@ $(ULTRASPARC_ASOBJS)
 	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(DIST)/lib
@@ -224,6 +228,6 @@ $(ULTRASPARC_ASOBJS): $(ULTRASPARC_ASFILES)
 endif
 endif
 endif
-
+endif
 
 install:: export

@@ -87,7 +87,7 @@ ifeq ($(OS_ARCH),NEC)
 MDCPUCFG_H = _nec.cfg
 endif
 
-ifeq ($(OS_ARCH),SCO_SV)
+ifeq ($(OS_ARCH),SCOOS)
 MDCPUCFG_H = _scoos.cfg
 endif
 

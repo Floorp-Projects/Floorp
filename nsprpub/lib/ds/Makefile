@@ -69,14 +69,14 @@ EXTRA_LIBS = -L$(DIST)/lib -lnspr$(MOD_VERSION)
 endif
 endif
 
-# On NCR and SCO_SV, we can't link with extra libraries when
+# On NCR and SCOOS, we can't link with extra libraries when
 # we build a shared library.  If we do so, the linker doesn't
 # complain, but we would run into weird problems at run-time.
 # Therefore on these platforms, we link just the .o files.
 ifeq ($(OS_ARCH),NCR)
 EXTRA_LIBS =
 endif
-ifeq ($(OS_ARCH),SCO_SV)
+ifeq ($(OS_ARCH),SCOOS)
 EXTRA_LIBS =
 endif
 

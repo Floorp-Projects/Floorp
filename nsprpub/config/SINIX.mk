@@ -16,7 +16,7 @@
 #
 
 #
-# Config stuff for SNI SINIX-N (aka ReliantUNIX)
+# Config stuff for SNI SINIX (aka ReliantUNIX)
 #
 
 include $(MOD_DEPTH)/config/UNIX.mk
@@ -24,7 +24,7 @@ include $(MOD_DEPTH)/config/UNIX.mk
 # use gcc -tf-
 NS_USE_GCC		= 1
 
-ifdef NS_USE_GCC
+ifeq ($(NS_USE_GCC),1)
 ## gcc-2.7.2 homebrewn
 CC			= gcc
 COMPILER_TAG		= _gcc
@@ -36,8 +36,8 @@ ifdef BUILD_OPT
 OPTIMIZER		= -O
 #OPTIMIZER		= -O6
 endif
-MKSHLIB			= $(LD) -G -h $(@:$(OBJDIR)/%.so=%.so)
-DSO_LDOPTS		= -G -Xlinker -Blargedynsym
+MKSHLIB			= $(LD) -G -z defs -h $(@:$(OBJDIR)/%.so=%.so)
+#DSO_LDOPTS		= -G -Xlinker -Blargedynsym
 else
 ## native compiler (CDS++ 1.0)
 CC			= /usr/bin/cc
@@ -49,11 +49,11 @@ ifdef BUILD_OPT
 #OPTIMIZER		= -Olimit 4000
 OPTIMIZER		= -O -F Olimit,4000
 endif
-MKSHLIB			= $(CC) -G -h $(@:$(OBJDIR)/%.so=%.so)
-DSO_LDOPTS		= -G -W l,-Blargedynsym
+MKSHLIB			= $(LD) -G -z defs -h $(@:$(OBJDIR)/%.so=%.so)
+#DSO_LDOPTS		= -G -W l,-Blargedynsym
 endif
 
-ODD_CFLAGS		+= -DSVR4 -DSNI -DRELIANTUNIX -D_SVID_GETTOD
+ODD_CFLAGS		+= -DSVR4 -DSNI -DRELIANTUNIX -Dsinix -D_SVID_GETTOD
 
 CPU_ARCH		= mips
 
@@ -64,11 +64,9 @@ NOMD_OS_CFLAGS		= $(ODD_CFLAGS)
 
 # we do not have -MDupdate ...
 OS_CFLAGS		= $(NOMD_OS_CFLAGS)
-OS_LIBS			= -lsocket -lnsl -lresolv -lgen -ldl -lc $(UCBLIB)
-UCBLIB			= -L/usr/ucblib -lucb
+OS_LIBS			= -lsocket -lnsl -lresolv -ldl -lc
 NOSUCHFILE		= /no-such-file
 
 HAVE_PURIFY		= 0
 
 DEFINES			+= -D_PR_LOCAL_THREADS_ONLY
-OS_CFLAGS		= $(ODD_CFLAGS) -DSVR4 -DSNI -Dsinix

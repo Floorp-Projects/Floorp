@@ -269,7 +269,7 @@ endif
 endif
 endif
 
-ifeq ($(OS_ARCH), SCO_SV)
+ifeq ($(OS_ARCH), SCOOS)
 # SCO Unix needs to link against -lsocket again even though we
 # already linked with these system libraries when we built libnspr.so.
 EXTRA_LIBS = -lsocket
@@ -280,7 +280,7 @@ export LD_RUN_PATH = $(PWD)/$(DIST)/lib
 endif
 
 ifeq ($(OS_ARCH),SINIX)
-EXTRA_LIBS = -lsocket -lnsl -lgen -ldl -lresolv /usr/ucblib/libucb.a
+EXTRA_LIBS = -lsocket -lnsl -lresolv -ldl
 # This hardcodes in the executable programs the directory to find
 # libnspr.so etc. at program startup.  Equivalent to the -R or -rpath
 # option for ld on other platforms.

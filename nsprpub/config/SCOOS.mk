@@ -17,6 +17,8 @@
 
 #
 # Config stuff for SCO OpenServer for x86.
+# SCO OpenServer 5, based on SVR3.2, is intended for small to
+# medium customers.
 #
 
 include $(MOD_DEPTH)/config/UNIX.mk
@@ -28,11 +30,10 @@ RANLIB			= /bin/true
 
 DEFINES			+= -D_PR_LOCAL_THREADS_ONLY
 #
-# -DSCO_PM - Policy Manager AKA: SCO Licensing
 # -DSCO - Changes to Netscape source (consistent with AIX, LINUX, etc..)
 # -Dsco - Needed for /usr/include/X11/*
 #
-OS_CFLAGS		= -DSCO_SV -DSYSV -D_SVID3 -DHAVE_STRERROR -D_PR_NEED_H_ERRNO -DSCO_PM -DSCO -Dsco
+OS_CFLAGS		= -DSYSV -D_SVID3 -DHAVE_STRERROR -D_PR_NEED_H_ERRNO -DSCO -Dsco
 #OS_LIBS			= -lpmapi -lsocket -lc
 
 MKSHLIB			= $(LD) $(DSO_LDOPTS)

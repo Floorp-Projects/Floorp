@@ -670,9 +670,9 @@ void _MD_unix_map_socket_error(int err)
 		case EACCES:
 			PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, err);
 			break;
-#if !defined(SCO_SV)
+#if !defined(SCO)
 		case ENOBUFS:
-#endif /* !defined(SCO_SV) */
+#endif /* !defined(SCO) */
 		case ENOMEM:
 #ifdef ENOSR
 		case ENOSR:
@@ -786,11 +786,11 @@ void _MD_unix_map_send_error(int err)
 		case EINVAL:
 			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
 			break;
-#if !defined(SCO_SV)
+#if !defined(SCO)
 		case ENOBUFS:
 			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
 			break;
-#endif /* !defined(SCO_SV) */
+#endif /* !defined(SCO) */
 		case ECONNREFUSED:
 			PR_SetError(PR_CONNECT_REFUSED_ERROR, err);
 			break;
@@ -840,11 +840,11 @@ void _MD_unix_map_sendto_error(int err)
 		case EINVAL:
 			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
 			break;
-#if !defined(SCO_SV)
+#if !defined(SCO)
 		case ENOBUFS:
 			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
 			break;
-#endif /* !defined(SCO_SV) */
+#endif /* !defined(SCO) */
 		case ECONNREFUSED:
 			PR_SetError(PR_CONNECT_REFUSED_ERROR, err);
 			break;
@@ -1174,9 +1174,9 @@ void _MD_unix_map_getsockname_error(int err)
 		case EFAULT:
 			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
 			break;
-#if !defined(SCO_SV)
+#if !defined(SCO)
 		case ENOBUFS:
-#endif /* !defined(SCO_SV) */
+#endif /* !defined(SCO) */
 		case ENOMEM:
 #ifdef ENOSR
 		case ENOSR:
@@ -1205,9 +1205,9 @@ void _MD_unix_map_getpeername_error(int err)
 		case EFAULT:
 			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
 			break;
-#if !defined(SCO_SV)
+#if !defined(SCO)
 		case ENOBUFS:
-#endif /* !defined(SCO_SV) */
+#endif /* !defined(SCO) */
 		case ENOMEM:
 #ifdef ENOSR
 		case ENOSR:

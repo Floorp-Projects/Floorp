@@ -139,7 +139,7 @@ endif
 ifeq ($(OS_ARCH),NCR)
 CSRCS += $(NCR_CSRCS)
 endif
-ifeq ($(OS_ARCH),SCO_SV)
+ifeq ($(OS_ARCH),SCOOS)
 CSRCS += $(SCOOS_CSRCS)
 endif
  
