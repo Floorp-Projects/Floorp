@@ -9,6 +9,7 @@
         {CLASS = GoMenu; LANGUAGE = ObjC; SUPERCLASS = NSMenu; }, 
         {
             ACTIONS = {
+                aboutPlugins = id; 
                 aboutServers = id; 
                 aboutWindow = id; 
                 addBookmark = id; 

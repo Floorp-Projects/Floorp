@@ -1220,6 +1220,11 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
     [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil];
 }
 
+-(IBAction) aboutPlugins:(id)aSender
+{
+  [self openNewWindowOrTabWithURL:@"about:plugins" andReferrer:nil];
+}
+
 + (NSImage*)createImageForDragging:(NSImage*)aIcon title:(NSString*)aTitle
 {
   NSImage* image;

@@ -160,6 +160,8 @@ typedef enum EBookmarkOpenBehavior
 -(IBAction) tipsTricksLink:(id)aSender;
 -(IBAction) searchCustomizeLink:(id)aSender;
 
+-(IBAction) aboutPlugins:(id)aSender;
+
 - (BrowserWindowController*)openBrowserWindowWithURL:(NSString*)aURL andReferrer:(NSString*)aReferrer behind:(NSWindow*)window allowPopups:(BOOL)inAllowPopups;
 - (BrowserWindowController*)openBrowserWindowWithURLs:(NSArray*)urlArray behind:(NSWindow*)window allowPopups:(BOOL)inAllowPopups;
 
