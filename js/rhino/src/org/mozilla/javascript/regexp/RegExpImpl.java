@@ -483,7 +483,11 @@ class ReplaceData extends GlobData {
             args[0] = reImpl.lastMatch.toString();
             for (int i=0; i < parenCount; i++) {
                 SubString sub = (SubString) parens.get(i);
-                args[i+1] = sub.toString();
+                if (sub != null) {
+                    args[i+1] = sub.toString();
+                } else {
+                    args[i+1] = Undefined.instance;
+                }
             }
             args[parenCount+1] = new Integer(reImpl.leftContext.length);
             args[parenCount+2] = str;
