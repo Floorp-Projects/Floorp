@@ -205,18 +205,33 @@ nsLineBox::CheckIsBlock() const
 
 //----------------------------------------------------------------------
 
+static NS_DEFINE_IID(kILineIteratorIID, NS_ILINE_ITERATOR_IID);
+
 static nsLineBox* gDummyLines[1];
 
 nsLineIterator::nsLineIterator()
 {
-  mLines = nsnull;
+  NS_INIT_REFCNT();
+  mLines = gDummyLines;
   mNumLines = 0;
   mIndex = 0;
+  mRightToLeft = PR_FALSE;
 }
 
-nsresult
-nsLineIterator::Init(nsLineBox* aLines)
+nsLineIterator::~nsLineIterator()
 {
+  if (mLines != gDummyLines) {
+    delete [] mLines;
+  }
+}
+
+NS_IMPL_QUERY_INTERFACE(nsLineIterator, kILineIteratorIID)
+
+nsresult
+nsLineIterator::Init(nsLineBox* aLines, PRBool aRightToLeft)
+{
+  mRightToLeft = aRightToLeft;
+
   // Count the lines
   PRInt32 numLines = 0;
   nsLineBox* line = aLines;
@@ -249,9 +264,201 @@ nsLineIterator::Init(nsLineBox* aLines)
   return NS_OK;
 }
 
-nsLineIterator::~nsLineIterator()
+NS_IMETHODIMP
+nsLineIterator::GetNumLines(PRInt32* aResult)
 {
-  if (mLines != gDummyLines) {
-    delete [] mLines;
+  NS_PRECONDITION(aResult, "null OUT ptr");
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
   }
+  *aResult = mNumLines;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLineIterator::GetDirection(PRBool* aIsRightToLeft)
+{
+  NS_PRECONDITION(aIsRightToLeft, "null OUT ptr");
+  if (!aIsRightToLeft) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aIsRightToLeft = mRightToLeft;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLineIterator::GetLine(PRInt32 aLineNumber,
+                        nsIFrame** aFirstFrameOnLine,
+                        PRInt32* aNumFramesOnLine,
+                        nsRect& aLineBounds)
+{
+  NS_PRECONDITION(aFirstFrameOnLine && aNumFramesOnLine, "null OUT ptr");
+  if (!aFirstFrameOnLine || !aNumFramesOnLine) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if ((aLineNumber < 0) || (aLineNumber >= mNumLines)) {
+    *aFirstFrameOnLine = nsnull;
+    *aNumFramesOnLine = 0;
+    aLineBounds.SetRect(0, 0, 0, 0);
+    return NS_OK;
+  }
+  nsLineBox* line = mLines[aLineNumber];
+  *aFirstFrameOnLine = line->mFirstChild;
+  *aNumFramesOnLine = line->mChildCount;
+  aLineBounds = line->mBounds;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLineIterator::FindLineContaining(nsIFrame* aFrame,
+                                   PRInt32* aLineNumberResult)
+{
+  nsLineBox* line = mLines[0];
+  PRInt32 lineNumber = 0;
+  while (line) {
+    if (line->Contains(aFrame)) {
+      *aLineNumberResult = lineNumber;
+      return NS_OK;
+    }
+    line = line->mNext;
+    lineNumber++;
+  }
+  *aLineNumberResult = -1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLineIterator::FindLineAt(nscoord aY,
+                           PRInt32* aLineNumberResult)
+{
+  nsLineBox* line = mLines[0];
+  if (!line || (aY < line->mBounds.y)) {
+    *aLineNumberResult = -1;
+    return NS_OK;
+  }
+  PRInt32 lineNumber = 0;
+  while (line) {
+    if ((aY >= line->mBounds.y) && (aY < line->mBounds.YMost())) {
+      *aLineNumberResult = lineNumber;
+      return NS_OK;
+    }
+    line = line->mNext;
+    lineNumber++;
+  }
+  *aLineNumberResult = mNumLines;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
+                            nscoord aX,
+                            nsIFrame** aFrameFound,
+                            PRBool* aXIsBeforeFirstFrame,
+                            PRBool* aXIsAfterLastFrame)
+{
+  NS_PRECONDITION(aFrameFound && aXIsBeforeFirstFrame && aXIsAfterLastFrame,
+                  "null OUT ptr");
+  if (!aFrameFound || !aXIsBeforeFirstFrame || !aXIsAfterLastFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if ((aLineNumber < 0) || (aLineNumber >= mNumLines)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsLineBox* line = mLines[aLineNumber];
+  if (!line) {
+    *aFrameFound = nsnull;
+    *aXIsBeforeFirstFrame = PR_TRUE;
+    *aXIsAfterLastFrame = PR_FALSE;
+    return NS_OK;
+  }
+
+  if (aX < line->mBounds.x) {
+    nsIFrame* frame;
+    if (mRightToLeft) {
+      frame = line->LastChild();
+    }
+    else {
+      frame = line->mFirstChild;
+    }
+    *aFrameFound = frame;
+    *aXIsBeforeFirstFrame = PR_TRUE;
+    *aXIsAfterLastFrame = PR_FALSE;
+    return NS_OK;
+  }
+  else if (aX >= line->mBounds.XMost()) {
+    nsIFrame* frame;
+    if (mRightToLeft) {
+      frame = line->mFirstChild;
+    }
+    else {
+      frame = line->LastChild();
+    }
+    *aFrameFound = frame;
+    *aXIsBeforeFirstFrame = PR_FALSE;
+    *aXIsAfterLastFrame = PR_TRUE;
+    return NS_OK;
+  }
+
+  // Find the frame closest to the X coordinate. Gaps can occur
+  // between frames (because of margins) so we split the gap in two
+  // when checking.
+  *aXIsBeforeFirstFrame = PR_FALSE;
+  *aXIsAfterLastFrame = PR_FALSE;
+  nsRect r1, r2;
+  nsIFrame* frame = line->mFirstChild;
+  PRInt32 n = line->mChildCount;
+  if (mRightToLeft) {
+    while (--n >= 0) {
+      nsIFrame* nextFrame;
+      frame->GetNextSibling(&nextFrame);
+      frame->GetRect(r1);
+      if (aX > r1.x) {
+        break;
+      }
+      if (nextFrame) {
+        nextFrame->GetRect(r2);
+        if (aX > r2.XMost()) {
+          nscoord rightEdge = r2.XMost();
+          nscoord delta = r1.x - rightEdge;
+          if (aX < rightEdge + delta/2) {
+            frame = nextFrame;
+          }
+          break;
+        }
+      }
+      else {
+        *aXIsBeforeFirstFrame = PR_TRUE;
+      }
+      frame = nextFrame;
+    }
+  }
+  else {
+    while (--n >= 0) {
+      nsIFrame* nextFrame;
+      frame->GetNextSibling(&nextFrame);
+      frame->GetRect(r1);
+      if (aX < r1.XMost()) {
+        break;
+      }
+      if (nextFrame) {
+        nextFrame->GetRect(r2);
+        if (aX < r2.x) {
+          nscoord rightEdge = r1.XMost();
+          nscoord delta = r2.x - rightEdge;
+          if (aX >= rightEdge + delta/2) {
+            frame = nextFrame;
+          }
+          break;
+        }
+      }
+      else {
+        *aXIsAfterLastFrame = PR_TRUE;
+      }
+      frame = nextFrame;
+    }
+  }
+
+  *aFrameFound = frame;
+  return NS_OK;
 }
