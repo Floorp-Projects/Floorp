@@ -158,6 +158,12 @@ NS_METHOD RootFrame::HandleEvent(nsIPresContext& aPresContext,
 {
   mContent->HandleDOMEvent(aPresContext, (nsEvent*)aEvent, nsnull, DOM_EVENT_INIT, aEventStatus);
 
+  if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP ||
+      aEvent->message == NS_MOUSE_MIDDLE_BUTTON_UP ||
+      aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP) {
+    nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+  }
+
 #if 0
   if (aEventStatus != nsEventStatus_eConsumeNoDefault) {
     switch (aEvent->message) {
