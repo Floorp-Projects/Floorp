@@ -196,7 +196,8 @@ RelatedLinksStreamListener::Init()
 				(nsISupports**)&charsetConv);
 		if (NS_SUCCEEDED(rv) && (charsetConv))
 		{
-			rv = charsetConv->GetUnicodeDecoder(&nsString("UTF-8"),
+			nsString	utf8("UTF-8");
+			rv = charsetConv->GetUnicodeDecoder(&utf8,
 				getter_AddRefs(mUnicodeDecoder));
 			NS_RELEASE(charsetConv);
 		}
