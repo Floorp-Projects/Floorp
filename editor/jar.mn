@@ -188,6 +188,8 @@ comm.jar:
 	content/editor/EditConflict.js                           (ui/dialogs/content/EditConflict.js) 
 	content/editor/EditorSaveAsCharset.xul                   (ui/dialogs/content/EditorSaveAsCharset.xul) 
 	content/editor/EditorSaveAsCharset.js                    (ui/dialogs/content/EditorSaveAsCharset.js) 
+	content/editor/EdConvertToTable.xul                      (ui/dialogs/content/EdConvertToTable.xul) 
+	content/editor/EdConvertToTable.js                       (ui/dialogs/content/EdConvertToTable.js) 
 
 en-US.jar:
         locale/en-US/editor/contents.rdf                 (ui/composer/locale/en-US/contents.rdf)
@@ -220,6 +222,7 @@ en-US.jar:
 	locale/en-US/editor/EditorImageMapHotSpot.dtd    (ui/dialogs/locale/en-US/EditorImageMapHotSpot.dtd) 
 	locale/en-US/editor/EditConflict.dtd             (ui/dialogs/locale/en-US/EditConflict.dtd) 
 	locale/en-US/editor/EditorSaveAsCharset.dtd      (ui/dialogs/locale/en-US/EditorSaveAsCharset.dtd) 
+	locale/en-US/editor/EdConvertToTable.dtd         (ui/dialogs/locale/en-US/EdConvertToTable.dtd) 
 
 US.jar:
         locale/US/editor-region/contents.rdf             (ui/composer/locale/en-US/contents-region.rdf)

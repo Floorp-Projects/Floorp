@@ -37,6 +37,7 @@ dump("KeepCurrentPage\n");
   //TODO: Should we force saving of the current page?
   SaveWindowLocation();
   window.close();
+  return;
 }
 
 function UseOtherPage()

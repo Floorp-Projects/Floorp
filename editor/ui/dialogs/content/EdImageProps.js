@@ -40,7 +40,7 @@ var globalMap;
 var doAltTextError = true;
 var actualWidth = "";
 var actualHeight = "";
-var previewImage;
+var gPreviewImage;
 var timeoutId = -1;
 // msec between attempts to load image
 var interval = 200;
@@ -50,8 +50,8 @@ var intervalLimit = 60000;
 
 // These must correspond to values in EditorDialog.css for each theme
 // (unfortunately, setting "style" attribute here doesn't work!)
-var previewImageWidth = 80;
-var previewImageHeight = 50;
+var gPreviewImageWidth = 80;
+var gPreviewImageHeight = 50;
 var StartupCalled = false;
 
 // dialog initialization code
@@ -126,6 +126,7 @@ function Startup()
     {
       dump("Failed to get selected element or create a new one!\n");
       window.close();
+      return;
     }
   }
 
@@ -260,6 +261,50 @@ function chooseFile()
   SetTextboxFocus(dialog.srcInput);
 }
 
+function PreviewImageLoaded()
+{
+  if (gPreviewImage)
+  {
+    // Image loading has completed -- we can get actual width
+    actualWidth  = gPreviewImage.naturalWidth;
+    actualHeight = gPreviewImage.naturalHeight;
+//dump("*** actualWidth = "+actualWidth+", actualHeight = "+actualHeight+"\n");
+    if (actualWidth && actualHeight)
+    {
+      // Use actual size or scale to fit preview if either dimension is too large
+      var width = actualWidth;
+      var height = actualHeight;
+      if (actualWidth > gPreviewImageWidth)
+      {
+          width = gPreviewImageWidth;
+          height = actualHeight * (gPreviewImageWidth / actualWidth);
+      }
+      if (height > gPreviewImageHeight)
+      {
+        height = gPreviewImageHeight;
+        width = actualWidth * (gPreviewImageHeight / actualHeight);
+      }
+      if (actualWidth > gPreviewImageWidth || actualHeight > gPreviewImageHeight)
+      {
+        // Resize image to fit preview frame
+        gPreviewImage.setAttribute("width", width);
+        gPreviewImage.setAttribute("height", height);
+      }
+
+      dialog.PreviewWidth.setAttribute("value", actualWidth);
+      dialog.PreviewHeight.setAttribute("value", actualHeight);
+
+      dialog.PreviewSize.setAttribute("collapsed", "false");
+      dialog.ImageHolder.setAttribute("collapsed", "false");
+
+      // Use values as start for constrain proportions
+    }
+
+    if (dialog.actualSizeRadio.checked)
+      SetActualSize();
+  }
+}
+
 function GetImageFromURL()
 {
   dialog.PreviewSize.setAttribute("collapsed", "true");
@@ -269,8 +314,6 @@ function GetImageFromURL()
   //  once we fail to load, further setting of src fail)
   if (dialog.ImageHolder.firstChild)
   {
-    //previewImage.setAttribute("width", 0);
-    //previewImage.setAttribute("height", 0);
     dialog.ImageHolder.removeChild(dialog.ImageHolder.firstChild);
   }
 
@@ -283,86 +326,16 @@ function GetImageFromURL()
     {
       // Append an image to the dialog to trigger image loading
       //   and also serves as a preview
-      previewImage = editorShell.CreateElementWithDefaults("img");
-      if (!previewImage) return;
-      dialog.ImageHolder.appendChild(previewImage);
+      gPreviewImage = editorShell.CreateElementWithDefaults("img");
+
+      if (!gPreviewImage) return;
+      dialog.ImageHolder.appendChild(gPreviewImage);
+
+      gPreviewImage.onload = "PreviewImageLoaded();";
+      gPreviewImage.src = imageSrc;
     }
-    previewImage.src = imageSrc;
 
     // Get the origin width from the image or setup timer to get later
-    if (previewImage.complete)
-      GetActualSize();
-    else
-    {
-      // Start timer to poll until image is loaded
-      //dump("*** Starting timer to get natural image size...\n");
-      timeoutId = window.setInterval("GetActualSize()", interval);
-      intervalSum = 0;
-    }
-  }
-}
-
-function GetActualSize()
-{
-  if (intervalSum > intervalLimit)
-  {
-    dump(" Timeout trying to load preview image\n");
-    CancelTimer();
-    return;
-  }
-
-  if (!previewImage)
-  {
-    CancelTimer();
-  }
-  else
-  {
-    if (previewImage.complete)
-    {
-      // Image loading has completed -- we can get actual width
-      CancelTimer();
-      actualWidth  = previewImage.naturalWidth;
-      actualHeight = previewImage.naturalHeight;
-      if (actualWidth && actualHeight)
-      {
-        // Use actual size or scale to fit preview if either dimension is too large
-        var width = actualWidth;
-        var height = actualHeight;
-        if (actualWidth > previewImageWidth)
-        {
-            width = previewImageWidth;
-            height = actualHeight * (previewImageWidth / actualWidth);
-        }
-        if (height > previewImageHeight)
-        {
-          height = previewImageHeight;
-          width = actualWidth * (previewImageHeight / actualHeight);
-        }
-        if (actualWidth > previewImageWidth || actualHeight > previewImageHeight)
-        {
-          // Resize image to fit preview frame
-          previewImage.setAttribute("width", width);
-          previewImage.setAttribute("height", height);
-        }
-
-        dialog.PreviewWidth.setAttribute("value", actualWidth);
-        dialog.PreviewHeight.setAttribute("value", actualHeight);
-
-        dialog.PreviewSize.setAttribute("collapsed", "false");
-        dialog.ImageHolder.setAttribute("collapsed", "false");
-
-        // Use values as start for constrain proportions
-      }
-
-      if (dialog.actualSizeRadio.checked)
-        SetActualSize();
-    }
-    else
-    {
-      //dump("*** Waiting for image loading...\n");
-      // Accumulate time so we don't do try this forever
-      intervalSum += interval;
-    }
   }
 }
 
@@ -488,7 +461,6 @@ function constrainProportions( srcID, destID )
   // always force an integer (whether we are constraining or not)
   forceInteger( srcID );
 
-//  if (!constrainWidth || !constrainHeight ||
   if (!actualWidth || !actualHeight ||
       !(dialog.constrainCheckbox.checked && !dialog.constrainCheckbox.disabled))
     return;

@@ -45,6 +45,7 @@ CHROME_L10N = \
   .\EditConflict.dtd \
   .\EditorSaveAsCharset.dtd \
   .\EdColorPicker.dtd \
+  .\EdConvertToTable.dtd \
   $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

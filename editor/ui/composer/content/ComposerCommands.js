@@ -83,6 +83,7 @@ function SetupHTMLEditorCommands()
   controller.registerCommand("cmd_CancelHTMLSource",   nsCancelHTMLSource);
   controller.registerCommand("cmd_smiley",             nsSetSmiley);
   controller.registerCommand("cmd_buildRecentPagesMenu", nsBuildRecentPagesMenu);
+  controller.registerCommand("cmd_ConvertToTable",     nsConvertToTable);
 }
 
 function SetupTextEditorCommands()
@@ -1457,5 +1458,40 @@ var nsBuildRecentPagesMenu =
   {
     // In editor.js. True means save menu to prefs
     BuildRecentMenu(true);
+  }
+};
+
+var nsConvertToTable =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    var selection = window.editorShell.editorSelection;
+
+    if (selection && !selection.isCollapsed)
+    {
+      // Don't allow if table or cell is the selection
+      var element = window.editorShell.GetSelectedElement("");
+
+      if (element && (element.nodeName == "td" ||
+                      element.nodeName == "table"))
+        return false;
+
+      // Selection start and end must be in the same cell
+      //   in same cell or both are NOT in a cell
+      if ( GetParentTableCell(selection.focusNode) !=
+           GetParentTableCell(selection.anchorNode) )
+        return false
+      
+      return true;
+    }
+    return false;
+  },
+  doCommand: function(aCommand)
+  {
+    if (this.isCommandEnabled())
+    {
+      window.openDialog("chrome://editor/content/EdConvertToTable.xul","_blank", "chrome,close,titlebar,modal")
+    }
+    window._content.focus();
   }
 };

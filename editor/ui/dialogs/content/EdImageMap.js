@@ -44,7 +44,10 @@ function initDialog(){
   //Get image element from parent
   imageElement = window.arguments[0];
   if (!imageElement) //If not an image close window
+  {
     window.close();
+    return;
+  }
 
   //Get image map from parent
   imageMap = window.arguments[1];

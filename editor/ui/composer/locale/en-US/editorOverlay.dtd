@@ -73,17 +73,29 @@
 <!-- Edit menu items -->
 <!ENTITY editMenu.label "Edit">
 <!ENTITY editmenu.accesskey "e">
+<!ENTITY pasteAs.label "Paste As">
+<!ENTITY pasteAs.accesskey "a">
 
 <!-- For a "Paste" submenu when more than 1 
      clipboard formats are available -->
+<!ENTITY pasteHTMLCmd.label "HTML">
+<!ENTITY pasteHTML.accesskey "h">
 <!ENTITY pasteTextCmd.label "Text">
-<!ENTITY editpastetext.accesskey "t">
+<!ENTITY pasteText.accesskey "t">
 <!ENTITY pasteImageCmd.label "Image">
-<!ENTITY editpasteimage.accesskey "i">
+<!ENTITY pasteImage.accesskey "i">
+<!ENTITY pasteRowsCmd.label "Rows">
+<!ENTITY pasteRows.accesskey "r">
+<!ENTITY pasteColumnsCmd.label "Columns">
+<!ENTITY pasteColumns.accesskey "c">
+<!-- LOCALIZATION NOTE: Text for menu item is in editor.properties
+     Set to: "Table" or "Nested Table" depending on context 
+     This accesskey must be in both strings -->
+<!ENTITY pasteTable.accesskey "a">
+
+
 <!ENTITY pasteLinkCmd.label "Link">
 <!ENTITY editpastelink.accesskey "l">
-<!ENTITY pasteHTMLCmd.label "HTML">
-<!ENTITY editpastehtml.accesskey "h">
 <!ENTITY pasteAsQuotationCmd.label "Paste As Quotation">
 <!ENTITY editpastequotation.accesskey "q">
 <!ENTITY editpastequotation.keybinding "v">
@@ -510,6 +522,8 @@
 <!ENTITY tablejoincells.accesskey "j">
 <!ENTITY tableSplitCell.label "Split Cell">
 <!ENTITY tablesplitcell.accesskey "c">
+<!ENTITY convertToTable.label "Create Table from Selection">
+<!ENTITY converttotable.accesskey "r">
 <!ENTITY tableProperties.label "Table Properties...">
 <!ENTITY tableProperties.accesskey "o">
 

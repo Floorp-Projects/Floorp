@@ -241,6 +241,7 @@
     <command id="cmd_NormalizeTable"      oncommand="goDoCommand('cmd_NormalizeTable')"/>
     <command id="cmd_JoinTableCells"      oncommand="goDoCommand('cmd_JoinTableCells')"/>
     <command id="cmd_SplitTableCell"      oncommand="goDoCommand('cmd_SplitTableCell')"/>
+    <command id="cmd_ConvertToTable"      oncommand="goDoCommand('cmd_ConvertToTable')"/>
     <command id="cmd_TableOrCellColor"    oncommand="goDoCommand('cmd_TableOrCellColor')"/>
     <command id="cmd_editTable"           oncommand="goDoCommand('cmd_editTable')"/>
   </commandset>
@@ -301,7 +302,7 @@
   </menu>
 
   <menu id="editMenu" label="&editMenu.label;" accesskey="&editmenu.accesskey;">
-    <menupopup id="edEditMenuPopup" oncreate="EditorInitEditMenu()">
+    <menupopup id="edEditMenuPopup">
       <!-- from utilityOverlay.xul -->
       <menuitem id="menu_undo"/>
       <menuitem id="menu_redo"/>
@@ -309,6 +310,17 @@
       <menuitem id="menu_cut"/>
       <menuitem id="menu_copy"/>
       <menuitem id="menu_paste"/>
+      <menu id="menu_pasteAs" label="&pasteAs.label;" accesskey="&pasteAs.accesskey;">
+        <menupopup oncreate="InitPasteAsMenu();">
+          <menuitem id="menu_pasteText"    label="&pasteTextCmd.label;"     accesskey="&pasteText.accesskey;"/>
+          <menuitem id="menu_pasteImage"   label="&pasteImageCmd.label;"    accesskey="&pasteImage.accesskey;"/>
+          <menuseparator/>
+          <menuitem id="menu_pasteRows"    label="&pasteRowsCmd.label;"     accesskey="&pasteRows.accesskey;"/>
+          <menuitem id="menu_pasteColumns" label="&pasteColumnsCmd.label;"  accesskey="&pasteColumns.accesskey;"/>
+          <!-- label set in InitPasteAsMenu depending on context -->
+          <menuitem id="menu_pasteTable"                                    accesskey="&pasteTable.accesskey;"/>
+        </menupopup>
+      </menu>
       <menuitem id="menu_delete"/>
       <menuseparator id="edEditMenuSep2" />
       <menuitem id="menu_selectAll"/>
@@ -551,6 +563,7 @@
       <!-- menu label is set in InitTableMenu -->
       <menuitem id="menu_JoinTableCells"   label="&tableJoinCells.label;"   accesskey="&tablejoincells.accesskey;"   observes="cmd_JoinTableCells"/>
       <menuitem id="menu_SlitTableCell"    label="&tableSplitCell.label;"   accesskey="&tablesplitcell.accesskey;"   observes="cmd_SplitTableCell"/>
+      <menuitem id="menu_ConvertToTable"   label="&convertToTable.label;"   accesskey="&converttotable.accesskey;"   observes="cmd_ConvertToTable"/>
       <menuseparator />
       <menuitem id="menu_TableOrCellColor" label="&tableOrCellColor.label;" accesskey="&tableOrCellColor.accesskey;" observes="cmd_TableOrCellColor"/>
       <menuitem id="menu_tableProperties"  label="&tableProperties.label;"  accesskey="&tableProperties.accesskey;"  observes="cmd_editTable"/>

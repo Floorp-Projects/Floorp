@@ -70,6 +70,8 @@ CHROME_CONTENT = \
 	.\EditConflict.js \
 	.\EditorSaveAsCharset.xul \
 	.\EditorSaveAsCharset.js \
+	.\EdConvertToTable.xul \
+	.\EdConvertToTable.js \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
