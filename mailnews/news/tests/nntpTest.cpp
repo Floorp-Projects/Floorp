@@ -336,7 +336,11 @@ nsresult nsNntpTestDriver::PromptForUserDataAndBuildUrl(const char * userPrompt)
 
     fgets(tempBuffer, sizeof(tempBuffer), stdin);
     strip_nonprintable(tempBuffer);
-    PL_strcpy(m_userData, tempBuffer);
+	// only replace m_userData if the user actually entered a valid line...
+	// this allows the command function to set a default value on m_userData before
+	// calling this routine....
+	if (tempBuffer && *tempBuffer)
+		PL_strcpy(m_userData, tempBuffer);
 
 	return NS_OK;
 }
