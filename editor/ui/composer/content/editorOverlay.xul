@@ -201,8 +201,8 @@
 					<menuitem id="menu_newCard"      observes="cmd_newCard"/>
 				</menupopup>
 			</menu>
-      <menuitem accesskey="&fileopen.accesskey;"            key="openeditorkb"   observes="Editor:Open"/>
       <menuitem accesskey="&fileopenremote.accesskey;" value="&openremoteCmd.label;" key="openremoteeditorkb" oncommand="EditorOpenRemote()"/>
+      <menuitem accesskey="&fileopen.accesskey;"            key="openeditorkb"   observes="Editor:Open"/>
       <menuseparator />
       <menuitem accesskey="&fileclose.accesskey;"           key="closekb"        observes="Editor:Close"/>
       <menuitem accesskey="&filesave.accesskey;"            key="savekb"         observes="Editor:Save"/>
