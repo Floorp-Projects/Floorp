@@ -188,7 +188,8 @@ protected:
                                   nsSize&               aMinSize, 
                                   nscoord&              aRowHeight,
                                   nsMargin&             aBorder,
-                                  nsMargin&             aPadding);
+                                  nsMargin&             aPadding,
+                                  PRBool                aIsUsingDefSize);
 
   PRInt32 CalculateSizeNavQuirks (nsIPresContext*       aPresContext, 
                                   nsIRenderingContext*  aRendContext,
@@ -198,7 +199,8 @@ protected:
                                   nsSize&               aMinSize, 
                                   nscoord&              aRowHeight,
                                   nsMargin&             aBorder,
-                                  nsMargin&             aPadding);
+                                  nsMargin&             aPadding,
+                                  PRBool                aIsUsingDefSize);
 
 
   NS_IMETHOD ReflowNavQuirks(nsIPresContext*          aPresContext,
