@@ -641,6 +641,17 @@ nsAreaFrame::ReflowAbsoluteFrame(nsIPresContext&          aPresContext,
     kidReflowState.availableWidth = kidReflowState.computedWidth;
     rv = htmlReflow->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
 
+    // XXX If the child had a fixed height, then make sure it respected it...
+    if (NS_AUTOHEIGHT != kidReflowState.computedHeight) {
+      if (kidDesiredSize.height < kidReflowState.computedHeight) {
+        kidDesiredSize.height = kidReflowState.computedHeight;
+
+        nsMargin  borderPadding;
+        nsHTMLReflowState::ComputeBorderPaddingFor(aKidFrame, &aReflowState, borderPadding);
+        kidDesiredSize.height += borderPadding.top + borderPadding.bottom;
+      }
+    }
+    
     // Position the child relative to our padding edge
     nsRect  rect(border.left + kidReflowState.computedOffsets.left + kidReflowState.computedMargin.left,
                  border.top + kidReflowState.computedOffsets.top + kidReflowState.computedMargin.top,
