@@ -59,7 +59,7 @@ function toDownloadManager()
     dlmgrWindow.focus();
   }
   else {
-    dlmgr.open(window);
+    dlmgr.open(window, null);
   }
 }
   
