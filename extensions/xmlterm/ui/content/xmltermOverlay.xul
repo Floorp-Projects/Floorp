@@ -12,11 +12,19 @@
 
 <html:script language="JavaScript" src="chrome://xmlterm/content/xmltermOverlay.js"/>
 
+<keyset id="keyset">
+  <key id="key_xmlterm" xulkey="true" key="7"
+       observes="Tasks:xmlterm"/>
+</keyset>
+
+<broadcasterset id="broadcasterset">
+  <broadcaster id="Tasks:xmlterm" value="XMLterm" oncommand="toXMLterm();"/>
+</broadcasterset>
+
 <menupopup id="taskPopup">
-	<menuitem
+	<menuitem accesskey="x" key="key_xmlterm"
         position="6"
-        value="XMLterm"
-        oncommand="toXMLterm()"/>
+        observes="Tasks:xmlterm"/>
 </menupopup>
 
 </overlay>
