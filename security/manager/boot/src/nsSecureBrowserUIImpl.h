@@ -81,26 +81,38 @@ protected:
   nsCOMPtr<nsIDOMWindow> mWindow;
   nsCOMPtr<nsIStringBundle> mStringBundle;
   nsCOMPtr<nsIURI> mCurrentURI;
+  nsCOMPtr<nsISecurityEventSink> mToplevelEventSink;
   
-  PRBool mMixContentAlertShown;
-  PRInt32 mSecurityState;
-  PRBool mFirstRequest;
-  PRBool mRedirecting;
+  enum lockIconState {
+    lis_no_security,
+    lis_broken_security,
+    lis_mixed_security,
+    lis_low_security,
+    lis_high_security
+  };
 
-  nsString mTooltipText;
+  PRBool mIsViewSource;
 
+  lockIconState mPreviousSecurityState;
+
+  void ResetStateTracking();
+  PRInt32 mNewToplevelSecurityState;
+  nsXPIDLString mInfoTooltip;
+  PRInt32 mDocumentRequestsInProgress;
+  PRInt32 mSubRequestsInProgress;
+  PRInt32 mSubRequestsHighSecurity;
+  PRInt32 mSubRequestsLowSecurity;
+  PRInt32 mSubRequestsBrokenSecurity;
+  PRInt32 mSubRequestsNoSecurity;
+
+  nsresult FinishedLoadingStateChange(nsIRequest* aRequest);
+  
   nsCOMPtr<nsISupports> mSSLStatus;
 
-  void GetBundleString(const PRUnichar* name, nsString &outString);
+  void GetBundleString(const PRUnichar* name, nsAString &outString);
   
-  nsresult CheckProtocolContextSwitch(nsISecurityEventSink* sink,
-                                      nsIRequest* request, nsIChannel* aChannel);
-  nsresult CheckMixedContext(nsISecurityEventSink* sink, nsIRequest* request,
-                             nsIChannel* aChannel);
   nsresult CheckPost(nsIURI *formURI, nsIURI *actionURL, PRBool *okayToPost);
   nsresult IsURLHTTPS(nsIURI* aURL, PRBool *value);
-  nsresult SetBrokenLockIcon(nsISecurityEventSink* sink, nsIRequest* request,
-                             PRBool removeValue = PR_FALSE);
 
   // Alerts for security transitions
   void AlertEnteringSecure();
