@@ -1649,6 +1649,59 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
       domSelection->AddSelectionListener(listener);
   }
 
+  if (mContent)
+  {
+    rv = mEditor->GetFlags(&editorFlags);
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    PRInt32 nameSpaceID;
+
+    rv = mContent->GetNameSpaceID(nameSpaceID);
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    nsAutoString resultValue;
+
+    // Check if the readonly attribute is set.
+
+    rv = mContent->GetAttribute(nameSpaceID, nsHTMLAtoms::readonly, resultValue);
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    if (NS_CONTENT_ATTR_NOT_THERE != rv)
+      editorFlags |= nsIHTMLEditor::eEditorReadonlyMask;
+
+    // Check if the disabled attribute is set.
+
+    rv = mContent->GetAttribute(nameSpaceID, nsHTMLAtoms::disabled, resultValue);
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    if (NS_CONTENT_ATTR_NOT_THERE != rv) 
+      editorFlags |= nsIHTMLEditor::eEditorDisabledMask;
+
+    // Disable the caret and selection if neccessary.
+
+    if (editorFlags & nsIHTMLEditor::eEditorReadonlyMask ||
+        editorFlags & nsIHTMLEditor::eEditorDisabledMask)
+    {
+      if (mSelCon)
+      {
+        mSelCon->SetCaretEnabled(PR_FALSE);
+
+        if (editorFlags & nsIHTMLEditor::eEditorDisabledMask)
+          mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_OFF);
+      }
+
+      mEditor->SetFlags(editorFlags);
+    }
+  }
+
   return NS_OK;
 }
 
@@ -2293,7 +2346,7 @@ nsGfxTextControlFrame2::AttributeChanged(nsIPresContext* aPresContext,
     else 
     { // unset readonly
       flags &= ~(nsIHTMLEditor::eEditorReadonlyMask);
-      if (mSelCon)
+      if (mSelCon && !(flags & nsIHTMLEditor::eEditorDisabledMask))
         mSelCon->SetCaretEnabled(PR_TRUE);
     }    
     mEditor->SetFlags(flags);
@@ -2309,16 +2362,23 @@ nsGfxTextControlFrame2::AttributeChanged(nsIPresContext* aPresContext,
     PRUint32 flags;
     mEditor->GetFlags(&flags);
     if (NS_CONTENT_ATTR_NOT_THERE != rv) 
-    { // set readonly
+    { // set disabled
       flags |= nsIHTMLEditor::eEditorDisabledMask;
-      mSelCon->SetCaretEnabled(PR_FALSE);
-      mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_OFF);
+      if (mSelCon)
+      {
+        mSelCon->SetCaretEnabled(PR_FALSE);
+        mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_OFF);
+      }
     }
     else 
-    { // unset readonly
+    { // unset disabled
       flags &= ~(nsIHTMLEditor::eEditorDisabledMask);
-      mSelCon->SetCaretEnabled(PR_TRUE);
-      mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
+      if (mSelCon)
+      {
+        if (! (flags & nsIHTMLEditor::eEditorReadonlyMask))
+          mSelCon->SetCaretEnabled(PR_TRUE);
+        mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
+      }
     }    
     mEditor->SetFlags(flags);
   }
