@@ -140,7 +140,7 @@ INCS=$(INCS) -I$(PUBLIC) -I$(DIST)\include -I$(XPDIST)\include\nspr
 
 REQINCS1=REQINCS=-I $(XPDIST)/include/$(REQUIRES: = -I$(XPDIST^)/include/)
 
-!if [echo.$(REQINCS1) > reqincs.inc]
+!if [echo $(REQINCS1) > reqincs.inc]
 !endif
 
 !include reqincs.inc
