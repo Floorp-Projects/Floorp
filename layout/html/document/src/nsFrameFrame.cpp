@@ -17,7 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *    Travis Bogard <travis@netscape.com> 
  */
 #include "nsCOMPtr.h"
 #include "nsLeafFrame.h"
@@ -27,6 +28,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
+#include "nsIDocShellTreeOwner.h"
 #include "nsIBaseWindow.h"
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
@@ -713,20 +715,10 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
   if (nsnull != container) {
     nsCOMPtr<nsIDocShellTreeNode> parentAsNode(do_QueryInterface(container));
     if (parentAsNode) {
-      parentAsNode->AddChild(docShellAsItem);
-
-      // connect the container...
-      nsIWebShellContainer* outerContainer = nsnull;
-      container->QueryInterface(kIWebShellContainerIID, (void**) &outerContainer);
-      if (nsnull != outerContainer) {
-        mWebShell->SetContainer(outerContainer);
-        NS_RELEASE(outerContainer);
-      }
-
-#ifdef INCLUDE_XUL
       nsCOMPtr<nsIDocShellTreeItem> parentAsItem(do_QueryInterface(parentAsNode));
       PRInt32 parentType;
       parentAsItem->GetItemType(&parentType);
+
       nsIAtom* typeAtom = NS_NewAtom("type");
       nsAutoString value, valuePiece;
       PRBool isContent;
@@ -746,20 +738,34 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
       if (isContent) {
         // The web shell's type is content.
         docShellAsItem->SetItemType(nsIDocShellTreeItem::typeContent);
-        nsCOMPtr<nsIWebShellContainer> shellAsContainer(do_QueryInterface(mWebShell));
-        shellAsContainer->ContentShellAdded(mWebShell, content);
       } else {
         // Inherit our type from our parent webshell.  If it is
         // chrome, we'll be chrome.  If it is content, we'll be
         // content.
         docShellAsItem->SetItemType(parentType);
       }
+      
+      parentAsNode->AddChild(docShellAsItem);
+
+      if (isContent) {
+        nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
+        parentAsItem->GetTreeOwner(getter_AddRefs(parentTreeOwner));
+        if(parentTreeOwner)
+          parentTreeOwner->ContentShellAdded(docShellAsItem, 
+            value.EqualsIgnoreCase("content-primary") ? PR_TRUE : PR_FALSE, 
+            value.GetUnicode());
+      }
+      // connect the container...
+      nsCOMPtr<nsIWebShellContainer> outerContainer(do_QueryInterface(container));
+      if (outerContainer)
+        mWebShell->SetContainer(outerContainer);
+
 
       // Make sure all shells have links back to the content element in the
       // nearest enclosing chrome shell.
       nsCOMPtr<nsIDocShell> parentShell(do_QueryInterface(parentAsNode));
       nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
-      if (parentType == nsWebShellChrome) {
+      if (parentType == nsIDocShellTreeItem::typeChrome) {
         // Our parent shell is a chrome shell. It is therefore our nearest
         // enclosing chrome shell.
         chromeEventHandler = do_QueryInterface(mContent);
@@ -773,7 +779,6 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
 
       mWebShell->SetChromeEventHandler(chromeEventHandler);
       
-#endif // INCLUDE_XUL 
 
       nsCOMPtr<nsIPref> parentPrefs; // connect the prefs
       parentShell->GetPrefs(getter_AddRefs(parentPrefs));
