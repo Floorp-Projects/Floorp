@@ -86,55 +86,14 @@ nsPluginInstancePeerImpl::~nsPluginInstancePeerImpl()
 static NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID); 
 static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID); 
 static NS_DEFINE_IID(kIJVMPluginTagInfoIID, NS_IJVMPLUGINTAGINFO_IID); 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIWindowlessPluginInstancePeerIID, NS_IWINDOWLESSPLUGININSTANCEPEER_IID);//~~~
 
-NS_IMPL_ADDREF(nsPluginInstancePeerImpl);
-NS_IMPL_RELEASE(nsPluginInstancePeerImpl);
-
-nsresult nsPluginInstancePeerImpl::QueryInterface(const nsIID& iid, void** instance)
-{
-  if (instance == NULL)
-    return NS_ERROR_NULL_POINTER;
-
-  if (iid.Equals(NS_GET_IID(nsIPluginInstancePeer)) || iid.Equals(NS_GET_IID(nsIPluginInstancePeer2))) {
-    *instance = (void *)(nsIPluginInstancePeer2*)this;
-    AddRef();
-    return NS_OK;
-  }
-
-  if (iid.Equals(kIWindowlessPluginInstancePeerIID)) {
-    *instance = (void *)(nsIWindowlessPluginInstancePeer*)this;
-    AddRef();
-    return NS_OK;
-  }
-
-  if (iid.Equals(kIPluginTagInfoIID)) {
-    *instance = (void *)(nsIPluginTagInfo *)this;
-    AddRef();
-    return NS_OK;
-  }
-
-  if (iid.Equals(kIPluginTagInfo2IID)) {
-    *instance = (void *)(nsIPluginTagInfo2 *)this;
-    AddRef();
-    return NS_OK;
-  }
-
-  if (iid.Equals(kIJVMPluginTagInfoIID)) {
-    *instance = (void *)(nsIJVMPluginTagInfo *)this;
-    AddRef();
-    return NS_OK;
-  }
-
-  if (iid.Equals(kISupportsIID)) {
-    *instance = (void *)(nsISupports *)(nsIPluginTagInfo *)this;
-    AddRef();
-    return NS_OK;
-  }
-
-  return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS6(nsPluginInstancePeerImpl,
+                   nsIPluginInstancePeer,
+                   nsIPluginInstancePeer2,
+                   nsIWindowlessPluginInstancePeer,
+                   nsIPluginTagInfo2,
+                   nsIJVMPluginTagInfo,
+                   nsPIPluginInstancePeer);
 
 NS_IMETHODIMP nsPluginInstancePeerImpl::GetValue(nsPluginInstancePeerVariable variable, void *value)
 {
@@ -218,7 +177,7 @@ nsPluginStreamToFile::nsPluginStreamToFile(const char* target, nsIPluginInstance
   if (NS_FAILED(rv))
     return;
 	
-  mOutputStream->Close();
+  //mOutputStream->Close();
 
   // construct the URL we'll use later in calls to GetURL()
   NS_GetURLSpecFromFile(mTempFile, mFileURL);
@@ -837,15 +796,10 @@ nsresult nsPluginInstancePeerImpl::SetOwner(nsIPluginInstanceOwner *aOwner)
   return NS_OK;
 }
 
-nsresult nsPluginInstancePeerImpl::GetOwner(nsIPluginInstanceOwner *&aOwner)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetOwner(nsCOMPtr<nsIPluginInstanceOwner> &aOwner)
 {
-  aOwner = mOwner;
-  NS_IF_ADDREF(mOwner);
-
-  if (nsnull != mOwner)
-    return NS_OK;
-  else
-    return NS_ERROR_FAILURE;
+  aOwner = mOwner; // this assignment will addref
+  return (mOwner) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 
