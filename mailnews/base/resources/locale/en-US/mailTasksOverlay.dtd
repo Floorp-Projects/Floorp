@@ -3,6 +3,10 @@
 <!ENTITY messengerCmd.label					"Mail">
 <!ENTITY messengerCmd.accesskey				"m">
 <!ENTITY messengerCmd.commandkey			"2">
+<!ENTITY addressBookCmd.label				"Address Book">  
+<!ENTITY addressBookCmd.accesskey			"a">
+<!ENTITY addressBookCmd.commandkey			"5">
 
 <!ENTITY taskMessenger.tooltip  "Mail">
+<!ENTITY taskAddressBook.tooltip  "Address Book">
 
