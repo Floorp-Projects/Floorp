@@ -162,7 +162,6 @@ static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDomNodeIID,            NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDomElementIID,         NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDomEventListenerIID,   NS_IDOMEVENTLISTENER_IID);
-static NS_DEFINE_IID(kIDomUIEventIID,         NS_IDOMUIEVENT_IID);
 
 enum eEventType {
   eKeyPress,
@@ -347,11 +346,10 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 	}
   
 	// Get DOMEvent target
-	nsIDOMNode* target = nsnull;
-	aKeyEvent->GetTarget(&target);
+	nsCOMPtr<nsIDOMNode> target = nsnull;
+	aKeyEvent->GetTarget(getter_AddRefs(target));
 
-	nsIDOMKeyEvent * keyEvent;
-	aKeyEvent->QueryInterface(kIDomUIEventIID, (void**)&keyEvent);
+	nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
 	// Find a keyset node
 
 	// locate the window element which holds the top level key bindings
