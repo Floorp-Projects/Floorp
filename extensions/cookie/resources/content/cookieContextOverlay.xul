@@ -127,12 +127,6 @@
 
     window.addEventListener("load", cookieContextMenu.addContextMenuItemListeners, false);
 
-    // For some unexplainable reason, this overlay is loaded twice as can be demonstrated
-    // by uncommenting the following "dump" statement which will get displayed twice
-    //    dump("$$$$$$$$$$ HERE WE ARE IN cookieContextOverlay.xul $$$$$$$$$$\n");
-    // As a consequence, the block-image item appears twice in the context menu.  To
-    // prevent that from happening, the "display:none" was added to the menuitem below
-
    ]]>
   </script>         
 
@@ -142,13 +136,11 @@
               label="&blockImageCmd.label;"
               accesskey=""
               oncommand="cookieContextMenu.blockImage();"
-              style="display:none;"
               insertafter="context-viewimage"/>
     <menuitem id="context-unblockimage"
               label="&unblockImageCmd.label;"
               accesskey=""
               oncommand="cookieContextMenu.unblockImage();"
-              style="display:none;"
               insertafter="context-viewimage"/>
   </popup>
 </overlay>
