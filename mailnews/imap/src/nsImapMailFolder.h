@@ -266,6 +266,8 @@ protected:
 	nsresult AddSubfolder(nsAutoString name, nsIMsgFolder **child);
 
 	nsresult GetDatabase();
+    static PRBool FindAndSelectFolder(nsISupports* aElement,
+                                                      void* aData);
 
     nsNativeFileSpec m_pathName;
 	nsIMsgDatabase* m_mailDatabase;
