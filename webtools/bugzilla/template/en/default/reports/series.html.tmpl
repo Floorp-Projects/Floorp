@@ -36,7 +36,7 @@
   <tbody>
     <tr>
       <th>Category:</th>
-      <noscript><th></th></noscript>
+      <th></th>
       <th>Sub-category:</th>
       <th>Name:</th>
       <td></td>
@@ -45,11 +45,11 @@
       [% PROCESS series_select sel = { name => 'category',
                                        size => 5,
                                        onchange => "catSelected()" } %]
-        <noscript>
-          <td>
-            <input type="submit" name="action-edit" value="Update -->">
-          </td>
-        </noscript>
+        <td>
+          <noscript>
+            <input type="submit" name="action-edit" value="Update --&gt;">
+          </noscript>
+        </td>
         
       [% PROCESS series_select sel = { name => 'subcategory', 
                                        size => 5,
@@ -81,7 +81,7 @@
         <input type="text" style="width: 100%" name="newcategory" 
                maxlength="64" value="[% default.newcategory.0 FILTER html %]">
       </td>
-        <noscript><td></td></noscript>
+        <td></td>
       <td>
         <input type="text" style="width: 100%" name="newsubcategory"
                maxlength="64" 

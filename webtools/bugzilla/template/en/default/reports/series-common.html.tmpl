@@ -30,7 +30,7 @@
 [% subcategory = category.${default.category} %]
 [% name = subcategory.${default.subcategory} %]
 
-<script>
+<script type="text/javascript">
 [%# This structure holds details of the series the user can select from. %]
 var series = {
 [% FOREACH c = category.keys.sort %]
@@ -102,7 +102,8 @@ function checkNewState() {
     <label for="[% sel.name %]" accesskey="[% sel.accesskey %]">
       <select name="[% sel.name %]" id="[% sel.name %]"
               size="[% sel.size %]" style="width: 15em"
-              [%+ "onchange='$sel.onchange'" IF sel.onchange %]>
+              [%+ "disabled=\"disabled\"" UNLESS ${sel.name}.keys.size || newtext %]
+              [%+ "onchange=\"$sel.onchange\"" IF sel.onchange %]>
         [% FOREACH x = ${sel.name}.keys.sort %]
           <option value="[% x FILTER html %]"
             [% " selected" IF default.${sel.name} == x %]>
@@ -110,6 +111,8 @@ function checkNewState() {
         [% END %]
         [% IF newtext %]
           <option value="">[% newtext FILTER html %]</option>
+        [% ELSIF NOT ${sel.name}.keys.size %]
+          <option value="" disabled="disabled"></option>
         [% END %]
       </select>
     </label>

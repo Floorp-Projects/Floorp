@@ -71,9 +71,9 @@ function subcatSelected() {
     [% ELSE %]
       <tr>
         <th>Category:</th>
-        <noscript><th></th></noscript>
+        <th></th>
         <th>Sub-category:</th>
-        <noscript><th></th></noscript>
+        <th></th>
         <th>Name:</th>
         <th><br>
         </th>
@@ -85,29 +85,33 @@ function subcatSelected() {
                                          onchange = "catSelected();
                                                      subcatSelected();" } %]
                                    
-        <noscript>
-          <td>
+        <td>
+          <noscript>
             <input type="submit" name="action-assemble" value="Update --&gt;">
-          </td>
-        </noscript>
+          </noscript>
+        </td>
         
         [% PROCESS series_select sel = { name => 'subcategory', 
                                          size => 5,
                                          onchange = "subcatSelected()" } %]
                                    
-        <noscript>
-          <td>
-            <input type="submit" name="action-assemble" value="Update --%gt;">
-          </td>
-        </noscript>
+        <td>
+          <noscript>
+            <input type="submit" name="action-assemble" value="Update --&gt;">
+          </noscript>
+        </td>
         
         <td align="left">
           <label for="name" accesskey="N">
             <select name="name" id="name" style="width: 15em"
                     size="5" multiple="multiple"
+                    [%+ "disabled=\"disabled\"" UNLESS name.keys.size %]>
               [% FOREACH x = name.keys.sort %]
                 <option value="[% name.$x FILTER html %]">
                   [% x FILTER html %]</option>
+              [% END %]
+              [% UNLESS name.keys.size %]
+                <option value="" disabled="disabled"></option>
               [% END %]
             </select>
           </label>
@@ -122,6 +126,8 @@ function subcatSelected() {
 
   <script language="JavaScript" type="text/javascript">
     document.chartform.category[0].selected = true;
+    document.chartform.subcategory.disabled = '';
+    document.chartform.name.disabled = '';
     catSelected();
     subcatSelected();
   </script>

@@ -187,7 +187,7 @@
 'reports/series-common.html.tmpl' => [
   'sel.name', 
   'sel.accesskey', 
-  '"onchange=\'$sel.onchange\'" IF sel.onchange', 
+  '"onchange=\"$sel.onchange\"" IF sel.onchange', 
 ],
 
 'reports/chart.csv.tmpl' => [
