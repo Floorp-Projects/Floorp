@@ -66,6 +66,7 @@ XPIDL_MODULE = xpcom_ds
 
 XPIDLSRCS =                         \
         .\nsIAtom.idl               \
+		.\nsIAtomService.idl		\
         .\nsICollection.idl         \
         .\nsIEnumerator.idl         \
 	.\nsIObserver.idl           \
@@ -93,6 +94,7 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsTextFormatter.obj            \
         .\$(OBJDIR)\nsArena.obj                   \
         .\$(OBJDIR)\nsAtomTable.obj               \
+		.\$(OBJDIR)\nsAtomService.obj			  \
         .\$(OBJDIR)\nsAVLTree.obj                 \
         .\$(OBJDIR)\nsByteBuffer.obj              \
         .\$(OBJDIR)\nsCRT.obj                     \

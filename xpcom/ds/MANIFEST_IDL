@@ -1,4 +1,5 @@
 nsIAtom.idl
+nsIAtomService.idl
 nsICollection.idl
 nsIEnumerator.idl
 nsIObserver.idl
