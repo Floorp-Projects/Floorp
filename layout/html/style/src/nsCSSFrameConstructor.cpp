@@ -769,7 +769,8 @@ public:
 
   // Function to push the existing absolute containing block state and
   // create a new scope
-  void PushAbsoluteContainingBlock(nsIFrame* aNewAbsoluteContainingBlock,
+  void PushAbsoluteContainingBlock(nsIPresContext* aPresContext,
+                                   nsIFrame* aNewAbsoluteContainingBlock,
                                    nsFrameConstructorSaveState& aSaveState);
 
   // Function to push the existing floater containing block state and
@@ -813,13 +814,35 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresContext*        aPresCon
   mPresShell->GetHistoryState(getter_AddRefs(mFrameState));
 }
 
+// Use the first-in-flow of a positioned inline frame in galley mode as the 
+// containing block. We don't need to do this for a block, since blocks aren't 
+// continued in galley mode.
+static nsIFrame*
+AdjustAbsoluteContainingBlock(nsIPresContext* aPresContext,
+                              nsIFrame*       aContainingBlockIn)
+{
+  nsIFrame* containingBlock = aContainingBlockIn;
+  PRBool paginated;
+  aPresContext->IsPaginated(&paginated);
+  if (!paginated) {
+    nsCOMPtr<nsIAtom> fType;
+    containingBlock->GetFrameType(getter_AddRefs(fType));
+    if (nsLayoutAtoms::positionedInlineFrame == fType) {
+      containingBlock = ((nsPositionedInlineFrame*)containingBlock)->GetFirstInFlow();
+    }
+  }
+  return containingBlock;
+}
+
 void
-nsFrameConstructorState::PushAbsoluteContainingBlock(nsIFrame* aNewAbsoluteContainingBlock,
+nsFrameConstructorState::PushAbsoluteContainingBlock(nsIPresContext* aPresContext,
+                                                     nsIFrame* aNewAbsoluteContainingBlock,
                                                      nsFrameConstructorSaveState& aSaveState)
 {
   aSaveState.mItems = &mAbsoluteItems;
   aSaveState.mSavedItems = mAbsoluteItems;
-  mAbsoluteItems = nsAbsoluteItems(aNewAbsoluteContainingBlock);
+  mAbsoluteItems = 
+    nsAbsoluteItems(AdjustAbsoluteContainingBlock(aPresContext, aNewAbsoluteContainingBlock));
 }
 
 void
@@ -3531,7 +3554,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
       PRBool haveFirstLetterStyle, haveFirstLineStyle;
       HaveSpecialBlockStyle(aPresContext, aDocElement, styleContext,
                             &haveFirstLetterStyle, &haveFirstLineStyle);
-      aState.PushAbsoluteContainingBlock(contentFrame, absoluteSaveState);
+      aState.PushAbsoluteContainingBlock(aPresContext, contentFrame, absoluteSaveState);
       aState.PushFloaterContainingBlock(contentFrame, floaterSaveState,
                                         haveFirstLetterStyle,
                                         haveFirstLineStyle);
@@ -4496,7 +4519,7 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsIPresShell*        aPresShell,
     if (isPositionedContainingBlock) {
       // The area frame becomes a container for child frames that are
       // absolutely positioned
-      aState.PushAbsoluteContainingBlock(scrolledFrame, absoluteSaveState);
+      aState.PushAbsoluteContainingBlock(aPresContext, scrolledFrame, absoluteSaveState);
     }
      
     ProcessChildren(aPresShell, aPresContext, aState, aContent, scrolledFrame, PR_FALSE,
@@ -4615,7 +4638,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*            aPresShel
     if (isPositionedContainingBlock) {
       // The area frame becomes a container for child frames that are
       // absolutely positioned
-      aState.PushAbsoluteContainingBlock(areaFrame, absoluteSaveState);
+      aState.PushAbsoluteContainingBlock(aPresContext, areaFrame, absoluteSaveState);
     }
      
     ProcessChildren(aPresShell, aPresContext, aState, aContent, areaFrame, PR_FALSE,
@@ -5017,7 +5040,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
         // The area frame becomes a container for child frames that are
         // absolutely positioned
         nsFrameConstructorSaveState absoluteSaveState;
-        aState.PushAbsoluteContainingBlock(newFrame, absoluteSaveState);
+        aState.PushAbsoluteContainingBlock(aPresContext, newFrame, absoluteSaveState);
         
         // Process the child frames
         rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame,
@@ -6364,7 +6387,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
     if (isPositionedContainingBlock) {
       // The area frame becomes a container for child frames that are
       // absolutely positioned
-      aState.PushAbsoluteContainingBlock(scrolledFrame, absoluteSaveState);
+      aState.PushAbsoluteContainingBlock(aPresContext, scrolledFrame, absoluteSaveState);
     }
      
     ProcessChildren(aPresShell, aPresContext, aState, aContent, scrolledFrame, PR_FALSE,
@@ -6428,7 +6451,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
       HaveSpecialBlockStyle(aPresContext, aContent, aStyleContext,
                             &haveFirstLetterStyle, &haveFirstLineStyle);
     }
-    aState.PushAbsoluteContainingBlock(newFrame, absoluteSaveState);
+    aState.PushAbsoluteContainingBlock(aPresContext, newFrame, absoluteSaveState);
     aState.PushFloaterContainingBlock(newFrame, floaterSaveState,
                                       haveFirstLetterStyle,
                                       haveFirstLineStyle);
@@ -7698,13 +7721,10 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIPresContext* aPresContext,
     }
   }
 
-  // If we didn't find an absolutely positioned containing block, then use the
-  // initial containing block
-  if (!containingBlock) {
-    containingBlock = mInitialContainingBlock;
-  }
-  
-  return containingBlock;
+  // If we found an absolutely positioned containing block, then use the first-in-flow if 
+  // it is a positioned inline. If we didn't find it, then use the initial containing block. 
+  return (containingBlock) ? AdjustAbsoluteContainingBlock(aPresContext, containingBlock)
+                           : mInitialContainingBlock;
 }
 
 nsIFrame*
@@ -13328,7 +13348,7 @@ nsCSSFrameConstructor::ConstructBlock(nsIPresShell*            aPresShell,
   nsFrameConstructorSaveState absoluteSaveState;
   if (aRelPos || !aState.mAbsoluteItems.containingBlock) {
     NS_ASSERTION(aRelPos, "should have made area frame for this");
-    aState.PushAbsoluteContainingBlock(aNewFrame, absoluteSaveState);
+    aState.PushAbsoluteContainingBlock(aPresContext, aNewFrame, absoluteSaveState);
   }
 
   // See if the block has first-letter style applied to it...
@@ -13476,7 +13496,7 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell*            aPresShell,
   if (aIsPositioned) {                            
     // Relatively positioned frames becomes a container for child
     // frames that are positioned
-    aState.PushAbsoluteContainingBlock(aNewFrame, absoluteSaveState);
+    aState.PushAbsoluteContainingBlock(aPresContext, aNewFrame, absoluteSaveState);
   }
 
   // Process the child content
