@@ -29,7 +29,6 @@ nsIDialog.h
 nsILabel.h
 nsILookAndFeel.h
 nsWidgetSupport.h
-<<<<<<< MANIFEST
 nsIMenu.h
 nsIMenuBar.h
 nsIMenuButton.h
