@@ -42,6 +42,8 @@ Transaction Listener interface to outside world
 class nsITransactionListener : public nsISupports {
 public:
 
+  static const nsIID& IID() { static nsIID iid = NS_ITRANSACTIONLISTENER_IID; return iid; }
+
   /**
    * Called when a transaction manager is doing a transaction.
    * @param aContinue if true, transaction manager continues normal processing.
