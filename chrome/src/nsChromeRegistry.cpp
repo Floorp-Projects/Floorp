@@ -479,17 +479,6 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
         // it's ok to not have a user.css file
       }
     }
-    else if (!mInstallInitialized) {
-      // Load the installed search path for skins, content, and locales
-      // Prepend them to our list of substitutions
-      mInstallInitialized = PR_TRUE;
-      rv = AddToCompositeDataSource(PR_FALSE);
-      if (NS_FAILED(rv)) return rv;
-
-      rv = LoadStyleSheet(getter_AddRefs(mScrollbarSheet), nsCAutoString("chrome://global/skin/scrollbars.css")); 
-      if (NS_FAILED(rv)) return rv;
-      // This must always be the last line of install initialization!
-    }
   }
  
   nsCAutoString finalURL;
@@ -2377,6 +2366,17 @@ nsChromeRegistry::CheckForNewChrome()
   rv = GetInstallRoot(mInstallRoot); // ensure install root is set
   if (NS_FAILED(rv)) return rv;
 
+  if (!mInstallInitialized) {
+    // Load the installed search path for skins, content, and locales
+    // Prepend them to our list of substitutions
+    mInstallInitialized = PR_TRUE;
+    rv = AddToCompositeDataSource(PR_FALSE);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = LoadStyleSheet(getter_AddRefs(mScrollbarSheet), nsCAutoString("chrome://global/skin/scrollbars.css")); 
+    if (NS_FAILED(rv)) return rv;
+  }
+
   // open the installed-chrome file
   nsCOMPtr<nsIFileLocator> locator;
   rv = nsComponentManager::CreateInstance("component://netscape/filelocator",
@@ -2435,11 +2435,13 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
          *chromeLocType,   // type of location (local path or URL)
          *chromeLocation;  // base location of chrome (jar file)
   PRBool isProfile;
+  PRBool isSelection;
 
   nsCAutoString content("content");
   nsCAutoString locale("locale");
   nsCAutoString skin("skin");
   nsCAutoString profile("profile");
+  nsCAutoString select("select");
   nsCAutoString path("path");
   nsCAutoString fileURL;
   nsCAutoString chromeURL;
@@ -2478,6 +2480,7 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
 
     // process the parsed line
     isProfile = profile.Equals(chromeProfile);
+    isSelection = select.Equals(chromeLocType);
 
     if (path.Equals(chromeLocType)) {
       // location is a (full) path. convert it to an URL.
@@ -2495,12 +2498,30 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
       chromeURL = chromeLocation;
 
     // process the line
-    if (skin.Equals(chromeType))
-      rv = InstallSkin(chromeURL, isProfile, PR_FALSE);
+    if (skin.Equals(chromeType)) {
+      if (isSelection) {
+        nsAutoString name; name.AssignWithConversion(chromeLocation);
+        rv = SelectSkin(name.GetUnicode(), isProfile);
+#ifdef DEBUG
+        printf("***** Chrome Registration: Selecting skin %s as default\n", (const char*)chromeLocation);
+#endif
+      }
+      else 
+        rv = InstallSkin(chromeURL, isProfile, PR_FALSE);
+    }
     else if (content.Equals(chromeType))
       rv = InstallPackage(chromeURL, isProfile);
-    else if (locale.Equals(chromeType))
-      rv = InstallLocale(chromeURL, isProfile);
+    else if (locale.Equals(chromeType)) {
+      if (isSelection) {
+        nsAutoString name; name.AssignWithConversion(chromeLocation);
+        rv = SelectLocale(name.GetUnicode(), isProfile);
+#ifdef DEBUG
+        printf("***** Chrome Registration: Selecting locale %s as default\n", (const char*)chromeLocation);
+#endif
+      }
+      else 
+        rv = InstallLocale(chromeURL, isProfile);
+    }
     if (NS_FAILED(rv)) return rv;
 
     while (aBuffer < bufferEnd && (*aBuffer == '\0' || *aBuffer == ' ' || *aBuffer == '\r' || *aBuffer == '\n'))
