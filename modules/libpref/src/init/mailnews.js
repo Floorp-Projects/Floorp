@@ -295,6 +295,8 @@ pref("mail.toolbars.showbutton.junk", true);
 pref("mail.toolbars.showbutton.print",false);
 pref("mail.toolbars.showbutton.stop", false);
 
+pref("mailnews.thread_pane_column_unthreads", true);
+
 pref("mailnews.account_central_page.url", "chrome://messenger/locale/messenger.properties");
 
 /* default prefs for Mozilla 5.0 */
