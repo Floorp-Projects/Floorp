@@ -369,8 +369,10 @@ XULPopupListenerImpl::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
     return NS_ERROR_FAILURE;
   }
 
-  // Store clicked-on node in xul document.
-  xulDocument->SetPopupNode( targetNode );
+  // Store clicked-on node in xul document for context menus and menu popups.
+  // Tooltips are stored in tooltipNode instead.
+  if (popupType != eXULPopupType_tooltip)
+    xulDocument->SetPopupNode( targetNode );
 
   switch (popupType) {
     case eXULPopupType_popup:
