@@ -12,7 +12,7 @@
 <!ENTITY openMessageMenu.label "Open">
 <!ENTITY openMessageWindowCmd.label "Open Message">
 <!ENTITY openMessageWindowCmd.accesskey "s">
-<!ENTITY openMessageFileCmd.label ""Open Saved Message..."">
+<!ENTITY openMessageFileCmd.label "Open Saved Message...">
 <!ENTITY openMessageFileCmd.accesskey "O">
 <!ENTITY openAttachmentCmd.label "Attachments">
 <!ENTITY openAttachmentCmd.accesskey "A">
