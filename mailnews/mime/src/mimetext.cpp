@@ -29,6 +29,7 @@
 #include "mimebuf.h"
 #include "mimethtm.h"
 #include "comi18n.h"
+#include "mimemoz2.h"
 
 #include "prlog.h"
 #include "prmem.h"
@@ -78,6 +79,7 @@ MimeInlineText_initialize (MimeObject *obj)
   PR_ASSERT(obj->clazz != (MimeObjectClass *) &mimeInlineTextClass);
 
   ((MimeInlineText *) obj)->initializeCharset = PR_FALSE;
+  ((MimeInlineText *) obj)->needUpdateMsgWinCharset = PR_FALSE;
   return ((MimeObjectClass*)&MIME_SUPERCLASS)->initialize(obj);
 }
 
@@ -168,6 +170,14 @@ static int MimeInlineText_initializeCharset(MimeObject *obj)
       PR_FREEIF(text->lineDamBuffer);
       PR_FREEIF(text->lineDamPtrs);
     }
+  }
+
+  //update MsgWindow charset if we are instructed to do so
+  if (text->needUpdateMsgWinCharset && *text->charset) {
+    if (!nsCRT::strcasecmp(text->charset, "us-ascii"))
+      SetMailCharacterSetToMsgWindow(obj, NS_LITERAL_STRING("ISO-8859-1").get());
+    else
+      SetMailCharacterSetToMsgWindow(obj, NS_ConvertASCIItoUCS2(text->charset).get());
   }
 
   text->initializeCharset = PR_TRUE;
@@ -354,6 +364,14 @@ MimeInlineText_convert_and_parse_line(char *line, PRInt32 length, MimeObject *ob
         MIME_get_unicode_decoder(textHTML->charset, getter_AddRefs(text->inputDecoder));
         PR_FREEIF(text->charset);
         text->charset = nsCRT::strdup(textHTML->charset);
+
+        //update MsgWindow charset if we are instructed to do so
+        if (text->needUpdateMsgWinCharset && *text->charset) {
+          if (!nsCRT::strcasecmp(text->charset, "us-ascii"))
+            SetMailCharacterSetToMsgWindow(obj, NS_LITERAL_STRING("ISO-8859-1").get());
+          else
+            SetMailCharacterSetToMsgWindow(obj, NS_ConvertASCIItoUCS2(text->charset).get());
+        }
       }
     }
   }
@@ -432,6 +450,14 @@ MimeInlineText_open_dam(char *line, PRInt32 length, MimeObject *obj)
   if (NS_SUCCEEDED(res) && detectedCharset && *detectedCharset)  {
     PR_FREEIF(text->charset);
     text->charset = nsCRT::strdup(detectedCharset);
+
+    //update MsgWindow charset if we are instructed to do so
+    if (text->needUpdateMsgWinCharset && *text->charset) {
+      if (!nsCRT::strcasecmp(text->charset, "us-ascii"))
+        SetMailCharacterSetToMsgWindow(obj, NS_LITERAL_STRING("ISO-8859-1").get());
+      else
+        SetMailCharacterSetToMsgWindow(obj, NS_ConvertASCIItoUCS2(text->charset).get());
+    }
   }
 
   //process dam and line using the charset

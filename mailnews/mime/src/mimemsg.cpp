@@ -449,30 +449,7 @@ HG09091
   // Only do this if this is a Text Object!
   if ( mime_typep(body, (MimeObjectClass *) &mimeInlineTextClass) )
   {
-    // Get a charset to be used for the conversion.  
-    const char      *input_charset = NULL;
-    MimeInlineText  *text = (MimeInlineText *) body;
-
-    if (obj->options->override_charset && obj->options->default_charset && *obj->options->default_charset)
-      input_charset = obj->options->default_charset;
-    else if (!text->charsetOverridable)
-      input_charset = text->charset;
-    else 
-    {
-      if (obj->options->default_charset)
-        input_charset = obj->options->default_charset;
-      else
-        input_charset = text->charset;
-    }
-
-    // Store the charset used for the conversion, so we can put a menu check mark.  
-    if (input_charset)
-    {
-      if (!nsCRT::strcasecmp(input_charset, "us-ascii"))
-        SetMailCharacterSetToMsgWindow(obj, NS_LITERAL_STRING("ISO-8859-1").get());
-      else
-        SetMailCharacterSetToMsgWindow(obj, NS_ConvertASCIItoUCS2(input_charset).get());
-    }
+    ((MimeInlineText *) body)->needUpdateMsgWinCharset = PR_TRUE;
   }
 
   /* Now that we've added this new object to our list of children,

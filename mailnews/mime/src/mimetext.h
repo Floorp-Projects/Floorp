@@ -92,6 +92,7 @@ struct MimeInlineText {
 							           object, or the caller-specified overrides
 							           or defaults. */
   PRBool charsetOverridable; 
+  PRBool needUpdateMsgWinCharset; 
   char *cbuffer;			/* Buffer used for charset conversion. */
   PRInt32 cbuffer_size;
   
