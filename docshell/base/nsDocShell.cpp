@@ -53,7 +53,6 @@
 
 // Interfaces Needed
 #include "nsICharsetConverterManager.h"
-#include "nsIGlobalHistory.h"
 #include "nsIHTTPChannel.h"
 #include "nsILayoutHistoryState.h"
 #include "nsILocaleService.h"
@@ -163,7 +162,7 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
    if(aIID.Equals(NS_GET_IID(nsIURIContentListener)) &&
       NS_SUCCEEDED(EnsureContentListener()))
       *aSink = mContentListener;
-   if(aIID.Equals(NS_GET_IID(nsIWebProgressListener)) &&
+   else if(aIID.Equals(NS_GET_IID(nsIWebProgressListener)) &&
       NS_SUCCEEDED(EnsureWebProgressListener()))
       *aSink = mWebProgressListener;
    else if(aIID.Equals(NS_GET_IID(nsIScriptGlobalObject)) &&
@@ -637,7 +636,11 @@ NS_IMETHODIMP nsDocShell::SetParent(nsIDocShellTreeItem* aParent)
    the parent.
    */
    mParent = aParent;
-  return NS_OK;
+
+   nsCOMPtr<nsIURIContentListener> parentURIListener(do_GetInterface(aParent));
+   if(parentURIListener)
+      SetParentURIContentListener(parentURIListener);
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::GetSameTypeParent(nsIDocShellTreeItem** aParent)
@@ -1624,13 +1627,13 @@ NS_IMETHODIMP nsDocShell::SetTitle(const PRUnichar* aTitle)
       treeOwnerAsWin->SetTitle(aTitle);
       }
 
-   nsCOMPtr<nsIGlobalHistory> 
-      globalHistory(do_GetService(NS_GLOBALHISTORY_PROGID));
-   if(globalHistory && mCurrentURI)
+   EnsureGlobalHistory();
+
+   if(mGlobalHistory && mCurrentURI)
       {
       nsXPIDLCString url;
       mCurrentURI->GetSpec(getter_Copies(url));
-      globalHistory->SetPageTitle(url, aTitle);
+      mGlobalHistory->SetPageTitle(url, aTitle);
       }
 
 
@@ -2717,6 +2720,18 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry)
 // nsDocShell: Global History
 //*****************************************************************************   
 
+NS_IMETHODIMP nsDocShell::EnsureGlobalHistory()
+{
+   if(mGlobalHistory)
+      return NS_OK;
+
+   mGlobalHistory = do_GetService(NS_GLOBALHISTORY_PROGID);
+   if(!mGlobalHistory)
+      return NS_ERROR_FAILURE;
+
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsDocShell::ShouldAddToGlobalHistory(nsIURI* aURI, 
    PRBool* aShouldAdd)
 {
@@ -2733,17 +2748,12 @@ NS_IMETHODIMP nsDocShell::ShouldAddToGlobalHistory(nsIURI* aURI,
 
 NS_IMETHODIMP nsDocShell::AddToGlobalHistory(nsIURI* aURI)
 {
-   nsCOMPtr<nsIGlobalHistory> 
-                        globalHistory(do_GetService(NS_GLOBALHISTORY_PROGID));
-   
-   // XXX Remove this when this starts working
-   if(!globalHistory)
-      return NS_ERROR_FAILURE;
-   NS_ENSURE_TRUE(globalHistory, NS_ERROR_FAILURE);   
+   NS_ENSURE_SUCCESS(EnsureGlobalHistory(), NS_ERROR_FAILURE);
+
    nsXPIDLCString spec;
    NS_ENSURE_SUCCESS(aURI->GetSpec(getter_Copies(spec)), NS_ERROR_FAILURE);
 
-   NS_ENSURE_SUCCESS(globalHistory->AddPage(spec, nsnull, PR_Now()), 
+   NS_ENSURE_SUCCESS(mGlobalHistory->AddPage(spec, nsnull, PR_Now()), 
       NS_ERROR_FAILURE);
 
    return NS_OK;

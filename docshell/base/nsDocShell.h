@@ -23,8 +23,6 @@
 #ifndef nsDocShell_h__
 #define nsDocShell_h__
 
-#include "nsCOMPtr.h"
-#include "nsString.h"
 #include "nsIParser.h"  // for nsCharSetSource
 #include "nsIPresShell.h"
 #include "nsIDOMNode.h"
@@ -43,23 +41,28 @@
 #include "nsIDocumentLoader.h"
 #include "nsIDocumentLoaderObserver.h"
 
-#include "nsIScriptGlobalObject.h"
-#include "nsIScriptGlobalObjectOwner.h"
-#include "nsIInterfaceRequestor.h"
 
-#include "nsPoint.h" // mCurrent/mDefaultScrollbarPreferences
 
 
 // Local Includes
 #include "nsDSURIContentListener.h"
 #include "nsDSWebProgressListener.h"
 
+// Helper Classes
+#include "nsCOMPtr.h"
+#include "nsPoint.h" // mCurrent/mDefaultScrollbarPreferences
+#include "nsString.h"
+
 // Interfaces Needed
 #include "nsIDocumentCharsetInfo.h"
+#include "nsIGlobalHistory.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIRefreshURI.h"
-#include "nsISupportsArray.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptGlobalObjectOwner.h"
 #include "nsISHistory.h"
 #include "nsIStringBundle.h"
+#include "nsISupportsArray.h"
 #include "nsITimerCallback.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebProgress.h"
@@ -204,6 +207,7 @@ protected:
    NS_IMETHOD LoadHistoryEntry(nsISHEntry* aEntry);
 
    // Global History
+   NS_IMETHOD EnsureGlobalHistory();
    NS_IMETHOD ShouldAddToGlobalHistory(nsIURI* aURI, PRBool* aShouldAdd);
    NS_IMETHOD AddToGlobalHistory(nsIURI* aURI);
    NS_IMETHOD UpdateCurrentGlobalHistory();
@@ -263,6 +267,7 @@ protected:
    nsCOMPtr<nsIScriptGlobalObject> mScriptGlobal;
    nsCOMPtr<nsIScriptContext> mScriptContext;
    nsCOMPtr<nsISHistory>      mSessionHistory;
+   nsCOMPtr<nsIGlobalHistory> mGlobalHistory;
    nsCOMPtr<nsISupportsArray> mWebProgressListenerList;
    nsCOMPtr<nsISupports>      mLoadCookie; // the load cookie associated with the window context.
    PRInt32                    mMarginWidth;
