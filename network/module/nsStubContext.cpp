@@ -89,7 +89,7 @@ static nsINetSupport *getNetSupport(URL_Struct *URL_s)
 
       /* The nsINetSupport interface will be implemented by the container */
       nsresult err = pConn->pURL->GetContainer(&container);
-      if (err == NS_OK) {
+      if (NS_SUCCEEDED(err) && (nsnull != container)) {
         container->QueryInterface(kINetSupportIID, (void **) &netSupport);
         NS_RELEASE(container);
       }
