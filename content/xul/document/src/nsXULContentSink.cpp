@@ -939,11 +939,10 @@ NS_IMETHODIMP
 XULContentSinkImpl::HandleCharacterData(const PRUnichar *aData, 
                                         PRUint32 aLength)
 {
-  nsresult result = NS_OK;
-  if (aData) {
-    result = result = AddText(aData,aLength);
+  if (aData && mState != eInProlog && mState != eInEpilog) {
+    return AddText(aData, aLength);
   }
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
