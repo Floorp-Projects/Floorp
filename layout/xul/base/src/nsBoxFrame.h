@@ -208,8 +208,6 @@ protected:
   
     NS_IMETHOD  Destroy(nsIPresContext* aPresContext);
 
-    static void GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIFrame* aChild, nsIFrame** aResult);
-
     nsSize mPrefSize;
     nsSize mMinSize;
     nsSize mMaxSize;
