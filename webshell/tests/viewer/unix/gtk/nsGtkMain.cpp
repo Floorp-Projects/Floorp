@@ -46,9 +46,14 @@ int
 nsNativeViewerApp::Run()
 {
   OpenWindow();
-  NS_ADDREF(mAppShell);
-  mAppShell->Run();
-  NS_IF_RELEASE(mAppShell);
+  // XXX mAppShell can be set to NULL while mAppShell->Run() is running
+  // because nsViewerApp::Exit() is called.  I don't know what should
+  // happen, but this is a workaround that neither crashes nor leaks.
+  // See <URL: http://bugzilla.mozilla.org/show_bug.cgi?id=28557 >
+  nsIAppShell* theAppShell = mAppShell;
+  NS_ADDREF(theAppShell);
+  theAppShell->Run();
+  NS_RELEASE(theAppShell);
   return 0;
 }
 
