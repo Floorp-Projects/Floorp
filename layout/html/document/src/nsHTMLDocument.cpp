@@ -1742,8 +1742,9 @@ nsHTMLDocument::SetFgColor(const nsString& aFgColor)
 NS_IMETHODIMP    
 nsHTMLDocument::GetLastModified(nsString& aLastModified)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  //XXX TBImplemented
+  aLastModified.Truncate();
+  return NS_OK;
 }
 
 
@@ -1805,15 +1806,17 @@ nsHTMLDocument::GetLayers(nsIDOMHTMLCollection** aLayers)
 NS_IMETHODIMP    
 nsHTMLDocument::GetPlugins(nsIDOMHTMLCollection** aPlugins)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  //XXX TBImplemented
+  *aPlugins = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::GetSelection(nsString& aReturn)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  //XXX TBImplemented
+  aReturn.Truncate();
+  return NS_OK;
 }
 
 PRIntn 
