@@ -71,17 +71,3 @@ function themeSelect()
   }
 }
 
-function restoreDefaults()
-{
-  var theSkinKids = document.getElementById("theSkinKids");
-  if (theSkinKids.hasChildNodes()) {
-    var defaultTheme = theSkinKids.firstChild;
-    var tree = document.getElementById( "skinsTree" );
-    var selectedSkinItem = tree.selectedItems[0];
-    var skinName = selectedSkinItem.getAttribute( "name" );
-    chromeRegistry.selectSkin( skinName, DEBUG_USE_PROFILE ); 
-    chromeRegistry.refreshSkins();
-  }
-}
-  
-  
