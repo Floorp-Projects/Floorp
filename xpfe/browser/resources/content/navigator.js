@@ -744,7 +744,8 @@ function ensureSearchPref()
   var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
   var ds = rdf.GetDataSource("rdf:internetsearch");
   var mPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-  kNC_Name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
+  var kNC_Name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
+  var defaultEngine;
   try {
     defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
   } catch(ex) {
