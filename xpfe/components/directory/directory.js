@@ -39,9 +39,6 @@ function Init()
 {
     debug("directory.js: Init()\n");
 
-    // Add the HTTPIndex datasource into the tree
-    var tree = document.getElementById('tree');
-
     // Initialize the tree's base URL to whatever the HTTPIndex is rooted at
     var baseURI = HTTPIndex.BaseURL;
 
@@ -54,11 +51,26 @@ function Init()
     	baseURI += "/";
     }
     debug("base URL = " + baseURI + "\n");
-    
-    // Note: set encoding for FTP URLs BEFORE setting "ref"
-    HTTPIndex.encoding = "ISO-8859-1";
 
-    // re-root the tree
+    // Note: Add the HTTPIndex datasource into the tree
+    var tree = document.getElementById('tree');
+
+    // Note: set encoding BEFORE setting "ref" (important!)
+    var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
+    if (RDF)    RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+    if (RDF)
+    {
+        var httpDS = RDF.GetDataSource("rdf:httpindex");
+        if (httpDS) httpDS = httpDS.QueryInterface(Components.interfaces.nsIHTTPIndex);
+        if (httpDS)
+        {
+            // TO DO - The encoding should really be determined
+            // from the current encoding as chosen by the user
+            httpDS.encoding = "ISO-8859-1";
+        }
+    }
+
+    // root the tree (do this last)
     tree.setAttribute("ref", baseURI);
 }
 
