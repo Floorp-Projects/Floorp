@@ -47,6 +47,6 @@ static nsModuleComponentInfo components[] =
 };
 
 ////////////////////////////////////////////////////////////////////////
-// Implment the NSGetModule() exported function for your module
+// Implement the NSGetModule() exported function for your module
 //
 NS_IMPL_NSGETMODULE("nsSampleModule", components)
