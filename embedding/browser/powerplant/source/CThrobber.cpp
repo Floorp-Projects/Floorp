@@ -23,6 +23,10 @@
 #include "CThrobber.h"
 #include "CBrowserWindow.h"
 
+#include <LString.h>
+#include <LStream.h>
+#include <UDrawingState.h>
+
 #include "nsIWidget.h"
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
@@ -62,7 +66,7 @@ CThrobber::CThrobber() :
 
 
 CThrobber::CThrobber(LStream*	inStream) :
-   LView(inStream),
+   LControl(inStream),
    mImages(nsnull),
    mNumImages(0), mCompletedImages(0), mIndex(0), mRunning(false),
    mImageGroup(nsnull)
@@ -71,8 +75,9 @@ CThrobber::CThrobber(LStream*	inStream) :
   
    LStr255  tempStr;
    *inStream >> (StringPtr) tempStr;
-   *inStream >> mNumImages;
    mFileNamePattern.AssignWithConversion((char *)&tempStr[1], (PRInt32)tempStr.Length());
+   
+   mNumImages = mMaxValue;
 }
 
 
@@ -161,6 +166,8 @@ void CThrobber::DrawSelf()
    // of each view. Since focusing puts the the origin at our top left corner,
    // all we have to do is get the bounds of the widget and put that at (0,0)
 
+   StColorPortState	origState(UQDGlobals::GetCurrentPort());
+
    nsIRenderingContext *cx = mWidget->GetRenderingContext();
    nsRect bounds;
    nsIImageRequest *imgreq;
@@ -223,7 +230,7 @@ void CThrobber::ResizeFrameBy(SInt16		inWidthDelta,
                 					SInt16		inHeightDelta,
                 					Boolean	   inRefresh)
 {
-	LView::ResizeFrameBy(inWidthDelta, inHeightDelta, inRefresh);
+	LControl::ResizeFrameBy(inWidthDelta, inHeightDelta, inRefresh);
 	AdjustFrame(inRefresh);
 }
 
@@ -232,7 +239,7 @@ void CThrobber::MoveBy(SInt32		inHorizDelta,
 				           SInt32		inVertDelta,
 							  Boolean	inRefresh)
 {
-	LView::MoveBy(inHorizDelta, inVertDelta, inRefresh);
+	LControl::MoveBy(inHorizDelta, inVertDelta, inRefresh);
 	AdjustFrame(inRefresh);
 }
 
@@ -298,7 +305,7 @@ NS_METHOD CThrobber::LoadImages(const nsString& aFileNameMask, PRInt32 aNumImage
   }
 
   if (nsnull != mask)
-    nsMemory::Free(mask);
+    nsAllocator::Free(mask);
 
   mWidget->Invalidate(PR_TRUE);
 
