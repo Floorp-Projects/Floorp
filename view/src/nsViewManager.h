@@ -249,8 +249,11 @@ private:
   void Refresh(nsView *aView, nsIRenderingContext *aContext,
                nsIRegion *region, PRUint32 aUpdateFlags);
   void DefaultRefresh(nsView* aView, const nsRect* aRect);
-  void RenderViews(nsView *aRootView, nsIRenderingContext& aRC, const nsRegion& aRegion,
-                   nsDrawingSurface aRCSurface);
+  PRBool BuildRenderingDisplayList(nsIView* aRootView,
+    const nsRegion& aRegion, nsVoidArray* aDisplayList);
+  void RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
+                   const nsRegion& aRegion, nsDrawingSurface aRCSurface,
+                   const nsVoidArray& aDisplayList);
 
   void RenderDisplayListElement(DisplayListElement2* element,
                                 nsIRenderingContext* aRC);
@@ -268,8 +271,8 @@ private:
 
   void ReparentViews(DisplayZTreeNode* aNode);
   void BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool aEventProcessing,
-                        PRBool aCaptured, nsAutoVoidArray* aDisplayList);
-  void BuildEventTargetList(nsAutoVoidArray &aTargets, nsView* aView, nsGUIEvent* aEvent, PRBool aCaptured);
+                        PRBool aCaptured, nsVoidArray* aDisplayList);
+  void BuildEventTargetList(nsVoidArray &aTargets, nsView* aView, nsGUIEvent* aEvent, PRBool aCaptured);
 
   PRBool CreateDisplayList(nsView *aView,
                            PRBool aReparentedViewsPresent, DisplayZTreeNode* &aResult,
@@ -281,7 +284,7 @@ private:
                           DisplayZTreeNode* &aParent, nsRect &aClipRect,
                           nsRect& aDirtyRect, PRUint32 aFlags, nscoord aAbsX, nscoord aAbsY,
                           PRBool aAssumeIntersection);
-  void OptimizeDisplayList(nsAutoVoidArray* aDisplayList, const nsRegion& aDirtyRegion,
+  void OptimizeDisplayList(const nsVoidArray* aDisplayList, const nsRegion& aDirtyRegion,
                            nsRect& aFinalTransparentRect, nsRegion& aOpaqueRgn,
                            PRBool aTreatUniformAsOpaque);
     // Remove redundant PUSH/POP_CLIP pairs.
@@ -296,13 +299,13 @@ private:
 
   void PauseTimer(void);
   void RestartTimer(void);
-  void OptimizeDisplayListClipping(nsAutoVoidArray* aDisplayList, PRBool aHaveClip,
+  void OptimizeDisplayListClipping(const nsVoidArray* aDisplayList, PRBool aHaveClip,
                                    nsRect& aClipRect, PRInt32& aIndex,
                                    PRBool& aAnyRendered);
-  nsRect OptimizeTranslucentRegions(const nsAutoVoidArray& aDisplayList,
+  nsRect OptimizeTranslucentRegions(const nsVoidArray& aDisplayList,
                                     PRInt32* aIndex, nsRegion* aOpaqueRegion);
 
-  void ShowDisplayList(nsAutoVoidArray* aDisplayList);
+  void ShowDisplayList(const nsVoidArray* aDisplayList);
 
   // Utilities
 

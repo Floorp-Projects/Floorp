@@ -836,6 +836,23 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
   t2p = mContext->AppUnitsToDevUnits();
   widgetDamageRectInPixels.ScaleRoundOut(t2p);
 
+  // On the Mac, we normally turn doublebuffering off because Quartz is
+  // doublebuffering for us. But we need to turn it on anyway if we need
+  // to use our blender, which requires access to the "current pixel values"
+  // when it blends onto the canvas.
+  nsAutoVoidArray displayList;
+  PRBool anyTransparentPixels
+    = BuildRenderingDisplayList(aView, damageRegion, &displayList);
+  if (!(aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)) {
+    for (PRInt32 i = 0; i < displayList.Count(); i++) {
+      DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, displayList.ElementAt(i));
+      if (element->mFlags & PUSH_FILTER) {
+        aUpdateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
+        break;
+      }
+    }
+  } 
+
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
   {
     nsRect maxWidgetSize;
@@ -848,6 +865,7 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
     }
   }
 
+  // painting will be done in aView's coordinates
   PRBool usingDoubleBuffer = (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds;
   if (usingDoubleBuffer) {
     // Adjust translations because the backbuffer holds just the damaged area,
@@ -876,8 +894,13 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
   localcx->SetClipRegion(*aRegion, nsClipCombine_kReplace, isClipped);
   localcx->SetClipRect(damageRect, nsClipCombine_kIntersect, isClipped);
 
-  // painting will be done in aView's coordinates
-  RenderViews(aView, *localcx, damageRegion, ds);
+  if (anyTransparentPixels) {
+    // There are some bits here that aren't going to be completely painted unless we do it now.
+    // XXX Which color should we use for these bits?
+    localcx->SetColor(NS_RGB(128, 128, 128));
+    localcx->FillRect(damageRegion.GetBounds());
+  }
+  RenderViews(aView, *localcx, damageRegion, ds, displayList);
 
   if (usingDoubleBuffer) {
     // Flush bits back to the screen
@@ -1226,46 +1249,48 @@ void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceCo
   } while (NS_SUCCEEDED(children->Next()));
 }
 
+PRBool nsViewManager::BuildRenderingDisplayList(nsIView* aRootView,
+  const nsRegion& aRegion, nsVoidArray* aDisplayList) {
+  BuildDisplayList(NS_STATIC_CAST(nsView*, aRootView),
+                   aRegion.GetBounds(), PR_FALSE, PR_FALSE, aDisplayList);
+
+  nsRegion opaqueRgn;
+  AddCoveringWidgetsToOpaqueRegion(opaqueRgn, mContext,
+                                   NS_STATIC_CAST(nsView*, aRootView));
+
+  nsRect finalTransparentRect;
+  OptimizeDisplayList(aDisplayList, aRegion, finalTransparentRect, opaqueRgn, PR_FALSE);
+
+#ifdef DEBUG_roc
+  if (!finalTransparentRect.IsEmpty()) {
+    printf("XXX: Using final transparent rect, x=%d, y=%d, width=%d, height=%d\n",
+           finalTransparentRect.x, finalTransparentRect.y, finalTransparentRect.width, finalTransparentRect.height);
+  }
+#endif
+
+  return !finalTransparentRect.IsEmpty();
+}
+
 /*
   aRCSurface is the drawing surface being used to double-buffer aRC, or null
   if no double-buffering is happening. We pass this in here so that we can
   blend directly into the double-buffer offscreen memory.
 */
 void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
-                                const nsRegion& aRegion, nsDrawingSurface aRCSurface)
+                                const nsRegion& aRegion, nsDrawingSurface aRCSurface,
+                                const nsVoidArray& aDisplayList)
 {
-  nsAutoVoidArray displayList;
-
-  BuildDisplayList(aRootView, aRegion.GetBounds(), PR_FALSE, PR_FALSE, &displayList);
-
-  nsRegion opaqueRgn;
-  AddCoveringWidgetsToOpaqueRegion(opaqueRgn, mContext, aRootView);
-
-  nsRect finalTransparentRect;
-  OptimizeDisplayList(&displayList, aRegion, finalTransparentRect, opaqueRgn, PR_FALSE);
-
 #ifdef DEBUG_roc
-  if (getenv("MOZ_SHOW_DISPLAY_LIST")) ShowDisplayList(&displayList);
+  if (getenv("MOZ_SHOW_DISPLAY_LIST")) ShowDisplayList(&aDisplayList);
 #endif
 
-  if (!finalTransparentRect.IsEmpty()) {
-    // There are some bits here that aren't going to be completely painted unless we do it now.
-    // XXX Which color should we use for these bits?
-    aRC.SetColor(NS_RGB(128, 128, 128));
-    aRC.FillRect(finalTransparentRect);
-#ifdef DEBUG_roc
-    printf("XXX: Using final transparent rect, x=%d, y=%d, width=%d, height=%d\n",
-           finalTransparentRect.x, finalTransparentRect.y, finalTransparentRect.width, finalTransparentRect.height);
-#endif
-  }
-    
   PRInt32 index = 0;
   nsRect fakeClipRect;
   PRBool anyRendered;
-  OptimizeDisplayListClipping(&displayList, PR_FALSE, fakeClipRect, index, anyRendered);
+  OptimizeDisplayListClipping(&aDisplayList, PR_FALSE, fakeClipRect, index, anyRendered);
 
   index = 0;
-  OptimizeTranslucentRegions(displayList, &index, nsnull);
+  OptimizeTranslucentRegions(aDisplayList, &index, nsnull);
 
   nsIWidget* widget = aRootView->GetWidget();
   PRBool translucentWindow = PR_FALSE;
@@ -1287,8 +1312,8 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
   nsAutoVoidArray filterStack;
 
   // draw all views in the display list, from back to front.
-  for (PRInt32 i = 0; i < displayList.Count(); i++) {
-    DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, displayList.ElementAt(i));
+  for (PRInt32 i = 0; i < aDisplayList.Count(); i++) {
+    DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, aDisplayList.ElementAt(i));
 
     nsIRenderingContext* RCs[2] = { buffers->mBlackCX, buffers->mWhiteCX };
 
@@ -2125,7 +2150,7 @@ static PRBool ComputePlaceholderContainment(nsView* aView) {
   Set aCaptured if the event is being captured by the given view.
 */
 void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool aEventProcessing,
-                                     PRBool aCaptured, nsAutoVoidArray* aDisplayList) {
+                                     PRBool aCaptured, nsVoidArray* aDisplayList) {
   // compute this view's origin
   nsPoint origin(0, 0);
   ComputeViewOffset(aView, &origin);
@@ -2179,7 +2204,7 @@ void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool 
   DestroyZTreeNode(zTree);
 }
 
-void nsViewManager::BuildEventTargetList(nsAutoVoidArray &aTargets, nsView* aView, nsGUIEvent* aEvent,
+void nsViewManager::BuildEventTargetList(nsVoidArray &aTargets, nsView* aView, nsGUIEvent* aEvent,
   PRBool aCaptured) {
   NS_ASSERTION(!mPainting, "View manager cannot handle events during a paint");
   if (mPainting) {
@@ -2191,7 +2216,7 @@ void nsViewManager::BuildEventTargetList(nsAutoVoidArray &aTargets, nsView* aVie
   BuildDisplayList(aView, eventRect, PR_TRUE, aCaptured, &displayList);
 
 #ifdef DEBUG_roc
-  // ShowDisplayList(&displayList);
+  if (getenv("MOZ_SHOW_DISPLAY_LIST")) ShowDisplayList(&displayList);
 #endif
 
   // The display list is in order from back to front. We return the target list in order from
@@ -3258,7 +3283,9 @@ NS_IMETHODIMP nsViewManager::Display(nsIView* aView, nscoord aX, nscoord aY, con
 
   // Paint the view. The clipping rect was set above set don't clip again.
   //aView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
-  RenderViews(view, *localcx, nsRegion(trect), PR_FALSE);
+  nsAutoVoidArray displayList;
+  BuildRenderingDisplayList(view, nsRegion(trect), &displayList);
+  RenderViews(view, *localcx, nsRegion(trect), PR_FALSE, displayList);
 
   NS_RELEASE(localcx);
 
@@ -3614,7 +3641,7 @@ PRBool nsViewManager::AddToDisplayList(nsView *aView,
        Usually this will be empty, but nothing really prevents someone
        from creating a set of views that are (for example) all transparent.
 */
-void nsViewManager::OptimizeDisplayList(nsAutoVoidArray* aDisplayList, const nsRegion& aDamageRegion,
+void nsViewManager::OptimizeDisplayList(const nsVoidArray* aDisplayList, const nsRegion& aDamageRegion,
                                         nsRect& aFinalTransparentRect,
                                         nsRegion &aOpaqueRegion, PRBool aTreatUniformAsOpaque)
 {
@@ -3664,7 +3691,7 @@ void nsViewManager::OptimizeDisplayList(nsAutoVoidArray* aDisplayList, const nsR
 }
 
 // Remove redundant PUSH/POP_CLIP pairs. These could be expensive.
-void nsViewManager::OptimizeDisplayListClipping(nsAutoVoidArray* aDisplayList,
+void nsViewManager::OptimizeDisplayListClipping(const nsVoidArray* aDisplayList,
                                                 PRBool aHaveClip, nsRect& aClipRect, PRInt32& aIndex,
                                                 PRBool& aAnyRendered)
 {   
@@ -3726,7 +3753,7 @@ void nsViewManager::OptimizeDisplayListClipping(nsAutoVoidArray* aDisplayList,
 // because it's much faster to composite a fully opaque element (i.e., all alphas
 // 255).
 nsRect nsViewManager::OptimizeTranslucentRegions(
-  const nsAutoVoidArray& aDisplayList, PRInt32* aIndex, nsRegion* aOpaqueRegion)
+  const nsVoidArray& aDisplayList, PRInt32* aIndex, nsRegion* aOpaqueRegion)
 {
   nsRect r;
   while (*aIndex < aDisplayList.Count()) {
@@ -3778,7 +3805,7 @@ nsRect nsViewManager::OptimizeTranslucentRegions(
   return r;
 }
 
-void nsViewManager::ShowDisplayList(nsAutoVoidArray* aDisplayList)
+void nsViewManager::ShowDisplayList(const nsVoidArray* aDisplayList)
 {
 #ifdef NS_DEBUG
   printf("### display list length=%d ###\n", aDisplayList->Count());
