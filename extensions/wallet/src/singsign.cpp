@@ -1886,13 +1886,12 @@ static nsresult EnsureSingleSignOnProfileObserver()
 static PRInt32
 si_ReadLine(nsIInputStream* strm, nsString& lineBuffer)
 {
-  char* line;
-  nsresult rv = wallet_GetLine(strm, (const char**)&line);
+  nsCAutoString line;
+  nsresult rv = wallet_GetLine(strm, line);
   if (NS_FAILED(rv))
     return -1;
   
   CopyUTF8toUTF16(line, lineBuffer);
-  nsMemory::Free(line);
   return NS_OK;
 }
 

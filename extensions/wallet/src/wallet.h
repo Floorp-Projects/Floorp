@@ -125,7 +125,7 @@ extern nsresult
 Wallet_Decrypt(const nsString& crypt, nsString& text);
 
 extern nsresult
-wallet_GetLine(nsIInputStream* strm, const char** lineCString);
+wallet_GetLine(nsIInputStream* strm, nsCString& line);
 
 /**
  * Writes a line to a stream, including a newline character.

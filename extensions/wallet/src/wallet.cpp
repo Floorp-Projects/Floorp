@@ -229,20 +229,14 @@ MOZ_DECL_CTOR_COUNTER(wallet_HelpMac)
 class wallet_HelpMac {
 public:
   wallet_HelpMac() {
-    item1 = nsnull;
-    item2 = nsnull;
-    item3 = nsnull;
     MOZ_COUNT_CTOR(wallet_HelpMac);
   }
   ~wallet_HelpMac() {
-    WALLET_FREEIF(item1);
-    WALLET_FREEIF(item2);
-    WALLET_FREEIF(item3);
     MOZ_COUNT_DTOR(wallet_HelpMac);
   }
-  const char* item1;
-  const char* item2;
-  const char* item3;
+  nsCString item1;
+  nsCString item2;
+  nsCString item3;
 };
 wallet_HelpMac * helpMac;
 
@@ -1114,13 +1108,14 @@ Wallet_RandomName(char* suffix)
  */
 
 nsresult
-wallet_GetLine(nsIInputStream* strm, const char** lineCString)
+wallet_GetLine(nsIInputStream* strm, nsCString &line)
 {
+  line.Truncate();
+  
   nsCOMPtr<nsILineInputStream> lis(do_QueryInterface(strm));
   NS_ENSURE_TRUE(lis, NS_ERROR_UNEXPECTED);
 
   PRBool more;
-  nsCAutoString line;
   nsresult rv = lis->ReadLine(line, &more);
   if (NS_FAILED(rv))
     return rv;
@@ -1130,22 +1125,19 @@ wallet_GetLine(nsIInputStream* strm, const char** lineCString)
   if (!more && line.IsEmpty())
     return NS_ERROR_FAILURE;
 
-  *lineCString = ToNewCString(line);
-  return *lineCString ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
 }
 
 static PRBool
 wallet_GetHeader(nsIInputStream* strm)
 {
-  const char* format = nsnull;
+  nsCAutoString format;
 
   /* format revision number */
-  if (NS_FAILED(wallet_GetLine(strm, &format))) {
+  if (NS_FAILED(wallet_GetLine(strm, format))) {
     return PR_FALSE;
   }
-  PRBool rv = !strcmp(format, HEADER_VERSION);
-  WALLET_FREEIF(format);
-  return rv;
+  return format.EqualsLiteral(HEADER_VERSION);
 }
 
 /*
@@ -1281,7 +1273,7 @@ wallet_ReadFromFile
   }
 
   for (;;) {
-    if (NS_FAILED(wallet_GetLine(strm, &helpMac->item1))) {
+    if (NS_FAILED(wallet_GetLine(strm, helpMac->item1))) {
       /* end of file reached */
       break;
     }
@@ -1289,33 +1281,33 @@ wallet_ReadFromFile
     /* Distinguished schema list is a list of single entries, not name/value pairs */
     if (!PL_strcmp(filename, distinguishedSchemaFileName)) {
       nsVoidArray* dummy = NULL;
-      wallet_WriteToList(helpMac->item1, helpMac->item1, dummy, list, PR_FALSE, placement);
+      wallet_WriteToList(helpMac->item1.get(), helpMac->item1.get(), dummy, list, PR_FALSE, placement);
       continue;
     }
 
-    if (NS_FAILED(wallet_GetLine(strm, &helpMac->item2))) {
+    if (NS_FAILED(wallet_GetLine(strm, helpMac->item2))) {
       /* unexpected end of file reached */
       break;
     }
 
-    if (WALLET_NULL(helpMac->item2)) {
+    if (helpMac->item2.IsEmpty()) {
       /* the value must have been deleted */
       nsVoidArray* dummy = NULL;
-      wallet_WriteToList(helpMac->item1, helpMac->item2, dummy, list, PR_FALSE, placement);
+      wallet_WriteToList(helpMac->item1.get(), helpMac->item2.get(), dummy, list, PR_FALSE, placement);
       continue;
     }
 
-    if (NS_FAILED(wallet_GetLine(strm, &helpMac->item3))) {
+    if (NS_FAILED(wallet_GetLine(strm, helpMac->item3))) {
       /* end of file reached */
       nsVoidArray* dummy = NULL;
-      wallet_WriteToList(helpMac->item1, helpMac->item2, dummy, list, PR_FALSE, placement);
+      wallet_WriteToList(helpMac->item1.get(), helpMac->item2.get(), dummy, list, PR_FALSE, placement);
       return;
     }
 
-    if (WALLET_NULL(helpMac->item3)) {
+    if (helpMac->item3.IsEmpty()) {
       /* just a pair of values, no need for a sublist */
       nsVoidArray* dummy = NULL;
-      wallet_WriteToList(helpMac->item1, helpMac->item2, dummy, list, PR_FALSE, placement);
+      wallet_WriteToList(helpMac->item1.get(), helpMac->item2.get(), dummy, list, PR_FALSE, placement);
     } else {
       /* need to create a sublist and put item2 and item3 onto it */
 
@@ -1328,27 +1320,27 @@ wallet_ReadFromFile
       if (!sublist) {
         break;
       }
-      sublist->item = PL_strdup(helpMac->item2);
+      sublist->item = ToNewCString(helpMac->item2);
       itemList->AppendElement(sublist);
       sublist = new wallet_Sublist;
       if (!sublist) {
         delete itemList;
         break;
       }
-      sublist->item = PL_strdup(helpMac->item3);
+      sublist->item = ToNewCString(helpMac->item3);
       itemList->AppendElement(sublist);
       /* add any following items to sublist up to next blank line */
       for (;;) {
         /* get next item for sublist */
-        if (NS_FAILED(wallet_GetLine(strm, &helpMac->item3))) {
+        if (NS_FAILED(wallet_GetLine(strm, helpMac->item3))) {
           /* end of file reached */
-          wallet_WriteToList(helpMac->item1, nsnull, itemList, list, PR_FALSE, placement);
+          wallet_WriteToList(helpMac->item1.get(), nsnull, itemList, list, PR_FALSE, placement);
           return;
         }
 
-        if (WALLET_NULL(helpMac->item3)) {
+        if (helpMac->item3.IsEmpty()) {
           /* blank line reached indicating end of sublist */
-          wallet_WriteToList(helpMac->item1, nsnull, itemList, list, PR_FALSE, placement);
+          wallet_WriteToList(helpMac->item1.get(), nsnull, itemList, list, PR_FALSE, placement);
           break;
         }
         /* add item to sublist */
@@ -1357,7 +1349,7 @@ wallet_ReadFromFile
           delete itemList;
           break;
         }
-        sublist->item = PL_strdup(helpMac->item3);
+        sublist->item = ToNewCString(helpMac->item3);
         itemList->AppendElement(sublist);
       }
     }
