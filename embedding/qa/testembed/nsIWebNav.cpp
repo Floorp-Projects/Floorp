@@ -80,7 +80,8 @@ NavElement UrlTable[] = {
    {"http://www.oracle.com/", nsIWebNavigation::LOAD_FLAGS_NONE},
    {"http://www.sun.com/", nsIWebNavigation::LOAD_FLAGS_IS_REFRESH},
    {"http://www.netscape.com/", nsIWebNavigation::LOAD_FLAGS_IS_LINK},
-   {"http://www.aol.com/", nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY}
+   {"http://www.aol.com/", nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY},
+   {"https://www.yahoo.com/", nsIWebNavigation::LOAD_FLAGS_NONE},
 };
 
 
@@ -139,7 +140,7 @@ void CNsIWebNav::LoadUriandReload()
 
    QAOutput("Run a few LoadURI() tests.", 2);
 	
-   for (i=0; i < 5; i++)
+   for (i=0; i < 6; i++)
    {
        LoadUriTest(UrlTable[i].theUri, UrlTable[i].theFlag);
        switch (i)
@@ -160,6 +161,9 @@ void CNsIWebNav::LoadUriandReload()
            break;
        case 4:
            ReloadTest(nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE);
+           break;
+	   case 5:
+           ReloadTest(nsIWebNavigation::LOAD_FLAGS_NONE);
            break;
        }
    }

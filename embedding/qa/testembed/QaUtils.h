@@ -60,7 +60,8 @@ extern void FormatAndPrintOutput(const char *, const char *, int);
 extern void FormatAndPrintOutput(const char *, int, int);
 extern void RequestName(nsIRequest *, nsCString &, int displayMethod=1);
 extern void WebProgDOMWindowTest(nsIWebProgress *, const char *,int displayMethod=1);
-extern void GetTheUri(nsIURI *theUri, int displayMethod);
+extern void GetTheUri(nsIURI *theUri, int displayMethod=1);
+extern void onStateChangeString(char *, char *, nsCString, PRUint32, int displayMethod=1);
 extern nsresult rv;
 
 #endif //_QAUTILS_H/////////////////////////////////////////////////////////////////////////////
