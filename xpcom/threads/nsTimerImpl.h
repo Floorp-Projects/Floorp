@@ -84,8 +84,8 @@ public:
 
   friend class TimerThread;
 
+  void PostTimerEvent();
   void Fire();
-  void Process();
   void SetDelayInternal(PRUint32 aDelay);
 
   NS_IMETHOD Init(nsTimerCallbackFunc aFunc,
@@ -152,5 +152,28 @@ private:
 #endif
 
 };
+
+#define NS_TIMERMANAGER_CONTRACTID "@mozilla.org/timer/manager;1"
+#define NS_TIMERMANAGER_CLASSNAME "Timer Manager"
+#define NS_TIMERMANAGER_CID \
+{ /* 4fe206fa-1dd2-11b2-8a0a-88bacbecc7d2 */         \
+     0x4fe206fa,                                     \
+     0x1dd2,                                         \
+     0x11b2,                                         \
+    {0x8a, 0x0a, 0x88, 0xba, 0xcb, 0xec, 0xc7, 0xd2} \
+}
+
+#include "nsITimerManager.h"
+
+class nsTimerManager : nsITimerManager
+{
+public:
+  nsTimerManager();
+  virtual ~nsTimerManager();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSITIMERMANAGER
+};
+
 
 #endif /* nsTimerImpl_h___ */
