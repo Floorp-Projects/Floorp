@@ -797,6 +797,150 @@ nsXPCWrappedJSClass::CleanupPointerTypeObject(const nsXPTType& type,
     }
 }
 
+nsresult
+nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
+                                       const char * aPropertyName,
+                                       const char * anInterfaceName)
+{
+    XPCContext * xpcc = ccx.GetXPCContext();
+    JSContext * cx = ccx.GetJSContext();
+    nsCOMPtr<nsIException> xpc_exception;
+    /* this one would be set by our error reporter */
+
+    xpcc->GetException(getter_AddRefs(xpc_exception));
+    if(xpc_exception)
+        xpcc->SetException(nsnull);
+
+    // get this right away in case we do something below to cause JS code
+    // to run on this JSContext
+    nsresult pending_result = xpcc->GetPendingResult();
+
+    jsval js_exception;
+    /* JS might throw an expection whether the reporter was called or not */
+    if(JS_GetPendingException(cx, &js_exception))
+    {
+        if(!xpc_exception)
+            XPCConvert::JSValToXPCException(ccx, js_exception, anInterfaceName,
+                                            aPropertyName, getter_AddRefs(xpc_exception));
+
+        /* cleanup and set failed even if we can't build an exception */
+        if(!xpc_exception)
+        {
+            ccx.GetThreadData()->SetException(nsnull); // XXX necessary?
+        }
+        JS_ClearPendingException(cx);
+    }
+
+    if(xpc_exception)
+    {
+        nsresult e_result;
+        if(NS_SUCCEEDED(xpc_exception->GetResult(&e_result)))
+        {
+            if(xpc_IsReportableErrorCode(e_result))
+            {
+#ifdef DEBUG
+                static const char line[] =
+                    "************************************************************\n";
+                static const char preamble[] =
+                    "* Call to xpconnect wrapped JSObject produced this error:  *\n";
+                static const char cant_get_text[] =
+                    "FAILED TO GET TEXT FROM EXCEPTION\n";
+
+                printf(line);
+                printf(preamble);
+                char* text;
+                if(NS_SUCCEEDED(xpc_exception->ToString(&text)) && text)
+                {
+                    printf(text);
+                    printf("\n");
+                    nsMemory::Free(text);
+                }
+                else
+                    printf(cant_get_text);
+                printf(line);
+#endif
+
+                // Log the exception to the JS Console, so that users can do
+                // something with it.
+                nsCOMPtr<nsIConsoleService> consoleService
+                    (do_GetService(XPC_CONSOLE_CONTRACTID));
+                if(nsnull != consoleService)
+                {
+                    nsresult rv;
+                    nsCOMPtr<nsIScriptError> scriptError;
+                    nsCOMPtr<nsISupports> errorData;
+                    rv = xpc_exception->GetData(getter_AddRefs(errorData));
+                    if(NS_SUCCEEDED(rv))
+                        scriptError = do_QueryInterface(errorData);
+
+                    if(nsnull == scriptError)
+                    {
+                        // No luck getting one from the exception, so
+                        // try to cook one up.
+                        scriptError = do_CreateInstance(XPC_SCRIPT_ERROR_CONTRACTID);
+                        if(nsnull != scriptError)
+                        {
+                            char* exn_string;
+                            rv = xpc_exception->ToString(&exn_string);
+                            if(NS_SUCCEEDED(rv))
+                            {
+                                // use toString on the exception as the message
+                                nsAutoString newMessage;
+                                newMessage.AssignWithConversion(exn_string);
+                                nsMemory::Free((void *) exn_string);
+
+                                // try to get filename, lineno from the first
+                                // stack frame location.
+                                PRUnichar* sourceNameUni = nsnull;
+                                PRInt32 lineNumber = 0;
+                                nsXPIDLCString sourceName;
+
+                                nsCOMPtr<nsIStackFrame> location;
+                                xpc_exception->
+                                    GetLocation(getter_AddRefs(location));
+                                if(location)
+                                {
+                                    // Get line number w/o checking; 0 is ok.
+                                    location->GetLineNumber(&lineNumber);
+
+                                    // get a filename.
+                                    rv = location->GetFilename(getter_Copies(sourceName));
+                                }
+
+                                rv = scriptError->Init(newMessage.get(),
+                                                       NS_ConvertASCIItoUCS2(sourceName).get(),
+                                                       nsnull,
+                                                       lineNumber, 0, 0,
+                                                       "XPConnect JavaScript");
+                                if(NS_FAILED(rv))
+                                    scriptError = nsnull;
+                            }
+                        }
+                    }
+                    if(nsnull != scriptError)
+                        consoleService->LogMessage(scriptError);
+                }
+            }
+            // Whether or not it passes the 'reportable' test, it might
+            // still be an error and we have to do the right thing here...
+            if(NS_FAILED(e_result))
+            {
+                ccx.GetThreadData()->SetException(xpc_exception);
+                return e_result;
+            }
+        }
+    }
+    else
+    {
+        // see if JS code signaled failure result without throwing exception
+        if(NS_FAILED(pending_result))
+        {
+            return pending_result;
+        }
+    }
+    return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP
 nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                                 const nsXPTMethodInfo* info,
@@ -819,8 +963,6 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     JSObject* obj;
     const char* name = info->GetName();
     jsval fval;
-    nsCOMPtr<nsIException> xpc_exception;
-    jsval js_exception;
     void* mark;
     JSBool foundDependentParam;
     XPCContext* xpcc;
@@ -1222,147 +1364,15 @@ pre_call_clean_up:
             xpcc->SetException(e);
             if(sz)
                 JS_smprintf_free(sz);
-        }
-    }
-
-    /* this one would be set by our error reporter */
-
-    xpcc->GetException(getter_AddRefs(xpc_exception));
-    if(xpc_exception)
-        xpcc->SetException(nsnull);
-
-    // get this right away in case we do something below to cause JS code
-    // to run on this JSContext
-    pending_result = xpcc->GetPendingResult();
-
-    /* JS might throw an expection whether the reporter was called or not */
-    if(JS_GetPendingException(cx, &js_exception))
-    {
-        if(!xpc_exception)
-            XPCConvert::JSValToXPCException(ccx, js_exception, GetInterfaceName(),
-                                            name, getter_AddRefs(xpc_exception));
-
-        /* cleanup and set failed even if we can't build an exception */
-        if(!xpc_exception)
-        {
-            ccx.GetThreadData()->SetException(nsnull); // XXX necessary?
-            success = JS_FALSE;
-        }
-        JS_ClearPendingException(cx);
-    }
-
-    if(xpc_exception)
-    {
-        nsresult e_result;
-        if(NS_SUCCEEDED(xpc_exception->GetResult(&e_result)))
-        {
-            if(xpc_IsReportableErrorCode(e_result))
-            {
-#ifdef DEBUG
-                static const char line[] =
-                    "************************************************************\n";
-                static const char preamble[] =
-                    "* Call to xpconnect wrapped JSObject produced this error:  *\n";
-                static const char cant_get_text[] =
-                    "FAILED TO GET TEXT FROM EXCEPTION\n";
-
-                printf(line);
-                printf(preamble);
-                char* text;
-                if(NS_SUCCEEDED(xpc_exception->ToString(&text)) && text)
-                {
-                    printf(text);
-                    printf("\n");
-                    nsMemory::Free(text);
-                }
-                else
-                    printf(cant_get_text);
-                printf(line);
-#endif
-
-                // Log the exception to the JS Console, so that users can do
-                // something with it.
-                nsCOMPtr<nsIConsoleService> consoleService
-                    (do_GetService(XPC_CONSOLE_CONTRACTID));
-                if(nsnull != consoleService)
-                {
-                    nsresult rv;
-                    nsCOMPtr<nsIScriptError> scriptError;
-                    nsCOMPtr<nsISupports> errorData;
-                    rv = xpc_exception->GetData(getter_AddRefs(errorData));
-                    if(NS_SUCCEEDED(rv))
-                        scriptError = do_QueryInterface(errorData);
-
-                    if(nsnull == scriptError)
-                    {
-                        // No luck getting one from the exception, so
-                        // try to cook one up.
-                        scriptError = do_CreateInstance(XPC_SCRIPT_ERROR_CONTRACTID);
-                        if(nsnull != scriptError)
-                        {
-                            char* exn_string;
-                            rv = xpc_exception->ToString(&exn_string);
-                            if(NS_SUCCEEDED(rv))
-                            {
-                                // use toString on the exception as the message
-                                nsAutoString newMessage;
-                                newMessage.AssignWithConversion(exn_string);
-                                nsMemory::Free((void *) exn_string);
-
-                                // try to get filename, lineno from the first
-                                // stack frame location.
-                                PRUnichar* sourceNameUni = nsnull;
-                                PRInt32 lineNumber = 0;
-                                nsXPIDLCString sourceName;
-
-                                nsCOMPtr<nsIStackFrame> location;
-                                xpc_exception->
-                                    GetLocation(getter_AddRefs(location));
-                                if(location)
-                                {
-                                    // Get line number w/o checking; 0 is ok.
-                                    location->GetLineNumber(&lineNumber);
-
-                                    // get a filename.
-                                    rv = location->GetFilename(getter_Copies(sourceName));
-                                }
-
-                                rv = scriptError->Init(newMessage.get(),
-                                                       NS_ConvertASCIItoUCS2(sourceName).get(),
-                                                       nsnull,
-                                                       lineNumber, 0, 0,
-                                                       "XPConnect JavaScript");
-                                if(NS_FAILED(rv))
-                                    scriptError = nsnull;
-                            }
-                        }
-                    }
-                    if(nsnull != scriptError)
-                        consoleService->LogMessage(scriptError);
-                }
-            }
-            // Whether or not it passes the 'reportable' test, it might
-            // still be an error and we have to do the right thing here...
-            if(NS_FAILED(e_result))
-            {
-                ccx.GetThreadData()->SetException(xpc_exception);
-                retval = e_result;
-            }
-        }
-        success = JS_FALSE;
-    }
-    else
-    {
-        // see if JS code signaled failure result without throwing exception
-        if(NS_FAILED(pending_result))
-        {
-            retval = pending_result;
             success = JS_FALSE;
         }
     }
 
-    if(!success)
+    if (!success)
+    {
+        retval = CheckForException(ccx, name, GetInterfaceName());
         goto done;
+    }
 
     ccx.GetThreadData()->SetException(nsnull); // XXX necessary?
 
