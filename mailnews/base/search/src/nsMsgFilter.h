@@ -32,8 +32,8 @@ public:
         nsMsgRuleActionType      m_type;
 		// this used to be a union - why bother?
         nsMsgPriority	m_priority;  /* priority to set rule to */
-        nsString2		m_folderName;    /* Or some folder identifier, if such a thing is invented */
-        nsString2		m_originalServerPath;
+        nsCString		m_folderName;    /* Or some folder identifier, if such a thing is invented */
+        nsCString		m_originalServerPath;
 } ;
 
 
@@ -86,11 +86,11 @@ public:
 	nsMsgFilterTypeType	GetType() {return m_type;}
 	void			SetType(nsMsgFilterTypeType	type) {m_type = type;}
 	PRBool			GetEnabled() {return m_enabled;}
-	nsresult		GetName(nsString2 *name);
-	nsresult		SetName(nsString2 *name);
-	nsresult		SetDescription(nsString2 *desc);
-	nsresult		GetDescription(nsString2 *desc);
-	void			SetFilterScript(nsString2 *filterName) ;
+	nsresult		GetName(nsCString *name);
+	nsresult		SetName(nsCString *name);
+	nsresult		SetDescription(nsCString *desc);
+	nsresult		GetDescription(nsCString *desc);
+	void			SetFilterScript(nsCString *filterName) ;
 	void			SetFilterList(nsMsgFilterList *filterList) ;
 	PRBool			IsRule() 
 						{return (m_type & (nsMsgFilterType::InboxRule |
@@ -111,17 +111,17 @@ public:
 	void	Dump();
 #endif
 
-	nsresult		ConvertMoveToFolderValue(nsString2 &relativePath);
+	nsresult		ConvertMoveToFolderValue(nsCString &relativePath);
 static	const char *GetActionStr(nsMsgRuleActionType action);
-static	nsresult GetActionFilingStr(nsMsgRuleActionType action, nsString2 &actionStr);
-static nsMsgRuleActionType GetActionForFilingStr(nsString2 &actionStr);
+static	nsresult GetActionFilingStr(nsMsgRuleActionType action, nsCString &actionStr);
+static nsMsgRuleActionType GetActionForFilingStr(nsCString &actionStr);
 	nsMsgRuleAction      m_action;
 protected:
 	nsMsgFilterTypeType m_type;
 	PRBool			m_enabled;
-	nsString2		m_filterName;
-	nsString2		m_scriptFileName;	// iff this filter is a script.
-	nsString2		m_description;
+	nsCString		m_filterName;
+	nsCString		m_scriptFileName;	// iff this filter is a script.
+	nsCString		m_description;
     PRBool         m_dontFileMe;
 
 	nsMsgFilterList *m_filterList;	/* owning filter list */

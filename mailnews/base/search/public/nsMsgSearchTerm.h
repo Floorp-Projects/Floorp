@@ -55,7 +55,7 @@ public:
                                    PRUint32 headersSize, /* size of the NULL terminated list of headers */
                                    PRBool ForFilters /* true if we are filtering */,
 								   PRBool *pResult);
-	nsresult MatchString (nsString2 *, const char *charset, PRBool body, PRBool *result);
+	nsresult MatchString (nsCString *, const char *charset, PRBool body, PRBool *result);
 	nsresult MatchDate (PRTime, PRBool *result);
 	nsresult MatchStatus (PRUint32, PRBool *result);
 	nsresult MatchPriority (nsMsgPriority, PRBool *result);
@@ -63,7 +63,7 @@ public:
 	nsresult MatchRfc822String(const char *, const char *charset, PRBool *pResult);
 	nsresult MatchAge (PRTime, PRBool *result);
 
-	nsresult EnStreamNew (nsString2 &stream);
+	nsresult EnStreamNew (nsCString &stream);
 	nsresult DeStream (char *, PRInt16 length);
 	nsresult DeStreamNew (char *, PRInt16 length);
 
@@ -71,7 +71,7 @@ public:
 
 	PRBool IsBooleanOpAND() { return m_booleanOp == nsMsgSearchBooleanOp::BooleanAND ? PR_TRUE : PR_FALSE;}
 	nsMsgSearchBooleanOperator GetBooleanOp() {return m_booleanOp;}
-	// maybe should return nsString2 &   ??
+	// maybe should return nsString &   ??
 	const char * GetArbitraryHeader() {return m_arbitraryHeader.GetBuffer();}
 
 	static char *	EscapeQuotesInStr(const char *str);
@@ -83,10 +83,10 @@ public:
 	nsMsgSearchOperator m_operator;
 	nsMsgSearchValue m_value;
 	nsMsgSearchBooleanOperator m_booleanOp;  // boolean operator to be applied to this search term and the search term which precedes it.
-	nsString2 m_arbitraryHeader;         // user specified string for the name of the arbitrary header to be used in the search
+	nsCString m_arbitraryHeader;         // user specified string for the name of the arbitrary header to be used in the search
 									  // only has a value when m_attribute = attribOtherHeader!!!!
 protected:
-	nsresult		OutputValue(nsString2 &outputStr);
+	nsresult		OutputValue(nsCString &outputStr);
 	nsMsgSearchAttribute ParseAttribute(char *inStream);
 	nsMsgSearchOperator	ParseOperator(char *inStream);
 	nsresult		ParseValue(char *inStream);

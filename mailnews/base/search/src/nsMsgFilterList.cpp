@@ -68,7 +68,7 @@ NS_IMETHODIMP nsMsgFilterList::CreateFilter(const char *name,class nsIMsgFilter 
 	*aFilter = filter;
 	if (filter)
 	{
-		nsString2 strName(name, eOneByte);
+		nsCAutoString strName(name);
 		filter->SetName(&strName);
 		return NS_OK;
 	}
@@ -294,7 +294,7 @@ char nsMsgFilterList::SkipWhitespace()
 	return ch;
 }
 
-PRBool nsMsgFilterList::StrToBool(nsString2 &str)
+PRBool nsMsgFilterList::StrToBool(nsCString &str)
 {
 	return str.Equals("yes") ;
 }
@@ -335,9 +335,9 @@ const char *nsMsgFilterList::GetStringForAttrib(nsMsgFilterFileAttrib attrib)
 	return nsnull;
 }
 
-nsresult nsMsgFilterList::LoadValue(nsString2 &value)
+nsresult nsMsgFilterList::LoadValue(nsCString &value)
 {
-	nsString2	valueStr(eOneByte);
+	nsCAutoString	valueStr;
 	char	curChar;
 	value = "";
 	curChar = SkipWhitespace();
@@ -388,7 +388,7 @@ nsresult nsMsgFilterList::LoadTextFilters()
 	m_fileStream->seek(PR_SEEK_SET, 0);
 	do 
 	{
-		nsString2	value(eOneByte);
+		nsCAutoString	value;
 		PRInt32 intToStringResult;
 
 		char curChar;
@@ -478,7 +478,7 @@ nsresult nsMsgFilterList::LoadTextFilters()
 // what about values with close parens and quotes? e.g., (body, isn't, "foo")")
 // I guess interior quotes will need to be escaped - ("foo\")")
 // which will get written out as (\"foo\\")\") and read in as ("foo\")"
-nsresult nsMsgFilterList::ParseCondition(nsString2 &value)
+nsresult nsMsgFilterList::ParseCondition(nsCString &value)
 {
 	PRBool	done = PR_FALSE;
 	nsresult	err = NS_OK;
@@ -564,10 +564,9 @@ nsresult nsMsgFilterList::WriteIntAttr(nsMsgFilterFileAttrib attrib, int value)
 	return NS_OK;
 }
 
-nsresult nsMsgFilterList::WriteStrAttr(nsMsgFilterFileAttrib attrib, nsString2 &str2)
+nsresult nsMsgFilterList::WriteStrAttr(nsMsgFilterFileAttrib attrib, nsCString &str)
 {
-	const char *str = str2.GetBuffer();
-	if (str && m_fileStream) // only proceed if we actually have a string to write out. 
+	if (!str.IsEmpty() && m_fileStream) // only proceed if we actually have a string to write out. 
 	{
 		char *escapedStr = nsnull;
 		if (PL_strchr(str, '"'))
@@ -578,7 +577,7 @@ nsresult nsMsgFilterList::WriteStrAttr(nsMsgFilterFileAttrib attrib, nsString2 &
 		{
 			*m_fileStream << attribStr;
 			*m_fileStream << "=\"";
-			*m_fileStream << ((escapedStr) ? escapedStr : str);
+			*m_fileStream << ((escapedStr) ? escapedStr : (const char *) str);
 			*m_fileStream << "\"" MSG_LINEBREAK;
 //			XP_FilePrintf(fid, "%s=\"%s\"%s", attribStr, (escapedStr) ? escapedStr : str, LINEBREAK);
 		}
@@ -589,7 +588,7 @@ nsresult nsMsgFilterList::WriteStrAttr(nsMsgFilterFileAttrib attrib, nsString2 &
 
 nsresult nsMsgFilterList::WriteBoolAttr(nsMsgFilterFileAttrib attrib, PRBool boolVal)
 {
-	nsString2 strToWrite((boolVal) ? "yes" : "no", eOneByte);
+	nsCString strToWrite((boolVal) ? "yes" : "no");
 	return WriteStrAttr(attrib, strToWrite);
 }
 

@@ -499,7 +499,6 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
 
     const char *charset = nsnull; // scope->m_folder->GetFolderCSID() & ~CS_AUTO;
 
-	// ### DMB Todo - remove nsAutoCString when nsString2 lands.
     nsMsgSearchBoolExpression * expression = new nsMsgSearchBoolExpression();  // create our expression
     if (!expression)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -513,12 +512,12 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
         {
         case nsMsgSearchAttrib::Sender:
             msgToMatch->GetAuthor(&matchString);
-            err = pTerm->MatchRfc822String (nsAutoString(matchString,eOneByte).GetBuffer(), charset, &result);
+            err = pTerm->MatchRfc822String (nsCAutoString(matchString), charset, &result);
             break;
         case nsMsgSearchAttrib::Subject:
 			{
             msgToMatch->GetSubject(&matchString /* , TRUE */);
-			nsString2 singleByteString(matchString, eOneByte); 
+			nsCAutoString singleByteString(matchString); 
             err = pTerm->MatchString (&singleByteString, charset, PR_FALSE, &result);
 			}
             break;
@@ -526,11 +525,11 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
         {
             PRBool boolKeepGoing = pTerm->MatchAllBeforeDeciding();
             msgToMatch->GetRecipients(&recipients);
-            err = pTerm->MatchRfc822String (nsAutoString(recipients,eOneByte).GetBuffer(), charset, &result);
+            err = pTerm->MatchRfc822String (nsCAutoString(recipients), charset, &result);
             if (boolKeepGoing == result)
             {
                 msgToMatch->GetCCList(&ccList);
-                err = pTerm->MatchRfc822String (nsAutoString(ccList,eOneByte).GetBuffer(), charset, &result);
+                err = pTerm->MatchRfc822String (nsCAutoString(ccList), charset, &result);
             }
         }
             break;
@@ -569,11 +568,11 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
             break;
         case nsMsgSearchAttrib::To:
             msgToMatch->GetRecipients(&recipients);
-            err = pTerm->MatchRfc822String(nsAutoString(recipients,eOneByte).GetBuffer(), charset, &result);
+            err = pTerm->MatchRfc822String(nsCAutoString(recipients), charset, &result);
             break;
         case nsMsgSearchAttrib::CC:
             msgToMatch->GetCCList(&ccList);
-            err = pTerm->MatchRfc822String (nsAutoString(ccList,eOneByte).GetBuffer(), charset, &result);
+            err = pTerm->MatchRfc822String (nsCAutoString(ccList), charset, &result);
             break;
         case nsMsgSearchAttrib::AgeInDays:
 			{

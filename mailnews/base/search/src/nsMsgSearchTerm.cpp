@@ -160,7 +160,7 @@ nsresult NS_MsgGetStringForOperator(int16 op, const char **string)
 	return (found) ? NS_OK : NS_ERROR_INVALID_ARG;
 }
 
-void NS_MsgGetUntranslatedStatusName (uint32 s, nsString2 *outName)
+void NS_MsgGetUntranslatedStatusName (uint32 s, nsCString *outName)
 {
 	char *tmpOutName = NULL;
 #define MSG_STATUS_MASK (MSG_FLAG_READ | MSG_FLAG_REPLIED | MSG_FLAG_FORWARDED | MSG_FLAG_NEW)
@@ -292,7 +292,7 @@ nsMsgSearchTerm::~nsMsgSearchTerm ()
 }
 
 
-nsresult nsMsgSearchTerm::OutputValue(nsString2 &outputStr)
+nsresult nsMsgSearchTerm::OutputValue(nsCString &outputStr)
 {
 	if (IS_STRING_ATTRIBUTE(m_attribute))
 	{
@@ -337,17 +337,17 @@ nsresult nsMsgSearchTerm::OutputValue(nsString2 &outputStr)
 		}
 		case nsMsgSearchAttrib::MsgStatus:
 		{
-			nsString2 status(eOneByte);
+			nsCAutoString status;
 			NS_MsgGetUntranslatedStatusName (m_value.u.msgStatus, &status);
 			outputStr += status;
 			break;
 		}
 		case nsMsgSearchAttrib::Priority:
 		{
-			nsString2 priority(eOneByte);
+			nsAutoString priority;
 			NS_MsgGetUntranslatedPriorityName( m_value.u.priority, 
 											 &priority);
-			outputStr += priority;
+			outputStr += nsCAutoString(priority);
 			break;
 		}
 		default:
@@ -358,10 +358,10 @@ nsresult nsMsgSearchTerm::OutputValue(nsString2 &outputStr)
 	return NS_OK;
 }
 
-nsresult nsMsgSearchTerm::EnStreamNew (nsString2 &outStream)
+nsresult nsMsgSearchTerm::EnStreamNew (nsCString &outStream)
 {
 	const char	*attrib, *operatorStr;
-	nsString2	outputStr(eOneByte);
+	nsCAutoString	outputStr;
 	nsresult	ret;
 
 	ret = NS_MsgGetStringForAttribute(m_attribute, &attrib);
@@ -459,7 +459,7 @@ nsMsgSearchOperator nsMsgSearchTerm::ParseOperator(char *inStream)
 // find the attribute code for this comma-delimited attribute. 
 nsMsgSearchAttribute nsMsgSearchTerm::ParseAttribute(char *inStream)
 {
-	nsString2			attributeStr(eOneByte);
+	nsCAutoString			attributeStr;
 	int16				attributeVal;
 	nsresult		err;
 
@@ -623,7 +623,7 @@ nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsMsgSearchScopeTerm *scope, PRU
 					
 				if (headerValue < buf_end && *headerValue) // make sure buf has info besides just the header
 				{
-					nsString2 headerStr = headerValue;
+					nsCAutoString headerStr (headerValue);
 					PRBool result2;
 					err = MatchString(&headerStr, charset, PR_FALSE, &result2);  // match value with the other info...
 					if (result != result2) // if we found a match
@@ -749,14 +749,14 @@ nsresult nsMsgSearchTerm::MatchBody (nsMsgSearchScopeTerm *scope, PRUint32 offse
 
 
 // *pResult is PR_FALSE when strings don't match, PR_TRUE if they do.
-nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, const char *charset, PRBool body, PRBool *pResult)
+nsresult nsMsgSearchTerm::MatchString (nsCString *stringToMatch, const char *charset, PRBool body, PRBool *pResult)
 {
 	if (!pResult)
 		return NS_ERROR_NULL_POINTER;
 	PRBool result = PR_FALSE;
 
 	nsresult err = NS_OK;
-	nsString2 n_str(eOneByte);
+	nsCAutoString n_str;
 	const char* n_header = nsnull;
 	if(nsMsgSearchOp::IsEmpty != m_operator)	// Save some performance for opIsEmpty
 	{
@@ -770,26 +770,26 @@ nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, const char *cha
 		NS_ASSERTION(n_str, "failed get normalized string");
 		NS_ASSERTION(n_header, "failed get normalized header");
 #else
-		n_header = stringToMatch->GetBuffer() ;
+		n_header = *stringToMatch;
 		n_str = m_value.u.string;
 #endif // DO_I18N
 	}
 	switch (m_operator)
 	{
 	case nsMsgSearchOp::Contains:
-		if ((nsnull != n_header) && (n_str[0]) && /* INTL_StrContains(csid, n_header, n_str) */
+		if ((nsnull != n_header) && ((n_str.GetBuffer())[0]) && /* INTL_StrContains(csid, n_header, n_str) */
 			stringToMatch->Find(n_str, PR_TRUE) != -1)
 			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::DoesntContain:
-		if ((nsnull != n_header) && (n_str[0]) &&  /* !INTL_StrContains(csid, n_header, n_str) */
+		if ((nsnull != n_header) && ((n_str.GetBuffer())[0]) &&  /* !INTL_StrContains(csid, n_header, n_str) */
 			stringToMatch->Find(n_str, PR_TRUE) == -1)
 			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::Is:
 		if(n_header)
 		{
-			if (n_str[0])
+			if ((n_str.GetBuffer())[0])
 			{
 				if (n_str.Equals(*stringToMatch, PR_TRUE /*ignore case*/) /* INTL_StrIs(csid, n_header, n_str)*/ )
 					result = PR_TRUE;
@@ -801,7 +801,7 @@ nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, const char *cha
 	case nsMsgSearchOp::Isnt:
 		if(n_header)
 		{
-			if (n_str[0])
+			if ((n_str.GetBuffer())[0])
 			{
 				if (!n_str.Equals(*stringToMatch, PR_TRUE)/* INTL_StrIs(csid, n_header, n_str)*/ )
 					result = PR_TRUE;
@@ -883,8 +883,8 @@ nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *cha
 		if (!names || !addresses)
 			return err;
 
-		nsString2 walkNames(names, eOneByte);
-		nsString2 walkAddresses(addresses, eOneByte);
+		nsCAutoString walkNames(names);
+		nsCAutoString walkAddresses(addresses);
 		PRInt32 namePos = 0;
 		PRInt32 addressPos = 0;
 		for (PRUint32 i = 0; i < count && result == boolContinueLoop; i++)

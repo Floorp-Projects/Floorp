@@ -87,7 +87,7 @@ public:
 
 	// IO routines, used by filter object filing code.
 	nsresult WriteIntAttr( nsMsgFilterFileAttrib attrib, int value);
-	nsresult WriteStrAttr(nsMsgFilterFileAttrib attrib, nsString2 &str);
+	nsresult WriteStrAttr(nsMsgFilterFileAttrib attrib, nsCString &str);
 	nsresult WriteBoolAttr(nsMsgFilterFileAttrib attrib, PRBool boolVal);
 protected:
 		// type-safe accessor when you really have to have an nsMsgFilter
@@ -101,11 +101,11 @@ protected:
 	char			ReadChar();
 	PRBool			IsWhitespace(char ch);
 	char			SkipWhitespace();
-	PRBool			StrToBool(nsString2 &str);
+	PRBool			StrToBool(nsCString &str);
 	char			LoadAttrib(nsMsgFilterFileAttrib &attrib);
 	const char		*GetStringForAttrib(nsMsgFilterFileAttrib attrib);
-	nsresult		LoadValue(nsString2 &value);
-	nsresult ParseCondition(nsString2 &value);
+	nsresult		LoadValue(nsCString &value);
+	nsresult ParseCondition(nsCString &value);
 		PRInt16		m_fileVersion;
 		PRBool		m_loggingEnabled;
 	nsCOMPtr <nsIMsgFolder>	m_folder;
