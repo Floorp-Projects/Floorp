@@ -2034,7 +2034,7 @@ net_CleanupMemoryCacheProtocol(void)
 {
 }
 
-void
+PUBLIC void
 NET_InitMemCacProtocol(void) /* no prototype when NU_CACHE */
 {
     static NET_ProtoImpl mem_cac_proto_impl;
