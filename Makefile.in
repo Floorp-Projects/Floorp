@@ -22,6 +22,57 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef USE_NGLAYOUT
+
+# The list of directories that need to be built to build the standalone
+# nglayout test program. The order is important.
+DIRS =				\
+  config			\
+  dbm				\
+  nsprpub			\
+  jpeg				\
+  modules/libreg		\
+  xpcom				\
+  modules/zlib			\
+  modules/libutil		\
+  sun-java			\
+  nav-java			\
+  js				\
+  modules/security/freenav	\
+  modules/libpref		\
+  modules/libimg		\
+  modules/oji		\
+  modules/plugin		\
+  base				\
+  lib/xp			\
+  lib/libpwcac			\
+  network			\
+  lib/liblayer/include		\
+  htmlparser			\
+  gfx				\
+  dom				\
+  view				\
+  widget			\
+  layout			\
+  webshell
+
+include $(topsrcdir)/config/config.mk
+
+include $(topsrcdir)/config/rules.mk
+
+real_all: all
+
+real_export: export
+
+real_libs: libs
+
+real_install: install
+
+real_clobber: clobber
+
+real_depend: depend
+
+else
 ifndef NO_MOCHA
 DIRS_JS		= js
 endif
@@ -94,3 +145,5 @@ sdk-bin::
 	$(SDKINSTALL) $(DIST)/bin/javah$(BIN_SUFFIX) $(SDK)/bin/$(OS_CONFIG)/
 	$(SDKINSTALL) sdk/examples/simple/Source/$(OBJDIR)/npsimple.$(DLL_SUFFIX) $(SDK)/bin/$(OS_CONFIG)/
 	$(SDKINSTALL) sdk/examples/UnixTemplate/Source/$(OBJDIR)/nptemplate.$(DLL_SUFFIX) $(SDK)/bin/$(OS_CONFIG)/
+
+endif # USE_NGLAYOUT

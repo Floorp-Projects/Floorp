@@ -1,4 +1,4 @@
-dnl The contents of this file are subject to the Mozilla Public License
+:nl The contents of this file are subject to the Mozilla Public License
 dnl Version 1.0 (the "License"); you may not use this file except in
 dnl compliance with the License. You may obtain a copy of the License
 dnl at http://www.mozilla.org/MPL/
@@ -105,11 +105,28 @@ dnl the qsort routine under solaris is faulty
 dnl Linux Alpha needs -mieee for FPU to work correctly
 dnl Note this case statement doesn't seem to handle [] as part of a regexp
 
+dnl set the defaults first
+dnl ========================================================
+MKSHLIB='$(LD) $(DSO_LDOPTS)'
+
+dnl now the exceptions
+dnl ========================================================
 case "$target" in
 *-*-solaris*) 
-	AC_DEFINE(BROKEN_QSORT) ;;
+	AC_DEFINE(BROKEN_QSORT)
+        DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.so=%.so)' ;;
+
 alpha-*-linux*)
-	CFLAGS="$CFLAGS -mieee" ;;
+	CFLAGS="$CFLAGS -mieee"
+        DSO_LDOPTS='-Wl,-soname,$(@:$(OBJDIR)/%.so=%.so)'
+	MKSHLIB='$(CC) -shared' ;;
+
+*-linux*)
+        DSO_LDOPTS='-Wl,-soname,$(@:$(OBJDIR)/%.so=%.so)'
+	MKSHLIB='$(CC) -shared' ;;
+
+*)
+	DSO_LDOPTS='-Bsymbolic -shared' ;;
 esac
 
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -245,6 +262,16 @@ dnl AC_CHECK_LIB(svld, main)
 
 dnl Mozilla specific options
 dnl ========================================================
+AC_ARG_ENABLE(nglayout,
+[  --enable-nglayout      enable the new generation layout features], 
+    [ if test "$enableval" = "yes"; then
+	USE_NGLAYOUT=1
+	OS_TARGET=`uname -s`
+    else 
+	USE_NGLAYOUT=
+    fi],
+    USE_NGLAYOUT= )
+
 AC_ARG_ENABLE(fe,
 [  --enable-fe=\$val	  enable \$val fe (defaults to x)],
     [fe_list=`echo "$enableval" | sed -e 's/,/ /g' -e 's|$| |'`], 
@@ -400,6 +427,8 @@ AC_ARG_ENABLE(ldap,
 	    NO_UNIX_LDAP=
 	fi] )
 
+AC_SUBST(USE_NGLAYOUT)
+AC_SUBST(OS_TARGET)
 AC_SUBST(MOZ_FE)
 AC_SUBST(MOZ_SECURITY)
 AC_SUBST(MOZ_NETCAST)
@@ -767,6 +796,9 @@ AC_SUBST(CFLAGS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(LIBS)
 
+AC_SUBST(MKSHLIB)
+AC_SUBST(DSO_LDOPTS)
+
 dnl Check for missing components
 if [ test "$MISSING_X" != "" ]; then
    AC_MSG_ERROR([ Could not find the following libraries: $MISSING_X ]);
@@ -845,7 +877,7 @@ if [ test "$MISSING_NSPR" != "" ]; then
     AC_MSG_ERROR([Could not find standard nspr headers or libraries.]);
 fi
 
-AC_OUTPUT(
+CLASSIC_MAKEFILES="
 Makefile
 base/Makefile
 base/public/Makefile
@@ -1032,5 +1064,195 @@ xpcom/Makefile
 xpcom/public/Makefile
 xpcom/src/Makefile
 xpcom/tests/Makefile
-xpcom/tests/dynamic/Makefile
-)
+xpcom/tests/dynamic/Makefile "
+
+NG_MAKEFILES="
+Makefile
+base/Makefile
+base/public/Makefile
+base/src/Makefile
+base/src/rhapsody/Makefile
+base/src/unix/Makefile
+base/tests/Makefile
+config/Makefile
+config/autoconf.mk
+config/mkdepend/Makefile
+config/mkdetect/Makefile
+config/ports/Makefile
+dbm/Makefile
+dbm/include/Makefile
+dbm/src/Makefile
+dbm/tests/Makefile
+dom/Makefile
+dom/public/Makefile
+dom/public/base/Makefile
+dom/public/coreDom/Makefile
+dom/public/coreEvents/Makefile
+dom/public/css/Makefile
+dom/public/events/Makefile
+dom/public/html/Makefile
+dom/src/Makefile
+dom/src/base/Makefile
+dom/src/build/Makefile
+dom/src/coreDOM/Makefile
+dom/src/css/Makefile
+dom/src/events/Makefile
+dom/src/html/Makefile
+dom/src/jsurl/Makefile
+dom/tools/Makefile
+gfx/Makefile
+gfx/public/Makefile
+gfx/src/Makefile
+gfx/src/gtk/Makefile
+gfx/src/motif/Makefile
+gfx/src/rhapsody/Makefile
+gfx/tests/Makefile
+htmlparser/Makefile
+htmlparser/robot/Makefile
+htmlparser/src/Makefile
+include/Makefile
+jpeg/Makefile
+js/Makefile
+js/jsd/Makefile
+js/jsd/classes/Makefile
+js/src/Makefile
+js/src/liveconnect/Makefile
+js/src/liveconnect/classes/Makefile
+js/src/xpcom/Makefile
+layout/Makefile
+layout/base/Makefile
+layout/base/public/Makefile
+layout/base/src/Makefile
+layout/base/tests/Makefile
+layout/build/Makefile
+layout/events/Makefile
+layout/events/public/Makefile
+layout/events/src/Makefile
+layout/html/Makefile
+layout/html/base/Makefile
+layout/html/base/src/Makefile
+layout/html/content/Makefile
+layout/html/content/public/Makefile
+layout/html/content/src/Makefile
+layout/html/document/Makefile
+layout/html/document/src/Makefile
+layout/html/forms/Makefile
+layout/html/forms/public/Makefile
+layout/html/forms/src/Makefile
+layout/html/style/Makefile
+layout/html/style/public/Makefile
+layout/html/style/src/Makefile
+layout/html/table/Makefile
+layout/html/table/src/Makefile
+layout/html/tests/Makefile
+layout/tools/Makefile
+lib/Makefile
+lib/liblayer/Makefile
+lib/liblayer/include/Makefile
+lib/liblayer/src/Makefile
+lib/libpwcac/Makefile
+lib/xp/Makefile
+modules/Makefile
+modules/libimg/Makefile
+modules/libimg/classes/Makefile
+modules/libimg/classes/netscape/Makefile
+modules/libimg/classes/netscape/libimg/Makefile
+modules/libimg/png/Makefile
+modules/libimg/public/Makefile
+modules/libimg/src/Makefile
+modules/libpref/Makefile
+modules/libpref/admin/Makefile
+modules/libpref/l10n/Makefile
+modules/libpref/public/Makefile
+modules/libpref/src/Makefile
+modules/libreg/Makefile
+modules/libreg/include/Makefile
+modules/libreg/src/Makefile
+modules/libutil/Makefile
+modules/libutil/public/Makefile
+modules/libutil/src/Makefile
+modules/oji/Makefile
+modules/oji/public/Makefile
+modules/oji/src/Makefile
+modules/plugin/Makefile
+modules/plugin/nglsrc/Makefile
+modules/plugin/public/Makefile
+modules/plugin/src/Makefile
+modules/plugin/test/Makefile
+modules/security/Makefile
+modules/security/freenav/Makefile
+modules/zlib/Makefile
+modules/zlib/src/Makefile
+nav-java/Makefile
+nav-java/stubs/Makefile
+nav-java/stubs/include/Makefile
+nav-java/stubs/jri/Makefile
+nav-java/stubs/src/Makefile
+network/Makefile
+network/cache/Makefile
+network/cache/nu/Makefile
+network/cache/nu/include/Makefile
+network/cache/nu/public/Makefile
+network/cache/nu/src/Makefile
+network/client/Makefile
+network/cnvts/Makefile
+network/cstream/Makefile
+network/main/Makefile
+network/mimetype/Makefile
+network/module/Makefile
+network/module/tests/Makefile
+network/protocol/Makefile
+network/protocol/about/Makefile
+network/protocol/callback/Makefile
+network/protocol/certld/Makefile
+network/protocol/dataurl/Makefile
+network/protocol/file/Makefile
+network/protocol/ftp/Makefile
+network/protocol/gopher/Makefile
+network/protocol/http/Makefile
+network/protocol/imap4/Makefile
+network/protocol/js/Makefile
+network/protocol/ldap/Makefile
+network/protocol/mailbox/Makefile
+network/protocol/marimba/Makefile
+network/protocol/nntp/Makefile
+network/protocol/pop3/Makefile
+network/protocol/remote/Makefile
+network/protocol/smtp/Makefile
+network/util/Makefile
+sun-java/Makefile
+sun-java/stubs/Makefile
+sun-java/stubs/include/Makefile
+sun-java/stubs/jri/Makefile
+sun-java/stubs/src/Makefile
+view/Makefile
+view/public/Makefile
+view/src/Makefile
+webshell/Makefile
+webshell/public/Makefile
+webshell/src/Makefile
+webshell/tests/Makefile
+webshell/tests/viewer/Makefile
+widget/Makefile
+widget/public/Makefile
+widget/src/Makefile
+widget/src/build/Makefile
+widget/src/motif/Makefile
+widget/src/rhapsody/Makefile
+widget/src/xpwidgets/Makefile
+widget/tests/Makefile
+widget/tests/scribble/Makefile
+widget/tests/widget/Makefile
+xpcom/Makefile
+xpcom/public/Makefile
+xpcom/src/Makefile
+xpcom/tests/Makefile
+xpcom/tests/dynamic/Makefile"
+
+if test "$USE_NGLAYOUT" = 1; then
+    THE_MAKEFILES="$NG_MAKEFILES"
+else
+    THE_MAKEFILES="$CLASSIC_MAKEFILES"
+fi
+AC_OUTPUT($THE_MAKEFILES)
+
