@@ -148,7 +148,7 @@ nsHTMLEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
 
 
 NS_IMETHODIMP
-nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
+nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection, PRBool aSetSelection)
 {
   if (mLockRulesSniffing) return NS_OK;
 
@@ -172,9 +172,17 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
       nsAutoTxnsConserveSelection dontSpazMySelection(mEditor);
      
       // expand the "changed doc range" as needed
-      res = PromoteRange(mDocChangeRange, action);
-      if (NS_FAILED(res)) return res;
-
+      // MOOSE:  I don't do this if the aSetSelection param is true.  This is because 
+      // if aSetSelection is true, it means we are to set the selection to the changed
+      // document region when we are done.  So I need to preserve mDocChangeRange as is.
+      // I should probably set up a parellel range for this purpose.
+      
+      if (!aSetSelection)
+      {
+        res = PromoteRange(mDocChangeRange, action);
+        if (NS_FAILED(res)) return res;
+      }
+      
       // add in any needed <br>s, and remove any unneeded ones.
       res = AdjustSpecialBreaks();
       if (NS_FAILED(res)) return res;
@@ -208,6 +216,12 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
     nsCOMPtr<nsIPresShell> pres;
     mEditor->GetPresShell(getter_AddRefs(pres));
     if (pres) pres->SetCaretEnabled(PR_TRUE);
+    
+    if (aSetSelection)
+    {
+      selection->ClearSelection();
+      selection->AddRange(mDocChangeRange);
+    }
   }
 
   return res;
@@ -1100,7 +1114,7 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
           {
             // make a new ordered list, insert it where the current unordered list is,
             // and move all the children to the new list, and remove the old list
-            res = ReplaceContainer(curNode,&newBlock,blockType);
+            res = mEditor->ReplaceContainer(curNode,&newBlock,blockType);
             if (NS_FAILED(res)) return res;
             curList = newBlock;
             continue;
@@ -1118,7 +1132,7 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
           {
             // make a new unordered list, insert it where the current ordered list is,
             // and move all the children to the new list, and remove the old list
-            ReplaceContainer(curNode,&newBlock,blockType);
+            mEditor->ReplaceContainer(curNode,&newBlock,blockType);
             if (NS_FAILED(res)) return res;
             curList = newBlock;
             continue;
@@ -1179,11 +1193,11 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
           // don't wrap li around a paragraph.  instead replace paragraph with li
           if (nsHTMLEditUtils::IsParagraph(curNode))
           {
-            res = ReplaceContainer(curNode, &listItem, "li");
+            res = mEditor->ReplaceContainer(curNode, &listItem, "li");
           }
           else
           {
-            res = InsertContainerAbove(curNode, &listItem, "li");
+            res = mEditor->InsertContainerAbove(curNode, &listItem, "li");
           }
           if (NS_FAILED(res)) return res;
           if (nsEditor::IsInlineNode(curNode)) 
@@ -1503,7 +1517,7 @@ nsHTMLEditRules::WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel, PRBoo
     {
       if (nsHTMLEditUtils::IsList(curNode))  // just unwrap this sublist
       {
-        res = RemoveContainer(curNode);
+        res = mEditor->RemoveContainer(curNode);
         if (NS_FAILED(res)) return res;
       }
       else  // we are moving a list item, but not whole list
@@ -1547,7 +1561,7 @@ nsHTMLEditRules::WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel, PRBoo
       {
         if (nsHTMLEditUtils::IsBlockquote(n))
         {
-          RemoveContainer(n);
+          mEditor->RemoveContainer(n);
           break;
         }
         n->GetParentNode(getter_AddRefs(tmp));
@@ -2347,142 +2361,6 @@ nsHTMLEditRules::MakeTransitionList(nsISupportsArray *inArrayOfNodes,
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// ReplaceContainer: replace inNode with a new node (outNode) which is contructed 
-//                   to be of type aNodeType.  Put inNodes children into outNode.
-//                   Callers responsibility to make sure inNode's children can 
-//                   go in outNode.
-nsresult
-nsHTMLEditRules::ReplaceContainer(nsIDOMNode *inNode, 
-                                  nsCOMPtr<nsIDOMNode> *outNode, 
-                                  const nsString &aNodeType)
-{
-  if (!inNode || !outNode)
-    return NS_ERROR_NULL_POINTER;
-  nsresult res;
-  nsCOMPtr<nsIDOMNode> parent;
-  PRInt32 offset;
-  res = nsEditor::GetNodeLocation(inNode, &parent, &offset);
-  if (NS_FAILED(res)) return res;
-  res = mEditor->CreateNode(aNodeType, parent, offset, getter_AddRefs(*outNode));
-  if (NS_FAILED(res)) return res;
-  PRBool bHasMoreChildren;
-  inNode->HasChildNodes(&bHasMoreChildren);
-  nsCOMPtr<nsIDOMNode> child;
-  offset = 0;
-  while (bHasMoreChildren)
-  {
-    inNode->GetLastChild(getter_AddRefs(child));
-    res = mEditor->DeleteNode(child);
-    if (NS_FAILED(res)) return res;
-    res = mEditor->InsertNode(child, *outNode, 0);
-    if (NS_FAILED(res)) return res;
-    inNode->HasChildNodes(&bHasMoreChildren);
-  }
-  res = mEditor->DeleteNode(inNode);
-  return res;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// RemoveContainer: remove inNode, reparenting it's children into their
-//                  the parent of inNode
-//
-nsresult
-nsHTMLEditRules::RemoveContainer(nsIDOMNode *inNode, PRBool aAddBRIfNeeded)
-{
-  if (!inNode)
-    return NS_ERROR_NULL_POINTER;
-  if (nsHTMLEditUtils::IsBody(inNode))
-    return NS_ERROR_UNEXPECTED;
-  nsresult res;
-  nsCOMPtr<nsIDOMNode> parent;
-  PRInt32 offset;
-  res = nsEditor::GetNodeLocation(inNode, &parent, &offset);
-  if (NS_FAILED(res)) return res;
-  
-  // add BR's before and/or after the inNode
-  // if aAddBRIfNeeded is set and if the content
-  // before/after the node is inline.  
-  // Only do this if inNode is a block node.
-  if (aAddBRIfNeeded && mEditor->IsBlockNode(inNode))
-  {
-    nsCOMPtr<nsIDOMNode> nearNode, brNode;
-    res = GetPriorHTMLSibling(inNode, &nearNode);
-    if (NS_FAILED(res)) return res;
-    if (nearNode && mEditor->IsInlineNode(nearNode))
-    {
-      res = mEditor->CreateBR(parent, offset, &brNode);
-      if (NS_FAILED(res)) return res;
-      // refresh location info
-      res = nsEditor::GetNodeLocation(inNode, &parent, &offset);
-      if (NS_FAILED(res)) return res;
-    }
-    res = GetNextHTMLSibling(inNode, &nearNode);
-    if (NS_FAILED(res)) return res;
-    if (nearNode && mEditor->IsInlineNode(nearNode))
-    {
-      res = mEditor->CreateBR(parent, offset+1, &brNode);
-      if (NS_FAILED(res)) return res;
-      // refresh location info
-      res = nsEditor::GetNodeLocation(inNode, &parent, &offset);
-      if (NS_FAILED(res)) return res;
-    }
-  }
-  
-  // loop through the child nodes of inNode and promote them
-  // into inNode's parent.
-  PRBool bHasMoreChildren;
-  inNode->HasChildNodes(&bHasMoreChildren);
-  nsCOMPtr<nsIDOMNode> child;
-  while (bHasMoreChildren)
-  {
-    inNode->GetLastChild(getter_AddRefs(child));
-    res = mEditor->DeleteNode(child);
-    if (NS_FAILED(res)) return res;
-    res = mEditor->InsertNode(child, parent, offset);
-    if (NS_FAILED(res)) return res;
-    inNode->HasChildNodes(&bHasMoreChildren);
-  }
-  res = mEditor->DeleteNode(inNode);
-  return res;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// InsertContainerAbove:  insert a new parent for inNode, returned in outNode,
-//                   which is contructed to be of type aNodeType.  outNode becomes
-//                   a child of inNode's earlier parent.
-//                   Callers responsibility to make sure inNode's can be child
-//                   of outNode, and outNode can be child of old parent.
-nsresult
-nsHTMLEditRules::InsertContainerAbove(nsIDOMNode *inNode, 
-                                  nsCOMPtr<nsIDOMNode> *outNode, 
-                                  const nsString &aNodeType)
-{
-  if (!inNode || !outNode)
-    return NS_ERROR_NULL_POINTER;
-  nsresult res;
-  nsCOMPtr<nsIDOMNode> parent;
-  PRInt32 offset;
-  res = nsEditor::GetNodeLocation(inNode, &parent, &offset);
-  if (NS_FAILED(res)) return res;
-  
-  // make new parent, outNode
-  res = mEditor->CreateNode(aNodeType, parent, offset, getter_AddRefs(*outNode));
-  if (NS_FAILED(res)) return res;
-
-  // put inNode in new parent, outNode
-  res = mEditor->DeleteNode(inNode);
-  if (NS_FAILED(res)) return res;
-  res = mEditor->InsertNode(inNode, *outNode, 0);
-  if (NS_FAILED(res)) return res;
-
-  return NS_OK;
-}
-
-
-
 
 /********************************************************
  *  main implementation methods 
@@ -2558,7 +2436,7 @@ nsHTMLEditRules::ReturnInHeader(nsIDOMSelection *aSelection,
   }
   // else unwrap it 
   nsCOMPtr<nsIDOMNode> newBlock;
-  res = RemoveContainer(aHeader);
+  res = mEditor->RemoveContainer(aHeader);
   return res;
 }
 
@@ -2958,11 +2836,11 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
 //        nsCOMPtr<nsIDOMNode> brNode;
 //        res = mEditor->CreateBR(curParent, offset+1, &brNode);
 //        if (NS_FAILED(res)) return res;
-        res = RemoveContainer(curNode, PR_TRUE); 
+        res = mEditor->RemoveContainer(curNode); 
       }
       else
       {
-        res = ReplaceContainer(curNode, &newBlock, *aBlockTag);
+        res = mEditor->ReplaceContainer(curNode, &newBlock, *aBlockTag);
       }
       if (NS_FAILED(res)) return res;
     }
@@ -3743,7 +3621,7 @@ nsHTMLEditRules::PopListItem(nsIDOMNode *aListItem, PRBool *aOutOfList)
     nsCOMPtr<nsIDOMNode> lastChild;
     res = GetLastEditableChild(curNode, &lastChild);
     if (NS_FAILED(res)) return res;
-    res = RemoveContainer(curNode);
+    res = mEditor->RemoveContainer(curNode);
     if (NS_FAILED(res)) return res;
     if (mEditor->IsInlineNode(lastChild))
     {
@@ -4003,15 +3881,9 @@ nsHTMLEditListener::DidSplitNode(nsIDOMNode *aExistingRightNode,
                               nsresult aResult)
 {
   nsCOMPtr<nsIDOMRange> range;
-  nsresult res = MakeRangeFromNode(aNewLeftNode, &range);
+  nsresult res = MakeCollapsedRange(aExistingRightNode, 0, &range);
   if (NS_FAILED(res)) return res;
-  if (range)
-  {
-    // now extend range to include right node
-    res = range->SetEndAfter(aExistingRightNode);
-    if (NS_FAILED(res)) return res;
-    res = mRules->UpdateDocChangeRange(range);
-  }
+  res = mRules->UpdateDocChangeRange(range);
   return res;  
 }
 
@@ -4019,7 +3891,9 @@ nsHTMLEditListener::DidSplitNode(nsIDOMNode *aExistingRightNode,
 NS_IMETHODIMP 
 nsHTMLEditListener::WillJoinNodes(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, nsIDOMNode *aParent)
 {
-  return NS_OK;  
+  // remember split point
+  nsresult res = nsEditor::GetLengthOfDOMNode(aLeftNode, mJoinOffset);
+  return res;  
 }
 
 
@@ -4029,14 +3903,11 @@ nsHTMLEditListener::DidJoinNodes(nsIDOMNode  *aLeftNode,
                               nsIDOMNode *aParent, 
                               nsresult aResult)
 {
-  nsCOMPtr<nsIDOMRange> range;
   // assumption that Join keeps the righthand node
-  nsresult res = MakeRangeFromNode(aRightNode, &range);
+  nsCOMPtr<nsIDOMRange> range;
+  nsresult res = MakeCollapsedRange(aRightNode, mJoinOffset, &range);
   if (NS_FAILED(res)) return res;
-  if (range)
-  {
-    res = mRules->UpdateDocChangeRange(range);
-  }
+  res = mRules->UpdateDocChangeRange(range);
   return res;  
 }
 
@@ -4139,6 +4010,28 @@ nsHTMLEditListener::MakeRangeFromNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMRange> 
                                                     getter_AddRefs(*outRange));
   if (NS_FAILED(res)) return res;
   res = (*outRange)->SelectNode(inNode);
+  return res;  
+}
+
+
+nsresult 
+nsHTMLEditListener::MakeCollapsedRange(nsIDOMNode *inNode, PRInt32 inOffset, nsCOMPtr<nsIDOMRange> *outRange)
+{
+  if (!inNode || !outRange) return NS_ERROR_NULL_POINTER;
+  *outRange = nsnull;
+  
+  // first check that inNode is still a descendant of the body
+  if (!IsDescendantOfBody(inNode)) return NS_OK;
+  
+  // construct a range to represent start and end of inNode
+  nsresult res = nsComponentManager::CreateInstance(kRangeCID,
+                                                    nsnull,
+                                                    NS_GET_IID(nsIDOMRange),
+                                                    getter_AddRefs(*outRange));
+  if (NS_FAILED(res)) return res;
+  res = (*outRange)->SetStart(inNode, inOffset);
+  if (NS_FAILED(res)) return res;
+  res = (*outRange)->SetEnd(inNode, inOffset);
   return res;  
 }
 

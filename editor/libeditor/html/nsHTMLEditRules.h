@@ -42,7 +42,7 @@ public:
 
   // nsEditRules methods
   NS_IMETHOD BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection);
-  NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection);
+  NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection, PRBool aSetSelection);
   NS_IMETHOD Init(nsHTMLEditor *aEditor, PRUint32 aFlags);
   NS_IMETHOD WillDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled);
   NS_IMETHOD DidDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
@@ -110,10 +110,6 @@ protected:
                                    
   nsresult ShouldMakeEmptyBlock(nsIDOMSelection *aSelection, const nsString *blockTag, PRBool *outMakeEmpty);
   nsresult ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString *aBlockTag);
-
-  nsresult ReplaceContainer(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, const nsString &aNodeType);
-  nsresult RemoveContainer(nsIDOMNode *inNode, PRBool aAddBRIfNeeded=PR_FALSE);
-  nsresult InsertContainerAbove(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, const nsString &aNodeType);
 
   nsresult JoinNodesSmart( nsIDOMNode *aNodeLeft, 
                            nsIDOMNode *aNodeRight, 
@@ -189,12 +185,14 @@ protected:
                                     PRInt32 inStart, 
                                     PRInt32 inEnd, 
                                     nsCOMPtr<nsIDOMRange> *outRange);
+  nsresult MakeCollapsedRange(nsIDOMNode *inNode, PRInt32 inOffset, nsCOMPtr<nsIDOMRange> *outRange);
   PRBool IsDescendantOfBody(nsIDOMNode *inNode) ;
   
 // data members
   nsHTMLEditor     *mEditor;
   nsHTMLEditRules  *mRules;
   nsCOMPtr<nsIDOMNode> mBody;
+  PRUint32          mJoinOffset;  // need to remember an int across willJoin/didJoin...
 };
 
 #endif //nsHTMLEditRules_h__

@@ -150,7 +150,7 @@ nsTextEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
 
 
 NS_IMETHODIMP
-nsTextEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
+nsTextEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection, PRBool aSetSelection)
 {
   if (mLockRulesSniffing) return NS_OK;
   

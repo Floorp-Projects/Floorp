@@ -1787,7 +1787,7 @@ nsEditor::StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
 /** All editor operations which alter the doc should be followed
  *  with a call to EndOperation, naming the action and direction */
 NS_IMETHODIMP
-nsEditor::EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
+nsEditor::EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection, PRBool aSetSelection)
 {
   return NS_OK;
 }
@@ -3304,22 +3304,41 @@ nsEditor::NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
 }
 
 PRBool 
-nsEditor::CanContainTag(nsIDOMNode* aParent, const nsString &aTag)
+nsEditor::CanContainTag(nsIDOMNode* aParent, const nsString &aChildTag)
+{
+  nsAutoString parentStringTag;
+  
+  nsCOMPtr<nsIDOMElement> parentElement = do_QueryInterface(aParent);
+  if (!parentElement) return PR_FALSE;
+  
+  parentElement->GetTagName(parentStringTag);
+  return TagCanContainTag(parentStringTag, aChildTag);
+}
+
+PRBool 
+nsEditor::TagCanContain(const nsString &aParentTag, nsIDOMNode* aChild)
+{
+  nsAutoString childStringTag;
+  
+  nsCOMPtr<nsIDOMElement> childElement = do_QueryInterface(aChild);
+  if (!childElement) return PR_FALSE;
+  
+  childElement->GetTagName(childStringTag);
+  return TagCanContainTag(aParentTag, childStringTag);
+}
+
+PRBool 
+nsEditor::TagCanContainTag(const nsString &aParentTag, const nsString &aChildTag)
 {
   // if we don't have a dtd then assume we can insert whatever want
   if (!mDTD) return PR_TRUE;
   
   PRInt32 childTagEnum, parentTagEnum;
-  nsAutoString parentStringTag;
-  nsAutoString non_const_aTag(aTag);
-  nsresult res = mDTD->StringTagToIntTag(non_const_aTag,&childTagEnum);
+  nsAutoString non_const_childTag(aChildTag);
+  nsAutoString non_const_parentTag(aParentTag);
+  nsresult res = mDTD->StringTagToIntTag(non_const_childTag,&childTagEnum);
   if (NS_FAILED(res)) return PR_FALSE;
-
-  nsCOMPtr<nsIDOMElement> parentElement = do_QueryInterface(aParent);
-  if (!parentElement) return PR_FALSE;
-  
-  parentElement->GetTagName(parentStringTag);
-  res = mDTD->StringTagToIntTag(parentStringTag,&parentTagEnum);
+  res = mDTD->StringTagToIntTag(non_const_parentTag,&parentTagEnum);
   if (NS_FAILED(res)) return PR_FALSE;
 
   return mDTD->CanContain(parentTagEnum, childTagEnum);
