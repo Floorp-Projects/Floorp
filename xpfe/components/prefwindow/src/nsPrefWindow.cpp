@@ -101,7 +101,8 @@ nsPrefWindow::~nsPrefWindow()
 {
     NS_IF_RELEASE(mTreeFrame);
     NS_IF_RELEASE(mPanelFrame);
-    nsServiceManager::ReleaseService(kPrefCID, mPrefs);
+    if(mPrefs)
+        nsServiceManager::ReleaseService(kPrefCID, mPrefs);
     if (mSubStrings)
     {
         for (int i=0; i< PREFWINDOW_MAX_STRINGS; i++)
