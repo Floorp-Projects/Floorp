@@ -65,11 +65,13 @@
 
 #include "nsCaret.h"
 
+#if !defined(XP_UNIX) || defined(XP_MACOSX)
 // Because of drawing issues, we currently always make a new RC. See bug 28068
 // Before removing this, stuff will need to be fixed and tested on all platforms.
 // For example, turning this off on Mac right now causes drawing problems on pages
 // with form elements.
 #define DONT_REUSE_RENDERING_CONTEXT
+#endif
 
 #ifdef IBMBIDI
 //-------------------------------IBM BIDI--------------------------------------
