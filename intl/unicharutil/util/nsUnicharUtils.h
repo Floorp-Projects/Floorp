@@ -37,4 +37,9 @@ class nsCaseInsensitiveStringComparator
       virtual int operator()( PRUnichar, PRUnichar ) const;
   };
 
+
 #endif
+
+PRUnichar ToUpperCase(PRUnichar);
+PRUnichar ToLowerCase(PRUnichar);
+
