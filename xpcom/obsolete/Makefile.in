@@ -78,9 +78,6 @@ XPIDLSRCS	= nsIFileSpec.idl \
 # Force use of PIC
 FORCE_USE_PIC	= 1 
 
-FORCE_SHARED_LIB = 1
-
-
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX) \
 		$(NULL)
