@@ -56,6 +56,15 @@
 #include "nsIAppShell.h"
 #include "nsWidgetSupport.h"
 
+#define USE_LOCAL_WIDGETS
+
+#ifdef USE_LOCAL_WIDGETS
+  extern nsresult NS_NewButton(nsIButton** aControl);
+  extern nsresult NS_NewLabel(nsILabel** aControl);
+  extern nsresult NS_NewTextWidget(nsITextWidget** aControl);
+  extern nsresult NS_NewCheckButton(nsICheckButton** aControl);
+#endif
+
 #include <stdio.h>
 
 #ifndef XP_MAC
@@ -414,8 +423,15 @@ int createTestButton(nsIWidget * aWin,
                      int aWidth, 
                      EVENT_CALLBACK aHandleEventFunction) {
   nsIButton *button;
-  nsRect rect(aX, aY, aWidth, 25);  
+  nsRect rect(aX, aY, aWidth, 25); 
+  
+#ifdef USE_LOCAL_WIDGETS
+  rv = NS_NewButton(&button);
+  NS_ADDREF(button);
+#else
   nsComponentManager::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void **) &button);
+#endif
+
   NS_CreateButton(aWin,button,rect,aHandleEventFunction);
   button->SetLabel(aTitle);
   return aX + aWidth;
@@ -432,7 +448,12 @@ nsIButton* createSimpleButton(nsIWidget * aWin,
                      EVENT_CALLBACK aHandleEventFunction) {
   nsIButton *button;
   nsRect rect(aX, aY, aWidth, 25);  
-  nsComponentManager::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
+#ifdef USE_LOCAL_WIDGETS
+  rv = NS_NewButton(&button);
+  NS_ADDREF(button);
+#else
+  nsComponentManager::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void **) &button);
+#endif
   NS_CreateButton(aWin,button,rect,aHandleEventFunction);
   button->SetLabel(aTitle);
   return button;
@@ -1177,7 +1198,12 @@ nsresult WidgetTest(int *argc, char **argv)
     //
     nsIButton *button;
     rect.SetRect(x, y, 60, 25);  
+#ifdef USE_LOCAL_WIDGETS
+    rv = NS_NewButton(&button);
+    NS_ADDREF(button);
+#else
     nsComponentManager::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
+#endif
     NS_CreateButton(window,button,rect,HandleEvent);
     nsString label("Slider");
     button->SetLabel(label);
@@ -1205,7 +1231,12 @@ nsresult WidgetTest(int *argc, char **argv)
     nsICheckButton * checkButton;
     rect.SetRect(x, y, 100, 25);  
 
+#ifdef USE_LOCAL_WIDGETS
+    rv = NS_NewCheckButton(&checkButton);
+    NS_ADDREF(checkButton);
+#else
     nsComponentManager::CreateInstance(kCCheckButtonCID, nsnull, kICheckButtonIID, (void**)&checkButton);
+#endif
     NS_CreateCheckButton(window,checkButton,rect,CheckButtonTestHandleEvent);
     nsString cbLabel("CheckButton");
     checkButton->SetLabel(cbLabel);
@@ -1226,7 +1257,12 @@ nsresult WidgetTest(int *argc, char **argv)
                          0,
                          12);
 
+#ifdef USE_LOCAL_WIDGETS
+    rv = NS_NewTextWidget(&textWidget);
+    NS_ADDREF(textWidget);
+#else
     nsComponentManager::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&textWidget);
+#endif
     NS_CreateTextWidget(window,textWidget,rect,HandleEvent);
 
     nsString initialText("0123456789");
@@ -1243,7 +1279,12 @@ nsresult WidgetTest(int *argc, char **argv)
 
     nsITextWidget * ptextWidget;
     rect.SetRect(x, y, 100, TEXT_HEIGHT);  
+#ifdef USE_LOCAL_WIDGETS
+    rv = NS_NewTextWidget(&ptextWidget);
+    NS_ADDREF(ptextWidget);
+#else
     nsComponentManager::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&ptextWidget);
+#endif
     NS_CreateTextWidget(window, ptextWidget, rect, HandleEvent);
 
     
@@ -1277,7 +1318,12 @@ nsresult WidgetTest(int *argc, char **argv)
 
     nsITextWidget * rtextWidget;
     rect.SetRect(x, y, 100, TEXT_HEIGHT);  
+#ifdef USE_LOCAL_WIDGETS
+    rv = NS_NewTextWidget(&rtextWidget);
+    NS_ADDREF(rtextWidget);
+#else
     nsComponentManager::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&rtextWidget);
+#endif
     NS_CreateTextWidget(window, rtextWidget, rect, HandleEvent);
 
     PRBool old;
@@ -1289,6 +1335,7 @@ nsresult WidgetTest(int *argc, char **argv)
     //NS_RELEASE(rtextWidget); 
     y += rect.height + 5;
 
+#if 0 // not supported anymore
     //
     // create a text area widget
     //
@@ -1303,7 +1350,7 @@ nsresult WidgetTest(int *argc, char **argv)
     //NS_RELEASE(textAreaWidget); 
     //y += rect.height + 5;
     x += rect.width + 5;
-
+#endif
     // Save these for later
     int saveY = y;
     saveX = x;
@@ -1324,7 +1371,12 @@ nsresult WidgetTest(int *argc, char **argv)
     //
     y = 10;
     rect.SetRect(x, y, 350, TEXT_HEIGHT);  
+#ifdef USE_LOCAL_WIDGETS
+    rv = NS_NewTextWidget(&statusText);
+    NS_ADDREF(statusText);
+#else
     nsComponentManager::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&statusText);
+#endif
     statusText->QueryInterface(kIWidgetIID,(void**)&widget);
     widget->Create(window, rect, HandleEvent, deviceContext);
     widget->Show(PR_TRUE);
@@ -1334,13 +1386,23 @@ nsresult WidgetTest(int *argc, char **argv)
     // create a Failed Button
     //
     rect.SetRect(x, y, 100, 25);  
+#ifdef USE_LOCAL_WIDGETS
+    rv = NS_NewButton(&button);
+    NS_ADDREF(button);
+#else
     nsComponentManager::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
+#endif
     NS_CreateButton(window,button,rect,FailedButtonHandleEvent);
     nsString failedLabel("Failed");
     button->SetLabel(failedLabel);
 
     rect.SetRect(x, y+30, 150, 25);  
+#ifdef USE_LOCAL_WIDGETS
+    rv = NS_NewButton(&button);
+    NS_ADDREF(button);
+#else
     nsComponentManager::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
+#endif
     NS_CreateButton(window,button,rect,DoSelfTests);
     nsString selfTestLabel("Perform Self Tests");
     button->SetLabel(selfTestLabel);
@@ -1350,11 +1412,17 @@ nsresult WidgetTest(int *argc, char **argv)
     // create a Succeeded Button
     //
     rect.SetRect(x, y, 100, 25);  
+#ifdef USE_LOCAL_WIDGETS
+    rv = NS_NewButton(&button);
+    NS_ADDREF(button);
+#else
     nsComponentManager::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
+#endif
     NS_CreateButton(window,button,rect,SucceededButtonHandleEvent);
     nsString succeededLabel("Succeeded");
     button->SetLabel(succeededLabel);
     
+#if 0
     //
     // create a listbox widget
     //
@@ -1427,7 +1495,6 @@ nsresult WidgetTest(int *argc, char **argv)
     radioButton->SetLabel(rbLabel2);
     gRadioBtns[gNumRadioBtns++] = radioButton;
     y += rect.height + 5;
-
     //window->SetBackgroundColor(NS_RGB(0,255,0));
 
     //
@@ -1451,6 +1518,7 @@ nsresult WidgetTest(int *argc, char **argv)
 
     x = 5;
     y += 30;
+#endif
 
    
     nsString status("The non-visual tests: ");

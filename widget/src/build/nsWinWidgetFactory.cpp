@@ -36,20 +36,6 @@
 #include "nsFontRetrieverService.h"
 #include "nsSound.h"
 
-//---------------------------
-// needed for viewer only
-#include "nsButton.h"
-#include "nsTextHelper.h"
-#include "nsTextWidget.h"
-#include "nsCheckButton.h"
-#include "nsLabel.h"
-
-static NS_DEFINE_IID(kCButton,        NS_BUTTON_CID);
-static NS_DEFINE_IID(kCTextField,     NS_TEXTFIELD_CID);
-static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
-static NS_DEFINE_IID(kCCheckButton,   NS_CHECKBUTTON_CID);
-//---------------------------
-
 #include "nsWindowsTimer.h"
 #include "nsTimerManager.h"
 
@@ -188,14 +174,15 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     }
     else if (mClassID.Equals(kCLookAndFeel)) {
         inst = (nsISupports*)new nsLookAndFeel();
-    }
+    } 
     else if (mClassID.Equals(kCSound)) {
-    	nsISound* aSound = nsnull;
-    	NS_NewSound(&aSound);
-      inst = (nsISupports*) aSound;
-    }
-    else if (mClassID.Equals(kCFileSpecWithUI))
+    	  nsISound* aSound = nsnull;
+    	  NS_NewSound(&aSound);
+        inst = (nsISupports*) aSound;
+    } 
+    else if (mClassID.Equals(kCFileSpecWithUI)) {
     	inst = (nsISupports*) (nsIFileSpecWithUI *) new nsFileSpecWithUIImpl;
+    }
     else if (mClassID.Equals(kCTransferable)) {
       inst = (nsISupports*)new nsTransferable();
     }
@@ -217,23 +204,6 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     else if (mClassID.Equals(kCTimerManager)) {
         inst = (nsISupports*)(nsITimerQueue*) new nsTimerManager();
     }
-    ///////////////////////////////////////
-    // These are needed for Viewer only
-    ///////////////////////////////////////
-#if 0
-    else if (mClassID.Equals(kCButton)) {
-        inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsButton();
-    }
-    else if (mClassID.Equals(kCTextField)) {
-        inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsTextWidget();
-    }
-    else if (mClassID.Equals(kCLabel)) {
-        inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsLabel();
-    }
-    else if (mClassID.Equals(kCCheckButton)) {
-        inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsCheckButton();
-    }
-#endif
     if (inst == NULL) {  
         return NS_ERROR_OUT_OF_MEMORY;  
     }  
