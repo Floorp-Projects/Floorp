@@ -29,6 +29,7 @@
 
 class nsIStyleContext;
 class nsIDOMRange;
+class nsIDOMNode;
 
 /**
  * The text editor implementation.<br>
@@ -157,7 +158,7 @@ protected:
     * into aNewParentNode, splitting aNode as necessary to maintain the relative
     * position of all leaf content.
     */
-  NS_IMETHOD nsTextEditor::MoveContentIntoNewParent(nsIDOMNode  *aNode, 
+  NS_IMETHOD MoveContentIntoNewParent(nsIDOMNode  *aNode, 
                                                     nsIDOMNode  *aOldParentNode, 
                                                     PRInt32      aStartOffset, 
                                                     PRInt32      aEndOffset,
