@@ -108,6 +108,9 @@ typedef int PRInt32;
 
 #define GRE_SETUP_DIR_NAME              "Setup GRE"
 
+/* filename which contains this product setup's exit status */
+#define SETUP_EXIT_STATUS_LOG           "%s Setup Exit Status.log"
+
 /* LOCAL GRE defines */
 #define GRE_TYPE_NOT_SET                -1
 #define GRE_SHARED                      0

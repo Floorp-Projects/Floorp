@@ -27,6 +27,8 @@
 #include "xpi.h"
 
 #define E_USER_CANCEL         -813
+#define SECTION_EXIT_STATUS   "Exit Status"
+#define KEY_STATUS            "Status"
 
 int AppendToGlobalMessageStream(char *szInfo)
 {
@@ -580,5 +582,74 @@ void LogMSTurboMode(BOOL bTurboMode)
 
   wsprintf(szMessageStream, "&TM=%d", bTurboMode);
   AppendToGlobalMessageStream(szMessageStream);
+}
+
+/* Function: GetExitStatusLogFile()
+ *       in: aProductName, aLogFileBufSize
+ *   in/out: aLogFile
+ *  purpose: To build the full filename of the exit log file
+ *           located in the TEMP dir given aProductName.
+ */
+void GetExitStatusLogFile(LPSTR aProductName, LPSTR aLogFile, DWORD aLogFileBufSize)
+{
+  char buf[MAX_BUF];
+  char logFilename[MAX_BUF];
+
+  if(!aProductName || !aLogFile)
+    return;
+
+  *aLogFile = '\0';
+  lstrcpy(buf, szOSTempDir);
+  MozCopyStr(szOSTempDir, buf, sizeof(buf));
+  AppendBackSlash(buf, sizeof(buf));
+  _snprintf(logFilename, sizeof(logFilename), SETUP_EXIT_STATUS_LOG, aProductName);
+  logFilename[sizeof(logFilename) - 1] = '\0';
+  _snprintf(aLogFile, aLogFileBufSize, "%s%s", buf, logFilename);
+  aLogFile[aLogFileBufSize - 1] = '\0';
+}
+
+/* Function: DeleteExitStatusFile()
+ *       in: none.
+ *      out: none
+ *  purpose: To delete the setup's exit status file located in
+ *           the TEMP dir.
+ */
+void DeleteExitStatusFile()
+{
+  char logFile[MAX_BUF];
+
+  GetExitStatusLogFile(sgProduct.szProductNameInternal, logFile, sizeof(logFile));
+  if(FileExists(logFile))
+    DeleteFile(logFile);
+}
+
+/* Function: LogExitStatus()
+ *       in: status to log.
+ *      out: none
+ *  purpose: To log the exit status of this setup.  We're normally
+ *           trying to log the need for a reboot.
+ */
+void LogExitStatus(LPSTR status)
+{
+  char logFile[MAX_BUF];
+
+  GetExitStatusLogFile(sgProduct.szProductNameInternal, logFile, sizeof(logFile));
+  WritePrivateProfileString(SECTION_EXIT_STATUS, KEY_STATUS, status, logFile);
+}
+
+/* Function: GetGreSetupExitStatus()
+ *       in: none
+ *      out: aStatus - status read in from the exit  status log file
+ *  purpose: To read the exis status from the GRE setup that was run
+ *           from within this setup.
+ */
+void GetGreSetupExitStatus(LPSTR aStatus, DWORD aStatusBufSize)
+{
+  char logFile[MAX_BUF];
+
+  *aStatus = '\0';
+  GetExitStatusLogFile("GRE", logFile, sizeof(logFile));
+  if(FileExists(logFile))
+    GetPrivateProfileString(SECTION_EXIT_STATUS, KEY_STATUS, "", aStatus, aStatusBufSize, logFile);
 }
 

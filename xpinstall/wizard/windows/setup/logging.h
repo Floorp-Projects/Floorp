@@ -50,6 +50,9 @@ void              LogMSDownloadStatus(int iDownloadStatus);
 void              LogMSDownloadProtocol(DWORD dwProtocolType);
 void              LogMSXPInstallStatus(char *szFile, int iErr);
 void              LogMSTurboMode(BOOL bTurboMode);
+void              DeleteExitStatusFile(void);
+void              LogExitStatus(LPSTR status);
+void              GetGreSetupExitStatus(LPSTR aStatus, DWORD aStatusBufSize);
 
 #endif /* _LOGGING_H_ */
 
