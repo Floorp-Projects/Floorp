@@ -2780,7 +2780,8 @@ HTMLContentSink::PreEvaluateScript()
   // Cause frame creation and reflow of all body children that 
   // have thus far been appended. Note that if mDirty is true
   // then we know that the current body child has not yet been
-  // added to the content model. 
+  // added to the content model (and, hence, it's safe to create
+  // frames for all body children).
   // We don't want the current body child to be appended (and
   // have frames be constructed for it) since the current script
   // may add new content to the tree (and cause an immediate 
@@ -2799,6 +2800,9 @@ HTMLContentSink::PreEvaluateScript()
     mDirty = PR_FALSE;
   }
 
+  // Now eagerly all pending elements (including the current body child)
+  // to the body (so that they can be seen by scripts). Note that frames
+  // have not yet been created for them (and shouldn't be).
   mCurrentContext->FlushTags();
   
   return (nsnull != mBody);
@@ -2929,10 +2933,53 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     }
   }
 
+  // Create content object
+  NS_ASSERTION(mCurrentContext->mStackPos > 0, "leaf w/o container");
+  nsIHTMLContent* parent = mCurrentContext->mStack[mCurrentContext->mStackPos-1].mContent;
+  nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
+  nsAutoString tag("SCRIPT");
+  nsIHTMLContent* element = nsnull;
+  rv = NS_CreateHTMLElement(&element, tag);
+  if (NS_SUCCEEDED(rv)) {
+    // Add in the attributes and add the style content object to the
+    // head container.
+    element->SetDocument(mDocument, PR_FALSE);
+    rv = AddAttributes(aNode, element, sco);
+    if (NS_FAILED(rv)) {
+      NS_RELEASE(element);
+      return rv;
+    }
+    parent->AppendChildTo(element, PR_FALSE);
+  }
+  else {
+    NS_IF_RELEASE(sco);
+    return rv;
+  }
+  NS_IF_RELEASE(sco);
+  
+  // Create a text node holding the content
+  // First, get the text content of the script tag
+  nsAutoString script;
+  script = aNode.GetSkippedContent();
+
+  if (script.Length() > 0) {
+    nsIContent* text;
+    rv = NS_NewTextNode(&text);
+    if (NS_OK == rv) {
+      nsIDOMText* tc;
+      rv = text->QueryInterface(kIDOMTextIID, (void**)&tc);
+      if (NS_OK == rv) {
+        tc->SetData(script);
+        NS_RELEASE(tc);
+      }
+      element->AppendChildTo(text, PR_FALSE);
+      text->SetDocument(mDocument, PR_FALSE);
+      NS_RELEASE(text);
+    }
+  }
+
   // Don't process scripts that aren't JavaScript
   if (isJavaScript) {
-    nsAutoString script;
-
     // If there is a SRC attribute...
     if (src.Length() > 0) {
       // Use the SRC attribute value to load the URL
@@ -2973,9 +3020,6 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     }
     else {
       PRBool bodyPresent = PreEvaluateScript();
-
-      // Otherwise, get the text content of the script tag
-      script = aNode.GetSkippedContent();
 
       PRUint32 lineNo = (PRUint32)aNode.GetSourceLineNumber();
 

@@ -79,7 +79,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
-  nsGenericHTMLLeafElement mInner;
+  nsGenericHTMLContainerElement mInner;
   nsString mText;
 };
 
