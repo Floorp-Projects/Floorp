@@ -245,7 +245,9 @@ public:
   NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
 
   // nsIWebShellServices
-  NS_IMETHOD LoadDocument(const char* aURL);
+  NS_IMETHOD LoadDocument(const char* aURL, 
+                          const char* aCharset, 
+                          nsCharsetSource aSource);
   NS_IMETHOD StopDocumentLoad(void);
   NS_IMETHOD SetRendering(PRBool aRender);
 
@@ -1938,7 +1940,9 @@ nsWebShell::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken)
 // Web Shell Services API
 
 NS_IMETHODIMP
-nsWebShell::LoadDocument(const char* aURL)
+nsWebShell::LoadDocument(const char* aURL, 
+                         const char* aCharset, 
+                         nsCharsetSource aSource)
 {
   return NS_OK;
 }
@@ -1946,6 +1950,7 @@ nsWebShell::LoadDocument(const char* aURL)
 NS_IMETHODIMP
 nsWebShell::StopDocumentLoad(void)
 {
+  Stop();
   return NS_OK;
 }
 
@@ -2289,7 +2294,7 @@ nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
 
   nsIDocumentViewer* docViewer;
   nsresult rv = NS_ERROR_FAILURE;
-  
+
   if (nsnull != mScriptGlobal) {
     if (nsnull != mContentViewer && 
         NS_OK == mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer)) {
