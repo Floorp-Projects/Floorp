@@ -34,7 +34,7 @@ class nsIControllers;
  { 0x993d2efc, 0xa768, 0x11d3, \
   { 0xbc, 0xcd, 0x00, 0x60, 0xb0, 0xfc, 0x76, 0xbd } } 
 
-class nsIDOMNSHTMLInputElement : public nsISupports {
+class NS_NO_VTABLE nsIDOMNSHTMLInputElement : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSHTMLINPUTELEMENT_IID; return iid; }
 

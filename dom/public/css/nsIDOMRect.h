@@ -34,7 +34,7 @@ class nsIDOMCSSPrimitiveValue;
  { 0x71735f62, 0xac5c, 0x4236, \
   { 0x9a, 0x1f, 0x5f, 0xfb, 0x28, 0x0d, 0x53, 0x1c } } 
 
-class nsIDOMRect : public nsISupports {
+class NS_NO_VTABLE nsIDOMRect : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMRECT_IID; return iid; }
 

@@ -33,7 +33,7 @@
  { 0x009f7ea5, 0x9e80, 0x41be, \
   { 0xb0, 0x08, 0xdb, 0x62, 0xf1, 0x08, 0x23, 0xf2 } } 
 
-class nsIDOMCSSValue : public nsISupports {
+class NS_NO_VTABLE nsIDOMCSSValue : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMCSSVALUE_IID; return iid; }
   enum {

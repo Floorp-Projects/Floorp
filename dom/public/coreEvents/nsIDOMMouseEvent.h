@@ -35,7 +35,7 @@ class nsIDOMEventTarget;
  { 0xff751edc, 0x8b02, 0xaae7, \
   { 0x00, 0x10, 0x83, 0x01, 0x83, 0x8a, 0x31, 0x23 } } 
 
-class nsIDOMMouseEvent : public nsIDOMUIEvent {
+class NS_NO_VTABLE nsIDOMMouseEvent : public nsIDOMUIEvent {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMMOUSEEVENT_IID; return iid; }
 

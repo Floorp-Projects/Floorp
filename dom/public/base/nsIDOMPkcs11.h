@@ -33,7 +33,7 @@
  {0x9fd42950, 0x25e7, 0x11d4, \
        {0x8a, 0x7d, 0x00, 0x60, 0x08, 0xc8, 0x44, 0xc3}} 
 
-class nsIDOMPkcs11 : public nsISupports {
+class NS_NO_VTABLE nsIDOMPkcs11 : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMPKCS11_IID; return iid; }
 

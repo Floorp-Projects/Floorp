@@ -46,7 +46,7 @@ class nsIControllers;
  { 0x9c911860, 0x7dd9, 0x11d4, \
   { 0x9a, 0x83, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74 } } 
 
-class nsIDOMWindowInternal : public nsIDOMWindow {
+class NS_NO_VTABLE nsIDOMWindowInternal : public nsIDOMWindow {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMWINDOWINTERNAL_IID; return iid; }
 

@@ -33,7 +33,7 @@
  { 0x77947960, 0xb4af, 0x11d2, \
   { 0xbd, 0x93, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4 } } 
 
-class nsIDOMScreen : public nsISupports {
+class NS_NO_VTABLE nsIDOMScreen : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMSCREEN_IID; return iid; }
 

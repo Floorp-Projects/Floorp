@@ -35,7 +35,7 @@ class nsIDOMNamedNodeMap;
  { 0xa6cf9077, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
-class nsIDOMDocumentType : public nsIDOMNode {
+class NS_NO_VTABLE nsIDOMDocumentType : public nsIDOMNode {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMDOCUMENTTYPE_IID; return iid; }
 

@@ -34,7 +34,7 @@ class nsIDOMDocumentView;
  { 0xf51ebade, 0x8b1a, 0x11d3, \
   { 0xaa, 0xe7, 0x00, 0x10, 0x83, 0x01, 0x23, 0xb4 } } 
 
-class nsIDOMAbstractView : public nsISupports {
+class NS_NO_VTABLE nsIDOMAbstractView : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMABSTRACTVIEW_IID; return iid; }
 

@@ -62,7 +62,7 @@ static const char *kUuidStr =
 "%s\n\n";
 static const char *kNoUuidStr = 
 "--- IID GOES HERE ---\n\n";
-static const char *kClassDeclStr = "class nsIDOM%s : ";
+static const char *kClassDeclStr = "class NS_NO_VTABLE nsIDOM%s : ";
 static const char *kBaseClassStr = "public nsIDOM%s";
 static const char *kNoBaseClassStr = "public nsISupports";
 static const char *kClassPrologStr = " {\npublic:\n";

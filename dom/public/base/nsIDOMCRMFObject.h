@@ -33,7 +33,7 @@
  {0x16da46c0, 0x208d, 0x11d4, \
        {0x8a, 0x7c, 0x00, 0x60, 0x08, 0xc8, 0x44, 0xc3}} 
 
-class nsIDOMCRMFObject : public nsISupports {
+class NS_NO_VTABLE nsIDOMCRMFObject : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMCRMFOBJECT_IID; return iid; }
 

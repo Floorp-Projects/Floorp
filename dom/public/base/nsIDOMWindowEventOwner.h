@@ -34,7 +34,7 @@
  { 0xef1876f0, 0x7881, 0x11d4, \
    { 0x9a, 0x80, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74 } } 
 
-class nsIDOMWindowEventOwner : public nsISupports {
+class NS_NO_VTABLE nsIDOMWindowEventOwner : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMWINDOWEVENTOWNER_IID; return iid; }
 

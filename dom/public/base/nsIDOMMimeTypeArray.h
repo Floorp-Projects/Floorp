@@ -33,7 +33,7 @@ class nsIDOMMimeType;
 #define NS_IDOMMIMETYPEARRAY_IID \
  { 0xf6134683, 0xf28b, 0x11d2, { 0x83, 0x60, 0xc9, 0x08, 0x99, 0x04, 0x9c, 0x3c } } 
 
-class nsIDOMMimeTypeArray : public nsISupports {
+class NS_NO_VTABLE nsIDOMMimeTypeArray : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMMIMETYPEARRAY_IID; return iid; }
 

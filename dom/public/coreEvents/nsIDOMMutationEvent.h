@@ -34,7 +34,7 @@ class nsIDOMNode;
 #define NS_IDOMMUTATIONEVENT_IID \
  { 0x8e440d86, 0x886a, 0x4e76, { 0x9e, 0x59, 0xc1, 0x3b, 0x93, 0x9c, 0x9a, 0x4b } } 
 
-class nsIDOMMutationEvent : public nsIDOMEvent {
+class NS_NO_VTABLE nsIDOMMutationEvent : public nsIDOMEvent {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMMUTATIONEVENT_IID; return iid; }
   enum {

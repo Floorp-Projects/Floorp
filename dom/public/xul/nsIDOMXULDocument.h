@@ -38,7 +38,7 @@ class nsIDOMNodeList;
  { 0x17ddd8c0, 0xc5f8, 0x11d2, \
         { 0xa6, 0xae, 0x0, 0x10, 0x4b, 0xde, 0x60, 0x48 } } 
 
-class nsIDOMXULDocument : public nsIDOMDocument {
+class NS_NO_VTABLE nsIDOMXULDocument : public nsIDOMDocument {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMXULDOCUMENT_IID; return iid; }
 

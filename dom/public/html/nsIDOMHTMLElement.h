@@ -36,7 +36,7 @@ class nsIDOMCSSStyleDeclaration;
  { 0xa6cf9085, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
-class nsIDOMHTMLElement : public nsIDOMElement {
+class NS_NO_VTABLE nsIDOMHTMLElement : public nsIDOMElement {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLELEMENT_IID; return iid; }
 

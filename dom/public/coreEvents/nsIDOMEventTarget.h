@@ -35,7 +35,7 @@ class nsIDOMEvent;
  { 0x1c773b30, 0xd1cf, 0x11d2, \
   { 0xbd, 0x95, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4 } } 
 
-class nsIDOMEventTarget : public nsISupports {
+class NS_NO_VTABLE nsIDOMEventTarget : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMEVENTTARGET_IID; return iid; }
 

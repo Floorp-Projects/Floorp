@@ -36,7 +36,7 @@ class nsIDOMNodeList;
  { 0xa6cf9078, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
-class nsIDOMElement : public nsIDOMNode {
+class NS_NO_VTABLE nsIDOMElement : public nsIDOMNode {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMELEMENT_IID; return iid; }
 

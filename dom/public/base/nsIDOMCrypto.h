@@ -35,7 +35,7 @@ class nsIDOMCRMFObject;
  {0xf45efbe0, 0x1d52, 0x11d4, \
          {0x8a, 0x7c, 0x00, 0x60, 0x08, 0xc8, 0x44, 0xc3}} 
 
-class nsIDOMCrypto : public nsISupports {
+class NS_NO_VTABLE nsIDOMCrypto : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMCRYPTO_IID; return iid; }
 
