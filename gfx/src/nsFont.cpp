@@ -103,7 +103,8 @@ PRBool nsFont::EnumerateFamilies(nsFontFamilyEnumFunc aFunc, void* aData) const
 
   familyList.Append(kNullCh);  // put an extra null at the end
 
-  PRUnichar* start = (PRUnichar*)familyList;
+  // XXX This code is evil...
+  PRUnichar* start = (PRUnichar*)(const PRUnichar*)familyList;
   PRUnichar* end   = start;
 
   while (running && (kNullCh != *start)) {
