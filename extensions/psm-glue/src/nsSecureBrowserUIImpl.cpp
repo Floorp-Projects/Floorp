@@ -248,10 +248,10 @@ static nsresult IsChildOfDomWindow(nsIDOMWindow *parent, nsIDOMWindow *child, PR
 
 
 NS_IMETHODIMP 
-nsSecureBrowserUIImpl::Notify(nsIContent* formNode, nsIDOMWindowInternal* window, nsIURI* actionURL)
+nsSecureBrowserUIImpl::Notify(nsIContent* formNode, nsIDOMWindowInternal* window, nsIURI* actionURL, PRBool* cancelSubmit)
 {
     // Return NS_OK unless we want to prevent this form from submitting.
-
+    *cancelSubmit = PR_FALSE;
     if (!window || !actionURL || !formNode) {
         return NS_OK;
     }
@@ -267,16 +267,17 @@ nsSecureBrowserUIImpl::Notify(nsIContent* formNode, nsIDOMWindowInternal* window
     PRBool isChild;
     IsChildOfDomWindow(mWindow, postingWindow, &isChild);
 
+    // This notify call is not for our window, ignore it.
     if (!isChild)
         return NS_OK;
 
     PRBool okayToPost;
     nsresult res = CheckPost(actionURL, &okayToPost);
 
-    if (NS_SUCCEEDED(res) && okayToPost)
-        return NS_OK;
+    if (NS_SUCCEEDED(res) && !okayToPost)
+        *cancelSubmit = PR_TRUE;
     
-    return NS_ERROR_FAILURE;
+    return res;
 }
 
 //  nsIWebProgressListener
@@ -535,8 +536,10 @@ nsSecureBrowserUIImpl::IsURLHTTPS(nsIURI* aURL, PRBool* value)
     char* scheme;
 	aURL->GetScheme(&scheme);
 
+        // If no scheme, it's not an https url - not necessarily an error.
+        // See bugs 54845 and 54966
 	if (scheme == nsnull)
-		return NS_ERROR_NULL_POINTER;
+		return NS_OK;
 
     if ( PL_strncasecmp(scheme, "https",  5) == 0 )
 		*value = PR_TRUE;
@@ -557,8 +560,10 @@ nsSecureBrowserUIImpl::IsURLfromPSM(nsIURI* aURL, PRBool* value)
     nsXPIDLCString host;
 	aURL->GetHost(getter_Copies(host));
 
+	// This may legitimately be null, for example a javascript: or file: url    
+	// See bug 54966 and 54845
 	if (host == nsnull)
-		return NS_ERROR_NULL_POINTER;
+		return NS_OK;
 
     if ( PL_strncasecmp(host, "127.0.0.1",  9) == 0 ) {
 	    nsresult res;
@@ -575,8 +580,9 @@ nsSecureBrowserUIImpl::IsURLfromPSM(nsIURI* aURL, PRBool* value)
 		nsXPIDLCString password;
 		aURL->GetPassword(getter_Copies(password));
 
+		// Bug 55906: this is not guaranteed to be present
 		if (password == nsnull) {
-			return NS_ERROR_NULL_POINTER;
+			return NS_OK;
 		}
 
 		if (PL_strncasecmp(password, (const char*)control->nonce.data, control->nonce.len) == 0) {
@@ -757,6 +763,7 @@ nsresult
 nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
 {
     PRBool secure, isSecurityAdvisor;
+    *okayToPost = PR_TRUE;
 
     nsresult rv = IsURLHTTPS(actionURL, &secure);
     if (NS_FAILED(rv))
@@ -764,7 +771,6 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
     
     // if we are posting to a secure link from a secure page, all is okay.
     if (secure  && mIsSecureDocument) {
-        *okayToPost = PR_TRUE;
         return NS_OK;
     }
 
@@ -775,7 +781,6 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
 	}
 
 	if (isSecurityAdvisor) {
-		*okayToPost = PR_TRUE;
 		return NS_OK;
 	}
 
@@ -816,10 +821,8 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
             NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_CONTRACTID, &rv);
             if (NS_FAILED(rv)) 
                 return rv;
-            psm->PassPrefs();
+            return psm->PassPrefs();
         }
-    } else {
-        *okayToPost = PR_TRUE;
     }
   
     return NS_OK;

@@ -51,7 +51,7 @@ public:
   nsWalletlibService();
 
   // NS_DECL_NSIFORMSUBMITOBSERVER
-  NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindowInternal* window, nsIURI* actionURL);
+  NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindowInternal* window, nsIURI* actionURL, PRBool* cancelSubmit);
   
 protected:
   virtual ~nsWalletlibService();

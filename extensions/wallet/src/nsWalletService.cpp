@@ -166,7 +166,7 @@ NS_IMETHODIMP nsWalletlibService::Observe(nsISupports*, const PRUnichar*, const 
 }
 
 #define CRLF "\015\012"   
-NS_IMETHODIMP nsWalletlibService::Notify(nsIContent* formNode, nsIDOMWindowInternal* window, nsIURI* actionURL)
+NS_IMETHODIMP nsWalletlibService::Notify(nsIContent* formNode, nsIDOMWindowInternal* window, nsIURI* actionURL, PRBool* cancelSubmit)
 {
   if (!formNode) {
     return NS_ERROR_FAILURE;

@@ -856,11 +856,11 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     if (NS_FAILED(result)) return result;
 
     nsString  theTopic; theTopic.AssignWithConversion(NS_FORMSUBMIT_SUBJECT);
-    nsIEnumerator* theEnum;
-    result = service->EnumerateObserverList(theTopic.GetUnicode(), &theEnum);
+    nsCOMPtr<nsIEnumerator> theEnum;
+    result = service->EnumerateObserverList(theTopic.GetUnicode(), getter_AddRefs(theEnum));
     if (NS_SUCCEEDED(result) && theEnum){
       nsCOMPtr<nsISupports> inst;
-      nsresult submitStatus = NS_OK;
+      PRBool cancelSubmit = PR_FALSE;
 
       nsCOMPtr<nsIScriptGlobalObject> globalObject;
       document->GetScriptGlobalObject(getter_AddRefs(globalObject));  
@@ -871,16 +871,15 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
         if (NS_SUCCEEDED(result) && inst) {
           nsCOMPtr<nsIFormSubmitObserver> formSubmitObserver = do_QueryInterface(inst, &result);
           if (NS_SUCCEEDED(result) && formSubmitObserver) {
-            nsresult notifyStatus = formSubmitObserver->Notify(mContent, window, actionURL);
-            if (NS_FAILED(notifyStatus)) {
-              submitStatus = notifyStatus;
+            nsresult notifyStatus = formSubmitObserver->Notify(mContent, window, actionURL, &cancelSubmit);
+            if (NS_FAILED(notifyStatus)) { // assert/warn if we get here?
+              return notifyStatus;
             }
           }
         }
-      }
-      NS_RELEASE(theEnum);
-      if (NS_FAILED(submitStatus)) {
-        return submitStatus;
+        if (cancelSubmit) {
+          return NS_OK;
+        }
       }
     }
 
