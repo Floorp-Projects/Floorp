@@ -23,104 +23,107 @@
 
 var browser;
 var dialog;
+var bundle;
 
-function onLoad() {
-	dialog = new Object;
-	dialog.input     = document.getElementById( "dialog.input" );
-	dialog.help      = document.getElementById( "dialog.help" );
-	dialog.topWindow = document.getElementById( "dialog.topWindow" );
-	dialog.topWindowDiv = document.getElementById( "dialog.topWindowDiv" );
-	dialog.newWindow = document.getElementById( "dialog.newWindow" );
-	dialog.newWindowDiv = document.getElementById( "dialog.newWindowDiv" );
-	dialog.editNewWindow = document.getElementById( "dialog.editNewWindow" );
-        dialog.open            = document.getElementById("ok");
-	dialog.openWhereBox = document.getElementById( "dialog.openWhereBox" );
+function onLoad() 
+  {
 
+    bundle = srGetStrBundle( "chrome://navigator/locale/openLocation.properties" );
+  
+  	dialog                = new Object;
+  	dialog.input          = document.getElementById( "dialog.input" );
+  	dialog.help           = document.getElementById( "dialog.help" );
+    dialog.open           = document.getElementById( "ok" );
+    dialog.openAppList    = document.getElementById( "openAppList" );
+    dialog.openTopWindow  = document.getElementById( "currentWindow" );
+    dialog.openEditWindow = document.getElementById( "editWindow" );
+  
+  
+  	browser = window.arguments[0];
+  
+    if ( !browser ) 
+      {
+        // No browser supplied - we are calling from Composer
+        dialog.openAppList.selectedItem = dialog.openEditWindow;
+        dialog.openTopWindow.disabled = true;
+      } 
+    else
+      dialog.openAppList.selectedItem = dialog.openTopWindow;
+  
 
-	browser = window.arguments[0];
+    // change OK button text to 'open'
+    dialog.open.setAttribute("value", bundle.GetStringFromName( "openButtonLabel" ));
 
-  if ( !browser ) {
-    // No browser supplied - we are calling from Composer
-    dialog.topWindow.checked = false;
-    dialog.editNewWindow.checked = true;
-
-    dialog.topWindowDiv.setAttribute("style","display:none;");
-    var pNode = dialog.newWindowDiv.parentNode;
-    pNode.removeChild(dialog.newWindowDiv);
-    pNode.appendChild(dialog.newWindowDiv);
-  } else {
-    dialog.topWindow.checked = true;
+  	doSetOKCancel(open, 0, 0, 0);
+  
+    doEnabling();
+    
+  	/* Give input field the focus. */
+  	dialog.input.focus();
+  
   }
-	doSetOKCancel(open, 0, 0, 0);
 
-	moveToAlertPosition();
-	/* Give input field the focus. */
-	dialog.input.focus();
-
-  // change OK to load
-  dialog.open.setAttribute("value", document.getElementById("openLabel").getAttribute("value"));
-}
-
-function onTyping( key ) {
-   // Look for enter key...
-   if ( key != 13 ) {
-      // Check for valid input.
-      if ( dialog.input.value == "" ) {
-         // No input, disable ok button if enabled.
-         if ( !dialog.open.disabled ) {
-            dialog.open.setAttribute( "disabled", "" );
-         }
-      } else {
-         // Input, enable ok button if disabled.
-         if ( dialog.open.disabled ) {
-            dialog.open.removeAttribute( "disabled" );
-         }
+function doEnabling() 
+  {
+    if ( dialog.input.value == "" ) 
+      {
+        // No input, disable ok button if enabled.
+        if ( !dialog.open.getAttribute("disabled") )
+          dialog.open.setAttribute("disabled","true");
       }
-   }
-}
-
-function open() {
-  if ( dialog.open.disabled || dialog.input.value == "" ) {
-    return false;
+    else
+      {
+        if ( dialog.open.getAttribute("disabled") )
+          dialog.open.removeAttribute( "disabled" );
+      }
   }
 
-  var url = dialog.input.value;
-
-  try {
-    if ( dialog.topWindow.checked ) {
-      // Open the URL.
-      browser.loadUrl( url );
-    } else if ( dialog.newWindow.checked ) {
-      /* User wants new window. */
-      window.opener.delayedOpenWindow("chrome://navigator/content/navigator.xul","all,dialog=no",url);
-    } else if ( dialog.editNewWindow.checked ) {
-      window.opener.delayedOpenWindow("chrome://editor/content", "chrome,all,dialog=no", url);
-    }
-  } catch( exception ) {
-    // XXX l10n
-    alert( "Error opening location." );
-    return false;
+function open() 
+  {
+  	try 
+      {
+        switch ( dialog.openAppList.data ) 
+          {
+            case "0":
+              browser.loadUrl( dialog.input.value );
+              break;
+            case "1": 
+              dump("*** foopy\n");
+              window.opener.delayedOpenWindow( "chrome://navigator/content/navigator.xul", "_blank", "all,dialog=no", dialog.input.value );
+              break;
+            case "2":
+              window.opener.delayedOpenWindow( "chrome://editor/content", "_blank", "chrome,all,dialog=no", dialog.input.value );
+              break;
+          }
+      }
+    catch( exception ) 
+      {
+    	}
+  
+     // Delay closing slightly to avoid timing bug on Linux.
+     window.close();
+     return false;
   }
 
-  window.close();
-  return false;
-}
+function createInstance( progid, iidName ) 
+  {
+    var iid = Components.interfaces[iidName];
+    return Components.classes[ progid ].createInstance( iid );
+  }
 
-function createInstance( progid, iidName ) {
-  var iid = eval( "Components.interfaces." + iidName );
-  return Components.classes[ progid ].createInstance( iid );
-}
-
-function onChooseFile() {
+function onChooseFile() 
+  {
     // Get filespecwithui component.            
     var fileSpec = createInstance( "component://netscape/filespecwithui", "nsIFileSpecWithUI" );
-    try {
+    try 
+      {
         fileSpec.parentWindow = window;
-        var url = fileSpec.chooseFile( document.getElementById("chooseFileTitle").getAttribute("value") );
+        var url = fileSpec.chooseFile( bundle.GetStringFromName("chooseFileDialogTitle") );
         fileSpec.parentWindow = null;
         dialog.input.value = fileSpec.URLString;
-    }
-    catch( exception ) {
+      }
+    catch( exception ) 
+      {
         // Just a cancel, probably.
-    }
-}
+      }
+  }

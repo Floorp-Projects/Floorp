@@ -27,6 +27,7 @@ DISTBROWSER=$(DIST)\bin\chrome\navigator\locale\en-US
 
 install::
     $(MAKE_INSTALL) openLocation.dtd $(DISTBROWSER)
+    $(MAKE_INSTALL) openLocation.properties $(DISTBROWSER)
 	$(MAKE_INSTALL) viewSource.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) navigator.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) NetSupportConfirmCheckYN.dtd $(DISTBROWSER)

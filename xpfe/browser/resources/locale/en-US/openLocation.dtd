@@ -1,14 +1,11 @@
 <!-- extracted from content/openLocation.xul -->
 
-<!ENTITY enter.label "Enter the web location (URL), or choose the file, you would like to open:">  
+<!ENTITY enter.label "Enter the web location (URL), or specify the local file you would like to open:">  
 <!ENTITY chooseFile.label "Choose File...">
-<!ENTITY chooseFileTitle.label "Choose File">
 <!ENTITY newWindow.label "New Navigator">
 <!ENTITY topWindow.label "Current Navigator">
 <!ENTITY editNewWindow.label "New Composer">
-<!ENTITY open.label "Open">
 <!ENTITY cancel.label "Cancel">
 <!ENTITY caption.label "Open Web Location">
 <!ENTITY openWhere.label "Open in which window:">
-<!ENTITY example.label "Example: ">
-<!ENTITY exampleURL.label "www.mozilla.org">
+<!ENTITY example.label "Example: &vendorURL;">
