@@ -1,9 +1,9 @@
 <!-- LOCALIZATION NOTE : FILE Cookie management prefs -->
 
-<!ENTITY window.title "Cookies">
-<!ENTITY lHeader "Cookies">
+<!ENTITY window.title "Cookies/Images">
+<!ENTITY lHeader "Cookies/Images">
 <!ENTITY remSignCheck.label "Automatically prefill usernames and passwords">
-<!ENTITY rHeader "Manage cookies stored on your computer">
+<!ENTITY rHeader "Manage cookies and images stored on your computer">
 <!ENTITY cookies "Cookies">
 <!ENTITY accAllCookiesRadio.label "Accept all cookies">
 <!ENTITY accAllCookiesRadio.accesskey "a">
