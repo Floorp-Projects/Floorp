@@ -474,7 +474,7 @@ js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
  * stable store allocated by the caller and passed in via notes.  Return false
  * on malloc failure, which means this function reported an error.
  *
- * To compute the number of JSSrcNotes to allocate and pass in via notes, use
+ * To compute the number of jssrcnotes to allocate and pass in via notes, use
  * the CG_COUNT_FINAL_SRCNOTES macro.  This macro knows a lot about details of
  * js_FinishTakingSrcNotes, SO DON'T CHANGE jsemit.c's js_FinishTakingSrcNotes
  * FUNCTION WITHOUT CHECKING WHETHER THIS MACRO NEEDS CORRESPONDING CHANGES!
