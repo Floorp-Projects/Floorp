@@ -262,7 +262,8 @@ public:	// public on BeOS to allow BViews to access it
 		CLOSEWINDOW,
 		MENU,
 		ONKEY,
-		BTNCLICK
+		BTNCLICK,
+		ONACTIVATE
     };
 	nsToolkit *GetToolkit() { return (nsToolkit *)nsBaseWidget::GetToolkit(); }
 };
@@ -293,6 +294,7 @@ class nsWindowBeOS : public BWindow, public nsIWidgetStore {
     virtual bool QuitRequested( void );  
 	virtual void MessageReceived(BMessage *msg);
 	virtual void DispatchMessage(BMessage *msg, BHandler *handler);
+    virtual void WindowActivated(bool active);
     virtual void FrameResized(float width, float height);
        
     void ResizeToWithoutEvent(float width, float height);
