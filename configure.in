@@ -6421,11 +6421,11 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     AC_MSG_WARN([Recreating autoconf.mk with updated nspr-config output])
     if test ! "$VACPP" && test "$OS_ARCH" != "WINNT"; then
         NSPR_LIBS=`./nsprpub/config/nspr-config --prefix=$MOZ_BUILD_ROOT/dist --exec-prefix=$MOZ_BUILD_ROOT/dist --libs`
-        $PERL -pi.bak -e "s {^NSPR_LIBS\s*=.*} {NSPR_LIBS = $NSPR_LIBS }" config/autoconf.mk
+        $PERL -pi.bak -e '$v = q|$\\(DIST\\)|; $v = `./nsprpub/config/nspr-config --prefix=$v --exec-prefix=$v --libs`; s {^NSPR_LIBS\s*=.*} {NSPR_LIBS = $v }' config/autoconf.mk
     fi
     if test "$OS_ARCH" != "WINNT"; then
         NSPR_CFLAGS=`./nsprpub/config/nspr-config --prefix=$MOZ_BUILD_ROOT/dist --exec-prefix=$MOZ_BUILD_ROOT/dist --cflags`
-        $PERL -pi.bak -e "s {^NSPR_CFLAGS\s*=.*} {NSPR_CFLAGS = $NSPR_CFLAGS }" config/autoconf.mk
+        $PERL -pi.bak -e '$v = q|$\\(DIST\\)|; $v = `./nsprpub/config/nspr-config --prefix=$v --exec-prefix=$v --cflags`; s {^NSPR_CFLAGS\s*=.*} {NSPR_CFLAGS = $v }' config/autoconf.mk
     fi
     rm -f config/autoconf.mk.bak
 fi
