@@ -78,10 +78,27 @@
 #define STATUS_CHECK_RETURN_MACRO() {if (!mTracker) return NS_ERROR_FAILURE;}
 //#define DEBUG_TABLE 1
 
-//static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
+// Selection's use of generated content iterators has been turned off
+// temporarily since it bogs down selection in large documents. Using
+// generated content iterators is slower because it must resolve the style
+// for the content to find out if it has any before/after style, and it
+// increases the number of calls to GetPrimaryFrame() which is very expensive.
+//
+// We can reduce the number of calls to GetPrimaryFrame() during selection
+// by a good factor (maybe 2-3 times) if we just ignore the generated content
+// and NOT hilite it when we cross it.
+//
+// #1 the output system doesn't handle it right now anyway so selecting
+//    has no REAL benefit to generated content.
+// #2 there is no available way given to me by troy that can give back the
+//    necessary data without a frame to work from.
+#ifdef USE_SELECTION_GENERATED_CONTENT_ITERATOR_CODE
 static NS_DEFINE_IID(kCGenContentIteratorCID, NS_GENERATEDCONTENTITERATOR_CID);
 static NS_DEFINE_IID(kCGenSubtreeIteratorCID, NS_GENERATEDSUBTREEITERATOR_CID);
+#else
+static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kCSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
+#endif // USE_SELECTION_GENERATED_CONTENT_ITERATOR_CODE
 
 //PROTOTYPES
 #if OLD_SELECTION
@@ -3668,12 +3685,16 @@ nsDOMSelection::selectFrames(nsIPresContext* aPresContext,
   if (!mFrameSelection)
     return NS_OK;//nothing to do
   nsresult result;
+  if (!aInnerIter)
+    return NS_ERROR_NULL_POINTER;
+#ifdef USE_SELECTION_GENERATED_CONTENT_ITERATOR_CODE
   nsCOMPtr<nsIGeneratedContentIterator> genericiter = do_QueryInterface(aInnerIter);
   if (genericiter && aPresShell)
   {
     result = genericiter->Init(aPresShell,aContent);
   }
   else
+#endif // USE_SELECTION_GENERATED_CONTENT_ITERATOR_CODE
     result = aInnerIter->Init(aContent);
   nsIFrame *frame;
   if (NS_SUCCEEDED(result))
@@ -3722,12 +3743,24 @@ nsDOMSelection::selectFrames(nsIPresContext* aPresContext, nsIDOMRange *aRange, 
     return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIContentIterator> iter;
   nsCOMPtr<nsIContentIterator> inneriter;
-  nsresult result = nsComponentManager::CreateInstance(kCGenSubtreeIteratorCID, nsnull,
+  nsresult result = nsComponentManager::CreateInstance(
+#ifdef USE_SELECTION_GENERATED_CONTENT_ITERATOR_CODE
+                                              kCGenSubtreeIteratorCID,
+#else
+                                              kCSubtreeIteratorCID,
+#endif // USE_SELECTION_GENERATED_CONTENT_ITERATOR_CODE
+                                              nsnull,
                                               NS_GET_IID(nsIContentIterator), 
                                               getter_AddRefs(iter));
   if (NS_FAILED(result))
     return result;
-  result = nsComponentManager::CreateInstance(kCGenContentIteratorCID, nsnull,
+  result = nsComponentManager::CreateInstance(
+#ifdef USE_SELECTION_GENERATED_CONTENT_ITERATOR_CODE
+                                              kCGenContentIteratorCID,
+#else
+                                              kCContentIteratorCID,
+#endif // USE_SELECTION_GENERATED_CONTENT_ITERATOR_CODE
+                                              nsnull,
                                               NS_GET_IID(nsIContentIterator), 
                                               getter_AddRefs(inneriter));
 
@@ -3737,10 +3770,12 @@ nsDOMSelection::selectFrames(nsIPresContext* aPresContext, nsIDOMRange *aRange, 
     result = aPresContext->GetShell(getter_AddRefs(presShell));
     if (NS_FAILED(result) && presShell)
       presShell = 0;
+#ifdef USE_SELECTION_GENERATED_CONTENT_ITERATOR_CODE
     nsCOMPtr<nsIGeneratedContentIterator> genericiter = do_QueryInterface(iter);
     if (genericiter && presShell)
       result = genericiter->Init(presShell,aRange);
     else
+#endif // USE_SELECTION_GENERATED_CONTENT_ITERATOR_CODE
       result = iter->Init(aRange);
 
     // loop through the content iterator for each content node
