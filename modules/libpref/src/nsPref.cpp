@@ -501,6 +501,16 @@ NS_IMETHODIMP nsPref::GetPrefConfigObject(JSObject **js_object)
 /*
  * Getters
  */
+NS_IMETHODIMP nsPref::GetPrefType(const char *pref, PRInt32 * return_type)
+{
+  // XXX The current implementation returns the raw type - the
+  // enums defining the types have been duplicated. If the old
+  // types don't all make sense in the context of the new API,
+  // we might need to do some translation.
+
+  *return_type = PREF_GetPrefType(pref);
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsPref::GetIntPref(const char *pref, PRInt32 * return_int)
 {
