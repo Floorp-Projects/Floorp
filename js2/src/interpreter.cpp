@@ -427,7 +427,7 @@ void Context::initContext()
 
 }
 
-JSBinaryOperator::JSBinaryCode getDefaultFunction(ExprNode::Kind op)
+static JSBinaryOperator::JSBinaryCode getDefaultFunction(ExprNode::Kind op)
 {
     switch (op) {
     case ExprNode::add: return add_Default;
