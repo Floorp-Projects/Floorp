@@ -1,0 +1,2 @@
+file://s:/mozilla/layout/html/tests/table/core/one_row.html
+file://s:/mozilla/layout/html/tests/table/core/col_span.html

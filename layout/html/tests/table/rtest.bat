@@ -1,6 +1,9 @@
 @echo off
 
-cd viewer_tests
+cd core
+call rtest.bat %1
+
+cd ..\viewer_tests
 call rtest.bat %1
 
 cd ..\bugs
