@@ -27,6 +27,7 @@
 #include "nsIPop3Sink.h"
 #include "nsMsgLineBuffer.h"
 #include "nsCOMPtr.h"
+#include "nsMsgProtocol.h"
 
 #include "rosetta.h"
 #include HG09893
@@ -289,33 +290,13 @@ typedef struct _Pop3ConData {
     char *sender_info;
 } Pop3ConData;
 
-class nsPop3Protocol : public nsIStreamListener, public nsMsgLineBuffer
+class nsPop3Protocol : public nsMsgProtocol, public nsMsgLineBuffer
 {
 public:
-    nsPop3Protocol(nsIURL* aURL);
-    
+    nsPop3Protocol(nsIURL* aURL);  
     virtual ~nsPop3Protocol();
     
-    PRInt32 Load(nsIURL *aURL, nsISupports * aConsumer /* consumer of the url */ = nsnull);
-    PRBool IsRunning() { return m_isRunning; };
-    
-    NS_DECL_ISUPPORTS
-    
-    /////////////////////////////////////////////////////////////////////////////
-    // nsIStreamListener interface
-    ////////////////////////////////////////////////////////////////////////////
-    NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo)   { return NS_OK;};	// for now
-    NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream* aInputStream, PRUint32 aLength);
-    NS_IMETHOD OnStartBinding(nsIURL* aURL, const char* aContentType);
-    NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
-    
-    NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 pProgress, PRUint32 aProgressMax)
-    { return NS_OK; };
-    
-	NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg) 
-    { return NS_OK; };
-
-public:
+    virtual nsresult LoadUrl(nsIURL *aURL);
 
     const char* GetUsername() { return m_username; };
     void SetUsername(const char* name);
@@ -330,39 +311,25 @@ private:
     char* m_password;
     Pop3ConData* m_pop3ConData;
 
-	void CloseConnection();
+	virtual nsresult ProcessProtocolState(nsIURL* aURL, nsIInputStream* aInputStream, PRUint32 aLength); 
+	virtual nsresult CloseSocket();
+	virtual PRInt32 SendData(nsIURL * aURL, const char * dataBuffer);
+	void Initialize(nsIURL * aURL);
+
     nsCOMPtr<nsIPop3URL> m_nsIPop3URL;
-    nsCOMPtr<nsITransport> m_transport;
-    nsCOMPtr<nsIOutputStream> m_outputStream; // from the transport
-    nsCOMPtr<nsIStreamListener> m_outputConsumer; // from the transport
     nsCOMPtr<nsIPop3Sink> m_nsIPop3Sink;
 	
 	nsMsgLineStreamBuffer   * m_lineStreamBuffer; // used to efficiently extract lines from the incoming data stream
-    PRBool m_isRunning;
-
-    /**********************************************************************
-     * sounds like the following do not need to be included in the protocol
-     * instance 
-    static PRInt8 uidl_cmp (const void* obj1, const void* obj2);
-    static void put_hash(Pop3UidlHost* host, PLHashTable* table, const char*
-                         key, char value);
-    static PRBool hash_empty_mapper(PLHashTable* hash, const void* key, void*
-                                    value, void* closure);
-    static PRBool hash_empty(PLHashTable* hash);
-
-    Pop3UidlHost* net_pop3_load_state(const char* host, const char* user);
-    PRBool net_pop3_write_mapper(PLHashTable* hash, const void* key, void*
-                                 value, void* closure);
-
-    void net_pop3_write_state(Pop3UidlHost* host);
-    ***********************************************************************/
     void FreeMsgInfo();
+
+	//////////////////////////////////////////////////////////////////////////////////////////
+	// Begin Pop3 protocol state handlers
+	//////////////////////////////////////////////////////////////////////////////////////////
     PRInt32 WaitForStartOfConnectionResponse(nsIInputStream* inputStream, 
                                              PRUint32 length);
     PRInt32 WaitForResponse(nsIInputStream* inputStream, 
                             PRUint32 length);
     PRInt32 Error(int err_code);
-    PRInt32 SendCommand(const char * command);
     PRInt32 SendAuth();
     PRInt32 AuthResponse(nsIInputStream* inputStream, 
                          PRUint32 length);
@@ -396,9 +363,6 @@ private:
     PRInt32 SendDele();
     PRInt32 DeleResponse();
     PRInt32 CommitState(PRBool remove_last_entry);
-    PRInt32 ProcessPop3State(nsIURL* aURL, nsIInputStream* aInputStream, PRUint32 aLength); 
-
-	void Initialize(nsIURL * aURL);
 };
 
 #endif /* nsPop3Protocol_h__ */
