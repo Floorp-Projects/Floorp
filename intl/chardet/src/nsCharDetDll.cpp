@@ -42,6 +42,16 @@
 
 NS_DEFINE_CID(kJAPSMDetectorCID,  NS_JA_PSMDETECTOR_CID);
 NS_DEFINE_CID(kJAStringPSMDetectorCID,  NS_JA_STRING_PSMDETECTOR_CID);
+NS_DEFINE_CID(kKOPSMDetectorCID,  NS_KO_PSMDETECTOR_CID);
+NS_DEFINE_CID(kKOStringPSMDetectorCID,  NS_KO_STRING_PSMDETECTOR_CID);
+NS_DEFINE_CID(kZHCNPSMDetectorCID,  NS_ZHCN_PSMDETECTOR_CID);
+NS_DEFINE_CID(kZHCNStringPSMDetectorCID,  NS_ZHCN_STRING_PSMDETECTOR_CID);
+NS_DEFINE_CID(kZHTWPSMDetectorCID,  NS_ZHTW_PSMDETECTOR_CID);
+NS_DEFINE_CID(kZHTWStringPSMDetectorCID,  NS_ZHTW_STRING_PSMDETECTOR_CID);
+NS_DEFINE_CID(kZHPSMDetectorCID,  NS_ZH_PSMDETECTOR_CID);
+NS_DEFINE_CID(kZHStringPSMDetectorCID,  NS_ZH_STRING_PSMDETECTOR_CID);
+NS_DEFINE_CID(kCJKPSMDetectorCID,  NS_CJK_PSMDETECTOR_CID);
+NS_DEFINE_CID(kCJKStringPSMDetectorCID,  NS_CJK_STRING_PSMDETECTOR_CID);
 
 
 
@@ -84,6 +94,28 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
     factory = NEW_DETECTION_ADAPTOR_FACTORY();
   } else if (aClass.Equals(kJAPSMDetectorCID)) {
     factory = NEW_JA_PSMDETECTOR_FACTORY();
+  } else if (aClass.Equals(kJAStringPSMDetectorCID)) {
+    factory = NEW_JA_STRING_PSMDETECTOR_FACTORY();
+  } else if (aClass.Equals(kKOPSMDetectorCID)) {
+    factory = NEW_KO_PSMDETECTOR_FACTORY();
+  } else if (aClass.Equals(kKOStringPSMDetectorCID)) {
+    factory = NEW_KO_STRING_PSMDETECTOR_FACTORY();
+  } else if (aClass.Equals(kZHCNPSMDetectorCID)) {
+    factory = NEW_ZHCN_PSMDETECTOR_FACTORY();
+  } else if (aClass.Equals(kZHCNStringPSMDetectorCID)) {
+    factory = NEW_ZHCN_STRING_PSMDETECTOR_FACTORY();
+  } else if (aClass.Equals(kZHTWPSMDetectorCID)) {
+    factory = NEW_ZHTW_PSMDETECTOR_FACTORY();
+  } else if (aClass.Equals(kZHTWStringPSMDetectorCID)) {
+    factory = NEW_ZHTW_STRING_PSMDETECTOR_FACTORY();
+  } else if (aClass.Equals(kZHPSMDetectorCID)) {
+    factory = NEW_ZH_PSMDETECTOR_FACTORY();
+  } else if (aClass.Equals(kZHStringPSMDetectorCID)) {
+    factory = NEW_ZH_STRING_PSMDETECTOR_FACTORY();
+  } else if (aClass.Equals(kCJKPSMDetectorCID)) {
+    factory = NEW_CJK_PSMDETECTOR_FACTORY();
+  } else if (aClass.Equals(kCJKStringPSMDetectorCID)) {
+    factory = NEW_CJK_STRING_PSMDETECTOR_FACTORY();
 #ifdef INCLUDE_DBGDETECTOR
   } else if (aClass.Equals(k1stBlkDbgDetectorCID)) {
     factory = NEW_1STBLKDBG_DETECTOR_FACTORY();
@@ -146,6 +178,56 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
                                   NS_STRCDETECTOR_PROGID_BASE "japsm", 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kKOPSMDetectorCID, 
+                                  "PSM based Korean Charset Detector", 
+                                  NS_CHARSET_DETECTOR_PROGID_BASE "kopsm", 
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kKOStringPSMDetectorCID, 
+                                  "PSM based Korean String Charset Detector", 
+                                  NS_STRCDETECTOR_PROGID_BASE "kopsm", 
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kZHTWPSMDetectorCID, 
+                                  "PSM based Traditional Chinese Charset Detector", 
+                                  NS_CHARSET_DETECTOR_PROGID_BASE "zhtwpsm", 
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kZHTWStringPSMDetectorCID, 
+                                  "PSM based Traditional Chinese String Charset Detector", 
+                                  NS_STRCDETECTOR_PROGID_BASE "zhtwpsm", 
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kZHCNPSMDetectorCID, 
+                                  "PSM based Simplified Chinese Charset Detector", 
+                                  NS_CHARSET_DETECTOR_PROGID_BASE "zhcnpsm", 
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kZHCNStringPSMDetectorCID, 
+                                  "PSM based Simplified Chinese String Charset Detector", 
+                                  NS_STRCDETECTOR_PROGID_BASE "zhcnpsm", 
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kZHPSMDetectorCID, 
+                                  "PSM based Chinese Charset Detector", 
+                                  NS_CHARSET_DETECTOR_PROGID_BASE "zhpsm", 
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kZHStringPSMDetectorCID, 
+                                  "PSM based Chinese String Charset Detector", 
+                                  NS_STRCDETECTOR_PROGID_BASE "zhpsm", 
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kCJKPSMDetectorCID, 
+                                  "PSM based CJK Charset Detector", 
+                                  NS_CHARSET_DETECTOR_PROGID_BASE "cjkpsm", 
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kCJKStringPSMDetectorCID, 
+                                  "PSM based CJK String Charset Detector", 
+                                  NS_STRCDETECTOR_PROGID_BASE "cjkpsm", 
+                                  path,
+                                  PR_TRUE, PR_TRUE);
 #ifdef INCLUDE_DBGDETECTOR
   rv = compMgr->RegisterComponent(k1stBlkDbgDetectorCID,
                                   "Debuging Detector 1st block", 
@@ -186,6 +268,16 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
   rv = compMgr->UnregisterComponent(kCharsetDetectionAdaptorCID, path);
   rv = compMgr->UnregisterComponent(kJAPSMDetectorCID, path);
   rv = compMgr->UnregisterComponent(kJAStringPSMDetectorCID, path);
+  rv = compMgr->UnregisterComponent(kKOPSMDetectorCID, path);
+  rv = compMgr->UnregisterComponent(kKOStringPSMDetectorCID, path);
+  rv = compMgr->UnregisterComponent(kZHTWPSMDetectorCID, path);
+  rv = compMgr->UnregisterComponent(kZHTWStringPSMDetectorCID, path);
+  rv = compMgr->UnregisterComponent(kZHCNPSMDetectorCID, path);
+  rv = compMgr->UnregisterComponent(kZHCNStringPSMDetectorCID, path);
+  rv = compMgr->UnregisterComponent(kZHPSMDetectorCID, path);
+  rv = compMgr->UnregisterComponent(kZHStringPSMDetectorCID, path);
+  rv = compMgr->UnregisterComponent(kCJKPSMDetectorCID, path);
+  rv = compMgr->UnregisterComponent(kCJKStringPSMDetectorCID, path);
 #ifdef INCLUDE_DBGDETECTOR
   rv = compMgr->UnregisterComponent(k1stBlkDbgDetectorCID, path);
   rv = compMgr->UnregisterComponent(k2ndBlkDbgDetectorCID, path);
