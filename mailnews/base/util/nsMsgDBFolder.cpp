@@ -1083,9 +1083,13 @@ nsresult nsMsgDBFolder::GetFolderCacheKey(nsIFileSpec **aFileSpec)
 		{
 			nsFileSpec		folderName;
 			dbPath->GetFileSpec(&folderName);
-			nsLocalFolderSummarySpec	summarySpec(folderName);
+			nsLocalFolderSummarySpec summarySpec(folderName);
 
 			dbPath->SetFromFileSpec(summarySpec);
+
+			// create the .msf file
+			// see bug #244217 for details
+			dbPath->Touch();
 		}
 	}
 	return rv;
