@@ -103,12 +103,14 @@ nsTSubstring_CharT::MutatePrep( size_type capacity, char_type** oldData, PRUint3
         nsStringHeader* hdr = nsStringHeader::FromData(mData);
         if (!hdr->IsReadonly())
           {
-            hdr = nsStringHeader::Realloc(hdr, storageSize);
-            if (hdr)
+            nsStringHeader *newHdr = nsStringHeader::Realloc(hdr, storageSize);
+            if (newHdr)
               {
+                hdr = newHdr;
                 mData = (char_type*) hdr->Data();
                 return PR_TRUE;
               }
+            hdr->Release();
             // out of memory!!  put us in a consistent state at least.
             mData = NS_CONST_CAST(char_type*, char_traits::sEmptyBuffer);
             mLength = 0;
