@@ -117,15 +117,10 @@ function loadCalendarEventDialog()
         return false;
     }
 
-    debug("-----");
-    debug("event: "+event);
-    debug("event.startDate: "+event.startDate);
-    debug("-----");
-
     // fill in fields from the event
     switch(componentType) {
     case "event":
-        startDate = event.startDate.jsDate;
+        var startDate = event.startDate.jsDate;
         setElementValue("start-datetime", startDate);
 
         // only events have end dates. todos have due dates
@@ -158,21 +153,15 @@ function loadCalendarEventDialog()
         setElementValue("all-day-event-checkbox", event.isAllDay, "checked");
         break;
     case "todo":
-        var hasStart = event.start && event.start.isSet;
-        if (hasStart) 
-            var startDate = event.startDate.jsDate;
-        else
-            startDate = null;
+        var hasEntry = event.entryDate.valid;
+        var entryDate = (hasEntry? event.entryDate.jsDate : null);
 
-        setElementValue("start-datetime", startDate);
-        setElementValue("start-datetime", !hasStart, "disabled");
-        setElementValue("start-checkbox", hasStart,  "checked");
+        setElementValue("start-datetime", entryDate);
+        setElementValue("start-datetime", !hasEntry, "disabled");
+        setElementValue("start-checkbox", hasEntry,  "checked");
 
-        var hasDue = event.due && event.due.isSet;
-        if (hasDue)
-            var dueDate = event.dueDate.jsDate;
-        else
-            dueDate = null;
+        var hasDue = event.dueDate.valid;
+        var dueDate = (hasDue? event.dueDate.jsDate : null);
 
         setElementValue("due-datetime", dueDate);
         setElementValue("due-datetime", !hasDue, "disabled");
@@ -501,14 +490,14 @@ function onOKCommand()
         if (!event.isMutable) // I will cut vlad for making me do this QI
             event = originalEvent.clone().QueryInterface(Components.interfaces.calITodo);
 
-        if ( getElementValue("start-datetime") ) {
+        if ( getElementValue("start-checkbox", "checked") ) {
             event.entryDate.jsDate = getElementValue("start-datetime");
             event.entryDate.timezone = tzid;
         } else {
             event.entryDate.reset();
         }
 
-        if ( getElementValue("due-datetime") ) {
+        if ( getElementValue("due-checkbox", "checked") ) {
             event.dueDate.jsDate = getElementValue("due-datetime");
             event.dueDate.timezone = tzid;
         } else {
@@ -1119,7 +1108,7 @@ function updateAdvancedWeekRepeat()
    var dayNumber = getElementValue("start-datetime").getDay();
 
    //uncheck them all if the repeat checkbox is checked
-   var repeatCheckBox = getElementValue("repeat-checkbox", "checkbox");
+   var repeatCheckBox = getElementValue("repeat-checkbox", "checked");
 
    if(repeatCheckBox) {
       //uncheck them all
@@ -1660,7 +1649,7 @@ function processToDoStatus(status, passedInCompletedDate)
         completedDate = null;
 
     // remember the original values
-    var oldPercentComplete = getElementValue("percent-complete-menulist", "data");
+    var oldPercentComplete = getElementValue("percent-complete-menulist", "value");
     var oldCompletedDate   = getElementValue("completed-date-picker");
 
     switch(status) {
