@@ -57,6 +57,8 @@ NSPR_CO_TAG = NSPRPUB_CLIENT_BRANCH
 PSM_CO_TAG = #We will now build PSM from the tip instead of a branch.
 NSS_CO_TAG = NSS_CLIENT_TAG
 LDAPCSDK_CO_TAG = LDAPCSDK_40_BRANCH
+GFX2_CO_TAG = 
+IMGLIB2_CO_TAG = 
 BUILD_MODULES = all
 
 #######################################################################
@@ -226,6 +228,26 @@ endif
 CVSCO_LDAPCSDK = cvs $(CVS_FLAGS) co $(LDAPCSDK_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(LDAPCSDK_CO_MODULE)
 
 ####################################
+# CVS defines for gfx2
+#
+GFX2_CO_MODULE = mozilla/gfx2
+GFX2_CO_FLAGS := -P
+ifdef GFX2_CO_TAG
+  GFX2_CO_FLAGS := $(GFX2_CO_FLAGS) -r $(GFX2_CO_TAG)
+endif
+CVSCO_GFX2 = cvs $(CVS_FLAGS) co $(GFX2_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(GFX2_CO_MODULE)
+
+####################################
+# CVS defines for new image library
+#
+IMGLIB2_CO_MODULE = mozilla/modules/libpr0n
+IMGLIB2_CO_FLAGS := -P
+ifdef IMGLIB2_CO_TAG
+  IMGLIB2_CO_FLAGS := $(IMGLIB2_CO_FLAGS) -r $(IMGLIB2_CO_TAG)
+endif
+CVSCO_IMGLIB2 = cvs $(CVS_FLAGS) co $(IMGLIB2_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(IMGLIB2_CO_MODULE)
+
+####################################
 # CVS defines for standalone modules
 #
 ifneq ($(BUILD_MODULES),all)
@@ -248,6 +270,12 @@ ifeq (,$(filter security security/manager, $(BUILD_MODULE_CVS)))
 endif
 ifeq (,$(filter directory/c-sdk, $(BUILD_MODULE_CVS)))
   CVSCO_LDAPCSDK :=
+endif
+ifeq (,$(filter gfx2, $(BUILD_MODULE_CVS)))
+  CVSCO_GFX2 :=
+endif
+ifeq (,$(filter modules/libpr0n, $(BUILD_MODULE_CVS)))
+  CVSCO_IMGLIB2 :=
 endif
 else
   # Do not pull PSM/NSS by default
@@ -316,6 +344,8 @@ real_checkout:
 	cvs_co $(CVSCO_PSM) && \
 	cvs_co $(CVSCO_NSS) && \
         cvs_co $(CVSCO_LDAPCSDK) && \
+        cvs_co $(CVSCO_GFX2) && \
+        cvs_co $(CVSCO_IMGLIB2) && \
 	cvs_co $(CVSCO_SEAMONKEY) && \
 	cvs_co $(CVSCO_NOSUBDIRS)
 	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE)
