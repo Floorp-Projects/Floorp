@@ -90,13 +90,6 @@ nsXSLContentSink::Init(nsITransformMediator* aTM,
 
   mXSLTransformMediator = aTM;
 
-  nsCOMPtr<nsIScriptLoader> loader;
-  rv = mDocument->GetScriptLoader(getter_AddRefs(loader));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  loader->SetEnabled(PR_FALSE);
-  loader->RemoveObserver(this);
-
   return rv;
 }
 
@@ -158,60 +151,6 @@ nsXSLContentSink::ProcessStyleLink(nsIContent* aElement,
                                    const nsString& aMedia)
 {
   return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsXSLContentSink::HandleStartElement(const PRUnichar *aName, 
-                                     const PRUnichar **aAtts, 
-                                     PRUint32 aAttsCount, 
-                                     PRUint32 aIndex, 
-                                     PRUint32 aLineNumber)
-{
-  nsresult rv = nsXMLContentSink::HandleStartElement(aName, aAtts,
-                                                     aAttsCount, 
-                                                     aIndex,
-                                                     aLineNumber);
-
-  nsCOMPtr<nsIContent> currentContent(dont_AddRef(GetCurrentContent()));
-
-  if (currentContent &&
-      currentContent->IsContentOfType(nsIContent::eHTML)) {
-    nsCOMPtr<nsIAtom> tagAtom;
-    currentContent->GetTag(*getter_AddRefs(tagAtom));
-    if ((tagAtom == nsHTMLAtoms::link) ||
-        (tagAtom == nsHTMLAtoms::style)) {
-      nsCOMPtr<nsIStyleSheetLinkingElement> ssle =
-        do_QueryInterface(currentContent);
-      if (ssle) {
-        ssle->InitStyleLinkElement(nsnull, PR_TRUE);
-      }
-    }
-  }
-  return  rv;
-}
-
-NS_IMETHODIMP
-nsXSLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget, 
-                                              const PRUnichar *aData)
-{
-  FlushText();
-
-  const nsDependentString target(aTarget);
-  const nsDependentString data(aData);
-
-  nsCOMPtr<nsIContent> node;
-
-  nsresult rv = NS_NewXMLProcessingInstruction(getter_AddRefs(node),
-                                               target, data);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(node));
-  if (ssle) {
-    ssle->InitStyleLinkElement(nsnull, PR_TRUE);
-  }
-
-  rv = AddContentAsLeaf(node);
-  return rv;
 }
 
 NS_IMETHODIMP

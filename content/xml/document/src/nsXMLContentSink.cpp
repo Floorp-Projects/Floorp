@@ -668,12 +668,6 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
     return NS_OK;
   }
 
-  static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
-
-  // Create the XML parser
-  nsCOMPtr<nsIParser> parser(do_CreateInstance(kCParserCID, &rv));
-  if (NS_FAILED(rv)) return rv;
-
   // Enable the transform mediator. It will start the transform
   // as soon as it has enough state to do so.  The state needed is
   // the source content model, the style content model, the current
@@ -681,35 +675,16 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
   // this state by calling the various setters on nsITransformMediator.
   mXSLTransformMediator->SetEnabled(PR_TRUE);
 
-  // Create the XSL stylesheet document
-  nsCOMPtr<nsIDOMDocument> styleDOMDoc;
-  nsAutoString emptyStr;
-  emptyStr.Truncate();
-  rv = NS_NewDOMDocument(getter_AddRefs(styleDOMDoc), emptyStr, emptyStr, nsnull, aUrl);
-  if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsIDocument> styleDoc(do_QueryInterface(styleDOMDoc));
-
-  // Create the XSL content sink
-  nsCOMPtr<nsIXMLContentSink> sink;
-  rv = NS_NewXSLContentSink(getter_AddRefs(sink), mXSLTransformMediator, styleDoc, aUrl, mWebShell);
-  if (NS_FAILED(rv)) return rv;
-
-  // Hook up the content sink to the parser's output and ask the parser
-  // to start parsing the URL specified by aURL.
-  parser->SetContentSink(sink);
-  NS_NAMED_LITERAL_STRING(utf8, "UTF-8");
-  styleDoc->SetDocumentCharacterSet(utf8);
-  parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
-  parser->Parse(aUrl);
-
-  // Set the parser as the stream listener and start the URL load
-  nsCOMPtr<nsIStreamListener> sl;
-  rv = parser->QueryInterface(NS_GET_IID(nsIStreamListener), (void**)getter_AddRefs(sl));
-  if (NS_FAILED(rv)) return rv;
+  // Create and set up the channel
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  rv = mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel), aUrl);
   if (NS_FAILED(rv)) return rv;
+
+  channel->SetLoadGroup(loadGroup);
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
@@ -718,13 +693,23 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
     httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
                                   NS_LITERAL_CSTRING("text/xml,application/xml,application/xhtml+xml,*/*;q=0.1"));
 
-    // XXX need to set the referrer equal to the document URI!
-    // httpChannel->SetReferrer(documentURI);
+    httpChannel->SetReferrer(mDocumentURL);
   }
 
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-  channel->SetLoadGroup(loadGroup);
+
+  // Create the XSL stylesheet document
+  nsCOMPtr<nsIDocument> styleDoc = do_CreateInstance(kXMLDocumentCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Create the XSL content sink
+  nsCOMPtr<nsIXMLContentSink> sink;
+  rv = NS_NewXSLContentSink(getter_AddRefs(sink), mXSLTransformMediator, styleDoc, aUrl, mWebShell);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIStreamListener> sl;
+  rv = styleDoc->StartDocumentLoad(kLoadAsData, channel, loadGroup, nsnull,
+                                   getter_AddRefs(sl), PR_TRUE, sink);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return channel->AsyncOpen(sl, nsnull);
 }
