@@ -396,7 +396,7 @@ nsSimpleDataBase::QueryInterface(REFNSIID iid, void** result)
 // nsIRDFDataSource interface
 
 NS_IMETHODIMP
-nsSimpleDataBase::Initialize(const nsString& uri)
+nsSimpleDataBase::Init(const nsString& uri)
 {
     PR_ASSERT(0);
     return NS_ERROR_UNEXPECTED;

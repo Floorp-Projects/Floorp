@@ -503,7 +503,7 @@ NS_IMPL_ISUPPORTS(nsMemoryDataSource, kIRDFDataSourceIID);
 
 
 NS_IMETHODIMP
-nsMemoryDataSource::Initialize(const nsString& uri)
+nsMemoryDataSource::Init(const nsString& uri)
 {
     nsresult rv;
 
