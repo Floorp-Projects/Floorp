@@ -154,6 +154,7 @@ BOOL CWizardMachineApp::InitInstance()
 #endif
 
 
+
 	//Do initializations
 	//Check for comm existence
 	//declare a tree for nodes
@@ -170,6 +171,39 @@ BOOL CWizardMachineApp::InitInstance()
 	if (wroot)
 	wroot->cached = TRUE;
 
+
+	
+	// see if our required support executables are there, as supplied in wizardmachine.ini
+
+	CString strFailed;
+	char    szToolList[MAX_SIZE];
+    char    szBuffer[MAX_SIZE];
+
+
+	GetPrivateProfileString("Default", "RequiredTools", "", szToolList, MAX_SIZE, Root + "WizardMachine.ini");
+
+	char *pTok = strtok(szToolList,",");
+
+	while (pTok)
+	{
+      if ((int)FindExecutable(pTok,currDirPath,szBuffer) <= 32)
+	  {
+		strFailed += " ";
+		strFailed += pTok;
+		strFailed += ",";
+	  }
+
+	  pTok = strtok(NULL,",");
+	}
+
+    if (!strFailed.IsEmpty())
+    {
+		CString str;
+		strFailed = strFailed.Left(strFailed.GetLength()-1);  // remove trailing comma
+		str.Format("The following support files could not be found in the system path: %s.   Please fix this problem and restart.",strFailed);
+		AfxMessageBox(str,MB_ICONSTOP);
+	}
+	
 	CString outputFile = Path + "output.dat";
 	out = fopen(outputFile, "w");
 	if (!out)
