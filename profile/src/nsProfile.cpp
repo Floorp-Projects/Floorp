@@ -72,6 +72,9 @@
 #define PREG_USERNAME	"PREG_USER_NAME"
 #define PREG_DENIAL		"PREG_USER_DENIAL"
 
+// hack for copying panels.rdf into migrated profile dir
+#define PANELS_RDF_FILE	"panels.rdf"
+
 // kill me now.
 #define REGISTRY_YES_STRING		"yes"
 #define REGISTRY_NO_STRING		"no"
@@ -1105,6 +1108,32 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName, PRBool showProg
     rv = pPrefMigrator->AddProfilePaths(oldProfDirStr,  newProfDirStr);  // you can do this a bunch of times.
     rv = pPrefMigrator->ProcessPrefs(showProgressAsModalWindow);
 	if (NS_FAILED(rv)) return rv;
+
+    // Copy the default 5.0 profile files into the migrated profile
+    // Get profile defaults folder..
+    nsCOMPtr <nsIFileSpec> profDefaultsDir;
+    rv = locator->GetFileLocation(nsSpecialFileSpec::App_ProfileDefaultsFolder50, getter_AddRefs(profDefaultsDir));
+        
+	if (NS_FAILED(rv) || !profDefaultsDir)
+	{
+		return NS_ERROR_FAILURE;
+	}
+
+	// Copy panels.rdf file
+	// This is a hack. Once the localFileSpec implementation
+	// is complete, this will be removed.
+	nsFileSpec defaultsDirSpecFile;
+
+	profDefaultsDir->GetFileSpec(&defaultsDirSpecFile);
+
+	defaultsDirSpecFile += PANELS_RDF_FILE;
+
+	if (defaultsDirSpecFile.Exists())
+	{
+		defaultsDirSpecFile.CopyToDir(newProfDir);
+	}
+	// hack finish.
+
 
     rv = SetProfileDir(profileName, newProfDir);
 	if (NS_FAILED(rv)) return rv;
