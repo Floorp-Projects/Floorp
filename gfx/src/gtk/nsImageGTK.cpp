@@ -20,16 +20,11 @@
  * Contributor(s):
  *    Stuart Parmenter <pavlov@netscape.com>
  *    Tim Rowley <tor@cs.brown.edu> -- 8bit alpha compositing
- *    Syd Logan <syd@netscape.com> -- simple Nearest Neighbor scaling 
  */
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 
-#ifdef HAVE_GDK_PIXBUF
-#include <gdk-pixbuf/gdk-pixbuf.h>
-#endif
-
-#include "drawers.h"
+#include "scale.h"
 
 #include "nsImageGTK.h"
 #include "nsRenderingContextGTK.h"
@@ -450,119 +445,90 @@ nsImageGTK::DrawScaled(nsIRenderingContext &aContext,
   }
 
   if ((mAlphaDepth==8) && mAlphaValid) {
-    NS_WARNING("can't do 8bit alpha stretched images currently\n");
-    //    DrawComposited(aContext, aSurface, aSX, aSY, aDX, aDY, aSWidth, aSHeight);
+    DrawComposited(aContext, aSurface, 
+                   aSX, aSY, aSWidth, aSHeight, 
+                   aDX, aDY, aDWidth, aDHeight);
     return NS_OK;
   }
 
-  PRBool succeeded = PR_FALSE;
+  GdkGC *gc;
+  GdkPixmap *pixmap = 0;
 
-#ifdef HAVE_XIE
-  // Draw with XIE
+  if (mAlphaDepth==1) {
+    PRUint32 scaledRowBytes = (aDWidth+7)>>3;   // round to next byte
+    PRUint8 *scaledAlpha = (PRUint8 *)nsMemory::Alloc(aDHeight*scaledRowBytes);
 
-  // don't make a copy... we promise not to change it
-  GdkGC *gc = ((nsRenderingContextGTK&)aContext).GetGC();
+    // code below attempts to draw the image without the mask if mask
+    // creation fails for some reason.  thus no easy-out "return"
+    if (scaledAlpha) {
+      memset(scaledAlpha, 0, aDHeight*scaledRowBytes);
+      RectStretch(aSX, aSY, aSX+aSWidth-1, aSY+aSHeight-1,
+                  0, 0, aDWidth-1, aDHeight-1,
+                  mAlphaBits, mAlphaRowBytes, scaledAlpha, scaledRowBytes, 1);
+    
+      pixmap = gdk_pixmap_new(nsnull, aDWidth, aDHeight, 1);
+      XImage *ximage = 0;
 
-  // DrawScaledImageXIE will copy the GC if it needs to change it.
+      if (pixmap) {
+        ximage = XCreateImage(GDK_WINDOW_XDISPLAY(pixmap),
+                              GDK_VISUAL_XVISUAL(gdk_rgb_get_visual()),
+                              1, XYPixmap, 0, (char *)scaledAlpha, 
+                              aDWidth, aDHeight,
+                              8, scaledRowBytes);
+      }
+      if (ximage) {
+        ximage->bits_per_pixel=1;
+        ximage->bitmap_bit_order=MSBFirst;
+        ximage->byte_order = MSBFirst;
+        
+        GdkGC *tmpGC = gdk_gc_new(pixmap);
+        if (tmpGC) {
+          XPutImage(GDK_WINDOW_XDISPLAY(pixmap), GDK_WINDOW_XWINDOW(pixmap),
+                    GDK_GC_XGC(tmpGC), ximage,
+                    0, 0, 0, 0, aDWidth, aDHeight);
+          gdk_gc_unref(tmpGC);
+        } else {
+          // can't write into the clip mask - destroy so we don't use it
+          if (pixmap)
+            gdk_pixmap_unref(pixmap);
+          pixmap = 0;
+        }
+        
+        ximage->data = 0;
+        XDestroyImage(ximage);
+      }
 
-  succeeded = DrawScaledImageXIE(GDK_DISPLAY(),
-                                 drawing->GetDrawable(),
-                                 gc,
-                                 mImagePixmap,
-                                 mAlphaPixmap,
-                                 mWidth, mHeight,
-                                 aSX, aSY,
-                                 aSWidth, aSHeight,
-                                 aDX, aDY,
-                                 aDWidth, aDHeight);
-
-  gdk_gc_unref(gc);
-
-#endif
-
-#ifdef HAVE_GDK_PIXBUF
-  if (!succeeded) {
-    GdkGC *copyGC;
-    if (mAlphaPixmap) {
-      NS_WARNING("alpha bitmask not scaled!\n");
-      copyGC = gdk_gc_new(drawing->GetDrawable());
-      GdkGC *gc = ((nsRenderingContextGTK&)aContext).GetGC();
-      gdk_gc_copy(copyGC, gc);
-      gdk_gc_unref(gc); // unref the one we got
-      
-      SetupGCForAlpha(copyGC, aDX-aSX, aDY-aSY);
-    } else {
-      // don't make a copy... we promise not to change it
-      copyGC = ((nsRenderingContextGTK&)aContext).GetGC();
+      nsMemory::Free(scaledAlpha);
     }
-
-    // Draw with GdkPixbuf
-    GdkPixbuf *tmpPb =
-      gdk_pixbuf_new_from_data(mImageBits,
-                               GDK_COLORSPACE_RGB, PR_FALSE, 8,
-                               mWidth, mHeight,
-                               mRowBytes, nsnull, nsnull);
-
-    GdkPixbuf *newPb = gdk_pixbuf_new(GDK_COLORSPACE_RGB, PR_FALSE,
-                                      8,
-                                      aDWidth, aDHeight);
-
-    gdk_pixbuf_scale(tmpPb, newPb, 0, 0, aDWidth, aDHeight,
-                     0, 0,
-                     (double)aDWidth / (double)aSWidth,
-                     (double)aDHeight / (double)aSHeight,
-                     GDK_INTERP_NEAREST);
-
-    gdk_pixbuf_render_to_drawable(newPb,
-                                  drawing->GetDrawable(),
-                                  copyGC,
-                                  0, 0,
-                                  aDX, aDY,
-                                  aDWidth, aDHeight,
-                                  GDK_RGB_DITHER_MAX, 0, 0);
-
-    succeeded = PR_TRUE;
-
-    gdk_gc_unref(copyGC);
-    gdk_pixbuf_unref(tmpPb);
-    gdk_pixbuf_unref(newPb);
   }
-#endif
 
-  if (!succeeded) {
+  if (pixmap) {
+    gc = gdk_gc_new(drawing->GetDrawable());
+    gdk_gc_set_clip_origin(gc, aDX, aDY);
+    gdk_gc_set_clip_mask(gc, pixmap);
+  } else {
     // don't make a copy... we promise not to change it
-    GdkGC *gc = ((nsRenderingContextGTK&)aContext).GetGC();
+    gc = ((nsRenderingContextGTK&)aContext).GetGC();
+  }    
+  
+  PRUint8 *scaledRGB = (PRUint8 *)nsMemory::Alloc(3*aDWidth*aDHeight);
+  if (scaledRGB && gc) {
+    RectStretch(aSX, aSY, aSX+aSWidth-1, aSY+aSHeight-1,
+                0, 0, aDWidth-1, aDHeight-1,
+                mImageBits, mRowBytes, scaledRGB, 3*aDWidth, 24);
+    
+    gdk_draw_rgb_image(drawing->GetDrawable(), gc,
+                       aDX, aDY, aDWidth, aDHeight,
+                       GDK_RGB_DITHER_MAX,
+                       scaledRGB, 3*aDWidth);
 
-
-#if 1
-    // this should work, but isn't very fast (espically over remote connections
-    succeeded = DrawScaledImageNN(GDK_DISPLAY(),
-                                  drawing->GetDrawable(),
-                                  gc,
-                                  mImagePixmap,
-                                  mAlphaPixmap,
-                                  mWidth, mHeight,
-                                  aSX, aSY,
-                                  aSWidth, aSHeight,
-                                  aDX, aDY,
-                                  aDWidth, aDHeight);
-#else
-    // XXX this doesn't work very well.
-    succeeded = DrawScaledImageBitsNN(GDK_DISPLAY(),
-                                      drawing->GetDrawable(),
-                                      gc,
-                                      mImageBits,
-                                      mRowBytes,
-                                      mAlphaBits,
-                                      mWidth, mHeight,
-                                      aSX, aSY,
-                                      aSWidth, aSHeight,
-                                      aDX, aDY,
-                                      aDWidth, aDHeight);
-#endif
-
-    gdk_gc_unref(gc);
+    nsMemory::Free(scaledRGB);
   }
+
+  if (gc)
+    gdk_gc_unref(gc);
+  if (pixmap)
+    gdk_pixmap_unref(pixmap);
 
   mFlags = 0;
 
@@ -626,7 +592,9 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
     return NS_OK;
 
   if ((mAlphaDepth==8) && mAlphaValid) {
-    DrawComposited(aContext, aSurface, aSX, aSY, aDX, aDY, aSWidth, aSHeight);
+    DrawComposited(aContext, aSurface, 
+                   aSX, aSY, aSWidth, aSHeight, 
+                   aDX, aDY, aSWidth, aSHeight);
     return NS_OK;
   }
 
@@ -717,7 +685,8 @@ findIndex24(unsigned mask)
 // 32-bit (888) truecolor convert/composite function
 void
 nsImageGTK::DrawComposited32(PRBool isLSB, PRBool flipBytes,
-                             unsigned offsetX, unsigned offsetY,
+                             PRUint8 *imageOrigin, PRUint32 imageStride,
+                             PRUint8 *alphaOrigin, PRUint32 alphaStride,
                              unsigned width, unsigned height,
                              XImage *ximage, unsigned char *readData)
 {
@@ -740,8 +709,8 @@ nsImageGTK::DrawComposited32(PRBool isLSB, PRBool flipBytes,
     unsigned char *baseRow   = (unsigned char *)ximage->data 
                                             +y*ximage->bytes_per_line;
     unsigned char *targetRow = readData     +3*(y*ximage->width);
-    unsigned char *imageRow  = mImageBits   +(y+offsetY)*mRowBytes+3*offsetX;
-    unsigned char *alphaRow  = mAlphaBits   +(y+offsetY)*mAlphaRowBytes+offsetX;
+    unsigned char *imageRow  = imageOrigin + y*imageStride;
+    unsigned char *alphaRow  = alphaOrigin + y*alphaStride;
 
     for (unsigned i=0; i<width;
          i++, baseRow+=4, targetRow+=3, imageRow+=3, alphaRow++) {
@@ -756,7 +725,8 @@ nsImageGTK::DrawComposited32(PRBool isLSB, PRBool flipBytes,
 // 24-bit (888) truecolor convert/composite function
 void
 nsImageGTK::DrawComposited24(PRBool isLSB, PRBool flipBytes,
-                             unsigned offsetX, unsigned offsetY,
+                             PRUint8 *imageOrigin, PRUint32 imageStride,
+                             PRUint8 *alphaOrigin, PRUint32 alphaStride,
                              unsigned width, unsigned height,
                              XImage *ximage, unsigned char *readData)
 {
@@ -775,8 +745,8 @@ nsImageGTK::DrawComposited24(PRBool isLSB, PRBool flipBytes,
     unsigned char *baseRow   = (unsigned char *)ximage->data 
                                             +y*ximage->bytes_per_line;
     unsigned char *targetRow = readData     +3*(y*ximage->width);
-    unsigned char *imageRow  = mImageBits   +(y+offsetY)*mRowBytes+3*offsetX;
-    unsigned char *alphaRow  = mAlphaBits   +(y+offsetY)*mAlphaRowBytes+offsetX;
+    unsigned char *imageRow  = imageOrigin + y*imageStride;
+    unsigned char *alphaRow  = alphaOrigin + y*alphaStride;
 
     for (unsigned i=0; i<width;
          i++, baseRow+=3, targetRow+=3, imageRow+=3, alphaRow++) {
@@ -803,7 +773,8 @@ unsigned nsImageGTK::scaled5[1<<5] = {
 // 16-bit ([56][56][56]) truecolor convert/composite function
 void
 nsImageGTK::DrawComposited16(PRBool isLSB, PRBool flipBytes,
-                             unsigned offsetX, unsigned offsetY,
+                             PRUint8 *imageOrigin, PRUint32 imageStride,
+                             PRUint8 *alphaOrigin, PRUint32 alphaStride,
                              unsigned width, unsigned height,
                              XImage *ximage, unsigned char *readData)
 {
@@ -817,8 +788,8 @@ nsImageGTK::DrawComposited16(PRBool isLSB, PRBool flipBytes,
     unsigned char *baseRow   = (unsigned char *)ximage->data 
                                             +y*ximage->bytes_per_line;
     unsigned char *targetRow = readData     +3*(y*ximage->width);
-    unsigned char *imageRow  = mImageBits   +(y+offsetY)*mRowBytes+3*offsetX;
-    unsigned char *alphaRow  = mAlphaBits   +(y+offsetY)*mAlphaRowBytes+offsetX;
+    unsigned char *imageRow  = imageOrigin + y*imageStride;
+    unsigned char *alphaRow  = alphaOrigin + y*alphaStride;
 
     for (unsigned i=0; i<width;
          i++, baseRow+=2, targetRow+=3, imageRow+=3, alphaRow++) {
@@ -847,7 +818,8 @@ nsImageGTK::DrawComposited16(PRBool isLSB, PRBool flipBytes,
 // Generic convert/composite function
 void
 nsImageGTK::DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
-                                  unsigned offsetX, unsigned offsetY,
+                                  PRUint8 *imageOrigin, PRUint32 imageStride,
+                                  PRUint8 *alphaOrigin, PRUint32 alphaStride,
                                   unsigned width, unsigned height,
                                   XImage *ximage, unsigned char *readData)
 {
@@ -976,8 +948,8 @@ nsImageGTK::DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
   // now composite
   for (unsigned y=0; y<height; y++) {
     unsigned char *targetRow = readData+3*y*width;
-    unsigned char *imageRow  = mImageBits   +(y+offsetY)*mRowBytes+3*offsetX;
-    unsigned char *alphaRow  = mAlphaBits   +(y+offsetY)*mAlphaRowBytes+offsetX;
+    unsigned char *imageRow  = imageOrigin + y*imageStride;
+    unsigned char *alphaRow  = alphaOrigin + y*alphaStride;
     
     for (unsigned i=0; i<width; i++) {
       unsigned alpha = alphaRow[i];
@@ -992,10 +964,11 @@ void
 nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
                            nsDrawingSurface aSurface,
                            PRInt32 aSX, PRInt32 aSY,
+                           PRInt32 aSWidth, PRInt32 aSHeight,
                            PRInt32 aDX, PRInt32 aDY,
-                           PRInt32 aWidth, PRInt32 aHeight)
+                           PRInt32 aDWidth, PRInt32 aDHeight)
 {
-  if ((aWidth==0) || (aHeight==0))
+  if ((aDWidth==0) || (aDHeight==0))
     return;
 
   nsDrawingSurfaceGTK* drawing = (nsDrawingSurfaceGTK*) aSurface;
@@ -1012,7 +985,7 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
   unsigned readWidth, readHeight, destX, destY;
 
   if ((aDY>=(int)surfaceHeight) || (aDX>=(int)surfaceWidth) ||
-      (aDY+aHeight<=0) || (aDX+aWidth<=0)) {
+      (aDY+aDHeight<=0) || (aDX+aDWidth<=0)) {
     // This should never happen if the layout engine is sane,
     // as it means we're trying to draw an image which is outside
     // the drawing surface.  Bulletproof gfx for now...
@@ -1020,14 +993,14 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
   }
 
   if (aDX<0) {
-    readX = 0;   readWidth = aWidth+aDX;    destX = aSX-aDX;
+    readX = 0;   readWidth = aDWidth+aDX;    destX = aSX-aDX;
   } else {
-    readX = aDX;  readWidth = aWidth;       destX = aSX;
+    readX = aDX;  readWidth = aDWidth;       destX = aSX;
   }
   if (aDY<0) {
-    readY = 0;   readHeight = aHeight+aDY;  destY = aSY-aDY;
+    readY = 0;   readHeight = aDHeight+aDY;  destY = aSY-aDY;
   } else {
-    readY = aDY;  readHeight = aHeight;     destY = aSY;
+    readY = aDY;  readHeight = aDHeight;     destY = aSY;
   }
 
   if (readX+readWidth > surfaceWidth)
@@ -1051,8 +1024,47 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
   if (!ximage)
     return;
 
-  unsigned char *readData = new unsigned char[3*readWidth*readHeight];
+  unsigned char *readData = 
+    (unsigned char *)nsMemory::Alloc(3*readWidth*readHeight);
 
+  PRUint8 *scaledImage = 0;
+  PRUint8 *scaledAlpha = 0;
+  PRUint8 *imageOrigin, *alphaOrigin;
+  PRUint32 imageStride, alphaStride;
+  if ((aSWidth!=aDWidth) || (aSHeight!=aDHeight)) {
+    PRUint32 x1, y1, x2, y2;
+    x1 = (destX*aSWidth)/aDWidth;
+    y1 = (destY*aSHeight)/aDHeight;
+    x2 = ((destX+readWidth)*aSWidth)/aDWidth;
+    y2 = ((destY+readHeight)*aSHeight)/aDHeight;
+
+    scaledImage = (PRUint8 *)nsMemory::Alloc(3*aDWidth*aDHeight);
+    scaledAlpha = (PRUint8 *)nsMemory::Alloc(aDWidth*aDHeight);
+    if (!scaledImage || !scaledAlpha) {
+      XDestroyImage(ximage);
+      nsMemory::Free(readData);
+      if (scaledImage)
+        nsMemory::Free(scaledImage);
+      if (scaledAlpha)
+        nsMemory::Free(scaledAlpha);
+      return;
+    }
+    RectStretch(x1, y1, x2-1, y2-1,
+                0, 0, readWidth-1, readHeight-1,
+                mImageBits, mRowBytes, scaledImage, 3*readWidth, 24);
+    RectStretch(x1, y1, x2-1, y2-1,
+                0, 0, readWidth-1, readHeight-1,
+                mAlphaBits, mAlphaRowBytes, scaledAlpha, readWidth, 8);
+    imageOrigin = scaledImage;
+    imageStride = 3*readWidth;
+    alphaOrigin = scaledAlpha;
+    alphaStride = readWidth;
+  } else {
+    imageOrigin = mImageBits + destY*mRowBytes + 3*destX;
+    imageStride = mRowBytes;
+    alphaOrigin = mAlphaBits + destY*mAlphaRowBytes + destX;
+    alphaStride = mAlphaRowBytes;
+  }
 
   PRBool isLSB;
   unsigned test = 1;
@@ -1066,23 +1078,31 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
       (visual->red_prec == 8) &&
       (visual->green_prec == 8) &&
       (visual->blue_prec == 8))
-    DrawComposited32(isLSB, flipBytes, destX, destY, readWidth, readHeight, 
-                     ximage, readData);
+    DrawComposited32(isLSB, flipBytes, 
+                     imageOrigin, imageStride,
+                     alphaOrigin, alphaStride, 
+                     readWidth, readHeight, ximage, readData);
   else if ((ximage->bits_per_pixel==24) &&
            (visual->red_prec == 8) && 
            (visual->green_prec == 8) &&
            (visual->blue_prec == 8))
-    DrawComposited24(isLSB, flipBytes, destX, destY, readWidth, readHeight, 
-                     ximage, readData);
+    DrawComposited24(isLSB, flipBytes, 
+                     imageOrigin, imageStride,
+                     alphaOrigin, alphaStride, 
+                     readWidth, readHeight, ximage, readData);
   else if ((ximage->bits_per_pixel==16) &&
            ((visual->red_prec == 5)   || (visual->red_prec == 6)) &&
            ((visual->green_prec == 5) || (visual->green_prec == 6)) &&
            ((visual->blue_prec == 5)  || (visual->blue_prec == 6)))
-    DrawComposited16(isLSB, flipBytes, destX, destY, readWidth, readHeight, 
-                     ximage, readData);
+    DrawComposited16(isLSB, flipBytes,
+                     imageOrigin, imageStride,
+                     alphaOrigin, alphaStride, 
+                     readWidth, readHeight, ximage, readData);
   else
-    DrawCompositedGeneral(isLSB, flipBytes, destX, destY, readWidth, readHeight, 
-                          ximage, readData);
+    DrawCompositedGeneral(isLSB, flipBytes,
+                     imageOrigin, imageStride,
+                     alphaOrigin, alphaStride, 
+                     readWidth, readHeight, ximage, readData);
 
   GdkGC *imageGC = ((nsRenderingContextGTK&)aContext).GetGC();
   gdk_draw_rgb_image(drawing->GetDrawable(), imageGC,
@@ -1092,7 +1112,11 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
   gdk_gc_unref(imageGC);
 
   XDestroyImage(ximage);
-  delete [] readData;
+  nsMemory::Free(readData);
+  if (scaledImage)
+    nsMemory::Free(scaledImage);
+  if (scaledAlpha)
+    nsMemory::Free(scaledAlpha);
   mFlags = 0;
 }
 
@@ -1221,7 +1245,7 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
     return NS_OK;
 
   if ((mAlphaDepth==8) && mAlphaValid) {
-    DrawComposited(aContext, aSurface, 0, 0, aX, aY, aWidth, aHeight);
+    DrawComposited(aContext, aSurface, 0, 0, aWidth, aHeight, aX, aY, aWidth, aHeight);
     return NS_OK;
   }
 
