@@ -61,33 +61,33 @@
   <html:script src="bookmarks.js"/>
 
   <menubar>
-    <menu name="&menu.file.label;">
-      <menuitem name="&menuitem.newWindow.label;"
-                onclick="window.open('resource:/res/samples/bookmarks.xul',
+    <menu value="&menu.file.label;">
+      <menuitem value="&menuitem.newWindow.label;"
+                onaction="window.open('resource:/res/samples/bookmarks.xul',
                                      'ManageBookmarks',
                                      'chrome');" />
-      <menuitem name="&menuitem.newBookmark.label;" onClick="return doContextCmd('http://home.netscape.com/NC-rdf#bookmarkcommand?newbookmark');" />
-      <menuitem name="&menuitem.newFolder.label;" onClick="return doContextCmd('http://home.netscape.com/NC-rdf#bookmarkcommand?newfolder');"/>
-      <menuitem name="&menuitem.newSeparator.label;" onClick="return doContextCmd('http://home.netscape.com/NC-rdf#bookmarkcommand?newseparator');"/>
-      <separator/>
-      <menuitem name="&menuitem.close.label;"
-                onclick="window.close()" />
+      <menuitem value="&menuitem.newBookmark.label;" onaction="return doContextCmd('http://home.netscape.com/NC-rdf#bookmarkcommand?newbookmark');" />
+      <menuitem value="&menuitem.newFolder.label;" onaction="return doContextCmd('http://home.netscape.com/NC-rdf#bookmarkcommand?newfolder');"/>
+      <menuitem value="&menuitem.newSeparator.label;" onaction="return doContextCmd('http://home.netscape.com/NC-rdf#bookmarkcommand?newseparator');"/>
+      <menuseparator/>
+      <menuitem value="&menuitem.close.label;"
+                onaction="window.close()" />
     </menu>
-    <menu name="&menu.edit.label;">
-      <menuitem name="x&menuitem.undo.label;"/>
-      <menuitem name="x&menuitem.redo.label;"/>
-      <separator/>
-      <menuitem name="x&menuitem.cut.label;"/>
-      <menuitem name="x&menuitem.copy.label;"/>
-      <menuitem name="x&menuitem.paste.label;"/>
-      <menuitem name="x&menuitem.delete.label;"/>
-      <menuitem name="x&menuitem.selectAll.label;"/>
-      <separator/>
-      <menuitem name="x&menuitem.find.label;"/>
-      <menuitem name="x&menuitem.findAgain.label;"/>
-      <separator/>
-      <menuitem name="&menuitem.properties.label;"
-                onclick="BookmarkProperties();"/>
+    <menu value="&menu.edit.label;">
+      <menuitem value="x&menuitem.undo.label;"/>
+      <menuitem value="x&menuitem.redo.label;"/>
+      <menuseparator/>
+      <menuitem value="x&menuitem.cut.label;"/>
+      <menuitem value="x&menuitem.copy.label;"/>
+      <menuitem value="x&menuitem.paste.label;"/>
+      <menuitem value="x&menuitem.delete.label;"/>
+      <menuitem value="x&menuitem.selectAll.label;"/>
+      <menuseparator/>
+      <menuitem value="x&menuitem.find.label;"/>
+      <menuitem value="x&menuitem.findAgain.label;"/>
+      <menuseparator/>
+      <menuitem value="&menuitem.properties.label;"
+                onaction="BookmarkProperties();"/>
     </menu>
   </menubar>
 
