@@ -57,9 +57,9 @@ public:
 
   static PRInt32 gMaxNumRowColSpecs;
 
-  void GetSizeOfChild(nsIFrame* aChild, nsReflowMetrics& aSize);
+  void GetSizeOfChild(nsIFrame* aChild, nsSize& aSize);
 
-  void GetSizeOfChildAt(PRInt32 aIndexInParent, nsReflowMetrics& aSize, nsPoint& aCellIndex);
+  void GetSizeOfChildAt(PRInt32 aIndexInParent, nsSize& aSize, nsPoint& aCellIndex);
 
   static nsHTMLFramesetFrame* GetFramesetParent(nsIFrame* aChild);
 

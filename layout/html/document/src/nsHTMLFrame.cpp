@@ -244,31 +244,22 @@ nsHTMLFrameOuterFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                       const nsReflowState& aReflowState,
                                       nsReflowMetrics& aDesiredSize)
 {
-  if (IsInline()) {
-    float p2t = aPresContext->GetPixelsToTwips();
+  // <frame> processing does not use this routine, only <iframe>
+  float p2t = aPresContext->GetPixelsToTwips();
 
-    nsSize size;
-    PRIntn ss = nsCSSLayout::GetStyleSize(aPresContext, aReflowState, size);
+  nsSize size;
+  PRIntn ss = nsCSSLayout::GetStyleSize(aPresContext, aReflowState, size);
 
-    if (0 == (ss & NS_SIZE_HAS_WIDTH)) {
-      size.width = (nscoord)(200.0 * p2t + 0.5);
-    }
-    if (0 == (ss & NS_SIZE_HAS_HEIGHT)) {
-      size.height = (nscoord)(200 * p2t + 0.5);
-    }
-
-    aDesiredSize.width  = size.width;
-    aDesiredSize.height = size.height;
-  } else {
-    nsHTMLFramesetFrame* framesetParent = nsHTMLFramesetFrame::GetFramesetParent(this);
-    if (nsnull != framesetParent) {
-      framesetParent->GetSizeOfChild(this, aDesiredSize);
-    } else {
-      NS_ASSERTION(0, "parent of <frame> not a <frameset>");
-      aDesiredSize.width  = 0;
-      aDesiredSize.height = 0;
-    }
+  // XXX this needs to be changed from (200,200) to a better default for inline frames
+  if (0 == (ss & NS_SIZE_HAS_WIDTH)) {
+    size.width = (nscoord)(200.0 * p2t + 0.5);
   }
+  if (0 == (ss & NS_SIZE_HAS_HEIGHT)) {
+    size.height = (nscoord)(200 * p2t + 0.5);
+  }
+
+  aDesiredSize.width  = size.width;
+  aDesiredSize.height = size.height;
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 }
@@ -283,7 +274,7 @@ nsHTMLFrameOuterFrame::Paint(nsIPresContext& aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect& aDirtyRect)
 {
-  //printf("outer paint %d %d %d %d \n", aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  printf("outer paint %d (%d,%d,%d,%d) ", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   if (nsnull != mFirstChild) {
     mFirstChild->Paint(aPresContext, aRenderingContext, aDirtyRect);
   }
@@ -296,8 +287,12 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&      aPresContext,
                               const nsReflowState& aReflowState,
                               nsReflowStatus&      aStatus)
 {
-  // Always get the size so that the caller knows how big we are
-  GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
+  if (IsInline()) {
+    GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
+  } else {
+    aDesiredSize.width  = aReflowState.maxSize.width;
+    aDesiredSize.height = aReflowState.maxSize.height;
+  }
 
   if (nsnull == mFirstChild) {
     mFirstChild = new nsHTMLFrameInnerFrame(mContent, this);
@@ -313,8 +308,9 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&      aPresContext,
   // Reflow the child and get its desired size
   nsReflowState kidReflowState(mFirstChild, aReflowState, innerSize);
   mFirstChild->WillReflow(aPresContext);
-  nsReflowMetrics ignore(nsnull);
-  aStatus = ReflowChild(mFirstChild, &aPresContext, ignore, kidReflowState);
+  aStatus = ReflowChild(mFirstChild, &aPresContext, aDesiredSize, kidReflowState);
+//  nsReflowMetrics ignore(nsnull);
+//  aStatus = ReflowChild(mFirstChild, &aPresContext, ignore, kidReflowState);
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   
   // Place and size the child
@@ -422,7 +418,7 @@ nsHTMLFrameInnerFrame::Paint(nsIPresContext& aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect& aDirtyRect)
 {
-  //printf("inner paint %d %d %d %d \n", aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  printf("inner paint %d (%d,%d,%d,%d) ", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   if (nsnull != mWebShell) {
     //mWebShell->Show();
   }
@@ -774,29 +770,35 @@ NS_IMETHODIMP
 TempObserver::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax,
                         const nsString& aMsg)
 {
+#if 0
   fputs("[progress ", stdout);
   fputs(mURL, stdout);
   printf(" %d %d ", aProgress, aProgressMax);
   fputs(aMsg, stdout);
   fputs("]\n", stdout);
+#endif
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TempObserver::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
+#if 0
   fputs("Loading ", stdout);
   fputs(mURL, stdout);
   fputs("\n", stdout);
+#endif
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TempObserver::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
 {
+#if 0
   fputs("Done loading ", stdout);
   fputs(mURL, stdout);
   fputs("\n", stdout);
+#endif
   return NS_OK;
 }
 

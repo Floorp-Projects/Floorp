@@ -595,6 +595,7 @@ HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
     return NS_ERROR_OUT_OF_MEMORY;
   }
   nsresult rv = NS_NewHTMLFrameset(&mFrameset, atom, nsnull);
+  mFrameset->SetDocument(mDocument);
   NS_RELEASE(atom);
   if (NS_OK != rv) {
     return rv;
@@ -605,9 +606,6 @@ HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
 
   // Add attributes to the frameset content object
   AddAttributes(aNode, mFrameset);
-  // XXX If the frameset already existed and has been reflowed somewhat
-  // then we need to trigger a style change
-  mRoot->AppendChild(mFrameset, PR_TRUE);
 
   return NS_OK;
 }
@@ -616,6 +614,8 @@ NS_IMETHODIMP
 HTMLContentSink::CloseFrameset(const nsIParserNode& aNode)
 {
   FlushText();
+
+  mRoot->AppendChild(mFrameset, PR_TRUE);
 
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::CloseFrameset", aNode);
@@ -1805,6 +1805,9 @@ nsresult HTMLContentSink::ProcessFrameTag(nsIHTMLContent** aInstancePtrResult,
   nsIAtom* atom = NS_NewAtom(tmp);
 
   nsresult rv = NS_NewHTMLFrame(aInstancePtrResult, atom, mWebShell);
+  if (NS_OK == rv) {
+    rv = AddAttributes(aNode, *aInstancePtrResult);
+  }
 
   NS_RELEASE(atom);
   return rv;
