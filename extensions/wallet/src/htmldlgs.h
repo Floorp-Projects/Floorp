@@ -1,12 +1,24 @@
-#include "xp_mcom.h"
+//#include "xp_mcom.h"
+#define XP_STRSTR                 strstr
+#define XP_STRTOUL                strtoul
+
+#include "platform.h"
+#include "xp_core.h"
+#include "xp_mem.h"
+//#include "xp_debug.h"
+#include "xp_str.h"
+#include "xp_list.h"
+#include "prprf.h"  
+#include <string.h>
 
 #include "xp_file.h"
-
 #include "plarenas.h"
 #include "jsotypes.h"
 #include "plstr.h"
 #include "seccomon.h"
 #include "xpgetstr.h"
+
+#define PORT_Strlen(s) 	strlen(s)
 
 #define HTML_DLGS_URL "file:///y|/htmldlgs.html"
 #define XP_DIALOG_CANCEL_BUTTON (1<<0)
@@ -201,7 +213,12 @@ XP_GetDialogStrings(int stringnum)
   header->arena = arena;
   header->basestringnum = stringnum;
 
+#ifdef	XP_MAC
+  goto loser;
+#else
   src = XP_GetString(stringnum);
+
+#endif
   len = PORT_Strlen(src);
   size = len + 1;
   dst = header->contents =

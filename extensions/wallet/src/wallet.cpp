@@ -25,7 +25,6 @@
 #include "wallet.h"
 #include "nsINetService.h"
 #include "nsIServiceManager.h"
-
 #include "nsIDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLCollection.h"
@@ -51,6 +50,9 @@ static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
 #include "htmldlgs.h"
+#include "prtypes.h"
+#include "prlong.h"
+#include "prinrval.h"
 
 /***************************************************/
 /* The following declarations define the data base */
@@ -146,7 +148,7 @@ PRInt64 timings [timing_max];
 char timingID [timing_max];
 PRInt32 timing_index = 0;
 
-PRInt64 stopwatch = 0;
+PRInt64 stopwatch = LL_Zero();
 PRInt64 stopwatchBase;
 PRBool stopwatchRunning = FALSE;
 
@@ -159,7 +161,9 @@ void
 wallet_DumpTiming() {
   PRInt32 i;
   for (i=1; i<timing_index; i++) {
+#ifndef	XP_MAC
     fprintf(stdout, "time %c = %ld\n", timingID[i], (timings[i] - timings[i-1])/100);
+#endif
     if (i%20 == 0) {
       wallet_Pause();
     }
@@ -171,20 +175,24 @@ void
 wallet_AddTiming(char c) {
   if (timing_index<timing_max) {
     timingID[timing_index] = c;
-    timings[timing_index++] = PR_IntervalNow();
+#ifndef	XP_MAC
+    timings[timing_index++] = PR_IntervalNow();	// note: PR_IntervalNow returns a 32 bit value!
+#endif
   }
 }
 
 void
 wallet_ClearStopwatch() {
-  stopwatch = 0;
+  stopwatch = LL_Zero();
   stopwatchRunning = FALSE;
 }
 
 void
 wallet_ResumeStopwatch() {
   if (!stopwatchRunning) {
-    stopwatchBase = PR_IntervalNow();
+#ifndef	XP_MAC
+    stopwatchBase = PR_IntervalNow();	// note: PR_IntervalNow returns a 32 bit value!
+#endif
     stopwatchRunning = TRUE;
   }
 }
@@ -192,7 +200,9 @@ wallet_ResumeStopwatch() {
 void
 wallet_PauseStopwatch() {
   if (stopwatchRunning) {
-    stopwatch += (PR_IntervalNow() - stopwatchBase);
+#ifndef	XP_MAC
+    stopwatch += (PR_IntervalNow() - stopwatchBase);	// note: PR_IntervalNow returns a 32 bit value!
+#endif
     stopwatchRunning = FALSE;
   }
 }
@@ -200,10 +210,14 @@ wallet_PauseStopwatch() {
 void
 wallet_DumpStopwatch() {
   if (stopwatchRunning) {
-    stopwatch += (PR_IntervalNow() - stopwatchBase);
+#ifndef	XP_MAC
+    stopwatch += (PR_IntervalNow() - stopwatchBase);	// note: PR_IntervalNow returns a 32 bit value!
     stopwatchBase = PR_IntervalNow();
+#endif
   }
+#ifndef	XP_MAC
   fprintf(stdout, "stopwatch = %ld\n", stopwatch/100);  
+#endif
 }
 #endif /* DEBUG */
 
