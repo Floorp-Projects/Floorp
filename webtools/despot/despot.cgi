@@ -66,8 +66,7 @@ print start_html(-Title=>"Despot -- configure mozilla users$extra",
 if (!param()) {
     print h1("Despot -- access control for mozilla.org.");
     if ($ENV{"HTTPS"} ne "ON") {
-        my $fixedurl = $ENV{"SERVER_URL"} . $ENV{"SCRIPT_NAME"};
-        $fixedurl =~ s/^http:/https:/;
+        my $fixedurl = "https://$ENV{'SERVER_NAME'}$ENV{'SCRIPT_NAME'}";
         print b("<font color=red>If possible, please use the " .
                 a({href=>$fixedurl}, "secure version of this form") .
                 ".</font>");
