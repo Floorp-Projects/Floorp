@@ -64,6 +64,9 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXULTreeAccessible, nsXULSelectableAccessible, nsI
 
 NS_IMETHODIMP nsXULTreeAccessible::GetAccState(PRUint32 *_retval)
 {
+  // Get focus status from base class                                           
+  nsAccessible::GetAccState(_retval);                                           
+
   // see if we are multiple select if so set ourselves as such
   nsCOMPtr<nsIDOMElement> element (do_QueryInterface(mDOMNode));
   if (element) {
@@ -74,7 +77,7 @@ NS_IMETHODIMP nsXULTreeAccessible::GetAccState(PRUint32 *_retval)
       *_retval |= STATE_MULTISELECTABLE;
   }
 
-  *_retval |= STATE_READONLY;
+  *_retval |= STATE_READONLY | STATE_FOCUSABLE;
 
   return NS_OK;
 }
@@ -798,11 +801,13 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetAccNextSibling(nsIAccessible **aAccNex
   PRInt32 rowCount;
   mTreeView->GetRowCount(&rowCount);
 
-  if (mRow < rowCount - 1 && mColumnIndex < 0) {
-    *aAccNextSibling = new nsXULTreeitemAccessible(mParent, mDOMNode, mPresShell, mRow + 1);
-    if (! *aAccNextSibling)
-      return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(*aAccNextSibling);
+  if (mColumnIndex < 0) {
+    if (mRow < rowCount - 1) {
+      *aAccNextSibling = new nsXULTreeitemAccessible(mParent, mDOMNode, mPresShell, mRow + 1);
+      if (! *aAccNextSibling)
+        return NS_ERROR_OUT_OF_MEMORY;
+      NS_ADDREF(*aAccNextSibling);
+    }
 
     return NS_OK;
   }
