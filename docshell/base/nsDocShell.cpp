@@ -3752,9 +3752,46 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                                               aHeadersData,
                                               aLoadType,
                                               aSHEntry);
-            return rv;
+            if (rv == NS_ERROR_NO_CONTENT) {
+                if (bIsNewWindow) {
+                    //
+                    // At this point, a new window has been created, but the
+                    // URI did not have any data associated with it...
+                    //
+                    // So, the best we can do, is to tear down the new window
+                    // that was just created!
+                    //
+                    nsCOMPtr<nsIDocShellTreeItem> treeItem;
+                    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+
+                    treeItem = do_QueryInterface(targetDocShell);
+                    treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+                    if (treeOwner) {
+                        nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
+
+                        treeOwnerAsWin = do_QueryInterface(treeOwner);
+                        if (treeOwnerAsWin) {
+                            treeOwnerAsWin->Destroy();
+                        }
+                    }
+                }
+                //
+                // NS_ERROR_NO_CONTENT should not be returned to the
+                // caller... This is an internal error code indicating that
+                // the URI had no data associated with it - probably a 
+                // helper-app style protocol (ie. mailto://)
+                //
+                rv = NS_OK;
+            }
+            else if (bIsNewWindow) {
+                // XXX: Once new windows are created hidden, the new
+                //      window will need to be made visible...  For now,
+                //      do nothing.
+            }
         }
+        return rv;
     }
+
     
     
     
