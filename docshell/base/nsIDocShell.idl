@@ -130,6 +130,17 @@ interface nsIDocShell : nsISupports
 	*/
 	attribute boolean allowPlugins;
 
+	/*
+	Definitions for the viewModes the docShell can be in.
+	*/
+	const long viewNormal=0;
+	const long viewSource=1;
+
+	/*
+	This is the mode that the docShell is in for viewing when a load occurs.
+	*/
+	attribute long viewMode;
+
 	/**
 	* Set/Get the document scale factor.  When setting this attribute, a
 	* NS_ERROR_NOT_IMPLEMENTED error may be returned by implementations
