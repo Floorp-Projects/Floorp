@@ -104,6 +104,12 @@ public:
    */
   virtual const nsFont& GetDefaultFixedFont(void) = 0;
 
+  /**
+   * Access Nav's magic font scaler value
+   */
+  virtual PRInt32 GetFontScaler(void) = 0;
+  virtual void SetFontScaler(PRInt32 aScaler) = 0;
+
   /** 
    * Get the defualt colors
    */

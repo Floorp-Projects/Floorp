@@ -46,6 +46,8 @@ public:
   virtual nsIFontMetrics* GetMetricsFor(const nsFont& aFont);
   virtual const nsFont& GetDefaultFont(void);
   virtual const nsFont& GetDefaultFixedFont(void);
+  virtual PRInt32 GetFontScaler(void);
+  virtual void SetFontScaler(PRInt32 aScaler);
   NS_IMETHOD GetDefaultColor(nscolor& aColor);
   NS_IMETHOD GetDefaultBackgroundColor(nscolor& aColor);
   NS_IMETHOD SetDefaultColor(const nscolor& aColor);
@@ -80,6 +82,7 @@ protected:
   nsISupports*          mContainer;
   nsFont                mDefaultFont;
   nsFont                mDefaultFixedFont;
+  PRInt32               mFontScaler;
   nscolor               mDefaultColor;
   nscolor               mDefaultBackgroundColor;
   nsVoidArray           mImageLoaders;
