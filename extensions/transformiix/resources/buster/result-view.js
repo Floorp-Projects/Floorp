@@ -43,7 +43,6 @@ function onNewResultView(event)
     const db = runItem.prototype.kDatabase;
     const kXalan = runItem.prototype.kXalan;
     var index = view.boxObject.selection.currentIndex;
-    enablePrivilege('UniversalXPConnect');
     var res = view.builder.getResourceAtIndex(index);
     var name = db.GetTarget(res, krTypeName, true);
     if (!name) {

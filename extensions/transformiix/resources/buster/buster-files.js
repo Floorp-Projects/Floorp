@@ -37,7 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-enablePrivilege('UniversalXPConnect');
 const kFTSCID = "@mozilla.org/network/file-transport-service;1";
 const nsIFileTransportService = Components.interfaces.nsIFileTransportService;
 const kFileTransportService = doCreate(kFTSCID, nsIFileTransportService);
@@ -60,7 +59,6 @@ var cmdFileController =
     },
     doCommand: function(aCommand)
     {
-        enablePrivilege('UniversalXPConnect');
         switch(aCommand) {
             case 'cmd_fl_save':
                 var serial = doCreate(kRDFXMLSerializerID,
