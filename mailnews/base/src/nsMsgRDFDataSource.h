@@ -143,8 +143,12 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
  protected:
   char *mURI;
 
-  nsIRDFService *getRDFService();
-  
+	nsIRDFService *getRDFService();
+	static PRBool assertEnumFunc(void *aElement, void *aData);
+	static PRBool unassertEnumFunc(void *aElement, void *aData);
+	nsresult  NotifyObservers(nsIRDFResource *subject, nsIRDFResource *property,
+								nsIRDFNode *object, PRBool assert);
+
  private:
   nsIRDFService *mRDFService;
   nsVoidArray *mObservers;

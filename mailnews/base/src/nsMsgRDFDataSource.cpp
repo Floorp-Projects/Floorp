@@ -21,6 +21,7 @@
 #include "rdf.h"
 #include "plstr.h"
 #include "nsXPIDLString.h"
+#include "nsMsgRDFUtils.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -268,4 +269,44 @@ nsMsgRDFDataSource::getRDFService()
     }
     
     return mRDFService;
+}
+
+nsresult nsMsgRDFDataSource::NotifyObservers(nsIRDFResource *subject,
+                                                nsIRDFResource *property,
+                                                nsIRDFNode *object,
+                                                PRBool assert)
+{
+	if(mObservers)
+	{
+		nsMsgRDFNotification note = { subject, property, object };
+		if (assert)
+			mObservers->EnumerateForwards(assertEnumFunc, &note);
+		else
+			mObservers->EnumerateForwards(unassertEnumFunc, &note);
+  }
+	return NS_OK;
+}
+
+PRBool
+nsMsgRDFDataSource::assertEnumFunc(void *aElement, void *aData)
+{
+  nsMsgRDFNotification *note = (nsMsgRDFNotification *)aData;
+  nsIRDFObserver* observer = (nsIRDFObserver *)aElement;
+  
+  observer->OnAssert(note->subject,
+                     note->property,
+                     note->object);
+  return PR_TRUE;
+}
+
+PRBool
+nsMsgRDFDataSource::unassertEnumFunc(void *aElement, void *aData)
+{
+  nsMsgRDFNotification* note = (nsMsgRDFNotification *)aData;
+  nsIRDFObserver* observer = (nsIRDFObserver *)aElement;
+
+  observer->OnUnassert(note->subject,
+                     note->property,
+                     note->object);
+  return PR_TRUE;
 }
