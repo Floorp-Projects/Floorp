@@ -23,8 +23,6 @@ DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
 MAKE_OBJ_TYPE	= DLL
-DLLNAME = webclient
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 MODULE=webclient 
 
@@ -67,7 +65,13 @@ LCFLAGS = \
 	$(LCFLAGS) \
 	-DBAL_INTERFACE \
 	$(NULL)
+
+DLLNAME = webclient_bal
+!else
+DLLNAME = webclient
 !endif
+
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LLIBS = \
 	$(DIST)\lib\gkweb.lib \
