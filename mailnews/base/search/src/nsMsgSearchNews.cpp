@@ -81,7 +81,7 @@ PRUnichar *nsMsgSearchNews::EncodeToWildmat (const PRUnichar *value)
 	// a case-insensitive match by specifying each case possibility for each character
 	// So, "FooBar" is encoded as "[Ff][Oo][Bb][Aa][Rr]"
 
-    PRUnichar *caseInsensitiveValue = (PRUnichar*) PR_Malloc ((4 * nsCRT::strlen(value)) + 1);
+  PRUnichar *caseInsensitiveValue = (PRUnichar*) nsMemory::Alloc(sizeof(PRUnichar) * ((4 * nsCRT::strlen(value)) + 1));
 	if (caseInsensitiveValue)
 	{
 		PRUnichar *walkValue = caseInsensitiveValue;
@@ -187,7 +187,7 @@ char *nsMsgSearchNews::EncodeTerm (nsIMsgSearchTerm *term)
 	// so we should search a string in either RFC1522 format and non-RFC1522 format
 		
 	PRUnichar *escapedValue = EscapeSearchUrl (caseInsensitiveValue);
-	nsCRT::free(caseInsensitiveValue);
+	nsMemory::Free(caseInsensitiveValue);
 	if (!escapedValue)
 		return nsnull;
 
@@ -425,99 +425,17 @@ void nsMsgSearchNews::ReportHits ()
 #endif // OLDWAY
 
 // ### this should take an nsIMsgFolder instead of a string location.
-void nsMsgSearchNews::ReportHit (nsIMsgDBHdr *pHeaders, const char *location)
+void nsMsgSearchNews::ReportHit (nsIMsgDBHdr *pHeaders, nsIMsgFolder *folder)
 {
     // this is totally filched from msg_SearchOfflineMail until I decide whether the 
     // right thing is to get them from the db or from NNTP
 
     nsresult err = NS_OK;
-    nsMsgResultElement *newResult = new nsMsgResultElement (this);
-
-    if (newResult)
-    {
-	    // This isn't very general. Just add the headers we think we'll be interested in
-	    // to the list of attributes per result element.
-	    nsMsgSearchValue *pValue = new nsMsgSearchValue;
-	    if (pValue)
-	    {
-            nsXPIDLCString subject;
-            PRUint32 flags;
-            pValue->attribute = nsMsgSearchAttrib::Subject;
-            pHeaders->GetFlags(&flags);
-            char *reString = (flags & MSG_FLAG_HAS_RE) ? (char *)"Re:" : (char *)"";
-            pHeaders->GetSubject(getter_Copies(subject));
-            pValue->string = PR_smprintf ("%s%s", reString, (const char*) subject); // hack. invoke cast operator by force
-            newResult->AddValue (pValue);
-	    }
-	    pValue = new nsMsgSearchValue;
-	    if (pValue)
-	    {
-		    pValue->attribute = nsMsgSearchAttrib::Sender;
-        nsXPIDLCString author;
-        pValue->string = (char*) PR_Malloc(64);
-        if (pValue->string)
-        {
-            pHeaders->GetAuthor(getter_Copies(author));
-            PL_strncpy(pValue->string, (const char *) author, 64);
-            newResult->AddValue (pValue);
-        }
-		    else
-			    err = NS_ERROR_OUT_OF_MEMORY;
-	    }
-	    pValue = new nsMsgSearchValue;
-	    if (pValue)
-	    {
-		    pValue->attribute = nsMsgSearchAttrib::Date;
-        pHeaders->GetDate(&pValue->u.date);
-		    newResult->AddValue (pValue);
-	    }
-	    pValue = new nsMsgSearchValue;
-	    if (pValue)
-	    {
-		    pValue->attribute = nsMsgSearchAttrib::MsgStatus;
-        pHeaders->GetFlags(&pValue->u.msgStatus);
-		    newResult->AddValue (pValue);
-	    }
-	    pValue = new nsMsgSearchValue;
-	    if (pValue)
-	    {
-		    pValue->attribute = nsMsgSearchAttrib::Priority;
-        pHeaders->GetPriority(&pValue->u.priority);
-		    newResult->AddValue (pValue);
-	    }
-	    pValue = new nsMsgSearchValue;
-	    if (pValue)
-	    {
-			    pValue->attribute = nsMsgSearchAttrib::Location;
-			    pValue->string = PL_strdup(location); 
-			    newResult->AddValue (pValue);
-	    }
-	    pValue = new nsMsgSearchValue;
-	    if (pValue)
-	    {
-		    pValue->attribute = nsMsgSearchAttrib::MessageKey;
-        pHeaders->GetMessageKey(&pValue->u.key);
-		    newResult->AddValue (pValue);
-	    }
-		  pValue = new nsMsgSearchValue;
-		  if (pValue)
-		  {
-        nsXPIDLCString messageId;
-        pValue->string = (char*) PR_Malloc(64);
-        if (pValue->string)
-        {
-  			  pValue->attribute = nsMsgSearchAttrib::MessageId;
-            pHeaders->GetMessageId(getter_Copies(messageId));
-            PL_strncpy(pValue->string, (const char *) messageId, 64);
-            newResult->AddValue (pValue);
-        }
-	    }
-	    if (!pValue)
-		    err = NS_ERROR_OUT_OF_MEMORY;
-        nsCOMPtr<nsIMsgSearchSession> session;
-        m_scope->GetSearchSession(getter_AddRefs(session));
-        session->AddResultElement (newResult);
-    }
+    nsCOMPtr<nsIMsgSearchSession> session;
+    nsCOMPtr <nsIMsgFolder> scopeFolder;
+    err = m_scope->GetFolder(getter_AddRefs(scopeFolder));
+    m_scope->GetSearchSession(getter_AddRefs(session));
+    session->AddSearchHit (pHeaders, scopeFolder);
 }
 
 

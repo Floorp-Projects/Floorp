@@ -98,7 +98,7 @@ interface nsIMsgSearchSession :  nsISupports {
 
 	[noscript] void AddResultElement(in nsMsgResultElement element);
 
-	void AddSearchHit(in nsIMsgHdr header);
+	void AddSearchHit(in nsIMsgHdr header, in nsIMsgFolder folder);
 
     readonly attribute long numResults;
     

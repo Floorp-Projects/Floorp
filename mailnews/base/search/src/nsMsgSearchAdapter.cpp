@@ -205,7 +205,7 @@ PRUnichar *nsMsgSearchAdapter::EscapeSearchUrl (const PRUnichar *nntpCommand)
 {
 	PRUnichar *result = nsnull;
 	// max escaped length is two extra characters for every character in the cmd.
-  PRUnichar *scratchBuf = (PRUnichar*) PR_Malloc(3*nsCRT::strlen(nntpCommand) + 1);
+  PRUnichar *scratchBuf = (PRUnichar*) PR_Malloc(sizeof(PRUnichar) * (3*nsCRT::strlen(nntpCommand) + 1));
 	if (scratchBuf)
 	{
 		PRUnichar *scratchPtr = scratchBuf;
@@ -238,7 +238,7 @@ nsMsgSearchAdapter::EscapeImapSearchProtocol(const PRUnichar *imapCommand)
 	PRUnichar *result = nsnull;
 	// max escaped length is one extra character for every character in the cmd.
     PRUnichar *scratchBuf =
-        (PRUnichar*) PR_Malloc (2*nsCRT::strlen(imapCommand) + 1);
+        (PRUnichar*) PR_Malloc (sizeof(PRUnichar) * (2*nsCRT::strlen(imapCommand) + 1));
 	if (scratchBuf)
 	{
 		PRUnichar *scratchPtr = scratchBuf;
@@ -268,7 +268,7 @@ nsMsgSearchAdapter::EscapeQuoteImapSearchProtocol(const PRUnichar *imapCommand)
 	PRUnichar *result = nsnull;
 	// max escaped length is one extra character for every character in the cmd.
     PRUnichar *scratchBuf =
-        (PRUnichar*) PR_Malloc (2*nsCRT::strlen(imapCommand) + 1);
+        (PRUnichar*) PR_Malloc (sizeof(PRUnichar) * (2*nsCRT::strlen(imapCommand) + 1));
 	if (scratchBuf)
 	{
 		PRUnichar *scratchPtr = scratchBuf;

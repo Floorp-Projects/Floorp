@@ -33,6 +33,7 @@
 class nsIMsgDBHdr;
 class nsMsgMailboxParser;
 class nsIMsgSearchScopeTerm;
+class nsIMsgFolder;
 
 class nsMsgSearchOfflineMail : public nsMsgSearchAdapter
 {

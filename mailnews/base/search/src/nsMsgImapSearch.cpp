@@ -70,101 +70,15 @@ NS_IMETHODIMP nsMsgSearchOnlineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
 {
     nsresult err = NS_OK;
 
-    nsMsgResultElement *newResult = new nsMsgResultElement (this);
-
-    NS_ASSERTION (newResult, "out of memory getting result element");
-    if (newResult)
+    nsCOMPtr<nsIMsgSearchSession> searchSession;
+    m_scope->GetSearchSession(getter_AddRefs(searchSession));
+    if (searchSession)
     {
-
-        // This isn't very general. Just add the headers we think we'll be interested in
-        // to the list of attributes per result element.
-        nsMsgSearchValue *pValue = new nsMsgSearchValue;
-        if (pValue)
-        {
-            nsXPIDLCString subject;
-            PRUint32 flags;
-            pValue->attribute = nsMsgSearchAttrib::Subject;
-            pHeaders->GetFlags(&flags);
-            char *reString = (flags & MSG_FLAG_HAS_RE) ? (char *)"Re:" : (char *)"";
-            pHeaders->GetSubject(getter_Copies(subject));
-            pValue->string = PR_smprintf ("%s%s", reString, (const char*) subject); // hack. invoke cast operator by force
-            newResult->AddValue (pValue);
-        }
-        pValue = new nsMsgSearchValue;
-        if (pValue)
-        {
-            nsXPIDLCString author;
-            pValue->attribute = nsMsgSearchAttrib::Sender;
-            pValue->string = (char*) PR_Malloc(64);
-            if (pValue->string)
-            {
-                pHeaders->GetAuthor(getter_Copies(author));
-                PL_strncpy(pValue->string, (const char *) author, 64);
-                newResult->AddValue (pValue);
-            }
-            else
-                err = NS_ERROR_OUT_OF_MEMORY;
-        }
-        pValue = new nsMsgSearchValue;
-        if (pValue)
-        {
-            pValue->attribute = nsMsgSearchAttrib::Date;
-            pHeaders->GetDate(&pValue->u.date);
-            newResult->AddValue (pValue);
-        }
-        pValue = new nsMsgSearchValue;
-        if (pValue)
-        {
-            pValue->attribute = nsMsgSearchAttrib::MsgStatus;
-            pHeaders->GetFlags(&pValue->u.msgStatus);
-            newResult->AddValue (pValue);
-        }
-        pValue = new nsMsgSearchValue;
-        if (pValue)
-        {
-            pValue->attribute = nsMsgSearchAttrib::Priority;
-            pHeaders->GetPriority(&pValue->u.priority);
-            newResult->AddValue (pValue);
-        }
-        pValue = new nsMsgSearchValue;
-        if (pValue)
-        {
-          nsXPIDLString folderName;
-            pValue->attribute = nsMsgSearchAttrib::Location;
-            nsCOMPtr<nsIMsgFolder> folder;
-            err = m_scope->GetFolder(getter_AddRefs(folder));
-            if (NS_SUCCEEDED(err) && folder)
-              folder->GetName(getter_Copies(folderName));
-            pValue->u.folder = folder;
-            NS_ADDREF(pValue->u.folder);
-           // pValue->u.wString = nsCRT::strdup((const PRUnichar *) folderName);
-            newResult->AddValue (pValue);
-        }
-        pValue = new nsMsgSearchValue;
-        if (pValue)
-        {
-            pValue->attribute = nsMsgSearchAttrib::MessageKey;
-            pHeaders->GetMessageKey(&pValue->u.key);
-            newResult->AddValue (pValue);
-        }
-        pValue = new nsMsgSearchValue;
-        if (pValue)
-        {
-            pValue->attribute = nsMsgSearchAttrib::Size;
-            pHeaders->GetMessageSize(&pValue->u.size);
-            newResult->AddValue (pValue);
-        }
-        if (!pValue)
-            err = NS_ERROR_OUT_OF_MEMORY;
-        nsCOMPtr<nsIMsgSearchSession> searchSession;
-        m_scope->GetSearchSession(getter_AddRefs(searchSession));
-        if (searchSession)
-        {
-          searchSession->AddResultElement(newResult);
-          searchSession->AddSearchHit(pHeaders);
-        }
-        //XXXX alecf do not checkin without fixing!        m_scope->m_searchSession->AddResultElement (newResult);
+      nsCOMPtr <nsIMsgFolder> scopeFolder;
+      err = m_scope->GetFolder(getter_AddRefs(scopeFolder));
+      searchSession->AddSearchHit(pHeaders, scopeFolder);
     }
+    //XXXX alecf do not checkin without fixing!        m_scope->m_searchSession->AddResultElement (newResult);
     return err;
 }
 

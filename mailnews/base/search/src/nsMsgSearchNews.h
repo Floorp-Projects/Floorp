@@ -44,8 +44,8 @@ public:
 	
     PRBool DuplicateHit(PRUint32 artNum) ;
     void CollateHits ();
+    void ReportHit (nsIMsgDBHdr *pHeaders, nsIMsgFolder *folder);
     static int PR_CALLBACK CompareArticleNumbers (const void *v1, const void *v2, void *data);
-    void ReportHit (nsIMsgDBHdr *pHeaders, const char *location);
 
 protected:
 	nsCString m_encoding;

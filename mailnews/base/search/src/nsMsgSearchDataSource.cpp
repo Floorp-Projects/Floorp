@@ -67,7 +67,7 @@ NS_IMPL_ISUPPORTS2(nsMsgSearchDataSource,
                    nsIMsgSearchNotify)
 
     NS_IMETHODIMP
-nsMsgSearchDataSource::OnSearchHit(nsIMsgHdr* aMessage)
+nsMsgSearchDataSource::OnSearchHit(nsIMsgHdr* aMessage, nsIMsgFolder *folder)
 {
     nsresult rv;
     // this probably wont work. Need to convert nsMsgDBHdr -> nsMessage

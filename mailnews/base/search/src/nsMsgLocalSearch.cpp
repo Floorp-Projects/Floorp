@@ -691,8 +691,9 @@ nsresult nsMsgSearchOfflineMail::Search (PRBool *aDone)
 
       // Add search hits to the results list
       if (NS_SUCCEEDED(err) && match)
+      {
         AddResultElement (msgDBHdr);
-
+      }
 //      m_scope->m_frame->IncrementOfflineProgress();
     }
 
@@ -733,95 +734,13 @@ NS_IMETHODIMP nsMsgSearchOfflineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
 {
     nsresult err = NS_OK;
 
-    nsMsgResultElement *newResult = new nsMsgResultElement (this);
-
-    if (newResult)
+    nsCOMPtr<nsIMsgSearchSession> searchSession;
+    m_scope->GetSearchSession(getter_AddRefs(searchSession));
+    if (searchSession)
     {
-        NS_ASSERTION (newResult, "out of memory adding search result");
-
-        // This isn't very general. Just add the headers we think we'll be interested in
-        // to the list of attributes per result element.
-        nsMsgSearchValue *pValue = new nsMsgSearchValue;
-        if (pValue)
-        {
-            nsXPIDLCString subject;
-			PRUint32 msgFlags;
-
-			// Don't even bother to look at expunged messages awaiting compression
-			pHeaders->GetFlags(&msgFlags);
-            pValue->attribute = nsMsgSearchAttrib::Subject;
-            char *reString = (msgFlags & MSG_FLAG_HAS_RE) ? (char *)"Re: " : (char *)"";
-            pHeaders->GetSubject(getter_Copies(subject));
-            pValue->string = PR_smprintf ("%s%s", reString, (const char*)subject);
-            newResult->AddValue (pValue);
-        }
-        pValue = new nsMsgSearchValue;
-        if (pValue)
-        {
-            pValue->attribute = nsMsgSearchAttrib::Sender;
-			nsXPIDLCString author;
-            pHeaders->GetAuthor(getter_Copies(author));
-			pValue->string = PL_strdup(author);
-            newResult->AddValue (pValue);
-            err = NS_ERROR_OUT_OF_MEMORY;
-        }
-        pValue = new nsMsgSearchValue;
-        if (pValue)
-        {
-            pValue->attribute = nsMsgSearchAttrib::Date;
-            pHeaders->GetDate(&pValue->u.date);
-            newResult->AddValue (pValue);
-        }
-        pValue = new nsMsgSearchValue;
-        if (pValue)
-        {
-            pValue->attribute = nsMsgSearchAttrib::MsgStatus;
-            pHeaders->GetFlags(&pValue->u.msgStatus);
-            newResult->AddValue (pValue);
-        }
-        pValue = new nsMsgSearchValue;
-        if (pValue)
-        {
-            pValue->attribute = nsMsgSearchAttrib::Priority;
-            pHeaders->GetPriority(&pValue->u.priority);
-            newResult->AddValue (pValue);
-        }
-        pValue = new nsMsgSearchValue;
-        if (pValue)
-        {
-            pValue->attribute = nsMsgSearchAttrib::Location;
-            m_scope->GetFolder(&pValue->u.folder);
-//            pValue->u.folder = m_scope->m_folder;
-//            NS_IF_ADDREF(pValue->u.folder); // use nsIMsgFolder, not string
-#ifdef HAVE_SEARCH_PORT
-            pValue->u.string = PL_strdup(m_scope->m_folder->GetName());
-#endif
-            newResult->AddValue (pValue);
-        }
-        pValue = new nsMsgSearchValue;
-        if (pValue)
-        {
-            pValue->attribute = nsMsgSearchAttrib::MessageKey;
-            pHeaders->GetMessageKey(&pValue->u.key);
-            newResult->AddValue (pValue);
-        }
-        pValue = new nsMsgSearchValue;
-        if (pValue)
-        {
-            pValue->attribute = nsMsgSearchAttrib::Size;
-            pHeaders->GetMessageSize(&pValue->u.size);
-            newResult->AddValue (pValue);
-        }
-        if (!pValue)
-            err = NS_ERROR_OUT_OF_MEMORY;
-
-        nsCOMPtr<nsIMsgSearchSession> searchSession;
-        m_scope->GetSearchSession(getter_AddRefs(searchSession));
-        if (searchSession)
-        {
-          searchSession->AddResultElement(newResult);
-          searchSession->AddSearchHit(pHeaders);
-        }
+      nsCOMPtr <nsIMsgFolder> scopeFolder;
+      err = m_scope->GetFolder(getter_AddRefs(scopeFolder));
+      searchSession->AddSearchHit(pHeaders, scopeFolder);
     }
     return err;
 }

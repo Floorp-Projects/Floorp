@@ -499,7 +499,7 @@ NS_IMETHODIMP nsMsgSearchSession::GetRunningAdapter (nsIMsgSearchAdapter **aSear
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgSearchSession::AddSearchHit(nsIMsgHdr *header)
+NS_IMETHODIMP nsMsgSearchSession::AddSearchHit(nsIMsgHdr *header, nsIMsgFolder *folder)
 {
   if (m_listenerList)
   {
@@ -511,7 +511,7 @@ NS_IMETHODIMP nsMsgSearchSession::AddSearchHit(nsIMsgHdr *header)
       m_listenerList->QueryElementAt(i, NS_GET_IID(nsIMsgSearchNotify),
                                (void **)getter_AddRefs(pListener));
       if (pListener)
-        pListener->OnSearchHit(header);
+        pListener->OnSearchHit(header, folder);
 
     }
   }
