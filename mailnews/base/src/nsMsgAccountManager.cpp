@@ -253,7 +253,8 @@ nsMsgAccountManager::AddAccount(nsIMsgAccount *account)
 
     // check for uniqueness
     nsCOMPtr<nsIMsgIncomingServer> server;
-    account->GetIncomingServer(getter_AddRefs(server));
+    rv = account->GetIncomingServer(getter_AddRefs(server));
+    if (NS_FAILED(rv)) return rv;
     if (!isUnique(server)) {
       // this means the server was found, which is bad.
       return NS_ERROR_UNEXPECTED;
@@ -966,7 +967,7 @@ nsMsgAccountManager::findIdentitiesForServer(nsHashKey *key,
   
   nsIMsgIncomingServer* thisServer;
   rv = account->GetIncomingServer(&thisServer);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) return PR_TRUE;
   
   // ugh, this is bad. Need a better comparison method
   if (entry->server == thisServer) {
