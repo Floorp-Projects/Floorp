@@ -39,10 +39,10 @@
 
 
 /* Approximate size of pixel data chunks sent to the FE for display */
-#define OUTPUT_CHUNK_SIZE        15000
+#define OUTPUT_CHUNK_SIZE        150000
 
 /* Delay from decode to display of first scanline, in milliseconds. */
-#define ROW_OUTPUT_INITIAL_DELAY    50
+#define ROW_OUTPUT_INITIAL_DELAY    32
 
 /* Delays between subsequent sets of scanlines */
 #define ROW_OUTPUT_DELAY           300
