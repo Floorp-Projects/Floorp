@@ -34,7 +34,7 @@ Contributor(s): ______________________________________. -->
   <script language="JavaScript" src="chrome://global/content/selectDialog.js" />
   <keyset id="keyset"/>
   <box align="vertical" style="width: 24em;margin: 5px;">
-    <div id="info.txt" style="margin-left:2em; margin-right:2em; margin-top:5px;"/>
+    <html id="info.txt" style="margin-left:2em; margin-right:2em; margin-top:5px;"/>
     <box orient="vertical">
       <tree rows="4" class="list" id="list" flex="1"/>
     </box>
