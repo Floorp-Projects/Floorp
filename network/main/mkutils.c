@@ -2269,6 +2269,34 @@ NET_EscapeHTML(const char * string)
 	return(rv);
 }
 
+/* URL-encode all '"' characters in a string into %22.
+ * returns a string that must be freed
+ */
+PUBLIC char *
+NET_EscapeDoubleQuote(const char * string)
+{
+	char *rv = (char *) PR_Malloc(PL_strlen(string)*3 + 1);
+	char *ptr = rv;
+	if (rv) 
+	  {
+		for (; *string != '\0'; string++) 
+		  {
+			if (*string == '"')
+			  {
+				*ptr++ = '%';
+				*ptr++ = '2';
+				*ptr++ = '2';
+			  }
+			else
+			  {
+				*ptr++ = *string;
+			  }
+		  }
+		*ptr = '\0';
+	  }
+	return rv;
+}
+
 
 PUBLIC char *
 NET_SpaceToPlus(char * string)

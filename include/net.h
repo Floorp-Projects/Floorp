@@ -1912,6 +1912,12 @@ extern char* NET_ScanHTMLForURLs(const char* input);
 extern char * NET_EscapeHTML(const char * string);
 
 
+/* escapes doubles quotes in a url, to protect
+ * the html page embedding the url.
+ */
+extern char * NET_EscapeDoubleQuote(const char * string);
+
+
 /* register a newsrc file mapping
  */
 extern Bool NET_RegisterNewsrcFile(char *filename, 
