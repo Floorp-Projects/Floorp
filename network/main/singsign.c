@@ -89,10 +89,62 @@ struct LO_FormSubmitData_struct {
  * Same applies to FE_SelectDialog because context doesn't exist when
  * SI_RestoreSignonData is called
  */
+static const char *pref_useDialogs =
+    "wallet.useDialogs";
+PRIVATE Bool si_useDialogs = FALSE;
+
+PRIVATE void
+si_SetUsingDialogsPref(Bool x)
+{
+    /* do nothing if new value of pref is same as current value */
+    if (x == si_useDialogs) {
+        return;
+    }
+
+    /* change the pref */
+    si_useDialogs = x;
+}
+
+MODULE_PRIVATE int PR_CALLBACK
+si_UsingDialogsPrefChanged(const char * newpref, void * data)
+{
+    Bool x;
+    PREF_GetBoolPref(pref_useDialogs, &x);
+    si_SetUsingDialogsPref(x);
+    return PREF_NOERROR;
+}
+
+void
+si_RegisterUsingDialogsPrefCallbacks(void)
+{
+    Bool x = FALSE; /* initialize to default value in case PREF_GetBoolPref fails */
+    static Bool first_time = TRUE;
+
+    if(first_time)
+    {
+        first_time = FALSE;
+        PREF_GetBoolPref(pref_useDialogs, &x);
+        si_SetUsingDialogsPref(x);
+        PREF_RegisterCallback(pref_useDialogs, si_UsingDialogsPrefChanged, NULL);
+    }
+}
+
+PRIVATE Bool
+si_GetUsingDialogsPref(void)
+{
+    si_RegisterUsingDialogsPrefCallbacks();
+    return si_useDialogs;
+}
+
 Bool
 MyFE_Confirm(const char* szMessage)
 {
     char c;
+
+    if (!si_GetUsingDialogsPref()) {
+      return JS_TRUE;
+    }
+
     fprintf(stdout, "%c%s  (y/n)?  ", '\007', szMessage); /* \007 is BELL */
     for (;;) {
         c = getchar();
@@ -111,6 +163,12 @@ MyFE_SelectDialog
 {
     char c;
     int i;
+
+    if (!si_GetUsingDialogsPref()) {
+      *pCount = 0;
+      return JS_TRUE;
+    }
+
     fprintf(stdout, "%s\n", szMessage);
     for (i=0; i<*pCount; i++) {
         fprintf(stdout, "%d: %s\n", i, pList[i]);
@@ -1455,6 +1513,33 @@ si_LoadSignonDataFromKeychain() {
 #endif
 
 /*
+ * Temporary routines until real encryption routines become available
+ */
+char *
+MY_SECNAV_UnMungeString(char * text) {
+  char * result = NULL;
+  char* p;
+  StrAllocCopy(result, text);
+  p = result;
+  while (*p) {
+    *(p++) ^= 0xff;
+  }
+  return result;
+}
+
+char *
+MY_SECNAV_MungeString(char * text) {
+  char * result = NULL;
+  char* p;
+  StrAllocCopy(result, text);
+  p = result;
+  while (*p) {
+    *(p++) ^= 0xff;
+  }
+  return result;
+}
+
+/*
  * Load signon data from disk file
  * The parameter passed in on entry is ignored
  */
@@ -1557,7 +1642,7 @@ SI_LoadSignonData(char * filename) {
             value_array[submit.value_cnt] = NULL;
             /* note that we need to skip over leading '=' of value */
             if (type_array[submit.value_cnt] == FORM_TYPE_PASSWORD) {
-                if ((unmungedValue=SECNAV_UnMungeString(buffer+1)) == NULL) {
+                if ((unmungedValue=MY_SECNAV_UnMungeString(buffer+1)) == NULL) {
                     /* this is the free source and there is no obscuring of passwords */
                     unmungedValue = buffer+1;
                     StrAllocCopy(value_array[submit.value_cnt++], buffer+1);
@@ -1860,7 +1945,7 @@ si_SaveSignonDataLocked(char * filename) {
                     XP_FileWrite(LINEBREAK, -1, fp);
                     XP_FileWrite("=", -1, fp); /* precede values with '=' */
                     if (data->isPassword) {
-                        if ((mungedValue = SECNAV_MungeString(data->value))) {
+                        if ((mungedValue = MY_SECNAV_MungeString(data->value))) {
                             XP_FileWrite(mungedValue, -1, fp);
                             XP_FREE(mungedValue);
                         } else {
@@ -2050,7 +2135,7 @@ SI_RestoreSignonData
         data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
         if(data->isPassword && name && XP_STRCMP(data->name, name)==0) {
             /* current item is first item on form and is a password */
-            user = si_GetUserForChangeForm(URLName, MK_SIGNON_PASSWORDS_FETCH);
+            user = (URLName, MK_SIGNON_PASSWORDS_FETCH);
             if (user) {
                 /* user has confirmed it's a change-of-password form */
                 data_ptr = user->signonData_list;
