@@ -40,10 +40,13 @@
 #include "lexer.h"
 #include <vector>
 
+#ifdef DIKDIK
 #include "property.h"
+#endif
 
 namespace JavaScript {
 
+#ifdef DIKDIK
     // forward declarations to classes in the back-end
     namespace JS2Runtime {
         class JSFunction;
@@ -51,7 +54,7 @@ namespace JavaScript {
         class JSObject;
         class Attribute;
     }
-
+#endif
 
 //
 // Pragmas
@@ -125,8 +128,10 @@ namespace JavaScript {
         ExprNode *initializer;          // Initial value expression or nil if not provided
         bool constant;                  // true for const variables and parameters
 
+#ifdef DikDik
         JS2Runtime::Property *prop;     // the sematics/codegen passes stuff their data in here.
         JS2Runtime::JSObject *scope;    // ditto
+#endif
 
         VariableBinding(size_t pos, const StringAtom *name, ExprNode *type, ExprNode *initializer, bool constant):
                 ParseNode(pos), next(0), name(name), type(type), initializer(initializer), constant(constant) {}
@@ -505,7 +510,9 @@ namespace JavaScript {
     struct AttributeStmtNode: StmtNode {
         ExprNode *attributes;           // Directive's attributes; nil if none
 
+#ifdef DIKDIK
         JS2Runtime::Attribute *attributeValue;      // used by backend
+#endif
 
         AttributeStmtNode(size_t pos, Kind kind, ExprNode *attributes): StmtNode(pos, kind), attributes(attributes) {}
 
@@ -590,7 +597,9 @@ namespace JavaScript {
         bool constant;                  // true for const variables
         StmtNode *stmt;                 // The catch clause's body; non-nil only
 
+#ifdef DIKDIK
         JS2Runtime::Property *prop;     // the sematics/codegen passes stuff their data in here.
+#endif
 
         CatchClause(size_t pos, const StringAtom &name, ExprNode *type, bool constant, StmtNode *stmt):
                 ParseNode(pos), next(0), name(name), type(type), constant(constant), stmt(stmt) {ASSERT(stmt);}
@@ -637,8 +646,9 @@ namespace JavaScript {
 
     struct FunctionStmtNode: AttributeStmtNode {
         FunctionDefinition function;    // Function definition
+#ifdef DIKDIK
         JS2Runtime::JSFunction *mFunction; // used by backend
-
+#endif
         FunctionStmtNode(size_t pos, Kind kind, ExprNode *attributes): AttributeStmtNode(pos, kind, attributes) {}
 
         void print(PrettyPrinter &f, bool noSemi) const;
@@ -657,7 +667,9 @@ namespace JavaScript {
         ExprNode *superclass;           // Superclass expression (classes only); nil if omitted
         BlockStmtNode *body;            // The class's body; nil if omitted
 
+#ifdef DIKDIK
         JS2Runtime::JSType *mType;      // used by backend
+#endif
 
         ClassStmtNode(size_t pos, ExprNode *attributes, const StringAtom &name, ExprNode *superclass, BlockStmtNode *body):
                 NamespaceStmtNode(pos, Class, attributes, name), superclass(superclass), body(body) {}
@@ -716,7 +728,10 @@ namespace JavaScript {
         IdentifierList *packageIdList;  // The package name as a list of identifiers; may be nil
         BlockStmtNode *body;            // The package's body; non-nil only
 
+#ifdef DIKDIK
         JS2Runtime::JSObject *scope;    // the sematics/codegen passes stuff their data in here.
+#endif
+
 
         PackageStmtNode(size_t pos, IdentifierList *packageIdList, BlockStmtNode *body):
                 StmtNode(pos, Package), packageIdList(packageIdList), body(body) {ASSERT(body);}

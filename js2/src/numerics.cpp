@@ -36,7 +36,7 @@
 #include <cfloat>
 #include "numerics.h"
 #include "parser.h"
-#include "js2runtime.h"
+//#include "js2runtime.h"
 
 #include "fdlibm_ns.h"
 
@@ -248,7 +248,7 @@ InitNumerics::InitNumerics()
     JS::maxValue = 1.7976931348623157E+308;
 }
 
-
+#ifdef DIKDIK
 // had to move these here since they depend upon the values
 // initialized above, and we can't guarantee order other than
 // lexically in a single file.
@@ -261,7 +261,7 @@ js2val JS::JS2Runtime::kNegativeZero = JSValue::newNumber(-0.0);
 js2val JS::JS2Runtime::kPositiveZero = JSValue::newNumber(0.0);
 js2val JS::JS2Runtime::kNegativeInfinity = JSValue::newNumber(negativeInfinity);
 js2val JS::JS2Runtime::kPositiveInfinity = JSValue::newNumber(positiveInfinity);
-
+#endif
 //
 // Portable double-precision floating point to string and back conversions
 //
