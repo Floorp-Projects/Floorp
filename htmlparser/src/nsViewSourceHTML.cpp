@@ -1092,11 +1092,9 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
         if((ePlainText!=mDocType) && mParser && (NS_OK==result)) {
           CObserverService* theService=mParser->GetObserverService();
           if(theService) {
-            CParserContext*   pc=mParser->PeekContext(); 
-            void*             theDocID=(pc)? pc->mKey:0; 
-            eHTMLTags         theTag=(eHTMLTags)theToken->GetTypeID();  
-
-            result=theService->Notify(theTag,theContext.mTokenNode,theDocID, NS_ConvertToString(kViewSourceCommand), mParser);
+            eHTMLTags theTag=(eHTMLTags)theToken->GetTypeID(); 
+            const nsISupportsParserBundle*  bundle=mParser->GetParserBundle();
+            result=theService->Notify(theTag,theContext.mTokenNode,(void*)bundle, mMimeType, mParser);
           }
         }
       }

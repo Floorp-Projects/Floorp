@@ -28,7 +28,6 @@
 #include "nsITokenizer.h"
 #include "nsDTDUtils.h"
 
-
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kClassIID, NS_PARSER_NODE_IID); 
 static NS_DEFINE_IID(kIParserNodeIID, NS_IPARSER_NODE_IID); 
@@ -39,6 +38,7 @@ const nsString& GetEmptyString() {
   return gEmptyStr;
 }
 
+
 /**
  *  Default constructor
  *  
@@ -46,7 +46,7 @@ const nsString& GetEmptyString() {
  *  @param   aToken -- token to init internal token
  *  @return  
  */
-nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator* aTokenAllocator): 
+nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator* aTokenAllocator,nsNodeAllocator* aNodeAllocator): 
     nsIParserNode() {
   NS_INIT_REFCNT();
   MOZ_COUNT_CTOR(nsCParserNode);
@@ -61,15 +61,9 @@ nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator
   mUseCount=0;
   mSkippedContent=0;
   mGenericState=PR_FALSE;
-}
-
-static void RecycleTokens(nsTokenAllocator* aTokenAllocator,nsDeque& aDeque) {
-  CToken* theToken=0;
-  if(aTokenAllocator) {
-    while((theToken=(CToken*)aDeque.Pop())){
-      IF_FREE(theToken);
-    }
-  }
+#ifdef HEAP_ALLOCATED_NODES
+  mNodeAllocator=aNodeAllocator;
+#endif
 }
 
 /**
@@ -83,6 +77,14 @@ static void RecycleTokens(nsTokenAllocator* aTokenAllocator,nsDeque& aDeque) {
 nsCParserNode::~nsCParserNode() {
   MOZ_COUNT_DTOR(nsCParserNode);
   ReleaseAll();
+#ifdef HEAP_ALLOCATED_NODES
+  if(mNodeAllocator) {
+    mNodeAllocator->Recycle(this);
+  }
+  mNodeAllocator=nsnull;
+#endif
+  mTokenAllocator=0;
+  mLineNumber=0;
 }
 
 
@@ -97,11 +99,15 @@ NS_IMPL_RELEASE(nsCParserNode)
  *  @return  
  */
 
-nsresult nsCParserNode::Init(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator* aTokenAllocator) {
+nsresult nsCParserNode::Init(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator* aTokenAllocator,nsNodeAllocator* aNodeAllocator) {
   mLineNumber=aLineNumber;
   mTokenAllocator=aTokenAllocator;
-  if(mAttributes && (mAttributes->GetSize()))
-    RecycleTokens(mTokenAllocator,*mAttributes);
+  if(mAttributes && (mAttributes->GetSize())) {
+    CToken* theAttrToken=0;
+    while((theAttrToken=NS_STATIC_CAST(CToken*,mAttributes->Pop()))) {
+      IF_FREE(theAttrToken);
+    }
+  }
   mToken=aToken;
   IF_HOLD(mToken);
   mGenericState=PR_FALSE;
@@ -109,6 +115,9 @@ nsresult nsCParserNode::Init(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator
   if(mSkippedContent) {
     mSkippedContent->Truncate();
   }
+#ifdef HEAP_ALLOCATED_NODES
+  mNodeAllocator=aNodeAllocator;
+#endif
   return NS_OK;
 }
 
@@ -369,30 +378,18 @@ void nsCParserNode::GetSource(nsString& aString) {
  */
 nsresult nsCParserNode::ReleaseAll() {
   if(mAttributes) {
-
-    //fixed a bug that patrick found, where the attributes deque existed
-    //but was empty. In that case, the attributes deque itself was leaked.
-    //THANKS PATRICK!
-    // Umm...why is this a useful comment in the source?
-
-    if(mTokenAllocator) {
-      RecycleTokens(mTokenAllocator,*mAttributes);
-    } 
-    else {
-      CToken* theToken=(CToken*)mAttributes->Pop();
-      while(theToken){
-        IF_FREE(theToken);
-        theToken=(CToken*)mAttributes->Pop();
-      }
+    CToken* theAttrToken=0;
+    while((theAttrToken=NS_STATIC_CAST(CToken*,mAttributes->Pop()))) {
+      IF_FREE(theAttrToken);
     }
     delete mAttributes;
     mAttributes=0;
   }
   if(mSkippedContent) {
     delete mSkippedContent;
+    mSkippedContent=0;
   }
   IF_FREE(mToken);
-  mSkippedContent=0;
   return NS_OK;
 }
 

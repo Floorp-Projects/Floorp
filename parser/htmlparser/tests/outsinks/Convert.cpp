@@ -22,7 +22,6 @@
 
 #include <ctype.h>      // for isdigit()
 
-#include "CNavDTD.h"
 #include "nsParserCIID.h"
 #include "nsIParser.h"
 #include "nsIHTMLContentSink.h"
@@ -160,9 +159,11 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType,
 #endif /* USE_SERIALIZER */
 
   parser->SetContentSink(sink);
-  nsIDTD* dtd = nsnull;
-  if (inType.EqualsWithConversion("text/html"))
-    rv = NS_NewNavHTMLDTD(&dtd);
+   nsCOMPtr<nsIDTD> dtd;
+  if (inType.EqualsWithConversion("text/html")) {
+    static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
+    rv=nsComponentManager::CreateInstance(kNavDTDCID,nsnull,NS_GET_IID(nsIDTD),getter_AddRefs(dtd));
+  }
   else
   {
     printf("Don't know how to deal with non-html input!\n");
@@ -184,8 +185,6 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType,
     printf("Parse() failed! 0x%x\n", rv);
     return rv;
   }
-
-  NS_IF_RELEASE(dtd);
   NS_RELEASE(parser);
 
   if (compareAgainst.Length() > 0)

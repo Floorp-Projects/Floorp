@@ -136,7 +136,6 @@ nsParserService::IsBlock(PRInt32 aId, PRBool& aIsBlock) const
 //----------------------------------------------------------------------
 
 static NS_DEFINE_CID(kParserCID, NS_PARSER_IID);
-static NS_DEFINE_CID(kParserNodeCID, NS_PARSER_NODE_IID);
 static NS_DEFINE_CID(kLoggingSinkCID, NS_LOGGING_SINK_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID, NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
@@ -154,7 +153,6 @@ struct Components {
 
 static Components gComponents[] = {
   { "Parser", &kParserCID },
-  { "ParserNode", &kParserNodeCID },
   { "Logging sink", &kLoggingSinkCID },
   { "Well formed DTD", &kWellFormedDTDCID },
   { "Navigator HTML DTD", &kNavDTDCID },
@@ -169,7 +167,6 @@ static Components gComponents[] = {
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]));
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParser)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCParserNode)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLoggingSink)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CWellFormedDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CNavDTD)
@@ -276,13 +273,6 @@ nsParserModule::GetClassObject(nsIComponentManager *aCompMgr,
                                 &nsParserConstructor);
     }
     fact = mParserFactory;
-  }
-  else if (aClass.Equals(kParserNodeCID)) {
-    if (!mParserNodeFactory) {
-      rv = NS_NewGenericFactory(getter_AddRefs(mParserNodeFactory), 
-                                &nsCParserNodeConstructor);
-    }
-    fact = mParserNodeFactory;
   }
   else if (aClass.Equals(kLoggingSinkCID)) {
     if (!mLoggingSinkFactory) {

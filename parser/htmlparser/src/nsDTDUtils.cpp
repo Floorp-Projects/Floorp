@@ -132,6 +132,9 @@ void nsEntryStack::Push(const nsIParserNode* aNode,nsEntryStack* aStyleStack) {
 
     mEntries[mCount].mTag=(eHTMLTags)aNode->GetNodeType();
     mEntries[mCount].mNode=(nsIParserNode*)aNode;
+    
+    NS_ADDREF(mEntries[mCount].mNode);
+    
     mEntries[mCount].mParent=aStyleStack;
     mEntries[mCount++].mStyles=0;
   }
@@ -159,6 +162,9 @@ void nsEntryStack::PushFront(const nsIParserNode* aNode,nsEntryStack* aStyleStac
 
     mEntries[0].mTag=(eHTMLTags)aNode->GetNodeType();
     mEntries[0].mNode=(nsIParserNode*)aNode;
+    
+    NS_ADDREF(mEntries[0].mNode);
+    
     mEntries[0].mParent=aStyleStack;
     mEntries[0].mStyles=0;
     mCount++;
@@ -210,6 +216,7 @@ nsIParserNode* nsEntryStack::Remove(PRInt32 anIndex,eHTMLTags aTag) {
     for(theIndex=anIndex;theIndex<mCount;theIndex++){
       mEntries[theIndex]=mEntries[theIndex+1];
     }
+
     mEntries[mCount].mNode=0;
     mEntries[mCount].mStyles=0;
 
@@ -356,8 +363,6 @@ eHTMLTags nsEntryStack::Last() const {
  ***************************************************************/
 
 
-CNodeRecycler   *nsDTDContext::gNodeRecycler=0;
-
 /**
  * 
  * @update	gess 04.21.2000
@@ -370,6 +375,7 @@ nsDTDContext::nsDTDContext() : mStack(), mEntities(0){
   mTableStates=0;
   mCounters=0;
   mTokenAllocator=0;
+  mNodeAllocator=0;
   mAllBits=0;
 
 #ifdef  NS_DEBUG
@@ -790,7 +796,7 @@ void nsDTDContext::ResetCounters(void) {
 
   returns the newly incremented value for the (determined) group.
  **********************************************************/
-PRInt32 nsDTDContext::IncrementCounter(eHTMLTags aTag,nsCParserNode& aNode,nsString& aResult) {
+PRInt32 nsDTDContext::IncrementCounter(eHTMLTags aTag,nsIParserNode& aNode,nsString& aResult) {
 
   PRInt32     result=0;
 
@@ -1039,7 +1045,8 @@ void nsDTDContext::PushStyles(nsEntryStack *aStyles){
       // If you're here it means that we have hit the rock bottom
       // ,of the stack, and there's no need to handle anymore styles.
       // Fix for bug 29048
-      gNodeRecycler->RecycleNode((nsCParserNode*)aStyles->Pop());
+      nsIParserNode* theNode=aStyles->Pop();
+      NS_IF_RELEASE(theNode);
       delete aStyles;
       aStyles=0;
     }
@@ -1119,50 +1126,11 @@ nsIParserNode* nsDTDContext::RemoveStyle(eHTMLTags aTag){
 }
 
 /**
- * 
- * @update  harishd 04/10/00
- */
-nsresult nsDTDContext::GetNodeRecycler(CNodeRecycler*& aNodeRecycler){
-  nsresult result=NS_OK;
-  if(!gNodeRecycler) {
-    gNodeRecycler=new CNodeRecycler();
-    if(gNodeRecycler==0) result=NS_ERROR_OUT_OF_MEMORY;
-  }
-  aNodeRecycler=gNodeRecycler;
-  return result;
-}
-
-/**
- * 
- * @update  rickg 16June2000
- */
-void nsDTDContext::RecycleNode(nsCParserNode* aNode) {
-  nsresult result=NS_OK;
-
-  if(aNode) {
-    if(!gNodeRecycler)
-      result=nsDTDContext::GetNodeRecycler(gNodeRecycler);
-
-    if(NS_SUCCEEDED(result)) {
-      gNodeRecycler->RecycleNode(aNode);
-    }
-    else {
-      delete aNode;
-    }
-  }
-}
-
-
-/**
  * This gets called when the parser module is getting unloaded
  * 
  * @return  nada
  */
 void nsDTDContext::ReleaseGlobalObjects(){
-  if(gNodeRecycler) {
-    delete gNodeRecycler;
-    gNodeRecycler=0;
-  }
 }
 
 
@@ -1170,9 +1138,9 @@ void nsDTDContext::ReleaseGlobalObjects(){
   Now define the nsTokenAllocator class...
  **************************************************************/
 
-static const size_t kBucketSizes[]    ={sizeof(CStartToken),sizeof(CAttributeToken),sizeof(CCommentToken),sizeof(CEndToken)};
-static const PRInt32 kNumBuckets      = sizeof(kBucketSizes) / sizeof(size_t);
-static const PRInt32 kInitialPoolSize = NS_SIZE_IN_HEAP(sizeof(CToken)) * 1536;
+static const size_t  kTokenBuckets[]       ={sizeof(CStartToken),sizeof(CAttributeToken),sizeof(CCommentToken),sizeof(CEndToken)};
+static const PRInt32 kNumTokenBuckets      = sizeof(kTokenBuckets) / sizeof(size_t);
+static const PRInt32 kInitialTokenPoolSize = NS_SIZE_IN_HEAP(sizeof(CToken)) * 200;
 
 /**
  * 
@@ -1183,7 +1151,7 @@ nsTokenAllocator::nsTokenAllocator() {
 
   MOZ_COUNT_CTOR(nsTokenAllocator);
 
-  mArenaPool.Init("TheTokenPool", kBucketSizes, kNumBuckets, kInitialPoolSize);
+  mArenaPool.Init("TokenPool", kTokenBuckets, kNumTokenBuckets, kInitialTokenPoolSize);
 
 #ifdef NS_DEBUG
   int i=0;
@@ -1295,7 +1263,6 @@ CToken* nsTokenAllocator::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag
   return result;
 }
 
-#define DEBUG_TRACK_NODES
 #ifdef DEBUG_TRACK_NODES 
 
 static nsCParserNode* gAllNodes[100];
@@ -1329,69 +1296,72 @@ void RemoveNode(nsCParserNode *aNode) {
 
 #endif 
 
-CNodeRecycler::CNodeRecycler(): mSharedNodes(0) {
 
-  MOZ_COUNT_CTOR(CNodeRecycler);
-
+#ifdef HEAP_ALLOCATED_NODES
+nsNodeAllocator::nsNodeAllocator():mSharedNodes(0){
+#ifdef DEBUG_TRACK_NODES
+  mCount=0;
+#endif
+#else 
+  static const size_t  kNodeBuckets[]       ={sizeof(nsCParserNode)};
+  static const PRInt32 kNumNodeBuckets      = sizeof(kNodeBuckets) / sizeof(size_t);
+  static const PRInt32 kInitialNodePoolSize = NS_SIZE_IN_HEAP(sizeof(nsCParserNode)) * 50;
+nsNodeAllocator::nsNodeAllocator() {
+  mNodePool.Init("NodePool", kNodeBuckets, kNumNodeBuckets, kInitialNodePoolSize);
+#endif
+  MOZ_COUNT_CTOR(nsNodeAllocator);
 }
+  
+nsNodeAllocator::~nsNodeAllocator() {
+  MOZ_COUNT_DTOR(nsNodeAllocator);
 
-CNodeRecycler::~CNodeRecycler() {
-
-  MOZ_COUNT_DTOR(CNodeRecycler);
-
+#ifdef HEAP_ALLOCATED_NODES
   nsCParserNode* theNode=0;
 
   while((theNode=(nsCParserNode*)mSharedNodes.Pop())){
-#ifdef  DEBUG_TRACK_NODES
+#ifdef DEBUG_TRACK_NODES
     RemoveNode(theNode);
 #endif
-    delete theNode;
+    ::operator delete(theNode); 
+    theNode=nsnull;
   }
-
 #ifdef DEBUG_TRACK_NODES
-  if(0<gAllNodeCount) {
-    printf("%i nodes leaked!\n",gAllNodeCount);
+  if(mCount) {
+    printf("**************************\n");
+    printf("%i out of %i nodes leaked!\n",gAllNodeCount,mCount);
+    printf("**************************\n");
   }
 #endif
-
+#endif
 }
-
-void CNodeRecycler::RecycleNode(nsCParserNode* aNode) {
   
-  if(aNode && (!aNode->mUseCount)) {
-        
-    IF_FREE(aNode->mToken);
+nsIParserNode* nsNodeAllocator::CreateNode(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator* aTokenAllocator) {
+  nsCParserNode* result=0;
 
-    CToken* theToken=0;
-    while((theToken=(CToken*)aNode->PopAttributeToken())){
-      IF_FREE(theToken);
-    }
-    mSharedNodes.Push(aNode);
-  }
-}
-
-nsCParserNode* CNodeRecycler::CreateNode(void) {
-
-#ifdef DEBUG_TRACK_NODES
+#ifdef HEAP_ALLOCATED_NODES
 #if 0
   if(gAllNodeCount!=mSharedNodes.GetSize()) {
     int x=10; //this is very BAD!
   }
 #endif
-#endif
 
-  nsCParserNode* result=0;
-  if(0<mSharedNodes.GetSize()) {
-    result=(nsCParserNode*)mSharedNodes.Pop();
+  result=NS_STATIC_CAST(nsCParserNode*,mSharedNodes.Pop());
+  if(result) {
+    result->Init(aToken,aLineNumber,aTokenAllocator,this);
   }
   else{
-    result=new nsCParserNode();
+    result=new nsCParserNode(aToken,aLineNumber,aTokenAllocator,this);
 #ifdef DEBUG_TRACK_NODES
-    AddNode(result);
+    mCount++;
+    AddNode(NS_STATIC_CAST(nsCParserNode*,result));
 #endif
-
+    NS_IF_ADDREF(result);
   }
-  return result;
+#else
+  result=new(mNodePool) nsCParserNode(aToken,aLineNumber,aTokenAllocator);
+  NS_IF_ADDREF(result);
+#endif
+  return NS_STATIC_CAST(nsIParserNode*,result);
 }
 
 void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* aTitle) {

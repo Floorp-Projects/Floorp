@@ -147,7 +147,7 @@ nsLoggingSink::WillBuildModel() {
 NS_IMETHODIMP
 nsLoggingSink::DidBuildModel(PRInt32 aQualityLevel) {
   
-  WriteTabs(mOutput,mLevel--);
+  WriteTabs(mOutput,--mLevel);
   PR_fprintf(mOutput, "</begin>\n");
 
   //proxy the call to the real sink if you have one.
@@ -342,11 +342,14 @@ nsLoggingSink::AddComment(const nsIParserNode& aNode){
 NS_IMETHODIMP
 nsLoggingSink::SetTitle(const nsString& aValue) {
    
-   nsAutoString tmp;
-   QuoteText(aValue, tmp);
-   WriteTabs(mOutput,++mLevel);
-   PR_fprintf(mOutput, "<title value=\"%s\"/>\n", tmp.GetBuffer());
-   --mLevel;
+  char* tmp;
+  GetNewCString(aValue, &tmp);
+	WriteTabs(mOutput,++mLevel);
+  if(tmp) {
+    PR_fprintf(mOutput, "<title value=\"%s\"/>\n", tmp);
+    nsMemory::Free(tmp);
+  }
+  --mLevel;
   
   nsresult theResult=NS_OK;
 
@@ -544,9 +547,12 @@ nsLoggingSink::OpenNode(const char* aKind, const nsIParserNode& aNode) {
     PR_fprintf(mOutput, "\"%s\"", tag);
   }
   else {
-    const nsAReadableString& theText = aNode.GetText();
-    PR_fprintf(mOutput, "\"%s\"", theText);
-
+    char* text;
+    GetNewCString(aNode.GetText(), &text);
+    if(text) {
+      PR_fprintf(mOutput, "\"%s\"", text);
+      nsMemory::Free(text);
+    }
   }
 
   if (WillWriteAttributes(aNode)) {
@@ -571,18 +577,25 @@ nsLoggingSink::CloseNode(const char* aKind) {
 
 nsresult
 nsLoggingSink::WriteAttributes(const nsIParserNode& aNode) {
-  nsAutoString tmp, tmp2;
+
+  WriteTabs(mOutput,1+mLevel);
+  nsAutoString tmp;
   PRInt32 ac = aNode.GetAttributeCount();
   for (PRInt32 i = 0; i < ac; i++) {
+    char* key=nsnull;
+    char* value=nsnull;
     const nsAReadableString& k = aNode.GetKeyAt(i);
     const nsString& v = aNode.GetValueAt(i);
 
-		PR_fprintf(mOutput, " <attr key=\"%s\" value=\"", k);
+    GetNewCString(k, &key);
+    if(key) {
+      PR_fprintf(mOutput, " <attr key=\"%s\" value=\"", key);
+      nsMemory::Free(key);
+    }
  
     tmp.Truncate();
     tmp.Append(v);
-
-    if(0<tmp.Length()) {
+    if(tmp.Length() > 0) {
       PRUnichar first = tmp.First();
       if ((first == '"') || (first == '\'')) {
         if (tmp.Last() == first) {
@@ -595,20 +608,26 @@ nsLoggingSink::WriteAttributes(const nsIParserNode& aNode) {
           // Mismatched quotes - leave them in
         }
       }
-    }    
-    QuoteText(tmp, tmp2);
-		PR_fprintf(mOutput, "%s\"/>\n", tmp2.GetBuffer());
-  }
+      GetNewCString(tmp, &value);
 
-  if (0 != strchr(gSkippedContentTags, aNode.GetNodeType())) {
-    const nsString& content = aNode.GetSkippedContent();
-    if (content.Length() > 0) {
-      QuoteText(content, tmp);
-      PR_fprintf(mOutput, " <content value=\"");
-      PR_fprintf(mOutput, "%s\"/>\n", tmp.GetBuffer()) ;
+      if(value) {
+        PR_fprintf(mOutput, "%s\"/>\n", value);
+        WriteTabs(mOutput,1+mLevel);
+        nsMemory::Free(value);
+      }
     }
   }
 
+  if (0 != strchr(gSkippedContentTags, aNode.GetNodeType())) {
+    char* content;
+    GetNewCString(aNode.GetSkippedContent(), &content);
+    if(content) {
+      PR_fprintf(mOutput, " <content value=\"");
+      PR_fprintf(mOutput, "%s\"/>\n", content) ;
+      nsMemory::Free(content);
+    }
+  }
+  WriteTabs(mOutput,1+mLevel);
   return NS_OK;
 }
 
@@ -654,11 +673,15 @@ nsLoggingSink::LeafNode(const nsIParserNode& aNode)
   else {
     PRInt32 pos;
     nsAutoString tmp;
+    char* str;
     switch (nodeType) {
 			case eHTMLTag_whitespace:
 			case eHTMLTag_text:
-				QuoteText(aNode.GetText(), tmp);
-				PR_fprintf(mOutput, "<text value=\"%s\"/>\n", tmp.GetBuffer());
+        GetNewCString(aNode.GetText(), &str);
+        if(str) {
+          PR_fprintf(mOutput, "<text value=\"%s\"/>\n", str);
+          nsMemory::Free(str);
+        }
 				break;
 
 			case eHTMLTag_newline:
@@ -705,6 +728,28 @@ nsLoggingSink::QuoteText(const nsAReadableString& aValue, nsString& aResult) {
     }
   }
   return NS_OK;
+}
+
+/**
+ * Use this method to convert nsString to char*. 
+ * REMEMBER: Match this call with nsMemory::Free(aResult);
+ * 
+ * @update 04/04/99 harishd
+ * @param aValue - The string value
+ * @param aResult - String coverted to char*.
+ */
+nsresult
+nsLoggingSink::GetNewCString(const nsAReadableString& aValue, char** aResult)
+{
+  nsresult result=NS_OK;
+  nsAutoString temp;
+  result=QuoteText(aValue,temp);
+  if(NS_SUCCEEDED(result)) {
+    if(temp.Length()>0) {
+      *aResult=temp.ToNewCString();
+    }
+  }
+  return result;
 }
 
 NS_IMETHODIMP

@@ -323,8 +323,7 @@ public:
     CElement *theElement=(aTag==mTag) ? this : GetElement(aTag);
     result=theElement->NotifyClose(theNode,aTag,aContext,aSink);
 
-    aContext->RecycleNode((nsCParserNode*)theNode);
-
+    NS_IF_RELEASE(aNode);
     return result;
   }
 
@@ -808,9 +807,8 @@ public:
     
         if(aContext->mTableStates) {
           if(aContext->mTableStates->CanOpenTBody()) {
-            nsCParserNode* theNode=aContext->gNodeRecycler->CreateNode();
             CToken* theToken=(CStartToken*)aContext->mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_tbody);
-            theNode->Init(theToken,0,0);  //this will likely leak...
+            nsIParserNode* theNode=aContext->mNodeAllocator->CreateNode(theToken,0,0);
 
             result=HandleStartToken(theNode,eHTMLTag_tbody,aContext,aSink);
           }
@@ -1797,8 +1795,7 @@ public:
             //let's auto open the body            
             
             CToken* theToken=(CStartToken*)aContext->mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body);
-            nsCParserNode* theNode=aContext->gNodeRecycler->CreateNode();
-            theNode->Init(theToken,0,0);
+            nsIParserNode* theNode=aContext->mNodeAllocator->CreateNode(theToken,0,0);
 
             result=theBody->HandleStartToken(theNode,eHTMLTag_body,aContext,aSink);
 

@@ -91,6 +91,7 @@
 #include "nsDeque.h"
 #include "nsParserCIID.h"
 #include "nsTime.h"
+#include "nsDTDUtils.h"
 
 #define NS_INAVHTML_DTD_IID      \
   {0x5c5cce40, 0xcfd6,  0x11d1,  \
@@ -106,7 +107,6 @@ class nsEntryStack;
 class nsITokenizer;
 class nsCParserNode;
 class nsTokenAllocator;
-class CNodeRecycler;
 
 /***************************************************************
   Now the main event: CNavDTD.
@@ -484,10 +484,10 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
 
 protected:
 
-		nsresult        CollectAttributes(nsCParserNode& aNode,eHTMLTags aTag,PRInt32 aCount);
-		nsresult        CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
-    nsresult        WillHandleStartTag(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode);
-    nsresult        DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag);
+		nsresult        CollectAttributes(nsIParserNode& aNode,eHTMLTags aTag,PRInt32 aCount);
+		nsresult        CollectSkippedContent(nsIParserNode& aNode,PRInt32& aCount);
+    nsresult        WillHandleStartTag(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode);
+    nsresult        DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag);
     nsresult        HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags aParent,nsIParserNode *aNode);
     nsresult        HandleSavedTokens(PRInt32 anIndex);
     nsresult        HandleKeyGen(nsIParserNode *aNode);
@@ -513,13 +513,12 @@ protected:
     nsParser*           mParser;
     nsITokenizer*       mTokenizer;
     nsTokenAllocator*   mTokenAllocator;
-    CNodeRecycler*      mNodeRecycler;
+    nsNodeAllocator     mNodeAllocator;
     nsDeque             mMisplacedContent;
     nsDeque             mSkippedContent;
     PRBool              mHasOpenScript;
     PRBool              mSaveBadTokens;
     eHTMLTags           mSkipTarget;
-    nsDeque             mSharedNodes;
     nsresult            mDTDState;
     nsDTDMode           mDTDMode;
     eParserCommands     mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
