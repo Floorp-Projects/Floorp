@@ -43,6 +43,11 @@ static NS_DEFINE_IID(kXULPopupListenerCID,      NS_XULPOPUPLISTENER_CID);
 static NS_DEFINE_IID(kIXULPopupListenerIID,     NS_IXULPOPUPLISTENER_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 
+static NS_DEFINE_IID(kIDomNodeIID,            NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIDomElementIID,         NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kIDomEventListenerIID,   NS_IDOMEVENTLISTENER_IID);
+
+
 ////////////////////////////////////////////////////////////////////////
 // PopupListenerImpl
 //
@@ -148,7 +153,9 @@ XULPopupListenerImpl::QueryInterface(REFNSIID iid, void** result)
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    else if (iid.Equals(nsIDOMEventListener::GetIID())) {
+      // compiler problems with nsIDOMEventListener::GetIID() cause us to do it this
+      // way. Please excuse the lameness (hyatt and pinkerton).
+    else if (iid.Equals(kIDomEventListenerIID)) {
         *result = (nsIDOMEventListener*)(nsIDOMMouseListener*)this;
         NS_ADDREF_THIS();
         return NS_OK;
