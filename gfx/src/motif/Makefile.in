@@ -22,8 +22,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= gfx_motif
 MODULE		= raptor
+LIBRARY_NAME	= gfx_motif
 
 REQUIRES	= util img xpcom raptor netlib
 
@@ -36,18 +36,14 @@ CPPSRCS		= \
 		nsImageMotif.cpp \
 		$(NULL)
 
-ifndef MOZ_MONOLITHIC_TOOLKIT
-EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb $(MOZ_MOTIF_LDFLAGS)
-else
-EXTRA_DSO_LDOPTS += $(TK_LIBS)
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 ifndef MOZ_MONOLITHIC_TOOLKIT
-CXXFLAGS += $(MOZ_MOTIF_CFLAGS)
+EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb $(MOZ_MOTIF_LDFLAGS)
+CXXFLAGS	+= $(MOZ_MOTIF_CFLAGS)
 else
-CXXFLAGS += $(TK_CFLAGS)
+EXTRA_DSO_LDOPTS += $(TK_LIBS)
+CXXFLAGS	+= $(TK_CFLAGS)
 endif
 
 DEFINES		+= -D_IMPL_NS_GFXNONXP
@@ -56,3 +52,4 @@ INCLUDES	+= \
 		-I$(srcdir)/. \
 		-I$(srcdir)/.. \
 		$(NULL)
+

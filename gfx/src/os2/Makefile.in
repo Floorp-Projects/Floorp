@@ -18,48 +18,47 @@
 # Contributor(s): 
 #
 # Makefile for gfx/src/os2
+#
 
-DEPTH = ../../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
+MODULE		= raptor
+OS2_LIBRARYNAME	= gfx_os2
+OS2_IMPLIB	= 1
 
-OS2_IMPLIB = 1
-OS2_LIBRARYNAME = gfx_os2
+REQUIRES	= util img xpcom raptor dom netlib java js
 
-MODULE = raptor 
+CSRCS		= libprint.c
 
-REQUIRES = util img xpcom raptor dom netlib java js
+CPPSRCS		= \
+		nsDeviceContextOS2.cpp \
+		nsRenderingContextOS2.cpp \
+		nsFontMetricsOS2.cpp \
+		nsImageOS2.cpp \
+		nsPaletteOS2.cpp \
+		nsRegionOS2.cpp \
+		nsDeviceContextSpecFactoryO.cpp \
+		nsDeviceContextSpecOS2.cpp \
+		nsDrawingSurfaceOS2.cpp \
+		nsGfxFactoryOS2.cpp \
+		$(NULL)
 
-DEFINES += -D_IMPL_NS_GFXONXP
+RES_FILE	= $(srcdir)/libprint.res
 
-OS2_LIBS = nggfx img mozjs mozutil netlib xpcom
-OS_LIBS += $(NSPR_LIBS) -luconv
-
-CPPSRCS = \
-	nsDeviceContextOS2.cpp          \
-	nsRenderingContextOS2.cpp       \
-	nsFontMetricsOS2.cpp            \
-	nsImageOS2.cpp                  \
-	nsPaletteOS2.cpp                \
-	nsRegionOS2.cpp                 \
-	nsDeviceContextSpecFactoryO.cpp \
-	nsDeviceContextSpecOS2.cpp      \
-	nsDrawingSurfaceOS2.cpp         \
-	nsGfxFactoryOS2.cpp             \
-	$(NULL)
-
-CSRCS = libprint.c
-
-RES_FILE = $(srcdir)/libprint.res
+OS2_LIBS	= nggfx img mozjs mozutil netlib xpcom
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES += -I$(topsrcdir)/gfx/src
+DEFINES		+= -D_IMPL_NS_GFXONXP
+
+INCLUDES	+= -I$(topsrcdir)/gfx/src
+
+OS_LIBS		+= $(NSPR_LIBS) -luconv
 
 # This adds the resources for the print dialog to the gfxos2 dll.
 # I guess eventually we ought to use an xml dialog...
