@@ -217,4 +217,3 @@ Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymPlaintext;
 ;+    local:
 ;+       *;
 ;+};
-
