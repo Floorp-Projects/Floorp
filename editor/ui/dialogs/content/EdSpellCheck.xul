@@ -41,58 +41,60 @@
 <box align="vertical">
   <box align="horizontal">
     <!-- value is set in JS -->
-    <text id="MisspelledWordLabel"/>
+    <text class="dialog" id="MisspelledWordLabel"/>
     <spring class="bigspacer"/>
-    <text id="MisspelledWord"/>
+    <text class="dialog bold" id="MisspelledWord"/>
   </box>
-  <text id="ReplaceWordLabel" value="&wordEditField.label;"/>
+  <text class="dialog" id="ReplaceWordLabel" value="&wordEditField.label;"/>
   <box align="horizontal">
-    <html:input type="text" class="SpellCheckWord" id="ReplaceWord" size="24" onkeyup="ChangeReplaceWord()"/>
-    <spring class="bigspacer"/>
-    <button class="dialog" id="CheckWord" oncommand="CheckWord()" value="&checkwordButton.label;"/>
-    <spring flex="100%"/>
-  </box>
-  <spring class="spacer"/>
-  <text id="SuggestedListLabel" value="&suggestions.label;"/>
-  <box align="horizontal">
-    <html:select class="SpellCheckList" id="SuggestedList" size="8" onchange="SelectSuggestedWord()"/>
-    <box align="vertical">
-      <box align="horizontal"> 
-        <spring class="bigspacer"/>
-        <button class="dialog" flex="100%" id="Ignore" oncommand="Ignore()" value="&ignoreButton.label;"/>
-        <spring class="bigspacer"/>
-        <button class="dialog" flex="100%" id="IgnoreAll" oncommand="IgnoreAll()" value="&ignoreallButton.label;"/>
-      </box>
-      <spring class="bigspacer"/>
-      <box align="horizontal"> 
-        <spring class="bigspacer"/>
-        <button class="dialog" flex="100%" id="Replace" oncommand="Replace()" value="&changeButton.label;"/>
-        <spring class="bigspacer"/>
-        <button class="dialog" flex="100%" id="ReplaceAll" oncommand="ReplaceAll()" value="&changeallButton.label;"/>
-      </box>
-      <spring class="bigspacer"/>
-      <box align="horizontal"> 
-        <spring class="bigspacer"/>
-        <html:label> &userDictionary.label; </html:label>
-      </box> 
-      <box align="horizontal"> 
-        <spring class="bigspacer"/>
-        <button class="dialog" flex="100%" id="AddToDictionary" oncommand="AddToDictionary()" value="&addtouserdictionaryButton.label;"/>
-        <spring class="bigspacer"/>
-        <button class="dialog" flex="100%" id="EditDictionary" oncommand="EditDictionary()" value="&edituserdictionaryButton.label;"/>
-      </box>
+    <textfield class="MinWidth20em" id="ReplaceWord" onkeyup="ChangeReplaceWord()"/>
+    <spring class="spacer"/>
+    <box flex="1">
+      <button class="dialog MinWidth10em" flex="1" id="CheckWord" oncommand="CheckWord()" value="&checkwordButton.label;"/>
+      <spring class="MinWidth20em" flex="1"/>
     </box>
   </box>
-  <html:label> &languagePopup.label; </html:label>
+  <spring class="spacer"/>
+  <text class="dialog" id="SuggestedListLabel" value="&suggestions.label;"/>
   <box align="horizontal">
-    <html:select class="SpellCheckLanguage" id="LanguageList" size="1"  onchange="SelectLanguage()">
-      <option> &englishLanguagePopup.value; </option>
-    </html:select>
-    <spring class="bigspacer"/>
-    <button class="dialog"  id="Recheck" oncommand="Recheck()" value="&recheckButton.label;"/>
-    <spring class="bigspacer"/>
-    <button class="dialog"  id="Close" oncommand="Close()" value="&closeButton.label;"/>
-    <spring class="bigspacer"/>
+    <tree class="list MinWidth20em" id="SuggestedList" oncommand="SelectSuggestedWord()"/>
+    <spring class="spacer"/>
+    <grid flex="1">
+      <columns><column flex="1"/><column flex="1"/></columns>
+      <rows>
+        <row>
+          <button class="dialog" flex="1" id="Ignore" oncommand="Ignore()" value="&ignoreButton.label;"/>
+          <button class="dialog" flex="1" id="IgnoreAll" oncommand="IgnoreAll()" value="&ignoreAllButton.label;"/>
+        </row>
+        <row>
+          <button class="dialog" flex="1" id="Replace" oncommand="Replace()" value="&changeButton.label;"/>
+          <button class="dialog" flex="1" id="ReplaceAll" oncommand="ReplaceAll()" value="&changeAllButton.label;"/>
+        </row>
+        <row>
+          <text class="dialog" flex="1" value="&userDictionary.label;"/>
+          <spring/>
+        </row>
+        <row>
+          <button class="dialog" flex="1" id="AddToDictionary" oncommand="AddToDictionary()" value="&addToUserDictionaryButton.label;"/>
+          <button class="dialog" flex="1" id="EditDictionary" oncommand="EditDictionary()" value="&editUserDictionaryButton.label;"/>
+        </row>
+      </rows> 
+    </grid>
+  </box>
+  <text class="dialog" value ="&languagePopup.label;"/>
+  <box>
+    <menulist class="MinWidth20em" id="LanguageMenulist" oncommand="SelectLanguage()">
+      <menupopup>
+        <menuitem id="English" value="&englishLanguagePopup.value;"/>
+        <menuitem id="Spanish" value="&spanishLanguagePopup.value;"/>
+        <menuitem id="French" value="&frenchLanguagePopup.value;"/>
+      </menupopup>
+    </menulist>
+    <spring class="spacer"/>
+    <box flex="1">
+      <button class="dialog" id="Recheck" flex="1" value="&recheckButton.label;" oncommand="Recheck()"/>
+      <button class="dialog" id="Close" flex="1" value="&closeButton.label;" oncommand="Close()"/>
+    </box>
   </box> 
 </box>
 </window>

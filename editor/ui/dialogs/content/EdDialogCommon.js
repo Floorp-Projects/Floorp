@@ -95,7 +95,7 @@ function ReplaceStringInList(list, index, string)
 }
 
 // THESE WILL BE REMOVE ONCE ALL DIALOGS ARE CONVERTED TO NEW WIDGETS
-function AppendStringToListByID(list, stringID)
+function AppendStringToListById(list, stringID)
 {
   AppendStringToList(list, editorShell.GetString(stringID));
 }
@@ -215,7 +215,7 @@ function PrepareStringForURL(string)
 // this function takes an elementID and a flag
 // if the element can be found by ID, then it is either enabled (by removing "disabled" attr)
 // or disabled (setAttribute) as specified in the "doEnable" parameter
-function SetElementEnabledByID( elementID, doEnable )
+function SetElementEnabledById( elementID, doEnable )
 {
   element = document.getElementById(elementID);
   if ( element )
@@ -231,7 +231,7 @@ function SetElementEnabledByID( elementID, doEnable )
   }
   else
   {
-    dump("Element "+elementID+" not found in SetElementEnabledByID\n");
+    dump("Element "+elementID+" not found in SetElementEnabledById\n");
   }
 }
 
@@ -241,7 +241,7 @@ function SetElementEnabledByID( elementID, doEnable )
 // The class is set to either "enabled" or "disabled" depending on the flag passed in.
 // This function relies on css having a special appearance for these two classes.
 
-function SetClassEnabledByID( elementID, doEnable )
+function SetClassEnabledById( elementID, doEnable )
 {
   element = document.getElementById(elementID);
   if ( element )
@@ -310,7 +310,7 @@ function InitPixelOrPercentMenulist(elementForAtt, elementInDoc, attribute, menu
   return size;
 }
 
-function AppendStringToMenulistByID(menulist, stringID)
+function AppendStringToMenulistById(menulist, stringID)
 {
   return AppendStringToMenulist(menulist, editorShell.GetString(stringID));
 }
@@ -366,7 +366,7 @@ dump(menulist+"=menulist in ClearMenulist\n");
           <treecell value="the text the user sees"/>
 */
 
-function AppendStringToTreelistByID(tree, stringID)
+function AppendStringToTreelistById(tree, stringID)
 {
   return AppendStringToTreelist(tree, editorShell.GetString(stringID));
 }
@@ -393,10 +393,13 @@ dump("Failed to create <treechildren>\n");
     if (treeitem && treerow && treecell)
     {
       treerow.appendChild(treecell);
-      treeeitem.appendChild(treerow);
+      treeitem.appendChild(treerow);
       treechildren.appendChild(treeitem)
       treecell.setAttribute("value", string);
-      return menuItem;
+      var len = Number(tree.getAttribute("length"));
+      if (!len) len = -1;
+      tree.setAttribute("length",len+1);
+      return treeitem;
     }
   }
   return null;
@@ -405,8 +408,13 @@ dump("Failed to create <treechildren>\n");
 function ClearTreelist(tree)
 {
   if (tree)
+  {
     while (tree.firstChild)
       tree.removeChild(tree.firstChild);
+    
+    // Count list items
+    tree.setAttribute("length", 0);
+  }
 }
 
 function GetSelectedTreelistValue(tree)
@@ -620,6 +628,7 @@ function InitMoreFewer()
   //   attribute on the dialog.MoreFewerButton button
   //   onMoreFewer will toggle it and redraw the dialog
   SeeMore = (dialog.MoreFewerButton.getAttribute("more") != "1");
+dump(SeeMore+"=SeeMore - InitMoreFewer\n");
   onMoreFewer();
 }
 
@@ -628,6 +637,8 @@ function onMoreFewer()
   if (SeeMore)
   {
     dialog.MoreSection.setAttribute("style","display: none");
+    //TODO: Bugs in box layout prevent us from using this:
+    //dialog.MoreSection.setAttribute("style","visibility: collapse");
     window.sizeToContent();
     dialog.MoreFewerButton.setAttribute("more","0");
     dialog.MoreFewerButton.setAttribute("value",GetString("MoreProperties"));
@@ -636,6 +647,7 @@ function onMoreFewer()
   else
   {
     dialog.MoreSection.setAttribute("style","display: inherit");
+    //dialog.MoreSection.setAttribute("style","visibility: inherit");
     window.sizeToContent();
     dialog.MoreFewerButton.setAttribute("more","1");
     dialog.MoreFewerButton.setAttribute("value",GetString("FewerProperties"));

@@ -62,40 +62,51 @@ image.popup-trigger {
   list-style-image: url(chrome://global/skin/scroll-down.gif);
 }
 
-/* XUL ELEMENTS */
+/* Most should be moved to global files */
+
+titledbox {
+  padding-bottom: 4px;
+}
+
+*.MinWidth10em {
+  min-width: 10em;
+}
+
 *.MinWidth20em {
   min-width: 20em;
 }
 
-box#ColorPreview {
-  border:           1px inset #CCCCCC;
-  padding-left:     5px;
-  padding-right:    5px;
-  min-width:        100px;
-  min-height:       50px;
+*.big-left-margin {
+  margin-left:    10px;
 }
 
-
-/* These reduce extra space to 
-   minimize total height in Table Dialog
-titledbox.NoBottomPad {
-  padding-bottom: 0px;
+*.middle {
+  vertical-align: middle:
 }
 
-titledbox.NoTopMargin {
-  margin-bottom: 0px;
+text.dialog {
+  margin: 1px 2px 1px 4px;
 }
 
-titledbox.NoTopPadding {
-  padding-top: 0px;
+text.bold {
+  font-weight: bold;
 }
 
-tabpanel.Padding5 {
-  padding: 5px;
+text.italic {
+  font-style: italic;
 }
-*/
 
-/* SHOULD GO IN GLOBAL.CSS */
+tree.list {
+  border: 1px inset #CCCCCC;
+  margin: 1px 4px 2px 4px;
+  width: 10em;
+  height: 3em;
+}
+
+textfield.narrow {
+  width: 3em;
+}
+
 *.align-right {
   text-align: right;
 }
@@ -108,22 +119,29 @@ text[hidden="true"], input[hidden="true"] {
   display: none;
 }
 
+box#ColorPreview {
+  border: 1px inset #CCCCCC;
+  margin-left:    10px;
+  padding-left:    5px;
+  padding-right:   5px;
+  min-width:     100px;
+  min-height:     50px;
+}
+
 select#alignTypeSelect,label#alignLabel {
   margin-left: 5px;
 }
 
 button#MoreFewerButton[more="0"] {
-  margin-left: 6px;
   list-style-image: url(chrome://global/skin/scroll-down.gif);
   /* bug 9459 - changing button text doesn't resize width.
      This covers that problem, but we want this size anyway */
-  width: 10em;
+  min-width: 10em;
 }
 
 button#MoreFewerButton[more="1"] {
-  margin-left: 6px;
   list-style-image: url(chrome://global/skin/scroll-up.gif);
-  width: 10em;
+  min-width: 10em;
 }
 
 /* We use a borderless button to show misspelled word in dialog */
@@ -186,20 +204,20 @@ img.AlignIcon {
   /*vertical-align: middle;*/
 }
 
-button#img-align-top {
+image#img-align-top {
 	list-style-image:url("chrome://editor/skin/images/img-align-top.gif");
 }
-button#img-align-middle {
+image#img-align-middle {
 	list-style-image:url("chrome://editor/skin/images/img-align-middle.gif");
 }
-button#img-align-bottom {
+image#img-align-bottom {
 	list-style-image:url("chrome://editor/skin/images/img-align-bottom.gif");
 }
-button#img-align-left {
-	list-style-image:url("chrome://editor/skin/images/img-align-left.gif");
-}
-button#img-align-right {
+image#img-align-right {
 	list-style-image:url("chrome://editor/skin/images/img-align-right.gif");
+}
+image#img-align-left {
+	list-style-image:url("chrome://editor/skin/images/img-align-left.gif");
 }
 
 /* Rest are from Ben Goodger for Advanced Edit dialog 

@@ -21,8 +21,7 @@
  */
 
 /* Insert Source HTML dialog */
-
-var dialog;
+var srcInput;
 
 // dialog initialization code
 function Startup()
@@ -33,32 +32,21 @@ function Startup()
   doSetOKCancel(onOK, null);
   
   // Create dialog object to store controls for easy access
-  dialog = new Object;
-  dialog.srcInput = document.getElementById("srcInput");
-
-  // Kinda clunky: Message was wrapped in a <p>,
-  // so actual message is a child text node
-  dialog.srcMessage = (document.getElementById("srcMessage")).firstChild;
-
-  if (null == dialog.srcInput ||
-      null == dialog.srcMessage )
-  {
-    dump("Not all dialog controls were found!!!\n");
-  }
+  srcInput = document.getElementById("srcInput");
 
   selection = editorShell.GetContentsAs("text/html", 35);
   selection = (selection.replace(/<body[^>]*>/,"")).replace(/<\/body>/,"");
   if (selection != "")
-    dialog.srcInput.value = selection;
+    srcInput.value = selection;
 
   // Set initial focus
-  dialog.srcInput.focus();
+  srcInput.focus();
 }
 
 function onOK()
 {
-  if (dialog.srcInput.value != "")
-    editorShell.InsertSource(dialog.srcInput.value);
+  if (srcInput.value != "")
+    editorShell.InsertSource(srcInput.value);
   else {
     dump("Null value -- not inserting\n");
     return false;

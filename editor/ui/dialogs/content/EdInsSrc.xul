@@ -44,10 +44,16 @@
   <broadcaster id="args" value=""/>
   <keyset id="keyset"/>
 
-  <text id="srcMessage" value="&sourceEditField.label;"/>
-  <textarea rows="16" cols="80" id="srcInput" flex="1"/>
+  <text class="dialog" id="srcMessage" value="&sourceEditField.label;"/>
+  <textfield id="srcInput" multiline="true" rows="6" flex="1"/>
   <!-- Will this accept the embedded HTML tags? -->
-  <text value="&example.label;"/>
+  <box>
+    <spring class="bigspacer"/>
+    <text value="&example.label;"/>
+    <text class="bold" value="&exampleOpenTag.label;"/>
+    <text class="bold italic" value="&exampleText.label;"/>
+    <text class="bold" value="&exampleCloseTag.label;"/>
+  </box>
   <spring class="spacer"/>
   <separator class="groove"/>
   <!-- from global dialogOverlay -->

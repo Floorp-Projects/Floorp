@@ -28,13 +28,13 @@
 <!ENTITY suggestions.label "Suggestions:">
 
 <!ENTITY ignoreButton.label "Ignore">
-<!ENTITY ignoreallButton.label "Ignore All">
+<!ENTITY ignoreAllButton.label "Ignore All">
 <!ENTITY changeButton.label "Change">
-<!ENTITY changeallButton.label "Change All">
+<!ENTITY changeAllButton.label "Change All">
 
 <!ENTITY userDictionary.label "User Dictionary:">
-<!ENTITY addtouserdictionaryButton.label "Add Word">
-<!ENTITY edituserdictionaryButton.label "Edit">
+<!ENTITY addToUserDictionaryButton.label "Add Word">
+<!ENTITY editUserDictionaryButton.label "Edit">
 <!ENTITY recheckButton.label "Recheck">
 <!ENTITY closeButton.label "Close">
 

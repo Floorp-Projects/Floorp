@@ -43,9 +43,9 @@
 
   <keyset id="keyset"/>
 
-  <text align="left" for="nameInput" value="&anchorNameEditField.label;"/>
+  <text class="dialog" align="left" for="nameInput" value="&anchorNameEditField.label;"/>
   <textfield class="MinWidth20em" id="nameInput"/>
-  <text align="left" value="&noSpacesMsg.label;"/>
+  <text class="dialog" align="left" value="&noSpacesMsg.label;"/>
   <spring class="spacer"/>
   <!-- from EdDialogOverlay -->
   <box id="AdvancedEdit"/>
