@@ -19,6 +19,7 @@
    Rights Reserved.
    
    Contributor(s): 
+     Ryan Cassin (rcassin@supernova.org)
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
@@ -34,7 +35,7 @@
 
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = ["maintainTableStructure", "tableDeleteKey", "preserveFormatting"];
+    _elementIDs = ["maintainTableStructure", "tableDeleteKey", "preserveFormatting", "recentFiles", "shouldAutoSave", "autoSaveAmount"];
   ]]>
   </script>        
         
@@ -72,32 +73,55 @@
     </box>
   </titledbox>
 
+  <!-- Recent files menu -->
+	<titledbox orient="vertical">
+    <title><text value="&recentFiles.title;"/></title>
+    <box align="horizontal" valign="middle">
+      <textfield 
+        id="recentFiles"
+        name="recent string" 
+        type="text" 
+        size="3" 
+        value="10" 
+        pref="true" 
+        preftype="int" 
+        prefstring="editor.history.url_maximum"
+        prefattribute="value"
+      />
+      <text value="&documentsInMenu;"/>
+    </box>
+	</titledbox>
+
 <!-- Take out Auto-Save; not supported at this time
+  -->
 	<titledbox orient="vertical">
     <title><text value="&saving;"/></title>
     <box align="horizontal" valign="middle">
       <checkbox 
+        value      = "&AutoSaveCheck;"
+        id         = "shouldAutoSave"
         pref       = "true" 
         preftype   = "bool" 
         prefstring = "editor.auto_save"
-        value      = "&AutoSaveCheck;"
         name       = "autosave" 
+        prefattribute="checked"
       />
       <textfield 
+        id="autoSaveAmount"
         name="time" 
         type="text" 
         size="3" 
         value="5" 
         pref="true" 
         preftype="int" 
-        prefindex="5" 
         prefstring="editor.auto_save_delay"
+        prefattribute="value"
       />
       <text value="&minText;" />
     </box>
 	</titledbox>
-  -->
 
+<!-- HTML formatting on output -->
 	<titledbox orient="vertical">
     <title><text value="&savingFiles.title;"/></title>
     <box align="horizontal" valign="middle">
@@ -106,7 +130,7 @@
         id         = "preserveFormatting" 
         pref       = "true" 
         preftype   = "bool" 
-        prefstring = "editor.prettyprint_html"
+        prefstring = "editor.prettyprint"
         prefattribute="checked"
       />
     </box>
