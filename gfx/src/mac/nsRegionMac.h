@@ -24,7 +24,8 @@
 
 //------------------------------------------------------------------------
 
-class nsNativeRegionPool
+
+class NS_EXPORT nsNativeRegionPool
 {
 public:
 	nsNativeRegionPool();
