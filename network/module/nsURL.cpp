@@ -749,6 +749,13 @@ char *mangleResourceIntoFileURL(const char* aResourceFileName)
    printf("RESOURCE name %s\n", resourceBase);
 #endif
 
+#ifdef XP_MAC
+#define MAXPATHLEN 2000
+
+    resourceBase = (char *)PR_Malloc(MAXPATHLEN);;
+	*resourceBase = '\0';
+#endif
+
   // Join base path to resource name
   if (aResourceFileName[0] == '/') {
     aResourceFileName++;
