@@ -24,11 +24,24 @@
 #include "nsAString.h"
 #include "nsPromiseSubstring.h"
 #include "nsLocalString.h"
+#include "nsCRT.h"
 
+
+int
+nsDefaultStringComparator::operator()( const PRUnichar* lhs, const PRUnichar* rhs, PRUint32 aLength ) const
+  {
+    return nsCharTraits<PRUnichar>::compare(lhs, rhs, aLength);
+  }
+
+int
+nsCaseInsensitiveStringComparator::operator()( const PRUnichar* lhs, const PRUnichar* rhs, PRUint32 aLength ) const
+  {
+    return nsCRT::strncasecmp(lhs, rhs, aLength);
+  }
 
 NS_COM
 int
-Compare( const nsAString& lhs, const nsAString& rhs )
+Compare( const nsAString& lhs, const nsAString& rhs, const nsStringComparator& aComparator )
   {
     typedef nsAString::size_type  size_type;
 
@@ -43,8 +56,6 @@ Compare( const nsAString& lhs, const nsAString& rhs )
     lhs.BeginReading(leftIter);
     rhs.BeginReading(rightIter);
 
-    int result;
-
     for (;;)
       {
         size_type lengthAvailable = size_type( NS_MIN(leftIter.size_forward(), rightIter.size_forward()) );
@@ -52,9 +63,12 @@ Compare( const nsAString& lhs, const nsAString& rhs )
         if ( lengthAvailable > lengthToCompare )
           lengthAvailable = lengthToCompare;
 
-          // Note: |result| should be declared in this |if| expression, but some compilers don't like that
-        if ( (result = nsCharTraits<PRUnichar>::compare(leftIter.get(), rightIter.get(), lengthAvailable)) != 0 )
-          return result;
+        {
+          int result;
+            // Note: |result| should be declared in this |if| expression, but some compilers don't like that
+          if ( (result = aComparator(leftIter.get(), rightIter.get(), lengthAvailable)) != 0 )
+            return result;
+        }
 
         if ( !(lengthToCompare -= lengthAvailable) )
           break;
@@ -475,9 +489,21 @@ nsAString::do_ReplaceFromReadable( index_type cutStart, size_type cutLength, con
 
 
 
+int
+nsDefaultCStringComparator::operator()( const char* lhs, const char* rhs, PRUint32 aLength ) const
+  {
+    return nsCharTraits<char>::compare(lhs, rhs, aLength);
+  }
+
+int
+nsCaseInsensitiveCStringComparator::operator()( const char* lhs, const char* rhs, PRUint32 aLength ) const
+  {
+    return nsCRT::strncasecmp(lhs, rhs, aLength);
+  }
+
 NS_COM
 int
-Compare( const nsACString& lhs, const nsACString& rhs )
+Compare( const nsACString& lhs, const nsACString& rhs, const nsCStringComparator& aComparator )
   {
     typedef nsACString::size_type   size_type;
 
@@ -492,8 +518,6 @@ Compare( const nsACString& lhs, const nsACString& rhs )
     lhs.BeginReading(leftIter);
     rhs.BeginReading(rightIter);
 
-    int result;
-
     for (;;)
       {
         size_type lengthAvailable = size_type( NS_MIN(leftIter.size_forward(), rightIter.size_forward()) );
@@ -501,9 +525,12 @@ Compare( const nsACString& lhs, const nsACString& rhs )
         if ( lengthAvailable > lengthToCompare )
           lengthAvailable = lengthToCompare;
 
-          // Note: |result| should be declared in this |if| expression, but some compilers don't like that
-        if ( (result = nsCharTraits<char>::compare(leftIter.get(), rightIter.get(), lengthAvailable)) != 0 )
-          return result;
+        {
+          int result;
+            // Note: |result| should be declared in this |if| expression, but some compilers don't like that
+          if ( (result = aComparator(leftIter.get(), rightIter.get(), lengthAvailable)) != 0 )
+            return result;
+        }
 
         if ( !(lengthToCompare -= lengthAvailable) )
           break;
