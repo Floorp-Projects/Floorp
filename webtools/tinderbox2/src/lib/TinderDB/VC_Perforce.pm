@@ -143,7 +143,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.9 $ )[1];
+$VERSION = ( qw $Revision: 1.10 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -357,9 +357,6 @@ sub status_table_row {
        $text_browser_color_string = 
          HTMLPopUp::text_browser_color_string($cell_color, $char);
   }
-
-  my $query_links = '';
-  $query_links.=  "\t\t".$text_browser_color_string."\n";
 
   if ( scalar(%{$affected_files}) || scalar(%{$jobs_fixed}) ) {
     
