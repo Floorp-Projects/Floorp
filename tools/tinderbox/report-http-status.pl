@@ -10,7 +10,7 @@
 # of this script read/write the same data.
 my $script_dir = "/builds/tinderbox/mozilla/tools/tinderbox";
 
-my $graph_server = "tegu.mozilla.org";
+my $graph_server = "coffee";
 
 # Send data to graph server via HTTP.
 require "$script_dir/reportdata.pl";
@@ -150,7 +150,7 @@ sub is_http_alive() {
   }
 
   # Hard-coded for now.
-  my $graph_url = "http://tegu.mozilla.org/graph/query.cgi?tbox=$ARGV[0]&testname=http_alive&autoscale=&size=&days=&units=hours&ltype=&points=&avg=&showpoint=";
+  my $graph_url = "http://$graph_server/graph/query.cgi?tbox=$ARGV[0]&testname=http_alive&autoscale=&size=&days=&units=hours&ltype=&points=&avg=&showpoint=";
 
   ReportData::send_tbox_packet("tinderbox-daemon\@warp.mcom.com",
                                "Talkback",
