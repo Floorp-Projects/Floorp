@@ -208,6 +208,7 @@ public:
   static nsIAtom* selectedindex;
   static nsIAtom* shape;
   static nsIAtom* size;
+  static nsIAtom* spacer;
   static nsIAtom* span;
   static nsIAtom* src;
   static nsIAtom* standby;
