@@ -255,6 +255,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
   if(!templine) 
     return MIME_OUT_OF_MEMORY;
   
+  nsCRT::memset(templine, 0, buffersizeneeded);
   /* Copy `line' to `templine', quoting HTML along the way.
 	 Note: this function does no charset conversion; that has already
 	 been done.
