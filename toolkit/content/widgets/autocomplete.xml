@@ -555,6 +555,7 @@
           else {
             if (this.tree.hasAttribute("collapsed"))
               this.tree.removeAttribute("collapsed");
+
             this.tree.setAttribute("height", height);
           }
           this.tree.setAttribute("hidescrollbar", view.rowCount <= rows);

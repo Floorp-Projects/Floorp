@@ -86,12 +86,13 @@ popup[type="autocomplete"],
 /* ::::: tree ::::: */
 
 .autocomplete-tree {
-  border: none;
+  -moz-appearance: none !important;
+  border: none !important;
   background-color: transparent !important;
 }
 
 .autocomplete-treecol {
-  -moz-appearance: none;
+  -moz-appearance: none !important;
   margin: 0 !important;
   border: none !important;
   padding: 0 !important;
