@@ -66,6 +66,38 @@ MISSING_X=
 MISSING_MOTIF=
 MISSING_GTK=
 
+dnl Check for invalid object directory setup.
+dnl    If the tree has already been built in topsrcdir,
+dnl    do not allow it to be built in a separate object 
+dnl    directory unless the src tree is cleaned up.
+dnl ========================================================
+_topsrcdir=`cd \`dirname $0\`; pwd`
+_objdir=`pwd`
+
+# Check for a separate objdir
+if test "$_topsrcdir" != "$_objdir"
+then
+  # Check for a couple representative files in the source tree
+  for file in $_topsrcdir/Makefile $_topsrcdir/config/autoconf.mk; do
+    if test -f $file; then
+      echo 2>&1
+      echo "Error: Your source tree contains the file," 2>&1
+      echo "          $file" 2>&1
+      echo 2>&1
+      echo "       This is an indication that you have built in the source tree." 2>&1
+      echo "       The files that were built in the source tree can mess up the" 2>&1
+      echo "       separate objdir build in strange and mysterious ways." 2>&1
+      echo 2>&1
+      echo "       You can clean up the source tree with the following steps:" 2>&1
+      echo "         1. cd $_topsrcdir" 2>&1
+      echo "         2. gmake realclean; build/autoconf/clean-config.sh" 2>&1
+      echo 2>&1
+      exit 1
+      break
+    fi
+  done
+fi
+
 dnl Checks for programs.
 dnl ========================================================
 AC_PROG_CC
@@ -133,6 +165,26 @@ if [ test "$GNU_CC" = 1]; then
     MKSHLIB_UNFORCE_ALL='-Wl,--no-whole-archive'
     DSO_LDOPTS='-shared -Wl,-h -Wl,$(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     DSO_CFLAGS='-fPIC'
+
+    # Turn on GNU specific features
+    _WARNINGS_CFLAGS="${_WARNINGS_CXXFLAGS} -Wall"
+    #_WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -pedantic"
+
+    _DEFINES_CFLAGS='-include $(DEPTH)/config-defs.h'
+    _USE_CPP_INCLUDE_FLAG=1
+else
+    _DEFINES_CFLAGS='$(ACDEFINES)'
+fi
+
+if [ test "$GNU_CXX" = 1]; then
+    # Turn on GNU specific features
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall"
+    #_WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -pedantic"
+
+    _DEFINES_CXXFLAGS='-include $(DEPTH)/config-defs.h'
+    _USE_CPP_INCLUDE_FLAG=1
+else
+    _DEFINES_CXXFLAGS='$(ACDEFINES)'
 fi
 
 dnl now the exceptions
@@ -569,81 +621,16 @@ CC=$_SAVE_CC
 dnl End of C++ language/feature checks
 
 
-dnl Check cc for  -include flag support (command-line include files)
-dnl Assume that cxx has the feature if cc has it.
-dnl (We can add another test later if we need to.)
-AC_MSG_CHECKING($CC for \"-include <file>\" option)
-_tmp_header="include-test-$$.h"
-echo "char *booboo;" > $_tmp_header
-_SAVE_CFLAGS=$CFLAGS ; CFLAGS="$CFLAGS -include $_tmp_header"
-AC_CACHE_VAL(ac_cv_cxx_include_flag,
- [AC_TRY_COMPILE([],
-                 [booboo = "yogi";],
-                 [ac_cv_cxx_include_flag=true],
-                 [ac_cv_cxx_include_flag=false])])
-if test $ac_cv_cxx_include_flag = true ; then
-  AC_MSG_RESULT(yes)
-  USE_CPP_INCLUDE_FLAG=1
-  AC_SUBST(USE_CPP_INCLUDE_FLAG)
-else
-  AC_MSG_RESULT(no)
-fi  
-rm -f $_tmp_header
-CFLAGS=$_SAVE_CFLAGS
-
-dnl Check cc and cxx for -Wall flag support (adds compiler warnings)
-AC_MSG_CHECKING($CC for \"-Wall\" support)
-_SAVE_CFLAGS=$CFLAGS ; CFLAGS="$CFLAGS -Wall"
-AC_CACHE_VAL(ac_cv_cc_wall_flag,
- [AC_TRY_COMPILE([],
-                 [int i;],
-                 [ac_cv_cc_wall_flag=true],
-                 [ac_cv_cc_wall_flag=false])])
-if test $ac_cv_cc_wall_flag = true ; then
-  AC_MSG_RESULT(yes)
-  _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall"
-else
-  AC_MSG_RESULT(no)
-fi  
-_SAVE_CC=$CC ; CC=$CXX
-CFLAGS="$CXXFLAGS -Wall"
-AC_MSG_CHECKING($CXX for \"-Wall\" support)
-AC_CACHE_VAL(ac_cv_cxx_wall_flag,
- [AC_TRY_COMPILE([],
-                 [int i;],
-                 [ac_cv_cxx_wall_flag=true],
-                 [ac_cv_cxx_wall_flag=false])])
-if test $ac_cv_cxx_wall_flag = true ; then
-  AC_MSG_RESULT(yes)
-  _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall"
-else
-  AC_MSG_RESULT(no)
-fi  
-CC=$_SAVE_CC
-CFLAGS=$_SAVE_CFLAGS
-
-dnl Check cc for -pedantic flag support (adds compiler warnings)
-dnl AC_MSG_CHECKING($CC for \"-pedantic\" support)
-dnl _SAVE_CFLAGS=$CFLAGS ; CFLAGS="$CFLAGS -pedantic"
-dnl AC_CACHE_VAL(ac_cv_cc_pedantic_flag,
-dnl  [AC_TRY_COMPILE([],
-dnl                  [int i;],
-dnl                  [ac_cv_cc_pedantic_flag=true],
-dnl                  [ac_cv_cc_pedantic_flag=false])])
-dnl if test $ac_cv_cc_pedantic_flag = true ; then
-dnl   AC_MSG_RESULT(yes)
-dnl   WARNINGS_CFLAGS="${WARNINGS_CFLAGS} -pedantic"
-dnl else
-dnl   AC_MSG_RESULT(no)
-dnl fi  
-dnl CFLAGS=$_SAVE_CFLAGS
-
-
 dnl Mozilla specific options
 dnl ========================================================
 dnl The macros used for command line options
 dnl are defined in build/autoconf/altoptions.m4.
 
+dnl ========================================================
+dnl =
+dnl = Components and Features
+dnl = 
+dnl ========================================================
 MOZ_ARG_HEADER(Components and Features)
 
 MOZ_ARG_DISABLE_BOOL(async-dns,
@@ -732,7 +719,7 @@ MOZ_ARG_ENABLE_BOOL_OR_STRING(debug,
 MOZ_ARG_ENABLE_BOOL(md,
 [  --enable-md             Use compiler-based dependencies ],
     [  COMPILER_DEPEND=1
-       _DEPEND_CFLAGS='-Wp,-MMD,$(*D)/.deps/$(*F).pp' ]
+       _DEPEND_CFLAGS='-Wp,-MD,$(*D)/.deps/$(*F).pp' ]
 )
 
 dnl Make pedantic a flag for now since the builds currently choke on it.
@@ -760,6 +747,11 @@ MOZ_ARG_ENABLE_BOOL(cpp-exceptions,
     [ _MOZ_EXCEPTIONS_FLAGS=-fexceptions ]
 )
 
+dnl ========================================================
+dnl =
+dnl = Profiling and Instrumenting
+dnl = 
+dnl ========================================================
 MOZ_ARG_HEADER(Profiling and Instrumenting)
 
 MOZ_ARG_ENABLE_BOOL(gprof,
@@ -794,6 +786,11 @@ MOZ_ARG_WITH_STRING(wrap-malloc,
   WRAP_MALLOC_LIB=$withval)
 
 
+dnl ========================================================
+dnl =
+dnl = Misc. Options
+dnl = 
+dnl ========================================================
 MOZ_ARG_HEADER(Misc. Options)
 
 MOZ_ARG_ENABLE_STRING(homedir,
@@ -819,6 +816,11 @@ MOZ_ARG_ENABLE_BOOL(js-stubs,
 [  --enable-js-stubs       Use XPIDL JavaScript Stubs.],
   AC_DEFINE(XPIDL_JS_STUBS))
 
+dnl ========================================================
+dnl =
+dnl = Untested or Broken Options
+dnl = 
+dnl ========================================================
 MOZ_ARG_HEADER(Untested or Broken Options)
 
 MOZ_ARG_ENABLE_BOOL(crypto,
@@ -1303,15 +1305,27 @@ CFLAGS=`echo \
 	$_WARNINGS_CFLAGS \
 	$_GPROF_CFLAGS \
 	$_DEPEND_CFLAGS \
+	$_DEFINES_CFLAGS \
 	$CFLAGS`
 
 CXXFLAGS=`echo \
 	$_MOZ_RTTI_FLAGS \
 	$_MOZ_EXCEPTIONS_FLAGS \
-	$_WARNINGS_CFLAGS \
+	$_WARNINGS_CXXFLAGS \
 	$_GPROF_CFLAGS \
 	$_DEPEND_CFLAGS \
+	$_DEFINES_CXXFLAGS \
 	$CXXFLAGS`
+
+# Clean out '-O' flags if doing a debug build.
+if test "$MOZ_DEBUG"
+then
+  changequote(,)dnl
+  CFLAGS=`  echo $CFLAGS   | sed 's/ *-O[^ ]*//g;'`
+  CXXFLAGS=`echo $CXXFLAGS | sed 's/ *-O[^ ]*//g;'`
+  changequote([,])dnl
+fi
+
 dnl Support for X11 makedepend, if found on the system
 dnl ========================================================
 AC_PATH_PROG(SYSTEM_MAKEDEPEND,makedepend)
@@ -1427,7 +1441,7 @@ dnl ========================================================
 
 # Save the defines header file before autoconf removes it.
 # (Do not add AC_DEFINE calls after this line.)
-if test "$USE_CPP_INCLUDE_FLAG"; then
+if test "$_USE_CPP_INCLUDE_FLAG"; then
   CONFIG_DEFS_H=config-defs.h
   # Only write config-defs.h when something changes (or it doesn't exist)
   if test ! -f $CONFIG_DEFS_H \
@@ -1442,9 +1456,6 @@ if test "$USE_CPP_INCLUDE_FLAG"; then
 EOF
     cat confdefs.h >> $CONFIG_DEFS_H
   fi
-
-  CONFIG_DEFS_H='$(DEPTH)/'$CONFIG_DEFS_H
-  AC_SUBST(CONFIG_DEFS_H)
 fi
 
 dnl Need to manual make the directories to get around deficiency in AC_OUTPUT
