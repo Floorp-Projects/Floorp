@@ -2319,21 +2319,22 @@ nsresult PresShell::SetPrefColorRules(void)
 nsresult
 PresShell::SetPrefNoScriptRule()
 {
-  // If script is disabled, change noscript from display: none to display: block
-  if (!mDocument->IsScriptEnabled()) {
-    nsresult rv;
+  nsresult rv = NS_OK;
+
+  if (mDocument->IsScriptEnabled()) {
     if (!mPrefStyleSheet) {
       rv = CreatePreferenceStyleSheet();
       NS_ENSURE_SUCCESS(rv, rv);
     }
     // get the DOM interface to the stylesheet
-    nsCOMPtr<nsIDOMCSSStyleSheet> sheet(do_QueryInterface(mPrefStyleSheet,&rv));
+    nsCOMPtr<nsIDOMCSSStyleSheet> sheet(do_QueryInterface(mPrefStyleSheet, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
     PRUint32 index = 0;
-    rv = sheet->InsertRule(NS_LITERAL_STRING("noscript{display:inline}"), sInsertPrefSheetRulesAt, &index);
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = sheet->InsertRule(NS_LITERAL_STRING("noscript{display:none!important}"),
+                           sInsertPrefSheetRulesAt, &index);
   }
-  return NS_OK;
+
+  return rv;
 }
 
 nsresult PresShell::SetPrefLinkRules(void)
