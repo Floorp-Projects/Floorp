@@ -20,6 +20,7 @@
 #define nsImapUrl_h___
 
 #include "nsIImapUrl.h"
+#include "nsCOMPtr.h"
 #include "nsIUrlListenerManager.h"
 #include "nsINetlibURL.h" /* this should be temporary until nunet project lands */
 #include "nsIMsgIncomingServer.h"
@@ -135,7 +136,7 @@ protected:
 	nsresult ParseURL(const nsString& aSpec, const nsIURL* aURL = nsnull);
 	void ReconstructSpec(void);
 	// manager of all of current url listeners....
-	nsIUrlListenerManager * m_urlListeners;
+	nsCOMPtr<nsIUrlListenerManager>  m_urlListeners;
 	// Here's our link to the old netlib world....
     URL_Struct *m_URL_s;
 
@@ -176,13 +177,13 @@ protected:
 	// event sinks
 	imapMessageFlagsType	m_flags;
 	nsImapAction			m_imapAction;
-	nsIImapLog  * m_imapLog;
-    nsIImapMailFolderSink* m_imapMailFolderSink;
-    nsIImapMessageSink* m_imapMessageSink;
-    nsIImapExtensionSink* m_imapExtensionSink;
-    nsIImapMiscellaneousSink* m_imapMiscellaneousSink;
+	nsCOMPtr<nsIImapLog>	m_imapLog;
+    nsCOMPtr<nsIImapMailFolderSink> m_imapMailFolderSink;
+    nsCOMPtr<nsIImapMessageSink>	m_imapMessageSink;
+    nsCOMPtr<nsIImapExtensionSink>	m_imapExtensionSink;
+    nsCOMPtr<nsIImapMiscellaneousSink> m_imapMiscellaneousSink;
 
-	nsIMsgIncomingServer  *m_server;
+	nsCOMPtr<nsIMsgIncomingServer>  m_server;
 };
 
 #endif /* nsImapUrl_h___ */

@@ -65,11 +65,6 @@ nsImapUrl::nsImapUrl()
     m_search = nsnull;
 	m_file = nsnull;
 	
-	m_imapLog = nsnull;
-    m_imapMailFolderSink = nsnull;
-    m_imapMessageSink = nsnull;
-    m_imapExtensionSink = nsnull;
-    m_imapMiscellaneousSink = nsnull;
 	m_listOfMessageIds = nsnull;
 	m_sourceCanonicalFolderPathSubString = nsnull;
 	m_destinationCanonicalFolderPathSubString = nsnull;
@@ -83,19 +78,11 @@ nsImapUrl::nsImapUrl()
 	m_validUrl = PR_TRUE;	// assume the best.
 	m_flags = 0;
 	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, nsIUrlListenerManager::GetIID(), 
-									   (void **) &m_urlListeners);
+									   (void **) getter_AddRefs(m_urlListeners));
 }
  
 nsImapUrl::~nsImapUrl()
 {
-	NS_IF_RELEASE(m_imapLog);
-    NS_IF_RELEASE(m_imapMailFolderSink);
-    NS_IF_RELEASE(m_imapMessageSink);
-    NS_IF_RELEASE(m_imapExtensionSink);
-    NS_IF_RELEASE(m_imapMiscellaneousSink);
-	NS_IF_RELEASE(m_server);
-
-	NS_IF_RELEASE(m_urlListeners);
 	PR_FREEIF(m_errorMessage);
 
     PR_FREEIF(m_spec);
@@ -179,14 +166,10 @@ NS_IMETHODIMP nsImapUrl::GetServer(nsIMsgIncomingServer **aServer)
     nsresult rv = NS_ERROR_NULL_POINTER;
 	if (aServer) // valid argument to return result in?
 	{
+		*aServer = m_server;
+		NS_IF_ADDREF(*aServer);
 		if (m_server)
-		{
-			*aServer = m_server;
-			NS_ADDREF(m_server);
-            rv = NS_OK;
-		}
-		else
-			*aServer = nsnull;
+			rv = NS_OK;  // only return ok if we have non null server...
 	} // if aMsgIdentity
 
 	return rv;
@@ -197,7 +180,7 @@ NS_IMETHODIMP nsImapUrl::GetImapLog(nsIImapLog ** aImapLog)
 	if (aImapLog)
 	{
 		*aImapLog = m_imapLog;
-		NS_IF_ADDREF(m_imapLog);
+		NS_IF_ADDREF(*aImapLog );
 	}
 
 	return NS_OK;
@@ -206,12 +189,7 @@ NS_IMETHODIMP nsImapUrl::GetImapLog(nsIImapLog ** aImapLog)
 NS_IMETHODIMP nsImapUrl::SetImapLog(nsIImapLog  * aImapLog)
 {
 	if (aImapLog)
-	{
-		NS_IF_RELEASE(m_imapLog);
-		m_imapLog = aImapLog;
-		NS_ADDREF(m_imapLog);
-	}
-
+		m_imapLog = dont_QueryInterface(aImapLog);
 	return NS_OK;
 }
 
@@ -221,7 +199,7 @@ NS_IMETHODIMP nsImapUrl::GetImapMailFolderSink(nsIImapMailFolderSink **
 	if (aImapMailFolderSink)
 	{
 		*aImapMailFolderSink = m_imapMailFolderSink;
-		NS_IF_ADDREF(m_imapMailFolderSink);
+		NS_IF_ADDREF(*aImapMailFolderSink);
 	}
 
 	return NS_OK;
@@ -230,11 +208,7 @@ NS_IMETHODIMP nsImapUrl::GetImapMailFolderSink(nsIImapMailFolderSink **
 NS_IMETHODIMP nsImapUrl::SetImapMailFolderSink(nsIImapMailFolderSink  * aImapMailFolderSink)
 {
 	if (aImapMailFolderSink)
-	{
-		NS_IF_RELEASE(m_imapMailFolderSink);
-		m_imapMailFolderSink = aImapMailFolderSink;
-		NS_ADDREF(m_imapMailFolderSink);
-	}
+		m_imapMailFolderSink = dont_QueryInterface(aImapMailFolderSink);
 
 	return NS_OK;
 }
@@ -244,7 +218,7 @@ NS_IMETHODIMP nsImapUrl::GetImapMessageSink(nsIImapMessageSink ** aImapMessageSi
 	if (aImapMessageSink)
 	{
 		*aImapMessageSink = m_imapMessageSink;
-		NS_IF_ADDREF(m_imapMessageSink);
+		NS_IF_ADDREF(*aImapMessageSink);
 	}
 
 	return NS_OK;
@@ -253,11 +227,7 @@ NS_IMETHODIMP nsImapUrl::GetImapMessageSink(nsIImapMessageSink ** aImapMessageSi
 NS_IMETHODIMP nsImapUrl::SetImapMessageSink(nsIImapMessageSink  * aImapMessageSink)
 {
 	if (aImapMessageSink)
-	{
-		NS_IF_RELEASE(m_imapMessageSink);
-		m_imapMessageSink = aImapMessageSink;
-		NS_ADDREF(m_imapMessageSink);
-	}
+		m_imapMessageSink = dont_QueryInterface(aImapMessageSink);
 
 	return NS_OK;
 }
@@ -267,7 +237,7 @@ NS_IMETHODIMP nsImapUrl::GetImapExtensionSink(nsIImapExtensionSink ** aImapExten
 	if (aImapExtensionSink)
 	{
 		*aImapExtensionSink = m_imapExtensionSink;
-		NS_IF_ADDREF(m_imapExtensionSink);
+		NS_IF_ADDREF(*aImapExtensionSink);
 	}
 
 	return NS_OK;
@@ -276,11 +246,7 @@ NS_IMETHODIMP nsImapUrl::GetImapExtensionSink(nsIImapExtensionSink ** aImapExten
 NS_IMETHODIMP nsImapUrl::SetImapExtensionSink(nsIImapExtensionSink  * aImapExtensionSink)
 {
 	if (aImapExtensionSink)
-	{
-		NS_IF_RELEASE(m_imapExtensionSink);
-		m_imapExtensionSink = aImapExtensionSink;
-		NS_ADDREF(m_imapExtensionSink);
-	}
+		m_imapExtensionSink = dont_QueryInterface(aImapExtensionSink);
 
 	return NS_OK;
 }
@@ -291,7 +257,7 @@ NS_IMETHODIMP nsImapUrl::GetImapMiscellaneousSink(nsIImapMiscellaneousSink **
 	if (aImapMiscellaneousSink)
 	{
 		*aImapMiscellaneousSink = m_imapMiscellaneousSink;
-		NS_IF_ADDREF(m_imapMiscellaneousSink);
+		NS_IF_ADDREF(*aImapMiscellaneousSink);
 	}
 
 	return NS_OK;
@@ -301,11 +267,7 @@ NS_IMETHODIMP nsImapUrl::SetImapMiscellaneousSink(nsIImapMiscellaneousSink  *
                                               aImapMiscellaneousSink)
 {
 	if (aImapMiscellaneousSink)
-	{
-		NS_IF_RELEASE(m_imapMiscellaneousSink);
-		m_imapMiscellaneousSink = aImapMiscellaneousSink;
-		NS_ADDREF(m_imapMiscellaneousSink);
-	}
+		m_imapMiscellaneousSink = dont_QueryInterface(aImapMiscellaneousSink);
 
 	return NS_OK;
 }
@@ -566,9 +528,7 @@ nsresult nsImapUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
 
     if (m_host)
     {
-        nsresult rv;
-        NS_IF_RELEASE (m_server);
-        m_server = nsnull;
+        nsresult rv = NS_OK;
         NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
         if (NS_FAILED(rv)) return rv;
         
@@ -581,11 +541,9 @@ nsresult nsImapUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
                               nsIImapIncomingServer::GetIID(),
                                        getter_AddRefs(servers));
         if (NS_FAILED(rv)) return rv;
-        nsCOMPtr<nsIMsgIncomingServer>
-            server(do_QueryInterface(servers->ElementAt(0)));
+        nsCOMPtr<nsIMsgIncomingServer> server (do_QueryInterface(servers->ElementAt(0)));
         if (NS_FAILED(rv)) return rv;
-        rv = server->QueryInterface(nsIMsgIncomingServer::GetIID(), (void**)
-                                    &m_server);
+		m_server = do_QueryInterface(server);
     }
 
     NS_UNLOCK_INSTANCE();
@@ -1443,12 +1401,12 @@ char *nsImapUrl::ReplaceCharsInCopiedString(const char *stringToCopy, char oldCh
 	*(oldCharString+1) = 0;
 	
 	char *translatedString = PL_strdup(stringToCopy);
-	char *currentSeparator = strstr(translatedString, oldCharString);
+	char *currentSeparator = PL_strstr(translatedString, oldCharString);
 	
 	while(currentSeparator)
 	{
 		*currentSeparator = newChar;
-		currentSeparator = strstr(currentSeparator+1, oldCharString);
+		currentSeparator = PL_strstr(currentSeparator+1, oldCharString);
 	}
 
 	return translatedString;
