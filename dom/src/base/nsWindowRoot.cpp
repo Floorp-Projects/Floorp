@@ -127,7 +127,7 @@ nsWindowRoot::RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsI
   nsCOMPtr<nsIEventListenerManager> manager;
   GetListenerManager(getter_AddRefs(manager));
   if (manager) {
-    manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
+    manager->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
