@@ -172,7 +172,7 @@ clobber_layout:
 browse_info::
 	cd $(MOZ_SRC)\$(MOZ_TOP)
 	-dir /s /b *.sbr > sbrlist.tmp
-	-bscmake /o nglayout.bsc @sbrlist.tmp
+	-bscmake /o /Es nglayout.bsc @sbrlist.tmp
 	-rm sbrlist.tmp
 
 deliver::
