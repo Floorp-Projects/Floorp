@@ -302,6 +302,9 @@ nsRangeListIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
+  // XXX shouldn't this just do mRangeList->QueryInterface instead of
+  // having a complete copy of that method here? What about AddRef and
+  // Release? shouldn't they be delegated too?
   if (aIID.Equals(kISupportsIID)) {
     nsIDOMSelection* tmp = mRangeList;
     *aInstancePtr = (void*)tmp;
@@ -319,7 +322,8 @@ nsRangeListIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
   if (aIID.Equals(kIEnumeratorIID)) {
-    *aInstancePtr = (void*)(nsIEnumerator*)this;
+    nsIEnumerator* tmp = this;
+    *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -378,26 +382,28 @@ nsRangeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kISupportsIID)) {
-    nsISupports* tmp = (nsISupports *)(nsIDOMSelection *)this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
   if (aIID.Equals(kIDOMSelectionIID)) {
-    *aInstancePtr = (void*)(nsIDOMSelection *)this;
+    nsIDOMSelection* tmp = this;
+    *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(  kIFrameSelectionIID)) {
-    *aInstancePtr = (void*)(nsIFrameSelection *)this;
+  if (aIID.Equals(kIFrameSelectionIID)) {
+    nsIFrameSelection* tmp = this;
+    *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIEnumeratorIID)) {
     nsRangeListIterator *iterator =  new nsRangeListIterator(this);
-    iterator->QueryInterface(kIEnumeratorIID,aInstancePtr);
-    *aInstancePtr = (void*)(iterator);
+    return iterator->QueryInterface(kIEnumeratorIID, aInstancePtr);
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    // use *first* base class for ISupports
+    nsIFrameSelection* tmp1 = this;
+    nsISupports* tmp2 = tmp1;
+    *aInstancePtr = (void*) tmp2;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;
