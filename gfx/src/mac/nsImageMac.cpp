@@ -1608,14 +1608,23 @@ nsresult nsImageMac::DrawTileQuickly(nsIRenderingContext &aContext,
 	    for (PRInt32 x = aX0; x < aX1; x += mWidth)
   		{
 	  		Rect		imageDestRect = imageRect;
+	  		Rect    imageSrcRect  = imageRect;
 	  		::OffsetRect(&imageDestRect, x, y);
-	  		imageDestRect.bottom = PR_MIN(imageDestRect.bottom, aY1);
-	  		imageDestRect.right = PR_MIN(imageDestRect.right, aX1);
+
+	  		if (x == aX1 - mWidth) {
+	  		  imageDestRect.right = PR_MIN(imageDestRect.right, aX1);
+	  		  imageSrcRect.right = imageRect.left + (imageDestRect.right - imageDestRect.left);
+	  		}
+        
+	  		if (y == aY1 - mHeight) {
+	  		  imageDestRect.bottom = PR_MIN(imageDestRect.bottom, aY1);
+	  		  imageSrcRect.bottom = imageRect.top + (imageDestRect.bottom - imageDestRect.top);
+	  		}
 	  		
 	  		// CopyBits will do the truncation for us at the edges
         CopyBitsWithMask((BitMap*)(&mImagePixmap),
             mMaskBitsHandle ? (BitMap*)(&mMaskPixmap) : nsnull, mAlphaDepth,
-            (BitMap*)(*destPixels), imageRect, imageRect, imageDestRect, PR_TRUE);
+            (BitMap*)(*destPixels), imageSrcRect, imageSrcRect, imageDestRect, PR_TRUE);
 	  	}
   	}
   
