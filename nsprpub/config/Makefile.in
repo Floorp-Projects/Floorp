@@ -39,7 +39,6 @@ else
 PROG_SUFFIX =
 endif
 
-ifdef notdef
 # Temporary workaround to disable the generation of
 # library build time because now.c uses the 'long long'
 # data type that's not available on some platforms.
@@ -66,7 +65,7 @@ endif
 
 ifeq ($(OS_ARCH), HP-UX)
     ifeq ($(USE_64),1)
-        XLDOPTS += +DD64
+        XLDOPTS += +DA2.0W
     endif
 endif
 
@@ -79,7 +78,6 @@ ifeq ($(MOZ_OS2_TOOLS),VACPP)
 OS_CFLAGS = $(OS_EXE_CFLAGS)
 endif
 
-endif # notdef
 include $(topsrcdir)/config/rules.mk
 
 PROGS	= $(OBJDIR)/now$(PROG_SUFFIX)
