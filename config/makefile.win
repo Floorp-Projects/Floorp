@@ -59,7 +59,7 @@ build_number::
     $(RM) $@
     $(PERL) bdate.pl > $@
     echo Setting build number...
-    $(PERL) aboutime.pl $(DEPTH)/xpfe/browser/resources/content/navigator.xul $@
+    $(PERL) aboutime.pl $(DEPTH)/xpfe/browser/resources/locale/en-US/navigator.dtd $@
     $(PERL) aboutime.pl $(DEPTH)/xpfe/browser/resources/content/viewSource.xul $@
 !endif
 
