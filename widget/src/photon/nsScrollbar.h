@@ -35,9 +35,7 @@ public:
     virtual                 ~nsScrollbar();
 
     // nsISupports
-    NS_IMETHOD_(nsrefcnt) AddRef();
-    NS_IMETHOD_(nsrefcnt) Release();
-    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+    NS_DECL_ISUPPORTS_INHERITED
 
     // nsIScrollBar implementation
     NS_IMETHOD SetMaxRange(PRUint32 aEndRange);
@@ -52,9 +50,7 @@ public:
                                PRUint32 aPosition, PRUint32 aLineIncrement);
 
 
-    virtual PRBool    OnPaint(nsPaintEvent & aEvent);
     virtual PRBool    OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
-    virtual PRBool    OnResize(nsSizeEvent &aEvent);
 
 protected:
   NS_IMETHOD CreateNative(PtWidget_t *parentWindow);

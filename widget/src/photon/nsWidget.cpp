@@ -39,7 +39,8 @@ static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 nsILookAndFeel *nsWidget::sLookAndFeel = nsnull;
 PRUint32 nsWidget::sWidgetCount = 0;
 
-//#define DBG 1
+/* Enable this to queue widget damage, this should be ON by default */
+#define ENABLE_DAMAGE_QUEUE
 
 DamageQueueEntry *nsWidget::mDmgQueue = nsnull;
 PtWorkProcId_t *nsWidget::mWorkProcID = nsnull;
@@ -661,7 +662,7 @@ NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
 
 NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate %p\n", this ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate this=<%p> IsSynch=<%d>\n", this, aIsSynchronous));
 
   if( mWidget )
   {
@@ -672,11 +673,12 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
 
     if( rect.width && rect.height )
     {
-	  /* Damage has to be releative Parent */
+	  /* Damage has to be relative Parent */
       mUpdateArea.SetRect( rect.x - mBounds.x, rect.y - mBounds.y, rect.width, rect.height );
 
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  rect=(%i,%i,%i,%i)\n", rect.x - mBounds.x, rect.y - mBounds.y, rect.width, rect.height  ));
 
+#ifdef ENABLE_DAMAGE_QUEUE
       if (aIsSynchronous)
       {
         UpdateWidgetDamage();
@@ -685,6 +687,9 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
       {
         QueueWidgetDamage();
       }
+#else
+      UpdateWidgetDamage();
+#endif
     }
   }
   else
@@ -696,7 +701,7 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
 
 NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate %p (%ld,%ld,%ld,%ld)\n", this, aRect.x, aRect.y, aRect.width, aRect.height ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate this=<%p> rect=(%ld,%ld,%ld,%ld) IsSync=<%d>\n", this, aRect.x, aRect.y, aRect.width, aRect.height, aIsSynchronous ));
 
   if( mWidget )
   {
@@ -728,6 +733,7 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 
       mUpdateArea.UnionRect( mUpdateArea, rect );
 
+#ifdef ENABLE_DAMAGE_QUEUE
       if( aIsSynchronous)
       {
         UpdateWidgetDamage();
@@ -736,6 +742,9 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
       {
         QueueWidgetDamage();
       }
+#else
+	  UpdateWidgetDamage();
+#endif
     }
   }
   else
@@ -850,7 +859,14 @@ NS_METHOD nsWidget::Update(void)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Update\n" ));
 
-  UpdateWidgetDamage();
+#if 0
+  /* Force every widget and draw itself */
+  if (mWidget)
+    PtDamageWidget(mWidget);
+#else
+  /* if the widget has been invalidated or damaged then re-draw it */
+    UpdateWidgetDamage();
+#endif
 
   return NS_OK;
 }
@@ -1410,58 +1426,63 @@ nsWidget* nsWidget::GetInstance( PtWidget_t * pWidget )
 
 
 // Input keysym is in gtk format; output is in NS_VK format
-PRUint32 nsWidget::nsConvertKey(unsigned long keysym)
+PRUint32 nsWidget::nsConvertKey(unsigned long keysym, PRBool *aIsChar )
 {
 
   struct nsKeyConverter {
     PRUint32       vkCode; // Platform independent key code
     unsigned long  keysym; // Photon key_sym key code
+    PRBool         isChar;
   };
 
  struct nsKeyConverter nsKeycodes[] = {
-  { NS_VK_CANCEL,     Pk_Cancel },
-  { NS_VK_BACK,       Pk_BackSpace },
-  { NS_VK_TAB,        Pk_Tab },
-  { NS_VK_CLEAR,      Pk_Clear },
-  { NS_VK_RETURN,     Pk_Return },
-  { NS_VK_SHIFT,      Pk_Shift_L },
-  { NS_VK_SHIFT,      Pk_Shift_R },
-  { NS_VK_CONTROL,    Pk_Control_L },
-  { NS_VK_CONTROL,    Pk_Control_R },
-  { NS_VK_ALT,        Pk_Alt_L },
-  { NS_VK_ALT,        Pk_Alt_R },
-  { NS_VK_PAUSE,      Pk_Pause },
-  { NS_VK_CAPS_LOCK,  Pk_Caps_Lock },
-  { NS_VK_ESCAPE,     Pk_Escape },
-  { NS_VK_SPACE,      Pk_space },
-  { NS_VK_PAGE_UP,    Pk_Pg_Up },
-  { NS_VK_PAGE_DOWN,  Pk_Pg_Down },
-  { NS_VK_END,        Pk_End },
-  { NS_VK_HOME,       Pk_Home },
-  { NS_VK_LEFT,       Pk_Left },
-  { NS_VK_UP,         Pk_Up },
-  { NS_VK_RIGHT,      Pk_Right },
-  { NS_VK_DOWN,       Pk_Down },
-  { NS_VK_PRINTSCREEN, Pk_Print },
-  { NS_VK_INSERT,     Pk_Insert },
-  { NS_VK_DELETE,     Pk_Delete },
-  { NS_VK_MULTIPLY,   Pk_KP_Multiply },
-  { NS_VK_ADD,        Pk_KP_Add },
-  { NS_VK_SEPARATOR,  Pk_KP_Separator },
-  { NS_VK_SUBTRACT,   Pk_KP_Subtract },
-  { NS_VK_DECIMAL,    Pk_KP_Decimal },
-  { NS_VK_DIVIDE,     Pk_KP_Divide },
-  { NS_VK_RETURN,     Pk_KP_Enter },
-  { NS_VK_COMMA,      Pk_comma },
-  { NS_VK_PERIOD,     Pk_period },
-  { NS_VK_SLASH,      Pk_slash },
-  { NS_VK_OPEN_BRACKET, Pk_bracketleft },
-  { NS_VK_CLOSE_BRACKET, Pk_bracketright },
-  { NS_VK_QUOTE, Pk_quotedbl }
+  { NS_VK_CANCEL,     Pk_Cancel, PR_FALSE },
+  { NS_VK_BACK,       Pk_BackSpace, PR_TRUE },
+  { NS_VK_TAB,        Pk_Tab, PR_TRUE },
+  { NS_VK_CLEAR,      Pk_Clear, PR_FALSE },
+  { NS_VK_RETURN,     Pk_Return, PR_TRUE },
+  { NS_VK_SHIFT,      Pk_Shift_L, PR_FALSE },
+  { NS_VK_SHIFT,      Pk_Shift_R, PR_FALSE },
+  { NS_VK_CONTROL,    Pk_Control_L, PR_FALSE },
+  { NS_VK_CONTROL,    Pk_Control_R, PR_FALSE },
+  { NS_VK_ALT,        Pk_Alt_L, PR_FALSE },
+  { NS_VK_ALT,        Pk_Alt_R, PR_FALSE },
+  { NS_VK_PAUSE,      Pk_Pause, PR_FALSE },
+  { NS_VK_CAPS_LOCK,  Pk_Caps_Lock, PR_FALSE },
+  { NS_VK_ESCAPE,     Pk_Escape, PR_FALSE },
+  { NS_VK_SPACE,      Pk_space, PR_TRUE },
+  { NS_VK_PAGE_UP,    Pk_Pg_Up, PR_FALSE },
+  { NS_VK_PAGE_DOWN,  Pk_Pg_Down, PR_FALSE },
+  { NS_VK_END,        Pk_End, PR_FALSE },
+  { NS_VK_HOME,       Pk_Home, PR_FALSE },
+  { NS_VK_LEFT,       Pk_Left, PR_FALSE },
+  { NS_VK_UP,         Pk_Up, PR_FALSE },
+  { NS_VK_RIGHT,      Pk_Right, PR_FALSE },
+  { NS_VK_DOWN,       Pk_Down, PR_FALSE },
+  { NS_VK_PRINTSCREEN, Pk_Print, PR_FALSE },
+  { NS_VK_INSERT,     Pk_Insert, PR_FALSE },
+  { NS_VK_DELETE,     Pk_Delete, PR_FALSE },
+  { NS_VK_MULTIPLY,   Pk_KP_Multiply, PR_FALSE },
+  { NS_VK_ADD,        Pk_KP_Add, PR_FALSE },
+  { NS_VK_SEPARATOR,  Pk_KP_Separator, PR_FALSE },
+  { NS_VK_SUBTRACT,   Pk_KP_Subtract, PR_FALSE },
+  { NS_VK_DECIMAL,    Pk_KP_Decimal, PR_FALSE },
+  { NS_VK_DIVIDE,     Pk_KP_Divide, PR_FALSE },
+  { NS_VK_RETURN,     Pk_KP_Enter, PR_TRUE },
+  { NS_VK_COMMA,      Pk_comma, PR_TRUE },
+  { NS_VK_PERIOD,     Pk_period, PR_TRUE },
+  { NS_VK_SLASH,      Pk_slash, PR_TRUE },
+  { NS_VK_OPEN_BRACKET, Pk_bracketleft, PR_TRUE },
+  { NS_VK_CLOSE_BRACKET, Pk_bracketright, PR_TRUE },
+  { NS_VK_QUOTE, Pk_quotedbl, PR_TRUE }
   };
 
   const int length = sizeof(nsKeycodes) / sizeof(struct nsKeyConverter);
-
+  if (aIsChar)
+  {
+    *aIsChar = PR_TRUE;
+  }
+	
   // First, try to handle alphanumeric input, not listed in nsKeycodes:
   if (keysym >= Pk_a && keysym <= Pk_z)
      return keysym - Pk_a + NS_VK_A;
@@ -1482,7 +1503,9 @@ PRUint32 nsWidget::nsConvertKey(unsigned long keysym)
     if (nsKeycodes[i].keysym == keysym)
     {
       printf("nsWidget::nsConvertKey - Converted <%x> to <%x>\n", keysym, nsKeycodes[i].vkCode);
-      return(nsKeycodes[i].vkCode);
+      if (aIsChar)
+        *aIsChar = (nsKeycodes[i].isChar);
+      return (nsKeycodes[i].vkCode);
     }
   }
 
@@ -1505,13 +1528,24 @@ void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
 
   if (aPhKeyEvent != nsnull)
   {
-    anEvent.keyCode =  (nsConvertKey(aPhKeyEvent->key_cap)  & 0x00FF);
+    PRBool IsChar;
+	
+    anEvent.keyCode =  (nsConvertKey(aPhKeyEvent->key_cap, &IsChar)  & 0x00FF);
+
     if (aEventType == NS_KEY_PRESS)
 	{
-      printf("nsWidget::InitKeyEvent key_sym=<%lu> converted=<%lu>\n",
-	     aPhKeyEvent->key_sym, nsConvertKey(aPhKeyEvent->key_cap));
+      printf("nsWidget::InitKeyEvent key_sym=<%lu> converted=<%lu> IsChar=<%d>\n",
+	     aPhKeyEvent->key_sym, nsConvertKey(aPhKeyEvent->key_cap), IsChar);
 
-	  anEvent.charCode = aPhKeyEvent->key_sym;
+      if (IsChar == PR_TRUE)
+      {
+        //anEvent.keyCode =  0;  /* I think the spec says this should be 0 */
+	    anEvent.charCode = aPhKeyEvent->key_sym;
+	  }
+	  else
+	  {
+        anEvent.charCode = 0;	  
+	  }
     }
 	else
       anEvent.charCode = 0; 
@@ -1528,8 +1562,6 @@ void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
 PRBool  nsWidget::DispatchKeyEvent(PhKeyEvent_t *aPhKeyEvent)
 {
 //  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::DispatchEvent Got a Key Event aPhEkyEvent->key_mods:<%x> aPhEkyEvent->key_flags:<%x> aPhEkyEvent->key_sym=<%x> aPhEkyEvent->key_caps=<%x>\n",aPhKeyEvent->key_mods, aPhKeyEvent->key_flags, aPhKeyEvent->key_sym, aPhKeyEvent->key_cap));
-  static int counter=0;
-  
   NS_ASSERTION(aPhKeyEvent, "nsWidget::DispatchKeyEvent a NULL PhKeyEvent was passed in");
 
   nsKeyEvent keyEvent;
@@ -1561,23 +1593,20 @@ printf("nsWidget::DispatchKeyEvent KeyEvent Info: key_flags=<%lu> key_mods=<%lu>
 
   if (PkIsFirstDown(aPhKeyEvent->key_flags))
   {
+    printf("nsWidget::DispatchKeyEvent Before Key Down \n");
     InitKeyEvent(aPhKeyEvent, this, keyEvent, NS_KEY_DOWN);
     result = w->OnKey(keyEvent); 
 
-  printf("nsWidget::DispatchKeyEvent Key Down counter=<%d>\n", counter++);
 
-//    if (aPhKeyEvent->key_cap < 0xF000)
-    {
-      InitKeyEvent(aPhKeyEvent, this, keyEvent, NS_KEY_PRESS);
-      result = w->OnKey(keyEvent); 
-      printf("nsWidget::DispatchKeyEvent Key Press counter=<%d>\n", counter++);
-    }
+    printf("nsWidget::DispatchKeyEvent Before Key Press\n");
+    InitKeyEvent(aPhKeyEvent, this, keyEvent, NS_KEY_PRESS);
+    result = w->OnKey(keyEvent); 
   }
   else if (PkIsKeyDown(aPhKeyEvent->key_flags) == 0)
   {
+    printf("nsWidget::DispatchKeyEvent Before Key Up\n");
     InitKeyEvent(aPhKeyEvent, this, keyEvent, NS_KEY_UP);
     result = w->OnKey(keyEvent); 
-  printf("nsWidget::DispatchKeyEvent Key Up counter=<%d>\n", counter++);
   }
 
   printf("nsWidget::DispatchKeyEvent after events result=<%d>\n", result);
@@ -1729,8 +1758,10 @@ void nsWidget::InitDamageQueue()
   mWorkProcID = PtAppAddWorkProc( nsnull, WorkProc, &mDmgQueue );
   if( mWorkProcID )
   {
+    int Global_Widget_Hold_Count;
     mDmgQueueInited = PR_TRUE;
-    PtHold();
+    Global_Widget_Hold_Count =  PtHold();
+    PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::InitDamageQueue PtHold Global_Widget_Hold_Count=<%d> this=<%p>\n", Global_Widget_Hold_Count, this));
   }
   else
   {
@@ -1791,6 +1822,9 @@ void nsWidget::QueueWidgetDamage()
 //---------------------------------------------------------------------------
 void nsWidget::UpdateWidgetDamage()
 {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::UpdateWidgetDamaged mWidget=<%p> mUpdateArea=(%d,%d)\n",
+    mWidget,  mUpdateArea.width,  mUpdateArea.height ));
+
   if( mWidget )
   {
     RemoveDamagedWidget( mWidget );
@@ -1862,7 +1896,11 @@ void nsWidget::RemoveDamagedWidget(PtWidget_t *aWidget)
       if( nsnull == mDmgQueue )
       {
         mDmgQueueInited = PR_FALSE;
-        PtRelease();
+
+        int Global_Widget_Hold_Count;
+        Global_Widget_Hold_Count =  PtRelease();
+        PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::RemoveDamagedWidget PtHold/PtRelease Global_Widget_Hold_Count=<%d> this=<%p>\n", Global_Widget_Hold_Count, this));
+ 
         if( mWorkProcID )
           PtAppRemoveWorkProc( nsnull, mWorkProcID );
       }
@@ -1909,7 +1947,11 @@ int nsWidget::WorkProc( void *data )
 
     *dq = nsnull;
     mDmgQueueInited = PR_FALSE;
-    PtRelease();
+
+    int Global_Widget_Hold_Count;
+    Global_Widget_Hold_Count =  PtRelease();
+    PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::WorkProc PtHold/PtRelease Global_Widget_Hold_Count=<%d> this=<%p>\n", Global_Widget_Hold_Count, NULL));
+
     PtFlush();
   }
 

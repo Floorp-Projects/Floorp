@@ -38,11 +38,8 @@
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
 
-
-//static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-//static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-//static NS_DEFINE_IID(kRenderingContextPhIID, NS_IRENDERING_CONTEXT_PH_IID);
-
+/* Turn this on to disable Resize queueing */
+//#define DRAW_EVERYTHING
 
 PRBool            nsWindow::mResizeQueueInited = PR_FALSE;
 DamageQueueEntry  *nsWindow::mResizeQueue = nsnull;
@@ -98,7 +95,6 @@ nsWindow::~nsWindow()
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::~nsWindow (%p) - Not Implemented.\n", this ));
 
 #if 1
-
   mIsDestroyingWindow = PR_TRUE;
 
   if ( (mWindowType == eWindowType_dialog) ||
@@ -679,6 +675,7 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
 NS_METHOD nsWindow::BeginResizingChildren(void)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::BeginResizingChildren.\n"));
+  /* PtHold() */
   return NS_OK;
 }
 
@@ -732,7 +729,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   PtArg_t  arg;
   PhDim_t  dim = { aWidth, aHeight };
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow(%p)::Resize (%i,%i,%i)\n", this, aWidth, aHeight, aRepaint ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow(%p)::Resize w/h=(%i,%i) Repaint=<%i)\n", this, aWidth, aHeight, aRepaint ));
 
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
@@ -752,11 +749,15 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 
     EnableDamage( mWidget, PR_TRUE );
 
-    Invalidate( aRepaint );
+// kirk Hack, taking this out to see what happens!
+//    Invalidate( aRepaint );
 
     if (aRepaint)
     {
       // REVISIT - Do nothing, resize handler will cause a redraw
+
+      // Hack - Added this to see if it helps
+      Invalidate( aRepaint );
     }
   }
   else
@@ -764,20 +765,6 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 
   return NS_OK;
 }
-
-
-#if 0
-NS_METHOD nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
-                           PRInt32 aHeight, PRBool aRepaint)
-{
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Resize Combination Resize and Move\n"));
-
-  Resize(aWidth,aHeight,aRepaint);
-  Move(aX,aY);
-  return NS_OK;
-}
-#endif
-
 
 NS_METHOD nsWindow::SetMenuBar( nsIMenuBar * aMenuBar )
 {
@@ -1011,21 +998,25 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
   
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc for %p\n", pWin ));
 
-  if( !pWin )
+  if ( !pWin )
   {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  aborted because instance is NULL!\n"));
     return;
   }
 
-#if 1
-  if( /*pWin->mCreateHold || pWin->mHold ||*/ pWin->mIsResizing )
+#ifndef DRAW_EVERYTHING
+// This prevents redraws while any window is resizing, ie there are
+//   windows in the resize queue
+
+  if ( /*pWin->mCreateHold || pWin->mHold ||*/ pWin->mIsResizing )
   {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  aborted due to hold-off!\n"));
     return;
   }
+
 #endif
 
-  if( pWin->mEventCallback )
+  if ( pWin->mEventCallback )
   {
     PhRect_t   rect;
     PhArea_t   area;
@@ -1071,7 +1062,9 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
     pev.rect = &nsDmg;
     pev.eventStructType = NS_PAINT_EVENT;
 
-    PtHold();
+    int Global_Widget_Hold_Count;
+    Global_Widget_Hold_Count =  PtHold();
+    PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWindow::RawDrawFunc PtHold Global_Widget_Hold_Count=<%d> this=<%p>\n", Global_Widget_Hold_Count, pWin));
 
 #if 1
   // call the event callback
@@ -1107,7 +1100,9 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
     }
 #endif
 
-    PtRelease();
+    Global_Widget_Hold_Count =  PtRelease();
+    PR_LOG(PhWidLog, PR_LOG_DEBUG,(" nsWindow::RawDrawFunc PtHold/PtRelease Global_Widget_Hold_Count=<%d> this=<%p>\n", Global_Widget_Hold_Count, pWin));
+
    //Kirk took this out  look at OnDrawSignal in GTK
    //NS_RELEASE(pev.widget);
   }
@@ -1388,7 +1383,7 @@ int nsWindow::ResizeHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *c
   nsWindow *someWindow = (nsWindow *) GetInstance(widget);
   nsRect rect;
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::ResizeHandler for %p\n", someWindow ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::ResizeHandler for someWindow=<%p>\n", someWindow));
 
   if( someWindow )
   {
@@ -1397,15 +1392,15 @@ int nsWindow::ResizeHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *c
     rect.width = extents->lr.x - rect.x + 1;
     rect.height = extents->lr.y - rect.y + 1;
 
-    someWindow->ResizeHoldOff();
+#ifndef DRAW_EVERYTHING
+    /* This enables the resize holdoff */
+//  someWindow->ResizeHoldOff();
+#endif
 
   	someWindow->OnResize( rect );
   }
 	return( Pt_CONTINUE );
 }
-
-
-//void nsWindow::StartResizeHoldOff( PtWidget_t *widget )
 
 void nsWindow::ResizeHoldOff()
 {
@@ -1414,8 +1409,12 @@ void nsWindow::ResizeHoldOff()
     return;
   }
 
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::ResizeHoldOff Entering this=<%p>\n", this ));
+
   if( PR_FALSE == mResizeQueueInited )
   {
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::ResizeHoldOff Initing Queue this=<%p>\n", this ));
+
     // This is to guarantee that the Invalidation work-proc is in place prior to the
     // Resize work-proc.
     if( !mDmgQueueInited )
@@ -1425,9 +1424,12 @@ void nsWindow::ResizeHoldOff()
 
     PtWidget_t *top = PtFindDisjoint( mWidget );
 
-    if(( mResizeProcID = PtAppAddWorkProc( nsnull, ResizeWorkProc, top )) != nsnull )
+    if ( (mResizeProcID = PtAppAddWorkProc( nsnull, ResizeWorkProc, top )) != nsnull )
     {
-      PtHold();
+      int Global_Widget_Hold_Count;
+      Global_Widget_Hold_Count =  PtHold();
+      PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWindow::ResizeHoldOff PtHold Global_Widget_Hold_Count=<%d> this=<%p>\n", Global_Widget_Hold_Count, this));
+
       mResizeQueueInited = PR_TRUE;
     }
     else
@@ -1447,6 +1449,8 @@ void nsWindow::ResizeHoldOff()
     {
       if( dqe->widget == mWidget )
       {
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::ResizeHoldOff Widget already in Queue this=<%p>\n", this ));
+
         found = PR_TRUE;
         break;
       }
@@ -1458,12 +1462,13 @@ void nsWindow::ResizeHoldOff()
       dqe = new DamageQueueEntry;
       if( dqe )
       {
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::ResizeHoldOff Adding widget to Queue this=<%p>\n", this ));
+
         mIsResizing = PR_TRUE;
         dqe->widget = mWidget;
         dqe->inst = this;
         dqe->next = mResizeQueue;
         mResizeQueue = dqe;
-//        NS_ADDREF_THIS();
       }
     }
   }
@@ -1505,7 +1510,11 @@ void nsWindow::RemoveResizeWidget()
     {
       mResizeQueueInited = PR_FALSE;
       PtWidget_t *top = PtFindDisjoint( mWidget );
-      PtRelease();
+
+      int Global_Widget_Hold_Count;
+      Global_Widget_Hold_Count =  PtRelease();
+      PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWindow::RemoveResizeWidget PtHold/PtRelease Global_Widget_Hold_Count=<%d> this=<%p>\n", Global_Widget_Hold_Count, this));
+
       if( mResizeProcID )
         PtAppRemoveWorkProc( nsnull, mResizeProcID );
     }
@@ -1534,7 +1543,10 @@ int nsWindow::ResizeWorkProc( void *data )
     nsWindow::mResizeQueue = nsnull;
     nsWindow::mResizeQueueInited = PR_FALSE;
 
-    PtRelease();
+    int Global_Widget_Hold_Count;
+    Global_Widget_Hold_Count =  PtRelease();
+    PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWindow::ResizeWorkProc PtHold/PtRelease Global_Widget_Hold_Count=<%d> this=<%p>\n", Global_Widget_Hold_Count, dqe->widget));
+
   }
   return Pt_END;
 }

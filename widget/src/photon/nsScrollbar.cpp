@@ -25,8 +25,9 @@
 #include "nsUnitConversion.h"
 
 
-NS_IMPL_ADDREF (nsScrollbar);
-NS_IMPL_RELEASE (nsScrollbar);
+NS_IMPL_ADDREF_INHERITED(nsScrollbar, nsWidget)
+NS_IMPL_RELEASE_INHERITED(nsScrollbar, nsWidget)
+NS_IMPL_QUERY_INTERFACE2(nsScrollbar, nsIScrollbar, nsIWidget)
 
 //-------------------------------------------------------------------------
 //
@@ -47,7 +48,7 @@ nsScrollbar::nsScrollbar (PRBool aIsVertical):nsWidget (), nsIScrollbar ()
 //-------------------------------------------------------------------------
 nsScrollbar::~nsScrollbar ()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::~nsScrollbar - Not Implemented.\n"));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::~nsScrollbar\n"));
 }
 
 //-------------------------------------------------------------------------
@@ -62,12 +63,13 @@ NS_METHOD nsScrollbar::CreateNative (PtWidget_t * parentWindow)
   PhDim_t   dim;
   PtArg_t   arg[5];
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::CreateNative\n"));
-
   pos.x = mBounds.x;
   pos.y = mBounds.y;
   dim.w = mBounds.width;
   dim.h = mBounds.height;
+
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::CreateNative at (%d,%d) w,h=(%d,%d)\n",
+    mBounds.x, mBounds.y, mBounds.width, mBounds.height));
     
   PtSetArg( &arg[0], Pt_ARG_ORIENTATION, mOrientation, 0 );
   PtSetArg( &arg[1], Pt_ARG_POS, &pos, 0 );
@@ -82,25 +84,6 @@ NS_METHOD nsScrollbar::CreateNative (PtWidget_t * parentWindow)
   }
 
   return res;
-}
-
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsScrollbar::QueryInterface (const nsIID & aIID, void **aInstancePtr)
-{
-  nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
-
-  static NS_DEFINE_IID(kInsScrollbarIID, NS_ISCROLLBAR_IID);
-  if (result == NS_NOINTERFACE && aIID.Equals(kInsScrollbarIID)) {
-    *aInstancePtr = (void*) ((nsIScrollbar*)this);
-    NS_ADDREF_THIS();
-    result = NS_OK;
-  }
-
-  return result;
 }
 
 //-------------------------------------------------------------------------
@@ -345,27 +328,6 @@ NS_METHOD nsScrollbar::SetParameters (PRUint32 aMaxRange, PRUint32 aThumbSize,
   return res;
 }
 
-
-//-------------------------------------------------------------------------
-//
-// paint message. Don't send the paint out
-//
-//-------------------------------------------------------------------------
-PRBool nsScrollbar::OnPaint (nsPaintEvent & aEvent)
-{
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::OnPaint - Not Implemented\n"));
-
-  return PR_FALSE;
-}
-
-
-PRBool nsScrollbar::OnResize(nsSizeEvent &aEvent)
-{
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::OnResize - Not Implemented\n"));
-
-  return PR_FALSE;
-}
-
 //-------------------------------------------------------------------------
 //
 // Deal with scrollbar messages (actually implemented only in nsScrollbar)
@@ -374,18 +336,9 @@ PRBool nsScrollbar::OnResize(nsSizeEvent &aEvent)
 PRBool nsScrollbar::OnScroll (nsScrollbarEvent & aEvent, PRUint32 cPos)
 {
   PRBool result = PR_TRUE;
-  float  newPosition;
+//  float  newPosition;
   
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::OnScroll cPos=<%d>\n", cPos));
-
-#if 0
-  /* I should look at the theScrollbarCallback->action and do something */
-  switch (aEvent.message)
-  {
-   default:
-     break;  
-  }
-#endif
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::OnScroll cPos=<%d> aEvent.message=<%d>\n", cPos, aEvent.message));
 
   if (mEventCallback)
   {
@@ -393,7 +346,7 @@ PRBool nsScrollbar::OnScroll (nsScrollbarEvent & aEvent, PRUint32 cPos)
 
     aEvent.position = cPos;
     result = ConvertStatus((*mEventCallback)(&aEvent));
-	newPosition = aEvent.position;
+//	newPosition = aEvent.position;
   }  
   else
     PR_LOG(PhWidLog, PR_LOG_ERROR, ("nsScrollbar::OnScroll Error no mEventCallback defined\n"));

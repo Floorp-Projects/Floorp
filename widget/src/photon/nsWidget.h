@@ -131,7 +131,7 @@ class nsWidget : public nsBaseWidget
     PRBool     ConvertStatus(nsEventStatus aStatus);
 
 	/* Convert Photon key codes to Mozilla key codes */
-    PRUint32   nsConvertKey(unsigned long keysym);
+    PRUint32   nsConvertKey(unsigned long keysym, PRBool *aIsChar = nsnull);
     void       InitKeyEvent(PhKeyEvent_t *aPhKeyEvent, nsWidget *aWidget,
 	                               nsKeyEvent &aKeyEvent, PRUint32 aEventType);
 
