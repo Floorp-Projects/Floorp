@@ -305,6 +305,37 @@ PrefResult PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_
 
 /*
 // <font color=blue>
+// Administration Kit support
+//
+// These fetch a given configuration parameter.
+// If the parameter is not defined, an error code will be returned;
+// a JavaScript error will not be generated (unlike the above Get routines).
+//
+// IndexConfig fetches an indexed button or menu string, e.g.
+//		PREF_CopyIndexConfigString( "menu.help.item", 3, "label", &buf );
+// to fetch the label of Help menu item 3.
+// The caller is responsible for freeing the returned string.
+// </font>
+*/
+PrefResult PREF_CopyConfigString(const char *obj_name, char **return_buffer);
+PrefResult PREF_CopyIndexConfigString(const char *obj_name, int indx,
+	const char *field, char **return_buffer);
+PrefResult PREF_GetConfigInt(const char *obj_name, PRInt32 *return_int);
+PrefResult PREF_GetConfigBool(const char *obj_name, PRBool *return_bool);
+
+/* OLD:: */PrefResult PREF_GetConfigString(const char *obj_name, char * return_buffer, int size,
+	int indx, const char *field);
+
+/*
+ * Listpref API
+ */
+PrefResult PREF_GetListPref(const char *pref_name, char*** list, PRBool isDefault);
+PrefResult PREF_SetListPref(const char *pref_name, char** list);
+PrefResult PREF_AppendListPref(const char *pref_name, const char *value);
+PrefResult PREF_FreeListPref(char*** list);
+
+/*
+// <font color=blue>
 // PRBool function that returns whether or not the preference is locked and therefore
 // cannot be changed.
 // </font>
