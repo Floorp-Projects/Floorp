@@ -11,7 +11,7 @@ toolkit.jar:
 *+       content/global/nsWidgetStateManager.js             (content/nsWidgetStateManager.js)
 *+       content/global/viewZoomOverlay.js                  (content/viewZoomOverlay.js)
          content/global/widgets/autocomplete.xml            (content/widgets/autocomplete.xml)
-         content/global/widgets/browser.xml                 (content/widgets/browser.xml)
+*        content/global/widgets/browser.xml                 (content/widgets/browser.xml)
          content/global/widgets/tabbrowser.xml              (content/widgets/tabbrowser.xml)
          content/global/widgets/tabbox.xml                  (content/widgets/tabbox.xml)
          content/global/widgets/textbox.xml                 (content/widgets/textbox.xml)
