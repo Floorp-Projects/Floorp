@@ -32,8 +32,7 @@
 #
 CORE_DEPTH = ../../..
 
-# DEFINES = -DTRACE
-
+# DEFINES = -DTRACE -DNISCC_TEST 
 
 PRIVATE_EXPORTS = \
 	ssl3prot.h \
