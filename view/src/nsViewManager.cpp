@@ -2248,15 +2248,17 @@ void nsViewManager::AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) co
 	// Find a view with an associated widget. We'll transform this rect from the
 	// current view's coordinate system to a "heavyweight" parent view, then convert
 	// the rect to pixel coordinates, and accumulate the rect into that view's dirty region.
-	nsRect widgetRect = aRect;
 	nsIView* widgetView = GetWidgetView(aView);
-	ViewToWidget(aView, widgetView, widgetRect);
+	if (widgetView != nsnull) {
+		nsRect widgetRect = aRect;
+		ViewToWidget(aView, widgetView, widgetRect);
 
-	// Get the dirty region associated with the widget view
-	nsCOMPtr<nsIRegion> dirtyRegion;
-	if (NS_SUCCEEDED(widgetView->GetDirtyRegion(*getter_AddRefs(dirtyRegion)))) {
-      // add this rect to the widget view's dirty region.
-      dirtyRegion->Union(widgetRect.x, widgetRect.y, widgetRect.width, widgetRect.height);
+		// Get the dirty region associated with the widget view
+		nsCOMPtr<nsIRegion> dirtyRegion;
+		if (NS_SUCCEEDED(widgetView->GetDirtyRegion(*getter_AddRefs(dirtyRegion)))) {
+			// add this rect to the widget view's dirty region.
+			dirtyRegion->Union(widgetRect.x, widgetRect.y, widgetRect.width, widgetRect.height);
+		}
 	}
 }
 
