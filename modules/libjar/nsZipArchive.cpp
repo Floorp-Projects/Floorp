@@ -117,8 +117,6 @@ static PRUint16 xtoint(unsigned char *ii);
 static PRUint32 xtolong(unsigned char *ll);
 static PRUint16 ExtractMode(PRUint32 ext_attr);
 static PRBool   IsSymlink(PRUint32 ext_attr);
-static void dosdate(char *aOutDateStr, PRUint16 aDate);
-static void dostime(char *aOutTimeStr, PRUint16 aTime);
 
 /*---------------------------------------------
  * C API wrapper for nsZipArchive
