@@ -623,7 +623,13 @@ nsString& nsString::operator=(char aChar) {
  * @return  this
  *------------------------------------------------------*/
 nsString& nsString::SetString(const PRUnichar* aStr,PRInt32 aLength) {
-  if(aStr!=0) {
+  if((0 == aLength) || (nsnull == aStr)) {
+    mLength=0;
+    if (nsnull != mStr) {
+      mStr[0]=0;  
+    }
+
+  } else {
     PRInt32 len=(kNotFound==aLength) ? nsCRT::strlen(aStr) : aLength;
     if(mCapacity< len ) 
       EnsureCapacityFor(len);
@@ -631,13 +637,7 @@ nsString& nsString::SetString(const PRUnichar* aStr,PRInt32 aLength) {
     mLength=len;
     mStr[mLength]=0;
   }
-  else {                          
-    mLength=0;  //This little bit of code handles the case
-                //where some blockhead hands us a null string 
-    if (nsnull != mStr) {
-      mStr[0]=0;  
-    }
-  }
+
   return *this;
 }
 
@@ -1512,8 +1512,20 @@ PRInt32 nsString::operator>=(const PRUnichar *s) const {return Compare(s)==0;}
  * @return TRUE if equal
  *------------------------------------------------------*/
 PRBool nsString::Equals(const nsString& aString) const {
-  PRInt32 result=nsCRT::strcmp(mStr,aString.mStr);
-  return PRBool(0==result);
+  PRBool  result;
+
+  if (mLength != aString.mLength) {
+    result = PR_FALSE;
+
+  } else if (0 == mLength) {
+    result = PR_TRUE;
+
+  } else {
+    result = (0 == nsCRT::strcmp(mStr,aString.mStr));
+  }
+
+
+  return result;
 }
 
 
