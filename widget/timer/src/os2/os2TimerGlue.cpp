@@ -139,3 +139,37 @@ HWND os2TimerGlue::Get()
    return hwnd;
 }
 
+UINT os2TimerGlue::SetTimer(HWND hWnd, UINT timerID, UINT aDelay)
+{
+   HWND timerHWND;
+   timerHWND = Get();
+   // Need a unique number for the timerID.  No way to get a unique timer ID
+   //  without passing in a null hwnd.  Since there are already tests in place
+   //  to ensure only one OS timer per nsTimer, this should be safe.  Could
+   //  really do away with the AddTimer/GetTimer stuff with this, but want to
+   //  keep this looking like Windows so will leave it in.  The only problem
+   //  is that we have to keep this id below 0x7fff.  This is the easy way
+   //  and likely to be safe.  If this doesn't work, we'll need to keep track
+   //  of what ID's we've used and what is still open.  Hopefully these id's
+   //  will be unique enough.   IBM-AKR
+ 
+   ULONG ulTimerID = ((ULONG)timerID & TID_USERMAX);
+ 
+   // Doing this fixer stuff since most values will be double word aligned.
+   //    This will help make it a little more unique by potentially giving us
+   //    3 times as many values.  IBM-AKR
+   ULONG fixer = ((ULONG)timerID & 0x00018000) >> 15;
+   ulTimerID = (ulTimerID | fixer);
+ 
+   ULONG newTimerID = WinStartTimer(NULLHANDLE, timerHWND, ulTimerID, aDelay);
+   return (UINT)newTimerID;
+}
+
+BOOL os2TimerGlue::KillTimer(HWND hWnd, UINT timerID)
+{
+   HWND timerHWND;
+   timerHWND = Get();
+   WinStopTimer(NULLHANDLE, timerHWND, timerID);
+
+   return TRUE;
+}

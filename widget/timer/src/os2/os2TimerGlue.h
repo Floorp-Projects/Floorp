@@ -50,6 +50,7 @@
 #define INCL_WINWINDOWMGR
 #define INCL_WINMESSAGEMGR
 #define INCL_WINHOOKS       /* to get HMQ_CURRENT */
+#define INCL_WINTIMER
 #include <os2.h>
 
 extern TID QueryCurrentTID(void);
@@ -60,6 +61,9 @@ typedef ULONG         DWORD;
 typedef BOOL          bool;
 #define true          TRUE
 #define false         FALSE
+
+#define HEARTBEATTIMEOUT 50
+#define HEARTBEATTIMERID 0x7ffe
 
 struct TIDKey : public nsVoidKey
 {
@@ -91,6 +95,8 @@ class os2TimerGlue
    os2TimerGlue();
    ~os2TimerGlue();
    HWND   Get();
+   UINT   SetTimer(HWND hWnd, UINT timerID, UINT aDelay);
+   BOOL   KillTimer(HWND hWnd, UINT timerID);
 
 };
 #endif /* __os2TimerGlue_h */

@@ -37,14 +37,13 @@
  *                                  until the module is unloaded.
  */
 
-#define  INCL_WINTIMER
-#include "os2TimerGlue.h"
 #include "nsWindowsTimer.h"
 #include "nsITimerQueue.h"
 #include "nsIWindowsTimerMap.h"
 #include "nsCRT.h"
 #include "prlog.h"
 #include <stdio.h>
+#include "os2TimerGlue.h"
 #include <limits.h>
 #include "nsWidgetsCID.h"
 #include "nsIServiceManager.h"
@@ -55,11 +54,13 @@ static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
 
 static nsCOMPtr<nsIWindowsTimerMap> sTimerMap;
 static nsCOMPtr<nsITimerQueue> sTimerQueue;
-os2TimerGlue  *sGlue = NULL;
+os2TimerGlue *sGlue = NULL;
+static ULONG heartbeatTimer = 0;
 
 class nsTimer;
 
 #define NS_PRIORITY_IMMEDIATE 10
+
 
 void CALLBACK FireTimeout(HWND aWindow, 
                           UINT aMessage, 
@@ -71,37 +72,46 @@ void CALLBACK FireTimeout(HWND aWindow,
   if (!sTimerMap) return;
 
   nsTimer* timer = sTimerMap->GetTimer(aTimerID);
-  if (timer == nsnull) {
-    return;
-  }
 
-  if (timer->GetType() != NS_TYPE_REPEATING_PRECISE) {
-    // stop OS timer: may be restarted later
-    timer->KillOSTimer();
-  }
+  if (aTimerID != HEARTBEATTIMERID) {
+    if (timer == nsnull) {
+      return;
+    }
+  
+    if (timer->GetType() != NS_TYPE_REPEATING_PRECISE) {
+      // stop OS timer: may be restarted later
+      timer->KillOSTimer();
+    }
+  } 
 
   if (!sTimerQueue) return;
 
   QMSG wmsg;
-  bool eventQueueEmpty = !(WinPeekMsg(NULLHANDLE, &wmsg, NULLHANDLE, 0, 0, 
-                                        PM_NOREMOVE));
-  bool timerQueueEmpty = !sTimerQueue->HasReadyTimers(NS_PRIORITY_LOWEST);
+  bool eventQueueEmpty = !(WinPeekMsg(NULLHANDLE, &wmsg, NULLHANDLE,
+                                      0, WM_TIMER-1, PM_NOREMOVE) ||
+                           WinPeekMsg(NULLHANDLE, &wmsg, NULLHANDLE,
+                                      WM_TIMER+1, WM_USER-1, PM_NOREMOVE));
 
-  if ((timerQueueEmpty && eventQueueEmpty) || 
-      timer->GetPriority() >= NS_PRIORITY_IMMEDIATE) {
-    
-    // fire timer immediatly
-    timer->Fire();
+  if (aTimerID != HEARTBEATTIMERID) {
+    bool timerQueueEmpty = !sTimerQueue->HasReadyTimers(NS_PRIORITY_LOWEST);
 
-  } else {
-    // defer timer firing
-    sTimerQueue->AddReadyQueue(timer);
-  }
+    if ((timerQueueEmpty && eventQueueEmpty) || 
+        timer->GetPriority() >= NS_PRIORITY_IMMEDIATE) {
+      
+      // fire timer immediatly
+      timer->Fire();
+  
+    } else {
+      // defer timer firing
+      sTimerQueue->AddReadyQueue(timer);
+    }
+  } 
 
   if (eventQueueEmpty) {
     // while event queue is empty, fire off waiting timers
     while (sTimerQueue->HasReadyTimers(NS_PRIORITY_LOWEST) &&
-        !(WinPeekMsg(NULLHANDLE, &wmsg, NULLHANDLE, 0, 0, PM_NOREMOVE))) {
+           !(WinPeekMsg(NULLHANDLE, &wmsg, NULLHANDLE, 0, WM_TIMER-1, PM_NOREMOVE) ||
+             WinPeekMsg(NULLHANDLE, &wmsg, NULLHANDLE, WM_TIMER+1, WM_USER-1, PM_NOREMOVE)) ) {
 
       sTimerQueue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
     }
@@ -251,29 +261,25 @@ void nsTimer::StartOSTimer(PRUint32 aDelay)
 {
   PR_ASSERT(mTimerID == 0);
 
+  // If the time-out is very small, set this timer to fire on the next cycle
+  if (sTimerQueue && aDelay <= HEARTBEATTIMEOUT) {
+     PRUint32 aType = GetType();
+     if (aType != NS_TYPE_REPEATING_PRECISE && aType != NS_TYPE_REPEATING_SLACK) {
+        // For very short non-repeating timeouts, use a "heartbeat" timer
+        if (!heartbeatTimer) {
+           HWND timerHWND;
+           timerHWND = sGlue->Get();
+           heartbeatTimer = WinStartTimer(NULLHANDLE, timerHWND, HEARTBEATTIMERID, HEARTBEATTIMEOUT);
+        }
+        sTimerQueue->AddReadyQueue(this);
+        return;
+     }
+  }
+
   if (!sTimerMap) return;
 
   // create OS timer
-  HWND timerHWND;
-  timerHWND = sGlue->Get();
-  // Need a unique number for the timerID.  No way to get a unique timer ID
-  //    without passing in a null hwnd.  Since there are already tests in place
-  //    to ensure only one OS timer per nsTimer, this should be safe.  Could
-  //    really do away with the AddTimer/GetTimer stuff with this, but want to
-  //    keep this looking like Windows so will leave it in.  The only problem
-  //    is that we have to keep this id below 0x7fff.  This is the easy way
-  //    and likely to be safe.  If this doesn't work, we'll need to keep track
-  //    of what ID's we've used and what is still open.  Hopefully these id's
-  //    will be unique enough.   IBM-AKR
-
-  ULONG ulTimerID = ((ULONG)this & TID_USERMAX);
-  ULONG fixer = ((ULONG)this & 0x00018000) >> 15;
-
-  // Doing this fixer stuff since most values will be double word aligned.
-  //    This will help make it a little more unique by potentially giving us
-  //    3 times as many values.  IBM-AKR
-  ulTimerID = (ulTimerID | fixer);
-  mTimerID = WinStartTimer(NULLHANDLE, timerHWND, ulTimerID, aDelay);
+  mTimerID = sGlue->SetTimer(NULL, (UINT)this, aDelay);
 
   // store mapping from OS timer to timer object
   sTimerMap->AddTimer(mTimerID, this);
@@ -290,9 +296,7 @@ void nsTimer::KillOSTimer()
     }
 
     // kill OS timer
-    HWND timerHWND;
-    timerHWND = sGlue->Get();
-    WinStopTimer(NULLHANDLE, timerHWND, mTimerID);
+    sGlue->KillTimer(NULL, mTimerID);
 
     mTimerID = 0;
   }
