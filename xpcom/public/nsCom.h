@@ -116,7 +116,7 @@ _method(char* *aString)\
 #define NS_METHOD_SETTER_STR(_method, _member) \
 _method(char *aString)\
 {\
-    PR_FREEIF(_member)\
+    PR_FREEIF(_member);\
     if (aString) _member = PL_strdup(aString); \
     else _member = nsnull;\
     return NS_OK; \
