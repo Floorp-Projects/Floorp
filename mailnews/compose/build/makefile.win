@@ -91,19 +91,6 @@ LLIBS=										\
 
 MISCDEP=$(LLIBS)
 
-LINCS=$(LINCS) -I,							\
-			   -I$(XPDIST)\msg				\
-			   -I$(PUBLIC)\xpcom			\
-			   -I$(PUBLIC)\js				\
-			   -I$(PUBLIC)\mailnews			\
-			   -I$(PUBLIC)\pref				\
-			   -I$(PUBLIC)\raptor			\
-				-I$(PUBLIC)\rdf				\
-			   -I$(PUBLIC)\dom				\
-			   -I$(PUBLIC)\appcores			\
-			   -I$(PUBLIC)\mime             \
-			   -I$(PUBLIC)\security             \
- 			     $(NULL)
 
 #//------------------------------------------------------------------------
 #//

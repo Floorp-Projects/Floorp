@@ -23,20 +23,6 @@ include <$(DEPTH)\config\config.mak>
 
 DEFINES=-D_IMPL_NS_MSG_BASE -DWIN32_LEAN_AND_MEAN
 
-LINCS=                       \
-        -I$(PUBLIC)\xpcom    \
-        -I$(PUBLIC)\mailnews \
-        -I$(PUBLIC)\raptor   \
-        -I$(PUBLIC)\rdf      \
-        -I$(PUBLIC)\rdfutil  \
-        -I$(PUBLIC)\pref     \
-        -I$(PUBLIC)\js		 \
-		-I$(PUBLIC)\netlib	 \
-		-I$(PUBLIC)\dom		 \
-		-I$(PUBLIC)\appcores	\
-		-I$(PUBLIC)\security	\
-		$(NULL)
-
 LLIBS=								\
 	$(DIST)\lib\xpcom.lib			\
 	$(DIST)\lib\plc3.lib			\

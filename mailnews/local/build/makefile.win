@@ -48,18 +48,6 @@ LLIBS=\
 
 MISCDEP=$(LLIBS)
 
-# XXX Note dependencies on implementation dirs for factory methods.
-
-LINCS=  -I$(DEPTH)\mailnews\local\src	\
-		-I$(PUBLIC)\xpcom				\
-		-I$(PUBLIC)\mailnews			\
-		-I$(PUBLIC)\raptor				\
-		-I$(PUBLIC)\rdf					\
-		-I$(PUBLIC)\rdfutil				\
-		-I$(PUBLIC)\netlib				\
-		-I$(PUBLIC)\mime				\
-        $(NULL)
-
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)

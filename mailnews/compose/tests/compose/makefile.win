@@ -72,18 +72,6 @@ LLIBS=	 $(LLIBS) ole32.lib	\
 	 $(DIST)\lib\xpcom.lib \
 	 $(DIST)\lib\plc3.lib \
 	 $(LIBNSPR)		\
-	
-
-LINCS=$(LINCS)  -I. \
-		-I$(PUBLIC)\mailnews   \
-		-I$(PUBLIC)\pref   \
-		-I$(PUBLIC)\js   \
-		-I$(PUBLIC)\mime   \
-                -I$(PUBLIC)\xpcom		\
-                -I$(PUBLIC)\netlib		\
-                -I$(PUBLIC)\rdf		\
-                -I$(PUBLIC)\security		\
-		-I$(PUBLIC)\raptor
 
 # clobber and clobber_all will remove the following garbage:
 GARBAGE	= $(GARBAGE) _gen
