@@ -61,6 +61,7 @@ public:
    
     // nsIXULTreeContent interface
     NS_IMETHOD FireOnSelectHandler();
+    NS_IMETHOD CheckSelection(nsIDOMXULElement* aDeletedItem);
 
     static nsIAtom*             kSelectedAtom;
     static nsIAtom*             kOpenAtom;

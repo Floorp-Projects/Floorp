@@ -483,6 +483,14 @@ nsXULTreeElement::SetCurrentItem(nsIDOMXULElement* aCurrentItem)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULTreeElement::CheckSelection(nsIDOMXULElement* aDeletedItem)
+{
+  if (aDeletedItem == mSelectionStart)
+    mSelectionStart = nsnull;
+  return NS_OK;
+}
+
 void
 nsXULTreeElement::SelectCallback(nsITimer *aTimer, void *aClosure)
 {
@@ -493,4 +501,5 @@ nsXULTreeElement::SelectCallback(nsITimer *aTimer, void *aClosure)
     self->mSelectTimer = nsnull;
   }
 } // sTimerCallback
+
 

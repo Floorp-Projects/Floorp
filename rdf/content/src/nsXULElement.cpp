@@ -2474,6 +2474,10 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
             if (IsAncestor(parentKid, node)) {
               nsCOMPtr<nsIContent> content = do_QueryInterface(node);
               content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::selected, PR_FALSE);
+              nsCOMPtr<nsIXULTreeContent> tree = do_QueryInterface(treeElement);
+              nsCOMPtr<nsIDOMXULElement> domxulnode = do_QueryInterface(node);
+              if (tree && domxulnode)
+                tree->CheckSelection(domxulnode);
               length--;
               i--;
               fireSelectionHandler = PR_TRUE;

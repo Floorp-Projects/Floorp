@@ -45,6 +45,7 @@ public:
     static const nsIID& GetIID() { static nsIID iid = NS_IXULTREECONTENT_IID; return iid; }
 
     NS_IMETHOD FireOnSelectHandler() = 0;
+    NS_IMETHOD CheckSelection(nsIDOMXULElement* aDeletedItem) = 0;
 };
 
 #endif // nsIXULTreeContent_h__
