@@ -114,37 +114,5 @@ protected:
   PRBool mIsLinkVisited;
 };
 
-/*
- * A base class that can listen to menu events. Its used by selects so the 
- * button and the window accessibles can change their name and role
- * depending on whether the drop down list is dropped down on not
- */
-class nsMenuListenerAccessible  : public nsAccessible, public nsIDOMXULListener
-{
-public:
-  
-  NS_DECL_ISUPPORTS_INHERITED
-
-  nsMenuListenerAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
-  virtual ~nsMenuListenerAccessible();
-
-  // popup listener
-  NS_IMETHOD PopupShowing(nsIDOMEvent* aEvent);
-  NS_IMETHOD PopupShown(nsIDOMEvent* aEvent) { return NS_OK; }
-  NS_IMETHOD PopupHiding(nsIDOMEvent* aEvent);
-  NS_IMETHOD PopupHidden(nsIDOMEvent* aEvent) { return NS_OK; }
-  
-  NS_IMETHOD Close(nsIDOMEvent* aEvent);
-  NS_IMETHOD Command(nsIDOMEvent* aEvent) { return NS_OK; }
-  NS_IMETHOD Broadcast(nsIDOMEvent* aEvent) { return NS_OK; }
-  NS_IMETHOD CommandUpdate(nsIDOMEvent* aEvent) { return NS_OK; }
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
-
-  virtual void SetupMenuListener();
-
-  PRBool mRegistered;
-  PRBool mOpen;
-};
-
 #endif  
 
