@@ -25,6 +25,7 @@ function Feed(resource) {
     this.author = null;
   
     this.request = null;
+    this.folder = null;
 
     this.downloadCallback = null;
 
@@ -83,10 +84,10 @@ Feed.onDownloaded = function(event) {
   var feed = gFzFeedCache[url];
   if (!feed)
     throw("error after downloading " + url + ": couldn't retrieve feed from request");
+  
   feed.parse();
 
-  if (feed.downloadCallback)
-    feed.downloadCallback.downloaded(feed);
+  // parse will asynchronously call the download callback when it is done
 }
 
 Feed.onProgress = function(event) {
@@ -207,6 +208,10 @@ Feed.prototype.parseAsRSS2 = function() {
   this.invalidateItems();
 
   var itemNodes = this.request.responseXML.getElementsByTagName("item");
+
+  gItemsToStore = new Array();
+  gItemsToStoreIndex = 0; 
+
   for ( var i=0 ; i<itemNodes.length ; i++ ) {
     var itemNode = itemNodes[i];
     var item = new FeedItem();
@@ -236,11 +241,10 @@ Feed.prototype.parseAsRSS2 = function() {
                              || itemNode.getElementsByTagName("date")[0])
                 || item.date;
 
-    item.store();
-    item.markValid();
-
+    gItemsToStore[i] = item;
   }
-  this.removeInvalidItems();
+  
+  storeNextItem();
 }
 
 Feed.prototype.parseAsRSS1 = function() {
@@ -271,6 +275,10 @@ Feed.prototype.parseAsRSS1 = function() {
   if (!items.hasMoreElements())
     items = ds.GetSources(RDF_TYPE, RSS_ITEM, true);
 
+  gItemsToStore = new Array();
+  gItemsToStoreIndex = 0; 
+  var index = 0; 
+
   while (items.hasMoreElements()) {
     var itemResource = items.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
     var item = new FeedItem();
@@ -295,10 +303,10 @@ Feed.prototype.parseAsRSS1 = function() {
     item.date = getRDFTargetValue(ds, itemResource, DC_DATE) || item.date;
     item.content = getRDFTargetValue(ds, itemResource, RSS_CONTENT_ENCODED);
 
-    item.store();
-    item.markValid();
+    gItemsToStore[index++] = item;
   }
-  this.removeInvalidItems();
+  
+  storeNextItem();
 }
 
 Feed.prototype.parseAsAtom = function() {
@@ -319,6 +327,10 @@ Feed.prototype.parseAsAtom = function() {
   this.invalidateItems();
 
   var items = this.request.responseXML.getElementsByTagName("entry");
+
+  gItemsToStore = new Array();
+  gItemsToStoreIndex = 0; 
+
   for ( var i=0 ; i<items.length ; i++ ) {
     var itemNode = items[i];
     var item = new FeedItem();
@@ -389,10 +401,10 @@ Feed.prototype.parseAsAtom = function() {
     }
     item.content = content;
 
-    item.store();
-    item.markValid();
+    gItemsToStore[i] = item;
   }
-  this.removeInvalidItems();
+  
+  storeNextItem();
 }
 
 Feed.prototype.invalidateItems = function invalidateItems() {
@@ -429,3 +441,37 @@ Feed.prototype.removeInvalidItems = function() {
     }
 }
 
+var gItemsToStore;
+var gItemsToStoreIndex = 0;
+
+// gets the next item from gItemsToStore and forces that item to be stored
+// to the folder. If more items are left to be stored, fires a timer for the next one.
+// otherwise it triggers a download done notification to the UI
+function storeNextItem()
+{
+  var item = gItemsToStore[gItemsToStoreIndex++]; 
+  item.store();
+  item.markValid();
+
+  // eventually we'll report individual progress here....
+
+  if (gItemsToStoreIndex < gItemsToStore.length)
+  {
+    if ('setTimeout' in this)
+      setTimeout(storeNextItem, 50); // fire off a timer for the next item to store
+    else
+    {
+      debug('set timeout is not defined if this call originated from newsblog.js\n');
+      storeNextItem();
+    }
+  }
+  else
+  {    
+    item.feed.removeInvalidItems();
+    if (item.feed.downloadCallback)
+      item.feed.downloadCallback.downloaded(item.feed);
+
+    gItemsToStore = "";
+    gItemsToStoreIndex = 0;
+  }   
+}

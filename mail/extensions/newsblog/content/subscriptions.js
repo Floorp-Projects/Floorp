@@ -34,6 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var kFeedUrlDelimiter = '|'; // the delimiter used to delimit feed urls in the msg folder database "feedUrl" property
+
 function doLoad() {
     // Display the list of feed subscriptions.
     var file = getSubscriptionsFile();
@@ -75,31 +77,19 @@ var feedDownloadCallback = {
     // feed is null if our attempt to parse the feed failed
     if (feed)
     {
-      debug("after download, feed name = " + feed.name + "\n");
-
       updateStatusItem('progressMeter', 100);
       updateStatusItem('statusText', document.getElementById("bundle_newsblog").getString('subscribe-validFeedFound'));
       updateStatusItem('statusText', 'Valid Feed Found!');
 
       var server = getIncomingServer();
-      var folder;
-      try {
-          var folder = server.rootMsgFolder.getChildNamed(feed.name);
-      }
-      catch(e) {
-          // If we're here, it's probably because the folder doesn't exist yet,
-          // so create it.
-          debug("folder for new feed " + feed.name + " doesn't exist; creating");
-			    debug("creating " + feed.name + "as child of " + server.rootMsgFolder + "\n");
-          server.rootMsgFolder.createSubfolder(feed.name, getMessageWindow());
-          folder = server.rootMsgFolder.FindSubFolder(feed.name);
-          var msgdb = folder.getMsgDatabase(null);
-          var folderInfo = msgdb.dBFolderInfo;
-          folderInfo.setCharPtrProperty("feedUrl", feed.url);
-      }
+      // if we get here...we should always have a folder by now...either
+      // in feed.folder or FeedItems created the folder for us....
+      var folder = feed.folder ? feed.folder : server.rootMsgFolder.getChildNamed(feed.name);
+
+      updateFolderFeedUrl(folder, feed.url, false);
 
       // add feed just adds the feed we have validated and downloaded to the subscription UI. 
-      // it also flushes the subscription database
+      // it also flushes the subscription datasource
       addFeed(feed.url, feed.name, null, folder); 
     } 
     else 
@@ -113,31 +103,51 @@ var feedDownloadCallback = {
 
   onProgress: function(aProgress, aProgressMax)
   {
-      updateStatusItem('progressMeter', (aProgress * 100) / aProgressMax);
+    updateStatusItem('progressMeter', (aProgress * 100) / aProgressMax);
   },
+}
+
+// updates the "feedUrl" property in the message database for the folder in question.
+function updateFolderFeedUrl(aFolder, aFeedUrl, aRemoveUrl)
+{
+  var msgdb = aFolder.QueryInterface(Components.interfaces.nsIMsgFolder).getMsgDatabase(null);
+  var folderInfo = msgdb.dBFolderInfo;
+  var oldFeedUrl = folderInfo.getCharPtrProperty("feedUrl");
+
+  if (aRemoveUrl)
+  { 
+    // remove our feed url string from the list of feed urls
+    var newFeedUrl = oldFeedUrl.replace(kFeedUrlDelimiter + aFeedUrl, "");
+    folderInfo.setCharPtrProperty("feedUrl", newFeedUrl);
+  }  
+  else 
+    folderInfo.setCharPtrProperty("feedUrl", oldFeedUrl + kFeedUrlDelimiter + aFeedUrl);  
 }
 
 function doAdd() {
     var userAddedFeed = false; 
-    var feedProperties = { feedName: "", feedLocation: "", result: userAddedFeed};
+    var server = getIncomingServer();
+    var feedProperties = { feedName: "", feedLocation: "", serverURI: server.serverURI, folderURI: "", result: userAddedFeed};
 
     feedProperties = openFeedEditor(feedProperties);
 
     // if the user hit cancel, exit without doing anything
     if (!feedProperties.result)
-    {
-      debug("feedProperties.result empty\n");
       return;
-    }
     
     if (!feedProperties.feedLocation)
-    {
-        debug("feedProperties.feedLocation empty\n");
         return;
-    }
 
     var itemResource = rdf.GetResource(feedProperties.feedLocation);
     feed = new Feed(itemResource);
+
+    // if the user specified a specific folder to add the feed too, then set it here
+    if (feedProperties.folderURI)
+    {
+      var folderResource = rdf.GetResource(feedProperties.folderURI);   
+      if (folderResource)
+        feed.folder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+    }
 
     // update status text
     updateStatusItem('statusText', document.getElementById("bundle_newsblog").getString('subscribe-validating'));
@@ -159,187 +169,107 @@ function doEdit() {
     var tree = document.getElementById('subscriptions');
     var item = tree.view.getItemAtIndex(tree.view.selection.currentIndex);
     var resource = rdf.GetResource(item.id);
-    var old_title = ds.GetTarget(resource, DC_TITLE, true);
-    old_title =
-        old_title ? old_title.QueryInterface(Components.interfaces.nsIRDFLiteral).Value : "";
     var old_url = ds.GetTarget(resource, DC_IDENTIFIER, true);
-    old_url =
-        old_url ? old_url.QueryInterface(Components.interfaces.nsIRDFLiteral).Value : "";
+    old_url = old_url ? old_url.QueryInterface(Components.interfaces.nsIRDFLiteral).Value : "";
 
+    var currentFolder = ds.GetTarget(resource, FZ_DESTFOLDER, true);
+    var currentFolderURI = currentFolder.QueryInterface(Components.interfaces.nsIRDFResource).Value;
+
+    currentFolder = rdf.GetResource(currentFolderURI).QueryInterface(Components.interfaces.nsIMsgFolder);
+   
+    var server = getIncomingServer();
     var userModifiedFeed = false; 
-    var feedProperties = { feedName: old_title, feedLocation: old_url, result: userModifiedFeed};
+    var feedProperties = { feedLocation: old_url, serverURI: server.serverURI, folderURI: currentFolderURI, result: userModifiedFeed};
 
     feedProperties = openFeedEditor(feedProperties);
     if (!feedProperties.result) // did the user cancel?
         return;
 
-    if (feedProperties.feedName != old_title) {
-        var server = getIncomingServer();
-        var msgWindow = getMessageWindow();
+    // did the user change the folder URI for storing the feed?
+    if (feedProperties.folderURI && feedProperties.folderURI != currentFolderURI)
+    {
+      // unassert the older URI, add an assertion for the new URI...
+      ds.Change(resource, FZ_DESTFOLDER, currentFolder, rdf.GetResource(feedProperties.folderURI));
 
-        // Throwing an error 0x80004005 seems to be getChildNamed()'s way
-        // of saying that a folder doesn't exist, so we need to trap that
-        // since it isn't fatal in our case.  XXX We should probably check
-        // the error code in the catch statement to verify the problem.
-        var old_folder;
-        try {
-            old_folder = server.rootMsgFolder.getChildNamed(old_title);
-            old_folder = old_folder.QueryInterface(Components.interfaces.nsIMsgFolder);
-        } catch(e) {}
-        var new_folder;
-        try {
-            new_folder = server.rootMsgFolder.getChildNamed(feedProperties.feedName);
-            new_folder = new_folder.QueryInterface(Components.interfaces.nsIMsgFolder);
-        } catch(e) {}
+      // we need to update the feed url attributes on the databases for each folder
+      var folderResource = rdf.GetResource(feedProperties.folderURI);   
+      var newFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+      currentFolder = rdf.GetResource(currentFolderURI).QueryInterface(Components.interfaces.nsIMsgFolder);
 
-        if (old_folder && new_folder) {
-            // We could move messages from the old folder to the new folder
-            // and then delete the old folder (code for doing so is below),
-            // but how do we distinguish between messages in the old folder
-            // from this feed vs. from another feed?  Until we can do that,
-            // which probably requires storing the feed ID in the message headers,
-            // we're better off just leaving the old folder as it is.
-            //var messages = old_folder.getMessages(msgWindow);
-            //var movees =
-            //    Components
-            //        .classes["@mozilla.org/supports-array;1"]
-            //            .createInstance(Components.interfaces.nsISupportsArray);
-            //var message;
-            //while (messages.hasMoreElements()) {
-            //    message = messages.getNext();
-            //    movees.AppendElement(message);
-            //}
-            //gFoldersBeingDeleted.push(old_folder);
-            //new_folder.copyMessages(old_folder,
-            //                        movees,
-            //                        true /*isMove*/,
-            //                        msgWindow /* nsIMsgWindow */,
-            //                        null /* listener */,
-            //                        false /* isFolder */,
-            //                        false /*allowUndo*/ );
-        }
-        else if (old_folder) {
-            // We could rename the old folder to the new folder
-            // (code for doing so is below), but what if other feeds
-            // are using the old folder?  Until we write code to determine
-            // whether they are or not (and perhaps even then), better to leave
-            // the old folder as it is and merely create a new folder.
-            //old_folder.rename(new_title, msgWindow);
-            server.rootMsgFolder.createSubfolder(feedProperties.feedName, msgWindow);
-            folder = rootMsgFolder.FindSubFolder(feedProperties.feedName);
-            var msgdb = folder.getMsgDatabase(null);
-            msgdb.dBFolderInfo.setCharPtrProperty("feedUrl", feedProperties.feedLocation);
-        }
-        else if (new_folder) {
-            // Do nothing, as everything is as it should be.
-        }
-        else {
-            // Neither old nor new folders exist, so just create the new one.
-            server.rootMsgFolder.createSubfolder(feedProperties.feedName, msgWindow);
-            folder = rootMsgFolder.FindSubFolder(feedProperties.feedName);
-            var msgdb = folder.getMsgDatabase(null);
-            msgdb.dBFolderInfo.setCharPtrProperty("feedUrl", feedProperties.feedLocation);
-        }
-        updateTitle(item.id, feedProperties.feedName);
+      updateFolderFeedUrl(currentFolder, old_url, true); // remove our feed url property from the current folder
+      updateFolderFeedUrl(newFolder, feedProperties.feedLocation, false); // add our feed url property to the new folder
+
+      currentFolder = newFolder; // the folder has changed
     }
 
-    if (!feedProperties.feedLocation) {
-        // The user cancelled the edit, but not until after potentially changing
-        // the title, so despite the cancellation we should still redownload
-        // the feed if the title has changed.
-        if (new_title != old_title) {
-            feed = new Feed(item.id);
-            feed.download();
-        }
-        return;
+    // check to see if the location changed
+    if (feedProperties.feedLocation && feedProperties.feedLocation != old_url)
+    {
+      ds.Change(resource, DC_IDENTIFIER, rdf.GetLiteral(old_url), rdf.GetLiteral(feedProperties.feedLocation));
+      // now update our feed url property on the destination folder
+      updateFolderFeedUrl(currentFolder, old_url, false); // remove the old url
+      updateFolderFeedUrl(currentFolder, feedProperties.feedLocation, true);  // add the new one
     }
-    else if (feedProperties.feedLocation != old_url)
-        updateURL(item.id, feedProperties.feedLocation);
 
-    feed = new Feed(item.id);
-    feed.download();
+    // feed = new Feed(item.id);
+    // feed.download();
 }
 
 function doRemove() {
     var tree = document.getElementById('subscriptions');
     var item = tree.view.getItemAtIndex(tree.view.selection.currentIndex);
     var resource = rdf.GetResource(item.id);
+    var feed = new Feed(resource);
     var ds = getSubscriptionsDS();
+    
+    // remove the feed from the subscriptions ds
     var feeds = getSubscriptionsList();
     var index = feeds.IndexOf(resource);
-    if (index != -1) {
-        var title = ds.GetTarget(resource, DC_TITLE, true);
-        if (title) {
-            title = title.QueryInterface(Components.interfaces.nsIRDFLiteral);
-            // We could delete the folder, but what if other feeds are using it?
-            // XXX Should we check for other feeds using the folder and delete it
-            // if there aren't any?  What if the user is using the folder
-            // for other purposes?
-            var server = getIncomingServer();
-            var openerResource = server.rootMsgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-            var titleValue = title ? title.QueryInterface(Components.interfaces.nsIRDFLiteral).Value : "";
-            var feed = new Feed(resource);
-            try {
-              var folderResource = server.rootMsgFolder.getChildNamed(feed.name).QueryInterface(Components.interfaces.nsIRDFResource);
-              var foo = window.opener.messenger.DeleteFolders(window.opener.GetFolderDatasource(), openerResource, folderResource);
-            } catch (e) {}
-            try {
-                // If the folder still exists, then it wasn't deleted,
-                // which means the user answered "no" to the question of whether
-                // they wanted to move the folder into the trash.  That probably
-                // means they changed their minds about removing the feed,
-                // so don't remove it.
-                folder = server.rootMsgFolder.getChildNamed(feed.name);
-                if (folder) 
-                  return;
-            }
-            catch (e) {}
-            ds.Unassert(resource, DC_TITLE, title, true);
-        }
+    if (index != -1)
+        feeds.RemoveElementAt(index, false);
 
-        var url = ds.GetTarget(resource, DC_IDENTIFIER, true);
-        if (url) {
-            url = url.QueryInterface(Components.interfaces.nsIRDFLiteral);
-            ds.Unassert(resource, DC_IDENTIFIER, url, true);
-        }
+    // remove the feed property string from the folder data base
+    var currentFolder = ds.GetTarget(resource, FZ_DESTFOLDER, true);
+    var currentFolderURI = currentFolder.QueryInterface(Components.interfaces.nsIRDFResource).Value;
+    currentFolder = rdf.GetResource(currentFolderURI).QueryInterface(Components.interfaces.nsIMsgFolder);
+    
+    var feedUrl = ds.GetTarget(resource, DC_IDENTIFIER, true);    
+    ds.Unassert(resource, DC_IDENTIFIER, feedUrl, true);
 
-        feeds.RemoveElementAt(index, true);
-    }
+    feedUrl = feedUrl ? feedUrl.QueryInterface(Components.interfaces.nsIRDFLiteral).Value : "";
+
+    updateFolderFeedUrl(currentFolder, feedUrl, true); // remove the old url
+
     // Remove all assertions about the feed from the subscriptions database.
-    removeAssertions(ds, feed);
+    removeAssertions(ds, resource);
     ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush(); // flush any changes
 
     // Remove all assertions about items in the feed from the items database.
-    ds = getItemsDS();
+    var itemds = getItemsDS();
     feed.invalidateItems();
     feed.removeInvalidItems();
-    ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush(); // flush any changes
+    itemds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush(); // flush any changes
+
+    // If we don't have any more subscriptions pointing into
+    // this folder, then I think we should offer to delete it...
+    // Cheat and look at the feed url property to see if anyone else is still using the feed...
+    // you could also accomplish this by looking at some properties in the data source...
+
+    var msgdb = currentFolder.QueryInterface(Components.interfaces.nsIMsgFolder).getMsgDatabase(null);
+    var folderInfo = msgdb.dBFolderInfo;
+    var oldFeedUrl = folderInfo.getCharPtrProperty("feedUrl");
+
+    if (!oldFeedUrl) // no more feeds pointing to the folder?
+    {
+      try {
+        var server = getIncomingServer();
+        var openerResource = server.rootMsgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+        var folderResource = currentFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+        window.opener.messenger.DeleteFolders(window.opener.GetFolderDatasource(), openerResource, folderResource);
+      } catch (e) { }
+    }
 }
 
-
-/*
- * Stuff
- */
-
-function updateTitle(item, new_title) {
-    var ds = getSubscriptionsDS();
-    item = rdf.GetResource(item);
-    var old_title = ds.GetTarget(item, DC_TITLE, true);
-    if (old_title)
-        ds.Change(item, DC_TITLE, old_title, rdf.GetLiteral(new_title));
-    else
-        ds.Assert(item, DC_TITLE, rdf.GetLiteral(new_title), true);
-}
-
-function updateURL(item, new_url) {
-    var ds = getSubscriptionsDS();
-    var item = rdf.GetResource(item);
-    var old_url = ds.GetTarget(item, DC_IDENTIFIER, true);
-    if (old_url)
-        ds.Change(item, DC_IDENTIFIER, old_url, rdf.GetLiteral(new_url));
-    else
-        ds.Assert(item, DC_IDENTIFIER, rdf.GetLiteral(new_url), true);
-}
 
 function getIncomingServer() {
     return window.opener.getIncomingServer();

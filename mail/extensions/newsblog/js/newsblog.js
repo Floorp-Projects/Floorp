@@ -42,17 +42,30 @@ var nsNewsBlogFeedDownloader =
     if (!gExternalScriptsLoaded)
       loadScripts();
 
+    // aUrl may be a delimited list of feeds for a particular folder. We need to kick off a download
+    // for each feed.
+
+    var feedUrlArray = aUrl.split("|");
+
     // we might just pull all these args out of the aFolder DB, instead of passing them in...
     var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
         .getService(Components.interfaces.nsIRDFService);
-    id = rdf.GetResource(aUrl);
-    feed = new Feed(id);
-    feed.urlListener = aUrlListener;
-    feed.folder = aFolder;
-    feed.msgWindow = aMsgWindow;
-    feed.download();
+    
+    var index = 0; 
+    for (url in feedUrlArray)
+    {
+      if (feedUrlArray[url])
+      {
+        id = rdf.GetResource(feedUrlArray[url]);
+        feed = new Feed(id);
+        feed.urlListener = aUrlListener;
+        feed.folder = aFolder;
+        feed.msgWindow = aMsgWindow;
+        feed.download();
+      }
+    }
   },
- 
+
   QueryInterface: function(aIID)
   {
     if (aIID.equals(Components.interfaces.nsINewsBlogFeedDownloader) ||

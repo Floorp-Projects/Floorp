@@ -33,7 +33,6 @@
 
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 
-
 <!DOCTYPE dialog SYSTEM "chrome://messenger-newsblog/locale/feed-properties.dtd">
 
 <dialog id="feedPropertyDialog"
@@ -44,8 +43,9 @@
   buttons="accept,cancel"
   onload="onLoad();"
   ondialogaccept="return onOk();">
-
+  
   <script type="application/x-javascript" src="feed-properties.js"/>
+   <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
 
   <grid flex="1">
     <columns>
@@ -54,12 +54,10 @@
     </columns>
 
     <rows>
+    
       <row>
-        <label value="&feedName.label;" accesskey="&feedName.accesskey;" control="feedName"/>
-        <hbox>
-          <textbox flex="1" id="feedName"/>
-          <spacer flex="4"/>
-        </hbox>
+          <label value="&feedLocation.label;" accesskey="&feedLocation.accesskey;" control="feedLocation"/>
+          <textbox id="feedLocation"/>
       </row>
 
       <row>
@@ -67,8 +65,27 @@
       </row>
 
       <row>
-          <label value="&feedLocation.label;" accesskey="&feedLocation.accesskey;" control="feedLocation"/>
-          <textbox id="feedLocation"/>
+        <label value="&feedFolder.label;" accesskey="&feedFolder.accesskey;" control="selectFolder"/>
+        <menulist id="selectFolder"
+              containment="http://home.netscape.com/NC-rdf#child"
+              sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
+              sortDirection="ascending"
+              datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
+              ref="...">
+            <template>
+                <menupopup>
+                   <menuitem uri="..." value="..."  
+                    class="folderMenuItem menuitem-iconic"
+                    oncommand="PickedMsgFolder(event.target,'selectFolder')"
+                    SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                    BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                    IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                    IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+                    ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+                    label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                </menupopup>
+            </template>
+        </menulist>
       </row>
 
       <!-- Eventually we'll add a folder picker here to pick the folder associated with the feed -->

@@ -32,22 +32,38 @@
  * ***** END LICENSE BLOCK ***** */
 
 function onLoad()
-{
-  if (window.arguments[0].feedName)
-    document.getElementById('feedName').value = window.arguments[0].feedName;
-  
+{ 
   if (window.arguments[0].feedLocation)
     document.getElementById('feedLocation').value = window.arguments[0].feedLocation;  
+
+  // root the location picker to the news & blogs server
+  document.getElementById('selectFolder').setAttribute('ref', window.arguments[0].serverURI);
+
+  SetFolderPicker(window.arguments[0].folderURI ? window.arguments[0].folderURI : window.arguments[0].serverURI, 'selectFolder');
 }
 
 function onOk()
 {
-  // eventually, add some validation code to make sure they've entered a location and a name
-  // before trying to create a feed entry...
-
-  window.arguments[0].feedName = document.getElementById('feedName').value;
-  window.arguments[0].feedLocation = document.getElementById('feedLocation').value
+  window.arguments[0].feedLocation = document.getElementById('feedLocation').value;
+  window.arguments[0].folderURI = document.getElementById('selectFolder').value;
   window.arguments[0].result = true;
 
   return true;
+}
+
+function PickedMsgFolder(selection,pickerID)
+{
+  var selectedUri = selection.getAttribute('id');
+  SetFolderPicker(selectedUri,pickerID);
+}   
+
+function SetFolderPicker(uri,pickerID)
+{
+  var picker = document.getElementById(pickerID);
+  var msgfolder = GetMsgFolderFromUri(uri, true);
+  if (!msgfolder) 
+    return;
+
+  picker.setAttribute("label",msgfolder.name);
+  picker.setAttribute("uri",uri);
 }

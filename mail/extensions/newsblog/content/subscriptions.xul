@@ -94,14 +94,12 @@
                   </conditions>
                   <bindings>
                       <binding subject="?feed" predicate="http://purl.org/dc/elements/1.1/title" object="?title"/>
-                      <binding subject="?feed" predicate="http://purl.org/dc/elements/1.1/identifier" object="?url"/>
                   </bindings>
                   <action>
                       <treechildren flex="1">
                           <treeitem uri="?feed">
                               <treerow>
                                   <treecell src="" label="?title"/>
-                                  <treecell src="" label="?url"/>
                               </treerow>
                           </treeitem>
                       </treechildren>
@@ -110,8 +108,6 @@
           </template>
           <treecols>
               <treecol id="subs-name-column" flex="1" label="&feedNameTreeCol.label;" primary="true"/> 
-              <splitter class="tree-splitter"/>
-              <treecol id="subs-url-column" flex="3" label="&locationTreeCol.label;" hidden="false"/>
           </treecols>
       </tree>
     </row>

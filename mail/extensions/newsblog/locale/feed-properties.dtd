@@ -1,10 +1,10 @@
 <!-- Feed Properties Dialog -->
 <!ENTITY window.title "News Feed Properties">
 
-<!ENTITY feedName.label "Name: ">
-<!ENTITY feedName.accesskey "N">
+<!ENTITY feedFolder.label "Store Feed Articles in: ">
+<!ENTITY feedFolder.accesskey "S">
 
-<!ENTITY feedLocation.label "Location URL: ">
-<!ENTITY feedLocation.accesskey "L">
+<!ENTITY feedLocation.label "Feed URL: ">
+<!ENTITY feedLocation.accesskey "F">
 
 
