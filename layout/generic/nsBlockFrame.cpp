@@ -165,7 +165,13 @@ InitDebugFlags()
 
 #endif
 
-//#define FIX_BUG_38157  needs review before it can be enabled
+#define FIX_BUG_38157 
+#define FIX_BUG_37657
+
+// add in a sanity check for absurdly deep frame trees.  See bug 42138
+// can't just use IsFrameTreeTooDeep() because that method has side effects we don't want
+static PRInt32 gRenumberListDepthCounter;
+#define MAX_DEPTH_FOR_LIST_RENUMBERING 200  // 200 open displayable tags is pretty unrealistic
 
 //----------------------------------------------------------------------
 
@@ -4263,21 +4269,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
 
   const nsMargin& borderPadding = aState.BorderPadding();
   nscoord x = aState.mAvailSpaceRect.x + borderPadding.left;
-  // the available width is the smaller of the widths given by:
-  //    a) the space manager, accounting for floaters impacting this line
-  //    b) the parent frame's computed width
-  // part 1 of a possible fix for 38157
-#ifdef FIX_BUG_38157
-  const nsMargin& margin = aState.Margin();
-  nscoord availContentWidth = aState.mReflowState.availableWidth;
-  if (NS_UNCONSTRAINEDSIZE != availContentWidth) {
-    availContentWidth -= (borderPadding.left + borderPadding.right) +
-                         (margin.left + margin.right);
-  }
-  nscoord availWidth = PR_MIN(aState.mAvailSpaceRect.width, availContentWidth);
-#else
   nscoord availWidth = aState.mAvailSpaceRect.width;
-#endif
   nscoord availHeight;
   if (aState.GetFlag(BRS_UNCONSTRAINEDHEIGHT)) {
     availHeight = NS_UNCONSTRAINEDSIZE;
@@ -4445,6 +4437,13 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
 
   // Send post-reflow notification
   aState.mPrevChild = aFrame;
+
+   /* XXX
+      This is where we need to add logic to handle some odd behavior.
+      For one thing, we should usually place at least one thing next
+      to a left floater, even when that floater takes up all the width on a line.
+      see bug 22496
+   */
 
   // Process the child frames reflow status. There are 5 cases:
   // complete, not-complete, break-before, break-after-complete,
@@ -6999,6 +6998,7 @@ nsBlockFrame::FrameStartsCounterScope(nsIFrame* aFrame)
 void
 nsBlockFrame::RenumberLists(nsIPresContext* aPresContext)
 {
+  gRenumberListDepthCounter = 0;  // reset the sanity check counter
   if (!FrameStartsCounterScope(this)) {
     // If this frame doesn't start a counter scope then we don't need
     // to renumber child list items.
@@ -7090,6 +7090,11 @@ nsBlockFrame::RenumberListsFor(nsIPresContext* aPresContext,
                                nsIFrame* aKid,
                                PRInt32* aOrdinal)
 {
+  // add in a sanity check for absurdly deep frame trees.  See bug 42138
+  gRenumberListDepthCounter++;
+  if (MAX_DEPTH_FOR_LIST_RENUMBERING < gRenumberListDepthCounter)
+    return PR_FALSE;
+
   PRBool kidRenumberedABullet = PR_FALSE;
 
   // If the frame is a list-item and the frame implements our
