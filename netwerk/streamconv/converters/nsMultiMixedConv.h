@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -26,9 +26,9 @@
 #include "nsIChannel.h"
 #include "nsIURI.h"
 #include "nsString.h"
+#include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
-
-#include "nsIFactory.h"
+#include "nsIIOService.h"
 
 #define NS_MULTIMIXEDCONVERTER_CID                         \
 { /* 7584CE90-5B25-11d3-A175-0050041CAF44 */         \
@@ -58,28 +58,35 @@ static NS_DEFINE_CID(kMultiMixedConverterCID,          NS_MULTIMIXEDCONVERTER_CI
 // NOTE: this MIME-type is used by HTTP, *not* SMTP, or IMAP.
 //
 // NOTE: For reference, a general description of how this MIME type should be handled via
-//   HTTP, see http://home.netscape.com/assist/net_sites/pushpull.html
+//   HTTP, see http://home.netscape.com/assist/net_sites/pushpull.html . Note that
+//   real world server content deviates considerably from this overview.
+//
+// Implementation assumptions:
+//  Assumed structue:
+//  --BoundaryToken[\r]\n
+//  content-type: foo/bar[\r]\n
+//  ... (other headers if any)
+//  [\r]\n (second line feed to delimit end of headers)
+//  data
+//  --BoundaryToken-- (end delimited by final "--")
+//
+// linebreaks can be either CRLF or LFLF. linebreaks preceeding
+// boundary tokens are considered part of the data. BoundaryToken
+// is any opaque string.
+//  
+//
 
 class nsMultiMixedConv : public nsIStreamConverter {
 public:
-    // nsISupports methods
     NS_DECL_ISUPPORTS
-
-    // nsIStreamConverter methods
     NS_DECL_NSISTREAMCONVERTER
-
-    // nsIStreamListener methods
     NS_DECL_NSISTREAMLISTENER
-
-    // nsIStreamObserver methods
     NS_DECL_NSISTREAMOBSERVER
 
-    // nsMultiMixedConv methods
     nsMultiMixedConv();
     virtual ~nsMultiMixedConv();
+
     nsresult Init();
-    nsresult SendData(const char *aBuffer, nsIChannel *aChannel, nsISupports *aCtxt);
-    nsresult BuildURI(nsIChannel *aChannel, nsIURI **_retval);
 
     // For factory creation.
     static NS_METHOD
@@ -102,21 +109,35 @@ public:
         return rv;
     }
 
+protected:
+    nsresult SendStart(nsIChannel *aChannel, nsISupports *context);
+    nsresult SendStop(nsISupports *context);
+    nsresult SendData(char *aBuffer, PRUint32 aLen, nsISupports *aCtxt);
+    nsresult BuildURI(nsIChannel *aChannel, nsIURI **_retval);
+    nsresult ParseHeaders(nsIChannel *aChannel, nsISupports *aContext,
+						  char *&aPtr, PRUint32 &aLen, PRBool *_retval);
+    PRInt8 PushOverLine(char *&aPtr, PRUint32 &aLen);
+    char *FindToken(char *aCursor, PRUint32 aLen);
+    nsresult BufferData(char *aData, PRUint32 aLen);
+
     // member data
-    PRBool              mFoundBoundary;  // Have we seen the first boundary?
     PRBool              mNewPart;        // Are we processing the beginning of a part?
-    nsCString           mBufferedData;   // holds any left over data after a crank turn
+	PRBool				mProcessingHeaders;
+	PRBool				mEndingNewline;  // Did our last header parsing pass end with a newline?
     nsCOMPtr<nsIStreamListener> mFinalListener; // this guy gets the converted data via his OnDataAvailable()
-    char                *mBoundaryCStr;
-    PRInt32             mBoundaryStrLen;
+    nsCOMPtr<nsIIOService>  mIOService;
+
+	nsXPIDLCString		mToken;
+    PRUint32            mTokenLen;
+
     PRUint16            mPartCount;     // the number of parts we've seen so far
-    nsCOMPtr<nsIChannel>mPartChannel;  // the channel for the given part we're processing.
+    nsCOMPtr<nsIChannel>mPartChannel;   // the channel for the given part we're processing.
                                         // one channel per part.
     nsCString           mContentType;
     PRInt32             mContentLength;
-    PRInt8              mLineFeedIncrement; // this is the amount to increment the
-                                            // cursor beyond the last "line". It will
-                                            // be either 1 or 2 chars.
+    
+    char                *mBuffer;
+    PRUint32            mBufLen;
 };
 
 #endif /* __nsmultimixedconv__h__ */
