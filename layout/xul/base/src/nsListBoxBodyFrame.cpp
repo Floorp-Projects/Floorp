@@ -404,7 +404,8 @@ nsListBoxBodyFrame::PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex)
 
      smoother->Stop();
 
-     mPresContext->PresShell()->FlushPendingNotifications(PR_FALSE);
+     // Don't flush anything but reflows lest it destroy us
+     mContent->GetDocument()->FlushPendingNotifications(Flush_OnlyReflow);
 
      smoother->mDelta = newTwipIndex > oldTwipIndex ? rowDelta : -rowDelta;
 
@@ -851,7 +852,8 @@ nsListBoxBodyFrame::DoScrollToIndex(PRInt32 aRowIndex, PRBool aForceDestruct)
 
   // This change has to happen immediately.
   // Flush any pending reflow commands.
-  mContent->GetDocument()->FlushPendingNotifications();
+  // Don't flush anything but reflows lest it destroy us
+  mContent->GetDocument()->FlushPendingNotifications(Flush_OnlyReflow);
 
   return NS_OK;
 }
@@ -881,8 +883,7 @@ nsListBoxBodyFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta, PRBool a
   // begin timing how long it takes to scroll a row
   PRTime start = PR_Now();
 
-  nsIPresShell *shell = mPresContext->PresShell();
-  shell->FlushPendingNotifications(PR_FALSE);
+  mContent->GetDocument()->FlushPendingNotifications(Flush_OnlyReflow);
 
   PRInt32 visibleRows = 0;
   if (mRowHeight)
@@ -927,7 +928,9 @@ nsListBoxBodyFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta, PRBool a
   nsBoxLayoutState state(mPresContext);
   mScrolling = PR_TRUE;
   MarkDirtyChildren(state);
-  shell->FlushPendingNotifications(PR_FALSE); // Calls CreateRows
+  // Flush calls CreateRows
+  // XXXbz there has to be a better way to do this than flushing!
+  mPresContext->PresShell()->FlushPendingNotifications(Flush_OnlyReflow);
   mScrolling = PR_FALSE;
   
   VerticalScroll(mYPosition);
@@ -1318,7 +1321,7 @@ nsListBoxBodyFrame::OnContentInserted(nsIPresContext* aPresContext, nsIContent* 
   
   nsBoxLayoutState state(aPresContext);
   MarkDirtyChildren(state);
-  shell->FlushPendingNotifications(PR_FALSE);
+  shell->FlushPendingNotifications(Flush_OnlyReflow);
 }
 
 // 
@@ -1390,7 +1393,7 @@ nsListBoxBodyFrame::OnContentRemoved(nsIPresContext* aPresContext, nsIFrame* aCh
   }
 
   MarkDirtyChildren(state);
-  aPresContext->PresShell()->FlushPendingNotifications(PR_FALSE);
+  aPresContext->PresShell()->FlushPendingNotifications(Flush_OnlyReflow);
 }
 
 void

@@ -104,7 +104,7 @@ public:
   NS_IMETHOD WillInterrupt(void) { return NS_OK; }
   NS_IMETHOD WillResume(void) { return NS_OK; }
   NS_IMETHOD SetParser(nsIParser* aParser) { return NS_OK; }
-  NS_IMETHOD FlushPendingNotifications() { return NS_OK; }
+  virtual void FlushContent(PRBool aNotify) { }
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset) { return NS_OK; }
   NS_IMETHOD WillProcessTokens(void) { return NS_OK; }
   NS_IMETHOD DidProcessTokens(void) { return NS_OK; }

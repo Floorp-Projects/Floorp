@@ -169,7 +169,7 @@ inLayoutUtils::GetScreenOrigin(nsIDOMElement* aElement)
 
     if (presShell) {
       // Flush all pending notifications so that our frames are uptodate
-      presShell->FlushPendingNotifications(PR_FALSE);
+      doc->FlushPendingNotifications(Flush_Layout);
 
       nsCOMPtr<nsIPresContext> presContext;
       presShell->GetPresContext(getter_AddRefs(presContext));

@@ -1060,7 +1060,10 @@ void nsSVGOuterSVGFrame::InitiateReflow()
   }
   
   mPresShell->AppendReflowCommand(reflowCmd);
-  mPresShell->FlushPendingNotifications(PR_FALSE);  
+  // XXXbz why is this synchronously flushing reflows, exactly?  If it
+  // needs to, why is it not using the presshell's reflow batching
+  // instead of hacking its own?
+  mPresShell->FlushPendingNotifications(Flush_OnlyReflow);  
 }
 
 

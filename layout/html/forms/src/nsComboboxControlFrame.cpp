@@ -616,7 +616,9 @@ nsComboboxControlFrame::ShowList(nsIPresContext* aPresContext, PRBool aShowList)
     mDroppedDown = PR_FALSE;
   }
 
-  aPresContext->PresShell()->FlushPendingNotifications(PR_FALSE);
+  // Don't flush anything but reflows lest it destroy us
+  aPresContext->PresShell()->
+    GetDocument()->FlushPendingNotifications(Flush_OnlyReflow);
 
   if (widget)
     widget->CaptureRollupEvents((nsIRollupListener *)this, mDroppedDown, aShowList);
@@ -1809,8 +1811,6 @@ nsComboboxControlFrame::RedisplayText(PRInt32 aIndex)
       //mTextFrame->AddStateBits(NS_FRAME_IS_DIRTY);
       mDisplayFrame->AddStateBits(NS_FRAME_IS_DIRTY);
       ReflowDirtyChild(mPresContext->PresShell(), mDisplayFrame);
-
-//      mPresContext->PresShell()->FlushPendingNotifications(PR_FALSE);
     }
   }
   return rv;

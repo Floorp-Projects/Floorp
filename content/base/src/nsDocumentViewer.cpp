@@ -656,7 +656,7 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
     // Note that we are flushing before we add mPresShell as an observer
     // to avoid bogus notifications.
 
-    mDocument->FlushPendingNotifications(PR_FALSE);
+    mDocument->FlushPendingNotifications(Flush_ContentAndNotify);
   }
 
   mPresShell->BeginObservingDocument();
@@ -935,9 +935,7 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   static PRBool forcePaint
     = PR_GetEnv("MOZ_FORCE_PAINT_AFTER_ONLOAD") != nsnull;
   if (forcePaint) {
-    if (mPresShell) {
-      mPresShell->FlushPendingNotifications(PR_TRUE);
-    }
+    mDocument->FlushPendingNotifications(Flush_Display);
     nsIURI *uri = mDocument->GetDocumentURI();
     nsCAutoString spec;
     if (uri) {

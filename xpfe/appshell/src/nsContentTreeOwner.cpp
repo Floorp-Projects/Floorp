@@ -388,6 +388,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetStatus(PRUint32 aStatusType, const PRUnicha
   // XXX: This is nasty because we have to drill down to the nsIDocument to
   //      force the flushing...
   //
+  // XXXbz no, this is nasty because we're flushing at all!
   nsCOMPtr<nsIDOMDocument> domDoc;
   nsCOMPtr<nsIDocument> doc;
 
@@ -395,7 +396,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetStatus(PRUint32 aStatusType, const PRUnicha
   doc = do_QueryInterface(domDoc);
 
   if (doc) {
-    doc->FlushPendingNotifications(PR_TRUE, PR_TRUE);
+    doc->FlushPendingNotifications(Flush_Layout);
   }
 
   return NS_OK;

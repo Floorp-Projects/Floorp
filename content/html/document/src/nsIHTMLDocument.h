@@ -106,6 +106,8 @@ public:
    * Called to get a better count of forms than document.forms can provide
    * without calling FlushPendingNotifications (bug 138892).
    */
+  // XXXbz is this still needed now that we can flush just content,
+  // not the rest?
   virtual PRInt32 GetNumFormsSynchronous() = 0;
   
   virtual PRBool IsWriting() = 0;

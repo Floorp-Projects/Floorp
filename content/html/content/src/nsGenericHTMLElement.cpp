@@ -582,7 +582,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
   }
 
   // Flush all pending notifications so that our frames are uptodate
-  mDocument->FlushPendingNotifications();
+  mDocument->FlushPendingNotifications(Flush_Layout);
 
   // Get the Frame for our content
   nsIFrame* frame = nsnull;
@@ -933,7 +933,7 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
     return;
   }
 
-  mDocument->FlushPendingNotifications(PR_TRUE, PR_FALSE);
+  mDocument->FlushPendingNotifications(Flush_Layout);
 
   // Get the presentation shell
   nsIPresShell *presShell = mDocument->GetShellAt(0);
@@ -1239,7 +1239,7 @@ nsGenericHTMLElement::ScrollIntoView(PRBool aTop)
   }
 
   // Now flush to make sure things are up to date
-  presShell->FlushPendingNotifications(PR_FALSE);
+  mDocument->FlushPendingNotifications(Flush_Layout);
   
   // Get the primary frame for this element
   nsIFrame *frame = nsnull;
@@ -2176,7 +2176,7 @@ nsGenericHTMLElement::GetPrimaryFrameFor(nsIContent* aContent,
   if (aFlushContent) {
     // Cause a flush of content, so we get up-to-date frame
     // information
-    aDocument->FlushPendingNotifications(PR_FALSE);
+    aDocument->FlushPendingNotifications(Flush_Frames);
   }
 
   // Get presentation shell 0

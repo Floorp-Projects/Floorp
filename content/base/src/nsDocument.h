@@ -397,8 +397,7 @@ public:
   virtual void StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
                                 nsIStyleRule* aStyleRule);
 
-  virtual void FlushPendingNotifications(PRBool aFlushReflows = PR_TRUE,
-                                         PRBool aUpdateViews = PR_FALSE);
+  virtual void FlushPendingNotifications(mozFlushType aType);
   virtual void AddReference(void *aKey, nsISupports *aReference);
   virtual already_AddRefed<nsISupports> RemoveReference(void *aKey);
   virtual nsIScriptEventManager* GetScriptEventManager();

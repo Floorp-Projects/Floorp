@@ -109,10 +109,13 @@ public:
   NS_IMETHOD SetParser(nsIParser* aParser)=0;
 
   /**
-   * Flush all pending notifications so that the content model
-   * is in sync with the state of the sink.
+   * Flush content so that the content model is in sync with the state
+   * of the sink.
+   *
+   * @param aNotify true if notifications should be fired in the
+   * process (instead of deferred for now).
    */
-  NS_IMETHOD FlushPendingNotifications()=0;
+  virtual void FlushContent(PRBool aNotify)=0;
 
   /**
    * Set the document character set. This should be passed on to the

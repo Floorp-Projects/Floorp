@@ -373,20 +373,12 @@ nsHTMLBodyElement::GetBgColor(nsAString& aBgColor)
   // If we don't have an attribute, find the actual color used for
   // (generally from the user agent style sheet) for compatibility
   if (rv == NS_CONTENT_ATTR_NOT_THERE) {
-    // XXX This should just use nsGenericHTMLElement::GetPrimaryFrame()
     if (mDocument) {
-      // Make sure the presentation is up-to-date
-      mDocument->FlushPendingNotifications();
-    }
+      // Make sure the style is up-to-date, since we need it
+      mDocument->FlushPendingNotifications(Flush_Style);
 
-    nsCOMPtr<nsIPresContext> context;
-    GetPresContext(this, getter_AddRefs(context));
-
-    if (context) {
-      nsIFrame* frame;
-      rv = context->PresShell()->GetPrimaryFrameFor(this, &frame);
-      NS_ENSURE_SUCCESS(rv, rv);
-
+      nsIFrame* frame = GetPrimaryFrameFor(this, mDocument, PR_FALSE);
+    
       if (frame) {
         bgcolor = frame->GetStyleBackground()->mBackgroundColor;
         NS_RGBToHex(bgcolor, aBgColor);

@@ -5879,7 +5879,9 @@ nsHTMLExternalObjSH::GetPluginInstance(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
   }
 
-  doc->FlushPendingNotifications();
+  // Have to flush layout, since plugin instance instantiation
+  // currently happens in reflow!  That's just uncool.
+  doc->FlushPendingNotifications(Flush_Layout);
 
   // See if we have a frame.
   nsIPresShell *shell = doc->GetShellAt(0);

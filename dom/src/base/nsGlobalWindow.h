@@ -83,6 +83,7 @@
 #include "nsIXPCScriptable.h"
 #include "nsPoint.h"
 #include "nsSize.h"
+#include "mozFlushType.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
@@ -249,7 +250,7 @@ protected:
                            const nsAString &aPopupURL,
                            const nsAString &aPopupWindowFeatures);
 
-  void FlushPendingNotifications(PRBool aFlushReflows);
+  void FlushPendingNotifications(mozFlushType aType);
   void EnsureReflowFlushAndPaint();
   nsresult CheckSecurityWidthAndHeight(PRInt32* width, PRInt32* height);
   nsresult CheckSecurityLeftAndTop(PRInt32* left, PRInt32* top);

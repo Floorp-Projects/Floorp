@@ -96,7 +96,7 @@ nsDOMWindowList::GetLength(PRUint32* aLength)
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(domdoc));
 
     if (doc) {
-      doc->FlushPendingNotifications();
+      doc->FlushPendingNotifications(Flush_ContentAndNotify);
     }
   }
 
@@ -129,7 +129,7 @@ nsDOMWindowList::Item(PRUint32 aIndex, nsIDOMWindow** aReturn)
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
 
     if (doc) {
-      doc->FlushPendingNotifications();
+      doc->FlushPendingNotifications(Flush_ContentAndNotify);
     }
   }
 
@@ -166,7 +166,7 @@ nsDOMWindowList::NamedItem(const nsAString& aName, nsIDOMWindow** aReturn)
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(domdoc));
 
     if (doc) {
-      doc->FlushPendingNotifications();
+      doc->FlushPendingNotifications(Flush_ContentAndNotify);
     }
   }
 

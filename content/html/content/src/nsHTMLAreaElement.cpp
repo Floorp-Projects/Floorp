@@ -202,7 +202,7 @@ nsHTMLAreaElement::SetFocus(nsIPresContext* aPresContext)
     
   // Make sure the presentation is up-to-date    
   if (mDocument) {
-    mDocument->FlushPendingNotifications();
+    mDocument->FlushPendingNotifications(Flush_Layout);
   }
 
   nsIPresShell *presShell = aPresContext->GetPresShell();

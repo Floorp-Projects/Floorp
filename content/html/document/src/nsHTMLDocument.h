@@ -136,8 +136,7 @@ public:
                                    PRInt32 aNameSpaceID,
                                    nsIAtom* aAttribute);
 
-  virtual void FlushPendingNotifications(PRBool aFlushReflows = PR_TRUE,
-                                         PRBool aUpdateViews = PR_FALSE);
+  virtual void FlushPendingNotifications(mozFlushType aType);
 
   virtual PRBool IsCaseSensitive();
 

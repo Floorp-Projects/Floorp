@@ -271,6 +271,11 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
 
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
+  nsIDocument* document = mContent->GetDocument();
+  if (document) {
+    document->FlushPendingNotifications(Flush_Style);
+  }
+
   nsIFrame *frame = nsnull;
   presShell->GetPrimaryFrameFor(mContent, &frame);
 
@@ -2873,7 +2878,7 @@ nsComputedDOMStyle::FlushPendingReflows()
   // Flush all pending notifications so that our frames are up to date
   nsIDocument* document = mContent->GetDocument();
   if (document) {
-    document->FlushPendingNotifications();
+    document->FlushPendingNotifications(Flush_Layout);
   }
 }
 

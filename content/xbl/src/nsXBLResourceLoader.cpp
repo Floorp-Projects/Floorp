@@ -251,8 +251,8 @@ nsXBLResourceLoader::NotifyBoundElements()
       nsCOMPtr<nsIDocument> doc = content->GetDocument();
     
       if (doc) {
-        // Flush first
-        doc->FlushPendingNotifications();
+        // Flush first to make sure we can get the frame for content
+        doc->FlushPendingNotifications(Flush_Frames);
 
         // Notify
         nsCOMPtr<nsIContent> parent = content->GetParent();
@@ -286,7 +286,8 @@ nsXBLResourceLoader::NotifyBoundElements()
         }
 
         // Flush again
-        doc->FlushPendingNotifications();
+        // XXXbz why is this needed?
+        doc->FlushPendingNotifications(Flush_ContentAndNotify);
       }
     }
   }

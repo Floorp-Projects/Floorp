@@ -503,6 +503,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     GenerateMouseEnterExit(aPresContext, (nsGUIEvent*)aEvent);
     // Flush reflows and invalidates to eliminate flicker when both a reflow
     // and visual change occur in an event callback. See bug  #36849
+    // XXXbz eeeew.  Why not fix viewmanager to flush reflows before painting??
     FlushPendingEvents(aPresContext); 
     break;
   case NS_MOUSE_EXIT:
@@ -4641,7 +4642,8 @@ nsEventStateManager::FlushPendingEvents(nsIPresContext* aPresContext)
   NS_PRECONDITION(nsnull != aPresContext, "nsnull ptr");
   nsIPresShell *shell = aPresContext->GetPresShell();
   if (shell) {
-    shell->FlushPendingNotifications(PR_FALSE);
+    // This is not flushing _Display because of the mess that is bug 36849
+    shell->FlushPendingNotifications(Flush_Layout);
     nsIViewManager* viewManager = shell->GetViewManager();
     if (viewManager) {
       viewManager->FlushPendingInvalidates();

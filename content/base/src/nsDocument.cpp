@@ -3906,10 +3906,11 @@ nsDocument::CreateEventGroup(nsIDOMEventGroup **aInstancePtrResult)
 }
 
 void
-nsDocument::FlushPendingNotifications(PRBool aFlushReflows,
-                                      PRBool aUpdateViews)
+nsDocument::FlushPendingNotifications(mozFlushType aType)
 {
-  if (!aFlushReflows || !mScriptGlobalObject) {
+  if (aType == (aType & (Flush_Content | Flush_SinkNotifications)) ||
+      !mScriptGlobalObject) {
+    // Nothing to do here
     return;
   }
 
@@ -3935,8 +3936,7 @@ nsDocument::FlushPendingNotifications(PRBool aFlushReflows,
       if (doc) {
         // If we have a parent we must flush the parent too to ensure
         // that our container is reflown if its size was changed.
-
-        doc->FlushPendingNotifications(aFlushReflows, aUpdateViews);
+        doc->FlushPendingNotifications(aType);
       }
     }
   }
@@ -3948,7 +3948,7 @@ nsDocument::FlushPendingNotifications(PRBool aFlushReflows,
       NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
 
     if (shell) {
-      shell->FlushPendingNotifications(aUpdateViews);
+      shell->FlushPendingNotifications(aType);
     }
   }
 }

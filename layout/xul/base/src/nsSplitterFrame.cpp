@@ -1047,11 +1047,7 @@ nsSplitterFrameInner::AdjustChildren(nsIPresContext* aPresContext)
         frame->GetOffsetFromView(aPresContext, offset, &view);
         NS_ASSERTION(nsnull != view, "no view");
     }
-    nsIViewManager* viewManager = view->GetViewManager();
-
-    viewManager->DisableRefresh();
-    aPresContext->PresShell()->FlushPendingNotifications(PR_FALSE);
-    viewManager->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
+    aPresContext->PresShell()->FlushPendingNotifications(Flush_Display);
   }
   else {
     nsBoxLayoutState state(aPresContext);
