@@ -28,13 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/build/unix/modules.mk
 
-ifneq ($(BUILD_MODULES),all)
-
-DIRS		= $(BUILD_MODULE_DIRS)
-EXPORT_DIRS	= $(BUILD_MODULE_DEP_DIRS)
-
-else
-
+ifeq ($(BUILD_MODULES),all)
 #
 # And now for something completely different...
 # Divide the default build into tiers. 
@@ -267,13 +261,19 @@ ifdef MOZ_ENABLE_GTK
 tier_99_dirs	+= embedding/browser/gtk/tests
 endif
 
+else
+
+# Standalone build
+
+DIRS		= $(BUILD_MODULE_DIRS)
+
+default: $(SUBMAKEFILES)
+	$(MAKE) export
+	$(MAKE) libs
+
 endif # BUILD_MODULES == all
 
-STATIC_MAKEFILES := nsprpub directory/c-sdk
-
-ifdef MOZ_PSM
-STATIC_MAKEFILES += security/nss 
-endif
+STATIC_MAKEFILES := nsprpub directory/c-sdk security/nss
 
 GARBAGE_DIRS += dist
 DIST_GARBAGE = config.cache config.log config.status config-defs.h \
@@ -281,12 +281,17 @@ DIST_GARBAGE = config.cache config.log config.status config-defs.h \
    unallmakefiles mozilla-config.h \
    $(topsrcdir)/.mozconfig.mk $(topsrcdir)/.mozconfig.out 
 
-ifeq ($(BUILD_MODULES),all)
-# Build psuedo-external modules first when export is explicitly called
+# Build pseudo-external modules first when export is explicitly called
 export::
 	$(MAKE) -C config export
 	$(MAKE) nspr
 	$(MAKE) ldap
+ifneq ($(BUILD_MODULES),all)
+ifneq (,$(findstring xpcom, $(BUILD_MODULE_DIRS)))
+	$(MAKE) -C xpcom/typelib
+	$(MAKE) export-idl
+endif
+endif
 
 install::
 ifndef MOZ_NATIVE_NSPR
@@ -298,19 +303,15 @@ ifdef MOZ_LDAP_XPCOM
 	$(MAKE) -C directory/c-sdk real_install DESTDIR=$(DESTDIR) libdir=$(mozappdir) includedir=$(includedir)/ldap
 endif
 
-endif
-
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(BUILD_MODULES),all)
-# Clean up after psuedo-external modules
+# Clean up after pseudo-external modules
 clean clobber realclean clobber_all distclean::
 ifndef MOZ_NATIVE_NSPR
 	$(MAKE) -C nsprpub $@
 endif
 ifdef MOZ_LDAP_XPCOM
 	$(MAKE) -C directory/c-sdk $@
-endif
 endif
 
 tier_%: 
@@ -340,10 +341,6 @@ ldap:
 ifdef MOZ_LDAP_XPCOM
 	$(MAKE) -C directory/c-sdk
 endif
-
-# For modules.mk standalone build
-export::
-	+$(LOOP_OVER_EXPORT_DIRS)
 
 export::
 	@$(PERL) $(MOZILLA_DIR)/config/purge-old-headers.pl $(DIST)/include
