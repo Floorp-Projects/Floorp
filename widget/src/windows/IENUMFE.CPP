@@ -125,7 +125,7 @@ STDMETHODIMP CEnumFormatEtc::QueryInterface(REFIID riid, LPVOID *ppv)
 STDMETHODIMP_(ULONG) CEnumFormatEtc::AddRef(void)
 {
   ++mRefCnt;
-  NS_LOG_ADDREF(this, mRefCnt, "CEnumFormatEtc");
+  NS_LOG_ADDREF(this, mRefCnt, "CEnumFormatEtc",sizeof(*this));
   //printf("CEnumFormatEtc::AddRef >>>>>>>>>>>>>>>>>> %d on %p\n", mRefCnt, this);
   return mRefCnt;
 }
