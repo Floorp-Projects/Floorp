@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.15 $ $Date: 2001/12/10 19:16:18 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.16 $ $Date: 2001/12/10 20:08:15 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -741,8 +741,10 @@ nssTrustDomain_AddCertsToCache
 		c = nssTrustDomain_GetCertForIssuerAndSNFromCache(td,
 		                                            &certs[i]->issuer,
 		                                            &certs[i]->serial);
-		NSSCertificate_Destroy(certs[i]);
-		certs[i] = c;
+		if (c != certs[i]) {
+		    NSSCertificate_Destroy(certs[i]);
+		    certs[i] = c;
+		}
 		nss_ClearErrorStack();
 		continue;
 	    }
