@@ -921,7 +921,7 @@ ifndef NO_GEN_XPT
 # generate intermediate .xpt files into $(XPIDL_GEN_DIR), then link
 # into $(MODULE).xpt and export it to $(DIST)/bin/components.
 $(XPIDL_GEN_DIR)/%.xpt: %.idl $(IDL_COMPILE) $(XPIDL_GEN_DIR)
-	$(XPIDL_COMPILE) -m typelib -w -I $(XPDIST)/idl -o $(XPIDL_GEN_DIR)/$* $<
+	$(XPIDL_COMPILE) -m typelib -w -I $(XPDIST)/idl -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $<
 
 $(XPIDL_GEN_DIR)/$(MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS))
 	$(XPIDL_LINK) $(XPIDL_GEN_DIR)/$(MODULE).xpt $^
