@@ -23,8 +23,10 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORTS= \
-		nsIRDFMSGFolderDataSource.h \
-		$(NULL)
+	nsIRDFMSGFolderDataSource.h \
+	nsIPop3Sink.h \
+	nsIPop3URL.h \
+	$(NULL)
 
 include $(topsrcdir)/config/config.mk
 

@@ -18,8 +18,11 @@
 DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
-EXPORTS = nsIRDFMSGFolderDataSource.h \
-        $(NULL)
+EXPORTS = \
+	nsIRDFMSGFolderDataSource.h \
+	nsIPop3Sink.h \
+	nsIPop3URL.h \
+	$(NULL)
 
 MODULE=mailnews
 
