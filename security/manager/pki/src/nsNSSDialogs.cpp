@@ -628,10 +628,8 @@ nsNSSDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *prefName,
 
   if (NS_FAILED(rv)) return rv;
 
-  if (buttonPressed == 1) {
-    *_result = PR_FALSE;
-  }                                
-        
+  *_result = (buttonPressed != 1);
+
   if (!prefValue && prefName != nsnull) {
     mPref->SetBoolPref(prefName, PR_FALSE);
   }
