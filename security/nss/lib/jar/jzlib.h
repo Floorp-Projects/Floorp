@@ -36,7 +36,11 @@
 extern "C" {
 #endif
 
+#ifdef MOZILLA_CLIENT
+#include "jzconf.h"
+#else
 #include "zconf.h"
+#endif
 
 #define ZLIB_VERSION "1.0.4"
 

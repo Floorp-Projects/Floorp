@@ -49,3 +49,5 @@ CSRCS =	\
 REQUIRES = security dbm
 
 EXPORTS	 = jar.h jar-ds.h jarfile.h
+
+DEFINES = -DMOZILLA_CLIENT=1
