@@ -1213,13 +1213,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 
   // Size the frame, but |RelativePositionFrames| will size the view.
   aFrame->SetSize(nsSize(metrics.width, metrics.height));
-  // XXX We shouldn't need to size the view because
-  // |RelativePositionFrames| does it, but we need to.  See 
-  // http://bugzilla.mozilla.org/show_bug.cgi?id=79315#c67
-  if (aFrame->HasView()) {
-    nsIView* view = aFrame->GetView();
-    view->GetViewManager()->ResizeView(view, pfd->mCombinedArea);
-  }
 
   // Tell the frame that we're done reflowing it
   aFrame->DidReflow(mPresContext, &reflowState, NS_FRAME_REFLOW_FINISHED);
@@ -2434,9 +2427,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       // Only consider non empty text frames when line-height=normal
       PRBool canUpdate = !pfd->GetFlag(PFD_ISTEXTFRAME);
       if (!canUpdate && pfd->GetFlag(PFD_ISNONWHITESPACETEXTFRAME)) {
-        const nsStyleText* textStyle = frame->GetStyleText();
-        canUpdate = textStyle->mLineHeight.GetUnit() == eStyleUnit_Normal ||
-                    textStyle->mLineHeight.GetUnit() == eStyleUnit_Null;
+        nsStyleUnit lhUnit = frame->GetStyleText()->mLineHeight.GetUnit();
+        canUpdate = lhUnit == eStyleUnit_Normal || lhUnit == eStyleUnit_Null;
       }
       if (canUpdate) {
 #endif
@@ -3074,16 +3066,16 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
   for (pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
     nscoord x = pfd->mBounds.x;
     nscoord y = pfd->mBounds.y;
+    nsIFrame* frame = pfd->mFrame;
 
     // Adjust the origin of the frame
     if (pfd->GetFlag(PFD_RELATIVEPOS)) {
-      nsIFrame* frame = pfd->mFrame;
-      // XXX what about right and bottom?
-      nscoord dx = pfd->mOffsets.left;
-      nscoord dy = pfd->mOffsets.top;
-      frame->SetPosition(frame->GetPosition() + nsPoint(dx, dy));
-      x += dx;
-      y += dy;
+      // right and bottom are handled by
+      // nsHTMLReflowState::ComputeRelativeOffsets
+      nsPoint change(pfd->mOffsets.left, pfd->mOffsets.top);
+      frame->SetPosition(frame->GetPosition() + change);
+      x += change.x;
+      y += change.y;
     }
 
     // Note: the combined area of a child is in its coordinate
@@ -3097,6 +3089,13 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
       r = &spanCombinedArea;
       RelativePositionFrames(pfd->mSpan, spanCombinedArea);
     }
+
+    // Do this here (rather than along with NS_FRAME_OUTSIDE_CHILDREN
+    // handling below) so we get leaf frames as well.  No need to worry
+    // about the root span, since it doesn't have a frame.
+    if (frame->HasView())
+      nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, frame,
+                                                 frame->GetView(), r);
 
     nscoord xl = x + r->x;
     if (xl < minX) {
@@ -3132,11 +3131,6 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
     } else {
       frame->RemoveStateBits(NS_FRAME_OUTSIDE_CHILDREN);
     }
-
-    if (frame->HasView())
-      nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, frame,
-                                                 frame->GetView(),
-                                                 &aCombinedArea);
   }
 }
 
