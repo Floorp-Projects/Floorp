@@ -42,6 +42,9 @@
 #include <Xm/Manager.h>
 #endif
 
+#include <Xm/ToggleB.h>
+#include <Xm/ToggleBG.h>
+
 #define MESSAGE0 "XfeInstancePointer() called with non XfePrimitive or XfeManager widget."
 
 /*----------------------------------------------------------------------*/
@@ -655,6 +658,26 @@ XfeEventGetModifiers(XEvent * event)
 	}
 
 	return 0;
+}
+/*----------------------------------------------------------------------*/
+/* extern */ Boolean
+XfeToggleButtonIsSet(Widget w)
+{
+	Boolean result = False;
+
+	assert( XfeIsAlive(w) );
+	assert( XmIsToggleButton(w) || XmIsToggleButtonGadget(w) );
+
+	if (XmIsToggleButton(w))
+	{
+		result = XmToggleButtonGetState(w);
+	}
+	else
+	{
+		result = XmToggleButtonGadgetGetState(w);
+	}
+	
+	return result;
 }
 /*----------------------------------------------------------------------*/
 

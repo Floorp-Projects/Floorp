@@ -398,6 +398,10 @@ XfeEventGetRootXY				(XEvent *			event,
 								 int *				x_out,
 								 int *				y_out);
 /*----------------------------------------------------------------------*/
+extern Boolean
+XfeToggleButtonIsSet			(Widget				w);
+
+/*----------------------------------------------------------------------*/
 extern Modifiers
 XfeEventGetModifiers			(XEvent *			event);
 /*----------------------------------------------------------------------*/
