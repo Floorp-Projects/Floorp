@@ -61,8 +61,6 @@ struct nsRegistry : public nsIRegistry {
     NS_IMETHOD SetInt( Key baseKey, const char *path, int32 value );
     NS_IMETHOD GetBytes( Key baseKey, const char *path, void **result, uint32 *len );
     NS_IMETHOD SetBytes( Key baseKey, const char *path, void *value, uint32 len );
-    NS_IMETHOD GetIntArray( Key baseKey, const char *path, int32 **result, uint32 *len );
-    NS_IMETHOD SetIntArray( Key baseKey, const char *path, const int32 *value, uint32 len );
 
     NS_IMETHOD AddSubtree( Key baseKey, const char *path, Key *result );
     NS_IMETHOD RemoveSubtree( Key baseKey, const char *path );
@@ -580,8 +578,7 @@ NS_IMETHODIMP nsRegistry::SetString( Key baseKey, const char *path, const char *
 
 /*---------------------------- nsRegistry::GetInt ------------------------------
 | This function is just shorthand for fetching a 1-element int32 array.  We    |
-| implement it "manually" using NR_RegGetEntry(versus calling GetIntArray)    |
-| to save allocating a copy of the result.                                     |
+| implement it "manually" using NR_RegGetEntry                                 |
 ------------------------------------------------------------------------------*/
 NS_IMETHODIMP nsRegistry::GetInt( Key baseKey, const char *path, int32 *result ) {
     nsresult rv = NS_OK;
@@ -680,77 +677,6 @@ NS_IMETHODIMP nsRegistry::SetBytes( Key baseKey, const char *path, void *value, 
     return regerr2nsresult( err );
 }
 
-/*-------------------------- nsRegistry::GetIntArray ---------------------------
-| Find out about the entry using GetValueInfo.  We check the type and then     |
-| use NR_RegGetEntry to get the actual array.  We have to convert from the     |
-| array dimension to number of bytes in the process.                           |
-------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::GetIntArray( Key baseKey, const char *path, int32 **result, uint32 *len ) {
-    nsresult rv = NS_OK;
-    REGERR err = REGERR_OK;
-
-    // Make sure caller gave us place for result.
-    if( result && len ) {
-        // Get info about the requested entry.
-        uint32 type, length;
-        rv = GetValueType( baseKey, path, &type );
-        if ( rv == NS_OK ) {
-            rv = GetValueLength( baseKey, path, &length );
-        } 
-        // See if that worked.
-        if( rv == NS_OK ) {
-            // Make sure the entry is bytes.
-            if( type == Int32 ) {
-                // Allocate space for result.
-                *len = length * sizeof(int32);
-                *result =(int32*)PR_Malloc( *len );
-                // Make sure that worked.
-                if( *result ) {
-                    // Get array from registry into result field.
-                    PR_Lock(mregLock);
-                    err = NR_RegGetEntry( mReg,(RKEY)baseKey,(char*)path, *result, len );
-                    PR_Unlock(mregLock);
-                    // Convert status.
-                    if( err == REGERR_OK ) {
-                        // Convert size in bytes to array dimension.
-                        *len /= sizeof(int32);
-                    } else {
-                        rv = regerr2nsresult( err );
-                        // Free buffer that we allocated(error will tell caller not to).
-                        PR_Free( *result );
-                        *result = 0;
-                    }
-                } else {
-                    rv = NS_ERROR_OUT_OF_MEMORY;
-                }
-            } else {
-                // They asked for the wrong type of value.
-                rv = NS_ERROR_REG_BADTYPE;
-            }
-        }
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-    return rv;
-}
-
-/*-------------------------- nsRegistry::SetIntArray ---------------------------
-| Store the given integer array at the given point in the registry.  The       |
-| length given is the size of the array, we have to convert that to the        |
-| size in bytes in order to use NR_RegSetEntry.                                |
-------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::SetIntArray( Key baseKey, const char *path, const int32 *value, uint32 len ) {
-    REGERR err = REGERR_OK;
-    // Convert array dimension to byte count.
-    uint32 size = len * sizeof(int32);
-    // Set contents.
-    PR_Lock(mregLock);
-    err = NR_RegSetEntry( mReg,(RKEY)baseKey,(char*)path,
-                           REGTYPE_ENTRY_INT32_ARRAY,(void*)value, size );
-    PR_Unlock(mregLock);
-    // Convert result.
-    return regerr2nsresult( err );
-}
 
 /*-------------------------- nsRegistry::AddSubtree ----------------------------
 | Add a new registry subkey with the specified name, using NR_RegAddKey.       |

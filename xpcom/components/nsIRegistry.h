@@ -199,12 +199,6 @@ struct nsIRegistry : public nsISupports {
     |             resulting array using PR_Free.                               |
     | SetBytes  - Stores a given array of bytes; you specify the bytes via a   |
     |             pointer and a length.                                        |
-    | GetIntArray - Obtains the array of int32 values stored at a given node.  |
-    |             The result is composed of two values: a pointer to an        |
-    |             array of integer values (which must be freed using           |
-    |             PR_Free) and the number of elements in that array.           |
-    | SetIntArray - Stores a set of int32 values at a given node.  You must    |
-    |             provide a pointer to the array and the number of entries.    |
     --------------------------------------------------------------------------*/
     NS_IMETHOD GetString( Key baseKey, const char *path, char **result ) = 0;
     NS_IMETHOD SetString( Key baseKey, const char *path, const char *value ) = 0;
@@ -212,8 +206,6 @@ struct nsIRegistry : public nsISupports {
     NS_IMETHOD SetInt( Key baseKey, const char *path, int32 value ) = 0;
     NS_IMETHOD GetBytes( Key baseKey, const char *path, void **result, uint32 *len ) = 0;
     NS_IMETHOD SetBytes( Key baseKey, const char *path, void *value, uint32 len ) = 0;
-    NS_IMETHOD GetIntArray( Key baseKey, const char *path, int32 **result, uint32 *len ) = 0;
-    NS_IMETHOD SetIntArray( Key baseKey, const char *path, const int32 *value, uint32 len ) = 0;
 
     /*------------------------------ Navigation --------------------------------
     | These functions let you navigate through the registry tree, querying     |
