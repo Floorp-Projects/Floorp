@@ -56,9 +56,6 @@
 #include "nsBidiKeyboard.h"
 #endif
 #include "nsFilePicker.h"
-#ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
-#endif
 
 #include <prlog.h>
 struct PRLogModuleInfo  *PhWidLog =  nsnull;
@@ -77,9 +74,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 #ifdef IBMBIDI
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
-#endif
-#ifdef ACCESSIBILITY
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccessibilityService)
 #endif
 
 static nsresult nsHorizScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -200,12 +194,6 @@ static nsModuleComponentInfo components[] =
     NS_FILEPICKER_CID,
     "@mozilla.org/filepicker;1",
     nsFilePickerConstructor },
-#ifdef ACCESSIBILITY
-  { "AccessibilityService", 
-    NS_ACCESSIBILITY_SERVICE_CID,
-    "@mozilla.org/accessibilityService;1", 
-    nsAccessibilityServiceConstructor },
-#endif
 };
 
 PR_STATIC_CALLBACK(void)

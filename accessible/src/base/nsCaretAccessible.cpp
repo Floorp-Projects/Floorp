@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIServiceManager.h"
 #include "nsAccessibilityService.h"
 #include "nsCaretAccessible.h"
 #include "nsIDocument.h"

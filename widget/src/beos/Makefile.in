@@ -66,30 +66,13 @@ CPPSRCS		= \
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 
-ifdef ACCESSIBILITY
-REQUIRES	+= accessibility
-SHARED_LIBRARY_LIBS += \
-    $(DIST)/lib/$(LIB_PREFIX)accessibility_base_s.$(LIB_SUFFIX) \
-    $(DIST)/lib/$(LIB_PREFIX)accessibility_html_s.$(LIB_SUFFIX) \
-    $(NULL)
-
-ifdef MOZ_XUL
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)accessibility_xul_s.$(LIB_SUFFIX)
-endif
-endif
-
 EXTRA_DSO_LDOPTS = \
 		-ltracker \
 		$(TOOLKIT_DSO_LDOPTS) \
-		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		-lgkgfx \
 		$(TK_LIBS) \
 		$(NULL)
-
-ifdef ACCESSIBILITY
-EXTRA_DSO_LIBS += gkconshared_s
-endif
 
 include $(topsrcdir)/config/rules.mk
 
@@ -101,5 +84,4 @@ INCLUDES += \
 		-I$(srcdir)/../xpwidgets \
 		-I$(srcdir) \
 		-I$(srcdir)/../../timer/src/beos \
-		-I$(srcdir)/../../../accessible/src/base \
 		$(NULL)

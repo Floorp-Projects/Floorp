@@ -59,10 +59,6 @@
 #include "nsHTMLFormatConverter.h"
 #include "nsDragService.h"
 #include "nsDragHelperService.h"
-#ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
-#endif
-
 
 #if USE_NATIVE_VERSION
 # include "nsCheckButton.h"
@@ -102,9 +98,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragHelperService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
-#ifdef ACCESSIBILITY
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccessibilityService)
-#endif
 
 static nsModuleComponentInfo components[] =
 {
@@ -191,13 +184,7 @@ static nsModuleComponentInfo components[] =
 	{	"Native Scrollbar",
 		NS_NATIVESCROLLBAR_CID,
 		"@mozilla.org/widget/nativescrollbar;1",
-		nsNativeScrollbarConstructor },
-#ifdef ACCESSIBILITY
-	{ "AccessibilityService", 
-		NS_ACCESSIBILITY_SERVICE_CID,
-		"@mozilla.org/accessibilityService;1", 
-		nsAccessibilityServiceConstructor },
-#endif
+		nsNativeScrollbarConstructor }
 };
 
 NS_IMPL_NSGETMODULE(nsWidgetMacModule, components)

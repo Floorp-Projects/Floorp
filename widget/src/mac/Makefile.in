@@ -109,28 +109,12 @@ XPIDLSRCS  += \
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 
-ifdef ACCESSIBILITY
-SHARED_LIBRARY_LIBS += \
-    $(DIST)/lib/$(LIB_PREFIX)accessibility_base_s.$(LIB_SUFFIX) \
-    $(DIST)/lib/$(LIB_PREFIX)accessibility_html_s.$(LIB_SUFFIX) \
-    $(NULL)
-
-ifdef MOZ_XUL
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)accessibility_xul_s.$(LIB_SUFFIX)
-endif
-endif
-
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_UNICHARUTIL_LIBS) \
-		$(EXTRA_DSO_LIBS) \
                 $(TK_LIBS) \
                 $(MOZ_COMPONENT_LIBS) \
                 -lgkgfx \
                 $(NULL)
-
-ifdef ACCESSIBILITY
-EXTRA_DSO_LIBS += gkconshared_s
-endif
 
 GARBAGE		+= $(GFX_LCPPSRCS)
 
@@ -157,7 +141,6 @@ libs:: $(RES_DEST)
 LOCAL_INCLUDES	= \
 	$(TK_CFLAGS) \
 	-I$(topsrcdir)/gfx/src/mac \
-	-I$(srcdir)/../../../accessible/src/base \
 	-I$(srcdir)/../xpwidgets \
 	$(NULL)
 

@@ -47,7 +47,6 @@
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIFrame.h"
-#include "nsObjectFrame.h"
 #include "nsIPluginViewer.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebShell.h"

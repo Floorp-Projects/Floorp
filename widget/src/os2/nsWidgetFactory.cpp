@@ -56,9 +56,7 @@
 #include "nsScrollbar.h"
 #include "nsSound.h"
 #include "nsToolkit.h"
-#ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
-#endif
+#include "nsModule.h"
 
 // Drag & Drop, Clipboard
 #include "nsClipboard.h"
@@ -81,9 +79,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
-#ifdef ACCESSIBILITY
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccessibilityService)
-#endif
 
 
 // custom "contructor" methods
@@ -243,13 +238,7 @@ static const nsModuleComponentInfo components[] =
   { "OS/2 HTML Format Converter",
     NS_HTMLFORMATCONVERTER_CID,
     "@mozilla.org/widget/htmlformatconverter/os2;1",
-    nsHTMLFormatConverterConstructor },
-#ifdef ACCESSIBILITY
-  { "AccessibilityService", 
-    NS_ACCESSIBILITY_SERVICE_CID,
-    "@mozilla.org/accessibilityService;1", 
-    nsAccessibilityServiceConstructor }
-#endif
+    nsHTMLFormatConverterConstructor }
 };
 
 PR_STATIC_CALLBACK(void)
