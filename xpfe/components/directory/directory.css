@@ -66,6 +66,11 @@ treeitem[type="FILE"] > treerow > treecell.filename:hover {
   text-decoration: underline;
 }
 
+treeitem[type="SYM-LINK"] > treerow > treecell.filename:hover {
+  color: #333366;
+  text-decoration: underline;
+}
+
 /* Override rule in xul.css that colors the selected row blue */
 treeitem[selected="true"] > treerow {
   color: inherit;

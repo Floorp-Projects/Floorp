@@ -77,7 +77,7 @@ function OnClick(event)
         // directories.
         var type = treeitem.getAttribute('type');
 
-        if (targetclass == 'filename' && type == 'FILE') {
+        if (targetclass == 'filename' && (type == 'FILE' || type == 'SYM-LINK') ) {
             var url = treeitem.getAttribute('id');
 
             debug('navigating to ' + url + '\n');
