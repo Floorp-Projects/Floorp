@@ -48,7 +48,7 @@ typedef enum {
   SECPKCS12TargetTokenIntermediateCAs,  /* User certs and intermediates go to
 					 * target token, root certs got to
 					 * fixed token */
-  SECPKCS12TargetTokenAllCAs,		/* All certs go to target token */
+  SECPKCS12TargetTokenAllCAs		/* All certs go to target token */
 } SECPKCS12TargetTokenCAs;
 
 /* PKCS12 Structures */
