@@ -395,34 +395,30 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxyInfo* *aResult) {
     }
 
     if (!mHTTPProxyHost.IsEmpty() && mHTTPProxyPort > 0 &&
-            scheme.Equals(NS_LITERAL_CSTRING("http"))) {
+        scheme.Equals(NS_LITERAL_CSTRING("http"))) {
         host = ToNewCString(mHTTPProxyHost);
         type = "http";
         port = mHTTPProxyPort;
     }
-    
-    if (!mHTTPSProxyHost.IsEmpty() && mHTTPSProxyPort > 0 &&
-            scheme.Equals(NS_LITERAL_CSTRING("https"))) {
+    else if (!mHTTPSProxyHost.IsEmpty() && mHTTPSProxyPort > 0 &&
+             scheme.Equals(NS_LITERAL_CSTRING("https"))) {
         host = ToNewCString(mHTTPSProxyHost);
         type = "http";
         port = mHTTPSProxyPort;
     }
-    
-    if (!mFTPProxyHost.IsEmpty() && mFTPProxyPort > 0 &&
-            scheme.Equals(NS_LITERAL_CSTRING("ftp"))) {
+    else if (!mFTPProxyHost.IsEmpty() && mFTPProxyPort > 0 &&
+             scheme.Equals(NS_LITERAL_CSTRING("ftp"))) {
         host = ToNewCString(mFTPProxyHost);
         type = "http";
         port = mFTPProxyPort;
     }
-
-    if (!mGopherProxyHost.IsEmpty() && mGopherProxyPort > 0 &&
-            scheme.Equals(NS_LITERAL_CSTRING("gopher"))) {
+    else if (!mGopherProxyHost.IsEmpty() && mGopherProxyPort > 0 &&
+             scheme.Equals(NS_LITERAL_CSTRING("gopher"))) {
         host = ToNewCString(mGopherProxyHost);
         type = "http";
         port = mGopherProxyPort;
     }
-    
-    if (!mSOCKSProxyHost.IsEmpty() && mSOCKSProxyPort > 0) {
+    else if (!mSOCKSProxyHost.IsEmpty() && mSOCKSProxyPort > 0) {
         host = ToNewCString(mSOCKSProxyHost);
         if (mSOCKSProxyVersion == 4) 
             type = "socks4";
