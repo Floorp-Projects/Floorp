@@ -106,9 +106,9 @@ int main(int argc, char* argv[])
   nsICmdLineService *  cmdLineArgs = nsnull;
 
   char *  urlstr=nsnull;
-  char *   progname = nsnull;
+  //char *   progname = nsnull;
   char *   width=nsnull, *height=nsnull;
-  char *  iconic_state=nsnull;
+  //char *  iconic_state=nsnull;
 
   PRInt32 widthVal  = 615;
   PRInt32 heightVal = 480;
@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
       return NS_ERROR_FAILURE;
 
   // get and start the ProfileManager service
-  #if defined(NS_USING_PROFILES)
+#if defined(NS_USING_PROFILES)
   rv = nsServiceManager::GetService(kProfileCID, 
                                     nsIProfile::GetIID(), 
                                     (nsISupports **)&profileService);
@@ -168,7 +168,7 @@ int main(int argc, char* argv[])
   }
   profileService->Startup(nsnull);
 
-  #endif // defined(NS_USING_PROFILES)
+#endif // defined(NS_USING_PROFILES)
 
 
 
@@ -205,9 +205,9 @@ int main(int argc, char* argv[])
   // change it. -- Greg Kostello
   if (nsnull == urlstr){
 
+#if defined(NS_USING_PROFILES)
 	// check for command line arguments for profile manager
-    #if defined(NS_USING_PROFILES)
-	
+  //	
 	// -P command line option works this way:
 	// apprunner -P profilename 
 	// runs the app using the profile <profilename> 
@@ -259,7 +259,7 @@ int main(int argc, char* argv[])
 			
 		}
     }
-	#endif // defined(NS_USING_PROFILES)
+#endif // defined(NS_USING_PROFILES)
     
     rv = cmdLineArgs->GetCmdLineValue("-editor", &cmdResult);
     if (NS_SUCCEEDED(rv))
@@ -309,16 +309,6 @@ int main(int argc, char* argv[])
     fprintf(stderr, "height was not set\n");
   }
   
-  /*
-   * check if we have a profile directory
-   */
-
-#if defined(NS_USING_PROFILES)
-  if (!profileDirSet)
-      locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &currProfileDirSpec);
-#endif // defined(NS_USING_PROFILES)
-
-
   /*
    * Load preferences
    */
@@ -394,7 +384,7 @@ int main(int argc, char* argv[])
   {
 	/*MESSENGER*/
     nsIAppShellService *messenger;
-    const char *messengerProgID = "component://netscape/messenger";
+    //const char *messengerProgID = "component://netscape/messenger";
     nsresult result;
 
     /* this is so ugly, but ProgID->CLSID mapping seems to be broken -alecf */
@@ -416,7 +406,7 @@ int main(int argc, char* argv[])
  
 	/*COMPOSER*/
       nsIAppShellService *composer;
-    const char *composerProgID = "component://netscape/composer";
+      //const char *composerProgID = "component://netscape/composer";
 
     /* this is so ugly, but ProgID->CLSID mapping seems to be broken -alecf */
 #define NS_COMPOSERBOOTSTRAP_CID                 \
