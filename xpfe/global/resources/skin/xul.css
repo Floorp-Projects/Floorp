@@ -20,10 +20,12 @@ window.dialog {
   display: block; 
   overflow: hidden;
   font: 3mm tahoma,arial,helvetica,sans-serif;
+  /* There is a bug preventing this so this will not work property.
   padding-left: 11px;
   padding-right: 10px;
   padding-top: 10px;
   padding-bottom: 11px;
+  */
 }
 
 /* generic elements*/
