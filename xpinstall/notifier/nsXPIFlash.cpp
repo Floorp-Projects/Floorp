@@ -314,6 +314,7 @@ nsXPINotifierImpl::Init()
                     aDistributor->GetValue(&uri);
 
                     rv = OpenRemoteDataSource(uri, PR_FALSE, getter_AddRefs(remoteDatasource));
+					nsAllocator::Free(uri);
                     if (NS_FAILED(rv)) break;
                     
                     distributorEnumerator->HasMoreElements(&moreElements);
