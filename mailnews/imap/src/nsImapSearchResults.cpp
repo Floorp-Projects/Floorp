@@ -32,7 +32,7 @@ nsImapSearchResultSequence *nsImapSearchResultSequence::CreateSearchResultSequen
 	if (!returnObject)
 	{
 		delete returnObject;
-		returnObject = nil;
+		returnObject = nsnull;
 	}
 	
 	return returnObject;
@@ -106,7 +106,7 @@ PRInt32 nsImapSearchResultIterator::GetNextMessageNumber()
 			if (fCurrentLine)
 				fPositionInCurrentLine = fCurrentLine;
 			else
-				fPositionInCurrentLine = nil;
+				fPositionInCurrentLine = nsnull;
 		}
 		else	// eat the space
 			fPositionInCurrentLine++;

@@ -253,7 +253,7 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
 void nsImapServerResponseParser::HandleMemoryFailure()
 {
 #ifdef DEBUG_chrisf
-	XP_ASSERT(PR_FALSE);
+	PR_ASSERT(PR_FALSE);
 #endif
 	fServerConnection.AlertUserEventUsingId(kImapOutOfMemory);
 	nsIMAPGenericParser::HandleMemoryFailure();
@@ -1631,7 +1631,7 @@ PRBool nsImapServerResponseParser::msg_fetch_quoted(PRBool chunk, PRInt32 origin
 {
 
 #ifdef DEBUG_chrisf
-	 XP_ASSERT(!chunk);
+	 PR_ASSERT(!chunk);
 #endif
 
 	char *q = CreateQuoted();
@@ -2255,11 +2255,11 @@ PRBool nsImapServerResponseParser::IsNumericString(const char *string)
 	{
 		if (! isdigit(string[i]))
 		{
-			return FALSE;
+			return PR_FALSE;
 		}
 	}
 
-	return TRUE;
+	return PR_TRUE;
 }
 
 

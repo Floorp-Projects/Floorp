@@ -78,7 +78,7 @@ public:
     NS_IMETHOD GetOnlineSubDirSeparator(char* separator);
 	NS_IMETHOD SetOnlineSubDirSeparator(char onlineDirSeparator);
 
-	// for enabling or disabling mime parts on demand. Setting this to TRUE says we
+	// for enabling or disabling mime parts on demand. Setting this to PR_TRUE says we
 	// can use mime parts on demand, if we chose.
 	NS_IMETHOD	SetAllowContentChange(PRBool allowContentChange);
 	NS_IMETHOD  GetAllowContentChange(PRBool *results);
@@ -124,7 +124,7 @@ protected:
 	PRBool					m_runningUrl;
 	PRBool					m_idsAreUids;
 	PRBool					m_mimePartSelectorDetected;
-	PRBool					m_allowContentChange;	// if FALSE, we can't use Mime parts on demand
+	PRBool					m_allowContentChange;	// if PR_FALSE, we can't use Mime parts on demand
 	PRInt32					m_discoveryDepth;
 
 	char *		m_userName;

@@ -57,8 +57,8 @@ protected:
 	// for each different implementation of a nsIMAPGenericParser.
 	// For instance, one implementation (the nsIMAPServerState) might get the next line
 	// from an open socket, whereas another implementation might just get it from a buffer somewhere.
-	// This fills in nextLine with the buffer, and returns TRUE if everything is OK.
-	// Returns FALSE if there was some error encountered.  In that case, we reset the parser.
+	// This fills in nextLine with the buffer, and returns PR_TRUE if everything is OK.
+	// Returns PR_FALSE if there was some error encountered.  In that case, we reset the parser.
 	virtual PRBool	GetNextLineForParser(char **nextLine) = 0;	
 
     virtual void	HandleMemoryFailure();
@@ -69,7 +69,7 @@ protected:
 	virtual char	*CreateNilString();
     virtual char    *CreateLiteral();
 	virtual char	*CreateAtom();
-    virtual char    *CreateQuoted(PRBool skipToEnd = TRUE);
+    virtual char    *CreateQuoted(PRBool skipToEnd = PR_TRUE);
 	virtual char	*CreateParenGroup();
     virtual void        SetSyntaxError(PRBool error);
     virtual PRBool     at_end_of_line();

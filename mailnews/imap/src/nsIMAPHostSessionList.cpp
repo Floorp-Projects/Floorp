@@ -204,7 +204,7 @@ NS_IMETHODIMP nsIMAPHostSessionList::SetPasswordVerifiedOnline(const char *hostN
 	PR_EnterMonitor(gCachedHostInfoMonitor);
 	nsIMAPHostInfo *host = FindHost(hostName, userName);
 	if (host)
-		host->fPasswordVerifiedOnline = TRUE;
+		host->fPasswordVerifiedOnline = PR_TRUE;
 	PR_ExitMonitor(gCachedHostInfoMonitor);
 	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
 }
@@ -491,7 +491,7 @@ NS_IMETHODIMP nsIMAPHostSessionList::ClearPrefsNamespacesForHost(const char *hos
 	nsIMAPHostInfo *host = FindHost(hostName, userName);
 	if (host)
 	{
-		host->fNamespaceList->ClearNamespaces(TRUE, FALSE, TRUE);
+		host->fNamespaceList->ClearNamespaces(PR_TRUE, PR_FALSE, PR_TRUE);
 	}
 	PR_ExitMonitor(gCachedHostInfoMonitor);
 	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
@@ -504,7 +504,7 @@ NS_IMETHODIMP nsIMAPHostSessionList::ClearServerAdvertisedNamespacesForHost(cons
 	nsIMAPHostInfo *host = FindHost(hostName, userName);
 	if (host)
 	{
-		host->fNamespaceList->ClearNamespaces(FALSE, TRUE, TRUE);
+		host->fNamespaceList->ClearNamespaces(PR_FALSE, PR_TRUE, PR_TRUE);
 	}
 	PR_ExitMonitor(gCachedHostInfoMonitor);
 	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
@@ -657,7 +657,7 @@ NS_IMETHODIMP nsIMAPHostSessionList::CommitNamespacesForHost(nsIImapIncomingServ
 			}
 		}
 		// clear, but don't delete the entries in, the temp namespace list
-		host->fTempNamespaceList->ClearNamespaces(TRUE, TRUE, FALSE);
+		host->fTempNamespaceList->ClearNamespaces(PR_TRUE, PR_TRUE, PR_FALSE);
 		
 		// Now reset all of libmsg's namespace references.
 		// Did I mention this needs to be running in the mozilla thread?
@@ -673,7 +673,7 @@ NS_IMETHODIMP nsIMAPHostSessionList::FlushUncommittedNamespacesForHost(const cha
 	nsIMAPHostInfo *host = FindHost(hostName, userName);
 	if (host)
 	{
-		host->fTempNamespaceList->ClearNamespaces(TRUE, TRUE, TRUE);
+		host->fTempNamespaceList->ClearNamespaces(PR_TRUE, PR_TRUE, PR_TRUE);
 	}
 	PR_ExitMonitor(gCachedHostInfoMonitor);
 	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
@@ -704,7 +704,7 @@ NS_IMETHODIMP nsIMAPHostSessionList::GetOnlineInboxPathForHost(const char *hostN
 
 NS_IMETHODIMP nsIMAPHostSessionList::GetShouldAlwaysListInboxForHost(const char* /*hostName */, const char * /*userName*/, PRBool &result)
 {
-	result = TRUE;
+	result = PR_TRUE;
 
 	/*
 	PR_EnterMonitor(gCachedHostInfoMonitor);
@@ -757,7 +757,7 @@ NS_IMETHODIMP nsIMAPHostSessionList::AddShellToCacheForHost(const char *hostName
 		else
 		{
 			PR_ExitMonitor(gCachedHostInfoMonitor);
-			return FALSE;
+			return PR_FALSE;
 		}
 	}
 	PR_ExitMonitor(gCachedHostInfoMonitor);

@@ -104,14 +104,14 @@ char *strtoken_r(char ** stringp, const char *delim, int skip)
 
 
 nsIMAPGenericParser::nsIMAPGenericParser() :
-	fNextToken(nil),
-	fCurrentLine(nil),
-	fLineOfTokens(nil),
-    fStartOfLineOfTokens(nil),
-	fCurrentTokenPlaceHolder(nil),
+	fNextToken(nsnull),
+	fCurrentLine(nsnull),
+	fLineOfTokens(nsnull),
+    fStartOfLineOfTokens(nsnull),
+	fCurrentTokenPlaceHolder(nsnull),
 	fAtEndOfLine(PR_FALSE),
     fTokenizerAdvanced(PR_FALSE),
-    fSyntaxErrorLine(nil),
+    fSyntaxErrorLine(nsnull),
 	fDisconnected(PR_FALSE),
 	fSyntaxError(PR_FALSE)
 {
@@ -135,7 +135,7 @@ void nsIMAPGenericParser::ResetLexAnalyzer()
 	PR_FREEIF( fStartOfLineOfTokens );
 	fTokenizerAdvanced = PR_FALSE;
 	
-	fCurrentLine = fNextToken = fLineOfTokens = fStartOfLineOfTokens = fCurrentTokenPlaceHolder = nil;
+	fCurrentLine = fNextToken = fLineOfTokens = fStartOfLineOfTokens = fCurrentTokenPlaceHolder = nsnull;
 	fAtEndOfLine = PR_FALSE;
 }
 
@@ -264,11 +264,11 @@ char *nsIMAPGenericParser::GetNextToken()
 		}
 		else
 		{
-			fNextToken = Imapstrtok_r(nil, WHITESPACE, &fCurrentTokenPlaceHolder);
+			fNextToken = Imapstrtok_r(nsnull, WHITESPACE, &fCurrentTokenPlaceHolder);
 		}
 		if (!fNextToken)
 		{
-			fAtEndOfLine = TRUE;
+			fAtEndOfLine = PR_TRUE;
 			fNextToken = CRLF;
 		}
 	}
@@ -286,9 +286,9 @@ void nsIMAPGenericParser::AdvanceToNextLine()
 	if (!ok)
 	{
 		SetConnected(PR_FALSE);
-		fStartOfLineOfTokens = nil;
-		fLineOfTokens = nil;
-		fCurrentTokenPlaceHolder = nil;
+		fStartOfLineOfTokens = nsnull;
+		fLineOfTokens = nsnull;
+		fCurrentTokenPlaceHolder = nsnull;
 		fNextToken = CRLF;
 	}
 	else if (fCurrentLine)	// might be NULL if we are would_block ?
@@ -300,7 +300,7 @@ void nsIMAPGenericParser::AdvanceToNextLine()
 			fNextToken = Imapstrtok_r(fLineOfTokens, WHITESPACE, &fCurrentTokenPlaceHolder);
 			if (!fNextToken)
 			{
-				fAtEndOfLine = TRUE;
+				fAtEndOfLine = PR_TRUE;
 				fNextToken = CRLF;
 			}
 			else
@@ -322,7 +322,7 @@ void nsIMAPGenericParser::AdvanceTokenizerStartingPoint(int32 bytesToAdvance)
 		if (fStartOfLineOfTokens && ((int32) PL_strlen(fStartOfLineOfTokens) >= bytesToAdvance))
 		{
 			fLineOfTokens = fStartOfLineOfTokens + bytesToAdvance;
-			fTokenizerAdvanced = TRUE;
+			fTokenizerAdvanced = PR_TRUE;
 		}
 		else
 			HandleMemoryFailure();
@@ -402,7 +402,7 @@ char *nsIMAPGenericParser::CreateString()
 	}
 	else
 	{
-		SetSyntaxError(TRUE);
+		SetSyntaxError(PR_TRUE);
 		return NULL;
 	}
 }
@@ -436,7 +436,7 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
 		{
 			// don't check to see if it was escaped, 
 			// that was handled in the next clause
-			closeQuoteFound = TRUE;
+			closeQuoteFound = PR_TRUE;
 		}
 		else if (returnString.CharAt(charIndex) == '\\')
 		{
@@ -468,18 +468,18 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
 			int charDiff = PL_strlen(fNextToken) - charIndex - 1;
 			fCurrentTokenPlaceHolder -= charDiff;
 			if (!nsCRT::strcmp(fCurrentTokenPlaceHolder, CRLF))
-				fAtEndOfLine = TRUE;
+				fAtEndOfLine = PR_TRUE;
 		}
 		else
 		{
 			fCurrentTokenPlaceHolder += tokenIndex + charIndex + 2 - PL_strlen(fNextToken);
 			if (!nsCRT::strcmp(fCurrentTokenPlaceHolder, CRLF))
-				fAtEndOfLine = TRUE;
+				fAtEndOfLine = PR_TRUE;
 			/*
 			tokenIndex += charIndex;
 			fNextToken = currentChar + tokenIndex + 1;
 			if (!nsCRT::strcmp(fNextToken, CRLF))
-				fAtEndOfLine = TRUE;
+				fAtEndOfLine = PR_TRUE;
 			*/
 		}
 	}
@@ -523,12 +523,12 @@ char *nsIMAPGenericParser::CreateLiteral()
 			if (bytesToCopy == 0)
 			{
 				skip_to_CRLF();
-				fAtEndOfLine = TRUE;
+				fAtEndOfLine = PR_TRUE;
 				//fNextToken = GetNextToken();
 			}
 			else if (currentLineLength == bytesToCopy)
 			{
-				fAtEndOfLine = TRUE;
+				fAtEndOfLine = PR_TRUE;
 				//AdvanceToNextLine();
 			}
 			else
@@ -540,7 +540,7 @@ char *nsIMAPGenericParser::CreateLiteral()
 				if (!*fCurrentTokenPlaceHolder)	// landed on a token boundary
 					fCurrentTokenPlaceHolder++;
 				if (!nsCRT::strcmp(fCurrentTokenPlaceHolder, CRLF))
-					fAtEndOfLine = TRUE;
+					fAtEndOfLine = PR_TRUE;
 
 				// The first token on the line might not
 				// be at the beginning of the line.  There might be ONLY
@@ -549,7 +549,7 @@ char *nsIMAPGenericParser::CreateLiteral()
 				// we want to advance to the next token.
 				/*
 				int32 numCharsChecked = 0;
-				PRBool allWhitespace = TRUE;
+				PRBool allWhitespace = PR_TRUE;
 				while ((numCharsChecked < bytesToCopy)&& allWhitespace)
 				{
 					allWhitespace = (XP_STRCHR(WHITESPACE, fCurrentLine[numCharsChecked]) != NULL);
@@ -561,7 +561,7 @@ char *nsIMAPGenericParser::CreateLiteral()
 					//fNextToken = fCurrentLine + bytesToCopy;
 					fNextToken = GetNextToken();
 					if (!nsCRT::strcmp(fNextToken, CRLF))
-						fAtEndOfLine = TRUE;
+						fAtEndOfLine = PR_TRUE;
 				}
 				*/
 			}	
@@ -644,17 +644,17 @@ char *nsIMAPGenericParser::CreateParenGroup()
 							if (lit)
 							{
 								returnString.Append(lit);
-								//fCurrentTokenPlaceHolder += XP_STRLEN(lit);
-								//AdvanceTokenizerStartingPoint(XP_STRLEN(lit));
+								//fCurrentTokenPlaceHolder += nsCRT::strlen(lit);
+								//AdvanceTokenizerStartingPoint(nsCRT::strlen(lit));
 								//fNextToken = GetNextToken();
-								extractReset = TRUE;
+								extractReset = PR_TRUE;
 								PR_Free(lit);
 							}
 						}
 						else
 						{
 #ifdef DEBUG_bienvenu
-							NS_ASSERTION(FALSE, "syntax error creating paren group");	// maybe not an error, but definitely a rare condition
+							NS_ASSERTION(PR_FALSE, "syntax error creating paren group");	// maybe not an error, but definitely a rare condition
 #endif
 						}
 					}
@@ -677,14 +677,14 @@ char *nsIMAPGenericParser::CreateParenGroup()
 					if (fNextToken)
 					{
 						char *q = CreateQuoted();
-						fTokenizerAdvanced = FALSE;	// force it to use fCurrentTokenPlaceHolder
+						fTokenizerAdvanced = PR_FALSE;	// force it to use fCurrentTokenPlaceHolder
 						NS_ASSERTION(q, "syntax error or out of memory creating paren group");
 						if (q)
 						{
 							returnString.Append("\"");
 							returnString.Append(q);
 							returnString.Append("\"");
-							extractReset = TRUE;
+							extractReset = PR_TRUE;
 							PR_Free(q);
 						}
 					}
@@ -716,7 +716,7 @@ char *nsIMAPGenericParser::CreateParenGroup()
 
 	if (numOpenParens != 0 || !ContinueParse())
 	{
-		SetSyntaxError(TRUE);
+		SetSyntaxError(PR_TRUE);
 		returnString.SetLength(0);
 	}
 	else

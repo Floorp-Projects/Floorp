@@ -322,7 +322,7 @@ NS_IMETHODIMP nsImapUrl::GetImapPartToFetch(char **result)
 	char *wherepart = NULL, *rv = NULL;
 	if (m_listOfMessageIds && (wherepart = PL_strstr(m_listOfMessageIds, "/;section=")) != NULL)
 	{
-		wherepart += 10; // XP_STRLEN("/;section=")
+		wherepart += 10; // nsCRT::strlen("/;section=")
 		if (wherepart)
 		{
 			char *wherelibmimepart = XP_STRSTR(wherepart, "&part=");
@@ -396,10 +396,10 @@ NS_IMETHODIMP nsImapUrl::GetMsgFlags(imapMessageFlagsType *result)	// kAddMsgFla
 void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 {
 	m_tokenPlaceHolder = imapPartOfUrl;
-	m_urlidSubString = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nil, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
+	m_urlidSubString = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
 	if (!m_urlidSubString)
 	{
-		m_validUrl = FALSE;
+		m_validUrl = PR_FALSE;
 		return;
 	}
 	
@@ -669,7 +669,7 @@ NS_IMETHODIMP nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailbox
 		// This invariant should be maintained by libmsg when reading/writing the prefs.
 		// We are only supporting online directories whose online delimiter is /
 		// Therefore, the online directory must end in a slash.
-		XP_ASSERT(onlineDir[XP_STRLEN(onlineDir) - 1] == '/');
+		PR_ASSERT(onlineDir[nsCRT::strlen(onlineDir) - 1] == '/');
 #endif
 		TIMAPNamespace *ns = TIMAPHostInfo::GetNamespaceForMailboxForHost(GetUrlHost(), onlineMailboxName);
 		NS_ASSERTION(ns, "couldn't find namespace for host");
@@ -680,12 +680,12 @@ NS_IMETHODIMP nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailbox
 
 			// The namespace for this mailbox is the root ("").
 			// Prepend the online server directory
-			int finalLen = XP_STRLEN(onlineDir) + XP_STRLEN(onlineMailboxName) + 1;
-			rv = (char *)XP_ALLOC(finalLen);
+			int finalLen = nsCRT::strlen(onlineDir) + nsCRT::strlen(onlineMailboxName) + 1;
+			rv = (char *)PR_Malloc(finalLen);
 			if (rv)
 			{
-				XP_STRCPY(rv, onlineDir);
-				XP_STRCAT(rv, onlineMailboxName);
+				nsCRT::strcpy(rv, onlineDir);
+				nsCRT::strcat(rv, onlineMailboxName);
 			}
 		}
 	}
@@ -862,7 +862,7 @@ NS_IMETHODIMP nsImapUrl::CreateServerDestinationFolderPathString(char **result)
 }
 
 
-// for enabling or disabling mime parts on demand. Setting this to TRUE says we
+// for enabling or disabling mime parts on demand. Setting this to PR_TRUE says we
 // can use mime parts on demand, if we chose.
 NS_IMETHODIMP nsImapUrl::SetAllowContentChange(PRBool allowContentChange)
 {
@@ -964,7 +964,7 @@ char *nsImapUrl::ReplaceCharsInCopiedString(const char *stringToCopy, char oldCh
 
 void nsImapUrl::ParseFolderPath(char **resultingCanonicalPath)
 {
-	char *resultPath = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nil, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
+	char *resultPath = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
 	
 	if (!resultPath)
 	{
@@ -989,15 +989,15 @@ void nsImapUrl::ParseFolderPath(char **resultingCanonicalPath)
 
 void nsImapUrl::ParseSearchCriteriaString()
 {
-	m_searchCriteriaString = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nil, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
+	m_searchCriteriaString = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
 	if (!m_searchCriteriaString)
-		m_validUrl = FALSE;
+		m_validUrl = PR_FALSE;
 }
 
 
 void nsImapUrl::ParseChildDiscoveryDepth()
 {
-	char *discoveryDepth = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nil, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
+	char *discoveryDepth = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
 	if (!discoveryDepth)
 	{
 		m_validUrl = PR_FALSE;
@@ -1009,16 +1009,16 @@ void nsImapUrl::ParseChildDiscoveryDepth()
 
 void nsImapUrl::ParseUidChoice()
 {
-	char *uidChoiceString = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nil, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
+	char *uidChoiceString = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
 	if (!uidChoiceString)
-		m_validUrl = FALSE;
+		m_validUrl = PR_FALSE;
 	else
 		m_idsAreUids = PL_strcmp(uidChoiceString, "UID") == 0;
 }
 
 void nsImapUrl::ParseMsgFlags()
 {
-	char *flagsPtr = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nil, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
+	char *flagsPtr = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
 	if (flagsPtr)
 	{
 		// the url is encodes the flags byte as ascii 
@@ -1031,7 +1031,7 @@ void nsImapUrl::ParseMsgFlags()
 
 void nsImapUrl::ParseListOfMessageIds()
 {
-	m_listOfMessageIds = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nil, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
+	m_listOfMessageIds = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
 	if (!m_listOfMessageIds)
 		m_validUrl = PR_FALSE;
 	else

@@ -1376,13 +1376,13 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 			if (aProtocol)
 				aProtocol->NotifyHdrsToDownload(NULL, 0);
 			// wait until we can get body id monitor before continuing.
-//			IMAP_BodyIdMonitor(adoptedBoxSpec->connection, TRUE);
+//			IMAP_BodyIdMonitor(adoptedBoxSpec->connection, PR_TRUE);
 			// I think the real fix for this is to seperate the header ids from body id's.
 			// this is for fetching bodies for offline use
 			if (aProtocol)
 				aProtocol->NotifyBodysToDownload(NULL, 0/*keysToFetch.GetSize() */);
 //			NotifyFetchAnyNeededBodies(aSpec->connection, mailDB);
-//			IMAP_BodyIdMonitor(adoptedBoxSpec->connection, FALSE);
+//			IMAP_BodyIdMonitor(adoptedBoxSpec->connection, PR_FALSE);
     	}
     }
 
@@ -1749,9 +1749,9 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 					nsMsgKeyArray	keysToFlag;
 
 					keysToFlag.Add(msgKey);
-					StoreImapFlags(kImapMsgSeenFlag | kImapMsgDeletedFlag, TRUE, keysToFlag);
+					StoreImapFlags(kImapMsgSeenFlag | kImapMsgDeletedFlag, PR_TRUE, keysToFlag);
 //					if (!showDeletedMessages)
-//						msgMoved = TRUE;	// this will prevent us from adding the header to the db.
+//						msgMoved = PR_TRUE;	// this will prevent us from adding the header to the db.
 
 				}
 			}
@@ -1786,7 +1786,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 								 &to, &cc, &state->m_subject, 
 								 &state->m_date, &state->m_mdn_original_recipient,
 								 &state->m_message_id, state->m_headers, 
-								 (PRInt32) state->m_headers_fp, TRUE);
+								 (PRInt32) state->m_headers_fp, PR_TRUE);
 						}
 						else
 						{
@@ -1797,7 +1797,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 								 &to, &cc, &state->m_subject, 
 								 &state->m_date, &state->m_mdn_original_recipient,
 								 &state->m_message_id, state->m_headers, 
-								 (PRInt32) state->m_headers_fp, TRUE);
+								 (PRInt32) state->m_headers_fp, PR_TRUE);
 						}
 						char *tmp = (char*) to.value;
 						PR_FREEIF(tmp);
@@ -1880,9 +1880,9 @@ nsresult nsImapMailFolder::StoreImapFlags(imapMessageFlagsType flags, PRBool add
 	{
 #ifdef OFFLINE_IMAP
 		MailDB *mailDb = NULL; // change flags offline
-		PRBool wasCreated=FALSE;
+		PRBool wasCreated=PR_FALSE;
 
-		ImapMailDB::Open(GetPathname(), TRUE, &mailDb, GetMaster(), &wasCreated);
+		ImapMailDB::Open(GetPathname(), PR_TRUE, &mailDb, GetMaster(), &wasCreated);
 		if (mailDb)
 		{
 			UndoManager *undoManager = NULL;
@@ -1890,7 +1890,7 @@ nsresult nsImapMailFolder::StoreImapFlags(imapMessageFlagsType flags, PRBool add
 
 			for (int keyIndex=0; keyIndex < total; keyIndex++)
 			{
-				OfflineImapOperation	*op = mailDb->GetOfflineOpForKey(keysToFlag[keyIndex], TRUE);
+				OfflineImapOperation	*op = mailDb->GetOfflineOpForKey(keysToFlag[keyIndex], PR_TRUE);
 				if (op)
 				{
 					MailDB *originalDB = NULL;
@@ -2094,7 +2094,7 @@ void nsImapMailFolder::PrepareToAddHeadersToMailDB(nsIImapProtocol* aProtocol, c
 //        m_DownLoadState = kDownLoadingAllMessageHeaders;
 
         nsresult res = NS_OK; /*ImapMailDB::Open(m_pathName,
-                                         TRUE, // create if necessary
+                                         PR_TRUE, // create if necessary
                                          &mailDB,
                                          m_master,
                                          &dbWasCreated); */
@@ -2110,7 +2110,7 @@ void nsImapMailFolder::PrepareToAddHeadersToMailDB(nsIImapProtocol* aProtocol, c
 			GetParseMailboxState()->SetPane(url_pane);
 
             GetParseMailboxState()->SetDB(mailDB);
-            GetParseMailboxState()->SetIncrementalUpdate(TRUE);
+            GetParseMailboxState()->SetIncrementalUpdate(PR_TRUE);
 	        GetParseMailboxState()->SetMaster(m_master);
 	        GetParseMailboxState()->SetContext(url_pane->GetContext());
 	        GetParseMailboxState()->SetFolder(this);
@@ -2140,7 +2140,7 @@ void nsImapMailFolder::TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMsgDBHdr 
 		tweakMe->SetMessageKey(m_curMsgUid);
 		tweakMe->SetMessageSize(m_nextMessageByteLength);
 		
-		PRBool foundIt = FALSE;
+		PRBool foundIt = PR_FALSE;
 		imapMessageFlagsType imap_flags;
 		nsresult res = aProtocol->GetFlagsForUID(m_curMsgUid, &foundIt, &imap_flags);
 		if (NS_SUCCEEDED(res) && foundIt)
@@ -2369,7 +2369,7 @@ nsImapMailFolder::NotifyMessageDeleted(nsIImapProtocol* aProtocol,
 #ifdef HAVE_PORT		
 		TNeoFolderInfoTransfer *originalInfo = NULL;
 		nsIMsgDatabase *folderDB;
-		if (ImapMailDB::Open(GetPathname(), FALSE, &folderDB, GetMaster(), &wasCreated) == eSUCCESS)
+		if (ImapMailDB::Open(GetPathname(), PR_FALSE, &folderDB, GetMaster(), &wasCreated) == eSUCCESS)
 		{
 			originalInfo = new TNeoFolderInfoTransfer(*folderDB->m_neoFolderInfo);
 			folderDB->ForceClosed();
@@ -2380,7 +2380,7 @@ nsImapMailFolder::NotifyMessageDeleted(nsIImapProtocol* aProtocol,
 		
 		// Create a new summary file, update the folder message counts, and
 		// Close the summary file db.
-		if (ImapMailDB::Open(GetPathname(), TRUE, &folderDB, GetMaster(), &wasCreated) == eSUCCESS)
+		if (ImapMailDB::Open(GetPathname(), PR_TRUE, &folderDB, GetMaster(), &wasCreated) == eSUCCESS)
 		{
 			if (originalInfo)
 			{

@@ -46,7 +46,7 @@ nsIMAPNamespace::~nsIMAPNamespace()
 void nsIMAPNamespace::SetDelimiter(char delimiter)
 {
 	m_delimiter = delimiter;
-	m_delimiterFilledIn = TRUE;
+	m_delimiterFilledIn = PR_TRUE;
 }
 
 // returns -1 if this box is not part of this namespace,
@@ -188,7 +188,7 @@ nsIMAPNamespace *nsIMAPNamespaceList::GetDefaultNamespaceOfType(EIMAPNamespaceTy
 
 nsIMAPNamespaceList::~nsIMAPNamespaceList()
 {
-	ClearNamespaces(TRUE, TRUE, TRUE);
+	ClearNamespaces(PR_TRUE, PR_TRUE, PR_TRUE);
 }
 
 // ClearNamespaces removes and deletes the namespaces specified, and if there are no namespaces left,

@@ -1547,9 +1547,9 @@ char *CreateImapMessageHeaderUrl(const char *imapHost,
 {
 	static const char *formatString = "header>%s>%c%s>%s";
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(sequenceString) + XP_STRLEN(mailbox) + XP_STRLEN(messageIdentifierList));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(sequenceString) + nsCRT::strlen(mailbox) + nsCRT::strlen(messageIdentifierList));
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, messageIdsAreUID ? uidString : sequenceString, hierarchySeparator, mailbox, messageIdentifierList);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, messageIdsAreUID ? uidString : sequenceString, hierarchySeparator, mailbox, messageIdentifierList);
    /* Reviewed 4.51 safe use of sprintf */
         	
 	return returnString;
@@ -1562,10 +1562,10 @@ char *CreateImapMailboxNoopUrl(const char *imapHost,
 {
 	static const char *formatString = "selectnoop>%c%s";
 	
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(mailbox));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(mailbox));
 
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), 
+		sprintf(returnString + nsCRT::strlen(returnString), 
 				formatString, 
 				hierarchySeparator, 
 				mailbox);   /* Reviewed 4.51 safe use of sprintf */
@@ -1580,10 +1580,10 @@ char *CreateImapMailboxExpungeUrl(const char *imapHost,
 {
 	static const char *formatString = "expunge>%c%s";
 	
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(mailbox));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(mailbox));
 
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), 
+		sprintf(returnString + nsCRT::strlen(returnString), 
 				formatString, 
 				hierarchySeparator, 
 				mailbox);   /* Reviewed 4.51 safe use of sprintf */
@@ -1597,9 +1597,9 @@ char *CreateImapMailboxCreateUrl(const char *imapHost, const char *mailbox,char 
 {
 	static const char *formatString = "create>%c%s";
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(mailbox));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(mailbox));
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, hierarchySeparator, mailbox);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, hierarchySeparator, mailbox);
    /* Reviewed 4.51 safe use of sprintf */
         
 	return returnString;
@@ -1610,9 +1610,9 @@ char *CreateImapChildDiscoveryUrl(const char *imapHost, const char *mailbox,char
 {
 	static const char *formatString = "discoverchildren>%c%s";
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(mailbox));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(mailbox));
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, hierarchySeparator, mailbox);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, hierarchySeparator, mailbox);
    /* Reviewed 4.51 safe use of sprintf */
         
 	return returnString;
@@ -1622,9 +1622,9 @@ char *CreateImapLevelChildDiscoveryUrl(const char *imapHost, const char *mailbox
 {
 	static const char *formatString = "discoverlevelchildren>%d>%c%s";
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(mailbox));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(mailbox));
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, n, hierarchySeparator, mailbox);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, n, hierarchySeparator, mailbox);
    /* Reviewed 4.51 safe use of sprintf */
         
 	return returnString;
@@ -1636,9 +1636,9 @@ char *CreateImapMailboxDeleteUrl(const char *imapHost, const char *mailbox, char
 {
 	static const char *formatString = "delete>%c%s";
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(mailbox));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(mailbox));
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, hierarchySeparator, mailbox);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, hierarchySeparator, mailbox);
    /* Reviewed 4.51 safe use of sprintf */
         
 	return returnString;
@@ -1657,22 +1657,22 @@ char *CreateImapMailboxRenameLeafUrl(const char *imapHost,
 	
 	/* figure out the new mailbox name */
 	char *slash;
-	char *newPath = XP_ALLOC(XP_STRLEN(oldBoxPathName) + XP_STRLEN(newBoxLeafName) + 1);
+	char *newPath = PR_Malloc(nsCRT::strlen(oldBoxPathName) + nsCRT::strlen(newBoxLeafName) + 1);
 	if (newPath)
 	{
-		XP_STRCPY (newPath, oldBoxPathName);
-		slash = XP_STRRCHR (newPath, '/'); 
+		nsCRT::strcpy (newPath, oldBoxPathName);
+		slash = nsCRT::strrchr (newPath, '/'); 
 		if (slash)
 			slash++;
 		else
 			slash = newPath;	/* renaming a 1st level box */
 			
-		XP_STRCPY (slash, newBoxLeafName);
+		nsCRT::strcpy (slash, newBoxLeafName);
 		
 		
-		returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(oldBoxPathName) + XP_STRLEN(newPath));
+		returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(oldBoxPathName) + nsCRT::strlen(newPath));
 		if (returnString)
-			sprintf(returnString + XP_STRLEN(returnString), formatString, hierarchySeparator, oldBoxPathName, hierarchySeparator, newPath);
+			sprintf(returnString + nsCRT::strlen(returnString), formatString, hierarchySeparator, oldBoxPathName, hierarchySeparator, newPath);
    /* Reviewed 4.51 safe use of sprintf */
                 
 		XP_FREE( newPath);
@@ -1693,9 +1693,9 @@ char *CreateImapMailboxMoveFolderHierarchyUrl(const char *imapHost,
 {
 	static const char *formatString = "movefolderhierarchy>%c%s>%c%s";
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(oldBoxPathName) + XP_STRLEN(newBoxPathName));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(oldBoxPathName) + nsCRT::strlen(newBoxPathName));
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, oldHierarchySeparator, oldBoxPathName, newHierarchySeparator, newBoxPathName);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, oldHierarchySeparator, oldBoxPathName, newHierarchySeparator, newBoxPathName);
    /* Reviewed 4.51 safe use of sprintf */
 
 	return returnString;
@@ -1714,10 +1714,10 @@ char *CreateImapListUrl(const char *imapHost,
 	static const char *formatString = "list>%c%s";
 
 	char *returnString = createStartOfIMAPurl(imapHost,
-											  XP_STRLEN(formatString) +
-											  XP_STRLEN(mailbox) + 1);
+											  nsCRT::strlen(formatString) +
+											  nsCRT::strlen(mailbox) + 1);
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString,
+		sprintf(returnString + nsCRT::strlen(returnString), formatString,
 				hierarchySeparator, mailbox);
    /* Reviewed 4.51 safe use of sprintf */
 
@@ -1733,11 +1733,11 @@ char *CreateImapBiffUrl(const char *imapHost,
 	static const char *formatString = "biff>%c%s>%ld";
 	
 		/* 22 enough for huge uid string  */
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + 
-														XP_STRLEN(mailbox) + 22);
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + 
+														nsCRT::strlen(mailbox) + 22);
 
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, hierarchySeparator, mailbox, (long)uidHighWater);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, hierarchySeparator, mailbox, (long)uidHighWater);
    /* Reviewed 4.51 safe use of sprintf */
         
 	return returnString;
@@ -1759,9 +1759,9 @@ char *CreateImapMessageFetchUrl(const char *imapHost,
 {
 	static const char *formatString = "fetch>%s>%c%s>%s";
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(sequenceString) + XP_STRLEN(mailbox) + XP_STRLEN(messageIdentifierList));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(sequenceString) + nsCRT::strlen(mailbox) + nsCRT::strlen(messageIdentifierList));
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, messageIdsAreUID ? uidString : sequenceString, hierarchySeparator, mailbox, messageIdentifierList);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, messageIdsAreUID ? uidString : sequenceString, hierarchySeparator, mailbox, messageIdentifierList);
    /* Reviewed 4.51 safe use of sprintf */
         
 	return returnString;
@@ -1779,9 +1779,9 @@ char *CreateImapMessageHeaderUrl(const char *imapHost,
 {
 	static const char *formatString = "header>%s>%c%s>%s";
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(sequenceString) + XP_STRLEN(mailbox) + XP_STRLEN(messageIdentifierList));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(sequenceString) + nsCRT::strlen(mailbox) + nsCRT::strlen(messageIdentifierList));
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, messageIdsAreUID ? uidString : sequenceString, hierarchySeparator, mailbox, messageIdentifierList);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, messageIdsAreUID ? uidString : sequenceString, hierarchySeparator, mailbox, messageIdentifierList);
    /* Reviewed 4.51 safe use of sprintf */
         	
 	return returnString;
@@ -1798,9 +1798,9 @@ char *CreateImapSearchUrl(const char *imapHost,
 {
 	static const char *formatString = "search>%s>%c%s>%s";
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(sequenceString) + XP_STRLEN(mailbox) + XP_STRLEN(searchString));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(sequenceString) + nsCRT::strlen(mailbox) + nsCRT::strlen(searchString));
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, messageIdsAreUID ? uidString : sequenceString, hierarchySeparator, mailbox, searchString);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, messageIdsAreUID ? uidString : sequenceString, hierarchySeparator, mailbox, searchString);
    /* Reviewed 4.51 safe use of sprintf */
 	
 	return returnString;	
@@ -1817,9 +1817,9 @@ char *CreateImapDeleteMessageUrl(const char *imapHost,
 {
 	static const char *formatString = "deletemsg>%s>%c%s>%s";
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(sequenceString) + XP_STRLEN(mailbox) + XP_STRLEN(messageIds));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(sequenceString) + nsCRT::strlen(mailbox) + nsCRT::strlen(messageIds));
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, idsAreUids ? uidString : sequenceString, hierarchySeparator, mailbox, messageIds);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, idsAreUids ? uidString : sequenceString, hierarchySeparator, mailbox, messageIds);
    /* Reviewed 4.51 safe use of sprintf */
 	
 	return returnString;
@@ -1833,9 +1833,9 @@ char *CreateImapDeleteAllMessagesUrl(const char *imapHost,
 {
 	static const char *formatString = "deleteallmsgs>%c%s";
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(mailbox));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(mailbox));
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, hierarchySeparator, mailbox);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, hierarchySeparator, mailbox);
    /* Reviewed 4.51 safe use of sprintf */
 	
 	return returnString;
@@ -1854,9 +1854,9 @@ char *CreateImapAddMessageFlagsUrl(const char *imapHost,
 {
 	static const char *formatString = "addmsgflags>%s>%c%s>%s>%d";
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(sequenceString) + XP_STRLEN(mailbox) + XP_STRLEN(messageIds) + 10);
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(sequenceString) + nsCRT::strlen(mailbox) + nsCRT::strlen(messageIds) + 10);
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, idsAreUids ? uidString : sequenceString, hierarchySeparator, mailbox, messageIds, (int) flags);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, idsAreUids ? uidString : sequenceString, hierarchySeparator, mailbox, messageIds, (int) flags);
    /* Reviewed 4.51 safe use of sprintf */
 	
 	return returnString;
@@ -1875,9 +1875,9 @@ char *CreateImapSubtractMessageFlagsUrl(const char *imapHost,
 {
 	static const char *formatString = "subtractmsgflags>%s>%c%s>%s>%d";
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(sequenceString) + XP_STRLEN(mailbox) + XP_STRLEN(messageIds) + 10);
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(sequenceString) + nsCRT::strlen(mailbox) + nsCRT::strlen(messageIds) + 10);
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, idsAreUids ? uidString : sequenceString, hierarchySeparator, mailbox, messageIds, (int) flags);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, idsAreUids ? uidString : sequenceString, hierarchySeparator, mailbox, messageIds, (int) flags);
    /* Reviewed 4.51 safe use of sprintf */
 	
 	return returnString;
@@ -1893,9 +1893,9 @@ char *CreateImapSetMessageFlagsUrl(const char *imapHost,
 {
 	static const char *formatString = "setmsgflags>%s>%c%s>%s>%d";
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(sequenceString) + XP_STRLEN(mailbox) + XP_STRLEN(messageIds) + 10);
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(sequenceString) + nsCRT::strlen(mailbox) + nsCRT::strlen(messageIds) + 10);
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, idsAreUids ? uidString : sequenceString, hierarchySeparator, mailbox, messageIds, (int) flags);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, idsAreUids ? uidString : sequenceString, hierarchySeparator, mailbox, messageIds, (int) flags);
    /* Reviewed 4.51 safe use of sprintf */
 	
 	return returnString;
@@ -1919,9 +1919,9 @@ char *CreateImapOnlineCopyUrl(const char *imapHost,
 	static const char *copyString   = "onlinecopy";
 
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(moveString) + XP_STRLEN(sequenceString) + XP_STRLEN(sourceMailbox) + XP_STRLEN(messageIds) + XP_STRLEN(destinationMailbox));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(moveString) + nsCRT::strlen(sequenceString) + nsCRT::strlen(sourceMailbox) + nsCRT::strlen(messageIds) + nsCRT::strlen(destinationMailbox));
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, 
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, 
 														isMove ? moveString : copyString, 
 														idsAreUids ? uidString : sequenceString, 
 														sourceHierarchySeparator, sourceMailbox,
@@ -1951,9 +1951,9 @@ char *CreateImapOnToOfflineCopyUrl(const char *imapHost,
 	static const char *copyString   = "onlinetoofflinecopy";
 
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(moveString) + XP_STRLEN(sequenceString) + XP_STRLEN(sourceMailbox) + XP_STRLEN(messageIds) + XP_STRLEN(destinationMailbox));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(moveString) + nsCRT::strlen(sequenceString) + nsCRT::strlen(sourceMailbox) + nsCRT::strlen(messageIds) + nsCRT::strlen(destinationMailbox));
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, 
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, 
 														isMove ? moveString : copyString, 
 														idsAreUids ? uidString : sequenceString, 
 														sourceHierarchySeparator, sourceMailbox,
@@ -1976,9 +1976,9 @@ char *CreateImapOffToOnlineCopyUrl(const char *imapHost,
 {
 	static const char *formatString = "offlinetoonlinecopy>%c%s";
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(destinationMailbox));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(destinationMailbox));
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, destinationHierarchySeparator, destinationMailbox);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, destinationHierarchySeparator, destinationMailbox);
    /* Reviewed 4.51 safe use of sprintf */
 	
 	return returnString;
@@ -1990,7 +1990,7 @@ char *CreateImapManageMailAccountUrl(const char *imapHost)
 {
 	static const char *formatString = "netscape";
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + 1);
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + 1);
 	StrAllocCat(returnString, formatString);;
 	
 	return returnString;
@@ -2002,9 +2002,9 @@ char *CreateIMAPSubscribeMailboxURL(const char *imapHost, const char *mailboxNam
 {
 	static const char *formatString = "subscribe>%c%s";	
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(mailboxName));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(mailboxName));
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, delimiter, mailboxName);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, delimiter, mailboxName);
    /* Reviewed 4.51 safe use of sprintf */
 	
 	return returnString;
@@ -2016,9 +2016,9 @@ char *CreateIMAPUnsubscribeMailboxURL(const char *imapHost, const char *mailboxN
 {
 	static const char *formatString = "unsubscribe>%c%s";
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(mailboxName));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(mailboxName));
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, delimiter, mailboxName);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, delimiter, mailboxName);
    /* Reviewed 4.51 safe use of sprintf */
 	
 	return returnString;
@@ -2031,9 +2031,9 @@ char *CreateIMAPRefreshACLForFolderURL(const char *imapHost, const char *mailbox
 {
 	static const char *formatString = "refreshacl>%c%s";
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(mailboxName));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(mailboxName));
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, delimiter, mailboxName);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, delimiter, mailboxName);
 	
 	return returnString;
 
@@ -2045,9 +2045,9 @@ char *CreateIMAPRefreshACLForAllFoldersURL(const char *imapHost)
 	/* we don't need the hierarchy delimiter, so just use slash ("/") */
 	static const char *formatString = "refreshallacls>/";
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString));
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString);
    /* Reviewed 4.51 safe use of sprintf */
 	
 	return returnString;
@@ -2058,12 +2058,12 @@ char *CreateIMAPRefreshACLForAllFoldersURL(const char *imapHost)
 char *CreateIMAPUpgradeToSubscriptionURL(const char *imapHost, XP_Bool subscribeToAll)
 {
 	static char *formatString = "upgradetosubscription>/";
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString));
 	if (subscribeToAll)
-		formatString[XP_STRLEN(formatString)-1] = '.';
+		formatString[nsCRT::strlen(formatString)-1] = '.';
 
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString);
    /* Reviewed 4.51 safe use of sprintf */
 	
 	return returnString;
@@ -2075,10 +2075,10 @@ char *CreateIMAPStatusFolderURL(const char *imapHost, const char *mailboxName, c
 {
 	static const char *formatString = "folderstatus>%c%s";
 	
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(mailboxName));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(mailboxName));
 
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), 
+		sprintf(returnString + nsCRT::strlen(returnString), 
 				formatString, 
 				hierarchySeparator, 
 				mailboxName);
@@ -2093,9 +2093,9 @@ char *CreateIMAPRefreshFolderURLs(const char *imapHost, const char *mailboxName,
 {
 	static const char *formatString = "refreshfolderurls>%c%s";
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(mailboxName));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(mailboxName));
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, delimiter, mailboxName);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, delimiter, mailboxName);
    /* Reviewed 4.51 safe use of sprintf */
 	
 	return returnString;
@@ -2114,9 +2114,9 @@ char *CreateIMAPListFolderURL(const char *imapHost, const char *mailboxName, cha
 {
 	static const char *formatString = "listfolder>%c%s";
 
-	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(mailboxName));
+	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(mailboxName));
 	if (returnString)
-		sprintf(returnString + XP_STRLEN(returnString), formatString, delimiter, mailboxName);
+		sprintf(returnString + nsCRT::strlen(returnString), formatString, delimiter, mailboxName);
    /* Reviewed 4.51 safe use of sprintf */
 	
 	return returnString;

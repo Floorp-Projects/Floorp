@@ -186,7 +186,7 @@ void nsImapFlagAndUidState::AddUidFlagPair(PRUint32 uid, imapMessageFlagsType fl
 	// search for the slot for this uid-flag pair
 
 	PRInt32 insertionIndex = -1;
-	PRBool foundIt = FALSE;
+	PRBool foundIt = PR_FALSE;
 
 	GetMessageFlagsFromUID(uid, &foundIt, &insertionIndex);
 
@@ -245,12 +245,12 @@ PRBool nsImapFlagAndUidState::IsLastMessageUnseen()
 	PRUint32 msgIndex = fNumberOfMessagesAdded;
 
 	if (msgIndex <= 0)
-		return FALSE;
+		return PR_FALSE;
 	msgIndex--;
 	// if last message is deleted, it was probably filtered the last time around
 	if (fUids[msgIndex] && (fFlags[msgIndex] & (kImapMsgSeenFlag | kImapMsgDeletedFlag)))
-		return FALSE;
-	return TRUE; 
+		return PR_FALSE;
+	return PR_TRUE; 
 }
 
 
@@ -267,7 +267,7 @@ imapMessageFlagsType nsImapFlagAndUidState::GetMessageFlagsFromUID(PRUint32 uid,
 	PRInt32 hi = fNumberOfMessagesAdded - 1;
 	PRInt32 lo = 0;
 
-	*foundIt = FALSE;
+	*foundIt = PR_FALSE;
 	*ndx = -1;
 	while (lo <= hi)
 	{
@@ -276,7 +276,7 @@ imapMessageFlagsType nsImapFlagAndUidState::GetMessageFlagsFromUID(PRUint32 uid,
 		{
 			PRInt32 returnFlags = fFlags[msgIndex];
 			
-			*foundIt = TRUE;
+			*foundIt = PR_TRUE;
 			*ndx = msgIndex;
 		    PR_CExitMonitor(this);
 			return returnFlags;

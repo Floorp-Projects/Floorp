@@ -790,7 +790,7 @@ NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
     		URL_s->pre_exit_fn = DeleteNonVerifiedExitFunction;
 		}
 
-	    XP_ASSERT(currentContext->imapURLPane);
+	    PR_ASSERT(currentContext->imapURLPane);
 
 		// Go through folders and find if there are still any that are left unverified.
 		// If so, manually LIST them to see if we can find out any info about them.
@@ -806,7 +806,7 @@ NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
 				int32 numberOfUnverifiedFolders = hostInfo->GetUnverifiedFolders(NULL, 0);
 				if (numberOfUnverifiedFolders > 0)
 				{
-					MSG_IMAPFolderInfoMail **folderList = (MSG_IMAPFolderInfoMail **)XP_ALLOC(sizeof(MSG_IMAPFolderInfoMail*) * numberOfUnverifiedFolders);
+					MSG_IMAPFolderInfoMail **folderList = (MSG_IMAPFolderInfoMail **)PR_Malloc(sizeof(MSG_IMAPFolderInfoMail*) * numberOfUnverifiedFolders);
 					if (folderList)
 					{
 						int32 numUsed = hostInfo->GetUnverifiedFolders(folderList, numberOfUnverifiedFolders);
@@ -822,7 +822,7 @@ NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
 								// undiscover all of the folders.
 								// Only if there are subfolders and at least one of them is verified do we want
 								// to refresh that folder's flags, because it won't be going away.
-								currentFolder->SetExplicitlyVerify(FALSE);
+								currentFolder->SetExplicitlyVerify(PR_FALSE);
 								char *url = CreateIMAPListFolderURL(hostName, currentFolder->GetOnlineName(), currentFolder->GetOnlineHierarchySeparator());
 								if (url)
 								{
@@ -839,7 +839,7 @@ NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
 		}
 		else
 		{
-			XP_ASSERT(FALSE);
+			PR_ASSERT(PR_FALSE);
 		}
 	}
 
@@ -849,7 +849,7 @@ NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
 
 nsresult nsImapIncomingServer::DeleteNonVerifiedFolders(nsIFolder *curFolder)
 {
-	PRBool autoUnsubscribeFromNoSelectFolders = TRUE;
+	PRBool autoUnsubscribeFromNoSelectFolders = PR_TRUE;
 	nsresult rv;
 	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
 	if(NS_SUCCEEDED(rv))
@@ -893,7 +893,7 @@ nsresult nsImapIncomingServer::DeleteNonVerifiedFolders(nsIFolder *curFolder)
 						PRBool noDescendentsAreVerified = NoDescendentsAreVerified(childFolder);
 						PRBool shouldDieBecauseNoSelect = (folderIsNoSelectFolder ? 
 							((noDescendentsAreVerified || AllDescendentsAreNoSelect(childFolder)) && !folderIsNameSpace)
-							: FALSE);
+							: PR_FALSE);
 						if (!childVerified && (noDescendentsAreVerified || shouldDieBecauseNoSelect))
 						{
 						}
@@ -920,16 +920,16 @@ nsresult nsImapIncomingServer::DeleteNonVerifiedFolders(nsIFolder *curFolder)
             									(LL_CMP(parentImapFolder->GetTimeStampOfLastList(), >= , IMAP_GetTimeStampOfNonPipelinedList()));
 
 			MSG_IMAPHost *imapHost = currentImapFolder->GetIMAPHost();
-           	PRBool usingSubscription = imapHost ? imapHost->GetIsHostUsingSubscription() : TRUE;
+           	PRBool usingSubscription = imapHost ? imapHost->GetIsHostUsingSubscription() : PR_TRUE;
 			PRBool folderIsNoSelectFolder = (currentImapFolder->GetFolderPrefFlags() & MSG_FOLDER_FLAG_IMAP_NOSELECT) != 0;
 			PRBool shouldDieBecauseNoSelect = usingSubscription ?
-									(folderIsNoSelectFolder ? ((NoDescendantsAreVerified(currentImapFolder) || AllDescendantsAreNoSelect(currentImapFolder)) && !currentImapFolder->GetFolderIsNamespace()): FALSE)
-									: FALSE;
+									(folderIsNoSelectFolder ? ((NoDescendantsAreVerified(currentImapFolder) || AllDescendantsAreNoSelect(currentImapFolder)) && !currentImapFolder->GetFolderIsNamespace()): PR_FALSE)
+									: PR_FALSE;
 			PRBool offlineCreate = (currentImapFolder->GetFolderPrefFlags() & MSG_FOLDER_FLAG_CREATED_OFFLINE) != 0;
 
             if (!currentImapFolder->GetExplicitlyVerify() && !offlineCreate &&
 				((autoUnsubscribeFromNoSelectFolders && shouldDieBecauseNoSelect) ||
-				((usingSubscription ? TRUE : parentChildrenWereListed) && !currentImapFolder->GetIsOnlineVerified() && NoDescendantsAreVerified(currentImapFolder))))
+				((usingSubscription ? PR_TRUE : parentChildrenWereListed) && !currentImapFolder->GetIsOnlineVerified() && NoDescendantsAreVerified(currentImapFolder))))
             {
                 // This folder is going away.
 				// Give notification so that folder menus can be rebuilt.
@@ -948,12 +948,12 @@ nsresult nsImapIncomingServer::DeleteNonVerifiedFolders(nsIFolder *curFolder)
 							if (currentPane->GetFolder() == currentFolder)
 							{
 								currentPane->SetFolder(NULL);
-								FE_PaneChanged(currentPane, TRUE, MSG_PaneNotifyFolderDeleted, (uint32)currentFolder);
+								FE_PaneChanged(currentPane, PR_TRUE, MSG_PaneNotifyFolderDeleted, (uint32)currentFolder);
 							}
 						}
 					}
 
-                	FE_PaneChanged(*url_pane, TRUE, MSG_PaneNotifyFolderDeleted, (uint32)currentFolder);
+                	FE_PaneChanged(*url_pane, PR_TRUE, MSG_PaneNotifyFolderDeleted, (uint32)currentFolder);
 
 					// If we are running the IMAP subscribe upgrade, and we are deleting the folder that we'd normally
 					// try to load after the process completes, then tell the pane not to load that folder.
@@ -991,7 +991,7 @@ nsresult nsImapIncomingServer::DeleteNonVerifiedFolders(nsIFolder *curFolder)
 				else
 				{
 #ifdef DEBUG_chrisf
-					XP_ASSERT(FALSE);
+					PR_ASSERT(PR_FALSE);
 #endif
 				}
 
@@ -1288,10 +1288,10 @@ TIMAPNamespace *MSG_IMAPFolderInfoMail::GetNamespaceForFolder()
 	{
 #ifdef DEBUG_bienvenu
 		// Make sure this isn't causing us to open the database
-		XP_ASSERT(m_OnlineHierSeparator != kOnlineHierarchySeparatorUnknown);
+		PR_ASSERT(m_OnlineHierSeparator != kOnlineHierarchySeparatorUnknown);
 #endif
 		m_namespace = IMAPNS_GetNamespaceForFolder(m_host->GetHostName(), GetOnlineName(), GetOnlineHierarchySeparator());
-		XP_ASSERT(m_namespace);
+		PR_ASSERT(m_namespace);
 		if (m_namespace)
 		{
 			IMAPNS_SuggestHierarchySeparatorForNamespace(m_namespace, GetOnlineHierarchySeparator());
@@ -1317,7 +1317,7 @@ void MSG_IMAPFolderInfoMail::ResetNamespaceReferences()
 	if (m_namespace)
 		m_folderIsNamespace = IMAPNS_GetFolderIsNamespace(GetHostName(), GetOnlineName(), GetOnlineHierarchySeparator(), m_namespace);
 	else
-		m_folderIsNamespace = FALSE;
+		m_folderIsNamespace = PR_FALSE;
 
 	// children
 	int numberOfChildren = GetNumSubFolders();

@@ -53,15 +53,15 @@ public:
 
 	// Generation
 	virtual PRInt32	Generate(PRBool /*stream*/, PRBool /* prefetch */) { return -1; }		// Generates an HTML representation of this part.  Returns content length generated, -1 if failed.
-	virtual void	AdoptPartDataBuffer(char *buf);		// Adopts storage for part data buffer.  If NULL, sets isValid to FALSE.
-	virtual void	AdoptHeaderDataBuffer(char *buf);	// Adopts storage for header data buffer.  If NULL, sets isValid to FALSE.
-	virtual PRBool	ShouldFetchInline() { return TRUE; }	// returns TRUE if this part should be fetched inline for generation.
-	virtual PRBool	PreflightCheckAllInline() { return TRUE; }
+	virtual void	AdoptPartDataBuffer(char *buf);		// Adopts storage for part data buffer.  If NULL, sets isValid to PR_FALSE.
+	virtual void	AdoptHeaderDataBuffer(char *buf);	// Adopts storage for header data buffer.  If NULL, sets isValid to PR_FALSE.
+	virtual PRBool	ShouldFetchInline() { return PR_TRUE; }	// returns PR_TRUE if this part should be fetched inline for generation.
+	virtual PRBool	PreflightCheckAllInline() { return PR_TRUE; }
 
 	virtual PRBool ShouldExplicitlyFetchInline();
 	virtual PRBool ShouldExplicitlyNotFetchInline();
 
-protected:																// If stream is FALSE, simply returns the content length that will be generated
+protected:																// If stream is PR_FALSE, simply returns the content length that will be generated
 	virtual PRInt32	GeneratePart(PRBool stream, PRBool prefetch);					// the body of the part itself
 	virtual PRInt32	GenerateMIMEHeader(PRBool stream, PRBool prefetch);				// the MIME headers of the part
 	virtual PRInt32	GenerateBoundary(PRBool stream, PRBool prefetch, PRBool lastBoundary);	// Generates the MIME boundary wrapper for this part.
@@ -92,7 +92,7 @@ protected:
 	virtual void	QueuePrefetchMIMEHeader();
 	//virtual void	PrefetchMIMEHeader();			// Initiates a prefetch for the MIME header of this part.
 	virtual PRBool ParseIntoObjects() = 0;	// Parses buffer and fills in both this and any children with associated objects
-									// Returns TRUE if it produced a valid Shell
+									// Returns PR_TRUE if it produced a valid Shell
 									// Must be overridden in the concerte derived class
 	const char	*GetBodyType() { return m_bodyType; }
 	const char	*GetBodySubType() { return m_bodySubType; }
@@ -140,7 +140,7 @@ public:
 	virtual void QueuePrefetchMessageHeaders();
 protected:
 	virtual PRBool ParseIntoObjects();	// Parses m_responseBuffer and fills in m_partList with associated objects
-										// Returns TRUE if it produced a valid Shell
+										// Returns PR_TRUE if it produced a valid Shell
 
 };
 
@@ -172,7 +172,7 @@ public:
 	nsIMAPBodypartLeaf(nsIMAPBodyShell *shell, char *partNum, const char *buf, nsIMAPBodypart *parentPart);
 	virtual nsIMAPBodypartType	GetType();
 	virtual PRInt32	Generate(PRBool stream, PRBool prefetch); 	// Generates an HTML representation of this part.  Returns content length generated, -1 if failed.
-	virtual PRBool	ShouldFetchInline();		// returns TRUE if this part should be fetched inline for generation.
+	virtual PRBool	ShouldFetchInline();		// returns PR_TRUE if this part should be fetched inline for generation.
 	virtual PRBool	PreflightCheckAllInline();
 
 protected:
@@ -242,7 +242,7 @@ public:
 																		// partNum specifies the message part number to which the
 																		// headers correspond.  NULL indicates the top-level message
 	void	AdoptMimeHeader(const char *partNum, char *mimeHeader);	// Fills in buffer (and adopts storage) for MIME headers in appropriate object.
-																		// If object can't be found, sets isValid to FALSE.
+																		// If object can't be found, sets isValid to PR_FALSE.
 
 	// Generation
 	virtual PRInt32 Generate(char *partNum);	// Streams out an HTML representation of this IMAP message, going along and
@@ -252,9 +252,9 @@ public:
 									// If partNum is not NULL, then this works to generates a MIME part that hasn't been downloaded yet
 									// and leaves out all other parts.  By default, to generate a normal message, partNum should be NULL.
 
-	PRBool	GetShowAttachmentsInline();		// Returns TRUE if the user has the pref "Show Attachments Inline" set.
-											// Returns FALSE if the setting is "Show Attachments as Links"
-	PRBool	PreflightCheckAllInline();		// Returns TRUE if all parts are inline, FALSE otherwise.  Does not generate anything.
+	PRBool	GetShowAttachmentsInline();		// Returns PR_TRUE if the user has the pref "Show Attachments Inline" set.
+											// Returns PR_FALSE if the setting is "Show Attachments as Links"
+	PRBool	PreflightCheckAllInline();		// Returns PR_TRUE if all parts are inline, PR_FALSE otherwise.  Does not generate anything.
 
 	// Helpers
 	nsImapProtocol *GetConnection() { return m_protocolConnection; }
@@ -263,7 +263,7 @@ public:
 	nsCString &GetUID() { return m_UID; }
 	const char	*GetFolderName() { return m_folderName; }
 	char	*GetGeneratingPart() { return m_generatingPart; }
-	PRBool	IsBeingGenerated() { return m_isBeingGenerated; }	// Returns TRUE if this is in the process of being
+	PRBool	IsBeingGenerated() { return m_isBeingGenerated; }	// Returns PR_TRUE if this is in the process of being
 																// generated, so we don't re-enter
 	PRBool IsShellCached() { return m_cached; }
 	void	SetIsCached(PRBool isCached) { m_cached = isCached; }
@@ -280,12 +280,12 @@ protected:
 	nsCString			m_UID;					// UID of this message
 	char				*m_folderName;			// folder that contains this message
 	char				*m_generatingPart;		// If a specific part is being generated, this is it.  Otherwise, NULL.
-	PRBool				m_isBeingGenerated;		// TRUE if this body shell is in the process of being generated
+	PRBool				m_isBeingGenerated;		// PR_TRUE if this body shell is in the process of being generated
 	PRBool				m_showAttachmentsInline;
 	PRBool				m_gotAttachmentPref;
 	PRBool				m_cached;				// Whether or not this shell is cached
 	PRBool				m_generatingWholeMessage;	// whether or not we are generating the whole (non-MPOD) message
-													// Set to FALSE if we are generating by parts
+													// Set to PR_FALSE if we are generating by parts
 };
 
 
@@ -316,7 +316,7 @@ public:
 protected:
 	nsIMAPBodyShellCache();
 	PRBool	EjectEntry();	// Chooses an entry to eject;  deletes that entry;  and ejects it from the cache,
-							// clearing up a new space.  Returns TRUE if it found an entry to eject, FALSE otherwise.
+							// clearing up a new space.  Returns PR_TRUE if it found an entry to eject, PR_FALSE otherwise.
 	PRUint32	GetSize() { return m_shellList->Count(); }
 	PRUint32	GetMaxSize() { return 20; }
 

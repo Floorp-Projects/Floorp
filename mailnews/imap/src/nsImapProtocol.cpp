@@ -836,7 +836,7 @@ void nsImapProtocol::EstablishServerConnection()
 
 void nsImapProtocol::ProcessCurrentURL()
 {
-	PRBool	logonFailed = FALSE;
+	PRBool	logonFailed = PR_FALSE;
 
 	if (!TestFlag(IMAP_CONNECTION_IS_OPEN) && m_channel)
 	{
@@ -1654,7 +1654,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 
 						deleteMsg->onlineFolderName = convertedCanonicalName;
 						deleteMsg->deleteAllMsgs = PR_TRUE;
-						deleteMsg->msgIdString   = nil;
+						deleteMsg->msgIdString   = nsnull;
 
 						if (m_imapMessageSink)
                     		m_imapMessageSink->NotifyMessageDeleted(this, deleteMsg);
@@ -3572,8 +3572,8 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
 								NS_ASSERTION (PL_strlen(serverTrashName) > 6,
                                               "Oops.. less that 6");
 #endif
-								trashExists = ((PL_strlen(serverTrashName) > 6 /* XP_STRLEN("INBOX.") */) &&
-									(PL_strlen(adoptedBoxSpec->allocatedPathName) > 6 /* XP_STRLEN("INBOX.") */) &&
+								trashExists = ((PL_strlen(serverTrashName) > 6 /* nsCRT::strlen("INBOX.") */) &&
+									(PL_strlen(adoptedBoxSpec->allocatedPathName) > 6 /* nsCRT::strlen("INBOX.") */) &&
 									!PL_strncasecmp(adoptedBoxSpec->allocatedPathName, serverTrashName, 6) &&	/* "INBOX." */
 									!PL_strcmp(adoptedBoxSpec->allocatedPathName + 6, serverTrashName + 6));
 							}
@@ -4877,7 +4877,7 @@ PRBool nsImapProtocol::DeleteSubFolders(const char* selectedMailbox)
 
 void nsImapProtocol::FolderDeleted(const char *mailboxName)
 {
-    char *convertedName = CreateUtf7ConvertedString(mailboxName,FALSE);
+    char *convertedName = CreateUtf7ConvertedString(mailboxName,PR_FALSE);
     char onlineDelimiter = kOnlineHierarchySeparatorUnknown;
     char *orphanedMailboxName = nsnull;
 
@@ -4908,8 +4908,8 @@ void nsImapProtocol::FolderRenamed(const char *oldName,
 		(m_hierarchyNameState == kListingForInfoAndDiscovery))
 
     {
-    	char *oldConvertedName = CreateUtf7ConvertedString(oldName,FALSE);
-    	char *newConvertedName = CreateUtf7ConvertedString(newName,FALSE);
+    	char *oldConvertedName = CreateUtf7ConvertedString(oldName,PR_FALSE);
+    	char *newConvertedName = CreateUtf7ConvertedString(newName,PR_FALSE);
     	
     	if (oldConvertedName && newConvertedName)
     	{
@@ -5508,7 +5508,7 @@ void nsImapProtocol::NthLevelChildList(const char* onlineMailboxPrefix,
         truncatedPrefix.SetLength(truncatedPrefix.Length()-1);
 		
     char *utf7ListArg = 
-        CreateUtf7ConvertedString(truncatedPrefix.GetBuffer(),TRUE);
+        CreateUtf7ConvertedString(truncatedPrefix.GetBuffer(),PR_TRUE);
     if (utf7ListArg)
     {
         nsCString pattern(utf7ListArg);
