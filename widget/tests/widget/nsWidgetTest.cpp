@@ -96,10 +96,10 @@ char * gFailedMsg = NULL;
 
 #ifdef XP_UNIX
 #ifndef WIDGET_DLL
-#define WIDGET_DLL "libwidgetunix.so"
+#define WIDGET_DLL "libwidgetgtk.so"
 #endif
 #ifndef GFX_DLL
-#define GFX_DLL "libgfxunix.so"
+#define GFX_DLL "libgfxgtk.so"
 #endif
 #define TEXT_HEIGHT 30
 #endif
