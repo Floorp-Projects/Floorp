@@ -100,6 +100,17 @@ static NSArray* sToolbarDefaults = nil;
 
 @implementation BrowserWindowController
 
+//
+// enterModalSession
+//
+// We have to load the window synchronously so windows coming from a JS
+// window.open() can be inspected or modified inline in JS. The way we
+// force this is by pretending we're a modal dialog just up to the point
+// where we finish creating the window. 
+//
+// This is icky, and there are several bugs that are caused by this hack
+// (bugzilla 159410, 159661)
+//
 -(void)enterModalSession
 {
     mModalSession = [NSApp beginModalSessionForWindow: [self window]];

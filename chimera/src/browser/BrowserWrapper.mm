@@ -544,10 +544,16 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
   float dy = dimensions.height - bounds.size.height;
 
   NSRect frame = [[self window] frame];
+  NSPoint topLeft = NSMakePoint(NSMinX(frame), NSMaxY(frame));
   frame.size.width += dx;
   frame.size.height += dy;
-
+  
+  // if we just call setFrame, it will change the top-left corner of the
+  // window as it pulls the extra space from the top and right sides of the window,
+  // which is not at all what the website desired. We must preserve
+  // topleft of the window and reset it after we resize.
   [[self window] setFrame:frame display:YES];
+  [[self window] setFrameTopLeftPoint:topLeft];
 }
 
 - (CHBrowserView*)createBrowserWindow:(unsigned int)aMask
