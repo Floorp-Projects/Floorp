@@ -936,7 +936,7 @@ nsGlobalHistory::AddExistingPageToDatabase(nsIMdbRow *row,
   SetRowValue(row, kToken_LastVisitDateColumn, aDate);
   SetRowValue(row, kToken_VisitCountColumn, (*aOldCount) + 1);
 
-  if (mLearningMode > AUTOCOMPLETE_NO_LEARNING || 
+  if (mLearningMode > AUTOCOMPLETE_NO_LEARNING ||
     mDataCaptureMode > URLDATACAPTURE_NONE) {
     // Update the two Frequency-Recency metrics
     PRFloat64 m;  
@@ -1005,7 +1005,7 @@ nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
   SetRowValue(row, kToken_LastVisitDateColumn, aDate);
   SetRowValue(row, kToken_FirstVisitDateColumn, aDate);
 
-  if (mLearningMode > AUTOCOMPLETE_NO_LEARNING || 
+  if (mLearningMode > AUTOCOMPLETE_NO_LEARNING ||
     mDataCaptureMode > URLDATACAPTURE_NONE) {
     // Initialize the Frequency-Recency metrics
     SetRowValue(row, kToken_FRFastDecayColumn, (PRFloat64) 1.0);
