@@ -207,6 +207,8 @@ bin\res\rdf\datasets\*
 bin\res\xpinstall\*
 bin\res\throbber\*
 bin\res\toolbar\*
+;debug menus reference samples dir - remove for actual releases:
+bin\res\samples\*
 
 bin\irc\*
 

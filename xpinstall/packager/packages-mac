@@ -247,6 +247,8 @@ viewer:res:toolbar:*
 viewer:res:ua.css
 viewer:res:URLFieldSchema.tbl
 viewer:res:xpinstall:*
+;debug menus reference samples dir - remove for actual releases:
+viewer:res:samples:*
 
 [mail] 
 viewer:Components:MsgAddrbook.shlb 
