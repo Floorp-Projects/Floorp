@@ -113,10 +113,6 @@ public:
   NS_IMETHOD SetFontScaler(PRInt32 aScaler);
   NS_IMETHOD GetDefaultColor(nscolor* aColor);
   NS_IMETHOD GetDefaultBackgroundColor(nscolor* aColor);
-  NS_IMETHOD GetDefaultBackgroundImage(nsString& aImage);
-  NS_IMETHOD GetDefaultBackgroundImageRepeat(PRUint8* aRepeat);
-  NS_IMETHOD GetDefaultBackgroundImageOffset(nscoord* aX, nscoord* aY);
-  NS_IMETHOD GetDefaultBackgroundImageAttachment(PRUint8* aRepeat);
   NS_IMETHOD GetDefaultLinkColor(nscolor* aColor);
   NS_IMETHOD GetDefaultVisitedLinkColor(nscolor* aColor);
 
@@ -127,10 +123,6 @@ public:
   NS_IMETHOD GetFocusRingOnAnything(PRBool& focusRingOnAnything);
   NS_IMETHOD SetDefaultColor(nscolor aColor);
   NS_IMETHOD SetDefaultBackgroundColor(nscolor aColor);
-  NS_IMETHOD SetDefaultBackgroundImage(const nsString& aImage);
-  NS_IMETHOD SetDefaultBackgroundImageRepeat(PRUint8 aRepeat);
-  NS_IMETHOD SetDefaultBackgroundImageOffset(nscoord aX, nscoord aY);
-  NS_IMETHOD SetDefaultBackgroundImageAttachment(PRUint8 aRepeat);
   NS_IMETHOD SetDefaultLinkColor(nscolor aColor);
   NS_IMETHOD SetDefaultVisitedLinkColor(nscolor aColor);
 
@@ -248,14 +240,8 @@ protected:
   PRUint8               mFocusRingWidth;          // set in GetUserPrefs
   PRPackedBool          mFocusRingOnAnything;     // set in GetUserPrefs
 
-  PRPackedBool  				mDrawImageBackground;
-  PRPackedBool  				mDrawColorBackground;
-  PRUint8               mDefaultBackgroundImageAttachment;
-  PRUint8               mDefaultBackgroundImageRepeat;
-
-  nscoord               mDefaultBackgroundImageOffsetX;
-  nscoord               mDefaultBackgroundImageOffsetY;
-  nsString              mDefaultBackgroundImage;
+  PRPackedBool          mDrawImageBackground;
+  PRPackedBool          mDrawColorBackground;
 
   nsSupportsHashtable   mImageLoaders;
 

@@ -979,10 +979,9 @@ nsStyleBackground::nsStyleBackground(nsIPresContext* aPresContext)
 {
   mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT | NS_STYLE_BG_IMAGE_NONE;
   aPresContext->GetDefaultBackgroundColor(&mBackgroundColor);
-  aPresContext->GetDefaultBackgroundImageAttachment(&mBackgroundAttachment);
-  aPresContext->GetDefaultBackgroundImageRepeat(&mBackgroundRepeat);
-  aPresContext->GetDefaultBackgroundImageOffset(&mBackgroundXPosition, &mBackgroundYPosition);
-  aPresContext->GetDefaultBackgroundImage(mBackgroundImage);
+  mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
+  mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
+  mBackgroundXPosition = mBackgroundYPosition = 0;
 }
 
 nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)

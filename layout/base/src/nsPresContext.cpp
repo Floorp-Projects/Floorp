@@ -187,9 +187,6 @@ nsPresContext::nsPresContext()
   mFocusRingWidth = 1;
   mFocusRingOnAnything = PR_FALSE;
 
-  mDefaultBackgroundImageAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
-  mDefaultBackgroundImageRepeat = NS_STYLE_BG_REPEAT_XY;
-  mDefaultBackgroundImageOffsetX = mDefaultBackgroundImageOffsetY = 0;
   mLanguageSpecificTransformType = eLanguageSpecificTransformType_Unknown;
   mIsRenderingOnlySelection = PR_FALSE;
 #ifdef IBMBIDI
@@ -1165,38 +1162,6 @@ nsPresContext::GetDefaultBackgroundColor(nscolor* aResult)
 }
 
 NS_IMETHODIMP
-nsPresContext::GetDefaultBackgroundImage(nsString& aImage)
-{
-  aImage = mDefaultBackgroundImage;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::GetDefaultBackgroundImageRepeat(PRUint8* aRepeat)
-{
-  NS_PRECONDITION(aRepeat, "null out param");
-  *aRepeat = mDefaultBackgroundImageRepeat;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::GetDefaultBackgroundImageOffset(nscoord* aX, nscoord* aY)
-{
-  NS_PRECONDITION(aX && aY, "null out param");
-  *aX = mDefaultBackgroundImageOffsetX;
-  *aY = mDefaultBackgroundImageOffsetY;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::GetDefaultBackgroundImageAttachment(PRUint8* aAttachment)
-{
-  NS_PRECONDITION(aAttachment, "null out param");
-  *aAttachment = mDefaultBackgroundImageAttachment;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsPresContext::GetDefaultLinkColor(nscolor* aColor)
 {
   NS_PRECONDITION(aColor, "null out param");
@@ -1266,35 +1231,6 @@ NS_IMETHODIMP
 nsPresContext::SetDefaultBackgroundColor(nscolor aColor)
 {
   mDefaultBackgroundColor = aColor;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::SetDefaultBackgroundImage(const nsString& aImage)
-{
-  mDefaultBackgroundImage = aImage;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::SetDefaultBackgroundImageRepeat(PRUint8 aRepeat)
-{
-  mDefaultBackgroundImageRepeat = aRepeat;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::SetDefaultBackgroundImageOffset(nscoord aX, nscoord aY)
-{
-  mDefaultBackgroundImageOffsetX = aX;
-  mDefaultBackgroundImageOffsetY = aY;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::SetDefaultBackgroundImageAttachment(PRUint8 aAttachment)
-{
-  mDefaultBackgroundImageAttachment = aAttachment;
   return NS_OK;
 }
 
