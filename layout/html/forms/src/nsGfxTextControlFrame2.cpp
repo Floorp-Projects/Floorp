@@ -721,8 +721,40 @@ nsGfxTextControlFrame2::~nsGfxTextControlFrame2()
 NS_IMETHODIMP
 nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
 {
+  // Clean up the controller
+  nsCOMPtr<nsIControllers> controllers;
+  nsCOMPtr<nsIDOMNSHTMLInputElement> inputElement = do_QueryInterface(mContent);
+  if (inputElement)
+    inputElement->GetControllers(getter_AddRefs(controllers));
+  else
+  {
+    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textAreaElement = do_QueryInterface(mContent);
+    textAreaElement->GetControllers(getter_AddRefs(controllers));
+  }
+
+  if (controllers)
+  {
+    PRUint32 numControllers;
+    nsresult rv = controllers->GetControllerCount(&numControllers);
+    NS_ASSERTION((NS_SUCCEEDED(rv)), "bad result in gfx text control destructor");
+    for (PRUint32 i = 0; i < numControllers; i ++)
+    {
+      nsCOMPtr<nsIController> controller;
+      rv = controllers->GetControllerAt(i, getter_AddRefs(controller));
+      if (NS_SUCCEEDED(rv) && controller)
+      {
+        nsCOMPtr<nsIEditorController> editController = do_QueryInterface(controller);
+        if (editController)
+        {
+          editController->SetCommandRefCon(nsnull);
+        }
+      }
+    }
+  }
+
   mSelCon = 0;
   mEditor = 0;
+  
   if (mCachedState)
   {
     delete mCachedState;
@@ -1293,22 +1325,22 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
     mEditor->Init(domdoc, shell, content, mSelCon, editorFlags);
 
 //initialize the controller for the editor
-    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textAreaElement = do_QueryInterface(mContent);
-    nsCOMPtr<nsIDOMNSHTMLInputElement>    inputElement = do_QueryInterface(mContent);
     nsCOMPtr<nsIControllers> controllers;
-    if (textAreaElement)
-      textAreaElement->GetControllers(getter_AddRefs(controllers));
-    else if (inputElement)
+    nsCOMPtr<nsIDOMNSHTMLInputElement> inputElement = do_QueryInterface(mContent);
+    if (inputElement)
       inputElement->GetControllers(getter_AddRefs(controllers));
     else
-      return rv = NS_ERROR_FAILURE;
-    
-    if (NS_SUCCEEDED(rv))
     {
-      PRUint32 count;
+      nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textAreaElement = do_QueryInterface(mContent);
+      textAreaElement->GetControllers(getter_AddRefs(controllers));
+    }
+
+    if (controllers)
+    {
+      PRUint32 numControllers;
       PRBool found = PR_FALSE;
-      rv = controllers->GetControllerCount(&count);
-      for (PRUint32 i = 0; i < count; i ++)
+      rv = controllers->GetControllerCount(&numControllers);
+      for (PRUint32 i = 0; i < numControllers; i ++)
       {
         nsCOMPtr<nsIController> controller;
         rv = controllers->GetControllerAt(i, getter_AddRefs(controller));
