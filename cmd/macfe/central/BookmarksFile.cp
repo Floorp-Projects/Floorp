@@ -47,8 +47,8 @@ ReadBookmarksFile ( vector<char> & oURL, FSSpec & inSpec )
 		Int32 howMuch;
 		
 		// Read in the URL, which is in the form URL\rTITLE
-		howMuch = stream.ReadData(oURL.begin(), oURL.size());
-		char* where = find(oURL.begin(), oURL.end(), '\r');
+		howMuch = stream.ReadData(&(*oURL.begin()), oURL.size());
+		char* where = &(*find(oURL.begin(), oURL.end(), '\r'));
 		ThrowIfNil_(where);
 		*where = 0;
 	}
