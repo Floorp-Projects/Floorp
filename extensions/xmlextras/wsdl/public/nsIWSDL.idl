@@ -36,7 +36,8 @@ interface nsIWSDLPart;
 interface nsIDOMElement;
 
 [scriptable, uuid(0458dac1-65de-11d5-9b42-00104bdf5339)]
-interface nsIWSDLPort : nsISupports { 
+interface nsIWSDLPort : nsISupports
+{ 
   readonly attribute AString name;
   readonly attribute nsIDOMElement documentation;
 
@@ -48,7 +49,8 @@ interface nsIWSDLPort : nsISupports {
 };
 
 [scriptable, uuid(0458dac2-65de-11d5-9b42-00104bdf5339)]
-interface nsIWSDLOperation : nsISupports {
+interface nsIWSDLOperation : nsISupports
+{
   readonly attribute AString name;
   readonly attribute nsIDOMElement documentation;
 
@@ -65,7 +67,8 @@ interface nsIWSDLOperation : nsISupports {
 };
 
 [scriptable, uuid(0458dac3-65de-11d5-9b42-00104bdf5339)]
-interface nsIWSDLMessage : nsISupports {
+interface nsIWSDLMessage : nsISupports
+{
   readonly attribute AString name;
   readonly attribute nsIDOMElement documentation;
 
@@ -77,7 +80,8 @@ interface nsIWSDLMessage : nsISupports {
 };
 
 [scriptable, uuid(0458dac4-65de-11d5-9b42-00104bdf5339)]
-interface nsIWSDLPart : nsISupports {
+interface nsIWSDLPart : nsISupports
+{
   readonly attribute AString name;
 
   readonly attribute nsIWSDLBinding binding;
@@ -94,7 +98,8 @@ interface nsIWSDLPart : nsISupports {
 };
 
 [scriptable, uuid(0458dac0-65de-11d5-9b42-00104bdf5339)]
-interface nsIWSDLBinding : nsISupports {
+interface nsIWSDLBinding : nsISupports
+{
   readonly attribute AString protocol;
   readonly attribute nsIDOMElement documentation;
 };

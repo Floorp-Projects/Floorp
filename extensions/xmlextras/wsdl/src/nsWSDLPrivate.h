@@ -4,20 +4,20 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/MPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is Mozilla.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications.  Portions created by Netscape Communications are
  * Copyright (C) 2001 by Netscape Communications.  All
  * Rights Reserved.
- * 
- * Contributor(s): 
+ *
+ * Contributor(s):
  *   Vidur Apparao <vidur@netscape.com> (original author)
  */
 
@@ -35,8 +35,7 @@
 
 // XPCOM Includes
 #include "nsCOMPtr.h"
-#include "nsVoidArray.h"
-#include "nsSupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsWeakReference.h"
@@ -51,31 +50,33 @@
 #define NS_WSDL_NAMESPACE "http://schemas.xmlsoap.org/wsdl/"
 #define NS_WSDL_SOAP_NAMESPACE "http://schemas.xmlsoap.org/wsdl/soap/"
 
-class nsSOAPPortBinding : public nsISOAPPortBinding {
+class nsSOAPPortBinding : public nsISOAPPortBinding
+{
 public:
   nsSOAPPortBinding(const nsAString& aName);
   virtual ~nsSOAPPortBinding();
-  
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWSDLBINDING
   NS_DECL_NSISOAPPORTBINDING
 
-  NS_IMETHOD SetDocumentationElement(nsIDOMElement* aElement);
-  NS_IMETHOD SetAddress(const nsAString& aAddress);
-  NS_IMETHOD SetStyle(PRUint16 aStyle);
-  NS_IMETHOD SetTransport(const nsAString& aTransport);
-  NS_IMETHOD SetSoapVersion(PRUint16 aSoapVersion);
+  nsresult SetDocumentationElement(nsIDOMElement* aElement);
+  nsresult SetAddress(const nsAString& aAddress);
+  nsresult SetStyle(PRUint16 aStyle);
+  nsresult SetTransport(const nsAString& aTransport);
+  nsresult SetSoapVersion(PRUint16 aSoapVersion);
 
 protected:
   nsString mName;
-  nsString mAddress;  
-  PRUint16 mStyle;
-  nsString mTransport;  
+  nsString mAddress;
+  nsString mTransport;
   nsCOMPtr<nsIDOMElement> mDocumentationElement;
   PRUint16 mSoapVersion;
+  PRUint16 mStyle;
 };
 
-class nsWSDLPort : public nsIWSDLPort {
+class nsWSDLPort : public nsIWSDLPort
+{
 public:
   nsWSDLPort(const nsAString &aName);
   virtual ~nsWSDLPort();
@@ -83,18 +84,19 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWSDLPORT
 
-  NS_IMETHOD SetDocumentationElement(nsIDOMElement* aElement);
-  NS_IMETHOD AddOperation(nsIWSDLOperation* aOperation);
-  NS_IMETHOD SetBinding(nsIWSDLBinding* aBinding);
+  nsresult SetDocumentationElement(nsIDOMElement* aElement);
+  nsresult AddOperation(nsIWSDLOperation* aOperation);
+  nsresult SetBinding(nsIWSDLBinding* aBinding);
 
 protected:
   nsString mName;
   nsCOMPtr<nsIDOMElement> mDocumentationElement;
-  nsSupportsArray mOperations;
+  nsCOMArray<nsIWSDLOperation> mOperations;
   nsCOMPtr<nsIWSDLBinding> mBinding;
 };
 
-class nsSOAPOperationBinding : public nsISOAPOperationBinding {
+class nsSOAPOperationBinding : public nsISOAPOperationBinding
+{
 public:
   nsSOAPOperationBinding();
   virtual ~nsSOAPOperationBinding();
@@ -103,17 +105,18 @@ public:
   NS_DECL_NSIWSDLBINDING
   NS_DECL_NSISOAPOPERATIONBINDING
 
-  NS_IMETHOD SetDocumentationElement(nsIDOMElement* aElement);
-  NS_IMETHOD SetStyle(PRUint16 aStyle);
-  NS_IMETHOD SetSoapAction(const nsAString& aAction);
+  nsresult SetDocumentationElement(nsIDOMElement* aElement);
+  nsresult SetStyle(PRUint16 aStyle);
+  nsresult SetSoapAction(const nsAString& aAction);
 
 protected:
-  PRUint16 mStyle;
-  nsString mSoapAction;  
+  nsString mSoapAction;
   nsCOMPtr<nsIDOMElement> mDocumentationElement;
+  PRUint16 mStyle;
 };
 
-class nsWSDLOperation : public nsIWSDLOperation {
+class nsWSDLOperation : public nsIWSDLOperation
+{
 public:
   nsWSDLOperation(const nsAString &aName);
   virtual ~nsWSDLOperation();
@@ -121,24 +124,25 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWSDLOPERATION
 
-  NS_IMETHOD SetDocumentationElement(nsIDOMElement* aElement);
-  NS_IMETHOD SetInput(nsIWSDLMessage* aInputMessage);
-  NS_IMETHOD SetOutput(nsIWSDLMessage* aOutputMessage);
-  NS_IMETHOD AddFault(nsIWSDLMessage* aFaultMessage);
-  NS_IMETHOD AddParameter(const nsAString& aParameter);
-  NS_IMETHOD SetBinding(nsIWSDLBinding* aBinding);
+  nsresult SetDocumentationElement(nsIDOMElement* aElement);
+  nsresult SetInput(nsIWSDLMessage* aInputMessage);
+  nsresult SetOutput(nsIWSDLMessage* aOutputMessage);
+  nsresult AddFault(nsIWSDLMessage* aFaultMessage);
+  nsresult AddParameter(const nsAString& aParameter);
+  nsresult SetBinding(nsIWSDLBinding* aBinding);
 
 protected:
   nsString mName;
   nsCOMPtr<nsIDOMElement> mDocumentationElement;
   nsCOMPtr<nsIWSDLMessage> mInputMessage;
   nsCOMPtr<nsIWSDLMessage> mOutputMessage;
-  nsSupportsArray mFaultMessages;
+  nsCOMArray<nsIWSDLMessage> mFaultMessages;
   nsStringArray mParameters;
   nsCOMPtr<nsIWSDLBinding> mBinding;
 };
 
-class nsSOAPMessageBinding : public nsISOAPMessageBinding {
+class nsSOAPMessageBinding : public nsISOAPMessageBinding
+{
 public:
   nsSOAPMessageBinding(const nsAString& aNamespace);
   virtual ~nsSOAPMessageBinding();
@@ -151,7 +155,8 @@ protected:
   nsString mNamespace;
 };
 
-class nsWSDLMessage : public nsIWSDLMessage {
+class nsWSDLMessage : public nsIWSDLMessage
+{
 public:
   nsWSDLMessage(const nsAString& aName);
   virtual ~nsWSDLMessage();
@@ -159,18 +164,19 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWSDLMESSAGE
 
-  NS_IMETHOD SetDocumentationElement(nsIDOMElement* aElement);
-  NS_IMETHOD AddPart(nsIWSDLPart* aPart);
-  NS_IMETHOD SetBinding(nsIWSDLBinding* aBinding);
+  nsresult SetDocumentationElement(nsIDOMElement* aElement);
+  nsresult AddPart(nsIWSDLPart* aPart);
+  nsresult SetBinding(nsIWSDLBinding* aBinding);
 
 protected:
   nsString mName;
   nsCOMPtr<nsIDOMElement> mDocumentationElement;
-  nsSupportsArray mParts;
+  nsCOMArray<nsIWSDLPart> mParts;
   nsCOMPtr<nsIWSDLBinding> mBinding;
 };
 
-class nsSOAPPartBinding : public nsISOAPPartBinding {
+class nsSOAPPartBinding : public nsISOAPPartBinding
+{
 public:
   nsSOAPPartBinding(PRUint16 aLocation, PRUint16 aUse,
                     const nsAString& aEncodingStyle,
@@ -185,10 +191,11 @@ protected:
   PRUint16 mLocation;
   PRUint16 mUse;
   nsString mEncodingStyle;
-  nsString mNamespace;  
+  nsString mNamespace;
 };
 
-class nsWSDLPart : public nsIWSDLPart {
+class nsWSDLPart : public nsIWSDLPart
+{
 public:
   nsWSDLPart(const nsAString& aName);
   virtual ~nsWSDLPart();
@@ -196,10 +203,9 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWSDLPART
 
-  NS_IMETHOD SetTypeInfo(const nsAString& aType,
-                         const nsAString& aElementName,
-                         nsISchemaComponent* aSchemaComponent);
-  NS_IMETHOD SetBinding(nsIWSDLBinding* aBinding);
+  nsresult SetTypeInfo(const nsAString& aType, const nsAString& aElementName,
+                       nsISchemaComponent* aSchemaComponent);
+  nsresult SetBinding(nsIWSDLBinding* aBinding);
 
 protected:
   nsString mName;

@@ -31,7 +31,6 @@
 
 // XPCOM Includes
 #include "nsCOMPtr.h"
-#include "nsSupportsArray.h"
 #include "nsString.h"
 #include "nsIAtom.h"
 #include "nsHashtable.h"
@@ -50,9 +49,10 @@
 
 #define NS_ERROR_WSDL_LOADPENDING NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 1)
 
-class nsWSDLAtoms {
+class nsWSDLAtoms
+{
 public:
-  static void CreateWSDLAtoms();
+  static nsresult CreateWSDLAtoms();
   static void DestroyWSDLAtoms();
 
   static nsIAtom* sDefinitions_atom;
@@ -74,9 +74,12 @@ public:
   static nsIAtom* sHeader_atom;
   static nsIAtom* sHeaderFault_atom;
   static nsIAtom* sAddress_atom;
+
+  static nsIAtom* sSchema_atom;
 };
 
-class nsWSDLLoader : public nsIWSDLLoader {
+class nsWSDLLoader : public nsIWSDLLoader
+{
 public:
   nsWSDLLoader();
   virtual ~nsWSDLLoader();
@@ -85,45 +88,59 @@ public:
   NS_DECL_NSIWSDLLOADER
 
   nsresult Init();
+
 protected:
+  nsresult doLoad(const nsAString& wsdlURI, const nsAString& portName,
+                  nsIWSDLLoadListener *aListener, nsIWSDLPort **_retval);
+
   nsresult GetResolvedURI(const nsAString& aSchemaURI,
                           const char* aMethod,
                           nsIURI** aURI);
 
-protected:
   nsWSDLPort* mPort;
 };
 
 
-class nsWSDLLoadingContext {
+class nsWSDLLoadingContext
+{
 public:
   nsWSDLLoadingContext(nsIDOMDocument* aDocument,
-                       const nsAString& aLocation) :
-    mDocument(aDocument), mChildIndex(0), mDocumentLocation(aLocation) {
+                       const nsAString& aLocation)
+    : mDocument(aDocument), mChildIndex(0), mDocumentLocation(aLocation)
+  {
   }
-  ~nsWSDLLoadingContext() {
+  ~nsWSDLLoadingContext()
+  {
   }
-          
-  void GetRootElement(nsIDOMElement** aElement) {
+
+  void GetRootElement(nsIDOMElement** aElement)
+  {
     mDocument->GetDocumentElement(aElement);
   }
 
-  PRUint32 GetChildIndex() { return mChildIndex; }
-  void SetChildIndex(PRUint32 aChildIndex) { mChildIndex = aChildIndex; }
+  PRUint32 GetChildIndex()
+  {
+    return mChildIndex;
+  }
+  void SetChildIndex(PRUint32 aChildIndex)
+  {
+    mChildIndex = aChildIndex;
+  }
 
-  void GetTargetNamespace(nsAString& aNamespace) {
+  void GetTargetNamespace(nsAString& aNamespace)
+  {
     nsCOMPtr<nsIDOMElement> element;
     GetRootElement(getter_AddRefs(element));
     if (element) {
-      element->GetAttribute(NS_LITERAL_STRING("targetNamespace"),
-                            aNamespace);
+      element->GetAttribute(NS_LITERAL_STRING("targetNamespace"), aNamespace);
     }
     else {
       aNamespace.Truncate();
     }
   }
 
-  void GetDocumentLocation(nsAString& aLocation) {
+  void GetDocumentLocation(nsAString& aLocation)
+  {
     aLocation.Assign(mDocumentLocation);
   }
 
@@ -139,8 +156,7 @@ protected:
 class nsWSDLLoadRequest : public nsIDOMEventListener
 {
 public:
-  nsWSDLLoadRequest(PRBool aIsSync, 
-                    nsIWSDLLoadListener* aListener,
+  nsWSDLLoadRequest(PRBool aIsSync, nsIWSDLLoadListener* aListener,
                     const nsAString& aPortName);
   virtual ~nsWSDLLoadRequest();
 
@@ -152,26 +168,21 @@ public:
   nsresult ContineProcessingTillDone();
   nsresult GetPort(nsIWSDLPort** aPort);
 
-  nsresult PushContext(nsIDOMDocument* aDocument, 
-                       const nsAString& aLocation);
+  nsresult PushContext(nsIDOMDocument* aDocument, const nsAString& aLocation);
   nsWSDLLoadingContext* GetCurrentContext();
   void PopContext();
 
   nsresult GetSchemaElement(const nsAString& aName,
                             const nsAString& aNamespace,
                             nsISchemaElement** aSchemaComponent);
-  nsresult GetSchemaType(const nsAString& aName,
-                         const nsAString& aNamespace,
+  nsresult GetSchemaType(const nsAString& aName, const nsAString& aNamespace,
                          nsISchemaType** aSchemaComponent);
-  nsresult GetMessage(const nsAString& aName,
-                      const nsAString& aNamespace,
+  nsresult GetMessage(const nsAString& aName, const nsAString& aNamespace,
                       nsIWSDLMessage** aMessage);
-  nsresult GetPortType(const nsAString& aName,
-                       const nsAString& aNamespace,
+  nsresult GetPortType(const nsAString& aName, const nsAString& aNamespace,
                        nsIWSDLPort** aPort);
 
-  nsresult ProcessImportElement(nsIDOMElement* aElement, 
-                                PRUint32 aIndex);
+  nsresult ProcessImportElement(nsIDOMElement* aElement, PRUint32 aIndex);
   nsresult ProcessTypesElement(nsIDOMElement* aElement);
   nsresult ProcessMessageElement(nsIDOMElement* aElement);
   nsresult ProcessAbstractPartElement(nsIDOMElement* aElement,
@@ -194,7 +205,7 @@ protected:
   nsCOMPtr<nsIXMLHttpRequest> mRequest;
   nsCOMPtr<nsISchemaLoader> mSchemaLoader;
 
-  PRBool mIsSync;
+  PRPackedBool mIsSync;
 
   nsCOMPtr<nsIWSDLPort> mPort;
   nsString mPortName;

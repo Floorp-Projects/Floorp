@@ -4,20 +4,20 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/MPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is Mozilla.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications.  Portions created by Netscape Communications are
  * Copyright (C) 2001 by Netscape Communications.  All
  * Rights Reserved.
- * 
- * Contributor(s): 
+ *
+ * Contributor(s):
  *   Vidur Apparao <vidur@netscape.com> (original author)
  */
 
@@ -26,13 +26,18 @@
 
 %{ C++
 #include "nsAString.h"
-%} 
+%}
 
-[scriptable, uuid(0458dac7-65de-11d5-9b42-00104bdf5339)]
-interface nsISOAPPortBinding : nsIWSDLBinding {
+[scriptable, uuid(bb76b72e-d143-4738-804a-53b311466dd9)]
+interface nsIWSDLSOAPBinding : nsIWSDLBinding
+{
   const unsigned short STYLE_RPC = 1;
   const unsigned short STYLE_DOCUMENT = 2;
+};
 
+[scriptable, uuid(0458dac7-65de-11d5-9b42-00104bdf5339)]
+interface nsISOAPPortBinding : nsIWSDLSOAPBinding
+{
   const unsigned short SOAP_VERSION_1_1 = 0;
   const unsigned short SOAP_VERSION_1_2 = 1;
   const unsigned short SOAP_VERSION_UNKNOWN = 32767;
@@ -45,18 +50,21 @@ interface nsISOAPPortBinding : nsIWSDLBinding {
 };
 
 [scriptable, uuid(0458dac8-65de-11d5-9b42-00104bdf5339)]
-interface nsISOAPOperationBinding : nsIWSDLBinding {
+interface nsISOAPOperationBinding : nsIWSDLSOAPBinding
+{
   readonly attribute unsigned short style;
   readonly attribute AString soapAction;
 };
 
 [scriptable, uuid(c3c4614c-301a-44af-ad70-936f9fd1ba5c)]
-interface nsISOAPMessageBinding : nsIWSDLBinding {
+interface nsISOAPMessageBinding : nsIWSDLSOAPBinding
+{
   readonly attribute AString namespace;
 };
 
 [scriptable, uuid(0458dac9-65de-11d5-9b42-00104bdf5339)]
-interface nsISOAPPartBinding : nsIWSDLBinding {
+interface nsISOAPPartBinding : nsIWSDLSOAPBinding
+{
   const unsigned short   LOCATION_BODY = 1;
   const unsigned short   LOCATION_HEADER = 2;
   const unsigned short   LOCATION_FAULT = 3;
