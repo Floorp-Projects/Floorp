@@ -54,6 +54,12 @@ NS_COM void CopyUTF8toUTF16( const nsACString& aSource, nsAString& aDest );
 NS_COM void CopyUTF16toUTF8( const PRUnichar* aSource, nsACString& aDest );
 NS_COM void CopyUTF8toUTF16( const char* aSource, nsAString& aDest );
 
+NS_COM void LossyAppendUTF16toASCII( const nsAString& aSource, nsACString& aDest );
+NS_COM void AppendASCIItoUTF16( const nsACString& aSource, nsAString& aDest );
+
+NS_COM void LossyAppendUTF16toASCII( const PRUnichar* aSource, nsACString& aDest );
+NS_COM void AppendASCIItoUTF16( const char* aSource, nsAString& aDest );
+
 NS_COM void AppendUTF16toUTF8( const nsAString& aSource, nsACString& aDest );
 NS_COM void AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest );
 

@@ -150,30 +150,16 @@ NS_COM
 void
 LossyCopyUTF16toASCII( const nsAString& aSource, nsACString& aDest )
   {
-      // right now, this won't work on multi-fragment destinations
-    aDest.SetLength(aSource.Length());
-
-    nsAString::const_iterator fromBegin, fromEnd;
-
-    nsACString::iterator toBegin;
-    LossyConvertEncoding<PRUnichar, char> converter(aDest.BeginWriting(toBegin).get());
-    
-    copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
+    aDest.Truncate();
+    LossyAppendUTF16toASCII(aSource, aDest);
   }
 
 NS_COM
 void
 CopyASCIItoUTF16( const nsACString& aSource, nsAString& aDest )
   {
-      // right now, this won't work on multi-fragment destinations
-    aDest.SetLength(aSource.Length());
-
-    nsACString::const_iterator fromBegin, fromEnd;
-
-    nsAString::iterator toBegin;
-    LossyConvertEncoding<char, PRUnichar> converter(aDest.BeginWriting(toBegin).get());
-
-    copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
+    aDest.Truncate();
+    AppendASCIItoUTF16(aSource, aDest);
   }
 
 NS_COM
@@ -206,6 +192,64 @@ CopyUTF8toUTF16( const char* aSource, nsAString& aDest )
   {
     aDest.Truncate();
     AppendUTF8toUTF16(aSource, aDest);
+  }
+
+NS_COM
+void
+LossyAppendUTF16toASCII( const nsAString& aSource, nsACString& aDest )
+  {
+    PRUint32 old_dest_length = aDest.Length();
+    aDest.SetLength(old_dest_length + aSource.Length());
+
+    nsAString::const_iterator fromBegin, fromEnd;
+
+    nsACString::iterator dest;
+    aDest.BeginWriting(dest);
+
+    dest.advance(old_dest_length);
+
+      // right now, this won't work on multi-fragment destinations
+    LossyConvertEncoding<PRUnichar, char> converter(dest.get());
+    
+    copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
+  }
+
+NS_COM
+void
+AppendASCIItoUTF16( const nsACString& aSource, nsAString& aDest )
+  {
+    PRUint32 old_dest_length = aDest.Length();
+    aDest.SetLength(old_dest_length + aSource.Length());
+
+    nsACString::const_iterator fromBegin, fromEnd;
+
+    nsAString::iterator dest;
+    aDest.BeginWriting(dest);
+
+    dest.advance(old_dest_length);
+
+      // right now, this won't work on multi-fragment destinations
+    LossyConvertEncoding<char, PRUnichar> converter(dest.get());
+
+    copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
+  }
+
+NS_COM
+void
+LossyAppendUTF16toASCII( const PRUnichar* aSource, nsACString& aDest )
+  {
+    if (aSource) {
+      LossyAppendUTF16toASCII(nsDependentString(aSource), aDest);
+    }
+  }
+
+NS_COM
+void
+AppendASCIItoUTF16( const char* aSource, nsAString& aDest )
+  {
+    if (aSource) {
+      AppendASCIItoUTF16(nsDependentCString(aSource), aDest);
+    }
   }
 
 NS_COM
