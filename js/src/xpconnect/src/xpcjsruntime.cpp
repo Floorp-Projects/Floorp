@@ -204,22 +204,32 @@ DyingProtoKiller(JSDHashTable *table, JSDHashEntryHdr *hdr,
 // static
 JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
 {
+    nsVoidArray* dyingWrappedJSArray;
+
     XPCJSRuntime* self = nsXPConnect::GetRuntime();
     if(self)
     {
-        nsVoidArray* dyingWrappedJSArray = &self->mWrappedJSToReleaseArray;
-
         switch(status)
         {
             case JSGC_BEGIN:
             {
-                // do nothing (yet)...
+                if(self->GetMainThreadOnlyGC() &&
+                   PR_GetCurrentThread() != nsXPConnect::GetMainThread())
+                {
+                    return JS_FALSE;
+                }
                 break;
             }
             case JSGC_MARK_END:
             {
+                NS_ASSERTION(!self->mDoingFinalization, "bad state");
+
+                dyingWrappedJSArray = &self->mWrappedJSToReleaseArray;
                 {
-                    XPCAutoLock lock(self->GetMapLock()); // lock the wrapper map
+                    XPCLock* lock = self->GetMainThreadOnlyGC() ?
+                                    nsnull : self->GetMapLock();
+
+                    XPCAutoLock al(lock); // lock the wrapper map if necessary
                     JSDyingJSObjectData data = {cx, dyingWrappedJSArray};
 
                     // Add any wrappers whose JSObjects are to be finalized to
@@ -241,10 +251,13 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                 // Find dying scopes...
                 XPCWrappedNativeScope::FinishedMarkPhaseOfGC(cx, self);
 
+                self->mDoingFinalization = JS_TRUE;
                 break;
             }
             case JSGC_FINALIZE_END:
             {
+                NS_ASSERTION(self->mDoingFinalization, "bad state");
+                self->mDoingFinalization = JS_FALSE;
 
 #ifdef XPC_REPORT_NATIVE_INTERFACE_AND_SET_FLUSHING
                 printf("--------------------------------------------------------------\n");
@@ -422,19 +435,56 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                 // Release all the members whose JSObjects are now known
                 // to be dead.
 
-                // XXX We ought to enter and exit a lock and pick these
-                // elements off one at a time!
-
-                for(PRInt32 i = dyingWrappedJSArray->Count() - 1; i >= 0; i--)
+                dyingWrappedJSArray = &self->mWrappedJSToReleaseArray;
+                XPCLock* lock = self->GetMainThreadOnlyGC() ?
+                                nsnull : self->GetMapLock();
+                while(1)
                 {
-                    nsXPCWrappedJS* wrapper =
-                        NS_REINTERPRET_CAST(nsXPCWrappedJS*,
-                                            dyingWrappedJSArray->ElementAt(i));
-
+                    nsXPCWrappedJS* wrapper;
+                    {
+                        XPCAutoLock al(lock); // lock if necessary
+                        PRInt32 count = dyingWrappedJSArray->Count();
+                        if(!count)
+                        {
+                            dyingWrappedJSArray->Compact();
+                            break;
+                        }
+                        wrapper = NS_REINTERPRET_CAST(nsXPCWrappedJS*,
+                                    dyingWrappedJSArray->ElementAt(count-1));
+                        dyingWrappedJSArray->RemoveElementAt(count-1);
+                    }
                     NS_RELEASE(wrapper);
                 }
-                dyingWrappedJSArray->Clear();
 
+                // Do any deferred released of native objects.
+                if(self->GetDeferReleases())
+                {
+                    nsVoidArray* array = &self->mNativesToReleaseArray;
+#ifdef XPC_TRACK_DEFERRED_RELEASES
+                    printf("XPC - Begin deferred Release of %d nsISupports pointers\n",
+                           array->Count());
+#endif
+                    while(1)
+                    {
+                        nsISupports* obj;
+                        {
+                            XPCAutoLock al(lock); // lock if necessary
+                            PRInt32 count = array->Count();
+                            if(!count)
+                            {
+                                array->Compact();
+                                break;
+                            }
+                            obj = NS_REINTERPRET_CAST(nsISupports*,
+                                    array->ElementAt(count-1));
+                            array->RemoveElementAt(count-1);
+                        }
+                        NS_RELEASE(obj);
+                    }
+#ifdef XPC_TRACK_DEFERRED_RELEASES
+                    printf("XPC - End deferred Releases\n");
+#endif
+                }
                 break;
             }
             default:
@@ -572,6 +622,16 @@ XPCJSRuntime::~XPCJSRuntime()
         delete mNativeScriptableSharedMap;
     }
 
+    if(mDyingWrappedNativeProtoMap)
+    {
+#ifdef XPC_DUMP_AT_SHUTDOWN
+        uint32 count = mDyingWrappedNativeProtoMap->Count();
+        if(count)
+            printf("deleting XPCJSRuntime with %d live but dying XPCWrappedNativeProto\n", (int)count);
+#endif
+        delete mDyingWrappedNativeProtoMap;
+    }
+
     // unwire the readable/JSString sharing magic
     XPCStringConvert::ShutdownDOMStringFinalizer();
 }
@@ -591,9 +651,12 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
    mNativeScriptableSharedMap(XPCNativeScriptableSharedMap::newMap(XPC_NATIVE_JSCLASS_MAP_SIZE)),
    mDyingWrappedNativeProtoMap(XPCWrappedNativeProtoMap::newMap(XPC_DYING_NATIVE_PROTO_MAP_SIZE)),
    mMapLock(XPCAutoLock::NewLock("XPCJSRuntime::mMapLock")),
-   mWrappedJSToReleaseArray()
+   mWrappedJSToReleaseArray(),
+   mNativesToReleaseArray(),
+   mMainThreadOnlyGC(JS_FALSE),
+   mDeferReleases(JS_FALSE),
+   mDoingFinalization(JS_FALSE)
 {
-
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
     DEBUG_WrappedNativeHashtable =
         JS_NewDHashTable(JS_DHashGetStubOps(), nsnull,
@@ -771,6 +834,19 @@ XPCJSRuntime::GenerateStringIDs(JSContext* cx)
         mStrJSVals[i] = STRING_TO_JSVAL(str);
     }
     return JS_TRUE;
+}
+
+JSBool
+XPCJSRuntime::DeferredRelease(nsISupports* obj)
+{
+    NS_ASSERTION(obj, "bad param");
+    NS_ASSERTION(GetDeferReleases(), "bad call");
+
+    XPCLock* lock = GetMainThreadOnlyGC() ? nsnull : GetMapLock();
+    {
+        XPCAutoLock al(lock); // lock if necessary
+        return mNativesToReleaseArray.AppendElement(obj);
+    }        
 }
 
 /***************************************************************************/

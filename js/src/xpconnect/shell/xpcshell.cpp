@@ -877,6 +877,8 @@ main(int argc, char **argv)
         NS_STATIC_CAST(nsIXPCSecurityManager*, new FullTrustSecMan());
     xpc->SetSecurityManagerForJSContext(jscontext, secman, 0);
 
+//    xpc->SetCollectGarbageOnMainThreadOnly(PR_TRUE); 
+//    xpc->SetDeferReleasesUntilAfterGarbageCollection(PR_TRUE); 
 
 #ifdef TEST_TranslateThis
     nsCOMPtr<nsIXPCFunctionThisTranslator> 

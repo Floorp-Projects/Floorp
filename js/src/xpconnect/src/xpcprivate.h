@@ -125,6 +125,7 @@
 #define XPC_TRACK_WRAPPER_STATS
 #define XPC_TRACK_SCOPE_STATS
 #define XPC_TRACK_PROTO_STATS
+#define XPC_TRACK_DEFERRED_RELEASES
 #define XPC_CHECK_WRAPPERS_AT_SHUTDOWN
 #define XPC_REPORT_SHADOWED_WRAPPED_NATIVE_MEMBERS
 #define XPC_CHECK_CLASSINFO_CLAIMS
@@ -380,6 +381,9 @@ public:
 
     static JSBool IsISupportsDescendant(nsIInterfaceInfo* info);
 
+    static PRThread* GetMainThread()
+        {return gMainThread ? gMainThread : FindMainThread();}
+
     nsIXPCSecurityManager* GetDefaultSecurityManager() const
         {return mDefaultSecurityManager;}
 
@@ -405,10 +409,13 @@ private:
     JSBool EnsureRuntime() {return mRuntime ? JS_TRUE : CreateRuntime();}
     JSBool CreateRuntime();
 
+    static PRThread* FindMainThread();
+
 private:
     // Singleton instance
     static nsXPConnect*      gSelf;
     static JSBool            gOnceAliveNowDead;
+    static PRThread*         gMainThread;
 
     XPCJSRuntime*            mRuntime;
     nsIInterfaceInfoManager* mInterfaceInfoManager;
@@ -466,6 +473,20 @@ public:
 
     XPCContext* GetXPCContext(JSContext* cx);
     XPCContext* SyncXPCContextList(JSContext* cx = nsnull);
+
+    JSBool GetMainThreadOnlyGC() const   {return mMainThreadOnlyGC;}
+    void   SetMainThreadOnlyGC(JSBool b) {mMainThreadOnlyGC = b;}
+    
+    JSBool GetDeferReleases() const {return mDeferReleases;}
+    void   SetDeferReleases(JSBool b) 
+        {/* If deferring is turned off while any are pending they'll leak! */
+         NS_ASSERTION((mDeferReleases && b) || 
+                      !mNativesToReleaseArray.Count(), "bad"); 
+         mDeferReleases = b;}
+
+    JSBool DeferredRelease(nsISupports* obj);
+
+    JSBool GetDoingFinalization() const {return mDoingFinalization;}
 
     // Mapping of often used strings to jsid atoms that live 'forever'.
     //
@@ -554,6 +575,10 @@ private:
     XPCWrappedNativeProtoMap* mDyingWrappedNativeProtoMap;
     XPCLock* mMapLock;
     nsVoidArray mWrappedJSToReleaseArray;
+    nsVoidArray mNativesToReleaseArray;
+    JSBool mMainThreadOnlyGC;
+    JSBool mDeferReleases;
+    JSBool mDoingFinalization;
 };
 
 /***************************************************************************/
