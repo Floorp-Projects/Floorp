@@ -367,3 +367,49 @@ nsresult nsFileSpec::Execute(const nsString& args) const
   SET_UCS( Execute , args.GetUnicode());
 }
 
+// should work on Macintosh, Unix, and Win32.
+#define kMaxFilenameLength 31  
+
+
+NS_IMETHODIMP
+nsLocalFile::MakeUnique(const char* suggestedName)
+{
+    PRBool exists;
+    nsresult rv = Exists(&exists);
+    
+    if (NS_FAILED(rv)) return rv;
+    if (!exists) return NS_OK;
+
+    char* leafName; 
+    rv = GetLeafName(&leafName);
+
+    if (NS_FAILED(rv)) return rv;
+
+    char* lastDot = strrchr(leafName, '.');
+    char* suffix = "";
+    if (lastDot)
+    {
+        suffix = nsCRT::strdup(lastDot); // include '.'
+        *lastDot = '\0'; // strip suffix and dot.
+    }
+
+    // 27 should work on Macintosh, Unix, and Win32. 
+    const int maxRootLength = 27 - nsCRT::strlen(suffix) - 1;
+
+    if ((int)nsCRT::strlen(leafName) > (int)maxRootLength)
+        leafName[maxRootLength] = '\0';
+
+    for (short indx = 1; indx < 10000 && exists; indx++)
+    {
+        // start with "Picture-1.jpg" after "Picture.jpg" exists
+        char newName[kMaxFilenameLength + 1];
+        sprintf(newName, "%s-%d%s", leafName, indx, suffix);
+        SetLeafName(newName);
+
+        rv = Exists(&exists);
+        if (NS_FAILED(rv)) return rv;
+    }
+    return NS_OK;
+}
+
+

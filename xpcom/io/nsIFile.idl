@@ -231,6 +231,12 @@ interface nsIFile : nsISupports
     boolean isSpecial();
 
     /**
+     * .
+     */
+    void makeUnique(in string suggestedName);
+    
+
+    /**
       * clone()
       *
       * This function will allocate and initialize a nsIFile object to the
@@ -258,7 +264,7 @@ interface nsIFile : nsISupports
      * Parent will be nsnull when this is at the top of the volume.
      */
     readonly attribute nsIFile parent;
-
+    
     /**
      * Returns an enumeration of the elements in a directory. Each
      * element in the enumeration is an nsIFile.

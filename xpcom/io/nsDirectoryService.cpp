@@ -538,7 +538,21 @@ NS_IMETHODIMP
 nsDirectoryService::Get(const char* prop, const nsIID & uuid, void* *result)
 {
     nsStringKey key(prop);
-    if (!mHashtable->Exists(&key))
+    
+    nsCOMPtr<nsISupports> value = dont_AddRef(mHashtable->Get(&key));
+    
+    if (value)
+    {
+        nsCOMPtr<nsIFile> cloneFile;
+        nsCOMPtr<nsIFile> cachedFile = do_QueryInterface(value);
+        
+        if (!cachedFile)
+            return NS_ERROR_NULL_POINTER;
+
+        cachedFile->Clone(getter_AddRefs(cloneFile));
+        return cloneFile->QueryInterface(uuid, result);
+    }
+    else
     {
       // it is not one of our defaults, lets check any providers
       FileData fileData;
@@ -550,30 +564,14 @@ nsDirectoryService::Get(const char* prop, const nsIID & uuid, void* *result)
       
       if (fileData.file)
       {
-        if (!fileData.persistant)
+        if (fileData.persistant)
 		{
-			nsresult rv = (fileData.file)->QueryInterface(uuid, result);
-			NS_RELEASE(fileData.file);
-			return rv;
+			Set(prop, NS_STATIC_CAST(nsIFile*, fileData.file));
 		}
-		Set(prop, NS_STATIC_CAST(nsIFile*, fileData.file));
-        NS_RELEASE(fileData.file);
+        nsresult rv = (fileData.file)->QueryInterface(uuid, result);
+		NS_RELEASE(fileData.file);  // addref occurs in FindProviderFile()
+		return rv;
       } 
-    }
-
-    
-    // now check again to see if it was added above.
-    if (mHashtable->Exists(&key))
-    {
-      nsCOMPtr<nsIFile> ourFile;
-      nsCOMPtr<nsISupports> value = getter_AddRefs (mHashtable->Get(&key));
-      
-      if (value && NS_SUCCEEDED(value->QueryInterface(NS_GET_IID(nsIFile), getter_AddRefs(ourFile))))
-      {
-        nsCOMPtr<nsIFile> cloneFile;
-        ourFile->Clone(getter_AddRefs(cloneFile));
-        return cloneFile->QueryInterface(uuid, result);
-      }
     }
 
     return NS_ERROR_FAILURE;
@@ -593,7 +591,7 @@ nsDirectoryService::Set(const char* prop, nsISupports* value)
       nsCOMPtr<nsIFile> cloneFile;
       ourFile->Clone (getter_AddRefs (cloneFile));
       mHashtable->Put(&key, cloneFile);
-        return NS_OK;
+      return NS_OK;
     }
     return NS_ERROR_FAILURE;   
 }
