@@ -139,7 +139,9 @@ namespace JavaScript {
 
 	char *doubleToStr(char *buffer, size_t bufferSize, double value, DToStrMode mode, int precision);
 	size_t doubleToBaseStr(char *buffer, double value, uint base);
-	void printDouble(String &dst, double value, DToStrMode mode = dtosStandard, int precision = 0);
-	inline String &operator+=(String &s, double value) {printDouble(s, value); return s;}
+	void appendDouble(String &dst, double value, DToStrMode mode = dtosStandard, int precision = 0);
+	inline String &operator+=(String &s, double value) {appendDouble(s, value); return s;}
+	void printDouble(Formatter &f, double value, DToStrMode mode = dtosStandard, int precision = 0);
+	inline Formatter &operator<<(Formatter &f, double value) {printDouble(f, value); return f;}
 }
 #endif
