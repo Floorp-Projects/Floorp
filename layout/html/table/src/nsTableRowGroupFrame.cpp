@@ -872,29 +872,30 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
 
         rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, aStatus);
         kidFrame->SizeTo(desiredSize.width, desiredSize.height);
-        NS_ASSERTION(NS_FRAME_IS_NOT_COMPLETE(aStatus), "unexpected status");
         ((nsTableRowFrame *)kidFrame)->DidResize(aPresContext, aReflowState);
-
-        // Create a continuing frame, add it to the child list, and then push it
-        // and the frames that follow
-        // XXX Check whether it already has a next-in-flow
-        nsIFrame*        continuingFrame;
-        nsIStyleContext* kidSC;
-
-        kidFrame->GetStyleContext(kidSC);
-        kidFrame->CreateContinuingFrame(aPresContext, this, kidSC, continuingFrame);
-        NS_RELEASE(kidSC);
-
-        // Add it to the child list
-        nsIFrame* nextSibling;
-
-        kidFrame->GetNextSibling(nextSibling);
-        continuingFrame->SetNextSibling(nextSibling);
-        kidFrame->SetNextSibling(continuingFrame);
-
-        // Push it and the frames that follow
-        PushChildren(continuingFrame, kidFrame);
         aDesiredSize.height = desiredSize.height;
+
+        if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+          // Create a continuing frame, add it to the child list, and then push it
+          // and the frames that follow
+          // XXX Check whether it already has a next-in-flow
+          nsIFrame*        continuingFrame;
+          nsIStyleContext* kidSC;
+  
+          kidFrame->GetStyleContext(kidSC);
+          kidFrame->CreateContinuingFrame(aPresContext, this, kidSC, continuingFrame);
+          NS_RELEASE(kidSC);
+  
+          // Add it to the child list
+          nsIFrame* nextSibling;
+  
+          kidFrame->GetNextSibling(nextSibling);
+          continuingFrame->SetNextSibling(nextSibling);
+          kidFrame->SetNextSibling(continuingFrame);
+  
+          // Push it and the frames that follow
+          PushChildren(continuingFrame, kidFrame);
+        }
 
       } else {
         // See whether the row frame has cells that span into it or across it
