@@ -37,248 +37,189 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsNativeAppSupportBase.h"
 #include "nsString.h"
-#include "nsICmdLineService.h"
-#include "nsCOMPtr.h"
-#include "nsXPIDLString.h"
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
-#include "nsIAppShellService.h"
-#include "nsAppShellCIDs.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIObserver.h"
 
 #include <Application.h>
 #include <Window.h>
 #include <View.h>
+#include <StringView.h>
 #include <Bitmap.h>
 #include <Screen.h>
+#include <Font.h>
 #include <Resources.h>
 
 #ifdef DEBUG
 #define DEBUG_SPLASH 1
 #endif
 
-class nsSplashScreenBeOS : public nsISplashScreen {
+class nsSplashScreenBeOS : public nsISplashScreen,
+                           public nsIObserver {
 public:
-    nsSplashScreenBeOS();
-    ~nsSplashScreenBeOS();
+	nsSplashScreenBeOS();
+	virtual ~nsSplashScreenBeOS();
 
-    NS_IMETHOD Show();
-    NS_IMETHOD Hide();
+	NS_DECL_ISUPPORTS
 
-    // nsISupports methods
-    NS_IMETHOD_(nsrefcnt) AddRef() {
-        mRefCnt++;
-        return mRefCnt;
-    }
-    NS_IMETHOD_(nsrefcnt) Release() {
-        --mRefCnt;
-        if ( !mRefCnt ) {
-            delete this;
-            return 0;
-        }
-        return mRefCnt;
-    }
-    NS_IMETHOD QueryInterface( const nsIID &iid, void**p ) {
-        nsresult rv = NS_OK;
-        if ( p ) {
-            *p = 0;
-            if ( iid.Equals( NS_GET_IID( nsISplashScreen ) ) ) {
-                nsISplashScreen *result = this;
-                *p = result;
-                NS_ADDREF( result );
-            } else if ( iid.Equals( NS_GET_IID( nsISupports ) ) ) {
-                nsISupports *result = NS_STATIC_CAST( nsISupports*, this );
-                *p = result;
-                NS_ADDREF( result );
-            } else {
-                rv = NS_NOINTERFACE;
-            }
-        } else {
-            rv = NS_ERROR_NULL_POINTER;
-        }
-        return rv;
-    }
+	NS_IMETHOD Show();
+	NS_IMETHOD Hide();
+
+	NS_DECL_NSIOBSERVER
 
 private:
-    nsresult LoadBitmap();
+	nsresult LoadBitmap();
 
-    nsrefcnt mRefCnt;
-    BWindow *window;
-    BBitmap *bitmap;
+	BWindow *window;
+	BBitmap *bitmap;
+  BStringView *textView;
 }; // class nsSplashScreenBeOS
 
-class nsNativeAppSupportBeOS : public nsNativeAppSupportBase {
-public:
-    // Overrides of base implementation.
-    NS_IMETHOD Start( PRBool *aResult );
-    NS_IMETHOD Stop( PRBool *aResult );
-    NS_IMETHOD Quit();
-
-private:
-    nsrefcnt mRefCnt;
-}; // nsNativeAppSupportBeOS
-
 nsSplashScreenBeOS::nsSplashScreenBeOS()
-    : mRefCnt( 0 ) , window( NULL ) , bitmap( NULL ) {
+		: window( NULL ) , bitmap( NULL ), textView(NULL) {
+	NS_INIT_REFCNT();
 #ifdef DEBUG_SPLASH
-    puts("nsSplashScreenBeOS::nsSlpashScreenBeOS()");
+	puts("nsSplashScreenBeOS::nsSlpashScreenBeOS()");
 #endif
 }
 
 nsSplashScreenBeOS::~nsSplashScreenBeOS() {
 #ifdef DEBUG_SPLASH
-    puts("nsSplashScreenBeOS::~nsSlpashScreenBeOS()");
+	puts("nsSplashScreenBeOS::~nsSlpashScreenBeOS()");
 #endif
-    Hide();
+	Hide();
 }
+
+NS_IMPL_ISUPPORTS2(nsSplashScreenBeOS, nsISplashScreen, nsIObserver);
 
 NS_IMETHODIMP
 nsSplashScreenBeOS::Show() {
 #ifdef DEBUG_SPLASH
-    puts("nsSplashScreenBeOS::Show()");
+	puts("nsSplashScreenBeOS::Show()");
 #endif
-    if (NULL == bitmap && NS_OK != LoadBitmap())
-        return NS_ERROR_FAILURE;
+	if (NULL == bitmap && NS_OK != LoadBitmap())
+		return NS_ERROR_FAILURE;
 
-    // Get the center position.
-    BScreen scr;
-    BRect scrRect = scr.Frame();
-    BRect bmpRect = bitmap->Bounds();
-    float winX = (scrRect.right - bmpRect.right) / 2;
-    float winY = (scrRect.bottom - bmpRect.bottom) / 2;
-    BRect winRect(winX, winY, winX + bmpRect.right, winY + bmpRect.bottom);
+	// Get the center position.
+	BScreen scr;
+	BRect scrRect = scr.Frame();
+	BRect bmpRect = bitmap->Bounds();
+	float winX = (scrRect.right - bmpRect.right) / 2;
+	float winY = (scrRect.bottom - bmpRect.bottom) / 2;
+	BRect winRect(winX, winY, winX + bmpRect.right, winY + bmpRect.bottom);
 #ifdef DEBUG_SPLASH
-    printf("SplashRect (%f, %f) - (%f, %f)\n", winRect.left, winRect.top,
-	winRect.right, winRect.bottom);
+	printf("SplashRect (%f, %f) - (%f, %f)\n", winRect.left, winRect.top,
+	       winRect.right, winRect.bottom);
 #endif
-    if (NULL == window) {
-        window = new BWindow(winRect,
-		"mozilla splash",
-		B_NO_BORDER_WINDOW_LOOK,
-		B_MODAL_APP_WINDOW_FEEL,
-		0);
-        if (NULL == window)
-            return NS_ERROR_FAILURE;
-        BView *view = new BView(bmpRect, "splash view", B_FOLLOW_ALL_SIDES, B_WILL_DRAW);
-        if (NULL != view) {
-            window->AddChild(view);
-            view->SetViewBitmap(bitmap);
-        }
-        window->Show();
-    }
-    return NS_OK;
+	if (NULL == window) {
+		window = new BWindow(winRect,
+		                     "mozilla splash",
+		                     B_NO_BORDER_WINDOW_LOOK,
+		                     B_MODAL_APP_WINDOW_FEEL,
+		                     0);
+		if (NULL == window)
+			return NS_ERROR_FAILURE;
+		BView *view = new BView(bmpRect, "splash view", B_FOLLOW_ALL_SIDES, B_WILL_DRAW);
+		if (NULL != view) {
+			window->AddChild(view);
+			view->SetViewBitmap(bitmap);
+		}
+		window->Show();
+	}
+	return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSplashScreenBeOS::Hide() {
 #ifdef DEBUG_SPLASH
-    puts("nsSplashScreenBeOS::Hide()");
+	puts("nsSplashScreenBeOS::Hide()");
 #endif
-    if (NULL != window) {
-        if (window->Lock())
-          window->Quit();
-        window = NULL;
-    }
-    if (NULL != bitmap) {
-        delete bitmap;
-        bitmap = NULL;
-    }
-    return NS_OK;
+	if (NULL != window) {
+		if (window->Lock())
+			window->Quit();
+		window = NULL;
+	}
+	if (NULL != bitmap) {
+		delete bitmap;
+		bitmap = NULL;
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSplashScreenBeOS::Observe(nsISupports *aSubject,
+                            const char *aTopic,
+                            const PRUnichar *someData)
+{
+	nsCAutoString statusString;
+	statusString.AssignWithConversion(someData);
+	if (textView == NULL) {
+		BRect textRect = bitmap->Bounds();
+		// Reduce the view size, and take into account the image frame
+		textRect.bottom -= 10;
+		textRect.left += 10;
+		textRect.right -= 10; 
+		textRect.top = textRect.bottom - 20;
+		textView = new BStringView(textRect,
+		                           "splash text",
+		                           statusString.get(), 
+		                           B_FOLLOW_LEFT | B_FOLLOW_V_CENTER);
+		textView->SetViewColor(B_TRANSPARENT_COLOR);
+		textView->SetHighColor(255,255,255,0);
+		textView->SetLowColor(0,0,0,0);
+		if (textView != NULL) {
+			window->AddChild(textView);
+		}
+	} else {
+		if (textView->LockLooper()) {
+			textView->SetText(statusString.get());
+			textView->UnlockLooper();
+		}
+	}
+	return NS_OK;
 }
 
 nsresult
 nsSplashScreenBeOS::LoadBitmap() {
-    BResources *rsrc = be_app->AppResources();
-    if (NULL == rsrc)
-        return NS_ERROR_FAILURE;
-    size_t length;
-    const void *data = rsrc->LoadResource('BBMP', "MOZILLA:SPLASH", &length);
-    if (NULL == data)
-        return NS_ERROR_FAILURE;
-    BMessage msg;
-    if (B_OK != msg.Unflatten((const char *)data))
-        return NS_ERROR_FAILURE;
-    BBitmap *bmp = new BBitmap(&msg);
-    if (NULL == bmp)
-        return NS_ERROR_FAILURE;
-    bitmap = new BBitmap(bmp, true);
-    if (NULL == bitmap) {
-        delete bmp;
-        return NS_ERROR_FAILURE;
-    }
-    return NS_OK;
+	BResources *rsrc = be_app->AppResources();
+	if (NULL == rsrc)
+		return NS_ERROR_FAILURE;
+	size_t length;
+	const void *data = rsrc->LoadResource('BBMP', "MOZILLA:SPLASH", &length);
+	if (NULL == data)
+		return NS_ERROR_FAILURE;
+	BMessage msg;
+	if (B_OK != msg.Unflatten((const char *)data))
+		return NS_ERROR_FAILURE;
+	BBitmap *bmp = new BBitmap(&msg);
+	if (NULL == bmp)
+		return NS_ERROR_FAILURE;
+	bitmap = new BBitmap(bmp, true);
+	if (NULL == bitmap) {
+		delete bmp;
+		return NS_ERROR_FAILURE;
+	}
+	return NS_OK;
 }
 
-// Create and return an instance of class nsNativeAppSupportBeOS.
-nsresult
-NS_CreateNativeAppSupport( nsINativeAppSupport **aResult ) {
-    if ( aResult ) {
-        *aResult = new nsNativeAppSupportBeOS();
-        if ( *aResult ) {
-            NS_ADDREF( *aResult );
-        } else {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-    } else {
-        return NS_ERROR_NULL_POINTER;
-    }
-    return NS_OK;
-}
 
 // Create instance of BeOS splash screen object.
 nsresult
 NS_CreateSplashScreen( nsISplashScreen **aResult ) {
-    if ( aResult ) {
-        *aResult = new nsSplashScreenBeOS;
-        if ( *aResult ) {
-            NS_ADDREF( *aResult );
-        } else {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-    } else {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    return NS_OK;
+	if ( aResult ) {
+		*aResult = new nsSplashScreenBeOS;
+		if ( *aResult ) {
+			NS_ADDREF( *aResult );
+			return NS_OK;
+		} else {
+			return NS_ERROR_OUT_OF_MEMORY;
+		}
+	} else {
+		return NS_ERROR_NULL_POINTER;
+	}
 }
 
-NS_IMETHODIMP
-nsNativeAppSupportBeOS::Start( PRBool *aResult ) {
-    NS_ENSURE_ARG( aResult );
-
-    nsresult rv = NS_OK;
-#ifdef DEBUG_SPLASH
-    puts("nsNativeAppSupportBeOS::Start()");
-#endif
-    *aResult = PR_TRUE;
-
-    return rv;
-}
-
-NS_IMETHODIMP
-nsNativeAppSupportBeOS::Stop( PRBool *aResult ) {
-    NS_ENSURE_ARG( aResult );
-
-    nsresult rv = NS_OK;
-#ifdef DEBUG_SPLASH
-    puts("nsNativeAppSupportBeOS::Stop()");
-#endif
-    *aResult = PR_TRUE;
-
-    return rv;
-}
-
-NS_IMETHODIMP
-nsNativeAppSupportBeOS::Quit() {
-#ifdef DEBUG_SPLASH
-    puts("nsNativeAppSupportBeOS::Quit()");
-#endif
-
-    return NS_OK;
-}
 
 PRBool NS_CanRun()
 {
-    return PR_TRUE;
+	return PR_TRUE;
 }
 

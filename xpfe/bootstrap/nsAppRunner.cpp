@@ -188,7 +188,7 @@ private:
         appFileInfo.SetTo(&file) != B_OK ||
         appFileInfo.GetSignature(sig) != B_OK)
     {
-      return "application/x-vnd.mozilla.apprunner";
+      return "application/x-vnd.Mozilla";
     }
     return sig;
   }
@@ -317,7 +317,7 @@ PRBool NS_CanRun()
 //       then rely on nsINativeAppSupport and its use of
 //       nsISplashScreen will be removed.
 //
-#if !defined( XP_PC ) && !defined( XP_BEOS ) && !defined(MOZ_WIDGET_GTK)
+#if !defined( XP_PC ) && !defined(MOZ_WIDGET_GTK)
 
 nsresult NS_CreateNativeAppSupport( nsINativeAppSupport **aResult )
 {
@@ -1208,7 +1208,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
         splashScreen->Hide();
       }
     }
-
     // Release argument object.
     NS_IF_RELEASE(nativeApp);
     return rv;
