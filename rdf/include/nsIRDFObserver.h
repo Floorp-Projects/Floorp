@@ -24,7 +24,6 @@
 */
 
 #include "nsISupports.h"
-#include "rdf.h"
 
 
 // 3cc75360-484a-11d2-bc16-00805f912fe7

@@ -21,8 +21,8 @@ MODULE = rdf
 
 DEPTH = ..\..
 
-EXPORTS	= rdf.h \
-	rdfc.h \
+EXPORTS	= \
+        rdf.h \
 	nsIRDFCursor.h \
 	nsIRDFDataBase.h \
 	nsIRDFDataSource.h \
@@ -30,11 +30,7 @@ EXPORTS	= rdf.h \
 	nsIRDFObserver.h \
         nsIRDFRegistry.h \
         nsIRDFResourceManager.h \
-	nsIRDFService.h \
         nsRDFCID.h \
-	htrdf.h \
-	vocab.h \
-	jsec2rdf.h \
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>

@@ -20,9 +20,6 @@
 #ifndef rdf_h___
 #define rdf_h___
 
-#include "nspr.h"
-#include "nsError.h"
-
 /*
  * The following macros are to aid in vocabulary definition.
  * They creates const char*'s for "kURI[prefix]_[name]" and
@@ -41,97 +38,5 @@
 #define DEFINE_RDF_VOCAB(namespace, prefix, name) \
 static const char  kURI##prefix##_##name [] = ##namespace #name ;\
 static const char* kTag##prefix##_##name    = kURI##prefix##_##name## + sizeof(##namespace) - 1
-
-
-typedef int RDF_Error;
-
-#define RDF_ERROR_ILLEGAL_ASSERT 1 /* NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_RDF,1) */
-#define RDF_ERROR_ILLEGAL_KILL   2 /* NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_RDF,2) */
-#define RDF_ERROR_UNABLE_TO_CREATE 3 /*NS_ERROR_GENERATE_FAILURE( NS_ERROR_MODULE_RDF,3) */
-
-#define RDF_ERROR_NO_MEMORY NS_ERROR_OUT_OF_MEMORY /* XXX remove this */
-
-NSPR_BEGIN_EXTERN_C
-
-typedef struct RDF_ResourceStruct* RDF_Resource;
-typedef struct RDF_CursorStruct* RDF_Cursor;
-typedef struct RDF_DBStruct* RDF;
-typedef struct RDF_TranslatorStruct *RDFT;
-
-typedef char* RDF_String;
-
-typedef enum { 
-  RDF_ANY_TYPE,
-  RDF_RESOURCE_TYPE,
-  RDF_INT_TYPE,
-  RDF_STRING_TYPE,
-#ifdef RDF_BLOB
-  RDF_BLOB_TYPE
-#endif
-} RDF_ValueType;
-
-
-#ifdef RDF_BLOB
-typedef struct RDF_BlobStruct {
-  PRUint32 size;
-  void* data;
-} *RDF_Blob;
-#endif
-
-typedef PRUint32 RDF_EventType;
-#define RDF_ASSERT_NOTIFY	((RDF_EventType)0x00000001)
-#define RDF_DELETE_NOTIFY	((RDF_EventType)0x00000002)
-#define RDF_KILL_NOTIFY		((RDF_EventType)0x00000004)
-#define RDF_CREATE_NOTIFY	((RDF_EventType)0x00000008)
-#define RDF_RESOURCE_GC_NOTIFY	((RDF_EventType)0x00000010)
-#define RDF_INSERT_NOTIFY	((RDF_EventType)0x00000020)
-
-typedef PRUint32 RDF_EventMask;
-#define RDF_ANY_NOTIFY      ((RDF_EventMask)0xFFFFFFFF)
-
-typedef struct  RDF_AssertEventStruct {
-  RDF_Resource u;
-  RDF_Resource s;
-  void*        v;
-  RDF_ValueType type;
-  PRBool       tv;
-  char*        dataSource;
-} *RDF_AssertEvent;
-
-
-typedef struct RDF_UnassertEventStruct {
-  RDF_Resource u;
-  RDF_Resource s;
-  void*        v;
-  RDF_ValueType type;
-  char*        dataSource;
-} *RDF_UnassertEvent;
-
-typedef struct RDF_KillEventStruct {
-  RDF_Resource u;
-} *RDF_KillEvent;
-
-
-typedef struct RDF_EventStruct {
-  RDF_EventType eventType;
-  union ev {
-    struct RDF_AssertEventStruct assert;
-    struct RDF_UnassertEventStruct unassert;
-    struct RDF_KillEventStruct    kill;
-  } event;
-} *RDF_Event;
-
-#include "vocab.h"
-#include "rdfc.h"
-
-NSPR_END_EXTERN_C
-
-#ifdef __cplusplus
-#include "nsIRDFDataSource.h"
-#include "nsIRDFDataBase.h"
-#include "nsIRDFObserver.h"
-#include "nsIRDFService.h"
-#include "nsIRDFCursor.h"
-#endif
 
 #endif /* rdf_h___ */
