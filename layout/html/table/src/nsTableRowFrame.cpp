@@ -252,7 +252,7 @@ nsTableRowFrame::DidResize(nsIPresContext* aPresContext,
     const nsStyleDisplay *kidDisplay;
     cellFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)kidDisplay));
     if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay) {
-      PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(GetRowIndex(), (nsTableCellFrame *)cellFrame);
+      PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan((nsTableCellFrame &)*cellFrame);
       nscoord cellHeight = rowCellHeight;
       // add in height of rows spanned beyond the 1st one
       nsIFrame* nextRow = nsnull;
@@ -486,7 +486,7 @@ void nsTableRowFrame::GetMinRowSpan(nsTableFrame *aTableFrame)
     frame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)kidDisplay));
     if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay)
     {
-      PRInt32 rowSpan = aTableFrame->GetEffectiveRowSpan(GetRowIndex(), ((nsTableCellFrame *)frame));
+      PRInt32 rowSpan = aTableFrame->GetEffectiveRowSpan((nsTableCellFrame &)*frame);
       if (-1==minRowSpan)
         minRowSpan = rowSpan;
       else if (minRowSpan>rowSpan)
@@ -506,7 +506,7 @@ void nsTableRowFrame::FixMinCellHeight(nsTableFrame *aTableFrame)
     frame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)kidDisplay));
     if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay)
     {
-      PRInt32 rowSpan = aTableFrame->GetEffectiveRowSpan(GetRowIndex(), ((nsTableCellFrame *)frame));
+      PRInt32 rowSpan = aTableFrame->GetEffectiveRowSpan((nsTableCellFrame &)*frame);
       if (PRInt32(mBits.mMinRowSpan) ==rowSpan)
       {
         nsRect rect;
@@ -538,7 +538,7 @@ void nsTableRowFrame::PlaceChild(nsIPresContext*      aPresContext,
   aReflowState.x += aDesiredSize.width;
 
   // Update the maximum element size
-  PRInt32 rowSpan = aReflowState.tableFrame->GetEffectiveRowSpan((nsTableCellFrame*)aKidFrame);
+  PRInt32 rowSpan = aReflowState.tableFrame->GetEffectiveRowSpan((nsTableCellFrame&)*aKidFrame);
   if (nsnull != aMaxElementSize) {
     aMaxElementSize->width += aKidMaxElementSize->width;
     if (1 == rowSpan) {
@@ -732,8 +732,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
       if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay) {
         PRInt32 cellColIndex;
         ((nsTableCellFrame *)kidFrame)->GetColIndex(cellColIndex);
-        cellColSpan = aReflowState.tableFrame->GetEffectiveColSpan(cellColIndex,
-                                                                   ((nsTableCellFrame &)*kidFrame));
+        cellColSpan = aReflowState.tableFrame->GetEffectiveColSpan((nsTableCellFrame &)*kidFrame);
    
         // Compute the x-origin for the child, taking into account straddlers (cells from prior
         // rows with rowspans > 1)
@@ -1059,7 +1058,7 @@ NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext* aPresContext,
 
         // Update maxCellHeight and maxVertCellSpace. When determining this we
         // don't include cells that span rows
-        PRInt32 rowSpan = aReflowState.tableFrame->GetEffectiveRowSpan(GetRowIndex(), ((nsTableCellFrame *)frame));
+        PRInt32 rowSpan = aReflowState.tableFrame->GetEffectiveRowSpan((nsTableCellFrame &)*frame);
         if (PRInt32(mBits.mMinRowSpan) == rowSpan) {
           // Get the cell's desired height the last time it was reflowed
           nsSize  desiredSize = ((nsTableCellFrame *)frame)->GetDesiredSize();
@@ -1210,8 +1209,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     // At this point, we know the column widths. Compute the cell available width
     PRInt32 cellColIndex;
     ((nsTableCellFrame *)aNextFrame)->GetColIndex(cellColIndex);
-    PRInt32 cellColSpan = aReflowState.tableFrame->GetEffectiveColSpan(cellColIndex,
-                                                                       ((nsTableCellFrame &)*aNextFrame));
+    PRInt32 cellColSpan = aReflowState.tableFrame->GetEffectiveColSpan((nsTableCellFrame &)*aNextFrame);
     nscoord cellSpacingX = aReflowState.tableFrame->GetCellSpacingX();
 
     nscoord cellAvailWidth = CalculateCellAvailableWidth(aReflowState.tableFrame, aNextFrame,

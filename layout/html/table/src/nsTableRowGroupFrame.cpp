@@ -620,7 +620,6 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext,
     // Get the next row
     GetNextFrame(rowFrame, &rowFrame);
   }
-  
 
   /* Step 2:  Now account for cells that span rows. We only do this if there are cells
    *          that span rows.
@@ -656,7 +655,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext,
             if (NS_STYLE_DISPLAY_TABLE_CELL == cellChildDisplay->mDisplay)
             {
               PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(rowIndex + startRowIndex,
-                                                                (nsTableCellFrame*)cellFrame);
+                                                                (nsTableCellFrame&)*cellFrame);
               if (rowSpan > 1)
               { // found a cell with rowspan > 1, determine the height of the rows it
                 // spans

@@ -36,7 +36,8 @@ struct nsColInfo
 {
   PRInt32 mNumCellsOrig; // number of cells originating in the col
   PRInt32 mNumCellsSpan; // number of cells spanning into the col via colspans (not rowspans)
-
+                         // for simplicity, a colspan=0 cell is only counted as spanning the
+                         // 1st col to the right of where it orginates
   nsColInfo(); 
   nsColInfo(PRInt32 aNumCellsOrig,
             PRInt32 aNumCellsSpan);
@@ -93,16 +94,13 @@ public:
                   PRInt32         aNumRowsToRemove,
                   PRBool          aConsiderSpans);
 
-  PRInt32 GetEffectiveColSpan(PRInt32                 aColIndex, 
-                              const nsTableCellFrame& aCell);
-
   PRInt32 GetNumCellsOriginatingInRow(PRInt32 aRowIndex) const;
   PRInt32 GetNumCellsOriginatingInCol(PRInt32 aColIndex) const;
 
-  PRInt32 GetRowSpan(PRInt32 aRowIndex,
-                     PRInt32 aColIndex);
-  PRInt32 GetColSpan(PRInt32 aRowIndex,
-                     PRInt32 aColIndex);
+  PRInt32 GetEffectiveRowSpan(PRInt32 aRowIndex,
+                              PRInt32 aColIndex);
+  PRInt32 GetEffectiveColSpan(PRInt32 aRowIndex,
+                              PRInt32 aColIndex);
 
   /** return the total number of columns in the table represented by this CellMap */
   PRInt32 GetColCount() const;
@@ -183,9 +181,9 @@ public:
                                  PRBool    aUseRowSpanIfOverlap) const;
 
   /** return the CellData for the cell at (aTableRowIndex, aTableColIndex) */
-  CellData* GetCellAt(PRInt32 aRowIndex, 
-                      PRInt32 aColIndex,
-                      PRInt32 aNumColsInTable);
+  CellData* GetCellAt(nsTableCellMap& aMap,
+                      PRInt32         aRowIndex, 
+                      PRInt32         aColIndex);
 
   /** append the cellFrame at the end of the row at aRowIndex and return the col index
     */
@@ -217,11 +215,6 @@ public:
                   PRInt32         aNumRowsToRemove,
                   PRBool          aConsiderSpans);
 
-  PRInt32 GetEffectiveColSpan(PRInt32                 aRowIndex,
-                              PRInt32                 aColIndex,
-                              PRInt32                 aNumColsInTable,
-                              const nsTableCellFrame& aCell);
-
   PRInt32 GetNumCellsOriginatingInRow(PRInt32 aRowIndex) const;
   PRInt32 GetNumCellsOriginatingInCol(PRInt32 aColIndex) const;
 
@@ -229,27 +222,27 @@ public:
   PRInt32 GetRowCount() const;
 
   // temporary until nsTableFrame::GetCellData uses GetCellFrameAt
-  nsTableCellFrame* GetCellFrameOriginatingAt(PRInt32 aRowX, 
-                                              PRInt32 aColX,
-                                              PRInt32 aNumColsInTable);
+  nsTableCellFrame* GetCellFrameOriginatingAt(nsTableCellMap& aMap,
+                                              PRInt32         aRowX, 
+                                              PRInt32         aColX);
 
-  nsTableCellFrame* GetCellInfoAt(PRInt32  aRowX, 
-                                  PRInt32  aColX, 
-                                  PRInt32  aNumColsInTable,
-                                  PRBool*  aOriginates = nsnull, 
-                                  PRInt32* aColSpan = nsnull);
+  nsTableCellFrame* GetCellInfoAt(nsTableCellMap& aMap,
+                                  PRInt32         aRowX, 
+                                  PRInt32         aColX,
+                                  PRBool*         aOriginates = nsnull, 
+                                  PRInt32*        aColSpan = nsnull);
 
-  PRBool RowIsSpannedInto(PRInt32 aRowIndex,
-                          PRInt32 aNumColsInTable);
+  PRBool RowIsSpannedInto(nsTableCellMap& aMap,
+                          PRInt32 aRowIndex);
 
-  PRBool RowHasSpanningCells(PRInt32 aRowIndex,
-                             PRInt32 aNumCols);
+  PRBool RowHasSpanningCells(nsTableCellMap& aMap,
+                             PRInt32         aRowIndex);
 
-  PRBool ColIsSpannedInto(PRInt32 aColIndex,
-                          PRInt32 aNumCols);
+  PRBool ColIsSpannedInto(nsTableCellMap& aMap,
+                          PRInt32         aColIndex);
 
-  PRBool ColHasSpanningCells(PRInt32 aColIndex,
-                             PRInt32 aNumCols);
+  PRBool ColHasSpanningCells(nsTableCellMap& aMap,
+                             PRInt32         aColIndex);
 
   /** dump a representation of the cell map to stdout for debugging */
 #ifdef NS_DEBUG
@@ -277,9 +270,10 @@ protected:
                     PRInt32         aColIndex,
                     PRBool          aCountZeroSpanAsSpan);
 
-  CellData* GetMapCellAt(PRInt32 aMapRowIndex, 
-                         PRInt32 aColIndex,
-                         PRInt32 aNumColsInTable);
+  CellData* GetMapCellAt(nsTableCellMap& aMap,
+                         PRInt32         aMapRowIndex, 
+                         PRInt32         aColIndex,
+                         PRBool          aUpdateZeroSpan);
 
   PRInt32 GetNumCellsIn(PRInt32 aColIndex) const;
 
@@ -316,13 +310,14 @@ protected:
                                PRInt32         aColIndex,
                                PRBool          aInsert);
 
-  PRBool CellsSpanOut(nsIPresContext* aPresContext, nsVoidArray& aNewRows);
+  PRBool CellsSpanOut(nsIPresContext* aPresContext, 
+                      nsVoidArray&    aNewRows);
 
-  PRBool CellsSpanInOrOut(PRInt32 aStartRowIndex, 
-                          PRInt32 aEndRowIndex,
-                          PRInt32 aStartColIndex, 
-                          PRInt32 aEndColIndex,
-                          PRInt32 aNumColsInTable);
+  PRBool CellsSpanInOrOut(nsTableCellMap& aMap,
+                          PRInt32         aStartRowIndex, 
+                          PRInt32         aEndRowIndex,
+                          PRInt32         aStartColIndex, 
+                          PRInt32         aEndColIndex);
 
   void ExpandForZeroSpan(nsTableCellFrame* aCellFrame,
                          PRInt32           aNumColsInTable);
@@ -330,27 +325,29 @@ protected:
   PRBool CreateEmptyRow(PRInt32 aRowIndex,
                         PRInt32 aNumCols);
 
-  PRInt32 GetColSpan(nsTableCellFrame& aCellFrameToAdd, 
-                     PRInt32           aColIndex,
-                     PRInt32           aNumColsInTable,
-                     PRBool&           aIsZeroColSpan);
-  
-  PRInt32 GetColSpan(PRInt32 aRowIndex,
-                     PRInt32 aColIndex,
-                     PRInt32 aNumColsInTable,
-                     PRBool& aIsZeroColSpan);
+  PRInt32 GetRowSpan(nsTableCellMap& aMap,
+                     PRInt32         aRowIndex,
+                     PRInt32         aColIndex,
+                     PRBool          aGetEffective,
+                     PRBool&         aIsZeroRowSpan);
 
-  PRInt32 GetRowSpan(PRInt32 aRowIndex,
-                     PRInt32 aColIndex,
-                     PRBool& aIsZeroRowSpan);
+  PRInt32 GetRowSpanForNewCell(nsTableCellFrame& aCellFrameToAdd, 
+                               PRInt32           aRowIndex,
+                               PRBool&           aIsZeroRowSpan);
 
-  PRInt32 GetRowSpan(nsTableCellFrame& aCellFrameToAdd, 
-                     PRInt32           aRowIndex,
-                     PRBool&           aIsZeroRowSpan);
-  
-  void AdjustForZeroSpan(PRInt32 aRowIndex,
-                         PRInt32 aColIndex,
-                         PRInt32 aNumColsInTable);
+  PRInt32 GetEffectiveColSpan(nsTableCellMap& aMap,
+                              PRInt32         aRowIndex,
+                              PRInt32         aColIndex,
+                              PRBool&         aIsZeroColSpan);
+
+  PRInt32 GetColSpanForNewCell(nsTableCellFrame& aCellFrameToAdd, 
+                               PRInt32           aColIndex,
+                               PRInt32           aNumColsInTable,
+                               PRBool&           aIsZeroColSpan);
+    
+  void AdjustForZeroSpan(nsTableCellMap& aMap,
+                         PRInt32         aRowIndex,
+                         PRInt32         aColIndex);
 
   PRBool IsZeroColSpan(PRInt32 aRowIndex,
                        PRInt32 aColIndex) const;

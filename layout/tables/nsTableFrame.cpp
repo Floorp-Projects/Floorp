@@ -353,44 +353,6 @@ nsTableFrame::SetInitialChildList(nsIPresContext* aPresContext,
   return rv;
 }
 
-PRInt32 
-nsTableFrame::GetColSpan(nsTableCellFrame& aCellFrame) 
-{
-  PRInt32 colspan = aCellFrame.GetColSpan();
-  if (0 == colspan) {
-    nsTableCellMap* cellMap = GetCellMap();
-    if (cellMap) {
-      PRInt32 rowIndex, colIndex;
-      aCellFrame.GetRowIndex(rowIndex);
-      aCellFrame.GetColIndex(colIndex);
-      colspan = cellMap->GetColSpan(rowIndex, colIndex);
-    }
-    else {
-      colspan = 1;
-    }
-  }
-  return colspan;
-}
-
-PRInt32 
-nsTableFrame::GetRowSpan(nsTableCellFrame& aCellFrame) 
-{
-  PRInt32 rowspan = aCellFrame.GetRowSpan();
-  if (0 == rowspan) {
-    nsTableCellMap* cellMap = GetCellMap();
-    if (cellMap) {
-      PRInt32 rowIndex, colIndex;
-      aCellFrame.GetRowIndex(rowIndex);
-      aCellFrame.GetColIndex(colIndex);
-      rowspan = cellMap->GetRowSpan(rowIndex, colIndex);
-    }
-    else {
-      rowspan = 1;
-    }
-  }
-  return rowspan;
-}
-
 void nsTableFrame::AttributeChangedFor(nsIPresContext* aPresContext, 
                                        nsIFrame*       aFrame,
                                        nsIContent*     aContent, 
@@ -472,71 +434,27 @@ nsTableCellFrame* nsTableFrame::GetCellFrameAt(PRInt32 aRowIndex, PRInt32 aColIn
   return nsnull;
 }
 
-// return the number of rows spanned by aCell starting at aRowIndex
-// note that this is different from just the rowspan of aCell
-// (that would be GetEffectiveRowSpan (indexOfRowThatContains_aCell, aCell)
-//
-// XXX This code should be in the table row group frame instead, and it
-// should clip rows spans so they don't extend past a row group rather than
-// clip to the table itself. Before that can happen the code that builds the
-// cell map needs to take row groups into account
-PRInt32 nsTableFrame::GetEffectiveRowSpan (PRInt32 aRowIndex, nsTableCellFrame *aCell)
-{
-  NS_PRECONDITION (nsnull!=aCell, "bad cell arg");
-  NS_PRECONDITION (0<=aRowIndex && aRowIndex<GetRowCount(), "bad row index arg");
 
-  if (!(0<=aRowIndex && aRowIndex<GetRowCount()))
-    return 1;
-
-  // XXX I don't think this is correct...
-#if 0
-  PRInt32 rowSpan = aCell->GetRowSpan();
-  PRInt32 rowCount = GetRowCount();
-  if (rowCount < (aRowIndex + rowSpan))
-    return (rowCount - aRowIndex);
-  return rowSpan;
-#else
-  PRInt32 rowSpan = GetRowSpan(*aCell);
-  PRInt32 rowCount = GetRowCount();
-  PRInt32 startRow;
-  aCell->GetRowIndex(startRow);
-
-  // Clip the row span so it doesn't extend past the bottom of the table
-  if ((startRow + rowSpan) > rowCount) {
-    rowSpan = rowCount - startRow;
-  }
-
-  // Check that aRowIndex is in the range startRow..startRow+rowSpan-1
-  PRInt32 lastRow = startRow + rowSpan - 1;
-  if ((aRowIndex < startRow) || (aRowIndex > lastRow)) {
-    return 0;  // cell doesn't span any rows starting at aRowIndex
-  } else {
-    return lastRow - aRowIndex + 1;
-  }
-#endif
-}
-
-PRInt32 nsTableFrame::GetEffectiveRowSpan(nsTableCellFrame *aCell)
-{
-  PRInt32 startRow;
-  aCell->GetRowIndex(startRow);
-  return GetEffectiveRowSpan(startRow, aCell);
-}
-
-
-// Return the number of cols spanned by aCell starting at aColIndex
-// This is different from the colspan of aCell. If the cell spans no
-// dead cells then the colSpan of the cell would be
-// GetEffectiveColSpan (indexOfColThatContains_aCell, aCell)
-//
-// XXX Should be moved to colgroup, as GetEffectiveRowSpan should be moved to rowgroup?
-PRInt32 nsTableFrame::GetEffectiveColSpan(PRInt32                 aColIndex, 
+PRInt32 nsTableFrame::GetEffectiveRowSpan(PRInt32                 aRowIndex,
                                           const nsTableCellFrame& aCell) const
 {
   nsTableCellMap* cellMap = GetCellMap();
   NS_PRECONDITION (nsnull != cellMap, "bad call, cellMap not yet allocated.");
 
-  return cellMap->GetEffectiveColSpan(aColIndex, aCell);
+  PRInt32 colIndex;
+  aCell.GetColIndex(colIndex);
+  return cellMap->GetEffectiveRowSpan(aRowIndex, colIndex);
+}
+
+PRInt32 nsTableFrame::GetEffectiveRowSpan(const nsTableCellFrame& aCell) const
+{
+  nsTableCellMap* cellMap = GetCellMap();
+  NS_PRECONDITION (nsnull != cellMap, "bad call, cellMap not yet allocated.");
+
+  PRInt32 colIndex, rowIndex;
+  aCell.GetColIndex(colIndex);
+  aCell.GetRowIndex(rowIndex);
+  return cellMap->GetEffectiveRowSpan(rowIndex, colIndex);
 }
 
 PRInt32 nsTableFrame::GetEffectiveColSpan(const nsTableCellFrame& aCell) const
@@ -544,9 +462,10 @@ PRInt32 nsTableFrame::GetEffectiveColSpan(const nsTableCellFrame& aCell) const
   nsTableCellMap* cellMap = GetCellMap();
   NS_PRECONDITION (nsnull != cellMap, "bad call, cellMap not yet allocated.");
 
-  PRInt32 initialColIndex;
-  aCell.GetColIndex(initialColIndex);
-  return cellMap->GetEffectiveColSpan(initialColIndex, aCell);
+  PRInt32 colIndex, rowIndex;
+  aCell.GetColIndex(colIndex);
+  aCell.GetRowIndex(rowIndex);
+  return cellMap->GetEffectiveColSpan(rowIndex, colIndex);
 }
 
 PRInt32 nsTableFrame::GetEffectiveCOLSAttribute()
@@ -4538,8 +4457,8 @@ nsTableFrame::GetCellDataAt(PRInt32        aRowIndex,
     {
       //The nsTableFrame version returns actual value
       // when nsTableCellFrame's return values are "HTML" (i.e., may = 0)
-      rowSpan = GetRowSpan(*cellFrame);
-      colSpan = GetColSpan(*cellFrame);
+      rowSpan = GetEffectiveRowSpan(*cellFrame);
+      colSpan = GetEffectiveColSpan(*cellFrame);
 
       // Check if this extends into the location we want
       if( aRowIndex >= row && aRowIndex < row+rowSpan && 
@@ -4564,8 +4483,8 @@ CELL_FOUND:
             cellFrame = cellMap->GetCellFrameOriginatingAt(row, col);
             if (cellFrame)
             {
-              rowSpan = GetRowSpan(*cellFrame);
-              colSpan = GetColSpan(*cellFrame);
+              rowSpan = GetEffectiveRowSpan(*cellFrame);
+              colSpan = GetEffectiveColSpan(*cellFrame);
               if( aRowIndex >= row && aRowIndex < row+rowSpan && 
                   aColIndex >= col && aColIndex < col+colSpan) 
               {
@@ -4587,8 +4506,8 @@ CELL_FOUND:
   //This returns HTML value, which may be 0
   aRowSpan = cellFrame->GetRowSpan();
   aColSpan = cellFrame->GetColSpan();
-  aActualRowSpan = GetRowSpan(*cellFrame);
-  aActualColSpan = GetColSpan(*cellFrame);
+  aActualRowSpan = GetEffectiveRowSpan(*cellFrame);
+  aActualColSpan = GetEffectiveColSpan(*cellFrame);
   result = cellFrame->GetSelected(&aIsSelected);
   if (NS_FAILED(result)) return result;
 

@@ -826,7 +826,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext* a
           // override the desired, proportional widths
           nscoord colMinWidth = colFrame->GetWidth(MIN_CON);
           colFrame->SetWidth(DES_CON, colMinWidth);
-          colFrame->SetWidth(MIN_PRO, colMinWidth);
+          colFrame->SetWidth(MIN_PRO, 0);
         }
       }
     }
