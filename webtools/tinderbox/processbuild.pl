@@ -61,6 +61,7 @@ sub  get_variables{
 
 
 sub parse_log_variables {
+    my $line;
     while($line = <LOG> ){
         chop($line);
         if( $line =~ /^tinderbox\:/ ){
@@ -72,6 +73,8 @@ sub parse_log_variables {
 }
 
 sub parse_mail_header {
+    my $line;
+    my $name = '';
     while($line = <LOG> ){
         chop($line);
 
@@ -81,6 +84,7 @@ sub parse_mail_header {
 
         if( $line =~ /([^ :]*)\:[ \t]+([^\n]*)/ ){
             $name = $1;
+            $name =~ tr/A-Z/a-z/;
             $MAIL_HEADER{$name} = $2;
             #print "$name $2\n";
         }
@@ -98,6 +102,11 @@ sub check_required_vars {
     }
     elsif( ! -r $tbx{'tree'} ){
         $err_string .= "Variable 'tinderbox:tree' not set to a valid tree.\n";
+    }
+    elsif(($MAIL_HEADER{'to'} =~ /external/i ||
+           $MAIL_HEADER{'cc'} =~ /external/i) &&
+          $tbx{'tree'} !~ /external/i) {
+        $err_string .= "Data from an external source didn't specify an 'external' tree.";
     }
     if( $tbx{'build'} eq ''){
         $err_string .= "Variable 'tinderbox:build' not set.\n";
