@@ -41,7 +41,7 @@ NS_DEF_PTR(nsIStyleContext);
 
 
 #ifdef NS_DEBUG
-static PRBool gsDebug = PR_FALSE;
+static PRBool gsDebug = PR_TRUE;
 static PRBool gsDebugNT = PR_FALSE;
 //#define   NOISY_STYLE
 //#define NOISY_FLOW
@@ -475,6 +475,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
     {
       if (this==target)
       {
+        if (gsDebug) { printf("IR target is cell\n"); }
         nsIReflowCommand::ReflowType type;
         aReflowState.reflowCommand->GetType(type);
         if (nsIReflowCommand::StyleChanged==type)
@@ -483,7 +484,27 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
           aStatus = NS_FRAME_COMPLETE;
           return rv;
         }
+        // BEGIN bug 4577 ---------------------------------------------------------
+        // XXX: this code should be replaced with the assertion below
+        //      the real fix belongs in the incr. reflow dispatch code
+        //      see bug 4577
+        else
+        {
+          nsIFrame *child;
+          FirstChild(nsnull, &child);
+          NS_ASSERTION(nsnull!=child, "cells can never have 0 children");
+          aReflowState.reflowCommand->SetTarget(child);
+        }
+        // XXX: this else block should replace the one above 
+        //      when the incr. relfow dispatch code is changed
+        /*
+        else {
+          NS_ASSERTION(PR_FALSE, "table cell target of illegal incremental reflow type");
+        }
+        */
+        // END bug 4577 -------------------------------------------------------
       }
+      else { printf("IR target is cell content\n"); }
     }
     // if any of these conditions are not true, we just pass the reflow command down
   }
@@ -509,7 +530,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
 #endif
 
   // 0 dimensioned cells need to be treated specially in Standard/NavQuirks mode 
-  // see testcase "cellHeights.html"
+  // see testcase "cellHeight.html"
   if (NS_UNCONSTRAINEDSIZE == kidReflowState.availableWidth) {
     if ((0 == kidSize.width) || (0 == kidSize.height)) {
     //if ((0 == kidSize.width) && (0 == kidSize.height)) { // XXX why was this &&
@@ -615,6 +636,21 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
 
   aDesiredSize.ascent=aDesiredSize.height;
   aDesiredSize.descent=0;
+
+  // if we got this far with an incremental reflow, the reflow was targeted
+  // at the cell's content.  We should only have to redo pass1 for this cell
+  // then rebalance columns. The pass1 is handled by the cell's parent row.
+  // So here all we have to do is tell the table to rebalance.
+  if (eReflowReason_Incremental == aReflowState.reason) 
+  {
+    nsTableFrame* tableFrame=nsnull;
+    rv = nsTableFrame::GetTableFrame(this, tableFrame);
+    if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
+    {
+      tableFrame->InvalidateColumnWidths();
+    }
+  }
+   
 
 #ifdef NS_DEBUG
   //PostReflowCheck(result);
