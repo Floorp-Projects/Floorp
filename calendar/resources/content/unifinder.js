@@ -187,6 +187,8 @@ function formatUnifinderEventTime( time )
 
 function unifinderRefesh()
 {
+   gEventSource.onlyFutureEvents = (document.getElementById( 'unifinder-future-events' ).getAttribute( "checked" ) == "true" );
+   
    var eventTable = gEventSource.getCurrentEvents();
    
    refreshSearchTree( eventTable );
