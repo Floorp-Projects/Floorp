@@ -190,3 +190,10 @@ nsBaseClipboard :: CreateDataFromPrimitive ( const char* aFlavor, nsISupports* a
 
 }
 
+
+NS_IMETHODIMP
+nsBaseClipboard :: HasDataMatchingFlavors ( nsISupportsArray* aFlavorList, PRBool * outResult ) 
+{
+  *outResult = PR_TRUE;  // say we always do.
+  return NS_OK;
+}

@@ -60,8 +60,8 @@ public:
   ~nsMimeMapperMac ( ) ;
    
     // Converts from mime type (eg: text/plain) to MacOS type (eg: 'TEXT').
-  ResType MapMimeTypeToMacOSType ( const nsString & aMimeStr ) ;
-  void MapMacOSTypeToMimeType ( ResType inMacType, nsString & outMimeStr ) ;
+  ResType MapMimeTypeToMacOSType ( const char* aMimeStr ) ;
+  void MapMacOSTypeToMimeType ( ResType inMacType, nsCAutoString & outMimeStr ) ;
  
     // Takes the internal mappings and converts them to a string for
     // placing on the clipboard or in a drag item. |outLength| includes 
@@ -74,7 +74,7 @@ private:
 
   void ParseMappings ( const char* inMappings ) ;
   
-  typedef pair<ResType, nsString>	MimePair;
+  typedef pair<ResType, nsCAutoString>	MimePair;
   typedef std::vector<MimePair>		MimeMap;
   typedef MimeMap::iterator			MimeMapIterator;
   typedef MimeMap::const_iterator	MimeMapConstIterator;

@@ -22,6 +22,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 
+class nsISupportsArray;
 class nsITransferable;
 class nsIClipboardOwner;
 
@@ -73,6 +74,18 @@ class nsIClipboard : public nsISupports {
   
     NS_IMETHOD ForceDataToClipboard() = 0;
 
+   /**
+    * This provides a way to give correct UI feedback about, for instance, a paste 
+    * should be allowed. It does _NOT_ actually retreive the data and should be a very
+    * inexpensive call. All it does is check if there is data on the clipboard matching
+    * any of the flavors in the given list.
+    *
+    * @aFlavorList - nsISupportsString's in a nsISupportsArray (for JavaScript).
+    * @outResult - if data is present matching one of 
+    * @result NS_OK if successful.
+    */
+    NS_IMETHOD HasDataMatchingFlavors ( nsISupportsArray* aFlavorList, PRBool * outResult ) = 0 ;
+    
 };
 
 #endif

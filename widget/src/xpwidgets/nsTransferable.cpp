@@ -62,7 +62,7 @@ struct DataStruct
   void GetData( nsISupports** outData, PRUint32 *outDataLen );
   nsIFileSpec * GetFileSpec(const char * aFileName);
   PRBool IsDataAvilable() { return (mData && mDataLen > 0) || (!mData && mCacheFileName); }
-  nsString   mFlavor;
+  nsCAutoString mFlavor;
 
 protected:
   nsresult WriteCache(nsISupports* aData, PRUint32 aDataLen );
@@ -283,11 +283,9 @@ nsTransferable :: GetTransferDataFlavors(nsISupportsArray ** aDataFlavorList)
       rv = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
                                                NS_GET_IID(nsISupportsString), getter_AddRefs(flavorWrapper));
       if ( flavorWrapper ) {
-        char* tempBecauseNSStringIsLame = data->mFlavor.ToNewCString();
-        flavorWrapper->SetData ( tempBecauseNSStringIsLame );
+        flavorWrapper->SetData ( NS_CONST_CAST(char*, data->mFlavor.GetBuffer()) );
         nsCOMPtr<nsISupports> genericWrapper ( do_QueryInterface(flavorWrapper) );
         (*aDataFlavorList)->AppendElement( genericWrapper );
-        delete [] tempBecauseNSStringIsLame;
       }
     }
   }
@@ -328,17 +326,15 @@ nsTransferable :: GetTransferData(const char *aFlavor, nsISupports **aData, PRUi
   if ( !found && mFormatConv ) {
     for (i=0;i<mDataArray->Count();i++) {
       DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-      char* tempBecauseNSStringIsLame = data->mFlavor.ToNewCString();
       PRBool canConvert = PR_FALSE;
-      mFormatConv->CanConvert(tempBecauseNSStringIsLame, aFlavor, &canConvert);
+      mFormatConv->CanConvert(data->mFlavor.GetBuffer(), aFlavor, &canConvert);
       if ( canConvert ) {
         nsCOMPtr<nsISupports> dataBytes;
         PRUint32 len;
         data->GetData(getter_AddRefs(dataBytes), &len);
-        mFormatConv->Convert(tempBecauseNSStringIsLame, dataBytes, len, aFlavor, aData, aDataLen);
+        mFormatConv->Convert(data->mFlavor.GetBuffer(), dataBytes, len, aFlavor, aData, aDataLen);
         found = PR_TRUE;
       }
-      delete [] tempBecauseNSStringIsLame;
     }
   }
   return found ? NS_OK : NS_ERROR_FAILURE;

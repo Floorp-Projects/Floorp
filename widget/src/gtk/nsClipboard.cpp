@@ -29,12 +29,9 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
+#include "nsXPIDLString.h"
 
 #include "nsVoidArray.h"
-
-// XXX: This must go away when nsAutoCString moves out of nsFileSpec.h
-#include "nsFileSpec.h" // for nsAutoCString()
-
 
 
 // The class statics:
@@ -264,14 +261,12 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
     flavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
     nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
     if ( currentFlavor ) {
-      char* flavorStr;
-      currentFlavor->ToString(&flavorStr);
+      nsXPIDLCString flavorStr;
+      currentFlavor->ToString(getter_Copies(flavorStr));
       gint format = GetFormat(flavorStr);
 
       // add these types as selection targets
       RegisterFormat(format);
-      
-      delete [] flavorStr;
     }
   }
 
@@ -287,42 +282,38 @@ void nsClipboard::AddTarget(GdkAtom aAtom)
                            aAtom, aAtom);
 }
 
-gint nsClipboard::GetFormat(const nsString &aMimeStr)
+gint nsClipboard::GetFormat(const char* aMimeStr)
 {
   gint type = TARGET_NONE;
-
+  nsCAutoString mimeStr ( CBufDescriptor(NS_CONST_CAST(char*,aMimeStr), PR_TRUE, PL_strlen(aMimeStr)+1) );
 #ifdef DEBUG_CLIPBOARD
-  char *foo = aMimeStr.ToNewCString();
-  g_print("  nsClipboard::GetFormat(%s)\n", foo);
-  delete [] foo;
+  g_print("  nsClipboard::GetFormat(%s)\n", aMimeStr);
 #endif
-  if (aMimeStr.Equals(kTextMime)) {
+  if (mimeStr.Equals(kTextMime)) {
     type = TARGET_TEXT_PLAIN;
-  } else if (aMimeStr.Equals("STRING")) {
+  } else if (mimeStr.Equals("STRING")) {
     type = TARGET_TEXT_PLAIN;
-  } else if (aMimeStr.Equals(kXIFMime)) {
+  } else if (mimeStr.Equals(kXIFMime)) {
     type = TARGET_TEXT_XIF;
-  } else if (aMimeStr.Equals(kUnicodeMime)) {
+  } else if (mimeStr.Equals(kUnicodeMime)) {
     type = TARGET_TEXT_UNICODE;
-  } else if (aMimeStr.Equals(kHTMLMime)) {
+  } else if (mimeStr.Equals(kHTMLMime)) {
     type = TARGET_TEXT_HTML;
-  } else if (aMimeStr.Equals(kAOLMailMime)) {
+  } else if (mimeStr.Equals(kAOLMailMime)) {
     type = TARGET_AOLMAIL;
-  } else if (aMimeStr.Equals(kPNGImageMime)) {
+  } else if (mimeStr.Equals(kPNGImageMime)) {
     type = TARGET_IMAGE_PNG;
-  } else if (aMimeStr.Equals(kJPEGImageMime)) {
+  } else if (mimeStr.Equals(kJPEGImageMime)) {
     type = TARGET_IMAGE_JPEG;
-  } else if (aMimeStr.Equals(kGIFImageMime)) {
+  } else if (mimeStr.Equals(kGIFImageMime)) {
     type = TARGET_IMAGE_GIF;
   }
 
 #ifdef WE_DO_DND
-  else if (aMimeStr.Equals(kDropFilesMime)) {
+  else if (mimeStr.Equals(kDropFilesMime)) {
     format = CF_HDROP;
   } else {
-    char * str = aMimeStr.ToNewCString();
-    format = ::RegisterClipboardFormat(str);
-    delete[] str;
+    format = ::RegisterClipboardFormat(aMimeStr);
   }
 #endif
   return type;
@@ -530,21 +521,19 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
   // Walk through flavors and see which flavor matches the one being pasted:
   PRUint32 cnt;
   flavorList->Count(&cnt);
-  char* foundFlavor = nsnull;
-  for ( int i = 0; i < cnt; ++i ) {
+  nsCAutoString foundFlavor;
+  for ( PRUint32 i = 0; i < cnt; ++i ) {
     nsCOMPtr<nsISupports> genericFlavor;
     flavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
     nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
     if ( currentFlavor ) {
-      char* flavorStr;
-      currentFlavor->ToString ( &flavorStr );
+      nsXPIDLCString flavorStr;
+      currentFlavor->ToString ( getter_Copies(flavorStr) );
       gint format = GetFormat(flavorStr);
-
       if (DoConvert(format)) {
         foundFlavor = flavorStr;
         break;
       }
-      delete [] flavorStr;
     }
   }
 
@@ -576,7 +565,6 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
                                  mSelectionData.length);
 
 //delete name;
-  delete [] foundFlavor;
   
   // transferable is now copying the data, so we can free it.
   //  g_free(mSelectionData.data);
@@ -807,7 +795,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
                            aInfo, size*8,
                            (unsigned char *)clipboardData,
                            dataLength);
-    delete [] NS_REINTERPRET_CAST(unsigned char *, clipboardData);
+    nsCRT::free ( NS_REINTERPRET_CAST(char*, clipboardData) );
   }
   else
     printf("Transferable didn't support the data flavor\n");

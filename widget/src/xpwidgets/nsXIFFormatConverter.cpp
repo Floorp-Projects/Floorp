@@ -21,6 +21,7 @@
 #include "nsRepository.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsPrimitives.h"
+#include "nsXPIDLString.h"
 
 #include "nsITransferable.h" // for mime defs, this is BAD
 
@@ -211,29 +212,29 @@ nsXIFFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDat
 
   nsresult rv = NS_OK;
   
-  nsAutoString fromFlavor ( aFromDataFlavor );
+  nsCAutoString fromFlavor ( aFromDataFlavor );
   if ( fromFlavor.Equals(kXIFMime) ) {
-    nsAutoString toFlavor ( aToDataFlavor );
+    nsCAutoString toFlavor ( aToDataFlavor );
 
     // XIF on clipboard is going to always be double byte so it will be in a primitive
     // class of nsISupportsWString. Also, since the data is in two byte chunks the 
     // length represents the length in 1-byte chars, so we need to divide by two.
     nsCOMPtr<nsISupportsWString> dataWrapper ( do_QueryInterface(aFromData) );
     if ( dataWrapper ) {
-      PRUnichar* data = nsnull;
-      dataWrapper->ToString ( &data );
+      nsXPIDLString data;
+      dataWrapper->ToString ( getter_Copies(data) );  //еее COPY #1
       if ( data ) {
-        nsAutoString dataStr ( data );
+        nsAutoString dataStr ( data );   //еее COPY #2
         nsAutoString outStr;
 
         if ( toFlavor.Equals(kTextMime) ) {
-          if ( NS_SUCCEEDED(ConvertFromXIFToText(dataStr, outStr)) ) {
+          if ( NS_SUCCEEDED(ConvertFromXIFToText(dataStr, outStr)) ) {  //еее COPY #3, then runs over the data to parse
             nsCOMPtr<nsISupportsString> dataWrapper;
             nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
                                                 NS_GET_IID(nsISupportsString), getter_AddRefs(dataWrapper) );
             if ( dataWrapper ) {
-              char* holderBecauseNSStringIsLame = outStr.ToNewCString();
-              dataWrapper->SetData ( holderBecauseNSStringIsLame );
+              char* holderBecauseNSStringIsLame = outStr.ToNewCString();  //еее COPY #4
+              dataWrapper->SetData ( holderBecauseNSStringIsLame );       //еее COPY #5
               nsCOMPtr<nsISupports> genericDataWrapper ( do_QueryInterface(dataWrapper) );
               *aToData = genericDataWrapper;
               NS_ADDREF(*aToData);
@@ -248,13 +249,11 @@ nsXIFFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDat
             nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
                                                 NS_GET_IID(nsISupportsWString), getter_AddRefs(dataWrapper) );
             if ( dataWrapper ) {
-              PRUnichar* holderBecauseNSStringIsLame = outStr.ToNewUnicode();
-              dataWrapper->SetData ( holderBecauseNSStringIsLame );
+              dataWrapper->SetData ( NS_CONST_CAST(PRUnichar*,outStr.GetUnicode()) );
               nsCOMPtr<nsISupports> genericDataWrapper ( do_QueryInterface(dataWrapper) );
               *aToData = genericDataWrapper;
               NS_ADDREF(*aToData);
               *aDataToLen = outStr.Length() * 2;
-              delete [] holderBecauseNSStringIsLame;
             }
           }
         } // else if HTML
@@ -264,13 +263,11 @@ nsXIFFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDat
             nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
                                                 NS_GET_IID(nsISupportsWString), getter_AddRefs(dataWrapper) );
             if ( dataWrapper ) {
-              PRUnichar* holderBecauseNSStringIsLame = outStr.ToNewUnicode();
-              dataWrapper->SetData ( holderBecauseNSStringIsLame );
+              dataWrapper->SetData ( NS_CONST_CAST(PRUnichar*,outStr.GetUnicode()) );
               nsCOMPtr<nsISupports> genericDataWrapper ( do_QueryInterface(dataWrapper) );
               *aToData = genericDataWrapper;
               NS_ADDREF(*aToData);
               *aDataToLen = outStr.Length() * 2;
-              delete [] holderBecauseNSStringIsLame;
             }
           }
         } // else if AOL mail

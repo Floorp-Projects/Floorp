@@ -50,7 +50,7 @@ protected:
 
   void AddTarget(GdkAtom aAtom);
 
-  gint GetFormat(const nsString & aMimeStr);
+  gint GetFormat(const char* aMimeStr);
   void RegisterFormat(gint format);
 
 
