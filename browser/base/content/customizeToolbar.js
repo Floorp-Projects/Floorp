@@ -54,7 +54,7 @@ function buildDialog()
   if (!modeValue)
     modeValue = "full";
   modeList.value = modeValue;
-
+  
   var cloneToolbarBox = document.getElementById("cloned-bar-container");
   var paletteBox = document.getElementById("palette-box");
   var currentSet = toolbar.getAttribute("currentset");
@@ -71,6 +71,7 @@ function buildDialog()
   newToolbar.id = "cloneToolbar";
   if (useSmallIcons.checked)
     newToolbar.setAttribute("iconsize", "small");
+  newToolbar.setAttribute("mode", modeList.value);
 
   // Walk through and manually clone the children of the to-be-customized toolbar.
   // Make sure all buttons look enabled (and that textboxes are disabled).
