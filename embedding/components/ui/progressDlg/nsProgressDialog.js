@@ -656,6 +656,9 @@ nsProgressDialog.prototype = {
 
                 // Fix up dialog layout (which gets messed up sometimes).
                 this.dialog.sizeToContent();
+
+                // GetAttention to show the user that we're done
+               this.dialog.getAttention();
             } else if ( this.dialog ) {
                 this.dialog.close();
             }
