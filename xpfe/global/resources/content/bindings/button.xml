@@ -219,7 +219,12 @@
         </children>
       </xul:hbox>
     </content>
-  </binding>           
+
+    <handlers>
+      <handler event="keypress" keycode="VK_RETURN" action="this.open = true;"/>
+      <handler event="keypress" key=" " action="this.open = true;"/>
+    </handlers>
+  </binding>
 
   <binding id="menu-button-base"
            extends="chrome://global/content/bindings/button.xml#button-base">
