@@ -11,7 +11,7 @@
  * NPL.
  *
  * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
+ * Communications Corporation.  Portions created by Netscape are 
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
@@ -20,9 +20,11 @@
 #include "nsCOMPtr.h"
 
 nsTransactionStack::nsTransactionStack()
-  : mQue(new nsTransactionReleaseFunctor())
+  : mQue(0)
 {
-}
+  nsTransactionReleaseFunctor* theFunctor=new nsTransactionReleaseFunctor();
+  mQue->mSetDeallocator(theFunctor);
+} 
 
 nsTransactionStack::~nsTransactionStack()
 {
