@@ -16,13 +16,13 @@ function Startup()
 
 function setColorWell(menu) 
 {
-	// Find the colorWell and colorPicker in the hierarchy.
-	var colorWell = menu.firstChild.nextSibling;
-	var colorPicker = menu.firstChild.nextSibling.nextSibling.firstChild;
+  // Find the colorWell and colorPicker in the hierarchy.
+  var colorWell = menu.firstChild.nextSibling;
+  var colorPicker = menu.firstChild.nextSibling.nextSibling.firstChild;
 
-	// Extract color from colorPicker and assign to colorWell.
-	var color = colorPicker.getAttribute('color');
-	colorWell.style.backgroundColor = color;
+  // Extract color from colorPicker and assign to colorWell.
+  var color = colorPicker.getAttribute('color');
+  colorWell.style.backgroundColor = color;
 }
 
 function StartPageCheck()
@@ -57,6 +57,8 @@ function Browse()
   var fp = Components.classes["@mozilla.org/filepicker;1"]
                        .createInstance(nsIFilePicker);
 
+  // XXX todo, persist the last sound directory and pass it in
+  // XXX todo filter by .wav
   fp.init(window, document.getElementById("browse").getAttribute("filepickertitle"), nsIFilePicker.modeOpen);
   fp.appendFilters(nsIFilePicker.filterAll);
 
@@ -78,8 +80,11 @@ function PreviewSound()
   if (!gSound)
     gSound = Components.classes["@mozilla.org/sound;1"].createInstance(Components.interfaces.nsISound);
 
-  if (soundURL.indexOf("file://") == -1)
+  if (soundURL.indexOf("file://") == -1) {
+    // XXX todo see if we can create a nsIURL from the native file path
+    // otherwise, play a system sound
     gSound.playSystemSound(soundURL);
+  }
   else {
     var url = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURL);
     url.spec = soundURL;

@@ -148,6 +148,8 @@ nsresult nsStatusBarBiffManager::PlayBiffSound()
         }
       }
       else {
+        // todo, see if we can create a nsIFile using the string as a native path.
+        // if that fails, try playing a system sound
         rv = mSound->PlaySystemSound(soundURLSpec.get());
         if (NS_SUCCEEDED(rv))
           customSoundPlayed = PR_TRUE;
