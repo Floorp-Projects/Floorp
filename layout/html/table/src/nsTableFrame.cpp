@@ -1206,8 +1206,14 @@ void nsTableFrame::RemoveRows(nsIPresContext&  aPresContext,
         cellMap->AddColsAtEnd(numColsNotRemoved);
       }
     }
-    else NS_ASSERTION(numColsInCache == numColsInMap, "cell map has too many cols");
-
+    else {
+      PRInt32 numAnonymousColsToAdd = numColsInMap - numColsInCache;
+      if (numAnonymousColsToAdd > 0) {
+        // this sets the child list, updates the col cache and cell map
+        CreateAnonymousColFrames(aPresContext, numAnonymousColsToAdd,
+                               eColAnonymousCell, PR_TRUE);
+      }
+    }
     if (IsBorderCollapse()) {
       SetBCDamageArea(aPresContext, damageArea);
     }
