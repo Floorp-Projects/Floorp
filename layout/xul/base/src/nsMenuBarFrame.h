@@ -59,6 +59,7 @@ public:
   void ToggleMenuActiveState();
   void KeyboardNavigation(PRUint32 aDirection);
   void ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag);
+  nsIFrame* FindMenuWithShortcut(PRUint32 aLetter);
 
 protected:
   nsMenuBarListener* mMenuBarListener; // The listener that tells us about key and mouse events.

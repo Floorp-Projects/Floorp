@@ -248,7 +248,27 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
     if (active) 
       mMenuBarFrame->KeyboardNavigation(theChar);
   }
-
+  else {
+    // Get the character code.
+    nsCOMPtr<nsIDOMUIEvent> uiEvent = do_QueryInterface(aKeyEvent);
+    if (uiEvent) {
+      // See if a letter was pressed.
+      PRUint32 charCode;
+      uiEvent->GetKeyCode(&charCode);
+    
+      if ((active || mAltKeyDown) && 
+          ((charCode >= 'a' && charCode <= 'z') ||
+           (charCode >= 'A' && charCode <= 'Z')))
+      {
+        // Do shortcut navigation.
+        mAltKeyDown = PR_FALSE; // Clear this. ALT presses are irrelevant now.
+      
+        // A letter was pressed. We want to see if a shortcut gets matched. If
+        // so, we'll know the menu got activated.
+        mMenuBarFrame->ShortcutNavigation(charCode, active);
+      }
+    }
+  }
   if (active)
     return NS_ERROR_BASE; // I am consuming event
   return NS_OK; // means I am NOT consuming event
@@ -262,26 +282,6 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
   PRBool active = mMenuBarFrame->IsActive();
   
-  // Get the character code.
-  nsCOMPtr<nsIDOMUIEvent> uiEvent = do_QueryInterface(aKeyEvent);
-  if (uiEvent) {
-    // See if a letter was pressed.
-    PRUint32 charCode;
-    uiEvent->GetCharCode(&charCode);
-    
-    if ((active || mAltKeyDown) && 
-        ((charCode >= 'a' && charCode <= 'z') ||
-         (charCode >= 'A' && charCode <= 'Z')))
-    {
-      // Do shortcut navigation.
-      mAltKeyDown = PR_FALSE; // Clear this. ALT presses are irrelevant now.
-      
-      // A letter was pressed. We want to see if a shortcut gets matched. If
-      // so, we'll know the menu got activated.
-      mMenuBarFrame->ShortcutNavigation(charCode, active);
-    }
-  }
-
   if (active)
     return NS_ERROR_BASE; // I am consuming event
   return NS_OK; // means I am NOT consuming event

@@ -155,10 +155,61 @@ nsMenuBarFrame::ToggleMenuActiveState()
   }
 }
 
+nsIFrame*
+nsMenuBarFrame::FindMenuWithShortcut(PRUint32 aLetter)
+{
+  // Enumerate over our list of frames.
+  nsIFrame* currFrame = mFrames.FirstChild();
+  while (currFrame) {
+    nsCOMPtr<nsIContent> current;
+    currFrame->GetContent(getter_AddRefs(current));
+    
+    // See if it's a menu item.
+    nsCOMPtr<nsIAtom> tag;
+    current->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsXULAtoms::xpmenu ||
+        tag.get() == nsXULAtoms::xpmenuitem) {
+      // Get the shortcut attribute.
+      nsString shortcutKey = "";
+      current->GetAttribute(kNameSpaceID_None, nsXULAtoms::shortcut, shortcutKey);
+      shortcutKey.ToUpperCase();
+      if (shortcutKey.Length() > 0) {
+        // We've got something.
+        PRUnichar shortcutChar = shortcutKey.CharAt(0);
+        if (shortcutChar == aLetter) {
+          // We match!
+          return currFrame;
+        }
+      }
+    }
+    currFrame->GetNextSibling(&currFrame);
+  }
+  return nsnull;
+}
+
 void 
 nsMenuBarFrame::ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag)
 {
+  if (mCurrentMenu) {
+    nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
+    if (menuFrame->IsOpen()) {
+      // No way this applies to us. Give it to our child.
+      menuFrame->ShortcutNavigation(aLetter, aHandledFlag);
+      return;
+    }
+  }
 
+  // This applies to us. Let's see if one of the shortcuts applies
+  nsIFrame* result = FindMenuWithShortcut(aLetter);
+  if (result) {
+    // We got one!
+    aHandledFlag = PR_TRUE;
+    mIsActive = PR_TRUE;
+    nsMenuFrame* menuFrame = (nsMenuFrame*)result;
+    SetCurrentMenuItem(result);
+    menuFrame->OpenMenu(PR_TRUE);
+    menuFrame->SelectFirstItem();
+  }
 }
 
 void
