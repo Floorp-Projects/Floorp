@@ -313,22 +313,22 @@ NS_IMETHODIMP nsMetaCharsetObserver::Observe(nsISupports*, const PRUnichar*, con
 NS_IMETHODIMP nsMetaCharsetObserver::Start() 
 {
     nsresult res = NS_OK;
-    nsAutoString htmlTopic("htmlparser");
 
     NS_WITH_SERVICE(nsIObserverService, anObserverService, NS_OBSERVERSERVICE_PROGID, &res);
     if (NS_FAILED(res)) return res;
-     
+
+    nsAutoString htmlTopic(kHTMLTextContentType);    
     return anObserverService->AddObserver(this, htmlTopic.GetUnicode());
 }
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMetaCharsetObserver::End() 
 {
     nsresult res = NS_OK;
-    nsAutoString htmlTopic("htmlparser");
 
     NS_WITH_SERVICE(nsIObserverService, anObserverService, NS_OBSERVERSERVICE_PROGID, &res);
     if (NS_FAILED(res)) return res;
      
+    nsAutoString htmlTopic(kHTMLTextContentType);
     return anObserverService->RemoveObserver(this, htmlTopic.GetUnicode());
 }
 //========================================================================== 
