@@ -735,7 +735,7 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
     wrap:inWrap backwards:inBackwards];
 }
 
-- (void)addBookmarkExtended: (BOOL)aIsFromMenu isFolder:(BOOL)aIsFolder
+- (void)addBookmarkExtended: (BOOL)aIsFromMenu isFolder:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle
 {
   [mSidebarBookmarksDataSource ensureBookmarks];
   BOOL useSel = aIsFromMenu;
@@ -748,19 +748,27 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
         useSel = NO;
   }
   
-  [mSidebarBookmarksDataSource addBookmark: self useSelection: useSel isFolder: aIsFolder];
+  [mSidebarBookmarksDataSource addBookmark: self useSelection: useSel isFolder: aIsFolder URL:aURL title:aTitle];
 }
 
 
 - (IBAction)bookmarkPage: (id)aSender
 {
-  [self addBookmarkExtended:YES isFolder:NO];
+  [self addBookmarkExtended:YES isFolder:NO URL:nil title:nil];
 }
 
 
 - (IBAction)bookmarkLink: (id)aSender
 {
-  NSLog(@"Bookmark Link not yet implemented");
+  nsCOMPtr<nsIDOMElement> linkContent;
+  nsAutoString href;
+  CHGeckoUtils::GetEnclosingLinkElementAndHref(mContextMenuNode, getter_AddRefs\
+                                               (linkContent), href);
+  nsAutoString linkText;
+  CHGeckoUtils::GatherTextUnder(linkContent, linkText);
+  NSString* urlStr = [NSString stringWithCharacters:href.get() length:href.Length()];
+  NSString* titleStr = [NSString stringWithCharacters:linkText.get() length:linkText.Length()];
+  [self addBookmarkExtended:YES isFolder:NO URL:urlStr title:titleStr];
 }
 
 - (IBAction)back:(id)aSender

@@ -190,7 +190,7 @@ class nsIDOMNode;
 
 - (BOOL)shouldShowBookmarkToolbar;
 
-- (void)addBookmarkExtended: (BOOL)aIsFromMenu isFolder:(BOOL)aIsFolder;
+- (void)addBookmarkExtended: (BOOL)aIsFromMenu isFolder:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle;
 - (IBAction)manageBookmarks: (id)aSender;
 - (void)importBookmarks: (NSString*)aURLSpec;
 - (IBAction)toggleSidebar:(id)aSender;

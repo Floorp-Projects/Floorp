@@ -53,6 +53,7 @@
 #include "nsVoidArray.h"
 
 #import "BookmarksService.h"
+#import "StringUtils.h"
 
 @implementation BookmarksDataSource
 
@@ -95,15 +96,15 @@
 
 -(IBAction)addBookmark:(id)aSender
 {
-  [self addBookmark: aSender useSelection: YES isFolder: NO];
+  [self addBookmark: aSender useSelection: YES isFolder: NO URL:nil title:nil];
 }
 
 -(IBAction)addFolder:(id)aSender
 {
-  [self addBookmark: aSender useSelection: YES isFolder: YES];
+  [self addBookmark: aSender useSelection: YES isFolder: YES URL:nil title:nil];
 }
 
--(void)addBookmark:(id)aSender useSelection:(BOOL)aUseSel isFolder:(BOOL)aIsFolder
+-(void)addBookmark:(id)aSender useSelection:(BOOL)aUseSel isFolder:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle
 {
   if (!mBookmarks)
     return;
@@ -138,16 +139,22 @@
 
   nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mBookmarks->gBookmarks));
   
-  // Fetch the title of the current page and the URL.
   nsAutoString title, href;
   if (!aIsFolder) {
-    BookmarksService::GetTitleAndHrefForBrowserView([[mBrowserWindowController getBrowserWrapper] getBrowserView],
-                                                    title, href);
+
+    // If no URL and title were specified, get them from the current page.
+    if (aURL && aTitle) {
+      NSStringTo_nsString(aURL, href);
+      NSStringTo_nsString(aTitle, title);
+    } else {
+      BookmarksService::GetTitleAndHrefForBrowserView([[mBrowserWindowController getBrowserWrapper] getBrowserView],
+                                                      title, href);
+    }
 
     mCachedHref = [NSString stringWithCharacters: href.get() length: href.Length()];
     [mCachedHref retain];
-  }
-  else {
+
+  } else {   // Folder
     mCachedHref = nil;
     title = NS_LITERAL_STRING("New Folder");
   }

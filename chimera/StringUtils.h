@@ -22,7 +22,7 @@
 
 // Utility to convert |NSString|s to unicode |nsString|s to save having
 // to repeat this set of code each time someone wants to do this...
-void 
+inline void 
 NSStringTo_nsString(NSString* aNSString, nsString& ansString)
 {
   unsigned int len = [aNSString length];
@@ -34,4 +34,4 @@ NSStringTo_nsString(NSString* aNSString, nsString& ansString)
   buffer[len] = (PRUnichar)'\0';
 
   ansString.Adopt(buffer);
-}                                                                                                                                                                                                                                                                                                                                                                                             
+}
