@@ -1882,7 +1882,8 @@ nsWebShell::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
 
   // (4) fire start document load notification
   nsIStreamListener* outStreamListener=nsnull;  // a valid pointer is required for the returned stream listener
-  NS_ENSURE_SUCCESS(doc->StartDocumentLoad("view", dummyChannel, nsnull, this, &outStreamListener), 
+  NS_ENSURE_SUCCESS(doc->StartDocumentLoad("view", dummyChannel, nsnull, NS_STATIC_CAST(nsIContentViewerContainer*, this),
+   &outStreamListener), 
                     NS_ERROR_FAILURE);
   NS_IF_RELEASE(outStreamListener);
   NS_ENSURE_SUCCESS(OnStartDocumentLoad(mDocLoader, uri, "load"), NS_ERROR_FAILURE);
