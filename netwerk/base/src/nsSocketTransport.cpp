@@ -345,7 +345,10 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
            ("Operation failed via PR_POLL_EXCEPT. [%s:%d %x].\n", 
             mHostName, mPort, this));
     // An error has occurred, so cancel the read and/or write operation...
-    mStatus = NS_BINDING_FAILED;
+    if (mCurrentState == eSocketState_WaitConnect)
+        mStatus = NS_ERROR_CONNECTION_REFUSED;
+    else
+        mStatus = NS_BINDING_FAILED;
   }
 
   if (PR_POLL_HUP & aSelectFlags) {
@@ -484,6 +487,9 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
           mWritePipeOut = null_nsCOMPtr();
           SetWriteType(eSocketWrite_None);
           ClearFlag(eSocketWrite_Done);
+
+          if (mCloseConnectionOnceDone)
+            CloseConnection();
         }
 
         //
