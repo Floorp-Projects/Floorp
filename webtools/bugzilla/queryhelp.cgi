@@ -50,7 +50,9 @@ print qq{
 
 <a name="top"></a>
 
-<p><center><b><font size="+2">Help Using The Bugzilla Query Form</font></b><br>January, 20 2001 - <a href="mailto:netdemonz\@yahoo.com">Brian Bober (netdemon)</a></center>
+<p><center><b><font size="+2">Help Using The Bugzilla Query Form</font></b><br>January, 20 2001 - 
+<a href="mailto:netdemonz\@yahoo.com">Brian Bober (netdemon)</a>.  
+<BR><I>Further heavy mutiliations by <a href="mailto:tara\@tequilarista.org">Tara Heranandez</A>, April 20, 2001.</I></CENTER>
 
 <br><center><img width="329" height="220" src="ant.jpg" border="2" alt="Da Ant"></center>
 
@@ -68,7 +70,7 @@ print qq{
 <br><a href="#therest">The Bottom Of The Form</a>
 
 <p>&quot;I already know how to use <a href="http://www.mozilla.org/bugs/">Bugzilla</a>, but would like <a href="#info">information</a> about Bugzilla and the author of this document.&quot;
-<br>&quot;Ok, I am almost certain the bug I discovered isn't in Bugzilla, how do I <a href="enter_bug.cgi">submit</a> the bug?&quot; - <a href= "http://www.mozilla.org/quality/bug-writing-guidelines.html">Read the guidelines first</a>!
+<br>&quot;Ok, I am almost certain the bug I discovered isn't in Bugzilla, how do I <a href="enter_bug.cgi">submit</a> the bug?&quot; - <a href= "docs/html/Bugzilla-Guide.html#BUG_WRITING">Read the guidelines first</a>!
 
 <p><br><center><h3>Tips</h3></center>
 You don't have to fill out any field on the query page you don't need. Filling out fields will limit
@@ -220,9 +222,6 @@ code produces no clues as to why this behavior would occur. If
 more information appears later, please re-assign the bug, for
 now, file it.
 </ul>
-
-Note: The LATER and REMIND resolutions are no longer used on bugzilla.mozilla.org and many
-installations are phasing them out.
 
 <a name="platform"></a>
 <p><b>Platform</b>
@@ -469,6 +468,8 @@ how a match will be determined.<br>
 <h4>A description entry</h4>
 <p>This lets you search comments. Comments can be added by anybody. Comments are the largest
 searchable area in most bugs. If you really want to find a lot of matches, search the comments.
+<BR><B>Note:</B>Because comments can get quite extensive in bugs, doing this particular type
+of query can take a long time. 
 
 <a name="url"></a>
 <h4>Associated URL</h4>
@@ -489,6 +490,8 @@ print qq{
 user with the proper permissions can edit these keywords. The following is a list of the keywords that are
 stored on this version of Bugzilla:
 };
+
+ConnectToDatabase();
 
 my $tableheader = qq{
 <p><table border="1" cellpadding="4" cellspacing="0">
@@ -556,61 +559,13 @@ if (UserInGroup("editkeywords")) {
 
 
 
-
+my %default;
+my %type;
 
 print qq{
 <a name="moduleoptions"></a>
 <p><br><center><h3>Module Options</h3></center>
 
-<center>
-
-
-<table width="710" bgcolor="#00afff" border="0" cellpadding="0" cellspacing="0">
-<tr>
-<td align="center" height="190" >
-<table>
-<tr><td>
-<table>
-<tr>
-<th align="left"><A HREF="queryhelp.cgi#product">Product</a>:</th>
-<th align="left"><A HREF="queryhelp.cgi#version">Version</a>:</th>
-<th align="left"><A HREF="queryhelp.cgi#component">Component</a>:</th>
-<th align="left"><A HREF="queryhelp.cgi#targetmilestone">Milestone</a>:</th>
-</tr>
-<tr>
-<td align="left" valign="top">
-<SELECT NAME="product" MULTIPLE SIZE=5>
-<OPTION VALUE="Browser">Browser<OPTION VALUE="Browser Localizations">Browser Localizations<OPTION VALUE="Calendar">Calendar<OPTION VALUE="CCK">CCK<OPTION VALUE="Derivatives">Derivatives<OPTION VALUE="Directory">Directory<OPTION VALUE="Documentation">Documentation<OPTION VALUE="Grendel">Grendel<OPTION VALUE="JSS">JSS<OPTION VALUE="MailNews">MailNews<OPTION VALUE="mozilla.org">mozilla.org<OPTION VALUE="MozillaClassic">MozillaClassic<OPTION VALUE="NSPR">NSPR<OPTION VALUE="NSS">NSS<OPTION VALUE="PSM">PSM<OPTION VALUE="Rhino">Rhino<OPTION VALUE="Webtools">Webtools
-</SELECT>
-</td>
-
-<td align="left" valign="top">
-<SELECT NAME="version" MULTIPLE SIZE=5>
-<OPTION VALUE="1.01">1.01<OPTION VALUE="1.1">1.1<OPTION VALUE="1.2">1.2<OPTION VALUE="1.3">1.3<OPTION VALUE="1.4">1.4<OPTION VALUE="1.5">1.5<OPTION VALUE="1998-03-31">1998-03-31<OPTION VALUE="1998-04-08">1998-04-08<OPTION VALUE="1998-04-29">1998-04-29<OPTION VALUE="1998-06-03">1998-06-03<OPTION VALUE="1998-07-28">1998-07-28<OPTION VALUE="1998-09-04">1998-09-04<OPTION VALUE="2.0">2.0<OPTION VALUE="2.1">2.1<OPTION VALUE="3.0">3.0<OPTION VALUE="3.0.1">3.0.1<OPTION VALUE="3.1">3.1<OPTION VALUE="3.1.1">3.1.1<OPTION VALUE="3.1.2">3.1.2<OPTION VALUE="3.1.3">3.1.3<OPTION VALUE="3.2">3.2<OPTION VALUE="3.5">3.5<OPTION VALUE="3.5.1">3.5.1<OPTION VALUE="4.0">4.0<OPTION VALUE="4.0.1">4.0.1<OPTION VALUE="4.0.2">4.0.2<OPTION VALUE="4.1">4.1<OPTION VALUE="other">other<OPTION VALUE="unspecified">unspecified
-</SELECT>
-</td>
-
-<td align="left" valign="top">
-<SELECT NAME="component" MULTIPLE SIZE=5>
-<OPTION VALUE="Account Manager">Account Manager<OPTION VALUE="ActiveX Wrapper">ActiveX Wrapper<OPTION VALUE="Address Book">Address Book<OPTION VALUE="Addressbook/LDAP (non-UI)">Addressbook/LDAP (non-UI)<OPTION VALUE="AS-Whitebox">AS-Whitebox<OPTION VALUE="Aurora/RDF BE">Aurora/RDF BE<OPTION VALUE="Aurora/RDF FE">Aurora/RDF FE<OPTION VALUE="Berkeley DB">Berkeley DB<OPTION VALUE="Bonsai">Bonsai<OPTION VALUE="Bookmarks">Bookmarks<OPTION VALUE="Bosnian/bs-BA">Bosnian/bs-BA<OPTION VALUE="Browser Hooks">Browser Hooks<OPTION VALUE="Browser-General">Browser-General<OPTION VALUE="Bugzilla">Bugzilla<OPTION VALUE="Bugzilla: Keyword/Component Changes">Bugzilla: Keyword/Component Changes<OPTION VALUE="Build">Build<OPTION VALUE="Build Config">Build Config<OPTION VALUE="Bulgarian/bg-BG">Bulgarian/bg-BG<OPTION VALUE="CCK-CDLayout">CCK-CDLayout<OPTION VALUE="CCK-CustomShell">CCK-CustomShell<OPTION VALUE="CCK-Installation">CCK-Installation<OPTION VALUE="CCK-Shell">CCK-Shell<OPTION VALUE="CCK-Whitebox">CCK-Whitebox<OPTION VALUE="CCK-Wizard">CCK-Wizard<OPTION VALUE="chatzilla">chatzilla<OPTION VALUE="Client Library">Client Library<OPTION VALUE="Compiler">Compiler<OPTION VALUE="Composer">Composer<OPTION VALUE="Composition">Composition<OPTION VALUE="Composition (non-UI)">Composition (non-UI)<OPTION VALUE="Compositor">Compositor<OPTION VALUE="Compositor Library">Compositor Library<OPTION VALUE="config">config<OPTION VALUE="Cookies">Cookies<OPTION VALUE="Core">Core<OPTION VALUE="Daemon">Daemon<OPTION VALUE="Danish/da-DK">Danish/da-DK<OPTION VALUE="Despot">Despot<OPTION VALUE="Dialup-Account Setup">Dialup-Account Setup<OPTION VALUE="Dialup-Install">Dialup-Install<OPTION VALUE="Dialup-Mup/Muc">Dialup-Mup/Muc<OPTION VALUE="Dialup-Upgrade">Dialup-Upgrade<OPTION VALUE="Documentation">Documentation<OPTION VALUE="DOM Level 0">DOM Level 0<OPTION VALUE="DOM Level 1">DOM Level 1<OPTION VALUE="DOM Level 2">DOM Level 2<OPTION VALUE="DOM to Text Conversion">DOM to Text Conversion<OPTION VALUE="DOM Viewer">DOM Viewer<OPTION VALUE="Dutch/nl">Dutch/nl<OPTION VALUE="Editor">Editor<OPTION VALUE="Embedding APIs">Embedding APIs<OPTION VALUE="Embedding: Docshell">Embedding: Docshell<OPTION VALUE="Evangelism">Evangelism<OPTION VALUE="Event Handling">Event Handling<OPTION VALUE="Filters">Filters<OPTION VALUE="FontLib">FontLib<OPTION VALUE="Form Manager">Form Manager<OPTION VALUE="Form Submission">Form Submission<OPTION VALUE="French/fr-FR">French/fr-FR<OPTION VALUE="German-Austria/de-AT">German-Austria/de-AT<OPTION VALUE="GTK Embedding Widget">GTK Embedding Widget<OPTION VALUE="Help">Help<OPTION VALUE="History">History<OPTION VALUE="HTML Element">HTML Element<OPTION VALUE="HTML Form Controls">HTML Form Controls<OPTION VALUE="HTML to Text/PostScript Translation">HTML to Text/PostScript Translation<OPTION VALUE="HTMLFrames">HTMLFrames<OPTION VALUE="HTMLTables">HTMLTables<OPTION VALUE="Image Conversion Library">Image Conversion Library<OPTION VALUE="ImageLib">ImageLib<OPTION VALUE="Install">Install<OPTION VALUE="Installer">Installer<OPTION VALUE="Installer: XPI Packages">Installer: XPI Packages<OPTION VALUE="Installer: XPInstall Engine">Installer: XPInstall Engine<OPTION VALUE="Internationalization">Internationalization<OPTION VALUE="Italian/it-IT">Italian/it-IT<OPTION VALUE="Java APIs for DOM">Java APIs for DOM<OPTION VALUE="Java APIs to WebShell">Java APIs to WebShell<OPTION VALUE="Java Stubs">Java Stubs<OPTION VALUE="Java to XPCOM Bridge">Java to XPCOM Bridge<OPTION VALUE="Java-Implemented Plugins">Java-Implemented Plugins<OPTION VALUE="JavaScript Debugger">JavaScript Debugger<OPTION VALUE="Javascript Engine">Javascript Engine<OPTION VALUE="JPEG Image Handling">JPEG Image Handling<OPTION VALUE="Keyboard Navigation">Keyboard Navigation<OPTION VALUE="Layout">Layout<OPTION VALUE="LDAP C SDK">LDAP C SDK<OPTION VALUE="LDAP Java SDK">LDAP Java SDK<OPTION VALUE="LDAP Tools">LDAP Tools<OPTION VALUE="LibMocha">LibMocha<OPTION VALUE="Libraries">Libraries<OPTION VALUE="Library">Library<OPTION VALUE="Live Connect">Live Connect<OPTION VALUE="Localization">Localization<OPTION VALUE="LXR">LXR<OPTION VALUE="Macintosh FE">Macintosh FE<OPTION VALUE="Mail Back End">Mail Back End<OPTION VALUE="Mail Database">Mail Database<OPTION VALUE="Mail Window Front End">Mail Window Front End<OPTION VALUE="MathML">MathML<OPTION VALUE="MIME">MIME<OPTION VALUE="MIMELib">MIMELib<OPTION VALUE="Miscellaneous">Miscellaneous<OPTION VALUE="Movemail">Movemail<OPTION VALUE="Mozbot">Mozbot<OPTION VALUE="Mozilla Developer">Mozilla Developer<OPTION VALUE="MozillaTranslator">MozillaTranslator<OPTION VALUE="Necko">Necko<OPTION VALUE="NetLib">NetLib<OPTION VALUE="Netscape 6">Netscape 6<OPTION VALUE="Networking">Networking<OPTION VALUE="Networking - General">Networking - General<OPTION VALUE="Networking - IMAP">Networking - IMAP<OPTION VALUE="Networking - News">Networking - News<OPTION VALUE="Networking - POP">Networking - POP<OPTION VALUE="Networking - SMTP">Networking - SMTP<OPTION VALUE="Networking: Cache">Networking: Cache<OPTION VALUE="Networking: File">Networking: File<OPTION VALUE="Networking: FTP">Networking: FTP<OPTION VALUE="Networking: HTTP">Networking: HTTP<OPTION VALUE="NLS">NLS<OPTION VALUE="Norwegian/nno-no">Norwegian/nno-no<OPTION VALUE="NSPR">NSPR<OPTION VALUE="Offline">Offline<OPTION VALUE="OJI">OJI<OPTION VALUE="Parser">Parser<OPTION VALUE="Password Manager">Password Manager<OPTION VALUE="PerLDAP">PerLDAP<OPTION VALUE="PICS">PICS<OPTION VALUE="Plug-ins">Plug-ins<OPTION VALUE="PNG Image Handling">PNG Image Handling<OPTION VALUE="Preferences">Preferences<OPTION VALUE="Preferences: Backend">Preferences: Backend<OPTION VALUE="Printing">Printing<OPTION VALUE="Profile Manager BackEnd">Profile Manager BackEnd<OPTION VALUE="Profile Manager FrontEnd">Profile Manager FrontEnd<OPTION VALUE="Profile Migration">Profile Migration<OPTION VALUE="Protocols">Protocols<OPTION VALUE="RDF">RDF<OPTION VALUE="Registry">Registry<OPTION VALUE="Sample Code">Sample Code<OPTION VALUE="Search">Search<OPTION VALUE="Security Stubs">Security Stubs<OPTION VALUE="Security: CAPS">Security: CAPS<OPTION VALUE="Security: Crypto">Security: Crypto<OPTION VALUE="Security: General">Security: General<OPTION VALUE="Selection">Selection<OPTION VALUE="Server Operations">Server Operations<OPTION VALUE="Sidebar">Sidebar<OPTION VALUE="Skinability">Skinability<OPTION VALUE="String">String<OPTION VALUE="StubFE">StubFE<OPTION VALUE="Style System">Style System<OPTION VALUE="Subscribe">Subscribe<OPTION VALUE="SVG">SVG<OPTION VALUE="Talkback">Talkback<OPTION VALUE="Test">Test<OPTION VALUE="Tests">Tests<OPTION VALUE="Testzilla">Testzilla<OPTION VALUE="Themes">Themes<OPTION VALUE="Threading">Threading<OPTION VALUE="Tinderbox">Tinderbox<OPTION VALUE="Tools">Tools<OPTION VALUE="Tracking">Tracking<OPTION VALUE="UI">UI<OPTION VALUE="User">User<OPTION VALUE="User interface">User interface<OPTION VALUE="User Interface: Design Feedback">User Interface: Design Feedback<OPTION VALUE="Viewer App">Viewer App<OPTION VALUE="Views">Views<OPTION VALUE="Web Developer">Web Developer<OPTION VALUE="Windows FE">Windows FE<OPTION VALUE="XBL">XBL<OPTION VALUE="XFE">XFE<OPTION VALUE="XML">XML<OPTION VALUE="XP Apps">XP Apps<OPTION VALUE="XP Apps: Cmd-line Features">XP Apps: Cmd-line Features<OPTION VALUE="XP Apps: GUI Features">XP Apps: GUI Features<OPTION VALUE="XP Miscellany">XP Miscellany<OPTION VALUE="XP Toolkit/Widgets">XP Toolkit/Widgets<OPTION VALUE="XP Toolkit/Widgets: Menus">XP Toolkit/Widgets: Menus<OPTION VALUE="XP Toolkit/Widgets: Trees">XP Toolkit/Widgets: Trees<OPTION VALUE="XP Toolkit/Widgets: XUL">XP Toolkit/Widgets: XUL<OPTION VALUE="XP Utilities">XP Utilities<OPTION VALUE="XPCOM">XPCOM<OPTION VALUE="XPCOM Registry">XPCOM Registry<OPTION VALUE="XPConnect">XPConnect<OPTION VALUE="XPFC">XPFC<OPTION VALUE="xpidl">xpidl<OPTION VALUE="XSLT">XSLT
-</SELECT>
-</td>
-<td align="left" valign="top">
-<SELECT NAME="target_milestone" MULTIPLE SIZE=5>
-<OPTION VALUE="---">---<OPTION VALUE="Future">Future<OPTION VALUE="M1">M1<OPTION VALUE="M2">M2<OPTION VALUE="M3">M3<OPTION VALUE="M4">M4<OPTION VALUE="M5">M5<OPTION VALUE="M6">M6<OPTION VALUE="M7">M7<OPTION VALUE="M8">M8<OPTION VALUE="M9">M9<OPTION VALUE="M10">M10<OPTION VALUE="M11">M11<OPTION VALUE="M12">M12<OPTION VALUE="M13">M13<OPTION VALUE="M14">M14<OPTION VALUE="M15">M15<OPTION VALUE="M16">M16<OPTION VALUE="M17">M17<OPTION VALUE="M18">M18<OPTION VALUE="mozilla0.6">mozilla0.6<OPTION VALUE="mozilla0.8">mozilla0.8<OPTION VALUE="mozilla0.9">mozilla0.9<OPTION VALUE="mozilla0.9.1">mozilla0.9.1<OPTION VALUE="mozilla1.0">mozilla1.0<OPTION VALUE="mozilla1.0.1">mozilla1.0.1<OPTION VALUE="mozilla1.1">mozilla1.1<OPTION VALUE="mozilla1.2">mozilla1.2<OPTION VALUE="M19">M19<OPTION VALUE="M20">M20<OPTION VALUE="M21">M21<OPTION VALUE="M22">M22<OPTION VALUE="M23">M23<OPTION VALUE="M24">M24<OPTION VALUE="M25">M25<OPTION VALUE="M26">M26<OPTION VALUE="M27">M27<OPTION VALUE="M28">M28<OPTION VALUE="M29">M29<OPTION VALUE="M30">M30<OPTION VALUE="3.0">3.0<OPTION VALUE="3.0.1">3.0.1<OPTION VALUE="3.0.2">3.0.2<OPTION VALUE="3.1">3.1<OPTION VALUE="3.1.1">3.1.1<OPTION VALUE="3.1.2">3.1.2<OPTION VALUE="3.1.3">3.1.3<OPTION VALUE="3.2">3.2<OPTION VALUE="3.3">3.3<OPTION VALUE="3.5">3.5<OPTION VALUE="3.5.1">3.5.1<OPTION VALUE="4.0">4.0<OPTION VALUE="4.0.1">4.0.1<OPTION VALUE="4.0.2">4.0.2<OPTION VALUE="4.1">4.1<OPTION VALUE="4.1.1">4.1.1<OPTION VALUE="4.2">4.2
-</SELECT>
-</td>
-
-</tr>
-</table>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-</table>
-
-</center>
 <br>
 
 <p>Module options are where you select what program, module and version the bugs you want to 
@@ -738,8 +693,9 @@ print qq{
 
 <p>Choosing this section lets you search through bugs that have their target milestones set to certain 
 values. Milestones are kind of like versions. They are specific tentative dates where a massive
-phasing out of bugs occur and a relatively stable release is produced. Milestones used to be in the
-form "M18", but now are in the form of "Mozilla0.9". <a href="http://www.mozilla.org/roadmap.html">The roadmap</a>.
+phasing out of bugs occur and a relatively stable release is produced. For example, Mozilla.org had milestones in the
+form of "M10" or "M18", but now are in the form of "Mozilla0.9".  Bugzilla milestones are in the form of "Bugzilla 2.12",
+"Bugzilla 2.14", etc.
 
 
 };
@@ -1424,7 +1380,7 @@ print qq{
 <p>Written and adapted from some older Bugzilla documents (by Terry Weissman, Tara Hernandez and others) by <a href="mailto:netdemonz\@yahoo.com">Brian Bober</a> 
 You can talk to me on irc.mozilla.org - #mozilla, #mozwebtools, #mozillazine, I go by the name netdemon.
 
-<P>For more information than you can find in this document: 
+<P>Lots of Bugzilla use documention is available through Mozilla.org and other sites:
 <br><a href="http://www.mozilla.org/quality/help/beginning-duplicate-finding.html\"> 
 How To Find Previously Reported Bugs</a><br>
 <a href="http://www.mozilla.org/bugs/">Bugzilla General Information</a><br>
@@ -1444,22 +1400,7 @@ doesn't have a duplicate before submitting it, as is stated clearly in
 The people reading your bugs are busy and usually swamped with bugs. Therefore, you are doing everyone 
 a huge favor to search for a duplicate. 
 
-<p><br><center><h3>About Bugzilla</h3></center>
 
-Bugzilla has been around for quite a while. It is a way for bug testers and users of Mozilla to interact with 
-engineers. It has been a very important part of the <a href="http://www.mozilla.org/">Mozilla Project</a> and will be for a long time to come. Bugzilla is 
-<a href="http://www.mozilla.org/bugs/source.html">open source</a>, 
-meaning that other people can use it and modify it if they follow Mozilla's 
-license. A good example of is <a href="http://bugzilla.redhat.com/bugzilla/">
-Redhat Linux</a>, although they have altered the utility more than most. This will first appear on Bugzilla version 2.12, which is being finalized as 
-I write this. Ian Hickson is working on Bugzilla version 3.0 - a total rewrite with a much better structure and more functionality. 
-
-<p><br><center><h3>The Database</h3></center>
-
-
-<p>The blood and guts of Bugzilla are the over 50,000 bugs (and growing in number quickly) 
-that exist in the Bugzilla Database. That is why the form is so complicated. If there were only 500 bugs, then a simple text search would probably be enough. This 
-form will help you sift through all these bugs to find the one you are looking for.
 
 };
 
@@ -1474,12 +1415,12 @@ print qq{
 <a name="samplequery"></a>
 <p><br><center><h3>Sample Query</h3></center>
 
-<p>Ok. <b>So lets find a bug!</b> First, lets make a <a target="_blank" href="query.cgi">
-copy</a> of the query window so you can easily switch between 
-this document and the query.
+<p>Ok. <b>So lets find a bug!</b>  We'll borrow the Mozilla.org database because it's handy. 
+<BR>First, lets make a <a target="_blank" href="http://bugzilla.mozilla.org/query.cgi">
+copy</a> of the query window so you can easily switch between this document and the query.
 <p>Do the following:
 <ul>
-<li>Go to the status field in Bug Settings and select all.
+<li>Go to the "Status" field in and select all fields (or deselect all fields).
 <li>In Text Search options, put Autoscroll in the summary and Panning in the description entry box 
 (meaning that panning is somewhere in the comments and the bug's summary has Autoscroll in it).
 </ul>
@@ -1488,8 +1429,6 @@ this document and the query.
 
 print qq{
 <hr>
-If you like this document, then please buy my book: <b>Bugzilla: Mozilla's Flu Shot</b>
-<br>It's 1521 pages of Bugzilla excitement! You will not regret it. At your local bookstore now!
 
 <a name="bottom"></a>
 
