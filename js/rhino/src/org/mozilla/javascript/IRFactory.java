@@ -587,7 +587,7 @@ final class IRFactory
      */
     Node createWith(Node obj, Node body, int lineno)
     {
-        setRequiresActivation();
+        parser.setRequiresActivation();
         Node result = new Node(Token.BLOCK, lineno);
         result.addChildToBack(new Node(Token.ENTERWITH, obj));
         Node bodyNode = new Node(Token.WITH, body, lineno);
@@ -791,7 +791,7 @@ final class IRFactory
         Node node = new Node(nodeType, child);
         if (type != Node.NON_SPECIALCALL) {
             // Calls to these functions require activation objects.
-            setRequiresActivation();
+            parser.setRequiresActivation();
             node.putIntProp(Node.SPECIALCALL_PROP, type);
         }
         return node;
@@ -1113,8 +1113,8 @@ final class IRFactory
 
     private void checkActivationName(String name, int token)
     {
-        boolean activation = false;
-        if (parser.currentScriptOrFn.getType() == Token.FUNCTION) {
+        if (parser.insideFunction()) {
+            boolean activation = false;
             if ("arguments".equals(name)
                 || (parser.compilerEnv.activationNames != null
                     && parser.compilerEnv.activationNames.containsKey(name)))
@@ -1129,16 +1129,9 @@ final class IRFactory
                     activation = true;
                 }
             }
-        }
-        if (activation) {
-            ((FunctionNode)parser.currentScriptOrFn).setRequiresActivation();
-        }
-    }
-
-    private void setRequiresActivation()
-    {
-        if (parser.currentScriptOrFn.getType() == Token.FUNCTION) {
-            ((FunctionNode)parser.currentScriptOrFn).setRequiresActivation();
+            if (activation) {
+                parser.setRequiresActivation();
+            }
         }
     }
 

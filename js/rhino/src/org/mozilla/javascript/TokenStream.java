@@ -54,20 +54,6 @@ import java.io.*;
 public class TokenStream
 {
     /*
-     * JSTokenStream flags, mirroring those in jsscan.h.  These are used
-     * by the parser to change/check the state of the scanner.
-     */
-
-    final static int
-        TSF_NEWLINES    = 1 << 0,  // tokenize newlines
-        TSF_FUNCTION    = 1 << 1,  // scanning inside function body
-        TSF_RETURN_EXPR = 1 << 2,  // function has 'return expr;'
-        TSF_RETURN_VOID = 1 << 3,  // function has 'return;'
-        TSF_REGEXP      = 1 << 4,  // looking for a regular expression
-        TSF_DIRTYLINE   = 1 << 5;  // stuff other than whitespace since
-                                   // start of line
-
-    /*
      * For chars - because we need something out-of-range
      * to check.  (And checking EOF by exception is annoying.)
      * Note distinction from EOF token type!
@@ -83,7 +69,6 @@ public class TokenStream
         this.pushbackToken = Token.EOF;
         this.sourceName = sourceName;
         this.lineno = lineno;
-        this.flags = 0;
         if (sourceReader != null) {
             if (sourceString != null) Kit.codeBug();
             this.sourceReader = sourceReader;
@@ -354,11 +339,11 @@ public class TokenStream
     }
 
     public final int peekTokenSameLine() throws IOException {
-        flags |= TSF_NEWLINES;          // SCAN_NEWLINES from jsscan.h
+        significantEol = true;          // SCAN_NEWLINES from jsscan.h
         int result = getToken();
         this.pushbackToken = result;
         tokenno--;
-        flags &= ~TSF_NEWLINES;         // HIDE_NEWLINES from jsscan.h
+        significantEol = false;         // HIDE_NEWLINES from jsscan.h
         return result;
     }
 
@@ -370,7 +355,7 @@ public class TokenStream
         if (this.pushbackToken != Token.EOF) {
             int result = this.pushbackToken;
             this.pushbackToken = Token.EOF;
-            if (result != Token.EOL || (flags & TSF_NEWLINES) != 0) {
+            if (result != Token.EOL || significantEol) {
                 return result;
             }
         }
@@ -383,13 +368,13 @@ public class TokenStream
                 if (c == EOF_CHAR) {
                     return Token.EOF;
                 } else if (c == '\n') {
-                    flags &= ~TSF_DIRTYLINE;
-                    if ((flags & TSF_NEWLINES) != 0) {
+                    dirtyLine = false;
+                    if (significantEol) {
                         return Token.EOL;
                     }
                 } else if (!isJSSpace(c)) {
                     if (c != '-') {
-                        flags |= TSF_DIRTYLINE;
+                        dirtyLine = true;
                     }
                     break;
                 }
@@ -839,7 +824,7 @@ public class TokenStream
                 }
 
                 // is it a regexp?
-                if ((flags & TSF_REGEXP) != 0) {
+                if (allowRegExp) {
                     stringBufferTop = 0;
                     while ((c = getChar()) != '/') {
                         if (c == '\n' || c == EOF_CHAR) {
@@ -914,7 +899,7 @@ public class TokenStream
                     this.op = Token.SUB;
                     c = Token.ASSIGNOP;
                 } else if (matchChar('-')) {
-                    if (0 == (flags & TSF_DIRTYLINE)) {
+                    if (!dirtyLine) {
                         // treat HTML end-comment after possible whitespace
                         // after line start as comment-utill-eol
                         if (matchChar('>')) {
@@ -926,7 +911,7 @@ public class TokenStream
                 } else {
                     c = Token.SUB;
                 }
-                flags |= TSF_DIRTYLINE;
+                dirtyLine = true;
                 return c;
 
             default:
@@ -1155,11 +1140,13 @@ public class TokenStream
         return true;
     }
 
-    /* for TSF_REGEXP, etc.
-     * should this be manipulated by gettor/settor functions?
-     * should it be passed to getToken();
-     */
-    int flags;
+    // tokenize newlines
+    private boolean significantEol;
+
+    // stuff other than whitespace since start of line
+    private boolean dirtyLine;
+
+    boolean allowRegExp;
     String regExpFlags;
 
     private String sourceName;

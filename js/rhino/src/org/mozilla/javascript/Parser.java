@@ -144,9 +144,9 @@ public class Parser
 
         try {
             for (;;) {
-                ts.flags |= TokenStream.TSF_REGEXP;
+                ts.allowRegExp = true;
                 int tt = ts.getToken();
-                ts.flags &= ~TokenStream.TSF_REGEXP;
+                ts.allowRegExp = false;
 
                 if (tt <= Token.EOF) {
                     break;
@@ -205,6 +205,18 @@ public class Parser
         return ts.eof();
     }
 
+    boolean insideFunction()
+    {
+        return nestingOfFunction != 0;
+    }
+
+    void setRequiresActivation()
+    {
+        if (insideFunction()) {
+            ((FunctionNode)currentScriptOrFn).setRequiresActivation();
+        }
+    }
+
     /*
      * The C version of this function takes an argument list,
      * which doesn't seem to be needed for tree generation...
@@ -214,11 +226,7 @@ public class Parser
     private Node parseFunctionBody()
         throws IOException
     {
-        int oldflags = ts.flags;
-        ts.flags &= ~(TokenStream.TSF_RETURN_EXPR
-                      | TokenStream.TSF_RETURN_VOID);
-        ts.flags |= TokenStream.TSF_FUNCTION;
-
+        ++nestingOfFunction;
         Node pn = nf.createBlock(ts.getLineno());
         try {
             int tt;
@@ -235,10 +243,7 @@ public class Parser
         } catch (ParserException e) {
             this.ok = false;
         } finally {
-            // also in finally block:
-            // flushNewLines, clearPushback.
-
-            ts.flags = oldflags;
+            --nestingOfFunction;
         }
 
         return pn;
@@ -286,7 +291,7 @@ public class Parser
             decompiler.addToken(Token.ASSIGN);
         }
 
-        boolean nested = (currentScriptOrFn.type == Token.FUNCTION);
+        boolean nested = insideFunction();
 
         FunctionNode fnNode = nf.createFunction(name);
         if (nested) {
@@ -816,23 +821,19 @@ public class Parser
 
             decompiler.addToken(Token.RETURN);
 
-            // bail if we're not in a (toplevel) function
-            if ((ts.flags & ts.TSF_FUNCTION) == 0)
+            if (!insideFunction())
                 reportError("msg.bad.return");
 
             /* This is ugly, but we don't want to require a semicolon. */
-            ts.flags |= ts.TSF_REGEXP;
+            ts.allowRegExp = true;
             tt = ts.peekTokenSameLine();
-            ts.flags &= ~ts.TSF_REGEXP;
+            ts.allowRegExp = false;
 
             int lineno = ts.getLineno();
             if (tt != Token.EOF && tt != Token.EOL && tt != Token.SEMI && tt != Token.RC) {
                 retExpr = expr(false);
                 if (ts.getLineno() == lineno)
                     checkWellTerminated();
-                ts.flags |= ts.TSF_RETURN_EXPR;
-            } else {
-                ts.flags |= ts.TSF_RETURN_VOID;
             }
 
             // XXX ASSERT pn
@@ -1186,9 +1187,9 @@ public class Parser
     {
         int tt;
 
-        ts.flags |= ts.TSF_REGEXP;
+        ts.allowRegExp = true;
         tt = ts.getToken();
-        ts.flags &= ~ts.TSF_REGEXP;
+        ts.allowRegExp = false;
 
         switch(tt) {
         case Token.VOID:
@@ -1253,9 +1254,9 @@ public class Parser
         throws IOException, ParserException
     {
         boolean matched;
-        ts.flags |= ts.TSF_REGEXP;
+        ts.allowRegExp = true;
         matched = ts.matchToken(Token.RP);
-        ts.flags &= ~ts.TSF_REGEXP;
+        ts.allowRegExp = false;
         if (!matched) {
             boolean first = true;
             do {
@@ -1278,9 +1279,9 @@ public class Parser
         Node pn;
 
         /* Check for new expressions. */
-        ts.flags |= ts.TSF_REGEXP;
+        ts.allowRegExp = true;
         tt = ts.peekToken();
-        ts.flags &= ~ts.TSF_REGEXP;
+        ts.allowRegExp = false;
         if (tt == Token.NEW) {
             /* Eat the NEW token. */
             ts.getToken();
@@ -1360,9 +1361,9 @@ public class Parser
 
         Node pn;
 
-        ts.flags |= ts.TSF_REGEXP;
+        ts.allowRegExp = true;
         tt = ts.getToken();
-        ts.flags &= ~ts.TSF_REGEXP;
+        ts.allowRegExp = false;
 
         switch(tt) {
 
@@ -1376,9 +1377,9 @@ public class Parser
                 decompiler.addToken(Token.LB);
                 boolean after_lb_or_comma = true;
                 for (;;) {
-                    ts.flags |= ts.TSF_REGEXP;
+                    ts.allowRegExp = true;
                     tt = ts.peekToken();
-                    ts.flags &= ~ts.TSF_REGEXP;
+                    ts.allowRegExp = false;
 
                     if (tt == Token.COMMA) {
                         ts.getToken();
@@ -1529,8 +1530,9 @@ public class Parser
 
     private boolean ok; // Did the parse encounter an error?
 
-    ScriptOrFnNode currentScriptOrFn;
+    private ScriptOrFnNode currentScriptOrFn;
 
+    private int nestingOfFunction;
     private int nestingOfWith;
 
     private Decompiler decompiler;
