@@ -52,26 +52,6 @@
 #include "nsIPromptService.h"
 #endif
 
-////////////////////////////////////////////////////////////////////////
-// module initialisation
-
-void NS_InitSVGRendererLibartGlobals()
-{
-  // Initialization of freetype (if compiled-in) is done lazily in
-  // NS_NewSVGRendererLibart(). The main reason is that we might want
-  // to show error messages using the prompt service, and that's
-  // probably not a good idea in *this* function, at a time when
-  // layout is still not fully initialized.
-}
-
-void NS_FreeSVGRendererLibartGlobals()
-{
-#ifdef MOZ_ENABLE_FREETYPE2  
-  NS_FreeSVGLibartGlyphMetricsFTGlobals();
-  nsSVGLibartFreetype::Shutdown();
-#endif
-}
-
 /**
  * \addtogroup libart_renderer Libart Rendering Engine
  * @{
@@ -95,7 +75,6 @@ public:
   // nsISVGRenderer interface
   NS_DECL_NSISVGRENDERER
 
-private:
   static PRBool sGlobalsInited;
 #ifdef MOZ_ENABLE_FREETYPE2
   static PRBool sUseFreetype;
@@ -150,6 +129,7 @@ NS_NewSVGRendererLibart(nsISVGRenderer** aResult)
       nsXPIDLString title(NS_LITERAL_STRING("Font Configuration Error"));
       nsXPIDLString msg(NS_LITERAL_STRING("The Libart/Freetype SVG rendering engine can't find any truetype fonts on your system. Please go to http://www.mozilla.org/projects/fonts/unix/enabling_truetype.html and follow steps 2-7."));
       prompter->Alert(nsnull, title, msg);
+      nsSVGLibartFreetype::Shutdown();
     }
     else {
       nsSVGRendererLibart::sUseFreetype = PR_TRUE;
@@ -221,3 +201,27 @@ nsSVGRendererLibart::CreateRectRegion(float x, float y, float width, float heigh
   return NS_NewSVGLibartRectRegion(_retval, x, y, width, height);
 }
 
+
+////////////////////////////////////////////////////////////////////////
+// module initialisation
+
+void NS_InitSVGRendererLibartGlobals()
+{
+  // Initialization of freetype (if compiled-in) is done lazily in
+  // NS_NewSVGRendererLibart(). The main reason is that we might want
+  // to show error messages using the prompt service, and that's
+  // probably not a good idea in *this* function, at a time when
+  // layout is still not fully initialized.
+}
+
+void NS_FreeSVGRendererLibartGlobals()
+{
+  if (!nsSVGRendererLibart::sGlobalsInited) return;
+  
+#ifdef MOZ_ENABLE_FREETYPE2
+  if (nsSVGRendererLibart::sUseFreetype) {
+    NS_FreeSVGLibartGlyphMetricsFTGlobals();  
+    nsSVGLibartFreetype::Shutdown();
+  }
+#endif
+}
