@@ -249,9 +249,8 @@ nsJSContext::InitializeExternalClasses()
 nsresult
 nsJSContext::InitializeLiveConnectClasses()
 {
-	nsresult rv = NS_OK;
-	
 #if defined(OJI)
+	nsresult rv = NS_OK;
 	NS_WITH_SERVICE(nsIJVMManager, jvmManager, nsIJVMManager::GetCID(), &rv);
 	if (rv == NS_OK && jvmManager != nsnull) {
 		PRBool javaEnabled = PR_FALSE;
