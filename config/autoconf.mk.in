@@ -164,6 +164,8 @@ NS_USE_NATIVE = @NS_USE_NATIVE@
 CC		    = @CC@
 CXX		    = @CXX@
 
+GNU_AS		= @GNU_AS@
+GNU_LD		= @GNU_LD@
 GNU_CC		= @GNU_CC@
 GNU_CXX		= @GNU_CXX@
 
