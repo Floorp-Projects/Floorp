@@ -24,9 +24,7 @@
 [scriptable, uuid(a6cf9083-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLCollection : nsISupports
 {
-
-   readonly attribute  unsigned long        length;
-   nsIDOMNode                      item(in unsigned long index);
-   nsIDOMNode                      namedItem(in DOMString name);
+  readonly attribute unsigned long    length;
+  nsIDOMNode                item(in unsigned long index);
+  nsIDOMNode                namedItem(in DOMString name);
 };
-

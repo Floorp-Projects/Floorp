@@ -24,13 +24,11 @@
 [scriptable, uuid(a6cf911b-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMNSHTMLAreaElement : nsISupports
 {
-
-   readonly attribute DOMString   protocol;
-   readonly attribute DOMString   host;
-   readonly attribute DOMString   hostname;  
-   readonly attribute DOMString   pathname;
-   readonly attribute DOMString   search;
-   readonly attribute DOMString   port;
-   readonly attribute DOMString   hash;
+  readonly attribute DOMString        protocol;
+  readonly attribute DOMString        host;
+  readonly attribute DOMString        hostname;  
+  readonly attribute DOMString        pathname;
+  readonly attribute DOMString        search;
+  readonly attribute DOMString        port;
+  readonly attribute DOMString        hash;
 };
-

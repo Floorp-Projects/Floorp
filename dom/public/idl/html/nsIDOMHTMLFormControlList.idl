@@ -22,10 +22,8 @@
 #include "nsIDOMHTMLCollection.idl"
 
 [scriptable, uuid(a6cf911a-15b3-11d2-932e-00805f8add32)]
-interface nsIDOMHTMLFormControlList : nsIDOMHTMLCollection
+interface nsIDOMHTMLFormControlList : nsISupports
 {
-
-   jsval namedItem(/* ... */);
-   jsval item(/* ... */);
+  nsISupports               namedItem(in DOMString name);
+  nsISupports               item(in unsigned long index);
 };
-

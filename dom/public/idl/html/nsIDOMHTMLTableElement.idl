@@ -24,28 +24,26 @@
 [scriptable, uuid(a6cf90b2-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLTableElement : nsIDOMHTMLElement
 {
-
-            attribute  nsIDOMHTMLTableCaptionElement caption;
-            attribute  nsIDOMHTMLTableSectionElement tHead;
-            attribute  nsIDOMHTMLTableSectionElement tFoot;
-   readonly attribute  nsIDOMHTMLCollection       rows;
-   readonly attribute  nsIDOMHTMLCollection       tBodies;
-            attribute  DOMString            align;
-            attribute  DOMString            bgColor;
-            attribute  DOMString            border;
-            attribute  DOMString            cellPadding;
-            attribute  DOMString            cellSpacing;
-            attribute  DOMString            frame;
-            attribute  DOMString            rules;
-            attribute  DOMString            summary;
-            attribute  DOMString            width;
-   nsIDOMHTMLElement               createTHead();
-   void                      deleteTHead();
-   nsIDOMHTMLElement               createTFoot();
-   void                      deleteTFoot();
-   nsIDOMHTMLElement               createCaption();
-   void                      deleteCaption();
-   nsIDOMHTMLElement               insertRow(in long index);
-   void                      deleteRow(in long index);
+           attribute nsIDOMHTMLTableCaptionElement caption;
+           attribute nsIDOMHTMLTableSectionElement tHead;
+           attribute nsIDOMHTMLTableSectionElement tFoot;
+  readonly attribute nsIDOMHTMLCollection          rows;
+  readonly attribute nsIDOMHTMLCollection          tBodies;
+           attribute DOMString                     align;
+           attribute DOMString                     bgColor;
+           attribute DOMString                     border;
+           attribute DOMString                     cellPadding;
+           attribute DOMString                     cellSpacing;
+           attribute DOMString                     frame;
+           attribute DOMString                     rules;
+           attribute DOMString                     summary;
+           attribute DOMString                     width;
+  nsIDOMHTMLElement         createTHead();
+  void                      deleteTHead();
+  nsIDOMHTMLElement         createTFoot();
+  void                      deleteTFoot();
+  nsIDOMHTMLElement         createCaption();
+  void                      deleteCaption();
+  nsIDOMHTMLElement         insertRow(in long index);
+  void                      deleteRow(in long index);
 };
-

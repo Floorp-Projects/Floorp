@@ -24,7 +24,5 @@
 [scriptable, uuid(a6cf9086-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLHtmlElement : nsIDOMHTMLElement
 {
-
-            attribute  DOMString            version;
+           attribute DOMString        version;
 };
-

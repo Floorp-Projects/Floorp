@@ -24,28 +24,26 @@
 [scriptable, uuid(a6cf9093-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
 {
-
-            attribute  DOMString            defaultValue;
-            attribute  boolean              defaultChecked;
-   readonly attribute  nsIDOMHTMLFormElement      form;
-            attribute  DOMString            accept;
-            attribute  DOMString            accessKey;
-            attribute  DOMString            align;
-            attribute  DOMString            alt;
-            attribute  boolean              checked;
-            attribute  boolean              disabled;
-            attribute  long                 maxLength;
-            attribute  DOMString            name;
-            attribute  boolean              readOnly;
-            attribute  DOMString            size;
-            attribute  DOMString            src;
-            attribute  long                 tabIndex;
-            attribute  DOMString            type;
-            attribute  DOMString            useMap;
-            attribute  DOMString            value;
-   void                      blur();
-   void                      focus();
-   void                      select();
-   void                      click();
+           attribute DOMString             defaultValue;
+           attribute boolean               defaultChecked;
+  readonly attribute nsIDOMHTMLFormElement form;
+           attribute DOMString             accept;
+           attribute DOMString             accessKey;
+           attribute DOMString             align;
+           attribute DOMString             alt;
+           attribute boolean               checked;
+           attribute boolean               disabled;
+           attribute long                  maxLength;
+           attribute DOMString             name;
+           attribute boolean               readOnly;
+           attribute DOMString             size;
+           attribute DOMString             src;
+           attribute long                  tabIndex;
+           attribute DOMString             type;
+           attribute DOMString             useMap;
+           attribute DOMString             value;
+  void                      blur();
+  void                      focus();
+  void                      select();
+  void                      click();
 };
-

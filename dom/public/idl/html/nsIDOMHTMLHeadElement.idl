@@ -24,7 +24,5 @@
 [scriptable, uuid(a6cf9087-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLHeadElement : nsIDOMHTMLElement
 {
-
-            attribute  DOMString            profile;
+           attribute DOMString        profile;
 };
-

@@ -24,7 +24,5 @@
 [scriptable, uuid(a6cf90a5-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLBRElement : nsIDOMHTMLElement
 {
-
-            attribute  DOMString            clear;
+           attribute DOMString        clear;
 };
-

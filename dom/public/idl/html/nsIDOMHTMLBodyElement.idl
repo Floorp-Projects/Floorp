@@ -24,12 +24,10 @@
 [scriptable, uuid(a6cf908e-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLBodyElement : nsIDOMHTMLElement
 {
-
-            attribute  DOMString            aLink;
-            attribute  DOMString            background;
-            attribute  DOMString            bgColor;
-            attribute  DOMString            link;
-            attribute  DOMString            text;
-            attribute  DOMString            vLink;
+           attribute DOMString        aLink;
+           attribute DOMString        background;
+           attribute DOMString        bgColor;
+           attribute DOMString        link;
+           attribute DOMString        text;
+           attribute DOMString        vLink;
 };
-

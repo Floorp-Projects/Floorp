@@ -24,21 +24,19 @@
 [scriptable, uuid(a6cf90b7-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLTableCellElement : nsIDOMHTMLElement
 {
-
-            attribute  long                 cellIndex;
-            attribute  DOMString            abbr;
-            attribute  DOMString            align;
-            attribute  DOMString            axis;
-            attribute  DOMString            bgColor;
-            attribute  DOMString            ch;
-            attribute  DOMString            chOff;
-            attribute  long                 colSpan;
-            attribute  DOMString            headers;
-            attribute  DOMString            height;
-            attribute  boolean              noWrap;
-            attribute  long                 rowSpan;
-            attribute  DOMString            scope;
-            attribute  DOMString            vAlign;
-            attribute  DOMString            width;
+           attribute long             cellIndex;
+           attribute DOMString        abbr;
+           attribute DOMString        align;
+           attribute DOMString        axis;
+           attribute DOMString        bgColor;
+           attribute DOMString        ch;
+           attribute DOMString        chOff;
+           attribute long             colSpan;
+           attribute DOMString        headers;
+           attribute DOMString        height;
+           attribute boolean          noWrap;
+           attribute long             rowSpan;
+           attribute DOMString        scope;
+           attribute DOMString        vAlign;
+           attribute DOMString        width;
 };
-

@@ -24,10 +24,8 @@
 [scriptable, uuid(a6cf908a-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLMetaElement : nsIDOMHTMLElement
 {
-
-            attribute  DOMString            content;
-            attribute  DOMString            httpEquiv;
-            attribute  DOMString            name;
-            attribute  DOMString            scheme;
+           attribute DOMString        content;
+           attribute DOMString        httpEquiv;
+           attribute DOMString        name;
+           attribute DOMString        scheme;
 };
-

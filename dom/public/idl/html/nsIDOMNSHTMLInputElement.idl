@@ -24,18 +24,18 @@
 [scriptable, uuid(993d2efc-a768-11d3-bccd-0060b0fc76bd)]
 interface nsIDOMNSHTMLInputElement : nsISupports
 {
-
-	readonly attribute  nsIControllers  controllers;
+	readonly attribute nsIControllers   controllers;
 	
-	readonly attribute  long   textLength;
+	readonly attribute long             textLength;
 	
-           attribute  long   selectionStart;
-           attribute  long   selectionEnd;
+           attribute long             selectionStart;
+           attribute long             selectionEnd;
 
 
- /* XXX The nsIDOMEventListener arg should be flagged as function */
+  /* XXX The nsIDOMEventListener arg should be flagged as function */
+
 	/* convenience */
-  void                       setSelectionRange(in long selectionStart, in long selectionEnd);
+  void                      setSelectionRange(in long selectionStart,
+                                              in long selectionEnd);
   
 };
-

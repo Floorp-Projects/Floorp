@@ -24,14 +24,12 @@
 [scriptable, uuid(a6cf90b0-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLAreaElement : nsIDOMHTMLElement
 {
-
-            attribute  DOMString            accessKey;
-            attribute  DOMString            alt;
-            attribute  DOMString            coords;
-            attribute  DOMString            href;
-            attribute  boolean              noHref;
-            attribute  DOMString            shape;
-            attribute  long                 tabIndex;
-            attribute  DOMString            target;
+           attribute DOMString        accessKey;
+           attribute DOMString        alt;
+           attribute DOMString        coords;
+           attribute DOMString        href;
+           attribute boolean          noHref;
+           attribute DOMString        shape;
+           attribute long             tabIndex;
+           attribute DOMString        target;
 };
-

@@ -24,23 +24,21 @@
 [scriptable, uuid(a6cf9084-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLDocument : nsIDOMDocument
 {
+           attribute DOMString            title;
+  readonly attribute DOMString            referrer;
+           attribute DOMString            domain;
+  readonly attribute DOMString            URL;
+           attribute nsIDOMHTMLElement    body;
+  readonly attribute nsIDOMHTMLCollection images;
+  readonly attribute nsIDOMHTMLCollection applets;
+  readonly attribute nsIDOMHTMLCollection links;
+  readonly attribute nsIDOMHTMLCollection forms;
+  readonly attribute nsIDOMHTMLCollection anchors;
+           attribute DOMString            cookie;
 
-            attribute  DOMString            title;
-   readonly attribute  DOMString            referrer;
-            attribute  DOMString            domain;
-   readonly attribute  DOMString            URL;
-            attribute  nsIDOMHTMLElement          body;
-   readonly attribute  nsIDOMHTMLCollection       images;
-   readonly attribute  nsIDOMHTMLCollection       applets;
-   readonly attribute  nsIDOMHTMLCollection       links;
-   readonly attribute  nsIDOMHTMLCollection       forms;
-   readonly attribute  nsIDOMHTMLCollection       anchors;
-            attribute  DOMString            cookie;
-
-   [noscript] void             open();
-   void                      close();
-   [noscript] void             write(in DOMString text);
-   [noscript] void             writeln(in DOMString text);
-   nsIDOMNodeList                  getElementsByName(in DOMString elementName);
+  [noscript] void           open();
+  void                      close();
+  [noscript] void           write(in DOMString text);
+  [noscript] void           writeln(in DOMString text);
+  nsIDOMNodeList            getElementsByName(in DOMString elementName);
 };
-

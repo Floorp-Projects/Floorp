@@ -24,10 +24,8 @@
 [scriptable, uuid(a6cf90a8-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLHRElement : nsIDOMHTMLElement
 {
-
-            attribute  DOMString            align;
-            attribute  boolean              noShade;
-            attribute  DOMString            size;
-            attribute  DOMString            width;
+           attribute DOMString        align;
+           attribute boolean          noShade;
+           attribute DOMString        size;
+           attribute DOMString        width;
 };
-

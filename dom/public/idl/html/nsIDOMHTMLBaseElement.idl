@@ -24,8 +24,6 @@
 [scriptable, uuid(a6cf908b-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLBaseElement : nsIDOMHTMLElement
 {
-
-            attribute  DOMString            href;
-            attribute  DOMString            target;
+           attribute DOMString        href;
+           attribute DOMString        target;
 };
-

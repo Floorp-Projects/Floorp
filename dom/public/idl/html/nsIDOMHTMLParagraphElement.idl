@@ -24,7 +24,5 @@
 [scriptable, uuid(a6cf90a1-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLParagraphElement : nsIDOMHTMLElement
 {
-
-            attribute  DOMString            align;
+           attribute DOMString        align;
 };
-
