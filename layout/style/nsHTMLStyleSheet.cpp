@@ -1295,69 +1295,80 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
   if (nsnull == aTag) {
     rv = NS_NewTextFrame(aContent, aParentFrame, aNewFrame);
   }
-  else if (nsHTMLAtoms::img == aTag) {
-    rv = NS_NewImageFrame(aContent, aParentFrame, aNewFrame);
-  }
-  else if (nsHTMLAtoms::hr == aTag) {
-    rv = NS_NewHRFrame(aContent, aParentFrame, aNewFrame);
-  }
-  else if (nsHTMLAtoms::br == aTag) {
-    rv = NS_NewBRFrame(aContent, aParentFrame, aNewFrame);
-  }
-  else if (nsHTMLAtoms::wbr == aTag) {
-    rv = NS_NewWBRFrame(aContent, aParentFrame, aNewFrame);
-  }
-  else if (nsHTMLAtoms::input == aTag) {
-    rv = CreateInputFrame(aContent, aParentFrame, aNewFrame);
-  }
-  else if (nsHTMLAtoms::textarea == aTag) {
-    rv = NS_NewTextControlFrame(aContent, aParentFrame, aNewFrame);
-  }
-  else if (nsHTMLAtoms::select == aTag) {
-    rv = NS_NewSelectControlFrame(aContent, aParentFrame, aNewFrame);
-  }
-  else if (nsHTMLAtoms::applet == aTag) {
-    rv = NS_NewObjectFrame(aContent, aParentFrame, aNewFrame);
-  }
-  else if (nsHTMLAtoms::embed == aTag) {
-    rv = NS_NewObjectFrame(aContent, aParentFrame, aNewFrame);
-  }
-  else if (nsHTMLAtoms::fieldset == aTag) {
-    rv = NS_NewFieldSetFrame(aContent, aParentFrame, aNewFrame);
-    processChildren = PR_TRUE;
-  }
-  else if (nsHTMLAtoms::legend == aTag) {
-    rv = NS_NewLegendFrame(aContent, aParentFrame, aNewFrame);
-    processChildren = PR_TRUE;
-  }
-  else if (nsHTMLAtoms::object == aTag) {
-    rv = NS_NewObjectFrame(aContent, aParentFrame, aNewFrame);
-//    processChildren = PR_TRUE;
-  }
-  else if (nsHTMLAtoms::body == aTag) {
-    rv = NS_NewBodyFrame(aContent, aParentFrame, aNewFrame,
-                         NS_BODY_THE_BODY|NS_BODY_NO_AUTO_MARGINS);
-    processChildren = PR_TRUE;
-  }
-  else if (nsHTMLAtoms::form == aTag) {
-    rv = NS_NewFormFrame(aContent, aParentFrame, aNewFrame);
-  }
-  else if (nsHTMLAtoms::frameset == aTag) {
-    rv = NS_NewHTMLFramesetFrame(aContent, aParentFrame, aNewFrame);
-  }
-  else if (nsHTMLAtoms::iframe == aTag) {
-    rv = NS_NewHTMLFrameOuterFrame(aContent, aParentFrame, aNewFrame);
-  }
-  else if (nsHTMLAtoms::spacer == aTag) {
-    rv = NS_NewSpacerFrame(aContent, aParentFrame, aNewFrame);
-  }
-  else if (nsHTMLAtoms::button == aTag) {
-    rv = NS_NewHTMLButtonControlFrame(aContent, aParentFrame, aNewFrame);
-    processChildren = PR_TRUE;
-  }
-  else if (nsHTMLAtoms::label == aTag) {
-    rv = NS_NewLabelFrame(aContent, aParentFrame, aNewFrame);
-    processChildren = PR_TRUE;
+  else {
+    nsIHTMLContent *htmlContent;
+    rv = aContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
+    if (NS_SUCCEEDED(rv)) {
+      if (nsHTMLAtoms::img == aTag) {
+        rv = NS_NewImageFrame(aContent, aParentFrame, aNewFrame);
+      }
+      else if (nsHTMLAtoms::hr == aTag) {
+        rv = NS_NewHRFrame(aContent, aParentFrame, aNewFrame);
+      }
+      else if (nsHTMLAtoms::br == aTag) {
+        rv = NS_NewBRFrame(aContent, aParentFrame, aNewFrame);
+      }
+      else if (nsHTMLAtoms::wbr == aTag) {
+        rv = NS_NewWBRFrame(aContent, aParentFrame, aNewFrame);
+      }
+      else if (nsHTMLAtoms::input == aTag) {
+        rv = CreateInputFrame(aContent, aParentFrame, aNewFrame);
+      }
+      else if (nsHTMLAtoms::textarea == aTag) {
+        rv = NS_NewTextControlFrame(aContent, aParentFrame, aNewFrame);
+      }
+      else if (nsHTMLAtoms::select == aTag) {
+        rv = NS_NewSelectControlFrame(aContent, aParentFrame, aNewFrame);
+      }
+      else if (nsHTMLAtoms::applet == aTag) {
+        rv = NS_NewObjectFrame(aContent, aParentFrame, aNewFrame);
+      }
+      else if (nsHTMLAtoms::embed == aTag) {
+        rv = NS_NewObjectFrame(aContent, aParentFrame, aNewFrame);
+      }
+      else if (nsHTMLAtoms::fieldset == aTag) {
+        rv = NS_NewFieldSetFrame(aContent, aParentFrame, aNewFrame);
+        processChildren = PR_TRUE;
+      }
+      else if (nsHTMLAtoms::legend == aTag) {
+        rv = NS_NewLegendFrame(aContent, aParentFrame, aNewFrame);
+        processChildren = PR_TRUE;
+      }
+      else if (nsHTMLAtoms::object == aTag) {
+        rv = NS_NewObjectFrame(aContent, aParentFrame, aNewFrame);
+        //    processChildren = PR_TRUE;
+      }
+      else if (nsHTMLAtoms::body == aTag) {
+        rv = NS_NewBodyFrame(aContent, aParentFrame, aNewFrame,
+                             NS_BODY_THE_BODY|NS_BODY_NO_AUTO_MARGINS);
+        processChildren = PR_TRUE;
+      }
+      else if (nsHTMLAtoms::form == aTag) {
+        rv = NS_NewFormFrame(aContent, aParentFrame, aNewFrame);
+      }
+      else if (nsHTMLAtoms::frameset == aTag) {
+        rv = NS_NewHTMLFramesetFrame(aContent, aParentFrame, aNewFrame);
+      }
+      else if (nsHTMLAtoms::iframe == aTag) {
+        rv = NS_NewHTMLFrameOuterFrame(aContent, aParentFrame, aNewFrame);
+      }
+      else if (nsHTMLAtoms::spacer == aTag) {
+        rv = NS_NewSpacerFrame(aContent, aParentFrame, aNewFrame);
+      }
+      else if (nsHTMLAtoms::button == aTag) {
+        rv = NS_NewHTMLButtonControlFrame(aContent, aParentFrame, aNewFrame);
+        processChildren = PR_TRUE;
+      }
+      else if (nsHTMLAtoms::label == aTag) {
+        rv = NS_NewLabelFrame(aContent, aParentFrame, aNewFrame);
+        processChildren = PR_TRUE;
+      }
+      NS_RELEASE(htmlContent);
+    }
+    else {
+      aNewFrame = nsnull;
+      rv = NS_OK;
+    }
   }
 
   // If we succeeded in creating a frame then set its style context,
