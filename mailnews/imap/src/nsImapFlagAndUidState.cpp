@@ -298,8 +298,15 @@ imapMessageFlagsType nsImapFlagAndUidState::GetMessageFlagsFromUID(PRUint32 uid,
 			lo = msgIndex + 1;
 	}
 	msgIndex = lo;
-	while ((msgIndex > 0) && (fUids[msgIndex] > (PRUint32) uid))
+  // leave msgIndex pointing to the first slot with a value > uid
+  // first, move it before any ids that are > (shouldn't happen).
+	while ((msgIndex > 0) && (fUids[msgIndex - 1] > (PRUint32) uid))
 		msgIndex--;
+
+  // next, move msgIndex up to the first slot > than uid.
+  while ((PRUint32) uid < fUids[msgIndex])
+    msgIndex++;
+
 	if (msgIndex < 0)
 		msgIndex = 0;
 	*ndx = msgIndex;

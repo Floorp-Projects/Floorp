@@ -2482,7 +2482,7 @@ void nsImapMailFolder::FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKey
 
       imapMessageFlagsType flags;
       flagState->GetMessageFlags(flagIndex, &flags);
-      if (showDeletedMessages || ! (flags & kImapMsgDeletedFlag))
+      if (uidOfMessage != nsMsgKey_None &&showDeletedMessages || ! (flags & kImapMsgDeletedFlag))
       {
         keysToFetch.Add(uidOfMessage);
       }
