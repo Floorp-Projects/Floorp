@@ -447,8 +447,9 @@ if test "$GNU_CC"; then
     # -Wconversion - complained when char's or short's were used a function args
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -Wshadow -Wpointer-arith -Wcast-align"
 
-    dnl Make pedantic a flag for now since the builds currently choke on it.
+    dnl Turn pedantic on but disable the warnings for long long
     _PEDANTIC=1
+    _IGNORE_LONG_LONG_WARNINGS=1
 
     _DEFINES_CFLAGS='-include $(DEPTH)/config-defs.h'
     _USE_CPP_INCLUDE_FLAG=1
@@ -549,6 +550,7 @@ case "$target" in
 *-bsdi*)
     dnl -pedantic doesn't play well with BSDI's _very_ modified gcc (shlicc2)
     _PEDANTIC=
+    _IGNORE_LONG_LONG_WARNINGS=
     case `uname -r` in
 	4.*) ;;
 	*)
@@ -2442,9 +2444,11 @@ fi
 
 dnl pass -Wno-long-long to the compiler
 MOZ_ARG_ENABLE_BOOL(ignore-no-long-long-warning,
-[  --enable-ignore-no-long-long-warning       pass -Wno-long-long to the compiler],
-  [ _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wno-long-long"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-long-long" ])
+[  --enable-ignore-no-long-long-warning       pass -Wno-long-long to the compiler], _IGNORE_LONG_LONG_WARNINGS=)
+if test "$_IGNORE_LONG_LONG_WARNINGS"; then
+    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wno-long-long"
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-long-long"
+fi
 
 dnl Note: This should not be disabled if --enable-oji is set
 MOZ_ARG_DISABLE_BOOL(shared,
