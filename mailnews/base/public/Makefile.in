@@ -24,7 +24,6 @@ include $(DEPTH)/config/autoconf.mk
 
 IDLSRCS =				  \
 		nsIMsgHost.idl		  \
-		nsIMsgGroupRecord.idl	  \
 		nsIMsgFolder.idl	  \
 		nsIDOMMsgAppCore.idl	\
 		$(NULL)
@@ -40,7 +39,6 @@ EXPORTS =				\
 		nsIMsg.h \
 		nsIMsgRFC822Parser.h	\
 		nsIMsgHost.h		\
-		nsIMsgGroupRecord.h	\
 		nsIFolder.h		\
 		nsIMsgFolder.h		\
 		nsIMsgRDFFolder.h	\
