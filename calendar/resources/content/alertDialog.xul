@@ -19,9 +19,9 @@
    - Portions created by the Initial Developer are Copyright (C) 2001
    - the Initial Developer. All Rights Reserved.
    -
-   - Contributor(s): Garth Smedley <garths@oeone.com> 
+   - Contributor(s): Garth Smedley <garths@oeone.com>
    -                 Mike Potter <mikep@oeone.com>
-   -                 Colin Phillips <colinp@oeone.com> 
+   -                 Colin Phillips <colinp@oeone.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,31 +36,28 @@
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
    - ***** END LICENSE BLOCK ***** -->
-   
-<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!-- CSS File with all styles specific to the dialog -->
 <?xml-stylesheet href="chrome://calendar/skin/alertDialog.css" ?>
 
-
 <!-- DTD File with all strings specific to the calendar -->
-<!DOCTYPE window 
+<!DOCTYPE window
 [
-    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
-    <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
-    <!ENTITY % dtd3 SYSTEM "chrome://global/locale/brand.dtd" > %dtd3;
+  <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
+  <!ENTITY % dtd3 SYSTEM "chrome://global/locale/brand.dtd" > %dtd3;
 ]>
 
+<window id="calendar-alarmwindow"
+        title="&brandShortName; - &event.title.heading; - &event.title.alarm;"
+        onload="onLoad()"
+        windowtype="calendarAlarmWindow"
+        persist="screenX screenY"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<window
-   id="calendar-new-eventwindow"
-   title="&brandShortName; - &event.title.heading; - &event.title.alarm;"
-   onload="onLoad()"
-   windowtype="calendarAlarmWindow"
-   persist="screenX screenY"
-   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
-   
 <!-- Javascript includes -->
 
 <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
@@ -69,79 +66,82 @@
 
 <!-- STRING BUNDLE for calendar properties -->
 <stringbundleset id="stringbundleset">
-   <stringbundle id="bundle_calendar" src="chrome://calendar/locale/calendar.properties"/>
+  <stringbundle id="bundle_calendar" src="chrome://calendar/locale/calendar.properties"/>
 </stringbundleset>
 <script type="application/x-javascript">
-   var gCalendarBundle = document.getElementById("bundle_calendar");
-</script>  
+  var gCalendarBundle = document.getElementById("bundle_calendar");
+</script>
 
 <!-- The dialog -->
-    
-    <!-- dialog-box: from dialogOverlay.xul -->
-    
-    <vbox id="dialog-box">  
-   
-      <!-- standard-dialog-content: from dialogOverlay.xul  -->
-        
-      <vbox id="standard-dialog-content">
-         <grid flex="1" id="event-container-box">
-            <columns>
-               <column flex="1"/>
-               <column flex="2" crop="right"/>
-               <column flex="1"/>
-               <column flex="1" id="last-column" collapsed="true"/>
-            </columns>
-            <rows id="event-container-rows"/>
-               <row class="ca-event-alert-row" name="sample-row" collapsed="true">
-                  <!-- NOTE: ALL ITEMS USE name INSTEAD OF id BECAUSE THE BOX IS DUPLICATED FOR EACH EVENT -->
-                  <vbox align="start" pack="center">
-                     <button name="AcknowledgeButton" label="&calendar.alarm.acknowledge.label;" wrap="none" class="alarm-acknowledge-button-class"/>
-                     <button name="EditEvent"         label="&calendar.edit.button.label;"   wrap="none" class="alarm-acknowledge-button-class"/>
-                     <box align="center" pack="center" flex="1">
-                        <button name="SnoozeButton"   label="&calendar.alarm.snooze.label;"      wrap="none" class="alarm-acknowledge-button-class"/>
-                        <textbox name="alarm-length-field" class="alarm-length-field-class"/>
-                               
-                        <menulist name="alarm-length-units" labelnumber="labelplural" crop="none">
-                           <menupopup >
-                              <menuitem label="&alarm.units.minutes;"
-                                        labelplural="&alarm.units.minutes;"
-                                        labelsingular="&alarm.units.minutes.singular;"
-                                        value="minutes"/>
-                              <menuitem label="&alarm.units.hours;"
-                                        labelplural="&alarm.units.hours;"
-                                        labelsingular="&alarm.units.hours.singular;"
-                                        value="hours"/>
-                              <menuitem label="&alarm.units.days;"
-                                        labelplural="&alarm.units.days;"
-                                        labelsingular="&alarm.units.days.singular;"
-                                        value="days"/>
-                           </menupopup>
-                        </menulist>
-                     </box>       
-						</vbox>
-		 <!--
-		   Note: this number is arbitrary. it should be moved out
-		   into a dtd or some other place than here, like a css.
-		   -->
-                  <vbox class="alarm-description">
-                     <description name="Title"/>
-                     <description name="Description"/>
-                  </vbox>
-                  <vbox>
-                     <description name="StartDate"/>
-                     <description name="StartTime"/>
-                  </vbox>
-                  <description name="NumberOfTimes" NumberOfTimes="1"/>
-                  <separator class="thin"/>
-               </row>
-               
-            
-         </grid>
-         <label id="too-many-alarms-description" value="" collapsed="true"/>
-         <box>
-				<spacer flex="1"/>
-            <button id="dialog-btn-yes" label="&calendar.alarm.acknowledgeall.label;" default="true" oncommand="doOKButton();"/>
-			</box>
-      </vbox> 
-    </vbox> <!-- dialog-box -->
+
+  <!-- dialog-box: from dialogOverlay.xul -->
+  <vbox id="dialog-box">
+
+    <!-- standard-dialog-content: from dialogOverlay.xul  -->
+    <vbox id="standard-dialog-content">
+      <grid flex="1" id="event-container-box">
+        <columns>
+          <column flex="1"/>
+          <column flex="2" crop="right"/>
+          <column flex="1"/>
+          <column flex="1" id="last-column" collapsed="true"/>
+        </columns>
+        <rows id="event-container-rows"/>
+        <row class="ca-event-alert-row" name="sample-row" collapsed="true">
+          <!-- NOTE: ALL ITEMS USE name INSTEAD OF id BECAUSE THE BOX IS DUPLICATED FOR EACH EVENT -->
+          <vbox align="start" pack="center">
+            <button name="AcknowledgeButton" wrap="none"
+                    label="&calendar.alarm.acknowledge.label;"
+                    class="alarm-acknowledge-button-class"/>
+            <button name="EditEvent" wrap="none"
+                    label="&calendar.edit.button.label;"
+                    class="alarm-acknowledge-button-class"/>
+            <box align="center" pack="center" flex="1">
+              <button name="SnoozeButton" wrap="none"
+                      label="&calendar.alarm.snooze.label;"
+                      class="alarm-acknowledge-button-class"/>
+              <textbox name="alarm-length-field" class="alarm-length-field-class"/>
+
+              <menulist name="alarm-length-units"
+                        labelnumber="labelplural" crop="none">
+                <menupopup >
+                  <menuitem label="&alarm.units.minutes;"
+                            labelplural="&alarm.units.minutes;"
+                            labelsingular="&alarm.units.minutes.singular;"
+                            value="minutes"/>
+                  <menuitem label="&alarm.units.hours;"
+                            labelplural="&alarm.units.hours;"
+                            labelsingular="&alarm.units.hours.singular;"
+                            value="hours"/>
+                  <menuitem label="&alarm.units.days;"
+                            labelplural="&alarm.units.days;"
+                            labelsingular="&alarm.units.days.singular;"
+                            value="days"/>
+                </menupopup>
+              </menulist>
+            </box>
+          </vbox>
+          <!--
+          Note: this number is arbitrary. it should be moved out
+          into a dtd or some other place than here, like a css.
+          -->
+          <vbox class="alarm-description">
+            <description name="Title"/>
+            <description name="Description"/>
+          </vbox>
+          <vbox>
+            <description name="StartDate"/>
+            <description name="StartTime"/>
+          </vbox>
+          <description name="NumberOfTimes" NumberOfTimes="1"/>
+          <separator class="thin"/>
+        </row>
+      </grid>
+      <label id="too-many-alarms-description" value="" collapsed="true"/>
+      <box>
+        <spacer flex="1"/>
+        <button id="dialog-btn-yes" label="&calendar.alarm.acknowledgeall.label;" default="true" oncommand="doOKButton();"/>
+      </box>
+    </vbox>
+  </vbox> <!-- dialog-box -->
 </window>
