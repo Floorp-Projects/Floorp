@@ -1,4 +1,5 @@
 <html>
+<title>Example 5</title>
 <head>
 <style>
 P {
@@ -12,11 +13,26 @@ P#reverse {
 </style>
 </head>
 <body>
-<P>This is a paragraph. We should be yellow because there is a style
-rule indicating that all paragraphs have a background of yellow.</P>
-<P ID=reverse>This is a paragraph. We should be black with yellow text
-because there is a style rule indicating that this paragraph should have
-a background of black with yellow text.</P>
+<h1>Example 5: CSS with ID's </h1>
+<pre>
+This document contains the following CSS:
+
+P {
+  color: black;
+  background-color: yellow;
+}
+P#reverse {
+  color: yellow;
+  background-color: black;
+}
+</pre>
+<pre>This following paragraph has no ID</pre>
+<P>This is a paragraph. We should be yellow because there is a style rule indicating 
+  that all paragraphs have a background of yellow.</P>
+<pre ID=reverse>The following paragraph has ID=&quot;reverse&quot;</pre>
+<P ID=reverse>This is a paragraph. We should be black with yellow text because 
+  there is a style rule indicating that this paragraph should have a background 
+  of black with yellow text.</P>
 </body>
 </html>
 
