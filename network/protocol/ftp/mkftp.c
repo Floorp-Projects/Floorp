@@ -61,7 +61,7 @@
 #endif /* XP_OS2 */
 
 #ifdef XP_UNIX
-#if !defined(__osf__) && !defined(AIXV3) && !defined(_HPUX_SOURCE) && !defined(__386BSD__) && !defined(__linux) && !defined(SCO_SV)
+#if !defined(__osf__) && !defined(AIXV3) && !defined(_HPUX_SOURCE) && !defined(__386BSD__) && !defined(__linux) && !defined(SCO_SV) && !defined(DGUX)
 #include <sys/filio.h>
 #endif
 #endif /* XP_UNIX */ 
