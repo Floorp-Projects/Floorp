@@ -61,10 +61,7 @@ protected:
 protected:
   // Data members
   PRBool mIsHeader; // Whether or not we're a column header
-  nsIStyleContext* mSelectedContext; // The style context to use when the tree item is selected
-  nsIStyleContext* mNormalContext; // The style context to use normally.
   nsTreeFrame* mTreeFrame; // Our parent tree frame.
   PRBool mAllowEvents; // Whether we let events go through.
 
-  PRBool mBeenReflowed; // Hack for now.
 }; // class nsTableCellFrame
