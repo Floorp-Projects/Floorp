@@ -45,10 +45,79 @@ sub str2timeAndCheck {
     return 0;
 }
 
-if (!($form{text})) { 
+if ($form{terse}) {
+
+ if (defined $tree && defined $start && defined $end) {
+    my $first = str2timeAndCheck($start);
+    my $last = str2timeAndCheck($end);
+    if ($first > 0 && $last > 0) {
+        if (open(IN, "<$tree/notes.txt")) {
+            my %stats;
+            while (<IN>) {
+                chop;
+                my ($nbuildtime,$nbuildname,$nwho,$nnow,$nenc_note)
+                    = split /\|/;
+                if ($nnow >= $first && $nnow <= $last) {
+                        my $note = &url_decode($nenc_note);
+                        $nbuildtime = print_time($nbuildtime);
+                        $nnow = print_time($nnow);
+                        print "$nbuildname ";
+                        print "$nwho ";
+                        print "$note ";
+                        print "\n";
+                        }
+                }
+            }
+        } else {
+            print "There does not appear to be a tree " .
+                "named '$tree'.";
+        }
+    }
+ 
+} elsif ($form{text}) {
+
+my $header = "<PRE>\nBuild Time\t\tBuild Name\t\t\tWho\t\t\Note Time\t\t\tNote\n" . 
+"----------------------------------------------------------------------------------------------------------------------------\n";
+
+ if (defined $tree && defined $start && defined $end) {
+    my $first = str2timeAndCheck($start);
+    my $last = str2timeAndCheck($end);
+    if ($first > 0 && $last > 0) {
+        if (open(IN, "<$tree/notes.txt")) {
+            print "<PRE>Notes for $tree\n\nfrom " .
+                time2str($TIMEFORMAT, $first) . " to " .
+                    time2str($TIMEFORMAT, $last) . "\n</PRE>";
+            my %stats;
+            print "$header\n";
+            while (<IN>) {
+                chop;
+                my ($nbuildtime,$nbuildname,$nwho,$nnow,$nenc_note)
+                    = split /\|/;
+                if ($nnow >= $first && $nnow <= $last) {
+                        my $note = &url_decode($nenc_note);
+                        $nbuildtime = print_time($nbuildtime);
+                        $nnow = print_time($nnow);
+                        print "$nbuildtime\t";
+                        print "$nbuildname\t";
+                        print "$nwho\t";
+                        print "$nnow\t\t";
+                        print "$note\t";
+                        print "\n";
+                        }
+                }
+            }
+        } else {
+            print "<p><font color=red>There does not appear to be a tree " .
+                "named '$tree'.</font><p>";
+        }
+    }
+    print "\n<\PRE>";
+ 
+} else {
+
 my $header = "<table border=1><th>Build time</th><th>Build name</th><th>Who</th><th>Note time</th><th>Note</th>";
 
-if (defined $tree && defined $start && defined $end) {
+ if (defined $tree && defined $start && defined $end) {
     my $first = str2timeAndCheck($start);
     my $last = str2timeAndCheck($end);
     if ($first > 0 && $last > 0) {
@@ -86,47 +155,7 @@ if (defined $tree && defined $start && defined $end) {
         }
     }
     print "</table>\n";
-}
-} #end html
-
-else {
-
-my $header = "<PRE>\nBuild Time\t\tBuild Name\t\t\tWho\t\t\Note Time\t\t\tNote\n" . 
-"----------------------------------------------------------------------------------------------------------------------------\n";
-
-if (defined $tree && defined $start && defined $end) {
-    my $first = str2timeAndCheck($start);
-    my $last = str2timeAndCheck($end);
-    if ($first > 0 && $last > 0) {
-        if (open(IN, "<$tree/notes.txt")) {
-            print "<PRE>Notes for $tree\n\nfrom " .
-                time2str($TIMEFORMAT, $first) . " to " .
-                    time2str($TIMEFORMAT, $last) . "\n</PRE>";
-            my %stats;
-            print "$header\n";
-            while (<IN>) {
-                chop;
-                my ($nbuildtime,$nbuildname,$nwho,$nnow,$nenc_note)
-                    = split /\|/;
-                if ($nnow >= $first && $nnow <= $last) {
-                        my $note = &url_decode($nenc_note);
-                        $nbuildtime = print_time($nbuildtime);
-                        $nnow = print_time($nnow);
-                        print "$nbuildtime\t";
-                        print "$nbuildname\t";
-                        print "$nwho\t";
-                        print "$nnow\t\t";
-                        print "$note\t";
-                        print "\n";
-                        }
-                }
-            }
-        } else {
-            print "<p><font color=red>There does not appear to be a tree " .
-                "named '$tree'.</font><p>";
-        }
-    }
-    print "\n<\PRE>";
+ } 
 }
 
 
