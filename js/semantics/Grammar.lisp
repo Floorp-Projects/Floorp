@@ -140,7 +140,7 @@
 ; Emit a markup paragraph for the left-hand-side of a general production.
 (defun depict-general-production-lhs (markup-stream lhs-general-nonterminal)
   (depict-paragraph (markup-stream ':grammar-lhs)
-    (depict-general-nonterminal markup-stream lhs-general-nonterminal)
+    (depict-general-nonterminal markup-stream lhs-general-nonterminal :definition)
     (depict markup-stream " " ':derives-10)))
 
 
@@ -153,7 +153,10 @@
       (depict markup-stream ':tab3)
       (depict markup-stream "|" ':tab2))
     (let ((rhs (general-production-rhs general-production)))
-      (depict-list markup-stream #'depict-general-grammar-symbol rhs
+      (depict-list markup-stream
+                   #'(lambda (markup-stream general-grammar-symbol)
+                       (depict-general-grammar-symbol markup-stream general-grammar-symbol :reference))
+                   rhs
                    :separator " "
                    :empty '(:left-angle-quote "empty" :right-angle-quote)))))
 
@@ -162,10 +165,11 @@
 ; Include serial number subscripts on all rhs grammar symbols that both
 ;    appear more than once in the rhs or appear in the lhs; and
 ;    have symbols that are present in the symbols-with-subscripts list.
-(defun depict-general-production (markup-stream general-production &optional symbols-with-subscripts)
+; link is the lhs's link type.
+(defun depict-general-production (markup-stream general-production link &optional symbols-with-subscripts)
   (let ((lhs (general-production-lhs general-production))
         (rhs (general-production-rhs general-production)))
-    (depict-general-nonterminal markup-stream lhs)
+    (depict-general-nonterminal markup-stream lhs link)
     (depict markup-stream " " ':derives-10)
     (if rhs
       (let ((counts-hash (make-hash-table :test *grammar-symbol-=*)))
@@ -186,7 +190,7 @@
           (let* ((symbol (general-grammar-symbol-symbol general-grammar-symbol))
                  (subscript (and (gethash symbol counts-hash) (incf (gethash symbol counts-hash)))))
             (depict-space markup-stream)
-            (depict-general-grammar-symbol markup-stream general-grammar-symbol subscript))))
+            (depict-general-grammar-symbol markup-stream general-grammar-symbol :reference subscript))))
       (depict markup-stream " " ':left-angle-quote "empty" :right-angle-quote))))
 
 
@@ -304,7 +308,7 @@
           (depict-general-production-lhs markup-stream (general-rule-lhs general-rule))
           (emit-general-productions general-productions t))
         (depict-paragraph (markup-stream ':grammar-lhs-last)
-          (depict-general-production markup-stream (first general-productions)))))))
+          (depict-general-production markup-stream (first general-productions) :definition))))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -1188,7 +1192,7 @@
 (defun depict-grammar (markup-stream grammar)
   (depict-paragraph (markup-stream ':body-text)
     (depict markup-stream "Start nonterminal: ")
-    (depict-general-nonterminal markup-stream (gramar-user-start-symbol grammar)))
+    (depict-general-nonterminal markup-stream (gramar-user-start-symbol grammar) :reference))
   (dolist (nonterminal (grammar-nonterminals-list grammar))
     (unless (grammar-symbol-= nonterminal *start-nonterminal*)
       (depict-general-rule markup-stream (grammar-rule grammar nonterminal)))))
@@ -1207,3 +1211,38 @@
              states-hash)
     (sort equivalences #'< :key #'(lambda (equivalence)
                                     (state-number (first equivalence))))))
+
+
+;;; ------------------------------------------------------------------------------------------------------
+;;; YACC OUTPUT
+
+
+; Print the nonterminal in a yacc-like form.
+(defun yacc-print-nonterminal (nonterminal &optional (stream t))
+  (cond
+   ((keywordp nonterminal)
+    (write-string (symbol-upper-mixed-case-name nonterminal) stream))
+   ((attributed-nonterminal? nonterminal)
+    (write-string (symbol-upper-mixed-case-name (attributed-nonterminal-symbol nonterminal)) stream)
+    (dolist (attribute (attributed-nonterminal-attributes nonterminal))
+      (write-char #\_ stream)
+      (write-string (symbol-lower-mixed-case-name attribute) stream)))
+   (t (error "Bad nonterminal ~S" nonterminal))))
+
+
+; Print the grammar-symbol in a yacc-like form.
+(defun yacc-print-grammar-symbol (grammar-symbol &optional (stream t))
+  (cond
+   ((nonterminal? grammar-symbol)
+    (yacc-print-nonterminal grammar-symbol stream))
+   ((and grammar-symbol (symbolp grammar-symbol))
+    (let ((name (symbol-name grammar-symbol)))
+      (if (and (> (length name) 0) (char= (char name 0) #\$))
+        (write-string (string-upcase name :start 1) stream)
+        (format stream "\"~A\"" (string-downcase name)))))
+   (t (error "Don't know how to emit markup for terminal ~S" grammar-symbol))))
+
+#|
+; Print the grammar in a yacc-like form.
+(defun yacc-print-grammar (grammar &optional (stream t))
+|#
