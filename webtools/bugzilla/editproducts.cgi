@@ -416,7 +416,7 @@ if ($action eq 'del') {
     CheckProduct($product);
 
     # display some data about the product
-    SendSQL("SELECT product_id, description, milestoneurl, disallownew
+    SendSQL("SELECT id, description, milestoneurl, disallownew
              FROM products
              WHERE name=" . SqlQuote($product));
     my ($product_id, $description, $milestoneurl, $disallownew) = FetchSQLData();
@@ -634,7 +634,7 @@ if ($action eq 'delete') {
     print "Milestones deleted.<BR>\n";
 
     SendSQL("DELETE FROM products
-             WHERE product_id=$product_id");
+             WHERE id=$product_id");
     print "Product '$product' deleted.<BR>\n";
 
     # Added -JMR, 2/16/00
