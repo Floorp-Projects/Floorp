@@ -2,6 +2,18 @@ TransforMiiX (TM)
 (C) Copyright The MITRE Corporation 1999, Keith Visco.  All rights reserved.
 
 
+Build 20000217
+
+-- Changed StringList#iterator to return a pointer instead of a reference
+-- Added patches from Eric Du for FreeBSD, sorry for the delay in committing these
+
+Build 20000216
+
+-- Fixed bug with using wildcards directly after the parent operator, such as "/*"
+-- Fixed bug with PredicateList#isEmpty which was returning the opposite of the
+   expected value.
+   -- this also caused default priorities to be incorrectly calculated.
+
 Build 19991110
 -- fixed bug with PathExpr and LocationStep with respect 
    to the ::match method
