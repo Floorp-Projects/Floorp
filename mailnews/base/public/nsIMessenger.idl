@@ -40,6 +40,8 @@ interface nsIMessenger : nsISupports {
     const long eMoveMsg = 2;
     const long eCopyMsg = 3;
 
+    void setDisplayCharset(in wstring aCharset);
+
     readonly attribute nsITransactionManager transactionManager;
 
     void SetWindow(in nsIDOMWindowInternal ptr, in nsIMsgWindow msgWindow);

@@ -40,8 +40,7 @@ public:
   nsMessenger();
   virtual ~nsMessenger();
 
-	NS_DECL_ISUPPORTS
-  
+	NS_DECL_ISUPPORTS  
 	NS_DECL_NSIMESSENGER
     
   nsresult Alert(const char * stringName);
@@ -71,8 +70,8 @@ private:
   // String bundles...
   nsCOMPtr<nsIStringBundle>   mStringBundle;
 
-  PRBool      mCharsetInitialized;
-  void        InitializeDisplayCharset();
+  nsString mCurrentDisplayCharset;
+
   nsCOMPtr<nsISupports>  mSearchContext;
   nsCString   mLastDisplayURI; // this used when the user attempts to force a charset reload of a message...we need to get the last displayed
                                // uri so we can re-display it..

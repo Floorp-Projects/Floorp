@@ -247,7 +247,6 @@ nsMessenger::nsMessenger()
 	mScriptObject = nsnull;
 	mWindow = nsnull;
   mMsgWindow = nsnull;
-  mCharsetInitialized = PR_FALSE;
   mStringBundle = nsnull;
 
   //	InitializeFolderRoot();
@@ -329,28 +328,29 @@ nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
   return NS_OK;
 }
 
-void
-nsMessenger::InitializeDisplayCharset()
+NS_IMETHODIMP nsMessenger::SetDisplayCharset(const PRUnichar * aCharset)
 {
-  if (mCharsetInitialized)
-    return;
+  if (mCurrentDisplayCharset.Equals(aCharset))
+    return NS_OK;
 
   // libmime always converts to UTF-8 (both HTML and XML)
   if (mDocShell) 
   {
-    nsAutoString aForceCharacterSet; aForceCharacterSet.AssignWithConversion("UTF-8");
     nsCOMPtr<nsIContentViewer> cv;
     mDocShell->GetContentViewer(getter_AddRefs(cv));
     if (cv) 
     {
       nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
       if (muDV) {
-        muDV->SetForceCharacterSet(aForceCharacterSet.get());
+        muDV->SetForceCharacterSet(aCharset);
+
       }
 
-      mCharsetInitialized = PR_TRUE;
+      mCurrentDisplayCharset = aCharset;
     }
   }
+
+  return NS_OK;
 }
 
 
@@ -497,7 +497,7 @@ nsMessenger::OpenURL(const char * url)
 #endif    
 
     // This is to setup the display DocShell as UTF-8 capable...
-    InitializeDisplayCharset();
+    SetDisplayCharset(NS_LITERAL_STRING("UTF-8").get());
     
     char* unescapedUrl = PL_strdup(url);
     if (unescapedUrl)
