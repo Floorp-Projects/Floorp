@@ -50,31 +50,6 @@
 
 #include "jri.h"
 
-/**
- * The nsIJRILiveConnectPluginInstancePeer interface is implemented by browsers
- * that support JRI-based LiveConnect. Note that for 5.0, LiveConnect support
- * has become JNI-based, so this interface is effectively deprecated.
- *
- * To obtain: QueryInterface on nsIPluginInstancePeer
- */
-class nsIJRILiveConnectPluginInstancePeer : public nsISupports {
-public:
-
-    /**
-     * Returns a JRI reference to the Java peer object associated with the
-     * plugin instance. This object is an instance of the class specified
-     * by nsIJRILiveConnectPlugin::GetJavaClass.
-     *
-     * (Corresponds to NPN_GetJavaPeer.)
-     *
-     * @param resultingJavaPeer - a resulting reference to the Java instance
-     * @result - NS_OK if this operation was successful
-     */
-    NS_IMETHOD
-    GetJavaPeer(jref *resultingJavaPeer) = 0;
-
-};
-
 #define NS_IJRILIVECONNECTPLUGININSTANCEPEER_IID     \
 { /* 25b63f40-f773-11d1-815b-006008119d7a */         \
     0x25b63f40,                                      \
@@ -92,6 +67,42 @@ public:
     0x11d1,                                          \
     {0x85, 0xb1, 0x00, 0x80, 0x5f, 0x0e, 0x4d, 0xfe} \
 }
+
+/**
+ * The nsIJRILiveConnectPluginInstancePeer interface is implemented by browsers
+ * that support JRI-based LiveConnect. Note that for 5.0, LiveConnect support
+ * has become JNI-based, so this interface is effectively deprecated.
+ *
+ * To obtain: QueryInterface on nsIPluginInstancePeer
+ */
+class nsIJRILiveConnectPluginInstancePeer : public nsISupports {
+public:
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJRILIVECONNECTPLUGININSTANCEPEER_IID)
+
+	/**
+	 * Returns a JRI env corresponding to the current Java thread of the
+	 * browser.
+     *
+     * (Corresponds to NPN_GetJavaEnv.)
+     *
+     * @result - NS_OK if this operation was successful
+	 */
+	NS_IMETHOD
+	GetJavaEnv(JRIEnv* *resultingEnv) = 0;
+
+    /**
+     * Returns a JRI reference to the Java peer object associated with the
+     * plugin instance. This object is an instance of the class specified
+     * by nsIJRILiveConnectPlugin::GetJavaClass.
+     *
+     * (Corresponds to NPN_GetJavaPeer.)
+     *
+     * @param resultingJavaPeer - a resulting reference to the Java instance
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    GetJavaPeer(jref *resultingJavaPeer) = 0;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
