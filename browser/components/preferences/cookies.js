@@ -313,7 +313,11 @@ var gCookiesWindow = {
     {
       if (!this._filtered) {
         var item = this._getItemAtIndex(aIndex);
-        if (!item) return -1;
+        // If an item has no parent index (i.e. it is at the top level) this 
+        // function MUST return -1 otherwise we will go into an infinite loop. 
+        // Containers are always top level items in the cookies tree, so make 
+        // sure to return the appropriate value here.        
+        if (!item || item.container) return -1;
         return item.parentIndex;
       }
       return -1;
@@ -379,7 +383,7 @@ var gCookiesWindow = {
         var delta = multiplier * item.cookies.length;
         this._rowCount += delta;
         item.open = !item.open;
-        gCookiesWindow._tree.treeBoxObject.rowCountChanged(aIndex, delta);
+        gCookiesWindow._tree.treeBoxObject.rowCountChanged(aIndex + 1, delta);
         gCookiesWindow._tree.treeBoxObject.invalidateRow(aIndex);
       }
     },    
