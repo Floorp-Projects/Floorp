@@ -33,6 +33,7 @@
 #include "nsIEventQueueService.h"
 #include "nsXPComCIID.h"
 #include "nsWebCrawler.h"
+#include "nsSpecialSystemDirectory.h"    // For exe dir
 #include "prprf.h"
 #include "plstr.h"
 #include "prenv.h"
@@ -190,8 +191,30 @@ nsViewerApp::Destroy()
 }
 
 nsresult
+nsViewerApp::AutoregisterComponents()
+{
+  // Autoregister components to populate registry
+  // All this logic is in nsSpecialFileSpec in apprunner. But hey this is viewer a different app.
+  nsSpecialSystemDirectory sysdir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+#ifdef XP_MAC
+  sysdir += "Components";
+#else
+  sysdir += "components";
+#endif /* XP_MAC */
+  nsprPath componentsDir(sysdir);
+  const char *componentsDirPath = (const char *) componentsDir;
+  if (componentsDirPath != NULL)
+  {
+    nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, componentsDirPath);
+  }
+}
+
+
+nsresult
 nsViewerApp::SetupRegistry()
 {
+  AutoregisterComponents();
+
   NS_SetupRegistry();
 
   // Register our browser window factory
