@@ -21,7 +21,7 @@ EF_CONFIG_MK=1
 
 include $(DEPTH)/config/arch.mk
 include $(DEPTH)/config/command.mk
-include $(DEPTH)/config/$(OS_CONFIG).mk
+include $(DEPTH)/config/$(OS_ARCH).mk
 PLATFORM = $(OBJDIR_NAME)
 include $(DEPTH)/config/location.mk
 include $(DEPTH)/config/prefix.mk
@@ -49,7 +49,8 @@ else
 	CCC = gcc
 	AS = gcc
 	ASFLAGS += -x assembler-with-cpp
-	EXC_FLAGS = -fexceptions
+#	EXC_FLAGS = -fexceptions
+	EXC_FLAGS =
 	EF_LIBS = -L$(DIST)/lib -lEF -lDebuggerChannel -lEFDisassemble
 	EF_LIB_FILES = $(DIST)/lib/libEF.a $(DIST)/lib/libDebuggerChannel.a $(DIST)/lib/libEFDisassemble.a
 	NSPR_LIBS = -L$(NSPR_PREFIX)/lib -lnspr21 -lplc21 $(NSPR_THREAD_LIBS)
