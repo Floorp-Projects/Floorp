@@ -342,7 +342,7 @@ NSFindSymbol(CFragConnectionID inID, Str255 inSymName, Ptr*	outMainAddr, CFragSy
 	by reading the 'cfrg' resoruce.
 
 -----------------------------------------------------------------*/
-static OSErr GetNamedFragmentOffsets(const FSSpec *fileSpec, const char* fragmentName,
+OSErr GetNamedFragmentOffsets(const FSSpec *fileSpec, const char* fragmentName,
 							UInt32 *outOffset, UInt32 *outLength)
 {
 	CFragResourceHandle		cFragHandle;
@@ -410,7 +410,7 @@ done:
 	by reading the 'cfrg' resoruce.
 
 -----------------------------------------------------------------*/
-static OSErr GetIndexedFragmentOffsets(const FSSpec *fileSpec, UInt32 fragmentIndex,
+OSErr GetIndexedFragmentOffsets(const FSSpec *fileSpec, UInt32 fragmentIndex,
 							UInt32 *outOffset, UInt32 *outLength, char **outFragmentName)
 {
 	CFragResourceHandle		cFragHandle;
