@@ -109,6 +109,7 @@ nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
     char *serverKeyPref = PR_smprintf("mail.account.%s.server", m_accountKey);
     char *serverKey;
     rv = m_prefs->CopyCharPref(serverKeyPref, &serverKey);
+    PR_FREEIF(serverKeyPref);
     
 #ifdef DEBUG_alecf
     printf("\t%s's server: %s\n", m_accountKey, serverKey);
@@ -120,6 +121,7 @@ nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
     char *serverTypePref = PR_smprintf("mail.server.%s.type", serverKey);
     char *serverType;
     rv = m_prefs->CopyCharPref(serverTypePref, &serverType);
+    PR_FREEIF(serverTypePref);
     
 #ifdef DEBUG_alecf
     if (NS_FAILED(rv)) {
@@ -137,6 +139,7 @@ nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
                                             nsnull,
                                             nsIMsgIncomingServer::GetIID(),
                                             (void **)&server);
+    PR_FREEIF(serverTypeProgID);
     
 #ifdef DEBUG_alecf
     if (NS_SUCCEEDED(rv)) {
@@ -151,6 +154,8 @@ nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
     
     if (NS_SUCCEEDED(rv))
       rv = SetIncomingServer(server);
+
+    PR_FREEIF(serverKey);
   }
   
   *aIncomingServer = m_incomingServer;
@@ -248,6 +253,7 @@ nsMsgAccount::SetKey(char *accountKey)
                                         accountKey);
   char *identityKey;
   rv = m_prefs->CopyCharPref(identitiesKeyPref, &identityKey);
+  PR_FREEIF(identitiesKeyPref);
 
 #ifdef DEBUG_alecf
   printf("%s's identities: %s\n", accountKey, identityKey);
@@ -267,7 +273,8 @@ nsMsgAccount::SetKey(char *accountKey)
   else
     printf("\tcouldn't create %s's identity\n",identityKey);
 #endif
-      
+
+  PR_FREEIF(identityKey);
   if (NS_SUCCEEDED(rv))
     rv = addIdentity(identity);
 
