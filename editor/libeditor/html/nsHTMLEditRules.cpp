@@ -458,7 +458,82 @@ nsHTMLEditRules::GetListItemState(PRBool &aMixed, PRBool &aLI, PRBool &aDT, PRBo
 NS_IMETHODIMP 
 nsHTMLEditRules::GetAlignment(PRBool &aMixed, nsIHTMLEditor::EAlignment &aAlign)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // for now, just return first alignment.  we'll lie about
+  // if it's mixed.  This is for efficiency, given that our
+  // current ui doesn't care if it's mixed.
+
+  // this routine assumes that alignment is done ONLY via divs
+  
+  // default alignment is left
+  aAlign = nsIHTMLEditor::eLeft;
+  
+  // get selection
+  nsCOMPtr<nsIDOMSelection>selection;
+  nsresult res = mEditor->GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+
+  // get selection location
+  nsCOMPtr<nsIDOMNode> parent;
+  PRInt32 offset;
+  res = mEditor->GetStartNodeAndOffset(selection, &parent, &offset);
+  if (NS_FAILED(res)) return res;
+  
+  // is the selection collapsed?
+  PRBool bCollapsed;
+  res = selection->GetIsCollapsed(&bCollapsed);
+  if (NS_FAILED(res)) return res;
+  nsCOMPtr<nsIDOMNode> nodeToExamine;
+  if (bCollapsed)
+  {
+    // if it is, we want to look at 'parent' and it's ancestors
+    // for divs with alignment on them
+    nodeToExamine = parent;
+  }
+  else if (mEditor->IsTextNode(parent)) 
+  {
+    // if we are in a text node, then that is the node of interest
+    nodeToExamine = parent;
+  }
+  else
+  {
+    // otherwise we want to look at the first editable node after
+    // {parent,offset} and it's ancestors for divs with alignment on them
+    mEditor->GetNextNode(parent, offset, PR_TRUE, getter_AddRefs(nodeToExamine));
+  }
+  
+  if (!nodeToExamine) return NS_ERROR_NULL_POINTER;
+  
+  // check up the ladder for divs with alignment
+  nsCOMPtr<nsIDOMNode> temp = nodeToExamine;
+  while (nodeToExamine)
+  {
+    if (nsHTMLEditUtils::IsDiv(nodeToExamine))
+    {
+      // check for alignment
+      nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(nodeToExamine);
+      if (elem)
+      {
+        nsAutoString typeAttrName; typeAttrName.AssignWithConversion("align");
+        nsAutoString typeAttrVal;
+        nsresult res = elem->GetAttribute(typeAttrName, typeAttrVal);
+        typeAttrVal.ToLowerCase();
+        if (NS_SUCCEEDED(res) && typeAttrVal.Length())
+        {
+          if (typeAttrVal.EqualsWithConversion("center"))
+            aAlign = nsIHTMLEditor::eCenter;
+          else if (typeAttrVal.EqualsWithConversion("right"))
+            aAlign = nsIHTMLEditor::eRight;
+          else
+            aAlign = nsIHTMLEditor::eLeft;
+          return res;
+        }
+      }
+    }
+    res = nodeToExamine->GetParentNode(getter_AddRefs(temp));
+    if (NS_FAILED(res)) temp = nsnull;
+    nodeToExamine = temp; 
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
