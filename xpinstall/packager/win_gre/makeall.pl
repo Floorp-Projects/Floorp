@@ -104,7 +104,7 @@ print "The display version is: $versionMain\n";
 
 $ENV{WIZ_nameCompany}          = "mozilla.org";
 $ENV{WIZ_nameProduct}          = "GRE";
-$ENV{WIZ_nameProductNoVersion} = "GRE";
+$ENV{WIZ_nameProductInternal}  = "GRE"; # product name without the version string
 $ENV{WIZ_fileMainExe}          = "none.exe";
 $ENV{WIZ_fileUninstall}        = $seuFileNameSpecific;
 $ENV{WIZ_fileUninstallZip}     = $seuzFileNameSpecific;

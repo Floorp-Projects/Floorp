@@ -106,6 +106,13 @@ typedef int PRInt32;
 #define STATUS_DISABLED                 0
 #define STATUS_ENABLED                  1
 
+#define GRE_SETUP_DIR_NAME              "Setup GRE"
+
+/* LOCAL GRE defines */
+#define GRE_TYPE_NOT_SET                -1
+#define GRE_SHARED                      0
+#define GRE_LOCAL                       1
+
 /* WS: WinSpawn wait values */
 #define WS_DO_NOT_WAIT                  FALSE
 #define WS_WAIT                         TRUE
@@ -429,6 +436,7 @@ typedef struct dlgReboot
 typedef struct setupStruct
 {
   int       mode;
+  int       greType;
   DWORD     dwCustomType;
   DWORD     dwNumberOfComponents;
   LPSTR     szPath;
@@ -450,6 +458,7 @@ typedef struct setupStruct
   LPSTR     szAppID;
   LPSTR     szAppPath;
   LPSTR     szRegPath;
+  char      grePrivateKey[MAX_BUF];
 } setupGen;
 
 typedef struct sinfoSmartDownload

@@ -222,6 +222,7 @@ HRESULT SmartUpdateJars()
   char      szMsgSmartUpdateStart[MAX_BUF];
   char      szDlgExtractingTitle[MAX_BUF];
   char      xpinstallPath[MAX_BUF];
+  char      xpiArgs[MAX_BUF];
 
   if(!GetPrivateProfileString("Messages", "MSG_SMARTUPDATE_START", "", szMsgSmartUpdateStart, sizeof(szMsgSmartUpdateStart), szFileIniInstall))
     return(1);
@@ -312,7 +313,22 @@ HRESULT SmartUpdateJars()
         SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS0, szBuf);
         LogISXPInstallComponent(siCObject->szDescriptionShort);
 
-        hrResult = pfnXpiInstall(szArchive, sgProduct.szRegPath, 0xFFFF);
+        /* XXX fix: we need to better support passing arguments to .xpi files.
+         * This is a temporary hack to get greType passed to browser.xpi so that
+         * it won't delete GRE files if GRE is installed in the mozilla dir.
+         *
+         * What should be done is have the arguments be described in each
+         * component's section in config.ini and have it passed thru here. */
+        *xpiArgs = '\0';
+        if(lstrcmpi(siCObject->szArchiveName, "gre.xpi") == 0)
+          MozCopyStr(sgProduct.szRegPath, xpiArgs, sizeof(xpiArgs));
+        else if((lstrcmpi(siCObject->szArchiveName, "browser.xpi") == 0) &&
+                (sgProduct.greType == GRE_LOCAL))
+          /* passing -greShared to browser.xpi will tell it to cleanup GRE files
+           * from it's directory if they exist. */
+          MozCopyStr("-greLocal", xpiArgs, sizeof(xpiArgs));
+
+        hrResult = pfnXpiInstall(szArchive, xpiArgs, 0xFFFF);
         if(hrResult == E_REBOOT)
           bReboot = TRUE;
         else if((hrResult != WIZ_OK) &&

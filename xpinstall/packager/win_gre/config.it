@@ -12,7 +12,7 @@ Default AppID=$ProductName$User
 
 Company Name=$CompanyName$
 Product Name=$ProductName$
-Product NameInternal=$ProductName$
+Product NameInternal=$ProductNameInternal$
 User Agent=$UserAgent$
 
 ; Destination Path values:
@@ -119,20 +119,6 @@ Show Confirmation=TRUE
 Confirmation Message=There was an error encountered during installation of $ProductName$.  The following information will be sent back to us to help us improve the product: %s
 
 
-
-; HKey:              valid decryptable setup key is [Product CurrentVersion] or [Product PreviousVersion]
-; Decrypt HKey:      there are times when '[' and ']' are valid part of windows registry key names.
-; Contains Filename: tells setup that the path contains filename needed to be removed before
-;                    using it as a path.
-; Verify Existence:  FILE or PATH
-;
-[Locate Previous Product Path0]
-HRoot=HKEY_LOCAL_MACHINE
-HKey=SOFTWARE\$CompanyName$\$ProductName$\$UserAgent$\Main
-Name=Install Directory
-Decrypt HKey=TRUE
-Contains Filename=FALSE
-Verify Existence=
 
 [Dialog Welcome]
 Show Dialog=TRUE
@@ -288,9 +274,9 @@ exe_param=
 Class Name=MozillaMessageWindow
 Window Name=
 ;*** LOCALIZE ME BABY ***
-Message=Download of $ProductName$ was successful. $ProductNameNoVersion$ must be closed to proceed with installation. Click OK to exit $ProductNameNoVersion$ automatically and to begin installation.
+Message=Download of $ProductName$ was successful. $ProductNameInternal$ must be closed to proceed with installation. Click OK to exit $ProductNameInternal$ automatically and to begin installation.
 ;*** LOCALIZE ME BABY ***
-Message Full Installer=$ProductNameNoVersion$ must be closed to proceed with installation. Click OK to exit $ProductNameNoVersion$ automatically and to begin installation.
+Message Full Installer=$ProductNameInternal$ must be closed to proceed with installation. Click OK to exit $ProductNameInternal$ automatically and to begin installation.
 
 ; This key indicates whether or not to close all the windows associated with
 ; the process id of this app instance window found.
@@ -574,7 +560,7 @@ Root Key=HKEY_LOCAL_MACHINE
 Key=[REGPATH]\$UserAgentShort$\Installer
 Name=PathToExe
 ;*** LOCALIZE ME BABY ***
-Name Value=[SETUP PATH]\Setup\setup.exe
+Name Value=[SETUP PATH]\Setup $ProductNameInternal$\setup.exe
 Type=REG_SZ
 Decrypt Key=TRUE
 Decrypt Name=FALSE

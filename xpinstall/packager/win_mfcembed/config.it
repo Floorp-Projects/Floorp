@@ -12,7 +12,7 @@ Default AppID=$ProductName$User
 
 Company Name=$CompanyName$
 Product Name=$ProductName$
-Product NameInternal=$ProductName$
+Product NameInternal=$ProductNameInternal$
 User Agent=$UserAgent$
 
 ; Destination Path values:
@@ -286,9 +286,9 @@ exe_param=
 Class Name=MozillaMessageWindow
 Window Name=
 ;*** LOCALIZE ME BABY ***
-Message=Download of $ProductName$ was successful. $ProductNameNoVersion$ must be closed to proceed with installation. Click OK to exit $ProductNameNoVersion$ automatically and to begin installation.
+Message=Download of $ProductName$ was successful. $ProductNameInternal$ must be closed to proceed with installation. Click OK to exit $ProductNameInternal$ automatically and to begin installation.
 ;*** LOCALIZE ME BABY ***
-Message Full Installer=$ProductNameNoVersion$ must be closed to proceed with installation. Click OK to exit $ProductNameNoVersion$ automatically and to begin installation.
+Message Full Installer=$ProductNameInternal$ must be closed to proceed with installation. Click OK to exit $ProductNameInternal$ automatically and to begin installation.
 
 ; This key indicates whether or not to close all the windows associated with
 ; the process id of this app instance window found.

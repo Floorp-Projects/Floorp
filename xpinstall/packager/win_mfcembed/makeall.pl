@@ -117,7 +117,7 @@ else
 print "The display version is: $versionMain\n";
 $ENV{WIZ_nameCompany}          = "mozilla.org";
 $ENV{WIZ_nameProduct}          = "MfcEmbed";
-$ENV{WIZ_nameProductNoVersion} = "MfcEmbed";
+$ENV{WIZ_nameProductInternal}  = "MfcEmbed"; # product name without any version string
 $ENV{WIZ_fileMainExe}          = "mfcembed.exe";
 $ENV{WIZ_fileUninstall}        = $seuFileNameSpecific;
 $ENV{WIZ_fileUninstallZip}     = $seuzFileNameSpecific;
