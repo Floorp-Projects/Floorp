@@ -26,7 +26,6 @@ EXPORTS= \
 		nsINNTPNewsgroupList.h \
 		nsIMsgNewsHost.h \
 		nsIMsgNewsgroup.h \
-		nsIMsgXOVERParser.h\
 		nsIMsgOfflineNewsState.h \
 		nsINNTPArticleList.h \
 		$(NULL)
