@@ -61,6 +61,7 @@
 #include "pkinss3hack.h"
 #include "dev.h"
 #include "nsspki.h"
+#include "pkitm.h"
 
 #define PK11_SEARCH_CHUNKSIZE 10
 
@@ -1280,9 +1281,11 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
 #else
     CERTCertificate *rvCert = NULL;
     NSSCertificate *cert = NULL;
+    NSSUsage usage;
     char *delimit = NULL;
     char *tokenName;
     NSSTrustDomain *defaultTD = STAN_GetDefaultTrustDomain();
+    usage.anyUsage = PR_TRUE;
     /* XXX login to slots ... */
     if ((delimit = PORT_Strchr(nickname,':')) != NULL) {
 	NSSToken *token;
@@ -1298,7 +1301,7 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
                                                          token,
                                                          (NSSUTF8 *)nickname,
                                                          NULL,
-                                                         NULL, /* XXX */
+                                                         &usage,
                                                          NULL);
 	}
     } else {
@@ -1307,7 +1310,7 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
                                                   defaultTD,
                                                   (NSSUTF8 *)nickname,
                                                   NULL,
-                                                  NULL, /* XXX */
+                                                  &usage,
                                                   NULL);
     }
     if (cert) {
@@ -2356,7 +2359,7 @@ PK11_TraverseCertsForSubjectInSlot(CERTCertificate *cert, PK11SlotInfo *slot,
     pk11cb.arg = arg;
     tok = PK11Slot_GetNSSToken(slot);
     if (tok) {
-	nssrv = nssToken_FindCertificatesByTemplate(tok, NULL, NULL,
+	nssrv = nssToken_TraverseCertificatesByTemplate(tok, NULL, NULL,
 	                                            theTemplate, templateSize,
 	                                            convert_cert, &pk11cb);
     } else {
@@ -2421,7 +2424,7 @@ PK11_TraverseCertsForNicknameInSlot(SECItem *nickname, PK11SlotInfo *slot,
     pk11cb.arg = arg;
     tok = PK11Slot_GetNSSToken(slot);
     if (tok) {
-	nssrv = nssToken_FindCertificatesByTemplate(tok, NULL, NULL,
+	nssrv = nssToken_TraverseCertificatesByTemplate(tok, NULL, NULL,
 	                                            theTemplate, templateSize,
 	                                            convert_cert, &pk11cb);
     } else {
