@@ -42,6 +42,10 @@ EX_LIBS = \
 	$(DIST)/lib/libnspr21.a	\
 	$(NULL)
 
+ifeq (linux,$(ARCH))
+OS_LIBS += /usr/lib/libdl.so
+endif
+
 PROGS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
 
 TARGETS = $(PROGS)
