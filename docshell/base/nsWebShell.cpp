@@ -211,8 +211,6 @@ public:
                   nsScrollPreference aScrolling = nsScrollPreference_kAuto,
                   PRBool aAllowPlugins = PR_TRUE,
                   PRBool aIsSunkenBorder = PR_FALSE);
-  NS_IMETHOD RemoveFocus();
-  NS_IMETHOD SetContentViewer(nsIContentViewer* aViewer);
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer);
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult);
   NS_IMETHOD GetTopLevelWindow(nsIWebShellContainer** aWebShellWindow);
@@ -262,11 +260,14 @@ public:
                      const PRUnichar* aReferrer=nsnull,
                      const char * aWindowTarget = nsnull);
 
+  NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
+      nsIInputStream* aPostData, loadType aLoadType);
+
   NS_IMETHOD Stop(void);
   NS_IMETHOD StopBeforeRequestingURL();
   NS_IMETHOD StopAfterURLAvailable();
 
-  NS_IMETHOD Reload(nsLoadFlags aType);
+  void SetReferrer(const PRUnichar* aReferrer);
 
   // History api's
   NS_IMETHOD Back(void);
@@ -347,7 +348,6 @@ public:
 
   void ShowHistory();
 
-  nsIWebShell* GetTarget(const PRUnichar* aName);
   nsIBrowserWindow* GetBrowserWindow(void);
 
   static void RefreshURLCallback(nsITimer* aTimer, void* aClosure);
@@ -396,7 +396,6 @@ protected:
   nsISessionHistory * mSHist;
 
   nsString mURL;
-  nsString mReferrer;
 
   nsString mOverURL;
   nsString mOverTarget;
@@ -414,7 +413,6 @@ protected:
   nsISupports* mHistoryState; // Weak reference.  Session history owns this.
 
   nsresult FireUnloadForChildren();
-  void ReleaseChildren();
   NS_IMETHOD DestroyChildren();
   nsresult DoLoadURL(nsIURI * aUri, 
                      const char* aCommand,
@@ -633,14 +631,6 @@ nsWebShell::~nsWebShell()
 
   InitFrameData(PR_TRUE);
 
-  // XXX Because we hold references to the children and they hold references
-  // to us we never get destroyed. See Destroy() instead...
-#if 0
-  // Release references on our children
-  ReleaseChildren();
-#endif
-
-
   // Free up history memory
   PRInt32 i, n = mHistory.Count();
   for (i = 0; i < n; i++) {
@@ -671,21 +661,6 @@ void nsWebShell::InitFrameData(PRBool aCompleteInitScrolling)
   else {
     mScrolling[1] = mScrolling[0];
   }
-}
-
-void
-nsWebShell::ReleaseChildren()
-{
-  PRInt32 i, n = mChildren.Count();
-  for (i = 0; i < n; i++) {
-    nsCOMPtr<nsIDocShellTreeItem> shell = dont_AddRef((nsIDocShellTreeItem*)mChildren.ElementAt(i));
-    shell->SetParent(nsnull);
-
-    //Break circular reference of webshell to contentviewer
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(shell));
-    webShell->SetContentViewer(nsnull);
-  }
-  mChildren.Clear();
 }
 
 nsresult
@@ -1094,32 +1069,6 @@ nsWebShell::IsBusy(PRBool& aResult)
 }
 
 NS_IMETHODIMP
-nsWebShell::RemoveFocus()
-{
-  /*
-  --dwc0001
-  NS_PRECONDITION(nsnull != mWindow, "null window");
-  */
-
-  if (nsnull != mWindow) {
-    nsIWidget *parentWidget = mWindow->GetParent();
-    if (nsnull != parentWidget) {
-      parentWidget->SetFocus();
-      NS_RELEASE(parentWidget);
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::SetContentViewer(nsIContentViewer* aViewer)
-{
-  mContentViewer = aViewer;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsWebShell::SetContainer(nsIWebShellContainer* aContainer)
 {
   NS_IF_RELEASE(mContainer);
@@ -1245,7 +1194,15 @@ nsWebShell::GetParent(nsIWebShell*& aParent)
 NS_IMETHODIMP
 nsWebShell::GetReferrer(nsIURI **aReferrer)
 {
-  return NS_NewURI(aReferrer, mReferrer, nsnull);
+   *aReferrer = mReferrerURI;
+   NS_IF_ADDREF(*aReferrer);
+   return NS_OK;
+}
+
+void
+nsWebShell::SetReferrer(const PRUnichar* aReferrer)
+{
+   NS_NewURI(getter_AddRefs(mReferrerURI), aReferrer, nsnull);
 }
 
 NS_IMETHODIMP
@@ -1481,21 +1438,7 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
 
   // This should probably get saved in mHistoryService or something... 
   // Ugh. It sucks that we have to hack webshell like this. Forgive me, Father.
-  do {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIGlobalHistory, history, "component://netscape/browser/global-history", &rv);
-    if (NS_FAILED(rv)) break;
-
-    nsXPIDLCString spec;
-    rv = aUri->GetSpec(getter_Copies(spec));
-    if (NS_FAILED(rv)) break;
-
-    if (! spec)
-      break;
-
-    rv = history->AddPage(spec, nsnull /* referrer */, PR_Now());
-    if (NS_FAILED(rv)) break;
-  } while (0);
+  AddToGlobalHistory(aUri);
 
   nsXPIDLCString urlSpec;
   nsresult rv = NS_OK;
@@ -1508,10 +1451,11 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
   // loadtype
   if ((aType == nsISessionHistory::LOAD_HISTORY || aType == nsIChannel::LOAD_NORMAL) && (nsnull != mContentViewer) &&
       (nsnull == aPostDataStream))
-  {
+   {
     nsCOMPtr<nsIDocumentViewer> docViewer;
     if (NS_SUCCEEDED(mContentViewer->QueryInterface(kIDocumentViewerIID,
-                                                    getter_AddRefs(docViewer)))) {
+                                                    getter_AddRefs(docViewer))))
+      {
       // Get the document object
       nsCOMPtr<nsIDocument> doc;
       docViewer->GetDocument(*getter_AddRefs(doc));
@@ -1519,77 +1463,85 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
       // Get the URL for the document
       nsCOMPtr<nsIURI>  docURL = nsDontAddRef<nsIURI>(doc->GetDocumentURL());
 
-      if (aUri && docURL && EqualBaseURLs(docURL, aUri)) {
-        // See if there's a destination anchor
-        nsXPIDLCString ref;
-        nsCOMPtr<nsIURL> aUrl = do_QueryInterface(aUri);
-        if (aUrl)
-          rv = aUrl->GetRef(getter_Copies(ref));
+      if (aUri && docURL && EqualBaseURLs(docURL, aUri))
+         {
+         // See if there's a destination anchor
+         nsXPIDLCString ref;
+         nsCOMPtr<nsIURL> aUrl = do_QueryInterface(aUri);
+         if (aUrl)
+            rv = aUrl->GetRef(getter_Copies(ref));
 
-        nsCOMPtr<nsIPresShell> presShell;
-        rv = docViewer->GetPresShell(*getter_AddRefs(presShell));
+         nsCOMPtr<nsIPresShell> presShell;
+         rv = docViewer->GetPresShell(*getter_AddRefs(presShell));
 
-        if (NS_SUCCEEDED(rv) && presShell) {
-           /* Pass OnStartDocument notifications to the docloaderobserver
+         if (NS_SUCCEEDED(rv) && presShell)
+            {
+            /* Pass OnStartDocument notifications to the docloaderobserver
             * so that urlbar, forward/back buttons will
             * behave properly when going to named anchors
             */
-           nsIInterfaceRequestor * interfaceRequestor = NS_STATIC_CAST(nsIInterfaceRequestor *, this);
-           nsCOMPtr<nsIChannel> dummyChannel;
-           // creating a channel is expensive...don't create it unless we know we have to
-           // so move the creation down into each of the if clauses...
-           if (nsnull != (const char *) ref) {
-              rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull, interfaceRequestor);
-              if (NS_FAILED(rv)) return rv;
-              if (!mProcessedEndDocumentLoad)
-                rv = OnStartDocumentLoad(mDocLoader, aUri, "load");
-              // Go to the anchor in the current document
-              rv = presShell->GoToAnchor(nsAutoString(ref));                      
-              // Set the URL & referrer if the anchor was successfully visited
-              if (NS_SUCCEEDED(rv)) {
+            nsIInterfaceRequestor * interfaceRequestor = NS_STATIC_CAST(nsIInterfaceRequestor *, this);
+            nsCOMPtr<nsIChannel> dummyChannel;
+            // creating a channel is expensive...don't create it unless we know we have to
+            // so move the creation down into each of the if clauses...
+            if (nsnull != (const char *) ref)
+               {
+               rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull, interfaceRequestor);
+               if (NS_FAILED(rv)) return rv;
+               if (!mProcessedEndDocumentLoad)
+                  rv = OnStartDocumentLoad(mDocLoader, aUri, "load");
+               // Go to the anchor in the current document
+               rv = presShell->GoToAnchor(nsAutoString(ref));                      
+               // Set the URL & referrer if the anchor was successfully visited
+               if (NS_SUCCEEDED(rv))
+                  {
+                  SetCurrentURI(aUri);
                   mURL = urlSpec;
-                  mReferrer = aReferrer;
-              }
-              // Pass on status of scrolling/anchor visit to docloaderobserver
-              if (!mProcessedEndDocumentLoad)
-              {
-                rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv);
-              }
-              return rv;       
-           }
-           else if (aType == nsISessionHistory::LOAD_HISTORY)
-           {
-              rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull, interfaceRequestor);
-              if (NS_FAILED(rv)) return rv;
-              rv = OnStartDocumentLoad(mDocLoader, aUri, "load");
-              // Go to the top of the current document
-              nsCOMPtr<nsIViewManager> viewMgr;
-              rv = presShell->GetViewManager(getter_AddRefs(viewMgr));
-              if (NS_SUCCEEDED(rv) && viewMgr) {
-                nsIScrollableView* view;
-                rv = viewMgr->GetRootScrollableView(&view);
-                if (NS_SUCCEEDED(rv) && view)
-                rv = view->ScrollTo(0, 0, NS_VMREFRESH_IMMEDIATE);
-                if (NS_SUCCEEDED(rv)) {
+                  SetReferrer(aReferrer);
+                  }
+               // Pass on status of scrolling/anchor visit to docloaderobserver
+               if (!mProcessedEndDocumentLoad)
+                  {
+                  rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv);
+                  }
+               return rv;       
+               }
+            else if (aType == nsISessionHistory::LOAD_HISTORY)
+               {
+               rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull, interfaceRequestor);
+               if (NS_FAILED(rv)) return rv;
+               rv = OnStartDocumentLoad(mDocLoader, aUri, "load");
+               // Go to the top of the current document
+               nsCOMPtr<nsIViewManager> viewMgr;
+               rv = presShell->GetViewManager(getter_AddRefs(viewMgr));
+               if (NS_SUCCEEDED(rv) && viewMgr)
+                  {
+                  nsIScrollableView* view;
+                  rv = viewMgr->GetRootScrollableView(&view);
+                  if (NS_SUCCEEDED(rv) && view)
+                  rv = view->ScrollTo(0, 0, NS_VMREFRESH_IMMEDIATE);
+                  if(NS_SUCCEEDED(rv))
+                     {
+                     SetCurrentURI(aUri);
                      mURL = urlSpec;
-                     mReferrer = aReferrer;
-                }
-                mProcessedEndDocumentLoad = PR_FALSE;
-                // Pass on status of scrolling/anchor visit to docloaderobserver
-                rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv);
-                return rv;       
-              }
-           }
+                     SetReferrer(aReferrer);
+                     }
+                  mProcessedEndDocumentLoad = PR_FALSE;
+                  // Pass on status of scrolling/anchor visit to docloaderobserver
+                  rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv);
+                  return rv;       
+                  }
+               }
 #if 0              
-       mProcessedEndDocumentLoad = PR_FALSE;
-       // Pass on status of scrolling/anchor visit to docloaderobserver
-           rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv);
-       return rv;      
+            mProcessedEndDocumentLoad = PR_FALSE;
+            // Pass on status of scrolling/anchor visit to docloaderobserver
+            rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv);
+            return rv;      
 #endif /* 0 */
-        }  // NS_SUCCEEDED(rv) && presShell
-      } // EqualBaseURLs(docURL, url)
-    }
-  }
+            }  // NS_SUCCEEDED(rv) && presShell
+         } // EqualBaseURLs(docURL, url)
+      }
+   }
 
   // Stop loading the current document (if any...).  This call may result in
   // firing an EndLoadURL notification for the old document...
@@ -1703,11 +1655,28 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
   // Fix for bug 1646.  Change the notion of current url and referrer only after
   // the document load succeeds.
   if (NS_SUCCEEDED(rv)) {
+    SetCurrentURI(aUri);
     mURL = urlSpec;
-    mReferrer = aReferrer;
+    SetReferrer(aReferrer);
   }
 
   return rv;
+}
+
+NS_IMETHODIMP nsWebShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
+   nsIInputStream* aPostData, loadType aLoadType)
+{
+   nsXPIDLCString url;
+   aURI->GetSpec(getter_Copies(url));
+
+   nsXPIDLCString referrer;
+   if(aReferrer)
+      aReferrer->GetSpec(getter_Copies(referrer));
+
+
+   return LoadURL(nsAutoString(url).GetUnicode(), nsnull, PR_FALSE, 0, 0,
+      nsnull, nsAutoString(referrer).GetUnicode());
+
 }
 
 // nsIURIContentListener support
@@ -1766,12 +1735,12 @@ nsWebShell::DoContent(const char * aContentType,
   // determine if the channel has just been retargeted to us...
   nsLoadFlags loadAttribs = 0;
   aOpenedChannel->GetLoadAttributes(&loadAttribs);
+  // first, run any uri preparation stuff that we would have run normally
+  // had we gone through OpenURI
+  nsCOMPtr<nsIURI> aUri;
+  aOpenedChannel->GetURI(getter_AddRefs(aUri));
   if (loadAttribs & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
   {
-    // first, run any uri preparation stuff that we would have run normally
-    // had we gone through OpenURI
-    nsCOMPtr<nsIURI> aUri;
-    aOpenedChannel->GetURI(getter_AddRefs(aUri));
     PrepareToLoadURI(aUri, strCommand, nsnull, PR_TRUE, nsIChannel::LOAD_NORMAL, 0, nsnull, nsnull);
     // mscott: when I called DoLoadURL I found that we ran into problems because
     // we currently don't have channel retargeting yet. Basically, what happens is that
@@ -1782,6 +1751,8 @@ nsWebShell::DoContent(const char * aContentType,
     DoLoadURL(aUri, strCommand, nsnull, nsIChannel::LOAD_NORMAL, 0, nsnull, nsnull, PR_FALSE);
     SetFocus(); // force focus to get set on the retargeted window...
   }
+
+  OnLoadingSite(aUri);
 
   return CreateViewer(aOpenedChannel, 
                       aContentType, 
@@ -2211,48 +2182,17 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
 NS_IMETHODIMP nsWebShell::Stop(void)
 {
-  if (nsnull != mContentViewer) {
-    mContentViewer->Stop();
-  }
-
   // Cancel any timers that were set for this loader.
   CancelRefreshURITimers();
 
-  if (mDocLoader) {
-    // Stop any documents that are currently being loaded...
-    mDocLoader->Stop();
-  }
-
-  // Stop the documents being loaded by children too...
-  PRInt32 i, n = mChildren.Count();
-  for (i = 0; i < n; i++) {
-    nsIDocShell* shell = (nsIDocShell*) mChildren.ElementAt(i);
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(shell));
-    webShell->Stop();
-  }
-
-  return NS_OK;
+  return nsDocShell::Stop();
 }
-
 // This "stops" the current document load enough so that the document loader
 // can be used to load a new URL.
 NS_IMETHODIMP
 nsWebShell::StopBeforeRequestingURL()
 {
-  if (mDocLoader) {
-    // Stop any documents that are currently being loaded...
-    mDocLoader->Stop();
-  }
-
-  // Recurse down the webshell hierarchy.
-  PRInt32 i, n = mChildren.Count();
-  for (i = 0; i < n; i++) {
-    nsIDocShell* shell = (nsIDocShell*) mChildren.ElementAt(i);
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(shell));
-    webShell->StopBeforeRequestingURL();
-  }
-
-  return NS_OK;
+   return StopLoad();
 }
 
 // This "stops" the current document load completely and is called once
@@ -2261,39 +2201,7 @@ nsWebShell::StopBeforeRequestingURL()
 NS_IMETHODIMP
 nsWebShell::StopAfterURLAvailable()
 {
-  if (nsnull != mContentViewer) {
-    mContentViewer->Stop();
-  }
-
-  // Cancel any timers that were set for this loader.
-  CancelRefreshURITimers();
-
-  // Recurse down the webshell hierarchy.
-  PRInt32 i, n = mChildren.Count();
-  for (i = 0; i < n; i++) {
-    nsIDocShell* shell = (nsIDocShell*) mChildren.ElementAt(i);
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(shell));
-    webShell->StopAfterURLAvailable();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWebShell::Reload(nsLoadFlags aType)
-{
-  nsString* s = (nsString*) mHistory.ElementAt(mHistoryIndex);
-  if (nsnull != s) {
-    // XXX What about the post data?
-
-    // Allocate since mReferrer will change beneath us
-    PRUnichar* str = mReferrer.ToNewUnicode();
-    return LoadURL(s->GetUnicode(), nsnull, PR_FALSE, 
-                   aType, 0, nsnull, str);
-    Recycle(str);
-  }
-
-  return NS_ERROR_FAILURE;
-
+   return Stop();
 }
 
 //----------------------------------------
@@ -2682,23 +2590,6 @@ nsWebShell::OnLinkClick(nsIContent* aContent,
     rv = NS_ERROR_OUT_OF_MEMORY;
   }
   return rv;
-}
-
-// Find the web shell in the entire tree that we can reach that the
-// link click should go to.
-
-// XXX This doesn't yet know how to target other windows with their
-// own tree
-nsIWebShell*
-nsWebShell::GetTarget(const PRUnichar* aName)
-{
-   nsCOMPtr<nsIDocShellTreeItem> shellItem;
-   NS_ENSURE_SUCCESS(nsDocShell::GetTarget(aName, getter_AddRefs(shellItem)), nsnull);
-   
-   nsIWebShell* target = nsnull;
-   if(shellItem)
-      CallQueryInterface(shellItem, &target);
-   return target;   
 }
 
 nsIEventQueue* nsWebShell::GetEventQueue(void)
@@ -3858,15 +3749,7 @@ NS_IMETHODIMP nsWebShell::GetTitle(PRUnichar** aTitle)
 
 NS_IMETHODIMP nsWebShell::SetTitle(const PRUnichar* aTitle)
 {
-   nsDocShell::SetTitle(aTitle);
-
-   // Oh this hack sucks. But there isn't any other way that I can
-   // reliably get the title text. Sorry.
-   nsCOMPtr<nsIGlobalHistory> globalHistory(do_GetService("component://netscape/browser/global-history"));
-   if (globalHistory)
-       globalHistory->SetPageTitle(nsCAutoString(mURL), aTitle);
-
-   return NS_OK;
+   return nsDocShell::SetTitle(aTitle);
 }
 
 //*****************************************************************************
@@ -3883,6 +3766,11 @@ NS_IMETHODIMP nsWebShell::LoadURIVia(nsIURI* aUri,
    nsIPresContext* aPresContext, PRUint32 aAdapterBinding)
 {
    return nsDocShell::LoadURIVia(aUri, aPresContext, aAdapterBinding);
+}
+
+NS_IMETHODIMP nsWebShell::StopLoad()
+{
+   return nsDocShell::StopLoad();
 }
 
 NS_IMETHODIMP nsWebShell::GetCurrentURI(nsIURI** aURI)
