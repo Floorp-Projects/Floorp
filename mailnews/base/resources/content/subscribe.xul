@@ -36,7 +36,8 @@ Rights Reserved.
         height="400"
         id="subscribeWindow"
         persist="width height screenX screenY"
-        onload="SubscribeOnLoad()">
+        onload="SubscribeOnLoad()"
+        onclose="Stop()">
         
 <script language="JavaScript" src="chrome://global/content/strres.js"/>
 <script language="JavaScript" src="chrome://messenger/content/mailCommands.js"/>
