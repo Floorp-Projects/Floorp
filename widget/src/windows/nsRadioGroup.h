@@ -59,7 +59,7 @@ protected:
 
 
     // keep the list of children
-    class Enumerator : public nsIEnumerator {
+    class Enumerator : public nsIBidirectionalEnumerator {
         nsIRadioButton   **mChildrens;
         int  mCurrentPosition;
         int  mArraySize;

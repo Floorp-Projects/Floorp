@@ -30,7 +30,6 @@
 #include "nsIDOMCharacterData.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
-#include "nsIEnumerator.h"
 #include "nsIRenderingContext.h"
 #include "nsIView.h"
 #include "nsIPresContext.h"

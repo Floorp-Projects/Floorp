@@ -44,6 +44,7 @@
 #include "Xm/DialogS.h"
 #include "Xm/RowColumn.h"
 #include "Xm/Form.h"
+#include "nsIEnumerator.h"
 
 #define DBG 0
 

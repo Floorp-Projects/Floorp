@@ -20,7 +20,9 @@
 #define nsISupportsArray_h___
 
 #include "nsCom.h"
-#include "nsISupports.h"
+#include "nsICollection.h"
+
+class nsIBidirectionalEnumerator;
 
 // {791eafa0-b9e6-11d1-8031-006008159b5a}
 #define NS_ISUPPORTSARRAY_IID \
@@ -30,7 +32,7 @@
 // Enumerator callback function. Return PR_FALSE to stop
 typedef PRBool (*nsISupportsArrayEnumFunc)(nsISupports* aElement, void *aData);
 
-class nsISupportsArray : public nsISupports {
+class nsISupportsArray : public nsICollection {
 public:
   static const nsIID& IID() { static nsIID iid = NS_ISUPPORTSARRAY_IID; return iid; }
 
@@ -38,27 +40,20 @@ public:
   NS_IMETHOD_(PRBool) operator==(const nsISupportsArray& other) const = 0;
   NS_IMETHOD_(PRBool) Equals(const nsISupportsArray* other) const = 0;
  
-  NS_IMETHOD_(PRInt32) Count(void) const = 0;
+  NS_IMETHOD_(nsISupports*)  ElementAt(PRUint32 aIndex) const = 0;
+  NS_IMETHOD_(nsISupports*)  operator[](PRUint32 aIndex) const = 0;
 
-  NS_IMETHOD_(nsISupports*)  ElementAt(PRInt32 aIndex) const = 0;
-  NS_IMETHOD_(nsISupports*)  operator[](PRInt32 aIndex) const = 0;
-
-  NS_IMETHOD_(PRInt32)  IndexOf(const nsISupports* aPossibleElement, PRInt32 aStartIndex = 0) const = 0;
+  NS_IMETHOD_(PRInt32)  IndexOf(const nsISupports* aPossibleElement, PRUint32 aStartIndex = 0) const = 0;
   NS_IMETHOD_(PRInt32)  LastIndexOf(const nsISupports* aPossibleElement) const = 0;
 
-  NS_IMETHOD_(PRBool) InsertElementAt(nsISupports* aElement, PRInt32 aIndex) = 0;
+  NS_IMETHOD_(PRBool) InsertElementAt(nsISupports* aElement, PRUint32 aIndex) = 0;
 
-  NS_IMETHOD_(PRBool) ReplaceElementAt(nsISupports* aElement, PRInt32 aIndex) = 0;
+  NS_IMETHOD_(PRBool) ReplaceElementAt(nsISupports* aElement, PRUint32 aIndex) = 0;
 
-  NS_IMETHOD_(PRBool) AppendElement(nsISupports* aElement) = 0;
-
-  NS_IMETHOD_(PRBool) RemoveElementAt(PRInt32 aIndex) = 0;
-  NS_IMETHOD_(PRBool) RemoveElement(const nsISupports* aElement, PRInt32 aStartIndex = 0) = 0;
+  NS_IMETHOD_(PRBool) RemoveElementAt(PRUint32 aIndex) = 0;
   NS_IMETHOD_(PRBool) RemoveLastElement(const nsISupports* aElement) = 0;
 
   NS_IMETHOD_(PRBool) AppendElements(nsISupportsArray* aElements) = 0;
-
-  NS_IMETHOD_(void)   Clear(void) = 0;
 
   NS_IMETHOD_(void)   Compact(void) = 0;
 
@@ -67,11 +62,16 @@ public:
 
 private:
   // Copy constructors are not allowed
-// XXX test wether this has to be here  nsISupportsArray(const nsISupportsArray& other);
+// XXX test whether this has to be here  nsISupportsArray(const nsISupportsArray& other);
 };
 
+// Construct and return a default implementation of nsISupportsArray:
 extern NS_COM nsresult
-  NS_NewISupportsArray(nsISupportsArray** aInstancePtrResult);
+NS_NewISupportsArray(nsISupportsArray** aInstancePtrResult);
 
+// Construct and return a default implementation of an enumerator for nsISupportsArrays:
+extern NS_COM nsresult
+NS_NewISupportsArrayEnumerator(nsISupportsArray* array,
+                               nsIBidirectionalEnumerator* *aInstancePtrResult);
 
 #endif // nsISupportsArray_h___

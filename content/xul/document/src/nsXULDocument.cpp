@@ -42,7 +42,6 @@
 #include "nsIDTD.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
-#include "nsIEnumerator.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsIHTMLCSSStyleSheet.h"
 #include "nsIHTMLStyleSheet.h"
@@ -1875,7 +1874,7 @@ XULDocumentImpl::CreateContents(nsIContent* aElement)
     if (! mBuilders)
         return NS_ERROR_NOT_INITIALIZED;
 
-    for (PRInt32 i = 0; i < mBuilders->Count(); ++i) {
+    for (PRUint32 i = 0; i < mBuilders->Count(); ++i) {
         // XXX we should QueryInterface() here
         nsIRDFContentModelBuilder* builder
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
@@ -2544,7 +2543,7 @@ XULDocumentImpl::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult)
 NS_IMETHODIMP
 XULDocumentImpl::OnSetNodeValue(nsIDOMNode* aNode, const nsString& aValue)
 {
-    for (PRInt32 i = 0; i < mBuilders->Count(); ++i) {
+    for (PRUint32 i = 0; i < mBuilders->Count(); ++i) {
         nsIRDFContentModelBuilder* builder
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
@@ -2564,7 +2563,7 @@ XULDocumentImpl::OnSetNodeValue(nsIDOMNode* aNode, const nsString& aValue)
 NS_IMETHODIMP
 XULDocumentImpl::OnInsertBefore(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsIDOMNode* aRefChild)
 {
-    for (PRInt32 i = 0; i < mBuilders->Count(); ++i) {
+    for (PRUint32 i = 0; i < mBuilders->Count(); ++i) {
         nsIRDFContentModelBuilder* builder
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
@@ -2584,7 +2583,7 @@ XULDocumentImpl::OnInsertBefore(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsID
 NS_IMETHODIMP
 XULDocumentImpl::OnReplaceChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsIDOMNode* aOldChild)
 {
-    for (PRInt32 i = 0; i < mBuilders->Count(); ++i) {
+    for (PRUint32 i = 0; i < mBuilders->Count(); ++i) {
         nsIRDFContentModelBuilder* builder
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
@@ -2604,7 +2603,7 @@ XULDocumentImpl::OnReplaceChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsID
 NS_IMETHODIMP
 XULDocumentImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
 {
-    for (PRInt32 i = 0; i < mBuilders->Count(); ++i) {
+    for (PRUint32 i = 0; i < mBuilders->Count(); ++i) {
         nsIRDFContentModelBuilder* builder
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
@@ -2624,7 +2623,7 @@ XULDocumentImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
 NS_IMETHODIMP
 XULDocumentImpl::OnAppendChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild)
 {
-    for (PRInt32 i = 0; i < mBuilders->Count(); ++i) {
+    for (PRUint32 i = 0; i < mBuilders->Count(); ++i) {
         nsIRDFContentModelBuilder* builder
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
@@ -2647,7 +2646,7 @@ XULDocumentImpl::OnAppendChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild)
 NS_IMETHODIMP
 XULDocumentImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName, const nsString& aValue)
 {
-    for (PRInt32 i = 0; i < mBuilders->Count(); ++i) {
+    for (PRUint32 i = 0; i < mBuilders->Count(); ++i) {
         nsIRDFContentModelBuilder* builder
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
@@ -2665,7 +2664,7 @@ XULDocumentImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName, 
 NS_IMETHODIMP
 XULDocumentImpl::OnRemoveAttribute(nsIDOMElement* aElement, const nsString& aName)
 {
-    for (PRInt32 i = 0; i < mBuilders->Count(); ++i) {
+    for (PRUint32 i = 0; i < mBuilders->Count(); ++i) {
         nsIRDFContentModelBuilder* builder
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
@@ -2683,7 +2682,7 @@ XULDocumentImpl::OnRemoveAttribute(nsIDOMElement* aElement, const nsString& aNam
 NS_IMETHODIMP
 XULDocumentImpl::OnSetAttributeNode(nsIDOMElement* aElement, nsIDOMAttr* aNewAttr)
 {
-    for (PRInt32 i = 0; i < mBuilders->Count(); ++i) {
+    for (PRUint32 i = 0; i < mBuilders->Count(); ++i) {
         nsIRDFContentModelBuilder* builder
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
@@ -2701,7 +2700,7 @@ XULDocumentImpl::OnSetAttributeNode(nsIDOMElement* aElement, nsIDOMAttr* aNewAtt
 NS_IMETHODIMP
 XULDocumentImpl::OnRemoveAttributeNode(nsIDOMElement* aElement, nsIDOMAttr* aOldAttr)
 {
-    for (PRInt32 i = 0; i < mBuilders->Count(); ++i) {
+    for (PRUint32 i = 0; i < mBuilders->Count(); ++i) {
         nsIRDFContentModelBuilder* builder
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 

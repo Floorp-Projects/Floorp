@@ -787,7 +787,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer :: OnDataAvailable(nsIURL* aURL, nsIInp
 
 NS_IMETHODIMP nsPluginStreamListenerPeer :: OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
   nsPluginReason  reason = nsPluginReason_NoReason;
 
   //XXX this is incomplete... MMP

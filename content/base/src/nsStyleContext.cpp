@@ -977,7 +977,7 @@ StyleContextImpl::FindChildWithRules(const nsIAtom* aPseudoTag,
             (child->mRuleHash == hash) &&
             (child->mPseudoTag == aPseudoTag) &&
             (nsnull != child->mRules) &&
-            (child->mRules->Count() == ruleCount)) {
+            ((PRInt32)child->mRules->Count() == ruleCount)) {
           if (child->mRules->Equals(aRules)) {
             aResult = child;
             break;

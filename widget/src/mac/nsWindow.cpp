@@ -34,6 +34,7 @@
 #include "nsIDeviceContext.h"
 #include "nsCOMPtr.h"
 #include "nsToolkit.h"
+#include "nsIEnumerator.h"
 
 
 NS_IMPL_ADDREF(ChildWindow)

@@ -125,7 +125,7 @@ protected:
     nsRect            mBounds;
 
     // keep the list of children
-    class Enumerator : public nsIEnumerator {
+    class Enumerator : public nsIBidirectionalEnumerator {
     public:
       NS_DECL_ISUPPORTS
 

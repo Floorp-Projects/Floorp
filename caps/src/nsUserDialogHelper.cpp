@@ -38,8 +38,8 @@ extern int CAPS_TARGET_HELP_URL;
 //
 char * JavaSecUI_targetRiskStr(int risk) 
 {
-  char * str;
 #ifdef XXX
+  char * str;
   if (risk <= nsRiskType_LowRisk) {
     str = XP_GetString(CAPS_TARGET_RISK_STR_LOW);
   } else if (risk <= nsRiskType_MediumRisk) {

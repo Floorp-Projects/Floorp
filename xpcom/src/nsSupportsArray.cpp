@@ -16,68 +16,12 @@
  * Reserved.
  */
 
-#include "nsISupportsArray.h"
+#include "nsSupportsArray.h"
+#include "nsSupportsArrayEnumerator.h"
 
-static NS_DEFINE_IID(kISupportsArrayIID, NS_ISUPPORTSARRAY_IID);
+static const PRUint32 kGrowArrayBy = 8;
 
-static const PRInt32 kGrowArrayBy = 8;
-static const PRInt32 kAutoArraySize = 4;
-
-class SupportsArrayImpl : public nsISupportsArray {
-public:
-  SupportsArrayImpl(void);
-  ~SupportsArrayImpl(void);
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD_(nsISupportsArray&) operator=(const nsISupportsArray& aOther);
-  NS_IMETHOD_(PRBool) operator==(const nsISupportsArray& aOther) const { return Equals(&aOther); }
-  NS_IMETHOD_(PRBool) Equals(const nsISupportsArray* aOther) const;
-
-  NS_IMETHOD_(PRInt32) Count(void) const {  return mCount;  }
-
-  NS_IMETHOD_(nsISupports*) ElementAt(PRInt32 aIndex) const;
-  NS_IMETHOD_(nsISupports*) operator[](PRInt32 aIndex) const { return ElementAt(aIndex); }
-
-  NS_IMETHOD_(PRInt32) IndexOf(const nsISupports* aPossibleElement, PRInt32 aStartIndex = 0) const;
-  NS_IMETHOD_(PRInt32) LastIndexOf(const nsISupports* aPossibleElement) const;
-
-  NS_IMETHOD_(PRBool) InsertElementAt(nsISupports* aElement, PRInt32 aIndex);
-
-  NS_IMETHOD_(PRBool) ReplaceElementAt(nsISupports* aElement, PRInt32 aIndex);
-
-  NS_IMETHOD_(PRBool) AppendElement(nsISupports* aElement) {
-    return InsertElementAt(aElement, mCount);
-  }
-
-  NS_IMETHOD_(PRBool) RemoveElementAt(PRInt32 aIndex);
-  NS_IMETHOD_(PRBool) RemoveElement(const nsISupports* aElement, PRInt32 aStartIndex = 0);
-  NS_IMETHOD_(PRBool) RemoveLastElement(const nsISupports* aElement);
-
-  NS_IMETHOD_(PRBool) AppendElements(nsISupportsArray* aElements);
-  
-  NS_IMETHOD_(void)   Clear(void);
-
-  NS_IMETHOD_(void)   Compact(void);
-
-  NS_IMETHOD_(PRBool) EnumerateForwards(nsISupportsArrayEnumFunc aFunc, void* aData) const;
-  NS_IMETHOD_(PRBool) EnumerateBackwards(nsISupportsArrayEnumFunc aFunc, void* aData) const;
-
-protected:
-  void DeleteArray(void);
-
-  nsISupports** mArray;
-  PRInt32 mArraySize;
-  PRInt32 mCount;
-  nsISupports*  mAutoArray[kAutoArraySize];
-
-private:
-  // Copy constructors are not allowed
-  SupportsArrayImpl(const nsISupportsArray& other);
-};
-
-
-SupportsArrayImpl::SupportsArrayImpl()
+nsSupportsArray::nsSupportsArray()
 {
   NS_INIT_REFCNT();
   mArray = &(mAutoArray[0]);
@@ -85,14 +29,14 @@ SupportsArrayImpl::SupportsArrayImpl()
   mCount = 0;
 }
 
-SupportsArrayImpl::~SupportsArrayImpl()
+nsSupportsArray::~nsSupportsArray()
 {
   DeleteArray();
 }
 
-NS_IMPL_ISUPPORTS(SupportsArrayImpl, kISupportsArrayIID);
+NS_IMPL_ISUPPORTS(nsSupportsArray, nsISupportsArray::IID());
 
-void SupportsArrayImpl::DeleteArray(void)
+void nsSupportsArray::DeleteArray(void)
 {
   Clear();
   if (mArray != &(mAutoArray[0])) {
@@ -102,11 +46,19 @@ void SupportsArrayImpl::DeleteArray(void)
   }
 }
 
-nsISupportsArray& SupportsArrayImpl::operator=(const nsISupportsArray& aOther)
+NS_IMETHODIMP_(nsISupportsArray&) 
+nsISupportsArray::operator=(const nsISupportsArray& other)
 {
-  PRInt32 otherCount = aOther.Count();
+  NS_ASSERTION(0, "should be an abstract method");
+  return *this; // bogus
+}
 
-  if (otherCount > mArraySize) {
+NS_IMETHODIMP_(nsISupportsArray&) 
+nsSupportsArray::operator=(const nsISupportsArray& aOther)
+{
+  PRUint32 otherCount = aOther.Count();
+
+  if (otherCount > (PRInt32)mArraySize) {
     DeleteArray();
     mArraySize = otherCount;
     mArray = new nsISupports*[mArraySize];
@@ -115,19 +67,20 @@ nsISupportsArray& SupportsArrayImpl::operator=(const nsISupportsArray& aOther)
     Clear();
   }
   mCount = otherCount;
-  while (0 <= --otherCount) {
+  while (0 < otherCount--) {
     mArray[otherCount] = aOther.ElementAt(otherCount);
   }
   return *this;
 }
 
-PRBool SupportsArrayImpl::Equals(const nsISupportsArray* aOther) const
+NS_IMETHODIMP_(PRBool)
+nsSupportsArray::Equals(const nsISupportsArray* aOther) const
 {
   if (0 != aOther) {
-    const SupportsArrayImpl* other = (const SupportsArrayImpl*)aOther;
+    const nsSupportsArray* other = (const nsSupportsArray*)aOther;
     if (mCount == other->mCount) {
-      PRInt32 index = mCount;
-      while (0 <= --index) {
+      PRUint32 index = mCount;
+      while (0 < index--) {
         if (mArray[index] != other->mArray[index]) {
           return PR_FALSE;
         }
@@ -138,7 +91,8 @@ PRBool SupportsArrayImpl::Equals(const nsISupportsArray* aOther) const
   return PR_FALSE;
 }
 
-nsISupports* SupportsArrayImpl::ElementAt(PRInt32 aIndex) const
+NS_IMETHODIMP_(nsISupports*)
+nsSupportsArray::ElementAt(PRUint32 aIndex) const
 {
   if ((0 <= aIndex) && (aIndex < mCount)) {
     nsISupports*  element = mArray[aIndex];
@@ -148,7 +102,8 @@ nsISupports* SupportsArrayImpl::ElementAt(PRInt32 aIndex) const
   return 0;
 }
 
-PRInt32 SupportsArrayImpl::IndexOf(const nsISupports* aPossibleElement, PRInt32 aStartIndex) const
+NS_IMETHODIMP_(PRInt32)
+nsSupportsArray::IndexOf(const nsISupports* aPossibleElement, PRUint32 aStartIndex) const
 {
   if ((0 <= aStartIndex) && (aStartIndex < mCount)) {
     const nsISupports** start = (const nsISupports**)mArray;  // work around goofy compiler behavior
@@ -164,7 +119,8 @@ PRInt32 SupportsArrayImpl::IndexOf(const nsISupports* aPossibleElement, PRInt32 
   return -1;
 }
 
-PRInt32 SupportsArrayImpl::LastIndexOf(const nsISupports* aPossibleElement) const
+NS_IMETHODIMP_(PRInt32)
+nsSupportsArray::LastIndexOf(const nsISupports* aPossibleElement) const
 {
   if (0 < mCount) {
     const nsISupports** start = (const nsISupports**)mArray;  // work around goofy compiler behavior
@@ -178,7 +134,8 @@ PRInt32 SupportsArrayImpl::LastIndexOf(const nsISupports* aPossibleElement) cons
   return -1;
 }
 
-PRBool SupportsArrayImpl::InsertElementAt(nsISupports* aElement, PRInt32 aIndex)
+NS_IMETHODIMP_(PRBool)
+nsSupportsArray::InsertElementAt(nsISupports* aElement, PRUint32 aIndex)
 {
   if ((0 <= aIndex) && (aIndex <= mCount)) {
     if (mArraySize < (mCount + 1)) {  // need to grow the array
@@ -194,7 +151,7 @@ PRBool SupportsArrayImpl::InsertElementAt(nsISupports* aElement, PRInt32 aIndex)
         if (0 < aIndex) {
           ::memcpy(mArray, oldArray, aIndex * sizeof(nsISupports*));
         }
-        PRInt32 slide = (mCount - aIndex);
+        PRUint32 slide = (mCount - aIndex);
         if (0 < slide) {
           ::memcpy(mArray + aIndex + 1, oldArray + aIndex, slide * sizeof(nsISupports*));
         }
@@ -204,7 +161,7 @@ PRBool SupportsArrayImpl::InsertElementAt(nsISupports* aElement, PRInt32 aIndex)
       }
     }
     else {
-      PRInt32 slide = (mCount - aIndex);
+      PRUint32 slide = (mCount - aIndex);
       if (0 < slide) {
         ::memmove(mArray + aIndex + 1, mArray + aIndex, slide * sizeof(nsISupports*));
       }
@@ -218,7 +175,8 @@ PRBool SupportsArrayImpl::InsertElementAt(nsISupports* aElement, PRInt32 aIndex)
   return PR_FALSE;
 }
 
-PRBool SupportsArrayImpl::ReplaceElementAt(nsISupports* aElement, PRInt32 aIndex)
+NS_IMETHODIMP_(PRBool)
+nsSupportsArray::ReplaceElementAt(nsISupports* aElement, PRUint32 aIndex)
 {
   if ((0 <= aIndex) && (aIndex < mCount)) {
     NS_ADDREF(aElement);  // addref first in case it's the same object!
@@ -229,7 +187,8 @@ PRBool SupportsArrayImpl::ReplaceElementAt(nsISupports* aElement, PRInt32 aIndex
   return PR_FALSE;
 }
 
-PRBool SupportsArrayImpl::RemoveElementAt(PRInt32 aIndex)
+NS_IMETHODIMP_(PRBool)
+nsSupportsArray::RemoveElementAt(PRUint32 aIndex)
 {
   if ((0 <= aIndex) && (aIndex < mCount)) {
     NS_RELEASE(mArray[aIndex]);
@@ -244,14 +203,15 @@ PRBool SupportsArrayImpl::RemoveElementAt(PRInt32 aIndex)
   return PR_FALSE;
 }
 
-PRBool SupportsArrayImpl::RemoveElement(const nsISupports* aElement, PRInt32 aStartIndex)
+NS_IMETHODIMP_(PRBool)
+nsSupportsArray::RemoveElement(const nsISupports* aElement, PRUint32 aStartIndex)
 {
   if ((0 <= aStartIndex) && (aStartIndex < mCount)) {
     nsISupports** ep = mArray;
     nsISupports** end = ep + mCount;
     while (ep < end) {
       if (*ep == aElement) {
-        return RemoveElementAt(PRInt32(ep - mArray));
+        return RemoveElementAt(PRUint32(ep - mArray));
       }
       ep++;
     }
@@ -259,27 +219,29 @@ PRBool SupportsArrayImpl::RemoveElement(const nsISupports* aElement, PRInt32 aSt
   return PR_FALSE;
 }
 
-PRBool SupportsArrayImpl::RemoveLastElement(const nsISupports* aElement)
+NS_IMETHODIMP_(PRBool)
+nsSupportsArray::RemoveLastElement(const nsISupports* aElement)
 {
   if (0 < mCount) {
     nsISupports** ep = (mArray + mCount);
     while (mArray <= --ep) {
       if (*ep == aElement) {
-        return RemoveElementAt(PRInt32(ep - mArray));
+        return RemoveElementAt(PRUint32(ep - mArray));
       }
     }
   }
   return PR_FALSE;
 }
 
-PRBool SupportsArrayImpl::AppendElements(nsISupportsArray* aElements)
+NS_IMETHODIMP_(PRBool)
+nsSupportsArray::AppendElements(nsISupportsArray* aElements)
 {
-  SupportsArrayImpl*  elements = (SupportsArrayImpl*)aElements;
+  nsSupportsArray*  elements = (nsSupportsArray*)aElements;
 
   if (elements && (0 < elements->mCount)) {
     if (mArraySize < (mCount + elements->mCount)) {  // need to grow the array
-      PRInt32 count = mCount + elements->mCount;
-      PRInt32 oldSize = mArraySize;
+      PRUint32 count = mCount + elements->mCount;
+      PRUint32 oldSize = mArraySize;
       while (mArraySize < count) {  // ick
         mArraySize += kGrowArrayBy;
       }
@@ -300,7 +262,7 @@ PRBool SupportsArrayImpl::AppendElements(nsISupportsArray* aElements)
       }
     }
 
-    PRInt32 index = 0;
+    PRUint32 index = 0;
     while (index < elements->mCount) {
       NS_ADDREF(elements->mArray[index]);
       mArray[mCount++] = elements->mArray[index++];
@@ -310,19 +272,21 @@ PRBool SupportsArrayImpl::AppendElements(nsISupportsArray* aElements)
   return PR_FALSE;
 }
 
-void SupportsArrayImpl::Clear(void)
+NS_IMETHODIMP
+nsSupportsArray::Clear(void)
 {
-  while (0 <= --mCount) {
-    NS_RELEASE(mArray[mCount]);
+  while (mCount != 0) {
+    NS_RELEASE(mArray[--mCount]);
   }
-  mCount = 0;
+  return NS_OK;
 }
 
-void SupportsArrayImpl::Compact(void)
+NS_IMETHODIMP_(void)
+nsSupportsArray::Compact(void)
 {
   if ((mArraySize != mCount) && (kAutoArraySize < mArraySize)) {
     nsISupports** oldArray = mArray;
-    PRInt32 oldArraySize = mArraySize;
+    PRUint32 oldArraySize = mArraySize;
     if (mCount <= kAutoArraySize) {
       mArray = &(mAutoArray[0]);
       mArraySize = kAutoArraySize;
@@ -341,42 +305,52 @@ void SupportsArrayImpl::Compact(void)
   }
 }
 
-PRBool SupportsArrayImpl::EnumerateForwards(nsISupportsArrayEnumFunc aFunc, void* aData) const
+NS_IMETHODIMP_(PRBool)
+nsSupportsArray::EnumerateForwards(nsISupportsArrayEnumFunc aFunc, void* aData) const
 {
   PRInt32 index = -1;
   PRBool  running = PR_TRUE;
 
-  while (running && (++index < mCount)) {
+  while (running && (++index < (PRInt32)mCount)) {
     running = (*aFunc)(mArray[index], aData);
   }
   return running;
 }
 
-PRBool SupportsArrayImpl::EnumerateBackwards(nsISupportsArrayEnumFunc aFunc, void* aData) const
+NS_IMETHODIMP_(PRBool)
+nsSupportsArray::EnumerateBackwards(nsISupportsArrayEnumFunc aFunc, void* aData) const
 {
-  PRInt32 index = mCount;
+  PRUint32 index = mCount;
   PRBool  running = PR_TRUE;
 
-  while (running && (0 <= --index)) {
+  while (running && (0 < index--)) {
     running = (*aFunc)(mArray[index], aData);
   }
   return running;
 }
 
+NS_IMETHODIMP
+nsSupportsArray::Enumerate(nsIEnumerator* *result)
+{
+  nsSupportsArrayEnumerator* e = new nsSupportsArrayEnumerator(this);
+  if (!e)
+    return NS_ERROR_OUT_OF_MEMORY;
+  *result = e;
+  NS_ADDREF(e);
+  return NS_OK;
+}
 
 NS_COM nsresult
-  NS_NewISupportsArray(nsISupportsArray** aInstancePtrResult)
+NS_NewISupportsArray(nsISupportsArray** aInstancePtrResult)
 {
-  if (aInstancePtrResult == 0) {
+  if (aInstancePtrResult == 0)
     return NS_ERROR_NULL_POINTER;
-  }
 
-  SupportsArrayImpl *it = new SupportsArrayImpl();
-
-  if (0 == it) {
+  nsSupportsArray *it = new nsSupportsArray();
+  if (0 == it)
     return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return it->QueryInterface(kISupportsArrayIID, (void **) aInstancePtrResult);
+  NS_ADDREF(it);
+  *aInstancePtrResult = it;
+  return NS_OK;
 }
 

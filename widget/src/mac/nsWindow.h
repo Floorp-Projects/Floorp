@@ -23,7 +23,6 @@
 #include "nsDeleteObserver.h"
 
 #include "nsIWidget.h"
-#include "nsIEnumerator.h"
 #include "nsIAppShell.h"
 
 #include "nsIMouseListener.h"

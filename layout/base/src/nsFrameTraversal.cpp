@@ -23,7 +23,7 @@ static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 
-class nsFrameIterator: public nsIEnumerator
+class nsFrameIterator: public nsIBidirectionalEnumerator
 {
 public:
   NS_DECL_ISUPPORTS
@@ -86,7 +86,7 @@ private :
 /************IMPLEMENTATIONS**************/
 
 nsresult
-NS_NewFrameTraversal(nsIEnumerator **aEnumerator, nsTraversalType aType, nsIFrame *aStart)
+NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator, nsTraversalType aType, nsIFrame *aStart)
 {
   if (!aEnumerator || !aStart)
     return NS_ERROR_NULL_POINTER;
@@ -96,7 +96,7 @@ NS_NewFrameTraversal(nsIEnumerator **aEnumerator, nsTraversalType aType, nsIFram
     nsLeafIterator *trav = new nsLeafIterator(aStart);
     if (!trav)
       return NS_ERROR_OUT_OF_MEMORY;
-    *aEnumerator = (nsIEnumerator *)trav;
+    *aEnumerator = NS_STATIC_CAST(nsIBidirectionalEnumerator*, trav);
     NS_ADDREF(trav);
              }
     break;
@@ -105,7 +105,7 @@ NS_NewFrameTraversal(nsIEnumerator **aEnumerator, nsTraversalType aType, nsIFram
     nsExtensiveTraversal *trav = new nsExtensiveTraversal(aStart);
     if (!trav)
       return NS_ERROR_NOMEMORY;
-    *aEnumerator = (nsIEnumerator *)trav;
+    *aEnumerator = NS_STATIC_CAST(nsIBidirectionalEnumerator*, trav);
     NS_ADDREF(trav);
                  }
     break;
@@ -113,7 +113,7 @@ NS_NewFrameTraversal(nsIEnumerator **aEnumerator, nsTraversalType aType, nsIFram
     nsFastestTraversal *trav = new nsFastestTraversal(aStart);
     if (!trav)
       return NS_ERROR_NOMEMORY;
-    *aEnumerator = (nsIEnumerator *)trav;
+    *aEnumerator = NS_STATIC_CAST(nsIBidirectionalEnumerator*, trav);
     NS_ADDREF(trav);
                }
 #endif
@@ -156,7 +156,7 @@ nsFrameIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
   if (aIID.Equals(kIEnumeratorIID)) {
-    *aInstancePtr = (void*)(nsIEnumerator*)this;
+    *aInstancePtr = (void*)NS_STATIC_CAST(nsIEnumerator*, this);
     NS_ADDREF_THIS();
     return NS_OK;
   }

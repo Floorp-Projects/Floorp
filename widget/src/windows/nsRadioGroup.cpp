@@ -284,7 +284,24 @@ nsRadioGroup::Enumerator::~Enumerator()
 //
 // nsISupports methods
 //
-NS_IMPL_ISUPPORTS(nsRadioGroup::Enumerator, NS_IENUMERATOR_IID);
+NS_IMPL_ADDREF(nsRadioGroup::Enumerator);
+NS_IMPL_RELEASE(nsRadioGroup::Enumerator);
+
+NS_IMETHODIMP
+nsRadioGroup::Enumerator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr)
+    return NS_ERROR_NULL_POINTER; 
+
+  if (aIID.Equals(nsIBidirectionalEnumerator::IID()) || 
+      aIID.Equals(nsIEnumerator::IID()) || 
+      aIID.Equals(nsISupports::IID())) {
+    *aInstancePtr = (void*) this; 
+    NS_ADDREF_THIS(); 
+    return NS_OK; 
+  } 
+  return NS_NOINTERFACE; 
+}
 
 //-------------------------------------------------------------------------
 //

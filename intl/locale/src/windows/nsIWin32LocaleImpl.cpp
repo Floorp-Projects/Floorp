@@ -247,7 +247,7 @@ nsIWin32LocaleImpl::GetPlatformLocale(const nsString* locale,LCID* winLCID)
 NS_IMETHODIMP
 nsIWin32LocaleImpl::GetXPLocale(LCID winLCID, nsString* locale)
 {
-	LCID		lang_id, country_id;
+	LCID		lang_id;
 	char		language_code[3];
 	char		country_code[3];
 	char		rfc_locale_string[9];

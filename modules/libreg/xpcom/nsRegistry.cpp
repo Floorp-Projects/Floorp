@@ -101,9 +101,7 @@ struct nsRegSubtreeEnumerator : public nsIEnumerator {
 
     // This class implements the nsIEnumerator interface functions.
     NS_IMETHOD First();
-    NS_IMETHOD Last();
     NS_IMETHOD Next();
-    NS_IMETHOD Prev();
     NS_IMETHOD CurrentItem(nsISupports **aItem);
     NS_IMETHOD IsDone();
 
@@ -851,15 +849,6 @@ nsRegSubtreeEnumerator::First() {
     return rv;
 }
 
-/*----------------------- nsRegSubtreeEnumerator::Last -------------------------
-| This can't be implemented using the libreg functions.                        |
-------------------------------------------------------------------------------*/
-NS_IMETHODIMP
-nsRegSubtreeEnumerator::Last() {
-    nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
-    return rv;
-}
-
 /*----------------------- nsRegSubtreeEnumerator::Next -------------------------
 | First, we check if we've already advanced to the end by checking the  mDone  |
 | flag.                                                                        |
@@ -901,15 +890,6 @@ NS_IMETHODIMP nsRegSubtreeEnumerator::advance() {
     nsresult rv = regerr2nsresult( mErr );
     return rv;
 };
-
-/*----------------------- nsRegSubtreeEnumerator::Prev -------------------------
-| This can't be implemented on top of libreg.                                  |
-------------------------------------------------------------------------------*/
-NS_IMETHODIMP
-nsRegSubtreeEnumerator::Prev() {
-    nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
-    return rv;
-}
 
 /*-------------------- nsRegSubtreeEnumerator::CurrentItem ---------------------
 | Allocates and returns a new instance of class nsRegistryNode.  The node      |

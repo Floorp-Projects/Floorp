@@ -21,7 +21,6 @@
 #include "nsISupports.h"
 
 #include "nsWidget.h"
-#include "nsIEnumerator.h"
 #include "nsIAppShell.h"
 
 #include "nsString.h"

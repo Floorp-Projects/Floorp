@@ -38,6 +38,7 @@
  */
 
 #include <stdlib.h>
+#include "prtypes.h"
 
 #if !defined(DEBUG) && (defined(__cplusplus) || defined(__gcc))
 # ifndef INLINE
@@ -50,8 +51,6 @@
 typedef int		 cmp_t(const void *, const void *, void *);
 static INLINE char	*med3(char *, char *, char *, cmp_t *, void *);
 static INLINE void	swapfunc(char *, char *, int, int);
-
-#define min(a, b)	(a) < (b) ? a : b
 
 /*
  * Qsort routine from Bentley & McIlroy's "Engineering a Sort Function".
@@ -171,9 +170,9 @@ loop:	SWAPINIT(a, es);
 	}
 
 	pn = (char *)a + n * es;
-	r = min(pa - (char *)a, pb - pa);
+	r = PR_MIN(pa - (char *)a, pb - pa);
 	vecswap(a, pb - r, r);
-	r = min(pd - pc, pn - pd - es);
+	r = PR_MIN(pd - pc, pn - pd - es);
 	vecswap(pb, pn - r, r);
 	if ((r = pb - pa) > es)
         rdf_qsort(a, r / es, es, cmp, data);
