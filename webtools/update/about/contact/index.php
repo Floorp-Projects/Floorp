@@ -43,7 +43,7 @@ require"../../core/config.php";
 <html lang="en">
 
 <head>
-    <title>Mozilla Update :: Contact</title>
+    <title>Mozilla Update :: Contact Information</title>
 
 <?php
 include"$page_header";
@@ -52,8 +52,19 @@ include"$page_header";
 <div id="mBody">
 
 <h1>Contact Mozilla Update</h1>
-This section has not yet been completed. This page serves as a placeholder for content that is coming soon.
+Are you looking for contact information for the Mozilla Update staff to report a bug?<br>
+Mozilla Update bugs should be filed in Bugzilla, the mozilla organizations bug tracking tool.
+For more information, visit our <a href="../#bugs">frequently asked questions</a>.
 
+
+<h2>E-Mail</h2>
+You can contact the Mozilla Update staff via e-mail by sending an e-mail message to
+<a href="mailto:update-admin@mozilla.org">update-admin@mozilla.org</a>. This is particularly ideal for
+situations requiring fast response. For most everyday issues it is preferred that you <a href="../#bugs">file a bug</a>.
+
+<h2>IRC</h2>
+Some of the Mozilla Update staff can be found on IRC. In the <a href="irc://irc.mozilla.org/umo">#umo</a> channel
+on <a href="irc://irc.mozilla.org">irc.mozilla.org</a>.
 
 </div>
 <?php
