@@ -110,7 +110,7 @@ ParseNormalMIMETypesEntry(const nsAString& aEntry,
 
 nsresult
 LookUpHandlerAndDescription(const nsAString& aMajorType,
-                            const nsAString& aMajorType,
+                            const nsAString& aMinorType,
                             nsHashtable& aTypeOptions,
                             nsAString& aHandler,
                             nsAString& aDescription,
