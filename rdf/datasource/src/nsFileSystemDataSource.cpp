@@ -910,14 +910,11 @@ GetName(nsIRDFResource *source, nsVoidArray **array)
 	char			*basename = native.GetLeafName();
 	if (basename)
 	{
-		nsString *name = new nsString(basename);
-		if (nsnull != name)
-		{
-			nsIRDFLiteral *literal;
-			gRDFService->GetLiteral(*name, &literal);
-			nameArray->AppendElement(literal);
-			delete name;
-		}
+		nsAutoString	name(basename);
+		nsIRDFLiteral *literal;
+		gRDFService->GetLiteral(name, &literal);
+		nameArray->AppendElement(literal);
+		delete []basename;
 	}
 	return(NS_OK);
 }
