@@ -560,7 +560,7 @@ function refreshEventTree( eventArray, childrenName )
       ** HACK! 
       ** There is a mysterious child of the HBox, with a flex of one, so set the flex on the HBox really high to hide the child. 
       */
-      treeCellHBox.setAttribute( "flex" , "1000" );
+      treeCellHBox.setAttribute( "flex" , "1" );
       treeCellHBox.setAttribute( "class", "unifinder-treecell-box-class" );
       treeCellHBox.setAttribute( "crop", "right" );
       treeCellHBox.setAttribute( "align", "center" );

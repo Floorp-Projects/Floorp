@@ -169,9 +169,6 @@ tabpanels {
 
 .unifinder-treecell-box-class
 {
-
-   margin         : 4px;
-   margin-right   : 8px;
    padding        : 2px;
    padding-left   : 4px;
    font-family    : Arial, Helvetica;
@@ -360,6 +357,6 @@ tabpanels {
 {
         font-family             : helvetica;
         font-size               : 10pt;
-        color                   : #000000;
+        color                   : #323642;
 }
 
