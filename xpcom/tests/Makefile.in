@@ -62,31 +62,10 @@ CPPSRCS		+= \
 		$(NULL)
 endif
 
-ifndef NECKO
-NETLIB_LIBS	= \
-		-lnetlib \
-		-labouturl \
-		-lfileurl \
-		-lremoturl \
-		-lgophurl \
-		-lsockstuburl \
-		-lftpurl \
-		-lmimetype \
-		-lpwcac \
-		-lhttpurl \
-		-lnetwork \
-		-lnetcnvts \
-		-lnetcache \
-		-lnetlib \
-		$(NULL)
-else
-NETLIB_LIBS	= -lneckoutil_s
-endif
-
 LIBS		+= \
 		-lmozjs \
 		-lxpcom \
-		$(NETLIB_LIBS) \
+		-lneckoutil_s \
 		$(MOZ_TIMER_LIBS) \
 		$(TK_LIBS) \
 		$(LOST_SYM_LIBS) \

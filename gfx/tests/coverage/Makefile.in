@@ -29,33 +29,12 @@ CPPSRCS		= \
 		nsWidgetTest.cpp \
 		$(NULL)
 
-include $(topsrcdir)/config/config.mk
-
-ifndef NECKO
-NET_LIBS	= \
-		-lnetlib \
-		-lremoturl \
-		-lnetcnvts \
-		-lgophurl \
-		-labouturl \
-		-lsockstuburl \
-		-lhttpurl \
-		-lmimetype \
-		-lfileurl \
-		-lftpurl \
-		-lpwcac \
-		-lnetwork \
-		-lnetcache \
-		$(NULL)
-endif
-
 LIBS		= \
 		-lxpcom \
 		-lmozjs \
 		-lwidgetsupport_s \
 		-lraptorgfx \
 		$(MOZ_TIMER_LIBS) \
-		$(NET_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \
 		$(NULL)
