@@ -58,7 +58,7 @@ public:
   /*
    *   This method return the tag which the observer care about
    */
-  NS_IMETHOD_(const char*) GetTagName();
+  NS_IMETHOD_(const char*)GetTagNameAt(PRUint32 aTagIndex);
 
   /*
    *   Subject call observer when the parser hit the tag
@@ -133,9 +133,13 @@ NS_IMETHODIMP nsMetaCharsetObserver::QueryInterface(REFNSIID aIID, void** aInsta
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP_(const char*) nsMetaCharsetObserver::GetTagName()
+NS_IMETHODIMP_(const char*) nsMetaCharsetObserver::GetTagNameAt(PRUint32 aTagIndex)
 {
-  return "META";
+  if (aTagIndex == 0) {
+    return "META";
+  }else {
+    return nsnull;
+  }
 }
 
 //-------------------------------------------------------------------------

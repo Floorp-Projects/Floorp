@@ -44,7 +44,7 @@ public:
   /*
    *   This method return the tag which the observer care about
    */
-  NS_IMETHOD_(const char*)GetTagName() = 0;
+  NS_IMETHOD_(const char*)GetTagNameAt(PRUint32 aTagIndex) = 0;
 
   /*
    *   Subject call observer when the parser hit the tag

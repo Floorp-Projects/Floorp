@@ -673,9 +673,10 @@ void CObserverDictionary::RegisterObservers() {
         if (NS_SUCCEEDED(result))
           result = inst->QueryInterface(nsIElementObserver::GetIID(), (void**)&theElementObserver);
         if(result == NS_OK) {
-          const char* theTagStr;
-          theTagStr = theElementObserver->GetTagName();
-          if(theTagStr != nsnull) {
+          const char* theTagStr = nsnull;
+          PRUint32 theTagIndex = 0;
+          theTagStr = theElementObserver->GetTagNameAt(theTagIndex);
+          while (theTagStr != nsnull) {
             eHTMLTags theTag = NS_TagToEnum(theTagStr);
             if(eHTMLTag_userdefined!=theTag){
               if(mObservers[theTag] == nsnull) {
@@ -684,6 +685,8 @@ void CObserverDictionary::RegisterObservers() {
               NS_ADDREF(theElementObserver);
               mObservers[theTag]->Push(theElementObserver);
             }
+            theTagIndex++;
+            theTagStr = theElementObserver->GetTagNameAt(theTagIndex);
           }
         }
       }
