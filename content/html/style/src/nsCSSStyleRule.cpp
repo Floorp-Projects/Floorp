@@ -1005,8 +1005,8 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         // text-decoration: none, enum (bit field), inherit
         if (eCSSUnit_Enumerated == ourText->mDecoration.GetUnit()) {
           PRInt32 td = ourText->mDecoration.GetIntValue();
-          font->mFont.decorations |= td;
-          font->mFixedFont.decorations |= td;
+          font->mFont.decorations = (parentFont->mFont.decorations | td);
+          font->mFixedFont.decorations = (parentFont->mFixedFont.decorations | td);
           text->mTextDecoration = td;
         }
         else if (eCSSUnit_None == ourText->mDecoration.GetUnit()) {
