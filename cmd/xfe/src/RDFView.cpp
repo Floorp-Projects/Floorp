@@ -505,6 +505,7 @@ XFE_RDFView::notify(HT_Notification ns, HT_Resource n,
     {
     D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_DELETED_NODATA",
              HT_GetNodeName(n)););
+#ifdef UNDEF
        // Is this a container node?
        Boolean expands =    HT_IsContainer(n);
        PRBool isExpanded = False;
@@ -515,14 +516,8 @@ XFE_RDFView::notify(HT_Notification ns, HT_Resource n,
        }
    
        int row = HT_GetNodeIndex(m_rdfview, n);    
-
-       // Delete the row with children
-       if (expands && !isExpanded)
-         delete_row(row, True);
-       else
-         delete_row(row, False);
-
-
+       delete_row(row);
+#endif  /* UNDEF   */
     break;
     }
   case HT_EVENT_NODE_VPROP_CHANGED:
@@ -537,7 +532,7 @@ XFE_RDFView::notify(HT_Notification ns, HT_Resource n,
     {
       D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_OPENCLOSE_CHANGED",
                HT_GetNodeName(n)););
-      refresh(n);
+        refresh(n); 
       Boolean expands =    HT_IsContainer(n);
 
 
@@ -593,6 +588,20 @@ XFE_RDFView::notify(HT_Notification ns, HT_Resource n,
      D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_OPENCLOSE_CHANGING",
              HT_GetNodeName(n)););
     break;
+    }
+  case HT_EVENT_VIEW_REFRESH:
+    {
+       int row = HT_GetNodeIndex(m_rdfview, n);
+       PRBool expands = HT_IsContainer(n);
+       PRBool isExpanded = False;
+       if (expands) 
+          HT_GetOpenState(n, &isExpanded);
+       if (expands && isExpanded)
+         XmLTreeDeleteChildren(m_widget, row);
+
+        refresh(n);
+
+        break;
     }
   default:
     D(printf("RDFView::HT_Event: Unknown type on %s\n",HT_GetNodeName(n)););
@@ -793,45 +802,10 @@ XFE_RDFView::add_row
 }
 
 void
-XFE_RDFView::delete_row(int row, PRBool deleteChildren)
+XFE_RDFView::delete_row(int row)
 {
-  /* If a container node is deleted and the node is in collapsed 
-   * state, the backend sends only one delete message to the container and 
-   * none to the invisible children. we have to delete theinvisible
-   *  children too. The following segment is for that. But it looks like
-   * it is not necessary to do this. Shall yan it after discussing with
-   * slamm - radha.
-   */
   
-   int numRows = 1;
-   if (deleteChildren)
-   {
-      XmLGridRow   rowPtr;
-      int  i=0, j=0, level=0, rows=0;
-
-      rowPtr = XmLGridGetRow(m_tree, XmCONTENT, row);
-      XtVaGetValues(m_tree,
-                    XmNrowPtr, rowPtr,
-                    XmNrowLevel, &level,
-                    XmNrows, &rows,
-                    NULL);
-      i = row + 1;
-      while (i < rows)
-      {
-         rowPtr = XmLGridGetRow(m_tree, XmCONTENT, i);
-         XtVaGetValues(m_tree,
-                       XmNrowPtr, rowPtr,
-                       XmNrowLevel, &j,
-                        NULL);
-         if (j <= level)
-           break;
-         i++;
-      }
-      numRows = i - row;
-
-   }
-   
-   XmLGridDeleteRows(m_widget, XmCONTENT, row, numRows);
+   XmLGridDeleteRows(m_widget, XmCONTENT, row, 1);
 
 }
 
