@@ -52,9 +52,9 @@ public:
     int             GetSize();
     int             SetURL(char *aURL, int aIndex);
     char *          GetURL(int aIndex);
-    int             AddDependency(nsComponent *aDependent);
-    int             RemoveDependency(nsComponent *aIndependent);
-    nsComponentList *GetDependencies();
+    int             AddDependee(char *aDependee); 
+    int             ResolveDependees(int aBeingSelected, 
+                                     nsComponentList *aComps);
     int             SetSelected();
     int             SetUnselected();
     int             IsSelected();
@@ -72,7 +72,12 @@ public:
     int             AddRef();
     int             Release();
     int             InitRefCount();
-    
+
+    // used for `dependee' tracking
+    int             DepAddRef();
+    int             DepRelease();
+    int             DepGetRefCount();
+  
 /*---------------------------------------------------------------*
  *   Attributes
  *---------------------------------------------------------------*/
@@ -90,11 +95,13 @@ private:
     char            *mArchive;
     int             mSize;
     char            *mURL[MAX_URLS];
-    nsComponentList *mDependencies;
+    char            *mDependees[MAX_COMPONENTS];
+    int             mNextDependeeIdx;
     int             mAttributes;
     nsComponent     *mNext;
     int             mIndex;
     int             mRefCount;
+    int             mDepRefCount;
 };
 
 #endif /* _NS_COMPONENT_H_ */

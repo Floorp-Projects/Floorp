@@ -526,6 +526,9 @@ nsSetupTypeDlg::SelectFolder(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("SelectFolder");
 
+    if (sFilePickerUp)
+        return;
+
     GtkWidget *fileSel = NULL;
     char *selDir = gCtx->opt->mDestination;
 

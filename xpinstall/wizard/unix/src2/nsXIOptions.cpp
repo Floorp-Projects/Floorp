@@ -32,5 +32,4 @@ nsXIOptions::nsXIOptions() :
 
 nsXIOptions::~nsXIOptions()
 {
-    XI_IF_FREE(mDestination);
 }
