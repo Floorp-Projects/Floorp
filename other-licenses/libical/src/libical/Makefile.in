@@ -175,7 +175,7 @@ icalrestriction.c: $(RESTRICTIONDEPS) Makefile
 	$(PERL) $(ICALSCRIPTS)/mkrestrictiontable.pl  -i $(srcdir)/icalrestriction.c.in \
                 $(DESIGNDATA)/restrictions.csv > icalrestriction.c
 
-ifneq (,$(filter BeOS Darwin,$(OS_ARCH)))
+ifneq (,$(filter BeOS Darwin OpenVMS,$(OS_ARCH)))
 DEFINES	+= -D__USE_BSD=1
 endif
 
