@@ -464,6 +464,7 @@ done:
 
   /* Release the global preferences... */
   if (prefs) {
+    prefs->SavePrefFile(); 
     prefs->ShutDown();
     nsServiceManager::ReleaseService(kPrefCID, prefs);
   }
