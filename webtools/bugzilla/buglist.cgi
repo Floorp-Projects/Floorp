@@ -57,6 +57,7 @@ use vars qw($db_name
             @versions);
 
 my $cgi = Bugzilla->cgi;
+my $dbh = Bugzilla->dbh;
 
 if (length($::buffer) == 0) {
     print $cgi->header(-refresh=> '10; URL=query.cgi');
@@ -195,10 +196,13 @@ sub iCalendarDateTime {
 sub LookupNamedQuery {
     my ($name) = @_;
     Bugzilla->login(LOGIN_REQUIRED);
-    my $userid = Bugzilla->user->id;
-    my $qname = SqlQuote($name);
-    SendSQL("SELECT query FROM namedqueries WHERE userid = $userid AND name = $qname");
-    my $result = FetchOneColumn();
+    my $dbh = Bugzilla->dbh;
+    # $name is safe -- we only use it below in a SELECT placeholder and then 
+    # in error messages (which are always HTML-filtered).
+    trick_taint($name);
+    my $result = $dbh->selectrow_array("SELECT query FROM namedqueries" 
+                          . " WHERE userid = ? AND name = ?"
+                          , undef, (Bugzilla->user->id, $name));
     
     defined($result) || ThrowUserError("missing_query", {'queryname' => $name});
     $result
@@ -207,60 +211,114 @@ sub LookupNamedQuery {
     return $result;
 }
 
+# Inserts a Named Query (a "Saved Search") into the database, or
+# updates a Named Query that already exists..
+# Takes four arguments:
+# userid - The userid who the Named Query will belong to.
+# query_name - A string that names the new Named Query, or the name
+#              of an old Named Query to update. If this is blank, we
+#              will throw a UserError. Leading and trailing whitespace
+#              will be stripped from this value before it is inserted
+#              into the DB.
+# query - The query part of the buglist.cgi URL, unencoded. Must not be 
+#         empty, or we will throw a UserError.
+# link_in_footer (optional) - 1 if the Named Query should be 
+# displayed in the user's footer, 0 otherwise.
+#
+# All parameters are validated before passing them into the database.
+#
+# Returns: A boolean true value if the query existed in the database 
+# before, and we updated it. A boolean false value otherwise.
+sub InsertNamedQuery ($$$;$) {
+    my ($userid, $query_name, $query, $link_in_footer) = @_;
+    $link_in_footer ||= 0;
+    $query_name = trim($query_name);
+    Bugzilla->login(LOGIN_REQUIRED);
+    my $dbh = Bugzilla->dbh;
+    my $query_existed_before;
+
+    # Validate the query name.
+    $query_name || ThrowUserError("query_name_missing");
+    $query_name !~ /[<>&]/ || ThrowUserError("illegal_query_name");
+    trick_taint($query_name);
+
+    detaint_natural($userid);
+    detaint_natural($link_in_footer);
+
+    $query || ThrowUserError("buglist_parameters_required",
+                             {'queryname' => $query});
+    # $query is safe, because we always urlencode or html_quote
+    # it when we display it to the user.
+    trick_taint($query);
+
+    $dbh->do("LOCK TABLES namedqueries WRITE");
+
+    my $result = $dbh->selectrow_array("SELECT userid FROM namedqueries"
+        . " WHERE userid = ? AND name = ?"
+        , undef, ($userid, $query_name));
+    if ($result) {
+        $query_existed_before = 1;
+        $dbh->do("UPDATE namedqueries"
+            . " SET query = ?, linkinfooter = ?"
+            . " WHERE userid = ? AND name = ?"
+            , undef, ($query, $link_in_footer, $userid, $query_name));
+    } else {
+        $query_existed_before = 0;
+        $dbh->do("INSERT INTO namedqueries"
+            . " (userid, name, query, linkinfooter)"
+            . " VALUES (?, ?, ?, ?)"
+            , undef, ($userid, $query_name, $query, $link_in_footer));
+    }
+
+    $dbh->do("UNLOCK TABLES");
+    return $query_existed_before;
+}
+
 sub LookupSeries {
     my ($series_id) = @_;
     detaint_natural($series_id) || ThrowCodeError("invalid_series_id");
     
     my $dbh = Bugzilla->dbh;
     my $result = $dbh->selectrow_array("SELECT query FROM series " .
-                                       "WHERE series_id = $series_id");
+                                       "WHERE series_id = ?"
+                                       , undef, ($series_id));
     $result
            || ThrowCodeError("invalid_series_id", {'series_id' => $series_id});
     return $result;
 }
 
 sub GetQuip {
-
-    my $quip;
-
+    my $dbh = Bugzilla->dbh;
     # COUNT is quick because it is cached for MySQL. We may want to revisit
     # this when we support other databases.
-
-    SendSQL("SELECT COUNT(quip) FROM quips WHERE approved = 1");
-    my $count = FetchOneColumn();
+    my $count = $dbh->selectrow_array("SELECT COUNT(quip)"
+                                    . " FROM quips WHERE approved = 1");
     my $random = int(rand($count));
-    SendSQL("SELECT quip FROM quips WHERE approved = 1 LIMIT $random,1");
-
-    if (MoreSQLData()) {
-        ($quip) = FetchSQLData();
-    }
-
+    my $quip = 
+        $dbh->selectrow_array("SELECT quip FROM quips"
+                            . " WHERE approved = 1 LIMIT $random,1");
     return $quip;
 }
 
 sub GetGroupsByUserId {
     my ($userid) = @_;
+    my $dbh = Bugzilla->dbh;
 
     return if !$userid;
 
-    SendSQL("
-        SELECT DISTINCT  groups.id, name, description, isactive
+    # Create an array where each item is a hash. The hash contains 
+    # as keys the name of the columns, which point to the value of 
+    # the columns for that row.
+    my $groups = $dbh->selectall_arrayref(
+       "SELECT DISTINCT  groups.id, name, description, isactive
                    FROM  groups, user_group_map
-                  WHERE  user_id = $userid AND isbless = 0
+                  WHERE  user_id = ? AND isbless = 0
                     AND  user_group_map.group_id = groups.id
                     AND  isbuggroup = 1
-               ORDER BY  description ");
+               ORDER BY  description "
+               , {}, ($userid));
 
-    my @groups;
-
-    while (MoreSQLData()) {
-        my $group = {};
-        ($group->{'id'}, $group->{'name'},
-         $group->{'description'}, $group->{'isactive'}) = FetchSQLData();
-        push(@groups, $group);
-    }
-
-    return \@groups;
+    return $groups;
 }
 
 
@@ -319,9 +377,14 @@ if ($::FORM{'cmdtype'} eq "dorem") {
     }
     elsif ($::FORM{'remaction'} eq "forget") {
         Bugzilla->login(LOGIN_REQUIRED);
-        my $userid = Bugzilla->user->id;
-        my $qname = SqlQuote($::FORM{'namedcmd'});
-        SendSQL("DELETE FROM namedqueries WHERE userid = $userid AND name = $qname");
+        # Copy the name into a variable, so that we can trick_taint it for
+        # the DB. We know it's safe, because we're using placeholders in 
+        # the SQL, and the SQL is only a DELETE.
+        my $qname = $::FORM{'namedcmd'};
+        trick_taint($qname);
+        $dbh->do("DELETE FROM namedqueries"
+            . " WHERE userid = ? AND name = ?"
+            , undef, ($userid, $qname));
 
         # Now reset the cached queries
         Bugzilla->user->flush_queries_cache();
@@ -339,70 +402,29 @@ if ($::FORM{'cmdtype'} eq "dorem") {
 elsif (($::FORM{'cmdtype'} eq "doit") && $::FORM{'remtype'}) {
     if ($::FORM{'remtype'} eq "asdefault") {
         Bugzilla->login(LOGIN_REQUIRED);
-        my $userid = Bugzilla->user->id;
-        my $qname = SqlQuote(DEFAULT_QUERY_NAME);
-        my $qbuffer = SqlQuote($::buffer);
-
-        SendSQL("LOCK TABLES namedqueries WRITE");
-
-        SendSQL("SELECT userid FROM namedqueries WHERE userid = $userid " .
-        "AND name = $qname");
-        my $result = FetchOneColumn();
-        if ($result) {
-            SendSQL("UPDATE namedqueries SET query = $qbuffer " .
-                    "WHERE userid = $userid AND name = $qname");
-        } else {
-            SendSQL("INSERT INTO namedqueries (userid, name, query, linkinfooter) VALUES " .
-                    "($userid, $qname, $qbuffer, 0)");
-        }
-
-        SendSQL("UNLOCK TABLES");
-
+        InsertNamedQuery(Bugzilla->user->id, DEFAULT_QUERY_NAME, $::buffer);
         $vars->{'message'} = "buglist_new_default_query";
     }
     elsif ($::FORM{'remtype'} eq "asnamed") {
         Bugzilla->login(LOGIN_REQUIRED);
         my $userid = Bugzilla->user->id;
+        my $query_name = $::FORM{'newqueryname'};
 
-        my $name = trim($::FORM{'newqueryname'});
-        $name || ThrowUserError("query_name_missing");
-        $name !~ /[<>&]/ || ThrowUserError("illegal_query_name");
-        my $qname = SqlQuote($name);
-
-        $::FORM{'newquery'} || ThrowUserError("buglist_parameters_required", 
-                                              {'queryname' => $name});
-        my $qbuffer = SqlQuote($::FORM{'newquery'});
-        
         my $tofooter = 1;
-
-        $vars->{'message'} = "buglist_new_named_query";
-
-        # We want to display the correct message. Check if it existed before
-        # we insert, because ->queries may fetch from the db anyway
-        if (grep { $_->{name} eq $name } @{Bugzilla->user->queries()}) {
+        my $existed_before = InsertNamedQuery($userid, $query_name, 
+                                              $::FORM{'newquery'}, $tofooter);
+        if ($existed_before) {
             $vars->{'message'} = "buglist_updated_named_query";
         }
-
-        SendSQL("LOCK TABLES namedqueries WRITE");
-
-        SendSQL("SELECT query FROM namedqueries WHERE userid = $userid AND name = $qname");
-        if (FetchOneColumn()) {
-            SendSQL("UPDATE  namedqueries
-                        SET  query = $qbuffer , linkinfooter = $tofooter
-                      WHERE  userid = $userid AND name = $qname");
-        }
         else {
-            SendSQL("INSERT INTO namedqueries (userid, name, query, linkinfooter)
-                     VALUES ($userid, $qname, $qbuffer, $tofooter)");
+            $vars->{'message'} = "buglist_new_named_query";
         }
-
-        SendSQL("UNLOCK TABLES");
 
         # Make sure to invalidate any cached query data, so that the footer is
         # correctly displayed
         Bugzilla->user->flush_queries_cache();
 
-        $vars->{'queryname'} = $name;
+        $vars->{'queryname'} = $query_name;
         
         print $cgi->header();
         $template->process("global/message.html.tmpl", $vars)
@@ -766,7 +788,8 @@ $::SIG{TERM} = 'DEFAULT';
 $::SIG{PIPE} = 'DEFAULT';
 
 # Execute the query.
-SendSQL($query);
+my $buglist_sth = $dbh->prepare($query);
+$buglist_sth->execute();
 
 
 ################################################################################
@@ -783,7 +806,7 @@ my @bugidlist;
 
 my @bugs; # the list of records
 
-while (my @row = FetchSQLData()) {
+while (my @row = $buglist_sth->fetchrow_array()) {
     my $bug = {}; # a record
 
     # Slurp the row of data into the record.
@@ -833,7 +856,8 @@ while (my @row = FetchSQLData()) {
 # or because of human choice
 my %min_membercontrol;
 if (@bugidlist) {
-    SendSQL("SELECT DISTINCT bugs.bug_id, MIN(group_control_map.membercontrol) " .
+    my $sth = $dbh->prepare("SELECT DISTINCT bugs.bug_id, " .
+            "MIN(group_control_map.membercontrol) " .
             "FROM bugs, bug_group_map " .
             "LEFT JOIN group_control_map " .
             "ON group_control_map.product_id=bugs.product_id " .
@@ -841,8 +865,8 @@ if (@bugidlist) {
             "WHERE bugs.bug_id = bug_group_map.bug_id " .
             "AND bugs.bug_id IN (" . join(',',@bugidlist) . ") " .
             "GROUP BY bugs.bug_id");
-    while (MoreSQLData()) {
-        my ($bug_id, $min_membercontrol) = FetchSQLData();
+    $sth->execute();
+    while (my ($bug_id, $min_membercontrol) = $sth->fetchrow_array()) {
         $min_membercontrol{$bug_id} = $min_membercontrol;
     }
     foreach my $bug (@bugs) {
