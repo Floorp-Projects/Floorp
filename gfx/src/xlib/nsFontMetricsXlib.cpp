@@ -2081,9 +2081,9 @@ nsFontXlibNormal::GetWidth(const PRUnichar* aString, PRUint32 aLength)
                                   aLength, p, bufLen);
 
   if ((mFont->min_byte1 == 0) && (mFont->max_byte1 == 0))
-    textWidth = XTextWidth(mFont, (char *) buf, len);
+    textWidth = XTextWidth(mFont, p, len);
   else
-    textWidth = XTextWidth16(mFont, buf, len / 2);
+    textWidth = XTextWidth16(mFont, (XChar2b *)p, len / 2);
 
   ENCODER_BUFFER_FREE_IF_NEEDED(p, buf);
   return textWidth;
