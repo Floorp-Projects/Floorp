@@ -1783,7 +1783,9 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
             {
                 nsMsgLabelValue filterLabel;
                 filter->GetActionLabel(&filterLabel);
-                msgHdr->SetLabel(filterLabel);
+                nsMsgKey msgKey;
+                msgHdr->GetMessageKey(&msgKey);
+                m_mailDB->SetLabel(msgKey, filterLabel);
             }
 			break;
 		default:
