@@ -342,7 +342,11 @@ net_OpenCacheFatDB(void)
             XP_StatStruct stat_entry;
 
             if(NET_XP_Stat("", &stat_entry, xpCacheFAT) != -1)
+#ifdef HAVE_ST_BLKSIZE
             	net_cache_file_block_size = stat_entry.st_blksize;
+#else
+            	net_cache_file_block_size = stat_entry.st_size;
+#endif
 		  }
 #endif
       }
