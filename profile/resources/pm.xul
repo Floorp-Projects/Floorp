@@ -1,342 +1,104 @@
-<?xml version="1.0"?>
+<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<!--
+
+  The contents of this file are subject to the Netscape Public License
+  Version 1.0 (the "NPL"); you may not use this file except in
+  compliance with the NPL.  You may obtain a copy of the NPL at
+  http://www.mozilla.org/NPL/
+
+  Software distributed under the NPL is distributed on an "AS IS" basis,
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+  for the specific language governing rights and limitations under the
+  NPL.
+
+  The Initial Developer of this code under the NPL is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+  Reserved.
+
+-->
+
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
 <?xml-stylesheet href="pm.css" type="text/css"?>
 
-<window 
-  width="640"
-  height="480"
-  xmlns:html="http://www.w3.org/TR/REC-html40"
-  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<!DOCTYPE window 
+[
+<!ENTITY reg.gif "reg.gif">
+<!ENTITY intro "Communicator stores information about your settings, preferences, bookmarks, and stored messages in your personal Netscape Name.">
+<!ENTITY intro.new "Click New to create a new Netscape Name."> 
+<!ENTITY intro.delete "Click Delete to remove a selected Netscape Name."> 
+<!ENTITY intro.rename "Click Rename to change the name of a selected Netscape Name.">
+<!ENTITY migration.label "Migration">
+<!ENTITY user.label "User Name">
+<!ENTITY newCmd.label "New...">
+<!ENTITY migrateCmd.label "Migrate">
+<!ENTITY migrateAllCmd.label "Migrate All">
+<!ENTITY renameCmd.label "Rename...">
+<!ENTITY deleteCmd.label "Delete">
+<!ENTITY startCmd.label "Start">
+<!ENTITY closeCmd.label "Close">
+]>
 
-<html:div flex="100%">
-
-<html:script>
-var profileCore = "";
-var selected    = null;
-var currProfile = "";
-
-function CreateProfile()
-{
-	// Need to call CreateNewProfile xuls
-	// var win = window.openDialog('resource:/res/profile/cpwManager.xul', 'Creator', 'chrome');
-	dump("\ngot here\n");
-	//this.location.replace(this.location);
-	this.location.replace("resource:/res/profile/cpwManager.xul");
-	//this.location = "resource:/res/profile/cpwManager.xul";
-}
-
-function MigrateProfile(override)
-{
-	// Hack to avoid writing two copies of this
-	if (override) 
-		selected = override;
-
-	if (!selected)
-	{
-		dump("Select a profile to migrate.\n");
-		return;
-	}
-
-	var name = selected.getAttribute("rowName");
-	var migrate = selected.getAttribute("rowMigrate");
-
-	if (migrate != "true")
-	{
-		dump("This profile doesn't need migration.\n");
-		return;
-	}
-
-	profileCore.MigrateProfile(name);
-	this.location.replace(this.location);
-}
-
-function MigrateAllProfiles()
-{
-	var body = document.getElementById("theTreeBody");
-
-	var child = body.firstChild;
-
-	while (child)
-	{
-		if (child.getAttribute("rowMigrate") == "true")
-		{
-			MigrateProfile(child);
-		}
-		child = child.nextSibling;
-	}
-}
-
-function RenameProfile(w)
-{
-	if (!selected)
-	{
-		dump("Select a profile to migrate.\n");
-		return;
-	}
-
-	var newName = w.document.getElementById("NewName").value;
-	var oldName = selected.getAttribute("rowName");
-	var migrate = selected.getAttribute("rowMigrate");
-
-	if (migrate == "true")
-	{
-		dump("Migrate this profile before renaming it.\n");
-		return;
-	}
-
-	//dump("RenameProfile : " + oldName + " to " + newName + "\n");
-	profileCore.RenameProfile(oldName, newName);
-	this.location.replace(this.location);
-}
-
-function DeleteProfile()
-{
-	if (!selected)
-	{
-		dump("Select a profile to delete.\n");
-		return;
-	}
-
-	var migrate = selected.getAttribute("rowMigrate");
-
-	var name = selected.getAttribute("rowName");
-	//dump("Delete '" + name + "'\n");
-	profileCore.DeleteProfile(name);
-	this.location.replace(this.location);
-}
-
-function StartCommunicator()
-{
-	//dump("************Inside Start Communicator prof\n");
-	if (!selected)
-	{
-		dump("Select a profile to migrate.\n");
-		return;
-	}
-
-	var migrate = selected.getAttribute("rowMigrate");
-	var name = selected.getAttribute("rowName");
-
-	if (migrate == "true")
-	{
-		dump("Migrate this profile before using it to start communicator.\n");
-		return;
-	}
-	profileCore.StartCommunicator(name);
-	ExitApp();
-}
-
-function ExitApp()
-{
-	var toolkitCore = XPAppCoresManager.Find("toolkitCore");
-	if (!toolkitCore) {
-		toolkitCore = new ToolkitCore();
-		
-		if (toolkitCore) {
-			toolkitCore.Init("toolkitCore");
-		}
-	}
-	if (toolkitCore) {
-		toolkitCore.CloseWindow(parent);
-	}
-}
-
-function showSelection(node)
-{
-	// (see tree's onclick definition)
-	// Tree events originate in the smallest clickable object which is the cell.  The object 
-	// originating the event is available as event.target.  We want the cell's row, so we go 
-	// one further and get event.target.parentNode.
-	selected = node;
-	var num = node.getAttribute("rowNum");
-	var name = node.getAttribute("rowName");
-	//dump("Selected " + num + " : " + name + "\n");
-}
-
-function addTreeItem(num, name, migrate)
-{
-  dump("Adding element " + num + " : " + name + "\n");
-  var body = document.getElementById("theTreeBody");
-
-  var newitem = document.createElement('treeitem');
-  var newrow = document.createElement('treerow');
-  newrow.setAttribute("rowNum", num);
-  newrow.setAttribute("rowName", name);
-  newrow.setAttribute("rowMigrate", migrate);
-
-  var elem = document.createElement('treecell');
-
-  // Hack in a differentation for migration
-  if (migrate)
-	  var text = document.createTextNode('Migrate');
-  else
-	  var text = document.createTextNode('');
-
-  elem.appendChild(text);
-  newrow.appendChild(elem);
-
-  var elem = document.createElement('treecell');
-  var text = document.createTextNode(name);
-  elem.appendChild(text);
-  newrow.appendChild(elem);
-
-  newitem.appendChild(newrow);
-  body.appendChild(newitem);
-}
-
-function loadElements()
-{
-	//dump("hacked onload handler adds elements to tree widget\n");
-	var profileList = "";
-
-	profileCore = XPAppCoresManager.Find("ProfileCore");
-	if (!profileCore)
-	{
-		profileCore = new ProfileCore();
-
-		if (profileCore) {
-			profileCore.Init("ProfileCore");
-		}
-		else {
-			dump("profileCore not created\n");
-		}
-	}
-	if (profileCore)
-		profileList = profileCore.GetProfileList();	
-
-	//dump("Got profile list of '" + profileList + "'\n");
-	profileList = profileList.split(",");
-	currProfile = profileCore.GetCurrentProfile();
-
-	for (var i=0; i &lt; profileList.length; i++)
-	{
-		var pvals = profileList[i].split(" - ");
-		addTreeItem(i, pvals[0], (pvals[1] == "migrate"));
-	}
-}
-
-// -------------------------------------------- begin Hack for OnLoad handling
-setTimeout("loadElements()", 0);
-// -------------------------------------------- end   Hack for OnLoad handling
-
-function openRename()
-{
-	if (!selected)
-		dump("Select a profile to rename.\n");
-	else
-	{
-		var migrate = selected.getAttribute("rowMigrate");
-		if (migrate == "true")
-			dump("Migrate the profile before renaming it.\n");
-		else
-			var win = window.openDialog('pmrename.xul', 'Renamer', 'chrome');
-	}
-}
-
-
-function ConfirmDelete() 
-{
-	if (!selected)
-	{
-		dump("Select a profile to delete.\n");
-		return;
-	}
-
-	var migrate = selected.getAttribute("rowMigrate");
-	var name = selected.getAttribute("rowName");
-
-	if (migrate == "true")
-	{
-		dump("Migrate this profile before deleting it.\n");
-		return;
-	}
-
-    var win = window.openDialog('pmDelete.xul', 'Deleter', 'chrome');
-    return win;
-}
-
-
-function ConfirmMigrateAll() 
-{
-    var win = window.openDialog('pmMigrateAll.xul', 'MigrateAll', 'chrome');
-    return win;
-}
+<xul:window 
+xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog"
+		width="500" height="500"> 
+      
+<html:script language="javascript" src="pm.js">
 </html:script>
+	    
+<html:div style="width: 300px; margin: 5px;">&intro;</html:div>
+<html:div>&intro.new;</html:div> 
+<html:div>&intro.delete;</html:div> 
+<html:div>&intro.rename;</html:div>
+<html:br></html:br>
+<html:br></html:br>
+<box align="horizontal" style="width: 75%; height: 70%;">
+	<tree id="tree" style="background-color: white; width: 75%; height: 70%; margin: 2px;" 
+		onclick="return showSelection(event.target.parentNode);">
+	  <treecol style="width: 25%"/>
+	  <treecol style="width: 50%"/>
 
-<popup id="deletePopup">
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" width="100" height="50">
-Deleting an unmigrated profile will prevent you from ever migrating it in the future.
-<html:p> </html:p>
-Confirm delete?
-<html:p />
-<titledbutton value="Ok" class="push" onclick="opener.DeleteProfile();window.close();" />
-<titledbutton value="Cancel" class="push" onclick="window.close();" />
-</window>
-</popup>
+	  <treehead>
+		<treerow>
+			<treecell style="background-color: #CCCCCC; border-right: 1px solid white;padding: 2px;">&migration.label;</treecell>
+			<treecell style="background-color: #CCCCCC; border-right: 1px solid white;padding: 2px;">&user.label;</treecell>
+		</treerow>
+	  </treehead>
 
-<popup id="migratePopup">
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" width="100" height="50">
-Confirm migrate all profiles?
-<html:p />
-<titledbutton value="Ok" class="push" onclick="opener.MigrateAllProfiles();window.close();" />
-<titledbutton value="Cancel" class="push" onclick="window.close();" />
-</window>
-</popup>
-
-<html:center>
-<html:table>
-<html:tr><html:td>
-Communicator stores information about your settings, preferences,
-bookmarks, and stored messages in your personal profile. 
-</html:td></html:tr>
-
-<html:tr><html:td>
-<html:ul>
-<html:li>Click New to create a new profile. 
-</html:li>
-<html:li>Select a profile, click delete to remove that profile. 
-</html:li>
-<html:li>Select a profile, click Rename to rename the profile.
-</html:li>
-</html:ul>
-</html:td></html:tr>
-<html:tr><html:td>
- 
-</html:td></html:tr>
-</html:table>
-
-<tree id="tree" onclick="return showSelection(event.target.parentNode);">
-  <treecol style="width: 25%;"/>
-  <treecol style="width: 75%; align: left;"/>
-  <treehead>
-    <treerow>
-      <treecell>Migration</treecell>
-      <treecell style="align: left;">User Name</treecell>
-	</treerow>
-  </treehead>
-
-  <treechildren id="theTreeBody">
-  </treechildren>
-</tree>
-
-<titledbutton value="New" class="push" onclick="CreateProfile();" />
-<titledbutton value="Migrate" class="push" onclick="MigrateProfile();" />
-<titledbutton value="Rename" class="push" onclick="openRename();" />
-<titledbutton value="Delete" class="push" onclick="ConfirmDelete();" />
-</html:center>
-
-<html:p />
-<html:hr />
-<html:p />
-
-<box align="horizontal" style="width: 100%">
-  <html:div flex="100%"/>
-  <titledbutton value="Migrate All" class="push" onclick="ConfirmMigrateAll();" />
-  <titledbutton value="Start" class="push" onclick="StartCommunicator();" />
-  <titledbutton value="Exit" class="push" onclick="ExitApp();" />
-  <html:div style="width: 10px"/>
+	  <treechildren id="theTreeBody" style="background-color: white; border: 1px inset white;">
+	  </treechildren>
+	</tree>
+		
+	<box align="horizontal">	
+		<box align="vertical">	
+			<titledbutton value="&newCmd.label;"  onclick="CreateProfile();" style="margin-bottom: 1em;"/>
+			<titledbutton value="&migrateCmd.label;"  onclick="MigrateProfile();"/>
+			<titledbutton value="&migrateAllCmd.label;"  onclick="ConfirmMigrateAll();"  style="margin-bottom: 1em;"/>
+			<titledbutton value="&renameCmd.label;"  onclick="openRename();" />
+			<titledbutton value="&deleteCmd.label;"  onclick="ConfirmDelete();" />
+		</box>
+		<!--<html:br></html:br>-->
+	
+		<box align="vertical" flex="100%">
+			<!-- A workaorund to add some vertical space before the Start/Exit buttons are displayed-->
+			<box align="vertical" flex="100%">
+				<html:p></html:p>
+				<html:p></html:p>
+				<html:p></html:p>
+				<html:p></html:p>
+				<html:p></html:p>
+				<html:p></html:p>
+				<html:p></html:p>
+				<html:p></html:p>
+				<html:br></html:br>
+			</box>
+			<box align="horizontal">
+				<titledbutton value="&startCmd.label;"  onclick="StartCommunicator();" />
+				<titledbutton value="&closeCmd.label;"  onclick="ExitApp();" />
+			</box>
+		</box>
+	</box>
 </box>
 
-</html:div>
-</window>
+</xul:window>
