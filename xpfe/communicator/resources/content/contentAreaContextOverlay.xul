@@ -73,7 +73,7 @@
       <menuitem id="context-reload"
                 value="&reloadCmd.label;"
                 accesskey="&reloadCmd.accesskey;"
-                oncommand="BrowserReallyReload(event);"/>
+                oncommand="BrowserReload();"/>
       <menuitem id="context-reload-frame"
                 value="&reloadFrameCmd.label;"
                 accesskey="&reloadFrameCmd.accesskey;"
