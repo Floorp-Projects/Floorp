@@ -622,7 +622,7 @@ nsFilePath::nsFilePath(const nsString& inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
 :    mPath(inString)
 {
-    NS_ASSERTION(strstr(mPath, kFileURLPrefix) != mPath, "URL passed as path");
+    NS_ASSERTION(strstr((const char*)mPath, kFileURLPrefix) != (const char*)mPath, "URL passed as path");
 
 #ifdef XP_PC
     nsFileSpecHelpers::UnixToNative(mPath);
