@@ -33,7 +33,7 @@ CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, int len,
 #define CURS_POOL_OFFSET_RAW(cursor)                                          \
   ((cursor)->pool == XPT_HEADER                                               \
    ? (cursor)->offset                                                         \
-   : (PR_ASSERT((cursor)->state->data_offset),                                \
+   : (XPT_ASSERT((cursor)->state->data_offset),                                \
       (cursor)->offset + (cursor)->state->data_offset))
 
 #define CURS_POOL_OFFSET(cursor)                                              \
@@ -71,17 +71,76 @@ CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, int len,
 #define CHECK_COUNT(cursor, space)                                            \
   (CHECK_COUNT_(cursor, space)                                                \
    ? PR_TRUE                                                                  \
-   : (PR_ASSERT(0),                                                           \
+   : (XPT_ASSERT(0),                                                          \
       fprintf(stderr, "FATAL: can't no room for %d in cursor\n", space),      \
       PR_FALSE))
 
 /* increase the data allocation for the pool by XPT_GROW_CHUNK */
 #define XPT_GROW_CHUNK 8192
 
-static PLHashNumber
-null_hash(const void *key)
-{
-    return (PLHashNumber)key;
+/*
+ * quick and dirty hardcoded hashtable, to avoid dependence on nspr or glib.
+ * XXXmccabe it might turn out that we could use a simpler data structure here.
+ */
+typedef struct XPTHashRecord {
+    void *key;
+    void *value;
+    struct XPTHashRecord *next;
+} XPTHashRecord;
+
+#define XPT_HASHSIZE 32
+
+struct XPTHashTable {  /* it's already typedef'ed from before. */
+    XPTHashRecord *buckets[XPT_HASHSIZE];
+};
+
+static XPTHashTable *
+XPT_NewHashTable() {
+    XPTHashTable *table;
+    table = XPT_NEWZAP(XPTHashTable);
+    return table;
+}
+
+static void trimrecord(XPTHashRecord *record) {
+    if (record == NULL)
+        return;
+    trimrecord(record->next);
+    XPT_DELETE(record);
+}
+
+static void
+XPT_HashTableDestroy(XPTHashTable *table) {
+    int i;
+    for (i = 0; i < XPT_HASHSIZE; i++)
+        trimrecord(table->buckets[i]);
+    XPT_FREE(table);
+}
+
+static void *
+XPT_HashTableAdd(XPTHashTable *table, void *key, void *value) {
+    XPTHashRecord **bucketloc = table->buckets + (((PRInt32)key) % XPT_HASHSIZE);
+    XPTHashRecord *bucket;
+
+    while (*bucketloc != NULL)
+        bucketloc = &((*bucketloc)->next);
+    
+    bucket = XPT_NEW(XPTHashRecord);
+    bucket->key = key;
+    bucket->value = value;
+    bucket->next = NULL;
+    *bucketloc = bucket;
+    return value;
+}
+
+static void *
+XPT_HashTableLookup(XPTHashTable *table, void *key) {
+    XPTHashRecord *bucket = table->buckets[(PRInt32)key % XPT_HASHSIZE];
+    while (bucket != NULL) {
+        if (bucket->key == key)
+            return bucket->value;
+        bucket = bucket->next;
+    }
+    return NULL;
 }
      
 XPT_PUBLIC_API(XPTState *)
@@ -89,20 +148,21 @@ XPT_NewXDRState(XPTMode mode, char *data, PRUint32 len)
 {
     XPTState *state;
 
-    state = PR_NEW(XPTState);
+    state = XPT_NEW(XPTState);
 
     if (!state)
         return NULL;
 
     state->mode = mode;
-    state->pool = PR_NEW(XPTDatapool);
+    state->pool = XPT_NEW(XPTDatapool);
     state->next_cursor[0] = state->next_cursor[1] = 1;
     if (!state->pool)
         goto err_free_state;
 
     state->pool->count = 0;
-    state->pool->offset_map = PL_NewHashTable(32, null_hash, PL_CompareValues,
-                                              PL_CompareValues, NULL, NULL);
+    state->pool->offset_map = XPT_NewHashTable();
+/*      state->pool->offset_map = PL_NewHashTable(32, null_hash, PL_CompareValues, */
+/*                                                PL_CompareValues, NULL, NULL); */
 
     if (!state->pool->offset_map)
         goto err_free_pool;
@@ -110,7 +170,7 @@ XPT_NewXDRState(XPTMode mode, char *data, PRUint32 len)
         state->pool->data = data;
         state->pool->allocated = len;
     } else {
-        state->pool->data = PR_MALLOC(XPT_GROW_CHUNK);
+        state->pool->data = XPT_MALLOC(XPT_GROW_CHUNK);
         if (!state->pool->data)
             goto err_free_hash;
         state->pool->allocated = XPT_GROW_CHUNK;
@@ -119,21 +179,24 @@ XPT_NewXDRState(XPTMode mode, char *data, PRUint32 len)
     return state;
 
  err_free_hash:
-    PL_HashTableDestroy(state->pool->offset_map);
+    XPT_HashTableDestroy(state->pool->offset_map);
+/*      PL_HashTableDestroy(state->pool->offset_map); */
  err_free_pool:
-    PR_DELETE(state->pool);
+    XPT_DELETE(state->pool);
  err_free_state:
-    PR_DELETE(state);
+    XPT_DELETE(state);
     return NULL;
 }
 
 XPT_PUBLIC_API(void)
 XPT_DestroyXDRState(XPTState *state)
 {
+    if (state->pool->offset_map)
+        XPT_HashTableDestroy(state->pool->offset_map);
     if (state->mode == XPT_ENCODE)
-        PR_DELETE(state->pool->data);
-    PR_DELETE(state->pool);
-    PR_DELETE(state);
+        XPT_DELETE(state->pool->data);
+    XPT_DELETE(state->pool);
+    XPT_DELETE(state);
 }
 
 XPT_PUBLIC_API(void)
@@ -207,13 +270,13 @@ XPT_SeekTo(XPTCursor *cursor, PRUint32 offset)
 XPT_PUBLIC_API(XPTString *)
 XPT_NewString(PRUint16 length, char *bytes)
 {
-    XPTString *str = PR_NEW(XPTString);
+    XPTString *str = XPT_NEW(XPTString);
     if (!str)
         return NULL;
     str->length = length;
     str->bytes = malloc(length);
     if (!str->bytes) {
-        PR_DELETE(str);
+        XPT_DELETE(str);
         return NULL;
     }
     memcpy(str->bytes, bytes, length);
@@ -237,7 +300,7 @@ XPT_DoStringInline(XPTCursor *cursor, XPTString **strp)
     int i;
 
     if (mode == XPT_DECODE) {
-        str = PR_NEWZAP(XPTString);
+        str = XPT_NEWZAP(XPTString);
         if (!str)
             return PR_FALSE;
         *strp = str;
@@ -259,9 +322,9 @@ XPT_DoStringInline(XPTCursor *cursor, XPTString **strp)
 
     return PR_TRUE;
  error_2:
-    PR_DELETE(str->bytes);
+    XPT_DELETE(str->bytes);
  error:
-    PR_DELETE(str);
+    XPT_DELETE(str);
     return PR_FALSE;
 }
 
@@ -311,7 +374,7 @@ XPT_DoCString(XPTCursor *cursor, char **identp)
         }
         len = end - start;
 
-        ident = PR_MALLOC(len + 1);
+        ident = XPT_MALLOC(len + 1);
         if (!ident)
             return PR_FALSE;
 
@@ -346,27 +409,33 @@ XPT_DoCString(XPTCursor *cursor, char **identp)
 XPT_PUBLIC_API(PRUint32)
 XPT_GetOffsetForAddr(XPTCursor *cursor, void *addr)
 {
-    return (PRUint32)PL_HashTableLookup(cursor->state->pool->offset_map, addr);
+    return (PRUint32)XPT_HashTableLookup(cursor->state->pool->offset_map, addr);
+/*      return (PRUint32)PL_HashTableLookup(cursor->state->pool->offset_map, addr); */
 }
 
 XPT_PUBLIC_API(PRBool)
 XPT_SetOffsetForAddr(XPTCursor *cursor, void *addr, PRUint32 offset)
 {
-    return PL_HashTableAdd(cursor->state->pool->offset_map,
-                           addr, (void *)offset) != NULL;
+    return XPT_HashTableAdd(cursor->state->pool->offset_map,
+                            addr, (void *)offset) != NULL;
+/*      return PL_HashTableAdd(cursor->state->pool->offset_map, */
+/*                             addr, (void *)offset) != NULL; */
 }
 
 XPT_PUBLIC_API(PRBool)
 XPT_SetAddrForOffset(XPTCursor *cursor, PRUint32 offset, void *addr)
 {
-    return PL_HashTableAdd(cursor->state->pool->offset_map,
-                           (void *)offset, addr) != NULL;
+    return XPT_HashTableAdd(cursor->state->pool->offset_map,
+                            (void *)offset, addr) != NULL;
+/*      return PL_HashTableAdd(cursor->state->pool->offset_map, */
+/*                             addr, (void *)offset) != NULL; */
 }
 
 XPT_PUBLIC_API(void *)
 XPT_GetAddrForOffset(XPTCursor *cursor, PRUint32 offset)
 {
-    return PL_HashTableLookup(cursor->state->pool->offset_map, (void *)offset);
+    return XPT_HashTableLookup(cursor->state->pool->offset_map, (void *)offset);
+/*      return PL_HashTableLookup(cursor->state->pool->offset_map, (void *)offset); */
 }
 
 static PRBool

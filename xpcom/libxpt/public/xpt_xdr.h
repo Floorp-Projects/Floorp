@@ -34,6 +34,9 @@ typedef struct XPTState         XPTState;
 typedef struct XPTDatapool      XPTDatapool;
 typedef struct XPTCursor        XPTCursor;
 
+/* Opaque type, for internal use */
+typedef struct XPTHashTable     XPTHashTable;
+
 extern XPT_PUBLIC_API(PRBool)
 XPT_DoString(XPTCursor *cursor, XPTString **strp);
 
@@ -101,7 +104,7 @@ struct XPTState {
 };
 
 struct XPTDatapool {
-    PLHashTable      *offset_map;
+    XPTHashTable     *offset_map;
     char             *data;
     PRUint32         count;
     PRUint32         allocated;
@@ -190,12 +193,16 @@ XPT_GetAddrForOffset(XPTCursor *cursor, PRUint32 offset);
     if (already)                                                              \
         return PR_TRUE;                                                       \
 
+/* XXXmccabe currently not used! */
+/* also, XPT_ALLOC isn't defined. */
+#if 0
 #define XPT_PREAMBLE(cursor, addrp, pool, size, new_curs, already,            \
                      XPTType, localp)                                         \
   {                                                                           \
     XPT_PREAMBLE_(cursor, addrp, pool, size, new_curs, already);              \
     XPT_ALLOC(addrp, new_curs, XPTType, localp)                               \
   }
+#endif
 
 #define XPT_PREAMBLE_NO_ALLOC(cursor, addrp, pool, size, new_curs, already)   \
   {                                                                           \
@@ -205,7 +212,7 @@ XPT_GetAddrForOffset(XPTCursor *cursor, PRUint32 offset);
 #define XPT_ERROR_HANDLE(free_it)                                             \
  error:                                                                       \
     if (cursor->state->mode == XPT_DECODE)                                    \
-    PR_FREEIF(free_it);                                                      \
+    XPT_FREEIF(free_it);                                                      \
     return PR_FALSE;
 
 

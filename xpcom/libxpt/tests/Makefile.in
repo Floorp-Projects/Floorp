@@ -30,7 +30,6 @@ CSRCS		= PrimitiveTest.c SimpleTypeLib.c
 LIBS		= 		\
 		  -L$(DIST)/bin \
 		  -lxpt 	\
-		  $(NSPR_LIBS) 	\
 		  $(NULL)
 
 include $(topsrcdir)/config/rules.mk

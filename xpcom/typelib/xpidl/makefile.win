@@ -44,7 +44,6 @@ MYLIBS=                         \
  $(DIST)\lib\libxpt32.lib		\
  $(MOZ_TOOLS)\lib\glib-1.2.lib		\
  $(MOZ_TOOLS)\lib\libidl-0.6.lib	\
- $(LIBNSPR)	\
  $(NULL)
 
 LLIBS= $(MYLIBS)                \

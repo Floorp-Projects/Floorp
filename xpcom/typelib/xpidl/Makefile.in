@@ -42,7 +42,7 @@ CFLAGS += $(shell glib-config --cflags)
 LIBXPT=$(DIST)/lib/libxpt.a
 
 # XXX need configure test
-EX_LIBS = -lIDL -L$(DIST)/bin $(LIBXPT) $(NSPR_LIBS) $(shell glib-config --libs)
+EX_LIBS = -lIDL -L$(DIST)/bin $(LIBXPT) $(shell glib-config --libs)
 
 PROGS = $(OBJDIR)/xpidl
 

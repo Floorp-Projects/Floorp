@@ -65,7 +65,7 @@ DoParamDescriptor(XPTCursor *cursor, XPTParamDescriptor *pd);
 #define CURS_POOL_OFFSET_RAW(cursor)                                          \
   ((cursor)->pool == XPT_HEADER                                               \
    ? (cursor)->offset                                                         \
-   : (PR_ASSERT((cursor)->state->data_offset),                                \
+   : (XPT_ASSERT((cursor)->state->data_offset),                               \
       (cursor)->offset + (cursor)->state->data_offset))
 
 #define CURS_POOL_OFFSET(cursor)                                              \
@@ -105,17 +105,17 @@ XPT_SizeOfHeaderBlock(XPTHeader *header)
 XPT_PUBLIC_API(XPTHeader *)
 XPT_NewHeader(PRUint16 num_interfaces)
 {
-    XPTHeader *header = PR_NEWZAP(XPTHeader);
+    XPTHeader *header = XPT_NEWZAP(XPTHeader);
     if (!header)
         return NULL;
     memcpy(header->magic, XPT_MAGIC, 16);
     header->major_version = XPT_MAJOR_VERSION;
     header->minor_version = XPT_MINOR_VERSION;
     header->num_interfaces = num_interfaces;
-    header->interface_directory = PR_CALLOC(num_interfaces *
-                                           sizeof(XPTInterfaceDirectoryEntry));
+    header->interface_directory = XPT_CALLOC(num_interfaces *
+                                             sizeof(XPTInterfaceDirectoryEntry));
     if (!header->interface_directory) {
-        PR_DELETE(header);
+        XPT_DELETE(header);
         return NULL;
     }
     header->data_pool = 0;      /* XXX do we even need this struct any more? */
@@ -131,7 +131,7 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
     PRUint32 ide_offset;
     int i;
     if (mode == XPT_DECODE) {
-        header = PR_NEWZAP(XPTHeader);
+        header = XPT_NEWZAP(XPTHeader);
         if (!header)
             return PR_FALSE;
         *headerp = header;
@@ -169,8 +169,8 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
 
     if (mode == XPT_DECODE) {
         header->interface_directory = 
-            PR_CALLOC(header->num_interfaces * 
-                      sizeof(XPTInterfaceDirectoryEntry));
+            XPT_CALLOC(header->num_interfaces * 
+                       sizeof(XPTInterfaceDirectoryEntry));
         if (!header->interface_directory)
             goto error;
     }
@@ -248,6 +248,7 @@ DoInterfaceDirectoryEntry(XPTCursor *cursor,
     XPT_ERROR_HANDLE(ide);    
 }
 
+#if 0
 /*
  * Decode: Get the interface directory entry for the on-disk index.
  * Encode: Write the index.
@@ -285,27 +286,28 @@ DoInterfaceDirectoryEntryIndex(XPTCursor *cursor,
 
     return PR_TRUE;
 }
+#endif
 
 XPT_PUBLIC_API(XPTInterfaceDescriptor *)
 XPT_NewInterfaceDescriptor(PRUint16 parent_interface, PRUint16 num_methods,
                            PRUint16 num_constants, PRUint8 flags)
 {
 
-    XPTInterfaceDescriptor *id = PR_NEWZAP(XPTInterfaceDescriptor);
+    XPTInterfaceDescriptor *id = XPT_NEWZAP(XPTInterfaceDescriptor);
     if (!id)
         return NULL;
 
     if (num_methods) {
-        id->method_descriptors = PR_CALLOC(num_methods *
-                                           sizeof(XPTMethodDescriptor));
+        id->method_descriptors = XPT_CALLOC(num_methods *
+                                            sizeof(XPTMethodDescriptor));
         if (!id->method_descriptors)
             goto free_id;
         id->num_methods = num_methods;
     }
 
     if (num_constants) {
-        id->const_descriptors = PR_CALLOC(num_constants *
-                                          sizeof(XPTConstDescriptor));
+        id->const_descriptors = XPT_CALLOC(num_constants *
+                                           sizeof(XPTConstDescriptor));
         if (!id->const_descriptors)
             goto free_meth;
         id->num_constants = num_constants;
@@ -322,9 +324,9 @@ XPT_NewInterfaceDescriptor(PRUint16 parent_interface, PRUint16 num_methods,
     return id;
 
  free_meth:
-    PR_FREEIF(id->method_descriptors);
+    XPT_FREEIF(id->method_descriptors);
  free_id:
-    PR_DELETE(id);
+    XPT_DELETE(id);
     return NULL;
 }
 
@@ -334,8 +336,8 @@ XPT_InterfaceDescriptorAddMethods(XPTInterfaceDescriptor *id, PRUint16 num)
     XPTMethodDescriptor *old = id->method_descriptors, *new;
 
     /* XXX should grow in chunks to minimize realloc overhead */
-    new = PR_REALLOC(old,
-                     (id->num_methods + num) * sizeof(XPTMethodDescriptor));
+    new = XPT_REALLOC(old,
+                      (id->num_methods + num) * sizeof(XPTMethodDescriptor));
     if (!new)
         return PR_FALSE;
 
@@ -351,8 +353,8 @@ XPT_InterfaceDescriptorAddConsts(XPTInterfaceDescriptor *id, PRUint16 num)
     XPTConstDescriptor *old = id->const_descriptors, *new;
 
     /* XXX should grow in chunks to minimize realloc overhead */
-    new = PR_REALLOC(old,
-                     (id->num_constants + num) * sizeof(XPTConstDescriptor));
+    new = XPT_REALLOC(old,
+                      (id->num_constants + num) * sizeof(XPTConstDescriptor));
     if (!new)
         return PR_FALSE;
 
@@ -441,7 +443,7 @@ DoInterfaceDescriptor(XPTCursor *outer, XPTInterfaceDescriptor **idp)
     PRUint32 i, id_sz = 0;
 
     if (mode == XPT_DECODE) {
-        id = PR_NEWZAP(XPTInterfaceDescriptor);
+        id = XPT_NEWZAP(XPTInterfaceDescriptor);
         if (!id)
             return PR_FALSE;
         *idp = id;
@@ -469,8 +471,8 @@ DoInterfaceDescriptor(XPTCursor *outer, XPTInterfaceDescriptor **idp)
     }
 
     if (mode == XPT_DECODE && id->num_methods) {
-        id->method_descriptors = PR_CALLOC(id->num_methods *
-                                           sizeof(XPTMethodDescriptor));
+        id->method_descriptors = XPT_CALLOC(id->num_methods *
+                                            sizeof(XPTMethodDescriptor));
         if (!id->method_descriptors)
             goto error;
     }
@@ -485,8 +487,8 @@ DoInterfaceDescriptor(XPTCursor *outer, XPTInterfaceDescriptor **idp)
     }
     
     if (mode == XPT_DECODE)
-        id->const_descriptors = PR_CALLOC(id->num_constants * 
-                                          sizeof(XPTConstDescriptor));
+        id->const_descriptors = XPT_CALLOC(id->num_constants * 
+                                           sizeof(XPTConstDescriptor));
     
     for (i = 0; i < id->num_constants; i++) {
         if (!DoConstDescriptor(cursor, &id->const_descriptors[i])) {
@@ -582,21 +584,21 @@ XPT_FillMethodDescriptor(XPTMethodDescriptor *meth, PRUint8 flags, char *name,
         return PR_FALSE;
     meth->num_args = num_args;
     if (meth->num_args) {
-        meth->params = PR_CALLOC(num_args * sizeof(XPTParamDescriptor));
+        meth->params = XPT_CALLOC(num_args * sizeof(XPTParamDescriptor));
         if (!meth->params)
             goto free_name;
     } else {
         meth->params = NULL;
     }
-    meth->result = PR_NEWZAP(XPTParamDescriptor);
+    meth->result = XPT_NEWZAP(XPTParamDescriptor);
     if (!meth->result)
         goto free_params;
     return PR_TRUE;
 
  free_params:
-    PR_DELETE(meth->params);
+    XPT_DELETE(meth->params);
  free_name:
-    PR_DELETE(meth->name);
+    XPT_DELETE(meth->name);
     return PR_FALSE;
 }
 
@@ -612,7 +614,7 @@ DoMethodDescriptor(XPTCursor *cursor, XPTMethodDescriptor *md)
         return PR_FALSE;
 
     if (mode == XPT_DECODE && md->num_args) {
-        md->params = PR_CALLOC(md->num_args * sizeof(XPTParamDescriptor));
+        md->params = XPT_CALLOC(md->num_args * sizeof(XPTParamDescriptor));
         if (!md->params)
             return PR_FALSE;
     }
@@ -623,7 +625,7 @@ DoMethodDescriptor(XPTCursor *cursor, XPTMethodDescriptor *md)
     }
     
     if (mode == XPT_DECODE) {
-        md->result = PR_NEWZAP(XPTParamDescriptor);
+        md->result = XPT_NEWZAP(XPTParamDescriptor);
         if (!md->result)
             return PR_FALSE;
     }
@@ -688,7 +690,7 @@ DoTypeDescriptor(XPTCursor *cursor, XPTTypeDescriptor *td)
 XPT_PUBLIC_API(XPTAnnotation *)
 XPT_NewAnnotation(PRUint8 flags, XPTString *creator, XPTString *private_data)
 {
-    XPTAnnotation *ann = PR_NEWZAP(XPTAnnotation);
+    XPTAnnotation *ann = XPT_NEWZAP(XPTAnnotation);
     if (!ann)
         return NULL;
     ann->flags = flags;
@@ -706,7 +708,7 @@ DoAnnotation(XPTCursor *cursor, XPTAnnotation **annp)
     XPTAnnotation *ann;
     
     if (mode == XPT_DECODE) {
-        ann = PR_NEWZAP(XPTAnnotation);
+        ann = XPT_NEWZAP(XPTAnnotation);
         if (!ann)
             return PR_FALSE;
         *annp = ann;
@@ -738,8 +740,8 @@ DoAnnotation(XPTCursor *cursor, XPTAnnotation **annp)
 
  error_2:
     if (ann && XPT_ANN_IS_PRIVATE(ann->flags)) {
-        PR_FREEIF(ann->creator);
-        PR_FREEIF(ann->private_data);
+        XPT_FREEIF(ann->creator);
+        XPT_FREEIF(ann->private_data);
     }
     XPT_ERROR_HANDLE(ann);
 }

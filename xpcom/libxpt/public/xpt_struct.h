@@ -25,6 +25,8 @@
 #define __xpt_struct_h__
 
 #include "prtypes.h"
+#include <assert.h>
+#include <stdlib.h>
 
 /*
  * The linkage of XPT API functions differs depending on whether the file is
@@ -48,6 +50,22 @@
 #define XPT_FRIEND_DATA(t)   XPT_PUBLIC_DATA(t)
 
 PR_BEGIN_EXTERN_C
+
+/*
+ * Some utility macros.  Defined here in lieu of equivalent NSPR
+ * macros, which require NSPR linkage.
+ */
+#define XPT_MALLOC(_bytes) (malloc((_bytes)))
+#define XPT_NEW(_struct) ((_struct *) malloc(sizeof(_struct)))
+#define XPT_REALLOC(_ptr, _size) (realloc((_ptr), (_size)))
+#define XPT_CALLOC(_size) (calloc(1, (_size)))
+#define XPT_NEWZAP(_struct) ((_struct*)calloc(1, sizeof(_struct)))
+#define XPT_DELETE(_ptr) { free(_ptr); (_ptr) = NULL; }
+#define XPT_FREEIF(_ptr) if (_ptr) free(_ptr)
+#define XPT_FREE(_ptr) free(_ptr)
+
+#define XPT_ASSERT(_expr) assert(_expr)
+
 
 /*
  * Originally, I was going to have structures that exactly matched the on-disk
