@@ -106,8 +106,14 @@ NS_IMETHODIMP nsDeviceContextWin::GetDepth(PRUint32& aDepth)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextWin::CreateILColorSpace(IL_ColorSpace*& aColorSpace)
+NS_IMETHODIMP nsDeviceContextWin::GetILColorSpace(IL_ColorSpace*& aColorSpace)
 {
+  if (nsnull != mColorSpace) {
+    aColorSpace = mColorSpace;
+    IL_AddRefToColorSpace(aColorSpace);
+    return NS_OK;
+  }
+
   HWND      hwnd = (HWND)GetNativeWidget();
   HDC       hdc = ::GetDC(hwnd);
   nsresult  result = NS_OK;
@@ -168,14 +174,16 @@ NS_IMETHODIMP nsDeviceContextWin::CreateILColorSpace(IL_ColorSpace*& aColorSpace
     }
 
     // Create an IL pseudo color space
-    aColorSpace = IL_CreatePseudoColorSpace(colorMap, 8, 8);
+    mColorSpace = IL_CreatePseudoColorSpace(colorMap, 8, 8);
     if (nsnull == aColorSpace) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
+    aColorSpace = mColorSpace;
+    IL_AddRefToColorSpace(aColorSpace);
 
   } else {
-    // Create a default color space.
-    result = DeviceContextImpl::CreateILColorSpace(aColorSpace);
+    // Get the default color space.
+    result = DeviceContextImpl::GetILColorSpace(aColorSpace);
   }
 
   return result;

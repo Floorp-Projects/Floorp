@@ -129,10 +129,12 @@ public:
   NS_IMETHOD GetDepth(PRUint32& aDepth) = 0;
 
   /**
-   * Create an image lib color space that's appropriate for this rendering
-   * context
+   * Return the image lib color space that's appropriate for this rendering
+   * context.
+   *
+   * You must call IL_ReleaseColorSpace() when you're done using the color space.
    */
-  NS_IMETHOD CreateILColorSpace(IL_ColorSpace*& aColorSpace) = 0;
+  NS_IMETHOD GetILColorSpace(IL_ColorSpace*& aColorSpace) = 0;
 };
 
 #endif /* nsIDeviceContext_h___ */

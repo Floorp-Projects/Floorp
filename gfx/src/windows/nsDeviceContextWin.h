@@ -42,7 +42,7 @@ public:
 
   NS_IMETHOD GetDepth(PRUint32& aDepth);
 
-  NS_IMETHOD CreateILColorSpace(IL_ColorSpace*& aColorSpace);
+  NS_IMETHOD GetILColorSpace(IL_ColorSpace*& aColorSpace);
 
 protected:
   virtual ~nsDeviceContextWin();

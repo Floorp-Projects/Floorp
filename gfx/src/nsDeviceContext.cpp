@@ -47,6 +47,7 @@ DeviceContextImpl :: DeviceContextImpl()
     mIcons[i] = nsnull;
   }
   mFontAliasTable = nsnull;
+  mColorSpace = nsnull;
 }
 
 static PRBool DeleteValue(nsHashKey* aKey, void* aValue)
@@ -75,6 +76,10 @@ DeviceContextImpl :: ~DeviceContextImpl()
   if (nsnull != mFontAliasTable) {
     mFontAliasTable->Enumerate(DeleteValue);
     delete mFontAliasTable;
+  }
+
+  if (nsnull != mColorSpace) {
+    IL_ReleaseColorSpace(mColorSpace);
   }
 }
 
@@ -258,7 +263,7 @@ nsresult DeviceContextImpl::CreateIconILGroupContext()
 
   // Initialize the image group context.
   IL_ColorSpace* colorSpace;
-  result = CreateILColorSpace(colorSpace);
+  result = GetILColorSpace(colorSpace);
   if (NS_FAILED(result)) {
     NS_RELEASE(renderer);
     IL_DestroyGroupContext(mIconImageGroup);
@@ -492,24 +497,29 @@ NS_IMETHODIMP DeviceContextImpl::GetLocalFontName(const nsString& aFaceName, nsS
   return result;
 }
 
-
-NS_IMETHODIMP DeviceContextImpl::CreateILColorSpace(IL_ColorSpace*& aColorSpace)
+NS_IMETHODIMP DeviceContextImpl::GetILColorSpace(IL_ColorSpace*& aColorSpace)
 {
-  IL_RGBBits colorRGBBits;
-
-  // Default is to create a 24-bit color space
-  colorRGBBits.red_shift = 16;  
-  colorRGBBits.red_bits = 8;
-  colorRGBBits.green_shift = 8;
-  colorRGBBits.green_bits = 8; 
-  colorRGBBits.blue_shift = 0; 
-  colorRGBBits.blue_bits = 8;  
-
-  aColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 24);
-  if (nsnull == aColorSpace) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (nsnull == mColorSpace) {
+    IL_RGBBits colorRGBBits;
+  
+    // Default is to create a 24-bit color space
+    colorRGBBits.red_shift = 16;  
+    colorRGBBits.red_bits = 8;
+    colorRGBBits.green_shift = 8;
+    colorRGBBits.green_bits = 8; 
+    colorRGBBits.blue_shift = 0; 
+    colorRGBBits.blue_bits = 8;  
+  
+    mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 24);
+    if (nsnull == mColorSpace) {
+      aColorSpace = nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
+  NS_POSTCONDITION(nsnull != mColorSpace, "null color space");
+  aColorSpace = mColorSpace;
+  IL_AddRefToColorSpace(aColorSpace);
   return NS_OK;
 }
 
