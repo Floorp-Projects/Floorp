@@ -435,8 +435,8 @@ nsIFrame* nsListItemFrame::CreateBullet(nsIPresContext *aCX)
   return bullet;
 }
 
-void nsListItemFrame::PlaceOutsideBullet(nsIFrame* aBullet,
-                                         nsIPresContext* aCX)
+void
+nsListItemFrame::PlaceOutsideBullet(nsIFrame* aBullet, nsIPresContext* aCX)
 {
   nsSize maxSize(0, 0);
   nsReflowMetrics bulletSize;
@@ -444,10 +444,14 @@ void nsListItemFrame::PlaceOutsideBullet(nsIFrame* aBullet,
   // Size the bullet
   ReflowChild(aBullet, aCX, bulletSize, maxSize, nsnull);
 
-  // We can only back the bullet over so far XXX what does nav do with
-  // a big bullet in a blockquote? does the bullet leak out of the
-  // blockquote or what?
-  nscoord minX = -mRect.x;
+  // We can only back the bullet over so far
+
+
+  // XXX clamp bullet coordinate to the left margin of the body; to do
+  // this the x,y 's have to be set during reflow (coming) and we need
+  // to walk up the container chain computing our distance from the
+  // body's inner area
+  nscoord minX = 0;/* XXX for now stay inside us */
 
   // Get bullet style (which is our style)
   nsStyleFont* font =
@@ -457,9 +461,14 @@ void nsListItemFrame::PlaceOutsideBullet(nsIFrame* aBullet,
   nscoord dx = fm->GetHeight() / 2;             // from old layout engine
   NS_RELEASE(fm);
 
+  nsMargin myBorderPadding;
+  nsStyleSpacing* mySpacing = (nsStyleSpacing*)
+    mStyleContext->GetData(eStyleStruct_Spacing);
+  mySpacing->CalcBorderPaddingFor(this, myBorderPadding);
+
   // Find the bullet x,y
-  nscoord x = 0;
-  nscoord y = 0;
+  nscoord x = myBorderPadding.left;
+  nscoord y = myBorderPadding.top;
 #if 0
   nsIFrame* firstKid = mFirstChild;
   if (nsnull != firstKid) {
@@ -578,7 +587,10 @@ NS_METHOD nsListItemFrame::ResizeReflow(nsIPresContext* aCX,
   nsStyleList* myList =
     (nsStyleList*)mStyleContext->GetData(eStyleStruct_List);
   if (NS_STYLE_LIST_STYLE_POSITION_INSIDE == myList->mListStylePosition) {
-    insideBullet = PR_TRUE;
+    // XXX For now this is disabled because line-layout can't handle
+    // an inside bullet. After we straighten out synthetic content
+    // then this can be enabled again.
+    //insideBullet = PR_TRUE;
   }
 
   nsIFrame* bullet = nsnull;
