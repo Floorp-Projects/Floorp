@@ -108,5 +108,5 @@ interface nsITransfer : nsIWebProgressListener {
  * INTERFACES THAT MAY BE IMPLEMENTED:
  *   nsIObserver
  */
-#define NS_DOWNLOAD_CONTRACTID "@mozilla.org/download;1"
+#define NS_TRANSFER_CONTRACTID "@mozilla.org/transfer;1"
 %}

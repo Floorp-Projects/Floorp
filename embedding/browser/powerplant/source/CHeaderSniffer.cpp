@@ -393,7 +393,7 @@ nsresult CHeaderSniffer::InitiateDownload(nsISupports* inSourceData, nsILocalFil
   nsAutoString fileDisplayName;
   inDestFile->GetLeafName(fileDisplayName);
   
-  nsCOMPtr<nsIDownload> downloader = do_CreateInstance(NS_DOWNLOAD_CONTRACTID);
+  nsCOMPtr<nsIDownload> downloader = do_CreateInstance(NS_TRANSFER_CONTRACTID);
   // dlListener attaches to its progress dialog here, which gains ownership
   rv = downloader->Init(inOriginalURI, inDestFile, fileDisplayName.get(), nsnull, timeNow, webPersist);
   if (NS_FAILED(rv)) return rv;

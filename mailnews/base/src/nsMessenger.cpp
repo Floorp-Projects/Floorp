@@ -1793,7 +1793,7 @@ nsresult nsSaveMsgListener::InitializeDownload(nsIRequest * aRequest, PRInt32 aB
       // so make an arbitrary decision based on the content length of the attachment
       if (mContentLength != -1 && mContentLength > aBytesDownloaded * 2)
       {
-        nsCOMPtr<nsITransfer> tr = do_CreateInstance("@mozilla.org/download;1", &rv);
+        nsCOMPtr<nsITransfer> tr = do_CreateInstance(NS_TRANSFER_CONTRACTID, &rv);
         if (tr && outputFile)
         {
           PRTime timeDownloadStarted = PR_Now();

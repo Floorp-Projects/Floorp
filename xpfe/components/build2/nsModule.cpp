@@ -83,7 +83,7 @@ static const nsModuleComponentInfo components[] = {
 
     { "Download Manager", NS_DOWNLOADMANAGER_CID, NS_DOWNLOADMANAGER_CONTRACTID,
       nsDownloadManagerConstructor },
-    { "Download", NS_DOWNLOAD_CID, NS_DOWNLOAD_CONTRACTID,
+    { "Download", NS_DOWNLOAD_CID, NS_TRANSFER_CONTRACTID,
       nsDownloadProxyConstructor },
     { "AutoComplete Search Results", NS_AUTOCOMPLETERESULTS_CID, NS_AUTOCOMPLETERESULTS_CONTRACTID,
       nsAutoCompleteResultsConstructor},
