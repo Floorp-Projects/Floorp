@@ -22,7 +22,7 @@
 #include "nsIObserverService.h"
 #include "nsIObserverList.h"
 
-class nsHashtable;
+class nsObjectHashtable;
 class nsString;
 
 // {D07F5195-E3D1-11d2-8ACD-00105A1B8860}
@@ -49,7 +49,7 @@ private:
 	
   NS_IMETHOD GetObserverList(const nsString& aTopic, nsIObserverList** anObserverList);
 
-  nsHashtable* mObserverTopicTable;
+  nsObjectHashtable* mObserverTopicTable;
 
 };
 

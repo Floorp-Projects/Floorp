@@ -156,15 +156,8 @@ protected:
 
     virtual ~nsServiceManagerImpl(void);
 
-    nsHashtable/*<nsServiceEntry>*/* mServices;
+    nsObjectHashtable/*<nsServiceEntry>*/* mServices;
 };
-
-nsServiceManagerImpl::nsServiceManagerImpl(void)
-{
-    NS_INIT_REFCNT();
-    mServices = new nsHashtable(256, PR_TRUE);	// Get a threadSafe hashtable
-    NS_ASSERTION(mServices, "out of memory already?");
-}
 
 static PRBool
 DeleteEntry(nsHashKey *aKey, void *aData, void* closure)
@@ -175,10 +168,18 @@ DeleteEntry(nsHashKey *aKey, void *aData, void* closure)
     return PR_TRUE;
 }
 
+nsServiceManagerImpl::nsServiceManagerImpl(void)
+{
+    NS_INIT_REFCNT();
+    mServices = new nsObjectHashtable(nsnull, nsnull,   // should never be cloned
+                                      DeleteEntry, nsnull,
+                                      256, PR_TRUE);    // Get a threadSafe hashtable
+    NS_ASSERTION(mServices, "out of memory already?");
+}
+
 nsServiceManagerImpl::~nsServiceManagerImpl(void)
 {
     if (mServices) {
-        mServices->Enumerate(DeleteEntry);
         delete mServices;
     }
 }
