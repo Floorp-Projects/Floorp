@@ -4971,7 +4971,7 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor)
     // This means that comparing "http://www.ABC.com/" to "http://www.abc.com/"
     // will fail this test.
 
-    if (Substring(currentLeftStart, currentLeftEnd).Equals(sNewLeft)) {
+    if (!Substring(currentLeftStart, currentLeftEnd).Equals(sNewLeft)) {
         return NS_OK;           // URIs not the same
     }
 
