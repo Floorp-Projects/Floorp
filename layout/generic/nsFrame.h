@@ -130,6 +130,11 @@ public:
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
+  NS_IMETHOD  ReplaceFrame(nsIPresContext& aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aOldFrame,
+                           nsIFrame*       aNewFrame);
   NS_IMETHOD  Destroy(nsIPresContext& aPresContext);
   NS_IMETHOD  GetContent(nsIContent** aContent) const;
   NS_IMETHOD  GetStyleContext(nsIStyleContext** aStyleContext) const;

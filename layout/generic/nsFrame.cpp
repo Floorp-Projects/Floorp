@@ -372,6 +372,16 @@ nsFrame::RemoveFrame(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
+nsFrame::ReplaceFrame(nsIPresContext& aPresContext,
+                      nsIPresShell&   aPresShell,
+                      nsIAtom*        aListName,
+                      nsIFrame*       aOldFrame,
+                      nsIFrame*       aNewFrame)
+{
+  return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
 nsFrame::Destroy(nsIPresContext& aPresContext)
 {
   nsCOMPtr<nsIPresShell> shell;
