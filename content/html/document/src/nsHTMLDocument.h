@@ -193,6 +193,11 @@ protected:
 
   PRBool       mShouldMatchCase;
 
+  /*
+   * Bug 13871: Frameset spoofing - find out if document.domain was set
+   */
+  PRBool       mDomainSet;
+
 protected:
   void RegisterNamedItems(nsIContent *aContent, PRBool aInForm);
   void UnregisterNamedItems(nsIContent *aContent, PRBool aInForm);

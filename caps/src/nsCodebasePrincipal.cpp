@@ -177,7 +177,8 @@ nsCodebasePrincipal::Equals(nsIPrincipal *other, PRBool *result)
             // All file: urls are considered to have the same origin.
             *result = PR_TRUE;
         } else if (PL_strcmp(scheme1, "imap") == 0 ||
-                   PL_strcmp(scheme1, "mailbox") == 0) 
+                   PL_strcmp(scheme1, "mailbox") == 0 ||
+                   PL_strcmp(scheme1, "news") == 0) 
         {
             // Each message is a distinct trust domain; use the 
             // whole spec for comparison
