@@ -30,35 +30,66 @@
 
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
-//utilities
-static char *gMailboxRoot = nsnull;
-
+// it would be really cool to:
+// - cache the last hostname->path match
+// - if no such server exists, behave like an old-style mailbox URL
+// (i.e. return the mail.directory preference or something)
 nsresult
-nsGetMailboxRoot(nsFileSpec &result)
+nsGetMailboxRoot(const char *hostname, nsFileSpec &result)
 {
   nsresult rv = NS_OK;
 
-  // temporary stuff. for now get everything from the mail session
-  if (gMailboxRoot == nsnull) {
-    NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv);
-    
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIMsgIncomingServer> server;
-      rv = session->GetCurrentServer(getter_AddRefs(server));
-      
-      if (NS_SUCCEEDED(rv))
-          rv = server->GetLocalPath(&gMailboxRoot);
-    }
-  } /* if (gMailboxRoot == nsnull) .. */
-  result = gMailboxRoot;
+  // retrieve the AccountManager
+  NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIMsgAccountManager> accountManager;
+  rv = session->GetAccountManager(getter_AddRefs(accountManager));
+  if (NS_FAILED(rv)) return rv;
+
+  // find all pop hosts matching the given hostname
+  nsCOMPtr<nsISupportsArray> hosts;
+  rv = accountManager->FindServersByHostname(hostname,
+                                             nsIPop3IncomingServer::GetIID(),
+                                             getter_AddRefs(hosts));
+  
+  if (NS_FAILED(rv)) return rv;
+
+  // use enumeration function to find the first Pop server
+  nsISupports *serverSupports = hosts->ElementAt(0);
+
+#ifdef DEBUG_alecf
+  if (hosts->Count() <= 0)
+    fprintf(stderr, "Augh, no pop server named %s?\n", hostname);
+  if (!serverSupports)
+    fprintf(stderr, "Huh, serverSupports returned nsnull\n");
+#endif
+
+  // if there are no pop servers, how did we get here?
+  if (! serverSupports) return NS_ERROR_UNEXPECTED;
+
+  nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(serverSupports);
+
+  // this had better be a nsIMsgIncomingServer, otherwise
+  // FindServersByHostname is broken or we got some wierd object back
+  PR_ASSERT(server);
+  
+  // now ask the server what it's root is
+  char *localPath;
+  rv = server->GetLocalPath(&localPath);
+  if (NS_SUCCEEDED(rv)) 
+    result = localPath;
+
   return rv;
 }
 
+// given rootURI and rootURI##folder, return on-disk path of folder
 nsresult
-nsLocalURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
+nsLocalURI2Path(const char* rootURI, const char* uriStr,
+                nsFileSpec& pathResult)
 {
   nsresult rv;
 
+  nsCOMPtr<nsIMsgIncomingServer> server;
   
   nsAutoString sep;
   sep += PR_GetDirectorySeparator();
@@ -71,20 +102,53 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
     return NS_ERROR_FAILURE;
 
-  if ((strcmp(rootURI, kMailboxRootURI) == 0) || 
-           (strcmp(rootURI, kMailboxMessageRootURI) == 0)) {
-    // local mail case
-    rv = nsGetMailboxRoot(pathResult);
-	}
-  else {
-    rv = NS_ERROR_FAILURE; 
+  // verify that rootURI starts with "mailbox:/" or "mailbox_message:/"
+  if ((strcmp(rootURI, kMailboxRootURI) != 0) && 
+      (strcmp(rootURI, kMailboxMessageRootURI) != 0)) {
+    pathResult = nsnull;
+    return NS_ERROR_FAILURE;
   }
+
+  // the server name is the first component of the path, so extract it out
+  PRInt32 hostStart;
+
+  hostStart = uri.Find('/');
+  if (hostStart <= 0) return NS_ERROR_FAILURE;
+
+  // skip past all //
+  while (uri[hostStart]=='/') hostStart++;
+
+  // cut mailbox://hostname/folder -> hostname/folder
+  nsAutoString hostname;
+  uri.Right(hostname, uri.Length() - hostStart);
+
+  PRInt32 hostEnd = hostname.Find('/');
+
+  // folder comes after the hostname, after the '/'
+  nsAutoString folder;
+  hostname.Right(folder, hostname.Length() - hostEnd - 1);
+
+  // cut off first '/' and everything following it
+  // hostname/folder -> hostname
+  if (hostEnd >0) {
+    hostname.Truncate(hostEnd);
+  }
+  
+  // local mail case
+  // should return a list of all local mail folders? or maybe nothing
+  // at all?
+  char *hostchar = hostname.ToNewCString();
+  rv = nsGetMailboxRoot(hostchar, pathResult);
+  printf("nsGetMailboxRoot(%s) = %s\n\tfolder = %s\n",
+         hostchar, (const char*)pathResult,
+         folder.ToNewCString());
+  delete[] hostchar;
 
   if (NS_FAILED(rv)) {
     pathResult = nsnull;
     return rv;
   }
- 
+#if 0
   nsAutoString path="";
   uri.Cut(0, nsCRT::strlen(rootURI));
 
@@ -129,10 +193,14 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 
   if(path.Length() > 0)
 	  pathResult +=path;
+#endif
 
+  pathResult += folder;
   return NS_OK;
 }
 
+#if 0
+static
 nsresult
 nsPath2LocalURI(const char* rootURI, const nsFileSpec& spec, char **uri)
 {
@@ -148,7 +216,7 @@ nsPath2LocalURI(const char* rootURI, const nsFileSpec& spec, char **uri)
 
   nsFileSpec root;
   // local mail case
-   rv = nsGetMailboxRoot(root);
+  rv = nsGetMailboxRoot(root);
   if (NS_FAILED(rv)) return rv;
 
   const char *path = spec;
@@ -197,6 +265,7 @@ nsPath2LocalURI(const char* rootURI, const nsFileSpec& spec, char **uri)
   *uri = uriStr.ToNewCString();
   return NS_OK;
 }
+#endif
 
 nsresult
 nsLocalURI2Name(const char* rootURI, char* uriStr, nsString& name)
@@ -210,11 +279,22 @@ nsLocalURI2Name(const char* rootURI, char* uriStr, nsString& name)
   return uri.Right(name, count);
 }
 
-/* parses LocalMessageURI */
-nsresult nsParseLocalMessageURI(const char* uri, nsString& folderURI, PRUint32 *key)
+/* parses LocalMessageURI
+ * mailbox://folder1/folder2#123
+ *
+ * puts folder path in folderURI
+ * message key number in key
+ */
+nsresult nsParseLocalMessageURI(const char* uri,
+                                nsString& folderURI,
+                                PRUint32 *key)
 {
 	if(!key)
 		return NS_ERROR_NULL_POINTER;
+
+#ifdef DEBUG_alecf
+  printf("nsParseLocalMessageURI(%s..)\n", uri);
+#endif
 
 	nsAutoString uriStr = uri;
 	PRInt32 keySeparator = uriStr.Find('#');
@@ -234,19 +314,22 @@ nsresult nsParseLocalMessageURI(const char* uri, nsString& folderURI, PRUint32 *
 
 }
 
-nsresult nsBuildLocalMessageURI(const nsFileSpec& path, PRUint32 key, char** uri)
+nsresult nsBuildLocalMessageURI(const char *baseURI, PRUint32 key, char** uri)
 {
 	
 	if(!uri)
 		return NS_ERROR_NULL_POINTER;
+  // need to convert mailbox://hostname/.. to mailbox_message://hostname/..
 
-	char *folderURI;
+  nsAutoString tailURI(baseURI);
 
-	nsPath2LocalURI(kMailboxMessageRootURI, path, &folderURI);
-
-	*uri = PR_smprintf("%s#%d", folderURI, key);
-
-	delete[] folderURI;
-
+  // chop off mailbox:/
+  if (tailURI.Find(kMailboxRootURI) == 0)
+    tailURI.Cut(0, PL_strlen(kMailboxRootURI));
+  
+  const char *tail = tailURI.ToNewCString();
+    
+	*uri = PR_smprintf("%s%s#%d", kMailboxMessageRootURI, tail, key);
+  
 	return NS_OK;
 }

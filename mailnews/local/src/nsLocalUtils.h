@@ -26,13 +26,10 @@ static const char kMailboxRootURI[] = "mailbox:/";
 static const char kMailboxMessageRootURI[] = "mailbox_message:/";
 
 nsresult
-nsGetMailboxRoot(nsFileSpec &result);
+nsGetMailboxRoot(const char* hostname, nsFileSpec &result);
 
 nsresult
 nsLocalURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult);
-
-nsresult
-nsPath2LocalURI(const char* rootURI, const nsFileSpec& path, char* *uri);
 
 nsresult
 nsLocalURI2Name(const char* rootURI, char* uriStr, nsString& name);
@@ -40,6 +37,6 @@ nsLocalURI2Name(const char* rootURI, char* uriStr, nsString& name);
 nsresult
 nsParseLocalMessageURI(const char* uri, nsString& folderURI, PRUint32 *key);
 
-nsresult nsBuildLocalMessageURI(const nsFileSpec& path, PRUint32 key, char** uri);
+nsresult nsBuildLocalMessageURI(const char* baseURI, PRUint32 key, char** uri);
 
 #endif //NS_LOCALUTILS_H
