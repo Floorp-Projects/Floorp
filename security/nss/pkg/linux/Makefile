@@ -2,7 +2,7 @@
 # Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile,v 1.1 2003/02/07 05:56:14 kirk.erickson%sun.com Exp $"
+#ident	"$Id: Makefile,v 1.2 2003/02/07 07:16:37 kirk.erickson%sun.com Exp $"
 #
 
 CORE_DEPTH = ../../..
@@ -14,7 +14,6 @@ VERSION     = `grep NSS_VERSION $(CORE_DEPTH)/../dist/public/nss/nss.h \
 				| sed -e 's/"$$//' -e 's/.*"//' -e 's/ .*//'`
 
 include $(CORE_DEPTH)/coreconf/config.mk
-include $(CORE_DEPTH)/coreconf/rules.mk
 
 publish:
 	$(MAKE) clean
@@ -56,3 +55,5 @@ clean::
 	rm -rf RPMS SRPMS usr
 	rm -f temp.spec
 	rm -f $(NAME)-$(VERSION).tar.gz
+
+include $(CORE_DEPTH)/coreconf/rules.mk
