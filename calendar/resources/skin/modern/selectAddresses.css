@@ -13,7 +13,7 @@
 #topBox
 {
     min-width: 300px;
-    -moz-box-align: left;
+    -moz-box-align: start;
 }
 
 #abResultsTree treechildren::-moz-tree-row( disabled )
