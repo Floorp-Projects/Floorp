@@ -409,6 +409,8 @@ nsBrowserAppCore::WalletSafeFillin()
   return NS_OK;
 }
 
+#include "nsIDOMHTMLDocument.h"
+static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 NS_IMETHODIMP    
 nsBrowserAppCore::WalletQuickFillin()
 {
@@ -416,7 +418,9 @@ nsBrowserAppCore::WalletQuickFillin()
   shell = nsnull;
   nsCOMPtr<nsIWebShell> webcontent; 
   mWebShell->FindChildWithName(nsAutoString("content"), *getter_AddRefs(webcontent));
-  shell = GetPresShellFor(webcontent);
+  nsCOMPtr<nsIWebShell> webcontent2; 
+  webcontent->ChildAt(1, (nsIWebShell*&)webcontent2); 
+  shell = GetPresShellFor(webcontent2);
 
   nsIWalletService *walletservice;
   nsresult res;
