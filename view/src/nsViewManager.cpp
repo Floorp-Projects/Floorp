@@ -127,9 +127,6 @@ nsViewManager :: ~nsViewManager()
   {
     nsIRenderingContext *rc;
 
-    static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-    static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-
     nsresult rv = nsComponentManager::CreateInstance(kRenderingContextCID, 
                                        nsnull, 
                                        kIRenderingContextIID, 
@@ -571,7 +568,9 @@ typedef enum
 #define TRANS_PROPERTY_TRANS      0
 #define TRANS_PROPERTY_OPACITY    1
 
+#ifdef SHOW_RECTS
 static PRInt32 evenodd = 0;
+#endif
 
 void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect, PRBool &aResult)
 {
@@ -1628,7 +1627,7 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
 
           if (varea > 0.0000001f)
           {
-            nsRect     arearect;
+            // nsRect     arearect;
             PRUint32   updateFlags = 0;
 
             // Auto double buffering logic.
@@ -2314,15 +2313,13 @@ void nsViewManager :: AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) 
 
   if (nsnull == dirtyRegion)
   {
-    static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
-    static NS_DEFINE_IID(kIRegionIID, NS_IREGION_IID);
-
     // The view doesn't have a dirty region so create one
     nsresult rv = nsComponentManager::CreateInstance(kRegionCID, 
                                        nsnull, 
                                        kIRegionIID, 
                                        (void **)&dirtyRegion);
 
+    if (NS_FAILED(rv)) return;
     dirtyRegion->Init();
     aView->SetDirtyRegion(dirtyRegion);
   }
@@ -2439,9 +2436,7 @@ NS_IMETHODIMP nsViewManager :: GetRootScrollableView(nsIScrollableView **aScroll
 
 NS_IMETHODIMP nsViewManager :: Display(nsIView* aView)
 {
-  nsRect              wrect;
   nsIRenderingContext *localcx = nsnull;
-  nsDrawingSurface    ds = nsnull;
   nsRect              trect;
 
   if (PR_FALSE == mRefreshEnabled)
