@@ -435,7 +435,7 @@ nsTextServicesDocument::FirstBlock()
 
   nsCOMPtr<nsIContent> content;
 
-  while (NS_ENUMERATOR_FALSE == mIterator->IsDone())
+  while (NS_COMFALSE == mIterator->IsDone())
   {
   	result = mIterator->CurrentNode(getter_AddRefs(content));
 
@@ -505,7 +505,7 @@ nsTextServicesDocument::LastBlock()
   nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsIContent> last;
 
-  while (NS_ENUMERATOR_FALSE == mIterator->IsDone())
+  while (NS_COMFALSE == mIterator->IsDone())
   {
   	result = mIterator->CurrentNode(getter_AddRefs(content));
 
@@ -729,7 +729,7 @@ nsTextServicesDocument::FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, 
         return result;
       }
 
-      while (iter->IsDone() == NS_ENUMERATOR_FALSE)
+      while (iter->IsDone() == NS_COMFALSE)
       {
         result = iter->CurrentNode(getter_AddRefs(content));
 
@@ -856,7 +856,7 @@ nsTextServicesDocument::FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, 
 
     // Now walk through the range till we find a text node.
 
-    while (iter->IsDone() == NS_ENUMERATOR_FALSE)
+    while (iter->IsDone() == NS_COMFALSE)
     {
       result = iter->CurrentNode(getter_AddRefs(content));
 
@@ -975,7 +975,7 @@ nsTextServicesDocument::FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, 
     return result;
   }
 
-  while (iter->IsDone() == NS_ENUMERATOR_FALSE)
+  while (iter->IsDone() == NS_COMFALSE)
   {
     result = iter->CurrentNode(getter_AddRefs(content));
 
@@ -1210,7 +1210,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, P
         return result;
       }
 
-      while (iter->IsDone() == NS_ENUMERATOR_FALSE)
+      while (iter->IsDone() == NS_COMFALSE)
       {
         result = iter->CurrentNode(getter_AddRefs(content));
 
@@ -1337,7 +1337,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, P
 
     // Now walk through the range till we find a text node.
 
-    while (iter->IsDone() == NS_ENUMERATOR_FALSE)
+    while (iter->IsDone() == NS_COMFALSE)
     {
       result = iter->CurrentNode(getter_AddRefs(content));
 
@@ -1456,7 +1456,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, P
     return result;
   }
 
-  while (iter->IsDone() == NS_ENUMERATOR_FALSE)
+  while (iter->IsDone() == NS_COMFALSE)
   {
     result = iter->CurrentNode(getter_AddRefs(content));
 
@@ -1543,7 +1543,7 @@ nsTextServicesDocument::PrevBlock()
         return result;
       }
 
-      if (mIterator->IsDone() != NS_ENUMERATOR_FALSE)
+      if (mIterator->IsDone() != NS_COMFALSE)
       {
         mIteratorStatus = nsTextServicesDocument::eIsDone;
         UNLOCK_DOC(this);
@@ -1616,7 +1616,7 @@ nsTextServicesDocument::NextBlock()
         return result;
       }
 
-      if (mIterator->IsDone() != NS_ENUMERATOR_FALSE)
+      if (mIterator->IsDone() != NS_COMFALSE)
       {
         mIteratorStatus = nsTextServicesDocument::eIsDone;
         UNLOCK_DOC(this);
@@ -3313,7 +3313,7 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
   // the text block, to find the first text node you
   // come across.
 
-  while (iter->IsDone() == NS_ENUMERATOR_FALSE)
+  while (iter->IsDone() == NS_COMFALSE)
   {
     result = iter->CurrentNode(getter_AddRefs(content));
 
@@ -3364,7 +3364,7 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
     if (NS_FAILED(result))
       return result;
 
-    while (iter->IsDone() == NS_ENUMERATOR_FALSE)
+    while (iter->IsDone() == NS_COMFALSE)
     {
       result = iter->CurrentNode(getter_AddRefs(content));
 
@@ -3619,7 +3619,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
   {
     found = PR_FALSE;
 
-    while (iter->IsDone() == NS_ENUMERATOR_FALSE)
+    while (iter->IsDone() == NS_COMFALSE)
     {
       result = iter->CurrentNode(getter_AddRefs(content));
 
@@ -3660,7 +3660,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
   {
     found = PR_FALSE;
 
-    while (iter->IsDone() == NS_ENUMERATOR_FALSE)
+    while (iter->IsDone() == NS_COMFALSE)
     {
       result = iter->CurrentNode(getter_AddRefs(content));
 
@@ -3896,7 +3896,7 @@ nsTextServicesDocument::FirstTextNodeInCurrentBlock(nsIContentIterator *iter)
   // Walk backwards over adjacent text nodes until
   // we hit a block boundary:
 
-  while (NS_ENUMERATOR_FALSE == iter->IsDone())
+  while (NS_COMFALSE == iter->IsDone())
   {
   	result = iter->CurrentNode(getter_AddRefs(content));
 
@@ -3970,7 +3970,7 @@ nsTextServicesDocument::FirstTextNodeInNextBlock(nsIContentIterator *aIterator)
   if (!aIterator)
     return NS_ERROR_NULL_POINTER;
 
-  while (NS_ENUMERATOR_FALSE == aIterator->IsDone())
+  while (NS_COMFALSE == aIterator->IsDone())
   {
   	result = aIterator->CurrentNode(getter_AddRefs(content));
     if (NS_FAILED(result))
@@ -4021,7 +4021,7 @@ nsTextServicesDocument::GetFirstTextNodeInPrevBlock(nsIContent **aContent)
     return result;
   }
 
-  if (mIterator->IsDone() == NS_ENUMERATOR_FALSE)
+  if (mIterator->IsDone() == NS_COMFALSE)
   {
     result = mIterator->CurrentNode(aContent);
 
@@ -4065,7 +4065,7 @@ nsTextServicesDocument::GetFirstTextNodeInNextBlock(nsIContent **aContent)
     return result;
   }
 
-  if (mIterator->IsDone() == NS_ENUMERATOR_FALSE)
+  if (mIterator->IsDone() == NS_COMFALSE)
   {
     result = mIterator->CurrentNode(aContent);
 
@@ -4115,7 +4115,7 @@ nsTextServicesDocument::CreateOffsetTable(nsString *aStr)
 
   PRInt32 offset = 0;
 
-  while (NS_ENUMERATOR_FALSE == mIterator->IsDone())
+  while (NS_COMFALSE == mIterator->IsDone())
   {
   	result = mIterator->CurrentNode(getter_AddRefs(content));
 

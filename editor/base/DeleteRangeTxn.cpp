@@ -337,7 +337,7 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteNodesBetween()
   result = iter->Init(mRange);
   if (NS_FAILED(result)) return result;
     
-  while (NS_ENUMERATOR_FALSE == iter->IsDone())
+  while (NS_COMFALSE == iter->IsDone())
   {
     nsCOMPtr<nsIDOMNode> node;
     nsCOMPtr<nsIContent> content;

@@ -648,7 +648,7 @@ NS_IMETHODIMP
 CSSMediaRuleImpl::EnumerateRulesForwards(nsISupportsArrayEnumFunc aFunc, void * aData) const
 {
   if (mRules) {
-    return ((mRules->EnumerateForwards(aFunc, aData)) ? NS_OK : NS_ENUMERATOR_FALSE);
+    return ((mRules->EnumerateForwards(aFunc, aData)) ? NS_OK : NS_COMFALSE);
   }
   return NS_OK;
 }

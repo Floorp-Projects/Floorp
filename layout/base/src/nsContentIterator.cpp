@@ -679,7 +679,7 @@ nsresult nsContentIterator::IsDone()
   if (mIsDone) 
     return NS_OK;
   else 
-    return NS_ENUMERATOR_FALSE;
+    return NS_COMFALSE;
 }
 
 

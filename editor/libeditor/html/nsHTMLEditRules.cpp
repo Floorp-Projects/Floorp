@@ -1795,7 +1795,7 @@ nsHTMLEditRules::IsEmptyNode(nsIDOMNode *aNode, PRBool *outIsEmptyNode)
   res = iter->Init(nodeAsContent);
   if (NS_FAILED(res)) return res;
     
-  while (NS_ENUMERATOR_FALSE == iter->IsDone())
+  while (NS_COMFALSE == iter->IsDone())
   {
     nsCOMPtr<nsIDOMNode> node;
     nsCOMPtr<nsIContent> content;
@@ -2297,7 +2297,7 @@ nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges,
     res = iter->Init(opRange);
     if (NS_FAILED(res)) return res;
     
-    while (NS_ENUMERATOR_FALSE == iter->IsDone())
+    while (NS_COMFALSE == iter->IsDone())
     {
       nsCOMPtr<nsIDOMNode> node;
       nsCOMPtr<nsIContent> content;
@@ -3321,7 +3321,7 @@ nsHTMLEditRules::CleanUpSelection(nsIDOMSelection *aSelection)
       if (NS_FAILED(res)) return res;
       
       // gather up a list of empty nodes
-      while (NS_ENUMERATOR_FALSE == iter->IsDone())
+      while (NS_COMFALSE == iter->IsDone())
       {
         nsCOMPtr<nsIDOMNode> node;
         nsCOMPtr<nsIContent> content;
