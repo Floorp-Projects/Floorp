@@ -20,13 +20,12 @@
  * Proxy JNI implementation.
  */
 
-#include "jni.h"
+#include "jvmmgr.h"
 #include "nsISecureJNI2.h"
 #include "nsIJVMPlugin.h"
 #include "nsHashtable.h"
 #include "nsVector.h"
 #include "plstr.h"
-#include "jvmmgr.h"
 
 #include "ProxyJNI.h"
 
