@@ -82,9 +82,11 @@ namespace JSClasses {
         // JSMethods mMethods;
     public:
         JSClass(JSScope* scope, const String& name, JSClass* superClass = 0)
-            : JSType(name, superClass), mSuperClass(superClass), mSlotCount(0)
+            :   JSType(name, superClass),
+                mSuperClass(superClass),
+                mScope(new JSScope(scope)),
+                mSlotCount(superClass ? superClass->mSlotCount : 0)
         {
-            mScope = new JSScope(scope);
         }
         
         JSClass* getSuperClass()
@@ -121,14 +123,14 @@ namespace JSClasses {
             return mSlots[name];
         }
         
+        bool hasSlot(const String& name)
+        {
+            return (mSlots.find(name) != mSlots.end());
+        }
+        
         JSSlots& getSlots()
         {
             return mSlots;
-        }
-        
-        bool hasSlot(const String& name)
-        {
-            return (mSlots.count(name) != 0);
         }
         
         uint32 getSlotCount()
@@ -154,7 +156,7 @@ namespace JSClasses {
             // slot 0 is always the class.
             mSlots[0] = thisClass;
             // initialize rest of slots with undefined.
-            std::uninitialized_fill(&mSlots[1], &mSlots[1] + thisClass->getSlotCount(), JSValue());
+            std::uninitialized_fill(&mSlots[1], &mSlots[1] + getSlotCount(thisClass), JSValue());
             // for grins, use the prototype link to access methods.
             setPrototype(thisClass->getScope());
         }
@@ -171,15 +173,31 @@ namespace JSClasses {
 
         virtual void printProperties(Formatter& f)
         {
+            f << "Properties:\n";
             JSObject::printProperties(f);
-            JSClass *thisClass = getClass();
-            JSSlots &slots = thisClass->getSlots();
             f << "Slots:\n";
+            printSlots(f, getClass());
+        }
+
+    private:
+        void printSlots(Formatter& f, JSClass* thisClass)
+        {
+            JSClass* superClass = thisClass->getSuperClass();
+            if (superClass) printSlots(f, superClass);
+            JSSlots& slots = thisClass->getSlots();
             for (JSSlots::iterator i = slots.begin(), end = slots.end(); i != end; ++i) {
                 f << i->first << " : " <<  mSlots[i->second.mIndex]  << "\n";
             }
         }
-
+        
+        uint32 getSlotCount(JSClass* thisClass)
+        {
+            uint32 slotCount = thisClass->getSlotCount();
+            JSClass* superClass = thisClass->getSuperClass();
+            if (superClass)
+                slotCount += getSlotCount(superClass);
+            return slotCount;
+        }
     };
     
 } /* namespace JSClasses */
