@@ -176,6 +176,19 @@ final class LineReader {
     }
 }
 
+class StringTable {
+    private Hashtable strings = new Hashtable();
+    
+    public String intern(String str) {
+        String result = (String) strings.get(str);
+        if (result == null) {
+            result = str;
+            strings.put(str, str);
+        }
+        return result;
+    }
+}
+
 public class leaksoup {
 	private static boolean ROOTS_ONLY = false;
 
@@ -219,11 +232,12 @@ public class leaksoup {
 			Hashtable types = new Hashtable();
 			Histogram hist = new Histogram();
 			LineReader reader = new LineReader(new BufferedReader(new InputStreamReader(new FileInputStream(inputName))));
+			StringTable strings = new StringTable();
 			String line = reader.readLine();
 			while (line != null) {
 				if (line.startsWith("0x")) {
-					String addr = line.substring(0, 10).intern();
-					String name = line.substring(line.indexOf('<') + 1, line.indexOf('>')).intern();
+					String addr = strings.intern(line.substring(0, 10));
+					String name = strings.intern(line.substring(line.indexOf('<') + 1, line.indexOf('>')));
 					int size;
 					try {
 						String str = line.substring(line.indexOf('(') + 1, line.indexOf(')')).trim();
@@ -233,7 +247,7 @@ public class leaksoup {
 					}
 
 					// generate a unique type for this object.
-					String key = (name + "_" + size).intern();
+					String key = strings.intern(name + "_" + size);
 					Type type = (Type) types.get(key);
 					if (type == null) {
 						type = new Type(name, size);
@@ -243,7 +257,7 @@ public class leaksoup {
 					// read in fields. could compress these by converting to Integer objects.
 					vec.setSize(0);
 					for (line = reader.readLine(); line != null && line.charAt(0) == '\t'; line = reader.readLine())
-						vec.addElement(line.substring(1, 11).intern());
+						vec.addElement(strings.intern(line.substring(1, 11)));
 					Object[] refs = new Object[vec.size()];
 					vec.copyInto(refs);
 					vec.setSize(0);
@@ -264,6 +278,9 @@ public class leaksoup {
 				}
 			}
 			reader.close();
+			
+			// don't need the interned strings table anymore.
+			strings = null;
 			
 			Leak[] leaks = new Leak[leakTable.size()];
 			int leakCount = 0;
