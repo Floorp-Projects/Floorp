@@ -91,9 +91,7 @@ CMozillaBrowser::CMozillaBrowser()
 
 	// Initialize layout interfaces
     m_pIWebShell = nsnull;
-#ifdef USE_NGPREF
 	m_pIPref = nsnull;
-#endif
 
 	// Ready state of control
 	m_nBrowserReadyState = READYSTATE_UNINITIALIZED;
@@ -262,12 +260,10 @@ LRESULT CMozillaBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 		m_pWebShellContainer = NULL;
 	}
 
-#ifdef USE_NGPREF
 	if (m_pIPref)
 	{
 		NS_RELEASE(m_pIPref);
 	}
-#endif
 
 	return 0;
 }
@@ -400,12 +396,8 @@ BOOL CMozillaBrowser::IsValid()
 
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
-
-#ifdef USE_NGPREF
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-#endif /* USE_NGPREF */
-
 
 // Create and initialise the web shell
 HRESULT CMozillaBrowser::CreateWebShell() 
@@ -428,18 +420,16 @@ HRESULT CMozillaBrowser::CreateWebShell()
 
 	nsresult rv;
 
-#ifdef USE_NGPREF
 	// Load preferences
 	rv = nsServiceManager::GetService(kPrefCID, 
 									nsIPref::GetIID(), 
-									(nsISupports **)&prefs);
+									(nsISupports **)&m_pIPref);
 	if (NS_OK != rv)
 	{
 		NG_ASSERT(0);
 		m_sErrorMessage = _T("Error - could not create preference object");
 		return E_FAIL;
 	}
-#endif
 	
 	// Create the web shell object
 	rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
@@ -475,14 +465,12 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	m_pWebShellContainer = new CWebShellContainer(this);
 	m_pWebShellContainer->AddRef();
 
+	m_pIWebShell->SetPrefs(m_pIPref);
 	m_pIWebShell->SetContainer((nsIWebShellContainer*) m_pWebShellContainer);
 	m_pIWebShell->SetObserver((nsIStreamObserver*) m_pWebShellContainer);
 	m_pIWebShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*) m_pWebShellContainer);
 	m_pIWebShell->SetWebShellType(nsWebShellContent);
 
-#ifdef USE_NGPREF
-	m_pIWebShell->SetPrefs(m_pIPref);
-#endif
 
 	m_pIWebShell->Show();
 
@@ -1012,19 +1000,18 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoHome(void)
 	USES_CONVERSION;
 
 	TCHAR * sUrl = _T("http://home.netscape.com");
-#ifdef USE_NGPREF
+
 	// Find the home page stored in prefs
 	if (m_pIPref)
 	{
 		char *szBuffer;
 		nsresult rv;
-		rv = m_pIPref->CopyCharPref(c_szPrefsHomePage, &szBuffer);
+		rv = m_pIPref->CopyCharPref(c_szPrefsHomePage.c_str(), &szBuffer);
 		if (rv == NS_OK)
 		{
 			sUrl = A2T(szBuffer);
 		}
 	}
-#endif
 
 	// Navigate to the home page
 	Navigate(T2OLE(sUrl), NULL, NULL, NULL, NULL);
@@ -1046,14 +1033,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoSearch(void)
 	USES_CONVERSION;
 
 	TCHAR * sUrl = _T("http://search.netscape.com");
-#ifdef USE_NGPREF
 	// Find the home page stored in prefs
 	if (m_pIPref)
 	{
 		// TODO find and navigate to the search page stored in prefs
 		//      and not this hard coded address
 	}
-#endif
 
 	Navigate(T2OLE(sUrl), NULL, NULL, NULL, NULL);
 	

@@ -34,8 +34,6 @@
 #define _ATL_STATIC_REGISTRY
 
 // Comment these out as appropriate
-//#define USE_NGPREF
-
 #ifdef MOZ_ACTIVEX_CONTROL_SUPPORT
 #define USE_CONTROL
 #endif
@@ -72,9 +70,6 @@ typedef long int32;
 #include "prtypes.h"
 
 // Mozilla headers
-#ifdef USE_NGPREF
-#include "nsIPref.h"
-#endif
 
 #ifdef USE_CONTROL
 #include "xp_core.h"
@@ -96,6 +91,7 @@ typedef long int32;
 #include "nsIHTTPChannel.h"
 #endif
 
+#include "nsIPref.h"
 #include "nsIURL.h"
 #include "nsIWebShell.h"
 #include "nsIBrowserWindow.h"
