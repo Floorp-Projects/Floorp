@@ -79,7 +79,7 @@ if ($form{terse}) {
  
 } elsif ($form{text}) {
 
-my $header = "<PRE>\nBuild Time\t\tBuild Name\t\t\tWho\t\t\Note Time\t\t\tNote\n" . 
+my $header = "<PRE>\nBuild Time\t\tBuild Name\t\t\tWho\t\t\tNote Time\t\t\tNote\n" . 
 "----------------------------------------------------------------------------------------------------------------------------\n";
 
  if (defined $tree && defined $start && defined $end) {
@@ -114,7 +114,7 @@ my $header = "<PRE>\nBuild Time\t\tBuild Name\t\t\tWho\t\t\Note Time\t\t\tNote\n
                 "named '$tree'.</font><p>";
         }
     }
-    print "\n<\PRE>";
+    print "\n</PRE>";
  
 } else {
 
