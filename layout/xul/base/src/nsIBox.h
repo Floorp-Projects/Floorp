@@ -28,7 +28,7 @@
 #ifndef nsIBox_h___
 #define nsIBox_h___
 
-class aPresContext;
+class nsIPresContext;
 class nsIFrame;
 struct nsHTMLReflowState;
 class nsBoxInfo;
