@@ -1,193 +1,388 @@
 <?xml version="1.0"?> <!-- -*- Mode: SGML -*- -->
+<!-- 
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   - 
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   - 
+   - The Original Code is Mozilla Communicator.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corp. Portions created by Netscape Communications
+   - Corp. are Copyright (C) 1999 Netscape Communications Corp. All
+   - Rights Reserved.
+   - 
+   - Contributor(s): Stephen Lamm <slamm@netscape.com>
+   -                 Chris Waterson <waterson@netscape.com>
+  --> 
 
 <!DOCTYPE RDF SYSTEM "chrome://sidebar/locale/sidebar-registry-rdf.dtd" >
 <RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:NC="http://home.netscape.com/NC-rdf#">
 
   <RDF:Seq about="urn:sidebar:master-panel-list">
- 
+
     <RDF:li>
-       <RDF:Description ID="&sidebar.panel.weather.label;">
-         <NC:title>&sidebar.panel.weather.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=weather</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=weather</NC:customize> 
-       </RDF:Description>
+      <RDF:Seq about="urn:sidebar:panel-group:most-popular">
+        <RDF:li resource="urn:sidebar:panel:bookmarks" />
+        <RDF:li resource="urn:sidebar:nc-panel:calendar" />
+        <RDF:li resource="urn:sidebar:nc-panel:net.254" />
+        <RDF:li resource="urn:sidebar:nc-panel:reuters" />
+        <RDF:li resource="urn:sidebar:nc-panel:sports" />
+        <RDF:li resource="urn:sidebar:nc-panel:stocks" />
+        <RDF:li resource="urn:sidebar:panel:tinderbox" />
+        <RDF:li resource="urn:sidebar:nc-panel:weather" />
+      </RDF:Seq>
     </RDF:li>
 
     <RDF:li>
-       <RDF:Description ID="&sidebar.panel.reuters.label;">
-         <NC:title>&sidebar.panel.reuters.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=reuters</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=reuters</NC:customize> 
-       </RDF:Description>
+      <RDF:Seq about="urn:sidebar:panel-group:local">
+        <RDF:li resource="urn:sidebar:nc-panel:localevent" />
+        <RDF:li resource="urn:sidebar:nc-panel:localmovie" />
+        <RDF:li resource="urn:sidebar:nc-panel:localnews" />
+      </RDF:Seq>
     </RDF:li>
 
     <RDF:li>
-       <RDF:Description ID="&sidebar.panel.horoscopes.label;">
-         <NC:title>&sidebar.panel.horoscopes.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=horoscopes</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=horoscopes</NC:customize> 
-       </RDF:Description>
+      <RDF:Seq about="urn:sidebar:panel-group:news-weather">
+        <RDF:li resource="urn:sidebar:nc-panel:newsedge" />
+        <RDF:li resource="urn:sidebar:nc-panel:localnews" />
+        <RDF:li resource="urn:sidebar:nc-panel:netscape" />
+        <RDF:li resource="urn:sidebar:nc-panel:reuters" />
+        <RDF:li resource="urn:sidebar:nc-panel:weather" />
+      </RDF:Seq>
     </RDF:li>
 
     <RDF:li>
-       <RDF:Description ID="&sidebar.panel.localnews.label;">
-         <NC:title>&sidebar.panel.localnews.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=localnews</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=localnews</NC:customize> 
-       </RDF:Description>
+      <RDF:Seq about="urn:sidebar:panel-group:sports-entertainment">
+        <RDF:li resource="urn:sidebar:nc-panel:fishcam" />
+        <RDF:li resource="urn:sidebar:nc-panel:horoscopes" />
+        <RDF:li resource="urn:sidebar:nc-panel:localevent" />
+        <RDF:li resource="urn:sidebar:nc-panel:localmovie" />
+        <RDF:li resource="urn:sidebar:nc-panel:sports" />
+      </RDF:Seq>
     </RDF:li>
 
     <RDF:li>
-       <RDF:Description ID="&sidebar.panel.sports.label;">
-         <NC:title>&sidebar.panel.sports.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=sports</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=sports</NC:customize> 
-       </RDF:Description>
+      <RDF:Seq about="urn:sidebar:panel-group:applications">
+        <RDF:li resource="urn:sidebar:nc-panel:calculator" />
+        <RDF:li resource="urn:sidebar:nc-panel:calendar" />
+        <RDF:li resource="urn:sidebar:nc-panel:delivery" />
+        <RDF:li resource="urn:sidebar:nc-panel:netcenterservices" />
+        <RDF:li resource="urn:sidebar:nc-panel:stocks" />
+        <RDF:li resource="urn:sidebar:nc-panel:travel" />
+        <RDF:li resource="urn:sidebar:nc-panel:addressbook" />
+        <RDF:li resource="urn:sidebar:nc-panel:bookmarks" />
+      </RDF:Seq>
     </RDF:li>
 
     <RDF:li>
-       <RDF:Description ID="&sidebar.panel.whiteyellowpages.label;">
-         <NC:title>&sidebar.panel.whiteyellowpages.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=whiteyellowpages</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=whiteyellowpages</NC:customize> 
-       </RDF:Description>
+      <RDF:Seq about="urn:sidebar:panel-group:search-directories-maps">
+        <RDF:li resource="urn:sidebar:nc-panel:maps" />
+        <RDF:li resource="urn:sidebar:nc-panel:memberdirectory" />
+        <RDF:li resource="urn:sidebar:nc-panel:search" />
+        <RDF:li resource="urn:sidebar:nc-panel:whiteyellowpages" />
+      </RDF:Seq>
     </RDF:li>
 
     <RDF:li>
-       <RDF:Description ID="&sidebar.panel.travel.label;">
-         <NC:title>&sidebar.panel.travel.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=travel</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=travel</NC:customize> 
-       </RDF:Description>
+      <RDF:Seq about="urn:sidebar:panel-group:netscape-netcenter">
+        <RDF:li resource="urn:sidebar:nc-panel:netcenterservices" />
+        <RDF:li resource="urn:sidebar:nc-panel:announcements" />
+        <RDF:li resource="urn:sidebar:nc-panel:netscape" />
+      </RDF:Seq>
     </RDF:li>
 
     <RDF:li>
-       <RDF:Description ID="&sidebar.panel.search.label;">
-         <NC:title>&sidebar.panel.search.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=search</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=search</NC:customize> 
-       </RDF:Description>
-    </RDF:li>
+      <RDF:Seq about="urn:sidebar:panel-group:other">
+        <RDF:li resource="urn:sidebar:nc-panel:net.342" />
+        <RDF:li resource="urn:sidebar:nc-panel:net.281" />
+        <RDF:li resource="urn:sidebar:nc-panel:net.1226" />
+        <RDF:li resource="urn:sidebar:nc-panel:net.1096" />
+        <RDF:li resource="urn:sidebar:nc-panel:net.240" />
+        <RDF:li resource="urn:sidebar:nc-panel:net.229" />
+        <RDF:li resource="urn:sidebar:nc-panel:net.400" />
+        <RDF:li resource="urn:sidebar:nc-panel:net.342" />
 
-    <RDF:li>
-       <RDF:Description ID="&sidebar.panel.memberdirectory.label;">
-         <NC:title>&sidebar.panel.memberdirectory.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=memberdirectory</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=memberdirectory</NC:customize> 
-       </RDF:Description>
-    </RDF:li>
+        <RDF:li>
+          <RDF:Seq about="urn:sidebar:panel-group:technology">
+            <RDF:li resource="urn:sidebar:nc-panel:net.514" />
+            <RDF:li resource="urn:sidebar:nc-panel:net.467" />
 
-    <RDF:li>
-       <RDF:Description ID="&sidebar.panel.netcenter.label;">
-         <NC:title>&sidebar.panel.netcenter.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=netcenter</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=netcenter</NC:customize> 
-       </RDF:Description>
-    </RDF:li>
-
-    <RDF:li>
-       <RDF:Description ID="&sidebar.panel.newsedge.label;">
-         <NC:title>&sidebar.panel.newsedge.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=newsedge</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=newsedge</NC:customize> 
-       </RDF:Description>
-    </RDF:li>
-
-    <RDF:li>
-       <RDF:Description ID="&sidebar.panel.addressbook.label;">
-         <NC:title>&sidebar.panel.addressbook.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=addressbook</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=addressbook</NC:customize> 
-       </RDF:Description>
-    </RDF:li>
-
-    <RDF:li>
-       <RDF:Description ID="&sidebar.panel.announcements.label;">
-         <NC:title>&sidebar.panel.announcements.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=announcements</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=announcements</NC:customize> 
-       </RDF:Description>
-    </RDF:li>
-
-    <RDF:li>
-       <RDF:Description ID="&sidebar.panel.bookmarks.label;">
-         <NC:title>&sidebar.panel.bookmarks.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=bookmarks</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=bookmarks</NC:customize> 
-       </RDF:Description>
-    </RDF:li>
-
-    <RDF:li>
-       <RDF:Description ID="&sidebar.panel.calculator.label;">
-         <NC:title>&sidebar.panel.calculator.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=calculator</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=calculator</NC:customize> 
-       </RDF:Description>
-    </RDF:li>
-
-    <RDF:li>
-       <RDF:Description ID="&sidebar.panel.calendar.label;">
-         <NC:title>&sidebar.panel.calendar.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=calendar</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=calendar</NC:customize> 
-       </RDF:Description>
-    </RDF:li>
-
-    <RDF:li>
-       <RDF:Description ID="&sidebar.panel.delivery.label;">
-         <NC:title>&sidebar.panel.delivery.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=delivery</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=delivery</NC:customize> 
-       </RDF:Description>
-    </RDF:li>
-
-    <RDF:li>
-       <RDF:Description ID="&sidebar.panel.fishcam.label;">
-         <NC:title>&sidebar.panel.fishcam.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=fishcam</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=fishcam</NC:customize> 
-       </RDF:Description>
-    </RDF:li>
-
-    <RDF:li>
-       <RDF:Description ID="&sidebar.panel.localevent.label;">
-         <NC:title>&sidebar.panel.localevent.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=localevent</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=localevent</NC:customize> 
-       </RDF:Description>
-    </RDF:li>
-
-    <RDF:li>
-       <RDF:Description ID="&sidebar.panel.localmovie.label;">
-         <NC:title>&sidebar.panel.localmovie.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=localmovie</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=localmovie</NC:customize> 
-       </RDF:Description>
-    </RDF:li>
-
-    <RDF:li>
-       <RDF:Description ID="&sidebar.panel.maps.label;">
-         <NC:title>&sidebar.panel.maps.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=maps</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=maps</NC:customize> 
-       </RDF:Description>
-    </RDF:li>
-
-    <RDF:li>
-       <RDF:Description ID="&sidebar.panel.netcenterservices.label;">
-         <NC:title>&sidebar.panel.netcenterservices.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=netcenterservices</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=netcenterservices</NC:customize> 
-       </RDF:Description>
-    </RDF:li>
-
-    <RDF:li>
-       <RDF:Description ID="&sidebar.panel.netscape.label;">
-         <NC:title>&sidebar.panel.netscape.label;</NC:title>
-         <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=netscape</NC:content>
-         <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=netscape</NC:customize> 
-       </RDF:Description>
+            <RDF:li>
+              <RDF:Seq about="urn:sidebar:panel-group:mozilla">
+                <RDF:li resource="urn:sidebar:nc-panel:net.404" />
+                <RDF:li resource="urn:sidebar:nc-panel:net.418" />
+                <RDF:li resource="urn:sidebar:nc-panel:net.254" />
+              </RDF:Seq>
+            </RDF:li>
+          </RDF:Seq>
+        </RDF:li>
+      </RDF:Seq>
     </RDF:li>
   </RDF:Seq>
+
+  <RDF:Description about='urn:sidebar:panel-group:applications'>
+    <NC:title>&sidebar.panel-group.applications;</NC:title>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:panel-group:local'>
+    <NC:title>&sidebar.panel-group.local;</NC:title>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:panel-group:most-popular'>
+    <NC:title>&sidebar.panel-group.most-popular;</NC:title>
+    <!-- Localization: "true" in the open tags should not be translated. -->
+    <NC:open>true</NC:open>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:panel-group:mozilla'>
+    <NC:title>&sidebar.panel-group.mozilla;</NC:title>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:panel-group:netscape-netcenter'>
+    <NC:title>&sidebar.panel-group.netscape-netcenter;</NC:title>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:panel-group:news-weather'>
+    <NC:title>&sidebar.panel-group.news-weather;</NC:title>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:panel-group:other'>
+    <NC:title>&sidebar.panel-group.other;</NC:title>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:panel-group:search-directories-maps'>
+    <NC:title>&sidebar.panel-group.search-directories-maps;</NC:title>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:panel-group:sports-entertainment'>
+    <NC:title>&sidebar.panel-group.sports-entertainment;</NC:title>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:panel-group:technology'>
+    <NC:title>&sidebar.panel-group.technology;</NC:title>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:addressbook'>
+    <NC:title>&sidebar.nc-panel.addressbook;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=addressbook</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=addressbook</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:announcements'>
+    <NC:title>&sidebar.nc-panel.announcements;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=announcements</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=announcements</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:bookmarks'>
+    <NC:title>&sidebar.nc-panel.bookmarks;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=bookmarks</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=bookmarks</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:calculator'>
+    <NC:title>&sidebar.nc-panel.calculator;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=calculator</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=calculator</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:calendar'>
+    <NC:title>&sidebar.nc-panel.calendar;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=calendar</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=calendar</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:delivery'>
+    <NC:title>&sidebar.nc-panel.delivery;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=delivery</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=delivery</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:fishcam'>
+    <NC:title>&sidebar.nc-panel.fishcam;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=fishcam</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=fishcam</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:horoscopes'>
+    <NC:title>&sidebar.nc-panel.horoscopes;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=horoscopes</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=horoscopes</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:localevent'>
+    <NC:title>&sidebar.nc-panel.localevent;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=localevent</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=localevent</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:localmovie'>
+    <NC:title>&sidebar.nc-panel.localmovie;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=localmovie</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=localmovie</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:localnews'>
+    <NC:title>&sidebar.nc-panel.localnews;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=localnews</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=localnews</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:maps'>
+    <NC:title>&sidebar.nc-panel.maps;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=maps</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=maps</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:memberdirectory'>
+    <NC:title>&sidebar.nc-panel.memberdirectory;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=memberdirectory</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=memberdirectory</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:net.1096'>
+    <NC:title>&sidebar.nc-panel.net.1096;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=net.1096</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=net.1096</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:net.1226'>
+    <NC:title>&sidebar.nc-panel.net.1226;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=net.1226</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=net.1226</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:net.229'>
+    <NC:title>&sidebar.nc-panel.net.229;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=net.229</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=net.229</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:net.240'>
+    <NC:title>&sidebar.nc-panel.net.240;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=net.240</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=net.240</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:net.254'>
+    <NC:title>&sidebar.nc-panel.net.254;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=net.254</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=net.254</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:net.281'>
+    <NC:title>&sidebar.nc-panel.net.281;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=net.281</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=net.281</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:net.342'>
+    <NC:title>&sidebar.nc-panel.net.342;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=net.342</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=net.342</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:net.400'>
+    <NC:title>&sidebar.nc-panel.net.400;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=net.400</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=net.400</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:net.404'>
+    <NC:title>&sidebar.nc-panel.net.404;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=net.404</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=net.404</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:net.418'>
+    <NC:title>&sidebar.nc-panel.net.418;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=net.418</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=net.418</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:net.467'>
+    <NC:title>&sidebar.nc-panel.net.467;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=net.467</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=net.467</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:net.514'>
+    <NC:title>&sidebar.nc-panel.net.514;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=net.514</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=net.514</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:netcenterservices'>
+    <NC:title>&sidebar.nc-panel.netcenterservices;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=netcenterservices</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=netcenterservices</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:netscape'>
+    <NC:title>&sidebar.nc-panel.netscape;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=netscape</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=netscape</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:newsedge'>
+    <NC:title>&sidebar.nc-panel.newsedge;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=newsedge</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=newsedge</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:reuters'>
+    <NC:title>&sidebar.nc-panel.reuters;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=reuters</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=reuters</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:search'>
+    <NC:title>&sidebar.nc-panel.search;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=search</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=search</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:sports'>
+    <NC:title>&sidebar.nc-panel.sports;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=sports</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=sports</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:stocks'>
+    <NC:title>&sidebar.nc-panel.stocks;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=stocks</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=stocks</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:panel:tinderbox'>
+    <NC:title>&sidebar.panel.tinderbox;</NC:title>
+    <NC:content>http://dunk/test.xul</NC:content>
+    <NC:xcontent>http://tinderbox.mozilla.org/seamonkey/panel.html</NC:xcontent>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:travel'>
+    <NC:title>&sidebar.nc-panel.travel;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=travel</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=travel</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:weather'>
+    <NC:title>&sidebar.nc-panel.weather;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=weather</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=weather</NC:customize>
+  </RDF:Description>
+
+  <RDF:Description about='urn:sidebar:nc-panel:whiteyellowpages'>
+    <NC:title>&sidebar.nc-panel.whiteyellowpages;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=whiteyellowpages</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=whiteyellowpages</NC:customize>
+  </RDF:Description>
+
 </RDF:RDF>
