@@ -13,7 +13,7 @@ $ENV{MOZ_PACKAGE_MSI} = 0;
 #  Purpose: Use scp or rsync to transfer symbols to the Talkback server.
 # Requires: The selected type requires the command be available both locally
 #           and on the Talkback server.
-$ENV{MOZ_SYMBOLS_TRANSFER_TYPE} = "scp"
+$ENV{MOZ_SYMBOLS_TRANSFER_TYPE} = "scp";
 
 #- PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
 #$BuildAdministrator = "$ENV{USER}\@$ENV{HOST}";
