@@ -592,7 +592,6 @@ function MessageComposeOfflineStateChanged(goingOffline)
       sendButton.setAttribute('tooltiptext', sendButton.getAttribute('now_tooltiptext'));
     }
 
-     goUpdateCommand('cmd_sendNow');
   } catch(e) {}
 }
 
