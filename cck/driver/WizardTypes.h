@@ -84,6 +84,7 @@ typedef struct PAGE
 typedef struct CONTROLS
 {
 	CString onNextAction;
+	CString onEnter;
 	CString helpFile;
 }CONTROLS;
 
