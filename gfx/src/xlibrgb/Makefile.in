@@ -30,6 +30,7 @@ MODULE		= xlibrgb
 XPIDL_MODULE	= layout
 LIBRARY_NAME	= xlibrgb
 EXPORT_LIBRARY = 1
+GRE_MODULE	= 1
 
 CSRCS		= xlibrgb.c
 
