@@ -59,13 +59,13 @@ static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kCSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 
 //PROTOTYPES
-static void printRange(nsIDOMRange *aDomRange);
 static nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode);
 static nsresult ParentOffset(nsIDOMNode *aNode, nsIDOMNode **aParent, PRInt32 *aChildOffset);
 
 
 
-#if 0
+#ifdef PRINT_RANGE
+static void printRange(nsIDOMRange *aDomRange);
 #define DEBUG_OUT_RANGE(x)  printRange(x)
 #else
 #define DEBUG_OUT_RANGE(x)  
@@ -622,6 +622,7 @@ nsRangeList::SetDesiredX(nscoord aX) //set the mDesiredX
 //BEGIN nsIFrameSelection methods
 
 
+#ifdef PRINT_RANGE
 void printRange(nsIDOMRange *aDomRange)
 {
   if (!aDomRange)
@@ -643,7 +644,7 @@ void printRange(nsIDOMRange *aDomRange)
          (unsigned long)(nsIDOMNode*)endNode, (long)endOffset);
          
 }
-
+#endif /* PRINT_RANGE */
 
 nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode)
 {
