@@ -93,7 +93,7 @@ CKutil_GetLine(nsInputFileStream& strm, nsString& aLine) {
     }
 
     if (c != '\r') {
-      aLine.AppendWithConversion(c);
+      aLine.Append(PRUnichar(c));
     }
   }
   return 0;

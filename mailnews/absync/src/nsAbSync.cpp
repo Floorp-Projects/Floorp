@@ -795,7 +795,10 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
     if (NS_SUCCEEDED(aCard->GetCardValue(mSchemaMappingList[i].abField, &aName)) && (aName) && (*aName))
     {
       // These are unknown tags we are omitting...
-      if (!nsCRT::strncasecmp(mSchemaMappingList[i].serverField, "OMIT:", 5))
+      const nsAString& prefix =
+        Substring(mSchemaMappingList[i].serverField, 0, 5);
+      if (NS_LITERAL_STRING("OMIT:").Equals(prefix,
+                                            nsCaseInsensitiveStringComparator()))
         continue;
 
       // Reset this flag...
@@ -875,7 +878,7 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
         }
 
         tProtLine.Append(NS_LITERAL_STRING("&") + 
-                         NS_ConvertASCIItoUCS2(mSchemaMappingList[i].serverField) +
+                         mSchemaMappingList[i].serverField +
                          NS_LITERAL_STRING("="));
         if (utfString)
         {
@@ -916,7 +919,7 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
         }
       
         tProtLine.Append(NS_LITERAL_STRING("&") + 
-                         NS_ConvertASCIItoUCS2(kServerPlainTextColumn) +
+                         kServerPlainTextColumn +
                          NS_LITERAL_STRING("="));
         if (utfString)
         {
@@ -2939,15 +2942,15 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
   // Ok, we need to figure out what the tag name from the server maps to and assign
   // this value the new nsIAbCard
   //
-  if (!aTagName->CompareWithConversion(kServerFirstNameColumn))
+  if (aTagName->Equals(kServerFirstNameColumn))
     aCard->SetFirstName(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerLastNameColumn))
+  else if (aTagName->Equals(kServerLastNameColumn))
     aCard->SetLastName(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerDisplayNameColumn))
+  else if (aTagName->Equals(kServerDisplayNameColumn))
     aCard->SetDisplayName(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerNicknameColumn))
+  else if (aTagName->Equals(kServerNicknameColumn))
     aCard->SetNickName(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerPriEmailColumn))
+  else if (aTagName->Equals(kServerPriEmailColumn))
   {
 #ifdef DEBUG_rhp
   char *t = ToNewCString(*aTagValue);
@@ -2956,53 +2959,53 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
 #endif
     aCard->SetPrimaryEmail(aTagValue->get());
   }
-  else if (!aTagName->CompareWithConversion(kServer2ndEmailColumn))
+  else if (aTagName->Equals(kServer2ndEmailColumn))
     aCard->SetSecondEmail(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerHomeAddressColumn))
+  else if (aTagName->Equals(kServerHomeAddressColumn))
     aCard->SetHomeAddress(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerHomeAddress2Column))
+  else if (aTagName->Equals(kServerHomeAddress2Column))
     aCard->SetHomeAddress2(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerHomeCityColumn))
+  else if (aTagName->Equals(kServerHomeCityColumn))
     aCard->SetHomeCity(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerHomeStateColumn))
+  else if (aTagName->Equals(kServerHomeStateColumn))
     aCard->SetHomeState(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerHomeZipCodeColumn))
+  else if (aTagName->Equals(kServerHomeZipCodeColumn))
     aCard->SetHomeZipCode(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerHomeCountryColumn))
+  else if (aTagName->Equals(kServerHomeCountryColumn))
     aCard->SetHomeCountry(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerWorkAddressColumn))
+  else if (aTagName->Equals(kServerWorkAddressColumn))
     aCard->SetWorkAddress(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerWorkAddress2Column))
+  else if (aTagName->Equals(kServerWorkAddress2Column))
     aCard->SetWorkAddress2(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerWorkCityColumn))
+  else if (aTagName->Equals(kServerWorkCityColumn))
     aCard->SetWorkCity(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerWorkStateColumn))
+  else if (aTagName->Equals(kServerWorkStateColumn))
     aCard->SetWorkState(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerWorkZipCodeColumn))
+  else if (aTagName->Equals(kServerWorkZipCodeColumn))
     aCard->SetWorkZipCode(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerWorkCountryColumn))
+  else if (aTagName->Equals(kServerWorkCountryColumn))
     aCard->SetWorkCountry(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerJobTitleColumn))
+  else if (aTagName->Equals(kServerJobTitleColumn))
     aCard->SetJobTitle(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerNotesColumn))
+  else if (aTagName->Equals(kServerNotesColumn))
     aCard->SetNotes(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerWebPage1Column))
+  else if (aTagName->Equals(kServerWebPage1Column))
     aCard->SetWebPage1(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerDepartmentColumn))
+  else if (aTagName->Equals(kServerDepartmentColumn))
     aCard->SetDepartment(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerCompanyColumn))
+  else if (aTagName->Equals(kServerCompanyColumn))
     aCard->SetCompany(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerWebPage2Column))
+  else if (aTagName->Equals(kServerWebPage2Column))
     aCard->SetWebPage2(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerCustom1Column))
+  else if (aTagName->Equals(kServerCustom1Column))
     aCard->SetCustom1(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerCustom2Column))
+  else if (aTagName->Equals(kServerCustom2Column))
     aCard->SetCustom2(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerCustom3Column))
+  else if (aTagName->Equals(kServerCustom3Column))
     aCard->SetCustom3(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerCustom4Column))
+  else if (aTagName->Equals(kServerCustom4Column))
     aCard->SetCustom4(aTagValue->get());
-  else if (!aTagName->CompareWithConversion(kServerPlainTextColumn))
+  else if (aTagName->Equals(kServerPlainTextColumn))
   {
     // This is plain text pref...have to add a little logic.
     if (aTagValue->Equals(NS_LITERAL_STRING("1")))

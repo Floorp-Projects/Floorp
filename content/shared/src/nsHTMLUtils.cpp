@@ -149,7 +149,8 @@ NS_MakeAbsoluteURIWithCharset(char* *aResult,
           spec.Append(buf);
         }
         else {
-          spec.AppendWithConversion(*uch);
+          // it's ascii, so we're safe
+          spec.Append(char(*uch));
         }
       }
     }

@@ -48,44 +48,44 @@
 
 
 // Server record fields!
-extern const char kServerFirstNameColumn[];
-extern const char kServerLastNameColumn[];
-extern const char kServerDisplayNameColumn[];
-extern const char kServerNicknameColumn[];
-extern const char kServerPriEmailColumn[];
-extern const char kServer2ndEmailColumn[];
-extern const char kServerPlainTextColumn[];
-extern const char kServerWorkPhoneColumn[];
-extern const char kServerHomePhoneColumn[];
-extern const char kServerFaxColumn[];
-extern const char kServerPagerColumn[];
-extern const char kServerCellularColumn[];
-extern const char kServerHomeAddressColumn[];
-extern const char kServerHomeAddress2Column[];
-extern const char kServerHomeCityColumn[];
-extern const char kServerHomeStateColumn[];
-extern const char kServerHomeZipCodeColumn[];
-extern const char kServerHomeCountryColumn[];
-extern const char kServerWorkAddressColumn[];
-extern const char kServerWorkAddress2Column[];
-extern const char kServerWorkCityColumn[];
-extern const char kServerWorkStateColumn[];
-extern const char kServerWorkZipCodeColumn[];
-extern const char kServerWorkCountryColumn[];
-extern const char kServerJobTitleColumn[];
-extern const char kServerDepartmentColumn[];
-extern const char kServerCompanyColumn[];
-extern const char kServerWebPage1Column[];
-extern const char kServerWebPage2Column[];
-extern const char kServerBirthYearColumn[];
-extern const char kServerBirthMonthColumn[];
-extern const char kServerBirthDayColumn[];
-extern const char kServerCustom1Column[];
-extern const char kServerCustom2Column[];
-extern const char kServerCustom3Column[];
-extern const char kServerCustom4Column[];
-extern const char kServerNotesColumn[];
-extern const char kServerLastModifiedDateColumn[];
+#define kServerFirstNameColumn NS_LITERAL_STRING("fname")
+#define kServerLastNameColumn NS_LITERAL_STRING("lname")
+#define kServerDisplayNameColumn NS_LITERAL_STRING("Display_name")
+#define kServerNicknameColumn NS_LITERAL_STRING("nick_name")
+#define kServerPriEmailColumn NS_LITERAL_STRING("email1")
+#define kServer2ndEmailColumn NS_LITERAL_STRING("email2")
+#define kServerPlainTextColumn NS_LITERAL_STRING("Pref_rich_email")
+#define kServerWorkPhoneColumn NS_LITERAL_STRING("work_phone")
+#define kServerHomePhoneColumn NS_LITERAL_STRING("home_phone")
+#define kServerFaxColumn NS_LITERAL_STRING("fax")
+#define kServerPagerColumn NS_LITERAL_STRING("pager")
+#define kServerCellularColumn NS_LITERAL_STRING("cell_phone")
+#define kServerHomeAddressColumn NS_LITERAL_STRING("home_add1")
+#define kServerHomeAddress2Column NS_LITERAL_STRING("home_add2")
+#define kServerHomeCityColumn NS_LITERAL_STRING("home_city")
+#define kServerHomeStateColumn NS_LITERAL_STRING("home_state")
+#define kServerHomeZipCodeColumn NS_LITERAL_STRING("home_zip")
+#define kServerHomeCountryColumn NS_LITERAL_STRING("home_country")
+#define kServerWorkAddressColumn NS_LITERAL_STRING("work_add1")
+#define kServerWorkAddress2Column NS_LITERAL_STRING("work_add2")
+#define kServerWorkCityColumn NS_LITERAL_STRING("work_city")
+#define kServerWorkStateColumn NS_LITERAL_STRING("work_state")
+#define kServerWorkZipCodeColumn NS_LITERAL_STRING("work_zip")
+#define kServerWorkCountryColumn NS_LITERAL_STRING("work_country")
+#define kServerJobTitleColumn NS_LITERAL_STRING("job_title")
+#define kServerDepartmentColumn NS_LITERAL_STRING("department")
+#define kServerCompanyColumn NS_LITERAL_STRING("company")
+#define kServerWebPage1Column NS_LITERAL_STRING("Work_web_page")
+#define kServerWebPage2Column NS_LITERAL_STRING("web_page")
+#define kServerBirthYearColumn NS_LITERAL_STRING("OMIT:BirthYear")
+#define kServerBirthMonthColumn NS_LITERAL_STRING("OMIT:BirthMonth")
+#define kServerBirthDayColumn NS_LITERAL_STRING("OMIT:BirthDay")
+#define kServerCustom1Column NS_LITERAL_STRING("Custom_1")
+#define kServerCustom2Column NS_LITERAL_STRING("Custom_2")
+#define kServerCustom3Column NS_LITERAL_STRING("Custom_3")
+#define kServerCustom4Column NS_LITERAL_STRING("Custom_4")
+#define kServerNotesColumn NS_LITERAL_STRING("addl_info")
+#define kServerLastModifiedDateColumn NS_LITERAL_STRING("OMIT:LastModifiedDate")
 
 class nsSyncDecoderRing
 {

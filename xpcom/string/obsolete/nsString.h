@@ -159,8 +159,7 @@ public:
    *  @return *this 
    */
   void StripChars(const char* aSet);
-  void StripChar(PRUnichar aChar,PRInt32 anOffset=0);
-  void StripChar(char aChar,PRInt32 anOffset=0) { StripChar((PRUnichar) (unsigned char)aChar,anOffset); }
+  void StripChar(char aChar,PRInt32 anOffset=0);
 
   /**
    *  This method strips whitespace throughout the string
@@ -174,8 +173,8 @@ public:
    *  
    *  @return  this
    */
-  void ReplaceChar(PRUnichar aOldChar,PRUnichar aNewChar);
-  void ReplaceChar(const char* aSet,PRUnichar aNewChar);
+  void ReplaceChar(char aOldChar,char aNewChar);
+  void ReplaceChar(const char* aSet,char aNewChar);
 
   void ReplaceSubstring(const nsCString& aTarget,const nsCString& aNewValue);
   void ReplaceSubstring(const char* aTarget,const char* aNewValue);
@@ -192,17 +191,6 @@ public:
    *  @return  this
    */
   void Trim(const char* aSet,PRBool aEliminateLeading=PR_TRUE,PRBool aEliminateTrailing=PR_TRUE,PRBool aIgnoreQuotes=PR_FALSE);
-
-  /**
-   *  This method strips whitespace from string.
-   *  You can control whether whitespace is yanked from
-   *  start and end of string as well.
-   *  
-   *  @param   aEliminateLeading controls stripping of leading ws
-   *  @param   aEliminateTrailing controls stripping of trailing ws
-   *  @return  this
-   */
-  void CompressSet(const char* aSet, PRUnichar aChar,PRBool aEliminateLeading=PR_TRUE,PRBool aEliminateTrailing=PR_TRUE);
 
   /**
    *  This method strips whitespace from string.
@@ -258,7 +246,6 @@ public:
   void AssignWithConversion(const PRUnichar*,PRInt32=-1);
   void AssignWithConversion( const nsString& aString );
   void AssignWithConversion( const nsAString& aString );
-  void AssignWithConversion(PRUnichar);
 
   /*
    *  Appends n characters from given string to this,
@@ -271,16 +258,12 @@ public:
    */
 
   void AppendWithConversion(const nsString&, PRInt32=-1);
-  void AppendWithConversion(PRUnichar aChar);
   void AppendWithConversion( const nsAString& aString );
   void AppendWithConversion(const PRUnichar*, PRInt32=-1);
   // Why no |AppendWithConversion(const PRUnichar*, PRInt32)|? --- now I know, because implicit construction hid the need for this routine
   void AppendInt(PRInt32 aInteger,PRInt32 aRadix=10); //radix=8,10 or 16
   void AppendFloat( double aFloat );
 
-
-  void InsertWithConversion(PRUnichar aChar,PRUint32 anOffset);
-  // Why no |InsertWithConversion(PRUnichar*)|?
 
 #if 0
   virtual void do_AppendFromReadable( const nsACString& );
@@ -306,10 +289,7 @@ public:
    *  @return  offset in string, or -1 (kNotFound)
    */
   PRInt32 Find(const nsCString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=0,PRInt32 aCount=-1) const;
-  PRInt32 Find(const nsString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=0,PRInt32 aCount=-1) const;
   PRInt32 Find(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=0,PRInt32 aCount=-1) const;
-  PRInt32 Find(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=0,PRInt32 aCount=-1) const;
-
   /**
    *  Search for given char within this string
    *  
@@ -329,9 +309,7 @@ public:
    * @return -1 if not found, else the offset in this
    */
   PRInt32 FindCharInSet(const char* aString,PRInt32 anOffset=0) const;
-  PRInt32 FindCharInSet(const PRUnichar* aString,PRInt32 anOffset=0) const;
   PRInt32 FindCharInSet(const nsCString& aString,PRInt32 anOffset=0) const;
-  PRInt32 FindCharInSet(const nsString& aString,PRInt32 anOffset=0) const;
 
 
   /**
@@ -343,9 +321,6 @@ public:
    */
   PRInt32 RFind(const char* aCString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
   PRInt32 RFind(const nsCString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
-  PRInt32 RFind(const nsString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
-  PRInt32 RFind(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
-
 
   /**
    *  Search for given char within this string
@@ -365,9 +340,7 @@ public:
    * @return -1 if not found, else the offset in this
    */
   PRInt32 RFindCharInSet(const char* aString,PRInt32 anOffset=-1) const;
-  PRInt32 RFindCharInSet(const PRUnichar* aString,PRInt32 anOffset=-1) const;
   PRInt32 RFindCharInSet(const nsCString& aString,PRInt32 anOffset=-1) const;
-  PRInt32 RFindCharInSet(const nsString& aString,PRInt32 anOffset=-1) const;
 
 
 
@@ -383,22 +356,11 @@ public:
    * @param   aCount tells us how many chars to compare
    * @return  -1,0,1
    */
-  PRInt32 CompareWithConversion(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
-  PRInt32 CompareWithConversion(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+  PRInt32 Compare(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
 
-  PRBool  EqualsWithConversion(const nsString &aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
   PRBool  EqualsWithConversion(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
-  PRBool  EqualsWithConversion(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
-  /* a hack to make sure things that used to compile continue to compile
-     even on compilers that don't have proper |explicit| support */
-  inline PRBool
-  EqualsWithConversion(const nsXPIDLString &aString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aCount=-1) const
-    {
-      return EqualsWithConversion(aString.get(), aIgnoreCase, aCount);
-    }
 
   PRBool  EqualsIgnoreCase(const char* aString,PRInt32 aCount=-1) const;
-  PRBool  EqualsIgnoreCase(const PRUnichar* aString,PRInt32 aCount=-1) const;
 
 
 
@@ -414,9 +376,7 @@ private:
     // NOT TO BE IMPLEMENTED
     //  these signatures help clients not accidentally call the wrong thing helped by C++ automatic integral promotion
   void operator=( PRUnichar );
-  void AssignWithConversion( char );
   void AssignWithConversion( const char*, PRInt32=-1 );
-  void AppendWithConversion( char );
   void InsertWithConversion( char, PRUint32 );
 };
 

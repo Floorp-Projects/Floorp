@@ -2364,7 +2364,7 @@ nsWebBrowserPersist::MakeFilenameFromURI(nsIURI *aURI, nsString &aFilename)
         {
             const PRInt32 kMaxFileNameLength = 20;
             // Unescape the file name (GetFileName escapes it)
-            nsString fileName;
+            nsAutoString fileName;
             PRInt32 length = 0;
             char *p = nsUnescape(nameFromURL);
             for (;*p && *p != ';' && *p != '?' && *p != '#' && *p != '.' &&
@@ -2378,7 +2378,7 @@ nsWebBrowserPersist::MakeFilenameFromURI(nsIURI *aURI, nsString &aFilename)
 #endif
                     )
                 {
-                    fileName.AppendWithConversion(*p);
+                    fileName.Append(PRUnichar(*p));
                 }
             }
             aFilename = fileName;

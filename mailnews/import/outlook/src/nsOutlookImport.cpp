@@ -392,7 +392,7 @@ NS_IMETHODIMP ImportOutlookMailImpl::FindMailboxes( nsIFileSpec *pLoc, nsISuppor
 void ImportOutlookMailImpl::AddLinebreak( nsString *pStream)
 {
 	if (pStream)
-		pStream->AppendWithConversion( char(nsCRT::LF));
+		pStream->Append( PRUnichar(nsCRT::LF));
 }
 
 void ImportOutlookMailImpl::ReportSuccess( nsString& name, PRInt32 count, nsString *pStream)

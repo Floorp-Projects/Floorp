@@ -266,7 +266,7 @@ NS_IMETHODIMP nsMIMEInfoImpl::SetFileExtensions( const char* aExtensions )
 	nsCString extList( aExtensions );
 	
 	PRInt32 breakLocation = -1;
-	while ( (breakLocation= extList.FindCharInSet( ",",0 ) )!= -1)
+	while ( (breakLocation= extList.FindChar(',') )!= -1)
 	{
 		nsCString ext( extList.get(), breakLocation );
 		mExtensions.AppendCString( ext );

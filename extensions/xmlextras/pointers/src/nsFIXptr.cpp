@@ -188,7 +188,7 @@ static nsresult GetRange(
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIDOMNode> node;
-  if (nsString::IsAlpha(aExpression.First())) {
+  if (nsCRT::IsAsciiAlpha(aExpression.First())) {
     // name
     nsAutoString id;
     const nsAutoString expression(aExpression);

@@ -572,7 +572,7 @@ CAliasEntry *nsEudoraAddress::ResolveAlias( nsCString& name)
 	CAliasEntry *pEntry;
 	for (PRInt32 i = 0; i < max; i++) {
 		pEntry = (CAliasEntry *) m_alias.ElementAt( i);
-		if (!name.CompareWithConversion( pEntry->m_name.get(), PR_TRUE))
+		if (name.Equals( pEntry->m_name, nsCaseInsensitiveCStringComparator()))
 			return( pEntry);
 	}
 	
@@ -592,7 +592,9 @@ void nsEudoraAddress::ResolveEntries( nsCString& name, nsVoidArray& list, nsVoid
 	for (i = 0; i < max; i++) {
 		pData = (CAliasData *)list.ElementAt( i);
 		// resolve the email to an existing alias!
-		if (name.CompareWithConversion( pData->m_email.get(), PR_TRUE) && ((pEntry = ResolveAlias( pData->m_email)) != nsnull)) {
+		if (!name.Equals( pData->m_email,
+                          nsCaseInsensitiveCStringComparator()) &&
+            ((pEntry = ResolveAlias( pData->m_email)) != nsnull)) {
 			// This new entry has all of the entries for this puppie.
 			// Resolve all of it's entries!
 			ResolveEntries( pEntry->m_name, pEntry->m_list, result);

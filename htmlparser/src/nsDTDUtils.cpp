@@ -597,7 +597,7 @@ public:
 	  while(expn--) {
 		  ndex = ((root<=aValue) && (root)) ? (aValue/root): 0;
 		  aValue%=root;
-      aString.AppendWithConversion(aCharSet[ndex+((root>1)*offset)]);
+      aString.Append(PRUnichar(aCharSet[ndex+((root>1)*offset)]));
 		  root/=base;
     }
   }
@@ -712,8 +712,14 @@ public:
    * @param   aString -- will hold result
    */
   static void RomanString(PRInt32 aValue,nsString& aString) {
-	  static char digitsA[] = "ixcm";
-	  static char digitsB[] = "vld?";
+	  static PRUnichar digitsA[] = { PRUnichar('i'),
+                                   PRUnichar('x'),
+                                   PRUnichar('c'),
+                                   PRUnichar('m') };
+	  static PRUnichar digitsB[] = { PRUnichar('v'),
+                                   PRUnichar('l'),
+                                   PRUnichar('d'),
+                                   PRUnichar('?') };
 
     aString.Truncate();
     if(aValue<0)
@@ -732,20 +738,20 @@ public:
 		  romanPos--;
 		  switch(decStr[digitPos]) {
 			  case	'0':	break;
-			  case	'3':	aString.AppendWithConversion(digitsA[romanPos]);
-			  case	'2':	aString.AppendWithConversion(digitsA[romanPos]);
-			  case	'1':	aString.AppendWithConversion(digitsA[romanPos]);
+			  case	'3':	aString.Append(digitsA[romanPos]);
+			  case	'2':	aString.Append(digitsA[romanPos]);
+			  case	'1':	aString.Append(digitsA[romanPos]);
 				  break;
-			  case	'4':	aString.AppendWithConversion(digitsA[romanPos]);
+			  case	'4':	aString.Append(digitsA[romanPos]);
 			  case 	'5':	case	'6':
 			  case	'7':	case 	'8':	
-          aString.AppendWithConversion(digitsB[romanPos]);
+          aString.Append(digitsB[romanPos]);
 					for(n=0;n<(decStr[digitPos]-'5');n++)
-            aString.AppendWithConversion(digitsA[romanPos]);
+            aString.Append(digitsA[romanPos]);
 				  break;
 			  case	'9':	          
-          aString.AppendWithConversion(digitsA[romanPos]);
-          aString.AppendWithConversion(digitsA[romanPos]);
+          aString.Append(digitsA[romanPos]);
+          aString.Append(digitsA[romanPos]);
 					break;
 		  }
 	  }
@@ -789,7 +795,7 @@ public:
 	  modChar=aValue-(repCount*seriesLen);
 	  
     for(count=0;count<=repCount;count++) {
-      aString.AppendWithConversion(kFootnoteSet[modChar]);
+      aString.Append(PRUnichar(kFootnoteSet[modChar]));
     }
   }
 

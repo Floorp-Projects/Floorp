@@ -42,45 +42,6 @@
 #include "nsEscape.h"
 #include "nsSyncDecoderRing.h"
 
-// Server record fields!
-const char kServerFirstNameColumn[] = "fname";
-const char kServerLastNameColumn[] = "lname";
-const char kServerDisplayNameColumn[] = "Display_name";
-const char kServerNicknameColumn[] = "nick_name";
-const char kServerPriEmailColumn[] = "email1";
-const char kServer2ndEmailColumn[] = "email2";
-const char kServerPlainTextColumn[] = "Pref_rich_email";
-const char kServerWorkPhoneColumn[] = "work_phone";
-const char kServerHomePhoneColumn[] = "home_phone";
-const char kServerFaxColumn[] = "fax";
-const char kServerPagerColumn[] = "pager";
-const char kServerCellularColumn[] = "cell_phone";
-const char kServerHomeAddressColumn[] = "home_add1";
-const char kServerHomeAddress2Column[] = "home_add2";
-const char kServerHomeCityColumn[] = "home_city";
-const char kServerHomeStateColumn[] = "home_state";
-const char kServerHomeZipCodeColumn[] = "home_zip";
-const char kServerHomeCountryColumn[] = "home_country";
-const char kServerWorkAddressColumn[] = "work_add1";
-const char kServerWorkAddress2Column[] = "work_add2";
-const char kServerWorkCityColumn[] = "work_city";
-const char kServerWorkStateColumn[] = "work_state";
-const char kServerWorkZipCodeColumn[] = "work_zip";
-const char kServerWorkCountryColumn[] = "work_country";
-const char kServerJobTitleColumn[] = "job_title";
-const char kServerDepartmentColumn[] = "department";
-const char kServerCompanyColumn[] = "company";
-const char kServerWebPage1Column[] = "Work_web_page";
-const char kServerWebPage2Column[] = "web_page";
-const char kServerBirthYearColumn[] = "OMIT:BirthYear";
-const char kServerBirthMonthColumn[] = "OMIT:BirthMonth";
-const char kServerBirthDayColumn[] = "OMIT:BirthDay";
-const char kServerCustom1Column[] = "Custom_1";
-const char kServerCustom2Column[] = "Custom_2";
-const char kServerCustom3Column[] = "Custom_3";
-const char kServerCustom4Column[] = "Custom_4";
-const char kServerNotesColumn[] = "addl_info";
-const char kServerLastModifiedDateColumn[] = "OMIT:LastModifiedDate";
 
 nsSyncDecoderRing::nsSyncDecoderRing()
 {

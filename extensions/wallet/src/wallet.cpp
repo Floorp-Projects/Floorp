@@ -2742,7 +2742,7 @@ wallet_ReleasePrefillElementList(nsVoidArray * wallet_PrefillElement_list) {
   }
 }
 
-#define BREAK '\001'
+#define BREAK PRUnichar('\001')
 
 nsVoidArray * wallet_list;
 nsAutoString wallet_url;
@@ -2756,15 +2756,15 @@ WLLT_GetPrefillListForViewer(nsString& aPrefillList)
   PRInt32 count = LIST_COUNT(wallet_list);
   for (PRInt32 i=0; i<count; i++) {
     prefillElementPtr = NS_STATIC_CAST(wallet_PrefillElement*, wallet_list->ElementAt(i));
-    buffer.AppendWithConversion(BREAK);
+    buffer.Append(BREAK);
     buffer.AppendInt(prefillElementPtr->count,10);
-    buffer.AppendWithConversion(BREAK);
+    buffer.Append(BREAK);
     buffer.Append(NS_ConvertUTF8toUCS2(prefillElementPtr->schema));
-    buffer.AppendWithConversion(BREAK);
+    buffer.Append(BREAK);
     buffer.Append(prefillElementPtr->value);
   }
 
-  buffer.AppendWithConversion(BREAK);
+  buffer.Append(BREAK);
   buffer += wallet_url.get();
   aPrefillList = buffer;
 }
@@ -3016,8 +3016,6 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, n
 /* The following are the interface routines seen by other dlls */
 /***************************************************************/
 
-#define BREAK '\001'
-
 PUBLIC void
 WLLT_GetNopreviewListForViewer(nsString& aNopreviewList)
 {
@@ -3030,7 +3028,7 @@ WLLT_GetNopreviewListForViewer(nsString& aNopreviewList)
   for (PRInt32 i=0; i<count; i++) {
     url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(i));
     if (NO_PREVIEW(url->item2) == 'y') {
-      buffer.AppendWithConversion(BREAK);
+      buffer.Append(BREAK);
       buffer += NS_ConvertUTF8toUCS2(url->item1);
     }
   }
@@ -3048,7 +3046,7 @@ WLLT_GetNocaptureListForViewer(nsString& aNocaptureList)
   for (PRInt32 i=0; i<count; i++) {
     url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(i));
     if (NO_CAPTURE(url->item2) == 'y') {
-      buffer.AppendWithConversion(BREAK);
+      buffer.Append(BREAK);
       buffer += NS_ConvertUTF8toUCS2(url->item1);
     }
   }
@@ -3113,27 +3111,27 @@ PUBLIC void
 WLLT_PreEdit(nsString& walletList)
 {
   wallet_Initialize();
-  walletList.AssignWithConversion(BREAK);
+  walletList.Assign(BREAK);
   wallet_MapElement * mapElementPtr;
   PRInt32 count = LIST_COUNT(wallet_SchemaToValue_list);
   for (PRInt32 i=0; i<count; i++) {
     mapElementPtr = NS_STATIC_CAST(wallet_MapElement*, wallet_SchemaToValue_list->ElementAt(i));
 
     walletList += NS_ConvertUTF8toUCS2(mapElementPtr->item1);
-    walletList.AppendWithConversion(BREAK);
+    walletList.Append(BREAK);
     if (!WALLET_NULL(mapElementPtr->item2)) {
       walletList += NS_ConvertUTF8toUCS2(mapElementPtr->item2);
-      walletList.AppendWithConversion(BREAK);
+      walletList.Append(BREAK);
     } else {
       wallet_Sublist * sublistPtr;
       PRInt32 count2 = LIST_COUNT(mapElementPtr->itemList);
       for (PRInt32 i2=0; i2<count2; i2++) {
         sublistPtr = NS_STATIC_CAST(wallet_Sublist*, mapElementPtr->itemList->ElementAt(i2));
         walletList += NS_ConvertUTF8toUCS2(sublistPtr->item);
-        walletList.AppendWithConversion(BREAK);
+        walletList.Append(BREAK);
       }
     }
-    walletList.AppendWithConversion(BREAK);
+    walletList.Append(BREAK);
   }
 }
 
@@ -3545,7 +3543,7 @@ WLLT_PrefillOneElement
             value,
             selectIndex,
             index))) {
-          compositeValue.AppendWithConversion(BREAK);
+          compositeValue.Append(BREAK);
           compositeValue.Append(value);
         }
       }

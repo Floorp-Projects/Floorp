@@ -585,8 +585,8 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceI
         // children of the real element and get the text nodes' values.
         if (aAttribute == nsXBLAtoms::xbltext) {
           nsXBLBinding::GetTextData(aChangedElement, value);
-          value.StripChar('\n');
-          value.StripChar('\r');
+          value.StripChar(PRUnichar('\n'));
+          value.StripChar(PRUnichar('\r'));
           nsAutoString stripVal(value);
           stripVal.StripWhitespace();
           if (stripVal.IsEmpty()) 
@@ -1070,8 +1070,8 @@ PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
   PRBool attrPresent = PR_TRUE;
   if (src == nsXBLAtoms::xbltext) {
     nsXBLBinding::GetTextData(changeData->mBoundElement, value);
-    value.StripChar('\n');
-    value.StripChar('\r');
+    value.StripChar(PRUnichar('\n'));
+    value.StripChar(PRUnichar('\r'));
     nsAutoString stripVal(value);
     stripVal.StripWhitespace();
 

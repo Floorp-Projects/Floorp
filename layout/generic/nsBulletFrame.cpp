@@ -454,23 +454,23 @@ static void RomanToText(PRInt32 ordinal, nsString& result, const char* achars, c
     romanPos--;
     addOn.SetLength(0);
     switch(*dp) {
-      case '3':  addOn.AppendWithConversion(achars[romanPos]);
-      case '2':  addOn.AppendWithConversion(achars[romanPos]);
-      case '1':  addOn.AppendWithConversion(achars[romanPos]);
+      case '3':  addOn.Append(PRUnichar(achars[romanPos]));
+      case '2':  addOn.Append(PRUnichar(achars[romanPos]));
+      case '1':  addOn.Append(PRUnichar(achars[romanPos]));
         break;
       case '4':
-        addOn.AppendWithConversion(achars[romanPos]);
+        addOn.Append(PRUnichar(achars[romanPos]));
         // FALLTHROUGH
       case '5': case '6':
       case '7': case  '8':
-        addOn.AppendWithConversion(bchars[romanPos]);
+        addOn.Append(PRUnichar(bchars[romanPos]));
         for(n=0;n<(*dp-'5');n++) {
-          addOn.AppendWithConversion(achars[romanPos]);
+          addOn.Append(PRUnichar(achars[romanPos]));
         }
         break;
       case '9':
-        addOn.AppendWithConversion(achars[romanPos]);
-        addOn.AppendWithConversion(achars[romanPos+1]);
+        addOn.Append(PRUnichar(achars[romanPos]));
+        addOn.Append(PRUnichar(achars[romanPos+1]));
         break;
       default:
         break;

@@ -226,8 +226,8 @@ nsAddbookProtocolHandler::GeneratePrintOutput(nsIAddbookUrl *addbookUrl,
   if (pos == kNotFound)
     return NS_ERROR_UNEXPECTED;
 
-  uri.InsertWithConversion(PRUnichar('/'), pos);
-  uri.InsertWithConversion(PRUnichar(':'), pos);
+  uri.Insert('/', pos);
+  uri.Insert(':', pos);
 
   nsCOMPtr <nsIRDFResource> resource;
   rv = rdfService->GetResource(uri.get(), getter_AddRefs(resource));

@@ -412,7 +412,7 @@ NS_IMETHODIMP ImportEudoraMailImpl::FindMailboxes( nsIFileSpec *pLoc, nsISupport
 void ImportEudoraMailImpl::AddLinebreak( nsString *pStream)
 {
 	if (pStream)
-		pStream->AppendWithConversion( char(nsCRT::LF));
+		pStream->Append( PRUnichar(nsCRT::LF));
 }
 
 void ImportEudoraMailImpl::ReportSuccess( nsString& name, PRInt32 count, nsString *pStream)

@@ -622,7 +622,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetFileExtension(char * *aFileExtension)
   if (!mAttachmentFileName.IsEmpty())
   {
     nsCAutoString extension;
-    PRInt32 pos = mAttachmentFileName.RFindCharInSet(".");
+    PRInt32 pos = mAttachmentFileName.RFindChar(PRUnichar('.'));
     if (pos > 0)
       mAttachmentFileName.Right(extension,
                                 mAttachmentFileName.Length() -

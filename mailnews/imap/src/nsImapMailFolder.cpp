@@ -831,7 +831,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
       {
         nsCAutoString onlineName(m_onlineFolderName); 
         if (onlineName.Length() > 0)
-          onlineName.AppendWithConversion(hierarchyDelimiter);
+          onlineName.Append(char(hierarchyDelimiter));
         onlineName.AppendWithConversion(folderNameStr);
         imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
         imapFolder->SetOnlineName(onlineName.get());
@@ -1770,7 +1770,7 @@ nsImapMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatab
             rv = nsImapURI2FullName(kImapRootURI, hostname, uri, getter_Copies(name));
             nsCAutoString onlineCName(name);
             if (m_hierarchyDelimiter != '/')
-              onlineCName.ReplaceChar('/', m_hierarchyDelimiter);
+              onlineCName.ReplaceChar('/', char(m_hierarchyDelimiter));
             m_onlineFolderName.Assign(onlineCName); 
             autoOnlineName.AssignWithConversion(onlineCName.get());
           }
@@ -6695,7 +6695,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFold
         {
           nsCAutoString onlineName(m_onlineFolderName); 
           if (onlineName.Length() > 0)
-          onlineName.AppendWithConversion(hierarchyDelimiter);
+          onlineName.Append(char(hierarchyDelimiter));
           onlineName.AppendWithConversion(folderNameStr);
           imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
           imapFolder->SetOnlineName(onlineName.get());
@@ -6811,7 +6811,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameSubFolders(nsIMsgWindow *msgWindow, nsIMsg
      nsXPIDLCString onlineName;
      GetOnlineName(getter_Copies(onlineName));
      nsCAutoString onlineCName(onlineName);
-     onlineCName.AppendWithConversion(hierarchyDelimiter);
+     onlineCName.Append(char(hierarchyDelimiter));
      onlineCName.AppendWithConversion(utf7LeafName);
      if (imapFolder)
      {

@@ -144,7 +144,7 @@ typedef struct {
 
 typedef struct {
   const char  *abField;
-  const char  *serverField;
+  nsString serverField;
 } schemaStruct;
 
 class nsAbSync : public nsIAbSync, public nsIAbSyncPostListener
