@@ -31,7 +31,7 @@
 #include "nsIImageContainer.h"
 #include "nsIImageFrame.h"
 #include "nsIImageDecoderObserver.h"
-#include "nsIImageRequest2.h"
+#include "lpIImageRequest.h"
 #include "nsIInputStream.h"
 #include "nsIPipe.h"
 
@@ -85,7 +85,7 @@ protected:
 public:
   nsCOMPtr<nsIImageContainer> mImage;
   nsCOMPtr<nsIImageFrame> mFrame;
-  nsCOMPtr<nsIImageRequest> mRequest;
+  nsCOMPtr<lpIImageRequest> mRequest;
 
   nsCOMPtr<nsIImageDecoderObserver> mObserver;
 

@@ -29,7 +29,7 @@
 #include "nsIImageContainer.h"
 #include "nsIImageDecoderObserver.h"
 #include "nsIImageFrame.h"
-#include "nsIImageRequest2.h"
+#include "lpIImageRequest.h"
 
 #include "GIF2.h"
 
@@ -60,7 +60,7 @@ public:
   
   nsCOMPtr<nsIImageContainer> mImageContainer;
   nsCOMPtr<nsIImageFrame> mImageFrame;
-  nsCOMPtr<nsIImageRequest> mImageRequest;
+  nsCOMPtr<lpIImageRequest> mImageRequest;
   nsCOMPtr<nsIImageDecoderObserver> mObserver; // this is just qi'd from mRequest for speed
   
   gif_struct mGIFStruct;
