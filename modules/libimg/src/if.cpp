@@ -60,30 +60,30 @@ public:
 
   NS_DECL_ISUPPORTS
   
-  il_container *GetContainer() {return mContainer;};
-  il_container *SetContainer(il_container *ic) {mContainer=ic; return ic;};
+  il_container *GetContainer() {return ilContainer;};
+  il_container *SetContainer(il_container *ic) {ilContainer=ic; return ic;};
 
-  ImgDecoder(il_container *aContainer){ NS_INIT_ISUPPORTS(); mContainer=aContainer;};
+  ImgDecoder(il_container *aContainer){ NS_INIT_ISUPPORTS(); ilContainer=aContainer;};
   virtual ~ImgDecoder(); 
 
 private:
-  il_container* mContainer;
+  il_container* ilContainer;
 };
 
 NS_IMPL_ISUPPORTS(ImgDecoder, kImgDecoderIID)
 
 ImgDecoder:: ~ImgDecoder()
 {
-  if(mContainer)
-    delete mContainer;
+  if(ilContainer)
+    delete ilContainer;
   return;
 }
 /*-----------------------------------------*/
 /*-----------------------------------------*/
 NS_IMETHODIMP ImgDCallbk::ImgDCBSetupColorspaceConverter()
 {  
-  if( mContainer != NULL ) {
-    il_setup_color_space_converter(mContainer);
+  if( ilContainer != NULL ) {
+    il_setup_color_space_converter(ilContainer);
   }
   return 0;
 }
@@ -91,7 +91,7 @@ NS_IMETHODIMP ImgDCallbk::ImgDCBSetupColorspaceConverter()
 NI_ColorSpace*
 ImgDCallbk::ImgDCBCreateGreyScaleColorSpace()
 {
-  if( mContainer != NULL ) {
+  if( ilContainer != NULL ) {
     return IL_CreateGreyScaleColorSpace(1,1);
   }
   return 0;
@@ -99,8 +99,8 @@ ImgDCallbk::ImgDCBCreateGreyScaleColorSpace()
   
 NS_IMETHODIMP ImgDCallbk::ImgDCBResetPalette()
 {
-   if( mContainer != NULL ) {
-       il_reset_palette(mContainer);
+   if( ilContainer != NULL ) {
+       il_reset_palette(ilContainer);
   }
   return NS_OK;
 }
@@ -109,8 +109,8 @@ NS_IMETHODIMP ImgDCallbk::ImgDCBResetPalette()
 NS_IMETHODIMP
 ImgDCallbk::ImgDCBHaveHdr(int destwidth, int destheight)
 {
-  if( mContainer != NULL ) {
-    il_dimensions_notify(mContainer, destwidth, destheight);
+  if( ilContainer != NULL ) {
+    il_dimensions_notify(ilContainer, destwidth, destheight);
   }
   return 0;
 
@@ -119,8 +119,8 @@ ImgDCallbk::ImgDCBHaveHdr(int destwidth, int destheight)
 NS_IMETHODIMP
 ImgDCallbk::ImgDCBInitTransparentPixel()
 {
-    if( mContainer != NULL ) {
-      il_init_image_transparent_pixel(mContainer);
+    if( ilContainer != NULL ) {
+      il_init_image_transparent_pixel(ilContainer);
   }
   return 0;
 
@@ -129,8 +129,8 @@ ImgDCallbk::ImgDCBInitTransparentPixel()
 NS_IMETHODIMP
 ImgDCallbk::ImgDCBDestroyTransparentPixel()
 {
-    if( mContainer != NULL ) {
-      il_destroy_image_transparent_pixel(mContainer);
+    if( ilContainer != NULL ) {
+      il_destroy_image_transparent_pixel(ilContainer);
   }
   return 0;
 
@@ -143,9 +143,9 @@ ImgDCallbk :: ImgDCBHaveRow(uint8 *rowbuf, uint8* rgbrow,
                             uint8 draw_mode, 
                             int pass )
 {
-  if( mContainer != NULL ) {
+  if( ilContainer != NULL ) {
     
-  	il_emit_row(mContainer, rowbuf, rgbrow, x_offset, len,
+  	il_emit_row(ilContainer, rowbuf, rgbrow, x_offset, len,
                        row, dup_rowcnt, (il_draw_mode)draw_mode, pass );
   }
   return 0;
@@ -155,8 +155,8 @@ ImgDCallbk :: ImgDCBHaveRow(uint8 *rowbuf, uint8* rgbrow,
 NS_IMETHODIMP 
 ImgDCallbk :: ImgDCBHaveImageFrame()
 {
-  if( mContainer != NULL ) {
-         il_frame_complete_notify(mContainer);
+  if( ilContainer != NULL ) {
+         il_frame_complete_notify(ilContainer);
   }
   return 0;
 }
@@ -164,8 +164,8 @@ ImgDCallbk :: ImgDCBHaveImageFrame()
 NS_IMETHODIMP 
 ImgDCallbk::ImgDCBFlushImage()
 {
-  if( mContainer != NULL ) {
-	  il_flush_image_data(mContainer);
+  if( ilContainer != NULL ) {
+	  il_flush_image_data(ilContainer);
   }
   return 0;
 }
@@ -173,8 +173,8 @@ ImgDCallbk::ImgDCBFlushImage()
 NS_IMETHODIMP 
 ImgDCallbk:: ImgDCBImageSize()
 { 
-  if( mContainer != NULL ) {
-    il_size(mContainer);
+  if( ilContainer != NULL ) {
+    il_size(ilContainer);
   }
   return 0;
 }
@@ -182,8 +182,8 @@ ImgDCallbk:: ImgDCBImageSize()
 NS_IMETHODIMP 
 ImgDCallbk :: ImgDCBHaveImageAll()
 {
-  if( mContainer != NULL ) {
-    il_image_complete(mContainer);
+  if( ilContainer != NULL ) {
+    il_image_complete(ilContainer);
   }
   return 0;
 
@@ -192,7 +192,7 @@ ImgDCallbk :: ImgDCBHaveImageAll()
 NS_IMETHODIMP 
 ImgDCallbk :: ImgDCBError()
 {
-  if( mContainer != NULL ) {
+  if( ilContainer != NULL ) {
   }
   return 0;
 
@@ -736,9 +736,11 @@ il_size(il_container *ic)
             }
 
             mask_header = &ic->mask->header;
-            mask_header->color_space = IL_CreateGreyScaleColorSpace(1, 1);
+                mask_header->color_space = IL_CreateGreyScaleColorSpace(1, 1);
+
             if (!mask_header->color_space)
                 return MK_OUT_OF_MEMORY;
+			
             mask_header->width = img_header->width;
             mask_header->height = img_header->height;
             mask_header->widthBytes = (mask_header->width + 7) / 8;

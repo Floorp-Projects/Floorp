@@ -62,19 +62,19 @@ public:
   NS_IMETHOD ImgDComplete();
   NS_IMETHOD ImgDAbort();
 
-  il_container *SetContainer(il_container *ic){mContainer = ic; return ic;}
-  il_container *GetContainer() {return mContainer;}
+  il_container *SetContainer(il_container *ic){ilContainer = ic; return ic;}
+  il_container *GetContainer() {return ilContainer;}
 
   
 private:
-  il_container* mContainer;
+  il_container* ilContainer;
 };
 /*-------------------------------------------------*/
 
 JPGDecoder::JPGDecoder(il_container* aContainer)
 {
   NS_INIT_REFCNT();
-  mContainer = aContainer;
+  ilContainer = aContainer;
 };
 
 
@@ -173,7 +173,7 @@ protected:
 
 private:
 	nsCID mClassID;
-	il_container *mContainer;
+	il_container *ilContainer;
 };
 
 /*-----------------------------------------*/
@@ -258,8 +258,8 @@ NSGetFactory(nsISupports* serviceMgr,
 NS_IMETHODIMP
 JPGDecoder::ImgDInit()
 {
-   if(mContainer != NULL) {
-     return(il_jpeg_init(mContainer));
+   if(ilContainer != NULL) {
+     return(il_jpeg_init(ilContainer));
   }
   else {
     return nsnull;
@@ -276,8 +276,8 @@ JPGDecoder::ImgDWriteReady()
 NS_IMETHODIMP
 JPGDecoder::ImgDWrite(const unsigned char *buf, int32 len)
 {
-  if( mContainer != NULL ) {
-     return(il_jpeg_write(mContainer, buf,len));
+  if( ilContainer != NULL ) {
+     return(il_jpeg_write(ilContainer, buf,len));
   }
   return 0;
 }
@@ -285,8 +285,8 @@ JPGDecoder::ImgDWrite(const unsigned char *buf, int32 len)
 NS_IMETHODIMP 
 JPGDecoder::ImgDComplete()
 {
-  if( mContainer != NULL ) {
-     il_jpeg_complete(mContainer);
+  if( ilContainer != NULL ) {
+     il_jpeg_complete(ilContainer);
   }
   return 0;
 }
@@ -294,8 +294,8 @@ JPGDecoder::ImgDComplete()
 NS_IMETHODIMP 
 JPGDecoder::ImgDAbort()
 {
-  if( mContainer != NULL ) {
-    il_jpeg_abort(mContainer);
+  if( ilContainer != NULL ) {
+    il_jpeg_abort(ilContainer);
   }
   return 0;
 }

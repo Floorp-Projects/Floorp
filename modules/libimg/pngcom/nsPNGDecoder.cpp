@@ -62,19 +62,19 @@ public:
   NS_IMETHOD ImgDComplete();
   NS_IMETHOD ImgDAbort();
 
-  il_container *SetContainer(il_container *ic){mContainer = ic; return ic;}
-  il_container *GetContainer() {return mContainer;}
+  il_container *SetContainer(il_container *ic){ilContainer = ic; return ic;}
+  il_container *GetContainer() {return ilContainer;}
 
   
 private:
-  il_container* mContainer;
+  il_container* ilContainer;
 };
 /*-------------------------------------------------*/
 
 PNGDecoder::PNGDecoder(il_container* aContainer)
 {
   NS_INIT_REFCNT();
-  mContainer = aContainer;
+  ilContainer = aContainer;
 };
 
 
@@ -125,7 +125,7 @@ protected:
 
 private:
 	nsCID mClassID;
-	il_container *mContainer;
+	il_container *ilContainer;
 };
 
 /*-----------------------------------------*/
@@ -255,8 +255,8 @@ NSGetFactory(nsISupports* serviceMgr,
 NS_IMETHODIMP
 PNGDecoder::ImgDInit()
 {
-   if(mContainer != NULL) {
-     return(il_png_init(mContainer));
+   if(ilContainer != NULL) {
+     return(il_png_init(ilContainer));
   }
   else {
     return nsnull;
@@ -267,7 +267,7 @@ PNGDecoder::ImgDInit()
 NS_IMETHODIMP 
 PNGDecoder::ImgDWriteReady()
 {
-  if(mContainer != NULL) {
+  if(ilContainer != NULL) {
     /* see ImageConsumer::OnDataAvailable(). dummy return */ 
     return 1;
   }
@@ -277,8 +277,8 @@ PNGDecoder::ImgDWriteReady()
 NS_IMETHODIMP
 PNGDecoder::ImgDWrite(const unsigned char *buf, int32 len)
 {
-  if( mContainer != NULL ) {
-     return(il_png_write(mContainer, buf,len));
+  if( ilContainer != NULL ) {
+     return(il_png_write(ilContainer, buf,len));
   }
   return 0;
 }
@@ -286,8 +286,8 @@ PNGDecoder::ImgDWrite(const unsigned char *buf, int32 len)
 NS_IMETHODIMP 
 PNGDecoder::ImgDComplete()
 {
-  if( mContainer != NULL ) {
-     il_png_complete(mContainer);
+  if( ilContainer != NULL ) {
+     il_png_complete(ilContainer);
   }
   return 0;
 }
@@ -295,8 +295,8 @@ PNGDecoder::ImgDComplete()
 NS_IMETHODIMP 
 PNGDecoder::ImgDAbort()
 {
-  if( mContainer != NULL ) {
-    il_png_abort(mContainer);
+  if( ilContainer != NULL ) {
+    il_png_abort(ilContainer);
   }
   return 0;
 }

@@ -43,14 +43,14 @@ class PNGCallbk : public nsIImgDCallbk {
 public:
   NS_DECL_ISUPPORTS
 
-  il_container *GetContainer() {return mContainer;};
-  il_container *SetContainer(il_container *ic) {mContainer=ic; return ic;};
+  il_container *GetContainer() {return ilContainer;};
+  il_container *SetContainer(il_container *ic) {ilContainer=ic; return ic;};
 
-  PNGCallbk(il_container *aContainer){mContainer=aContainer;};
+  PNGCallbk(il_container *aContainer){ilContainer=aContainer;};
   virtual ~PNGCallbk() {};	// XXX Pam needs to fix this
 
 private:
-  il_container* mContainer;
+  il_container* ilContainer;
 };
 
 #endif
