@@ -29,19 +29,6 @@ struct nsReflowState;
 class nsCSSLayout {
 public:
   /**
-   * Perform vertical alignment ala CSS. Return the height of the
-   * line.
-   */
-  static nscoord VerticallyAlignChildren(nsIPresContext* aPresContext,
-                                         nsIFrame* aContainer,
-                                         const nsStyleFont* aContainerFont,
-                                         nscoord aY0,
-                                         nsIFrame* aFirstChild,
-                                         PRInt32 aChildCount,
-                                         nscoord* aAscents,
-                                         nscoord aMaxAscent);
-
-  /**
    * Perform horizontal alignment ala CSS.
    */
   static void HorizontallyPlaceChildren(nsIPresContext* aPresContext,
