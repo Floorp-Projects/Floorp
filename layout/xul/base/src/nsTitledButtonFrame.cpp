@@ -193,11 +193,7 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
   mNeedsLayout = PR_TRUE;
   UpdateAttributes(*aPresContext);
 
-  // redraw
-  nsRect frameRect;
-  GetRect(frameRect);
-  nsRect rect(0,0,frameRect.width, frameRect.height);
-  Invalidate(rect, PR_TRUE);
+  mRenderer.Redraw();
   return NS_OK;
 }
 
@@ -800,18 +796,28 @@ nsTitledButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
  
   nsRect minSize(0,0,mMinSize.width, mMinSize.height);
  
+  // we need to factory or focus stuff into our computed size.
+  nscoord computedWidth = aReflowState.computedWidth;
+  nscoord computedHeight = aReflowState.computedHeight;
+
+  
+  nsMargin added = mRenderer.GetAddedButtonBorderAndPadding();
+
+  computedWidth -= (added.left + added.right);
+  computedHeight -= (added.top + added.bottom);
+
   // if the width is set
   if (fixedWidthContent)
-	  if (aReflowState.computedWidth >= minSize.width)
-	      aDesiredSize.width = aReflowState.computedWidth;
+	  if (computedWidth >= minSize.width)
+	      aDesiredSize.width = computedWidth;
 	  else
-          aDesiredSize.width = minSize.width;
+        aDesiredSize.width = minSize.width;
   
 
   // if the height is set
   if (fixedHeightContent) 
-	  if (aReflowState.computedWidth >= minSize.height)
-	      aDesiredSize.height = aReflowState.computedHeight;
+	  if (computedHeight >= minSize.height)
+	      aDesiredSize.height = computedHeight;
 	  else
         aDesiredSize.height = minSize.height;
 }

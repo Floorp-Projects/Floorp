@@ -24,6 +24,7 @@ REQUIRES=xpcom raptor pref
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\
+        nsBoxFrame.cpp        \
         nsProgressMeterFrame.cpp        \
         nsTitledButtonFrame.cpp        \
 	nsToolboxFrame.cpp		\
@@ -34,6 +35,7 @@ CPPSRCS=					\
 	$(NULL)
 
 CPP_OBJS=					\
+        .\$(OBJDIR)\nsBoxFrame.obj    \
         .\$(OBJDIR)\nsProgressMeterFrame.obj    \
         .\$(OBJDIR)\nsTitledButtonFrame.obj    \
 	.\$(OBJDIR)\nsToolboxFrame.obj		\
