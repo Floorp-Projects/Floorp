@@ -750,11 +750,8 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
                                                    PR_TRUE);             // colStyleContext: REFCNT++
       NS_NewTableColFrame(colFrame);
       colFrame->Init(aPresContext, lastColGroupElement, lastColGroupFrame, colStyleContext);
+      NS_RELEASE(colStyleContext);
       colFrame->SetInitialChildList(aPresContext, nsnull, nsnull);
-
-      // XXX Don't release this style context (or we'll end up with a double-free).\
-      // This code is doing what nsTableColGroupFrame::Reflow() does...
-      //NS_RELEASE(colStyleContext);
 
       // Add it to our list
       if (nsnull == lastNewColFrame) {
