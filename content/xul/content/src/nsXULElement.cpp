@@ -290,8 +290,7 @@ private:
     nsIEventListenerManager* mListenerManager;
     nsXULAttributes*  mAttributes;
     PRBool            mContentsMustBeGenerated;
-    nsIDOMNode*		    mBroadcaster;
-    nsVoidArray		    mBroadcastListeners;
+    nsVoidArray*		  mBroadcastListeners;
 };
 
 
@@ -319,7 +318,7 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
       mListenerManager(nsnull),
       mAttributes(nsnull),
       mContentsMustBeGenerated(PR_FALSE),
-      mBroadcaster(nsnull)
+      mBroadcastListeners(nsnull)
 {
     NS_INIT_REFCNT();
     NS_ADDREF(aTag);
@@ -362,10 +361,13 @@ RDFElementImpl::~RDFElementImpl()
     NS_IF_RELEASE(mChildren);
 
     // Release our broadcast listeners
-    PRInt32 count = mBroadcastListeners.Count();
-    for (PRInt32 i = 0; i < count; i++) {
-        XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners[0];
-        RemoveBroadcastListener(xulListener->mAttribute, xulListener->mListener);
+    if (mBroadcastListeners != nsnull)
+    {
+        PRInt32 count = mBroadcastListeners->Count();
+        for (PRInt32 i = 0; i < count; i++) {
+            XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners->ElementAt(0);
+            RemoveBroadcastListener(xulListener->mAttribute, xulListener->mListener);
+        }
     }
 
     if (--gRefCnt == 0) {
@@ -1652,16 +1654,19 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         AddScriptEventListener(aName, aValue, kIDOMPaintListenerIID); 
 
     // Notify any broadcasters that are listening to this node.
-    count = mBroadcastListeners.Count();
-    for (PRInt32 i = 0; i < count; i++) {
-        XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners[i];
-        nsString aString;
-        aName->ToString(aString);
-        if (xulListener->mAttribute == aString) {
-            nsCOMPtr<nsIDOMElement> element;
-            element = do_QueryInterface(xulListener->mListener);
-            if (element)
-                element->SetAttribute(aString, aValue);
+    if (mBroadcastListeners != nsnull)
+    {
+        count = mBroadcastListeners->Count();
+        for (PRInt32 i = 0; i < count; i++) {
+            XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners->ElementAt(i);
+            nsString aString;
+            aName->ToString(aString);
+            if (xulListener->mAttribute == aString) {
+                nsCOMPtr<nsIDOMElement> element;
+                element = do_QueryInterface(xulListener->mListener);
+                if (element)
+                    element->SetAttribute(aString, aValue);
+            }
         }
     }
 
@@ -1835,11 +1840,11 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
     }
 
     // XUL Only. Find out if we have a broadcast listener for this element.
-    if (successful) {
-        PRInt32 count = mBroadcastListeners.Count();
+    if (successful && mBroadcastListeners != nsnull) {
+        PRInt32 count = mBroadcastListeners->Count();
         for (PRInt32 i = 0; i < count; i++)
         {
-            XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners[i];
+            XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners->ElementAt(i);
             nsString aString;
             aName->ToString(aString);
             if (xulListener->mAttribute == aString) {
@@ -2144,7 +2149,12 @@ RDFElementImpl::AddBroadcastListener(const nsString& attr, nsIDOMElement* anElem
 { 
 	// Add ourselves to the array.
 	NS_ADDREF(anElement);
-	mBroadcastListeners.AppendElement(new XULBroadcastListener(attr, anElement));
+  if (mBroadcastListeners == nsnull)
+  {
+      mBroadcastListeners = new nsVoidArray();
+  }
+
+	mBroadcastListeners->AppendElement(new XULBroadcastListener(attr, anElement));
 
 	// We need to sync up the initial attribute value.
   nsCOMPtr<nsIContent> listener( do_QueryInterface(anElement) );
@@ -2180,17 +2190,20 @@ RDFElementImpl::AddBroadcastListener(const nsString& attr, nsIDOMElement* anElem
 NS_IMETHODIMP
 RDFElementImpl::RemoveBroadcastListener(const nsString& attr, nsIDOMElement* anElement) 
 { 
-	// Find the node.
-	PRInt32 count = mBroadcastListeners.Count();
+  if (mBroadcastListeners == nsnull)
+    return NS_OK;
+
+	// Find the element.
+	PRInt32 count = mBroadcastListeners->Count();
 	for (PRInt32 i = 0; i < count; i++)
 	{
-		XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners[i];
+		XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners->ElementAt(i);
 		
 		if (xulListener->mAttribute == attr &&
 			  xulListener->mListener == nsCOMPtr<nsIDOMElement>( dont_QueryInterface(anElement) ))
 		{
 			// Do the removal.
-			mBroadcastListeners.RemoveElementAt(i);
+			mBroadcastListeners->RemoveElementAt(i);
 			delete xulListener;
 			return NS_OK;
 		}
