@@ -117,6 +117,9 @@ extern int XP_UPTO_HIGHER_LEVEL_DIRECTORY ;
 #define FTP_TCPC_TYPE        7
 #define FTP_VMS_TYPE         8
 #define FTP_NT_TYPE          9
+/* bug # 309043 */
+#define FTP_WEBSTAR_TYPE     10
+
 
 #define OUTPUT_BUFFER_SIZE 2048
 
@@ -877,6 +880,12 @@ net_send_syst_response(FTPConData * cd)
              cd->cc->use_list = TRUE;
              cd->next_state = FTP_SEND_MAC_BIN; 
           }
+        else if (PL_strncmp(cd->return_msg, "MACOS WebSTAR FTP", 17) == 0)
+          {
+             cd->cc->server_type = FTP_WEBSTAR_TYPE;
+             cd->cc->use_list = TRUE;
+             cd->next_state = FTP_SEND_MAC_BIN; 
+          }
         else if(cd->cc->server_type == FTP_GENERIC_TYPE)
           {
               cd->next_state = FTP_SEND_PWD; 
@@ -1229,6 +1238,7 @@ net_send_pwd_response(ActiveEntry *ce)
 
      if (cd->cc->server_type == FTP_NCSA_TYPE ||
                         cd->cc->server_type == FTP_TCPC_TYPE ||
+                        cd->cc->server_type == FTP_WEBSTAR_TYPE ||
                         cd->cc->server_type == FTP_PETER_LEWIS_TYPE)
          cd->next_state = FTP_SEND_MAC_BIN;
 
@@ -3456,6 +3466,7 @@ net_parse_dir_entry (char *entry, int server_type)
         {
             case FTP_UNIX_TYPE:
             case FTP_PETER_LEWIS_TYPE:
+            case FTP_WEBSTAR_TYPE:
             case FTP_MACHTEN_TYPE:
 				/* interpret and edit LIST output from Unix server */
 
