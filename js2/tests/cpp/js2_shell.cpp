@@ -122,19 +122,20 @@ static void readEvalPrint(FILE *in, World &world)
     }
     stdOut << '\n';
 }
-            
+
 static void testICG(World &world)
 {
     //
     // testing ICG 
     //
     uint32 pos = 0;
-    ICodeGenerator icg;
+    ICodeGenerator icg(&world, true, 1);
     
     // var i,j;
     // i is bound to var #0, j to var #1
     Register r_i = icg.allocateVariable(world.identifiers[widenCString("i")]);
     Register r_j = icg.allocateVariable(world.identifiers[widenCString("j")]);
+    Register r_x = icg.allocateVariable(world.identifiers[widenCString("x")]);
 
     //  i = j + 2;
     icg.beginStatement(pos);
@@ -170,6 +171,39 @@ static void testICG(World &world)
     icg.endIfStatement();
     icg.beginElseStatement(false);
     icg.endIfStatement();
+    
+    // try {
+    //   if (i) if (j) i = 3; else j = 4;
+    //   throw j;
+    // } 
+    // catch (x) {
+    //  j = x;
+    // }
+    // finally {
+    //  i = 5;
+    // }
+    icg.beginTryStatement(pos, true, true);    // hasCatch, hasFinally
+        icg.beginIfStatement(pos, r_i);
+        icg.beginIfStatement(pos, r_j);
+        icg.move(r_i, icg.loadImmediate(3));
+        icg.beginElseStatement(true);
+        icg.beginStatement(pos);
+        icg.move(r_j, icg.loadImmediate(4));
+        icg.endIfStatement();
+        icg.beginElseStatement(false);
+        icg.endIfStatement();
+        icg.throwStatement(pos, r_j);
+    icg.endTryBlock();
+        icg.beginCatchStatement(pos);
+        icg.endCatchExpression(r_x);
+        icg.beginStatement(pos);
+        icg.move(r_j, r_x);
+        icg.endCatchStatement();
+        icg.beginFinallyStatement(pos);
+        icg.beginStatement(pos);
+        icg.move(r_i, icg.loadImmediate(5));
+        icg.endFinallyStatement();
+    icg.endTryStatement();
     
 
     // switch (i) { case 3: case 4: j = 4; break; case 5: j = 5; break; default : j = 6; }
@@ -419,8 +453,8 @@ int main(int argc, char **argv)
 #if 1
     assert(JavaScript::Shell::testFactorial(world, 5) == 120);
     assert(JavaScript::Shell::testObjects(world, 5) == 5);
-    //    JavaScript::Shell::testICG(world);
-    assert(JavaScript::Shell::testFunctionCall(world, 5) == 5);
+//    JavaScript::Shell::testICG(world);
+     assert(JavaScript::Shell::testFunctionCall(world, 5) == 5);
 #endif
     JavaScript::Shell::readEvalPrint(stdin, world);
     return 0;
