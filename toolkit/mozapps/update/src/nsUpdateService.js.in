@@ -218,12 +218,12 @@ nsUpdateService.prototype = {
     }  
   },
   
-  _canUpdate: function (aPreference, aSourceEvent)
+  _canUpdate: function (aPreference, aSourceEvent, aUpdateTypes)
   {
     var canUpdate = false;
     if (aPreference) 
       canUpdate = true;
-    else {
+    else if (!(aUpdateTypes & nsIUpdateItem.TYPE_ANY)) {
       // If app updates are disabled, then still proceed if this is a mismatch or user generated
       // event (if the user asks to update, then we should update, regardless of preference setting)
       canUpdate = aSourceEvent != Components.interfaces.nsIUpdateService.SOURCE_EVENT_BACKGROUND;
@@ -240,7 +240,7 @@ nsUpdateService.prototype = {
     var os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
     if ((aUpdateTypes & nsIUpdateItem.TYPE_ANY) || (aUpdateTypes & nsIUpdateItem.TYPE_APP)) {
-      if (this._canUpdate(this._appUpdatesEnabled, aSourceEvent)) {
+      if (this._canUpdate(this._appUpdatesEnabled, aSourceEvent, aUpdateTypes)) {
         gOS.addObserver(this._updateObserver, "Update:App:Ended", false);
         
         this._currentVersion  = new nsAppUpdateInfo();
@@ -253,7 +253,7 @@ nsUpdateService.prototype = {
       }
     }
     if (!(aUpdateTypes & nsIUpdateItem.TYPE_APP)) { // TYPE_EXTENSION, TYPE_ANY, etc.
-      if (this._canUpdate(this._extUpdatesEnabled, aSourceEvent)) {
+      if (this._canUpdate(this._extUpdatesEnabled, aSourceEvent, aUpdateTypes)) {
         gOS.addObserver(this._updateObserver, "Update:Extension:Started", false);
         gOS.addObserver(this._updateObserver, "Update:Extension:Item-Ended", false);
         gOS.addObserver(this._updateObserver, "Update:Extension:Ended", false);
