@@ -330,10 +330,16 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
 		// make the imap folder remember the file spec it was created with.
 		if (child)
 		{
+			nsCAutoString leafName (currentFolderNameStr);
 			nsCOMPtr <nsIFileSpec> msfFileSpec;
 			nsresult rv = NS_NewFileSpecWithSpec(currentFolderPath, getter_AddRefs(msfFileSpec));
 			if (NS_SUCCEEDED(rv) && msfFileSpec)
+			{
+				// leaf name is the db name w/o .msf (nsShouldIgnoreFile strips it off)
+				// so this trims the .msf off the file spec.
+				msfFileSpec->SetLeafName(leafName);
 				child->SetPath(msfFileSpec);
+			}
 		}
 		PL_strfree(folderName);
     }
