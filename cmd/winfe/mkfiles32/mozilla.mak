@@ -730,6 +730,7 @@ CDEFINES=/DXP_PC /Dx386 /D_WINDOWS /D_X86_ \
     /DEDIT_REMOTE /DLAYERS /DMQUOTE \
 	/D_IMAGE_CONVERT \
 	/D_IME_COMPOSITION \
+      /DENDER \
 !if "$(MOZ_BITS)" == "32"
 !ifndef NSPR20
     /DWIN32 /DJAVA_WIN32 /DHW_THREADS /D_AFXDLL \
@@ -748,9 +749,6 @@ CDEFINES=/DXP_PC /Dx386 /D_WINDOWS /D_X86_ \
     /DOJI \
 !elseif defined(MOZ_JAVA)
     /DJAVA \
-!endif
-!if defined(MOZ_ENDER)
-    /DENDER \
 !endif
     /DMOZILLA_CLIENT
 
