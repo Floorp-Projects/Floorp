@@ -555,8 +555,15 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
     "($id, $exporterid, now(), " . SqlQuote($long_description) . ")");
 
   $log .= "Bug $bug_fields{'bug_id'}\@$urlbase imported as bug $id.\n";
+  if ($err) {
+    $log .= "The following problems were encountered importing this bug.\n";
+    $log .= "You may have to set certain fields in the new bug by hand.\n";
+    $log .= $err;
+    $log .= "\n\n";
+  }
 }
 
+$log .= "\n\n
 my $subject = "$bugqty bug(s) successfully moved from $urlbase to " 
                . Param("urlbase") ;
 my @to = ($exporter);
