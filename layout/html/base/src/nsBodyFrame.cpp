@@ -850,6 +850,7 @@ nsIView* nsBodyFrame::CreateAbsoluteView(const nsStylePosition* aPosition,
     view->Init(viewManager, nsRect(0, 0, 0, 0), containingView, nsnull,
                nsnull, nsnull, zIndex, pClip);
     viewManager->InsertChild(containingView, view, 0);
+    //XXX this needs to be conditional...
     viewManager->SetViewContentTransparency(view, PR_TRUE);
     NS_RELEASE(viewManager);
   }
