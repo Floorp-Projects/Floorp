@@ -545,6 +545,10 @@ NS_IMETHODIMP nsPlaintextEditor::CanPaste(PRInt32 aSelectionType, PRBool &aCanPa
 {
   aCanPaste = PR_FALSE;
   
+  // can't paste if readonly
+  if (!IsModifiable())
+    return NS_OK;
+
   nsresult rv;
   NS_WITH_SERVICE(nsIClipboard, clipboard, kCClipboardCID, &rv);
   if (NS_FAILED(rv)) return rv;
