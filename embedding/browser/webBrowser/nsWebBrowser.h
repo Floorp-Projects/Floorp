@@ -99,6 +99,11 @@ public:
     nsIID mID;
 };
 
+//  {F1EAC761-87E9-11d3-AF80-00A024FFC08C} - 
+#define NS_WEBBROWSER_CID \
+{0xf1eac761, 0x87e9, 0x11d3, { 0xaf, 0x80, 0x00, 0xa0, 0x24, 0xff, 0xc0, 0x8c }}
+
+
 class nsWebBrowser : public nsIWebBrowser,
                      public nsIWebNavigation,
                      public nsIWebBrowserSetup,

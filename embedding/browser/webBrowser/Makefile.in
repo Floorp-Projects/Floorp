@@ -67,6 +67,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  imglib2 \
 		  locale \
+		  embed_base \
 		  $(NULL)
 
 ifdef MOZ_PHOENIX

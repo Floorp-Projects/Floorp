@@ -1,6 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,15 +11,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla browser.
+ * The Original Code is Mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications, Inc.
- * Portions created by the Initial Developer are Copyright (C) 1999
+ * Boris Zbarsky <bzbarsky@mit.edu>.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Travis Bogard <travis@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,31 +34,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIWebBrowser.idl"
-#include "nsIBaseWindow.idl"
-#include "nsIScrollable.idl"
-#include "nsITextScroll.idl"
+#ifndef NSEMBEDCID_H
+#define NSEMBEDCID_H
 
-/*
-nsCWebBrowser implements:
--------------------------
-nsIWebBrowser
-nsIDocShellTreeItem
-nsIWebNavigation
-nsIWebProgress
-nsIBaseWindow
-nsIScrollable
-nsITextScroll
-nsIInterfaceRequestor
+/**
+ * @file
+ * @brief List of, and documentation for, frozen Gecko embedding contracts.
+ */
 
+/**
+ * Web Browser ContractID
+ *   The web browser is the basic way to instantiate a Gecko browser.
+ *
+ * This contract implements the following interfaces:
+ * nsIWebBrowser
+ * nsIWebBrowserSetup
+ * nsIInterfaceRequestor
+ *
+ * @note This contract does not guarantee implementation of any other
+ * interfaces and does not guarantee ability to get any particular
+ * interfaces via the nsIInterfaceRequestor implementation.
+ */
+#define NS_WEBBROWSER_CONTRACTID \
+  "@mozilla.org/embedding/browser/nsWebBrowser;1"
 
-Outwardly communicates with:
-----------------------------
-nsIWebBrowserChrome
-nsIBaseWindow
-nsIInterfaceRequestor
-*/
-
-%{ C++
-#include "nsEmbedCID.h"
-%}
+#endif // NSEMBEDCID_H
