@@ -45,7 +45,7 @@ class nsIURI;
 class nsClassList {
 public:
     nsClassList(nsIAtom* aAtom)
-        : mAtom(aAtom), mNext(nsnull)
+        : mAtom(getter_AddRefs(aAtom)), mNext(nsnull)
     {
         MOZ_COUNT_CTOR(nsClassList);
     }
