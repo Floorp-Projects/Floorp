@@ -292,7 +292,7 @@ mork_size
 morkEnv::TokenAsHex(void* outBuf, mork_token inToken)
   // TokenAsHex() is the same as sprintf(outBuf, "%lX", (long) inToken);
 {
-  static const char* morkEnv_kHexDigits = "0123456789ABCDEF";
+  static const char morkEnv_kHexDigits[] = "0123456789ABCDEF";
   char* p = (char*) outBuf;
   char* end = p + 32; // write no more than 32 digits for safety
   if ( inToken )
@@ -439,7 +439,7 @@ morkEnv::CantMakeWhenBadError()
   this->NewError("can't make an object when ev->Bad()");
 }
 
-static const char* morkEnv_kNilPointer = "nil pointer";
+static const char morkEnv_kNilPointer[] = "nil pointer";
 
 void
 morkEnv::NilPointerError()

@@ -411,7 +411,7 @@ morkWriter::WriteMore(morkEnv* ev) // call until IsWritingDone() is true
   return ev->Good();
 }
 
-static const char* morkWriter_kHexDigits = "0123456789ABCDEF";
+static const char morkWriter_kHexDigits[] = "0123456789ABCDEF";
 
 mork_size
 morkWriter::WriteYarn(morkEnv* ev, const mdbYarn* inYarn)
