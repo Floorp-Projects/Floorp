@@ -335,7 +335,7 @@ nsresult
 nsNNTPHost::WriteIfDirty()
 {
 	if (m_dirty) return WriteNewsrc();
-	return 0;
+	return NS_OK;
 }
 
 
@@ -356,7 +356,7 @@ nsNNTPHost::WriteTimer(void* closure)
 {
 	nsNNTPHost* host = (nsNNTPHost*) closure;
 	host->m_writetimer = nsnull;
-	if (host->WriteNewsrc() < 0) {
+	if (NS_FAILED(host->WriteNewsrc())) {
 		// ###tw  Pop up error message???
 		host->MarkDirty();		// Cause us to try again. Or is this bad? ###tw
 	}
