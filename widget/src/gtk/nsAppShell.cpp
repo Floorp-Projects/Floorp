@@ -238,14 +238,6 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
     gdk_rgb_set_install(TRUE);
   }
 
-  gtk_set_locale ();
-
-  gtk_init (&argc, &argv);
-
-#ifdef MOZ_GLE
-  gle_init (&argc, &argv);
-#endif
-
   gdk_rgb_init();
 
   return NS_OK;

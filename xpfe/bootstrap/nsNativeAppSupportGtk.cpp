@@ -53,8 +53,6 @@ NS_IMPL_ISUPPORTS1(nsSplashScreenGtk, nsISplashScreen)
 
 nsSplashScreenGtk::nsSplashScreenGtk()
 {
-  // if this fails, we exit
-  gdk_init(0, NULL);
 }
 
 nsSplashScreenGtk::~nsSplashScreenGtk()
