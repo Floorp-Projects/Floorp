@@ -247,6 +247,10 @@ public:
   static nsIAtom* tabindex;
   static nsIAtom* table;
   static nsIAtom* tablePseudo;
+  static nsIAtom* tableColGroupPseudo;
+  static nsIAtom* tableColPseudo;
+  static nsIAtom* tableRowGroupPseudo;
+  static nsIAtom* tableRowPseudo;
   static nsIAtom* tabstop;
   static nsIAtom* target;
   static nsIAtom* tbody;
