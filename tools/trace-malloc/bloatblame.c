@@ -63,193 +63,6 @@ static int    unified_output = 0;
 static char   *function_dump = NULL;
 static int32  min_subtotal = 0;
 
-static int accum_byte(FILE *fp, uint32 *uip)
-{
-    int c = getc(fp);
-    if (c == EOF)
-        return 0;
-    *uip = (*uip << 8) | c;
-    return 1;
-}
-
-static int get_uint32(FILE *fp, uint32 *uip)
-{
-    int c;
-    uint32 ui;
-
-    c = getc(fp);
-    if (c == EOF)
-        return 0;
-    ui = 0;
-    if (c & 0x80) {
-        c &= 0x7f;
-        if (c & 0x40) {
-            c &= 0x3f;
-            if (c & 0x20) {
-                c &= 0x1f;
-                if (c & 0x10) {
-                    if (!accum_byte(fp, &ui))
-                        return 0;
-                } else {
-                    ui = (uint32) c;
-                }
-                if (!accum_byte(fp, &ui))
-                    return 0;
-            } else {
-                ui = (uint32) c;
-            }
-            if (!accum_byte(fp, &ui))
-                return 0;
-        } else {
-            ui = (uint32) c;
-        }
-        if (!accum_byte(fp, &ui))
-            return 0;
-    } else {
-        ui = (uint32) c;
-    }
-    *uip = ui;
-    return 1;
-}
-
-static char *get_string(FILE *fp)
-{
-    char *cp;
-    int c;
-    static char buf[256];
-    static char *bp = buf, *ep = buf + sizeof buf;
-    static size_t bsize = sizeof buf;
-
-    cp = bp;
-    do {
-        c = getc(fp);
-        if (c == EOF)
-            return 0;
-        if (cp == ep) {
-            if (bp == buf) {
-                bp = malloc(2 * bsize);
-                if (bp)
-                    memcpy(bp, buf, bsize);
-            } else {
-                bp = realloc(bp, 2 * bsize);
-            }
-            if (!bp)
-                return 0;
-            cp = bp + bsize;
-            bsize *= 2;
-            ep = bp + bsize;
-        }
-        *cp++ = c;
-    } while (c != '\0');
-    return strdup(bp);
-}
-
-typedef struct logevent {
-    char            type;
-    uint32          serial;
-    union {
-        char        *libname;
-        struct {
-            uint32  library;
-            char    *name;
-        } method;
-        struct {
-            uint32  parent;
-            uint32  method;
-            uint32  offset;
-        } site;
-        struct {
-            uint32  oldsize;
-            uint32  size;
-        } alloc;
-        struct {
-            nsTMStats tmstats;
-            uint32 calltree_maxkids_parent;
-            uint32 calltree_maxstack_top;
-        } stats;
-    } u;
-} logevent;
-
-static int get_logevent(FILE *fp, logevent *event)
-{
-    int c;
-    char *s;
-
-    c = getc(fp);
-    if (c == EOF)
-        return 0;
-    event->type = (char) c;
-    if (!get_uint32(fp, &event->serial))
-        return 0;
-    switch (c) {
-      case 'L':
-        s = get_string(fp);
-        if (!s)
-            return 0;
-        event->u.libname = s;
-        break;
-
-      case 'N':
-        if (!get_uint32(fp, &event->u.method.library))
-            return 0;
-        s = get_string(fp);
-        if (!s)
-            return 0;
-        event->u.method.name = s;
-        break;
-
-      case 'S':
-        if (!get_uint32(fp, &event->u.site.parent))
-            return 0;
-        if (!get_uint32(fp, &event->u.site.method))
-            return 0;
-        if (!get_uint32(fp, &event->u.site.offset))
-            return 0;
-        break;
-
-      case 'M':
-      case 'C':
-      case 'F':
-        event->u.alloc.oldsize = 0;
-        if (!get_uint32(fp, &event->u.alloc.size))
-            return 0;
-        break;
-
-      case 'R':
-        if (!get_uint32(fp, &event->u.alloc.oldsize))
-            return 0;
-        if (!get_uint32(fp, &event->u.alloc.size))
-            return 0;
-        break;
-
-      case 'Z':
-        if (!get_uint32(fp, &event->u.stats.tmstats.calltree_maxstack)) return 0;
-        if (!get_uint32(fp, &event->u.stats.tmstats.calltree_maxdepth)) return 0;
-        if (!get_uint32(fp, &event->u.stats.tmstats.calltree_parents)) return 0;
-        if (!get_uint32(fp, &event->u.stats.tmstats.calltree_maxkids)) return 0;
-        if (!get_uint32(fp, &event->u.stats.tmstats.calltree_kidhits)) return 0;
-        if (!get_uint32(fp, &event->u.stats.tmstats.calltree_kidmisses)) return 0;
-        if (!get_uint32(fp, &event->u.stats.tmstats.calltree_kidsteps)) return 0;
-        if (!get_uint32(fp, &event->u.stats.tmstats.callsite_recurrences)) return 0;
-        if (!get_uint32(fp, &event->u.stats.tmstats.backtrace_calls)) return 0;
-        if (!get_uint32(fp, &event->u.stats.tmstats.backtrace_failures)) return 0;
-        if (!get_uint32(fp, &event->u.stats.tmstats.btmalloc_failures)) return 0;
-        if (!get_uint32(fp, &event->u.stats.tmstats.dladdr_failures)) return 0;
-        if (!get_uint32(fp, &event->u.stats.tmstats.malloc_calls)) return 0;
-        if (!get_uint32(fp, &event->u.stats.tmstats.malloc_failures)) return 0;
-        if (!get_uint32(fp, &event->u.stats.tmstats.calloc_calls)) return 0;
-        if (!get_uint32(fp, &event->u.stats.tmstats.calloc_failures)) return 0;
-        if (!get_uint32(fp, &event->u.stats.tmstats.realloc_calls)) return 0;
-        if (!get_uint32(fp, &event->u.stats.tmstats.realloc_failures)) return 0;
-        if (!get_uint32(fp, &event->u.stats.tmstats.free_calls)) return 0;
-        if (!get_uint32(fp, &event->u.stats.tmstats.null_free_calls)) return 0;
-        if (!get_uint32(fp, &event->u.stats.calltree_maxkids_parent)) return 0;
-        if (!get_uint32(fp, &event->u.stats.calltree_maxstack_top)) return 0;
-        break;
-    }
-    return 1;
-}
-
 static void connect_nodes(tmgraphnode *from, tmgraphnode *to, tmcallsite *site)
 {
     tmgraphedge *edge;
@@ -685,7 +498,7 @@ static void dump_graph(tmreader *tmr, PLHashTable *hashtbl, const char *varname,
 static void my_tmevent_handler(tmreader *tmr, tmevent *event)
 {
     switch (event->type) {
-      case 'Z':
+      case TM_EVENT_STATS:
         if (js_mode)
             break;
         fprintf(stdout,
@@ -735,8 +548,7 @@ static void my_tmevent_handler(tmreader *tmr, tmevent *event)
 
         if (event->u.stats.calltree_maxkids_parent) {
             tmcallsite *site =
-                tmreader_get_callsite(tmr,
-                                      event->u.stats.calltree_maxkids_parent);
+                tmreader_callsite(tmr, event->u.stats.calltree_maxkids_parent);
             if (site && site->method) {
                 fprintf(stdout, "<p>callsite with the most kids: %s</p>",
                         tmgraphnode_name(site->method));
@@ -745,8 +557,7 @@ static void my_tmevent_handler(tmreader *tmr, tmevent *event)
 
         if (event->u.stats.calltree_maxstack_top) {
             tmcallsite *site =
-                tmreader_get_callsite(tmr,
-                                      event->u.stats.calltree_maxstack_top);
+                tmreader_callsite(tmr, event->u.stats.calltree_maxstack_top);
             fputs("<p>deepest callsite tree path:\n"
                   "<table border=1>\n"
                     "<tr><th>Method</th><th>Offset</th></tr>\n",
@@ -766,7 +577,7 @@ static void my_tmevent_handler(tmreader *tmr, tmevent *event)
 
 int main(int argc, char **argv)
 {
-    int c, i;
+    int c, i, j, rv;
     tmreader *tmr;
     FILE *fp;
 
@@ -823,18 +634,25 @@ int main(int argc, char **argv)
     argc -= optind;
     argv += optind;
     if (argc == 0) {
-        tmreader_loop(tmr, "-", my_tmevent_handler);
+        if (tmreader_eventloop(tmr, "-", my_tmevent_handler) <= 0)
+            exit(1);
     } else {
-        for (i = 0; i < argc; i++) {
+        for (i = j = 0; i < argc; i++) {
             fp = fopen(argv[i], "r");
             if (!fp) {
                 fprintf(stderr, "%s: can't open %s: %s\n",
                         program, argv[i], strerror(errno));
                 exit(1);
             }
-            tmreader_loop(tmr, argv[i], my_tmevent_handler);
+            rv = tmreader_eventloop(tmr, argv[i], my_tmevent_handler);
+            if (rv < 0)
+                exit(1);
+            if (rv > 0)
+                j++;
             fclose(fp);
         }
+        if (j == 0)
+            exit(1);
     }
 
     compute_callsite_totals(&tmr->calltree_root);

@@ -135,14 +135,14 @@ static int get_tmevent(FILE *fp, tmevent *event)
     if (!get_uint32(fp, &event->serial))
         return 0;
     switch (c) {
-      case 'L':
+      case TM_EVENT_LIBRARY:
         s = get_string(fp);
         if (!s)
             return 0;
         event->u.libname = s;
         break;
 
-      case 'N':
+      case TM_EVENT_METHOD:
         if (!get_uint32(fp, &event->u.method.library))
             return 0;
         s = get_string(fp);
@@ -151,7 +151,7 @@ static int get_tmevent(FILE *fp, tmevent *event)
         event->u.method.name = s;
         break;
 
-      case 'S':
+      case TM_EVENT_CALLSITE:
         if (!get_uint32(fp, &event->u.site.parent))
             return 0;
         if (!get_uint32(fp, &event->u.site.method))
@@ -160,22 +160,22 @@ static int get_tmevent(FILE *fp, tmevent *event)
             return 0;
         break;
 
-      case 'M':
-      case 'C':
-      case 'F':
+      case TM_EVENT_MALLOC:
+      case TM_EVENT_CALLOC:
+      case TM_EVENT_FREE:
         event->u.alloc.oldsize = 0;
         if (!get_uint32(fp, &event->u.alloc.size))
             return 0;
         break;
 
-      case 'R':
+      case TM_EVENT_REALLOC:
         if (!get_uint32(fp, &event->u.alloc.oldsize))
             return 0;
         if (!get_uint32(fp, &event->u.alloc.size))
             return 0;
         break;
 
-      case 'Z':
+      case TM_EVENT_STATS:
         if (!get_uint32(fp, &event->u.stats.tmstats.calltree_maxstack))
             return 0;
         if (!get_uint32(fp, &event->u.stats.tmstats.calltree_maxdepth))
@@ -341,8 +341,8 @@ void tmreader_destroy(tmreader *tmr)
     free(tmr);
 }
 
-int tmreader_loop(tmreader *tmr, const char *filename,
-                  tmeventhandler eventhandler)
+int tmreader_eventloop(tmreader *tmr, const char *filename,
+                       tmeventhandler eventhandler)
 {
     FILE *fp;
     char buf[NS_TRACE_MALLOC_MAGIC_SIZE];
@@ -369,7 +369,7 @@ int tmreader_loop(tmreader *tmr, const char *filename,
 
     while (get_tmevent(fp, &event)) {
         switch (event.type) {
-          case 'L': {
+          case TM_EVENT_LIBRARY: {
             const void *key;
             PLHashNumber hash;
             PLHashEntry **hep, *he;
@@ -385,12 +385,12 @@ int tmreader_loop(tmreader *tmr, const char *filename,
                                     event.u.libname);
             if (!he) {
                 perror(tmr->program);
-                return 0;
+                return -1;
             }
             break;
           }
 
-          case 'N': {
+          case TM_EVENT_METHOD: {
             const void *key;
             PLHashNumber hash;
             PLHashEntry **hep, *he;
@@ -408,7 +408,7 @@ int tmreader_loop(tmreader *tmr, const char *filename,
             he = PL_HashTableRawAdd(tmr->methods, hep, hash, key, name);
             if (!he) {
                 perror(tmr->program);
-                return 0;
+                return -1;
             }
             meth = (tmgraphnode*) he;
 
@@ -442,7 +442,7 @@ int tmreader_loop(tmreader *tmr, const char *filename,
                 }
                 if (!he) {
                     perror(tmr->program);
-                    return 0;
+                    return -1;
                 }
                 comp = (tmgraphnode*) he;
 
@@ -464,7 +464,7 @@ int tmreader_loop(tmreader *tmr, const char *filename,
             break;
           }
 
-          case 'S': {
+          case TM_EVENT_CALLSITE: {
             const void *key, *mkey;
             PLHashNumber hash, mhash;
             PLHashEntry **hep, *he;
@@ -481,7 +481,7 @@ int tmreader_loop(tmreader *tmr, const char *filename,
             if (event.u.site.parent == 0) {
                 parent = &tmr->calltree_root;
             } else {
-                parent = tmreader_get_callsite(tmr, event.u.site.parent);
+                parent = tmreader_callsite(tmr, event.u.site.parent);
                 if (!parent) {
                     fprintf(stderr, "%s: no parent for %lu (%lu)!\n",
                             tmr->program, (unsigned long) event.serial,
@@ -493,7 +493,7 @@ int tmreader_loop(tmreader *tmr, const char *filename,
             he = PL_HashTableRawAdd(tmr->callsites, hep, hash, key, NULL);
             if (!he) {
                 perror(tmr->program);
-                return 0;
+                return -1;
             }
 
             site = (tmcallsite*) he;
@@ -513,15 +513,15 @@ int tmreader_loop(tmreader *tmr, const char *filename,
             break;
           }
 
-          case 'M':
-          case 'C':
-          case 'R': {
+          case TM_EVENT_MALLOC:
+          case TM_EVENT_CALLOC:
+          case TM_EVENT_REALLOC: {
             tmcallsite *site;
             int32 size, oldsize, delta;
             tmgraphnode *meth, *comp, *lib;
             double sqdelta, sqszdelta;
 
-            site = tmreader_get_callsite(tmr, event.serial);
+            site = tmreader_callsite(tmr, event.serial);
             if (!site) {
                 fprintf(stderr, "%s: no callsite for '%c' (%lu)!\n",
                         tmr->program, event.type, (unsigned long) event.serial);
@@ -532,13 +532,13 @@ int tmreader_loop(tmreader *tmr, const char *filename,
             oldsize = (int32)event.u.alloc.oldsize;
             delta = size - oldsize;
             site->bytes.direct += delta;
-            if (event.type != 'R')
+            if (event.type != TM_EVENT_REALLOC)
                 site->allocs.direct++;
             meth = site->method;
             if (meth) {
                 meth->bytes.direct += delta;
                 sqdelta = delta * delta;
-                if (event.type == 'R') {
+                if (event.type == TM_EVENT_REALLOC) {
                     sqszdelta = ((double)size * size)
                               - ((double)oldsize * oldsize);
                     meth->sqsum += sqszdelta;
@@ -549,7 +549,7 @@ int tmreader_loop(tmreader *tmr, const char *filename,
                 comp = meth->up;
                 if (comp) {
                     comp->bytes.direct += delta;
-                    if (event.type == 'R') {
+                    if (event.type == TM_EVENT_REALLOC) {
                         comp->sqsum += sqszdelta;
                     } else {
                         comp->sqsum += sqdelta;
@@ -558,7 +558,7 @@ int tmreader_loop(tmreader *tmr, const char *filename,
                     lib = comp->up;
                     if (lib) {
                         lib->bytes.direct += delta;
-                        if (event.type == 'R') {
+                        if (event.type == TM_EVENT_REALLOC) {
                             lib->sqsum += sqszdelta;
                         } else {
                             lib->sqsum += sqdelta;
@@ -570,10 +570,10 @@ int tmreader_loop(tmreader *tmr, const char *filename,
             break;
           }
 
-          case 'F':
+          case TM_EVENT_FREE:
             break;
 
-          case 'Z':
+          case TM_EVENT_STATS:
             break;
         }
 
@@ -583,11 +583,38 @@ int tmreader_loop(tmreader *tmr, const char *filename,
     return 1;
 }
 
-tmcallsite *tmreader_get_callsite(tmreader *tmr, uint32 serial)
+tmgraphnode *tmreader_library(tmreader *tmr, uint32 serial)
 {
     const void *key;
     PLHashNumber hash;
-    tmcallsite *site;
+
+    key = (const void*) serial;
+    hash = hash_serial(key);
+    return (tmgraphnode*) *PL_HashTableRawLookup(tmr->libraries, hash, key);
+}
+
+tmgraphnode *tmreader_component(tmreader *tmr, const char *name)
+{
+    PLHashNumber hash;
+
+    hash = PL_HashString(name);
+    return (tmgraphnode*) *PL_HashTableRawLookup(tmr->components, hash, name);
+}
+
+tmgraphnode *tmreader_method(tmreader *tmr, uint32 serial)
+{
+    const void *key;
+    PLHashNumber hash;
+
+    key = (const void*) serial;
+    hash = hash_serial(key);
+    return (tmgraphnode*) *PL_HashTableRawLookup(tmr->methods, hash, key);
+}
+
+tmcallsite *tmreader_callsite(tmreader *tmr, uint32 serial)
+{
+    const void *key;
+    PLHashNumber hash;
 
     key = (const void*) serial;
     hash = hash_serial(key);

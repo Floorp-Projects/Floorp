@@ -36,9 +36,11 @@
 
 /*
  * TODO:
- * - Fix rusty's SMP realloc oldsize corruption bug
+ * - fix my_dladdr so it builds its own symbol tables from bfd
+ * - extend logfile so 'F' record tells free stack
+ * - diagnose rusty's SMP realloc oldsize corruption bug
  * - #ifdef __linux__/x86 and port to other platforms
- * - unify calltree with gc/boehm somehow (common utility libs)
+ * - unify calltree with gc/boehm somehow (common utility lib?)
  * - provide NS_TraceMallocTimestamp() or do it internally
  */
 #include <errno.h>
@@ -54,8 +56,11 @@
 #include "prprf.h"
 #include "nsTraceMalloc.h"
 
-/* From libiberty, why isn't this in <libiberty.h> ? */
+/* From libiberty, why aren't these in <libiberty.h> ? */
 extern char *cplus_demangle(const char *, int);
+
+#define DMGL_PARAMS     0x1
+#define DMGL_ANSI       0x2
 
 extern __ptr_t __libc_malloc(size_t);
 extern __ptr_t __libc_calloc(size_t, size_t);
@@ -380,6 +385,8 @@ static uint32   library_serial_generator = 0;
 static uint32   method_serial_generator = 0;
 static uint32   callsite_serial_generator = 0;
 static uint32   tmstats_serial_generator = 0;
+
+/* Root of the tree of callsites, the sum of all (cycle-compressed) stacks. */
 static callsite calltree_root = {0, 0, LFD_SET_STATIC_INITIALIZER, NULL, NULL, NULL, NULL};
 
 /* Basic instrumentation. */
@@ -396,7 +403,7 @@ static callsite *last_callsite_recurrence;
 
 static void log_tmstats(logfile *fp)
 {
-    log_event1(fp, 'Z', ++tmstats_serial_generator);
+    log_event1(fp, TM_EVENT_STATS, ++tmstats_serial_generator);
     log_uint32(fp, tmstats.calltree_maxstack);
     log_uint32(fp, tmstats.calltree_maxdepth);
     log_uint32(fp, tmstats.calltree_parents);
@@ -595,7 +602,7 @@ static callsite *calltree(uint32 *bp)
                 slash = strrchr(library, '/');
                 if (slash)
                     library = slash + 1;
-                log_event1(fp, 'L', library_serial);
+                log_event1(fp, TM_EVENT_LIBRARY, library_serial);
                 log_string(fp, library);
                 LFD_SET(fp->lfd, &le->lfdset);
             }
@@ -606,11 +613,8 @@ static callsite *calltree(uint32 *bp)
         offset = (char*)pc - (char*)info.dli_saddr;
         method = NULL;
         if (symbol && (len = strlen(symbol)) != 0) {
-            /*
-             * Attempt to demangle symbol in case it's a C++ mangled name.
-             * The magic 3 passed here specifies DMGL_PARAMS | DMGL_ANSI.
-             */
-            method = cplus_demangle(symbol, 3);
+            /* Attempt to demangle symbol in case it's a C++ mangled name. */
+            method = cplus_demangle(symbol, DMGL_PARAMS | DMGL_ANSI);
         }
         if (!method) {
             method = symbol
@@ -660,7 +664,7 @@ static callsite *calltree(uint32 *bp)
             le = (lfdset_entry *) he;
         }
         if (le) {
-            log_event2(fp, 'N', method_serial, library_serial);
+            log_event2(fp, TM_EVENT_METHOD, method_serial, library_serial);
             log_string(fp, method);
             LFD_SET(fp->lfd, &le->lfdset);
         }
@@ -696,8 +700,8 @@ static callsite *calltree(uint32 *bp)
         }
 
         /* Log the site with its parent, method, and offset. */
-        log_event4(fp, 'S', site->serial, parent->serial, method_serial,
-                   offset);
+        log_event4(fp, TM_EVENT_CALLSITE, site->serial, parent->serial,
+                   method_serial, offset);
         LFD_SET(fp->lfd, &site->lfdset);
 
       upward:
@@ -837,7 +841,7 @@ __ptr_t malloc(size_t size)
             PR_EnterMonitor(tmmon);
         site = backtrace(1);
         if (site)
-            log_event2(logfp, 'M', site->serial, size);
+            log_event2(logfp, TM_EVENT_MALLOC, site->serial, size);
         if (get_allocations()) {
             suppress_tracing++;
             he = PL_HashTableAdd(allocations, ptr, site);
@@ -870,7 +874,7 @@ __ptr_t calloc(size_t count, size_t size)
         site = backtrace(1);
         size *= count;
         if (site)
-            log_event2(logfp, 'C', site->serial, size);
+            log_event2(logfp, TM_EVENT_CALLOC, site->serial, size);
         if (get_allocations()) {
             suppress_tracing++;
             he = PL_HashTableAdd(allocations, ptr, site);
@@ -932,7 +936,7 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
 #endif
         site = backtrace(1);
         if (site)
-            log_event3(logfp, 'R', site->serial, oldsize, size);
+            log_event3(logfp, TM_EVENT_REALLOC, site->serial, oldsize, size);
         if (ptr && allocations) {
             suppress_tracing++;
             he = PL_HashTableAdd(allocations, ptr, site);
@@ -967,7 +971,7 @@ void free(__ptr_t ptr)
                 site = (callsite*) he->value;
                 if (site) {
                     alloc = (allocation*) he;
-                    log_event2(logfp, 'F', site->serial, alloc->size);
+                    log_event2(logfp, TM_EVENT_FREE, site->serial, alloc->size);
                 }
                 PL_HashTableRawRemove(allocations, hep, he);
             }
