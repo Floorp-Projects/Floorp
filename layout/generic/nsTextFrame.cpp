@@ -316,11 +316,7 @@ protected:
 
 #define TEXT_IN_WORD         0x08
 
-#define TEXT_FIRST_LINE      0x10
-
-#define TEXT_FIRST_LETTER    0x20
-
-#define TEXT_TRIMMED_WS      0x40
+#define TEXT_TRIMMED_WS      0x10
 
 //----------------------------------------------------------------------
 
@@ -514,20 +510,10 @@ TextFrame::Paint(nsIPresContext& aPresContext,
   }
 
   nsIStyleContext* sc = mStyleContext;
-  nsIStyleContext* firstLineStyle = nsnull;
-  if ((TEXT_FIRST_LETTER | TEXT_FIRST_LINE) & mFlags) {
-    firstLineStyle = aPresContext.
-      ProbePseudoStyleContextFor(mContent, nsHTMLAtoms::firstLinePseudo, sc);
-    if (nsnull != firstLineStyle) {
-      sc = firstLineStyle;
-    }
-  }
-
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
     sc->GetStyleData(eStyleStruct_Display);
-
   if (disp->mVisible) {
-    TextStyle ts(aPresContext, aRenderingContext, sc);
+    TextStyle ts(aPresContext, aRenderingContext, mStyleContext);
     if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing) ||
         ((NS_STYLE_TEXT_ALIGN_JUSTIFY == ts.mText->mTextAlign) &&
          (mRect.width > mComputedWidth))) {
@@ -549,7 +535,6 @@ TextFrame::Paint(nsIPresContext& aPresContext,
       }
     }
   }
-  NS_IF_RELEASE(firstLineStyle);
   return NS_OK;
 }
 
@@ -1619,19 +1604,8 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
     startingOffset = prev->mContentOffset + prev->mContentLength;
   }
 
-  // Find out what style context should be used
   nsLineLayout& lineLayout = *aReflowState.lineLayout;
-  nsIStyleContext* firstLineStyle = nsnull;
-  nsIStyleContext* sc = mStyleContext;
-  if (0 == lineLayout.GetLineNumber()) {
-    firstLineStyle = lineLayout.mPresContext.
-      ProbePseudoStyleContextFor(mContent, nsHTMLAtoms::firstLinePseudo, sc);
-    if (nsnull != firstLineStyle) {
-      sc = firstLineStyle;
-    }
-  }
-
-  TextStyle ts(aPresContext, *aReflowState.rendContext, sc);
+  TextStyle ts(aPresContext, *aReflowState.rendContext, mStyleContext);
 
   // Initialize mFlags (without destroying the TEXT_BLINK_ON bit) bits
   // that are filled in by the reflow routines.
@@ -1642,11 +1616,9 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
       gTextBlinker->AddFrame(this);
     }
   }
-  if (nsnull != firstLineStyle) {
-    mFlags |= TEXT_FIRST_LINE;
-  }
 
   PRBool wrapping = NS_STYLE_WHITESPACE_NORMAL == ts.mText->mWhiteSpace;
+  PRBool firstLetterOK = lineLayout.GetFirstLetterStyleOK();
 
   // Set whitespace skip flag
   PRBool skipWhitespace = PR_FALSE;
@@ -1728,6 +1700,7 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
         width = ts.mSpaceWidth + ts.mWordSpacing;/* XXX simplistic */
       }
       breakable = PR_TRUE;
+      firstLetterOK = PR_FALSE;
     } else {
       if (ts.mSmallCaps) {
         MeasureSmallCapsText(aReflowState, ts, bp, wordLen, width);
@@ -1867,10 +1840,6 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   if (nsnull != aMetrics.maxElementSize) {
     aMetrics.maxElementSize->width = maxWordWidth;
     aMetrics.maxElementSize->height = aMetrics.height;
-  }
-
-  if (nsnull != firstLineStyle) {
-    NS_RELEASE(firstLineStyle);
   }
 
   // Set content offset and length
