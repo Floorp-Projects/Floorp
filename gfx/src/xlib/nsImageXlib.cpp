@@ -160,10 +160,10 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
                          XLIB_RGB_DITHER_MAX,
                          mImageBits, mRowBytes);
   }
-
+  
   if (nsnull != mAlphaPixmap) {
     // set up the gc to use the alpha pixmap for clipping
-    XSetClipOrigin(gDisplay, drawing->GetGC(), 0, 0);
+    XSetClipOrigin(gDisplay, drawing->GetGC(), aX, aY);
     XSetClipMask(gDisplay, drawing->GetGC(), mAlphaPixmap);
   }
 
@@ -171,9 +171,9 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
             mImagePixmap,              // source
             drawing->GetDrawable(),    // dest
             drawing->GetGC(),          // GC
-            aX, aY,                    // xsrc, ysrc
+            0, 0,                    // xsrc, ysrc
             aWidth, aHeight,           // width, height
-            0, 0);                     // xdest, ydest
+            aX, aY);                     // xdest, ydest
             
   if (mAlphaPixmap != nsnull) {
     XSetClipOrigin(gDisplay, drawing->GetGC(), 0, 0);
