@@ -45,7 +45,7 @@
   <groupbox flex="1">
     <caption label="&descript;"/>
     <label value="&fileTypes.label;"/>
-    <vbox>
+    <vbox flex="1">
       <hbox flex="1">
         <listbox id="appList" flex="1"
               sortResource="http://home.netscape.com/NC-rdf#value"
