@@ -189,6 +189,12 @@ protected:
 
   ~nsRenderingContextWin();
 
+  /** ---------------------------------------------------
+   *  See documentation in nsIRenderingContextImpl.h
+   *	@update 4/01/00 dwc
+   */
+  virtual PRBool CanTile(nscoord aWidth,nscoord aHeight);
+
 private:
    // ConditionRect is used to fix a coordinate overflow problem under WIN95. 
   void ConditionRect(nsRect aSrcRect, RECT& aDestRect);
