@@ -1453,19 +1453,15 @@ public class Interpreter extends LabelTable {
         int rIntValue;
         double rDbl;
 
-        int[] catchStack = null;
+// tryStack[2 * i]: starting pc of catch block
+// tryStack[2 * i + 1]: starting pc of finally block
+        int[] tryStack = null;
         int tryStackTop = 0;
-        InterpreterFrame frame = null;
 
+        InterpreterFrame frame = null;
         if (cx.debugger != null) {
             frame = new InterpreterFrame(scope, theData, fnOrScript);
             cx.pushFrame(frame);
-        }
-
-        if (maxTryDepth != 0) {
-            // catchStack[2 * i]: starting pc of catch block
-            // catchStack[2 * i + 1]: starting pc of finally block
-            catchStack = new int[maxTryDepth * 2];
         }
 
         /* Save the security domain. Must restore upon normal exit.
@@ -1493,12 +1489,15 @@ public class Interpreter extends LabelTable {
                         tryStackTop--;
                         break;
                     case TokenStream.TRY :
+                        if (tryStackTop == 0) {
+                            tryStack = new int[maxTryDepth * 2];
+                        }
                         i = getTarget(iCode, pc + 1);
                         if (i == pc) i = 0;
-                        catchStack[tryStackTop * 2] = i;
+                        tryStack[tryStackTop * 2] = i;
                         i = getTarget(iCode, pc + 3);
                         if (i == (pc + 2)) i = 0;
-                        catchStack[tryStackTop * 2 + 1] = i;
+                        tryStack[tryStackTop * 2 + 1] = i;
                         stack[TRY_SCOPE_SHFT + tryStackTop] = scope;
                         ++tryStackTop;
                         pc += 4;
@@ -2244,14 +2243,14 @@ public class Interpreter extends LabelTable {
                     if (exType == SCRIPT_THROW || exType == ECMA) {
                         // Check for catch only for
                         // JavaScriptException and EcmaError
-                        pc = catchStack[tryStackTop * 2];
+                        pc = tryStack[tryStackTop * 2];
                         if (pc != 0) {
                             // Has catch block
                             rethrow = false;
                         }
                     }
                     if (rethrow) {
-                        pc = catchStack[tryStackTop * 2 + 1];
+                        pc = tryStack[tryStackTop * 2 + 1];
                         if (pc != 0) {
                             // has finally block
                             rethrow = false;
