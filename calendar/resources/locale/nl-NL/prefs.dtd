@@ -135,8 +135,6 @@
 
 <!ENTITY pref.publish.caption        "Publiceer gebeurtenissen">
 <!ENTITY pref.publish.path.label     "Standaard bestandsnaam op andere computer">
-<!ENTITY pref.publish.username.label "Gebruikersnaam">
-<!ENTITY pref.publish.password.label "Wachtwoord">
 
 <!ENTITY pref.minutes.label "Minuten">
 
