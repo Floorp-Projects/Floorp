@@ -181,8 +181,10 @@ static nsModuleComponentInfo components[] = {
       NS_COOKIEHTTPNOTIFY_CID,
       NS_COOKIEHTTPNOTIFY_PROGID,
       nsCookieHTTPNotifyConstructor,
+#if 0
       nsCookieHTTPNotify::RegisterProc,
       nsCookieHTTPNotify::UnregisterProc
+#endif
     },
 };
 
