@@ -52,7 +52,7 @@ import org.w3c.dom.Document;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.11 2000/06/05 17:54:58 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.12 2000/06/05 18:23:23 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -70,6 +70,7 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 
     private Navigation navigation = null;
 	private CurrentPage	    currentPage;
+	private History	        history;
 	private Bookmarks	    bookmarks;
     private BookmarksFrame bookmarksFrame = null;
 	private TreeModel	    bookmarksTree;
@@ -150,9 +151,13 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 
 		// Add the buttons
 		backButton = makeItem(buttonsPanel, "Back",    0, 0, 1, 1, 0.0, 0.0);
+        backButton.setEnabled(false);
 		forwardButton = makeItem(buttonsPanel, "Forward", 1, 0, 1, 1, 0.0, 0.0);
+        forwardButton.setEnabled(false);
 		stopButton = makeItem(buttonsPanel, "Stop",    2, 0, 1, 1, 0.0, 0.0);
+        stopButton.setEnabled(false);
 		refreshButton = makeItem(buttonsPanel, "Refresh", 3, 0, 1, 1, 0.0, 0.0);
+        refreshButton.setEnabled(false);
 		makeItem(buttonsPanel, "Bookmarks",    4, 0, 1, 1, 0.0, 0.0);
 		makeItem(buttonsPanel, "DOMViewer",    5, 0, 1, 1, 0.0, 0.0);
 
@@ -217,6 +222,8 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
                 browserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
             currentPage = (CurrentPage)
                 browserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
+            history = (History)
+                browserControl.queryInterface(BrowserControl.HISTORY_NAME);
             
         }
 		catch (Exception e) {
@@ -321,11 +328,7 @@ public void actionPerformed (ActionEvent evt)
     String command = evt.getActionCommand();
     
     try {
-        CurrentPage currentPage = (CurrentPage)
-            browserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
-        History history = (History)
-            browserControl.queryInterface(BrowserControl.HISTORY_NAME);
-
+        
         // deal with the menu item commands
         if (evt.getSource() instanceof MenuItem) {
             if (command.equals("New Window")) {
@@ -505,10 +508,14 @@ private Component makeItem (Panel p, Object arg, int x, int y, int w, int h, dou
 
 public void eventDispatched(WebclientEvent event)
 {
+    boolean enabledState;
+
     if (event instanceof DocumentLoadEvent) {
         String currentURL;
         switch ((int) event.getType()) {
         case ((int) DocumentLoadEvent.START_DOCUMENT_LOAD_EVENT_MASK):
+            stopButton.setEnabled(true);
+            refreshButton.setEnabled(true);
             currentURL = (String) event.getEventData();
             System.out.println("debug: edburns: Currently Viewing: " + 
                                currentURL);
@@ -517,6 +524,9 @@ public void eventDispatched(WebclientEvent event)
             currentDocument = null;
             break;
         case ((int) DocumentLoadEvent.END_DOCUMENT_LOAD_EVENT_MASK):
+            stopButton.setEnabled(false);
+            backButton.setEnabled(history.canBack());
+            forwardButton.setEnabled(history.canForward());
             statusLabel.setText("Done.");
             currentDocument = currentPage.getDOM();
             if (null != domViewer) {
