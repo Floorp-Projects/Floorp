@@ -2460,6 +2460,8 @@ void DlgSequenceNext()
 
       if(RetrieveArchives() == WIZ_OK)
       {
+        char szInstallLogFile[MAX_BUF];
+
         /* POST_DOWNLOAD process file manipulation functions */
         ProcessFileOps(T_POST_DOWNLOAD);
         /* PRE_XPCOM process file manipulation functions */
@@ -2503,6 +2505,17 @@ void DlgSequenceNext()
           CreateDirectoriesAll(szBuf, TRUE);
           ShowMessage(szMessage, FALSE);
         }
+
+        /* copy the install_wizard.log file from the temp\ns_temp dir to
+         * the destination dir and use the new destination file to continue
+         * logging.
+         */
+        lstrcpy(szInstallLogFile, szTempDir);
+        AppendBackSlash(szInstallLogFile, sizeof(szInstallLogFile));
+        lstrcat(szInstallLogFile, FILE_INSTALL_LOG);
+        FileCopy(szInstallLogFile, szBuf, FALSE);
+        DeleteFile(szInstallLogFile);
+        gbILUseTemp = FALSE;
 
         lstrcat(szBuf, "Uninstall\\");
         CreateDirectoriesAll(szBuf, TRUE);

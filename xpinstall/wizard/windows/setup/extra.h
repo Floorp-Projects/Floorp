@@ -181,6 +181,7 @@ void              ResetComponentAttributes(char *szFileIni);
 BOOL              IsInList(DWORD dwCurrentItem, DWORD dwItems, DWORD *dwItemsSelected);
 int               LocateExistingPath(char *szPath, char *szExistingPath, DWORD dwExistingPathSize);
 BOOL              ContainsReparseTag(char *szPath, char *szReparsePath, DWORD dwReparsePathSize);
+BOOL              DeleteInstallLogFile();
 
 BOOL              bSDInit;
 
