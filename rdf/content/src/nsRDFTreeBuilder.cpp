@@ -121,7 +121,7 @@ public:
     nsresult
     AddWidgetItem(nsIContent* aTreeItemElement,
                   nsIRDFResource* aProperty,
-                  nsIRDFResource* aValue, PRInt32 naturalOrderPos);
+                  nsIRDFResource* aValue, PRInt32 aNaturalOrderPos);
 
     nsresult
     EnsureCell(nsIContent* aTreeItemElement, PRInt32 aIndex, nsIContent** aCellElement);
@@ -262,7 +262,7 @@ nsresult
 RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
                                   nsIRDFResource* aProperty,
                                   nsIRDFResource* aValue,
-                                  PRInt32 naturalOrderPos)
+                                  PRInt32 aNaturalOrderPos)
 {
     // If it's a tree property, then we need to add the new child
     // element to a special "children" element in the parent.  The
@@ -391,11 +391,11 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
 
         treeItem->SetAttribute(nameSpaceID, tag, s, PR_FALSE);
 
-        if (naturalOrderPos > 0)
+        if (aNaturalOrderPos > 0)
 	    {
             // XXX Add this to menu builder as well, or better yet, abstract out.
 		    nsAutoString	pos, zero("0");;
-		    pos.Append(naturalOrderPos, 10);
+		    pos.Append(aNaturalOrderPos, 10);
 		    if (pos.Length() < 4)
 		    {
 			    pos.Insert(zero, 0, 4-pos.Length()); 
