@@ -1149,11 +1149,13 @@ nsSecureBrowserUIImpl::OnSecurityChange(nsIWebProgress *aWebProgress,
   nsCOMPtr<nsIURI> aURI;
   channel->GetURI(getter_AddRefs(aURI));
   
-  nsCAutoString temp;
-  aURI->GetSpec(temp);
-  PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-         ("SecureUI:%p: OnSecurityChange: (%x) %s\n", this,
-          state, temp.get()));
+  if (aURI) {
+    nsCAutoString temp;
+    aURI->GetSpec(temp);
+    PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+           ("SecureUI:%p: OnSecurityChange: (%x) %s\n", this,
+            state, temp.get()));
+  }
 #endif
 
   return NS_OK;
