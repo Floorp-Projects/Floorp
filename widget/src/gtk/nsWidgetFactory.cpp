@@ -44,6 +44,8 @@
 #include "nsScrollbar.h"
 #include "nsSound.h"
 
+#include "nsGtkIMEHelper.h"
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsButton)
@@ -205,4 +207,12 @@ static nsModuleComponentInfo components[] =
     nsFileSpecWithUIImplConstructor }
 };
 
-NS_IMPL_NSGETMODULE("nsWidgetGTKModule", components)
+PR_STATIC_CALLBACK(void)
+nsWidgetGTKModuleDtor(nsIModule *self)
+{
+  nsGtkIMEHelper::Shutdown();
+}
+
+NS_IMPL_NSGETMODULE_WITH_DTOR("nsWidgetGTKModule",
+                              components,
+                              nsWidgetGTKModuleDtor)

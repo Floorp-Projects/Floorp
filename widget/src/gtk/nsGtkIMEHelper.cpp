@@ -53,13 +53,25 @@ nsGtkIMEHelper* nsGtkIMEHelper::GetSingleton()
   NS_ASSERTION(gSingleton, "do not have singleton");
   return gSingleton;  
 }
+
+/*static*/ void nsGtkIMEHelper::Shutdown()
+{
+  if (gSingleton) {
+    delete gSingleton;
+    gSingleton = nsnull;
+  }
+}
 //-----------------------------------------------------------------------
+MOZ_DECL_CTOR_COUNTER(nsGtkIMEHelper);
+
 nsGtkIMEHelper::nsGtkIMEHelper()
 {
+  MOZ_COUNT_CTOR(nsGtkIMEHelper);
   SetupUnicodeDecoder(); 
 }
 nsGtkIMEHelper::~nsGtkIMEHelper()
 {
+  MOZ_COUNT_DTOR(nsGtkIMEHelper);
   NS_IF_RELEASE(mDecoder);
 }
 //-----------------------------------------------------------------------
