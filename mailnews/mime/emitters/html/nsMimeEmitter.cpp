@@ -148,7 +148,11 @@ nsMimeEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char 
   mDocHeader = rootMailHeader;
 
   if (mDocHeader)
+  {
+    if (!headerOnly)
+      UtilityWrite("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">");
     UtilityWrite("<BLOCKQUOTE><table BORDER=0>");
+  }  
   else
     UtilityWrite("<BLOCKQUOTE><table BORDER=0 BGCOLOR=\"#CCCCCC\" >");
   return NS_OK;
@@ -349,6 +353,9 @@ nsMimeEmitter::StartBody(PRBool bodyOnly, const char *msgID)
 #ifdef DEBUG
   mReallyOutput = PR_TRUE;
 #endif
+
+  if (bodyOnly)
+    UtilityWrite("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">");
 
   return NS_OK;
 }
