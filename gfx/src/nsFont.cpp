@@ -86,7 +86,8 @@ static PRBool IsGenericFontFamily(const nsString& aFamily)
                 aFamily.EqualsIgnoreCase("sans-serif") ||
                 aFamily.EqualsIgnoreCase("cursive") ||
                 aFamily.EqualsIgnoreCase("fantasy") ||
-                aFamily.EqualsIgnoreCase("monospace"));
+                aFamily.EqualsIgnoreCase("monospace") ||
+                aFamily.EqualsIgnoreCase("-moz-fixed"));  // our special "use the user's fixed font"
 }
 
 const PRUnichar kNullCh       = PRUnichar('\0');

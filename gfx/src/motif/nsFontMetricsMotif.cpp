@@ -363,6 +363,9 @@ static void MapGenericFamilyToFont(const nsString& aGenericFamily, nsIDeviceCont
   else if (aGenericFamily.EqualsIgnoreCase("monospace")) {
     aDC->GetLocalFontName("fixed", aFontFace, aliased);
   }
+  else if (aGenericFamily.EqualsIgnoreCase("-moz-fixed")) {
+    aDC->GetLocalFontName("fixed", aFontFace, aliased);
+  }
   else {
     aFontFace.Truncate();
   }

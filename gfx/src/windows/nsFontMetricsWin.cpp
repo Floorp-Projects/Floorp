@@ -744,6 +744,7 @@ static nsFontFamilyName gFamilyNameTable[] =
   { "fantasy",    "Arial" },
   { "cursive",    "Arial" },
   { "monospace",  "Courier New" },
+  { "-moz-fixed", "Courier New" },
 
   { nsnull, nsnull }
 };
