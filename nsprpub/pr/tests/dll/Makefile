@@ -105,7 +105,6 @@ ifdef SHARED_LIBRARY
 export:: $(TARGETS)
 	$(NSINSTALL) $(TARGETS) ../$(OBJDIR)/dll
 
-install:: export
 
 clean::
 	rm -rf $(TARGETS)

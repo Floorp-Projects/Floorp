@@ -454,4 +454,3 @@ $(AIX_RTL_LIBC): /usr/ccs/lib/libc.a
 	rtl_enable -o $@ $<
 endif
 
-install:: export

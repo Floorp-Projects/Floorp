@@ -51,5 +51,4 @@ DEFINES     += -D_NSPR_BUILD_
 
 export:: $(TARGETS)
 
-install:: export
 

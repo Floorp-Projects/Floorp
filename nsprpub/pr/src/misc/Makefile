@@ -100,5 +100,4 @@ build_prerr:
 
 export:: $(TARGETS)
 
-install:: export
 

@@ -82,4 +82,3 @@ include $(topsrcdir)/config/rules.mk
 
 export:: $(TARGETS)
 
-install:: export

@@ -554,7 +554,6 @@ endif
 endif # !USE_AUTOCONF
 
 export:: $(TARGETS)
-install:: export
 clean::
 	rm -f $(TARGETS)
 

@@ -67,4 +67,3 @@ include $(MOD_DEPTH)/config/rules.mk
 
 export:: $(TARGETS)
 
-install:: export
