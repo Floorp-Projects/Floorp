@@ -118,7 +118,7 @@ public:
         mValue = aValue;
     }
 
-    nsHTTPChunkConvHeaderEntry::~nsHTTPChunkConvHeaderEntry()
+    ~nsHTTPChunkConvHeaderEntry()
     {
     }
 
