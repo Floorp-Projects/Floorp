@@ -35,6 +35,7 @@
 #include "nsScrollbarButtonFrame.h"
 #include "nsSliderFrame.h"
 #include "nsIDOMElement.h"
+#include "nsISupportsArray.h"
 
 //
 // NS_NewTreeFrame
@@ -157,9 +158,24 @@ void nsTreeRowGroupFrame::ReverseDestroyRows(nsIPresContext& aPresContext, PRInt
 }
 
 void 
-nsTreeRowGroupFrame::ConstructContentChain(PRInt32 aOldIndex, PRInt32 aNewIndex, nsIContent* aContent)
+nsTreeRowGroupFrame::ConstructContentChain(nsIContent* aRowContent)
 {
-  
+  // Create the content chain array.
+  NS_NewISupportsArray(getter_AddRefs(mContentChain));
+
+  // Move up the chain until we hit our content node.
+  nsCOMPtr<nsIContent> currContent = dont_QueryInterface(aRowContent);
+  while (currContent && (currContent != mContent)) {
+    mContentChain->InsertElementAt(currContent, 0);
+    currContent->GetParent(*getter_AddRefs(currContent));
+  }
+
+  NS_ASSERTION(currContent.get() == mContent, "Disaster! Content not contained in our tree!\n");
+}
+
+void 
+nsTreeRowGroupFrame::FindPreviousRowContent(PRInt32 aDelta, nsIContent* aHint, nsIContent** aResult)
+{
 
 }
 
@@ -179,18 +195,11 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldI
   nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);
 
-  // Get the content node that corresponds to the topmost row.
-  nsTableCellFrame* tableCellFrame = tableFrame->GetCellFrameAt(0, 0);
-  nsCOMPtr<nsIContent> cellContent;
-  tableCellFrame->GetContent(getter_AddRefs(cellContent));
-  nsCOMPtr<nsIContent> rowContent;
-  cellContent->GetParent(*getter_AddRefs(rowContent));
-
   // Figure out how many rows we need to lose (if we moved down) or gain (if we moved up).
   PRInt32 delta = aNewIndex > aOldIndex ? aNewIndex - aOldIndex : aOldIndex - aNewIndex;
   
   // Get our presentation context.
-  if (delta <= rowCount) {
+  if (delta < rowCount) {
     PRInt32 loseRows = delta;
     if (aNewIndex > aOldIndex) {
       // Figure out how many rows we have to lose off the top.
@@ -200,16 +209,24 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldI
       // Figure out how many rows we have to lose off the bottom.
       ReverseDestroyRows(aPresContext, loseRows);
     
+      nsTableCellFrame* tableCellFrame = tableFrame->GetCellFrameAt(0, 0);
+      nsCOMPtr<nsIContent> cellContent;
+      tableCellFrame->GetContent(getter_AddRefs(cellContent));
+      nsCOMPtr<nsIContent> rowContent;
+      cellContent->GetParent(*getter_AddRefs(rowContent));
+      
       // Now that we've lost some rows, we need to create a
       // content chain that provides a hint for moving forward.
-      ConstructContentChain(aOldIndex, aNewIndex, rowContent);
+      nsCOMPtr<nsIContent> topRowContent;
+      FindPreviousRowContent(delta, rowContent, getter_AddRefs(topRowContent));
+      ConstructContentChain(topRowContent);
     }
   }
   else {
     // Just blow away all our frames, but keep a content chain
     // as a hint to figure out how to build the frames.
-    mFrames.DeleteFrames(aPresContext); // Destroys everything.
-    ConstructContentChain(aOldIndex, aNewIndex, rowContent);
+    NS_ERROR("Not yet implemented!\n");
+    //mFrames.DeleteFrames(aPresContext); // Destroys everything.
   }
 
   // Invalidate the cell map and column cache.
