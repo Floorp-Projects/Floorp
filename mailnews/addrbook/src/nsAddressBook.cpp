@@ -1731,19 +1731,35 @@ nsresult nsAddressBook::AppendBasicLDIFForCard(nsIAbCard *aCard, nsAFlatCString 
   return rv;
 }
 
+PRBool nsAddressBook::IsSafeLDIFString(const PRUnichar *aStr)
+{
+  // follow RFC 2849 to determine if something is safe "as is" for LDIF
+  if (aStr[0] == PRUnichar(' ') ||
+      aStr[0] == PRUnichar(':') ||
+      aStr[0] == PRUnichar('<')) 
+    return PR_FALSE;
+
+  PRUint32 i;
+  PRUint32 len = nsCRT::strlen(aStr);
+  for (i=0; i<len; i++) {
+    // If string contains CR or LF, it is not safe for LDIF
+    // and MUST be base64 encoded
+    if ((aStr[i] == PRUnichar('\n')) ||
+        (aStr[i] == PRUnichar('\r')) ||
+        (!nsCRT::IsAscii(aStr[i])))
+      return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
 nsresult nsAddressBook::AppendProperty(const char *aProperty, const PRUnichar *aValue, nsAFlatCString &aResult)
 {
   NS_ENSURE_ARG_POINTER(aValue);
 
   aResult += aProperty;
  
-  // follow RFC 2849 for when we MUST base64 encode
-  if (nsCRT::IsAscii(aValue) && 
-    aValue[0] != PRUnichar(' ') &&
-    aValue[0] != PRUnichar('\n') &&
-    aValue[0] != PRUnichar('\r') &&
-    aValue[0] != PRUnichar(':') &&
-    aValue[0] != PRUnichar('<')) {
+  // if the string is not safe "as is", base64 encode it
+  if (IsSafeLDIFString(aValue)) {
     aResult += NS_LITERAL_CSTRING(": ") + NS_LossyConvertUCS2toASCII(aValue);
   }
   else {

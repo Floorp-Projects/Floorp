@@ -81,6 +81,7 @@ private:
   nsresult AppendDNForCard(const char *aProperty, nsIAbCard *aCard, nsAFlatCString &aResult);
   nsresult AppendBasicLDIFForCard(nsIAbCard *aCard, nsAFlatCString &aResult);
   nsresult AppendProperty(const char *aProperty, const PRUnichar *aValue, nsAFlatCString &aResult);
+  PRBool IsSafeLDIFString(const PRUnichar *aStr);
 };
 
 #endif
