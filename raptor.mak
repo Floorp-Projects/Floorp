@@ -172,3 +172,11 @@ pull_raptor:
 	$(CVSCO_RAPTOR) ns/view
 	$(CVSCO_RAPTOR) ns/webshell
 	$(CVSCO_RAPTOR) ns/widget
+#
+# Build raptor Doc++ documentation
+#
+
+doc_raptor:
+	-@mkdir $(MOZ_SRC)\ns\dist\documentation
+	@for %d in (raptor xpcom img dom) do @docxx -H -A -p -f -B c:\fake_banner-file_name -j -a -d $(MOZ_SRC)\ns\dist\documentation\%d $(MOZ_SRC)\ns\dist\public\%d\*.h
+	@echo Documentation written to $(MOZ_SRC)\ns\dist\documentation
