@@ -556,7 +556,8 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aMaxWidth
           continue;
         nscoord spanTotal = 0;
         nscoord divisor   = 0;
-        for (PRInt32 spanX = 0; spanX < colSpan; spanX++) {
+        PRInt32 spanX;
+        for (spanX = 0; spanX < colSpan; spanX++) {
           nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX);
           nscoord colWidth = colFrame->GetWidth(widthX);
           // need to get a contribution for every cell 
