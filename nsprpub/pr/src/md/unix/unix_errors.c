@@ -42,7 +42,10 @@ static void _MD_unix_map_default_error(int err)
         case EAGAIN:
             prError = PR_WOULD_BLOCK_ERROR;
             break;
-#ifndef QNX
+        /*
+         * On QNX and Neutrino, EALREADY is defined as EBUSY.
+         */
+#if EALREADY != EBUSY
         case EALREADY:
             prError = PR_ALREADY_INITIATED_ERROR;
             break;

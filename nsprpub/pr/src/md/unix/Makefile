@@ -126,6 +126,10 @@ QNX_CSRCS = \
 	qnx.c \
 	$(NULL)
 
+NTO_CSRCS = \
+	nto.c \
+	$(NULL)
+
 ifeq ($(PTHREADS_USER),1)
 CSRCS += $(PTH_USER_CSRCS)
 endif
@@ -197,7 +201,11 @@ ifeq ($(OS_ARCH),DGUX)
 CSRCS += $(DGUX_CSRCS)
 endif
 ifeq ($(OS_ARCH),QNX)
+ifeq ($(OS_TARGET),NTO)
+CSRCS += $(NTO_CSRCS)
+else
 CSRCS += $(QNX_CSRCS)
+endif
 endif
 
 #

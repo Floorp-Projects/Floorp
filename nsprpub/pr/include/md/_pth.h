@@ -93,7 +93,7 @@
 #elif defined(IRIX) || defined(OSF1) || defined(AIX) || defined(SOLARIS) \
 	|| defined(HPUX) || defined(LINUX) || defined(FREEBSD) \
 	|| defined(NETBSD) || defined(OPENBSD) || defined(BSDI) \
-	|| defined(VMS)
+	|| defined(VMS) || defined(NTO)
 #define PTHREAD_ZERO_THR_HANDLE(t)        (t) = 0
 #define PTHREAD_THR_HANDLE_IS_ZERO(t)     (t) == 0
 #define PTHREAD_COPY_THR_HANDLE(st, dt)   (dt) = (st)
@@ -186,6 +186,14 @@
 #elif defined(LINUX)
 #define PT_PRIO_MIN            sched_get_priority_min(SCHED_OTHER)
 #define PT_PRIO_MAX            sched_get_priority_max(SCHED_OTHER)
+#elif defined(NTO)
+/*
+ * Neutrino has functions that return the priority range but
+ * they return invalid numbers, so I just hard coded these here
+ * for now.  Jerry.Kirk@Nexarecorp.com
+ */
+#define PT_PRIO_MIN            0
+#define PT_PRIO_MAX            30 
 #elif defined(SOLARIS)
 /*
  * Solaris doesn't seem to have macros for the min/max priorities.
@@ -229,7 +237,7 @@ extern int (*_PT_aix_yield_fcn)();
     PR_END_MACRO
 #elif defined(HPUX) || defined(LINUX) || defined(SOLARIS) \
 	|| defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
-	|| defined(BSDI)
+	|| defined(BSDI) || defined(NTO)
 #define PTHREAD_YIELD()            	sched_yield()
 #else
 #error "Need to define PTHREAD_YIELD for this platform"

@@ -62,8 +62,17 @@ static void init_pthread_gc_support(void);
 #if defined(_PR_DCETHREADS) || defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
 static PRIntn pt_PriorityMap(PRThreadPriority pri)
 {
+#ifdef NTO
+    /* This priority algorithm causes lots of problems on Neutrino
+     * for now I have just hard coded everything to run at priority 10
+     * until I can come up with a new algorithm.
+     *     Jerry.Kirk@Nexwarecorp.com
+     */
+    return 10;
+#else
     return pt_book.minPrio +
 	    pri * (pt_book.maxPrio - pt_book.minPrio) / PR_PRIORITY_LAST;
+#endif
 }
 #endif
 
@@ -271,6 +280,10 @@ static PRThread* _PR_CreateThread(
         schedule.sched_priority = pt_PriorityMap(priority);
         rv = pthread_attr_setschedparam(&tattr, &schedule);
         PR_ASSERT(0 == rv);
+#ifdef NTO
+        rv = pthread_attr_setschedpolicy(&tattr, SCHED_RR); /* Round Robin */
+        PR_ASSERT(0 == rv);
+#endif
 #endif /* !defined(_PR_DCETHREADS) */
     }
 

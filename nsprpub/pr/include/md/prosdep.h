@@ -116,6 +116,9 @@ PR_BEGIN_EXTERN_C
 #elif defined(VMS)
 #include "md/_openvms.h"
 
+#elif defined(NTO)
+#include "md/_nto.h"
+
 #else
 #error unknown Unix flavor
 
