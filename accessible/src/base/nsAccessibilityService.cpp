@@ -84,7 +84,6 @@
 #include "nsXULTabAccessible.h"
 #include "nsXULTextAccessible.h"
 #include "nsXULTreeAccessible.h"
-#include "nsIAccessible.h"
 #include "nsCaretAccessible.h"
 #include "nsIAccessibleCaret.h"
 
@@ -1513,10 +1512,22 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
 #endif
   nsCOMPtr<nsIAccessibleProvider> accProv(do_QueryInterface(aNode));
   if (accProv) {
-    accProv->GetAccessible(_retval); 
-    if (*_retval)
-      return NS_OK;
-    return NS_ERROR_FAILURE;
+    accProv->GetAccessible(getter_AddRefs(newAcc)); 
+    if (! newAcc)
+      return NS_ERROR_FAILURE;
+#ifdef MOZ_ACCESSIBILITY_ATK
+    PRUint32 role, state;
+    newAcc->GetAccRole(&role);
+    // don't create the accessible object for popup widget when it's not visible
+    if (role == nsIAccessible::ROLE_MENUPOPUP) {
+      newAcc->GetAccState(&state);
+      if (state & (nsIAccessible::STATE_INVISIBLE | nsIAccessible::STATE_OFFSCREEN))
+        return NS_ERROR_FAILURE;
+    }
+#endif // MOZ_ACCESSIBILITY_ATK
+    *_retval = newAcc;
+    NS_ADDREF(*_retval);
+    return NS_OK;
   }
 
 #ifdef MOZ_XUL
