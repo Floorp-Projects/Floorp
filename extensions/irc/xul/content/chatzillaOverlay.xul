@@ -27,7 +27,7 @@
         command="Tasks:IRC"
         id="tasksMenuIRC"
         class="menuitem-iconic"
-        insertbefore="tasksMenuEditor"/>
+        insertafter="tasksMenuAddressBook"/>
 </menupopup>
 
 <statusbarpanel id="component-bar">

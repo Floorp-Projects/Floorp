@@ -65,7 +65,7 @@
         accesskey="&calendarCmd.accesskey;"
         key="key_calendar"
         command="Tasks:Calendar"
-        insertafter="tasksMenuNavigator"
+        insertbefore="tasksMenuEditor"
         class="menuitem-iconic icon-calendar16 menu-iconic"/>
 </menupopup>
 
