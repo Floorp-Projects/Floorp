@@ -24,6 +24,7 @@
 #include "nsIThreadPool.h"
 #include "nsISupportsArray.h"
 #include "prcmon.h"
+#include "nsCOMPtr.h"
 
 class nsThread : public nsIThread 
 {
@@ -57,9 +58,9 @@ public:
     static PRUintn kIThreadSelfIndex;
 
 protected:
-    PRThread*           mThread;
-    nsIRunnable*        mRunnable;
-    PRBool              mDead;
+    PRThread*                   mThread;
+    nsCOMPtr<nsIRunnable>       mRunnable;
+    PRBool                      mDead;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,12 +85,12 @@ public:
     nsIRunnable* GetRequest();
     
 protected:
-    nsISupportsArray*   mThreads;
-    nsISupportsArray*   mRequests;
-    PRMonitor*          mRequestMonitor;
-    PRUint32            mMinThreads;
-    PRUint32            mMaxThreads;
-    PRBool              mShuttingDown;
+    nsCOMPtr<nsISupportsArray>  mThreads;
+    nsCOMPtr<nsISupportsArray>  mRequests;
+    PRMonitor*                  mRequestMonitor;
+    PRUint32                    mMinThreads;
+    PRUint32                    mMaxThreads;
+    PRBool                      mShuttingDown;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,7 +108,7 @@ public:
     virtual ~nsThreadPoolRunnable();
 
 protected:
-    nsThreadPool*       mPool;
+    nsCOMPtr<nsThreadPool>      mPool;
 
 };
 

@@ -44,7 +44,7 @@ PRLogModuleInfo* nsIThreadLog = nsnull;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsThread::nsThread()
-    : mThread(nsnull), mRunnable(nsnull), mDead(PR_FALSE)
+    : mThread(nsnull), mDead(PR_FALSE)
 {
     NS_INIT_REFCNT();
 
@@ -67,7 +67,6 @@ nsThread::Init(nsIRunnable* runnable,
                PRThreadState state)
 {
     mRunnable = runnable;
-    NS_ADDREF(mRunnable);
 
     NS_ADDREF_THIS();   // released in nsThread::Exit
     if (state == PR_JOINABLE_THREAD)
@@ -85,7 +84,6 @@ nsThread::~nsThread()
 {
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
            ("nsIThread %p destroyed\n", this));
-    NS_IF_RELEASE(mRunnable);
 }
 
 void
@@ -112,7 +110,6 @@ void
 nsThread::Exit(void* arg)
 {
     nsThread* self = (nsThread*)arg;
-    nsresult rv = NS_OK;
     self->mDead = PR_TRUE;
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
            ("nsIThread %p exited\n", self));
@@ -208,14 +205,14 @@ NS_NewThread(nsIThread* *result,
     nsThread* thread = new nsThread();
     if (thread == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(thread);
 
     rv = thread->Init(runnable, stackSize, priority, scope, state);
     if (NS_FAILED(rv)) {
-        delete thread;
+        NS_RELEASE(thread);
         return rv;
     }
 
-    NS_ADDREF(thread);
     *result = thread;
     return NS_OK;
 }
@@ -277,33 +274,30 @@ nsIThread::GetIThread(PRThread* prthread, nsIThread* *result)
 NS_COM nsresult
 nsIThread::SetMainThread()
 {
-  // strictly speaking, it could be set twice. but practically speaking,
-  // it's almost certainly an error if it is
-  if (gMainThread != 0)
-  {
-    NS_ERROR("Setting main thread twice?");
-    return NS_ERROR_FAILURE;
-  }
-  return GetCurrent(&gMainThread);
+    // strictly speaking, it could be set twice. but practically speaking,
+    // it's almost certainly an error if it is
+    if (gMainThread != 0) {
+        NS_ERROR("Setting main thread twice?");
+        return NS_ERROR_FAILURE;
+    }
+    return GetCurrent(&gMainThread);
 }
 
 NS_COM nsresult
 nsIThread::GetMainThread(nsIThread **result)
 {
-  if (gMainThread == 0)
-    return NS_ERROR_FAILURE;
-  if (result == 0)
-    return NS_ERROR_NULL_POINTER;
-  *result = gMainThread;
-  NS_ADDREF(gMainThread);
-  return NS_OK;
+    NS_ASSERTION(result, "bad result pointer");
+    if (gMainThread == 0)
+        return NS_ERROR_FAILURE;
+    *result = gMainThread;
+    NS_ADDREF(gMainThread);
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 nsThreadPool::nsThreadPool(PRUint32 minThreads, PRUint32 maxThreads)
-    : mThreads(nsnull), mRequests(nsnull),
-      mMinThreads(minThreads), mMaxThreads(maxThreads), mShuttingDown(PR_FALSE)
+    : mMinThreads(minThreads), mMaxThreads(maxThreads), mShuttingDown(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -315,10 +309,10 @@ nsThreadPool::Init(PRUint32 stackSize,
 {
     nsresult rv;
 
-    rv = NS_NewISupportsArray(&mThreads);
+    rv = NS_NewISupportsArray(getter_AddRefs(mThreads));
     if (NS_FAILED(rv)) return rv;
     
-    rv = NS_NewISupportsArray(&mRequests);
+    rv = NS_NewISupportsArray(getter_AddRefs(mRequests));
     if (NS_FAILED(rv)) return rv;
 
     mRequestMonitor = PR_NewMonitor();
@@ -357,10 +351,7 @@ nsThreadPool::~nsThreadPool()
 {
     if (mThreads) {
         Shutdown();
-        NS_RELEASE(mThreads);
     }
-
-    NS_IF_RELEASE(mRequests);
 
     if (mRequestMonitor) {
         PR_DestroyMonitor(mRequestMonitor);
@@ -376,8 +367,8 @@ nsThreadPool::DispatchRequest(nsIRunnable* runnable)
     PR_EnterMonitor(mRequestMonitor);
 
 #if defined(PR_LOGGING)
-    nsIThread* th;
-    nsIThread::GetCurrent(&th);
+    nsCOMPtr<nsIThread> th;
+    nsIThread::GetCurrent(getter_AddRefs(th));
 #endif
     if (mShuttingDown) {
         rv = NS_ERROR_FAILURE;
@@ -389,7 +380,7 @@ nsThreadPool::DispatchRequest(nsIRunnable* runnable)
             PR_Notify(mRequestMonitor);
     }
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-           ("nsIThreadPool thread %p dispatching %p status %x\n", th, runnable, rv));
+           ("nsIThreadPool thread %p dispatching %p status %x\n", th.get(), runnable, rv));
     PR_ExitMonitor(mRequestMonitor);
     return rv;
 }
@@ -402,8 +393,8 @@ nsThreadPool::GetRequest()
  
     PR_EnterMonitor(mRequestMonitor);
 #if defined(PR_LOGGING)
-    nsIThread* th;
-    nsIThread::GetCurrent(&th);
+    nsCOMPtr<nsIThread> th;
+    nsIThread::GetCurrent(getter_AddRefs(th));
 #endif
 
     PRUint32 cnt;
@@ -435,7 +426,7 @@ nsThreadPool::GetRequest()
         NS_ASSERTION(removed, "nsISupportsArray broken");
     }
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-           ("nsIThreadPool thread %p got request %p\n", th, request));
+           ("nsIThreadPool thread %p got request %p\n", th.get(), request));
     PR_ExitMonitor(mRequestMonitor);
     return request;
 }
@@ -471,8 +462,8 @@ nsThreadPool::Shutdown()
     PRUint32 i;
 
 #if defined(PR_LOGGING)
-    nsIThread* th;
-    nsIThread::GetCurrent(&th);
+    nsCOMPtr<nsIThread> th;
+    nsIThread::GetCurrent(getter_AddRefs(th));
 #endif
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
            ("nsIThreadPool thread %p shutting down\n", th));
@@ -514,14 +505,14 @@ NS_NewThreadPool(nsIThreadPool* *result,
     nsThreadPool* pool = new nsThreadPool(minThreads, maxThreads);
     if (pool == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(pool);
 
     rv = pool->Init(stackSize, priority, scope);
     if (NS_FAILED(rv)) {
-        delete pool;
+        NS_RELEASE(pool);
         return rv;
     }
     
-    NS_ADDREF(pool);
     *result = pool;
     return NS_OK;
 }
@@ -529,15 +520,13 @@ NS_NewThreadPool(nsIThreadPool* *result,
 ////////////////////////////////////////////////////////////////////////////////
 
 nsThreadPoolRunnable::nsThreadPoolRunnable(nsThreadPool* pool)
-    : mPool(pool)
 {
     NS_INIT_REFCNT();
-    NS_ADDREF(mPool);
+    mPool = pool;
 }
 
 nsThreadPoolRunnable::~nsThreadPoolRunnable()
 {
-    NS_RELEASE(mPool);
 }
 
 NS_IMPL_ISUPPORTS1(nsThreadPoolRunnable, nsIRunnable)
@@ -554,12 +543,12 @@ nsThreadPoolRunnable::Run()
     PR_CExitMonitor(mPool);
 
 #if defined(PR_LOGGING)
-    nsIThread* th;
-    nsIThread::GetCurrent(&th);
+    nsCOMPtr<nsIThread> th;
+    nsIThread::GetCurrent(getter_AddRefs(th));
 #endif
     while ((request = mPool->GetRequest()) != nsnull) {
         PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-               ("nsIThreadPool thread %p running %p\n", th, request));
+               ("nsIThreadPool thread %p running %p\n", th.get(), request));
         rv = request->Run();
         NS_ASSERTION(NS_SUCCEEDED(rv), "runnable failed");
 
@@ -569,11 +558,11 @@ nsThreadPoolRunnable::Run()
         PR_CExitMonitor(mPool);
         PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
                ("nsIThreadPool thread %p completed %p status=%x\n",
-                th, request, rv));
+                th.get(), request, rv));
         NS_RELEASE(request);
     }
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-           ("nsIThreadPool thread %p quitting %p\n", th, this));
+           ("nsIThreadPool thread %p quitting %p\n", th.get(), this));
     return rv;
 }
 
