@@ -41,15 +41,40 @@ import org.mozilla.javascript.*;
 
 import java.util.Enumeration;
 
+/**
+ * This interface exposes debugging information from executable 
+ * code (either functions or top-level scripts).
+ */
 public interface DebuggableScript {
     
+    /**
+     * Get the Scriptable object (Function or Script) that is 
+     * described by this DebuggableScript object.
+     */
     public Scriptable getScriptable();
 
+    /**
+     * Get the name of the source (usually filename or URL)
+     * of the script.
+     */
     public String getSourceName();
     
+    /**
+     * Get an enumeration containing the line numbers that 
+     * can have breakpoints placed on them.
+     * XXX - array?
+     */
     public Enumeration getLineNumbers();
     
+    /**
+     * Place a breakpoint at the given line.
+     * @return true if the breakpoint was successfully set.
+     */
     public boolean placeBreakpoint(int line);
     
+    /**
+     * Remove a breakpoint from the given line.
+     * @return true if there was a breakpoint at the given line.
+     */
     public boolean removeBreakpoint(int line);
 }
