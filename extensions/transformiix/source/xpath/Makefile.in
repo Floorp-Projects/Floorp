@@ -75,8 +75,11 @@ CPPSRCS = AdditiveExpr.cpp \
         VariableRefExpr.cpp \
         XPathNames.cpp
 ifndef TX_EXE
-CPPSRCS += XPathProcessor.cpp \
-           nsNodeSet.cpp
+CPPSRCS += nsXPathEvaluator.cpp \
+           nsXPathException.cpp \
+           nsXPathExpression.cpp \
+           nsXPathNSResolver.cpp \
+           nsXPathResult.cpp
 endif
 
 include $(topsrcdir)/config/rules.mk

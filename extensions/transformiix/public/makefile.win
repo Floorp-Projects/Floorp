@@ -23,8 +23,7 @@
 
 DEPTH=..\..\..
 
-XPIDLSRCS = .\nsIXPathNodeSelector.idl  \
-            .\nsISyncLoader.idl         \
+XPIDLSRCS = .\nsISyncLoader.idl         \
 	      $(NULL)
 
 MODULE=transformiix
