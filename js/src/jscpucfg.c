@@ -139,41 +139,6 @@ static int Log2(unsigned int n)
     return log2;
 }
 
-/* We assume that int's are 32 bits */
-static void do64(void)
-{
-    union {
-	long i;
-	char c[4];
-    } u;
-
-    u.i = 0x01020304;
-    if (u.c[0] == 0x01) {
-	printf("#undef  IS_LITTLE_ENDIAN\n");
-	printf("#define IS_BIG_ENDIAN 1\n\n");
-    } else {
-	printf("#define IS_LITTLE_ENDIAN 1\n");
-	printf("#undef  IS_BIG_ENDIAN\n\n");
-    }
-}
-
-static void do32(void)
-{
-    union {
-	long i;
-	char c[4];
-    } u;
-
-    u.i = 0x01020304;
-    if (u.c[0] == 0x01) {
-	printf("#undef  IS_LITTLE_ENDIAN\n");
-	printf("#define IS_BIG_ENDIAN 1\n\n");
-    } else {
-	printf("#define IS_LITTLE_ENDIAN 1\n");
-	printf("#undef  IS_BIG_ENDIAN\n\n");
-    }
-}
-
 /*
  * Conceivably this could actually be used, but there is lots of code out
  * there with ands and shifts in it that assumes a byte is exactly 8 bits,
@@ -232,10 +197,75 @@ int main(int argc, char **argv)
     align_of_word	= PR_ALIGN_OF_WORD;
 
 #else /* !CROSS_COMPILE */
-    if (sizeof(long) == 8) {
-	do64();
-    } else {
-	do32();
+
+    /*
+     * We don't handle PDP-endian or similar orders: if a short is big-endian,
+     * so must int and long be big-endian for us to generate the IS_BIG_ENDIAN
+     * #define and the IS_LITTLE_ENDIAN #undef.
+     */
+    {
+        int big_endian = 0, little_endian = 0, ntests = 0;
+
+        if (sizeof(short) == 2) {
+            union {
+                short i;
+                char c[2];
+            } u;
+
+            u.i = 0x0102;
+            big_endian += (u.c[0] == 0x01 && u.c[1] == 0x02);
+            little_endian += (u.c[0] == 0x02 && u.c[1] == 0x01);
+            ntests++;
+        }
+
+        if (sizeof(int) == 4) {
+            union {
+                int i;
+                char c[4];
+            } u;
+
+            u.i = 0x01020304;
+            big_endian += (u.c[0] == 0x01 && u.c[1] == 0x02 &&
+                           u.c[2] == 0x03 && u.c[3] == 0x04);
+            little_endian += (u.c[0] == 0x04 && u.c[1] == 0x03 &&
+                              u.c[2] == 0x02 && u.c[3] == 0x01);
+            ntests++;
+        }
+
+        if (sizeof(long) == 8) {
+            union {
+                long i;
+                char c[8];
+            } u;
+
+            /*
+             * Write this as portably as possible: avoid 0x0102030405060708L
+             * and <<= 32.
+             */
+            u.i = 0x01020304;
+            u.i <<= 16, u.i <<= 16;
+            u.i |= 0x05060708;
+            big_endian += (u.c[0] == 0x01 && u.c[1] == 0x02 &&
+                           u.c[2] == 0x03 && u.c[3] == 0x04 &&
+                           u.c[4] == 0x05 && u.c[5] == 0x06 &&
+                           u.c[6] == 0x07 && u.c[7] == 0x08);
+            little_endian += (u.c[0] == 0x08 && u.c[1] == 0x07 &&
+                              u.c[2] == 0x06 && u.c[3] == 0x05 &&
+                              u.c[4] == 0x04 && u.c[5] == 0x03 &&
+                              u.c[6] == 0x02 && u.c[7] == 0x01);
+            ntests++;
+        }
+
+        if (big_endian && big_endian == ntests) {
+            printf("#undef  IS_LITTLE_ENDIAN\n");
+            printf("#define IS_BIG_ENDIAN 1\n\n");
+        } else if (little_endian && little_endian == ntests) {
+            printf("#define IS_LITTLE_ENDIAN 1\n");
+            printf("#undef  IS_BIG_ENDIAN\n\n");
+        } else {
+            fprintf(stderr, "%s: unknown byte order!\n", argv[0]);
+            return 1;
+        }
     }
 
     sizeof_char		= sizeof(char);
