@@ -32,6 +32,17 @@ nsFileWidget::nsFileWidget(nsISupports *aOuter) : nsWindow(aOuter)
   mNumberOfFilters = 0;
 }
 
+void nsFileWidget::Create(nsIWidget *aParent,
+                const nsRect &aRect,
+                EVENT_CALLBACK aHandleEventFunction,
+                nsIDeviceContext *aContext = nsnull,
+                nsIToolkit *aToolkit = nsnull,
+                nsWidgetInitData *aInitData = nsnull) 
+{
+  nsString title("Load");
+  Create(aParent, title, eMode_load, aContext, aToolkit, aInitData);
+}
+
 
 void   nsFileWidget:: Create(nsIWidget *aParent,
                                  nsString& aTitle,
