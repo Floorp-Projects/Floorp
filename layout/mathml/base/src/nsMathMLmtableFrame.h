@@ -138,6 +138,8 @@ public:
     return NS_OK;
   }
 
+  // overloaded nsTableOuterFrame methods
+
   NS_IMETHOD
   Init(nsIPresContext*  aPresContext,
        nsIContent*      aContent,
@@ -171,7 +173,7 @@ protected:
 
 // --------------
 
-class nsMathMLmtdFrame : public nsAreaFrame {
+class nsMathMLmtdFrame : public nsBlockFrame {
 public:
   friend nsresult NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
