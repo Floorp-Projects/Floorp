@@ -41,32 +41,28 @@ interface nsIBrowserInstance : nsISupports {
     
     // Wallet (should reside elsewhere, somehow).
     void walletPreview(in nsIDOMWindow win, in nsIDOMWindow form);
-    void cookieViewer(in nsIDOMWindow win);
-    void signonViewer(in nsIDOMWindow win);
-    void walletEditor(in nsIDOMWindow win);
+ 
     void walletChangePassword();
     void walletQuickFillin(in nsIDOMWindow win);
     void walletRequestToCapture(in nsIDOMWindow win);
-    void walletSamples();
+    
     
     // Infrastructure.
     void init();
-    void setToolbarWindow( in nsIDOMWindow aWindow );
     void setContentWindow( in nsIDOMWindow aWindow );
     void setWebShellWindow( in nsIDOMWindow aWindow );
     void SetDocumentCharset(in wstring charset);
     
     // File.
-    void newWindow();
-    void openWindow();
-    void printPreview();
 
+    void printPreview();
+	void print();
+    void close();
     // Edit.
     void copy();
     void selectAll();
-    void print();
-    void close();
-    void exit();
+    
+    
 
     // View.
     attribute boolean isViewSource;
