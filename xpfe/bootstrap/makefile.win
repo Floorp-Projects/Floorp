@@ -77,9 +77,6 @@ LINCS=-I$(PUBLIC)\raptor                \
       -I$(PUBLIC)\intl                  \
       -I$(PUBLIC)\xpfe\components       \
       -I$(PUBLIC)\oji                   \
-!ifdef MOZ_FULLCIRCLE
-      -I$(MOZ_TOOLS)\include            \
-!endif
       $(NULL)
 
 MAKE_OBJ_TYPE = EXE
@@ -121,9 +118,6 @@ LLIBS=                               \
  $(DIST)\lib\mpfilelocprovider_s.lib \
 !ifdef GC_LEAK_DETECTOR
  $(DIST)\lib\boehm.lib               \
-!endif
-!ifdef MOZ_FULLCIRCLE
- $(MOZ_TOOLS)\lib\fulls32.lib        \
 !endif
  $(LIBNSPR)                          \
  $(NULL)

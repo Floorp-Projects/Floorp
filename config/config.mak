@@ -212,11 +212,6 @@ CFLAGS=$(CFLAGS) -D_IMPL_NS_WIDGET
 #//
 #//-----------------------------------------------------------------------
 
-# Crash-reporting system.  http://www.fullcirclesoftware.com
-!ifdef MOZ_FULLCIRCLE
-CFLAGS=$(CFLAGS) -DMOZ_FULLCIRCLE
-!endif
-
 # For modular netlib support.
 CFLAGS=$(CFLAGS) -DNS_MT_SUPPORTED -DNETLIB_THREAD -DNS_NET_FILE
 

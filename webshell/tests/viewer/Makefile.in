@@ -128,10 +128,6 @@ XP_NS_UNDERBAR_CRAP	= \
 
 XP_LIBS			=
 
-ifdef MOZ_FULLCIRCLE
-XP_LIBS			+= $(FULLCIRCLE_LIBS)
-endif
-
 XP_LIBS			+= \
 			$(XP_NS_UNDERBAR_CRAP) \
 			$(XP_DIST_LIBS) \

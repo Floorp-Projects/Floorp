@@ -322,10 +322,6 @@ MOZ_DISABLE_DTD_DEBUG = @MOZ_DISABLE_DTD_DEBUG@
 
 MOZ_DEMANGLE_SYMBOLS = @MOZ_DEMANGLE_SYMBOLS@
 
-# For the use of the Fullcircle Talkback tool, if available.
-MOZ_FULLCIRCLE	= @MOZ_FULLCIRCLE@
-FULLCIRCLE_LIBS	= @FULLCIRCLE_LIBS@
-
 # XXX - these need to be cleaned up and have real checks added -cls
 CM_BLDTYPE=dbg 
 AWT_11=1 
