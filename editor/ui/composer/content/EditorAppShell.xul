@@ -618,71 +618,71 @@
 <!-- Popup Menus and Windows - Not displayed in primary chrome -->
 <popup id="ParagraphMenu">
   <menu>
-    <menuitem value="&headingNormalCmd.label;"    onclick="EditorSetParagraphFormat('normal')"/>
-    <menuitem value="&headingOneCmd.label;" onclick="EditorSetParagraphFormat('h1')"/>
-    <menuitem value="&headingTwoCmd.label;" onclick="EditorSetParagraphFormat('h2')"/>
-    <menuitem value="&headingThreeCmd.label;" onclick="EditorSetParagraphFormat('h3')"/>
-    <menuitem value="&headingFourCmd.label;" onclick="EditorSetParagraphFormat('h4')"/>
-    <menuitem value="&headingFiveCmd.label;" onclick="EditorSetParagraphFormat('h5')"/>
-    <menuitem value="&headingSixCmd.label;" onclick="EditorSetParagraphFormat('h6')"/>
-    <menuitem value="&paragraphAddressCmd.label;"   onclick="EditorSetParagraphFormat('address')"/>
-    <menuitem value="&paragraphPreformatCmd.label;" onclick="EditorSetParagraphFormat('pre')"/>
-    <menuitem value="&paragraphListCmd.label;" onclick="EditorSetParagraphFormat('li')"/>
-    <menuitem value="&paragraphDfnTermCmd.label;" onclick="EditorSetParagraphFormat('dt')"/>
-    <menuitem value="&paragraphDfnDescCmd.label;" onclick="EditorSetParagraphFormat('dd')"/>
+    <menuitem value="&headingNormalCmd.label;"    onaction="EditorSetParagraphFormat('normal')"/>
+    <menuitem value="&headingOneCmd.label;" onaction="EditorSetParagraphFormat('h1')"/>
+    <menuitem value="&headingTwoCmd.label;" onaction="EditorSetParagraphFormat('h2')"/>
+    <menuitem value="&headingThreeCmd.label;" onaction="EditorSetParagraphFormat('h3')"/>
+    <menuitem value="&headingFourCmd.label;" onaction="EditorSetParagraphFormat('h4')"/>
+    <menuitem value="&headingFiveCmd.label;" onaction="EditorSetParagraphFormat('h5')"/>
+    <menuitem value="&headingSixCmd.label;" onaction="EditorSetParagraphFormat('h6')"/>
+    <menuitem value="&paragraphAddressCmd.label;"   onaction="EditorSetParagraphFormat('address')"/>
+    <menuitem value="&paragraphPreformatCmd.label;" onaction="EditorSetParagraphFormat('pre')"/>
+    <menuitem value="&paragraphListCmd.label;" onaction="EditorSetParagraphFormat('li')"/>
+    <menuitem value="&paragraphDfnTermCmd.label;" onaction="EditorSetParagraphFormat('dt')"/>
+    <menuitem value="&paragraphDfnDescCmd.label;" onaction="EditorSetParagraphFormat('dd')"/>
   </menu>
 </popup>
 
 <popup id="FontFaceMenu">
   <menu>
-    <menuitem value="&defaultVariableWidthCmd.label;" onclick="EditorSetFontFace('')"/>
-    <menuitem value="&defaultFixedWidthCmd.label;" onclick="EditorSetFontFace('tt')"/>
+    <menuitem value="&defaultVariableWidthCmd.label;" onaction="EditorSetFontFace('')"/>
+    <menuitem value="&defaultFixedWidthCmd.label;" onaction="EditorSetFontFace('tt')"/>
     <menuseparator/>
-    <menuitem value="&arialHelveticaFont.label;" onclick="EditorSetFontFace('Arial, Helvetica, sans-serif')"/>
-    <menuitem value="&timesFont.label;" onclick="EditorSetFontFace('Times New Roman, Times, serif')"/>
-    <menuitem value="&courierFont.label;" onclick="EditorSetFontFace('Courier New, Courier, mono')"/>
+    <menuitem value="&arialHelveticaFont.label;" onaction="EditorSetFontFace('Arial, Helvetica, sans-serif')"/>
+    <menuitem value="&timesFont.label;" onaction="EditorSetFontFace('Times New Roman, Times, serif')"/>
+    <menuitem value="&courierFont.label;" onaction="EditorSetFontFace('Courier New, Courier, mono')"/>
   </menu>
 </popup>
 
 <popup id="FontSizeMenu">
   <menu>
-    <menuitem value="&sizeMinusTwoCmd.label;" onclick="EditorSetFontSize('-2')"/>
-    <menuitem value="&sizeMinusOneCmd.label;" onclick="EditorSetFontSize('-1')"/>
-    <menuitem value="&sizeNormalCmd.label;" onclick="EditorSetFontSize('0')"/>
-    <menuitem value="&sizePlusOneCmd.label;" onclick="EditorSetFontSize('+1')"/>
-    <menuitem value="&sizePlusTwoCmd.label;" onclick="EditorSetFontSize('+2')"/>
-    <menuitem value="&sizePlusThreeCmd.label;" onclick="EditorSetFontSize('+3')"/>
-    <menuitem value="&sizePlusFourCmd.label;" onclick="EditorSetFontSize('+4')"/>
+    <menuitem value="&sizeMinusTwoCmd.label;" onaction="EditorSetFontSize('-2')"/>
+    <menuitem value="&sizeMinusOneCmd.label;" onaction="EditorSetFontSize('-1')"/>
+    <menuitem value="&sizeNormalCmd.label;" onaction="EditorSetFontSize('0')"/>
+    <menuitem value="&sizePlusOneCmd.label;" onaction="EditorSetFontSize('+1')"/>
+    <menuitem value="&sizePlusTwoCmd.label;" onaction="EditorSetFontSize('+2')"/>
+    <menuitem value="&sizePlusThreeCmd.label;" onaction="EditorSetFontSize('+3')"/>
+    <menuitem value="&sizePlusFourCmd.label;" onaction="EditorSetFontSize('+4')"/>
   </menu>
 </popup>
 
 <popup id="BackColorMenu">
   <menu>
-    <menuitem value="&colorBlackCmd.label;" onclick="EditorSetBackgroundColor('black')"/>
-    <menuitem value="&colorGrayCmd.label;" onclick="EditorSetBackgroundColor('gray')"/>
-    <menuitem value="&colorSilverCmd.label;" onclick="EditorSetBackgroundColor('silver')"/>
-    <menuitem value="&colorWhiteCmd.label;" onclick="EditorSetBackgroundColor('white')"/>
-    <menuitem value="&colorRedCmd.label;" onclick="EditorSetBackgroundColor('red')"/>
-    <menuitem value="&colorBlueCmd.label;" onclick="EditorSetBackgroundColor('blue')"/>
-    <menuitem value="&colorGreenCmd.label;" onclick="EditorSetBackgroundColor('green')"/>
-    <menuitem value="&colorCyanCmd.label;" onclick="EditorSetBackgroundColor('cyan')"/>
-    <menuitem value="&colorYellowCmd.label;" onclick="EditorSetBackgroundColor('yellow')"/>
-    <menuitem value="&colorMagentaCmd.label;" onclick="EditorSetBackgroundColor('magenta')"/>
+    <menuitem value="&colorBlackCmd.label;" onaction="EditorSetBackgroundColor('black')"/>
+    <menuitem value="&colorGrayCmd.label;" onaction="EditorSetBackgroundColor('gray')"/>
+    <menuitem value="&colorSilverCmd.label;" onaction="EditorSetBackgroundColor('silver')"/>
+    <menuitem value="&colorWhiteCmd.label;" onaction="EditorSetBackgroundColor('white')"/>
+    <menuitem value="&colorRedCmd.label;" onaction="EditorSetBackgroundColor('red')"/>
+    <menuitem value="&colorBlueCmd.label;" onaction="EditorSetBackgroundColor('blue')"/>
+    <menuitem value="&colorGreenCmd.label;" onaction="EditorSetBackgroundColor('green')"/>
+    <menuitem value="&colorCyanCmd.label;" onaction="EditorSetBackgroundColor('cyan')"/>
+    <menuitem value="&colorYellowCmd.label;" onaction="EditorSetBackgroundColor('yellow')"/>
+    <menuitem value="&colorMagentaCmd.label;" onaction="EditorSetBackgroundColor('magenta')"/>
   </menu>
 </popup>
 
 <popup id="TextColorMenu">
   <menu class="popup">
-    <menuitem value="&colorBlackCmd.label;" onclick="EditorSetFontColor('black')"/>
-    <menuitem value="&colorGrayCmd.label;" onclick="EditorSetFontColor('gray')"/>
-    <menuitem value="&colorSilverCmd.label;" onclick="EditorSetFontColor('silver')"/>
-    <menuitem value="&colorWhiteCmd.label;" onclick="EditorSetFontColor('white')"/>
-    <menuitem value="&colorRedCmd.label;" onclick="EditorSetFontColor('red')"/>
-    <menuitem value="&colorBlueCmd.label;" onclick="EditorSetFontColor('blue')"/>
-    <menuitem value="&colorGreenCmd.label;" onclick="EditorSetFontColor('green')"/>
-    <menuitem value="&colorCyanCmd.label;" onclick="EditorSetFontColor('cyan')"/>
-    <menuitem value="&colorYellowCmd.label;" onclick="EditorSetFontColor('yellow')"/>
-    <menuitem value="&colorMagentaCmd.label;" onclick="EditorSetFontColor('magenta')"/>
+    <menuitem value="&colorBlackCmd.label;" onaction="EditorSetFontColor('black')"/>
+    <menuitem value="&colorGrayCmd.label;" onaction="EditorSetFontColor('gray')"/>
+    <menuitem value="&colorSilverCmd.label;" onaction="EditorSetFontColor('silver')"/>
+    <menuitem value="&colorWhiteCmd.label;" onaction="EditorSetFontColor('white')"/>
+    <menuitem value="&colorRedCmd.label;" onaction="EditorSetFontColor('red')"/>
+    <menuitem value="&colorBlueCmd.label;" onaction="EditorSetFontColor('blue')"/>
+    <menuitem value="&colorGreenCmd.label;" onaction="EditorSetFontColor('green')"/>
+    <menuitem value="&colorCyanCmd.label;" onaction="EditorSetFontColor('cyan')"/>
+    <menuitem value="&colorYellowCmd.label;" onaction="EditorSetFontColor('yellow')"/>
+    <menuitem value="&colorMagentaCmd.label;" onaction="EditorSetFontColor('magenta')"/>
   </menu>
 </popup>
 
