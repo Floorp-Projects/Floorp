@@ -21,6 +21,8 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>,
 #                 Bryce Nesbitt <bryce-mozilla@nextbus.com>
 #                 Dan Mosedale <dmose@mozilla.org>
+#                 Alan Raetz <al_raetz@yahoo.com>
+#
 
 # To recreate the shadow database,  run "processmail regenerate" .
 
@@ -38,6 +40,11 @@ umask(0);
 $::lockcount = 0;
 my $regenerate = 0;
 my $nametoexclude = "";
+
+my @excludedAddresses = ();
+
+# disable email flag for offline debugging work
+my $enableSendMail = 1;
 
 my @forcecc;
 
@@ -267,7 +274,6 @@ $::bug{'long_desc'}
 }
 
 
-my $didexclude = 0;
 my %seen;
 my @sentlist;
 sub fixaddresses {
@@ -290,7 +296,7 @@ sub fixaddresses {
         }
         if ($emailnotification eq "ExcludeSelfChanges" &&
            (lc($i) eq $nametoexclude)) {
-            $didexclude = 1;
+            push @excludedAddresses, $nametoexclude;
             next;
         }
         
@@ -462,6 +468,86 @@ sub NewProcessOneBug {
 
     my $newcomments = GetLongDescriptionAsText($id, $start, $end);
 
+    if (Param('newemailtech')) {
+        
+        #
+        # Start of email filtering code
+        #
+        # Even if the user sending the email has not enabled #
+        # 'newEmailTech', we still want to filter the email
+        # based on other user's email preferences if the global Param 
+        # 'newemailtech' is enabled.
+        #
+        # Note: users who have not enabled newEmailTech will default
+        # to no filtering (they will get all email Bugzilla sends).
+        
+        my $count = 0;
+        
+        my @currentEmailAttributes = getEmailAttributes($newcomments,
+                                                        @diffs);
+        my (@assigned_toList,@reporterList,@qa_contactList,@ccList) = 
+          ();
+        
+        #open(LOG, ">>/tmp/maillog");
+        #print LOG "\nBug ID: $id   CurrentEmailAttributes:";
+        #print LOG join(',', @currentEmailAttributes) . "\n";
+        
+        @excludedAddresses = (); # zero out global list 
+
+        @assigned_toList = filterEmailGroup('Owner',
+                                            \@currentEmailAttributes,
+                                            $values{'assigned_to'});
+        @reporterList = filterEmailGroup('Reporter', 
+                                         \@currentEmailAttributes,
+                                         $values{'reporter'});
+        if (Param('useqacontact') && $values{'qa_contact'}) {
+            @qa_contactList = filterEmailGroup('QAcontact',
+                                               \@currentEmailAttributes,
+                                               $values{'qa_contact'});
+        } else { 
+            @qa_contactList = (); 
+        }
+
+        @ccList = filterEmailGroup('CClist', \@currentEmailAttributes,
+                                   $values{'cc'});
+
+        my @emailList = (@assigned_toList, @reporterList, 
+                         @qa_contactList, @ccList);
+
+        # only need one entry per person
+        my @allEmail = ();
+        my %AlreadySeen = ();
+        foreach my $person (@emailList) {
+            if ( !($AlreadySeen{$person}) ) {
+                push(@allEmail,$person);
+                $AlreadySeen{$person}++;
+            }
+        }
+
+        #print LOG "\nbug $id email sent: " . join(',', @allEmail) . "\n";
+        
+        @excludedAddresses = filterExcludeList(\@excludedAddresses,
+                                               \@allEmail);
+
+        # print LOG "excluded: " . join(',',@excludedAddresses) . "\n\n";
+
+        foreach my $person ( @allEmail ) {
+            $count++;
+            if ( !defined(NewProcessOnePerson($person, $count, \@headerlist,
+                                              \%values, \%defmailhead, 
+                                              \%fielddescription, $difftext, 
+                                              $newcomments, $start, $id, 1))) {
+
+                # if a value is not returned, this means that the person
+                # was not sent mail.  add them to the excludedAddresses list.
+                # it will be filtered later for dups.
+                #
+                push @excludedAddresses, $person;
+
+            }
+        }
+
+    } else {
     my $count = 0;
     my @personlist = ($values{'assigned_to'}, $values{'reporter'},
                       split(/,/, $values{'cc'}),
@@ -476,16 +562,252 @@ sub NewProcessOneBug {
           $person = $person . Param('emailsuffix');
         }
 
-        &NewProcessOnePerson($person, $count, \@headerlist, \%values,
-                             \%defmailhead, \%fielddescription, $difftext, 
-                             $newcomments, $start, $id, 1);
+            if ( !defined(NewProcessOnePerson($person, $count, \@headerlist, 
+                                              \%values, \%defmailhead, 
+                                              \%fielddescription, $difftext, 
+                                              $newcomments, $start, $id, 1))) {
+
+                # if a value is not returned, this means that the person
+                # was not sent mail.  add them to the excludedAddresses list.
+                # it will be filtered later for dups.
+                #
+                push @excludedAddresses, $person;
+            }
+        }
     }
 
     SendSQL("UPDATE bugs SET lastdiffed = '$end', delta_ts = delta_ts " .
             "WHERE bug_id = $id");
 }
 
-sub NewProcessOnePerson ($$\@\%\%\%$$$$) {
+# When one person is in different fields on one bug, they may be
+# excluded from email because of one relationship to the bug (eg
+# they're the QA contact) but included because of another (eg they
+# also reported the bug).  Inclusion takes precedence, so this
+# function looks for and removes any users from the exclude list who
+# are also on the include list.  Additionally, it removes duplicate
+# entries from the exclude list.  
+#
+# Arguments are the exclude list and the include list; the cleaned up
+# exclude list is returned.
+#
+sub filterExcludeList ($$) {
+
+    if ($#_ != 1) {
+        die ("filterExcludeList called with wrong number of args");
+    }
+
+    my ($refExcluded, $refAll) = @_;
+
+    my @excludedAddrs = @$refExcluded;
+    my @allEmail = @$refAll;
+    my @tmpList = @excludedAddrs;
+    my (@result,@uniqueResult) = ();
+    my %alreadySeen;
+
+    foreach my $excluded (@tmpList) {
+
+        push (@result,$excluded);
+        foreach my $included (@allEmail) {
+
+            # match found, so we remove the entry
+            if ($included eq $excluded) {
+                pop(@result);
+            }
+        }
+    }
+
+    # only need one entry per person
+    foreach my $person (@result) {
+        if ( !($alreadySeen{$person}) ) {
+            push(@uniqueResult,$person);
+            $alreadySeen{$person}++;
+        }
+    }
+
+    return @uniqueResult;
+}
+
+# if the Status was changed to Resolved or Verified
+#       set the Resolved flag
+#
+# else if Severity, Status OR Priority fields have any change
+#       set the Status flag
+#
+# else if Keywords has changed
+#       set the Keywords flag
+#
+# else if CC has changed
+#       set the CC flag
+#
+# if the Comments field shows an attachment
+#       set the Attachment flag
+#
+# else if Comments exist
+#       set the Comments flag
+#
+# if no flags are set and there was some other field change
+#       set the Status flag
+#
+sub getEmailAttributes ($@) {
+    
+    my ($commentField,@fieldDiffs) = @_;
+    my (@flags,@uniqueFlags,%alreadySeen) = ();
+    my $Status = 0;
+    
+    foreach my $ref (@fieldDiffs) {
+        my ($who, $fieldName, $when, $old, $new) = (@$ref);
+        
+        #print qq{field: $fieldName $new<br>};
+        
+        # the STATUS will be flagged for Severity, Status and 
+        # Priority changes
+        #
+        if ( $fieldName eq 'Status') {
+            if ($new eq 'RESOLVED' || $new eq 'VERIFIED') {
+                push (@flags, 'Resolved');
+            }
+            $Status = 1;
+        }
+        elsif ( $fieldName eq 'Severity' || $fieldName eq 'Status' ||
+                $fieldName eq 'Priority' ) {
+            push (@flags, 'Status');
+        } elsif ( $fieldName eq 'Keywords') {
+            push (@flags, 'Keywords');
+        } elsif ( $fieldName eq 'CC') {
+            push (@flags, 'CC');
+        }
+    }
+    
+    if ( $commentField =~ /Created an attachment \(/ ) {
+        push (@flags, 'Attachments');
+    }
+    elsif ( $commentField ne '' && !($Status)) {
+        push (@flags, 'Comments');
+    }
+    
+    # default fallthrough for any unflagged change is 'Other'
+    if ( @flags == 0 && @fieldDiffs != 0 ) {
+        push (@flags, 'Other');
+    }
+    
+    # only need one flag per attribute type
+    foreach my $flag (@flags) {
+        if ( !($alreadySeen{$flag}) ) {
+            push(@uniqueFlags,$flag);
+            $alreadySeen{$flag}++;
+        }
+    }
+    #print "\nEmail Attributes: ", join(' ,',@uniqueFlags), "<br>\n";
+    
+    # catch-all default, just in case the above logic is faulty
+    if ( @uniqueFlags == 0) {
+        push (@uniqueFlags, 'Comments');
+    }
+    
+    return @uniqueFlags;
+}
+
+sub filterEmailGroup ($$$) {
+    
+    my ($emailGroup,$refAttributes,$emailList) = @_;
+    my @emailAttributes = @$refAttributes;
+    my @emailList = split(/,/,$emailList);
+    my @filteredList = ();
+    
+    foreach my $person (@emailList) {
+        
+        my $userid;
+        my $lastCount = @filteredList;
+
+        if ( $person eq '' ) { next; }
+
+        SendSQL("SELECT userid FROM profiles WHERE login_name = " 
+                . SqlQuote($person) );
+
+        if ( !($userid = FetchSQLData()) ) {
+            push(@filteredList,$person);
+            next;
+        }
+        
+        SendSQL("SELECT emailflags, newemailtech FROM profiles WHERE " .
+                "userid = $userid" );
+        
+        my ($userFlagString, $newemailtech) = FetchSQLData();
+        
+        # people who are not using newemailtech get skipped; they will 
+        # be dealt with later by the old email tech code in 
+        # ProcessOneBug().
+        #
+        if (!defined($newemailtech) || $newemailtech == 0) {
+            next;
+        }
+
+        # If the sender doesn't want email, exclude them from list
+        
+        if (lc($person) eq $nametoexclude) {
+            
+            if ( defined ($userFlagString) && 
+                 $userFlagString =~ /ExcludeSelf\~on/ ) {
+                
+                push (@excludedAddresses,$person);
+                next;
+            }
+        }
+        
+        # if the users database entry is empty, send them all email
+        # by default (they have not accessed userprefs.cgi recently).
+        
+        if ( !defined($userFlagString) || !($userFlagString =~ /email/) ) {
+            push(@filteredList,$person);
+        }
+        else {
+            
+            # The default condition is to send each person email.
+            # If we match the email attribute with the user flag, and
+            # they do not want email, then remove them from the list.
+            
+            push(@filteredList,$person);
+            
+            foreach my $attribute (@emailAttributes) {
+
+                my $matchName = 'email' . $emailGroup . $attribute;
+
+                # the 255 param is here, because without a third param, 
+                # split will trim any trailing null fields, which causes perl 
+                # to eject lots of warnings.  any suitably large number would 
+                # do.
+                
+                my %userFlags = split(/~/, $userFlagString, 255);
+                
+                while ((my $flagName, my $flagValue) = each %userFlags) {
+                    
+                    if ($flagName !~ /$emailGroup/) { next; }
+
+                                        if ( $flagName eq $matchName 
+                                             && $flagValue ne 'on') {
+                                            pop(@filteredList);
+                                        }
+
+                } # for each userFlag
+
+            } # for each email attribute
+
+        } # if $userFlagString is valid
+
+        # If email was not sent to the person, then put on excluded
+        # addresses list.
+
+        if (@filteredList == $lastCount) {
+            push (@excludedAddresses,$person);
+        }
+
+    } # for each person
+
+    return @filteredList;
+}
+
+sub NewProcessOnePerson ($$$$$$$$$$$) {
     my ($person, $count, $hlRef, $valueRef, $dmhRef, $fdRef, $difftext, 
         $newcomments, $start, $id, $checkWatchers) = @_;
 
@@ -542,7 +864,7 @@ sub NewProcessOnePerson ($$\@\%\%\%$$$$) {
     }
     if ($emailnotification eq "ExcludeSelfChanges" &&
         lc($person) eq $nametoexclude) {
-      $didexclude = 1;
+      push @excludedAddresses, $nametoexclude;
       return;
     }
     # "$count < 3" means "this person is either assigned_to or reporter"
@@ -601,19 +923,36 @@ sub NewProcessOnePerson ($$\@\%\%\%$$$$) {
     if (Param("sendmailnow")) {
        $sendmailparam = "";
     }
+
+    if ($enableSendMail == 1) {
     open(SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t") ||
       die "Can't open sendmail";
     
     print SENDMAIL trim($msg) . "\n";
     close SENDMAIL;
+    }
     push(@sentlist, $person);
-    
+    return 1;
 }
 
 
 sub ProcessOneBug {
   my $i = $_[0];
   NewProcessOneBug($i);
+
+  # Make sure that everyone who was excluded because of the advanced
+  # filtering options (and thus are using new email tech) has the
+  # corresponding element in %seen set.  This is so that they won't
+  # also be processed by the old email tech code, which follows.
+  #
+  # It's necessary because people who are excluded by the advanced
+  # filtering code never make it into NewProcessOnePerson(), which is
+  # where %seen would have otherwise been touched for them.
+  # 
+  foreach my $person (@excludedAddresses) {
+      $seen{$person} = 1;
+  }
+
   my $old = "shadow/$i";
   my $new = "shadow/$i.tmp.$$";
   my $diffs = "shadow/$i.diffs.$$";
@@ -668,12 +1007,14 @@ sub ProcessOneBug {
                 if (Param("sendmailnow")) {
                     $sendmailparam = "";
                 }
+                if ($enableSendMail==1) {
                 open(SENDMAIL, 
                      "|/usr/lib/sendmail $sendmailparam -t") ||
                        die "Can't open sendmail";
 
                 print SENDMAIL $msg;
                 close SENDMAIL;
+                }
                 foreach my $n (split(/[, ]+/, "$tolist,$cclist")) {
                     if ($n ne "") {
                         push(@sentlist, $n);
@@ -686,11 +1027,29 @@ sub ProcessOneBug {
         unlink($diffs);
         Log($logstr);
     }
+
+    # on the off chance that there are duplicate addresses in the exclude list,
+    # we filter it for dups one more time.  They could have gotten there in 
+    # fixaddresses(), NewProcessOnePerson(), or NewProcessOneBug.
+    # 
+    @excludedAddresses = filterExcludeList(\@excludedAddresses, 
+                                           \@sentlist);
+
+    if (!$regenerate) {
     if (@sentlist) {
-        print "<B>Email sent to:</B> " . join(", ", @sentlist) . "\n";
-        if ($didexclude) {
-            print qq{<B>Excluding:</B> $nametoexclude (<a href="userprefs.cgi?bank=diffs">change your preferences</a> if you wish not to be excluded)\n};
+            print "<B>Email sent to:</B> " . join(", ", @sentlist) . "<br>\n";
+        } else {
+            print "<B>Email sent to:</B> no one<br>\n";
         }
+
+        if ( @excludedAddresses ) {
+            print "<br><B>Excluding: </B>" . join(", ", @excludedAddresses) . 
+              "\n";
+        }
+
+        print "<br><br><center>New: <a href=\"userprefs.cgi\?bank=diffs\">" .
+          "change your email preferences<\/a> if you wish to tweak the " .
+            "kinds of Bugzilla email you get.<\/center>\n";
     }
     rename($new, $old) || die "Can't rename $new to $old";
     chmod 0666, $old;

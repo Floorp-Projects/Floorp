@@ -15,6 +15,9 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
+#                 Alan Raetz <al_raetz@yahoo.com>
+#                 David Miller <dave@intrec.com>
+#
 
 use diagnostics;
 use strict;
@@ -32,6 +35,62 @@ sub sillyness {
 }
 
 my $userid;
+
+my $showNewEmailTech;
+
+# Note the use of arrays instead of hashes: we want the items
+# displayed in the same order as they appear in the array.
+
+my @emailGroups = (
+        'Owner',        'the Bug Owner',
+        'Reporter',     'the Reporter',
+        'QAcontact',    'the QA contact',
+        'CClist',       'on the CC list'
+        );
+
+my @emailFlags = (
+        'Comments',     'New Comments',
+        'Attachments',  'New Attachments',
+        'Status',       'Priority, status, severity, and milestone changes',
+        'Resolved',     'When the bug is resolved or verified',
+        'Keywords',     'Keywords field changes',
+        'CC',           'CC field changes',
+        'Other',        'Any field not mentioned above changes'
+        );
+
+my $defaultEmailFlagString =
+
+        'emailOwnerComments~'        . 'on~' .
+        'emailOwnerAttachments~'     . 'on~' .
+        'emailOwnerStatus~'          . 'on~' .
+        'emailOwnerResolved~'        . 'on~' .
+        'emailOwnerKeywords~'        . 'on~' .
+        'emailOwnerCC~'              . 'on~' .
+        'emailOwnerOther~'           . 'on~' .
+
+        'emailReporterComments~'     . 'on~' .
+        'emailReporterAttachments~'  . 'on~' .
+        'emailReporterStatus~'       . 'on~' .
+        'emailReporterResolved~'     . 'on~' .
+        'emailReporterKeywords~'     . 'on~' .
+        'emailReporterCC~'           . 'on~' .
+        'emailReporterOther~'        . 'on~' .
+
+        'emailQAcontactComments~'    . 'on~' .
+        'emailQAcontactAttachments~' . 'on~' .
+        'emailQAcontactStatus~'      . 'on~' .
+        'emailQAcontactResolved~'    . 'on~' .
+        'emailQAcontactKeywords~'    . 'on~' .
+        'emailQAcontactCC~'          . 'on~' .
+        'emailQAcontactOther~'       . 'on~' .
+
+        'emailCClistComments~'       . 'on~' .
+        'emailCClistAttachments~'    . 'on~' .
+        'emailCClistStatus~'         . 'on~' .
+        'emailCClistResolved~'       . 'on~' .
+        'emailCClistKeywords~'       . 'on~' .
+        'emailCClistCC~'             . 'on~' .
+        'emailCClistOther~'          . 'on' ;
 
 
 sub EmitEntry {
@@ -93,22 +152,52 @@ sub SaveAccount {
             " WHERE userid = $userid");
 }
 
+#
+# Set email flags in database based on the parameter string.
+#
+sub setEmailFlags ($) {
+
+    my $emailFlagString = $_[0];
+
+    SendSQL("UPDATE profiles SET emailflags = " .
+            SqlQuote($emailFlagString) . " WHERE userid = $userid");
+}
 
 
-sub ShowDiffs {
+sub ShowEmailOptions () {
+
     SendSQL("SELECT emailnotification, newemailtech FROM profiles " .
             "WHERE userid = $userid");
-    my ($emailnotification, $newemailtech) = (FetchSQLData());
+    my ($emailnotification, $dbNewEmailTech) = (FetchSQLData());
+
+    # Override the database value with the current form value
+    # if the disable/enable button has been pressed.
+    if ( defined $::FORM{'newEmailTech'} ) {
+
+        # If the user has clicked on 'Disable New Email Tech',
+        # clear out their email flag preferences.
+        if ($dbNewEmailTech == 1) {
+            setEmailFlags('');
+        }
+
+        $showNewEmailTech = $::FORM{'newEmailTech'};
+    } else {
+        $showNewEmailTech = $dbNewEmailTech;
+    }
+
+    #print "<BR>database newemailtech = $showNewEmailTech<br>";
+
     my $qacontactpart = "";
     if (Param('useqacontact')) {
         $qacontactpart = ", the current QA Contact";
     }
+
+    if ($showNewEmailTech==0) {
     print qq{
 <TR><TD COLSPAN="2">
 Bugzilla will send out email notification of changed bugs to 
-the current owner, the submitter of the bug$qacontactpart, anyone on the
-CC list and anyone who has voted for the bug.  However, you can suppress
-some of those email notifications.
+the current owner, the Reporter of the bug$qacontactpart, and anyone on the
+CC list.  However, you can suppress some of those email notifications.
 On which of these bugs would you like email notification of changes?
 </TD></TR>
 };
@@ -122,64 +211,269 @@ On which of these bugs would you like email notification of changes?
                         "All qualifying bugs"]],
                        $emailnotification);
     EmitEntry("Notify me of changes to", $entry);
+    }
 
     if (Param("newemailtech")) {
-        my $checkedpart = $newemailtech ? "CHECKED" : "";
         print qq{
 <TR><TD COLSPAN="2"><HR></TD></TR>
 <TR><TD COLSPAN="2"><FONT COLOR="red">Updated!</FONT>
 Bugzilla's new standard email notification scheme allows for the use of 
 features such as watching other users and selecting which bug changes you get 
-mail about.  You can revert to the old notification scheme by unchecking this
-box, but this isn't recommended, because the old scheme is no longer
+mail about.  Although it's still possible to use the old notification scheme, 
+this isn't recommended, because the old scheme is no longer
 supported and will be going away in an upcoming version of Bugzilla.
-</TD></TR>
-};
-        EmitEntry("Uncheck here to revert",
-                  qq{<INPUT TYPE="checkbox" NAME="newemailtech" $checkedpart>New email tech});
+<FONT COLOR="red">Note that after clicking the link below, you must still click
+on the <B>Submit Changes</B> button in order for your email tech change to be saved.</FONT>
+</TD></TR>};
+
+        if ($showNewEmailTech == 1) {
+            print qq{
+                <tr><td colspan=2><center>
+                <A HREF="userprefs.cgi?bank=diffs&amp;newEmailTech=0">Disable New Email Tech</A>
+                </center></td></tr>};
+        } else {
+            print qq{<tr><td colspan=2><center><A HREF="userprefs.cgi?bank=diffs&amp;newEmailTech=1">Enable New Email Tech</A></center></td></tr>};
     }
 
-    if (Param("supportwatchers")) {
+        if (Param("supportwatchers") && $showNewEmailTech == 1) {
+
       my $watcheduserSet = new RelationSet;
       $watcheduserSet->mergeFromDB("SELECT watched FROM watch WHERE" .
                                     " watcher=$userid");
       my $watchedusers = $watcheduserSet->toString();
 
       print qq{
-<TR><TD COLSPAN="2"><HR></TD></TR>
-<TR><TD COLSPAN="2"><FONT COLOR="red">New!</FONT>
-If you want to help cover for someone when they're on vacation, or if 
+<TR><TD COLSPAN="4"><HR></TD></TR>
+<TR><TD COLSPAN="4">
+<FONT COLOR="red">New Email Tech Feature: </FONT>If you want to help cover for someone when they're on vacation, or if
 you need to do the QA related to all of their bugs, you can tell bugzilla
 to send mail related to their bugs to you also.  List the email addresses
 of any users you wish to watch here, separated by commas.
-<FONT COLOR="red">Note that you MUST have the above "New email tech" 
-button selected in order to use this feature.</FONT>
-</TD></TR>
-};
+</TD></TR>};
+
       EmitEntry("Users to watch",
               qq{<INPUT SIZE=35 NAME="watchedusers" VALUE="$watchedusers">});
+        }
 
+        print qq{<TR><TD COLSPAN="2"><HR></TD></TR>};
+
+        if ($showNewEmailTech == 1) {
+            showAdvancedEmailFilterOptions();
+        }
+    }
+
+print qq {
+<TABLE CELLSPACING="0" CELLPADDING="10" BORDER=0 WIDTH="100%">
+<TR><TD>};
+
+}
+
+sub showAdvancedEmailFilterOptions () {
+
+    my $flags;
+    my $notify;
+    my %userEmailFlags = ();
+
+    print qq{
+        <TR><TD COLSPAN="2"><center>
+        <font size=+1>Advanced Email Filtering Options</font>
+        </center>
+        </TD></TR><tr><td colspan="2">
+        <p>
+        <center><FONT COLOR="red">New Email Tech Feature:</FONT>
+        Filter email notifications for <b>modified</b>
+        bugs (does not effect new bug email notices).
+        </center></td></tr></table>
+       <hr width=800 align=center>
+    };
+
+    SendSQL("SELECT emailflags, emailnotification FROM profiles WHERE " .
+            "userid = $userid");
+
+    ($flags, $notify) = FetchSQLData();
+
+    # if the emailflags haven't been set before, that means that this user 
+    # hasn't been to (the email pane of?) userprefs.cgi since the change to 
+    # use emailflags.  create a default flagset for them, mostly based on
+    # static defaults, but setting ExcludeSelf based on the old 
+    # emailnotification column.
+    #
+    if ( !$flags ) {
+
+        if ( !$notify ) { 
+            confess("neither \$flags nor \$notify was set");
+        }
+
+        my $notifyString;
+        if ( $notify eq 'ExcludeSelfChanges' ) {
+            $notifyString = "ExcludeSelf~on~";
+        } else {
+            $notifyString = "ExcludeSelf~~";
+        }
+
+        $flags = $notifyString . $defaultEmailFlagString;
+        setEmailFlags($flags);
+    }
+
+    # the 255 param is here, because without a third param, split will
+    # trim any trailing null fields, which causes perl to eject lots of
+    # warnings.  any suitably large number would do.
+    #
+    %userEmailFlags = split(/~/ , $flags, 255);
+
+    showExcludeSelf(\%userEmailFlags);
+
+    # print STDERR "$flags\n";
+
+    print qq{
+                <hr width=800 align=left>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                  <b>Field/recipient specific options:</b><br><br>
+              };
+
+
+    my @tmpGroups = @emailGroups;
+    while ((my $groupName,my $groupText) = splice(@tmpGroups,0,2) ) {
+        printEmailPrefGroup($groupName,$groupText,\%userEmailFlags);
     }
 
 }
 
-sub SaveDiffs {
-    my $newemailtech = 0;
-    if (exists $::FORM{'newemailtech'}) {
-        $newemailtech = 1;
-    }
-    SendSQL("UPDATE profiles " .
-            "SET emailnotification = " . SqlQuote($::FORM{'emailnotification'})
-            . ", newemailtech = $newemailtech WHERE userid = $userid");
+sub showExcludeSelf (\%) {
 
-    # deal with any watchers
-    #
+     my %CurrentFlags = %{$_[0]};
+     
+     my $excludeSelf = " ";
+
+     while ( my ($key,$value) = each (%CurrentFlags) ) {
+
+     # print qq{flag name: $key    value: $value<br>};
+
+        if ( $key eq 'ExcludeSelf' ) {
+
+                if ( $value eq 'on' ) {
+
+                        $excludeSelf = "CHECKED";
+                        }
+                }
+        }
+
+        print qq {
+                <table><tr><td colspan=2>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <b>Global options:</b></tr>
+                <tr><td width=150></td><td>
+                Do not email me bugs that I change
+             <input type="checkbox" name="ExcludeSelf" VALUE="on" $excludeSelf>
+                <br>
+                </td>
+                </tr>
+                </table>
+                };
+
+}
+
+sub printEmailPrefGroup ($$\%) {
+
+    my ($groupName,$textName,$refCurrentFlags) = @_[0,1,2];
+    my @tmpFlags = @emailFlags;
+
+    print qq {<table cellspacing=0 cellpadding=6> };
+    print qq {<tr><td colspan=2> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                When I\'m $textName, email me:</td></tr> };
+
+    while ((my $flagName,my $flagText) = splice(@tmpFlags,0,2)) {
+
+        printEmailOption($groupName . $flagName, $flagText, $refCurrentFlags);
+    }
+    print qq { </table> };
+    print qq { <hr WIDTH=320 ALIGN=left> };
+}
+
+sub printEmailOption ($$\%) {
+
+    my $value= '';
+
+    my ($optionName,$description,$refCurrentFlags) = @_[0,1,2];
+
+    #print qq{ email$optionName: $$refCurrentFlags{"email$optionName"} <br>};
+
+    # if the db value is 'on', then mark that checkbox
+    if ($$refCurrentFlags{"email$optionName"} eq 'on'){
+        $value = 'CHECKED';
+    }
+
+    print qq{
+        <tr><td width=320></td>
+        <td><input type="checkbox" name="email$optionName" VALUE="on" $value>
+        $description</td>
+        </tr>
+    };
+}
+
+sub SaveEmailOptions () {
+
+    # I don't understand: global variables and %FORM variables are
+    # not preserved between ShowEmailOptions() and SaveEmailOptions()
+    # The form value here is from a hidden variable just before the SUBMIT.
+
+    my $useNewEmailTech = $::FORM{'savedEmailTech'};
+    my $updateString;
+
+    if ($useNewEmailTech == 0) {
+
+        # we force the NEW email filter entry to allow all email
+        # (empty string defaults to allowing all email).
+        $updateString = '';
+
+    } else {
+        if ( defined $::FORM{'ExcludeSelf'}) {
+            $updateString .= 'ExcludeSelf~on';
+        } else {
+            $updateString .= 'ExcludeSelf~';
+        }
+        my @tmpGroups = @emailGroups;
+
+        while ((my $groupName,my $groupText) = splice(@tmpGroups,0,2) ) {
+
+            my @tmpFlags = @emailFlags;
+
+            while ((my $flagName,my $flagText) = splice(@tmpFlags,0,2) ) {
+
+                my $entry = 'email' . $groupName . $flagName;
+                my $entryValue;
+
+                if (!defined $::FORM{$entry} ) {
+                    $entryValue = "";
+                } else {
+                    $entryValue = $::FORM{$entry};
+                }
+
+                $updateString .= '~' . $entry . '~' . $entryValue;
+            }
+        }
+
+        # we force the OLD email tech flag to allow all email
+        $::FORM{'emailnotification'} = "All";
+    }
+        
+    #open(FID,">updateString");
+    #print qq{UPDATE STRING: $updateString <br>};
+    #close(FID);
+
+    SendSQL("UPDATE profiles SET emailnotification = "
+            . SqlQuote($::FORM{'emailnotification'})
+            . ", newemailtech = $useNewEmailTech "
+            . "WHERE userid = $userid" );
+
+    SendSQL("UPDATE profiles SET emailflags = " .
+            SqlQuote($updateString) . " WHERE userid = $userid");
+
     if (Param("supportwatchers") ) {
 
         if (exists $::FORM{'watchedusers'}) {
 
             Error ('You must have "New email tech" set to watch someone')
-                if ( $::FORM{'watchedusers'} ne "" && $newemailtech == 0);
+                if ( $::FORM{'watchedusers'} ne "" && $useNewEmailTech == 0);
 
             # Just in case.  Note that this much locking is actually overkill:
             # we don't really care if anyone reads the watch table.  So 
@@ -247,7 +541,7 @@ sub ShowFooter {
     print qq{<INPUT TYPE=HIDDEN NAME="numqueries" VALUE="$count">\n};
     if (!$count) {
         print qq{
-<TR><TD COLSPAN="2">
+<TR><TD COLSPAN="4">                            
 If you go create remembered queries in the <A HREF="query.cgi">query page</A>,
 you can then come to this page and choose to have some of them appear in the 
 footer of each Bugzilla page.
@@ -285,7 +579,7 @@ sub SaveFooter {
 
 
 sub ShowPermissions {
-    print "<TR><TD>You have the following permission bits set on your account:\n";
+    print "You have the following permission bits set on your account:\n";
     print "<P><UL>\n";
     my $found = 0;
     SendSQL("SELECT description FROM groups " .
@@ -313,7 +607,7 @@ sub ShowPermissions {
             my ($description) = (FetchSQLData());
             print "<LI>$description\n";
         }
-        print "</UL></TD></TR>\n";
+        print "</UL>\n";
     }
 }
         
@@ -330,7 +624,7 @@ print "Content-type: text/html\n\n";
 
 GetVersionTable();
 
-PutHeader("Preferences", "Preferences", $::COOKIE{'Bugzilla_login'});
+PutHeader("User Preferences", "User Preferences", $::COOKIE{'Bugzilla_login'});
 
 #  foreach my $k (sort(keys(%::FORM))) {
 #      print "<pre>" . value_quote($k) . ": " . value_quote($::FORM{$k}) . "\n</pre>";
@@ -342,7 +636,7 @@ my @banklist = (
                 ["account", "Account settings",
                  \&ShowAccount, \&SaveAccount],
                 ["diffs", "Email settings",
-                 \&ShowDiffs, \&SaveDiffs],
+                                 \&ShowEmailOptions, \&SaveEmailOptions],
                 ["footer", "Page footer",
                  \&ShowFooter, \&SaveFooter],
                 ["permissions", "Permissions",
@@ -397,19 +691,27 @@ if (defined $bankdescription) {
         &$savefunc;
         print "Your changes have been saved.";
     }
-    print qq{
-<H3>$bankdescription</H3>
-<FORM METHOD="POST">
-<TABLE>
-};
+    print qq{<H3>$bankdescription</H3><FORM METHOD="POST"><TABLE>};
+
+    # execute subroutine from @banklist based on bank selected.
     &$showfunc;
-    print qq{
-</TABLE>
-<INPUT TYPE="hidden" NAME="dosave" VALUE="1">
-<INPUT TYPE="hidden" NAME="bank" VALUE="$bank">
-};
+
+    print qq{</TABLE><INPUT TYPE="hidden" NAME="dosave" VALUE="1">};
+    print qq{<INPUT TYPE="hidden" NAME="savedEmailTech" VALUE="};
+
+    # default this to 0 if it's not already set
+    #
+    if (defined $showNewEmailTech) {
+        print qq{$showNewEmailTech">};
+    } else {
+        print qq{0">};
+    }
+    print qq{<INPUT TYPE="hidden" NAME="bank" VALUE="$bank"> };
+
     if ($savefunc) {
-        print qq{<INPUT TYPE="submit" VALUE="Submit">\n};
+              print qq{<table><tr><td width=150></td><td>
+                        <INPUT TYPE="submit" VALUE="Submit Changes">
+                        </td></tr></table> };
     }
     print qq{</FORM>\n};
 } else {

@@ -748,6 +748,7 @@ $table{profiles} =
     newemailtech tinyint not null,
     mybugslink tinyint not null default 1,
     blessgroupset bigint not null,
+    emailflags mediumtext,
 
 
     unique(login_name)';
@@ -1868,6 +1869,13 @@ unless (-d 'graphs') {
     }    
 }
 
+#
+# 2000-12-18.  Added an 'emailflags' field for storing preferences about
+# when email gets sent on a per-user basis.
+#
+if (!GetFieldDef('profiles', 'emailflags')) {
+    AddField('profiles', 'emailflags', 'mediumtext');
+}
 
 #
 # If you had to change the --TABLE-- definition in any way, then add your
