@@ -92,34 +92,24 @@ sub url_quote {
 }
 
 sub ParseUrlString {
-    # We don't want to detaint the user supplied data...
-    use re 'taint';
-
     my ($buffer, $f, $m) = (@_);
     undef %$f;
     undef %$m;
 
     my %isnull;
-    my $remaining = $buffer;
-    while ($remaining ne "") {
-        my $item;
-        if ($remaining =~ /^([^&]*)&(.*)$/) {
-            $item = $1;
-            $remaining = $2;
-        } else {
-            $item = $remaining;
-            $remaining = "";
-        }
 
-        my $name;
-        my $value;
-        if ($item =~ /^([^=]*)=(.*)$/) {
-            $name = url_decode($1);
-            $value = url_decode($2);
-        } else {
-            $name = url_decode($item);
-            $value = "";
-        }
+    # We must make sure that the CGI params remain tainted.
+    # This means that if for some reason you want to make this code
+    # use a regexp and $1, $2, ... (or use a helper function which does so)
+    # you must |use re 'taint'| _and_ make sure that you don't run into
+    # http://bugs.perl.org/perlbug.cgi?req=bug_id&bug_id=20020704.001
+    my @args = split('&', $buffer);
+    foreach my $arg (@args) {
+        my ($name, $value) = split('=', $arg, 2);
+        $value = '' if not defined $value;
+
+        $name = url_decode($name);
+        $value = url_decode($value);
 
         if ($value ne "") {
             if (defined $f->{$name}) {
