@@ -55,11 +55,6 @@ void _PR_InitLocks(void)
     rv = PTHREAD_MUTEXATTR_INIT(&_pt_mattr); 
     PR_ASSERT(0 == rv);
 
-#if defined(AIX)
-    rv = pthread_mutexattr_setkind_np(&_pt_mattr, MUTEX_FAST_NP);
-    PR_ASSERT(0 == rv);
-#endif
-
     rv = PTHREAD_CONDATTR_INIT(&_pt_cvar_attr);
     PR_ASSERT(0 == rv);
     _PR_MD_INIT_LOCKS();
