@@ -113,12 +113,13 @@ void nsWindow::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
- 
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 {
+  return NS_OK;
 } 
 
 //-------------------------------------------------------------------------
