@@ -67,15 +67,15 @@
 
 /* The next three strings must be exactly 32 characters long */
 static char *manufacturerID      = "Netscape Communications Corp    ";
-static char *libraryDescription  = "Communicator Internal Crypto Svc";
-static char *tokDescription      = "Communicator Generic Crypto Svcs";
-static char *privTokDescription  = "Communicator Certificate DB     ";
+static char *libraryDescription  = "NSS Internal Crypto Services    ";
+static char *tokDescription      = "NSS Generic Crypto Services     ";
+static char *privTokDescription  = "NSS Certificate DB              ";
 /* The next two strings must be exactly 64 characters long, with the
    first 32 characters meaningful  */
 static char *slotDescription     = 
-	"Communicator Internal Cryptographic Services Version 4.0        ";
+	"NSS Internal Cryptographic Services Version 3.2                 ";
 static char *privSlotDescription = 
-	"Communicator User Private Key and Certificate Services          ";
+	"NSS User Private Key and Certificate Services                   ";
 static int minimumPinLen = 0;
 
 #define __PASTE(x,y)    x##y
@@ -2372,8 +2372,8 @@ CK_RV  NSC_GetInfo(CK_INFO_PTR pInfo)
     pInfo->cryptokiVersion.major = 2;
     pInfo->cryptokiVersion.minor = 1;
     PORT_Memcpy(pInfo->manufacturerID,manufacturerID,32);
-    pInfo->libraryVersion.major = 4;
-    pInfo->libraryVersion.minor = 0;
+    pInfo->libraryVersion.major = 3;
+    pInfo->libraryVersion.minor = 2;
     PORT_Memcpy(pInfo->libraryDescription,libraryDescription,32);
     pInfo->flags = 0;
     return CKR_OK;
@@ -2401,8 +2401,8 @@ CK_RV NSC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo)
 	PORT_Memcpy(pInfo->manufacturerID,manufacturerID,32);
 	PORT_Memcpy(pInfo->slotDescription,slotDescription,64);
 	pInfo->flags = CKF_TOKEN_PRESENT;
-        pInfo->hardwareVersion.major = 4;
-        pInfo->hardwareVersion.minor = 1;
+        pInfo->hardwareVersion.major = 3;
+        pInfo->hardwareVersion.minor = 2;
 	return CKR_OK;
     case PRIVATE_KEY_SLOT_ID:
 	PORT_Memcpy(pInfo->manufacturerID,manufacturerID,32);

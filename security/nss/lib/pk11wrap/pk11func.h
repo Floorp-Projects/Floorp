@@ -387,6 +387,8 @@ SECStatus PK11_TraverseCertsForNicknameInSlot(SECItem *nickname,
 	void *arg);
 SECStatus PK11_TraverseCertsInSlot(PK11SlotInfo *slot,
        SECStatus(* callback)(CERTCertificate*, void *), void *arg);
+CERTCertList *
+PK11_ListCerts(enum PK11CertListType type, void *pwarg);
 
 
 /**********************************************************************

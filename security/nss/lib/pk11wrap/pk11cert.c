@@ -2542,3 +2542,89 @@ PK11_GetKeyIDFromPrivateKey(SECKEYPrivateKey *key, void *wincx)
 loser:
     return item;
 }
+
+struct listCertsStr {
+    enum PK11CertListType type;
+    CERTCertList *certList;
+};
+
+static PRBool
+isOnList(CERTCertList *certList,CERTCertificate *cert)
+{
+	CERTCertListNode *cln;
+
+	for (cln = CERT_LIST_HEAD(certList); !CERT_LIST_END(cln,certList);
+			cln = CERT_LIST_NEXT(cln)) {
+	    if (cln->cert == cert) {
+		return PR_TRUE;
+	    }
+	}
+	return PR_FALSE;
+}
+
+static SECStatus
+pk11ListCertCallback(CERTCertificate *cert, SECItem *derCert, void *arg)
+{
+    struct listCertsStr *listCertP = (struct listCertsStr *)arg;
+    CERTCertificate *newCert = NULL;
+    enum PK11CertListType type = listCertP->type;
+    CERTCertList *certList = listCertP->certList;
+    CERTCertTrust *trust;
+
+    if (derCert == NULL) {
+	newCert=CERT_DupCertificate(cert);
+    } else {
+	newCert=CERT_FindCertByDERCert(CERT_GetDefaultCertDB(),&cert->derCert);
+    }
+
+    if (newCert == NULL) return SECSuccess;
+
+    trust = newCert->trust;
+
+    /* if we want user certs and we don't have one skip this cert */
+    if ((type == PK11CertListUser) && 
+	( (cert->slot == NULL) || 
+	  (trust == NULL) || (((trust->sslFlags & CERTDB_USER == 0)  && 
+				((trust->emailFlags & CERTDB_USER) == 0))) ) ) {
+	CERT_DestroyCertificate(newCert);
+	return SECSuccess;
+    }
+
+
+    /* if we want Unique certs and we already have it on our list, skip it */
+    if ((type == PK11CertListUnique) && (isOnList(certList,newCert))) {
+	CERT_DestroyCertificate(newCert);
+	return SECSuccess;
+    }
+
+
+    /* put slot certs at the end */
+    if (newCert->slot && !PK11_IsInternal(newCert->slot)) {
+    	CERT_AddCertToListTail(certList,newCert);
+    } else {
+    	CERT_AddCertToListHead(certList,newCert);
+    }
+    return SECSuccess;
+}
+
+
+CERTCertList *
+PK11_ListCerts(enum PK11CertListType type, void *pwarg)
+{
+    CERTCertList *certList = NULL;
+    struct listCertsStr listCerts;
+    
+    certList= CERT_NewCertList();
+    listCerts.type = type;
+    listCerts.certList = certList;
+
+    SEC_TraversePermCerts(CERT_GetDefaultCertDB(),pk11ListCertCallback,&listCerts);
+
+    PK11_TraverseSlotCerts(pk11ListCertCallback,&listCerts,pwarg);
+
+    if (CERT_LIST_HEAD(certList) == NULL) {
+	CERT_DestroyCertList(certList);
+	certList = NULL;
+    }
+    return certList;
+}

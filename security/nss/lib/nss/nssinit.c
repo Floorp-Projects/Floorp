@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.8 2001/01/18 20:29:00 wtc%netscape.com Exp $
+ # $Id: nssinit.c,v 1.9 2001/01/19 07:53:47 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -208,7 +208,7 @@ NSS_InitReadWrite(const char *configdir)
 SECStatus
 NSS_Initialize(const char *configdir, const char *certPrefix, const char *keyPrefix, const char *secmodName, PRBool readonly)
 {
-    return nss_Init(configdir, certPrefix, keyPrefix, secmodName, PR_TRUE);
+    return nss_Init(configdir, certPrefix, keyPrefix, secmodName, readonly);
 }
 
 /*
