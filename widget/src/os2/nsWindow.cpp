@@ -1985,6 +1985,18 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           break;
     
         case WM_MOUSEMOVE:
+          {
+            static POINTL ptlLastPos = { -1, -1 };
+            // See if mouse has actually moved.
+            if ( ptlLastPos.x == (SHORT)SHORT1FROMMP(mp1) &&
+                 ptlLastPos.y == (SHORT)SHORT2FROMMP(mp1)) {
+                return PR_TRUE;
+            } else {
+                // Yes, remember new position.
+                ptlLastPos.x = (SHORT)SHORT1FROMMP(mp1);
+                ptlLastPos.y = (SHORT)SHORT2FROMMP(mp1);
+            }
+          }
           result = DispatchMouseEvent( NS_MOUSE_MOVE, mp1, mp2);
           break;
         case WM_MOUSEENTER:
