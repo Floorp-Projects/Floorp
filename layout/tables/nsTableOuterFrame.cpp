@@ -110,20 +110,11 @@ struct OuterTableReflowState {
 nsTableOuterFrame::nsTableOuterFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsContainerFrame(aContent, aParentFrame),
   mInnerTableFrame(nsnull),
-  mCaptionFrames(nsnull),
-  mBottomCaptions(nsnull),
+  mCaptionFrame(nsnull),
   mMinCaptionWidth(0),
   mMaxCaptionWidth(0),
   mDesiredSize(nsnull)
 {
-}
-
-nsTableOuterFrame::~nsTableOuterFrame()
-{
-  if (nsnull!=mCaptionFrames)
-    delete mCaptionFrames;
-  if (nsnull!=mBottomCaptions)
-    delete mBottomCaptions;
 }
 
 NS_METHOD nsTableOuterFrame::Paint(nsIPresContext& aPresContext,
@@ -1121,89 +1112,77 @@ nsTableOuterFrame::ReflowChild( nsIFrame*              aKidFrame,
   return status;
 }
 
-void nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
+nsresult nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
 {
-  nsIFrame *prevKidFrame = nsnull;
-  nsresult frameCreated = nsTableFrame::NewFrame((nsIFrame **)(&mInnerTableFrame), mContent, this);
-  if (NS_OK!=frameCreated)
-    return;  // SEC: an error!!!!
-  // Resolve style
+  // Create the inner table frame
+  nsresult result = nsTableFrame::NewFrame((nsIFrame **)(&mInnerTableFrame), mContent, this);
+  if (NS_OK != result) {
+    return result;
+  }
+
+  // Resolve its style
   nsIStyleContextPtr kidStyleContext =
     aPresContext->ResolveStyleContextFor(mContent, this);
   NS_ASSERTION(kidStyleContext.IsNotNull(), "bad style context for kid.");
   mInnerTableFrame->SetStyleContext(aPresContext,kidStyleContext);
-  mChildCount++;
-  // Link child frame into the list of children
-  mFirstChild = mInnerTableFrame;
-  prevKidFrame = mInnerTableFrame;
 
-  // now create the caption frames, prepending top captions and
-  // appending bottom captions
-  mCaptionFrames = new nsVoidArray();
-  // create caption frames as needed
-  nsIFrame *lastTopCaption = nsnull;
-  for (PRInt32 kidIndex=0; /* nada */ ;kidIndex++) 
+  // Link inner table frame into the list of child frames
+  mFirstChild = mInnerTableFrame;
+  mChildCount++;
+
+  // Now create the caption frame, prepending a top caption and appending a
+  // bottom caption
+  //
+  // We only allow a single caption. If there are more than one caption, then
+  // ignore all but the first
+  for (PRInt32 kidIndex = 0; /* nada */ ; kidIndex++) 
   {
     nsIContentPtr caption = mContent->ChildAt(kidIndex);
     if (PR_TRUE==caption.IsNull()) {
       break;
     }
-    // Resolve style
+
+    // Resolve style so we can tell if the content should be displayed
+    // as a caption
     nsIStyleContextPtr captionSC =
       aPresContext->ResolveStyleContextFor(caption, this);
     NS_ASSERTION(captionSC.IsNotNull(), "bad style context for caption.");
     nsStyleDisplay *childDisplay = (nsStyleDisplay*)captionSC->GetStyleData(eStyleStruct_Display);
     if (NS_STYLE_DISPLAY_TABLE_CAPTION == childDisplay->mDisplay)
     {
+      // Create the caption frame.
+      // XXX In general (e.g. in an XML document) there's no reason to assume
+      // that the content object is of type nsIHTMLContent
+      result = ((nsIHTMLContent*)(nsIContent*)caption)->CreateFrame(aPresContext, 
+                                                                    this, captionSC,
+                                                                    mCaptionFrame);
+      if (NS_OK != result) {
+        return result;
+      }
+
+      // Determine if the caption is a top or bottom caption
       const nsStyleText* captionTextStyle = 
         (const nsStyleText*)captionSC->GetStyleData(eStyleStruct_Text);
-      // create the frame
-      nsIFrame *captionFrame=nsnull;
-      frameCreated = ((nsIHTMLContent*)(nsIContent*)caption)->CreateFrame(aPresContext, 
-                      this, captionSC, captionFrame);
-      if (NS_OK!=frameCreated)
-        return;  // SEC: an error!!!!
 
-      mChildCount++;
       // Link child frame into the list of children
       if ((eStyleUnit_Enumerated == captionTextStyle->mVerticalAlign.GetUnit()) && 
           (NS_STYLE_VERTICAL_ALIGN_BOTTOM==captionTextStyle->mVerticalAlign.GetIntValue()))
-      { // bottom captions get added to the end of the outer frame child list
-        prevKidFrame->SetNextSibling(captionFrame);
-        prevKidFrame = captionFrame;
-        // bottom captions get remembered in an instance variable for easy access later
-        if (nsnull==mBottomCaptions)
-        {
-          mBottomCaptions = new nsVoidArray();
-        }
-        mBottomCaptions->AppendElement(captionFrame);
+      {
+        // Bottom caption is added to the end of the child frame list
+        mInnerTableFrame->SetNextSibling(mCaptionFrame);
       }
       else
-      {  // top captions get prepended to the outer frame child list
-        if (nsnull == lastTopCaption) 
-        { // our first top caption, therefore our first child
-          mFirstChild = captionFrame;
-          mFirstChild->SetNextSibling(mInnerTableFrame);
-        }
-        else 
-        { // just another grub in the brood of top captions
-          nsIFrame* nextSibling;
-
-          lastTopCaption->GetNextSibling(nextSibling);
-          captionFrame->SetNextSibling(nextSibling);
-          lastTopCaption->SetNextSibling(captionFrame);
-          lastTopCaption = captionFrame;
-        }
-        lastTopCaption = captionFrame;
+      {
+        // Top caption is added to the beginning of child frame list
+        mCaptionFrame->SetNextSibling(mFirstChild);
+        mFirstChild = mCaptionFrame;
       }
-      mCaptionFrames->AppendElement(captionFrame);
-    }
-    else
-    { // otherwise I know there are no more captions
-      // I'm assuming the frames were created in the correct order
+      mChildCount++;
       break;
     }
   }
+
+  return NS_OK;
 }
 
 
@@ -1212,30 +1191,21 @@ nsTableOuterFrame::ResizeReflowCaptionsPass1(nsIPresContext* aPresContext,
                                              OuterTableReflowState& aState,
                                              PRBool aIsInitialReflow)
 {
-  if (nsnull!=mCaptionFrames)
+  if (nsnull!=mCaptionFrame)
   {
-    PRInt32 numCaptions = mCaptionFrames->Count();
     nsReflowReason  reflowReason = aIsInitialReflow ? eReflowReason_Initial :
                                                       eReflowReason_Resize;
-    for (PRInt32 captionIndex = 0; captionIndex < numCaptions; captionIndex++)
-    {
-      nsSize maxElementSize(0,0);
-      nsSize maxSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-      nsReflowMetrics kidSize(&maxElementSize);
-      kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
-      nsIFrame *captionFrame = (nsIFrame*)mCaptionFrames->ElementAt(captionIndex);
-      nsReflowStatus  status;
-      nsReflowState   reflowState(captionFrame, aState.reflowState, maxSize,
-                                  reflowReason);
-      captionFrame->WillReflow(*aPresContext);
-      captionFrame->Reflow(aPresContext, kidSize, reflowState, status);
-      if (mMinCaptionWidth<maxElementSize.width)
-        mMinCaptionWidth = maxElementSize.width;
-      if (mMaxCaptionWidth<kidSize.width)
-        mMaxCaptionWidth = kidSize.width;
-      // captionFrame->VerticallyAlignChild(aPresContext);
-
-    }
+    nsSize maxElementSize;
+    nsSize maxSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+    nsReflowMetrics kidSize(&maxElementSize);
+    kidSize.width = kidSize.height = kidSize.ascent = kidSize.descent = 0;
+    nsReflowStatus  status;
+    nsReflowState   reflowState(mCaptionFrame, aState.reflowState, maxSize,
+                                reflowReason);
+    mCaptionFrame->WillReflow(*aPresContext);
+    mCaptionFrame->Reflow(aPresContext, kidSize, reflowState, status);
+    mMinCaptionWidth = maxElementSize.width;
+    mMaxCaptionWidth = kidSize.width;
   }
   return NS_FRAME_COMPLETE;
 }

@@ -22,20 +22,17 @@
 #include "nsContainerFrame.h"
 
 class nsTableFrame;
-class nsVoidArray;
-class nsTableCaptionFrame;
 struct OuterTableReflowState;
 
 /**
  * main frame for an nsTable content object, 
- * the nsTableOuterFrame contains 0 or more nsTableCaptionFrames, 
- * and a single nsTableFrame psuedo-frame, often referred to as the "inner frame'.
+ * the nsTableOuterFrame contains 0 or one caption frame, and a nsTableFrame
+ * psuedo-frame (referred to as the "inner frame').
  * <P> Unlike other frames that handle continuing across breaks, nsTableOuterFrame
- * has no notion of "unmapped" children.  All children (captions and inner table)
+ * has no notion of "unmapped" children.  All children (caption and inner table)
  * have frames created in Pass 1, so from the layout process' point of view, they
  * are always mapped
  *
- * @author  sclark
  */
 class nsTableOuterFrame : public nsContainerFrame
 {
@@ -58,10 +55,10 @@ public:
                    const nsRect& aDirtyRect);
 
   /** outer tables are reflowed in two steps.
-    * Step 1:, we lay out all of the captions and the inner table with
+    * Step 1:, we lay out the caption and the inner table with
     * height and width set to NS_UNCONSTRAINEDSIZE.
     * This gives us absolute minimum and maximum widths for each component.
-    * In the second step, we set all the captions and the inner table to 
+    * In the second step, we set the caption and the inner table to 
     * the width of the widest component, given the table's style, width constraints
     * and compatibility mode.<br>
     * Step 2: With the widths now known, we reflow the captions and table.<br>
@@ -92,8 +89,6 @@ public:
                                    nsIFrame*        aParent,
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame);
-  /** destructor */
-  virtual ~nsTableOuterFrame();
 
 protected:
 
@@ -110,7 +105,7 @@ protected:
   virtual PRBool NeedsReflow(const nsSize& aMaxSize);
 
   /** create all child frames for this table */
-  virtual void CreateChildFrames(nsIPresContext*  aPresContext);
+  virtual nsresult CreateChildFrames(nsIPresContext* aPresContext);
 
   /** reflow the captions in an infinite space, caching the min/max sizes for each
     */
@@ -232,8 +227,7 @@ protected:
 private:
   /** used to keep track of this frame's children */
   nsTableFrame *mInnerTableFrame;
-  nsVoidArray * mCaptionFrames;
-  nsVoidArray * mBottomCaptions;
+  nsIFrame* mCaptionFrame;
 
   /** used to keep track of min/max caption requirements */
   PRInt32 mMinCaptionWidth;
