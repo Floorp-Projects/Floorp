@@ -625,7 +625,7 @@
 			//	name=<name of the appcore>
 			//	editorType=[default | html | text]			; default means use the prefs value send_html
 			var args = "name=" + composeAppCoreName + ",editorType=default";
-			composeAppCore.NewMessage("chrome://messengercompose/content/", args, null, null, null, 0);
+			composeAppCore.NewMessage("chrome://messengercompose/content/", args, null, null, 0);
 			dump("Created a compose appcore from Navigator.xul, " + args);
 		}
 	}
