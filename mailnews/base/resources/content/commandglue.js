@@ -32,6 +32,10 @@ msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMs
 var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 
+var prefs = Components.classes['component://netscape/preferences'].getService();
+prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+var showPerformance = prefs.GetBoolPref('mail.showMessengerPerformance');
+
 //put this in a function so we can change the position in hierarchy if we have to.
 function GetFolderTree()
 {
@@ -155,7 +159,12 @@ function ChangeFolderByDOMNode(folderNode)
 function ChangeFolderByURI(uri)
 {
   var tree = frames[0].frames[1].document.getElementById('threadTree');
+  var beforeTime = new Date();
   tree.childNodes[5].setAttribute('id', uri);
+  var afterTime = new Date();
+  var timeToLoad = (afterTime - beforeTime)/1000;
+  if(showPerformance)
+	  dump("Time to load " + uri + " is " +  timeToLoad + " seconds\n");
 }
 
 function SortThreadPane(column, sortKey)
