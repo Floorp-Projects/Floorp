@@ -434,7 +434,7 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow,
 nsresult nsMsgCompose::SetDocumentCharset(const PRUnichar *charset) 
 {
 	// Set charset, this will be used for the MIME charset labeling.
-	m_compFields->SetCharacterSet(nsAutoCString(charset));
+	m_compFields->SetCharacterSet(nsCAutoString(charset));
 	
 	return NS_OK;
 }
@@ -693,7 +693,7 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,
 			    PR_Free(outCString);
 		    }
 		    else
-			    m_compFields->SetBody(nsAutoCString(msgBody));
+			    m_compFields->SetBody(nsCAutoString(msgBody));
       }
     }
 	}
@@ -732,7 +732,7 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 			PR_Free(outCString);
 		}
 		else 
-			m_compFields->SetTo(nsAutoCString(addrTo));
+			m_compFields->SetTo(nsCAutoString(addrTo));
 
 		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, addrCc, &outCString))) 
 		{
@@ -740,7 +740,7 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 			PR_Free(outCString);
 		}
 		else 
-			m_compFields->SetCc(nsAutoCString(addrCc));
+			m_compFields->SetCc(nsCAutoString(addrCc));
 
 		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, addrBcc, &outCString))) 
 		{
@@ -748,7 +748,7 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 			PR_Free(outCString);
 		}
 		else 
-			m_compFields->SetBcc(nsAutoCString(addrBcc));
+			m_compFields->SetBcc(nsCAutoString(addrBcc));
 
 		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, newsgroup, &outCString))) 
 		{
@@ -756,7 +756,7 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 			PR_Free(outCString);
 		}
 		else 
-			m_compFields->SetNewsgroups(nsAutoCString(newsgroup));
+			m_compFields->SetNewsgroups(nsCAutoString(newsgroup));
         
 		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, subject, &outCString))) 
 		{
@@ -764,7 +764,7 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 			PR_Free(outCString);
 		}
 		else 
-			m_compFields->SetSubject(nsAutoCString(subject));
+			m_compFields->SetSubject(nsCAutoString(subject));
 
 		// Convert body to mail charset not to utf-8 (because we don't manipulate body text)
 		aCharset.SetString(m_compFields->GetCharacterSet());
@@ -774,7 +774,7 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 			PR_Free(outCString);
 		}
 		else
-			m_compFields->SetBody(nsAutoCString(body));
+			m_compFields->SetBody(nsCAutoString(body));
 
 		rv = _SendMsg(deliverMode, identity, callback);
 	}
@@ -923,7 +923,7 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
           mQuotingToFollow = PR_TRUE;
           // get an original charset, used for a label, UTF-8 is used for the internal processing
           if (!aCharset.Equals(""))
-            m_compFields->SetCharacterSet(nsAutoCString(aCharset));
+            m_compFields->SetCharacterSet(nsCAutoString(aCharset));
         
           subjectStr += "Re: ";
           subjectStr += subject;
@@ -962,7 +962,7 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
               if (recipStr.Length() > 0 && ccListStr.Length() > 0)
                 recipStr += ", ";
               recipStr += ccListStr;
-              m_compFields->SetCc(nsAutoCString(recipStr));
+              m_compFields->SetCc(nsCAutoString(recipStr));
               
               if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(recipStr, encodedCharset, decodedString)))
                 if (NS_SUCCEEDED(rv = ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString)))
@@ -999,7 +999,7 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
         {
         
           if (!aCharset.Equals(""))
-            m_compFields->SetCharacterSet(nsAutoCString(aCharset));
+            m_compFields->SetCharacterSet(nsCAutoString(aCharset));
         
           subjectStr += "[Fwd: ";
           subjectStr += subject;
@@ -1063,14 +1063,14 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
         rv = ConvertFromUnicode(aCharset, author, &utf8Author);
         if (NS_SUCCEEDED(rv) && utf8Author)
         {
-          rv = parser->ExtractHeaderAddressName(nsAutoCString(aCharset), utf8Author, &authorName);
+          rv = parser->ExtractHeaderAddressName(nsCAutoString(aCharset), utf8Author, &authorName);
           if (NS_SUCCEEDED(rv))
             rv = ConvertToUnicode(aCharset, authorName, author);
         }
         
         if (!utf8Author || NS_FAILED(rv))
         {
-          rv = parser->ExtractHeaderAddressName(nsnull, nsAutoCString(author), &authorName);
+          rv = parser->ExtractHeaderAddressName(nsnull, nsCAutoString(author), &authorName);
           if (NS_SUCCEEDED(rv))
             author = authorName;
         }

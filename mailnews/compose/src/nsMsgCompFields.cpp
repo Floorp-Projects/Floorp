@@ -693,7 +693,7 @@ nsresult nsMsgCompFields::SplitRecipients(const PRUnichar *recipients, nsIMsgRec
 			PRUint32 numAddresses;
 
 			if (NS_FAILED(ConvertFromUnicode(msgCompHeaderInternalCharset(), recipients, &recipientsStr)))
-				recipientsStr = PL_strdup(nsAutoCString(recipients));
+				recipientsStr = PL_strdup(nsCAutoString(recipients));
 			
 			if (! recipientsStr)
 				return NS_ERROR_OUT_OF_MEMORY;
