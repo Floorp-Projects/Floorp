@@ -729,21 +729,6 @@ lm_ReallyInitMocha(void)
     crippled_decoder = lm_new_decoder(lm_runtime, &lm_dummy_class);
     crippled_context = crippled_decoder->js_context;
 
-#if defined(OJI)
-    if (JVM_MaybeStartupLiveConnect())
-        JSJ_InitJSContext(LM_GetCrippledContext(), 
-			  JS_GetGlobalObject(LM_GetCrippledContext()), NULL);
-
-#elif defined(JAVA)
-    LJ_JSJ_Init();
-
-    /* 
-     * Get liveconnect functions defined for the crippled context
-     *   so we can pass error messages to the JavaConsole
-     */
-    JSJ_InitContext(crippled_context, JS_GetGlobalObject(crippled_context));
-#endif
-
     /* Initialize a dummy object used for unreflectable applets and embeds. */
     lm_DummyObject = crippled_decoder->window_object;
 
@@ -772,6 +757,22 @@ lm_ReallyInitMocha(void)
 
 #ifdef JSDEBUGGER
     lm_InitJSDebug(lm_runtime);
+#endif
+
+	/* beard: move this to end, to ensure complete initialization before initing LiveConnect. */
+#if defined(OJI)
+    if (JVM_MaybeStartupLiveConnect())
+        JSJ_InitJSContext(LM_GetCrippledContext(), 
+			  JS_GetGlobalObject(LM_GetCrippledContext()), NULL);
+
+#elif defined(JAVA)
+    LJ_JSJ_Init();
+
+    /* 
+     * Get liveconnect functions defined for the crippled context
+     *   so we can pass error messages to the JavaConsole
+     */
+    JSJ_InitContext(crippled_context, JS_GetGlobalObject(crippled_context));
 #endif
 
     return;
