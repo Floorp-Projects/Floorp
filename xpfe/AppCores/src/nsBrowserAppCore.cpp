@@ -159,7 +159,6 @@ nsBrowserAppCore::nsBrowserAppCore()
 
 nsBrowserAppCore::~nsBrowserAppCore()
 {
-
   // We own none of these things, so no need to release
   //NS_IF_RELEASE(mToolbarWindow)
   //NS_IF_RELEASE(mToolbarScriptContext);
@@ -1652,8 +1651,17 @@ nsBrowserAppCore::Close()
   }
   mGHistory = nsnull;
 
-	// session history is an instance, not a service
+  // Undo other stuff we did in SetContentWindow.
+  if ( mContentAreaWebShell ) {
+      mContentAreaWebShell->SetDocLoaderObserver( 0 );
+      mContentAreaWebShell->SetSessionHistory( 0 );
+  }
+
+  // session history is an instance, not a service
   NS_IF_RELEASE(mSHistory);
+
+  // Release search context.
+  mSearchContext = 0;
 
   return NS_OK;
 }
