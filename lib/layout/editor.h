@@ -1036,7 +1036,7 @@ private:
     // See comments for similar params in CEditTableCellElement
     int32   m_iWidthPixels;       
     // This is % of parent (when bWidthPercent = TRUE) or absolute (in pixels)
-    XP_Bool m_iWidth;
+    int32   m_iWidth;
     XP_Bool m_bWidthPercent;       
 
     int32   m_iHeightPixels;       
