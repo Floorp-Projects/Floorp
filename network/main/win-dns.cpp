@@ -18,7 +18,9 @@
  */
 #ifdef XP_PC
 #include <windows.h>
+#ifdef WIN32_LEAN_AND_MEAN
 #include <winsock2.h>
+#endif
 #include "net.h"
 #include "nsISupports.h"
 #include "merrors.h"
