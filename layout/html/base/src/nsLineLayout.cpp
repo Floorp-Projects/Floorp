@@ -60,11 +60,8 @@
 #include "nsIViewManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsTextFragment.h"
-#ifdef IBMBIDI
 #include "nsBidiUtils.h"
-#include "nsITextFrame.h"
 #define FIX_FOR_BUG_40882
-#endif // IBMBIDI
 
 #ifdef DEBUG
 #undef  NOISY_HORIZONTAL_ALIGN
@@ -1308,43 +1305,24 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   printf(" status=%x\n", aReflowStatus);
 #endif
 
-#ifdef IBMBIDI
   if (state & NS_FRAME_IS_BIDI) {
-    nsITextFrame* textFrame = nsnull;
-    aFrame->QueryInterface(NS_GET_IID(nsITextFrame), (void**) &textFrame);
-    if (textFrame) {
-      // Since aReflowStatus may change, check it at the end
-      if (NS_INLINE_IS_BREAK_BEFORE(aReflowStatus) ) {
-        textFrame->SetOffsets(start, end);
-        nsFrameState frameState;
-        aFrame->GetFrameState(&frameState);
-        frameState |= NS_FRAME_IS_BIDI;
-        aFrame->SetFrameState(frameState);
-      }
-      else if (!NS_FRAME_IS_COMPLETE(aReflowStatus) ) {
-        PRInt32 newEnd;
-        aFrame->GetOffsets(start, newEnd);
-        if (newEnd != end) {
-          nsIFrame* nextInFlow;
-          aFrame->GetNextInFlow(&nextInFlow);
-          if (nextInFlow) {
-            nsITextFrame* nextTextInFlow = nsnull;
-            nextInFlow->QueryInterface(NS_GET_IID(nsITextFrame),
-                                       (void**) &nextTextInFlow);
-            if (nextTextInFlow) {
-              nextInFlow->GetOffsets(start, end);
-              nextTextInFlow->SetOffsets(newEnd, end);
-              nsFrameState frameState;
-              nextInFlow->GetFrameState(&frameState);
-              frameState |= NS_FRAME_IS_BIDI;
-              nextInFlow->SetFrameState(frameState);
-            }
-          } // nextInFlow
-        } // newEnd != end
-      } // !NS_FRAME_IS_COMPLETE(aReflowStatus)
-    } // textFrame
+    // Since aReflowStatus may change, check it at the end
+    if (NS_INLINE_IS_BREAK_BEFORE(aReflowStatus) ) {
+      aFrame->AdjustOffsetsForBidi(start, end);
+    }
+    else if (!NS_FRAME_IS_COMPLETE(aReflowStatus) ) {
+      PRInt32 newEnd;
+      aFrame->GetOffsets(start, newEnd);
+      if (newEnd != end) {
+        nsIFrame* nextInFlow;
+        aFrame->GetNextInFlow(&nextInFlow);
+        if (nextInFlow) {
+          nextInFlow->GetOffsets(start, end);
+          nextInFlow->AdjustOffsetsForBidi(newEnd, end);
+        } // nextInFlow
+      } // newEnd != end
+    } // !NS_FRAME_IS_COMPLETE(aReflowStatus)
   } // isBidiFrame
-#endif // IBMBIDI
 
   return rv;
 }

@@ -31,6 +31,8 @@ XPIDL_MODULE	= layout_base
 GRE_MODULE	= 1
 
 EXPORTS		= \
+nsBidiPresUtils.h \
+nsBidi.h \
 nsCompatibility.h \
 nsFrameList.h \
 nsFrameTraversal.h \
@@ -73,14 +75,6 @@ nsStyleChangeList.h \
 nsStyleConsts.h \
 nsIFrameFrame.h \
 $(NULL)
-
-ifdef IBMBIDI
-EXPORTS		+= \
-		nsBidiPresUtils.h \
-		nsBidi.h \
-		nsITextFrame.h \
-		$(NULL)
-endif                
 
 XPIDLSRCS	= \
 		nsIChromeEventHandler.idl	\
