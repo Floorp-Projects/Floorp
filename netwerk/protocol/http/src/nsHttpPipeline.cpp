@@ -439,13 +439,22 @@ nsHttpPipeline::OnDataWritable(nsIOutputStream *stream)
             // maybe this transaction has already been canceled...
             if (mTransactionQ[i]) {
                 while (1) {
+                    PRUint32 before = 0, after = 0;
+                    mRequestData->Available(&before);
+                    // append the transaction's request data to our buffer...
                     rv = mTransactionQ[i]->OnDataWritable(outputStream);
                     if (rv == NS_BASE_STREAM_CLOSED)
                         break; // advance to next transaction
                     if (NS_FAILED(rv))
                         return rv; // something bad happened!!
                     // else, there's more to write (the transaction may be
-                    // writing in small chunks).
+                    // writing in small chunks).  verify that the transaction
+                    // actually wrote something to the pipe, and if it didn't,
+                    // then advance to the next transaction to avoid an
+                    // infinite loop (see bug 146884).
+                    mRequestData->Available(&after);
+                    if (before == after)
+                        break;
                 }
             }
         }

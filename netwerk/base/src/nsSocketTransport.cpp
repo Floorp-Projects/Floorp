@@ -2935,6 +2935,13 @@ nsSocketReadRequest::OnRead()
     // Allow reads beyond what is available right now.
     amount = MAX_IO_TRANSFER_SIZE;
 
+    // Since the input stream remembers any socket errors, we need to
+    // be sure to clear the error state before calling OnDataAvailable.
+    // If we don't, and the listener fails to call the Read method on
+    // mInputStream, then GotWouldBlock() might incorrectly return TRUE,
+    // which could lead us to loop indefinitely (See bug 146884).
+    mInputStream->ClearError();
+
     LOG(("nsSocketReadRequest: [this=%x] calling listener [offset=%u, count=%u]\n",
         this, offset, amount));
 
@@ -3037,6 +3044,13 @@ nsSocketWriteRequest::OnWrite()
 
     nsresult rv;
     PRUint32 offset = mOutputStream->GetOffset();
+
+    // Since the output stream remembers any socket errors, we need to
+    // be sure to clear the error state before calling OnDataWritable.
+    // If we don't, and the provider fails to call the Write method on
+    // mOutputStream, then GotWouldBlock() might incorrectly return TRUE,
+    // which could lead us to loop indefinitely (See bug 146884).
+    mOutputStream->ClearError();
 
     rv = mProvider->OnDataWritable(this,
                                    mContext,
