@@ -294,7 +294,24 @@ my $file_template = <<'EOF';
 </html>
 EOF
 
-
+my $total_template = <<'EOF';
+[% grand_total = 0 %]
+[% FOREACH stat = stats %]
+  [% NEXT IF !stat.isactive %]
+  [% app_total = 0 %]
+    [% FOREACH platform = stat.platforms %]
+      [% platform_total = 0 %]
+      [% files = platform.value %]
+      [% FOREACH file = files %]
+        [% file_total = file.value.counts.complete_uni + file.value.counts.complete_multi %]
+        [% platform_total = platform_total + file_total %]
+      [% END %]
+      [% app_total = app_total + platform_total %]
+    [% END %]
+  [% grand_total = grand_total + app_total %]
+[% END %]
+[% grand_total %]
+EOF
 
 my $template;
 if ($report_type eq "file") {
@@ -304,6 +321,10 @@ if ($report_type eq "file") {
 elsif ($report_type eq "platform_build") {
     retrieve_by_platform_build();
     $template = $platform_build_template;
+}
+elsif ($report_type eq "total_downloads") {
+    retrieve_by_platform_build();
+    $template = $total_template;
 }
 
 my $tt = new Template({ PRE_CHOMP => 1, POST_CHOMP => 1});
