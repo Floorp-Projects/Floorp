@@ -73,7 +73,7 @@ nsBodyFrame::~nsBodyFrame()
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// nsIUnknown
+// nsISupports
 
 nsresult
 nsBodyFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -87,7 +87,7 @@ nsBodyFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*) tmp;
     return NS_OK;
   }
-  return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
+  return nsBlockFrame::QueryInterface(aIID, aInstancePtr);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -104,11 +104,12 @@ NS_IMETHODIMP
 nsBodyFrame::GetAdditionalChildListName(PRInt32   aIndex,
                                         nsIAtom*& aListName) const
 {
-  if (aIndex < 0) {
-    return NS_ERROR_INVALID_ARG;
+  if (aIndex < 2) {
+    return nsBlockFrame::GetAdditionalChildListName(aIndex, aListName);
   }
+  
   nsIAtom* atom = nsnull;
-  if (0 == aIndex) {
+  if (2 == aIndex) {
     atom = gAbsoluteAtom;
     NS_ADDREF(atom);
   }
