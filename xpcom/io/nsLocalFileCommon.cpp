@@ -116,7 +116,7 @@ nsFSStringConversion::CleanUp()
   NS_IF_RELEASE(mDecoder);
 }
 
-NS_IMETHODIMP 
+/* static */ nsresult
 nsFSStringConversion::PrepareFSCharset()
 {
    nsresult res = NS_ERROR_NOT_IMPLEMENTED;
@@ -142,7 +142,7 @@ nsFSStringConversion::PrepareFSCharset()
 #endif /* XPCOM_STANDALONE */
    return res;
 }
-NS_IMETHODIMP 
+/* static */ nsresult
 nsFSStringConversion::PrepareEncoder()
 {
    nsresult res = NS_ERROR_NOT_IMPLEMENTED;
@@ -165,7 +165,7 @@ nsFSStringConversion::PrepareEncoder()
 #endif /* XPCOM_STANDALONE */
    return res;
 }
-NS_IMETHODIMP 
+/* static */ nsresult
 nsFSStringConversion::PrepareDecoder()
 {
    nsresult res = NS_ERROR_NOT_IMPLEMENTED;
@@ -188,7 +188,7 @@ nsFSStringConversion::PrepareDecoder()
 #endif /* XPCOM_STANDALONE */
    return res;
 }
-NS_IMETHODIMP 
+/* static */ nsresult
 nsFSStringConversion::UCSToNewFS( const PRUnichar* aIn, char** aOut)
 {
    nsresult res = NS_ERROR_NOT_IMPLEMENTED;
@@ -217,7 +217,7 @@ nsFSStringConversion::UCSToNewFS( const PRUnichar* aIn, char** aOut)
 #endif /* XPCOM_STANDALONE */
    return res;
 }
-NS_IMETHODIMP 
+/* static */ nsresult
 nsFSStringConversion::FSToNewUCS( const char* aIn, PRUnichar** aOut)
 {
    nsresult res = NS_ERROR_NOT_IMPLEMENTED;
