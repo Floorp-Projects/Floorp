@@ -40,7 +40,7 @@ sub print_machines {
 }
 
 sub show_graph {
-  die "$TBOX is not a valid machine name" 
+  die "$TBOX: no data file found" 
 	unless -e $DATAFILE; 
 
   my $PNGFILE  = "/tmp/gnuplot.$$";
