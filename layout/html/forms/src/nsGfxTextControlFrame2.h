@@ -151,14 +151,19 @@ public:
   NS_IMETHOD GetText(nsString* aText, PRBool aInitialValue);
 
   NS_DECL_ISUPPORTS_INHERITED
+
 public: //for methods who access nsGfxTextControlFrame2 directly
+
   void SubmitAttempt();
   NS_IMETHOD InternalContentChanged();//notify that we have some kind of change.
   NS_IMETHOD CallOnChange();
+
 protected:
+
   PRBool IsScrollable() const;
   nsresult SetInitialValue();
   nsString *GetCachedString();
+  void InvalidateCachedState();
   virtual PRIntn GetSkipSides() const;
   void RemoveNewlines(nsString &aString);
   NS_IMETHOD GetMaxLength(PRInt32* aSize);
