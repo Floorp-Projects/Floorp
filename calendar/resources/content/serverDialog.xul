@@ -49,7 +49,6 @@
     <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
 ]>
 
-
 <dialog
    id="calendar-serverwindow"
    title="&calendar.server.dialog.title.new;"
@@ -59,101 +58,84 @@
    onload="loadCalendarServerDialog()"
    persist="screenX screenY width height"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   width="600"
-	height="270"
-	xmlns:nc="http://home.netscape.com/NC-rdf#">
-    
-   
+   xmlns:nc="http://home.netscape.com/NC-rdf#">
+
    <!-- Javascript includes -->
-   
    <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
    <script type="application/x-javascript" src="chrome://calendar/content/serverDialog.js"/>
-   
-   <!-- Data used in JS from dtd -->
-   
-   <dataset>
-       <data id="data-event-title-new"             value="&calendar.server.dialog.title.new;" />
-       <data id="data-event-title-edit"            value="&calendar.server.dialog.title.edit;" />
-   </dataset>
 
+   <!-- Data used in JS from dtd -->
+   <dataset>
+      <data id="data-event-title-new" value="&calendar.server.dialog.title.new;" />
+      <data id="data-event-title-edit" value="&calendar.server.dialog.title.edit;" />
+   </dataset>
    <keyset id="dialogKeys"/>
 
    <!-- The dialog -->
-    
    <!-- dialog-box: from dialogOverlay.xul -->
-    
    <vbox id="dialog-box" flex="1">  
-   
-      <!-- standard-dialog-content: from dialogOverlay.xul  -->
-        
-      <vbox id="standard-dialog-content"  flex="1">
-        
-         <grid>
-            
-                <columns>
-                    <column />
-                    <column flex="1"/>
-                </columns>
-                
-                <rows>
-            
-                    <!-- Name -->    
-                    <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <description>&calendar.server.dialog.name.label;</description>
-                        </hbox>
-                        <textbox flex="1" id="server-name-textbox"/>
-                    </row>
 
-				   <!-- Color -->  
-                    //added by Dallas
-                    <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <description flex="1">&calendar.server.dialog.color.label;</description>
-						</hbox>
-                        <hbox align="center">
-                           <colorpicker id="calendar-color"
-                              class="small-margin"
-                              type="button"
-                              palettename="standard"/>
-                        </hbox>
-                    </row>
-                    
-                    <!-- Remote Location -->    
-                    <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <description>&calendar.server.dialog.location.label;</description>
-                        </hbox>
-                        <hbox>
-                           <textbox id="server-path-textbox" flex="1" /> 
-                        </hbox>
-                    </row>
-                    
-						  <!-- Local Location -->    
-                    <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <description>&calendar.server.dialog.local.location.label;</description>
-                        </hbox>
-                        <hbox>
-                           <textbox readonly="true"
-                                    id="server-local-path-textbox"
-                                    flex="1" /> 
-                        </hbox>
-                    </row>
-						  
-						  <!-- Publish Automatically -->    
-                    <row align="center">
-                        <hbox class="field-label-box-class" pack="end"/>
-                        <hbox>
-									<checkbox id="server-publish-checkbox"/>
-									<description flex="1">&calendar.server.dialog.publish.label;</description>
-								</hbox>
-                    </row>
-                  </rows>
-               </grid> 
-            
-            
+      <!-- standard-dialog-content: from dialogOverlay.xul  -->
+      <vbox id="standard-dialog-content"  flex="1">
+         <grid>
+            <columns>
+               <column />
+               <column flex="1"/>
+            </columns>
+            <rows>
+               <!-- Name -->    
+               <row align="center">
+                  <hbox class="field-label-box-class" pack="end">
+                     <description>&calendar.server.dialog.name.label;</description>
+                  </hbox>
+                  <textbox flex="1" id="server-name-textbox"/>
+               </row>
+
+               <!-- Color -->  
+               <row align="center">
+                  <hbox class="field-label-box-class" pack="end">
+                     <description>&calendar.server.dialog.color.label;</description>
+                  </hbox>
+                  <hbox align="center">
+                     <colorpicker id="calendar-color"
+                        class="small-margin"
+                        type="button"
+                        palettename="standard"/>
+                  </hbox>
+               </row>
+
+               <!-- Remote Location -->    
+               <row align="center">
+                  <hbox class="field-label-box-class" pack="end">
+                     <description>&calendar.server.dialog.location.label;</description>
+                  </hbox>
+                  <hbox>
+                     <textbox id="server-path-textbox" flex="1" /> 
+                  </hbox>
+               </row>
+
+               <!-- Local Location -->    
+               <row align="center">
+                  <hbox class="field-label-box-class" pack="end">
+                     <description>&calendar.server.dialog.local.location.label;</description>
+                  </hbox>
+                  <hbox>
+                     <textbox readonly="true"
+                        id="server-local-path-textbox"
+                        flex="1" /> 
+                  </hbox>
+               </row>
+
+               <!-- Publish Automatically -->    
+               <row align="center">
+                  <hbox class="field-label-box-class" pack="end"/>
+                  <hbox>
+                     <checkbox id="server-publish-checkbox"/>
+                     <description flex="1">&calendar.server.dialog.publish.label;</description>
+                  </hbox>
+               </row>
+            </rows>
+         </grid> 
       </vbox> <!-- standard-dialog-content -->
    </vbox> <!-- dialog-box -->
-
 </dialog>

@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Colin Phillips <colinp@oeone.com>
+ *                 Simon Paquet <bugzilla@babylonsounds.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,6 +38,11 @@
 /* the main content of the dialog */
 #standard-dialog-content
 {
-	padding					:10px;
+       padding: 10px;
 }
 
+#calendar-serverwindow
+{
+       width: 60em;
+       height: 15em;
+}
