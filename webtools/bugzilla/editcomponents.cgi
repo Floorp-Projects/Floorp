@@ -46,7 +46,7 @@ sub sillyness {
 
 my $dobugcounts = (defined $::FORM{'dobugcounts'});
 
-
+my $cgi = Bugzilla->cgi;
 
 # TestProduct:    just returns if the specified product does exists
 # CheckProduct:   same check, optionally  emit an error text
@@ -458,12 +458,21 @@ if ($action eq 'new') {
 
     # For localisation reasons, we get the title of the queries from the
     # submitted form.
+    my $open_name = $cgi->param('open_name');
+    my $closed_name = $cgi->param('closed_name');
     my @openedstatuses = ("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED");
-    my $statuses = join("&", map { "bug_status=$_" } @openedstatuses);
-    push(@series, [$::FORM{'open_name'}, $statuses . $prodcomp]);
+    my $statuses = join("&", map { "bug_status=$_" } @openedstatuses) . $prodcomp;
+    my $resolved = "field0-0-0=resolution&type0-0-0=notequals&value0-0-0=---" . $prodcomp;
 
-    my $resolved = "field0-0-0=resolution&type0-0-0=notequals&value0-0-0=---";
-    push(@series, [$::FORM{'closed_name'}, $resolved . $prodcomp]);
+    # trick_taint is ok here, as these variables aren't used as a command
+    # or in SQL unquoted
+    trick_taint($open_name);
+    trick_taint($closed_name);
+    trick_taint($statuses);
+    trick_taint($resolved);
+
+    push(@series, [$open_name, $statuses]);
+    push(@series, [$closed_name, $resolved]);
 
     foreach my $sdata (@series) {
         my $series = new Bugzilla::Series(undef, $product, $component,

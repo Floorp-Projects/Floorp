@@ -180,7 +180,6 @@ sub writeToDatabase {
     }
     else {
         # Insert the new series into the series table
-        trick_taint($self->{'query'});
         $dbh->do("INSERT INTO series (creator, category, subcategory, " .
                  "name, frequency, query) VALUES ($self->{'creator'}, " .
                  "$category_id, $subcategory_id, " .
