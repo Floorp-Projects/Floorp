@@ -36,6 +36,7 @@
 #include "nsRepository.h"
 #include "nsIView.h"
 
+PRInt32 nsInputFileFrame::gSpacing = 40;
 
 nsInputFileFrame::nsInputFileFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsInlineFrame(aContent, aParentFrame)
@@ -107,7 +108,7 @@ void nsInputFileFrame::MouseClicked(nsIPresContext* aPresContext)
 NS_IMETHODIMP
 nsInputFileFrame::MoveTo(nscoord aX, nscoord aY)
 {
-  if ((aX != mRect.x) || (aY != mRect.y)) {
+  if ( ((aX == 0) && (aY == 0)) || (aX != mRect.x) || (aY != mRect.y)) {
     nsIFrame* childFrame = mFirstChild;
     nscoord x = aX;
     nscoord y = aY;
@@ -115,7 +116,7 @@ nsInputFileFrame::MoveTo(nscoord aX, nscoord aY)
       nsresult result = childFrame->MoveTo(x, y);
       nsSize childSize;
       ((nsInputFrame *)childFrame)->GetWidgetSize(childSize);
-      x = x + childSize.width + 100;
+      x = x + childSize.width + gSpacing;
       childFrame->GetNextSibling(childFrame);
     }
   }
@@ -175,7 +176,7 @@ NS_IMETHODIMP nsInputFileFrame::ResizeReflow(nsIPresContext* aCX,
 
   nsSize maxSize = aMaxSize;
   nsReflowMetrics desiredSize = aDesiredSize;
-  aDesiredSize.width = 100; // padding
+  aDesiredSize.width = gSpacing; 
   aDesiredSize.height = 0;
   childFrame = mFirstChild;
   while (nsnull != childFrame) {

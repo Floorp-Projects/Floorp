@@ -81,7 +81,7 @@ NS_METHOD nsInputFrame::SetRect(const nsRect& aRect)
 NS_METHOD
 nsInputFrame::MoveTo(nscoord aX, nscoord aY)
 {
-  if ((aX != mRect.x) || (aY != mRect.y)) {
+  if ( ((aX == 0) && (aY == 0)) || (aX != mRect.x) || (aY != mRect.y)) {
     mRect.x = aX;
     mRect.y = aY;
 
@@ -114,12 +114,17 @@ nsInputFrame::SizeTo(nscoord aWidth, nscoord aHeight)
   nsIView* view = nsnull;
   GetView(view);
   if (nsnull != view) {
+    // XXX combo boxes need revision, they cannot have their height altered
     view->SetDimensions(aWidth, aHeight);
     NS_RELEASE(view);
   }
   return NS_OK;
 }
 
+PRInt32 nsInputFrame::GetBorderSpacing(nsIPresContext& aPresContext)
+{
+  return (int)(2 * (aPresContext.GetPixelsToTwips() + .5));
+}
 
 // XXX it would be cool if form element used our rendering sw, then
 // they could be blended, and bordered, and so on...
@@ -443,6 +448,8 @@ nsInputFrame::GetTextSize(nsIPresContext& aPresContext, nsIFrame* aFrame,
   aSize.width  = fontMet->GetWidth(aString);
   aSize.height = fontMet->GetHeight() + fontMet->GetLeading();
 
+  aSize.height = (int)(((float)aSize.height) * .90); // XXX find out why this is necessary
+
   nscoord charWidth  = fontMet->GetWidth("W");
 
   NS_RELEASE(fontMet);
@@ -500,7 +507,7 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
     else {
       PRInt32 col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
       charWidth = GetTextSize(*aPresContext, aFrame, col, aBounds);
-      aRowHeight = aBounds.height;
+      aRowHeight = aBounds.height;  // XXX aBounds.height has CSS_NOTSET
     }
 	  if (aSpec.mColSizeAttrInPixels) {
 	    aWidthExplicit = PR_TRUE;
@@ -522,7 +529,7 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
       else  {                                    // use default width in num characters
         charWidth = GetTextSize(*aPresContext, aFrame, aSpec.mColDefaultSize, aBounds); 
       }
-      aRowHeight = aBounds.height;
+      aRowHeight = aBounds.height; // XXX aBounds.height has CSS_NOTSET
     }
   }
 
@@ -574,6 +581,9 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
   if (ATTR_NOTSET == numRows) {
     numRows = aBounds.height / aRowHeight;
   }
+
+  aBounds.height += (2 * aFrame->GetBorderSpacing(*aPresContext)); 
+
   return numRows;
 }
 
