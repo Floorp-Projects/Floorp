@@ -71,6 +71,8 @@ classic.jar:
 +  skin/classic/global/arrow/arrow-up-sharp.gif                       (arrow/arrow-up-sharp.gif)
 +  skin/classic/global/arrow/arrow-up.gif                             (arrow/arrow-up.gif)
 +  skin/classic/global/arrow/arrow-up.png                             (arrow/arrow-up.png)
++  skin/classic/global/console/console-toolbar.png                    (console/console-toolbar.png)
++  skin/classic/global/console/console-bullets.png                    (console/console-bullets.png)
 +  skin/classic/global/console/console-error-caret.gif                (console/console-error-caret.gif)
 +  skin/classic/global/console/console-error-dash.gif                 (console/console-error-dash.gif)
 +  skin/classic/global/console/console.css                            (console/console.css)

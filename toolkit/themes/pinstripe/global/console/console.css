@@ -29,30 +29,53 @@
 
 .console-box {
   background-color: -moz-Field;
-  color: -moz-FieldText;
+  color: -moz-FieldText;  overflow: auto;
 }
  
 /* ::::: console rows ::::: */
 
 .console-row {
   border-bottom: 1px solid #A3A3A3;
-  padding: 0px;
+  padding: 4px;
 }
 
-.console-row-icon {
-  padding: 5px;
-  background-color: -moz-Dialog;
-  -moz-box-align: start !important;
+.console-row-file {
+  color: #505050;
 }
 
+
+.console-row-msg > label {
+  font-weight: bold;
+}
+
+.console-row-msg > label, .comsole-row-msg > description, .console-error-msg, .console-row-file, .console-row-code {
+  margin: 2px;
+}
+
+.console-row-file > label {
+  margin: 0;
+}
+
+.console-msg-text {
+  white-space: -moz-pre-wrap !important;
+}
 .console-icon {
   list-style-image: inherit;
+  padding-right: 6px;
+  padding-left: 6px;
+}
+
+.text-link {
+  text-decoration: none;  
+}
+
+.text-link:hover {
+  text-decoration: underline;
 }
 
 /* ..... error rows ..... */
 
 .console-row-code {
-  padding: 3px 0px 3px 3px;
   color: #0000BB;
   font-size: larger;
 }
@@ -80,28 +103,35 @@
 /* ..... selected state ..... */
 
 .console-row[selected="true"] {
-  background-color: #B7DBEB !important;
+  background-color: #3D80DF !important;
+  color: #FFF;
 }
 
 .console-row-code[selected="true"],
+.console-row-content[selected="true"] > .console-row-file,
 .console-row-content[selected="true"] > .console-row-file > .console-error-source > .text-link {
-  color: inherit !important;  
+  color: #FFF !important;  
 }
 
 /* ::::: icons ::::: */
 
+.console-row {
+  list-style-image: url("chrome://global/skin/console/console-bullets.png");
+  -moz-image-region: rect(0px, 32px, 32px, 0px);
+}
 .console-row[type="error"],
 .console-row[type="exception"] {
-  list-style-image: url("chrome://global/skin/icons/alert-error.gif");
+  background-color: #FFD0DC;
 }
 
 .console-row[type="warning"] {
-  list-style-image: url("chrome://global/skin/icons/alert-exclam.png");
-  padding-right: 10px;
+  -moz-image-region: rect(0px, 64px, 32px, 32px);
+  background-color: #F8F3CC;
 }
 
 .console-row[type="message"] {
-  list-style-image: url("chrome://global/skin/icons/alert-message.gif");
+  -moz-image-region: rect(0px, 96px, 32px, 64px);
+  background-color: #D3EDFF;
 }
 
 /* ::::: toolbars ::::: */
@@ -120,3 +150,51 @@
 toolbarseparator {
   min-height: 1em;
 }
+
+/* Toolbar icons */
+
+toolbar#ToolbarMode {
+  padding-right: 5px;
+  padding-left: 5px;
+}
+
+toolbar#ToolbarMode toolbarbutton {
+  list-style-image: url("chrome://global/skin/console/console-toolbar.png");
+  -moz-box-orient: vertical;
+}
+
+toolbarbutton[observes="Console:modeWarnings"] {
+  -moz-image-region: rect(0px, 32px, 32px, 0px);
+}
+toolbarbutton[observes="Console:modeWarnings"]:hover:active {
+  -moz-image-region: rect(32px, 32px, 64px, 0px);
+}
+
+toolbarbutton[observes="Console:modeMessages"] {
+  -moz-image-region: rect(0px, 64px, 32px, 32px);
+}
+toolbarbutton[observes="Console:modeMessages"]:hover:active {
+  -moz-image-region: rect(32px, 64px, 64px, 32px);
+}
+
+toolbarbutton[observes="Console:modeErrors"] {
+  -moz-image-region: rect(0px, 96px, 32px, 64px);
+}
+toolbarbutton[observes="Console:modeErrors"]:hover:active {
+  -moz-image-region: rect(32px, 96px, 64px, 64px);
+}
+
+toolbarbutton[observes="Console:modeAll"] {
+  -moz-image-region: rect(0px, 128px, 32px, 96px);
+}
+toolbarbutton[observes="Console:modeAll"]:hover:active {
+  -moz-image-region: rect(32px, 128px, 64px, 96px);
+}
+
+toolbarbutton[observes="Console:clear"] {
+  -moz-image-region: rect(0px, 160px, 32px, 128px);
+}
+toolbarbutton[observes="Console:clear"]:hover:active {
+  -moz-image-region: rect(32px, 160px, 64px, 128px);
+}
+
