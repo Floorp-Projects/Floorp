@@ -46,6 +46,7 @@ base/src/Makefile
 base/src/motif/Makefile
 base/src/rhapsody/Makefile
 base/src/gtk/Makefile
+base/src/xlib/Makefile
 base/tests/Makefile
 build/package/rpm/mozilla.spec
 build/package/rpm/nspr-pthreads.spec
@@ -92,6 +93,7 @@ gfx/src/gtk/Makefile
 gfx/src/ps/Makefile
 gfx/src/motif/Makefile
 gfx/src/rhapsody/Makefile
+gfx/src/xlib/Makefile
 gfx/tests/Makefile
 htmlparser/Makefile
 htmlparser/robot/Makefile
@@ -305,6 +307,7 @@ widget/src/build/Makefile
 widget/src/motif/Makefile
 widget/src/rhapsody/Makefile
 widget/src/gtk/Makefile
+widget/src/xlib/Makefile
 widget/src/xpwidgets/Makefile
 widget/tests/Makefile
 widget/tests/scribble/Makefile
