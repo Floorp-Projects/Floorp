@@ -23,6 +23,11 @@ packages/core.jar:
 	editor/content/sb-FileWidgetFileHandler.js               (ui/composer/content/sb-FileWidgetFileHandler.js)
 	editor/content/editorOverlay.xul                         (ui/composer/content/editorOverlay.xul) 
 	editor/content/editorOverlay.js                          (ui/composer/content/editorOverlay.js) 
+	editor/content/pref-editing.xul                          (ui/composer/content/pref-editing.xul) 
+	editor/content/pref-composer.js                          (ui/composer/content/pref-composer.js) 
+	editor/content/pref-composer.xul                         (ui/composer/content/pref-composer.xul) 
+	editor/content/pref-publish.xul                          (ui/composer/content/pref-publish.xul) 
+	editor/content/editorPrefsOverlay.xul                    (ui/composer/content/editorPrefsOverlay.xul) 
 	editor/content/images/tag-anchor.gif                     (ui/composer/content/images/tag-anchor.gif)
 	editor/content/images/tag-abr.gif                        (ui/composer/content/images/tag-abr.gif)
 	editor/content/images/tag-acr.gif                        (ui/composer/content/images/tag-acr.gif)
@@ -165,6 +170,10 @@ packages/core.jar:
 
 locales/en-US.jar:
 	editor/locale/editor.dtd                   (ui/composer/locale/en-US/editor.dtd) 
+	editor/locale/editorPrefsOverlay.dtd       (ui/composer/locale/en-US/editorPrefsOverlay.dtd) 
+	editor/locale/pref-editing.dtd             (ui/composer/locale/en-US/pref-editing.dtd) 
+	editor/locale/pref-composer.dtd            (ui/composer/locale/en-US/pref-composer.dtd) 
+	editor/locale/pref-publish.dtd             (ui/composer/locale/en-US/pref-publish.dtd) 
 	editor/locale/sidebar-editor-rdf.dtd       (ui/composer/locale/en-US/sidebar-editor-rdf.dtd)
 	editor/locale/sidebar-editor.dtd           (ui/composer/locale/en-US/sidebar-editor.dtd)
 	editor/locale/viewSource.dtd               (ui/composer/locale/en-US/viewSource.dtd) 
