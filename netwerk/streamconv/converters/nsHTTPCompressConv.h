@@ -27,6 +27,8 @@
 #include "nsIFactory.h"
 #include "nsCOMPtr.h"
 
+#include "zlib.h"
+
 #define NS_HTTPCOMPRESSCONVERTER_CID                \
 {                                                   \
     /* 66230b2b-17fa-4bd3-abf4-07986151022d */      \
@@ -34,7 +36,7 @@
     0x17fa,                                         \
     0x4bd3,                                         \
     {0xab, 0xf4, 0x07, 0x98, 0x61, 0x51, 0x02, 0x2d}\
-};
+}
 
 static NS_DEFINE_CID(kHTTPCompressConverterCID, NS_HTTPCOMPRESSCONVERTER_CID);
 
@@ -82,6 +84,15 @@ private:
     nsCOMPtr<nsISupports>   mAsyncConvContext;
 
     nsresult do_OnDataAvailable (nsIChannel *aChannel, nsISupports *aContext, PRUint32 aSourceOffset, char *buffer, PRUint32 aCount);
+
+    PRBool      mCheckHeaderDone;
+    PRBool      mGzipStreamEnded;
+    PRBool      mGzipStreamInitialized;
+
+    z_stream d_stream;
+    unsigned mLen, hMode, mSkipCount, mFlags;
+
+    PRUint32 check_header (nsIInputStream *iStr, PRUint32 streamLen, nsresult *rv);
 };
 
 
