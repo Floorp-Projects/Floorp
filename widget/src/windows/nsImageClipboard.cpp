@@ -25,9 +25,6 @@
  
 #include "nsImageClipboard.h"
 #include "nsGfxCIID.h"
-#include "nsIImage.h"
-
-#include <windows.h>
 
 
 /* Things To Do 11/8/00
@@ -132,7 +129,7 @@ nsImageToClipboard::CalcSpanLength(PRUint32 aWidth, PRUint32 aBitCount)
 // image. 
 //
 nsresult
-nsImageToClipboard::CreateFromIImage ( nsIImage* inImage )
+nsImageToClipboard::CreateFromImage ( nsIImage* inImage )
 {
   nsresult result = NS_OK;
 
@@ -192,22 +189,20 @@ nsImageToClipboard::CreateFromIImage ( nsIImage* inImage )
     if ( !imageHeader )
       return NS_ERROR_FAILURE;
       
-    PRInt32 imageSize = CalcSize(imageHeader->biHeight, imageHeader->biClrUsed, imageHeader->biBitCount, imageHeader->GetLineStride());
+    PRInt32 imageSize = CalcSize(imageHeader->biHeight, imageHeader->biClrUsed, imageHeader->biBitCount, inImage->GetLineStride());
 
     // Create the buffer where we'll copy the image bits (and header) into and lock it
     mBitmap = (HANDLE)::GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE | GMEM_ZEROINIT, imageSize);
     if (mBitmap && (mHeader = (BITMAPINFOHEADER*)::GlobalLock((HGLOBAL) mBitmap)) )
     {
       RGBQUAD *pRGBQUAD = (RGBQUAD *)&mHeader[1];
-      PBYTE bits = (PBYTE)&pRGBQUAD[pHead->biClrUsed];
+      PBYTE bits = (PBYTE)&pRGBQUAD[imageHeader->biClrUsed];
 
       // Fill in the header info.
 
       mHeader->biSize          = sizeof(BITMAPINFOHEADER);
-      mHeader->biWidth         = pHead->biWidth;
-      imageHeight             = mHeader->biHeight = imageHeader->biHeight;
-      if ( imageHeight < 0 )
-        imageHeight = -imageHeight;
+      mHeader->biWidth         = imageHeader->biWidth;
+      mHeader->biHeight        = imageHeader->biHeight;
 
       mHeader->biPlanes        = 1;
       mHeader->biBitCount      = imageHeader->biBitCount;
@@ -292,7 +287,7 @@ nsImageFromClipboard :: GetImage ( nsIImage** outImage )
     PRInt32 width  = mHeader->bV4Width;
     PRInt32 height = mHeader->bV4Height;
     PRInt32 depth  = mHeader->bV4BitCount;
-    PRUint8 * bits = GetDIBBits((BITMAPINFO *)mHeader);
+    PRUint8 * bits = GetDIBBits();
     if ( !bits )
       return NS_ERROR_FAILURE;
       
@@ -300,10 +295,10 @@ nsImageFromClipboard :: GetImage ( nsIImage** outImage )
     // depths other than 8 or 24 bits. Ensure that's what we have
     // before we try to work with the image. (pinkerton)
     if ( depth == 24 || depth == 8 ) {
-      outImage->Init(width, height, depth, nsMaskRequirements_kNoMask);
+      (*outImage)->Init(width, height, depth, nsMaskRequirements_kNoMask);
 
       // Now, copy the image bits from the Dib into the nsIImage's buffer
-      PRUint8 * imageBits = outImage->GetBits();
+      PRUint8* imageBits = (*outImage)->GetBits();
       depth = (depth >> 3);
       PRUint32 size = width * height * depth;
       ::CopyMemory(imageBits, bits, size);

@@ -29,9 +29,11 @@ Any other render format? HTML?
 
 */
 
-#include "prtypes.h"
+#include "nserror.h"
+#include <windows.h>
 
-class nsIImage;
+#include "nsCOMPtr.h"
+#include "nsIImage.h"
 
 
 //
