@@ -105,6 +105,8 @@ public:
   NS_IMETHOD GetNaturalImageSize(PRUint32* naturalWidth, 
                                  PRUint32 *naturalHeight);
 
+  NS_IMETHOD GetImageRequest(imgIRequest **aRequest);
+
   NS_IMETHOD IsImageComplete(PRBool* aComplete);
 
 #ifdef DEBUG
