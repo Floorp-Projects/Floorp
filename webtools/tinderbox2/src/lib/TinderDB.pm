@@ -19,8 +19,8 @@
 #       notice board display,  build display (colored squares)
 
 
-# $Revision: 1.3 $ 
-# $Date: 2000/09/22 15:01:58 $ 
+# $Revision: 1.4 $ 
+# $Date: 2000/10/17 23:49:24 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB.pm,v $ 
 # $Name:  $ 
@@ -120,7 +120,7 @@ if ( defined($TinderConfig::DB_LEGEND_BORDER) ) {
 # finest spacing on html page (in minutes), this resticts the
 # minimum time between builds (to this value plus 5 minutes).
 
-$MIN_TABLE_SPACING = $TinderConfig::DB_MIN_TABLE_SPACING || (5);
+$TABLE_SPACING = $TinderConfig::DB_TABLE_SPACING || (5);
 
 # number of times a database can be updated before its contents must
 # be trimmed of old data.  This scan of the database is used to
