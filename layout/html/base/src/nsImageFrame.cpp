@@ -1155,18 +1155,17 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
                                  absURL, target, altText,
                                  &suppress);
         }
-        
+
         if (!inside && isServerMap) {
           suppress = GetSuppress();
-          nsIURI* baseURL = nsnull;
-          GetBaseURI(&baseURL);
+          nsCOMPtr<nsIURI> baseURL;
+          GetBaseURI(getter_AddRefs(baseURL));
           
           // Server side image maps use the href in a containing anchor
           // element to provide the basis for the destination url.
           nsAutoString src;
           if (GetAnchorHREFAndTarget(src, target)) {
             NS_MakeAbsoluteURI(absURL, src, baseURL);
-            NS_IF_RELEASE(baseURL);
             
             // XXX if the mouse is over/clicked in the border/padding area
             // we should probably just pretend nothing happened. Nav4
