@@ -4989,6 +4989,7 @@ HRESULT CheckInstances()
   char  szProcessName[MAX_BUF];
   char  szClassName[MAX_BUF];
   char  szWindowName[MAX_BUF];
+  char  szAttention[MAX_BUF];
   char  szMessage[MAX_BUF];
   char  szIndex[MAX_BUF];
   int   iIndex;
@@ -5012,6 +5013,8 @@ HRESULT CheckInstances()
     lstrcpy(szSection, "Check Instance");
     lstrcat(szSection, szIndex);
 
+
+    GetPrivateProfileString("Messages", "MB_ATTENTION_STR", "", szAttention, sizeof(szAttention), szFileIniInstall);
     GetPrivateProfileString(szSection, "Message", "", szMessage, sizeof(szMessage), szFileIniConfig);
     if(GetPrivateProfileString(szSection, "Process Name", "", szProcessName, sizeof(szProcessName), szFileIniConfig) != 0L)
     {
@@ -5028,13 +5031,14 @@ HRESULT CheckInstances()
             switch(sgProduct.dwMode)
             {
               case NORMAL:
-                switch(MessageBox(hWndMain, szMessage, NULL, MB_ICONEXCLAMATION | MB_RETRYCANCEL))
+                switch(MessageBox(hWndMain, szMessage, szAttention, MB_ICONEXCLAMATION))
                 {
                   case IDCANCEL:
                     /* User selected to cancel Setup */
                     return(TRUE);
 
                   case IDRETRY:
+                  case IDOK:
                     /* User selected to retry.  Reset counter */
                     iIndex = -1;
                     break;
@@ -5096,13 +5100,14 @@ HRESULT CheckInstances()
           switch(sgProduct.dwMode)
           {
             case NORMAL:
-              switch(MessageBox(hWndMain, szMessage, NULL, MB_ICONEXCLAMATION | MB_RETRYCANCEL))
+              switch(MessageBox(hWndMain, szMessage, szAttention, MB_ICONEXCLAMATION))
               {
                 case IDCANCEL:
                   /* User selected to cancel Setup */
                   return(TRUE);
 
                 case IDRETRY:
+                case IDOK:
                   /* User selected to retry.  Reset counter */
                   iIndex = -1;
                   break;
@@ -5392,9 +5397,6 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   SetSetupRunMode(szBuf);
   if(ParseCommandLine(lpszCmdLine))
     return(1);
-
-//  if(CheckInstances())
-//    return(1);
 
   if(GetPrivateProfileString("Messages", "MSG_INIT_SETUP", "", szMsgInitSetup, sizeof(szMsgInitSetup), szFileIniInstall))
     ShowMessage(szMsgInitSetup, TRUE);
