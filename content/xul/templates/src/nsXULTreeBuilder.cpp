@@ -181,7 +181,7 @@ protected:
     /**
      * A sorting callback for NS_QuickSort().
      */
-    static int
+    static int PR_CALLBACK
     Compare(const void* aLeft, const void* aRight, void* aClosure);
 
     /**
