@@ -571,53 +571,59 @@ NS_METHOD nsFormControlFrame::HandleEvent(nsIPresContext& aPresContext,
     }
   }
 
-  // lets see if the button was clicked. -EDV
-  switch (aEvent->message) {
-     case NS_MOUSE_LEFT_CLICK:
-        MouseClicked(&aPresContext);
-     break;
-  }
-
-  /* All this this now done internally in Gecko.
-
-  //printf(" %d %d %d %d (%d,%d) \n", this, aEvent->widget, aEvent->widgetSupports, 
-  //       aEvent->message, aEvent->point.x, aEvent->point.y);
-
-  PRInt32 type;
-  GetType(&type);
-  switch (aEvent->message) {
-    case NS_MOUSE_ENTER:
-      mLastMouseState = eMouseEnter;
-      break;
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
-      if (NS_FORM_INPUT_IMAGE == type) {
-        mLastMouseState = eMouseDown;
-      } else {
-        mLastMouseState = (eMouseEnter == mLastMouseState) ? eMouseDown : eMouseNone;
-      }
-      break;
-    case NS_MOUSE_LEFT_BUTTON_UP:
-      if (eMouseDown == mLastMouseState) {
-        MouseClicked(&aPresContext);
-      } 
-      mLastMouseState = eMouseEnter;
-      break;
-    case NS_MOUSE_EXIT:
-      mLastMouseState = eMouseNone;
-      break;
-    case NS_KEY_DOWN:
-      if (NS_KEY_EVENT == aEvent->eventStructType) {
-        nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
-        if (NS_VK_RETURN == keyEvent->keyCode) {
-          EnterPressed(aPresContext);
-        } 
-        else if (NS_VK_SPACE == keyEvent->keyCode) {
+  // if not native then use the NS_MOUSE_LEFT_CLICK to see if pressed
+  // unfortunately native widgets don't seem to handle this right. 
+  // so use the old code for native stuff. -EDV
+  if (nsnull == mWidget) {
+    switch (aEvent->message) {
+       case NS_MOUSE_LEFT_CLICK:
           MouseClicked(&aPresContext);
+       break;
+    }
+  } else {
+    //printf(" %d %d %d %d (%d,%d) \n", this, aEvent->widget, aEvent->widgetSupports, 
+    //       aEvent->message, aEvent->point.x, aEvent->point.y);
+
+    PRInt32 type;
+    GetType(&type);
+    switch (aEvent->message) {
+      case NS_MOUSE_ENTER:
+        mLastMouseState = eMouseEnter;
+        break;
+      case NS_MOUSE_LEFT_BUTTON_DOWN:
+        if (NS_FORM_INPUT_IMAGE == type) {
+          mLastMouseState = eMouseDown;
+        } else {
+          mLastMouseState = (eMouseEnter == mLastMouseState) ? eMouseDown : eMouseNone;
         }
-      }
-      break;
+        break;
+      case NS_MOUSE_LEFT_BUTTON_UP:
+        if (eMouseDown == mLastMouseState) {
+          MouseClicked(&aPresContext);
+        } 
+        mLastMouseState = eMouseEnter;
+        break;
+      case NS_MOUSE_EXIT:
+        mLastMouseState = eMouseNone;
+        break;
+    }
   }
-  */
+
+   // see if a key was pressed
+   switch (aEvent->message) {
+   case NS_KEY_DOWN:
+    if (NS_KEY_EVENT == aEvent->eventStructType) {
+      nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
+      if (NS_VK_RETURN == keyEvent->keyCode) {
+        EnterPressed(aPresContext);
+      } 
+      else if (NS_VK_SPACE == keyEvent->keyCode) {
+        MouseClicked(&aPresContext);
+      }
+    }
+    break;
+  }
+
   aEventStatus = nsEventStatus_eConsumeDoDefault;
   return NS_OK;
 }
