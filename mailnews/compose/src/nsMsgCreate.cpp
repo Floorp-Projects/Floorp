@@ -164,12 +164,15 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
   nsXPIDLString mailCharset;
   if (aMsgWindow)
   {
-    aMsgWindow->GetMailCharacterSet(getter_Copies(mailCharset));
-    if (mailCharset)
+    PRBool charsetOverride;
+    if (NS_SUCCEEDED(aMsgWindow->GetCharsetOverride(&charsetOverride)) && charsetOverride)
     {
-      nsCOMPtr<nsIMsgI18NUrl> i18nUrl(do_QueryInterface(aURL));
-      if (i18nUrl)
-        i18nUrl->SetCharsetOverRide(mailCharset);
+      if (NS_SUCCEEDED(aMsgWindow->GetMailCharacterSet(getter_Copies(mailCharset))))
+      {
+        nsCOMPtr<nsIMsgI18NUrl> i18nUrl(do_QueryInterface(aURL));
+        if (i18nUrl)
+          (void) i18nUrl->SetCharsetOverRide(mailCharset);
+      }
     }
   }
 
