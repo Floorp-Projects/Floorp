@@ -676,7 +676,7 @@ NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
 
   nsIWidget* parent = ((nsGUIEvent*)mEvent)->widget;
   //Add extra ref since loop will free one.
-  NS_ADDREF(parent);
+  NS_IF_ADDREF(parent);
   nsIWidget* tmp;
   while (rootWidget != parent && nsnull != parent) {
     nsWindowType windowType;
@@ -729,7 +729,7 @@ NS_METHOD nsDOMEvent::GetClientY(PRInt32* aClientY)
 
   nsIWidget* parent = ((nsGUIEvent*)mEvent)->widget;
   //Add extra ref since loop will free one.
-  NS_ADDREF(parent);
+  NS_IF_ADDREF(parent);
   nsIWidget* tmp;
   while (rootWidget != parent && nsnull != parent) {
     nsWindowType windowType;
