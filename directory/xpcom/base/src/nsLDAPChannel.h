@@ -84,12 +84,12 @@ class nsLDAPChannel : public nsIChannel, public nsILDAPMessageListener
     // instance vars for read/write nsIChannel attributes
     //
     nsresult mStatus;
-    nsCOMPtr<nsIURI> mURI; // the URI we're processing
+    nsCOMPtr<nsIURI> mURI;         // the URI we're processing
     nsCOMPtr<nsILoadGroup> mUnproxiedLoadGroup; // the load group we belong to
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks; 
     nsCOMPtr<nsIURI> mOriginalURI; // the URI we started prcessing
-    nsLoadFlags mLoadAttributes; // load attributes for this channel
-    nsCOMPtr<nsISupports> mOwner; // entity responsible for this channel
+    nsLoadFlags mLoadFlags;        // load attributes for this channel
+    nsCOMPtr<nsISupports> mOwner;  // entity responsible for this channel
 
     // various other instance vars
     //

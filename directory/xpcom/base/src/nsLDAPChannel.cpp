@@ -77,7 +77,7 @@ nsLDAPChannel::Init(nsIURI *uri)
 
     mStatus = NS_OK;
     mURI = uri;
-    mLoadAttributes = LOAD_NORMAL;
+    mLoadFlags = LOAD_NORMAL;
     mReadPipeOffset = 0;
     mReadPipeClosed = PR_FALSE;
 
@@ -214,8 +214,8 @@ nsLDAPChannel::Cancel(nsresult aStatus)
     // remove self from loadgroup to stop the throbber
     //
     if (mLoadGroup) {
-        rv = mLoadGroup->RemoveRequest(this, mResponseContext, aStatus,
-                                       0);
+        rv = mLoadGroup->RemoveRequest(NS_STATIC_CAST(nsIRequest *, this), 
+                                       mResponseContext, aStatus);
         if (NS_FAILED(rv)) 
             return rv;
     }
@@ -223,7 +223,7 @@ nsLDAPChannel::Cancel(nsresult aStatus)
     // call listener's onstoprequest
     //
     if (mUnproxiedListener) {
-        rv = mListener->OnStopRequest(this, mResponseContext, aStatus, 0);
+        rv = mListener->OnStopRequest(this, mResponseContext, aStatus);
         if (NS_FAILED(rv)) 
             return rv;
     }
@@ -264,19 +264,12 @@ nsLDAPChannel::GetOriginalURI(nsIURI **aOriginalURI)
     return NS_OK;
 }
 
-// getter and setter for URI attribute:
+// getter for URI attribute:
 //
 // Returns the URL to which the channel currently refers. If a redirect
 // or URI resolution occurs, this accessor returns the current location
 // to which the channel is referring.
 //
-NS_IMETHODIMP
-nsLDAPChannel::SetURI(nsIURI* aURI)
-{
-    mURI = aURI;
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsLDAPChannel::GetURI(nsIURI* *aURI)
 {
@@ -285,25 +278,25 @@ nsLDAPChannel::GetURI(nsIURI* *aURI)
     return NS_OK;
 }
 
-// getter and setter for loadAttributes attribute:
+// getter and setter for loadFlags attribute:
 //
-// The load attributes for the channel. E.g. setting the load 
+// The load attributes for the request. E.g. setting the load 
 // attributes with the LOAD_QUIET bit set causes the loading process to
 // not deliver status notifications to the program performing the load,
 // and to not contribute to keeping any nsILoadGroup it may be contained
 // in from firing its OnLoadComplete notification.
 //
 NS_IMETHODIMP
-nsLDAPChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
+nsLDAPChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
 {
-    *aLoadAttributes = mLoadAttributes;
+    *aLoadFlags = mLoadFlags;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLDAPChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
+nsLDAPChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 {
-    mLoadAttributes = aLoadAttributes;
+    mLoadFlags = aLoadFlags;
     return NS_OK;
 }
 
@@ -836,7 +829,8 @@ nsLDAPChannel::OnLDAPSearchResult(nsILDAPMessage *aMessage)
     // remove self from loadgroup to stop the throbber
     //
     if (mLoadGroup) {
-        rv = mLoadGroup->RemoveRequest(this, mResponseContext, NS_OK, 0);
+        rv = mLoadGroup->RemoveRequest(NS_STATIC_CAST(nsIRequest *, this), 
+                                       mResponseContext, NS_OK);
         if (NS_FAILED(rv)) {
             NS_WARNING("nsLDAPChannel::OnSearchResult(): "
                        "mLoadGroup->RemoveChannel() failed");
@@ -847,7 +841,7 @@ nsLDAPChannel::OnLDAPSearchResult(nsILDAPMessage *aMessage)
     // call listener's onstoprequest
     //
     if (mListener) {
-        rv = mListener->OnStopRequest(this, mResponseContext, NS_OK, 0);
+        rv = mListener->OnStopRequest(this, mResponseContext, NS_OK);
         if (NS_FAILED(rv)) {
             NS_WARNING("nsLDAPChannel::OnSearchResult(): "
                        "mListener->OnStopRequest failed\n");
