@@ -49,7 +49,6 @@ typedef unsigned long HMTX;
 #include "nsIRefreshURI.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
-#include "nsIProgressEventSink.h"
 #include "nsDOMEvent.h"
 #include "nsIPresContext.h"
 #include "nsIComponentManager.h"
@@ -174,7 +173,6 @@ class nsWebShell : public nsDocShell,
                    public nsIWebShellServices,
                    public nsILinkHandler,
                    public nsIDocumentLoaderObserver,
-                   public nsIProgressEventSink, // should go away (nsIDocLoaderObs)
                    public nsIClipboardCommands
 {
 public:
@@ -259,9 +257,6 @@ public:
                         const PRUnichar* aURLSpec,
                         const PRUnichar* aTargetSpec);
   NS_IMETHOD GetLinkState(const nsString& aLinkURI, nsLinkState& aState);
-
-  // nsIProgressEventSink
-  NS_DECL_NSIPROGRESSEVENTSINK
 
   // nsIClipboardCommands
   NS_IMETHOD CanCutSelection  (PRBool* aResult);
@@ -358,7 +353,6 @@ static NS_DEFINE_IID(kWebShellCID,            NS_WEB_SHELL_CID);
 // IID's
 static NS_DEFINE_IID(kIContentViewerContainerIID,
                      NS_ICONTENT_VIEWER_CONTAINER_IID);
-static NS_DEFINE_IID(kIProgressEventSinkIID,  NS_IPROGRESSEVENTSINK_IID);
 static NS_DEFINE_IID(kIDocumentLoaderIID,     NS_IDOCUMENTLOADER_IID);
 static NS_DEFINE_IID(kIFactoryIID,            NS_IFACTORY_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -505,7 +499,6 @@ NS_INTERFACE_MAP_BEGIN(nsWebShell)
    NS_INTERFACE_MAP_ENTRY(nsIWebShellServices)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIContentViewerContainer, nsIWebShell)
    NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
-   NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
    NS_INTERFACE_MAP_ENTRY(nsIWebShellContainer)
    NS_INTERFACE_MAP_ENTRY(nsILinkHandler)
    NS_INTERFACE_MAP_ENTRY(nsIClipboardCommands)
@@ -1115,7 +1108,6 @@ nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
          nsCOMPtr<nsIDocShellTreeItem> rootItem;
          GetSameTypeRootTreeItem(getter_AddRefs(rootItem));
          nsCOMPtr<nsIDocShell> rootDocShell(do_QueryInterface(rootItem));
-
          if(rootDocShell)
             rootDocShell->GetDocLoaderObserver(getter_AddRefs(dlObserver));
          }
@@ -1127,7 +1119,6 @@ nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
       if(mContainer && dlObserver)
          dlObserver->OnStartDocumentLoad(mDocLoader, aURL, aCommand);
       }
-
    return rv;
 }
 
@@ -1323,7 +1314,6 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
             errorMsg.AppendInt(port);
             }
          errorMsg.AppendWithConversion('.');
-
          prompter->Alert(errorMsg.GetUnicode());
          } 
       else if(aStatus == NS_ERROR_NET_TIMEOUT)
@@ -1350,7 +1340,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
          } // end NS_ERROR_NET_TIMEOUT
       } // end mDocLoader == loader
 
-   return rv;
+      return rv;
 }
 
 NS_IMETHODIMP
@@ -1565,40 +1555,6 @@ NS_IMETHODIMP
 nsWebShell::FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound)
 {
   return NS_ERROR_FAILURE;
-}
-
-// Methods from nsIProgressEventSink
-NS_IMETHODIMP
-nsWebShell::OnProgress(nsIChannel* channel, nsISupports* ctxt, 
-    PRUint32 aProgress, 
-    PRUint32 aProgressMax)
-{
-    if (nsnull != mDocLoaderObserver)
-    {
-        return mDocLoaderObserver->OnProgressURLLoad(
-            mDocLoader,
-            channel,
-            aProgress,
-            aProgressMax);
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::OnStatus(nsIChannel* channel, nsISupports* ctxt, 
-    const PRUnichar* aMsg)
-{
-    if (nsnull != mDocLoaderObserver)
-    {
-        nsAutoString temp(aMsg);
-        nsresult rv =  mDocLoaderObserver->OnStatusURLLoad(
-            mDocLoader,
-            channel,
-            temp);
-
-        return rv;
-    }
-    return NS_OK;
 }
 
 //*****************************************************************************
