@@ -42,11 +42,13 @@
 
 #include "mozStorageService.h"
 #include "mozStorageConnection.h"
+#include "mozStorageStatementWrapper.h"
 
 #include "mozStorageCID.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozStorageService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozStorageConnection)
+NS_GENERIC_FACTORY_CONSTRUCTOR(mozStorageStatementWrapper)
 
 static const nsModuleComponentInfo components[] =
 {
@@ -60,7 +62,13 @@ static const nsModuleComponentInfo components[] =
       MOZ_STORAGE_CONNECTION_CID,
       MOZ_STORAGE_CONNECTION_CONTRACTID,
       mozStorageConnectionConstructor
+    },
+
+    { "Unified Data Store Scriptable Statement Wrapper",
+      MOZ_STORAGE_STATEMENT_WRAPPER_CID,
+      MOZ_STORAGE_STATEMENT_WRAPPER_CONTRACTID,
+      mozStorageStatementWrapperConstructor
     }
 };
 
-NS_IMPL_NSGETMODULE(mozStorageModule, components);
+NS_IMPL_NSGETMODULE(mozStorageModule, components)

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,40 +36,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _MOZSTORAGESTATEMENT_H_
-#define _MOZSTORAGESTATEMENT_H_
+#include "mozIStorageStatement.idl"
 
-#include "nsCOMPtr.h"
-#include "nsString.h"
-
-#include "nsVoidArray.h"
-
-#include "mozIStorageStatement.h"
-#include "mozIStorageConnection.h"
-
-#include <sqlite3.h>
-
-class mozStorageStatement : public mozIStorageStatement
-{
-public:
-    mozStorageStatement();
-
-    // interfaces
-    NS_DECL_ISUPPORTS
-    NS_DECL_MOZISTORAGESTATEMENT
-    NS_DECL_MOZISTORAGEVALUEARRAY
-
-private:
-    ~mozStorageStatement();
-
-protected:
-    nsCString mStatementString;
-    nsCOMPtr<mozIStorageConnection> mDBConnection;
-    sqlite3_stmt *mDBStatement;
-    PRUint32 mParamCount;
-    PRUint32 mResultColumnCount;
-    nsStringArray mColumnNames;
-    PRBool mExecuting;
+[scriptable, uuid(02eeaf95-c3db-4182-9340-222c29f68f02)]
+interface mozIStorageStatementRow : nsISupports {
+  // magic interface we return that implements nsIXPCScriptable, to allow
+  // for by-name access to rows
 };
 
-#endif /* _MOZSTORAGESTATEMENT_H_ */
+[scriptable, uuid(e65fe6e2-2643-463c-97e2-27665efe2386)]
+interface mozIStorageStatementParams : nsISupports {
+  // magic interface for parameter setting that implements nsIXPCScriptable.
+};
+
+[scriptable, uuid(c9fc1259-a9ac-43da-912f-d321ebd0ff7a)]
+interface mozIStorageStatementWrapper : nsISupports {
+  void initialize (in mozIStorageStatement aStatement);
+
+  readonly attribute mozIStorageStatement statement;
+
+  void reset ();
+
+  boolean step ();
+
+  /**
+   * The current row.  Throws an exception if no row is currently available.
+   * Useful only from script.  The value of this is only valid while the
+   * statement is still executing, and is on the appropriate row
+   */
+  readonly attribute mozIStorageStatementRow row;
+
+  /**
+   * The parameters.  Can be set in lieu of using the call notation on this.
+   */
+  readonly attribute mozIStorageStatementParams params;
+};

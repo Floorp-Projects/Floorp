@@ -265,20 +265,19 @@ mozStorageConnection::CreateTable(/*const nsID& aID,*/
                                   const char *aTableName,
                                   const char *aTableSchema)
 {
-#if 0
     int srv;
     char *buf;
     int buflen = 0;
 
-    buflen = snprintf(nsnull, 0, "CREATE TABLE %s (%s)");
+    buflen = snprintf(nsnull, 0, "CREATE TABLE %s (%s)", aTableName, aTableSchema);
     if (buflen <= 0)
         return NS_ERROR_FAILURE;
 
-    buf = nsMemory::Alloc(buflen + 1);
+    buf = (char *) nsMemory::Alloc(buflen + 1);
     if (!buf)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    buflen = sprintf(buf, buflen, "CREATE TABLE %s (%s)");
+    buflen = snprintf(buf, buflen+1, "CREATE TABLE %s (%s)", aTableName, aTableSchema);
     if (buflen <= 0) {
         nsMemory::Free(buf);
         return NS_ERROR_FAILURE;
@@ -291,7 +290,6 @@ mozStorageConnection::CreateTable(/*const nsID& aID,*/
     if (srv != SQLITE_OK) {
         return NS_ERROR_FAILURE; // XXX SQL_ERROR_TABLE_EXISTS
     }
-#endif
     return NS_OK;
 }
 

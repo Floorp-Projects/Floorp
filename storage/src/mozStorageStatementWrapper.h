@@ -36,40 +36,45 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _MOZSTORAGESTATEMENT_H_
-#define _MOZSTORAGESTATEMENT_H_
+#ifndef _MOZSTORAGESTATEMENTWRAPPER_H_
+#define _MOZSTORAGESTATEMENTWRAPPER_H_
 
-#include "nsCOMPtr.h"
-#include "nsString.h"
+#include "mozIStorageStatement.h"
+#include "mozIStorageStatementWrapper.h"
+#include "nsIXPCScriptable.h"
 
 #include "nsVoidArray.h"
 
-#include "mozIStorageStatement.h"
-#include "mozIStorageConnection.h"
+#include "sqlite3.h"
 
-#include <sqlite3.h>
 
-class mozStorageStatement : public mozIStorageStatement
+/***
+ *** mozStorageStatementWrapper
+ ***/
+class mozStorageStatementWrapper : public mozIStorageStatementWrapper,
+                                   public nsIXPCScriptable
 {
 public:
-    mozStorageStatement();
+    mozStorageStatementWrapper();
 
     // interfaces
     NS_DECL_ISUPPORTS
-    NS_DECL_MOZISTORAGESTATEMENT
-    NS_DECL_MOZISTORAGEVALUEARRAY
+    NS_DECL_MOZISTORAGESTATEMENTWRAPPER
+    NS_DECL_NSIXPCSCRIPTABLE
 
 private:
-    ~mozStorageStatement();
+    ~mozStorageStatementWrapper();
 
 protected:
-    nsCString mStatementString;
-    nsCOMPtr<mozIStorageConnection> mDBConnection;
+    // note: pointer to the concrete statement
+    nsCOMPtr<mozIStorageStatement> mStatement;
     sqlite3_stmt *mDBStatement;
     PRUint32 mParamCount;
     PRUint32 mResultColumnCount;
     nsStringArray mColumnNames;
-    PRBool mExecuting;
+
+    nsCOMPtr<mozIStorageStatementRow> mStatementRow;
+    nsCOMPtr<mozIStorageStatementParams> mStatementParams;
 };
 
-#endif /* _MOZSTORAGESTATEMENT_H_ */
+#endif /* _MOZSTORAGESTATEMENTWRAPPER_H_ */

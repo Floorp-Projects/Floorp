@@ -43,6 +43,8 @@ interface mozIStorageConnection;
 interface mozIStorageDataSet;
 interface nsISimpleEnumerator;
 
+[ptr] native sqlite3stmtptr(struct sqlite3_stmt);
+
 [scriptable, uuid(656aa634-36e2-4977-802e-79bce39c1024)]
 interface mozIStorageStatement : mozIStorageValueArray {
   /**
@@ -57,6 +59,21 @@ interface mozIStorageStatement : mozIStorageValueArray {
    * Number of parameters
    */
   readonly attribute unsigned long parameterCount;
+
+  /*
+   * Name of nth parameter, if given
+   */
+  AUTF8String getParameterName(in unsigned long aParamIndex);
+
+  /*
+   * Number of columns returned
+   */
+  readonly attribute unsigned long columnCount;
+
+  /*
+   * Name of nth column
+   */
+  AUTF8String getColumnName(in unsigned long aColumnIndex);
 
   /*
    * Reset parameters/statement execution
@@ -111,5 +128,15 @@ interface mozIStorageStatement : mozIStorageValueArray {
    */
   boolean executeStep ();
 
-};
+  /**
+   * The current state.  Row getters are only valid while
+   * the statement is in the "executing" state.
+   */
+  const long MOZ_STORAGE_STATEMENT_INVALID = 0;
+  const long MOZ_STORAGE_STATEMENT_READY = 1;
+  const long MOZ_STORAGE_STATEMENT_EXECUTING = 2;
 
+  readonly attribute long state;
+
+  [noscript,notxpcom] sqlite3stmtptr getNativeStatementPointer();
+};
