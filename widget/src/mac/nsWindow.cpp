@@ -1876,33 +1876,33 @@ nsWindow::ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inTop
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
-	if (! mVisible || !ContainerHierarchyIsVisible())
-		return NS_OK;
 
-  nsRect scrollRect;	
+  
+  if (mVisible && ContainerHierarchyIsVisible())  {
+    nsRect scrollRect;	
 
-	// If the clipping region is non-rectangular, just force a full update, sorry.
-  // XXX ?
-	if (!IsRegionRectangular(mWindowRegion)) {
-		Invalidate(PR_TRUE);
-		goto scrollChildren;
-	}
+	  // If the clipping region is non-rectangular, just force a full update, sorry.
+    // XXX ?
+	  if (!IsRegionRectangular(mWindowRegion)) {
+		  Invalidate(PR_TRUE);
+		  goto scrollChildren;
+	  }
 
-	//--------
-	// Scroll this widget
-	if (aClipRect)
-		scrollRect = *aClipRect;
-	else
-	{
-		scrollRect = mBounds;
-		scrollRect.x = scrollRect.y = 0;
-	}
+	  //--------
+	  // Scroll this widget
+	  if (aClipRect)
+		  scrollRect = *aClipRect;
+	  else
+	  {
+		  scrollRect = mBounds;
+		  scrollRect.x = scrollRect.y = 0;
+	  }
 
-	Rect macRect;
-	nsRectToMacRect(scrollRect, macRect);
+	  Rect macRect;
+	  nsRectToMacRect(scrollRect, macRect);
 
 
-	StartDraw();
+	  StartDraw();
 
 		// Clip to the windowRegion instead of the visRegion (note: the visRegion
 		// is equal to the windowRegion minus the children). The result is that
@@ -1913,6 +1913,7 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 		ScrollBits(macRect,aDx,aDy);
 
 	EndDraw();
+  }
 
 scrollChildren:
 	//--------
