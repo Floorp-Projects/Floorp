@@ -545,7 +545,7 @@ nsNativeComponentLoader::DumpLoadError(nsDll *dll,
         if (demangled && strlen(demangled))
             demangledSymbol = demangled;
         
-        if (demangledSymbol != "")
+        if (demangledSymbol != (const char *) "")
         {
             nsCAutoString tmp(errorMsg);
             
