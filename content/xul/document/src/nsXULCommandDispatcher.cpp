@@ -371,7 +371,7 @@ nsXULCommandDispatcher::Focus(nsIDOMEvent* aEvent)
     nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(t);
     if (domDoc) {
       GetParentWindowFromDocument(domDoc, getter_AddRefs(domWindow));
-      if (domWindow && (domWindow != mCurrentWindow)) {
+      if (domWindow) {
         SetFocusedWindow(domWindow);
         if (mCurrentElement) {
           // Make sure this element is in our window. If not, we
@@ -380,7 +380,7 @@ nsXULCommandDispatcher::Focus(nsIDOMEvent* aEvent)
           mCurrentElement->GetOwnerDocument(getter_AddRefs(ownerDoc));
           nsCOMPtr<nsIDOMDocument> windowDoc;
           mCurrentWindow->GetDocument(getter_AddRefs(windowDoc));
-          if (ownerDoc == windowDoc)
+          if (ownerDoc != windowDoc)
             mCurrentElement = nsnull;
         }
 
