@@ -55,6 +55,7 @@
 #include "nsIPresContext.h"
 #include "nsILookAndFeel.h"
 #include "nsRegionPool.h"
+#include "nsGfxUtils.h"
 
 //
 // Return true if we are on Mac OS X, caching the result after the first call
@@ -307,6 +308,9 @@ nsNativeThemeMac::GetScrollbarParentLocalRect ( nsIFrame* inButton, nsTransform2
     scrollbar->GetRect(scrollbarRect);
     nsRect localScrollRect(-offset.x, -offset.y, scrollbarRect.width, scrollbarRect.height);
 
+//printf("offset is (%ld, %ld)\n", offset.x, offset.y);
+//printf("pre-xform (%ld, %ld) w=%ld h=%ld\n", localScrollRect.x, localScrollRect.y, localScrollRect.width,
+//                localScrollRect.height);
     // now that we have it in gecko coords, transform it to coords the OS can use
     inMatrix->TransformCoord(&localScrollRect.x, &localScrollRect.y, 
                                &localScrollRect.width, &localScrollRect.height);
@@ -396,6 +400,22 @@ nsNativeThemeMac::DrawEditText ( const Rect& inBoxRect, PRBool inIsDisabled )
 #endif
 }
 
+
+void
+nsNativeThemeMac::DrawListBox ( const Rect& inBoxRect, PRBool inIsDisabled )
+{
+#if TARGET_CARBON
+  Pattern whitePat;
+  ::BackColor(whiteColor);
+  ::BackPat(GetQDGlobalsWhite(&whitePat));
+  ::EraseRect(&inBoxRect);
+  
+  ThemeDrawState drawState = inIsDisabled ? kThemeStateActive : kThemeStateDisabled;
+  ::DrawThemeListBoxFrame(&inBoxRect, drawState);
+#endif
+}
+
+
 void
 nsNativeThemeMac::DrawProgress ( const Rect& inBoxRect, PRBool inIsDisabled, PRBool inIsIndeterminate, 
                                   PRBool inIsHorizontal, PRInt32 inValue )
@@ -413,7 +433,38 @@ nsNativeThemeMac::DrawProgress ( const Rect& inBoxRect, PRBool inIsDisabled, PRB
   info.trackInfo.progress.phase = sPhase++;       // animate for the next time we're called
   
   ::DrawThemeTrack(&info, nsnull, nsnull, 0L);
+}
 
+
+void
+nsNativeThemeMac::DrawTabPanel ( const Rect& inBoxRect, PRBool inIsDisabled )
+{
+  ThemeDrawState drawState = inIsDisabled ? kThemeStateActive : kThemeStateDisabled;
+  ::DrawThemeTabPane(&inBoxRect, kThemeStateActive);
+}
+
+
+void
+nsNativeThemeMac::DrawTab ( const Rect& inBoxRect, PRBool inIsDisabled, PRBool inIsFrontmost, 
+                              PRBool inIsHorizontal, PRInt32 inState )
+{
+  ThemeTabStyle style = 0L;
+  if ( inIsFrontmost ) {
+    if ( inIsDisabled ) 
+      style = kThemeTabFrontInactive;
+    else
+      style = kThemeTabFront;
+  }
+  else {
+    if ( inIsDisabled )
+      style = kThemeTabNonFrontInactive;
+    else if ( (inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER) )
+      style = kThemeTabNonFrontPressed;
+    else
+      style = kThemeTabNonFront;  
+  }
+
+  ::DrawThemeTab(&inBoxRect, style, kThemeTabNorth, nsnull, 0L);
 }
 
 
@@ -474,6 +525,8 @@ nsNativeThemeMac::DrawFullScrollbar ( const Rect& inSbarRect, PRInt32 inWidgetHi
 #ifdef DEBUG_PINK
   // some debug info for helping diagnose problems
   printf("--- BEGIN scrollbar debug info\n");
+  printf("-- widget drawn is %ld\n", inWidgetHit);
+  printf("bounds (%ld, %ld), (%ld, %ld)\n",inSbarRect.left, inSbarRect.top, inSbarRect.right, inSbarRect.bottom );
   if ( isHorizontal )
     printf("horizontal\n");
   else
@@ -491,6 +544,18 @@ NS_IMETHODIMP
 nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                         PRUint8 aWidgetType, const nsRect& aRect, const nsRect& aClipRect)
 {
+  // setup to draw into the correct port
+  nsDrawingSurface surf;
+  aContext->GetDrawingSurface(&surf);
+  nsDrawingSurfaceMac* macSurface = (nsDrawingSurfaceMac*)surf;
+  CGrafPtr port = nsnull;
+  NS_ASSERTION(macSurface,"no surface!!!\n");
+  if ( macSurface )
+    macSurface->GetGrafPtr(&port);
+  else
+    return NS_ERROR_FAILURE;      // we won't get far w/out something to draw into
+  StPortSetter temp(port);
+
   // save off the old clip rgn for later restoration. however, we're currently
   // not using the cliprect because aqua likes to draw shadows and stuff outside
   // the bounds we give it, and clipping to the exact rect looks horrible.
@@ -611,6 +676,17 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
       break;
     }
     
+    case NS_THEME_LISTBOX:
+      DrawListBox(macRect, IsDisabled(aFrame));
+      break;
+    
+    case NS_THEME_TAB:
+      DrawTab(macRect, IsDisabled(aFrame), IsSelected(aFrame), PR_TRUE, eventState);
+      break;
+      
+    case NS_THEME_TAB_PANELS:
+      DrawTabPanel(macRect, IsDisabled(aFrame));
+      break;
   }
 
   ::SetClip(oldClip);
@@ -632,9 +708,9 @@ nsNativeThemeMac::GetWidgetBorder(nsIDeviceContext* aContext,
 {
   aResult->SizeTo(0,0,0,0);
       
-#if TARGET_CARBON
   // XXX we should probably cache some of these metrics
   
+#if TARGET_CARBON
   switch ( aWidgetType ) {
   
     case NS_THEME_BUTTON:
@@ -665,6 +741,14 @@ nsNativeThemeMac::GetWidgetBorder(nsIDeviceContext* aContext,
       break;
     }
 
+    case NS_THEME_LISTBOX:
+    {
+      SInt32 frameOutset = 0;
+      ::GetThemeMetric(kThemeMetricListBoxFrameOutset, &frameOutset);
+      aResult->SizeTo(frameOutset, frameOutset, frameOutset, frameOutset);
+      break;
+    }
+      
   }
 #endif
   
@@ -788,6 +872,7 @@ nsNativeThemeMac::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
     case NS_THEME_TOOLTIP:
     case NS_THEME_TAB_PANELS:
     case NS_THEME_TAB_PANEL:
+    case NS_THEME_TEXTFIELD:
       *aShouldRepaint = PR_FALSE;
       return NS_OK;
   }
@@ -846,6 +931,13 @@ nsNativeThemeMac::ThemeSupportsWidget(nsIPresContext* aPresContext,
     case NS_THEME_PROGRESSBAR_CHUNK:
     case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
     case NS_THEME_TREEVIEW_TWISTY:
+    
+    case NS_THEME_LISTBOX:
+    
+    case NS_THEME_TAB_PANELS:
+    case NS_THEME_TAB:
+    case NS_THEME_TAB_LEFT_EDGE:
+    case NS_THEME_TAB_RIGHT_EDGE:
     
     case NS_THEME_SCROLLBAR:
     case NS_THEME_SCROLLBAR_BUTTON_UP:
