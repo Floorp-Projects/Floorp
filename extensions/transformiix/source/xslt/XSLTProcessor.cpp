@@ -25,7 +25,7 @@
  * Pierre Phaneuf, pp@ludusdesign.com
  *    -- fixed some XPCOM usage.
  *
- * $Id: XSLTProcessor.cpp,v 1.5 2000/04/12 11:00:37 kvisco%ziplink.net Exp $
+ * $Id: XSLTProcessor.cpp,v 1.6 2000/04/12 11:25:21 kvisco%ziplink.net Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -38,7 +38,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.5 $ $Date: 2000/04/12 11:00:37 $
+ * @version $Revision: 1.6 $ $Date: 2000/04/12 11:25:21 $
 **/
 
 /**
@@ -1069,6 +1069,22 @@ void XSLTProcessor::processAction
                 NodeSet* nodeSet = 0;
                 if ( exprResult->getResultType() == ExprResult::NODESET ) {
                     nodeSet = (NodeSet*)exprResult;
+
+				    //-- make sure nodes are in DocumentOrder
+                    ps->sortByDocumentOrder(nodeSet);
+
+                    //-- look for xsl:sort elements
+                    Node* child = actionElement->getFirstChild();
+                    while (child) {
+                        if (child->getNodeType() == Node::ELEMENT_NODE) {
+                            DOMString nodeName = child->getNodeName();
+                            if (getElementType(nodeName, ps) == XSLType::SORT) {
+                                NodeSorter::sort(nodeSet, (Element*)child, node, ps);
+                                break;
+                            }
+                        }
+                        child = child->getNextSibling();
+                    }
 
                     //-- push nodeSet onto context stack
                     ps->getNodeSetStack()->push(nodeSet);
