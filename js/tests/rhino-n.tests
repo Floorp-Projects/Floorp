@@ -14,6 +14,10 @@ ecma_3/Function/regress-94506.js
 js1_2/regexp/regress-9141.js
 #See bug number 100199
 ecma_3/RegExp/regress-100199.js
+#See bug number 104375
+ecma_3/String/regress-104375.js
+#See bug number 105972.js
+ecma_3/RegExp/regress-105972.js
 #
 # Unfixable bugs:
 #
