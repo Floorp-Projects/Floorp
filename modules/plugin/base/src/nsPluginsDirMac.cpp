@@ -30,6 +30,7 @@
 
 #include "nsPluginsDir.h"
 #include "prlink.h"
+#include "nsSpecialSystemDirectory.h"
 
 #include <Processes.h>
 #include <Folders.h>
@@ -38,34 +39,28 @@
 #include <Aliases.h>
 #include <string.h>
 
-static nsresult getApplicationSpec(FSSpec& outAppSpec)
-{
-	// Use the process manager to get the application's FSSpec,
-	// then construct an nsFileSpec that encapsulates it.
-	ProcessInfoRec info;
-	info.processInfoLength = sizeof(info);
-	info.processName = NULL;
-	info.processAppSpec = &outAppSpec;
-	ProcessSerialNumber psn = { 0, kCurrentProcess };
-	OSErr result = GetProcessInformation(&psn, &info);
-	return (result == noErr ? NS_OK : NS_ERROR_FAILURE);
-}
-
 nsPluginsDir::nsPluginsDir(PRUint16 location)
 {
 	PRBool wasAliased;
 
-	// The "Plugins" folder in the application's directory is where plugins are loaded from.
-	mError = getApplicationSpec(mSpec);
-	if (NS_SUCCEEDED(mError))
+  switch (location)
 	{
-		if (location == PLUGINS_DIR_LOCATION_MAC_OLD)
-			SetLeafName("Plug-ins");
-		else
-			SetLeafName("Plugins");
+    case PLUGINS_DIR_LOCATION_MAC_SYSTEM_PLUGINS_FOLDER:
+      // The system's shared "Plugin-ins" folder
+      mError = ::FindFolder(kOnAppropriateDisk, kInternetPlugInFolderType, kDontCreateFolder, & mSpec.vRefNum, &mSpec.parID);
+      if (mError)
+        mError = ::FSMakeFSSpec(mSpec.vRefNum, mSpec.parID, "\p", &mSpec);
+      break;
+    case PLUGINS_DIR_LOCATION_MOZ_LOCAL:
+    default:    
+      // The "Plug-ins" folder in the application's directory is where plugins are loaded from.    
+      // Use the Moz_BinDirectory
+      nsSpecialSystemDirectory plugDir(nsSpecialSystemDirectory::Moz_BinDirectory);
+      *(nsFileSpec*)this = plugDir + "Plug-ins";
+      break;
+  }   
 		if (IsSymlink())
 			ResolveSymlink(wasAliased);
-	}
 }
 
 nsPluginsDir::~nsPluginsDir() {}

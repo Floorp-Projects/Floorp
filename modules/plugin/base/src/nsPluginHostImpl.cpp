@@ -3920,9 +3920,11 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
     rv = LoadXPCOMPlugins(compManager, path);
   }
 
+  
+  nsCOMPtr<nsIPref> theprefs = do_GetService(NS_PREF_CONTRACTID);
 	// scan the 4x plugins directory for eligible legacy plugin libraries
 
-#ifndef XP_WIN // old plugin finding logic
+#if !defined(XP_WIN) && !defined (XP_MAC) // old plugin finding logic
 
   // scan Mozilla plugins dir
   nsPluginsDir pluginsDir;
@@ -3935,26 +3937,50 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 
     ScanPluginsDirectory(pluginsDir, compManager, lpath);
   }
+#endif
 
-#ifdef XP_MAC
-  // try to scan old-spelled plugins dir ("Plug-ins") for Mac
+#if defined (XP_MAC)
+  // try to scan plugins dir ("Plug-ins") for Mac
   // should we check for duplicate plugins here? We probably should.
-  nsPluginsDir pluginsDirMacOld(PLUGINS_DIR_LOCATION_MAC_OLD);
+  nsPluginsDir pluginsDirMac(PLUGINS_DIR_LOCATION_MOZ_LOCAL);
+
+  // on Mac there is a common folder for storing plugins. Go and look there next
+  nsPluginsDir pluginsDirMacSystem(PLUGINS_DIR_LOCATION_MAC_SYSTEM_PLUGINS_FOLDER);
+  	
+  if (pluginsDirMacSystem.Valid())
+  {
+    PRBool skipSystem = PR_FALSE;    
+    if (theprefs)
+      theprefs->GetBoolPref("browser.plugins.skipSystemInternetFolder",&skipSystem);
+
+    // now do the "Internet plug-ins"
+    if (!skipSystem)
+    {
+      nsCOMPtr<nsIFile> lpath = nsnull;
+      if(isLayoutPath)
+        lpath = path;
 	
-  if (pluginsDirMacOld.Valid())
+      ScanPluginsDirectory(pluginsDirMacSystem, 
+                           compManager, 
+                           lpath, 
+                           PR_FALSE); // don't check for specific plugins
+    }
+  }
+
+  if (pluginsDirMac.Valid())
   {
     nsCOMPtr<nsIFile> lpath = nsnull;
     if(isLayoutPath)
       lpath = path;
 
-    ScanPluginsDirectory(pluginsDirMacOld, 
+    ScanPluginsDirectory(pluginsDirMac, 
                          compManager, 
                          lpath, 
                          PR_FALSE); // don't check for specific plugins
   }
 #endif // XP_MAC
 
-#else //  XP_WIN go for new plugin finding logic on Windows
+#if defined (XP_WIN) //  XP_WIN go for new plugin finding logic on Windows
 
   // currently we decided to look in both local plugins dir and 
   // that of the previous 4.x installation combining plugins from both places.
@@ -4000,7 +4026,6 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 #ifdef XP_WIN
   // Checks the installation path of Sun's JRE in scanning for plugins if the prefs are enabled
 
-  nsCOMPtr<nsIPref> theprefs = do_GetService(NS_PREF_CONTRACTID);
   if (theprefs)     // we got the pref service
   {
     PRBool javaEnabled = PR_FALSE;         // don't bother the scan if java is OFF
