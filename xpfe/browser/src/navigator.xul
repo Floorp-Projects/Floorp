@@ -497,7 +497,7 @@
     <toolbar id="mainbar">
  	  <html:table width="100%" cellpadding=0 cellspacing=0><html:tr>
 
-      <html:td valign="middle" width="155">
+      <html:td valign="middle" width="160">
 
 		  <titledbutton src="resource:/res/toolbar/TB_Back.gif" align="bottom" value="Back" onclick="BrowserBack()">	
 				  <observes element="canGoBack" attribute="disabled"/>			
