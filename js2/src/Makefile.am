@@ -12,6 +12,8 @@ libjs2_a_SOURCES = \
 	fdlibm_ns.cpp \
 	hash.cpp \
 	js2runtime.cpp \
+	jsdate.cpp \
+	prmjtime.cpp \
 	js2execution.cpp \
 	jsarray.cpp \
 	jsmath.cpp \
