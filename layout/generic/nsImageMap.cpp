@@ -1161,41 +1161,12 @@ nsImageMap::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
   }
 }
 
-NS_IMETHODIMP
-nsImageMap::BeginUpdate(nsIDocument *aDocument)
-{
-  return NS_OK;
-}
+NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(nsImageMap)
+NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsImageMap)
+NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsImageMap)
+NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsImageMap)
+NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsImageMap)
 
-NS_IMETHODIMP
-nsImageMap::EndUpdate(nsIDocument *aDocument)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageMap::BeginLoad(nsIDocument *aDocument)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageMap::EndLoad(nsIDocument *aDocument)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageMap::BeginReflow(nsIDocument *aDocument, nsIPresShell* aShell)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageMap::EndReflow(nsIDocument *aDocument, nsIPresShell* aShell)
-{
-  return NS_OK;
-}
 
 PRBool
 nsImageMap::IsAncestorOf(nsIContent* aContent,
@@ -1236,16 +1207,6 @@ nsImageMap::ContentChanged(nsIDocument *aDocument,
   }
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsImageMap::ContentStatesChanged(nsIDocument* aDocument,
-                                 nsIContent* aContent1,
-                                 nsIContent* aContent2,
-                                 PRInt32 aStateMask)
-{
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP
 nsImageMap::AttributeChanged(nsIDocument *aDocument,
@@ -1318,59 +1279,6 @@ nsImageMap::ContentRemoved(nsIDocument *aDocument,
       (mContainsBlockContents && IsAncestorOf(aContainer, mMap))) {
     UpdateAreas();
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageMap::StyleSheetAdded(nsIDocument *aDocument,
-                            nsIStyleSheet* aStyleSheet)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageMap::StyleSheetRemoved(nsIDocument *aDocument,
-                              nsIStyleSheet* aStyleSheet)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageMap::StyleSheetDisabledStateChanged(nsIDocument *aDocument,
-                                           nsIStyleSheet* aStyleSheet,
-                                           PRBool aDisabled)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageMap::StyleRuleChanged(nsIDocument *aDocument,
-                             nsIStyleSheet* aStyleSheet,
-                             nsIStyleRule* aStyleRule,
-                             nsChangeHint aHint)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageMap::StyleRuleAdded(nsIDocument *aDocument,
-                           nsIStyleSheet* aStyleSheet,
-                           nsIStyleRule* aStyleRule)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageMap::StyleRuleRemoved(nsIDocument *aDocument,
-                             nsIStyleSheet* aStyleSheet,
-                             nsIStyleRule* aStyleRule)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageMap::DocumentWillBeDestroyed(nsIDocument *aDocument)
-{
   return NS_OK;
 }
 

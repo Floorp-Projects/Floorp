@@ -620,6 +620,10 @@ NS_METHOD nsMenuBar::Paint()
 // this is needed for menubar changes
 //
 
+NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsMenuBar)
+NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsMenuBar)
+NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsMenuBar)
+NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsMenuBar)
 
 NS_IMETHODIMP
 nsMenuBar::BeginUpdate( nsIDocument * aDocument )
@@ -634,38 +638,7 @@ nsMenuBar::EndUpdate( nsIDocument * aDocument )
 }
 
 NS_IMETHODIMP
-nsMenuBar::BeginLoad( nsIDocument * aDocument )
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuBar::EndLoad( nsIDocument * aDocument )
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuBar::BeginReflow(  nsIDocument * aDocument, nsIPresShell * aShell)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuBar::EndReflow( nsIDocument * aDocument, nsIPresShell * aShell)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsMenuBar::ContentChanged( nsIDocument * aDocument, nsIContent * aContent, nsISupports * aSubContent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuBar::ContentStatesChanged( nsIDocument * aDocument, nsIContent  * aContent1,
-                                 nsIContent  * aContent2, PRInt32 aStateMask)
 {
   return NS_OK;
 }
@@ -699,46 +672,6 @@ nsMenuBar::ContentAppended( nsIDocument * aDocument, nsIContent  * aContainer,
 NS_IMETHODIMP
 nsMenuBar::ContentReplaced( nsIDocument * aDocument, nsIContent * aContainer, nsIContent * aOldChild,
                           nsIContent * aNewChild, PRInt32 aIndexInContainer)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuBar::StyleSheetAdded( nsIDocument * aDocument, nsIStyleSheet * aStyleSheet)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuBar::StyleSheetRemoved(nsIDocument * aDocument, nsIStyleSheet * aStyleSheet)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuBar::StyleSheetDisabledStateChanged(nsIDocument * aDocument, nsIStyleSheet * aStyleSheet,
-                                            PRBool aDisabled)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuBar::StyleRuleChanged( nsIDocument * aDocument, nsIStyleSheet * aStyleSheet,
-                              nsIStyleRule * aStyleRule, nsChangeHint aHint)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuBar::StyleRuleAdded( nsIDocument * aDocument, nsIStyleSheet * aStyleSheet,
-                            nsIStyleRule * aStyleRule)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuBar::StyleRuleRemoved(nsIDocument * aDocument, nsIStyleSheet * aStyleSheet,
-                              nsIStyleRule  * aStyleRule)
 {
   return NS_OK;
 }

@@ -1525,41 +1525,11 @@ PRBool nsWebShellWindow::ExecuteCloseHandler()
 //----------------------------------------------------------------
 //-- nsIDocumentObserver
 //----------------------------------------------------------------
-NS_IMETHODIMP
-nsWebShellWindow::BeginUpdate(nsIDocument *aDocument)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShellWindow::EndUpdate(nsIDocument *aDocument)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShellWindow::BeginLoad(nsIDocument *aDocument)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShellWindow::EndLoad(nsIDocument *aDocument)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShellWindow::BeginReflow(nsIDocument *aDocument, nsIPresShell* aShell)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShellWindow::EndReflow(nsIDocument *aDocument, nsIPresShell* aShell)
-{
-  return NS_OK;
-}
+NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(nsWebShellWindow)
+NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsWebShellWindow)
+NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsWebShellWindow)
+NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsWebShellWindow)
+NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsWebShellWindow)
 
 ///////////////////////////////////////////////////////////////
 // nsIDocumentObserver
@@ -1569,15 +1539,6 @@ NS_IMETHODIMP
 nsWebShellWindow::ContentChanged(nsIDocument *aDocument,
                                  nsIContent* aContent,
                                  nsISupports* aSubContent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShellWindow::ContentStatesChanged(nsIDocument *aDocument,
-                                       nsIContent* aContent1,
-                                       nsIContent* aContent2,
-                                       PRInt32 aStateMask)
 {
   return NS_OK;
 }
@@ -1645,59 +1606,6 @@ nsWebShellWindow::ContentRemoved(nsIDocument *aDocument,
                            nsIContent* aContainer,
                            nsIContent* aChild,
                            PRInt32 aIndexInContainer)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShellWindow::StyleSheetAdded(nsIDocument *aDocument,
-                            nsIStyleSheet* aStyleSheet)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShellWindow::StyleSheetRemoved(nsIDocument *aDocument,
-                              nsIStyleSheet* aStyleSheet)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShellWindow::StyleSheetDisabledStateChanged(nsIDocument *aDocument,
-                                           nsIStyleSheet* aStyleSheet,
-                                           PRBool aDisabled)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShellWindow::StyleRuleChanged(nsIDocument *aDocument,
-                             nsIStyleSheet* aStyleSheet,
-                             nsIStyleRule* aStyleRule,
-                             nsChangeHint aHint)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShellWindow::StyleRuleAdded(nsIDocument *aDocument,
-                           nsIStyleSheet* aStyleSheet,
-                           nsIStyleRule* aStyleRule)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShellWindow::StyleRuleRemoved(nsIDocument *aDocument,
-                             nsIStyleSheet* aStyleSheet,
-                             nsIStyleRule* aStyleRule)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShellWindow::DocumentWillBeDestroyed(nsIDocument *aDocument)
 {
   return NS_OK;
 }

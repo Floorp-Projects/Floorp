@@ -599,6 +599,38 @@ nsContentList::NamedItem(const nsAString& aName, nsIDOMNode** aReturn)
   return NamedItem(aName, aReturn, PR_TRUE);
 }
 
+NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsContentList)
+NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsContentList)
+NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsContentList)
+NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsContentList)
+
+NS_IMETHODIMP 
+nsContentList::BeginUpdate(nsIDocument *aDocument)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsContentList::EndUpdate(nsIDocument *aDocument)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentList::ContentChanged(nsIDocument* aDocument, nsIContent* aContent,
+                              nsISupports* aSubContent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentList::AttributeChanged(nsIDocument* aDocument, nsIContent* aContent,
+                                PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                                PRInt32 aModType, nsChangeHint aHint)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
                                PRInt32 aNewIndexInContainer)

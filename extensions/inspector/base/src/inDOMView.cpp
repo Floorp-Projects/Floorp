@@ -644,6 +644,12 @@ inDOMView::PerformActionOnCell(const PRUnichar *action, PRInt32 row, const PRUni
 ///////////////////////////////////////////////////////////////////////
 // nsIDocumentObserver
 
+NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(inDOMView)
+NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(inDOMView)
+NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(inDOMView)
+NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(inDOMView)
+NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(inDOMView)
+
 NS_IMETHODIMP
 inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent, PRInt32 aNameSpaceID,
                             nsIAtom* aAttribute, PRInt32 aModType, nsChangeHint aHint)
@@ -762,6 +768,14 @@ inDOMView::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer, PRInt
   nsCOMPtr<nsIContent> child;
   aContainer->ChildAt(aNewIndexInContainer, *getter_AddRefs(child));
   return ContentInserted(aDocument, aContainer, child, aNewIndexInContainer);
+}
+
+NS_IMETHODIMP
+inDOMView::ContentChanged(nsIDocument *aDocument,
+                          nsIContent* aContent,
+                          nsISupports* aSubContent)
+{
+  return NS_OK;
 }
 
 NS_IMETHODIMP
