@@ -998,9 +998,9 @@ function IsThreadAndMessagePaneSplitterCollapsed()
   var messagePane = GetMessagePane();
   try {
     return (messagePane.getAttribute("collapsed") == "true");
-	}
+  }
   catch (ex) {
-		return false;
+    return false;
   }
 }
 
@@ -1033,18 +1033,18 @@ function ClearThreadPaneSelection()
 
 function ClearMessagePane()
 {
-	if(gHaveLoadedMessage)
-	{	
+  if(gHaveLoadedMessage)
+  {
     gHaveLoadedMessage = false;
-		gCurrentDisplayedMessage = null;
+    gCurrentDisplayedMessage = null;
     if (GetMessagePaneFrame().location != "about:blank")
         GetMessagePaneFrame().location = "about:blank";
     // hide the message header view AND the message pane...
-		HideMessageHeaderPane();
+    HideMessageHeaderPane();
 
     // hide the junk bar
     SetUpJunkBar(null);
-	}
+  }
 }
 
 function GetSelectedFolderIndex()
@@ -1303,7 +1303,7 @@ function GetLoadedMessage()
 //Clear everything related to the current message. called after load start page.
 function ClearMessageSelection()
 {
-	ClearThreadPaneSelection();
+  ClearThreadPaneSelection();
 }
 
 function GetCompositeDataSource(command)
