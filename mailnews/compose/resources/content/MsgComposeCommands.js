@@ -2557,7 +2557,7 @@ var attachmentBucketObserver = {
           {
             var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                             .getService(Components.interfaces.nsIIOService);
-            rawData = ioService.getURLSpecFromFile(aData.data);
+            rawData = ioService.getURLSpecFromFile(rawData);
           }
           else
           {
