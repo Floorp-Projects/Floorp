@@ -52,6 +52,8 @@
 #include "prprf.h"
 #include "prio.h"
 #include "rdf.h"
+#include "nsFileLocations.h"
+#include "nsIFileSpec.h"
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
@@ -101,6 +103,7 @@ static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,    NS_RDFINMEMORYDATASOURCE_CID)
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,         NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kTextToSubURICID,             NS_TEXTTOSUBURI_CID);
+static NS_DEFINE_CID(kFileLocatorCID,              NS_FILELOCATOR_CID);
 
 static const char kURINC_SearchEngineRoot[]                   = "NC:SearchEngineRoot";
 static const char kURINC_SearchResultsSitesRoot[]             = "NC:SearchResultsSitesRoot";
@@ -1070,14 +1073,16 @@ InternetSearchDataSource::GetCategoryList()
 	nsCOMPtr<nsIRDFRemoteDataSource>	remoteCategoryDataSource = do_QueryInterface(categoryDataSource);
 	if (!remoteCategoryDataSource)	return(NS_ERROR_UNEXPECTED);
 
-	// XXX should check in user's profile directory first,
-	//     and fallback to the default file
+	// get search.rdf
+	NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+	if (NS_FAILED(rv) || !locator)	return(NS_ERROR_FAILURE);
 
-	nsFileSpec			searchDir;
-	if (NS_FAILED(rv = GetSearchFolder(searchDir)))	return(rv);
-	searchDir += "category.rdf";
-
-	nsFileURL	fileURL(searchDir);
+	nsCOMPtr<nsIFileSpec>	dirSpec;
+	if (NS_FAILED(rv = locator->GetFileLocation(nsSpecialFileSpec::App_SearchFile50,
+		getter_AddRefs(dirSpec))))			return(rv);
+	nsFileSpec		fileSpec;
+	if (NS_FAILED(rv = dirSpec->GetFileSpec(&fileSpec)))	return(rv);
+	nsFileURL		fileURL(fileSpec);
 	if (NS_FAILED(rv = remoteCategoryDataSource->Init(fileURL.GetURLString())))	return(rv);
 
 	// synchronous read
@@ -2994,11 +2999,14 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 nsresult
 InternetSearchDataSource::GetSearchFolder(nsFileSpec &spec)
 {
-	nsSpecialSystemDirectory	searchSitesDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-	searchSitesDir += "res";
-	searchSitesDir += "rdf";
-	searchSitesDir += "datasets";
-	spec = searchSitesDir;
+	nsresult		rv;
+	NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+	if (NS_FAILED(rv) || !locator)	return NS_ERROR_FAILURE;
+
+	nsCOMPtr<nsIFileSpec>	dirSpec;
+	if (NS_FAILED(rv = locator->GetFileLocation(nsSpecialFileSpec::App_SearchDirectory50,
+		getter_AddRefs(dirSpec))))			return(rv);
+	if (NS_FAILED(rv = dirSpec->GetFileSpec(&spec)))	return(rv);
 	return(NS_OK);
 }
 
