@@ -3465,6 +3465,9 @@ nsGenericContainerElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                    nsAString& aResult) const
 {
   NS_ASSERTION(nsnull != aName, "must have attribute name");
+  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown,
+               "must have a real namespace ID!");
+  
   if (!aName) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -3507,6 +3510,9 @@ NS_IMETHODIMP_(PRBool)
 nsGenericContainerElement::HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const
 {
   NS_ASSERTION(nsnull != aName, "must have attribute name");
+  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown,
+               "must have a real namespace ID!");
+
   if (nsnull == aName)
     return PR_FALSE;
   
