@@ -113,26 +113,22 @@ nsFactoryEntry::~nsFactoryEntry(void)
 // Once that object goes out of scope, deletion and hence memory free will
 // automatically happen.
 //
-class autoFree
+class autoStringFree
 {
 public:
     enum DeleteModel {
         NSPR_Delete = 1,
-        Cplusplus_Delete = 2,
-        Cplusplus_Array_Delete = 3,
-        nsCRT_String_Delete = 4
+        nsCRT_String_Delete = 2
     };
-    autoFree(void *Ptr, DeleteModel whichDelete): mPtr(Ptr), mWhichDelete(whichDelete) {}
-    ~autoFree() {
+    autoStringFree(char *Ptr, DeleteModel whichDelete): mPtr(Ptr), mWhichDelete(whichDelete) {}
+    ~autoStringFree() {
         if (mPtr)
             if (mWhichDelete == NSPR_Delete) { PR_FREEIF(mPtr); }
-            else if (mWhichDelete == Cplusplus_Delete) delete mPtr;
-            else if (mWhichDelete == Cplusplus_Array_Delete) delete [] mPtr;
-            else if (mWhichDelete == nsCRT_String_Delete) nsCRT::free((char *) mPtr);
+            else if (mWhichDelete == nsCRT_String_Delete) nsCRT::free(mPtr);
             else PR_ASSERT(0);
     }
 private:
-    void *mPtr;
+    char *mPtr;
     DeleteModel mWhichDelete;
     
 };
@@ -321,7 +317,7 @@ nsComponentManagerImpl::PlatformVersionCheck()
     
     char *buf;
     nsresult err = mRegistry->GetString(xpcomKey, versionValueName, &buf);
-    autoFree delete_buf(buf, autoFree::NSPR_Delete);
+    autoStringFree delete_buf(buf, autoStringFree::NSPR_Delete);
 
     // If there is a version mismatch or no version string, we got an old registry.
     // Delete the old repository hierarchies and recreate version string
@@ -610,7 +606,7 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
         // Registry inconsistent. No File name for CLSID.
         return rv;
     }
-    autoFree delete_library(library, autoFree::NSPR_Delete);
+    autoStringFree delete_library(library, autoStringFree::NSPR_Delete);
 
     // Get the library name, modifiedtime and size
     PRUint32 lastModTime = 0;
@@ -711,7 +707,7 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         rv = node->GetName(&library);
         if (NS_FAILED(rv)) continue;
         // XXX make sure the following will work
-        autoFree delete_library(library, autoFree::nsCRT_String_Delete);
+        autoStringFree delete_library(library, autoStringFree::nsCRT_String_Delete);
 
         // Get key associated with library
         nsIRegistry::Key libKey;
@@ -756,7 +752,7 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         rv = node->GetName(&cidString);
         if (NS_FAILED(rv)) continue;
         // XXX make sure the following will work
-        autoFree delete_cidString(cidString, autoFree::nsCRT_String_Delete);
+        autoStringFree delete_cidString(cidString, autoStringFree::nsCRT_String_Delete);
 
         // Get key associated with library
         nsIRegistry::Key cidKey;
@@ -768,7 +764,7 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         rv = mRegistry->GetString(cidKey, inprocServerValueName, &library);
         if (NS_FAILED(rv)) continue;
         // XXX wont work in this scope
-        autoFree delete_library(library, autoFree::NSPR_Delete);
+        autoStringFree delete_library(library, autoStringFree::NSPR_Delete);
         nsCID aClass;
         if (!(aClass.Parse(cidString))) continue;
 
@@ -1859,7 +1855,7 @@ nsComponentManagerImpl::AutoRegisterComponent(RegistrationTime when, nsIFileSpec
     char *persistentDescriptor = NULL;
     rv = component->GetPersistentDescriptorString(&persistentDescriptor);
     if (NS_FAILED(rv)) return rv;
-    autoFree delete_persistentDescriptor(persistentDescriptor, autoFree::nsCRT_String_Delete);
+    autoStringFree delete_persistentDescriptor(persistentDescriptor, autoStringFree::nsCRT_String_Delete);
     nsCStringKey key(persistentDescriptor);
 
     // Check if dll is one that we have already seen
