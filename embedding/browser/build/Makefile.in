@@ -68,7 +68,7 @@ REQUIRES	= xpcom \
 		  webbrowserpersist \
 		  $(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINCE WINNT,$(OS_ARCH)))
 EXTRA_DSO_LIBS	= gkgfx
 endif
 
