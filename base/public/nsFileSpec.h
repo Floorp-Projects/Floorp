@@ -282,8 +282,11 @@ class NS_BASE nsFileSpec
 {
     public:
                                 nsFileSpec();
+
         NS_EXPLICIT             nsFileSpec(const char* inString, PRBool inCreateDirs = PR_FALSE);
         NS_EXPLICIT             nsFileSpec(const nsString& inString, PRBool inCreateDirs = PR_FALSE);
+                                // These above two meathods take *native* file paths.
+        
         NS_EXPLICIT             nsFileSpec(const nsFilePath& inPath);
         NS_EXPLICIT             nsFileSpec(const nsFileURL& inURL);
         NS_EXPLICIT             nsFileSpec(const nsPersistentFileDescriptor& inURL);
@@ -559,9 +562,9 @@ class NS_BASE nsFilePath
 
                                 
                                 operator const char* () const { return mPath; }
-                                    // This is the only automatic conversion to const char*
-                                    // that is provided, and it allows the
-                                    // path to be "passed" to NSPR file routines.
+                                    // This will return a UNIX string.  If you
+                                    // need a string that can be passed into
+                                    // NSPR, take a look at the nsprPath class.
 
         void                    operator = (const nsFilePath& inPath);
         void                    operator = (const char* inString);
@@ -683,5 +686,28 @@ class NS_BASE nsDirectoryIterator
 	    short                   mMaxIndex;
 #endif
 }; // class nsDirectoryIterator
+
+//========================================================================================
+class NS_BASE nsprPath
+//  This class will allow you to pass anyone of the nsFile* classes directly into NSPR
+//  without the need to worry about whether you have the right kind of filepath or not.
+//  It will also take care of cleaning up any allocated memory. 
+//========================================================================================
+{
+public:
+    NS_EXPLICIT                  nsprPath(const nsFileSpec& other)  : mFilePath(other) { modifiedNSPRPath = nsnull; }
+    NS_EXPLICIT                  nsprPath(const nsFileURL&  other)  : mFilePath(other) { modifiedNSPRPath = nsnull; }
+    NS_EXPLICIT                  nsprPath(const nsFilePath& other)  : mFilePath(other) { modifiedNSPRPath = nsnull; }
+    
+    virtual                      ~nsprPath();    
+ 
+                                 operator const char*();
+
+private:
+                                 nsFilePath mFilePath;
+                                 char* modifiedNSPRPath;
+                             
+                                 
+}; // class nsprPath
 
 #endif //  _FILESPEC_H_
