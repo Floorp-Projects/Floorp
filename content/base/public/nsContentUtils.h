@@ -75,6 +75,9 @@ class nsIDOMDocument;
 class nsIConsoleService;
 class nsIStringBundleService;
 class nsIStringBundle;
+#ifdef MOZ_XTF
+class nsIXTFService;
+#endif
 
 class nsContentUtils
 {
@@ -254,6 +257,10 @@ public:
     return sIOService;
   };
 
+#ifdef MOZ_XTF
+  static nsIXTFService* GetXTFServiceWeakRef();
+#endif
+  
   static nsIScriptSecurityManager* GetSecurityManager()
   {
     return sSecurityManager;
@@ -489,6 +496,10 @@ private:
   static nsINameSpaceManager *sNameSpaceManager;
 
   static nsIIOService *sIOService;
+
+#ifdef MOZ_XTF
+  static nsIXTFService *sXTFService;
+#endif
 
   static nsIPrefBranch *sPrefBranch;
 

@@ -1217,6 +1217,19 @@ if [ "$MOZ_SVG" ]; then
 "
 fi
 
+# xtf
+if [ "$MOZ_XTF" ]; then
+    MAKEFILES_content="$MAKEFILES_content
+	content/xtf/Makefile
+	content/xtf/public/Makefile
+	content/xtf/src/Makefile
+"
+    MAKEFILES_layout="$MAKEFILES_layout
+	layout/xtf/Makefile
+	layout/xtf/src/Makefile
+"
+fi
+
 # directory/xpcom
 if [ "$MOZ_LDAP_XPCOM" ]; then
     MAKEFILES_ldap="

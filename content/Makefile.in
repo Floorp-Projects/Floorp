@@ -49,6 +49,10 @@ ifdef MOZ_SVG
 DIRS		+= svg
 endif
 
+ifdef MOZ_XTF
+DIRS            += xtf
+endif
+
 DIRS           += events shared
 
 include $(topsrcdir)/config/rules.mk

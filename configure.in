@@ -4139,6 +4139,17 @@ if test "$MOZ_MATHML"; then
 fi
 
 dnl ========================================================
+dnl XTF
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(xtf,
+[  --enable-xtf            Enable XTF (pluggable xml tags) support],
+    MOZ_XTF=1,
+    MOZ_XTF= )
+if test -n "$MOZ_XTF"; then
+  AC_DEFINE(MOZ_XTF)
+fi
+
+dnl ========================================================
 dnl SVG
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(svg,
@@ -5568,6 +5579,7 @@ AC_SUBST(MOZ_GFX_TOOLKIT_LDFLAGS)
 AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(MINIMO)
 AC_SUBST(MOZ_MATHML)
+AC_SUBST(MOZ_XTF)
 AC_SUBST(MOZ_SVG)
 AC_SUBST(MOZ_SVG_RENDERER_GDIPLUS)
 AC_SUBST(MOZ_SVG_RENDERER_LIBART)

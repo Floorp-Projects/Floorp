@@ -44,6 +44,13 @@
 #include "nsLayoutAtoms.h"
 #include "nsString.h"
 
+#ifdef MOZ_XTF
+#include "nsIServiceManager.h"
+#include "nsIXTFService.h"
+#include "nsContentUtils.h"
+static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
+#endif
+
 #define kXMLNSNameSpaceURI "http://www.w3.org/2000/xmlns/"
 #define kXMLNameSpaceURI "http://www.w3.org/XML/1998/namespace"
 #define kXHTMLNameSpaceURI "http://www.w3.org/1999/xhtml"
@@ -467,6 +474,15 @@ NS_NewElement(nsIContent** aResult, PRInt32 aElementType,
   if (aElementType == kNameSpaceID_XMLEvents) {
     return NS_NewXMLEventsElement(aResult, aNodeInfo);
   }
+#ifdef MOZ_XTF
+  if (aElementType > kNameSpaceID_LastBuiltin) {
+    nsIXTFService* xtfService = nsContentUtils::GetXTFServiceWeakRef();
+    NS_ASSERTION(xtfService, "could not get xtf service");
+    if (xtfService &&
+        NS_SUCCEEDED(xtfService->CreateElement(aResult, aNodeInfo)))
+      return NS_OK;
+  }
+#endif
   return NS_NewXMLElement(aResult, aNodeInfo);
 }
 
