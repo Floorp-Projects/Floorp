@@ -45,6 +45,7 @@
 #include "nsIViewManager.h"
 #include "nsViewsCID.h"
 #include "nsColor.h"
+#include "nsIDocument.h"
 
 //Enumeration of possible mouse states used to detect mouse clicks
 /*enum nsMouseState {
@@ -334,6 +335,9 @@ nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
 static
 void ReflowTemp(nsIPresContext& aPresContext, nsHTMLButtonControlFrame* aFrame, nsRect& aRect)
 {  
+  // XXX You can't do this. Incremental reflow commands are dispatched from the
+  // root frame downward...
+#if 0
   nsHTMLReflowMetrics metrics(nsnull);
   nsSize size;
   aFrame->GetSize(size);
@@ -355,6 +359,19 @@ void ReflowTemp(nsIPresContext& aPresContext, nsHTMLButtonControlFrame* aFrame, 
   aFrame->DidReflow(aPresContext, didStatus);
   NS_IF_RELEASE(acx);
   aFrame->Invalidate(aRect, PR_TRUE);
+  NS_RELEASE(cmd);
+#else
+  nsIContent* content;
+  aFrame->GetContent(content);
+  if (nsnull != content) {
+    nsIDocument*  document;
+
+    content->GetDocument(document);
+    document->ContentChanged(content, nsnull);
+    NS_RELEASE(document);
+    NS_RELEASE(content);
+  }
+#endif
 }
 
 void 
@@ -615,11 +632,29 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
     mDidInit = PR_TRUE;
   }
 
-  nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
-
   // reflow the child
   nsIFrame* firstKid = mFrames.FirstChild();
+  nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
   nsHTMLReflowState reflowState(aPresContext, firstKid, aReflowState, availSize);
+
+  // XXX Proper handling of incremental reflow...
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    nsIFrame* targetFrame;
+    
+    // See if it's targeted at us
+    aReflowState.reflowCommand->GetTarget(targetFrame);
+    if (this == targetFrame) {
+      // XXX Handle this...
+      reflowState.reason = eReflowReason_Resize;
+    } else {
+      nsIFrame* nextFrame;
+
+      // Remove the next frame from the reflow path
+      aReflowState.reflowCommand->GetNext(nextFrame);
+      NS_ASSERTION(nextFrame == firstKid, "unexpected next frame");
+    }
+  }
+
   ReflowChild(firstKid, aPresContext, aDesiredSize, reflowState, aStatus);
 
   // get border and padding
