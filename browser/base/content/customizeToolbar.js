@@ -243,6 +243,7 @@ var paletteDNDObserver = {
   },
   onDrop: function(aEvent, aXferData, aDragSession)
   {
+    alert("DROP HAPPENED.");
     var itemID = aXferData.data;
     var item = null;
     var palette = document.getElementById("palette-box");
@@ -258,15 +259,86 @@ var paletteDNDObserver = {
     if (!item)
       return;
 
-    // XXX Now insertBefore |item| in the right place.
-
     // We're going back in the palette now, so we have to readd the flex
     // and width which we removed when moving the item to the toolbar.
     // (These attributes help space the items properly in the palette.)
     item.setAttribute("flex", "1");
     item.setAttribute("width", "0");
-    
+    item.setAttribute("align", "center");
+    item.setAttribute("pack", "center");
+    item.setAttribute("flex", "1");
+    item.setAttribute("width", "0");
+    item.setAttribute("minheight", "0");
+    item.setAttribute("minwidth", "0");
+    item.setAttribute("ondraggesture", "gDraggingFromPalette = true; nsDragAndDrop.startDrag(event, dragObserver)");
+ 
     gToolbarChanged = true;
+
+    // Now insertBefore |item| in the right place.
+    var target = evt.target;
+    alert(target);
+
+    if (target == palette) {
+      alert("Target and palette are the same.");
+      target = palette.lastChild.lastChild;
+      if (target.localName != "spacer") {
+        // Create a new row, insert, create the spring and bail.
+        // Now build up a palette of items.
+        var newRow = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                  "hbox");
+        newRow.setAttribute("class", "paletteRow");
+        newRow.appendChild(item);
+        var spring = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                            "spacer");
+        spring.setAttribute("flex", "3");
+        newRow.appendChild(spring);
+        palette.appendChild(newRow);
+        return;
+      }
+    }
+
+    alert("Doing the insertBefore of the item.");
+
+    target.parentNode.insertBefore(item, target);
+    
+    // Now walk all of the parent rows and take the last child of the row and shove it down to the next
+    // row.  If we hit the spring as the last child, then reduce its flex by 1.
+    var currentRow = target.parentNode;
+    var nextRow = currentRow.nextSibling;
+    while (currentRow) {
+      var last = currentRow.lastChild;
+      if (last.localName == "spacer") {
+        var flex = last.getAttribute("flex");
+        if (flex > 1) {
+          flex--;
+          last.setAttribute("flex", flex);
+        }
+        else
+          currentRow.removeChild(last);
+         
+        break;
+      }
+     
+      if (nextRow) {
+        nextRow.insertBefore(item, nextRow.firstChild);
+      }
+      else {
+        // Create a new row. Add the item and a spring and break.
+        var newRow = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                  "hbox");
+        newRow.setAttribute("class", "paletteRow");
+        newRow.appendChild(item);
+        var spring = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                            "spacer");
+        spring.setAttribute("flex", "3");
+        newRow.appendChild(spring);
+        palette.appendChild(newRow);
+        break;
+      }
+
+      currentRow = nextRow;
+      nextRow = currentRow.nextSibling;
+    }
   },
   _flavourSet: null,
   getSupportedFlavours: function ()
