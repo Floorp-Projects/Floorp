@@ -976,6 +976,25 @@ ShowNativePrintDialog(HWND              aHWnd,
       char* device = &(((char *)devnames)[devnames->wDeviceOffset]);
       char* driver = &(((char *)devnames)[devnames->wDriverOffset]);
 
+      // Check to see if the "Print To File" control is checked
+      // then take the name from devNames and set it in the PrintSettings
+      //
+      // NOTE:
+      // As per Microsoft SDK documentation the returned value offset from
+      // devnames->wOutputOffset is either "FILE:" or NULL
+      // if the "Print To File" checkbox is checked it MUST be "FILE:"
+      // We assert as an extra safety check.
+      if (prntdlg.Flags & PD_PRINTTOFILE) {
+        char* fileName = &(((char *)devnames)[devnames->wOutputOffset]);
+        NS_ASSERTION(strcmp(fileName, "FILE:") == 0, "FileName must be `FILE:`");
+        aPrintSettings->SetToFileName(NS_ConvertASCIItoUCS2(fileName).get());
+        aPrintSettings->SetPrintToFile(PR_TRUE);
+      } else {
+        // clear "print to file" info
+        aPrintSettings->SetPrintToFile(PR_FALSE);
+        aPrintSettings->SetToFileName(nsnull);
+      }
+
       nsCOMPtr<nsIPrintSettingsWin> psWin(do_QueryInterface(aPrintSettings));
       // Setup local Data members
       psWin->SetDeviceName(device);
@@ -1293,6 +1312,25 @@ ShowNativePrintDialogEx(HWND              aHWnd,
 
       char* device = &(((char *)devnames)[devnames->wDeviceOffset]);
       char* driver = &(((char *)devnames)[devnames->wDriverOffset]);
+
+      // Check to see if the "Print To File" control is checked
+      // then take the name from devNames and set it in the PrintSettings
+      //
+      // NOTE:
+      // As per Microsoft SDK documentation the returned value offset from
+      // devnames->wOutputOffset is either "FILE:" or NULL
+      // if the "Print To File" checkbox is checked it MUST be "FILE:"
+      // We assert as an extra safety check.
+      if (prntdlg.Flags & PD_PRINTTOFILE) {
+        char* fileName = &(((char *)devnames)[devnames->wOutputOffset]);
+        NS_ASSERTION(strcmp(fileName, "FILE:") == 0, "FileName must be `FILE:`");
+        aPrintSettings->SetToFileName(NS_ConvertASCIItoUCS2(fileName).get());
+        aPrintSettings->SetPrintToFile(PR_TRUE);
+      } else {
+        // clear "print to file" info
+        aPrintSettings->SetPrintToFile(PR_FALSE);
+        aPrintSettings->SetToFileName(nsnull);
+      }
 
       nsCOMPtr<nsIPrintSettingsWin> psWin(do_QueryInterface(aPrintSettings));
       // Setup local Data members
