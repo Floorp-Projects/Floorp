@@ -88,6 +88,7 @@ OS_INCLUDES		+= -I/usr/X11R6/include
 OS_LIBS			+= -L/lib -ldl -lc
 
 # Linux: only install fullcircle crash-reporting for Intel, RedHat 5.0.
+ifndef NO_MOZ_FULLCIRCLE
 LINUX_VENDOR	= $(shell if test -f /etc/redhat-release; then echo "redhat"; else echo "unknown"; fi;)
 ifeq ($(LINUX_VENDOR),redhat)
 ifeq ($(basename $(shell awk '{print $$2}' /etc/redhat-release)),5)
@@ -96,6 +97,7 @@ FC_PLATFORM     = LinuxIntel
 FC_PLATFORM_DIR = Linux2_x86
 endif # rh 5.0
 endif # LINUX_VENDOR = redhat
+endif # NO_MOZ_FULLCIRCLE
 
 endif # x86
 
