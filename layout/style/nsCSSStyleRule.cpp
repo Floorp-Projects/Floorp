@@ -163,6 +163,9 @@ public:
 
   virtual nscoord CalcLength(const nsCSSValue& aValue, nsStyleFont* aFont, 
                              nsIPresContext* aPresContext);
+  virtual void SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord, 
+                        PRInt32 aMask, nsStyleFont* aFont, 
+                        nsIPresContext* aPresContext);
   virtual void MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -437,6 +440,56 @@ nscoord CSSStyleRuleImpl::CalcLength(const nsCSSValue& aValue,
   return 0;
 }
 
+#define SETCOORD_LENGTH       0x01
+#define SETCOORD_PERCENT      0x02
+#define SETCOORD_INTEGER      0x04
+#define SETCOORD_ENUMERATED   0x08
+#define SETCOORD_AUTO         0x10
+#define SETCOORD_INHERIT      0x20
+#define SETCOORD_NORMAL       0x80
+
+#define SETCOORD_LP   (SETCOORD_LENGTH | SETCOORD_PERCENT)
+#define SETCOORD_LH   (SETCOORD_LENGTH | SETCOORD_INHERIT)
+#define SETCOORD_AH   (SETCOORD_AUTO | SETCOORD_INHERIT)
+#define SETCOORD_LPH  (SETCOORD_LP | SETCOORD_INHERIT)
+#define SETCOORD_LPAH (SETCOORD_LP | SETCOORD_AH)
+#define SETCOORD_LPEH (SETCOORD_LP | SETCOORD_ENUMERATED | SETCOORD_INHERIT)
+#define SETCOORD_IAH  (SETCOORD_INTEGER | SETCOORD_AH)
+
+void CSSStyleRuleImpl::SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord, 
+                                PRInt32 aMask, nsStyleFont* aFont, 
+                                nsIPresContext* aPresContext)
+{
+  if (((aMask & SETCOORD_LENGTH) != 0) && 
+      aValue.IsLengthUnit()) {
+    aCoord.SetCoordValue(CalcLength(aValue, aFont, aPresContext));
+  } 
+  else if (((aMask & SETCOORD_PERCENT) != 0) && 
+           (aValue.GetUnit() == eCSSUnit_Percent)) {
+    aCoord.SetPercentValue(aValue.GetPercentValue());
+  } 
+  else if (((aMask & SETCOORD_INTEGER) != 0) && 
+           (aValue.GetUnit() == eCSSUnit_Integer)) {
+    aCoord.SetIntValue(aValue.GetIntValue(), eStyleUnit_Integer);
+  } 
+  else if (((aMask & SETCOORD_ENUMERATED) != 0) && 
+           (aValue.GetUnit() == eCSSUnit_Enumerated)) {
+    aCoord.SetIntValue(aValue.GetIntValue(), eStyleUnit_Enumerated);
+  } 
+  else if (((aMask & SETCOORD_AUTO) != 0) && 
+           (aValue.GetUnit() == eCSSUnit_Auto)) {
+    aCoord.SetAutoValue();
+  } 
+  else if (((aMask & SETCOORD_INHERIT) != 0) && 
+           (aValue.GetUnit() == eCSSUnit_Inherit)) {
+    aCoord.SetInheritValue();
+  }
+  else if (((aMask & SETCOORD_NORMAL) != 0) && 
+           (aValue.GetUnit() == eCSSUnit_Normal)) {
+    aCoord.SetNormalValue();
+  }
+}
+
 void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
 {
   if (nsnull != mDeclaration) {
@@ -483,7 +536,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
         }
 
         // font-weight: abs, enum
-        if (ourFont->mWeight.GetUnit() == eCSSUnit_Absolute) {
+        if (ourFont->mWeight.GetUnit() == eCSSUnit_Integer) {
           font->mFont.style = ourFont->mWeight.GetIntValue();
         }
         else if (ourFont->mWeight.GetUnit() == eCSSUnit_Enumerated) {
@@ -539,7 +592,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
           font->mFont.size = CalcLength(ourFont->mSize, parentFont, aPresContext);
         }
         else if (ourFont->mSize.GetUnit() == eCSSUnit_Percent) {
-          font->mFont.size = (nscoord)((float)(parentFont->mFont.size) * ourFont->mSize.GetFloatValue());
+          font->mFont.size = (nscoord)((float)(parentFont->mFont.size) * ourFont->mSize.GetPercentValue());
         }
 
         NS_IF_RELEASE(parentContext);
@@ -553,25 +606,11 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
         nsStyleText* text = (nsStyleText*) aContext->GetData(kStyleTextSID);
 
         // letter-spacing
-        if (ourText->mLetterSpacing.IsLengthUnit()) {
-          text->mLetterSpacing.Set(CalcLength(ourText->mLetterSpacing,
-                                              font, aPresContext));
-        }
-        else if (ourText->mLetterSpacing.GetUnit() == eCSSUnit_Enumerated) {
-          text->mLetterSpacing.SetAuto();
-        }
+        SetCoord(ourText->mLetterSpacing, text->mLetterSpacing, SETCOORD_LH | SETCOORD_NORMAL, 
+                 font, aPresContext);
 
         // line-height
-        if (ourText->mLineHeight.IsLengthUnit()) {
-          text->mLineHeight.Set(CalcLength(ourText->mLineHeight,
-                                           font, aPresContext));
-        }
-        else if (ourText->mLineHeight.GetUnit() == eCSSUnit_Enumerated) {
-          text->mLineHeight.SetAuto();
-        }
-        else if (ourText->mLineHeight.GetUnit() == eCSSUnit_Percent) {
-          text->mLineHeight.Set(ourText->mLineHeight.GetFloatValue());
-        }
+        SetCoord(ourText->mLineHeight, text->mLineHeight, SETCOORD_LPAH, font, aPresContext);
 
         // text-align
         if (ourText->mTextAlign.GetUnit() == eCSSUnit_Enumerated) {
@@ -579,17 +618,11 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
         }
 
         // text-indent
-        if (ourText->mTextIndent.IsLengthUnit()) {
-          text->mTextIndent.Set(CalcLength(ourText->mTextIndent,
-                                           font, aPresContext));
-        }
-        else if (ourText->mTextIndent.GetUnit() == eCSSUnit_Percent) {
-          text->mTextIndent.Set(ourText->mTextIndent.GetFloatValue());
-        }
+        SetCoord(ourText->mTextIndent, text->mTextIndent, SETCOORD_LPH, font, aPresContext);
 
-        // text-decoration: enum, absolute (bit field)
+        // text-decoration: enum, int (bit field)
         if ((ourText->mDecoration.GetUnit() == eCSSUnit_Enumerated) ||
-            (ourText->mDecoration.GetUnit() == eCSSUnit_Absolute)) {
+            (ourText->mDecoration.GetUnit() == eCSSUnit_Integer)) {
           PRInt32 td = ourText->mDecoration.GetIntValue();
           font->mFont.decorations = td;
           text->mTextDecoration = td;
@@ -601,16 +634,8 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
         }
 
         // vertical-align
-        if (ourText->mVerticalAlign.IsLengthUnit()) {
-          text->mVerticalAlign.Set(CalcLength(ourText->mVerticalAlign,
-                                              font, aPresContext));
-        }
-        else if (ourText->mVerticalAlign.GetUnit() == eCSSUnit_Enumerated) {
-          text->mVerticalAlign.Set(ourText->mVerticalAlign.GetIntValue(), eStyleUnit_Enumerated);
-        }
-        else if (ourText->mVerticalAlign.GetUnit() == eCSSUnit_Percent) {
-          text->mVerticalAlign.Set(ourText->mVerticalAlign.GetFloatValue());
-        }
+        SetCoord(ourText->mVerticalAlign, text->mVerticalAlign, SETCOORD_LPEH,
+                 font, aPresContext);
 
         // white-space
         if (ourText->mWhiteSpace.GetUnit() == eCSSUnit_Enumerated) {
@@ -618,13 +643,8 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
         }
 
         // word-spacing
-        if (ourText->mWordSpacing.IsLengthUnit()) {
-          text->mWordSpacing.Set(CalcLength(ourText->mWordSpacing,
-                                            font, aPresContext));
-        }
-        else if (ourText->mWordSpacing.GetUnit() == eCSSUnit_Enumerated) {
-          text->mWordSpacing.SetAuto();
-        }
+        SetCoord(ourText->mWordSpacing, text->mWordSpacing, SETCOORD_LH | SETCOORD_NORMAL,
+                 font, aPresContext);
       }
     }
 
@@ -636,13 +656,11 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
           aContext->GetData(kStyleDisplaySID);
 
         // display
-        display->mDisplay = NS_STYLE_DISPLAY_INLINE;
         if (ourDisplay->mDisplay.GetUnit() == eCSSUnit_Enumerated) {
           display->mDisplay = ourDisplay->mDisplay.GetIntValue();
         }
 
         // direction: enum
-        display->mDirection = NS_STYLE_DIRECTION_LTR;
         if (ourDisplay->mDirection.GetUnit() == eCSSUnit_Enumerated) {
           display->mDirection = ourDisplay->mDirection.GetIntValue();
         }
@@ -670,9 +688,15 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
           color->mColor = ourColor->mColor.GetColorValue();
         }
 
-        // cursor: enum
+        // cursor: enum, auto, inherit
         if (ourColor->mCursor.GetUnit() == eCSSUnit_Enumerated) {
           color->mCursor = ourColor->mCursor.GetIntValue();
+        }
+        else if (ourColor->mCursor.GetUnit() == eCSSUnit_Auto) {
+          color->mCursor = NS_STYLE_CURSOR_AUTO;
+        }
+        else if (ourColor->mCursor.GetUnit() == eCSSUnit_Inherit) {
+          color->mCursor = NS_STYLE_CURSOR_INHERIT;
         }
 
         // cursor-image: string
@@ -689,12 +713,13 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
           color->mBackgroundFlags |= NS_STYLE_BG_COLOR_TRANSPARENT;
         }
 
-        // background-image: string, enum (flags)
+        // background-image: string (url), none
         if (ourColor->mBackImage.GetUnit() == eCSSUnit_String) {
           ourColor->mBackImage.GetStringValue(color->mBackgroundImage);
           color->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
         }
-        else if (ourColor->mBackImage.GetUnit() == eCSSUnit_Enumerated) {
+        else if (ourColor->mBackImage.GetUnit() == eCSSUnit_None) {
+          color->mBackgroundImage.Truncate();
           color->mBackgroundFlags |= NS_STYLE_BG_IMAGE_NONE;
         }
 
@@ -710,7 +735,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
 
         // background-position: length, percent (flags)
         if (ourColor->mBackPositionX.GetUnit() == eCSSUnit_Percent) {
-          color->mBackgroundXPosition = (nscoord)(TWIPS_CONST_FLOAT * ourColor->mBackPositionX.GetFloatValue());
+          color->mBackgroundXPosition = (nscoord)(100.0f * ourColor->mBackPositionX.GetPercentValue());
           color->mBackgroundFlags |= NS_STYLE_BG_X_POSITION_PERCENT;
           color->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_LENGTH;
         }
@@ -721,7 +746,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
           color->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_PERCENT;
         }
         if (ourColor->mBackPositionY.GetUnit() == eCSSUnit_Percent) {
-          color->mBackgroundYPosition = (nscoord)(TWIPS_CONST_FLOAT * ourColor->mBackPositionY.GetFloatValue());
+          color->mBackgroundYPosition = (nscoord)(100.0f * ourColor->mBackPositionY.GetPercentValue());
           color->mBackgroundFlags |= NS_STYLE_BG_Y_POSITION_PERCENT;
           color->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_LENGTH;
         }
@@ -750,25 +775,25 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
             spacing->mMargin.left = CalcLength(ourMargin->mMargin->mLeft, font, aPresContext);
           } else if (ourMargin->mMargin->mLeft.GetUnit() != eCSSUnit_Null) {
             // XXX handle percent properly, this isn't it
-            spacing->mMargin.left = (nscoord)ourMargin->mMargin->mLeft.GetFloatValue();
+            spacing->mMargin.left = (nscoord)ourMargin->mMargin->mLeft.GetPercentValue();
           }
           if (ourMargin->mMargin->mTop.IsLengthUnit()) {
             spacing->mMargin.top = CalcLength(ourMargin->mMargin->mTop, font, aPresContext);
           } else if (ourMargin->mMargin->mTop.GetUnit() != eCSSUnit_Null) {
             // XXX handle percent properly, this isn't it
-            spacing->mMargin.top = (nscoord)ourMargin->mMargin->mTop.GetFloatValue();
+            spacing->mMargin.top = (nscoord)ourMargin->mMargin->mTop.GetPercentValue();
           }
           if (ourMargin->mMargin->mRight.IsLengthUnit()) {
             spacing->mMargin.right = CalcLength(ourMargin->mMargin->mRight, font, aPresContext);
           } else if (ourMargin->mMargin->mRight.GetUnit() != eCSSUnit_Null) {
             // XXX handle percent properly, this isn't it
-            spacing->mMargin.right = (nscoord)ourMargin->mMargin->mRight.GetFloatValue();
+            spacing->mMargin.right = (nscoord)ourMargin->mMargin->mRight.GetPercentValue();
           }
           if (ourMargin->mMargin->mBottom.IsLengthUnit()) {
             spacing->mMargin.bottom = CalcLength(ourMargin->mMargin->mBottom, font, aPresContext);
           } else if (ourMargin->mMargin->mBottom.GetUnit() != eCSSUnit_Null) {
             // XXX handle percent properly, this isn't it
-            spacing->mMargin.bottom = (nscoord)ourMargin->mMargin->mBottom.GetFloatValue();
+            spacing->mMargin.bottom = (nscoord)ourMargin->mMargin->mBottom.GetPercentValue();
           }
         }
 
@@ -778,25 +803,25 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
             spacing->mPadding.left = CalcLength(ourMargin->mPadding->mLeft, font, aPresContext);
           } else if (ourMargin->mPadding->mLeft.GetUnit() != eCSSUnit_Null) {
             // XXX handle percent properly, this isn't it
-            spacing->mPadding.left = (nscoord)ourMargin->mPadding->mLeft.GetFloatValue();
+            spacing->mPadding.left = (nscoord)ourMargin->mPadding->mLeft.GetPercentValue();
           }
           if (ourMargin->mPadding->mTop.IsLengthUnit()) {
             spacing->mPadding.top = CalcLength(ourMargin->mPadding->mTop, font, aPresContext);
           } else if (ourMargin->mPadding->mTop.GetUnit() != eCSSUnit_Null) {
             // XXX handle percent properly, this isn't it
-            spacing->mPadding.top = (nscoord)ourMargin->mPadding->mTop.GetFloatValue();
+            spacing->mPadding.top = (nscoord)ourMargin->mPadding->mTop.GetPercentValue();
           }
           if (ourMargin->mPadding->mRight.IsLengthUnit()) {
             spacing->mPadding.right = CalcLength(ourMargin->mPadding->mRight, font, aPresContext);
           } else if (ourMargin->mPadding->mRight.GetUnit() != eCSSUnit_Null) {
             // XXX handle percent properly, this isn't it
-            spacing->mPadding.right = (nscoord)ourMargin->mPadding->mRight.GetFloatValue();
+            spacing->mPadding.right = (nscoord)ourMargin->mPadding->mRight.GetPercentValue();
           }
           if (ourMargin->mPadding->mBottom.IsLengthUnit()) {
             spacing->mPadding.bottom = CalcLength(ourMargin->mPadding->mBottom, font, aPresContext);
           } else if (ourMargin->mPadding->mBottom.GetUnit() != eCSSUnit_Null) {
             // XXX handle percent properly, this isn't it
-            spacing->mPadding.bottom = (nscoord)ourMargin->mPadding->mBottom.GetFloatValue();
+            spacing->mPadding.bottom = (nscoord)ourMargin->mPadding->mBottom.GetPercentValue();
           }
         }
 
@@ -808,25 +833,25 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
             border->mSize.left = CalcLength(ourBorder->mLeft, font, aPresContext);
           } else if (ourBorder->mLeft.GetUnit() != eCSSUnit_Null) {
             // XXX handle percent properly, this isn't it
-            border->mSize.left = (nscoord)ourBorder->mLeft.GetFloatValue();
+            border->mSize.left = (nscoord)ourBorder->mLeft.GetPercentValue();
           }
           if (ourBorder->mTop.IsLengthUnit()) {
             border->mSize.top = CalcLength(ourBorder->mTop, font, aPresContext);
           } else if (ourBorder->mTop.GetUnit() != eCSSUnit_Null) {
             // XXX handle percent properly, this isn't it
-            border->mSize.top = (nscoord)ourBorder->mTop.GetFloatValue();
+            border->mSize.top = (nscoord)ourBorder->mTop.GetPercentValue();
           }
           if (ourBorder->mRight.IsLengthUnit()) {
             border->mSize.right = CalcLength(ourBorder->mRight, font, aPresContext);
           } else if (ourBorder->mRight.GetUnit() != eCSSUnit_Null) {
             // XXX handle percent properly, this isn't it
-            border->mSize.right = (nscoord)ourBorder->mRight.GetFloatValue();
+            border->mSize.right = (nscoord)ourBorder->mRight.GetPercentValue();
           }
           if (ourBorder->mBottom.IsLengthUnit()) {
             border->mSize.bottom = CalcLength(ourBorder->mBottom, font, aPresContext);
           } else if (ourBorder->mBottom.GetUnit() != eCSSUnit_Null) {
             // XXX handle percent properly, this isn't it
-            border->mSize.bottom = (nscoord)ourBorder->mBottom.GetFloatValue();
+            border->mSize.bottom = (nscoord)ourBorder->mBottom.GetPercentValue();
           }
         }
 
@@ -882,64 +907,36 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
           position->mOverflow = ourPosition->mOverflow.GetIntValue();
         }
 
-        // box offsets. note: default value is auto so we don't check for it here
-        if (ourPosition->mLeft.IsLengthUnit()) {
-          position->mLeftOffset = CalcLength(ourPosition->mLeft, font, aPresContext);
-          position->mLeftOffsetFlags = NS_STYLE_POSITION_VALUE_LENGTH;
-        } else if (ourPosition->mHeight.GetUnit() == eCSSUnit_Percent) {
-          position->mLeftOffset = (nscoord)(100 * ourPosition->mLeft.GetFloatValue());
-          position->mLeftOffsetFlags = NS_STYLE_POSITION_VALUE_PERCENT;
-        }
-        if (ourPosition->mTop.IsLengthUnit()) {
-          position->mTopOffset = CalcLength(ourPosition->mTop, font, aPresContext);
-          position->mTopOffsetFlags = NS_STYLE_POSITION_VALUE_LENGTH;
-        } else if (ourPosition->mHeight.GetUnit() == eCSSUnit_Percent) {
-          position->mTopOffset = (nscoord)(100 * ourPosition->mTop.GetFloatValue());
-          position->mTopOffsetFlags = NS_STYLE_POSITION_VALUE_PERCENT;
-        }
-        if (ourPosition->mWidth.IsLengthUnit()) {
-          position->mWidth = CalcLength(ourPosition->mWidth, font, aPresContext);
-          position->mWidthFlags = NS_STYLE_POSITION_VALUE_LENGTH;
-        } else if (ourPosition->mWidth.GetUnit() == eCSSUnit_Percent) {
-          position->mWidth = (nscoord)(100 * ourPosition->mWidth.GetFloatValue());
-          position->mWidthFlags = NS_STYLE_POSITION_VALUE_PERCENT;
-        }
-        if (ourPosition->mHeight.IsLengthUnit()) {
-          position->mHeight = CalcLength(ourPosition->mHeight, font, aPresContext);
-          position->mHeightFlags = NS_STYLE_POSITION_VALUE_LENGTH;
-        } else if (ourPosition->mHeight.GetUnit() == eCSSUnit_Percent) {
-          position->mHeight = (nscoord)(100 * ourPosition->mHeight.GetFloatValue());
-          position->mHeightFlags = NS_STYLE_POSITION_VALUE_PERCENT;
-        }
+        // box offsets: length, percent, auto, inherit
+        SetCoord(ourPosition->mLeft, position->mLeftOffset, SETCOORD_LPAH, font, aPresContext);
+        SetCoord(ourPosition->mTop, position->mTopOffset, SETCOORD_LPAH, font, aPresContext);
+        SetCoord(ourPosition->mWidth, position->mWidth, SETCOORD_LPAH, font, aPresContext);
+        SetCoord(ourPosition->mHeight, position->mHeight, SETCOORD_LPAH, font, aPresContext);
 
         // z-index
-        if (ourPosition->mZIndex.GetUnit() == eCSSUnit_Enumerated) {
-          position->mPosition = ourPosition->mPosition.GetIntValue();
-        } else if (ourPosition->mZIndex.GetUnit() == eCSSUnit_Absolute) {
-          position->mZIndex = ourPosition->mZIndex.GetIntValue();
-        }
+        SetCoord(ourPosition->mZIndex, position->mZIndex, SETCOORD_IAH, nsnull, nsnull);
 
-        // clip property
+        // clip property: length, auto
         if (nsnull != ourPosition->mClip) {
           position->mClipFlags = NS_STYLE_CLIP_RECT;
 
-          if (ourPosition->mClip->mTop.GetUnit() == eCSSUnit_Enumerated) {
-            position->mClip.top = ourPosition->mClip->mTop.GetIntValue();
+          if (ourPosition->mClip->mTop.GetUnit() == eCSSUnit_Auto) {
+            // XXX position->mClip.top = ourPosition->mClip->mTop.GetIntValue();
           } else if (ourPosition->mClip->mTop.IsLengthUnit()) {
             position->mClip.top = CalcLength(ourPosition->mClip->mTop, font, aPresContext);
           }
-          if (ourPosition->mClip->mRight.GetUnit() == eCSSUnit_Enumerated) {
-            position->mClip.right = ourPosition->mClip->mRight.GetIntValue();
+          if (ourPosition->mClip->mRight.GetUnit() == eCSSUnit_Auto) {
+            // XXX position->mClip.right = ourPosition->mClip->mRight.GetIntValue();
           } else if (ourPosition->mClip->mRight.IsLengthUnit()) {
             position->mClip.right = CalcLength(ourPosition->mClip->mRight, font, aPresContext);
           }
-          if (ourPosition->mClip->mBottom.GetUnit() == eCSSUnit_Enumerated) {
-            position->mClip.bottom = ourPosition->mClip->mBottom.GetIntValue();
+          if (ourPosition->mClip->mBottom.GetUnit() == eCSSUnit_Auto) {
+            // XXX position->mClip.bottom = ourPosition->mClip->mBottom.GetIntValue();
           } else if (ourPosition->mClip->mBottom.IsLengthUnit()) {
             position->mClip.bottom = CalcLength(ourPosition->mClip->mBottom, font, aPresContext);
           }
-          if (ourPosition->mClip->mLeft.GetUnit() == eCSSUnit_Enumerated) {
-            position->mClip.left = ourPosition->mClip->mLeft.GetIntValue();
+          if (ourPosition->mClip->mLeft.GetUnit() == eCSSUnit_Auto) {
+            // XXX position->mClip.left = ourPosition->mClip->mLeft.GetIntValue();
           } else if (ourPosition->mClip->mLeft.IsLengthUnit()) {
             position->mClip.left = CalcLength(ourPosition->mClip->mLeft, font, aPresContext);
           }
