@@ -40,7 +40,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj);
  * exception is found, JS_FALSE if none.
  */
 extern JSBool
-js_ErrorToException(JSContext *cx, JSErrorReport *reportp);
+js_ErrorToException(JSContext *cx, JSErrorReport *reportp, const char *message);
 
 PR_END_EXTERN_C
 

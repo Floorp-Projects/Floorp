@@ -187,7 +187,7 @@ Process(JSContext *cx, JSObject *obj, char *filename)
 
                     /* XXX non-i18nized strings... */
                     if (str) {
-                        fprintf(stderr, "Uncaught javascript exception: %s\n",
+                        fprintf(stderr, "Uncaught javascript exception:\n%s\n",
                                JS_GetStringBytes(str));
                     } else {
                         fprintf(stderr, "Uncaught javascript exception\n");

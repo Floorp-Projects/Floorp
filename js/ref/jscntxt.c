@@ -303,7 +303,7 @@ endif
 
 void
 js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallBack callback,
-					    const uintN errorNumber, va_list ap)
+                       const JSErrNum errorNumber, va_list ap)
 {
     JSStackFrame *fp;
     JSErrorReport report, *reportp;
@@ -342,7 +342,7 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallBack callback,
      * exception is thrown, then the JSREPORT_EXCEPTION flag will be set
      * on the error report, and exception-aware hosts should ignore it.
      */
-    js_ErrorToException(cx, reportp);
+    js_ErrorToException(cx, reportp, message);
 #endif
 
     js_ReportErrorAgain(cx, message, reportp);

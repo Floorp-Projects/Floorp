@@ -597,7 +597,7 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
          * XXX it'd probably be best if there was only one call to this
          * function, but there seem to be two error reporter call points.
          */
-        (void)js_ErrorToException(cx, &report);
+        (void)js_ErrorToException(cx, &report, message);
 #endif
 
 	(*onError)(cx, message, &report);
