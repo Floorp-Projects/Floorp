@@ -113,6 +113,13 @@ public:
   virtual void SetDocumentCharacterSet(nsCharSetID aCharSetID) = 0;
 
   /**
+   * Access HTTP header data (this may also get set from other sources, like
+   * HTML META tags).
+   */
+  NS_IMETHOD GetHeaderData(nsIAtom* aHeaderField, nsString& aData) const = 0;
+  NS_IMETHOD SetHeaderData(nsIAtom* aheaderField, const nsString& aData) = 0;
+
+  /**
    * Create a new presentation shell that will use aContext for
    * it's presentation context (presentation context's <b>must not</b> be
    * shared among multiple presentation shell's).
@@ -147,6 +154,7 @@ public:
    */
   virtual PRInt32 GetNumberOfStyleSheets() = 0;
   virtual nsIStyleSheet* GetStyleSheetAt(PRInt32 aIndex) = 0;
+  virtual PRInt32 GetIndexOfStyleSheet(nsIStyleSheet* aSheet) = 0;
   virtual void AddStyleSheet(nsIStyleSheet* aSheet) = 0;
   virtual void SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
                                           PRBool mDisabled) = 0;
