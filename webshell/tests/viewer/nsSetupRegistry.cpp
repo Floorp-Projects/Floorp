@@ -215,6 +215,10 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCTimerManagerCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
 #endif
 
+#ifdef XP_MAC
+  nsComponentManager::RegisterComponentLib(kCTimerCID, "Timer", "component://netscape/timer", WIDGET_DLL, PR_FALSE, PR_FALSE);
+#endif
+
   // WIDGETS
   nsComponentManager::RegisterComponentLib(kCLabelCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCButtonCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
