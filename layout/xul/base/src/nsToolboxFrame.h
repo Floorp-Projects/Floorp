@@ -88,6 +88,7 @@ public:
   virtual nsresult DragOver(nsIDOMEvent* aDragEvent);
   virtual nsresult DragExit(nsIDOMEvent* aDragEvent);
   virtual nsresult DragDrop(nsIDOMEvent* aDragEvent);
+  virtual nsresult DragGesture(nsIDOMEvent* aDragEvent) { return NS_OK; } 
 /*END implementations of dragevent handler interface*/
 
 protected:

@@ -29,6 +29,7 @@
 
 #include "nsToolbarDragListener.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsIDOMDragListener.h"
 #include "nsIContent.h"
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
@@ -36,35 +37,36 @@
 #define TEMP_HACK_FOR_BUG_11291 1
 #if TEMP_HACK_FOR_BUG_11291
 
-// for temp fix of bug 11291
+// for temp fix of bug 11291. This should really be in JavaScript, I think.
 #include "nsIDOMNodeList.h"
 #include "nsIDOMElement.h"
-class nsTEMPMouseDownEater : public nsIDOMMouseListener
+
+
+class nsTEMPDragGestureEater : public nsIDOMDragListener
 {
 public:
 
     // default ctor and dtor
-  nsTEMPMouseDownEater ( ) ;
-  virtual ~nsTEMPMouseDownEater() { };
+  nsTEMPDragGestureEater ( ) ;
+  virtual ~nsTEMPDragGestureEater() { };
 
     // interfaces for addref and release and queryinterface
   NS_DECL_ISUPPORTS
 
     // nsIDOMMouseListener
   virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
-  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent);
+  virtual nsresult DragEnter(nsIDOMEvent* aMouseEvent);
+  virtual nsresult DragOver(nsIDOMEvent* aMouseEvent);
+  virtual nsresult DragExit(nsIDOMEvent* aMouseEvent);
+  virtual nsresult DragDrop(nsIDOMEvent* aMouseEvent);
+  virtual nsresult DragGesture(nsIDOMEvent* aMouseEvent);
 
-}; // class nsTEMPMouseDownEater
+}; // class nsTEMPDragGestureEater
 
-NS_IMPL_ADDREF(nsTEMPMouseDownEater)
-NS_IMPL_RELEASE(nsTEMPMouseDownEater)
+NS_IMPL_ADDREF(nsTEMPDragGestureEater)
+NS_IMPL_RELEASE(nsTEMPDragGestureEater)
 
-nsTEMPMouseDownEater :: nsTEMPMouseDownEater (  )
+nsTEMPDragGestureEater :: nsTEMPDragGestureEater (  )
 {
   NS_INIT_REFCNT();
 }
@@ -76,17 +78,17 @@ nsTEMPMouseDownEater :: nsTEMPMouseDownEater (  )
 //   http://www.mozilla.org/projects/xpcom/QI.html
 //
 nsresult
-nsTEMPMouseDownEater::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+nsTEMPDragGestureEater::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if ( !aInstancePtr)
     return NS_ERROR_NULL_POINTER;
 
   if (aIID.Equals(nsCOMTypeInfo<nsIDOMEventListener>::GetIID()))
     *aInstancePtr = NS_STATIC_CAST(nsIDOMEventListener*, this);
-  else if (aIID.Equals(nsCOMTypeInfo<nsIDOMMouseListener>::GetIID()))
-    *aInstancePtr = NS_STATIC_CAST(nsIDOMMouseListener*, this);
+  else if (aIID.Equals(nsCOMTypeInfo<nsIDOMDragListener>::GetIID()))
+    *aInstancePtr = NS_STATIC_CAST(nsIDOMDragListener*, this);
   else if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))                                   
-    *aInstancePtr = NS_STATIC_CAST(nsISupports*, NS_STATIC_CAST(nsIDOMMouseListener*, this));
+    *aInstancePtr = NS_STATIC_CAST(nsISupports*, NS_STATIC_CAST(nsIDOMDragListener*, this));
   else
     *aInstancePtr = 0;
   
@@ -101,47 +103,41 @@ nsTEMPMouseDownEater::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsTEMPMouseDownEater :: HandleEvent(nsIDOMEvent* aEvent)
+nsTEMPDragGestureEater :: HandleEvent(nsIDOMEvent* aEvent)
 {
   return NS_OK;
 }
 
 nsresult
-nsTEMPMouseDownEater::MouseDown(nsIDOMEvent* aMouseEvent)
+nsTEMPDragGestureEater::DragGesture(nsIDOMEvent* aMouseEvent)
 {
   // we want the text widget to see this event, but not anyone above us that
-  // might be registered as a listener for mouse clicks. Therefore, don't
+  // might be registered as a listener for drags. Therefore, don't
   // allow this event to bubble.
   aMouseEvent->PreventBubble();
-  return NS_OK; // means I am NOT consuming event
+  return NS_ERROR_BASE; // means I AM consuming event
 }
 
 nsresult
-nsTEMPMouseDownEater::MouseUp(nsIDOMEvent* aMouseEvent)
+nsTEMPDragGestureEater::DragEnter(nsIDOMEvent* aMouseEvent)
 {
   return NS_OK; // means I am NOT consuming event
 }
 
 nsresult
-nsTEMPMouseDownEater::MouseClick(nsIDOMEvent* aMouseEvent)
+nsTEMPDragGestureEater::DragOver(nsIDOMEvent* aMouseEvent)
 {
   return NS_OK; // means I am NOT consuming event
 }
 
 nsresult
-nsTEMPMouseDownEater::MouseDblClick(nsIDOMEvent* aMouseEvent)
+nsTEMPDragGestureEater::DragExit(nsIDOMEvent* aMouseEvent)
 {
   return NS_OK; // means I am NOT consuming event
 }
 
 nsresult
-nsTEMPMouseDownEater::MouseOver(nsIDOMEvent* aMouseEvent)
-{
-  return NS_OK; // means I am NOT consuming event
-}
-
-nsresult
-nsTEMPMouseDownEater::MouseOut(nsIDOMEvent* aMouseEvent)
+nsTEMPDragGestureEater::DragDrop(nsIDOMEvent* aMouseEvent)
 {
   return NS_OK; // means I am NOT consuming event
 }
@@ -196,10 +192,8 @@ nsToolbarFrame :: ~nsToolbarFrame ( )
   GetContent(getter_AddRefs(content));
   nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
 
-  // NOTE: the last Remove will delete the drag listener
+  // NOTE: the Remove will delete the drag listener
   reciever->RemoveEventListenerByIID((nsIDOMDragListener *)mDragListener, nsIDOMDragListener::GetIID());
-  reciever->RemoveEventListenerByIID((nsIDOMMouseListener *)mDragListener, nsIDOMMouseListener::GetIID());
-  reciever->RemoveEventListenerByIID((nsIDOMMouseMotionListener *)mDragListener, nsIDOMMouseMotionListener::GetIID());
 }
 
 
@@ -225,8 +219,6 @@ nsToolbarFrame::Init ( nsIPresContext&  aPresContext, nsIContent* aContent,
 
   mDragListener = new nsToolbarDragListener(this, &aPresContext);
   receiver->AddEventListenerByIID((nsIDOMDragListener *)mDragListener, nsIDOMDragListener::GetIID());
-  receiver->AddEventListenerByIID((nsIDOMMouseListener *)mDragListener, nsIDOMMouseListener::GetIID());
-  receiver->AddEventListenerByIID((nsIDOMMouseMotionListener *)mDragListener, nsIDOMMouseMotionListener::GetIID());
 
 #if TEMP_HACK_FOR_BUG_11291
   // Ok, this is a hack until Ender lands. We need to have a mouse listener on text widgets
@@ -245,7 +237,7 @@ nsToolbarFrame::Init ( nsIPresContext&  aPresContext, nsIContent* aContent,
         inputList->Item(i, getter_AddRefs(node));
         nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(node));
         if ( receiver )
-          receiver->AddEventListenerByIID(new nsTEMPMouseDownEater, nsIDOMMouseListener::GetIID());
+          receiver->AddEventListenerByIID(new nsTEMPDragGestureEater, nsIDOMDragListener::GetIID());
         // yes, i know this will leak. That's ok, i don't care because this code will go away
       }   
     }
@@ -345,17 +337,6 @@ nsToolbarFrame :: HandleEvent ( nsIPresContext& aPresContext,
       }
       break; 
 
-    case NS_DRAGDROP_OVER: 
-      break; 
-
-    case NS_DRAGDROP_EXIT: 
-      mMarkerStyle = do_QueryInterface(nsnull);
-      // remove drop feedback 
-      break; 
-
-    case NS_DRAGDROP_DROP: 
-      // do drop coolness stuff 
-      break; 
   } 
 
   //XXX this needs to change when I am really handling the D&D events 
