@@ -156,7 +156,7 @@ NS_IMETHODIMP nsNetSupportDialog::Prompt(const PRUnichar *text,
 	nsresult rv = NS_ERROR_FAILURE;
 	nsCOMPtr< nsIPrompt> dialogService;
     if( GetNSIPrompt( dialogService ) )
-		dialogService->Prompt( text, defaultText, resultText, returnValue );
+		rv = dialogService->Prompt( text, defaultText, resultText, returnValue );
 	 
 	return rv;	
 }
