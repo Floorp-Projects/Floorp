@@ -4658,12 +4658,12 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
     if (!aState.mPseudoFrames.IsEmpty() && !isWhitespace) { 
       ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems);
     }
-    // exclude whitespace from tables in as efficient manner as possible
+    // exclude whitespace from table and math elements in as efficient manner as possible
     PRBool createFrame = PR_TRUE;
     if (isWhitespace) {
-      nsCOMPtr<nsIAtom> fType;
-      aParentFrame->GetFrameType(getter_AddRefs(fType));
-      if ((fType.get() != nsLayoutAtoms::tableCellFrame) && IsTableRelated(fType.get(), PR_TRUE)) {
+      nsFrameState state;
+      aParentFrame->GetFrameState(&state);
+      if (NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE & state) {
         createFrame = PR_FALSE;
         if (aWhiteSpaceContent) {
           *aWhiteSpaceContent = PR_TRUE;
@@ -6713,24 +6713,25 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
                                         // processChildren = PR_TRUE for inline frames.
                                         // see case NS_STYLE_DISPLAY_INLINE in
                                         // ConstructFrameByDisplayType()
-  
+
   nsresult  rv = NS_OK;
   PRBool    isAbsolutelyPositioned = PR_FALSE;
   PRBool    isFixedPositioned = PR_FALSE;
   PRBool    isReplaced = PR_FALSE;
-
-  NS_ASSERTION(aTag != nsnull, "null MathML tag");
-  if (aTag == nsnull)
-    return NS_OK;
+  PRBool    ignoreInterTagWhitespace = PR_TRUE;
 
   // Make sure that we remain confined in the MathML world
   if (aNameSpaceID != nsMathMLAtoms::nameSpaceID) 
     return NS_OK;
 
+  NS_ASSERTION(aTag != nsnull, "null MathML tag");
+  if (aTag == nsnull)
+    return NS_OK;
+
   // Initialize the new frame
   nsIFrame* newFrame = nsnull;
   nsMathMLmtableCreator mathTableCreator(aPresShell); // Used to make table views.
- 
+
   // See if the element is absolute or fixed positioned
   const nsStylePosition* position = (const nsStylePosition*)
     aStyleContext->GetStyleData(eStyleStruct_Position);
@@ -6836,20 +6837,32 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
     return rv;
   }
   // End CONSTRUCTION of MTABLE elements 
-  
+
+  else if (aTag == nsMathMLAtoms::math) { 
+    // root <math> element
+    const nsStyleDisplay* display = (const nsStyleDisplay*)
+      aStyleContext->GetStyleData(eStyleStruct_Display);
+    PRBool isBlock = (NS_STYLE_DISPLAY_BLOCK == display->mDisplay);
+    rv = NS_NewMathMLmathFrame(aPresShell, &newFrame, isBlock);
+  }
   else {
      return rv;
   }
- 
+
   // If we succeeded in creating a frame then initialize it, process its
   // children (if requested), and set the initial child list
   if (NS_SUCCEEDED(rv) && newFrame != nsnull) {
+    nsFrameState state;
+    newFrame->GetFrameState(&state);
     // If the frame is a replaced element, then set the frame state bit
     if (isReplaced) {
-      nsFrameState  state;
-      newFrame->GetFrameState(&state);
-      newFrame->SetFrameState(state | NS_FRAME_REPLACED_ELEMENT);
+      state |= NS_FRAME_REPLACED_ELEMENT;
     }
+    // record that children that are ignorable whitespace should be excluded
+    if (ignoreInterTagWhitespace) {
+      state |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
+    }
+    newFrame->SetFrameState(state);
 
     nsIFrame* geometricParent = isAbsolutelyPositioned
                               ? aState.mAbsoluteItems.containingBlock
@@ -6876,7 +6889,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
 
     // Set the frame's initial child list
     newFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
-  
+
     // If the frame is absolutely positioned then create a placeholder frame
     if (isAbsolutelyPositioned || isFixedPositioned) {
       nsIFrame* placeholderFrame;
