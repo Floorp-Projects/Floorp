@@ -269,35 +269,42 @@ NS_IMETHODIMP ConsoleOutputStreamListener::OnDataAvailable(nsIChannel * aChannel
     return NS_OK;
   }
 
+  PRBool mDoIndentProcessing = PR_FALSE;
   for (i=0; i<aCount; i++)
   {
-    // First, check if we are in a new level of html...
-    if (aBuf[i] == '<')
+    if (mDoIndentProcessing)
     {
-      if ( (i < aCount) && (aBuf[i+1] == '/') )
+      // First, check if we are in a new level of html...
+      if (aBuf[i] == '<')
       {
-        --mIndentCount;
-        mInClosingTag = PR_TRUE;
-      }
-      else
-      {
-        ++mIndentCount;
-        DoIndent();
-        mInClosingTag = PR_FALSE;
-      }
+        if ( (i < aCount) && (aBuf[i+1] == '/') )
+        {
+          --mIndentCount;
+          mInClosingTag = PR_TRUE;
+        }
+        else
+        {
+          ++mIndentCount;
+          DoIndent();
+          mInClosingTag = PR_FALSE;
+        }
 
-      if (mIndentCount < 0)
-        mIndentCount = 0;
+        if (mIndentCount < 0)
+          mIndentCount = 0;
+      }
     }
 
     // Now, write the HTML character...
     PR_Write(PR_GetSpecialFD(PR_StandardOutput), aBuf+i, 1);
 
-    if (aBuf[i] == '>')
+    if (mDoIndentProcessing)
     {
-      // Now, write out the correct number or spaces for the indent count...
-      if (mInClosingTag)
-        DoIndent();
+      if (aBuf[i] == '>')
+      {
+        // Now, write out the correct number or spaces for the indent count...
+        if (mInClosingTag)
+          DoIndent();
+      }
     }
   }
 
@@ -457,13 +464,13 @@ int
 main(int argc, char** argv)
 {
   nsresult DoFormattingOnly(char *filename);
-  nsresult DoRFC822toHTMLConversion(char *filename, int numArgs);
+  nsresult DoRFC822toHTMLConversion(char *filename, int numArgs, int format);
   nsresult rv;
   
   // Do some sanity checking...
   if (argc < 2) 
   {
-    fprintf(stderr, "usage: %s <rfc822_disk_file> <any_arg_for_XUL_output - 19 for simple processing>\n", argv[0]);
+    fprintf(stderr, "usage: %s <rfc822_disk_file> <output_format>\n\nwhere output_format is:\n\n19 - indentation formatting\n1 - nsMimeMessageBodyDisplay\n", argv[0]);
     return 1;
   }
   
@@ -483,8 +490,15 @@ main(int argc, char** argv)
   // Do the conversion or just process the file!
   if ( (argc >= 3) && (atoi(argv[2]) == 19) )
     DoFormattingOnly(argv[1]);
-  else
-    DoRFC822toHTMLConversion(argv[1], argc);
+  else 
+  {
+    int   format;
+    if (argc >= 3)
+      format = atoi(argv[2]);
+    else
+      format = nsMimeOutput::nsMimeMessagePrintOutput;
+    DoRFC822toHTMLConversion(argv[1], argc, format);
+  }
 
   // Cleanup stuff necessary...
   NS_IF_RELEASE(ccMan);
@@ -492,18 +506,17 @@ main(int argc, char** argv)
 }
 
 nsresult
-DoRFC822toHTMLConversion(char *filename, int numArgs)
+DoRFC822toHTMLConversion(char *filename, int numArgs, int outFormat)
 {
   nsresult          rv;
   char              newURL[1024] = ""; // URL for filename
   nsIURI            *theURI = nsnull;
-  nsMimeOutputType  outFormat;
   char              *contentType = nsnull;
 
-  if (numArgs >= 3)
-    outFormat = nsMimeOutput::nsMimeMessageXULDisplay;
-  else
+  if (outFormat == 1)
     outFormat = nsMimeOutput::nsMimeMessagePrintOutput;
+  else if (outFormat == 2)
+    outFormat = nsMimeOutput::nsMimeMessageBodyDisplay;
 
   char *opts = PL_strchr(filename, '?');
   char save;
@@ -623,8 +636,8 @@ DoFormattingOnly(char *filename)
 {
   char              newURL[1024] = ""; // URL for filename
   nsIURI            *theURI = nsnull;
-  nsMimeOutputType  outFormat;
   char              *contentType = nsnull;
+  int               outFormat;
 
   outFormat = nsMimeOutput::nsMimeMessagePrintOutput;
 
