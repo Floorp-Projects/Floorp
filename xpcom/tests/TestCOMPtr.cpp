@@ -292,7 +292,7 @@ AVoidPtrPtrContext( void** )
 #define TEST_EXCEPTIONS 1
 
 // HAVE_CPP_EXCEPTIONS is defined automagically on unix
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_BEOS)
 #if !defined(HAVE_CPP_EXCEPTIONS)
 #undef TEST_EXCEPTIONS
 #endif
