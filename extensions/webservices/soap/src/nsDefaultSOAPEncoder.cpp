@@ -1768,7 +1768,7 @@ nsBase64BinaryEncoder::Encode(nsISOAPEncoding * aEncoding,
     return NS_ERROR_FAILURE;
   }
 
-  char* encodedVal = PL_Base64Encode(NS_STATIC_CAST(const char*, array), count, nsnull);
+  char* encodedVal = PL_Base64Encode(NS_STATIC_CAST(char*, array), count, nsnull);
   if (!encodedVal) {
     return NS_ERROR_FAILURE;
   }
