@@ -64,7 +64,11 @@ CSRCS = cmtinit.c  \
 	cmtsdr.c \
 	$(NULL)
 
-EXTRA_DSO_LDOPTS	+= -L$(DIST)/bin -lprotocol
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+EXTRA_DSO_LDOPTS	+= $(DIST)/lib/protocol.$(LIB_SUFFIX)
+else
+EXTRA_DSO_LDOPTS	+= -L$(DIST)/lib -lprotocol
+endif
 
 include $(topsrcdir)/config/rules.mk
 
