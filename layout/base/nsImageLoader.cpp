@@ -97,7 +97,7 @@ nsImageLoader::Load(nsIURI *aURI)
 
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
-  if (NS_FAILED(rv)) return rv;
+  if ((NS_FAILED(rv)) || (!shell)) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDocument> doc;
   rv = shell->GetDocument(getter_AddRefs(doc));
