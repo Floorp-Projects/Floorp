@@ -16,17 +16,9 @@
  * Reserved.
  */
 #include "nsTableCell.h"
-#include "nsTableColGroup.h"
-#include "nsTableRow.h"
-#include "nsTablePart.h"
 #include "nsTableCellFrame.h"
 #include "nsHTMLParts.h"
-#include "nsHTMLContainer.h"
-#include "nsReflowCommand.h"
 #include "nsIStyleContext.h"
-#include "nsStyleConsts.h"
-#include "nsIPresContext.h"
-#include "nsIRenderingContext.h"
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
 
