@@ -1,0 +1,26 @@
+From foo1@example.com  Sun Jan 16 17:34:23 2000
+From: foo1@example.com
+To: alice@agony
+Subject: Phone Conference
+Mime-Version: 1.0
+Content-Type:text/calendar; method=REQUEST; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+
+BEGIN:VCALENDAR
+PRODID:-//ACME/DesktopCalendar//EN
+METHOD:REQUEST
+VERSION:2.0
+BEGIN:VEVENT
+ORGANIZER:mailto:sman@netscape.com
+ATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:sman@netscape.com
+ATTENDEE;RSVP=TRUE:mailto:stevesil@microsoft.com
+DTSTAMP:19970611T190000Z
+DTSTART:19970701T210000Z
+DTEND:19970701T230000Z
+SUMMARY:Phone Conference
+DESCRIPTION:Please review the attached document.
+UID:calsvr.example.com-873970198738777
+ATTACH:ftp://ftp.bar.com/pub/docs/foo.doc
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR                              

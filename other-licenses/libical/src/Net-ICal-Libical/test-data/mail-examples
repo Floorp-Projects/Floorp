@@ -1,0 +1,262 @@
+From foo1@example.com  Sun Jan 16 17:34:23 2000
+From: foo1@example.com
+To: alice@agony
+Subject: Phone Conference
+Mime-Version: 1.0
+Content-Type:text/calendar; method=REQUEST; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+
+BEGIN:VCALENDAR
+PRODID:-//ACME/DesktopCalendar//EN
+METHOD:REQUEST
+VERSION:2.0
+BEGIN:VEVENT
+ORGANIZER:mailto:sman@netscape.com
+ATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:sman@netscape.com
+ATTENDEE;RSVP=TRUE:mailto:stevesil@microsoft.com
+DTSTAMP:19970611T190000Z
+DTSTART:19970701T210000Z
+DTEND:19970701T230000Z
+SUMMARY:Phone Conference
+DESCRIPTION:Please review the attached document.
+UID:calsvr.example.com-873970198738777
+ATTACH:ftp://ftp.bar.com/pub/docs/foo.doc
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR                              
+
+From foo2@example.com  Sun Jan 16 17:34:23 2000
+From: foo2@example.com
+To: alice@agony
+Subject: Phone Conference
+Mime-Version: 1.0
+Content-Type: multipart/alternative;boundary="01BD3665.3AF0D360"
+
+--01BD3665.3AF0D360
+Content-Type: text/plain;charset=us-ascii     
+Content-Transfer-Encoding: 7bit
+
+This is an alternative representation of a TEXT/CALENDAR MIME Object
+When: 7/1/1997 10:00AM PDT - 7/1/97 10:30AM PDT
+Where:
+Organizer: foo1@example.com
+Summary: Phone Conference
+
+--01BD3665.3AF0D360
+Content-Type:text/calendar; method=REQUEST; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+
+BEGIN:VCALENDAR
+PRODID:-//ACME/DesktopCalendar//EN
+METHOD:REQUEST
+VERSION:2.0
+BEGIN:VEVENT
+ORGANIZER:mailto:foo1@example.com
+ATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:foo1@example.com
+ATTENDEE;RSVP=TRUE;CUTYPE=INDIVIDUAL:mailto:foo2@example.com
+DTSTAMP:19970611T190000Z
+DTSTART:19970701T170000Z
+DTEND:19970701T173000Z
+SUMMARY:Phone Conference
+UID:calsvr.example.com-8739701987387771
+SEQUENCE:0
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR
+
+--01BD3665.3AF0D360--
+
+From foo3@example.com  Sun Jan 16 17:34:23 2000
+From: foo3@example.com
+To: alice@agony
+Subject: Phone Conference
+Mime-Version: 1.0
+Content-Type: multipart/related; boundary="boundary-example-1";type=text/calendar
+
+--boundary-example-1
+Content-Type:text/calendar; method=REQUEST; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="event.vcs"
+
+BEGIN:VCALENDAR
+PRODID:-//ACME/DesktopCalendar//EN
+METHOD:REQUEST
+VERSION:2.0
+BEGIN:VEVENT
+ORGANIZER:mailto:foo1@example.com
+ATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:foo1@example.com
+ATTENDEE;RSVP=TRUE;CUTYPE=INDIVIDUAL:mailto:foo2@example.com
+DTSTAMP:19970611T190000Z
+DTSTART:19970701T180000Z
+DTEND:19970701T183000Z
+SUMMARY:Phone Conference
+UID:calsvr.example.com-8739701987387771
+ATTACH:cid:123456789@example.com
+SEQUENCE:0
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR
+
+--boundary-example-1
+Content-Type: application/msword; name="FieldReport.doc"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline; filename="FieldReport.doc"
+Content-ID: <123456789@example.com>
+
+0M8R4KGxGuEAAAAAAAAAAAAAAAAAAAAAPgADAP7/CQAGAAAAAAAAAAABAAAARAAAAAAA
+AAAAEAAAQAAAAAEAAAD+////AAAAAEUAAAD/////////////////////////////////
+
+--boundary-example-1--
+
+From foo4@example.com  Sun Jan 16 17:34:23 2000
+From: foo4@example.com
+To: alice@agony
+Subject: Summer Company Holidays
+Mime-Version: 1.0
+Content-Type:text/calendar; method=PUBLISH; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="event.vcs"
+
+BEGIN:VCALENDAR
+PRODID:-//ACME/DESKTOPCALENDAR//EN
+METHOD:PUBLISH
+VERSION:2.0
+BEGIN:VEVENT
+ORGANIZER:MAILTO:FOO1@EXAMPLE.COM
+DTSTAMP:19970611T150000Z
+DTSTART:19970701T150000Z
+DTEND:19970701T230000Z
+SUMMARY:Company Picnic
+DESCRIPTION:Food and drink will be provided
+UID:CALSVR.EXAMPLE.COM-873970198738777-1
+SEQUENCE:0
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+ORGANIZER:MAILTO:FOO1@EXAMPLE.COM
+DTSTAMP:19970611T190000Z
+DTSTART:19970715T150000Z
+DTEND:19970715T230000Z
+SUMMARY:Company Bowling Tournament
+DESCRIPTION:We have 10 lanes reserved
+UID:CALSVR.EXAMPLE.COM-873970198738777-2
+SEQUENCE:0
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR
+
+From foo5@example.com  Sun Jan 16 17:34:23 2000
+From: foo5@example.com
+To: alice@agony
+Subject: Phone Conference
+Mime-Version: 1.0
+Content-Type:multipart/mixed;boundary="--FEE3790DC7E35189CA67CE2C"
+
+This is a multi-part message in MIME format.
+
+----FEE3790DC7E35189CA67CE2C
+Content-Type:text/calendar; method=REQUEST; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="event1.vcs"
+
+BEGIN:VCALENDAR
+PRODID:-//ACME/DesktopCalendar//EN
+METHOD:REQUEST
+VERSION:2.0
+BEGIN:VEVENT
+ORGANIZER:mailto:foo1@example.com
+ATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:foo1@example.com
+ATTENDEE;RSVP=TRUE;CUTYPE=INDIVIDUAL:mailto:foo2@example.com
+DTSTAMP:19970611T190000Z
+DTSTART:19970701T210000Z
+DTEND:19970701T230000Z
+SUMMARY:Phone Conference
+DESCRIPTION:Discuss what happened at the last meeting
+UID:calsvr.example.com-8739701987387772
+SEQUENCE:0
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR
+
+----FEE3790DC7E35189CA67CE2C
+Content-Type:text/calendar; method=REQUEST; charset=US-ASCII
+Content-Transfer-Encoding:7bit
+Content-Disposition: attachment; filename="todo1.vcs"
+
+BEGIN:VCALENDAR
+PRODID:-//ACME/DesktopCalendar//EN
+METHOD:REQUEST
+VERSION:2.0
+BEGIN:VTODO
+DUE:19970701T090000
+ORGANIZER:mailto:foo1@example.com
+ATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:foo1@example.com
+ATTENDEE;RSVP=TRUE:mailto:foo2@example.com
+SUMMARY:Phone Conference
+DESCRIPTION:Discuss a new location for the company picnic
+UID:calsvr.example.com-td-8739701987387773
+SEQUENCE:0
+STATUS:NEEDS ACTION
+END:VEVENT
+END:VCALENDAR
+
+----FEE3790DC7E35189CA67CE2C--
+
+From foo6@example.com  Sun Jan 16 17:34:23 2000
+From: foo6@example.com
+MIME-Version: 1.0
+To: alice@agony
+Subject: REQUEST - Phone Conference
+Content-Type:multipart/related;boundary="--FEE3790DC7E35189CA67CE2C"
+
+----FEE3790DC7E35189CA67CE2C
+Content-Type: multipart/alternative;boundary="--00FEE3790DC7E35189CA67CE2C00"
+
+----00FEE3790DC7E35189CA67CE2C00
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+
+When: 7/1/1997 10:00PM PDT- 7/1/97 10:30 PM PDT
+Where:
+Organizer: foo1@example.com
+Summary: Let's discuss the attached document
+
+----00FEE3790DC7E35189CA67CE2C00
+Content-Type:text/calendar; method=REQUEST; charset=US-ASCII;Component=vevent
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="event.vcs"
+
+BEGIN:VCALENDAR
+PRODID:-//ACME/DesktopCalendar//EN
+METHOD:REQUEST
+VERSION:2.0
+BEGIN:VEVENT
+ORGANIZER:foo1@example.com
+ATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:foo1@example.com
+ATTENDEE;RSVP=TRUE;CUTYPE=INDIVIDUAL:mailto:foo2@example.com
+ATTENDEE;RSVP=TRUE;CUTYPE=INDIVIDUAL:mailto:foo3@example.com
+DTSTAMP:19970611T190000Z
+DTSTART:19970621T170000Z
+DTEND:199706211T173000Z
+SUMMARY:Let's discuss the attached document
+UID:calsvr.example.com-873970198738777-8aa
+ATTACH:cid:calsvr.example.com-12345aaa
+SEQUENCE:0
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR
+
+----00FEE3790DC7E35189CA67CE2C00--
+
+----FEE3790DC7E35189CA67CE2C
+Content-Type: application/msword; name="FieldReport.doc"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline; filename="FieldReport.doc"
+Content-ID: <calsvr.example.com-12345aaa>
+
+
+R0lGODdhTAQZAJEAAFVVVd3d3e4AAP///ywAAAAATAQZAAAC/5yPOSLhD6OctNqLs94XqAG
+4kiW5omm6sq27gvH8kzX9o1y+s73/g8MCofEovGITCoxKMbyCR16cNSq9YrNarfcrvdriIH
+5LL5jE6rxc3G+v2cguf0uv2Oz+v38L7/DxgoOKjURnjIIbe3yNjo+AgZWYVIWWl5iZnJY6J.
+
+----FEE3790DC7E35189CA67CE2C--

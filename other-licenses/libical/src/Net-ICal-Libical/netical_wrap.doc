@@ -1,0 +1,393 @@
+netical_wrap.c
+
+[ Module : Net__ICal__Libical, Package : Net::ICal::Libical ]
+
+
+icalparser_parse_string(str);
+        [ returns icalcomponent * ]
+
+icalcomponent_new(kind);
+        [ returns icalcomponent * ]
+
+icalcomponent_new_clone(component);
+        [ returns icalcomponent * ]
+
+icalcomponent_new_from_string(str);
+        [ returns icalcomponent * ]
+
+icalcomponent_as_ical_string(component);
+        [ returns char * ]
+
+icalcomponent_free(component);
+        [ returns void  ]
+
+icalcomponent_count_errors(component);
+        [ returns int  ]
+
+icalcomponent_strip_errors(component);
+        [ returns void  ]
+
+icalcomponent_convert_errors(component);
+        [ returns void  ]
+
+icalcomponent_get_current_property(component);
+        [ returns icalproperty * ]
+
+icalcomponent_get_first_property(component,kind);
+        [ returns icalproperty * ]
+
+icalcomponent_get_next_property(component,kind);
+        [ returns icalproperty * ]
+
+icalcomponent_get_current_component(component);
+        [ returns icalcomponent * ]
+
+icalcomponent_get_first_component(component,kind);
+        [ returns icalcomponent * ]
+
+icalcomponent_get_next_component(component,kind);
+        [ returns icalcomponent * ]
+
+icalcomponent_add_property(component,property);
+        [ returns void  ]
+
+icalcomponent_remove_property(component,property);
+        [ returns void  ]
+
+icalcomponent_get_parent(component);
+        [ returns icalcomponent * ]
+
+icalcomponent_isa(component);
+        [ returns icalcomponent_kind  ]
+
+icalrestriction_check(comp);
+        [ returns int  ]
+
+icalproperty_string_to_kind(string);
+        [ returns int  ]
+
+icalproperty_new(kind);
+        [ returns icalproperty * ]
+
+icalproperty_new_from_string(str);
+        [ returns icalproperty * ]
+
+icalproperty_as_ical_string(prop);
+        [ returns char * ]
+
+icalproperty_set_parameter_from_string(prop,name,value);
+        [ returns void  ]
+
+icalproperty_set_value_from_string(prop,value,kind);
+        [ returns void  ]
+
+icalproperty_get_value_as_string(prop);
+        [ returns char * ]
+
+icalproperty_get_parameter_as_string(prop,name);
+        [ returns char * ]
+
+icalproperty_get_parent(property);
+        [ returns icalcomponent * ]
+
+$ICAL_BADARG_ERROR = ICAL_BADARG_ERROR
+        [ Constant: int  ]
+
+$ICAL_NEWFAILED_ERROR = ICAL_NEWFAILED_ERROR
+        [ Constant: int  ]
+
+$ICAL_MALFORMEDDATA_ERROR = ICAL_MALFORMEDDATA_ERROR
+        [ Constant: int  ]
+
+$ICAL_PARSE_ERROR = ICAL_PARSE_ERROR
+        [ Constant: int  ]
+
+$ICAL_INTERNAL_ERROR = ICAL_INTERNAL_ERROR
+        [ Constant: int  ]
+        Like assert --internal consist. prob 
+
+$ICAL_FILE_ERROR = ICAL_FILE_ERROR
+        [ Constant: int  ]
+
+$ICAL_ALLOCATION_ERROR = ICAL_ALLOCATION_ERROR
+        [ Constant: int  ]
+
+$ICAL_USAGE_ERROR = ICAL_USAGE_ERROR
+        [ Constant: int  ]
+
+$ICAL_NO_ERROR = ICAL_NO_ERROR
+        [ Constant: int  ]
+        Used for problems in input to icalerror_strerror() 
+
+$ICAL_UNKNOWN_ERROR = ICAL_UNKNOWN_ERROR
+        [ Constant: int  ]
+
+$ICAL_ERROR_FATAL = ICAL_ERROR_FATAL
+        [ Constant: int  ]
+        Not fata 
+
+$ICAL_ERROR_NONFATAL = ICAL_ERROR_NONFATAL
+        [ Constant: int  ]
+        Fatal 
+
+$ICAL_ERROR_DEFAULT = ICAL_ERROR_DEFAULT
+        [ Constant: int  ]
+        Use the value of icalerror_errors_are_fatal Asked state for an unknown
+        error type 
+
+$ICAL_ERROR_UNKNOWN = ICAL_ERROR_UNKNOWN
+        [ Constant: int  ]
+
+icalerror_set_error_state(error,icalerrorstate );
+        [ returns void  ]
+
+icalerror_get_error_state(error);
+        [ returns icalerrorstate  ]
+
+icalenum_property_kind_to_string(kind);
+        [ returns char * ]
+
+icalenum_string_to_property_kind(string);
+        [ returns icalproperty_kind  ]
+
+icalenum_value_kind_to_string(kind);
+        [ returns char * ]
+        icalvalue_kind icalenum_value_kind_by_prop(icalproperty_kind kind);
+        
+
+icalenum_parameter_kind_to_string(kind);
+        [ returns char * ]
+
+icalenum_string_to_parameter_kind(string);
+        [ returns icalparameter_kind  ]
+
+icalenum_component_kind_to_string(kind);
+        [ returns char * ]
+
+icalenum_string_to_component_kind(string);
+        [ returns icalcomponent_kind  ]
+
+icalenum_property_kind_to_value_kind(kind);
+        [ returns icalvalue_kind  ]
+
+icallangbind_new_array(size);
+        [ returns int * ]
+
+icallangbind_free_array(array);
+        [ returns void  ]
+
+icallangbind_access_array(array,index);
+        [ returns int  ]
+
+icalrecur_expand_recurrence(rule,start,count,array);
+        [ returns int  ]
+
+icallangbind_get_first_property(c,prop);
+        [ returns icalproperty * ]
+
+icallangbind_get_next_property(c,prop);
+        [ returns icalproperty * ]
+
+icallangbind_get_first_component(c,comp);
+        [ returns icalcomponent * ]
+
+icallangbind_get_next_component(c,comp);
+        [ returns icalcomponent * ]
+
+icallangbind_property_eval_string(prop,sep);
+        [ returns char * ]
+
+1.  class icaltimetype
+======================
+[ created from struct icaltimetype ]
+
+
+icaltimetype_year_set(struct icaltimetype *,int );
+icaltimetype_year_get(struct icaltimetype *);
+        [ Member data: returns int  ]
+
+icaltimetype_month_set(struct icaltimetype *,int );
+icaltimetype_month_get(struct icaltimetype *);
+        [ Member data: returns int  ]
+
+icaltimetype_day_set(struct icaltimetype *,int );
+icaltimetype_day_get(struct icaltimetype *);
+        [ Member data: returns int  ]
+
+icaltimetype_hour_set(struct icaltimetype *,int );
+icaltimetype_hour_get(struct icaltimetype *);
+        [ Member data: returns int  ]
+
+icaltimetype_minute_set(struct icaltimetype *,int );
+icaltimetype_minute_get(struct icaltimetype *);
+        [ Member data: returns int  ]
+
+icaltimetype_second_set(struct icaltimetype *,int );
+icaltimetype_second_get(struct icaltimetype *);
+        [ Member data: returns int  ]
+
+icaltimetype_is_utc_set(struct icaltimetype *,int );
+icaltimetype_is_utc_get(struct icaltimetype *);
+        [ Member data: returns int  ]
+        1-> time is in UTC timezone 
+
+icaltimetype_is_date_set(struct icaltimetype *,int );
+icaltimetype_is_date_get(struct icaltimetype *);
+        [ Member data: returns int  ]
+        1 -> interpret this as date. 
+
+$icaltimetype_zone = icaltimetype::zone
+        [ Constant: char * ]
+        Ptr to Olsen placename. Libical does not own mem 
+
+----------
+
+icaltime_from_timet(v,is_date);
+        [ returns struct icaltimetype  ]
+
+icaltime_as_timet(struct icaltimetype *);
+        [ returns int  ]
+
+icaltime_as_ical_string(tt);
+        [ returns char * ]
+
+icaltime_from_string(str);
+        [ returns struct icaltimetype  ]
+
+icaltime_utc_offset(tt,tzid);
+        [ returns int  ]
+
+icaltime_as_utc(tt,tzid);
+        [ returns struct icaltimetype  ]
+
+icaltime_as_zone(tt,tzid);
+        [ returns struct icaltimetype  ]
+
+icaltime_null_time();
+        [ returns struct icaltimetype  ]
+
+icaltime_is_null_time(t);
+        [ returns int  ]
+
+icaltime_is_valid_time(t);
+        [ returns int  ]
+
+icaltime_normalize(t);
+        [ returns struct icaltimetype  ]
+
+icaltime_day_of_year(t);
+        [ returns short  ]
+
+icaltime_from_day_of_year(doy,year);
+        [ returns struct icaltimetype  ]
+
+icaltime_day_of_week(t);
+        [ returns short  ]
+
+icaltime_start_doy_of_week(t);
+        [ returns short  ]
+
+icaltime_as_ctime(struct icaltimetype *);
+        [ returns char * ]
+
+icaltime_week_number(t);
+        [ returns short  ]
+
+icaltime_compare(a,b);
+        [ returns int  ]
+
+icaltime_compare_date_only(a,b);
+        [ returns int  ]
+
+icaltime_days_in_month(month,year);
+        [ returns short  ]
+
+2.  class icaldurationtype
+==========================
+[ created from struct icaldurationtype ]
+
+
+icaldurationtype_is_neg_set(struct icaldurationtype *,int );
+icaldurationtype_is_neg_get(struct icaldurationtype *);
+        [ Member data: returns int  ]
+
+icaldurationtype_days_set(struct icaldurationtype *,unsigned int );
+icaldurationtype_days_get(struct icaldurationtype *);
+        [ Member data: returns unsigned int  ]
+
+icaldurationtype_weeks_set(struct icaldurationtype *,unsigned int );
+icaldurationtype_weeks_get(struct icaldurationtype *);
+        [ Member data: returns unsigned int  ]
+
+icaldurationtype_hours_set(struct icaldurationtype *,unsigned int );
+icaldurationtype_hours_get(struct icaldurationtype *);
+        [ Member data: returns unsigned int  ]
+
+icaldurationtype_minutes_set(struct icaldurationtype *,unsigned int );
+icaldurationtype_minutes_get(struct icaldurationtype *);
+        [ Member data: returns unsigned int  ]
+
+icaldurationtype_seconds_set(struct icaldurationtype *,unsigned int );
+icaldurationtype_seconds_get(struct icaldurationtype *);
+        [ Member data: returns unsigned int  ]
+
+----------
+
+icaldurationtype_from_int(t);
+        [ returns struct icaldurationtype  ]
+
+icaldurationtype_from_string(char *);
+        [ returns struct icaldurationtype  ]
+
+icaldurationtype_as_int(duration);
+        [ returns int  ]
+
+icaldurationtype_as_ical_string(d);
+        [ returns char * ]
+
+icaldurationtype_null_duration();
+        [ returns struct icaldurationtype  ]
+
+icaldurationtype_is_null_duration(d);
+        [ returns int  ]
+
+icaltime_add(t,d);
+        [ returns struct icaltimetype  ]
+
+icaltime_subtract(t1,t2);
+        [ returns struct icaldurationtype  ]
+
+3.  class icalperiodtype
+========================
+[ created from struct icalperiodtype ]
+
+
+icalperiodtype_start_set(struct icalperiodtype *,struct icaltimetype *);
+icalperiodtype_start_get(struct icalperiodtype *);
+        [ Member data: returns struct icaltimetype * ]
+
+icalperiodtype_end_set(struct icalperiodtype *,struct icaltimetype *);
+icalperiodtype_end_get(struct icalperiodtype *);
+        [ Member data: returns struct icaltimetype * ]
+
+icalperiodtype_duration_set(struct icalperiodtype *,struct icaldurationtype *);
+icalperiodtype_duration_get(struct icalperiodtype *);
+        [ Member data: returns struct icaldurationtype * ]
+
+----------
+
+icalperiodtype_from_string(str);
+        [ returns struct icalperiodtype  ]
+
+icalperiodtype_as_ical_string(p);
+        [ returns char * ]
+
+icalperiodtype_null_period();
+        [ returns struct icalperiodtype  ]
+
+icalperiodtype_is_null_period(p);
+        [ returns int  ]
+
+icalperiodtype_is_valid_period(p);
+        [ returns int  ]
+

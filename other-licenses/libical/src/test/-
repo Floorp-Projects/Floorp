@@ -1,0 +1,2020 @@
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+VERSION
+ :2.0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for property PRODID. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ :Mailto:alice@cal.softwarestudio.org
+ATTENDEE
+ ;RSVP=TRUE
+ ;CUTYPE=INDIVIDUAL
+ ;CN=B
+ :Mailto:B@example.com
+DTSTAMP
+ :19970611T010000Z
+DTSTART
+ :19970701T130000Z
+DTEND
+ :19970701T140000Z
+SUMMARY
+ : Event 2
+UID
+ :calsrv.example.com-873970198738701@example.com
+SEQUENCE
+ :2
+STATUS
+ :CONFIRMED
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+VERSION
+ :2.0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for property PRODID. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ :Mailto:alice@cal.softwarestudio.org
+ATTENDEE
+ ;RSVP=TRUE
+ ;CUTYPE=INDIVIDUAL
+ ;CN=B
+ :Mailto:B@example.com
+DTSTAMP
+ :19970611T030000Z
+DTSTART
+ :19970701T120000Z
+DTEND
+ :19970701T130000Z
+SUMMARY
+ : Overlap  1
+UID
+ :calsrv.example.com-873970198738703@example.com
+SEQUENCE
+ :2
+STATUS
+ :CONFIRMED
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+VERSION
+ :2.0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for property PRODID. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ :Mailto:alice@cal.softwarestudio.org
+ATTENDEE
+ ;RSVP=TRUE
+ ;CUTYPE=INDIVIDUAL
+ ;CN=B
+ :Mailto:B@example.com
+DTSTAMP
+ :19970611T050000Z
+DTSTART
+ :19970701T140000Z
+DTEND
+ :19970701T150000Z
+SUMMARY
+ :Overlap  3
+UID
+ :calsrv.example.com-873970198738705@example.com
+SEQUENCE
+ :2
+STATUS
+ :CONFIRMED
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT1M1S
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT1S
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT2S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT3S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT4S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT5S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT6S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT7S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT8S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT9S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT10S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT11S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT12S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT13S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT15S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT16S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT17S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT18S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT21S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT22S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT23S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT24S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT25S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT27S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT28S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT30S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT32S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT34S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT35S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT37S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT39S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT40S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT40S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT41S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT43S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT45S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT47S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT49S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT51S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT52S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT53S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT55S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT57S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT59S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT1M1S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+VERSION
+ :2.0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for property PRODID. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ :Mailto:alice@cal.softwarestudio.org
+ATTENDEE
+ ;RSVP=TRUE
+ ;CUTYPE=INDIVIDUAL
+ ;CN=B
+ :Mailto:B@example.com
+DTSTAMP
+ :19970611T010000Z
+DTSTART
+ :19970701T130000Z
+DTEND
+ :19970701T140000Z
+SUMMARY
+ : Event 2
+UID
+ :calsrv.example.com-873970198738701@example.com
+SEQUENCE
+ :2
+STATUS
+ :CONFIRMED
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+VERSION
+ :2.0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for property PRODID. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ :Mailto:alice@cal.softwarestudio.org
+ATTENDEE
+ ;RSVP=TRUE
+ ;CUTYPE=INDIVIDUAL
+ ;CN=B
+ :Mailto:B@example.com
+DTSTAMP
+ :19970611T030000Z
+DTSTART
+ :19970701T120000Z
+DTEND
+ :19970701T130000Z
+SUMMARY
+ : Overlap  1
+UID
+ :calsrv.example.com-873970198738703@example.com
+SEQUENCE
+ :2
+STATUS
+ :CONFIRMED
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+VERSION
+ :2.0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for property PRODID. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ :Mailto:alice@cal.softwarestudio.org
+ATTENDEE
+ ;RSVP=TRUE
+ ;CUTYPE=INDIVIDUAL
+ ;CN=B
+ :Mailto:B@example.com
+DTSTAMP
+ :19970611T050000Z
+DTSTART
+ :19970701T140000Z
+DTEND
+ :19970701T150000Z
+SUMMARY
+ :Overlap  3
+UID
+ :calsrv.example.com-873970198738705@example.com
+SEQUENCE
+ :2
+STATUS
+ :CONFIRMED
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT1M1S
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT1S
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT2S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT3S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT4S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT5S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT6S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT7S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT8S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT9S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT10S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT11S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT12S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT13S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT15S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT16S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT17S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT18S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT21S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT22S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT23S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT24S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT25S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT27S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT28S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT30S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT32S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT34S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT35S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT37S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT39S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT40S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT40S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT41S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT43S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT45S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT47S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT49S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT51S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT52S
+SUMMARY
+ :Process 2
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT53S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT55S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT57S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT59S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REQUEST
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for PRODID property. Expected 1 instances 
+ of the property and got 0
+X-LIC-ERROR
+ ;X-LIC-ERRORTYPE=INVALID_ITIP
+ :Failed iTIP restrictions for VERSION property. Expected 1 instances 
+ of the property and got 0
+BEGIN:VEVENT
+DTSTART
+ :20000101T120000Z
+DURATION
+ :PT1M1S
+SUMMARY
+ :Process 1
+END:VEVENT
+END:VCALENDAR
