@@ -75,9 +75,6 @@ housecleaning
   error conditions (eg network & data errors).  should audit interface
   boundaries to make sure they do appropriate checking.
 
-* migrate from "#ifdef DEBUG_dmose PR_fprintf(PR_STDERR)" to a more
-  general logging mechanism (PR_Log)
-
 * does always using this-> for member vars cause inheritance problems?  if so, 
   does it matter in an XPCOM world?
 
@@ -114,6 +111,10 @@ rdf datasource (in progress: dmose)
 
   * nsILDAPURL (see nsIIOService.idl: extractScheme())
 
+testing
+-------
+* see how the browser copes when it does such a big search that the server 
+  only returns partial results and an error.
 
 perf
 ----

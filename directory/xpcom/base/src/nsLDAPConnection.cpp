@@ -31,7 +31,7 @@
  * GPL.
  */
 
-#include "nspr.h"
+#include "nsLDAP.h"
 #include "nsIComponentManager.h"
 #include "nsLDAPConnection.h"
 #include "nsLDAPMessage.h"
@@ -56,9 +56,7 @@ nsLDAPConnection::~nsLDAPConnection()
 {
   int rc;
 
-#ifdef DEBUG_dmose
-    PR_fprintf(PR_STDERR,"unbinding\n");
-#endif    
+  PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("unbinding\n"));
 
   rc = ldap_unbind_s(this->mConnectionHandle);
   if (rc != LDAP_SUCCESS) {
@@ -68,9 +66,7 @@ nsLDAPConnection::~nsLDAPConnection()
 #endif
   }
 
-#ifdef DEBUG_dmose
-    PR_fprintf(PR_STDERR,"unbound\n");
-#endif
+  PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("unbound\n"));
 
   // XXX can delete fail?
   //
@@ -96,6 +92,17 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
 
     NS_ENSURE_ARG(aHost);
     NS_ENSURE_ARG(aPort);
+
+#ifdef DEBUG
+    // initialize logging, if it hasn't been already
+    //
+    if (!gLDAPLogModule) {
+	gLDAPLogModule = PR_NewLogModule("ldap");
+
+	NS_ABORT_IF_FALSE(gLDAPLogModule, 
+			  "failed to initialize LDAP log module");
+    }
+#endif
 
     // XXXdmose - is a bindname of "" equivalent to a bind name of
     // NULL (which which means bind anonymously)?  if so, we don't
@@ -337,9 +344,8 @@ nsLDAPConnection::Run(void)
 	return NS_ERROR_FAILURE;
     }
 
-#ifdef DEBUG_dmose
-    PR_fprintf(PR_STDERR, "nsLDAPConnection::Run() entered\n");
-#endif
+    PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
+	   ("nsLDAPConnection::Run() entered\n"));
 
     // wait for results
     //
@@ -355,11 +361,11 @@ nsLDAPConnection::Run(void)
 	switch (returnCode) {
 
 	case 0: // timeout
+
 	    // the connection may not exist yet.  sleep for a while
 	    // and try again
-#ifdef DEBUG_dmose
-	    PR_fprintf(PR_STDERR, "ldap_result() timed out.\n");
-#endif
+	    PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
+		   ("ldap_result() timed out.\n"));
 	    PR_Sleep(2000);
 	    continue;
 
@@ -421,9 +427,7 @@ nsLDAPConnection::InvokeMessageCallback(LDAPMessage *aMsgHandle,
     nsCOMPtr<nsILDAPOperation> operation;
     nsCOMPtr<nsILDAPMessageListener> listener;
 
-#ifdef DEBUG_dmose
-    PR_fprintf(PR_STDERR, "InvokeMessageCallback entered\n");
-#endif
+    PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("InvokeMessageCallback entered\n"));
 
     // get the message id corresponding to this operation
     //
@@ -447,10 +451,10 @@ nsLDAPConnection::InvokeMessageCallback(LDAPMessage *aMsgHandle,
     //
     nsISupports *data = mPendingOperations->Get(key);
     if (data == nsnull) {
-#ifdef DEBUG_dmose
-	PR_fprintf(PR_STDERR, "InvokeMessageCallback(): couldn't find "
-		   "nsILDAPOperation corresponding to this message id\n");
-#endif
+
+	PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
+	       ("InvokeMessageCallback(): couldn't find "
+		"nsILDAPOperation corresponding to this message id\n"));
 	delete key;
 
 	// this may well be ok, since it could just mean that the operation

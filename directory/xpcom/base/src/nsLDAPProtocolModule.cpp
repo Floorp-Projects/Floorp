@@ -71,3 +71,7 @@ static nsModuleComponentInfo components[] =
 // implement the NSGetModule() exported function
 //
 NS_IMPL_NSGETMODULE("nsLDAPProtocolModule", components);
+
+#ifdef DEBUG
+PRLogModuleInfo *gLDAPLogModule = 0;
+#endif

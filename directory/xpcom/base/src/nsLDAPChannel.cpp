@@ -32,6 +32,7 @@
  * GPL.
  */
 
+#include "nsLDAP.h"
 #include "nsLDAPConnection.h"
 #include "nsLDAPChannel.h"
 #include "nsString.h"
@@ -48,9 +49,6 @@
 //
 #include "nsIEventQueueService.h"
 
-#ifdef DEBUG
-#include "nspr.h"
-#endif
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsLDAPChannel, nsIChannel, nsIRequest,	
 			      nsILDAPMessageListener);
@@ -604,13 +602,13 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // kick off a bind operation 
-    // XXXdmose better error handling / passthrough; deal with password
     // 
-#ifdef DEBUG_dmose
-    PR_fprintf(PR_STDERR, "initiating SimpleBind\n");
-#endif
+    PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("initiating SimpleBind\n"));
     rv = mCurrentOperation->SimpleBind(NULL);
     if (NS_FAILED(rv)) {
+
+	// XXXdmose better error handling / passthrough; deal with password
+	//
 #ifdef DEBUG
 	PR_fprintf(PR_STDERR, "mCurrentOperation->SimpleBind failed. rv=%d\n",
 		   rv);
@@ -756,9 +754,8 @@ nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage)
     // XXX what about timeouts? 
     // XXX failure is a reasonable thing; don't assert
     //
-#ifdef DEBUG_dmose
-    PR_fprintf(PR_STDERR, "bind completed; starting search\n");
-#endif
+    PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
+	   ("bind completed; starting search\n"));
     rv = mCurrentOperation->SearchExt(baseDn, scope, filter, 0, LDAP_NO_LIMIT);
     NS_ENSURE_SUCCESS(rv,rv);
     
@@ -773,9 +770,7 @@ nsLDAPChannel::OnLDAPSearchResult(nsILDAPMessage *aMessage)
     PRInt32 errorCode;	// the LDAP error code
     nsresult rv;
 
-#ifdef DEBUG_dmose
-    PR_fprintf(PR_STDERR, "result returned\n");
-#endif
+    PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("result returned\n"));
 
     // XXX should use GetErrorString here?
     //
@@ -816,9 +811,7 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
     nsresult rv;
     char *dn, *attr;
 
-#ifdef DEBUG_dmose
-    PR_fprintf(PR_STDERR, "entry returned!\n");
-#endif
+    PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("entry returned!\n"));
 
     // get the DN
     // XXX better err handling

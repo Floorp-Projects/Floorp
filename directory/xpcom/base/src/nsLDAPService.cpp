@@ -31,11 +31,9 @@
  * GPL.
  */
 
+#include "nsLDAP.h"
 #include "nsLDAPService.h"
 
-#ifdef DEBUG_dmose
-#include "nspr.h"
-#endif
 
 // constructor
 //
@@ -60,10 +58,6 @@ nsLDAPService::Init(void)
 {
   nsresult rv;
 
-#ifdef DEBUG_dmose  
-  PR_fprintf(PR_STDERR, "nsLDAPService::Init() entered!\n");
-#endif
-
   NS_ASSERTION(!mThread, "nsLDAPService already initialized!");
 
   rv = NS_NewThread(getter_AddRefs(mThread),
@@ -78,9 +72,7 @@ nsLDAPService::Init(void)
 NS_IMETHODIMP
 nsLDAPService::Run(void)
 {
-#ifdef DEBUG_dmose  
-  PR_fprintf(PR_STDERR, "nsLDAPService::Run() entered!\n");
-#endif
+  PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("nsLDAPService::Run() entered\n"));
 
   // XXX - should use mThreadRunning here
   //	

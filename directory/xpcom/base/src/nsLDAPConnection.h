@@ -42,6 +42,7 @@
 #include "nsCOMPtr.h"
 #include "nsILDAPMessageListener.h"
 #include "nsHashtable.h"
+#include "nspr.h"
 
 // 0d871e30-1dd2-11b2-8ea9-831778c78e93
 //
