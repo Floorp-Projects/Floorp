@@ -793,9 +793,9 @@ PRInt32 _PR_MD_ATOMIC_ADD(PRInt32 *intp, PRInt32 val)
     {
         mov ecx, intp
         mov eax, val
-        mov ebx, val
+        mov edx, eax
         lock xadd dword ptr [ecx], eax
-        add eax, ebx
+        add eax, edx
     }
 #endif /* __GNUC__ */
 }
