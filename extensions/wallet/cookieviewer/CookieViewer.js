@@ -492,7 +492,7 @@ function DeleteItemSelected(tree, prefix, kids) {
   var delnarray = [];
   var rv = "";
   var cookietree = document.getElementById(tree);
-  selitems = cookietree.selectedItems;
+  var selitems = cookietree.selectedItems;
   for(i = 0; i < selitems.length; i++) 
   { 
     delnarray[i] = document.getElementById(selitems[i].getAttribute("id"));
