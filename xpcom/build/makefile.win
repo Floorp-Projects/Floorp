@@ -1,0 +1,64 @@
+#!nmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+IGNORE_MANIFEST=1
+
+DEPTH=..\..
+MODULE = xpcom 
+
+LIBNAME = .\$(OBJDIR)\xpcom
+DLL = $(LIBNAME).dll
+
+LINCS =                   \
+	-I$(PUBLIC)\xpcom \
+        -I..\base         \
+        -I..\ds           \
+        -I..\io           \
+        -I..\components   \
+        -I..\threads      \
+	$(NULL)
+
+LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
+
+CPP_OBJS =                             \
+        .\$(OBJDIR)\nsXPComInit.obj    \
+        .\$(OBJDIR)\dlldeps.obj        \
+        $(NULL)
+
+LLIBS =                                \
+	$(LIBNSPR)                     \
+	$(DIST)\lib\plc3.lib           \
+        $(DIST)\lib\xpcombase_s.lib    \
+        $(DIST)\lib\xpcomds_s.lib      \
+        $(DIST)\lib\xpcomio_s.lib      \
+        $(DIST)\lib\xpcomcomp_s.lib    \
+        $(DIST)\lib\xpcomthreads_s.lib \
+	$(DIST)\lib\libreg32.lib       \
+        shell32.lib                    \
+!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
+	$(GLOWDIR)\glowcode.lib        \
+!endif
+!if defined(MOZ_TRACE_XPCOM_REFCNT)
+	imagehlp.lib                   \
+!endif	
+	$(NULL)
+
+include <$(DEPTH)\config\rules.mak>
+
+libs:: $(DLL)
+	$(MAKE_INSTALL) $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin
+	$(MAKE_INSTALL) $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
