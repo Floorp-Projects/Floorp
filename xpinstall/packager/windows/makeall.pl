@@ -69,10 +69,6 @@ MakeXpiFile("core");
 MakeXpiFile("mail");
 MakeXpiFile("editor");
 
-# The jre122.exe is as is.  There is no need to create a .xpi file for it.
-# It just simply needs to be copied to $inDistPath\xpi.
-system("xcopy /f $inStagePath\\oji $inDistPath\\xpi");
-
 if(-e "$inDistPath\\setup")
 {
   unlink <$inDistPath\\setup\\*>;
