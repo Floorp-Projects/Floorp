@@ -54,6 +54,8 @@
 #include "nsISocketTransport.h"
 #include "nsMultiplexInputStream.h"
 
+#include "nsComponentManagerUtils.h" // do_CreateInstance
+
 //-----------------------------------------------------------------------------
 
 #ifdef DEBUG

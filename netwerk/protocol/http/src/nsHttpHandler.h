@@ -61,7 +61,6 @@
 #include "nsICacheSession.h"
 #include "nsIEventQueueService.h"
 #include "nsICookieService.h"
-#include "nsIMIMEService.h"
 #include "nsIIDNService.h"
 #include "nsITimer.h"
 
@@ -167,7 +166,6 @@ public:
     //
     nsresult GetCurrentEventQ(nsIEventQueue **);
     nsresult GetStreamConverterService(nsIStreamConverterService **);
-    nsresult GetMimeService(nsIMIMEService **);
     nsresult GetIOService(nsIIOService** service);
     nsICookieService * GetCookieService(); // not addrefed
 
@@ -217,7 +215,6 @@ private:
     nsCOMPtr<nsIStreamConverterService> mStreamConvSvc;
     nsCOMPtr<nsIObserverService>        mObserverService;
     nsCOMPtr<nsICookieService>          mCookieService;
-    nsCOMPtr<nsIMIMEService>            mMimeService;
     nsCOMPtr<nsIIDNService>             mIDNConverter;
     nsCOMPtr<nsITimer>                  mTimer;
 

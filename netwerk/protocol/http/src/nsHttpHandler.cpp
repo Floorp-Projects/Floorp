@@ -461,19 +461,6 @@ nsHttpHandler::GetCookieService()
     return mCookieService;
 }
 
-nsresult
-nsHttpHandler::GetMimeService(nsIMIMEService **result)
-{
-    if (!mMimeService) {
-        nsresult rv;
-        mMimeService = do_GetService("@mozilla.org/mime;1", &rv);
-        if (NS_FAILED(rv)) return rv;
-    }
-    *result = mMimeService;
-    NS_ADDREF(*result);
-    return NS_OK;
-}
-
 nsresult 
 nsHttpHandler::GetIOService(nsIIOService** result)
 {
