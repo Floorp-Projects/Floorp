@@ -98,32 +98,38 @@ function MsgDeleteFolder()
 
 function MsgReplyMessage()
 {
-  ComposeMessageWithType(0);
+  dump("\nMsgReplyMessage from XUL\n");
+  ComposeMessage(1, 0);
 }
 
 function MsgReplyToAllMessage() 
 {
-  ComposeMessageWithType(1);
+  dump("\nMsgReplyToAllMessage from XUL\n");
+  ComposeMessage(2, 0);
 }
 
 function MsgForwardMessage()
 {
-  ComposeMessageWithType(3);
+  dump("\nMsgForwardMessage from XUL\n");
+  MsgForwardAsInline();
 }
 
 function MsgForwardAsAttachment()
 {
-  ComposeMessageWithType(2);
+  dump("\nMsgForwardAsAttachment from XUL\n");
+  ComposeMessage(5, 0);
 }
 
 function MsgForwardAsInline()
 {
-  ComposeMessageWithType(3);
+  dump("\nMsgForwardAsInline from XUL\n");
+  ComposeMessage(3, 0);
 }
 
 function MsgForwardAsQuoted()
 {
-  ComposeMessageWithType(4);
+  dump("\nMsgForwardAsQuoted from XUL\n");
+  ComposeMessage(4, 0);
 }
 
 function MsgCopyMessage(destFolder)
