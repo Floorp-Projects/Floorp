@@ -282,6 +282,9 @@
           } else {
               info.preferredAction = Components.interfaces.nsIMIMEInfo.handleInternally;
           }
+
+          // tell the helper app dialog to update itself
+          gHelperAppDlg.updateSelf = true;
       }
     
       window.opener.gUpdateTypeRV = true;

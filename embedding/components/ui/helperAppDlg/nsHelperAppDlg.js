@@ -62,6 +62,7 @@ function nsHelperAppDialog() {
     this.givenDefaultApp = false;
     this.strings   = new Array;
     this.elements  = new Array;
+    this.updateSelf = true;
 }
 
 nsHelperAppDialog.prototype = {
@@ -502,14 +503,17 @@ nsHelperAppDialog.prototype = {
         }
 
         // Open whichever dialog is appropriate, passing this dialog object as argument.
+        this.updateSelf = false; // dialog will reset to true onOK
         this.mDialog.openDialog( dlgUrl,
                                  "_blank",
                                  "chrome,modal=yes,resizable=no",
                                  this );
 
-        // Refresh dialog with updated info about the default action.
-        this.initIntro();
-        this.initAppAndSaveToDiskValues();
+        if (this.updateSelf) {
+            // Refresh dialog with updated info about the default action.
+            this.initIntro();
+            this.initAppAndSaveToDiskValues();
+        }
     },
 
     // updateMIMEInfo:  This is called from the pref-applications-edit dialog when the user
