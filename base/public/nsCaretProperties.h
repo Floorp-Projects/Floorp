@@ -28,7 +28,7 @@ class nsCaretProperties
 												nsCaretProperties();
 		virtual							~nsCaretProperties() {}
 	
-		virtual PRUint32		GetCaretWidth() 		{ return mCaretWidth; }
+		virtual PRInt32			GetCaretWidth() 		{ return mCaretWidth; }
 		virtual PRUint32		GetCaretBlinkRate()	{ return mBlinkRate; }
 		
 		
@@ -37,12 +37,12 @@ class nsCaretProperties
 	// have value for no blinking
 	
 		enum {
-			eDefaulBlinkRate					= 500,		// twice a second
-			eDefaultCaretWidth				= 1				// one pixel wide
+			eDefaulBlinkRate					= 500,			// twice a second
+			eDefaultCaretWidth				= 20				// 20 twips = 1 pixel
 		};
 
 
-		PRUint32				mCaretWidth;			// caret width in twips
+		PRInt32					mCaretWidth;			// caret width in twips
 		PRUint32				mBlinkRate;				// blink rate in milliseconds
 		
 		
