@@ -425,6 +425,13 @@ function Statement(t, x) {
         n.isLoop = true;
         n.body = nest(t, x, n, Statement, WHILE);
         n.condition = ParenExpression(t, x);
+        if (!x.ecmaStrictMode) {
+            // <script language="JavaScript"> (without version hints) may need
+            // automatic semicolon insertion without a newline after do-while.
+            // See http://bugzilla.mozilla.org/show_bug.cgi?id=238945.
+            t.match(SEMICOLON);
+            return n;
+        }
         break;
 
       case BREAK:
@@ -723,8 +730,8 @@ loop:
                 operators.push(new Node(t));
                 if (tt == ASSIGN)
                     operands.top().assignOp = t.token.assignOp;
-                else if (tt == HOOK)
-                    ++x.hookLevel;
+                else
+                    ++x.hookLevel;      // tt == HOOK
             }
             t.scanOperand = true;
             break;
