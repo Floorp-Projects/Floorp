@@ -1316,7 +1316,7 @@ Rights Reserved.
       accesskey="&forwardMsgCmd.accesskey;"
       key="key_forward"
       observes="cmd_forward"/>
-    <menu label="&forwardAsMenu.label;" accesskey="&forwardAsMenu.accesskey;">
+    <menu id="forwardAsMenu" label="&forwardAsMenu.label;" accesskey="&forwardAsMenu.accesskey;">
       <menupopup>
         <menuitem label="&forwardAsInline.label;" accesskey="&forwardAsInline.accesskey;" observes="cmd_forwardInline"/>
         <menuitem label="&forwardAsAttachmentCmd.label;" accesskey="&forwardAsAttachmentCmd.accesskey;" observes="cmd_forwardAttachment"/>
@@ -1458,7 +1458,7 @@ Rights Reserved.
         </rule>
       </template>
     </menu>
-    <menu label="&labelMenu.label;" accesskey="&labelMenu.accesskey;">
+    <menu id="labelMenu" label="&labelMenu.label;" accesskey="&labelMenu.accesskey;">
       <menupopup id="menuPopup-labels" onpopupshowing="InitMessageLabel('menuPopup')">
         <menuitem
            id="menuPopup-labelMenuItem0"
@@ -1499,7 +1499,7 @@ Rights Reserved.
            observes="cmd_label5"/>
       </menupopup>
     </menu>
-    <menu label="&markMenu.label;" accesskey="&markMenu.accesskey;">
+    <menu id="markMenu" label="&markMenu.label;" accesskey="&markMenu.accesskey;">
       <menupopup onpopupshowing="InitMessageMark()">
         <menuitem id="markReadMenuItem"
                   type="checkbox"

@@ -387,6 +387,23 @@ function InitMessageMenu()
   if(copyMenu)
       copyMenu.setAttribute("disabled", !aMessage);
 
+  // Disable Forward as/Label menu items if no message is selected
+  var forwardAsMenu = document.getElementById("forwardAsMenu");
+  if(forwardAsMenu)
+      forwardAsMenu.setAttribute("disabled", !aMessage);
+
+  var labelMenu = document.getElementById("labelMenu");
+  if(labelMenu)
+      labelMenu.setAttribute("disabled", !aMessage);
+
+  // Disable mark menu when we're not in a folder
+  var markMenu = document.getElementById("markMenu");
+  if(markMenu)
+  {
+      var msgFolder = GetLoadedMsgFolder();
+      markMenu.setAttribute("disabled", !msgFolder);
+  }
+
   document.commandDispatcher.updateCommands('create-menu-message');
 }
 
