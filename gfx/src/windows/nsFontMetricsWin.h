@@ -65,7 +65,6 @@ public:
 #ifdef MOZ_MATHML
   virtual nsresult
   GetBoundingMetrics(HDC                aDC, 
-                     float              aItalicSlope,
                      const PRUnichar*   aString,
                      PRUint32           aLength,
                      nsBoundingMetrics& aBoundingMetrics) = 0;
@@ -105,9 +104,6 @@ public:
                    nsIDeviceContext* aContext);
   NS_IMETHOD  Destroy();
 
-#ifdef MOZ_MATHML
-  NS_IMETHOD  GetItalicSlope(float& aResult);
-#endif
   NS_IMETHOD  GetXHeight(nscoord& aResult);
   NS_IMETHOD  GetSuperscriptOffset(nscoord& aResult);
   NS_IMETHOD  GetSubscriptOffset(nscoord& aResult);
@@ -213,9 +209,6 @@ protected:
   nscoord             mMaxDescent;
   nscoord             mMaxAdvance;
   nscoord             mAveCharWidth;
-#ifdef MOZ_MATHML
-  float               mItalicSlope;
-#endif
   nscoord             mXHeight;
   nscoord             mSuperscriptOffset;
   nscoord             mSubscriptOffset;
@@ -256,7 +249,6 @@ public:
 #ifdef MOZ_MATHML
   virtual nsresult
   GetBoundingMetrics(HDC                aDC, 
-                     float              aItalicSlope,
                      const PRUnichar*   aString,
                      PRUint32           aLength,
                      nsBoundingMetrics& aBoundingMetrics);
@@ -283,7 +275,6 @@ public:
 #ifdef MOZ_MATHML
   virtual nsresult
   GetBoundingMetrics(HDC                aDC, 
-                     float              aItalicSlope,
                      const PRUnichar*   aString,
                      PRUint32           aLength,
                      nsBoundingMetrics& aBoundingMetrics);

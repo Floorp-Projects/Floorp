@@ -80,16 +80,6 @@ public:
    */
   NS_IMETHOD  Destroy() = 0;
 
-#if defined(MOZ_MATHML) && defined(WIN32)
-  // XXX currently implemented only on win32 -- other platforms should implement this
-  /**
-   * Return the font's italic slope, i.e., the tangent of the italic angle.
-   * The slope = 0 for an upright font. It is > 0 for a forward-slanted
-   * font (italic style) and is < 0 for a back-slanted font.
-   */
-  NS_IMETHOD  GetItalicSlope(float& aResult) = 0;
-#endif
-
   /**
    * Return the font's xheight property, scaled into app-units.
    */
