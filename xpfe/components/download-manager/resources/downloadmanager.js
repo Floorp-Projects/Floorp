@@ -46,6 +46,9 @@ var gRDFService = null;
 var gNC_File = null;
 var gFileHandler = null;
 var gStatusBar = null;
+var gCannotLaunch = ((navigator.platform.indexOf("Win") == -1) &&
+                     (navigator.platform.indexOf("OS/2") == -1) &&
+                     (navigator.platform.indexOf("Mac") == -1));
 
 const dlObserver = {
   observe: function(subject, topic, state) {
@@ -102,12 +105,8 @@ function DLManagerStartup()
   window.setTimeout(onRebuild, 0);
 
   var key;
-  if ((navigator.platform.indexOf("Win") == -1) &&
-      (navigator.platform.indexOf("OS/2") == -1) &&
-      (navigator.platform.indexOf("Mac") == -1))
-  {
-    document.getElementById("btn_openfile").hidden = true;
-  }
+  document.getElementById("btn_openfile").hidden = gCannotLaunch;
+  document.getElementById("downloadPaneContext-openfile").hidden = gCannotLaunch;
 }
 
 function onRebuild() {
@@ -144,6 +143,8 @@ function onTrigger() {
     goDoCommand('cmd_properties');
   else if (downloadViewController.isCommandEnabled('cmd_openfile'))
     goDoCommand('cmd_openfile');
+  else if (downloadViewController.isCommandEnabled('cmd_showinshell'))
+    goDoCommand('cmd_showinshell');
 }
 
 var downloadViewController = {
@@ -174,6 +175,8 @@ var downloadViewController = {
 
     switch (aCommand) {
     case "cmd_openfile":
+      if (gCannotLaunch)
+        return false;
     case "cmd_showinshell":
       // we can't reveal until the download is complete, because we have not given
       // the file its final name until them.
