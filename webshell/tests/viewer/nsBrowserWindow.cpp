@@ -142,25 +142,31 @@ nsBrowserWindow::FindBrowserFor(nsIWidget* aWidget, PRIntn aWhich)
         NS_IF_RELEASE(widget);
         break;
       case FIND_BACK:
-        bw->mBack->QueryInterface(kIWidgetIID, (void**) &widget);
-        if (widget == aWidget) {
-          result = bw;
+        if (bw->mBack) {
+          bw->mBack->QueryInterface(kIWidgetIID, (void**) &widget);
+          if (widget == aWidget) {
+            result = bw;
+          }
+          NS_IF_RELEASE(widget);
         }
-        NS_IF_RELEASE(widget);
         break;
       case FIND_FORWARD:
-        bw->mForward->QueryInterface(kIWidgetIID, (void**) &widget);
-        if (widget == aWidget) {
-          result = bw;
+        if (bw->mForward) {
+          bw->mForward->QueryInterface(kIWidgetIID, (void**) &widget);
+          if (widget == aWidget) {
+            result = bw;
+          }
+          NS_IF_RELEASE(widget);
         }
-        NS_IF_RELEASE(widget);
         break;
       case FIND_LOCATION:
-        bw->mLocation->QueryInterface(kIWidgetIID, (void**) &widget);
-        if (widget == aWidget) {
-          result = bw;
+        if (bw->mLocation) {
+          bw->mLocation->QueryInterface(kIWidgetIID, (void**) &widget);
+          if (widget == aWidget) {
+            result = bw;
+          }
+          NS_IF_RELEASE(widget);
         }
-        NS_IF_RELEASE(widget);
         break;
       }
     }
