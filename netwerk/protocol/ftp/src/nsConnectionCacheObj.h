@@ -46,7 +46,6 @@ public:
 
         mServerType = 0;
         mList = PR_FALSE;
-        mUseDefaultPath = PR_TRUE;
     };
     ~nsConnectionCacheObj()
     {
@@ -61,7 +60,6 @@ public:
     PRUint32         mServerType;           // what kind of server is it.
     nsCAutoString    mCwd;                  // what dir are we in
     PRBool           mList;                 // are we sending LIST or NLST
-    PRBool           mUseDefaultPath;       // do we need to use the default path.
 };
 
 #endif // __nsconnectioncacheobj__h____

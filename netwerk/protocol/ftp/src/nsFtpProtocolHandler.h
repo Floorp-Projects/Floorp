@@ -24,6 +24,7 @@
 #include "nsVoidArray.h"
 #include "nsIConnectionCache.h"
 #include "nsConnectionCacheObj.h"
+#include "nsIThreadPool.h"
 
 // {25029490-F132-11d2-9588-00805F369F95}
 #define NS_FTPPROTOCOLHANDLER_CID \
@@ -52,6 +53,10 @@ public:
 protected:
     nsISupports*        mEventSinkGetter;
     nsHashtable*        mRootConnectionList;    // hash of FTP connections
+    nsCOMPtr<nsIThreadPool> mPool;                  // thread pool for FTP connections
 };
+
+#define NS_FTP_CONNECTION_COUNT  6
+#define NS_FTP_CONNECTION_STACK_SIZE (64 * 1024)
 
 #endif /* nsFtpProtocolHandler_h___ */

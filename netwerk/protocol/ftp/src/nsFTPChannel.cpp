@@ -61,12 +61,34 @@ nsFTPChannel::nsFTPChannel() {
 nsFTPChannel::~nsFTPChannel() {
 }
 
-NS_IMPL_ISUPPORTS4(nsFTPChannel, nsIChannel, nsIFTPChannel, nsIStreamListener, nsIStreamObserver);
+NS_IMETHODIMP_(nsrefcnt) nsFTPChannel::AddRef(void)
+{                                                            
+  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");  
+  ++mRefCnt;                                                 
+  NS_LOG_ADDREF(this, mRefCnt, "nsFTPChannel", sizeof(*this));      
+  return mRefCnt;                                            
+}
+                          
+NS_IMETHODIMP_(nsrefcnt) nsFTPChannel::Release(void)               
+{                                                            
+  NS_PRECONDITION(0 != mRefCnt, "dup release");              
+  --mRefCnt;                                                 
+  NS_LOG_RELEASE(this, mRefCnt, "nsFTPChannel");                    
+  if (mRefCnt == 0) {                                        
+    mRefCnt = 1; /* stabilize */                             
+    NS_DELETEXPCOM(this);                                    
+    return 0;                                                
+  }                                                          
+  return mRefCnt;                                            
+}
+NS_IMPL_QUERY_INTERFACE4(nsFTPChannel, nsIChannel, nsIFTPChannel, nsIStreamListener, nsIStreamObserver);
+
+//NS_IMPL_ISUPPORTS4(nsFTPChannel, nsIChannel, nsIFTPChannel, nsIStreamListener, nsIStreamObserver);
 
 nsresult
 nsFTPChannel::Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
                    nsIEventSinkGetter* getter, nsIURI* originalURI,
-                   nsIProtocolHandler* aHandler)
+                   nsIProtocolHandler* aHandler, nsIThreadPool* aPool)
 {
     nsresult rv;
 
@@ -75,13 +97,19 @@ nsFTPChannel::Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
 
     mHandler = aHandler;
 
+    NS_ASSERTION(aPool, "FTP channel needs a thread pool to play in");
+    if (!aPool) return NS_ERROR_NULL_POINTER;
+    mPool = aPool;
+
     mOriginalURI = originalURI ? originalURI : uri;
     mURL = uri;
 
     mLoadGroup = aGroup;
 
-    if (getter) {
-        rv = getter->GetEventSink(verb, NS_GET_IID(nsIProgressEventSink), 
+    mEventSinkGetter = getter;
+
+    if (mEventSinkGetter) {
+        rv = mEventSinkGetter->GetEventSink(verb, NS_GET_IID(nsIProgressEventSink), 
                                   (nsISupports**)(nsIProgressEventSink**)getter_AddRefs(mEventSink));
         if (NS_FAILED(rv)) {
             PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::Init() (couldn't find event sink)\n"));
@@ -95,28 +123,6 @@ nsFTPChannel::Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
     // protocol is interpreted on the FTP thread.
     rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), getter_AddRefs(mEventQueue));
     if (NS_FAILED(rv)) return rv;
-
-    // go ahead and create the thread for the connection.
-    // we'll init it and kick it off later
-    rv = NS_NewThread(getter_AddRefs(mConnectionThread));
-    if (NS_FAILED(rv)) return rv;
-
-    // we'll create the FTP connection's event queue here, on this thread.
-    // it will be passed to the FTP connection upon FTP connection 
-    // initialization. at that point it's up to the FTP conn thread to
-    // turn the crank on it.
-#if 1
-    PRThread *thread; // does not need deleting
-    rv = mConnectionThread->GetPRThread(&thread);
-    if (NS_FAILED(rv)) return rv;
-
-    PLEventQueue* PLEventQ = PL_CreateEventQueue("FTP thread", thread);
-    if (!PLEventQ) return rv;
-
-    rv = eventQService->CreateFromPLEventQueue(PLEventQ, getter_AddRefs(mConnectionEventQueue));
-#else
-    rv = eventQService->CreateFromIThread(mConnectionThread, getter_AddRefs(mConnectionEventQueue));
-#endif
 
     return rv;
 }
@@ -152,8 +158,8 @@ NS_IMETHODIMP
 nsFTPChannel::Cancel(void)
 {
     nsresult rv = NS_OK;
-    if (mThreadRequest)
-        rv = mThreadRequest->Cancel();
+    if (mProxiedThreadRequest)
+        rv = mProxiedThreadRequest->Cancel();
     return rv;
 }
 
@@ -161,8 +167,8 @@ NS_IMETHODIMP
 nsFTPChannel::Suspend(void)
 {
     nsresult rv = NS_OK;
-    if (mThreadRequest)
-        rv = mThreadRequest->Suspend();
+    if (mProxiedThreadRequest)
+        rv = mProxiedThreadRequest->Suspend();
     return rv;
 }
 
@@ -170,8 +176,8 @@ NS_IMETHODIMP
 nsFTPChannel::Resume(void)
 {
     nsresult rv = NS_OK;
-    if (mThreadRequest)
-        rv = mThreadRequest->Resume();
+    if (mProxiedThreadRequest)
+        rv = mProxiedThreadRequest->Resume();
     return rv;
 }
 
@@ -200,40 +206,6 @@ NS_IMETHODIMP
 nsFTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
                               nsIInputStream **_retval)
 {
-#if 0
-    // The ftp channel will act as the listener which will receive
-    // events from the ftp connection thread. It then uses a syncstreamlistener
-    // as it's mListener which receives the listener notifications and writes
-    // data down the output stream end of a pipe.
-    nsresult rv;
-
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::OpenInputStream() called\n"));
-
-    rv = serv->NewSyncStreamListener(_retval /* nsIInputStream **inStream */, 
-                                     &mBufferOutputStream /* nsIBufferOutputStream **outStream */,
-                                     &mListener/* nsIStreamListener **listener */);
-    if (NS_FAILED(rv)) return rv;
-
-    mSourceOffset = startPosition;
-    mAmount = readCount;
-
-    ////////////////////////////////
-    //// setup the channel thread
-
-    nsIThread* workerThread = nsnull;
-    nsFtpConnectionThread* protocolInterpreter = 
-        new nsFtpConnectionThread(mEventQueue, this, this, nsnull);
-    if (!protocolInterpreter)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    protocolInterpreter->Init(mURL);
-    protocolInterpreter->SetUsePasv(PR_TRUE);
-
-    rv = NS_NewThread(&workerThread, protocolInterpreter);
-    if (NS_FAILED(rv)) return rv;
-
-    return NS_OK;
-#endif // 0
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -258,17 +230,24 @@ nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::AsyncRead() called\n"));
 
+    if (mEventSink) {
+        nsAutoString statusMsg("Beginning FTP transaction.");
+#ifndef BUG_16273_FIXED //TODO
+        rv = mEventSink->OnStatus(this, ctxt, statusMsg.ToNewUnicode());
+#else
+        rv = mEventSink->OnStatus(this, ctxt, statusMsg.GetUnicode());
+#endif
+        if (NS_FAILED(rv)) return rv;
+    }
+
     ///////////////////////////
     //// setup channel state
 
     // XXX we should be using these. esp. for FTP restart.
     mSourceOffset = startPosition;
     mAmount = readCount;
-
     mContext = ctxt;
-
     mListener = listener;
-
     mSourceOffset = startPosition;
     mAmount = readCount;
 
@@ -279,39 +258,19 @@ nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     if (!protocolInterpreter) return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(protocolInterpreter);
 
-    rv = protocolInterpreter->Init(mConnectionEventQueue,   /* FTP thread queue */
-                                   mURL,                    /* url to load */
+    mThreadRequest = do_QueryInterface((nsISupports*)(nsIRequest*)protocolInterpreter, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = protocolInterpreter->Init(mURL,                    /* url to load */
                                    mEventQueue,             /* event queue for this thread */
                                    mHandler,
-                                   this, ctxt);
+                                   this, ctxt, mEventSinkGetter);
+    mHandler = 0; // XXX this can go away when the channel is no longer being leaked.
     if (NS_FAILED(rv)) return rv;
 
-    // create the proxy object so we can call into the FTP thread.
-    NS_WITH_SERVICE(nsIProxyObjectManager, proxyManager, kProxyObjectManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    rv = mPool->DispatchRequest((nsIRunnable*)protocolInterpreter);
 
-    rv = proxyManager->GetProxyObject(mConnectionEventQueue,
-                                      NS_GET_IID(nsIRequest),
-                                      (nsISupports*)(nsIRequest*)protocolInterpreter,
-                                      PROXY_SYNC | PROXY_ALWAYS,
-                                      getter_AddRefs(mThreadRequest));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = mConnectionThread->Init((nsIRunnable*)protocolInterpreter,
-                                 0, /* stack size */
-                                 PR_PRIORITY_NORMAL,
-                                 PR_GLOBAL_THREAD,
-                                 PR_UNJOINABLE_THREAD);
-
-    // this extra release is a result of a discussion with 
-    // dougt. GetProxyObject is doing an extra addref. dougt
-    // can best explain why. If this is suddenly an *extra* 
-    // release, yank it.
-    NS_RELEASE2(protocolInterpreter, rv);
     NS_RELEASE(protocolInterpreter);
-    mConnectionThread = 0; // this is necessary because there is a circular dependency
-                           // between the FTPChannel and the connection thread.
-                           // we need to ditch our ref to the connection thread asap.
     if (NS_FAILED(rv)) return rv;
 
     mConnected = PR_TRUE;
@@ -424,20 +383,22 @@ nsFTPChannel::SetOwner(nsISupports * aOwner)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIFTPChannel methods:
-
 NS_IMETHODIMP
-nsFTPChannel::Get(void) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
+nsFTPChannel::SetConnectionQueue(nsIEventQueue *aEventQ) {
+    nsresult rv;
+    // create the proxy object so we can call into the FTP thread.
+    NS_WITH_SERVICE(nsIProxyObjectManager, proxyManager, kProxyObjectManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-NS_IMETHODIMP
-nsFTPChannel::Put(void) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
+    // change the thread request over to a proxy thread request.
+    rv = proxyManager->GetProxyObject(aEventQ,
+                                      NS_GET_IID(nsIRequest),
+                                      mThreadRequest,
+                                      PROXY_SYNC | PROXY_ALWAYS,
+                                      getter_AddRefs(mProxiedThreadRequest));
+    mThreadRequest = 0;
+    if (NS_FAILED(rv)) return rv;
 
-NS_IMETHODIMP
-nsFTPChannel::SetStreamListener(nsIStreamListener *aListener) {
-    mListener = aListener;
     return NS_OK;
 }
 
@@ -446,6 +407,7 @@ nsFTPChannel::SetStreamListener(nsIStreamListener *aListener) {
 
 NS_IMETHODIMP
 nsFTPChannel::OnStartRequest(nsIChannel* channel, nsISupports* context) {
+    //MOZ_TIMER_START(channelTime, "nsFTPChannel::OnStart(): hit.");
     nsresult rv = NS_OK;
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::OnStartRequest(channel = %x, context = %x)\n", channel, context));
     if (mListener) {
@@ -459,6 +421,15 @@ nsFTPChannel::OnStopRequest(nsIChannel* channel, nsISupports* context,
                             nsresult aStatus,
                             const PRUnichar* aMsg) {
     nsresult rv = NS_OK;
+    if (mEventSink) {
+        nsAutoString statusMsg("FTP transaction complete.");
+#ifndef BUG_16273_FIXED //TODO
+        rv = mEventSink->OnStatus(this, context, statusMsg.ToNewUnicode());
+#else
+        rv = mEventSink->OnStatus(this, context, statusMsg.GetUnicode());
+#endif
+        if (NS_FAILED(rv)) return rv;
+    }
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::OnStopRequest(channel = %x, context = %x, status = %d, msg = N/A)\n",channel, context, aStatus));
     if (mListener) {
         rv = mListener->OnStopRequest(channel, mContext, aStatus, aMsg);

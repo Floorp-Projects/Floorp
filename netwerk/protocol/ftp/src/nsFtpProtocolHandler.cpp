@@ -50,6 +50,9 @@ static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 nsFtpProtocolHandler::nsFtpProtocolHandler() {
     NS_INIT_REFCNT();
     NS_NEWXPCOM(mRootConnectionList, nsHashtable);
+    NS_NewThreadPool(getter_AddRefs(mPool), NS_FTP_CONNECTION_COUNT,
+                          NS_FTP_CONNECTION_COUNT,
+                          NS_FTP_CONNECTION_STACK_SIZE);
 }
 
 // cleans up a connection list entry
@@ -64,7 +67,30 @@ nsFtpProtocolHandler::~nsFtpProtocolHandler() {
     NS_DELETEXPCOM(mRootConnectionList);
 }
 
-NS_IMPL_ISUPPORTS2(nsFtpProtocolHandler, nsIProtocolHandler, nsIConnectionCache);
+
+NS_IMETHODIMP_(nsrefcnt) nsFtpProtocolHandler::AddRef(void)
+{                                                            
+  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");  
+  ++mRefCnt;                                                 
+  NS_LOG_ADDREF(this, mRefCnt, "nsFtpProtocolHandler", sizeof(*this));      
+  return mRefCnt;                                            
+}
+                          
+NS_IMETHODIMP_(nsrefcnt) nsFtpProtocolHandler::Release(void)               
+{                                                            
+  NS_PRECONDITION(0 != mRefCnt, "dup release");              
+  --mRefCnt;                                                 
+  NS_LOG_RELEASE(this, mRefCnt, "nsFtpProtocolHandler");                    
+  if (mRefCnt == 0) {                                        
+    mRefCnt = 1; /* stabilize */                             
+    NS_DELETEXPCOM(this);                                    
+    return 0;                                                
+  }                                                          
+  return mRefCnt;                                            
+}
+
+NS_IMPL_QUERY_INTERFACE2(nsFtpProtocolHandler, nsIProtocolHandler, nsIConnectionCache);
+//NS_IMPL_ISUPPORTS2(nsFtpProtocolHandler, nsIProtocolHandler, nsIConnectionCache);
 
 NS_METHOD
 nsFtpProtocolHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
@@ -181,7 +207,7 @@ nsFtpProtocolHandler::NewChannel(const char* verb, nsIURI* url,
     rv = nsFTPChannel::Create(nsnull, NS_GET_IID(nsIFTPChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->Init(verb, url, aGroup, eventSinkGetter, originalURI, this);
+    rv = channel->Init(verb, url, aGroup, eventSinkGetter, originalURI, this, mPool);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpProtocolHandler::NewChannel() FAILED\n"));

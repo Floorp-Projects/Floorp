@@ -23,7 +23,6 @@
 
 #include "nsIFTPChannel.h"
 #include "nsIStreamListener.h"
-#include "nsIThread.h"
 #include "nsIURI.h"
 #include "nsString2.h"
 #include "nsIEventQueue.h"
@@ -32,6 +31,8 @@
 #include "nsHashtable.h"
 #include "nsIProtocolHandler.h"
 #include "nsIProgressEventSink.h"
+#include "nsIEventSinkGetter.h"
+#include "nsIThreadPool.h"
 
 class nsIEventSinkGetter;
 class nsIProgressEventSink;
@@ -59,13 +60,14 @@ public:
     // join() it on shutdown.
     nsresult Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
                   nsIEventSinkGetter* getter, nsIURI* originalURI,
-                  nsIProtocolHandler* aHandler);
+                  nsIProtocolHandler* aHandler, nsIThreadPool* aPool);
 
 protected:
     nsCOMPtr<nsIURI>                mOriginalURI;
     nsCOMPtr<nsIURI>                mURL;
     nsCOMPtr<nsIEventQueue>         mEventQueue;
     nsCOMPtr<nsIProgressEventSink>  mEventSink;
+    nsCOMPtr<nsIEventSinkGetter>    mEventSinkGetter;
 
     PRBool                          mConnected;
     nsCOMPtr<nsIStreamListener>     mListener;
@@ -78,11 +80,11 @@ protected:
     nsAutoString                    mContentType;
     PRInt32                         mContentLength;
     nsCOMPtr<nsISupports>           mOwner;
-    nsCOMPtr<nsIThread>             mConnectionThread; // the thread for this connection.
 
-    nsCOMPtr<nsIEventQueue>         mConnectionEventQueue;
-    nsCOMPtr<nsIRequest>            mThreadRequest; // the nsIRequest proxy object.
+    nsCOMPtr<nsIRequest>            mThreadRequest;
+    nsCOMPtr<nsIRequest>            mProxiedThreadRequest;
     nsCOMPtr<nsIProtocolHandler>    mHandler;
+    nsCOMPtr<nsIThreadPool>         mPool; // the thread pool we want to use to fire off connections.
 };
 
 #define NS_FTP_SEGMENT_SIZE   (4*1024)
