@@ -85,12 +85,12 @@ class nsCookiePrefObserver : public nsIObserver
                                 mCookiesForDomainOnly_temp,         // into mCookiesPermissions.
                                 mCookiesDisabledForMailNews;        // Disable cookies in mailnews
 #else
-    PRInt32                     mCookiesLifetimeSec;                // Lifetime limit specified in seconds
     PRPackedBool                mCookiesDisabledForMailNews;        // Disable cookies in mailnews
 #endif
     PRPackedBool                mCookiesAskPermission, // Ask user permission before storing cookie
                                 mCookiesLifetimeEnabled,            // Cookie lifetime limit enabled
                                 mCookiesLifetimeCurrentSession;     // Limit cookie lifetime to current session
+    PRInt32                     mCookiesLifetimeSec;                // Lifetime limit specified in seconds
     PRBool                      mCookiesStrictDomains; // Optional pref to apply stricter domain checks
     PERMISSION_BehaviorEnum     mCookiesPermissions;   // PERMISSION_{Accept, DontAcceptForeign, DontUse, P3P}
     nsXPIDLCString              mCookiesP3PString;                  // P3P settings
