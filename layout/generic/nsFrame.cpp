@@ -752,45 +752,57 @@ nsFrame::HandleEvent(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::GetDataForTableSelection(nsIFrameSelection *aFrameSelection, nsMouseEvent *aMouseEvent, 
+nsFrame::GetDataForTableSelection(nsIFrameSelection *aFrameSelection, 
+                                  nsIPresShell *aPresShell, nsMouseEvent *aMouseEvent, 
                                   nsIContent **aParentContent, PRInt32 *aContentOffset, PRInt32 *aTarget)
 {
-  if (!aFrameSelection || !aMouseEvent || !aParentContent || !aContentOffset || !aTarget)
+  if (!aFrameSelection || !aPresShell || !aMouseEvent || !aParentContent || !aContentOffset || !aTarget)
     return NS_ERROR_NULL_POINTER;
 
   *aParentContent = nsnull;
   *aContentOffset = 0;
   *aTarget = 0;
 
-  // Test if special 'table selection' key is pressed
-  PRBool doTableSelection;
-  
+  PRInt16 displaySelection;
+  nsresult result = aPresShell->GetSelectionFlags(&displaySelection);
+  if (NS_FAILED(result))
+    return result;
+
+  PRBool selectingTableCells = PR_FALSE;
+  aFrameSelection->GetTableCellSelection(&selectingTableCells);
+
+  // DISPLAY_ALL means we're in an editor.
+  // If already in cell selection mode, 
+  //  continue selecting with mouse drag or end on mouse up,
+  //  or when using shift key to extend block of cells
+  //  (Mouse down does normal selection unless Ctrl/Cmd is pressed)
+  PRBool doTableSelection =
+     displaySelection == nsISelectionDisplay::DISPLAY_ALL && selectingTableCells &&
+     (aMouseEvent->message == NS_MOUSE_MOVE ||
+      aMouseEvent->message == NS_MOUSE_LEFT_BUTTON_UP || 
+      aMouseEvent->isShift);
+
+  if (!doTableSelection)
+  {  
+    // In Browser, special 'table selection' key must be pressed for table selection
+    // or when just Shift is pressed and we're already in table/cell selection mode
 #if defined(XP_MAC) || defined(XP_MACOSX)
-  doTableSelection = aMouseEvent->isMeta;
+    doTableSelection = aMouseEvent->isMeta || (aMouseEvent->isShift && selectingTableCells);
 #else
-  doTableSelection = aMouseEvent->isControl;
+    doTableSelection = aMouseEvent->isControl || (aMouseEvent->isShift && selectingTableCells);
 #endif
-
-  if (!doTableSelection) 
-  {
-    // We allow table selection when just Shift is pressed
-    //  only if already in table/cell selection mode
-    if (aMouseEvent->isShift)
-      aFrameSelection->GetTableCellSelection(&doTableSelection);
-
-    if (!doTableSelection) 
-      return NS_OK;
   }
+  if (!doTableSelection) 
+    return NS_OK;
 
   // Get the cell frame or table frame (or parent) of the current content node
   nsIFrame *frame = this;
-  nsresult result = NS_OK;
   PRBool foundCell = PR_FALSE;
   PRBool foundTable = PR_FALSE;
 
   // Get the limiting node to stop parent frame search
   nsCOMPtr<nsIContent> limiter;
-  aFrameSelection->GetLimiter(getter_AddRefs(limiter));
+  result = aFrameSelection->GetLimiter(getter_AddRefs(limiter));
 
   //We don't initiate row/col selection from here now,
   //  but we may in future
@@ -1127,7 +1139,7 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   nsCOMPtr<nsIContent>parentContent;
   PRInt32  contentOffset;
   PRInt32 target;
-  rv = GetDataForTableSelection(frameselection, me, getter_AddRefs(parentContent), &contentOffset, &target);
+  rv = GetDataForTableSelection(frameselection, shell, me, getter_AddRefs(parentContent), &contentOffset, &target);
   if (NS_SUCCEEDED(rv) && parentContent)
   {
     rv = frameselection->SetMouseDownState( PR_TRUE );
@@ -1390,7 +1402,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext* aPresContext,
       PRInt32 contentOffset;
       PRInt32 target;
       nsMouseEvent *me = (nsMouseEvent *)aEvent;
-      result = GetDataForTableSelection(frameselection, me, getter_AddRefs(parentContent), &contentOffset, &target);
+      result = GetDataForTableSelection(frameselection, presShell, me, getter_AddRefs(parentContent), &contentOffset, &target);
       if (NS_SUCCEEDED(result) && parentContent)
         frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
       else
@@ -1498,7 +1510,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext* aPresContext,
         nsCOMPtr<nsIContent>parentContent;
         PRInt32  contentOffset;
         PRInt32 target;
-        result = GetDataForTableSelection(frameselection, me, getter_AddRefs(parentContent), &contentOffset, &target);
+        result = GetDataForTableSelection(frameselection, presShell, me, getter_AddRefs(parentContent), &contentOffset, &target);
 
         if (NS_SUCCEEDED(result) && parentContent)
         {
