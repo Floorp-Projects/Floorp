@@ -27,9 +27,6 @@ Contributor(s):
 <?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?>
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorReplace.dtd">
 
 <dialog id="replaceDlg" title="&replaceDialog.title;"

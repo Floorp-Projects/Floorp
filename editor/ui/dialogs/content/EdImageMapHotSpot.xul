@@ -24,7 +24,6 @@
   -->
 <?xml-stylesheet href="chrome://editor/skin/" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorImageMapHotSpot.dtd">
@@ -38,8 +37,6 @@
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js"/>
-
   <script type="application/x-javascript" src="chrome://editor/content/EdImageMapHotSpot.js"/>
 
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
