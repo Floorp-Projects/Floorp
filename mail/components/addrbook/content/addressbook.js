@@ -149,8 +149,6 @@ function delayedOnLoadAddressBook()
 
   InitCommonJS();
 
-  UpgradeAddressBookResultsPaneUI("mailnews.ui.addressbook_results.version");
-
   GetCurrentPrefs();
 
   AddPrefObservers();

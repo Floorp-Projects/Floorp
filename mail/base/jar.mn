@@ -15,6 +15,7 @@ messenger.jar:
 *+  content/messenger/widgetglue.js                 (content/widgetglue.js)
 *+  content/messenger/SearchDialog.xul              (content/SearchDialog.xul)
 *+  content/messenger/ABSearchDialog.xul            (content/ABSearchDialog.xul)
+*+  content/messenger/ABSearchDialog.js             (content/ABSearchDialog.js)
 *+  content/messenger/subscribe.xul                 (content/subscribe.xul)
 *+  content/messenger/aboutDialog.xul               (content/aboutDialog.xul)
 *+  content/messenger/junkMail.xul                  (content/junkMail.xul)

@@ -121,9 +121,7 @@ function LoadPreviouslySelectedAB()
 
 function AbPanelLoad() 
 {
-  InitCommonJS(); 
-
-  UpgradeAddressBookResultsPaneUI("mailnews.ui.addressbook_panel_results.version");
+  InitCommonJS();
 
   LoadPreviouslySelectedAB();
 

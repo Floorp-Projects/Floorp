@@ -844,7 +844,6 @@ function AddToSession()
 function InitPanes()
 {
     OnLoadFolderPane();
-    OnLoadThreadPane();
     SetupCommandUpdateHandlers();
 }
 
@@ -870,28 +869,8 @@ function OnFolderUnreadColAttrModified(event)
     }
 }
 
-// builds prior to 8-14-2001 did not have the unread and total columns
-// in the folder pane.  so if a user ran an old build, and then
-// upgraded, they get the new columns, and this causes problems
-// because it looks like all the folder names are gone (see bug #96979)
-// to work around this, we hide those columns once, using the 
-// "mail.ui.folderpane.version" pref.
-function UpgradeFolderPaneUI()
-{
-  var folderPaneUIVersion = pref.getIntPref("mail.ui.folderpane.version");
-
-  if (folderPaneUIVersion == 1) {
-    pref.setIntPref("mail.ui.folderpane.version", 2);
-  } // we fall through to the == 2 case so we'll upgrade v 1 profiles correctly
-  if (folderPaneUIVersion <= 2) {
-    pref.setIntPref("mail.ui.folderpane.version", 3);
-  }
-}
-
 function OnLoadFolderPane()
 {
-    UpgradeFolderPaneUI();
-
     //Add folderDataSource and accountManagerDataSource to folderPane
     accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
     folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
@@ -906,48 +885,6 @@ function OnLoadFolderPane()
     folderTreeBuilder.addObserver(folderObserver);
     folderTree.addEventListener("click",FolderPaneOnClick,true);
     folderTree.addEventListener("mousedown",TreeOnMouseDown,true);
-}
-
-// builds prior to 12-08-2001 did not have the labels column
-// in the thread pane.  so if a user ran an old build, and then
-// upgraded, they get the new column, and this causes problems.
-// We're trying to avoid a similar problem to bug #96979.
-// to work around this, we hide the column once, using the 
-// "mailnews.ui.threadpane.version" pref.
-function UpgradeThreadPaneUI()
-{
-  var labelCol;
-  var threadPaneUIVersion;
-
-  try {
-    threadPaneUIVersion = pref.getIntPref("mailnews.ui.threadpane.version");
-    if (threadPaneUIVersion < 3) {
-      var subjectCol = document.getElementById("subjectCol");
-      var junkCol = document.getElementById("junkStatusCol");
-      var threadTree = document.getElementById("threadTree");
-      
-      var beforeCol = subjectCol.boxObject.nextSibling.boxObject.nextSibling;
-      if (beforeCol)
-        threadTree._reorderColumn(junkCol, beforeCol, true);
-      else // subjectCol was the last column, put it after
-        threadTree._reorderColumn(junkCol, subjectCol, false);
-
-      if (threadPaneUIVersion == 1) {
-        labelCol = document.getElementById("labelCol");
-        labelCol.setAttribute("hidden", "true");
-      }
-
-      pref.setIntPref("mailnews.ui.threadpane.version", 3);
-    }    
-	}
-  catch (ex) {
-    dump("UpgradeThreadPane: ex = " + ex + "\n");
-  }
-}
-
-function OnLoadThreadPane()
-{
-    UpgradeThreadPaneUI();
 }
 
 function GetFolderDatasource()

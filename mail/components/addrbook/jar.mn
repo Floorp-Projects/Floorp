@@ -8,6 +8,7 @@ messenger.jar:
 *+  content/messenger/addressbook/abCardViewOverlay.js          (content/abCardViewOverlay.js)
 *+  content/messenger/addressbook/addressbook.js                (content/addressbook.js)
 *+  content/messenger/addressbook/addressbook.xul               (content/addressbook.xul)
+*+  content/messenger/addressbook/abCommon.js                   (content/abCommon.js)
 *+  content/messenger/addressbook/abCardOverlay.js              (content/abCardOverlay.js)
 +   content/messenger/addressbook/abAddressBookNameDialog.js    (content/abAddressBookNameDialog.js)
 *+  content/messenger/addressbook/abAddressBookNameDialog.xul   (content/abAddressBookNameDialog.xul)
