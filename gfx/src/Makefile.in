@@ -77,16 +77,21 @@ CPPSRCS		= \
 		nsGraphicsImpl.cpp \
 		$(NULL)
 
+SHARED_LIBRARY_LIBS = \
+		$(DIST)/lib/libimg_s.a \
+		$(DIST)/lib/libmozutil_s.a \
+		$(NULL)
+
 EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_FORCE_ALL) \
 		$(MOZ_TIMER_LIBS) \
-		$(DIST)/lib/libimg_s.a \
-		$(DIST)/lib/libmozutil_s.a \
+		$(SHARED_LIBRARY_LIBS) \
 		$(MKSHLIB_UNFORCE_ALL) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
+$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 DEFINES		+= -D_IMPL_NS_GFX
 
