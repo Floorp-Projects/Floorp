@@ -29,7 +29,6 @@ use Data::Dumper;
 #use vars %::COOKIE;
 require "CGI.pl";
 
-print "Content-type: text/plain\n\n";
 #$::lockcount = 0;
 my $dump = new XML::Dumper;
 
@@ -335,6 +334,7 @@ if (defined $bug{'attachments'}) {
 $xml .= "</bug>\n";
 $xml .= "</bugzilla>\n";
 
+print "Content-type: text/plain\n\n";
 print $xml;
 
 #my $msg = "To: $exporter\n";
