@@ -260,11 +260,10 @@ inline nsresult NS_NewTableCaptionFrame(nsIFrame** aNewFrame) {
   return NS_NewAreaFrame(aNewFrame, NS_AREA_WRAP_HEIGHT);
 }
 
-// This type of AreaFrame shrink wraps, and is the document root and is a
-// margin root for margin collapsing.
+// This type of AreaFrame is the document root and is a margin root for
+// margin collapsing.
 inline nsresult NS_NewDocumentElementFrame(nsIFrame** aNewFrame) {
-  return NS_NewAreaFrame(aNewFrame, NS_BLOCK_DOCUMENT_ROOT |
-                         NS_BLOCK_MARGIN_ROOT | NS_BLOCK_SHRINK_WRAP);
+  return NS_NewAreaFrame(aNewFrame, NS_BLOCK_DOCUMENT_ROOT|NS_BLOCK_MARGIN_ROOT);
 }
 
 // This type of AreaFrame is a margin root, but does not shrink wrap

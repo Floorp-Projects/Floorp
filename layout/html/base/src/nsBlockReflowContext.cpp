@@ -388,8 +388,8 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
     y = mSpace.y;
 
     // Empty blocks do not have anything special done to them and they
-    // always fit.
-    nsRect r(x, y, 0, 0);
+    // always fit. Note: don't force the width to 0
+    nsRect r(x, y, mMetrics.width, 0);
     mFrame->SetRect(r);
     aInFlowBounds = r;
 
