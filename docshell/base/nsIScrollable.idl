@@ -1,0 +1,70 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Travis Bogard <travis@netscape.com>
+ */
+
+#include "nsISupports.idl"
+
+/**
+ * The nsIScrollable is an interface that can be implemented by a control that
+ * supports scrolling.  This is a generic interface without concern for the 
+ * type of content that may be inside.  It simply deals blindly with scroll
+ * position as a composite of the lowest possible scroll position, the highest
+ * possible position and the current position lying somewhere between the 
+ * min and the max. 
+ */
+
+[scriptable, uuid(61792520-82C2-11d3-AF76-00A024FFC08C)]
+interface nsIScrollable : nsISupports
+{
+	/*
+	Constants declaring the two scroll orientations a scroll bar can be in.
+	vertScroll - Vertical scrolling.  When passing this in to a scroll position
+		method you are requesting or setting the positions for the vertical
+		scroll bar.
+	horizScroll - Horizontal scrolling.  When passing this in to a scroll
+		position you are requesting or setting the positions for the horizontal
+		scroll bar.
+	*/
+	const long vertScroll = 1;
+	const long horizScroll = 2;
+
+	/*
+	Retrieves or Sets the current thumb position to the curPos passed in for the
+	scrolling orientation passed in.  curPos should be between minPos and maxPos.
+
+	@return	NS_OK - Setting or Getting completed successfully.
+				NS_ERROR_INVALID_ARG - returned when curPos is not within the
+					minPos and maxPos.
+	*/
+	void getCurScrollPos(in long scrollOrientation, out long curPos);
+	void setCurScrollPos(in long scrollOrientation, in long curPos);
+
+	/*
+	Retrieves or Sets the valid ranges for the thumb.  When maxPos is set to 
+	something less than the current thumb position, curPos is set = to maxPos.
+
+	@return	NS_OK - Setting or Getting completed successfully.
+				NS_ERROR_INVALID_ARG - returned when curPos is not within the
+					minPos and maxPos.
+	*/
+	void getScrollRange(in long scrollOrientation, out long minPos, out long maxPos);
+	void setScrollRange(in long scrollOrientation, in long minPos, in long maxPos);
+};
