@@ -814,15 +814,15 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   PRBool          padded = (aPadX || aPadY);
 
   ((nsDrawingSurfaceWin *)aSurface)->GetTECHNOLOGY(&canRaster);
+  aContext.GetDeviceContext(*getter_AddRefs(theDeviceContext));
 
   // We can Progressive Double Blit if we aren't printing to a printer, and
-  // we aren't in 256 color mode, and we don't have an unoptimized 8 bit alpha.
+  // we aren't a 256 color image, and we don't have an unoptimized 8 bit alpha.
   if ((canRaster != DT_RASPRINTER) && (256 != mNumPaletteColors) &&
       !(mAlphaDepth == 8 && !mIsOptimized) && !padded)
-    if (ProgressiveDoubleBlit(aSurface, aSXOffset, aSYOffset, aDestRect))
+    if (ProgressiveDoubleBlit(theDeviceContext, aSurface,
+                              aSXOffset, aSYOffset, aDestRect))
       return NS_OK;
-
-  aContext.GetDeviceContext(*getter_AddRefs(theDeviceContext));
   theDeviceContext->GetCanonicalPixelScale(scale);
 
   destScaledWidth  = PR_MAX(PRInt32(mBHead->biWidth*scale), 1);
@@ -977,7 +977,8 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
  *  See documentation in nsImageWin.h
  */
 PRBool
-nsImageWin::ProgressiveDoubleBlit(nsDrawingSurface aSurface,
+nsImageWin::ProgressiveDoubleBlit(nsIDeviceContext *aContext,
+                                  nsDrawingSurface aSurface,
                                   PRInt32 aSXOffset, PRInt32 aSYOffset,
                                   nsRect aDestRect)
 {
@@ -1008,6 +1009,14 @@ nsImageWin::ProgressiveDoubleBlit(nsDrawingSurface aSurface,
   if (!imgDC) {
     ((nsDrawingSurfaceWin *)aSurface)->ReleaseDC();
     return PR_FALSE;
+  }
+  
+  nsPaletteInfo palInfo;
+  aContext->GetPaletteInfo(palInfo);
+  if (palInfo.isPaletteDevice && palInfo.palette) {
+    ::SetStretchBltMode(imgDC, HALFTONE);
+    ::SelectPalette(imgDC, (HPALETTE)palInfo.palette, TRUE);
+    ::RealizePalette(imgDC);
   }
 
   // Create a maskDC, and fill it with mAlphaBits
