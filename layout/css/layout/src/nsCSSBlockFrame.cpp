@@ -1952,6 +1952,9 @@ nsCSSBlockFrame::FrameInsertedReflow(nsCSSBlockReflowState& aState)
 nsresult
 nsCSSBlockFrame::FrameDeletedReflow(nsCSSBlockReflowState& aState)
 {
+  if (nsnull == mLines) {
+    return NS_OK;
+  } 
   LineData* line = mLines;
   while (nsnull != line->mNext) {
     if (line->IsDirty()) {
