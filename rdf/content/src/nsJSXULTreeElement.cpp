@@ -298,10 +298,10 @@ XULTreeElementSelectCell(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
 
 //
-// Native method ClearSelection
+// Native method ClearItemSelection
 //
 PR_STATIC_CALLBACK(JSBool)
-XULTreeElementClearSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+XULTreeElementClearItemSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULTreeElement *nativeThis = (nsIDOMXULTreeElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
@@ -314,7 +314,7 @@ XULTreeElementClearSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.clearselection", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.clearitemselection", &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -329,7 +329,50 @@ XULTreeElementClearSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 
   {
 
-    if (NS_OK != nativeThis->ClearSelection()) {
+    if (NS_OK != nativeThis->ClearItemSelection()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method ClearCellSelection
+//
+PR_STATIC_CALLBACK(JSBool)
+XULTreeElementClearCellSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMXULTreeElement *nativeThis = (nsIDOMXULTreeElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.clearcellselection", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+
+    if (NS_OK != nativeThis->ClearCellSelection()) {
       return JS_FALSE;
     }
 
@@ -926,7 +969,8 @@ static JSFunctionSpec XULTreeElementMethods[] =
 {
   {"selectItem",          XULTreeElementSelectItem,     1},
   {"selectCell",          XULTreeElementSelectCell,     1},
-  {"clearSelection",          XULTreeElementClearSelection,     0},
+  {"clearItemSelection",          XULTreeElementClearItemSelection,     0},
+  {"clearCellSelection",          XULTreeElementClearCellSelection,     0},
   {"addItemToSelection",          XULTreeElementAddItemToSelection,     1},
   {"removeItemFromSelection",          XULTreeElementRemoveItemFromSelection,     1},
   {"addCellToSelection",          XULTreeElementAddCellToSelection,     1},

@@ -44,7 +44,9 @@ public:
 
   NS_IMETHOD    SelectCell(nsIDOMXULElement* aTreeCell)=0;
 
-  NS_IMETHOD    ClearSelection()=0;
+  NS_IMETHOD    ClearItemSelection()=0;
+
+  NS_IMETHOD    ClearCellSelection()=0;
 
   NS_IMETHOD    AddItemToSelection(nsIDOMXULElement* aTreeItem)=0;
 
@@ -73,7 +75,8 @@ public:
   NS_IMETHOD    GetSelectedCells(nsIDOMNodeList** aSelectedCells);  \
   NS_IMETHOD    SelectItem(nsIDOMXULElement* aTreeItem);  \
   NS_IMETHOD    SelectCell(nsIDOMXULElement* aTreeCell);  \
-  NS_IMETHOD    ClearSelection();  \
+  NS_IMETHOD    ClearItemSelection();  \
+  NS_IMETHOD    ClearCellSelection();  \
   NS_IMETHOD    AddItemToSelection(nsIDOMXULElement* aTreeItem);  \
   NS_IMETHOD    RemoveItemFromSelection(nsIDOMXULElement* aTreeItem);  \
   NS_IMETHOD    AddCellToSelection(nsIDOMXULElement* aTreeCell);  \
@@ -92,7 +95,8 @@ public:
   NS_IMETHOD    GetSelectedCells(nsIDOMNodeList** aSelectedCells) { return _to GetSelectedCells(aSelectedCells); } \
   NS_IMETHOD    SelectItem(nsIDOMXULElement* aTreeItem) { return _to SelectItem(aTreeItem); }  \
   NS_IMETHOD    SelectCell(nsIDOMXULElement* aTreeCell) { return _to SelectCell(aTreeCell); }  \
-  NS_IMETHOD    ClearSelection() { return _to ClearSelection(); }  \
+  NS_IMETHOD    ClearItemSelection() { return _to ClearItemSelection(); }  \
+  NS_IMETHOD    ClearCellSelection() { return _to ClearCellSelection(); }  \
   NS_IMETHOD    AddItemToSelection(nsIDOMXULElement* aTreeItem) { return _to AddItemToSelection(aTreeItem); }  \
   NS_IMETHOD    RemoveItemFromSelection(nsIDOMXULElement* aTreeItem) { return _to RemoveItemFromSelection(aTreeItem); }  \
   NS_IMETHOD    AddCellToSelection(nsIDOMXULElement* aTreeCell) { return _to AddCellToSelection(aTreeCell); }  \
