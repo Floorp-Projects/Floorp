@@ -33,7 +33,7 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsGfxXlibModule
 
-REQUIRES	= xpcom string xlibrgb widget dom layout appshell js necko pref util view uconv locale unicharutil gfx2 mozcomps windowwatcher
+REQUIRES	= xpcom string xlibrgb widget dom layout appshell js necko pref util view uconv locale unicharutil gfx2 mozcomps windowwatcher intl
 
 CPPSRCS		= \
 		nsDeviceContextSpecFactoryX.cpp \
@@ -86,6 +86,7 @@ endif
 ifdef MOZ_ENABLE_XPRINT
 DEFINES         += -DUSE_XPRINT
 INCLUDES	+= -I$(srcdir)/../xprint
+EXTRA_DSO_LDOPTS += $(MOZ_XPRINT_LDFLAGS)
 endif
 
 INCLUDES	+= \
