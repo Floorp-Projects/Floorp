@@ -869,6 +869,22 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
   if ((PRInt32) window->width <= 0 || (PRInt32) window->height <= 0)
     return NS_OK;
 
+  // We need to test if this is an xembed window before doing checks
+  // below, as they might be used on the first pass or on later passes
+  // when we resize the plugin window.
+  GdkWindow *win = gdk_window_lookup((XID)window->window);
+  if (!win)
+    return NS_ERROR_FAILURE;
+
+  gpointer user_data = nsnull;
+  gdk_window_get_user_data(win, &user_data);
+  if (user_data) {
+    GtkWidget* widget = GTK_WIDGET(user_data);
+
+    if (GTK_IS_SOCKET(widget))
+      isXembed = PR_TRUE;
+  }
+
   // Allocate and fill out the ws_info data
   if (!window->ws_info) {
 #ifdef NS_DEBUG
@@ -883,17 +899,6 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 
     ws = (NPSetWindowCallbackStruct *)window->ws_info;
 
-    GdkWindow *win = gdk_window_lookup((XID)window->window);
-    if (!win)
-      return NS_ERROR_FAILURE;
-    gpointer user_data = nsnull;
-    gdk_window_get_user_data(win, &user_data);
-    if (user_data) {
-      GtkWidget* widget = GTK_WIDGET(user_data);
-      if (GTK_IS_SOCKET(widget)) {
-	isXembed = PR_TRUE;
-      }
-    }
     if (!isXembed)
     {  
 #ifdef NS_DEBUG      
