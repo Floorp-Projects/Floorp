@@ -156,3 +156,10 @@ ifeq ($(OS_ARCH),WINNT)
 else
 	$(INSTALL) $^ .
 endif
+
+ifdef USE_PREBINDING
+libs::
+	$(INSTALL) $(srcdir)/redo-prebinding.sh $(DIST)/bin
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(DESTDIR)$(bindir)
+endif

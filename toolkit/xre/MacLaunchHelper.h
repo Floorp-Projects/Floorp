@@ -42,6 +42,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+  void UpdatePrebinding();
   void LaunchChildMac(int aArgc, char** aArgv);
 #ifdef __cplusplus
 }
