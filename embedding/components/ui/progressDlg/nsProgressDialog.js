@@ -84,7 +84,7 @@ nsProgressDialog.prototype = {
 
     // Chrome-related constants.
     dialogChrome:   "chrome://global/content/nsProgressDialog.xul",
-    dialogFeatures: "chrome,titlebar,minimizable=yes",
+    dialogFeatures: "chrome,titlebar,minimizable=yes,dialog=no",
 
     // getters/setters
     get saving()            { return this.MIMEInfo == null ||
