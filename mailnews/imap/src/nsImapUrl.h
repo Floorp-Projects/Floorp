@@ -78,6 +78,9 @@ public:
 	NS_IMETHOD	SetAllowContentChange(PRBool allowContentChange);
 	NS_IMETHOD  GetAllowContentChange(PRBool *results);
 
+    NS_IMETHOD SetCopyState(void* copyState);
+    NS_IMETHOD GetCopyState(void** copyState);
+
 	// nsImapUrl
 	nsImapUrl();
 	virtual ~nsImapUrl();
@@ -125,6 +128,9 @@ protected:
     nsCOMPtr<nsIImapMiscellaneousSink> m_imapMiscellaneousSink;
 
 	nsCOMPtr<nsIMsgIncomingServer>  m_server;
+  
+    // online message copy support; i don't have a better solution yet
+    void* m_copyState;
 };
 
 #endif /* nsImapUrl_h___ */

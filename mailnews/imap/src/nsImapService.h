@@ -135,7 +135,8 @@ public:
                                  PRBool idsAreUids,
                                  PRBool isMove,
                                  nsIUrlListener* aUrlListener,
-                                 nsIURI** aURL);
+                                 nsIURI** aURL,
+                                 void* copyState);
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End support of nsIImapService interface 
 	////////////////////////////////////////////////////////////////////////////////////////

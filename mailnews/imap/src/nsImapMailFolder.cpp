@@ -978,39 +978,44 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
     }
     if(NS_SUCCEEDED(rv) && trashFolder)
     {
+        nsCOMPtr<nsIMsgFolder> srcFolder;
+        nsCOMPtr<nsISupports>srcSupport;
         PRUint32 count = 0;
         rv = messages->Count(&count);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+        
+        rv = QueryInterface(nsIMsgFolder::GetIID(),
+                            getter_AddRefs(srcFolder));
+        if (NS_SUCCEEDED(rv))
+            srcSupport = do_QueryInterface(srcFolder, &rv);
+
         nsString2 messageIds("", eOneByte);
         nsMsgKeyArray srcKeyArray;
         rv = BuildIdsAndKeyArray(messages, messageIds, srcKeyArray);
         if (NS_FAILED(rv)) return rv;
+        rv = InitCopyState(srcSupport, messages, PR_TRUE);
         NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
         if (NS_SUCCEEDED(rv) && imapService)
             rv = imapService->OnlineMessageCopy(m_eventQueue,
                                                 this, messageIds.GetBuffer(),
                                                 trashFolder, PR_TRUE, PR_TRUE,
-                                                this, nsnull);
+                                                this, nsnull,
+                                                (void*)m_copyState);
         if (NS_SUCCEEDED(rv))
         {
             nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn(
                 this, &srcKeyArray, messageIds.GetBuffer(), trashFolder,
                 PR_TRUE, PR_TRUE, m_eventQueue, this);
-            m_pendingUndoTxn = null_nsCOMPtr();
+
             if (undoMsgTxn)
-                m_pendingUndoTxn = do_QueryInterface(undoMsgTxn, &rv);
-            if (m_pendingUndoTxn)
+                m_copyState->undoMsgTxn = do_QueryInterface(undoMsgTxn, &rv);
+            if (undoMsgTxn)
             {
                 nsString undoString = count > 1 ? "Undo Delete Messages" :
                     "Undo Delete Message";
                 nsString redoString = count > 1 ? "Redo Delete Messages" :
                     "Redo Delete Message";
-                nsCOMPtr<nsImapMoveCopyMsgTxn> msgTxn = do_QueryInterface(m_pendingUndoTxn, &rv);
-                if (NS_SUCCEEDED(rv))
-                {
-                    rv = msgTxn->SetUndoString(&undoString);
-                    rv = msgTxn->SetRedoString(&redoString);
-                }
+                rv = undoMsgTxn->SetUndoString(&undoString);
+                rv = undoMsgTxn->SetRedoString(&redoString);
             }
             if (mDatabase)
             {
@@ -2369,15 +2374,9 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                     }
                     ClearCopyState(aExitCode);
                 }
-                else if (m_pendingUndoTxn && NS_SUCCEEDED(aExitCode))
-                {
-                    if (m_transactionManager)
-                        m_transactionManager->Do(m_pendingUndoTxn);
-                }
-                m_pendingUndoTxn = null_nsCOMPtr();
                 break;
             default:
-                m_pendingUndoTxn = null_nsCOMPtr();
+                break;
             }
         }
 		// query it for a mailnews interface for now....
@@ -2449,18 +2448,16 @@ nsImapMailFolder::SetFolderAdminURL(nsIImapProtocol* aProtocol,
 NS_IMETHODIMP
 nsImapMailFolder::SetCopyResponseUid(nsIImapProtocol* aProtocol,
                                      nsMsgKeyArray* aKeyArray,
-                                     const char* msgIdString)
+                                     const char* msgIdString,
+                                     void* copyState)
 {
     nsresult rv = NS_OK;
     nsCOMPtr<nsImapMoveCopyMsgTxn> msgTxn;
 
-    if (m_copyState)
+    if (copyState)
     {
-        msgTxn = do_QueryInterface(m_copyState->undoMsgTxn, &rv);
-    }
-    else if (m_pendingUndoTxn)
-    {
-        msgTxn = do_QueryInterface(m_pendingUndoTxn, &rv);
+        nsImapMailCopyState* mailCopyState = (nsImapMailCopyState*) copyState;
+        msgTxn = do_QueryInterface(mailCopyState->undoMsgTxn, &rv);
     }
     if (msgTxn)
         msgTxn->SetCopyResponseUid(aKeyArray, msgIdString);
@@ -2733,13 +2730,13 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
         rv = imapService->OnlineMessageCopy(m_eventQueue,
                                             srcFolder, messageIds.GetBuffer(),
                                             this, PR_TRUE, isMove,
-                                            urlListener, nsnull);
+                                            urlListener, nsnull,
+                                            (void*)m_copyState);
     if (NS_SUCCEEDED(rv))
     {
         nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn(
             srcFolder, &srcKeyArray, messageIds.GetBuffer(), this,
             PR_TRUE, isMove, m_eventQueue, urlListener);
-        m_pendingUndoTxn = null_nsCOMPtr();
         m_copyState->undoMsgTxn = do_QueryInterface(undoMsgTxn, &rv);
     }
 

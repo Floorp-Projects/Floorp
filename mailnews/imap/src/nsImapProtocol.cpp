@@ -3303,7 +3303,13 @@ void nsImapProtocol::SetCopyResponseUid(nsMsgKeyArray* aKeyArray,
                                         const char *msgIdString)
 {
     if (m_imapExtensionSink)
-        m_imapExtensionSink->SetCopyResponseUid(this,aKeyArray, msgIdString);
+    {
+        void* copyState = nsnull;
+        if (m_runningUrl)
+            m_runningUrl->GetCopyState(&copyState);
+        m_imapExtensionSink->SetCopyResponseUid(this,aKeyArray, msgIdString,
+                                                copyState);
+    }
 }
 
 void nsImapProtocol::CommitNamespacesForHostEvent()

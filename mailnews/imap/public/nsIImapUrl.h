@@ -170,6 +170,9 @@ public:
 	NS_IMETHOD	SetAllowContentChange(PRBool allowContentChange) = 0;
 	NS_IMETHOD  GetAllowContentChange(PRBool *results) = 0;
 
+    NS_IMETHOD SetCopyState(void* copyState) = 0;
+    NS_IMETHOD GetCopyState(void** copyState) = 0;
+
 };
 
 #endif /* nsIImapUrl_h___ */

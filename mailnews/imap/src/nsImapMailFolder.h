@@ -229,7 +229,8 @@ public:
                                  FolderQueryInfo* aInfo);
     NS_IMETHOD SetCopyResponseUid(nsIImapProtocol* aProtocol,
                                   nsMsgKeyArray* keyArray,
-                                  const char* msgIdString);
+                                  const char* msgIdString,
+                                  void* copyState);
     
     // nsIImapMiscellaneousSink methods
 	NS_IMETHOD AddSearchResult(nsIImapProtocol* aProtocol, 

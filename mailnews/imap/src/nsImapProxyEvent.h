@@ -181,7 +181,8 @@ public:
                                  FolderQueryInfo* aInfo);
     NS_IMETHOD SetCopyResponseUid(nsIImapProtocol* aProtocol,
                                   nsMsgKeyArray* aKeyArray,
-                                  const char* msgIdString);
+                                  const char* msgIdString,
+                                  void* copyState);
     
     nsIImapExtensionSink* m_realImapExtensionSink;
 };
@@ -580,11 +581,13 @@ struct SetCopyResponseUidProxyEvent : nsImapExtensionSinkProxyEvent
 {
     SetCopyResponseUidProxyEvent(nsImapExtensionSinkProxy* aProxy,
                                  nsMsgKeyArray* aKeyArray, 
-                                 const char* msgIdString);
+                                 const char* msgIdString,
+                                 void* copyState);
     virtual ~SetCopyResponseUidProxyEvent();
     NS_IMETHOD HandleEvent();
     nsMsgKeyArray m_copyKeyArray;
     nsString2 m_msgIdString;
+    void* m_copyState;
 };
 
 struct nsImapMiscellaneousSinkProxyEvent : public nsImapEvent

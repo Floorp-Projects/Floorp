@@ -1010,7 +1010,8 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
                                  PRBool idsAreUids,
                                  PRBool isMove,
                                  nsIUrlListener* aUrlListener,
-                                 nsIURI** aURL)
+                                 nsIURI** aURL,
+                                 void* copyState)
 {
     NS_ASSERTION(aSrcFolder && aDstFolder && messageIds && aClientEventQueue,
                  "Fatal ... missing key parameters");
@@ -1086,6 +1087,9 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
         folderName = "";
         GetFolderName(aDstFolder, folderName);
         urlSpec.Append(folderName);
+
+        imapUrl->SetCopyState(copyState);
+
 		nsCOMPtr <nsIURI> url = do_QueryInterface(imapUrl, &rv);
 		if (NS_SUCCEEDED(rv) && url)
 			rv = url->SetSpec(urlSpec.GetBuffer());

@@ -60,6 +60,7 @@ nsImapUrl::nsImapUrl()
 	m_flags = 0;
 	m_userName = nsnull;
 	m_onlineSubDirSeparator = '/'; 
+    m_copyState = nsnull;
 }
 
 nsresult nsImapUrl::Initialize(const char * aUserName)
@@ -997,6 +998,24 @@ NS_IMETHODIMP nsImapUrl::SetAllowContentChange(PRBool allowContentChange)
 	m_allowContentChange = allowContentChange;
     NS_UNLOCK_INSTANCE();
 	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::SetCopyState(void* copyState)
+{
+    NS_LOCK_INSTANCE();
+    m_copyState = copyState;
+    NS_UNLOCK_INSTANCE();
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::GetCopyState(void** copyState)
+{
+    if (!copyState) return NS_ERROR_NULL_POINTER;
+    NS_LOCK_INSTANCE();
+    *copyState = m_copyState;
+    NS_UNLOCK_INSTANCE();
+    if (*copyState) return NS_OK;
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsImapUrl::GetAllowContentChange(PRBool *result)

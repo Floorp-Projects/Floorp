@@ -140,7 +140,8 @@ public:
                                  PRBool idsAreUids,
                                  PRBool isMove,
                                  nsIUrlListener* aUrlListener,
-                                 nsIURI** aURL) = 0;
+                                 nsIURI** aURL,
+                                 void* copyState) = 0;
 };
 
 
