@@ -49,6 +49,9 @@ public:
   static nsresult CreateNativeDataObject(nsITransferable * aTransferable, 
                                          IDataObject ** aDataObj);
 
+  static nsresult SetupNativeDataObject(nsITransferable * aTransferable, 
+                                        IDataObject * aDataObj);
+
   static nsresult GetDataFromDataObject(IDataObject     * aDataObject, 
                                         nsIWidget       * aWindow,
                                         nsITransferable * aTransferable);
