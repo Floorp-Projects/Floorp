@@ -8856,18 +8856,12 @@ CXXFLAGS=`echo \
 	$_DEFINES_CXXFLAGS \
 	$CXXFLAGS`
 
-# Clean out '-O' flags if doing a debug build.
-if test "$MOZ_DEBUG"
-then
-    CFLAGS=`  echo $CFLAGS   | sed 's/ *-O[^ ]*//g;'`
-  CXXFLAGS=`echo $CXXFLAGS | sed 's/ *-O[^ ]*//g;'`
-  LDFLAGS=`echo  $LDFLAGS  | sed 's/ *-O[^ ]*//g;'`
-  fi
+
 
 # Extract the first word of "makedepend", so it can be a program name with args.
 set dummy makedepend; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:8871: checking for $ac_word" >&5
+echo "configure:8865: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_SYSTEM_MAKEDEPEND'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
