@@ -104,7 +104,7 @@ nsFactoryEntry::~nsFactoryEntry(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// autoFree
+// autoStringFree
 ////////////////////////////////////////////////////////////////////////////////
 
 //
@@ -215,18 +215,35 @@ nsresult nsComponentManagerImpl::Init(void)
 
 nsComponentManagerImpl::~nsComponentManagerImpl()
 {
+    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Beginning destruction."));
+
+    // Release all cached factories
     if (mFactories)
         delete mFactories;
+
+    // Unload libraries
+    UnloadLibraries(NULL);
+
+    // Release Progid hash tables
     if (mProgIDs)
         delete mProgIDs;
-    if (mMon)
-        PR_DestroyMonitor(mMon);
+
+    // Release dll abstraction storage
     if (mDllStore)
         delete mDllStore;
+
 #ifdef USE_REGISTRY
+    // Release registry
     if(mRegistry)
         NS_RELEASE(mRegistry);
 #endif /* USE_REGISTRY */
+    
+    // Destroy the Lock
+    if (mMon)
+        PR_DestroyMonitor(mMon);
+
+    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Destroyed."));
+
 }
 
 NS_IMPL_ISUPPORTS(nsComponentManagerImpl, nsIComponentManager::GetIID());
@@ -694,7 +711,7 @@ nsComponentManagerImpl::PlatformCLSIDToProgID(nsCID *aClass,
 
     char* cidStr = aClass->ToString();
     nsIRegistry::Key cidKey;
-    rv = mRegistry->GetSubtreeRaw(mClassesKey,cidStr,&cidKey);
+    rv = mRegistry->GetSubtreeRaw(mCLSIDKey, cidStr, &cidKey);
     if(NS_FAILED(rv)) return rv;
     PR_FREEIF(cidStr);
 
@@ -781,7 +798,6 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         char *cidString = NULL;
         rv = node->GetName(&cidString);
         if (NS_FAILED(rv)) continue;
-        // XXX make sure the following will work
         autoStringFree delete_cidString(cidString, autoStringFree::nsCRT_String_Delete);
 
         // Get key associated with library
@@ -793,7 +809,6 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         char *library = NULL;
         rv = mRegistry->GetString(cidKey, inprocServerValueName, &library);
         if (NS_FAILED(rv)) continue;
-        // XXX wont work in this scope
         autoStringFree delete_library(library, autoStringFree::NSPR_Delete);
         nsCID aClass;
         if (!(aClass.Parse(cidString))) continue;
@@ -805,14 +820,53 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
 
         nsIDKey key(aClass);
         mFactories->Put(&key, entry);
-        //        printf("Populating cid: %s, %s\n", cidString, library);
-
     }
 
     // Finally read in PROGID -> CID mappings
-    // Naa. Only about 20 progid are always got. So prepopulating this
-    // doesn't make much sense now. If this gets higher, more close to
-    // the number of progid that exist, this would make sense.
+    nsCOMPtr<nsIEnumerator> progidEnum;
+    rv = mRegistry->EnumerateSubtrees( mClassesKey, getter_AddRefs(progidEnum));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = progidEnum->First();
+    for (; NS_SUCCEEDED(rv) && !progidEnum->IsDone(); (rv = progidEnum->Next()))
+    {
+        nsCOMPtr<nsISupports> base;
+        rv = progidEnum->CurrentItem(getter_AddRefs(base));
+        if (NS_FAILED(rv))  continue;
+
+        // Get specific interface.
+        nsIID nodeIID = NS_IREGISTRYNODE_IID;
+        nsCOMPtr<nsIRegistryNode> node;
+        rv = base->QueryInterface(nodeIID, getter_AddRefs(node));
+        if (NS_FAILED(rv)) continue;
+
+        // Get the progid string
+        char *progidString = NULL;
+        rv = node->GetName(&progidString);
+        if (NS_FAILED(rv)) continue;
+        autoStringFree delete_progidString(progidString, autoStringFree::nsCRT_String_Delete);
+
+        // Get cid string
+        nsIRegistry::Key progidKey;
+        rv = node->GetKey(&progidKey);
+        if (NS_FAILED(rv)) continue;
+        char *cidString = NULL;
+        rv = mRegistry->GetString(progidKey, classIDValueName, &cidString);
+        if (NS_FAILED(rv)) continue;
+        autoStringFree delete_cidString(cidString, autoStringFree::NSPR_Delete);
+        nsCID *aClass = new nsCID();
+        if (!aClass) continue;		// Protect against out of memory.
+        if (!(aClass->Parse(cidString)))
+        {
+            delete aClass;
+            continue;
+        }
+
+        // put the {progid, Cid} mapping into our map
+        nsStringKey key(progidString);
+        mProgIDs->Put(&key, aClass);
+        //  printf("Populating [ %s, %s ]\n", cidString, progidString);
+    }
 
     return NS_OK;
 }
@@ -1669,20 +1723,27 @@ nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
 static PRBool
 nsFreeLibraryEnum(nsHashKey *aKey, void *aData, void* closure) 
 {
-    nsFactoryEntry *entry = (nsFactoryEntry *) aData;
+    nsDll *dll = (nsDll *) aData;
     nsIServiceManager* serviceMgr = (nsIServiceManager*)closure;
     	
-    if (entry->dll && entry->dll->IsLoaded() == PR_TRUE)
+    if (dll && dll->IsLoaded() == PR_TRUE)
     {
-        nsCanUnloadProc proc = (nsCanUnloadProc) entry->dll->FindSymbol("NSCanUnload");
+        nsCanUnloadProc proc = (nsCanUnloadProc) dll->FindSymbol("NSCanUnload");
         if (proc != NULL) {
-            nsresult rv = proc(serviceMgr);
-            if (NS_FAILED(rv))
+            PRBool canUnload = proc(serviceMgr);
+            if (canUnload == PR_TRUE)
             {
                 PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-                       ("nsComponentManager: + Unloading \"%s\".", entry->dll->GetNativePath()));
-                entry->dll->Unload();
+                       ("nsComponentManager: + Unloading \"%s\".", dll->GetNativePath()));
+#if 0
+                // XXX dlls aren't counting their outstanding instances correctly
+                // XXX hence, dont unload until this gets enforced.
+                dll->Unload();
+#endif /* 0 */
             }
+            else
+                PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+                       ("nsComponentManager: + NOT Unloading \"%s\".", dll->GetNativePath()));
         }
     }
     	
@@ -1692,18 +1753,26 @@ nsFreeLibraryEnum(nsHashKey *aKey, void *aData, void* closure)
 nsresult
 nsComponentManagerImpl::FreeLibraries(void) 
 {
-    PR_EnterMonitor(mMon);
-    	
-    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-           ("nsComponentManager: Freeing Libraries."));
-
     nsIServiceManager* serviceMgr = NULL;
     nsresult rv = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
     if (NS_FAILED(rv)) return rv;
-    mFactories->Enumerate(nsFreeLibraryEnum, serviceMgr);
+    rv = UnloadLibraries(serviceMgr);
+    return rv;
+}
+
+// Private implementation of unloading libraries
+nsresult
+nsComponentManagerImpl::UnloadLibraries(nsIServiceManager *serviceMgr)
+{
+    PR_EnterMonitor(mMon);
+    	
+    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+           ("nsComponentManager: Unloading Libraries."));
+
+    mDllStore->Enumerate(nsFreeLibraryEnum, serviceMgr);
     	
     PR_ExitMonitor(mMon);
-    	
+
     return NS_OK;
 }
 
@@ -1788,7 +1857,7 @@ nsComponentManagerImpl::SyncComponentsInDir(RegistrationTime when, nsIFileSpec *
     nsCOMPtr<nsIDirectoryIterator>dirIterator;
     rv = CreateInstance(NS_DIRECTORYITERATOR_PROGID, NULL, kDirectoryIteratorIID, getter_AddRefs(dirIterator));
     if (NS_FAILED(rv)) return rv;
-    rv = dirIterator->Init(dirSpec, PR_TRUE);
+    rv = dirIterator->Init(dirSpec, PR_FALSE);
     if (NS_FAILED(rv)) return rv;
 
     // whip through the directory to register every file
