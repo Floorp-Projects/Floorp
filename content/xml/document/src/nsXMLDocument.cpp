@@ -206,7 +206,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
   }
 
   nsIWebShell* webShell;
-  nsAutoString charset("utf-8");
+  nsAutoString charset("UTF-8");
   nsCharsetSource charsetSource = kCharsetFromDocTypeDefault;
 
   nsCOMPtr<nsIURI> aUrl;
@@ -261,9 +261,24 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
   if (NS_OK == rv) {
     nsIXMLContentSink* sink;
     
-    aContainer->QueryInterface(kIWebShellIID, (void**)&webShell);
-    rv = NS_NewXMLContentSink(&sink, this, aUrl, webShell);
-    NS_IF_RELEASE(webShell);
+    rv = aContainer->QueryInterface(kIWebShellIID, (void**)&webShell);
+   
+    if(NS_SUCCEEDED(rv) && (nsnull != webShell)) {
+       if(0 == nsCRT::strcmp("view-source", aCommand)) { // only do this for view-source
+           const PRUnichar* hintCharset = nsnull;
+           nsCharsetSource  hintSource = kCharsetUninitialized;
+           rv = webShell->GetCharacterSetHint(&hintCharset, &hintSource); 
+           if(NS_SUCCEEDED(rv)) {
+              if(hintSource > charsetSource) {
+                    charset = hintCharset;
+                    charsetSource = hintSource;
+              }
+           }
+       }
+       if(NS_SUCCEEDED(rv))
+           rv = NS_NewXMLContentSink(&sink, this, aUrl, webShell);
+       NS_IF_RELEASE(webShell);
+    }
 
     if (NS_OK == rv) {      
       // Set the parser as the stream listener for the document loader...
