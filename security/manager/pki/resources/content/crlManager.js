@@ -154,19 +154,20 @@ function DeleteCrlSelected() {
     //XXXXXXXXXXXX
   }
 
-  if( !crltree.view.selection.count) {
-    if( !document.getElementById("deleteCrl").disabled ) {
-      document.getElementById("deleteCrl").disabled = true;
-      document.getElementById("editPrefs").disabled = true;
-      document.getElementById("updateCRL").disabled = true;
-    }
-  }
+  EnableCrlActions();
 }
 
 function EnableCrlActions() {
-  document.getElementById("deleteCrl").removeAttribute("disabled", "true");
-  document.getElementById("editPrefs").removeAttribute("disabled", "true");
-  document.getElementById("updateCRL").removeAttribute("disabled", "true");
+  var tree = document.getElementById("crltree");
+  if (tree.treeBoxObject.selection.count) {
+    document.getElementById("deleteCrl").removeAttribute("disabled");
+    document.getElementById("editPrefs").removeAttribute("disabled");
+    document.getElementById("updateCRL").removeAttribute("disabled");
+  } else {
+    document.getElementById("deleteCrl").setAttribute("disabled", "true");
+    document.getElementById("editPrefs").setAttribute("disabled", "true");
+    document.getElementById("updateCRL").setAttribute("disabled", "true");
+  }
 }
 
 function DeleteItemSelected(tree, prefix, kids) {
