@@ -1116,6 +1116,12 @@ NS_METHOD nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
 
   // Output the tag
   ListTag(out);
+  nsIView* view;
+  GetView(view);
+  if (nsnull != view) {
+    fprintf(out, " [view=%p]", view);
+    NS_RELEASE(view);
+  }
 
   // Output the first/last content offset
   fprintf(out, "[%d,%d,%c] ", mFirstContentOffset, mLastContentOffset,
