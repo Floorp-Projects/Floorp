@@ -46,6 +46,7 @@
 #include "nsDateTimeFormatCID.h"
 #include "nsURLHelper.h"
 #include "nsCRT.h"
+#include "nsIPlatformCharset.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS4(nsIndexedToHTML,
                               nsIDirIndexListener,
@@ -223,6 +224,15 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
             if (NS_FAILED(rv)) return rv;
             parentStr.Assign(url);
         }
+
+        // reset parser's charset to platform's default if this is file url
+        nsCOMPtr<nsIPlatformCharset> platformCharset(do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv));
+        NS_ENSURE_SUCCESS(rv, rv);
+        nsAutoString charset;
+        rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, charset);
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = mParser->SetEncoding(NS_LossyConvertUCS2toASCII(charset).get());
+        NS_ENSURE_SUCCESS(rv, rv);
     }
 
     nsString buffer;
