@@ -105,6 +105,34 @@ sub DescCC {
 }
 
 
+sub DescDependencies {
+    my ($id) = (@_);
+    if (!Param("usedependencies")) {
+        return "";
+    }
+    my $result = "";
+    my $me = "blocked";
+    my $target = "dependson";
+    my $title = "BugsThisDependsOn";
+    for (1..2) {
+        SendSQL("select $target from dependencies where $me = $id order by $target");
+        my @list;
+        while (MoreSQLData()) {
+            push(@list, FetchOneColumn());
+        }
+        if (@list) {
+            $result .= "$title: " . join(',', @list) . "\n";
+        }
+        my $tmp = $me;
+        $me = $target;
+        $target = $tmp;
+        $title = "OtherBugsDependingOnThis";
+    }
+    return $result;
+}
+
+
+
 sub GetBugText {
     my ($id) = (@_);
     undef %::bug;
@@ -171,7 +199,7 @@ AssignedTo: $::bug{'assigned_to'}
 ReportedBy: $::bug{'reporter'}               
 $qa_contact$target_milestone${status_whiteboard}URL: $::bug{'bug_file_loc'}
 " . DescCC($::bug{'cclist'}) . "Summary: $::bug{'short_desc'}
-
+" . DescDependencies($id) . "
 $::bug{'long_desc'}
 ";
 

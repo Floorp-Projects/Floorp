@@ -262,18 +262,46 @@ if ($::comma eq "") {
 my $basequery = $::query;
 my $delta_ts;
 
+
 sub SnapShotBug {
     my ($id) = (@_);
     SendSQL("select delta_ts, " . join(',', @::log_columns) .
             " from bugs where bug_id = $id");
     my @row = FetchSQLData();
     $delta_ts = shift @row;
+
     return @row;
 }
 
 
+sub SnapShotDeps {
+    my ($i, $target, $me) = (@_);
+    SendSQL("select $target from dependencies where $me = $i order by $target");
+    my @list;
+    while (MoreSQLData()) {
+        push(@list, FetchOneColumn());
+    }
+    return join(',', @list);
+}
+
+
+my $whoid = DBNameToIdAndCheck($::FORM{'who'});
+my $timestamp;
+
+sub LogDependencyActivity {
+    my ($i, $oldstr, $target, $me) = (@_);
+    my $newstr = SnapShotDeps($i, $target, $me);
+    if ($oldstr ne $newstr) {
+        SendSQL("insert into bugs_activity (bug_id,who,when,field,oldvalue,newvalue) values ($i,$whoid,$timestamp,'$target','$oldstr','$newstr')");
+        return 1;
+    }
+    return 0;
+}
+
+
 foreach my $id (@idlist) {
-    SendSQL("lock tables bugs write, bugs_activity write, cc write, profiles write");
+    my %dependencychanged;
+    SendSQL("lock tables bugs write, bugs_activity write, cc write, profiles write, dependencies write");
     my @oldvalues = SnapShotBug($id);
 
     if (defined $::FORM{'delta_ts'} && $::FORM{'delta_ts'} ne $delta_ts) {
@@ -301,16 +329,66 @@ The changes made were:
             print qq{<input type=hidden name="$i" value="$value">\n};
         }
         print qq{<input type=submit value="Submit my changes anyway">\n};
-        print " (This will cause all of the above changes to be overwritten";
+        print " This will cause all of the above changes to be overwritten";
         if ($longchanged) {
             print ", except for the changes to the description";
         }
-        print qq{.)</form>\n<li><a href="show_bug.cgi?id=$id">Throw away my changes, and go revisit bug $id</a></ul>\n};
+        print qq{.</form>\n<li><a href="show_bug.cgi?id=$id">Throw away my changes, and go revisit bug $id</a></ul>\n};
         navigation_header();
         exit;
     }
         
+    my %deps;
+    if (defined $::FORM{'dependson'}) {
+        my $me = "blocked";
+        my $target = "dependson";
+        for (1..2) {
+            $deps{$target} = [];
+            my %seen;
+            foreach my $i (split('[\s,]+', $::FORM{$target})) {
+                if ($i eq "") {
+                    next;
 
+                }
+                SendSQL("select bug_id from bugs where bug_id = " .
+                        SqlQuote($i));
+                my $comp = FetchOneColumn();
+                if ($comp ne $i) {
+                    print "<H1>$i is not a legal bug number</H1>\n";
+                    print "<p>Click <b>Back</b> and try again.\n";
+                    exit;
+                }
+                if (!exists $seen{$i}) {
+                    push(@{$deps{$target}}, $i);
+                    $seen{$i} = 1;
+                }
+            }
+            my @stack = @{$deps{$target}};
+            while (@stack) {
+                my $i = shift @stack;
+                SendSQL("select $target from dependencies where $me = $i");
+                while (MoreSQLData()) {
+                    my $t = FetchOneColumn();
+                    if ($t == $id) {
+                        print "<H1>Dependency loop detected!</H1>\n";
+                        print "The change you are making to dependencies\n";
+                        print "has caused a circular dependency chain.\n";
+                        print "<p>Click <b>Back</b> and try again.\n";
+                        exit;
+                    }
+                    if (!exists $seen{$t}) {
+                        push @stack, $t;
+                        $seen{$t} = 1;
+                    }
+                }
+            }
+                        
+
+            my $tmp = $me;
+            $me = $target;
+            $target = $tmp;
+        }
+    }
 
     my $query = "$basequery\nwhere bug_id = $id";
     
@@ -339,9 +417,65 @@ The changes made were:
         }
     }
 
+    SendSQL("select delta_ts from bugs where bug_id = $id");
+    $timestamp = FetchOneColumn();
+
+    if (defined $::FORM{'dependson'}) {
+        my $me = "blocked";
+        my $target = "dependson";
+        for (1..2) {
+            SendSQL("select $target from dependencies where $me = $id order by $target");
+            my %snapshot;
+            my @oldlist;
+            while (MoreSQLData()) {
+                push(@oldlist, FetchOneColumn());
+            }
+            my @newlist = sort {$a <=> $b} @{$deps{$target}};
+
+            while (0 < @oldlist || 0 < @newlist) {
+                if (@oldlist == 0 || (@newlist > 0 &&
+                                      $oldlist[0] > $newlist[0])) {
+                    $snapshot{$newlist[0]} = SnapShotDeps($newlist[0], $me,
+                                                          $target);
+                    shift @newlist;
+                } elsif (@newlist == 0 || (@oldlist > 0 &&
+                                           $newlist[0] > $oldlist[0])) {
+                    $snapshot{$oldlist[0]} = SnapShotDeps($oldlist[0], $me,
+                                                          $target);
+                    shift @oldlist;
+                } else {
+                    if ($oldlist[0] != $newlist[0]) {
+                        die "Error in list comparing code";
+                    }
+                    shift @oldlist;
+                    shift @newlist;
+                }
+            }
+            my @keys = keys(%snapshot);
+            if (@keys) {
+                my $oldsnap = SnapShotDeps($id, $target, $me);
+                SendSQL("delete from dependencies where $me = $id");
+                foreach my $i (@{$deps{$target}}) {
+                    SendSQL("insert into dependencies ($me, $target) values ($id, $i)");
+                }
+                foreach my $k (@keys) {
+                    if (LogDependencyActivity($k, $snapshot{$k}, $me,
+                                              $target)) {
+                        $dependencychanged{$k} = 1;
+                    }
+
+                }
+                LogDependencyActivity($id, $oldsnap, $target, $me);
+            }
+
+            my $tmp = $me;
+            $me = $target;
+            $target = $tmp;
+        }
+    }
+
+
     my @newvalues = SnapShotBug($id);
-    my $whoid;
-    my $timestamp;
     foreach my $col (@::log_columns) {
         my $old = shift @oldvalues;
         my $new = shift @newvalues;
@@ -352,14 +486,9 @@ The changes made were:
             $new = "";
         }
         if ($old ne $new) {
-            if (!defined $whoid) {
-                $whoid = DBNameToIdAndCheck($::FORM{'who'});
-                SendSQL("select delta_ts from bugs where bug_id = $id");
-                $timestamp = FetchOneColumn();
-            }
-            if ($col eq 'assigned_to') {
-                $old = DBID_to_name($old);
-                $new = DBID_to_name($new);
+            if ($col eq 'assigned_to' || $col eq 'qa_contact') {
+                $old = DBID_to_name($old) if $old != 0;
+                $new = DBID_to_name($new) if $new != 0;
             }
             $col = SqlQuote($col);
             $old = SqlQuote($old);
@@ -374,6 +503,13 @@ The changes made were:
     SendSQL("unlock tables");
     system("./processmail $id $::FORM{'who'}");
     print "<TD><A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A></TABLE>\n";
+
+    foreach my $k (keys(%dependencychanged)) {
+        print "<TABLE BORDER=1><TD><H2>Dependency changed for bug $k</H2>\n";
+        system("./processmail $k $::FORM{'who'}");
+        print "<TD><A HREF=\"show_bug.cgi?id=$k\">Go To BUG# $k</A></TABLE>\n";
+    }
+
 }
 
 if (defined $::next_bug) {

@@ -10,6 +10,12 @@ query the CVS tree.  For example,
 will tell you what has been changed in the last week.
 
 
+5/27/99 Added support for dependency information.  You must run the new
+"makedependenciestable.sh" script.  You can turn off dependencies with the new
+"usedependencies" param, but it defaults to being on.  Also, read very
+carefully the description for the new "webdotbase" param; you will almost
+certainly need to tweak it.
+
 
 5/24/99 Added "Mac System 8.6" and "Neutrino" to the list of OS's.
 Feed this to mysql:

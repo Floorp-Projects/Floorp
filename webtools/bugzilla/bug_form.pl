@@ -106,6 +106,8 @@ sub quoteUrls {
 
 my $loginok = quietly_check_login();
 
+my $id = $::FORM{'id'};
+
 my $query = "
 select
         bug_id,
@@ -129,7 +131,7 @@ select
         groupset,
 	delta_ts
 from bugs
-where bug_id = $::FORM{'id'}
+where bug_id = $id
 and bugs.groupset & $::usergroupset = bugs.groupset";
 
 SendSQL($query);
@@ -150,29 +152,29 @@ if (@row = FetchSQLData()) {
 	$count++;
     }
 } else {
-    SendSQL("select groupset from bugs where bug_id = $::FORM{'id'}");
+    SendSQL("select groupset from bugs where bug_id = $id");
     if (@row = FetchSQLData()) {
         print "<H1>Permission denied.</H1>\n";
         if ($loginok) {
             print "Sorry; you do not have the permissions necessary to see\n";
-            print "bug $::FORM{'id'}.\n";
+            print "bug $id.\n";
         } else {
-            print "Sorry; bug $::FORM{'id'} can only be viewed when logged\n";
+            print "Sorry; bug $id can only be viewed when logged\n";
             print "into an account with the appropriate permissions.  To\n";
             print "see this bug, you must first\n";
-            print "<a href=\"show_bug.cgi?id=$::FORM{'id'}&GoAheadAndLogIn=1\">";
+            print "<a href=\"show_bug.cgi?id=$id&GoAheadAndLogIn=1\">";
             print "log in</a>.";
         }
     } else {
         print "<H1>Bug not found</H1>\n";
-        print "There does not seem to be a bug numbered $::FORM{'id'}.\n";
+        print "There does not seem to be a bug numbered $id.\n";
     }
     exit;
 }
 
 $bug{'assigned_to'} = DBID_to_name($bug{'assigned_to'});
 $bug{'reporter'} = DBID_to_name($bug{'reporter'});
-$bug{'long_desc'} = GetLongDescription($::FORM{'id'});
+$bug{'long_desc'} = GetLongDescription($id);
 my $longdesclength = length($bug{'long_desc'});
 
 
@@ -193,7 +195,7 @@ my $component_popup = make_options($::components{$bug{'product'}},
 				   $bug{'component'});
 
 my $cc_element = '<INPUT NAME=cc SIZE=30 VALUE="' .
-    ShowCcList($::FORM{'id'}) . '">';
+    ShowCcList($id) . '">';
 
 
 my $URL = $bug{'bug_file_loc'};
@@ -205,12 +207,12 @@ if (defined $URL && $URL ne "none" && $URL ne "NULL" && $URL ne "") {
 }
 
 print "
-<HEAD><TITLE>Bug $::FORM{'id'} -- " . html_quote($bug{'short_desc'}) .
+<HEAD><TITLE>Bug $id -- " . html_quote($bug{'short_desc'}) .
     "</TITLE></HEAD><BODY>
 <FORM NAME=changeform METHOD=POST ACTION=\"process_bug.cgi\">
 <INPUT TYPE=HIDDEN NAME=\"delta_ts\" VALUE=\"$bug{'delta_ts'}\">
 <INPUT TYPE=HIDDEN NAME=\"longdesclength\" VALUE=\"$longdesclength\">
-<INPUT TYPE=HIDDEN NAME=\"id\" VALUE=$::FORM{'id'}>
+<INPUT TYPE=HIDDEN NAME=\"id\" VALUE=$id>
 <INPUT TYPE=HIDDEN NAME=\"was_assigned_to\" VALUE=\"$bug{'assigned_to'}\">
   <TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0><TR>
     <TD ALIGN=RIGHT><B>Bug#:</B></TD><TD><A HREF=\"show_bug.cgi?id=$bug{'bug_id'}\">$bug{'bug_id'}</A></TD>
@@ -310,22 +312,64 @@ if (Param("usestatuswhiteboard")) {
 }
 
 print "<tr><td align=right><B>Attachments:</b></td>\n";
-SendSQL("select attach_id, creation_ts, description from attachments where bug_id = $::FORM{'id'}");
+SendSQL("select attach_id, creation_ts, description from attachments where bug_id = $id");
 while (MoreSQLData()) {
-    my ($id, $date, $desc) = (FetchSQLData());
+    my ($attachid, $date, $desc) = (FetchSQLData());
     if ($date =~ /^(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/) {
         $date = "$3/$4/$2 $5:$6";
     }
-    my $link = "showattachment.cgi?attach_id=$id";
+    my $link = "showattachment.cgi?attach_id=$attachid";
     $desc = value_quote($desc);
     print qq{<td><a href="$link">$date</a></td><td colspan=4>$desc</td></tr><tr><td></td>};
-    $knownattachments{$id} = 1;
+    $knownattachments{$attachid} = 1;
 }
-print "<td colspan=6><a href=createattachment.cgi?id=$::FORM{'id'}>Create a new attachment</a> (proposed patch, testcase, etc.)</td></tr>\n";
+print "<td colspan=6><a href=createattachment.cgi?id=$id>Create a new attachment</a> (proposed patch, testcase, etc.)</td></tr></table>\n";
 
+
+sub EmitDependList {
+    my ($desc, $myfield, $targetfield) = (@_);
+    print "<th align=right>$desc:</th><td>";
+    my @list;
+    SendSQL("select dependencies.$targetfield, bugs.bug_status
+ from dependencies, bugs
+ where dependencies.$myfield = $id
+   and bugs.bug_id = dependencies.$targetfield
+ order by dependencies.$targetfield");
+    while (MoreSQLData()) {
+        my ($i, $stat) = (FetchSQLData());
+        push(@list, $i);
+        my $opened = ($stat eq "NEW" || $stat eq "ASSIGNED" ||
+                      $stat eq "REOPENED");
+        if (!$opened) {
+            print "<strike>";
+        }
+        print qq{<a href="show_bug.cgi?id=$i">$i</a>};
+        if (!$opened) {
+            print "</strike>";
+        }
+        print " ";
+    }
+    print "</td><td><input name=$targetfield value=\"" .
+        join(',', @list) . "\"></td>\n";
+}
+
+if (Param("usedependencies")) {
+    print "<table><tr>\n";
+    EmitDependList("Bugs that bug $id depends on", "blocked", "dependson");
+    print qq{
+<td rowspan=2><a href="showdependencytree.cgi?id=$id">Show dependency tree</a>
+};
+    if (Param("webdotbase") ne "") {
+        print qq{
+<br><a href="showdependencygraph.cgi?id=$id">Show dependency graph</a>
+};
+    }
+    print "</td></tr><tr>";
+    EmitDependList("Bugs depending on bug $id", "dependson", "blocked");
+    print "</tr></table>\n";
+}
 
 print "
-</TABLE>
 <br>
 <B>Additional Comments:</B>
 <BR>
@@ -410,8 +454,8 @@ print "
 <INPUT TYPE=hidden name=form_name VALUE=process_bug>
 <BR>
 <FONT size=\"+1\"><B>
- <A HREF=\"show_activity.cgi?id=$::FORM{'id'}\">View Bug Activity</A>
- <A HREF=\"long_list.cgi?buglist=$::FORM{'id'}\">Format For Printing</A>
+ <A HREF=\"show_activity.cgi?id=$id\">View Bug Activity</A>
+ <A HREF=\"long_list.cgi?buglist=$id\">Format For Printing</A>
 </B></FONT><BR>
 </FORM>
 <table><tr><td align=left><B>Description:</B></td><td width=100%>&nbsp;</td>
@@ -426,7 +470,7 @@ print "
 
 # To add back option of editing the long description, insert after the above
 # long_list.cgi line:
-#  <A HREF=\"edit_desc.cgi?id=$::FORM{'id'}\">Edit Long Description</A>
+#  <A HREF=\"edit_desc.cgi?id=$id\">Edit Long Description</A>
 
 
 navigation_header();
