@@ -48,6 +48,8 @@ function highlightCurrentProfile()
 {
   try {
     var currentProfile = profile.currentProfile;
+    if( !currentProfile )
+      return;
     var currentProfileItem = document.getElementById( ( "profileName_" + currentProfile ) );
     var profileList = document.getElementById( "profiles" );
     profileList.selectItem( currentProfileItem );
