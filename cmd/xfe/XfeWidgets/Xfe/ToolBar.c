@@ -46,7 +46,6 @@
 #define DEFAULT_MAX_CHILD_HEIGHT	0
 #define DEFAULT_MAX_CHILD_WIDTH		0
 
-#define INDICATOR_DONT_SHOW			-2
 #define INDICATOR_NAME				"Indicator"
 #define FAR_AWAY		-1000
 
@@ -352,7 +351,7 @@ static XtResource resources[] =
 		sizeof(int),
 		XtOffsetOf(XfeToolBarRec , xfe_tool_bar . indicator_position),
 		XmRImmediate, 
-		(XtPointer) INDICATOR_DONT_SHOW
+		(XtPointer) XmINDICATOR_DONT_SHOW
     },
 
 	/* Geometry resources */
@@ -701,7 +700,7 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
     if (np->indicator_position != op->indicator_position)
     {
 		/* Create the indicator if it is not already alive */
-		if (np->indicator_position != INDICATOR_DONT_SHOW)
+		if (np->indicator_position != XmINDICATOR_DONT_SHOW)
 		{
 			if (!np->indicator)
 			{
@@ -1059,7 +1058,7 @@ LayoutComponents(Widget w)
 		return;
 	}
 
-	if (index == INDICATOR_DONT_SHOW)
+	if (index == XmINDICATOR_DONT_SHOW)
 	{
 		_XfeMoveWidget(tp->indicator,FAR_AWAY,FAR_AWAY);
 		

@@ -100,6 +100,6 @@ hide_cb(Widget w,XtPointer client_data,XtPointer call_data)
 
 	printf("%s(%s)\n",__FUNCTION__,XtName(w));
 
-	XtVaSetValues(tool_bar,XmNindicatorPosition,-1,NULL);
+	XtVaSetValues(tool_bar,XmNindicatorPosition,XmINDICATOR_DONT_SHOW,NULL);
 }
 /*----------------------------------------------------------------------*/
