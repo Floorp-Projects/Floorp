@@ -1,6 +1,8 @@
-file:///s:/mozilla/layout/html/tests/table/bugs/bug5835.html
-file:///s:/mozilla/layout/html/tests/table/bugs/bug625.html
-file:///s:/mozilla/layout/html/tests/table/bugs/bug6933.html
-file:///s:/mozilla/layout/html/tests/table/bugs/bug709.html
-file:///s:/mozilla/layout/html/tests/table/bugs/bug12012.html
-file:///s:/mozilla/layout/html/tests/table/bugs/bug15933.html
+# the following are back in file_list. They were here because of some
+# javascript glitches
+#file:///s:/mozilla/layout/html/tests/table/bugs/bug5835.html
+#file:///s:/mozilla/layout/html/tests/table/bugs/bug625.html
+#file:///s:/mozilla/layout/html/tests/table/bugs/bug6933.html
+#file:///s:/mozilla/layout/html/tests/table/bugs/bug709.html
+#file:///s:/mozilla/layout/html/tests/table/bugs/bug12012.html
+#file:///s:/mozilla/layout/html/tests/table/bugs/bug15933.html
