@@ -33,7 +33,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMHTMLDocument.h"
-#include "nsIDOMHTMLCollection.h"
+#include "nsIDOMNSHTMLOptionCollection.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLSelectElement.h"
@@ -2329,7 +2329,7 @@ wallet_GetSelectIndex(
   nsresult result;
   PRUint32 length;
   selectElement->GetLength(&length);
-  nsIDOMHTMLCollection * options;
+  nsIDOMNSHTMLOptionCollection * options;
   result = selectElement->GetOptions(&options);
   if ((NS_SUCCEEDED(result)) && (nsnull != options)) {
     PRUint32 numOptions;

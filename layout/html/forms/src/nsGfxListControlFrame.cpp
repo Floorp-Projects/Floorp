@@ -32,6 +32,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIDeviceContext.h" 
 #include "nsIDOMHTMLCollection.h" 
+#include "nsIDOMNSHTMLOptionCollection.h"
 #include "nsIDOMHTMLSelectElement.h" 
 #include "nsIDOMHTMLOptionElement.h" 
 #include "nsIComboboxControlFrame.h"
@@ -1581,20 +1582,21 @@ nsGfxListControlFrame::GetOptionContent(PRInt32 aIndex)
 nsIDOMHTMLCollection* 
 nsGfxListControlFrame::GetOptions(nsIContent * aContent, nsIDOMHTMLSelectElement* aSelect)
 {
+  nsIDOMNSHTMLOptionCollection* optCol = nsnull;
   nsIDOMHTMLCollection* options = nsnull;
   if (!aSelect) {
-    nsIDOMHTMLSelectElement* selectElement = GetSelect(aContent);
+    nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = getter_AddRefs(GetSelect(aContent));
     if (selectElement) {
-      selectElement->GetOptions(&options);
-      NS_RELEASE(selectElement);
-      return options;
-    } else {
-      return nsnull;
+      selectElement->GetOptions(&optCol);  // AddRefs (1)
     }
   } else {
-    aSelect->GetOptions(&options);
-    return options;
+    aSelect->GetOptions(&optCol); // AddRefs (1)
   }
+  if (optCol) {
+    nsresult res = optCol->QueryInterface(NS_GET_IID(nsIDOMHTMLCollection), (void **)&options); // AddRefs (2)
+    NS_RELEASE(optCol); // Release (1)
+  }
+  return options;
 }
 
 //---------------------------------------------------------

@@ -29,9 +29,9 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
+class nsIDOMNSHTMLOptionCollection;
 class nsIDOMHTMLElement;
 class nsIDOMHTMLFormElement;
-class nsIDOMHTMLCollection;
 
 #define NS_IDOMHTMLSELECTELEMENT_IID \
  { 0xa6cf9090, 0x15b3, 0x11d2, \
@@ -50,10 +50,11 @@ public:
   NS_IMETHOD    SetValue(const nsString& aValue)=0;
 
   NS_IMETHOD    GetLength(PRUint32* aLength)=0;
+  NS_IMETHOD    SetLength(PRUint32 aLength)=0;
 
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm)=0;
 
-  NS_IMETHOD    GetOptions(nsIDOMHTMLCollection** aOptions)=0;
+  NS_IMETHOD    GetOptions(nsIDOMNSHTMLOptionCollection** aOptions)=0;
 
   NS_IMETHOD    GetDisabled(PRBool* aDisabled)=0;
   NS_IMETHOD    SetDisabled(PRBool aDisabled)=0;
@@ -87,8 +88,9 @@ public:
   NS_IMETHOD    GetValue(nsString& aValue);  \
   NS_IMETHOD    SetValue(const nsString& aValue);  \
   NS_IMETHOD    GetLength(PRUint32* aLength);  \
+  NS_IMETHOD    SetLength(PRUint32 aLength);  \
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm);  \
-  NS_IMETHOD    GetOptions(nsIDOMHTMLCollection** aOptions);  \
+  NS_IMETHOD    GetOptions(nsIDOMNSHTMLOptionCollection** aOptions);  \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled);  \
   NS_IMETHOD    SetDisabled(PRBool aDisabled);  \
   NS_IMETHOD    GetMultiple(PRBool* aMultiple);  \
@@ -113,8 +115,9 @@ public:
   NS_IMETHOD    GetValue(nsString& aValue) { return _to GetValue(aValue); } \
   NS_IMETHOD    SetValue(const nsString& aValue) { return _to SetValue(aValue); } \
   NS_IMETHOD    GetLength(PRUint32* aLength) { return _to GetLength(aLength); } \
+  NS_IMETHOD    SetLength(PRUint32 aLength) { return _to SetLength(aLength); } \
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to GetForm(aForm); } \
-  NS_IMETHOD    GetOptions(nsIDOMHTMLCollection** aOptions) { return _to GetOptions(aOptions); } \
+  NS_IMETHOD    GetOptions(nsIDOMNSHTMLOptionCollection** aOptions) { return _to GetOptions(aOptions); } \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return _to GetDisabled(aDisabled); } \
   NS_IMETHOD    SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
   NS_IMETHOD    GetMultiple(PRBool* aMultiple) { return _to GetMultiple(aMultiple); } \

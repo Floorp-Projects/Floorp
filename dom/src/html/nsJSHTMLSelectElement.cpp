@@ -34,23 +34,23 @@
 #include "nsCOMPtr.h"
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
+#include "nsIDOMNSHTMLOptionCollection.h"
 #include "nsIDOMHTMLSelectElement.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLFormElement.h"
+#include "nsIDOMNode.h"
 #include "nsIDOMNSHTMLSelectElement.h"
-#include "nsIDOMHTMLCollection.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kINSHTMLOptionCollectionIID, NS_IDOMNSHTMLOPTIONCOLLECTION_IID);
 static NS_DEFINE_IID(kIHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
-static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
+static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kINSHTMLSelectElementIID, NS_IDOMNSHTMLSELECTELEMENT_IID);
-static NS_DEFINE_IID(kIHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
 
 //
 // HTMLSelectElement property ids
@@ -83,6 +83,7 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  PRBool checkNamedItem = PR_TRUE;
   if (JSVAL_IS_INT(id)) {
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
@@ -90,6 +91,7 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (NS_FAILED(rv)) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
     }
+    checkNamedItem = PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case HTMLSELECTELEMENT_TYPE:
       {
@@ -183,7 +185,7 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_FAILED(rv)) {
           return nsJSUtils::nsReportError(cx, obj, rv);
         }
-        nsIDOMHTMLCollection* prop;
+        nsIDOMNSHTMLOptionCollection* prop;
         nsresult result = NS_OK;
         result = a->GetOptions(&prop);
         if (NS_SUCCEEDED(result)) {
@@ -282,7 +284,7 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       default:
       {
-        nsIDOMElement* prop;
+        nsIDOMNode* prop;
         nsIDOMNSHTMLSelectElement* b;
         if (NS_OK == a->QueryInterface(kINSHTMLSelectElementIID, (void **)&b)) {
           nsresult result = NS_OK;
@@ -301,6 +303,42 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
       }
+    }
+  }
+
+  if (checkNamedItem) {
+    nsIDOMNode* prop;
+    nsIDOMNSHTMLSelectElement* b;
+    nsAutoString name;
+
+    JSString *jsstring = JS_ValueToString(cx, id);
+    if (nsnull != jsstring) {
+      name.SetString(JS_GetStringChars(jsstring));
+    }
+    else {
+      name.SetString("");
+    }
+
+    if (NS_OK == a->QueryInterface(kINSHTMLSelectElementIID, (void **)&b)) {
+      nsresult result = NS_OK;
+      result = b->NamedItem(name, &prop);
+      if (NS_SUCCEEDED(result)) {
+        NS_RELEASE(b);
+        if (NULL != prop) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+        }
+        else {
+          return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
+        }
+      }
+      else {
+        NS_RELEASE(b);
+        return nsJSUtils::nsReportError(cx, obj, result);
+      }
+    }
+    else {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
     }
   }
   else {
@@ -324,6 +362,7 @@ SetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  PRBool checkNamedItem = PR_TRUE;
   if (JSVAL_IS_INT(id)) {
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
@@ -331,6 +370,7 @@ SetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (NS_FAILED(rv)) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
     }
+    checkNamedItem = PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case HTMLSELECTELEMENT_SELECTEDINDEX:
       {
@@ -361,6 +401,25 @@ SetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetValue(prop);
+        
+        break;
+      }
+      case HTMLSELECTELEMENT_LENGTH:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_LENGTH, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
+        }
+        PRUint32 prop;
+        int32 temp;
+        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+          prop = (PRUint32)temp;
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
+        }
+      
+        a->SetLength(prop);
         
         break;
       }
@@ -696,7 +755,7 @@ NSHTMLSelectElementItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
   }
 
-  nsIDOMElement* nativeRet;
+  nsIDOMNode* nativeRet;
   PRUint32 b0;
   // If there's no private data, this must be the prototype, so ignore
   if (!nativeThis) {
@@ -739,6 +798,60 @@ NSHTMLSelectElementItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 }
 
 
+//
+// Native method NamedItem
+//
+PR_STATIC_CALLBACK(JSBool)
+NSHTMLSelectElementNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMHTMLSelectElement *privateThis = (nsIDOMHTMLSelectElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMNSHTMLSelectElement> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kINSHTMLSelectElementIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  nsIDOMNode* nativeRet;
+  nsAutoString b0;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+
+  *rval = JSVAL_NULL;
+
+  {
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLSELECTELEMENT_NAMEDITEM, PR_FALSE);
+    }
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
+    }
+  }
+
+    if (argc < 1) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    result = nativeThis->NamedItem(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for HTMLSelectElement
@@ -767,7 +880,7 @@ static JSPropertySpec HTMLSelectElementProperties[] =
   {"type",    HTMLSELECTELEMENT_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"selectedIndex",    HTMLSELECTELEMENT_SELECTEDINDEX,    JSPROP_ENUMERATE},
   {"value",    HTMLSELECTELEMENT_VALUE,    JSPROP_ENUMERATE},
-  {"length",    HTMLSELECTELEMENT_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"length",    HTMLSELECTELEMENT_LENGTH,    JSPROP_ENUMERATE},
   {"form",    HTMLSELECTELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"options",    HTMLSELECTELEMENT_OPTIONS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"disabled",    HTMLSELECTELEMENT_DISABLED,    JSPROP_ENUMERATE},
@@ -789,6 +902,7 @@ static JSFunctionSpec HTMLSelectElementMethods[] =
   {"blur",          HTMLSelectElementBlur,     0},
   {"focus",          HTMLSelectElementFocus,     0},
   {"item",          NSHTMLSelectElementItem,     1},
+  {"namedItem",          NSHTMLSelectElementNamedItem,     1},
   {0}
 };
 
