@@ -259,16 +259,6 @@ public:
   NS_IMETHOD  DidReflow(nsIPresContext&   aPresContext,
                         nsDidReflowStatus aStatus) = 0;
 
-  /**
-   * Return the reflow metrics for this frame. If the frame is a container then
-   * the values for ascent and descent are computed across the various children
-   * in the appropriate manner (e.g., for a line frame the ascent value would be
-   * the maximum ascent of the line's children). Note that the metrics returned
-   * apply to the frame as it exists at the time of the call.
-   */
-  NS_IMETHOD  GetReflowMetrics(nsIPresContext& aPresContext,
-                               ReflowMetrics&  aMetrics) = 0;
-
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
