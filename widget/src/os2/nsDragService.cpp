@@ -214,9 +214,9 @@ NS_IMETHODIMP nsDragService::GetData(nsITransferable *aTransferable, PRUint32 aI
       if (item) {
         nsCOMPtr<nsISupports> data;
         PRUint32 tmpDataLen = 0;
-        rv = item->GetTransferData(flavorStr, getter_AddRefs(data), &tmpDataLen);
+        rv = item->GetTransferData(flavorStr.get(), getter_AddRefs(data), &tmpDataLen);
         if (NS_SUCCEEDED(rv)) {
-          rv = aTransferable->SetTransferData(flavorStr, data, tmpDataLen);
+          rv = aTransferable->SetTransferData(flavorStr.get(), data, tmpDataLen);
           break;
         }
       }
