@@ -148,11 +148,11 @@ legend {
 }
 
 label {
-  display: inline;
+	display: inline;
 	padding-bottom: 4px;
-	/* background-color: inherit; */
-	background-color:#CCCCDD;
+	background-color: transparent;
 	background-image: inherit;
+	white-space: nowrap;
 }
 
 textarea {
