@@ -88,10 +88,10 @@ Rights Reserved.
 	<key id="key_newMessage"/>
 	<key id="key_close"/>
 	<key id="key_save" xulkey="true" key="&saveCmd.key;" disabled="true"/>
-	<key id="key_attachFile" xulkey="true" key="&attachFileCmd.key;" observes="cmd_attachFile"/>
+	<!-- key id="key_attachFile" xulkey="true" key="&attachFileCmd.key;" observes="cmd_attachFile"/ -->
 	<key id="key_selectAddresses" xulkey="true" key="&selectAddressCmd.key;" observes="cmd_selectAddress"/>
-	<key id="key_sendNow" xulkey="true" key="&sendNowCmd.key;" observes="cmd_sendNow"/>
-	<key id="key_sendLater" xulkey="true" key="&sendLaterCmd.key;" shift="true" observes="cmd_sendLater"/>
+	<!-- key id="key_sendNow" xulkey="true" keycode="&sendNowCmd.keycode;" observes="cmd_sendNow"/ -->
+	<!-- key id="key_sendLater" xulkey="true" keycode="&sendLaterCmd.keycode;" shift="true" observes="cmd_sendLater"/ -->
 	<key id="key_print" xulkey="true" key="&printCmd.key;" disabled="true" observes="cmd_print"/>
 	<key id="key_quit"/>
 	<!-- Edit Menu -->
