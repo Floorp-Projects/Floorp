@@ -58,7 +58,8 @@ enum Navigator_slots {
   NAVIGATOR_PLATFORM = -6,
   NAVIGATOR_PLUGINS = -7,
   NAVIGATOR_SECURITYPOLICY = -8,
-  NAVIGATOR_USERAGENT = -9
+  NAVIGATOR_USERAGENT = -9,
+  NAVIGATOR_COOKIEENABLED = -10
 };
 
 /***********************************************************************/
@@ -241,6 +242,24 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         result = a->GetUserAgent(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, obj, result);
+        }
+        break;
+      }
+      case NAVIGATOR_COOKIEENABLED:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NAVIGATOR_COOKIEENABLED, PR_FALSE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        PRBool prop;
+        nsresult result = NS_OK;
+        result = a->GetCookieEnabled(&prop);
+        if (NS_SUCCEEDED(result)) {
+          *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
           return nsJSUtils::nsReportError(cx, obj, result);
@@ -490,6 +509,7 @@ static JSPropertySpec NavigatorProperties[] =
   {"plugins",    NAVIGATOR_PLUGINS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"securityPolicy",    NAVIGATOR_SECURITYPOLICY,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"userAgent",    NAVIGATOR_USERAGENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"cookieEnabled",    NAVIGATOR_COOKIEENABLED,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

@@ -58,6 +58,8 @@ public:
 
   NS_IMETHOD    GetUserAgent(nsString& aUserAgent)=0;
 
+  NS_IMETHOD    GetCookieEnabled(PRBool* aCookieEnabled)=0;
+
   NS_IMETHOD    JavaEnabled(PRBool* aReturn)=0;
 
   NS_IMETHOD    TaintEnabled(PRBool* aReturn)=0;
@@ -76,6 +78,7 @@ public:
   NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins);  \
   NS_IMETHOD    GetSecurityPolicy(nsString& aSecurityPolicy);  \
   NS_IMETHOD    GetUserAgent(nsString& aUserAgent);  \
+  NS_IMETHOD    GetCookieEnabled(PRBool* aCookieEnabled);  \
   NS_IMETHOD    JavaEnabled(PRBool* aReturn);  \
   NS_IMETHOD    TaintEnabled(PRBool* aReturn);  \
   NS_IMETHOD    Preference(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn);  \
@@ -92,6 +95,7 @@ public:
   NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins) { return _to GetPlugins(aPlugins); } \
   NS_IMETHOD    GetSecurityPolicy(nsString& aSecurityPolicy) { return _to GetSecurityPolicy(aSecurityPolicy); } \
   NS_IMETHOD    GetUserAgent(nsString& aUserAgent) { return _to GetUserAgent(aUserAgent); } \
+  NS_IMETHOD    GetCookieEnabled(PRBool* aCookieEnabled) { return _to GetCookieEnabled(aCookieEnabled); } \
   NS_IMETHOD    JavaEnabled(PRBool* aReturn) { return _to JavaEnabled(aReturn); }  \
   NS_IMETHOD    TaintEnabled(PRBool* aReturn) { return _to TaintEnabled(aReturn); }  \
   NS_IMETHOD    Preference(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn) { return _to Preference(cx, argv, argc, aReturn); }  \

@@ -84,6 +84,7 @@
 #include "nsRDFCID.h"
 #include "nsDOMPropEnums.h"
 #include "nsXPIDLString.h"
+#include "nsICookieService.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #include "nsIJVMManager.h"
@@ -118,6 +119,7 @@ static NS_DEFINE_IID(kIDOMAbstractViewIID, NS_IDOMABSTRACTVIEW_IID);
 
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 
 static NS_DEFINE_CID(kXULControllersCID,          NS_XULCONTROLLERS_CID);
 
@@ -1178,7 +1180,6 @@ GlobalWindowImpl::Dump(const nsString& aStr)
 NS_IMETHODIMP
 GlobalWindowImpl::Alert(JSContext *cx, jsval *argv, PRUint32 argc)
 {
-  nsresult ret = NS_OK;
   nsAutoString str;
 
   NS_ENSURE_STATE(mWebShell);
@@ -1211,7 +1212,6 @@ GlobalWindowImpl::Alert(JSContext *cx, jsval *argv, PRUint32 argc)
 NS_IMETHODIMP    
 GlobalWindowImpl::Confirm(JSContext *cx, jsval *argv, PRUint32 argc, PRBool* aReturn)
 {
-  nsresult ret = NS_OK;
   nsAutoString str;
 
   *aReturn = PR_FALSE;
@@ -3417,6 +3417,21 @@ NavigatorImpl::GetPlugins(nsIDOMPluginArray** aPlugins)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP    
+NavigatorImpl::GetCookieEnabled(PRBool* aCookieEnabled)
+{
+  nsresult rv = NS_OK;
+  *aCookieEnabled = PR_FALSE;
+
+  NS_WITH_SERVICE(nsICookieService, service, kCookieServiceCID, &rv);
+  if (NS_FAILED(rv) || service == nsnull) {
+    return rv;
+  }
+
+  return service->CookieEnabled(aCookieEnabled);
+}
+
 
 NS_IMETHODIMP
 NavigatorImpl::JavaEnabled(PRBool* aReturn)
