@@ -58,6 +58,10 @@ nsMsgRDFDataSource::Init()
     return rv;
 }
 
+void
+nsMsgRDFDataSource::Close()
+{
+}
 
 NS_IMPL_ADDREF(nsMsgRDFDataSource)
 NS_IMPL_RELEASE(nsMsgRDFDataSource)
