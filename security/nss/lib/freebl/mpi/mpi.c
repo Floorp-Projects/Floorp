@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.4 2000/07/20 04:21:37 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.5 2000/07/20 04:47:24 nelsonb%netscape.com Exp $
  */
 
 #include "mpi.h"
@@ -3598,7 +3598,7 @@ int      s_mp_outlen(int bits, int r)
  */
 
 mp_err  
-mp_read_unsigned_octets(mp_int *mp, const unsigned char *str, int len)
+mp_read_unsigned_octets(mp_int *mp, const unsigned char *str, unsigned int len)
 {
   int            count;
   mp_err         res;
@@ -3672,7 +3672,7 @@ mp_unsigned_octet_size(const mp_int *mp)
 /* {{{ mp_to_unsigned_octets(mp, str) */
 /* output a buffer of big endian octets no longer than specified. */
 mp_err 
-mp_to_unsigned_octets(const mp_int *mp, unsigned char *str, int maxlen)
+mp_to_unsigned_octets(const mp_int *mp, unsigned char *str, unsigned int maxlen)
 {
   int  ix, pos = 0;
   int  bytes;
@@ -3702,7 +3702,7 @@ mp_to_unsigned_octets(const mp_int *mp, unsigned char *str, int maxlen)
 /* {{{ mp_to_signed_octets(mp, str) */
 /* output a buffer of big endian octets no longer than specified. */
 mp_err 
-mp_to_signed_octets(const mp_int *mp, unsigned char *str, int maxlen)
+mp_to_signed_octets(const mp_int *mp, unsigned char *str, unsigned int maxlen)
 {
   int  ix, pos = 0;
   int  bytes;
@@ -3740,7 +3740,7 @@ mp_to_signed_octets(const mp_int *mp, unsigned char *str, int maxlen)
 /* {{{ mp_to_fixlen_octets(mp, str) */
 /* output a buffer of big endian octets exactly as long as requested. */
 mp_err 
-mp_to_fixlen_octets(const mp_int *mp, unsigned char *str, int length)
+mp_to_fixlen_octets(const mp_int *mp, unsigned char *str, unsigned int length)
 {
   int  ix, pos = 0;
   int  bytes;
