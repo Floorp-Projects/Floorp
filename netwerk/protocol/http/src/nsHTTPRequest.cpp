@@ -453,14 +453,12 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Context,
       // Prepare to receive the response...
       //
       else {
-        nsHTTPResponseListener* pListener;
-        
         PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                ("nsHTTPRequest [this=%x]. Finished writing request to server."
                 "\tStatus: %x\n", 
                 this, iStatus));
 
-        pListener = new nsHTTPResponseListener(mConnection);
+        nsHTTPResponseListener* pListener = new nsHTTPResponseListener(mConnection);
         if (pListener) {
           NS_ADDREF(pListener);
           rv = mTransport->AsyncRead(0, -1, i_Context, pListener);

@@ -39,7 +39,6 @@
 #include "nsIServiceManager.h"
 #include "nsINetModuleMgr.h"
 #include "nsIEventQueueService.h"
-#include "nsIPipe.h"
 
 #include "nsXPIDLString.h" 
 
@@ -57,13 +56,14 @@ extern PRLogModuleInfo* gHTTPLog;
 static const int kMAX_HEADER_SIZE = 60000;
 
 
-nsHTTPResponseListener::nsHTTPResponseListener(nsHTTPChannel* aConnection): 
-    mConsumer(nsnull),
+nsHTTPResponseListener::nsHTTPResponseListener(nsHTTPChannel* aConnection):
     mFirstLineParsed(PR_FALSE),
     mHeadersDone(PR_FALSE),
+    mDataOnly(PR_FALSE),
     mReadLength(0),
     mResponse(nsnull),
-    mResponseContext(nsnull)
+    mResponseContext(nsnull),
+    mBytesReceived(0)
 {
     NS_INIT_REFCNT();
 
@@ -83,7 +83,6 @@ nsHTTPResponseListener::~nsHTTPResponseListener()
 
     NS_IF_RELEASE(mConnection);
     NS_IF_RELEASE(mResponse);
-    NS_IF_RELEASE(mConsumer);
 }
 
 NS_IMPL_ISUPPORTS2(nsHTTPResponseListener, nsIStreamListener, nsIStreamObserver);
@@ -114,7 +113,6 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
 
     if (!mResponse)
     {
-        // why do I need the connection in the constructor... get rid.. TODO
         mResponse = new nsHTTPResponse ();
         if (!mResponse) {
             NS_ERROR("Failed to create the response object!");
@@ -152,36 +150,69 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
         //
         // All the headers have been read.  Check the status code of the 
         // response to see if any special action should be taken.
-        //
+
+        // We want to defer header completion notification until the 
+        // caller actually does an AsyncRead();
         if (mHeadersDone) {
-            rv = FinishedResponseHeaders();
-        }
-    }
-
-    //
-    // Abort the connection if the consumer has been released.  This will 
-    // happen if a redirect has been processed...
-    //
-    if (!mConsumer) {
-        // XXX: What should the return code be?
-        rv = NS_BINDING_ABORTED;
-    }
-
-    if (NS_SUCCEEDED(rv)) {
-        if (i_Length) {
-            PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-                   ("\tOnDataAvailable [this=%x]. Calling consumer "
-                    "OnDataAvailable.\tlength:%d\n", this, i_Length));
-
-            rv = mConsumer->OnDataAvailable(mConnection, mResponseContext, 
-                    i_pStream, 0, i_Length);
-            if (NS_FAILED(rv)) {
-              PR_LOG(gHTTPLog, PR_LOG_ERROR, 
-                     ("\tOnDataAvailable [this=%x]. Consumer failed!"
-                      "Status: %x\n", this, rv));
+            if (mConnection->mOpenObserver) {
+                mConnection->mRawResponseListener = this;
+                rv = mConnection->mOpenObserver->OnStartRequest(mConnection, 
+                                                            mConnection->mOpenContext);
+                mDataStream = i_pStream;
+            } else {
+                rv = FinishedResponseHeaders();
             }
+            if (NS_FAILED(rv)) return rv;
         }
-    } 
+    }
+
+    if (mDataOnly && mDataStream) {
+        // fire on headers *once* if we're in data only mode.
+        mDataStream = 0; // we're done w/ this stream.
+        rv = FinishedResponseHeaders();
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // At this point we've digested headers from the server and we're
+    // onto the actual data. If this transaction was initiated without
+    // an AsyncOpen, we just want to pass the OnData() notifications
+    // straight through to the consumer.
+    //
+    // .... otherwise...
+    //
+    // if we were AsyncOpened, we want to increment our internal byte count
+    // so when we finally push the stream to the consumer via AsyncRead,
+    // we're sure to pass him all the data that has queued up.
+
+    if (mConnection->mOpenObserver && !mDataOnly) {
+        mBytesReceived += i_Length;
+    } else {
+
+        //
+        // Abort the connection if the consumer has been released.  This will 
+        // happen if a redirect has been processed...
+        //
+        if (!mConsumer) {
+            // XXX: What should the return code be?
+            rv = NS_BINDING_ABORTED;
+        }
+
+        if (NS_SUCCEEDED(rv)) {
+            if (i_Length) {
+                PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+                       ("\tOnDataAvailable [this=%x]. Calling consumer "
+                        "OnDataAvailable.\tlength:%d\n", this, i_Length));
+
+                rv = mConsumer->OnDataAvailable(mConnection, mResponseContext, i_pStream, 0, 
+                                                  i_Length);
+                if (NS_FAILED(rv)) {
+                  PR_LOG(gHTTPLog, PR_LOG_ERROR, 
+                         ("\tOnDataAvailable [this=%x]. Consumer failed!"
+                          "Status: %x\n", this, rv));
+                }
+            }
+        } 
+    } // end !mConnection->mOpenObserver
 
     return rv;
 }
@@ -200,10 +231,9 @@ nsHTTPResponseListener::OnStartRequest(nsIChannel* channel, nsISupports* i_pCont
     mFirstLineParsed = PR_FALSE;
 
     // Cache the nsIStreamListener and ISupports context of the consumer...
-    rv = mConnection->GetResponseDataListener(&mConsumer);
-    if (NS_SUCCEEDED(rv)) {
-        rv = mConnection->GetResponseContext(getter_AddRefs(mResponseContext));
-    }
+    rv = mConnection->GetResponseDataListener(getter_AddRefs(mConsumer));
+    if (NS_SUCCEEDED(rv))
+        mConnection->GetResponseContext(getter_AddRefs(mResponseContext));
 
     return rv;
 }
@@ -241,8 +271,14 @@ nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
         mConnection->ResponseCompleted(channel, i_Status, i_pMsg);
     }
 
-    // The Consumer is no longer needed...
-    NS_IF_RELEASE(mConsumer);
+    if (mDataOnly) {
+        // we're done processing the data
+        NS_ASSERTION(mConnection->mOpenObserver, "HTTP: HTTP should still have an observer.");
+        rv = mConnection->mOpenObserver->OnStopRequest(mConnection,
+                                                   mConnection->mOpenContext,
+                                                   i_Status, i_pMsg);
+        if (NS_FAILED(rv)) return rv;
+    }
 
     // The HTTPChannel is no longer needed...
     NS_IF_RELEASE(mConnection);
@@ -255,6 +291,17 @@ nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTTPResponseListener methods:
+
+nsresult nsHTTPResponseListener::FireSingleOnData(nsIStreamListener *aListener, nsISupports *aContext)
+{
+    nsresult rv;
+    mConsumer = aListener;
+    mResponseContext = aContext;
+    rv = mConsumer->OnDataAvailable(mConnection, mResponseContext,
+                                    mDataStream, 0, mBytesReceived);
+    mDataOnly = PR_TRUE;
+    return rv;
+}
 
 nsresult nsHTTPResponseListener::FireOnHeadersAvailable()
 {
@@ -760,8 +807,8 @@ nsHTTPResponseListener::ProcessRedirection(PRInt32 aStatusCode)
            This allows the entity that follows to be discarded 
            without notifying the consumer...
         */
-        NS_RELEASE(mConsumer);
-        mResponseContext = nsnull;
+        mConsumer = 0;
+        mResponseContext = 0;
       }
   }
   return rv;
@@ -800,7 +847,7 @@ nsHTTPResponseListener::ProcessAuthentication(PRInt32 aStatusCode)
        This allows the entity that follows to be discarded 
        without notifying the consumer...
     */
-    NS_RELEASE(mConsumer);
-    mResponseContext = nsnull;
+    mConsumer = 0;
+    mResponseContext = 0;
     return rv;
 }

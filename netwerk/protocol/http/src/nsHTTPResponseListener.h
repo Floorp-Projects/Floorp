@@ -66,6 +66,8 @@ public:
     NS_DECL_NSISTREAMOBSERVER
     NS_DECL_NSISTREAMLISTENER
 
+    nsresult FireSingleOnData(nsIStreamListener *aListener, nsISupports *aContext);
+
 protected:
     // nsHTTPResponseListener methods...
     nsresult FireOnHeadersAvailable();
@@ -93,14 +95,18 @@ protected:
 
 protected:
 
-    nsCString           mHeaderBuffer;
-    nsHTTPChannel*      	mConnection;
-    nsIStreamListener*  	mConsumer;
-    PRBool              	mFirstLineParsed;
-    PRBool              	mHeadersDone;
-    PRUint32            	mReadLength; // Already read
-    nsHTTPResponse*     	mResponse;
-    nsCOMPtr<nsISupports> 	mResponseContext;
+    nsCString                   mHeaderBuffer;
+    nsHTTPChannel*      	    mConnection;
+    nsCOMPtr<nsIStreamListener> mConsumer;
+    PRBool              	    mFirstLineParsed;
+    PRBool              	    mHeadersDone;
+    PRBool                      mDataOnly; // we're only listening for data
+    PRUint32            	    mReadLength; // Already read
+    nsHTTPResponse*     	    mResponse;
+    nsCOMPtr<nsISupports> 	    mResponseContext;
+
+    nsCOMPtr<nsIInputStream>    mDataStream;
+    PRUint32                    mBytesReceived; 
 };
 
 #endif /* _nsHTTPResponseListener_h_ */

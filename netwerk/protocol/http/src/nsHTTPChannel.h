@@ -34,9 +34,9 @@
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsHTTPResponseListener.h"
 
 class nsHTTPRequest;
-class nsHTTPResponse;
 /* 
     The nsHTTPChannel class is an example implementation of a
     protocol instnce that is active on a per-URL basis.
@@ -86,13 +86,17 @@ public:
     // Set if this channel is using proxy to connect
     nsresult            SetUsingProxy(PRBool i_UsingProxy);
 
+    nsHTTPResponse*                     mResponse;
+    nsCOMPtr<nsIStreamObserver>         mOpenObserver;
+    nsCOMPtr<nsISupports>               mOpenContext;
+
     nsHTTPHandler*                      mHandler;
     nsHTTPRequest*                      mRequest;
+    nsHTTPResponseListener*             mRawResponseListener;
 
 protected:
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsIURI>                    mURI;
-    nsHTTPResponse*                     mResponse;
     PRBool                              mConnected; 
     HTTPState                           mState;
 
@@ -111,6 +115,7 @@ protected:
     nsCString                           mContentType;
     nsCString                           mCharset;
     nsCOMPtr<nsISupports>               mOwner;
+    
     // Auth related stuff-
     /* 
        If this is true then we have already tried 
