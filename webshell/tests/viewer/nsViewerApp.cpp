@@ -297,7 +297,9 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
 #ifdef XP_WIN
       if (PL_strcmp(argv[i], "-md") == 0) {
         int old = _CrtSetDbgFlag(0);
+#ifdef NS_DEBUG
         old |= _CRTDBG_CHECK_ALWAYS_DF;
+#endif
         _CrtSetDbgFlag(old);
       }
       else
