@@ -533,10 +533,13 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
 
   if (!data) 
     return 0;
-  *data = NULL;
+  *data = nsnull;
 
   obj = mime_get_main_object(tobj);
-  if ( (obj) && (!mime_subclass_p(obj->clazz, (MimeObjectClass*) &mimeContainerClass)) )
+  if (!obj)
+    return 0;
+
+  if (!mime_subclass_p(obj->clazz, (MimeObjectClass*) &mimeContainerClass))
   {
     if (!PL_strcasecmp(obj->content_type, MESSAGE_RFC822))
       return 0;
@@ -1257,7 +1260,7 @@ mime_get_main_object(MimeObject* obj)
         obj = nsnull;
     }
   }
-  return NULL;
+  return nsnull;
 }
 
 PRBool MimeObjectChildIsMessageBody(MimeObject *obj, 
