@@ -194,9 +194,6 @@ endif
 # CVS defines for PSM
 #
 PSM_CO_MODULE= mozilla/security/manager
-ifndef MOZ_NSS_AUTOCONF
-PSM_CO_MODULE += mozilla/security/psm mozilla/security/Makefile.in
-endif
 PSM_CO_FLAGS := -P -A
 ifdef PSM_CO_TAG
   PSM_CO_FLAGS := $(PSM_CO_FLAGS) -r $(PSM_CO_TAG)
