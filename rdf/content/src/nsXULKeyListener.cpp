@@ -281,7 +281,8 @@ private:
     nsIDOMElement* element; // Weak reference. The element will go away first.
     nsIDOMXULDocument* mDOMDocument; // Weak reference.
 
-    static nsSupportsHashtable mKeyBindingTable;
+    static PRUint32 gRefCnt;
+    static nsSupportsHashtable* mKeyBindingTable;
     
     // The "xul key" modifier can be any of the known modifiers:
     enum {
@@ -289,7 +290,8 @@ private:
     } mXULKeyModifier;
 }; 
 
-nsSupportsHashtable nsXULKeyListenerImpl::mKeyBindingTable = nsSupportsHashtable();
+PRUint32 nsXULKeyListenerImpl::gRefCnt = 0;
+nsSupportsHashtable* nsXULKeyListenerImpl::mKeyBindingTable = nsnull;
     
 class nsProxyStream : public nsIInputStream
 {
@@ -350,14 +352,17 @@ NS_IMPL_ISUPPORTS(nsProxyStream, nsIInputStream::GetIID());
 nsXULKeyListenerImpl::nsXULKeyListenerImpl(void)
 {
 	NS_INIT_REFCNT();	
+  gRefCnt++;
+  if (gRefCnt == 1) {
+    mKeyBindingTable = new nsSupportsHashtable();
+  }
 }
 
 nsXULKeyListenerImpl::~nsXULKeyListenerImpl(void)
 {
-#ifdef DEBUG_REFS
-    --gInstanceCount;
-    fprintf(stdout, "%d - RDF: nsXULKeyListenerImpl\n", gInstanceCount);
-#endif
+  gRefCnt--;
+  if (gRefCnt == 0)
+    delete mKeyBindingTable;
 }
 
 NS_IMPL_ADDREF(nsXULKeyListenerImpl)
@@ -1042,13 +1047,13 @@ NS_IMETHODIMP nsXULKeyListenerImpl::GetKeyBindingDocument(nsCAutoString& aURLStr
 
     // We've got a file.  Check our key binding file cache.
     nsIURIKey key(uri);
-    document = NS_STATIC_CAST(nsIDOMXULDocument*, mKeyBindingTable.Get(&key));
+    document = NS_STATIC_CAST(nsIDOMXULDocument*, mKeyBindingTable->Get(&key));
     
     if (!document) {
       LoadKeyBindingDocument(uri, getter_AddRefs(document));
       if (document) {
         // Put the key binding doc into our table.
-        mKeyBindingTable.Put(&key, document);
+        mKeyBindingTable->Put(&key, document);
       }
     }
   }
