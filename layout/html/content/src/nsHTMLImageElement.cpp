@@ -91,22 +91,8 @@ public:
   NS_DECL_IDOMHTMLIMAGEELEMENT
 
   // nsIDOMImage
-  // XXX Casing is different for backward compatibility
-  NS_IMETHOD    GetLowsrc(nsAWritableString& aLowsrc);
-  NS_IMETHOD    SetLowsrc(const nsAReadableString& aLowsrc);
-  NS_IMETHOD    GetComplete(PRBool* aComplete);
-  NS_IMETHOD    GetBorder(PRInt32* aBorder);
-  NS_IMETHOD    SetBorder(PRInt32 aBorder);
-  NS_IMETHOD    GetHeight(PRInt32* aHeight);
-  NS_IMETHOD    SetHeight(PRInt32 aHeight);
-  NS_IMETHOD    GetHspace(PRInt32* aHspace);
-  NS_IMETHOD    SetHspace(PRInt32 aHspace);
-  NS_IMETHOD    GetVspace(PRInt32* aVspace);
-  NS_IMETHOD    SetVspace(PRInt32 aVspace);
-  NS_IMETHOD    GetWidth(PRInt32* aWidth);
-  NS_IMETHOD    SetWidth(PRInt32 aWidth);
-
-
+  NS_DECL_IDOMIMAGE
+  
   // nsIContent
   NS_IMPL_ICONTENT_NO_SETDOCUMENT_USING_GENERIC(mInner)
 
@@ -1026,4 +1012,50 @@ nsHTMLImageElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
   return mInner.SizeOf(aSizer, aResult, sizeof(*this));
 }
+
+
+NS_IMETHODIMP
+nsHTMLImageElement::GetNaturalHeight(PRInt32* aNaturalHeight)
+{
+  NS_ENSURE_ARG_POINTER(aNaturalHeight);
+  
+  *aNaturalHeight = 0;
+  
+  if (!mLoader)
+    return NS_ERROR_FAILURE;
+  
+  nsImageFrame* imageFrame;
+  nsresult rv = GetImageFrame(&imageFrame);
+  if (NS_FAILED(rv) || !imageFrame) return NS_OK;      // don't throw JS exceptions in this case
+
+  nsSize    naturalSize(0, 0);
+  //rv = imageFrame->GetNaturalSize(naturalSize);
+  if (NS_FAILED(rv)) return NS_OK;
+  
+  *aNaturalHeight = naturalSize.height;
+  return NS_OK;  
+}
+
+NS_IMETHODIMP
+nsHTMLImageElement::GetNaturalWidth(PRInt32* aNaturalWidth)
+{
+  NS_ENSURE_ARG_POINTER(aNaturalWidth);
+  
+  *aNaturalWidth = 0;
+  
+  if (!mLoader)
+    return NS_ERROR_FAILURE;
+  
+  nsImageFrame* imageFrame;
+  nsresult rv = GetImageFrame(&imageFrame);
+  if (NS_FAILED(rv) || !imageFrame) return NS_OK;      // don't throw JS exceptions in this case
+
+  nsSize    naturalSize(0, 0);
+  //rv = imageFrame->GetNaturalSize(naturalSize);
+  if (NS_FAILED(rv)) return NS_OK;
+  
+  *aNaturalWidth = naturalSize.width;
+  return NS_OK;  
+}
+
 
