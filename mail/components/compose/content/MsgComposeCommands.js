@@ -1106,6 +1106,23 @@ function ComposeFieldsReady(msgType)
   AdjustFocus();
 }
 
+// checks if the passed in string is a mailto url, if it is, generates nsIMsgComposeParams
+// for the url and returns them.
+function handleMailtoArgs(mailtoUrl)
+{
+  // see if the string is a mailto url....do this by checking the first 7 characters of the string
+  if (mailtoUrl.search(/(^mailto:)/i) == 0)
+  {
+    // if it is a mailto url, turn the mailto url into a MsgComposeParams object....
+    var uri = gIOService.newURI(mailtoUrl, null, null);
+
+    if (uri)
+      return sMsgComposeService.getParamsForMailto(uri);
+  }
+
+  return null;
+}
+
 function ComposeStartup(recycled, aParams)
 {
   var params = null; // New way to pass parameters to the compose window as a nsIMsgComposeParameters object
@@ -1116,15 +1133,23 @@ function ComposeStartup(recycled, aParams)
 
   if (aParams)
     params = aParams;
-  else
-    if (window.arguments && window.arguments[0]) {
-      try {
-        params = window.arguments[0].QueryInterface(Components.interfaces.nsIMsgComposeParams);
-      }
-      catch(ex) { dump("ERROR with parameters: " + ex + "\n"); }
-      if (!params)
-        args = GetArgs(window.arguments[0]);
+
+  else if (window.arguments && window.arguments[0]) {
+    try {
+      if (typeof window.arguments[0] == "string") 
+        params = handleMailtoArgs(window.arguments[0]);
+      else if (typeof window.arguments[0] == "object" && window.arguments[0] instanceof Components.interfaces.nsIMsgComposeParams)
+       params = window.arguments[0].QueryInterface(Components.interfaces.nsIMsgComposeParams);
     }
+    catch(ex) { dump("ERROR with parameters: " + ex + "\n"); }
+      
+    // if still no dice, try and see if the params is an old fashioned list of string attributes
+    // XXX can we get rid of this yet? 
+    if (!params)
+    {
+      args = GetArgs(window.arguments[0]);
+    }
+  }
 
   var identityList = document.getElementById("msgIdentity");
   var identityListPopup = document.getElementById("msgIdentityPopup");
