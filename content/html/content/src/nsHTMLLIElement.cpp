@@ -164,11 +164,15 @@ NS_IMPL_STRING_ATTR(nsHTMLLIElement, Type, type)
 NS_IMPL_INT_ATTR(nsHTMLLIElement, Value, value)
 
 
-static nsGenericHTMLElement::EnumTable kListItemTypeTable[] = {
+static nsGenericHTMLElement::EnumTable kUnorderedListItemTypeTable[] = {
   { "disc", NS_STYLE_LIST_STYLE_DISC },
   { "circle", NS_STYLE_LIST_STYLE_CIRCLE },
   { "round", NS_STYLE_LIST_STYLE_CIRCLE },
   { "square", NS_STYLE_LIST_STYLE_SQUARE },
+  { 0 }
+};
+
+static nsGenericHTMLElement::EnumTable kOrderedListItemTypeTable[] = {
   { "A", NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA },
   { "a", NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA },
   { "I", NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN },
@@ -183,7 +187,10 @@ nsHTMLLIElement::StringToAttribute(nsIAtom* aAttribute,
                                    nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::type) {
-    if (ParseCaseSensitiveEnumValue(aValue, kListItemTypeTable, aResult)) {
+    if (ParseCaseSensitiveEnumValue(aValue, kOrderedListItemTypeTable, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+    if (ParseEnumValue(aValue, kUnorderedListItemTypeTable, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -202,16 +209,10 @@ nsHTMLLIElement::AttributeToString(nsIAtom* aAttribute,
                                    nsAWritableString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::type) {
-    PRInt32 v = aValue.GetIntValue();
-    switch (v) {
-      case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
-      case NS_STYLE_LIST_STYLE_OLD_LOWER_ROMAN:
-        EnumValueToString(aValue, kListItemTypeTable, aResult);
-        break;
-      default:
-        EnumValueToString(aValue, kListItemTypeTable, aResult);
+    if (!EnumValueToString(aValue, kOrderedListItemTypeTable, aResult)) {
+      EnumValueToString(aValue, kUnorderedListItemTypeTable, aResult);
     }
-
+    
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
 
