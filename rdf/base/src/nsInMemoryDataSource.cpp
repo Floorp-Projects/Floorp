@@ -71,6 +71,7 @@
 #include "nsRDFBaseDataSources.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nsFixedSizeAllocator.h"
 #include "rdfutil.h"
 #include "plhash.h"
 #include "plstr.h"
@@ -97,6 +98,17 @@ static PRLogModuleInfo* gLog = nsnull;
 class Assertion 
 {
 public:
+    static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
+        return aAllocator.Alloc(aSize); }
+
+    static void operator delete(void* aPtr, size_t aSize) {
+        nsFixedSizeAllocator::Free(aPtr, aSize); }
+
+#if defined(HAVE_CPP_EXCEPTIONS) && defined(HAVE_CPP_PLACEMENT_DELETE)
+    static void operator delete(void* aPtr, size_t aSize, nsFixedSizeAllocator& aAllocator) {
+        nsFixedSizeAllocator::Free(aPtr, aSize); }
+#endif
+
     Assertion(nsIRDFResource* aSource,
               nsIRDFResource* aProperty,
               nsIRDFNode* aTarget,
@@ -185,6 +197,8 @@ class InMemoryDataSource : public nsIRDFDataSource,
                            public nsIRDFPurgeableDataSource
 {
 protected:
+    nsFixedSizeAllocator mAllocator;
+
     // These hash tables are keyed on pointers to nsIRDFResource
     // objects (the nsIRDFService ensures that there is only ever one
     // nsIRDFResource object per unique URI). The value of an entry is
@@ -192,6 +206,22 @@ protected:
     // predicate object) triples.
     PLHashTable* mForwardArcs; 
     PLHashTable* mReverseArcs; 
+
+    static PLHashAllocOps gAllocOps;
+
+    static void* PR_CALLBACK AllocTable(void* aPool, PRSize aSize) {
+        return new char[aSize]; }
+
+    static void PR_CALLBACK FreeTable(void* aPool, void* aItem) {
+        delete[] NS_STATIC_CAST(char*, aItem); }
+
+    static PLHashEntry* PR_CALLBACK AllocEntry(void* aPool, const void* aKey) {
+        void* result = NS_STATIC_CAST(nsFixedSizeAllocator*, aPool)->Alloc(sizeof(PLHashEntry));
+        return NS_REINTERPRET_CAST(PLHashEntry*, result); }
+
+    static void PR_CALLBACK FreeEntry(void* aPool, PLHashEntry* aHashEntry, PRUintn aFlag) {
+        if (aFlag == HT_FREE_ENTRY)
+            nsFixedSizeAllocator::Free(aHashEntry, sizeof(PLHashEntry)); }
 
     nsCOMPtr<nsISupportsArray> mObservers;  
 
@@ -284,7 +314,10 @@ public:
 #endif
 };
 
-const PRInt32 InMemoryDataSource::kInitialTableSize = 500;
+PLHashAllocOps InMemoryDataSource::gAllocOps = {
+    AllocTable, FreeTable, AllocEntry, FreeEntry };
+
+const PRInt32 InMemoryDataSource::kInitialTableSize = 32;
 
 ////////////////////////////////////////////////////////////////////////
 // InMemoryAssertionEnumeratorImpl
@@ -305,6 +338,17 @@ private:
     Assertion*      mNextAssertion;
 
 public:
+    static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
+        return aAllocator.Alloc(aSize); }
+
+    static void operator delete(void* aPtr, size_t aSize) {
+        nsFixedSizeAllocator::Free(aPtr, aSize); }
+
+#if defined(HAVE_CPP_EXCEPTIONS) && defined(HAVE_CPP_PLACEMENT_DELETE)
+    static void operator delete(void* aPtr, size_t aSize, nsFixedSizeAllocator& aAllocator) {
+        nsFixedSizeAllocator::Free(aPtr, aSize); }
+#endif
+
     InMemoryAssertionEnumeratorImpl(InMemoryDataSource* aDataSource,
                                     nsIRDFResource* aSource,
                                     nsIRDFResource* aProperty,
@@ -465,6 +509,17 @@ private:
     Assertion*          mAssertion;
 
 public:
+    static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
+        return aAllocator.Alloc(aSize); }
+
+    static void operator delete(void* aPtr, size_t aSize) {
+        nsFixedSizeAllocator::Free(aPtr, aSize); }
+
+#if defined(HAVE_CPP_EXCEPTIONS) && defined(HAVE_CPP_PLACEMENT_DELETE)
+    static void operator delete(void* aPtr, size_t aSize, nsFixedSizeAllocator& aAllocator) {
+        nsFixedSizeAllocator::Free(aPtr, aSize); }
+#endif
+
     InMemoryArcsEnumeratorImpl(InMemoryDataSource* aDataSource,
                                nsIRDFResource* aSource,
                                nsIRDFNode* aTarget);
@@ -628,6 +683,18 @@ InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
 {
     NS_INIT_AGGREGATED(aOuter);
 
+    static size_t kSizes[] = {
+        sizeof(Assertion),
+        sizeof(PLHashEntry),
+        sizeof(InMemoryArcsEnumeratorImpl),
+        sizeof(InMemoryAssertionEnumeratorImpl) };
+
+    mAllocator.Init("nsInMemoryDataSource", kSizes, sizeof(kSizes) / sizeof(PRInt32),
+                    NS_SIZE_IN_HEAP(sizeof(Assertion) * 64)
+                    + NS_SIZE_IN_HEAP(sizeof(PLHashEntry) * 64)
+                    + NS_SIZE_IN_HEAP(sizeof(InMemoryAssertionEnumeratorImpl))
+                    + NS_SIZE_IN_HEAP(sizeof(InMemoryArcsEnumeratorImpl)));
+
 #ifdef MOZ_THREADSAFE_RDF
     mLock = nsnull;
 #endif
@@ -641,8 +708,8 @@ InMemoryDataSource::Init()
                                    rdf_HashPointer,
                                    PL_CompareValues,
                                    PL_CompareValues,
-                                   nsnull,
-                                   nsnull);
+                                   &gAllocOps,
+                                   &mAllocator);
 
     if (! mForwardArcs)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -651,8 +718,8 @@ InMemoryDataSource::Init()
                                    rdf_HashPointer,
                                    PL_CompareValues,
                                    PL_CompareValues,
-                                   nsnull,
-                                   nsnull);
+                                   &gAllocOps,
+                                   &mAllocator);
 
     if (! mReverseArcs)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -938,7 +1005,7 @@ InMemoryDataSource::GetSources(nsIRDFResource* aProperty,
     NS_AUTOLOCK(mLock);
 
     InMemoryAssertionEnumeratorImpl* result
-        = new InMemoryAssertionEnumeratorImpl(this, nsnull, aProperty, aTarget, aTruthValue);
+        = new (mAllocator) InMemoryAssertionEnumeratorImpl(this, nsnull, aProperty, aTarget, aTruthValue);
 
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -970,7 +1037,7 @@ InMemoryDataSource::GetTargets(nsIRDFResource* aSource,
     NS_AUTOLOCK(mLock);
 
     InMemoryAssertionEnumeratorImpl* result
-        = new InMemoryAssertionEnumeratorImpl(this, aSource, aProperty, nsnull, aTruthValue);
+        = new (mAllocator) InMemoryAssertionEnumeratorImpl(this, aSource, aProperty, nsnull, aTruthValue);
 
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1012,7 +1079,7 @@ InMemoryDataSource::LockedAssert(nsIRDFResource* aSource,
         next = next->mNext;
     }
 
-    as = new Assertion(aSource, aProperty, aTarget, aTruthValue);
+    as = new (mAllocator) Assertion(aSource, aProperty, aTarget, aTruthValue);
     if (! as)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1353,7 +1420,7 @@ InMemoryDataSource::ArcLabelsIn(nsIRDFNode* aTarget, nsISimpleEnumerator** aResu
         return NS_ERROR_NULL_POINTER;
 
     InMemoryArcsEnumeratorImpl* result =
-        new InMemoryArcsEnumeratorImpl(this, nsnull, aTarget);
+        new (mAllocator) InMemoryArcsEnumeratorImpl(this, nsnull, aTarget);
 
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1374,7 +1441,7 @@ InMemoryDataSource::ArcLabelsOut(nsIRDFResource* aSource, nsISimpleEnumerator** 
     NS_AUTOLOCK(mLock);
 
     InMemoryArcsEnumeratorImpl* result =
-        new InMemoryArcsEnumeratorImpl(this, aSource, nsnull);
+        new (mAllocator) InMemoryArcsEnumeratorImpl(this, aSource, nsnull);
 
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
