@@ -122,7 +122,7 @@
             <splitter class="tree-splitter"/>
             <outlinercol id="statusCol" label="&treehead.status.label;" flex="5"
                          onclick="PermissionColumnSort('capability');"/>
-            <outlinerbody flex="1" onselect="PermissionCookieSelected();"/>
+            <outlinerbody flex="1" onselect="PermissionSelected();"/>
           </outliner>
           <hbox>
             <button id="removePermission" disabled="true" 
