@@ -20,7 +20,6 @@
 #   -d debug
 #   -f <filename> - write the (error)output to filename
 #   -cron equivalient to -y -s -d -f $RESULTDIR/$HOST.nssqa
-#   -l <mozroot> run on a local build
 # 
 # 12/1/00
 # took out the (unused) local directory for releasebuild QA on NT
@@ -38,18 +37,7 @@ WIN_WAIT_FOREVER=ON     # first we wait forever for a TESTDIR to appear, than
 
 is_running ${TMP}/nssqa # checks if the file exists, if yes Exits, if not 
                         # creates to implement a primitive locking mechanism
-#if [ $O_CRON = "OFF" -a $O_WIN = "OFF" ]    # if we are running from cron 
-                        # or on windows this has been done
-#then
-    #set_host           # sets the HOST and DOMSUF variables - carefull, 
-#fi                     # hardcoded to redplanet
-
 KILL_SELFSERV=ON        # cleanup will also kill the leftover selfserv processes
-
-#. `dirname $0`/nssqa.header    #derived from init.sh
-
-TMP_ALL_SH_OUT=${TMP}/nssqa_all_sh_out.$$    #redirecting all.sh's output
-TMPFILES="$TMPFILES $TMP_ALL_SH_OUT"
 
 ################################ check_distdir #########################
 # local shell function to check if the DIST directory exists, if not there 
@@ -88,7 +76,7 @@ run_all()
     kill_by_name selfserv
     ask "Testing $OBJDIR continue with all.sh" "y" "n" || Exit
 
-    Debug "running all.sh in `pwd`... please be patient :)"
+    Debug "running all.sh in `pwd`"
     if [ $O_SILENT = ON ]
     then
         if [ $O_DEBUG = ON -a $O_FILE = ON ]
@@ -98,16 +86,7 @@ run_all()
             all.sh >/dev/null 2>/dev/null
         fi
     else
-        #if [ $O_FILE = ON ]    #FIXME - write to tmp file and copy
-        #then
-            #all.sh 2>&1 | tee $TMP_ALL_SH_OUT
-            #if [ -r $TMP_ALL_SH_OUT ]
-            #then
-                #cat $TMP_ALL_SH_OUT >>$FILENAME
-            #fi
-        #else
-            all.sh
-        #fi
+        all.sh
     fi
     Debug "Done with all.sh "
     line
@@ -124,15 +103,14 @@ all_sh()
 ########################################################################
 nssqa_main()
 {
-  # determine if all needed symbolic links are present, in case
-  # we build on one platform and QA on another
+  Debug "In function nssqa_main"
 
-  if [ $O_WIN = "OFF" ]
-  then
+  if [ $O_WIN = "OFF" ] ; then
       if [ ! -h ${NTDIST}/WINNT5.0_DBG.OBJ -o \
               ! -h ${UXDIST}/SunOS5.8_OPT.OBJ -o \
-              ! -h ${UXDIST}/OSF1V5.0_DBG.OBJ ]
-      then
+              ! -h ${UXDIST}/OSF1V5.0_DBG.OBJ ] ; then
+          # determine if all needed symbolic links are present, in case
+          # we build on one platform and QA on another
           # create the symbolic links
           mksymlinks $* ||
               glob_usage "Can't make the neccessary symbolic links"
@@ -146,7 +124,7 @@ nssqa_main()
       Exit "cant cd to $TESTSCRIPTDIR Exiting"
   fi
 
-  Debug testing from `pwd`
+  Debug "Testing from `pwd`"
   line
 
   Debug "HOST: $HOST, DOMSUF: $DOMSUF"
@@ -188,7 +166,9 @@ nssqa_main()
       WaitForever ${OSDIR}/SVbuild.InProgress.1 0 
                      #Wait for the build to finish Windows a lot longer
       OS_TARGET=WINNT;export OS_TARGET;Debug "OS_TARGET set to $OS_TARGET"
-      Echo "WINDOWS-OS-LINE: $os_name $os_full $OS_TARGET"
+      QA_OS_NAME=`cd ${TESTSCRIPTDIR}/common; gmake objdir_name | \
+          sed -e "s/WINNT4.0.*/Windows-NT-4.0/" -e "s/WINNT5.0.*/Windows-2000/"`
+      Echo "WINDOWS-OS-LINE: $QA_OS_NAME"
   else
       Wait ${OSDIR}/SVbuild.InProgress.1 0     
                      #Wait for the build to finish... Unix a few hours
@@ -225,13 +205,17 @@ nssqa_main()
           then
               OS_TARGET=WIN95;export OS_TARGET
               Debug "OS_TARGET set to $OS_TARGET"
-              Echo "WINDOWS-OS-LINE: $os_name $os_full $OS_TARGET"
+              #Echo "WINDOWS-OS-LINE: $os_name $os_full $OS_TARGET"
               unset BUILD_OPT;export BUILD_OPT;Debug "BUILD_OPT $BUILD_OPT"
+              #if [ "$TEST_LEVEL" = "0" ] ; then
+                  #QA_OS_NAME=`cd ${TESTSCRIPTDIR}/common; gmake objdir_name | \
+                      #sed -e "s/WINNT4.0.*/Windows-NT-4.0/" -e \
+                             #"s/WINNT5.0.*/Windows-2000/"`
+                  #Echo "WINDOWS-OS-LINE: $QA_OS_NAME $OS_TARGET"
+              #fi
               run_all
               BUILD_OPT=1; export BUILD_OPT; Debug "BUILD_OPT $BUILD_OPT"
               run_all
-              Debug "Copy results from $NT_MASTERDIR/mozilla/tests_results/security to $RESULTDIR"
-              cp -r $NT_MASTERDIR/mozilla/tests_results/security/* $RESULTDIR
           fi
           return
           ;;
@@ -260,8 +244,8 @@ while [ $TEST_LEVEL -lt 3 ] ; do
     unset BUILD_OPT;export BUILD_OPT;Debug "BUILD_OPT $BUILD_OPT"
     unset USE_64;export USE_64;Debug "USE_64 $USE_64"
     bc $TEST_LEVEL
-    if [ $O_FILE = ON ]
-    then
+    Debug "About to start nssqa_main"
+    if [ $O_FILE = ON -a "$O_WIN" != "ON" ] ; then
         nssqa_main 2>>$FILENAME
     else
         nssqa_main
