@@ -5824,7 +5824,10 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
         nsCOMPtr<nsIURI> uri = scriptProto->mSrcURI;
 
         nsCOMPtr<nsIFastLoadService> fastLoadService;
-        gXULCache->GetFastLoadService(getter_AddRefs(fastLoadService));
+        PRBool useXULCache;
+        gXULCache->GetEnabled(&useXULCache);
+        if (useXULCache)
+            gXULCache->GetFastLoadService(getter_AddRefs(fastLoadService));
 
         if (fastLoadService) {
             nsCAutoString urispec;
