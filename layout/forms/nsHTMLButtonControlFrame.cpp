@@ -598,6 +598,20 @@ NS_IMETHODIMP nsHTMLButtonControlFrame::GetProperty(nsIAtom* aName, nsString& aV
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLButtonControlFrame::GetAdditionalStyleContext(PRInt32 aIndex, 
+                                                    nsIStyleContext** aStyleContext) const
+{
+  return mRenderer.GetStyleContext(aIndex, aStyleContext);
+}
+
+NS_IMETHODIMP
+nsHTMLButtonControlFrame::SetAdditionalStyleContext(PRInt32 aIndex, 
+                                                    nsIStyleContext* aStyleContext)
+{
+  return mRenderer.SetStyleContext(aIndex, aStyleContext);
+}
+
 //
 // ReResolveStyleContext
 //

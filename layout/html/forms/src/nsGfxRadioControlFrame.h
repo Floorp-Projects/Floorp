@@ -23,6 +23,9 @@
 
 // nsGfxRadioControlFrame
 
+#define NS_GFX_RADIO_CONTROL_FRAME_FACE_CONTEXT_INDEX   0 // for additional style contexts
+#define NS_GFX_RADIO_CONTROL_FRAME_LAST_CONTEXT_INDEX   0
+
 class nsGfxRadioControlFrame : public nsRadioControlFrame
 {
 private:
@@ -34,6 +37,12 @@ public:
 
    //nsIRadioControlFrame methods
   NS_IMETHOD SetRadioButtonFaceStyleContext(nsIStyleContext *aRadioButtonFaceStyleContext);
+
+  NS_IMETHOD GetAdditionalStyleContext(PRInt32 aIndex, 
+                                       nsIStyleContext** aStyleContext) const;
+  NS_IMETHOD SetAdditionalStyleContext(PRInt32 aIndex, 
+                                       nsIStyleContext* aStyleContext);
+
 
   NS_IMETHOD ReResolveStyleContext(nsIPresContext* aPresContext,
                                    nsIStyleContext* aParentContext,

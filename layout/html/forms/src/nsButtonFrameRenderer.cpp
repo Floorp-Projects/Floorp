@@ -376,3 +376,48 @@ nsButtonFrameRenderer::ReResolveStyles(nsIPresContext& aPresContext,
                                    aParentChange, aChangeList, aLocalChange);
   }
 }
+
+nsresult 
+nsButtonFrameRenderer::GetStyleContext(PRInt32 aIndex, nsIStyleContext** aStyleContext) const
+{
+  NS_PRECONDITION(nsnull != aStyleContext, "null OUT parameter pointer");
+  if (aIndex < 0) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *aStyleContext = nsnull;
+  switch (aIndex) {
+  case NS_BUTTON_RENDERER_OUTLINE_CONTEXT_INDEX:
+    *aStyleContext = mOutlineStyle;
+    NS_ADDREF(*aStyleContext);
+    break;
+  case NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX:
+    *aStyleContext = mInnerFocusStyle;
+    NS_ADDREF(*aStyleContext);
+    break;
+  case NS_BUTTON_RENDERER_FOCUS_OUTER_CONTEXT_INDEX:
+    *aStyleContext = mOuterFocusStyle;
+    NS_ADDREF(*aStyleContext);
+    break;
+  }
+  return NS_OK;
+}
+
+nsresult 
+nsButtonFrameRenderer::SetStyleContext(PRInt32 aIndex, nsIStyleContext* aStyleContext)
+{
+  if (aIndex < 0) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  switch (aIndex) {
+  case NS_BUTTON_RENDERER_OUTLINE_CONTEXT_INDEX:
+    mOutlineStyle = aStyleContext;
+    break;
+  case NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX:
+    mInnerFocusStyle = aStyleContext;
+    break;
+  case NS_BUTTON_RENDERER_FOCUS_OUTER_CONTEXT_INDEX:
+    mOuterFocusStyle = aStyleContext;
+    break;
+  }
+  return NS_OK;
+}

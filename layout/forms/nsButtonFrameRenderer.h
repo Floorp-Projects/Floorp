@@ -32,6 +32,11 @@
 
 class nsStyleChangeList;
 
+#define NS_BUTTON_RENDERER_OUTLINE_CONTEXT_INDEX      0
+#define NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX  1
+#define NS_BUTTON_RENDERER_FOCUS_OUTER_CONTEXT_INDEX  2
+#define NS_BUTTON_RENDERER_LAST_CONTEXT_INDEX   NS_BUTTON_RENDERER_FOCUS_OUTER_CONTEXT_INDEX
+
 class nsButtonFrameRenderer {
 public:
 
@@ -78,6 +83,8 @@ public:
   virtual nsMargin GetFullButtonBorderAndPadding();
   virtual nsMargin GetAddedButtonBorderAndPadding();
 
+  virtual nsresult GetStyleContext(PRInt32 aIndex, nsIStyleContext** aStyleContext) const;
+  virtual nsresult SetStyleContext(PRInt32 aIndex, nsIStyleContext* aStyleContext);
 	virtual void ReResolveStyles(nsIPresContext& aPresContext,
                                PRInt32 aParentChange,
                                nsStyleChangeList* aChangeList,

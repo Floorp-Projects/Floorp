@@ -868,34 +868,6 @@ nsComboboxControlFrame::GetFrameName(nsString& aResult) const
 
 
 
-NS_IMETHODIMP
-nsComboboxControlFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
-                                              nsIStyleContext* aParentContext,
-                                              PRInt32 aParentChange,
-                                              nsStyleChangeList* aChangeList,
-                                              PRInt32* aLocalChange)
-{
-   PRInt32 ourChange = aParentChange;
-   nsresult rv = nsAreaFrame::ReResolveStyleContext(aPresContext, aParentContext, aParentChange, aChangeList, aLocalChange);
-   
-   if (NS_FAILED(rv)) {
-     return rv;
-   }
-
-   if (aLocalChange) {
-    *aLocalChange = ourChange;
-   }
-
-   if (NS_COMFALSE != rv) {
-       PRInt32 childChange;
-       // Update child list
-      nsIFrame* dropdownFrame = GetDropdownFrame();
-      dropdownFrame->ReResolveStyleContext(aPresContext, mStyleContext, ourChange, aChangeList, &childChange);
-   }
-
-   return rv;
-}
-
 //----------------------------------------------------------------------
 // nsIDOMMouseListener
 //----------------------------------------------------------------------
