@@ -1706,7 +1706,7 @@ html|select > html|input[type="button"]:hover {
   border: 1px solid #003366;
 }
 
-html|select > html|input#-moz-display:hover {
+html|select:-moz-display-comboboxcontrol-frame:hover {
   border: 1px solid #003366;
   border-right: none;
 }
@@ -1780,7 +1780,7 @@ html|select[disabled] > html|input[type="button"] {
 
 
 /* combobox display area */
-html|select > html|input#-moz-display {
+html|select:-moz-display-comboboxcontrol-frame {
   font-family: inherit;
   font-size: inherit;
   border-top: 1px solid #666666;
@@ -1789,7 +1789,7 @@ html|select > html|input#-moz-display {
   border-right: none;
   background-color: #CCCCCC;
   background-image: none;
-  padding: 0px 0px 3px 0px;
+  padding: 0px 0px 1px 3px;
   margin: 0px;
   vertical-align: bottom;
 }
@@ -1798,7 +1798,7 @@ html|select > html|input:button-content {
   text-align: left;
 }
 
-html|select[disabled] > html|input#-moz-display {
+html|select[disabled]:-moz-display-comboboxcontrol-frame {
   font-family: inherit;
   font-size: inherit;
   border: none;
@@ -1806,12 +1806,12 @@ html|select[disabled] > html|input#-moz-display {
   background-color: #CCCCCC;
   background-image: none;
   -moz-border-radius: 0px;
-  padding: 0px 0px 3px 0px;
+  padding: 0px 0px 1px 3px;
   vertical-align: bottom;
 }
 
 /* combbox display area - active */
-html|select > html|input#-moz-display:active {
+html|select:-moz-display-comboboxcontrol-frame:active {
   font-family: inherit;
   font-size: inherit;
   border-top: 1px solid #666666;
@@ -1821,7 +1821,7 @@ html|select > html|input#-moz-display:active {
   background-color: #CCCCCC;
   background-image: none;
   -moz-border-radius: 0px;
-  padding: 0px 0px 3px 0px;
+  padding: 0px 0px 1px 3px;
   vertical-align: bottom;
 }
 
@@ -1911,23 +1911,6 @@ html|select[multiple][size="1"] html|option[-moz-option-selected] {
   background-color: #336699;
 }
 
-html|select > html|input[type="button"]#-moz-display:-moz-focus-inner {
-   /*border:none;
-   padding-left  : 3px;
-   padding-right : 0px;
-   padding-top   : 0px;
-   padding-bottom: 0px;
-   margin: 0px;*/
-}
-
-html|select > html|input[type="button"]#-moz-display:focus:-moz-focus-inner {
-   /*border:none;
-   padding-left  : 0px;
-   padding-right : 0px;
-   padding-top   : 0px;
-   padding-bottom: 0px;
-   margin: 0px;*/
-}
 
 html|optgroup {
   font-family: inherit;
@@ -1949,11 +1932,11 @@ html|optgroup:before {
   content:attr(label);
 }
 
-html|select:focus > html|input#-moz-display {
+html|select:-moz-display-comboboxcontrol-frame:focus {
   border: none;
 }
 
-html|select[size="1"]:focus > html|input#-moz-display {
+html|select[size="1"]:-moz-display-comboboxcontrol-frame:focus {
   border: none;
 }
 
