@@ -306,8 +306,8 @@ NS_IMETHODIMP nsImapService::OpenAttachment(const char *aContentType,
   // or it may already be downloaded for us....the only way i can tell to 
   // distinguish the two events is to search for ?section or ?part
 
-  nsCAutoString uri = aMessageUri;
-  nsCAutoString urlString = aUrl;
+  nsCAutoString uri(aMessageUri);
+  nsCAutoString urlString(aUrl);
   urlString.ReplaceSubstring("/;section", "?section");
 
   // more stuff i don't understand
@@ -1988,7 +1988,7 @@ nsImapService::RenameLeaf(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
 
 			char *utfNewName = CreateUtf7ConvertedStringFromUnicode( newLeafName);
 
-			nsCAutoString cStrFolderName = (const char *) folderName;
+			nsCAutoString cStrFolderName(NS_STATIC_CAST(const char *, folderName));
             PRInt32 leafNameStart = 
                 cStrFolderName.RFindChar('/'); // ** troublesome hierarchyseparator
             if (leafNameStart != -1)
@@ -2775,7 +2775,7 @@ NS_IMETHODIMP nsImapService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
   {
     // now extract lots of fun information...
     nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl);
-    nsCAutoString unescapedSpec = aSpec;
+    nsCAutoString unescapedSpec(aSpec);
     nsUnescape(unescapedSpec);
     mailnewsUrl->SetSpec((char *) unescapedSpec); // set the url spec...
     

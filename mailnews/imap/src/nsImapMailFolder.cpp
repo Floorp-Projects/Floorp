@@ -238,9 +238,9 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
   //Only set these is these are top level children.
   if(NS_SUCCEEDED(rv) && isServer)
   {
-    if(name->EqualsIgnoreCase(NS_ConvertASCIItoUCS2("Inbox").GetUnicode()))
+    if(name->EqualsIgnoreCase(NS_ConvertASCIItoUCS2("Inbox")))
       flags |= MSG_FOLDER_FLAG_INBOX;
-    else if(name->EqualsIgnoreCase(kTrashName))
+    else if(name->EqualsIgnoreCase(nsAutoString(kTrashName)))
       flags |= MSG_FOLDER_FLAG_TRASH;
 #if 0
     else if(name->EqualsIgnoreCase(kSentName))
@@ -696,7 +696,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateStorageIfMissing(nsIUrlListener* urlListen
   // and not by folder discovery. So, we have to compute the parent.
   if (!msgParent)
   {
-    nsCAutoString folderName = mURI;
+    nsCAutoString folderName(mURI);
       
     nsCAutoString uri;
 
@@ -761,7 +761,7 @@ NS_IMETHODIMP nsImapMailFolder::GetOnlineDelimiter(char** onlineDelimiter)
         nsresult rv;
         PRUnichar delimiter = 0;
         rv = GetHierarchyDelimiter(&delimiter);
-        nsAutoString aString = delimiter;
+        nsAutoString aString(delimiter);
         *onlineDelimiter = aString.ToNewCString();
         return rv;
     }
@@ -980,7 +980,7 @@ NS_IMETHODIMP nsImapMailFolder::PrepareToRename()
 
 NS_IMETHODIMP nsImapMailFolder::RenameLocal(const char *newName)
 {
-    nsCAutoString leafname = newName;
+    nsCAutoString leafname(newName);
     // newName always in the canonical form "greatparent/parentname/leafname"
     PRInt32 leafpos = leafname.RFindChar('/');
     if (leafpos >0)

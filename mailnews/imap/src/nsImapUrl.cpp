@@ -1050,7 +1050,7 @@ NS_IMETHODIMP nsImapUrl::GetUri(char** aURI)
     PRUint32 key = m_listOfMessageIds ? atoi(m_listOfMessageIds) : 0;
 		nsXPIDLCString theFile;
     CreateCanonicalSourceFolderPathString(getter_Copies(theFile));
-    nsCString fullFolderPath = "/";
+    nsCString fullFolderPath("/");
     fullFolderPath += (const char *) m_userName;
     char *hostName = nsnull;
     rv = GetHost(&hostName);

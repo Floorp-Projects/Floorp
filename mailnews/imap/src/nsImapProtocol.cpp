@@ -5121,7 +5121,7 @@ PRBool nsImapProtocol::RenameHierarchyByHand(const char *oldParentMailboxName,
     }
     if (ns)
     {
-            nsCString pattern = oldParentMailboxName;
+            nsCString pattern(oldParentMailboxName);
             pattern += ns->GetDelimiter();
             pattern += "*";
             PRBool isUsingSubscription = PR_FALSE;
@@ -5163,7 +5163,7 @@ PRBool nsImapProtocol::RenameHierarchyByHand(const char *oldParentMailboxName,
         }
         
         // calculate the new name and do the rename
-        nsCString newChildName = newParentMailboxName;
+        nsCString newChildName(newParentMailboxName);
         newChildName += (currentName + PL_strlen(oldParentMailboxName));
         RenameMailboxRespectingSubscriptions(currentName,
                                              newChildName.GetBuffer(), 
@@ -5189,7 +5189,7 @@ PRBool nsImapProtocol::DeleteSubFolders(const char* selectedMailbox)
   if (m_deletableChildren)
   {
     m_hierarchyNameState = kDeleteSubFoldersInProgress;
-        nsCString pattern = selectedMailbox;
+        nsCString pattern(selectedMailbox);
         char onlineDirSeparator = kOnlineHierarchySeparatorUnknown;
         m_runningUrl->GetOnlineSubDirSeparator(&onlineDirSeparator);
         pattern.Append(onlineDirSeparator);
@@ -5354,7 +5354,7 @@ void nsImapProtocol::OnMoveFolderHierarchy(const char * sourceMailbox)
         m_runningUrl->GetOnlineSubDirSeparator(&onlineDirSeparator);
         newBoxName = destinationMailbox;
 
-        nsCString oldBoxName = sourceMailbox;
+        nsCString oldBoxName(sourceMailbox);
         PRInt32 leafStart = oldBoxName.RFindChar(onlineDirSeparator);
         PRInt32 length = oldBoxName.Length();
         nsCString leafName;
@@ -5471,10 +5471,10 @@ void nsImapProtocol::DiscoverAllAndSubscribedBoxes()
 						HandleMemoryFailure();
 				}
 
-                nsCAutoString allPattern = prefix;
+                nsCAutoString allPattern(prefix);
                 allPattern += '*';
 
-                nsCAutoString topLevelPattern = prefix;
+                nsCAutoString topLevelPattern(prefix);
                 topLevelPattern += '%';
 
                 nsCAutoString secondLevelPattern;

@@ -777,7 +777,7 @@ NS_IMETHODIMP nsIMAPHostSessionList::AddShellToCacheForHost(const char *serverKe
 NS_IMETHODIMP nsIMAPHostSessionList::FindShellInCacheForHost(const char *serverKey, const char *mailboxName, const char *UID, 
                                                              IMAP_ContentModifiedType modType, nsIMAPBodyShell	**shell)
 {
-	nsCString uidString = UID;
+	nsCString uidString(UID);
 
 	PR_EnterMonitor(gCachedHostInfoMonitor);
 	nsIMAPHostInfo *host = FindHost(serverKey);

@@ -244,7 +244,7 @@ nsImapIncomingServer::GetServerDirectory(char **serverDirectory)
 NS_IMETHODIMP
 nsImapIncomingServer::SetServerDirectory(const char *serverDirectory)
 {
-    nsCAutoString dirString = serverDirectory;
+    nsCAutoString dirString(serverDirectory);
 
     if (dirString.Length() > 0)
     {
@@ -872,7 +872,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 		return rv;
 	}
 
-    nsCAutoString dupFolderPath = folderPath;
+    nsCAutoString dupFolderPath(folderPath);
     if (dupFolderPath.Last() == '/')
     {
         dupFolderPath.SetLength(dupFolderPath.Length()-1);

@@ -50,7 +50,7 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 	if (NS_FAILED(rv)) 
 		return rv;
 
-	nsCAutoString uri = uriStr;
+	nsCAutoString uri(uriStr);
 	if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
 		return NS_ERROR_FAILURE;
 
@@ -183,7 +183,7 @@ nsresult nsParseImapMessageURI(const char* uri, nsCString& folderURI, PRUint32 *
 	if(!key)
 		return NS_ERROR_NULL_POINTER;
 
-	nsCAutoString uriStr = uri;
+	nsCAutoString uriStr(uri);
 	PRInt32 keySeparator = uriStr.FindChar('#');
 	if(keySeparator != -1)
 	{
