@@ -69,6 +69,8 @@ const extensionCsv      = ".csv";
 const filterRdf         = "iCalendar RDF";
 const extensionRdf      = ".rdf";
 
+calendarStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
+      
 if( opener && opener.gICalLib )
    gICalLib = opener.gICalLib;
 
@@ -158,7 +160,7 @@ function loadEventsFromFile()
       // If there are no events to import, let the user know
       //
       if (calendarEventArray.length == 0 && (duplicateEventArray.length == 0 || dupResult.discard == true) ) {
-        alert("No events to import...");
+        alert( calendarStringBundle.GetStringFromName( "noEventsToImport" ) );
         return false;
       }
       
@@ -171,7 +173,7 @@ function loadEventsFromFile()
 
         var buttonPressed =      
           promptService.confirmEx(window, 
-                                  "Import", "About to import " + calendarEventArray.length + " event(s).\nDo you want to open all new events to import before importing?", 
+                                  "Import", calendarStringBundle.GetStringFromName( "aboutToImport" ) + calendarEventArray.length + " " + calendarStringBundle.GetStringFromName( "aboutToImportEnd" ), 
                                   (promptService.BUTTON_TITLE_YES * promptService.BUTTON_POS_0) + 
                                   (promptService.BUTTON_TITLE_NO * promptService.BUTTON_POS_1) + 
                                   (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_2), 
@@ -202,7 +204,7 @@ function loadEventsFromFile()
         if (dupResult.discard == false) {
 
           if (dupResult.prompt)
-            alert("Some duplicate entries were imported. Each one will display in the New Event dialog,\n where you can skip it using Cancel, or edit and accept it using OK.");
+            alert(calendarStringBundle.GetStringFromName( "duplicateImport" ));
 
           addEventsToCalendar( duplicateEventArray, !dupResult.prompt );
         }
@@ -386,10 +388,10 @@ function entryExists( date, subject) {
 function promptToKeepEntry(title, startTime, endTime) 
 {
   return confirm(
-                 "Add duplicate entry:\n\n" + 
-                 "Title:      " + title + "\n" +
-                 "Start Time: " + startTime.toString() + "\n" +
-                 "End Time:   " + endTime.toString() + "\n" 
+                 calendarStringBundle.GetStringFromName( "addDuplicate" )+"\n\n" + 
+                 calendarStringBundle.GetStringFromName( "eventTitle" )+ title + "\n" +
+                 calendarStringBundle.GetStringFromName( "eventStartTime" )+ startTime.toString() + "\n" +
+                 calendarStringBundle.GetStringFromName( "eventEndTime" )+ endTime.toString() + "\n" 
                  );
 
 }
@@ -534,7 +536,7 @@ function readDataFromFile( aFilePath, charset )
    }
    catch(ex)
    {
-      alert("Unable to read from file: " + aFilePath );
+      alert( calendarStringBundle.GetStringFromName( "unableToRead" ) + aFilePath );
    }
 
    return aDataStream;
@@ -554,7 +556,7 @@ function saveEventsToFile( calendarEventArray )
 
    if (calendarEventArray.length == 0)
    {
-      alert("No events selected to save");
+      alert( calendarStringBundle.GetStringFromName( "noEventsToSave" ) );
       return;
    }
 
@@ -570,7 +572,7 @@ function saveEventsToFile( calendarEventArray )
    if(calendarEventArray.length == 1 && calendarEventArray[0].title)
       fp.defaultString = calendarEventArray[0].title;
    else
-      fp.defaultString = "Mozilla Calendar events";
+      fp.defaultString = calendarStringBundle.GetStringFromName( "defaultFileName" );
 
    fp.defaultExtension = "ics";
 
@@ -696,7 +698,7 @@ function patchICalStringForExport( sTextiCalendar )
 function eventArrayToHTML( calendarEventArray )
 {
    sHTMLHeader = 
-      "<html>\n" + "<head>\n" + "<title>Mozilla Calendar</title>\n" +
+      "<html>\n" + "<head>\n" + "<title>"+calendarStringBundle.GetStringFromName( "HTMLTitle" )+"</title>\n" +
       "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n" +
       "</head>\n"+ "<body bgcolor=\"#FFFFFF\" text=\"#000000\">\n";
    sHTMLFooter =
@@ -708,10 +710,10 @@ function eventArrayToHTML( calendarEventArray )
    {
       var calendarEvent = calendarEventArray[ eventArrayIndex ];
       sHTMLText += "<p>";
-      sHTMLText += "<B>Summary: </B>\t" + calendarEvent.title + "<BR>\n";
-      sHTMLText += "<B>Description: </B>\t" + calendarEvent.description + "<BR>\n";
-      sHTMLText += "<B>When: </B>" + formatDateTimeInterval(calendarEvent.start, calendarEvent.end) + "<BR>\n";
-      sHTMLText += "<B>Where: </B>" + calendarEvent.location + "<BR>\n";
+      sHTMLText += "<B>"+calendarStringBundle.GetStringFromName( "eventTitle" )+"</B>\t" + calendarEvent.title + "<BR>\n";
+      sHTMLText += "<B>"+calendarStringBundle.GetStringFromName( "eventDescription" )+"</B>\t" + calendarEvent.description + "<BR>\n";
+      sHTMLText += "<B>"+calendarStringBundle.GetStringFromName( "eventWhen" )+"</B>" + formatDateTimeInterval(calendarEvent.start, calendarEvent.end) + "<BR>\n";
+      sHTMLText += "<B>"+calendarStringBundle.GetStringFromName( "eventWhere" )+"</B>" + calendarEvent.location + "<BR>\n";
       // sHTMLText += "<B>Organiser: </B>\t" + Event.???
       sHTMLText += "</p>";
    }
@@ -738,8 +740,8 @@ function eventArrayToRTF( calendarEventArray )
    for( var eventArrayIndex = 0;  eventArrayIndex < calendarEventArray.length; ++eventArrayIndex )
    {
       var calendarEvent = calendarEventArray[ eventArrayIndex ];
-      sRTFText += "\\b\\f0\\fs20 " + "Summary:" + "\\b0\\tab " + calendarEvent.title + "\\par\n";
-      sRTFText += "\\b\\f0\\fs20 " + "Description:" + "\\b0\\tab " + calendarEvent.description + "\\par\n";
+      sRTFText += "\\b\\f0\\fs20 " + calendarStringBundle.GetStringFromName( "eventTitle" ) + "\\b0\\tab " + calendarEvent.title + "\\par\n";
+      sRTFText += "\\b\\f0\\fs20 " + calendarStringBundle.GetStringFromName( "eventDescription" ) + "\\b0\\tab " + calendarEvent.description + "\\par\n";
 
       sRTFText += "\\b When:\\b0\\tab " + formatDateTimeInterval(calendarEvent.start, calendarEvent.end) + "\\par\n";
 
@@ -850,7 +852,7 @@ function saveDataToFile(aFilePath, aDataStream, charset)
    }
    catch(ex)
    {
-      alert("Unable to write to file: " + aFilePath );
+      alert(calendarStringBundle.GetStringFromName( "unableToWrite" ) + aFilePath );
    }
 }
 

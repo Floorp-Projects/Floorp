@@ -154,6 +154,8 @@
 
 <!-- Javascript includes -->
 
+<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+
 <script type="application/x-javascript" src="chrome://calendar/content/jslib/jslib.js"/>
 
 <!-- NEEDED FOR DRAG AND DROP SUPPORT -->
@@ -175,7 +177,6 @@
 <script type="application/x-javascript" src="chrome://calendar/content/publish.js"/>
 
 <!-- NEEDED FOR DATE UTILS -->
-<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
 
 <script type="application/x-javascript" src="chrome://calendar/content/calendar.js"/>
