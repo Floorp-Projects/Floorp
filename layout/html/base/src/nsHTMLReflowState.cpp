@@ -1338,13 +1338,15 @@ nsHTMLReflowState::CalculateTableSideMargins(const nsHTMLReflowState* cbrs,
 static nsIStyleContext*
 GetNonInheritedLineHeightStyleContext(nsIStyleContext* aStyleContext)
 {
-  nsCOMPtr<nsIStyleContext> parentSC;
-  parentSC = getter_AddRefs(aStyleContext->GetParent());
+  nsIStyleContext* parentSC;
+  parentSC = aStyleContext->GetParent();
   if (parentSC) {
     const nsStyleText* text = (const nsStyleText*)
       parentSC->GetStyleData(eStyleStruct_Text);
     if (eStyleUnit_Inherit == text->mLineHeight.GetUnit()) {
-      return GetNonInheritedLineHeightStyleContext(parentSC);
+      nsIStyleContext* sc = GetNonInheritedLineHeightStyleContext(parentSC);
+      NS_RELEASE(parentSC);
+      return sc;
     }
   }
   return parentSC;
