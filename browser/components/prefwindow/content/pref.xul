@@ -15,6 +15,7 @@
         ondialogcancel="return hPrefWindow.onCancel(event);"
         persist="screenX screenY"> 
 
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script>
   <![CDATA[
 
@@ -54,17 +55,6 @@
     if (hPrefWindow)
       hPrefWindow.switchPage(newURL, "");
   }    
-
-  function visitLink(aEvent)
-  {
-    var node = aEvent.target;
-    while (node.nodeType != Node.ELEMENT_NODE)
-      node = node.parentNode;
-
-    var url = node.getAttribute("link");
-    if (url != "")
-      window.opener.openNewWindowWith(url, null, false);
-  }
 
   ]]>
   </script>        

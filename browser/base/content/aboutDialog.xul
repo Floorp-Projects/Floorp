@@ -54,6 +54,7 @@
         title="&aboutDialog.title;"
         style="width: 299px"> 
     
+    <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
     <script type="application/x-javascript">
       <![CDATA[
         function onLoad() {
@@ -74,11 +75,8 @@
         <spacer flex="1"/>
         <textbox id="userAgent" multiline="true" readonly="true" cols="60" style="height: 5.1em"/>
         <spacer flex="1"/>
-        /* XXXBlake This is a workaround.  I find that if I try to use href and I open
-                    About as a modal dialog, a new browser window opens when I click the link
-                    but the page doesn't load in it. */
-        <html:a onclick="window.openDialog('chrome://browser/content', 'Mozilla Firebird', 'chrome,all,dialog=no', '&copyrightLink;');"
-                href="" id="copyright"
+        <html:a onclick="visitLink(event);"
+                href="" id="copyright" link="&copyrightLink;"
                 style="display: block;">&copyright;</html:a>
         <spacer flex="1"/>
       </vbox>

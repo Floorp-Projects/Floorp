@@ -124,6 +124,15 @@ function goOnEvent(node, event)
   }
 }
 
+function visitLink(aEvent) {
+  var node = aEvent.target;
+  while (node.nodeType != Node.ELEMENT_NODE)
+    node = node.parentNode;
+  var url = node.getAttribute("link");
+  if (url != "")
+    window.opener.openNewWindowWith(url, null, false);
+}
+
 function isValidLeftClick(aEvent, aName)
 {
   return (aEvent.button == 0 && aEvent.originalTarget.localName == aName);
