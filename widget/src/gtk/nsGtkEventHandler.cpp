@@ -300,7 +300,8 @@ void InitKeyEvent(GdkEventKey *aGEK,
     anEvent.isShift = (aGEK->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isControl = (aGEK->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isAlt = (aGEK->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
-    anEvent.isMeta = (aGEK->state & GDK_MOD2_MASK) ? PR_TRUE : PR_FALSE;
+    // XXX
+    anEvent.isMeta = PR_FALSE; //(aGEK->state & GDK_MOD2_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.point.x = 0;
     anEvent.point.y = 0;
   }
@@ -322,7 +323,8 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
     anEvent.isShift = (aGEK->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isControl = (aGEK->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isAlt = (aGEK->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
-    anEvent.isMeta = (aGEK->state & GDK_MOD2_MASK) ? PR_TRUE : PR_FALSE;
+    // XXX
+    anEvent.isMeta = PR_FALSE; //(aGEK->state & GDK_MOD2_MASK) ? PR_TRUE : PR_FALSE;
 
     if(aGEK->length)
        anEvent.charCode = nsConvertCharCodeToUnicode(aGEK);
@@ -600,7 +602,8 @@ static gint composition_draw(GdkEventKey *aEvent, nsWindow *aWin,
   textEvent.isShift = (aEvent->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
   textEvent.isControl = (aEvent->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
   textEvent.isAlt = (aEvent->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
-  textEvent.isMeta = (aEvent->state & GDK_MOD2_MASK) ? PR_TRUE : PR_FALSE;
+  // XXX
+  textEvent.isMeta = PR_FALSE; //(aEvent->state & GDK_MOD2_MASK) ? PR_TRUE : PR_FALSE;
   textEvent.eventStructType = NS_TEXT_EVENT;
   aWin->DispatchEvent(&textEvent, *aStatus);
 
