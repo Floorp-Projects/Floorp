@@ -2155,27 +2155,68 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
   // Should put caret at anchor point?
   if (!aDeleteSelection)
   {
+    PRBool collapseAfter = PR_TRUE;
+    // Named Anchor is a special case,
+    // We collapse to insert element BEFORE the selection
+    // For all other tags, we insert AFTER the selection
+    nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aElement);
+    if (anchor)
+    {
+      nsAutoString name;
+      if (NS_SUCCEEDED(anchor->GetName(name)) && name.GetUnicode() && name.Length() != 0)
+        collapseAfter = PR_FALSE;
+    }
+
     nsCOMPtr<nsIDOMSelection>selection;
     res = nsEditor::GetSelection(getter_AddRefs(selection));
     if (NS_SUCCEEDED(res) && selection)
-      selection->ClearSelection();    
+    {
+      if (collapseAfter)
+      {
+        // Default behavior is to collapse to the end of the selection
+        selection->ClearSelection();
+      } else {
+        // Collapse to the start of the selection,
+        // We must explore the first range and find
+        //   its parent and starting offset of selection
+        // TODO: Move this logic to a new method nsIDOMSelection::CollapseToStart()???
+        nsCOMPtr<nsIDOMRange> firstRange;
+        res = selection->GetRangeAt(0, getter_AddRefs(firstRange));
+        if (NS_SUCCEEDED(res) && firstRange)
+        {
+          nsCOMPtr<nsIDOMNode> parent;
+          res = firstRange->GetCommonParent(getter_AddRefs(parent));
+          if (NS_SUCCEEDED(res) && parent)
+          {
+            PRInt32 startOffset;
+            firstRange->GetStartOffset(&startOffset);
+            selection->Collapse(parent, startOffset);
+          } else {
+            // Very unlikely, but collapse to the end if we failed above
+            selection->ClearSelection();
+          }
+        }
+      }
+    }
   }
-  PRBool isInline;
   
-    //
   res = DeleteSelectionAndPrepareToCreateNode(parentSelectedNode, offsetOfNewNode);
   if (NS_SUCCEEDED(res))
   {
     nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(aElement);
+    PRBool isInline;
     res = IsNodeInline(newNode, isInline);
-    if( NS_SUCCEEDED(res))
+    if( NS_SUCCEEDED(res) && isInline)
     {
       // The simple case of an inline node
       res = InsertNode(aElement, parentSelectedNode, offsetOfNewNode);
-      if( NS_SUCCEEDED(res))
-        SetCaretAfterElement(aElement);
+    } else {
+      // Inserting a BLOCK element:
+
     }
   }
+  if (NS_SUCCEEDED(res))
+    SetCaretAfterElement(aElement);
   return res;
 }
 
