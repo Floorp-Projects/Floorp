@@ -59,6 +59,10 @@ ifeq ($(OS_TEST),pmax)
 DSO_LDOPTS		= -shared
 endif
 
+ifdef LIBRUNPATH
+DSO_LDOPTS		+= -R$(LIBRUNPATH)
+endif
+
 MKSHLIB			= $(LD) $(DSO_LDOPTS)
 
 G++INCLUDES		= -I/usr/include/g++
