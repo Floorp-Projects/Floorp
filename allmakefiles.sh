@@ -1092,6 +1092,9 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/xmlextras/base/public/Makefile
             extensions/xmlextras/build/Makefile
             extensions/xmlextras/build/src/Makefile
+            extensions/xmlextras/proxy/Makefile
+            extensions/xmlextras/proxy/public/Makefile
+            extensions/xmlextras/proxy/src/Makefile
             extensions/xmlextras/schema/Makefile
             extensions/xmlextras/schema/public/Makefile
             extensions/xmlextras/schema/src/Makefile
@@ -1116,6 +1119,11 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/xmlterm/scripts/Makefile
             extensions/xmlterm/tests/Makefile
             extensions/xmlterm/ui/Makefile
+            " ;;
+        interfaceinfo ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/interfaceinfo/Makefile
+            extensions/interfaceinfo/public/Makefile
+            extensions/interfaceinfo/src/Makefile
             " ;;
     esac
 done
