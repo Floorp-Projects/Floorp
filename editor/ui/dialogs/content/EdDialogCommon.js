@@ -220,7 +220,8 @@ function SetTextboxFocus(textbox)
   {
     // Until .select works for editable menulist, lets just set focus
     //XXX Using the setTimeout is hacky workaround for bug 103197
-    setTimeout("textbox.focus()", 1);
+    // Must create a new function to keep "textbox" in scope
+    setTimeout( function(textbox) { textbox.focus(); }, 0, textbox );
 /*
     // Select entire contents
     if (textbox.value.length > 0)
