@@ -4004,6 +4004,89 @@ nsCSSFrameConstructor::ContentReplaced(nsIPresContext* aPresContext,
   return res;
 }
 
+// Returns PR_TRUE if aAncestorFrame is an ancestor frame of aFrame
+static PRBool
+IsAncestorFrame(nsIFrame* aFrame, nsIFrame* aAncestorFrame)
+{
+  nsIFrame* parentFrame;
+  aFrame->GetParent(&parentFrame);
+
+  while (parentFrame) {
+    if (parentFrame == aAncestorFrame) {
+      return PR_TRUE;
+    }
+
+    parentFrame->GetParent(&parentFrame);
+  }
+
+  return PR_FALSE;
+}
+
+static nsresult
+DeleteOutOfFlowChildFrames(nsIPresContext* aPresContext,
+                           nsIFrame*       aRemovedFrame,
+                           nsIFrame*       aFrame)
+{
+  // Recursively walk aFrame's child frames looking for placeholder frames
+  nsIFrame* childFrame;
+  aFrame->FirstChild(nsnull, &childFrame);
+  while (childFrame) {
+    nsIAtom*  frameType;
+    PRBool    isPlaceholder;
+
+    // See if it's a placeholder frame
+    childFrame->GetFrameType(&frameType);
+    isPlaceholder = (nsLayoutAtoms::placeholderFrame == frameType);
+    NS_IF_RELEASE(frameType);
+
+    if (isPlaceholder) {
+      // Get the out-of-flow frame
+      nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)childFrame)->GetOutOfFlowFrame();
+
+      // Find and delete any of its out-of-flow frames
+      DeleteOutOfFlowChildFrames(aPresContext, aRemovedFrame, outOfFlowFrame);
+      
+      // Don't delete the out-of-flow frame if aRemovedFrame is one of its
+      // ancestor frames, because when aRemovedFrame is deleted it will delete
+      // its child frames including this out-of-flow frame
+      if (!IsAncestorFrame(outOfFlowFrame, aRemovedFrame)) {
+        nsIPresShell* presShell;
+        aPresContext->GetShell(&presShell);
+
+        // Remove the mapping from the out-of-flow frame to its placeholder
+        presShell->SetPlaceholderFrameFor(outOfFlowFrame, nsnull);
+
+        // XXX TROY Factor this code...
+        nsIAtom* listName;
+        const nsStylePosition* position;
+        outOfFlowFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
+
+        if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
+          listName = nsLayoutAtoms::absoluteList;
+        } else if (NS_STYLE_POSITION_FIXED == position->mPosition) {
+          listName = nsLayoutAtoms::fixedList;
+        } else {
+          listName = nsLayoutAtoms::floaterList;
+        }
+
+        // Ask the out-of-flow frame's parent frame to delete it
+        nsIFrame* parentFrame;
+        outOfFlowFrame->GetParent(&parentFrame);
+        parentFrame->RemoveFrame(*aPresContext, *presShell, listName, outOfFlowFrame);
+        NS_RELEASE(presShell);
+      }
+
+    } else {
+      DeleteOutOfFlowChildFrames(aPresContext, aRemovedFrame, childFrame);
+    }
+
+    // Get the next sibling child frame
+    childFrame->GetNextSibling(&childFrame);
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
                                       nsIContent*     aContainer,
@@ -4019,6 +4102,10 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
   shell->GetPrimaryFrameFor(aChild, &childFrame);
 
   if (nsnull != childFrame) {
+    // If the frame has any child frames that have been moved out of the
+    // flow, then delete them as well
+    DeleteOutOfFlowChildFrames(aPresContext, childFrame, childFrame);
+
     // See if the child frame is a floating frame
     const nsStyleDisplay* display;
     childFrame->GetStyleData(eStyleStruct_Display,
@@ -4844,6 +4931,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
     styleContext->GetStyleData(eStyleStruct_Position);
   nsIAtom*  listName = nsnull;
 
+  // XXX TROY Factor out this code...
   if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
     listName = nsLayoutAtoms::absoluteList;
   } else if (NS_STYLE_POSITION_FIXED == position->mPosition) {
