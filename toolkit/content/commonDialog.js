@@ -135,7 +135,6 @@ function commonDialogOnLoad()
     iconClass = "message-icon";
   iconElement.setAttribute("class", iconElement.getAttribute("class") + " " + iconClass);
 
-  var firstButton = document.documentElement.getButton("accept");
   switch (nButtons) {
     case 4:
       setLabelForNode(document.documentElement.getButton("extra2"), gCommonDialogParam.GetString(11));
@@ -152,7 +151,7 @@ function commonDialogOnLoad()
     case 1:
       string = gCommonDialogParam.GetString(8);
       if (string)
-        setLabelForNode(firstButton, string);
+        setLabelForNode(document.documentElement.getButton("accept"), string);
       break;
   }
 
@@ -163,9 +162,55 @@ function commonDialogOnLoad()
   setCheckbox(gCommonDialogParam.GetString(1), gCommonDialogParam.GetInt(1));
 
   if (gCommonDialogParam.GetInt(3) == 0) // If no text fields
-    firstButton.focus(); // Don't focus checkbox, focus first button instead
+  {
+    var dButton;
+    var defaultButton = gCommonDialogParam.GetInt(5);
+    switch (defaultButton) {
+      case 3:
+        dButton = document.documentElement.getButton("extra2");
+        break;
+      case 2:
+        dButton = document.documentElement.getButton("extra1");
+        break;
+      case 1:
+        dButton = document.documentElement.getButton("cancel");
+        break;
+      default:
+      case 0:
+        dButton = document.documentElement.getButton("accept");
+        break;
+    }
+    // move the default attribute and focus from the accept button
+    // to the one specified in the dialog params
+    document.documentElement.getButton("accept").setAttribute("default",false);
+    dButton.setAttribute("default", true);
+    dButton.focus();
+  }
+
+  if (gCommonDialogParam.GetInt(6) != 0) // delay button enable
+  {
+    var delayInterval = 2000;
+    try {
+      var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                  .getService(Components.interfaces.nsIPrefBranch);
+      delayInterval = prefs.getIntPref("security.dialog_enable_delay");
+    } catch (e) {}
+
+    document.documentElement.getButton("accept").disabled = true;
+    document.documentElement.getButton("extra1").disabled = true;
+    document.documentElement.getButton("extra2").disabled = true;
+
+    setTimeout(commonDialogReenableButtons, delayInterval);
+  }
 
   getAttention();
+}
+
+function commonDialogReenableButtons()
+{
+  document.documentElement.getButton("accept").disabled = false;
+  document.documentElement.getButton("extra1").disabled = false;
+  document.documentElement.getButton("extra2").disabled = false;
 }
 
 function initTextbox(aName, aLabelIndex, aValueIndex, aAlwaysLabel)
