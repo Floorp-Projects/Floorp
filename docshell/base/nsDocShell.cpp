@@ -1235,46 +1235,29 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
 {  
 #ifdef SH_IN_FRAMES
    // XXX Honor the reload type
-   NS_ENSURE_STATE(mCurrentURI);
+   //NS_ENSURE_STATE(mCurrentURI);
 
    // XXXTAB Convert reload type to our type
    nsDocShellInfoLoadType type = nsIDocShellLoadInfo::loadReloadNormal;
    if ( aReloadType == nsIWebNavigation::loadReloadBypassProxyAndCache )
    	type = nsIDocShellLoadInfo::loadReloadBypassProxyAndCache;
 
-  // XXX: Why does reload fail if session history is not available?
-  //      Won't this break reloading framesets?
-   if (mSessionHistory == nsnull) {
-      return NS_OK;
-   }
-
-   nsCOMPtr<nsIDocShellTreeItem> root;
-   GetSameTypeRootTreeItem(getter_AddRefs(root));
-   if(root.get() != NS_STATIC_CAST(nsIDocShellTreeItem*, this))
-      {
-      nsCOMPtr<nsIWebNavigation> rootAsNav(do_QueryInterface(root));
-      return rootAsNav->Reload(aReloadType);
-      }
-
-   NS_ENSURE_STATE(mSessionHistory);
-   
-   UpdateCurrentSessionHistory();  
-
    nsCOMPtr<nsISHEntry> entry;
-   PRInt32 index = -1;
-   NS_ENSURE_SUCCESS(mSessionHistory->GetIndex(&index), NS_ERROR_FAILURE);
-   NS_ENSURE_SUCCESS(mSessionHistory->GetEntryAtIndex(index, PR_FALSE,
-      getter_AddRefs(entry)), NS_ERROR_FAILURE);
-   NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
-   
-   nsCOMPtr<nsIURI> uri;
-   nsCOMPtr<nsIInputStream> postdata;
-
-   entry->GetURI(getter_AddRefs(uri));
-   entry->GetPostData(getter_AddRefs(postdata));
-
-   NS_ENSURE_SUCCESS(InternalLoad(uri, mReferrerURI, nsnull, nsnull, 
-      postdata, type, entry), NS_ERROR_FAILURE);
+   if (OSHE) {
+	   /* We should fall here in most cases including subframes & refreshes */
+	   entry = OSHE;
+   } else if (mSessionHistory) {
+	   /* In case we fail above, as a last ditch effort, we 
+	    * reload the whole page.
+		*/
+	  PRInt32 index = -1;
+      NS_ENSURE_SUCCESS(mSessionHistory->GetIndex(&index), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(mSessionHistory->GetEntryAtIndex(index, PR_FALSE,
+          getter_AddRefs(entry)), NS_ERROR_FAILURE);
+      NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
+   }
+	   
+   return LoadHistoryEntry(entry, type);
 
 
 #else
@@ -1291,8 +1274,9 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
 
    NS_ENSURE_SUCCESS(InternalLoad(mCurrentURI, mReferrerURI, nsnull, nsnull, 
       nsnull, type), NS_ERROR_FAILURE);
-#endif  /* SH_IN_FRAMES  */
    return NS_OK;
+#endif  /* SH_IN_FRAMES  */
+ 
 }
 
 NS_IMETHODIMP nsDocShell::Stop()
@@ -3338,6 +3322,7 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI *aURI,
   if (mSessionHistory) {
 	  if (mLoadType != nsIDocShellLoadInfo::loadNormalReplace)
          rv = mSessionHistory->AddEntry(entry, shouldPersist);
+
   } else {
     rv = AddChildSHEntry(nsnull, entry, mChildOffset);
   }
