@@ -41,7 +41,7 @@ class nsImageContainer : public nsIImageContainer,
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIIMAGECONTAINER
+  NS_DECL_GFXIIMAGECONTAINER
   NS_DECL_NSPIIMAGECONTAINERXLIB
 
   nsImageContainer();
