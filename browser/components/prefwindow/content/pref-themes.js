@@ -56,7 +56,7 @@ function Startup()
     return;
   }
   gData.loaded = true;
-  parent.hPrefWindow.registerOKCallbackFunc( applySkin );
+  parent.hPrefWindow.registerOKCallbackFunc(applyTheme);
 
   const kPrefSvcContractID = "@mozilla.org/preferences;1";
   const kPrefSvcIID = Components.interfaces.nsIPref;
@@ -93,15 +93,11 @@ function Startup()
   }
 }
 
-function applySkin()
+function applyTheme()
 {
   var data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-themes.xul"];
   if (data.name == null)
     return;
-
-  const kPrefSvcContractID = "@mozilla.org/preferences;1";
-  const kPrefSvcIID = Components.interfaces.nsIPref;
-  const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
 
   var theme = null;
   try {
@@ -122,35 +118,54 @@ function applySkin()
   var inUse = reg.isSkinSelected(data.name, true);
   if (!theme && inUse == Components.interfaces.nsIChromeRegistry.FULL) return;
 
-  var str = Components.classes["@mozilla.org/supports-wstring;1"]
-                      .createInstance(Components.interfaces.nsISupportsWString);
-  str.data = data.name;
+  var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+    .getService(Components.interfaces.nsIXULChromeRegistry);
 
-  kPrefSvc.setComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsWString, str);
-
-  // shut down quicklaunch so the next launch will have the new skin
-  var appShell = Components.classes['@mozilla.org/appshell/appShellService;1'].getService();
-  appShell = appShell.QueryInterface(Components.interfaces.nsIAppShellService);
+  var oldTheme = false;
   try {
-    appShell.nativeAppSupport.isServerMode = false;
+    oldTheme = !chromeRegistry.checkThemeVersion(data.name);
   }
-  catch(ex) {
+  catch(e) {
   }
+
 
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+  if (oldTheme) {
+    var title = gNavigatorBundle.getString("oldthemetitle");
+    var message = gNavigatorBundle.getString("oldTheme");
 
-  var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(); 
-  strBundleService = strBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
-  var navbundle = strBundleService.createBundle("chrome://navigator/locale/navigator.properties"); 
-  var brandbundle = strBundleService.createBundle("chrome://global/locale/brand.properties");
-  
-  if (promptService && navbundle && brandbundle) {                                                          
-    var dialogTitle = navbundle.GetStringFromName("switchskinstitle");          
-    var brandName = brandbundle.GetStringFromName("brandShortName");            
-    var msg = navbundle.formatStringFromName("switchskins", [brandName], 1);                                
-    promptService.alert(window, dialogTitle, msg); 
+    message = message.replace(/%theme_name%/, themeName.getAttribute("displayName"));
+    message = message.replace(/%brand%/g, gBrandBundle.getString("brandShortName"));
+
+    if (promptService.confirm(window, title, message)){
+      var inUse = chromeRegistry.isSkinSelected(data.name, true);
+
+      chromeRegistry.uninstallSkin(data.name, true);
+
+      var str = Components.classes["@mozilla.org/supports-wstring;1"]
+                          .createInstance(Components.interfaces.nsISupportsWString);
+
+      str.data = true;
+      pref.setComplexValue("general.skins.removelist." + data.name,
+                           Components.interfaces.nsISupportsWString, str);
+      
+      if (inUse)
+        chromeRegistry.refreshSkins();
+    }
+
+    return;
   }
+
+var str = Components.classes["@mozilla.org/supports-wstring;1"]
+                    .createInstance(Components.interfaces.nsISupportsWString);
+str.data = data.name;
+kPrefSvc.setComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsWString, str);
+
+
+chromeRegistry.selectSkin(data.name, true);                                        
+chromeRegistry.refreshSkins();
 }
+
 
 function uninstallSkin()
 {
