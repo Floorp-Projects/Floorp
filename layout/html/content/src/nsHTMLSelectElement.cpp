@@ -320,6 +320,7 @@ nsHTMLSelectElement::Release()
     return 0;                                          
   } else if ((1 == mRefCnt) && mForm) { 
     mRefCnt = 0;
+    NS_LOG_RELEASE(this, mRefCnt, "nsHTMLSelectElement");
     delete this;
     return 0;
   } else {

@@ -183,6 +183,7 @@ nsHTMLButtonElement::Release()
     return 0;                                          
   } else if ((1 == mRefCnt) && mForm) { 
     mRefCnt = 0;
+    NS_LOG_RELEASE(this, mRefCnt, "nsHTMLButtonElement");
     delete this;
     return 0;
   } else {
@@ -525,11 +526,11 @@ nsHTMLButtonElement::SetForm(nsIDOMHTMLFormElement* aForm)
 
   if (mForm && formControl)
     mForm->RemoveElement(formControl, PR_TRUE);
-  NS_IF_RELEASE(mForm);
 
   if (nsnull == aForm)
     mForm = nsnull;
   else {
+    NS_IF_RELEASE(mForm);
     if (formControl) {
       result = aForm->QueryInterface(kIFormIID, (void**)&mForm); // keep the ref
       if ((NS_OK == result) && mForm) {
