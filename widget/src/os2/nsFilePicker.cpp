@@ -35,7 +35,7 @@
 #include "nsFilePicker.h"
 #include "nsILocalFile.h"
 #include "nsIURL.h"
-#include "nsIFileChannel.h"
+#include "nsIFileURL.h"
 #include "nsIStringBundle.h"
 
 /* Item structure */
