@@ -36,7 +36,7 @@ $lxr_data_root = '/export2/lxr-data';
 $ignore_pat = "(?:".join('|',@ignore).")";
 
 print STDERR "Building hash of file names...";
-%file_names = build_file_hash($cvsroot, $tree);
+($file_bases, $file_fullpaths) = build_file_hash($cvsroot, $tree);
 print STDERR "done.\n";
 
 for $br (last_successful_builds($tree)) {
@@ -47,7 +47,7 @@ for $br (last_successful_builds($tree)) {
   warn "Parsing build log, $log_file\n";
 
   $fh = new FileHandle "gunzip -c $tree/$log_file |";
-  &gcc_parser($fh, $cvsroot, $tree, $log_file, \%file_names);
+  &gcc_parser($fh, $cvsroot, $tree, $log_file, $file_bases, $file_fullpaths);
   $fh->close;
 
   &build_blame;
@@ -78,18 +78,22 @@ sub build_file_hash {
   
   while (<LXR_FILENAMES>) {
     my ($base, $dir, $ext) = fileparse($_,'\.[^/]*');
+
     next unless $ext =~ /^\.(cpp|h|C|s|c|mk|in)$/;
+
     $base = "$base$ext";
+    $dir =~ s|$lxr_data_root/mozilla/||;
+    $dir =~ s|/$||;
+
+    $fullpath{"$dir/$base"}=1;
 
     unless (exists $bases{$base}) {
-      $dir =~ s|$lxr_data_root/mozilla/||;
-      $dir =~ s|/$||;
       $bases{$base} = $dir;
     } else {
       $bases{$base} = '[multiple]';
     }
   }
-  return %bases;
+  return \%bases, \%fullpath;
 }
 
 sub last_successful_builds {
@@ -116,7 +120,7 @@ sub last_successful_builds {
 }
 
 sub gcc_parser {
-  my ($fh, $cvsroot, $tree, $log_file, $file_hash_ref) = @_;
+  my ($fh, $cvsroot, $tree, $log_file, $file_bases, $file_fullnames) = @_;
   my $dir = '';
 
   while (<$fh>) {
@@ -140,11 +144,11 @@ sub gcc_parser {
     # Special case for Makefiles
     $filename =~ s/Makefile$/Makefile.in/;
 
-    my $dir;
-    if (-e "$cvsroot/$tree/$build_dir/$filename,v") {
+    my $dir = '';
+    if ($file_fullnames->{"$build_dir/$filename"}) {
       $dir = $build_dir;
     } else {
-      unless(defined($dir = $file_hash_ref->{$filename})) {
+      unless(defined($dir = $file_bases->{$filename})) {
         $dir = '[no_match]';
       }
     }
