@@ -116,6 +116,7 @@ function initMenus()
                  {type: "checkbox",
                   checkedif: "console.prefs['prettyprint']"}],
          ["-"],
+         ["clear-session"],
          [">session:colors"],
          ["-"],
          ["save-default-layout"],

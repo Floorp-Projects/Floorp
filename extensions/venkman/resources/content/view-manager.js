@@ -136,6 +136,8 @@ function vmrg_endmm()
 
     ASSERT(this.multiMoveDepth >= 0, "mismatched multi move calls: " +
            this.multiMoveDepth);
+
+    var container;
     
     if (!this.multiMoveDepth)
     {
@@ -146,7 +148,7 @@ function vmrg_endmm()
             if (w != VMGR_MAINWINDOW)
             {
                 var window = this.windows[w];
-                var container = 
+                container = 
                     window.document.getElementById(VMGR_DEFAULT_CONTAINER);
                 if (container && container.viewCount == 0)
                     window.close();
@@ -157,9 +159,9 @@ function vmrg_endmm()
         for (var viewId in this.views)
         {
             var view = this.views[viewId];
-            if (view.currentContent)
+            if ("currentContent" in view && view.currentContent)
             {
-                var container = view.currentContent.parentNode;
+                container = view.currentContent.parentNode;
                 if (container.getAttribute("type") == "tab" &&
                     container.viewCount == 1)
                 {

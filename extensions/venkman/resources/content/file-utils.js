@@ -273,6 +273,8 @@ function LocalFile(file, mode, perms, tmp)
     {
         throw "bad type for argument |file|.";
     }
+
+    this.path = this.localFile.path;
     
     if (mode & (MODE_WRONLY | MODE_RDWR))
     {

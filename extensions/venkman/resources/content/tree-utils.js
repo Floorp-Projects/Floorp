@@ -356,13 +356,14 @@ BasicOView.prototype.onRouteKeyPress =
 function bov_rkeypress (event)
 {
     var rec;
+    var rowIndex;
     
     if ("onRowCommand" in this && (event.keyCode == 13 || event.charCode == 32))
     {
         if (!this.selection)
             return;
         
-        var rowIndex = this.tree.selection.currentIndex;
+        rowIndex = this.tree.selection.currentIndex;
         if (rowIndex == -1 || rowIndex > this.rowCount)
             return;
         rec = this.childData.locateChildByVisualRow(rowIndex);
@@ -376,10 +377,10 @@ function bov_rkeypress (event)
     }
     else if ("onKeyPress" in this)
     {
-        var rowIndex = this.tree.selection.currentIndex;
+        rowIndex = this.tree.selection.currentIndex;
         if (rowIndex != -1 && rowIndex < this.rowCount)
         {
-            var rec = this.childData.locateChildByVisualRow(rowIndex);
+            rec = this.childData.locateChildByVisualRow(rowIndex);
             if (!rec)
             {
                 ASSERT (0, "bogus row index " + rowIndex);
@@ -1597,13 +1598,14 @@ XULTreeView.prototype.onRouteKeyPress =
 function xtv_rkeypress (event)
 {
     var rec;
+    var rowIndex;
     
     if ("onRowCommand" in this && (event.keyCode == 13 || event.charCode == 32))
     {
         if (!this.selection)
             return;
         
-        var rowIndex = this.tree.selection.currentIndex;
+        rowIndex = this.tree.selection.currentIndex;
         if (rowIndex == -1 || rowIndex > this.rowCount)
             return;
         rec = this.childData.locateChildByVisualRow(rowIndex);
@@ -1617,10 +1619,10 @@ function xtv_rkeypress (event)
     }
     else if ("onKeyPress" in this)
     {
-        var rowIndex = this.tree.selection.currentIndex;
+        rowIndex = this.tree.selection.currentIndex;
         if (rowIndex != -1 && rowIndex < this.rowCount)
         {
-            var rec = this.childData.locateChildByVisualRow(rowIndex);
+            rec = this.childData.locateChildByVisualRow(rowIndex);
             if (!rec)
             {
                 ASSERT (0, "bogus row index " + rowIndex);

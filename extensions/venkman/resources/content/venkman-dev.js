@@ -33,13 +33,6 @@
  *
  */
 
-console.guessFallback =
-function (scriptWrapper, sourceContext)
-{
-    dd ("guess fallback");
-    return "foo";
-}
-
 function initDev()
 {
     var cmdary =
@@ -50,6 +43,7 @@ function initDev()
          ["dumpscripts",   cmdDumpScripts,   CMD_CONSOLE | CMD_NO_HELP],
          ["reloadui",      cmdReloadUI,      CMD_CONSOLE | CMD_NO_HELP],
          ["sync-debug",    cmdSyncDebug,     CMD_CONSOLE | CMD_NO_HELP],
+         ["test",          cmdTest,          CMD_CONSOLE | CMD_NO_HELP],
          ["testargs",      cmdTestArgs,      CMD_CONSOLE | CMD_NO_HELP],
          ["testargs1",     cmdTestArgs,      CMD_CONSOLE | CMD_NO_HELP],
          ["testfilters",   cmdTestFilters,   CMD_CONSOLE | CMD_NO_HELP],
@@ -191,6 +185,24 @@ function cmdSyncDebug()
         console.dbgRealize = true;
     else
         delete console.dbgRealize;
+}
+
+function cmdTest(e)
+{
+    function f()
+    {
+        g();
+        h();
+    };
+
+    function g() {};
+    function h() {};
+    
+    dd("start {");
+    for (var i = 0; i < 50000; ++i)
+        f();
+
+    dd("} stop");
 }
 
 function cmdTestArgs (e)
