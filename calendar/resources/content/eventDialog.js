@@ -313,7 +313,7 @@ function onOKCommand()
    }
    gEvent.recur         = getFieldValue( "repeat-checkbox", "checked" );
    gEvent.recurUnits    = getFieldValue( "repeat-length-units", "value" );  
-   gEvent.recurForever  = getFieldValue( "repeat-forever-radio", "checked" );
+   gEvent.recurForever  = getFieldValue( "repeat-forever-radio", "selected" );
    gEvent.recurInterval  = getFieldValue( "repeat-length-field" );
    
    if( gEvent.recurInterval == 0 )
@@ -328,7 +328,7 @@ function onOKCommand()
    if( gEvent.recur == true )
    {
       //check that the repeat end time is later than the end time
-      if( recurEndDate.getTime() < gEvent.end.getTime() && gEvent.recurForever != false )
+      if( recurEndDate.getTime() < gEvent.end.getTime() && gEvent.recurForever == false )
       {
          alert( neRecurErrorAlertMessage );
          return( false );
