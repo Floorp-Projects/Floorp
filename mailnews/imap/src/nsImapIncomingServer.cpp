@@ -1086,29 +1086,24 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 		// If there is a hierarchy, there is a parent.
 		// Don't strip off slash if it's the first character
         parentName.Truncate(leafPos);
+        folderName.Cut(0, leafPos + 1);	// get rid of the parent name
 		haveParent = PR_TRUE;
-		parentUri.Append('/');
-		parentUri.Append(parentName);
-		folderName.Cut(0, leafPos + 1);	// get rid of the parent name
-        if ((nsCRT::strcasecmp("INBOX", parentName) == 0) && (nsCRT::strcmp(parentName, "INBOX") != 0 ))
-        {
-          NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
-          NS_ENSURE_SUCCESS(rv,rv);
-          nsCOMPtr<nsIRDFResource> res;
-          nsCAutoString inboxUri(uri);
-          inboxUri.Append('/');
-          inboxUri.Append("INBOX");
-          rv = rdf->GetResource(inboxUri, getter_AddRefs(res));
-          if (NS_SUCCEEDED(rv))
+        PRInt32 offset = parentName.Find("INBOX",PR_TRUE,0,1); 
+        if (offset > -1)
+        {  
+          nsCAutoString inbox("INBOX");
+          PRInt32 j=0;
+          for (PRInt32 i=offset;i <(offset+5);i++)
+            inbox.SetCharAt(parentName.CharAt(i), j++);
+          if (nsCRT::strcmp(inbox,"INBOX") != 0 )
           {
-            nsCOMPtr<nsIMsgFolder> inboxFolder = do_QueryInterface(res, &rv);
-            if (NS_SUCCEEDED(rv) && res)
-              a_nsIFolder->PropagateDelete(inboxFolder, PR_TRUE);
+            dupFolderPath.ReplaceSubstring(inbox,"INBOX");
+            parentName.ReplaceSubstring(inbox,"INBOX");
           }
         }
+        parentUri.Append('/');
+        parentUri.Append(parentName);
     }
-
-
     if (nsCRT::strcasecmp("INBOX", folderPath) == 0 &&
         hierarchyDelimiter == kOnlineHierarchySeparatorNil)
     {
@@ -1138,7 +1133,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
             caseInsensitive = (nsCRT::strcasecmp("INBOX", parentName) == 0);
             a_nsIFolder->GetChildWithURI(parentUri, PR_TRUE, caseInsensitive, getter_AddRefs(parent));
 			if (!parent /* || parentFolder->GetFolderNeedsAdded()*/)
-			{
+            {
 				PossibleImapMailbox(parentName, hierarchyDelimiter, kNoselect |		// be defensive
 											((boxFlags  &	 //only inherit certain flags from the child
 											(kPublicMailbox | kOtherUsersMailbox | kPersonalMailbox)))); 
