@@ -82,7 +82,7 @@ include $(DEPTH)/config/rules.mk
 $(OBJDIR)/moz-export: $(OBJS) 
 	@$(MAKE_OBJDIR)
 	rm -f $@
-	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(BASIC_LIBS) -L$(DIST)/bin -L$(DIST)/lib $(DSO_EX_LIBS) $(DNS_LIB)
+	$(CCC) -o $@ $(LDFLAGS) $(OBJS) $(BASIC_LIBS) -L$(DIST)/bin -L$(DIST)/lib $(DSO_EX_LIBS) $(DNS_LIB)
 	@$(EXTRA_POST_LINK_CMD) $@
 
 install:: $(TARGETS)
