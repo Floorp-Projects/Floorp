@@ -38,7 +38,8 @@ nsCacheEntryDescriptor::nsCacheEntryDescriptor(nsCacheEntry * entry,
 
 nsCacheEntryDescriptor::~nsCacheEntryDescriptor()
 {
-    Close();
+    if (mCacheEntry)
+        Close();
 }
 
 
@@ -65,12 +66,13 @@ nsCacheEntryDescriptor::Create(nsCacheEntry * entry, nsCacheAccessMode  accessGr
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetKey(char ** result)
 {
-    //** copy key, stripping clientID
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
     nsCString * key;
     nsresult    rv = NS_OK;
 
     *result = nsnull;
-    key = mCacheEntry->GetKey();
+    key = mCacheEntry->Key();
 
     nsReadingIterator<char> start;
     key->BeginReading(start);
@@ -94,8 +96,10 @@ nsCacheEntryDescriptor::GetKey(char ** result)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetFetchCount(PRInt32 *fetchCount)
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
     if (!fetchCount) return NS_ERROR_NULL_POINTER;
-    mCacheEntry->GetFetchCount(fetchCount);
+
+    *fetchCount = mCacheEntry->FetchCount();
     return NS_OK;
 }
 
@@ -103,8 +107,10 @@ nsCacheEntryDescriptor::GetFetchCount(PRInt32 *fetchCount)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetLastFetched(PRTime *lastFetched)
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
     if (!lastFetched) return NS_ERROR_NULL_POINTER;
-    mCacheEntry->GetLastFetched(lastFetched);
+
+    *lastFetched = mCacheEntry->LastFetched();
     return NS_OK;
 }
 
@@ -112,8 +118,10 @@ nsCacheEntryDescriptor::GetLastFetched(PRTime *lastFetched)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetLastValidated(PRTime *lastValidated)
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
     if (!lastValidated) return NS_ERROR_NULL_POINTER;
-    mCacheEntry->GetLastValidated(lastValidated);
+
+    *lastValidated = mCacheEntry->LastValidated();
     return NS_OK;
 }
 
@@ -122,14 +130,18 @@ nsCacheEntryDescriptor::GetLastValidated(PRTime *lastValidated)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetExpirationTime(PRTime *expirationTime)
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
     if (!expirationTime) return NS_ERROR_NULL_POINTER;
-    mCacheEntry->GetExpirationTime(expirationTime);
+
+    *expirationTime = mCacheEntry->ExpirationTime();
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCacheEntryDescriptor::SetExpirationTime(PRTime expirationTime)
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
     mCacheEntry->SetExpirationTime(expirationTime);
     return NS_OK;
 }
@@ -138,23 +150,34 @@ nsCacheEntryDescriptor::SetExpirationTime(PRTime expirationTime)
 /* boolean isStreamBased (); */
 NS_IMETHODIMP nsCacheEntryDescriptor::IsStreamBased(PRBool *streamBased)
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
     if (!streamBased) return NS_ERROR_NULL_POINTER;
     *streamBased = mCacheEntry->IsStreamData();  //** which name is better?
     return NS_OK;
 }
 
 
-NS_IMETHODIMP nsCacheEntryDescriptor::GetDataSize(PRUint32 *aDataSize)
+NS_IMETHODIMP nsCacheEntryDescriptor::GetDataSize(PRUint32 *dataSize)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+    if (!dataSize)     return NS_ERROR_NULL_POINTER;
+
+    *dataSize = mCacheEntry->DataSize();
+    return NS_OK;
 }
-NS_IMETHODIMP nsCacheEntryDescriptor::SetDataSize(PRUint32 aDataSize)
+NS_IMETHODIMP nsCacheEntryDescriptor::SetDataSize(PRUint32 dataSize)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
+    mCacheEntry->SetDataSize(dataSize);
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsCacheEntryDescriptor::GetTransport(nsITransport * *aTransport)
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -163,12 +186,18 @@ NS_IMETHODIMP nsCacheEntryDescriptor::GetTransport(nsITransport * *aTransport)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetCacheElement(nsISupports * *cacheElement)
 {
-     return mCacheEntry->GetData(cacheElement);
+    if (!mCacheEntry)                 return NS_ERROR_NOT_AVAILABLE;
+    if (mCacheEntry->IsStreamData())  return NS_ERROR_CACHE_DATA_IS_STREAM;
+
+    return mCacheEntry->GetData(cacheElement);
 }
 
 NS_IMETHODIMP
 nsCacheEntryDescriptor::SetCacheElement(nsISupports * cacheElement)
 {
+    if (!mCacheEntry)                 return NS_ERROR_NOT_AVAILABLE;
+    if (mCacheEntry->IsStreamData())  return NS_ERROR_CACHE_DATA_IS_STREAM;
+
     return mCacheEntry->SetData(cacheElement);
 }
 
@@ -184,6 +213,7 @@ nsCacheEntryDescriptor::GetAccessGranted(nsCacheAccessMode *accessGranted)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetStoragePolicy(nsCacheStoragePolicy *policy)
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
     
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -191,6 +221,8 @@ nsCacheEntryDescriptor::GetStoragePolicy(nsCacheStoragePolicy *policy)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::SetStoragePolicy(nsCacheStoragePolicy policy)
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -198,6 +230,8 @@ nsCacheEntryDescriptor::SetStoragePolicy(nsCacheStoragePolicy policy)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::Doom()
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -205,6 +239,8 @@ nsCacheEntryDescriptor::Doom()
 NS_IMETHODIMP
 nsCacheEntryDescriptor::DoomAndFailPendingRequests(nsresult status)
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -213,6 +249,8 @@ nsCacheEntryDescriptor::DoomAndFailPendingRequests(nsresult status)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::MarkValid()
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
     if (mCacheEntry) {
         mCacheEntry->MarkValid();
         return NS_OK;
@@ -223,11 +261,12 @@ nsCacheEntryDescriptor::MarkValid()
 NS_IMETHODIMP
 nsCacheEntryDescriptor::Close()
 {
-    if (mCacheEntry) {
-        // tell nsCacheService we're going away
-        nsCacheService::GlobalInstance()->CloseDescriptor(this);
-        mCacheEntry = nsnull;
-    }
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
+    // tell nsCacheService we're going away
+    nsCacheService::GlobalInstance()->CloseDescriptor(this);
+    mCacheEntry = nsnull;
+
     return NS_OK;
 }
 
@@ -236,6 +275,8 @@ nsCacheEntryDescriptor::Close()
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetMetaDataElement(const char *key, char **result)
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
     if (!key | !result) return NS_ERROR_NULL_POINTER;
     nsAReadableCString *value;
     *result = nsnull;
@@ -257,6 +298,8 @@ nsCacheEntryDescriptor::GetMetaDataElement(const char *key, char **result)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::SetMetadataElement(const char *key, const char *value)
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
     if (!key) return NS_ERROR_NULL_POINTER;
 
     //** allow null value, for clearing key?
@@ -270,6 +313,8 @@ nsCacheEntryDescriptor::SetMetadataElement(const char *key, const char *value)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetMetaDataEnumerator(nsISimpleEnumerator **_retval)
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -277,6 +322,8 @@ nsCacheEntryDescriptor::GetMetaDataEnumerator(nsISimpleEnumerator **_retval)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetSecurityInfo(nsISupports * *aSecurityInfo)
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -284,6 +331,8 @@ nsCacheEntryDescriptor::GetSecurityInfo(nsISupports * *aSecurityInfo)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetProgressEventSink(nsIProgressEventSink * *aProgressEventSink)
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -291,6 +340,8 @@ nsCacheEntryDescriptor::GetProgressEventSink(nsIProgressEventSink * *aProgressEv
 NS_IMETHODIMP
 nsCacheEntryDescriptor::SetProgressEventSink(nsIProgressEventSink * aProgressEventSink)
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -301,6 +352,8 @@ nsCacheEntryDescriptor::OpenInputStream(PRUint32          offset,
                                         PRUint32          flags,
                                         nsIInputStream  **result)
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
     *result = nsnull;
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -312,6 +365,8 @@ nsCacheEntryDescriptor::OpenOutputStream(PRUint32           offset,
                                          PRUint32           flags,
                                          nsIOutputStream  **result)
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
     *result = nsnull;
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -325,6 +380,8 @@ nsCacheEntryDescriptor::AsyncRead(nsIStreamListener *listener,
                                   PRUint32           flags,
                                   nsIRequest       **result)
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
     *result = nsnull;
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -338,6 +395,8 @@ nsCacheEntryDescriptor::AsyncWrite(nsIStreamProvider *provider,
                                    PRUint32           flags, 
                                    nsIRequest       **result)
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
     *result = nsnull;
     return NS_ERROR_NOT_IMPLEMENTED;
 }
