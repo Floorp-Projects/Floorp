@@ -1134,7 +1134,8 @@ AutomatedAutoCompleteHandler.prototype =
 
            if (gLDAPSession && gCurrentAutocompleteDirectory && this.searchResults[0] && this.searchResults[0].defaultItemIndex != -1)
            {
-             return this.processAllResults();
+             this.processAllResults();
+             return;
            }
         }
 
