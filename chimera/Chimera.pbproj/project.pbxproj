@@ -903,6 +903,18 @@
 //A72
 //A73
 //A74
+		A71B225203CE5F0900A967F8 = {
+			isa = PBXFileReference;
+			name = libgfxshared_s.a;
+			path = ../gfx/src/shared/libgfxshared_s.a;
+			refType = 2;
+		};
+		A71B225303CE5F0900A967F8 = {
+			fileRef = A71B225203CE5F0900A967F8;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		A74F8BD203CE582D00A967F8 = {
 			isa = PBXFileReference;
 			name = libi18n.a;
@@ -911,6 +923,18 @@
 		};
 		A74F8BD303CE584F00A967F8 = {
 			fileRef = A74F8BD203CE582D00A967F8;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		A75174AD03CE5D7600A967F8 = {
+			isa = PBXFileReference;
+			name = libimglib2.a;
+			path = ../modules/libpr0n/build/libimglib2.a;
+			refType = 2;
+		};
+		A75174AE03CE5D7D00A967F8 = {
+			fileRef = A75174AD03CE5D7600A967F8;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -5000,6 +5024,8 @@
 				F54AD84402C115D901A967F3,
 				F5E47654030C5FD501A967F3,
 				A74F8BD203CE582D00A967F8,
+				A75174AD03CE5D7600A967F8,
+				A71B225203CE5F0900A967F8,
 			);
 			isa = PBXGroup;
 			name = "Gecko Static Components";
@@ -7152,7 +7178,6 @@
 			);
 			buildSettings = {
 				DEBUGGING_SYMBOLS = NO;
-				FRAMEWORK_SEARCH_PATHS = /Users/sdagley/Library/Frameworks;
 				HEADER_SEARCH_PATHS = "../dist/include/helperAppDlg ../dist/include/exthandler ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/ \"$(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon\" \"$(LOCAL_LIBRARY_DIR)/Frameworks/SharedMenusCocoa.framework/Headers\"";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../intl/unicharutil/src ../gfx/src ../js/src/liveconnect ../intl/unicharutil/util";
@@ -7649,6 +7674,7 @@
 				F5AC38BA02AD8E7B01A967F3,
 				F54AD84502C115DA01A967F3,
 				F5E47655030C5FD501A967F3,
+				A75174AE03CE5D7D00A967F8,
 				F5BAAB9B02AC4AA701A967F3,
 				F5BAAB9E02AC4AA701A967F3,
 				F5BAABA002AC4AA701A967F3,
@@ -7656,6 +7682,7 @@
 				F5BAABA102AC4AA701A967F3,
 				F5BAABA202AC4AA701A967F3,
 				F55A4DF50380705A01A80166,
+				A71B225303CE5F0900A967F8,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
