@@ -742,6 +742,9 @@ nsMenuFrame::AttributeChanged(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsMenuFrame::OpenMenu(PRBool aActivateFlag)
 {
+  if (!mContent)
+    return NS_OK;
+
   nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mContent));
   if (aActivateFlag) {
     // Now that the menu is opened, we should have a menupopup child built.
