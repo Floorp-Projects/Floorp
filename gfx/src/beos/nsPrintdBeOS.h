@@ -75,6 +75,8 @@ typedef struct beosprdata {
         int orientation;            /* Page orientation, e.g. portrait */
         char command[ PATH_MAX ];   /* Print command e.g., lpr */
         char path[ PATH_MAX ];      /* If toPrinter = PR_FALSE, dest file */
+        char printer[256];         /* Printer name */
+        int  copies;               /* number of copies */
 	PRBool cancel;		    /* If PR_TRUE, user cancelled */
 	float left;		    /* left margin */
 	float right;		    /* right margin */
@@ -86,4 +88,4 @@ typedef struct beosprdata {
 
 PR_END_EXTERN_C
 
-#endif /* nsPrintdBeOS_h___ */
+#endif /* !defined(nsPrintdBeOS_h___) */

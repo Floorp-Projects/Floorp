@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de> 
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -80,16 +81,19 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryBeOS :: CreateDeviceContextSpec(nsIWidge
                                                                        nsIDeviceContextSpec *&aNewSpec,
                                                                        PRBool aQuiet)
 {
-nsresult  						rv = NS_ERROR_FAILURE;
-nsIDeviceContextSpec  *devSpec = nsnull;
+  nsresult rv;
+  static NS_DEFINE_CID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
+  nsCOMPtr<nsIDeviceContextSpec> devSpec = do_CreateInstance(kDeviceContextSpecCID, &rv);
+  if (NS_SUCCEEDED(rv))
+  {
+    rv = ((nsDeviceContextSpecBeOS *)devSpec.get())->Init(aQuiet);
+    if (NS_SUCCEEDED(rv))
+    {
+      aNewSpec = devSpec;
+      NS_ADDREF(aNewSpec);
+    }
+  }
 
-	nsComponentManager::CreateInstance(kDeviceContextSpecCID, nsnull, kIDeviceContextSpecIID, (void **)&devSpec);
-
-	if (nsnull != devSpec){
-	  if (NS_OK == ((nsDeviceContextSpecBeOS *)devSpec)->Init(aQuiet)){
-	    aNewSpec = devSpec;
-	    rv = NS_OK;
-	  }
-	}
-	return rv;
+  return rv;
 }
+
