@@ -2298,12 +2298,17 @@ nsHTMLDocument::WriteCommon(const nsAReadableString& aText,
 
   mWriteLevel++;
 
-  static const NS_NAMED_LITERAL_STRING(sNewLine, "\n");
-
-  rv = mParser->Parse(aNewlineTerminate ? (aText + sNewLine) : aText,
-                      NS_GENERATE_PARSER_KEY(),
-                      NS_LITERAL_STRING("text/html"), PR_FALSE,
-                      (!mIsWriting || (mWriteLevel > 1)));
+  if (aNewlineTerminate) {
+    rv = mParser->Parse(aText + NS_LITERAL_STRING("\n"),
+                        NS_GENERATE_PARSER_KEY(),
+                        NS_LITERAL_STRING("text/html"), PR_FALSE,
+                        (!mIsWriting || (mWriteLevel > 1)));
+  } else {
+    rv = mParser->Parse(aText,
+                        NS_GENERATE_PARSER_KEY(),
+                        NS_LITERAL_STRING("text/html"), PR_FALSE,
+                        (!mIsWriting || (mWriteLevel > 1)));
+  }
   mWriteLevel--;
 
   return rv;
