@@ -20,7 +20,7 @@
 #define nsUrlListenerManager_h___
 
 #include "nsIUrlListenerManager.h"
-#include "nsVoidArray.h"
+#include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 
 /********************************************************************************************
@@ -55,7 +55,7 @@ public:
 	 NS_IMETHOD OnStopRunningUrl(nsIMsgMailNewsUrl * aUrl, nsresult aExitCode);
 
 protected:
-	nsVoidArray * m_listeners;
+	nsCOMPtr<nsISupportsArray> m_listeners;
 
 	// helper function used to enumerate ISupportsArray and broadcast the change
 	nsresult BroadcastChange(nsIURL * aUrl, nsUrlNotifyType notification, nsresult aErrorCode);
