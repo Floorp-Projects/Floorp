@@ -47,16 +47,66 @@ struct nsNamedVector : public nsVoidArray {
     }
 };
 
+static void * PR_CALLBACK
+_hash_alloc_table(void *pool, PRSize size)
+{
+    return operator new(size);
+}
+
+static void  PR_CALLBACK
+_hash_free_table(void *pool, void *item)
+{
+    operator delete(item);
+}
+
+static PLHashEntry * PR_CALLBACK
+_hash_alloc_entry(void *pool, const void *key)
+{
+    return new PLHashEntry;
+}
+
+/*
+ * Because monitors and locks may be associated with an nsAutoLockBase,
+ * without having had their associated nsNamedVector created explicitly in
+ * nsAutoMonitor::NewMonitor/DeleteMonitor, we need to provide a freeEntry
+ * PLHashTable hook, to avoid leaking nsNamedVectors which are replaced by
+ * nsAutoMonitor::NewMonitor.
+ *
+ * There is still a problem with the OrderTable containing orphaned
+ * nsNamedVector entries, for manually created locks wrapped by nsAutoLocks.
+ * (there should be no manually created monitors wrapped by nsAutoMonitors:
+ * you should use nsAutoMonitor::NewMonitor and nsAutoMonitor::DestroyMonitor
+ * instead of PR_NewMonitor and PR_DestroyMonitor).  These lock vectors don't
+ * strictly leak, as they are killed on shutdown, but there are unnecessary
+ * named vectors in the hash table that outlive their associated locks.
+ *
+ * XXX so we should have nsLock, nsMonitor, etc. and strongly type their
+ * XXX nsAutoXXX counterparts to take only the non-auto types as inputs
+ */
+static void  PR_CALLBACK
+_hash_free_entry(void *pool, PLHashEntry *entry, PRUintn flag)
+{
+    nsNamedVector* vec = (nsNamedVector*) entry->value;
+    if (vec) {
+        entry->value = 0;
+        delete vec;
+    }
+    if (flag == HT_FREE_ENTRY)
+        delete entry;
+}
+
+static PLHashAllocOps _hash_alloc_ops = {
+    _hash_alloc_table, _hash_free_table,
+    _hash_alloc_entry, _hash_free_entry
+};
+
 PR_STATIC_CALLBACK(PRIntn)
 _purge_one(PLHashEntry* he, PRIntn cnt, void* arg)
 {
     nsNamedVector* vec = (nsNamedVector*) he->value;
 
-    if (he->key == arg) {
-        he->value = 0;
-        delete vec;
+    if (he->key == arg)
         return HT_ENUMERATE_REMOVE;
-    }
     vec->RemoveElement(arg);
     return HT_ENUMERATE_NEXT;
 }
@@ -81,21 +131,12 @@ static void InitAutoLockStatics()
     (void) PR_NewThreadPrivateIndex(&LockStackTPI, 0);
     OrderTable = PL_NewHashTable(64, _hash_pointer,
                                  PL_CompareValues, PL_CompareValues,
-                                 0, 0);
+                                 &_hash_alloc_ops, 0);
     if (OrderTable && !(OrderTableLock = PR_NewLock())) {
         PL_HashTableDestroy(OrderTable);
         OrderTable = 0;
     }
     PR_CSetOnMonitorRecycle(OnMonitorRecycle);
-}
-
-PR_STATIC_CALLBACK(PRIntn)
-_purge_all(PLHashEntry* he, PRIntn cnt, void* arg)
-{
-    nsNamedVector* vec = (nsNamedVector*) he->value;
-    he->value = 0;
-    delete vec;
-    return HT_ENUMERATE_REMOVE;
 }
 
 void _FreeAutoLockStatics()
@@ -107,7 +148,6 @@ void _FreeAutoLockStatics()
     PR_CSetOnMonitorRecycle(0);
     PR_DestroyLock(OrderTableLock);
     OrderTableLock = 0;
-    PL_HashTableEnumerateEntries(table, _purge_all, 0);
     PL_HashTableDestroy(table);
     OrderTable = 0;
 }
