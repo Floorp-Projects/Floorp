@@ -3462,7 +3462,7 @@ GlobalWindowImpl::GetPrivateParent(nsPIDOMWindow** aParent)
    nsCOMPtr<nsIDOMWindow> parent;
    GetParent(getter_AddRefs(parent));
 
-   if(NS_STATIC_CAST(nsIDOMWindow*, this) == parent)
+   if(NS_STATIC_CAST(nsIDOMWindow*, this) == parent.get())
       {
       if(mChromeElement)
          {
