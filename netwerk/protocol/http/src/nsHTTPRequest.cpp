@@ -1056,6 +1056,8 @@ nsHTTPPipelinedRequest::Cancel(nsresult status)
 {
     nsresult rv = NS_OK;
 
+    NS_ASSERTION(NS_FAILED(status), "Can't cancel with a sucessful status");
+
     if (mCurrentReadRequest)
         rv = mCurrentReadRequest->Cancel(status);
 

@@ -109,7 +109,16 @@ HTTP_ATOM(Head,                      "HEAD")
 HTTP_ATOM(Post,                      "POST")
 HTTP_ATOM(Put,                       "PUT")
 HTTP_ATOM(Get,                       "GET")
+HTTP_ATOM(Index,                     "INDEX")
 HTTP_ATOM(Delete,                    "DELETE")
 HTTP_ATOM(Trace,                     "TRACE")
 HTTP_ATOM(Connect,                   "CONNECT")
 HTTP_ATOM(M_Post,                    "M-POST")
+
+
+
+
+
+
+
+

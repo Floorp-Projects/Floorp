@@ -941,7 +941,10 @@ nsSocketTransport::doReadWrite(PRInt16 aSelectFlags)
         if (mReadRequest->IsCanceled() || (mBytesExpected == 0)) {
             LOG(("nsSocketTransport: [this=%x] completing read request due to cancelation\n", this));
             mSelectFlags &= ~PR_POLL_READ;
+            mReadRequest->GetStatus(&readStatus);
             CompleteAsyncRead();
+            if (NS_FAILED(readStatus))
+                return readStatus;
         }
         else if (mSelectFlags & PR_POLL_READ) {
             //
@@ -976,7 +979,10 @@ nsSocketTransport::doReadWrite(PRInt16 aSelectFlags)
         if (mWriteRequest->IsCanceled()) {
             LOG(("nsSocketTransport: [this=%x] completing write request due to cancelation\n", this));
             mSelectFlags &= ~PR_POLL_WRITE;
+            mWriteRequest->GetStatus(&writeStatus);
             CompleteAsyncWrite();
+            if (NS_FAILED(writeStatus))
+                return writeStatus;
         }
         else if (mSelectFlags & PR_POLL_WRITE) {
             //
@@ -1543,6 +1549,9 @@ NS_IMETHODIMP
 nsSocketTransport::IsAlive (PRUint32 seconds, PRBool *alive)
 {
     *alive = PR_TRUE;
+
+    // Enter the socket transport lock...
+    nsAutoMonitor mon(mMonitor);
 
     if (mSocketFD) {
         if (mLastActiveTime != PR_INTERVAL_NO_WAIT) {
@@ -2197,7 +2206,10 @@ nsSocketRequest::Cancel(nsresult status)
     LOG(("nsSocketRequest: Cancel [this=%x status=%x]\n", this, status));
     mStatus = status;
     mCanceled = PR_TRUE;
-    // Will be canceled the next time PR_Poll returns
+
+    // if status is a fail, we need to force a dispatch
+    if (NS_FAILED(status))
+        mTransport->Dispatch(this);
     return NS_OK;
 }
 
