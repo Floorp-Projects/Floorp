@@ -139,6 +139,15 @@ public:
   NS_IMETHOD DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect);
   NS_IMETHOD DrawTile(imgIContainer *aImage, nscoord aXOffset, nscoord aYOffset, const nsRect * aTargetRect);
   NS_IMETHOD DrawScaledTile(imgIContainer *aImage, nscoord aXOffset, nscoord aYOffset, nscoord aTileWidth, nscoord aTileHeight, const nsRect * aTargetRect);
+
+  // Redeclare the other |DrawImage| methods from nsIRenderingContext,
+  // still as pure virtual, to avoid method-hiding warnings.
+  NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY) = 0;
+  NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
+                       nscoord aWidth, nscoord aHeight) = 0; 
+  NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aRect) = 0;
+  NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect,
+                       const nsRect& aDRect)=0;
 #endif
 
 
