@@ -153,8 +153,11 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsIWidget*
 	if (nsnull == aWindow->GetNativeData(NS_NATIVE_WINDOW))
 		return NS_ERROR_NOT_INITIALIZED;
 
-	mContext = aContext;
-	NS_IF_ADDREF(mContext);
+	if (aContext != mContext) {
+		NS_IF_RELEASE(mContext);
+		mContext = aContext;
+		NS_IF_ADDREF(mContext);
+	}
 
  	// select the surface
 	mFrontSurface->Init(aWindow);
