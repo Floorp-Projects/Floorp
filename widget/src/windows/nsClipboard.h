@@ -40,6 +40,7 @@
 
 #include "nsBaseClipboard.h"
 #include "nsIObserver.h"
+#include "nsIURI.h"
 #include <windows.h>
 
 class nsITransferable;
@@ -70,7 +71,8 @@ public:
 
   // Internal Native Routines
   static nsresult CreateNativeDataObject(nsITransferable * aTransferable, 
-                                         IDataObject ** aDataObj);
+                                         IDataObject ** aDataObj,
+                                         nsIURI       * uri);
   static nsresult SetupNativeDataObject(nsITransferable * aTransferable, 
                                         IDataObject * aDataObj);
   static nsresult GetDataFromDataObject(IDataObject     * aDataObject,

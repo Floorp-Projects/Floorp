@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Sean Echevarria <sean@beatnik.com>
+ *   David Gardiner <david.gardiner@unisa.edu.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -130,7 +131,7 @@ UINT nsClipboard::GetFormat(const char* aMimeStr)
 }
 
 //-------------------------------------------------------------------------
-nsresult nsClipboard::CreateNativeDataObject(nsITransferable * aTransferable, IDataObject ** aDataObj)
+nsresult nsClipboard::CreateNativeDataObject(nsITransferable * aTransferable, IDataObject ** aDataObj, nsIURI * uri)
 {
   if (nsnull == aTransferable) {
     return NS_ERROR_FAILURE;
@@ -138,8 +139,11 @@ nsresult nsClipboard::CreateNativeDataObject(nsITransferable * aTransferable, ID
 
   // Create our native DataObject that implements 
   // the OLE IDataObject interface
-  nsDataObj * dataObj;
-  dataObj = new nsDataObj();
+  nsDataObj * dataObj = new nsDataObj(uri);
+
+  if (!dataObj) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
   dataObj->AddRef();
 
   // No set it up with all the right data flavors & enums
@@ -270,7 +274,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData ( PRInt32 aWhichClipboard )
   ::OleSetClipboard(NULL);
 
   IDataObject * dataObj;
-  if ( NS_SUCCEEDED(CreateNativeDataObject(mTransferable, &dataObj)) ) { // this add refs
+  if ( NS_SUCCEEDED(CreateNativeDataObject(mTransferable, &dataObj, NULL)) ) { // this add refs dataObj
     ::OleSetClipboard(dataObj);
     dataObj->Release();
   }
