@@ -4,7 +4,7 @@ package	MANIFESTO;
 require 5.004;
 require	Exporter;
 
-use strict;
+#use strict;
 
 use vars qw($VERSION @ISA @EXPORT $MANIFESTOLib);
 use Mac::StandardFile;
@@ -60,24 +60,7 @@ sub current_directory()
 	return $current_directory;
 }
 
-# just like Mac::DoAppleScript, 1 is success, 0 is failure
-sub _myDoAppleScript($)
-{
-	my($script) = @_;
-	my $asresult = MacPerl::DoAppleScript($script);
-	if ($asresult eq "0")
-	{
-		return 1;
-	}
-	else
-	{
-		print STDERR "AppleScript error: $asresult\n";
-		print STDERR "AppleScript was: \n $script \n";
-		return 0;
-	}
-}
-
-# _useMANIFESTOLib
+# _useMANIFESTOLib()
 # returns 1 on success
 # Search the include path for the file called MANIFESTOLib
 sub _useMANIFESTOLib() 
@@ -116,6 +99,19 @@ sub _useMANIFESTOLib()
 	return 1;
 }
 
+sub getModificationDate($) {
+	my($filePath)=@_;
+	my($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
+		$atime,$mtime,$ctime,$blksize,$blocks) = stat($filePath);
+	return $mtime;
+}
+
+sub setExtension($;$;$) {
+	my($filePath, $oldExtension, $newExtension)=@_;
+	my($name, $dir, $type) = fileparse($filePath, $oldExtension);
+	return "$dir$name$newExtension";
+}
+
 #
 # ReconcileProject(projectPath, manifestoPath)
 #
@@ -129,14 +125,34 @@ sub ReconcileProject($;$) {
 
 	my($projectPath, $manifestoPath) = @_;
 	my($sourceTree) = current_directory();
+	my($logPath) = setExtension($manifestoPath, ".toc", ".log");
+
+	print STDERR "# Reconciling Project: $projectPath with $manifestoPath\n";
+	
+	#// compare the modification dates of the .toc and .log files. If .log is newer, do nothing.
+	if (-e $logPath && getModificationDate($logPath) >= getModificationDate($manifestoPath)) {
+		print "# Project is up to date.\n";
+		return 1;
+	}
 
 	_useMANIFESTOLib() || die "Could not load MANIFESTOLib\n";
 	
 	my $script = <<END_OF_APPLESCRIPT;
 	tell (load script file "$MANIFESTOLib") to ReconcileProject("$sourceTree:", "$sourceTree$projectPath", "$sourceTree$manifestoPath")
 END_OF_APPLESCRIPT
-	print STDERR "# Reconciling Project: $projectPath with $manifestoPath\n";
-	return _myDoAppleScript($script);
+
+	#// run the script, and store the results in a file called "$manifestoPath.log"
+	my $asresult = substr(MacPerl::DoAppleScript($script), 1, -1);	#// chops off leading, trailing quotes.
+
+	#// print out to STDOUT to show progress.
+	print $asresult;
+
+	#// store the results in "$manifestoPath.log", which will act as a cache for later checks.
+	open(OUTPUT, ">$logPath") || die "can't open log file $logPath.";
+	print OUTPUT $asresult;
+	close(OUTPUT);
+
+	return 1;
 }
 
 1;
@@ -144,17 +160,16 @@ END_OF_APPLESCRIPT
 
 =head1 NAME
 
-MANIFEST - Scripts to process source MANIFEST files. Really need a better name.
+MANIFESTO - Scripts to process source .toc files.
 
 =head1 SYNOPSIS
 
-	use MacCVS;
-	$session = MacCVS->new( <session_file_path>) || die "cannot create session";
-	$session->checkout([module] [revision] [date]) || die "Could not check out";
+	use MANIFESTO;
+	ReconcileProject(<path to Mac project file>, <path to table of contents file>) || die "cannot reconcile project";
 		
 =head1 DESCRIPTION
 
-This is a PERL interface for talking to MANIFEST AppleScripts.
+This is a PERL interface for talking to MANIFESTOLib AppleScripts.
 
 =item ReconcileProject
 	ReconcileProject(<path to Mac project file>, <path to table of contents file>);
