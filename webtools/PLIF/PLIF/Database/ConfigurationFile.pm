@@ -139,6 +139,7 @@ sub DESTROY {
     if ($self->{'_DIRTY'}) {
         $self->write();
     }
+    $self->SUPER::DESTROY(@_);
 }
 
 
