@@ -51,8 +51,8 @@
 class nsMimeStoreData
 {
 public:
-   nsMimeStoreData(QCString& name, QByteArray& data);
-   nsMimeStoreData(const char* name, void* rawdata, PRInt32 rawlen);
+   nsMimeStoreData(const QCString &name, const QByteArray &data);
+   nsMimeStoreData(const char *name, void *rawdata, PRInt32 rawlen);
 
    QCString    flavorName;
    QByteArray  flavorData;
@@ -67,7 +67,7 @@ public:
     virtual const char* format(int n = 0) const ;
     virtual QByteArray encodedData(const char*) const;
 
-    PRBool AddFlavorData(const char* name, void* data, PRInt32 len);
+    PRBool AddFlavorData(const char* name, const QByteArray &data);
     PRBool ContainsFlavor(const char* name);
     PRUint32  count();
 

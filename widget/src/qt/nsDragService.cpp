@@ -137,41 +137,49 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
 
 QDragObject *nsDragService::RegisterDragFlavors(nsITransferable *transferable)
 {
-  nsMimeStore *pMimeStore = new nsMimeStore();
-  nsCOMPtr<nsISupportsArray> flavorList;
+    nsMimeStore *pMimeStore = new nsMimeStore();
+    nsCOMPtr<nsISupportsArray> flavorList;
 
-  if (NS_SUCCEEDED(transferable->FlavorsTransferableCanExport(getter_AddRefs(flavorList)))) {
-    PRUint32 numFlavors;
+    if (NS_SUCCEEDED(transferable->FlavorsTransferableCanExport(getter_AddRefs(flavorList)))) {
+        PRUint32 numFlavors;
 
-    flavorList->Count(&numFlavors);
+        flavorList->Count(&numFlavors);
 
-    for (PRUint32 flavorIndex = 0; flavorIndex < numFlavors; ++flavorIndex) {
-      nsCOMPtr<nsISupports> genericWrapper;
+        for (PRUint32 flavorIndex = 0; flavorIndex < numFlavors; ++flavorIndex) {
+            nsCOMPtr<nsISupports> genericWrapper;
 
-      flavorList->GetElementAt(flavorIndex,getter_AddRefs(genericWrapper));
+            flavorList->GetElementAt(flavorIndex,getter_AddRefs(genericWrapper));
 
-      nsCOMPtr<nsISupportsCString> currentFlavor(do_QueryInterface(genericWrapper));
+            nsCOMPtr<nsISupportsCString> currentFlavor(do_QueryInterface(genericWrapper));
 
-      if (currentFlavor) {
-	nsXPIDLCString flavorStr;
+            if (currentFlavor) {
+                nsXPIDLCString flavorStr;
 
-	currentFlavor->ToString(getter_Copies(flavorStr));
+                currentFlavor->ToString(getter_Copies(flavorStr));
 
-	PRUint32   len;
-	void* data;
-	nsCOMPtr<nsISupports> clip;
+                PRUint32   len;
+                nsCOMPtr<nsISupports> clip;
 
-	transferable->GetTransferData(flavorStr,getter_AddRefs(clip),&len);
-        nsPrimitiveHelpers::CreateDataFromPrimitive(flavorStr,clip,&data,len);
-        pMimeStore->AddFlavorData(flavorStr,data,len);
-      }
-    } // foreach flavor in item
-  } // if valid flavor list
+                transferable->GetTransferData(flavorStr,getter_AddRefs(clip),&len);
+
+                nsCOMPtr<nsISupportsString> wideString;
+                wideString = do_QueryInterface(clip);
+                if (!wideString)
+                    continue;
+
+                nsAutoString ucs2string;
+                wideString->GetData(ucs2string);
+                QString str = QString::fromUcs2(ucs2string.get());
+
+                pMimeStore->AddFlavorData(flavorStr,str.utf8());
+            }
+        } // foreach flavor in item
+    } // if valid flavor list
 #ifdef NS_DEBUG
-  else
-   printf(" DnD ERROR: cannot export any flavor\n");
+    else
+        printf(" DnD ERROR: cannot export any flavor\n");
 #endif
-  return new nsDragObject(pMimeStore,mHiddenWidget);
+    return new nsDragObject(pMimeStore,mHiddenWidget);
 } // RegisterDragItemsAndFlavors
 
 NS_IMETHODIMP nsDragService::StartDragSession()
@@ -292,9 +300,7 @@ NS_IMETHODIMP nsDragService::SetDragReference(QMimeSource* aDragRef)
      // so, we need to copy datafrom one to onother
 
      QByteArray ba = aDragRef->encodedData(format);
-     char *data = new char[ba.size()];
-     memcpy(data,ba.data(),ba.size());
-     pMimeStore->AddFlavorData(format,data,ba.size());
+     pMimeStore->AddFlavorData(format,ba);
    }
    mDragObject = new nsDragObject(pMimeStore,mHiddenWidget);
    return NS_OK;

@@ -64,14 +64,14 @@ protected:
     NS_IMETHOD GetNativeClipboardData(nsITransferable *aTransferable,
                                       PRInt32 aWhichClipboard);
 
-    inline nsITransferable *GetTransferable(PRInt32 aWhichClipboard);
+    nsITransferable *GetTransferable(PRInt32 aWhichClipboard);
+
+    PRBool mIgnoreEmptyNotification;
 
     nsCOMPtr<nsIClipboardOwner> mSelectionOwner;
     nsCOMPtr<nsIClipboardOwner> mGlobalOwner;
     nsCOMPtr<nsITransferable>   mSelectionTransferable;
     nsCOMPtr<nsITransferable>   mGlobalTransferable;
-
-    PRBool              mIgnoreEmptyNotification;
 };
 
 #endif // nsClipboard_h__
