@@ -31,7 +31,8 @@ public class PlugletInputStream extends InputStream {
 	nativeInitialize();
     }
     public  int read() throws IOException {
-		return read(buf,0,1);
+	read(buf,0,1);
+	return buf[0];
     }
     public int read(byte b[], int off, int len) throws IOException {
 	if (b == null) {
