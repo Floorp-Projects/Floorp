@@ -83,18 +83,13 @@ WalletPreviewImpl::GetPrefillValue(char** aValue)
   if (!aValue) {
     return NS_ERROR_NULL_POINTER;
   }
-
-  nsIWalletService *walletservice;
   nsresult res;
-  res = nsServiceManager::GetService(kWalletServiceCID,
-                                     kIWalletServiceIID,
-                                     (nsISupports **)&walletservice);
-  if ((NS_SUCCEEDED(res)) && (nsnull != walletservice)) {
-    nsAutoString walletList;
-    res = walletservice->WALLET_GetPrefillListForViewer(walletList);
-    if (NS_SUCCEEDED(res)) {
-      *aValue = walletList.ToNewCString();
-    }
+  NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &res);
+  if (NS_FAILED(res)) return res;
+  nsAutoString walletList;
+  res = walletservice->WALLET_GetPrefillListForViewer(walletList);
+  if (NS_SUCCEEDED(res)) {
+    *aValue = walletList.ToNewCString();
   }
   return res;
 }
@@ -145,14 +140,10 @@ WalletPreviewImpl::SetValue(const char* aValue, nsIDOMWindow* win)
   if (! aValue) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIWalletService *walletservice;
   nsresult res;
-  res = nsServiceManager::GetService(kWalletServiceCID,
-                                     kIWalletServiceIID,
-                                     (nsISupports **)&walletservice);
-  if ((NS_SUCCEEDED(res)) && (nsnull != walletservice)) {
-    nsAutoString walletList = aValue;
-    res = walletservice->WALLET_PrefillReturn(walletList);
-  }
+  NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &res);
+  if (NS_FAILED(res)) return res;
+  nsAutoString walletList = aValue;
+  res = walletservice->WALLET_PrefillReturn(walletList);
   return res;
 }
