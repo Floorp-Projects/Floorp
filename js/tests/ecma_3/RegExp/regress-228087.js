@@ -91,7 +91,7 @@ string = 'foo {1} foo {2} foo';
   addThis();
 
 
-string = 'abccccc{3 }c{ 3}c{3, }c{3 ,}de';
+string = 'abccccc{3 }c{ 3}c{3, }c{3 ,}c{3 ,4}c{3, 4}c{3,4 }de';
 
   // use braces in a normal quantifier construct
   status = inSection(5);
@@ -145,11 +145,36 @@ string = 'abccccc{3 }c{ 3}c{3, }c{3 ,}de';
   expectedmatch = Array('c{3, }');
   addThis();
 
-  // now disrupt it - the braces should now be interpreted literally
   status = inSection(13);
   pattern = /c{3 ,}/;
   actualmatch = string.match(pattern);
   expectedmatch = Array('c{3 ,}');
+  addThis();
+
+  // using braces in a normal quantifier construct again
+  status = inSection(14);
+  pattern = /c{3,4}/;
+  actualmatch = string.match(pattern);
+  expectedmatch = Array('cccc');
+  addThis();
+
+  // now disrupt it - the braces should now be interpreted literally
+  status = inSection(15);
+  pattern = /c{3 ,4}/;
+  actualmatch = string.match(pattern);
+  expectedmatch = Array('c{3 ,4}');
+  addThis();
+
+  status = inSection(16);
+  pattern = /c{3, 4}/;
+  actualmatch = string.match(pattern);
+  expectedmatch = Array('c{3, 4}');
+  addThis();
+
+  status = inSection(17);
+  pattern = /c{3,4 }/;
+  actualmatch = string.match(pattern);
+  expectedmatch = Array('c{3,4 }');
   addThis();
 
 
