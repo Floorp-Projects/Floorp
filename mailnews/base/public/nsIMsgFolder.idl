@@ -73,6 +73,8 @@ interface nsIMsgFolder : nsIFolder {
 
 	void CreateSubfolder(in string folderName);
 
+  void Compact();
+
 	void Rename(in string name);
 	void Adopt(in nsIMsgFolder srcFolder, out unsigned long outPos);
 
