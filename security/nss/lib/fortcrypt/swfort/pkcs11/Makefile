@@ -125,16 +125,6 @@ endif
 
 #$(SHARED_LIBRARY): $(SWCILIB)
 
-forsock.c: ../../forsock.c $(CP_INCLUDES)
-	cp ../../forsock.c $(CP_INCLUDES) .
-
-fortpk11.c: ../../fortpk11.c
-	cp ../../fortpk11.c .
-
-fmutex.c: ../../fmutex.c
-	cp ../../fmutex.c  .
-
-
 #
 # The following rules packages the shared library into a JAR,
 # ready to be signed

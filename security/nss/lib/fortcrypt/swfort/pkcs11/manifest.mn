@@ -47,23 +47,13 @@ CSRCS		= \
 		  stub.c \
 		  $(NULL)
 
+vpath %.c ../../
+INCLUDES += -I../..
+
 EXPORTS		= 
 
 REQUIRES	= security dbm
 
-CP_INCLUDES =  \
-	../../cryptint.h \
-	../../fmutex.h \
-	../../fortsock.h \
-	../../fpkcs11.h \
-	../../fpkcs11f.h \
-	../../fpkcs11i.h \
-	../../fpkcs11t.h \
-	../../fpkmem.h \
-	../../fpkstrs.h \
-	../../genci.h \
-	../../maci.h \
-	$(NULL)
 
 CFLAGS		+= -DSWFORT
 
