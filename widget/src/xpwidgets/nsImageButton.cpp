@@ -67,12 +67,21 @@ HandleImageButtonEvent(nsGUIEvent *aEvent)
 
 //------------------------------------------------------------
 nsImageButton::nsImageButton() : ChildWindow(), nsIImageButton(),
+#ifdef XP_MAC		//temporary: we should use CSS for platform-specific rendering
+                      mFont("geneva", 
+                         NS_FONT_STYLE_NORMAL,
+                         NS_FONT_VARIANT_NORMAL,
+                         NS_FONT_WEIGHT_NORMAL,
+                         0,
+                         9)
+#else
                       mFont("Sans", 
                          NS_FONT_STYLE_NORMAL,
                          NS_FONT_VARIANT_NORMAL,
                          NS_FONT_WEIGHT_NORMAL,
                          0,
                          13)
+#endif
 {
   NS_INIT_REFCNT();
 
