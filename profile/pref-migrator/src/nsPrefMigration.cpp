@@ -1923,9 +1923,9 @@ nsPrefMigration::ShowPMDialogEngine(nsIDialogParamBlock *ioParamBlock, const cha
                     void *stackPtr;
                     jsval *argv = JS_PushArguments( jsContext,
                                                     &stackPtr,
-                                                    "svs%ip",
+                                                    "sss%ip",
                                                     inChromeURL,
-                                                    JSVAL_NULL,
+                                                    "_blank",
                                                     "chrome",
                                                     (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)),
                                                     (nsISupports*)ioParamBlock
