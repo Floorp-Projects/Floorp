@@ -57,6 +57,8 @@ CSRCS =	adler32.c 	\
 
 LIBRARY_NAME = zlib
 
+PROGRAMS = example minigzip
+
 # REQUIRES = nss
 
 DEFINES = -DNSPR20=1
