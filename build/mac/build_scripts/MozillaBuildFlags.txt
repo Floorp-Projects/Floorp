@@ -77,7 +77,7 @@ string_stats    0      DEBUG_STRING_STATS
 xpctools        0      XPC_TOOLS_SUPPORT
 smime			1
 print_preview   1      NS_PRINT_PREVIEW
-moz_xul         0      MOZ_XUL
+moz_xul         1      MOZ_XUL
 
 filepath_flags
 idepath             ":CodeWarrior IDE Path.txt"
