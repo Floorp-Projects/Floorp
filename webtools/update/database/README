@@ -1,0 +1,4 @@
+The files contained in this directory are schema for the Mozilla Update MySQL Database.
+This directory does not have to be on the webserver for the site to function, in fact, it should not be.
+
+Mozilla Update requires MySQL 4.0 or higher w/ InnoDB support.

@@ -1,0 +1,226 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Update.
+ *
+ * The Initial Developer of the Original Code is
+ * Chris "Wolf" Crews.
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Chris "Wolf" Crews <psychoticwolf@carolina.rr.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+BODY {
+	MARGIN: 0px 0px 5px; FONT-FAMILY: Arial; BACKGROUND-COLOR: #fff
+}
+A {
+	COLOR: #00129c; TEXT-DECORATION: none
+}
+A:visited {
+	COLOR: #00129c; TEXT-DECORATION: none
+}
+A:hover {
+	COLOR: #fc5900
+}
+DIV.header {
+	BACKGROUND-IMAGE: url(/images/header.png); BACKGROUND-REPEAT: repeat-x; HEIGHT: 77px
+}
+DIV.header-top {
+	HEIGHT: 57px
+}
+DIV.logo {
+	z-index: 1; position: absolute; right: 0px
+}
+DIV.tabbar {
+	PADDING-LEFT: 26px; HEIGHT: 20px
+}
+
+DIV.nav {
+	BACKGROUND-IMAGE: url(/images/orangebar.png); background-repeat: repeat-x; PADDING-TOP: 3px; PADDING-LEFT: 10px; FONT-WEIGHT: bold; MARGIN-BOTTOM: 10px; COLOR: #fff; BACKGROUND-COLOR: #0F67C1; a:VISITED: #fff
+}
+DIV.nav A:visited { 
+  COLOR: #FFF;
+}
+DIV.nav A {
+	COLOR: #fff
+}
+DIV.adminheading {
+	FONT-WEIGHT: bold; FONT-SIZE: 10pt; MARGIN-RIGHT: 10px; HEIGHT: 25px; TEXT-ALIGN: right
+}
+.box {
+	BORDER-RIGHT: #ccc 2px solid; PADDING-RIGHT: 5px; BORDER-TOP: #ccc 2px solid; PADDING-LEFT: 5px; FONT-WEIGHT: bold; FONT-SIZE: 14pt; MARGIN-BOTTOM: 15px; PADDING-BOTTOM: 5px; POSITION: relative; LEFT: 150px; BORDER-LEFT: #ccc 2px solid; WIDTH: 78%; PADDING-TOP: 5px; BORDER-BOTTOM: #ccc 2px solid; -moz-border-radius: 10px
+}
+.boxheader {
+	MARGIN-BOTTOM: 6px; BORDER-BOTTOM: #000 1px solid
+}
+.boxcolumns {
+	BORDER-RIGHT: #ccc 2px solid; PADDING-RIGHT: 2px; BORDER-TOP: #ccc 2px solid; PADDING-LEFT: 2px; FONT-SIZE: 12pt; MIN-HEIGHT: 200px; FLOAT: left; PADDING-BOTTOM: 2px; MARGIN-LEFT: 2px; BORDER-LEFT: #ccc 2px solid; WIDTH: 31%; PADDING-TOP: 2px; BORDER-BOTTOM: #ccc 2px solid; -moz-border-radius: 10px
+}
+DIV.sidelinks {
+	BORDER-RIGHT: #ccc 2px solid; PADDING-RIGHT: 2px; BORDER-TOP: #ccc 2px solid; MARGIN-TOP: 10px; PADDING-LEFT: 2px; PADDING-BOTTOM: 2px; MARGIN-LEFT: 3px; BORDER-LEFT: #ccc 2px solid; WIDTH: 135px; PADDING-TOP: 2px; BORDER-BOTTOM: #ccc 2px solid; POSITION: absolute; -moz-border-radius: 10px
+}
+.sidebartitle {
+	FONT-WEIGHT: bold
+}
+.sidebartext {
+	MARGIN-LEFT: 4px
+}
+.updatebox {
+	BORDER-RIGHT: #ccc 2px solid; PADDING-RIGHT: 5px; BORDER-TOP: #ccc 2px solid; MARGIN-TOP: 3px; PADDING-LEFT: 5px; FONT-WEIGHT: bold; FONT-SIZE: 14pt; MIN-HEIGHT: 200px; MARGIN-BOTTOM: 15px; PADDING-BOTTOM: 5px; MARGIN-LEFT: 1px; BORDER-LEFT: #ccc 2px solid; WIDTH: 230px; PADDING-TOP: 5px; BORDER-BOTTOM: #ccc 2px solid; POSITION: absolute; -moz-border-radius: 10px
+}
+.frontpagecontainer {
+	MIN-HEIGHT: 360px; WIDTH: 100%
+}
+.contentbox {
+	BORDER-RIGHT: #ccc 2px solid; PADDING-RIGHT: 5px; BORDER-TOP: #ccc 2px solid; PADDING-LEFT: 5px; FONT-WEIGHT: bold; FONT-SIZE: 14pt; PADDING-BOTTOM: 5px; MARGIN: 0px 5px 15px 0px; BORDER-LEFT: #ccc 2px solid; PADDING-TOP: 5px; BORDER-BOTTOM: #ccc 2px solid; -moz-border-radius: 10px
+}
+.contentcolumns {
+	FLOAT: left; WIDTH: 48%
+}
+
+#content {
+	PADDING-LEFT: 5px; POSITION: relative; LEFT: 145px; WIDTH: 85%;
+}
+
+DIV.item {
+	BORDER-RIGHT: #ccc 2px solid; PADDING-RIGHT: 8px; BORDER-TOP: #ccc 2px solid; PADDING-LEFT: 8px; PADDING-BOTTOM: 0px; MARGIN: 0px auto 15px; BORDER-LEFT: #ccc 2px solid; WIDTH: 95%; PADDING-TOP: 8px; BORDER-BOTTOM: #ccc 2px solid; -moz-border-radius: 10px
+}
+#listnav {
+	BORDER-RIGHT: #ccc 2px solid; PADDING-RIGHT: 6px; BORDER-TOP: #ccc 2px solid; PADDING-LEFT: 6px; FONT-WEIGHT: bold; FONT-SIZE: 10pt; PADDING-BOTTOM: 6px; MARGIN: 3px auto; BORDER-LEFT: #ccc 2px solid; WIDTH: 95%; PADDING-TOP: 6px; BORDER-BOTTOM: #ccc 2px solid; TEXT-ALIGN: left; -moz-border-radius: 10px
+}
+.listform {
+	BORDER-RIGHT: #3d97c0 1px dotted; PADDING-RIGHT: 2px; BORDER-TOP: #3d97c0 1px dotted; PADDING-LEFT: 2px; PADDING-BOTTOM: 2px; MARGIN: 10px auto auto; BORDER-LEFT: #3d97c0 1px dotted; WIDTH: 90%; PADDING-TOP: 2px; BORDER-BOTTOM: #3d97c0 1px dotted; HEIGHT: 25px; BACKGROUND-COLOR: #d4e9f2; TEXT-ALIGN: center
+}
+.title A {
+	COLOR: #fc5900
+}
+.title A:visited {
+	COLOR: #fc5900
+}
+.liststars {
+	FLOAT: right; WIDTH: 80px; HEIGHT: 20px
+}
+.listtitle {
+	FONT-WEIGHT: bold; FONT-SIZE: 11pt
+}
+.itemtitle {
+	FONT-WEIGHT: bold; FONT-SIZE: 14pt; MARGIN-BOTTOM: 10px; MARGIN-LEFT: 30px
+}
+.authorline {
+	FONT-SIZE: 10pt; MARGIN-LEFT: 15px
+}
+.itemdescription {
+	FONT-SIZE: 10pt
+}
+.iconbar {
+	PADDING-RIGHT: 5px; FONT-WEIGHT: normal; FONT-SIZE: 9pt; FLOAT: right; WIDTH: 115px; HEIGHT: 34px; TEXT-ALIGN: left
+}
+.filesize {
+	FONT-WEIGHT: bold; FONT-SIZE: 8pt
+}
+.smallfont {
+	FONT-WEIGHT: bold; FONT-SIZE: 8pt
+}
+.baseline {
+	BORDER-TOP: #ccc 1px solid; PADDING-LEFT: 10px; FONT-WEIGHT: bold; FONT-SIZE: 8pt; COLOR: #333
+}
+.noitems {
+	FONT-WEIGHT: bold; FONT-SIZE: 12pt; HEIGHT: 60px; TEXT-ALIGN: center
+}
+.pagenum {
+	FONT-SIZE: 9pt; FLOAT: right
+}
+DIV.tabbar {
+	PADDING-RIGHT: 8px; PADDING-LEFT: 8px; PADDING-BOTTOM: 0px; MARGIN: 0px auto auto; WIDTH: 85%; PADDING-TOP: 0px; HEIGHT: 20px
+}
+DIV.tab {
+	BORDER-RIGHT: #ccc 2px solid; PADDING-RIGHT: 3px; BORDER-TOP: #ccc 2px solid; PADDING-LEFT: 3px; FONT-SIZE: 11pt; FLOAT: left; MARGIN: 0px 3px; VERTICAL-ALIGN: middle; BORDER-LEFT: #ccc 2px solid; BORDER-BOTTOM: #ccc 2px solid; HEIGHT: 20px; BACKGROUND-COLOR: #ddd; TEXT-ALIGN: center; -moz-border-radius: 10px
+}
+.downloadbox {
+	BORDER-RIGHT: #ccc 1px dotted; BORDER-TOP: #ccc 1px dotted; FONT-WEIGHT: bold; FLOAT: left; BORDER-LEFT: #ccc 1px dotted; BORDER-BOTTOM: #ccc 1px dotted; max-width: 395px;
+}
+.moreinfoinstall {
+	MARGIN-LEFT: 18px; WIDTH: 250px; HEIGHT: 34px
+}
+.commentbox {
+	BORDER-RIGHT: #ccc 1px solid; PADDING-RIGHT: 2px; BORDER-TOP: #ccc 1px solid; PADDING-LEFT: 5px; FONT-WEIGHT: bold; FONT-SIZE: 10pt; MIN-HEIGHT: 240px; PADDING-BOTTOM: 6px; MARGIN: auto 0px 5px auto; BORDER-LEFT: #ccc 1px solid; WIDTH: 50%; PADDING-TOP: 2px; BORDER-BOTTOM: #ccc 1px solid
+}
+.commenttitlebar {
+	PADDING-LEFT: 0px; FONT-WEIGHT: bold; FONT-SIZE: 11pt; HEIGHT: 20px; BACKGROUND-COLOR: #eee
+}
+.commenttitle {
+	PADDING-LEFT: 0px; FONT-WEIGHT: bold; FONT-SIZE: 11pt; POSITION: absolute
+}
+.commentfooter {
+	PADDING-RIGHT: 5px; FONT-SIZE: 8pt; TEXT-ALIGN: right
+}
+.nocomment {
+	MARGIN-LEFT: 30px
+}
+.mipageheading {
+	BORDER-TOP: #ccc 1px solid; MARGIN-TOP: 5px; PADDING-LEFT: 4px; FONT-WEIGHT: bold; FONT-SIZE: 11pt; MARGIN-BOTTOM: 5px; COLOR: #333
+}
+.reviewbox {
+	BORDER-RIGHT: #bbb 1px dotted; BORDER-TOP: #bbb 1px dotted; FONT-WEIGHT: bold; MARGIN: auto auto 10px; BORDER-LEFT: #bbb 1px dotted; WIDTH: 70%; BORDER-BOTTOM: #bbb 1px dotted
+};
+.opinionform {
+	FONT-WEIGHT: bold; FONT-SIZE: 10pt; MARGIN: auto 30px; WIDTH: 80%; LINE-HEIGHT: 30px
+}
+.errorbox {
+	BORDER-RIGHT: #f00 1px solid; PADDING-RIGHT: 3px; BORDER-TOP: #f00 1px solid; PADDING-LEFT: 3px; PADDING-BOTTOM: 3px; MARGIN: auto auto 20px; BORDER-LEFT: #f00 1px solid; WIDTH: 80%; PADDING-TOP: 3px; BORDER-BOTTOM: #f00 1px solid
+}
+.boxheader2 {
+	BORDER-TOP: #2e64ff 4px solid; HEIGHT: 4px
+}
+.boldfont {
+	FONT-WEIGHT: bold
+}
+.disabled {
+	FONT-WEIGHT: bold; FONT-SIZE: 10pt; COLOR: #ccc; FONT-STYLE: italic
+}
+.emailactive {
+	FONT-WEIGHT: bold; FONT-SIZE: 10pt; FONT-STYLE: italic
+}
+.profileitemdesc {
+	FONT-WEIGHT: bold; FONT-SIZE: 10pt; MARGIN-BOTTOM: 4px; MARGIN-LEFT: 20px
+}
+.mailresult {
+	FONT-WEIGHT: bold; FONT-SIZE: 14pt; MARGIN: auto; WIDTH: 650px; HEIGHT: 30px; TEXT-ALIGN: center
+}
+.faqtitle {
+	FONT-WEIGHT: normal; FONT-SIZE: 24pt; COLOR: #0065CA; TEXT-ALIGN: center
+}
+.faqitemtitle {
+	FONT-WEIGHT: bold; FONT-SIZE: 12pt
+}
+.faqitemtext {
+	MARGIN-LEFT: 5px
+}
+.footer {
+	PADDING-RIGHT: 30px; FONT-WEIGHT: bold; FONT-SIZE: 10pt; MARGIN-LEFT: 200px; TEXT-ALIGN: right
+}
