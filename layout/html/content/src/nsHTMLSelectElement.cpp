@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsIDOMHTMLSelectElement.h"
+#include "nsIDOMNSHTMLSelectElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
@@ -46,6 +47,7 @@
 #include "nsIFrame.h"
 
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
+static NS_DEFINE_IID(kIDOMNSHTMLSelectElementIID, NS_IDOMNSHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -99,6 +101,7 @@ private:
 };
 
 class nsHTMLSelectElement : public nsIDOMHTMLSelectElement,
+                            public nsIDOMNSHTMLSelectElement,
                             public nsIScriptObjectOwner,
                             public nsIDOMEventReceiver,
                             public nsIHTMLContent,
@@ -145,6 +148,7 @@ public:
   NS_IMETHOD Remove(PRInt32 aIndex);
   NS_IMETHOD Blur();
   NS_IMETHOD Focus();
+  NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
 
   // nsIScriptObjectOwner
   NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
@@ -227,6 +231,11 @@ nsHTMLSelectElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
   if (aIID.Equals(kIDOMHTMLSelectElementIID)) {
     *aInstancePtr = (void*)(nsIDOMHTMLSelectElement*)this;
+    mRefCnt++;
+    return NS_OK;
+  }
+  else if (aIID.Equals(kIDOMNSHTMLSelectElementIID)) {
+    *aInstancePtr = (void*)(nsIDOMNSHTMLSelectElement*)this;
     mRefCnt++;
     return NS_OK;
   }
@@ -591,6 +600,20 @@ nsHTMLSelectElement::RemoveFocus(nsIPresContext* aPresContext)
   // XXX Should focus only this presContext
   Blur();
   return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLSelectElement::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
+{
+  *aReturn=nsnull;
+  nsresult result = NS_OK;
+
+  if (nsnull == mOptions) {
+    Init();
+  }
+
+  result = mOptions->Item(aIndex, aReturn);
+  return result;
 }
 
 NS_IMETHODIMP
