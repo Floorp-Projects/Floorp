@@ -27,20 +27,20 @@
 class nsEditor;
 
 //nsIDOMKeyListener interface
-/** The editorKeyListener public nsIDOMKeyListener
+/** The nsEditorKeyListener public nsIDOMKeyListener
  *  This class will delegate events to its editor according to the translation
  *  it is responsible for.  i.e. 'c' becomes a keydown, but 'ESC' becomes nothing.
  *  This should be done through contexts that are loaded from URLs
  */
-class editorKeyListener : public nsIDOMKeyListener {
+class nsEditorKeyListener : public nsIDOMKeyListener {
   nsEditor *mEditor;
 public:
   /** the default constructor
    */
-  editorKeyListener();
+  nsEditorKeyListener();
   /** the default destructor. virtual due to the possibility of derivation.
    */
-  virtual ~editorKeyListener();
+  virtual ~nsEditorKeyListener();
 
   /** SetEditor gives an address to the editor that will be accessed
    *  @param nsEditor *aEditor simple
@@ -59,7 +59,6 @@ public:
   see the nsIDOMKeyListener interface implementation for details
   */
   virtual nsresult ProcessEvent(nsIDOMEvent* aEvent);
-public:
   virtual nsresult KeyDown(nsIDOMEvent* aKeyEvent);
   virtual nsresult KeyUp(nsIDOMEvent* aKeyEvent);
   virtual nsresult KeyPress(nsIDOMEvent* aKeyEvent);
@@ -72,16 +71,16 @@ private:
 /** editor Implementation of the MouseListener interface
  * nsIDOMMouseListener interface
  */
-class editorMouseListener : public nsIDOMMouseListener 
+class nsEditorMouseListener : public nsIDOMMouseListener 
 {
   nsEditor *mEditor;
 public:
   /** default constructor
    */
-  editorMouseListener();
+  nsEditorMouseListener();
   /** default destructor
    */
-  virtual ~editorMouseListener();
+  virtual ~nsEditorMouseListener();
 
   /** SetEditor gives an address to the editor that will be accessed
    *  @param nsEditor *aEditor simple
@@ -110,11 +109,11 @@ public:
 
 /** factory for the editor key listener
  */
-extern nsresult NS_NewEditorKeyListener(nsIDOMEventListener ** aInstancePtrResult, nsEditor *aEditor);
+extern nsresult NS_NewnsEditorKeyListener(nsIDOMEventListener ** aInstancePtrResult, nsEditor *aEditor);
 
 /** factory for the editor mouse listener
  */
-extern nsresult NS_NewEditorMouseListener(nsIDOMEventListener ** aInstancePtrResult, nsEditor *aEditor);
+extern nsresult NS_NewnsEditorMouseListener(nsIDOMEventListener ** aInstancePtrResult, nsEditor *aEditor);
 
 #endif //editorInterfaces_h__
 
