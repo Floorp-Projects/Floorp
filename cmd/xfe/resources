@@ -5483,6 +5483,7 @@ from the network, or save to a file and then play from the file?
 *documentFonts.charset*jisx0212.1990-ocmp.1992:			jis_x0212-1990
 *documentFonts.charset*koi8-1:					koi8-r
 *documentFonts.charset*koi8-r:					koi8-r
+*documentFonts.charset*koi-8:					koi8-r
 *documentFonts.charset*ks-roman:				x-ignore
 *documentFonts.charset*ksc5601.1987-0:				ks_c_5601-1987
 *documentFonts.charset*ksc5601.1987-1:				x-ksc5601-11
