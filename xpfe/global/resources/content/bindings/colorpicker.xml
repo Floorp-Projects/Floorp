@@ -27,9 +27,9 @@
         <xul:hbox>
           <xul:spacer class="colorpickertile" style="background-color: #CCCCCC" color="#CCCCCC"/>
           <xul:spacer class="colorpickertile" style="background-color: #FF6666" color="#FF6666"/>
-          <xul:spacer class="colorpickertile" style="background-color: #FFCC33" color="#FFCC33"/>
+          <xul:spacer class="colorpickertile" style="background-color: #FF9966" color="#FF9966"/>
           <xul:spacer class="colorpickertile cp-light" style="background-color: #FFFF66" color="#FFFF66"/>
-          <xul:spacer class="colorpickertile cp-light" style="background-color: #FFFF99" color="#FFFF99"/>
+          <xul:spacer class="colorpickertile cp-light" style="background-color: #FFFF33" color="#FFFF33"/>
           <xul:spacer class="colorpickertile cp-light" style="background-color: #66FF99" color="#66FF99"/>
           <xul:spacer class="colorpickertile cp-light" style="background-color: #33FFFF" color="#33FFFF"/>
           <xul:spacer class="colorpickertile cp-light" style="background-color: #66FFFF" color="#66FFFF"/>
