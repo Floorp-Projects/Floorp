@@ -10,6 +10,6 @@
 <!ENTITY address.label "Address Book">
 <!ENTITY viewingMessages.label "Message Display">
 <!ENTITY composingMessages.label "Message Composition">
-<!ENTITY format.label "Sending Format">
+<!ENTITY format.label "Send Format">
 <!ENTITY return.label "Return Receipts">
 <!ENTITY disk.label "Disk Space">

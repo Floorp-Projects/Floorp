@@ -18,8 +18,8 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!ENTITY window.title           "Addressing">
-<!ENTITY pane.title             "Addressing">
+<!ENTITY window.title           "Address Books">
+<!ENTITY pane.title             "Address Books">
 <!ENTITY pane.description       "Settings for addressing messages">
 <!ENTITY pinpoint.label         "Pinpoint Addressing">
 <!ENTITY lookFor.label          "Look for addresses in the following:">
@@ -40,9 +40,9 @@ Rights Reserved.
 <!ENTITY emailCollectionOutgoingEnable.label	"Outgoing Messages">
 <!ENTITY emailCollectionTypeText.label "Save email addresses from my:">
 <!ENTITY emailCollectiontitle.label	"Email Address Collection">
-<!ENTITY emailCollectiontext.label	"Email Address Collection saves the email addresses from your incoming and/or outgoing mail and stores them in a local address book, Collected Addresses.">
+<!ENTITY emailCollectiontext.label	"Email Address Collection saves the email addresses from your incoming and/or outgoing mail and stores them in a local address book, 'Collected Addresses'.">
 
 <!-- Autocompletion -->
-<!ENTITY addressingTitle.label				  "Address Autocompletion">
+<!ENTITY addressingTitle.label				  "Addressing Messages">
 <!ENTITY addressingText.label				  "When you address messages, Mail can autocomplete addresses for you by looking for matching entries in your address books, or showing you a list of possible matches.">
 <!ENTITY addressingEnable.label				  "Enable address autocompletion">

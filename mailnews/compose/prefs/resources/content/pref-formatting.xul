@@ -24,15 +24,18 @@
     <radiogroup id="mailDefaultHTMLAction" orient="vertical" autostretch="never"
                 pref="true" preftype="int" prefstring="mail.default_html_action"
                 prefattribute="data">
-      <radio group="mailDefaultHTMLAction" data="0" value="&askMe.label;" accesskey="&askMe.accesskey;"/>
-      <radio group="mailDefaultHTMLAction" data="1" value="&convertPlain.label;" accesskey="&convertPlain.accesskey;"/>                
-      <radio group="mailDefaultHTMLAction" data="2" value="&sendHTML.label;" accesskey="&sendHTML.accesskey;"/>
-      <radio group="mailDefaultHTMLAction" data="3" value="&sendBoth.label;" accesskey="&sendBoth.accesskey;"/>
+      <radio group="mailDefaultHTMLAction" data="0" value="&askMe.label;"/>
+      <radio group="mailDefaultHTMLAction" data="1" value="&convertPlain.label;"/>                
+      <radio group="mailDefaultHTMLAction" data="2" value="&sendHTML.label;"/>
+      <radio group="mailDefaultHTMLAction" data="3" value="&sendBoth.label;"/>
     </radiogroup>
     
     <separator/>
 
     <html>&override.label;</html>
+	<separator/>
+	<html>&receiveHTML.label;</html>
+
   </titledbox>
 
 </window>

@@ -22,29 +22,30 @@ Rights Reserved.
 <!ENTITY pane.description                 "Settings for message display">
 <!ENTITY textBegin.label                  "Quoted plain text appearance">
 <!ENTITY style.label                      "Style:">
-<!ENTITY style.accesskey                  "y">
+<!ENTITY style.accesskey                  "t">
 <!ENTITY regular.label                    "Regular">
 <!ENTITY bold.label                       "Bold">
 <!ENTITY italic.label                     "Italic">
 <!ENTITY boldItalic.label                 "Bold Italic">
 <!ENTITY size.label                       "Size:">
-<!ENTITY size.accesskey                   "z">
+<!ENTITY size.accesskey                   "s">
 <!ENTITY regular.label                    "Regular">
 <!ENTITY bigger.label                     "Bigger">
 <!ENTITY smaller.label                    "Smaller">
 <!ENTITY color.label                      "Color:">
 <!ENTITY color.accesskey                  "c">
 <!ENTITY displayWidth.label               "Plain Text Messages">
-<!ENTITY plainText.label				  "Display plain text messages using:">
-<!ENTITY displayText.label				  "Settings for displaying quoted plain text messages:">
+<!ENTITY plainText.label				  "Use this font when displaying plain text messages:">
+<!ENTITY displayText.label				  "Use the following settings when  displaying quoted plain text messages:">
 <!ENTITY viewingPlainText.label			  "When viewing plain text messages:">
-<!ENTITY languages.label				  "Languages">
-<!ENTITY coding.label					  "Default character coding for viewing messages:">
+<!ENTITY languagesTitle.label			  "Languages">
+<!ENTITY coding.label					  "Use the following character coding as the default for viewing messages:">
 <!ENTITY sendDefaultCharset.label         "Character Coding:">
+<!ENTITY sendDefaultCharset.accesskey	  "h">
 <!ENTITY forceCharsetOverride.label       "Apply default to all messages (ignore character coding specified by MIME header).">
-<!ENTITY forceCharsetOverride.accesskey   "i">
+<!ENTITY forceCharsetOverride.accesskey   "p">
 <!ENTITY fixedWidth.label                 "Fixed width font">
-<!ENTITY fixedWidth.accesskey             "x">
+<!ENTITY fixedWidth.accesskey             "f">
 <!ENTITY variableWidth.label              "Variable width font">
 <!ENTITY variableWidth.accesskey          "v">
 <!ENTITY readingMessagesHeader.label      "For incoming messages">
@@ -53,7 +54,7 @@ Rights Reserved.
 <!ENTITY wrapInMsg.accesskey              "w">
 <!-- LOCALIZATION NOTE : (emoticonsAndStructs.label) 'Emoticons' are also known as 'Smileys', e.g. :-)   -->
 <!ENTITY convertEmoticons.label           "Display emoticons as graphics.">
-<!ENTITY convertEmoticons.accesskey       "c">
+<!ENTITY convertEmoticons.accesskey       "d">
 
 <!-- Tooltips  -->  
 <!ENTITY convertEmoticons.tooltip "Convert Emoticons">  

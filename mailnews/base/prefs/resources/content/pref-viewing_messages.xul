@@ -60,14 +60,14 @@
   <titledbox orient="vertical">
     <title><text value="&displayWidth.label;"/></title>
 
-    <box orient="horizontal">
       <html>&plainText.label;</html>
     
+	<box orient="horizontal" class="indent">
       <radiogroup id="mailFixedWidthMessages" orient="vertical" autostretch="never"
                   pref="true" preftype="bool" prefstring="mail.fixed_width_messages"
                   prefattribute="data">
-        <radio group="mailFixedWidthMessages" data="true" value="&fixedWidth.label;" accesskey="&fixedWidth.accesskey;"/>
-        <radio group="mailFixedWidthMessages" data="false" value="&variableWidth.label;" accesskey="&variableWidth.accesskey;"/>                
+        <radio group="mailFixedWidthMessages" data="true" value="&fixedWidth.label;"/>
+        <radio group="mailFixedWidthMessages" data="false" value="&variableWidth.label;"/>                
       </radiogroup>
     </box>
 
@@ -85,7 +85,7 @@
         </menupopup>
       </menulist>
 
-      <text class="label" value="&size.label;" accesskey="&size.label;" for="mailQuotedSize"/>
+      <text class="label" value="&size.label;" accesskey="&size.accesskey;" for="mailQuotedSize"/>
       <menulist id="mailQuotedSize" pref="true" preftype="int" prefstring="mail.quoted_size"
                 prefattribute="data">
         <menupopup>
@@ -95,7 +95,7 @@
         </menupopup>
       </menulist>
       
-      <text class="label" value="&color.label;"/>
+      <text class="label" value="&color.label;" accesskey="&color.accesskey;"/>
       <menu id="citationmenu" allowevents="true" class="colorpicker">
         <titledbutton class="popup" align="right"/> 
         <html:div style="width:30px; background-color:white"/>
@@ -109,20 +109,20 @@
 	<separator class="thin"/>
 	<html>&viewingPlainText.label;</html>
     <box orient="vertical" class="indent">
-      <checkbox id="wrapLongLines" value="&wrapInMsg.label;" accesskey="&wrapInMsg.accesskey;"
+      <checkbox id="wrapLongLines" value="&wrapInMsg.label;"
                 pref="true" preftype="bool" prefstring="mail.wrap_long_lines" 
                 prefattribute="checked"/>
-      <checkbox class="iconic" id="displayGlyph" value="&convertEmoticons.label;" accesskey="&convertEmoticons.accesskey;"
+      <checkbox class="iconic" id="displayGlyph" value="&convertEmoticons.label;"
                 pref="true" preftype="bool" prefstring="mail.display_glyph"
                 prefattribute="checked" tooltip="aTooltip" tooltiptext="&convertEmoticons.tooltip;"/>		
     </box>
   </titledbox>
 
 	<titledbox orient="vertical" autostretch="never">
-	<title><text value="&languages.label;"/></title>
+	<title><text value="&languagesTitle.label;"/></title>
 	<html>&coding.label;</html>
 	<box autostretch="never" class="indent">
-    <text class="label" value="&sendDefaultCharset.label;" for="sendDefaultCharsetList"/>
+    <text class="label" value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;" for="sendDefaultCharsetList"/>
     <menulist id="sendDefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
               pref="true" preftype="string" prefstring="mailnews.view_default_charset"
               prefattribute="data">
@@ -133,7 +133,7 @@
       </template>
     </menulist>       
     </box>    
-  <checkbox id="forceCharsetOverride" value="&forceCharsetOverride.label;" accesskey="&forceCharsetOverride.accesskey;"
+  <checkbox id="forceCharsetOverride" value="&forceCharsetOverride.label;"
             pref="true" preftype="bool" prefstring="mailnews.force_charset_override" 
             prefattribute="checked"/>
 	</titledbox>

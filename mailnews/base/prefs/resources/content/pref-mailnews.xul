@@ -39,7 +39,7 @@
     <html>&chooseExp.label;</html>
 
 	<separator class="thin"/>
-    <checkbox id="mailnewsConfirmMoveFoldersToTrash" value="&confirmMove.label;" accesskey="&confirmMove.label;"
+    <checkbox id="mailnewsConfirmMoveFoldersToTrash" value="&confirmMove.label;"
               pref="true" preftype="bool" prefstring="mailnews.confirm.moveFoldersToTrash"
               prefattribute="checked"/>
 
@@ -48,11 +48,11 @@
 	<titledbox orient="vertical">
     <title><text value="&messengerStartPage.label;"/></title>
 
-    <checkbox allowevents="true" id="mailnewsStartPageEnabled" value="&enableStartPage.label;" accesskey="&enableStartPage.accesskey;"
+    <checkbox allowevents="true" id="mailnewsStartPageEnabled" value="&enableStartPage.label;"
               pref="true" preftype="bool" prefstring="mailnews.start_page_enabled"
               prefattribute="checked"/>
     <box autostretch="never" class="indent">
-      <text class="label" value="&location.label;" accesskey="&location.label;" for="mailnews.start_page.url"/>
+      <text class="label" value="&location.label;" accesskey="&location.accesskey;" for="mailnews.start_page.url"/>
       <textfield id="mailnewsStartPageUrl" flex="1" pref="true" preftype="string"
                  prefstring="mailnews.start_page.url" prefattribute="value"/>
     </box>

@@ -18,7 +18,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!ENTITY pane.title                           "Composing Messages">
+<!ENTITY pane.title                           "Message Composition">
 <!ENTITY pane.description                     "Composing mail messages">
 <!ENTITY forwardReply.label                   "Forwarding and replying to messages">
 <!ENTITY forwardMsg.label                     "Forward messages:">
@@ -32,8 +32,8 @@ Rights Reserved.
 <!ENTITY autoQuote.label                      "Automatically quote the original message when replying">
 <!ENTITY autoQuote.accesskey                  "u">
 <!-- LOCALIZATION NOTE (then.label): This will concatenate with the 4 strings that follow. -->
-<!ENTITY then.label                           "then,">
-<!ENTITY then.accesskey                       "h">
+<!ENTITY then.label                           "Then,">
+<!ENTITY then.accesskey                       "t">
 <!ENTITY aboveQuote.label                     "start my reply above the quoted text">
 <!ENTITY aboveQuote.accesskey                 "v">
 <!ENTITY belowQuote.label                     "start my reply below the quoted text">
@@ -50,7 +50,7 @@ Rights Reserved.
 
 <!ENTITY sendingMessagesHeader.label          "Composing Messages">
 <!ENTITY spellCheck.label                     "Check spelling before sending">
-<!ENTITY spellCheck.accesskey                 "p">
+<!ENTITY spellCheck.accesskey                 "c">
 <!-- LOCALIZATION NOTE (wrapOutMsg.label): This will concatenate with "xxx characters", using a number and (char.label). -->
 <!ENTITY wrapOutMsg.label                     "Wrap plain text messages at">
 <!ENTITY wrapOutMsg.accesskey                 "l">
@@ -59,9 +59,11 @@ Rights Reserved.
 <!ENTITY asIs.label                           "As is (does not work well with some mail servers)">
 <!ENTITY asIs.accesskey                       "t">
 <!ENTITY useMIME.label                        "For messages that contain 8-bit characters, use 'quoted printable' MIME encoding. Leave unchecked to send the messages as is.">
-<!ENTITY useMIME.accesskey                    "m">
+<!ENTITY useMIME.accesskey                    "o">
 
-<!ENTITY sendDefaultCharset.label             "Default Character Coding:">
-<!ENTITY languages.label					  "Languages">
+<!ENTITY sendDefaultCharset.label             "Character Coding:">
+<!ENTITY sendDefaultCharset.accesskey         "h">
+<!ENTITY languagesTitle.label				  "Languages">
+<!ENTITY languagesText.label				  "Use the following character coding as the default for composing messages:">
 
 <!-- Tooltips -->  

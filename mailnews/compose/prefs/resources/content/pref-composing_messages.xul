@@ -56,7 +56,7 @@
       </menulist>
     </box>
     
-    <checkbox id="autoQuote" value="&autoQuote.label;" accesskey="&autoQuote.accesskey;" 
+    <checkbox id="autoQuote" value="&autoQuote.label;" 
               pref="true" preftype="bool" prefstring="mail.auto_quote"
               prefattribute="checked" oncommand="doEnabling();"/>		
     <box class="indent" autostretch="never" id="thenBox">
@@ -77,11 +77,11 @@
 	<titledbox orient="vertical" autostretch="never">
 		<title><text value="&sendingMessagesHeader.label;"/></title>
         
-    <checkbox id="spellCheckBeforeSend" value="&spellCheck.label;" accesskey="&spellCheck.accesskey;"
+    <checkbox id="spellCheckBeforeSend" value="&spellCheck.label;"
               pref="true" preftype="bool" prefstring="mail.SpellCheckBeforeSend"
               prefattribute="checked"/>
 	
-	<checkbox id="strictlyMime" value="&useMIME.label;" accesskey="&useMIME.accesskey;"
+	<checkbox id="strictlyMime" value="&useMIME.label;"
                 pref="true" preftype="bool" prefstring="mail.strictly_mime"
                 prefattribute="checked"/>
     
@@ -93,7 +93,7 @@
 	</box>
 
    <box autostretch="never">
-    <text class="label" value="&sendDefaultCharset.label;" for="sendDefaultCharsetList"/>
+    <text class="label" value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;" for="sendDefaultCharsetList"/>
     <menulist id="sendDefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
               pref="true" preftype="string" prefstring="mailnews.send_default_charset"
               prefattribute="data">

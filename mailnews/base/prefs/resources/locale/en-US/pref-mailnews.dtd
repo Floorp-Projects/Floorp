@@ -21,18 +21,18 @@ Rights Reserved.
 <!ENTITY pane.title                       "Mail and Newsgroups">
 <!ENTITY pane.description                 "General Mail/News settings">
 
-<!ENTITY windowSettings.label             "Window Settings">
+<!ENTITY windowSettings.label             "General Settings">
 <!ENTITY selectWindowLayout.label         "Select the window layout you prefer for Mail:">
 <!ENTITY chooseExp.label                  "Note: For this setting to take effect, you will need to exit and then restart Mail.">
 <!ENTITY playSound.label                  "Play a sound when new messages arrive">
 <!ENTITY playSound.accesskey              "p">
-<!ENTITY confirmMove.label                "Confirm when moving folders to the trash">
-<!ENTITY confirmMove.accesskey            "m">
+<!ENTITY confirmMove.label                "Confirm when moving folders to the Trash">
+<!ENTITY confirmMove.accesskey            "c">
 <!ENTITY useMessenger.label               "Use Mail from MAPI-based applications">
 <!ENTITY useMessenger.accesskey           "u">
 <!ENTITY messengerStartPage.label         "Mail Start Page">
-<!ENTITY enableStartPage.label            "When Mail launches, show the start page in the message area">
-<!ENTITY enableStartPage.accesskey        "t">
+<!ENTITY enableStartPage.label            "When Mail launches, show the Start Page in the message area">
+<!ENTITY enableStartPage.accesskey        "w">
 <!ENTITY location.label                   "Location:">
 <!ENTITY location.accesskey               "l">
 <!ENTITY useDefault.label                 "Restore Default">

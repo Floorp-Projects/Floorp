@@ -27,7 +27,7 @@
       </menulist>
     </box>
     
-    <checkbox id="autoQuote" value="&autoQuote.label;" accesskey="&autoQuote.accesskey;" 
+    <checkbox id="autoQuote" value="&autoQuote.label;" 
               pref="true" preftype="bool" prefstring="mail.auto_quote"
               prefattribute="checked"/>		
     <box autostretch="never">
@@ -48,13 +48,13 @@
 	<titledbox orient="vertical" autostretch="never">
 		<title><text value="&readingMessagesHeader.label;"/></title>
 
-    <checkbox id="wrapLongLines" value="&wrapInMsg.label;" accesskey="&wrapInMsg.accesskey;"
+    <checkbox id="wrapLongLines" value="&wrapInMsg.label;"
               pref="true" preftype="bool" prefstring="mail.wrap_long_lines" 
               prefattribute="checked"/>
-    <checkbox id="displayGlyph" value="&convertEmoticons.label;" accesskey="&convertEmoticons.accesskey;"
+    <checkbox id="displayGlyph" value="&convertEmoticons.label;"
               pref="true" preftype="bool" prefstring="mail.display_glyph"
               prefattribute="checked"/>		
-    <checkbox id="displayStruct" value="&convertStructs.label;" accesskey="&convertStructs.accesskey;" 
+    <checkbox id="displayStruct" value="&convertStructs.label;" 
               pref="true" preftype="bool" prefstring="mail.display_struct"
               prefattribute="checked"/>
   </titledbox>
@@ -63,10 +63,10 @@
 	<titledbox orient="vertical">
 		<title><text value="&sendingMessagesHeader.label;"/></title>
         
-    <checkbox id="spellCheckBeforeSend" value="&spellCheck.label;" accesskey="&spellCheck.accesskey;"
+    <checkbox id="spellCheckBeforeSend" value="&spellCheck.label;"
               pref="true" preftype="bool" prefstring="mail.SpellCheckBeforeSend"
               prefattribute="checked"/>
-    <checkbox id="sendStruct" value="&convertStructs.label;" accesskey="&convertStructs.accesskey;"
+    <checkbox id="sendStruct" value="&convertStructs.label;"
               pref="true" preftype="bool" prefstring="mail.send_struct"
               prefattribute="checked"/>
     <box autostretch="never">
@@ -80,8 +80,8 @@
     <radiogroup id="strictlyMime" orient="vertical" autostretch="never"
                 pref="true" preftype="bool" prefstring="mail.strictly_mime"
                 prefattribute="data">
-      <radio group="strictlyMime" data="false" value="&asIs.label;" accesskey="&asIs.accesskey;"/>
-      <radio group="strictlyMime" data="true" value="&useMIME.label;" accesskey="&useMIME.accesskey;"/>
+      <radio group="strictlyMime" data="false" value="&asIs.label;"/>
+      <radio group="strictlyMime" data="true" value="&useMIME.label;"/>
     </radiogroup>                
 	</titledbox>
 
