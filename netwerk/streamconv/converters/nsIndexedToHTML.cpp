@@ -522,19 +522,22 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         pushBuffer.Append(NS_LITERAL_STRING("</td>\n <td>"));
     } else {
         nsAutoString formatted;
+        nsAutoString strNCR;    // use NCR to show date in any doc charset
         mDateTime->FormatPRTime(nsnull,
                                 kDateFormatShort,
                                 kTimeFormatNone,
                                 t,
                                 formatted);
-        pushBuffer.Append(formatted);
+        ConvertNonAsciiToNCR(formatted, strNCR);
+        pushBuffer.Append(strNCR);
         pushBuffer.Append(NS_LITERAL_STRING("</td>\n <td>"));
         mDateTime->FormatPRTime(nsnull,
                                 kDateFormatNone,
                                 kTimeFormatSeconds,
                                 t,
                                 formatted);
-        pushBuffer.Append(formatted);
+        ConvertNonAsciiToNCR(formatted, strNCR);
+        pushBuffer.Append(strNCR);
     }
 
     pushBuffer.Append(NS_LITERAL_STRING("</td>\n</tr>\n"));
