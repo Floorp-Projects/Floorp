@@ -512,7 +512,8 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
 		rv = newMsgHdr->GetFlags(&flags);
    		if (NS_FAILED(rv)) return rv;
 		/* strip "Re: " */
-		if (NS_MsgStripRE(&subject, &subjectLen))
+    nsXPIDLCString modifiedSubject;
+		if (NS_MsgStripRE(&subject, &subjectLen, getter_Copies(modifiedSubject)))
 		{
 			// todo:
 			// use OrFlags()?
@@ -525,9 +526,9 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
 		if (! (flags & MSG_FLAG_READ))
 			rv = newMsgHdr->OrFlags(MSG_FLAG_NEW, &flags);
 #ifdef DEBUG_NEWS
-		printf("subject = %s\n",subject);
+		printf("subject = %s\n",modifiedSubject.IsEmpty() ? subject : modifiedSubject.get());
 #endif
-		rv = newMsgHdr->SetSubject(subject);
+    rv = newMsgHdr->SetSubject(modifiedSubject.IsEmpty() ? subject : modifiedSubject.get());
     		if (NS_FAILED(rv)) return rv;
 		
 	}

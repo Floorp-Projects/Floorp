@@ -345,7 +345,7 @@ nsresult NS_MsgCreatePathStringFromFolderURI(const char *folderURI, nsCString& p
    The string is not altered: the pointer to its head is merely advanced,
    and the length correspondingly decreased.
  */
-PRBool NS_MsgStripRE(const char **stringP, PRUint32 *lengthP)
+PRBool NS_MsgStripRE(const char **stringP, PRUint32 *lengthP, char **modifiedSubject)
 {
   const char *s, *s_end;
   const char *last;
@@ -358,7 +358,8 @@ PRBool NS_MsgStripRE(const char **stringP, PRUint32 *lengthP)
   nsXPIDLCString decodedString;
   nsCOMPtr<nsIMimeConverter> mimeConverter;
   nsresult rv;
-  if (strstr(*stringP, "=?"))
+  // we cannot strip "Re:" for MIME encoded subject without modifying the original
+  if (modifiedSubject && strstr(*stringP, "=?"))
   {
     mimeConverter = do_GetService(kCMimeConverterCID, &rv);
     if (NS_SUCCEEDED(rv))
@@ -423,15 +424,10 @@ PRBool NS_MsgStripRE(const char **stringP, PRUint32 *lengthP)
           char charset[kMAX_CSNAME] = "";
           if (kMAX_CSNAME >= (p2 - p1))
             strncpy(charset, p1, p2 - p1);
-          nsXPIDLCString encodedString;
           rv = mimeConverter->EncodeMimePartIIStr_UTF8(s, PR_FALSE, charset, sizeof("Subject:"), 
-                                                       kMIME_ENCODED_WORD_SIZE, getter_Copies(encodedString));
+                                                       kMIME_ENCODED_WORD_SIZE, modifiedSubject);
           if (NS_SUCCEEDED(rv)) 
-          {
-            strcpy((char *)*stringP, encodedString.get());
-            *lengthP = encodedString.Length();
             return result;
-          }
         }
       }
     }

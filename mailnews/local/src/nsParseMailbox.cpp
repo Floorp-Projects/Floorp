@@ -1058,7 +1058,8 @@ int nsParseMailMessageState::InternSubject (struct message_header *header)
 	 we just parsed the subject header anyway, we expect that parsing
 	 to be smartest.  (After all, what if someone just went in and
 	 edited the subject line by hand?) */
-	if (NS_MsgStripRE((const char **) &key, &L))
+  nsXPIDLCString modifiedSubject;
+	if (NS_MsgStripRE((const char **) &key, &L, getter_Copies(modifiedSubject)))
     flags |= MSG_FLAG_HAS_RE;
 	else
     flags &= ~MSG_FLAG_HAS_RE;
@@ -1068,11 +1069,12 @@ int nsParseMailMessageState::InternSubject (struct message_header *header)
 
 	// Condense the subject text into as few MIME-2 encoded words as possible.
 #ifdef WE_CONDENSE_MIME_STRINGS
-	char *condensedKey = msg_condense_mime2_string(key);
+  char *condensedKey = msg_condense_mime2_string(modifiedSubject.IsEmpty() ? key : modifiedSubject.get());
 #else
 	char *condensedKey = nsnull;
 #endif
-	m_newMsgHdr->SetSubject(condensedKey ? condensedKey : key);
+  m_newMsgHdr->SetSubject(condensedKey ? condensedKey : 
+                          (modifiedSubject.IsEmpty() ? key : modifiedSubject.get()));
 	PR_FREEIF(condensedKey);
 
 	return 0;
