@@ -18,6 +18,7 @@
 DEPTH=..\..
 IGNORE_MANIFEST=1
 
+!if defined(NGPREFS) || defined(MSSDK)
 DIRS= \
 !if "$(MSSDK)" != ""
       ActiveX \
@@ -26,5 +27,5 @@ DIRS= \
       ngprefs \
 !endif
       $(NULL)
-
+!endif
 include <$(DEPTH)\config\rules.mak>
