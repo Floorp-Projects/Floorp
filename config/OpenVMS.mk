@@ -26,7 +26,7 @@ ifndef NSBUILDROOT
 #OBJDIR_NAME	= $(OS_CONFIG)$(CPU_ARCH_TAG)$(OBJDIR_TAG).OBJ  # NSPR
 OBJDIR_NAME	= $(subst _,,$(CPU_ARCH_TAG)$(OBJDIR_TAG))
 endif
-
+#
 ifdef BUILD_OPT
 OBJDIR_TAG	= _OPT
 else
@@ -47,8 +47,8 @@ OS_CXXFLAGS	+= -DVMS
 ifdef INTERNAL_TOOLS
 CC		= c89
 CCC		= cxx
-OS_CFLAGS	= $(ACDEFINES) -O -Wc,names=short
-OS_CXXFLAGS	= $(ACDEFINES) -O -Wc,names=short
+OS_CFLAGS	= $(ACDEFINES) -O -Wc,names=\(short,as\) -DAS_IS
+OS_CXXFLAGS	= $(ACDEFINES) -O -Wc,names=\(short,as\) -DAS_IS
 OS_LDFLAGS	=
 endif
 
@@ -62,6 +62,5 @@ AS		= vmsas $(VMS_DEBUG)
 LD		= vmsld MODULE=$(LIBRARY_NAME) DIST=$(DIST) \
 		  DISTNSPR=$(subst -L/,/,$(NSPR_LIBS:-l%=)) $(VMS_DEBUG)
 DSO_LDOPTS	=
-EXTRA_DSO_LDOPTS += $(EXTRA_LIBS)
+EXTRA_DSO_LDOPTS+= $(EXTRA_LIBS)
 MKSHLIB		= $(LD)
-
