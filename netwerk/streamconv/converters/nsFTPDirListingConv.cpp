@@ -143,26 +143,15 @@ nsFTPDirListingConv::Convert(nsIInputStream *aFromStream,
     }
     CBufDescriptor desc(buffer, PR_TRUE, CONV_BUF_SIZE);
     nsCAutoString aBuffer(desc);
-    nsCAutoString convertedData;
+    nsCString convertedData;
 
     NS_ASSERTION(aCtxt, "FTP dir conversion needs the context");
-    // build up the 300: line
-    nsXPIDLCString spec;
+
     nsCOMPtr<nsIURI> uri(do_QueryInterface(aCtxt, &rv));
     if (NS_FAILED(rv)) return rv;
-
-    rv = uri->GetSpec(getter_Copies(spec));
+    
+    rv = GetHeaders(convertedData, uri);
     if (NS_FAILED(rv)) return rv;
-
-    convertedData.Append("300: ");
-    convertedData.Append(spec);
-    convertedData.Append(char(nsCRT::LF));
-    // END 300:
-
-    // build up the column heading; 200:
-    convertedData.Append("200: filename content-length last-modified file-type\n");
-    // END 200:
-
 
     // build up the body
     while (1) {
@@ -264,8 +253,6 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
     if (NS_FAILED(rv)) return rv;
     
     PRUint32 read, streamLen;
-    nsCAutoString indexFormat;
-    indexFormat.SetCapacity(72); // quick guess 
 
     rv = inStr->Available(&streamLen);
     if (NS_FAILED(rv)) return rv;
@@ -294,27 +281,15 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
     printf("::OnData() received the following %d bytes...\n\n%s\n\n", streamLen, buffer);
 #endif // DEBUG_valeski
 
-
+    nsCString indexFormat;
     if (!mSentHeading) {
         // build up the 300: line
-        char *spec = nsnull;
-        nsIURI *uri = nsnull;
-        rv = channel->GetURI(&uri);
+        nsCOMPtr<nsIURI> uri;
+        rv = channel->GetURI(getter_AddRefs(uri));
         if (NS_FAILED(rv)) return rv;
 
-        rv = uri->GetSpec(&spec);
-        NS_RELEASE(uri);
+        rv = GetHeaders(indexFormat, uri);
         if (NS_FAILED(rv)) return rv;
-
-        indexFormat.Append("300: ");
-        indexFormat.Append(spec);
-        indexFormat.Append(char(nsCRT::LF));
-        nsMemory::Free(spec);
-        // END 300:
-
-        // build up the column heading; 200:
-        indexFormat.Append("200: filename content-length last-modified file-type\n");
-        // END 200:
 
         mSentHeading = PR_TRUE;
     }
@@ -400,29 +375,10 @@ nsFTPDirListingConv::nsFTPDirListingConv() {
 nsFTPDirListingConv::~nsFTPDirListingConv() {
     NS_IF_RELEASE(mFinalListener);
     NS_IF_RELEASE(mPartChannel);
-    NS_RELEASE(mLocale);
-    NS_RELEASE(mDateTimeFormat);
 }
 
 nsresult
 nsFTPDirListingConv::Init() {
-    // Grab the nsILocale for date parsing.
-    nsresult rv;
-    nsCOMPtr<nsILocaleService> localeSvc = 
-             do_GetService(kLocaleServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = localeSvc->GetApplicationLocale(&mLocale);
-    if (NS_FAILED(rv)) return rv;
-
-    // Grab the date/time formatter
-    nsIComponentManager *comMgr;
-    rv = NS_GetGlobalComponentManager(&comMgr);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = comMgr->CreateInstance(kDateTimeCID, nsnull, NS_GET_IID(nsIDateTimeFormat), (void**)&mDateTimeFormat);
-    if (NS_FAILED(rv)) return rv;
-
 #if defined(PR_LOGGING)
     //
     // Initialize the global PRLogModule for FTP Protocol logging 
@@ -436,6 +392,39 @@ nsFTPDirListingConv::Init() {
     return NS_OK;
 }
 
+nsresult
+nsFTPDirListingConv::GetHeaders(nsAWritableCString& headers,
+                                nsIURI* uri)
+{
+    nsresult rv = NS_OK;
+    // build up 300 line
+    headers.Append("300: ");
+
+    // Bug 111117 - don't print the password
+    nsXPIDLCString pw,spec;
+    uri->GetPassword(getter_Copies(pw));
+    if (!pw.IsEmpty()) {
+         rv = uri->SetPassword(nsnull);
+         if (NS_FAILED(rv)) return rv;
+         rv = uri->GetSpec(getter_Copies(spec));
+         if (NS_FAILED(rv)) return rv;
+         headers.Append(spec);
+         rv = uri->SetPassword(pw);
+         if (NS_FAILED(rv)) return rv;
+    } else {
+        rv = uri->GetSpec(getter_Copies(spec));
+        if (NS_FAILED(rv)) return rv;
+        
+        headers.Append(spec);
+    }
+    headers.Append(char(nsCRT::LF));
+    // END 300:
+
+    // build up the column heading; 200:
+    headers.Append("200: filename content-length last-modified file-type\n");
+    // END 200:
+    return rv;
+}
 
 PRInt8
 nsFTPDirListingConv::MonthNumber(const char *month) {
@@ -733,7 +722,7 @@ nsFTPDirListingConv::InitPRExplodedTime(PRExplodedTime& aTime) {
 }
 
 char *
-nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
+nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
     nsresult rv;
     char *line = aBuffer;
     char *eol;

@@ -41,8 +41,6 @@
 #include "nsIChannel.h"
 #include "nsIURI.h"
 #include "nsString.h"
-#include "nsILocale.h"
-#include "nsIDateTimeFormat.h"
 
 #include "nsIFactory.h"
 
@@ -152,6 +150,9 @@ public:
     }
 
 private:
+    // Get the application/http-index-format headers
+    nsresult GetHeaders(nsAWritableCString& str, nsIURI* uri);
+
     // util parsing methods
     PRInt8   MonthNumber(const char *aCStr);
     PRBool   IsLSDate(char *aCStr);
@@ -165,7 +166,7 @@ private:
     nsresult ParseVMSLine(char *aLine, indexEntry *aEntry);
 
     void     InitPRExplodedTime(PRExplodedTime& aTime);
-    char*    DigestBufferLines(char *aBuffer, nsCAutoString &aString);
+    char*    DigestBufferLines(char *aBuffer, nsCString &aString);
 
     // member data
     FTP_Server_Type     mServerType;        // what kind of server is the data coming from?
@@ -176,8 +177,6 @@ private:
     nsIStreamListener   *mFinalListener; // this guy gets the converted data via his OnDataAvailable()
     nsIChannel          *mPartChannel;  // the channel for the given part we're processing.
                                         // one channel per part.
-    nsILocale           *mLocale;            // the application locale for date formating
-    nsIDateTimeFormat   *mDateTimeFormat;    // for the actual date time formatting.
 };
 
 #endif /* __nsftpdirlistingdconv__h__ */
