@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.283 $ ';
+$::UtilsVersion = '$Revision: 1.284 $ ';
 
 package TinderUtils;
 
@@ -2189,9 +2189,11 @@ sub LayoutPerformanceTest {
         $tp_prefix = "m";
       }
       
-      print_log "TinderboxPrint:" .
-        "<a title=\"Avg of the median per url pageload time\" href=\"http://$Settings::results_server/graph/query.cgi?testname=pageload&tbox=" .
-          ::hostname() . "&autoscale=1&days=7&avg=1&showpoint=$time,$layout_time\">" . $tp_prefix . "Tp:$layout_time" . "ms</a>\n";
+      print_log "TinderboxPrint:";
+      print_log "<a title=\"Avg of the median per url pageload time\" href=\"http://$Settings::results_server/graph/query.cgi?testname=pageload&tbox=" .  ::hostname() . "&autoscale=1&days=7&avg=1&showpoint=$time,$layout_time\">" if ($Settings::TestsPhoneHome); 
+      print_log $tp_prefix . "Tp:$layout_time" . "ms";
+      print_log "</a>" if ($Settings::TestsPhoneHome);
+      print_log "\n";
       
       # Pull out detail data from log.
       my $raw_data = extract_token_from_file($binary_log, "_x_x_mozilla_page_load_details", ",");
