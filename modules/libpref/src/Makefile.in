@@ -21,7 +21,7 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-
+IS_COMPONENT=1
 MODULE		= pref
 LIBRARY_NAME	= pref
 
@@ -60,7 +60,11 @@ CSRCS		+= prefapi.c
 CPPSRCS		+= nsPref.cpp
 
 EXTRA_DSO_LDOPTS =\
-				-L$(DIST)/bin -lsecfree \
+				-L$(DIST)/bin \
+				$(NSPR_LIBS)	\
+				-lxpcom		\
+				-lmozjs	\
+				-lsecfree	\
 				$(NULL)
 
 include $(topsrcdir)/config/rules.mk
