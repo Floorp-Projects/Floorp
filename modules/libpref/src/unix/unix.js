@@ -87,25 +87,6 @@ pref("intl.font_spec_list", "");
 pref("mail.signature_date", 0);
 
 // Outliner column defaults
-pref("addressbook.searchpane.outliner_geometry", "");
-pref("addressbook.addresseepane.outliner_geometry", "");
-pref("addressbook.listpane.outliner_geometry", "");
-pref("addressbook.outliner_geometry", "");
-pref("mail.composition.addresspane.outliner_geometry", "");
-pref("bookmarks.outliner_geometry", "");
-pref("mail.categorypane.outliner_geometry", "");
-pref("mail.folderpane.outliner_geometry", "");
-pref("history.outliner_geometry", "");
-pref("mail.ldapsearchpane.outliner_geometry", "");
-pref("mail.searchpane.outliner_geometry", "");
-pref("mail.mailfilter.outliner_geometry", "");
-pref("preferences.lang.outliner_geometry", "");
-pref("preferences.dir.outliner_geometry", "");
-pref("preferences.font.outliner_geometry", "");
-pref("mail.subscribepane.all_groups.outliner_geometry", "");
-pref("mail.subscribepane.new_groups.outliner_geometry", "");
-pref("mail.subscribepane.search_groups.outliner_geometry", "");
-pref("mail.threadpane.outliner_geometry", "");
 pref("mail.threadpane.messagepane_height", 400);
 
 // Customizable toolbar stuff
