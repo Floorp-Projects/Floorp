@@ -684,7 +684,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   
   nsAutoString shouldDisplay, menuActive;
   mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, menuActive);
-  if ( !menuActive.Equals("true") ) {
+  if (menuActive != "true") {
     mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, shouldDisplay);
     if ( shouldDisplay.Equals("true") )
       mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
