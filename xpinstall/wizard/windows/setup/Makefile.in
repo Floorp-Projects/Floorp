@@ -30,7 +30,6 @@ PROGRAM		= setup$(BIN_SUFFIX)
 RESFILE		= setup.res
 REQUIRES	= \
 		setuprsc \
-		uninstall \
 		xpnet \
 		$(NULL)
 
@@ -58,6 +57,10 @@ CPPSRCS		= \
 		$(NULL)
 
 LIBS		= $(EXTRA_DSO_LIBS)
+
+LOCAL_INCLUDES	= -I$(srcdir)/../uninstall
+
+NO_DIST_INSTALL	= 1
 
 include $(topsrcdir)/config/rules.mk
 

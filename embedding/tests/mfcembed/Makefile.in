@@ -25,7 +25,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= mfcEmbed$(BIN_SUFFIX)
+PROGRAM		= mfcembed$(BIN_SUFFIX)
 RESFILE		= MfcEmbed.res
 
 REQUIRES = \

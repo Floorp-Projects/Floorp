@@ -52,7 +52,11 @@ REQUIRES	= xpcom \
 ifdef MOZ_OJI
 LIBRARY_NAME	= oji
 EXPORT_LIBRARY = 1
+ifeq ($(OS_ARCH),WINNT)
+EXTRA_DSO_LIBS	= jsj$(MOZ_BITS)$(VERSION_NUMBER)
+else
 EXTRA_DSO_LIBS	= jsj
+endif
 
 CPPSRCS		= \
 		jvmmgr.cpp \
@@ -76,7 +80,7 @@ EXPORTS		= \
 endif
 
 EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/bin \
+		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_JS_LIBS) \

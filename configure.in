@@ -927,11 +927,11 @@ case "$target" in
         MOZ_DEBUG_FLAGS='-Zi'
         MOZ_DEBUG_LDFLAGS='/DEBUG /DEBUGTYPE:CV'
     	MOZ_OPTIMIZE_FLAGS='-O1'
-        MOZ_JPEG_LIBS='$(DIST)/lib/mozjpeg.lib'
+        MOZ_JPEG_LIBS='$(DIST)/lib/jpeg$(MOZ_BITS)$(VERSION_NUMBER).lib'
         MOZ_ZLIB_LIBS='$(DIST)/lib/zlib.lib'
-        MOZ_PNG_LIBS='$(DIST)/lib/mozpng.lib'
-        MOZ_MNG_LIBS='$(DIST)/lib/mozmng.lib'
-        MOZ_JS_LIBS='$(DIST)/lib/mozjs.lib'
+        MOZ_PNG_LIBS='$(DIST)/lib/png.lib'
+        MOZ_MNG_LIBS='$(DIST)/lib/mng.lib'
+        MOZ_JS_LIBS='$(DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib'
         XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
         MOZ_COMPONENT_XPCOM_LIBS='$(XPCOM_LIBS)'
@@ -950,6 +950,7 @@ case "$target" in
     OS_TARGET=WINNT
     MOZ_WIDGET_TOOLKIT='windows'
     BIN_SUFFIX='.exe'
+    USE_SHORT_LIBNAME=1
 
     dnl Hardcode to win95 for now - cls
     TARGET_NSPR_MDCPUCFG='\"md/_win95.cfg\"'
@@ -3077,7 +3078,6 @@ dnl Need cookie and wallet to build mozilla, this should
 dnl not be the case, 18352 has been filed.
 dnl http://bugzilla.mozilla.org/show_bug.cgi?id=18352
 MOZ_EXTENSIONS_DEFAULT=" cookie wallet content-packs xml-rpc xmlextras help pref transformiix venkman inspector"
-MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT irc xmlterm access-builtin ctl" 
 
 dnl universalchardet is only built on win32 (bug XXXXXX)
 case "$target_os" in
@@ -3090,6 +3090,8 @@ dnl Check if Thai Rendering Extension needs to be enabled
 if test -n "$SUNCTL"; then
   MOZ_EXTENSIONS_DEFAULT="$MOZ_EXTENSIONS_DEFAULT ctl"
 fi
+
+MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT irc xmlterm access-builtin ctl" 
 
 dnl XXX - remove this next milestone
 if test -z "$enable_extensions" && test "$with_extensions"; then
@@ -3122,6 +3124,9 @@ if test -z "$MOZ_JSDEBUGGER" && test `echo "$MOZ_EXTENSIONS" | grep -c venkman` 
     AC_MSG_WARN([Cannot build venkman without JavaScript debug library. Removing venkman from MOZ_EXTENSIONS.])
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|venkman||'`
 fi
+
+dnl Remove dupes
+MOZ_EXTENSIONS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_EXTENSIONS}`
 
 dnl ========================================================
 dnl experimental ldap features

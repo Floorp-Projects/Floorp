@@ -35,6 +35,8 @@ CPPSRCS		= nsztool.cpp
 
 LIBS		= $(EXTRA_DSO_LIBS)
 
+NO_DIST_INSTALL	= 1
+
 include $(topsrcdir)/config/rules.mk
 
 LDFLAGS		+= /SUBSYSTEM:WINDOWS /MACHINE:i386

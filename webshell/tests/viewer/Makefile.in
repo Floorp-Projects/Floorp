@@ -108,11 +108,15 @@ XP_DIST_LIBS		= \
 
 ifeq ($(OS_ARCH),WINNT)
 RESFILE		= viewer.res
-XP_DIST_LIBS	+= -lxpwidgets_s -lDebugRobot
+XP_DIST_LIBS	+= -lxpwidgets_s -ldbgrobot
 endif
 
 ifdef MOZ_OJI
+ifeq ($(OS_ARCH),WINNT)
+XP_DIST_LIBS		+= -ljsj$(MOZ_BITS)$(VERSION_NUMBER)
+else
 XP_DIST_LIBS		+= -ljsj
+endif
 endif
 ifdef MOZ_PERF_METRICS
 XP_DIST_LIBS		+= -lmozutil_s

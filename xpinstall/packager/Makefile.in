@@ -100,7 +100,11 @@ include $(topsrcdir)/config/rules.mk
 GARBAGE		+= $(DIST)/$(PACKAGE) $(PACKAGE)
 
 OSPACKAGE	= unix
+ifdef USE_SHORT_LIBNAME
+MOZILLA_BIN	= $(DIST)/bin/mozilla$(BIN_SUFFIX)
+else
 MOZILLA_BIN	= $(DIST)/bin/mozilla-bin
+endif
 
 ifeq ($(OS_ARCH),IRIX)
 STRIP_FLAGS	= -f

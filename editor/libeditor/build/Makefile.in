@@ -58,6 +58,9 @@ REQUIRES	= xpcom \
 ifdef MOZ_PLAINTEXT_EDITOR_ONLY
 # We're only building the Core PlainText Editor Source so just include
 # the plain text registration file.
+ifeq ($(OS_ARCH),WINNT)
+LIBRARY_NAME	= texteditor
+endif
 CPPSRCS = nsTextEditorReg.cpp
 SHARED_LIBRARY_LIBS = $(NULL)
 

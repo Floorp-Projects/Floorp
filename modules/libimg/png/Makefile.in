@@ -30,6 +30,10 @@ MODULE		= png
 LIBRARY_NAME	= mozpng
 EXPORT_LIBRARY = 1
 
+ifeq ($(OS_ARCH),WINNT)
+LIBRARY_NAME	= png
+endif
+
 REQUIRES	= $(ZLIB_REQUIRES) \
 		  $(NULL)
 

@@ -124,7 +124,7 @@ endif
 
 ifndef LIBRARY
 ifdef LIBRARY_NAME
-ifeq ($(OS_ARCH),OS2)
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 ifdef SHORT_LIBNAME
 LIBRARY_NAME		:= $(SHORT_LIBNAME)
 endif

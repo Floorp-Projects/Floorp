@@ -61,8 +61,14 @@ SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 include $(topsrcdir)/config/config.mk
 
+ifeq ($(OS_ARCH),WINNT)
+EXTRA_DSO_LIBS	= dbm$(MOZ_BITS)
+else
+EXTRA_DSO_LIBS	= mozdbm_s
+endif
+
 LIBS		= \
-		$(DIST)/lib/$(LIB_PREFIX)mozdbm_s.$(LIB_SUFFIX) \
+		$(EXTRA_DSO_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \

@@ -45,6 +45,11 @@ EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= xpconect
 IS_COMPONENT	= 1
 MODULE_NAME	= xpconnect
+ifeq ($(OS_ARCH),WINNT)
+LIBRARY_NAME	= xpc$(MOZ_BITS)$(VERSION_NUMBER)
+SHORT_LIBNAME	= xpc$(MOZ_BITS)$(VERSION_NUMBER)
+endif
+
 REQUIRES	= xpcom \
 		  string \
 		  js \
@@ -81,14 +86,6 @@ CPPSRCS		= \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
-
-# this is automatically discovered under BeOS
-ifneq ($(OS_ARCH),BeOS)
-LIBS		+= \
-		$(MOZ_JS_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
-endif
 
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \

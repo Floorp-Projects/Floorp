@@ -50,6 +50,8 @@ FORCE_SHARED_LIB = 1
 # Force use of PIC
 FORCE_USE_PIC	= 1
 
+NO_DIST_INSTALL	= 1
+
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS	+= -GX

@@ -26,8 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= ISimpleDOMNodeMarshall
-LIBRARY_NAME	= ISimpleDOMNodeMarshall
+MODULE		= ISimpleDOMNodeMarshal
+LIBRARY_NAME	= ISimpleDOMNodeMarshal
 DEFFILE		= $(srcdir)/ISimpleDOMNode.def
 
 DEFINES		+= -DREGISTER_PROXY_DLL -D_WIN32_WINNT=0x400
