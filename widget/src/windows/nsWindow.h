@@ -20,7 +20,6 @@
 
 #include "nsBaseWidget.h"
 #include "nsdefs.h"
-#include "nsObject.h"
 #include "nsSwitchToUIThread.h"
 #include "nsToolkit.h"
 
@@ -47,8 +46,7 @@ class nsNativeDragTarget;
  * Native WIN32 window wrapper. 
  */
 
-class nsWindow : public nsObject,
-                 public nsSwitchToUIThread,
+class nsWindow : public nsSwitchToUIThread,
                  public nsBaseWidget
 {
 
