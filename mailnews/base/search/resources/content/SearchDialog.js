@@ -61,6 +61,7 @@ var nsSearchResultsController =
         case "button_delete":
         case "cmd_open":
         case "file_message_button":
+        case "goto_folder_button":
             return true;
         default:
             return false;
@@ -69,12 +70,21 @@ var nsSearchResultsController =
 
     // this controller only handles commands
     // that rely on items being selected in
-    // the threadpane.
+    // the search results pane.
     isCommandEnabled: function(command)
     {
         var enabled = true;
-        if (GetNumSelectedMessages() <= 0)
-          enabled = false;
+        
+        switch (command) { 
+          case "goto_folder_button":
+            if (GetNumSelectedMessages() != 1)
+              enabled = false;
+            break;
+          default:
+            if (GetNumSelectedMessages() <= 0)
+              enabled = false;
+            break;
+        }
 
         return enabled;
     },
@@ -88,6 +98,10 @@ var nsSearchResultsController =
 
         case "button_delete":
             MsgDeleteSelectedMessages();
+            return true;
+
+        case "goto_folder_button":
+            GoToFolder();
             return true;
 
         default:
@@ -602,6 +616,11 @@ function MoveMessageInSearch(destFolder)
     catch (ex) {
         dump("MsgMoveMessage failed: " + ex + "\n");
     }   
+}
+
+function GoToFolder()
+{
+  MsgOpenNewWindowForMsgHdr(gSearchView.hdrForFirstSelectedMessage);
 }
 
 function BeginDragThreadPane(event)

@@ -15,3 +15,5 @@
 <!ENTITY fileHereMenu.label          "File Here">
 <!ENTITY fileHereMenu.accesskey      "F">
 <!ENTITY fileButton.label            "File">
+<!ENTITY goToFolderButton.label      "Go to Message Folder">
+<!ENTITY goToFolderButton.accesskey  "G">

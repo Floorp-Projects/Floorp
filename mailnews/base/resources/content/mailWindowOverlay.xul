@@ -483,7 +483,7 @@ Rights Reserved.
         <menuitem id="folderPaneContext-openNewWindow"
         label="&folderContextOpenNewWindow.label;"
         accesskey="&folderContextOpenNewWindow.accesskey;"
-        oncommand="MsgOpenNewWindowForFolder(null);"/>
+        oncommand="MsgOpenNewWindowForFolder(null,-1);"/>
     <menuitem id="folderPaneContext-subscribe"
         label="&folderContextSubscribe.label;"
         accesskey="&folderContextSubscribe.accesskey;"

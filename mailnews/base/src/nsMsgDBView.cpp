@@ -4523,4 +4523,13 @@ NS_IMETHODIMP nsMsgDBView::IsSorted(PRBool *_retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgDBView::SelectMsgByKey(nsMsgKey aKey)
+{
+  nsMsgKeyArray keyArray;
+  keyArray.Add(aKey);
 
+  // use RestoreSelection() so that we'll select (and load) the desired message
+  nsresult rv = RestoreSelection(&keyArray);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return NS_OK;
+}

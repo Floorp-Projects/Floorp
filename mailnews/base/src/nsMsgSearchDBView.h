@@ -58,6 +58,7 @@ public:
   NS_IMETHOD Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder);
   NS_IMETHOD DoCommand(nsMsgViewCommandTypeValue command);
   NS_IMETHOD DoCommandWithFolder(nsMsgViewCommandTypeValue command, nsIMsgFolder *destFolder);
+  NS_IMETHOD GetHdrForFirstSelectedMessage(nsIMsgDBHdr **hdr);
   // override to get location
   NS_IMETHOD GetCellText(PRInt32 aRow, const PRUnichar * aColID, PRUnichar ** aValue);
   virtual nsresult GetMsgHdrForViewIndex(nsMsgViewIndex index, nsIMsgDBHdr **msgHdr);

@@ -21,6 +21,7 @@
  *               slucy@objectivesw.co.uk
  *               Håkan Waara <hwaara@chello.se>
  *               Jan Varga <varga@utcru.sk>
+ *               Seth Spitzer <sspitzer@netscape.com>
  */
 
 var gMessengerBundle;
@@ -29,6 +30,8 @@ var gOfflinePromptsBundle;
 var nsPrefBranch = null;
 var gOfflineManager;
 var gWindowManagerInterface;
+
+var gPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
 
 // Disable the new account menu item if the account preference is locked.
 // Two other affected areas are the account central and the account manager
@@ -39,7 +42,6 @@ function menu_new_init()
     var prefService = Components.classes["@mozilla.org/preferences-service;1"];
     prefService = prefService.getService();
     prefService = prefService.QueryInterface(Components.interfaces.nsIPrefService);
-
     nsPrefBranch = prefService.getBranch(null);
   }
   var newAccountItem = document.getElementById('newAccountMenuItem');
@@ -606,7 +608,7 @@ function MsgForwardMessage(event)
 {
   var forwardType = 0;
   try {
-      forwardType = pref.GetIntPref("mail.forward_message_mode");
+      forwardType = gPrefs.GetIntPref("mail.forward_message_mode");
   } catch (e) {dump ("failed to retrieve pref mail.forward_message_mode");}
 
   // mail.forward_message_mode could be 1, if the user migrated from 4.x
@@ -773,24 +775,31 @@ function MsgSaveAsTemplate()
     }
 }
 
-function MsgOpenNewWindowForFolder(folderUri)
+function MsgOpenNewWindowForMsgHdr(hdr)
 {
-    if(!folderUri)
-    {
-        var folder = GetLoadedMsgFolder();
-        var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
-        folderUri = folderResource.Value;
-    }
+  MsgOpenNewWindowForFolder(hdr.folder.URI, hdr.messageKey);
+}
 
-    if(folderUri)
-    {
-        var layoutType = pref.GetIntPref("mail.pane_config");
+function MsgOpenNewWindowForFolder(uri, key)
+{
+  var uriToOpen = uri;
+  var keyToSelect = key;
 
-        if(layoutType == 0)
-            window.openDialog( "chrome://messenger/content/messenger.xul", "_blank", "chrome,all,dialog=no", folderUri );
-        else
-            window.openDialog("chrome://messenger/content/mail3PaneWindowVertLayout.xul", "_blank", "chrome,all,dialog=no", folderUri );
-    }
+  if (!uriToOpen)
+  {
+    var folder = GetLoadedMsgFolder();
+    var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
+    uriToOpen = folderResource.Value;
+  }
+
+  if (uriToOpen) {
+    var layoutType = gPrefs.GetIntPref("mail.pane_config");
+
+    if(layoutType == 0)
+      window.openDialog("chrome://messenger/content/messenger.xul", "_blank", "chrome,all,dialog=no", {uri: uriToOpen, key: keyToSelect});
+    else
+      window.openDialog("chrome://messenger/content/mail3PaneWindowVertLayout.xul", "_blank", "chrome,all,dialog=no", {uri: uriToOpen, key: keyToSelect});
+  }
 }
 
 // passing in the view, so this will work for search and the thread pane
@@ -941,21 +950,21 @@ function MsgFilters()
 
 function MsgViewAllHeaders()
 {
-    pref.SetIntPref("mail.show_headers",2);
+    gPrefs.SetIntPref("mail.show_headers",2);
     MsgReload();
     return true;
 }
 
 function MsgViewNormalHeaders()
 {
-    pref.SetIntPref("mail.show_headers",1);
+    gPrefs.SetIntPref("mail.show_headers",1);
     MsgReload();
     return true;
 }
 
 function MsgViewBriefHeaders()
 {
-    pref.SetIntPref("mail.show_headers",0);
+    gPrefs.SetIntPref("mail.show_headers",0);
     MsgReload();
     return true;
 }

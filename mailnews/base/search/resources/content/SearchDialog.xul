@@ -65,6 +65,7 @@ Rights Reserved.
                 oncommandupdate="goUpdateSearchItems(this)">
       <command id="cmd_open" oncommand="goDoCommand('cmd_open')" disabled="true"/>
       <command id="button_delete" oncommand="goDoCommand('button_delete')" disabled="true"/>
+      <command id="goto_folder_button" oncommand="goDoCommand('goto_folder_button')" disabled="true"/>
       <command id="file_message_button"/>
     </commandset>
   </commands>
@@ -176,6 +177,7 @@ Rights Reserved.
       </button>
 
       <button label="&deleteButton.label;" id="deleteButton" command="button_delete"/>
+      <button label="&goToFolderButton.label;" id="goToFolderButton" command="goto_folder_button" accesskey="&goToFolderButton.accesskey;" />
       <spacer flex="1" />
     </vbox>      
   </groupbox>

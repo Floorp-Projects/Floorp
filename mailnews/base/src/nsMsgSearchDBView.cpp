@@ -451,3 +451,17 @@ NS_IMETHODIMP nsMsgSearchDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgView
 }
 
 
+// if nothing selected, return an NS_ERROR
+NS_IMETHODIMP
+nsMsgSearchDBView::GetHdrForFirstSelectedMessage(nsIMsgDBHdr **hdr)
+{
+  NS_ENSURE_ARG_POINTER(hdr);
+  PRInt32 index;
+
+  nsresult rv = mOutlinerSelection->GetCurrentIndex(&index);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = GetMsgHdrForViewIndex(index, hdr);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return NS_OK;
+}

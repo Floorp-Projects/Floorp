@@ -51,6 +51,7 @@ var gCurrentlyDisplayedMessage=-1;
 var gActiveThreadPaneSortColumn = "";
 
 var gStartFolderUri = null;
+var gStartMsgKey = -1;
 
 //If we've loaded a message, set to true.  Helps us keep the start page around.
 var gHaveLoadedMessage;
@@ -94,90 +95,94 @@ var folderListener = {
 		}
 	},
 
-	OnItemBoolPropertyChanged: function(item, property, oldValue, newValue) {},
+    OnItemBoolPropertyChanged: function(item, property, oldValue, newValue) {},
 
     OnItemUnicharPropertyChanged: function(item, property, oldValue, newValue){},
-	OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) {},
+    OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) {},
 
     OnItemEvent: function(folder, event) {
-        var eventType = event.GetUnicode();
+       var eventType = event.GetUnicode();
 
-        if (eventType == "FolderLoaded") {
-		if(folder)
-		{
-			var resource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
-			if(resource)
-			{
-				var uri = resource.Value;
-				if(uri == gCurrentFolderToReroot)
-				{
-					gCurrentFolderToReroot="";
-					var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
-					if(msgFolder)
-					{
-						msgFolder.endFolderLoading();
-						RerootFolder(uri, msgFolder, gCurrentLoadingFolderViewType, gCurrentLoadingFolderViewFlags, gCurrentLoadingFolderSortType, gCurrentLoadingFolderSortOrder);
-						gIsEditableMsgFolder = IsSpecialFolder(msgFolder, MSG_FOLDER_FLAG_DRAFTS);
+       if (eventType == "FolderLoaded") {
+         if (folder) {
+           var resource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
+           if(resource) {
+             var uri = resource.Value;
+             if(uri == gCurrentFolderToReroot) {
+               gCurrentFolderToReroot="";
+               var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
+               if(msgFolder) {
+                 msgFolder.endFolderLoading();
+                 RerootFolder(uri, msgFolder, gCurrentLoadingFolderViewType, gCurrentLoadingFolderViewFlags, gCurrentLoadingFolderSortType, gCurrentLoadingFolderSortOrder);
+                 gIsEditableMsgFolder = IsSpecialFolder(msgFolder, MSG_FOLDER_FLAG_DRAFTS);
 
-						gCurrentLoadingFolderSortType = 0;
-						gCurrentLoadingFolderSortOrder = 0;
-            gCurrentLoadingFolderViewType = 0;
-            gCurrentLoadingFolderViewFlags = 0;
+                 gCurrentLoadingFolderSortType = 0;
+                 gCurrentLoadingFolderSortOrder = 0;
+                 gCurrentLoadingFolderViewType = 0;
+                 gCurrentLoadingFolderViewFlags = 0;
 
-            SetFocusThreadPane();
-            var scrolled = false;
-            if (gNextMessageAfterLoad) 
-            {
-              var type = gNextMessageAfterLoad;
-              gNextMessageAfterLoad = null;
+                 SetFocusThreadPane();
+                 var scrolled = false;
 
-              // scroll to and select the proper message
-              scrolled = ScrollToMessage(type, true, true /* selectMessage */);
-            }
-					}
-				}
-				if(uri == gCurrentLoadingFolderURI)
-				{
-				  gCurrentLoadingFolderURI = "";
-				  //Now let's select the first new message if there is one
-                  var beforeScrollToNew;
-				  if(showPerformance) {
-				    beforeScrollToNew = new Date();
-                  }
-                  if (!scrolled) {
-                    // if we didn't just scroll, scroll to the first new message
-                    // don't select it though
-				    scrolled = ScrollToMessage(nsMsgNavigationType.firstNew, true, false /* selectMessage */);
+                 if (gStartMsgKey != -1) { 
+                   // select the desired message
+                   gDBView.selectMsgByKey(gStartMsgKey);
+                   gStartMsgKey = -1;
+
+                   // now scroll to it
+	           var indicies = GetSelectedIndices(gDBView);
+                   EnsureRowInThreadOutlinerIsVisible(indicies[0]);
+                   scrolled = true;
+                 }
+                 if (gNextMessageAfterLoad) {
+                   var type = gNextMessageAfterLoad;
+                   gNextMessageAfterLoad = null;
+
+                   // scroll to and select the proper message
+                   scrolled = ScrollToMessage(type, true, true /* selectMessage */);
+                 }
+               }
+             }
+             if(uri == gCurrentLoadingFolderURI) {
+               gCurrentLoadingFolderURI = "";
+               //Now let's select the first new message if there is one
+               var beforeScrollToNew;
+               if(showPerformance) {
+                 beforeScrollToNew = new Date();
+               }
+               if (!scrolled) {
+                 // if we didn't just scroll, scroll to the first new message
+                 // don't select it though
+                 scrolled = ScrollToMessage(nsMsgNavigationType.firstNew, true, false /* selectMessage */);
                     
-                    // if we failed to find a new message, scroll to the top
-                    if (!scrolled) {
-                      EnsureRowInThreadOutlinerIsVisible(0);
-                    }
-                  }
+                 // if we failed to find a new message, scroll to the top
+                 if (!scrolled) {
+                   EnsureRowInThreadOutlinerIsVisible(0);
+                 }
+               }
+               if(showPerformance) {
+                 var afterScrollToNew = new Date();
+                 var timeToScroll = (afterScrollToNew.getTime() - beforeScrollToNew.getTime())/1000;
 
-				  if(showPerformance) {
-				      var afterScrollToNew = new Date();
-				      var timeToScroll = (afterScrollToNew.getTime() - beforeScrollToNew.getTime())/1000;
-
-				      var afterFolderLoadTime = new Date();
-				      var timeToLoad = (afterFolderLoadTime.getTime() - gBeforeFolderLoadTime.getTime())/1000;
-					  dump("Time to load " + uri + " is " +  timeToLoad + " seconds\n");
-				  	  dump("of which scrolling to new is " + timeToScroll + " seconds\n");
-				  }
-    				SetBusyCursor(window, false);
-				}
-			}
-
-		}
-        } else if (eventType == "DeleteOrMoveMsgCompleted") {
-			HandleDeleteOrMoveMsgCompleted(folder);
-        }     
-          else if (eventType == "DeleteOrMoveMsgFailed") {
-                        HandleDeleteOrMoveMsgFailed(folder);
-        }
-          else if (eventType == "CompactCompleted") {
-                        HandleCompactCompleted(folder);
-        }
+                 var afterFolderLoadTime = new Date();
+                 var timeToLoad = (afterFolderLoadTime.getTime() - gBeforeFolderLoadTime.getTime())/1000;
+                 dump("Time to load " + uri + " is " +  timeToLoad + " seconds\n");
+                 dump("of which scrolling to new is " + timeToScroll + " seconds\n");
+               }
+               SetBusyCursor(window, false);
+             }
+           }
+         }
+       } 
+       else if (eventType == "DeleteOrMoveMsgCompleted") {
+         HandleDeleteOrMoveMsgCompleted(folder);
+       }     
+       else if (eventType == "DeleteOrMoveMsgFailed") {
+         HandleDeleteOrMoveMsgFailed(folder);
+       }
+       else if (eventType == "CompactCompleted") {
+         HandleCompactCompleted(folder);
+       }
     }
 }
 
@@ -441,11 +446,13 @@ function OnLoadMessenger()
   //set up correctly.
   if ("arguments" in window && window.arguments[0])
   {
-	gStartFolderUri = window.arguments[0];
+    gStartFolderUri = window.arguments[0].uri;
+    gStartMsgKey = window.arguments[0].key;
   }
   else
   {
     gStartFolderUri = null;
+    gStartMsgKey = -1;
   }
 
   setTimeout("loadStartFolder(gStartFolderUri);", 0);
@@ -920,7 +927,7 @@ function FolderPaneDoubleClick(folderIndex, event)
     {
       // Open a new msg window only if we are double clicking on 
       // folders or newsgroups.
-      MsgOpenNewWindowForFolder(folderResource.Value);
+      MsgOpenNewWindowForFolder(folderResource.Value, -1 /* key */);
 
       // double clicking should not toggle the open / close state of the
       // folder.  this will happen if we don't prevent the event from
@@ -1120,6 +1127,10 @@ function SelectMessage(messageUri)
 {
   // this isn't going to work anymore
   dump("XXX fix this or remove SelectMessage()\n");
+  // if you need this to work, do something like this:
+  // from the messageUri, get the nsIMsgDBHdr
+  // from the hdr, get the key, then do:
+  // gDBView.selectMsgByKey(key);
 }
 
 function ReloadMessage()
