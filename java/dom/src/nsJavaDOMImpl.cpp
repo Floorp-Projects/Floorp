@@ -71,8 +71,8 @@ static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIWebProgressListenerIID, NS_IWEBPROGRESSLISTENER_IID);
 
-NS_IMPL_ADDREF(nsJavaDOMImpl);
-NS_IMPL_RELEASE(nsJavaDOMImpl);
+NS_IMPL_ADDREF(nsJavaDOMImpl)
+NS_IMPL_RELEASE(nsJavaDOMImpl)
 
 jclass nsJavaDOMImpl::domAccessorClass = NULL;
 
