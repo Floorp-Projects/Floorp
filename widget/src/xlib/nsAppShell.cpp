@@ -26,6 +26,8 @@
 #include "nsIServiceManager.h"
 #include "nsITimer.h"
 
+static PRUint8 convertMaskToCount(unsigned long val);
+static PRUint8 getShiftForMask(unsigned long val);
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
@@ -80,11 +82,28 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
   if (gVisualInfo == NULL) {
     printf("nsAppShell::Create(): Warning: Failed to get XVisualInfo\n");
   }
-  if (num_visuals != 0) {
+  if (num_visuals != 1) {
     printf("nsAppShell:Create(): Warning: %d XVisualInfo structs were returned.\n", num_visuals);
   }
   // get the depth for this display
   gDepth = DefaultDepth(gDisplay, gScreenNum);
+  // set up the color info for this display
+  // set up the masks
+  gRedMask = gVisualInfo->red_mask;
+  gGreenMask = gVisualInfo->green_mask;
+  gBlueMask = gVisualInfo->blue_mask;
+  gAlphaMask = 0;
+  // set up the number of bits in each
+  gRedCount = convertMaskToCount(gVisualInfo->red_mask);
+  gGreenCount = convertMaskToCount(gVisualInfo->green_mask);
+  gBlueCount = convertMaskToCount(gVisualInfo->blue_mask);
+  gAlphaCount = 0;
+  // set up the number of bits that you need to shift to get to
+  // a specific mask
+  gRedShift = getShiftForMask(gVisualInfo->red_mask);
+  gGreenShift = getShiftForMask(gVisualInfo->green_mask);
+  gBlueShift = getShiftForMask(gVisualInfo->blue_mask);
+  gAlphaShift = 0;
   return NS_OK;
 }
 
@@ -168,22 +187,22 @@ nsresult nsAppShell::Run()
     }
     if (select_retval == 0) {
       // the select timed out, process the timeout queue.
-      printf("Timer ran out...\n");
+      //      printf("Timer ran out...\n");
       please_run_timer_queue = 1;
     }
     // check to see if there's data avilable for the queue
     if (FD_ISSET(queue_fd, &select_set)) {
-      printf("queue data available.\n");
+      //printf("queue data available.\n");
       PR_ProcessPendingEvents(EQueue);
     }
     // check to see if there's data avilable for
     // xlib
     if (FD_ISSET(xlib_fd, &select_set)) {
-      printf("xlib data available.\n");
+      //printf("xlib data available.\n");
       XNextEvent(gDisplay, &event);
     }
     if (please_run_timer_queue) {
-      printf("Running timer queue...\n");
+      //printf("Running timer queue...\n");
       NS_ProcessTimeouts();
     }
   }
@@ -222,3 +241,30 @@ void* nsAppShell::GetNativeData(PRUint32 aDataType)
   return nsnull;
 }
 
+static PRUint8 convertMaskToCount(unsigned long val)
+{
+  PRUint8 retval = 0;
+  PRUint8 cur_bit = 0;
+  // walk through the number, incrementing the value if
+  // the bit in question is set.
+  while (cur_bit < (sizeof(unsigned long) * 8)) {
+    if ((val >> cur_bit) & 0x1) {
+      retval++;
+    }
+    cur_bit++;
+  }
+  return retval;
+}
+
+static PRUint8 getShiftForMask(unsigned long val)
+{
+  PRUint8 cur_bit = 0;
+  // walk through the number, looking for the first 1
+  while (cur_bit < (sizeof(unsigned long) * 8)) {
+    if ((val >> cur_bit) & 0x1) {
+      return cur_bit;
+    }
+    cur_bit++;
+  }
+  return cur_bit;
+}

@@ -28,6 +28,7 @@ class nsDrawingSurfaceXlib : public nsIDrawingSurface
 {
 public:
   nsDrawingSurfaceXlib();
+  ~nsDrawingSurfaceXlib();
 
   NS_DECL_ISUPPORTS
   
@@ -45,7 +46,21 @@ public:
 private:
   GC mGC;
   Pixmap mPixmap;
+  XImage *mImage;
   nsPixelFormat mPixFormat;
+  PRUint8 mDepth;
+  // for locking
+  PRInt32	mLockX;
+  PRInt32	mLockY;
+  PRUint32	mLockWidth;
+  PRUint32	mLockHeight;
+  PRUint32	mLockFlags;
+  PRBool	mLocked;
+  // dimensions
+  PRUint32 mWidth;
+  PRUint32 mHeight;
+  // are we offscreen
+  PRBool mIsOffscreen;
 };
 
 #endif
