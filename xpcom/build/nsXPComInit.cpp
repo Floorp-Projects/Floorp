@@ -49,7 +49,6 @@
 
 #include "nsMemoryImpl.h"
 #include "nsErrorService.h"
-#include "nsLogging.h"
 #include "nsArena.h"
 #include "nsByteBuffer.h"
 #ifdef PAGE_MANAGER
@@ -106,7 +105,6 @@
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kMemoryCID, NS_MEMORY_CID);
-static NS_DEFINE_CID(kLoggingServiceCID, NS_LOGGINGSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsProcess);
@@ -197,10 +195,6 @@ static nsModuleComponentInfo components[] = {
     COMPONENT(MEMORY, nsMemoryImpl::Create),
 #define NS_ERRORSERVICE_CLASSNAME NS_ERRORSERVICE_NAME
     COMPONENT(ERRORSERVICE, nsErrorService::Create),
-
-#ifdef NS_ENABLE_LOGGING
-    COMPONENT(LOGGINGSERVICE, nsLoggingService::Create),
-#endif
 
     COMPONENT(ARENA, ArenaImpl::Create),
     COMPONENT(BYTEBUFFER, ByteBufferImpl::Create),
@@ -423,11 +417,6 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
     nsIInterfaceInfoManager* iim = XPTI_GetInterfaceInfoManager();
     NS_IF_RELEASE(iim);
 
-    // get the logging service so that it gets registered with the service 
-    // manager, and later unregistered
-#ifdef NS_ENABLE_LOGGING
-    nsCOMPtr<nsILoggingService> logServ = do_GetService(kLoggingServiceCID, &rv);
-#endif
     return rv;
 }
 

@@ -62,7 +62,6 @@
 #include "nsNetCID.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIConsoleService.h"
-#include "nslog.h"
 #else
 #include "printers.h"
 #include "TxLog.h"
