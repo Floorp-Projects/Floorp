@@ -123,13 +123,13 @@ function buildPalette(paletteBox, toolbar, currentSet)
   var rowMax = 4;
 
   // Add the toolbar separator first.
-  var sep = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+  var node = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                       "toolbarseparator");
-  sep.setAttribute("id", "separator");
+  node.setAttribute("id", "separator");
 
-  createEnclosure(sep, currentRow);
+  createEnclosure(node, currentRow);
 
-  var node = toolbar.palette.firstChild;
+  node = toolbar.palette.firstChild;
   var isOnToolbar = false;
   while (node) {
     for (var i = 0; i < currentSet.length; ++i) {
@@ -169,7 +169,11 @@ function buildPalette(paletteBox, toolbar, currentSet)
       var spring = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                             "spacer");
       spring.setAttribute("flex", remainingFlex);
-      spring.setAttribute("height", currentRow.boxObject.height);
+      try {
+        spring.setAttribute("height", currentRow.boxObject.height);
+      }
+      catch(ex) {
+      }
       currentRow.appendChild(spring);
     }
 
@@ -303,7 +307,11 @@ var toolbarDNDObserver = {
           var spring = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                             "spacer");
           spring.setAttribute("flex", "1");
-          spring.setAttribute("height", currentRow.boxObject.height);
+          try {
+            spring.setAttribute("height", currentRow.boxObject.height);
+          }
+          catch(ex) {
+          }
           currentRow.appendChild(spring);
         }
         return;
