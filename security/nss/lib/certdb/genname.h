@@ -129,8 +129,10 @@ CERT_AddGeneralNameToList(CERTGeneralNameList *list,
 CERTGeneralNameList *
 CERT_DupGeneralNameList(CERTGeneralNameList *list);
 
-/* returns the length of a CERTGeneralName */
-int
+/* returns the number of CERTGeneralName objects in the  doubly linked
+** list of which *names is a member.
+*/
+extern int
 CERT_GetNamesLength(CERTGeneralName *names);
 
 /************************************************************************/

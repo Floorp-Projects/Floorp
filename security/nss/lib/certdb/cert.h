@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.38 2003/06/26 01:56:32 nelsonb%netscape.com Exp $
+ * $Id: cert.h,v 1.39 2003/10/14 17:44:33 nelsonb%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -718,7 +718,6 @@ CERT_DecodeDERCertificate(SECItem *derSignedCert, PRBool copyDER,
 ** extract various element strings from a distinguished name.
 **	"name" the distinguished name
 */
-extern char *CERT_GetCommonName(CERTName *name);
 
 extern char *CERT_GetCertificateEmailAddress(CERTCertificate *cert);
 
@@ -1167,8 +1166,6 @@ CERT_CheckForEvilCert(CERTCertificate *cert);
 CERTGeneralName *
 CERT_GetCertificateNames(CERTCertificate *cert, PRArenaPool *arena);
 
-int
-CERT_GetNamesLength(CERTGeneralName *names);
 
 SECStatus 
 CERT_EncodeSubjectKeyID(PRArenaPool *arena, char *value, int len, SECItem *encodedValue);
