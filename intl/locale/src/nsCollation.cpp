@@ -83,10 +83,28 @@ nsresult nsCollation::CompareString(nsICollation *inst, const nsCollationStrengt
   PRUint8 *aKey1, *aKey2;
   nsresult res;
 
-  // Create a key for string1
   res = inst->GetSortKeyLen(strength, string1, &aLength1);
   if (NS_FAILED(res))
     return res;
+  res = inst->GetSortKeyLen(strength, string2, &aLength2);
+  if (NS_FAILED(res)) {
+    return res;
+  }
+
+  // if input string is small then use local buffer for keys
+  if (aLength1 <= 128 && aLength2 <= 128) {
+    PRUint8 aKeyBuf1[128], aKeyBuf2[128];
+    res = inst->CreateRawSortKey(strength, string1, aKeyBuf1, &aLength1);
+    if (NS_SUCCEEDED(res)) {
+      res = inst->CreateRawSortKey(strength, string2, aKeyBuf2, &aLength2);
+      if (NS_SUCCEEDED(res)) {
+        *result = CompareRawSortKey(aKeyBuf1, aLength1, aKeyBuf2, aLength2);
+      }
+    }
+    return res;
+  }
+
+  // Create a key for string1
   aKey1 = new PRUint8[aLength1];
   if (NULL == aKey1)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -97,11 +115,6 @@ nsresult nsCollation::CompareString(nsICollation *inst, const nsCollationStrengt
   }
 
   // Create a key for string2
-  res = inst->GetSortKeyLen(strength, string2, &aLength2);
-  if (NS_FAILED(res)) {
-    delete [] aKey1;
-    return res;
-  }
   aKey2 = new PRUint8[aLength2];
   if (NULL == aKey2) {
     delete [] aKey1;
@@ -189,22 +202,29 @@ PRInt32 nsCollation::CompareSortKey(const nsString& key1, const nsString& key2)
   return CompareRawSortKey(rawKey1, len1, rawKey2, len2);
 }
 
-nsresult nsCollation::NormalizeString(nsAutoString& stringInOut)
+nsresult nsCollation::NormalizeString(nsString& stringInOut)
 {
   if (mCaseConversion == NULL) {
     stringInOut.ToLowerCase();
   }
   else {
-    PRUnichar *aBuffer;
     PRInt32 aLength = stringInOut.Length();
 
-    aBuffer = new PRUnichar[aLength];
-    if (aBuffer == NULL) {
-      return NS_ERROR_OUT_OF_MEMORY;
+    if (aLength <= 64) {
+      PRUnichar conversionBuf[64];
+      mCaseConversion->ToLower(stringInOut.GetUnicode(), conversionBuf, aLength);
+      stringInOut.Assign(conversionBuf, aLength);
     }
-    mCaseConversion->ToLower(stringInOut.GetUnicode(), aBuffer, aLength);
-    stringInOut.Assign(aBuffer, aLength);
-    delete [] aBuffer;
+    else {
+      PRUnichar *aBuffer;
+      aBuffer = new PRUnichar[aLength];
+      if (aBuffer == NULL) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      mCaseConversion->ToLower(stringInOut.GetUnicode(), aBuffer, aLength);
+      stringInOut.Assign(aBuffer, aLength);
+      delete [] aBuffer;
+    }
   }
   return NS_OK;
 }

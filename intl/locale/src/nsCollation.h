@@ -67,7 +67,7 @@ public:
   PRInt32 CompareSortKey(const nsString& key1, const nsString& key2);
 
   // normalize string before collation key generation
-  nsresult NormalizeString(nsAutoString& stringInOut);
+  nsresult NormalizeString(nsString& stringInOut);
 
   // charset conversion util, C string buffer is allocate by PR_Malloc, caller should call PR_Free
   nsresult UnicodeToChar(const nsString& src, char** dst, const nsString& aCharset);
