@@ -338,6 +338,72 @@ void nsMenu::LoadMenuItem(nsIMenu *       pParentMenu,
   return;
 }
 
+void nsMenu::LoadSubMenu(nsIMenu *       pParentMenu,
+                         nsIDOMElement * menuElement,
+                         nsIDOMNode *    menuNode)
+{
+  nsString menuName;
+  menuElement->GetAttribute(nsAutoString("name"), menuName);
+  //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
+  
+  // Create nsMenu
+  nsIMenu * pnsMenu = nsnull;
+  nsresult rv = nsComponentManager::CreateInstance(kMenuCID,
+                                                   nsnull,
+                                                   nsIMenu::GetIID(),
+                                                   (void**)&pnsMenu);
+  if (NS_OK == rv) {
+    // Call Create
+    nsISupports * supports = nsnull;
+    pParentMenu->QueryInterface(kISupportsIID, (void**) &supports);
+    pnsMenu->Create(supports, menuName);
+    NS_RELEASE(supports); // Balance QI
+  
+    // Set nsMenu Name
+    pnsMenu->SetLabel(menuName);
+                                                   
+    supports = nsnull;
+    pnsMenu->QueryInterface(kISupportsIID, (void**) &supports);
+    pParentMenu->AddItem(supports); // parent takes ownership
+    NS_RELEASE(supports);
+    
+    pnsMenu->SetWebShell(mWebShell);   
+    pnsMenu->SetDOMNode(menuNode);
+    
+    /*
+    // Begin menuitem inner loop                   
+    unsigned short menuIndex = 0;
+    
+    nsCOMPtr<nsIDOMNode> menuitemNode;
+    menuNode->GetFirstChild(getter_AddRefs(menuitemNode));
+    while (menuitemNode) {
+      nsCOMPtr<nsIDOMElement> menuitemElement(do_QueryInterface(menuitemNode));
+      if (menuitemElement) {
+        nsString menuitemNodeType;
+        menuitemElement->GetNodeName(menuitemNodeType);
+    
+#ifdef DEBUG_saari
+        printf("Type [%s] %d\n", menuitemNodeType.ToNewCString(), menuitemNodeType.Equals("separator"));
+#endif
+    
+        if (menuitemNodeType.Equals("menuitem")) {
+          // Load a menuitem
+          LoadMenuItem(pnsMenu, menuitemElement, menuitemNode, menuIndex, mWebShell);
+        } else if (menuitemNodeType.Equals("separator")) {
+          pnsMenu->AddSeparator();
+        } else if (menuitemNodeType.Equals("menu")) {
+          // Add a submenu
+          LoadSubMenu(pnsMenu, menuitemElement, menuitemNode);
+        }
+      }
+          ++menuIndex;
+      nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
+      oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
+    } // end menu item innner loop
+    */
+  }
+}
+
 nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
   return nsEventStatus_eIgnore;

@@ -86,6 +86,11 @@ protected:
     unsigned short  menuitemIndex,
     nsIWebShell   * aWebShell);
 
+  void LoadSubMenu(
+    nsIMenu       * pParentMenu,
+    nsIDOMElement * menuElement,
+    nsIDOMNode    * menuNode);
+
   Widget     GetNativeParent();
 
   nsString   mLabel;
