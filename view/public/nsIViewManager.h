@@ -151,6 +151,15 @@ public:
   NS_IMETHOD  UpdateAllViews(PRUint32 aUpdateFlags) = 0;
 
   /**
+   * Called to inform the view manager that a view has scrolled.
+   * The view manager will invalidate any widgets which may need
+   * to be rerendered.
+   * @param aView view to paint. should be root view
+   * @param aUpdateFlags see bottom of nsIViewManager.h for description
+   */
+  NS_IMETHOD  UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY) = 0;
+
+  /**
    * Called to dispatch an event to the appropriate view. Often called
    * as a result of receiving a mouse or keyboard event from the widget
    * event system.
@@ -213,6 +222,9 @@ public:
    */
   NS_IMETHOD  InsertChild(nsIView *aParent, nsIView *aChild,
                           PRInt32 aZIndex) = 0;
+
+  NS_IMETHOD  InsertZPlaceholder(nsIView *aParent, nsIView *aZChild,
+                                 PRInt32 aZIndex) = 0;
 
   /**
    * Remove a specific child of a view.

@@ -1694,6 +1694,7 @@ void nsScrollingView::Scroll(nsIView *aScrolledView, PRInt32 aDx, PRInt32 aDy, f
       // Scroll the contents of the widget by the specfied amount, and scroll
       // the child widgets
       clipWidget->Scroll(aDx, aDy, nsnull);
+      mViewManager->UpdateViewAfterScroll(this, aDx, aDy);
     }
     
     NS_IF_RELEASE(clipWidget);

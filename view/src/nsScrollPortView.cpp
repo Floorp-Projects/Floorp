@@ -512,7 +512,6 @@ NS_IMETHODIMP nsScrollPortView::ScrollByWhole(PRBool aTop)
 
 PRBool nsScrollPortView::CannotBitBlt(nsIView* aScrolledView)
 {
-  
   PRBool    trans;
   float     opacity;
   PRUint32  scrolledViewFlags;
@@ -549,6 +548,7 @@ void nsScrollPortView::Scroll(nsIView *aScrolledView, PRInt32 aDx, PRInt32 aDy, 
       // Scroll the contents of the widget by the specfied amount, and scroll
       // the child widgets
       scrollWidget->Scroll(aDx, aDy, nsnull);
+      mViewManager->UpdateViewAfterScroll(this, aDx, aDy);
     }
     
     NS_IF_RELEASE(scrollWidget);

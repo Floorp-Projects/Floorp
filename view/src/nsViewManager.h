@@ -78,6 +78,7 @@ public:
   NS_IMETHOD  UpdateView(nsIView *aView, PRUint32 aUpdateFlags);
   NS_IMETHOD  UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags);
   NS_IMETHOD  UpdateAllViews(PRUint32 aUpdateFlags);
+  NS_IMETHOD  UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY);
 
   NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent, nsEventStatus* aStatus);
 
@@ -92,6 +93,9 @@ public:
 
   NS_IMETHOD  InsertChild(nsIView *parent, nsIView *child,
                           PRInt32 zindex);
+
+  NS_IMETHOD  InsertZPlaceholder(nsIView *aParent, nsIView *aZChild,
+                                 PRInt32 aZIndex);
 
   NS_IMETHOD  RemoveChild(nsIView *parent, nsIView *child);
 

@@ -73,6 +73,8 @@ public:
   NS_IMETHOD  GetChildClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom) const;
   NS_IMETHOD  SetVisibility(nsViewVisibility visibility);
   NS_IMETHOD  GetVisibility(nsViewVisibility &aVisibility) const;
+  NS_IMETHOD  SetZParent(nsIView *aZParent);
+  NS_IMETHOD  GetZParent(nsIView *&aZParent) const;
   NS_IMETHOD  SetZIndex(PRInt32 aZIndex);
   NS_IMETHOD  GetZIndex(PRInt32 &aZIndex) const;
   NS_IMETHOD  SetAutoZIndex(PRBool aAutoZIndex);
@@ -139,6 +141,8 @@ protected:
   nsIViewManager    *mViewManager;
   nsIView           *mParent;
   nsIWidget         *mWindow;
+
+  nsIView           *mZParent;
 
   //XXX should there be pointers to last child so backward walking is fast?
   nsIView           *mNextSibling;

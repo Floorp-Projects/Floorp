@@ -237,6 +237,15 @@ public:
   NS_IMETHOD  GetVisibility(nsViewVisibility &aVisibility) const = 0;
 
   /**
+   * Called to set the Z-order parent of the view. This is the
+   * parent from which we derive our Z-order grouping. It might not
+   * be the same as the geometric parent.
+   * @param aParent new parent
+   */
+  NS_IMETHOD  SetZParent(nsIView *aZParent) = 0;
+  NS_IMETHOD  GetZParent(nsIView *&aZParent) const = 0;
+
+  /**
    * Called to indicate that the z-index of a view has been changed.
    * The z-index is relative to all siblings of the view.
    * @param zindex new z depth
@@ -277,7 +286,8 @@ public:
   NS_IMETHOD GetFloating(PRBool &aFloatingView) const = 0;
 
   /**
-   * Called to set the parent of the view.
+   * Called to set the parent of the view. This is the geometric parent
+   * (from which we derive our coordinate system).
    * @param aParent new parent
    */
   NS_IMETHOD  SetParent(nsIView *aParent) = 0;
