@@ -1,5 +1,8 @@
-Build instructions from pschwartau@netscape.com as of 2 Dec 2001 ...
+Build instructions from pschwartau@netscape.com as of 02 Dec 2001 ...
 Updated - rogerl@netscape.com 10 Jan 2002
+Updated - pschwartau@netscape.com 29 Mar 2002
+
+
 
 Building JS2 on WINNT:
 ---------------------------------------------------------------------------------------------
@@ -16,11 +19,9 @@ Project Files:   D:\JS_2\mozilla\js2\src\winbuild\DikDik.dsp
 
 
 RUNNING THE JS2 SHELL AFTER YOU'VE BUILT IT:
-(Note the 3 underbars between "shell" and "Win32" in "DikDik_shell___Win32_Debug")
-cd  (path to)/mozilla/js2/tests/cpp/winbuild/DikDik_shell___Win32_Debug
-[(path to)/mozilla/js2/tests/cpp/winbuild/DikDik_shell___Win32_Debug] ./DikDik_shell.exe
+cd  (path to)/mozilla/js2/tests/cpp/winbuild/Debug
+[(path to)/mozilla/js2/tests/cpp/winbuild/Debug] ./DikDik_shell.exe
 
-[XXX I'm not getting these directories - for me it builds into 'Debug' folder]
 
 
 Building JS2 on LINUX:
@@ -31,8 +32,8 @@ Building JS2 on LINUX:
 [/d/JS_2] cd mozilla/js2
 
 [/d/JS_2/mozilla/js2] automake    <--- FIRST TIME ONLY
-[/d/JS_2/mozilla/js2] autoconf      <--- FIRST TIME ONLY
-[/d/JS_2/mozilla/js2] ./configure --enable-debug     <--- FIRST TIME ONLY
+[/d/JS_2/mozilla/js2] autoconf    <--- FIRST TIME ONLY
+[/d/JS_2/mozilla/js2] ./configure --enable-debug    <--- FIRST TIME ONLY
 [/d/JS_2/mozilla/js2] make
 
 
@@ -54,6 +55,7 @@ without getting complaints about unimplemented features from the back end.
 RUNNING THE JS2 SHELL AFTER YOU'VE BUILT IT:
 cd   (path to):mozilla:js2:tests:cpp:macbuild
 [ (path to):mozilla:js2:tests:cpp:macbuild] ./js2_shell
+
 
 
 ---------------------------------------------------------------------------------------------
@@ -102,7 +104,7 @@ numerics.cpp numerics.h
 
 parser.cpp parser.h
     - main parser source.
-        tables in parser.h: 
+        tables in parser.h:
         enum ExprNode::Kind; types of expressions
         enum StmtNode::Kind; types of statements
 
