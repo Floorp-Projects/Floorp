@@ -956,7 +956,7 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
     // If we reach here, we have an unknown protocol. Warn, but allow.
     // This is risky from a security standpoint, but allows flexibility
     // in installing new protocol handlers after initial ship.
-    NS_WARN_IF_FALSE(PR_FALSE, "unknown protocol in nsScriptSecurityManager::CheckLoadURI");
+    NS_WARNING("unknown protocol in nsScriptSecurityManager::CheckLoadURI");
 
     return NS_OK;
 }
