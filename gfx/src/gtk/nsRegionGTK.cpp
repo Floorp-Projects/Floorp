@@ -269,7 +269,7 @@ NS_IMETHODIMP nsRegionGTK::GetRegionComplexity(nsRegionComplexity &aComplexity) 
   if (((nsRegionGTK*)this)->IsEmpty())
     aComplexity = eRegionComplexity_empty;
   else
-    aComplexity = eRegionComplexity_rect;
+    aComplexity = eRegionComplexity_complex;
 
   return NS_OK;
 }

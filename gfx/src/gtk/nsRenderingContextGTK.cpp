@@ -25,6 +25,7 @@
 
 #define NS_TO_GDK_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 
+
 #define NSRECT_TO_GDKRECT(ns,gdk) \
   PR_BEGIN_MACRO \
   gdk.x = ns.x; \
@@ -711,6 +712,8 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawRect(nscoord aX, nscoord aY, nscoord aW
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
 
+  // FIXME why are we drawign this 1 pixel less than we should be?
+
   ::gdk_draw_rectangle(mSurface->GetDrawable(), mSurface->GetGC(),
                        FALSE,
                        x, y,
@@ -1337,50 +1340,63 @@ nsRenderingContextGTK::DrawString(const nsString& aString,
                     aX, aY, aFontID, aSpacing);
 }
 
-NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
+NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
+                                               nscoord aX, nscoord aY)
 {
-  nscoord width,height;
+  nscoord width, height;
+
+  // we have to do this here because we are doing a transform below
   width = NSToCoordRound(mP2T * aImage->GetWidth());
   height = NSToCoordRound(mP2T * aImage->GetHeight());
 
-  return DrawImage(aImage,aX,aY,width,height);
-}
-
-NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
-                     nscoord aWidth, nscoord aHeight)
-{
-  nsRect	tr;
-
-  tr.x = aX;
-  tr.y = aY;
-  tr.width = aWidth;
-  tr.height = aHeight;
-
-  return DrawImage(aImage,tr);
+  return DrawImage(aImage, aX, aY, width, height);
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage, const nsRect& aRect)
 {
-  nsRect	tr;
-
-  tr = aRect;
-  mTMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
-
-  return aImage->Draw(*this,mSurface,tr.x,tr.y,tr.width,tr.height);
+  return DrawImage(aImage,
+                   aRect.x,
+                   aRect.y,
+                   aRect.width,
+                   aRect.height);
 }
 
-NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
+NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
+                                               nscoord aX, nscoord aY,
+                                               nscoord aWidth, nscoord aHeight)
+{
+  nscoord x, y, w, h;
+
+  x = aX;
+  y = aY;
+  w = aWidth;
+  h = aHeight;
+
+  mTMatrix->TransformCoord(&x, &y, &w, &h);
+
+  return aImage->Draw(*this, mSurface,
+                      x, y, w, h);
+}
+
+NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
+                                               const nsRect& aSRect,
+                                               const nsRect& aDRect)
 {
   nsRect	sr,dr;
 
   sr = aSRect;
-  mTMatrix ->TransformCoord(&sr.x,&sr.y,&sr.width,&sr.height);
+  mTMatrix->TransformCoord(&sr.x, &sr.y,
+                            &sr.width, &sr.height);
 
   dr = aDRect;
-  mTMatrix->TransformCoord(&dr.x,&dr.y,&dr.width,&dr.height);
+  mTMatrix->TransformCoord(&dr.x, &dr.y,
+                           &dr.width, &dr.height);
 
-  return aImage->Draw(*this,mSurface,sr.x,sr.y,sr.width,sr.height,
-                      dr.x,dr.y,dr.width,dr.height);
+  return aImage->Draw(*this, mSurface,
+                      sr.x, sr.y,
+                      sr.width, sr.height,
+                      dr.x, dr.y,
+                      dr.width, dr.height);
 }
 
 NS_IMETHODIMP
@@ -1432,7 +1448,6 @@ nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
 
   //XXX flags are unused. that would seem to mean that there is
   //inefficiency somewhere... MMP
-
 
   // gdk_draw_pixmap and copy_area do the same thing internally.
   // copy_area sounds better
