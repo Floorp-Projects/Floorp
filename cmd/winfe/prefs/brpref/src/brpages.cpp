@@ -1083,7 +1083,8 @@ CEditTypeDialog::InitDialog()
       else
       {
         char sz[256];
-	      LoadString(m_hInstance, IDS_NONE, sz, sizeof(sz));
+	      //~~~ this breaks build for some reason LoadString(m_hInstance, IDS_NONE, sz, sizeof(sz));
+        strcpy(sz, "<none>");
         ComboBox_AddString(hWndCombo1, sz);
         ComboBox_SetCurSel(hWndCombo1, 0);
         EnableDlgItem(IDC_RADIO4, FALSE);
@@ -1095,7 +1096,8 @@ CEditTypeDialog::InitDialog()
   }
   
   char sz[256];
-	LoadString(m_hInstance, IDS_NONE, sz, sizeof(sz));
+	//~~~ this breaks build for some reason LoadString(m_hInstance, IDS_NONE, sz, sizeof(sz));
+  strcpy(sz, "<none>");
   HWND hWndCombo2 = GetDlgItem(m_hwndDlg, IDC_COMBO2);
   ComboBox_AddString(hWndCombo2, sz);
   ComboBox_SetCurSel(hWndCombo2, 0);
@@ -1813,7 +1815,8 @@ CApplicationsPrefs::DisplayFileDetails()
 					//~~~bIsPlugin = TRUE;
 					break;
 				case HANDLE_VIA_PLUGINAPPLET:
-					strHandledBy.LoadString(m_hInstance, IDS_PLUGINAPPLET);
+					//~~~ this breaks build for some reason strHandledBy.LoadString(m_hInstance, IDS_PLUGINAPPLET);
+          strHandledBy = "Applet";
 					break;
 			}
 
