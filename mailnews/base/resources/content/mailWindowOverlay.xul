@@ -827,4 +827,12 @@ END of Deprecated -->
 	</toolbar>
 </toolbox>
 
+<box id="status-bar">
+	<box align="vertical" style="width:100px" position="1">
+		<spring flex="100%"/>
+		<progressmeter id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()"/>
+		<spring flex="100%"/>
+	</box>
+	<text id="statusText" class="status-bar" align="left" flex="100%" value="&statusText.label;" position="2"/>
+</box>
 </overlay>

@@ -329,13 +329,6 @@ Rights Reserved.
 				<iframe id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank"/>
 			</box>	
 			<box id="status-bar">
-				<box align="vertical" style="width:100px">
-					<spring flex="100%"/>
-					<progressmeter id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()"/>
-					<spring flex="100%"/>
-				</box>
-
-				<text id="statusText" class="status-bar" align="left" flex="100%" value="&statusText.label;"/>
 				<text value="&unreadCountText.label;"/>
 				<text id="unreadMessageCount" style="min-width: 5px"/>
 				<text value="&totalCountText.label;"/>

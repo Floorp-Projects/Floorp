@@ -86,15 +86,7 @@ Rights Reserved.
 	</box>	
 
 
-	<box id="status-bar">
-		<box align="vertical" style="width:100px">
-			<spring flex="100%"/>
-			<progressmeter id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()"/>
-			<spring flex="100%"/>
-		</box>
-
-		<button id="statusText" class="status-bar" align="left" flex="100%" value="&statusText.label;"/>       
-	</box>
+	<box id="status-bar"/>
 	<toolbar id="taskbar"/>
 
 </window>
