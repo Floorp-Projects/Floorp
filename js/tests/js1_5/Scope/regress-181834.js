@@ -38,6 +38,9 @@
 * SUMMARY: Testing scope
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=181834
 *
+* This bug only bit in Rhino interpreted mode, when the
+* 'compile functions with dynamic scope' feature was set.
+*
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
@@ -79,6 +82,18 @@ function outer(N)
 }
 
 
+/*
+ * This only has meaning in Rhino -
+ */
+setDynamicScope(true);
+
+/*
+ * Recompile the function outer() via eval() in order to
+ * feel the effect of the dynamic scope mode we have set.
+ */
+var s = outer.toString();
+eval(s);
+
 status = inSection(1);
 actual = outer(-5);
 expect = 1;
@@ -95,12 +110,48 @@ expect = 6;
 addThis();
 
 
+/*
+ * Sanity check: do same steps with the dynamic flag off
+ */
+setDynamicScope(false);
+
+/*
+ * Recompile the function outer() via eval() in order to
+ * feel the effect of the dynamic scope mode we have set.
+ */
+eval(s);
+
+status = inSection(4);
+actual = outer(-5);
+expect = 1;
+addThis();
+
+status = inSection(5);
+actual = outer(0);
+expect = 1;
+addThis();
+
+status = inSection(6);
+actual = outer(5);
+expect = 6;
+addThis();
+
 
 
 //-----------------------------------------------------------------------------
 test();
 //-----------------------------------------------------------------------------
 
+
+
+function setDynamicScope(flag)
+{
+  if (this.Packages)
+  {
+    var cx = this.Packages.org.mozilla.javascript.Context.getCurrentContext();
+    cx.setCompileFunctionsWithDynamicScope(flag);
+  }
+}
 
 
 function addThis()
