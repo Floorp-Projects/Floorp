@@ -1,7 +1,7 @@
 # -*- Mode: perl; tab-width: 4; indent-tabs-mode: nil; -*-
 #
 # This file is MPL/GPL dual-licensed under the following terms:
-# 
+#
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.1 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
@@ -37,8 +37,8 @@ sub provides {
     my $class = shift;
     my($service) = @_;
     return ($service eq 'component.cosesEditor' or
-            $service eq 'dispatcher.commands' or 
-            $service eq 'dispatcher.output.generic' or 
+            $service eq 'dispatcher.commands' or
+            $service eq 'dispatcher.output.generic' or
             $service eq 'dataSource.strings.default' or
             $class->SUPER::provides($service));
 }
@@ -149,7 +149,7 @@ sub cmdCosesVariantExport {
     my $XML = $app->getService('service.xml');
     # note. This namespace is certainly not set in stone. Please make better suggestions. XXX
     my $result = '<variant xmlns="http://bugzilla.mozilla.org/variant/1"';
-    foreach my $name (qw(protocol quality type encoding charset language description translator)) {  
+    foreach my $name (qw(protocol quality type encoding charset language description translator)) {
         my $value = $XML->escape(shift(@data));
         $result .=   "\n         $name=\"$value\"";
     }
@@ -187,8 +187,8 @@ sub cmdCosesVariantImport {
     foreach my $string (keys(%{$data->{'strings'}})) {
         $dataSource->setString($app, $id, $string, $data->{'strings'}->{$string});
     }
-    
-    # display data                    
+
+    # display data
     my %expectedStrings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
     $app->output->cosesEditorVariant($id, @{$data->{'variant'}}, \%expectedStrings, $data->{'strings'}->{$string});
 }
@@ -199,7 +199,7 @@ sub walkElement {
     my($tagName, $attributes, $tree, $data) = @_;
     if ($tagName eq '{http://bugzilla.mozilla.org/variant/1}variant') {
         if ($data->{'depth'} == 0) {
-            foreach my $name (qw(protocol quality type encoding charset language description translator)) {  
+            foreach my $name (qw(protocol quality type encoding charset language description translator)) {
                 if (exists($attributes->{$name})) {
                     push(@{$data->{'variant'}}, $attributes->{$name});
                 } else {
@@ -215,7 +215,7 @@ sub walkElement {
                 $data->{'string'} = $attributes->{'name'};
             } else {
                 $self->error(1, 'invalid variant document format - missing attribute 'name' on <string>');
-            }            
+            }
         } else {
             $self->error(1, 'invalid variant document format - <string> not child of <variant>');
         }
@@ -252,7 +252,7 @@ sub outputCosesEditor {
     my $self = shift;
     my($app, $output, XXX) = @_;
     $output->output('cosesEditor', {
-    });   
+    });
 }
 
 # dispatcher.output.generic
@@ -296,7 +296,7 @@ sub getVariantEditorArguments {
     }
     my $newName = $input->getArgument('cosesEditorVariantStringNewName');
     if ((defined($newName)) and ($newName ne '')) {
-        $variantStrings{$newName} = $input->getArgument('cosesEditorVariantStringNewValue');    
+        $variantStrings{$newName} = $input->getArgument('cosesEditorVariantStringNewValue');
     }
     return ($id, \@data, \%variantStrings);
 }

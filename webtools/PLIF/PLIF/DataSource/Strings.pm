@@ -1,7 +1,7 @@
 # -*- Mode: perl; tab-width: 4; indent-tabs-mode: nil; -*-
 #
 # This file is MPL/GPL dual-licensed under the following terms:
-# 
+#
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.1 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
@@ -87,9 +87,9 @@ sub selectVariant {
     my $variants = $self->variants($app, $protocol);
     # Initialize the fake header
     my $request = new HTTP::Headers;
-    foreach my $header (['Accept', $self->acceptType($app, $protocol)], 
-                        ['Accept-Encoding', $self->acceptEncoding($app, $protocol)], 
-                        ['Accept-Charset', $self->acceptCharset($app, $protocol)], 
+    foreach my $header (['Accept', $self->acceptType($app, $protocol)],
+                        ['Accept-Encoding', $self->acceptEncoding($app, $protocol)],
+                        ['Accept-Charset', $self->acceptCharset($app, $protocol)],
                         ['Accept-Language', $self->acceptLanguage($app, $protocol)]) {
         # only add headers that exist -- HTTP::Negotiate isn't very bullet-proof :-)
         if ($header->[1]) {
@@ -100,7 +100,7 @@ sub selectVariant {
     my $choice;
     if (scalar(@$variants) > 0) {
         # $HTTP::Negotiate::DEBUG = 1; # enable debugging
-        $choice = choose($variants, $request); 
+        $choice = choose($variants, $request);
     }
     if (not defined($choice)) {
         $choice = 0; # XXX we could maybe not hard code the default variant some how... ;-)

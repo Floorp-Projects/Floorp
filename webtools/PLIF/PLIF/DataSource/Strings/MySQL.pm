@@ -1,7 +1,7 @@
 # -*- Mode: perl; tab-width: 4; indent-tabs-mode: nil; -*-
 #
 # This file is MPL/GPL dual-licensed under the following terms:
-# 
+#
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.1 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
@@ -37,9 +37,9 @@ sub databaseType {
     return qw(mysql);
 }
 
-sub getString { 
+sub getString {
     my $self = shift;
-    my($app, $variant, $string) = @_;    
+    my($app, $variant, $string) = @_;
     return $self->database($app)->execute('SELECT data FROM strings WHERE variant = ? AND name = ?', $variant, $string)->row;
 }
 

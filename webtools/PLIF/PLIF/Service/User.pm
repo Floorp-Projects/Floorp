@@ -1,7 +1,7 @@
 # -*- Mode: perl; tab-width: 4; indent-tabs-mode: nil; -*-
 #
 # This file is MPL/GPL dual-licensed under the following terms:
-# 
+#
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.1 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
@@ -309,7 +309,7 @@ sub propertyGet {
     my $self = shift;
     my($name) = @_;
     if ($name eq 'groups') {
-        return {%{$self->{'groups'}}}; 
+        return {%{$self->{'groups'}}};
         # Create new hash so that they can't edit ours. This ensures
         # that they can't inadvertently bypass the DIRTY flagging by
         # propertySet(), above. This does mean that internally we have
@@ -333,8 +333,8 @@ sub DESTROY {
 
 sub writeProperties {
     my $self = shift;
-    $self->app->getService('dataSource.user')->setUser($self->app, $self->userID, $self->mode, 
-                                                       $self->password, $self->adminMessage, 
+    $self->app->getService('dataSource.user')->setUser($self->app, $self->userID, $self->mode,
+                                                       $self->password, $self->adminMessage,
                                                        $self->newFieldID, $self->newFieldValue, $self->newFieldKey);
 }
 

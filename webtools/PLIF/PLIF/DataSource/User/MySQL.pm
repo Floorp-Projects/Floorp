@@ -1,7 +1,7 @@
 # -*- Mode: perl; tab-width: 4; indent-tabs-mode: nil; -*-
 #
 # This file is MPL/GPL dual-licensed under the following terms:
-# 
+#
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.1 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
@@ -95,7 +95,7 @@ sub getUserByID {
         return ();
     }
     # return userID, mode, password, adminMessage, newFieldID,
-    # newFieldValue, newFieldKey, { fieldID => data }*, { groupID => name }*, 
+    # newFieldValue, newFieldKey, { fieldID => data }*, { groupID => name }*,
     # [rightNames]*; or () if unsuccessful
 }
 
@@ -177,7 +177,7 @@ sub setField {
     # if fieldID is undefined, then add a new entry and return the
     # fieldID. $data will often be undefined or empty
     if (defined($fieldID)) {
-        $self->database($app)->execute('UPDATE userDataTypes SET category=?, name=?, type=?, data=?, mode=? WHERE fieldID = ?', 
+        $self->database($app)->execute('UPDATE userDataTypes SET category=?, name=?, type=?, data=?, mode=? WHERE fieldID = ?',
                                        $category, $name, $type, $data, $mode, $fieldID);
     } else {
         return $self->database($app)->execute('INSERT INTO userDataTypes SET category=?, name=?, type=?, data=?, mode=?',
@@ -189,7 +189,7 @@ sub removeField {
     my $self = shift;
     my($app, $fieldID) = @_;
     $self->database($app)->execute('DELETE FROM userData WHERE fieldID = ?', $fieldID);
-    $self->database($app)->execute('DELETE FROM userDataTypes WHERE fieldID = ?', $fieldID);    
+    $self->database($app)->execute('DELETE FROM userDataTypes WHERE fieldID = ?', $fieldID);
 }
 
 sub getGroups {
@@ -230,8 +230,8 @@ sub setGroup {
     # If groupID is undefined, then add a new entry and return the new
     # groupID. If groupName is undefined, then leave it as is. If both
     # groupID and groupName are undefined, there is an error.
-    # This probably doesn't need to be too efficient... 
-    $self->assert(defined($groupID) or defined($groupName), 1, 
+    # This probably doesn't need to be too efficient...
+    $self->assert(defined($groupID) or defined($groupName), 1,
                   'Invalid arguments to DataSource::User::setGroup: \'groupID\' and \'groupName\' both undefined');
     if (not defined($groupID)) {
         # add a new record
@@ -272,7 +272,7 @@ sub addRight {
 
 sub getRightID {
     my $self = shift;
-    my($app, $name) = @_;    
+    my($app, $name) = @_;
     my $row = $self->database($app)->execute('SELECT rightID FROM rights WHERE name = ?', $name)->row;
     if (defined($row)) {
         return $row->[0];
@@ -378,7 +378,7 @@ sub setupInstall {
         # +-------------------+
         # | userGroupsMapping |
         # +-------------------+
-        # | userID         K1 | 
+        # | userID         K1 |
         # | groupID        K1 |
         # +-------------------+
     } else {

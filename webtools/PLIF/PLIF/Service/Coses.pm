@@ -1,7 +1,7 @@
 # -*- Mode: perl; tab-width: 4; indent-tabs-mode: nil; -*-
 #
 # This file is MPL/GPL dual-licensed under the following terms:
-# 
+#
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.1 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
@@ -66,7 +66,7 @@ sub expand {
             my $contents = $stack->[$index+1];
             my $superscope = $scope; # scope of parent element
             $index += 2; # move the pointer on to the next node
-            if ($node) { 
+            if ($node) {
                 # element node
                 my $attributes = $contents->[0];
                 if ($attributes->{'xml:space'}) {
@@ -112,7 +112,7 @@ sub expand {
                                 push(@index, 1);
                                 push(@stack, $contents);
                                 $scope->{$variable} = $item;
-                                push(@scope, $scope); 
+                                push(@scope, $scope);
                                 # make sure we create a new scope for the
                                 # next item -- otherwise each part of the
                                 # loop would just have a reference to the
@@ -142,13 +142,13 @@ sub expand {
                         #   insert text escaped (as HTML, XML, URI, etc)
                         #   insert a hash as a particular data structure (CGI arguments, an XML fragment, etc)
                         next node; # skip contents if attribute 'value' is present
-                    } 
+                    }
                 } elsif ($node eq 'br') {
                     # useful if xml:space is set to 'default'
                     $result .= "\n";
                 } elsif ($node eq 'embed') {
-                    push(@index, $index); 
-                    push(@stack, $stack); 
+                    push(@index, $index);
+                    push(@stack, $stack);
                     $index = 0;
                     $stack = $self->parseString($self->getString($app, $session, $protocol, $self->evaluateExpression($attributes->{'string'}, $scope)));
                     push(@scope, $superscope);
@@ -202,7 +202,7 @@ sub evaluateVariable {
     my @parts = split(/\./o, $variable, -1); # split variable at dots ('.') (the negative number prevents null trailing fields from being stripped)
     # drill down through scope
     foreach my $part (@parts) {
-        if (ref($scope) eq 'HASH') { 
+        if (ref($scope) eq 'HASH') {
             $scope = $scope->{$part};
         } elsif (ref($scope) eq 'ARRAY') {
             $self->assert(scalar($part =~ /^\d+$/o), 1, "Tried to drill into an array using a non-numeric key ('$part')");
@@ -215,10 +215,10 @@ sub evaluateVariable {
         # fully dereference all scalar references
         while (ref($scope) eq 'SCALAR') {
             $scope = $$scope;
-        } 
+        }
         return $scope;
     } else {
-        return ''; 
+        return '';
     }
 }
 
@@ -246,16 +246,16 @@ sub evaluateExpression {
                                     ( # followed by a group of
                                  .*\( # anything up to an open bracket
                                [^()]* # then anything but brackets
-                                    ) # followed by 
+                                    ) # followed by
                                    \( # an open bracket
                              ([^()]*) # our variable
                                    \) # a close bracket
-                                    ( # followed by a group of 
-                                  (?: # as many instances as required 
+                                    ( # followed by a group of
+                                  (?: # as many instances as required
                                [^()]* # of first other-variable stuff
                            \([^()]*\) # and then of more embedded variabled
                                    )* # followed by
-                           [^()]*\).* # anything but brackets, a close bracket then anything 
+                           [^()]*\).* # anything but brackets, a close bracket then anything
                                     ) # which should be at the
                                     $ # end of the line
                                    /$1.$self->evaluateNestedVariableSafely($2, $scope).$3/sexo) {
@@ -299,7 +299,7 @@ sub evaluateCondition {
     my($lvalue, $rvalue, $condition) = @_;
     if (defined($condition) and defined($lvalue) and defined($rvalue)) {
         if ($condition eq '=' or $condition eq '==') {
-            return eval { $lvalue == $rvalue; }; # could fail with non numeric arguments 
+            return eval { $lvalue == $rvalue; }; # could fail with non numeric arguments
         } elsif ($condition eq '!=') {
             return eval { $lvalue != $rvalue; };
         } elsif ($condition eq '<') {
@@ -341,13 +341,13 @@ sub keys {
     if (ref($value) eq 'HASH') {
         if (defined($source) and $source eq 'values') {
             return values(%$value);
-        } else { # (not defined($source) or $source eq 'keys') 
+        } else { # (not defined($source) or $source eq 'keys')
             return keys(%$value);
         }
     } elsif (ref($value) eq 'ARRAY') {
         if (defined($source) and $source eq 'values') {
             return @$value;
-        } else { # (not defined($source) or $source eq 'keys') 
+        } else { # (not defined($source) or $source eq 'keys')
             if ($#$value >= 0) {
                 return (0..$#$value);
             } else {
@@ -383,7 +383,7 @@ sub sort {
         }
         # XXX we need to also support:
         #   Sorting by a particular subkey of a hash to sort an array of hashes
-    } 
+    }
     # else:
     return reverse @list;
 }
