@@ -570,8 +570,9 @@ NET_ParseDate(char *date_string)
 	
 	if(PR_ParseTimeString(date_string, TRUE, &prdate) == PR_SUCCESS)
 	  {
-        PRInt64 r;
-        LL_DIV(r, prdate, PR_USEC_PER_SEC);
+        PRInt64 r, u;
+        LL_I2L(u, PR_USEC_PER_SEC);
+        LL_DIV(r, prdate, u);
         LL_L2I(date, r);
 		TRACEMSG(("Parsed date as GMT: %s\n", asctime(gmtime(&date))));
 		TRACEMSG(("Parsed date as local: %s\n", ctime(&date)));
@@ -1669,9 +1670,10 @@ net_parse_http_index_201_line(HTTPIndexParserData *obj, char *data_line)
 			case LAST_MODIFIED_TOKEN:
                 {
                     PRTime prtime;
-                    PRInt64 r;
+                    PRInt64 r, u;
+                    LL_I2L(u, PR_USEC_PER_SEC);
 				    PR_ParseTimeString(token, TRUE, &prtime);
-                    LL_DIV(r, prtime, PR_USEC_PER_SEC);
+                    LL_DIV(r, prtime, u);
                     LL_L2I(file_struct->date, r);
                 }
 				break;
