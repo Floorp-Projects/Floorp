@@ -37,7 +37,7 @@
 	  <template>
 	  	<rule>
 	      <treechildren>
-			<treeitem uri="..." 
+			<treeitem class="folderTreeItem" uri="..." 
 			  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
 			  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
 			  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"

@@ -19,12 +19,12 @@
  */
 
 /* basic mail folders */
-treeitem > treerow > treecell > .tree-icon
+treeitem.folderTreeItem > treerow > treecell > .tree-icon
 {
  list-style-image: url("chrome://messenger/skin/Folder.gif");
 }
 
-treeitem[open="true"] > treerow > treecell > .tree-icon
+treeitem.folderTreeItem[open="true"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("chrome://messenger/skin/folder-open.gif");
 }
