@@ -2759,9 +2759,12 @@ fi
 dnl system FullCircle/Talkback support (Crash-reporting mechanism)
 dnl ==============================================================
 
+MOZ_ARG_ENABLE_BOOL(fullcircle,
+[  --enable-fullcircle           Enable FullCircle/Talkback support],
+[ MOZ_FULLCIRCLE=1 FULLCIRCLE_LIBS="-lfullsoft" ])
+
 AC_ARG_WITH(fullcircle,
 [  --with-fullcircle=\$dir        location of FullCircle headers and libraries],
-
         FULLCIRCLE_DIR=$withval,
         FULLCIRCLE_DIR=no)
 
@@ -2774,12 +2777,12 @@ _SAVE_LDFLAGS=$LDFLAGS
 _SAVE_LIBS=$LIBS
 CFLAGS="$CFLAGS -I${FULLCIRCLE_DIR}"
 LDFLAGS="$LDFLAGS -L${FULLCIRCLE_DIR}"
-LIBS="-ltalkback $LIBS"
-AC_MSG_CHECKING("for FC_Initialize in -ltalkback");
+LIBS="-lfullsoft $LIBS"
+AC_MSG_CHECKING("for FC_Initialize in -lfullsoft");
 AC_TRY_LINK([ #include <stdio.h>
 	      #include "fullcircle.h" ],
             [ FC_Initialize(); exit(0); ],
-            [FULLCIRCLE_LIB="-ltalkback $FULLCIRCLE_LIB" result="yes"],
+            [FULLCIRCLE_LIBS="-I${FULLCIRCLE_DIR} -L${FULLCIRCLE_DIR} -lfullsoft" result="yes"],
             [MISSING_FULLCIRCLE=1 result="no"])
 AC_MSG_RESULT("$result")
 CFLAGS=$_SAVE_CFLAGS
@@ -2787,10 +2790,17 @@ LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
 
 if test ! -z "$MISSING_FULLCIRCLE"; then
-    AC_MSG_ERROR([Could not find FullCircle library]);
+    echo
+    echo "Could not find FullCircle library -- ignoring it"
+    echo
+else
+    AC_DEFINE(MOZ_FULLCIRCLE)
 fi
 
 fi
+
+dnl AC_SUBST(MOZ_FULLCIRCLE)
+dnl AC_SUBST(FULLCIRCLE_LIBS)
 
 
 LDFLAGS=`echo \
