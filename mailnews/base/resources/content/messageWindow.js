@@ -50,7 +50,27 @@ var folderListener = {
   },
 
   OnItemPropertyChanged: function(item, property, oldValue, newValue) {},
-  OnItemIntPropertyChanged: function(item, property, oldValue, newValue) { },
+  OnItemIntPropertyChanged: function(item, property, oldValue, newValue) { 
+    var currentLoadedFolder = GetLoadedMsgFolder();
+    if (!currentLoadedFolder) return;
+    var currentURI = currentLoadedFolder.URI;
+
+    //if we don't have a folder loaded, don't bother.
+    if(currentURI) {
+      if(property.GetUnicode() == "TotalMessages" || property.GetUnicode() == "TotalUnreadMessages") {
+        var folder = item.QueryInterface(Components.interfaces.nsIMsgFolder);
+        if(folder) {
+          var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource); 
+          if(folderResource) {
+            var folderURI = folderResource.Value;
+            if(currentURI == folderURI) {
+              UpdateStandAloneMessageCounts();
+            }
+          }
+        }
+      }      
+    }
+  },
   OnItemBoolPropertyChanged: function(item, property, oldValue, newValue) {},
   OnItemUnicharPropertyChanged: function(item, property, oldValue, newValue){},
   OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) {},
@@ -228,7 +248,7 @@ function OnLoadMessageWindow()
 
   try {
     var nsIFolderListener = Components.interfaces.nsIFolderListener;
-    var notifyFlags = nsIFolderListener.removed | nsIFolderListener.event;
+    var notifyFlags = nsIFolderListener.removed | nsIFolderListener.event | nsIFolderListener.intPropertyChanged;
     mailSession.AddFolderListener(folderListener, notifyFlags);
   } catch (ex) {
     dump("Error adding to session: " +ex + "\n");
