@@ -54,10 +54,10 @@
 #define nsplugindefs_h___
 
 #if defined(XP_OS2) || defined(__OS2__)
-#pragma pack(1)
 #define INCL_BASE
 #define INCL_PM
 #include <os2.h>
+#pragma pack(1)
 #endif
 
 #ifndef prtypes_h___
