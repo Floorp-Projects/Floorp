@@ -24,6 +24,7 @@
 # Contributor(s):
 #   Sean Su <ssu@netscape.com>
 #   Samir Gehani <sgehani@netscape.com>
+#   Chase Phillips <cmp@mozilla.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -77,6 +78,16 @@ sub RecursiveStrip
     undef @libraryList;
     find({ wanted => \&find_libraries, no_chdir => 1 }, $targetDir);
     @dirEntries = <$targetDir/*>;
+
+    # Remove from @libraryList files that shouldn't be stripped.  This is a
+    # temporary workaround to resolve bug 262822.
+    @libraryList = grep { ! /softokn3/ } @libraryList;
+    @libraryList = grep { ! /freebl_hybrid_3/ } @libraryList;
+    @libraryList = grep { ! /freebl_pure32_3/ } @libraryList;
+
+    # As stated by Wan-Teh, the true fix is to recreate the *.chk files for
+    # the softokn3, freebl_hybrid_3, and freebl_pure32_3 shared libraries
+    # after they have been stripped.
 
     # strip all strippable files
     system("strip @libraryList") if (defined(@libraryList));
