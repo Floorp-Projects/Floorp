@@ -1376,9 +1376,9 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
     // Set up clipping and call Draw().
     PRBool clipState;
     aContext.PushState();
-    aContext.SetClipRect(aTileRect, nsClipCombine_kIntersect,
-                         clipState);
-
+    ((nsRenderingContextXlib&)aContext).SetClipRectInPixels(
+      aTileRect, nsClipCombine_kIntersect, clipState);
+    ((nsRenderingContextXlib&)aContext).UpdateGC();
     for (PRInt32 y = aY0; y < aY1; y += mHeight)
       for (PRInt32 x = aX0; x < aX1; x += mWidth)
         Draw(aContext,aSurface, x, y,
