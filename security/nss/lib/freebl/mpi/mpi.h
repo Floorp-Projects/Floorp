@@ -36,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- *  $Id: mpi.h,v 1.4 2000/07/20 04:47:24 nelsonb%netscape.com Exp $
+ *  $Id: mpi.h,v 1.5 2000/07/28 22:55:56 nelsonb%netscape.com Exp $
  */
 
 #ifndef _H_MPI_
@@ -82,15 +82,14 @@ typedef int               mp_err;
 #endif
 
 #if defined(MP_ULONG_LONG_MAX) && MP_ULONG_LONG_MAX > UINT_MAX
-#if MP_ULONG_LONG_MAX == ULONG_MAX
 typedef unsigned int      mp_digit;
-typedef unsigned long     mp_word;
 #define MP_DIGIT_MAX      UINT_MAX
+
+#if MP_ULONG_LONG_MAX == ULONG_MAX
+typedef unsigned long     mp_word;
 #define MP_WORD_MAX       ULONG_MAX
 #else
-typedef unsigned long     mp_digit;
 typedef unsigned long long mp_word;
-#define MP_DIGIT_MAX      ULONG_MAX
 #define MP_WORD_MAX       MP_ULONG_LONG_MAX
 #endif
 #endif
@@ -114,7 +113,11 @@ typedef unsigned long     mp_word;
 #define MP_WORD_BIT       (CHAR_BIT*sizeof(mp_word))
 #define MP_RADIX          (1+(mp_word)MP_DIGIT_MAX)
 
+#if MP_DIGIT_MAX == USHRT_MAX
 #define MP_DIGIT_FMT      "%04X"     /* printf() format for 1 digit */
+#else
+#define MP_DIGIT_FMT      "%08X"     /* printf() format for 1 digit */
+#endif
 
 /* Macros for accessing the mp_int internals           */
 #define  MP_SIGN(MP)     ((MP)->sign)
@@ -134,8 +137,8 @@ typedef struct {
 } mp_int;
 
 /* Default precision       */
-unsigned int mp_get_prec(void);
-void         mp_set_prec(unsigned int prec);
+mp_size mp_get_prec(void);
+void    mp_set_prec(mp_size prec);
 
 /* Memory management       */
 mp_err mp_init(mp_int *mp);
@@ -232,11 +235,11 @@ int    mp_tovalue(char ch, int r);
 const  char  *mp_strerror(mp_err ec);
 
 /* Octet string conversion functions */
-mp_err mp_read_unsigned_octets(mp_int *mp, const unsigned char *str, unsigned int len);
+mp_err mp_read_unsigned_octets(mp_int *mp, const unsigned char *str, mp_size len);
 int    mp_unsigned_octet_size(const mp_int *mp);
-mp_err mp_to_unsigned_octets(const mp_int *mp, unsigned char *str, unsigned int maxlen);
-mp_err mp_to_signed_octets(const mp_int *mp, unsigned char *str, unsigned int maxlen);
-mp_err mp_to_fixlen_octets(const mp_int *mp, unsigned char *str, unsigned int len);
+mp_err mp_to_unsigned_octets(const mp_int *mp, unsigned char *str, mp_size maxlen);
+mp_err mp_to_signed_octets(const mp_int *mp, unsigned char *str, mp_size maxlen);
+mp_err mp_to_fixlen_octets(const mp_int *mp, unsigned char *str, mp_size len);
 
 #if defined(MP_API_COMPATIBLE)
 #define NEG             MP_NEG
