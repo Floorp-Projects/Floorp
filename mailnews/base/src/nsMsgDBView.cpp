@@ -4445,6 +4445,8 @@ nsresult	nsMsgDBView::ListIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex st
 PRInt32 nsMsgDBView::FindLevelInThread(nsIMsgDBHdr *msgHdr, nsMsgViewIndex startOfThread, nsMsgViewIndex viewIndex)
 {
   nsCOMPtr <nsIMsgDBHdr> curMsgHdr = msgHdr;
+  nsMsgKey msgKey;
+  msgHdr->GetMessageKey(&msgKey);
 
   // look through the ancestors of the passed in msgHdr in turn, looking for them in the view, up to the start of
   // the thread. If we find an ancestor, then our level is one greater than the level of the ancestor.
@@ -4462,9 +4464,11 @@ PRInt32 nsMsgDBView::FindLevelInThread(nsIMsgDBHdr *msgHdr, nsMsgViewIndex start
         return m_levels[indexToTry] + 1;
     }
 
-    if (NS_FAILED(m_db->GetMsgHdrForKey(parentKey, getter_AddRefs(curMsgHdr))))
+    // if msgHdr's key is its parentKey, we'll loop forever, so protect
+    // against that corruption.
+    if (msgKey == parentKey || NS_FAILED(m_db->GetMsgHdrForKey(parentKey, getter_AddRefs(curMsgHdr))))
     {
-      NS_ERROR("GetMsgHdrForKey failed, this used to be an infinte loop condition");
+      NS_ERROR("msgKey == parentKey, or GetMsgHdrForKey failed, this used to be an infinte loop condition");
       curMsgHdr = nsnull;
     }
   }
