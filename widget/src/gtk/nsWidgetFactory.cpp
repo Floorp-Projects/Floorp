@@ -234,9 +234,11 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCPopUpMenu)) {
         inst = (nsISupports*)new nsPopUpMenu();
     }
+    /*
     else if (mClassID.Equals(kCContextMenu)) {
         inst = (nsISupports*)(nsIContextMenu*)new nsContextMenu();
     }
+    */
     else if (mClassID.Equals(kCSound)) {
     	nsISound* aSound = nsnull;
     	NS_NewSound(&aSound);
