@@ -46,7 +46,7 @@ protected:
                              const nsRect& aDirtyRect,
                              nsFramePaintLayer aWhichLayer);
   virtual void PaintMixedMark(nsIRenderingContext& aRenderingContext,
-                               float aPixelsToTwips, PRUint32 aWidth, PRUint32 aHeight) ;
+                               float aPixelsToTwips, const nsRect& aRect) ;
 
     //GFX-rendered state variables
   CheckState mChecked;
