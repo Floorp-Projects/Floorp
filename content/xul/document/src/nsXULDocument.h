@@ -55,7 +55,6 @@
 #include "nsIXULPrototypeDocument.h"
 #include "nsScriptLoader.h"
 #include "nsIStreamListener.h"
-#include "nsIDocument.h"
 
 class nsIRDFResource;
 class nsIRDFService;
@@ -174,7 +173,6 @@ protected:
     // Implementation methods
     friend nsresult
     NS_NewXULDocument(nsIXULDocument** aResult);
-    friend nsresult NS_NewXULDocument(nsIDocument** aResult);
 
     nsresult Init(void);
     nsresult StartLayout(void);
