@@ -68,6 +68,7 @@ class ATL_NO_VTABLE CMozillaBrowser :
 	public CComControl<CMozillaBrowser>,
 	public CDWebBrowserEvents1,
 	public CDWebBrowserEvents2,
+	public IPropertyNotifySinkCP<CMozillaBrowser>,
 	public CStockPropImpl<CMozillaBrowser, IWebBrowser2, &IID_IWebBrowser2, &LIBID_MOZILLACONTROLLib>,
 	public IProvideClassInfo2Impl<&CLSID_MozillaBrowser, &DIID_DWebBrowserEvents2, &LIBID_MOZILLACONTROLLib>,
 	public IPersistStreamInitImpl<CMozillaBrowser>,
@@ -134,6 +135,7 @@ END_PROPERTY_MAP()
 // connect points.
 
 BEGIN_CONNECTION_POINT_MAP(CMozillaBrowser)
+	CONNECTION_POINT_ENTRY(IID_IPropertyNotifySink)
 	// Fires IE events
 	CONNECTION_POINT_ENTRY(DIID_DWebBrowserEvents2)
 	CONNECTION_POINT_ENTRY(DIID_DWebBrowserEvents)
