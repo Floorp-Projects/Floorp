@@ -87,7 +87,15 @@ xptiZipLoader::EnumerateZipEntries(nsILocalFile* file,
 
     nsCOMPtr<nsIZipReader> zip = dont_AddRef(GetZipReader(file));
     if(!zip)
-        return PR_FALSE;
+    {
+        // XXX We are going to say that failure to open a zip/jar is OK. 
+        // We have at least one case where a jar file exists but is not 
+        // available to us to read (MRJPlugin.jar on Mac - bug 109893). 
+        // We TRUST that such files are not going to have xpt files that we 
+        // need to see.
+        LOG_AUTOREG(("      FAILED to open file! Skipping.\n"));
+        return PR_TRUE;
+    }
     
     nsCOMPtr<nsISimpleEnumerator> entries;
     if(NS_FAILED(zip->FindEntries("*.xpt", getter_AddRefs(entries))) ||
