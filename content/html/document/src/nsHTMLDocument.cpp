@@ -439,9 +439,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   nsAutoString lastModified;
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
 
-  PRBool bTryCache = PR_FALSE;
-  PRUint32 cacheFlags = 0;
-
   if (httpChannel) {
     nsXPIDLCString lastModHeader;
     rv = httpChannel->GetResponseHeader("last-modified", 
@@ -2493,6 +2490,10 @@ nsHTMLDocument::GetElementById(const nsAReadableString& aElementId,
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
   
+  if(!mRootContent) {
+    return NS_OK;
+  }
+
   NS_WARN_IF_FALSE(!aElementId.IsEmpty(), "getElementById(\"\"), fix caller?");
   if (aElementId.IsEmpty())
     return NS_OK;
@@ -3397,7 +3398,9 @@ nsHTMLDocument::ResolveName(const nsAReadableString& aName,
 
     NS_ADDREF(list);
 
-    FindNamedItems(aName, mRootContent, *list);
+    if(mRootContent) {
+      FindNamedItems(aName, mRootContent, *list);
+    }
 
     mNameHashTable.Put(&key, list);
   }
