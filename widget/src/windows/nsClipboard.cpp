@@ -46,6 +46,8 @@
 #include "nsGfxCIID.h"
 #include "nsIImage.h"
 
+#define DEBUG_PINK 0
+
 static NS_DEFINE_IID(kCImageCID, NS_IMAGE_CID);
 
 //-------------------------------------------------------------------------
@@ -60,10 +62,6 @@ nsClipboard::nsClipboard() : nsBaseClipboard()
   mIgnoreEmptyNotification = PR_FALSE;
   mWindow         = nsnull;
 
-  // Create a Native window for the shell container...
-  //nsresult rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWidgetIID, (void**)&mWindow);
-  //mWindow->Show(PR_FALSE);
-  //mWindow->Resize(1,1,PR_FALSE);
 }
 
 //-------------------------------------------------------------------------
@@ -71,12 +69,8 @@ nsClipboard::nsClipboard() : nsBaseClipboard()
 //-------------------------------------------------------------------------
 nsClipboard::~nsClipboard()
 {
-  //NS_IF_RELEASE(mWindow);
-
-  //EmptyClipboard();
-  if (nsnull != mDataObj) {
+  if ( mDataObj )
     mDataObj->Release();
-  }
 
 }
 
@@ -97,7 +91,9 @@ UINT nsClipboard::GetFormat(const char* aMimeStr)
   } else {
     format = ::RegisterClipboardFormat(aMimeStr);
   }
-  printf("nsClipboard::GetFormat [%s] 0x%x\n", aMimeStr, format);
+#if DEBUG_PINK
+   printf("nsClipboard::GetFormat [%s] 0x%x\n", aMimeStr, format);
+#endif
   return format;
 }
 
@@ -404,12 +400,27 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
       case TYMED_HGLOBAL: 
         {
           switch (fe.cfFormat) {
-            case CF_TEXT: 
+            case CF_TEXT:
               {
+				// strip off any trailing null because other platforms don't
+                // use nulls to terminate their clipboard strings.
                 result = GetGlobalData(stm.hGlobal, aData, aLen);
                 char * str = (char *)*aData;
                 while (str[*aLen-1] == 0) {
                   (*aLen)--;
+                }
+              } break;
+
+			case CF_UNICODETEXT:
+              {
+				// strip off any trailing null because other platforms don't
+                // use nulls to terminate their clipboard strings. Since we're
+				// dealing with two-byte strings here, we have to back off two
+				// characters at a time.
+                result = GetGlobalData(stm.hGlobal, aData, aLen);
+                char * str = (char *)*aData;
+                while ( NS_STATIC_CAST(PRUint16, str[*aLen-2]) == 0x0000 ) {
+                  (*aLen) -= 2;
                 }
               } break;
 
