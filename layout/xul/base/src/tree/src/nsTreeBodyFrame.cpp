@@ -3101,12 +3101,14 @@ nsTreeBodyFrame::PaintDropFeedback(const nsRect&        aDropFeedbackRect,
 
     currX += mIndentation * level;
 
-    nsStyleContext* twistyContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreetwisty);
-    nsRect twistySize = GetImageSize(mSlots->mDropRow, primaryCol, PR_TRUE, twistyContext);
-    nsMargin twistyMargin;
-    twistyContext->GetStyleMargin()->GetMargin(twistyMargin);
-    twistySize.Inflate(twistyMargin);
-    currX += twistySize.width;
+    if (primaryCol){
+      nsStyleContext* twistyContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreetwisty);
+      nsRect twistySize = GetImageSize(mSlots->mDropRow, primaryCol, PR_TRUE, twistyContext);
+      nsMargin twistyMargin;
+      twistyContext->GetStyleMargin()->GetMargin(twistyMargin);
+      twistySize.Inflate(twistyMargin);
+      currX += twistySize.width;
+    }
 
     const nsStylePosition* stylePosition = feedbackContext->GetStylePosition();
 

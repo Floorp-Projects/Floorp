@@ -1470,6 +1470,8 @@ nsXULTreeBuilder::GetTemplateActionCellFor(PRInt32 aRow,
 {
     *aResult = nsnull;
 
+    if (!aCol) return NS_ERROR_INVALID_ARG;
+
     nsCOMPtr<nsIContent> row;
     GetTemplateActionRowFor(aRow, getter_AddRefs(row));
     if (row) {
