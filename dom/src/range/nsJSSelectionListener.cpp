@@ -34,12 +34,16 @@
 #include "nsCOMPtr.h"
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMSelection.h"
 #include "nsIDOMSelectionListener.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
+static NS_DEFINE_IID(kISelectionIID, NS_IDOMSELECTION_IID);
 static NS_DEFINE_IID(kISelectionListenerIID, NS_IDOMSELECTIONLISTENER_IID);
 
 
@@ -150,6 +154,8 @@ SelectionListenerNotifySelectionChanged(JSContext *cx, JSObject *obj, uintN argc
 {
   nsIDOMSelectionListener *nativeThis = (nsIDOMSelectionListener*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsresult result = NS_OK;
+  nsCOMPtr<nsIDOMDocument> b0;
+  nsCOMPtr<nsIDOMSelection> b1;
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -164,8 +170,26 @@ SelectionListenerNotifySelectionChanged(JSContext *cx, JSObject *obj, uintN argc
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
+    if (argc < 2) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
 
-    result = nativeThis->NotifySelectionChanged();
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
+                                           kIDocumentIID,
+                                           "Document",
+                                           cx,
+                                           argv[0])) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
+    }
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b1),
+                                           kISelectionIID,
+                                           "Selection",
+                                           cx,
+                                           argv[1])) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
+    }
+
+    result = nativeThis->NotifySelectionChanged(b0, b1);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -211,7 +235,7 @@ static JSPropertySpec SelectionListenerProperties[] =
 //
 static JSFunctionSpec SelectionListenerMethods[] = 
 {
-  {"notifySelectionChanged",          SelectionListenerNotifySelectionChanged,     0},
+  {"notifySelectionChanged",          SelectionListenerNotifySelectionChanged,     2},
   {0}
 };
 
