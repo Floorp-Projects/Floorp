@@ -45,6 +45,15 @@ enum nsEventStatus {
 };
 
 /**
+ * sizemode is an adjunct to widget size
+ */
+enum nsSizeMode {
+  nsSizeMode_Normal = 0,
+  nsSizeMode_Minimized,
+  nsSizeMode_Maximized
+};
+
+/**
  * General event
  */
 
@@ -85,6 +94,15 @@ struct nsSizeEvent : public nsGUIEvent {
     PRInt32         mWinWidth;    
                 /// height of entire window (in pixels)
     PRInt32         mWinHeight;    
+};
+
+/**
+ * Window size mode event
+ */
+
+struct nsSizeModeEvent : public nsGUIEvent {
+
+    nsSizeMode      mSizeMode;
 };
 
 /**
@@ -222,11 +240,12 @@ enum nsDragDropEventStatus {
 #define NS_EVENT            1
 #define NS_GUI_EVENT        2
 #define NS_SIZE_EVENT       3
-#define NS_PAINT_EVENT      4
-#define NS_SCROLLBAR_EVENT  5
-#define NS_INPUT_EVENT      6
-#define NS_KEY_EVENT        7
-#define NS_MOUSE_EVENT      8
+#define NS_SIZEMODE_EVENT   4
+#define NS_PAINT_EVENT      5
+#define NS_SCROLLBAR_EVENT  6
+#define NS_INPUT_EVENT      7
+#define NS_KEY_EVENT        8
+#define NS_MOUSE_EVENT      9
 
 #define NS_MENU_EVENT       10
 #define NS_DRAGDROP_EVENT   11
@@ -251,14 +270,16 @@ enum nsDragDropEventStatus {
 #define NS_DESTROY                      (NS_WINDOW_START + 2)
 // Widget was resized
 #define NS_SIZE                         (NS_WINDOW_START + 3)
+// Widget size mode was changed
+#define NS_SIZEMODE                     (NS_WINDOW_START + 4)
 // Widget gained focus
-#define NS_GOTFOCUS                     (NS_WINDOW_START + 4)
+#define NS_GOTFOCUS                     (NS_WINDOW_START + 5)
 // Widget lost focus
-#define NS_LOSTFOCUS                    (NS_WINDOW_START + 5)
+#define NS_LOSTFOCUS                    (NS_WINDOW_START + 6)
 // Widget got activated
-#define NS_ACTIVATE                     (NS_WINDOW_START + 6)
+#define NS_ACTIVATE                     (NS_WINDOW_START + 7)
 // Widget got deactivated
-#define NS_DEACTIVATE                   (NS_WINDOW_START + 7)
+#define NS_DEACTIVATE                   (NS_WINDOW_START + 8)
 // Widget needs to be repainted
 #define NS_PAINT                        (NS_WINDOW_START + 30)
 // Key is pressed within a window
