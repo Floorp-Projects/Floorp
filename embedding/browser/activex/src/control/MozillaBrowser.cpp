@@ -21,8 +21,6 @@
  *
  * Contributor(s):
  *   Adam Lock <adamlock@netscape.com>
- *   Pierre Phaneuf <pp@ludusdesign.com>
- *
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,6 +48,7 @@
 #include "IEHtmlDocument.h"
 #include "PropertyDlg.h"
 #include "PromptService.h"
+#include "WindowCreator.h"
 
 #include "nsCWebBrowser.h"
 #include "nsILocalFile.h"
@@ -62,6 +61,7 @@
 #include "nsIWebBrowserPrint.h"
 #include "nsIWidget.h"
 #include "nsIWebBrowserFocus.h"
+#include "nsIWindowWatcher.h"
 
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMHTMLAnchorElement.h"
@@ -997,18 +997,6 @@ HRESULT CMozillaBrowser::Initialize()
         return E_FAIL;
     }
 
-    // Register our own native prompting service for message boxes, login
-    // prompts etc.
-
-    nsCOMPtr<nsIFactory> promptFactory;
-    rv = NS_NewPromptServiceFactory(getter_AddRefs(promptFactory));
-    if (NS_FAILED(rv)) return rv;
-    rv = nsComponentManager::RegisterFactory(kPromptServiceCID,
-        "Prompt Service",
-        "@mozilla.org/embedcomp/prompt-service;1",
-        promptFactory,
-        PR_TRUE); // replace existing
-
     // Make a new default profile
     nsAutoString newProfileName; newProfileName.AssignWithConversion("MozillaControl");
     PRBool profileExists = PR_FALSE;
@@ -1029,6 +1017,33 @@ HRESULT CMozillaBrowser::Initialize()
     if (NS_FAILED(rv))
     {
         return E_FAIL;
+    }
+
+    // Stuff in here only needs to be done once
+    static BOOL bRegisterComponents = FALSE;
+    if (!bRegisterComponents)
+    {
+        // Register our own native prompting service for message boxes, login
+        // prompts etc.
+        nsCOMPtr<nsIFactory> promptFactory;
+        rv = NS_NewPromptServiceFactory(getter_AddRefs(promptFactory));
+        if (NS_FAILED(rv)) return rv;
+        rv = nsComponentManager::RegisterFactory(kPromptServiceCID,
+            "Prompt Service",
+            "@mozilla.org/embedcomp/prompt-service;1",
+            promptFactory,
+            PR_TRUE); // replace existing
+
+        // create our local object
+        CWindowCreator *creator = new CWindowCreator();
+        nsCOMPtr<nsIWindowCreator> windowCreator;
+        windowCreator = NS_STATIC_CAST(nsIWindowCreator *, creator);
+
+        // Attach it via the watcher service
+        nsCOMPtr<nsIWindowWatcher> watcher =
+            do_GetService("@mozilla.org/embedcomp/window-watcher;1");
+        if (watcher)
+            watcher->SetWindowCreator(windowCreator);
     }
 
 #ifdef HACK_NON_REENTRANCY
