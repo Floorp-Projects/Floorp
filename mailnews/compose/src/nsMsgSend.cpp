@@ -4359,6 +4359,13 @@ NS_IMETHODIMP nsMsgComposeAndSend::SetPendingAttachmentCount(PRUint32 aPendingAt
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgComposeAndSend::GetDeliveryMode(nsMsgDeliverMode *aDeliveryMode)
+{
+  NS_ENSURE_ARG(aDeliveryMode);
+  *aDeliveryMode = m_deliver_mode;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgComposeAndSend::GetProgress(nsIMsgProgress **_retval)
 {
   NS_ENSURE_ARG(_retval);

@@ -250,6 +250,7 @@ interface nsIMsgSend : nsISupports
     [noscript] nsMsgAttachmentHandler getAttachmentHandlers();
     [noscript] readonly attribute unsigned long attachmentCount;
     [noscript] attribute unsigned long pendingAttachmentCount;
+    [noscript] readonly attribute nsMsgDeliverMode deliveryMode;
 
     [noscript] nsIMsgProgress getProgress();
     

@@ -980,7 +980,12 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
     PRUnichar         *printfString = nsnull;
     nsCOMPtr<nsIMsgStringService> composebundle (do_GetService(NS_MSG_COMPOSESTRINGSERVICE_CONTRACTID));
 
-    composebundle->GetStringByID(NS_MSG_FAILURE_ON_OBJ_EMBED, getter_Copies(msg));
+    nsMsgDeliverMode mode = nsIMsgSend::nsMsgDeliverNow;
+    m_mime_delivery_state->GetDeliveryMode(&mode);
+    if (mode == nsIMsgSend::nsMsgSaveAsDraft || mode == nsIMsgSend::nsMsgSaveAsTemplate)
+      composebundle->GetStringByID(NS_MSG_FAILURE_ON_OBJ_EMBED_WHILE_SAVING, getter_Copies(msg));
+    else
+      composebundle->GetStringByID(NS_MSG_FAILURE_ON_OBJ_EMBED_WHILE_SENDING, getter_Copies(msg));
  
     if (m_real_name && *m_real_name)
       printfString = nsTextFormatter::smprintf(msg, m_real_name);
