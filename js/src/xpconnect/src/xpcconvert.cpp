@@ -83,8 +83,8 @@ static uint8 xpc_reflectable_flags[XPC_FLAG_COUNT] = {
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_INTERFACE         */
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_INTERFACE_IS      */
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_ARRAY             */
-    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* T_PSTRING_SIZE_IS   */ //XXX disabled
-    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 )  /* T_PWSTRING_SIZE_IS  */ //XXX disabled
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_PSTRING_SIZE_IS   */
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 )  /* T_PWSTRING_SIZE_IS  */
     };
 /***********************************************************/
 
@@ -764,9 +764,20 @@ XPCConvert::JSValToXPCException(JSContext* cx,
         }
         else
         {
-            // It is a JSObject, but not a wrapped native.
+            // It is a JSObject, but not a wrapped native...
 
-            // XXX should be able to extract info from 'regular' JS Exceptions
+            // If it is an engine Error with an error report then let's
+            // extract the report and build an xpcexception from that
+            const JSErrorReport* report;
+            if(nsnull != (report = JS_ErrorFromException(cx, s)))
+            {
+                const char* message = nsnull;
+                JSString* str;
+                if(nsnull != (str = JS_ValueToString(cx, s)))
+                    message = JS_GetStringBytes(str);
+                return JSErrorToXPCException(cx, message, report);
+            }
+
 
             uintN ignored;
             JSBool found;
@@ -786,6 +797,12 @@ XPCConvert::JSValToXPCException(JSContext* cx,
                                                 NS_GET_IID(nsIXPCException));
                 }
             }
+
+
+            // XXX we should do a check against 'js_ErrorClass' here and 
+            // do the right thing - even though it has no JSErrorReport,
+            // The fact that it is a JSError exceptions means we can extract
+            // particular info and our 'result' should reflect that.
 
             // otherwise we'll just try to convert it to a string
 
@@ -1042,8 +1059,11 @@ XPCConvert::JSArray2Native(JSContext* cx, void** d, jsval s,
 {
     NS_PRECONDITION(d, "bad param");
 
+    // No Action, FRee memory, RElease object
     enum CleanupMode {na, fr, re};
     CleanupMode cleanupMode;
+
+    JSObject* jsarray = nsnull;
     void* array = nsnull;
     JSUint32 initedCount;
     jsval current;
@@ -1054,6 +1074,18 @@ XPCConvert::JSArray2Native(JSContext* cx, void** d, jsval s,
 
     if(JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s))
     {
+        if(0 != count)
+        {
+            if(pErr)
+                *pErr = NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY;
+            return JS_FALSE;
+        }
+
+        // If a non-zero capacity was indicated then we build an 
+        // empty array rather than return nsnull.
+        if(0 != capacity)
+            goto fill_array;
+
         *d = nsnull;
         return JS_TRUE;
     }
@@ -1065,7 +1097,7 @@ XPCConvert::JSArray2Native(JSContext* cx, void** d, jsval s,
         return JS_FALSE;
     }
 
-    JSObject* jsarray = JSVAL_TO_OBJECT(s);
+    jsarray = JSVAL_TO_OBJECT(s);
     if(!JS_IsArrayObject(cx, jsarray))
     {
         if(pErr)
@@ -1107,6 +1139,7 @@ XPCConvert::JSArray2Native(JSContext* cx, void** d, jsval s,
 
     // XXX make extra space at end of char* and wchar* and null termintate
 
+fill_array:
     switch(type.TagPart())
     {
     case nsXPTType::T_I8            : POPULATE(na, int8);           break;
@@ -1167,3 +1200,220 @@ failure:
 #undef POPULATE
 }
 
+// static 
+JSBool 
+XPCConvert::NativeStringWithSize2JS(JSContext* cx,
+                                    jsval* d, const void* s,
+                                    const nsXPTType& type, 
+                                    JSUint32 count,
+                                    nsresult* pErr)
+{
+    NS_PRECONDITION(s, "bad param");
+    NS_PRECONDITION(d, "bad param");
+
+    if(pErr)
+        *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
+
+    if(!type.IsPointer())
+    {
+        XPC_LOG_ERROR(("XPCConvert::NativeStringWithSize2JS : unsupported type"));
+        return JS_FALSE;
+    }
+    switch(type.TagPart())
+    {
+        case nsXPTType::T_PSTRING_SIZE_IS:
+        {
+            char* p = *((char**)s);
+            if(!p)
+                break;
+            JSString* str;
+            if(!(str = JS_NewStringCopyN(cx, p, count)))
+                return JS_FALSE;
+            *d = STRING_TO_JSVAL(str);
+            break;
+        }
+        case nsXPTType::T_PWSTRING_SIZE_IS:
+        {
+            jschar* p = *((jschar**)s);
+            if(!p)
+                break;
+            JSString* str;
+            if(!(str = JS_NewUCStringCopyN(cx, p, count)))
+                return JS_FALSE;
+            *d = STRING_TO_JSVAL(str);
+            break;
+        }
+        default:
+            XPC_LOG_ERROR(("XPCConvert::NativeStringWithSize2JS : unsupported type"));
+            return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
+// static 
+JSBool 
+XPCConvert::JSStringWithSize2Native(JSContext* cx, void* d, jsval s,
+                                    JSUint32 count, JSUint32 capacity,
+                                    const nsXPTType& type,
+                                    JSBool useAllocator,
+                                    uintN* pErr)
+{
+    NS_PRECONDITION(s, "bad param");
+    NS_PRECONDITION(d, "bad param");
+
+    JSUint32 len;
+
+    if(pErr)
+        *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
+
+    if(capacity < count)
+    {
+        if(pErr)
+            *pErr = NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING;
+        return JS_FALSE;
+    }
+
+    if(!type.IsPointer())
+    {
+        XPC_LOG_ERROR(("XPCConvert::JSStringWithSize2Native : unsupported type"));
+        return JS_FALSE;
+    }
+    switch(type.TagPart())
+    {
+        case nsXPTType::T_PSTRING_SIZE_IS:
+        {
+            char* bytes=nsnull;
+            JSString* str;
+
+            if(JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s))
+            {
+                if(0 != count)
+                {
+                    if(pErr)
+                        *pErr = NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING;
+                    return JS_FALSE;
+                }
+                if(type.IsReference())
+                {
+                    if(pErr)
+                        *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF;
+                    return JS_FALSE;
+                }
+
+                if(useAllocator && 0 != capacity)
+                {
+                    len = (capacity + 1) * sizeof(char);
+                    if(!(*((void**)d) = nsAllocator::Alloc(len)))
+                        return JS_FALSE;
+                    return JS_TRUE;
+                }
+                // else ...
+
+                *((char**)d) = nsnull;
+                return JS_TRUE;
+            }
+
+            if(!(str = JS_ValueToString(cx, s))||
+               !(bytes = JS_GetStringBytes(str)))
+            {
+                return JS_FALSE;
+            }
+
+            len = JS_GetStringLength(str);
+            if(len > count)
+            {
+                if(pErr)
+                    *pErr = NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING;
+                return JS_FALSE;
+            }
+
+            if(len < capacity)
+                len = capacity;
+
+            if(useAllocator)
+            {
+                JSUint32 alloc_len = (len + 1) * sizeof(char);
+                if(!(*((void**)d) = nsAllocator::Alloc(alloc_len)))
+                {
+                    return JS_FALSE;
+                }
+                memcpy(*((char**)d), bytes, count);
+                ((char**)d)[count] = 0;
+            }
+            else
+                *((char**)d) = bytes;
+
+            return JS_TRUE;
+        }
+
+        case nsXPTType::T_PWSTRING_SIZE_IS:
+        {
+            jschar* chars=nsnull;
+            JSString* str;
+
+            if(JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s))
+            {
+                if(0 != count)
+                {
+                    if(pErr)
+                        *pErr = NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING;
+                    return JS_FALSE;
+                }
+                if(type.IsReference())
+                {
+                    if(pErr)
+                        *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF;
+                    return JS_FALSE;
+                }
+
+                if(useAllocator && 0 != capacity)
+                {
+                    len = (capacity + 1) * sizeof(jschar);
+                    if(!(*((void**)d) = nsAllocator::Alloc(len)))
+                        return JS_FALSE;
+                    return JS_TRUE;
+                }
+
+                // else ...
+                *((jschar**)d) = nsnull;
+                return JS_TRUE;
+            }
+
+            if(!(str = JS_ValueToString(cx, s))||
+               !(chars = JS_GetStringChars(str)))
+            {
+                return JS_FALSE;
+            }
+
+            len = JS_GetStringLength(str);
+            if(len > count)
+            {
+                if(pErr)
+                    *pErr = NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING;
+                return JS_FALSE;
+            }
+            if(len < capacity)
+                len = capacity;
+
+            if(useAllocator)
+            {
+                JSUint32 alloc_len = (len + 1) * sizeof(jschar);
+                if(!(*((void**)d) = nsAllocator::Alloc(alloc_len)))
+                {
+                    // XXX should report error
+                    return JS_FALSE;
+                }
+                memcpy(*((jschar**)d), chars, alloc_len);
+                ((jschar**)d)[count] = 0;
+            }
+            else
+                *((jschar**)d) = chars;
+
+            return JS_TRUE;
+        }
+        default:
+            XPC_LOG_ERROR(("XPCConvert::JSStringWithSize2Native : unsupported type"));
+            return JS_FALSE;
+    }
+}
+                                    

@@ -519,8 +519,13 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         const nsXPTParamInfo& param = info->GetParam(i);
         const nsXPTType& type = param.GetType();
         nsXPTType datum_type;
+        JSUint32 array_count;
         PRBool isArray = type.IsArray();
         jsval val;
+        PRBool isSizedString = isArray ? 
+                JS_FALSE :
+                type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
+                type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
 
         if(isArray)
         {
@@ -547,18 +552,27 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                                           &iidIsOwned, &conditional_iid))
                 goto pre_call_clean_up;
 
-
-            if(isArray)
+            if(isArray || isSizedString)
             {
-                JSUint32 array_count;
-
                 if(!GetArraySizeFromParam(cx, info, param, methodIndex,
                                           i, GET_LENGTH, nativeParams,
                                           &array_count))
                     goto pre_call_clean_up;
+            }
+
+            if(isArray)
+            {
 
                 if(!XPCConvert::NativeArray2JS(cx, &val, (const void**)&pv->val, 
                                                datum_type, conditional_iid, 
+                                               array_count, nsnull))
+                    goto pre_call_clean_up;
+            }
+            else if(isSizedString)
+            {
+                if(!XPCConvert::NativeStringWithSize2JS(cx, &val, 
+                                               (const void*)&pv->val,
+                                               datum_type,
                                                array_count, nsnull))
                     goto pre_call_clean_up;
             }
@@ -830,9 +844,14 @@ pre_call_clean_up:
             jsval val;
             nsXPTCMiniVariant* pv;
             nsXPTType datum_type;
-            PRBool isArray = type.IsArray();
             JSBool useAllocator = JS_FALSE;
-    
+            JSUint32 array_count;
+            PRBool isArray = type.IsArray();
+            PRBool isSizedString = isArray ? 
+                    JS_FALSE :
+                    type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
+                    type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
+
             pv = (nsXPTCMiniVariant*) nativeParams[i].val.p;
     
             if(param.IsRetval())
@@ -863,17 +882,30 @@ pre_call_clean_up:
             else if(type.IsPointer() && !param.IsShared())
                 useAllocator = JS_TRUE;
     
-            if(isArray)
+            if(isArray || isSizedString)
             {
-                JSUint32 array_count;
                 if(!GetArraySizeFromParam(cx, info, param, methodIndex,
                                           i, GET_LENGTH, nativeParams,
-                                          &array_count) ||
-                   !XPCConvert::JSArray2Native(cx, (void**)&pv->val, val, 
+                                          &array_count))
+                    HANDLE_OUT_CONVERSION_FAILURE;
+            }
+
+            if(isArray)
+            {
+                if(!XPCConvert::JSArray2Native(cx, (void**)&pv->val, val, 
                                                array_count, array_count, 
                                                datum_type,
                                                useAllocator, conditional_iid, 
                                                nsnull))
+                    HANDLE_OUT_CONVERSION_FAILURE;
+            }
+            else if(isSizedString)
+            {
+                if(!XPCConvert::JSStringWithSize2Native(cx, 
+                                                   (void*)&pv->val, val,
+                                                   array_count, array_count, 
+                                                   datum_type, useAllocator, 
+                                                   nsnull))
                     HANDLE_OUT_CONVERSION_FAILURE;
             }
             else

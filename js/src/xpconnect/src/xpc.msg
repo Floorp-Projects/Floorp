@@ -72,8 +72,9 @@ XPC_MSG_DEF(NS_ERROR_XPC_JAVASCRIPT_ERROR               , "JavaScript component 
 XPC_MSG_DEF(NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS  , "JavaScript component caused a JavaScript error (detailed report attached)")
 XPC_MSG_DEF(NS_ERROR_XPC_CANT_CONVERT_PRIMITIVE_TO_ARRAY, "Can not convert primitive JavaScript value into an array")
 XPC_MSG_DEF(NS_ERROR_XPC_CANT_CONVERT_OBJECT_TO_ARRAY   , "Can not convert JavaScript object into an array")
-XPC_MSG_DEF(NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY   , "JavaScript Array does not have enough elements")
+XPC_MSG_DEF(NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY   , "JavaScript Array does not have as many elements as indicated by size argument")
 XPC_MSG_DEF(NS_ERROR_XPC_CANT_GET_ARRAY_INFO            , "Can not find array information")
+XPC_MSG_DEF(NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING     , "JavaScript String does not have as many characters as indicated by size argument")
 
 /* common global codes (from nsError.h) */
 

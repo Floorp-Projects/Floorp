@@ -67,6 +67,7 @@
 #include "xpcexception.h"
 #include "xpcjsid.h"
 #include "prlong.h"
+#include "prmem.h"
 
 #include "nsIJSContextStack.h"
 #include "prthread.h"
@@ -800,6 +801,18 @@ public:
                                  const nsXPTType& type,
                                  JSBool useAllocator, const nsID* iid,
                                  uintN* pErr);
+
+    static JSBool NativeStringWithSize2JS(JSContext* cx,
+                                          jsval* d, const void* s,
+                                          const nsXPTType& type, 
+                                          JSUint32 count,
+                                          nsresult* pErr);
+
+    static JSBool JSStringWithSize2Native(JSContext* cx, void* d, jsval s,
+                                          JSUint32 count, JSUint32 capacity,
+                                          const nsXPTType& type,
+                                          JSBool useAllocator,
+                                          uintN* pErr);
 
     static nsIXPCException* JSValToXPCException(JSContext* cx,
                                                 jsval s,

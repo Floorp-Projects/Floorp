@@ -251,6 +251,39 @@ xpcarraytest::ReverseStringArray(PRUint32 count, char ***valueArray)
     return NS_OK;
 }
 
+/* void PrintStringWithSize (in PRUint32 count, [size_is (count)] in string str); */
+NS_IMETHODIMP
+xpcarraytest::PrintStringWithSize(PRUint32 count, const char *str)
+{
+    if(mReceiver)
+        return mReceiver->PrintStringWithSize(count, str);
+    printf("\"%s\" : %d\n", str, count);
+    return NS_OK;
+}        
+
+/* void DoubleString (inout PRUint32 count, [size_is (count)] inout string str); */
+NS_IMETHODIMP
+xpcarraytest::DoubleString(PRUint32 *count, char **str)
+{
+    NS_ENSURE_ARG_POINTER(str);
+    if(mReceiver)
+        return mReceiver->DoubleString(count, str);
+    if(!count || !*count)
+        return NS_OK;
+
+    char* out = (char*) nsAllocator::Alloc(((*count * 2)+1) * sizeof(char));                        
+    if(!out)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    for(PRUint32 k = 0; k < *count; k++)
+        out[k*2] = out[(k*2)+1] = (*str)[k];
+    out[k*2] = '\0';
+    nsAllocator::Free(*str);
+    *str = out; 
+    *count = *count * 2;
+    return NS_OK;
+}        
+
 /***************************************************************************/
 
 // static
