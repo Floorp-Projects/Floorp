@@ -225,6 +225,12 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     [noscript] void checkSameOriginPrincipal(in nsIPrincipal aSourcePrincipal,
                                              in nsIPrincipal aTargetPrincipal);
 
+    /**
+     * Returns the principal of the global object of the given context, or null
+     * if no global or no principal.
+     */
+    [noscript] nsIPrincipal getPrincipalFromContext(in JSContextPtr cx);
+
 };
 
 %{C++

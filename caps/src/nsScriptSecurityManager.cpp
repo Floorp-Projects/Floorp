@@ -1754,6 +1754,28 @@ nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
 }
 
 nsresult
+nsScriptSecurityManager::GetPrincipalFromContext(JSContext *cx,
+                                                 nsIPrincipal **result)
+{
+    *result = nsnull;
+    NS_ENSURE_TRUE(::JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS,
+                   NS_ERROR_FAILURE);
+    nsISupports* scriptContextSupports =
+        NS_REINTERPRET_CAST(nsISupports*, JS_GetContextPrivate(cx));
+    nsCOMPtr<nsIScriptContext> scriptContext(do_QueryInterface(scriptContextSupports));
+
+    if (scriptContext)
+    {
+        nsCOMPtr<nsIScriptGlobalObject> global;
+        scriptContext->GetGlobalObject(getter_AddRefs(global));
+        nsCOMPtr<nsIScriptObjectPrincipal> globalData(do_QueryInterface(global));
+        if (globalData)
+            globalData->GetPrincipal(result);
+    }
+    return NS_OK;
+}
+
+nsresult
 nsScriptSecurityManager::GetScriptPrincipal(JSContext *cx,
                                             JSScript *script,
                                             nsIPrincipal **result)
