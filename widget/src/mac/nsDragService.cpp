@@ -973,7 +973,6 @@ nsDragService::GetDataForFlavor(nsISupportsArray* inDragItems, DragReference inD
     // values with the plain text.
     if ( needToDoConversionToPlainText ) {
       char* plainTextData = nsnull;
-      PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, *outData);
       PRInt32 plainTextLen = 0;
       nsresult rv =
       nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText ( castedUnicode, *outDataSize / 2, &plainTextData, &plainTextLen );
