@@ -289,7 +289,7 @@ InputTestConsumer::OnStopBinding(nsISupports* context,
     printf("\tRead: %d bytes.\n", info->mBytesRead);
     printf("\tTime to connect: %f seconds\n", (info->mConnectTime/1000UL)/1000.0);
     printf("\tTime to read: %f seconds.\n", (loadTime/1000UL)/1000.0);
-    printf("\tThroughput: %d bps.\n", (info->mBytesRead*8)/((loadTime/1000UL)/1000UL));
+    printf("\tThroughput: %f bps.\n", (info->mBytesRead*8)/((loadTime/1000UL)/1000.0));
   } else {
     printf("\nFinished loading: UNKNOWN URL. Status Code: %x\n", aStatus);
   }
