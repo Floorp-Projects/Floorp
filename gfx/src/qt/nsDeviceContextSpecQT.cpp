@@ -82,7 +82,9 @@ nsDeviceContextSpecQT::~nsDeviceContextSpecQT()
 }
 
 static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
+#ifdef USE_POSTSCRIPT
 static NS_DEFINE_IID(kIDeviceContextSpecPSIID, NS_IDEVICE_CONTEXT_SPEC_PS_IID); 
+#endif
 
 NS_IMPL_ADDREF(nsDeviceContextSpecQT)
 NS_IMPL_RELEASE(nsDeviceContextSpecQT)
@@ -99,14 +101,14 @@ NS_IMETHODIMP nsDeviceContextSpecQT::QueryInterface(REFNSIID aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
- 
+#ifdef USE_POSTSCRIPT
   if (aIID.Equals(kIDeviceContextSpecPSIID)) {
     nsIDeviceContextSpecPS* tmp = this;
     *aInstancePtr = (void*)tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
- 
+#endif 
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
  
   if (aIID.Equals(kISupportsIID)) {
