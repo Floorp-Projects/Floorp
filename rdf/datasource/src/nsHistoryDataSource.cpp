@@ -50,6 +50,9 @@
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
 #include "prio.h"
+#ifdef DEBUG_warren
+#include "nsIBrowsingProfile.h" // XXX here to bootstrap browsing profile service
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 // Interface IDs
@@ -455,7 +458,18 @@ nsHistoryDataSource::Init(const char* uri)
     historyFile += filename;
 
     mCurrentFileSpec = historyFile;
-    return NS_OK;
+
+#ifdef DEBUG_warren
+    // XXX here to bootstrap the browsing profile code -- move later
+    {
+        static NS_DEFINE_CID(kBrowsingProfileCID, NS_BROWSINGPROFILE_CID);
+        NS_WITH_SERVICE(nsIRDFObserver, brProf, kBrowsingProfileCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+        rv = AddObserver(brProf);
+    }
+#endif
+
+    return rv;
 }
 
 
