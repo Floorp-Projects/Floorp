@@ -349,10 +349,13 @@ struct regEntry gRegEntries[] = {
     "FormSuggest Passwords",
     "signon.rememberSignons",
     TranslateYNtoTF },
+#if 0
+  // Firefox supplies its own home page.
   { 0,
     "Start Page",
     "browser.startup.homepage",
     TranslateString },
+#endif
   { 0, 
     "Anchor Underline",
     "browser.underline_anchors",
