@@ -253,10 +253,14 @@ matchAgeInDaysCallback(nsIMdbRow *row, void *aClosure)
   CharsToPRInt64((const char*)yarn.mYarn_Buf, yarn.mYarn_Fill, &rowDate);
 
   PRInt64 age;
+  PRInt64 oneThousand;
+  LL_I2L(oneThousand, 1000);
   LL_SUB(age, matchSearchTerm->now, rowDate);
-  LL_DIV(age, age, 1000);
+  LL_DIV(age, age, oneThousand);
 
   PRInt64 ageInDays;
+  PRInt64 msecsPerDay;
+  LL_I2L(msecsPerDay, MSECS_PER_DAY);
   LL_DIV(ageInDays, age, MSECS_PER_DAY);
 
   PRInt32 days;
@@ -1410,7 +1414,8 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
       if (NS_FAILED(rv)) return rv;
 
       PRInt64 age;
-      LL_SUB(age, GetNow(), lastVisitDate);
+      PRInt64 now = GetNow();
+      LL_SUB(age, now, lastVisitDate);
 
       // now need to convert msec -> days
       PRInt64 ageInDays;
