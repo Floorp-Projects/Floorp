@@ -28,10 +28,6 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= base util content datasource resources chrome build
 
-ifdef MOZ_BRPROF
-DIRS		+= brprof
-endif
-
 ifdef ENABLE_TESTS
 DIRS		+= tests
 endif

@@ -30,7 +30,6 @@ DIRS=\
         datasource      \
         resources       \
         build           \
-        brprof          \
 	chrome		\
         tests           \
 	$(NULL)
