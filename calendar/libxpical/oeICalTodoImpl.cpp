@@ -127,11 +127,6 @@ oeICalTodoImpl::~oeICalTodoImpl()
     mEvent->Release();
 }
 
-NS_IMETHODIMP oeICalTodoImpl::SetParent( oeIICal *calendar )
-{
-    return mEvent->SetParent( calendar );
-}
-
 bool oeICalTodoImpl::matchId( const char *id ) {
     return mEvent->matchId( id );
 }

@@ -104,7 +104,7 @@ interface oeIICalEvent : nsISupports
     readonly attribute oeIDateTime start;
     readonly attribute oeIDateTime end;
     readonly attribute oeIDateTime stamp;
-    readonly attribute oeIICal parent;
+    attribute oeIICal parent;
     readonly attribute Componenttype type;
     readonly attribute PRTime lastModified;
 
@@ -230,12 +230,17 @@ interface oeIICal : nsISupports
 	oeIICalEvent fetchEvent( in string id );
 //	nsISimpleEnumerator searchBySQL( in string sqlstr );
 	nsISimpleEnumerator getAllEvents();
-	nsISimpleEnumerator getEventsForMonth( in PRTime date );
-	nsISimpleEnumerator getEventsForWeek( in PRTime date );
-	nsISimpleEnumerator getEventsForDay( in PRTime date );
-	nsISimpleEnumerator getEventsForRange( in PRTime begindate, in PRTime enddate );
-	nsISimpleEnumerator getNextNEvents( in PRTime begindate, in long count );
-	nsISimpleEnumerator getFirstEventsForRange( in PRTime begindate, in PRTime enddate );
+    /**
+     * For all the getEvents* and get*EventForRange methods:
+     * Get events for a certain range. items are oeIICalEventDisplay
+     */
+    nsISimpleEnumerator getEventsForMonth( in PRTime date );
+    nsISimpleEnumerator getEventsForWeek( in PRTime date );
+    nsISimpleEnumerator getEventsForDay( in PRTime date );
+    nsISimpleEnumerator getEventsForRange( in PRTime begindate, in PRTime enddate );
+
+    nsISimpleEnumerator getNextNEvents( in PRTime begindate, in long count );
+    nsISimpleEnumerator getFirstEventsForRange( in PRTime begindate, in PRTime enddate );
 
 	string addTodo( in oeIICalTodo icaltodo );
 	string modifyTodo( in oeIICalTodo icaltodo );
@@ -253,7 +258,20 @@ interface oeIICalContainer : nsISupports
     attribute boolean batchMode;
     readonly attribute oeIICalTodo filter;
 
-	void addCalendar( in string server );
+
+    /**
+     * Add a calendar to the container.
+     * @param server
+     *          a string indicating the server url
+     * @param type
+     *          a string idicating which type of calendar to add.
+     *          an object with contractid of @mozilla.org/ical;1?type=<type>
+     *          will be created and added. The object should implement
+     *          oeIICal.
+     *          When empty, @mozilla.org/ical;1 will be used
+     */
+    void addCalendar( in string server, in string type );
+
 	void removeCalendar( in string server );
     oeIICal getCalendar( in string server );
 	void addCalendars( in unsigned long serverCount, [array, size_is(serverCount)] in string servers );
@@ -265,13 +283,26 @@ interface oeIICalContainer : nsISupports
 	string modifyEvent( in oeIICalEvent icalevent );
 	void deleteEvent( in string id );
 	oeIICalEvent fetchEvent( in string id );
-	nsISimpleEnumerator getAllEvents();
-	nsISimpleEnumerator getEventsForMonth( in PRTime date );
-	nsISimpleEnumerator getEventsForWeek( in PRTime date );
-	nsISimpleEnumerator getEventsForDay( in PRTime date  );
-	nsISimpleEnumerator getEventsForRange( in PRTime begindate, in PRTime enddate );
-	nsISimpleEnumerator getNextNEvents( in PRTime begindate, in long count );
-	nsISimpleEnumerator getFirstEventsForRange( in PRTime begindate, in PRTime enddate );
+
+    nsISimpleEnumerator getAllEvents();
+    /**
+     * For all the getEvents* and get*EventForRange methods:
+     * Get events for a certain range. items are oeIICalEventDisplay
+     */
+    nsISimpleEnumerator getEventsForMonth( in PRTime date );
+    /**
+     * Get the events starting at the beginning of |date|
+     * until 7 days later
+     */
+    nsISimpleEnumerator getEventsForWeek( in PRTime date );
+    nsISimpleEnumerator getEventsForDay( in PRTime date  );
+    nsISimpleEnumerator getEventsForRange( in PRTime begindate, in PRTime enddate );
+    nsISimpleEnumerator getNextNEvents( in PRTime begindate, in long count );
+
+    /**
+     * Get the first occurence of the events in the given time range
+     */
+    nsISimpleEnumerator getFirstEventsForRange( in PRTime begindate, in PRTime enddate );
 
 	string addTodo( in oeIICalTodo icaltodo, in string server );
 	string modifyTodo( in oeIICalTodo icaltodo );

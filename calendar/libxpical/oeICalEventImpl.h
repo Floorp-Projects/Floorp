@@ -117,7 +117,6 @@ public:
     bool matchId( const char *id );
     icaltimetype GetNextRecurrence( icaltimetype begin, bool *isbeginning );
     icaltimetype GetPreviousOccurrence( icaltimetype beforethis );
-    NS_IMETHODIMP SetParent( oeIICal *parent );
     icaltimetype CalculateEventTime( icaltimetype alarmtime );
     void ChopAndAddEventToEnum( struct icaltimetype startdate, nsISimpleEnumerator **eventlist, 
                                                bool isallday, bool isbeginning );
@@ -166,7 +165,7 @@ private:
     icaldurationtype GetLength();
     nsCOMPtr<nsISupportsArray> m_attachments;
     nsCOMPtr<nsISupportsArray> m_contacts;
-    oeIICal *m_calendar;
+    nsCOMPtr<oeIICal> m_calendar;
 };
 
 /*******************************************************************************************/

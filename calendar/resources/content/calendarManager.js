@@ -401,7 +401,8 @@ calendarManager.prototype.addCalendar = function calMan_addCalendar( ThisCalenda
 {
    //dump( "\n CALENDAR MANANGER-> add calendar with path "+ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#path"+"\n\n" ) );
 
-   gICalLib.addCalendar( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
+   gICalLib.addCalendar( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#path" ),
+                         ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#type" ));
 
    //ThisCalendarObject.setAttribute( "http://home.netscape.com/NC-rdf#active", "true" );
 
@@ -885,7 +886,8 @@ function switchCalendar( event )
    {
       window.setCursor( "wait" );
 
-      gICalLib.addCalendar( calendarNode.getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
+      gICalLib.addCalendar( calendarNode.getAttribute( "http://home.netscape.com/NC-rdf#path" ),
+                            calendarNode.getAttribute( "http://home.netscape.com/NC-rdf#type" ));
       
       window.setCursor( "default" );
       

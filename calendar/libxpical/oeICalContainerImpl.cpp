@@ -272,9 +272,9 @@ oeICalContainerImpl::~oeICalContainerImpl()
 NS_IMPL_ISUPPORTS1(oeICalContainerImpl, oeIICalContainer)
 
 NS_IMETHODIMP
-oeICalContainerImpl::AddCalendar( const char *server ) {
+oeICalContainerImpl::AddCalendar( const char *server, const char *type ) {
 #ifdef ICAL_DEBUG
-    printf( "oeICalContainerImpl::AddCalendar(%s)\n", server );
+    printf( "oeICalContainerImpl::AddCalendar(%s, %s)\n", server, type );
 #endif
 
     nsresult rv;
@@ -288,7 +288,14 @@ oeICalContainerImpl::AddCalendar( const char *server ) {
         return NS_OK;
     }
 
-    calendar = do_CreateInstance(OE_ICAL_CONTRACTID, &rv);
+    nsCAutoString contractid;
+    contractid.AssignLiteral("@mozilla.org/ical;1");
+    if (type && strlen(type)) {
+      contractid.AppendLiteral("?type=");
+      contractid.Append(type);
+    }
+    printf("\nContractID: %s\n\n",contractid.get());
+    calendar = do_CreateInstance(contractid.get(), &rv);
     if (NS_FAILED(rv)) {
         return NS_ERROR_FAILURE;
     }
@@ -378,7 +385,7 @@ oeICalContainerImpl::AddCalendars( PRUint32 serverCount, const char **servers ) 
 #endif
     nsresult rv=NS_OK;
     for( unsigned int i=0; i<serverCount; i++ ) {
-        rv = AddCalendar( servers[i] );
+        rv = AddCalendar( servers[i], "" );
         if( NS_FAILED( rv ) )
             break;
     }
@@ -472,7 +479,7 @@ NS_IMETHODIMP oeICalContainerImpl::AddEvent( oeIICalEvent *icalevent, const char
     nsCOMPtr<oeIICal> calendar;
     GetCalendar( server , getter_AddRefs(calendar) );
     if( !calendar ) {
-        AddCalendar( server );
+        AddCalendar( server, "" );
         GetCalendar( server , getter_AddRefs(calendar) );
         if( !calendar ) {
             #ifdef ICAL_DEBUG
@@ -921,7 +928,7 @@ NS_IMETHODIMP oeICalContainerImpl::AddTodo(oeIICalTodo *icaltodo, const char *se
     nsCOMPtr<oeIICal> calendar;
     GetCalendar( server , getter_AddRefs(calendar) );
     if( !calendar ) {
-        AddCalendar( server );
+        AddCalendar( server, "" );
         GetCalendar( server , getter_AddRefs(calendar) );
         if( !calendar ) {
             #ifdef ICAL_DEBUG
@@ -1501,6 +1508,11 @@ NS_IMETHODIMP oeICalContainerFilter::GetContactsArray(nsISupportsArray * *aConta
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP oeICalContainerFilter::SetParent( oeIICal *parent)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP oeICalContainerFilter::GetParent( oeIICal **parent)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -1542,10 +1554,13 @@ void oeICalContainerFilter::UpdateAllFilters( PRInt32 icaltype )
             nsCOMPtr<oeIICal> calendar;
             m_calendarArray->GetElementAt( i, getter_AddRefs(calendar) );
             oeIICalTodo *filter;
+            //XXX comptr? getter_AddRefs?
             calendar->GetFilter( &filter );
-            oeIDateTime *completed;
-            filter->GetCompleted( &completed );
-            completed->SetTime( completedvalue );
+            if (filter) {
+                oeIDateTime *completed;
+                filter->GetCompleted( &completed );
+                completed->SetTime( completedvalue );
+            }
         }
 
         break;

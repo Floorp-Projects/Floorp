@@ -369,7 +369,7 @@ oeICalEventImpl::~oeICalEventImpl()
 NS_IMETHODIMP oeICalEventImpl::SetParent( oeIICal *calendar )
 {
 #ifdef ICAL_DEBUG
-    printf( "oeICalEventImpl::SetParent()\n" );
+    printf( "oeICalEventImpl::SetParent()\n");
 #endif
     m_calendar = calendar;
     return NS_OK;
@@ -378,7 +378,7 @@ NS_IMETHODIMP oeICalEventImpl::SetParent( oeIICal *calendar )
 NS_IMETHODIMP oeICalEventImpl::GetParent( oeIICal **calendar )
 {
 #ifdef ICAL_DEBUG_ALL
-    printf( "oeICalEventImpl::GetParent()\n" );
+    printf( "oeICalEventImpl::GetParent()\n");
 #endif
     *calendar = m_calendar;
     NS_ADDREF( *calendar );

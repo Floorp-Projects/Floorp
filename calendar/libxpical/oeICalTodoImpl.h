@@ -69,7 +69,6 @@ public:
   icalcomponent *AsIcalComponent();
   NS_IMETHOD Clone(oeIICalTodo **_retval);
   bool matchId( const char *id );
-  NS_IMETHODIMP SetParent( oeIICal *parent );
   oeICalEventImpl *GetBaseEvent();
 private:
     int m_percent;

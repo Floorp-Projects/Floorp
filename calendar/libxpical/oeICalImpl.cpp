@@ -2285,14 +2285,11 @@ oeICalImpl::GetAllTodos(nsISimpleEnumerator **resultList )
     printf( "oeICalImpl::GetAllTodos()\n" );
 #endif
 
-    nsCOMPtr<oeEventEnumerator> todoEnum;
-    if( !*resultList ) {
-        todoEnum = new oeEventEnumerator();
-        if (!todoEnum)
-            return NS_ERROR_OUT_OF_MEMORY;
-        todoEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)resultList);
-    } else
-        todoEnum = (oeEventEnumerator *)*resultList;
+    oeEventEnumerator *todoEnum = new oeEventEnumerator();
+    if (!todoEnum)
+        return NS_ERROR_OUT_OF_MEMORY;
+    *resultList = todoEnum;
+    NS_ADDREF(*resultList);
 
     TodoList *tmplistptr = &m_todolist;
     while( tmplistptr ) {
@@ -2792,6 +2789,11 @@ NS_IMETHODIMP oeICalFilter::RemoveContacts()
 }
 
 NS_IMETHODIMP oeICalFilter::GetContactsArray(nsISupportsArray * *aContactsArray)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetParent( oeIICal *parent)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
