@@ -17,7 +17,7 @@
  */
 #include "stdio.h"
 
-#ifdef XP_WIN
+#ifdef WIN32
 #include <windows.h>
 #endif
 
@@ -171,7 +171,7 @@ main(int argc, char* argv[])
 
   // Enter the message pump to allow the URL load to proceed.
   while ( gKeepRunning ) {
-#ifdef XP_PC
+#ifdef WIN32
     MSG msg;
 
     if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
