@@ -167,10 +167,19 @@ function onOK()
   } 
   else if (name && uri) // create a new virtual folder
   {
+    
+    // check to see if we already have a folder with the same name and alert the user if so...
+    var parentFolder = GetMsgFolderFromUri(uri);
+    if (parentFolder.containsChildNamed(name))
+    {
+      window.alert(messengerBundle.getString('folderExists'));
+      return false;      
+    }
+
     // XXX: Add code to make sure a folder with this name does not already exist before creating the virtual folder...
     // Alert the user here if that is the case.
     saveSearchTerms(gSearchTermSession.searchTerms, gSearchTermSession);
-    CreateVirtualFolder(name, GetMsgFolderFromUri(uri), gSearchFolderURIs, gSearchTermSession.searchTerms);
+    CreateVirtualFolder(name, parentFolder, gSearchFolderURIs, gSearchTermSession.searchTerms);
   }
 
   return true;
