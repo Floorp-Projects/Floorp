@@ -257,7 +257,8 @@ nsContextMenu.prototype = {
                 // URL must be constructed.
                 this.imageURL = this.objectImageURL( this.target );
              } else if ( this.target.localName.toUpperCase() == "INPUT") {
-               if(this.target.getAttribute( "type" ).toUpperCase() == "IMAGE") {
+               var type = this.target.getAttribute("type");
+               if(type && type.toUpperCase() == "IMAGE") {
                  this.onImage = true;
                  // Convert src attribute to absolute URL.
                  this.imageURL = this.makeURLAbsolute( this.target.baseURI,
@@ -731,7 +732,12 @@ nsContextMenu.prototype = {
         return false;
 
       if (node.localName.toUpperCase() == "INPUT") {
-        var attrib = node.getAttribute("type").toUpperCase();
+        var attrib = "";
+        var type = node.getAttribute("type");
+
+        if (type)
+          attrib = type.toUpperCase();
+
         return( (attrib != "IMAGE") &&
                 (attrib != "PASSWORD") &&
                 (attrib != "CHECKBOX") &&
