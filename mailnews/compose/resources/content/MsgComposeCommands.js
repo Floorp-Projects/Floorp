@@ -2226,7 +2226,8 @@ function AttachFile()
 
     var ioService = Components.classes["@mozilla.org/network/io-service;1"]
     ioService = ioService.getService(Components.interfaces.nsIIOService);
-    var currentAttachment = ioService.getURLSpecFromFile(currentFile);
+    var fileHandler = ioService.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+    var currentAttachment = fileHandler.getURLSpecFromFile(currentFile);
 
     if (!DuplicateFileCheck(currentAttachment)) {
       var attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"].createInstance(Components.interfaces.nsIMsgAttachment);
