@@ -99,6 +99,10 @@ static ViewWrapper* GetWrapperFor(nsIWidget* aWidget)
     if (data) {
       ViewWrapper* wrapper;
       CallQueryInterface(data, &wrapper);
+      // Give a weak reference to the caller. There will still be at least one
+      // reference left, since the wrapper was addrefed when set on the widget.
+      if (wrapper)
+        wrapper->Release();
       return wrapper;
     }
   }
