@@ -1574,7 +1574,6 @@
 
       <method name="showPopup">
         <body><![CDATA[
-          this.parentNode.closeResultPopup(); // close autocomplete popup
           var textbox = document.getBindingParent(this);
           var kids = textbox.getElementsByTagName("menupopup");
           if (kids.item(0)) {   // Open history popup
