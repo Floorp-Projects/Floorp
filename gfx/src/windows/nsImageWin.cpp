@@ -27,9 +27,9 @@ IsWindowsNT()
 {
   OSVERSIONINFO versionInfo;
 
-  versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+  versionInfo.dwOSVersionInfoSize = sizeof(versionInfo);
   ::GetVersionEx(&versionInfo);
-  return versionInfo.dwPlatformId == VER_PLATFORM_WIN32_NT;
+  return VER_PLATFORM_WIN32_NT == versionInfo.dwPlatformId;
 }
 
 PRBool nsImageWin::gIsWinNT = IsWindowsNT();
@@ -43,7 +43,6 @@ nsImageWin :: nsImageWin()
   mImageBits = nsnull;
 	mHBitmap = nsnull;
 	mAlphaHBitmap = nsnull;
-	mHPalette = nsnull;
   mAlphaBits = nsnull;
   mColorMap = nsnull;
   mBHead = nsnull;
@@ -66,31 +65,65 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
 {
 	mHBitmap = nsnull;
 	mAlphaHBitmap = nsnull;
-	mHPalette = nsnull;
 	CleanUp(PR_TRUE);
-	ComputePaletteSize(aDepth);
 
-  if (mNumPalleteColors >= 0)
+  if (8 == aDepth) {
+    mNumPaletteColors = 256;
+    mNumBytesPixel = 1;
+  } else if (24 == aDepth) {
+    mNumPaletteColors = 0;
+    mNumBytesPixel = 3;
+  } else {
+    NS_ASSERTION(PR_FALSE, "unexpected image depth");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (mNumPaletteColors >= 0)
   {
-	  mBHead = (LPBITMAPINFOHEADER) new char[sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * mNumPalleteColors];
+    // If we have a palette
+    if (0 == mNumPaletteColors) {
+      // space for the header only (no color table)
+      mBHead = (LPBITMAPINFOHEADER)new char[sizeof(BITMAPINFO)];
+    } else {
+      // Space for the header and the palette. Since we'll be using DIB_PAL_COLORS
+      // the color table is an array of 16-bit unsigned integers that specify an
+      // index into the currently realized logical palette
+      mBHead = (LPBITMAPINFOHEADER)new char[sizeof(BITMAPINFOHEADER) + (256 * sizeof(WORD))];
+    }
     mBHead->biSize = sizeof(BITMAPINFOHEADER);
 	  mBHead->biWidth = aWidth;
 	  mBHead->biHeight = aHeight;
 	  mBHead->biPlanes = 1;
-	  mBHead->biBitCount = (unsigned short) aDepth;
+	  mBHead->biBitCount = (WORD)aDepth;
 	  mBHead->biCompression = BI_RGB;
 	  mBHead->biSizeImage = 0;            // not compressed, so we dont need this to be set
 	  mBHead->biXPelsPerMeter = 0;
 	  mBHead->biYPelsPerMeter = 0;
-	  mBHead->biClrUsed = mNumPalleteColors;
-	  mBHead->biClrImportant = mNumPalleteColors;
+	  mBHead->biClrUsed = mNumPaletteColors;
+	  mBHead->biClrImportant = mNumPaletteColors;
 
-	  ComputeMetrics();
-	  memset(mColorTable, 0, sizeof(RGBQUAD) * mNumPalleteColors);
+    // Compute the size of the image
+    mRowBytes = CalcBytesSpan(mBHead->biWidth);
+    mSizeImage = mRowBytes * mBHead->biHeight; // no compression
+
+    // Allocate the image bits
     mImageBits = new unsigned char[mSizeImage];
+    // XXX We don't need to waste time initializing the bits. The reason Purify
+    // complains about UMR is because when asked to Draw() we ask GDI to render
+    // bits that aren't valid yet. We need to fix that...
+#if 0
     memset(mImageBits, 128, mSizeImage);
-    this->MakePalette();
+#endif
 
+    if (256 == mNumPaletteColors) {
+      // Initialize the array of indexes into the logical palette
+      WORD* palIndx = (WORD*)(((LPBYTE)mBHead) + mBHead->biSize);
+      for (WORD index = 0; index < 256; index++) {
+        *palIndx++ = index;
+      }
+    }
+
+    // Allocate mask image bits if requested
     if (aMaskRequirements != nsMaskRequirements_kNoMask)
     {
       if (nsMaskRequirements_kNeeds1Bit == aMaskRequirements)
@@ -120,17 +153,18 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
       mAlphaHeight = 0;
     }
 
+    // XXX Let's only do this if we actually have a palette...
     mColorMap = new nsColorMap;
 
     if (mColorMap != nsnull) 
     {
-      mColorMap->NumColors = mNumPalleteColors;
-      mColorMap->Index = new PRUint8[3 * mNumPalleteColors];
+      mColorMap->NumColors = mNumPaletteColors;
+      mColorMap->Index = new PRUint8[3 * mNumPaletteColors];
 
       // XXX Note: I added this because purify claims that we make a
       // copy of the memory (which we do!). I'm not sure if this
       // matters or not, but this shutup purify.
-      memset(mColorMap->Index, 0, sizeof(PRUint8) * (3 * mNumPalleteColors));
+      memset(mColorMap->Index, 0, sizeof(PRUint8) * (3 * mNumPaletteColors));
 		}
   }
 
@@ -142,18 +176,18 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
 // set up the pallete to the passed in color array, RGB only in this array
 void nsImageWin :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
 {
-  PRInt32 i;
-  PRUint8 *cpointer;
-
   if (aFlags & nsImageUpdateFlags_kColorMapChanged)
   {
+    // The entries for the color cube have been gamma corrected in the
+    // HPALETTE, so we don't need to worry about gamma correction here...
+#if 0
     PRUint8 *gamma = aContext->GetGammaTable();
 
     if (mColorMap->NumColors > 0)
     {
-      cpointer = mColorTable;
+      PRUint8* cpointer = mColorTable;
 
-      for(i = 0; i < mColorMap->NumColors; i++)
+      for(PRInt32 i = 0; i < mColorMap->NumColors; i++)
       {
 		    *cpointer++ = gamma[mColorMap->Index[(3 * i) + 2]];
 		    *cpointer++ = gamma[mColorMap->Index[(3 * i) + 1]];
@@ -161,13 +195,12 @@ void nsImageWin :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRe
 		    *cpointer++ = 0;
       }
     }
-
-    this->MakePalette();
+#endif
   }
   else if ((aFlags & nsImageUpdateFlags_kBitsChanged) &&
            (nsnull != aUpdateRect))
   {
-    if (mNumPalleteColors == 0)
+    if (0 == mNumPaletteColors)
     {
       PRInt32 x, y, span = CalcBytesSpan(mBHead->biWidth), idx;
       PRUint8 *pixels = mImageBits + 
@@ -175,6 +208,9 @@ void nsImageWin :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRe
 		                aUpdateRect->x * 3;
       PRUint8 *gamma = aContext->GetGammaTable();
 
+      // Gamma correct the image.
+      // XXX We shouldn't waste time doing this unless the user requested
+      // gamma correction...
       for (y = 0; y < aUpdateRect->height; y++)
       {
         for (x = 0, idx = 0; x < aUpdateRect->width; x++)
@@ -192,18 +228,6 @@ void nsImageWin :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRe
 
     }
   }
-}
-
-//------------------------------------------------------------
-
-PRUintn nsImageWin :: UsePalette(HDC* aHdc, PRBool bBackground)
-{
-	if (mHPalette == nsnull) 
-    return 0;
-
-  HPALETTE hOldPalette = ::SelectPalette(aHdc, mHPalette, (bBackground == PR_TRUE) ? TRUE : FALSE);
-
-	return ::RealizePalette(aHdc);
 }
 
 //------------------------------------------------------------
@@ -250,7 +274,7 @@ void nsImageWin :: CreateDDB(nsDrawingSurface aSurface)
   if ((the_hdc != NULL) && (mSizeImage > 0))
   {
     mHBitmap = ::CreateDIBitmap(the_hdc, mBHead, CBM_INIT, mImageBits, (LPBITMAPINFO)mBHead,
-                                DIB_RGB_COLORS);
+                                256 == mNumPaletteColors ? DIB_PAL_COLORS : DIB_RGB_COLORS);
 
     if (nsnull != mAlphaBits)
     {
@@ -298,7 +322,8 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
 
     ::StretchDIBits(the_hdc, aDX, aDY, aDWidth, aDHeight,
                     aSX, aSY, aSWidth, aSHeight, mImageBits,
-                    (LPBITMAPINFO)mBHead, DIB_RGB_COLORS, rop);
+                    (LPBITMAPINFO)mBHead, 256 == mNumPaletteColors ? DIB_PAL_COLORS :
+                    DIB_RGB_COLORS, rop);
   }
   else
   {
@@ -322,9 +347,14 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
       }
       else
       {
+        COLORREF oldTextColor = ::SetTextColor(the_hdc, RGB(0, 0, 0));
+        COLORREF oldBkColor = ::SetBkColor(the_hdc, RGB(255, 255, 255));
         oldbits = ::SelectObject(srcdc, mAlphaHBitmap);
         ::StretchBlt(the_hdc, aDX, aDY, aDWidth, aDHeight, srcdc, aSX, aSY,
                      aSWidth, aSHeight, SRCAND);
+        ::SetTextColor(the_hdc, oldTextColor);
+        ::SetBkColor(the_hdc, oldBkColor);
+
         ::SelectObject(srcdc, mHBitmap);
         ::StretchBlt(the_hdc, aDX, aDY, aDWidth, aDHeight, srcdc, aSX, aSY,
                      aSWidth, aSHeight, SRCPAINT);
@@ -370,7 +400,8 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
 
     ::StretchDIBits(the_hdc, aX, aY, aWidth, aHeight,
                     0, 0, mBHead->biWidth, mBHead->biHeight, mImageBits,
-                    (LPBITMAPINFO)mBHead, DIB_RGB_COLORS, rop);
+                    (LPBITMAPINFO)mBHead, 256 == mNumPaletteColors ? DIB_PAL_COLORS :
+                    DIB_RGB_COLORS, rop);
   }
   else
   {
@@ -821,145 +852,7 @@ PRUint32  quantlevel,tnum,num,shiftnum;
 nsIImage*      
 nsImageWin::DuplicateImage()
 {
-PRInt32     num,i;
-nsImageWin  *theimage;
-
-  if( IsOptimized() )
-    return nsnull;
-
-  theimage = new nsImageWin();
-
-  NS_ADDREF(theimage);
-
-  // get the header and copy it
-  theimage->mBHead = (LPBITMAPINFOHEADER)new char[sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * this->mNumPalleteColors];
-  num = sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * this->mNumPalleteColors;
-  memcpy(theimage->mBHead,this->mBHead,num);
-
-  // set in compute metrics
-  theimage->mSizeImage = this->mSizeImage;
-  theimage->mRowBytes = this->mRowBytes;
-  theimage->mColorTable = (PRUint8 *)theimage->mBHead + sizeof(BITMAPINFOHEADER);
-  theimage->mNumBytesPixel = this->mNumBytesPixel;
-  theimage->mNumPalleteColors = this->mNumPalleteColors;
-  theimage->mAlphaDepth = this->mAlphaDepth;
-  theimage->mARowBytes = this->mARowBytes;
-  theimage->mAlphaWidth = this->mAlphaWidth;
-  theimage->mAlphaHeight = this->mAlphaHeight;
-  theimage->mLocation = this->mLocation;
-  theimage->mIsOptimized = this->mIsOptimized;
-
-  // set up the memory
-  num = sizeof(RGBQUAD) * mNumPalleteColors;
-  if(num>0)
-    memcpy(mColorTable,this->mColorTable,sizeof(RGBQUAD) * mNumPalleteColors);
-
-    // the bits of the image
-  if(theimage->mSizeImage>0)
-    {
-    theimage->mImageBits = new unsigned char[theimage->mSizeImage];
-    memcpy(theimage->mImageBits,this->mImageBits,theimage->mSizeImage);
-    }
-  else
-    theimage->mImageBits = nsnull;
-
-
-  // bits of the alpha mask
-  num = theimage->mARowBytes * theimage->mAlphaHeight;
-  if(num > 0)
-    {
-    theimage->mAlphaBits = new unsigned char[num];
-    memcpy(theimage->mAlphaBits,this->mAlphaBits,num);
-    }
-  else
-    theimage->mAlphaBits = nsnull;
-
-  theimage->mColorMap = new nsColorMap;
-  if (theimage->mColorMap != nsnull) 
-	  {
-    theimage->mColorMap->NumColors = theimage->mNumPalleteColors;
-    theimage->mColorMap->Index = new PRUint8[3 * theimage->mNumPalleteColors];
-    memset(theimage->mColorMap->Index, 0, sizeof(PRUint8) * (3 * theimage->mNumPalleteColors));
-		}
-
-  for(i = 0; i < theimage->mColorMap->NumColors; i++)
-    {
-		theimage->mColorMap->Index[(3 * i) + 2] = this->mColorMap->Index[(3 * i) + 2];
-		theimage->mColorMap->Index[(3 * i) + 1] = this->mColorMap->Index[(3 * i) + 1];
-		theimage->mColorMap->Index[(3 * i)] = this->mColorMap->Index[(3 * i)];
-    }
-
-  theimage->MakePalette();
-
-  theimage->mHBitmap = nsnull;    
-  theimage->mAlphaHBitmap = nsnull;    
-
-  return (theimage);
-}
-
-//------------------------------------------------------------
-
-PRBool nsImageWin::MakePalette()
-{
-	// makes a logical palette (mHPalette) from the DIB's color table
-	// this palette will be selected and realized prior to drawing the DIB
-
-	if (mNumPalleteColors == 0) 
-    return PR_FALSE;
-
-	if (mHPalette != nsnull) 
-    ::DeleteObject(mHPalette);
-
-  LPLOGPALETTE pLogPal = (LPLOGPALETTE) new char[2 * sizeof(WORD) + mNumPalleteColors * sizeof(PALETTEENTRY)];
-	pLogPal->palVersion = 0x300;
-	pLogPal->palNumEntries = mNumPalleteColors;
-	LPRGBQUAD pDibQuad = (LPRGBQUAD) mColorTable;
-
-	for (int i = 0; i < mNumPalleteColors; i++) 
-  {
-		pLogPal->palPalEntry[i].peRed = pDibQuad->rgbRed;
-		pLogPal->palPalEntry[i].peGreen = pDibQuad->rgbGreen;
-		pLogPal->palPalEntry[i].peBlue = pDibQuad->rgbBlue;
-		pLogPal->palPalEntry[i].peFlags = 0;
-		pDibQuad++;
-  }
-
-	mHPalette = ::CreatePalette(pLogPal);
-	delete pLogPal;
-
-	return PR_TRUE;
-}	
-
-//------------------------------------------------------------
-
-PRBool nsImageWin :: SetSystemPalette(HDC* aHdc)
-{
-  PRInt32 nsyscol, npal, nument;
-
-	// if the DIB doesn't have a color table, we can use the system palette
-
-	if (mNumPalleteColors != 0) 
-    return PR_FALSE;
-
-	if (!(::GetDeviceCaps(aHdc, RASTERCAPS) & RC_PALETTE)) 
-    return PR_FALSE;
-
-	nsyscol = ::GetDeviceCaps(aHdc, NUMCOLORS);
-	npal = ::GetDeviceCaps(aHdc, SIZEPALETTE);
-	nument = (npal == 0) ? nsyscol : npal;
-
-	LPLOGPALETTE pLogPal = (LPLOGPALETTE) new char[2 * sizeof(WORD) + nument * sizeof(PALETTEENTRY)];
-
-	pLogPal->palVersion = 0x300;
-	pLogPal->palNumEntries = nument;
-
-	::GetSystemPaletteEntries(aHdc, 0, nument, (LPPALETTEENTRY)((LPBYTE)pLogPal + 2 * sizeof(WORD)));
-
-	mHPalette = ::CreatePalette(pLogPal);
-
-	delete pLogPal;
-
-	return PR_TRUE;
+  return nsnull;
 }
 
 //------------------------------------------------------------
@@ -967,34 +860,10 @@ PRBool nsImageWin :: SetSystemPalette(HDC* aHdc)
 // creates an optimized bitmap, or HBITMAP
 nsresult nsImageWin :: Optimize(nsIDeviceContext* aContext)
 {
-  // Wait until we're asked to draw, before we create the DDB, because
+  // Wait until we're asked to draw before creating the DDB, because
   // we don't have an HDC now
   mIsOptimized = PR_TRUE;
   return NS_OK;
-}
-
-//------------------------------------------------------------
-
-// figure out how big our palette needs to be
-void nsImageWin :: ComputePaletteSize(PRIntn nBitCount)
-{
-	switch (nBitCount) 
-  {
-		case 8:
-			mNumPalleteColors = 256;
-      mNumBytesPixel = 1;
-      break;
-
-		case 24:
-			mNumPalleteColors = 0;
-      mNumBytesPixel = 3;
-      break;
-
-		default:
-			mNumPalleteColors = -1;
-      mNumBytesPixel = 0;
-      break;
-  }
 }
 
 //------------------------------------------------------------
@@ -1014,23 +883,6 @@ PRInt32  nsImageWin :: CalcBytesSpan(PRUint32  aWidth)
 }
 
 //------------------------------------------------------------
-
-void nsImageWin :: ComputeMetrics()
-{
-	mSizeImage = mBHead->biSizeImage;
-
-	if (mSizeImage == 0) 
-  {
-    mRowBytes = CalcBytesSpan(mBHead->biWidth);
-		mSizeImage = mRowBytes * mBHead->biHeight; // no compression
-  }
-
-  // set the color table in the info header
-
-	mColorTable = (PRUint8 *)mBHead + sizeof(BITMAPINFOHEADER);
-}
-//------------------------------------------------------------
-
 
 // clean up our memory
 void nsImageWin :: CleanUp(PRBool aCleanUpAll)
@@ -1061,9 +913,6 @@ void nsImageWin :: CleanUp(PRBool aCleanUpAll)
   if (mAlphaBits != nsnull)
     delete [] mAlphaBits;
 
-	if (mHPalette != nsnull) 
-    ::DeleteObject(mHPalette);
-
 	// Should be an ISupports, so we can release
   if (mColorMap != nsnull)
   {
@@ -1072,11 +921,9 @@ void nsImageWin :: CleanUp(PRBool aCleanUpAll)
     delete mColorMap;
   }
 
-	mColorTable = nsnull;
-	mNumPalleteColors = -1;
+	mNumPaletteColors = -1;
   mNumBytesPixel = 0;
 	mSizeImage = 0;
-	mHPalette = nsnull;
   mImageBits = nsnull;
   mAlphaBits = nsnull;
   mColorMap = nsnull;
