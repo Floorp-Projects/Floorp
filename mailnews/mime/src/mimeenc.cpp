@@ -175,8 +175,8 @@ mime_decode_qp_buffer (MimeDecoderData *data, const char *buffer, PRInt32 length
 			  if (in > out) *out++ = token[2];
 			  continue;
 			}
-
-		  *out++ = (char) c;
+		  /* treat null bytes as spaces per bug 243199 comment 7 */
+		  *out++ = c ? (char) c : ' ';
 		}
 	  else
 		{
