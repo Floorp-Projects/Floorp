@@ -39,7 +39,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <plgetopt.h>
+#ifdef MOZ_WIDGET_PHOTON
+#include "PhRemoteClient.h"
+#else
 #include "XRemoteClient.h"
+#endif
 
 static void print_usage(void);
 

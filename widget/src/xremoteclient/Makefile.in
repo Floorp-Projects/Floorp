@@ -76,17 +76,19 @@ endif
 EXPORTS		= \
 		nsXRemoteClientCID.h
 
-ifndef MOZ_ENABLE_PHOTON
 PROGRAM         = mozilla-xremote-client$(BIN_SUFFIX)
 
 PROGOBJS        = mozilla-xremote-client.$(OBJ_SUFFIX) \
 		XRemoteClient_standalone.$(OBJ_SUFFIX) \
 		$(NULL)
-endif
 
 LIBS            = \
 		$(NSPR_LIBS) \
 		$(XLDFLAGS) $(XLIBS)
+
+ifdef MOZ_ENABLE_PHOTON
+	LIBS += -lph
+endif
 
 include $(topsrcdir)/config/rules.mk
 
@@ -96,5 +98,8 @@ endif
 
 ifndef MOZ_ENABLE_PHOTON
 XRemoteClient_standalone.$(OBJ_SUFFIX): XRemoteClient.cpp
+	$(CXX) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) -DXREMOTE_STANDALONE $<
+else
+XRemoteClient_standalone.$(OBJ_SUFFIX): PhRemoteClient.cpp
 	$(CXX) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) -DXREMOTE_STANDALONE $<
 endif
