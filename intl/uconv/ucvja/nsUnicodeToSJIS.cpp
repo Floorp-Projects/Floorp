@@ -56,7 +56,6 @@ NS_IMETHODIMP nsUnicodeToSJIS::GetMaxLength(const PRUnichar * aSrc,
                                             PRInt32 aSrcLength,
                                             PRInt32 * aDestLength)
 {
-  // XXX write me
-  *aDestLength = 0;
-  return NS_OK_UENC_EXACTLENGTH;
+  *aDestLength = 3*aSrcLength;
+  return NS_OK;
 }
