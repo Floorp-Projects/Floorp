@@ -23,14 +23,48 @@
 #include "nsIDOMText.h"
 #include "nsIDOMElement.h"
 
+#include "nsIEditor.h"
+#include "nsEditorCID.h"
+
+#include "nsRepository.h"
+#include "nsIServiceManager.h"
+
 static nsIDOMDocument* kDomDoc;
 static nsIDOMNode* kCurrentNode;
 
+static nsIEditor *gEditor;
+
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kIEditorIID, NS_IEDITOR_IID);
+static NS_DEFINE_CID(kEditorCID, NS_EDITOR_CID);
+
+#ifdef XP_PC
+#define EDITOR_DLL "ender.dll"
+#else
+#ifdef XP_MAC
+#define EDITOR_DLL "ENDER_DLL"
+#else // XP_UNIX
+#define EDITOR_DLL "libender.so"
+#endif
+#endif
+
 
 nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument)
 {
+  nsresult result = NS_OK;
+  static needsInit=PR_TRUE;
+
+  if (PR_TRUE==needsInit)
+  {
+    gEditor=(nsIEditor*)1;  // XXX: hack to get around null pointer problem
+    needsInit=PR_FALSE;
+    result = nsRepository::RegisterFactory(kEditorCID, EDITOR_DLL, 
+                                           PR_TRUE, PR_TRUE);
+    if (NS_FAILED(result))
+      return result;
+  }
+
   NS_IF_RELEASE(kCurrentNode);
   NS_IF_RELEASE(kDomDoc);
   
@@ -39,9 +73,28 @@ nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument)
   kDomDoc = aDOMDocument;
   NS_IF_ADDREF(kDomDoc);
 
-  RegisterEventListeners();
-  
-  return NS_OK;
+
+  nsISupports *isup = nsnull;
+
+  result = nsServiceManager::GetService(kEditorCID,
+                                        kIEditorIID, &isup);
+  if (NS_FAILED(result) || !isup) {
+    printf("ERROR: Failed to get Editor nsISupports interface.\n");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  result = isup->QueryInterface(kIEditorIID, (void **)&gEditor);
+  if (NS_FAILED(result)) {
+    printf("ERROR: Failed to get Editor interface. (%d)\n", result);
+    return result;
+  }
+  if (nsnull==gEditor) {
+    printf("ERROR: QueryInterface() returned NULL pointer.\n");
+    return NS_ERROR_NULL_POINTER;
+  } 
+  gEditor->Init(aDOMDocument);
+
+  return result;
 }
 
 nsresult RegisterEventListeners()
