@@ -175,7 +175,7 @@ static void ClientNB(void *arg)
         exit(1);
     }
     if (PR_Connect(sock, &addr, PR_INTERVAL_NO_TIMEOUT) == PR_FAILURE) {
-        if (PR_GetError() != PR_WOULD_BLOCK_ERROR) {
+        if (PR_GetError() != PR_IN_PROGRESS_ERROR) {
             fprintf(stderr, "PR_Connect failed\n");
             exit(1);
         }
@@ -300,12 +300,40 @@ static void ClientNB(void *arg)
     }
 }
 
-int main(int argc, char **argv)
+static void
+RunTest(PRThreadScope scope, PRFileDesc *listenSock, PRUint16 port)
 {
     PRThread *server, *client;
+
+    server = PR_CreateThread(PR_USER_THREAD, ServerB, listenSock,
+            PR_PRIORITY_NORMAL, scope, PR_JOINABLE_THREAD, 0);
+    if (NULL == server) {
+        fprintf(stderr, "PR_CreateThread failed\n");
+        exit(1);
+    }
+    client = PR_CreateThread(
+            PR_USER_THREAD, ClientNB, (void *) port,
+            PR_PRIORITY_NORMAL, scope, PR_JOINABLE_THREAD, 0);
+    if (NULL == client) {
+        fprintf(stderr, "PR_CreateThread failed\n");
+        exit(1);
+    }
+
+    if (PR_JoinThread(server) == PR_FAILURE) {
+        fprintf(stderr, "PR_JoinThread failed\n");
+        exit(1);
+    }
+    if (PR_JoinThread(client) == PR_FAILURE) {
+        fprintf(stderr, "PR_JoinThread failed\n");
+        exit(1);
+    }
+}
+
+int main(int argc, char **argv)
+{
     PRFileDesc *listenSock;
     PRNetAddr addr;
-    PRThreadScope scope = PR_GLOBAL_THREAD;
+    PRUint16 port;
 
     listenSock = PR_OpenTCPSocket(PR_AF_INET6);
     if (NULL == listenSock) {
@@ -325,33 +353,17 @@ int main(int argc, char **argv)
         fprintf(stderr, "PR_GetSockName failed\n");
         exit(1);
     }
+    port = PR_ntohs(addr.ipv6.port);
     if (PR_Listen(listenSock, 5) == PR_FAILURE) {
         fprintf(stderr, "PR_Listen failed\n");
         exit(1);
     }
 
-    server = PR_CreateThread(PR_USER_THREAD, ServerB, listenSock,
-            PR_PRIORITY_NORMAL, scope, PR_JOINABLE_THREAD, 0);
-    if (NULL == server) {
-        fprintf(stderr, "PR_CreateThread failed\n");
-        exit(1);
-    }
-    client = PR_CreateThread(
-            PR_USER_THREAD, ClientNB, (void *) PR_ntohs(addr.ipv6.port),
-            PR_PRIORITY_NORMAL, scope, PR_JOINABLE_THREAD, 0);
-    if (NULL == client) {
-        fprintf(stderr, "PR_CreateThread failed\n");
-        exit(1);
-    }
+    fprintf(stderr, "Running the test with local threads\n");
+    RunTest(PR_LOCAL_THREAD, listenSock, port);
+    fprintf(stderr, "Running the test with global threads\n");
+    RunTest(PR_GLOBAL_THREAD, listenSock, port);
 
-    if (PR_JoinThread(server) == PR_FAILURE) {
-        fprintf(stderr, "PR_JoinThread failed\n");
-        exit(1);
-    }
-    if (PR_JoinThread(client) == PR_FAILURE) {
-        fprintf(stderr, "PR_JoinThread failed\n");
-        exit(1);
-    }
     if (PR_Close(listenSock) == PR_FAILURE) {
         fprintf(stderr, "PR_Close failed\n");
         exit(1);
