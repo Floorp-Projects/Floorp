@@ -135,12 +135,14 @@ Rights Reserved.
           <spring flex="1"/>
         </box>
       </row>
+      <row>
+        <statusbar id="status-bar" class="chromeclass-status"/>
+      </row>
     </rows>
   </grid>
   
   <separator/>
 
-  <box id="okCancelButtons"/>
+  <box id="okCancelButtonsRight"/>
 
-  <statusbar id="status-bar" class="chromeclass-status"/>
 </window>

@@ -65,3 +65,6 @@
   list-style-image: url("chrome://messenger/skin/icons/server-news-lock.gif");
 }
 
+#subscribetree {
+  margin: 0px 0px 0px 0px !important;
+}
