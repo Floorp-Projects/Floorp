@@ -20,9 +20,9 @@
  * Contributor(s): 
  */
 
-		.globl sysThrow
-		.align 4
-sysThrow:
+#include <md/Asm.h>
+
+GLOBAL_ENTRY(sysThrow)
 		push %ebp
 		mov	%esp,%ebp
 		push 8(%ebp)
@@ -31,14 +31,12 @@ sysThrow:
 		push %edi
 		push %ebp
 
-		call x86SoftwareExceptionHandler
+		call SYMBOL_NAME(x86SoftwareExceptionHandler)
 
 /**
 	restore when regalloc is fixed
 
-		.globl x86JumpToHandler
-		.align 4
-x86JumpToHandler:
+GLOBAL_ENTRY(x86JumpToHandler)
 		popl %eax
 		popl %eax
 		popl %ecx
@@ -51,9 +49,7 @@ x86JumpToHandler:
 		
 		// FIX (hack to work around reg alloc bug)
 **/
-		.globl x86JumpToHandler
-		.align 4
-x86JumpToHandler:
+GLOBAL_ENTRY(x86JumpToHandler)
 		popl %eax
 		popl %ecx
 		popl %eax
@@ -64,46 +60,38 @@ x86JumpToHandler:
 		popl %esp
 		jmp *%eax	
 
-		.globl sysThrowClassCastException
-		.align 4
-sysThrowClassCastException:
-		mov $exceptionClass, %eax
+GLOBAL_ENTRY(sysThrowClassCastException)
+		mov $SYMBOL_NAME(exceptionClass), %eax
 		push 8(%eax)
-		call x86NewExceptionInstance
+		call SYMBOL_NAME(x86NewExceptionInstance)
 		popl %ecx
 		pushl %eax
 		pushl %ecx
-		jmp sysThrow;
+		jmp SYMBOL_NAME(sysThrow);
 
-		.globl sysThrowNullPointerException
-		.align 4
-sysThrowNullPointerException:
-		mov $exceptionClass, %eax
+GLOBAL_ENTRY(sysThrowNullPointerException)
+		mov $SYMBOL_NAME(exceptionClass), %eax
 		push (%eax)
-		call x86NewExceptionInstance
+		call SYMBOL_NAME(x86NewExceptionInstance)
 		popl %ecx
 		pushl %eax
 		pushl %ecx
-		jmp sysThrow;
+		jmp SYMBOL_NAME(sysThrow);
 
-		.globl sysThrowArrayIndexOutOfBoundsException
-		.align 4
-sysThrowArrayIndexOutOfBoundsException:
-		mov $exceptionClass, %eax
+GLOBAL_ENTRY(sysThrowArrayIndexOutOfBoundsException)
+		mov $SYMBOL_NAME(exceptionClass), %eax
 		push 4(%eax)
-		call x86NewExceptionInstance
+		call SYMBOL_NAME(x86NewExceptionInstance)
 		popl %ecx
 		pushl %eax
 		pushl %ecx
-		jmp sysThrow;
+		jmp SYMBOL_NAME(sysThrow);
 		
-		.globl sysThrowArrayStoreException
-		.align 4
-sysThrowArrayStoreException:
-		mov $exceptionClass, %eax
+GLOBAL_ENTRY(sysThrowArrayStoreException)
+		mov $SYMBOL_NAME(exceptionClass), %eax
 		push 12(%eax)
-		call x86NewExceptionInstance
+		call SYMBOL_NAME(x86NewExceptionInstance)
 		popl %ecx
 		pushl %eax
 		pushl %ecx
-		jmp sysThrow;
+		jmp SYMBOL_NAME(sysThrow);
