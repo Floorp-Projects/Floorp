@@ -18,6 +18,7 @@
 
 #include "nsMessengerBootstrap.h"
 #include "nsIAppShellComponent.h"
+#include "nsCOMPtr.h"
 
 #include "nsDOMCID.h"
 
@@ -49,13 +50,28 @@ nsresult
 nsMessengerBootstrap::Initialize(nsIAppShellService*,
                                  nsICmdLineService*)
 {
-  return NS_OK;
+	nsresult rv;
+    rv = nsServiceManager::RegisterService( "component://netscape/appshell/component/messenger", this );
+
+	return rv;
 }
 
 nsresult
 nsMessengerBootstrap::Shutdown()
 {
-  return NS_OK;
+	nsresult finalrv = NS_OK;
+	nsresult rv;
+
+	rv = nsServiceManager::UnregisterService("component://netscape/appshell/component/messenger");
+	if(NS_FAILED(rv)) finalrv = rv;
+
+	rv = nsServiceManager::UnregisterService("component://netscape/messenger/services/session");
+	if(NS_FAILED(rv)) finalrv = rv;
+
+	rv = nsServiceManager::UnregisterService("component://netscape/messenger/biffManager");
+	if(NS_FAILED(rv)) finalrv = rv;
+
+	return finalrv;
 }
 
 nsresult
