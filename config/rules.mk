@@ -358,9 +358,9 @@ ifeq ($(OS_ARCH),WINNT)
 	$(CC) $(PROGOBJS) -Fe$@ -link $(LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS)
 else
 ifdef CPP_PROG_LINK
-	$(CCC) $(CFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS)
+	$(CCC) $(CFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 else
-	$(CCF) -o $@ $(PROGOBJS) $(LDFLAGS)
+	$(CCF) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
 endif
 endif
