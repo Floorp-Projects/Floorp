@@ -434,6 +434,9 @@ nsContextMenu.prototype = {
       }
       // test for a form with at least one text element that has a value
       var formsArray = window._content.document.forms;
+      if (!formsArray) {
+        return false;
+      }
       var form;
       for (form=0; form<formsArray.length; form++) {
         var elementsArray = formsArray[form].elements;
@@ -466,6 +469,9 @@ nsContextMenu.prototype = {
         return false;
       }
       var formsArray = window._content.document.forms;
+      if (!formsArray) {
+        return false;
+      }
       var form;
       for (form=0; form<formsArray.length; form++) {
         var elementsArray = formsArray[form].elements;
