@@ -21,7 +21,6 @@
 #include "plstr.h"
 #include "stdio.h"
 #ifdef NECKO
-#include "nsIIOService.h"
 #include "nsICookieService.h"
 #else
 #include "nsINetService.h"
@@ -35,7 +34,6 @@
 #include "nsICookieViewer.h"
 
 #ifdef NECKO
-static NS_DEFINE_IID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kICookieServiceIID, NS_ICOOKIESERVICE_IID);
 static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 #else
@@ -98,16 +96,12 @@ CookieViewerImpl::GetCookieValue(char** aValue)
 
   nsresult res;
 #ifdef NECKO
-  nsICookieService *cookieservice;
-  res = nsServiceManager::GetService(kCookieServiceCID,
-                                     kICookieServiceIID,
-                                     (nsISupports **)&cookieservice);
-  if ((NS_SUCCEEDED(res)) && (nsnull != cookieservice)) {
-    nsAutoString cookieList;
-    res = cookieservice->Cookie_GetCookieListForViewer(cookieList);
-    if (NS_SUCCEEDED(res)) {
-      *aValue = cookieList.ToNewCString();
-    }
+  NS_WITH_SERVICE(nsICookieService, cookieservice, kCookieServiceCID, &res);
+  if (NS_FAILED(res)) return res;
+  nsAutoString cookieList;
+  res = cookieservice->Cookie_GetCookieListForViewer(cookieList);
+  if (NS_SUCCEEDED(res)) {
+    *aValue = cookieList.ToNewCString();
   }
 #else
   nsINetService *netservice;
@@ -135,16 +129,12 @@ CookieViewerImpl::GetPermissionValue(char** aValue)
 
   nsresult res;
 #ifdef NECKO
-  nsICookieService *cookieservice;
-  res = nsServiceManager::GetService(kCookieServiceCID,
-                                     kICookieServiceIID,
-                                     (nsISupports **)&cookieservice);
-  if ((NS_SUCCEEDED(res)) && (nsnull != cookieservice)) {
-    nsAutoString PermissionList;
-    res = cookieservice->Cookie_GetPermissionListForViewer(PermissionList);
-    if (NS_SUCCEEDED(res)) {
-      *aValue = PermissionList.ToNewCString();
-    }
+  NS_WITH_SERVICE(nsICookieService, cookieservice, kCookieServiceCID, &res);
+  if (NS_FAILED(res)) return res;
+  nsAutoString PermissionList;
+  res = cookieservice->Cookie_GetPermissionListForViewer(PermissionList);
+  if (NS_SUCCEEDED(res)) {
+    *aValue = PermissionList.ToNewCString();
   }
 #else
   nsINetService *netservice;
@@ -210,14 +200,10 @@ CookieViewerImpl::SetValue(const char* aValue, nsIDOMWindow* win)
   }
   nsresult res;
 #ifdef NECKO
-  nsICookieService *cookieservice;
-  res = nsServiceManager::GetService(kCookieServiceCID,
-                                     kICookieServiceIID,
-                                     (nsISupports **)&cookieservice);
-  if ((NS_SUCCEEDED(res)) && (nsnull != cookieservice)) {
-    nsAutoString netList = aValue;
-    res = cookieservice->Cookie_CookieViewerReturn(netList);
-  }
+  NS_WITH_SERVICE(nsICookieService, cookieservice, kCookieServiceCID, &res);
+  if (NS_FAILED(res)) return res;
+  nsAutoString netList = aValue;
+  res = cookieservice->Cookie_CookieViewerReturn(netList);
 #else
   nsINetService *netservice;
   res = nsServiceManager::GetService(kNetServiceCID,
