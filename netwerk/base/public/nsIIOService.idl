@@ -61,7 +61,7 @@ interface nsIIOService : nsISupports
      */
     nsIChannel NewChannelFromURI(in string verb,
                                  in nsIURI aURI,
-								 in nsILoadGroup aLoadGroup,
+                                 in nsILoadGroup aLoadGroup,
                                  in nsIEventSinkGetter eventSinkGetter);
 
     /**
@@ -71,7 +71,7 @@ interface nsIIOService : nsISupports
     nsIChannel NewChannel(in string verb,
                           in string aSpec,
                           in nsIURI aBaseURI,
-						  in nsILoadGroup aLoadGroup,
+                          in nsILoadGroup aLoadGroup,
                           in nsIEventSinkGetter eventSinkGetter);
 
     /**
