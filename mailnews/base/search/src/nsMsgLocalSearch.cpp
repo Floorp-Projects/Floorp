@@ -547,7 +547,10 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
         nsMsgSearchAttribValue attrib;
         pTerm->GetAttrib(&attrib);
         msgToMatch->GetCharset(getter_Copies(msgCharset));
-        charset = *(const char *)msgCharset ? msgCharset : defaultCharset;
+        if ((const char*)msgCharset)
+          charset = (const char*)msgCharset;
+        else
+          charset = (const char*)defaultCharset;
         switch (attrib)
         {
         case nsMsgSearchAttrib::Sender:
