@@ -108,7 +108,6 @@ $source_root = 'mozilla';
 @mac_ignore = (
   'function has no prototype',
   'inline function call .* not inlined',
-  'variable / argument .* is not used in function',
 );
 
 @ignore = ( 
@@ -146,7 +145,7 @@ $source_root = 'mozilla';
 #   paths to files.
 #
 print STDERR "Building hash of file names...";
-($file_bases, $file_fullpaths) = build_file_hash($cvs_root, $tree);
+($file_bases, $file_fullpaths) = build_file_hash($cvs_root, @cvs_modules);
 print STDERR "done.\n";
 
 # Find the build we want and generate warnings for it
@@ -174,7 +173,7 @@ $total_ignored_count = 0;
 
   # Attach blame to all the warnings
   #   (Yes, global variables are flying around.)
-  &build_blame($cvs_root);
+  &build_blame($cvs_root, $file_fullpaths);
 
   # Come up with the temporary filenames for the output
   #
@@ -211,19 +210,33 @@ if ($total_unignored_warnings > 0) {
 # ===================================================================
 
 sub build_file_hash {
-  my ($cvs_root, $tree) = @_;
+  my ($cvs_root, @modules) = @_;
 
   read_cvs_modules_file();
-  @include_list = ();
-  @exclude_list = ();
-  expand_cvs_modules('SeaMonkeyAll', \@include_list, \@exclude_list);
 
-  local $exclude_pat = join '|', @exclude_list;
+  local %bases = (); # Set in find_cvs_files
+  local %fullpath = (); # Set in find_cvs_files
 
-  use File::Find;
-  for my $include (@include_list) {
-    $include .= ",v" unless -d "$cvs_root/$include";
-    &find(\&find_cvs_files, "$cvs_root/$include"); 
+  for my $module_item (@modules) {
+    my $module = $module_item->[0];
+    local $tag = $module_item->[1]; # Used in find_cvs_files
+
+    my @include_list = ();
+    my @exclude_list = ();
+
+    if (-d "$cvs_root/$module") {
+      $include_list[0] = $module
+    } else {
+      expand_cvs_modules($module, \@include_list, \@exclude_list);
+    }
+
+    local $exclude_pat = join '|', @exclude_list; # Used in find_cvs_files
+
+    use File::Find;
+    for my $include (@include_list) {
+      $include .= ",v" unless -d "$cvs_root/$include";
+      &find(\&find_cvs_files, "$cvs_root/$include"); 
+    }
   }
   return \%bases, \%fullpath;
 }
@@ -262,8 +275,10 @@ sub expand_cvs_modules {
 sub find_cvs_files {
   $File::Find::prune = 1 if /.OBJ$/ or /^CVS$/ or /^Attic$/;
   if (-d $_) {
-    $File::Find::prune = 1 if /$exclude_pat/o or $seen{$File::Find::name};
+    $File::Find::prune = 1 if $seen{$File::Find::name};
+    $File::Find::prune = 1 if $exclude_pat ne '' and /$exclude_pat/o;
     $seen{$File::Find::name} = 1;
+
     return;
   }
   my $dir = $File::Find::dir;
@@ -276,7 +291,7 @@ sub find_cvs_files {
   } else {
     $bases{$file} = $dir;
   }
-  $fullpath{"$dir/$file"} = 1;
+  $fullpath{"$dir/$file"} = $tag;
 }
 
 sub find_build_record {
@@ -453,7 +468,7 @@ sub mac_parser {
 }
 
 sub build_blame {
-  my ($cvs_root) = @_;
+  my ($cvs_root, $tags) = @_;
 
   use lib '../bonsai';
   require 'utils.pl';
@@ -469,6 +484,7 @@ sub build_blame {
       next;
     }
 
+    $::opt_rev = $tags->{$file} if defined $tags->{$file};
     my $revision = &parse_cvs_file($rcs_filename);
     @text = &extract_revision($revision);
     LINE: while (my ($line, $line_rec) = each %{$lines_hash}) {
