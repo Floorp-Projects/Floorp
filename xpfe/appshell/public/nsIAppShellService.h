@@ -59,6 +59,11 @@ public:
                                   nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight) = 0;
+  NS_IMETHOD RunModalDialog(      nsIWebShellWindow * aParent,
+                                  nsIURL* aUrl, 
+                                  nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
+                                  nsIXULWindowCallbacks *aCallbacks,
+                                  PRInt32 aInitialWidth, PRInt32 aInitialHeight) = 0;
   NS_IMETHOD CloseTopLevelWindow(nsIWebShellWindow* aWindow) = 0;
   NS_IMETHOD RegisterTopLevelWindow(nsIWebShellWindow* aWindow) = 0;
   NS_IMETHOD UnregisterTopLevelWindow(nsIWebShellWindow* aWindow) = 0;

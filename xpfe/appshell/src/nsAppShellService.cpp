@@ -90,6 +90,11 @@ public:
                                   nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight);
+  NS_IMETHOD RunModalDialog(      nsIWebShellWindow * aParent,
+                                  nsIURL* aUrl, 
+                                  nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
+                                  nsIXULWindowCallbacks *aCallbacks,
+                                  PRInt32 aInitialWidth, PRInt32 aInitialHeight);
   NS_IMETHOD CloseTopLevelWindow(nsIWebShellWindow* aWindow);
   NS_IMETHOD RegisterTopLevelWindow(nsIWebShellWindow* aWindow);
   NS_IMETHOD UnregisterTopLevelWindow(nsIWebShellWindow* aWindow);
@@ -317,6 +322,62 @@ nsAppShellService::CreateDialogWindow(nsIWebShellWindow * aParent,
 				window->Show(PR_TRUE);
     }
   }
+
+  return rv;
+}
+
+
+/* CreateDialogWindow, run it modally, and destroy it.  To make initial control
+   settings or get information out of the dialog before dismissal, use
+   event handlers.  This wrapper method is desirable because of the
+   complications creeping in to the modal window story: there's a lot of setup.
+   See the code.
+*/
+NS_IMETHODIMP
+nsAppShellService::RunModalDialog(
+                      nsIWebShellWindow *aParent, nsIURL* aUrl,
+                      nsIWebShellWindow*& aResult, nsIStreamObserver *anObserver,
+                      nsIXULWindowCallbacks *aCallbacks,
+                      PRInt32 aInitialWidth, PRInt32 aInitialHeight)
+{
+
+  nsresult             rv;
+  nsIWebShellWindow    *window;
+
+  window = nsnull;
+
+#ifdef XP_PC // XXX: Won't work with any other platforms yet.
+  // First push a nested event queue for event processing from netlib
+  // onto our UI thread queue stack.
+  // nsCOMPtr<nsIEventQueue> innerQueue;
+  NS_WITH_SERVICE(nsIEventQueueService, eQueueService, kEventQueueServiceCID, &rv);
+  if (NS_FAILED(rv)) {
+    NS_ERROR("RunModalDialog unable to obtain eventqueue service.");
+    return rv;
+  }
+  eQueueService->PushThreadEventQueue();
+#endif
+
+  rv = CreateDialogWindow(aParent, aUrl, PR_TRUE, window, anObserver, nsnull,
+            aInitialWidth, aInitialHeight);
+
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIWidget> parentWindowWidgetThing;
+    nsresult gotParent;
+    gotParent = aParent ? aParent->GetWidget(*getter_AddRefs(parentWindowWidgetThing)) :
+                          NS_ERROR_FAILURE;
+    // Windows OS wants the parent disabled for modality
+    if (NS_SUCCEEDED(gotParent))
+      parentWindowWidgetThing->Enable(PR_FALSE);
+    window->ShowModal();
+    if (NS_SUCCEEDED(gotParent))
+      parentWindowWidgetThing->Enable(PR_TRUE);
+  }
+
+	// Release the event queue 
+#ifdef XP_PC // XXX Won't work on other platforms yet
+  eQueueService->PopThreadEventQueue();
+#endif
 
   return rv;
 }
