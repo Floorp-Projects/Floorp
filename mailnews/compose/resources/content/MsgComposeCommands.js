@@ -151,7 +151,6 @@ function SetupCommandUpdateHandlers()
 
 function CommandUpdate_MsgCompose()
 {
-  dump("CommandUpdate_MsgCompose\n");
   goUpdateCommand("cmd_sendNow");
   goUpdateCommand("cmd_sendLater");
   goUpdateCommand("cmd_saveDefault");
