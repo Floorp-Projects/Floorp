@@ -31,6 +31,12 @@
 #include "nsJAR.h"
 #include "nsXPIDLString.h"
 
+#ifdef XP_UNIX
+  #include <sys/stat.h>
+#elif defined (XP_PC)
+  #include <io.h>
+#endif
+
 //----------------------------------------------
 // Errors and other utility definitions
 //----------------------------------------------
@@ -207,6 +213,22 @@ nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
 
   PRUint16 mode;
   PRInt32 err = mZip.ExtractFileToFileDesc(zipEntry, fd, &mode);
+
+  if (err != ZIP_OK)
+    outFile->Delete(PR_FALSE);
+#if defined(XP_UNIX) || defined(XP_PC)
+  else
+  {
+    char *path;
+
+    // XXX Bug 28630: nsIFile::SetPermissions() doesn't work on Win32
+
+    rv = outFile->GetPath(&path); 
+    if (NS_SUCCEEDED(rv))
+      chmod(path, mode);
+  }
+#endif
+
   PR_Close(fd);
   return ziperr2nsresult(err);
 }
