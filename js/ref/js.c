@@ -255,9 +255,14 @@ Version(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+static void
+my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
+
 static JSBool
 Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+    JSContext *cx2;
+    JSVersion version;
     uintN i;
     JSString *str;
     const char *filename;
@@ -265,10 +270,26 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSBool ok;
     jsval result;
 
+    /*
+     * Create new context to execute in so that gc will still find
+     * roots for the script that called load().
+     */
+    cx2 = JS_NewContext(cx->runtime, 8192);
+    if (!cx2)
+	return JS_FALSE;
+    JS_SetErrorReporter(cx2, my_ErrorReporter);
+    JS_SetGlobalObject(cx2, JS_GetGlobalObject(cx));
+    version = JS_GetVersion(cx);
+    if (version != JSVERSION_DEFAULT)
+	JS_SetVersion(cx2, version);
+
+    ok = JS_TRUE;
     for (i = 0; i < argc; i++) {
 	str = JS_ValueToString(cx, argv[i]);
-	if (!str)
-	    return JS_FALSE;
+        if (!str) {
+            ok = JS_FALSE;
+            break;
+        }
 	argv[i] = STRING_TO_JSVAL(str);
 	filename = JS_GetStringBytes(str);
 	errno = 0;
@@ -280,12 +301,13 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	    putc('\n', stderr);
 	    continue;
 	}
-	ok = JS_ExecuteScript(cx, obj, script, &result);
+	ok = JS_ExecuteScript(cx2, obj, script, &result);
 	JS_DestroyScript(cx, script);
 	if (!ok)
-	    return JS_FALSE;
+	    break;
     }
-    return JS_TRUE;
+    JS_DestroyContext(cx2);
+    return ok;
 }
 
 static JSBool
