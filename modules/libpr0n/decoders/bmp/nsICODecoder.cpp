@@ -79,6 +79,12 @@ nsresult nsICODecoder::SetImageData()
        ++i, frameOffset += bpr, decodeBufferPos += decodedLineLen) {
     mFrame->SetImageData(decodeBufferPos, decodedLineLen, frameOffset);
   }
+
+  nsRect r(0, 0, 0, 0);
+  mFrame->GetWidth(&r.width);
+  mFrame->GetHeight(&r.height);
+  mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
+
   return NS_OK;
 }
 
