@@ -27,6 +27,7 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug1164.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug1188.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug11944.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug11945.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug14929.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug12008.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug1220.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug12287.xul
@@ -174,6 +175,7 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug32447.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug3263.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug3309-1.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug3309-2.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug33137.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug33855.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug3454.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug34538.html
@@ -193,7 +195,8 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug4501.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4520.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4523.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4527.html
-file:///s|/mozilla/layout/html/tests/table/bugs/bug4576.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug4527.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug45350.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug46368-1.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug46368-2.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4739.html
