@@ -198,7 +198,8 @@
   <menuitem label="&delete.label;" accesskey="&delete.accesskey;" command="cmd_delete"/>
   <menuitem label="&selectAll.label;" accesskey="&selectAll.accesskey;" command="cmd_selectAll"/>
   <menuseparator/>
-  <menuitem label="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" command="cmd_attachFile"/>
+  <menuitem label="&attachFile.label;" accesskey="&attachFile.accesskey;" command="cmd_attachFile"/>
+  <menuitem label="&attachPage.label;" accesskey="&attachPage.accesskey;" command="cmd_attachPage"/>
 </popup>
 
   <toolbox class="toolbox-top" id="headers-box">
@@ -213,8 +214,14 @@
               <menuitem id="menu_newEditor"/>
             </menupopup>
           </menu>
-          <menuitem label="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" command="cmd_attachFile"/>
-          <menuitem label="&attachPageCmd.label;" accesskey="&attachPageCmd.accesskey;" command="cmd_attachPage"/>
+          <menu label="&attachMenu.label;" accesskey="&attachMenu.accesskey;">
+            <menupopup>
+              <menuitem label="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" command="cmd_attachFile"/>
+              <menuitem label="&attachPageCmd.label;" accesskey="&attachPageCmd.accesskey;" command="cmd_attachPage"/>
+              <menuseparator/>
+              <menuitem type="checkbox" label="&attachVCardCmd.label;" accesskey="&attachVCardCmd.accesskey;" command="cmd_attachVCard"/>
+            </menupopup>
+          </menu>
           <menuitem id="menu_close"/>
           <menuseparator/>
           <menuitem label="&saveCmd.label;" accesskey="&saveCmd.accesskey;" key="key_save" command="cmd_saveDefault"/>
@@ -300,7 +307,7 @@
           <menuitem label="&quoteCmd.label;" accesskey="&quoteCmd.accesskey;" command="cmd_quoteMessage"/>
           <menuseparator/>
           <menuitem id="returnReceiptMenu" type="checkbox" label="&returnReceiptMenu.label;" accesskey="&returnReceiptMenu.accesskey;" checked="false" oncommand="ToggleReturnReceipt(event.target)"/>
-          <menuitem type="checkbox" label="&attachVCardMenu.label;" accesskey="&attachVCardMenu.accesskey;" command="cmd_attachVCard"/>
+          <menuitem type="checkbox" label="&attachVCard.label;" accesskey="&attachVCard.accesskey;" command="cmd_attachVCard"/>
           <menuseparator/>
           <menu id="outputFormatMenu" label="&outputFormatMenu.label;" accesskey="&outputFormatMenu.accesskey;" command="cmd_outputFormat">
             <menupopup>
@@ -405,10 +412,10 @@
                tooltiptext="&attachButton.tooltip;" 
                command="cmd_attachFile">
          <menupopup>
-           <menuitem label="&attachFileButton.label;" accesskey="&attachFileCmd.accesskey;" command="cmd_attachFile"/>
-           <menuitem label="&attachPageButton.label;" accesskey="&attachPageCmd.accesskey;" command="cmd_attachPage"/>
+           <menuitem label="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" command="cmd_attachFile"/>
+           <menuitem label="&attachPageCmd.label;" accesskey="&attachPageCmd.accesskey;" command="cmd_attachPage"/>
            <menuseparator/>
-           <menuitem type="checkbox" label="&attachVCardButton.label;" accesskey="&attachVCardCmd.accesskey;" command="cmd_attachVCard"/>
+           <menuitem type="checkbox" label="&attachVCardCmd.label;" accesskey="&attachVCardCmd.accesskey;" command="cmd_attachVCard"/>
          </menupopup>
        </toolbarbutton>
        <toolbarbutton class="toolbarbutton-1"
