@@ -188,8 +188,12 @@ MenuSpec XFE_Frame::privacytools_submenu_spec[] = {
 #endif
 	MENU_SEPARATOR,
 	{ xfeCmdPrivacyPolicy,		PUSHBUTTON },
+#ifdef CookieManagement
 	{ xfeCmdViewCookies,		PUSHBUTTON },
+#endif
+#ifdef SingleSignon
 	{ xfeCmdViewSignons,		PUSHBUTTON },
+#endif
 #ifdef TRANSACTION_RECEIPTS
 	{ xfeCmdViewReceipts,		PUSHBUTTON },
 #endif
@@ -3313,8 +3317,12 @@ XFE_Frame::isCommandEnabled(CommandType cmd,
 #endif
         }
     else if ((cmd == xfeCmdAnonymousMode) ||
+#ifdef CookieManagement
              (cmd == xfeCmdViewCookies) ||
+#endif
+#ifdef SingleSignon
              (cmd == xfeCmdViewSignons) ||
+#endif
              (cmd == xfeCmdPrivacyTutorial))
         {
             return TRUE;
@@ -3696,16 +3704,18 @@ XFE_Frame::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo* info)
                                MWContextBrowser, FALSE);
               }
         }
+#ifdef CookieManagement
     else if (cmd == xfeCmdViewCookies)
         {
             NET_DisplayCookieInfoAsHTML(m_context);
         }   
+#endif
+#ifdef SingleSignon
     else if (cmd == xfeCmdViewSignons)
         {
-#ifdef SingleSignon
             SI_DisplaySignonInfoAsHTML(m_context);
-#endif
         }
+#endif
     else if (cmd == xfeCmdAnonymousMode)
         {
             PRVCY_ToggleAnonymous();
@@ -3763,8 +3773,12 @@ XFE_Frame::handlesCommand(CommandType cmd,
 		|| cmd == xfeCmdPrivacyPolicy
 		|| cmd == xfeCmdAnonymousMode
 		|| cmd == xfeCmdToggleReceipt
+#ifdef CookieManagement
 		|| cmd == xfeCmdViewCookies
+#endif
+#ifdef SingleSignon
 		|| cmd == xfeCmdViewSignons
+#endif
 		|| cmd == xfeCmdViewReceipts
 		|| cmd == xfeCmdPrivacyTutorial
 #ifdef MOZ_TASKBAR
