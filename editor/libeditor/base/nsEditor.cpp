@@ -71,7 +71,7 @@
 // END
 #endif
 
-#define NEW_CLIPBOARD_SUPPORT
+//#define NEW_CLIPBOARD_SUPPORT
 
 #ifdef NEW_CLIPBOARD_SUPPORT
 
