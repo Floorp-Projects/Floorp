@@ -35,6 +35,10 @@
 #define NS_IXULSORTSERVICE_IID \
 { 0xbfd05261, 0x834c, 0x11d2, { 0x8e, 0xac, 0x0, 0x80, 0x5f, 0x29, 0xf3, 0x71 } }
 
+class nsIRDFCompositeDataSource;
+class nsIContent;
+class nsIRDFResource;
+class nsIDOMNode;
 
 class nsIXULSortService : public nsISupports {
 public:
