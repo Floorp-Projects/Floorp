@@ -898,18 +898,8 @@ sub SetNewPassword {
         Punt("Your new password isn't any different than your old one.");
     }
     my $z1;
-    my $p = "";
     my $salt = "";
-    if ($F::loginname =~ /\@netscape.com$/) {
-        my $userid = $F::loginname;
-        $userid =~ s/@.*$//;
-        ($z1, $p) = split(/:/, `/bin/ypmatch $userid passwd`);
-        $salt = substr($p, 0, 2);
-    }
     my $pass = cryptit($F::newpassword1, $salt);
-    if ($pass eq $p) {
-        Punt("Your new password seems to be the same as your LDAP password that is used in the rest of Netscape.  Please pick a different password.");
-    }
 
     my $qpass = $::db->quote($pass);
     Query("update users set passwd = $qpass, neednewpassword = 'No' where email='$F::loginname'");
