@@ -55,6 +55,8 @@ BLOCKQUOTE {
   display: block;
   margin-left: 40px;
   margin-right: 40px;
+  margin-top: auto;
+  margin-bottom: auto;
 }
 CENTER {
   display: block;
@@ -301,12 +303,18 @@ FIELDSET {
 UL, MENU, DIR {
   display: block;
   margin-left: 20px;
+  margin-right: 0;
+  margin-bottom: auto;
+  margin-top: auto;
   padding-left: 20px;
   list-style-type: disc;
 }
 OL {
   display: block;
   margin-left: 20px;
+  margin-right: 0;
+  margin-bottom: auto;
+  margin-top: auto;
   padding-left: 20px;
   list-style-type: decimal;
 }
@@ -358,14 +366,14 @@ UL UL, UL OL, OL UL, OL OL  {
 
 DL {
   display: block;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 DT {
   display: block;
-  margin-bottom: 0;
 }
 DD {
   display: block;
-  margin-top: 0;
   margin-left: 40px;
 }
 
@@ -382,7 +390,6 @@ HR {
 }
 BR {
   display: inline;
-  vertical-align: bottom;
   color: cyan;
 }
 IMG {
