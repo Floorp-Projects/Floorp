@@ -90,6 +90,12 @@ interface nsIWebBrowserPersist : nsISupports
    * operations to remote servers.
    */
   const unsigned long PERSIST_FLAGS_CLEANUP_ON_FAILURE = 8192;
+  /**
+   * Let the WebBrowserPersist decide whether the incoming data is encoded
+   * and whether it needs to go through a content converter e.g. to
+   * decompress it.
+   */
+  const unsigned long PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION = 16384;
 
 
   /**
