@@ -1169,6 +1169,7 @@ NET_InitGopherProtocol(void)
     gopher_proto_impl.init = net_GopherLoad;
     gopher_proto_impl.process = net_ProcessGopher;
     gopher_proto_impl.interrupt = net_InterruptGopher;
+    gopher_proto_impl.resume = NULL;
     gopher_proto_impl.cleanup = net_CleanupGopher;
 
     NET_RegisterProtocolImplementation(&gopher_proto_impl, GOPHER_TYPE_URL);

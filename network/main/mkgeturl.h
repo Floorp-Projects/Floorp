@@ -106,6 +106,8 @@ struct _NET_ProtoImpl {
 	int32 (*init) (ActiveEntry *ce);
 	int32 (*process)   (ActiveEntry *ce);
 	int32 (*interrupt) (ActiveEntry *ce);
+    void  (*resume)    (ActiveEntry *ce, NET_AuthClosure *, PRBool);
+                                 /* callback to resume paused streams */
 	void  (*cleanup)   (void);   /* note that cleanup can be called more 
 				      			  * than once, when we need to shut down 
 				      			  * connections or free up memory

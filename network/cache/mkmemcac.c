@@ -2045,6 +2045,7 @@ NET_InitMemCacProtocol(void) /* no prototype when NU_CACHE */
     mem_cac_proto_impl.init = net_MemoryCacheLoad;
     mem_cac_proto_impl.process = net_ProcessMemoryCache;
     mem_cac_proto_impl.interrupt = net_InterruptMemoryCache;
+    mem_cac_proto_impl.resume = NULL;
     mem_cac_proto_impl.cleanup = net_CleanupMemoryCacheProtocol;
 
     NET_RegisterProtocolImplementation(&mem_cac_proto_impl, MEMORY_CACHE_TYPE_URL);
@@ -2310,6 +2311,7 @@ NET_InitNuCacheProtocol(void)
     nu_cache_proto_impl.init = net_NuCacheLoad;
     nu_cache_proto_impl.process = net_ProcessNuCache;
     nu_cache_proto_impl.interrupt = net_InterruptNuCache;
+    nu_cache_proto_impl.resume = NULL;
     nu_cache_proto_impl.cleanup = net_CleanupNuCacheProtocol;
 
     NET_RegisterProtocolImplementation(&nu_cache_proto_impl, NU_CACHE_TYPE_URL);

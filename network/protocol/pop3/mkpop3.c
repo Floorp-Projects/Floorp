@@ -3259,6 +3259,7 @@ NET_InitPop3Protocol(void)
     pop3_proto_impl.init = net_Pop3Load;
     pop3_proto_impl.process = net_ProcessPop3;
     pop3_proto_impl.interrupt = net_InterruptPop3;
+    pop3_proto_impl.resume = NULL;
     pop3_proto_impl.cleanup = net_CleanupPop3;
     NET_RegisterProtocolImplementation(&pop3_proto_impl, POP3_TYPE_URL);
 	NET_InitMailboxProtocol();
@@ -3863,6 +3864,7 @@ NET_InitMailboxProtocol(void)
     mbox_proto_impl.init = net_MBoxLoad;
     mbox_proto_impl.process = net_ProcessMBox;
     mbox_proto_impl.interrupt = net_InterruptMBox;
+    mbox_proto_impl.resume = NULL;
     mbox_proto_impl.cleanup = net_CleanupMBox;
     NET_RegisterProtocolImplementation(&mbox_proto_impl, MAILBOX_TYPE_URL);
 }

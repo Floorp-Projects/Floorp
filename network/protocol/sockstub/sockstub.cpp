@@ -640,6 +640,7 @@ NET_InitSockStubProtocol(void)
   sockstub_proto_impl.init = net_LoadSockStub;
   sockstub_proto_impl.process = net_ProcessSockStub;
   sockstub_proto_impl.interrupt = net_InterruptSockStub;
+  sockstub_proto_impl.resume = NULL;
   sockstub_proto_impl.cleanup = net_CleanupSockStub;
   StrAllocCopy(sockstub_proto_impl.scheme, SOCKSTUB_SCHEME); 
 

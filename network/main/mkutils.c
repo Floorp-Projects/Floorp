@@ -3338,6 +3338,7 @@ NET_InitURNProtocol(void)
     urn_proto_impl.init = net_URNProtoLoad;
     urn_proto_impl.process = net_URNProtoStub;
     urn_proto_impl.interrupt = net_URNProtoStub;
+    urn_proto_impl.resume = NULL;
     urn_proto_impl.cleanup = net_URNProtoCleanupStub;
 
     NET_RegisterProtocolImplementation(&urn_proto_impl, URN_TYPE_URL);
@@ -3380,6 +3381,7 @@ NET_InitNFSProtocol(void)
     nfs_proto_impl.init = net_NFSProtoLoad;
     nfs_proto_impl.process = net_NFSProtoStub;
     nfs_proto_impl.interrupt = net_NFSProtoStub;
+    nfs_proto_impl.resume = NULL;
     nfs_proto_impl.cleanup = net_NFSProtoCleanupStub;
 
     NET_RegisterProtocolImplementation(&nfs_proto_impl, NFS_TYPE_URL);
@@ -3420,6 +3422,7 @@ NET_InitWAISProtocol(void)
     wais_proto_impl.init = net_WAISProtoLoad;
     wais_proto_impl.process = net_WAISProtoStub;
     wais_proto_impl.interrupt = net_WAISProtoStub;
+    wais_proto_impl.resume = NULL;
     wais_proto_impl.cleanup = net_WAISProtoCleanupStub;
 
     NET_RegisterProtocolImplementation(&wais_proto_impl, WAIS_TYPE_URL);

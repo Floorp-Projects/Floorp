@@ -2646,15 +2646,22 @@ net_setup_http_stream(ActiveEntry * ce) {
 }
 
 PUBLIC void
-NET_ResumeHTTP(ActiveEntry * ce, PRBool resume)
+net_ResumeHTTP(ActiveEntry * ce, NET_AuthClosure *auth_closure, PRBool resume)
 {
     HTTPConData * cd = (HTTPConData *) ce->con_data;
 
     TRACEMSG (("NET_ResumeHTTP: %s", ce->URL_s->address));
-    if (resume)
+
+    if (resume) {
+
+      /* now update the user/pass */
+      ce->URL_s->username = PL_strdup (auth_closure->user);
+      ce->URL_s->password = PL_strdup (auth_closure->pass);
       cd->next_state = HTTP_SETUP_STREAM;
-    else
+
+    } else {
       cd->next_state = HTTP_DONE;
+    }
       
     return;
 }
@@ -3887,6 +3894,7 @@ NET_InitHTTPProtocol(void)
   http_proto_impl.init = net_HTTPLoad;
   http_proto_impl.process = net_ProcessHTTP;
   http_proto_impl.interrupt = net_InterruptHTTP;
+  http_proto_impl.resume = net_ResumeHTTP;
   http_proto_impl.cleanup = net_CleanupHTTP;
   StrAllocCopy(http_proto_impl.scheme, HTTP_SCHEME); 
 

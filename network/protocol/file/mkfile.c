@@ -1851,6 +1851,7 @@ NET_InitFileProtocol(void)
     file_proto_impl.init = net_FileLoad;
     file_proto_impl.process = net_ProcessFile;
     file_proto_impl.interrupt = net_InterruptFile;
+    file_proto_impl.resume = NULL;
     file_proto_impl.cleanup = net_CleanupFile;
 
     NET_RegisterProtocolImplementation(&file_proto_impl, FILE_TYPE_URL);

@@ -933,6 +933,7 @@ NET_InitAboutProtocol(void)
     about_proto_impl.init = net_AboutLoad;
     about_proto_impl.process = net_AboutStub;
     about_proto_impl.interrupt = net_AboutStub;
+    about_proto_impl.resume = NULL;
     about_proto_impl.cleanup = net_CleanupAbout;
 
     NET_RegisterProtocolImplementation(&about_proto_impl, ABOUT_TYPE_URL);

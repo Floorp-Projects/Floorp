@@ -3143,10 +3143,6 @@ redo_load_switch:   /* come here on file/ftp retry */
 #endif
 }
 
-/* forward declaration */
-PUBLIC void NET_ResumeHTTP (ActiveEntry *, PRBool);
-
-
 /* this thing is a hack that will allow http streams
    waiting on passwd auth to resume XXX */
 PUBLIC void NET_ResumeWithAuth (void *closure)
@@ -3162,27 +3158,27 @@ PUBLIC void NET_ResumeWithAuth (void *closure)
     }
     iter = net_EntryList;
 
-    while (tmpEntry = (ActiveEntry *) XP_ListNextObject(iter)) {
+    while ((tmpEntry = (ActiveEntry *) XP_ListNextObject(iter))) {
       if (tmpEntry == (ActiveEntry *) auth_closure->_private) {
         break;
-      } else {
-        return;
       }
     }
+
+    if (!tmpEntry)
+        return;
 
     if (auth_closure && auth_closure->pass && *auth_closure->pass) {
 
       TRACEMSG (("NET_ResumeWithAuth: auth succeeded: %s", tmpEntry->URL_s->address));
-      /* now update the user/pass */
-      tmpEntry->URL_s->username = PL_strdup (auth_closure->user);
-      tmpEntry->URL_s->password = PL_strdup (auth_closure->pass);
 
       /* now try it again */
-      NET_ResumeHTTP(tmpEntry, PR_TRUE);
+      if (tmpEntry->proto_impl->resume)
+          tmpEntry->proto_impl->resume (tmpEntry, auth_closure, PR_TRUE);
 
     } else {
       TRACEMSG (("NET_ResumeWithAuth(): auth failed: %s", tmpEntry->URL_s->address));
-      NET_ResumeHTTP(tmpEntry, PR_FALSE);
+      if (tmpEntry->proto_impl->resume)
+          tmpEntry->proto_impl->resume (tmpEntry, auth_closure, PR_FALSE);
     }
 
     /* now free the closure struct */
@@ -4611,6 +4607,7 @@ net_reg_random_protocol(NET_ProtoInitFunc *LoadRoutine, int type)
     random_proto_impl->init = LoadRoutine;
     random_proto_impl->process = net_ProtoMainStub;
     random_proto_impl->interrupt = net_ProtoMainStub;
+    random_proto_impl->resume = NULL; /* not usually need */
     random_proto_impl->cleanup = net_ProtoCleanupStub;
 
     NET_RegisterProtocolImplementation(random_proto_impl, type);
@@ -5120,7 +5117,7 @@ int32 net_MailtoLoad (ActiveEntry * cur_entry)
 		if(newshost)
 		  {
 			char *prefix = "news://";
-			char *slash = PL_strrchr (newshost, '/');
+			/* char *slash = PL_strrchr (newshost, '/'); -- unused */
 			HG32828
 			newspost_url = (char *) PR_Malloc (PL_strlen (prefix) +
 											  PL_strlen (newshost) + 10);
@@ -5192,6 +5189,7 @@ NET_InitMailtoProtocol(void)
         mailto_proto_impl.init = net_MailtoLoad;
         mailto_proto_impl.process = net_MailtoStub;
         mailto_proto_impl.interrupt = net_MailtoStub;
+        mailto_proto_impl.resume = NULL;
         mailto_proto_impl.cleanup = net_CleanupMailtoStub;
 
         NET_RegisterProtocolImplementation(&mailto_proto_impl, MAILTO_TYPE_URL);

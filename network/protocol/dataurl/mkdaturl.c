@@ -156,6 +156,7 @@ NET_InitDataURLProtocol(void)
         dataurl_proto_impl.init = net_DataURLLoad;
         dataurl_proto_impl.process = net_ProcessDataURL;
         dataurl_proto_impl.interrupt = net_InterruptDataURL;
+        dataurl_proto_impl.resume = NULL;
         dataurl_proto_impl.cleanup = net_CleanupDataURL;
 
         NET_RegisterProtocolImplementation(&dataurl_proto_impl, DATA_TYPE_URL);

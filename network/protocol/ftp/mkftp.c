@@ -154,6 +154,7 @@ typedef struct _FTPConnection {
  */
 typedef enum _FTPStates {
 FTP_WAIT_FOR_RESPONSE,
+FTP_WAIT_FOR_AUTH,
 FTP_CONTROL_CONNECT,
 FTP_CONTROL_CONNECT_WAIT,
 FTP_SEND_USERNAME,
@@ -291,6 +292,11 @@ typedef struct _FTPConData {
 /* forward decls */
 static const char *pref_email_as_ftp_password = "security.email_as_ftp_password";
 PRIVATE int32 net_ProcessFTP(ActiveEntry * ce);
+PUBLIC PRBool stub_PromptPassword(MWContext *context,
+                                  char *prompt,
+                                  XP_Bool *remember,
+                                  XP_Bool is_secure,
+                                  void *closure);
 
 /* function prototypes
  */
@@ -3752,6 +3758,7 @@ net_parse_dir_entry (char *entry, int server_type)
 
 } /* net_parse_dir_entry */
 
+
 PRIVATE int
 net_get_ftp_password(ActiveEntry *ce)
 {
@@ -3788,36 +3795,39 @@ net_get_ftp_password(ActiveEntry *ce)
 
 			if(!cd->password)
 			{
+                PRBool status;
+                NET_AuthClosure * auth_closure = PR_NEWZAP (NET_AuthClosure);
+
             	PR_snprintf(cd->output_buffer, OUTPUT_BUFFER_SIZE,
 							XP_GetString(XP_PROMPT_ENTER_PASSWORD),
 							host_string);
-#if defined(SingleSignon)
-		cd->password = (char *)SI_PromptPassword(ce->window_id,
-				cd->output_buffer, host_string,
-				FALSE /* pickFirstUser */);
-#else
-            	cd->password = (char *)PC_PromptPassword(ce->window_id,
-				cd->output_buffer, &cd->store_password,
-													 FALSE /* not secure */);
-#endif
-            	if(!cd->password)
-			  	{
-					PR_Free(host_string);
-                	return(MK_INTERRUPTED);  /* user canceled */
-			  	}
+
+                /* the new multi-threaded case -- we return asynchronously */
+                if (!auth_closure) {
+                  return(MK_INTERRUPTED);
+                }
+        
+                auth_closure->_private = (void *) ce;
+                auth_closure->user = NULL;
+                auth_closure->pass = NULL;
+                auth_closure->msg = PL_strdup (cd->output_buffer);
+
+            	status = stub_PromptPassword(ce->window_id,
+                                             cd->output_buffer, 
+                                             &cd->store_password,
+                                             FALSE /* not secure */,
+                                             (void *) auth_closure);
+
+                PR_Free(host_string);
+                /* this no longer a user cancel - password prompting is async */
+                return(FTP_WAIT_FOR_AUTH);
 			}
-
-			StrAllocCopy(ftp_last_password_host, host_string);
-			StrAllocCopy(ftp_last_password, cd->password);
 		  }
-
-		PR_Free(host_string);
 	  }
-
-	cd->next_state = FTP_SEND_PASSWORD;
 
     return 0;
 }
+
 
 PRIVATE int
 net_get_ftp_password_response(FTPConData *cd)
@@ -4160,6 +4170,30 @@ net_FTPLoad (ActiveEntry * ce)
 } 
 
 
+PUBLIC void
+net_ResumeFTP(ActiveEntry *ce, NET_AuthClosure *auth_closure, PRBool resume)
+{
+  FTPConData * cd = (FTPConData *) ce->con_data;
+  
+  TRACEMSG (("net_ResumeFTP: %s", ce->URL_s->address));
+
+  if (resume) {
+    char * host_string = NET_ParseURL(ce->URL_s->address, (GET_USERNAME_PART | GET_HOST_PART) );
+
+    cd->password = PL_strdup (auth_closure->pass);
+    cd->next_state = FTP_SEND_PASSWORD;
+
+    StrAllocCopy(ftp_last_password_host, host_string);
+    StrAllocCopy(ftp_last_password, cd->password);
+
+    PR_Free (host_string);
+  } else {
+    cd->next_state = FTP_DONE;
+  }
+      
+  return;
+}
+
 /* the main state machine control routine.  Calls
  * the individual state processors
  * 
@@ -4177,6 +4211,10 @@ net_ProcessFTP(ActiveEntry * ce)
         TRACEMSG(("In ProcessFTP switch loop with state: %d \n", cd->next_state));
 
         switch(cd->next_state) {
+
+          case FTP_WAIT_FOR_AUTH:
+            printf ("ProcessFTP: waiting for password\n");
+            break;
 
           case FTP_WAIT_FOR_RESPONSE:
             ce->status = net_ftp_response(ce);
@@ -4835,6 +4873,7 @@ NET_InitFTPProtocol(void)
 	ftp_proto_impl.init = net_FTPLoad;
 	ftp_proto_impl.process = net_ProcessFTP;
 	ftp_proto_impl.interrupt = net_InterruptFTP;
+	ftp_proto_impl.resume = net_ResumeFTP;
 	ftp_proto_impl.cleanup = net_CleanupFTP;
 
 	NET_RegisterProtocolImplementation(&ftp_proto_impl, FTP_TYPE_URL);
