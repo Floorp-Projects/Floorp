@@ -40,6 +40,7 @@
 #import "CHBrowserView.h"
 
 #include "nsCOMPtr.h"
+#include "nsString.h"
 #include "CHClickListener.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIContent.h"
