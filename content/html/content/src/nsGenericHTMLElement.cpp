@@ -29,7 +29,7 @@
 #include "nsICSSDeclaration.h"
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
-#include "nsIDOMDocumentFragment.h"
+#include "nsIDOMHTMLDocument.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMNamedNodeMap.h"
@@ -413,7 +413,7 @@ class nsGenericHTMLElementTearoff : public nsIDOMNSHTMLElement,
     NS_ADDREF(mElement);
   }
 
-  ~nsGenericHTMLElementTearoff()
+  virtual ~nsGenericHTMLElementTearoff()
   {
     NS_RELEASE(mElement);
   }
@@ -732,121 +732,217 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
                                     nsIAtom* aOffsetParentTag,
                                     nsIContent** aOffsetParent)
 {
-  nsresult res = NS_OK;
-
   *aOffsetParent = nsnull;
 
   aRect.x = aRect.y = 0;
   aRect.Empty();
 
-  if(mDocument) {
-    // Get Presentation shell 0
-    nsCOMPtr<nsIPresShell> presShell;
-    mDocument->GetShellAt(0, getter_AddRefs(presShell));
+  if (!mDocument) {
+    return NS_OK;
+  }
 
-    if(presShell) {
-      // Flush all pending notifications so that our frames are uptodate
-      mDocument->FlushPendingNotifications();
+  // Get Presentation shell 0
+  nsCOMPtr<nsIPresShell> presShell;
+  mDocument->GetShellAt(0, getter_AddRefs(presShell));
 
-      // Get the Frame for our content
-      nsIFrame* frame = nsnull;
-      presShell->GetPrimaryFrameFor(this, &frame);
-      if(frame != nsnull) {
-        // Get it's origin
-        nsPoint origin;
-        frame->GetOrigin(origin);
+  if (!presShell) {
+    return NS_OK;
+  }
 
-        // Get the union of all rectangles in this and continuation frames
-        nsRect rcFrame;
-        nsIFrame* next = frame;
-        do {
-          nsRect rect;
-          next->GetRect(rect);
-          rcFrame.UnionRect(rcFrame, rect);
-          next->GetNextInFlow(&next);
-        } while (nsnull != next);
+  // Get the Presentation Context from the Shell
+  nsCOMPtr<nsIPresContext> context;
+  presShell->GetPresContext(getter_AddRefs(context));
+
+  if (!context) {
+    return NS_OK;
+  }
+
+  // Flush all pending notifications so that our frames are uptodate
+  mDocument->FlushPendingNotifications();
+
+  // Get the Frame for our content
+  nsIFrame* frame = nsnull;
+  presShell->GetPrimaryFrameFor(this, &frame);
+
+  if (!frame) {
+    return NS_OK;
+  }
+
+  // Get the union of all rectangles in this and continuation frames
+  nsRect rcFrame;
+  nsIFrame* next = frame;
+
+  do {
+    nsRect rect;
+    next->GetRect(rect);
+
+    rcFrame.UnionRect(rcFrame, rect);
+
+    next->GetNextInFlow(&next);
+  } while (next);
 
 
-        // Find the frame parent whose content's tagName either matches
-        // the tagName passed in or is the document element.
-        nsCOMPtr<nsIContent> docElement;
-        mDocument->GetRootContent(getter_AddRefs(docElement));
-        nsIFrame* parent = frame;
-        nsCOMPtr<nsIContent> parentContent;
-        frame->GetParent(&parent);
-        while (parent) {
-          parent->GetContent(getter_AddRefs(parentContent));
-          if (parentContent) {
-            // If we've hit the document element, break here
-            if (parentContent.get() == docElement.get()) {
-              break;
-            }
-            nsCOMPtr<nsIAtom> tag;
-            // If the tag of this frame matches the one passed in, break here
-            parentContent->GetTag(*getter_AddRefs(tag));
-            if (tag.get() == aOffsetParentTag) {
-              *aOffsetParent = parentContent;
-              NS_IF_ADDREF(*aOffsetParent);
+  nsCOMPtr<nsIContent> docElement;
+  mDocument->GetRootContent(getter_AddRefs(docElement));
 
-              break;
-            }
-          }
-          // Add the parent's origin to our own to get to the
-          // right coordinate system
-          nsPoint parentOrigin;
-          parent->GetOrigin(parentOrigin);
-          origin += parentOrigin;
+  // Find the frame parent whose content's tagName either matches
+  // the tagName passed in or is the document element.
+  nsCOMPtr<nsIContent> content;
+  nsIFrame* parent = nsnull;
+  PRBool done = PR_FALSE;
+  nsCOMPtr<nsIAtom> tag;
 
-          parent->GetParent(&parent);
+
+  frame->GetContent(getter_AddRefs(content));
+
+  if (content) {
+    content->GetTag(*getter_AddRefs(tag));
+
+    if (tag.get() == aOffsetParentTag || content == docElement) {
+      done = PR_TRUE;
+
+      parent = frame;
+    }
+  }
+
+  const nsStyleDisplay* display = nsnull;
+  nsPoint origin(0, 0);
+
+  if (!done) {
+    PRBool is_absolutely_positioned = PR_FALSE;
+
+    frame->GetOrigin(origin);
+
+    frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+
+    if (display && display->IsAbsolutelyPositioned()) {
+      // If the primary frame or a parent is absolutely positioned
+      // (fixed or absolute) we stop walking up the frame parent
+      // chain
+
+      is_absolutely_positioned = PR_TRUE;
+    }
+
+    frame->GetParent(&parent);
+
+    while (parent) {
+      parent->GetStyleData(eStyleStruct_Display,
+                           (const nsStyleStruct*&)display);
+
+      if (display) {
+        if (display->IsPositioned()) {
+          // Stop at the first *parent* that is positioned (fixed,
+          // absolute, or relatiive)
+
+          parent->GetContent(aOffsetParent);
+
+          break;
+        }
+      }
+
+      // Add the parent's origin to our own to get to the
+      // right coordinate system
+
+      if (!is_absolutely_positioned) {
+        nsPoint parentOrigin;
+        parent->GetOrigin(parentOrigin);
+        origin += parentOrigin;
+      }
+
+      parent->GetContent(getter_AddRefs(content));
+
+      if (content) {
+        // If we've hit the document element, break here
+        if (content == docElement) {
+          break;
         }
 
-        // For the origin, add in the border for the frame
-        const nsStyleBorder* border;
-        nsStyleCoord coord;
-        frame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border);
-        if (border) {
-          if (eStyleUnit_Coord == border->mBorder.GetLeftUnit()) {
-            origin.x += border->mBorder.GetLeft(coord).GetCoordValue();
+        content->GetTag(*getter_AddRefs(tag));
+
+        // If the tag of this frame matches the one passed in, break here
+        if (tag.get() == aOffsetParentTag) {
+          if (parent != frame) {
+            *aOffsetParent = content;
+            NS_ADDREF(*aOffsetParent);
           }
-          if (eStyleUnit_Coord == border->mBorder.GetTopUnit()) {
-            origin.y += border->mBorder.GetTop(coord).GetCoordValue();
-          }
+
+          break;
         }
+      }
 
-        // And subtract out the border for the parent
-        if (parent) {
-          const nsStyleBorder* parentBorder;
-          parent->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)parentBorder);
-          if (parentBorder) {
-            if (eStyleUnit_Coord == parentBorder->mBorder.GetLeftUnit()) {
-              origin.x -= parentBorder->mBorder.GetLeft(coord).GetCoordValue();
-            }
-            if (eStyleUnit_Coord == parentBorder->mBorder.GetTopUnit()) {
-              origin.y -= parentBorder->mBorder.GetTop(coord).GetCoordValue();
-            }
-          }
-        }
+      parent->GetParent(&parent);
+    }
 
-        // Get the Presentation Context from the Shell
-        nsCOMPtr<nsIPresContext> context;
-        presShell->GetPresContext(getter_AddRefs(context));
+    if (is_absolutely_positioned && !*aOffsetParent) {
+      // If this element is absolutely positioned, but we don't have
+      // an offset parent it means this element is an absolutely
+      // positioned child that's not nested inside another positioned
+      // element, in this case the element's frame's parent is the
+      // frame for the HTML element so we fail to find the body in the
+      // parent chain. We want the offset parent in this case to be
+      // the body, so we just get the body element from the document.
 
-        if(context) {
-          // Get the scale from that Presentation Context
-          float scale;
-          context->GetTwipsToPixels(&scale);
+      nsCOMPtr<nsIDOMHTMLDocument> html_doc(do_QueryInterface(mDocument));
 
-          // Convert to pixels using that scale
-          aRect.x = NSTwipsToIntPixels(origin.x, scale);
-          aRect.y = NSTwipsToIntPixels(origin.y, scale);
-          aRect.width = NSTwipsToIntPixels(rcFrame.width, scale);
-          aRect.height = NSTwipsToIntPixels(rcFrame.height, scale);
+      if (html_doc) {
+        nsCOMPtr<nsIDOMHTMLElement> html_element;
+
+        html_doc->GetBody(getter_AddRefs(html_element));
+
+        if (html_element) {
+          CallQueryInterface(html_element, aOffsetParent);
         }
       }
     }
   }
 
-  return res;
+  // For the origin, add in the border for the frame
+  const nsStyleBorder* border = nsnull;
+  nsStyleCoord coord;
+
+#if 0
+  // We used to do this to include the border of the frame in the
+  // calculations, but I think that's wrong. My tests show that we
+  // work more like IE if we don't do this, so lets try this and see
+  // if people agree.
+  frame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border);
+
+  if (border) {
+    if (eStyleUnit_Coord == border->mBorder.GetLeftUnit()) {
+      origin.x += border->mBorder.GetLeft(coord).GetCoordValue();
+    }
+    if (eStyleUnit_Coord == border->mBorder.GetTopUnit()) {
+      origin.y += border->mBorder.GetTop(coord).GetCoordValue();
+    }
+  }
+#endif
+
+  // And subtract out the border for the parent
+  if (parent) {
+    border = nsnull;
+
+    parent->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border);
+    if (border) {
+      if (eStyleUnit_Coord == border->mBorder.GetLeftUnit()) {
+        origin.x -= border->mBorder.GetLeft(coord).GetCoordValue();
+      }
+      if (eStyleUnit_Coord == border->mBorder.GetTopUnit()) {
+        origin.y -= border->mBorder.GetTop(coord).GetCoordValue();
+      }
+    }
+  }
+
+  // Get the scale from that Presentation Context
+  float scale;
+  context->GetTwipsToPixels(&scale);
+
+  // Convert to pixels using that scale
+  aRect.x = NSTwipsToIntPixels(origin.x, scale);
+  aRect.y = NSTwipsToIntPixels(origin.y, scale);
+  aRect.width = NSTwipsToIntPixels(rcFrame.width, scale);
+  aRect.height = NSTwipsToIntPixels(rcFrame.height, scale);
+
+  return NS_OK;
 }
 
 nsresult
