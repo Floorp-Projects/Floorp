@@ -491,7 +491,7 @@ nsInlineFrame::ComputeFinalSize(nsInlineReflowState& aState,
       aMetrics.maxElementSize->height = aMetrics.height;
     }
     else {
-      *aMetrics.maxElementSize = aState.mMaxElementSize;
+      *aMetrics.maxElementSize = aInlineReflow.GetMaxElementSize();
     }
 
     // Add in our border and padding to the max-element-size so that
