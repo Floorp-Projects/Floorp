@@ -87,7 +87,9 @@ nsDebugObject::~nsDebugObject()
 NS_IMETHODIMP
 nsDebugObject::DumpContent(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName) 
 {
-nsresult            found;
+nsresult    result = NS_ERROR_NOT_AVAILABLE;
+PRUint32    busyFlags;
+PRBool      stillLoading;
 
   nsCOMPtr<nsIDOMWindowInternal> theInternWindow(do_QueryInterface(aWindow));
   if (theInternWindow) {
@@ -101,17 +103,28 @@ nsresult            found;
       nsCOMPtr<nsIScriptGlobalObject> scriptObj(do_QueryInterface(theInternWindow));
       nsCOMPtr<nsIDocShell> docShell;
       scriptObj->GetDocShell(getter_AddRefs(docShell));
-      docShell->GetPresShell(getter_AddRefs(presShell));
-      presShell->GetRootFrame(&root);
-      if (NS_SUCCEEDED(CallQueryInterface(root, &fdbg))) {
-        FILE* fp = fopen("s:/testdump.txt", "wt");
-        presShell->GetPresContext(&thePC);
-        fdbg->DumpRegressionData(thePC, fp, 0, PR_TRUE);
-        fclose(fp);
+
+      // find out if the document is loaded
+      docShell->GetBusyFlags(&busyFlags);
+      stillLoading = busyFlags && (nsIDocShell::BUSY_FLAGS_BUSY | nsIDocShell::BUSY_FLAGS_PAGE_LOADING);
+
+      if ( !stillLoading ) {
+        docShell->GetPresShell(getter_AddRefs(presShell));
+        presShell->GetRootFrame(&root);
+        if (NS_SUCCEEDED(CallQueryInterface(root, &fdbg))) {
+
+          FILE* fp = fopen("s:/testdump.txt", "wt");
+          presShell->GetPresContext(&thePC);
+          fdbg->DumpRegressionData(thePC, fp, 0, PR_TRUE);
+          fclose(fp);
+          result = NS_OK;    // the document is now loaded, and the frames are dumped.
+        }
       }
     }
   }
 
-  return NS_OK;
+  return result;
 }
+
+
 
