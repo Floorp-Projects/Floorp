@@ -195,7 +195,7 @@
 
 #if defined(XP_MAC) || defined(XP_PC)
 #    include "jscpucfg.h"        /* Use standard Mac or Windows configuration */
-#elif XP_UNIX
+#elif defined(XP_UNIX)
 #    include "jsautocfg.h"       /* Use auto-detected configuration */
 #else
 #    error "Must define one of XP_PC, XP_MAC or XP_UNIX"
