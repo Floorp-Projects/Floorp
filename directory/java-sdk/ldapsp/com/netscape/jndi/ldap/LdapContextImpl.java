@@ -610,7 +610,9 @@ public class LdapContextImpl implements EventDirContext, LdapContext {
         close();
         m_ldapSvc = new LdapService();
         // This controls are to be set on the the LDAPConnection
-        m_ctxEnv.setProperty(ContextEnv.P_CONNECT_CTRLS, reqCtls);
+        if (reqCtls != null) {
+            m_ctxEnv.setProperty(ContextEnv.P_CONNECT_CTRLS, reqCtls);
+        }
         m_ldapSvc.connect(this);
     }
     

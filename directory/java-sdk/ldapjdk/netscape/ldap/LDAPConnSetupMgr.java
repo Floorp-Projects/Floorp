@@ -298,7 +298,7 @@ class LDAPConnSetupMgr implements Cloneable{
     /**
      * Connect to the server at the given index
      */    
-    private void connectServer(int idx) {
+    void connectServer(int idx) {
         ServerEntry entry = m_dsList[idx];
         Thread currThread = Thread.currentThread();
         Socket sock = null;

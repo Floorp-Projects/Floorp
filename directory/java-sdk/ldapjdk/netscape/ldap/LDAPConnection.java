@@ -215,6 +215,11 @@ public class LDAPConnection
      */
     private LDAPSearchConstraints m_defaultConstraints =
         new LDAPSearchConstraints();
+    
+    // A clone of constraints for the successful bind. Used by 
+    // "smart failover" for the automatic rebind
+    private LDAPConstraints m_rebindConstraints;
+
     private Vector m_responseListeners;
     private Vector m_searchListeners;
     private boolean m_bound;
@@ -253,11 +258,11 @@ public class LDAPConnection
     /**
      * Properties
      */
-    private final static Float SdkVersion = new Float(4.05f);
+    private final static Float SdkVersion = new Float(4.07f);
     private final static Float ProtocolVersion = new Float(3.0f);
     private final static String SecurityVersion = new String("none,simple,sasl");
     private final static Float MajorVersion = new Float(4.0f);
-    private final static Float MinorVersion = new Float(0.5f);
+    private final static Float MinorVersion = new Float(0.07f);
     private final static String DELIM = "#";
     private final static String PersistSearchPackageName =
       "netscape.ldap.controls.LDAPPersistSearchControl";
@@ -1691,6 +1696,7 @@ public class LDAPConnection
                         myListener, cons);
             checkMsg( myListener.getResponse() );
             markConnAsBound();
+            m_rebindConstraints = (LDAPConstraints)cons.clone();
             m_authMethod = "simple";
         } catch (LDAPReferralException e) {
             m_referralConnection = createReferralConnection(e, cons);
@@ -1761,7 +1767,11 @@ public class LDAPConnection
             m_saslBinder.bind(this, false);
             m_authMethod = "sasl";
         } else {
-            internalBind (m_protocolVersion, false, cons);
+            //Rebind using m_rebindConstraints
+            if (m_rebindConstraints == null) {
+                m_rebindConstraints = m_defaultConstraints;
+            }
+            internalBind (m_protocolVersion, false, m_rebindConstraints);
         }
     }
 

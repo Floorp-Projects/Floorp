@@ -57,12 +57,18 @@ public class LDAPSaslBind implements LDAPBind, Serializable {
         _packageName = packageName;
         _props = props;
         _cbh = cbh;
-        if ( (cbh != null) &&
+
+        // 12-01-99 Disabled check for instanceof CallbackHandler so that
+        // there is no dependency on the extenal jaas.jar package. This is
+        // reqired for Communicator build where the ldap java package does not
+        // include any sasl classes.
+
+        /*if ( (cbh != null) &&
              !(cbh instanceof javax.security.auth.callback.CallbackHandler) ) {
             throw new IllegalArgumentException(
                 "Callback argument must implement " +
                 "javax.security.auth.callback.CallbackHandler" );
-        }
+        }*/
     }
 
     /**

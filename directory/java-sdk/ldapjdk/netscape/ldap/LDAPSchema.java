@@ -212,7 +212,7 @@ public class LDAPSchema {
      * @see netscape.ldap.LDAPSchemaElement#add
      * @see netscape.ldap.LDAPSchemaElement#remove
      */
-    protected void addObjectClass( LDAPObjectClassSchema objectSchema ) {
+    public void addObjectClass( LDAPObjectClassSchema objectSchema ) {
         objectClasses.put( objectSchema.getName().toLowerCase(),
                            objectSchema );
     }
@@ -242,7 +242,7 @@ public class LDAPSchema {
      * @see netscape.ldap.LDAPSchemaElement#add
      * @see netscape.ldap.LDAPSchemaElement#remove
      */
-    protected void addAttribute( LDAPAttributeSchema attrSchema ) {
+    public void addAttribute( LDAPAttributeSchema attrSchema ) {
         attributes.put( attrSchema.getName().toLowerCase(), attrSchema );
     }
 
@@ -271,7 +271,7 @@ public class LDAPSchema {
      * @see netscape.ldap.LDAPSchemaElement#add
      * @see netscape.ldap.LDAPSchemaElement#remove
      */
-    protected void addMatchingRule( LDAPMatchingRuleSchema matchSchema ) {
+    public void addMatchingRule( LDAPMatchingRuleSchema matchSchema ) {
         matchingRules.put( matchSchema.getName().toLowerCase(), matchSchema );
     }
 
