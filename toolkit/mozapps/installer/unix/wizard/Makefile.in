@@ -80,8 +80,6 @@ WIZARD_FILES = \
 	mozilla-installer \
 	$(PROGRAM) \
 	installer.ini \
-	watermark.xpm \
-	header.xpm \
 	$(NULL)
 
 libs:: $(WIZARD_FILES)
