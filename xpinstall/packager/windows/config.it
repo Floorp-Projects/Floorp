@@ -375,7 +375,7 @@ exe_param=
 Class Name=MozillaMessageWindow
 Window Name=
 ;*** LOCALIZE ME BABY ***
-Message=Setup has detected that $ProductName$ is currently running.  Please quit $ProductName$ before continuing Setup.  Click Retry to perform the check again, or Cancel to exit Setup.
+Message=Download of $ProductName$ was successful.  Close any $ProductName$ windows to proceed with installation.  To do this, open the File menu in $ProductName$ and choose Exit.  Then click OK in this dialog box to continue installation.
 
 ; These keys are not normally necessary for checking instances.  They are
 ; set here because Mozilla requires a way to shut down it's turbo mode.
@@ -388,8 +388,7 @@ Extra Cmd Parameter=-kill
 Class Name=MozillaWindowClass
 Window Name=
 ;*** LOCALIZE ME BABY ***
-Message=Setup has detected that $ProductName$ is currently running.  Please quit $ProductName$ before continuing Setup.  Click Retry to perform the check again, or Cancel to exit Setup.
-
+Message=Download of $ProductName$ was successful.  Close any $ProductName$ windows to proceed with installation.  To do this, open the File menu in $ProductName$ and choose Exit.  Then click OK in this dialog box to continue installation.
 
 
 

@@ -87,6 +87,7 @@ STR_INSTALLING=Currently installing %s
 STR_COPYINGFILE=Copying file: %s
 MB_WARNING_STR=Warning
 MB_MESSAGE_STR=Message
+MB_ATTENTION_STR=Attention
 MSG_CREATE_DIRECTORY=The following directory does not exist:%sWould you like to create it?
 STR_CREATE_DIRECTORY=Create Directory?
 ERROR_PROGRAM_FOLDER_NAME=Invalid Program folder name entered.
