@@ -446,9 +446,9 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *newsgroupname)
 
 	//Now we have a valid directory or we have returned.
 	//Make sure the new folder name is valid
+	// do we need to hash newsgroup name if it is too big?
 	path += newsgroupname;
-	path.MakeUnique();
-
+	
 #ifdef DEBUG_NEWS
 	printf("echo %s: to the newsrc file\n", newsgroupname);
 #endif
