@@ -98,6 +98,10 @@ extern "C" {
 #define LDAP_CONTROL_PWEXPIRED          "2.16.840.1.113730.3.4.4"
 #define LDAP_CONTROL_PWEXPIRING         "2.16.840.1.113730.3.4.5"
 
+/* Proposed standard password policy controls */
+#define LDAP_X_CONTROL_PWPOLICY_REQUEST		"1.3.6.1.4.1.42.2.27.8.5.1"
+#define LDAP_X_CONTROL_PWPOLICY_RESPONSE	"1.3.6.1.4.1.42.2.27.8.5.1"
+
 /* Suppress virtual/inherited attribute values */
 #define LDAP_CONTROL_REAL_ATTRS_ONLY	"2.16.840.1.113730.3.4.17"
 

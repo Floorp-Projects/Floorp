@@ -62,6 +62,12 @@ static char * ldaptool_fortezza_err2string( int err );
 #endif /* FORTEZZA */
 #endif
 
+/* copied from ldaprot.h - required to parse the pwpolicy ctrl */
+#define LDAP_TAG_PWP_WARNING	0xA0L   /* context specific + constructed */
+#define LDAP_TAG_PWP_SECSLEFT	0x80L   /* context specific + primitive */
+#define LDAP_TAG_PWP_GRCLOGINS	0x81L   /* context specific + primitive + 1 */
+#define LDAP_TAG_PWP_ERROR	0x81L   /* context specific + primitive + 1 */
+
 /*
  * display usage for common options with one exception: -f is not included
  * since the description tends to be tool-specific.
@@ -169,6 +175,7 @@ static int		prompt_password = 0;
 static FILE		*password_fp = NULL;
 static char             *proxyauth_id = NULL;
 static int		proxyauth_version = 2;	/* use newer proxy control */
+static int		no_pwpolicy_req_ctrl = 0;
 
 #ifndef NO_LIBLCACHE
 static char		*cache_config_file = NULL;
@@ -327,7 +334,7 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 	extra_opts = "";
     }
 
-    common_opts = "nvEMRHZ03d:D:f:h:j:I:K:N:O:P:p:Q:W:w:V:X:m:i:k:y:Y:J:";
+    common_opts = "gnvEMRHZ03d:D:f:h:j:I:K:N:O:P:p:Q:W:w:V:X:m:i:k:y:Y:J:";
 
     /* note: optstring must include room for liblcache "C:" option */
     if (( optstring = (char *) malloc( strlen( extra_opts ) + strlen( common_opts )
@@ -582,6 +589,9 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 	    ldctrl->ldctl_iscritical = ctrl_criticality;
 	    ldaptool_add_control_to_array(ldctrl, ldaptool_request_ctrls);
 	    break;
+	case 'g':	/* do not send password policy request control */
+		no_pwpolicy_req_ctrl++;
+		break;
 	default:
 	    (*extra_opt_callback)( i, optarg );
 	}
@@ -1007,9 +1017,10 @@ ldaptool_ldap_init( int second_host )
 void
 ldaptool_bind( LDAP *ld )
 {
-    int		rc;
+    int		rc, ctrl_index = 0;
     char	*conv;
-    LDAPControl	auth_resp_ctrl, *ctrl_array[ 2 ], **bindctrls;
+    LDAPControl	auth_resp_ctrl, *ctrl_array[ 3 ], **bindctrls;
+    LDAPControl pwpolicy_req_ctrl;
 
     if ( ldaptool_not ) {
 	return;
@@ -1020,12 +1031,22 @@ ldaptool_bind( LDAP *ld )
 	auth_resp_ctrl.ldctl_value.bv_val = NULL;
 	auth_resp_ctrl.ldctl_value.bv_len = 0;
 	auth_resp_ctrl.ldctl_iscritical = 0;
+	ctrl_array[ctrl_index++] = &auth_resp_ctrl;
+    }
 
-	ctrl_array[0] = &auth_resp_ctrl;
-	ctrl_array[1] = NULL;
-	bindctrls = ctrl_array;
-    } else {
+    if ( !no_pwpolicy_req_ctrl ) {
+	pwpolicy_req_ctrl.ldctl_oid = LDAP_X_CONTROL_PWPOLICY_REQUEST;
+	pwpolicy_req_ctrl.ldctl_value.bv_val = NULL;
+	pwpolicy_req_ctrl.ldctl_value.bv_len = 0;
+	pwpolicy_req_ctrl.ldctl_iscritical = 0;
+	ctrl_array[ctrl_index++] = &pwpolicy_req_ctrl;
+    }
+
+    if ( ctrl_index == 0 ) {
 	bindctrls = NULL;
+    } else {
+	ctrl_array[ctrl_index] = NULL;
+	bindctrls = ctrl_array;
     }
 
     /*
@@ -1390,6 +1411,18 @@ parse_result( LDAP *ld, LDAPMessage *res, struct berval **servercredp,
     int		pw_days=0, pw_hrs=0, pw_mins=0, pw_secs=0; /* for pwpolicy */
     char	**refs = NULL;
     LDAPControl	**ctrls;
+    BerElement *ber = NULL;
+    static const char *pwpolicy_err2str[] = {
+	"Password has expired.",
+	"Account is locked.",
+	"Password has been reset by an administrator; you must change it.",
+	"Password change not allowed.",
+	"Must supply old password.",
+	"Invalid password syntax.",
+	"Password too short.",
+	"Password too young.",
+	"Password in history."
+    };
 
     if (( rc = ldap_parse_result( ld, res, &lderr, NULL, NULL, &refs,
 	    &ctrls, 0 )) != LDAP_SUCCESS ) {
@@ -1449,6 +1482,79 @@ parse_result( LDAP *ld, LDAPMessage *res, struct berval **servercredp,
 			
 		   }
 		}
+	    if ( 0 == strcmp( ctrls[i]->ldctl_oid,
+		LDAP_X_CONTROL_PWPOLICY_RESPONSE )) {
+		unsigned long tag1=0, tag2=0, tag3=0;
+		int warnvalue=0, grclogins=-1, secsleft=-1, errvalue=-1;
+		static int err2str_size = sizeof(pwpolicy_err2str)/sizeof(pwpolicy_err2str[0]);
+
+		if ( ( ber = ber_init(&(ctrls[i]->ldctl_value)) ) == NULL ) {
+			fprintf(stderr, "%s: not enough memory\n", ldaptool_progname);
+			return( LDAP_NO_MEMORY );
+		}
+		if ( ber_scanf(ber,"{t", &tag1) == LBER_ERROR ) {
+			/* error */
+			ber_free( ber, 1 );
+			return (ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP ));
+		} 
+		switch (tag1) {
+		case LDAP_TAG_PWP_WARNING:
+			if ( ber_scanf(ber, "{ti}", &tag2, &warnvalue)
+					== LBER_ERROR ) {
+				/* error */
+				ber_free( ber, 1 );
+				return(ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP ));
+			}
+			switch (tag2) {
+			case LDAP_TAG_PWP_SECSLEFT:
+				secsleft = warnvalue;
+				break;
+			case LDAP_TAG_PWP_GRCLOGINS:
+				grclogins = warnvalue;
+				break;
+			default:
+				/* error */
+				ber_free( ber, 1 );
+				return(ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP ));
+			}
+			/* Now check for the error value if it's present */
+			if ( ber_scanf(ber, "te", &tag3, &errvalue) != LBER_ERROR ) {
+				if (tag3 != LDAP_TAG_PWP_ERROR) {
+					errvalue = -1;
+				}
+			}
+			break;
+		case LDAP_TAG_PWP_ERROR:
+			if ( ber_scanf(ber, "e}", &errvalue) 
+					== LBER_ERROR ) {
+				/* error */
+				ber_free( ber, 1 );
+				return(ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP ));
+			}
+			break;
+		default : /* error */
+			ber_free( ber, 1 );
+			return(ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP ));
+		}
+		
+		/* Now we have all the values */
+		if ( secsleft >= 0 ) {
+			fprintf(stderr, "%s: Password will expire in %d seconds\n",
+				ldaptool_progname, secsleft);
+		}
+		if ( grclogins >= 0 ) {
+			fprintf(stderr, "%s: %d grace login(s) remain\n",
+				ldaptool_progname, grclogins);
+		}
+		if ( errvalue >= 0 && errvalue < err2str_size ) {
+			fprintf(stderr, "%s: %s\n",
+				ldaptool_progname, pwpolicy_err2str[errvalue]);
+		} else if ( errvalue != -1 ) {
+			fprintf(stderr, "%s: %s\n",
+				ldaptool_progname,
+				"Invalid error value in password policy response control");
+		}
+	    } /* end of LDAP_X_CONTROL_PWPOLICY_RESPONSE */
 	}
 	ldap_controls_free( ctrls );
     }
@@ -1457,6 +1563,7 @@ parse_result( LDAP *ld, LDAPMessage *res, struct berval **servercredp,
 	    servercredp, 0 )) != LDAP_SUCCESS ) {
 	(void)ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
 	ldap_msgfree( res );
+	ber_free( ber, 1 );
 	return( rc );
     }
 
@@ -1473,6 +1580,7 @@ parse_result( LDAP *ld, LDAPMessage *res, struct berval **servercredp,
 	ldap_value_free( refs );
     }
 
+    ber_free( ber, 1 );
     return( lderr );
 }
 

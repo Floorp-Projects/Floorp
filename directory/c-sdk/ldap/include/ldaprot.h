@@ -71,6 +71,10 @@ extern "C" {
 #define LDAP_TAG_SASL_RES_CREDS	0x87L	/* context specific + primitive + 7 */
 #define LDAP_TAG_VLV_BY_INDEX	0xa0L	/* context specific + constructed + 0 */
 #define LDAP_TAG_VLV_BY_VALUE	0x81L	/* context specific + primitive + 1 */
+#define LDAP_TAG_PWP_WARNING	0xA0L   /* context specific + constructed */
+#define LDAP_TAG_PWP_SECSLEFT	0x80L   /* context specific + primitive */
+#define LDAP_TAG_PWP_GRCLOGINS	0x81L   /* context specific + primitive + 1 */
+#define LDAP_TAG_PWP_ERROR	0x81L   /* context specific + primitive + 1 */
 
 /* possible operations a client can invoke */
 #define LDAP_REQ_BIND		0x60L	/* application + constructed + 0 */

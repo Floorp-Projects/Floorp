@@ -18,42 +18,42 @@ The "avail" lists included options that are available for use.
 
 
 common.c (supported by all of the tools):
-	raw:	nvEMRHZ0d:D:f:h:I:j:K:N:O:P:p:Q:W:w:V:X:m:i:k:y:Y:J:
-	sorted: 0 DEHIJKMNOPQRVWXYZ dfhikmnpvwy
-	avail:	2 [4-9] g (not used by any of the tools)
+	raw:	gnvEMRHZ0d:D:f:h:I:j:K:N:O:P:p:Q:W:w:V:X:m:i:k:y:Y:J:
+	sorted: 0 DEHIJKMNOPQRVWXYZ dfghikmnpvwy
+	avail:	2 [4-9] (not used by any of the tools)
 
 ldapcmp.c:
 	raw:	Bb:l:s:z:
 	sorted:	B blsz
-	all:	0 BDHIKMNOPQRVWXYZ bdfhiklmnpsvwyz
-	avail:	[12] [4-9] ACFGLSTU acegjoqrtu
+	all:	0 BDHIKMNOPQRVWXYZ bdfghiklmnpsvwyz
+	avail:	[12] [4-9] ACFGLSTU acejoqrtu
 
 ldapcompare.c:
 	raw:	cq
 	sorted:	cq
-	all:	0 DEHIKMNOPQRVWXYZ cdfhikmnpqvwy
-	avail:	[12] [4-9] ABCFLSTU abegjlorstuxz
+	all:	0 DEHIKMNOPQRVWXYZ cdfghikmnpqvwy
+	avail:	[12] [4-9] ABCFLSTU abejlorstuxz
 
 ldapdelete.c (deprecated)
 	raw:	c
 	sorted:	c
-	all:	0 DHIKMNOPQRVWXYZ cdfhikmnpvwy
-	avail:	[12] [4-9] ABCFGLSTU abegjloqrstuxz
+	all:	0 DHIKMNOPQRVWXYZ cdfghikmnpvwy
+	avail:	[12] [4-9] ABCFGLSTU abejloqrstuxz
 
 ldapmodify.c
 	raw:	aAbcFe:B:q
 	sorted:	ABF abceq
-	all:	0 ABDFHIKMNOPQRVWXYZ abcdefhikmnpqvwy
-	avail:	[12] [4-9] CGLSTU gjlorstuxz
+	all:	0 ABDFHIKMNOPQRVWXYZ abcdefghikmnpqvwy
+	avail:	[12] [4-9] CGLSTU jlorstuxz
 
 ldapmodrdn.c (deprecated)
 	raw:	cr
 	sorted:	cr
-	all:	0 DHIKMNOPQRVWXYZ cdfhikmnprvwy
-	avail:	[12] [4-9]  ABCFGLSTU abegjloqstuxz
+	all:	0 DHIKMNOPQRVWXYZ cdfghikmnprvwy
+	avail:	[12] [4-9]  ABCFGLSTU abejloqstuxz
 
 ldapsearch.c
 	raw:	ABLTU1eotuxa:b:F:G:l:S:s:z:C:
 	sorted:	1 ABCFGLSTU abeostuxz
-	all:	01 ABCDFGHIKLMNOPQRSTUVWXYZ abdefhikmnopstuvwxyz
-	avail:	2 [4-9] cgjlqr
+	all:	01 ABCDFGHIKLMNOPQRSTUVWXYZ abdefghikmnopstuvwxyz
+	avail:	2 [4-9] cjlqr
