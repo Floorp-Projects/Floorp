@@ -49,6 +49,11 @@ JS_END_EXTERN_C
 
 #endif /* XP_MAC */
 
+#ifdef XP_BEOS
+#define JS_HAVE_LONG_LONG
+#endif
+
+
 #ifdef XP_UNIX
 
 /*
