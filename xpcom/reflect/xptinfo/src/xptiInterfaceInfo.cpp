@@ -407,7 +407,7 @@ xptiInterfaceInfo::GetInfoForParam(uint16 methodIndex,
 
     nsIInterfaceInfo* theInfo =
         mInterface->mWorkingSet->GetTypelibGuts(mInterface->mTypelib)->
-            GetInfoAtNoAddRef(td->type.interface - 1);
+            GetInfoAtNoAddRef(td->type.iface - 1);
 
     NS_IF_ADDREF(*info = theInfo);
     return NS_OK;
@@ -448,7 +448,7 @@ xptiInterfaceInfo::GetIIDForParam(uint16 methodIndex,
 
     nsIInterfaceInfo* theInfo =
         mInterface->mWorkingSet->GetTypelibGuts(mInterface->mTypelib)->
-            GetInfoAtNoAddRef(td->type.interface - 1);
+            GetInfoAtNoAddRef(td->type.iface - 1);
 
     return theInfo->GetIID(iid);
 }

@@ -293,7 +293,7 @@ struct XPTTypeDescriptor {
     PRUint8 argnum;                 /* used for iid_is and size_is */
     PRUint8 argnum2;                /* used for length_is */
     union {                         
-        PRUint16 interface;         /* used for TD_INTERFACE_TYPE */
+        PRUint16 iface;             /* used for TD_INTERFACE_TYPE */
         PRUint16 additional_type;   /* used for TD_ARRAY */
     } type;
 };

@@ -634,7 +634,7 @@ XPT_GetStringForType(XPTHeader *header, XPTTypeDescriptor *td,
     }
     
     if (tag == TD_INTERFACE_TYPE) {
-        int idx = td->type.interface;
+        int idx = td->type.iface;
         if (!idx || idx > header->num_interfaces)
             *type_string = "UNKNOWN_INTERFACE";
         else
@@ -772,7 +772,7 @@ XPT_DumpTypeDescriptor(XPTTypeDescriptor *td,
     if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_TYPE) {
         fprintf(stdout, "%*sInterfaceTypeDescriptor:\n", indent, " "); 
         fprintf(stdout, "%*sIndex of IDE:             %d\n", new_indent, " ", 
-                td->type.interface);
+                td->type.iface);
     }
 
     if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_IS_TYPE) {
