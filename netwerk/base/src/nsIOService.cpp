@@ -58,6 +58,7 @@ nsIOService::Init()
                                       getter_AddRefs(mSocketTransportService));
 
     if (NS_FAILED(rv)) return rv;
+
     rv = nsServiceManager::GetService(kFileTransportService,
                                       NS_GET_IID(nsIFileTransportService),
                                       getter_AddRefs(mFileTransportService));
@@ -65,6 +66,16 @@ nsIOService::Init()
     rv = nsServiceManager::GetService(kDNSServiceCID,
                                       NS_GET_IID(nsIDNSService),
                                       getter_AddRefs(mDNSService));
+    
+    return rv;
+}
+
+nsresult
+nsIOService::LateInit()
+{
+    nsresult rv;
+
+    rv = mSocketTransportService -> LateInit ();
     return rv;
 }
 
@@ -76,20 +87,42 @@ nsIOService::~nsIOService()
 NS_METHOD
 nsIOService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
+    static  nsISupports *_rValue = nsnull;
+
     nsresult rv;
     NS_ENSURE_NO_AGGREGATION(aOuter);
+
+    if (_rValue)
+    {
+        NS_ADDREF (_rValue);
+        *aResult = _rValue;
+        return NS_OK;
+    }
 
     nsIOService* _ios = new nsIOService();
     if (_ios == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(_ios);
     rv = _ios->Init();
-    if (NS_FAILED(rv)) {
+    if (NS_FAILED(rv))
+    {
         delete _ios;
         return rv;
     }
+
     rv = _ios->QueryInterface(aIID, aResult);
-    NS_RELEASE(_ios);
+
+    if (NS_FAILED(rv))
+    {
+        delete _ios;
+        return rv;
+    }
+    
+    _rValue = NS_STATIC_CAST (nsISupports*, *aResult);
+    _ios -> LateInit  ();
+    NS_RELEASE (_rValue);
+    _rValue = nsnull;
+
     return rv;
 }
 

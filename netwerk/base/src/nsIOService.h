@@ -47,6 +47,7 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
     nsresult Init();
+    nsresult LateInit();
     nsresult NewURI(const char* aSpec, nsIURI* aBaseURI,
                     nsIURI* *result, nsIProtocolHandler* *hdlrResult);
 

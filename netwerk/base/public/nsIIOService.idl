@@ -44,6 +44,9 @@ interface nsIIOService : nsISupports
 {
     /**
      * Returns a protocol handler for a given URI scheme.
+	 *
+	 * @param scheme	URI scheme
+	 * @return	reference to nsIProtcolHandler
      */
     nsIProtocolHandler getProtocolHandler(in string scheme);
 
@@ -52,6 +55,10 @@ interface nsIIOService : nsISupports
      * of the URI spec, and then delegating the construction of the URI
      * to the protocol handler for that scheme. QueryInterface can be used
      * on the resulting URI object to obtain a more specific type of URI.
+	 *
+	 * @param aSpec	URI spec (http, ftp, etc)
+	 * @param aBaseURI	nsIURI to construct the actual URI from
+	 * @return	reference to a new nsIURI object
      */
     nsIURI newURI(in string aSpec, in nsIURI aBaseURI);
 
@@ -66,6 +73,9 @@ interface nsIIOService : nsISupports
      * (e.g. a file: channel), or if a redirect occurs, causing the current
      * URL to become different from the original URL. If NULL, the aURI parameter
      * will be used as the originalURI instead.
+	 *
+	 * @param aURI	- nsIURI to make a channel from
+	 * @return	a reference to the new nsIChannel object
      */
     nsIChannel newChannelFromURI(in nsIURI aURI);
 
@@ -79,6 +89,10 @@ interface nsIIOService : nsISupports
      * (e.g. a file: channel), or if a redirect occurs, causing the current
      * URL to become different from the original URL. If NULL, the aURI parameter
      * will be used as the originalURI instead.
+	 *
+	 * @param aSpec	URI spec to select the appropriate protocol handler
+	 * @param aBaseURI	a base URI to create a channel to
+	 * @return	a reference to the new nsIChannel object
      */
     nsIChannel newChannel(in string aSpec, in nsIURI aBaseURI);
 
@@ -130,16 +144,26 @@ interface nsIIOService : nsISupports
 
     /**
      * Encode characters into % escaped hexcodes.
+	 *
+	 * @param	str	a string to convert from
+	 * @param	mask	a mask of flags to tell the converter which part of the url to escape
+	 * @return	escaped string
      */
     string escape(in string str, in short mask);
 
     /**
      * Decode % escaped hex codes into character values.
+	 *
+	 * @param str	a string to unescape from
+	 * @return	resulted unescaped string
      */
     string unescape(in string str);
 
     /**
      * Get port from string.
+	 *
+	 * @param	str	URI-style string
+	 * @return	port number
      */
     long extractPort(in string str);
 
@@ -150,6 +174,10 @@ interface nsIIOService : nsISupports
      * "/a/b/c/d/e/" yields "/a/b/c/foo/baz.html". Attempting to 
      * ascend above the base results in the NS_ERROR_MALFORMED_URI
      * exception. If basePath is null, it treats it as "/".
+	 *
+	 * @param relativePath	a relative URI
+	 * @param basePath	a base URI
+	 * @return	a new string, representing canonical uri
      */
     string resolveRelativePath(in string relativePath,
                                in string basePath);
