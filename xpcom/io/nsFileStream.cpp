@@ -34,6 +34,10 @@
 #include <Errors.h>
 #endif
 
+#ifdef NS_USING_STL
+using std::endl;
+using std::cout;
+#endif
 
 //========================================================================================
 //          nsBasicFileStream

@@ -36,6 +36,8 @@ CPPSRCS =				\
 	nsUnicharBuffer.cpp		\
 	nsUnicharInputStream.cpp	\
 	nsVoidArray.cpp			\
+	nsFileSpec.cpp \
+	nsFileStream.cpp \
 	$(NULL)
 
 CPP_OBJS =					\
@@ -51,6 +53,8 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsUnicharBuffer.obj		\
 	.\$(OBJDIR)\nsUnicharInputStream.obj	\
 	.\$(OBJDIR)\nsVoidArray.obj		\
+	.\$(OBJDIR)\nsFileSpec.obj \
+	.\$(OBJDIR)\nsFileStream.obj \
 	$(NULL)
 
 EXPORTS=nscore.h nsIArena.h nsIAtom.h nsIByteBuffer.h \
@@ -66,7 +70,7 @@ MODULE=raptor
 REQUIRES=xpcom netlib raptor 
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\netlib \
-    -I$(PUBLIC)\raptor 
+    -I$(PUBLIC)\raptor
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = raptorbase
