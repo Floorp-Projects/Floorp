@@ -27,19 +27,20 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= mimetype
-LIBRARY_NAME	= mimetype
-IS_COMPONENT	= 1
+LIBRARY_NAME	= nkmime_s
 
 REQUIRES	= xpcom
 
 CPPSRCS		= \
 		nsMIMEInfoImpl.cpp \
 		nsMIMEService.cpp \
-		nsMIMEServiceModule.cpp \
 		nsXMLMIMEDataSource.cpp \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
+# we don't want the shared lib, but we want to force the creation of a
+# static lib.
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
 

@@ -426,7 +426,7 @@ nsresult nsHTTPResponse::ProcessHeader(nsIAtom* aHeader, nsCString& aValue)
     else
     if (nsHTTPAtoms::Content_Length == aHeader)
     {
-        PRInt32 length, status;
+        PRInt32 status;
 
         mContentLength = aValue.ToInteger(&status);
         rv = (nsresult)status;

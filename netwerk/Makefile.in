@@ -27,15 +27,16 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 DIRS		= \
-		cache \
 		base \
+		cache \
 		dns \
 		socket \
-		build \
-		protocol \
-		resources \
 		mime \
 		streamconv \
+		protocol \
+		build \
+		build2 \
+		resources \
 		$(NULL)
 
 ifdef ENABLE_TESTS

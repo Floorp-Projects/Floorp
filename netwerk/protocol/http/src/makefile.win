@@ -32,21 +32,13 @@ include <$(DEPTH)/config/config.mak>
 
 MODULE=necko
 
-IS_COMPONENT=1
-MAKE_OBJ_TYPE=DLL
-DLLNAME=nkhttp
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+LIBRARY_NAME=nkhttp_s
 
-LLIBS= $(LLIBS) \
-	$(LIBNSPR)				\
-	$(DIST)\lib\necko.lib       \
-	$(DIST)\lib\xpcom.lib	\
-	$(NULL)
+LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 
 CPP_OBJS=		\
 	.\$(OBJDIR)\nsHTTPSHandler.obj		\
 	.\$(OBJDIR)\nsHTTPHandler.obj		\
-	.\$(OBJDIR)\nsHTTPHandlerModule.obj	\
 	.\$(OBJDIR)\nsHTTPChannel.obj		\
 	.\$(OBJDIR)\nsHTTPRequest.obj		\
 	.\$(OBJDIR)\nsHTTPResponseListener.obj	\
@@ -59,21 +51,10 @@ CPP_OBJS=		\
 	.\$(OBJDIR)\nsAuthEngine.obj		\
 	$(NULL)
 
-LOCAL_INCLUDES=-I. -I../../../streamconv/converters
-
-INCLUDES = $(LOCAL_INCLUDES)
-
-REQUIRES= necko 
-
-INCS = $(INCS)                  \
-        -I$(DEPTH)\dist\include \
-        -I..\public \
-	-I../../../streamconv/converters \
-        $(NULL)
-
 include <$(DEPTH)\config\rules.mak> 
 
-install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
+clobber::
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

@@ -36,12 +36,40 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libneckobase_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libneckodns_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libneckosocket_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnkconv_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnkcnvts_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnkcachemgr_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnkfilecache_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnkmemcache_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libmozdbm_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnkmime_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnkhttp_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnkfile_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnkdata_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnkjar_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnkres_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnkabout_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnkkwd_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libzlib.$(LIB_SUFFIX) \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../base/src \
 		-I$(srcdir)/../dns/src \
 		-I$(srcdir)/../socket/base \
+		-I$(srcdir)/../streamconv/src \
+		-I$(srcdir)/../streamconv/converters \
+		-I$(srcdir)/../cache/memcache \
+		-I$(srcdir)/../cache/filecache \
+		-I$(srcdir)/../cache/mgr \
+		-I$(srcdir)/../mime/src \
+		-I$(srcdir)/../protocol/http/src \
+		-I$(srcdir)/../protocol/file/src \
+		-I$(srcdir)/../protocol/data/src \
+		-I$(srcdir)/../protocol/jar/src \
+		-I$(srcdir)/../protocol/res/src \
+		-I$(srcdir)/../protocol/about/src \
+		-I$(srcdir)/../protocol/keyword/src \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

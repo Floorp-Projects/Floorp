@@ -26,17 +26,18 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= converters
-LIBRARY_NAME	= converters
-SHORT_LIBNAME	= convrtrs
-IS_COMPONENT	= 1
+MODULE		= necko
+LIBRARY_NAME	= nkcnvts_s
 
 REQUIRES	= xpcom zlib
+
+EXPORTS =                 \
+        nsHTTPChunkConv.h \
+        $(NULL)
 
 CPPSRCS		= \
 		nsMultiMixedConv.cpp \
 		nsFTPDirListingConv.cpp \
-		nsConvFactories.cpp \
 		mozTXTToHTMLConv.cpp \
 		nsUnknownDecoder.cpp \
 		nsHTTPChunkConv.cpp \
@@ -44,8 +45,10 @@ CPPSRCS		= \
 		nsTXTToHTMLConv.cpp \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
-		    $(ZLIB_LIBS)
+# we don't want the shared lib, but we want to force the creation of a
+# static lib.
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
 

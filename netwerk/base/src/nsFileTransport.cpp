@@ -121,7 +121,7 @@ nsFileTransport::Init(nsFileTransportService *aService, nsIStreamIO* io)
 
     mService = aService;
     if (mService)
-        PR_AtomicIncrement (&mService -> mTotalTransports);
+        PR_AtomicIncrement(&mService->mTotalTransports);
 
     return rv;
 }
@@ -508,7 +508,7 @@ nsFileTransport::Process(void)
                ("nsFileTransport: OPENING [this=%x %s]",
                 this, mStreamName.GetBuffer()));
         mStatus = mStreamIO->Open(&mContentType, &mTotalAmount);
-        if (NS_SUCCEEDED(mStatus) && mOpenObserver) {
+        if (mOpenObserver) {
             mStatus = mOpenObserver->OnStartRequest(this, mOpenContext);
         }
         switch (mCommand) {
@@ -531,7 +531,7 @@ nsFileTransport::Process(void)
                 this, mStreamName.GetBuffer()));
         
         if (mService)
-            PR_AtomicIncrement (&mService -> mConnectedTransports);
+            PR_AtomicIncrement(&mService->mConnectedTransports);
 
         break;
       }
@@ -542,7 +542,7 @@ nsFileTransport::Process(void)
                 this, mStreamName.GetBuffer()));
 
         if (mService)
-            PR_AtomicIncrement (&mService -> mInUseTransports);
+            PR_AtomicIncrement(&mService->mInUseTransports);
 
         mStatus = mStreamIO->GetInputStream(getter_AddRefs(mSource));
         if (NS_FAILED(mStatus)) {
@@ -641,8 +641,8 @@ nsFileTransport::Process(void)
 
       case END_READ: {
         
-          if (mService)
-            PR_AtomicDecrement (&mService -> mInUseTransports);
+        if (mService)
+            PR_AtomicDecrement(&mService->mInUseTransports);
 
         PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
                ("nsFileTransport: END_READ [this=%x %s] status=%x",
@@ -685,7 +685,7 @@ nsFileTransport::Process(void)
                 this, mStreamName.GetBuffer()));
 
         if (mService)
-            PR_AtomicIncrement (&mService -> mInUseTransports);
+            PR_AtomicIncrement(&mService->mInUseTransports);
 
         mStatus = mStreamIO->GetOutputStream(getter_AddRefs(mSink));
         if (NS_FAILED(mStatus)) {
@@ -789,7 +789,7 @@ nsFileTransport::Process(void)
                 this, mStreamName.GetBuffer(), mStatus));
 
         if (mService)
-            PR_AtomicDecrement (&mService -> mInUseTransports);
+            PR_AtomicDecrement(&mService->mInUseTransports);
 
         if (mSink) {
             mSink->Flush();

@@ -19,7 +19,9 @@
 #
 # Contributor(s): 
 
-MODULE = streamconv
+MODULE = necko
+
+XPIDL_MODULE = necko_strconv
 
 DEPTH = ..\..\..
 

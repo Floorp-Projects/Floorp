@@ -22,53 +22,29 @@ include <$(DEPTH)/config/config.mak>
 
 MODULE = necko
 
-IS_COMPONENT=1
-MAKE_OBJ_TYPE=DLL
-DLLNAME=cnvts
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
-LLIBS= $(LLIBS) \
-        $(DIST)\lib\xpcom.lib \
-        $(LIBNSPR)            \
-!ifdef MOZ_PERF
-        $(DIST)\lib\util.lib  \
-!endif
-	$(DIST)\lib\zlib.lib  \
-        $(NULL)
-
-#
-# Add these for perf info...
-#
-#        $(DIST)\lib\timer_s.lib \
-
-
+LIBRARY_NAME=nkcnvts_s
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 # Add this for performance TXT-HTML performance #'s: -DMOZ_PERF_METRICS
 
-CPP_OBJS =                                         \
-        .\$(OBJDIR)\nsMultiMixedConv.obj          \
-        .\$(OBJDIR)\nsFTPDirListingConv.obj       \
-        .\$(OBJDIR)\nsConvFactories.obj           \
-        .\$(OBJDIR)\mozTXTToHTMLConv.obj \
-        .\$(OBJDIR)\nsHTTPChunkConv.obj  \
-        .\$(OBJDIR)\nsHTTPCompressConv.obj  \
-        .\$(OBJDIR)\nsUnknownDecoder.obj \
-        .\$(OBJDIR)\nsTXTToHTMLConv.obj \
+EXPORTS =                 \
+        nsHTTPChunkConv.h \
         $(NULL)
 
-LOCAL_INCLUDES=-I. -I$(XPDIST)\public\zlib
-
-INCLUDES = $(LOCAL_INCLUDES)
-
-INCS = $(INCS)                  \
-        -I$(DEPTH)\dist\include \
+CPP_OBJS =                                  \
+        .\$(OBJDIR)\nsMultiMixedConv.obj    \
+        .\$(OBJDIR)\nsFTPDirListingConv.obj \
+        .\$(OBJDIR)\mozTXTToHTMLConv.obj    \
+        .\$(OBJDIR)\nsHTTPChunkConv.obj     \
+        .\$(OBJDIR)\nsHTTPCompressConv.obj  \
+        .\$(OBJDIR)\nsUnknownDecoder.obj    \
+        .\$(OBJDIR)\nsTXTToHTMLConv.obj     \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-    $(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::
-        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+        $(RM) $(DIST)\lib\$(LIBRARY_NAME).lib

@@ -40,7 +40,7 @@
     { 0xa1, 0x2b, 0xa6, 0x6e, 0xf6, 0x62, 0xf0, 0xbc } \
 }
 #define NS_MIMEINFO_PROGID \
-"component:||netscape|mimeinfo"
+"component://netscape/mime-info"
 %}
 
 [scriptable, uuid(6A57EAE0-2FE8-11d3-A164-0050041CAF44)]

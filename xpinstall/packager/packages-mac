@@ -48,8 +48,6 @@ viewer:Essential Files:RaptorShell.shlb
 viewer:Essential Files:webshell.shlb 
 viewer:Essential Files:widget.shlb 
 
-viewer:Components:about.shlb 
-viewer:Components:about.xpt 
 viewer:Components:AppShell.shlb 
 viewer:Components:appshell.xpt 
 viewer:Components:bookmarks.shlb 
@@ -60,9 +58,6 @@ viewer:Components:chardet.shlb
 viewer:Components:ChomeRegistry.shlb 
 viewer:Components:chrome.xpt
 viewer:Components:Cookie.shlb 
-viewer:Components:data.shlb 
-viewer:Components:data.shlb 
-viewer:Components:data.xpt 
 viewer:Components:Directory.shlb 
 viewer:Components:Directory.xpt 
 viewer:Components:docshell.xpt
@@ -72,22 +67,11 @@ viewer:Components:domds.xpt
 viewer:Components:editor.xpt 
 viewer:Components:EditorCore.shlb 
 viewer:Components:EditorTxmgr.shlb 
-viewer:Components:file.shlb 
 viewer:Components:FindComponent.shlb 
-viewer:Components:finger.shlb
-viewer:Components:ftp.shlb 
-viewer:Components:ftp.xpt 
-viewer:Components:gfx.xpt 
 viewer:Components:gifdecoder.shlb 
 viewer:Components:history.shlb 
 viewer:Components:history.xpt 
 viewer:Components:htmlparser.shlb 
-viewer:Components:http.shlb 
-viewer:Components:http.xpt 
-viewer:Components:keyword.shlb
-viewer:Components:datetime.shlb
-viewer:Components:jar.shlb
-viewer:Components:jar.xpt
 viewer:Components:jpgdecoder.shlb 
 viewer:Components:JSLoader.shlb 
 viewer:Components:jsurl.shlb 
@@ -99,15 +83,10 @@ viewer:Components:libpref.shlb
 viewer:Components:libpref.xpt 
 viewer:Components:libutil.xpt
 viewer:Components:lwbrk.shlb 
-viewer:Components:mimetype.shlb 
 viewer:Components:mozBrowser.shlb 
 viewer:Components:mozBrowser.xpt 
 viewer:Components:mozcomps.xpt 
-viewer:Components:multiMixedConv.shlb 
-viewer:Components:netwerk.xpt 
-viewer:Components:Network.shlb 
-viewer:Components:nkcache.shlb 
-viewer:Components:nkcache.xpt
+viewer:Components:gfx.xpt 
 viewer:Components:nsIStringBundle.xpt 
 viewer:Components:nslocale.shlb 
 viewer:Components:nsLocale.xpt 
@@ -124,14 +103,10 @@ viewer:Components:RegViewer.shlb
 viewer:Components:RegViewer.xpt 
 viewer:Components:Related.shlb 
 viewer:Components:related.xpt 
-viewer:Components:res.shlb 
-viewer:Components:res.xpt
 viewer:Components:Search.shlb 
 viewer:Components:search.xpt 
 viewer:Components:shistory.shlb 
 viewer:Components:shistory.xpt 
-viewer:Components:streamconv.shlb 
-viewer:Components:streamconv.xpt 
 viewer:Components:strres.shlb 
 viewer:Components:TextServices.shlb
 viewer:Components:tmbm.shlb
@@ -163,6 +138,10 @@ viewer:Components:xpconnect.xpt
 viewer:Components:xpinstall.xpt 
 viewer:Components:autocomplete.shlb 
 viewer:Components:autocomplete.xpt 
+
+viewer:Components:Necko.shlb 
+viewer:Components:Necko2.shlb 
+viewer:Components:necko.xpt 
 
 viewer:chrome:editor:*
 -viewer:chrome:editor:content:EditorInitPage.html

@@ -30,10 +30,6 @@ CPP_OBJS=                                    \
 	$(NULL)
 
 LLIBS=                                \
-        $(DIST)\lib\nkcachemgr_s.lib  \
-        $(DIST)\lib\nkfilecache_s.lib \
-        $(DIST)\lib\nkmemcache_s.lib  \
-        $(DIST)\lib\dbm32.lib         \
         $(DIST)\lib\xpcom.lib         \
         $(LIBNSPR)  
 

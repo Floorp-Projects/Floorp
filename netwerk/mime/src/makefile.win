@@ -22,10 +22,7 @@ include <$(DEPTH)/config/config.mak>
 
 MODULE = necko
 
-IS_COMPONENT=1
-MAKE_OBJ_TYPE=DLL
-DLLNAME=mimetype
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+LIBRARY_NAME = nkmime_s
 
 LLIBS= $(LLIBS) \
         $(DIST)\lib\xpcom.lib \
@@ -34,10 +31,9 @@ LLIBS= $(LLIBS) \
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 
-CPP_OBJS =                                         \
-        .\$(OBJDIR)\nsMIMEInfoImpl.obj          \
-        .\$(OBJDIR)\nsMIMEService.obj           \
-        .\$(OBJDIR)\nsMIMEServiceModule.obj    \
+CPP_OBJS =                                  \
+        .\$(OBJDIR)\nsMIMEInfoImpl.obj      \
+        .\$(OBJDIR)\nsMIMEService.obj       \
         .\$(OBJDIR)\nsXMLMIMEDataSource.obj \
         $(NULL)
 
@@ -51,8 +47,8 @@ INCS = $(INCS)                  \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-    $(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
+install:: $(LIBRARY)
+    $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::
         rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

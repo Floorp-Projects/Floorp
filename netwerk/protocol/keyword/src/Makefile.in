@@ -27,17 +27,18 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= necko
-LIBRARY_NAME	= nkkyword
-IS_COMPONENT	= 1
+LIBRARY_NAME	= nkkwd_s
 
 REQUIRES	= xpcom necko
 
 CPPSRCS		= \
 		nsKeywordProtocolHandler.cpp \
-		nsKeywordModule.cpp \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
+# we don't want the shared lib, but we want to force the creation of a
+# static lib.
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
 

@@ -199,7 +199,7 @@ nsTXTToHTMLConv::nsTXTToHTMLConv() {
     mPreFormatHTML = PR_FALSE;
 }
 
-PRBool CleanupTokens(void *aElement, void *aData) {
+static PRBool CleanupTokens(void *aElement, void *aData) {
     if (aElement) delete (convToken*)aElement;
     return PR_TRUE;
 }
