@@ -229,13 +229,17 @@ DBArcsInOutCursor::DBArcsInOutCursor(CompositeDataSourceImpl* db,
 
     // XXX there better be at least _one_ datasource in this here
     // CompositeDataSourceImpl, else this'll be a real short ride...
-    PR_ASSERT(db->mDataSources.Count() > 0);
-    nsIRDFDataSource* ds = (nsIRDFDataSource*) db->mDataSources[mCount++];
+//    PR_ASSERT(db->mDataSources.Count() > 0);
+    // but if there's not (because some datasource failed to initialize)
+    // then just skip this...
+    if (db->mDataSources.Count() > 0) {
+        nsIRDFDataSource* ds = (nsIRDFDataSource*) db->mDataSources[mCount++];
 
-    if (mTarget) {
-        ds->ArcLabelsIn(mTarget,  &mInCursor);
-    } else {
-        ds->ArcLabelsOut(mSource,  &mOutCursor);
+        if (mTarget) {
+            ds->ArcLabelsIn(mTarget,  &mInCursor);
+        } else {
+            ds->ArcLabelsOut(mSource,  &mOutCursor);
+        }
     }
 }
 
