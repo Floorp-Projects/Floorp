@@ -41,6 +41,7 @@ imgContainer::imgContainer()
   mCurrentFrameIsFinishedDecoding = PR_FALSE;
   mDoneDecoding = PR_FALSE;
   mAnimating = PR_FALSE;
+  mAnimationMode = 0;
   mObserver = nsnull;
 }
 
@@ -213,21 +214,8 @@ NS_IMETHODIMP imgContainer::EndFrameDecode(PRUint32 aFrameNum, PRUint32 aTimeout
   if (!currentFrame) return NS_ERROR_UNEXPECTED;
 
   currentFrame->SetTimeout(aTimeout);
-      
-  if (!mTimer && mAnimating){
-    PRUint32 numFrames;
-    this->GetNumFrames(&numFrames);
-    if (numFrames > 1) {
-        if (aTimeout > 0) { // -1 means display this frame forever
 
-          mAnimating = PR_TRUE;
-          mTimer = do_CreateInstance("@mozilla.org/timer;1");
-      
-          mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this),
-                     aTimeout, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
-        }
-    }
-  }
+  StartAnimation();
   return NS_OK;
 }
 
@@ -253,9 +241,28 @@ NS_IMETHODIMP imgContainer::Clear()
 }
 
 //******************************************************************************
+NS_IMETHODIMP imgContainer::GetAnimationMode(PRUint16 *aAnimationMode)
+{
+  if (!aAnimationMode) return NS_ERROR_NULL_POINTER;
+  *aAnimationMode = mAnimationMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP imgContainer::SetAnimationMode(PRUint16 aAnimationMode)
+{
+  mAnimationMode = aAnimationMode;
+  return NS_OK;
+}
+
 /* void startAnimation () */
 NS_IMETHODIMP imgContainer::StartAnimation()
 {
+  if (mAnimationMode == 1)      // don't animate
+  {
+    mAnimating = PR_FALSE;
+    return NS_OK;
+  }
+
   mAnimating = PR_TRUE;
         
   if (mTimer)
@@ -363,6 +370,12 @@ NS_IMETHODIMP_(void) imgContainer::Notify(nsITimer *timer)
     }
   } else if (mDoneDecoding){
     if ((numFrames-1) == mCurrentAnimationFrameIndex) {
+      // If animation mode is "loop once", it's time to stop animating
+      if (mAnimationMode == 2) {
+        this->StopAnimation();
+        return;
+      }
+
       // Go back to the beginning of the animation
       GetFrameAt(0, getter_AddRefs(nextFrame));
       if(!nextFrame) return;
@@ -403,7 +416,6 @@ NS_IMETHODIMP_(void) imgContainer::Notify(nsITimer *timer)
     // do notification to FE to draw this frame
     observer->FrameChanged(this, nsnull, nextFrame, &dirtyRect);
   }
-
 
 }
 //******************************************************************************

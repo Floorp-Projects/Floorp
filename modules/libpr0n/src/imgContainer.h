@@ -74,6 +74,7 @@ private:
   PRBool   mCurrentFrameIsFinishedDecoding;
   PRBool   mDoneDecoding;
   PRBool   mAnimating;
+  PRUint16 mAnimationMode;
   
   nsWeakPtr mObserver;
 

@@ -111,8 +111,8 @@ NS_NewImageFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 nsImageFrame::nsImageFrame() :
   mLowSrcImageLoader(nsnull)
 #ifdef USE_IMG2
-  , mIntrinsicSize(0, 0),
-  mGotInitialReflow(PR_FALSE)
+  , mGotInitialReflow(PR_FALSE)
+  , mIntrinsicSize(0, 0)
 #endif
 {
   // Size is constrained if we have a width and height. 
@@ -339,6 +339,19 @@ NS_IMETHODIMP nsImageFrame::OnStartDecode(imgIRequest *aRequest, nsIPresContext 
 NS_IMETHODIMP nsImageFrame::OnStartContainer(imgIRequest *aRequest, nsIPresContext *aPresContext, imgIContainer *aImage)
 {
   mInitialLoadCompleted = PR_TRUE;
+
+  if (aImage)
+  {
+    /* Get requested animation policy from the pres context:
+     *   normal = 0
+     *   one frame = 1
+     *   one loop = 2
+     */
+    nsImageAnimation animateMode = eImageAnimation_Normal; //default value
+    nsresult rv = aPresContext->GetImageAnimationMode(&animateMode);
+    if (NS_SUCCEEDED(rv))
+      aImage->SetAnimationMode(animateMode);
+  }
 
   nscoord w, h;
 #ifdef DEBUG_pavlov
@@ -1034,9 +1047,6 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
     nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
                        aWhichLayer);
 
-    // first get to see if lowsrc image is here
-    PRInt32 lowSrcLinesLoaded = -1;
-    PRInt32 imgSrcLinesLoaded = -1;
 #ifdef USE_IMG2
 
     nsCOMPtr<imgIContainer> imgCon;
@@ -1046,6 +1056,9 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
       mImageRequest->GetImage(getter_AddRefs(imgCon));
     }
 #else
+    // first get to see if lowsrc image is here
+    PRInt32 lowSrcLinesLoaded = -1;
+    PRInt32 imgSrcLinesLoaded = -1;
     nsIImage * lowImage = nsnull;
     nsIImage * image    = nsnull;
 #endif

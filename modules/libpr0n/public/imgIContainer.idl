@@ -75,6 +75,14 @@ interface imgIContainer : nsISupports
 
   readonly attribute unsigned long numFrames;
 
+  /**
+   * Animation mode.
+   *   0 = normal
+   *   1 = don't animate
+   *   2 = loop once
+   */
+  attribute unsigned short animationMode;
+
   gfxIImageFrame getFrameAt(in unsigned long index);
 
   /**
