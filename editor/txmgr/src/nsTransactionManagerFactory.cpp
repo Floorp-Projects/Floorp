@@ -113,7 +113,7 @@ nsresult nsTransactionManagerFactory::LockFactory(PRBool aLock)
 }
 
 // return the proper factory to the caller
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass, nsIFactory
+extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass, nsISupports* serviceMgr, nsIFactory
 **aFactory)
 {
   if (!aFactory)
