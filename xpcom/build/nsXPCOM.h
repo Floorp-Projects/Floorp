@@ -68,12 +68,12 @@ class nsITraceRefcnt;
  *
  * @param result           The service manager.  You may pass null.
  *
- * @param abinDirectory    The directory containing the component
+ * @param binDirectory     The directory containing the component
  *                         registry and runtime libraries;
  *                         or use <CODE>nsnull</CODE> to use the working
  *                         directory.
  *
- * @param aAppFileLocProvider The object to be used by Gecko that specifies
+ * @param appFileLocationProvider The object to be used by Gecko that specifies
  *                         to Gecko where to find profiles, the component
  *                         registry preferences and so on; or use
  *                         <CODE>nsnull</CODE> for the default behaviour.
@@ -167,7 +167,7 @@ NS_GetMemoryManager(nsIMemory* *result);
  * 
  * @status FROZEN
  * 
- *   @param filePath       
+ *   @param path       
  *       A string which specifies a full file path to a 
  *       location.  Relative paths will be treated as an
  *       error (NS_ERROR_FILE_UNRECOGNIZED_PATH).       

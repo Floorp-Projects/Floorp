@@ -48,8 +48,8 @@
 /*******************************************************************************
 *   Defined Constants And Macros                                               *
 *******************************************************************************/
-/** @group Visual Age for C++ v3.6.5 target (OS/2).
- * @{ */
+/** @group Visual Age for C++ v3.6.5 target (OS/2). */
+/* @{ */
 /** Indicate Visual Age for C++ v3.6.5 target */
 #define VFT_VAC365          1
 /** VFTable/Interface Calling Convention for Win32. */
