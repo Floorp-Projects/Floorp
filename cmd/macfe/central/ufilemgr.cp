@@ -509,10 +509,11 @@ char* CFileMgr::PathNameFromFSSpec( const FSSpec& inSpec, Boolean wantLeafName )
 	{
 		/* The object isn't a volume */
 		
-		CInfoPBRec	pb;
+		CInfoPBRec	pb = { 0 };
+		CStr63 dummyFileName("\pGrippy Lives!");
 
 		/* Is the object a file or a directory? */
-		pb.dirInfo.ioNamePtr = tempSpec.name;
+		pb.dirInfo.ioNamePtr = (! tempSpec.name[0] ) ? (StringPtr)dummyFileName : tempSpec.name;
 		pb.dirInfo.ioVRefNum = tempSpec.vRefNum;
 		pb.dirInfo.ioDrDirID = tempSpec.parID;
 		pb.dirInfo.ioFDirIndex = 0;
