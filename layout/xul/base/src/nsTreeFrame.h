@@ -31,6 +31,7 @@ public:
   void ClearSelection(nsIPresContext& presContext);
   void ToggleSelection(nsIPresContext& presContext, nsTreeCellFrame* pFrame);
   void RangedSelection(nsIPresContext& aPresContext, nsTreeCellFrame* pEndFrame);
+  void RemoveFromSelection(nsTreeCellFrame* frame);
 
   void MoveUp(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
   void MoveDown(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
@@ -47,4 +48,4 @@ protected:
 
 protected: // Data Members
 	nsVoidArray mSelectedItems; // The selected cell frames. 
-}; // class nsTableFrame
+}; // class nsTreeFrame

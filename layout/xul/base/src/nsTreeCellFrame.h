@@ -44,6 +44,8 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
 
+  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+
   NS_IMETHOD
   AttributeChanged(nsIPresContext* aPresContext,
                                   nsIContent* aChild,

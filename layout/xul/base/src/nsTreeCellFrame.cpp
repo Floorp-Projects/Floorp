@@ -318,7 +318,8 @@ void nsTreeCellFrame::Hover(nsIPresContext& aPresContext, PRBool isHover, PRBool
   NS_IF_RELEASE(pParentContent);
 }
 
-// XXX This method will go away.
+// XXX This method will go away.  I think it can
+// actually go away now... ?
 NS_IMETHODIMP
 nsTreeCellFrame::AttributeChanged(nsIPresContext* aPresContext,
                                   nsIContent* aChild,
@@ -332,4 +333,11 @@ nsTreeCellFrame::AttributeChanged(nsIPresContext* aPresContext,
   Invalidate(rect, PR_TRUE);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTreeCellFrame::DeleteFrame(nsIPresContext& aPresContext)
+{
+  mTreeFrame->RemoveFromSelection(this);
+  return nsTableCellFrame::DeleteFrame(aPresContext);
 }
