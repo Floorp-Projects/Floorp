@@ -27,6 +27,11 @@
 #include "nsToolboxFrame.h"
 #include "nsIStyleContext.h"
 #include "nsCSSRendering.h"
+#include "nsIHTMLReflow.h"
+#include "nsIReflowCommand.h"
+#include "nsHTMLIIDs.h"
+#include "nsCOMPtr.h"
+
 
 //
 // NS_NewToolboxFrame
@@ -113,23 +118,6 @@ nsToolboxFrame :: Paint ( nsIPresContext& aPresContext,
 
 
 //
-// Reflow
-//
-// Handle moving children around. This may have to account for toolbars that 
-// grew to multiple lines or collapsed toolbars and the expando-dock at the bottom
-//
-NS_IMETHODIMP
-nsToolboxFrame :: Reflow ( nsIPresContext&          aPresContext,
-                            nsHTMLReflowMetrics&     aDesiredSize,
-                            const nsHTMLReflowState& aReflowState,
-                            nsReflowStatus&          aStatus)
-{
-  return nsHTMLContainerFrame::Reflow ( aPresContext, aDesiredSize, aReflowState, aStatus );
-
-} // Reflow 
-
-
-//
 // GetSkipSides
 //
 // ***What does this do???
@@ -140,4 +128,73 @@ nsToolboxFrame :: GetSkipSides() const
   return 0;
 
 } // GetSkipSides
+
+
+//
+// Reflow
+//
+// This is responsible for layout out its child elements one on top of the
+// other in the order in which they appear in the DOM. It is mostly used for
+// toolbars, but I guess they don't have to be, looking at the implementation.
+// This doesn't have to explicitly worry about toolbars that grow because of
+// too much content because Gecko handles all that for us (grin).
+//
+// If a toolbar (child) is not visible, we need to leave extra space at the bottom of
+// the toolbox for a "expando area" in which the grippies that represent the 
+// collapsed toolbars reside.
+//
+NS_IMETHODIMP 
+nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
+                              nsHTMLReflowMetrics&     aDesiredSize,
+                              const nsHTMLReflowState& aReflowState,
+                              nsReflowStatus&          aStatus)
+{
+  // start with a reasonable desired size (in twips), which will be changed to 
+  // the size of our children plus some other stuff below.
+  aDesiredSize.width = 6000;
+  aDesiredSize.height = 3000;
+  aDesiredSize.ascent = 3000;
+  aDesiredSize.descent = 0;
+  if (nsnull != aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width = 0;
+    aDesiredSize.maxElementSize->height = 0;
+  }
+
+  // Resize our frame based on our children
+  nsIFrame* childFrame = mFrames.FirstChild();
+  nsPoint offset ( 200, 0 );   // offset 10 pixels in to leave room for grippy
+  while ( childFrame ) {
+      
+    nsSize maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
+		
+    nsHTMLReflowState reflowState(aPresContext, childFrame, aReflowState, maxSize);
+    nsIHTMLReflow* htmlReflow;
+    if (NS_OK == childFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+      htmlReflow->WillReflow(aPresContext);
+      nsresult result = htmlReflow->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
+      NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");       
+      htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);  // XXX Should we be sending the DidReflow?
+    }
+
+    nsRect rect(offset.x, offset.y, aDesiredSize.width, aDesiredSize.height);
+    childFrame->SetRect(rect);
+
+    offset.y += aDesiredSize.height;
+    
+    // advance to the next child
+    childFrame->GetNextSibling(childFrame);
+    
+  } // for each child
+
+  // let our toolbox be as wide as our parent says we can be and as tall
+  // as our child toolbars
+  aDesiredSize.width = aReflowState.availableWidth - 200;
+  aDesiredSize.height = offset.y;
+
+  aStatus = NS_FRAME_COMPLETE;
+
+  return NS_OK;
+
+} // Reflow
+
 
