@@ -1330,7 +1330,6 @@ public abstract class ScriptableObject implements Scriptable {
         return count == -1;
     }
 
-        
     /**
      * Gets a named property from an object or any object in its prototype chain.
      * <p>
@@ -1775,25 +1774,23 @@ public abstract class ScriptableObject implements Scriptable {
     private String lastName;
     private int lastHash;
     private Object lastValue = REMOVED;
+
+    private static class Slot {
+        static final int HAS_GETTER  = 0x01;
+        static final int HAS_SETTER  = 0x02;
+        
+        int intKey;
+        String stringKey;
+        Object value;
+        short attributes;
+        short flags;
+    }
+
+    private static class GetterSlot extends Slot {
+        Object delegateTo;  // OPT: merge with "value"
+        Method getter;
+        Method setter;
+        boolean setterReturnsValue;
+    }
+
 }
-
-
-class Slot {
-    static final int HAS_GETTER  = 0x01;
-    static final int HAS_SETTER  = 0x02;
-    
-    int intKey;
-    String stringKey;
-    Object value;
-    short attributes;
-    short flags;
-}
-
-class GetterSlot extends Slot {
-    Object delegateTo;  // OPT: merge with "value"
-    Method getter;
-    Method setter;
-    boolean setterReturnsValue;
-}
-
-
