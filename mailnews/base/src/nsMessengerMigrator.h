@@ -50,6 +50,12 @@
 #define PSUEDO_SECURE_NAME_PREFIX "snewsrc-"
 
 #if defined(XP_PC)
+/* another case of mac vs. windows in 4.x
+ * on mac, the default for news fcc, if you used imap, 
+ * was "Sent on Local Mail"
+ * on windows, the default for news fcc, 
+ * if you used imap, was "Sent on <imap server>"
+ */
 #define NEWS_FCC_DEFAULT_TO_IMAP_SENT
 #define NEWS_FAT_FILE_NAME "fat"
 /*
@@ -112,7 +118,7 @@ private:
         
   nsresult ProceedWithMigration();
   
-  nsresult Convert4XUri(const char *old_uri, PRBool for_news, const char *aUsername, const char *aHostname, const char *default_folder_name, char **new_uri);
+  nsresult Convert4XUri(const char *old_uri, PRBool for_news, const char *aUsername, const char *aHostname, const char *default_folder_name, const char *default_pref_name, char **new_uri);
  
   nsresult SetSendLaterUriPref(nsIMsgIncomingServer *server);
 

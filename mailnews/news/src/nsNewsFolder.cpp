@@ -346,9 +346,11 @@ nsMsgNewsFolder::GetSubFolders(nsIEnumerator* *result)
     if (NS_FAILED(rv)) return rv;
 
 	// force ourselves to get initialized from cache
-    rv = UpdateSummaryTotals(PR_FALSE); 
-    if (NS_FAILED(rv)) return rv;
+    // Don't care if it fails.  this will fail the first time after 
+    // migration, but we continue on.  see #66018
+    (void)UpdateSummaryTotals(PR_FALSE);
   }
+
   rv = mSubFolders->Enumerate(result);
   return rv;
 }

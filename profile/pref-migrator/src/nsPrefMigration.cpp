@@ -1229,6 +1229,7 @@ nsPrefMigration::CreateNewUser5Tree(nsIFileSpec * oldProfilePath, nsIFileSpec * 
   }
 
   rv = oldPrefsFile->CopyToDir(newPrefsFile);
+  NS_ASSERTION(NS_SUCCEEDED(rv),"failed to copy prefs file");
 
   rv = newPrefsFile->AppendRelativeUnixPath(PREF_FILE_NAME_IN_4x);
   rv = newPrefsFile->Rename(PREF_FILE_NAME_IN_5x);
@@ -1327,8 +1328,6 @@ nsPrefMigration::GetDirFromPref(nsIFileSpec * oldProfilePath, nsIFileSpec * newP
 	if (NS_SUCCEEDED(rv) && pathsMatch) {
 #endif /* XP_UNIX */
 		rv = newPath->FromFileSpec(newProfilePath);
-		if (NS_FAILED(rv)) return rv;
-		rv = newPath->AppendRelativeUnixPath(newDirName);
 		if (NS_FAILED(rv)) return rv;
 	}
 	else {
@@ -1502,7 +1501,8 @@ nsPrefMigration::CopyAndRenameNewsrcFiles(nsIFileSpec * newPathSpec)
 	    printf("newsrc file == %s\n",folderName);
 #endif /* DEBUG_seth */
 
-	fileOrDirName.CopyToDir(newPath);
+	    rv = fileOrDirName.CopyToDir(newPath);
+        NS_ASSERTION(NS_SUCCEEDED(rv),"failed to copy news file");
 
         nsFileSpec newFile = newPath;
         newFile += fileOrDirNameStr;
@@ -1577,7 +1577,8 @@ nsPrefMigration::DoTheCopyAndRename(nsIFileSpec * oldPathSpec, nsIFileSpec *newP
       }
       else {
         // copy the file
-        fileOrDirName.CopyToDir(newPath);
+        rv = fileOrDirName.CopyToDir(newPath);
+        NS_ASSERTION(NS_SUCCEEDED(rv),"failed to copy file");
 
         if (needToRenameFiles) {
           // rename the file, if it matches
@@ -1859,7 +1860,8 @@ nsPrefMigration::RenameAndMove4xPopFile(nsIFileSpec * profilePath, const char *f
   PR_FREEIF(popServerName);
 
   // copy the 4.x file from <profile>/<fileNameIn4x> to the <profile>/Mail/<hostname>/<fileNameIn4x>
-  file.CopyToDir(migratedPopDirectory);
+  rv = file.CopyToDir(migratedPopDirectory);
+  NS_ASSERTION(NS_SUCCEEDED(rv),"failed to copy pop file");
   
   // make migratedPopDirectory point the the copied filter file,
   // <profile>/Mail/<hostname>/<fileNameIn4x>
@@ -1870,7 +1872,7 @@ nsPrefMigration::RenameAndMove4xPopFile(nsIFileSpec * profilePath, const char *f
 	  migratedPopDirectory.Rename(fileNameIn5x);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 
@@ -1900,7 +1902,8 @@ nsPrefMigration::RenameAndMove4xImapFilterFile(nsIFileSpec * profilePath, const 
   migratedImapDirectory += hostname;
 
   // copy the 4.x file from "<profile>/<hostname> Rules" to <profile>/ImapMail/<hostname>/
-  file.CopyToDir(migratedImapDirectory);
+  rv = file.CopyToDir(migratedImapDirectory);
+  NS_ASSERTION(NS_SUCCEEDED(rv),"failed to copy imap file");
 
   // make migratedPopDirectory point the the copied filter file,
   // "<profile>/ImapMail/<hostname>/<hostname> Rules"
@@ -1909,7 +1912,7 @@ nsPrefMigration::RenameAndMove4xImapFilterFile(nsIFileSpec * profilePath, const 
   // rename "<profile>/ImapMail/<hostname>/<hostname> Rules" to  "<profile>/ImapMail/<hostname>/rules.dat"
   migratedImapDirectory.Rename(IMAP_MAIL_FILTER_FILE_NAME_IN_5x);
 
-  return rv;         
+  return NS_OK;         
 }
 
 nsresult
