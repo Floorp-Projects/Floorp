@@ -1311,9 +1311,9 @@ $(XPIDL_GEN_DIR)/.done:
 $(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
 	$(REPORT_BUILD)
 ifdef _NO_AUTO_VARS
-	$(ELOG) $(XPIDL_COMPILE) -m header -w -I $(IDL_DIR) -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $(srcdir)/$*.idl
+	$(ELOG) $(XPIDL_COMPILE) -m header -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/$* $(srcdir)/$*.idl
 else
-	$(ELOG) $(XPIDL_COMPILE) -m header -w -I $(IDL_DIR) -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $(_VPATH_SRCS)
+	$(ELOG) $(XPIDL_COMPILE) -m header -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/$* $(_VPATH_SRCS)
 endif
 	@if test -n "$(findstring $*.h, $(EXPORTS) $(SDK_HEADERS))"; \
 	  then echo "*** WARNING: file $*.h generated from $*.idl overrides $(srcdir)/$*.h"; else true; fi
