@@ -148,6 +148,8 @@ public:
   NS_IMETHOD GetActiveChild(nsIDOMElement** aResult);
   NS_IMETHOD SetActiveChild(nsIDOMElement* aChild);
 
+  NS_IMETHOD UngenerateMenu();
+
   NS_IMETHOD SelectFirstItem();
 
   NS_IMETHOD Escape(PRBool& aHandledFlag);
@@ -169,6 +171,8 @@ public:
   NS_IMETHOD GetScrollableView(nsIScrollableView** aView);
 
   // nsMenuFrame methods 
+
+  nsresult DestroyPopupFrames(nsIPresContext* aPresContext);
 
   PRBool IsOpen() { return mMenuOpen; };
   PRBool IsMenu();

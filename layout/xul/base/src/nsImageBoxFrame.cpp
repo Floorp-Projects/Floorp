@@ -91,6 +91,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIEventQueueService.h"
 #include "nsTransform2D.h"
+#include "nsITheme.h"
 
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
@@ -286,7 +287,8 @@ nsImageBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-nsImageBoxFrame::nsImageBoxFrame(nsIPresShell* aShell):nsLeafBoxFrame(aShell), mIntrinsicSize(0,0)
+nsImageBoxFrame::nsImageBoxFrame(nsIPresShell* aShell):nsLeafBoxFrame(aShell), mIntrinsicSize(0,0),
+  mLoadFlags(nsIRequest::LOAD_NORMAL), mSuppressStyleCheck(PR_FALSE)
 {
   mSizeFrozen = PR_FALSE;
   mHasImage = PR_FALSE;
@@ -336,7 +338,9 @@ nsImageBoxFrame::Init(nsIPresContext*  aPresContext,
     NS_RELEASE(listener);
   }
 
+  mSuppressStyleCheck = PR_TRUE;
   nsresult  rv = nsLeafBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  mSuppressStyleCheck = PR_FALSE;
 
   GetImageSource();
   UpdateLoadFlags();
@@ -356,6 +360,14 @@ nsImageBoxFrame::GetImageSource()
   // if the new image is empty
   if (mSrc.IsEmpty()) {
     mUseSrcAttr = PR_FALSE;
+
+    // Only get the list-style-image if we aren't being drawn
+    // by a native theme.
+    const nsStyleDisplay* disp =
+      (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+    if (disp->mAppearance && nsBox::gTheme && 
+        nsBox::gTheme->ThemeSupportsWidget(nsnull, disp->mAppearance))
+      return;
 
     // get the list-style-image
     const nsStyleList* myList =
@@ -543,7 +555,7 @@ nsImageBoxFrame::DidSetStyleContext( nsIPresContext* aPresContext )
     (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
   mSubRect = myList->mImageRegion;
 
-  if (mUseSrcAttr)
+  if (mUseSrcAttr || mSuppressStyleCheck)
     return NS_OK; // No more work required, since the image isn't specified by style.
 
   // If list-style-image changes, we have a new image.

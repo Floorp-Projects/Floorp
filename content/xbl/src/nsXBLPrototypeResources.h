@@ -58,6 +58,7 @@ public:
   void LoadResources(PRBool* aResult);
   void AddResource(nsIAtom* aResourceType, const nsAReadableString& aSrc);
   void AddResourceListener(nsIContent* aElement);
+  nsresult FlushSkinSheets();
 
   nsXBLPrototypeResources(nsIXBLPrototypeBinding* aBinding);
   ~nsXBLPrototypeResources();

@@ -410,6 +410,7 @@ nsContainerBox::SetDebugOnChildList(nsBoxLayoutState& aState, nsIBox* aChild, PR
 void
 nsContainerBox::SanityCheck(nsFrameList& aFrameList)
 {
+#ifdef DEBUG
     // make sure the length match
     PRInt32 length = aFrameList.GetLength();
     NS_ASSERTION(length == mChildCount,"nsBox::ERROR!! Box info list count does not match frame count!!");
@@ -431,6 +432,7 @@ nsContainerBox::SanityCheck(nsFrameList& aFrameList)
        child->GetNextSibling(&child);
        count++;
     }
+#endif
 }
 
 void 

@@ -914,6 +914,7 @@ PRInt32 nsStyleTableBorder::CalcDifference(const nsStyleTableBorder& aOther) con
 //
 
 nsStyleColor::nsStyleColor(nsIPresContext* aPresContext)
+:mColorFlags(NS_COLORFLAGS_NONE)
 {
   aPresContext->GetDefaultColor(&mColor);
 }
@@ -921,6 +922,7 @@ nsStyleColor::nsStyleColor(nsIPresContext* aPresContext)
 nsStyleColor::nsStyleColor(const nsStyleColor& aSource)
 {
   mColor = aSource.mColor;
+  mColorFlags = aSource.mColorFlags;
 }
 
 PRInt32 nsStyleColor::CalcDifference(const nsStyleColor& aOther) const
@@ -975,6 +977,7 @@ PRInt32 nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) const
 
 nsStyleDisplay::nsStyleDisplay()
 {
+  mAppearance = 0;
   mDisplay = NS_STYLE_DISPLAY_INLINE;
   mPosition = NS_STYLE_POSITION_NORMAL;
   mFloats = NS_STYLE_FLOAT_NONE;
@@ -988,6 +991,7 @@ nsStyleDisplay::nsStyleDisplay()
 
 nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
 {
+  mAppearance = aSource.mAppearance;
   mDisplay = aSource.mDisplay;
   mBinding = aSource.mBinding;
   mPosition = aSource.mPosition;
@@ -1007,7 +1011,8 @@ PRInt32 nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
 
   if ((mDisplay == aOther.mDisplay) &&
       (mFloats == aOther.mFloats) &&
-      (mOverflow == aOther.mOverflow)) {
+      (mOverflow == aOther.mOverflow) &&
+      (mAppearance == aOther.mAppearance)) {
     if ((mBreakType == aOther.mBreakType) &&
         (mBreakBefore == aOther.mBreakBefore) &&
         (mBreakAfter == aOther.mBreakAfter) &&

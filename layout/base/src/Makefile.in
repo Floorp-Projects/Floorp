@@ -30,7 +30,7 @@ MODULE		= layout
 LIBRARY_NAME	= gkbase_s
 REQUIRES	= xpcom \
 		  string \
-		  dom \
+      dom \
 		  content \
 		  gfx \
 		  widget \

@@ -56,6 +56,7 @@
 
 #include "nsHashtable.h"
 #include "nsIContent.h"
+#include "nsITheme.h"
 
 // Base class for concrete presentation context classes
 class nsPresContext : public nsIPresContext, public nsIObserver {
@@ -199,6 +200,9 @@ public:
 //Mohamed End
 #endif // IBMBIDI
 
+  NS_IMETHOD GetTheme(nsITheme** aResult);
+  NS_IMETHOD ThemeChanged();
+
 protected:
   nsPresContext();
   virtual ~nsPresContext();
@@ -285,6 +289,9 @@ protected:
 #endif
 
   PRUint16      mImageAnimationModePref;
+
+  nsCOMPtr<nsITheme> mTheme;
+  PRBool mNoTheme;
 
 protected:
   void   GetUserPreferences();

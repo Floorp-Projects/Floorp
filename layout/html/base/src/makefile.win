@@ -49,6 +49,7 @@ REQUIRES	= xpcom \
 		  java \
 		  exthandler \
 		  content \
+      layout_xul \
 		  $(NULL)
 include <$(DEPTH)\config\config.mak>
 

@@ -47,6 +47,11 @@
 #include "nsXBLResourceLoader.h"
 #include "nsXBLPrototypeResources.h"
 #include "nsIDocumentObserver.h"
+#include "nsICSSLoader.h"
+#include "nsIURI.h"
+#include "nsLayoutCID.h"
+
+static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
 
 MOZ_DECL_CTOR_COUNTER(nsXBLPrototypeResources);
 
@@ -86,4 +91,68 @@ nsXBLPrototypeResources::AddResourceListener(nsIContent* aBoundElement)
 {
   if (mLoader)
     mLoader->AddResourceListener(aBoundElement);
+}
+
+static PRBool IsChromeURI(nsIURI* aURI)
+{
+  PRBool isChrome=PR_FALSE;
+  if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && isChrome)
+    return PR_TRUE;
+  return PR_FALSE;
+}
+
+nsresult
+nsXBLPrototypeResources::FlushSkinSheets()
+{
+  if (!mStyleSheetList)
+    return NS_OK;
+
+  // We have scoped stylesheets.  Reload any chrome stylesheets we
+  // encounter.  (If they aren't skin sheets, it doesn't matter, since
+  // they'll still be in the chrome cache.
+  mRuleProcessors->Clear();
+
+  nsCOMPtr<nsICSSLoader> loader;
+  nsresult rv = nsComponentManager::CreateInstance(kCSSLoaderCID,
+                                    nsnull,
+                                    NS_GET_IID(nsICSSLoader),
+                                    getter_AddRefs(loader));
+  if (NS_FAILED(rv) || !loader) return rv;
+  
+  nsCOMPtr<nsISupportsArray> newSheets;
+  rv = NS_NewISupportsArray(getter_AddRefs(newSheets));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIStyleRuleProcessor> prevProcessor;  
+  PRUint32 count;
+  mStyleSheetList->Count(&count);
+  PRUint32 i;
+  for (i = 0; i < count; i++) {
+    nsCOMPtr<nsISupports> supp = getter_AddRefs(mStyleSheetList->ElementAt(i));
+    nsCOMPtr<nsICSSStyleSheet> oldSheet(do_QueryInterface(supp));
+    
+    nsCOMPtr<nsICSSStyleSheet> newSheet;
+    nsCOMPtr<nsIURI> uri;
+    oldSheet->GetURL(*getter_AddRefs(uri));
+
+    if (IsChromeURI(uri)) {
+      PRBool complete;
+      loader->LoadAgentSheet(uri, *getter_AddRefs(newSheet), complete, nsnull);
+    }
+    else 
+      newSheet = oldSheet;
+
+    newSheets->AppendElement(newSheet);
+
+    nsCOMPtr<nsIStyleRuleProcessor> processor;
+    newSheet->GetStyleRuleProcessor(*getter_AddRefs(processor), prevProcessor);
+    if (processor != prevProcessor) {
+      mRuleProcessors->AppendElement(processor);
+      prevProcessor = processor;
+    }
+  }
+
+  mStyleSheetList = newSheets;
+  
+  return NS_OK;
 }

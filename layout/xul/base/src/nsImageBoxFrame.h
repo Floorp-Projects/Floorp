@@ -155,7 +155,7 @@ private:
   PRInt32 mLoadFlags;
 
   nsSize mImageSize;
-  
+  PRBool mSuppressStyleCheck;
 }; // class nsImageBoxFrame
 
 #endif /* nsImageBoxFrame_h___ */

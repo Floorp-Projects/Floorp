@@ -96,6 +96,8 @@
 
 #include "nsITimer.h"
 
+#include "nsITheme.h"
+
 // For SetIcon
 #include "nsSpecialSystemDirectory.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -3025,6 +3027,7 @@ EventMsgInfo gAllEvents[] = {
     {"WM_HOTKEY           ", 0x0312},
     {"WM_PRINT            ", 0x0317},
     {"WM_PRINTCLIENT      ", 0x0318},
+    {"WM_THEMECHANGED     ", 0x031A},
     {"WM_HANDHELDFIRST    ", 0x0358},
     {"WM_HANDHELDLAST     ", 0x035F},
     {"WM_AFXFIRST         ", 0x0360},
@@ -3055,6 +3058,7 @@ void PrintEvent(UINT msg, PRBool aShowAllEvents, PRBool aShowMouseMoves)
 
 #endif
 
+#define WM_XP_THEMECHANGED                 0x031A
 
 PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue)
 {
@@ -3111,6 +3115,15 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           }
           break;
 
+        case WM_XP_THEMECHANGED: {
+          DispatchStandardEvent(NS_THEMECHANGED);
+
+          // Invalidate the window so that the repaint will
+          // pick up the new theme.
+          Invalidate(PR_FALSE);
+       
+          break;
+        }
         case WM_FONTCHANGE: 
           {
             nsresult rv;

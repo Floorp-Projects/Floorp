@@ -65,6 +65,7 @@
 #include "nsIDOMWindow.h"
 #include "nsNetUtil.h"
 #include "nsXPIDLString.h"
+
 #include "prprf.h"
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -143,7 +144,8 @@ nsPresContext::nsPresContext()
     mDefaultCursiveFont("cursive", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL, 
       NS_FONT_WEIGHT_NORMAL, 0, NSIntPointsToTwips(12)),
     mDefaultFantasyFont("fantasy", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL, 
-      NS_FONT_WEIGHT_NORMAL, 0, NSIntPointsToTwips(12))
+      NS_FONT_WEIGHT_NORMAL, 0, NSIntPointsToTwips(12)),
+    mNoTheme(PR_FALSE)
 {
   NS_INIT_REFCNT();
   mCompatibilityMode = eCompatibility_Standard;
@@ -1747,6 +1749,39 @@ nsPresContext::IsRenderingOnlySelection(PRBool* aResult)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsPresContext::GetTheme(nsITheme** aResult)
+{
+  if (!mNoTheme && !mTheme) {
+    mTheme = do_GetService("@mozilla.org/chrome/chrome-native-theme;1");
+    if (!mTheme)
+      mNoTheme = PR_TRUE;
+  }
+
+  *aResult = mTheme;
+  NS_IF_ADDREF(*aResult);
+  return mTheme ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsPresContext::ThemeChanged()
+{
+  // Tell the theme that it changed, so it can flush any handles to stale theme
+  // data.
+  if (mTheme)
+    mTheme->ThemeChanged();
+
+  // Clear all cached nsILookAndFeel colors.
+  if (mLookAndFeel)
+    mLookAndFeel->LookAndFeelChanged();
+  
+  if (!mShell)
+    return NS_OK;
+
+  return mShell->ReconstructStyleData();
+}
+
 
 #ifdef MOZ_REFLOW_PERF
 NS_IMETHODIMP

@@ -403,7 +403,13 @@ NS_IMETHODIMP nsOutlinerBoxObject::OnDragDrop(nsIDOMEvent* inEvent)
   return NS_OK;
 }
 
-
+NS_IMETHODIMP nsOutlinerBoxObject::ClearStyleAndImageCaches()
+{
+  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  if (body)
+    return body->ClearStyleAndImageCaches();
+  return NS_OK;
+}
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 

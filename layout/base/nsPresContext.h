@@ -68,6 +68,7 @@ class nsIURI;
 class nsILookAndFeel;
 class nsICSSPseudoComparator;
 class nsILanguageAtom;
+class nsITheme;
 
 #ifdef MOZ_REFLOW_PERF
 class nsIRenderingContext;
@@ -523,6 +524,19 @@ public:
    */
   NS_IMETHOD SetIsRenderingOnlySelection(PRBool aResult) = 0;
   NS_IMETHOD IsRenderingOnlySelection(PRBool* aResult) = 0;
+
+  /*
+   * Obtain a native them for rendering our widgets (both form controls and html)
+   */
+  NS_IMETHOD GetTheme(nsITheme** aResult) = 0;
+
+  /*
+   * Notify the pres context that the theme has changed.  An internal switch
+   * means it's one of our Mozilla themes that changed (e.g., Modern to Classic).
+   * Otherwise, the OS is telling us that the native theme for the platform
+   * has changed.
+   */
+  NS_IMETHOD ThemeChanged() = 0;
 
 #ifdef MOZ_REFLOW_PERF
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame) = 0;

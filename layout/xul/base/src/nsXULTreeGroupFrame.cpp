@@ -504,6 +504,9 @@ void nsXULTreeGroupFrame::OnContentRemoved(nsIPresContext* aPresContext,
                                            nsIFrame* aChildFrame,
                                            PRInt32 aIndex, PRInt32& aOnScreenRowCount)
 {
+  if (!mFrameConstructor)
+    return;
+
   // if we're removing the top row, the new top row is the next row
   if (mTopFrame && mTopFrame == aChildFrame)
     mTopFrame->GetNextSibling(&mTopFrame);

@@ -112,7 +112,9 @@ public:
   NS_IMETHOD GetStyleSheets(nsISupportsArray** aResult)=0;
 
   NS_IMETHOD HasInsertionPoints(PRBool* aResult)=0;
+  
   NS_IMETHOD HasStyleSheets(PRBool* aResult)=0; 
+  NS_IMETHOD FlushSkinSheets()=0;
 
   NS_IMETHOD InstantiateInsertionPoints(nsIXBLBinding* aBinding)=0;
 

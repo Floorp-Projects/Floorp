@@ -46,6 +46,7 @@ class nsIStyleRule;
 class nsIStyleSheet;
 class nsIStyleContext;
 class nsIStyleRuleSupplier;
+class nsIStyleFrameConstruction;
 class nsIPresContext;
 class nsIPresShell;
 class nsIContent;
@@ -109,7 +110,23 @@ public:
   virtual nsresult GetRuleTree(nsRuleNode** aResult) = 0;
   virtual nsresult ClearCachedDataInRuleTree(nsIStyleRule* aRule) = 0;
 
+  // The following two methods can be used to tear down and reconstruct a rule tree.  The idea
+  // is to first call BeginRuleTreeReconstruct, which will set aside the old rule
+  // tree.  The entire frame tree should then have ReResolveStyleContext
+  // called on it.  With the old rule tree hidden from view, the newly resolved style contexts will
+  // resolve to rule nodes in a fresh rule tree, and the re-resolve system will properly compute
+  // the visual impact of the changes.
+  //
+  // After re-resolution, call EndRuleTreeReconstruct() to finally discard the old rule tree.
+  // This trick can be used in lieu of a full frame reconstruction when drastic style changes
+  // happen (e.g., stylesheets being added/removed in the DOM, theme switching in the Mozilla app,
+  // etc.
+  virtual nsresult BeginRuleTreeReconstruct()=0;
+  virtual nsresult EndRuleTreeReconstruct()=0;
+
   virtual nsresult RemoveBodyFixupRule(nsIDocument *aDocument) = 0;
+
+  virtual nsresult GetStyleFrameConstruction(nsIStyleFrameConstruction** aResult) = 0;
 
   // ClearCachedStyleData is used to invalidate portions of both the style context tree
   // and rule tree without destroying the actual nodes in the two trees.  |aRule| provides

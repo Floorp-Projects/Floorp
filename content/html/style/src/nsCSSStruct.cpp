@@ -402,6 +402,7 @@ void nsCSSDisplay::List(FILE* out, PRInt32 aIndent) const
 
   nsAutoString buffer;
 
+  mAppearance.AppendToString(buffer, eCSSProperty_appearance);
   mDirection.AppendToString(buffer, eCSSProperty_direction);
   mDisplay.AppendToString(buffer, eCSSProperty_display);
   mBinding.AppendToString(buffer, eCSSProperty_binding);
@@ -1553,7 +1554,8 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
       }
       break;
 
-      // nsCSSDisplay
+    // nsCSSDisplay
+    case eCSSProperty_appearance:
     case eCSSProperty_float:
     case eCSSProperty_clear:
     case eCSSProperty_display:
@@ -1565,6 +1567,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
     case eCSSProperty_overflow:
       CSS_ENSURE(Display) {
         switch (aProperty) {
+          case eCSSProperty_appearance: mDisplay->mAppearance = aValue; break;
           case eCSSProperty_float:      mDisplay->mFloat = aValue;      break;
           case eCSSProperty_clear:      mDisplay->mClear = aValue;      break;
           case eCSSProperty_display:    mDisplay->mDisplay = aValue;    break;
@@ -2325,7 +2328,8 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
         }
         break;
 
-        // nsCSSDisplay
+      // nsCSSDisplay
+      case eCSSProperty_appearance:
       case eCSSProperty_direction:
       case eCSSProperty_display:
       case eCSSProperty_binding:
@@ -2338,6 +2342,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
         if (nsnull != mDisplay) {
           CSS_ENSURE_IMPORTANT(Display) {
             switch (aProperty) {
+              CSS_CASE_IMPORTANT(eCSSProperty_appearance, mDisplay->mAppearance);
               CSS_CASE_IMPORTANT(eCSSProperty_direction,  mDisplay->mDirection);
               CSS_CASE_IMPORTANT(eCSSProperty_display,    mDisplay->mDisplay);
               CSS_CASE_IMPORTANT(eCSSProperty_binding,    mDisplay->mBinding);
@@ -3203,7 +3208,8 @@ CSSDeclarationImpl::RemoveProperty(nsCSSProperty aProperty)
       }
       break;
 
-      // nsCSSDisplay
+    // nsCSSDisplay
+    case eCSSProperty_appearance:
     case eCSSProperty_float:
     case eCSSProperty_clear:
     case eCSSProperty_display:
@@ -3215,6 +3221,7 @@ CSSDeclarationImpl::RemoveProperty(nsCSSProperty aProperty)
     case eCSSProperty_overflow:
       CSS_CHECK(Display) {
         switch (aProperty) {
+          case eCSSProperty_appearance: mDisplay->mAppearance.Reset(); break;
           case eCSSProperty_float:      mDisplay->mFloat.Reset();      break;
           case eCSSProperty_clear:      mDisplay->mClear.Reset();      break;
           case eCSSProperty_display:    mDisplay->mDisplay.Reset();    break;
@@ -3994,7 +4001,8 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
       }
       break;
 
-      // nsCSSDisplay
+    // nsCSSDisplay
+    case eCSSProperty_appearance:
     case eCSSProperty_float:
     case eCSSProperty_clear:
     case eCSSProperty_display:
@@ -4006,6 +4014,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
     case eCSSProperty_overflow:
       if (nsnull != mDisplay) {
         switch (aProperty) {
+          case eCSSProperty_appearance: aValue = mDisplay->mAppearance; break;
           case eCSSProperty_float:      aValue = mDisplay->mFloat;      break;
           case eCSSProperty_clear:      aValue = mDisplay->mClear;      break;
           case eCSSProperty_display:    aValue = mDisplay->mDisplay;    break;

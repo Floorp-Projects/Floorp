@@ -39,6 +39,7 @@
 #include "nsCSSProps.h"
 #include "nsCSSKeywords.h"
 #include "nsStyleConsts.h"
+#include "nsThemeConstants.h"  // For system widget appearance types
 
 #include "nsILookAndFeel.h" // for system colors
 
@@ -122,6 +123,58 @@ nsCSSProps::GetStringValue(nsCSSProperty aProperty)
 
 
 /***************************************************************************/
+
+const PRInt32 nsCSSProps::kAppearanceKTable[] = {
+  eCSSKeyword_none,                   NS_THEME_NONE,
+  eCSSKeyword_button,                 NS_THEME_BUTTON,
+  eCSSKeyword_radio,                  NS_THEME_RADIO,
+  eCSSKeyword_checkbox,               NS_THEME_CHECKBOX,
+  eCSSKeyword_toolbox,                NS_THEME_TOOLBOX,
+  eCSSKeyword_toolbar,                NS_THEME_TOOLBAR,
+  eCSSKeyword_toolbarbutton,          NS_THEME_TOOLBAR_BUTTON,
+  eCSSKeyword_toolbargripper,         NS_THEME_TOOLBAR_GRIPPER,
+  eCSSKeyword_dualbutton,             NS_THEME_TOOLBAR_DUAL_BUTTON,
+  eCSSKeyword_dualbutton_dropdown,    NS_THEME_TOOLBAR_DUAL_BUTTON_DROPDOWN,
+  eCSSKeyword_separator,              NS_THEME_TOOLBAR_SEPARATOR,
+  eCSSKeyword_statusbar,              NS_THEME_STATUSBAR,
+  eCSSKeyword_statusbar_pane,         NS_THEME_STATUSBAR_PANE,
+  eCSSKeyword_resizer_pane,           NS_THEME_STATUSBAR_RESIZER_PANE,
+  eCSSKeyword_resizer,                NS_THEME_RESIZER,
+  eCSSKeyword_listbox,                NS_THEME_LISTBOX,
+  eCSSKeyword_listitem,               NS_THEME_LISTBOX_LISTITEM,
+  eCSSKeyword_treeview,               NS_THEME_TREEVIEW,
+  eCSSKeyword_treeitem,               NS_THEME_TREEVIEW_TREEITEM,
+  eCSSKeyword_treetwisty,             NS_THEME_TREEVIEW_TWISTY,
+  eCSSKeyword_treeline,               NS_THEME_TREEVIEW_LINE,
+  eCSSKeyword_treeheader,             NS_THEME_TREEVIEW_HEADER,
+  eCSSKeyword_treeheadercell,         NS_THEME_TREEVIEW_HEADER_CELL,
+  eCSSKeyword_treeheadersortarrow,    NS_THEME_TREEVIEW_HEADER_SORTARROW,
+  eCSSKeyword_progressbar,            NS_THEME_PROGRESSBAR,
+  eCSSKeyword_progresschunk,          NS_THEME_PROGRESSBAR_CHUNK,
+  eCSSKeyword_tab,                    NS_THEME_TAB,
+  eCSSKeyword_tabpanel,               NS_THEME_TAB_PANEL,
+  eCSSKeyword_tooltip,                NS_THEME_TOOLTIP,
+  eCSSKeyword_spinner,                NS_THEME_SPINNER,
+  eCSSKeyword_spinner_upbutton,       NS_THEME_SPINNER_UP_BUTTON,
+  eCSSKeyword_spinner_downbutton,     NS_THEME_SPINNER_DOWN_BUTTON,
+  eCSSKeyword_scrollbar,              NS_THEME_SCROLLBAR,
+  eCSSKeyword_scrollbarbutton,        NS_THEME_SCROLLBAR_BUTTON,
+  eCSSKeyword_scrollbartrack,         NS_THEME_SCROLLBAR_TRACK,
+  eCSSKeyword_scrollbartrackstart,    NS_THEME_SCROLLBAR_TRACK_START,
+  eCSSKeyword_scrollbartrackend,      NS_THEME_SCROLLBAR_TRACK_END,
+  eCSSKeyword_scrollbarthumb,         NS_THEME_SCROLLBAR_THUMB,
+  eCSSKeyword_scrollbargripper,       NS_THEME_SCROLLBAR_GRIPPER,
+  eCSSKeyword_textfield,              NS_THEME_TEXTFIELD,
+  eCSSKeyword_caret,                  NS_THEME_TEXTFIELD_CARET,
+  eCSSKeyword_menulist,               NS_THEME_DROPDOWN,
+  eCSSKeyword_menulistbutton,         NS_THEME_DROPDOWN_BUTTON,
+  eCSSKeyword_slider,                 NS_THEME_SLIDER,
+  eCSSKeyword_sliderthumb,            NS_THEME_SLIDER_THUMB,
+  eCSSKeyword_sliderthumbstart,       NS_THEME_SLIDER_THUMB_START,
+  eCSSKeyword_sliderthumbend,         NS_THEME_SLIDER_THUMB_END,
+  eCSSKeyword_sliderthumbtick,        NS_THEME_SLIDER_TICK,
+  -1,-1
+};
 
 // Keyword id tables for variant/enum parsing
 const PRInt32 nsCSSProps::kAzimuthKTable[] = {
@@ -244,6 +297,7 @@ const PRInt32 nsCSSProps::kColorKTable[] = {
   eCSSKeyword_window, nsILookAndFeel::eColor_window,
   eCSSKeyword_windowframe, nsILookAndFeel::eColor_windowframe,
   eCSSKeyword_windowtext, nsILookAndFeel::eColor_windowtext,
+  eCSSKeyword_theme, nsILookAndFeel::eColor_theme,
   eCSSKeyword__moz_field, nsILookAndFeel::eColor__moz_field,
   eCSSKeyword__moz_fieldtext, nsILookAndFeel::eColor__moz_fieldtext,
   eCSSKeyword__moz_dialog, nsILookAndFeel::eColor__moz_dialog,
@@ -387,6 +441,7 @@ const PRInt32 nsCSSProps::kFontKTable[] = {
   eCSSKeyword_pull_down_menu, NS_STYLE_FONT_PULL_DOWN_MENU,
   eCSSKeyword_list, NS_STYLE_FONT_LIST,
   eCSSKeyword_field, NS_STYLE_FONT_FIELD,
+  eCSSKeyword_theme, NS_STYLE_FONT_THEME,
   -1,-1
 };
 

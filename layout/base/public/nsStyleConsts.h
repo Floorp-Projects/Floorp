@@ -402,6 +402,7 @@
 #define NS_STYLE_FONT_PULL_DOWN_MENU						14
 #define NS_STYLE_FONT_LIST											15
 #define NS_STYLE_FONT_FIELD											16
+#define NS_STYLE_FONT_THEME                     17
 
 // See nsStylePosition.mPosition
 #define NS_STYLE_POSITION_NORMAL                0

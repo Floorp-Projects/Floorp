@@ -67,6 +67,7 @@
 #include "nsCSSAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsINameSpace.h"
+#include "nsThemeConstants.h"
 
 // XXX TODO:
 // - rework aErrorCode stuff: switch over to nsresult
@@ -257,6 +258,7 @@ protected:
 #endif
 
   // Property specific parsing routines
+  PRBool ParseAppearance(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseAzimuth(PRInt32& aErrorCode, nsCSSValue& aValue);
   PRBool ParseBackground(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseBackgroundPosition(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
@@ -3400,6 +3402,8 @@ PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
                                     PRInt32& aChangeHint)
 {
   switch (aPropID) {  // handle shorthand or multiple properties
+  case eCSSProperty_appearance:
+    return ParseAppearance(aErrorCode, aDeclaration, aChangeHint);
   case eCSSProperty_background:
     return ParseBackground(aErrorCode, aDeclaration, aChangeHint);
   case eCSSProperty_background_position:
@@ -3616,6 +3620,8 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_background_y_position:
     return ParseVariant(aErrorCode, aValue, VARIANT_HKLP,
                         kBackgroundXYPositionKTable);
+  case eCSSProperty_appearance:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HOK, nsCSSProps::kAppearanceKTable);
   case eCSSProperty_binding:
     return ParseVariant(aErrorCode, aValue, VARIANT_HUO, nsnull);
   case eCSSProperty_border_collapse:
@@ -3945,6 +3951,52 @@ PRBool CSSParserImpl::ParseAzimuth(PRInt32& aErrorCode, nsCSSValue& aValue)
     return PR_TRUE;
   }
   return PR_FALSE;
+}
+
+static PRBool HasForegroundContent(PRUint8 aAppearance)
+{
+  return ((aAppearance == NS_THEME_BUTTON) ||
+          (aAppearance == NS_THEME_TOOLBAR_BUTTON) ||
+          (aAppearance == NS_THEME_TOOLBAR_DUAL_BUTTON) ||
+          (aAppearance == NS_THEME_LISTBOX_LISTITEM) ||
+          (aAppearance == NS_THEME_TREEVIEW_TREEITEM) ||
+          (aAppearance == NS_THEME_TREEVIEW_HEADER_CELL) ||
+          (aAppearance == NS_THEME_TAB) ||
+          (aAppearance == NS_THEME_TOOLTIP) ||
+          (aAppearance == NS_THEME_TEXTFIELD));
+}
+
+PRBool CSSParserImpl::ParseAppearance(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, 
+                                      PRInt32& aChangeHint)
+{
+  nsCSSValue appearance;
+  if (!ParseVariant(aErrorCode, appearance, VARIANT_HK, nsCSSProps::kAppearanceKTable))
+    return PR_FALSE;
+
+  if (ExpectEndProperty(aErrorCode, PR_TRUE))
+    aErrorCode = AppendValue(aDeclaration, eCSSProperty_appearance, appearance, aChangeHint);
+  else
+    return PR_FALSE;
+
+  if (appearance.GetIntValue() && HasForegroundContent(appearance.GetIntValue())) {
+    // When an appearance is specified, it can act as a shorthand that
+    // specifies color and font information as well.
+    // Add in font information.
+    PRInt32 index = SearchKeywordTable(eCSSKeyword_theme, nsCSSProps::kFontKTable);
+    if (index > 0) {
+      nsCSSValue val(nsCSSProps::kFontKTable[index], eCSSUnit_Enumerated);
+      AppendValue(aDeclaration, eCSSProperty_font_family, val, aChangeHint);
+    }
+
+    // Add in color information.
+    index = SearchKeywordTable(eCSSKeyword_theme, nsCSSProps::kColorKTable);
+    if (index > 0) {
+      nsCSSValue val(nsCSSProps::kColorKTable[index], eCSSUnit_Integer);
+      AppendValue(aDeclaration, eCSSProperty_color, val, aChangeHint);
+    }
+  }
+
+  return PR_TRUE;
 }
 
 PRBool CSSParserImpl::ParseBackground(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, 

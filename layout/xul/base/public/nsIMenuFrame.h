@@ -80,6 +80,8 @@ public:
 
   NS_IMETHOD MarkAsGenerated() = 0;
 
+  NS_IMETHOD UngenerateMenu() = 0;
+
   NS_IMETHOD GetActiveChild(nsIDOMElement** aResult)=0;
   NS_IMETHOD SetActiveChild(nsIDOMElement* aChild)=0;
 };

@@ -157,6 +157,9 @@ struct nsStyleFont : public nsStyleStruct {
   nsStyleFont(nsIPresContext* aPresContext);
 };
 
+#define NS_COLORFLAGS_NONE  0x00
+#define NS_COLORFLAGS_THEME 0x01
+
 struct nsStyleColor : public nsStyleStruct {
   nsStyleColor(nsIPresContext* aPresContext);
   nsStyleColor(const nsStyleColor& aOther);
@@ -179,6 +182,8 @@ struct nsStyleColor : public nsStyleStruct {
   // Don't add ANY members to this struct!  We can achieve caching in the rule
   // tree (rather than the style tree) by letting color stay by itself! -dwh
   nscolor mColor;                 // [inherited]
+  PRPackedBool mColorFlags;       // Used to indicate theme colors.  Theme colors
+                                  // must be resolved dynamically.
 };
 
 struct nsStyleBackground : public nsStyleStruct {
@@ -740,6 +745,7 @@ struct nsStyleDisplay : public nsStyleStruct {
   PRInt32 CalcDifference(const nsStyleDisplay& aOther) const;
   
   PRUint8 mDisplay;             // [reset] see nsStyleConsts.h NS_STYLE_DISPLAY_*
+  PRUint8 mAppearance;          // [reset]
   nsString  mBinding;           // [reset] absolute url string
   PRUint8   mPosition;          // [reset] see nsStyleConsts.h
   PRUint8 mFloats;              // [reset] see nsStyleConsts.h NS_STYLE_FLOAT_*

@@ -48,6 +48,8 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsStyleUtil.h"
 #include "nsCSSAtoms.h"
+#include "nsThemeConstants.h"
+#include "nsITheme.h"
 
 // Temporary - Test of full time Standard mode for forms
 #include "nsIPref.h"
@@ -352,6 +354,8 @@ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
     nsILookAndFeel* look = nsnull;
     if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(&look)) && look) {
       nsILookAndFeel::nsColorID colorID = (nsILookAndFeel::nsColorID)aValue.GetIntValue();
+      if (colorID == nsILookAndFeel::eColor_theme)
+        return PR_FALSE;
       if (NS_SUCCEEDED(look->GetColor(colorID, aResult))) {
         result = PR_TRUE;
       }
@@ -758,7 +762,8 @@ CheckFontCallback(const nsCSSStruct& aData)
         (family == NS_STYLE_FONT_BUTTON) ||
         (family == NS_STYLE_FONT_PULL_DOWN_MENU) ||
         (family == NS_STYLE_FONT_LIST) ||
-        (family == NS_STYLE_FONT_FIELD))
+        (family == NS_STYLE_FONT_FIELD) ||
+        (family == NS_STYLE_FONT_THEME))
       return nsRuleNode::eRuleFullMixed;
   }
   return nsRuleNode::eRuleUnknown;
@@ -774,6 +779,7 @@ static const PropertyCheckData FontCheckProperties[] = {
 };
 
 static const PropertyCheckData DisplayCheckProperties[] = {
+  CHECKDATA_PROP(nsCSSDisplay, mAppearance, CHECKDATA_VALUE, PR_FALSE),
   CHECKDATA_PROP(nsCSSDisplay, mClip, CHECKDATA_RECT, PR_FALSE),
   CHECKDATA_PROP(nsCSSDisplay, mDisplay, CHECKDATA_VALUE, PR_FALSE),
   CHECKDATA_PROP(nsCSSDisplay, mBinding, CHECKDATA_VALUE, PR_FALSE),
@@ -1803,6 +1809,7 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
       case NS_STYLE_FONT_PULL_DOWN_MENU:sysID = eSystemFont_PullDownMenu; break;
       case NS_STYLE_FONT_LIST:          sysID = eSystemFont_List;         break;
       case NS_STYLE_FONT_FIELD:         sysID = eSystemFont_Field;        break;
+      case NS_STYLE_FONT_THEME:         sysID = eSystemFont_Theme;        break;
     }
 
     nsCompatibility mode = eCompatibility_Standard;
@@ -1826,7 +1833,24 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
     if (dc) {
       // GetSystemFont sets the font face but not necessarily the size
       aFont->mFont.size = defaultVariableFont.size;
-      if (NS_FAILED(dc->GetSystemFont(sysID, &aFont->mFont))) {
+      
+      // If our font type is theme, then check for appearance data and
+      // obtain our font based off our widget type.
+      if (sysID == eSystemFont_Theme) {
+        const nsStyleDisplay* display = (const nsStyleDisplay*)
+                                         aContext->GetStyleData(eStyleStruct_Display);
+        if (display->mAppearance) {
+          // Get our theme.
+          nsCOMPtr<nsITheme> theme;
+          aPresContext->GetTheme(getter_AddRefs(theme));
+          if (theme) {
+            nsCOMPtr<nsIDeviceContext> deviceContext;
+            aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
+            theme->GetWidgetFont(deviceContext, display->mAppearance, &aFont->mFont);
+          }
+        }
+      }
+      else if (NS_FAILED(dc->GetSystemFont(sysID, &aFont->mFont))) {
         aFont->mFont.name = defaultVariableFont.name;
       }
       aFont->mSize = aFont->mFont.size; // this becomes our cascading size
@@ -2697,6 +2721,18 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
     display->mDisplay = parentDisplay->mDisplay;
   }
 
+  // appearance: enum, none, inherit
+  if (eCSSUnit_Enumerated == displayData.mAppearance.GetUnit()) {
+    display->mAppearance = displayData.mAppearance.GetIntValue();
+  }
+  else if (eCSSUnit_None == displayData.mAppearance.GetUnit()) {
+    display->mAppearance = NS_THEME_NONE;
+  }
+  else if (eCSSUnit_Inherit == displayData.mAppearance.GetUnit()) {
+    inherited = PR_TRUE;
+    display->mAppearance = parentDisplay->mAppearance;
+  }
+
   // binding: url, none, inherit
   if (eCSSUnit_URL == displayData.mBinding.GetUnit()) {
     displayData.mBinding.GetStringValue(display->mBinding);
@@ -3026,7 +3062,18 @@ nsRuleNode::ComputeColorData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDa
     parentColor = color;
 
   // color: color, string, inherit
-  SetColor(colorData.mColor, parentColor->mColor, mPresContext, color->mColor, inherited);
+  if (!SetColor(colorData.mColor, parentColor->mColor, mPresContext, color->mColor, 
+                inherited) && colorData.mColor.GetUnit() == eCSSUnit_Integer) {
+    // See if this is a special theme color.  Theme colors must always be resolved
+    // dynamically at paint time.
+    nsCOMPtr<nsILookAndFeel> look;
+    mPresContext->GetLookAndFeel(getter_AddRefs(look));
+    if (look) {
+      nsILookAndFeel::nsColorID colorID = (nsILookAndFeel::nsColorID)colorData.mColor.GetIntValue();
+      if (colorID == nsILookAndFeel::eColor_theme)
+        color->mColorFlags = NS_COLORFLAGS_THEME;
+    }
+  }
 
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the

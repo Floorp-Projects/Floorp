@@ -54,6 +54,8 @@ EXPORTS		= \
 		nsIDeviceContextSpec.h \
 		nsIDeviceContextSpecFactory.h \
 		nsIDrawingSurface.h \
+		nsITheme.h \
+		nsThemeConstants.h \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),mac)

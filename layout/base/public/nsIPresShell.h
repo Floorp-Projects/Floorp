@@ -158,6 +158,13 @@ public:
 
   NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle) = 0;
 
+  /*
+   * Called when stylesheets are added/removed/enabled/disabled to rebuild
+   * all style data for a given pres shell without necessarily reconstructing
+   * all of the frames.
+   */
+  NS_IMETHOD ReconstructStyleData() = 0;
+
   /** Setup all style rules required to implement preferences
    * - used for background/text/link colors and link underlining
    *    may be extended for any prefs that are implemented via style rules

@@ -79,6 +79,7 @@ public:
     NS_IMETHOD GetXBLDocumentInfo(const nsCString& aString, nsIXBLDocumentInfo** _result);
     NS_IMETHOD PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo);
     NS_IMETHOD FlushXBLInformation();
+    NS_IMETHOD FlushSkinFiles();
 
     NS_IMETHOD Flush();
 
@@ -327,6 +328,98 @@ nsXULPrototypeCache::FlushXBLInformation()
 {
     mXBLDocTable.Reset();
     return NS_OK;
+}
+
+struct nsHashKeyEntry {
+  nsHashKey* mKey;
+  nsHashKeyEntry* mNext;
+
+  nsHashKeyEntry(nsHashKey* aKey, nsHashKeyEntry* aNext = nsnull) {
+    mKey = aKey;
+    mNext = aNext;
+  }
+
+  ~nsHashKeyEntry() {
+    delete mNext;
+  }
+};
+
+struct nsHashKeys {
+  nsHashKeyEntry* mFirst;
+
+  nsHashKeys() { mFirst = nsnull; };
+  ~nsHashKeys() { Clear(); };
+
+  void AppendKey(nsHashKey* aKey) {
+    mFirst = new nsHashKeyEntry(aKey, mFirst);
+  }
+
+  void Clear() {
+    delete mFirst;
+    mFirst = nsnull;
+  }
+};
+
+PRBool PR_CALLBACK FlushSkinXBL(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  nsIXBLDocumentInfo* docInfo = (nsIXBLDocumentInfo*)aData;
+  nsCOMPtr<nsIDocument> doc;
+  docInfo->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIURI> uri;
+  doc->GetDocumentURL(getter_AddRefs(uri));
+  nsXPIDLCString str;
+  uri->GetPath(getter_Copies(str));
+  if (!PL_strncmp(str.get(), "/skin", 5)) {
+    // This is a skin binding. Add the key to the list.
+    nsHashKeys* list = (nsHashKeys*)aClosure;
+    list->AppendKey(aKey);
+  }
+  return PR_TRUE;
+}
+
+PRBool PR_CALLBACK FlushSkinSheets(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  nsICSSStyleSheet* sheet = (nsICSSStyleSheet*)aData;
+  nsCOMPtr<nsIURI> uri;
+  sheet->GetURL(*getter_AddRefs(uri));
+  nsXPIDLCString str;
+  uri->GetPath(getter_Copies(str));
+  if (!PL_strncmp(str.get(), "/skin", 5)) {
+    // This is a skin binding. Add the key to the list.
+    nsHashKeys* list = (nsHashKeys*)aClosure;
+    list->AppendKey(aKey);
+  }
+  return PR_TRUE;
+}
+
+PRBool PR_CALLBACK FlushScopedSkinStylesheets(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  nsIXBLDocumentInfo* docInfo = (nsIXBLDocumentInfo*)aData;
+  docInfo->FlushSkinStylesheets();
+  return PR_TRUE;
+}
+
+NS_IMETHODIMP
+nsXULPrototypeCache::FlushSkinFiles()
+{
+  // Flush out skin XBL files from the cache.
+  nsHashKeys keysToRemove;
+  nsHashKeyEntry* curr;
+  mXBLDocTable.Enumerate(FlushSkinXBL, &keysToRemove);
+  for (curr = keysToRemove.mFirst; curr; curr = curr->mNext)
+    mXBLDocTable.Remove(curr->mKey);
+
+  // Now flush out our skin stylesheets from the cache.
+  keysToRemove.Clear();
+  mStyleSheetTable.Enumerate(FlushSkinSheets, &keysToRemove);
+  for (curr = keysToRemove.mFirst; curr; curr = curr->mNext)
+    mStyleSheetTable.Remove(curr->mKey);
+
+  // Iterate over all the remaining XBL and make sure cached 
+  // scoped skin stylesheets are flushed and refetched by the
+  // prototype bindings.
+  mXBLDocTable.Enumerate(FlushScopedSkinStylesheets);
+  return NS_OK;
 }
 
 

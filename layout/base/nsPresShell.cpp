@@ -146,6 +146,17 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsITimer.h"
 
+// For style data reconstruction
+#include "nsStyleChangeList.h"
+#include "nsIStyleFrameConstruction.h"
+#include "nsINameSpaceManager.h"
+#include "nsIBindingManager.h"
+#include "nsIMenuFrame.h"
+#include "nsITreeFrame.h"
+#include "nsIOutlinerBoxObject.h"
+#include "nsIXBLBinding.h"
+#include "nsPlaceholderFrame.h"
+
 // Dummy layout request
 #include "nsIChannel.h"
 #include "nsILoadGroup.h"
@@ -844,6 +855,7 @@ public:
   NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle);
   NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle);
   NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList);
+  NS_IMETHOD ReconstructStyleData();
   NS_IMETHOD SetPreferenceStyleRules(PRBool aForceReflow);
   NS_IMETHOD EnablePrefStyleRules(PRBool aEnable, PRUint8 aPrefType=0xFF);
   NS_IMETHOD ArePrefStyleRulesEnabled(PRBool& aEnabled);
@@ -1891,7 +1903,7 @@ PresShell::SelectAlternateStyleSheet(const nsString& aSheetTitle)
         }
       }
     }
-    ReconstructFrames();
+    ReconstructStyleData();
   }
   return NS_OK;
 }
@@ -2059,7 +2071,7 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
       // this is harsh, but without it the new colors don't appear on the current page
       // Fortunately, it only happens when the prefs change, a rare event.
       // XXX - determine why the normal PresContext::RemapStyleAndReflow doesn't cut it
-      ReconstructFrames();
+      ReconstructStyleData();
     }
 
     return result;
@@ -5225,18 +5237,152 @@ PresShell::ReconstructFrames(void)
   return rv;
 }
 
+static nsresult 
+FlushMiscWidgetInfo(nsStyleChangeList& aChangeList, nsIPresContext* aPresContext, nsIFrame* aFrame)
+{
+  // Ok, get our binding information.
+  const nsStyleDisplay* oldDisplay;
+  aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)oldDisplay);
+  if (!oldDisplay->mBinding.IsEmpty()) {
+    // We had a binding.
+    nsCOMPtr<nsIContent> content;
+    aFrame->GetContent(getter_AddRefs(content));
+    nsCOMPtr<nsIDocument> doc;
+    content->GetDocument(*getter_AddRefs(doc));
+    if (doc) {
+      nsCOMPtr<nsIBindingManager> bm;
+      doc->GetBindingManager(getter_AddRefs(bm));
+      nsCOMPtr<nsIXBLBinding> binding;
+      bm->GetBinding(content, getter_AddRefs(binding));
+      PRBool marked = PR_FALSE;
+      binding->MarkedForDeath(&marked);
+      if (marked) {
+        // Add in a change to process, thus ensuring this binding gets rebuilt.
+        aChangeList.AppendChange(aFrame, content, NS_STYLE_HINT_FRAMECHANGE);
+        return NS_OK;
+      }
+    }
+  }
+
+  nsCOMPtr<nsITreeFrame> treeFrame(do_QueryInterface(aFrame));
+  if (treeFrame) {
+    // Trees are problematic.  Always flush them out on a skin switch.
+    nsCOMPtr<nsIContent> content;
+    aFrame->GetContent(getter_AddRefs(content));
+    aChangeList.AppendChange(aFrame, content, NS_STYLE_HINT_FRAMECHANGE);
+    return NS_OK;
+  }
+
+  // Outliners have a special style cache that needs to be flushed when
+  // the theme changes.
+  nsCOMPtr<nsIOutlinerBoxObject> outlinerBox(do_QueryInterface(aFrame));
+  if (outlinerBox)
+    outlinerBox->ClearStyleAndImageCaches();
+
+  nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(aFrame));
+  if (menuFrame) {
+    menuFrame->UngenerateMenu();   // We deliberately don't re-resolve style on
+    menuFrame->OpenMenu(PR_FALSE); // a menu's popup sub-content, since doing so 
+                                   // slows menus to a crawl.  That means we have to
+                                   // special-case them on a skin switch, and ensure that
+                                   // the popup frames just get destroyed completely.
+  }
+   
+  // Now walk our children.
+  PRInt32 listIndex = 0;
+  nsCOMPtr<nsIAtom> childList;
+  nsIFrame* child;
+
+  do {
+    child = nsnull;
+    aFrame->FirstChild(aPresContext, childList, &child);
+    while (child) {
+      nsFrameState  state;
+      child->GetFrameState(&state);
+      if (NS_FRAME_OUT_OF_FLOW != (state & NS_FRAME_OUT_OF_FLOW)) {
+        // only do frames that are in flow
+        nsCOMPtr<nsIAtom> frameType;
+        child->GetFrameType(getter_AddRefs(frameType));
+        if (nsLayoutAtoms::placeholderFrame == frameType.get()) { // placeholder
+          // get out of flow frame and recurse there
+          nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)child)->GetOutOfFlowFrame();
+          NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
+          FlushMiscWidgetInfo(aChangeList, aPresContext, outOfFlowFrame);
+        }
+        else
+          FlushMiscWidgetInfo(aChangeList, aPresContext, child);
+      }
+      child->GetNextSibling(&child);
+    }
+
+    aFrame->GetAdditionalChildListName(listIndex++, getter_AddRefs(childList));
+  } while (childList);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::ReconstructStyleData()
+{
+  nsIFrame* rootFrame;
+  GetRootFrame(&rootFrame);
+  if (!rootFrame)
+    return NS_OK;
+
+  nsCOMPtr<nsIStyleSet> set;
+  GetStyleSet(getter_AddRefs(set));
+  if (!set)
+    return NS_OK;
+
+  nsCOMPtr<nsIStyleFrameConstruction> cssFrameConstructor;
+  set->GetStyleFrameConstruction(getter_AddRefs(cssFrameConstructor));
+  if (!cssFrameConstructor)
+    return NS_OK;
+
+  nsCOMPtr<nsIFrameManager> frameManager;
+  GetFrameManager(getter_AddRefs(frameManager));
+  
+  // Now handle some of our more problematic widgets (and also deal with
+  // skin XBL changing).
+  nsStyleChangeList changeList;
+  FlushMiscWidgetInfo(changeList, mPresContext, rootFrame);
+  cssFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
+  changeList.Clear();
+
+  // Clear all undisplayed content in the undisplayed content map.
+  // These cached style contexts will no longer be valid following
+  // a full rule tree reconstruct.
+  frameManager->ClearUndisplayedContentMap();
+
+  // Now do a complete re-resolve of our style tree.
+  set->BeginRuleTreeReconstruct();
+ 
+  PRInt32 frameChange = NS_STYLE_HINT_NONE;
+  frameManager->ComputeStyleChangeFor(mPresContext, rootFrame, 
+                                      kNameSpaceID_Unknown, nsnull,
+                                      changeList, NS_STYLE_HINT_NONE, frameChange);
+
+  if (frameChange == NS_STYLE_HINT_RECONSTRUCT_ALL)
+    set->ReconstructDocElementHierarchy(mPresContext);
+  else
+    cssFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
+
+  set->EndRuleTreeReconstruct();
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 PresShell::StyleSheetAdded(nsIDocument *aDocument,
                            nsIStyleSheet* aStyleSheet)
 {
-  return ReconstructFrames();
+  return ReconstructStyleData();
 }
 
 NS_IMETHODIMP 
 PresShell::StyleSheetRemoved(nsIDocument *aDocument,
                              nsIStyleSheet* aStyleSheet)
 {
-  return ReconstructFrames();
+  return ReconstructStyleData();
 }
 
 NS_IMETHODIMP
@@ -5290,7 +5436,7 @@ PresShell::StyleRuleAdded(nsIDocument *aDocument,
     return rv;
   }
   // XXX For now reconstruct everything
-  return ReconstructFrames();
+  return ReconstructStyleData();
 }
 
 NS_IMETHODIMP
@@ -5307,7 +5453,7 @@ PresShell::StyleRuleRemoved(nsIDocument *aDocument,
     return rv;
   }
   // XXX For now reconstruct everything
-  return ReconstructFrames();
+  return ReconstructStyleData();
 }
 
 NS_IMETHODIMP
@@ -5496,14 +5642,7 @@ NS_IMETHODIMP
 PresShell::BidiStyleChangeReflow()
 {
   // Have the root frame's style context remap its style
-  nsIFrame* rootFrame;
-  mFrameManager->GetRootFrame(&rootFrame);
-
-  if (rootFrame) {
-    mStyleSet->ClearStyleData(mPresContext, nsnull, nsnull);
-    ReconstructFrames();
-  }
-  return NS_OK;
+  return ReconstructStyleData();
 }
 #endif // IBMBIDI
 
@@ -5683,6 +5822,9 @@ PresShell::HandleEvent(nsIView         *aView,
     return HandleEventInternal(aEvent, aView, NS_EVENT_FLAG_INIT, aEventStatus);
 #endif
 
+  // Check for a theme change up front, since the frame type is irrelevant
+  if (aEvent->message == NS_THEMECHANGED && mPresContext)
+    return mPresContext->ThemeChanged();
 
   aView->GetClientData(clientData);
   frame = (nsIFrame *)clientData;

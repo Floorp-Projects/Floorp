@@ -345,6 +345,22 @@ nsXBLDocumentInfo::SetPrototypeBinding(const nsAReadableCString& aRef, nsIXBLPro
   return NS_OK;
 }
 
+PRBool PR_CALLBACK FlushScopedSkinSheets(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  nsIXBLPrototypeBinding* proto = (nsIXBLPrototypeBinding*)aData;
+  proto->FlushSkinSheets();
+  return PR_TRUE;
+}
+
+NS_IMETHODIMP
+nsXBLDocumentInfo::FlushSkinStylesheets()
+{
+  if (mBindingTable)
+    mBindingTable->Enumerate(FlushScopedSkinSheets);
+  return NS_OK;
+
+}
+
 //----------------------------------------------------------------------
 //
 // nsIScriptGlobalObjectOwner methods

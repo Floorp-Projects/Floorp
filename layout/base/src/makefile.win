@@ -38,7 +38,7 @@ REQUIRES	= xpcom \
 		  imglib2 \
 		  gfx2 \
 		  content \
-		  gfx \
+      gfx \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>

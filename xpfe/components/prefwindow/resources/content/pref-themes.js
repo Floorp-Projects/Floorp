@@ -40,22 +40,9 @@ function applySkin()
   var tree = document.getElementById("skinsTree");
   var selectedSkinItem = tree.selectedItems[0];
   var skinName = selectedSkinItem.getAttribute("name");
-  // XXX - this sucks and should only be temporary.
-  kPrefSvc.SetUnicharPref("general.skins.selectedSkin", skinName);
-  tree.selectItem(selectedSkinItem);
-
-  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-  observerService.notifyObservers(null, "skin-selected", null);
-
-  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-  if (promptService) {
-    var navbundle = document.getElementById("bundle_navigator");
-    var brandbundle = document.getElementById("bundle_brand");
-    var dialogTitle = navbundle.getString("switchskinstitle");
-    var brandName = brandbundle.getString("brandShortName");
-    var msg = navbundle.getFormattedString("switchskins", [brandName]);
-    promptService.alert(window, dialogTitle, msg);
-  }
+  
+  chromeRegistry.selectSkin(skinName, DEBUG_USE_PROFILE);
+  chromeRegistry.refreshSkins();
 }
 
 function uninstallSkin()

@@ -25,6 +25,8 @@ public:
   NS_IMETHOD GetPrototypeBinding(const nsAReadableCString& aRef, nsIXBLPrototypeBinding** aResult);
   NS_IMETHOD SetPrototypeBinding(const nsAReadableCString& aRef, nsIXBLPrototypeBinding* aBinding);
 
+  NS_IMETHOD FlushSkinStylesheets();
+
   // nsIScriptGlobalObjectOwner methods
   NS_DECL_NSISCRIPTGLOBALOBJECTOWNER
 

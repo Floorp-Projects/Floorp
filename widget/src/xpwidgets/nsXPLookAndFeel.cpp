@@ -471,6 +471,19 @@ nsXPLookAndFeel::GetMetric(const nsMetricFloatID aID, float& aMetric)
   return NS_ERROR_NOT_AVAILABLE;
 }
 
+NS_IMETHODIMP
+nsXPLookAndFeel::LookAndFeelChanged()
+{
+  // Wipe out our color cache.
+  PRUint32 i;
+  for (i = 0; i < nsILookAndFeel::eColor_LAST_COLOR; i++)
+    sCachedColors[i] = 0;
+  for (i = 0; i < COLOR_CACHE_SIZE; i++)
+    sCachedColorBits[i] = 0;
+  return NS_OK;
+}
+
+
 #ifdef NS_DEBUG
   // This method returns the actual (or nearest estimate) 
   // of the Navigator size for a given form control for a given font

@@ -96,6 +96,7 @@
 #include "nsIBindingManager.h"
 #include "nsIXBLBinding.h"
 #include "nsIElementFactory.h"
+#include "nsITheme.h"
 #include "nsContentCID.h"
 #include "nsIDocShell.h"
 #include "nsFormControlHelper.h"
@@ -7795,7 +7796,13 @@ FindPreviousSibling(nsIPresShell* aPresShell,
       prevSibling->GetStyleData(eStyleStruct_Display,
                                 (const nsStyleStruct*&)display);
 
-      if (display->IsFloating() || display->IsPositioned()) {
+      if (display->mDisplay == NS_STYLE_DISPLAY_POPUP) {
+        nsIFrame* placeholderFrame;
+        aPresShell->GetPlaceholderFrameFor(prevSibling, &placeholderFrame);
+        if (prevSibling)
+          prevSibling = placeholderFrame;
+      }
+      else if (display->IsFloating() || display->IsPositioned()) {
         nsIFrame* placeholderFrame;
         aPresShell->GetPlaceholderFrameFor(prevSibling, &placeholderFrame);
         NS_ASSERTION(placeholderFrame, "no placeholder for out-of-flow frame");
@@ -8510,6 +8517,9 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
         nsXULTreeOuterGroupFrame* treeRowGroup;
         tree->GetTreeBody(&treeRowGroup);
         if (treeRowGroup) {
+          // Don't bother with the odd XBL case of anonymous content.
+          if (aIndexInContainer == -1)
+            return NS_OK;
 
           // Get the primary frame for the parent of the child that's being added.
           nsIFrame* innerFrame = GetFrameFor(shell, aPresContext, aContainer);
@@ -10052,28 +10062,43 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
 
   NS_ASSERTION(shell, "couldn't get pres shell");
   if (shell) {
-    nsIStyleSet* styleSet;
-    shell->GetStyleSet(&styleSet);
+    nsCOMPtr<nsIStyleSet> styleSet;
+    shell->GetStyleSet(getter_AddRefs(styleSet));
 
     NS_ASSERTION(styleSet, "couldn't get style set");
     if (styleSet) { // test if any style rules exist which are dependent on content state
       nsIFrame* primaryFrame1 = nsnull;
       nsIFrame* primaryFrame2 = nsnull;
-      if (aContent1 && (NS_OK == styleSet->HasStateDependentStyle(aPresContext, aContent1))) {
-        shell->GetPrimaryFrameFor(aContent1, &primaryFrame1);
+      PRUint8 app1 = 0;
+      PRUint8 app2 = 0;
+
+      shell->GetPrimaryFrameFor(aContent1, &primaryFrame1);
+      if (primaryFrame1) {
+        const nsStyleDisplay* disp;
+        primaryFrame1->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)disp);
+        app1 = disp->mAppearance;
       }
-      else {
+
+      if (!app1 && (NS_OK != styleSet->HasStateDependentStyle(aPresContext, aContent1))) {
+        primaryFrame1 = nsnull;
         aContent1 = nsnull;
       }
 
-      if (aContent2 && (aContent2 != aContent1) && 
-          (NS_OK == styleSet->HasStateDependentStyle(aPresContext, aContent2))) {
-        shell->GetPrimaryFrameFor(aContent2, &primaryFrame2);
-      }
-      else {
+      if (aContent2 == aContent1)
         aContent2 = nsnull;
+      else if (aContent2) {
+        shell->GetPrimaryFrameFor(aContent2, &primaryFrame2);
+        if (primaryFrame2) {
+          const nsStyleDisplay* disp2;
+          primaryFrame2->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)disp2);
+          app2 = disp2->mAppearance;
+        }
+
+        if (!app2 && (NS_OK != styleSet->HasStateDependentStyle(aPresContext, aContent2))) {
+          primaryFrame2 = nsnull;
+          aContent2 = nsnull;
+        }
       }
-      NS_RELEASE(styleSet);
 
       if (primaryFrame1 && primaryFrame2) { // detect if one is parent of other, skip child
         nsIFrame* parent;
@@ -10109,10 +10134,29 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
                                             kNameSpaceID_Unknown, nsnull,
                                             changeList1, NS_STYLE_HINT_NONE, frameChange1);
 
+        if (app1) {
+          nsCOMPtr<nsITheme> theme;
+          aPresContext->GetTheme(getter_AddRefs(theme));
+          PRBool repaint = PR_FALSE;
+          if (theme)
+            theme->WidgetStateChanged(primaryFrame1, app1, nsnull, &repaint);
+          if (repaint)
+            ApplyRenderingChangeToTree(aPresContext, primaryFrame1, nsnull);
+        }
+
         if ((frameChange1 != NS_STYLE_HINT_RECONSTRUCT_ALL) && (primaryFrame2)) {
           frameManager->ComputeStyleChangeFor(aPresContext, primaryFrame2, 
                                               kNameSpaceID_Unknown, nsnull,
                                               changeList2, NS_STYLE_HINT_NONE, frameChange2);
+          if (app2) {
+            nsCOMPtr<nsITheme> theme;
+            aPresContext->GetTheme(getter_AddRefs(theme));
+            PRBool repaint = PR_FALSE;
+            if (theme)
+              theme->WidgetStateChanged(primaryFrame1, app2, nsnull, &repaint);
+            if (repaint) 
+              ApplyRenderingChangeToTree(aPresContext, primaryFrame2, nsnull);
+          }
         }
 
         if ((frameChange1 == NS_STYLE_HINT_RECONSTRUCT_ALL) || 
@@ -10157,6 +10201,15 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
         frameManager->ComputeStyleChangeFor(aPresContext, primaryFrame2, 
                                             kNameSpaceID_Unknown, nsnull,
                                             changeList, NS_STYLE_HINT_NONE, frameChange);
+        if (app2) {
+          nsCOMPtr<nsITheme> theme;
+          aPresContext->GetTheme(getter_AddRefs(theme));
+          PRBool repaint = PR_FALSE;
+          if (theme)
+            theme->WidgetStateChanged(primaryFrame2, app2, nsnull, &repaint);
+          if (repaint)
+            ApplyRenderingChangeToTree(aPresContext, primaryFrame2, nsnull);
+        }
 
         switch (frameChange) {  // max change needed for top level frames
           case NS_STYLE_HINT_RECONSTRUCT_ALL:
@@ -10390,6 +10443,23 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
     nsCOMPtr<nsIStyleSet> set;
     shell->GetStyleSet(getter_AddRefs(set));
     set->ClearStyleData(aPresContext, rule, styleContext);
+  }
+
+  // See if we have appearance information for a theme.
+  if (primaryFrame) {
+    const nsStyleDisplay* disp;
+    primaryFrame->GetStyleData(eStyleStruct_Display,
+                               (nsStyleStruct*&)disp);
+    if (disp && disp->mAppearance) {
+      nsCOMPtr<nsITheme> theme;
+      aPresContext->GetTheme(getter_AddRefs(theme));
+      if (theme && theme->ThemeSupportsWidget(aPresContext, disp->mAppearance)) {
+        PRBool repaint = PR_FALSE;
+        theme->WidgetStateChanged(primaryFrame, disp->mAppearance, aAttribute, &repaint);
+        if (repaint)
+          ApplyRenderingChangeToTree(aPresContext, primaryFrame, nsnull);
+      }
+    }
   }
 
   // apply changes

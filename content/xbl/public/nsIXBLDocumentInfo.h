@@ -74,6 +74,8 @@ public:
 
   NS_IMETHOD GetPrototypeBinding(const nsAReadableCString& aRef, nsIXBLPrototypeBinding** aResult)=0;
   NS_IMETHOD SetPrototypeBinding(const nsAReadableCString& aRef, nsIXBLPrototypeBinding* aBinding)=0;
+
+  NS_IMETHOD FlushSkinStylesheets()=0;
 };
 
 extern nsresult

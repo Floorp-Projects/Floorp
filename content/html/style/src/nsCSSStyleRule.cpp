@@ -2285,6 +2285,11 @@ MapDisplayForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, n
     return NS_OK; // We don't have any rules for display.
 
   if (aID == eStyleStruct_Display) {
+    // appearance: enum, none, inherit
+    if (aDisplay.mAppearance.GetUnit() == eCSSUnit_Null && 
+        ourDisplay->mAppearance.GetUnit() != eCSSUnit_Null)
+      aDisplay.mAppearance = ourDisplay->mAppearance;
+
     // display: enum, none, inherit
     if (aDisplay.mDisplay.GetUnit() == eCSSUnit_Null && ourDisplay->mDisplay.GetUnit() != eCSSUnit_Null)
       aDisplay.mDisplay = ourDisplay->mDisplay;

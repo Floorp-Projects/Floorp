@@ -222,6 +222,7 @@ struct nsCSSDisplay : public nsCSSStruct  {
   nsCSSValue mDirection;
   nsCSSValue mDisplay;
   nsCSSValue mBinding;
+  nsCSSValue mAppearance;
   nsCSSValue mPosition;
   nsCSSValue mFloat;
   nsCSSValue mClear;
