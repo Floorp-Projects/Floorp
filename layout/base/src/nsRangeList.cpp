@@ -103,6 +103,8 @@ private:
   nsresult RemoveItem(nsISupports *aRange);
 
   nsresult Clear();
+  NS_IMETHOD ScrollIntoView(nsIFocusTracker *aTracker);
+
   friend class nsRangeListIterator;
 
 #ifdef DEBUG
@@ -579,7 +581,7 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent)
           frameused = anchor;
         }
         if (NS_SUCCEEDED(frameused->PeekOffset(eSelectCharacter, eDirPrevious, offsetused, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
-          return TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, keyEvent->isShift);
+          result = TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, keyEvent->isShift);
         }
         break;
       case nsIDOMEvent::VK_RIGHT : 
@@ -598,15 +600,16 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent)
           frameused = frame;
         }
         if (NS_SUCCEEDED(frameused->PeekOffset(eSelectCharacter, eDirNext, offsetused, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
-          return TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, keyEvent->isShift);
+          result = TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, keyEvent->isShift);
         }
       case nsIDOMEvent::VK_UP : 
         printf("debug vk up\n");
         break;
     default :break;
     }
+    result = ScrollIntoView(aTracker);
   }
-  return NS_OK;
+  return result;
 }
 
 #ifdef DEBUG
@@ -953,6 +956,7 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
   PRInt32 startOffset;
   PRInt32 endOffset;
   nsIFrame *result;
+  nsresult res;
   nsCOMPtr<nsIDOMRange> range;
   if (!GetNotifyFrames())
     return NS_OK;
@@ -967,65 +971,72 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
   nsCOMPtr<nsIContent> anchorContent;
   nsCOMPtr<nsIContent> frameContent;
   if (GetAnchorNode() && GetFocusNode()){
-    anchorContent =  do_QueryInterface(GetAnchorNode());
-    frameContent = do_QueryInterface(GetFocusNode());
+    anchorContent =  do_QueryInterface(GetAnchorNode(),&res);
+    if (NS_SUCCEEDED(res))
+      frameContent = do_QueryInterface(GetFocusNode(),&res);
   }
-  for (PRInt32 i =0; i<mRangeArray->Count(); i++){
-    //end content and start content do NOT necessarily mean anchor and focus frame respectively
-    PRInt32 anchorOffset = -1; //the frames themselves can talk to the presentation manager.  we will tell them
-    PRInt32 frameOffset = -1;  // where we would "like" to have the anchor pt.  actually we count on it.
-    range = do_QueryInterface((nsISupports *)mRangeArray->ElementAt(i));
-    DEBUG_OUT_RANGE(range);
-    range->GetStartParent(getter_AddRefs(startNode));
-    range->GetStartOffset(&startOffset);
-    range->GetEndParent(getter_AddRefs(endNode));
-    range->GetEndOffset(&endOffset);
-    nsCOMPtr<nsIContent> startContent(do_QueryInterface(startNode));
-    result = findFrameFromContent(aStartFrame, startContent,PR_TRUE);
-    if (result){
-      nsCOMPtr<nsIContent> endContent(do_QueryInterface(endNode));
-      if (endContent == startContent){
-        if (startContent == frameContent)
-          frameOffset = GetFocusOffset();
-        if ( startContent == anchorContent ) 
-          anchorOffset = GetAnchorOffset();
-        result->SetSelectedContentOffsets(PR_TRUE, startOffset, endOffset, anchorOffset, frameOffset, PR_FALSE, 
-                                          aTracker, &result);
-      }
-      else{
-        if (startContent == frameContent)
-          frameOffset = GetFocusOffset();
-        if ( startContent == anchorContent ) 
-          anchorOffset = GetAnchorOffset();
-        result->SetSelectedContentOffsets(PR_TRUE, startOffset, -1 , anchorOffset, frameOffset, PR_FALSE, 
-                                          aTracker, &result);//select from start to end
-        //now we keep selecting until we hit the last content, or the end of the page.
-        anchorOffset = -1;
-        frameOffset = -1;
-        while((result = getNextFrame(result)) != nsnull){
-          nsCOMPtr<nsIContent> content;
-          result->GetContent(getter_AddRefs(content));
-          if (content == endContent){
-            if (endContent == frameContent)
-              frameOffset = GetFocusOffset();
-            if ( endContent == anchorContent ) 
-              anchorOffset = GetAnchorOffset();
-            result->SetSelectedContentOffsets(PR_TRUE, 0, endOffset, anchorOffset, frameOffset, PR_FALSE, 
-                                              aTracker, &result);//select from beginning to endOffset
-            return NS_OK;
+  if (NS_SUCCEEDED(res)){
+    for (PRInt32 i =0; i<mRangeArray->Count(); i++){
+      //end content and start content do NOT necessarily mean anchor and focus frame respectively
+      PRInt32 anchorOffset = -1; //the frames themselves can talk to the presentation manager.  we will tell them
+      PRInt32 frameOffset = -1;  // where we would "like" to have the anchor pt.  actually we count on it.
+      range = do_QueryInterface((nsISupports *)mRangeArray->ElementAt(i));
+      DEBUG_OUT_RANGE(range);
+      range->GetStartParent(getter_AddRefs(startNode));
+      range->GetStartOffset(&startOffset);
+      range->GetEndParent(getter_AddRefs(endNode));
+      range->GetEndOffset(&endOffset);
+
+      nsCOMPtr<nsIContent> startContent;
+      startContent = do_QueryInterface(startNode,&res);
+      if (startContent)
+        result = findFrameFromContent(aStartFrame, startContent,PR_TRUE);
+      if (result && NS_SUCCEEDED(res)){
+        nsCOMPtr<nsIContent> endContent(do_QueryInterface(endNode));
+        if (endContent == startContent){
+          if (startContent == frameContent)
+            frameOffset = GetFocusOffset();
+          if ( startContent == anchorContent ) 
+            anchorOffset = GetAnchorOffset();
+          result->SetSelectedContentOffsets(PR_TRUE, startOffset, endOffset, anchorOffset, frameOffset, PR_FALSE, 
+                                            aTracker, &result);
+        }
+        else{
+          if (startContent == frameContent)
+            frameOffset = GetFocusOffset();
+          if ( startContent == anchorContent ) 
+            anchorOffset = GetAnchorOffset();
+          result->SetSelectedContentOffsets(PR_TRUE, startOffset, -1 , anchorOffset, frameOffset, PR_FALSE, 
+                                            aTracker, &result);//select from start to end
+          //now we keep selecting until we hit the last content, or the end of the page.
+          anchorOffset = -1;
+          frameOffset = -1;
+          while((result = getNextFrame(result)) != nsnull){
+            nsCOMPtr<nsIContent> content;
+            result->GetContent(getter_AddRefs(content));
+            if (content == endContent){
+              if (endContent == frameContent)
+                frameOffset = GetFocusOffset();
+              if ( endContent == anchorContent ) 
+                anchorOffset = GetAnchorOffset();
+              result->SetSelectedContentOffsets(PR_TRUE, 0, endOffset, anchorOffset, frameOffset, PR_FALSE, 
+                                                aTracker, &result);//select from beginning to endOffset
+              break;
+            }
+            else
+              result->SetSelected(PR_TRUE, 0 , -1, PR_FALSE);
           }
-          else
-            result->SetSelected(PR_TRUE, 0 , -1, PR_FALSE);
         }
       }
+      res = ScrollIntoView(aTracker);
     }
-
   }
-  return NS_OK;
+  return res;
 }
 
 
-NS_METHOD nsRangeList::AddSelectionListener(nsIDOMSelectionListener* inNewListener)
+NS_METHOD
+nsRangeList::AddSelectionListener(nsIDOMSelectionListener* inNewListener)
 {
   if (!mSelectionListeners)
     return NS_ERROR_FAILURE;
@@ -1037,7 +1048,8 @@ NS_METHOD nsRangeList::AddSelectionListener(nsIDOMSelectionListener* inNewListen
 
 
 
-NS_IMETHODIMP nsRangeList::RemoveSelectionListener(nsIDOMSelectionListener* inListenerToRemove)
+NS_IMETHODIMP
+nsRangeList::RemoveSelectionListener(nsIDOMSelectionListener* inListenerToRemove)
 {
   if (!mSelectionListeners)
     return NS_ERROR_FAILURE;
@@ -1049,7 +1061,8 @@ NS_IMETHODIMP nsRangeList::RemoveSelectionListener(nsIDOMSelectionListener* inLi
 
 
 
-NS_IMETHODIMP nsRangeList::StartBatchChanges()
+NS_IMETHODIMP
+nsRangeList::StartBatchChanges()
 {
   nsresult result(NS_OK);
   if (PR_TRUE == mBatching)
@@ -1060,7 +1073,8 @@ NS_IMETHODIMP nsRangeList::StartBatchChanges()
 
 
  
-NS_IMETHODIMP nsRangeList::EndBatchChanges()
+NS_IMETHODIMP
+nsRangeList::EndBatchChanges()
 {
   nsresult result(NS_OK);
   if (PR_FALSE == mBatching)
@@ -1075,7 +1089,26 @@ NS_IMETHODIMP nsRangeList::EndBatchChanges()
 
   
   
-nsresult nsRangeList::NotifySelectionListeners()
+NS_IMETHODIMP
+nsRangeList::ScrollIntoView(nsIFocusTracker *aTracker)
+{
+  if (!aTracker)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult result;
+  nsIFrame *anchor;
+  nsIFrame *frame;
+  result = aTracker->GetFocus(&frame, &anchor);
+  if (NS_FAILED(result))
+    return result;
+  result = aTracker->ScrollFrameIntoView(frame);
+  return result;
+}
+
+
+
+nsresult
+nsRangeList::NotifySelectionListeners()
 {
   if (!mSelectionListeners)
     return NS_ERROR_FAILURE;

@@ -309,6 +309,7 @@ public:
 
   NS_IMETHOD GetFocus(nsIFrame **aFrame, nsIFrame **aAnchorFrame);
 
+  NS_IMETHOD ScrollFrameIntoView(nsIFrame *aFrame);
   // caret handling
   NS_IMETHOD GetCaret(nsICaret **outCaret);
   NS_IMETHOD RefreshCaret();
@@ -942,6 +943,14 @@ PresShell::GetFocus(nsIFrame **aFrame, nsIFrame **aAnchorFrame){
   *aFrame = mFocusEventFrame;
   *aAnchorFrame = mAnchorEventFrame; 
   return NS_OK;
+}
+
+NS_IMETHODIMP PresShell::ScrollFrameIntoView(nsIFrame *aFrame){
+  if (!aFrame)
+    return NS_ERROR_NULL_POINTER;
+  return ScrollFrameIntoView(aFrame, 
+           0, NS_PRESSHELL_SCROLL_TOP |NS_PRESSHELL_SCROLL_ANYWHERE,
+           0, NS_PRESSHELL_SCROLL_LEFT|NS_PRESSHELL_SCROLL_ANYWHERE);
 }
 
 
