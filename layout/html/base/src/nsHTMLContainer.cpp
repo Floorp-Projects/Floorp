@@ -519,6 +519,9 @@ nsContentAttr nsHTMLContainer::AttributeToString(nsIAtom* aAttribute,
       }
     }
   }
+  else {
+    ca = nsHTMLTagContent::AttributeToString(aAttribute, aValue, aResult);
+  }
   return ca;
 }
 
