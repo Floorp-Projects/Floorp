@@ -166,6 +166,7 @@ private:
 	static nsIRDFResource		*kRDF_InstanceOf;
 	static nsIRDFResource		*kRDF_type;
 	static nsIRDFResource		*kNC_loading;
+	static nsIRDFResource		*kNC_HTML;
 
 protected:
 	static nsIRDFDataSource		*mInner;
@@ -275,6 +276,7 @@ nsIRDFResource			*SearchDataSource::kNC_URL;
 nsIRDFResource			*SearchDataSource::kRDF_InstanceOf;
 nsIRDFResource			*SearchDataSource::kRDF_type;
 nsIRDFResource			*SearchDataSource::kNC_loading;
+nsIRDFResource			*SearchDataSource::kNC_HTML;
 
 PRInt32				SearchDataSourceCallback::gRefCnt;
 
@@ -350,6 +352,7 @@ SearchDataSource::SearchDataSource(void)
 		gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf",      &kRDF_InstanceOf);
 		gRDFService->GetResource(RDF_NAMESPACE_URI "type",            &kRDF_type);
 		gRDFService->GetResource(NC_NAMESPACE_URI "loading",          &kNC_loading);
+		gRDFService->GetResource(NC_NAMESPACE_URI "HTML",             &kNC_HTML);
 
 		gSearchDataSource = this;
 	}
@@ -372,6 +375,7 @@ SearchDataSource::~SearchDataSource (void)
 		NS_RELEASE(kRDF_InstanceOf);
 		NS_RELEASE(kRDF_type);
 		NS_RELEASE(kNC_loading);
+		NS_RELEASE(kNC_HTML);
 
 		NS_IF_RELEASE(mInner);
 
@@ -1228,6 +1232,17 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
 	}
 #endif
 
+	// dispose of any last HTML results page
+	if (mInner)
+	{
+		nsCOMPtr<nsIRDFNode>	htmlNode;
+		if (NS_SUCCEEDED(rv = mInner->GetTarget(engine, kNC_HTML, PR_TRUE, getter_AddRefs(htmlNode)))
+			&& (rv != NS_RDF_NO_VALUE))
+		{
+			rv = mInner->Unassert(engine, kNC_HTML, htmlNode);
+		}
+	}
+
 	// start "loading" animation for this search engine
 	if (NS_SUCCEEDED(rv) && (mInner))
 	{
@@ -1919,10 +1934,20 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 	printf("\n\n%s\n\n", mLine);
 #endif
 
-
 	nsAutoString	htmlResults(mLine);
 	delete [] mLine;
 	mLine = nsnull;
+
+	// save HTML result page for this engine
+	const PRUnichar	*htmlUni = htmlResults.GetUnicode();
+	if (htmlUni)
+	{
+		nsCOMPtr<nsIRDFLiteral>	htmlLiteral;
+		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(htmlUni, getter_AddRefs(htmlLiteral))))
+		{
+			rv = mDataSource->Assert(mEngine, kNC_HTML, htmlLiteral, PR_TRUE);
+		}
+	}
 
 	// get data out of graph
 	nsAutoString		data("");
