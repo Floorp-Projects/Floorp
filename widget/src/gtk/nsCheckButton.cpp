@@ -49,7 +49,6 @@ NS_IMPL_QUERY_INTERFACE2(nsCheckButton, nsICheckButton, nsIWidget)
 //-------------------------------------------------------------------------
 nsCheckButton::nsCheckButton() : nsWidget() , nsICheckButton()
 {
-  NS_INIT_ISUPPORTS();
   mLabel = nsnull;
   mCheckButton = nsnull;
   mState = PR_FALSE;

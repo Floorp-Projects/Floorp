@@ -110,7 +110,6 @@ MemoryFlusher::MemoryFlusher(nsMemoryImpl* aMemoryImpl)
       mLock(nsnull),
       mCVar(nsnull)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 MemoryFlusher::~MemoryFlusher()
@@ -253,7 +252,6 @@ nsMemoryImpl::nsMemoryImpl()
       mFlushLock(nsnull),
       mIsFlushing(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsMemoryImpl::~nsMemoryImpl()

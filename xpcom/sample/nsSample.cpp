@@ -53,7 +53,6 @@
 
 nsSampleImpl::nsSampleImpl() : mValue(nsnull)
 {
-    NS_INIT_ISUPPORTS();
     mValue = (char*)nsMemory::Clone("initial value", 14);
 }
 

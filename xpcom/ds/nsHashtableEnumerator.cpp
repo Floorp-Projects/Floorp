@@ -139,8 +139,6 @@ nsHashtableEnumerator::nsHashtableEnumerator(nsHashtable *aHash,
                                              aConverter,
                                              void* aData)
 {
-    NS_INIT_ISUPPORTS();
-
     nsHashEnumClosure c;
     c.Current = mCurrent = 0;
     c.Elements = mElements;

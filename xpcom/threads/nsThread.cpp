@@ -66,8 +66,6 @@ PRLogModuleInfo* nsIThreadLog = nsnull;
 nsThread::nsThread()
     : mThread(nsnull), mDead(PR_FALSE), mStartLock(nsnull)
 {
-    NS_INIT_ISUPPORTS();
-
 #if defined(PR_LOGGING)
     //
     // Initialize the global PRLogModule for nsIThread logging 
@@ -485,7 +483,6 @@ nsThreadPool::nsThreadPool()
       mPendingRequestsAtZero(nsnull), mMinThreads(0), mMaxThreads(0), 
       mBusyThreads(0), mShuttingDown(PR_TRUE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsThreadPool::~nsThreadPool()
@@ -874,7 +871,6 @@ NS_NewThreadPool(nsIThreadPool* *result,
 nsThreadPoolRunnable::nsThreadPoolRunnable(nsThreadPool* pool)
     : mPool(pool)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsThreadPoolRunnable::~nsThreadPoolRunnable()

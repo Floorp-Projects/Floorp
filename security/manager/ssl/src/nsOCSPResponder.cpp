@@ -49,13 +49,11 @@ NS_IMPL_ISUPPORTS1(nsOCSPResponder, nsIOCSPResponder)
 
 nsOCSPResponder::nsOCSPResponder()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 
 nsOCSPResponder::nsOCSPResponder(const PRUnichar * aCA, const PRUnichar * aURL)
 {
-  NS_INIT_ISUPPORTS();
   mCA.Assign(aCA);
   mURL.Assign(aURL);
 }

@@ -59,7 +59,6 @@ NS_IMPL_QUERY_INTERFACE1(nsBaseClipboard, nsIClipboard);
 //-------------------------------------------------------------------------
 nsBaseClipboard::nsBaseClipboard()
 {
-  NS_INIT_ISUPPORTS();
   mClipboardOwner          = nsnull;
   mTransferable            = nsnull;
   mIgnoreEmptyNotification = PR_FALSE;

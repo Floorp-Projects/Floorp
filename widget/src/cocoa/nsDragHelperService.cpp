@@ -55,7 +55,6 @@ NS_IMPL_QUERY_INTERFACE1(nsDragHelperService, nsIDragHelperService);
 //
 nsDragHelperService::nsDragHelperService()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 

@@ -52,7 +52,7 @@ class nsDownloadProxy : public nsIDownload,
 {
 public:
 
-  nsDownloadProxy() { NS_INIT_ISUPPORTS(); }
+  nsDownloadProxy() { }
   virtual ~nsDownloadProxy() { };
 
   NS_DECL_ISUPPORTS

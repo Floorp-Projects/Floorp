@@ -106,7 +106,6 @@ nsWindow::nsWindow() : nsBaseWidget()
 {
 	rgb_color	back = ui_color(B_PANEL_BACKGROUND_COLOR);
 
-	NS_INIT_ISUPPORTS();
 	mView               = 0;
 	mBackground         = NS_RGB(back.red, back.green, back.blue);
 	mForeground         = NS_RGB(0x00,0x00,0x00);

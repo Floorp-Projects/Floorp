@@ -171,7 +171,6 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 nsExternalHelperAppService::nsExternalHelperAppService() : mDataSourceInitialized(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
   // we need a good guess for a size for our hash table...let's try O(n) where n = # of default
   // entries we'll be adding to the hash table. Of course, we'll be adding more entries as we 
   // discover those content types at run time...
@@ -743,7 +742,6 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 nsExternalAppHandler::nsExternalAppHandler()
 {
-  NS_INIT_ISUPPORTS();
   mCanceled = PR_FALSE;
   mReceivedDispositionInfo = PR_FALSE;
   mHandlingAttachment = PR_FALSE;

@@ -67,7 +67,6 @@ NS_IMPL_ISUPPORTS1(nsSDRContext, nsIInterfaceRequestor)
 
 nsSDRContext::nsSDRContext()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSDRContext::~nsSDRContext()
@@ -109,7 +108,6 @@ NS_IMPL_ISUPPORTS2(nsSecretDecoderRing, nsISecretDecoderRing, nsISecretDecoderRi
 nsSecretDecoderRing::nsSecretDecoderRing()
 {
   // initialize superclass
-  NS_INIT_ISUPPORTS();
 }
 
 // nsSecretDecoderRing destructor

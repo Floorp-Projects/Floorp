@@ -404,7 +404,6 @@ nsMdbTableEnumerator::nsMdbTableEnumerator()
     mCursor(nsnull),
     mCurrent(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 
@@ -518,7 +517,6 @@ nsGlobalHistory::nsGlobalHistory()
     mStore(nsnull),
     mTable(nsnull)
 {
-  NS_INIT_ISUPPORTS();
   LL_I2L(mFileSizeOnDisk, 0);
   
   // commonly used prefixes that should be chopped off all 

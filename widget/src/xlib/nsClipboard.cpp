@@ -85,8 +85,6 @@ Display                    *nsClipboard::sDisplay;
 NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard)
 
 nsClipboard::nsClipboard() {
-  NS_INIT_ISUPPORTS();
-
   sDisplay = xxlib_rgb_get_display(nsAppShell::GetXlibRgbHandle());
 
   Init();

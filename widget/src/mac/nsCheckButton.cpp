@@ -49,7 +49,6 @@ NS_IMPL_RELEASE(nsCheckButton);
 //-------------------------------------------------------------------------
 nsCheckButton::nsCheckButton() : nsMacControl(), nsICheckButton()
 {
-  NS_INIT_ISUPPORTS();
   gInstanceClassName = "nsCheckButton";
   SetControlType(checkBoxProc);
 }

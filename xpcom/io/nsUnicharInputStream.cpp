@@ -69,7 +69,6 @@ public:
 
 StringUnicharInputStream::StringUnicharInputStream(nsString* aString)
 {
-  NS_INIT_ISUPPORTS();
   mString = aString;
   mPos = 0;
   mLen = aString->Length();
@@ -168,7 +167,6 @@ UTF8InputStream::UTF8InputStream() :
   mUnicharDataOffset(0),
   mUnicharDataLength(0)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsresult 

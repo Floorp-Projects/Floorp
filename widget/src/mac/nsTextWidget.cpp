@@ -88,7 +88,6 @@ enum
 //-------------------------------------------------------------------------
 nsTextWidget::nsTextWidget() : nsMacControl(), nsITextWidget(), Repeater()
 {
-  NS_INIT_ISUPPORTS();
   WIDGET_SET_CLASSNAME("nsTextWidget");
   SetControlType(kControlEditTextProc);
   mIsPassword = PR_FALSE;

@@ -476,7 +476,6 @@ PR_IMPLEMENT(nsresult) NS_TimelineLeave(const char *text)
 
 nsTimelineService::nsTimelineService()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 

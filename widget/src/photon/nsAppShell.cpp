@@ -90,7 +90,6 @@ nsAppShell::nsAppShell()
 { 
   mEventQueue  = nsnull;
   mFD          = -1;
-  NS_INIT_ISUPPORTS();
 }
 
 //-------------------------------------------------------------------------

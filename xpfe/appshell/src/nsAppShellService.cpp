@@ -109,7 +109,6 @@ nsAppShellService::nsAppShellService() :
   mShuttingDown(PR_FALSE),
   mAttemptingQuit(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsAppShellService::~nsAppShellService()

@@ -45,7 +45,6 @@
 
 nsUserInfo::nsUserInfo()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsUserInfo::~nsUserInfo()

@@ -68,8 +68,6 @@ static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
 
 nsEventQueueServiceImpl::nsEventQueueServiceImpl()
 {
-  NS_INIT_ISUPPORTS();
-
   mEventQMonitor = PR_NewMonitor();
 #if defined(PR_LOGGING) && defined(DEBUG_danm)
   if (!gEventQueueLog)

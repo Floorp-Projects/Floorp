@@ -119,7 +119,6 @@ nsFileView::nsFileView() :
   mDirectoryFilter(PR_FALSE),
   mReverseSort(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsFileView::~nsFileView()

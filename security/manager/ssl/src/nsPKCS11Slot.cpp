@@ -52,7 +52,6 @@ NS_IMPL_ISUPPORTS1(nsPKCS11Slot, nsIPKCS11Slot)
 
 nsPKCS11Slot::nsPKCS11Slot(PK11SlotInfo *slot)
 {
-  NS_INIT_ISUPPORTS();
   PK11_ReferenceSlot(slot);
   mSlot = slot;
 
@@ -188,7 +187,6 @@ NS_IMPL_ISUPPORTS1(nsPKCS11Module, nsIPKCS11Module)
 
 nsPKCS11Module::nsPKCS11Module(SECMODModule *module)
 {
-  NS_INIT_ISUPPORTS();
   SECMOD_ReferenceModule(module);
   mModule = module;
 }
@@ -281,7 +279,6 @@ NS_IMPL_ISUPPORTS1(nsPKCS11ModuleDB, nsIPKCS11ModuleDB)
 
 nsPKCS11ModuleDB::nsPKCS11ModuleDB()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsPKCS11ModuleDB::~nsPKCS11ModuleDB()

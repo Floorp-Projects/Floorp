@@ -50,7 +50,6 @@
 nsCmdLineService::nsCmdLineService()
 	:  mArgCount(0), mArgc(0), mArgv(0)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 /*

@@ -76,7 +76,6 @@ private:
 
 nsSound::nsSound()
 {
-  NS_INIT_ISUPPORTS();
   mLastSound = nsnull;
 }
 

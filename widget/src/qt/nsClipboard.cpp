@@ -76,7 +76,6 @@ nsClipboard::nsClipboard() :
   mGlobalTransferable (nsnull),
   mIgnoreEmptyNotification (PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //-------------------------------------------------------------------------

@@ -264,8 +264,6 @@ nsProxyObject::nsProxyObject()
 }
 nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISupports *realObject)
 {
-    NS_INIT_ISUPPORTS();
-    
     mEventQService = do_GetService(kEventQueueServiceCID);
 
     mRealObject      = realObject;
@@ -276,8 +274,6 @@ nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISup
 
 nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32  proxyType, const nsCID &aClass,  nsISupports *aDelegate,  const nsIID &aIID)
 {
-    NS_INIT_ISUPPORTS();
-
     mEventQService = do_GetService(kEventQueueServiceCID);
 
     nsComponentManager::CreateInstance(aClass, 

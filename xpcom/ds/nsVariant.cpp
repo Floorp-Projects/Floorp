@@ -1636,8 +1636,6 @@ NS_IMPL_ISUPPORTS2(nsVariant, nsIVariant, nsIWritableVariant)
 nsVariant::nsVariant()
     : mWritable(PR_TRUE)
 {
-    NS_INIT_ISUPPORTS();
-
     nsVariant::Initialize(&mData);
 
 #ifdef DEBUG

@@ -77,7 +77,6 @@ PRInt32 Foo::gCount;
 
 Foo::Foo(PRInt32 aID)
 {
-  NS_INIT_ISUPPORTS();
   mID = aID;
   ++gCount;
   fprintf(stdout, "init: %d (%p), %d total)\n", mID, this, gCount);

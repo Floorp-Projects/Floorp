@@ -36,8 +36,6 @@ NS_IMPL_ISUPPORTS1(nsPK11Token, nsIPK11Token)
 
 nsPK11Token::nsPK11Token(PK11SlotInfo *slot)
 {
-  NS_INIT_ISUPPORTS();
-
   PK11_ReferenceSlot(slot);
   mSlot = slot;
   
@@ -315,7 +313,6 @@ NS_IMPL_ISUPPORTS1(nsPK11TokenDB, nsIPK11TokenDB)
 
 nsPK11TokenDB::nsPK11TokenDB()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 

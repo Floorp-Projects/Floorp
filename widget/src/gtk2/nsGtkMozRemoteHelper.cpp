@@ -187,7 +187,6 @@ nsGtkMozRemoteHelper::~nsGtkMozRemoteHelper()
 
 nsGtkXRemoteWidgetHelper::nsGtkXRemoteWidgetHelper()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsGtkXRemoteWidgetHelper::~nsGtkXRemoteWidgetHelper()

@@ -106,7 +106,6 @@ nsXULWindow::nsXULWindow() : mChromeTreeOwner(nsnull),
    mHadChildWindow(PR_FALSE),
    mZlevel(nsIXULWindow::normalZ), mContextFlags(0)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsXULWindow::~nsXULWindow()

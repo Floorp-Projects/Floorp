@@ -61,7 +61,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIERRORSERVICE
 
-    nsErrorService() { NS_INIT_ISUPPORTS(); }
+    nsErrorService() {}
     virtual ~nsErrorService() {}
 
     static NS_METHOD

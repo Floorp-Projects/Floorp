@@ -123,7 +123,6 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 nsDocumentOpenInfo::nsDocumentOpenInfo()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsDocumentOpenInfo::~nsDocumentOpenInfo()
@@ -522,7 +521,6 @@ nsresult nsDocumentOpenInfo::RetargetOutput(nsIRequest *request, const char * aS
 
 nsURILoader::nsURILoader()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsURILoader::~nsURILoader()

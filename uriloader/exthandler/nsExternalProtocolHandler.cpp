@@ -74,7 +74,6 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 nsExtProtocolChannel::nsExtProtocolChannel() : mStatus(NS_OK)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsExtProtocolChannel::~nsExtProtocolChannel()
@@ -266,7 +265,6 @@ NS_IMETHODIMP nsExtProtocolChannel::Resume()
 
 nsExternalProtocolHandler::nsExternalProtocolHandler()
 {
-  NS_INIT_ISUPPORTS();
 	m_schemeName = "default";
 }
 

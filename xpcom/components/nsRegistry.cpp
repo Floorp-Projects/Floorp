@@ -368,7 +368,6 @@ NS_IMPL_ISUPPORTS1( nsRegistryValue,        nsIRegistryValue )
 ------------------------------------------------------------------------------*/
 nsRegistry::nsRegistry() 
     : mReg(0), mCurRegID(0) {
-    NS_INIT_ISUPPORTS();
 #ifdef EXTRA_THREADSAFE
     mregLock = PR_NewLock();
 #endif
@@ -1574,7 +1573,6 @@ int nsRegistry::SetBufferSize( int bufsize )
 nsRegSubtreeEnumerator::nsRegSubtreeEnumerator( HREG hReg, RKEY rKey, PRBool all )
     : mReg( hReg ), mKey( rKey ), mEnum( 0 ), mNext( 0 ),
       mStyle( all ? REGENUM_DESCEND : REGENUM_CHILDREN ), mDone( PR_FALSE ) {
-    NS_INIT_ISUPPORTS();
 
     mName[0] = '\0';
 
@@ -1762,7 +1760,6 @@ NS_IMETHODIMP nsRegValueEnumerator::advance() {
 ------------------------------------------------------------------------------*/
 nsRegistryNode::nsRegistryNode( HREG hReg, char *name, RKEY childKey )
     : mReg( hReg ), mChildKey( childKey ) {
-    NS_INIT_ISUPPORTS();
 
     PR_ASSERT(name != nsnull);
     strcpy(mName, name);
@@ -1825,7 +1822,6 @@ NS_IMETHODIMP nsRegistryNode::GetKey( nsRegistryKey *r_key ) {
 ------------------------------------------------------------------------------*/
 nsRegistryValue::nsRegistryValue( HREG hReg, RKEY key, REGENUM slot )
     : mReg( hReg ), mKey( key ), mEnum( slot ), mErr( -1 ) {
-    NS_INIT_ISUPPORTS();
 #ifdef EXTRA_THREADSAFE
     mregLock = PR_NewLock();
 #endif
@@ -1953,7 +1949,6 @@ nsresult nsRegistryValue::getInfo() {
 
 
 nsRegistryFactory::nsRegistryFactory() {
-    NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ISUPPORTS1(nsRegistryFactory, nsIFactory)

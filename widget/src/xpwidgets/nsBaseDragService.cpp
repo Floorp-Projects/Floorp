@@ -67,7 +67,6 @@ NS_IMPL_QUERY_INTERFACE2(nsBaseDragService, nsIDragService, nsIDragSession)
 nsBaseDragService::nsBaseDragService() :
   mCanDrop(PR_FALSE), mDoingDrag(PR_FALSE), mTargetSize(0,0), mDragAction(DRAGDROP_ACTION_NONE)
 {
-  NS_INIT_ISUPPORTS();
   nsresult result = NS_NewISupportsArray(getter_AddRefs(mTransArray));
   if ( NS_FAILED(result) ) {
     //what do we do? we can't throw!

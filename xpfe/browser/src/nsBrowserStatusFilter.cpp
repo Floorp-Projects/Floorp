@@ -57,7 +57,6 @@ nsBrowserStatusFilter::nsBrowserStatusFilter()
     , mDelayedStatus(PR_FALSE)
     , mDelayedProgress(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsBrowserStatusFilter::~nsBrowserStatusFilter()

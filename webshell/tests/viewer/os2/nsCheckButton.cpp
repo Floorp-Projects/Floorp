@@ -80,7 +80,6 @@ NS_IMPL_RELEASE(nsCheckButton)
 nsCheckButton::nsCheckButton() : nsWindow() , nsICheckButton(),
   mState(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 

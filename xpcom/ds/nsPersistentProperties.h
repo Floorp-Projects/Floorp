@@ -81,13 +81,11 @@ class nsPropertyElement : public nsIPropertyElement
 public:
   nsPropertyElement()
   {
-    NS_INIT_ISUPPORTS();
   }
 
   nsPropertyElement(const nsACString& aKey, const nsAString& aValue)
     : mKey(aKey), mValue(aValue)
   {
-    NS_INIT_ISUPPORTS();
   }
 
   virtual ~nsPropertyElement() {}

@@ -122,7 +122,6 @@ BasicStringImpl::BasicStringImpl()
 , mLastResult(NS_OK)
 , mEOF(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------------------------

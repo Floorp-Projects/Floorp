@@ -81,7 +81,6 @@ public:                                                                     \
 // Put this in your class's constructor:
 #define NS_INIT_AGGREGATED(outer)                                           \
   PR_BEGIN_MACRO                                                            \
-    NS_INIT_ISUPPORTS();                                                       \
     fOuter = outer ? outer : &fAggregated;                                  \
   PR_END_MACRO
 

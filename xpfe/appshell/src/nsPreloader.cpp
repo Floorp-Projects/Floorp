@@ -70,7 +70,6 @@ NS_IMPL_ISUPPORTS1(nsPreloader, nsICmdLineHandler)
                    
 nsPreloader::nsPreloader()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsresult

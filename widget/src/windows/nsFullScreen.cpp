@@ -53,7 +53,6 @@ NS_IMPL_ISUPPORTS1(nsFullScreen, nsIFullScreen)
 
 nsFullScreen::nsFullScreen()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 
@@ -129,7 +128,6 @@ NS_IMPL_ISUPPORTS1(nsOSChromeItem, nsIOSChromeItem)
 
 nsOSChromeItem::nsOSChromeItem(char* aName) : mIsHidden(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 
   mName.Assign(aName);

@@ -66,7 +66,6 @@ private:
 
 nsInputStreamTee::nsInputStreamTee()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsInputStreamTee::~nsInputStreamTee()

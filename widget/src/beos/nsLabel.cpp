@@ -51,7 +51,6 @@
 //-------------------------------------------------------------------------
 nsLabel::nsLabel() : nsWindow(), nsILabel()
 {
-  NS_INIT_ISUPPORTS();
   mAlignment = eAlign_Left;
 }
 

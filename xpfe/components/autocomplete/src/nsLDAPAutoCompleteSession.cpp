@@ -69,7 +69,6 @@ nsLDAPAutoCompleteSession::nsLDAPAutoCompleteSession() :
     mMaxHits(100), mMinStringLength(2), mCjkMinStringLength(0), 
     mSearchAttrs(0), mSearchAttrsSize(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsLDAPAutoCompleteSession::~nsLDAPAutoCompleteSession()

@@ -46,12 +46,10 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsConsoleMessage, nsIConsoleMessage);
 
 nsConsoleMessage::nsConsoleMessage() 
 {
-	NS_INIT_ISUPPORTS();
 }
 
 nsConsoleMessage::nsConsoleMessage(const PRUnichar *message) 
 {
-	NS_INIT_ISUPPORTS();
 	mMessage.Assign(message);
 }
 

@@ -125,8 +125,6 @@ xptiInterfaceInfoManager::xptiInterfaceInfoManager(nsISupportsArray* aSearchPath
         mAdditionalManagersLock(PR_NewLock()),
         mSearchPath(aSearchPath)
 {
-    NS_INIT_ISUPPORTS();
-    
     const char* statsFilename = PR_GetEnv("MOZILLA_XPTI_STATS");
     if(statsFilename)
     {
@@ -1991,7 +1989,6 @@ NS_IMPL_ISUPPORTS1(xptiAdditionalManagersEnumerator, nsISimpleEnumerator)
 xptiAdditionalManagersEnumerator::xptiAdditionalManagersEnumerator()
     : mIndex(0), mCount(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 PRBool xptiAdditionalManagersEnumerator::AppendElement(nsIInterfaceInfoManager* element)

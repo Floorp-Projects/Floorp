@@ -97,8 +97,6 @@ PRTimeToSeconds(PRTime t_usec)
 
 nsPrefetchListener::nsPrefetchListener(nsPrefetchService *aService)
 {
-    NS_INIT_ISUPPORTS();
-
     NS_ADDREF(mService = aService);
 }
 
@@ -207,7 +205,6 @@ nsPrefetchService::nsPrefetchService()
     , mStopCount(0)
     , mDisabled(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsPrefetchService::~nsPrefetchService()

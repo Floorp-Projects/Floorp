@@ -99,7 +99,6 @@ public:
 
     nsDummyMenuItemX()
     {
-        NS_INIT_ISUPPORTS();
     }
 };
 
@@ -120,8 +119,6 @@ nsMenuX::nsMenuX()
         mIsHelpMenu(PR_FALSE), mIsEnabled(PR_TRUE), mDestroyHandlerCalled(PR_FALSE),
         mNeedsRebuild(PR_TRUE), mConstructed(PR_FALSE), mVisible(PR_TRUE), mHandler(nsnull)
 {
-  NS_INIT_ISUPPORTS();
-
 #if DEBUG
   //++gMenuCounterX;
 #endif 

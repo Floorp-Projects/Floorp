@@ -117,8 +117,6 @@ nsNSSCertificate::nsNSSCertificate(CERTCertificate *cert) :
                                            mPermDelete(PR_FALSE),
                                            mCertType(nsIX509Cert::UNKNOWN_CERT)
 {
-  NS_INIT_ISUPPORTS();
-
   if (cert) 
     mCert = CERT_DupCertificate(cert);
   else

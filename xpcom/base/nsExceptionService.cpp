@@ -99,7 +99,6 @@ nsExceptionManager::nsExceptionManager(nsExceptionService *svc) :
   mService(svc)
 {
   /* member initializers and constructor code */
-  NS_INIT_ISUPPORTS();
 #ifdef NS_DEBUG
   PR_AtomicIncrement(&totalInstances);
 #endif
@@ -158,7 +157,6 @@ nsExceptionService::nsExceptionService()
     NS_ERROR("The nsExceptionService is a singleton!");
   }
 #endif
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
   if (tlsIndex == BAD_TLS_INDEX) {
     PRStatus status;

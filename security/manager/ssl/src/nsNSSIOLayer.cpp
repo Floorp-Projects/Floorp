@@ -147,7 +147,6 @@ nsNSSSocketInfo::nsNSSSocketInfo()
     mPort(0),
     mCAChain(nsnull)
 { 
-  NS_INIT_ISUPPORTS();
 }
 
 nsNSSSocketInfo::~nsNSSSocketInfo()

@@ -200,7 +200,6 @@ public:
 
     nsRecyclingAllocatorImpl()
     {
-        NS_INIT_ISUPPORTS();
     }
 
     virtual ~nsRecyclingAllocatorImpl() {}

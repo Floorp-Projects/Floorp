@@ -66,7 +66,6 @@ PRBool nsAppShell::mRunning = PR_FALSE;
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell()
 {
-  NS_INIT_ISUPPORTS();
   mDispatchListener = 0;
   mEventQueue = nsnull;
   mApplication = nsnull;

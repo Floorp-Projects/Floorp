@@ -72,7 +72,6 @@ GetHTMLCharset             (guchar * data, PRInt32 dataLength, nsAString& str);
 
 nsClipboard::nsClipboard()
 {
-    NS_INIT_ISUPPORTS();
     mWidget = nsnull;
 }
 

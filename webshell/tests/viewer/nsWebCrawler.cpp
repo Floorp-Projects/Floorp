@@ -172,8 +172,6 @@ nsWebCrawler::nsWebCrawler(nsViewerApp* aViewer)
   : mHaveURLList(PR_FALSE),
     mQueuedLoadURLs(0)
 {
-  NS_INIT_ISUPPORTS();
-
   mBrowser = nsnull;
   mViewer = aViewer;
   mCrawl = PR_FALSE;

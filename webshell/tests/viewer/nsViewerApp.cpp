@@ -144,8 +144,6 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 
 nsViewerApp::nsViewerApp()
 {
-  NS_INIT_ISUPPORTS(); 
-
   char * text = PR_GetEnv("NGLAYOUT_HOME");
   mStartURL.AssignWithConversion(text ? text : "resource:/res/samples/test0.html");
 
@@ -231,7 +229,6 @@ NS_IMPL_ISUPPORTS1(nsTestFormProcessor, nsIFormProcessor);
 
 nsTestFormProcessor::nsTestFormProcessor()
 {
-   NS_INIT_ISUPPORTS();
 }
 
 NS_METHOD 

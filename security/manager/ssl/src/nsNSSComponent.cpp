@@ -209,7 +209,6 @@ static void PR_CALLBACK DestroyCRLImportPLEvent(CRLDownloadEvent* aEvent)
 nsNSSComponent::nsNSSComponent()
 :mNSSInitialized(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
   mutex = PR_NewLock();
   
 #ifdef PR_LOGGING
@@ -1646,7 +1645,6 @@ NS_IMPL_ISUPPORTS1(PipUIContext, nsIInterfaceRequestor)
 
 PipUIContext::PipUIContext()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 PipUIContext::~PipUIContext()
@@ -1754,7 +1752,6 @@ PSMContentDownloader::PSMContentDownloader(PRUint32 type)
     mType(type),
     mDoSilentDownload(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 PSMContentDownloader::~PSMContentDownloader()
@@ -2011,7 +2008,6 @@ NS_IMPL_ISUPPORTS2(PSMContentListener,
 
 PSMContentListener::PSMContentListener()
 {
-  NS_INIT_ISUPPORTS();
   mLoadCookie = nsnull;
   mParentContentListener = nsnull;
 }

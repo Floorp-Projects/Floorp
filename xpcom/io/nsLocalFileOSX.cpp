@@ -123,7 +123,6 @@ class nsDirEnumerator : public nsISimpleEnumerator
           mFSRefsArray(nsnull),
           mArrayCnt(0), mArrayIndex(0)
         {
-            NS_INIT_ISUPPORTS();
         }
 
         nsresult Init(nsILocalFileMac* parent) 
@@ -322,8 +321,6 @@ nsLocalFile::nsLocalFile() :
   mIdentityDirty(PR_TRUE),
   mFollowLinksDirty(PR_TRUE)
 {
-    NS_INIT_ISUPPORTS();
-    
     mFSRef = kInvalidFSRef;
     mTargetFSRef = kInvalidFSRef;
 }
@@ -334,8 +331,6 @@ nsLocalFile::nsLocalFile(const FSRef& aFSRef, const nsAString& aRelativePath) :
   mIdentityDirty(PR_TRUE),
   mFollowLinksDirty(PR_TRUE)
 {
-    NS_INIT_ISUPPORTS();
-    
     mTargetFSRef = kInvalidFSRef;
 
     if (aRelativePath.Length()) {
@@ -361,7 +356,6 @@ nsLocalFile::nsLocalFile(const nsLocalFile& src) :
   mIdentityDirty(src.mIdentityDirty),
   mFollowLinksDirty(src.mFollowLinksDirty)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsLocalFile::~nsLocalFile()

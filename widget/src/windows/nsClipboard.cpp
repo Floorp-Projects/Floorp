@@ -80,7 +80,6 @@ UINT nsClipboard::CF_HTML = ::RegisterClipboardFormat("HTML Format");
 //-------------------------------------------------------------------------
 nsClipboard::nsClipboard() : nsBaseClipboard()
 {
-  //NS_INIT_ISUPPORTS();
   mIgnoreEmptyNotification = PR_FALSE;
   mWindow         = nsnull;
 

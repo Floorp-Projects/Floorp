@@ -76,8 +76,6 @@ NS_IMPL_ISUPPORTS1(MaiTopLevel, nsIAccessibleEventListener)
 
 MaiTopLevel::MaiTopLevel(nsIAccessible *aAcc):MaiWidget(aAcc)
 {
-    NS_INIT_ISUPPORTS();
-
 #ifdef MAI_LOGGING
     ++sMaiTopCount;
 #endif

@@ -115,7 +115,6 @@ public:
   
   nsDummyMenuItem()
   {
-    NS_INIT_ISUPPORTS();
   }
 };
 
@@ -129,7 +128,6 @@ NS_IMPL_ISUPPORTS4(nsMenu, nsIMenu, nsIMenuListener, nsIChangeObserver, nsISuppo
 //
 nsMenu::nsMenu()
 {
-  NS_INIT_ISUPPORTS();
   mNumMenuItems  = 0;
   mParent    = nsnull;
   mManager = nsnull;

@@ -57,7 +57,7 @@ public:
     NS_DECL_NSISCRIPTABLEINPUTSTREAM
 
     // nsScriptableInputStream methods
-    nsScriptableInputStream() { NS_INIT_ISUPPORTS(); };
+    nsScriptableInputStream() {};
     virtual ~nsScriptableInputStream() {};
 
     static NS_METHOD

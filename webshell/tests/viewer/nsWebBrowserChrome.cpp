@@ -52,8 +52,6 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 nsWebBrowserChrome::nsWebBrowserChrome() : mBrowserWindow(nsnull), mTimerSet(PR_FALSE)
 
 {
-	NS_INIT_ISUPPORTS();
-
    mActiveDocuments = 0;
    mChromeFlags = 0;
    mSizeSet = PR_FALSE;

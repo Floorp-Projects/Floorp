@@ -761,7 +761,6 @@ NS_IMPL_QUERY_INTERFACE1(xptiInterfaceInfo, nsIInterfaceInfo)
 xptiInterfaceInfo::xptiInterfaceInfo(xptiInterfaceEntry* entry)
     : mEntry(entry), mParent(nsnull)
 {
-    NS_INIT_ISUPPORTS();
     LOG_INFO_CREATE(this);
 }
 

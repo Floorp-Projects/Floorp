@@ -75,7 +75,6 @@ private:
 
 nsSplashScreenBeOS::nsSplashScreenBeOS()
 		: window( NULL ) , bitmap( NULL ), textView(NULL) {
-	NS_INIT_ISUPPORTS();
 #ifdef DEBUG_SPLASH
 	puts("nsSplashScreenBeOS::nsSlpashScreenBeOS()");
 #endif

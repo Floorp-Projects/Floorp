@@ -155,7 +155,6 @@ public:
 
   PageCycler(nsBrowserInstance* appCore, const char *aTimeoutValue = nsnull, const char *aWaitValue = nsnull)
     : mAppCore(appCore), mBuffer(nsnull), mCursor(nsnull), mTimeoutValue(0), mWaitValue(1 /*sec*/) { 
-    NS_INIT_ISUPPORTS();
     NS_ADDREF(mAppCore);
     if (aTimeoutValue){
       mTimeoutValue = atol(aTimeoutValue);
@@ -403,7 +402,6 @@ nsBrowserInstance::nsBrowserInstance() : mIsClosed(PR_FALSE)
 {
   mDOMWindow            = nsnull;
   mContentAreaDocShellWeak  = nsnull;
-  NS_INIT_ISUPPORTS();
 }
 
 nsBrowserInstance::~nsBrowserInstance()
@@ -653,7 +651,6 @@ NS_INTERFACE_MAP_END
 
 nsBrowserContentHandler::nsBrowserContentHandler()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsBrowserContentHandler::~nsBrowserContentHandler()

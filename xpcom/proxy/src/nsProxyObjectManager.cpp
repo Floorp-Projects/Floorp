@@ -80,7 +80,6 @@ class nsProxyCreateInstance : public nsIProxyCreateInstance
 
 nsProxyCreateInstance::nsProxyCreateInstance()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsProxyCreateInstance::~nsProxyCreateInstance()
@@ -116,8 +115,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsProxyObjectManager, nsIProxyObjectManager)
 
 nsProxyObjectManager::nsProxyObjectManager()
 {
-    NS_INIT_ISUPPORTS();
-    
     mProxyClassMap = new nsHashtable(256, PR_TRUE);
     mProxyObjectMap = new nsHashtable(256, PR_TRUE);
 

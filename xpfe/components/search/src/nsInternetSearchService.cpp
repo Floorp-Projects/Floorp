@@ -193,7 +193,6 @@ InternetSearchContext::InternetSearchContext(PRUint32 contextType, nsIRDFResourc
 				nsIUnicodeDecoder *aUnicodeDecoder, const PRUnichar *hint)
 	: mContextType(contextType), mParent(aParent), mEngine(aEngine), mUnicodeDecoder(aUnicodeDecoder), mHint(hint)
 {
-	NS_INIT_ISUPPORTS();
 }
 
 
@@ -422,8 +421,6 @@ nsIRDFResource			*InternetSearchDataSource::kNC_SearchCommand_ClearFilters;
 nsIRDFLiteral			*InternetSearchDataSource::kTrueLiteral;
 InternetSearchDataSource::InternetSearchDataSource(void)
 {
-	NS_INIT_ISUPPORTS();
-
 	if (gRefCnt++ == 0)
 	{
 		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,

@@ -55,8 +55,6 @@ NS_IMPL_QUERY_INTERFACE2(nsScrollbar, nsIScrollbar, nsIWidget)
 //-------------------------------------------------------------------------
 nsScrollbar::nsScrollbar (PRBool aIsVertical):nsWidget (), nsIScrollbar ()
 {
-	NS_INIT_ISUPPORTS ();
-	
 	mOrientation = (aIsVertical) ? Pt_VERTICAL : Pt_HORIZONTAL;
 }
 

@@ -70,7 +70,6 @@ class TestObserver : public nsIObserver, public nsSupportsWeakReference {
 public:
     TestObserver( const nsAString &name )
         : mName( name ) {
-        NS_INIT_ISUPPORTS();
     }
     virtual ~TestObserver() {}
     NS_DECL_ISUPPORTS

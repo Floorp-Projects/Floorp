@@ -64,7 +64,6 @@ static const char gDestroyedNotification[] = "nsIEventQueueDestroyed";
 
 nsEventQueueImpl::nsEventQueueImpl()
 {
-  NS_INIT_ISUPPORTS();
   NS_ADDREF_THIS();
   /* The slightly weird ownership model for eventqueues goes like this:
    
