@@ -251,32 +251,6 @@
     </menupopup>
   </menu>
         
-  <!-- XXX needs xbl-ification! gray horizontal splitter -->
-  <splitter id="gray_horizontal_splitter" class="gray-horizontal-splitter">
-    <hbox id="begincap">
-      <spacer flex="100%"/>
-    </hbox>
-    <spacer flex="100%"/>
-    <grippy/>
-    <spacer flex="100%"/>
-    <hbox id="endcap">
-      <spacer flex="100%"/>
-    </hbox>
- </splitter>
-
-  <!-- XXX needs xbl-ification! gray vertical splitter -->
-  <splitter id="gray_vertical_splitter" class="gray-vertical-splitter">
-    <vbox id="begincap">
-      <spacer flex="100%"/>
-    </vbox>
-    <spacer flex="100%"/>
-    <grippy/>
-    <spacer flex="100%"/>
-    <vbox id="endcap">
-      <spacer flex="100%"/>
-    </vbox>
- </splitter>
-
  <!-- Toolbar boxes -->
  <hbox id="toolbar_button_box"
        flex="100%"/>
