@@ -955,7 +955,15 @@ nsCrypto::Alert(const nsString& aMessage)
 NS_IMETHODIMP
 nsCrypto::Logout()
 {
-  return NS_ERROR_FAILURE;
+  PCMT_CONTROL control = nsnull;
+  nsresult rv;
+  
+  rv = mPSM->GetControlConnection(&control);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  CMT_LogoutAllTokens(control);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
