@@ -42,12 +42,10 @@
 #include "nsILocaleService.h"
 #include "nsIServiceManager.h"
 
-static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS(nsCollationMacUC, kICollationIID);
+NS_IMPL_ISUPPORTS1(nsCollationMacUC, nsICollation);
 
 
 nsCollationMacUC::nsCollationMacUC() 
