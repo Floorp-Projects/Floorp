@@ -75,7 +75,6 @@ menulist > menupopup > menu {
   padding: 1px 30px 1px 5px;
   max-width: none;
   font: message-box;
-  color: -moz-FieldText;
 }
 
 /* ..... internal content .... */
