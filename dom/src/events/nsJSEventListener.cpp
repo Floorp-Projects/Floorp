@@ -124,13 +124,8 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   }
 
   argv[0] = OBJECT_TO_JSVAL(eventObj);
-  JSFunction *jsFun = JS_ValueToFunction(cx, funval);
   PRBool jsBoolResult;
-  if (!jsFun)
-  {
-    return NS_ERROR_FAILURE;
-  }
-  result = mContext->CallFunction(obj, jsFun, 1, argv, &jsBoolResult);
+  result = mContext->CallFunctionObject(obj, (void*) JSVAL_TO_OBJECT(funval), 1, argv, &jsBoolResult);
   if (NS_FAILED(result)) {
     return result;
   }

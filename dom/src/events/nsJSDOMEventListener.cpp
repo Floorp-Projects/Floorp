@@ -23,6 +23,7 @@
 #include "nsString.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptSecurityManager.h"
+#include "jsapi.h"
 
 static NS_DEFINE_IID(kIScriptEventListenerIID, NS_ISCRIPTEVENTLISTENER_IID);
 static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
@@ -31,12 +32,12 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 /*
  * nsJSDOMEventListener implementation
  */
-nsJSDOMEventListener::nsJSDOMEventListener(JSContext *aContext, JSObject *aObj, JSFunction *aFun) 
+nsJSDOMEventListener::nsJSDOMEventListener(JSContext *aContext, JSObject *aScopeObj, JSObject *aFunObj) 
 {
   NS_INIT_REFCNT();
   mContext = aContext;
-  mJSObj = aObj;
-  mJSFun = aFun;
+  mScopeObj = aScopeObj;
+  mFunObj = aFunObj;
 }
 
 nsJSDOMEventListener::~nsJSDOMEventListener() 
@@ -82,7 +83,7 @@ nsresult nsJSDOMEventListener::HandleEvent(nsIDOMEvent* aEvent)
 
   argv[0] = OBJECT_TO_JSVAL(eventObj);
   PRBool jsBoolResult;
-  if (NS_FAILED(mScriptCX->CallFunction(mJSObj, mJSFun, 1, argv, &jsBoolResult))) {
+  if (NS_FAILED(mScriptCX->CallFunctionObject(mScopeObj, mFunObj, 1, argv, &jsBoolResult))) {
     return NS_ERROR_FAILURE;
   }
   return jsBoolResult ? NS_OK : NS_ERROR_FAILURE;
@@ -97,11 +98,11 @@ nsresult nsJSDOMEventListener::CheckIfEqual(nsIScriptEventListener *aListener)
  * Factory functions
  */
 
-extern "C" NS_DOM nsresult NS_NewScriptEventListener(nsIDOMEventListener ** aInstancePtrResult, nsIScriptContext *aContext, void* aObj, void *aFun)
+extern "C" NS_DOM nsresult NS_NewScriptEventListener(nsIDOMEventListener ** aInstancePtrResult, nsIScriptContext *aContext, void* aScopeObj, void *aFunObj)
 {
   JSContext *mCX = (JSContext*)aContext->GetNativeContext();
   
-  nsJSDOMEventListener* it = new nsJSDOMEventListener(mCX, (JSObject*)aObj, (JSFunction*)aFun);
+  nsJSDOMEventListener* it = new nsJSDOMEventListener(mCX, (JSObject*)aScopeObj, (JSObject*)aFunObj);
   if (NULL == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

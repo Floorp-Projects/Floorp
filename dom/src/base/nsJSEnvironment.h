@@ -82,13 +82,13 @@ public:
   NS_IMETHOD       CompileEventHandler(void *aObj,
                                        nsIAtom *aName,
                                        const nsString& aBody,
-                                       void** aFunction);
-  NS_IMETHOD       CallFunction(void *aObj, void *aFunction, 
-                                PRUint32 argc, void *argv, 
-                                PRBool *aBoolResult);
+                                       void** aFunObj);
+  NS_IMETHOD       CallFunctionObject(void *aObj, void *aFunObj, 
+                                      PRUint32 argc, void *argv, 
+                                      PRBool *aBoolResult);
   NS_IMETHOD BindCompiledEventHandler(void *aObj,
                                       nsIAtom *aName,
-                                      void *aFunction);
+                                      void *aFunObj);
   NS_IMETHOD SetDefaultLanguageVersion(const char* aVersion);
   NS_IMETHOD_(nsIScriptGlobalObject*)    GetGlobalObject();
   NS_IMETHOD_(void*)                     GetNativeContext();

@@ -471,7 +471,7 @@ AtomToEventHandlerName(nsIAtom *aName, char *charName, PRUint32 charNameSize)
 
 NS_IMETHODIMP
 nsJSContext::CompileEventHandler(void *aObj, nsIAtom *aName, const nsString& aBody,
-                                 void** aFunction)
+                                 void** aFunObj)
 {
   JSPrincipals *jsprin = nsnull;
 
@@ -502,14 +502,14 @@ nsJSContext::CompileEventHandler(void *aObj, nsIAtom *aName, const nsString& aBo
     JSPRINCIPALS_DROP(mContext, jsprin);
   if (!fun)
     return NS_ERROR_FAILURE;
-  if (aFunction)
-    *aFunction = (void*) fun;
+  if (aFunObj)
+    *aFunObj = (void*) JS_GetFunctionObject(fun);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJSContext::CallFunction(void *aObj, void *aFunction, PRUint32 argc,
-                          void *argv, PRBool *aBoolResult)
+nsJSContext::CallFunctionObject(void *aObj, void *aFunObj, PRUint32 argc,
+                                void *argv, PRBool *aBoolResult)
 {
   // This one's a lot easier than EvaluateString because we don't have to
   // hassle with principals: they're already compiled into the JS function.
@@ -519,8 +519,11 @@ nsJSContext::CallFunction(void *aObj, void *aFunction, PRUint32 argc,
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
+  jsval funval = OBJECT_TO_JSVAL(aFunObj);
+  JSFunction* fun = JS_ValueToFunction(mContext, funval);
+
   PRBool ok;
-  rv = securityManager->CanExecuteFunction((JSFunction *)aFunction, &ok);
+  rv = securityManager->CanExecuteFunction(fun, &ok);
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
@@ -533,8 +536,8 @@ nsJSContext::CallFunction(void *aObj, void *aFunction, PRUint32 argc,
 
   jsval val;
   if (ok) {
-    ok = JS_CallFunction(mContext, (JSObject *)aObj, (JSFunction *)aFunction,
-                         argc, (jsval *)argv, &val);
+    ok = JS_CallFunctionValue(mContext, (JSObject *)aObj, funval,
+                              argc, (jsval *)argv, &val);
   }
   *aBoolResult = ok
                  ? !JSVAL_IS_BOOLEAN(val) || JSVAL_TO_BOOLEAN(val)
@@ -549,17 +552,13 @@ nsJSContext::CallFunction(void *aObj, void *aFunction, PRUint32 argc,
 }
 
 NS_IMETHODIMP
-nsJSContext::BindCompiledEventHandler(void *aObj, nsIAtom *aName, void *aFunction)
+nsJSContext::BindCompiledEventHandler(void *aObj, nsIAtom *aName, void *aFunObj)
 {
   char charName[64];
   AtomToEventHandlerName(aName, charName, sizeof charName);
 
-  JSObject *funobj = JS_GetFunctionObject((JSFunction *)aFunction);
-  if (!funobj)
-    return NS_ERROR_UNEXPECTED;
-
   if (!::JS_DefineProperty(mContext, (JSObject *)aObj, charName,
-                           OBJECT_TO_JSVAL(funobj), nsnull, nsnull,
+                           OBJECT_TO_JSVAL(aFunObj), nsnull, nsnull,
                            JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
     return NS_ERROR_FAILURE;
   }
