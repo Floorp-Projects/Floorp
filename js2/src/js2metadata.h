@@ -97,6 +97,9 @@ enum ObjectKind {
     ForIteratorKind
 };
 
+enum Plurality { Singular, Plural };
+
+
 class PondScum {
 public:    
     void resetMark()        { size &= 0x7FFFFFFF; }
@@ -416,7 +419,6 @@ typedef InstanceBindingMap::iterator InstanceBindingIterator;
 // a global object, a package, a function frame, a class, or a block frame
 class Frame : public JS2Object {
 public:
-    enum Plurality { Singular, Plural };
 
     Frame(ObjectKind kind) : JS2Object(kind), temps(NULL), pluralFrame(NULL) { }
     Frame(ObjectKind kind, Frame *pluralFrame) : JS2Object(kind), temps(NULL), pluralFrame(pluralFrame) { }
@@ -461,6 +463,12 @@ public:
 
     Callor *call;                               // A procedure to call when this class is used in a call expression
     Constructor *construct;                     // A procedure to call when this class is used in a new expression
+    js2val implicitCoerce(JS2Metadata *meta, js2val newValue);
+                                                // A procedure to call when a value is assigned whose type is this class
+
+    bool isAncestor(JS2Class *heir);
+
+    js2val  defaultValue;                       // An instance of this class assigned when a variable is not explicitly initialized
 
     uint32 slotCount;
 
@@ -979,21 +987,24 @@ public:
     js2val readEvalFile(const char *fileName);
 
 
-    void ValidateStmtList(Context *cxt, Environment *env, StmtNode *p);
+    void ValidateStmtList(Context *cxt, Environment *env, Plurality pl, StmtNode *p);
     void ValidateTypeExpression(Context *cxt, Environment *env, ExprNode *e)    { ValidateExpression(cxt, env, e); } 
-    void ValidateStmt(Context *cxt, Environment *env, StmtNode *p);
+    void ValidateStmt(Context *cxt, Environment *env, Plurality pl, StmtNode *p);
     void ValidateExpression(Context *cxt, Environment *env, ExprNode *p);
     void ValidateAttributeExpression(Context *cxt, Environment *env, ExprNode *p);
+    CallableInstance *validateStaticFunction(FunctionStmtNode *f, js2val compileThis, bool prototype, bool unchecked, Context *cxt, Environment *env);
 
     js2val ExecuteStmtList(Phase phase, StmtNode *p);
     js2val EvalExpression(Environment *env, Phase phase, ExprNode *p);
     JS2Class *EvalTypeExpression(Environment *env, Phase phase, ExprNode *p);
-    Reference *EvalExprNode(Environment *env, Phase phase, ExprNode *p, JS2Class **exprType);
+    Reference *SetupExprNode(Environment *env, Phase phase, ExprNode *p, JS2Class **exprType);
     Attribute *EvalAttributeExpression(Environment *env, Phase phase, ExprNode *p);
-    void EvalStmt(Environment *env, Phase phase, StmtNode *p);
+    void SetupStmt(Environment *env, Phase phase, StmtNode *p);
 
 
     JS2Class *objectType(js2val obj);
+    bool hasType(js2val objVal, JS2Class *c);
+    bool relaxedHasType(js2val objVal, JS2Class *c);
 
     StaticMember *findFlatMember(Frame *container, Multiname *multiname, Access access, Phase phase);
     InstanceBinding *resolveInstanceMemberName(JS2Class *js2class, Multiname *multiname, Access access, Phase phase);

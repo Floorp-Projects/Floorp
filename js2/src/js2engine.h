@@ -173,8 +173,6 @@ public:
     static uint16 float64toUInt16(float64 f);
 
 
-    js2val assignmentConversion(js2val val, JS2Class * /*type*/)     { return val; } // XXX s'more code, please
-
     int64 checkInteger(js2val x);
 
     JS2Metadata *meta;

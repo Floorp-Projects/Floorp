@@ -147,24 +147,59 @@ namespace MetaData {
      */
     void JS2Metadata::ValidateStmtList(StmtNode *p) {
         while (p) {
-            ValidateStmt(&cxt, &env, p);
+            ValidateStmt(&cxt, &env, Singular, p);
             p = p->next;
         }
     }
 
-    void JS2Metadata::ValidateStmtList(Context *cxt, Environment *env, StmtNode *p) {
+    void JS2Metadata::ValidateStmtList(Context *cxt, Environment *env, Plurality pl, StmtNode *p) {
         while (p) {
-            ValidateStmt(cxt, env, p);
+            ValidateStmt(cxt, env, pl, p);
             p = p->next;
         }
     }
+     
+    CallableInstance *JS2Metadata::validateStaticFunction(FunctionStmtNode *f, js2val compileThis, bool prototype, bool unchecked, Context *cxt, Environment *env)
+    {
+        ParameterFrame *compileFrame = new ParameterFrame(compileThis, prototype);
+        CompilationData *oldData = startCompilationUnit(f->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
+        env->addFrame(compileFrame);
+        VariableBinding *pb = f->function.parameters;
+        if (pb) {
+            NamespaceList publicNamespaceList;
+            publicNamespaceList.push_back(publicNamespace);
+            uint32 pCount = 0;
+            while (pb) {
+                pCount++;
+                pb = pb->next;
+            }
+            pb = f->function.parameters;
+            compileFrame->positional = new Variable *[pCount];
+            compileFrame->positionalCount = pCount;
+            pCount = 0;
+            while (pb) {
+                // XXX define a static binding for each parameter
+                Variable *v = new Variable();
+                compileFrame->positional[pCount++] = v;
+                pb->mn = defineStaticMember(env, pb->name, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, pb->pos);
+                pb = pb->next;
+            }
+        }
+        ValidateStmt(cxt, env, Plural, f->function.body);
+        env->removeTopFrame();
+        restoreCompilationUnit(oldData);
 
-        
+        CallableInstance *fInst = new CallableInstance(functionClass);
+        fInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
+        f->fWrap = fInst->fWrap;
+
+        return fInst;
+    }
 
     /*
      * Validate an individual statement 'p', including it's children
      */
-    void JS2Metadata::ValidateStmt(Context *cxt, Environment *env, StmtNode *p) 
+    void JS2Metadata::ValidateStmt(Context *cxt, Environment *env, Plurality pl, StmtNode *p) 
     {
         CompoundAttribute *a = NULL;
         JS2Object::RootIterator ri = JS2Object::addRoot(&a);
@@ -179,7 +214,7 @@ namespace MetaData {
                     b->compileFrame = new BlockFrame();
                     bCon->saveFrame(b->compileFrame);   // stash this frame so it doesn't get gc'd before eval pass.
                     env->addFrame(b->compileFrame);
-                    ValidateStmtList(cxt, env, b->statements);
+                    ValidateStmtList(cxt, env, pl, b->statements);
                     env->removeTopFrame();
                 }
                 break;
@@ -202,7 +237,7 @@ namespace MetaData {
                         }
                     }
                     targetList.push_back(p);
-                    ValidateStmt(cxt, env, l->stmt);
+                    ValidateStmt(cxt, env, pl, l->stmt);
                     targetList.pop_back();
                 }
                 break;
@@ -210,15 +245,15 @@ namespace MetaData {
                 {
                     UnaryStmtNode *i = checked_cast<UnaryStmtNode *>(p);
                     ValidateExpression(cxt, env, i->expr);
-                    ValidateStmt(cxt, env, i->stmt);
+                    ValidateStmt(cxt, env, pl, i->stmt);
                 }
                 break;
             case StmtNode::IfElse:
                 {
                     BinaryStmtNode *i = checked_cast<BinaryStmtNode *>(p);
                     ValidateExpression(cxt, env, i->expr);
-                    ValidateStmt(cxt, env, i->stmt);
-                    ValidateStmt(cxt, env, i->stmt2);
+                    ValidateStmt(cxt, env, pl, i->stmt);
+                    ValidateStmt(cxt, env, pl, i->stmt2);
                 }
                 break;
             case StmtNode::ForIn:
@@ -229,7 +264,7 @@ namespace MetaData {
                     f->breakLabelID = bCon->getLabel();
                     f->continueLabelID = bCon->getLabel();
                     if (f->initializer)
-                        ValidateStmt(cxt, env, f->initializer);
+                        ValidateStmt(cxt, env, pl, f->initializer);
                     if (f->expr2)
                         ValidateExpression(cxt, env, f->expr2);
                     if (f->expr3)
@@ -237,7 +272,7 @@ namespace MetaData {
                     f->breakLabelID = bCon->getLabel();
                     f->continueLabelID = bCon->getLabel();
                     targetList.push_back(p);
-                    ValidateStmt(cxt, env, f->stmt);
+                    ValidateStmt(cxt, env, pl, f->stmt);
                     targetList.pop_back();
                 }
                 break;
@@ -256,7 +291,7 @@ namespace MetaData {
                                 ValidateExpression(cxt, env, c->expr);
                         }
                         else
-                            ValidateStmt(cxt, env, s);
+                            ValidateStmt(cxt, env, pl, s);
                         s = s->next;
                     }
                     targetList.pop_back();
@@ -270,7 +305,7 @@ namespace MetaData {
                     w->continueLabelID = bCon->getLabel();
                     targetList.push_back(p);
                     ValidateExpression(cxt, env, w->expr);
-                    ValidateStmt(cxt, env, w->stmt);
+                    ValidateStmt(cxt, env, pl, w->stmt);
                     targetList.pop_back();
                 }
                 break;
@@ -379,12 +414,12 @@ namespace MetaData {
             case StmtNode::Try:
                 {
                     TryStmtNode *t = checked_cast<TryStmtNode *>(p);
-                    ValidateStmt(cxt, env, t->stmt);
+                    ValidateStmt(cxt, env, pl, t->stmt);
                     if (t->finally)
-                        ValidateStmt(cxt, env, t->finally);
+                        ValidateStmt(cxt, env, pl, t->finally);
                     CatchClause *c = t->catches;
                     while (c) {                    
-                        ValidateStmt(cxt, env, c->stmt);
+                        ValidateStmt(cxt, env, pl, c->stmt);
                         if (c->type)
                             ValidateExpression(cxt, env, c->type);
                         c = c->next;
@@ -411,13 +446,15 @@ namespace MetaData {
                     if (a->dynamic)
                         reportError(Exception::definitionError, "Illegal attribute", p->pos);
                     VariableBinding *vb = f->function.parameters;
-                    bool untyped = true;
-                    while (vb) {
-                        if (vb->type) {
-                            untyped = false;
-                            break;
+                    bool untyped = (f->function.resultType == NULL);
+                    if (untyped) {
+                        while (vb) {
+                            if (vb->type) {
+                                untyped = false;
+                                break;
+                            }
+                            vb = vb->next;
                         }
-                        vb = vb->next;
                     }
                     bool unchecked = !cxt->strict && (env->getTopFrame()->kind != ClassKind)
                                         && (f->function.prefix == FunctionName::normal) && untyped;
@@ -439,76 +476,52 @@ namespace MetaData {
                                   || (memberMod == Attribute::Virtual) 
                                   || (memberMod == Attribute::Final))
                         compileThis = JS2VAL_INACCESSIBLE;
-                    ParameterFrame *compileFrame = new ParameterFrame(compileThis, prototype);
                     Frame *topFrame = env->getTopFrame();
 
-                    if (unchecked 
-                            && ((topFrame->kind == GlobalObjectKind)
-                                            || (topFrame->kind == ParameterKind))
-                            && (f->attributes == NULL)) {
-                        HoistedVar *v = defineHoistedVar(env, f->function.name, p);
-                        // XXX Here the spec. has ???, so the following is tentative
-                        CallableInstance *dInst = new CallableInstance(functionClass);
-                        dInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
-                        f->fWrap = dInst->fWrap;
-                        v->value = OBJECT_TO_JS2VAL(dInst);
-                    }
-                    else {
-                        CallableInstance *fInst = new CallableInstance(functionClass);
-                        fInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
-                        f->fWrap = fInst->fWrap;
-                        switch (memberMod) {
-                        case Attribute::NoModifier:
-                        case Attribute::Static:
-                            {
+                    CallableInstance *fInst = validateStaticFunction(f, compileThis, prototype, unchecked, cxt, env);
+
+                    switch (memberMod) {
+                    case Attribute::NoModifier:
+                    case Attribute::Static:
+                        {
+                            if (f->function.prefix != FunctionName::normal) {
+                                // XXX getter/setter --> ????
+                            }
+                            else {
+
+                            }
+                            if (unchecked 
+                                    && (f->attributes == NULL)
+                                    && ((topFrame->kind == GlobalObjectKind)
+                                                    || (topFrame->kind == BlockKind)
+                                                    || (topFrame->kind == ParameterKind)) ) {
+                                HoistedVar *v = defineHoistedVar(env, f->function.name, p);
+                                v->value = OBJECT_TO_JS2VAL(fInst);
+                            }
+                            else {
                                 Variable *v = new Variable(functionClass, OBJECT_TO_JS2VAL(fInst), true);
                                 defineStaticMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
                             }
-                            break;
-                        case Attribute::Virtual:
-                        case Attribute::Final:
-                            {
-                                JS2Class *c = checked_cast<JS2Class *>(env->getTopFrame());
-                                InstanceMember *m = new InstanceMethod(fInst);
-                                defineInstanceMember(c, cxt, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, m, p->pos);
-                            }
-                            break;
-                        case Attribute::Constructor:
-                            {
-                                ConstructorMethod *cm = new ConstructorMethod(OBJECT_TO_JS2VAL(fInst));
-                                defineStaticMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, cm, p->pos);
-                            }
-                            break;
                         }
+                        break;
+                    case Attribute::Virtual:
+                    case Attribute::Final:
+                        {
+                    // XXX Here the spec. has ???, so the following is tentative
+                            JS2Class *c = checked_cast<JS2Class *>(env->getTopFrame());
+                            InstanceMember *m = new InstanceMethod(fInst);
+                            defineInstanceMember(c, cxt, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, m, p->pos);
+                        }
+                        break;
+                    case Attribute::Constructor:
+                        {
+                    // XXX Here the spec. has ???, so the following is tentative
+                            ConstructorMethod *cm = new ConstructorMethod(OBJECT_TO_JS2VAL(fInst));
+                            defineStaticMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, cm, p->pos);
+                        }
+                        break;
                     }
 
-
-                    CompilationData *oldData = startCompilationUnit(f->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
-                    env->addFrame(compileFrame);
-                    VariableBinding *pb = f->function.parameters;
-                    if (pb) {
-                        NamespaceList publicNamespaceList;
-                        publicNamespaceList.push_back(publicNamespace);
-                        uint32 pCount = 0;
-                        while (pb) {
-                            pCount++;
-                            pb = pb->next;
-                        }
-                        pb = f->function.parameters;
-                        compileFrame->positional = new Variable *[pCount];
-                        compileFrame->positionalCount = pCount;
-                        pCount = 0;
-                        while (pb) {
-                            // XXX define a static binding for each parameter
-                            Variable *v = new Variable();
-                            compileFrame->positional[pCount++] = v;
-                            pb->mn = defineStaticMember(env, pb->name, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, p->pos);
-                            pb = pb->next;
-                        }
-                    }
-                    ValidateStmt(cxt, env, f->function.body);
-                    env->removeTopFrame();
-                    restoreCompilationUnit(oldData);
                 }
                 break;
             case StmtNode::Var:
@@ -662,7 +675,7 @@ namespace MetaData {
                     defineStaticMember(env, &classStmt->name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
                     if (classStmt->body) {
                         env->addFrame(c);
-                        ValidateStmtList(cxt, env, classStmt->body->statements);
+                        ValidateStmtList(cxt, env, pl, classStmt->body->statements);
                         ASSERT(env->getTopFrame() == c);
                         env->removeTopFrame();
                     }
@@ -690,7 +703,7 @@ namespace MetaData {
     {
         size_t lastPos = p->pos;
         while (p) {
-            EvalStmt(&env, phase, p);
+            SetupStmt(&env, phase, p);
             lastPos = p->pos;
             p = p->next;
         }
@@ -727,11 +740,11 @@ namespace MetaData {
     }
 
     /*
-     * Evaluate an individual statement 'p', including it's children
+     * Process an individual statement 'p', including it's children
      *  - this generates bytecode for each statement, but doesn't actually
      * execute it.
      */
-    void JS2Metadata::EvalStmt(Environment *env, Phase phase, StmtNode *p) 
+    void JS2Metadata::SetupStmt(Environment *env, Phase phase, StmtNode *p) 
     {
         JS2Class *exprType;
         switch (p->getKind()) {
@@ -745,7 +758,7 @@ namespace MetaData {
                 bCon->addFrame(runtimeFrame);
                 StmtNode *bp = b->statements;
                 while (bp) {
-                    EvalStmt(env, phase, bp);
+                    SetupStmt(env, phase, bp);
                     bp = bp->next;
                 }
                 bCon->emitOp(ePopFrame, p->pos);
@@ -755,17 +768,17 @@ namespace MetaData {
         case StmtNode::label:
             {
                 LabelStmtNode *l = checked_cast<LabelStmtNode *>(p);
-                EvalStmt(env, phase, l->stmt);
+                SetupStmt(env, phase, l->stmt);
             }
             break;
         case StmtNode::If:
             {
                 BytecodeContainer::LabelID skipOverStmt = bCon->getLabel();
                 UnaryStmtNode *i = checked_cast<UnaryStmtNode *>(p);
-                Reference *r = EvalExprNode(env, phase, i->expr, &exprType);
+                Reference *r = SetupExprNode(env, phase, i->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
                 bCon->emitBranch(eBranchFalse, skipOverStmt, p->pos);
-                EvalStmt(env, phase, i->stmt);
+                SetupStmt(env, phase, i->stmt);
                 bCon->setLabel(skipOverStmt);
             }
             break;
@@ -774,13 +787,13 @@ namespace MetaData {
                 BytecodeContainer::LabelID falseStmt = bCon->getLabel();
                 BytecodeContainer::LabelID skipOverFalseStmt = bCon->getLabel();
                 BinaryStmtNode *i = checked_cast<BinaryStmtNode *>(p);
-                Reference *r = EvalExprNode(env, phase, i->expr, &exprType);
+                Reference *r = SetupExprNode(env, phase, i->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
                 bCon->emitBranch(eBranchFalse, falseStmt, p->pos);
-                EvalStmt(env, phase, i->stmt);
+                SetupStmt(env, phase, i->stmt);
                 bCon->emitBranch(eBranch, skipOverFalseStmt, p->pos);
                 bCon->setLabel(falseStmt);
-                EvalStmt(env, phase, i->stmt2);
+                SetupStmt(env, phase, i->stmt2);
                 bCon->setLabel(skipOverFalseStmt);
             }
             break;
@@ -825,7 +838,7 @@ namespace MetaData {
                 else {
                     if (f->initializer->getKind() == StmtNode::expression) {
                         ExprStmtNode *e = checked_cast<ExprStmtNode *>(f->initializer);
-                        v = EvalExprNode(env, phase, e->expr, &exprType);
+                        v = SetupExprNode(env, phase, e->expr, &exprType);
                         if (v == NULL)
                             reportError(Exception::semanticError, "for..in needs an lValue", p->pos);
                     }
@@ -835,7 +848,7 @@ namespace MetaData {
 
                 BytecodeContainer::LabelID loopTop = bCon->getLabel();
 
-                Reference *r = EvalExprNode(env, phase, f->expr2, &exprType);
+                Reference *r = SetupExprNode(env, phase, f->expr2, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(eFirst, p->pos);
                 bCon->emitBranch(eBranchFalse, f->breakLabelID, p->pos);
@@ -845,7 +858,7 @@ namespace MetaData {
                 bCon->emitOp(eForValue, p->pos);
                 v->emitWriteBytecode(bCon, p->pos);
                 bCon->emitOp(ePop, p->pos);     // clear iterator value from stack
-                EvalStmt(env, phase, f->stmt);
+                SetupStmt(env, phase, f->stmt);
                 targetList.pop_back();
                 bCon->setLabel(f->continueLabelID);
                 bCon->emitOp(eNext, p->pos);
@@ -861,22 +874,22 @@ namespace MetaData {
                 BytecodeContainer::LabelID testLocation = bCon->getLabel();
 
                 if (f->initializer)
-                    EvalStmt(env, phase, f->initializer);
+                    SetupStmt(env, phase, f->initializer);
                 if (f->expr2)
                     bCon->emitBranch(eBranch, testLocation, p->pos);
                 bCon->setLabel(loopTop);
                 targetList.push_back(p);
-                EvalStmt(env, phase, f->stmt);
+                SetupStmt(env, phase, f->stmt);
                 targetList.pop_back();
                 bCon->setLabel(f->continueLabelID);
                 if (f->expr3) {
-                    Reference *r = EvalExprNode(env, phase, f->expr3, &exprType);
+                    Reference *r = SetupExprNode(env, phase, f->expr3, &exprType);
                     if (r) r->emitReadBytecode(bCon, p->pos);
                     bCon->emitOp(ePop, p->pos);
                 }
                 bCon->setLabel(testLocation);
                 if (f->expr2) {
-                    Reference *r = EvalExprNode(env, phase, f->expr2, &exprType);
+                    Reference *r = SetupExprNode(env, phase, f->expr2, &exprType);
                     if (r) r->emitReadBytecode(bCon, p->pos);
                     bCon->emitBranch(eBranchTrue, loopTop, p->pos);
                 }
@@ -920,7 +933,7 @@ namespace MetaData {
                 uint16 swVarIndex = env->getTopFrame()->allocateTemp();
                 BytecodeContainer::LabelID defaultLabel = NotALabel;
 
-                Reference *r = EvalExprNode(env, phase, sw->expr, &exprType);
+                Reference *r = SetupExprNode(env, phase, sw->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(eFrameSlotWrite, p->pos);
                 bCon->addShort(swVarIndex);
@@ -933,7 +946,7 @@ namespace MetaData {
                         if (c->expr) {
                             bCon->emitOp(eFrameSlotRead, c->pos);
                             bCon->addShort(swVarIndex);
-                            Reference *r = EvalExprNode(env, phase, c->expr, &exprType);
+                            Reference *r = SetupExprNode(env, phase, c->expr, &exprType);
                             if (r) r->emitReadBytecode(bCon, c->pos);
                             bCon->emitOp(eEqual, c->pos);
                             bCon->emitBranch(eBranchTrue, c->labelID, c->pos);
@@ -956,7 +969,7 @@ namespace MetaData {
                         bCon->setLabel(c->labelID);
                     }
                     else
-                        EvalStmt(env, phase, s);
+                        SetupStmt(env, phase, s);
                     s = s->next;
                 }
                 targetList.pop_back();
@@ -971,10 +984,10 @@ namespace MetaData {
                 bCon->emitBranch(eBranch, w->continueLabelID, p->pos);
                 bCon->setLabel(loopTop);
                 targetList.push_back(p);
-                EvalStmt(env, phase, w->stmt);
+                SetupStmt(env, phase, w->stmt);
                 targetList.pop_back();
                 bCon->setLabel(w->continueLabelID);
-                Reference *r = EvalExprNode(env, phase, w->expr, &exprType);
+                Reference *r = SetupExprNode(env, phase, w->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
                 bCon->emitBranch(eBranchTrue, loopTop, p->pos);
                 bCon->setLabel(w->breakLabelID);
@@ -986,10 +999,10 @@ namespace MetaData {
                 BytecodeContainer::LabelID loopTop = bCon->getLabel();
                 bCon->setLabel(loopTop);
                 targetList.push_back(p);
-                EvalStmt(env, phase, w->stmt);
+                SetupStmt(env, phase, w->stmt);
                 targetList.pop_back();
                 bCon->setLabel(w->continueLabelID);
-                Reference *r = EvalExprNode(env, phase, w->expr, &exprType);
+                Reference *r = SetupExprNode(env, phase, w->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
                 bCon->emitBranch(eBranchTrue, loopTop, p->pos);
                 bCon->setLabel(w->breakLabelID);
@@ -998,7 +1011,7 @@ namespace MetaData {
         case StmtNode::Throw:
             {
                 ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
-                Reference *r = EvalExprNode(env, phase, e->expr, &exprType);
+                Reference *r = SetupExprNode(env, phase, e->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(eThrow, p->pos);
             }
@@ -1075,7 +1088,7 @@ namespace MetaData {
                     bCon->addOffset(NotALabel);
                 }
                 BytecodeContainer::LabelID finishedLabel = bCon->getLabel();
-                EvalStmt(env, phase, t->stmt);
+                SetupStmt(env, phase, t->stmt);
 
                 if (t->finally) {
                     bCon->emitBranch(eCallFinally, t_finallyLabel, p->pos);
@@ -1083,7 +1096,7 @@ namespace MetaData {
 
                     bCon->setLabel(t_finallyLabel);
                     bCon->emitOp(eHandler, p->pos);
-                    EvalStmt(env, phase, t->finally);
+                    SetupStmt(env, phase, t->finally);
                     bCon->emitOp(eReturnFinally, p->pos);
 
                     bCon->setLabel(finallyInvokerLabel);
@@ -1110,7 +1123,7 @@ namespace MetaData {
                         if (c->next && c->type) {
                             nextCatch = bCon->getLabel();
                             bCon->emitOp(eDup, p->pos);
-                            Reference *r = EvalExprNode(env, phase, c->type, &exprType);
+                            Reference *r = SetupExprNode(env, phase, c->type, &exprType);
                             if (r) r->emitReadBytecode(bCon, p->pos);
                             bCon->emitOp(eIs, p->pos);
                             bCon->emitBranch(eBranchFalse, nextCatch, p->pos);
@@ -1120,7 +1133,7 @@ namespace MetaData {
                         Reference *r = new LexicalReference(&c->name, false);
                         r->emitWriteBytecode(bCon, p->pos);
                         bCon->emitOp(ePop, p->pos);
-                        EvalStmt(env, phase, c->stmt);
+                        SetupStmt(env, phase, c->stmt);
                         if (t->finally) {
                             bCon->emitBranch(eCallFinally, t_finallyLabel, p->pos);
                         }
@@ -1140,7 +1153,7 @@ namespace MetaData {
             {
                 ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
                 if (e->expr) {
-                    Reference *r = EvalExprNode(env, phase, e->expr, &exprType);
+                    Reference *r = SetupExprNode(env, phase, e->expr, &exprType);
                     if (r) r->emitReadBytecode(bCon, p->pos);
                     bCon->emitOp(eReturn, p->pos);
                 }
@@ -1151,7 +1164,7 @@ namespace MetaData {
                 FunctionStmtNode *f = checked_cast<FunctionStmtNode *>(p);
                 CompilationData *oldData = startCompilationUnit(f->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
                 env->addFrame(f->fWrap->compileFrame);
-                EvalStmt(env, phase, f->function.body);
+                SetupStmt(env, phase, f->function.body);
                 // XXX need to make sure that all paths lead to an exit of some kind
                 bCon->emitOp(eReturnVoid, p->pos);
                 env->removeTopFrame();
@@ -1174,25 +1187,16 @@ namespace MetaData {
                                 if (vb->initializer) {
                                     try {
                                         js2val newValue = EvalExpression(env, CompilePhase, vb->initializer);
-                                        v->value = engine->assignmentConversion(newValue, type);
+                                        v->value = type->implicitCoerce(this, newValue);
                                     }
                                     catch (Exception x) {
                                         // If a compileExpressionError occurred, then the initialiser is 
-                                        // not a compile-time constant expression. 
+                                        // not a compile-time constant expression. In this case, ignore the
+                                        // error and leave the value of the variable INACCESSIBLE until it
+                                        // is defined at run time.
                                         if (x.kind != Exception::compileExpressionError)
                                             throw x;
                                     }
-                                    // XXX more here - does 'static' act c-like?
-                                    //
-                                    // eGET_TOP_FRAME    <-- establish base??? why isn't this a lexical reference?
-                                    // eDotRead <v->mn>
-                                    // eIS_INACCESSIBLE      ??
-                                    // eBRANCH_FALSE <lbl>   ?? eBRANCH_ACC <lbl>
-                                    //      eGET_TOP_FRAME
-                                    //      <vb->initializer code>
-                                    //      <convert to 'type'>
-                                    //      eDotWrite <v->mn>
-                                    // <lbl>:
                                 }
                                 else
                                     // Would only have come here if the variable was immutable - i.e. a 'const' definition
@@ -1203,7 +1207,7 @@ namespace MetaData {
                                 if (vb->initializer) {
                                     try {
                                         js2val newValue = EvalExpression(env, CompilePhase, vb->initializer);
-                                        v->value = engine->assignmentConversion(newValue, type);
+                                        v->value = type->implicitCoerce(this, newValue);
                                     }
                                     catch (Exception x) {
                                         // If a compileExpressionError occurred, then the initialiser is not a compile-time 
@@ -1211,7 +1215,7 @@ namespace MetaData {
                                         // variable inaccessible until it is defined at run time.
                                         if (x.kind != Exception::compileExpressionError)
                                             throw x;
-                                        Reference *r = EvalExprNode(env, phase, vb->initializer, &exprType);
+                                        Reference *r = SetupExprNode(env, phase, vb->initializer, &exprType);
                                         if (r) r->emitReadBytecode(bCon, p->pos);
                                         LexicalReference *lVal = new LexicalReference(vb->name, cxt.strict);
                                         lVal->variableMultiname->addNamespace(publicNamespace);
@@ -1241,7 +1245,7 @@ namespace MetaData {
                     }
                     else { // HoistedVariable
                         if (vb->initializer) {
-                            Reference *r = EvalExprNode(env, phase, vb->initializer, &exprType);
+                            Reference *r = SetupExprNode(env, phase, vb->initializer, &exprType);
                             if (r) r->emitReadBytecode(bCon, p->pos);
                             LexicalReference *lVal = new LexicalReference(vb->name, cxt.strict);
                             lVal->variableMultiname->addNamespace(publicNamespace);
@@ -1255,7 +1259,7 @@ namespace MetaData {
         case StmtNode::expression:
             {
                 ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
-                Reference *r = EvalExprNode(env, phase, e->expr, &exprType);
+                Reference *r = SetupExprNode(env, phase, e->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(ePopv, p->pos);
             }
@@ -1278,7 +1282,7 @@ namespace MetaData {
                     bCon->addFrame(c);
                     StmtNode *bp = classStmt->body->statements;
                     while (bp) {
-                        EvalStmt(env, phase, bp);
+                        SetupStmt(env, phase, bp);
                         bp = bp->next;
                     }
                     ASSERT(env->getTopFrame() == c);
@@ -1727,7 +1731,7 @@ namespace MetaData {
 
         CompilationData *oldData = startCompilationUnit(NULL, bCon->mSource, bCon->mSourceLocation);
         try {
-            Reference *r = EvalExprNode(env, phase, p, &exprType);
+            Reference *r = SetupExprNode(env, phase, p, &exprType);
             if (r) r->emitReadBytecode(bCon, p->pos);
             bCon->emitOp(eReturn, p->pos);
             savePC = engine->pc;
@@ -1745,9 +1749,9 @@ namespace MetaData {
     }
 
     /*
-     * Evaluate the expression (i.e. generate bytecode, but don't execute) rooted at p.
+     * Process the expression (i.e. generate bytecode, but don't execute) rooted at p.
      */
-    Reference *JS2Metadata::EvalExprNode(Environment *env, Phase phase, ExprNode *p, JS2Class **exprType)
+    Reference *JS2Metadata::SetupExprNode(Environment *env, Phase phase, ExprNode *p, JS2Class **exprType)
     {
         Reference *returnRef = NULL;
         *exprType = NULL;
@@ -1758,17 +1762,17 @@ namespace MetaData {
         case ExprNode::parentheses:
             {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-                returnRef = EvalExprNode(env, phase, u->op, exprType);
+                returnRef = SetupExprNode(env, phase, u->op, exprType);
             }
             break;
         case ExprNode::assignment:
             {
                 if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
-                Reference *lVal = EvalExprNode(env, phase, b->op1, exprType);
+                Reference *lVal = SetupExprNode(env, phase, b->op1, exprType);
                 JS2Class *l_exprType = *exprType;
                 if (lVal) {
-                    Reference *rVal = EvalExprNode(env, phase, b->op2, exprType);
+                    Reference *rVal = SetupExprNode(env, phase, b->op2, exprType);
                     if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                     lVal->emitWriteBytecode(bCon, p->pos);
                     *exprType = l_exprType;
@@ -1817,11 +1821,11 @@ doAssignBinary:
             {
                 if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
-                Reference *lVal = EvalExprNode(env, phase, b->op1, exprType);
+                Reference *lVal = SetupExprNode(env, phase, b->op1, exprType);
                 JS2Class *l_exprType = *exprType;
                 if (lVal) {
                     lVal->emitReadForWriteBackBytecode(bCon, p->pos);
-                    Reference *rVal = EvalExprNode(env, phase, b->op2, exprType);
+                    Reference *rVal = SetupExprNode(env, phase, b->op2, exprType);
                     if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                     *exprType = l_exprType;
                 }
@@ -1891,9 +1895,9 @@ doBinary:
             {
                 JS2Class *l_exprType, *r_exprType;
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
-                Reference *lVal = EvalExprNode(env, phase, b->op1, &l_exprType);
+                Reference *lVal = SetupExprNode(env, phase, b->op1, &l_exprType);
                 if (lVal) lVal->emitReadBytecode(bCon, p->pos);
-                Reference *rVal = EvalExprNode(env, phase, b->op2, &r_exprType);
+                Reference *rVal = SetupExprNode(env, phase, b->op2, &r_exprType);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(op, p->pos);
             }
@@ -1913,7 +1917,7 @@ doBinary:
 doUnary:
             {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-                Reference *rVal = EvalExprNode(env, phase, u->op, exprType);
+                Reference *rVal = SetupExprNode(env, phase, u->op, exprType);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(op, p->pos);
             }
@@ -1924,7 +1928,7 @@ doUnary:
                 if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
                 BytecodeContainer::LabelID skipOverSecondHalf = bCon->getLabel();
-                Reference *lVal = EvalExprNode(env, phase, b->op1, exprType);
+                Reference *lVal = SetupExprNode(env, phase, b->op1, exprType);
                 if (lVal) 
                     lVal->emitReadForWriteBackBytecode(bCon, p->pos);
                 else
@@ -1932,7 +1936,7 @@ doUnary:
                 bCon->emitOp(eDup, p->pos);
                 bCon->emitBranch(eBranchFalse, skipOverSecondHalf, p->pos);
                 bCon->emitOp(ePop, p->pos);
-                Reference *rVal = EvalExprNode(env, phase, b->op2, exprType);
+                Reference *rVal = SetupExprNode(env, phase, b->op2, exprType);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                 bCon->setLabel(skipOverSecondHalf);
                 lVal->emitWriteBackBytecode(bCon, p->pos);
@@ -1944,7 +1948,7 @@ doUnary:
                 if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
                 BytecodeContainer::LabelID skipOverSecondHalf = bCon->getLabel();
-                Reference *lVal = EvalExprNode(env, phase, b->op1, exprType);
+                Reference *lVal = SetupExprNode(env, phase, b->op1, exprType);
                 if (lVal) 
                     lVal->emitReadForWriteBackBytecode(bCon, p->pos);
                 else
@@ -1952,7 +1956,7 @@ doUnary:
                 bCon->emitOp(eDup, p->pos);
                 bCon->emitBranch(eBranchTrue, skipOverSecondHalf, p->pos);
                 bCon->emitOp(ePop, p->pos);
-                Reference *rVal = EvalExprNode(env, phase, b->op2, exprType);
+                Reference *rVal = SetupExprNode(env, phase, b->op2, exprType);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                 bCon->setLabel(skipOverSecondHalf);
                 lVal->emitWriteBackBytecode(bCon, p->pos);
@@ -1963,12 +1967,12 @@ doUnary:
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
                 BytecodeContainer::LabelID skipOverSecondHalf = bCon->getLabel();
-                Reference *lVal = EvalExprNode(env, phase, b->op1, exprType);
+                Reference *lVal = SetupExprNode(env, phase, b->op1, exprType);
                 if (lVal) lVal->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(eDup, p->pos);
                 bCon->emitBranch(eBranchFalse, skipOverSecondHalf, p->pos);
                 bCon->emitOp(ePop, p->pos);
-                Reference *rVal = EvalExprNode(env, phase, b->op2, exprType);
+                Reference *rVal = SetupExprNode(env, phase, b->op2, exprType);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                 bCon->setLabel(skipOverSecondHalf);
             }
@@ -1977,9 +1981,9 @@ doUnary:
         case ExprNode::logicalXor:
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
-                Reference *lVal = EvalExprNode(env, phase, b->op1, exprType);
+                Reference *lVal = SetupExprNode(env, phase, b->op1, exprType);
                 if (lVal) lVal->emitReadBytecode(bCon, p->pos);
-                Reference *rVal = EvalExprNode(env, phase, b->op2, exprType);
+                Reference *rVal = SetupExprNode(env, phase, b->op2, exprType);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(eLogicalXor, p->pos);
             }
@@ -1989,12 +1993,12 @@ doUnary:
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
                 BytecodeContainer::LabelID skipOverSecondHalf = bCon->getLabel();
-                Reference *lVal = EvalExprNode(env, phase, b->op1, exprType);
+                Reference *lVal = SetupExprNode(env, phase, b->op1, exprType);
                 if (lVal) lVal->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(eDup, p->pos);
                 bCon->emitBranch(eBranchTrue, skipOverSecondHalf, p->pos);
                 bCon->emitOp(ePop, p->pos);
-                Reference *rVal = EvalExprNode(env, phase, b->op2, exprType);
+                Reference *rVal = SetupExprNode(env, phase, b->op2, exprType);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                 bCon->setLabel(skipOverSecondHalf);
             }
@@ -2051,18 +2055,18 @@ doUnary:
                 BytecodeContainer::LabelID labelAtBottom = bCon->getLabel();
 
                 TernaryExprNode *c = checked_cast<TernaryExprNode *>(p);
-                Reference *lVal = EvalExprNode(env, phase, c->op1, exprType);
+                Reference *lVal = SetupExprNode(env, phase, c->op1, exprType);
                 if (lVal) lVal->emitReadBytecode(bCon, p->pos);
                 bCon->emitBranch(eBranchFalse, falseConditionExpression, p->pos);
 
-                lVal = EvalExprNode(env, phase, c->op2, exprType);
+                lVal = SetupExprNode(env, phase, c->op2, exprType);
                 if (lVal) lVal->emitReadBytecode(bCon, p->pos);
                 bCon->emitBranch(eBranch, labelAtBottom, p->pos);
 
                 bCon->setLabel(falseConditionExpression);
                 //adjustStack(-1);        // the true case will leave a stack entry pending
                                           // but we can discard it since only one path will be taken.
-                lVal = EvalExprNode(env, phase, c->op3, exprType);
+                lVal = SetupExprNode(env, phase, c->op3, exprType);
                 if (lVal) lVal->emitReadBytecode(bCon, p->pos);
 
                 bCon->setLabel(labelAtBottom);
@@ -2136,7 +2140,7 @@ doUnary:
         case ExprNode::Delete:
             {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-                Reference *lVal = EvalExprNode(env, phase, u->op, exprType);
+                Reference *lVal = SetupExprNode(env, phase, u->op, exprType);
                 if (lVal)
                     lVal->emitDeleteBytecode(bCon, p->pos);
                 else
@@ -2146,7 +2150,7 @@ doUnary:
         case ExprNode::postIncrement:
             {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-                Reference *lVal = EvalExprNode(env, phase, u->op, exprType);
+                Reference *lVal = SetupExprNode(env, phase, u->op, exprType);
                 if (lVal)
                     lVal->emitPostIncBytecode(bCon, p->pos);
                 else
@@ -2156,7 +2160,7 @@ doUnary:
         case ExprNode::postDecrement:
             {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-                Reference *lVal = EvalExprNode(env, phase, u->op, exprType);
+                Reference *lVal = SetupExprNode(env, phase, u->op, exprType);
                 if (lVal)
                     lVal->emitPostDecBytecode(bCon, p->pos);
                 else
@@ -2166,7 +2170,7 @@ doUnary:
         case ExprNode::preIncrement:
             {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-                Reference *lVal = EvalExprNode(env, phase, u->op, exprType);
+                Reference *lVal = SetupExprNode(env, phase, u->op, exprType);
                 if (lVal)
                     lVal->emitPreIncBytecode(bCon, p->pos);
                 else
@@ -2176,7 +2180,7 @@ doUnary:
         case ExprNode::preDecrement:
             {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-                Reference *lVal = EvalExprNode(env, phase, u->op, exprType);
+                Reference *lVal = SetupExprNode(env, phase, u->op, exprType);
                 if (lVal)
                     lVal->emitPreDecBytecode(bCon, p->pos);
                 else
@@ -2186,11 +2190,11 @@ doUnary:
         case ExprNode::index:
             {
                 InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
-                Reference *baseVal = EvalExprNode(env, phase, i->op, exprType);
+                Reference *baseVal = SetupExprNode(env, phase, i->op, exprType);
                 if (baseVal) baseVal->emitReadBytecode(bCon, p->pos);
                 ExprPairList *ep = i->pairs;
                 while (ep) {    // Validate has made sure there is only one, unnamed argument
-                    Reference *argVal = EvalExprNode(env, phase, ep->value, exprType);
+                    Reference *argVal = SetupExprNode(env, phase, ep->value, exprType);
                     if (argVal) argVal->emitReadBytecode(bCon, p->pos);
                     ep = ep->next;
                 }
@@ -2200,7 +2204,7 @@ doUnary:
         case ExprNode::dot:
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
-                Reference *baseVal = EvalExprNode(env, phase, b->op1, exprType);
+                Reference *baseVal = SetupExprNode(env, phase, b->op1, exprType);
                 if (baseVal) baseVal->emitReadBytecode(bCon, p->pos);
 
                 if (b->op2->getKind() == ExprNode::identifier) {
@@ -2221,7 +2225,7 @@ doUnary:
                 } 
                 else {
                     if (b->op2->getKind() == ExprNode::qualify) {
-                        Reference *rVal = EvalExprNode(env, phase, b->op2, exprType);
+                        Reference *rVal = SetupExprNode(env, phase, b->op2, exprType);
                         ASSERT(rVal && checked_cast<LexicalReference *>(rVal));
                         returnRef = new DotReference(((LexicalReference *)rVal)->variableMultiname);
                     }
@@ -2244,7 +2248,7 @@ doUnary:
                 ExprPairList *e = plen->pairs;
                 while (e) {
                     if (e->value) {
-                        Reference *rVal = EvalExprNode(env, phase, e->value, exprType);
+                        Reference *rVal = SetupExprNode(env, phase, e->value, exprType);
                         if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                         argCount++;
                     }
@@ -2261,7 +2265,7 @@ doUnary:
                 ExprPairList *e = plen->pairs;
                 while (e) {
                     ASSERT(e->field && e->value);
-                    Reference *rVal = EvalExprNode(env, phase, e->value, exprType);
+                    Reference *rVal = SetupExprNode(env, phase, e->value, exprType);
                     if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                     switch (e->field->getKind()) {
                     case ExprNode::identifier:
@@ -2286,7 +2290,7 @@ doUnary:
         case ExprNode::Typeof:
             {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-                Reference *rVal = EvalExprNode(env, phase, u->op, exprType);
+                Reference *rVal = SetupExprNode(env, phase, u->op, exprType);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(eTypeof, p->pos);
             }
@@ -2294,12 +2298,12 @@ doUnary:
         case ExprNode::call:
             {
                 InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
-                Reference *rVal = EvalExprNode(env, phase, i->op, exprType);
+                Reference *rVal = SetupExprNode(env, phase, i->op, exprType);
                 if (rVal) rVal->emitReadForInvokeBytecode(bCon, p->pos);
                 ExprPairList *args = i->pairs;
                 uint16 argCount = 0;
                 while (args) {
-                    Reference *r = EvalExprNode(env, phase, args->value, exprType);
+                    Reference *r = SetupExprNode(env, phase, args->value, exprType);
                     if (r) r->emitReadBytecode(bCon, p->pos);
                     argCount++;
                     args = args->next;
@@ -2312,12 +2316,12 @@ doUnary:
             {
                 // XXX why not?--> if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
                 InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
-                Reference *rVal = EvalExprNode(env, phase, i->op, exprType);
+                Reference *rVal = SetupExprNode(env, phase, i->op, exprType);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                 ExprPairList *args = i->pairs;
                 uint16 argCount = 0;
                 while (args) {
-                    Reference *r = EvalExprNode(env, phase, args->value, exprType);
+                    Reference *r = SetupExprNode(env, phase, args->value, exprType);
                     if (r) r->emitReadBytecode(bCon, p->pos);
                     argCount++;
                     args = args->next;
@@ -3074,6 +3078,23 @@ doUnary:
         }
     }
 
+
+    // hasType(o, c) returns true if o is an instance of class c (or one of c's subclasses). 
+    // It considers null to be an instance of the classes Null and Object only.
+    bool JS2Metadata::hasType(js2val objVal, JS2Class *c)
+    {
+        return c->isAncestor(objectType(objVal));
+    }
+
+    // relaxedHasType(o, c) returns true if o is an instance of class c (or one of c's subclasses) 
+    // but considers null to be an instance of the classes Null, Object, and all other non-primitive classes.
+    bool JS2Metadata::relaxedHasType(js2val objVal, JS2Class *c)
+    {
+        JS2Class *t = objectType(objVal);
+        return c->isAncestor(t) || (JS2VAL_IS_NULL(objVal) && t->allowNull);
+    }
+
+
     // Scan this object and, if appropriate, it's prototype chain
     // looking for the given name. Return the containing object.
     JS2Object *JS2Metadata::lookupDynamicProperty(JS2Object *obj, const String *name)
@@ -3505,7 +3526,7 @@ readClassProperty:
                 Slot *s = findSlot(containerVal, mv);
                 if (mv->immutable && JS2VAL_IS_INITIALIZED(s->value))
                     reportError(Exception::propertyAccessError, "Reinitialization of constant", engine->errorPos());
-                s->value = engine->assignmentConversion(newValue, mv->type);
+                s->value = mv->type->implicitCoerce(this, newValue);
                 return true;
             }
         
@@ -4184,6 +4205,26 @@ deleteClassProperty:
         for (ib = instanceWriteBindings.begin(), iend = instanceWriteBindings.end(); (ib != iend); ib++) {
             ib->second->content->mark();
         }        
+    }
+
+    // return true if 'heir' is a member of this class or of any antecedent
+    bool JS2Class::isAncestor(JS2Class *heir)
+    {
+        JS2Class *kinsman = this;
+        do {
+            if (heir == kinsman)
+                return true;
+            kinsman = kinsman->super;
+        } while (kinsman);
+        return false;
+    }
+
+    js2val JS2Class::implicitCoerce(JS2Metadata *meta, js2val newValue)
+    {
+        if (meta->relaxedHasType(newValue, this))
+            return newValue;
+        meta->reportError(Exception::badValueError, "Illegal coercion", meta->engine->errorPos());
+        return JS2VAL_VOID;
     }
 
  /************************************************************************************
