@@ -44,7 +44,8 @@ public:
   // Inherited methods from nsIDocument 
   NS_IMETHOD SetSelection(nsIDOMSelection* aSelection);
   NS_IMETHOD SetCharset(const nsString& aCharset);
-  NS_IMETHOD Encode(nsIOutputStream* aStream);
+  NS_IMETHOD EncodeToStream(nsIOutputStream* aStream);
+  NS_IMETHOD EncodeToString(nsString& aOutputString);
 
   // Get embedded objects -- images, links, etc.
   // NOTE: we may want to use an enumerator
@@ -100,9 +101,28 @@ nsHTMLEncoder::SetCharset(const nsString& aCharset)
 }
 
 NS_IMETHODIMP
-nsHTMLEncoder::Encode(nsIOutputStream* aStream)
+nsHTMLEncoder::EncodeToString(nsString& aOutputString)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTMLEncoder::EncodeToStream(nsIOutputStream* aStream)
+{
+#if 0
+  nsString str;
+  nsresult rv = Encode(str);
+  if (NS_FAILED(rv))
+    return rv;
+
+  PRUint32 len = str.Length();
+  // Doesn't work -- how do we get a stream to take input from an nsString?
+  // nsIOutputStream is expecting ascii, I assume,
+  // while nsString's buffer is likely (but not definitely) unicode.
+  return aStream->Write(str, len, &len);
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 NS_IMETHODIMP
