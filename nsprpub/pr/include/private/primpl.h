@@ -730,10 +730,6 @@ extern void _PR_ClockInterrupt(void);
 extern void _PR_Schedule(void);
 extern void _PR_SetThreadPriority(
     PRThread* thread, PRThreadPriority priority);
-NSPR_API(void) _PR_Unlock(PRLock *lock);
-
-NSPR_API(void) _PR_SuspendThread(PRThread *t);
-NSPR_API(void) _PR_ResumeThread(PRThread *t);
 
 /***********************************************************************
 ** FUNCTION:	_PR_NewSegment()
