@@ -102,7 +102,7 @@ public:
   NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval);
   NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval);
 
-  static nsresult GetFocusedOptionNode(nsIWeakReference *aPresShell, nsIDOMNode *aListNode, nsCOMPtr<nsIDOMNode>& aFocusedOptionNode);
+  static nsresult GetFocusedOptionNode(nsIDOMNode *aListNode, nsCOMPtr<nsIDOMNode>& aFocusedOptionNode);
 
 };
 

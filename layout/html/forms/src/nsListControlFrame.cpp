@@ -63,6 +63,7 @@
 #include "nsHTMLParts.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIEventStateManager.h"
+#include "nsIEventListenerManager.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIPrivateDOMEvent.h"
@@ -1315,6 +1316,24 @@ nsListControlFrame::PerformSelection(PRInt32 aSelectedIndex,
   printf("mStartSelectionIndex:  %d\n", mStartSelectionIndex);
   printf("mLastStartIndex:     %d\n", mLastStartIndex);
   printf("mLastEndIndex:       %d\n", mLastEndIndex);
+#endif
+
+#ifdef ACCESSIBILITY
+  // Fire a custom DOM event for the change, so that accessibility can
+  // fire a native focus event for accessibility 
+  // (Some 3rd party products need to track our focus)
+  nsCOMPtr<nsIDOMEvent> event;
+  nsCOMPtr<nsIEventListenerManager> manager;
+  mContent->GetListenerManager(getter_AddRefs(manager));
+  if (manager &&
+      NS_SUCCEEDED(manager->CreateEvent(mPresContext, nsnull, NS_LITERAL_STRING("Events"), getter_AddRefs(event)))) {
+    event->InitEvent(NS_LITERAL_STRING("DOMMenuItemActive"), PR_TRUE, PR_TRUE);
+    PRBool noDefault;
+    nsCOMPtr<nsIEventStateManager> esm;
+    mPresContext->GetEventStateManager(getter_AddRefs(esm));
+    if (esm)
+      esm->DispatchNewEvent(mContent, event, &noDefault);
+  }
 #endif
 
   return wasChanged;

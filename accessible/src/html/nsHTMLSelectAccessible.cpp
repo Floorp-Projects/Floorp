@@ -50,6 +50,7 @@
 #include "nsIListControlFrame.h"
 #include "nsIServiceManager.h"
 #include "nsLayoutAtoms.h"
+#include "nsIDocument.h"
 
 /**
   * Selects, Listboxes and Comboboxes, are made up of a number of different
@@ -200,7 +201,7 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetAccState(PRUint32 *_retval)
   nsCOMPtr<nsIDOMNode> focusedOptionNode, parentNode;
   mParent->AccGetDOMNode(getter_AddRefs(parentNode));
   // find out if we are the focused node
-  GetFocusedOptionNode(mPresShell, parentNode, focusedOptionNode);
+  GetFocusedOptionNode(parentNode, focusedOptionNode);
   if (focusedOptionNode == mDOMNode)
     *_retval |= STATE_FOCUSED;
 
@@ -223,34 +224,43 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetAccState(PRUint32 *_retval)
   *  need to use the frame to get the focused option because for some reason we
   *  weren't getting the proper notification when the focus changed using the DOM
   */
-nsresult nsHTMLSelectOptionAccessible::GetFocusedOptionNode(nsIWeakReference *aPresShell, 
-                                                            nsIDOMNode *aListNode, 
+nsresult nsHTMLSelectOptionAccessible::GetFocusedOptionNode(nsIDOMNode *aListNode, 
                                                             nsCOMPtr<nsIDOMNode>& aFocusedOptionNode)
 {
   NS_ASSERTION(aListNode, "Called GetFocusedOptionNode without a valid list node");
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(aPresShell));
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aListNode));
+  nsCOMPtr<nsIDocument> document;
+  content->GetDocument(*getter_AddRefs(document));
+  nsCOMPtr<nsIPresShell> shell;
+  if (document) 
+    document->GetShellAt(0,getter_AddRefs(shell));
   if (!shell)
     return NS_ERROR_FAILURE;
 
   nsIFrame *frame = nsnull;
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aListNode));
   shell->GetPrimaryFrameFor(content, &frame);
 
-  nsCOMPtr<nsIListControlFrame> listFrame(do_QueryInterface(frame));
-  if (!listFrame)
-    return NS_ERROR_FAILURE;  
-
-  // Get what's focused by asking frame for "selected item". 
   PRInt32 focusedOptionIndex = 0;
-  nsresult rv = listFrame->GetSelectedIndex(&focusedOptionIndex);  
-
-  nsCOMPtr<nsIDOMHTMLCollection> options;
 
   // Get options
+  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement(do_QueryInterface(aListNode));
+  NS_ASSERTION(selectElement, "No select element where it should be");
+
+  nsCOMPtr<nsIDOMHTMLCollection> options;
+  nsresult rv = selectElement->GetOptions(getter_AddRefs(options));
+  
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIDOMHTMLSelectElement> selectElement(do_QueryInterface(aListNode));
-    NS_ASSERTION(selectElement, "No select element where it should be");
-    rv = selectElement->GetOptions(getter_AddRefs(options));
+    nsCOMPtr<nsIListControlFrame> listFrame(do_QueryInterface(frame));
+    if (listFrame) {
+      // Get what's focused in listbox by asking frame for "selected item". 
+      // Can't use dom interface for this, because it will always return the first selected item
+      // when there is more than 1 item selected. We need the focused item, not
+      // the first selected item.
+      rv = listFrame->GetSelectedIndex(&focusedOptionIndex);
+    }
+    else  // Combo boxes can only have 1 selected option, so they can use the dom interface for this
+      rv = selectElement->GetSelectedIndex(&focusedOptionIndex);
   }
 
   // Either use options and focused index, or default to list node itself
