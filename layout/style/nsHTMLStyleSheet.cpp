@@ -147,13 +147,8 @@ private:
 public:
   nsMapAttributesFunc mMapFunc;
   nsIHTMLAttributes*  mAttributes;
-  union {
-    struct {
-      PRUint32        mHashSet: 1;
-      PRUint32        mHashCode: 31;
-    };
-    PRUint32          mBitfiledInitializer; // this is a hack to allow initialization without pruify complaining about a UMR
-  };
+  PRUint32            mHashSet: 1;
+  PRUint32            mHashCode: 31;
 };
 
 AttributeKey::AttributeKey(nsMapAttributesFunc aMapFunc, nsIHTMLAttributes* aAttributes)
@@ -161,7 +156,8 @@ AttributeKey::AttributeKey(nsMapAttributesFunc aMapFunc, nsIHTMLAttributes* aAtt
     mAttributes(aAttributes)
 {
   NS_ADDREF(mAttributes);
-  mBitfiledInitializer = 0;
+  mHashSet = 0;
+  mHashCode = 0;
 }
 
 AttributeKey::~AttributeKey(void)
