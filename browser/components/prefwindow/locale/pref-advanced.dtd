@@ -15,3 +15,5 @@
 <!ENTITY useSSL2.label                "Use SSL 2.0">
 <!ENTITY useSSL3.label                "Use SSL 3.0">
 <!ENTITY useTLS1.label                "Use TLS 1.0">
+<!ENTITY useTypeAheadFind.label       "Use Find As You Type">
+<!ENTITY linksOnlyTypeAheadFind.label "to search links only">

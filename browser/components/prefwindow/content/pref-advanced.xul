@@ -14,7 +14,18 @@
       var _elementIDs = ["moveSystemCaret", "hideTabBar",
                          "loadInBackground", "useAutoScrolling",
                          "useSmoothScrolling", "enableAutoImageResizing",
-                         "useSSL2", "useSSL3", "useTLS1"];
+                         "useSSL2", "useSSL3", "useTLS1", "useTypeAheadFind",
+                         "linksOnlyTypeAheadFind",];
+
+      function Startup() {
+        updatePrefs();
+      }
+
+      function updatePrefs() {
+        var enabled = document.getElementById("useTypeAheadFind").checked;
+        var linksOnly = document.getElementById("linksOnlyTypeAheadFind");
+        linksOnly.disabled = !enabled;
+      }
     ]]>
   </script>
 
@@ -22,13 +33,17 @@
     <expander id="accessibility" label="&accessibility.label;" open="true" persist="open" clearhidden="true">
       <checkbox id="moveSystemCaret" label="&moveSystemCaret.label;"
                 prefstring="accessibility.browsewithcaret"/>
+      <checkbox id="useTypeAheadFind" label="&useTypeAheadFind.label;"
+		prefstring="accessibility.typeaheadfind" oncommand="updatePrefs()"/>
+      <checkbox class="indent" id="linksOnlyTypeAheadFind" label="&linksOnlyTypeAheadFind.label;"
+                prefstring="accessibility.typeaheadfind.linksonly"/>
     </expander>
     <expander id="browsing" label="&browsing.label;" open="true" persist="open" clearhidden="true">
       <checkbox id="hideTabBar" label="&hideTabBar.label;"
                 prefstring="browser.tabs.autoHide"/>
       <checkbox id="loadInBackground" label="&loadInBackground.label;"
                 prefstring="browser.tabs.loadInBackground"/>
-      <checkbox id="useAutoScrolling" label="&useAutoScrolling.label;" 
+      <checkbox id="useAutoScrolling" label="&useAutoScrolling.label;"
                 prefstring="general.autoScroll"/>
       <checkbox id="useSmoothScrolling" label="&useSmoothScrolling.label;"
                 prefstring="general.smoothScroll"/>
@@ -39,13 +54,12 @@
     </expander>
     <expander id="security" label="&security.label;" open="true" persist="open" clearhidden="true">
       <checkbox id="useSSL2" label="&useSSL2.label;"
-                prefstring="security.enable_ssl2"/>                
+                prefstring="security.enable_ssl2"/>
       <checkbox id="useSSL3" label="&useSSL3.label;"
                 prefstring="security.enable_ssl3"/>
       <checkbox id="useTLS1" label="&useTLS1.label;"
                 prefstring="security.enable_tls"/>
     </expander>
-  </vbox>    
+  </vbox>
 </page>
-
 
