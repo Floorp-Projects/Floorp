@@ -298,6 +298,9 @@ nsMozIconURI::SetPath(const nsACString &aPath)
 NS_IMETHODIMP
 nsMozIconURI::Equals(nsIURI *other, PRBool *result)
 {
+  NS_ENSURE_ARG_POINTER(other);
+  NS_PRECONDITION(result, "null pointer");
+
   nsCAutoString spec1;
   nsCAutoString spec2;
 
