@@ -141,7 +141,7 @@ OS_PTHREAD = -lpthread
 endif
 
 OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -pipe -DLINUX -Dlinux -D_POSIX_SOURCE -D_BSD_SOURCE -DHAVE_STRERROR
-OS_LIBS			= -L/lib $(OS_PTHREAD) -ldl -lc
+OS_LIBS			= $(OS_PTHREAD) -ldl -lc
 
 ifdef USE_PTHREADS
 	DEFINES		+= -D_REENTRANT
