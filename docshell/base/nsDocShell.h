@@ -146,17 +146,8 @@ public:
    NS_DECL_NSIINTERFACEREQUESTOR
    NS_DECL_NSISCRIPTGLOBALOBJECTOWNER
    NS_DECL_NSIWEBPROGRESSLISTENER
-
-   // nsIRefreshURI
-   NS_IMETHOD RefreshURI(nsIURI *aURI, PRInt32 aDelay, PRBool aRepeat);
-   NS_IMETHOD CancelRefreshURITimers();
-
-   // XXX: move to a macro
-   // nsIContentViewerContainer
-   NS_IMETHOD Embed(nsIContentViewer* aDocViewer, 
-                   const char* aCommand,
-                   nsISupports* aExtraInfo);
-
+   NS_DECL_NSIREFRESHURI
+   NS_DECL_NSICONTENTVIEWERCONTAINER
 
   nsresult SetLoadCookie(nsISupports *aCookie);
   nsresult GetLoadCookie(nsISupports **aResult);
