@@ -307,6 +307,9 @@ _PR_MD_CONNECT(PRFileDesc *fd, const PRNetAddr *addr, PRUint32 addrlen,
     PRInt32 rv, err;
     PRThread *me = _PR_MD_CURRENT_THREAD();
     PRInt32 osfd = fd->secret->md.osfd;
+    PRNetAddr addrCopy = *addr; /* Work around a bug in OS/2 where connect
+                                 * modifies the sockaddr structure.
+                                 * See Bugzilla bug 100776. */
 
      /*
       * We initiate the connection setup by making a nonblocking connect()
@@ -321,7 +324,7 @@ _PR_MD_CONNECT(PRFileDesc *fd, const PRNetAddr *addr, PRUint32 addrlen,
       */
 
 retry:
-    if ((rv = connect(osfd, (struct sockaddr *)addr, addrlen)) == -1)
+    if ((rv = connect(osfd, (struct sockaddr *)&addrCopy, addrlen)) == -1)
     {
         err = sock_errno();
 
