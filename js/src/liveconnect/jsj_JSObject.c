@@ -165,7 +165,7 @@ jsj_WrapJSObject(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj)
     java_wrapper_obj =
         (*jEnv)->NewObject(jEnv, njJSObject, njJSObject_JSObject, (jint)js_obj);
 #else
-    if (JSJ_callbacks->get_java_wrapper != NULL) {
+    if (JSJ_callbacks && JSJ_callbacks->get_java_wrapper != NULL) {
         java_wrapper_obj = JSJ_callbacks->get_java_wrapper(jEnv, (jint)handle);
     }
 #endif /*! OJI */
@@ -272,7 +272,7 @@ jsj_WrapJSObject(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj)
         (*jEnv)->NewObject(jEnv, njJSObject, njJSObject_JSObject, (jint)handle);
 #endif
 #else
-    if (JSJ_callbacks->get_java_wrapper != NULL) {
+    if (JSJ_callbacks && JSJ_callbacks->get_java_wrapper != NULL) {
         java_wrapper_obj = JSJ_callbacks->get_java_wrapper(jEnv, (jint)handle);
     }
 #endif /*! OJI */
@@ -309,7 +309,7 @@ jsj_UnwrapJSObjectWrapper(JNIEnv *jEnv, jobject java_wrapper_obj)
 	   that works with Sun's plugin assuming that it has not yet been implemented yet. This 'else' 
 	   case should be removed as soon as the unwrap function is supported by the Sun JPI. */
 
-    if (JSJ_callbacks->unwrap_java_wrapper != NULL) {
+    if (JSJ_callbacks && JSJ_callbacks->unwrap_java_wrapper != NULL) {
         handle = (JSObjectHandle*)JSJ_callbacks->unwrap_java_wrapper(jEnv, java_wrapper_obj);
     }
     else {
@@ -700,7 +700,7 @@ jsj_enter_js(JNIEnv *jEnv, void* applet_obj, jobject java_wrapper_obj,
     err_msg = NULL;
 
     /* Invoke callback, presumably used to implement concurrency constraints */
-    if (JSJ_callbacks->enter_js_from_java) {
+    if (JSJ_callbacks && JSJ_callbacks->enter_js_from_java) {
 #ifdef OJI
         if (!JSJ_callbacks->enter_js_from_java(jEnv, &err_msg, pNSIPrincipaArray, numPrincipals, pNSISecurityContext))
 #else
@@ -739,7 +739,7 @@ jsj_enter_js(JNIEnv *jEnv, void* applet_obj, jobject java_wrapper_obj,
         /* We called spontaneously into JS from Java, rather than from JS into
            Java and back into JS.  Invoke a callback to obtain/create a
            JSContext for us to use. */
-        if (JSJ_callbacks->map_jsj_thread_to_js_context) {
+        if (JSJ_callbacks && JSJ_callbacks->map_jsj_thread_to_js_context) {
 #ifdef OJI
             cx = JSJ_callbacks->map_jsj_thread_to_js_context(jsj_env,
                                                              applet_obj,
@@ -774,7 +774,7 @@ jsj_enter_js(JNIEnv *jEnv, void* applet_obj, jobject java_wrapper_obj,
 
 error:
     /* Invoke callback, presumably used to implement concurrency constraints */
-    if (JSJ_callbacks->exit_js)
+    if (JSJ_callbacks && JSJ_callbacks->exit_js)
         JSJ_callbacks->exit_js(jEnv);
 
 entry_failure:
@@ -823,7 +823,7 @@ jsj_exit_js(JSContext *cx, JSJavaThreadState *jsj_env, JSErrorReporter original_
     throw_any_pending_js_error_as_a_java_exception(jsj_env);
 
     /* Invoke callback, presumably used to implement concurrency constraints */
-    if (JSJ_callbacks->exit_js)
+    if (JSJ_callbacks && JSJ_callbacks->exit_js)
         JSJ_callbacks->exit_js(jEnv);
 
     return JS_TRUE;
@@ -1212,7 +1212,7 @@ Java_netscape_javascript_JSObject_eval(JNIEnv *jEnv,
     
     /* Set up security stuff */
     principals = NULL;
-    if (JSJ_callbacks->get_JSPrincipals_from_java_caller)
+    if (JSJ_callbacks && JSJ_callbacks->get_JSPrincipals_from_java_caller)
         principals = JSJ_callbacks->get_JSPrincipals_from_java_caller(jEnv, cx, NULL, 0, NULL);
     codebase = principals ? principals->codebase : NULL;
 
@@ -1281,7 +1281,7 @@ Java_netscape_javascript_JSObject_getWindow(JNIEnv *jEnv,
 {
     char *err_msg;
     JSContext *cx = NULL;
-    JSObject *js_obj;
+    JSObject *js_obj = NULL;
     jsval js_val;
     int dummy_cost;
     JSBool dummy_bool;
@@ -1295,7 +1295,8 @@ Java_netscape_javascript_JSObject_getWindow(JNIEnv *jEnv,
     
     err_msg = NULL;
     java_obj = NULL;
-    js_obj = JSJ_callbacks->map_java_object_to_js_object(jEnv, java_applet_obj, &err_msg);
+    if (JSJ_callbacks && JSJ_callbacks->map_java_object_to_js_object)
+        js_obj = JSJ_callbacks->map_java_object_to_js_object(jEnv, java_applet_obj, &err_msg);
     if (!js_obj) {
         if (err_msg) {
             JS_ReportError(cx, err_msg);

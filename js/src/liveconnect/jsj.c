@@ -684,7 +684,8 @@ JSJ_AttachCurrentThreadToJava(JSJavaVM *jsjava_vm, const char *name, JNIEnv **ja
 
     /* Try to attach a Java thread to the current native thread */
     java_vm = jsjava_vm->java_vm;
-    jEnv = JSJ_callbacks->attach_current_thread(java_vm);
+    if (JSJ_callbacks && JSJ_callbacks->attach_current_thread)
+        jEnv = JSJ_callbacks->attach_current_thread(java_vm);
     if (jEnv == NULL) 
         return NULL;
 
@@ -738,7 +739,8 @@ jsj_MapJavaThreadToJSJavaThreadState(JNIEnv *jEnv, char **errp)
        Invoke the callback to create one on-the-fly. */
 
     /* First, figure out which Java VM is calling us */
-    java_vm = JSJ_callbacks->get_java_vm(jEnv);
+    if (JSJ_callbacks && JSJ_callbacks->get_java_vm)
+        java_vm = JSJ_callbacks->get_java_vm(jEnv);
     if (java_vm == NULL)
         return NULL;
 

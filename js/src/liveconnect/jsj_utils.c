@@ -452,8 +452,8 @@ jsj_EnterJava(JSContext *cx, JNIEnv **envp)
     err_msg = NULL;
     
     jsj_env = the_java_jsj_env;
-    if (jsj_env == NULL)
-            jsj_env = JSJ_callbacks->map_js_context_to_jsj_thread(cx, &err_msg);
+    if (jsj_env == NULL && JSJ_callbacks && JSJ_callbacks->map_js_context_to_jsj_thread)
+        jsj_env = JSJ_callbacks->map_js_context_to_jsj_thread(cx, &err_msg);
     if (!jsj_env) {
         if (err_msg) {
             JS_ReportError(cx, err_msg);
