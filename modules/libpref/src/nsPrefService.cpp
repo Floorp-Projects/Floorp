@@ -36,7 +36,6 @@ class nsIFileSpec;	// needed for prefapi_private_data.h inclusion
 
 // supporting lock files
 #include "nsDirectoryServiceDefs.h"
-#include "plstr.h"
 #include "prmem.h"
 #include "prprf.h"
 
@@ -44,7 +43,7 @@ class nsIFileSpec;	// needed for prefapi_private_data.h inclusion
 #include "nsIJSRuntimeService.h"
 #include "nsAppDirectoryServiceDefs.h"
 
-// lose these if possible (supporting _nsIFileToFileSpec)
+// lose these if possible (supporting nsIFileToFileSpec)
 #include "nsIFileSpec.h"
 #include "nsFileStream.h"
 
@@ -54,7 +53,7 @@ class nsIFileSpec;	// needed for prefapi_private_data.h inclusion
 #define INITIAL_MAX_DEFAULT_PREF_FILES 10
 
 // Prototypes
-static nsresult _nsIFileToFileSpec(nsIFile* inFile, nsIFileSpec **aFileSpec);
+static nsresult nsIFileToFileSpec(nsIFile* inFile, nsIFileSpec **aFileSpec);
 static PRBool   verifyFileHash(char* buf, long buflen);
 static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal, PRBool aVerifyHash,
                         PRBool aIsGlobalContext, PRBool aSkipFirstLine);
@@ -83,16 +82,6 @@ nsPrefService::nsPrefService()
 nsPrefService::~nsPrefService()
 {
   PREF_Cleanup();
-
-  if (gLockInfoRead) {
-    if (gLockFileName) {
-      PR_DELETE(gLockFileName);
-    }
-    if (gLockVendor) {
-      PR_DELETE(gLockVendor);
-    }
-    gLockInfoRead = PR_FALSE;
-  }
 }
 
 
@@ -108,6 +97,7 @@ NS_INTERFACE_MAP_BEGIN(nsPrefService)
     NS_INTERFACE_MAP_ENTRY(nsIPrefService)
     NS_INTERFACE_MAP_ENTRY(nsIObserver)
     NS_INTERFACE_MAP_ENTRY(nsIPrefBranch)
+    NS_INTERFACE_MAP_ENTRY(nsIPrefBranchInternal)
 NS_INTERFACE_MAP_END
 
 
@@ -115,7 +105,7 @@ NS_INTERFACE_MAP_END
  * nsIPrefService Implementation
  */
 
-NS_IMETHODIMP nsPrefService::Init()
+nsresult nsPrefService::Init()
 {
   nsresult rv = NS_OK;
 
@@ -158,56 +148,7 @@ NS_IMETHODIMP nsPrefService::Observe(nsISupports *aSubject, const PRUnichar *aTo
 
 NS_IMETHODIMP nsPrefService::ReadConfigFile()
 {
-  nsresult rv = NS_OK;
-  PRUint32 fileNameLen;
-  PRUint32 vendorLen;
-
-  gLockFileName = nsnull;
-  gLockVendor = nsnull;
-
-  if (gLockInfoRead)
-    return rv;
-
-  gLockInfoRead = PR_TRUE;
-
-  rv = mRootBranch->GetCharPref("general.config.filename", &gLockFileName);
-  if (NS_SUCCEEDED(rv) && (gLockFileName)) {
-#ifdef NS_DEBUG
-    printf("\ngLockFileName %s \n", gLockFileName);
-#endif
-    rv = mRootBranch->GetCharPref("general.config.vendor", &gLockVendor);
-    if (NS_SUCCEEDED(rv) && (gLockVendor)) {
-      // if we got here, we have a lockfile pref and a vendor pref
-#ifdef NS_DEBUG
-      printf("\ngLockVendor %s \n", gLockVendor);
-#endif
-      fileNameLen = PL_strlen(gLockFileName);
-      vendorLen = PL_strlen(gLockVendor);
-      if (PL_strncmp(gLockFileName, gLockVendor, fileNameLen -4) != 0) {
-        // configuration filename and vendor name do not match
-        rv = NS_ERROR_FAILURE;
-      } else {
-        nsCOMPtr<nsIFile> lockFile; 
-
-        rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, getter_AddRefs(lockFile));
-        if (NS_SUCCEEDED(rv)) {
-#ifdef XP_MAC
-          rv = lockFile->Append("Essential Files");
-#endif
-          rv = lockFile->Append(gLockFileName);
-          rv = openPrefFile(lockFile, PR_TRUE, PR_TRUE, PR_FALSE, PR_FALSE);
-        }
-      }
-    } else {
-      // No vendor name specified, hence cannot verify it
-      rv = NS_ERROR_FAILURE;
-    }
-  } else {
-    // config file is not specified, hence no need to read it.
-    rv = NS_OK;
-  }
-
-  return rv;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsPrefService::ReadUserPrefs(nsIFile *aFile)
@@ -284,6 +225,30 @@ NS_IMETHODIMP nsPrefService::GetDefaultBranch(const char *aPrefRoot, nsIPrefBran
 
 
 #pragma mark -
+// Forward these methods through the nsIPrefBranchInternal headers
+
+NS_IMETHODIMP nsPrefService::AddObserver(const char *aDomain, nsIObserver *aObserver)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIPrefBranchInternal> prefBranch = do_QueryInterface(mRootBranch, &rv);
+  if (NS_SUCCEEDED(rv))
+    rv = prefBranch->AddObserver(aDomain, aObserver);
+  return rv;
+}
+
+NS_IMETHODIMP nsPrefService::RemoveObserver(const char *aDomain, nsIObserver *aObserver)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIPrefBranchInternal> prefBranch = do_QueryInterface(mRootBranch, &rv);
+  if (NS_SUCCEEDED(rv))
+    rv = prefBranch->RemoveObserver(aDomain, aObserver);
+  return rv;
+}
+
+
+#pragma mark -
 
 nsresult nsPrefService::useDefaultPrefFile()
 {
@@ -336,7 +301,9 @@ static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal, PRBool aVerif
   nsCOMPtr<nsIFileSpec> fileSpec;
   nsresult rv;
 
-  rv = _nsIFileToFileSpec(aFile, getter_AddRefs(fileSpec));
+  JS_BeginRequest(gMochaContext);
+  rv = nsIFileToFileSpec(aFile, getter_AddRefs(fileSpec));
+  JS_EndRequest(gMochaContext);
   if (NS_FAILED(rv))
     return rv;        
 
@@ -409,7 +376,7 @@ static nsresult savePrefFile(nsIFile* aFile)
     return NS_OK;
 
   // TODO: Convert the rest of this code to nsIFile and avoid this conversion to nsIFileSpec
-  rv = _nsIFileToFileSpec(aFile, getter_AddRefs(fileSpec));
+  rv = nsIFileToFileSpec(aFile, getter_AddRefs(fileSpec));
   if (NS_FAILED(rv))
     return rv;        
 
@@ -446,7 +413,7 @@ static nsresult savePrefFile(nsIFile* aFile)
 // So discouraged is the use of nsIFileSpec, nobody wanted to have this routine be
 // public - It might lead to continued use of nsIFileSpec. Right now, this code has
 // such a need for it, here it is. Let's stop having to use it though.
-static nsresult _nsIFileToFileSpec(nsIFile* inFile, nsIFileSpec **aFileSpec)
+static nsresult nsIFileToFileSpec(nsIFile* inFile, nsIFileSpec **aFileSpec)
 //----------------------------------------------------------------------------------------
 {
    nsresult rv;
@@ -579,7 +546,7 @@ extern "C" JSBool pref_InitInitialObjects()
   rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR, getter_AddRefs(aFile));
   if (NS_FAILED(rv))
     return JS_FALSE;
-  rv = _nsIFileToFileSpec(aFile, getter_AddRefs(defaultPrefDir));
+  rv = nsIFileToFileSpec(aFile, getter_AddRefs(defaultPrefDir));
   if (NS_FAILED(rv))
     return JS_FALSE;
 

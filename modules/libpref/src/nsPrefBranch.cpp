@@ -286,7 +286,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
   }
 
   if (aType.Equals(NS_GET_IID(nsIPrefLocalizedString))) {
-    nsCOMPtr<nsIPrefLocalizedString> theString(do_CreateInstance(NS_SUPPORTS_PREFLOCALIZEDSTRING_CONTRACTID, &rv));
+    nsCOMPtr<nsIPrefLocalizedString> theString(do_CreateInstance(NS_PREFLOCALIZEDSTRING_CONTRACTID, &rv));
 
     if (NS_SUCCEEDED(rv)) {
       rv = theString->SetData(NS_ConvertASCIItoUCS2(utf8String).get());
@@ -626,9 +626,8 @@ nsresult nsPrefBranch::QueryObserver(const char *aPrefName)
 
 #pragma mark -
 
-NS_IMPL_ISUPPORTS1(nsPrefLocalizedString, nsIPrefLocalizedString)
-
 nsPrefLocalizedString::nsPrefLocalizedString()
+: mUnicodeString(nsnull)
 {
   nsresult rv;
 
@@ -640,3 +639,26 @@ nsPrefLocalizedString::nsPrefLocalizedString()
 nsPrefLocalizedString::~nsPrefLocalizedString()
 {
 }
+
+
+/*
+ * nsISupports Implementation
+ */
+
+NS_IMPL_THREADSAFE_ADDREF(nsPrefLocalizedString)
+NS_IMPL_THREADSAFE_RELEASE(nsPrefLocalizedString)
+
+NS_INTERFACE_MAP_BEGIN(nsPrefLocalizedString)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPrefLocalizedString)
+    NS_INTERFACE_MAP_ENTRY(nsIPrefLocalizedString)
+    NS_INTERFACE_MAP_ENTRY(nsISupportsWString)
+NS_INTERFACE_MAP_END
+
+nsresult nsPrefLocalizedString::Init()
+{
+  nsresult rv;
+  mUnicodeString = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, &rv);
+
+  return rv;
+}
+
