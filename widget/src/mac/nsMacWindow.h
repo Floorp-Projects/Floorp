@@ -87,6 +87,8 @@ public:
 
 		PRBool 									PointInWidget(Point aThePoint);
 
+		WindowPtr					GetWindowPtr()		{return mWindowPtr;}
+
 protected:
 	PRBool							mWindowMadeHere;	// true if we created the window
 	auto_ptr<nsMacEventHandler>		mMacEventHandler;
