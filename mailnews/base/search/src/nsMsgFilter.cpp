@@ -59,6 +59,7 @@
 #include "nsIImportService.h"
 #include "nsISupportsObsolete.h"
 #include "nsIOutputStream.h"
+#include "nsEscape.h"
 
 static const char *kImapPrefix = "//imap:";
 
@@ -256,6 +257,11 @@ nsMsgFilter::GetActionTargetFolderUri(char** aResult)
     return NS_OK;
 }
 
+#define LOG_ENTRY_START_TAG "<pre>\n"
+#define LOG_ENTRY_START_TAG_LEN (strlen(LOG_ENTRY_START_TAG))
+#define LOG_ENTRY_END_TAG "</pre>\n"
+#define LOG_ENTRY_END_TAG_LEN (strlen(LOG_ENTRY_END_TAG))
+
 NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgDBHdr *msgHdr)
 {
     nsCOMPtr <nsIOutputStream> logStream;
@@ -284,8 +290,7 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgDBHdr *msgHdr)
     nsCString buffer;
     buffer.SetCapacity(512);
 
-    buffer = "<pre>\n";
-    buffer += "Applied filter \"";
+    buffer = "Applied filter \"";
     buffer +=  NS_ConvertUCS2toUTF8(filterName).get();
     buffer +=  "\" to message from ";
     buffer +=  (const char*)author;
@@ -313,20 +318,30 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgDBHdr *msgHdr)
       buffer += (const char*)msgId;
       buffer += "\n";
     }
-    buffer += "</pre>\n";
-
+    
     PRUint32 writeCount;
-    rv = logStream->Write(buffer.get(), buffer.Length(), &writeCount);
+
+    rv = logStream->Write(LOG_ENTRY_START_TAG, LOG_ENTRY_START_TAG_LEN, &writeCount);
     NS_ENSURE_SUCCESS(rv,rv);
+    NS_ASSERTION(writeCount == LOG_ENTRY_START_TAG_LEN, "failed to write out start log tag");
+
+    char *escapedBuffer = nsEscapeHTML(buffer.get());
+    if (!escapedBuffer)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    PRUint32 escapedBufferLen = strlen(escapedBuffer);
+    rv = logStream->Write(escapedBuffer, escapedBufferLen, &writeCount);
+    PR_FREEIF(escapedBuffer);
+    NS_ENSURE_SUCCESS(rv,rv);
+    NS_ASSERTION(writeCount == escapedBufferLen, "failed to write out log hit");
  
+    rv = logStream->Write(LOG_ENTRY_END_TAG, LOG_ENTRY_END_TAG_LEN, &writeCount);
+    NS_ENSURE_SUCCESS(rv,rv);
+    NS_ASSERTION(writeCount == LOG_ENTRY_END_TAG_LEN, "failed to write out end log tag");
+
     // flush to disk after ever log hit  
     rv = logStream->Flush();
     NS_ENSURE_SUCCESS(rv,rv);
-
-    NS_ASSERTION(writeCount == buffer.Length(), "did write out full log hit");
-    if (writeCount != buffer.Length())
-     return NS_ERROR_FAILURE;
-
     return NS_OK;
 }
 
