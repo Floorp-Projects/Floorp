@@ -33,7 +33,7 @@ REQUIRES	= chrome netlib rdf rdfutil raptor xpcom
 
 CPPSRCS		= \
 		nsChromeRegistry.cpp \
-		nsChromeEntry.cpp \
+		nsChromeUIDataSource.cpp \
 		nsChromeProtocolHandler.cpp \
 		$(NULL)
 

@@ -109,6 +109,8 @@ protected:
   nsCAutoString mInstallRoot;
 
   nsCOMPtr<nsIRDFCompositeDataSource> mChromeDataSource;
+  nsCOMPtr<nsIRDFDataSource> mUIDataSource;
+
   nsSupportsHashtable* mDataSourceTable;
   nsIRDFService* mRDFService;
 

@@ -27,6 +27,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsIChromeRegistry.h"
 #include "nsChromeRegistry.h"
+#include "nsChromeUIDataSource.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFObserver.h"
 #include "nsIRDFRemoteDataSource.h"
@@ -201,7 +202,12 @@ nsChromeRegistry::nsChromeRegistry()
 nsChromeRegistry::~nsChromeRegistry()
 {
   delete mDataSourceTable;
-       
+   
+  if (mUIDataSource) {
+    mRDFService->UnregisterDataSource(mUIDataSource);
+    mUIDataSource = nsnull;
+  }
+
   if (mRDFService) {
     nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService);
     mRDFService = nsnull;
@@ -1360,6 +1366,14 @@ nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
                                             getter_AddRefs(mChromeDataSource));
     if (NS_FAILED(rv))
       return rv;
+
+    // Also create and hold on to our UI data source.
+    if (mUIDataSource) {
+      mRDFService->UnregisterDataSource(mUIDataSource);
+      mUIDataSource = nsnull;
+    }
+    NS_NewChromeUIDataSource(mChromeDataSource, getter_AddRefs(mUIDataSource));
+    mRDFService->RegisterDataSource(mUIDataSource, PR_FALSE);
   }
   
   if (aUseProfile) {
