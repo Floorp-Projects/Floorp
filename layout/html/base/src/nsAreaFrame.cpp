@@ -106,7 +106,7 @@ nsAreaFrame::Init(nsIPresContext&  aPresContext,
 NS_IMETHODIMP
 nsAreaFrame::Destroy(nsIPresContext& aPresContext)
 {
-  mAbsoluteContainer.DestroyFrames(aPresContext);
+  mAbsoluteContainer.DestroyFrames(this, aPresContext);
   return nsBlockFrame::Destroy(aPresContext);
 }
 
@@ -118,9 +118,65 @@ nsAreaFrame::SetInitialChildList(nsIPresContext& aPresContext,
   nsresult  rv;
 
   if (nsLayoutAtoms::absoluteList == aListName) {
-    rv = mAbsoluteContainer.SetInitialChildList(aPresContext, aListName, aChildList);
+    rv = mAbsoluteContainer.SetInitialChildList(this, aPresContext, aListName, aChildList);
   } else {
     rv = nsBlockFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsAreaFrame::AppendFrames(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aFrameList)
+{
+  nsresult  rv;
+
+  if (nsLayoutAtoms::absoluteList == aListName) {
+    rv = mAbsoluteContainer.AppendFrames(this, aPresContext, aPresShell, aListName,
+                                         aFrameList);
+  } else {
+    rv = nsBlockFrame::AppendFrames(aPresContext, aPresShell, aListName,
+                                    aFrameList);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsAreaFrame::InsertFrames(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aPrevFrame,
+                          nsIFrame*       aFrameList)
+{
+  nsresult  rv;
+
+  if (nsLayoutAtoms::absoluteList == aListName) {
+    rv = mAbsoluteContainer.InsertFrames(this, aPresContext, aPresShell, aListName,
+                                         aPrevFrame, aFrameList);
+  } else {
+    rv = nsBlockFrame::InsertFrames(aPresContext, aPresShell, aListName,
+                                    aPrevFrame, aFrameList);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsAreaFrame::RemoveFrame(nsIPresContext& aPresContext,
+                         nsIPresShell&   aPresShell,
+                         nsIAtom*        aListName,
+                         nsIFrame*       aOldFrame)
+{
+  nsresult  rv;
+
+  if (nsLayoutAtoms::absoluteList == aListName) {
+    rv = mAbsoluteContainer.RemoveFrame(this, aPresContext, aPresShell, aListName, aOldFrame);
+  } else {
+    rv = nsBlockFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
   }
 
   return rv;
@@ -148,7 +204,7 @@ nsAreaFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
 {
   NS_PRECONDITION(nsnull != aFirstChild, "null OUT parameter pointer");
   if (aListName == nsLayoutAtoms::absoluteList) {
-    return mAbsoluteContainer.FirstChild(aListName, aFirstChild);
+    return mAbsoluteContainer.FirstChild(this, aListName, aFirstChild);
   }
 
   return nsBlockFrame::FirstChild(aListName, aFirstChild);
@@ -217,7 +273,7 @@ nsAreaFrame::Paint(nsIPresContext&      aPresContext,
 NS_IMETHODIMP
 nsAreaFrame::GetPositionedInfo(nscoord& aXMost, nscoord& aYMost) const
 {
-  nsresult  rv = mAbsoluteContainer.GetPositionedInfo(aXMost, aYMost);
+  nsresult  rv = mAbsoluteContainer.GetPositionedInfo(this, aXMost, aYMost);
 
   // If we have child frames that stick outside of our box, and they should
   // be visible, then include them too so the total size is correct
@@ -257,7 +313,7 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
     // Give the absolute positioning code a chance to handle it
     PRBool  handled;
     
-    mAbsoluteContainer.IncrementalReflow(aPresContext, aReflowState, handled);
+    mAbsoluteContainer.IncrementalReflow(this, aPresContext, aReflowState, handled);
 
     // If the incremental reflow command was handled by the absolute positioning
     // code, then we're all done
@@ -276,7 +332,7 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
 
   // If we have a space manager, then set it in the reflow state
   if (nsnull != mSpaceManager) {
-    // Modify the reflow state and set the space manager
+    // Modify the existing reflow state
     nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
     reflowState.mSpaceManager = mSpaceManager;
 
@@ -288,9 +344,10 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
   rv = nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   // Let the absolutely positioned container reflow any absolutely positioned
-  // child frames that need to be reflowed
+  // child frames that need to be reflowed, e.g., elements with a percentage
+  // based width/height
   if (NS_SUCCEEDED(rv)) {
-    rv = mAbsoluteContainer.Reflow(aPresContext, aReflowState);
+    rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState);
   }
 
   if (mFlags & NS_AREA_WRAP_SIZE) {
