@@ -224,11 +224,24 @@ httpParseRequest(HTTP *http, App *app, char *url)
 	app->http(app, http->input);
 }
 
+static void
+httpDefaultType(HTTP *http, App *app)
+{
+	unsigned short	c;
+
+	do
+	{
+		c = getByte(http->input);
+	}
+	while (c != 256);
+	mark(http->input, -1);
+	app->httpBody(app, http->input);
+}
+
 void
 httpParseStream(HTTP *http, App *app, unsigned char *url)
 {
 	const unsigned char	*begin;
-	unsigned short		c;
 	unsigned char		*contentType;
 
 	begin = current(http->input);
@@ -251,20 +264,14 @@ httpParseStream(HTTP *http, App *app, unsigned char *url)
 			}
 			else
 			{
-				do
-				{
-					c = getByte(http->input);
-				}
-				while (c != 256);
-				mark(http->input, -1);
-				app->httpBody(app, http->input);
+				httpDefaultType(http, app);
 			}
 			free(contentType);
 		}
 	}
 	else
 	{
-		fprintf(stderr, "no Content-Type: %s\n", url);
+		httpDefaultType(http, app);
 	}
 }
 
@@ -281,41 +288,82 @@ httpRead(HTTP *http, App *app, int sock, unsigned char *url)
 	httpParseStream(http, app, url);
 }
 
+static int
+countOrCopy(char **p, char *str)
+{
+	char	*orig;
+	char	*q;
+
+	orig = str;
+	if (*p)
+	{
+		q = *p;
+		while ((*q++ = *str++));
+		*p = --q;
+	}
+	else
+	{
+		while (*str++);
+	}
+
+	return --str - orig;
+}
+
 static void
 httpGetObject(HTTP *http, App *app, int sock, URL *url, unsigned char **headers)
 {
 	char		*get;
 	unsigned char	**h;
 	char		*httpStr;
+	char		*p;
+	int		len;
+	int		i;
+	char		*buf;
 
 	get = "GET ";
 	httpStr = " HTTP/1.0\n";
 
-	send(sock, get, strlen(get), 0);
-	if (url->path)
+	len = 0;
+	p = NULL;
+	buf = NULL;
+	for (i = 0; i < 2; i++)
 	{
-		send(sock, url->path, strlen((char *) url->path), 0);
-	}
-	if (url->params)
-	{
-		send(sock, url->params, strlen((char *) url->params), 0);
-	}
-	if (url->query)
-	{
-		send(sock, url->query, strlen((char *) url->query), 0);
-	}
-	send(sock, httpStr, strlen(httpStr), 0);
-	h = headers;
-	if (h)
-	{
-		while (*h)
+		len += countOrCopy(&p, get);
+		if (url->path)
 		{
-			send(sock, *h, strlen((char *) *h), 0);
-			send(sock, "\n", 1, 0);
-			h++;
+			len += countOrCopy(&p, (char *) url->path);
+		}
+		if (url->params)
+		{
+			len += countOrCopy(&p, (char *) url->params);
+		}
+		if (url->query)
+		{
+			len += countOrCopy(&p, (char *) url->query);
+		}
+		len += countOrCopy(&p, httpStr);
+		h = headers;
+		if (h)
+		{
+			while (*h)
+			{
+				len += countOrCopy(&p, (char *) *h);
+				len += countOrCopy(&p, "\n");
+				h++;
+			}
+		}
+		len += countOrCopy(&p, "\n");
+		if (!buf)
+		{
+			buf = malloc(len);
+			if (!buf)
+			{
+				return;
+			}
+			p = buf;
 		}
 	}
-	send(sock, "\n", 1, 0);
+	send(sock, buf, len, 0);
 
 	httpRead(http, app, sock, url->url);
 }
