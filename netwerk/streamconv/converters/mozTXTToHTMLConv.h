@@ -24,7 +24,7 @@
  * License for the specific language governing rights and limitations
  * under the License.
  * 
- * The Original Code is the Text to HTML converter code.
+ * The Original Code is the Mozilla Text to HTML converter code.
  * 
  * The Initial Developer of the Original Code is Ben Bucksch
  * <http://www.bucksch.org>. Portions created by Ben Bucksch are Copyright
