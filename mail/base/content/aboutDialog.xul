@@ -47,12 +47,12 @@
 
 <dialog xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        id="aboutdlg"
         buttons="accept"
         onload="onLoad();"
         title="&aboutDialog.title;"
-        width="300" height="315"> 
-    
+        width="306" height="381"
+        style="padding: 0px;"> 
+
     <script type="application/x-javascript">
       <![CDATA[
         function onLoad() {
@@ -62,25 +62,23 @@
           hidversionField.value = brandShortNameEl.firstChild.nodeValue + ' ' + navigator.vendorSub + ' (' + navigator.productSub + ')';
           versionField.value = hidversionField.value;
           versionField.width = hidversionField.width;
-          var userAgentField = document.getElementById("userAgent");
-          userAgentField.value = navigator.userAgent;
         }
       ]]>
     </script>
 
-    <vbox flex="1">
+    <vbox align="center" flex="1">
       <image src="chrome://messenger/content/about-thunderbird.png"/>
-      <vbox style="padding: 8px 10px 10px 8px;" align="center" flex="1">
-        <separator class="thin"/>
-        <hbox>
+
+      <hbox>
+        <vbox>
           <label id="hidversionField" style="padding: 0px; visibility: hidden; font-weight: bold;"/>
           <textbox id="versionField" readonly="true" class="plain" style="padding-left: 6px !important; font-weight: bold;" tabindex="2"/>
-        </hbox>
-        <spacer flex="1"/>
-        <textbox id="userAgent" multiline="true" readonly="true" cols="60"/>
-        <html:a href="&copyrightLink;" style="display: block; color: blue; text-decoration: underline;" tabindex="3">&copyright;</html:a>
-        <spacer flex="1"/>
-      </vbox>
+        </vbox>
+      </hbox>
+
+      <separator class="thin"/>
+
+      <html:a href="&copyrightLink;" style="display: block; color: blue; text-decoration: underline;" tabindex="3">&copyright;</html:a>
     </vbox>
     <separator class="groove"/>
     
