@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Utils.pm,v 1.3 1998/07/23 05:25:09 leif Exp $
+# $Id: Utils.pm,v 1.4 1998/07/29 08:29:07 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -26,12 +26,26 @@
 
 package Mozilla::LDAP::Utils;
 
+use Mozilla::LDAP::API qw(:constant);
+use vars qw(@ISA %EXPORT_TAGS);
+
 require Exporter;
-require Mozilla::LDAP::API;
 
 @ISA = qw(Exporter);
-@EXPORT_OK = qw(normalizeDN printEntry printentry encodeBase64
-		decodeBase64);
+%EXPORT_TAGS = (
+		all => [qw(normalizeDN
+			   isUrl
+			   printEntry
+			   printentry
+			   encodeBase64
+			   decodeBase64
+			   str2Scope
+			   ldapArgs)]
+		);
+
+
+# Add Everything in %EXPORT_TAGS to @EXPORT_OK
+Exporter::export_ok_tags('all');
 
 
 #############################################################################
@@ -54,20 +68,29 @@ sub normalizeDN
 
 
 #############################################################################
+# Checks if a string is a properly formed LDAP URL.
+#
+sub isURL
+{
+  return ldap_is_ldap_url($_[0]);
+}
+
+
+#############################################################################
 # Print an entry, in LDIF format. This is sort of obsolete, we encourage
 # you to use the :;LDAP::LDIF class instead.
 #
 sub printEntry
 {
-  my ($self, $entry) = @_;
+  my $entry = $_[0];
   my $attr;
   local $_;
 
   print "dn: ", $entry->{dn},"\n";
   foreach $attr (@{$entry->{_oc_order_}})
     {
-      next if ($attr eq "_oc_order_");
-      next if $entry->{"_${attr}_deleted"};
+      next if ($attr =~ /^_.+_$/);
+      next if $entry->{"_${attr}_deleted_"};
       foreach (@{$entry->{$attr}})
 	{
 	  print "$attr: $_\n";
@@ -130,4 +153,76 @@ sub decodeBase64
     }
 
   return $res;
+}
+
+
+#############################################################################
+# Convert a "human" readable string to an LDAP scope value
+#
+sub str2Scope
+{
+  my $str = $_[0];
+
+  return $str if ($str =~ /^[0-9]+$/);
+
+  if ($str =~ /^sub/i)
+    {
+      return LDAP_SCOPE_SUBTREE;
+    }
+  elsif ($str =~ /^base/i)
+    {
+      return LDAP_SCOPE_BASE;
+    }
+  elsif ($str =~ /^one/i)
+    {
+      return LDAP_SCOPE_ONELEVEL;
+    }
+
+  # Default...
+  return LDAP_SCOPE_SUBTREE;
+}
+
+
+#################################################################################
+# Ask for a password, without displaying it on the TTY. This is very non-
+# portable, we need a better solution (using the term package perhaps?).
+#
+sub askPassword
+{
+  system('/bin/stty -echo');
+  chop($_ = <STDIN>);
+  system('/bin/stty echo');
+  print "\n";
+
+  return $_;
+}
+
+
+#################################################################################
+# Handle some standard LDAP options, and construct a nice little structure that
+# we can use later on.
+#
+sub ldapArgs
+{
+  my($bind, $base) = @_;
+  my(%ld);
+
+  $main::opt_v = $main::opt_n if $main::opt_n;
+  $main::opt_p = LDAPS_PORT unless ($main::opt_p || ($main::opt_P eq ""));
+
+  $ld{host} = $main::opt_h || "ldap";
+  $ld{port} = $main::opt_p || LDAP_PORT;
+  $ld{root} = $main::opt_b || $base || $ENV{'LDAP_BASEDN'};
+  $ld{bind} = $main::opt_D || $bind || "";
+  $ld{pswd} = $main::opt_w || "";
+  $ld{cert} = $main::opt_P || "";
+  $ld{scope} = $main::opt_s || LDAP_SCOPE_SUBTREE;
+
+  if (($ld{bind} ne "") && ($ld{pswd} eq ""))
+    {
+      print "LDAP password: ";
+      $ld{pswd} = askPassword();
+    }
+
+  return %ld;
 }
