@@ -346,7 +346,9 @@ LogItemStruct * makeLogItemStruct(NPAPI_Action action,
         memcpy(plis->arg3.pData, (LPVOID)&szTarget[0], plis->arg3.iLength);
       }
 
-      makeAbbreviatedString(szBuf, sizeof(szBuf), dw5, strlen((LPSTR)dw5), iWrap);
+      
+	  // strlen not protected from 0!
+	  makeAbbreviatedString(szBuf, sizeof(szBuf), dw5, strlen((LPSTR)dw5), iWrap);
       plis->arg5.iLength = (int)dw4 + 1;
       plis->arg5.pData = new char[plis->arg5.iLength];
       memcpy(plis->arg5.pData, (LPVOID)&szBuf[0], plis->arg5.iLength);
@@ -370,6 +372,7 @@ LogItemStruct * makeLogItemStruct(NPAPI_Action action,
         memcpy(plis->arg3.pData, (LPVOID)&szTarget[0], plis->arg3.iLength);
       }
 
+	  // strlen not protected from 0!
       makeAbbreviatedString(szBuf, sizeof(szBuf), dw5, strlen((LPSTR)dw5), iWrap);
       plis->arg5.iLength = (int)dw4 + 1;
       plis->arg5.pData = new char[plis->arg5.iLength];
@@ -386,6 +389,7 @@ LogItemStruct * makeLogItemStruct(NPAPI_Action action,
         memcpy(plis->arg2.pData, (LPVOID)dw2, plis->arg2.iLength);
       }
 
+	  // strlen not protected from 0!
       makeAbbreviatedString(szTarget, sizeof(szTarget), dw3, strlen((LPSTR)dw3), iWrap);
       plis->arg3.iLength = strlen(szTarget) + 1;
       plis->arg3.pData = new char[plis->arg3.iLength];
@@ -403,6 +407,7 @@ LogItemStruct * makeLogItemStruct(NPAPI_Action action,
       break;
     case action_npn_write:
     {
+	  // strlen not protected from 0!
       makeAbbreviatedString(szBuf, sizeof(szBuf), dw4, strlen((LPSTR)dw4), iWrap);
       plis->arg4.iLength = strlen(szBuf) + 1;
       plis->arg4.pData = new char[plis->arg4.iLength];
@@ -440,6 +445,7 @@ LogItemStruct * makeLogItemStruct(NPAPI_Action action,
       if(((NPPVariable)dw2 == NPPVpluginNameString) || 
          ((NPPVariable)dw2 == NPPVpluginDescriptionString))
       {
+        // strlen not protected from 0!
         makeAbbreviatedString(szBuf, sizeof(szBuf), dw3, strlen((char *)dw3), iWrap);
         plis->arg3.iLength = strlen(szBuf) + 1;
         plis->arg3.pData = new char[plis->arg3.iLength];
@@ -478,6 +484,7 @@ LogItemStruct * makeLogItemStruct(NPAPI_Action action,
     case action_np_shutdown:
       break;
     case action_npp_new:
+      // strlen not protected from 0!
       plis->arg1.iLength = strlen((LPSTR)dw1) + 1;
       plis->arg1.pData = new char[plis->arg1.iLength];
       memcpy(plis->arg1.pData, (LPVOID)dw1, plis->arg1.iLength);
@@ -493,6 +500,7 @@ LogItemStruct * makeLogItemStruct(NPAPI_Action action,
       memcpy(plis->arg2.pData, (LPVOID)dw2, plis->arg2.iLength);
       break;
     case action_npp_new_stream:
+      // strlen not protected from 0!
       plis->arg2.iLength = strlen((LPSTR)dw2) + 1;
       plis->arg2.pData = new char[plis->arg2.iLength];
       memcpy(plis->arg2.pData, (LPVOID)dw2, plis->arg2.iLength);
@@ -504,10 +512,14 @@ LogItemStruct * makeLogItemStruct(NPAPI_Action action,
     case action_npp_destroy_stream:
       break;
     case action_npp_stream_as_file:
-      plis->arg3.iLength = strlen((LPSTR)dw3) + 1;
+    {
+      // strlen not protected from 0!
+      char* str = dw3 ? (LPSTR)dw3 : "";
+      plis->arg3.iLength = strlen(str) + 1;
       plis->arg3.pData = new char[plis->arg3.iLength];
-      memcpy(plis->arg3.pData, (LPVOID)dw3, plis->arg3.iLength);
+      memcpy(plis->arg3.pData, (LPVOID)str, plis->arg3.iLength);
       break;
+    }
     case action_npp_write_ready:
       break;
     case action_npp_write:
@@ -526,6 +538,7 @@ LogItemStruct * makeLogItemStruct(NPAPI_Action action,
     case action_npp_handle_event:
       break;
     case action_npp_url_notify:
+      // strlen not protected from 0!
       plis->arg2.iLength = strlen((LPSTR)dw2) + 1;
       plis->arg2.pData = new char[plis->arg2.iLength];
       memcpy(plis->arg2.pData, (LPVOID)dw2, plis->arg2.iLength);
