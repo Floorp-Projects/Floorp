@@ -1,4 +1,4 @@
-# sh
+#! /bin/sh
 #
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -42,6 +42,7 @@
 #
 # Send comments, improvements, bugs to Steve Lamm (slamm@netscape.com).
 
+# Note: $_AUTOCONF_TOOLS_DIR must be defined in the script that includes this.
 
 ac_add_options() {
   for _opt
@@ -73,9 +74,9 @@ ac_echo_options() {
   done
 }
 
-#
-# Define load the options
-#
+# Main
+#--------------------------------------------------
+_topsrcdir=`dirname $0`
 ac_options=
 mozconfig_ac_options=
 
@@ -84,15 +85,10 @@ for _opt
 do
   # Escape shell characters, space, tab, dollar, quote, backslash.
   _opt=`echo $_opt | sed -e 's/\([\ \	\$\"\\]\)/\\\\\1/g;'`
-
   ac_options="$ac_options \"$_opt\""
 done
 
-# Call find-mozconfig.sh 
-#   In params:   $MOZCONFIG $HOME (old:$MOZ_MYCONFIG)
-_topsrcdir=`dirname $0`
-MOZCONFIG=`$_topsrcdir/build/autoconf/find-mozconfig.sh`
-
+MOZCONFIG=`$_AUTOCONF_TOOLS_DIR/mozconfig-find $_topsrcdir`
 if [ "$MOZCONFIG" ]; then
   . $MOZCONFIG
   ac_echo_options 1>&2
