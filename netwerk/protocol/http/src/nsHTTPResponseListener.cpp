@@ -303,6 +303,9 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
 
     while (!mHeadersDone) 
     {
+        if (i_Length == 0) 
+            return NS_OK;
+
         if (!mResponse) 
         {
             mResponse = new nsHTTPResponse() ;
