@@ -1023,20 +1023,11 @@ nsDocShell::GetPresContext(nsIPresContext ** aPresContext)
     NS_ENSURE_ARG_POINTER(aPresContext);
     *aPresContext = nsnull;
 
-    /* We want to get the prescontext for the "most previous"
-       content viewer, because this is the one that will actually
-       be shown onscreen and is hooked up for events. */
-    nsCOMPtr<nsIContentViewer> viewer = mContentViewer;
-    while (viewer) {
-        nsCOMPtr<nsIContentViewer> prevViewer;
-        viewer->GetPreviousViewer(getter_AddRefs(prevViewer));
-        if (prevViewer)
-            viewer = prevViewer;
-        else {
-            nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(viewer));
-            if (docv)
-                rv = docv->GetPresContext(*aPresContext);
-            break;
+    if (mContentViewer) {
+        nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(mContentViewer));
+
+        if (docv) {
+            rv = docv->GetPresContext(*aPresContext);
         }
     }
 
