@@ -67,6 +67,9 @@ static void progress_change_cb   (GtkMozEmbed *embed, gint cur, gint max,
 				  TestGtkBrowser *browser);
 static void link_message_cb      (GtkMozEmbed *embed, TestGtkBrowser *browser);
 static void js_status_cb         (GtkMozEmbed *embed, TestGtkBrowser *browser);
+static void new_window_cb        (GtkMozEmbed *embed, GtkMozEmbed **retval, guint chromemask,
+				  TestGtkBrowser *browser);
+static void visibility_cb        (GtkMozEmbed *embed, gboolean visibility, TestGtkBrowser *browser);
 
 // some utility functions
 static void update_status_bar_text  (TestGtkBrowser *browser);
@@ -224,6 +227,12 @@ new_gtk_browser(void)
   // hookup to changes in js status message
   gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "js_status",
 		     GTK_SIGNAL_FUNC(js_status_cb), browser);
+  // hookup to see whenever a new window is requested
+  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "new_window",
+		     GTK_SIGNAL_FUNC(new_window_cb), browser);
+  // hookup to any requested visibility changes
+  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "visibility",
+		     GTK_SIGNAL_FUNC(visibility_cb), browser);
 
   return browser;
 }
@@ -265,9 +274,11 @@ url_activate_cb    (GtkEditable *widget, TestGtkBrowser *browser)
 gboolean
 destroy_cb(GtkWidget *widget, GdkEventAny *event, TestGtkBrowser *browser)
 {
+  g_print("destroy_cb\n");
   if (browser->tempMessage)
     g_free(browser->tempMessage);
   num_browsers--;
+  gtk_widget_destroy(widget);
   if (num_browsers == 0)
     gtk_main_quit();
   return TRUE;
@@ -418,6 +429,27 @@ js_status_cb (GtkMozEmbed *embed, TestGtkBrowser *browser)
     g_free(message);
 }
 
+void
+new_window_cb (GtkMozEmbed *embed, GtkMozEmbed **newEmbed, guint chromemask, TestGtkBrowser *browser)
+{
+  g_print("new_window_cb\n");
+  g_print("embed is %p chromemask is %d\n", embed, chromemask);
+  TestGtkBrowser *newBrowser = new_gtk_browser();
+  gtk_widget_set_usize(newBrowser->topLevelWindow, 400, 400);
+  *newEmbed = GTK_MOZ_EMBED(newBrowser->mozEmbed);
+  g_print("new browser is %p\n", *newEmbed);
+}
+
+void
+visibility_cb (GtkMozEmbed *embed, gboolean visibility, TestGtkBrowser *browser)
+{
+  g_print("visibility_cb %d\n", visibility);
+  if (visibility)
+    gtk_widget_show_all(browser->topLevelWindow);
+  else
+    gtk_widget_hide_all(browser->topLevelWindow);
+}
+
 // utility functions
 
 void
@@ -476,3 +508,4 @@ update_nav_buttons      (TestGtkBrowser *browser)
   else
     gtk_widget_set_sensitive(browser->forwardButton, FALSE);
 }
+
