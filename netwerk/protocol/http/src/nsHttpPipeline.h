@@ -104,8 +104,11 @@ private:
     // is partial.  a partial request means that Request(0) has been 
     // partially written out to the socket.  a partial response means
     // that Response(0) has been partially read in from the socket.
-    PRBool mRequestIsPartial;
-    PRBool mResponseIsPartial;
+    PRPackedBool mRequestIsPartial;
+    PRPackedBool mResponseIsPartial;
+
+    // indicates whether or not the pipeline has been explicitly closed.
+    PRPackedBool mClosed;
 
     // used when calling ReadSegments/WriteSegments on a transaction.
     nsAHttpSegmentReader *mReader;
