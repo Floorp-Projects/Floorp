@@ -377,7 +377,7 @@ void gdk_superwin_hard_process_exposes(GdkSuperWin *superwin)
 
   GdkSuperWinTranslate *translate;
   
-  // wait for the window event
+  /* wait for the window event */
   while (superwin->translate_queue)
   {
     XWindowEvent(GDK_DISPLAY(),
