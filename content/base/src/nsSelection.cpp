@@ -446,9 +446,14 @@ private:
                          nsPeekOffsetStruct aPos);
 #endif // VISUALSELECTION
 
-//post and pop reasons for notifications. we may stack these later
-  void  PostReason(short aReason){mReason = aReason;}
-  short PopReason(){short retval = mReason; mReason=0;return retval;}
+// post and pop reasons for notifications. we may stack these later
+  void    PostReason(PRInt16 aReason) { mSelectionChangeReason = aReason; }
+  PRInt16 PopReason()
+  {
+    PRInt16 retval = mSelectionChangeReason;
+    mSelectionChangeReason = 0;
+    return retval;
+  }
 
   friend class nsTypedSelection; 
 #ifdef DEBUG
@@ -510,13 +515,20 @@ private:
     
   nsIContent *mLimiter;     //limit selection navigation to a child of this node.
   nsIFocusTracker *mTracker;
+
+  PRInt16 mSelectionChangeReason; // reason for notifications of selection changing
   PRInt16 mDisplaySelection; //for visual display purposes.
+
+  HINT  mHint;   //hint to tell if the selection is at the end of this line or beginning of next
+
   PRInt32 mDesiredX;
   nsIScrollableView *mScrollView;
 
-  PRBool mDelayCaretOverExistingSelection;
-  PRBool mDelayedMouseEventValid;
   nsMouseEvent mDelayedMouseEvent;
+
+  PRPackedBool mDelayCaretOverExistingSelection;
+  PRPackedBool mDelayedMouseEventValid;
+
   PRPackedBool mChangesDuringBatching;
   PRPackedBool mNotifyFrames;
   PRPackedBool mIsEditor;
@@ -524,7 +536,6 @@ private:
   PRPackedBool mMouseDownState;   //for drag purposes
   PRPackedBool mMouseDoubleDownState; //has the doubleclick down happened
   PRPackedBool mDesiredXSet;
-  short mReason; //reason for notifications of selection changing
 };
 
 class nsSelectionIterator : public nsIBidirectionalEnumerator
@@ -986,9 +997,8 @@ nsSelection::nsSelection()
 
   mDelayCaretOverExistingSelection = PR_TRUE;
   mDelayedMouseEventValid = PR_FALSE;
-  mReason = nsISelectionListener::NO_REASON;
+  mSelectionChangeReason = nsISelectionListener::NO_REASON;
 }
-
 
 
 nsSelection::~nsSelection() 
@@ -2918,7 +2928,7 @@ nsSelection::SetMouseDownState(PRBool aState)
   mMouseDownState = aState;
   if (!mMouseDownState)
   {
-    short reason;
+    PRInt16 reason;
     if (aState)
       reason = nsISelectionListener::MOUSEDOWN_REASON;
     else
