@@ -104,6 +104,7 @@ jboolean (* nativeWebShellAddDocListener) (JNIEnv *, jobject, jint, jobject);
 */
 // from NativeEventThread.h
 void (* nativeAddListener) (JNIEnv *, jobject, jint, jobject);
+void (* nativeRemoveAllListeners) (JNIEnv *, jobject, jint);
 void (* nativeInitialize) (JNIEnv *, jobject, jint);
 void (* nativeProcessEvents) (JNIEnv *, jobject, jint);
 // from BookmarksImpl.h
@@ -376,6 +377,10 @@ void locateBrowserControlStubFunctions(void * dll) {
   if (!nativeAddListener) {
     printf("got dlsym error %s\n", dlerror());
   }
+  nativeRemoveAllListeners = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeRemoveAllListeners");
+  if (!nativeRemoveAllListeners) {
+    printf("got dlsym error %s\n", dlerror());
+  }
   nativeInitialize = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeInitialize");
   if (!nativeInitialize) {
     printf("got dlsym error %s\n", dlerror());
@@ -408,6 +413,13 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
 (JNIEnv *env, jobject obj, jint webShellPtr, jobject typedListener) {
   (* nativeAddListener) (env, obj, webShellPtr, typedListener);
 }
+
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeRemoveAllListeners
+(JNIEnv *env, jobject obj, jint webShellPtr)
+{
+    (* nativeRemoveAllListeners) (env, obj, webShellPtr);
+}
+
 
 /*
  * Class:     org_mozilla_webclient_wrapper_0005fnative_NativeEventThread
