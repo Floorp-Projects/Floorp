@@ -73,7 +73,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartBinding(nsIURL* aURL, const char *aCont
 		// okay, now fill in our event sinks...Note that each getter ref counts before
 		// it returns the interface to us...we'll release when we are done
 		const char	*fileName;
-		runningUrl->GetFile(&fileName);
+		aURL->GetFile(&fileName);
 		if (fileName)
 		{
 			nsFilePath dbPath(fileName);

@@ -277,7 +277,10 @@ PRInt32 nsMailboxProtocol::ReadFolderResponse(nsIInputStream * inputStream, PRUi
 	nsresult rv = NS_OK;
 
 	if (m_mailboxParser)
-		rv = m_mailboxParser->OnDataAvailable(m_runningUrl, inputStream, length); // let the parser deal with it...
+	{
+		nsCOMPtr <nsIURL> url = do_QueryInterface(m_runningUrl);
+		rv = m_mailboxParser->OnDataAvailable(url, inputStream, length); // let the parser deal with it...
+	}
 
 	if (NS_FAILED(rv))
 	{
@@ -308,7 +311,10 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 	if (m_mailboxAction == nsMailboxActionCopyMessage || m_mailboxAction == nsMailboxActionMoveMessage) 
 	{
 		if (m_mailboxCopyHandler)
-			rv = m_mailboxCopyHandler->OnDataAvailable(m_runningUrl, inputStream, length);
+		{
+			nsCOMPtr <nsIURL> url = do_QueryInterface(m_runningUrl);
+			rv = m_mailboxCopyHandler->OnDataAvailable(url, inputStream, length);
+		}
 	}
 	else
 	{
@@ -387,8 +393,11 @@ nsresult nsMailboxProtocol::ProcessProtocolState(nsIURL * url, nsIInputStream * 
 				break;
 			case MAILBOX_DONE:
 			case MAILBOX_ERROR_DONE:
-				m_runningUrl->SetUrlState(PR_FALSE, NS_OK);
-	            m_nextState = MAILBOX_FREE;
+				{
+					nsCOMPtr <nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningUrl);
+					url->SetUrlState(PR_FALSE, NS_OK);
+					m_nextState = MAILBOX_FREE;
+				}
 				break;
         
 			case MAILBOX_FREE:

@@ -83,7 +83,7 @@ protected:
 	nsresult PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsIUrlListener * aUrlListener,
 							   nsMailboxAction aMailboxAction, nsIMailboxUrl ** aMailboxUrl);
 	
-	nsresult RunMailboxUrl(nsIMailboxUrl * aMailboxUrl, nsISupports * aDisplayConsumer = nsnull);
+	nsresult RunMailboxUrl(nsIURL * aMailboxUrl, nsISupports * aDisplayConsumer = nsnull);
 };
 
 #endif /* nsMailboxService_h___ */
