@@ -372,7 +372,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gInTable,&gInTable,	
       /*autoclose starttags and endtags*/ &gCaptionAutoClose,0,0,0,
       /*parent,incl,exclgroups*/          kNone, kFlowEntity, kSelf,	
-      /*special props, prop-range*/       kNoPropagate,kDefaultPropRange,
+      /*special props, prop-range*/       (kNoPropagate|kNoStyleLeaksOut),kDefaultPropRange,
       /*special parents,kids,skip*/       &gInTable,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -1112,7 +1112,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gTableRootTags,&gTableRootTags,	
       /*autoclose starttags and endtags*/ 0,&gTableCloseTags,0,0,
       /*parent,incl,exclgroups*/          kBlock, kNone, (kSelf|kInlineEntity),	
-      /*special props, prop-range*/       (kOmitWS|kBadContentWatch|kNoStyleLeaksIn|kNoStyleLeaksOut), 2,
+      /*special props, prop-range*/       (kOmitWS|kBadContentWatch|kNoStyleLeaksIn), 2,
       /*special parents,kids,skip*/       0,&gTableKids,eHTMLTag_unknown);
 
     Initialize( 

@@ -3291,7 +3291,11 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
 #ifdef  ENABLE_RESIDUALSTYLE
 
         PRBool theTagIsStyle=nsHTMLElement::IsResidualStyleTag(theTag);
-        PRBool theStyleDoesntLeakOut = gHTMLElements[aTarget].HasSpecialProperty(kNoStyleLeaksOut);
+        // If the current tag cannot leak out then we shouldn't leak out of the target - Fix 40713
+        PRBool theStyleDoesntLeakOut = gHTMLElements[theTag].HasSpecialProperty(kNoStyleLeaksOut);
+        if(!theStyleDoesntLeakOut) {
+          theStyleDoesntLeakOut = gHTMLElements[aTarget].HasSpecialProperty(kNoStyleLeaksOut);
+        }
         //  (aClosedByStartTag) ? gHTMLElements[aTarget].HasSpecialProperty(kNoStyleLeaksOut) 
         //                      :  gHTMLElements[theParent].HasSpecialProperty(kNoStyleLeaksOut);
 
