@@ -38,6 +38,8 @@
 #ifndef nsGREDirServiceProvider_h_
 #define nsGREDirServiceProvider_h_
 
+#include "nsIDirectoryService.h"
+
 #ifndef MAXPATHLEN
 #ifdef _MAX_PATH
 #define MAXPATHLEN _MAX_PATH
@@ -47,8 +49,6 @@
 #define MAXPATHLEN 1024
 #endif
 #endif
-
-#include "nsIDirectoryService.h"
 
 /**
  * the directoryserviceprovider used by GRE_Startup when calling NS_InitXPCOM2
