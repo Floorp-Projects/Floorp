@@ -95,6 +95,16 @@ toolbarbutton.bookmark-item[open="true"] {
   background: url("chrome://browser/skin/bookmarks-large.png") no-repeat;
 }
 
+.bookmarks-toolbar-customize {
+  display: none;
+  background: -moz-Dialog;
+  max-width: 15em !important;
+}
+
+toolbarpaletteitem[place="toolbar"] .bookmarks-toolbar-customize {
+  display: -moz-box;
+}
+  
 /* ::::: bookmark menus ::::: */
 
 menu.bookmark-item,
