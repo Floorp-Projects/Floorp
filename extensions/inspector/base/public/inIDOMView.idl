@@ -48,14 +48,10 @@ interface inIDOMView : nsISupports
   attribute boolean showAnonymousContent;
   attribute boolean showSubDocuments;
   attribute boolean showWhitespaceNodes;
+  attribute unsigned long    whatToShow;
 
   nsIDOMNode getNodeFromRowIndex(in long rowIndex);
   long getRowIndexFromNode(in nsIDOMNode node);
-
-  void addFilterByType(in unsigned short type, in boolean exclusive);
-  void removeFilterByType(in unsigned short type);
-  boolean isFiltered(in unsigned short type);
-
 
   void rebuild();
 };

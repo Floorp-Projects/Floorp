@@ -160,7 +160,7 @@ XBLBindings.prototype =
     window.setTimeout(function(me) {
       // prepare and attach the content DOM datasource
       me.mContentView = XPCU.createInstance(kDOMViewCID, "inIDOMView");
-      me.mContentView.removeFilterByType(Node.TEXT_NODE);
+      me.mContentView.whatToShow &= ~(NodeFilter.SHOW_TEXT);
       me.mContentTree.treeBoxObject.view = me.mContentView;
 
       me.mContentInit = true;
