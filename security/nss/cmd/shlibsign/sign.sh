@@ -5,7 +5,7 @@ if [ ${3} = "YES" ]; then
     else
         # ARG1 is ${1} with the drive letter escaped.
         if echo "${1}" | grep -c : >/dev/null; then
-            ARG1=`(cd ${1}; pwd)`
+            ARG1=`cygpath -u ${1}`
         else
             ARG1=${1}
         fi
