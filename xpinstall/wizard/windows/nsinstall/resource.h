@@ -27,6 +27,9 @@
  *     Sean Su <ssu@netscape.com>
  */
 
+#include "winuser.h"
+#include "winnt.rh"
+
 #define IDS_PROMPT                      1
 #define IDS_STATUS_EXTRACTING           2
 #define IDS_STATUS_LAUNCHING_SETUP      3

@@ -2,6 +2,15 @@
 // Microsoft Developer Studio generated include file.
 // Used by setuprsc.rc
 //
+//#include "winres.h"
+#include "winnt.rh"
+#include "winuser.rh"
+
+#ifdef IDC_STATIC
+#undef IDC_STATIC
+#endif
+#define IDC_STATIC                     (-1)
+
 #define IDS_ERROR_DIALOG_CREATE         1
 #define IDS_ERROR_FAILED                2
 #define IDS_ERROR_FILE_NOT_FOUND        3
@@ -101,6 +110,8 @@
 #define IDC_RADIO_ST3                   11010
 #define IDC_RADIO_YES                   11011
 #define IDC_RADIO_NO                    11012
+#define IDWIZBACK                       11013
+#define IDWIZNEXT                       11014
 
 // Next default values for new objects
 // 

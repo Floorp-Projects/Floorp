@@ -1,8 +1,3 @@
-//{{NO_DEPENDENCIES}}
-// Microsoft Developer Studio generated include file.
-// Used by setup.rc
-//
-
 /* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
  * The contents of this file are subject to the Netscape Public
@@ -27,6 +22,13 @@
  *     Sean Su <ssu@netscape.com>
  */
 
+//{{NO_DEPENDENCIES}}
+// Microsoft Developer Studio generated include file.
+// Used by setup.rc
+//
+
+#include "winnt.rh"
+
 #define IDS_ERROR_DLL_LOAD              1
 #define IDS_ERROR_STRING_LOAD           2
 #define IDS_ERROR_STRING_NULL           4
@@ -36,6 +38,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
+#define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1000
