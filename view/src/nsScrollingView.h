@@ -51,7 +51,7 @@ public:
   NS_IMETHOD  SetPosition(nscoord aX, nscoord aY);
   NS_IMETHOD  HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags, nsEventStatus &aStatus);
   NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsRect& rect,
-                    PRUint32 aPaintFlags, nsIView *aBackstop, PRBool &aResult);
+                    PRUint32 aPaintFlags, PRBool &aResult);
 
   //nsIScrollableView interface
   NS_IMETHOD  ComputeContainerSize();

@@ -352,7 +352,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   trect.ScaleRoundOut(p2t);
 
   PRBool  result;
-  aView->Paint(*localcx, trect, 0, nsnull, result);
+  aView->Paint(*localcx, trect, 0, result);
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
     localcx->CopyOffScreenBits(wrect);
@@ -433,7 +433,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
   }
 
   PRBool  result;
-  aView->Paint(*localcx, trect, 0, nsnull, result);
+  aView->Paint(*localcx, trect, 0, result);
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
     localcx->CopyOffScreenBits(wrect);

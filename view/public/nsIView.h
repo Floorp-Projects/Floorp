@@ -31,6 +31,7 @@ class nsIRenderingContext;
 class nsTransform2D;
 class nsIFrame;
 class nsIViewObserver;
+class nsVoidArray;
 struct nsRect;
 
 //this is used by the view clipping APIs since the description of
@@ -139,13 +140,10 @@ public:
    * @param rc rendering context to paint into
    * @param rect damage area
    * @param aPaintFlags see nsIView.h for flag definitions
-   * @param aBackstop if we will need to do back to front
-   *        painting, this is the view that, once rendered
-   *        ends the back to front pass. can be nsnull.
    * @return PR_TRUE if the entire clip region has been eliminated, else PR_FALSE
    */
   NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsRect& rect,
-                    PRUint32 aPaintFlags, nsIView *aBackstop, PRBool &aResult) = 0;
+                    PRUint32 aPaintFlags, PRBool &aResult) = 0;
 
   /**
    * Called to indicate that the specified region of the view
@@ -358,7 +356,7 @@ public:
    * be set externally, transparency is a quality of the view itself.
    * @result Returns PR_TRUE if there are transparent areas, PR_FALSE otherwise.
    */
-  NS_IMETHOD  HasTransparency(PRBool &aTransparent) = 0;
+  NS_IMETHOD  HasTransparency(PRBool &aTransparent) const = 0;
 
   /**
    * Used set the transparency status of the content in a view. see
@@ -430,5 +428,10 @@ private:
 //to indicate that the clip is set by an
 //outer class
 #define NS_VIEW_FLAG_CLIP_SET       0x0020
+
+//when painting, if we have determined that we need to do a combination
+//of front to back and back to front painting, this flag will be set
+//while in the front to back pass
+#define NS_VIEW_FLAG_FRONT_TO_BACK  0x0040
 
 #endif
