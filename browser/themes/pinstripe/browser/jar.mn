@@ -1,0 +1,36 @@
+classic.jar:
+  skin/classic/browser/bookmark-hover-dropmarker.png
+  skin/classic/browser/bookmark-hover-left.png
+  skin/classic/browser/bookmark-hover-mid.png
+  skin/classic/browser/bookmark-hover-right.png
+  skin/classic/browser/browser.css
+  skin/classic/browser/browser.xml
+  skin/classic/browser/contents.rdf
+  skin/classic/browser/Go.png
+  skin/classic/browser/Info.png
+  skin/classic/browser/lock-insecure.gif
+  skin/classic/browser/lock-mixed.gif
+  skin/classic/browser/page-themes.png
+  skin/classic/browser/pageInfo.css
+  skin/classic/browser/Popup-blocked.png
+  skin/classic/browser/search-bar-background.png
+  skin/classic/browser/Search-bar.png
+  skin/classic/browser/Secure.png
+  skin/classic/browser/Security-broken.png
+  skin/classic/browser/Toolbar-small.png
+  skin/classic/browser/Toolbar.png
+  skin/classic/browser/bookmarks/addBookmark.css            (bookmarks/addBookmark.css)
+  skin/classic/browser/bookmarks/bookmark-folder.png        (bookmarks/bookmark-folder.png)
+  skin/classic/browser/bookmarks/bookmark-item.png          (bookmarks/bookmark-item.png)
+  skin/classic/browser/bookmarks/Bookmarks-toolbar.png      (bookmarks/Bookmarks-toolbar.png)
+  skin/classic/browser/bookmarks/bookmarksManager.css       (bookmarks/bookmarksManager.css)
+  skin/classic/browser/bookmarks/expander-closed-active.png (bookmarks/expander-closed-active.png)
+  skin/classic/browser/bookmarks/expander-closed.png        (bookmarks/expander-closed.png)
+  skin/classic/browser/bookmarks/expander-open-active.png   (bookmarks/expander-open-active.png)
+  skin/classic/browser/bookmarks/expander-open.png          (bookmarks/expander-open.png)
+  skin/classic/browser/bookmarks/folderarrow-hover.png      (bookmarks/folderarrow-hover.png)
+  skin/classic/browser/bookmarks/folderarrow.png            (bookmarks/folderarrow.png)
+  skin/classic/browser/pref/Options.png                     (pref/Options.png)
+  skin/classic/browser/pref/pref.css                        (pref/pref.css)
+  preview.png
+  
