@@ -403,9 +403,18 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
             return NS_NOINTERFACE;
     }
     else if (aIID.Equals(NS_GET_IID(nsIAuthPrompt))) {
-        return NS_SUCCEEDED(
-                GetAuthPrompt(PROMPT_NORMAL, (nsIAuthPrompt **) aSink)) ?
-                NS_OK : NS_NOINTERFACE;
+        // if auth is not allowed, bail out
+        if (!mAllowAuth)
+          return NS_NOINTERFACE;
+
+        nsCOMPtr<nsIAuthPrompt> authPrompter(do_GetInterface(mTreeOwner));
+        if (authPrompter) {
+            *aSink = authPrompter;
+            NS_ADDREF((nsISupports *) * aSink);
+            return NS_OK;
+        }
+        else
+            return NS_NOINTERFACE;
     }
     else if (aIID.Equals(NS_GET_IID(nsIProgressEventSink))
              || aIID.Equals(NS_GET_IID(nsIHttpEventSink))
