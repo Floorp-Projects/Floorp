@@ -28,7 +28,7 @@ PROGRAM		= lots
 
 CSRCS		= lots.c
 
-LIBS		= -lmozdbm
+LIBS		= -lmozdbm_s
 
 include $(topsrcdir)/config/rules.mk
 

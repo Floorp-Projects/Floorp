@@ -33,7 +33,7 @@ OS2_LIBRARYNAME = gfx_os2
 
 MODULE = raptor 
 
-REQUIRES = util img xpcom raptor dom netlib java dbm js
+REQUIRES = util img xpcom raptor dom netlib java js
 
 DEFINES += -D_IMPL_NS_GFXONXP
 

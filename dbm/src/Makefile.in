@@ -22,8 +22,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= dbm
-LIBRARY_NAME	= mozdbm
+LIBRARY_NAME	= mozdbm_s
 
 LIB_IS_C_ONLY	= 1
 
@@ -44,6 +43,10 @@ CSRCS		= db.c \
 		  $(NULL)
 
 LOCAL_INCLUDES	= -I$(srcdir)/../include
+
+MKSHLIB :=
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
 

@@ -33,7 +33,7 @@ EXPORTS		= nppg.h npglue.h nppriv.h nsMalloc.h
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
-REQUIRES	= lay layer js style applet dbm img util java pref xpcom raptor netcnvts plugin plugimpl oji ojiimpl caps
+REQUIRES	= lay layer js style applet img util java pref xpcom raptor netcnvts plugin plugimpl oji ojiimpl caps
 
 ifeq ($(subst /,_,$(shell uname -s)),OS2) 
 CPPSRCS		= npwplat.cpp
