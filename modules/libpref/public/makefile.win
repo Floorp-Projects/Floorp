@@ -15,11 +15,12 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-IGNORE_MANIFEST=1
-# 
 
 MODULE=pref 
 DEPTH=..\..\.. 
-EXPORTS=prefapi.h prefldap.h nsIPref.h
+EXPORTS=prefapi.h prefldap.h
 
+XPIDLSRCS = .\nsIPref.idl
+
+include <$(DEPTH)\config\config.mak>
 include <$(DEPTH)\config\rules.mak>
