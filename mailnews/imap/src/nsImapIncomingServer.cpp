@@ -153,7 +153,7 @@ NS_IMETHODIMP nsImapIncomingServer::SetKey(const char * aKey)  // override nsMsg
 
 	nsresult rv;
 	nsCOMPtr<nsIImapHostSessionList> hostSession = 
-	         do_GetService(kCImapHostSessionList, &rv);
+	         do_GetService(kCImapHostSessionListCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
 	hostSession->AddHostToList(aKey, this);
@@ -262,7 +262,7 @@ nsImapIncomingServer::SetServerDirectory(const char *serverDirectory)
     if (NS_SUCCEEDED(rv))
     {
         nsCOMPtr<nsIImapHostSessionList> hostSession = 
-                 do_GetService(kCImapHostSessionList, &rv);
+                 do_GetService(kCImapHostSessionListCID, &rv);
         if (NS_SUCCEEDED(rv))
             hostSession->SetOnlineDirForHost(serverKey, serverDirectory);
     }
@@ -285,7 +285,7 @@ nsImapIncomingServer::SetOverrideNamespaces(PRBool bVal)
     {
         nsresult rv;
         nsCOMPtr<nsIImapHostSessionList> hostSession = 
-                 do_GetService(kCImapHostSessionList, &rv);
+                 do_GetService(kCImapHostSessionListCID, &rv);
         if (NS_SUCCEEDED(rv))
             hostSession->SetNamespacesOverridableForHost(serverKey, bVal);
     }
@@ -307,7 +307,7 @@ nsImapIncomingServer::SetUsingSubscription(PRBool bVal)
     {
         nsresult rv;
         nsCOMPtr<nsIImapHostSessionList> hostSession = 
-                 do_GetService(kCImapHostSessionList, &rv);
+                 do_GetService(kCImapHostSessionListCID, &rv);
         if (NS_SUCCEEDED(rv))
             hostSession->SetHostIsUsingSubscription(serverKey, bVal);
     }
@@ -372,7 +372,7 @@ nsImapIncomingServer::SetDeleteModel(PRInt32 ivalue)
   if (NS_SUCCEEDED(rv))
   {
     nsCOMPtr<nsIImapHostSessionList> hostSession = 
-        do_GetService(kCImapHostSessionList, &rv);
+        do_GetService(kCImapHostSessionListCID, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
     hostSession->SetDeleteIsMoveToTrashForHost(m_serverKey.get(), ivalue == nsMsgImapDeleteModels::MoveToTrash); 
     hostSession->SetShowDeletedMessagesForHost(m_serverKey.get(), ivalue == nsMsgImapDeleteModels::IMAPDelete);
@@ -843,7 +843,7 @@ nsImapIncomingServer::CreateProtocolInstance(nsIEventQueue *aEventQueue,
 	if (NS_SUCCEEDED(rv) && protocolInstance)
     {
         nsCOMPtr<nsIImapHostSessionList> hostSession = 
-                 do_GetService(kCImapHostSessionList, &rv);
+                 do_GetService(kCImapHostSessionListCID, &rv);
         if (NS_SUCCEEDED(rv))
             rv = protocolInstance->Initialize(hostSession, aEventQueue);
     }
@@ -2429,7 +2429,7 @@ NS_IMETHODIMP  nsImapIncomingServer::CommitNamespaces()
 
 	nsresult rv;
 	nsCOMPtr<nsIImapHostSessionList> hostSession = 
-	         do_GetService(kCImapHostSessionList, &rv);
+	         do_GetService(kCImapHostSessionListCID, &rv);
     if (NS_FAILED(rv)) 
 		return rv;
 
@@ -3662,7 +3662,7 @@ nsImapIncomingServer::OnUserOrHostNameChanged(const char *oldName, const char *n
 
   // 2. Reset 'HaveWeEverDiscoveredFolders' flag so the new folder list can be
   //    reloaded (ie, DiscoverMailboxList() will be invoked in nsImapProtocol).
-  nsCOMPtr<nsIImapHostSessionList> hostSessionList = do_GetService(kCImapHostSessionList, &rv);
+  nsCOMPtr<nsIImapHostSessionList> hostSessionList = do_GetService(kCImapHostSessionListCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   nsXPIDLCString serverKey;
   rv = GetKey(getter_Copies(serverKey));
