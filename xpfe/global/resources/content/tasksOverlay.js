@@ -264,7 +264,9 @@ function ShowUpdateFromResource( node )
 {
 	var url = node.getAttribute('url');
     dump( url +" finding \n" );
-	OpenTaskURL( url )
+        // hack until I get a new interface on xpiflash to do a 
+        // look up on the name/url pair.
+	OpenTaskURL( "http://www.mozilla.org/binaries.html");
 }
 /** 
  * WALLET submenu
