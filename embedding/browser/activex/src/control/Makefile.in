@@ -70,7 +70,6 @@ CPPSRCS = \
     PromptService.cpp      \
     HelperAppDlg.cpp       \
     WindowCreator.cpp      \
-    guids.cpp              \
     $(NULL)
 
 

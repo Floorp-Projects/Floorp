@@ -102,10 +102,6 @@ SOURCE=.\DropTarget.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\guids.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\HelperAppDlg.cpp
 # End Source File
 # Begin Source File
