@@ -75,10 +75,6 @@ public:
                          nsIAtom* aListName,
                          nsIFrame* aOldFrame);
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext& aCX,
-                                   nsIFrame* aParent,
-                                   nsIStyleContext* aStyleContext,
-                                   nsIFrame*& aContinuingFrame);
   NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
@@ -1758,23 +1754,6 @@ nsInlineFrame::ReflowBlockFrame(ReflowState& rs,
     }
   }
 
-  return NS_OK;
-}
-
-//////////////////////////////////////////////////////////////////////
-
-NS_IMETHODIMP
-nsInlineFrame::CreateContinuingFrame(nsIPresContext& aPresContext,
-                                     nsIFrame* aParent,
-                                     nsIStyleContext* aStyleContext,
-                                     nsIFrame*& aContinuingFrame)
-{
-  nsInlineFrame* cf = new nsInlineFrame;
-  if (nsnull == cf) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  cf->Init(aPresContext, mContent, aParent, aStyleContext, this);
-  aContinuingFrame = cf;
   return NS_OK;
 }
 

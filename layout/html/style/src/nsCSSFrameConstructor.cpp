@@ -3575,100 +3575,164 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
                                              nsIFrame*       aParentFrame,
                                              nsIFrame**      aContinuingFrame)
 {
-#if 1
-  nsresult  rv;
-  nsIFrame* continuingFrame;
+  nsIAtom*          frameType;
+  nsIContent*       content;
+  nsIStyleContext*  styleContext;
+  nsIFrame*         newFrame = nsnull;
+  nsresult          rv;
 
-  nsIStyleContext* styleContext;
-  aFrame->GetStyleContext(&styleContext);
-  rv = aFrame->CreateContinuingFrame(*aPresContext, aParentFrame, styleContext,
-                                     continuingFrame);
-  NS_RELEASE(styleContext);
-  *aContinuingFrame = continuingFrame;
-  return rv;
-#else
-  nsIAtom*  frameType;
-  nsIFrame* newFrame = nsnull;
-  PRBool    forceView = PR_FALSE;
-  nsresult  rv;
-
+  // Use the frame type to determine what type of frame to create
   aFrame->GetFrameType(&frameType);
+  aFrame->GetContent(&content);
+  aFrame->GetStyleContext(&styleContext);
 
   if (nsLayoutAtoms::textFrame == frameType) {
     rv = NS_NewTextFrame(newFrame);
+    if (NS_SUCCEEDED(rv)) {
+      newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
+                                               styleContext, PR_FALSE);
+    }
     
   } else if (nsHTMLAtoms::inlineFrame == frameType) {
-    NS_NewInlineFrame(newFrame);
+    rv = NS_NewInlineFrame(newFrame);
+    if (NS_SUCCEEDED(rv)) {
+      newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
+                                               styleContext, PR_FALSE);
+    }
   
   } else if (nsHTMLAtoms::blockFrame == frameType) {
-    NS_NewBlockFrame(newFrame, 0);
+    rv = NS_NewBlockFrame(newFrame, 0);
+    if (NS_SUCCEEDED(rv)) {
+      newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
+                                               styleContext, PR_FALSE);
+    }
   
   } else if (nsLayoutAtoms::areaFrame == frameType) {
-    // XXX What should be used for the flags?
-    NS_NewAreaFrame(newFrame, 0);
+    rv = NS_NewAreaFrame(newFrame, 0);
+    if (NS_SUCCEEDED(rv)) {
+      newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
+                                               styleContext, PR_FALSE);
+    }
   
   } else if (nsLayoutAtoms::pageFrame == frameType) {
-    NS_NewPageFrame(newFrame);
-    forceView = PR_TRUE;
+    rv = NS_NewPageFrame(newFrame);
+    if (NS_SUCCEEDED(rv)) {
+      newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
+                                               styleContext, PR_TRUE);
+    }
 
   } else if (nsLayoutAtoms::tableOuterFrame == frameType) {
-    NS_NewTableOuterFrame(newFrame);
+    rv = NS_NewTableOuterFrame(newFrame);
+    if (NS_SUCCEEDED(rv)) {
+      newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
+                                               styleContext, PR_FALSE);
+
+      // Create a continuing inner table frame
+      nsIFrame*     childFrame;
+      nsFrameItems  newChildFrames;
+
+      aFrame->FirstChild(nsnull, &childFrame);
+      while (childFrame) {
+        nsIAtom*  tableType;
+
+        // See if it's the inner table frame
+        childFrame->GetFrameType(&tableType);
+        if (nsLayoutAtoms::tableFrame == tableType) {
+          nsIFrame* continuingTableFrame;
+
+          // It's the inner table frame, so create a continuing frame
+          CreateContinuingFrame(aPresContext, childFrame, newFrame, &continuingTableFrame);
+          newChildFrames.AddChild(continuingTableFrame);
+        }
+        NS_IF_RELEASE(tableType);
+        childFrame->GetNextSibling(&childFrame);
+      }
+
+      // Set the outer table's initial child list
+      newFrame->SetInitialChildList(*aPresContext, nsnull, newChildFrames.childList);
+    }
 
   } else if (nsLayoutAtoms::tableFrame == frameType) {
-    NS_NewTableFrame(newFrame);
+    rv = NS_NewTableFrame(newFrame);
+    if (NS_SUCCEEDED(rv)) {
+      newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
+                                               styleContext, PR_FALSE);
+    }
 
   } else if (nsLayoutAtoms::tableRowGroupFrame == frameType) {
-    NS_NewTableRowGroupFrame(newFrame);
+    rv = NS_NewTableRowGroupFrame(newFrame);
+    if (NS_SUCCEEDED(rv)) {
+      newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
+                                               styleContext, PR_FALSE);
+    }
 
   } else if (nsLayoutAtoms::tableRowFrame == frameType) {
-    NS_NewTableRowFrame(newFrame);
+    rv = NS_NewTableRowFrame(newFrame);
+    if (NS_SUCCEEDED(rv)) {
+      newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
+                                               styleContext, PR_FALSE);
+
+      // Create a continuing frame for each table cell frame
+      nsIFrame*     cellFrame;
+      nsFrameItems  newChildList;
+
+      aFrame->FirstChild(nsnull, &cellFrame);
+      while (cellFrame) {
+        nsIAtom*  tableType;
+        
+        // See if it's a table cell frame
+        cellFrame->GetFrameType(&tableType);
+        if (nsLayoutAtoms::tableCellFrame == tableType) {
+          nsIFrame* continuingCellFrame;
+
+          CreateContinuingFrame(aPresContext, cellFrame, newFrame, &continuingCellFrame);
+          newChildList.AddChild(continuingCellFrame);
+        }
+
+        NS_IF_RELEASE(tableType);
+        cellFrame->GetNextSibling(&cellFrame);
+      }
+      
+      // Set the table cell's initial child list
+      newFrame->SetInitialChildList(*aPresContext, nsnull, newChildList.childList);
+    }
 
   } else if (nsLayoutAtoms::tableCellFrame == frameType) {
-    NS_NewTableCellFrame(newFrame);
+    rv = NS_NewTableCellFrame(newFrame);
+    if (NS_SUCCEEDED(rv)) {
+      newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
+                                               styleContext, PR_FALSE);
+
+      // Create a continuing area frame
+      nsIFrame* areaFrame;
+      nsIFrame* continuingAreaFrame;
+      aFrame->FirstChild(nsnull, &areaFrame);
+      CreateContinuingFrame(aPresContext, areaFrame, newFrame, &continuingAreaFrame);
+
+      // Set the table cell's initial child list
+      newFrame->SetInitialChildList(*aPresContext, nsnull, continuingAreaFrame);
+    }
 
   } else {
     NS_ASSERTION(PR_FALSE, "unexpected frame type");
     rv = NS_ERROR_UNEXPECTED;
   }
 
-  if (NS_SUCCEEDED(rv) && newFrame) {
-    nsIContent*       content;
-    nsIStyleContext*  styleContext;
-
-    // Initialize the continuing frame, and create a view for it if appropriate
-    aFrame->GetContent(&content);
-    aFrame->GetStyleContext(&styleContext);
-    newFrame->Init(*aPresContext, content, aParentFrame, styleContext);
-    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
-                                             styleContext, forceView);
-    NS_RELEASE(styleContext);
-    NS_RELEASE(content);
-
-    // Append it to the flow
-    newFrame->AppendToFlow(aFrame);
-
-    // Make sure some of the flag bits are set
-    // XXX Maybe it would be better if we passed the prev-in-flow into the Init()
-    // call, and that way the frame can add itself to the flow and replicate any
-    // state...
-    nsFrameState  state;
-    nsFrameState  newState;
-    aFrame->GetFrameState(&state);
-    newFrame->GetFrameState(&newState);
-
-    if (state & NS_FRAME_SYNC_FRAME_AND_VIEW) {
-      newState |= NS_FRAME_SYNC_FRAME_AND_VIEW;
-    }
-    if (state & NS_FRAME_REPLACED_ELEMENT) {
-      newState |= NS_FRAME_REPLACED_ELEMENT;
-    }
-    newFrame->SetFrameState(newState);
-  }
-  NS_RELEASE(frameType);
-
   *aContinuingFrame = newFrame;
+  NS_RELEASE(styleContext);
+  NS_IF_RELEASE(content);
+  NS_IF_RELEASE(frameType);
   return rv;
-#endif
 }
 
 nsresult

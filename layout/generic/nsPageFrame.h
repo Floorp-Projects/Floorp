@@ -30,11 +30,6 @@ public:
                      const nsHTMLReflowState& aMaxSize,
                      nsReflowStatus&      aStatus);
 
-  NS_IMETHOD  CreateContinuingFrame(nsIPresContext&  aCX,
-                                    nsIFrame*        aParent,
-                                    nsIStyleContext* aStyleContext,
-                                    nsIFrame*&       aContinuingFrame);
-
   /**
    * Get the "type" of the frame
    *

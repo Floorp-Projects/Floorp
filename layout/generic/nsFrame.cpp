@@ -1098,16 +1098,6 @@ NS_IMETHODIMP nsFrame::IsSplittable(nsSplittableType& aIsSplittable) const
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
-                                         nsIFrame*        aParent,
-                                         nsIStyleContext* aStyleContext,
-                                         nsIFrame*&       aContinuingFrame)
-{
-  NS_ERROR("not splittable");
-  aContinuingFrame = nsnull;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP nsFrame::GetPrevInFlow(nsIFrame** aPrevInFlow) const
 {
   *aPrevInFlow = nsnull;

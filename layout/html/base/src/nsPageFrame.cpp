@@ -138,21 +138,6 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
   return NS_OK;
 }
 
-NS_METHOD
-nsPageFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
-                                   nsIFrame*        aParent,
-                                   nsIStyleContext* aStyleContext,
-                                   nsIFrame*&       aContinuingFrame)
-{
-  nsPageFrame* cf = new nsPageFrame;
-  if (nsnull == cf) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  cf->Init(aPresContext, mContent, aParent, aStyleContext, this);
-  aContinuingFrame = cf;
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsPageFrame::GetFrameType(nsIAtom** aType) const
 {

@@ -182,12 +182,6 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  /** @see nsContainerFrame::CreateContinuingFrame */
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
-                                   nsIFrame*        aParent,
-                                   nsIStyleContext* aStyleContext,
-                                   nsIFrame*&       aContinuingFrame);
-
   /** allow the cell and row attributes to effect the column frame
     * currently, the only reason this exists is to support the HTML "rule"
     * that a width attribute on a cell in the first column sets the column width.

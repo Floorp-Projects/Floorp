@@ -81,10 +81,6 @@ public:
   NS_IMETHOD DidReflow(nsIPresContext&   aPresContext,
                        nsDidReflowStatus aStatus);
 
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
-                                   nsIFrame*        aParent,
-                                   nsIStyleContext* aStyleContext,
-                                   nsIFrame*&       aContinuingFrame);
   /**
    * Get the "type" of the frame
    *

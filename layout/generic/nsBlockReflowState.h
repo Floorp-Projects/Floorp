@@ -4474,6 +4474,24 @@ nsBlockFrame::VerifyTree() const
 //----------------------------------------------------------------------
 
 NS_IMETHODIMP
+nsBlockFrame::Init(nsIPresContext&  aPresContext,
+                   nsIContent*      aContent,
+                   nsIFrame*        aParent,
+                   nsIStyleContext* aContext,
+                   nsIFrame*        aPrevInFlow)
+{
+  if (aPrevInFlow) {
+    // Copy over the block/area frame flags
+    nsBlockFrame*  blockFrame = (nsBlockFrame*)aPrevInFlow;
+
+    SetFlags(blockFrame->mFlags);
+  }
+  
+  return nsBlockFrameSuper::Init(aPresContext, aContent, aParent,
+                                 aContext, aPrevInFlow);
+}
+
+NS_IMETHODIMP
 nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList)
@@ -4538,22 +4556,6 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
 #endif
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBlockFrame::CreateContinuingFrame(nsIPresContext& aPresContext,
-                                    nsIFrame* aParent,
-                                    nsIStyleContext* aStyleContext,
-                                    nsIFrame*& aContinuingFrame)
-{
-  nsBlockFrame* cf = new nsBlockFrame;
-  if (nsnull == cf) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  cf->Init(aPresContext, mContent, aParent, aStyleContext, this);
-  cf->SetFlags(mFlags);
-  aContinuingFrame = cf;
   return NS_OK;
 }
 

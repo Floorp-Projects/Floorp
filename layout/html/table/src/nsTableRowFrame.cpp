@@ -93,6 +93,29 @@ nsTableRowFrame::nsTableRowFrame()
 }
 
 NS_IMETHODIMP
+nsTableRowFrame::Init(nsIPresContext&  aPresContext,
+                      nsIContent*      aContent,
+                      nsIFrame*        aParent,
+                      nsIStyleContext* aContext,
+                      nsIFrame*        aPrevInFlow)
+{
+  nsresult  rv;
+
+  // Let the the base class do its initialization
+  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext,
+                                  aPrevInFlow);
+
+  if (aPrevInFlow) {
+    // Set the row index
+    nsTableRowFrame* rowFrame = (nsTableRowFrame*)aPrevInFlow;
+    
+    SetRowIndex(rowFrame->GetRowIndex());
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
 nsTableRowFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                      nsIAtom*        aListName,
                                      nsIFrame*       aChildList)
@@ -1428,50 +1451,6 @@ nsTableRowFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   return rv;
-}
-
-NS_METHOD
-nsTableRowFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
-                                       nsIFrame*        aParent,
-                                       nsIStyleContext* aStyleContext,
-                                       nsIFrame*&       aContinuingFrame)
-{
-  nsTableRowFrame* cf = new nsTableRowFrame;
-  if (nsnull == cf) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  cf->Init(aPresContext, mContent, aParent, aStyleContext, this);
-  cf->SetRowIndex(GetRowIndex());
-
-  // Create a continuing frame for each table cell frame
-  nsIFrame* newChildList;
-  for (nsIFrame* kidFrame = mFrames.FirstChild();
-       nsnull != kidFrame;
-       kidFrame->GetNextSibling(&kidFrame)) {
-
-    const nsStyleDisplay *kidDisplay;
-    kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)kidDisplay));
-    if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay) {
-      nsIFrame*         contCellFrame;
-      nsIStyleContext*  kidSC;
-
-      // Create a continuing cell frame
-      kidFrame->GetStyleContext(&kidSC);
-      kidFrame->CreateContinuingFrame(aPresContext, cf, kidSC, contCellFrame);
-      NS_RELEASE(kidSC);
-      
-      // Link it into the list of child frames
-      if (nsnull == cf->mFrames.FirstChild()) {
-        cf->mFrames.SetFrames(contCellFrame);
-      } else {
-        newChildList->SetNextSibling(contCellFrame);
-      }
-      newChildList = contCellFrame;
-    }
-  }
-
-  aContinuingFrame = cf;
-  return NS_OK;
 }
 
 /* we overload this here because rows have children that can span outside of themselves.

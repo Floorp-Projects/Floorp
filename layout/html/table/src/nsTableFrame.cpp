@@ -308,14 +308,27 @@ nsTableFrame::Init(nsIPresContext&  aPresContext,
                    nsIStyleContext* aContext,
                    nsIFrame*        aPrevInFlow)
 {
-  float p2t;
+  nsresult  rv;
+  float     p2t;
+
   aPresContext.GetPixelsToTwips(&p2t);
   mDefaultCellSpacingX = NSIntPixelsToTwips(2, p2t);
   mDefaultCellSpacingY = NSIntPixelsToTwips(2, p2t);
   mDefaultCellPadding = NSIntPixelsToTwips(1, p2t);
 
-  return nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext,
-                                    aPrevInFlow);
+  // Let the base class do its processing
+  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext,
+                                  aPrevInFlow);
+
+  if (aPrevInFlow) {
+    // set my width, because all frames in a table flow are the same width and
+    // code in nsTableOuterFrame depends on this being set
+    nsSize  size;
+    aPrevInFlow->GetSize(size);
+    mRect.width = size.width;
+  }
+
+  return rv;
 }
 
 
@@ -4450,70 +4463,6 @@ void nsTableFrame::InvalidateCellMap()
     }
   }
   if (PR_TRUE==gsDebugIR) printf("TIF: CellMap invalidated.\n");
-}
-
-NS_METHOD
-nsTableFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
-                                    nsIFrame*        aParent,
-                                    nsIStyleContext* aStyleContext,
-                                    nsIFrame*&       aContinuingFrame)
-{
-  nsTableFrame* cf = new nsTableFrame;
-  if (nsnull == cf) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  cf->Init(aPresContext, mContent, aParent, aStyleContext, this);
-  if (PR_TRUE==gsDebug) printf("nsTableFrame::CCF parent = %p, this=%p, cf=%p\n", aParent, this, cf);
-  // set my width, because all frames in a table flow are the same width
-  // code in nsTableOuterFrame depends on this being set
-  cf->SetRect(nsRect(0, 0, mRect.width, 0));
-  // add headers and footers to cf
-  nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
-  nsIFrame * rg = nsnull;
-  firstInFlow->FirstChild(nsnull, &rg);
-  NS_ASSERTION (nsnull!=rg, "previous frame has no children");
-  PRInt32 index = 0;
-  nsIFrame * bodyRowGroupFromOverflow = mOverflowFrames.FirstChild();
-  nsIFrame * lastSib = nsnull;
-  for ( ; nsnull!=rg; index++)
-  {
-    nsIContent *content = nsnull;
-    rg->GetContent(&content);                                              // content: REFCNT++
-    NS_ASSERTION(nsnull!=content, "bad frame, returned null content.");
-    const nsStyleDisplay* display;
-    //XXX: TROY:  this was just this->GetStyleData which can't be right
-    rg->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
-    if ((display->mDisplay == NS_STYLE_DISPLAY_TABLE_HEADER_GROUP) || 
-        (display->mDisplay == NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP)) 
-    {
-      printf("found a head or foot in continuing frame\n");
-      // Resolve style for the child
-      nsIStyleContext* kidStyleContext;
-      aPresContext.ResolveStyleContextFor(content, aStyleContext,
-                                          PR_FALSE, &kidStyleContext);     // kidStyleContext: REFCNT++
-
-      nsIFrame* duplicateFrame;
-      NS_NewTableRowGroupFrame(duplicateFrame);
-      duplicateFrame->Init(aPresContext, content, cf, kidStyleContext, nsnull);
-      NS_RELEASE(kidStyleContext);                                       // kidStyleContenxt: REFCNT--
-      
-      if (nsnull==lastSib)
-      {
-        mOverflowFrames.SetFrames(duplicateFrame);
-      }
-      else
-      {
-        lastSib->SetNextSibling(duplicateFrame);
-      }
-      duplicateFrame->SetNextSibling(bodyRowGroupFromOverflow);
-      lastSib = duplicateFrame;
-    }
-    NS_RELEASE(content);                                                 // content: REFCNT--
-    // get the next row group
-    rg->GetNextSibling(&rg);
-  }
-  aContinuingFrame = cf;
-  return NS_OK;
 }
 
 PRInt32 nsTableFrame::GetColumnWidth(PRInt32 aColIndex)
