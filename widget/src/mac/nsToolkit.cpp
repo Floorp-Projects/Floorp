@@ -65,6 +65,9 @@ void nsToolkit::SetFocus(nsWindow *aFocusWidget)
 	
 	guiEvent.eventStructType = NS_GUI_EVENT;
 
+	if (aFocusWidget == mFocusedWidget)
+		return;
+		
 	// tell the old widget, it is not focused
 	if (mFocusedWidget)
 	{
