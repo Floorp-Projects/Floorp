@@ -814,7 +814,7 @@ nsEventStatus nsMenu::MenuConstruct(
       if ( tag == nsWidgetAtoms::menuitem )
         LoadMenuItem(this, child);
       else if ( tag == nsWidgetAtoms::menuseparator )
-        AddSeparator();
+        LoadSeparator(child);
       else if ( tag == nsWidgetAtoms::menu )
         LoadSubMenu(this, child);
     }
@@ -1155,6 +1155,18 @@ nsMenu::LoadSubMenu( nsIMenu * pParentMenu, nsIContent* inMenuItemContent )
     nsCOMPtr<nsISupports> supports2 ( do_QueryInterface(pnsMenu) );
 	  pParentMenu->AddItem(supports2);
   }     
+}
+
+void
+nsMenu::LoadSeparator ( nsIContent* inMenuItemContent ) 
+{
+  // if item should be hidden, bail
+  nsAutoString hidden;
+  inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, hidden);
+  if ( hidden == NS_LITERAL_STRING("true") )
+    return;
+
+  AddSeparator();
 }
 
 
