@@ -331,6 +331,8 @@ NS_METHOD nsNntpUrl::GetURLInfo(URL_Struct_** aResult) const
 // XXX don't bother with ref's
 // XXX null pointer checks are incomplete
 
+// warning: don't assume when parsing the url that the protocol part is "news"...
+
 nsresult nsNntpUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
 {
     // XXX hack!
@@ -690,7 +692,6 @@ nsresult nsNntpUrl::GetProtocol(const char* *result) const
 
 nsresult nsNntpUrl::SetProtocol(const char *aNewProtocol)
 {
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
     NS_LOCK_INSTANCE();
     m_protocol = nsCRT::strdup(aNewProtocol);
     ReconstructSpec();
