@@ -367,7 +367,7 @@ void AddPref(CString xpifile, CString entity, CString newvalue, BOOL bUseQuotes,
 	}
 
 	CString Quote = bUseQuotes? quotes : "";
-	CString FuncName = bLockPref? "lockpref(" : "pref(";
+	CString FuncName = bLockPref? "lock_pref(" : "pref(";
 	tf<< FuncName << entity << ", " << Quote << newvalue << Quote << ");\n";
 
 	pf.close();
@@ -667,7 +667,7 @@ int ModifyHashedPref(CString HashedPrefsFile, CString PrefName, CString NewPrefV
 	else
 	{
 		// Create a plain text prefs with only a comment.
-		CreateNewFile(PlainTextPrefsFile, "/* protected prefs */\n");
+		CreateNewFile(PlainTextPrefsFile, "/* prefs configured in NADK */\n");
 	}
 	
 	// Modify the pref.
@@ -686,8 +686,10 @@ int ModifyHashedPref(CString HashedPrefsFile, CString PrefName, CString NewPrefV
 	}
 	else if (PrefType.CompareNoCase("bool") == 0)
 	{
-		if (NewPrefValue.IsEmpty())
-			NewPrefValue = "FALSE";
+		if (NewPrefValue.IsEmpty() || NewPrefValue == "0" || (NewPrefValue.CompareNoCase("false") == 0))
+			NewPrefValue = "false";
+    else
+      NewPrefValue = "true";
 
 		if (!ModifyJS2(PlainTextPrefsFile, PrefName, NewPrefValue, bLockPref))
 			return FALSE;
@@ -759,6 +761,38 @@ void endElement(void *userData, const char *name)
 }
 
 
+// Converts the strPrefFile (netscp6.cfg) to a plain text file (autoconfig.jsc) in the output directory, then sets the 
+// autoadmin.global_config_url in strPrefFile to strURL.
+BOOL ConvertToRemoteAdmin(CString strURL, CString strPrefFile, CString strRemoteAdminFile)
+{
+  ASSERT(!strURL.IsEmpty() && !strPrefFile.IsEmpty() && !strRemoteAdminFile.IsEmpty());
+  if (strURL.IsEmpty() || strPrefFile.IsEmpty() || strRemoteAdminFile.IsEmpty())
+    return FALSE;
+
+  ASSERT(strPrefFile.Find(".cfg") > 0);
+  if (strPrefFile.Find(".cfg") <= 0)
+    return FALSE;
+    
+
+  // Convert the strPrefFile to plain text remote admin file.
+  CString strPlainTextFile = outputPath + "\\" + strRemoteAdminFile;
+
+  if (!UnHash(strPrefFile, strPlainTextFile))
+    return FALSE;
+
+  // Delete the original pref file and replace it with a file with only remote admin entries.
+  DeleteFile(strPrefFile);
+  ModifyHashedPref(strPrefFile, "autoadmin.global_config_url", strURL, "string", TRUE); 
+
+  CString strAppendEmail = GetGlobal("RemoteAdminAppendEmail");
+  ModifyHashedPref(strPrefFile, "autoadmin.append_emailaddr", strAppendEmail, "bool", TRUE); 
+
+  CString strFailover = GetGlobal("RemoteAdminFailover");
+  ModifyHashedPref(strPrefFile, "autoadmin.offline_failover", strFailover, "bool", TRUE); 
+  
+
+  return TRUE;
+}
 
 // This function can easily be rewriten to parse the XML file by hand if it 
 // needs to be ported to a non-MS OS. The XML is pretty simple.
@@ -804,7 +838,7 @@ BOOL ProcessPrefsTree(CString strPrefsTreeFile, CString strPrefFile, CString str
   // copy the file into the buffer.
   size_t len = fread(buffer,1,lSize,pFile);
   
-  /*** the whole file is loaded in the buffer. ***/
+  // the whole file is loaded in the buffer. 
 
   int done = 0;
   if (!XML_Parse(parser, buffer, len, done)) 
@@ -818,87 +852,8 @@ BOOL ProcessPrefsTree(CString strPrefsTreeFile, CString strPrefFile, CString str
   }
 
   XML_ParserFree(parser);
-
-  return TRUE;
-
-  /* //SCM
-  // Create XML DOM instance.
-  IXMLDOMDocumentPtr prefXMLTree;
-  HRESULT hr = prefXMLTree.CreateInstance(__uuidof(DOMDocument));
-  if (FAILED(hr))
-  {
-    AfxMessageBox("Error creating MS XML DOM.", MB_OK);
-    return FALSE;
-  }
-
-  // Load the prefs metadata. This is a representation of the prefs tree as
-  // it should appear in the tree control.
-  if (prefXMLTree)
-  {
-    CString strPrefsFileURL;
-    strPrefsFileURL.Format("FILE://%s", strPrefsTreeFile);
-
-    if (!prefXMLTree->load(strPrefsFileURL.GetBuffer(0)))
-    {
-      CString strError;
-      strError.Format("Error loading preferences metadata %s.", strPrefsFileURL);
-      AfxMessageBox(strError, MB_OK);
-      prefXMLTree = NULL;
-      return FALSE;
-    }
-    if (prefXMLTree->parseError->errorCode != 0)
-    {
-      CString strError;
-      strError.Format("Bad XML in %s.", strPrefsFileURL);
-      AfxMessageBox(strError, MB_OK);
-      prefXMLTree = NULL;
-      return FALSE;
-    }
-  }
-
-  // Go through the list of prefs in the xml and write to prefs file for each one.
-  IXMLDOMNodeListPtr prefsList = prefXMLTree->getElementsByTagName("PREF");
-  for(int i = 0; i < prefsList->length; i++)
-  {
-    IXMLDOMElementPtr element = prefsList->Getitem(i);
-
-    CString strPrefName = GetAttribute(element, "prefname");
-    CString strPrefType = GetAttribute(element, "type");
-    CString strPrefValue = GetElementValue(element, "VALUE");
-    CString strLocked = GetElementValue(element, "LOCKED");
-    CString strInstallFile = GetElementValue(element, "INSTALLATIONFILE");
-    CString strPrefFile = GetElementValue(element, "PREFFILE");
-
-    if (strPrefName.IsEmpty() ||
-        strPrefType.IsEmpty() ||
-        strInstallFile.IsEmpty() ||
-        strPrefFile.IsEmpty() )
-        continue;
-
-    ExtractXPIFile(strInstallFile, strPrefFile);
-
-    BOOL bLocked = (strLocked == "true");
-
-    // Should go into a hashed file if prefs file is .cfg.
-    if (strPrefFile.Find(".cfg") > 0)
-    {
-      // hashed
-      ModifyHashedPref(strPrefFile, strPrefName, strPrefValue, strPrefType, bLocked); 
-
-    }
-    else
-    {
-      // not hashed
-      if ((strPrefType == "int") || (strPrefType == "bool") || (strPrefType == "choose"))
-        ModifyJS2(strPrefFile, strPrefName, strPrefValue, bLocked);
-
-      else  // string
-        ModifyJS(strPrefFile, strPrefName, strPrefValue, bLocked);
-
-    }
-  }
-
-  */
+  free(buffer);
+  
   return TRUE;
 }
 
@@ -1112,6 +1067,45 @@ int interpret(char *cmd)
     char *prefFile = strtok(NULL, ",)");
     CString fileWithPath = configPath + "\\" + prefsTreeFile;
     ProcessPrefsTree(fileWithPath, prefFile, installFile);
+  }
+  else if (strcmp(cmdname, "convertToRemoteAdmin") == 0)
+  {
+    char *vConvert = strtok(NULL, ",)");  // if set, then do the convert to remote admin
+		if (vConvert[0] == '%')
+		{
+			vConvert++;
+			char *t = strchr(vConvert, '%');
+			if (!t)
+				return TRUE;
+			*t = '\0';
+			char *bConvert = (char *)(LPCTSTR) GetGlobal(vConvert);
+
+      // The convert checkbox was not checked. No need to continue.
+      if (strcmp(bConvert, "1") != 0)
+        return TRUE;
+		}
+    
+    char *url = strtok(NULL, ",)");
+		if (url[0] == '%')
+		{
+			url++;
+			char *t = strchr(url, '%');
+			if (!t)
+				return TRUE;
+			*t = '\0';
+			url = (char *)(LPCTSTR) GetGlobal(url);
+      if (!url)
+        return TRUE;
+		}
+
+    char *prefFile = strtok(NULL, ",)");
+    char *remoteAdminFile = strtok(NULL, ",)");
+    
+    if (!prefFile || !remoteAdminFile)
+      return TRUE;
+
+    ConvertToRemoteAdmin(url, prefFile, remoteAdminFile);
+
   }
 	else
 		return FALSE;//*** We have to handle this condition better.

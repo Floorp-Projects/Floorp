@@ -1,0 +1,240 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"><html><head><meta http-equiv="content-type" content="text/html; charset=ISO-8859-1"><meta name="author" content="Steve Meredith"><title>Structure of the Pref Editor XML File for the PrefsTree Widget</title></head><body text="#000000" bgcolor="#ffffcc" link="#0000ff" alink="darkblue" vlink="#cc0000">
+<div align="Right">Removed elements <tt>INSTALLATIONFILE </tt>and <tt>PREFFILE.</tt> Changed <tt>processPrefsTree()</tt> number of params. &nbsp;&nbsp; 02 Jan 2002<br>
+Removed <tt>choose </tt>attribute. &nbsp;&nbsp; <strike>13 Dec 2001</strike><br>
+Original version. &nbsp;&nbsp; <strike>11 Dec 2001</strike><br>
+Steve Meredith<br>
+</div>
+<h1>Structure of the Pref Editor XML File for the PrefsTree Widget</h1>
+<h2>Introduction</h2>
+The<i> Pref Editor</i> is a widget for CCK/Factory, named <i>PrefsTree </i>
+in .ini files. It is a tree control which displays prefs in a hierarchy and
+allows a user to edit their values. It reads an XML file to determine the
+structure of the tree control. This XML file includes information on each
+pref, including its name, its default value, a description of it, etc. It
+also includes structure for how these prefs are grouped in the tree control.
+The name of the XML file is specified in the .ini section for the PrefsTree
+Widget. The default file must be located in the same directory as the <tt>WIZARDMACHINE.EXE</tt>
+. When used, a copy of the file is saved in the working config directory.
+This copy contains the changes made by the CCK/Factory user, and is used
+by the install builder to write preferences in the install image. A SCRIPT.IB
+entry must be made in order for it process the .XML file: <tt>processPrefsTree(,browser.xpi,bin/netscp6.cfg</tt><tt>)</tt>
+. Note that spaces are not allowed between the parameters. For details on
+adding a PrefsTree control to wizard pages, see the document&nbsp;<a href="PrefsTree.htm">PrefsTree.htm</a>
+
+<h2>Who This Document is For</h2>
+<h2></h2>
+You will need to understand the structure of the XML file if you want to
+add or remove prefs to the Pref Editor or change how they are grouped.<br>
+<h2>Conventions</h2>
+For XML item tags, we use ALL CAPS. For attribute names, we use lower case.
+&#8220;true&#8221; and &#8220;false&#8221; are also written in lower case. Generally, for PREF items,
+the attributes are those things about the pref which are fixed, and use elements
+for thing the CCK/Factory app will change. The exception is for <tt>&lt;CHOICES&gt;</tt>, which are difficult to represent as attributes, so these are elements.<br>
+<h2>General Structure</h2>
+<h3>Example 1</h3>
+The simplest file that may exist consists of one group containing one pref. <br>
+<br>
+<code>&lt;?xml version="1.0"?&gt;<br>
+&lt;PREFSGROUP uiname="Netscape Preferences"&gt;<br>
+&nbsp; &lt;PREF uiname="Open Browser on Startup" prefname="general.startup.browser"
+type="bool" lockable="true" description="When the application starts, open
+a browser window."&gt;<br>
+&nbsp;&nbsp;&nbsp; &lt;VALUE&gt;true&lt;/VALUE&gt;<br>
+&nbsp;&nbsp;&nbsp; &lt;LOCKED&gt;false&lt;/LOCKED&gt;<br>&nbsp; &lt;/PREF&gt;<br>
+&lt;/PREFSGROUP&gt;</code><br>
+<br>
+The above file will result in a tree control with one parent, the group, and one child, the pref. See the example below.<br>
+<br>
+<img src="PrefsTreeEx1.jpg" alt="Example 1">
+ 
+<h3>Example 2</h3>
+The more complicated example below shows the top level group, with two sub groups, each with two preferences.<br>
+<br>
+<code>&lt;?xml version="1.0"?&gt;<br>
+
+&lt;PREFSGROUP uiname="Netscape Preferences"&gt;<br>
+&nbsp; &lt;PREFSGROUP uiname="Group 1"&gt;<br>
+&nbsp;&nbsp;&nbsp; &lt;PREF uiname="Autoload What's Related" prefname="browser.related.autoload"
+type="int" lockable="true" description="A good description
+of this pref goes here."&gt;<br>
+&nbsp;&nbsp;&nbsp; &nbsp; &lt;CHOICES&gt;<br>
+&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &lt;CHOICE uiname="Always" value="0"/&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;CHOICE uiname="After First Use" value="1"/&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;CHOICE uiname="Never" value="2"/&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/CHOICES&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;VALUE&gt;0&lt;/VALUE&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;LOCKED&gt;false&lt;/LOCKED&gt;<br>&nbsp;&nbsp;&nbsp; &lt;/PREF&gt;<br>
+&nbsp;&nbsp; &nbsp;&lt;PREF uiname="Start Page" prefname="browser.startup.page"
+type="int" lockable="true" description="Display this page when
+Navigator starts up."&gt;<br>
+&nbsp; &nbsp;&nbsp; &nbsp;&lt;CHOICES&gt;<br>
+&nbsp; &nbsp;&nbsp; &nbsp; &nbsp;&lt;CHOICE uiname="Blank Page" value="0"/&gt;<br>
+&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &lt;CHOICE uiname="Home Page" value="1"/&gt;<br>
+&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &lt;CHOICE uiname="Last Page Visited" value="2"/&gt;<br>
+&nbsp; &nbsp;&nbsp; &nbsp;&lt;/CHOICES&gt;<br>
+&nbsp; &nbsp; &nbsp; &lt;VALUE&gt;0&lt;/VALUE&gt;<br>
+&nbsp; &nbsp; &nbsp; &lt;LOCKED&gt;false&lt;/LOCKED&gt;<br>&nbsp; &nbsp; &lt;/PREF&gt;<br>
+&nbsp; &lt;/PREFSGROUP&gt;<br>
+&nbsp; &lt;PREFSGROUP uiname="Group 2"&gt;<br>
+&nbsp;&nbsp;&nbsp; &lt;PREF uiname="Bookmarks" prefname="browser.toolbars.showbutton.bookmarks"
+type="bool" lockable="true" description="Show Booksmarks button on browser
+toolbar."&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;VALUE&gt;true&lt;/VALUE&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;LOCKED&gt;false&lt;/LOCKED&gt;<br>&nbsp;&nbsp;&nbsp; &lt;/PREF&gt;<br>
+&nbsp;&nbsp;&nbsp; &lt;PREF uiname="Go" prefname="browser.toolbars.showbutton.go"
+type="bool" lockable="true" description="Show Go button on browser toolbar."&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;VALUE&gt;true&lt;/VALUE&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;LOCKED&gt;false&lt;/LOCKED&gt;<br>&nbsp;&nbsp;&nbsp; &lt;/PREF&gt;<br>
+&nbsp; &lt;/PREFSGROUP&gt;<br>
+&lt;/PREFSGROUP&gt;<br>
+<br>
+</code>The above example also demonstrates how to include multiple choice
+prefs. These make it easier for the CCK/Factory user to select pref values
+without understanding how they are implemented. This XML file results in the prefs tree structure in the example below.<br>
+<br>
+<img src="PrefsTreeEx2.jpg" alt="Example 2" width="638" height="493">
+<br>
+<h2>Reference</h2>The structure of the file is important. Not much work
+as been put into handling malformed files. If the XML is invalid, you'll
+get an error that the file failed to load, an error type, and a line number. If you create valid XML, but don't follow
+the rules as defined here, the behaviour is undefined. It's probably easiest
+to start with an existing prefs XML file, then cut, paste, and edit the <tt>&lt;PREF&gt;</tt>s from there.<br>
+
+<h3>&lt;PREFSGROUP&gt;</h3>
+Each <tt>&lt;PREFSGROUP&gt;</tt> element will make a new level of hierarchy in the tree control. A <tt>&lt;PREFSGROUP&gt;</tt> may contain <tt>&lt;PREF&gt;</tt>s or other <tt>&lt;PREFSGROUP&gt;</tt> or both, but must not be empty. The first element in the file must be a <tt>&lt;PREFSGROUP&gt;</tt>. These may be nested arbitrarily deep.<br>
+<br>
+<table cellpadding="2" cellspacing="2" border="1" width="100%" bgcolor="#ffffff">
+  <tbody>
+    <tr>
+      <td valign="Top"><b>Attribute</b><br>
+      </td>
+      <td valign="Top"><b>Example</b><br>
+      </td>
+      <td valign="Top"><b>Description</b><br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="Top"><tt>uiname</tt><br>
+      </td>
+      <td valign="Top"><tt>uiname="Netscape Preferences"</tt><br>
+      </td>
+      <td valign="Top">This is the name of the group as it appears in the tree control. <br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<h3>&lt;PREF&gt;</h3>
+Each pref element will make a leaf node in the tree control--a pref which
+the user can edit.These elements must be contained in some <tt>&lt;PREFSGROUP&gt;</tt>.<br>
+<br>
+<table width="100%" border="1" cellspacing="2" cellpadding="2" bgcolor="#ffffff">
+  <tbody>
+    <tr>
+      <td valign="Top"><b>Attribute</b><br>
+      </td>
+      <td valign="Top"><b>Example</b><br>
+      </td>
+      <td valign="Top"><b>Description</b><br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="Top"><tt>uiname</tt><br>
+      </td>
+      <td valign="Top"><code>uiname="Open Browser on Startup"</code><br>
+      </td>
+      <td valign="Top">This is the name of the pref as is appears in the
+tree control. It doesn't have to be the name of the pref--it should be something
+easy for the user to understand.<br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="Top"><tt>prefname</tt><br>
+      </td>
+      <td valign="Top"><code>prefname="general.startup.browser"</code></td>
+      <td valign="Top">This is the real name of the pref as it is used by the Netscape client products.<br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="Top"><tt>type</tt><br>
+      </td>
+      <td valign="Top"><code>type="bool"</code><br>
+      </td>
+      <td valign="Top">Must be one of <b><tt>int</tt></b>, <b><tt>bool</tt></b>, or <b><tt>string</tt></b>. This determines how the pref will be edited in the Pref Editor and how it is written to the prefs file in the install image.<br>
+      <br>
+      <tt><b>bool</b> </tt>Pref Editor user allowed to select &#8220;true&#8221; or &#8220;false&#8221;
+from a drop-down. No quotes are used when writing the pref in the pref file.
+For example, <tt>pref("general.startup.browser", true);</tt><br>
+      <br>
+      <b><tt>int &nbsp;</tt></b>Pref Editor user allowed to enter integers. No quotes are used when writing the pref in the pref file. For example, <tt>pref("network.proxy.socks_version", 5);</tt><br>
+      <br>
+      <b><tt>string &nbsp;</tt></b>Pref Editor user may enter whatever he likes. Quotes are used when writing the pref in the pref file. For example, <tt>pref("general.useragent.vendorComment", "AK-MyISP");</tt><br>
+      </td>
+    </tr>
+    
+    <tr>
+      <td valign="Top"><tt>lockable</tt><br>
+      </td>
+      <td valign="Top"><code>lockable="true"</code><br>
+      </td>
+      <td valign="Top">Determines whether or not the Pref Editor user can change the lock state the pref.<br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="Top"><tt>description</tt><br>
+      </td>
+      <td valign="Top"><code>description="When the application starts, open a browser window."</code><br>
+      </td>
+      <td valign="Top">This is some text which further describes the pref
+to the Pref Editor user. It appears when the user selected the pref for editing.
+Any text which helps the user under the pref should go here.<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<h3>&lt;CHOICES&gt;</h3>
+This element can optionally appear in <tt>&lt;PREF&gt;</tt> element if the values are to be translated into easy to understand multiple choice options. It contains more than one <tt>&lt;CHOICE&gt;</tt>
+ element. When the
+user edits one of these prefs, he gets a list box from which he can select
+from those choices described in the <tt>&lt;CHOICE&gt;</tt> elements which are contained in the <tt>&lt;CHOICES&gt;</tt> element. It will work for any type, but it is up to the person creating the XML to set the values in the <tt>value </tt>attribute to the correct type for the enclosing <tt>&lt;PREF&gt;</tt>. See <b>Example 2</b>, and <tt>&lt;CHOICE&gt;</tt>.<br>
+<br>
+The example below shows how a multiple choice pref will look like when the user selects it for editing.<br>
+<br>
+<img src="PrefsTreeEx3.jpg" alt="Example 3" width="447" height="360">
+<br>
+<h3>&lt;CHOICE&gt;</h3>
+This element appears in <tt>&lt;CHOICES&gt;</tt> elements to describe one item of a multiple choice. Each <tt>&lt;CHOICE&gt;</tt> element in a <tt>&lt;CHOICES&gt;</tt> element for a <tt>&lt;PREF&gt;</tt> appears in a list box when the user edits a pref of this type. When selected, the value of the <tt>value </tt>attribute for the selected <tt>&lt;CHOICE&gt;</tt> is saved as the pref's value. See <b>Example 2,</b> and <tt>&lt;CHOICES&gt;</tt>.<br>
+<br>
+<table cellpadding="2" cellspacing="2" border="1" width="100%" bgcolor="#ffffff">
+  <tbody>
+    <tr>
+      <td valign="Top"><b>Attribute</b><br>
+      </td>
+      <td valign="Top"><b>Example</b><br>
+      </td>
+      <td valign="Top"><b>Description</b><br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="Top"><tt>uiname</tt><br>
+      </td>
+      <td valign="Top"><code>uiname="Blank Page"</code><br>
+      </td>
+      <td valign="Top">The text of this choice in the list box for this choice.<br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="Top"><tt>value</tt><br>
+      </td>
+      <td valign="Top"><code>value="0"</code><br>
+      </td>
+      <td valign="Top">The value saved in the <tt>&lt;VALUE&gt;</tt> element for the <tt>&lt;PREF&gt;</tt> when the pref is edit and this choice is selected in the list box. The type of the value must be correct for the enclosing <tt>&lt;PREF&gt;</tt> element.<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<h3>&lt;VALUE&gt;</h3>One and only one must appear in a <tt>&lt;PREF&gt;</tt> element. This is the value of the pref. No quotes, regardless
+of type. This gets modified when the user edits the pref. Note that the modified
+file is saved to the working config directory.<br>
+<h3>&lt;LOCKED&gt;</h3>One and only one must appear in a <tt>&lt;PREF&gt;</tt> element. This is <tt>true </tt>or <tt>false, </tt>depending on whether the pref is locked or not. If locked, prefs are written as <tt>lockPref()</tt> instead of <tt>pref()</tt>. See also <tt>&lt;PREF lockable="true"&gt;</tt>.<br>
+<br>
+</body></html>

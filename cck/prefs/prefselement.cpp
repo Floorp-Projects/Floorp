@@ -28,7 +28,7 @@ CPrefElement::CPrefElement()
 }
 
 CPrefElement::CPrefElement(CString strPrefName, CString strPrefDesc, CString strPrefType)
-: m_bPrefOpen(FALSE), m_iChoices(0), m_strPrefName(strPrefName), m_strDescription(strPrefDesc), m_strType(strPrefType)
+: m_bPrefOpen(FALSE), m_iChoices(0), m_strPrefName(strPrefName), m_strUIName(strPrefName), m_strDescription(strPrefDesc), m_strType(strPrefType)
 {
 
 }

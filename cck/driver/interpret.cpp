@@ -824,6 +824,18 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 				}
 
 			}
+      else if (strcmp(pcmd, "ValidateRemoteAdmin") == 0)
+      {
+        // if checkbox is set, then there must be a URL.
+        CString useRemoteAdmin = GetGlobal("RemoteAdmin");
+				CString remoteAdminURL = GetGlobal("RemoteAdminURL");
+
+        if ((useRemoteAdmin == "1") && (remoteAdminURL.IsEmpty()))
+        {
+          AfxMessageBox("Specify the remote admin URL. This is where the browser will retrieve 'autoconfig.jsc'.", MB_OK);
+          return FALSE;
+        }
+      }
 			else if (strcmp(pcmd, "CopyFile") == 0)
 			{
 				// VerifySet checks to see if the first parameter has any value
