@@ -1345,7 +1345,7 @@ struct PRSem {
 
 struct PRStackStr {
     /* head MUST be at offset 0; assembly language code relies on this */
-#if defined(AIX) || defined(OSF1)
+#if defined(AIX)
     volatile PRStackElem prstk_head;
 #else
     PRStackElem prstk_head;
