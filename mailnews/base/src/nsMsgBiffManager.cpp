@@ -155,8 +155,10 @@ nsresult nsMsgBiffManager::AddBiffEntry(nsBiffEntry *biffEntry)
 
 nsresult nsMsgBiffManager::SetupNextBiff()
 {
+	/*
 	if(mBiffArray->Count() > 0)
 	{
+		
 		//Get the next biff entry
 		nsBiffEntry *biffEntry = (nsBiffEntry*)mBiffArray->ElementAt(0);
 		nsTime currentTime;
@@ -175,7 +177,9 @@ nsresult nsMsgBiffManager::SetupNextBiff()
 		LL_DIV(timeInMS, biffDelay, ms);
 		LL_L2UI(timeInMSUint32, timeInMS);
 		mBiffTimer->Init(this, timeInMSUint32);
+		
 	}
+	*/
 	return NS_OK;
 }
 
