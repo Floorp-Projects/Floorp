@@ -285,13 +285,13 @@ nsStringBundle::GetLangCountry(nsILocale* aLocale, nsString2& lang, nsString2& c
 
   PRUnichar *lc_name_unichar;
   nsString	  lc_name;
-  nsString  	catagory("NSILOCALE_MESSAGES");
-  nsresult	  result	 = aLocale->GetCategory(catagory.GetUnicode(), &lc_name_unichar);
+  nsString  	category("NSILOCALE_MESSAGES");
+  nsresult	  result	 = aLocale->GetCategory(category.GetUnicode(), &lc_name_unichar);
   lc_name.SetString(lc_name_unichar);
   nsAllocator::Free(lc_name_unichar);
 
-  NS_ASSERTION(NS_SUCCEEDED(result),"nsStringBundle::GetLangCountry: locale.GetCatagory failed");
-  NS_ASSERTION(lc_name.Length()>0,"nsStringBundle::GetLangCountry: locale.GetCatagory failed");
+  NS_ASSERTION(NS_SUCCEEDED(result),"nsStringBundle::GetLangCountry: locale.GetCategory failed");
+  NS_ASSERTION(lc_name.Length()>0,"nsStringBundle::GetLangCountry: locale.GetCategory failed");
 
   PRInt32   dash = lc_name.FindCharInSet("-");
   if (dash > 0) {

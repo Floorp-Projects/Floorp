@@ -2176,7 +2176,7 @@ dnl check for LC_MESSAGES
 AC_CACHE_CHECK(for LC_MESSAGES,
 		ac_cv_i18n_lc_messages,
 		[AC_TRY_COMPILE([#include <locale.h>],
-				[int catagory = LC_MESSAGES;],
+				[int category = LC_MESSAGES;],
 				ac_cv_i18n_lc_messages=yes,
 				ac_cv_i18n_lc_messages=no)])
 if test "$ac_cv_i18n_lc_messages" = yes; then

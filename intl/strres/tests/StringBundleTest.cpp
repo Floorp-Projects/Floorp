@@ -87,7 +87,7 @@ get_applocale(void)
 	nsresult			result;
 	nsILocaleFactory*	localeFactory;
 	nsILocale*			locale;
-	nsString*			catagory;
+	nsString*			category;
 	nsString*			value;
 	PRUnichar *lc_name_unichar;
 
@@ -108,16 +108,16 @@ get_applocale(void)
 	//
 	locale->AddRef();
 
-	catagory = new nsString("NSILOCALE_MESSAGES");
+	category = new nsString("NSILOCALE_MESSAGES");
 	value = new nsString();
 
-	result = locale->GetCategory(catagory->GetUnicode(),&lc_name_unichar);
+	result = locale->GetCategory(category->GetUnicode(),&lc_name_unichar);
 	value->SetString(lc_name_unichar);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: factory_get_locale failed");
 	NS_ASSERTION(value->Length()>0,"nsLocaleTest: factory_get_locale failed");
 
 	locale->Release();
-	delete catagory;
+	delete category;
 	delete value;
 
 	localeFactory->Release();
