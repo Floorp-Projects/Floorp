@@ -75,7 +75,7 @@ function CycleWindow( inType, inChromeURL )
 	if ( topWindowOfType == null )
 	{
 		dump( " no windows of this type so create a new one \n");
-		window.open( inChromeURL, "","chrome,menubar,toolbar,resizable" );
+		window.open( inChromeURL, "","chrome,menubar,toolbar,location,status,resizable" );
 		return;
 	}
 	
@@ -118,7 +118,7 @@ function CycleWindow( inType, inChromeURL )
 	else
 	{
 		dump("open window \n");
-		window.open( inChromeURL, "","chrome,menubar,toolbar,resizable" );
+		window.open( inChromeURL, "","chrome,menubar,toolbar,location,status,resizable" );
 	}
 }
 
