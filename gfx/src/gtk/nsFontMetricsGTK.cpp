@@ -890,13 +890,13 @@ ISO88591GenerateMap(nsFontCharSetInfo* aSelf)
 static nsFontCharSetInfo ISO88591 =
   { ISO88591Convert, ISO88591GenerateMap, nsnull };
 
-#undef JAPANESE
+#define JAPANESE
 #ifdef JAPANESE
 
 #define TEMPORARY_CONVERTERS
 #ifdef TEMPORARY_CONVERTERS
 
-#include "jisx0208.h"
+#include "u2j208.h"
 
 static gint
 JISX02081983Convert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
