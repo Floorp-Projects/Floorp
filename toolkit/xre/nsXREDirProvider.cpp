@@ -76,7 +76,7 @@ nsXREDirProvider::~nsXREDirProvider()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsXREDirProvider, nsIDirectoryServiceProvider);
+NS_IMPL_ISUPPORTS1(nsXREDirProvider, nsIDirectoryServiceProvider)
 
 NS_IMETHODIMP
 nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,

@@ -160,7 +160,7 @@ done:
     return primeBits;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsKeygenFormProcessor, nsIFormProcessor);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsKeygenFormProcessor, nsIFormProcessor)
 MOZ_DECL_CTOR_COUNTER(nsKeygenFormProcessor)
 
 nsKeygenFormProcessor::nsKeygenFormProcessor()

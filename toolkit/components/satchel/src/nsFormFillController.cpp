@@ -77,8 +77,8 @@ NS_INTERFACE_MAP_BEGIN(nsFormFillController)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMFocusListener)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsFormFillController);
-NS_IMPL_RELEASE(nsFormFillController);
+NS_IMPL_ADDREF(nsFormFillController)
+NS_IMPL_RELEASE(nsFormFillController)
 
 nsFormFillController::nsFormFillController() :
   mTimeout(50),

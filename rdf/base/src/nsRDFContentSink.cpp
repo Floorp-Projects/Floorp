@@ -465,8 +465,8 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
 ////////////////////////////////////////////////////////////////////////
 // nsISupports interface
 
-NS_IMPL_ADDREF(RDFContentSinkImpl);
-NS_IMPL_RELEASE(RDFContentSinkImpl);
+NS_IMPL_ADDREF(RDFContentSinkImpl)
+NS_IMPL_RELEASE(RDFContentSinkImpl)
 
 NS_IMETHODIMP
 RDFContentSinkImpl::QueryInterface(REFNSIID iid, void** result)

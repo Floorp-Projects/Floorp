@@ -66,8 +66,8 @@ NS_INTERFACE_MAP_BEGIN(nsFormHistory)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-NS_IMPL_THREADSAFE_ADDREF(nsFormHistory);
-NS_IMPL_THREADSAFE_RELEASE(nsFormHistory);
+NS_IMPL_THREADSAFE_ADDREF(nsFormHistory)
+NS_IMPL_THREADSAFE_RELEASE(nsFormHistory)
 
 mdb_column nsFormHistory::kToken_ValueColumn = 0;
 mdb_column nsFormHistory::kToken_NameColumn = 0;

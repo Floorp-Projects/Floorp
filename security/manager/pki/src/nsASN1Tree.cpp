@@ -38,7 +38,7 @@
 #include "nsArray.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsNSSASN1Tree, nsIASN1Tree, 
-                                                 nsITreeView);
+                                                 nsITreeView)
 
 nsNSSASN1Tree::nsNSSASN1Tree() 
 :mTopNode(nsnull)

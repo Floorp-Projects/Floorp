@@ -309,7 +309,7 @@ nsChromeRegistry::~nsChromeRegistry()
 
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsChromeRegistry, nsIChromeRegistry, nsIXULChromeRegistry, nsIObserver, nsISupportsWeakReference);
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsChromeRegistry, nsIChromeRegistry, nsIXULChromeRegistry, nsIObserver, nsISupportsWeakReference)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIChromeRegistry methods:
