@@ -12506,7 +12506,7 @@ _MOZ_CPP_EXCEPTIONS=1
 fi
 
 
-if test "$_MOZ_CPP_EXCEPTIONS"; then
+if test "$_MOZ_CPP_EXCEPTIONS" -o -z "$GNU_CC"; then
     cat >> confdefs.h <<\EOF
 #define CPP_THROW_NEW 
 EOF
