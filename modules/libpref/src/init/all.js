@@ -106,6 +106,7 @@ pref("browser.show_about_as_stupid_modal_window", false);
 // various default search settings
 pref("browser.search.defaulturl", "http://search.netscape.com/cgi-bin/search?search=");
 pref("browser.search.opensidebarsearchpanel", true);
+pref("browser.search.last_search_category", "NC:SearchCategory?category=urn:search:category:1");
 pref("browser.search.powermode", 0);
 pref("browser.search.use_double_clicks", false);
 
