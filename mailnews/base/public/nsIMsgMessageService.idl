@@ -27,6 +27,7 @@ interface nsIUrlListener;
 interface nsIStreamListener;
 interface nsIMsgWindow;
 interface nsIFileSpec;
+interface nsIMsgFolder;
 
 %{C++
 #include "nsMsgKeyArray.h"
@@ -63,7 +64,7 @@ interface nsIMsgMessageService : nsISupports {
 						   in nsIUrlListener aUrlListener, out nsIURI aURL);
 
     /* copy multiple messages at a time */
-	[noscript] void CopyMessages(in nsMsgKeyArrayPtr keys, in nsIStreamListener aCopyListener, in boolean aMoveMessage,
+	[noscript] void CopyMessages(in nsMsgKeyArrayPtr keys, in nsIMsgFolder srcFolder, in nsIStreamListener aCopyListener, in boolean aMoveMessage,
 						   in nsIUrlListener aUrlListener, out nsIURI aURL);
 
 %{ C++

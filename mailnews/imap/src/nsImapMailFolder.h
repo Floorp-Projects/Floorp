@@ -181,9 +181,7 @@ public:
 	NS_DECL_NSIIMAPMESSAGESINK
 
     //nsICopyMessageListener
-	NS_IMETHOD BeginCopy(nsIMessage *message);
-	NS_IMETHOD CopyData(nsIInputStream *aIStream, PRInt32 aLength);
-	NS_IMETHOD EndCopy(PRBool copySucceeded);
+	NS_DECL_NSICOPYMESSAGELISTENER
 
     // nsIUrlListener methods
 	NS_IMETHOD OnStartRunningUrl(nsIURI * aUrl);
@@ -294,6 +292,10 @@ protected:
                            nsIMsgCopyServiceListener* listener);
     nsresult CopyStreamMessage(nsIMessage* message, nsIMsgFolder* dstFolder,
                                PRBool isMove);
+	// used for multiple messages
+	nsresult CopyStreamMessages(nsMsgKeyArray *keys,
+                                    nsIMsgFolder* dstFolder,
+                                    PRBool isMove);
     nsresult InitCopyState(nsISupports* srcSupport, 
                            nsISupportsArray* messages,
                            PRBool isMove,

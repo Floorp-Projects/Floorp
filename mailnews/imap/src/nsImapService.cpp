@@ -333,53 +333,37 @@ nsImapService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener *
 }
 
 NS_IMETHODIMP
-nsImapService::CopyMessages(nsMsgKeyArray *keys, nsIStreamListener *
-                           aMailboxCopy, PRBool moveMessage,
+nsImapService::CopyMessages(nsMsgKeyArray *keys, nsIMsgFolder *srcFolder, nsIStreamListener *aMailboxCopy, PRBool moveMessage,
 						   nsIUrlListener * aUrlListener, nsIURI **aURL)
 {
-    nsresult rv = NS_ERROR_NULL_POINTER;
+    nsresult rv = NS_OK;
     nsCOMPtr<nsISupports> streamSupport;
-    if (!keys || !aMailboxCopy) return rv;
+    if (!keys || !aMailboxCopy) 
+		return NS_ERROR_NULL_POINTER;
     streamSupport = do_QueryInterface(aMailboxCopy, &rv);
-    if (NS_FAILED(rv)) return rv;
+    if (!streamSupport || NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIMsgFolder> folder;
+    nsCOMPtr<nsIMsgFolder> folder = srcFolder;
     nsXPIDLCString msgKey;
-	  if (NS_SUCCEEDED(rv))
-	  {
+	if (NS_SUCCEEDED(rv))
+	{
     	nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(folder, &rv));
-		  if (NS_SUCCEEDED(rv))
-		  {
+		if (NS_SUCCEEDED(rv))
+		{
+			nsCString messageIds;
+
+			AllocateImapUidString(keys->GetArray(), keys->GetSize(), messageIds);
             nsCOMPtr<nsIImapUrl> imapUrl;
             nsCAutoString urlSpec;
 			PRUnichar hierarchySeparator = '/';
             rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
 
+			imapUrl->SetCopyState(aMailboxCopy);
             // now try to display the message
-			      rv = FetchMessage(imapUrl, nsIImapUrl::nsImapMsgFetch, folder, imapMessageSink,
-                              aURL, streamSupport, msgKey, PR_TRUE);
-           if (NS_SUCCEEDED(rv) && moveMessage)
-           {
-               nsCOMPtr<nsIEventQueue> queue;	
-               // get the Event Queue for this thread...
-	             NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
+			rv = FetchMessage(imapUrl, nsIImapUrl::nsImapMsgFetch, folder, imapMessageSink,
+                              aURL, streamSupport, messageIds.GetBuffer(), PR_TRUE);
+			// ### end of copy operation should know how to do the delete.if this is a move
 
-               if (NS_FAILED(rv)) return rv;
-
-               rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
-               if (NS_FAILED(rv)) return rv;
-               
-               // ** jt -- this really isn't an optimal way of deleting a
-               // list of messages but I don't have a better way at this
-               // moment
-               rv = AddMessageFlags(queue, folder, aUrlListener, nsnull,
-                                    msgKey,
-                                    kImapMsgDeletedFlag,
-                                    PR_TRUE);
-               // ** jt -- force to update the folder
-               if (NS_SUCCEEDED(rv))
-                  rv = SelectFolder(queue, folder, aUrlListener, nsnull, nsnull);
-            } // if move message
         } // if we got an imap message sink
     } // if we decomposed the imap message 
     return rv;

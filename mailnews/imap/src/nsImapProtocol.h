@@ -376,7 +376,6 @@ private:
 	void FolderMsgDumpLoop(PRUint32 *msgUids, PRUint32 msgCount, nsIMAPeFetchFields fields);
 	void WaitForPotentialListOfMsgsToFetch(PRUint32 **msgIdList, PRUint32 &msgCount);
 	void WaitForPotentialListOfBodysToFetch(PRUint32 **msgIdList, PRUint32 &msgCount);
-	void AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsCString &returnString);
 	void HeaderFetchCompleted();
     void UploadMessageFromFile(nsIFileSpec* fileSpec, const char* mailboxName,
                                imapMessageFlagsType flags);

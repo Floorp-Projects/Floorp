@@ -99,11 +99,13 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
 }
 
 nsresult nsMailboxService::CopyMessages(nsMsgKeyArray *msgKeys,
+							  nsIMsgFolder *srcFolder,
                               nsIStreamListener * aMailboxCopyHandler,
                               PRBool moveMessage,
                               nsIUrlListener * aUrlListener,
                               nsIURI **aURL)
 {
+	NS_ASSERTION(PR_FALSE, "not implemented yet");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -467,6 +467,7 @@ NS_IMETHODIMP nsMsgHdr::SetCCListArray(const char *names, const char *addresses,
 NS_IMETHODIMP nsMsgHdr::SetMessageSize(PRUint32 messageSize)
 {
 	SetUInt32Column(messageSize, m_mdb->m_messageSizeColumnToken);
+	m_messageSize = messageSize;
     return NS_OK;
 }
 

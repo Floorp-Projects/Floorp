@@ -1216,6 +1216,7 @@ nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport,
   rv = messages->Count(&mCopyState->m_totalMsgCount);
   if (listener)
     mCopyState->m_listener = do_QueryInterface(listener, &rv);
+  mCopyState->m_copyingMultipleMessages = PR_FALSE;
 
 done:
 
@@ -1301,17 +1302,27 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   }
   else
   {
-    nsCOMPtr<nsISupports> msgSupport;
-    msgSupport = getter_AddRefs(messages->ElementAt(0));
-    if (msgSupport)
-    {
-      nsCOMPtr<nsIMessage> aMessage;
-      aMessage = do_QueryInterface(msgSupport, &rv);
-      if(NS_SUCCEEDED(rv))
-        rv = CopyMessageTo(aMessage, this, isMove);
-      else
-        ClearCopyState();
-    }
+	  PRUint32 numMsgs = 0;
+	  messages->Count(&numMsgs);
+	if (numMsgs > 1 && protocolType.EqualsIgnoreCase("imap"))
+	{
+		mCopyState->m_copyingMultipleMessages = PR_TRUE;
+		rv = CopyMessagesTo(messages, this, isMove);
+	}
+	else
+	{
+		nsCOMPtr<nsISupports> msgSupport;
+		msgSupport = getter_AddRefs(messages->ElementAt(0));
+		if (msgSupport)
+		{
+		  nsCOMPtr<nsIMessage> aMessage;
+		  aMessage = do_QueryInterface(msgSupport, &rv);
+		  if(NS_SUCCEEDED(rv))
+			rv = CopyMessageTo(aMessage, this, isMove);
+		  else
+			ClearCopyState();
+		}
+	}
   }
   return rv;
 }
@@ -1492,14 +1503,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
     return rv;
 }
 
-
-//nsICopyMessageListener
-NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy(nsIMessage *message)
+nsresult nsMsgLocalMailFolder::WriteStartOfNewMessage()
 {
-  if (!mCopyState) return NS_ERROR_NULL_POINTER;
-  nsresult rv = NS_OK;
-  mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
-
   mCopyState->m_curDstKey = mCopyState->m_fileStream->tell();
 
   // CopyFileMessage() and CopyMessages() from servers other than pop3
@@ -1538,7 +1543,19 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy(nsIMessage *message)
         mCopyState->m_parseMsgState->ParseAFolderLine(
           result.GetBuffer(), result.Length());
   }
+	return NS_OK;
+}
 
+//nsICopyMessageListener
+NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy(nsIMessage *message)
+{
+  if (!mCopyState) return NS_ERROR_NULL_POINTER;
+  nsresult rv = NS_OK;
+  mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
+
+  // if we're copying more than one message, StartMessage will handle this.
+  if (!mCopyState->m_copyingMultipleMessages)
+	rv = WriteStartOfNewMessage();
   return rv;
 }
 
@@ -1684,24 +1701,26 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 
     mCopyState->m_parseMsgState->FinishHeader();
 
-    result =
-      mCopyState->m_parseMsgState->GetNewMsgHdr(getter_AddRefs(newHdr));
-    if (NS_SUCCEEDED(result) && newHdr)
-    {
-      result = GetMsgDatabase(getter_AddRefs(msgDb));
-      if (NS_SUCCEEDED(result) && msgDb)
-      {
-        msgDb->AddNewHdrToDB(newHdr, PR_TRUE);
-        if (localUndoTxn)
-        { // ** jt - recording the message size for possible undo use; the
-          // message size is different for pop3 and imap4 messages
-            PRUint32 msgSize;
-            newHdr->GetMessageSize(&msgSize);
-            localUndoTxn->AddDstMsgSize(msgSize);
-        }
-        msgDb->SetSummaryValid(PR_TRUE);
-        msgDb->Commit(nsMsgDBCommitType::kLargeCommit);
-      }
+    result = GetMsgDatabase(getter_AddRefs(msgDb));
+    if (NS_SUCCEEDED(result) && msgDb)
+	{
+	  if (!mCopyState->m_copyingMultipleMessages)
+	  {
+		  result = mCopyState->m_parseMsgState->GetNewMsgHdr(getter_AddRefs(newHdr));
+		  if (NS_SUCCEEDED(result) && newHdr)
+		  {
+			msgDb->AddNewHdrToDB(newHdr, PR_TRUE);
+			if (localUndoTxn)
+			{ // ** jt - recording the message size for possible undo use; the
+			  // message size is different for pop3 and imap4 messages
+				PRUint32 msgSize;
+				newHdr->GetMessageSize(&msgSize);
+				localUndoTxn->AddDstMsgSize(msgSize);
+			}
+		  }
+	  }
+	  msgDb->SetSummaryValid(PR_TRUE);
+	  msgDb->Commit(nsMsgDBCommitType::kLargeCommit);
     }
     mCopyState->m_parseMsgState->Clear();
 
@@ -1736,6 +1755,138 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
     
     ClearCopyState();
   }
+
+	return rv;
+}
+
+// this is the beginning of the next message copied
+NS_IMETHODIMP nsMsgLocalMailFolder::StartMessage()
+{
+	return WriteStartOfNewMessage();
+}
+
+// just finished the current message.
+NS_IMETHODIMP nsMsgLocalMailFolder::EndMessage(nsMsgKey key)
+{
+	nsCOMPtr<nsLocalMoveCopyMsgTxn> localUndoTxn;
+	nsresult rv;
+
+  if (mCopyState->m_undoMsgTxn)
+    rv = mCopyState->m_undoMsgTxn->QueryInterface(
+      nsCOMTypeInfo<nsLocalMoveCopyMsgTxn>::GetIID(),
+      getter_AddRefs(localUndoTxn));
+
+  // I think this is always true for online to offline copy
+  mCopyState->m_dummyEnvelopeNeeded = PR_TRUE;
+
+  if (mCopyState->m_dummyEnvelopeNeeded)
+  {
+    mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
+    *(mCopyState->m_fileStream) << MSG_LINEBREAK;
+    if (mCopyState->m_parseMsgState)
+        mCopyState->m_parseMsgState->ParseAFolderLine(CRLF, MSG_LINEBREAK_LEN);
+  }
+
+  // CopyFileMessage() and CopyMessages() from servers other than mailbox
+  if (mCopyState->m_parseMsgState)
+  {
+    nsresult result;
+    nsCOMPtr<nsIMsgDatabase> msgDb;
+    nsCOMPtr<nsIMsgDBHdr> newHdr;
+
+    mCopyState->m_parseMsgState->FinishHeader();
+
+    result =
+      mCopyState->m_parseMsgState->GetNewMsgHdr(getter_AddRefs(newHdr));
+    if (NS_SUCCEEDED(result) && newHdr)
+    {
+      result = GetMsgDatabase(getter_AddRefs(msgDb));
+      if (NS_SUCCEEDED(result) && msgDb)
+      {
+        msgDb->AddNewHdrToDB(newHdr, PR_TRUE);
+        if (localUndoTxn)
+        { // ** jt - recording the message size for possible undo use; the
+          // message size is different for pop3 and imap4 messages
+            PRUint32 msgSize;
+            newHdr->GetMessageSize(&msgSize);
+            localUndoTxn->AddDstMsgSize(msgSize);
+        }
+      }
+    }
+    mCopyState->m_parseMsgState->Clear();
+
+    if (mCopyState->m_listener) // CopyFileMessage() only
+      mCopyState->m_listener->SetMessageKey((PRUint32) mCopyState->m_curDstKey);
+    }
+
+  if (mCopyState->m_fileStream)
+    mCopyState->m_fileStream->flush();
+  return NS_OK;
+}
+
+
+nsresult nsMsgLocalMailFolder::CopyMessagesTo(nsISupportsArray *messages, 
+                                             nsIMsgFolder *dstFolder,
+                                             PRBool isMove)
+{
+  if (!mCopyState) return NS_ERROR_OUT_OF_MEMORY;
+	nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener; 
+	nsresult rv = nsComponentManager::CreateInstance(kCopyMessageStreamListenerCID, NULL,
+											nsICopyMessageStreamListener::GetIID(),
+											getter_AddRefs(copyStreamListener)); 
+	if(NS_FAILED(rv))
+		return rv;
+
+	nsCOMPtr<nsICopyMessageListener> copyListener(do_QueryInterface(dstFolder));
+	if(!copyListener)
+		return NS_ERROR_NO_INTERFACE;
+
+	nsCOMPtr<nsIMsgFolder> srcFolder(do_QueryInterface(mCopyState->m_srcSupport));
+	if(!srcFolder)
+		return NS_ERROR_NO_INTERFACE;
+
+	rv = copyStreamListener->Init(srcFolder, copyListener, nsnull);
+	if(NS_FAILED(rv))
+		return rv;
+
+  if (!mCopyState->m_messageService)
+  {
+    nsXPIDLCString uri;
+    srcFolder->GetURI(getter_Copies(uri));
+    rv = GetMessageServiceFromURI(uri, &mCopyState->m_messageService);
+  }
+   
+  if (NS_SUCCEEDED(rv) && mCopyState->m_messageService)
+  {
+    nsIURI * url = nsnull;
+	nsMsgKeyArray keyArray;
+	PRUint32 numMessages = 0;
+	messages->Count(&numMessages);
+	for (PRUint32 i = 0; i < numMessages; i++)
+	{
+        nsCOMPtr<nsISupports> msgSupport;
+		msgSupport = getter_AddRefs(messages->ElementAt(i));
+		if (msgSupport)
+		{
+		  nsCOMPtr<nsIMessage> aMessage;
+		  aMessage = do_QueryInterface(msgSupport, &rv);
+		  if(NS_SUCCEEDED(rv) && aMessage)
+		  {
+			  nsMsgKey key;
+			  aMessage->GetMessageKey(&key);
+			  keyArray.Add(key);
+		  }
+		}
+	}
+		nsCOMPtr<nsIStreamListener>
+      streamListener(do_QueryInterface(copyStreamListener));
+		if(!streamListener)
+			return NS_ERROR_NO_INTERFACE;
+		// since we're doing all the copies at once, advance curCopyIndex.
+		mCopyState->m_curCopyIndex = mCopyState->m_totalMsgCount;
+		mCopyState->m_messageService->CopyMessages(&keyArray, srcFolder, streamListener, isMove,
+                                            nsnull, &url);
+	}
 
 	return rv;
 }

@@ -63,6 +63,7 @@ struct nsLocalMailCopyState
   PRBool m_dummyEnvelopeNeeded;
   char m_dataBuffer[FOUR_K+1];
   PRUint32 m_leftOver;
+  PRBool m_copyingMultipleMessages;
 };
 
 class nsMsgLocalMailFolder : public nsMsgDBFolder,
@@ -141,7 +142,8 @@ protected:
 	nsresult CreateSubFolders(nsFileSpec &path);
 	nsresult AddDirectorySeparator(nsFileSpec &path);
 	nsresult GetDatabase();
-  nsresult GetTrashFolder(nsIMsgFolder** trashFolder);
+    nsresult GetTrashFolder(nsIMsgFolder** trashFolder);
+    nsresult WriteStartOfNewMessage();
 
 	/* Finds the directory associated with this folder.  That is if the path is
 	c:\Inbox, it will return c:\Inbox.sbd if it succeeds.  If that path doesn't
@@ -154,6 +156,11 @@ protected:
   // copy message helper
 	nsresult CopyMessageTo(nsIMessage *message, nsIMsgFolder *dstFolder,
                          PRBool isMove);
+
+	// copy multiple messages at a time from this folder
+	nsresult CopyMessagesTo(nsISupportsArray *messages, 
+                                             nsIMsgFolder *dstFolder,
+                                             PRBool isMove);
 
 	virtual const char* GetIncomingServerType();
   nsresult SetTransactionManager(nsITransactionManager* txnMgr);

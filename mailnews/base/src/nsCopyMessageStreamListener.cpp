@@ -127,6 +127,23 @@ NS_IMETHODIMP nsCopyMessageStreamListener::Init(nsIMsgFolder *srcFolder, nsICopy
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsCopyMessageStreamListener::StartMessage()
+{
+	if (mDestination)
+		mDestination->StartMessage();
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsCopyMessageStreamListener::EndMessage(nsMsgKey key)
+{
+	if (mDestination)
+		mDestination->EndMessage(key);
+
+	return NS_OK;
+}
+
+
 NS_IMETHODIMP nsCopyMessageStreamListener::OnDataAvailable(nsIChannel * /* aChannel */, nsISupports *ctxt, nsIInputStream *aIStream, PRUint32 sourceOffset, PRUint32 aLength)
 {
 	nsresult rv;
@@ -162,6 +179,8 @@ NS_IMETHODIMP nsCopyMessageStreamListener::OnStopRequest(nsIChannel * aChannel, 
 	if(copySucceeded)
 	{
 		PRBool moveMessage;
+		// this only happens for local messages, because it checks for a
+		// mailbox uri. Seems wrong.
 		IsMoveMessage(uri, &moveMessage);
 		if(moveMessage)
 		{
@@ -172,3 +191,4 @@ NS_IMETHODIMP nsCopyMessageStreamListener::OnStopRequest(nsIChannel * aChannel, 
 	//be some error dialog if either the copy or delete failed.
 	return NS_OK;
 }
+

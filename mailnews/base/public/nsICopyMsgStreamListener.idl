@@ -29,4 +29,6 @@
 interface nsICopyMessageStreamListener: nsISupports
 {
 	void Init(in nsIMsgFolder srcFolder, in nsICopyMessageListener destination, in nsISupports listenerData);
+	void StartMessage();
+	void EndMessage(in nsMsgKey key);
 };

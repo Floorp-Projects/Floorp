@@ -344,3 +344,45 @@ nsImapMailboxSpec& nsImapMailboxSpec::operator=(const nsImapMailboxSpec& aCopy)
   
   return *this;
 }
+
+void AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsCString &returnString)
+{
+  PRUint32 startSequence = (msgCount > 0) ? msgUids[0] : 0xFFFFFFFF;
+  PRUint32 curSequenceEnd = startSequence;
+  PRUint32 total = msgCount;
+
+  for (PRUint32 keyIndex=0; keyIndex < total; keyIndex++)
+  {
+    PRUint32 curKey = msgUids[keyIndex];
+    PRUint32 nextKey = (keyIndex + 1 < total) ? msgUids[keyIndex + 1] : 0xFFFFFFFF;
+    PRBool lastKey = (nextKey == 0xFFFFFFFF);
+
+    if (lastKey)
+      curSequenceEnd = curKey;
+    if (nextKey == curSequenceEnd + 1 && !lastKey)
+    {
+      curSequenceEnd = nextKey;
+      continue;
+    }
+    else if (curSequenceEnd > startSequence)
+    {
+      returnString.Append(startSequence, 10);
+      returnString += ':';
+      returnString.Append(curSequenceEnd, 10);
+      if (!lastKey)
+        returnString += ',';
+//      sprintf(currentidString, "%ld:%ld,", startSequence, curSequenceEnd);
+      startSequence = nextKey;
+      curSequenceEnd = startSequence;
+    }
+    else
+    {
+      startSequence = nextKey;
+      curSequenceEnd = startSequence;
+      returnString.Append(msgUids[keyIndex], 10);
+      if (!lastKey)
+        returnString += ',';
+//      sprintf(currentidString, "%ld,", msgUids[keyIndex]);
+    }
+  }
+}

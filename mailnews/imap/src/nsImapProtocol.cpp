@@ -49,6 +49,7 @@
 #include "nsIPipe.h"
 #include "nsIMsgFolder.h"
 #include "nsImapStringBundle.h"
+#include "nsICopyMsgStreamListener.h"
 
 // for the memory cache...
 #include "nsINetDataCacheManager.h"
@@ -63,7 +64,7 @@ PRLogModuleInfo *IMAP;
 #include "nsIMsgIncomingServer.h"
 #include "nsIImapIncomingServer.h"
 #include "nsIPref.h"
-
+#include "nsImapUtils.h"
 #include "nsProxyObjectManager.h"
 
 #define ONE_SECOND ((PRUint32)1000)    // one second
@@ -494,7 +495,7 @@ nsImapProtocol::SetupSinkProxy()
         if (!m_imapMessageSink)
         {
             nsCOMPtr<nsIImapMessageSink> aImapMessageSink;
-            nsresult res = m_runningUrl->GetImapMessageSink(getter_AddRefs(aImapMessageSink));
+            res = m_runningUrl->GetImapMessageSink(getter_AddRefs(aImapMessageSink));
             if (NS_SUCCEEDED(res) && aImapMessageSink)
             {
         NS_WITH_SERVICE( nsIProxyObjectManager, proxyManager, kProxyObjectManagerCID, &res);
@@ -2104,7 +2105,23 @@ void nsImapProtocol::BeginMessageDownLoad(
            fileSpec->GetNativePath(getter_Copies(nativePath));
            m_imapMessageSink->SetupMsgWriteStream(nativePath, addDummyEnvelope);
 	       }
+	}
+	if (m_imapMailFolderSink)
+	{
+		nsCOMPtr<nsISupports> copyState;
+
+        if (m_runningUrl)
+		{
+            m_runningUrl->GetCopyState(getter_AddRefs(copyState));
+			if (copyState)
+			{
+				nsCOMPtr <nsICopyMessageStreamListener> listener = do_QueryInterface(copyState);
+				if (listener)
+					listener->StartMessage();
+			}
 		}
+	}
+
   }
   else
     HandleMemoryFailure();
@@ -2861,6 +2878,19 @@ void nsImapProtocol::NormalMessageEndDownload()
     // need to know if we're downloading for display or not.
     if (m_imapMessageSink)
       m_imapMessageSink->NormalEndMsgWriteStream(m_downloadLineCache.CurrentUID());
+	nsCOMPtr<nsISupports> copyState;
+
+    if (m_runningUrl)
+	{
+        m_runningUrl->GetCopyState(getter_AddRefs(copyState));
+		if (copyState)
+		{
+			nsCOMPtr <nsICopyMessageStreamListener> listener = do_QueryInterface(copyState);
+			if (listener)
+				listener->EndMessage(m_downloadLineCache.CurrentUID());
+		}
+	}
+
   }
 }
 
@@ -3214,47 +3244,6 @@ PRBool nsImapProtocol::CheckNewMail()
 
 
 
-void nsImapProtocol::AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsCString &returnString)
-{
-  PRUint32 startSequence = (msgCount > 0) ? msgUids[0] : 0xFFFFFFFF;
-  PRUint32 curSequenceEnd = startSequence;
-  PRUint32 total = msgCount;
-
-  for (PRUint32 keyIndex=0; keyIndex < total; keyIndex++)
-  {
-    PRUint32 curKey = msgUids[keyIndex];
-    PRUint32 nextKey = (keyIndex + 1 < total) ? msgUids[keyIndex + 1] : 0xFFFFFFFF;
-    PRBool lastKey = (nextKey == 0xFFFFFFFF);
-
-    if (lastKey)
-      curSequenceEnd = curKey;
-    if (nextKey == curSequenceEnd + 1 && !lastKey)
-    {
-      curSequenceEnd = nextKey;
-      continue;
-    }
-    else if (curSequenceEnd > startSequence)
-    {
-      returnString.Append(startSequence, 10);
-      returnString += ':';
-      returnString.Append(curSequenceEnd, 10);
-      if (!lastKey)
-        returnString += ',';
-//      sprintf(currentidString, "%ld:%ld,", startSequence, curSequenceEnd);
-      startSequence = nextKey;
-      curSequenceEnd = startSequence;
-    }
-    else
-    {
-      startSequence = nextKey;
-      curSequenceEnd = startSequence;
-      returnString.Append(msgUids[keyIndex], 10);
-      if (!lastKey)
-        returnString += ',';
-//      sprintf(currentidString, "%ld,", msgUids[keyIndex]);
-    }
-  }
-}
 
 // log info including current state...
 void nsImapProtocol::Log(const char *logSubName, const char *extraInfo, const char *logData)
