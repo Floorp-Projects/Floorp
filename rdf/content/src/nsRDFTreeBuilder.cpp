@@ -121,6 +121,9 @@ public:
     // nsIRDFContentModelBuilder interface
     NS_IMETHOD SetDataBase(nsIRDFCompositeDataSource* aDataBase);
 
+    // nsIDOMNodeObserver interface
+    NS_IMETHOD OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild);
+
     // Implementation methods
     nsresult
     AddWidgetItem(nsIContent* aTreeItemElement,
@@ -128,7 +131,7 @@ public:
                   nsIRDFResource* aValue, PRInt32 aNaturalOrderPos);
 
     nsresult
-    RemoveWidgetItem(nsIContent* aTreeItemElement,
+    RemoveWidgetItem(nsIContent* aElement,
                      nsIRDFResource* aProperty,
                      nsIRDFResource* aValue);
 
@@ -191,6 +194,7 @@ public:
     // pseudo-constants
     static nsrefcnt gRefCnt;
  
+    static nsIAtom* kPropertyAtom;
     static nsIAtom* kTreeAtom;
     static nsIAtom* kTreeBodyAtom;
     static nsIAtom* kTreeCellAtom;
@@ -208,6 +212,7 @@ public:
 
 nsrefcnt RDFTreeBuilderImpl::gRefCnt = 0;
 
+nsIAtom* RDFTreeBuilderImpl::kPropertyAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeBodyAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeCellAtom;
@@ -244,6 +249,7 @@ RDFTreeBuilderImpl::RDFTreeBuilderImpl(void)
     : RDFGenericBuilderImpl()
 {
     if (gRefCnt == 0) {
+        kPropertyAtom        = NS_NewAtom("property");
         kTreeAtom            = NS_NewAtom("tree");
         kTreeBodyAtom        = NS_NewAtom("treebody");
         kTreeCellAtom        = NS_NewAtom("treecell");
@@ -264,7 +270,7 @@ RDFTreeBuilderImpl::~RDFTreeBuilderImpl(void)
 {
     --gRefCnt;
     if (gRefCnt == 0) {
-        
+        NS_RELEASE(kPropertyAtom);
         NS_RELEASE(kTreeAtom);
         NS_RELEASE(kTreeBodyAtom);
         NS_RELEASE(kTreeCellAtom);
@@ -306,6 +312,169 @@ RDFTreeBuilderImpl::SetDataBase(nsIRDFCompositeDataSource* aDataBase)
     return rv;
 }
 
+
+////////////////////////////////////////////////////////////////////////
+// nsIDOMNodeObserver interface
+
+NS_IMETHODIMP
+RDFTreeBuilderImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
+{
+    NS_PRECONDITION(aParent != nsnull, "null ptr");
+    if (!aParent)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aOldChild != nsnull, "null ptr");
+    if (!aOldChild)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+
+    nsCOMPtr<nsIRDFResource> resource;
+    if (NS_FAILED(rv = GetDOMNodeResource(aParent, getter_AddRefs(resource)))) {
+        // XXX it's not a resource element, so there's no assertions
+        // we need to make on the back-end. Should we just do the
+        // update?
+        return NS_OK;
+    }
+
+    // Get the nsIContent interface, it's a bit more utilitarian
+    nsCOMPtr<nsIContent> parent( do_QueryInterface(aParent) );
+    if (! parent) {
+        NS_ERROR("parent doesn't support nsIContent");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    // Make sure that the element is in the widget. XXX Even this may be
+    // a bit too promiscuous: an element may also be a XUL element...
+    if (!IsElementInWidget(parent))
+        return NS_OK;
+
+    // Split the parent into its namespace and tag components
+    PRInt32 parentNameSpaceID;
+    if (NS_FAILED(rv = parent->GetNameSpaceID(parentNameSpaceID))) {
+        NS_ERROR("unable to get parent namespace ID");
+        return rv;
+    }
+
+    nsCOMPtr<nsIAtom> parentNameAtom;
+    if (NS_FAILED(rv = parent->GetTag( *getter_AddRefs(parentNameAtom) ))) {
+        NS_ERROR("unable to get parent tag");
+        return rv;
+    }
+
+    // Now do the same for the child
+    nsCOMPtr<nsIContent> child( do_QueryInterface(aOldChild) );
+    if (! child) {
+        NS_ERROR("child doesn't support nsIContent");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    PRInt32 childNameSpaceID;
+    if (NS_FAILED(rv = child->GetNameSpaceID(childNameSpaceID))) {
+        NS_ERROR("unable to get child's namespace ID");
+        return rv;
+    }
+
+    nsCOMPtr<nsIAtom> childNameAtom;
+    if (NS_FAILED(rv = child->GetTag( *getter_AddRefs(childNameAtom) ))) {
+        NS_ERROR("unable to get child's tag");
+        return rv;
+    }
+
+    // Now see if there's anything we can do about it.
+
+    if ((parentNameSpaceID == kNameSpaceID_XUL) &&
+        ((parentNameAtom == kTreeChildrenAtom) ||
+         (parentNameAtom == kTreeBodyAtom))) {
+        // The parent is a xul:treechildren or xul:treebody...
+
+        if ((childNameSpaceID == kNameSpaceID_XUL) &&
+            (childNameAtom == kTreeItemAtom)) {
+
+            // ...and the child is a tree item. We can do this. First,
+            // get the rdf:property out of the child to see what the
+            // relationship was between the parent and the child.
+            nsAutoString propertyStr;
+            if  (NS_FAILED(rv = child->GetAttribute(kNameSpaceID_RDF, kPropertyAtom, propertyStr))) {
+                NS_ERROR("severe error trying to retrieve attribute");
+                return rv;
+            }
+
+            if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+                // It's a relationship set up by RDF. So let's
+                // unassert it from the graph. First we need the
+                // property resource.
+                nsCOMPtr<nsIRDFResource> property;
+                if (NS_FAILED(gRDFService->GetUnicodeResource(propertyStr, getter_AddRefs(property)))) {
+                    NS_ERROR("unable to construct resource for property");
+                    return rv;
+                }
+
+
+                // And now we need the child's resource.
+                nsCOMPtr<nsIRDFResource> target;
+                if (NS_FAILED(rv = GetElementResource(child, getter_AddRefs(target)))) {
+                    NS_ERROR("expected child to have resource");
+                    return rv;
+                }
+
+                // We'll handle things a bit differently if we're
+                // tinkering with an RDF container...
+                if (rdf_IsContainer(mDB, resource) &&
+                    rdf_IsOrdinalProperty(property)) {
+                    rv = rdf_ContainerRemoveElement(mDB, resource, target);
+                }
+                else {
+                    rv = mDB->Unassert(resource, property, target);
+                }
+
+                if (NS_FAILED(rv)) {
+                    NS_ERROR("unable to remove element from DB");
+                    return rv;
+                }
+            }
+            else {
+
+                // It's a random (non-RDF inserted) element. Just use
+                // the content interface to remove it.
+                PRInt32 index;
+                if (NS_FAILED(rv = parent->IndexOf(child, index))) {
+                    NS_ERROR("unable to get index of child in parent node");
+                    return rv;
+                }
+
+                NS_ASSERTION(index >= 0, "child was already removed");
+
+                if (index >= 0) {
+                    rv = parent->RemoveChildAt(index, PR_TRUE);
+                    NS_ASSERTION(NS_SUCCEEDED(rv), "error removing child from parent");
+                }
+            }
+        }
+    }
+    else if ((parentNameSpaceID == kNameSpaceID_XUL) &&
+             (parentNameAtom == kTreeItemAtom)) {
+
+        // The parent is a xul:treeitem. We really only care about
+        // treeitems in the body; not treeitems in the header...
+        NS_NOTYETIMPLEMENTED("write me");
+    }
+    else if ((parentNameSpaceID == kNameSpaceID_XUL) &&
+             (parentNameAtom == kTreeCellAtom)) {
+
+        // The parent is a xul:treecell. We really only care about
+        // cells in the body; not cells in the header...
+        NS_NOTYETIMPLEMENTED("write me");
+    }
+
+    // they're trying to manipulate the DOM in some way that we don't
+    // care about: we should probably just call through and do the
+    // operation on nsIContent, but...let the XUL builder do that I
+    // guess.
+    return NS_OK;
+}
+
+
 ////////////////////////////////////////////////////////////////////////
 // Implementation methods
 
@@ -324,19 +493,16 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
     // <xul:treeitem>
     //   ...
     //   <xul:treechildren>
-    //     <xul:treeitem RDF:ID="value">
-    //        <xul:treerow>
-    //           <xul:treecell RDF:ID="column1">
-    //              <!-- value not specified until SetCellValue() -->
-    //           </xul:treecell>
+    //     <xul:treeitem id="value" rdf:property="property">
+    //        <xul:treecell>
+    //           <!-- value not specified until SetCellValue() -->
+    //        </xul:treecell>
     //
-    //           </xul:treecell RDF:ID="column2"/>
-    //              <!-- value not specified until SetCellValue() -->
-    //           </xul:treecell>
+    //        <xul:treecell>
+    //           <!-- value not specified until SetCellValue() -->
+    //        </xul:treecell>
     //
-    //           ...
-    //
-    //        </xul:treerow>
+    //        ...
     //
     //        <!-- Other content recursively generated -->
     //
@@ -381,6 +547,16 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
                                              aValue,
                                              getter_AddRefs(treeItem))))
         return rv;
+
+    // Set the rdf:property attribute to be the arc label from the
+    // parent. This indicates how it got generated, so we can keep any
+    // subsequent changes via the DOM in sink. This property should be
+    // immutable.
+    {
+        const char* uri;
+        aProperty->GetValue(&uri);
+        treeItem->SetAttribute(kNameSpaceID_RDF, kPropertyAtom, uri, PR_FALSE);
+    }
 
     // Create the cell substructure
     if (NS_FAILED(rv = CreateTreeItemCells(treeItem)))
@@ -479,30 +655,68 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
 
 
 nsresult
-RDFTreeBuilderImpl::RemoveWidgetItem(nsIContent* aTreeItemElement,
+RDFTreeBuilderImpl::RemoveWidgetItem(nsIContent* aElement,
                                      nsIRDFResource* aProperty,
                                      nsIRDFResource* aValue)
 {
     nsresult rv;
-    nsCOMPtr<nsIContent> treechildren;
 
-    if (NS_FAILED(rv = FindChildByTag(aTreeItemElement,
-                                      kNameSpaceID_XUL,
-                                      kTreeChildrenAtom,
-                                      getter_AddRefs(treechildren)))) {
-        // XXX make this a warning
-        NS_ERROR("attempt to remove child from an element with no treechildren");
-        return NS_OK;
+    // We may put in a situation where we've been asked to either
+    // remove a xul:treeitem directly from a xul:treechildren (or
+    // xul:treebody) tag; or, we may be asked to remove a xul:treeitem
+    // from a grandparent xul:treeitem tag.
+
+    // Verify that the element is actually a xul:treeitem
+    PRInt32 nameSpaceID;
+    if (NS_FAILED(rv = aElement->GetNameSpaceID(nameSpaceID))) {
+        NS_ERROR("unable to get element's namespace ID");
+        return rv;
     }
 
+    nsCOMPtr<nsIAtom> tag;
+    if  (NS_FAILED(rv = aElement->GetTag(*getter_AddRefs(tag)))) {
+        NS_ERROR("unable to get element's tag");
+        return rv;
+    }
 
+    nsCOMPtr<nsIContent> treechildren; // put it here so it stays in scope
+
+    if ((nameSpaceID == kNameSpaceID_XUL) && (tag == kTreeItemAtom)) {
+        if (NS_FAILED(rv = FindChildByTag(aElement,
+                                          kNameSpaceID_XUL,
+                                          kTreeChildrenAtom,
+                                          getter_AddRefs(treechildren)))) {
+            // XXX make this a warning
+            NS_ERROR("attempt to remove child from an element with no treechildren");
+            return NS_OK;
+        }
+
+        aElement = treechildren.get();
+    }
+
+    // Now we assume that aElement is a xul:treebody or a
+    // xul:treechildren; we'll just make sure for kicks.
+    {
+        aElement->GetNameSpaceID(nameSpaceID);
+        NS_ASSERTION(kNameSpaceID_XUL == nameSpaceID, "not a xul:treebody or xul:treechildren");
+        if (kNameSpaceID_XUL != nameSpaceID)
+            return NS_ERROR_UNEXPECTED;
+
+        aElement->GetTag(*getter_AddRefs(tag));
+        NS_ASSERTION((kTreeBodyAtom == tag) || (kTreeChildrenAtom == tag),
+                     "not a xul:treebody or xul:treechildren");
+        if ((kTreeBodyAtom != tag) && (kTreeChildrenAtom != tag))
+            return NS_ERROR_UNEXPECTED;
+    }
+
+    // Allright, now grovel to find the doomed kid and blow it away.
     PRInt32 count;
-    if (NS_FAILED(rv = treechildren->ChildCount(count)))
+    if (NS_FAILED(rv = aElement->ChildCount(count)))
         return rv;
 
     for (PRInt32 i = 0; i < count; ++i) {
         nsCOMPtr<nsIContent> kid;
-        if (NS_FAILED(rv = treechildren->ChildAt(i, *getter_AddRefs(kid))))
+        if (NS_FAILED(rv = aElement->ChildAt(i, *getter_AddRefs(kid))))
             return rv; // XXX fatal
 
         // Make sure it's a <xul:treeitem>
@@ -533,7 +747,11 @@ RDFTreeBuilderImpl::RemoveWidgetItem(nsIContent* aTreeItemElement,
             continue; // not the resource we want
 
         // Fount it! Now kill it.
-        treechildren->RemoveChildAt(i, PR_TRUE);
+        if (NS_FAILED(rv = aElement->RemoveChildAt(i, PR_TRUE))) {
+            NS_ERROR("unable to remove xul:treeitem from xul:treechildren");
+            return rv;
+        }
+
         return NS_OK;
     }
 
