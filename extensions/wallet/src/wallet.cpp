@@ -1029,18 +1029,24 @@ wallet_unlock(void) {
 void
 wallet_Clear(nsVoidArray ** list) {
   wallet_MapElement * ptr;
+  wallet_Sublist * ptr1;
   PRInt32 count = LIST_COUNT((*list));
   for (PRInt32 i=count-1; i>=0; i--) {
-    ptr = NS_STATIC_CAST(wallet_MapElement*, (*list)->ElementAt(i));
-    wallet_Sublist * ptr1;
-    PRInt32 count2 = LIST_COUNT(ptr->itemList);
-    for (PRInt32 i2=0; i2<count2; i2++) {
-      ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(i2));
+    if (*list == wallet_DistinguishedSchema_list) {
+      ptr1 = NS_STATIC_CAST(wallet_Sublist*, (*list)->ElementAt(i));
+      (*list)->RemoveElement(ptr1);
       delete ptr1;
+    } else {
+      ptr = NS_STATIC_CAST(wallet_MapElement*, (*list)->ElementAt(i));
+      PRInt32 count2 = LIST_COUNT(ptr->itemList);
+      for (PRInt32 i2=0; i2<count2; i2++) {
+        ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(i2));
+        delete ptr1;
+      }
+      delete ptr->itemList;
+      (*list)->RemoveElement(ptr);
+      delete ptr;
     }
-    delete ptr->itemList;
-    (*list)->RemoveElement(ptr);
-    delete ptr;
   }
   *list = 0;
 }
@@ -2684,23 +2690,29 @@ wallet_Initialize(PRBool fetchTables, PRBool unlockDatabase=PR_TRUE) {
    * fetchTables parameter was added and it is set to PR_FALSE in the case of the
    * wallet editor and PR_TRUE in all other cases
    */
-  if (!wallet_tablesInitialized && fetchTables) {
+  if (!wallet_tablesInitialized) {
 #ifdef DEBUG
 //wallet_ClearStopwatch();
 //wallet_ResumeStopwatch();
 #endif
-    wallet_FetchFromNetCenter();
+    if (fetchTables) {
+      wallet_FetchFromNetCenter();
+      wallet_tablesInitialized = PR_TRUE;
+    }
 #ifdef DEBUG
 //wallet_PauseStopwatch();
 //wallet_DumpStopwatch();
 #endif
+    wallet_Clear(&wallet_FieldToSchema_list); /* otherwise we will duplicate the list */
+    wallet_Clear(&wallet_URLFieldToSchema_list); /* otherwise we will duplicate the list */
+    wallet_Clear(&wallet_SchemaConcat_list); /* otherwise we will duplicate the list */
 #ifdef AutoCapture
+    wallet_Clear(&wallet_DistinguishedSchema_list); /* otherwise we will duplicate the list */
     wallet_ReadFromFile(distinguishedSchemaFileName, wallet_DistinguishedSchema_list, PR_FALSE, PR_FALSE);
 #endif
     wallet_ReadFromFile(fieldSchemaFileName, wallet_FieldToSchema_list, PR_FALSE, PR_FALSE);
     wallet_ReadFromURLFieldToSchemaFile(URLFieldSchemaFileName, wallet_URLFieldToSchema_list);
     wallet_ReadFromFile(schemaConcatFileName, wallet_SchemaConcat_list, PR_FALSE, PR_FALSE);
-    wallet_tablesInitialized = PR_TRUE;
   }
 
   if (!unlockDatabase) {
@@ -3734,7 +3746,7 @@ WLLT_OnSubmit(nsIContent* formNode) {
                         signonData->AppendElement(data);
 #ifdef AutoCapture
                         /* get schema from field */
-                        wallet_Initialize(PR_TRUE, PR_FALSE);
+                        wallet_Initialize(PR_FALSE, PR_FALSE);
                         wallet_InitializeCurrentURL(doc);
                         nsAutoString schema;
                         nsVoidArray* dummy;
