@@ -41,34 +41,32 @@
 #include "nsMacResources.h"
 #include "nsRegionMac.h"
 
-
-class StRegionFromPool 
-{
-public:
-  StRegionFromPool();
-  ~StRegionFromPool();
-
-  operator RgnHandle() const { return mRegionH; }
-
-private:
-  RgnHandle mRegionH;
-}; 
-
-
-StRegionFromPool :: StRegionFromPool ( )
-{
-  mRegionH = sNativeRegionPool.GetNewRegion();
-} 
-
-StRegionFromPool :: ~StRegionFromPool ( )
-{
-  if ( mRegionH )
-    sNativeRegionPool.ReleaseRegion(mRegionH);
-}
-
-
 #pragma mark -
 
+#if !TARGET_CARBON
+
+// for non-carbon builds, provide various accessors to keep the code below free of ifdefs.
+inline void GetRegionBounds(RgnHandle region, Rect* rect)
+{
+	*rect = (**region).rgnBBox;
+}
+
+inline Boolean IsRegionComplex(RgnHandle region)
+{
+	return (**region).rgnSize != sizeof(MacRegion);
+}
+
+inline void GetWindowPortBounds(WindowRef window, Rect* rect)
+{
+	*rect = window->portRect;
+}
+
+inline void InvalWindowRect(WindowRef window, Rect* rect)
+{
+	::InvalRect(rect);
+}
+
+#endif
 
 //-------------------------------------------------------------------------
 //
@@ -825,7 +823,7 @@ NS_IMETHODIMP	nsWindow::Update()
 		reentrant = PR_TRUE;
 
 		// make a copy of the window update rgn
-		RgnHandle saveUpdateRgn = ::NewRgn();
+		StRegionFromPool saveUpdateRgn;
 		if (!saveUpdateRgn)
 			return NS_ERROR_OUT_OF_MEMORY;
 		if(mWindowPtr)
@@ -861,7 +859,6 @@ NS_IMETHODIMP	nsWindow::Update()
 #else
 		::ValidRect(&macRect);
 #endif
-		::DisposeRgn(saveUpdateRgn);
 
 		reentrant = PR_FALSE;
 	}
@@ -899,17 +896,19 @@ nsresult nsWindow::HandleUpdateEvent()
 	StPortSetter	portSetter(mWindowPtr);
 	
 	// get the damaged region from the OS
+	StRegionFromPool damagedRgn;
+	if (!damagedRgn)
+		return NS_ERROR_OUT_OF_MEMORY;
 #if TARGET_CARBON
-	RgnHandle damagedRgn = ::NewRgn();
-	::GetPortVisibleRegion ( GetWindowPort(mWindowPtr), damagedRgn );
+	::GetPortVisibleRegion(GetWindowPort(mWindowPtr), damagedRgn);
 #else
-	RgnHandle damagedRgn = mWindowPtr->visRgn;
+	::CopyRgn(mWindowPtr->visRgn, damagedRgn);
 #endif
 
 	// calculate the update region relatively to the window port rect
 	// (at this point, the grafPort origin should always be 0,0
 	// so mWindowRegion has to be converted to window coordinates)
-	RgnHandle updateRgn = ::NewRgn();
+	StRegionFromPool updateRgn;
 	if (!updateRgn)
 		return NS_ERROR_OUT_OF_MEMORY;
 	::CopyRgn(mWindowRegion, updateRgn);
@@ -958,10 +957,6 @@ nsresult nsWindow::HandleUpdateEvent()
 			NS_RELEASE(renderingContext);
 		}
 	}
-	::DisposeRgn(updateRgn);
-#if TARGET_CARBON
-	::DisposeRgn(damagedRgn);
-#endif
 	return NS_OK;
 }
 
@@ -1058,6 +1053,9 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 	::RectRgn(totalView, &frame);
 	
 	Rect source = inRectToScroll;
+	
+#if 0
+	// <pcb> what is this supposed to be doing?
 	if ( inTopDelta > 0 )
 		source.top += inTopDelta;
 	else if ( inTopDelta < 0 )
@@ -1066,6 +1064,7 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 		source.left += inLeftDelta;
 	else if ( inLeftDelta < 0 )
 		source.right -= inLeftDelta;	
+#endif
 	
 	// compute the destination of copybits (post-scroll)
 	Rect dest = source;
@@ -1156,6 +1155,12 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
 	if (! mVisible)
 		return NS_OK;
+	
+	// If the clipping region is non-rectangular, just force a full update, sorry.
+	if (IsRegionComplex(mWindowRegion)) {
+		Invalidate(PR_TRUE);
+		goto scrollChildren;
+	}
 
 	//--------
 	// Scroll this widget
@@ -1183,6 +1188,7 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 
 	EndDraw();
 
+scrollChildren:
 	//--------
 	// Scroll the children
 	nsCOMPtr<nsIEnumerator> children ( getter_AddRefs(GetChildren()) );
@@ -1446,33 +1452,35 @@ void nsWindow::CalcWindowRegions()
 	::CopyRgn(mWindowRegion, mVisRegion);
 
 	// clip the children out of the visRegion
-	RgnHandle childRgn = ::NewRgn();
-	if (!childRgn) return;
-
 	nsCOMPtr<nsIEnumerator> children ( getter_AddRefs(GetChildren()) );
 	if (children)
 	{
-		children->First();
-		do
-		{
-			nsISupports* child;
-			if (NS_SUCCEEDED(children->CurrentItem(&child)))
+		StRegionFromPool childRgn;
+		if (childRgn != nsnull) {
+			children->First();
+			do
 			{
-				nsWindow* childWindow = static_cast<nsWindow*>(child);
-				NS_RELEASE(child);
+				nsISupports* child;
+				if (NS_SUCCEEDED(children->CurrentItem(&child)))
+				{
+					nsWindow* childWindow = static_cast<nsWindow*>(child);
+					NS_RELEASE(child);
+					
+					PRBool visible;
+					childWindow->IsVisible(visible);
+					if (visible) {
+						nsRect childRect;
+						childWindow->GetBounds(childRect);
 
-				nsRect childRect;
-				childWindow->GetBounds(childRect);
-
-				Rect macRect;
-				::SetRect(&macRect, childRect.x, childRect.y, childRect.XMost(), childRect.YMost());
-				::RectRgn(childRgn, &macRect);
-				::DiffRgn(mVisRegion, childRgn, mVisRegion);
-			}
-		} while (NS_SUCCEEDED(children->Next()));
+						Rect macRect;
+						::SetRect(&macRect, childRect.x, childRect.y, childRect.XMost(), childRect.YMost());
+						::RectRgn(childRgn, &macRect);
+						::DiffRgn(mVisRegion, childRgn, mVisRegion);
+					}
+				}
+			} while (NS_SUCCEEDED(children->Next()));
+		}
 	}
-	::DisposeRgn(childRgn);
-
 }
 
 //-------------------------------------------------------------------------
