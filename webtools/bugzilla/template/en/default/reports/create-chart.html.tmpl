@@ -34,7 +34,7 @@
   donames = 1 
 %]
 
-<script language="JavaScript" type="text/javascript">
+<script type="text/javascript">
 [%# This function takes necessary action on selection of a subcategory %]
 function subcatSelected() {
   var cat = document.chartform.category.value;
@@ -124,7 +124,7 @@ function subcatSelected() {
     [% END %]
   </table>
 
-  <script language="JavaScript" type="text/javascript">
+  <script type="text/javascript">
     document.chartform.category[0].selected = true;
     document.chartform.subcategory.disabled = '';
     document.chartform.name.disabled = '';

@@ -66,14 +66,14 @@
     [% PROCESS "global/site-navigation.html.tmpl" %]
 
     [% IF javascript %]
-      <script type="text/javascript" language="JavaScript">
+      <script type="text/javascript">
         [% javascript %]
       </script>
     [% END %]
     
     [% IF javascript_urls %]
       [% FOREACH javascript_url = javascript_urls %]
-        <script src="[% javascript_url FILTER html %]" type="text/javascript" language="JavaScript"></script>
+        <script src="[% javascript_url FILTER html %]" type="text/javascript"></script>
       [% END %]
     [% END %]
 

@@ -21,7 +21,7 @@
   #                 Gervase Markham <gerv@gerv.net>
   #%]
 
-<script type="text/javascript" language="JavaScript">
+<script type="text/javascript">
 
 var first_load = true;         [%# is this the first time we load the page? %]
 var last_sel = new Array();    [%# caches last selection %]
@@ -130,7 +130,7 @@ function doOnSelectProduct(selectmode) {
     <td>
       <input name="short_desc" size="40" accesskey="s"
              value="[% default.short_desc.0 FILTER html %]">
-      <script language="JavaScript" type="text/javascript"> <!--
+      <script type="text/javascript"> <!--
           document.forms[queryform].short_desc.focus(); 
       // -->
       </script>
