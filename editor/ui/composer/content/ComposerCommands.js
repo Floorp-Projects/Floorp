@@ -3251,8 +3251,6 @@ var nsAllTagsModeCommand =
     FinishHTMLSource();
     if (gEditorDisplayMode != kDisplayModeAllTags)
       SetEditMode(kDisplayModeAllTags);
-    if (gEditorDisplayMode != gDisplayModeAllTags)
-      SetEditMode(gDisplayModeAllTags);
   }
 };
 
