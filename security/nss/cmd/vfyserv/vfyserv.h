@@ -108,10 +108,6 @@ void exitErr(char *function);
 
 void printSecurityInfo(FILE *outfile, PRFileDesc *fd);
 
-void printCertProblems(FILE *outfile, CERTCertDBHandle *handle, 
-	CERTCertificate *cert, PRBool checksig, 
-	SECCertUsage certUsage, void *pinArg);
-
 /* Some simple thread management routines. */
 
 #define MAX_THREADS 32

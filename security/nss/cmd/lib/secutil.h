@@ -161,6 +161,12 @@ extern void SECU_PrintSystemError(char *progName, char *msg, ...);
 /* Return informative error string */
 extern const char * SECU_Strerror(PRErrorCode errNum);
 
+/* print information about cert verification failure */
+extern void
+SECU_printCertProblems(FILE *outfile, CERTCertDBHandle *handle, 
+	CERTCertificate *cert, PRBool checksig, 
+	SECCertificateUsage certUsage, void *pinArg, PRBool verbose);
+
 /* Read the contents of a file into a SECItem */
 extern SECStatus SECU_FileToItem(SECItem *dst, PRFileDesc *src);
 extern SECStatus SECU_TextFileToItem(SECItem *dst, PRFileDesc *src);
