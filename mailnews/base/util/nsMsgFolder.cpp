@@ -48,7 +48,6 @@ nsMsgFolder::nsMsgFolder(void)
     mParent(nsnull),
     mNumUnreadMessages(-1),
     mNumTotalMessages(-1),
-    mDepth(0), 
     mPrefFlags(0),
     mBiffState(nsMsgBiffState_NoMail),
     mNumNewBiffMessages(0),
@@ -816,21 +815,6 @@ NS_IMETHODIMP nsMsgFolder::GenerateUniqueSubfolderName(const char *prefix, nsIMs
 			PR_FREEIF(uniqueName);
 	}
 	*name = nsnull;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgFolder::GetDepth(PRUint32 *depth)
-{
-	if(!depth)
-		return NS_ERROR_NULL_POINTER;
-	*depth = mDepth;
-	return NS_OK;
-	
-}
-
-NS_IMETHODIMP nsMsgFolder::SetDepth(PRUint32 depth)
-{
-	mDepth = depth;
 	return NS_OK;
 }
 

@@ -153,9 +153,6 @@ public:
   NS_IMETHOD GenerateUniqueSubfolderName(const char *prefix, nsIMsgFolder *otherFolder,
                                          char **name);
 
-  NS_IMETHOD GetDepth(PRUint32 *depth);
-  NS_IMETHOD SetDepth(PRUint32 depth);
-
   // updates num messages and num unread - should be pure virtual
   // when I get around to implementing in all subclasses?
   NS_IMETHOD UpdateSummaryTotals(PRBool force);
@@ -330,7 +327,6 @@ protected:
   nsVoidArray *mListeners; //This can't be an nsISupportsArray because due to
 													 //ownership issues, listeners can't be AddRef'd
 
-  PRUint8 mDepth;
   PRInt32 mPrefFlags;       // prefs like MSG_PREF_OFFLINE, MSG_PREF_ONE_PANE, etc
   nsISupports *mSemaphoreHolder; // set when the folder is being written to
 								//Due to ownership issues, this won't be AddRef'd.

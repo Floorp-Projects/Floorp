@@ -83,8 +83,6 @@ interface nsIMsgFolder : nsIFolder {
 
 	string GenerateUniqueSubfolderName(in string prefix, in nsIMsgFolder otherFolder);
 
-	attribute unsigned long depth;
-
 	void UpdateSummaryTotals(in boolean force);
 	void SummaryChanged();
 	long GetNumUnread(in boolean deep);
