@@ -120,6 +120,12 @@ nsXMLProcessingInstruction::GetTag(nsIAtom** aResult) const
   return NS_OK;
 }
 
+NS_IMETHODIMP_(PRBool)
+nsXMLProcessingInstruction::IsContentOfType(PRUint32 aFlags)
+{
+  return !(aFlags & ~ePROCESSING_INSTRUCTION);
+}
+
 NS_IMETHODIMP
 nsXMLProcessingInstruction::GetNodeName(nsAString& aNodeName)
 {

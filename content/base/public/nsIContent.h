@@ -464,7 +464,9 @@ public:
     /** form controls */
     eHTML_FORM_CONTROL   = 0x00000008,
     /** XUL elements */
-    eXUL                 = 0x00000010
+    eXUL                 = 0x00000010,
+    /** xml processing instructions */
+    ePROCESSING_INSTRUCTION = 0x00000020
   };
 
   /**
