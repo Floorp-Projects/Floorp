@@ -39,8 +39,15 @@
 
 # Create a read-only disk image of the contents of a folder
 #
-# Usage: make-diskimage <image file> <folder> <volume name> <.dsstore file to use> <background image>
+# Usage: make-diskimage <image_file>
+#                       <src_folder>
+#                       <volume_name>
+#                       <eula_resource_file>
+#                       <.dsstore_file>
+#                       <background_image_file>
 #
+# tip: use '-null-' for <eula-resource-file> if you only want to
+# provide <.dsstore_file> and <background_image_file>
 
 DMG_DIRNAME=`dirname $1`
 DMG_DIR=`cd $DMG_DIRNAME; pwd`
@@ -50,8 +57,9 @@ SRC_FOLDER=`cd $2; pwd`
 VOLUME_NAME=$3
 
 # optional arguments
-DMG_DSSTORE=$4
-DMG_BKGND_IMG=$5
+EULA_RSRC=$4
+DMG_DSSTORE=$5
+DMG_BKGND_IMG=$6
 
 # Find the size of the folder contents
 FOLDER_SIZE=`du -s $SRC_FOLDER | sed s/[^0-9].*//`
@@ -76,15 +84,14 @@ MOUNT_DIR=`hdid $DMG_TEMP_NAME | grep Apple_HFS | awk '{print $3}'`
 
 # copy content
 echo "copying content to disk image"
-echo ditto $SRC_FOLDER
 ditto -rsrcFork $SRC_FOLDER $MOUNT_DIR
 # add optional Finder window layout and background image
 if [ ! -z ${DMG_DSSTORE} ]; then
-	echo cp ${DMG_DSSTORE}
+	echo "adding .DS_Store"
 	cp -p ${DMG_DSSTORE} ${MOUNT_DIR}/.DS_Store
 fi
 if [ ! -z ${DMG_BKGND_IMG} ]; then
-	echo cp ${DMG_BKGND_IMG}
+	echo "adding background image"
 	mkdir ${MOUNT_DIR}/.background
 	cp -p ${DMG_BKGND_IMG} ${MOUNT_DIR}/.background/
 fi
@@ -97,8 +104,16 @@ echo "unmounting disk image"
 hdiutil detach $DEV_NAME
 
 # convert to read-only image
-echo converting disk image to read-only
+echo "converting disk image to read-only"
 hdiutil convert $DMG_TEMP_NAME -format UDRO -o ${DMG_DIR}/${DMG_NAME}
 rm -f $DMG_TEMP_NAME
+
+# adding EULA resources
+if [ ! -z "${EULA_RSRC}" -a "${EULA_RSRC}" != "-null-" ]; then
+	echo "adding EULA resources"
+	hdiutil unflatten ${DMG_DIR}/${DMG_NAME}
+	/Developer/Tools/ResMerger -a ${EULA_RSRC} -o ${DMG_DIR}/${DMG_NAME}
+	hdiutil flatten ${DMG_DIR}/${DMG_NAME}
+fi
 
 echo "disk image done"
