@@ -814,7 +814,7 @@ case "$target" in
         AC_LANG_CPLUSPLUS
         AC_MSG_CHECKING([for VisualAge C++ compiler version >= 5.0.2.0])
         AC_TRY_COMPILE([],
-            [#if (__IBMCPP__ < 520)
+            [#if (__IBMCPP__ < 502)
              #error "Bad compiler"
              #endif],
             _BAD_COMPILER=,_BAD_COMPILER=1)
