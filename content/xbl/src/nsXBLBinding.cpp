@@ -333,31 +333,29 @@ nsXBLBinding::nsXBLBinding(void)
   }
 }
 
-/**
- * Removes a root inadvertently left over.
- * This is really an error condition, but I've written
- * this to prevent the JS GC from asserting.
- */
-static nsresult removeRoot(void* aSlot)
-{
-    const char kJSRuntimeServiceProgID[] = "nsJSRuntimeService";
-    nsresult rv;
-    NS_WITH_SERVICE(nsIJSRuntimeService, runtimeService, kJSRuntimeServiceProgID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    JSRuntime* rt;
-    rv = runtimeService->GetRuntime(&rt);
-    if (NS_FAILED(rv)) return rv;
-    return (JS_RemoveRootRT(rt, aSlot) ? NS_OK : NS_ERROR_FAILURE);
- }
- 
 
+// Error code that ensures the binding clears
+// out its script object, even in cases where it should
+// have done so earlier.
+static nsresult RemoveRoot(void* aSlot)
+{
+  const char kJSRuntimeServiceProgID[] = "nsJSRuntimeService";
+  nsresult rv;
+  NS_WITH_SERVICE(nsIJSRuntimeService, runtimeService, kJSRuntimeServiceProgID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  JSRuntime* rt;
+  rv = runtimeService->GetRuntime(&rt);
+  if (NS_FAILED(rv)) return rv;
+  return (JS_RemoveRootRT(rt, aSlot) ? NS_OK : NS_ERROR_FAILURE);
+}
+ 
 nsXBLBinding::~nsXBLBinding(void)
 {
-
-    if (mScriptObject) {
-        removeRoot(&mScriptObject);
-        mScriptObject = nsnull;
-    }
+  NS_ASSERTION(!mScriptObject, "XBL binding hasn't properly cleared its script object out.");
+  if (mScriptObject) {
+    RemoveRoot(&mScriptObject);
+    mScriptObject = nsnull;
+  }
  
   delete mAttributeTable;
 
