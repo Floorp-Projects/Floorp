@@ -93,3 +93,9 @@ label {
 option {
   -moz-user-select: text !important;
 }
+
+#mozToc.readonly {
+  -moz-user-select: all !important;
+  -moz-user-input: none ! important;
+}
+

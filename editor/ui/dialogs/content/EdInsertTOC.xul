@@ -1,0 +1,263 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is TocMaker.
+   -
+   - The Initial Developer of the Original Code is
+   - Daniel Glazman.
+   - Portions created by the Initial Developer are Copyright (C) 2002
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Original author: Daniel Glazman (daniel@glazman.org)
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://editor/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+
+
+<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorInsertTOC.dtd">
+
+<dialog title="&Window.title;"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    onload="Startup();"
+    ondialogaccept="return BuildTOC(true);"
+    oncancel="window.close(); return true;">
+
+  <!-- Methods common to all editor dialogs -->
+  <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
+
+  <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/EdInsertTOC.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
+
+  <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
+  <spacer id="dummy" style="display:none"/>
+  <broadcaster id="args" value=""/>
+  <vbox flex="1">
+    <groupbox><caption label="&buildToc.label;"/>
+      <grid>
+        <columns><column/><column style="min-width: 6em"/><column/></columns>
+        <rows>
+          <row align="center">
+            <spacer/>
+            <label value="&tag.label;"/>
+            <label value="&class.label;"/>
+          </row>
+          <row align="center">
+            <label value="&header1.label;"/>
+            <menulist id="header1Menulist">
+              <menupopup>
+                <menuitem id="header1none" label="--" value=""
+                          oncommand="selectHeader(this, 1)"/>
+                <menuseparator/>
+                <menuitem id="header1H1"  label="h1"  value="h1"
+                          oncommand="selectHeader(this, 1)"/>
+                <menuitem id="header1H2"  label="h2"  value="h2"
+                          oncommand="selectHeader(this, 1)"/>
+                <menuitem id="header1H3"  label="h3"  value="h3"
+                          oncommand="selectHeader(this, 1)"/>
+                <menuitem id="header1H4"  label="h4"  value="h4"
+                          oncommand="selectHeader(this, 1)"/>
+                <menuitem id="header1H5"  label="h5"  value="h5"
+                          oncommand="selectHeader(this, 1)"/>
+                <menuitem id="header1H6"  label="h6"  value="h6"
+                          oncommand="selectHeader(this, 1)"/>
+                <menuitem id="header1DIV" label="div" value="div"
+                          oncommand="selectHeader(this, 1)"/>
+                <menuitem id="header1P"   label="p"   value="p"
+                          oncommand="selectHeader(this, 1)"/>
+              </menupopup>
+            </menulist>
+            <textbox id="header1Class" size="10"
+                     oninput="changeClass(this, 1)"/>
+          </row>
+
+          <row align="center">
+            <label value="&header2.label;"/>
+            <menulist id="header2Menulist">
+              <menupopup>
+                <menuitem id="header2none" label="--" value=""
+                          oncommand="selectHeader(this, 2)"/>
+                <menuseparator/>
+                <menuitem id="header2H1"  label="h1"  value="h1"
+                          oncommand="selectHeader(this, 2)"/>
+                <menuitem id="header2H2"  label="h2"  value="h2"
+                          oncommand="selectHeader(this, 2)"/>
+                <menuitem id="header2H3"  label="h3"  value="h3"
+                          oncommand="selectHeader(this, 2)"/>
+                <menuitem id="header2H4"  label="h4"  value="h4"
+                          oncommand="selectHeader(this, 2)"/>
+                <menuitem id="header2H5"  label="h5"  value="h5"
+                          oncommand="selectHeader(this, 2)"/>
+                <menuitem id="header2H6"  label="h6"  value="h6"
+                          oncommand="selectHeader(this, 2)"/>
+                <menuitem id="header2DIV" label="div" value="div"
+                          oncommand="selectHeader(this, 2)"/>
+                <menuitem id="header2P"   label="p"   value="p"
+                          oncommand="selectHeader(this, 2)"/>
+              </menupopup>
+            </menulist>
+            <textbox id="header2Class" size="10"
+                     oninput="changeClass(this, 2)"/>
+          </row>
+
+          <row align="center">
+            <label value="&header3.label;"/>
+            <menulist id="header3Menulist">
+              <menupopup>
+                <menuitem id="header3none" label="--" value=""
+                          oncommand="selectHeader(this, 3)"/>
+                <menuseparator/>
+                <menuitem id="header3H1"  label="h1"  value="h1"
+                          oncommand="selectHeader(this, 3)"/>
+                <menuitem id="header3H2"  label="h2"  value="h2"
+                          oncommand="selectHeader(this, 3)"/>
+                <menuitem id="header3H3"  label="h3"  value="h3"
+                          oncommand="selectHeader(this, 3)"/>
+                <menuitem id="header3H4"  label="h4"  value="h4"
+                          oncommand="selectHeader(this, 3)"/>
+                <menuitem id="header3H5"  label="h5"  value="h5"
+                          oncommand="selectHeader(this, 3)"/>
+                <menuitem id="header3H6"  label="h6"  value="h6"
+                          oncommand="selectHeader(this, 3)"/>
+                <menuitem id="header3DIV" label="div" value="div"
+                          oncommand="selectHeader(this, 3)"/>
+                <menuitem id="header3P"   label="p"   value="p"
+                          oncommand="selectHeader(this, 3)"/>
+              </menupopup>
+            </menulist>
+            <textbox id="header3Class" size="10"
+                     oninput="changeClass(this, 3)"/>
+          </row>
+
+          <row align="center">
+            <label value="&header4.label;"/>
+            <menulist id="header4Menulist">
+              <menupopup>
+                <menuitem id="header4none" label="--" value=""
+                          oncommand="selectHeader(this, 4)"/>
+                <menuseparator/>
+                <menuitem id="header4H1"  label="h1"  value="h1"
+                          oncommand="selectHeader(this, 4)"/>
+                <menuitem id="header4H2"  label="h2"  value="h2"
+                          oncommand="selectHeader(this, 4)"/>
+                <menuitem id="header4H3"  label="h3"  value="h3"
+                          oncommand="selectHeader(this, 4)"/>
+                <menuitem id="header4H4"  label="h4"  value="h4"
+                          oncommand="selectHeader(this, 4)"/>
+                <menuitem id="header4H5"  label="h5"  value="h5"
+                          oncommand="selectHeader(this, 4)"/>
+                <menuitem id="header4H6"  label="h6"  value="h6"
+                          oncommand="selectHeader(this, 4)"/>
+                <menuitem id="header4DIV" label="div" value="div"
+                          oncommand="selectHeader(this, 4)"/>
+                <menuitem id="header4P"   label="p"   value="p"
+                          oncommand="selectHeader(this, 4)"/>
+              </menupopup>
+            </menulist>
+            <textbox id="header4Class" size="10"
+                     oninput="changeClass(this, 4)"/>
+          </row>
+
+          <row align="center">
+            <label value="&header5.label;"/>
+            <menulist id="header5Menulist">
+              <menupopup>
+                <menuitem id="header5none" label="--" value=""
+                          oncommand="selectHeader(this, 5)"/>
+                <menuseparator/>
+                <menuitem id="header5H1"  label="h1"  value="h1"
+                          oncommand="selectHeader(this, 5)"/>
+                <menuitem id="header5H2"  label="h2"  value="h2"
+                          oncommand="selectHeader(this, 5)"/>
+                <menuitem id="header5H3"  label="h3"  value="h3"
+                          oncommand="selectHeader(this, 5)"/>
+                <menuitem id="header5H4"  label="h4"  value="h4"
+                          oncommand="selectHeader(this, 5)"/>
+                <menuitem id="header5H5"  label="h5"  value="h5"
+                          oncommand="selectHeader(this, 5)"/>
+                <menuitem id="header5H6"  label="h6"  value="h6"
+                          oncommand="selectHeader(this, 5)"/>
+                <menuitem id="header5DIV" label="div" value="div"
+                          oncommand="selectHeader(this, 5)"/>
+                <menuitem id="header5P"   label="p"   value="p"
+                          oncommand="selectHeader(this, 5)"/>
+              </menupopup>
+            </menulist>
+            <textbox id="header5Class" size="10"
+                     oninput="changeClass(this, 5)"/>
+          </row>
+
+          <row align="center">
+            <label value="&header6.label;"/>
+            <menulist id="header6Menulist">
+              <menupopup>
+                <menuitem id="header6none" label="--" value=""
+                          oncommand="selectHeader(this, 6)"/>
+                <menuseparator/>
+                <menuitem id="header6H1"  label="h1"  value="h1"
+                          oncommand="selectHeader(this, 6)"/>
+                <menuitem id="header6H2"  label="h2"  value="h2"
+                          oncommand="selectHeader(this, 6)"/>
+                <menuitem id="header6H3"  label="h3"  value="h3"
+                          oncommand="selectHeader(this, 6)"/>
+                <menuitem id="header6H4"  label="h4"  value="h4"
+                          oncommand="selectHeader(this, 6)"/>
+                <menuitem id="header6H5"  label="h5"  value="h5"
+                          oncommand="selectHeader(this, 6)"/>
+                <menuitem id="header6H6"  label="h6"  value="h6"
+                          oncommand="selectHeader(this, 6)"/>
+                <menuitem id="header6DIV" label="div" value="div"
+                          oncommand="selectHeader(this, 6)"/>
+                <menuitem id="header6P"   label="p"   value="p"
+                          oncommand="selectHeader(this, 6)"/>
+              </menupopup>
+            </menulist>
+            <textbox id="header6Class" size="10"
+                     oninput="changeClass(this, 6)"/>
+          </row>
+        </rows>
+      </grid>
+    </groupbox>
+    <vbox>
+      <checkbox id="orderedListCheckbox"
+                label="&orderedList.label;"
+                oncommand="ToggleOrderedList(this)"/>
+      <checkbox id="readOnlyCheckbox"
+                label="&makeReadOnly.label;"
+                oncommand="ToggleReadOnlyToc(this)"/>
+    </vbox>
+    <separator class="groove"/>
+  </vbox>
+</dialog>
