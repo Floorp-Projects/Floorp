@@ -82,6 +82,15 @@ public:
                         NS_SCRIPTSECURITYMANAGER_PROGID, &result);
         if (NS_FAILED(result)) 
             return NS_ERROR_FAILURE;
+        PRBool hasPrincipal;
+        if (NS_FAILED(securityManager->HasSubjectPrincipal(&hasPrincipal)))
+            return NS_ERROR_FAILURE;
+        if (!hasPrincipal) {
+            // Must be loaded as a result of a user action on a HTML element
+            //  with a javascript: HREF attribute
+            // TODO: need to find URI of enclosing page
+            return NS_OK;
+        }
         if (NS_FAILED(securityManager->GetSubjectPrincipal(&mPrincipal)))
             return NS_ERROR_FAILURE;
         return NS_OK;
@@ -151,8 +160,9 @@ public:
         // Finally, we have everything needed to evaluate the expression.
         nsAutoString ret;
         PRBool isUndefined;
-        rv = scriptContext->EvaluateString(nsString(jsExpr), mPrincipal,
-                                           nsnull, 0, ret, &isUndefined);
+        rv = scriptContext->EvaluateString(nsString(jsExpr), nsnull, 
+                                           mPrincipal, nsnull, 0, ret,
+                                           &isUndefined);
         nsCRT::free(jsExpr);
         if (NS_FAILED(rv)) {
             rv = NS_ERROR_MALFORMED_URI;

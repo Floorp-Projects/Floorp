@@ -1633,7 +1633,6 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
     nsTimeoutImpl dummy_timeout;
     JSContext *cx;
     PRInt64 now;
-    jsval result;
     nsITimer *timer;
     nsresult rv;
 
@@ -1691,35 +1690,18 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
       /* Hold the timeout in case expr or funobj releases its doc. */
       HoldTimeout(timeout);
       mRunningTimeout = timeout;
-      NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
-      if (NS_FAILED(rv)) {
-        NS_RELEASE(temp);
-        NS_RELEASE(tempContext);
-        return PR_TRUE;
-      }
 
-      rv = stack->Push(cx);
-      // XXX Should check for rv. If failed, then what?
       if (timeout->expr) {
         /* Evaluate the timeout expression. */
-#if 0
-        // V says it would be nice if we could have a chokepoint
-        // for calling scripts instead of making a bunch of
-        // ScriptEvaluated() calls to clean things up. MMP
-        PRBool isundefined;
-        mContext->EvaluateString(nsAutoString(timeout->expr),
-                                 timeout->filename,
-                                 timeout->lineno, nsAutoString(""), &isundefined);
-#endif
-        JSPrincipals * jsprin;
-        timeout->principal->GetJSPrincipals(&jsprin);
-        JS_EvaluateUCScriptForPrincipals(cx, (JSObject *)mScriptObject,
-                                         jsprin, JS_GetStringChars(timeout->expr),
-                                         JS_GetStringLength(timeout->expr), timeout->filename,
-                                         timeout->lineno, &result);
-        JSPRINCIPALS_DROP(cx, jsprin);
-      } 
-      else {
+        nsAutoString script = JS_GetStringChars(timeout->expr);
+        nsAutoString blank = "";
+        PRBool isUndefined;
+        rv = mContext->EvaluateString(script, mScriptObject, 
+                                      timeout->principal, 
+                                      timeout->filename,
+                                      timeout->lineno, blank, 
+                                      &isUndefined);
+      } else {
         PRInt64 lateness64;
         PRInt32 lateness;
 
@@ -1729,11 +1711,17 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
         LL_L2I(lateness, lateness64);
         lateness = PR_IntervalToMilliseconds(lateness);
         timeout->argv[timeout->argc] = INT_TO_JSVAL((jsint)lateness);
-        JS_CallFunctionValue(cx, (JSObject *)mScriptObject, OBJECT_TO_JSVAL(timeout->funobj),
-                             timeout->argc + 1, timeout->argv, &result);
+        PRBool aBoolResult;
+        rv = mContext->CallFunction(mScriptObject, timeout->funobj, 
+                                    timeout->argc + 1, timeout->argv, 
+				                            &aBoolResult);
       }
-      tempContext->ScriptEvaluated();
-      rv = stack->Pop(nsnull);
+      if (NS_FAILED(rv)) {
+        NS_RELEASE(temp);
+        NS_RELEASE(tempContext);
+        return PR_TRUE;
+      }
+
       mRunningTimeout = nsnull;
       /* If the temporary reference is the only one that is keeping
          the timeout around, the document was released and we should

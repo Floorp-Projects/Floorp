@@ -45,28 +45,40 @@ class nsIScriptContext : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTCONTEXT_IID)
 
-  /**
-   * Execute a script.
-   *
-   * @param aScript a string representing the script to be executed
-   * @param aScriptSize the length of aScript
-   * @param aRetValue return value 
-   *
-   * @return NS_OK if the script was valid and got executed
-   *
-   **/
-  NS_IMETHOD EvaluateString(const nsString& aScript, 
+  // deprecated: remove later
+  NS_IMETHOD EvaluateString(const nsString& aScript,
                             const char *aURL,
                             PRUint32 aLineNo,
                             nsString& aRetValue,
                             PRBool* aIsUndefined) = 0;
 
-  NS_IMETHOD EvaluateString(const nsString& aScript, 
+  /**
+   * Execute a script.
+   *
+   * @param aScript a string representing the script to be executed
+   * @param aObj a JavaScript JSObject for the scope to execute in, or nsnull
+   *             to use a default scope
+   * @param principal the principal that produced the script
+   * @param aURL the URL or filename for error messages
+   * @param aLineNo the starting line number for the script for error messages
+   * @param aRetValue the result of executing the script
+   * @param aIsUndefined true if the result of executing the script is the 
+   *                     undefined value
+   *
+   * @return NS_OK if the script was valid and got executed
+   *
+   **/
+  NS_IMETHOD EvaluateString(const nsString& aScript,
+                            void *aObj,
                             nsIPrincipal *principal,
                             const char *aURL,
                             PRUint32 aLineNo,
                             nsString& aRetValue,
                             PRBool* aIsUndefined) = 0;
+
+  NS_IMETHOD CallFunction(void *aObj, void *aFunction, 
+                          PRUint32 argc, void *argv, 
+                          PRBool *aBoolResult) = 0;
 
   /**
    * Return the global object.

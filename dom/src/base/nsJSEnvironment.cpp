@@ -123,53 +123,68 @@ nsJSContext::~nsJSContext()
 NS_IMPL_ISUPPORTS(nsJSContext, kIScriptContextIID);
 
 NS_IMETHODIMP
-nsJSContext::EvaluateString(const nsString& aScript, 
+nsJSContext::EvaluateString(const nsString& aScript,
                             const char *aURL,
                             PRUint32 aLineNo,
                             nsString& aRetValue,
                             PRBool* aIsUndefined)
 {
-  nsCOMPtr<nsIScriptGlobalObjectData> globalData;
-  nsCOMPtr<nsIPrincipal> principal;
-  nsCOMPtr<nsIScriptGlobalObject> global = GetGlobalObject();
-  if (!global || NS_FAILED(global->QueryInterface(NS_GET_IID(nsIScriptGlobalObjectData), 
-                                                  (void**) getter_AddRefs(globalData)))) 
-  {
-    return NS_ERROR_FAILURE;
-  }
-  if (NS_FAILED(globalData->GetPrincipal(getter_AddRefs(principal)))) 
-    return NS_ERROR_FAILURE;
-
-  return EvaluateString(aScript, principal, aURL, aLineNo, aRetValue, aIsUndefined);
+  return EvaluateString(aScript, nsnull, nsnull, aURL, aLineNo, aRetValue, aIsUndefined);
 }
 
-  
 NS_IMETHODIMP
-nsJSContext::EvaluateString(const nsString& aScript, 
+nsJSContext::EvaluateString(const nsString& aScript,
+                            void *jsObj,
                             nsIPrincipal *principal,
                             const char *aURL,
                             PRUint32 aLineNo,
                             nsString& aRetValue,
                             PRBool* aIsUndefined)
 {
-
   nsresult rv;
+  if (!jsObj)
+    jsObj = JS_GetGlobalObject(mContext);
   NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
   if (NS_FAILED(rv)) 
     return NS_ERROR_FAILURE;
   if (NS_FAILED(stack->Push(mContext))) 
     return NS_ERROR_FAILURE;
   JSPrincipals *jsprin;
-  principal->GetJSPrincipals(&jsprin);
+  if (principal) {
+    principal->GetJSPrincipals(&jsprin);
+  } else {
+    // norris TODO: Using GetGlobalObject to get principals is unrelible.
+    nsCOMPtr<nsIScriptGlobalObjectData> globalData;
+    nsCOMPtr<nsIPrincipal> principal;
+    nsCOMPtr<nsIScriptGlobalObject> global = GetGlobalObject();
+    if (!global || NS_FAILED(global->QueryInterface(NS_GET_IID(nsIScriptGlobalObjectData), 
+                                                    (void**) getter_AddRefs(globalData)))) 
+    {
+      return NS_ERROR_FAILURE;
+    }
+    if (NS_FAILED(globalData->GetPrincipal(getter_AddRefs(principal)))) 
+      return NS_ERROR_FAILURE;
+    principal->GetJSPrincipals(&jsprin);
+  }
   jsval val;
-  PRBool ret = ::JS_EvaluateUCScriptForPrincipals(mContext, 
-                                                  JS_GetGlobalObject(mContext),
-                                                  jsprin,
-                                                  (jschar*)aScript.GetUnicode(), 
-                                                  aScript.Length(),
-                                                  aURL, 
-                                                  aLineNo,
-                                                  &val);
+  NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+  if (NS_FAILED(rv)) 
+    return NS_ERROR_FAILURE;
+  PRBool canExecute;
+  if (NS_FAILED(securityManager->CanExecuteScripts(principal, &canExecute)))
+    return NS_ERROR_FAILURE;
+  PRBool ret = PR_FALSE;
+  if (canExecute) {
+    ret = ::JS_EvaluateUCScriptForPrincipals(mContext, 
+                                             (JSObject *)jsObj,
+                                             jsprin,
+                                             (jschar*)aScript.GetUnicode(), 
+                                             aScript.Length(),
+                                             aURL, 
+                                             aLineNo,
+                                             &val);
+  }
   JSPRINCIPALS_DROP(mContext, jsprin);
   if (ret) {
     *aIsUndefined = JSVAL_IS_VOID(val);
@@ -177,6 +192,7 @@ nsJSContext::EvaluateString(const nsString& aScript,
     aRetValue.SetString(JS_GetStringChars(jsstring));
   }
   else {
+    *aIsUndefined = PR_TRUE;
     aRetValue.Truncate();
   }
 	
@@ -187,6 +203,44 @@ nsJSContext::EvaluateString(const nsString& aScript,
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsJSContext::CallFunction(void *aObj, void *aFunction, PRUint32 argc, 
+                          void *argv, PRBool *aBoolResult)
+{
+  nsresult rv;
+  NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+  if (NS_FAILED(rv)) 
+    return NS_ERROR_FAILURE;
+  PRBool canExecute;
+  if (NS_FAILED(securityManager->CanExecuteFunction((JSFunction *)aFunction, 
+                                                    &canExecute)))
+    return NS_ERROR_FAILURE;
+
+  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
+  if (NS_FAILED(rv)) 
+    return NS_ERROR_FAILURE;
+  if (NS_FAILED(stack->Push(mContext))) 
+    return NS_ERROR_FAILURE;
+
+  jsval val;
+  PRBool ret = canExecute &&
+               JS_CallFunction(mContext, (JSObject *)aObj, 
+                               (JSFunction *)aFunction, argc, 
+                               (jsval *)argv, &val);
+  *aBoolResult = ret 
+                 ? !JSVAL_IS_BOOLEAN(val) || JSVAL_TO_BOOLEAN(val) 
+                 : JS_TRUE;
+	
+  ScriptEvaluated();
+  
+  if (NS_FAILED(stack->Pop(nsnull))) 
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP_(nsIScriptGlobalObject*)
 nsJSContext::GetGlobalObject()

@@ -185,18 +185,18 @@ nsScriptSecurityManager::CheckURI(nsIScriptContext *aContext,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsScriptSecurityManager::HasSubjectPrincipal(PRBool *result)
+{
+    *result = GetCurrentContext() != nsnull;
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsScriptSecurityManager::GetSubjectPrincipal(nsIPrincipal **result)
 {
-    // Get JSContext from stack.
-    nsresult rv;
-    NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", 
-                    &rv);
-    if (NS_FAILED(rv))
-        return NS_ERROR_FAILURE;
-    JSContext *cx;
-    if (NS_FAILED(stack->Peek(&cx)))
+    JSContext *cx = GetCurrentContext();
+    if (!cx)
         return NS_ERROR_FAILURE;
     return GetSubjectPrincipal(cx, result);
 }
@@ -228,6 +228,54 @@ nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI *aURI,
     NS_ADDREF(*result);
     return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanExecuteScripts(nsIPrincipal *principal,
+                                           PRBool *result)
+{
+    nsIPref *mPrefs;
+    nsServiceManager::GetService(kPrefServiceCID, NS_GET_IID(nsIPref), 
+                                 (nsISupports**) &mPrefs);
+    if (NS_FAILED(mPrefs->GetBoolPref("javascript.enabled", result))) {
+        // Default to enabled.
+        *result = PR_TRUE;
+        return NS_OK;
+    }
+    if (!*result) {
+        // JavaScript is disabled, but we must still execute system JavaScript
+        *result = (principal == mSystemPrincipal);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanExecuteFunction(void *jsFunc,
+                                            PRBool *result)
+{
+    nsIPref *mPrefs;
+    nsServiceManager::GetService(kPrefServiceCID, NS_GET_IID(nsIPref), 
+                                 (nsISupports**) &mPrefs);
+    if (NS_FAILED(mPrefs->GetBoolPref("javascript.enabled", result))) {
+        // Default to enabled.
+        *result = PR_TRUE;
+        return NS_OK;
+    }
+    if (!*result) {
+        // norris TODO: figure out JSContext strategy, replace nsnulls below
+        // JavaScript is disabled, but we must still execute system JavaScript
+        JSScript *script = JS_GetFunctionScript(nsnull, (JSFunction *) jsFunc);
+        if (!script)
+            return NS_ERROR_FAILURE;
+        JSPrincipals *jsprin = JS_GetScriptPrincipals(nsnull, script);
+        if (!jsprin)
+            return NS_ERROR_FAILURE;
+        nsJSPrincipals *nsJSPrin = (nsJSPrincipals *) jsprin;
+        *result = (nsJSPrin->nsIPrincipalPtr == mSystemPrincipal);
+    }
+    return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CanEnableCapability(nsIPrincipal *principal, 
@@ -348,6 +396,20 @@ nsScriptSecurityManager::GetScriptSecurityManager()
     if (!ssecMan) 
         ssecMan = new nsScriptSecurityManager();
     return ssecMan;
+}
+
+JSContext *
+nsScriptSecurityManager::GetCurrentContext() {
+    // Get JSContext from stack.
+    nsresult rv;
+    NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", 
+                    &rv);
+    if (NS_FAILED(rv))
+        return nsnull;
+    JSContext *cx;
+    if (NS_FAILED(stack->Peek(&cx)))
+        return nsnull;
+    return cx;
 }
 
 NS_IMETHODIMP

@@ -47,6 +47,9 @@ public:
     GetScriptSecurityManager();
     
 private:
+    JSContext *
+    GetCurrentContext();
+
     NS_IMETHOD
     GetSubjectPrincipal(JSContext *aCx, nsIPrincipal **result);
 
