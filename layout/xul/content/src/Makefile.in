@@ -41,7 +41,7 @@ CPPSRCS =				\
 EXPORTS = \
 	$(NULL)
 
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
+#EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 MODULE=layout
 
@@ -49,16 +49,8 @@ REQUIRES = xpcom raptor dom
 
 MKSHLIB :=
 
-# we don't want the shared lib
-NO_SHARED_LIB=1
+# we don't want the shared lib, but we want to force the creation of a static lib.
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
-
-
-export::
-
-install:: $(TARGETS)
-
-
-clobber::
-
