@@ -50,8 +50,8 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
 
     // overloading nsITransaction methods
-	NS_IMETHOD Undo(void);
-    NS_IMETHOD Redo(void);
+    NS_IMETHOD UndoTransaction(void);
+    NS_IMETHOD RedoTransaction(void);
 
     // helper
     nsresult AddSrcKey(nsMsgKey aKey);

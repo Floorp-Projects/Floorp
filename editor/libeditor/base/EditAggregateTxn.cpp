@@ -31,8 +31,6 @@ EditAggregateTxn::EditAggregateTxn()
   // base class does this: NS_INIT_REFCNT();
   nsresult res = NS_NewISupportsArray(getter_AddRefs(mChildren));
   NS_POSTCONDITION(NS_SUCCEEDED(res), "EditAggregateTxn failed in constructor");
-  SetTransactionDescriptionID( kTransactionID );
-  /* log description initialized in parent constructor */
 }
 
 EditAggregateTxn::~EditAggregateTxn()
@@ -40,7 +38,7 @@ EditAggregateTxn::~EditAggregateTxn()
   // nsISupportsArray cleans up array for us at destruct time
 }
 
-NS_IMETHODIMP EditAggregateTxn::Do(void)
+NS_IMETHODIMP EditAggregateTxn::DoTransaction(void)
 {
   nsresult result=NS_OK;  // it's legal (but not very useful) to have an empty child list
   if (mChildren)
@@ -53,7 +51,7 @@ NS_IMETHODIMP EditAggregateTxn::Do(void)
       nsCOMPtr<nsISupports> isupports = dont_AddRef(mChildren->ElementAt(i));
       nsCOMPtr<nsITransaction> txn ( do_QueryInterface(isupports) );
       if (!txn) { return NS_ERROR_NULL_POINTER; }
-      result = txn->Do();
+      result = txn->DoTransaction();
       if (NS_FAILED(result))
         break;
     }  
@@ -61,7 +59,7 @@ NS_IMETHODIMP EditAggregateTxn::Do(void)
   return result;
 }
 
-NS_IMETHODIMP EditAggregateTxn::Undo(void)
+NS_IMETHODIMP EditAggregateTxn::UndoTransaction(void)
 {
   nsresult result=NS_OK;  // it's legal (but not very useful) to have an empty child list
   if (mChildren)
@@ -75,7 +73,7 @@ NS_IMETHODIMP EditAggregateTxn::Undo(void)
       nsCOMPtr<nsISupports> isupports = dont_AddRef(mChildren->ElementAt(i));
       nsCOMPtr<nsITransaction> txn ( do_QueryInterface(isupports) );
       if (!txn) { return NS_ERROR_NULL_POINTER; }
-      result = txn->Undo();
+      result = txn->UndoTransaction();
       if (NS_FAILED(result))
         break;
     }  
@@ -83,7 +81,7 @@ NS_IMETHODIMP EditAggregateTxn::Undo(void)
   return result;
 }
 
-NS_IMETHODIMP EditAggregateTxn::Redo(void)
+NS_IMETHODIMP EditAggregateTxn::RedoTransaction(void)
 {
   nsresult result=NS_OK;  // it's legal (but not very useful) to have an empty child list
   if (mChildren)
@@ -96,7 +94,7 @@ NS_IMETHODIMP EditAggregateTxn::Redo(void)
       nsCOMPtr<nsISupports> isupports = dont_AddRef(mChildren->ElementAt(i));
       nsCOMPtr<nsITransaction> txn ( do_QueryInterface(isupports) );
       if (!txn) { return NS_ERROR_NULL_POINTER; }
-      result = txn->Redo();
+      result = txn->RedoTransaction();
       if (NS_FAILED(result))
         break;
     }  
@@ -111,7 +109,7 @@ NS_IMETHODIMP EditAggregateTxn::GetIsTransient(PRBool *aIsTransient)
   return NS_OK;
 }
 
-NS_IMETHODIMP EditAggregateTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP EditAggregateTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
   nsresult result=NS_OK;  // it's legal (but not very useful) to have an empty child list
   if (nsnull!=aDidMerge)
@@ -127,29 +125,24 @@ NS_IMETHODIMP EditAggregateTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransa
       nsCOMPtr<nsISupports> isupports = dont_AddRef(mChildren->ElementAt(i));
       nsCOMPtr<nsITransaction> txn ( do_QueryInterface(isupports) );
       if (!txn) { return NS_ERROR_NULL_POINTER; }
-      result = txn->Merge(aDidMerge, aTransaction);
+      result = txn->Merge(aTransaction, aDidMerge);
     }
   }
   return result;
 
 }
 
-NS_IMETHODIMP EditAggregateTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP EditAggregateTxn::GetTxnDescription(nsAWritableString& aString)
 {
-  return NS_OK;
-}
+  aString.Assign(NS_LITERAL_STRING("EditAggregateTxn: "));
 
-NS_IMETHODIMP EditAggregateTxn::GetUndoString(nsString *aString)
-{
-  if (nsnull!=aString)
-    aString->SetLength(0);
-  return NS_OK;
-}
+  if (mName)
+  {
+    nsAutoString name;
+    mName->ToString(name);
+    aString += name;
+  }
 
-NS_IMETHODIMP EditAggregateTxn::GetRedoString(nsString *aString)
-{
-  if (nsnull!=aString)
-    aString->SetLength(0);
   return NS_OK;
 }
 

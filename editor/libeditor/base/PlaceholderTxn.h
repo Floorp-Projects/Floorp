@@ -65,13 +65,15 @@ public:
 
 // ------------ EditAggregateTxn -----------------------
 
-  NS_IMETHOD Do(void);
+  NS_IMETHOD DoTransaction(void);
 
-  NS_IMETHOD Undo(void);
+  NS_IMETHOD UndoTransaction(void);
   
-  NS_IMETHOD Redo(void);
+  NS_IMETHOD RedoTransaction(void);
 
-  NS_IMETHOD Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
+  NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
+
+  NS_IMETHOD GetTxnDescription(nsAWritableString& aTxnDescription);
 
 // ------------ nsIAbsorbingTransaction -----------------------
 
@@ -91,8 +93,6 @@ public:
   
   friend class TransactionFactory;
 
-  enum { kTransactionID = 11260 };
-
 protected:
 
   /** the presentation shell, which we'll need to get the selection */
@@ -103,7 +103,8 @@ protected:
   PRBool      mCommitted;       // do we stop auto absorbing any matching placeholder txns?
   // these next two members store the state of the selection in a safe way. 
   // selection at the start of the txn is stored, as is the selection at the end.
-  // This is so that Undo() and Redo() can restore the selection properly.
+  // This is so that UndoTransaction() and RedoTransaction() can restore the
+  // selection properly.
   nsSelectionState *mStartSel; // use a pointer because this is constructed before we exist
   nsSelectionState  mEndSel;
   nsIEditor*        mEditor;   /** the editor for this transaction */

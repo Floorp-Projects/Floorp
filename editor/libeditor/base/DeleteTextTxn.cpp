@@ -33,8 +33,6 @@ static const PRBool gNoisy = PR_FALSE;
 DeleteTextTxn::DeleteTextTxn()
   : EditTxn()
 {
-  SetTransactionDescriptionID( kTransactionID );
-  /* log description initialized in parent constructor */
 }
 
 DeleteTextTxn::~DeleteTextTxn()
@@ -62,7 +60,7 @@ NS_IMETHODIMP DeleteTextTxn::Init(nsIEditor *aEditor,
   return NS_OK;
 }
 
-NS_IMETHODIMP DeleteTextTxn::Do(void)
+NS_IMETHODIMP DeleteTextTxn::DoTransaction(void)
 {
   if (gNoisy) { printf("Do Delete Text\n"); }
   NS_ASSERTION(mEditor && mElement, "bad state");
@@ -94,7 +92,7 @@ NS_IMETHODIMP DeleteTextTxn::Do(void)
 
 //XXX: we may want to store the selection state and restore it properly
 //     was it an insertion point or an extended selection?
-NS_IMETHODIMP DeleteTextTxn::Undo(void)
+NS_IMETHODIMP DeleteTextTxn::UndoTransaction(void)
 {
   if (gNoisy) { printf("Undo Delete Text\n"); }
   NS_ASSERTION(mEditor && mElement, "bad state");
@@ -105,34 +103,16 @@ NS_IMETHODIMP DeleteTextTxn::Undo(void)
   return result;
 }
 
-NS_IMETHODIMP DeleteTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP DeleteTextTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
   if (nsnull!=aDidMerge)
     *aDidMerge=PR_FALSE;
   return NS_OK;
 }
 
-NS_IMETHODIMP DeleteTextTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP DeleteTextTxn::GetTxnDescription(nsAWritableString& aString)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP DeleteTextTxn::GetUndoString(nsString *aString)
-{
-  if (nsnull!=aString)
-  {
-    aString->AssignWithConversion("Insert Text: ");
-    *aString += mDeletedText;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP DeleteTextTxn::GetRedoString(nsString *aString)
-{
-  if (nsnull!=aString)
-  {
-    aString->AssignWithConversion("Remove Text: ");
-    *aString += mDeletedText;
-  }
+  aString.Assign(NS_LITERAL_STRING("DeleteTextTxn: "));
+  aString += mDeletedText;
   return NS_OK;
 }

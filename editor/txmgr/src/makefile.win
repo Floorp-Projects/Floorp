@@ -26,6 +26,7 @@ LIBRARY_NAME=txmgr
 
 CPPSRCS =				\
 	nsTransactionItem.cpp	\
+	nsTransactionList.cpp	\
 	nsTransactionManager.cpp	\
 	nsTransactionManagerFactory.cpp	\
 	nsTransactionStack.cpp	\
@@ -33,6 +34,7 @@ CPPSRCS =				\
 
 CPP_OBJS =					\
 	.\$(OBJDIR)\nsTransactionItem.obj	\
+	.\$(OBJDIR)\nsTransactionList.obj	\
 	.\$(OBJDIR)\nsTransactionManager.obj	\
 	.\$(OBJDIR)\nsTransactionStack.obj	\
 	.\$(OBJDIR)\nsTransactionManagerFactory.obj	\

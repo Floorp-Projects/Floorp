@@ -22,7 +22,6 @@
 
 #include <stdlib.h>
 #include "nsITransactionManager.h"
-#include "nsTransactionManagerCID.h"
 #include "nsIComponentManager.h"
 
 static PRInt32 sConstructorCount     = 0;
@@ -417,13 +416,9 @@ PRInt32 sAggregateBatchTestRedoOrderArr[] = {
         295, 296, 297, 298, 299, 300, 301, 448, 449, 450, 451, 452, 453, 454,
         455, 456, 457, 458 };
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kITransactionIID, NS_ITRANSACTION_IID);
-static NS_DEFINE_IID(kITransactionManagerIID, NS_ITRANSACTIONMANAGER_IID);
-static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
-
+#ifdef MUST_REGISTER_TXMGR_DLL
+#include "nsTransactionManagerCID.h"
 static NS_DEFINE_CID(kCTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
-
 
 #ifdef XP_PC
 #define TRANSACTION_MANAGER_DLL "txmgr.dll"
@@ -434,124 +429,21 @@ static NS_DEFINE_CID(kCTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 #define TRANSACTION_MANAGER_DLL "libtxmgr"MOZ_DLL_SUFFIX
 #endif
 #endif
+#endif /* MUST_REGISTER_TXMGR_DLL */
 
-
-class ConsoleOutput : public nsIOutputStream
-{
-public:
-  ConsoleOutput()  {}
-  virtual ~ConsoleOutput() {}
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Close(void) {return NS_OK;}
-  NS_IMETHOD Write(const char *str, PRUint32 len, PRUint32 *wcnt)
-  {
-    *wcnt = fwrite(str, 1, len, stdout);
-    fflush(stdout);
-    return NS_OK;
-  }
-  NS_IMETHOD Flush()
-  {
-    fflush(stdout);
-    return NS_OK;
-  }
-
-    
-    NS_IMETHOD
-    WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval) {
-      NS_NOTREACHED("WriteFrom");
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    NS_IMETHOD
-    WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval) {
-      NS_NOTREACHED("WriteSegments");
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    NS_IMETHOD
-    GetNonBlocking(PRBool *aNonBlocking) {
-      NS_NOTREACHED("GetNonBlocking");
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    NS_IMETHOD
-    SetNonBlocking(PRBool aNonBlocking) {
-      NS_NOTREACHED("SetNonBlocking");
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    NS_IMETHOD
-    GetObserver(nsIOutputStreamObserver * *aObserver) {
-      NS_NOTREACHED("GetObserver");
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    NS_IMETHOD
-    SetObserver(nsIOutputStreamObserver * aObserver) {
-      NS_NOTREACHED("SetObserver");
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
-};
-
-NS_IMPL_ADDREF(ConsoleOutput)
-NS_IMPL_RELEASE(ConsoleOutput)
-
-nsresult
-ConsoleOutput::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIOutputStreamIID)) {
-    *aInstancePtr = (void*)(nsITransaction*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  *aInstancePtr = 0;
-  return NS_NOINTERFACE;
-}
-
-ConsoleOutput console;
+#define TEST_TXMGR_IF_RELEASE(tx) if (tx) tx->Release(); // Release but don't clear pointer!
 
 class TestTransaction : public nsITransaction
 {
 public:
 
-  TestTransaction() : mRefCnt(0) {}
+  TestTransaction() { NS_INIT_REFCNT(); }
   virtual ~TestTransaction()     {}
 
   NS_DECL_ISUPPORTS
 };
 
-NS_IMPL_ADDREF(TestTransaction)
-NS_IMPL_RELEASE(TestTransaction)
-
-nsresult
-TestTransaction::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kITransactionIID)) {
-    *aInstancePtr = (void*)(nsITransaction*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  *aInstancePtr = 0;
-  return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS(TestTransaction, NS_GET_IID(nsITransaction))
 
 class SimpleTransaction : public TestTransaction
 {
@@ -596,10 +488,10 @@ public:
     mVal = -1;
   }
 
-  NS_IMETHOD Do()
+  NS_IMETHOD DoTransaction()
   {
     //
-    // Make sure Do() is called in the order we expect!
+    // Make sure DoTransaction() is called in the order we expect!
     // Notice that we don't check to see if we go past the end of the array.
     // This is done on purpose since we want to crash if the order array is out
     // of date.
@@ -613,16 +505,16 @@ public:
     ++sDoCount;
 
 #ifdef ENABLE_DEBUG_PRINTFS
-    printf("\nSimpleTransaction.Do: %d - 0x%.8x\n", mVal, (PRInt32)this);
+    printf("\nSimpleTransaction.DoTransaction: %d - 0x%.8x\n", mVal, (PRInt32)this);
 #endif // ENABLE_DEBUG_PRINTFS
 
     return (mFlags & THROWS_DO_ERROR_FLAG) ? NS_ERROR_FAILURE : NS_OK;
   }
 
-  NS_IMETHOD Undo()
+  NS_IMETHOD UndoTransaction()
   {
     //
-    // Make sure Undo() is called in the order we expect!
+    // Make sure UndoTransaction() is called in the order we expect!
     // Notice that we don't check to see if we go past the end of the array.
     // This is done on purpose since we want to crash if the order array is out
     // of date.
@@ -642,10 +534,10 @@ public:
     return (mFlags & THROWS_UNDO_ERROR_FLAG) ? NS_ERROR_FAILURE : NS_OK;
   }
 
-  NS_IMETHOD Redo()
+  NS_IMETHOD RedoTransaction()
   {
     //
-    // Make sure Redo() is called in the order we expect!
+    // Make sure RedoTransaction() is called in the order we expect!
     // Notice that we don't check to see if we go past the end of the array.
     // This is done on purpose since we want to crash if the order array is out
     // of date.
@@ -673,37 +565,13 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+  NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge) 
   {
     if (aDidMerge)
       *aDidMerge = (mFlags & MERGE_FLAG) ? PR_TRUE : PR_FALSE;
 
     return NS_OK;
   }
-
-  NS_IMETHOD Write(nsIOutputStream *aOutputStream)
-  {
-    char buf[256];
-    PRUint32 amt;
-
-    sprintf(buf, "Transaction: %d - 0x%.8x\n", mVal, (PRInt32)this);
-    return aOutputStream->Write(buf, strlen(buf), &amt);
-  }
-
-  NS_IMETHOD GetUndoString(nsString *aString)
-  {
-    if (aString)
-      aString->SetLength(0);
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetRedoString(nsString *aString)
-  {
-    if (aString)
-      aString->SetLength(0) ;
-    return NS_OK;
-  }
-
 };
 
 class AggregateTransaction : public SimpleTransaction
@@ -754,14 +622,14 @@ public:
     // printf("~AggregateTransaction(0x%.8x) - %3d (%3d)\n", this, mLevel, mVal);
   }
 
-  NS_IMETHOD Do()
+  NS_IMETHOD DoTransaction()
   {
     if (mLevel >= mMaxLevel) {
       // Only leaf nodes can throw errors!
       mFlags |= mErrorFlags;
     }
 
-    nsresult result = SimpleTransaction::Do();
+    nsresult result = SimpleTransaction::DoTransaction();
 
     if (NS_FAILED(result)) {
       // printf("ERROR: QueryInterface() failed for transaction level %d. (%d)\n",
@@ -813,7 +681,7 @@ public:
       }
 
       nsITransaction *tx = 0;
-      result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+      result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
       if (NS_FAILED(result)) {
         printf("ERROR: QueryInterface() failed for transaction %d, level %d. (%d)\n",
                i, mLevel, result);
@@ -824,7 +692,7 @@ public:
         return result;
       }
 
-      result = mTXMgr->Do(tx);
+      result = mTXMgr->DoTransaction(tx);
 
       if (NS_FAILED(result)) {
         // printf("ERROR: Failed to execute transaction %d, level %d. (%d)\n",
@@ -916,15 +784,15 @@ quick_test(TestTransactionFactory *factory)
   printf("Create transaction manager instance ... ");
 
   PRInt32 i, numitems = 0;
-  nsITransactionManager  *mgr = 0;
-  nsITransaction *tx          = 0;
-  TestTransaction *tximpl   = 0;
+  nsITransactionManager *mgr = 0;
+  nsITransaction  *tx        = 0;
+  TestTransaction *tximpl    = 0;
   nsITransaction *u1 = 0, *u2 = 0;
   nsITransaction *r1 = 0, *r2 = 0;
   nsresult result;
 
-  result = nsComponentManager::CreateInstance(kCTransactionManagerCID, nsnull,
-                                        kITransactionManagerIID, (void **)&mgr);
+  result = nsComponentManager::CreateInstance(NS_TRANSACTIONMANAGER_CONTRACTID, nsnull,
+                                        NS_GET_IID(nsITransactionManager), (void **)&mgr);
 
   if (NS_FAILED(result) || !mgr) {
     printf("ERROR: Failed to create Transaction Manager instance.\n");
@@ -935,16 +803,16 @@ quick_test(TestTransactionFactory *factory)
 
   /*******************************************************************
    *
-   * Call Do() with a null transaction:
+   * Call DoTransaction() with a null transaction:
    *
    *******************************************************************/
 
-  printf("Call Do() with null transaction ... ");
-  result = mgr->Do(0);
+  printf("Call DoTransaction() with null transaction ... ");
+  result = mgr->DoTransaction(0);
 
   if (NS_FAILED(result)
       && result != NS_ERROR_NULL_POINTER) {
-    printf("ERROR: Do() returned unexpected error. (%d)\n", result);
+    printf("ERROR: DoTransaction() returned unexpected error. (%d)\n", result);
     return result;
   }
 
@@ -952,12 +820,12 @@ quick_test(TestTransactionFactory *factory)
 
   /*******************************************************************
    *
-   * Call Undo() with an empty undo stack:
+   * Call UndoTransaction() with an empty undo stack:
    *
    *******************************************************************/
 
-  printf("Call Undo() with empty undo stack ... ");
-  result = mgr->Undo();
+  printf("Call UndoTransaction() with empty undo stack ... ");
+  result = mgr->UndoTransaction();
 
   if (NS_FAILED(result)) {
     printf("ERROR: Undo on empty undo stack failed. (%d)\n", result);
@@ -968,12 +836,12 @@ quick_test(TestTransactionFactory *factory)
 
   /*******************************************************************
    *
-   * Call Redo() with an empty redo stack:
+   * Call RedoTransaction() with an empty redo stack:
    *
    *******************************************************************/
 
-  printf("Call Redo() with empty redo stack ... ");
-  result = mgr->Redo();
+  printf("Call RedoTransaction() with empty redo stack ... ");
+  result = mgr->RedoTransaction();
 
   if (NS_FAILED(result)) {
     printf("ERROR: Redo on empty redo stack failed. (%d)\n", result);
@@ -1105,6 +973,8 @@ quick_test(TestTransactionFactory *factory)
   tx = 0;
   result = mgr->PeekUndoStack(&tx);
 
+  TEST_TXMGR_IF_RELEASE(tx); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: PeekUndoStack() on empty undo stack failed. (%d)\n", result);
     return result;
@@ -1128,6 +998,8 @@ quick_test(TestTransactionFactory *factory)
   tx = 0;
   result = mgr->PeekRedoStack(&tx);
 
+  TEST_TXMGR_IF_RELEASE(tx); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: PeekRedoStack() on empty redo stack failed. (%d)\n", result);
     return result;
@@ -1136,24 +1008,6 @@ quick_test(TestTransactionFactory *factory)
   if (tx != 0) {
     printf("ERROR: PeekRedoStack() on empty redo stack failed. (%d)\n", result);
     return NS_ERROR_FAILURE;
-  }
-
-  printf("passed\n");
-
-  /*******************************************************************
-   *
-   * Call Write() with a null output stream:
-   *
-   *******************************************************************/
-
-  printf("Call Write() with null output stream ... ");
-
-  result = mgr->Write(0);
-
-  if (NS_FAILED(result)
-      && result != NS_ERROR_NULL_POINTER) {
-    printf("ERROR: Write() returned unexpected error. (%d)\n", result);
-    return result;
   }
 
   printf("passed\n");
@@ -1222,7 +1076,7 @@ quick_test(TestTransactionFactory *factory)
 
   tx = 0;
 
-  result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+  result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
 
   if (NS_FAILED(result)) {
     printf("ERROR: QueryInterface() failed for initial transaction. (%d)\n",
@@ -1230,7 +1084,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  result = mgr->Do(tx);
+  result = mgr->DoTransaction(tx);
 
   if (NS_FAILED(result)) {
     printf("ERROR: Failed to execute initial transaction. (%d)\n", result);
@@ -1243,6 +1097,8 @@ quick_test(TestTransactionFactory *factory)
 
   result = mgr->PeekUndoStack(&u1);
 
+  TEST_TXMGR_IF_RELEASE(u1); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekUndoStack() failed. (%d)\n", result);
     return result;
@@ -1254,6 +1110,8 @@ quick_test(TestTransactionFactory *factory)
   }
 
   result = mgr->PeekRedoStack(&r1);
+
+  TEST_TXMGR_IF_RELEASE(r1); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekRedoStack() failed. (%d)\n", result);
@@ -1269,14 +1127,14 @@ quick_test(TestTransactionFactory *factory)
     }
 
     tx = 0;
-    result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+    result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
     if (NS_FAILED(result)) {
       printf("ERROR: QueryInterface() failed for transaction %d. (%d)\n",
              i, result);
       return result;
     }
 
-    result = mgr->Do(tx);
+    result = mgr->DoTransaction(tx);
     if (NS_FAILED(result)) {
       printf("ERROR: Failed to execute transaction %d. (%d)\n", i, result);
       return result;
@@ -1286,6 +1144,8 @@ quick_test(TestTransactionFactory *factory)
   }
 
   result = mgr->PeekUndoStack(&u2);
+
+  TEST_TXMGR_IF_RELEASE(u2); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekUndoStack() failed. (%d)\n", result);
@@ -1298,6 +1158,8 @@ quick_test(TestTransactionFactory *factory)
   }
 
   result = mgr->PeekRedoStack(&r2);
+
+  TEST_TXMGR_IF_RELEASE(r2); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekRedoStack() failed. (%d)\n", result);
@@ -1364,14 +1226,14 @@ quick_test(TestTransactionFactory *factory)
     }
 
     tx = 0;
-    result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+    result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
     if (NS_FAILED(result)) {
       printf("ERROR: QueryInterface() failed for transaction %d. (%d)\n",
              i, result);
       return result;
     }
 
-    result = mgr->Do(tx);
+    result = mgr->DoTransaction(tx);
     if (NS_FAILED(result)) {
       printf("ERROR: Failed to execute transaction %d. (%d)\n", i, result);
       return result;
@@ -1423,12 +1285,16 @@ quick_test(TestTransactionFactory *factory)
 
   result = mgr->PeekUndoStack(&u1);
 
+  TEST_TXMGR_IF_RELEASE(u1); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekUndoStack() failed. (%d)\n", result);
     return result;
   }
 
   result = mgr->PeekRedoStack(&r1);
+
+  TEST_TXMGR_IF_RELEASE(r1); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekRedoStack() failed. (%d)\n", result);
@@ -1444,14 +1310,14 @@ quick_test(TestTransactionFactory *factory)
     }
 
     tx = 0;
-    result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+    result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
     if (NS_FAILED(result)) {
       printf("ERROR: QueryInterface() failed for transaction %d. (%d)\n",
              i, result);
       return result;
     }
 
-    result = mgr->Do(tx);
+    result = mgr->DoTransaction(tx);
     if (NS_FAILED(result)) {
       printf("ERROR: Failed to execute transaction %d. (%d)\n", i, result);
       return result;
@@ -1461,6 +1327,8 @@ quick_test(TestTransactionFactory *factory)
   }
 
   result = mgr->PeekUndoStack(&u2);
+
+  TEST_TXMGR_IF_RELEASE(u2); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekUndoStack() failed. (%d)\n", result);
@@ -1473,6 +1341,8 @@ quick_test(TestTransactionFactory *factory)
   }
 
   result = mgr->PeekRedoStack(&r2);
+
+  TEST_TXMGR_IF_RELEASE(r2); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekRedoStack() failed. (%d)\n", result);
@@ -1524,7 +1394,7 @@ quick_test(TestTransactionFactory *factory)
   printf("Undo 4 transactions ... ");
 
   for (i = 1; i <= 4; i++) {
-    result = mgr->Undo();
+    result = mgr->UndoTransaction();
     if (NS_FAILED(result)) {
       printf("ERROR: Failed to undo transaction %d. (%d)\n", i, result);
       return result;
@@ -1571,7 +1441,7 @@ quick_test(TestTransactionFactory *factory)
   printf("Redo 2 transactions ... ");
 
   for (i = 1; i <= 2; ++i) {
-    result = mgr->Redo();
+    result = mgr->RedoTransaction();
     if (NS_FAILED(result)) {
       printf("ERROR: Failed to redo transaction %d. (%d)\n", i, result);
       return result;
@@ -1625,14 +1495,14 @@ quick_test(TestTransactionFactory *factory)
 
   tx     = 0;
 
-  result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+  result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
 
   if (NS_FAILED(result)) {
     printf("ERROR: QueryInterface() failed for transaction. (%d)\n", result);
     return result;
   }
 
-  result = mgr->Do(tx);
+  result = mgr->DoTransaction(tx);
   if (NS_FAILED(result)) {
     printf("ERROR: Failed to execute transaction. (%d)\n", result);
     return result;
@@ -1679,7 +1549,7 @@ quick_test(TestTransactionFactory *factory)
   printf("Undo 4 transactions then clear the undo and redo stacks ... ");
 
   for (i = 1; i <= 4; ++i) {
-    result = mgr->Undo();
+    result = mgr->UndoTransaction();
     if (NS_FAILED(result)) {
       printf("ERROR: Failed to undo transaction %d. (%d)\n", i, result);
       return result;
@@ -1769,14 +1639,14 @@ quick_test(TestTransactionFactory *factory)
     }
 
     tx = 0;
-    result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+    result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
     if (NS_FAILED(result)) {
       printf("ERROR: QueryInterface() failed for transaction %d. (%d)\n",
              i, result);
       return result;
     }
 
-    result = mgr->Do(tx);
+    result = mgr->DoTransaction(tx);
     if (NS_FAILED(result)) {
       printf("ERROR: Failed to execute transaction %d. (%d)\n", i, result);
       return result;
@@ -1817,11 +1687,11 @@ quick_test(TestTransactionFactory *factory)
 
   /*******************************************************************
    *
-   * Test transaction Do() error:
+   * Test transaction DoTransaction() error:
    *
    *******************************************************************/
 
-  printf("Test transaction Do() error ... ");
+  printf("Test transaction DoTransaction() error ... ");
 
   tximpl = factory->create(mgr, THROWS_DO_ERROR_FLAG);
 
@@ -1832,7 +1702,7 @@ quick_test(TestTransactionFactory *factory)
 
   tx     = 0;
 
-  result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+  result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
 
   if (NS_FAILED(result)) {
     printf("ERROR: QueryInterface() failed for transaction. (%d)\n", result);
@@ -1843,6 +1713,8 @@ quick_test(TestTransactionFactory *factory)
 
   result = mgr->PeekUndoStack(&u1);
 
+  TEST_TXMGR_IF_RELEASE(u1); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekUndoStack() failed. (%d)\n", result);
     return result;
@@ -1850,21 +1722,25 @@ quick_test(TestTransactionFactory *factory)
 
   result = mgr->PeekRedoStack(&r1);
 
+  TEST_TXMGR_IF_RELEASE(r1); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekRedoStack() failed. (%d)\n", result);
     return result;
   }
 
-  result = mgr->Do(tx);
+  result = mgr->DoTransaction(tx);
 
   if (NS_FAILED(result) && result != NS_ERROR_FAILURE) {
-    printf("ERROR: Do() returned unexpected error. (%d)\n", result);
+    printf("ERROR: DoTransaction() returned unexpected error. (%d)\n", result);
     return result;
   }
 
   tx->Release();
 
   result = mgr->PeekUndoStack(&u2);
+
+  TEST_TXMGR_IF_RELEASE(u2); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekUndoStack() failed. (%d)\n", result);
@@ -1877,6 +1753,8 @@ quick_test(TestTransactionFactory *factory)
   }
 
   result = mgr->PeekRedoStack(&r2);
+
+  TEST_TXMGR_IF_RELEASE(r2); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekRedoStack() failed. (%d)\n", result);
@@ -1920,11 +1798,11 @@ quick_test(TestTransactionFactory *factory)
 
   /*******************************************************************
    *
-   * Test transaction Undo() error:
+   * Test transaction UndoTransaction() error:
    *
    *******************************************************************/
 
-  printf("Test transaction Undo() error ... ");
+  printf("Test transaction UndoTransaction() error ... ");
 
   tximpl = factory->create(mgr, THROWS_UNDO_ERROR_FLAG);
 
@@ -1935,17 +1813,17 @@ quick_test(TestTransactionFactory *factory)
 
   tx     = 0;
 
-  result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+  result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
 
   if (NS_FAILED(result)) {
     printf("ERROR: QueryInterface() failed for transaction. (%d)\n", result);
     return result;
   }
 
-  result = mgr->Do(tx);
+  result = mgr->DoTransaction(tx);
 
   if (NS_FAILED(result)) {
-    printf("ERROR: Do() returned unexpected error. (%d)\n", result);
+    printf("ERROR: DoTransaction() returned unexpected error. (%d)\n", result);
     return result;
   }
 
@@ -1955,6 +1833,8 @@ quick_test(TestTransactionFactory *factory)
 
   result = mgr->PeekUndoStack(&u1);
 
+  TEST_TXMGR_IF_RELEASE(u1); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekUndoStack() failed. (%d)\n", result);
     return result;
@@ -1962,19 +1842,23 @@ quick_test(TestTransactionFactory *factory)
 
   result = mgr->PeekRedoStack(&r1);
 
+  TEST_TXMGR_IF_RELEASE(r1); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekRedoStack() failed. (%d)\n", result);
     return result;
   }
 
-  result = mgr->Undo();
+  result = mgr->UndoTransaction();
 
   if (NS_FAILED(result) && result != NS_ERROR_FAILURE) {
-    printf("ERROR: Undo() returned unexpected error. (%d)\n", result);
+    printf("ERROR: UndoTransaction() returned unexpected error. (%d)\n", result);
     return result;
   }
 
   result = mgr->PeekUndoStack(&u2);
+
+  TEST_TXMGR_IF_RELEASE(u2); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekUndoStack() failed. (%d)\n", result);
@@ -1987,6 +1871,8 @@ quick_test(TestTransactionFactory *factory)
   }
 
   result = mgr->PeekRedoStack(&r2);
+
+  TEST_TXMGR_IF_RELEASE(r2); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekRedoStack() failed. (%d)\n", result);
@@ -2030,11 +1916,11 @@ quick_test(TestTransactionFactory *factory)
 
   /*******************************************************************
    *
-   * Test transaction Redo() error:
+   * Test transaction RedoTransaction() error:
    *
    *******************************************************************/
 
-  printf("Test transaction Redo() error ... ");
+  printf("Test transaction RedoTransaction() error ... ");
 
   tximpl = factory->create(mgr, THROWS_REDO_ERROR_FLAG);
 
@@ -2045,7 +1931,7 @@ quick_test(TestTransactionFactory *factory)
 
   tx     = 0;
 
-  result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+  result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
 
   if (NS_FAILED(result)) {
     printf("ERROR: QueryInterface() failed for RedoErrorTransaction. (%d)\n",
@@ -2053,10 +1939,10 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  result = mgr->Do(tx);
+  result = mgr->DoTransaction(tx);
 
   if (NS_FAILED(result)) {
-    printf("ERROR: Do() returned unexpected error. (%d)\n", result);
+    printf("ERROR: DoTransaction() returned unexpected error. (%d)\n", result);
     return result;
   }
 
@@ -2075,17 +1961,17 @@ quick_test(TestTransactionFactory *factory)
 
   tx     = 0;
 
-  result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+  result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
 
   if (NS_FAILED(result)) {
     printf("ERROR: QueryInterface() failed for transaction. (%d)\n", result);
     return result;
   }
 
-  result = mgr->Do(tx);
+  result = mgr->DoTransaction(tx);
 
   if (NS_FAILED(result)) {
-    printf("ERROR: Do() returned unexpected error. (%d)\n", result);
+    printf("ERROR: DoTransaction() returned unexpected error. (%d)\n", result);
     return result;
   }
 
@@ -2096,7 +1982,7 @@ quick_test(TestTransactionFactory *factory)
   //
 
   for (i = 1; i <= 2; ++i) {
-    result = mgr->Undo();
+    result = mgr->UndoTransaction();
     if (NS_FAILED(result)) {
       printf("ERROR: Failed to undo transaction %d. (%d)\n", i, result);
       return result;
@@ -2111,6 +1997,8 @@ quick_test(TestTransactionFactory *factory)
 
   result = mgr->PeekUndoStack(&u1);
 
+  TEST_TXMGR_IF_RELEASE(u1); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekUndoStack() failed. (%d)\n", result);
     return result;
@@ -2118,19 +2006,23 @@ quick_test(TestTransactionFactory *factory)
 
   result = mgr->PeekRedoStack(&r1);
 
+  TEST_TXMGR_IF_RELEASE(r1); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekRedoStack() failed. (%d)\n", result);
     return result;
   }
 
-  result = mgr->Redo();
+  result = mgr->RedoTransaction();
 
   if (NS_FAILED(result) && result != NS_ERROR_FAILURE) {
-    printf("ERROR: Redo() returned unexpected error. (%d)\n", result);
+    printf("ERROR: RedoTransaction() returned unexpected error. (%d)\n", result);
     return result;
   }
 
   result = mgr->PeekUndoStack(&u2);
+
+  TEST_TXMGR_IF_RELEASE(u2); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekUndoStack() failed. (%d)\n", result);
@@ -2143,6 +2035,8 @@ quick_test(TestTransactionFactory *factory)
   }
 
   result = mgr->PeekRedoStack(&r2);
+
+  TEST_TXMGR_IF_RELEASE(r2); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekRedoStack() failed. (%d)\n", result);
@@ -2238,14 +2132,14 @@ quick_test(TestTransactionFactory *factory)
     }
 
     tx = 0;
-    result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+    result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
     if (NS_FAILED(result)) {
       printf("ERROR: QueryInterface() failed for transaction %d. (%d)\n",
              i, result);
       return result;
     }
 
-    result = mgr->Do(tx);
+    result = mgr->DoTransaction(tx);
     if (NS_FAILED(result)) {
       printf("ERROR: Failed to execute transaction %d. (%d)\n", i, result);
       return result;
@@ -2312,14 +2206,14 @@ quick_test(TestTransactionFactory *factory)
     }
 
     tx = 0;
-    result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+    result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
     if (NS_FAILED(result)) {
       printf("ERROR: QueryInterface() failed for transaction %d. (%d)\n",
              i, result);
       return result;
     }
 
-    result = mgr->Do(tx);
+    result = mgr->DoTransaction(tx);
     if (NS_FAILED(result)) {
       printf("ERROR: Failed to execute transaction %d. (%d)\n", i, result);
       return result;
@@ -2358,7 +2252,7 @@ quick_test(TestTransactionFactory *factory)
 
   for (i = 1; i <= 10; i++) {
 
-    result = mgr->Undo();
+    result = mgr->UndoTransaction();
     if (NS_FAILED(result)) {
       printf("ERROR: Failed to undo transaction %d. (%d)\n", i, result);
       return result;
@@ -2396,12 +2290,16 @@ quick_test(TestTransactionFactory *factory)
 
   result = mgr->PeekUndoStack(&u1);
 
+  TEST_TXMGR_IF_RELEASE(u1); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekUndoStack() failed. (%d)\n", result);
     return result;
   }
 
   result = mgr->PeekRedoStack(&r1);
+
+  TEST_TXMGR_IF_RELEASE(r1); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekRedoStack() failed. (%d)\n", result);
@@ -2417,6 +2315,8 @@ quick_test(TestTransactionFactory *factory)
 
   result = mgr->PeekUndoStack(&u2);
 
+  TEST_TXMGR_IF_RELEASE(u2); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekUndoStack() failed. (%d)\n", result);
     return result;
@@ -2428,6 +2328,8 @@ quick_test(TestTransactionFactory *factory)
   }
 
   result = mgr->PeekRedoStack(&r2);
+
+  TEST_TXMGR_IF_RELEASE(r2); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekRedoStack() failed. (%d)\n", result);
@@ -2483,12 +2385,16 @@ quick_test(TestTransactionFactory *factory)
 
   result = mgr->PeekUndoStack(&u1);
 
+  TEST_TXMGR_IF_RELEASE(u1); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekUndoStack() failed. (%d)\n", result);
     return result;
   }
 
   result = mgr->PeekRedoStack(&r1);
+
+  TEST_TXMGR_IF_RELEASE(r1); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekRedoStack() failed. (%d)\n", result);
@@ -2504,6 +2410,8 @@ quick_test(TestTransactionFactory *factory)
 
   result = mgr->PeekUndoStack(&u2);
 
+  TEST_TXMGR_IF_RELEASE(u2); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekUndoStack() failed. (%d)\n", result);
     return result;
@@ -2515,6 +2423,8 @@ quick_test(TestTransactionFactory *factory)
   }
 
   result = mgr->PeekRedoStack(&r2);
+
+  TEST_TXMGR_IF_RELEASE(r2); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekRedoStack() failed. (%d)\n", result);
@@ -2570,12 +2480,16 @@ quick_test(TestTransactionFactory *factory)
 
   result = mgr->PeekUndoStack(&u1);
 
+  TEST_TXMGR_IF_RELEASE(u1); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekUndoStack() failed. (%d)\n", result);
     return result;
   }
 
   result = mgr->PeekRedoStack(&r1);
+
+  TEST_TXMGR_IF_RELEASE(r1); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekRedoStack() failed. (%d)\n", result);
@@ -2591,6 +2505,8 @@ quick_test(TestTransactionFactory *factory)
 
   result = mgr->PeekUndoStack(&u2);
 
+  TEST_TXMGR_IF_RELEASE(u2); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekUndoStack() failed. (%d)\n", result);
     return result;
@@ -2602,6 +2518,8 @@ quick_test(TestTransactionFactory *factory)
   }
 
   result = mgr->PeekRedoStack(&r2);
+
+  TEST_TXMGR_IF_RELEASE(r2); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekRedoStack() failed. (%d)\n", result);
@@ -2670,14 +2588,14 @@ quick_test(TestTransactionFactory *factory)
     }
 
     tx = 0;
-    result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+    result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
     if (NS_FAILED(result)) {
       printf("ERROR: QueryInterface() failed for transaction %d. (%d)\n",
              i, result);
       return result;
     }
 
-    result = mgr->Do(tx);
+    result = mgr->DoTransaction(tx);
     if (NS_FAILED(result)) {
       printf("ERROR: Failed to execute transaction %d. (%d)\n", i, result);
       return result;
@@ -2716,7 +2634,7 @@ quick_test(TestTransactionFactory *factory)
 
   for (i = 1; i <= 10; i++) {
 
-    result = mgr->Undo();
+    result = mgr->UndoTransaction();
     if (NS_FAILED(result)) {
       printf("ERROR: Failed to undo transaction %d. (%d)\n", i, result);
       return result;
@@ -2863,8 +2781,8 @@ quick_batch_test(TestTransactionFactory *factory)
   nsITransaction *r1 = 0, *r2 = 0;
   nsresult result;
 
-  result = nsComponentManager::CreateInstance(kCTransactionManagerCID, nsnull,
-                                        kITransactionManagerIID, (void **)&mgr);
+  result = nsComponentManager::CreateInstance(NS_TRANSACTIONMANAGER_CONTRACTID, nsnull,
+                                        NS_GET_IID(nsITransactionManager), (void **)&mgr);
 
   if (NS_FAILED(result) || !mgr) {
     printf("ERROR: Failed to create Transaction Manager instance.\n");
@@ -3012,14 +2930,14 @@ quick_batch_test(TestTransactionFactory *factory)
     }
 
     tx = 0;
-    result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+    result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
     if (NS_FAILED(result)) {
       printf("ERROR: QueryInterface() failed for transaction %d. (%d)\n",
              i, result);
       return result;
     }
 
-    result = mgr->Do(tx);
+    result = mgr->DoTransaction(tx);
     if (NS_FAILED(result)) {
       printf("ERROR: Failed to execute transaction %d. (%d)\n", i, result);
       return result;
@@ -3078,12 +2996,16 @@ quick_batch_test(TestTransactionFactory *factory)
 
   result = mgr->PeekUndoStack(&u1);
 
+  TEST_TXMGR_IF_RELEASE(u1); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekUndoStack() failed. (%d)\n", result);
     return result;
   }
 
   result = mgr->PeekRedoStack(&r1);
+
+  TEST_TXMGR_IF_RELEASE(r1); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekRedoStack() failed. (%d)\n", result);
@@ -3106,14 +3028,14 @@ quick_batch_test(TestTransactionFactory *factory)
     }
 
     tx = 0;
-    result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+    result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
     if (NS_FAILED(result)) {
       printf("ERROR: QueryInterface() failed for transaction %d. (%d)\n",
              i, result);
       return result;
     }
 
-    result = mgr->Do(tx);
+    result = mgr->DoTransaction(tx);
     if (NS_FAILED(result)) {
       printf("ERROR: Failed to execute transaction %d. (%d)\n", i, result);
       return result;
@@ -3131,6 +3053,8 @@ quick_batch_test(TestTransactionFactory *factory)
 
   result = mgr->PeekUndoStack(&u2);
 
+  TEST_TXMGR_IF_RELEASE(u2); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekUndoStack() failed. (%d)\n", result);
     return result;
@@ -3142,6 +3066,8 @@ quick_batch_test(TestTransactionFactory *factory)
   }
 
   result = mgr->PeekRedoStack(&r2);
+
+  TEST_TXMGR_IF_RELEASE(r2); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekRedoStack() failed. (%d)\n", result);
@@ -3207,13 +3133,13 @@ quick_batch_test(TestTransactionFactory *factory)
   }
 
   tx = 0;
-  result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+  result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
   if (NS_FAILED(result)) {
     printf("ERROR: QueryInterface() failed for transaction. (%d)\n", result);
     return result;
   }
 
-  result = mgr->Do(tx);
+  result = mgr->DoTransaction(tx);
   if (NS_FAILED(result)) {
     printf("ERROR: Failed to execute transaction. (%d)\n", result);
     return result;
@@ -3250,13 +3176,13 @@ quick_batch_test(TestTransactionFactory *factory)
   }
 
   tx = 0;
-  result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+  result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
   if (NS_FAILED(result)) {
     printf("ERROR: QueryInterface() failed for transaction. (%d)\n", result);
     return result;
   }
 
-  result = mgr->Do(tx);
+  result = mgr->DoTransaction(tx);
   if (NS_FAILED(result)) {
     printf("ERROR: Failed to execute transaction. (%d)\n", result);
     return result;
@@ -3293,13 +3219,13 @@ quick_batch_test(TestTransactionFactory *factory)
   }
 
   tx = 0;
-  result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+  result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
   if (NS_FAILED(result)) {
     printf("ERROR: QueryInterface() failed for transaction. (%d)\n", result);
     return result;
   }
 
-  result = mgr->Do(tx);
+  result = mgr->DoTransaction(tx);
   if (NS_FAILED(result)) {
     printf("ERROR: Failed to execute transaction. (%d)\n", result);
     return result;
@@ -3368,7 +3294,7 @@ quick_batch_test(TestTransactionFactory *factory)
   printf("Undo 2 batch transactions ... ");
 
   for (i = 1; i <= 2; ++i) {
-    result = mgr->Undo();
+    result = mgr->UndoTransaction();
     if (NS_FAILED(result)) {
       printf("ERROR: Failed to undo transaction %d. (%d)\n", i, result);
       return result;
@@ -3416,7 +3342,7 @@ quick_batch_test(TestTransactionFactory *factory)
   printf("Redo 2 batch transactions ... ");
 
   for (i = 1; i <= 2; ++i) {
-    result = mgr->Redo();
+    result = mgr->RedoTransaction();
     if (NS_FAILED(result)) {
       printf("ERROR: Failed to undo transaction %d. (%d)\n", i, result);
       return result;
@@ -3462,7 +3388,7 @@ quick_batch_test(TestTransactionFactory *factory)
 
   printf("Undo a batched transaction that was redone ... ");
 
-  result = mgr->Undo();
+  result = mgr->UndoTransaction();
 
   if (NS_FAILED(result)) {
     printf("ERROR: Failed to undo transaction. (%d)\n", result);
@@ -3653,14 +3579,14 @@ quick_batch_test(TestTransactionFactory *factory)
     }
 
     tx = 0;
-    result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+    result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
     if (NS_FAILED(result)) {
       printf("ERROR: QueryInterface() failed for transaction %d. (%d)\n",
              i, result);
       return result;
     }
 
-    result = mgr->Do(tx);
+    result = mgr->DoTransaction(tx);
     if (NS_FAILED(result)) {
       printf("ERROR: Failed to execute transaction %d. (%d)\n", i, result);
       return result;
@@ -3745,7 +3671,7 @@ quick_batch_test(TestTransactionFactory *factory)
   // Move a transaction over to the redo stack, so that we have one
   // transaction on the undo stack, and one on the redo stack!
 
-  result = mgr->Undo();
+  result = mgr->UndoTransaction();
 
   if (NS_FAILED(result)) {
     printf("ERROR: Failed to undo transaction. (%d)\n", result);
@@ -3784,11 +3710,11 @@ quick_batch_test(TestTransactionFactory *factory)
 
   /*******************************************************************
    *
-   * Test transaction Do() error:
+   * Test transaction DoTransaction() error:
    *
    *******************************************************************/
 
-  printf("Test transaction Do() error ... ");
+  printf("Test transaction DoTransaction() error ... ");
 
 
   tximpl = factory->create(mgr, THROWS_DO_ERROR_FLAG);
@@ -3800,7 +3726,7 @@ quick_batch_test(TestTransactionFactory *factory)
 
   tx     = 0;
 
-  result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+  result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
 
   if (NS_FAILED(result)) {
     printf("ERROR: QueryInterface() failed for transaction. (%d)\n", result);
@@ -3811,12 +3737,16 @@ quick_batch_test(TestTransactionFactory *factory)
 
   result = mgr->PeekUndoStack(&u1);
 
+  TEST_TXMGR_IF_RELEASE(u1); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekUndoStack() failed. (%d)\n", result);
     return result;
   }
 
   result = mgr->PeekRedoStack(&r1);
+
+  TEST_TXMGR_IF_RELEASE(r1); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekRedoStack() failed. (%d)\n", result);
@@ -3830,10 +3760,10 @@ quick_batch_test(TestTransactionFactory *factory)
     return result;
   }
 
-  result = mgr->Do(tx);
+  result = mgr->DoTransaction(tx);
 
   if (NS_FAILED(result) && result != NS_ERROR_FAILURE) {
-    printf("ERROR: Do() returned unexpected error. (%d)\n", result);
+    printf("ERROR: DoTransaction() returned unexpected error. (%d)\n", result);
     return result;
   }
 
@@ -3848,6 +3778,8 @@ quick_batch_test(TestTransactionFactory *factory)
 
   result = mgr->PeekUndoStack(&u2);
 
+  TEST_TXMGR_IF_RELEASE(u2); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekUndoStack() failed. (%d)\n", result);
     return result;
@@ -3859,6 +3791,8 @@ quick_batch_test(TestTransactionFactory *factory)
   }
 
   result = mgr->PeekRedoStack(&r2);
+
+  TEST_TXMGR_IF_RELEASE(r2); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekRedoStack() failed. (%d)\n", result);
@@ -3902,11 +3836,11 @@ quick_batch_test(TestTransactionFactory *factory)
 
   /*******************************************************************
    *
-   * Test transaction Undo() error:
+   * Test transaction UndoTransaction() error:
    *
    *******************************************************************/
 
-  printf("Test transaction Undo() error ... ");
+  printf("Test transaction UndoTransaction() error ... ");
 
   tximpl = factory->create(mgr, THROWS_UNDO_ERROR_FLAG);
 
@@ -3917,7 +3851,7 @@ quick_batch_test(TestTransactionFactory *factory)
 
   tx     = 0;
 
-  result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+  result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
 
   if (NS_FAILED(result)) {
     printf("ERROR: QueryInterface() failed for transaction. (%d)\n", result);
@@ -3931,10 +3865,10 @@ quick_batch_test(TestTransactionFactory *factory)
     return result;
   }
 
-  result = mgr->Do(tx);
+  result = mgr->DoTransaction(tx);
 
   if (NS_FAILED(result)) {
-    printf("ERROR: Do() returned unexpected error. (%d)\n", result);
+    printf("ERROR: DoTransaction() returned unexpected error. (%d)\n", result);
     return result;
   }
 
@@ -3951,6 +3885,8 @@ quick_batch_test(TestTransactionFactory *factory)
 
   result = mgr->PeekUndoStack(&u1);
 
+  TEST_TXMGR_IF_RELEASE(u1); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekUndoStack() failed. (%d)\n", result);
     return result;
@@ -3958,19 +3894,23 @@ quick_batch_test(TestTransactionFactory *factory)
 
   result = mgr->PeekRedoStack(&r1);
 
+  TEST_TXMGR_IF_RELEASE(r1); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekRedoStack() failed. (%d)\n", result);
     return result;
   }
 
-  result = mgr->Undo();
+  result = mgr->UndoTransaction();
 
   if (NS_FAILED(result) && result != NS_ERROR_FAILURE) {
-    printf("ERROR: Undo() returned unexpected error. (%d)\n", result);
+    printf("ERROR: UndoTransaction() returned unexpected error. (%d)\n", result);
     return result;
   }
 
   result = mgr->PeekUndoStack(&u2);
+
+  TEST_TXMGR_IF_RELEASE(u2); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekUndoStack() failed. (%d)\n", result);
@@ -3983,6 +3923,8 @@ quick_batch_test(TestTransactionFactory *factory)
   }
 
   result = mgr->PeekRedoStack(&r2);
+
+  TEST_TXMGR_IF_RELEASE(r2); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekRedoStack() failed. (%d)\n", result);
@@ -4026,11 +3968,11 @@ quick_batch_test(TestTransactionFactory *factory)
 
   /*******************************************************************
    *
-   * Test transaction Redo() error:
+   * Test transaction RedoTransaction() error:
    *
    *******************************************************************/
 
-  printf("Test transaction Redo() error ... ");
+  printf("Test transaction RedoTransaction() error ... ");
 
   tximpl = factory->create(mgr, THROWS_REDO_ERROR_FLAG);
 
@@ -4041,7 +3983,7 @@ quick_batch_test(TestTransactionFactory *factory)
 
   tx     = 0;
 
-  result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+  result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
 
   if (NS_FAILED(result)) {
     printf("ERROR: QueryInterface() failed for RedoErrorTransaction. (%d)\n",
@@ -4056,10 +3998,10 @@ quick_batch_test(TestTransactionFactory *factory)
     return result;
   }
 
-  result = mgr->Do(tx);
+  result = mgr->DoTransaction(tx);
 
   if (NS_FAILED(result)) {
-    printf("ERROR: Do() returned unexpected error. (%d)\n", result);
+    printf("ERROR: DoTransaction() returned unexpected error. (%d)\n", result);
     return result;
   }
 
@@ -4085,17 +4027,17 @@ quick_batch_test(TestTransactionFactory *factory)
 
   tx     = 0;
 
-  result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+  result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
 
   if (NS_FAILED(result)) {
     printf("ERROR: QueryInterface() failed for transaction. (%d)\n", result);
     return result;
   }
 
-  result = mgr->Do(tx);
+  result = mgr->DoTransaction(tx);
 
   if (NS_FAILED(result)) {
-    printf("ERROR: Do() returned unexpected error. (%d)\n", result);
+    printf("ERROR: DoTransaction() returned unexpected error. (%d)\n", result);
     return result;
   }
 
@@ -4106,7 +4048,7 @@ quick_batch_test(TestTransactionFactory *factory)
   //
 
   for (i = 1; i <= 2; ++i) {
-    result = mgr->Undo();
+    result = mgr->UndoTransaction();
     if (NS_FAILED(result)) {
       printf("ERROR: Failed to undo transaction %d. (%d)\n", i, result);
       return result;
@@ -4121,6 +4063,8 @@ quick_batch_test(TestTransactionFactory *factory)
 
   result = mgr->PeekUndoStack(&u1);
 
+  TEST_TXMGR_IF_RELEASE(u1); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekUndoStack() failed. (%d)\n", result);
     return result;
@@ -4128,19 +4072,23 @@ quick_batch_test(TestTransactionFactory *factory)
 
   result = mgr->PeekRedoStack(&r1);
 
+  TEST_TXMGR_IF_RELEASE(r1); // Don't hold onto any references!
+
   if (NS_FAILED(result)) {
     printf("ERROR: Initial PeekRedoStack() failed. (%d)\n", result);
     return result;
   }
 
-  result = mgr->Redo();
+  result = mgr->RedoTransaction();
 
   if (NS_FAILED(result) && result != NS_ERROR_FAILURE) {
-    printf("ERROR: Redo() returned unexpected error. (%d)\n", result);
+    printf("ERROR: RedoTransaction() returned unexpected error. (%d)\n", result);
     return result;
   }
 
   result = mgr->PeekUndoStack(&u2);
+
+  TEST_TXMGR_IF_RELEASE(u2); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekUndoStack() failed. (%d)\n", result);
@@ -4153,6 +4101,8 @@ quick_batch_test(TestTransactionFactory *factory)
   }
 
   result = mgr->PeekRedoStack(&r2);
+
+  TEST_TXMGR_IF_RELEASE(r2); // Don't hold onto any references!
 
   if (NS_FAILED(result)) {
     printf("ERROR: Second PeekRedoStack() failed. (%d)\n", result);
@@ -4248,7 +4198,7 @@ quick_batch_test(TestTransactionFactory *factory)
     }
 
     tx = 0;
-    result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+    result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
     if (NS_FAILED(result)) {
       printf("ERROR: QueryInterface() failed for transaction %d. (%d)\n",
              i, result);
@@ -4262,7 +4212,7 @@ quick_batch_test(TestTransactionFactory *factory)
       return result;
     }
 
-    result = mgr->Do(tx);
+    result = mgr->DoTransaction(tx);
     if (NS_FAILED(result)) {
       printf("ERROR: Failed to execute transaction %d. (%d)\n", i, result);
       return result;
@@ -4335,7 +4285,7 @@ quick_batch_test(TestTransactionFactory *factory)
     }
 
     tx = 0;
-    result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+    result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
     if (NS_FAILED(result)) {
       printf("ERROR: QueryInterface() failed for transaction %d. (%d)\n",
              i, result);
@@ -4349,7 +4299,7 @@ quick_batch_test(TestTransactionFactory *factory)
       return result;
     }
 
-    result = mgr->Do(tx);
+    result = mgr->DoTransaction(tx);
     if (NS_FAILED(result)) {
       printf("ERROR: Failed to execute transaction %d. (%d)\n", i, result);
       return result;
@@ -4395,7 +4345,7 @@ quick_batch_test(TestTransactionFactory *factory)
 
   for (i = 1; i <= 10; i++) {
 
-    result = mgr->Undo();
+    result = mgr->UndoTransaction();
     if (NS_FAILED(result)) {
       printf("ERROR: Failed to undo transaction %d. (%d)\n", i, result);
       return result;
@@ -4541,8 +4491,8 @@ stress_test(TestTransactionFactory *factory, PRInt32 iterations)
   nsITransaction *tx          = 0;
   nsresult result;
 
-  result = nsComponentManager::CreateInstance(kCTransactionManagerCID, nsnull,
-                                        kITransactionManagerIID, (void **)&mgr);
+  result = nsComponentManager::CreateInstance(NS_TRANSACTIONMANAGER_CONTRACTID, nsnull,
+                                        NS_GET_IID(nsITransactionManager), (void **)&mgr);
 
   if (NS_FAILED(result) || !mgr) {
     printf("ERROR: Failed to create Transaction Manager instance.\n");
@@ -4565,14 +4515,14 @@ stress_test(TestTransactionFactory *factory, PRInt32 iterations)
       }
 
       tx = 0;
-      result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+      result = tximpl->QueryInterface(NS_GET_IID(nsITransaction), (void **)&tx);
       if (NS_FAILED(result)) {
         printf("ERROR: QueryInterface() failed for transaction %d. (%d)\n",
                i, result);
         return result;
       }
 
-      result = mgr->Do(tx);
+      result = mgr->DoTransaction(tx);
       if (NS_FAILED(result)) {
         printf("ERROR: Failed to execute transaction %d. (%d)\n", i, result);
         return result;
@@ -4588,7 +4538,7 @@ stress_test(TestTransactionFactory *factory, PRInt32 iterations)
      *******************************************************************/
 
     for (j = 1; j <= i; j++) {
-      result = mgr->Undo();
+      result = mgr->UndoTransaction();
       if (NS_FAILED(result)) {
         printf("ERROR: Failed to undo transaction %d-%d. (%d)\n", i, j, result);
         return result;
@@ -4602,7 +4552,7 @@ stress_test(TestTransactionFactory *factory, PRInt32 iterations)
      *******************************************************************/
 
     for (j = 1; j <= i; j++) {
-      result = mgr->Redo();
+      result = mgr->RedoTransaction();
       if (NS_FAILED(result)) {
         printf("ERROR: Failed to redo transaction %d-%d. (%d)\n", i, j, result);
         return result;
@@ -4618,7 +4568,7 @@ stress_test(TestTransactionFactory *factory, PRInt32 iterations)
      *******************************************************************/
 
     for (j = 1; j <= i; j++) {
-      result = mgr->Undo();
+      result = mgr->UndoTransaction();
       if (NS_FAILED(result)) {
         printf("ERROR: Failed to undo transaction %d-%d. (%d)\n", i, j, result);
         return result;
@@ -4740,8 +4690,11 @@ main (int argc, char *argv[])
 {
   nsresult result;
 
-  nsComponentManager::RegisterComponent(kCTransactionManagerCID, NULL, NULL,
+#ifdef MUST_REGISTER_TXMGR_DLL
+  nsComponentManager::RegisterComponent(kCTransactionManagerCID,
+                                NULL, NS_TRANSACTIONMANAGER_CONTRACTID,
                                 TRANSACTION_MANAGER_DLL, PR_FALSE, PR_FALSE);
+#endif /* MUST_REGISTER_TXMGR_DLL */
 
   result = simple_test();
 

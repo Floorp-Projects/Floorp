@@ -95,6 +95,20 @@ nsTransactionStack::Peek(nsTransactionItem **aTransaction)
 }
 
 nsresult
+nsTransactionStack::GetItem(PRInt32 aIndex, nsTransactionItem **aTransaction)
+{
+  if (!aTransaction)
+    return NS_ERROR_NULL_POINTER;
+
+  if (aIndex < 0 || aIndex >= mQue.GetSize())
+    return NS_ERROR_FAILURE;
+
+  *aTransaction = (nsTransactionItem *)(mQue.ObjectAt(aIndex));
+
+  return NS_OK;
+}
+
+nsresult
 nsTransactionStack::Clear(void)
 {
   nsTransactionItem *tx = 0;
@@ -129,24 +143,6 @@ nsTransactionStack::GetSize(PRInt32 *aStackSize)
 
   return NS_OK;
 }
-
-nsresult
-nsTransactionStack::Write(nsIOutputStream *aOutputStream)
-{
-  /* Call Write() for every transaction on the stack. Start
-   * from the top of the stack.
-   */
-
-  nsDequeIterator di = mQue.End();
-  nsTransactionItem *tx = (nsTransactionItem *)--di;
-
-  while (tx) {
-    tx->Write(aOutputStream);
-    tx = (nsTransactionItem *)--di;
-  }
-  return NS_OK;
-}
-
 
 nsTransactionRedoStack::~nsTransactionRedoStack()
 {

@@ -34,8 +34,6 @@ static const PRBool gNoisy = PR_FALSE;
 JoinElementTxn::JoinElementTxn()
   : EditTxn()
 {
-  SetTransactionDescriptionID( kTransactionID );
-  /* log description initialized in parent constructor */
 }
 
 NS_IMETHODIMP JoinElementTxn::Init(nsEditor   *aEditor,
@@ -55,8 +53,8 @@ JoinElementTxn::~JoinElementTxn()
 {
 }
 
-// After Do() and Redo(), the left node is removed from the content tree and right node remains.
-NS_IMETHODIMP JoinElementTxn::Do(void)
+// After DoTransaction() and RedoTransaction(), the left node is removed from the content tree and right node remains.
+NS_IMETHODIMP JoinElementTxn::DoTransaction(void)
 {
   if (gNoisy) { printf("%p Do Join of %p and %p\n", this, mLeftNode.get(), mRightNode.get()); }
   NS_PRECONDITION((mEditor && mLeftNode && mRightNode), "null arg");
@@ -110,7 +108,7 @@ NS_IMETHODIMP JoinElementTxn::Do(void)
 
 //XXX: what if instead of split, we just deleted the unneeded children of mRight
 //     and re-inserted mLeft?
-NS_IMETHODIMP JoinElementTxn::Undo(void)
+NS_IMETHODIMP JoinElementTxn::UndoTransaction(void)
 {
   if (gNoisy) { printf("%p Undo Join, right node = %p\n", this, mRightNode.get()); }
   NS_ASSERTION(mRightNode && mLeftNode && mParent, "bad state");
@@ -152,32 +150,15 @@ NS_IMETHODIMP JoinElementTxn::GetIsTransient(PRBool *aIsTransient)
   return NS_OK;
 }
 
-nsresult JoinElementTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+nsresult JoinElementTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
   if (nsnull!=aDidMerge)
     *aDidMerge=PR_FALSE;
   return NS_OK;
 }
 
-NS_IMETHODIMP JoinElementTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP JoinElementTxn::GetTxnDescription(nsAWritableString& aString)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP JoinElementTxn::GetUndoString(nsString *aString)
-{
-  if (nsnull!=aString)
-  {
-    aString->AssignWithConversion("Join Element");
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP JoinElementTxn::GetRedoString(nsString *aString)
-{
-  if (nsnull!=aString)
-  {
-    aString->AssignWithConversion("Split Element");
-  }
+  aString.Assign(NS_LITERAL_STRING("JoinElementTxn"));
   return NS_OK;
 }

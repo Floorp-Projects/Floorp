@@ -42,22 +42,15 @@ class NS_MSG_BASE nsMsgTxn : public nsITransaction
     nsMsgTxn();
     virtual ~nsMsgTxn();
 
-    NS_IMETHOD Do(void);
-    
-    NS_IMETHOD Undo(void) = 0;
-    
-    NS_IMETHOD Redo(void) = 0;
+    NS_IMETHOD DoTransaction(void);
+
+    NS_IMETHOD UndoTransaction(void) = 0;
+
+    NS_IMETHOD RedoTransaction(void) = 0;
     
     NS_IMETHOD GetIsTransient(PRBool *aIsTransient);
 
-    NS_IMETHOD Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
-
-    NS_IMETHOD Write(nsIOutputStream *aOutputStream);
-
-    NS_IMETHOD GetUndoString(nsString *aString);
-    NS_IMETHOD SetUndoString(nsString *aString);
-    NS_IMETHOD GetRedoString(nsString *aString);
-    NS_IMETHOD SetRedoString(nsString *aString);
+    NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
 
     NS_IMETHOD GetMsgWindow(nsIMsgWindow **msgWindow);
     NS_IMETHOD SetMsgWindow(nsIMsgWindow *msgWindow);
@@ -66,8 +59,6 @@ class NS_MSG_BASE nsMsgTxn : public nsITransaction
 
 protected:
     nsCOMPtr<nsIMsgWindow> m_msgWindow;
-    nsString m_undoString;
-    nsString m_redoString;
     PRUint32 m_txnType;
 };
 

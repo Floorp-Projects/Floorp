@@ -23,7 +23,6 @@
 #include "nsIGenericFactory.h"
 
 #include "nsTransactionManagerCID.h"
-#include "nsITransactionManager.h"
 #include "nsTransactionStack.h"
 #include "nsTransactionManager.h"
 
@@ -40,7 +39,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransactionManager)
 // class name.
 //
 static nsModuleComponentInfo components[] = {
-  { NULL, NS_TRANSACTIONMANAGER_CID, NULL, nsTransactionManagerConstructor },
+  { "nsTransactionManager", NS_TRANSACTIONMANAGER_CID, NS_TRANSACTIONMANAGER_CONTRACTID, nsTransactionManagerConstructor },
 };
 
 ////////////////////////////////////////////////////////////////////////

@@ -47,8 +47,6 @@ static const PRBool gNoisy = PR_FALSE;
 DeleteRangeTxn::DeleteRangeTxn()
   : EditAggregateTxn()
 {
-  SetTransactionDescriptionID( kTransactionID );
-  /* log description initialized in parent constructor */
 }
 
 NS_IMETHODIMP DeleteRangeTxn::Init(nsIEditor *aEditor, nsIDOMRange *aRange)
@@ -112,7 +110,7 @@ DeleteRangeTxn::~DeleteRangeTxn()
 {
 }
 
-NS_IMETHODIMP DeleteRangeTxn::Do(void)
+NS_IMETHODIMP DeleteRangeTxn::DoTransaction(void)
 {
   if (gNoisy) { printf("Do Delete Range\n"); }
   if (!mStartParent || !mEndParent || !mCommonParent || !mEditor) 
@@ -143,7 +141,7 @@ NS_IMETHODIMP DeleteRangeTxn::Do(void)
 
   // if we've successfully built this aggregate transaction, then do it.
   if (NS_SUCCEEDED(result)) {
-    result = EditAggregateTxn::Do();
+    result = EditAggregateTxn::DoTransaction();
   }
 
   if (NS_FAILED(result)) return result;
@@ -167,53 +165,36 @@ NS_IMETHODIMP DeleteRangeTxn::Do(void)
   return result;
 }
 
-NS_IMETHODIMP DeleteRangeTxn::Undo(void)
+NS_IMETHODIMP DeleteRangeTxn::UndoTransaction(void)
 {
   if (gNoisy) { printf("Undo Delete Range\n"); }
   if (!mStartParent || !mEndParent || !mCommonParent || !mEditor) 
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsresult result = EditAggregateTxn::Undo();
+  nsresult result = EditAggregateTxn::UndoTransaction();
   return result;
 }
 
-NS_IMETHODIMP DeleteRangeTxn::Redo(void)
+NS_IMETHODIMP DeleteRangeTxn::RedoTransaction(void)
 {
   if (gNoisy) { printf("Redo Delete Range\n"); }
   if (!mStartParent || !mEndParent || !mCommonParent || !mEditor) 
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsresult result = EditAggregateTxn::Redo();
+  nsresult result = EditAggregateTxn::RedoTransaction();
   return result;
 }
 
-NS_IMETHODIMP DeleteRangeTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP DeleteRangeTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
   if (nsnull!=aDidMerge)
     *aDidMerge=PR_FALSE;
   return NS_OK;
 }
 
-NS_IMETHODIMP DeleteRangeTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP DeleteRangeTxn::GetTxnDescription(nsAWritableString& aString)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP DeleteRangeTxn::GetUndoString(nsString *aString)
-{
-  if (nsnull!=aString)
-  {
-    aString->AssignWithConversion("Insert Range: ");
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP DeleteRangeTxn::GetRedoString(nsString *aString)
-{
-  if (nsnull!=aString)
-  {
-    aString->AssignWithConversion("Remove Range: ");
-  }
+  aString.Assign(NS_LITERAL_STRING("DeleteRangeTxn"));
   return NS_OK;
 }
 

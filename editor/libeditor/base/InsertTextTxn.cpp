@@ -52,8 +52,6 @@ nsresult InsertTextTxn::ClassShutdown()
 InsertTextTxn::InsertTextTxn()
   : EditTxn()
 {
-  SetTransactionDescriptionID( kTransactionID );
-  /* log description initialized in parent constructor */
 }
 
 InsertTextTxn::~InsertTextTxn()
@@ -83,7 +81,7 @@ NS_IMETHODIMP InsertTextTxn::Init(nsIDOMCharacterData *aElement,
   return NS_OK;
 }
 
-NS_IMETHODIMP InsertTextTxn::Do(void)
+NS_IMETHODIMP InsertTextTxn::DoTransaction(void)
 {
   if (gNoisy) { printf("Do Insert Text element = %p\n", mElement.get()); }
   NS_ASSERTION(mElement && mEditor, "bad state");
@@ -112,7 +110,7 @@ NS_IMETHODIMP InsertTextTxn::Do(void)
   return result;
 }
 
-NS_IMETHODIMP InsertTextTxn::Undo(void)
+NS_IMETHODIMP InsertTextTxn::UndoTransaction(void)
 {
   if (gNoisy) { printf("Undo Insert Text element = %p\n", mElement.get()); }
   NS_ASSERTION(mElement && mEditor, "bad state");
@@ -124,7 +122,7 @@ NS_IMETHODIMP InsertTextTxn::Undo(void)
   return result;
 }
 
-NS_IMETHODIMP InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP InsertTextTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
   // set out param default value
   if (nsnull!=aDidMerge)
@@ -192,28 +190,10 @@ NS_IMETHODIMP InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransacti
   return result;
 }
 
-NS_IMETHODIMP InsertTextTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP InsertTextTxn::GetTxnDescription(nsAWritableString& aString)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP InsertTextTxn::GetUndoString(nsString *aString)
-{
-  if (nsnull!=aString)
-  {
-    aString->AssignWithConversion("Remove Text: ");
-    *aString += mStringToInsert;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP InsertTextTxn::GetRedoString(nsString *aString)
-{
-  if (nsnull!=aString)
-  {
-    aString->AssignWithConversion("Insert Text: ");
-    *aString += mStringToInsert;
-  }
+  aString.Assign(NS_LITERAL_STRING("InsertTextTxn: "));
+  aString += mStringToInsert;
   return NS_OK;
 }
 

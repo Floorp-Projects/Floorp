@@ -69,42 +69,6 @@ nsImapMoveCopyMsgTxn::Init(
 		m_urlListener = do_QueryInterface(urlListener, &rv);
 	m_srcKeyArray.CopyArray(srcKeyArray);
 	m_dupKeyArray.CopyArray(srcKeyArray);
-	if (srcKeyArray->GetSize() > 1)
-	{
-		if (isMove)
-		{
-			m_undoString.AssignWithConversion("Undo Move Messages");
-			m_redoString.AssignWithConversion("Redo Move Messages");
-		}
-		else if (!dstFolder)
-    {
-			m_undoString.AssignWithConversion("Undo Imap Deletes");
-			m_redoString.AssignWithConversion("Redo Imap Deletes");
-    }
-    else
-		{
-			m_undoString.AssignWithConversion("Undo Copy Messages");
-			m_redoString.AssignWithConversion("Redo Copy Messages");
-		}
-	}
-	else
-	{
-		if (isMove)
-		{
-			m_undoString.AssignWithConversion("Undo Move Message");
-			m_redoString.AssignWithConversion("Redo Move Message");
-		}
-		else if (!dstFolder)
-    {
-			m_undoString.AssignWithConversion("Undo Imap Deletes");
-			m_redoString.AssignWithConversion("Redo Imap Deletes");
-    }
-		else
-		{
-			m_undoString.AssignWithConversion("Undo Copy Message");
-			m_redoString.AssignWithConversion("Redo Copy Message");
-		}
-	}
     char *uri = nsnull;
     rv = m_srcFolder->GetURI(&uri);
     nsCString protocolType(uri);
@@ -182,7 +146,7 @@ nsImapMoveCopyMsgTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsImapMoveCopyMsgTxn::Undo(void)
+nsImapMoveCopyMsgTxn::UndoTransaction(void)
 {
 	nsresult rv = NS_OK;
 	NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
@@ -237,7 +201,7 @@ nsImapMoveCopyMsgTxn::Undo(void)
 }
 
 NS_IMETHODIMP
-nsImapMoveCopyMsgTxn::Redo(void)
+nsImapMoveCopyMsgTxn::RedoTransaction(void)
 {
 	nsresult rv = NS_OK;
 	NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);

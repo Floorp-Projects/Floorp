@@ -2429,7 +2429,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 		    copyService->NotifyCompletion(mCopyState->m_srcSupport, this, rv);
 
 		  if (mTxnMgr && NS_SUCCEEDED(rv) && mCopyState->m_undoMsgTxn)
-		    mTxnMgr->Do(mCopyState->m_undoMsgTxn);
+		    mTxnMgr->DoTransaction(mCopyState->m_undoMsgTxn);
     
 
           if (srcFolder && !mCopyState->m_isFolder)
@@ -2474,7 +2474,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove()
 			copyService->NotifyCompletion(mCopyState->m_srcSupport, this, NS_OK);
 
 			if (mTxnMgr  && mCopyState->m_undoMsgTxn)
-				mTxnMgr->Do(mCopyState->m_undoMsgTxn);
+				mTxnMgr->DoTransaction(mCopyState->m_undoMsgTxn);
 
 			ClearCopyState();
 		}

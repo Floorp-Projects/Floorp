@@ -2300,6 +2300,17 @@ nsEditorShell::NodeIsBlock(nsIDOMNode *node, PRBool *_retval)
 }
 
 NS_IMETHODIMP    
+nsEditorShell::GetTransactionManager(nsITransactionManager **aTxnMgr)
+{ 
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+
+  if (!editor)
+    return NS_ERROR_FAILURE;
+
+  return editor->GetTransactionManager(aTxnMgr);
+}
+
+NS_IMETHODIMP    
 nsEditorShell::Undo()
 { 
   nsresult  err = NS_NOINTERFACE;

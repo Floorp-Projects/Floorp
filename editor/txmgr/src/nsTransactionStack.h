@@ -49,9 +49,9 @@ public:
   virtual nsresult Pop(nsTransactionItem **aTransactionItem);
   virtual nsresult PopBottom(nsTransactionItem **aTransactionItem);
   virtual nsresult Peek(nsTransactionItem **aTransactionItem);
+  virtual nsresult GetItem(PRInt32 aIndex, nsTransactionItem **aTransactionItem);
   virtual nsresult Clear(void);
   virtual nsresult GetSize(PRInt32 *aStackSize);
-  virtual nsresult Write(nsIOutputStream *aOutputStream);
 };
 
 class nsTransactionRedoStack: public nsTransactionStack

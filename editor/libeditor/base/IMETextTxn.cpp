@@ -54,8 +54,6 @@ nsresult IMETextTxn::ClassShutdown()
 IMETextTxn::IMETextTxn()
   : EditTxn()
 {
-  SetTransactionDescriptionID( kTransactionID );
-  /* log description initialized in parent constructor */
 }
 
 IMETextTxn::~IMETextTxn()
@@ -84,7 +82,7 @@ NS_IMETHODIMP IMETextTxn::Init(nsIDOMCharacterData     *aElement,
   return NS_OK;
 }
 
-NS_IMETHODIMP IMETextTxn::Do(void)
+NS_IMETHODIMP IMETextTxn::DoTransaction(void)
 {
 
 #ifdef DEBUG_IMETXN
@@ -108,7 +106,7 @@ NS_IMETHODIMP IMETextTxn::Do(void)
   return result;
 }
 
-NS_IMETHODIMP IMETextTxn::Undo(void)
+NS_IMETHODIMP IMETextTxn::UndoTransaction(void)
 {
 #ifdef DEBUG_IMETXN
   printf("Undo IME Text element = %p\n", mElement.get());
@@ -132,7 +130,7 @@ NS_IMETHODIMP IMETextTxn::Undo(void)
   return result;
 }
 
-NS_IMETHODIMP IMETextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP IMETextTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
   NS_ASSERTION(aDidMerge, "illegal vaule- null ptr- aDidMerge");
   NS_ASSERTION(aTransaction, "illegal vaule- null ptr- aTransaction");
@@ -185,45 +183,16 @@ NS_IMETHODIMP IMETextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
   return NS_OK;
 }
 
-NS_IMETHODIMP IMETextTxn::Write(nsIOutputStream *aOutputStream)
-{
-  NS_ASSERTION(aOutputStream, "illegal value- null ptr- aOutputStream");
-  if(nsnull == aOutputStream)
-  	return NS_ERROR_NULL_POINTER;
-  return NS_OK;
-}
-
 NS_IMETHODIMP IMETextTxn::MarkFixed(void)
 {
   mFixed = PR_TRUE;
   return NS_OK;
 }
 
-NS_IMETHODIMP IMETextTxn::GetUndoString(nsString *aString)
+NS_IMETHODIMP IMETextTxn::GetTxnDescription(nsAWritableString& aString)
 {
-  NS_ASSERTION(aString, "illegal value- null ptr- aString");
-  if(nsnull == aString)
-  	return NS_ERROR_NULL_POINTER;
-  	
-  if (nsnull!=aString)
-  {
-    aString->AssignWithConversion("Remove Text: ");
-    *aString += mStringToInsert;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP IMETextTxn::GetRedoString(nsString *aString)
-{
-  NS_ASSERTION(aString, "illegal value- null ptr- aString");
-  if(nsnull == aString)
-  	return NS_ERROR_NULL_POINTER;
-  	
-  if (nsnull!=aString)
-  {
-    aString->AssignWithConversion("Insert Text: ");
-    *aString += mStringToInsert;
-  }
+  aString.Assign(NS_LITERAL_STRING("IMETextTxn: "));
+  aString += mStringToInsert;
   return NS_OK;
 }
 

@@ -74,17 +74,13 @@ private:
 
 public:
 	
-  NS_IMETHOD Do(void);
+  NS_IMETHOD DoTransaction(void);
 
-  NS_IMETHOD Undo(void);
+  NS_IMETHOD UndoTransaction(void);
 
-  NS_IMETHOD Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
+  NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
 
-  NS_IMETHOD Write(nsIOutputStream *aOutputStream);
-
-  NS_IMETHOD GetUndoString(nsString *aString);
-
-  NS_IMETHOD GetRedoString(nsString *aString);
+  NS_IMETHOD GetTxnDescription(nsAWritableString& aTxnDescription);
 
   NS_IMETHOD MarkFixed(void);
 
@@ -101,8 +97,6 @@ public:
 
   /** must be called once we are guaranteed all IMETextTxn have completed */
   static nsresult ClassShutdown();
-
-  enum { kTransactionID = 11220 };
 
 protected:
 

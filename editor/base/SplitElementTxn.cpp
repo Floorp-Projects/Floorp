@@ -37,8 +37,6 @@ static const PRBool gNoisy = PR_FALSE;
 SplitElementTxn::SplitElementTxn()
   : EditTxn()
 {
-  SetTransactionDescriptionID( kTransactionID );
-  /* log description initialized in parent constructor */
 }
 
 NS_IMETHODIMP SplitElementTxn::Init(nsEditor   *aEditor,
@@ -58,7 +56,7 @@ SplitElementTxn::~SplitElementTxn()
 {
 }
 
-NS_IMETHODIMP SplitElementTxn::Do(void)
+NS_IMETHODIMP SplitElementTxn::DoTransaction(void)
 {
   if (gNoisy) { printf("%p Do Split of node %p offset %d\n", this, mExistingRightNode.get(), mOffset); }
   NS_ASSERTION(mExistingRightNode && mEditor, "bad state");
@@ -94,7 +92,7 @@ NS_IMETHODIMP SplitElementTxn::Do(void)
   return result;
 }
 
-NS_IMETHODIMP SplitElementTxn::Undo(void)
+NS_IMETHODIMP SplitElementTxn::UndoTransaction(void)
 {
   if (gNoisy) { 
     printf("%p Undo Split of existing node %p and new node %p offset %d\n", 
@@ -122,7 +120,7 @@ NS_IMETHODIMP SplitElementTxn::Undo(void)
 /* redo cannot simply resplit the right node, because subsequent transactions
  * on the redo stack may depend on the left node existing in its previous state.
  */
-NS_IMETHODIMP SplitElementTxn::Redo(void)
+NS_IMETHODIMP SplitElementTxn::RedoTransaction(void)
 {
   NS_ASSERTION(mEditor && mExistingRightNode && mNewLeftNode && mParent, "bad state");
   if (!mEditor || !mExistingRightNode || !mNewLeftNode || !mParent) {
@@ -182,33 +180,16 @@ NS_IMETHODIMP SplitElementTxn::Redo(void)
 }
 
 
-NS_IMETHODIMP SplitElementTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP SplitElementTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
   if (nsnull!=aDidMerge)
     *aDidMerge=PR_FALSE;
   return NS_OK;
 }
 
-NS_IMETHODIMP SplitElementTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP SplitElementTxn::GetTxnDescription(nsAWritableString& aString)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP SplitElementTxn::GetUndoString(nsString *aString)
-{
-  if (nsnull!=aString)
-  {
-    aString->AssignWithConversion("Join Element");
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP SplitElementTxn::GetRedoString(nsString *aString)
-{
-  if (nsnull!=aString)
-  {
-    aString->AssignWithConversion("Split Element");
-  }
+  aString.Assign(NS_LITERAL_STRING("SplitElementTxn"));
   return NS_OK;
 }
 

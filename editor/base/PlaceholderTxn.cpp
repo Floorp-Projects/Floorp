@@ -43,8 +43,6 @@ PlaceholderTxn::PlaceholderTxn() :  EditAggregateTxn(),
                                     mEndSel(),
                                     mEditor(nsnull)
 {
-  SetTransactionDescriptionID( kTransactionID );
-  /* log description initialized in parent constructor */
 }
 
 
@@ -84,16 +82,16 @@ NS_IMETHODIMP PlaceholderTxn::Init(nsIAtom *aName, nsSelectionState *aSelState, 
   return NS_OK;
 }
 
-NS_IMETHODIMP PlaceholderTxn::Do(void)
+NS_IMETHODIMP PlaceholderTxn::DoTransaction(void)
 {
   if (gNoisy) { printf("PlaceholderTxn Do\n"); }
   return NS_OK;
 }
 
-NS_IMETHODIMP PlaceholderTxn::Undo(void)
+NS_IMETHODIMP PlaceholderTxn::UndoTransaction(void)
 {
   // undo txns
-  nsresult res = EditAggregateTxn::Undo();
+  nsresult res = EditAggregateTxn::UndoTransaction();
   if (NS_FAILED(res)) return res;
   
   // now restore selection
@@ -107,10 +105,10 @@ NS_IMETHODIMP PlaceholderTxn::Undo(void)
 }
 
 
-NS_IMETHODIMP PlaceholderTxn::Redo(void)
+NS_IMETHODIMP PlaceholderTxn::RedoTransaction(void)
 {
   // redo txns
-  nsresult res = EditAggregateTxn::Redo();
+  nsresult res = EditAggregateTxn::RedoTransaction();
   if (NS_FAILED(res)) return res;
   
   // now restore selection
@@ -123,7 +121,7 @@ NS_IMETHODIMP PlaceholderTxn::Redo(void)
 }
 
 
-NS_IMETHODIMP PlaceholderTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP PlaceholderTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
   if (!aDidMerge || !aTransaction) return NS_ERROR_NULL_POINTER;
 
@@ -155,7 +153,7 @@ NS_IMETHODIMP PlaceholderTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransact
       else  
       {
         PRBool didMerge;
-        mIMETextTxn->Merge(&didMerge, otherTxn);
+        mIMETextTxn->Merge(otherTxn, &didMerge);
         if (!didMerge)
         {
           // it wouldn't merge.  Earlier IME txn is already commited and will 
@@ -216,6 +214,20 @@ NS_IMETHODIMP PlaceholderTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransact
     }
   }
   return res;
+}
+
+NS_IMETHODIMP PlaceholderTxn::GetTxnDescription(nsAWritableString& aString)
+{
+  aString.Assign(NS_LITERAL_STRING("PlaceholderTxn: "));
+
+  if (mName)
+  {
+    nsAutoString name;
+    mName->ToString(name);
+    aString += name;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP PlaceholderTxn::GetTxnName(nsIAtom **aName)

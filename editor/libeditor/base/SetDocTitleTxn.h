@@ -27,7 +27,6 @@
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
 #include "nsITransaction.h"
-#include "nsITransactionDescription.h"
 #include "nsCOMPtr.h"
 
 #define SET_DOC_TITLE_TXN_CID \
@@ -61,23 +60,17 @@ private:
   nsresult SetDomTitle(nsString& aTitle);
 
 public:
-  NS_IMETHOD Do(void);
+  NS_IMETHOD DoTransaction(void);
 
-  NS_IMETHOD Undo(void);
+  NS_IMETHOD UndoTransaction(void);
 
-  NS_IMETHOD Redo(void);
+  NS_IMETHOD RedoTransaction(void);
 
-  NS_IMETHOD Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
-
-  NS_IMETHOD Write(nsIOutputStream *aOutputStream);
-
-  NS_IMETHOD GetUndoString(nsString *aString);
-
-  NS_IMETHOD GetRedoString(nsString *aString);
+  NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
 
   NS_IMETHOD GetIsTransient(PRBool *aIsTransient);
 
-  enum { kTransactionID = 11270 };
+  NS_IMETHOD GetTxnDescription(nsAWritableString& aTxnDescription);
 
 protected:
 

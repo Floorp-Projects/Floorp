@@ -42,8 +42,6 @@ nsresult IMECommitTxn::ClassShutdown()
 IMECommitTxn::IMECommitTxn()
   : EditTxn()
 {
-  SetTransactionDescriptionID( kTransactionID );
-  /* log description initialized in parent constructor */
 }
 
 IMECommitTxn::~IMECommitTxn()
@@ -55,7 +53,7 @@ NS_IMETHODIMP IMECommitTxn::Init(void)
 	return NS_OK;
 }
 
-NS_IMETHODIMP IMECommitTxn::Do(void)
+NS_IMETHODIMP IMECommitTxn::DoTransaction(void)
 {
 #ifdef DEBUG_IME
 	printf("Do IME Commit");
@@ -64,7 +62,7 @@ NS_IMETHODIMP IMECommitTxn::Do(void)
 	return NS_OK;
 }
 
-NS_IMETHODIMP IMECommitTxn::Undo(void)
+NS_IMETHODIMP IMECommitTxn::UndoTransaction(void)
 {
 #ifdef DEBUG_IME
 	printf("Undo IME Commit");
@@ -73,7 +71,7 @@ NS_IMETHODIMP IMECommitTxn::Undo(void)
 	return NS_OK;
 }
 
-NS_IMETHODIMP IMECommitTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP IMECommitTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
 #ifdef DEBUG_IME
 	printf("Merge IME Commit");
@@ -88,35 +86,10 @@ NS_IMETHODIMP IMECommitTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransactio
 	return NS_OK;
 }
 
-NS_IMETHODIMP IMECommitTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP IMECommitTxn::GetTxnDescription(nsAWritableString& aString)
 {
-  NS_ASSERTION(aOutputStream, "null ptr- aOutputStream");
-  if(nsnull == aOutputStream)
-	return NS_ERROR_NULL_POINTER;
-  else 
-    return NS_OK;
-}
-
-NS_IMETHODIMP IMECommitTxn::GetUndoString(nsString *aString)
-{
-  NS_ASSERTION(aString, "null ptr- aString");
-  if(nsnull == aString) {
-	return NS_ERROR_NULL_POINTER;
-  } else {
-    aString->AssignWithConversion("Remove IMECommit: ");
-    return NS_OK;
-  }
-}
-
-NS_IMETHODIMP IMECommitTxn::GetRedoString(nsString *aString)
-{
-  NS_ASSERTION(aString, "null ptr- aString");
-  if(nsnull == aString) {
-	return NS_ERROR_NULL_POINTER;
-  } else {
-    aString->AssignWithConversion("Insert IMECommit: ");
-    return NS_OK;
-  }
+  aString.Assign(NS_LITERAL_STRING("IMECommitTxn"));
+  return NS_OK;
 }
 
 /* ============= nsISupports implementation ====================== */

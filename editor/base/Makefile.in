@@ -39,7 +39,6 @@ CPPSRCS		=                           \
 		DeleteTextTxn.cpp           \
 		EditAggregateTxn.cpp        \
 		EditTxn.cpp                 \
-		IMECommitTxn.cpp            \
 		IMETextTxn.cpp              \
 		InsertElementTxn.cpp        \
 		InsertTextTxn.cpp           \

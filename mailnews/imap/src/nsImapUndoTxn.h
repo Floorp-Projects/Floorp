@@ -52,8 +52,8 @@ public:
 
     NS_DECL_ISUPPORTS_INHERITED 
 
-    NS_IMETHOD Undo(void);
-    NS_IMETHOD Redo(void);
+    NS_IMETHOD UndoTransaction(void);
+    NS_IMETHOD RedoTransaction(void);
 
     // helper
     nsresult SetCopyResponseUid(nsMsgKeyArray* keyArray,
@@ -82,8 +82,6 @@ private:
     nsCString m_dstMsgIdString;
     nsCOMPtr<nsIEventQueue> m_eventQueue;
     nsCOMPtr<nsIUrlListener> m_urlListener;
-    nsString m_undoString;
-    nsString m_redoString;
     PRBool m_idsAreUids;
     PRBool m_isMove;
     PRBool m_srcIsPop3;

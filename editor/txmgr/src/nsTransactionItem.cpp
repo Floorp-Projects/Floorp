@@ -21,7 +21,6 @@
  */
 
 #include "nsITransaction.h"
-#include "nsITransactionManager.h"
 #include "nsTransactionStack.h"
 #include "nsTransactionManager.h"
 #include "nsTransactionItem.h"
@@ -72,6 +71,17 @@ nsTransactionItem::GetTransaction(nsITransaction **aTransaction)
 }
 
 nsresult
+nsTransactionItem::GetIsBatch(PRBool *aIsBatch)
+{
+  if (!aIsBatch)
+    return NS_ERROR_NULL_POINTER;
+
+  *aIsBatch = !mTransaction;
+
+  return NS_OK;
+}
+
+nsresult
 nsTransactionItem::GetNumberOfChildren(PRInt32 *aNumChildren)
 {
   nsresult result;
@@ -100,15 +110,64 @@ nsTransactionItem::GetNumberOfChildren(PRInt32 *aNumChildren)
 }
 
 nsresult
-nsTransactionItem::Do()
+nsTransactionItem::GetChild(PRInt32 aIndex, nsTransactionItem **aChild)
+{
+  if (!aChild)
+    return NS_ERROR_NULL_POINTER;
+
+  *aChild = 0;
+
+  PRInt32 numItems = 0;
+  nsresult result = GetNumberOfChildren(&numItems);
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (aIndex < 0 || aIndex >= numItems)
+    return NS_ERROR_FAILURE;
+
+  // Children are expected to be in the order they were added,
+  // so the child first added would be at the bottom of the undo
+  // stack, or if there are no items on the undo stack, it would
+  // be at the top of the redo stack.
+
+  result = GetNumberOfUndoItems(&numItems);
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (numItems > 0 && aIndex < numItems) {
+    if (!mUndoStack)
+      return NS_ERROR_FAILURE;
+
+    return mUndoStack->GetItem(aIndex, aChild);
+  }
+
+  // Adjust the index for the redo stack:
+
+  aIndex -=  numItems;
+
+  result = GetNumberOfRedoItems(&numItems);
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (!mRedoStack || numItems == 0 || aIndex >= numItems)
+      return NS_ERROR_FAILURE;
+
+  return mRedoStack->GetItem(numItems - aIndex - 1, aChild);
+}
+
+nsresult
+nsTransactionItem::DoTransaction()
 {
   if (mTransaction)
-    return mTransaction->Do();
+    return mTransaction->DoTransaction();
   return NS_OK;
 }
 
 nsresult
-nsTransactionItem::Undo(nsTransactionManager *aTxMgr)
+nsTransactionItem::UndoTransaction(nsTransactionManager *aTxMgr)
 {
   nsresult result = UndoChildren(aTxMgr);
 
@@ -120,7 +179,7 @@ nsTransactionItem::Undo(nsTransactionManager *aTxMgr)
   if (!mTransaction)
     return NS_OK;
 
-  result = mTransaction->Undo();
+  result = mTransaction->UndoTransaction();
 
   if (NS_FAILED(result)) {
     RecoverFromUndoError(aTxMgr);
@@ -177,7 +236,7 @@ nsTransactionItem::UndoChildren(nsTransactionManager *aTxMgr)
         return NS_OK;
       }
 
-      result = item->Undo(aTxMgr);
+      result = item->UndoTransaction(aTxMgr);
 
       if (NS_SUCCEEDED(result)) {
         result = mUndoStack->Pop(&item);
@@ -203,12 +262,12 @@ nsTransactionItem::UndoChildren(nsTransactionManager *aTxMgr)
 }
 
 nsresult
-nsTransactionItem::Redo(nsTransactionManager *aTxMgr)
+nsTransactionItem::RedoTransaction(nsTransactionManager *aTxMgr)
 {
   nsresult result;
 
   if (mTransaction) {
-    result = mTransaction->Redo();
+    result = mTransaction->RedoTransaction();
 
     if (NS_FAILED(result))
       return result;
@@ -268,7 +327,7 @@ nsTransactionItem::RedoChildren(nsTransactionManager *aTxMgr)
       return NS_OK;
     }
 
-    result = item->Redo(aTxMgr);
+    result = item->RedoTransaction(aTxMgr);
 
     if (NS_SUCCEEDED(result)) {
       result = mRedoStack->Pop(&item);
@@ -320,33 +379,11 @@ nsTransactionItem::GetNumberOfRedoItems(PRInt32 *aNumItems)
 }
 
 nsresult
-nsTransactionItem::Write(nsIOutputStream *aOutputStream)
-{
-  PRUint32 len;
-
-  if (mTransaction)
-    mTransaction->Write(aOutputStream);
-
-  aOutputStream->Write("    ItemUndoStack:\n", 19, &len);
-  if (mUndoStack) {
-    mUndoStack->Write(aOutputStream);
-  }
-
-  aOutputStream->Write("\n    ItemRedoStack:\n", 20, &len);
-  if (mRedoStack) {
-    mRedoStack->Write(aOutputStream);
-  }
-  aOutputStream->Write("\n", 1, &len);
-
-  return NS_OK;
-}
-
-nsresult
 nsTransactionItem::RecoverFromUndoError(nsTransactionManager *aTxMgr)
 {
   //
   // If this method gets called, we never got to the point where we
-  // successfully called Undo() for the transaction item itself.
+  // successfully called UndoTransaction() for the transaction item itself.
   // Just redo any children that successfully called undo!
   //
   return RedoChildren(aTxMgr);
@@ -356,9 +393,10 @@ nsresult
 nsTransactionItem::RecoverFromRedoError(nsTransactionManager *aTxMgr)
 {
   //
-  // If this method gets called, we already successfully called Redo()
-  // for the transaction item itself. Undo all the children that successfully
-  // called Redo(), then undo the transaction item itself.
+  // If this method gets called, we already successfully called
+  // RedoTransaction() for the transaction item itself. Undo all
+  // the children that successfully called RedoTransaction(),
+  // then undo the transaction item itself.
   //
 
   nsresult result;
@@ -372,6 +410,6 @@ nsTransactionItem::RecoverFromRedoError(nsTransactionManager *aTxMgr)
   if (!mTransaction)
     return NS_OK;
 
-  return mTransaction->Undo();
+  return mTransaction->UndoTransaction();
 }
 

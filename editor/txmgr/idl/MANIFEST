@@ -20,4 +20,7 @@
 # Contributor(s): 
 # 
 
-nsITransactionDescription.idl
+nsITransaction.idl
+nsITransactionList.idl
+nsITransactionListener.idl
+nsITransactionManager.idl

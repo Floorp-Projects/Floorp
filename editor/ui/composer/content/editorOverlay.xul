@@ -836,6 +836,11 @@
     <menuitem value="&runUnitTestsCmd.label;"
            oncommand="EditorUnitTests()"/>
     <menuseparator />
+    <menuitem value="&dumpUndoStack.label;"
+           oncommand="DumpUndoStack()"/>
+    <menuitem value="&dumpRedoStack.label;"
+           oncommand="DumpRedoStack()"/>
+    <menuseparator />
     <menuitem value="&startLogCmd.label;"
            oncommand="EditorStartLog()"/>
     <menuitem value="&stopLogCmd.label;"

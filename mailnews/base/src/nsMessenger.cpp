@@ -1204,9 +1204,8 @@ NS_IMETHODIMP nsMessenger::GetUndoTransactionType(PRUint32 *txnType)
     if (!txnType || !mTxnMgr)
         return rv;
     *txnType = nsMessenger::eUnknown;
-    nsITransaction *txn = nsnull;
-    // ** jt -- too bad PeekUndoStack not AddRef'ing
-    rv = mTxnMgr->PeekUndoStack(&txn);
+    nsCOMPtr<nsITransaction> txn;
+    rv = mTxnMgr->PeekUndoStack(getter_AddRefs(txn));
     if (NS_SUCCEEDED(rv) && txn)
     {
         nsCOMPtr<nsMsgTxn> msgTxn = do_QueryInterface(txn, &rv);
@@ -1235,9 +1234,8 @@ NS_IMETHODIMP nsMessenger::GetRedoTransactionType(PRUint32 *txnType)
     if (!txnType || !mTxnMgr)
         return rv;
     *txnType = nsMessenger::eUnknown;
-    nsITransaction *txn = nsnull;
-    // ** jt - too bad PeekRedoStack not AddRef'ing
-    rv = mTxnMgr->PeekRedoStack(&txn);
+    nsCOMPtr<nsITransaction> txn;
+    rv = mTxnMgr->PeekRedoStack(getter_AddRefs(txn));
     if (NS_SUCCEEDED(rv) && txn)
     {
         nsCOMPtr<nsMsgTxn> msgTxn = do_QueryInterface(txn, &rv);
@@ -1270,16 +1268,15 @@ nsMessenger::Undo(nsIMsgWindow *msgWindow)
     rv = mTxnMgr->GetNumberOfUndoItems(&numTxn);
     if (NS_SUCCEEDED(rv) && numTxn > 0)
     {
-        nsITransaction *txn = nsnull;
-        // ** jt -- PeekUndoStack not AddRef'ing
-        rv = mTxnMgr->PeekUndoStack(&txn);
+        nsCOMPtr<nsITransaction> txn;
+        rv = mTxnMgr->PeekUndoStack(getter_AddRefs(txn));
         if (NS_SUCCEEDED(rv) && txn)
         {
             nsCOMPtr<nsMsgTxn> msgTxn = do_QueryInterface(txn, &rv);
             if (NS_SUCCEEDED(rv) && msgTxn)
                 msgTxn->SetMsgWindow(msgWindow);
         }
-        mTxnMgr->Undo();
+        mTxnMgr->UndoTransaction();
     }
   }
   return rv;
@@ -1295,16 +1292,15 @@ nsMessenger::Redo(nsIMsgWindow *msgWindow)
     rv = mTxnMgr->GetNumberOfRedoItems(&numTxn);
     if (NS_SUCCEEDED(rv) && numTxn > 0)
     {
-        nsITransaction *txn = nsnull;
-        // jt -- PeekRedoStack not AddRef'ing
-        rv = mTxnMgr->PeekRedoStack(&txn);
+        nsCOMPtr<nsITransaction> txn;
+        rv = mTxnMgr->PeekRedoStack(getter_AddRefs(txn));
         if (NS_SUCCEEDED(rv) && txn)
         {
             nsCOMPtr<nsMsgTxn> msgTxn = do_QueryInterface(txn, &rv);
             if (NS_SUCCEEDED(rv) && msgTxn)
                 msgTxn->SetMsgWindow(msgWindow);
         }
-        mTxnMgr->Redo();
+        mTxnMgr->RedoTransaction();
     }
   }
   return rv;

@@ -35,8 +35,6 @@ static const PRBool gNoisy = PR_FALSE;
 InsertElementTxn::InsertElementTxn()
   : EditTxn()
 {
-  SetTransactionDescriptionID( kTransactionID );
-  /* log description initialized in parent constructor */
 }
 
 NS_IMETHODIMP InsertElementTxn::Init(nsIDOMNode *aNode,
@@ -62,7 +60,7 @@ InsertElementTxn::~InsertElementTxn()
 {
 }
 
-NS_IMETHODIMP InsertElementTxn::Do(void)
+NS_IMETHODIMP InsertElementTxn::DoTransaction(void)
 {
   if (gNoisy) 
   { 
@@ -119,7 +117,7 @@ NS_IMETHODIMP InsertElementTxn::Do(void)
   return result;
 }
 
-NS_IMETHODIMP InsertElementTxn::Undo(void)
+NS_IMETHODIMP InsertElementTxn::UndoTransaction(void)
 {
   if (gNoisy) { printf("%p Undo Insert Element of %p into parent %p at offset %d\n", 
                        this, mNode.get(), mParent.get(), mOffset); }
@@ -130,32 +128,15 @@ NS_IMETHODIMP InsertElementTxn::Undo(void)
   return result;
 }
 
-NS_IMETHODIMP InsertElementTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP InsertElementTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
   if (nsnull!=aDidMerge)
     *aDidMerge=PR_FALSE;
   return NS_OK;
 }
 
-NS_IMETHODIMP InsertElementTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP InsertElementTxn::GetTxnDescription(nsAWritableString& aString)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP InsertElementTxn::GetUndoString(nsString *aString)
-{
-  if (nsnull!=aString)
-  {
-    aString->AssignWithConversion("Remove Element: ");
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP InsertElementTxn::GetRedoString(nsString *aString)
-{
-  if (nsnull!=aString)
-  {
-    aString->AssignWithConversion("Insert Element: ");
-  }
+  aString.Assign(NS_LITERAL_STRING("InsertElementTxn"));
   return NS_OK;
 }

@@ -40,8 +40,6 @@ static const PRBool gNoisy = PR_FALSE;
 CreateElementTxn::CreateElementTxn()
   : EditTxn()
 {
-  SetTransactionDescriptionID( kTransactionID );
-  /* log description initialized in parent constructor */
 }
 
 NS_IMETHODIMP CreateElementTxn::Init(nsEditor      *aEditor,
@@ -72,7 +70,7 @@ CreateElementTxn::~CreateElementTxn()
 {
 }
 
-NS_IMETHODIMP CreateElementTxn::Do(void)
+NS_IMETHODIMP CreateElementTxn::DoTransaction(void)
 {
   if (gNoisy)
   {
@@ -170,7 +168,7 @@ NS_IMETHODIMP CreateElementTxn::Do(void)
   return result;
 }
 
-NS_IMETHODIMP CreateElementTxn::Undo(void)
+NS_IMETHODIMP CreateElementTxn::UndoTransaction(void)
 {
   if (gNoisy) { printf("Undo Create Element, mParent = %p, node = %p\n",
                         mParent.get(), mNewNode.get()); }
@@ -182,7 +180,7 @@ NS_IMETHODIMP CreateElementTxn::Undo(void)
   return result;
 }
 
-NS_IMETHODIMP CreateElementTxn::Redo(void)
+NS_IMETHODIMP CreateElementTxn::RedoTransaction(void)
 {
   if (gNoisy) { printf("Redo Create Element\n"); }
   NS_ASSERTION(mEditor && mParent, "bad state");
@@ -203,35 +201,17 @@ NS_IMETHODIMP CreateElementTxn::Redo(void)
   return result;
 }
 
-NS_IMETHODIMP CreateElementTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP CreateElementTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
   if (nsnull!=aDidMerge)
     *aDidMerge=PR_FALSE;
   return NS_OK;
 }
 
-NS_IMETHODIMP CreateElementTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP CreateElementTxn::GetTxnDescription(nsAWritableString& aString)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP CreateElementTxn::GetUndoString(nsString *aString)
-{
-  if (nsnull!=aString)
-  {
-    aString->AssignWithConversion("Remove Element: ");
-    *aString += mTag;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP CreateElementTxn::GetRedoString(nsString *aString)
-{
-  if (nsnull!=aString)
-  {
-    aString->AssignWithConversion("Create Element: ");
-    *aString += mTag;
-  }
+  aString.Assign(NS_LITERAL_STRING("CreateElementTxn: "));
+  aString += mTag;
   return NS_OK;
 }
 

@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include "nsHTMLEditorLog.h"
 #include "nsEditorTxnLog.h"
+#include "nsPIEditorTransaction.h"
 
 #define LOCK_LOG(doc)
 #define UNLOCK_LOG(doc)
@@ -361,7 +362,12 @@ nsEditorTxnLog::GetString(nsITransaction *aTransaction, char *aBuffer, PRInt32 a
 
   nsString str;
 
-  aTransaction->GetRedoString(&str);
+  nsCOMPtr<nsPIEditorTransaction> txn = do_QueryInterface(aTransaction);
+
+  if (!txn)
+    return aBuffer;
+
+  txn->GetTxnDescription(str);
 
   if (str.Length() == 0)
     str.AssignWithConversion("<NULL>");

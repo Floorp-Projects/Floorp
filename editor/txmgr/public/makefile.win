@@ -23,9 +23,6 @@ DEPTH=..\..\..
 
 
 EXPORTS =						\
-    nsITransaction.h			\
-    nsITransactionListener.h	\
-    nsITransactionManager.h		\
     nsTransactionManagerCID.h	\
     $(NULL)
 

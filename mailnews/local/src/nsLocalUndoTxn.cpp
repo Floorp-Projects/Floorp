@@ -203,7 +203,7 @@ nsLocalMoveCopyMsgTxn::UndoImapDeleteFlag(nsIMsgFolder* folder,
 
 
 NS_IMETHODIMP
-nsLocalMoveCopyMsgTxn::Undo()
+nsLocalMoveCopyMsgTxn::UndoTransaction()
 {
     nsresult rv = NS_ERROR_FAILURE;
     nsCOMPtr<nsIMsgDatabase> srcDB;
@@ -256,7 +256,7 @@ nsLocalMoveCopyMsgTxn::Undo()
 }
 
 NS_IMETHODIMP
-nsLocalMoveCopyMsgTxn::Redo()
+nsLocalMoveCopyMsgTxn::RedoTransaction()
 {
     nsresult rv = NS_ERROR_FAILURE;
     nsCOMPtr<nsIMsgDatabase> srcDB;

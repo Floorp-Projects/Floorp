@@ -41,12 +41,13 @@ public:
 
   virtual nsresult AddChild(nsTransactionItem *aTransactionItem);
   virtual nsresult GetTransaction(nsITransaction **aTransaction);
+  virtual nsresult GetIsBatch(PRBool *aIsBatch);
   virtual nsresult GetNumberOfChildren(PRInt32 *aNumChildren);
+  virtual nsresult GetChild(PRInt32 aIndex, nsTransactionItem **aChild);
 
-  virtual nsresult Do(void);
-  virtual nsresult Undo(nsTransactionManager *aTxMgr);
-  virtual nsresult Redo(nsTransactionManager *aTxMgr);
-  virtual nsresult Write(nsIOutputStream *aOutputStream);
+  virtual nsresult DoTransaction(void);
+  virtual nsresult UndoTransaction(nsTransactionManager *aTxMgr);
+  virtual nsresult RedoTransaction(nsTransactionManager *aTxMgr);
 
 private:
 

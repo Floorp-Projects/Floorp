@@ -32,15 +32,13 @@ nsMsgTxn::nsMsgTxn()
 {
   NS_INIT_REFCNT();
   m_txnType = 0;
-  m_undoString.AssignWithConversion("Undo");
-  m_redoString.AssignWithConversion("Redo");
 }
 
 nsMsgTxn::~nsMsgTxn()
 {
 }
 
-NS_IMETHODIMP nsMsgTxn::Do(void)
+NS_IMETHODIMP nsMsgTxn::DoTransaction(void)
 {
   return NS_OK;
 }
@@ -54,12 +52,7 @@ NS_IMETHODIMP nsMsgTxn::GetIsTransient(PRBool *aIsTransient)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsMsgTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP nsMsgTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -79,39 +72,6 @@ NS_IMETHODIMP nsMsgTxn::SetMsgWindow(nsIMsgWindow *msgWindow)
     m_msgWindow = msgWindow;
     return NS_OK;
 }
-
-NS_IMETHODIMP
-nsMsgTxn::SetUndoString(nsString *aString)
-{
-	if (!aString) return NS_ERROR_NULL_POINTER;
-	m_undoString = *aString;
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgTxn::SetRedoString(nsString* aString)
-{
-	if (!aString) return NS_ERROR_NULL_POINTER;
-	m_redoString = *aString;
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgTxn::GetUndoString(nsString* aString)
-{
-	if (!aString) return NS_ERROR_NULL_POINTER;
-	*aString = m_undoString;
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgTxn::GetRedoString(nsString* aString)
-{
-	if (!aString) return NS_ERROR_NULL_POINTER;
-	*aString = m_redoString;
-	return NS_OK;
-}
-
 
 NS_IMETHODIMP 
 nsMsgTxn::GetTransactionType(PRUint32 *txnType)

@@ -34,7 +34,6 @@ NS_IMPL_RELEASE(EditTxn)
 
 // note that aEditor is not refcounted
 EditTxn::EditTxn()
-  : mTransactionID(-1)
 {
   NS_INIT_REFCNT();
 }
@@ -43,19 +42,19 @@ EditTxn::~EditTxn()
 {
 }
 
-NS_IMETHODIMP EditTxn::Do(void)
+NS_IMETHODIMP EditTxn::DoTransaction(void)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP EditTxn::Undo(void)
+NS_IMETHODIMP EditTxn::UndoTransaction(void)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP EditTxn::Redo(void)
+NS_IMETHODIMP EditTxn::RedoTransaction(void)
 {
-  return Do();
+  return DoTransaction();
 }
 
 NS_IMETHODIMP EditTxn::GetIsTransient(PRBool *aIsTransient)
@@ -65,53 +64,14 @@ NS_IMETHODIMP EditTxn::GetIsTransient(PRBool *aIsTransient)
   return NS_OK;
 }
 
-NS_IMETHODIMP EditTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP EditTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP EditTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP EditTxn::GetTxnDescription(nsAWritableString& aString)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP EditTxn::GetUndoString(nsString *aString)
-{
-  if (nsnull!=aString)
-    aString->SetLength(0);
-  return NS_OK;
-}
-
-NS_IMETHODIMP EditTxn::GetRedoString(nsString *aString)
-{
-  if (nsnull!=aString)
-    aString->SetLength(0);
-  return NS_OK;
-}
-
-NS_IMETHODIMP EditTxn::GetLogDescription(PRUnichar * *aString)
-{
-  if (nsnull!=aString)
-    *aString = mLogDescription.ToNewUnicode();
-  return NS_OK;
-}
-
-NS_IMETHODIMP EditTxn::SetLogDescription(const PRUnichar *aString)
-{
-  mLogDescription = (PRUnichar *)aString;
-  return NS_OK;
-}
-
-NS_IMETHODIMP EditTxn::GetTransactionDescriptionID(int *aID)
-{
-  if (nsnull!=aID)
-    *aID = mTransactionID;
-  return NS_OK;
-}
-
-NS_IMETHODIMP EditTxn::SetTransactionDescriptionID(int aID)
-{
-  mTransactionID = aID;
+  aString.Assign(NS_LITERAL_STRING("EditTxn"));
   return NS_OK;
 }
 
@@ -133,11 +93,12 @@ EditTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(NS_GET_IID(nsITransactionDescription))) {
-    *aInstancePtr = (void*)(nsITransactionDescription*)this;
+  if (aIID.Equals(NS_GET_IID(nsPIEditorTransaction))) {
+    *aInstancePtr = (void*)(nsPIEditorTransaction*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  
   
   *aInstancePtr = 0;
   return NS_NOINTERFACE;

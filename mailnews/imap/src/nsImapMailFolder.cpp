@@ -1816,7 +1816,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
     // we're adding this undo action before the delete is successful. This is evil,
     // but 4.5 did it as well.
     if (m_transactionManager)
-      m_transactionManager->Do(undoMsgTxn);
+      m_transactionManager->DoTransaction(undoMsgTxn);
 
     rv = StoreImapFlags(kImapMsgDeletedFlag, PR_TRUE, srcKeyArray);
     if (NS_SUCCEEDED(rv))
@@ -3749,7 +3749,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                 srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
               }
               if (m_transactionManager)
-                m_transactionManager->Do(m_copyState->m_undoMsgTxn);
+                m_transactionManager->DoTransaction(m_copyState->m_undoMsgTxn);
             }
             ClearCopyState(aExitCode);
           }
@@ -3822,7 +3822,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
               if (m_copyState->m_curIndex >= m_copyState->m_totalCount)
               {
                   if (m_transactionManager && m_copyState->m_undoMsgTxn)
-                      m_transactionManager->Do(m_copyState->m_undoMsgTxn);
+                      m_transactionManager->DoTransaction(m_copyState->m_undoMsgTxn);
                   ClearCopyState(aExitCode);
               }
               else
