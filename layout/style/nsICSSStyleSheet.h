@@ -42,7 +42,7 @@
 
 class nsICSSRule;
 class nsIDOMNode;
-class nsNameSpaceMap;
+class nsXMLNameSpaceMap;
 class nsCSSRuleProcessor;
 class nsIMediaList;
 class nsICSSGroupRule;
@@ -92,7 +92,7 @@ public:
   NS_IMETHOD  GetOwnerRule(nsICSSImportRule** aOwnerRule) = 0;
   
   // get namespace map for sheet
-  virtual NS_HIDDEN_(nsNameSpaceMap*) GetNameSpaceMap() const = 0;
+  virtual NS_HIDDEN_(nsXMLNameSpaceMap*) GetNameSpaceMap() const = 0;
 
   NS_IMETHOD  Clone(nsICSSStyleSheet* aCloneParent,
                     nsICSSImportRule* aCloneOwnerRule,

@@ -36,25 +36,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsNameSpaceMap_h_
-#define nsNameSpaceMap_h_
+#ifndef nsXMLNameSpaceMap_h_
+#define nsXMLNameSpaceMap_h_
 
 #include "nsVoidArray.h"
 
 class nsIAtom;
 
 /**
- * nsNameSpaceMap contains a set of prefixes which are mapped onto namespaces.
- * It allows the set to be searched by prefix or by namespace ID.
+ * nsXMLNameSpaceMap contains a set of prefixes which are mapped onto
+ * namespaces.  It allows the set to be searched by prefix or by namespace ID.
  */
-class nsNameSpaceMap
+class nsXMLNameSpaceMap
 {
 public:
   /**
-   * Allocates a new nsNameSpaceMap (with new()) and initializes it with the
+   * Allocates a new nsXMLNameSpaceMap (with new()) and initializes it with the
    * xmlns and xml namespaces.
    */
-  static NS_HIDDEN_(nsNameSpaceMap*) Create();
+  static NS_HIDDEN_(nsXMLNameSpaceMap*) Create();
 
   /**
    * Add a prefix and its corresponding namespace ID to the map.
@@ -89,10 +89,10 @@ public:
   /* Removes all prefix mappings. */
   NS_HIDDEN_(void) Clear();
 
-  ~nsNameSpaceMap() { Clear(); }
+  ~nsXMLNameSpaceMap() { Clear(); }
 
 private:
-  nsNameSpaceMap() NS_HIDDEN;  // use Create() to create new instances
+  nsXMLNameSpaceMap() NS_HIDDEN;  // use Create() to create new instances
 
   nsVoidArray mNameSpaces;
 };

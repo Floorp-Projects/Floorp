@@ -73,7 +73,7 @@ public:
   nsCOMPtr<nsIURI>       mSheetURI; // for error reports, etc.
   nsCOMPtr<nsIURI>       mBaseURI; // for resolving relative URIs
   nsISupportsArray*      mOrderedRules;
-  nsAutoPtr<nsNameSpaceMap> mNameSpaceMap;
+  nsAutoPtr<nsXMLNameSpaceMap> mNameSpaceMap;
   PRPackedBool           mComplete;
 };
 
@@ -138,7 +138,7 @@ public:
   NS_IMETHOD SetOwningNode(nsIDOMNode* aOwningNode);
   NS_IMETHOD SetOwnerRule(nsICSSImportRule* aOwnerRule);
   NS_IMETHOD GetOwnerRule(nsICSSImportRule** aOwnerRule);
-  virtual NS_HIDDEN_(nsNameSpaceMap*) GetNameSpaceMap() const;
+  virtual NS_HIDDEN_(nsXMLNameSpaceMap*) GetNameSpaceMap() const;
   NS_IMETHOD Clone(nsICSSStyleSheet* aCloneParent,
                    nsICSSImportRule* aCloneOwnerRule,
                    nsIDocument* aCloneDocument,
