@@ -155,6 +155,8 @@ public:
 
   //  --------------------------------------------------
 
+  void InitFloater(nsPlaceholderFrame* aFrame);
+
   void AddFloater(nsPlaceholderFrame* aFrame);
 
   nsIPresContext& mPresContext;
