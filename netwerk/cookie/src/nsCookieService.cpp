@@ -1034,6 +1034,10 @@ nsCookieService::Write()
     return NS_OK;
   }
 
+  if (!mCookieFile) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
   nsresult rv;
   nsCOMPtr<nsIOutputStream> fileOutputStream;
   rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(fileOutputStream),
