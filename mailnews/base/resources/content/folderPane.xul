@@ -33,7 +33,8 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <outliner id="folderOutliner"
-            flex="1">
+            flex="1"
+            seltype="single">
     <outlinerbody flex="1"
                   datasources="rdf:null"
                   ondraggesture="return BeginDragFolderOutliner(event);"

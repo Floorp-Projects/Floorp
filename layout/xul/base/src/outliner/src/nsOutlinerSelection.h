@@ -43,6 +43,7 @@ public:
 protected:
   nsresult FireOnSelectHandler();
   static void SelectCallback(nsITimer *aTimer, void *aClosure);
+  PRBool SingleSelection();
 
 protected:
   // Members
