@@ -98,21 +98,21 @@
   <menubar id="main-menubar" class="chromeclass-menubar">
    <menu id="menu_File">
       <menupopup id="menu_FilePopup">
-         <menuitem id="calendar-import-menu" label="Import ..." oncommand="loadEventsFromFile()"/>
-         <menuitem id="calendar-export-menu" label="Export ..." oncommand="saveEventsToFile()"/>
+         <menuitem id="calendar-import-menu" label="&calendar.import.label;" oncommand="loadEventsFromFile()"/>
+         <menuitem id="calendar-export-menu" label="&calendar.export.label;" oncommand="saveEventsToFile()"/>
          <menuseparator/>
-         <menuitem id="calendar-about-menu-item" label="About Calendar" oncommand="alertCalendarVersion()"/>
+         <menuitem id="calendar-about-menu-item" label="&calendar.about.label;" oncommand="alertCalendarVersion()"/>
       </menupopup>
    </menu>
 
    <menu id="menu_Edit">
       <menupopup id="mppEdit">
-         <menuitem id="calendar-copy-menu" observes="copy_command" label="Copy" accesskey="c" oncommand="copyToClipboard()"/>
-         <menuitem id="calendar-paste-menu" label="Paste" accesskey="p" oncommand="pasteFromClipboard()"/>
+         <menuitem id="calendar-copy-menu" observes="copy_command" label="&calendar.copy.label;" accesskey="c" oncommand="copyToClipboard()"/>
+         <menuitem id="calendar-paste-menu" label="&calendar.paste.label;" accesskey="p" oncommand="pasteFromClipboard()"/>
          <menuseparator/>
-         <menuitem id="calendar-selectall-menu" label="Select All" accesskey="a" oncommand="selectAllEvents()"/>
+         <menuitem id="calendar-selectall-menu" label="&calendar.selectall.label;" accesskey="a" oncommand="selectAllEvents()"/>
          <menuseparator/>
-         <menuitem id="calendar-edit-preferences" label="Preferences..." oncommand="launchPreferences()"/>
+         <menuitem id="calendar-edit-preferences" label="&calendar.preferences.label;" oncommand="launchPreferences()"/>
       </menupopup>
    </menu>
    
