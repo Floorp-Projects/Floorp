@@ -77,7 +77,7 @@ nsresult nsCollationFactory::CreateCollation(nsILocale* locale, nsICollation** i
 nsCollation::nsCollation()
 {
   nsresult res;
-  mCaseConversion = do_CreateInstance(NS_UNICHARUTIL_CONTRACTID, &res);
+  mCaseConversion = do_GetService(NS_UNICHARUTIL_CONTRACTID, &res);
   NS_ASSERTION(NS_SUCCEEDED(res), "CreateInstance failed for kCaseConversionIID");
 }
 
