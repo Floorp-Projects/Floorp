@@ -85,8 +85,8 @@ function WM_LoadPage( pageURL, absolute )
     //   this.WSM.SavePageData( this.content_frame );
 
     // build a url from a tag, or use an absolute url
-		if( !absolute ) {
-      src = this.GetURLFromTag( pageURL );
+    if( !absolute ) {
+            var src = this.GetURLFromTag( pageURL );
     } else {
       src = pageURL;
     }

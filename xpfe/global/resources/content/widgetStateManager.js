@@ -81,7 +81,7 @@ function WSM_SavePageData( currentPageTag, optAttributes, exclElements, inclElem
   // and do not need to be passed. 
   
   if( !currentPageTag )
-    var currentPageTag = this.GetTagFromURL( this.content_frame.location.href, this.panelPrefix, this.panelSuffix, true );
+    currentPageTag = this.GetTagFromURL( this.content_frame.location.href, this.panelPrefix, this.panelSuffix, true );
   
   var doc = this.content_frame.document;
   var thisTagData = this.GetDataForTag(currentPageTag);
@@ -98,7 +98,7 @@ function WSM_SavePageData( currentPageTag, optAttributes, exclElements, inclElem
   else if (doc && doc.controls) {
     var fields = doc.controls;
     var data = [];
-    for( var i = 0; i < fields.length; i++ ) 
+    for( i = 0; i < fields.length; i++ ) 
     { 
       data[i] = []; 
       var formElement = fields[i];
@@ -177,7 +177,7 @@ function WSM_SavePageData( currentPageTag, optAttributes, exclElements, inclElem
 function WSM_SetPageData( currentPageTag, hasExtraAttributes )
 {
   if( !currentPageTag )
-    var currentPageTag = this.GetTagFromURL( this.content_frame.location.href, this.panelPrefix, this.panelSuffix, true );
+    currentPageTag = this.GetTagFromURL( this.content_frame.location.href, this.panelPrefix, this.panelSuffix, true );
   
 	var doc = this.content_frame.document;
   var thisTagData = this.GetDataForTag(currentPageTag);
@@ -262,7 +262,7 @@ function WSM_SetPageData( currentPageTag, hasExtraAttributes )
             }
             else {
               // single selected item
-              for ( var k = 0; k < formElement.options.length; k++ )
+              for ( k = 0; k < formElement.options.length; k++ )
               {
                 dump("*** value=" + value + "; options[k].value=" + formElement.options[k].value + "\n");
                 if( formElement.options[k].value == value )
@@ -423,6 +423,7 @@ function WSM_LookupElement( element, lookby, property )
       }
     }
   }
+  return undefined;
 }
 
 /**
