@@ -59,8 +59,8 @@
         
   <groupbox flex="1">
     <caption label="&descript;"/>
-    <label value="&fileTypes.label;"/>
     <vbox flex="1">
+      <label value="&fileTypes.label;" control="appList"/>
       <hbox flex="1">
         <tree id="appList" flex="1" seltype="single" hidecolumnpicker="true"
               datasources="rdf:null" ref="urn:mimetypes"

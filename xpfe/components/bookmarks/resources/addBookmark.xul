@@ -109,7 +109,7 @@
   <separator id="destinationSeparator"/>
 
   <vbox id="folderbox" flex="1">
-    <label id="destinationLabel" value="&destination.label;"/>
+    <label id="destinationLabel" value="&destination.label;" control="bookmarks-view"/>
     <bookmarks-tree id="bookmarks-view" flex="1" type="folders"
                     rows="10" seltype="single"
                     persist="width height"/>

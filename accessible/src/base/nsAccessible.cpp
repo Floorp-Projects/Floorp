@@ -1258,6 +1258,9 @@ NS_IMETHODIMP nsAccessible::GetXULName(nsAString& _retval)
   nsresult rv = NS_OK;
   nsAutoString label;
 
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  NS_ASSERTION(content, "No content for accessible DOM node!");
+
   // CASE #1 -- great majority of the cases
   nsCOMPtr<nsIDOMXULLabeledControlElement> labeledEl(do_QueryInterface(mDOMNode));
   if (labeledEl) {
@@ -1310,34 +1313,50 @@ NS_IMETHODIMP nsAccessible::GetXULName(nsAString& _retval)
       //   This should keep search times down and still get the relevant
       //   labels.
       nsAutoString controlID;
-      domElement->GetAttribute(NS_LITERAL_STRING("id"), controlID);
-      nsCOMPtr<nsIDOMNode> parent;
-      if (!controlID.IsEmpty() && NS_SUCCEEDED(rv = mDOMNode->GetParentNode(getter_AddRefs(parent)))) {
-        nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(parent));
-        NS_ASSERTION(xulElement, "No xulElement for parent DOM Node!");
-        if (xulElement) {
-          nsCOMPtr<nsIDOMNodeList> labelList;
-          if (NS_SUCCEEDED(rv = xulElement->GetElementsByAttribute(NS_LITERAL_STRING("control"), controlID, getter_AddRefs(labelList))))
-          {
-            PRUint32 length = 0;
-            if (NS_SUCCEEDED(rv = labelList->GetLength(&length)) && length > 0) {
-              for (PRUint32 index = 0; index < length; ++index) {
-                nsCOMPtr<nsIDOMNode> child;
-                if (NS_SUCCEEDED(rv = labelList->Item(index, getter_AddRefs(child) ))) {
-                  rv = AppendLabelText(child, label);
-                }
-              }
-            }
+      content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::id, controlID);
+      nsIContent *labelSearchStart = nsnull;
+      if (controlID.IsEmpty()) {
+        // If no control ID and we're anonymous content
+        // get ID from parent that inserted us.
+        nsIContent *bindingParent = content->GetBindingParent();
+        if (bindingParent) {
+          bindingParent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::id, controlID);
+          if (!controlID.IsEmpty()) {
+            labelSearchStart = bindingParent->GetParent();
           }
         }
+      }
+      else {
+        // We have an id
+        labelSearchStart = content->GetParent();
+      }
+      static const PRUint32 kAncestorLevelsToSearch = 3;
+      for (PRUint32 level = 0; level < kAncestorLevelsToSearch; level ++) {
+        nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(labelSearchStart));
+        if (!xulElement) {
+          break;
+        }
+        nsCOMPtr<nsIDOMNodeList> labelList;
+        xulElement->GetElementsByAttribute(NS_LITERAL_STRING("control"), controlID, 
+                                           getter_AddRefs(labelList));
+        if (!labelList) {
+          break;
+        }
+        PRUint32 index = 0;
+        nsCOMPtr<nsIDOMNode> child;
+        while (NS_SUCCEEDED(labelList->Item(index++, getter_AddRefs(child))) && child) {
+          AppendLabelText(child, label);
+        }
+        if (!label.IsEmpty()) {
+          break;
+        }
+        labelSearchStart = labelSearchStart->GetParent();
       }  // End of CASE #3
     }  // END of CASE #2
   }  // END of CASE #1
 
   label.CompressWhitespace();
   if (label.IsEmpty()) {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-    NS_ASSERTION(content, "No nsIContent for DOM node");
     return GetNameFromSubtree(content, &_retval);
   }
   
