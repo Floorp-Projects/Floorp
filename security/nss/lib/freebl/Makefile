@@ -150,16 +150,7 @@ ifdef USE_HYBRID
     OS_CFLAGS += -xchip=ultra2
 endif
 endif
-ifeq ($(OS_RELEASE),5.5.1)
-    SYSV_SPARC = 1
-endif
-ifeq ($(OS_RELEASE),5.6)
-    SYSV_SPARC = 1
-endif
-ifeq ($(OS_RELEASE),5.7)
-    SYSV_SPARC = 1
-endif
-ifeq ($(OS_RELEASE),5.8)
+ifeq (5.5.1,$(firstword $(sort 5.5.1 $(OS_RELEASE))))
     SYSV_SPARC = 1
 endif
 ifeq ($(SYSV_SPARC),1)
