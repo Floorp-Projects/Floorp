@@ -45,12 +45,10 @@ function elipseString(aStr, doFront)
   if (aStr.length > fixedLen) {
     if (doFront) {
       var endStr = aStr.substr(aStr.length-fixedLen, fixedLen);
-      var str = "..." + endStr;
-      return str;
+      return "..." + endStr;
     } else {
       var frontStr = aStr.substr(0, fixedLen);
-      var str = frontStr + "...";
-      return str;
+      return frontStr + "...";
     }
   }
   return aStr;
