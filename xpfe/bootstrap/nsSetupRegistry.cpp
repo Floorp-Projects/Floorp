@@ -90,7 +90,7 @@ static NS_DEFINE_IID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
 nsresult NS_AutoregisterComponents()
 {
   nsIFileSpec* spec = NS_LocateFileOrDirectory(
-  							nsSpecialFileSpec::App_UserProfileDirectory50);
+  							nsSpecialFileSpec::App_ComponentsDirectory);
   if (!spec)
   	return NS_ERROR_FAILURE;
 
