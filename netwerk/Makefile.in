@@ -27,7 +27,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 DIRS		= \
-	        cache \
 		base \
 		dns \
 		socket \
