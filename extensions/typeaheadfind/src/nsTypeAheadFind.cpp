@@ -559,7 +559,9 @@ nsTypeAheadFind::HandleEvent(nsIDOMEvent* aEvent)
     event->GetOriginalTarget(getter_AddRefs(eventTarget));
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(eventTarget));
     nsCOMPtr<nsIPresShell> focusedShell(do_QueryReferent(mFocusedWeakShell));
-    NS_ENSURE_TRUE(focusedShell && doc, NS_ERROR_FAILURE);
+    if (!focusedShell || !doc) {
+      return NS_ERROR_FAILURE;
+    }
 
     PRInt32 numShells = doc->GetNumberOfShells();
     nsCOMPtr<nsIPresShell> shellToBeDestroyed;
