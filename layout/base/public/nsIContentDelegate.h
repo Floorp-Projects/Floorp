@@ -21,6 +21,7 @@
 #include "nslayout.h"
 class nsIFrame;
 class nsIPresContext;
+class nsIStyleContext;
 
 #define NS_ICONTENTDELEGATE_IID \
  { 0x0f135ce0, 0xa286, 0x11d1,	\
@@ -36,9 +37,11 @@ public:
    * Create a new frame object that will be responsible for the layout
    * and presentation of the content.
    */
-  virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                nsIContent* aContent,
-                                nsIFrame* aParentFrame) = 0;
+  NS_IMETHOD CreateFrame(nsIPresContext* aPresContext,
+                         nsIContent* aContent,
+                         nsIFrame* aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*& aFrame) = 0;
 };
 
 #endif /* nsIContentDelegate_h___ */
