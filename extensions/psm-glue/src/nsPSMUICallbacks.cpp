@@ -214,33 +214,37 @@ PRStatus DisplayPSMUIDialog(PCMT_CONTROL control, const char *pickledStatus, con
     CMTSecurityAdvisorData data;
     memset(&data, '\0', sizeof(CMTSecurityAdvisorData));
     
-
-    data.infoContext = SSM_BROWSER;
-    data.hostname    = (char*) hostName;
-
-    if (pickledStatus)
+    if (hostName)
     {
-        CMTItem pickledResource = {0, NULL, 0};
-        CMUint32 socketStatus = 0;
+        // if there is a hostName, than this request is about
+        // a webpage.  
+        data.hostname    = (char*) hostName;
+        data.infoContext = SSM_BROWSER;
     
-        pickledResource.len = *(int*)(pickledStatus);
-        pickledResource.data = (unsigned char*) PR_Malloc(SSMSTRING_PADDED_LENGTH(pickledResource.len));
-        
-        if (! pickledResource.data) return PR_FAILURE;
-
-        memcpy(pickledResource.data, pickledStatus+sizeof(int), pickledResource.len);
-        
-        /* Unpickle the SSL Socket Status */
-        if (CMT_UnpickleResource( control, 
-                                  SSM_RESTYPE_SSL_SOCKET_STATUS,
-                                  pickledResource, 
-                                  &socketStatus) == CMTSuccess)
+        if (pickledStatus)
         {
-            data.infoContext = SSM_BROWSER;    
-            data.resID = socketStatus;
-        }
+            CMTItem pickledResource = {0, NULL, 0};
+            CMUint32 socketStatus = 0;
+    
+            pickledResource.len = *(int*)(pickledStatus);
+            pickledResource.data = (unsigned char*) PR_Malloc(SSMSTRING_PADDED_LENGTH(pickledResource.len));
+        
+            if (! pickledResource.data) return PR_FAILURE;
 
-        PR_FREEIF(pickledResource.data);
+            memcpy(pickledResource.data, pickledStatus+sizeof(int), pickledResource.len);
+        
+            /* Unpickle the SSL Socket Status */
+            if (CMT_UnpickleResource( control, 
+                                      SSM_RESTYPE_SSL_SOCKET_STATUS,
+                                      pickledResource, 
+                                      &socketStatus) == CMTSuccess)
+            {
+                data.infoContext = SSM_BROWSER;    
+                data.resID = socketStatus;
+            }
+
+            PR_FREEIF(pickledResource.data);
+        }
     }
 
     /* Create a Security Advisor context object. */
