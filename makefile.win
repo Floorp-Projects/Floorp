@@ -131,6 +131,8 @@ include <$(DEPTH)\config\rules.mak>
 
 export::
 	$(PERL) $(DEPTH)\config\purge-old-headers.pl $(XPDIST)\include
+	$(MAKE_INSTALL) README.txt $(DIST)\bin
+	$(MAKE_INSTALL) LICENSE $(DIST)\bin
 
 #//------------------------------------------------------------------------
 #//
