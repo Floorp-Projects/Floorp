@@ -774,6 +774,8 @@ nsHTTPHandler::Init()
                 HTTPPrefsCallback, (void*)this);
     mPrefs->RegisterCallback(INTL_ACCEPT_LANGUAGES, 
                 HTTPPrefsCallback, (void*)this);
+    mPrefs->RegisterCallback(UA_PREF_PREFIX "override", 
+                HTTPPrefsCallback, (void*)this);
     mPrefs->RegisterCallback(UA_PREF_PREFIX "locale", 
                 HTTPPrefsCallback, (void*)this);
     mPrefs->RegisterCallback(UA_PREF_PREFIX "misc",
@@ -843,6 +845,8 @@ nsHTTPHandler::~nsHTTPHandler()
         mPrefs->UnregisterCallback(NETWORK_PREFS, 
                 HTTPPrefsCallback, (void*)this);
         mPrefs->UnregisterCallback(INTL_ACCEPT_LANGUAGES, 
+                HTTPPrefsCallback, (void*)this);
+        mPrefs->UnregisterCallback(UA_PREF_PREFIX "override", 
                 HTTPPrefsCallback, (void*)this);
         mPrefs->UnregisterCallback(UA_PREF_PREFIX "locale", 
                 HTTPPrefsCallback, (void*)this);
@@ -1465,6 +1469,19 @@ nsHTTPHandler::PrefsChanged(const char* pref)
         printf("\n--> nsHTTPHandler::PrefsChanged: intl.accept_languages=%s\n",
                (const char *)NS_ConvertUCS2toUTF8(acceptLanguages));
 #endif
+    }
+
+    // general.useragent.override
+    if ((bChangedAll) || !PL_strcmp(pref, UA_PREF_PREFIX "override")) {
+        nsXPIDLCString uval;
+        nsresult rv = NS_OK;
+        rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "override",
+                                  getter_Copies(uval));
+        if (NS_SUCCEEDED(rv)) {
+            mAppUserAgentOverride.Assign(uval);
+            // rebuild the user agent
+            BuildUserAgent();
+        }
     }
 
     if ( (bChangedAll)|| !PL_strcmp(pref, UA_PREF_PREFIX "locale") ) {// general.useragent.locale
