@@ -412,18 +412,16 @@ nsFileTransport::OpenInputStream(PRUint32 aTransferOffset,
                                  nsIInputStream **aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
-    nsresult rv;
-    nsCOMPtr<nsIInputStream> in;
-    rv = mStreamIO->GetInputStream(getter_AddRefs(in));
-    if (NS_FAILED(rv)) return rv;
-    NS_ASSERTION(aTransferCount == (PRUint32) -1, "need to wrap input stream in one that truncates");
-    if (aTransferOffset > 0) {
-        nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(in, &rv);
-        if (NS_FAILED(rv)) return rv;
-        rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, aTransferOffset);
-        if (NS_FAILED(rv)) return rv;
+    NS_ASSERTION(aTransferCount == ULONG_MAX, "need to wrap input stream in one that truncates");
+    
+    nsresult rv = mStreamIO->GetInputStream(aResult);
+    if (NS_SUCCEEDED(rv) && aTransferOffset) {
+        nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(*aResult, &rv));
+        if (NS_SUCCEEDED(rv) && seekable) {
+            rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, aTransferOffset);
+        }
     }
-    NS_ADDREF(*aResult = in);
+    
     return rv;
 }
 
@@ -433,9 +431,18 @@ nsFileTransport::OpenOutputStream(PRUint32 aTransferOffset,
                                   PRUint32 aFlags,
                                   nsIOutputStream **aResult)
 {
-    NS_ASSERTION(aTransferOffset == 0, "need to seek to specified offset");
-    NS_ASSERTION(aTransferCount == (PRUint32) -1, "need to wrap output stream in one that truncates");
-    return mStreamIO->GetOutputStream(aResult);
+    NS_ENSURE_ARG_POINTER(aResult);
+    NS_ASSERTION(aTransferCount == ULONG_MAX, "need to wrap output stream in one that truncates");
+    
+    nsresult rv = mStreamIO->GetOutputStream(aResult);
+    if (NS_SUCCEEDED(rv) && aTransferOffset) {
+        nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(*aResult, &rv));
+        if (NS_SUCCEEDED(rv) && seekable) {
+            rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, aTransferOffset);
+        }
+    }
+    
+    return rv;
 }
 
 NS_IMETHODIMP
