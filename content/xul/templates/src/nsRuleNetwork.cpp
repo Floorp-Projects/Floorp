@@ -87,6 +87,8 @@ nsRuleNetwork::Clear()
 Value::Value(const Value& aValue)
     : mType(aValue.mType)
 {
+    MOZ_COUNT_CTOR(Value);
+
     switch (mType) {
     case eUndefined:
         break;
@@ -104,6 +106,8 @@ Value::Value(const Value& aValue)
 
 Value::Value(nsISupports* aISupports)
 {
+    MOZ_COUNT_CTOR(Value);
+
     mType = eISupports;
     mISupports = aISupports;
     NS_IF_ADDREF(mISupports);
@@ -111,6 +115,8 @@ Value::Value(nsISupports* aISupports)
 
 Value::Value(const PRUnichar* aString)
 {
+    MOZ_COUNT_CTOR(Value);
+
     mType = eString;
     mString = nsCRT::strdup(aString);
 }
@@ -165,6 +171,7 @@ Value::operator=(const PRUnichar* aString)
 
 Value::~Value()
 {
+    MOZ_COUNT_CTOR(Value);
     Clear();
 }
 
@@ -485,6 +492,7 @@ Instantiation::Compare(const void* aLeft, const void* aRight)
 InstantiationSet::InstantiationSet()
 {
     mHead.mPrev = mHead.mNext = &mHead;
+    MOZ_COUNT_CTOR(InstantiationSet);
 }
 
 
@@ -496,6 +504,8 @@ InstantiationSet::InstantiationSet(const InstantiationSet& aInstantiationSet)
     ConstIterator last = aInstantiationSet.Last();
     for (ConstIterator inst = aInstantiationSet.First(); inst != last; ++inst)
         Append(*inst);
+
+    MOZ_COUNT_CTOR(InstantiationSet);
 }
 
 InstantiationSet&

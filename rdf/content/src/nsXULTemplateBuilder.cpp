@@ -179,7 +179,8 @@ public:
     PropertySet()
         : mProperties(nsnull),
           mCount(0),
-          mCapacity(0) {}
+          mCapacity(0) {
+        MOZ_COUNT_CTOR(PropertySet); }
     
     ~PropertySet();
 
@@ -239,6 +240,7 @@ public:
 
 PropertySet::~PropertySet()
 {
+    MOZ_COUNT_DTOR(PropertySet);
     Clear();
     delete[] mProperties;
 }
@@ -309,7 +311,10 @@ public:
         : mContent(aContent),
           mContainerVariable(aContainerVariable),
           mMemberVariable(aMemberVariable),
-          mPriority(aPriority) {}
+          mPriority(aPriority) {
+        MOZ_COUNT_CTOR(Rule); }
+
+    ~Rule() { MOZ_COUNT_DTOR(Rule); }
 
     nsresult GetContent(nsIContent** aResult) const;
     PRInt32 GetContainerVariable() const { return mContainerVariable; }
@@ -345,17 +350,22 @@ public:
      */
     class Match {
     public:
-        Match() {}
+        Match() { MOZ_COUNT_CTOR(Match); }
+
         Match(const Rule* aRule, const Instantiation& aInstantiation)
-            : mRule(aRule), mInstantiation(aInstantiation) {}
+            : mRule(aRule), mInstantiation(aInstantiation) {
+            MOZ_COUNT_CTOR(Match); }
 
         Match(const Match& aMatch)
-            : mRule(aMatch.mRule), mInstantiation(aMatch.mInstantiation) {}
+            : mRule(aMatch.mRule), mInstantiation(aMatch.mInstantiation) {
+            MOZ_COUNT_CTOR(Match); }
 
         Match& operator=(const Match& aMatch) {
             mRule = aMatch.mRule;
             mInstantiation = aMatch.mInstantiation;
             return *this; }
+
+        ~Match() { MOZ_COUNT_DTOR(Match); }
 
         PRBool operator==(const Match& aMatch) const {
             return mRule == aMatch.mRule && mInstantiation == aMatch.mInstantiation; }
@@ -511,6 +521,8 @@ public:
 MatchSet::MatchSet()
     : mMatches(nsnull), mCount(0)
 {
+    MOZ_COUNT_CTOR(MatchSet);
+
     mHead.mNext = mHead.mPrev = &mHead;
 
     // XXXwaterson create this lazily if we exceed a threshold?
@@ -535,6 +547,8 @@ MatchSet::~MatchSet()
 
     if (mMatches)
         PL_HashTableDestroy(mMatches);
+
+    MOZ_COUNT_DTOR(MatchSet);
 }
 
 
@@ -612,7 +626,7 @@ MatchSet::Erase(Iterator aIterator)
 
 class Key { // XXXwaterson this needs a better name
 public:
-    Key() {}
+    Key() { MOZ_COUNT_CTOR(Key); }
 
     Key(const Instantiation& aInstantiation, const Rule* aRule);
 
@@ -620,7 +634,10 @@ public:
         : mContainerVariable(aKey.mContainerVariable),
           mContainerValue(aKey.mContainerValue),
           mMemberVariable(aKey.mMemberVariable),
-          mMemberValue(aKey.mMemberValue) {}
+          mMemberValue(aKey.mMemberValue) {
+        MOZ_COUNT_CTOR(Key); }
+
+    ~Key() { MOZ_COUNT_DTOR(Key); }
 
     Key& operator=(const Key& aKey) {
         mContainerVariable = aKey.mContainerVariable;
@@ -674,6 +691,8 @@ Key::Key(const Instantiation& aInstantiation, const Rule* aRule)
     mMemberVariable = aRule->GetMemberVariable();
     hasbinding = aInstantiation.mBindings.GetBindingFor(mMemberVariable, &mMemberValue);
     NS_ASSERTION(hasbinding, "no binding for member variable");
+
+    MOZ_COUNT_CTOR(Key);
 }
 
 
@@ -699,8 +718,12 @@ class KeySet {
 protected:
     class Entry {
     public:
-        Entry() {}
-        Entry(const Key& aKey) : mKey(aKey) {}
+        Entry() { MOZ_COUNT_CTOR(KeySet::Entry); }
+
+        Entry(const Key& aKey) : mKey(aKey) {
+            MOZ_COUNT_CTOR(KeySet::Entry); }
+
+        ~Entry() { MOZ_COUNT_DTOR(KeySet::Entry); }
 
         PLHashEntry mHashEntry;
         Key         mKey;
@@ -807,12 +830,15 @@ KeySet::KeySet()
 
     mTable = PL_NewHashTable(8, Key::Hash, Key::Compare, PL_CompareValues,
                              &gAllocOps, nsnull);
+
+    MOZ_COUNT_CTOR(KeySet);
 }
 
 
 KeySet::~KeySet()
 {
     PL_HashTableDestroy(mTable);
+    MOZ_COUNT_DTOR(KeySet);
 }
 
 PRBool
@@ -1486,7 +1512,10 @@ protected:
         class Element : public MemoryElement {
         public:
             Element(nsIContent* aContent)
-                : mContent(aContent) {}
+                : mContent(aContent) {
+                MOZ_COUNT_CTOR(ContentIdTestNode::Element); }
+
+            virtual ~Element() { MOZ_COUNT_DTOR(ContentIdTestNode::Element); }
 
             virtual const char* Type() const {
                 return "RDFGenericBuilderImpl::ContentIdTestNode::Element"; }
@@ -1509,7 +1538,7 @@ protected:
         };
 
     protected:
-        nsCOMPtr<nsIXULDocument> mDocument;
+        nsIXULDocument* mDocument; // [WEAK] because we know the document will outlive us
         nsCOMPtr<nsIContent> mRoot;
         PRInt32 mContentVariable;
         PRInt32 mIdVariable;
@@ -1643,7 +1672,10 @@ public:
                 nsIRDFNode* aTarget)
             : mSource(aSource),
               mProperty(aProperty),
-              mTarget(aTarget) {}
+              mTarget(aTarget) {
+            MOZ_COUNT_CTOR(RDFPropertyTestNode::Element); }
+
+        virtual ~Element() { MOZ_COUNT_DTOR(RDFPropertyTestNode::Element); }
 
         virtual const char* Type() const {
             return "RDFPropertyTestNode::Element"; }
@@ -1904,7 +1936,10 @@ public:
         Element(nsIRDFResource* aContainer,
                 nsIRDFNode* aMember)
             : mContainer(aContainer),
-              mMember(aMember) {}
+              mMember(aMember) {
+            MOZ_COUNT_CTOR(RDFContainerMemberTestNode::Element); }
+
+        virtual ~Element() { MOZ_COUNT_DTOR(RDFContainerMemberTestNode::Element); }
 
         virtual const char* Type() const {
             return "RDFContainerMemberTestNode::Element"; }
@@ -2331,7 +2366,10 @@ public:
                 Test aEmptyTest)
             : mContainer(aContainer),
               mContainerTest(aContainerTest),
-              mEmptyTest(aEmptyTest) {}
+              mEmptyTest(aEmptyTest) {
+            MOZ_COUNT_CTOR(RDFContainerInstanceTestNode::Element); }
+
+        virtual ~Element() { MOZ_COUNT_DTOR(RDFContainerInstanceTestNode::Element); }
 
         virtual const char* Type() const {
             return "RDFContainerInstanceTestNode::Element"; }
@@ -3112,16 +3150,33 @@ RDFGenericBuilderImpl::Propogate(nsIRDFResource* aSource,
     // is an ancestor of B in the rule network).
     nsresult rv;
 
-    // XXXwaterson naive: O(n^2).
-    NodeSet::Iterator last = mRDFTests.Last();
-    for (NodeSet::Iterator i = mRDFTests.First(); i != last; ++i) {
-        RDFTestNode* rdftestnode = NS_STATIC_CAST(RDFTestNode*, *i);
+    // First, we'll go through and find all of the test nodes that can
+    // propogate the assertion.
+    NodeSet livenodes;
 
-        Instantiation seed;
-        if (rdftestnode->CanPropogate(aSource, aProperty, aTarget, seed)) {
+    {
+        NodeSet::Iterator last = mRDFTests.Last();
+        for (NodeSet::Iterator i = mRDFTests.First(); i != last; ++i) {
+            RDFTestNode* rdftestnode = NS_STATIC_CAST(RDFTestNode*, *i);
+
+            Instantiation seed;
+            if (rdftestnode->CanPropogate(aSource, aProperty, aTarget, seed)) {
+                livenodes.Add(rdftestnode);
+            }
+        }
+    }
+
+    // Now, we'll go through each, and any that aren't dominated by
+    // another live node will be used to propogate the assertion
+    // through the rule network
+    {
+        NodeSet::Iterator last = livenodes.Last();
+        for (NodeSet::Iterator i = livenodes.First(); i != last; ++i) {
+            RDFTestNode* rdftestnode = NS_STATIC_CAST(RDFTestNode*, *i);
+
             PRBool isdominated = PR_FALSE;
 
-            for (NodeSet::ConstIterator j = mRDFTests.First(); j != last; ++j) {
+            for (NodeSet::ConstIterator j = livenodes.First(); j != last; ++j) {
                 // we can't be dominated by ourself
                 if (j == i)
                     continue;
@@ -3133,6 +3188,10 @@ RDFGenericBuilderImpl::Propogate(nsIRDFResource* aSource,
             }
 
             if (! isdominated) {
+                // Bogus, to get the seed instantiation
+                Instantiation seed;
+                rdftestnode->CanPropogate(aSource, aProperty, aTarget, seed);
+
                 InstantiationSet instantiations;
                 instantiations.Append(seed);
 

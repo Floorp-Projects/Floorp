@@ -58,7 +58,8 @@ protected:
     void Clear();
 
 public:
-    Value() : mType(eUndefined) {}
+    Value() : mType(eUndefined) {
+        MOZ_COUNT_CTOR(Value); }
 
     Value(const Value& aValue);
     Value(nsISupports* aISupports);
@@ -134,7 +135,10 @@ class MemoryElementSet {
 protected:
     class List {
     public:
+        List() { MOZ_COUNT_CTOR(MemoryElementSet::List); }
+
         ~List() {
+            MOZ_COUNT_DTOR(MemoryElementSet::List);
             delete mElement;
             NS_IF_RELEASE(mNext); }
 
@@ -153,9 +157,11 @@ protected:
     List* mElements;
 
 public:
-    MemoryElementSet() : mElements(nsnull) {}
+    MemoryElementSet() : mElements(nsnull) {
+        MOZ_COUNT_CTOR(MemoryElementSet); }
 
     MemoryElementSet(const MemoryElementSet& aSet) : mElements(aSet.mElements) {
+        MOZ_COUNT_CTOR(MemoryElementSet);
         NS_IF_ADDREF(mElements); }
 
     MemoryElementSet& operator=(const MemoryElementSet& aSet) {
@@ -164,7 +170,9 @@ public:
         NS_IF_ADDREF(mElements);
         return *this; }
         
-    ~MemoryElementSet() { NS_IF_RELEASE(mElements); }
+    ~MemoryElementSet() {
+        MOZ_COUNT_DTOR(MemoryElementSet);
+        NS_IF_RELEASE(mElements); }
 
 public:
     class ConstIterator {
@@ -181,6 +189,8 @@ public:
             mCurrent = aConstIterator.mCurrent;
             NS_IF_ADDREF(mCurrent);
             return *this; }
+
+        ~ConstIterator() { NS_IF_RELEASE(mCurrent); }
 
         ConstIterator& operator++() {
             List* next = mCurrent->mNext;
@@ -227,15 +237,20 @@ public:
     PRInt32 mVariable;
     Value   mValue;
 
-    Binding() : mVariable(-1), mValue() {}
+    Binding() : mVariable(-1), mValue() {
+        MOZ_COUNT_CTOR(Binding); }
 
     Binding(PRInt32 aVariable, const Value& aValue)
         : mVariable(aVariable),
-          mValue(aValue) {}
+          mValue(aValue) {
+        MOZ_COUNT_CTOR(Binding); }
 
     Binding(const Binding& aBinding)
         : mVariable(aBinding.mVariable),
-          mValue(aBinding.mValue) {}
+          mValue(aBinding.mValue) {
+        MOZ_COUNT_CTOR(Binding); }
+
+    ~Binding() { MOZ_COUNT_DTOR(Binding); }
 
     Binding& operator=(const Binding& aBinding) {
         mVariable = aBinding.mVariable;
@@ -260,7 +275,11 @@ class BindingSet {
 protected:
     class List {
     public:
-        ~List() { NS_IF_RELEASE(mNext); }
+        List() { MOZ_COUNT_CTOR(BindingSet::List); }
+
+        ~List() {
+            MOZ_COUNT_DTOR(BindingSet::List);
+            NS_IF_RELEASE(mNext); }
 
         PRInt32 AddRef() { return ++mRefCnt; }
 
@@ -277,9 +296,11 @@ protected:
     List* mBindings;
 
 public:
-    BindingSet() : mBindings(nsnull) {}
+    BindingSet() : mBindings(nsnull) {
+        MOZ_COUNT_CTOR(BindingSet); }
 
     BindingSet(const BindingSet& aSet) : mBindings(aSet.mBindings) {
+        MOZ_COUNT_CTOR(BindingSet);
         NS_IF_ADDREF(mBindings); }
 
     BindingSet& operator=(const BindingSet& aSet) {
@@ -288,7 +309,9 @@ public:
         NS_IF_ADDREF(mBindings);
         return *this; }
         
-    ~BindingSet() { NS_IF_RELEASE(mBindings); }
+    ~BindingSet() {
+        MOZ_COUNT_DTOR(BindingSet);
+        NS_IF_RELEASE(mBindings); }
 
 public:
     class ConstIterator {
@@ -305,6 +328,8 @@ public:
             mCurrent = aConstIterator.mCurrent;
             NS_IF_ADDREF(mCurrent);
             return *this; }
+
+        ~ConstIterator() { NS_IF_RELEASE(mCurrent); }
 
         ConstIterator& operator++() {
             List* next = mCurrent->mNext;
@@ -364,18 +389,19 @@ public:
     BindingSet       mBindings;
     MemoryElementSet mSupport;
 
-    Instantiation() {}
+    Instantiation() { MOZ_COUNT_CTOR(Instantiation); }
 
     Instantiation(const Instantiation& aInstantiation)
         : mBindings(aInstantiation.mBindings),
-          mSupport(aInstantiation.mSupport) {}
+          mSupport(aInstantiation.mSupport) {
+        MOZ_COUNT_CTOR(Instantiation); }
 
     Instantiation& operator=(const Instantiation& aInstantiation) {
         mBindings = aInstantiation.mBindings;
         mSupport  = aInstantiation.mSupport;
         return *this; }
 
-    ~Instantiation() {}
+    ~Instantiation() { MOZ_COUNT_DTOR(Instantiation); }
 
     nsresult AddBinding(PRInt32 aVariable, const Value& aValue) {
         mBindings.Add(Binding(aVariable, aValue));
@@ -410,7 +436,10 @@ public:
     InstantiationSet();
     InstantiationSet(const InstantiationSet& aInstantiationSet);
     InstantiationSet& operator=(const InstantiationSet& aInstantiationSet);
-    ~InstantiationSet() { Clear(); }
+
+    ~InstantiationSet() {
+        MOZ_COUNT_DTOR(InstantiationSet);
+        Clear(); }
 
 protected:
     class List {
@@ -418,6 +447,9 @@ protected:
         Instantiation mInstantiation;
         List*         mNext;
         List*         mPrev;
+
+        List() { MOZ_COUNT_CTOR(InstantiationSet::List); }
+        ~List() { MOZ_COUNT_DTOR(InstantiationSet::List); }
     };
 
     List mHead;
@@ -484,7 +516,7 @@ public:
 
         Iterator operator++(int) {
             Iterator result(*this);
-            mCurrent = mCurrent->mPrev;
+            mCurrent = mCurrent->mNext;
             return result; }
 
         Iterator& operator--() {
