@@ -79,6 +79,7 @@
 #include "nsRuleNode.h"
 
 #include "nsIJSContextStack.h"
+#include "nsIView.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
@@ -358,54 +359,10 @@ nsHTMLImageElement::GetXY(PRInt32* aX, PRInt32* aY)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContent> docElement;
-  mDocument->GetRootContent(getter_AddRefs(docElement));
-
   nsPoint origin(0, 0);
-
-  while (frame) {
-    // Add the parent's origin to our own to get to the right
-    // coordinate system
-
-    nsPoint frameOrigin;
-    frame->GetOrigin(frameOrigin);
-    origin += frameOrigin;
-
-    nsCOMPtr<nsIContent> content;
-    frame->GetContent(getter_AddRefs(content));
-
-    if (content) {
-      // If we've hit the document element, break here
-      if (content == docElement) {
-        break;
-      }
-
-      nsCOMPtr<nsIAtom> tag;
-      content->GetTag(*getter_AddRefs(tag));
-
-      if (tag == nsHTMLAtoms::body) {
-        break;
-      }
-    }
-
-    frame->GetParent(&frame);
-  }
-
-  if (frame) {
-    // For the origin subtract out the border for the parent
-    const nsStyleBorder* border = nsnull;
-    nsStyleCoord coord;
-
-    frame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border);
-    if (border) {
-      if (eStyleUnit_Coord == border->mBorder.GetLeftUnit()) {
-        origin.x -= border->mBorder.GetLeft(coord).GetCoordValue();
-      }
-      if (eStyleUnit_Coord == border->mBorder.GetTopUnit()) {
-        origin.y -= border->mBorder.GetTop(coord).GetCoordValue();
-      }
-    }
-  }
+  nsCOMPtr<nsIView> parentView;
+  nsresult rv = frame->GetOffsetFromView(context, origin, getter_AddRefs(parentView));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the scale from that Presentation Context
   float scale;
