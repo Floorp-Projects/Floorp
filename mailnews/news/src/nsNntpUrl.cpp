@@ -379,9 +379,6 @@ NS_IMETHODIMP nsNntpUrl::GetURI(char ** aURI)
 			char * uri = nsnull;
 			nsFileSpec folder = *filePath;
 			nsBuildNewsMessageURI(m_spec, 0 /* don't have keys yet */, &uri);
-#ifdef DEBUG_alecf
-            fprintf(stderr, "nsBuildNewsMessageURI(%s, %d -> %s) in nsNntpUrl::GetURI", m_spec, m_messageKey, uri);
-#endif
 			*aURI = uri;
 		}
 		else
