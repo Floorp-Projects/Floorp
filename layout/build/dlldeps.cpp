@@ -32,4 +32,5 @@ void XXXNeverCalled()
   NS_NewStyleSet(&ss);
   nsIDocument* doc;
   NS_NewHTMLDocument(&doc);
+  NS_NewImageDocument(&doc);
 }
