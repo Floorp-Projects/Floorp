@@ -189,7 +189,7 @@ nsHTTPCompressConv::OnDataAvailable (
                 {
                     memset (&d_stream, 0, sizeof (d_stream));
                 
-                    if (inflateInit (&d_stream) != Z_OK)
+                    if (inflateInit2 (&d_stream, -MAX_WBITS) != Z_OK)
                         return NS_ERROR_FAILURE;
 
                     mGzipStreamInitialized = PR_TRUE;
