@@ -1252,12 +1252,12 @@ function GetPrintSettings()
 
       // I would rather be using nsIWebBrowserPrint API
       // but I really don't have a document at this point
-      var printOptionsService = Components.classes["@mozilla.org/gfx/printoptions;1"]
-                                           .getService(Components.interfaces.nsIPrintOptions);
+      var printSettingsService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+                                           .getService(Components.interfaces.nsIPrintSettingsService);
       if (useGlobalPrintSettings) {
-        gPrintSettings = printOptionsService.globalPrintSettings;
+        gPrintSettings = printSettingsService.globalPrintSettings;
       } else {
-        gPrintSettings = printOptionsService.CreatePrintSettings();
+        gPrintSettings = printSettingsService.CreatePrintSettings();
       }
     }
   } catch (e) {
