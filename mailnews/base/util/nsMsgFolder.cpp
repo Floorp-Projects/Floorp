@@ -500,7 +500,7 @@ nsMsgFolder::parseURI(PRBool needServer)
     if (!server && needServer) {
       // Get username and hostname so we can get the server
       nsXPIDLCString userName;
-      rv = url->GetUsername(getter_Copies(userName));
+      rv = url->GetPreHost(getter_Copies(userName));
       if (NS_SUCCEEDED(rv) && (const char*)userName)
         nsUnescape(NS_CONST_CAST(char*,(const char*)userName));
       
@@ -568,10 +568,10 @@ nsMsgFolder::parseURI(PRBool needServer)
           newPath += "/";
         }
         
-		hashedToken = token;
-		NS_MsgHashIfNecessary(hashedToken);
-		newPath += hashedToken;
-		haveFirst=PR_TRUE;
+        hashedToken = token;
+        NS_MsgHashIfNecessary(hashedToken);
+        newPath += hashedToken;
+        haveFirst=PR_TRUE;
       }
       
       token = nsCRT::strtok(newStr, "/", &newStr);

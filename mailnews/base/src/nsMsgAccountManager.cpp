@@ -1740,7 +1740,7 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, PRBool for_news, const ch
 
         rv = url->GetHost(getter_Copies(hostname));
         if (NS_FAILED(rv)) return rv;
-        rv = url->GetUsername(getter_Copies(username));  
+        rv = url->GetPreHost(getter_Copies(username));  
 	if (NS_FAILED(rv)) return rv;
 
 	// in 4.x, mac and windows stored the URI as IMAP://<hostname> 

@@ -1818,7 +1818,7 @@ nsMsgLocalMailFolder::GetIncomingServerType()
   if (NS_FAILED(rv)) return "";
 
   nsXPIDLCString userName;
-  rv = url->GetUsername(getter_Copies(userName));
+  rv = url->GetPreHost(getter_Copies(userName));
   if (NS_FAILED(rv)) return "";
   if ((const char *) userName)
 	nsUnescape(NS_CONST_CAST(char*,(const char*)userName));
