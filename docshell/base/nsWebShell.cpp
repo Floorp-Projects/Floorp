@@ -1785,8 +1785,8 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
   if (aModifyHistory) {
 	  nsCOMPtr<nsIWebShell> webShell;
-	  GetRootWebShell(*getter_AddRefs(webShell));
-	  if (webShell)
+	  nsresult res = GetRootWebShell(*getter_AddRefs(webShell));
+	  if (NS_SUCCEEDED(res) && webShell)
 	  {
       nsCOMPtr<nsISessionHistory> shist;
 	    webShell->GetSessionHistory(*getter_AddRefs(shist));
@@ -1827,11 +1827,6 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   /* The session History may have changed the URL. So pass on the
    * right one for loading 
    */
-  const PRUnichar * urlString=nsnull;
-  GetURL(&urlString);
-  nsAutoString  newURL(urlString);
-  printf("Loading  url %s in WEbshell %x\n", mURL.ToNewCString(), this);
-
   // Give web-shell-container right of refusal
   if (nsnull != mContainer) {
     rv = mContainer->WillLoadURL(this, mURL.GetUnicode(), nsLoadURL);
@@ -1840,6 +1835,9 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
     }
   }
   
+  const PRUnichar * urlString=nsnull;
+  GetURL(&urlString);
+  nsAutoString  newURL(urlString);
 
   return DoLoadURL(newURL, aCommand, aPostData, aType, aLocalIP);
 }
@@ -2608,7 +2606,7 @@ NS_IMETHODIMP
 nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader, 
                               nsIURL* aURL, 
                               PRInt32 aStatus,
-							  nsIDocumentLoaderObserver * aWebShell)
+							                nsIDocumentLoaderObserver * aWebShell)
 {
 #if DEBUG_nisheeth
   const char* spec;
@@ -2651,19 +2649,24 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
        }
     }
 
+
 	  nsCOMPtr<nsIDocumentLoaderObserver> dlObserver;
+
     if (!mDocLoaderObserver && mParent) {
       /* If this is a frame (in which case it would have a parent && doesn't
        * have a documentloaderObserver, get it from the rootWebShell
        */
       nsCOMPtr<nsIWebShell> root;
-      GetRootWebShell(*getter_AddRefs(root));
+      nsresult res = GetRootWebShell(*getter_AddRefs(root));
    
-      if (root) 
+      if (NS_SUCCEEDED(res) && root) 
         root->GetDocLoaderObserver(*getter_AddRefs(dlObserver));
     }
     else
     {
+	  /* Take care of the Trailing slash situation */
+	  if (mSHist)
+		CheckForTrailingSlash(aURL);
       dlObserver = do_QueryInterface(mDocLoaderObserver);		// we need this to addref
     }
     
@@ -2918,6 +2921,7 @@ nsWebShell::CancelRefreshURLTimers(void)
 nsresult nsWebShell::CheckForTrailingSlash(nsIURL* aURL)
 {
 
+#if OLD_HISTORY 
   nsString* historyURL = (nsString*) mHistory.ElementAt(mHistoryIndex);
   const char* spec;
   aURL->GetSpec(&spec);
@@ -2931,6 +2935,30 @@ nsresult nsWebShell::CheckForTrailingSlash(nsIURL* aURL)
     mHistory.ReplaceElementAt(newURL, mHistoryIndex);
   } else
     delete newURL;
+#endif  /* OLD_HISTORY */
+
+  const PRUnichar * url=nsnull;
+  PRInt32     curIndex=0;
+
+  /* Get current history index and url for it */
+  mSHist->getCurrentIndex(curIndex);
+  mSHist->GetURLForIndex(curIndex, &url);
+  nsString * historyURL = (nsString *)  new nsString(url);
+
+  /* Get the url that netlib passed us */
+  const char* spec;
+  aURL->GetSpec(&spec);
+  nsString* newURL = (nsString*) new nsString(spec);
+
+  if (newURL && newURL->Last() == '/' && !historyURL->Equals(*newURL)) {
+    // Replace the top most history entry with the new url
+    printf("Changing  URL from %s to %s for history entry %d\n", historyURL->ToNewCString(), newURL->ToNewCString(), curIndex);
+    mSHist->SetURLForIndex(curIndex, newURL->GetUnicode());
+  }
+  else {
+    delete newURL;
+    delete historyURL;
+  }
 
   return NS_OK;
 }
