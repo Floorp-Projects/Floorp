@@ -406,7 +406,7 @@ static const char *pref_rememberSignons =
 PRIVATE PRBool si_RememberSignons = PR_FALSE;
 
 PRIVATE int
-si_SaveSignonDataLocked();
+si_SaveSignonDataLocked(PRBool fullSave);
 
 PUBLIC int
 SI_SaveSignonData();
@@ -428,7 +428,7 @@ si_SetSignonRememberingPref(PRBool x)
     /* if pref is being turned off, save the current signons to a file */
     if (x == 0) {
         si_lock_signon_list();
-        si_SaveSignonDataLocked();
+        si_SaveSignonDataLocked(PR_TRUE);
         si_unlock_signon_list();
 #ifdef APPLE_KEYCHAIN
             /* We no longer need the Keychain callback installed */
@@ -703,7 +703,7 @@ SI_RemoveUser(char *URLName, char *userName, PRBool save) {
     /* write out the change to disk */
     if (save) {
         si_signon_list_changed = PR_TRUE;
-        si_SaveSignonDataLocked();
+        si_SaveSignonDataLocked(PR_TRUE);
     }
 
     si_unlock_signon_list();
@@ -968,7 +968,7 @@ si_GetURLAndUserForChangeForm(char* password)
         XP_ListRemoveObject(url->signonUser_list, user);
         XP_ListAddObject(url->signonUser_list, user);
         si_signon_list_changed = PR_TRUE;
-        si_SaveSignonDataLocked();
+        si_SaveSignonDataLocked(PR_TRUE);
     } else {
         user = NULL;
     }
@@ -1086,7 +1086,9 @@ si_PutReject(char * URLName, char * userName, PRBool save) {
 
         if (save) {
             si_signon_list_changed = PR_TRUE;
-            SI_SaveSignonData();
+            si_lock_signon_list();
+            si_SaveSignonDataLocked(PR_FALSE);
+            si_unlock_signon_list();
         }
         if (save) {
             si_unlock_signon_list();
@@ -1346,7 +1348,7 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
             /* return */
             if (save) {
                 si_signon_list_changed = PR_TRUE;
-                si_SaveSignonDataLocked();
+                si_SaveSignonDataLocked(PR_TRUE);
                 si_unlock_signon_list();
             }
             return; /* nothing more to do since data already exists */
@@ -1417,7 +1419,7 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
     if (save) {
         XP_ListAddObject(url->signonUser_list, user);
         si_signon_list_changed = PR_TRUE;
-        si_SaveSignonDataLocked();
+        si_SaveSignonDataLocked(PR_TRUE);
         si_unlock_signon_list();
     } else {
         XP_ListAddObjectToEnd(url->signonUser_list, user);
@@ -2043,7 +2045,7 @@ si_WriteLine(nsOutputFileStream strm, nsOutputFileStream strmx, char * lineBuffe
 }
 
 PRIVATE int
-si_SaveSignonDataLocked() {
+si_SaveSignonDataLocked(PRBool fullSave) {
     XP_List * list_ptr;
     XP_List * user_ptr;
     XP_List * data_ptr;
@@ -2062,19 +2064,21 @@ si_SaveSignonDataLocked() {
         return(-1);
     }
 
-    si_RestartKey();
-    while (!si_SetKey()) {
-        if (!si_GetUsingDialogsPref()) {
-          return 1;
-        } else if (!MyFE_Confirm("incorrect key -- do you want to try again?")) {
-            MyFE_Confirm("Key failure -- password file will not be opened");
-            return 1;
+    if (fullSave) {
+        si_RestartKey();
+        while (!si_SetKey()) {
+            if (!si_GetUsingDialogsPref()) {
+              return 1;
+            } else if (!MyFE_Confirm("incorrect key -- do you want to try again?")) {
+                MyFE_Confirm("Key failure -- password file will not be opened");
+                return 1;
+            }
         }
-    }
 
-    /* do not save signons if user didn't know the key */
-    if (si_BadKey()) {
-        return(-1);
+        /* do not save signons if user didn't know the key */
+        if (si_BadKey()) {
+            return(-1);
+        }
     }
 
 #ifdef APPLE_KEYCHAIN
@@ -2094,10 +2098,12 @@ si_SaveSignonDataLocked() {
       return 0;
     }
     nsOutputFileStream strmx(dirSpec + "signonx.tbl");
-    if (!strmx.is_open()) {
-      return 0;
+    if (fullSave) {
+        if (!strmx.is_open()) {
+          return 0;
+        }
+        si_RestartKey();
     }
-    si_RestartKey();
 
     /* format for head of file shall be:
      * URLName -- first url/username on reject list
@@ -2143,7 +2149,9 @@ si_SaveSignonDataLocked() {
                     if (data->isPassword) {
                         si_WriteChar(strm, '*');
                         si_WriteLine(strm, strmx, data->name, FALSE);
-                        si_WriteLine(strm, strmx, data->value, TRUE);
+                        if (fullSave) {
+                            si_WriteLine(strm, strmx, data->value, TRUE);
+                        }
                     } else {
                         si_WriteLine(strm, strmx, data->name, FALSE);
                         si_WriteLine(strm, strmx, data->value, FALSE);
@@ -2157,8 +2165,10 @@ si_SaveSignonDataLocked() {
     si_signon_list_changed = PR_FALSE;
     strm.flush();
     strm.close();
-    strmx.flush();
-    strmx.close();
+    if (fullSave) {
+        strmx.flush();
+        strmx.close();
+    }
     return 0;
 }
 
@@ -2178,7 +2188,7 @@ SI_SaveSignonData() {
 
     /* lock and call common save routine */
     si_lock_signon_list();
-    retval = si_SaveSignonDataLocked();
+    retval = si_SaveSignonDataLocked(PR_TRUE);
     si_unlock_signon_list();
     return retval;
 }
@@ -2304,7 +2314,7 @@ SINGSIGN_RememberSignonData
                ((char **)submit.value_array)[pswd[1]]);
         StrAllocCopy(data->value, ((char **)submit.value_array)[pswd[1]]);
         si_signon_list_changed = PR_TRUE;
-        si_SaveSignonDataLocked();
+        si_SaveSignonDataLocked(PR_TRUE);
         si_unlock_signon_list();
     }
 }
@@ -2796,7 +2806,7 @@ si_SignonInfoDialogDone(XPDialogState* state, char** argv, int argc,
         /* do the deletion */
         SI_RemoveUser(URLToDelete->URLName, data->value, PR_TRUE);
         si_signon_list_changed = PR_TRUE;
-        si_SaveSignonDataLocked();
+        si_SaveSignonDataLocked(PR_TRUE);
     }
 
     /* get the comma-separated sequence of rejections to be deleted */
@@ -2825,7 +2835,7 @@ si_SignonInfoDialogDone(XPDialogState* state, char** argv, int argc,
     if (rejectToDelete) {
         si_FreeReject(rejectToDelete);
         si_signon_list_changed = PR_TRUE;
-        si_SaveSignonDataLocked();
+        si_SaveSignonDataLocked(PR_FALSE);
     }
     si_unlock_signon_list();
     return PR_FALSE;
