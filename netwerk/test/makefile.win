@@ -48,11 +48,12 @@ PROGF = .\$(OBJDIR)\TestHttp.exe
 PROGG = .\$(OBJDIR)\TestIDN.exe
 PROGH = .\$(OBJDIR)\TestStandardURL.exe
 PROGI = .\$(OBJDIR)\TestURLParser.exe
+PROGJ = .\$(OBJDIR)\TestPerf.exe
 
 PROGRAMS = \
 $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) $(PROG6) $(PROG7) $(PROG8)\
           $(PROGA) $(PROGB) $(PROGC) $(PROGD) $(PROGE) $(PROGF) $(PROGG)\
-          $(PROGH) $(PROGI)
+          $(PROGH) $(PROGI) $(PROGJ)
 
 LCFLAGS=-DUSE_NSREG -GX
 
@@ -72,6 +73,7 @@ libs:: $(PROGRAMS)
 	-for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
         $(MAKE_INSTALL) urlparse.dat $(DIST)\bin\res
         $(MAKE_INSTALL) urlparse_win.dat $(DIST)\bin\res
+        $(MAKE_INSTALL) jarlist.dat $(DIST)\bin\res
 
 clobber::
 	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
@@ -109,6 +111,8 @@ $(PROGG): $(OBJDIR) TestIDN.cpp
 $(PROGH): $(OBJDIR) TestStandardURL.cpp
 
 $(PROGI): $(OBJDIR) TestURLParser.cpp
+
+$(PROGI): $(OBJDIR) TestPerf.cpp
 
 
 
