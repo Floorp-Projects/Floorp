@@ -128,13 +128,13 @@ enum {
     eParserState_Key,
     eParserState_AwaitingValue,
     eParserState_Value,
-    eParserState_Comment,
+    eParserState_Comment
 };
 
 enum {
   eParserSpecial_None,          // not parsing a special character
   eParserSpecial_Escaped,       // awaiting a special character
-  eParserSpecial_Unicode,       // parsing a \Uxxx value
+  eParserSpecial_Unicode        // parsing a \Uxxx value
 };
 
 class nsParserState
@@ -163,6 +163,9 @@ public:
   }
   
   void FinishValueState(nsAString& aOldValue) {
+    static const char trimThese[] = " \t";
+    mKey.Trim(trimThese, PR_FALSE, PR_TRUE);
+    mValue.Trim(trimThese, PR_FALSE, PR_TRUE);
     mProps->SetStringProperty(NS_ConvertUCS2toUTF8(mKey), mValue, aOldValue);
     mSpecialState = eParserSpecial_None;
     WaitForKey();
@@ -288,16 +291,16 @@ ParseValueCharacter(nsParserState& aState, PRUnichar c,
       
       // the easy characters - \t, \n, and so forth
     case 't':
-      aState.mKey += PRUnichar('\t');
+      aState.mValue += PRUnichar('\t');
       break;
     case 'n':
-      aState.mKey += PRUnichar('\n');
+      aState.mValue += PRUnichar('\n');
       break;
     case 'r':
-      aState.mKey += PRUnichar('\r');
+      aState.mValue += PRUnichar('\r');
       break;
     case '\\':
-      aState.mKey += PRUnichar('\\');
+      aState.mValue += PRUnichar('\\');
       break;
       
       // switch to unicode mode!
@@ -316,7 +319,6 @@ ParseValueCharacter(nsParserState& aState, PRUnichar c,
       
     default:
       // don't recognize the character, so just append it
-      NS_WARNING("Unknown escaped value in properties file");
       aState.mValue += c;
       break;
     }
@@ -432,6 +434,9 @@ ParseBuffer(nsParserState& aState,
   // if we're still parsing the value, then append whatever we have..
   if (aState.GetState() == eParserState_Value && tokenStart)
     aState.mValue += Substring(tokenStart, cur);
+  // if we're still parsing the value, then append whatever we have..
+  else if (aState.GetState() == eParserState_Key && tokenStart)
+    aState.mKey += Substring(tokenStart, cur);
   
   return NS_OK;
 }
