@@ -1083,7 +1083,7 @@ NS_IMETHODIMP
     nsCOMPtr < nsIDOMAttr > enc;
     nsresult rv =
 	aSource->
-	GetAttributeNodeNS(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+	GetAttributeNodeNS(*nsSOAPUtils::kSOAPEnvURI[mSOAPVersion],
 			   nsSOAPUtils::kEncodingStyleAttribute,
 			   getter_AddRefs(enc));
     if (NS_FAILED(rv))

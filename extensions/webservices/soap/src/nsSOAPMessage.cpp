@@ -304,7 +304,7 @@ NS_IMETHODIMP
       if (NS_FAILED(rv))
 	return rv;
       if (!enc.IsEmpty()) {
-	rv = envelope->SetAttributeNS(*nsSOAPUtils::kSOAPEncURI[aVersion],
+	rv = envelope->SetAttributeNS(*nsSOAPUtils::kSOAPEnvURI[aVersion],
 				      nsSOAPUtils::
 				      kEncodingStyleAttribute, enc);
 	if (NS_FAILED(rv))
@@ -393,7 +393,7 @@ NS_IMETHODIMP
 	  nsAutoString enc;
 	  encoding->GetStyleURI(enc);
 	  element->
-	      SetAttributeNS(*nsSOAPUtils::kSOAPEncURI[aVersion],
+	      SetAttributeNS(*nsSOAPUtils::kSOAPEnvURI[aVersion],
 			     nsSOAPUtils::kEncodingStyleAttribute, enc);
 	}
       }
@@ -479,7 +479,7 @@ NS_IMETHODIMP
       if (encoding != newencoding) {
 	nsAutoString enc;
 	newencoding->GetStyleURI(enc);
-	element->SetAttributeNS(*nsSOAPUtils::kSOAPEncURI[aVersion],
+	element->SetAttributeNS(*nsSOAPUtils::kSOAPEnvURI[aVersion],
 				nsSOAPUtils::kEncodingStyleAttribute, enc);
       }
     }
@@ -514,7 +514,7 @@ nsresult
   nsAutoString style;
   for (;;) {
     nsCOMPtr < nsIDOMAttr > enc;
-    rv = element->GetAttributeNodeNS(*nsSOAPUtils::kSOAPEncURI[*aVersion],
+    rv = element->GetAttributeNodeNS(*nsSOAPUtils::kSOAPEnvURI[*aVersion],
 				     nsSOAPUtils::kEncodingStyleAttribute,
 				     getter_AddRefs(enc));
     if (NS_FAILED(rv))
@@ -531,7 +531,7 @@ nsresult
 	return rv;
       if (next) {
 	PRUint16 type;
-	rv = element->GetNodeType(&type);
+	rv = next->GetNodeType(&type);
 	if (NS_FAILED(rv))
 	  return rv;
 	if (type != nsIDOMNode::ELEMENT_NODE) {
