@@ -5077,7 +5077,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       nsCOMPtr<nsIInterfaceRequestor> promptcall(do_QueryInterface(mWebShell));
       rv = NS_NewStreamLoader(getter_AddRefs(loader), mScriptURI, this,
                               nsnull, loadGroup, promptcall,
-                              nsIChannel::FORCE_RELOAD);
+                              nsIChannel::LOAD_NORMAL);
       if (NS_OK == rv) {
         rv = NS_ERROR_HTMLPARSER_BLOCK;
       }
