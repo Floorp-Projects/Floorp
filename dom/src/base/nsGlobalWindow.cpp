@@ -341,11 +341,20 @@ GlobalWindowImpl::SetWebShell(nsIWebShell *aWebShell)
   // script object (held via a named JS root) and the script context
   // itself.
   if ((nsnull == aWebShell) && (nsnull != mContext)) {
+
     if (nsnull != mScriptObject) {
+      // Indicate that the window is now closed. Since we've
+      // cleared scope, we have to explicitly set a property.
+      jsval val = BOOLEAN_TO_JSVAL(JS_TRUE);
+      JS_SetProperty((JSContext*)mContext->GetNativeContext(),
+                     (JSObject*)mScriptObject,
+                     "closed",
+                     &val);
       mContext->RemoveReference(&mScriptObject, mScriptObject);
       mScriptObject = nsnull;
     }
-    NS_IF_RELEASE(mContext);
+      
+    NS_RELEASE(mContext);
   }
   mWebShell = aWebShell;
   if (nsnull != mLocation) {
@@ -2612,7 +2621,7 @@ GlobalWindowImpl::GetBrowserWindowInterface(
   NS_ENSURE_TRUE(aWebShell, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIWebShellContainer> topLevelWindow;
-  NS_ENSURE_SUCCESS(mWebShell->GetTopLevelWindow(
+  NS_ENSURE_SUCCESS(aWebShell->GetTopLevelWindow(
       getter_AddRefs(topLevelWindow)), NS_ERROR_FAILURE);
   
   return topLevelWindow->QueryInterface(NS_GET_IID(nsIBrowserWindow), (void**)&aBrowser);
