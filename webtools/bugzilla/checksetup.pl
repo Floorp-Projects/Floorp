@@ -3886,8 +3886,6 @@ if (TableExists("attachstatuses") && TableExists("attachstatusdefs")) {
 # 2004-12-13 Nick.Barnes@pobox.com bug 262268
 # Check flag type names for spaces and commas, and rename them.
 if (TableExists("flagtypes")) {
-    print "Checking flag type names for spaces and commas...\n" unless $silent;
-    
     # Get names and IDs which are broken.
     $sth = $dbh->prepare("SELECT name, id FROM flagtypes");
     $sth->execute();
@@ -3902,6 +3900,7 @@ if (TableExists("flagtypes")) {
         }
     }
     if (@badflagnames) {
+        print "Removing spaces and commas from flag names...\n";
         my ($flagname, $tryflagname);
         my $sth = $dbh->prepare("UPDATE flagtypes SET name = ? WHERE id = ?");
         foreach $flagname (@badflagnames) {
@@ -3926,8 +3925,6 @@ if (TableExists("flagtypes")) {
             delete $flagtypes{$flagname};
         }
         print "... done.\n";
-    } else {
-        print "... all flag type names are good.\n" unless $silent;
     }
 }
 
