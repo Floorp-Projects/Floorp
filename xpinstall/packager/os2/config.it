@@ -41,7 +41,7 @@ Program Folder Name=$ProductName$
 Program Folder Path=[DESKTOP]
 Program Folder Object ID=<MOZ_FOLDER>
 
-;Uninstall Filename=$UninstallFile$
+Uninstall Filename=$UninstallFile$
 
 ; This key is used as a fail over key.  This url will be used when the
 ; url in the Site Selector fails.
@@ -139,7 +139,7 @@ C2=Component PSM
 C3=Component US English Profile Defaults
 C4=Component En US lang pack
 C5=Component US region pack
-;C6=Component Uninstaller
+C6=Component Uninstaller
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
 ;C7=Component QFA
@@ -164,7 +164,7 @@ C7=Component En US lang pack
 C8=Component US region pack
 C9=Component DOM Inspector
 C10=Component Type Ahead Find
-;C11=Component Uninstaller
+C11=Component Uninstaller
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
 ;C12=Component QFA
@@ -191,7 +191,7 @@ C7=Component En US lang pack
 C8=Component US region pack
 C9=Component DOM Inspector
 C10=Component Type Ahead Find
-;C11=Component Uninstaller
+C11=Component Uninstaller
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
 ;C12=Component QFA
@@ -459,21 +459,14 @@ Attributes=SELECTED|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\msgbsutl.dll
 
 
-;[Component Uninstaller]
-;Description Short=$CompanyName$ Uninstaller
-;*** LOCALIZE ME BABY ***
-;Description Long=Uninstaller for $ProductName$
-;Archive=$UninstallFileZip$
-;$InstallSize$:$UninstallFileZip$
-;$InstallSizeArchive$:$UninstallFileZip$
-;Attributes=SELECTED|INVISIBLE|DOWNLOAD_ONLY
-
-;Since the uninstaller program is going to be installed into the Windows folder,
-;Setup.exe need to know to calculate the disk space required for the Windows folder.
-;This section overrides the default user-chosen path for Uninstaller only.
-;[Component Uninstaller-Destination Path0]
-;Path=[WINDIR]
-
+[Component Uninstaller]
+Description Short=$CompanyName$ Uninstaller
+*** LOCALIZE ME BABY ***
+Description Long=Uninstaller for $ProductName$
+Archive=$UninstallFileZip$
+$InstallSize$:$UninstallFileZip$
+$InstallSizeArchive$:$UninstallFileZip$
+Attributes=SELECTED|INVISIBLE|DOWNLOAD_ONLY
 
 [Component Chatzilla]
 Description Short=Chatzilla
@@ -603,13 +596,13 @@ Message=
 ;                      the app runs once upon windows reboot.
 
 ;Uncompress FileX sections
-;[Uncompress File0]
-;Timing=post smartupdate
-;Source=[XPI PATH]\$UninstallFileZip$
-;Destination=[WINDIR]
-;*** LOCALIZE ME BABY ***
-;Message=Installing the uninstaller, please wait...
-;Only If Exists=FALSE
+[Uncompress File0]
+Timing=post smartupdate
+Source=[XPI PATH]\$UninstallFileZip$
+Destination=[SETUP PATH]\Uninstall
+*** LOCALIZE ME BABY ***
+Message=Installing the uninstaller, please wait...
+Only If Exists=FALSE
 
 
 ;Copy FileX sections
@@ -760,13 +753,13 @@ Working Dir=[SETUP PATH]
 Location=[Default Folder]
 Object ID=<MOZILLA_PROFMGR>
 
-;[Program Folder0-Shortcut0]
-;File=[SETUP PATH]\Uninstall\$UninstallFile$
-;Arguments=/ua "$UserAgent$"
-;Working Dir=[SETUP PATH]
-;Description=Uninstall $ProductName$
-;Icon Path=[SETUP PATH]\Uninstall\$UninstallFile$
-;Icon Id=0
+[Program Folder0-Object20]
+ClassName=WPProgram
+Title=Uninstall $ProductName$
+File=[SETUP PATH]\Uninstall\$UninstallFile$
+Parameters=/ua "$UserAgent$"
+Working Dir=[SETUP PATH]
+Object ID=<MOZILLA_UNINSTALL>
 
 [Strings]
 ;*** LOCALIZE ME BABY ***
