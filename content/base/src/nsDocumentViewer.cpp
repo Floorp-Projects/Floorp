@@ -379,6 +379,7 @@ public:
   NS_IMETHOD GetContainer(nsISupports** aContainerResult);
   NS_IMETHOD LoadStart(nsISupports* aDoc);
   NS_IMETHOD LoadComplete(nsresult aStatus);
+  NS_IMETHOD Unload(void);
   NS_IMETHOD Destroy(void);
   NS_IMETHOD Stop(void);
   NS_IMETHOD GetDOMDocument(nsIDOMDocument **aResult);
@@ -1129,6 +1130,37 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
     mPresShell->UnsuppressPainting();
 
   NS_RELEASE_THIS();
+
+  return rv;
+}
+
+NS_IMETHODIMP
+DocumentViewerImpl::Unload()
+{
+  nsresult rv;
+
+  if (!mDocument) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  // First, get the script global object from the document...
+  nsCOMPtr<nsIScriptGlobalObject> global;
+
+  rv = mDocument->GetScriptGlobalObject(getter_AddRefs(global));
+  if (!global) {
+    // Fail if no ScriptGlobalObject is available...
+    NS_ASSERTION(0, "nsIScriptGlobalObject not set for document!");
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  // Now, fire an Unload event to the document...
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsEvent event;
+
+  event.eventStructType = NS_EVENT;
+  event.message = NS_PAGE_UNLOAD;
+  rv = global->HandleDOMEvent(mPresContext, &event, nsnull,
+                              NS_EVENT_FLAG_INIT, &status);
 
   return rv;
 }

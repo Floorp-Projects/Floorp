@@ -144,6 +144,8 @@ interface nsIDocShell : nsISupports
    */
   void prepareForNewContentModel();
 
+  [noscript] void FireUnloadNotification();
+
   /**
    * Presentation context for the currently loaded document.  This may be null.
    */

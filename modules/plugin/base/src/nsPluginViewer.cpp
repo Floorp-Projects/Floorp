@@ -176,6 +176,7 @@ public:
   NS_IMETHOD GetContainer(nsISupports** aContainerResult);
   NS_IMETHOD LoadStart(nsISupports* aDoc);
   NS_IMETHOD LoadComplete(nsresult aStatus);
+  NS_IMETHOD Unload(void);
   NS_IMETHOD Destroy(void);
   NS_IMETHOD Stop(void);
   NS_IMETHOD GetDOMDocument(nsIDOMDocument **aResult);
@@ -426,6 +427,12 @@ NS_IMETHODIMP
 PluginViewerImpl::LoadComplete(nsresult aStatus)
 {
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+PluginViewerImpl::Unload(void)
+{
+  return NS_OK;
 }
 
 NS_IMETHODIMP

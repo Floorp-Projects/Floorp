@@ -84,7 +84,6 @@ public:
 
     // nsIWebShellContainer
     NS_IMETHOD SetHistoryState(nsISupports* aLayoutHistoryState);
-    NS_IMETHOD FireUnloadEvent(void);
 
     // nsILinkHandler
     NS_IMETHOD OnLinkClick(nsIContent* aContent,
@@ -144,15 +143,11 @@ protected:
     nsIWebShellContainer* mContainer;
     nsIDocumentLoader* mDocLoader;
 
-    PRBool mFiredUnloadEvent;
-
     nsRect   mBounds;
 
     eCharsetReloadState mCharsetReloadState;
 
     nsISupports* mHistoryState; // Weak reference.  Session history owns this.
-
-    nsresult FireUnloadForChildren();
 
     nsresult CreateViewer(nsIRequest* request,
         const char* aContentType,

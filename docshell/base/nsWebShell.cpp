@@ -176,7 +176,6 @@ nsWebShell::nsWebShell() : nsDocShell()
   mItemType = typeContent;
   mCharsetReloadState = eCharsetReloadInit;
   mHistoryState = nsnull;
-  mFiredUnloadEvent = PR_FALSE;
   mBounds.SetRect(0, 0, 0, 0);
 }
 
@@ -225,54 +224,6 @@ void nsWebShell::InitFrameData()
 {
   SetMarginWidth(-1);    
   SetMarginHeight(-1);
-}
-
-nsresult
-nsWebShell::FireUnloadForChildren()
-{
-  nsresult rv = NS_OK;
-
-  PRInt32 i, n = mChildren.Count();
-  for (i = 0; i < n; i++) {
-    nsIDocShell* shell = (nsIDocShell*) mChildren.ElementAt(i);
-    if(shell) {
-        nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(shell));
-        rv = webShell->FireUnloadEvent();
-    }
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsWebShell::FireUnloadEvent()
-{
-  nsresult rv = NS_OK;
-
-  if (!mFiredUnloadEvent) {
-    mFiredUnloadEvent = PR_TRUE;
-
-    if (mScriptGlobal) {
-      nsIDocumentViewer* docViewer;
-      if (mContentViewer && NS_SUCCEEDED(mContentViewer->QueryInterface(NS_GET_IID(nsIDocumentViewer), (void**)&docViewer))) {
-        nsIPresContext *presContext;
-        if (NS_SUCCEEDED(docViewer->GetPresContext(presContext))) {
-          nsEventStatus status = nsEventStatus_eIgnore;
-          nsMouseEvent event;
-          event.eventStructType = NS_EVENT;
-          event.message = NS_PAGE_UNLOAD;
-          rv = mScriptGlobal->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-
-          NS_RELEASE(presContext);
-        }
-        NS_RELEASE(docViewer);
-      }
-    }
-  }
-  //Fire child unloads now while our data is intact.
-  rv = FireUnloadForChildren();
-
-  return rv;
 }
 
 NS_IMPL_ADDREF_INHERITED(nsWebShell, nsDocShell)
@@ -346,12 +297,7 @@ nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsWebShell::SetupNewViewer(nsIContentViewer* aViewer)
 {
-   NS_ENSURE_SUCCESS(FireUnloadEvent(), NS_ERROR_FAILURE);
    NS_ENSURE_SUCCESS(nsDocShell::SetupNewViewer(aViewer), NS_ERROR_FAILURE);
-
-   // Set mFiredUnloadEvent = PR_FALSE so that the unload handler for the
-   // *new* document will fire.
-   mFiredUnloadEvent = PR_FALSE;
 
     // If the history state has been set by session history,
     // set it on the pres shell now that we have a content
@@ -1424,11 +1370,6 @@ NS_IMETHODIMP nsWebShell::Create()
 
 NS_IMETHODIMP nsWebShell::Destroy()
 {
-  nsresult rv = NS_OK;
-
-  //Fire unload event before we blow anything away.
-  rv = FireUnloadEvent();
-
   nsDocShell::Destroy();
 
   SetContainer(nsnull);

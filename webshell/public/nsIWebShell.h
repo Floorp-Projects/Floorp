@@ -131,11 +131,6 @@ public:
    * Set the URL of the current WebShell.
    */
   NS_IMETHOD SetURL(const PRUnichar* aURL) = 0;
-
-  /**
-   * Notify children to fire unload events before root data gone
-   */
-  NS_IMETHOD FireUnloadEvent(void) = 0;
 };
 
 #endif /* nsIWebShell_h___ */

@@ -273,10 +273,9 @@ protected:
     // Helper method that is called when a new document (including any
     // sub-documents - ie. frames) has been completely loaded.
     //
-    virtual nsresult EndPageLoad(nsIWebProgress * aProgress, 
-        nsIChannel * aChannel,
-        nsresult aResult);
-
+    virtual nsresult EndPageLoad(nsIWebProgress * aProgress,
+                                 nsIChannel * aChannel,
+                                 nsresult aResult);
 protected:
     nsString                   mName;
     nsString                   mTitle;
@@ -324,6 +323,8 @@ protected:
     // Reference to the SHEntry for this docshell until the page is loaded
     // Somebody give me better name
     nsCOMPtr<nsISHEntry>       mLSHE;
+
+    PRBool                     mFiredUnloadEvent;
 
     // this flag is for bug #21358. a docshell may load many urls
     // which don't result in new documents being created (i.e. a new content viewer)
