@@ -149,9 +149,9 @@ public class NativeJavaPackage extends ScriptableObject {
         if (shutter == null || shutter.visibleToScripts(className)) {
             Class cl = null;
             if (classLoader != null) {
-                cl = ScriptRuntime.classOrNull(classLoader, className);
+                cl = Kit.classOrNull(classLoader, className);
             } else {
-                cl = ScriptRuntime.classOrNull(className);
+                cl = Kit.classOrNull(className);
             }
             if (cl != null) {
                 newValue = new NativeJavaClass(getTopLevelScope(this), cl);
