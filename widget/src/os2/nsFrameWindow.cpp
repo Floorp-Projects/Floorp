@@ -450,15 +450,14 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
       /* To simulate Windows better, we need to send a focus message to the */
       /* client when the frame is activated if there is a non mozilla window focused */
       case WM_ACTIVATE:
-         if (SHORT1FROMMP(mp1)) {
-            char className[19];
-            ::WinQueryClassName(WinQueryFocus(HWND_DESKTOP), 19, className);
-            if (strcmp(className, WindowClass()) != 0) {
-#ifdef DEBUG_FOCUS
-              printf("Extra WM_FOCUSCHANGED because className was %s on WM_ACTIVATE\n", className);
+ifdef DEBUG_FOCUS
+         printf("[%x] WM_ACTIVATE (%d)\n", this, mWindowIdentifier);
 #endif
-              WinSendMsg(mWnd, WM_FOCUSCHANGED, 0, MPFROM2SHORT(1,0));
-            }
+         if (SHORT1FROMMP(mp1)) {
+#ifdef DEBUG_FOCUS
+            printf("[%x] NS_GOTFOCUS (%d)\n", this, mWindowIdentifier);
+#endif
+            mRC = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
          }
          break;
    }
