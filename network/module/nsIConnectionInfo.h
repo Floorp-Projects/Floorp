@@ -44,6 +44,16 @@ public:
   NS_IMETHOD GetURL(nsIURL **aURL)=0;
 
   /**
+   * Set the URL associated with this connection. I added this because it is possible
+   * to keep a connection open and run different urls on the connection. (i.e.
+   * for mail protocols or other consumers of the pluggable protocol interface).
+   *
+   * @param aURL In parameter
+   * @result NS_OK if successful
+   */
+  NS_IMETHOD SetURL(nsIURL *aURL) = 0;
+
+  /**
    * Get the input stream associated with this connection
    *
    * @param aStream Out parameter

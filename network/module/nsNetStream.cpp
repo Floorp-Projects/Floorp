@@ -91,6 +91,17 @@ nsConnectionInfo::GetURL(nsIURL **aURL)
 }
 
 NS_IMETHODIMP 
+nsConnectionInfo::SetURL(nsIURL *aURL)
+{
+	NS_IF_RELEASE(pURL); // release old one
+	pURL = aURL;
+    NS_IF_ADDREF(pURL);  // now addref new one
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP 
 nsConnectionInfo::GetInputStream(nsIInputStream **aStream)
 {
     *aStream = (nsIInputStream *)pNetStream;
