@@ -3339,7 +3339,13 @@ nsImapMailFolder::GetMessageId(nsIImapProtocol* aProtocl,
     if (mailCopyState->m_listener)
         rv = mailCopyState->m_listener->GetMessageId(messageId);
   }
-  
+  if (NS_SUCCEEDED(rv) && messageId->Length() > 0)
+  {
+      if (messageId->First() == '<')
+          messageId->Cut(0, 1);
+      if (messageId->Last() == '>')
+          messageId->SetLength(messageId->Length() -1);
+  }  
   return rv;
 }
     // nsIImapMiscellaneousSink methods
