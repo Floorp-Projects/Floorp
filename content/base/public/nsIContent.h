@@ -104,7 +104,7 @@ public:
   /**
    * Set attribute values. All attribute values are assumed to have a
    * canonical String representation that can be used for these
-   * methods. The setAttribute method is assumed to perform a translation
+   * methods. The SetAttr method is assumed to perform a translation
    * of the canonical form into the underlying content specific
    * form.
    *
@@ -122,7 +122,7 @@ public:
   /**
    * Set attribute values. All attribute values are assumed to have a
    * canonical string representation that can be used for these
-   * methods. The setAttribute method is assumed to perform a translation
+   * methods. The SetAttr method is assumed to perform a translation
    * of the canonical form into the underlying content specific
    * form.
    *
@@ -139,7 +139,7 @@ public:
 
   /**
    * Get the current value of the attribute. This returns a form that is
-   * suitable for passing back into setAttribute.
+   * suitable for passing back into SetAttr.
    *
    * <UL>
    *
@@ -159,7 +159,7 @@ public:
 
   /**
    * Get the current value and prefix of the attribute. This returns a form
-   * that is suitable for passing back into setAttribute.
+   * that is suitable for passing back into SetAttr.
    *
    * <UL>
    *
@@ -183,13 +183,13 @@ public:
   /**
    * Remove an attribute so that it is no longer explicitly specified.
    *
-   * @param aAttribute the name of the attribute to unset
+   * @param aAttr the name of the attribute to unset
    * 
    * @param aNotify specifies whether or not the document should be
    * notified of the attribute change
    *
    */
-  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
+  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr, 
                        PRBool aNotify) = 0;
 
 
@@ -317,7 +317,7 @@ public:
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult) = 0;
 };
 
-// nsresult codes for GetAttribute
+// nsresult codes for GetAttr
 #define NS_CONTENT_ATTR_HAS_VALUE NS_OK
 
 #define NS_CONTENT_ATTR_NO_VALUE \
