@@ -25,7 +25,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS=webBrowser setup build chrome
+DIRS=webBrowser build chrome
 
 ifdef MOZ_ENABLE_GTK
 DIRS += gtk
