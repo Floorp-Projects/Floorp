@@ -4071,6 +4071,13 @@ NS_IMETHODIMP nsWebShell::SetFocus()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWebShell::FocusAvailable(nsIBaseWindow* aCurrentFocus, PRBool* aTookFocus)
+{
+   NS_ENSURE_ARG_POINTER(aTookFocus);
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsWebShell::GetTitle(PRUnichar** aTitle)
 {
   *aTitle = mTitle.ToNewUnicode();
