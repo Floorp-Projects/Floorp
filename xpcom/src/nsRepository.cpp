@@ -667,6 +667,7 @@ nsresult nsRepository::AddToDefaultPathList(const char *pathlist)
 
 nsresult nsRepository::SyncComponentsInPathList(const char *pathlist)
 {
+#ifndef XP_UNIX
 	char *paths = PL_strdup(pathlist);
 	
 	if (paths == NULL || *paths == '\0')
@@ -681,6 +682,7 @@ nsresult nsRepository::SyncComponentsInPathList(const char *pathlist)
 		paths = nextpath;
 	}
 	PL_strfree(pathsMem);
+#endif
 	return (NS_OK);
 }
 
