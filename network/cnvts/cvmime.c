@@ -950,7 +950,7 @@ net_PrintRawToDiskWrite (NET_StreamClass *stream, CONST char *str, int32 len)
   }
 
 /*  int32 rv = fwrite ((char *) str, 1, len, obj->fp);*/
-  rv = NET_XP_FileWrite((const)str, len, obj->fp);
+  rv = NET_XP_FileWrite(str, len, obj->fp);
 
   if (newStr)
 	  PR_Free(newStr);
