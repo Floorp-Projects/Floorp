@@ -17,6 +17,7 @@
 # 
 # Contributor(s):
 #   Christopher Blizzard <blizzard@mozilla.org>
+#   Brian Edmond <briane@qnx.com>
 
 DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
@@ -29,8 +30,8 @@ LIBRARY_NAME	= phembedmoz
 
 
 CPPSRCS		= \
-		MozEmbedChrome.cpp \
-		MozEmbedStream.cpp \
+		PhMozEmbedChrome.cpp \
+		PhMozEmbedStream.cpp \
 		PtMozilla.cpp
 
 SHARED_LIBRARY_LIBS= \
@@ -38,7 +39,7 @@ SHARED_LIBRARY_LIBS= \
 		$(NULL)
 
 EXPORTS		= \
-		PtMozilla.h MozEmbedChrome.h nsIPhEmbed.h
+		PtMozilla.h PhMozEmbedChrome.h nsIPhEmbed.h
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \

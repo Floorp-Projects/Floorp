@@ -17,28 +17,30 @@
  * 
  * Contributor(s):
  *   Christopher Blizzard <blizzard@mozilla.org>
+ *	 Brian Edmond <briane@qnx.com>
  */
 
 #include "nsISupports.h"
+#include "nsCOMPtr.h"
+#include "nsIOutputStream.h"
 #include "nsIInputStream.h"
 
-class MozEmbedStream : public nsIInputStream 
+class PhMozEmbedStream : public nsIInputStream 
 {
  public:
 
-  MozEmbedStream();
-  virtual ~MozEmbedStream();
+  PhMozEmbedStream();
+  virtual ~PhMozEmbedStream();
+  NS_METHOD Init();
+  NS_METHOD Append(const char *aData, PRUint32 aLen); 
 
   // nsISupports
   NS_DECL_ISUPPORTS
   // nsIInputStream
   NS_DECL_NSIINPUTSTREAM
 
-  NS_METHOD Append(const char *aData, PRUint32 aLen); 
-
  private:
+  nsCOMPtr<nsIOutputStream> mOutputStream;
+  nsCOMPtr<nsIInputStream>  mInputStream;
 
-  char *    mBuffer;
-  PRUint32  mLength;
-  PRUint32  mBufLen;
 };
