@@ -206,7 +206,8 @@
     [mBookmarksSource ensureBookmarks];
     [mBookmarksSource restoreFolderExpandedStates];
     [self setCanEditSelectedContainerContents:YES];
-    
+
+    [mItemPane setTarget:mBookmarksSource];
     [mItemPane setDoubleAction: @selector(openBookmark:)];
     [mItemPane setDeleteAction: @selector(deleteBookmarks:)];
   }
@@ -217,6 +218,7 @@
     [mItemPane reloadData];
     [self setCanEditSelectedContainerContents:NO];
 
+    [mItemPane setTarget:mHistorySource];
     [mItemPane setDoubleAction: @selector(openHistoryItem:)];
     [mItemPane setDeleteAction: @selector(deleteHistoryItems:)];
   }
