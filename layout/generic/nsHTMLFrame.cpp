@@ -97,6 +97,7 @@ public:
               nsIFrame*        aParent,
               nsIStyleContext* aContext,
               nsIFrame*        aPrevInFlow);
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
   NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
@@ -168,7 +169,7 @@ protected:
 
   // Data members
   PRPackedBool             mDoPaintFocus;
-  nsCOMPtr<nsIPresContext> mPresContext;
+  nsCOMPtr<nsIViewManager> mViewManager;
 
 
 private:
@@ -227,22 +228,29 @@ CanvasFrame::Init(nsIPresContext*  aPresContext,
 {
   nsresult rv = nsHTMLContainerFrame::Init(aPresContext,aContent,aParent,aContext,aPrevInFlow);
 
-  mPresContext = aPresContext;
-
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
-  nsCOMPtr<nsIViewManager> vm;
-  presShell->GetViewManager(getter_AddRefs(vm));
+  presShell->GetViewManager(getter_AddRefs(mViewManager));
 
   nsIScrollableView* scrollingView = nsnull;
-  vm->GetRootScrollableView(&scrollingView);
-
+  mViewManager->GetRootScrollableView(&scrollingView);
   if (scrollingView) {
-    scrollingView->AddScrollPositionListener((nsIScrollPositionListener *)this);
+    scrollingView->AddScrollPositionListener(this);
   }
 
   return rv;
+}
 
+NS_IMETHODIMP
+CanvasFrame::Destroy(nsIPresContext* aPresContext)
+{
+  nsIScrollableView* scrollingView = nsnull;
+  mViewManager->GetRootScrollableView(&scrollingView);
+  if (scrollingView) {
+    scrollingView->RemoveScrollPositionListener(this);
+  }
+
+  return nsHTMLContainerFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
@@ -251,8 +259,13 @@ CanvasFrame::ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX
 #ifdef DEBUG_CANVAS_FOCUS
   {
     PRBool hasFocus = PR_FALSE;
+    nsCOMPtr<nsIViewObserver> observer;
+    mViewManager->GetViewObserver(*getter_AddRefs(observer));
+    nsCOMPtr<nsIPresShell> shell = do_QueryInterface(observer);
+    nsCOMPtr<nsIPresContext> context;
+    shell->GetPresContext(getter_AddRefs(context));
     nsCOMPtr<nsISupports> container;
-    mPresContext->GetContainer(getter_AddRefs(container));
+    context->GetContainer(getter_AddRefs(container));
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
     if (docShell) {
       docShell->GetHasFocus(&hasFocus);
@@ -263,16 +276,7 @@ CanvasFrame::ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX
 
   if (mDoPaintFocus) {
     mDoPaintFocus = PR_FALSE;
-    
-    nsCOMPtr<nsIPresShell> presShell;
-    mPresContext->GetShell(getter_AddRefs(presShell));
-    if (presShell) {
-      nsCOMPtr<nsIViewManager> vm;
-      presShell->GetViewManager(getter_AddRefs(vm));
-      if (vm) {
-        vm->UpdateAllViews(NS_VMREFRESH_NO_SYNC);
-      }
-    }
+    mViewManager->UpdateAllViews(NS_VMREFRESH_NO_SYNC);
   }
   return NS_OK;
 }

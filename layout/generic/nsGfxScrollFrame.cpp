@@ -460,6 +460,10 @@ NS_IMETHODIMP
 nsGfxScrollFrame::Destroy(nsIPresContext* aPresContext)
 
 {
+  nsIScrollableView *view = mInner->GetScrollableView(aPresContext);
+  NS_ASSERTION(view, "unexpected null pointer");
+  if (view)
+    view->RemoveScrollPositionListener(mInner);
   return nsBoxFrame::Destroy(aPresContext);
 }
 
