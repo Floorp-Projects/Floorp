@@ -202,6 +202,7 @@ protected:
    nsString                   mTitle;
    nsVoidArray                mChildren;
    nsDSURIContentListener*    mContentListener;
+   nsDSWebProgressListener*   mWebProgressListener;
    nsDocShellInitInfo*        mInitInfo;
    nsCOMPtr<nsIContentViewer> mContentViewer;
    nsCOMPtr<nsIDeviceContext> mDeviceContext;

@@ -69,6 +69,7 @@ static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 
 nsDocShell::nsDocShell() : 
   mContentListener(nsnull),
+  mWebProgressListener(nsnull),
   mInitInfo(nsnull), 
   mMarginWidth(0), 
   mMarginHeight(0),
@@ -155,6 +156,9 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
    if(aIID.Equals(NS_GET_IID(nsIURIContentListener)) &&
       NS_SUCCEEDED(EnsureContentListener()))
       *aSink = mContentListener;
+   if(aIID.Equals(NS_GET_IID(nsIURIContentListener)) &&
+      NS_SUCCEEDED(EnsureWebProgressListener()))
+      *aSink = mWebProgressListener;
    else if(aIID.Equals(NS_GET_IID(nsIScriptGlobalObject)) &&
       NS_SUCCEEDED(EnsureScriptEnvironment()))
       *aSink = mScriptGlobal;
@@ -1285,6 +1289,12 @@ NS_IMETHODIMP nsDocShell::Destroy()
       {
       mContentListener->DocShell(nsnull);
       NS_RELEASE(mContentListener);
+      }
+
+   if(mWebProgressListener)
+      {
+      mWebProgressListener->DocShell(nsnull);
+      NS_RELEASE(mWebProgressListener);
       }
 
    return NS_OK;
@@ -2500,8 +2510,15 @@ NS_IMETHODIMP nsDocShell::UpdateCurrentGlobalHistory()
 
 NS_IMETHODIMP nsDocShell::EnsureWebProgressListener()
 {
-   //XXXTAB
-   NS_ERROR("Not yet IMplemented");
+   if(mWebProgressListener)   
+      return NS_OK;
+
+   mWebProgressListener = new nsDSWebProgressListener();
+   NS_ENSURE_TRUE(mWebProgressListener, NS_ERROR_OUT_OF_MEMORY);
+
+   NS_ADDREF(mWebProgressListener);
+   mWebProgressListener->DocShell(this);
+
    return NS_OK;
 }
 
