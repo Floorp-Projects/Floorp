@@ -1,0 +1,443 @@
+<?xml version="1.0"?>
+
+<bindings id="popupBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <binding id="resizerbase" extends="xul:box">
+    <implementation>
+      <method name="findPopup">
+        <body>
+        <![CDATA[
+          var currNode = this.parentNode;
+          while (currNode) {
+            if (currNode.localName == "popup" ||
+                currNode.localName == "menupopup")
+              return currNode;
+            currNode = currNode.parentNode;
+          }
+          return null;
+        ]]>
+        </body>
+      </method>
+      <method name="handleMouseMove">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        ]]>
+        </body>
+      </method> 
+      <property name="screenLeft">0</property>
+      <property name="screenTop">0</property>
+      <property name="direction">0</property>
+      <property name="popup">0</property>
+    </implementation>
+    <handlers>
+      <handler event="mousedown" phase="capturing"> 
+      <![CDATA[
+        var popup = event.target.findPopup();
+        var boxObject = popup.boxObject;
+        boxObject.captureMouseEvents = true;
+        event.target.screenLeft = event.screenX;
+        event.target.screenTop = event.screenY;
+        event.target.setMode();
+        event.preventDefault();
+      ]]>
+      </handler>
+      <handler event="mouseup" phase="capturing">
+      <![CDATA[
+        var popup = event.target.findPopup();
+        var boxObject = popup.boxObject;
+        boxObject.captureMouseEvents = false;
+        event.target.screenLeft = event.screenX;
+        event.target.screenTop = event.screenY;
+        event.target.direction = 0;
+        event.preventDefault();
+      ]]>
+      </handler>
+      <handler event="mousemove" phase="capturing">
+      <![CDATA[
+        event.target.handleMouseMove(event);
+        event.preventDefault();
+      ]]>
+      </handler>
+    </handlers>
+  </binding>
+  
+  <!-- Right horizontal resizer -->
+  <binding id="r-resizer" extends="xul:box"> <!-- extends="chrome://global/content/popupBindings.xml#resizerbase"> -->
+    <content>
+      <xul:box class="b-resizer-box" flex="1"/>
+    </content>
+    <!--
+    <implementation>
+      <method name="handleMouseMove">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          if (!this.popup) this.popup = aEvent.target.findPopup();
+          var boxObject = this.popup.boxObject;
+          if (boxObject.captureMouseEvents && this.direction == "right") {
+            var popupBoxObject = boxObject.QueryInterface(Components.interfaces.nsIPopupBoxObject);
+            var width = this.popup.boxObject.width;
+            var delta = aEvent.screenX - this.screenLeft;
+            this.screenLeft = aEvent.screenX;
+            popupBoxObject.width = width + delta;
+          }
+        ]]>
+        </body>
+      </method>
+      <method name="setMode">
+        <body>
+        <![CDATA[
+          this.direction = "right";
+        ]]>
+        </body>
+      </method>
+    </implementation>
+    -->
+  </binding>
+  
+  <!-- Bottom vertical resizer -->
+  <binding id="b-resizer" extends="xul:box"> <!-- extends="chrome://global/content/popupBindings.xml#resizerbase"> -->
+    <content>
+      <xul:box class="b-resizer-box" flex="1"/>
+    </content>
+    <!--
+    <implementation>
+      <method name="handleMouseMove">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          if (!this.popup) this.popup = aEvent.target.findPopup();
+          var boxObject = this.popup.boxObject;
+          if (boxObject.captureMouseEvents && this.direction == "bottom") {
+            var popupBoxObject = boxObject.QueryInterface(Components.interfaces.nsIPopupBoxObject);
+            var height = this.popup.boxObject.height;
+            var delta = aEvent.screenY - this.screenTop;
+            this.screenTop = aEvent.screenY;
+            popupBoxObject.height = height + delta;
+          }
+        ]]>
+        </body>
+      </method>
+      <method name="setMode">
+        <body>
+        <![CDATA[
+          this.direction = "bottom";
+        ]]>
+        </body>
+      </method>
+    </implementation>
+    -->
+  </binding>
+  
+  <!-- Right/Bottom diagonal resizer -->
+  <binding id="rb-resizer" extends="xul:box"> <!-- extends="chrome://global/content/popupBindings.xml#resizerbase"> -->
+    <content>
+      <xul:box class="rb-resizer-box" autostretch="never" flex="1">
+        <xul:image class="rb-resizer-image"/>
+      </xul:box>
+    </content>
+    <!--
+    <implementation>
+      <method name="handleMouseMove">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          if (!this.popup) this.popup = aEvent.target.findPopup();
+          var boxObject = this.popup.boxObject;
+          if (boxObject.captureMouseEvents && this.direction == "bottomright") {
+            if (!this.screenLeft || !this.screenTop) {
+              this.screenLeft = aEvent.screenX; this.screenTop = aEvent.screenY;
+            }
+            var popupBoxObject = boxObject.QueryInterface(Components.interfaces.nsIPopupBoxObject);
+            var deltaX = aEvent.screenX - this.screenLeft;
+            var deltaY = aEvent.screenY - this.screenTop;
+            this.screenLeft = aEvent.screenX;
+            this.screenTop = aEvent.screenY;
+            popupBoxObject.width += deltaX;
+            popupBoxObject.height += deltaY;
+          }
+        ]]>
+        </body>
+      </method>
+      <method name="setMode">
+        <body>
+        <![CDATA[
+          this.direction = "bottomright";
+        ]]>
+        </body>
+      </method>
+    </implementation>
+    -->
+  </binding>
+  
+  <binding id="titlebar" extends="xul:box"> <!-- extends="chrome://global/content/popupBindings.xml#resizerbase"> -->
+    <content>
+      <xul:box class="titlebar-box" flex="1">
+        <xul:box class="titlebar-title-box" flex="1"  tooltip="aTooltip" tooltiptext="Click and drag to float">
+          <xul:text class="titlebar-title" inherits="value=title" flex="1" crop="right"/>
+        </xul:box>
+        <xul:button class="popupClose" tooltip="aTooltip" tooltiptext="Close"/>
+      </xul:box>
+    </content>
+    <!--
+    <implementation>
+      <method name="handleMouseMove">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          if (!this.popup) this.popup = aEvent.target.findPopup();
+          var boxObject = this.popup.boxObject;
+          if (boxObject.captureMouseEvents && this.direction == "titlebar") {
+            if (!this.screenLeft || !this.screenTop) {
+              this.screenLeft = aEvent.screenX; this.screenTop = aEvent.screenY;
+            }
+            var popupBoxObject = boxObject.QueryInterface(Components.interfaces.nsIPopupBoxObject);
+            var deltaX = aEvent.screenX - this.screenLeft;
+            var deltaY = aEvent.screenY - this.screenTop;
+            this.screenLeft = aEvent.screenX;
+            this.screenTop = aEvent.screenY;
+            popupBoxObject.left += deltaX;
+            popupBoxObject.top += deltaY;
+          }
+        ]]>
+        </body>
+      </method>
+      <method name="setMode">
+        <body>
+        <![CDATA[
+          this.direction = "titlebar";
+        ]]>
+        </body>
+      </method>
+    </implementation>
+    -->
+  </binding>          
+
+  <binding id="floater-base" extends="xul:popup">
+    <implementation>
+      <method name="findPopup">
+        <body>
+        <![CDATA[
+          var currNode = this.parentNode;
+          while (currNode) {
+            if (currNode.localName == "popup" ||
+                currNode.localName == "menupopup")
+              return currNode;
+            currNode = currNode.parentNode;
+          }
+          return null;
+        ]]>
+        </body>
+      </method>
+      <method name="handleMouseMove">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          var boxObject = this.boxObject;
+          if (boxObject.captureMouseEvents) {
+            var pBO = boxObject.QueryInterface(Components.interfaces.nsIPopupBoxObject);
+            var dX, dY;
+            var eScreenX = aEvent.screenX; 
+            var eScreenY = aEvent.screenY;
+            switch (this.direction) {
+              case "right":
+                var width = boxObject.width;
+                dX = eScreenX - this.screenLeft;
+                pBO.sizeTo(width + dX, pBO.height);
+                break;
+              case "bottom":
+                var height = boxObject.height;
+                dY = eScreenY - this.screenTop;
+                pBO.sizeTo(pBO.width, height + dY);
+                break;
+              case "bottomright":
+                dX = eScreenX - this.screenLeft;
+                dY = eScreenY - this.screenTop;
+                pBO.sizeTo(pBO.width + dX, pBO.height + dY);
+                break;
+              case "titlebar":
+                pBO.autoPosition = false;
+                pBO.enableRollup(false);
+                pBO.enableKeyboardNavigator(false);
+                if (this.doDock(pBO, aEvent, eScreenX, eScreenY)) break;
+                dX = eScreenX - this.screenLeft;
+                dY = eScreenY - this.screenTop;
+                pBO.moveTo(pBO.left + dX, pBO.top + dY);
+                this.docked = 0;
+                break;
+              default:
+                break;                      
+            }
+            this.screenLeft = eScreenX;
+            this.screenTop = eScreenY;
+          }
+        ]]>
+        </body>
+      </method> 
+      <method name="findParentByLocalName">
+        <parameter name="aNode"/>
+        <parameter name="aLocalName"/>
+        <body>
+        <![CDATA[
+          var parent = aNode;
+          var names = [].concat(aLocalName);
+          while (parent) {
+            for (var i = 0; i < names.length; ++i) {
+              if (parent.localName == names[i])
+                return parent;
+            }
+            parent = parent.parentNode;
+          }
+          return null;
+        ]]>
+        </body>
+      </method>
+      <method name="setMode">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          var widget = this.findParentByLocalName(aEvent.originalTarget, ["resizer", "titlebar"]);
+          if (widget) {
+            if (widget.localName == "titlebar")
+              this.direction = "titlebar";
+            else 
+              this.direction = widget.getAttribute("direction");
+          }
+        ]]>
+        </body>
+      </method>
+      <method name="doDock">
+        <parameter name="aPBO"/>
+        <parameter name="aEvent"/>
+        <parameter name="xCoord"/>
+        <parameter name="yCoord"/>
+        <body>
+        <![CDATA[
+          const kDragZone = 20;
+          if (xCoord < kDragZone) {
+            if (!this.docked) {
+              aPBO.sizeTo(aPBO.width, screen.availHeight);
+              aPBO.moveTo(0,22);
+              this.docked = "left";
+              this.cleanUp(aEvent);
+              //this.setAttribute("docked", "left");
+            }
+            return true;
+          }
+          else if (xCoord > (screen.availWidth - kDragZone)) {
+            if (!this.docked) {
+              aPBO.sizeTo(aPBO.width, screen.availHeight);
+              aPBO.moveTo(screen.availWidth - aPBO.width,22);
+              this.docked = "right";
+              this.cleanUp(aEvent);
+              //this.setAttribute("docked", "right");
+            }
+          }
+          return false;
+        ]]>
+        </body>
+      </method>
+      <method name="cleanUp">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          this.boxObject.captureMouseEvents = false;
+          this.screenLeft = aEvent.screenX;
+          this.screenTop = aEvent.screenY;
+          this.direction = 0;
+          aEvent.preventDefault();
+        ]]>
+        </body>
+      </method>
+      <property name="screenLeft">0</property>
+      <property name="screenTop">0</property>
+      <property name="direction">0</property>
+      <property name="docked">0</property>
+      <property name="popup">0</property>
+    </implementation>
+    <handlers>
+      <handler event="mousedown" phase="capturing"> 
+      <![CDATA[
+        this.boxObject.captureMouseEvents = true;
+        this.screenLeft = event.screenX;
+        this.screenTop = event.screenY;
+        this.setMode(event);
+      ]]>
+      </handler>
+      <handler event="mouseup" phase="capturing">
+      <![CDATA[
+        this.cleanUp(event);
+      ]]>
+      </handler>
+      <handler event="mousemove" phase="capturing">
+      <![CDATA[
+        this.handleMouseMove(event);
+        event.preventDefault();
+      ]]>
+      </handler>
+      <!-- clean up, release the mouse, etc -->
+      <handler event="destroy">
+      <![CDATA[
+        dump("*** destroy: releasing mouse\n");
+        this.cleanUp(event);
+      ]]>
+      </handler>
+      <handler event="click">
+      <![CDATA[
+        dump("*** clicked\n");
+        if (event.originalTarget.className.indexOf("popupClose") != -1) {
+          var popupBoxObject = this.boxObject.QueryInterface(Components.interfaces.nsIPopupBoxObject);
+          dump("*** hiding the popup\n");
+          popupBoxObject.hide();
+        }
+      ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="floater-normal" extends="chrome://global/content/popupBindings.xml#floater-base">
+    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" >
+      <box class="floater-box" orient="vertical" flex="1">
+        <box class="floater-box-top">
+          <titlebar flex="1" inherits="title"/>
+        </box>
+        <box class="floater-box-center" flex="1">
+          <box class="floater-children" flex="1"> 
+            <xbl:children/>
+          </box>
+        </box>
+        <box class="floater-box-bottom">
+          <resizer direction="bottom" flex="1"/>
+          <resizer direction="bottomright" tooltip="aTooltip" tooltiptext="Click and drag to resize"/>
+        </box>
+      </box>
+    </xbl:content>
+  </binding>
+
+  <binding id="floater-dock-left" extends="chrome://global/content/popupBindings.xml#floater-base">
+    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" >
+      <box class="floater-box" orient="vertical" flex="1">
+        <box class="floater-box-top">
+          <titlebar flex="1" inherits="title"/>
+        </box>
+        <box class="floater-box-center" flex="1">
+          <box class="floater-children" flex="1"> 
+            <xbl:children/>
+          </box>
+          <resizer direction="right" tooltip="aTooltip" tooltiptext="Click and drag to resize"/>
+        </box>
+      </box>
+    </xbl:content>
+  </binding>  
+  
+  <binding id="close-button" extends="xul:button">
+    <content autostretch="never">
+      <xul:image class="close-button-x"/>
+    </content>
+  </binding>
+          
+</bindings>          
