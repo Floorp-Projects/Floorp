@@ -87,6 +87,8 @@ nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] =
   { "ui.caretWidthTwips", eMetric_SingleLineCaretWidth, PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "ui.submenuDelay", eMetric_SubmenuDelay, PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "ui.dragFullWindow", eMetric_DragFullWindow, PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.dragThresholdX", eMetric_DragThresholdX, PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.dragThresholdY", eMetric_DragThresholdY, PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "ui.menusCanOverlapOSBar", eMetric_MenusCanOverlapOSBar,
     PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "ui.treeOpenDelay",
