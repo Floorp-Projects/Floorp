@@ -43,6 +43,7 @@ EXPORTS = \
 CPPSRCS = \
 	nsNNTPArticleList.cpp \
 	nsNNTPArticleSet.cpp \
+	nsNNTPNewsgroup.cpp \
 	nsNNTPNewsgroupList.cpp \
 	nsNNTPNewsgroupPost.cpp \
 	nsNNTPProtocol.cpp \
