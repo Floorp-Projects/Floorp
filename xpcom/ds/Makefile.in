@@ -52,7 +52,6 @@ CPPSRCS		= \
 		nsFixedSizeAllocator.cpp \
 		nsHashSets.cpp \
 		nsHashtable.cpp \
-		nsObserver.cpp \
 		nsObserverList.cpp \
 		nsObserverService.cpp \
 		nsProperties.cpp \
