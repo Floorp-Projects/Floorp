@@ -46,7 +46,6 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsXPComFactory.h"    /* template implementation of a XPCOM factory */
@@ -801,7 +800,7 @@ void nsAppShellService::RegisterObserver(PRBool aRegister)
 
   NS_ASSERTION(weObserve, "who's been chopping bits off nsAppShellService?");
 
-  rv = nsServiceManager::GetService(NS_OBSERVERSERVICE_CONTRACTID,
+  rv = nsServiceManager::GetService("@mozilla.org/observer-service;1",
                            NS_GET_IID(nsIObserverService), &glop);
   if (NS_SUCCEEDED(rv)) {
     nsIObserverService *os = NS_STATIC_CAST(nsIObserverService*,glop);

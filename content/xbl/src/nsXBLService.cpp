@@ -70,7 +70,6 @@
 #include "nsITextContent.h"
 #include "nsIMemory.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIDOMNodeList.h"
 
 #include "nsIXBLBinding.h"
@@ -1501,7 +1500,7 @@ NS_NewXBLService(nsIXBLService** aResult)
 
   // Register the first (and only) nsXBLService as a memory pressure observer
   // so it can flush the LRU list in low-memory situations.
-  nsCOMPtr<nsIObserverService> os = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
   if (os)
     os->AddObserver(result, NS_MEMORY_PRESSURE_TOPIC, PR_TRUE);
 

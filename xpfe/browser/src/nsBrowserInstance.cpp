@@ -109,7 +109,6 @@
 
 #include "nsIDocumentLoader.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 
 #include "nsIFileSpec.h"
 
@@ -236,7 +235,7 @@ public:
     mCursor = mBuffer;
 
     nsCOMPtr<nsIObserverService> obsServ = 
-             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+             do_GetService("@mozilla.org/observer-service;1", &rv);
     if (NS_FAILED(rv)) return rv;
     rv = obsServ->AddObserver(this, "EndDocumentLoad", PR_FALSE );
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add self to observer service");

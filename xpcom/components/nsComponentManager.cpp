@@ -52,7 +52,6 @@
 #include "nsXPIDLString.h"
 
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 
 #include "nsLocalFile.h"
 #include "nsDirectoryService.h"
@@ -2599,7 +2598,7 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
     
     // Notify observers of xpcom autoregistration start
     nsCOMPtr<nsIObserverService> observerService = 
-             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+             do_GetService("@mozilla.org/observer-service;1", &rv);
     if (NS_FAILED(rv))
     {
         // NO COMPtr as we dont release the service manager

@@ -85,7 +85,6 @@
 #include "nsINodeInfo.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIPrivateDOMImplementation.h"
@@ -182,7 +181,7 @@ Initialize(nsIModule* aSelf)
 
   // Add our shutdown observer.
   nsCOMPtr<nsIObserverService> observerService =
-    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    do_GetService("@mozilla.org/observer-service;1");
 
   if (observerService) {
     ContentShutdownObserver* observer =

@@ -57,7 +57,6 @@
 #include "nsIPluginStreamListener.h"
 #include "nsIHTTPHeaderListener.h" 
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIHttpChannel.h"
 #include "nsIUploadChannel.h"
@@ -2396,7 +2395,7 @@ nsPluginHostImpl::nsPluginHostImpl()
   mIsDestroyed = PR_FALSE;
   mUnusedLibraries = nsnull;
 
-  nsCOMPtr<nsIObserverService> obsService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  nsCOMPtr<nsIObserverService> obsService = do_GetService("@mozilla.org/observer-service;1");
   if (obsService)
   {
     obsService->AddObserver(this, "quit-application", PR_FALSE);
@@ -2428,7 +2427,7 @@ nsPluginHostImpl::~nsPluginHostImpl()
 #ifdef NS_DEBUG
   printf("nsPluginHostImpl dtor\n");
 #endif
-  nsCOMPtr<nsIObserverService> obsService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  nsCOMPtr<nsIObserverService> obsService = do_GetService("@mozilla.org/observer-service;1");
   if (obsService)
   {
     obsService->RemoveObserver(this, "quit-application");

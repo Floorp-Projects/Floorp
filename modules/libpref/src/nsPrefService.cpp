@@ -41,7 +41,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsPrefBranch.h"
 #include "nsXPIDLString.h"
 #include "nsIAutoConfig.h"
@@ -136,7 +135,7 @@ nsresult nsPrefService::Init()
     return rv;
 
   nsCOMPtr<nsIObserverService> observerService = 
-           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+           do_GetService("@mozilla.org/observer-service;1", &rv);
   if (observerService) {
     // Our refcnt must be > 0 when we call this, or we'll get deleted!
     ++mRefCnt;

@@ -54,7 +54,6 @@
 #include "nsIMemory.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
 #include "pratom.h"
@@ -281,7 +280,7 @@ nsStringBundle::OnStreamComplete(nsIStreamLoader* aLoader,
     mLoaded = PR_TRUE;
 
     // observer notification
-    nsCOMPtr<nsIObserverService> os = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
     if (os)
       (void) os->NotifyObservers((nsIStringBundle *) this, 
                         NS_STRBUNDLE_LOADED_TOPIC, 
@@ -796,7 +795,7 @@ nsStringBundleService::~nsStringBundleService()
 nsresult
 nsStringBundleService::Init()
 {
-  nsCOMPtr<nsIObserverService> os = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
   if (os)
     os->AddObserver(this, NS_MEMORY_PRESSURE_TOPIC, PR_TRUE);
 

@@ -54,15 +54,12 @@ class nsObserverService : public nsIObserverService {
 public:
   NS_DEFINE_STATIC_CID_ACCESSOR( NS_OBSERVERSERVICE_CID )
 
-	static nsresult GetObserverService(nsIObserverService** anObserverService);
-    
   nsObserverService();
   virtual ~nsObserverService(void);
      
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVERSERVICE
-   
-
+  
   static NS_METHOD
   Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 

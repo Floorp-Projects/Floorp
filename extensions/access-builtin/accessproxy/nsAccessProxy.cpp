@@ -31,7 +31,6 @@
 #include "nsMemory.h"
 #include "nsIServiceManager.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIGenericFactory.h"
 #include "nsIWebProgress.h"
 #include "nsIDocumentLoader.h"
@@ -185,7 +184,7 @@ NS_IMETHODIMP nsAccessProxy::Observe(nsISupports *aSubject, const char *aTopic, 
     }
      // install xpcom shutdown observer
     if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIObserverService> observerService(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
+      nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1", &rv));
       if (NS_SUCCEEDED(rv)) 
         rv = observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
     }

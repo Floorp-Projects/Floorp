@@ -45,7 +45,6 @@
 #include "nsDOMClassInfo.h"
 #include "nsGlobalWindow.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIJSContextStack.h"
 
 
@@ -90,7 +89,7 @@ nsDOMSOFactory::nsDOMSOFactory()
   NS_INIT_REFCNT();
 
   nsCOMPtr<nsIObserverService> observerService =
-    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    do_GetService("@mozilla.org/observer-service;1");
 
   if (observerService) {
     observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);

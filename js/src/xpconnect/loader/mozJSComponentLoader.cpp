@@ -45,7 +45,6 @@
 #include "nsIRegistry.h"
 #include "nsXPIDLString.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIXPCScriptable.h"
 #ifndef XPCONNECT_STANDALONE
 #include "nsIScriptSecurityManager.h"
@@ -77,7 +76,7 @@ const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect;1";
 const char kJSContextStackContractID[] =   "@mozilla.org/js/xpc/ContextStack;1";
 const char kConsoleServiceContractID[] =   "@mozilla.org/consoleservice;1";
 const char kScriptErrorContractID[] =      "@mozilla.org/scripterror;1";
-const char kObserverServiceContractID[] = NS_OBSERVERSERVICE_CONTRACTID;
+const char kObserverServiceContractID[] = "@mozilla.org/observer-service;1";
 #ifndef XPCONNECT_STANDALONE
 const char kScriptSecurityManagerContractID[] = NS_SCRIPTSECURITYMANAGER_CONTRACTID;
 const char kStandardURLContractID[] = "@mozilla.org/network/standard-url;1";

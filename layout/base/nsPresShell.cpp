@@ -103,7 +103,6 @@
 #include "plarena.h"
 #include "nsCSSAtoms.h"
 #include "nsIObserverService.h" // for reflow observation
-#include "nsObserverService.h"
 #include "nsIDocShell.h"        // for reflow observation
 #include "nsIDOMRange.h"
 #ifdef MOZ_PERF_METRICS
@@ -1603,7 +1602,7 @@ PresShell::Init(nsIDocument* aDocument,
   }
 
   // cache the observation service
-  mObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID,
+  mObserverService = do_GetService("@mozilla.org/observer-service;1",
                                    &result);
   if (NS_FAILED(result)) {
     return result;

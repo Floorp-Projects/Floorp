@@ -42,7 +42,6 @@
 #include "nsCOMPtr.h"
 #include "prthread.h"
 #include "prlock.h"
-#include "nsObserverService.h"
 static const PRUintn BAD_TLS_INDEX = (PRUintn) -1;
 
 #define CHECK_SERVICE_USE_OK() if (!lock) return NS_ERROR_NOT_INITIALIZED
@@ -179,7 +178,7 @@ nsExceptionService::nsExceptionService()
   NS_WARN_IF_FALSE(lock, "Error allocating ExceptionService lock");
 
   // observe XPCOM shutdown.
-  nsCOMPtr<nsIObserverService> observerService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
   NS_WARN_IF_FALSE(observerService, "Could not get observer service!");
   if (observerService)
     observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);

@@ -59,7 +59,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsWeakReference.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -378,7 +377,7 @@ LocalStoreImpl::Init()
 
     // Register as an observer of profile changes
     nsCOMPtr<nsIObserverService> obs =
-        do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+        do_GetService("@mozilla.org/observer-service;1");
 
     if (obs) {
         obs->AddObserver(this, "profile-before-change", PR_TRUE);

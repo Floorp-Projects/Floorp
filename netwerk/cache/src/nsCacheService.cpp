@@ -35,7 +35,6 @@
 #include "nsAutoLock.h"
 #include "nsIEventQueue.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranchInternal.h"
@@ -110,7 +109,7 @@ nsCacheProfilePrefObserver::Install()
     nsresult rv, rv2 = NS_OK;
     
     // install profile-change observer
-    nsCOMPtr<nsIObserverService> observerService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
     if (NS_FAILED(rv)) return rv;
     NS_ENSURE_ARG(observerService);
     
@@ -160,7 +159,7 @@ nsCacheProfilePrefObserver::Remove()
     nsresult rv, rv2 = NS_OK;
 
     // remove Observer Service observers
-    nsCOMPtr<nsIObserverService> observerService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
     if (NS_FAILED(rv)) return rv;
     NS_ENSURE_ARG(observerService);
 

@@ -31,7 +31,6 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
-#include "nsObserverService.h"
 #include "plbase64.h"
 #include "nsIConsoleService.h"
 #include "nscore.h"
@@ -1144,7 +1143,7 @@ nsZipReaderCache::Init(PRUint32 cacheSize)
   
 // Register as a memory pressure observer 
   nsCOMPtr<nsIObserverService> os = 
-           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+           do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_SUCCEEDED(rv))   
   {
     rv = os->AddObserver(this, NS_MEMORY_PRESSURE_TOPIC, PR_TRUE);

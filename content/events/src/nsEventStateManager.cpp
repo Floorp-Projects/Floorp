@@ -86,7 +86,6 @@
 #include "nsXULAtoms.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIDocShell.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsITreeFrame.h"
@@ -192,7 +191,7 @@ nsEventStateManager::Init()
 {
   nsresult rv;
   nsCOMPtr<nsIObserverService> observerService = 
-           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+           do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_SUCCEEDED(rv))
   {
     observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
@@ -254,7 +253,7 @@ nsEventStateManager::~nsEventStateManager()
     nsresult rv;
 
     nsCOMPtr<nsIObserverService> observerService = 
-             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+             do_GetService("@mozilla.org/observer-service;1", &rv);
     if (NS_SUCCEEDED(rv))
       {
         observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);

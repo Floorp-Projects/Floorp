@@ -49,7 +49,6 @@
 #include "nsIJSContextStack.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIWindowMediator.h"
 #include "nsIScreenManager.h"
 #include "nsIScreen.h"
@@ -1430,7 +1429,7 @@ static const char *prefix = "@mozilla.org/appshell/component/browser/window;1";
 NS_IMETHODIMP nsXULWindow::NotifyObservers(const PRUnichar* aTopic, 
    const PRUnichar* aData)
 {
-   nsCOMPtr<nsIObserverService> service(do_GetService(NS_OBSERVERSERVICE_CONTRACTID));
+   nsCOMPtr<nsIObserverService> service(do_GetService("@mozilla.org/observer-service;1"));
 
    if(!service)
       return NS_ERROR_FAILURE;

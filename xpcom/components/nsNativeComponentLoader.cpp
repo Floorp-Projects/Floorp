@@ -43,7 +43,6 @@
 #include "nsCRT.h"
 
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 
 #include "nsITimelineService.h"
 
@@ -682,7 +681,7 @@ nsNativeComponentLoader::AutoUnregisterComponent(PRInt32 when,
 
     // Notify observers, if any, of autoregistration work
     nsCOMPtr<nsIObserverService> observerService = 
-             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+             do_GetService("@mozilla.org/observer-service;1", &rv);
     if (NS_SUCCEEDED(rv))
     {
       nsCOMPtr<nsIServiceManager> mgr;
@@ -839,7 +838,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
 
         // Notify observers, if any, of autoregistration work
         nsCOMPtr<nsIObserverService> observerService = 
-                 do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+                 do_GetService("@mozilla.org/observer-service;1", &rv);
         if (NS_SUCCEEDED(rv))
         {
           nsCOMPtr<nsIServiceManager> mgr;

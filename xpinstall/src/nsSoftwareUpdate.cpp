@@ -33,7 +33,6 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 
 #include "nspr.h"
 #include "prlock.h"
@@ -147,7 +146,7 @@ nsSoftwareUpdate::nsSoftwareUpdate()
     /* Add this as a shutdown observer     */
     /***************************************/
     nsCOMPtr<nsIObserverService> observerService = 
-             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+             do_GetService("@mozilla.org/observer-service;1", &rv);
 
     if (NS_SUCCEEDED(rv))
         observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);

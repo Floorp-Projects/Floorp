@@ -40,7 +40,6 @@
 #include "nsISupports.h"
 #include "nsIComponentManager.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIObserver.h"
 #include "nsIEnumerator.h"
 #include "nsString.h"
@@ -105,7 +104,7 @@ int main(int argc, char *argv[])
     nsCString topicB; topicB.Assign( "topic-B" );
     nsresult rv;
 
-    nsresult res = nsComponentManager::CreateInstance(NS_OBSERVERSERVICE_CONTRACTID,
+    nsresult res = nsComponentManager::CreateInstance("@mozilla.org/observer-service;1",
                                                 NULL,
                                                  NS_GET_IID(nsIObserverService),
                                                 (void **) &anObserverService);

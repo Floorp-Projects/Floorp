@@ -42,7 +42,6 @@
 
 #include "nsIServiceManager.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 
 #include "nsString.h"
 
@@ -218,7 +217,7 @@ nsEventQueueImpl::NotifyObservers(const char *aTopic)
 {
   nsresult rv;
 
-  nsCOMPtr<nsIObserverService> os = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIEventQueue> kungFuDeathGrip(this);
     nsCOMPtr<nsISupports> us(do_QueryInterface(kungFuDeathGrip));

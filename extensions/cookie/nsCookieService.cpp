@@ -47,7 +47,6 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIPrompt.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIDocumentLoader.h"
 #include "nsIWebProgress.h"
 #include "nsCURILoader.h"
@@ -84,7 +83,7 @@ nsresult nsCookieService::Init()
   COOKIE_Read();
 
   nsCOMPtr<nsIObserverService> observerService = 
-           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+           do_GetService("@mozilla.org/observer-service;1", &rv);
   if (observerService) {
     observerService->AddObserver(this, "profile-before-change", PR_TRUE);
     observerService->AddObserver(this, "profile-do-change", PR_TRUE);

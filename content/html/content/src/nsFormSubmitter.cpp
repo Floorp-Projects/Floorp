@@ -45,7 +45,6 @@ static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
 #include "nsNetUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIFormSubmitObserver.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIUnicodeEncoder.h"
@@ -349,7 +348,7 @@ nsFormSubmitter::OnSubmit(nsIForm* form,
     // Notify observers that the form is being submitted.
     rv = NS_OK;
     nsCOMPtr<nsIObserverService> service =
-             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+             do_GetService("@mozilla.org/observer-service;1", &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsAutoString  theTopic = NS_ConvertASCIItoUCS2(NS_FORMSUBMIT_SUBJECT);

@@ -57,7 +57,6 @@
 #include "nsIWindowWatcher.h"
 #include "nsIProfile.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIObserver.h"
 #include "nsIProfileChangeStatus.h"
 #include "nsIURI.h"
@@ -169,7 +168,7 @@ int main(int argc, char *argv[])
     }
 
 	// Now register an observer to watch for profile changes
-    nsCOMPtr<nsIObserverService> observerService(do_GetService(NS_OBSERVERSERVICE_CONTRACTID));
+    nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1"));
 
     ProfileChangeObserver *observer = new ProfileChangeObserver;
     observer->AddRef();
@@ -1342,7 +1341,7 @@ nsresult AppCallbacks::CreateBrowserWindow(PRUint32 aChromeFlags,
   ResizeEmbedding(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome));
 
   // Subscribe new window to profile changes so it can kill itself when one happens
-  nsCOMPtr<nsIObserverService> observerService(do_GetService(NS_OBSERVERSERVICE_CONTRACTID));
+  nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1"));
   if (observerService)
     observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, chrome),
                                  "profile-change-teardown", PR_FALSE);

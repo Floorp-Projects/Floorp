@@ -64,7 +64,6 @@
 #include "BrowserImpl.h"
 #include "BrowserView.h"
 #include "nsIWindowWatcher.h"
-#include "nsObserverService.h"
 #include "plstr.h"
 #include "Preferences.h"
 #include <io.h>
@@ -489,9 +488,9 @@ BOOL CTestEmbedApp::InitializeProfiles()
 
 	nsresult rv;
 
-    //NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    //NS_WITH_SERVICE(nsIObserverService, observerService, "@mozilla.org/observer-service;1", &rv);
 
-    nsCOMPtr<nsIObserverService>observerService(do_GetService(NS_OBSERVERSERVICE_CONTRACTID,&rv));
+    nsCOMPtr<nsIObserverService>observerService(do_GetService("@mozilla.org/observer-service;1",&rv));
 	if (NS_SUCCEEDED(rv)) 
 	{	  
 		observerService->AddObserver(this, "profile-approve-change", PR_FALSE);
