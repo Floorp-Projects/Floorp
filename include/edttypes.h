@@ -214,19 +214,19 @@ typedef enum {
 } ED_CopyType;
 
 struct _EDT_DragTableData {
-    void       *pSourceTable;        /* So we can tell if dragging between different tables */
-    ED_HitType  iSourceType;         /* One of the ED_HIT_SEL_... enums */
-    ED_DropType iDropType;           /* One of ED_DROP_... enums */
-    LO_Element  *pFirstSelectedCell; /* First cell in source being dragged */
-    LO_Element  *pDragOverCell;      /* Cell being dragged over */
-    int32        iRows;              /* Number of rows being dragged */
-    int32        iColumns;           /* Number of columns being dragged (counts COLSPAN) */
-    int32       *pCellsPerRow;       /* Array of number of actual cells in each row (size = iRows) */
-                                     /*   (this doesn't count COLSPAN effects) */
-    int32        X;                  /* Location to place highlighting or make caret */
-    int32        Y;                  /*  to show where to drop cells */
-    int32        iWidth;             /* The width and */
-    int32        iHeight;            /*  height of the insert-between-cells feedback */
+    LO_TableStruct *pSourceTable;       /* So we can tell if dragging over the source table */
+    ED_HitType      iSourceType;        /* One of the ED_HIT_SEL_... enums */
+    ED_DropType     iDropType;          /* One of ED_DROP_... enums */
+    LO_Element     *pFirstSelectedCell; /* First cell in source being dragged */
+    LO_Element     *pDragOverCell;      /* Cell being dragged over */
+    int32           iRows;              /* Number of rows being dragged */
+    int32           iColumns;           /* Number of columns being dragged (counts COLSPAN) */
+    int32          *pCellsPerRow;       /* Array of number of actual cells in each row (size = iRows) */
+                                        /*   (this doesn't count COLSPAN effects) */
+    int32           X;                  /* Location to place highlighting or make caret */
+    int32           Y;                  /*  to show where to drop cells */
+    int32           iWidth;             /* The width and */
+    int32           iHeight;            /*  height of the insert-between-cells feedback */
 };
 typedef struct _EDT_DragTableData EDT_DragTableData;
 
