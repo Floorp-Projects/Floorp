@@ -1,0 +1,57 @@
+# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is the Mozilla browser.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications, Inc.  Portions created by Netscape are
+# Copyright (C) 2001, Mozilla.  All Rights Reserved.
+# 
+# Contributor(s):
+
+DEPTH		= ../..
+topsrcdir	= ../..
+srcdir		= .
+VPATH		= .
+
+include $(DEPTH)/config/autoconf.mk
+
+PROGRAM		= dcck$(BIN_SUFFIX)
+RESFILE		= dcck.res
+
+CPPSRCS		= \
+            customize.cpp     \
+		        $(NULL)
+
+LIBS		= \
+          ../toolkit/dcck.lib \
+		      $(NULL)
+
+OS_LIBS		+= \
+		ole32.lib \
+		comdlg32.lib \
+		shell32.lib \
+		version.lib \
+		$(NULL)
+
+#
+# Control the default heap size.
+# This is the heap returned by GetProcessHeap().
+# As we use the CRT heap, the default size is too large and wastes VM.
+#
+# The default heap size is 1MB on Win32.
+# The heap will grow if need be.
+#
+# Set it to 256k.  See bug 127069.
+#
+LDFLAGS += /HEAP:0x40000
+
+include $(topsrcdir)/config/rules.mk
