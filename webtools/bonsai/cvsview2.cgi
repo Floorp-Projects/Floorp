@@ -930,14 +930,15 @@ sub print_cell {
             $j++;
         }
     }
-    $newline =~ s/&/&amp;/g;
-    $newline =~ s/</&lt;/g;
-    $newline =~ s/>/&gt;/g;
+    $newline =~ s/\s+$//;
     if (length($newline) <= 80) {
         $newline = sprintf("%-80.80s", $newline);
     } else {
         $newline =~ s/([^\n\r]{80})([^\n\r]*)/$1\n$2/g;
     }
+    $newline =~ s/&/&amp;/g;
+    $newline =~ s/</&lt;/g;
+    $newline =~ s/>/&gt;/g;
     print $newline;
 }
 
