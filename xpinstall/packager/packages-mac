@@ -78,6 +78,7 @@ viewer:Components:caps.xpt
 viewer:Components:chardet.shlb 
 viewer:Components:ChomeRegistry.shlb 
 viewer:Components:chrome.xpt
+viewer:Components:Composer.shlb 
 viewer:Components:content.shlb
 viewer:Components:content.xpt
 viewer:Components:cookie.xpt 
@@ -99,7 +100,7 @@ viewer:Components:dom_views.xpt
 viewer:Components:dom_xbl.xpt
 viewer:Components:dom_xul.xpt
 viewer:Components:editor.xpt 
-viewer:Components:EditorCore.shlb 
+viewer:Components:HTMLEditor.shlb 
 viewer:Components:EditorTxmgr.shlb 
 viewer:Components:EmbedComponents.xpt
 viewer:Components:EmbedComponents.shlb
