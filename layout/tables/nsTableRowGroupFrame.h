@@ -184,12 +184,6 @@ protected:
 
   PRBool NoRowsFollow();
 
-  /** @see nsContainerFrame::CreateContinuingFrame */
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
-                                   nsIFrame*        aParent,
-                                   nsIStyleContext* aStyleContext,
-                                   nsIFrame*&       aContinuingFrame);
-
   nsresult AdjustSiblingsAfterReflow(nsIPresContext&      aPresContext,
                                      RowGroupReflowState& aReflowState,
                                      nsIFrame*            aKidFrame,

@@ -56,6 +56,31 @@ NS_IMPL_ADDREF(nsTableCellFrame)
 NS_IMPL_RELEASE(nsTableCellFrame)
 
 
+NS_IMETHODIMP
+nsTableCellFrame::Init(nsIPresContext&  aPresContext,
+                       nsIContent*      aContent,
+                       nsIFrame*        aParent,
+                       nsIStyleContext* aContext,
+                       nsIFrame*        aPrevInFlow)
+{
+  nsresult  rv;
+  
+  // Let the base class do its initialization
+  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext,
+                                  aPrevInFlow);
+
+  if (aPrevInFlow) {
+    // Set the column index
+    nsTableCellFrame* cellFrame = (nsTableCellFrame*)aPrevInFlow;
+    PRInt32           baseColIndex;
+    
+    cellFrame->GetColIndex(baseColIndex);
+    InitCellFrame(baseColIndex);
+  }
+
+  return rv;
+}
+
 void nsTableCellFrame::InitCellFrame(PRInt32 aColIndex)
 {
   NS_PRECONDITION(0<=aColIndex, "bad col index arg");
@@ -585,35 +610,6 @@ NS_METHOD nsTableCellFrame::IR_StyleChanged(nsIPresContext&          aPresContex
 
   return rv;
 }
-
-NS_METHOD
-nsTableCellFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
-                                        nsIFrame*        aParent,
-                                        nsIStyleContext* aStyleContext,
-                                        nsIFrame*&       aContinuingFrame)
-{
-  nsTableCellFrame* cf = new nsTableCellFrame;
-  if (nsnull == cf) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  cf->Init(aPresContext, mContent, aParent, aStyleContext, this);
-  PRInt32 baseColIndex;
-  GetColIndex(baseColIndex);
-  cf->InitCellFrame(baseColIndex);
-  aContinuingFrame = cf;
-
-  // Create a continuing body frame
-  nsIFrame*         childList;
-  nsIStyleContext*  kidSC;
-
-  nsIFrame* firstKid = mFrames.FirstChild();
-  firstKid->GetStyleContext(&kidSC);
-  firstKid->CreateContinuingFrame(aPresContext, cf, kidSC, childList);
-  NS_RELEASE(kidSC);
-  cf->SetInitialChildList(aPresContext, nsnull, childList);
-  return NS_OK;
-}
-
 
 /**
   *

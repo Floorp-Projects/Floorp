@@ -48,6 +48,12 @@ public:
 
   // default constructor supplied by the compiler
 
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
+
   void InitCellFrame(PRInt32 aColIndex);
 
   void SetBorderEdge(PRUint8 aSide, 
@@ -78,14 +84,6 @@ public:
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
-
-  /**
-   * @see nsContainerFrame
-   */
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
-                                   nsIFrame*        aParent,
-                                   nsIStyleContext* aStyleContext,
-                                   nsIFrame*&       aContinuingFrame);
 
   /**
    * Get the "type" of the frame

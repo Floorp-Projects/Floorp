@@ -1296,23 +1296,6 @@ NS_METHOD nsTableRowGroupFrame::IR_StyleChanged(nsIPresContext&      aPresContex
   return rv;
 }
 
-// XXX this doesn't handle scrolling, it that is even possible in this context
-NS_METHOD
-nsTableRowGroupFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
-                                            nsIFrame*        aParent,
-                                            nsIStyleContext* aStyleContext,
-                                            nsIFrame*&       aContinuingFrame)
-{
-  nsTableRowGroupFrame* cf = new nsTableRowGroupFrame;
-  if (nsnull == cf) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  cf->Init(aPresContext, mContent, aParent, aStyleContext, this);
-  if (PR_TRUE==gsDebug) printf("nsTableRowGroupFrame::CCF parent = %p, this=%p, cf=%p\n", aParent, this, cf);
-  aContinuingFrame = cf;
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsTableRowGroupFrame::GetFrameType(nsIAtom** aType) const
 {

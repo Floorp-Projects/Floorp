@@ -97,11 +97,6 @@ public:
   TextFrame();
 
   // nsIFrame
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
-                                   nsIFrame*        aParent,
-                                   nsIStyleContext* aStyleContext,
-                                   nsIFrame*&       aContinuingFrame);
-
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
@@ -490,21 +485,6 @@ TextFrame::GetCursor(nsIPresContext& aPresContext,
       aCursor = NS_STYLE_CURSOR_TEXT;
     }
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TextFrame::CreateContinuingFrame(nsIPresContext&  aCX,
-                                 nsIFrame*        aParent,
-                                 nsIStyleContext* aStyleContext,
-                                 nsIFrame*&       aContinuingFrame)
-{
-  TextFrame* cf = new TextFrame;
-  if (nsnull == cf) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  cf->Init(aCX, mContent, aParent, aStyleContext, this);
-  aContinuingFrame = cf;
   return NS_OK;
 }
 

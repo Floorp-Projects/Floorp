@@ -1083,33 +1083,6 @@ void nsTableOuterFrame::PlaceChild( OuterTableReflowState& aReflowState,
   }
 }
 
-
-NS_METHOD
-nsTableOuterFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
-                                         nsIFrame*        aParent,
-                                         nsIStyleContext* aStyleContext,
-                                         nsIFrame*&       aContinuingFrame)
-{
-  nsTableOuterFrame* cf = new nsTableOuterFrame;
-  if (nsnull == cf) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  cf->Init(aPresContext, mContent, aParent, aStyleContext, this);
-  if (PR_TRUE==gsDebug)
-    printf("nsTableOuterFrame::CCF parent = %p, this=%p, cf=%p\n", aParent, this, cf);
-  aContinuingFrame = cf;
-
-  // Create a continuing inner table frame
-  nsIFrame*         childList;
-  nsIStyleContext*  kidSC;
-
-  mInnerTableFrame->GetStyleContext(&kidSC);
-  mInnerTableFrame->CreateContinuingFrame(aPresContext, cf, kidSC, childList);
-  NS_RELEASE(kidSC);
-  cf->SetInitialChildList(aPresContext, nsnull, childList);
-  return NS_OK;
-}
-
 NS_METHOD nsTableOuterFrame::VerifyTree() const
 {
 #ifdef NS_DEBUG

@@ -38,6 +38,12 @@ struct RowReflowState;
 class nsTableRowFrame : public nsHTMLContainerFrame
 {
 public:
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
+
   /** Initialization of data */
   NS_IMETHOD InitChildren(PRInt32 aRowIndex=-1);
 
@@ -92,12 +98,6 @@ public:
 
   virtual void DidResize(nsIPresContext& aPresContext,
                          const nsHTMLReflowState& aReflowState);
-
-  /** @see nsContainerFrame::CreateContinuingFrame */
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
-                                   nsIFrame*        aParent,
-                                   nsIStyleContext* aStyleContext,
-                                   nsIFrame*&       aContinuingFrame);
 
   /**
    * Get the "type" of the frame

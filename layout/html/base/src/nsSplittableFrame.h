@@ -30,8 +30,6 @@ public:
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
   
-  // CreateContinuingFrame() does the default behavior of using the
-  // content delegate to create a new frame
   NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
 
   // Flow member functions.

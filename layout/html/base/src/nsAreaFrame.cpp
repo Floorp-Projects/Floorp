@@ -80,13 +80,18 @@ nsAreaFrame::Init(nsIPresContext&  aPresContext,
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow)
 {
+  nsresult  rv;
+
+  // Let the block frame do its initialization
+  rv = nsBlockFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+
   // Create a space manager if requested
   if (0 == (mFlags & NS_AREA_NO_SPACE_MGR)) {
     mSpaceManager = new nsSpaceManager(this);
     NS_ADDREF(mSpaceManager);
   }
 
-  return nsBlockFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -581,22 +586,6 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   return rv;
-}
-
-NS_METHOD
-nsAreaFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
-                                   nsIFrame*        aParent,
-                                   nsIStyleContext* aStyleContext,
-                                   nsIFrame*&       aContinuingFrame)
-{
-  nsAreaFrame* cf = new nsAreaFrame;
-  if (nsnull == cf) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  cf->Init(aPresContext, mContent, aParent, aStyleContext, this);
-  cf->SetFlags(mFlags);
-  aContinuingFrame = cf;
-  return NS_OK;
 }
 
 /////////////////////////////////////////////////////////////////////////////
