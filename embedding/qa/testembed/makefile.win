@@ -90,6 +90,7 @@ OBJS =                           \
     .\$(OBJDIR)\nsIObserServ.obj \
     .\$(OBJDIR)\nsIFile.obj \
     .\$(OBJDIR)\nsIWebBrow.obj \
+	.\$(OBJDIR)\nsIWebProg.obj \
     $(NULL)
 
 LLIBS=					\

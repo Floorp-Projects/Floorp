@@ -150,7 +150,15 @@ SOURCE=.\nsIRequest.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\nsIWebBrow.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\nsIWebNav.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\nsiWebProg.cpp
 # End Source File
 # Begin Source File
 
@@ -262,7 +270,15 @@ SOURCE=.\nsIRequest.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\nsIWebBrow.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\nsIWebNav.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\nsiWebProg.h
 # End Source File
 # Begin Source File
 

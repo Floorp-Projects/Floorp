@@ -116,12 +116,14 @@ protected:
 	afx_msg void OnTestsCreateprofile();
 	afx_msg void OnTestsAddWebProgListener();
 	afx_msg void OnTestsAddHistoryListener();
+	afx_msg void OnTestsRemovehistorylistener();
 	afx_msg void OnInterfacesNsifile();
 	afx_msg void OnToolsRemoveGHPage();
 	afx_msg void OnToolsRemoveAllGH();
 	afx_msg void OnToolsTestYourMethod();
 	afx_msg void OnToolsTestYourMethod2();
 	afx_msg void OnVerifybugs70228();
+	afx_msg void OnVerifybugs90195();
     afx_msg void OnPasteTest();
     afx_msg void OnCopyTest();
     afx_msg void OnSelectAllTest();
@@ -135,14 +137,13 @@ protected:
 	afx_msg void OnInterfacesNsidomwindow();
 	afx_msg void OnInterfacesNsidirectoryservice();
 	afx_msg void OnInterfacesNsiselection();
-	afx_msg void OnVerifybugs90195();
 	afx_msg void OnInterfacesNsiprofile();
 	afx_msg void OnInterfacesNsishistory();
-	afx_msg void OnTestsRemovehistorylistener();
 	afx_msg void OnInterfacesNsiwebnav();
 	afx_msg void OnInterfacesNsiclipboardcommands();
 	afx_msg void OnInterfacesNsiobserverservice();
 	afx_msg void OnInterfacesNsiwebbrowser();
+	afx_msg void OnInterfacesNsiwebprogress();
 
 	//}}AFX_MSG
 
