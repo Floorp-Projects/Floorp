@@ -7972,7 +7972,7 @@ nsImapMailFolder::SetJunkScoreForMessages(nsISupportsArray *aMessages, const cha
     nsMsgKeyArray keys;
     nsresult rv = BuildIdsAndKeyArray(aMessages, messageIds, keys);
     NS_ENSURE_SUCCESS(rv, rv);
-    StoreCustomKeywords(nsnull, aJunkScore, "", keys.GetArray(), 
+    StoreCustomKeywords(nsnull, (*aJunkScore == '0') ? "NonJunk" : "Junk", "", keys.GetArray(), 
       keys.GetSize(), nsnull);
     if (mDatabase)
       mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
