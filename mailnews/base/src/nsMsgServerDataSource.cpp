@@ -23,6 +23,7 @@
 
 #include "rdf.h"
 
+#include "nsCOMPtr.h"
 
 class nsMsgServerDataSource : public nsMsgRDFDataSource
 {
@@ -64,8 +65,8 @@ private:
 };
 
 #define NS_GET_SERVER(_resource, _variable)	\
-nsIMsgIncomingServer *_variable;						\
-rv = getServer(_resource, &_variable);		\
+nsCOMPtr<nsIMsgIncomingServer> _variable;						\
+rv = getServer(_resource, getter_AddRefs(_variable));		\
 if (NS_FAILED(rv)) return rv;					\
 
 // static members
@@ -99,16 +100,12 @@ nsMsgServerDataSource::GetTarget(nsIRDFResource *source,
 {
   nsresult rv = NS_RDF_NO_VALUE;
 
-  nsIMsgIncomingServer *server;
-  rv = getServer(source, &server);
-  if NS_FAILED(rv) return rv;
+  NS_GET_SERVER(source, server);
 
   if (!aTruthValue) return NS_RDF_NO_VALUE;
   
   // server code here
 
-  
-  NS_RELEASE(server);
   return rv;
 }
 
@@ -135,7 +132,9 @@ NS_IMETHODIMP
 nsMsgServerDataSource::ArcLabelsOut(nsIRDFResource *source,
                                      nsISimpleEnumerator **_retval)
 {
-
+    nsresult rv;
+    NS_GET_SERVER(source, server);
+  
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

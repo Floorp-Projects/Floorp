@@ -27,10 +27,10 @@
 #include "rdf.h"
 #include "nsRDFCID.h"
 #include "nsIRDFDataSource.h"
-
 #include "nsIServiceManager.h"
 #include "nsIMsgMailSession.h"
 
+#include "nsCOMPtr.h"
 #include "plstr.h"
 
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
@@ -114,16 +114,14 @@ nsMsgIdentityDataSource::GetTarget(nsIRDFResource *source,
 {
   nsresult rv = NS_RDF_NO_VALUE;
 
-  nsIMsgIdentity *identity;
-  rv = getIdentity(source, &identity);
+  nsCOMPtr<nsIMsgIdentity> identity;
+  rv = getIdentity(source, getter_AddRefs(identity));
   if NS_FAILED(rv) return rv;
 
   if (!aTruthValue) return NS_RDF_NO_VALUE;
   
   // identity code here
 
-  
-  NS_RELEASE(identity);
   return rv;
 }
 
