@@ -38,5 +38,9 @@ LIBS		= \
 		$(NSPR_LIBS) \
 		$(NULL)
 
+SDK_BINARY     =                    \
+		$(SIMPLE_PROGRAMS)  \
+		$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
