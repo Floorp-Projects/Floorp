@@ -2327,6 +2327,11 @@ MOZ_ARG_ENABLE_BOOL(xterm-updates,
 [  --enable-xterm-updates  Update XTERM titles with current command.],
   MOZ_UPDATE_XTERM=1)
 
+dnl Creating the makefiles incrementally obsoletes allmakefiles.sh
+MOZ_ARG_ENABLE_BOOL(incremental-makefiles,
+[  --enable-incremental-makefiles Create Makefile's on the fly],
+  MOZ_INCREMENTAL_MAKEFILES=1)
+
 dnl ========================================================
 dnl =
 dnl = --diable-dtd-debug
@@ -2430,6 +2435,7 @@ AC_SUBST(NS_USE_NATIVE)
 AC_SUBST(MOZ_WIDGET_TOOLKIT)
 AC_SUBST(MOZ_GFX_TOOLKIT)
 AC_SUBST(MOZ_UPDATE_XTERM)
+AC_SUBST(MOZ_INCREMENTAL_MAKEFILES) 
 AC_SUBST(NECKO)
 AC_SUBST(MOZ_MONOLITHIC_TOOLKIT)
 AC_SUBST(MOZ_TIMER_LIBS)
@@ -2961,21 +2967,50 @@ for dir in lib modules modules/security build build/package; do
    if test ! -d $dir; then rm -f $dir; mkdir $dir; fi
 done
 
-# Load the list of Makefiles to generate.
-#   To add new Makefiles, edit allmakefiles.sh.
-#   allmakefiles.sh sets the variable, MAKEFILES.
-. ${srcdir}/allmakefiles.sh
-
-# Run a perl script to quickly create the makefiles.
-# If it succeeds, it outputs a shell command to set CONFIG_FILES
-#   for the files it cannot handle correctly. This way, config.status
-#   will handle these files.
-# If it fails, nothing is set and config.status will run as usual.
-#
-# This does not change the $MAKEFILES variable.
-#
-eval `echo $MAKEFILES | \
-      $PERL $srcdir/build/autoconf/acoutput-fast.pl` 2>/dev/null
+if test "$MOZ_INCREMENTAL_MAKEFILES"; then
+  MAKEFILES="
+    Makefile
+    build/unix/nspr_my_config.mk
+    build/unix/nspr_my_overrides.mk
+    build/package/rpm/mozilla.spec
+    build/package/rpm/nspr-pthreads.spec
+    config/autoconf.mk
+    webshell/embed/gtk/mozilla_config.mk
+  "
+  dnl Create needed subdirectories because config.status is lame.
+  dnl It can only create one directory level at a time.
+  changequote(,)
+  $PERL -e '
+    foreach (split /\s+/, "'"$MAKEFILES"'") {
+      $dir = /(.*)\/.*/ ? "$1" : ".";
+      while (not defined $have_seen{$dir}) {
+	$have_seen{$dir} = 1;
+	last if -d $dir;
+	push @dirs, $dir;
+	$dir =~ s/\/[^\/]+$//;
+      }
+    }
+    sub by_subdir_count {
+      split(/\//,$a) <=> split(/\//,$b)
+    }
+    system "mkdir ".join(" ",sort by_subdir_count @dirs) if @dirs;'
+  changequote([,])
+else
+  dnl Load the list of Makefiles to generate.
+  dnl   To add new Makefiles, edit allmakefiles.sh.
+  dnl   allmakefiles.sh sets the variable, MAKEFILES.
+  . ${srcdir}/allmakefiles.sh
+  dnl 
+  dnl Run a perl script to quickly create the makefiles.
+  dnl If it succeeds, it outputs a shell command to set CONFIG_FILES
+  dnl   for the files it cannot handle correctly. This way, config.status
+  dnl   will handle these files.
+  dnl If it fails, nothing is set and config.status will run as usual.
+  dnl
+  dnl This does not change the $MAKEFILES variable.
+  eval `echo $MAKEFILES | \
+         $PERL $srcdir/build/autoconf/acoutput-fast.pl` 2>/dev/null
+fi
 
 AC_OUTPUT($MAKEFILES)
 
@@ -3012,7 +3047,7 @@ MAKEFILES=
 
 unset CONFIG_FILES
 
-if test -n "$MOZ_ENABLE_GTK_MOZILLA"; then
-ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --with-mozilla=$MOZ_BUILD_ROOT"
-AC_OUTPUT_SUBDIRS(webshell/embed/gtk)
+if test "$MOZ_ENABLE_GTK_MOZILLA"; then
+  ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --with-mozilla=$MOZ_BUILD_ROOT"
+  AC_OUTPUT_SUBDIRS(webshell/embed/gtk)
 fi

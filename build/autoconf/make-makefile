@@ -1,0 +1,192 @@
+#! /usr/bin/env perl
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+# Reserved.
+#
+
+# make-makefiles.pl - Quickly create Makefiles for subdirectories.
+#      Also, creates any needed subdirectories.
+#
+# usage: make-makefiles.pl [ <subdir> | <subdir>/Makefile ] ...
+
+# Send comments, improvements, bugs to Steve Lamm (slamm@netscape.com).
+
+sub dirname {
+ $_[0] =~ /(.*)\/.*/ ? "$1" : '.';
+}
+
+# find_depth: Pull the value of DEPTH out of Makefile (or Makefile.in)
+sub find_depth {
+  my $depth = '';
+  open(MAKEFILE, "<$_[0]") || die "Unable to open $_[0]: $!\n";
+  while (<MAKEFILE>) {
+    next unless /^DEPTH\s*=\s*(\..*)/;
+    $depth = $1;
+    last;
+  }
+  close MAKEFILE;
+  return $depth;
+}
+
+if ($ARGV[0] eq '-d') {
+  $depth = $ARGV[1];
+  shift @ARGV; 
+  shift @ARGV; 
+} else {
+  # Use $(DEPTH) in the Makefile or Makefile.in to determine the depth
+  if (-e "Makefile.in") {
+    $depth = find_depth("Makefile.in");
+  } elsif (-e "Makefile") {
+    $depth = find_depth("Makefile");
+  } elsif (-e "../Makefile") {
+    $depth = "../".find_depth("../Makefile");
+    $depth =~ s/\/\.$//;
+  } else {
+    warn "Unable to determine depth (e.g. ../..) to root of objdir tree.\n";
+    die  "Try running with '-d <depth>'\n";
+  }
+}
+
+# Determine various tree path variables
+#
+$object_subdir = `pwd`;
+chomp $object_subdir;
+
+chdir $depth;
+$object_root = `pwd`;
+chomp $object_root;
+
+($source_subdir = $object_subdir) =~ s/^$object_root\/?//;
+$source_subdir .= '/' unless $source_subdir eq '';
+
+# Find the top of the source directory
+# (Assuming that the executable is $topsrcdir/build/autoconf)
+$ac_given_srcdir = $0;
+$ac_given_srcdir =~ s|/?build/autoconf/.*$||;
+$ac_given_srcdir = '.' if $ac_given_srcdir eq '';
+
+if ($ac_given_srcdir =~ /^\./) {
+  while ($depth =~ /\.\./g) {
+    $ac_given_srcdir =~ s/\/[^\/]+//;
+  }
+}
+
+# Build the list of makefiles to generate
+#
+@makefiles = ();
+foreach $makefile (@ARGV) {
+  $makefile =~ s/\.in$//;
+  $makefile =~ s/\/$//;
+  $makefile =~ /Makefile$/ or $makefile .= "/Makefile";
+  push @makefiles, "${source_subdir}$makefile";
+}
+@makefiles = "Makefile" if $#makefiles == -1;
+
+# Create all the directories at once.
+#   This can be much faster than calling mkdir() for each one.
+@dirs = ();
+%have_seen = ();
+foreach $ac_file (@makefiles) {
+  next if $ac_file =~ /:/;
+  $ac_dir = dirname($ac_file);
+  while (not defined $have_seen{$ac_dir}) {
+    $have_seen{$ac_dir} = 1;
+    last if -d $ac_dir;
+    push @dirs, $ac_dir;
+    $ac_dir =~ s/\/[^\/]+$//;
+  }
+}
+sub by_subdir_count { 
+  split(/\//,$a) <=> split(/\//,$b)
+}
+system "mkdir ".join(' ',sort by_subdir_count @dirs) if @dirs;
+
+# Output the makefiles.
+#
+@unhandled=();
+foreach $ac_file (@makefiles) {
+  if (not $ac_file =~ /Makefile$/ or $ac_file =~ /:/) {
+    push @unhandled, $ac_file;
+    next;
+  }
+
+  $ac_file_in = "$ac_given_srcdir/$ac_file.in";
+  $ac_dir = dirname($ac_file);
+  if ($ac_dir eq '.') {
+    $ac_dir_suffix = '';
+    $ac_dots = '';
+  } else {
+    $ac_dir_suffix = "/$ac_dir";
+    $ac_dir_suffix =~ s%^/\./%/%;
+    $ac_dots = $ac_dir_suffix;
+    $ac_dots =~ s%/[^/]*%../%g;
+  }
+  if ($ac_given_srcdir eq '.') {
+    $srcdir = '.';
+    if ($ac_dots eq '') {
+      $top_srcdir = '.'
+    } else {
+      $top_srcdir = $ac_dots;
+      $top_srcdir =~ s%/$%%;
+    }
+  } elsif ($ac_given_srcdir =~ m%^/%) {
+    $srcdir     = "$ac_given_srcdir$ac_dir_suffix";
+    $top_srcdir = "$ac_given_srcdir";
+  } else {
+    $srcdir     = "$ac_dots$ac_given_srcdir$ac_dir_suffix";
+    $top_srcdir = "$ac_dots$ac_given_srcdir";
+  }
+
+  #mkdir $subdir, 0777 unless -d $subdir;
+
+  if (-e $ac_file) {
+    next if -M _ < -M $ac_file_in;
+    warn "updating $ac_file\n";
+  } else {
+    warn "creating $ac_file\n";
+  }
+
+  open (INFILE, "<$ac_file_in")
+    or ( warn "can't read $ac_file_in: No such file or directory\n" and next);
+  open (OUTFILE, ">$ac_file")
+    or ( warn "Unable to create $ac_file\n" and next);
+
+  while (<INFILE>) {
+    if (/\@[_a-zA-Z]*\@.*\@[_a-zA-Z]*\@/) {
+      #warn "Two defines on a line:$ac_file:$.:$_";
+      push @unhandled, $ac_file;
+      last;
+    }
+
+    s/\@srcdir\@/$srcdir/;
+    s/\@top_srcdir\@/$top_srcdir/;
+
+    if (/\@[_a-zA-Z]*\@/) {
+      #warn "Unknown variable:$ac_file:$.:$_";
+      push @unhandled, $ac_file;
+      last;
+    }
+    print OUTFILE;
+  }
+  close INFILE;
+  close OUTFILE;
+}
+
+# Print the shell command to be evaluated by configure.
+#
+if (@unhandled) {
+  $ENV{CONFIG_FILES}= join ' ', @unhandled;
+  system "./config.status";
+}
