@@ -70,7 +70,7 @@
 #define CFRONT_STYLE_THIS_ADJUST
 
 #elif defined(__sun__)
-#define THUNK_BASED_THIS_ADJUST
+#define CFRONT_STYLE_THIS_ADJUST
 
 #else
 #error "need a platform define if using unixish x86 code"
