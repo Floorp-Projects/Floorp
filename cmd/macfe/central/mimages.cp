@@ -332,7 +332,7 @@ _IMGCB_ControlPixmapBits(struct IMGCB* /*self*/, jint /*op*/, void* a, IL_Pixmap
 				// with this image will go away and we know we can just give out the bits to anyone
 				// that asks in the future.
 				if ( context->type == MWContextIcon )
-					gIconCache.ContextFinished ( context );
+					gImageCache().ContextFinished ( context );
 				break;
 		}
 	}
