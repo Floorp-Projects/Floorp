@@ -82,6 +82,7 @@ interface nsIMsgImapMailFolder : nsISupports {
   attribute long boxFlags;
   attribute string onlineName;
   attribute unsigned long aclFlags;
+  attribute boolean isNamespace;
   readonly attribute boolean canIOpenThisFolder;
   readonly attribute boolean hasAdminUrl;
 };

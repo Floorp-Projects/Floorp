@@ -4362,18 +4362,6 @@ nsImapMailFolder::RefreshFolderRights(nsIImapProtocol* aProtocol,
 }
 
 NS_IMETHODIMP
-nsImapMailFolder::FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
-                                            nsIMAPACLRightsInfo* aclRights)
-{
-  PRBool noSelect;
-
-  GetFlag(MSG_FOLDER_FLAG_IMAP_NOSELECT, &noSelect);
-  return (m_folderNeedsACLListed &&
-    !GetFolderIsNamespace() &&
-    !noSelect);
-}
-
-NS_IMETHODIMP
 nsImapMailFolder::SetCopyResponseUid(nsIImapProtocol* aProtocol,
                                      nsMsgKeyArray* aKeyArray,
                                      const char* msgIdString,
@@ -5126,22 +5114,6 @@ nsresult nsMsgIMAPFolderACL::CreateACLRightsString(PRUnichar **rightsString)
   *rightsString = ToNewUnicode(rights);
   return rv;
 }
-
-#ifdef WE_HAVE_NS_YET
-PRBool MSG_IsFolderACLInitialized(const char *folderName, const char *hostName)
-{
-  MSG_IMAPFolderInfoMail *fi = master->FindImapMailFolder(hostName, folderName, nsnull, PR_FALSE);
-  if (fi)
-    return ((fi->GetFolderPrefFlags() & MSG_FOLDER_PREF_IMAP_ACL_RETRIEVED) ||
-				fi->GetFolderIsNamespace() ||
-                                fi->GetFolderIsNoSelect());		// If a namespace or \Noselect, treat it as if initialized
-  else
-  {
-    NS_ASSERTION(PR_FALSE, "no folder");
-    return PR_TRUE;	// If we can't find the folder, we don't want to get ACLs for it
-  }
-}
-#endif
 
 NS_IMETHODIMP nsImapMailFolder::GetPath(nsIFileSpec ** aPathName)
 {
@@ -6286,12 +6258,14 @@ nsresult nsImapMailFolder::CreateACLRightsStringForFolder(PRUnichar **rightsStri
 NS_IMETHODIMP nsImapMailFolder::GetFolderNeedsACLListed(PRBool *bVal)
 {
   NS_ENSURE_ARG_POINTER(bVal);
-    // *** jt -- come back later; still need to worry about if the folder
-    // itself is a namespace
-    *bVal = (m_folderNeedsACLListed && !(mFlags &
-                                         MSG_FOLDER_FLAG_IMAP_NOSELECT) 
-             /* && !GetFolderIsNamespace() */ );
-    return NS_OK;
+  PRBool dontNeedACLListed = PR_TRUE;
+  // if we haven't acl listed, and it's not a no select folder, then we'll
+  // list the acl if it's not a namespace.
+  if (m_folderNeedsACLListed && !(mFlags & MSG_FOLDER_FLAG_IMAP_NOSELECT))
+    GetIsNamespace(&dontNeedACLListed);
+
+  *bVal = !dontNeedACLListed;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMailFolder::SetFolderNeedsACLListed(PRBool bVal)
@@ -6300,8 +6274,10 @@ NS_IMETHODIMP nsImapMailFolder::SetFolderNeedsACLListed(PRBool bVal)
     return NS_OK;
 }
 
-PRBool nsImapMailFolder::GetFolderIsNamespace()
+NS_IMETHODIMP nsImapMailFolder::GetIsNamespace(PRBool *aResult)
 {
+  NS_ENSURE_ARG_POINTER(aResult);
+  nsresult rv = NS_OK;
   if (!m_namespace)
   {
 #ifdef DEBUG_bienvenu
@@ -6309,47 +6285,47 @@ PRBool nsImapMailFolder::GetFolderIsNamespace()
     NS_ASSERTION(m_hierarchyDelimiter != kOnlineHierarchySeparatorUnknown, "hierarchy delimiter not set");
 #endif
 
-    nsXPIDLCString hostName;
     nsXPIDLCString onlineName;
-    GetHostname(getter_Copies(hostName));
+    nsXPIDLCString serverKey;
+    GetServerKey(getter_Copies(serverKey));
     GetOnlineName(getter_Copies(onlineName));
     PRUnichar hierarchyDelimiter;
     GetHierarchyDelimiter(&hierarchyDelimiter);
 
-    nsresult rv;
     nsCOMPtr<nsIImapHostSessionList> hostSession = 
              do_GetService(kCImapHostSessionList, &rv);
 
     if (NS_SUCCEEDED(rv) && hostSession)
     {
-      m_namespace = nsIMAPNamespaceList::GetNamespaceForFolder(hostName.get(), onlineName.get(), (char) hierarchyDelimiter);
+      m_namespace = nsIMAPNamespaceList::GetNamespaceForFolder(serverKey.get(), onlineName.get(), (char) hierarchyDelimiter);
       if (m_namespace == nsnull)
       {
         if (mFlags & MSG_FOLDER_FLAG_IMAP_OTHER_USER)
         {
-           rv = hostSession->GetDefaultNamespaceOfTypeForHost(hostName.get(), kOtherUsersNamespace, m_namespace);
+           rv = hostSession->GetDefaultNamespaceOfTypeForHost(serverKey.get(), kOtherUsersNamespace, m_namespace);
         }
         else if (mFlags & MSG_FOLDER_FLAG_IMAP_PUBLIC)
         {
-          rv = hostSession->GetDefaultNamespaceOfTypeForHost(hostName.get(), kPublicNamespace, m_namespace);
+          rv = hostSession->GetDefaultNamespaceOfTypeForHost(serverKey.get(), kPublicNamespace, m_namespace);
         }
         else 
         {
-          rv = hostSession->GetDefaultNamespaceOfTypeForHost(hostName.get(), kPersonalNamespace, m_namespace);
+          rv = hostSession->GetDefaultNamespaceOfTypeForHost(serverKey.get(), kPersonalNamespace, m_namespace);
         }
       }
       NS_ASSERTION(m_namespace, "failed to get namespace");
       if (m_namespace)
       {
         nsIMAPNamespaceList::SuggestHierarchySeparatorForNamespace(m_namespace, (char) hierarchyDelimiter);
-        m_folderIsNamespace = nsIMAPNamespaceList::GetFolderIsNamespace(hostName.get(), onlineName.get(), (char) hierarchyDelimiter, m_namespace);
+        m_folderIsNamespace = nsIMAPNamespaceList::GetFolderIsNamespace(serverKey.get(), onlineName.get(), (char) hierarchyDelimiter, m_namespace);
       }
     }
   } 
-  return m_folderIsNamespace;
+  *aResult = m_folderIsNamespace;
+  return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::SetFolderIsNamespace(PRBool isNamespace)
+NS_IMETHODIMP nsImapMailFolder::SetIsNamespace(PRBool isNamespace)
 {
   m_folderIsNamespace = isNamespace;
   return NS_OK;

@@ -1092,21 +1092,27 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 
   if (mDoingSubscribeDialog) 
   {
-    rv = AddTo(folderPath, mDoingLsub /* add as subscribed */, mDoingLsub /* change if exists */);
-    NS_ENSURE_SUCCESS(rv,rv);
     // Make sure the imapmailfolder object has the right delimiter because the unsubscribed
     // folders (those not in the 'lsub' list) have the delimiter set to the default ('^').
     if (a_nsIFolder && folderPath && (*folderPath))
     {
       nsCOMPtr<nsIMsgFolder> msgFolder;
       nsCOMPtr<nsIFolder> subFolder;
+      PRBool isNamespace = PR_FALSE;
+      PRBool noSelect = PR_FALSE;
+
       rv = a_nsIFolder->FindSubFolder(folderPath, getter_AddRefs(subFolder));
       NS_ENSURE_SUCCESS(rv,rv);
       msgFolder = do_QueryInterface(subFolder, &rv);
       NS_ENSURE_SUCCESS(rv,rv);
+      msgFolder->GetNoSelect(&noSelect);
       nsCOMPtr<nsIMsgImapMailFolder> imapFolder = do_QueryInterface(msgFolder, &rv);
       NS_ENSURE_SUCCESS(rv,rv);
       imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
+      isNamespace = (boxFlags & kNameSpace) != 0;
+      if (!isNamespace && !noSelect)
+        rv = AddTo(folderPath, mDoingLsub /* add as subscribed */, mDoingLsub /* change if exists */);
+      NS_ENSURE_SUCCESS(rv,rv);
       return rv;
     }
   }

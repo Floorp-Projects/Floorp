@@ -83,8 +83,6 @@ public:
                                  nsIMAPACLRightsInfo* aclRights);
     NS_IMETHOD RefreshFolderRights(nsIImapProtocol* aProtocol,
                                    nsIMAPACLRightsInfo* aclRights);
-    NS_IMETHOD FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
-                                         nsIMAPACLRightsInfo* aclRights);
     NS_IMETHOD SetCopyResponseUid(nsIImapProtocol* aProtocol,
                                   nsMsgKeyArray* aKeyArray,
                                   const char* msgIdString,
@@ -172,15 +170,6 @@ struct RefreshFolderRightsProxyEvent : nsImapExtensionSinkProxyEvent
     RefreshFolderRightsProxyEvent(nsImapExtensionSinkProxy* aProxy,
                                 nsIMAPACLRightsInfo* aclRights);
     virtual ~RefreshFolderRightsProxyEvent();
-    NS_IMETHOD HandleEvent();
-    nsIMAPACLRightsInfo m_aclRightsInfo;
-};
-
-struct FolderNeedsACLInitializedProxyEvent : nsImapExtensionSinkProxyEvent
-{
-    FolderNeedsACLInitializedProxyEvent(nsImapExtensionSinkProxy* aProxy,
-                                nsIMAPACLRightsInfo* aclRights);
-    virtual ~FolderNeedsACLInitializedProxyEvent();
     NS_IMETHOD HandleEvent();
     nsIMAPACLRightsInfo m_aclRightsInfo;
 };

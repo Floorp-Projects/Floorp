@@ -196,37 +196,6 @@ nsImapExtensionSinkProxy::RefreshFolderRights(nsIImapProtocol* aProtocol,
 }
 
 NS_IMETHODIMP
-nsImapExtensionSinkProxy::FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
-                                                nsIMAPACLRightsInfo* aclRights)
-{
-    nsresult res = NS_OK;
-    NS_PRECONDITION (aclRights, "Oops... null aclRights");
-    if(!aclRights)
-        return NS_ERROR_NULL_POINTER;
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        FolderNeedsACLInitializedProxyEvent *ev =
-            new FolderNeedsACLInitializedProxyEvent(this, aclRights);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-        {
-            ev->SetNotifyCompletion(PR_TRUE);
-            ev->PostEvent(m_eventQueue);
-        }
-    }
-    else
-    {
-        res = m_realImapExtensionSink->FolderNeedsACLInitialized(aProtocol,
-                                                             aclRights);
-        aProtocol->NotifyFEEventCompletion();
-    }
-    return res;
-}
-
-NS_IMETHODIMP
 nsImapExtensionSinkProxy::SetCopyResponseUid(nsIImapProtocol* aProtocol,
                                              nsMsgKeyArray* aKeyArray,
                                              const char* msgIdString,
@@ -700,49 +669,6 @@ NS_IMETHODIMP
 RefreshFolderRightsProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapExtensionSink->RefreshFolderRights(
-        m_proxy->m_protocol, &m_aclRightsInfo); 
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
-}
-
-FolderNeedsACLInitializedProxyEvent::FolderNeedsACLInitializedProxyEvent(
-    nsImapExtensionSinkProxy* aProxy, nsIMAPACLRightsInfo* aclRights) :
-    nsImapExtensionSinkProxyEvent(aProxy)
-{
-    NS_ASSERTION (aclRights, "Oops... a null acl rights info");
-    if (aclRights)
-    {
-        m_aclRightsInfo.hostName = PL_strdup(aclRights->hostName);
-        m_aclRightsInfo.mailboxName = PL_strdup(aclRights->mailboxName);
-        m_aclRightsInfo.userName = PL_strdup(aclRights->userName);
-        m_aclRightsInfo.rights = PL_strdup(aclRights->rights);
-    }
-    else
-    {
-        m_aclRightsInfo.hostName = nsnull;
-        m_aclRightsInfo.mailboxName = nsnull;
-        m_aclRightsInfo.userName = nsnull;
-        m_aclRightsInfo.rights = nsnull;
-    }
-}
-
-FolderNeedsACLInitializedProxyEvent::~FolderNeedsACLInitializedProxyEvent()
-{
-    if (m_aclRightsInfo.hostName)
-        PL_strfree(m_aclRightsInfo.hostName);
-    if (m_aclRightsInfo.mailboxName)
-        PL_strfree(m_aclRightsInfo.mailboxName);
-    if (m_aclRightsInfo.userName)
-        PL_strfree(m_aclRightsInfo.userName);
-    if (m_aclRightsInfo.rights)
-        PL_strfree(m_aclRightsInfo.rights);
-}
-
-NS_IMETHODIMP
-FolderNeedsACLInitializedProxyEvent::HandleEvent()
-{
-    nsresult res = m_proxy->m_realImapExtensionSink->FolderNeedsACLInitialized(
         m_proxy->m_protocol, &m_aclRightsInfo); 
     if (m_notifyCompletion)
         m_proxy->m_protocol->NotifyFEEventCompletion();

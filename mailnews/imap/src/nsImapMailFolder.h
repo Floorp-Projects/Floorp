@@ -309,8 +309,6 @@ public:
 
   NS_IMETHOD RefreshFolderRights(nsIImapProtocol* aProtocol,
                                  nsIMAPACLRightsInfo* aclRights);
-  NS_IMETHOD FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
-                                       nsIMAPACLRightsInfo* aclRights);
   NS_IMETHOD SetCopyResponseUid(nsIImapProtocol* aProtocol,
                                 nsMsgKeyArray* keyArray,
                                 const char* msgIdString,
@@ -399,9 +397,6 @@ protected:
   nsresult        GetOwnersOnlineFolderName(char **onlineName);
   nsIMAPNamespace *GetNamespaceForFolder();
   void            SetNamespaceForFolder(nsIMAPNamespace *ns);
-  PRBool          GetFolderIsNamespace();
-  // ### TODO if this is supposed to be a method of an interface, which interface, and who will call it?
-  NS_IMETHODIMP   SetFolderIsNamespace(PRBool isNamespace);
 
   nsresult GetServerAdminUrl(char **aAdminUrl);
   nsMsgIMAPFolderACL * GetFolderACL();
