@@ -63,7 +63,7 @@ public:
    * @param aTheString -- The string (tag) associated with this handler
    * @return VOID
    */
-  void SetString(const nsString &aTheString) {mTheTagName = aTheString;}
+  void SetString(const nsString &aTheString) {mTheTagName.Assign(aTheString);}
 
   /**
    * Returns the string (tag) handled by this nsTagHandler

@@ -194,8 +194,9 @@ void nsParser::FreeSharedObjects(void) {
  *  @param   
  *  @return   
  */
-nsParser::nsParser(nsITokenObserver* anObserver) : mUnusedInput("") , mCharset("ISO-8859-1") {
+nsParser::nsParser(nsITokenObserver* anObserver) {
   NS_INIT_REFCNT();
+  mCharset.AssignWithConversion("ISO-8859-1");
   mParserFilter = 0;
   mObserver = 0;
   mProgressEventSink = nsnull;
@@ -311,7 +312,7 @@ nsIParserFilter * nsParser::SetParserFilter(nsIParserFilter * aFilter)
  *  @return	 ptr to previously set contentsink (usually null)  
  */
 void nsParser::SetCommand(const char* aCommand){
-  nsAutoString theCommand(aCommand);
+  nsCAutoString theCommand(aCommand);
   if(theCommand.Equals(kViewSourceCommand))
     mCommand=eViewSource;
   else mCommand=eViewNormal;
@@ -872,7 +873,7 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerif
     if (rv != NS_OK) {      
       return rv;
     }
-    nsAutoString theName(spec);
+    nsAutoString theName; theName.AssignWithConversion(spec);
     nsCRT::free(spec);
 
     nsScanner* theScanner=new nsScanner(theName,PR_FALSE,mCharset,mCharsetSource);
@@ -903,7 +904,7 @@ nsresult nsParser::Parse(nsIInputStream& aStream,const nsString& aMimeType,PRBoo
   nsresult  result=NS_ERROR_OUT_OF_MEMORY;
 
   //ok, time to create our tokenizer and begin the process
-  nsAutoString theUnknownFilename("unknown");
+  nsAutoString theUnknownFilename; theUnknownFilename.AssignWithConversion("unknown");
 
   nsInputStream input(&aStream);
     
@@ -1035,11 +1036,11 @@ PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aSta
   PRUint32 theCount=aStack.GetSize();
   PRUint32 theIndex=0;
   while(theIndex++<theCount){
-    theContext.Append("<");
+    theContext.AppendWithConversion("<");
     theContext.Append(aStack.TagAt(theCount-theIndex));
-    theContext.Append(">");
+    theContext.AppendWithConversion(">");
   }
-  theContext.Append("<endnote>");       //XXXHack! I'll make this better later.
+  theContext.AppendWithConversion("<endnote>");       //XXXHack! I'll make this better later.
   nsAutoString theBuffer(theContext);
   theBuffer.Append(aSourceBuffer);
   
@@ -1047,7 +1048,7 @@ PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aSta
   if(theBuffer.Length()){
     //now it's time to try to build the model from this fragment
 
-    nsString theOutput("");
+    nsString theOutput;
     nsIHTMLContentSink*  theSink=0;
     nsresult theResult=NS_New_HTML_ContentSinkStream(&theSink,&theOutput,0);
     SetContentSink(theSink);
@@ -1078,11 +1079,11 @@ nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITag
   PRUint32 theCount=aStack.GetSize();
   PRUint32 theIndex=0;
   while(theIndex++<theCount){
-    theContext.Append("<");
+    theContext.AppendWithConversion("<");
     theContext.Append(aStack.TagAt(theCount-theIndex));
-    theContext.Append(">");
+    theContext.AppendWithConversion(">");
   }
-  theContext.Append("<endnote>");       //XXXHack! I'll make this better later.
+  theContext.AppendWithConversion("<endnote>");       //XXXHack! I'll make this better later.
   nsAutoString theBuffer(theContext);
 
 #if 0
@@ -1386,7 +1387,7 @@ nsresult nsParser::OnStartRequest(nsIChannel* channel, nsISupports* aContext)
   rv = channel->GetContentType(&contentType);
   if (NS_SUCCEEDED(rv))
   {
-    mParserContext->SetMimeType(contentType);
+    mParserContext->SetMimeType( NS_ConvertToString(contentType) );
 	  nsCRT::free(contentType);
   }
   else
@@ -1409,7 +1410,7 @@ nsresult nsParser::OnStartRequest(nsIChannel* channel, nsISupports* aContext)
 
 static PRBool detectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsString& oCharset, nsCharsetSource& oCharsetSource) {
  oCharsetSource= kCharsetFromAutoDetection;
- oCharset = "";
+ oCharset.SetLength(0);
  // see http://www.w3.org/TR/1998/REC-xml-19980210#sec-oCharseting
  // for details
  switch(aBytes[0])
@@ -1419,19 +1420,19 @@ static PRBool detectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsS
         // 00 00
         if((0x00==aBytes[2]) && (0x3C==aBytes[3])) {
            // 00 00 00 3C UCS-4, big-endian machine (1234 order)
-           oCharset = UCS4_BE;
+           oCharset.AssignWithConversion(UCS4_BE);
         } else if((0x3C==aBytes[2]) && (0x00==aBytes[3])) {
            // 00 00 3C 00 UCS-4, unusual octet order (2143)
-           oCharset = UCS4_2143;
+           oCharset.AssignWithConversion(UCS4_2143);
         } 
      } else if(0x3C==aBytes[1]) {
         // 00 3C
         if((0x00==aBytes[2]) && (0x00==aBytes[3])) {
            // 00 3C 00 00 UCS-4, unusual octet order (3412)
-           oCharset = UCS4_3412;
+           oCharset.AssignWithConversion(UCS4_3412);
         } else if((0x3C==aBytes[2]) && (0x3F==aBytes[3])) {
            // 00 3C 00 3F UTF-16, big-endian, no Byte Order Mark
-           oCharset = UCS2_BE; // should change to UTF-16BE
+           oCharset.AssignWithConversion(UCS2_BE); // should change to UTF-16BE
         } 
      }
    break;
@@ -1440,17 +1441,17 @@ static PRBool detectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsS
         // 3C 00
         if((0x00==aBytes[2]) && (0x00==aBytes[3])) {
            // 3C 00 00 00 UCS-4, little-endian machine (4321 order)
-           oCharset = UCS4_LE;
+           oCharset.AssignWithConversion(UCS4_LE);
         } else if((0x3F==aBytes[2]) && (0x00==aBytes[3])) {
            // 3C 00 3F 00 UTF-16, little-endian, no Byte Order Mark
-           oCharset = UCS2_LE; // should change to UTF-16LE
+           oCharset.AssignWithConversion(UCS2_LE); // should change to UTF-16LE
         } 
      } else if((0x3C==aBytes[0]) && (0x3F==aBytes[1]) &&
                (0x78==aBytes[2]) && (0x6D==aBytes[3]) &&
                (0 == PL_strncmp("<?xml version", (char*)aBytes, 13 ))) {
        // 3C 3F 78 6D
-       nsAutoString firstXbytes("");
-       firstXbytes.Append((const char*)aBytes, (PRInt32)
+       nsAutoString firstXbytes;
+       firstXbytes.AppendWithConversion((const char*)aBytes, (PRInt32)
                        ((aLen > XMLENCODING_PEEKBYTES)?
                        XMLENCODING_PEEKBYTES:
                        aLen)); 
@@ -1481,7 +1482,7 @@ static PRBool detectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsS
      if(0xFF==aBytes[1]) {
         // FE FF
         // UTF-16, big-endian 
-        oCharset = UCS2_BE; // should change to UTF-16BE
+        oCharset.AssignWithConversion(UCS2_BE); // should change to UTF-16BE
         oCharsetSource= kCharsetFromByteOrderMark;
      }
    break;
@@ -1489,7 +1490,7 @@ static PRBool detectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsS
      if(0xFE==aBytes[1]) {
         // FF FE
         // UTF-16, little-endian 
-        oCharset = UCS2_LE; // should change to UTF-16LE
+        oCharset.AssignWithConversion(UCS2_LE); // should change to UTF-16LE
         oCharsetSource= kCharsetFromByteOrderMark;
      }
    break;
@@ -1565,7 +1566,7 @@ theContext->mTransferBufferSize;
         if(NS_SUCCEEDED(result) && (theNumRead>0)) { 
           if(needCheckFirst4Bytes && (theNumRead >= 4)) { 
              nsCharsetSource guessSource; 
-             nsAutoString guess(""); 
+             nsAutoString guess; 
   
              needCheckFirst4Bytes = PR_FALSE; 
              if(detectByteOrderMark((const unsigned char*)theContext->mTransferBuffer, 
@@ -1639,7 +1640,7 @@ nsresult nsParser::OnStopRequest(nsIChannel* channel, nsISupports* aContext,
     //If you're here, then OnDataAvailable() never got called. 
     //Prior to necko, we never dealt with this case, but the problem may have existed.
     //What we'll do (for now at least) is construct a blank HTML document.
-    nsAutoString  temp("<html><body></body></html>");
+    nsAutoString  temp; temp.AssignWithConversion("<html><body></body></html>");
     mParserContext->mScanner->Append(temp);
     result=ResumeParse(PR_TRUE,PR_TRUE);    
   }

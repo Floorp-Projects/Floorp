@@ -78,7 +78,7 @@ nsParserService::HTMLStringTagToId(const nsString &aTag, PRInt32* aId) const
 NS_IMETHODIMP 
 nsParserService::HTMLIdToStringTag(PRInt32 aId, nsString& aTag) const
 {
-  aTag = nsHTMLTags::GetStringValue((nsHTMLTag)aId);
+  aTag.AssignWithConversion( nsHTMLTags::GetStringValue((nsHTMLTag)aId) );
   return NS_OK;
 }
   

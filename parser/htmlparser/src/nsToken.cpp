@@ -72,8 +72,9 @@ CToken::CToken(const nsString& aName) : mTextValue(aName) {
  *  @update gess 3/25/98
  *  @param  aName--char* containing name of token
  */
-CToken::CToken(const char* aName) : mTextValue(aName) {
+CToken::CToken(const char* aName) {
   MOZ_COUNT_CTOR(CToken);
+  mTextValue.AssignWithConversion(aName);
   mTypeID=0;
   mAttrCount=0;
   TokenCount++;
@@ -164,7 +165,7 @@ void CToken::DebugDumpSource(nsOutputStream& anOutputStream) {
  * @param   name is a char* value containing new string value
  */
 void CToken::SetStringValue(const char* name){
-  mTextValue=name;
+  mTextValue.AssignWithConversion(name);
 }
 
 /**

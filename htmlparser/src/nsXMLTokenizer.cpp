@@ -237,7 +237,7 @@ nsresult nsXMLTokenizer::ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,ns
     PRBool isComment=PR_TRUE; 
     nsAutoString  theEmpty;
     if(theChar==kLeftSquareBracket) {
-      nsAutoString CDATAString("[CDATA[");
+      nsAutoString CDATAString; CDATAString.AssignWithConversion("[CDATA[");
       PRBool isCDATA = PR_FALSE;
       result = ConsumeConditional(aScanner, CDATAString, isCDATA);
       if (NS_OK == result) {

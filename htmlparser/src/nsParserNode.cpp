@@ -35,7 +35,7 @@ static NS_DEFINE_IID(kIParserNodeIID, NS_IPARSER_NODE_IID);
 nsString& GetEmptyString() {
   static nsString* gEmptyStr=0;
   if(!gEmptyStr)
-    gEmptyStr=new nsString("");
+    gEmptyStr=new nsString;
   return *gEmptyStr;
 }
 
