@@ -160,7 +160,8 @@ sub build_deps_matrix_from_file {
   while (<DEPS_FILE>) {
 	if(/->/) {
 	  chomp;
-	  s/\;//;  # Strip off ';'
+	  s/^\s+//;  # Strip off leading spaces.
+	  s/\;//;    # Strip off ';'
 
 	  # Pick off module, and dependency from -> line.
 	  @line = split(' -> ', $_);
@@ -229,7 +230,7 @@ sub print_dependency_list() {
 				   keys %{ $deps{$module} } ) {
 	  #    print "    $module -> $req [weight=$deps{$module}{$req}];\n";
 	  if(!$list_only_mode) {
-		print "$module -> $req;\n";
+		print "    $module -> $req;\n";
 	  } else {
 		# print "$req ";
 		push(@raw_list, $req);
