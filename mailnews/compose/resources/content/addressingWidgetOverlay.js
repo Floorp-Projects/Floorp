@@ -133,3 +133,7 @@ function CompFields2Recipients(msgCompFields)
 	}
 }
 
+function AddressingWidgetClick()
+{
+	dump("AddressingWidgetClick\n");
+}

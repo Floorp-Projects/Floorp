@@ -33,9 +33,13 @@ Rights Reserved.
 	<!-- Addressing Widget -->
 	<box id="addressingWidget"
 		 align="vertical"
+		 onclick="AddressingWidgetClick()"
 		 style="background-color:white; border:solid black 1px">
 
-		<tree id="addressingWidgetTree">		<!-- for fixed height:  height:5em;  -->
+		<!-- for fixed height:  height:5em;  -->
+		<tree id="addressingWidgetTree"		
+			  treeallowevents="true">
+			  
 			<treecol style="width:15%"/>
 			<treecol style="width:85%"/>
 
