@@ -37,32 +37,59 @@ nsBasicAuth::~nsBasicAuth()
 }
 
 nsresult
-nsBasicAuth::Authenticate(nsIURI* i_URI, 
-    const char* iChallenge, 
-    const char* iUserPass,
-    char**  oResult)
+nsBasicAuth::Authenticate(nsIURI* i_URI, const char *protocol,
+                          const char* iChallenge, const PRUnichar* iUser,
+                          const PRUnichar* iPass, nsIPrompt *prompt,
+                          char **oResult)
 {
-    nsresult rv = NS_ERROR_FAILURE;
-    // Assert that iChallenge starts with Basic. TODO
-    // Then do the conversion
-    if (oResult && iUserPass)
-    {
-        char* tempBuff = nsnull;
-        tempBuff = PL_Base64Encode(iUserPass, 0, tempBuff); 
-        if (!tempBuff)
-            return NS_ERROR_FAILURE; // ??
-        
-          // STRING USE WARNING: perhaps |authString| should be an |nsCAutoString|? -- scc
-        nsString authString; authString.AssignWithConversion("Basic ");
-        authString.AppendWithConversion(tempBuff);
-        *oResult = authString.ToNewCString();
-        PR_Free(tempBuff);
-        rv = NS_OK;
+    // we only know how to deal with Basic auth for http.
+    PRBool isBasicAuth = !strncmp(iChallenge, "Basic ", 6);
+    NS_ASSERTION(isBasicAuth, "nsBasicAuth called for non-Basic auth");
+    if (!isBasicAuth)
+        return NS_ERROR_INVALID_ARG;
+    PRBool isHTTPAuth = !strncmp(protocol, "http", 4);
+    NS_ASSERTION(isHTTPAuth, "nsBasicAuth called for non-http auth");
+    if (!isHTTPAuth)
+        return NS_ERROR_INVALID_ARG;
+
+    if (!oResult || !iUser)
+        return NS_ERROR_NULL_POINTER;
+
+    // we work with ASCII around these here parts
+    nsCAutoString cUser, cPass;
+    cUser.AssignWithConversion(iUser);
+    if (iPass) {
+        cPass.AssignWithConversion(iPass);
     }
-    return rv;
+    char* tempBuff = (char *)nsAllocator::Alloc(cUser.Length() + 
+                                                iPass ? (cPass.Length() + 2) 
+                                                      : 1);
+    if (!tempBuff)
+        return NS_ERROR_OUT_OF_MEMORY;
+    strcpy(tempBuff, cUser.GetBuffer());
+    if (iPass) {
+        strcat(tempBuff, ":");
+        strcat(tempBuff, cPass.GetBuffer());
+    }
+
+    char *base64Buff = PL_Base64Encode(tempBuff, 0, nsnull); 
+    if (!base64Buff) {
+        nsAllocator::Free(tempBuff);
+        return NS_ERROR_FAILURE; // ??
+    }
+    nsCAutoString authString("Basic "); // , 6 + strlen(base64Buff));
+    authString.Append(base64Buff);
+    *oResult = authString.ToNewCString();
+    PR_Free(base64Buff);
+    nsAllocator::Free(tempBuff);
+    return NS_OK;
 }
 
-NS_IMPL_ADDREF(nsBasicAuth);
-NS_IMPL_RELEASE(nsBasicAuth);
+nsresult
+nsBasicAuth::GetInteractionType(PRUint32 *aType)
+{
+    *aType = nsIAuthenticator::INTERACTION_STANDARD;
+    return NS_OK;
+}
 
-NS_IMPL_QUERY_INTERFACE0(nsBasicAuth);
+NS_IMPL_ISUPPORTS1(nsBasicAuth, nsIAuthenticator);

@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= necko
 
 XPIDLSRCS	= \
+		nsIAuthenticator.idl \
 		nsIFileStreams.idl \
 		nsIRequest.idl \
 		nsIChannel.idl \

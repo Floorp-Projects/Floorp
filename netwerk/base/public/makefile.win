@@ -31,6 +31,7 @@ EXPORTS =                           \
         $(NULL)
 
 XPIDLSRCS =                             \
+	.\nsIAuthenticator.idl          \
         .\nsIChannel.idl                \
         .\nsIFileStreams.idl            \
         .\nsIFileTransportService.idl   \
