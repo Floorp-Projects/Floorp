@@ -281,6 +281,9 @@ js_InitStringGlobals(void);
 extern void
 js_FreeStringGlobals(void);
 
+extern void
+js_PurgeDeflatedStringCache(JSString *str);
+
 /* Initialize per-runtime string state for the first context in the runtime. */
 extern JSBool
 js_InitRuntimeStringState(JSContext *cx);
