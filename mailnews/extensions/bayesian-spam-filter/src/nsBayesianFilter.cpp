@@ -364,7 +364,7 @@ nsresult nsBayesianFilter::tokenizeMessage(const char* messageURL, TokenAnalyzer
     // Tell mime we just want to scan the message data
     nsCAutoString aUrl(messageURL);
     aUrl.FindChar('?') == kNotFound ? aUrl += "?" : aUrl += "&";
-    aUrl += "header=spam";
+    aUrl += "header=filter";
 
     nsCOMPtr<nsIChannel> channel;
     rv = ioService->NewChannel(aUrl, NULL, NULL, getter_AddRefs(channel));
