@@ -78,7 +78,7 @@ static const char * kLocaleColumnName = "locale";
 
 #define kMAILNEWS_VIEW_DEFAULT_CHARSET        "mailnews.view_default_charset"
 #define kMAILNEWS_DEFAULT_CHARSET_OVERRIDE    "mailnews.force_charset_override"
-static nsCString   gDefaultCharacterSet;
+static char * gDefaultCharacterSet = NULL;
 static PRBool     gDefaultCharacterOverride;
 static nsIObserver *gFolderCharsetObserver = nsnull;
 static PRBool     gInitializeObserver = PR_FALSE;
@@ -122,7 +122,11 @@ NS_IMETHODIMP nsFolderCharsetObserver::Observe(nsISupports *aSubject, const char
         nsXPIDLString ucsval;
         pls->ToString(getter_Copies(ucsval));
         if (ucsval)
-          gDefaultCharacterSet.AssignWithConversion(ucsval.get());
+        {
+          if (gDefaultCharacterSet)
+            nsMemory::Free(gDefaultCharacterSet); 
+          gDefaultCharacterSet = ToNewCString(ucsval);
+        }
       }
     }
     else if (prefName.EqualsLiteral(kMAILNEWS_DEFAULT_CHARSET_OVERRIDE))
@@ -211,7 +215,11 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
         nsXPIDLString ucsval;
         pls->ToString(getter_Copies(ucsval));
         if (ucsval)
-          gDefaultCharacterSet.AssignWithConversion(ucsval.get());
+        {
+          if (gDefaultCharacterSet)
+            nsMemory::Free(gDefaultCharacterSet);
+          gDefaultCharacterSet = ToNewCString(ucsval);
+        }
       }
       rv = prefBranch->GetBoolPref(kMAILNEWS_DEFAULT_CHARSET_OVERRIDE, &gDefaultCharacterOverride);
       
@@ -268,9 +276,17 @@ nsDBFolderInfo::~nsDBFolderInfo()
 // to call multiple times.
 void nsDBFolderInfo::ReleaseExternalReferences()
 {
-  if (gReleaseObserver) 
-
+  if (gReleaseObserver && gFolderCharsetObserver) 
+  {
     NS_IF_RELEASE(gFolderCharsetObserver);
+  
+    // this can be called many times
+    if (gDefaultCharacterSet)
+    {
+      nsMemory::Free(gDefaultCharacterSet);
+      gDefaultCharacterSet = NULL; // free doesn't null out our ptr.
+    }
+  }
   
   if (m_mdb)
   {
@@ -649,7 +665,7 @@ nsresult nsDBFolderInfo::GetConstCharPtrCharacterSet(const char**result)
   if (!m_charSet.IsEmpty())
     *result = m_charSet.get();
   else
-    *result = gDefaultCharacterSet.get();
+    *result = gDefaultCharacterSet;
   return NS_OK;
 }
 
@@ -661,7 +677,7 @@ nsDBFolderInfo::GetCharPtrCharacterSet(char **result)
   if ((*result == nsnull || **result == '\0'))
   {
     PR_Free(*result);
-    *result = ToNewCString(gDefaultCharacterSet);
+    *result = strdup(gDefaultCharacterSet);
   }
 
   return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
