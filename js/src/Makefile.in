@@ -83,6 +83,10 @@ CSRCS		= \
 		prmjtime.c \
 		$(NULL)
 
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+ASFILES		= jslocko.asm
+endif
+
 EXPORTS		= \
 		jsautocfg.h \
 		js.msg \
