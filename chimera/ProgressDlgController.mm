@@ -90,11 +90,13 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
   mDownloadIsPaused = NO;
   mDownloadIsComplete = NO;
 
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-  PRBool save = PR_FALSE;
-  prefs->GetBoolPref("browser.download.progressDnldDialog.keepAlive", &save);
-  mSaveFileDialogShouldStayOpen = save;
-
+  if (!mIsFileSave) {
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+    PRBool save = PR_FALSE;
+    prefs->GetBoolPref("browser.download.progressDnldDialog.keepAlive", &save);
+    mSaveFileDialogShouldStayOpen = save;
+  }
+  
   [self setupToolbar];
   [mProgressBar setUsesThreadedAnimation:YES];      
   [mProgressBar startAnimation:self];   // move to onStateChange
@@ -149,6 +151,7 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
     return (mDownloadIsComplete);
   return YES;           // turn it on otherwise.
 }
+
 - (NSToolbarItem *) toolbar:(NSToolbar *)toolbar
       itemForItemIdentifier:(NSString *)itemIdent
   willBeInsertedIntoToolbar:(BOOL)willBeInserted
@@ -187,23 +190,25 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(openFile)];
     } else if ( [itemIdent isEqual:LeaveOpenToolbarItemIdentifier] ) {
-        if ( mSaveFileDialogShouldStayOpen ) {
-            [toolbarItem setLabel:NSLocalizedString(@"Leave Open",@"Leave Open")];
-            [toolbarItem setPaletteLabel:NSLocalizedString(@"Toggle Close Behavior",@"Toggle Close Behavior")];
-            [toolbarItem setToolTip:NSLocalizedString(@"LeaveOpenToolTip",@"Window will stay open when download finishes.")];
-            [toolbarItem setImage:[NSImage imageNamed:@"saveLeaveOpenYES"]];
-            [toolbarItem setTarget:self];
-            [toolbarItem setAction:@selector(toggleLeaveOpen)];
-        } else {
-            [toolbarItem setLabel:NSLocalizedString(@"Close When Done",@"Close When Done")];
-            [toolbarItem setPaletteLabel:NSLocalizedString(@"Toggle Close Behavior",@"Toggle Close Behavior")];
-            [toolbarItem setToolTip:NSLocalizedString(@"CloseWhenDoneToolTip",@"Window will close automatically when download finishes.")];
-            [toolbarItem setImage:[NSImage imageNamed:@"saveLeaveOpenNO"]];
-            [toolbarItem setTarget:self];
-            [toolbarItem setAction:@selector(toggleLeaveOpen)];
-        }
-        if ( willBeInserted ) {
-            leaveOpenToggleToolbarItem = toolbarItem; //establish reference
+        if ( !mIsFileSave ) {
+            if ( mSaveFileDialogShouldStayOpen ) {
+                [toolbarItem setLabel:NSLocalizedString(@"Leave Open",@"Leave Open")];
+                [toolbarItem setPaletteLabel:NSLocalizedString(@"Toggle Close Behavior",@"Toggle Close Behavior")];
+                [toolbarItem setToolTip:NSLocalizedString(@"LeaveOpenToolTip",@"Window will stay open when download finishes.")];
+                [toolbarItem setImage:[NSImage imageNamed:@"saveLeaveOpenYES"]];
+                [toolbarItem setTarget:self];
+                [toolbarItem setAction:@selector(toggleLeaveOpen)];
+            } else {
+                [toolbarItem setLabel:NSLocalizedString(@"Close When Done",@"Close When Done")];
+                [toolbarItem setPaletteLabel:NSLocalizedString(@"Toggle Close Behavior",@"Toggle Close Behavior")];
+                [toolbarItem setToolTip:NSLocalizedString(@"CloseWhenDoneToolTip",@"Window will close automatically when download finishes.")];
+                [toolbarItem setImage:[NSImage imageNamed:@"saveLeaveOpenNO"]];
+                [toolbarItem setTarget:self];
+                [toolbarItem setAction:@selector(toggleLeaveOpen)];
+            }
+            if ( willBeInserted ) {
+                leaveOpenToggleToolbarItem = toolbarItem; //establish reference
+         }
         }
     } else {
         toolbarItem = nil;
@@ -459,8 +464,9 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
 
 // DownloadProgressDisplay protocol methods
 
-- (void)onStartDownload
+- (void)onStartDownload:(BOOL)isFileSave;
 {
+  mIsFileSave = isFileSave;
   [self showWindow: self];
   [self setupDownloadTimer];
 }
