@@ -15,40 +15,40 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*---------------------------------------*/
-/*																		*/
-/* Name:		FrameListMenu.h											*/
-/* Description:	XFE_FrameListMenu component header file.				*/
-/*				These are the menu items that appear at the end of the	*/
-/*																		*/
-/* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 
-
-/* Date:		Sun Mar  2 01:34:13 PST 1997							*/
-/*																		*/
-/*----------------------------------------------------------------------*/
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// Name:        WindowListMenu.h                                        //
+//                                                                      //
+// Description:	A menu class for listing all the xfe windows.           //
+//              This class can be used with both XmCascadeButton and    //
+//              XfeCascade widgets.                                     //
+//                                                                      //
+// Author:		Ramiro Estrugo <ramiro@netscape.com>                    //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 #include "NotificationCenter.h"
 #include "Frame.h"
 
-#ifndef _xfe_frame_list_menu_h_
-#define _xfe_frame_list_menu_h_
+#ifndef _xfe_window_list_menu_h_
+#define _xfe_window_list_menu_h_
 
 // This class can be used with a DYNA_CASCADEBUTTON or
 // DYNA_MENUITEMS.
 
-class XFE_FrameListMenu : public XFE_NotificationCenter
+class XFE_WindowListMenu : public XFE_NotificationCenter
 {
 public:
 
-	virtual ~XFE_FrameListMenu();
+	virtual ~XFE_WindowListMenu();
 
 	// this function occupies the generateCallback slot in a menuspec.
 	static void generate(Widget, void *, XFE_Frame *);
 
 private:
 	
-	XFE_FrameListMenu(Widget, XFE_Frame *);
+	XFE_WindowListMenu(Widget, XFE_Frame *);
 	
 	// the toplevel component -- the thing we dispatch our events to.
 	XFE_Frame *m_parentFrame;
@@ -83,4 +83,4 @@ private:
 
 };
 
-#endif /* _xfe_frame_list_menu_h_ */
+#endif /* _xfe_window_list_menu_h_ */

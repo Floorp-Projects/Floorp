@@ -48,7 +48,7 @@
 #include "BookmarkMenu.h"
 #include "BrowserFrame.h"
 #include "NavCenterFrame.h"
-#include "FrameListMenu.h"
+#include "WindowListMenu.h"
 #include "Minibuffer.h"
 #include "Toolbox.h"
 #include "Dashboard.h"
@@ -255,7 +255,7 @@ MenuSpec XFE_Frame::window_menu_spec[] = {
 	{ "privacyToolsSubmenu",	CASCADEBUTTON, privacytools_submenu_spec },
 	{ "serverToolsSubmenu",	CASCADEBUTTON, servertools_submenu_spec },
 	MENU_SEPARATOR,
- 	{ "frameListPlaceHolder",	DYNA_MENUITEMS, NULL, NULL, False, NULL, XFE_FrameListMenu::generate },
+ 	{ "frameListPlaceHolder",	DYNA_MENUITEMS, NULL, NULL, False, NULL, XFE_WindowListMenu::generate },
 	{ NULL }
 };
 

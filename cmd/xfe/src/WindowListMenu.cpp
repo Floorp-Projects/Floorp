@@ -15,20 +15,20 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*---------------------------------------*/
-/*																		*/
-/* Name:		FrameListMenu.cpp										*/
-/* Description:	XFE_FrameListMenu component implementation.				*/
-/*				These are the menu items that appear at the end of the	*/
-/*																		*/
-/* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// Name:        WindowListMenu.cpp                                      //
+//                                                                      //
+// Description:	A menu class for listing all the xfe windows.           //
+//              This class can be used with both XmCascadeButton and    //
+//              XfeCascade widgets.                                     //
+//                                                                      //
+// Author:		Ramiro Estrugo <ramiro@netscape.com>                    //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
-/* Date:		Sun Mar  2 01:34:13 PST 1997							*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-
-#include "FrameListMenu.h"
+#include "WindowListMenu.h"
 #include "MozillaApp.h"
 #include "felocale.h"
 #include "intl_csi.h"
@@ -40,7 +40,7 @@
 #define MAX_ITEM_WIDTH 40
 
 //////////////////////////////////////////////////////////////////////////
-XFE_FrameListMenu::XFE_FrameListMenu(Widget w, XFE_Frame * frame)
+XFE_WindowListMenu::XFE_WindowListMenu(Widget w, XFE_Frame * frame)
 {
 	m_cascade = w;
 	m_parentFrame = frame;
@@ -49,12 +49,12 @@ XFE_FrameListMenu::XFE_FrameListMenu(Widget w, XFE_Frame * frame)
 	
 	XtAddCallback(m_cascade,
 				  XmNdestroyCallback,
-				  &XFE_FrameListMenu::destroy_cb,
+				  &XFE_WindowListMenu::destroy_cb,
 				  (XtPointer) this);
 	
 	XtAddCallback(m_cascade,
 				  XmNcascadingCallback,
-				  &XFE_FrameListMenu::cascading_cb,
+				  &XFE_WindowListMenu::cascading_cb,
 				  (XtPointer) this);
 	
 	XtVaGetValues(m_cascade,XmNsubMenuId,&m_submenu,NULL);
@@ -64,20 +64,20 @@ XFE_FrameListMenu::XFE_FrameListMenu(Widget w, XFE_Frame * frame)
 	XP_ASSERT(m_submenu);
 }
 //////////////////////////////////////////////////////////////////////////
-XFE_FrameListMenu::~XFE_FrameListMenu()
+XFE_WindowListMenu::~XFE_WindowListMenu()
 {
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_FrameListMenu::generate(Widget cascade, XtPointer, XFE_Frame *frame)
+XFE_WindowListMenu::generate(Widget cascade, XtPointer, XFE_Frame *frame)
 {
-	XFE_FrameListMenu *obj;
+	XFE_WindowListMenu *obj;
 	
-	obj = new XFE_FrameListMenu(cascade, frame);
+	obj = new XFE_WindowListMenu(cascade, frame);
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_FrameListMenu::cascading()
+XFE_WindowListMenu::cascading()
 {
 	XP_List *	frame_list = getShownFrames();
 
@@ -116,7 +116,7 @@ XFE_FrameListMenu::cascading()
 			XtAddCallback(item,
 						  XmNactivateCallback,
 						  //XmNvalueChangedCallback,
-						  &XFE_FrameListMenu::item_activate_cb,
+						  &XFE_WindowListMenu::item_activate_cb,
 						  (XtPointer) this);
 		}
 
@@ -179,7 +179,7 @@ XFE_FrameListMenu::cascading()
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_FrameListMenu::item_activate(Widget item)
+XFE_WindowListMenu::item_activate(Widget item)
 {
 	XP_ASSERT( XfeIsAlive(m_submenu) );
 
@@ -212,31 +212,31 @@ XFE_FrameListMenu::item_activate(Widget item)
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_FrameListMenu::destroy_cb(Widget, XtPointer clientData, XtPointer)
+XFE_WindowListMenu::destroy_cb(Widget, XtPointer clientData, XtPointer)
 {
-  XFE_FrameListMenu *obj = (XFE_FrameListMenu*)clientData;
+  XFE_WindowListMenu *obj = (XFE_WindowListMenu*)clientData;
 
   delete obj;
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_FrameListMenu::cascading_cb(Widget, XtPointer clientData, XtPointer)
+XFE_WindowListMenu::cascading_cb(Widget, XtPointer clientData, XtPointer)
 {
-  XFE_FrameListMenu *obj = (XFE_FrameListMenu*)clientData;
+  XFE_WindowListMenu *obj = (XFE_WindowListMenu*)clientData;
 
   obj->cascading();
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_FrameListMenu::item_activate_cb(Widget item, XtPointer clientData, XtPointer)
+XFE_WindowListMenu::item_activate_cb(Widget item, XtPointer clientData, XtPointer)
 {
-	XFE_FrameListMenu *obj = (XFE_FrameListMenu*)clientData;
+	XFE_WindowListMenu *obj = (XFE_WindowListMenu*)clientData;
 
 	obj->item_activate(item);
 }
 //////////////////////////////////////////////////////////////////////////
 XP_List *
-XFE_FrameListMenu::getShownFrames()
+XFE_WindowListMenu::getShownFrames()
 {
 	XP_List *	frame_list = XFE_MozillaApp::theApp()->getAllFrameList();
 	Cardinal	frame_count = XP_ListCount(frame_list);
