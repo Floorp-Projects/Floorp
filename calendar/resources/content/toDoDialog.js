@@ -228,6 +228,8 @@ function loadCalendarToDoDialog()
    
    var firstFocus = document.getElementById( "title-field" );
    firstFocus.focus();
+
+   opener.setCursor( "default" );
 }
 
 
@@ -440,7 +442,7 @@ function updateCompletedItemEnabled()
 
    if( getFieldValue( completedCheckbox, "checked" ) )
    {
-      setFieldValue( "completed-date-poicker", false, "disabled" );
+      setFieldValue( "completed-date-picker", false, "disabled" );
       setFieldValue( "percent-complete-menulist", "100" );
       setFieldValue( "percent-complete-menulist", true, "disabled" );
       setFieldValue( "percent-complete-text", true, "disabled" );
