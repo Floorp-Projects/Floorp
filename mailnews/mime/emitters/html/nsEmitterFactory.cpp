@@ -28,8 +28,7 @@
 
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kMimeEmitterCID, NS_MIME_EMITTER_CID);
-
+static NS_DEFINE_CID(kMimeEmitterCID, NS_HTML_MIME_EMITTER_CID);
 
 ////////////////////////////////////////////////////////////
 //
@@ -209,7 +208,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
   if (NS_FAILED(rv)) goto done;
 
 #ifdef NS_DEBUG
-  printf("*** Register MIME Emitter...\n");
+  printf("*** Register HTML MIME Emitter...\n");
 #endif
 
   done:

@@ -24,14 +24,12 @@ IS_COMPONENT=1
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=emitter
-LIBRARY_NAME=emitter
+MODULE=htmlemitter
+LIBRARY_NAME=htmlemitter
 
 CPPSRCS = \
 		nsMimeEmitter.cpp	    \
 		nsEmitterFactory.cpp	\
-		nsEmitterUtils.cpp	\
-		rebuffer.cpp          \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS	= 	\

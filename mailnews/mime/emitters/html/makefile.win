@@ -34,7 +34,7 @@ DEPTH=..\..\..\..
 # New build system where zip dll is build indepenant of java stubs.
 #//
 #//------------------------------------------------------------------------
-MODULE  = emitter
+MODULE  = htmlemitter
 REQUIRES=
 #EXPORTS =\
 #		.\nsMimeEmitter.h	\
@@ -52,8 +52,6 @@ DEFINES=
 OBJS=							\
 		.\$(OBJDIR)\nsMimeEmitter.obj		\
 		.\$(OBJDIR)\nsEmitterFactory.obj	\
-		.\$(OBJDIR)\nsEmitterUtils.obj	\
-		.\$(OBJDIR)\rebuffer.obj		\
 		$(NULL)
 
 #//------------------------------------------------------------------------
@@ -80,7 +78,7 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 #//     (ie. LCFLAGS, LLFLAGS, LLIBS, LINCS)
 #//
 #//------------------------------------------------------------------------
-LCFLAGS=-DNETSCAPE
+DEFINES= -NS_DEBUG
 
 MSGLIBS=				\
 		$(NULL)
@@ -98,6 +96,7 @@ LLIBS=							\
 			$(DIST)\lib\xplib.lib       	\
 			$(DIST)\lib\raptorbase.lib       	\
 			$(DIST)\lib\xpcom32.lib       	\
+			$(DIST)\lib\emitterutils.lib    \
 			$(NULL)
 
 LINCS=$(LINCS)  -I.                         		\

@@ -19,7 +19,8 @@
 #define _nsMimeEmitter_h_
 
 #include "prtypes.h"
-#include "rebuffer.h"
+#include "prio.h"
+#include "nsMimeRebuffer.h"
 #include "nsINetOStream.h"
 #include "nsIMimeEmitter.h"
 
@@ -39,17 +40,17 @@ public:
     NS_IMETHOD    SetOutputStream(nsINetOStream *outStream);
 
     // Header handling routines.
-    NS_IMETHOD    StartHeader(PRBool rootMailHeader);
+    NS_IMETHOD    StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID);
     NS_IMETHOD    AddHeaderField(const char *field, const char *value);
     NS_IMETHOD    EndHeader();
 
     // Attachment handling routines
-    NS_IMETHOD    StartAttachment();
+    NS_IMETHOD    StartAttachment(const char *name, const char *contentType, const char *url);
     NS_IMETHOD    AddAttachmentField(const char *field, const char *value);
     NS_IMETHOD    EndAttachment();
 
     // Body handling routines
-    NS_IMETHOD    StartBody();
+    NS_IMETHOD    StartBody(PRBool bodyOnly, const char *msgID);
     NS_IMETHOD    WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten);
     NS_IMETHOD    EndBody();
 
@@ -70,6 +71,11 @@ protected:
 
     // For header determination...
     PRBool        mDocHeader;
+
+#ifdef DEBUG
+    PRBool        mReallyOutput;
+    PRFileDesc    *mLogFile;        /* Temp file to put generated HTML into. */ 
+#endif 
 };
 
 /* this function will be used by the factory to generate an class access object....*/
