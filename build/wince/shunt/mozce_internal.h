@@ -142,6 +142,9 @@ int w2a_buffer(LPCWSTR inWideString, int inWideChars, LPSTR outACPString, int in
 
 LPSTR w2a_malloc(LPCWSTR inWideString, int inWideChars, int* outACPChars);
 
+
+void dumpMemoryInfo();
+
 #define charcount(array) (sizeof(array) / sizeof(array[0]))
 
 #endif /* __mozce_internal_h */

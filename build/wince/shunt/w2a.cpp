@@ -61,15 +61,15 @@ int w2a_buffer(LPCWSTR inWideString, int inWideChars, LPSTR outACPString, int in
         **  Attempt the conversion.
         */
         retval = WideCharToMultiByte(
-            CP_ACP,
-            0,
-            inWideString,
-            inWideChars,
-            outACPString,
-            inACPChars,
-            NULL,
-            NULL
-            );
+                                     CP_ACP,
+                                     0,
+                                     inWideString,
+                                     inWideChars,
+                                     outACPString,
+                                     inACPChars,
+                                     NULL,
+                                     NULL
+                                     );
     }
 
     return retval;

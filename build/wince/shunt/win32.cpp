@@ -14,7 +14,7 @@
  * License.
  *
  * The Original Code is mozilla.org code, released
- * Jan 28, 2003.
+ * Jan 28, 20.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
@@ -136,14 +136,31 @@ MOZCE_SHUNT_API int mozce_SetStretchBltMode(HDC inDC, int inStretchMode)
 MOZCE_SHUNT_API int mozce_ExtSelectClipRgn(HDC inDC, HRGN inRGN, int inMode)
 {
 #ifdef DEBUG
-    printf("-- mozce_ExtSelectClipRgn called\n");
+    printf("mozce_ExtSelectClipRgn called\n");
 #endif
+    RECT rect;
+    int result = GetClipBox(inDC, &rect);
 
-    int retval = ERROR;
+    if (result != ERROR)
+    {
+        HRGN region = CreateRectRgn(0, 0, 0, 0);
+        HRGN scrap  = CreateRectRgn(rect.left, rect.top, rect.right, rect.bottom);
+        
+        result = CombineRgn(region, scrap, inRGN, RGN_AND);
+        if (result != ERROR)
+            SelectClipRgn(inDC, region);
+        
+        ::DeleteObject(scrap);
+        ::DeleteObject(region);
+    }
 
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-    return retval;
+    if (result == ERROR || TRUE)
+    {
+        HRGN rgn = CreateRectRgn(0, 0, 32000, 32000);
+        ::SelectClipRgn(inDC, rgn);
+        ::DeleteObject(rgn);
+    }
+    return result;
 }
 
 typedef VOID CALLBACK LINEDDAPROC(
@@ -169,14 +186,36 @@ MOZCE_SHUNT_API BOOL mozce_LineDDA(int inXStart, int inYStart, int inXEnd, int i
 MOZCE_SHUNT_API int mozce_FrameRect(HDC inDC, CONST RECT *inRect, HBRUSH inBrush)
 {
 #ifdef DEBUG
-    printf("-- mozce_FrameRect called\n");
+    printf("mozce_FrameRect called\n");
 #endif
 
-    int retval = 0;
+    HBRUSH oldBrush = (HBRUSH)SelectObject(inDC, inBrush);
+    RECT myRect = *inRect;
+    InflateRect(&myRect, 1, 1); // The width and height of
+                                // the border are always one
+                                // logical unit.
+    
+    // 1  ---->   2
+    //            
+    //            |
+    //            v
+    //
+    // 4  ---->   3 
 
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    MoveToEx(inDC, myRect.left, myRect.top, (LPPOINT) NULL); 
 
-    return retval;
+    // 1 -> 2
+    LineTo(inDC, myRect.right, myRect.top); 
+    
+    // 2 -> 3
+    LineTo(inDC, myRect.right, myRect.bottom); 
+
+    // 3 -> 4
+    LineTo(inDC, myRect.left, myRect.bottom); 
+
+    SelectObject(inDC, oldBrush);
+
+    return 1;
 }
 
 
@@ -271,8 +310,10 @@ MOZCE_SHUNT_API UINT mozce_GetTextCharsetInfo(HDC inDC, LPFONTSIGNATURE outSig, 
 
 MOZCE_SHUNT_API UINT mozce_GetOutlineTextMetrics(HDC inDC, UINT inData, void* outOTM)
 {
+    static int x = 0;
+
 #ifdef DEBUG
-    printf("-- mozce_GetOutlineTextMetrics called\n");
+    printf("-- mozce_GetOutlineTextMetrics called (%d)\n", ++x);
 #endif
 
     UINT retval = 0;
@@ -968,3 +1009,21 @@ MOZCE_SHUNT_API DWORD mozce_MsgWaitForMultipleObjects(DWORD nCount, const HANDLE
 {
 #endif
 } /* extern "C" */
+
+void dumpMemoryInfo()
+{
+    MEMORYSTATUS ms;
+    ms.dwLength = sizeof(MEMORYSTATUS);
+
+
+    GlobalMemoryStatus(&ms);
+
+    wprintf(L"-> %d %d %d %d %d %d %d\n", 
+            ms.dwMemoryLoad, 
+            ms.dwTotalPhys, 
+            ms.dwAvailPhys, 
+            ms.dwTotalPageFile, 
+            ms.dwAvailPageFile, 
+            ms.dwTotalVirtual, 
+            ms.dwAvailVirtual);
+}
