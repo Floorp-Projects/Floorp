@@ -113,6 +113,10 @@ protected:
    nsresult EnsureContentListener();
 
    void SetCurrentURI(nsIURI* aUri);
+   nsresult CreateContentViewer(const char* aContentType, const char* aCommand,
+      nsIChannel* aOpenedChannel, nsIStreamListener** aContentHandler);
+   nsresult NewContentViewerObj(const char* aContentType, const char* aCommand,
+      nsIChannel* aOpenedChannel, nsIStreamListener** aContentHandler);
 
    NS_IMETHOD FireStartDocumentLoad(nsIDocumentLoader* aLoader,
                                     nsIURI* aURL,
