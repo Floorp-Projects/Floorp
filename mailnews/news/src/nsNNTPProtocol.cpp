@@ -2162,7 +2162,11 @@ PRInt32 nsNNTPProtocol::BeginArticle()
           nsCOMPtr <nsISupports> supports;
           NS_NewIOFileStream(getter_AddRefs(supports), fileSpec,
                          PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
-          m_tempArticleStream = do_QueryInterface(supports);
+          nsresult rv;
+          m_tempArticleStream = do_QueryInterface(supports, &rv);
+          NS_ASSERTION(NS_SUCCEEDED(rv) && m_tempArticleStream,"failed to get article stream");
+          if (NS_FAILED(rv) || !m_tempArticleStream) return -1;
+
           PRBool needDummyHeaders = PR_FALSE;
           msgurl->GetAddDummyEnvelope(&needDummyHeaders);
           if (needDummyHeaders)
