@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Doug Turner <dougt@netscape.com>
  *   IBM Corp.
+ *   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -97,6 +98,7 @@
 #elif defined(XP_BEOS)
 
 #include <FindDirectory.h>
+#include <fs_info.h>
 #include <Path.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -231,7 +233,30 @@ Clean:
 
 #endif // XP_WIN
 
+#if defined (XP_BEOS)                                            
+static nsresult
+GetBeOSFolder( directory_which which, dev_t volume, nsILocalFile** aFile)
+{
+    char path[MAXPATHLEN];
+    if (volume < 0)
+        return NS_ERROR_FAILURE;
+        
+    status_t result = find_directory(which, volume, false, path, MAXPATHLEN - 2);
+    if (result != B_OK)
+        return NS_ERROR_FAILURE;
+        
+    int len = strlen(path);
+    if (len == 0)
+        return NS_ERROR_FAILURE;
 
+    if (path[len-1] != '/') 
+    {
+        path[len]   = '/';
+        path[len+1] = '\0';            
+    }
+    return NS_NewNativeLocalFile(nsDependentCString(path), PR_TRUE, aFile);
+}
+#endif // XP_BEOS
 
 
 nsresult
@@ -635,61 +660,26 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 #ifdef XP_BEOS
         case BeOS_SettingsDirectory:
         {
-            find_directory(B_USER_SETTINGS_DIRECTORY, 0, 0, path, MAXPATHLEN);
-            // Need enough space to add the trailing backslash
-            int len = strlen(path);
-            if (len > MAXPATHLEN-2)
-                break;
-            path[len]   = '/';
-            path[len+1] = '\0';
-            return NS_NewNativeLocalFile(nsDependentCString(path), 
-                                         PR_TRUE, 
-                                         aFile);
+            return GetBeOSFolder(B_USER_SETTINGS_DIRECTORY,0, aFile);
         }
 
         case BeOS_HomeDirectory:
         {
-            find_directory(B_USER_DIRECTORY, 0, 0, path, MAXPATHLEN);
-            // Need enough space to add the trailing backslash
-            int len = strlen(path);
-            if (len > MAXPATHLEN-2)
-                break;
-            path[len]   = '/';
-            path[len+1] = '\0';
-
-            return NS_NewNativeLocalFile(nsDependentCString(path), 
-                                         PR_TRUE, 
-                                         aFile);
+            return GetBeOSFolder(B_USER_DIRECTORY,0, aFile);
         }
 
         case BeOS_DesktopDirectory:
         {
-            find_directory(B_DESKTOP_DIRECTORY, 0, 0, path, MAXPATHLEN);
-            // Need enough space to add the trailing backslash
-            int len = strlen(path);
-            if (len > MAXPATHLEN-2)
+            /* Get the user's desktop folder, which in the future may differ from the boot desktop */
+            char path[MAXPATHLEN];
+            if (find_directory(B_USER_DIRECTORY, 0, false, path, MAXPATHLEN) != B_OK )
                 break;
-            path[len]   = '/';
-            path[len+1] = '\0';
-
-            return NS_NewNativeLocalFile(nsDependentCString(path), 
-                                         PR_TRUE, 
-                                         aFile);
+            return GetBeOSFolder(B_DESKTOP_DIRECTORY, dev_for_path(path), aFile);
         }
 
         case BeOS_SystemDirectory:
         {
-            find_directory(B_BEOS_DIRECTORY, 0, 0, path, MAXPATHLEN);
-            // Need enough space to add the trailing backslash
-            int len = strlen(path);
-            if (len > MAXPATHLEN-2)
-                break;
-            path[len]   = '/';
-            path[len+1] = '\0';
-
-            return NS_NewNativeLocalFile(nsDependentCString(path), 
-                                         PR_TRUE, 
-                                         aFile);
+            return GetBeOSFolder(B_BEOS_DIRECTORY,0, aFile);
         }
 #endif        
 #ifdef XP_OS2
