@@ -51,6 +51,10 @@ class NS_COM nsSupportsWeakReference : public nsISupportsWeakReference
         }
 
       nsWeakReference* mProxy;
+
+		protected:
+
+			inline void ClearWeakReferences();
   };
 
 class NS_COM nsWeakReference : public nsIWeakReference
@@ -93,10 +97,27 @@ class NS_COM nsWeakReference : public nsIWeakReference
       nsSupportsWeakReference*  mReferent;
   };
 
-inline nsSupportsWeakReference::~nsSupportsWeakReference()
+inline
+void
+nsSupportsWeakReference::ClearWeakReferences()
+		/*
+			Usually being called from |nsSupportsWeakReference::~nsSupportsWeakReference|
+			will be good enough, but you may have a case where you need to call disconnect
+			your weak references in an outer destructor (to prevent some client holding a
+			weak reference from re-entering your destructor).
+		*/
+	{
+		if ( mProxy )
+			{
+				mProxy->NoticeReferentDestruction();
+				mProxy = 0;
+			}
+	}
+
+inline
+nsSupportsWeakReference::~nsSupportsWeakReference()
   {
-    if ( mProxy )
-      mProxy->NoticeReferentDestruction();
+  	ClearWeakReferences();
   }
 
 #endif
