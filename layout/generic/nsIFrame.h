@@ -1010,9 +1010,8 @@ public:
    * Returns the offset from this frame to the closest geometric parent that
    * has a view. Also returns the containing view or null in case of error
    */
-  NS_IMETHOD  GetOffsetFromView(nsPresContext* aPresContext,
-                                nsPoint&        aOffset,
-                                nsIView**       aView) const = 0;
+  NS_IMETHOD  GetOffsetFromView(nsPoint&  aOffset,
+                                nsIView** aView) const = 0;
 
   /**
    * Returns the offset from this frame's upper left corner to the upper

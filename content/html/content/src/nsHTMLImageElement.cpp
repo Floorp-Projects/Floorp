@@ -289,7 +289,7 @@ nsHTMLImageElement::GetXY()
 
   nsPoint origin(0, 0);
   nsIView* parentView;
-  nsresult rv = frame->GetOffsetFromView(context, origin, &parentView);
+  nsresult rv = frame->GetOffsetFromView(origin, &parentView);
   if (NS_FAILED(rv)) {
     return point;
   }

@@ -142,7 +142,7 @@ GetScreenOrigin(nsIDOMElement* aElement)
 
         nsIView* view;
         nsPoint offset;
-        frame->GetOffsetFromView(presContext, offset, &view);
+        frame->GetOffsetFromView(offset, &view);
         if (view) {
           nsPoint widgetOffset(0, 0);
           nsIWidget* widget = view->GetNearestWidget(&widgetOffset);

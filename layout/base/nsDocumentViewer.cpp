@@ -3254,7 +3254,7 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
     // find offset from view
     nsPoint pnt;
     nsIView * view;
-    fndPageFrame->GetOffsetFromView(mPresContext, pnt, &view);
+    fndPageFrame->GetOffsetFromView(pnt, &view);
 
     nscoord deadSpaceGap = 0;
     nsIPageSequenceFrame * sqf;

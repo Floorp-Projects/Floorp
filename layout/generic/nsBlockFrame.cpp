@@ -6228,7 +6228,7 @@ nsBlockFrame::HandleEvent(nsPresContext* aPresContext,
 
     while(NS_OK == result)
     { //we are starting aloop to allow us to "drill down to the one we want" 
-      mainframe->GetOffsetFromView(aPresContext, origin, &parentWithView);
+      mainframe->GetOffsetFromView(origin, &parentWithView);
 
       if (NS_FAILED(result))
         return NS_OK;//do not handle

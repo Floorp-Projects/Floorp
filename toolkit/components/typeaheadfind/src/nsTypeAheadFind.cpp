@@ -1054,7 +1054,7 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
 
   if (!aGetTopVisibleLeaf) {
     nsRect relFrameRect = frame->GetRect();
-    frame->GetOffsetFromView(aPresContext, frameOffset, &containingView);
+    frame->GetOffsetFromView(frameOffset, &containingView);
     if (!containingView)      
       return PR_FALSE;  // no view -- not visible    
 
@@ -1091,7 +1091,7 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
       return PR_FALSE;
 
     nsRect relFrameRect = frame->GetRect();
-    frame->GetOffsetFromView(aPresContext, frameOffset, &containingView);
+    frame->GetOffsetFromView(frameOffset, &containingView);
     if (containingView) {
       relFrameRect.x = frameOffset.x;
       relFrameRect.y = frameOffset.y;

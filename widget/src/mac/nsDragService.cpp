@@ -176,7 +176,7 @@ nsDragService::ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outScre
   // Find offset from our view
 	nsIView *containingView = nsnull;
 	nsPoint	viewOffset(0,0);
-	aFrame->GetOffsetFromView(presContext, viewOffset, &containingView);
+	aFrame->GetOffsetFromView(viewOffset, &containingView);
   NS_ASSERTION(containingView, "No containing view!");
   if ( !containingView )
     return PR_FALSE;

@@ -450,7 +450,7 @@ nsContainerFrame::PositionFrameView(nsPresContext* aPresContext,
 
     nsIView*        containingView;
     nsPoint         origin;
-    aKidFrame->GetOffsetFromView(aPresContext, origin, &containingView);
+    aKidFrame->GetOffsetFromView(origin, &containingView);
 
     nsIViewManager* vm = view->GetViewManager();
 

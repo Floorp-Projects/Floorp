@@ -2735,7 +2735,6 @@ nsresult
 nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
 {
   nsIScrollableView* scrollableView = GetScrollableView();
-  nsPresContext* presContext = GetPresContext();  
 
   if (scrollableView) {
     // if null is passed in we scroll to 0,0
@@ -2745,7 +2744,7 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
     }
   
     // otherwise we find the content's frame and scroll to it
-    nsIPresShell *presShell = presContext->PresShell();
+    nsIPresShell *presShell = GetPresContext()->PresShell();
     nsIFrame * childframe;
     nsresult result;
     if (aOptElement) {
@@ -2769,7 +2768,7 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
         nsRect fRect = childframe->GetRect();
         nsPoint pnt;
         nsIView * view;
-        childframe->GetOffsetFromView(presContext, pnt, &view);
+        childframe->GetOffsetFromView(pnt, &view);
 
         // This change for 33421 (remove this comment later)
 

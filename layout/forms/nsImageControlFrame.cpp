@@ -261,7 +261,7 @@ nsImageControlFrame::HandleEvent(nsPresContext* aPresContext,
     {
       // Store click point for GetNamesValues
       // Do this on MouseUp because the specs don't say and that's what IE does
-      TranslateEventCoords(aPresContext, aEvent->point, mLastClickPoint);
+      TranslateEventCoords(aEvent->point, mLastClickPoint);
       break;
     }
   }

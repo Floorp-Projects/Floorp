@@ -894,7 +894,7 @@ nsFormControlFrame::GetAbsoluteFramePosition(nsPresContext* aPresContext,
   // Start with frame's offset from it it's containing view
   nsIView *view = nsnull;
   nsPoint frameOffset;
-  rv = aFrame->GetOffsetFromView(aPresContext, frameOffset, &view);
+  rv = aFrame->GetOffsetFromView(frameOffset, &view);
 
   if (NS_SUCCEEDED(rv) && view) {
     aAbsoluteTwipsRect.MoveTo(frameOffset);

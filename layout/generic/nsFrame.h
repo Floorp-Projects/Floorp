@@ -243,7 +243,7 @@ public:
   NS_IMETHOD  SetPrevInFlow(nsIFrame*);
   virtual nsIFrame* GetNextInFlow() const;
   NS_IMETHOD  SetNextInFlow(nsIFrame*);
-  NS_IMETHOD  GetOffsetFromView(nsPresContext* aPresContext, nsPoint& aOffset, nsIView** aView) const;
+  NS_IMETHOD  GetOffsetFromView(nsPoint& aOffset, nsIView** aView) const;
   NS_IMETHOD  GetOriginToViewOffset(nsPresContext *aPresContext, nsPoint& aOffset, nsIView **aView) const;
   virtual nsIAtom* GetType() const;
   virtual PRBool IsContainingBlock() const;

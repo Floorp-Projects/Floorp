@@ -1025,7 +1025,7 @@ nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext)
 
     if (!view) {
         nsPoint   offset;
-        mParentBox->GetOffsetFromView(aPresContext, offset, &view);
+        mParentBox->GetOffsetFromView(offset, &view);
         NS_ASSERTION(nsnull != view, "no view");
     }
     aPresContext->PresShell()->FlushPendingNotifications(Flush_Display);

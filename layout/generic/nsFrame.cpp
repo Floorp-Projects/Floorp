@@ -1205,7 +1205,7 @@ ContentContainsPoint(nsPresContext *aPresContext,
 
   // Get the view that contains the content's frame.
 
-  rv = frame->GetOffsetFromView(aPresContext, offsetPoint, &frameView);
+  rv = frame->GetOffsetFromView(offsetPoint, &frameView);
 
   if (NS_FAILED(rv) || !frameView) return PR_FALSE;
 
@@ -1283,7 +1283,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
         nsRect frameRect = mRect;
         nsPoint offsetPoint;
 
-        GetOffsetFromView(aPresContext, offsetPoint, &dummyView);
+        GetOffsetFromView(offsetPoint, &dummyView);
 
         frameRect.x = offsetPoint.x;
         frameRect.y = offsetPoint.y;
@@ -1497,7 +1497,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
       // frame's parent view. Unfortunately, the only way to get
       // the parent view is to call GetOffsetFromView().
 
-      GetOffsetFromView(aPresContext, dummyPoint, &view);
+      GetOffsetFromView(dummyPoint, &view);
 
       // Now check to see if the point is truly within the bounds
       // of any of the frames that make up the -moz-user-select:all subtree:
@@ -1739,7 +1739,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
     // Get the view that aEvent->point is relative to. This is disgusting.
     nsPoint dummyPoint;
     nsIView* eventView;
-    GetOffsetFromView(aPresContext, dummyPoint, &eventView);
+    GetOffsetFromView(dummyPoint, &eventView);
     nsPoint pt = aEvent->point + eventView->GetOffsetTo(captureView);
     frameselection->StartAutoScrollTimer(aPresContext, captureView, pt, 30);
   }
@@ -1920,7 +1920,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
 
       nsPoint offsetPoint(0,0);
       nsIView * kidView = nsnull;
-      kid->GetOffsetFromView(aCX, offsetPoint, &kidView);
+      kid->GetOffsetFromView(offsetPoint, &kidView);
 
       nsRect rect = kid->GetRect();
       rect.x = offsetPoint.x;
@@ -1991,7 +1991,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
     return NS_ERROR_NULL_POINTER;
 
   nsPoint offsetPoint;
-  GetOffsetFromView(aCX, offsetPoint, &view);
+  GetOffsetFromView(offsetPoint, &view);
   nsRect thisRect = GetRect();
   thisRect.x = offsetPoint.x;
   thisRect.y = offsetPoint.y;
@@ -2329,9 +2329,8 @@ nsIntRect nsIFrame::GetScreenRect() const
 
 // Returns the offset from this frame to the closest geometric parent that
 // has a view. Also returns the containing view or null in case of error
-NS_IMETHODIMP nsFrame::GetOffsetFromView(nsPresContext* aPresContext,
-                                         nsPoint&        aOffset,
-                                         nsIView**       aView) const
+NS_IMETHODIMP nsFrame::GetOffsetFromView(nsPoint&  aOffset,
+                                         nsIView** aView) const
 {
   NS_PRECONDITION(nsnull != aView, "null OUT parameter pointer");
   nsIFrame* frame = (nsIFrame*)this;
@@ -2384,7 +2383,7 @@ NS_IMETHODIMP nsFrame::GetOriginToViewOffset(nsPresContext* aPresContext,
     nsIView *view = GetView();
     nsIView *parentView = nsnull;
     nsPoint offsetToParentView;
-    rv = GetOffsetFromView(aPresContext, offsetToParentView, &parentView);
+    rv = GetOffsetFromView(offsetToParentView, &parentView);
 
     if (NS_SUCCEEDED(rv)) {
       nsPoint viewOffsetFromParent(0,0);
@@ -2503,7 +2502,7 @@ nsIFrame::Invalidate(const nsRect& aDamageRect,
     nsPoint   offset;
   
     nsIView *view;
-    GetOffsetFromView(GetPresContext(), offset, &view);
+    GetOffsetFromView(offset, &view);
     NS_ASSERTION(view, "no view");
     rect += offset;
     view->GetViewManager()->UpdateView(view, rect, flags);
@@ -3207,7 +3206,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
       }
       nsPoint offset;
       nsIView * view; //used for call of get offset from view
-      aBlockFrame->GetOffsetFromView(aPresContext, offset,&view);
+      aBlockFrame->GetOffsetFromView(offset,&view);
       nscoord newDesiredX  = aPos->mDesiredX - offset.x;//get desired x into blockframe coordinates!
 #ifdef IBMBIDI
       result = it->FindFrameAt(searchingLine, newDesiredX, aPresContext->BidiEnabled(), &resultFrame, &isBeforeFirstFrame, &isAfterLastFrame);
@@ -3245,7 +3244,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
         nsRect tempRect = resultFrame->GetRect();
         nsPoint offset;
         nsIView * view; //used for call of get offset from view
-        result = resultFrame->GetOffsetFromView(aPresContext, offset, &view);
+        result = resultFrame->GetOffsetFromView(offset, &view);
         if (NS_FAILED(result))
           return result;
         point.y = tempRect.height + offset.y;
@@ -3600,8 +3599,7 @@ nsFrame::PeekOffsetParagraph(nsPresContext* aPresContext,
 // Alas, this doesn't entirely work; it's blocked by some style changes.
 static nsresult
 DrillDownToEndOfLine(nsIFrame* aFrame, PRInt32 aLineNo, PRInt32 aLineFrameCount,
-                     nsRect& aUsedRect,
-                     nsPresContext* aPresContext, nsPeekOffsetStruct* aPos)
+                     nsRect& aUsedRect, nsPeekOffsetStruct* aPos)
 {
   if (!aFrame)
     return NS_ERROR_UNEXPECTED;
@@ -3634,7 +3632,7 @@ DrillDownToEndOfLine(nsIFrame* aFrame, PRInt32 aLineNo, PRInt32 aLineFrameCount,
       
     nsPoint offsetPoint; //used for offset of result frame
     nsIView * view; //used for call of get offset from view
-    nextFrame->GetOffsetFromView(aPresContext, offsetPoint, &view);
+    nextFrame->GetOffsetFromView(offsetPoint, &view);
 
     offsetPoint.x += 2* aUsedRect.width; //2* just to be sure we are off the edge
     // This doesn't seem very efficient since GetPosition
@@ -3886,7 +3884,7 @@ nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
         {
           nsPoint offsetPoint; //used for offset of result frame
           nsIView * view; //used for call of get offset from view
-          firstFrame->GetOffsetFromView(aPresContext, offsetPoint, &view);
+          firstFrame->GetOffsetFromView(offsetPoint, &view);
 
           offsetPoint.x = 0;//all the way to the left
           result = firstFrame->GetContentAndOffsetsFromPoint(context,
@@ -3908,7 +3906,7 @@ nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
         // to get the last offset in the last content represented
         // by that frame.
         return DrillDownToEndOfLine(firstFrame, thisLine, lineFrameCount,
-                                    usedRect, aPresContext, aPos);
+                                    usedRect, aPos);
       }
       return result;
     }
