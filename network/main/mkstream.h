@@ -69,4 +69,8 @@ void
 NET_RegisterUniversalEncodingConverter(char *encoding_in,
                               void          * data_obj,
                               NET_Converter * converter_func);
+
+void
+NET_DumpDecoders();
+
 #endif  /* MKSTREAM.h */
