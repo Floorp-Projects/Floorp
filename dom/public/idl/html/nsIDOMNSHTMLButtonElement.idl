@@ -45,4 +45,5 @@ interface nsIDOMNSHTMLButtonElement : nsISupports
 {
   void                      blur();
   void                      focus();
+  void                      click();
 };

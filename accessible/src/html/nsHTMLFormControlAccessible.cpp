@@ -45,6 +45,7 @@
 #include "nsIDOMHTMLButtonElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMNSHTMLButtonElement.h"
 #include "nsIDOMHTMLLabelElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMXULCheckboxElement.h"
@@ -179,7 +180,7 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetAccActionName(PRUint8 index, nsAString&
 
 NS_IMETHODIMP nsHTMLButtonAccessible::AccDoAction(PRUint8 index)
 {
-  if (index == 0) {
+  if (index == eAction_Click) {
     nsCOMPtr<nsIDOMHTMLInputElement> element(do_QueryInterface(mDOMNode));
     if (element) {
       element->Click();
@@ -250,10 +251,10 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccActionName(PRUint8 index, nsAString
 NS_IMETHODIMP nsHTML4ButtonAccessible::AccDoAction(PRUint8 index)
 {
   if (index == 0) {
-    nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(mDOMNode));
-    if ( inputElement )
+    nsCOMPtr<nsIDOMNSHTMLButtonElement> buttonElement(do_QueryInterface(mDOMNode));
+    if ( buttonElement )
     {
-      inputElement->Click();
+      buttonElement->Click();
       return NS_OK;
     }
     return NS_ERROR_FAILURE;
