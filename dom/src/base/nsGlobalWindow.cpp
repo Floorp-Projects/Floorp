@@ -68,6 +68,7 @@
 #include "nsIHTTPProtocolHandler.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIMarkupDocumentViewer.h"
+#include "nsIPref.h"
 #include "nsIPresShell.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIPrompt.h"
