@@ -224,7 +224,8 @@ nsWSRunObject::InsertBreak(nsCOMPtr<nsIDOMNode> *aInOutParent,
       // delete the leading ws that is after insertion point.  We don't
       // have to (it would still not be significant after br), but it's 
       // just more aesthetically pleasing to.
-      res = DeleteChars(*aInOutParent, *aInOutOffset, afterRun->mEndNode, afterRun->mEndOffset);
+      res = DeleteChars(*aInOutParent, *aInOutOffset, afterRun->mEndNode, afterRun->mEndOffset,
+                        eOutsideUserSelectAll);
       NS_ENSURE_SUCCESS(res, res);
     }
     else if (afterRun->mType == eNormalWS)
@@ -259,7 +260,8 @@ nsWSRunObject::InsertBreak(nsCOMPtr<nsIDOMNode> *aInOutParent,
     {
       // need to delete the trailing ws that is before insertion point, because it 
       // would become significant after break inserted.
-      res = DeleteChars(beforeRun->mStartNode, beforeRun->mStartOffset, *aInOutParent, *aInOutOffset);
+      res = DeleteChars(beforeRun->mStartNode, beforeRun->mStartOffset, *aInOutParent, *aInOutOffset,
+                        eOutsideUserSelectAll);
       NS_ENSURE_SUCCESS(res, res);
     }
     else if (beforeRun->mType == eNormalWS)
@@ -318,7 +320,8 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
     {
       // delete the leading ws that is after insertion point, because it 
       // would become significant after text inserted.
-      res = DeleteChars(*aInOutParent, *aInOutOffset, afterRun->mEndNode, afterRun->mEndOffset);
+      res = DeleteChars(*aInOutParent, *aInOutOffset, afterRun->mEndNode, afterRun->mEndOffset,
+                         eOutsideUserSelectAll);
       NS_ENSURE_SUCCESS(res, res);
     }
     else if (afterRun->mType == eNormalWS)
@@ -341,7 +344,8 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
     {
       // need to delete the trailing ws that is before insertion point, because it 
       // would become significant after text inserted.
-      res = DeleteChars(beforeRun->mStartNode, beforeRun->mStartOffset, *aInOutParent, *aInOutOffset);
+      res = DeleteChars(beforeRun->mStartNode, beforeRun->mStartOffset, *aInOutParent, *aInOutOffset,
+                        eOutsideUserSelectAll);
       NS_ENSURE_SUCCESS(res, res);
     }
     else if (beforeRun->mType == eNormalWS)
@@ -1408,7 +1412,8 @@ nsWSRunObject::PrepareToDeleteRangePriv(nsWSRunObject* aEndObject)
   // trim after run of any leading ws
   if (afterRun && (afterRun->mType & eLeadingWS))
   {
-    res = aEndObject->DeleteChars(aEndObject->mNode, aEndObject->mOffset, afterRun->mEndNode, afterRun->mEndOffset);
+    res = aEndObject->DeleteChars(aEndObject->mNode, aEndObject->mOffset, afterRun->mEndNode, afterRun->mEndOffset,
+                                  eOutsideUserSelectAll);
     NS_ENSURE_SUCCESS(res, res);
   }
   // adjust normal ws in afterRun if needed
@@ -1422,7 +1427,7 @@ nsWSRunObject::PrepareToDeleteRangePriv(nsWSRunObject* aEndObject)
       aEndObject->GetCharAfter(aEndObject->mNode, aEndObject->mOffset, &point);
       if (point.mTextNode && nsCRT::IsAsciiSpace(point.mChar))
       {
-        res = aEndObject->ConvertToNBSP(point);
+        res = aEndObject->ConvertToNBSP(point, eOutsideUserSelectAll);
         NS_ENSURE_SUCCESS(res, res);
       }
     }
@@ -1430,7 +1435,8 @@ nsWSRunObject::PrepareToDeleteRangePriv(nsWSRunObject* aEndObject)
   // trim before run of any trailing ws
   if (beforeRun && (beforeRun->mType & eTrailingWS))
   {
-    res = DeleteChars(beforeRun->mStartNode, beforeRun->mStartOffset, mNode, mOffset);
+    res = DeleteChars(beforeRun->mStartNode, beforeRun->mStartOffset, mNode, mOffset,
+                      eOutsideUserSelectAll);
     NS_ENSURE_SUCCESS(res, res);
   }
   else if (beforeRun && (beforeRun->mType == eNormalWS) && !mPRE)
@@ -1452,7 +1458,7 @@ nsWSRunObject::PrepareToDeleteRangePriv(nsWSRunObject* aEndObject)
         NS_ENSURE_SUCCESS(res, res);
         point.mTextNode = do_QueryInterface(wsStartNode);
         point.mOffset = wsStartOffset;
-        res = ConvertToNBSP(point);
+        res = ConvertToNBSP(point, eOutsideUserSelectAll);
         NS_ENSURE_SUCCESS(res, res);
       }
     }
@@ -1512,12 +1518,27 @@ nsWSRunObject::PrepareToSplitAcrossBlocksPriv()
 
 nsresult 
 nsWSRunObject::DeleteChars(nsIDOMNode *aStartNode, PRInt32 aStartOffset, 
-                           nsIDOMNode *aEndNode, PRInt32 aEndOffset)
+                           nsIDOMNode *aEndNode, PRInt32 aEndOffset,
+                           AreaRestriction aAR)
 {
   // MOOSE: this routine needs to be modified to preserve the integrity of the
   // wsFragment info.
   if (!aStartNode || !aEndNode)
     return NS_ERROR_NULL_POINTER;
+
+  if (aAR == eOutsideUserSelectAll)
+  {
+    nsCOMPtr<nsIDOMNode> san = mHTMLEditor->FindUserSelectAllNode(aStartNode);
+    if (san)
+      return NS_OK;
+    
+    if (aStartNode != aEndNode)
+    {
+      san = mHTMLEditor->FindUserSelectAllNode(aEndNode);
+      if (san)
+        return NS_OK;
+    }
+  }
 
   if ((aStartNode == aEndNode) && (aStartOffset == aEndOffset))
     return NS_OK;  // nothing to delete
@@ -1717,12 +1738,23 @@ nsWSRunObject::GetCharBefore(WSPoint &aPoint, WSPoint *outPoint)
 }
 
 nsresult 
-nsWSRunObject::ConvertToNBSP(WSPoint aPoint)
+nsWSRunObject::ConvertToNBSP(WSPoint aPoint, AreaRestriction aAR)
 {
   // MOOSE: this routine needs to be modified to preserve the integrity of the
   // wsFragment info.
   if (!aPoint.mTextNode)
     return NS_ERROR_NULL_POINTER;
+
+  if (aAR == eOutsideUserSelectAll)
+  {
+    nsCOMPtr<nsIDOMNode> domnode = do_QueryInterface(aPoint.mTextNode);
+    if (domnode)
+    {
+      nsCOMPtr<nsIDOMNode> san = mHTMLEditor->FindUserSelectAllNode(domnode);
+      if (san)
+        return NS_OK;
+    }
+  }
 
   nsCOMPtr<nsIDOMCharacterData> textNode(do_QueryInterface(aPoint.mTextNode));
   if (!textNode)
