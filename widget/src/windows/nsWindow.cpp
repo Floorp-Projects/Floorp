@@ -240,6 +240,8 @@ nsWindow::~nsWindow()
   if (mIMECompositionString!=NULL) delete [] mIMECompositionString;
   if (mIMEAttributeString!=NULL) delete [] mIMEAttributeString;
   if (mIMECompositionUniString!=NULL) delete [] mIMECompositionUniString;
+
+  NS_IF_RELEASE(mNativeDragTarget);
 }
 
 
