@@ -11,7 +11,12 @@
 # mozilla file:/foo/startup-test.html?begin=999456977124
 # 
 # NOTE: You will get much better results if you install the
-# Time::HiRes perl module, urls in gettime.pl.
+# Time::HiRes perl module (urls in gettime.pl) and test
+# an optimized build.
+#
+# For optimized builds, startup-test.html will also dump
+# the time out to stdout if you set:
+#   user_pref("browser.dom.window.dump.enabled", 1);
 #
 
 require 5.003;
