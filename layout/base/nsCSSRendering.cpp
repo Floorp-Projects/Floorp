@@ -1368,7 +1368,9 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
                                  const nsStyleSpacing& aBorderStyle,
                                  nsIStyleContext* aStyleContext,
                                  PRIntn aSkipSides,
-                                 nsRect* aGap)
+                                 nsRect* aGap,
+                                 nscoord aHardBorderSize,
+                                 PRBool  aShouldIgnoreRounded)
 {
   PRIntn    cnt;
   nsMargin  border;
@@ -1376,7 +1378,11 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
   PRInt16       theRadius;
   nsStyleCoord  borderRadius;
 
-  aBorderStyle.CalcBorderFor(aForFrame, border);
+  if (aHardBorderSize > 0) {
+    border.SizeTo(aHardBorderSize, aHardBorderSize, aHardBorderSize, aHardBorderSize);
+  } else {
+    aBorderStyle.CalcBorderFor(aForFrame, border);
+  }
   if ((0 == border.left) && (0 == border.right) &&
       (0 == border.top) && (0 == border.bottom)) {
     // Empty border area
@@ -1399,9 +1405,11 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
   }
 
   // rounded version of the border
-  if (theRadius > 0){
-    PaintRoundedBorder(aPresContext,aRenderingContext,aForFrame,aDirtyRect,aBorderArea,aBorderStyle,aStyleContext,aSkipSides,theRadius,aGap);
-    return;
+  if (!aShouldIgnoreRounded) {
+    if (theRadius > 0){
+      PaintRoundedBorder(aPresContext,aRenderingContext,aForFrame,aDirtyRect,aBorderArea,aBorderStyle,aStyleContext,aSkipSides,theRadius,aGap);
+      return;
+    }
   }
 
   // Turn off rendering for all of the zero sized sides
