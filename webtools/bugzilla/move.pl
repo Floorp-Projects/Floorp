@@ -109,7 +109,7 @@ foreach my $id (split(/:/, $::FORM{'buglist'})) {
     SendSQL("INSERT INTO bugs_activity " .
             "(bug_id,who,bug_when,fieldid,oldvalue,newvalue) VALUES " .
             "($id,$exporterid,now(),$fieldid,'$cur_status','RESOLVED')");
-    my $fieldid = GetFieldID("resolution");
+    $fieldid = GetFieldID("resolution");
     my $cur_res= $bug->resolution;
     SendSQL("INSERT INTO bugs_activity " .
             "(bug_id,who,bug_when,fieldid,oldvalue,newvalue) VALUES " .

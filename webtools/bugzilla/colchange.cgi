@@ -23,6 +23,10 @@
 use diagnostics;
 use strict;
 
+sub sillyness { # shut up "used only once" warnings
+  my $zz = @::legal_keywords;
+}
+
 require "CGI.pl";
 
 print "Content-type: text/html\n";
