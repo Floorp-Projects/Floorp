@@ -7820,7 +7820,7 @@ certDump_top_content:
 certDump_buttons_type="text/html"
 certDump_buttons_hdrs=""
 certDump_buttons_content:
-{windowclose_buttons_frame OKButton,help.htm}
+{windowclose_buttons_frame OKButton,help.htm#1055417}
 :certDump_buttons_content
 
 certPrettyPrefix:
@@ -7872,7 +7872,7 @@ no_issuer_top_content:
 no_issuer_buttons_type="text/html"
 no_issuer_buttons_hdrs=""
 no_issuer_buttons_content:
-{windowclose_buttons_frame OKButton,help.htm}
+{windowclose_buttons_frame OKButton,help.htm#1055437}
 :no_issuer_buttons_content
 
 no_issuer_main_type="text/html"
