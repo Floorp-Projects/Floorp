@@ -319,8 +319,6 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject,
 							
 							if (NS_SUCCEEDED(rv)) {
 								post->AddNewsgroup(newsgroupName);
-								// eventually, use pathToFile
-								post->SetBody("hello, this is a test\n");
 								post->SetSubject((char *)subject);
 								post->SetFrom((char *)from);
 								post->SetOrganization((char *)org);
