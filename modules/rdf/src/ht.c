@@ -148,18 +148,83 @@ HT_Shutdown()
 
 
 
-void
-htLoadComplete(char *url, int status)
+PRBool
+ht_UpdateURLstate(char *url, PRBool inProgressFlag, int status)
 {
-	RDF_Resource		pollR;
+	HT_Pane			paneList;
+	HT_Resource		node;
+	RDF_Resource		r;
+	PRBool			found = PR_FALSE;
 
 	if (url != NULL)
 	{
-		if ((pollR = RDF_GetResource(gNCDB, url, PR_TRUE)) != NULL)
+		if ((r = RDF_GetResource(gNCDB, url, PR_TRUE)) != NULL)
 		{
-			if (pollR == pollingResource)
+			paneList = gHTTop;
+			while (paneList != NULL)
 			{
-				pollingResource = NULL;
+				node = PR_HashTableLookup(paneList->hash, r);
+				while (node != NULL)
+				{
+					found = PR_TRUE;
+					if (inProgressFlag == PR_TRUE)
+					{
+						/* start node icon animation */
+						node->flags |= HT_CONTENTS_LOADING_FLAG;
+					}
+					else
+					{
+						/* stop node icon animation */
+						node->flags &= (~HT_CONTENTS_LOADING_FLAG);
+					}
+					sendNotification(node, HT_EVENT_NODE_VPROP_CHANGED,
+						gNavCenter->RDF_smallIcon, HT_COLUMN_STRING);
+
+					if ((inProgressFlag == PR_FALSE) && (status < 0))
+					{
+						/* problem, close container */
+						HT_SetOpenState(node, PR_FALSE);
+					}
+					node = node->nextItem;
+				}
+				paneList = paneList->next;
+			}
+
+			if (inProgressFlag == PR_FALSE)
+			{
+				if (r == pollingResource)
+				{
+					pollingResource = NULL;
+				}
+			}
+		}
+	}
+	return(found);
+}
+
+
+
+void
+htLoadBegins(URL_Struct *urls, char *url)
+{
+	ht_UpdateURLstate(url, PR_TRUE, 0);
+}
+
+
+
+void
+htLoadComplete(MWContext *cx, URL_Struct *urls, char *url, int status)
+{
+	PRBool		found;
+
+	if (url != NULL)
+	{
+		found = ht_UpdateURLstate(url, PR_FALSE, status);
+		if ((urls != NULL) && (found == PR_TRUE))
+		{
+			if ((cx != NULL) && (urls->error_msg != NULL))
+			{
+				FE_Alert(cx, urls->error_msg);
 			}
 		}
 	}
@@ -6077,7 +6142,11 @@ getIconURL( HT_Resource node, PRBool toolbarIconFlag, PRBool workspaceFlag, int 
 			break;
 	}
 
-	if ((res == gNavCenter->RDF_smallIcon) || (res == gNavCenter->RDF_largeIcon))
+	if ((res == gNavCenter->RDF_smallIcon) && (node->flags & HT_CONTENTS_LOADING_FLAG))
+	{
+		iconURL = "http://hackmeister.mcom.com/busy.gif";
+	}
+	else if ((res == gNavCenter->RDF_smallIcon) || (res == gNavCenter->RDF_largeIcon))
 	{
 		HT_GetNodeData(node, res, HT_COLUMN_STRING, &iconURL);
 		if (iconURL == NULL)

@@ -193,11 +193,6 @@ rdf_GetUrlExitFunc (URL_Struct *urls, int status, MWContext *cx)
 
 	if ((status < 0) && (urls != NULL))
 	{
-		if ((cx != NULL) && (urls->error_msg != NULL))
-		{
-			FE_Alert(cx, urls->error_msg);
-		}
-
 		/* if unable to read in navcntr.rdf file, create some default views */
 		if ((f = (RDFFile) urls->fe_data) != NULL)
 		{
@@ -213,7 +208,7 @@ rdf_GetUrlExitFunc (URL_Struct *urls, int status, MWContext *cx)
 	{
 		if ((f = (RDFFile) urls->fe_data) != NULL)
 		{
-			htLoadComplete(f->url, status);
+			htLoadComplete(cx, urls, f->url, status);
 		}
 	}
 
@@ -252,29 +247,47 @@ rdfRetrievalType (RDFFile f)
 
 */
 
+
+
 typedef	struct	{
 	ETEvent			ce;
+	char			*url;
 	URL_Struct		*urls;
 	int			method;
 	MWContext		*cx;
 	Net_GetUrlExitFunc	*exitFunc;
 } MozillaEvent_rdf_GetURL;
 
+
+
 PR_STATIC_CALLBACK(void *)
 rdf_HandleEvent_GetURL(MozillaEvent_rdf_GetURL *event)
 {
+	if (event->url != NULL)
+	{
+		htLoadBegins(event->urls, event->url);
+	}
 	NET_GetURL(event->urls, event->method, event->cx, event->exitFunc);
 	return(NULL);
 }
 
+
+
 PR_STATIC_CALLBACK(void)
 rdf_DisposeEvent_GetURL(MozillaEvent_rdf_GetURL *event)
 {
+	if (event->url != NULL)
+	{
+		freeMem(event->url);
+		event->url = NULL;
+	}
 	XP_FREE(event);
 }
 
+
+
 int
-rdf_GetURL (MWContext *cx,  int method, Net_GetUrlExitFunc *exit_routine, RDFFile rdfFile)
+rdf_GetURL (MWContext *cx, int method, Net_GetUrlExitFunc *exit_routine, RDFFile rdfFile)
 {
 	MozillaEvent_rdf_GetURL		*event;
 	URL_Struct      		*urls = NULL;
@@ -311,6 +324,7 @@ rdf_GetURL (MWContext *cx,  int method, Net_GetUrlExitFunc *exit_routine, RDFFil
 
 	if (PR_CurrentThread() == mozilla_thread)
 	{
+		htLoadBegins(urls, url);
 		NET_GetURL(urls, FO_CACHE_AND_RDF, cx, rdf_GetUrlExitFunc);
 	}
 	else
@@ -323,6 +337,7 @@ rdf_GetURL (MWContext *cx,  int method, Net_GetUrlExitFunc *exit_routine, RDFFil
 		PR_InitEvent(&(event->ce.event), cx,
 			(PRHandleEventProc)rdf_HandleEvent_GetURL,
 			(PRDestroyEventProc)rdf_DisposeEvent_GetURL);
+		event->url = copyString(url);
 		event->urls = urls;
 		event->method = FO_CACHE_AND_RDF;
 		event->cx = cx;

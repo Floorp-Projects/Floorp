@@ -171,16 +171,17 @@ typedef	struct _HT_ValueStruct {
 	void				*data;
 } HT_ValueStruct, *HT_Value;
 
-#define	HT_CONTAINER_FLAG	0x0001
-#define	HT_OPEN_FLAG		0x0002
-#define	HT_AUTOFLUSH_OPEN_FLAG	0x0004
-#define	HT_HIDDEN_FLAG		0x0008
-#define	HT_SELECTED_FLAG	0x0010
-#define	HT_VOLATILE_URL_FLAG	0x0020
-#define	HT_PASSWORDOK_FLAG	0x0080
-#define	HT_INITED_FLAG		0x0100
-#define	HT_DIRTY_FLAG		0x0200
-#define	HT_ENABLED_FLAG		0x0400
+#define	HT_CONTAINER_FLAG		0x0001
+#define	HT_OPEN_FLAG			0x0002
+#define	HT_AUTOFLUSH_OPEN_FLAG		0x0004
+#define	HT_HIDDEN_FLAG			0x0008
+#define	HT_SELECTED_FLAG		0x0010
+#define	HT_VOLATILE_URL_FLAG		0x0020
+#define	HT_CONTENTS_LOADING_FLAG	0x0040
+#define	HT_PASSWORDOK_FLAG		0x0080
+#define	HT_INITED_FLAG			0x0100
+#define	HT_DIRTY_FLAG			0x0200
+#define	HT_ENABLED_FLAG			0x0400
 
 typedef struct _HT_ResourceStruct {
 	struct _HT_ResourceStruct	*nextItem; 
@@ -259,7 +260,9 @@ XP_BEGIN_PROTOS
 
 void				HT_Startup();
 void				HT_Shutdown();
-void				htLoadComplete(char *url, int status);
+PRBool				ht_UpdateURLstate(char *url, PRBool inProgressFlag, int status);
+void				htLoadBegins(URL_Struct *urls, char *url);
+void				htLoadComplete(MWContext *cx, URL_Struct *urls, char *url, int status);
 void				htTimerRoutine(void *timerID);
 PRBool				possiblyUpdateView(HT_View view);
 void				updateViewItem(HT_Resource node);
