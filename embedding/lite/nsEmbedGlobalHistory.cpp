@@ -41,7 +41,7 @@
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsHashTable.h"
+#include "nsHashtable.h"
 #include "nsInt64.h"
 #include "prtypes.h"
 #include "nsFixedSizeAllocator.h"
@@ -93,7 +93,7 @@ public:
                 { mWritten = PR_TRUE; }
                   
   // Memory management stuff    
-  static void*  operator new(size_t size);
+  static void*  operator new(size_t size) CPP_THROW_NEW;
   static void   operator delete(void *p, size_t size);
   
   // Must be called when done with all HistoryEntry objects
@@ -111,7 +111,7 @@ nsFixedSizeAllocator *HistoryEntry::sPool;
 
 //*****************************************************************************   
 
-void* HistoryEntry::operator new(size_t size)
+void* HistoryEntry::operator new(size_t size) CPP_THROW_NEW
 {
   if (size != sizeof(HistoryEntry))
     return ::operator new(size);
@@ -168,9 +168,7 @@ NS_IMPL_ISUPPORTS3(nsEmbedGlobalHistory, nsIGlobalHistory, nsIObserver, nsISuppo
 nsEmbedGlobalHistory::nsEmbedGlobalHistory() :
   mDataIsLoaded(PR_FALSE), mEntriesAddedSinceFlush(0),
   mURLTable(nsnull)
-{
-  NS_INIT_REFCNT();
-  
+{  
   LL_I2L(mExpirationInterval, kDefaultExpirationIntervalDays);
   LL_MUL(mExpirationInterval, mExpirationInterval, kMSecsPerDay);
 }

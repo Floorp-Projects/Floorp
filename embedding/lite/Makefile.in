@@ -40,6 +40,7 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  js \
 		  xuldoc \
+		  appcomps \
 		  $(NULL)
 
 CPPSRCS         = \
@@ -49,7 +50,7 @@ CPPSRCS         = \
                 $(NULL)
 
 # bring in the chrome protocol handler
-LOBJS = $(topsrcdir)/rdf/chrome/src/nsChromeProtocolHandler.$(OBJ_SUFFIX)
+# LOBJS = $(topsrcdir)/rdf/chrome/src/nsChromeProtocolHandler.$(OBJ_SUFFIX)
 
 
 LOCAL_INCLUDES	= -I$(DEPTH)/rdf/chrome/src

@@ -216,7 +216,6 @@ nsEmbedChromeRegistry::ReadChromeRegistry()
 nsresult
 nsEmbedChromeRegistry::ProcessNewChromeBuffer(char* aBuffer, PRInt32 aLength)
 {
-    nsresult rv = NS_OK;
     while (aLength > 0) {
         PRInt32 processedBytes = ProcessChromeLine(aBuffer, aLength);
         aBuffer += processedBytes;
@@ -347,16 +346,12 @@ nsEmbedChromeRegistry::Canonify(nsIURI* aChromeURI)
 }
 
 NS_IMETHODIMP
-nsEmbedChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
+nsEmbedChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, nsACString& aResult)
 {
     nsresult rv;
     
-    nsCAutoString finalURL;
-    rv = aChromeURL->GetSpec(finalURL);
+    rv = aChromeURL->GetSpec(aResult);
     if (NS_FAILED(rv)) return rv;
-    
-    *aResult = ToNewCString(finalURL);
-    if (!*aResult) return NS_ERROR_OUT_OF_MEMORY;
     
     return NS_OK;
 }

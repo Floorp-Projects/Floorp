@@ -87,7 +87,7 @@ protected:
 
 protected:
   PRBool            mDataIsLoaded;
-  PRUint32          mEntriesAddedSinceFlush;
+  PRInt32           mEntriesAddedSinceFlush;
   nsCOMPtr<nsILocalFile>  mHistoryFile;
   nsHashtable       *mURLTable;
   PRInt64           mExpirationInterval;

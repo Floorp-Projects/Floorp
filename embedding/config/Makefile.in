@@ -76,6 +76,7 @@ endif
 	fi
 	$(NSINSTALL) -t $(srcdir)/installed-chrome.txt $(DIST)/Embed/chrome
 	$(NSINSTALL) -t $(srcdir)/readme.html $(DIST)/Embed
+	$(NSINSTALL) -t $(topsrcdir)/embedding/lite/$(LIB_PREFIX)embed_lite$(DLL_SUFFIX) $(DIST)/Embed/components
 ifeq ($(OS_ARCH),WINNT)
 ifeq ($(WINAPP),mfcembed)
 	$(NSINSTALL) -t $(DIST)/bin/mfcembed.exe $(DIST)/Embed
