@@ -24,9 +24,9 @@
 #define nsROCSSPrimitiveValue_h___
 
 #include "nsIDOMCSSPrimitiveValue.h"
+#include "nsString.h"
 #include "nsCoord.h"
 #include "nsUnitConversion.h"
-#include "nsIScriptObjectOwner.h"
 
 #include "nsCOMPtr.h"
 #include "nsDOMError.h"
