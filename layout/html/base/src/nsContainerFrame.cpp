@@ -167,6 +167,14 @@ void nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
     hidden = PR_TRUE;
   }
 
+  // See if we should render everything, or just what can be seen
+  PRBool renderEverything = PR_TRUE;
+  if (NS_STYLE_OVERFLOW_VISIBLE != disp->mOverflow) {
+    renderEverything = PR_FALSE;
+  }
+  // XXX for now, disable this...
+  renderEverything = PR_FALSE;
+
   // XXX reminder: use the coordinates in the dirty rect to figure out
   // which set of children are impacted and only do the intersection
   // work for them. In addition, stop when we no longer overlap.
@@ -174,30 +182,14 @@ void nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
   nsIFrame* kid = mFirstChild;
   while (nsnull != kid) {
     nsIView *pView;
-     
     kid->GetView(pView);
     if (nsnull == pView) {
       nsRect kidRect;
       kid->GetRect(kidRect);
       nsRect damageArea;
-#ifdef NS_DEBUG
-      PRBool overlap = PR_FALSE;
-      if (nsIFrame::GetShowFrameBorders() &&
-          ((kidRect.width == 0) || (kidRect.height == 0))) {
-        nscoord xmost = aDirtyRect.XMost();
-        nscoord ymost = aDirtyRect.YMost();
-        if ((aDirtyRect.x <= kidRect.x) && (kidRect.x < xmost) &&
-            (aDirtyRect.y <= kidRect.y) && (kidRect.y < ymost)) {
-          overlap = PR_TRUE;
-        }
-      }
-      else {
-        overlap = damageArea.IntersectRect(aDirtyRect, kidRect);
-      }
-#else
       PRBool overlap = damageArea.IntersectRect(aDirtyRect, kidRect);
-#endif
-      if (overlap) {
+//XXX ListTag(stdout); printf(": re=%c overlap=%c dirtyRect={%d,%d,%d,%d} damageArea={%d,%d,%d,%d}\n", renderEverything?'T':'F', overlap?'T':'F', aDirtyRect, damageArea);
+      if (renderEverything || overlap) {
         // Translate damage area into kid's coordinate system
         nsRect kidDamageArea(damageArea.x - kidRect.x,
                              damageArea.y - kidRect.y,
