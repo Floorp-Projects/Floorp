@@ -172,6 +172,7 @@
 <!ENTITY aboutCmd.accesskey       "A">
 
 <!ENTITY openCmd.commandkey           "l">
+<!ENTITY openCmd2.commandkey          "d">
 <!ENTITY searchFocus.commandkey       ";">
 
 <!ENTITY openLinkCmd.label            "Open Link in New Window">
