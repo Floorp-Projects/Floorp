@@ -485,6 +485,7 @@ nsDocLoaderImpl::LoadOpenedDocument(nsIChannel * aOpenedChannel,
   // viewer container since that's the new guy whose actually going to be
   // receiving the content
   nsresult rv = NS_OK;
+
   nsDocumentBindInfo* loader = nsnull;
   if (!aOpenedChannel)
     return NS_ERROR_NULL_POINTER;
@@ -507,6 +508,15 @@ nsDocLoaderImpl::LoadOpenedDocument(nsIChannel * aOpenedChannel,
    * OnConnectionsComplete(...) notification is fired for the loader...
    */
   mIsLoadingDocument = PR_TRUE;
+
+  // let's try resetting the load group if we need to...
+  nsCOMPtr<nsILoadGroup> aCurrentLoadGroup;
+  rv = aOpenedChannel->GetLoadGroup(getter_AddRefs(aCurrentLoadGroup));
+  if (NS_SUCCEEDED(rv))
+  {
+    if (aCurrentLoadGroup.get() != mLoadGroup.get())
+      aOpenedChannel->SetLoadGroup(mLoadGroup);
+  }
   return rv;
 }
 
