@@ -22,6 +22,7 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsIStreamObserver.h"
+#include "nsIInputStream.h"
 #include "nsIPipe.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
