@@ -5,6 +5,7 @@ objdir=forwardtoback(objdir);
 'echo 'dist
 'echo 'objdir
 'set BEGINLIBPATH='dist'\lib;%BEGINLIBPATH%'
+'set LIBPATHSTRICT=T'
 objdir'\shlibsign -v -i 'therest
 exit
 
