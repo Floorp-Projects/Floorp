@@ -108,7 +108,7 @@ struct BlockDebugFlags {
   PRBool* on;
 };
 
-static BlockDebugFlags gFlags[] = {
+static const BlockDebugFlags gFlags[] = {
   { "reflow", &nsBlockFrame::gNoisyReflow },
   { "really-noisy-reflow", &nsBlockFrame::gReallyNoisyReflow },
   { "max-element-width", &nsBlockFrame::gNoisyMaxElementWidth },
@@ -125,8 +125,8 @@ static void
 ShowDebugFlags()
 {
   printf("Here are the available GECKO_BLOCK_DEBUG_FLAGS:\n");
-  BlockDebugFlags* bdf = gFlags;
-  BlockDebugFlags* end = gFlags + NUM_DEBUG_FLAGS;
+  const BlockDebugFlags* bdf = gFlags;
+  const BlockDebugFlags* end = gFlags + NUM_DEBUG_FLAGS;
   for (; bdf < end; bdf++) {
     printf("  %s\n", bdf->name);
   }
@@ -148,8 +148,8 @@ nsBlockFrame::InitDebugFlags()
         if (cm) *cm = '\0';
 
         PRBool found = PR_FALSE;
-        BlockDebugFlags* bdf = gFlags;
-        BlockDebugFlags* end = gFlags + NUM_DEBUG_FLAGS;
+        const BlockDebugFlags* bdf = gFlags;
+        const BlockDebugFlags* end = gFlags + NUM_DEBUG_FLAGS;
         for (; bdf < end; bdf++) {
           if (PL_strcasecmp(bdf->name, flags) == 0) {
             *(bdf->on) = PR_TRUE;
