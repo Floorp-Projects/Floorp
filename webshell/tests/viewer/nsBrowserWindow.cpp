@@ -1014,7 +1014,7 @@ nsBrowserWindow::DoToolbarDemo()
 	if (NS_OK != rv)
 	  return;
 
-	nsCOMPtr<nsIWidget> widget(mToolbox);	
+	nsCOMPtr<nsIWidget> widget( do_QueryInterface(mToolbox) );	
 	if ( widget ) {
       widget->Create((nsIWidget *)pToolbarWindow, r, nsnull, nsnull);	
       widget->Show(PR_TRUE);
