@@ -130,7 +130,9 @@ protected:
 class nsContentShellInfo
 {
 public:
-   nsContentShellInfo(const nsString& aID, PRBool aPrimary, nsIDocShellTreeItem* aContentShell);
+   nsContentShellInfo(const nsAString& aID,
+                      PRBool aPrimary,
+                      nsIDocShellTreeItem* aContentShell);
    ~nsContentShellInfo();
 
 public:

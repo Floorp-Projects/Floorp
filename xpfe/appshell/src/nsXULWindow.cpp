@@ -1168,7 +1168,7 @@ NS_IMETHODIMP nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
    PRBool aPrimary, const PRUnichar* aID)
 {
   nsContentShellInfo* shellInfo = nsnull;
-  nsAutoString newID(aID);
+  nsDependentString newID(aID);
 
   PRBool resetTreeOwner = PR_FALSE;
 
@@ -1179,7 +1179,6 @@ NS_IMETHODIMP nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
   PRInt32 i;
   for (i = 0; i < count; i++) {
     nsContentShellInfo* info = (nsContentShellInfo*)mContentShells.ElementAt(i);
-    nsAutoString srcID(info->id);
     if (info->child == aContentShell) {
       info->child = nsnull;
       resetTreeOwner = PR_TRUE;
@@ -1189,9 +1188,8 @@ NS_IMETHODIMP nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
   // Now find the appropriate entry and put ourselves in as the content shell.
   for (i = 0; i < count; i++) {
     nsContentShellInfo* info = (nsContentShellInfo*)mContentShells.ElementAt(i);
-    nsAutoString srcID(info->id);
        
-    if (info->primary == aPrimary && srcID.Equals(newID)) {
+    if (info->primary == aPrimary && info->id.Equals(newID)) {
       // We already exist. Do a replace.
       info->child = aContentShell;
       shellInfo = info;
@@ -1200,7 +1198,7 @@ NS_IMETHODIMP nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
   }
 
   if (!shellInfo) {
-    shellInfo = new nsContentShellInfo(nsAutoString(aID), aPrimary, aContentShell);
+    shellInfo = new nsContentShellInfo(newID, aPrimary, aContentShell);
     mContentShells.AppendElement((void*)shellInfo);
   }
     
@@ -1596,8 +1594,12 @@ void nsXULWindow::SetContentScrollbarVisibility(PRBool aVisible) {
 //*** nsContentShellInfo: Object Management
 //*****************************************************************************   
 
-nsContentShellInfo::nsContentShellInfo(const nsString& aID, PRBool aPrimary, 
-   nsIDocShellTreeItem* aContentShell) : id(aID), primary(aPrimary), child(aContentShell)
+nsContentShellInfo::nsContentShellInfo(const nsAString& aID,
+                                       PRBool aPrimary,
+                                       nsIDocShellTreeItem* aContentShell)
+  : id(aID),
+    primary(aPrimary),
+    child(aContentShell)
 {
 }
 
