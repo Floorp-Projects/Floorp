@@ -17,18 +17,22 @@
 
 DEPTH = ../..
 
+LIBRARY_NAME = raptorwebwidget
+
 MODULE=raptor
+
+REQUIRES=xpcom raptor dom js netlib
 
 DEFINES = -D_IMPL_NS_WEB
 
 CPPSRCS=				\
- nsLinkHandler.cpp			\
  nsWebWidget.cpp			\
+ nsLinkHandler.cpp			\
  $(NULL)
 
 CPP_OBJS=				\
- ./$(OBJDIR)/nsLinkHandler.o		\
  ./$(OBJDIR)/nsWebWidget.o		\
+ ./$(OBJDIR)/nsLinkHandler.o		\
  $(NULL)
 
 include $(DEPTH)/config/config.mk
