@@ -13,6 +13,7 @@ TestAtoms
 TestAutoLock
 TestBuffers
 TestCOMPtr
+TestCOMPtrEq
 TestCRT
 TestFactory
 TestID
