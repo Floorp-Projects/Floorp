@@ -182,7 +182,7 @@ class PageCycler : public nsIObserver {
 public:
   NS_DECL_ISUPPORTS
 
-  PageCycler(nsBrowserInstance* appCore, char *aTimeoutValue = nsnull)
+  PageCycler(nsBrowserInstance* appCore, const char *aTimeoutValue = nsnull)
     : mAppCore(appCore), mBuffer(nsnull), mCursor(nsnull), mTimeoutValue(0) { 
     NS_INIT_REFCNT();
     NS_ADDREF(mAppCore);
@@ -537,23 +537,19 @@ nsBrowserInstance::LoadInitialPage(void)
 #ifdef ENABLE_PAGE_CYCLER
     // First, check if there's a URL file to load (for testing), and if there 
     // is, process it instead of anything else.
-    char* file = 0;
-    rv = cmdLineArgs->GetCmdLineValue("-f", &file);
-    if (NS_SUCCEEDED(rv) && file) {
+    nsXPIDLCString file;
+    rv = cmdLineArgs->GetCmdLineValue("-f", getter_Copies(file));
+    if (NS_SUCCEEDED(rv) && (const char*)file) {
       // see if we have a timeout value corresponding to the url-file
-      char *timeoutVal=nsnull;
-      rv = cmdLineArgs->GetCmdLineValue("-ftimeout", &timeoutVal);
+      nsXPIDLCString timeoutVal;
+      rv = cmdLineArgs->GetCmdLineValue("-ftimeout", getter_Copies(timeoutVal));
       // cereate the cool PageCycler instance
       PageCycler* bb = new PageCycler(this, timeoutVal);
-      if (bb == nsnull) {
-        nsCRT::free(file);
-        nsCRT::free(timeoutVal);
+      if (bb == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-      }
+
       NS_ADDREF(bb);
       rv = bb->Init(file);
-      nsCRT::free(file);
-      nsCRT::free(timeoutVal);
       if (NS_FAILED(rv)) return rv;
 
       nsAutoString str;

@@ -511,19 +511,19 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
 	nsresult rv;
 	PRInt32 height  = NS_SIZETOCONTENT;
 	PRInt32 width  = NS_SIZETOCONTENT;
-	char* tempString = NULL;
+	nsXPIDLCString tempString;
 
 	// Get the value of -width option
-	rv = cmdLineArgs->GetCmdLineValue("-width", &tempString);
+	rv = cmdLineArgs->GetCmdLineValue("-width", getter_Copies(tempString));
 	if (NS_FAILED(rv)) return rv;
 	
-	if (tempString) PR_sscanf(tempString, "%d", &width);
+	if ((const char*)tempString) PR_sscanf(tempString, "%d", &width);
 	
 	// Get the value of -height option
-	rv = cmdLineArgs->GetCmdLineValue("-height", &tempString);
+	rv = cmdLineArgs->GetCmdLineValue("-height", getter_Copies(tempString));
 	if (NS_FAILED(rv)) return rv;
 	
-	if (tempString) PR_sscanf(tempString, "%d", &height);
+	if ((const char*)tempString) PR_sscanf(tempString, "%d", &height);
 
   if (heedGeneralStartupPrefs) {
 #ifdef DEBUG_CMD_LINE
@@ -679,20 +679,20 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
       PRInt32 width  = NS_SIZETOCONTENT;
 				
       // Get the value of -width option
-      char* tempString = NULL;
-      rv = cmdLineArgs->GetCmdLineValue("-width", &tempString);
+      nsXPIDLCString tempString;
+      rv = cmdLineArgs->GetCmdLineValue("-width", getter_Copies(tempString));
       if (NS_FAILED(rv))
         return rv;
-      if (tempString)
+      if ((const char*)tempString)
         PR_sscanf(tempString, "%d", &width);
 				
 				
       // Get the value of -height option
-      rv = cmdLineArgs->GetCmdLineValue("-height", &tempString);
+      rv = cmdLineArgs->GetCmdLineValue("-height", getter_Copies(tempString));
       if (NS_FAILED(rv))
         return rv;
 
-      if (tempString)
+      if ((const char*)tempString)
         PR_sscanf(tempString, "%d", &height);
 				
       rv = OpenBrowserWindow(height, width);

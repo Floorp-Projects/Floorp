@@ -25,6 +25,7 @@
 #include "nsString.h"
 #include "nsICmdLineService.h"
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIAppShellService.h"
@@ -805,26 +806,32 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request ) {
     nsCOMPtr<nsICmdLineService> args;
     nsresult rv = GetCmdLineArgs( request, getter_AddRefs( args ) );
     if ( NS_SUCCEEDED( rv ) ) {
-        char *arg;
-        if ( NS_SUCCEEDED( args->GetURLToLoad( &arg ) ) && arg ) {
+        nsXPIDLCString arg;
+        if (NS_SUCCEEDED(args->GetURLToLoad(getter_Copies(arg) ) ) &&
+            (const char*)arg ) {
             // Launch browser.
             #if MOZ_DEBUG_DDE
-            printf( "Launching browser on url [%s]...\n", arg );
+            printf( "Launching browser on url [%s]...\n", (const char*)arg );
             #endif
             (void)OpenWindow( "chrome://navigator/content/", arg );
-        } else if ( NS_SUCCEEDED( args->GetCmdLineValue( "-chrome", &arg ) ) && arg ) {
+        }
+        else if (NS_SUCCEEDED(args->GetCmdLineValue("-chrome", getter_Copies(arg))) &&
+                 (const char*)arg ) {
             // Launch chrome.
             #if MOZ_DEBUG_DDE
-            printf( "Launching chrome url [%s]...\n", arg );
+            printf( "Launching chrome url [%s]...\n", (const char*)arg );
             #endif
             (void)OpenWindow( arg, "" );
-        } else if ( NS_SUCCEEDED( args->GetCmdLineValue( "-edit", &arg ) ) && arg ) {
+        }
+        else if (NS_SUCCEEDED(args->GetCmdLineValue("-edit", getter_Copies(arg))) &&
+                 (const char*)arg ) {
             // Launch composer.
             #if MOZ_DEBUG_DDE
             printf( "Launching editor on url [%s]...\n", arg );
             #endif
             (void)OpenWindow( "chrome://editor/content/", arg );
-        } else if ( NS_SUCCEEDED( args->GetCmdLineValue( "-mail", &arg ) ) && arg ) {
+        } else if ( NS_SUCCEEDED( args->GetCmdLineValue( "-mail", getter_Copies(arg))) &&
+                    (const char*)arg ) {
             // Launch composer.
             #if MOZ_DEBUG_DDE
             printf( "Launching mail...\n" );

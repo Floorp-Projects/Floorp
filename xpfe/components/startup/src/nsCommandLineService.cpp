@@ -195,7 +195,7 @@ nsCmdLineService::GetCmdLineValue(const char * aArg, char ** aResult)
    for (int i = 0; i<mArgCount; i++)
    {
      if (ArgsMatch(aArg,(char *) mArgList.ElementAt(i))) {
-       *aResult = (char *)mArgValueList.ElementAt(i);
+       *aResult = nsCRT::strdup((char *)mArgValueList.ElementAt(i));
         return NS_OK;
      }
    }
