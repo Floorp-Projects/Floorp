@@ -653,3 +653,48 @@ tmcallsite *tmreader_callsite(tmreader *tmr, uint32 serial)
     hash = hash_serial(key);
     return (tmcallsite*) *PL_HashTableRawLookup(tmr->callsites, hash, key);
 }
+
+int tmgraphnode_connect(tmgraphnode *from, tmgraphnode *to, tmcallsite *site)
+{
+    tmgraphlink *outlink;
+    tmgraphedge *edge;
+
+    for (outlink = from->out; outlink; outlink = outlink->next) {
+        if (outlink->node == to) {
+            /*
+             * Say the stack looks like this: ... => JS => js => JS => js.
+             * We must avoid overcounting JS=>js because the first edge total
+             * includes the second JS=>js edge's total (which is because the
+             * lower site's total includes all its kids' totals).
+             */
+            edge = TM_LINK_TO_EDGE(outlink, TM_EDGE_OUT_LINK);
+            if (!to->low || to->low < from->low) {
+                /* Add the direct and total counts to edge->allocs. */
+                edge->allocs.bytes.direct += site->allocs.bytes.direct;
+                edge->allocs.bytes.total += site->allocs.bytes.total;
+                edge->allocs.calls.direct += site->allocs.calls.direct;
+                edge->allocs.calls.total += site->allocs.calls.total;
+
+                /* Now update the free counts. */
+                edge->frees.bytes.direct += site->frees.bytes.direct;
+                edge->frees.bytes.total += site->frees.bytes.total;
+                edge->frees.calls.direct += site->frees.calls.direct;
+                edge->frees.calls.total += site->frees.calls.total;
+            }
+            return 1;
+        }
+    }
+
+    edge = (tmgraphedge*) malloc(sizeof(tmgraphedge));
+    if (!edge)
+        return 0;
+    edge->links[TM_EDGE_OUT_LINK].node = to;
+    edge->links[TM_EDGE_OUT_LINK].next = from->out;
+    from->out = &edge->links[TM_EDGE_OUT_LINK];
+    edge->links[TM_EDGE_IN_LINK].node = from;
+    edge->links[TM_EDGE_IN_LINK].next = to->in;
+    to->in = &edge->links[TM_EDGE_IN_LINK];
+    edge->allocs = site->allocs;
+    edge->frees = site->frees;
+    return 1;
+}

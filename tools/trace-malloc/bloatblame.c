@@ -62,45 +62,6 @@ static int    unified_output = 0;
 static char   *function_dump = NULL;
 static uint32 min_subtotal = 0;
 
-static void connect_nodes(tmgraphnode *from, tmgraphnode *to, tmcallsite *site)
-{
-    tmgraphlink *link;
-    tmgraphedge *edge;
-
-    for (link = from->out; link; link = link->next) {
-        if (link->node == to) {
-            /*
-             * Say the stack looks like this: ... => JS => js => JS => js.
-             * We must avoid overcounting JS=>js because the first edge total
-             * includes the second JS=>js edge's total (which is because the
-             * lower site's total includes all its kids' totals).
-             */
-            edge = TM_LINK_TO_EDGE(link, TM_EDGE_OUT_LINK);
-            if (!to->low || to->low < from->low) {
-                /* Add the direct and total counts to edge->allocs. */
-                edge->allocs.bytes.direct += site->allocs.bytes.direct;
-                edge->allocs.bytes.total += site->allocs.bytes.total;
-                edge->allocs.calls.direct += site->allocs.calls.direct;
-                edge->allocs.calls.total += site->allocs.calls.total;
-            }
-            return;
-        }
-    }
-
-    edge = (tmgraphedge*) malloc(sizeof(tmgraphedge));
-    if (!edge) {
-        perror(program);
-        exit(1);
-    }
-    edge->links[TM_EDGE_OUT_LINK].node = to;
-    edge->links[TM_EDGE_OUT_LINK].next = from->out;
-    from->out = &edge->links[TM_EDGE_OUT_LINK];
-    edge->links[TM_EDGE_IN_LINK].node = from;
-    edge->links[TM_EDGE_IN_LINK].next = to->in;
-    to->in = &edge->links[TM_EDGE_IN_LINK];
-    edge->allocs = site->allocs;
-}
-
 static void compute_callsite_totals(tmcallsite *site)
 {
     tmcallsite *kid;
@@ -132,7 +93,8 @@ static void walk_callsite_tree(tmcallsite *site, int level, int kidnum, FILE *fp
                     meth->allocs.bytes.total += site->allocs.bytes.total;
                     meth->allocs.calls.total += site->allocs.calls.total;
                 }
-                connect_nodes(pmeth, meth, site);
+                if (!tmgraphnode_connect(pmeth, meth, site))
+                    goto bad;
 
                 comp = meth->up;
                 if (comp) {
@@ -144,7 +106,8 @@ static void walk_callsite_tree(tmcallsite *site, int level, int kidnum, FILE *fp
                             comp->allocs.calls.total
                                 += site->allocs.calls.total;
                         }
-                        connect_nodes(pcomp, comp, site);
+                        if (!tmgraphnode_connect(pcomp, comp, site))
+                            goto bad;
 
                         lib = comp->up;
                         if (lib) {
@@ -156,7 +119,8 @@ static void walk_callsite_tree(tmcallsite *site, int level, int kidnum, FILE *fp
                                     lib->allocs.calls.total
                                         += site->allocs.calls.total;
                                 }
-                                connect_nodes(plib, lib, site);
+                                if (!tmgraphnode_connect(plib, lib, site))
+                                    goto bad;
                             }
                             old_lib_low = lib->low;
                             if (!old_lib_low)
@@ -200,6 +164,11 @@ static void walk_callsite_tree(tmcallsite *site, int level, int kidnum, FILE *fp
             }
         }
     }
+    return;
+
+bad:
+    perror(program);
+    exit(1);
 }
 
 /*
