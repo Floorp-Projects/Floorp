@@ -104,20 +104,23 @@ nsresult TimerThread::Shutdown()
   if (!mThread)
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsAutoLock lock(mLock);
+  {   // lock scope
+    nsAutoLock lock(mLock);
 
-  mProcessing = PR_FALSE;
+    mProcessing = PR_FALSE;
 
-  // notify the cond var so that Run() can return
-  if (mCondVar && mWaiting)
-    PR_NotifyCondVar(mCondVar);
+    // notify the cond var so that Run() can return
+    if (mCondVar && mWaiting)
+      PR_NotifyCondVar(mCondVar);
 
-  nsTimerImpl *timer;
-  for (PRInt32 i = mTimers.Count() - 1; i >= 0; i--) {
-    timer = NS_STATIC_CAST(nsTimerImpl*, mTimers[i]);
-    RemoveTimerInternal(timer);
+    nsTimerImpl *timer;
+    for (PRInt32 i = mTimers.Count() - 1; i >= 0; i--) {
+      timer = NS_STATIC_CAST(nsTimerImpl*, mTimers[i]);
+      RemoveTimerInternal(timer);
+    }
   }
-
+  
+  mThread->Join();    // wait for the thread to die
   return NS_OK;
 }
 
@@ -135,10 +138,11 @@ NS_IMETHODIMP TimerThread::Run()
 
       PRIntervalTime itIsNow = PR_IntervalNow();
 #ifdef ACCEPT_WRONG_TIMES
-      if (itIsNow + kThreeMS > timer->mTimeout - kThreeMS) {
+      if (itIsNow + kThreeMS > timer->mTimeout - kThreeMS)
 #else
-      if (itIsNow >= timer->mTimeout) {
+      if (itIsNow >= timer->mTimeout)
 #endif
+      {
         RemoveTimerInternal(timer);
         theTimer = timer;
         NS_ADDREF(theTimer);
