@@ -25,10 +25,6 @@
 # to where you will install the running Bonsai.  Then "make install" should
 # copy things for you.
 
-CC = @CC@
-CFLAGS = @CFLAGS@
-# -lcrypt
-LDFLAGS = @LIBS@
 # /usr/bin/perl
 PERL = @PERL@
 # /var/www/bonsai
@@ -87,12 +83,10 @@ FILES = CGI.pl			\
 	showcheckins.cgi	\
 	switchtree.cgi		\
 	toplevel.cgi		\
-	viewold.cgi
+	viewold.cgi			\
+	trapdoor 	
 
-all: trapdoor treeconfig.pl params
-
-trapdoor: trapdoor.o
-	$(CC) -o trapdoor trapdoor.o $(LDFLAGS)
+all: treeconfig.pl params
 
 treeconfig.pl: treeconfig.pl.in
 	cp treeconfig.pl.in treeconfig.pl
@@ -114,9 +108,10 @@ install: all
               $$I > $(PREFIX)/$$I && \
 	chmod 755 $(PREFIX)/$$I; done
 	-mkdir -p $(PREFIX)/data && chmod 755 $(PREFIX)/data
-	cp trapdoor $(PREFIX)/data
 	cp bonsai.gif $(PREFIX)
 	chmod 755 $(PREFIX)/bonsai.gif
+	# put trapdoor into data
+	mv $(PREFIX)/trapdoor $(PREFIX)/data
 	@if test ! -r $(PREFIX)/data/treeconfig.pl ; then \
 	echo "Installing treeconfig.pl" && \
 	cp treeconfig.pl $(PREFIX)/data ; \
@@ -150,4 +145,4 @@ install: all
 	@echo "Bonsai configuration in $(PREFIX)/data/treeconfig.pl"
 
 clean:
-	rm -f trapdoor trapdoor.o treeconfig.pl params
+	rm -f treeconfig.pl params

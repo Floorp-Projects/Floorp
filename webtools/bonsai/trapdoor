@@ -1,0 +1,10 @@
+#!/usr/bonsaitools/bin/perl -wT
+if (!defined $ARGV[0]) {
+    print "Usage: trapdoor PASSWORD\n";
+    exit 2;
+}
+# XXX We are using salt as 'aa' for now, but ideally it should be
+# something like:
+#   chr(int (rand 26) + 65) . chr(int (rand 26) + 65);
+my $salt = 'aa';
+print crypt($ARGV[0], $salt) . "\n"; 

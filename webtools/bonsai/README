@@ -492,7 +492,7 @@ toplevel.cgi		Perl.  Main interface to the bonsai hook.
 				contacthelp.html
 				http://warp/client/dogbert/buildlore/index.html
 
-trapdoor.c		Runs crypt on passwd
+trapdoor		Runs crypt on passwd
 
 utils.pl		Ancient globals.pl. 			DELETE
 			Called by: testlock.pl  whohastouchedwhat.cgi

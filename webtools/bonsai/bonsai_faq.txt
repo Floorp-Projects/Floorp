@@ -70,9 +70,9 @@ you set up.
 
 o How do I set up my administration password?
 
-When you build bonsai, the program "trapdoor" is built and installed
-into the data directory in your Bonsai installation tree.  Change to
-the data directory in your installation and run the command:
+When you build bonsai, the program "trapdoor" is installed into the data
+directory in your Bonsai installation tree.  Change to the data
+directory in your installation and run the command:
 
 trapdoor <your admin password> > passwd
 

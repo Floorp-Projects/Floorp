@@ -1,8 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(trapdoor.c)
+AC_INIT
 
 dnl Checks for programs.
-AC_PROG_CC
 AC_PATH_PROG(PERL,perl)
 AC_PERL_DB
 AC_PERL_DATEPARSE
@@ -14,8 +13,6 @@ AC_PATH_PROG(RCSDIFF,rcsdiff)
 
 
 dnl Checks for libraries.
-dnl Replace `main' with a function in -lcrypt:
-AC_CHECK_LIB(crypt, crypt)
 
 dnl Checks for header files.
 
