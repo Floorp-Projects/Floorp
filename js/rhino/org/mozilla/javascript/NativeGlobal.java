@@ -38,6 +38,7 @@ package org.mozilla.javascript;
 
 import java.io.StringReader;
 import java.io.IOException;
+import java.lang.reflect.Method;
 
 /**
  * This class implements the global native object (function and value 
@@ -85,20 +86,21 @@ public class NativeGlobal {
                                   "SyntaxError",
                                   "TypeError",
                                   "URIError"
-                                };                                                   
-
-        global.defineFunctionProperties(errorMethods, NativeGlobal.class,
-                                            ScriptableObject.DONTENUM);
+                                };          
+        Method[] m = FunctionObject.findMethods(NativeGlobal.class, 
+                                                "CommonError");
+        Context cx = Context.getContext();
         /*
-            Each error constructor gets it's own Error object as a prototype,
+            Each error constructor gets its own Error object as a prototype,
             with the 'name' property set to the name of the error.
         */
         for (int i = 0; i < errorMethods.length; i++) {
-            FunctionObject errorConstructor 
-                        = (FunctionObject)(global.get(errorMethods[i], global));
-            Scriptable errorProto = Context.getContext().newObject(scope, "Error");
-            errorProto.put("name", errorProto, errorMethods[i]);
-            errorConstructor.put("prototype", errorConstructor, errorProto);
+            String name = errorMethods[i];
+            FunctionObject ctor = new FunctionObject(name, m[0], global);
+            global.defineProperty(name, ctor, ScriptableObject.DONTENUM);
+            Scriptable errorProto = cx.newObject(scope, "Error");
+            errorProto.put("name", errorProto, name);
+            ctor.put("prototype", ctor, errorProto);
         }
     
     }
@@ -498,52 +500,11 @@ public class NativeGlobal {
         }
     }
     
-    // XXX what are these functions used for?
-    public static Object ConversionError(Context cx, Object[] args, 
-                                         Function ctorObj, boolean inNewExpr)
-    {
-        Scriptable newInstance = new NativeError();
-        newInstance.setPrototype((Scriptable)(ctorObj.get("prototype", ctorObj)));
-        newInstance.setParentScope(cx.ctorScope);
-        if (args.length > 0)
-            newInstance.put("message", newInstance, args[0]);
-        return newInstance;
-    }
-    
-    public static Object EvalError(Context cx, Object[] args, 
-                                   Function ctorObj, boolean inNewExpr)
-    {
-        Scriptable newInstance = new NativeError();
-        newInstance.setPrototype((Scriptable)(ctorObj.get("prototype", ctorObj)));
-        newInstance.setParentScope(cx.ctorScope);
-        if (args.length > 0)
-            newInstance.put("message", newInstance, args[0]);
-        return newInstance;
-    }
-    
-    public static Object RangeError(Context cx, Object[] args, 
-                                    Function ctorObj, boolean inNewExpr)
-    {
-        Scriptable newInstance = new NativeError();
-        newInstance.setPrototype((Scriptable)(ctorObj.get("prototype", ctorObj)));
-        newInstance.setParentScope(cx.ctorScope);
-        if (args.length > 0)
-            newInstance.put("message", newInstance, args[0]);
-        return newInstance;
-    }
-    
-    public static Object ReferenceError(Context cx, Object[] args, 
-                                        Function ctorObj, boolean inNewExpr)
-    {
-        Scriptable newInstance = new NativeError();
-        newInstance.setPrototype((Scriptable)(ctorObj.get("prototype", ctorObj)));
-        newInstance.setParentScope(cx.ctorScope);
-        if (args.length > 0)
-            newInstance.put("message", newInstance, args[0]);
-        return newInstance;
-    }
-    
-    public static Object SyntaxError(Context cx, Object[] args, 
+    /**
+     * The implementation of all the ECMA error constructors (SyntaxError, 
+     * TypeError, etc.)
+     */
+    public static Object CommonError(Context cx, Object[] args, 
                                      Function ctorObj, boolean inNewExpr)
     {
         Scriptable newInstance = new NativeError();
@@ -553,27 +514,4 @@ public class NativeGlobal {
             newInstance.put("message", newInstance, args[0]);
         return newInstance;
     }
-    
-    public static Object TypeError(Context cx, Object[] args, 
-                                   Function ctorObj, boolean inNewExpr)
-    {
-        Scriptable newInstance = new NativeError();
-        newInstance.setPrototype((Scriptable)(ctorObj.get("prototype", ctorObj)));
-        newInstance.setParentScope(cx.ctorScope);
-        if (args.length > 0)
-            newInstance.put("message", newInstance, args[0]);
-        return newInstance;
-    }
-    
-    public static Object URIError(Context cx, Object[] args, 
-                                  Function ctorObj, boolean inNewExpr)
-    {
-        Scriptable newInstance = new NativeError();
-        newInstance.setPrototype((Scriptable)(ctorObj.get("prototype", ctorObj)));
-        newInstance.setParentScope(cx.ctorScope);
-        if (args.length > 0)
-            newInstance.put("message", newInstance, args[0]);
-        return newInstance;
-    }
-    
 }

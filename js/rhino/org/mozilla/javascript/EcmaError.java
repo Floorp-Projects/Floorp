@@ -95,10 +95,18 @@ public class EcmaError extends RuntimeException {
         return errorObject.getMessage();
     }
     
+    /**
+     * Get the name of the source containing the error, or null
+     * if that information is not available.
+     */
     public String getSourceName() {
         return sourceName;
     }
     
+    /**
+     * Returns the line number of the statement causing the error,
+     * or zero if not available.
+     */
     public int getLineNumber() {
         return lineNumber;
     }
