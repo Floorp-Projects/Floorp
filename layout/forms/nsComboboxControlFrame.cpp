@@ -78,7 +78,7 @@ static NS_DEFINE_IID(kIPrivateDOMEventIID,       NS_IPRIVATEDOMEVENT_IID);
 const char * kMozDropdownActive = "-moz-dropdown-active";
 
 nsresult
-NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
@@ -88,6 +88,7 @@ NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  it->SetFlags(aFlags);
   *aNewFrame = it;
   return NS_OK;
 }
@@ -109,7 +110,7 @@ nsComboboxControlFrame::nsComboboxControlFrame()
   mSelectedIndex               = -1;
 
    //Shrink the area around it's contents
-  SetFlags(NS_BLOCK_SHRINK_WRAP);
+  //SetFlags(NS_BLOCK_SHRINK_WRAP);
 }
 
 //--------------------------------------------------------------
@@ -730,6 +731,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
         //nsRect absolutePixels;
         //GetAbsoluteFramePosition(aPresContext, displayFrame,  absoluteTwips, absolutePixels);
         //PositionDropdown(aPresContext, displayRect.height, absoluteTwips, absolutePixels);
+        aStatus = NS_FRAME_COMPLETE;
         return rv;
       }
     }
@@ -810,7 +812,8 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
       // Reflow again with the width of the display frame set.
     nsAreaFrame::Reflow(aPresContext, aDesiredSize, firstPassState, aStatus);
     // nsAreaFrame::Reflow adds in the border and padding so we need to remove it
-    aDesiredSize.width -= borderPadding.left + borderPadding.right;
+    // XXX rods - this hould not be subtracted in
+    //aDesiredSize.width -= borderPadding.left + borderPadding.right;
 
      // Reflow the dropdown list to match the width of the display + button
     ReflowComboChildFrame(dropdownFrame, aPresContext, dropdownDesiredSize, firstPassState, aStatus, aDesiredSize.width, NS_UNCONSTRAINEDSIZE);

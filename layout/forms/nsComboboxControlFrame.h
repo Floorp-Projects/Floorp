@@ -58,6 +58,8 @@ class nsComboboxControlFrame : public nsAreaFrame,
                                public nsIRollupListener
 {
 public:
+  friend nsresult NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags);
+
   nsComboboxControlFrame();
   ~nsComboboxControlFrame();
 
