@@ -1584,7 +1584,6 @@ nsHTMLEditRules::WillAlign(nsIDOMSelection *aSelection,
   *aCancel = PR_FALSE;
   *aHandled = PR_FALSE;
   
-  nsAutoSelectionReset selectionResetter(aSelection);
 
   PRBool outMakeEmpty;
   res = ShouldMakeEmptyBlock(aSelection, alignType, &outMakeEmpty);
@@ -1610,6 +1609,8 @@ nsHTMLEditRules::WillAlign(nsIDOMSelection *aSelection,
     res = aSelection->Collapse(theDiv, 0);
     return res;
   }
+
+  nsAutoSelectionReset selectionResetter(aSelection);
 
   // convert the selection ranges into "promoted" selection ranges:
   // this basically just expands the range to include the immediate
