@@ -578,6 +578,7 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
 
     } else {
         // we're going direct.
+        nsAllocator::Free(cProgID);
         nsIStreamConverter *conv = nsnull;
         rv = converter->QueryInterface(nsCOMTypeInfo<nsIStreamConverter>::GetIID(), (void**)&conv);
         NS_RELEASE(converter);
@@ -677,6 +678,7 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
 
     } else {
         // we're going direct.
+        nsAllocator::Free(cProgID);
         nsIStreamListener *listener= nsnull;
         rv = converter->QueryInterface(nsCOMTypeInfo<nsIStreamListener>::GetIID(), (void**)&listener);
         if (NS_FAILED(rv)) return rv;
