@@ -2258,7 +2258,7 @@ sub BuildMailNewsProjects()
         BuildOneProject(":mozilla:mailnews:mime:cthandlers:smimestub:macbuild:smime.xml",   "smime$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     }
     if ($main::options{mdn}) {
-    	InstallResources(":mozilla:mailnews:extensions:mdn:src:MANIFEST",
+    	InstallResources(":mozilla:mailnews:extensions:mdn:src:MANIFEST",				 "${dist_dir}Components");
     }
     EndBuildModule("mailnews");
 }
