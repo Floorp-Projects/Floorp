@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -33,11 +33,11 @@
 //*****************************************************************************
 
 nsDSWebProgressListener::nsDSWebProgressListener() : mDocShell(nsnull),
-   mProgressStatusFlags(0), mCurSelfProgress(0), mMaxSelfProgress(0),
-   mCurTotalProgress(0), mMaxTotalProgress(0)
+    mProgressStatusFlags(0), mCurSelfProgress(0), mMaxSelfProgress(0),
+    mCurTotalProgress(0), mMaxTotalProgress(0)
  
 {
-	NS_INIT_REFCNT();
+    NS_INIT_REFCNT();
 }
 
 nsDSWebProgressListener::~nsDSWebProgressListener()
@@ -52,8 +52,8 @@ NS_IMPL_ADDREF(nsDSWebProgressListener)
 NS_IMPL_RELEASE(nsDSWebProgressListener)
 
 NS_INTERFACE_MAP_BEGIN(nsDSWebProgressListener)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebProgressListener)
-   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebProgressListener)
+    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -61,67 +61,67 @@ NS_INTERFACE_MAP_END
 //*****************************************************************************   
 
 NS_IMETHODIMP nsDSWebProgressListener::OnProgressChange(nsIChannel* aChannel,
-   PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, 
-   PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
+    PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, 
+    PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
 {
-   mCurSelfProgress = aCurSelfProgress;
-   mMaxSelfProgress = aMaxSelfProgress;
-   mCurTotalProgress = aCurTotalProgress;
-   mMaxTotalProgress = aMaxTotalProgress;
+    mCurSelfProgress = aCurSelfProgress;
+    mMaxSelfProgress = aMaxSelfProgress;
+    mCurTotalProgress = aCurTotalProgress;
+    mMaxTotalProgress = aMaxTotalProgress;
 
-   if(mDocShell)
-      mDocShell->FireOnProgressChange(aChannel, aCurSelfProgress, 
-      aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress);
+    if(mDocShell)
+        mDocShell->FireOnProgressChange(aChannel, aCurSelfProgress, 
+            aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress);
 
-   return NS_OK;
+    return NS_OK;
 }
       
 NS_IMETHODIMP nsDSWebProgressListener::OnChildProgressChange(nsIChannel* aChannel,
-   PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress)
+    PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress)
 {
-   if(mDocShell)
-      mDocShell->FireOnChildProgressChange(aChannel, aCurSelfProgress, 
-      aMaxSelfProgress);
+    if(mDocShell)
+        mDocShell->FireOnChildProgressChange(aChannel, aCurSelfProgress, 
+        aMaxSelfProgress);
 
-   return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsDSWebProgressListener::OnStatusChange(nsIChannel* aChannel,
-   PRInt32 aProgressStatusFlags)
+    PRInt32 aProgressStatusFlags)
 {
-   mProgressStatusFlags = aProgressStatusFlags;
-   //XXX Need to mask in flag_windowActivity when animation is occuring in the
-   // window
-   if(mDocShell)
-      {
-      if(aProgressStatusFlags & nsIWebProgress::flag_net_start &&
-         PR_TRUE /*XXX Eventually check some flag to make sure there is not
-         already window activity.  If there is don't add the window start*/)
-         aProgressStatusFlags |= nsIWebProgress::flag_win_start;
-      else if(aProgressStatusFlags & nsIWebProgress::flag_net_stop &&
-         PR_TRUE /*XXX Eventually check some flag to see if there is animation
-         going if there is don't add in the window stop flag*/)
-         aProgressStatusFlags |= nsIWebProgress::flag_win_stop;
-         
-      mDocShell->FireOnStatusChange(aChannel, aProgressStatusFlags);
-      }
+    mProgressStatusFlags = aProgressStatusFlags;
+    //XXX Need to mask in flag_windowActivity when animation is occuring in the
+    // window
+    if(mDocShell)
+    {
+        if(aProgressStatusFlags & nsIWebProgress::flag_net_start &&
+            PR_TRUE /*XXX Eventually check some flag to make sure there is not
+                    already window activity.  If there is don't add the window start*/)
+            aProgressStatusFlags |= nsIWebProgress::flag_win_start;
+        else if(aProgressStatusFlags & nsIWebProgress::flag_net_stop &&
+            PR_TRUE /*XXX Eventually check some flag to see if there is animation
+                    going if there is don't add in the window stop flag*/)
+            aProgressStatusFlags |= nsIWebProgress::flag_win_stop;
 
-   return NS_OK;
+        mDocShell->FireOnStatusChange(aChannel, aProgressStatusFlags);
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsDSWebProgressListener::OnChildStatusChange(nsIChannel* aChannel,
-   PRInt32 aProgressStatusFlags)
+    PRInt32 aProgressStatusFlags)
 {
-   if(mDocShell)
-      mDocShell->FireOnChildStatusChange(aChannel, aProgressStatusFlags);
+    if(mDocShell)
+        mDocShell->FireOnChildStatusChange(aChannel, aProgressStatusFlags);
 
-   return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsDSWebProgressListener::OnLocationChange(nsIURI* aLocation)
 {
-   NS_ERROR("DocShell should be the only one generating this message");
-   return NS_OK;
+    NS_ERROR("DocShell should be the only one generating this message");
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -143,12 +143,12 @@ nsDSWebProgressListener::OnSecurityChange(nsIWebProgress *aWebProgress,
 
 void nsDSWebProgressListener::DocShell(nsDocShell* aDocShell)
 {
-   mDocShell = aDocShell;
+    mDocShell = aDocShell;
 }
 
 nsDocShell* nsDSWebProgressListener::DocShell()
 {
-   return mDocShell;
+    return mDocShell;
 }
 
 #endif /* 0 */

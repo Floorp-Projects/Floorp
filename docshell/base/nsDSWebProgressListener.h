@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -33,25 +33,25 @@ class nsDSWebProgressListener : public nsIWebProgressListener
 {
 friend class nsDocShell;
 public:
-   NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS
 
-   NS_DECL_NSIWEBPROGRESSLISTENER
-
-protected:
-   nsDSWebProgressListener();
-   virtual ~nsDSWebProgressListener();
-
-   void DocShell(nsDocShell* aDocShell);
-   nsDocShell* DocShell();
+    NS_DECL_NSIWEBPROGRESSLISTENER
 
 protected:
-   nsDocShell*       mDocShell;
+    nsDSWebProgressListener();
+    virtual ~nsDSWebProgressListener();
 
-   PRInt32           mProgressStatusFlags;
-   PRInt32           mCurSelfProgress;
-   PRInt32           mMaxSelfProgress;
-   PRInt32           mCurTotalProgress;
-   PRInt32           mMaxTotalProgress;
+    void DocShell(nsDocShell* aDocShell);
+    nsDocShell* DocShell();
+
+protected:
+    nsDocShell*       mDocShell;
+
+    PRInt32           mProgressStatusFlags;
+    PRInt32           mCurSelfProgress;
+    PRInt32           mMaxSelfProgress;
+    PRInt32           mCurTotalProgress;
+    PRInt32           mMaxTotalProgress;
 };
 
 #endif /* nsDSWebProgressListener_h__ */
