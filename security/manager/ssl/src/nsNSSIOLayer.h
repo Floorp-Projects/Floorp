@@ -68,14 +68,8 @@ public:
   nsresult GetPort(PRInt32 *aPort);
   nsresult SetPort(PRInt32 aPort);
 
-  nsresult GetProxyHost(char **aProxyHost);
-  nsresult SetProxyHost(const char *aProxyHost);
-
-  nsresult GetProxyPort(PRInt32 *aProxyPort);
-  nsresult SetProxyPort(PRInt32 aProxyPort);
-
-  nsresult GetNetAddr(PRNetAddr *aNetAddr);
-  nsresult SetNetAddr(const PRNetAddr *aNetAddr);
+  nsresult GetTLSIntolerant(PRBool *aTLSIntolerant);
+  nsresult SetTLSIntolerant(PRBool aTLSIntolerant);
 
   /* Set SSL Status values */
   nsresult SetSSLStatus(nsISSLStatus *aSSLStatus);  
@@ -88,10 +82,9 @@ protected:
   PRBool mForceHandshake;
   PRBool mForTLSStepUp;
   PRBool mFirstWrite;
+  PRBool mTLSIntolerant;
+  PRInt32 mPort;
   nsXPIDLCString mHostName;
-  nsXPIDLCString mProxyHostName;
-  PRInt32 mPort, mProxyPort;
-  PRNetAddr mNetAddr;
 
   /* SSL Status */
   nsCOMPtr<nsISSLStatus> mSSLStatus;
@@ -112,4 +105,6 @@ nsresult nsSSLIOLayerAddToSocket(const char *host,
                                  PRFileDesc *fd,
                                  nsISupports **securityInfo,
                                  PRBool forTLSStepUp);
+
+nsresult nsSSLIOLayerFreeTLSIntolerantSites();
 #endif /* _NSNSSIOLAYER_H */
