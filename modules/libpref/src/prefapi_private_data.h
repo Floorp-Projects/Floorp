@@ -76,6 +76,7 @@ NSPR_END_EXTERN_C
 
 /* Possibly exportable */
 #if defined(__cplusplus)
+#include "nsIFileSpec.h"
 PrefResult PREF_SavePrefFileSpecWith(
 	nsIFileSpec* fileSpec,
 	PLHashEnumerator heSaveProc);
