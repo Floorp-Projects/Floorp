@@ -17,18 +17,23 @@
  */
 
 
-#include "nsMsgAccount.h"
-#include "nsIMsgAccount.h"
-
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
 #include "prprf.h"
 #include "plstr.h"
 #include "prmem.h"
-#include "nsMsgBaseCID.h"
-#include "nsIPref.h"
+
+#include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
+
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
+
+#include "nsIPref.h"
+#include "nsMsgBaseCID.h"
+#include "nsMsgAccount.h"
+#include "nsIMsgAccount.h"
 #include "nsIMsgFolderCache.h"
+#include "nsIMsgAccountManager.h"
+#include "nsIMsgMailSession.h"
 
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -75,6 +80,8 @@ private:
   nsCOMPtr<nsISupportsArray> m_identities;
 
   nsresult getPrefService();
+  nsresult createIncomingServer();
+  nsresult createIdentities();
 };
 
 
@@ -111,12 +118,14 @@ nsMsgAccount::nsMsgAccount():
   m_incomingServer(null_nsCOMPtr()),
   m_defaultIdentity(null_nsCOMPtr())
 {
-  NS_NewISupportsArray(getter_AddRefs(m_identities));
   NS_INIT_REFCNT();
 }
 
 nsMsgAccount::~nsMsgAccount()
 {
+  // release of servers an identites happen automatically
+  // thanks to nsCOMPtrs and nsISupportsArray
+  
   PR_FREEIF(m_accountKey);
   
 }
@@ -136,79 +145,12 @@ NS_IMETHODIMP
 nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
 {
   if (!aIncomingServer) return NS_ERROR_NULL_POINTER;
-  //Need to initialize this otherwise if there's already an m_incomingServer, this
-  //will be unitialized.
-  nsresult rv = NS_OK;
 
-  // need to call SetKey() first!
-  NS_ASSERTION(m_accountKey, "Account key not initialized.");
-  if (!m_accountKey) return NS_ERROR_NOT_INITIALIZED;
-  
+  nsresult rv = NS_OK;
   // create the incoming server lazily
   if (!m_incomingServer) {
-    // from here, load mail.account.myaccount.server
-    // and             mail.account.myaccount.identities
-    // to load and create the appropriate objects
-    
-    //
-    // Load the incoming server
-    //
-    // ex) mail.account.myaccount.server = "myserver"
-    char *serverKeyPref = PR_smprintf("mail.account.%s.server", m_accountKey);
-    char *serverKey;
-
-    /* make sure m_prefs is valid */
-    rv = getPrefService();
+    rv = createIncomingServer();
     if (NS_FAILED(rv)) return rv;
-    
-    rv = m_prefs->CopyCharPref(serverKeyPref, &serverKey);
-    PR_FREEIF(serverKeyPref);
-
-    // the server pref doesn't exist
-    if (NS_FAILED(rv)) return rv;
-    
-#ifdef DEBUG_alecf
-    printf("\t%s's server: %s\n", m_accountKey, serverKey);
-#endif
-    
-    // ask the prefs what kind of server this is and use it to
-    // create a ProgID for it
-    // ex) mail.server.myserver.type = imap
-    char *serverTypePref = PR_smprintf("mail.server.%s.type", serverKey);
-    char *serverType;
-    rv = m_prefs->CopyCharPref(serverTypePref, &serverType);
-    PR_FREEIF(serverTypePref);
-
-    // the server type doesn't exist!
-    if (NS_FAILED(rv)) return rv;
-    
-#ifdef DEBUG_alecf
-    if (NS_FAILED(rv)) {
-      printf("\tCould not read pref %s\n", serverTypePref);
-    } else {
-      printf("\t%s's   type: %s\n", m_accountKey, serverType);
-    }
-#endif
-    
-    char *serverTypeProgID =
-      PR_smprintf("component://netscape/messenger/server&type=%s", serverType);
-    
-    PR_FREEIF(serverType);
-    
-    nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = nsComponentManager::CreateInstance(serverTypeProgID,
-                                            nsnull,
-                                            nsCOMTypeInfo<nsIMsgIncomingServer>::GetIID(),
-                                            getter_AddRefs(server));
-    PR_FREEIF(serverTypeProgID);
-    
-    if (NS_SUCCEEDED(rv))
-      rv = server->SetKey(serverKey);
-    
-    if (NS_SUCCEEDED(rv))
-      rv = SetIncomingServer(server);
-
-    PR_FREEIF(serverKey);
   }
   
   if (NS_FAILED(rv)) return rv;
@@ -216,6 +158,72 @@ nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
   
   *aIncomingServer = m_incomingServer;
   NS_ADDREF(*aIncomingServer);
+
+  return NS_OK;
+}
+
+nsresult
+nsMsgAccount::createIncomingServer()
+{
+  if (!m_accountKey) return NS_ERROR_NOT_INITIALIZED;
+  // from here, load mail.account.myaccount.server
+  // Load the incoming server
+  //
+  // ex) mail.account.myaccount.server = "myserver"
+
+  nsresult rv = getPrefService();
+  if (NS_FAILED(rv)) return rv;
+
+  // get the "server" pref
+  char *serverKeyPref = PR_smprintf("mail.account.%s.server", m_accountKey);
+  nsXPIDLCString serverKey;
+  rv = m_prefs->CopyCharPref(serverKeyPref, getter_Copies(serverKey));
+  PR_FREEIF(serverKeyPref);
+  if (NS_FAILED(rv)) return rv;
+    
+#ifdef DEBUG_alecf
+  printf("\t%s's server: %s\n", m_accountKey, (const char*)serverKey);
+#endif
+
+  // get the servertype
+  // ex) mail.server.myserver.type = imap
+  char *serverTypePref = PR_smprintf("mail.server.%s.type",
+                                     (const char*)serverKey);
+  nsXPIDLCString serverType;
+  rv = m_prefs->CopyCharPref(serverTypePref, getter_Copies(serverType));
+  PR_FREEIF(serverTypePref);
+
+  // the server type doesn't exist, use "generic"
+  if (NS_FAILED(rv)) {
+    serverType.Copy("generic");
+    return rv;
+  }
+    
+#ifdef DEBUG_alecf
+  if (NS_FAILED(rv)) {
+    printf("\tCould not read pref %s\n", serverTypePref);
+  } else {
+    printf("\t%s's   type: %s\n", m_accountKey, (const char*)serverType);
+  }
+#endif
+    
+  // get the server from the account manager
+  NS_WITH_SERVICE(nsIMsgMailSession,session, NS_MSGMAILSESSION_PROGID, &rv);
+  if (NS_FAILED(rv)) return rv;
+    
+  nsCOMPtr<nsIMsgAccountManager> am;
+  rv = session->GetAccountManager(getter_AddRefs(am));
+  if (NS_FAILED(rv)) return rv;
+    
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = am->GetIncomingServer(serverKey, getter_AddRefs(server));
+  if (NS_FAILED(rv)) return rv;
+  
+#ifdef DEBUG_alecf
+  printf("%s loaded.\n", m_accountKey);
+#endif
+  // store the server in this structure
+  m_incomingServer = server;
 
   return NS_OK;
 }
@@ -232,21 +240,72 @@ nsMsgAccount::SetIncomingServer(nsIMsgIncomingServer * aIncomingServer)
 NS_IMETHODIMP
 nsMsgAccount::GetIdentities(nsISupportsArray **_retval)
 {
-  NS_ASSERTION(m_accountKey, "Account key not initialized.");
   if (!_retval) return NS_ERROR_NULL_POINTER;
-  if (!m_identities) return NS_ERROR_UNEXPECTED;
-  
+
+  nsresult rv = NS_OK;
+  if (!m_identities)
+    rv = createIdentities();
+  if (NS_FAILED(rv)) return rv;
+
   *_retval = m_identities;
   NS_ADDREF(*_retval);
 
   return NS_OK;
 }
 
+/*
+ * set up the m_identities array
+ * do not call this more than once or we'll leak.
+ */
+nsresult
+nsMsgAccount::createIdentities()
+{
+
+  NS_ASSERTION(m_accountKey, "Account key not initialized.");
+  if (!m_accountKey) return NS_ERROR_NOT_INITIALIZED;
+  
+  NS_NewISupportsArray(getter_AddRefs(m_identities));
+
+  // get the pref
+  // ex) mail.account.myaccount.identities = "joe-home,joe-work"
+  char *identitiesKeyPref = PR_smprintf("mail.account.%s.identities",
+                                        m_accountKey);
+  nsXPIDLCString identityKey;
+  nsresult rv;
+  rv = getPrefService();
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = m_prefs->CopyCharPref(identitiesKeyPref, getter_Copies(identityKey));
+  PR_FREEIF(identitiesKeyPref);
+  if (NS_FAILED(rv)) return rv;
+  
+#ifdef DEBUG_alecf
+  printf("%s's identities: %s\n", m_accountKey, (const char*)identityKey);
+#endif
+  
+  // get the server from the account manager
+  NS_WITH_SERVICE(nsIMsgMailSession,session, NS_MSGMAILSESSION_PROGID, &rv);
+  if (NS_FAILED(rv)) return rv;
+    
+  nsCOMPtr<nsIMsgAccountManager> am;
+  rv = session->GetAccountManager(getter_AddRefs(am));
+  if (NS_FAILED(rv)) return rv;
+    
+  // XXX todo: iterate through identities. for now, assume just one
+  nsCOMPtr<nsIMsgIdentity> identity;
+  rv = am->GetIdentity(identityKey, getter_AddRefs(identity));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = AddIdentity(identity);
+
+  return rv;
+}
+
+
 /* attribute nsIMsgIdentity defaultIdentity; */
 NS_IMETHODIMP
 nsMsgAccount::GetDefaultIdentity(nsIMsgIdentity * *aDefaultIdentity)
 {
-  NS_ASSERTION(m_accountKey, "Account key not initialized.");
   if (!aDefaultIdentity) return NS_ERROR_NULL_POINTER;
   if (!m_defaultIdentity) return NS_ERROR_NULL_POINTER;
   
@@ -258,7 +317,11 @@ nsMsgAccount::GetDefaultIdentity(nsIMsgIdentity * *aDefaultIdentity)
 NS_IMETHODIMP
 nsMsgAccount::SetDefaultIdentity(nsIMsgIdentity * aDefaultIdentity)
 {
-  NS_ASSERTION(m_accountKey, "Account key not initialized.");
+  nsresult rv = NS_OK;
+  if (!m_identities)
+    rv = createIdentities();
+  if (NS_FAILED(rv)) return rv;
+  
   NS_ASSERTION(m_identities->IndexOf(aDefaultIdentity) != -1, "Where did that identity come from?!");
   if (m_identities->IndexOf(aDefaultIdentity) == -1)
     return NS_ERROR_UNEXPECTED;
@@ -301,46 +364,8 @@ nsMsgAccount::SetKey(char *accountKey)
   if (NS_FAILED(rv)) return rv;
 
   m_accountKey = PL_strdup(accountKey);
-
-
-  // we should make this be created lazily like incoming servers are
-  //
-  // Load Identities
-  //
-  // ex) mail.account.myaccount.identities = "joe-home,joe-work"
-  char *identitiesKeyPref = PR_smprintf("mail.account.%s.identities",
-                                        accountKey);
-  char *identityKey = nsnull;
-  rv = getPrefService();
-  if (NS_SUCCEEDED(rv)) 
-    rv = m_prefs->CopyCharPref(identitiesKeyPref, &identityKey);
   
-  PR_FREEIF(identitiesKeyPref);
-
-#ifdef DEBUG_alecf
-  printf("%s's identities: %s\n", accountKey, identityKey);
-#endif
-  
-  // XXX todo: iterate through identities. for now, assume just one
-
-  nsIMsgIdentity *identity = nsnull;
-  rv = nsComponentManager::CreateInstance(kMsgIdentityCID,
-                                          nsnull,
-                                          nsCOMTypeInfo<nsIMsgIdentity>::GetIID(),
-                                          (void **)&identity);
-
-  if (NS_SUCCEEDED(rv))
-    rv = identity->SetKey(identityKey);
-#ifdef DEBUG_alecf
-  else
-    printf("\tcouldn't create %s's identity\n",identityKey);
-#endif
-
-  PR_FREEIF(identityKey);
-  if (NS_SUCCEEDED(rv))
-    rv = AddIdentity(identity);
-
-  return rv;
+  return NS_OK;
 }
 
 /* called if the prefs service goes offline */
