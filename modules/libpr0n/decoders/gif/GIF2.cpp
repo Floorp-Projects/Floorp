@@ -315,6 +315,8 @@ do_lzw(gif_struct *gs, const PRUint8 *q)
     PRUint8 *rowend   = gs->rowend;
     PRUintn rows_remaining = gs->rows_remaining;
 
+    if (rowp == rowend)
+      return 0;
 
 #define OUTPUT_ROW(gs)                                                        \
     {                                                                         \
@@ -1190,6 +1192,10 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
             {
                 height = gs->screen_height;
                 width = gs->screen_width;
+                if (!height || !width) {
+                    gs->state = gif_error;
+                    break;
+                }
             }
 
             gs->height = height;
