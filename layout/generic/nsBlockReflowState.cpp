@@ -5092,7 +5092,7 @@ nsAnonymousBlockFrame::StealFirstFrame()
         if (firstChild == placeholderFrame) {
           // Remove placeholder from the line's floater array
           floaters.RemoveElementAt(i);
-          if (0 == floaters.Count) {
+          if (0 == floaters.Count()) {
             delete line->mFloaters;
             line->mFloaters = nsnull;
           }
