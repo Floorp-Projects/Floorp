@@ -34,6 +34,7 @@
 #include "nsXPIDLString.h"
 #include "nsQuickSort.h"
 #include "nsIMsgImapMailFolder.h"
+#include "nsIImapIncomingServer.h"
 #include "nsImapCore.h"
 #include "nsMsgFolderFlags.h"
 
@@ -4191,6 +4192,7 @@ nsresult nsMsgDBView::AdjustRowCount(PRInt32 rowCountBeforeSort, PRInt32 rowCoun
 nsresult nsMsgDBView::GetImapDeleteModel(nsIMsgFolder *folder)
 {
    nsresult rv = NS_OK;
+   nsMsgImapDeleteModel deleteModel;
    nsCOMPtr <nsIMsgIncomingServer> server;
    if (folder) //for the search view 
      folder->GetServer(getter_AddRefs(server));
@@ -4198,6 +4200,9 @@ nsresult nsMsgDBView::GetImapDeleteModel(nsIMsgFolder *folder)
      m_folder->GetServer(getter_AddRefs(server));
    nsCOMPtr<nsIImapIncomingServer> imapServer = do_QueryInterface(server, &rv);
    if (NS_SUCCEEDED(rv) && imapServer )
-     imapServer->GetDeleteModel(&mDeleteModel);       
+   {
+     imapServer->GetDeleteModel(&deleteModel);       
+     mDeleteModel = deleteModel;
+   }
    return rv;
 }

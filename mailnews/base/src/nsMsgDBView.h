@@ -41,7 +41,6 @@
 #include "nsIMsgHeaderParser.h"
 #include "nsIDOMElement.h"
 #include "nsIAtom.h"
-#include "nsIImapIncomingServer.h"
 
 #include "nsIStringBundle.h"
 
@@ -249,7 +248,7 @@ protected:
   nsMsgKeyArray m_keys;
   nsUInt32Array m_flags;
   nsUint8Array   m_levels;
-  nsMsgImapDeleteModel mDeleteModel;
+  long mDeleteModel;
 
   // cache the most recently asked for header and corresponding msgKey.
   nsCOMPtr <nsIMsgDBHdr>  m_cachedHdr;

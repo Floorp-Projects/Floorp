@@ -30,6 +30,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsIMsgCopyService.h"
 #include "nsICopyMsgStreamListener.h"
+#include "nsIImapIncomingServer.h"
 
 static NS_DEFINE_CID(kMsgCopyServiceCID,    NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID);
