@@ -1870,8 +1870,6 @@ nsLocalFile::IsExecutable(PRBool *_retval)
     
     nsresult rv;
 
-    Normalize();
-
     // only files can be executables
     PRBool isFile;
     rv = IsFile(&isFile);
@@ -1891,6 +1889,13 @@ nsLocalFile::IsExecutable(PRBool *_retval)
         GetNativeTarget(path);
     else
         GetNativePath(path);
+
+    // kill trailing dots and spaces.
+    PRInt32 filePathLen = path.Length() - 1;
+    while(filePathLen > 0 && (path[filePathLen] == ' ' || path[filePathLen] == '.'))
+    {
+        path.Truncate(filePathLen--);
+    } 
 
     // Get extension.
     char * ext = (char *) _mbsrchr((unsigned char *)path.BeginWriting(), '.');
