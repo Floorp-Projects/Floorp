@@ -28,6 +28,7 @@ DEPTH=..\..\..
 
 MAKE_OBJ_TYPE=DLL
 
+USE_NON_MT_LIBS=1
 LIBRARY=$(OBJDIR)\jar_s.lib
 
 OBJS=.\$(OBJDIR)\nsZipArchive.obj
