@@ -54,6 +54,7 @@ function Startup()
     var filterContractId;
     sendMailMessageMode = window.arguments[0];
     var skipBlockQuotes = window.arguments[1];
+    var enableSelectionChecking = window.arguments[2];
 
     if (skipBlockQuotes)
       filterContractId = "@mozilla.org/editor/txtsrvfiltermail;1";
@@ -61,7 +62,7 @@ function Startup()
       filterContractId = "@mozilla.org/editor/txtsrvfilter;1";
 
     gSpellChecker.setFilter(Components.classes[filterContractId].createInstance(Components.interfaces.nsITextServicesFilter));
-    gSpellChecker.InitSpellChecker(GetCurrentEditor());
+    gSpellChecker.InitSpellChecker(GetCurrentEditor(), enableSelectionChecking);
 
    // XXX: We need to read in a pref here so we can set the
    //      default language for the spellchecker!
@@ -424,7 +425,7 @@ function Recheck()
     var curLang = gSpellChecker.GetCurrentDictionary();
 
     gSpellChecker.UninitSpellChecker();
-    gSpellChecker.InitSpellChecker(GetCurrentEditor());
+    gSpellChecker.InitSpellChecker(GetCurrentEditor(), false);
     gSpellChecker.SetCurrentDictionary(curLang);
     gMisspelledWord = gSpellChecker.GetNextMisspelledWord();
     SetWidgetsForMisspelledWord();

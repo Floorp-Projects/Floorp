@@ -53,6 +53,8 @@
 #include "nsISelectionController.h"
 #include "nsITextServicesFilter.h"
 
+class nsIWordBreaker;
+
 /** implementation of a text services object.
  *
  */
@@ -110,7 +112,9 @@ private:
   PRInt32                         mSelEndIndex;
   PRInt32                         mSelEndOffset;
 
-  nsCOMPtr<nsITextServicesFilter>   mTxtSvcFilter;
+  nsCOMPtr<nsIDOMRange>           mExtent;
+
+  nsCOMPtr<nsITextServicesFilter> mTxtSvcFilter;
 
 public:
 
@@ -129,6 +133,9 @@ public:
   NS_IMETHOD InitWithDocument(nsIDOMDocument *aDOMDocument, nsIPresShell *aPresShell);
   NS_IMETHOD InitWithEditor(nsIEditor *aEditor);
   NS_IMETHOD GetDocument(nsIDOMDocument **aDoc);
+  NS_IMETHOD SetExtent(nsIDOMRange* aDOMRange);
+  NS_IMETHOD GetExtent(nsIDOMRange** aDOMRange);
+  NS_IMETHOD ExpandRangeToWordBoundaries(nsIDOMRange *aRange);
   NS_IMETHOD SetFilter(nsITextServicesFilter *aFilter);
   NS_IMETHOD CanEdit(PRBool *aCanEdit);
   NS_IMETHOD GetCurrentTextBlock(nsString *aStr);
@@ -175,19 +182,24 @@ private:
 
   nsresult AdjustContentIterator();
 
-  nsresult FirstTextNodeInCurrentBlock(nsIContentIterator *aIterator);
-  nsresult FirstTextNodeInPrevBlock(nsIContentIterator *aIterator);
-  nsresult FirstTextNodeInNextBlock(nsIContentIterator *aIterator);
+  static nsresult FirstTextNode(nsIContentIterator *aIterator, TSDIteratorStatus *IteratorStatus);
+  static nsresult LastTextNode(nsIContentIterator *aIterator, TSDIteratorStatus *IteratorStatus);
+
+  static nsresult FirstTextNodeInCurrentBlock(nsIContentIterator *aIterator);
+  static nsresult FirstTextNodeInPrevBlock(nsIContentIterator *aIterator);
+  static nsresult FirstTextNodeInNextBlock(nsIContentIterator *aIterator);
+
   nsresult GetFirstTextNodeInPrevBlock(nsIContent **aContent);
   nsresult GetFirstTextNodeInNextBlock(nsIContent **aContent);
 
-  PRBool IsBlockNode(nsIContent *aContent);
-  PRBool IsTextNode(nsIContent *aContent);
-  PRBool IsTextNode(nsIDOMNode *aNode);
-  PRBool DidSkip(nsIContentIterator* aFilteredIter);
-  void   ClearDidSkip(nsIContentIterator* aFilteredIter);
+  static PRBool IsBlockNode(nsIContent *aContent);
+  static PRBool IsTextNode(nsIContent *aContent);
+  static PRBool IsTextNode(nsIDOMNode *aNode);
 
-  PRBool HasSameBlockNodeParent(nsIContent *aContent1, nsIContent *aContent2);
+  static PRBool DidSkip(nsIContentIterator* aFilteredIter);
+  static void   ClearDidSkip(nsIContentIterator* aFilteredIter);
+
+  static PRBool HasSameBlockNodeParent(nsIContent *aContent1, nsIContent *aContent2);
 
   nsresult SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, PRBool aDoUpdate);
   nsresult GetSelection(TSDBlockSelectionStatus *aSelStatus, PRInt32 *aSelOffset, PRInt32 *aSelLength);
@@ -197,12 +209,29 @@ private:
   PRBool SelectionIsCollapsed();
   PRBool SelectionIsValid();
 
+  static nsresult CreateOffsetTable(nsVoidArray *aOffsetTable,
+                             nsIContentIterator *aIterator,
+                             TSDIteratorStatus *aIteratorStatus,
+                             nsIDOMRange *aIterRange,
+                             nsString *aStr);
+  static nsresult ClearOffsetTable(nsVoidArray *aOffsetTable);
+
+  static nsresult NodeHasOffsetEntry(nsVoidArray *aOffsetTable,
+                                     nsIDOMNode *aNode,
+                                     PRBool *aHasEntry,
+                                     PRInt32 *aEntryIndex);
+
   nsresult RemoveInvalidOffsetEntries();
-  nsresult CreateOffsetTable(nsString *aStr=0);
-  nsresult ClearOffsetTable();
   nsresult SplitOffsetEntry(PRInt32 aTableIndex, PRInt32 aOffsetIntoEntry);
 
-  nsresult NodeHasOffsetEntry(nsIDOMNode *aNode, PRBool *aHasEntry, PRInt32 *aEntryIndex);
+  static nsresult GetWordBreaker(nsIWordBreaker **aWordBreaker);
+  static nsresult FindWordBounds(nsVoidArray *offsetTable, nsString *blockStr,
+                                 nsIWordBreaker *aWordBreaker,
+                                 nsIDOMNode *aNode, PRInt32 aNodeOffset,
+                                 nsIDOMNode **aWordStartNode,
+                                 PRInt32 *aWordStartOffset,
+                                 nsIDOMNode **aWordEndNode,
+                                 PRInt32 *aWordEndOffset);
 
   /* DEBUG */
   void PrintOffsetTable();

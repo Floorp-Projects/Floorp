@@ -1564,7 +1564,7 @@ function GenericSendMessage( msgType )
           window.cancelSendMessage = false;
           try {
             window.openDialog("chrome://editor/content/EdSpellCheck.xul", "_blank",
-                    "chrome,close,titlebar,modal", true, true);
+                    "chrome,close,titlebar,modal", true, true, false);
           }
           catch(ex){}
           if(window.cancelSendMessage)
