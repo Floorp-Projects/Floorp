@@ -438,8 +438,6 @@ GenerateTree(const char * aStickyUrl, nsIWebShell * aStickyContainer, nsIWebShel
 {
 
    nsHistoryEntry * hEntry = nsnull;
-   const PRUnichar * url = nsnull;
-   const char * aCStr = nsnull;
    nsAutoString urlAStr;
 
    hEntry = new nsHistoryEntry;
@@ -529,7 +527,6 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
    nsIWebShell *prev=nsnull;
    PRBool result = PR_FALSE;
    nsAutoString  cSURL,  pSURL;
-   const PRUnichar *  pURL=nsnull;
    char * cURL=nsnull;   
 
    cur = this;
@@ -674,7 +671,6 @@ nsHistoryEntry::Compare(nsIWebShell * aPrevEntry, PRBool aIsReload) {
    //nsIWebShell * pWS = nsnull, *cWS=nsnull;
    nsIWebShell *prev=nsnull;
    PRBool result = PR_FALSE;
-   const PRUnichar *  pURL=nsnull;
    char * cURL=nsnull;   
    nsAutoString  cSURL,  pSURL;
 

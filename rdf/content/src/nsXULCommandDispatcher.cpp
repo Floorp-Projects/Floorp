@@ -55,8 +55,8 @@ static PRLogModuleInfo* gLog;
 ////////////////////////////////////////////////////////////////////////
 
 nsXULCommandDispatcher::nsXULCommandDispatcher(void)
-    : mScriptObject(nsnull), mUpdaters(nsnull), mSuppressFocus(PR_FALSE), 
-	mActive(PR_FALSE), mFocusInitialized(PR_FALSE)
+    : mScriptObject(nsnull), mSuppressFocus(PR_FALSE), 
+	mActive(PR_FALSE), mFocusInitialized(PR_FALSE), mUpdaters(nsnull)
 {
 	NS_INIT_REFCNT();
 

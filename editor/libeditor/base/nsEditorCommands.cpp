@@ -215,8 +215,6 @@ nsDeleteCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
     
   nsAutoString cmdString(aCommand);
 
-  nsresult rv = NS_OK;
-  
   nsIEditor::EDirection deleteDir = nsIEditor::eNone;
   
   if (cmdString == "cmd_delete")

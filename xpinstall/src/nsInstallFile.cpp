@@ -58,11 +58,11 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
     mExtractedFile(nsnull),
     mFinalFile(nsnull),
     mVersionRegistryName(nsnull),
-    mMode(mode),
     mReplaceFile(PR_FALSE),
     mChildFile(PR_TRUE),
     mUpgradeFile(PR_FALSE),
-    mSkipInstall(PR_FALSE)
+    mSkipInstall(PR_FALSE),
+    mMode(mode)
 {
     MOZ_COUNT_CTOR(nsInstallFile);
 

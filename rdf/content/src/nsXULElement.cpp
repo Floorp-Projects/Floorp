@@ -4059,7 +4059,6 @@ nsXULElement::Click()
       HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
 
       if (isButton) {
-        nsEventStatus stat = nsEventStatus_eIgnore;
         nsMouseEvent evt;
         evt.eventStructType = NS_EVENT;
         evt.message = NS_MENU_ACTION;

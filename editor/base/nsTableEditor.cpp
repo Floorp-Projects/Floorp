@@ -390,8 +390,6 @@ nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
   res = GetTableSize(table, rowCount, colCount);
   if (NS_FAILED(res)) return res;
 
-  PRInt32 lastColumn = colCount - 1;
-
   //We reset caret in destructor...
   nsSetCaretAfterTableEdit setCaret(this, table, startRowIndex, startColIndex, ePreviousRow);
   //.. so suppress Rules System selection munging
