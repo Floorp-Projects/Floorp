@@ -1531,7 +1531,10 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
   nsRect currentRect;
   GetBounds(currentRect); 
   {
-   if ((currentRect.x == aX) && (currentRect.y == aY))
+   // Only perform this check for non-popup windows, since the positioning can
+   // in fact change even when the x/y do not.  We always need to perform the
+   // check. See bug #97805 for details.
+   if (mWindowType != eWindowType_popup && (currentRect.x == aX) && (currentRect.y == aY))
    {
       // Nothing to do, since it is already positioned correctly.
      return NS_OK;    
