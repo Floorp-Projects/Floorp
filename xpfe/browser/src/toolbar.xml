@@ -55,7 +55,19 @@
                   <html:img alt="Throbber!" border=0 src="resource:/res/throbber/anims00.gif"/>
           </html:a>
     </xul:toolbar>
-  
+    
+    <xul:toolbar>
+    	<html:button cmd="nsCmd:BrowserHome">
+             <html:img src="resource:/res/toolbar/TB_Location.gif"/>Mozilla.org
+        </html:button>
+    	<html:button cmd="nsCmd:BrowserHome">
+             <html:img src="resource:/res/toolbar/TB_Location.gif"/>Mozilla.org
+        </html:button>
+    	<html:button cmd="nsCmd:BrowserHome">
+             <html:img src="resource:/res/toolbar/TB_Location.gif"/>Mozilla.org
+        </html:button>
+    </xul:toolbox>
+    
   </xul:toolbox>
   
 </window>
