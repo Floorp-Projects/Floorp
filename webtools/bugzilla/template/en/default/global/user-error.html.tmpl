@@ -158,7 +158,7 @@
     [%+ terms.bug %] is a duplicate.  The [% terms.bug %] has not been changed.
 
   [% ELSIF error == "dupe_of_self_disallowed" %]
-    [% title = "Cannot mark [% terms.abug %] as a duplicate of itself" %]
+    [% title = "Cannot mark $terms.abug as a duplicate of itself" %]
     You can't mark [% terms.abug %] as a duplicate of itself.
 
   [% ELSIF error == "email_change_in_progress" %]
@@ -186,7 +186,8 @@
     KB.
     If your attachment is an image, try converting it to a compressable
     format like JPG or PNG, or put it elsewhere on the web and
-    link to it from the [% terms.bug %]'s URL field or in a comment on the [% terms.bug %].
+    link to it from the [% terms.bug %]'s URL field or a comment in 
+    the [% terms.bug %].
 
   [% ELSIF error == "flag_requestee_unauthorized" %]
     [% title = "Flag Requestee Not Authorized" %]
