@@ -5458,7 +5458,7 @@ nsCSSDeclaration::TryBorderShorthand(nsAString & aString, PRUint32 aPropertiesSe
                                      PRInt32 aBorderRightStyle,
                                      PRInt32 aBorderRightColor)
 {
-  PRBool border = PR_FALSE, isImportant;
+  PRBool border = PR_FALSE, isImportant = PR_FALSE;
   // 0 means not in the mOrder array; otherwise it's index+1
   if (B_BORDER == aPropertiesSet
       && AllPropertiesSameValue(aBorderTopWidth, aBorderBottomWidth,
