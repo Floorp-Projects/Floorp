@@ -20,7 +20,10 @@
 #define nsDNSService_h__
 
 #include "nsIDNSService.h"
-#ifdef XP_PC
+#if defined(XP_MAC)
+#include <OpenTransport.h>
+#include <OpenTptInternet.h>
+#elif defined (XP_PC)
 #include <windows.h>
 #endif
 
