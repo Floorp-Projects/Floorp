@@ -92,7 +92,9 @@ public:
 
   NS_IMETHOD GetFormControlElements(nsIDOMNodeList** aReturn) = 0;
 
-  NS_IMETHOD GetBodyElement(nsIDOMHTMLBodyElement** aBody) = 0; 
+  NS_IMETHOD GetBodyElement(nsIDOMHTMLBodyElement** aBody) = 0;
+
+  NS_IMETHOD_(PRBool) IsWriting() = 0;
 
 };
 

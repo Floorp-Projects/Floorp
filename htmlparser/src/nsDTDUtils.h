@@ -571,7 +571,8 @@ public:
 
   NS_IMETHOD Notify(nsIParserNode* aNode,
                     nsIParser* aParser,
-                    nsISupports* aWebShell);
+                    nsISupports* aWebShell,
+                    const PRUint32 aFlags);
 
   nsresult   AddObserver(nsIElementObserver* aObserver,eHTMLTags aTag);
   void       RemoveObserver(nsIElementObserver* aObserver);

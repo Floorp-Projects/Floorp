@@ -125,6 +125,8 @@ public:
   NS_IMETHOD GetDTDMode(nsDTDMode& aMode);
   NS_IMETHOD SetDTDMode(nsDTDMode aMode);
 
+  NS_IMETHOD_(PRBool) IsWriting() { return mWriteLevel != PRUint32(0); }
+
   NS_IMETHOD ContentAppended(nsIContent* aContainer,
                              PRInt32 aNewIndexInContainer);
   NS_IMETHOD ContentInserted(nsIContent* aContainer,

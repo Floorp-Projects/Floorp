@@ -78,7 +78,8 @@ public:
                     nsISupports* aChannel,
                     const PRUnichar* aTag, 
                     const nsStringArray* keys, 
-                    const nsStringArray* values);
+                    const nsStringArray* values,
+                    const PRUint32 aFlags);
 
   NS_DECL_ISUPPORTS
 

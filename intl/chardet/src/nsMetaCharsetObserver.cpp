@@ -146,13 +146,22 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                      nsISupports* aWebShell,
                      nsISupports* aChannel,
                      const PRUnichar* aTag, 
-                     const nsStringArray* keys, const nsStringArray* values)
+                     const nsStringArray* keys, 
+                     const nsStringArray* values,
+                     const PRUint32 aFlags)
 {
+  nsresult result = NS_OK;
+  // bug 125317 - document.write content is already an unicode content.
+  if (!(aFlags & nsIElementObserver::IS_DOCUMENT_WRITE)) {
     if(!nsDependentString(aTag).Equals(NS_LITERAL_STRING("META"),
-                                       nsCaseInsensitiveStringComparator())) 
-        return NS_ERROR_ILLEGAL_VALUE;
-    else
-        return Notify(aWebShell, aChannel, keys, values);
+                                       nsCaseInsensitiveStringComparator())) {
+        result = NS_ERROR_ILLEGAL_VALUE;
+    }
+    else {
+        result = Notify(aWebShell, aChannel, keys, values);
+    }
+  }
+  return result;
 }
 
 #define IS_SPACE_CHARS(ch)  (ch == ' ' || ch == '\b' || ch == '\r' || ch == '\n')
