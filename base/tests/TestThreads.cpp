@@ -95,7 +95,7 @@ TestThreads()
 
     ////////////////////////////////////////////////////////////////////////////
     // try an unjoinable thread 
-    rv = NS_NewThread(&runner, new nsRunner(1), 0, PR_USER_THREAD,
+    rv = NS_NewThread(&runner, new nsRunner(1), 0, 
                       PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD);
     if (NS_FAILED(rv)) {
         printf("failed to create thread\n");
@@ -124,7 +124,7 @@ TestThreadPools()
     for (PRUint32 i = 0; i < 100; i++) {
         rv = pool->DispatchRequest(new nsRunner(i+2));
     }
-    rv = pool->Join();
+    rv = pool->Shutdown();
     return rv;
 }
 
