@@ -193,7 +193,7 @@ nsXULPrototypeCache::PutStyleSheet(nsICSSStyleSheet* aStyleSheet)
 
     nsIURIKey key(uri);
     mStyleSheetTable.Put(&key, aStyleSheet);
-
+    
     return NS_OK;
 }
 
