@@ -33,6 +33,7 @@
 #include "nsString.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLForms.h"
+#include "nsFont.h"
 
 class nsInputTextFrame : public nsInputFrame {
 public:
@@ -156,10 +157,19 @@ nsInputTextFrame::GetDesiredSize(nsIPresContext* aPresContext,
   PRBool widthExplicit, heightExplicit;
   PRInt32 ignore;
   if ((kInputText_Text == textType) || (kInputText_Password == textType) ||
-      (kInputText_FileText == textType)) 
-  {
-    nsInputDimensionSpec textSpec(nsHTMLAtoms::size, PR_FALSE, nsnull,
-                                  nsnull, 21, PR_FALSE, nsnull, 1);
+                (kInputText_FileText == textType)) {
+    nsHTMLValue sizeAttr;
+    PRInt32 width = 21;
+    if (eContentAttr_HasValue == ((nsInput*)mContent)->GetAttribute(nsHTMLAtoms::size, sizeAttr)) {
+      width = (sizeAttr.GetUnit() == eHTMLUnit_Pixel) ? sizeAttr.GetPixelValue() : sizeAttr.GetIntValue();
+      if (kBackwardMode == GetMode()) {
+        width += 1;
+      }
+    }
+    nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull,
+                                  nsnull, width, PR_FALSE, nsnull, 1);
+  //  nsInputDimensionSpec textSpec(nsHTMLAtoms::size, PR_FALSE, nsnull,
+  //                                nsnull, 21, PR_FALSE, nsnull, 1);
     CalculateSize(aPresContext, this, styleSize, textSpec, size, 
                   widthExplicit, heightExplicit, ignore);
   } 
@@ -216,12 +226,18 @@ nsInputTextFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
 {
   nsITextWidget* text;
   if (NS_OK == GetWidget(aView, (nsIWidget **)&text)) {
-	  text->SetFont(GetFont(aPresContext));
+    nsFont font("foo", 0, 0, 0, 0, 0);
+    GetFont(aPresContext, font);
+	  text->SetFont(font);
     nsInputText* content;
     GetContent((nsIContent *&) content);
     nsAutoString valAttr;
     nsContentAttr valStatus = ((nsInput *)content)->GetAttribute(nsHTMLAtoms::value, valAttr);
     text->SetText(valAttr);
+    PRInt32 maxLength = content->GetMaxLength();
+    if (ATTR_NOTSET != maxLength) {
+      text->SetMaxTextLength(maxLength);
+    }
     NS_RELEASE(text);
     NS_RELEASE(content);
   }
@@ -310,7 +326,7 @@ void nsInputText::GetType(nsString& aResult) const
     aResult = "password";
   }
   else if (kInputText_Area == mType) {   
-    aResult = "";
+    aResult = "textarea";
   }
   else if (kInputText_FileText == mType) {   
     aResult = "filetext";

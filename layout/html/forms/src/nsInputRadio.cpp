@@ -99,13 +99,12 @@ nsInputRadioFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView
 {
   nsInputRadio* content = (nsInputRadio *)mContent; 
   PRInt32 checkedAttr; 
-  nsContentAttr result = ((nsInput *)content)->GetAttribute(nsHTMLAtoms::checked, checkedAttr); 
-  if ((result == eContentAttr_HasValue) && (PR_FALSE != checkedAttr)) {
-    nsIRadioButton* radio;
-    if (NS_OK == GetWidget(aView, (nsIWidget **)&radio)) {
-	    radio->SetState(PR_TRUE);
-      NS_RELEASE(radio);
-    }
+  //nsContentAttr result = ((nsInput *)content)->GetAttribute(nsHTMLAtoms::checked, checkedAttr); 
+  //if ((result == eContentAttr_HasValue) && (PR_FALSE != checkedAttr)) {
+  nsIRadioButton* radio;
+  if (NS_OK == GetWidget(aView, (nsIWidget **)&radio)) {
+	  radio->SetState(content->mForcedChecked);
+    NS_RELEASE(radio);
   }
 }
 
@@ -116,7 +115,8 @@ const nsString* nsInputRadio::kTYPE = new nsString("radio");
 nsInputRadio::nsInputRadio(nsIAtom* aTag, nsIFormManager* aManager)
   : nsInput(aTag, aManager) 
 {
-  mChecked = PR_FALSE;
+  mInitialChecked = PR_FALSE;
+  mForcedChecked = PR_FALSE;
 }
 
 nsInputRadio::~nsInputRadio()
@@ -179,22 +179,29 @@ PRBool
 nsInputRadio::GetChecked(PRBool aGetInitialValue) const
 {
   if (aGetInitialValue) {
-    return mChecked;
+    return mInitialChecked;
   }
   else {
-    NS_ASSERTION(mWidget, "no widget for this nsInputRadio");
-    return ((nsIRadioButton *)mWidget)->GetState();
+    if (mWidget) {
+      return ((nsIRadioButton *)mWidget)->GetState();
+    }
+    else {
+      return mForcedChecked;
+    }
   }
 }
 
 void
 nsInputRadio::SetChecked(PRBool aValue, PRBool aSetInitialValue)
 {
+  mForcedChecked = aValue;
   if (aSetInitialValue) {
-    mChecked = aValue;
+    mInitialChecked = aValue;
   }
-  NS_ASSERTION(mWidget, "no widget for this nsInputRadio");
-  ((nsIRadioButton *)mWidget)->SetState(aValue);
+  //NS_ASSERTION(mWidget, "no widget for this nsInputRadio");
+  if (mWidget) {
+    ((nsIRadioButton *)mWidget)->SetState(aValue);
+  }
 }
 
 nsresult
@@ -221,7 +228,8 @@ void nsInputRadio::SetAttribute(nsIAtom* aAttribute,
                                 const nsString& aValue)
 {
   if (aAttribute == nsHTMLAtoms::checked) {
-    mChecked = PR_TRUE;
+    mInitialChecked = PR_TRUE;
+    mForcedChecked = PR_TRUE;
   }
   nsInputRadioSuper::SetAttribute(aAttribute, aValue);
 }
@@ -231,7 +239,7 @@ nsContentAttr nsInputRadio::GetAttribute(nsIAtom* aAttribute,
 {
   aResult.Reset();
   if (aAttribute == nsHTMLAtoms::checked) {
-    return GetCacheAttribute(mChecked, aResult, eHTMLUnit_Empty);
+    return GetCacheAttribute(mInitialChecked, aResult, eHTMLUnit_Empty);
   }
   else {
     return nsInputRadioSuper::GetAttribute(aAttribute, aResult);
@@ -267,7 +275,7 @@ nsInputRadio::Reset()
 {
   nsIRadioButton* radio = (nsIRadioButton *)GetWidget();
   if (nsnull != radio) {
-    radio->SetState(mChecked);
+    radio->SetState(mInitialChecked);
   }
 }  
 

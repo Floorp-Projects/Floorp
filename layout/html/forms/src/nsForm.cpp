@@ -834,8 +834,8 @@ void nsForm::RemoveRadioGroups()
   for (int i = 0; i < numRadioGroups; i++) {
     nsInputRadioGroup* radioGroup = (nsInputRadioGroup *) mRadioGroups.ElementAt(i);
     delete radioGroup;
-    mRadioGroups.RemoveElement(radioGroup);
   }
+  mRadioGroups.Clear();
 }
 
 void nsForm::Init(PRBool aReinit)
@@ -861,9 +861,9 @@ void nsForm::Init(PRBool aReinit)
       nsInputRadioGroup* group;
       for (int j = 0; j < numGroups; j++) {
         group = (nsInputRadioGroup *) mRadioGroups.ElementAt(j);
-        nsString name;
-        group->GetName(name);
-        if (name.Equals(name)) {
+        nsString groupName;
+        group->GetName(groupName);
+        if (groupName.Equals(name)) {
           group->AddRadio(control);
           added = PR_TRUE;
           break;
