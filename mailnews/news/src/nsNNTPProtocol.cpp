@@ -456,7 +456,9 @@ nsNNTPProtocol::nsNNTPProtocol(nsIURI * aURL, nsIMsgWindow *aMsgWindow)
 
     m_commandSpecificData = nsnull;
     m_searchData = nsnull;
+
 	mBytesReceived = 0;
+    mBytesReceivedSinceLastStatusUpdate = 0;
 
     if (aMsgWindow) {
         m_msgWindow = aMsgWindow;
@@ -1262,6 +1264,7 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
         FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status, ce->URL_s->content_length);
 #else
 		mBytesReceived += status;
+        mBytesReceivedSinceLastStatusUpdate += status;
 #endif
 	}
 
@@ -2278,6 +2281,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 						 ce->URL_s->content_length);
 #else
 		mBytesReceived += status;
+        mBytesReceivedSinceLastStatusUpdate += status;
 #endif
 	}
 
@@ -2733,6 +2737,7 @@ PRInt32 nsNNTPProtocol::BeginNewsgroups()
 	ce->bytes_received = 0;
 #else
 	mBytesReceived = 0;
+    mBytesReceivedSinceLastStatusUpdate = 0;
 #endif
 	return(status);
 }
@@ -2805,6 +2810,7 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
         FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status, ce->URL_s->content_length);
 #else
 		mBytesReceived += status;
+        mBytesReceivedSinceLastStatusUpdate += status;
 #endif
     }
 
@@ -2835,6 +2841,7 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
 	ce->bytes_received++;  /* small numbers of groups never seem to trigger this */
 #else
 	mBytesReceived += status;
+    mBytesReceivedSinceLastStatusUpdate += status;
 #endif
 #if 0
 	m_newsHost->AddNewNewsgroup(line, oldest, youngest, flag, PR_FALSE);
@@ -2865,7 +2872,10 @@ PRInt32 nsNNTPProtocol::BeginReadNewsList()
 {
 	m_readNewsListCount = 0;
     m_nextState = NNTP_READ_LIST;
+
     mBytesReceived = 0;
+    mBytesReceivedSinceLastStatusUpdate = 0;
+
 	PRInt32 status = 0;
 #ifdef UNREADY_CODE
 	NET_Progress(ce->window_id, XP_GetString(XP_PROGRESS_RECEIVE_NEWSGROUP));
@@ -2924,12 +2934,15 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
         FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status, ce->URL_s->content_length);
 #else
 		mBytesReceived += status;
+        mBytesReceivedSinceLastStatusUpdate += status;
 
-		if (m_msgWindow) {
-        	nsCOMPtr <nsIMsgStatusFeedback> msgStatusFeedback;
+        // only update every 10 KB
+        if ((mBytesReceivedSinceLastStatusUpdate > (1024 * 25)) && m_msgWindow) {
+                mBytesReceivedSinceLastStatusUpdate = 0;
+        	    nsCOMPtr <nsIMsgStatusFeedback> msgStatusFeedback;
 
-        	rv = m_msgWindow->GetStatusFeedback(getter_AddRefs(msgStatusFeedback));
-        	if (NS_FAILED(rv)) return rv;
+        	    rv = m_msgWindow->GetStatusFeedback(getter_AddRefs(msgStatusFeedback));
+        	    if (NS_FAILED(rv)) return rv;
 // XXXXX
                 nsXPIDLString statusString;
 		
@@ -2942,17 +2955,22 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
                                             getter_AddRefs(bundle));
                 NS_ENSURE_SUCCESS(rv, rv);
 
-                nsAutoString bytesStr; bytesStr.AppendInt(mBytesReceived);
-		
-                const PRUnichar *formatStrings[] = { bytesStr.GetUnicode() };
-        NS_NAMED_LITERAL_STRING(literalPropertyTag, "bytesReceived");
+                nsString kBytesStr; 
+                kBytesStr.AppendInt(mBytesReceived / 1024);
+
+		        nsString kRateStr; 
+                // todo, fix this
+                //kRateStr.AppendFloat(0.0);
+                kRateStr.AppendWithConversion("?.?");
+                const PRUnichar *formatStrings[2] = { kBytesStr.GetUnicode(), kRateStr.GetUnicode() };
+                NS_NAMED_LITERAL_STRING(literalPropertyTag, "bytesReceived");
 				const PRUnichar *propertyTag = literalPropertyTag.get();
                 rv = bundle->FormatStringFromName(propertyTag,
-                                                  formatStrings, 1,
+                                                  formatStrings, 2,
                                                   getter_Copies(statusString));
 
-        	rv = msgStatusFeedback->ShowStatusString(statusString);
-        	if (NS_FAILED(rv)) return rv;
+        	    rv = msgStatusFeedback->ShowStatusString(statusString);
+        	    if (NS_FAILED(rv)) return rv;
 		}
 #endif
     }
@@ -3266,6 +3284,7 @@ PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
 						 ce->URL_s->content_length);
 #else
 		mBytesReceived += status;
+        mBytesReceivedSinceLastStatusUpdate += status;
 #endif
 	}
 
@@ -4395,6 +4414,7 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 		FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status, ce->URL_s->content_length);
 #else
 		mBytesReceived += status;
+        mBytesReceivedSinceLastStatusUpdate += status;
 #endif
 	}
 

@@ -87,6 +87,7 @@ protected:
 private:
 	PRInt32 mGroupsOnServerIndex;
 	PRInt32 mGroupsOnServerCount;
+    PRInt32 mOldPercent;
 	nsCStringArray mGroupsOnServer;
 	nsCStringArray mSubscribedNewsgroups;
 

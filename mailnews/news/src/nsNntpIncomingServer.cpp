@@ -43,6 +43,9 @@
 #define PREF_MAIL_NEWSRC_ROOT    "mail.newsrc_root"
 #define HOSTINFO_FILE_NAME		 "hostinfo.dat"
 
+#define OLD_PERCENT_INITIAL_VALUE 0
+#define PERCENT_CHANGE_THRESHHOLD 10
+
 #define NEWS_DELIMITER   '.'
 
 #define HOSTINFO_COUNT_MAX 200 /* number of groups to process at a time when reading the list from the hostinfo.dat file */
@@ -92,6 +95,7 @@ nsNntpIncomingServer::nsNntpIncomingServer() : nsMsgLineBuffer(nsnull, PR_FALSE)
   mHasSeenBeginGroups = PR_FALSE;
   mVersion = 0;
   mGroupsOnServerIndex = 0;
+  mOldPercent = OLD_PERCENT_INITIAL_VALUE;
   mGroupsOnServerCount = 0;
   SetupNewsrcSaveTimer();
 }
@@ -868,6 +872,7 @@ nsNntpIncomingServer::StartPopulatingFromHostInfo()
 #endif
 
 	mGroupsOnServerCount = mGroupsOnServer.Count();
+    mOldPercent = OLD_PERCENT_INITIAL_VALUE;
 	nsCString currentGroup;
 
 	while (mGroupsOnServerIndex < mGroupsOnServerCount) {
@@ -890,10 +895,12 @@ nsNntpIncomingServer::StartPopulatingFromHostInfo()
 		if (NS_FAILED(rv)) return rv;
 
 		if (mGroupsOnServerCount != 0) {
-			// xxx todo
-			// if old percent == new percent, don't call ShowProgress()
-			// why poke the front end, through xpconnect, if we don't have to?
-			rv = msgStatusFeedback->ShowProgress((mGroupsOnServerIndex * 100) / mGroupsOnServerCount);
+            // only poke the front end if the percentage has grown by at least PERCENT_CHANGE_THRESHHOLD
+            PRInt32 newPercent = (mGroupsOnServerIndex * 100) / mGroupsOnServerCount;
+            if (newPercent > (mOldPercent + PERCENT_CHANGE_THRESHHOLD)) {
+			    rv = msgStatusFeedback->ShowProgress(newPercent);
+            }
+            mOldPercent = newPercent;
 		}
 		if (NS_FAILED(rv)) return rv;
 	}

@@ -404,6 +404,7 @@ private:
     nsCOMPtr <nsITimer> mUpdateTimer; 
 	nsresult AlertError(PRInt32 errorCode, const char *text);
 	PRInt32 mBytesReceived;
+    PRInt32 mBytesReceivedSinceLastStatusUpdate;
 };
 
 NS_BEGIN_EXTERN_C
