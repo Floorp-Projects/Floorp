@@ -27,7 +27,8 @@
 //***    nsDSURIContentListener: Object Management
 //*****************************************************************************
 
-nsDSURIContentListener::nsDSURIContentListener() : mDocShell(nsnull)
+nsDSURIContentListener::nsDSURIContentListener() : mDocShell(nsnull), 
+   mParentContentListener(nsnull)
 {
 	NS_INIT_REFCNT();
 }
@@ -138,6 +139,7 @@ void nsDSURIContentListener::GetParentContentListener(nsIURIContentListener**
 void nsDSURIContentListener::SetParentContentListener(nsIURIContentListener* 
    aParentListener)
 {
+   // Weak Reference, don't addref
    mParentContentListener = aParentListener;
 }  
 
