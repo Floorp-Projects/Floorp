@@ -78,10 +78,10 @@ extern "C" char * strsignal(int);
 
 static char _progname[1024] = "huh?";
 
-//#ifdef DEBUG_ramiro
+//#if defined(LINUX) && defined(DEBUG) && (defined(__i386) || defined(PPC))
 #if 0
 #define CRAWL_STACK_ON_SIGSEGV
-#endif // DEBUG_ramiro
+#endif
  
 #ifdef NTO
 void abnormal_exit_handler(int signum)
@@ -92,16 +92,16 @@ void abnormal_exit_handler(int signum)
 #if defined(DEBUG)
   if (    (signum == SIGSEGV)
        || (signum == SIGILL)
-	   || (signum == SIGABRT)
-	 )
+       || (signum == SIGABRT)
+     )
   {
     PR_CurrentThread();
     printf("prog = %s\npid = %d\nsignal = %s\n", 
-	  _progname, getpid(), strsignal(signum));
+           _progname, getpid(), strsignal(signum));
 
     printf("Sleeping for 5 minutes.\n");
     printf("Type 'gdb %s %d' to attatch your debugger to this thread.\n",
-	  _progname, getpid());
+           _progname, getpid());
 
     sleep(300);
 
@@ -114,19 +114,27 @@ void abnormal_exit_handler(int signum)
 #elif defined(CRAWL_STACK_ON_SIGSEGV)
 
 #include <unistd.h>
-#include "nsTraceRefcnt.h"
+#include "nsISupportsUtils.h"
 
 void
 ah_crap_handler(int signum)
 {
   PR_CurrentThread();
 
-  printf("prog = %s\npid = %d\nsignal = %s\n",
+  // I don't think strsignal is portable.  If it is, this can be changed.
+#ifdef LINUX
+  printf("\nProgram %s (pid = %d) received %s signal.\n",
          _progname,
          getpid(),
          strsignal(signum));
+#else
+  printf("\nProgram %s (pid = %d) received signal %d.\n",
+         _progname,
+         getpid(),
+         signum);
+#endif
   
-  printf("stack logged to someplace\n");
+  printf("Stack:\n");
   nsTraceRefcnt::WalkTheStack(stdout);
 
   printf("Sleeping for 5 minutes.\n");
@@ -137,7 +145,7 @@ ah_crap_handler(int signum)
   sleep(300);
 
   printf("Done sleeping...\n");
-} 
+}
 #endif // CRAWL_STACK_ON_SIGSEGV
 
 #ifdef XP_BEOS
