@@ -54,6 +54,11 @@ interface calIDateTime;
 [scriptable, uuid(4c352774-2c4f-11d9-9c63-00045ace3b8d)]
 interface calICalendar : nsISupports
 {
+  /**
+   * Setting this URI causes the calendar to be (re)loaded.
+   */
+  attribute nsIURI uri;
+
   /** 
    * In combination with the other parameters to getItems(), these
    * constants provide for a very basic filtering mechanisms for use
@@ -73,6 +78,12 @@ interface calICalendar : nsISupports
     (ITEM_FILTER_TYPE_TODO | ITEM_FILTER_TYPE_EVENT |
      ITEM_FILTER_TYPE_JOURNAL);
 
+  /** 
+   * If set, return calIOccurence items, otherwise return subclasses of
+   * calIItemBase.
+   */
+  const unsigned long ITEM_FILTER_CLASS_OCCURRENCES = 1 << 5;
+
   void addObserver( in calIObserver observer, in unsigned long aItemFilter );
   void removeObserver( in calIObserver observer );
 
@@ -80,47 +91,66 @@ interface calICalendar : nsISupports
    * The following five "Item" functions are all asynchronous, and get 
    * their results called back through an calIOperationListener object.
    *
-   * @param aItem	The item to add or modify
-   * @param aListener 	Where to call back the results
-   * @param aId		UUID of the event in question
+   * @param aItem	      item to add or modify
+   * @param aListener 	where to call back the results
+   * @param aId		      UID of the event in question
    */
   void addItem( in calIItemBase aItem, in calIOperationListener aListener );
   void modifyItem( in calIItemBase aItem, in calIOperationListener aListener );
   void deleteItem( in string aId, in calIOperationListener aListener );
+
+  /**
+   * Get a single event.  The event will be typed as one of the child classes
+   * child of calIItemBase (which ever concrete one is most appropriate).
+   * 
+   * @param aId        UID of the event
+   * @param aListener  listener to which this event will be called back.
+   */
   void getItem( in string aId, in calIOperationListener aListener );
 
   /**
-   * XXX As mentioned above, this method isn't suitably general.  We need to
-   * do better than this.
+   * XXX As mentioned above, this method isn't suitably general.  It's just
+   * placeholder until it gets supplanted by something more SQL or RDF-like.
    * 
-   * XXX what do we guarantee about item ordering, especially regarding
-   * which items are returned when aCount != 0
+   *   Ordering: This method is currently guaranteed to return lists ordered
+   *   as follows to make for the least amount of pain when
+   *   migrating existing frontend code:
    *
-   * @param aItemType	  The interface that we want returned.  This could be 
-   * 			              either something that inherits from calIItemBase,
-   * 			              or it could be calIOccurence.
+   *     The events are sorted based on the order of their next occurence
+   *     if they recur in the future or their last occurence in the past
+   *     otherwise.  Here's a presentation of the sort criteria using the
+   *     time axis:
+   *   
+   *     -----(Last occurence of Event1)---(Last occurence of Event2)----(Now)----(Next occurence of Event3)---->
    *
+   *     (Note that Event1 and Event2 will not recur in the future.)
+   *
+   *   We should probably be able get rid of this ordering constraint
+   *   at some point in the future.
+   *
+   * Note that the range is intended to act as a mask on the
+   * occurences, not just the initial recurring items.  So if a
+   * getItems() call without ITEM_FILTER_CLASS_OCCURENCES is made, all
+   * events and todos which have occurrences inside the range should
+   * be returned, even if some of those events or todos themselves
+   * live outside the range.
+   *
+   * @param aItemFilter ITEM_FILTER flags, or-ed together
+   * @param aCount	    Maximum number of items to return.  
    * @param aRangeStart Items starting at this time or after should be 
    *                    returned.  If invalid, assume "since the beginning
    *                    of time".
    * @param aRangeEnd   Items starting at this time or before should be
    *			              returned.  If invalid, assume "until the end of time".
-   * @param aCount	    Maximum number of items to return.  
+   * @param aListener   The results will be called back through this interface.
    */
-  void getItems( in nsIIDRef aItemType, in unsigned long aItemFilter, 
-                 in unsigned long aCount, in calIDateTime aRangeStart,
-                 in calIDateTime aRangeEnd, 
+  void getItems( in unsigned long aItemFilter, in unsigned long aCount, 
+                 in calIDateTime aRangeStart, in calIDateTime aRangeEnd,
                  in calIOperationListener aListener );
 
-  /** 
-   * Remaining stuff is holdovers from oeIICal.idl; doxygen comments required
-   * (assuming we keep all these).
+  /**
+   * Whether or not alarms for this calendar should be suppressed.
    */
-
-  void reportError( in unsigned long errorid, in AUTF8String aMessage );
-
-  attribute boolean batchMode; // XXX use start/end methods instead of attr?
-  attribute nsIURI uri; // XXX is this heavier weight than we need?
   attribute boolean suppressAlarms;
 };
 
@@ -131,9 +161,16 @@ interface calICalendar : nsISupports
 [scriptable, uuid(1f6dba37-8ce4-4c51-bc10-6892d3e6f5ed)]
 interface calICompositeCalendar : calICalendar
 {
-  void addCalendar( in string server, in string type );
-  void removeCalendar( in string server );
-  calICalendar getCalendar( in string server );
+  /**
+   * Routines to manipulate calendars on a composite.
+   * 
+   * @param aServer  URI of the server to be created 
+   * @param aType    used to parameterize the XPCOM contract-id of the
+   *                 calendar object to be created (eg "?type=caldav")
+   */ 
+  void addCalendar( in nsIURI aServer, in string aType );
+  void removeCalendar( in nsIURI aServer );
+  calICalendar getCalendar( in nsIURI aServer );
 };
 
 /**
