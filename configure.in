@@ -115,15 +115,16 @@ dnl Note this case statement doesn't seem to handle [] as part of a regexp
 
 dnl set the defaults first
 dnl ========================================================
+DLL_SUFFIX="so"
 MKSHLIB='$(LD) $(DSO_LDOPTS)'
-DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.so=%.so)'
+DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
 DSO_CFLAGS='-KPIC'
 
 dnl gcc can come with its own linker so its better to use the pass-thru calls
 dnl ========================================================
 if test "$GNU_CC" = 1; then
     MKSHLIB='$(CC) $(DSO_LDOPTS)'
-    DSO_LDOPTS='-shared -Wl,-h -Wl,$(@:$(OBJDIR)/%.so=%.so)'
+    DSO_LDOPTS='-shared -Wl,-h -Wl,$(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     DSO_CFLAGS='-fPIC'
 fi
 
@@ -133,7 +134,7 @@ case "$target" in
 *-*-solaris*) 
     AC_DEFINE(BROKEN_QSORT)
     if test -z "$GNU_CC"; then
-	DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.so=%.so)'
+	DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     fi ;;
 
 alpha-*-linux*)
@@ -142,7 +143,13 @@ alpha-*-linux*)
 *-freebsd*)
     if test -z "$GNU_CC"; then
 	DSO_LDOPTS="-Bshareable $DSO_LDOPTS"
+    fi 
+    if test `test -x /usr/bin/objformat && /usr/bin/objformat || echo aout` = "elf"; then
+        DLL_SUFFIX="so"
+    else
+	DLL_SUFFIX="so.1.0"
     fi ;;
+
 esac
 
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -230,6 +237,7 @@ fi
 
 dnl Checks for libraries.
 dnl ========================================================
+AC_CHECK_LIB(c_r, gethostbyname_r)
 AC_CHECK_LIB(c, strcpy)
 AC_CHECK_LIB(m, atan)
 AC_CHECK_LIB(dl, dlopen)
@@ -251,8 +259,6 @@ dnl Replace `main' with a function in -lSgm:
 dnl AC_CHECK_LIB(Sgm, main)
 dnl Replace `main' with a function in -laudio:
 dnl AC_CHECK_LIB(audio, main)
-dnl Replace `main' with a function in -lc_r:
-dnl AC_CHECK_LIB(c_r, main)
 dnl Replace `main' with a function in -ldld:
 dnl AC_CHECK_LIB(dld, main)
 dnl Replace `main' with a function in -ldnet_stub:
@@ -558,11 +564,23 @@ if [ test $res != 0 ]; then
     unset _GTK_MIN_VER
     unset _GTK_REL_VER
 
-    AC_CHECK_LIB(gtk, gtk_widget_set, 
-	[TK_GTK_LIBS="`${GTK_CONFIG} --libs`" 
-	    TK_GTK_CFLAGS="`${GTK_CONFIG} --cflags`" ],
-	[MISSING_GTK="-lgtk"],
-	`$GTK_CONFIG --libs`)
+    _SAVE_LIBS=$LIBS
+    _SAVE_CFLAGS=$CFLAGS
+    LIBS="`${GTK_CONFIG} --libs` $LIBS"
+    CFLAGS="`${GTK_CONFIG} --cflags` $CFLAGS"
+    AC_MSG_CHECKING(for useable gtk)
+    AC_TRY_LINK(#include <gtk/gtk.h>
+	,
+	GtkWidget *window;
+        window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+        ,
+        [ TK_GTK_LIBS="`${GTK_CONFIG} --libs`"
+            TK_GTK_CFLAGS="`${GTK_CONFIG} --cflags`"
+    	    result="yes" ],
+        [ MISSING_GTK="`${GTK_CONFIG} --libs`" result="no" ] )
+    LIBS=$_SAVE_LIBS
+    CFLAGS=$_SAVE_CFLAGS
+    AC_MSG_RESULT("$result")
 fi
 
 AC_SUBST(GTK_CONFIG)
@@ -798,19 +816,19 @@ AC_SUBST(DSO_CFLAGS)
 AC_SUBST(DSO_LDOPTS)
 
 dnl Check for missing components
-if [ test "$MISSING_X" != "" ]; then
+if [ test -n "$MISSING_X" ]; then
    AC_MSG_ERROR([ Could not find the following X libraries: $MISSING_X ]);
 fi
 
-if [ test "$MISSING_GTK" != "" ]; then
-   AC_MSG_ERROR([ Could not find the following gtk libraries: $MISSING_GTK ]);
+if [ test -n "$MISSING_GTK" ]; then
+   AC_MSG_ERROR([ Could not link sample program with the following gtk libraries: $MISSING_GTK ])
 fi
 
-if [ test "$MISSING_MOTIF" != "" ]; then
+if [ test -n "$MISSING_MOTIF" ]; then
    AC_MSG_ERROR([ Could not find the following motif libraries: $MISSING_MOTIF ]);
 fi
 
-if [ test "$MISSING_NSPR" != "" ]; then
+if [ test -n "$MISSING_NSPR" ]; then
     AC_MSG_ERROR([Could not find the following nspr libraries or could not run sample program: $MISSING_NSPR]);
 fi
 
