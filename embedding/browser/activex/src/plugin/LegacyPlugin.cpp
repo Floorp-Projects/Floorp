@@ -921,9 +921,9 @@ NewControl(const char *pluginType,
 
             // Check for existing params with the same name
             BOOL bFound = FALSE;
-            for (unsigned long i = 0; i < pl.GetSize(); i++)
+            for (unsigned long j = 0; j < pl.GetSize(); j++)
             {
-                if (wcscmp(pl.GetNameOf(i), (BSTR) paramName) == 0)
+                if (wcscmp(pl.GetNameOf(j), (BSTR) paramName) == 0)
                 {
                     bFound = TRUE;
                     break;
@@ -937,7 +937,8 @@ NewControl(const char *pluginType,
             }
 
             // Add named parameter to list
-            pl.AddNamedProperty(paramName, CComVariant(paramValue));
+            CComVariant v(paramValue);
+            pl.AddNamedProperty(paramName, v);
         }
     }
 
