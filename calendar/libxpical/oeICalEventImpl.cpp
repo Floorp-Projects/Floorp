@@ -21,6 +21,7 @@
  * Contributor(s): Mostafa Hosseini <mostafah@oeone.com>
  *                 Gary Frederick <gary.frederick@jsoft.com>
  *                 ArentJan Banck <ajbanck@planet.nl>
+ *                 Alexandre Pauzies <apauzies@linagora.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -283,6 +284,7 @@ oeICalEventImpl::oeICalEventImpl()
     m_syncid = nsnull;
     m_allday = false;
     m_hasalarm = false;
+    m_storeingmt = false;
     m_alarmlength = DEFAULT_ALARM_LENGTH;
     m_alarmtriggerrelation = DEFAULT_ALARMTRIGGER_RELATION;
     m_alarmemail = nsnull;
@@ -313,6 +315,9 @@ oeICalEventImpl::oeICalEventImpl()
         rv = prefBranch->GetIntPref("calendar.alarms.onforevents", &tmpint);
         if (NS_SUCCEEDED(rv))
             m_hasalarm = tmpint;
+        rv = prefBranch->GetBoolPref("calendar.dateformat.storeingmt", &tmpint);
+        if (NS_SUCCEEDED(rv))
+            m_storeingmt = tmpint;
         rv = prefBranch->GetIntPref("calendar.alarms.eventalarmlen", &tmpint);
         if (NS_SUCCEEDED(rv))
             m_alarmlength = tmpint;
@@ -2648,6 +2653,11 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     char *starttzid=nsnull;
     if( m_start && !icaltime_is_null_time( m_start->m_datetime ) ) {
         m_start->GetTzID( &starttzid );
+        if( !starttzid && m_storeingmt ) {
+            m_start->SetTzID( "/Mozilla.org/BasicTimezones/GMT" );
+            m_start->GetTzID( &starttzid );
+        }
+
         if( m_allday ) {
             m_start->SetHour( 0 );
             m_start->SetMinute( 0 );
@@ -2684,6 +2694,10 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     if( m_end && !icaltime_is_null_time( m_end->m_datetime ) ) {
         char *tzid=nsnull;
         m_end->GetTzID( &tzid );
+        if( !tzid && m_storeingmt ) {
+            m_end->SetTzID( "/Mozilla.org/BasicTimezones/GMT" );
+            m_end->GetTzID( &tzid );
+        }
         if( m_allday ) {
             if( m_end->CompareDate( m_start )==0 ) {
                 m_end->m_datetime = m_start->m_datetime;

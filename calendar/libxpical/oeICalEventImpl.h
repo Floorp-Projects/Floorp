@@ -156,6 +156,7 @@ private:
     oeDateTimeImpl *m_end;
     oeDateTimeImpl *m_stamp;
     oeDateTimeImpl *m_recurend;
+    bool m_storeingmt;
     icaltimetype m_lastalarmack;
     icaltimetype m_lastmodified;
     nsVoidArray m_exceptiondates;
