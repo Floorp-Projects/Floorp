@@ -25,7 +25,7 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMElement.h"
 
-class nsIDOMNode;
+class nsIDOMElement;
 class nsIDOMNodeList;
 
 #define NS_IDOMXULELEMENT_IID \
@@ -36,9 +36,9 @@ class nsIDOMXULElement : public nsIDOMElement {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMXULELEMENT_IID; return iid; }
 
-  NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMNode* aNode)=0;
+  NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement)=0;
 
-  NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMNode* aNode)=0;
+  NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement)=0;
 
   NS_IMETHOD    DoCommand()=0;
 
@@ -47,16 +47,16 @@ public:
 
 
 #define NS_DECL_IDOMXULELEMENT   \
-  NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMNode* aNode);  \
-  NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMNode* aNode);  \
+  NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement);  \
+  NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement);  \
   NS_IMETHOD    DoCommand();  \
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMXULELEMENT(_to)  \
-  NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMNode* aNode) { return _to##AddBroadcastListener(aAttr, aNode); }  \
-  NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMNode* aNode) { return _to##RemoveBroadcastListener(aAttr, aNode); }  \
+  NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement) { return _to##AddBroadcastListener(aAttr, aElement); }  \
+  NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement) { return _to##RemoveBroadcastListener(aAttr, aElement); }  \
   NS_IMETHOD    DoCommand() { return _to##DoCommand(); }  \
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn) { return _to##GetElementsByAttribute(aName, aValue, aReturn); }  \
 
