@@ -159,9 +159,12 @@ void InitializeMacToolbox(void)
 		InitDialogs(0);
 		InitCursor();
 		Gestalt(gestaltContextualMenuAttr, &CMMavail);
-		if ( CMMavail == gestaltContextualMenuTrapAvailable )
+		if ((CMMavail == gestaltContextualMenuTrapAvailable) &&
+		    ((long)InitContextualMenus != kUnresolvedCFragSymbolAddress))
 		  InitContextualMenus();
+		
 		InitTSMAwareApplication();
+	    
 		// init QuickTime if we have it
 		if ((long)EnterMovies != kUnresolvedCFragSymbolAddress)
 			EnterMovies();
@@ -185,8 +188,8 @@ void InitializeSIOUX(unsigned char isStandAlone)
 	SIOUXSettings.standalone = isStandAlone;
 	SIOUXSettings.setupmenus = isStandAlone;
 	SIOUXSettings.autocloseonquit = true;
-	SIOUXSettings.asktosaveonclose = isStandAlone;
-	SIOUXSettings.showstatusline = true;
+	SIOUXSettings.asktosaveonclose = false;
+	SIOUXSettings.showstatusline = false;
 	
 	if (isStandAlone)
 	{
