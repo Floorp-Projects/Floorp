@@ -15,21 +15,23 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
+#include <gtk/gtk.h>
+
 #include "nsViewerApp.h"
 #include "nsBrowserWindow.h"
-#include "nsMotifMenu.h"
+#include "nsGTKMenu.h"
 #include "nsIImageManager.h"
 #include <stdlib.h>
 #include "plevent.h"
 
-#include <gdk/gdk.h>
 
 extern "C" char *fe_GetConfigDir(void) {
   printf("XXX: return /tmp for fe_GetConfigDir\n");
   return strdup("/tmp");
 }
 
-extern XtAppContext gAppContext; // XXX This should be changed
+//extern XtAppContext gAppContext; // XXX This should be changed
 static nsNativeViewerApp* gTheApp;
 PLEventQueue*  gUnixMainEventQueue = nsnull;
 
@@ -99,9 +101,7 @@ static void MenuProc(PRUint32 aId)
 nsresult
 nsNativeBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 {
-#if 0
-  CreateViewerMenus(XtParent((Widget)mWindow->GetNativeData(NS_NATIVE_WIDGET)), MenuProc);
-#endif
+  CreateViewerMenus((GtkWidget*)mWindow->GetNativeData(NS_NATIVE_WIDGET),NULL);
   return NS_OK;
 }
 
