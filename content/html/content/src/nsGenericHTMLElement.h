@@ -81,7 +81,7 @@ public:
   virtual ~nsGenericHTMLElement();
 
 #ifdef GATHER_ELEMENT_USEAGE_STATISTICS
-  virtual nsresult Init(nsINodeInfo *aNodeInfo);
+  nsresult Init(nsINodeInfo *aNodeInfo);
 #endif
 
   /** Call on shutdown to release globals */
@@ -121,34 +121,40 @@ public:
   NS_METHOD GetElementsByTagName(const nsAString& aTagname,
                                  nsIDOMNodeList** aReturn);
 
-  // Implementation for nsIDOMHTMLElement
-  NS_IMETHOD GetId(nsAString& aId);
-  NS_IMETHOD SetId(const nsAString& aId);
-  NS_IMETHOD GetTitle(nsAString& aTitle);
-  NS_IMETHOD SetTitle(const nsAString& aTitle);
-  NS_IMETHOD GetLang(nsAString& aLang);
-  NS_IMETHOD SetLang(const nsAString& aLang);
-  NS_IMETHOD GetDir(nsAString& aDir);
-  NS_IMETHOD SetDir(const nsAString& aDir);
-  NS_IMETHOD GetClassName(nsAString& aClassName);
-  NS_IMETHOD SetClassName(const nsAString& aClassName);
-  NS_IMETHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
-  NS_IMETHOD GetOffsetTop(PRInt32* aOffsetTop);
-  NS_IMETHOD GetOffsetLeft(PRInt32* aOffsetLeft);
-  NS_IMETHOD GetOffsetWidth(PRInt32* aOffsetWidth);
-  NS_IMETHOD GetOffsetHeight(PRInt32* aOffsetHeight);
-  NS_IMETHOD GetOffsetParent(nsIDOMElement** aOffsetParent);
-  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
-  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML);
-  NS_IMETHOD GetScrollTop(PRInt32* aScrollTop);
-  NS_IMETHOD SetScrollTop(PRInt32 aScrollTop);
-  NS_IMETHOD GetScrollLeft(PRInt32* aScrollLeft);
-  NS_IMETHOD SetScrollLeft(PRInt32 aScrollLeft);
-  NS_IMETHOD GetScrollHeight(PRInt32* aScrollHeight);
-  NS_IMETHOD GetScrollWidth(PRInt32* aScrollWidth);
-  NS_IMETHOD GetClientHeight(PRInt32* aClientHeight);
-  NS_IMETHOD GetClientWidth(PRInt32* aClientWidth);
-  NS_IMETHOD ScrollIntoView(PRBool aTop);
+  // nsIDOMHTMLElement methods. Note that these are non-virtual
+  // methods, implementations are expected to forward calls to these
+  // methods.
+  nsresult GetId(nsAString& aId);
+  nsresult SetId(const nsAString& aId);
+  nsresult GetTitle(nsAString& aTitle);
+  nsresult SetTitle(const nsAString& aTitle);
+  nsresult GetLang(nsAString& aLang);
+  nsresult SetLang(const nsAString& aLang);
+  nsresult GetDir(nsAString& aDir);
+  nsresult SetDir(const nsAString& aDir);
+  nsresult GetClassName(nsAString& aClassName);
+  nsresult SetClassName(const nsAString& aClassName);
+
+  // nsIDOMNSHTMLElement methods. Note that these are non-virtual
+  // methods, implementations are expected to forward calls to these
+  // methods.
+  nsresult GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
+  nsresult GetOffsetTop(PRInt32* aOffsetTop);
+  nsresult GetOffsetLeft(PRInt32* aOffsetLeft);
+  nsresult GetOffsetWidth(PRInt32* aOffsetWidth);
+  nsresult GetOffsetHeight(PRInt32* aOffsetHeight);
+  nsresult GetOffsetParent(nsIDOMElement** aOffsetParent);
+  virtual nsresult GetInnerHTML(nsAString& aInnerHTML);
+  virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
+  nsresult GetScrollTop(PRInt32* aScrollTop);
+  nsresult SetScrollTop(PRInt32 aScrollTop);
+  nsresult GetScrollLeft(PRInt32* aScrollLeft);
+  nsresult SetScrollLeft(PRInt32 aScrollLeft);
+  nsresult GetScrollHeight(PRInt32* aScrollHeight);
+  nsresult GetScrollWidth(PRInt32* aScrollWidth);
+  nsresult GetClientHeight(PRInt32* aClientHeight);
+  nsresult GetClientWidth(PRInt32* aClientWidth);
+  nsresult ScrollIntoView(PRBool aTop);
 
   /**
    * Get the frame's offset information for offsetTop/Left/Width/Height.
@@ -156,10 +162,9 @@ public:
    * @param aOffsetParent the parent the offset is relative to (offsetParent)
    *        [OUT]
    */
-  nsresult GetOffsetRect(nsRect& aRect,
-                         nsIContent** aOffsetParent);
-  nsresult GetScrollInfo(nsIScrollableView **aScrollableView, float *aP2T,
-                         float *aT2P, nsIFrame **aFrame = nsnull);
+  void GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent);
+  void GetScrollInfo(nsIScrollableView **aScrollableView, float *aP2T,
+                     float *aT2P, nsIFrame **aFrame = nsnull);
 
   /**
    * Get an element's client info if the element doesn't have a

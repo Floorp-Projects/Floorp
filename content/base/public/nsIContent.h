@@ -521,10 +521,9 @@ public:
   virtual nsresult GetListenerManager(nsIEventListenerManager** aResult) = 0;
 
   /**
-   * Get the base URL for any relative URLs within this piece
-   * of content. Generally, this is the document's base URL,
-   * but certain content carries a local base for backward
-   * compatibility.
+   * Get the base URI for any relative URIs within this piece of
+   * content. Generally, this is the document's base URI, but certain
+   * content carries a local base for backward compatibility.
    *
    * @return the base URI
    */

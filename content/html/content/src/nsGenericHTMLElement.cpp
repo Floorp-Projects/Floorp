@@ -541,9 +541,8 @@ IsOffsetParent(nsIContent *aContent)
           aContent->IsContentOfType(nsIContent::eHTML));
 }
 
-nsresult
-nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
-                                    nsIContent** aOffsetParent)
+void
+nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
 {
   *aOffsetParent = nsnull;
 
@@ -551,14 +550,14 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
   aRect.Empty();
 
   if (!mDocument) {
-    return NS_OK;
+    return;
   }
 
   // Get Presentation shell 0
   nsIPresShell *presShell = mDocument->GetShellAt(0);
 
   if (!presShell) {
-    return NS_OK;
+    return;
   }
 
   // Get the Presentation Context from the Shell
@@ -566,7 +565,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
   presShell->GetPresContext(getter_AddRefs(context));
 
   if (!context) {
-    return NS_OK;
+    return;
   }
 
   // Flush all pending notifications so that our frames are uptodate
@@ -577,7 +576,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
   presShell->GetPrimaryFrameFor(this, &frame);
 
   if (!frame) {
-    return NS_OK;
+    return;
   }
 
   // Get the union of all rectangles in this and continuation frames
@@ -746,8 +745,6 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
   aRect.y = NSTwipsToIntPixels(origin.y, scale);
   aRect.width = NSTwipsToIntPixels(rcFrame.width, scale);
   aRect.height = NSTwipsToIntPixels(rcFrame.height, scale);
-
-  return NS_OK;
 }
 
 nsresult
@@ -755,16 +752,11 @@ nsGenericHTMLElement::GetOffsetTop(PRInt32* aOffsetTop)
 {
   nsRect rcFrame;
   nsCOMPtr<nsIContent> parent;
-  nsresult res = GetOffsetRect(rcFrame, getter_AddRefs(parent));
+  GetOffsetRect(rcFrame, getter_AddRefs(parent));
 
-  if(NS_SUCCEEDED(res)) {
-    *aOffsetTop = rcFrame.y;
-  }
-  else {
-    *aOffsetTop = 0;
-  }
+  *aOffsetTop = rcFrame.y;
 
-  return res;
+  return NS_OK;
 }
 
 nsresult
@@ -772,16 +764,11 @@ nsGenericHTMLElement::GetOffsetLeft(PRInt32* aOffsetLeft)
 {
   nsRect rcFrame;
   nsCOMPtr<nsIContent> parent;
-  nsresult res = GetOffsetRect(rcFrame, getter_AddRefs(parent));
+  GetOffsetRect(rcFrame, getter_AddRefs(parent));
 
-  if(NS_SUCCEEDED(res)) {
-    *aOffsetLeft = rcFrame.x;
-  }
-  else {
-    *aOffsetLeft = 0;
-  }
+  *aOffsetLeft = rcFrame.x;
 
-  return res;
+  return NS_OK;
 }
 
 nsresult
@@ -789,16 +776,11 @@ nsGenericHTMLElement::GetOffsetWidth(PRInt32* aOffsetWidth)
 {
   nsRect rcFrame;
   nsCOMPtr<nsIContent> parent;
-  nsresult res = GetOffsetRect(rcFrame, getter_AddRefs(parent));
+  GetOffsetRect(rcFrame, getter_AddRefs(parent));
 
-  if(NS_SUCCEEDED(res)) {
-    *aOffsetWidth = rcFrame.width;
-  }
-  else {
-    *aOffsetWidth = 0;
-  }
+  *aOffsetWidth = rcFrame.width;
 
-  return res;
+  return NS_OK;
 }
 
 nsresult
@@ -806,34 +788,27 @@ nsGenericHTMLElement::GetOffsetHeight(PRInt32* aOffsetHeight)
 {
   nsRect rcFrame;
   nsCOMPtr<nsIContent> parent;
-  nsresult res = GetOffsetRect(rcFrame, getter_AddRefs(parent));
+  GetOffsetRect(rcFrame, getter_AddRefs(parent));
 
-  if(NS_SUCCEEDED(res)) {
-    *aOffsetHeight = rcFrame.height;
-  }
-  else {
-    *aOffsetHeight = 0;
-  }
+  *aOffsetHeight = rcFrame.height;
 
-  return res;
+  return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::GetOffsetParent(nsIDOMElement** aOffsetParent)
 {
-  NS_ENSURE_ARG_POINTER(aOffsetParent);
-
   nsRect rcFrame;
   nsCOMPtr<nsIContent> parent;
-  nsresult res = GetOffsetRect(rcFrame, getter_AddRefs(parent));
-  if (NS_SUCCEEDED(res)) {
-    if (parent) {
-      res = CallQueryInterface(parent, aOffsetParent);
-    } else {
-      *aOffsetParent = nsnull;
-    }
+  GetOffsetRect(rcFrame, getter_AddRefs(parent));
+
+  if (parent) {
+    CallQueryInterface(parent, aOffsetParent);
+  } else {
+    *aOffsetParent = nsnull;
   }
-  return res;
+
+  return NS_OK;
 }
 
 nsresult
@@ -932,7 +907,7 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
   return rv;
 }
 
-nsresult
+void
 nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
                                     float *aP2T, float *aT2P,
                                     nsIFrame **aFrame)
@@ -942,7 +917,7 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
   *aT2P = 0.0f;
 
   if (!mDocument) {
-    return NS_OK;
+    return;
   }
 
   mDocument->FlushPendingNotifications(PR_TRUE, PR_FALSE);
@@ -950,21 +925,21 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
   // Get the presentation shell
   nsIPresShell *presShell = mDocument->GetShellAt(0);
   if (!presShell) {
-    return NS_OK;
+    return;
   }
 
   // Get the presentation context
   nsCOMPtr<nsIPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
   if (!presContext) {
-    return NS_OK;
+    return;
   }
 
   // Get the primary frame for this element
   nsIFrame *frame = nsnull;
   presShell->GetPrimaryFrameFor(this, &frame);
   if (!frame) {
-    return NS_OK;
+    return;
   }
 
   if (aFrame) {
@@ -984,7 +959,7 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
     if (scrollProvider) {
       scrollProvider->GetScrollableView(presContext, aScrollableView);
       if (*aScrollableView) {
-        return NS_OK;
+        return;
       }
     }
 
@@ -1010,14 +985,14 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
     }
 
     if (!scrollFrame) {
-      return NS_OK;
+      return;
     }
   }
 
   // Get the scrollable view
   scrollFrame->GetScrollableView(presContext, aScrollableView);
 
-  return NS_OK;
+  return;
 }
 
 

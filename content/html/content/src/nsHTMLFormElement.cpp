@@ -110,7 +110,7 @@ public:
 
   virtual ~nsHTMLFormElement();
 
-  virtual nsresult Init(nsINodeInfo* aNodeInfo);
+  nsresult Init(nsINodeInfo* aNodeInfo);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
