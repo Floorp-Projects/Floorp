@@ -43,7 +43,7 @@
 #
 # hack on me! required reading:
 #
-# Net::IRC web page: 
+# Net::IRC web page:
 #   http://netirc.betterbox.net/
 #   (free software)
 #   or get it from CPAN @ http://www.perl.com/CPAN
@@ -76,7 +76,7 @@
 ################################
 
 # -- #mozwebtools was here --
-#      <Hixie> syntax error at oopsbot.pl line 48, near "; }" 
+#      <Hixie> syntax error at oopsbot.pl line 48, near "; }"
 #      <Hixie> Execution of oopsbot.pl aborted due to compilation errors.
 #      <Hixie> DOH!
 #     <endico> hee hee. nice smily in the error message
@@ -156,7 +156,7 @@ if ($LOGGING) {
 # begin session log...
 &debug('-'x80);
 &debug('mozbot starting up');
-&debug('compilation took '.&days($^T).'.'); 
+&debug('compilation took '.&days($^T).'.');
 if ($CHROOT) {
     &debug('mozbot chroot()ed successfully');
 }
@@ -231,7 +231,7 @@ my @modulenames = ('General', 'Greeting', 'Infobot', 'Parrot');
 &Configuration::Get($cfgfile, &configStructure()); # empty gets entire structure
 
 # - check variables are ok
-# note. Ensure only works on an interactive terminal (-t). 
+# note. Ensure only works on an interactive terminal (-t).
 # It will abort otherwise.
 { my $changed; # scope this variable
 $changed = &Configuration::Ensure([
@@ -246,11 +246,11 @@ $changed = &Configuration::Ensure([
 # - check we have some nicks
 until (@nicks) {
     $changed = &Configuration::Ensure([['What nicks should I use? (I need at least one.)', \@nicks]]) || $changed;
-    # the original 'mozbot 2.0' development codename (and thus nick) was oopsbot. 
+    # the original 'mozbot 2.0' development codename (and thus nick) was oopsbot.
 }
 
-# - check current nick pointer is valid 
-# (we assume that no sillyness has happened with $[ as, 
+# - check current nick pointer is valid
+# (we assume that no sillyness has happened with $[ as,
 # according to man perlvar, "Its use is highly discouraged".)
 $nick = 0 if (($nick > $#nicks) or ($nick < 0));
 
@@ -305,7 +305,7 @@ sub connect {
 
     my $identd = getpwuid($<);
     if ($serverExpectsValidUsername ne $server) {
-        $ircname = $username || $USERNAME;
+        $identd = $username || $USERNAME;
     }
 
     until (inet_aton($server) and # we check this first because Net::IRC::Connection doesn't
@@ -330,7 +330,7 @@ sub connect {
         if ($Net::IRC::VERSION < 0.73) {
             &debug("Note that to use 'localAddr' you need Net::IRC version 0.73 or higher (you have $Net::IRC::VERSION)");
         }
-        $mailed = &Mails::ServerDown($server, $port, $localAddr, $nicks[$nick], "[mozbot] $helpline", $nicks[0]) unless $mailed;
+        $mailed = &Mails::ServerDown($server, $port, $localAddr, $nicks[$nick], $ircname, $identd) unless $mailed;
         sleep($sleepdelay);
         &Configuration::Get($cfgfile, &configStructure(\$server, \$port, \$password, \@nicks, \$nick, \$owner, \$sleepdelay));
         &debug("connecting to $server:$port...");
@@ -364,17 +364,17 @@ sub connect {
         402, # no such nick
         407, # too many targets
     ], \&on_notice);
-    
+
     $bot->add_global_handler([ # should only be one command here - when to join channels
         376, # RPL_ENDOFMOTD
         422, # nomotd
-    ], \&on_connect);  
-    
+    ], \&on_connect);
+
     $bot->add_global_handler([ # when to change nick name
         433, # ERR_NICKNAMEINUSE
         436, # nick collision
-    ], \&on_nick_taken); 
-    
+    ], \&on_nick_taken);
+
     $bot->add_global_handler([ # when to give up and go home
         'disconnect', 'kill', # bad connection, booted offline
         465, # ERR_YOUREBANNEDCREEP
@@ -391,7 +391,7 @@ sub connect {
     $bot->add_handler('invite', \&on_invite); # when someone invites us
     $bot->add_handler('quit', \&on_quit); # when someone quits IRC
     $bot->add_handler('nick', \&on_nick); # when someone changes nick
-    $bot->add_handler('kick', \&on_kick); # when someone (or us) is kicked 
+    $bot->add_handler('kick', \&on_kick); # when someone (or us) is kicked
     $bot->add_handler('mode', \&on_mode); # when modes change
     $bot->add_handler('umode', \&on_umode); # when modes of user change (by IRCop or ourselves)
     # XXX could add handler for 474, # ERR_BANNEDFROMCHAN
@@ -420,7 +420,7 @@ sub connect {
     $bot->add_handler('crping', \&on_cpong); # client to client ping (response)
     $bot->add_handler('cversion', \&on_version); # version info of mozbot.pl
     $bot->add_handler('csource', \&on_source); # where is mozbot.pl's source
-    $bot->add_handler('caction', \&on_me); # when someone says /me 
+    $bot->add_handler('caction', \&on_me); # when someone says /me
     $bot->add_handler('cgender', \&on_gender); # guess
 
     $bot->schedule($connectTimeout, \&on_check_connect);
@@ -448,7 +448,7 @@ sub on_notice {
 sub on_whois {
     my ($self, $event) = @_;
     &debug('collecting whois information: '.join('|', $event->args));
-    # XXX could cache this information and then autoop people from 
+    # XXX could cache this information and then autoop people from
     # the bot's host, or whatever
 }
 
@@ -461,7 +461,7 @@ sub on_nick_taken {
         &debug("waited for a bit -- reading $cfgfile then searching for a nick...");
         &Configuration::Get($cfgfile, &configStructure(\@nicks, \$nick));
         $nick = 0 if ($nick > $#nicks) or ($nick < 0); # sanitise
-        $nickOriginal = $nick;        
+        $nickOriginal = $nick;
     } else {
         if (!$nickHadProblem) {
             &debug("preferred nick ($nicks[$nick]) in use, searching for another...");
@@ -472,7 +472,7 @@ sub on_nick_taken {
         $nick = 0 if $nick > $#nicks;
         if ($nick == $nickOriginal) {
             # looped!
-            local $" = ", "; 
+            local $" = ", ";
             &debug("could not find an unused nick");
             &debug("nicks tried: @nicks");
             if (-t) {
@@ -481,7 +481,7 @@ sub on_nick_taken {
                 chomp($new);
                 if ($new) {
                     @nicks = (@nicks[0..$nickOriginal], $new, @nicks[$nickOriginal+1..$#nicks]);
-                    &debug("saving nicks: @nicks"); 
+                    &debug("saving nicks: @nicks");
                     &Configuration::Save($cfgfile, &configStructure(\@nicks));
                 } else {
                     &debug("Could not find an unused nick");
@@ -492,7 +492,7 @@ sub on_nick_taken {
                 $nickProblemEscalated = Mails::NickShortage($cfgfile, $self->server, $self->port,
                      $self->username, $self->ircname, @nicks) unless $nickProblemEscalated;
                 $nickProblemEscalated++;
-                &debug("going to wait $sleepdelay seconds so as not to overload ourselves."); 
+                &debug("going to wait $sleepdelay seconds so as not to overload ourselves.");
                 $self->schedule($sleepdelay, \&on_nick_taken, $event, 1); # try again, this time don't mail if it goes wrong
                 return; # otherwise we no longer respond to pings.
             }
@@ -509,7 +509,7 @@ sub on_connect {
     if (defined($self->{'__mozbot__shutdown'})) { # HACK HACK HACK
         &debug('Uh oh. I connected anyway, even though I thought I had timed out.');
         &debug('I\'m going to increase the timeout time by 20%.');
-        $connectTimeout = $connectTimeout * 1.2; 
+        $connectTimeout = $connectTimeout * 1.2;
         &Configuration::Save($cfgfile, &configStructure(\$connectTimeout));
         $self->quit('having trouble connecting, brb...');
         return;
@@ -587,7 +587,7 @@ sub on_connect {
     $self->{'__mozbot__active'} = 1; # HACK HACK HACK
 
     # all done!
-    &debug('initialisation took '.&days($uptime).'.'); 
+    &debug('initialisation took '.&days($uptime).'.');
     $uptime = time();
 
 }
@@ -616,19 +616,22 @@ sub on_disconnected {
         $serverRestrictsIRCNames = $server;
         $serverExpectsValidUsername = $server;
         &Configuration::Save($cfgfile, &configStructure(\$serverRestrictsIRCNames));
-        &debug("Hrm, $server is having issues. We're gonna try to be nice.");
+        &debug("Hrm, $server is having issues.");
+        &debug("We're gonna try again with different settings, hold on.");
         &debug("The full message from the server was: '$reason'");
     } elsif ($reason =~ /Bad user info/osi and $serverRestrictsIRCNames ne $server) {
         # change our IRC name to something simpler by setting the flag
         $serverRestrictsIRCNames = $server;
         &Configuration::Save($cfgfile, &configStructure(\$serverRestrictsIRCNames));
-        &debug("Hrm, $server didn't like our IRC name. Trying again with a simpler one.");
+        &debug("Hrm, $server didn't like our IRC name.");
+        &debug("Trying again with a simpler one, hold on.");
         &debug("The full message from the server was: '$reason'");
     } elsif ($reason =~ /identd/osi and $serverExpectsValidUsername ne $server) {
         # try setting our username to the actual username
         $serverExpectsValidUsername = $server;
         &Configuration::Save($cfgfile, &configStructure(\$delaytime));
-        &debug("Hrm, $server said something about an identd problem. Trying again with our real username.");
+        &debug("Hrm, $server said something about an identd problem.");
+        &debug("Trying again with our real username, hold on.");
         &debug("The full message from the server was: '$reason'");
     } elsif ($reason =~ /Excess Flood/osi) {
         # increase the delay by 20%
@@ -646,7 +649,7 @@ sub on_disconnected {
             &Configuration::Save($cfgfile, &configStructure(\$password));
         } else {
             &debug("edit $cfgfile to set the password *hint* *hint*");
-            &debug("going to wait $sleepdelay seconds so as not to overload ourselves."); 
+            &debug("going to wait $sleepdelay seconds so as not to overload ourselves.");
             sleep $sleepdelay;
         }
     } else {
@@ -748,7 +751,7 @@ sub on_me {
 # on_topic: for when someone changes the topic
 # also for when the server notifies us of the topic
 # ...so we have to parse it carefully.
-sub on_topic { 
+sub on_topic {
     my ($self, $event) = @_;
     if ($event->userhost eq '@') {
         # server notification
@@ -757,11 +760,11 @@ sub on_topic {
         $event->args($topic);
         $event->to($channel);
     }
-    &do(@_, 'SpottedTopicChange'); 
+    &do(@_, 'SpottedTopicChange');
 }
 
 # on_kick: parse the kick event
-sub on_kick { 
+sub on_kick {
     my ($self, $event) = @_;
     my ($channel, $from) = $event->args; # from is already set anyway
     my $who = $event->to;
@@ -875,7 +878,7 @@ sub do {
             $continue = 1;
             $e->{'type'} = $type;
             &debug("$type: $channel <".$event->nick.'> '.join(' ', $event->args));
-            do { 
+            do {
                 $level++;
                 $e->{'level'} = $level;
                 my @modulesInThisLoop = @modulesInNextLoop;
@@ -886,7 +889,7 @@ sub do {
                         $currentResponse = $module->do($self, $event, $type, $e);
                     };
                     if ($@) {
-                        # $@ contains the error 
+                        # $@ contains the error
                         &debug("ERROR IN MODULE $module->{'_name'}!!!", $@);
                     } elsif (!defined($currentResponse)) {
                         &debug("ERROR IN MODULE $module->{'_name'}: invalid response code to event '$type'.");
@@ -912,7 +915,7 @@ sub doLog {
             $module->Log($e);
         };
         if ($@) {
-            # $@ contains the error 
+            # $@ contains the error
             &debug("ERROR!!!", $@);
         }
     }
@@ -1009,7 +1012,7 @@ sub drainmsgqueue {
                 &bot_longprocess($self, "Long send queue. There were $qln, and I just sent one to $who.");
                 $timeLastSetAway = time();
                 $self->schedule($delaytime * 4, # because previous one counts as message, plus you want to delay an extra bit regularly
-                    \&drainmsgqueue); 
+                    \&drainmsgqueue);
             } else {
                 $self->schedule($delaytime, \&drainmsgqueue);
             }
@@ -1148,7 +1151,7 @@ sub bot_select {
     undef $/;
     my $data = <$pipe>;
     &debug("child ${$pipe}->{'BotModules_PID'} completed ${$pipe}->{'BotModules_ChildType'}".
-           (${$pipe}->{'BotModules_Module'}->{'_shutdown'} ? 
+           (${$pipe}->{'BotModules_Module'}->{'_shutdown'} ?
             ' (nevermind, module has shutdown)': ''));
     kill 9, ${$pipe}->{'BotModules_PID'}; # ensure child is dead
     # non-blocking reap of any pending zombies
@@ -1158,8 +1161,8 @@ sub bot_select {
         ${$pipe}->{'BotModules_Event'}->{'time'} = time(); # update the time field of the event
         ${$pipe}->{'BotModules_Module'}->ChildCompleted(
             ${$pipe}->{'BotModules_Event'},
-            ${$pipe}->{'BotModules_ChildType'}, 
-            $data, 
+            ${$pipe}->{'BotModules_ChildType'},
+            $data,
             @{${$pipe}->{'BotModules_Data'}}
         );
     };
@@ -1183,7 +1186,7 @@ sub debug {
         }
         if ($LOGGING) {
             # XXX this file grows without bounds!!!
-            if (open(LOG, ">>$LOGFILEPREFIX.$$.log")) { 
+            if (open(LOG, ">>$LOGFILEPREFIX.$$.log")) {
                 print LOG &logdate() . " $line\n";
                 close(LOG);
                 print "\n";
@@ -1201,7 +1204,7 @@ sub logdate {
                    $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
 }
 
-# days: how long ago was that? 
+# days: how long ago was that?
 sub days {
     my $then = shift;
     # maths
@@ -1211,13 +1214,13 @@ sub days {
     my $days = int ($hours / 24);
     # english
     if ($seconds < 60) {
-        return sprintf("%d second%s", $seconds, $seconds == 1 ? "" : "s"); 
+        return sprintf("%d second%s", $seconds, $seconds == 1 ? "" : "s");
     } elsif ($minutes < 60) {
-        return sprintf("%d minute%s", $minutes, $minutes == 1 ? "" : "s"); 
+        return sprintf("%d minute%s", $minutes, $minutes == 1 ? "" : "s");
     } elsif ($hours < 24) {
-        return sprintf("%d hour%s", $hours, $hours == 1 ? "" : "s"); 
+        return sprintf("%d hour%s", $hours, $hours == 1 ? "" : "s");
     } else {
-        return sprintf("%d day%s", $days, $days == 1 ? "" : "s"); 
+        return sprintf("%d day%s", $days, $days == 1 ? "" : "s");
     }
 }
 
@@ -1238,7 +1241,7 @@ my %configStructure; # hash of cfg file keys and associated variable refs
 # ok. In strict 'refs' mode, you cannot use strings as refs. Fair enough.
 # However, hash keys are _always_ strings. Using a ref as a hash key turns
 # it into a string. So we have to keep a virgin copy of the ref around.
-# 
+#
 # So the structure of the %configStructure hash is:
 #   "ref" => [ cfgName, ref ]
 # Ok?
@@ -1275,7 +1278,7 @@ sub getModule {
 sub LoadModule {
     my ($name) = @_;
     # sanitize the name
-    $name =~ s/[^-a-zA-Z0-9]/-/gos;    
+    $name =~ s/[^-a-zA-Z0-9]/-/gos;
     # check the module is not already loaded
     foreach (@modules) {
         if ($_->{'_name'} eq $name) {
@@ -1284,7 +1287,7 @@ sub LoadModule {
     }
     # read the module in from a file
     my $filename = "./BotModules/$name.bm"; # bm = bot module
-    my $result = open(my $file, "< $filename"); 
+    my $result = open(my $file, "< $filename");
     if ($result) {
         my $code = do {
             local $/ = undef; # enable "slurp" mode
@@ -1299,7 +1302,7 @@ sub LoadModule {
                 { no warnings; # as per the warning, but doesn't work??? XXX
                 eval($code); }
                 if ($@) {
-                    # $@ contains the error 
+                    # $@ contains the error
                     return "Failed [4]: $@";
                 } else {
                     # if ok, then create a module
@@ -1308,7 +1311,7 @@ sub LoadModule {
                         \$newmodule = BotModules::$name->create('$name', '$filename');
                     ");
                     if ($@) {
-                        # $@ contains the error 
+                        # $@ contains the error
                         return "Failed [5]: $@";
                     } else {
                         # if ok, then add it to the @modules list
@@ -1323,7 +1326,7 @@ sub LoadModule {
 #               return "Failed [3]: Could not find valid module definition line.";
 #           }
         } else {
-            # $! contains the error 
+            # $! contains the error
             if ($!) {
                 return "Failed [2]: $!";
             } else {
@@ -1331,7 +1334,7 @@ sub LoadModule {
             }
         }
     } else {
-        # $! contains the error 
+        # $! contains the error
         return "Failed [1]: $!";
     }
 }
@@ -1400,7 +1403,7 @@ package BotModules;
 sub create {
     my $class = shift;
     my ($name, $filename) = @_;
-    my $self = { 
+    my $self = {
         '_name' => $name,
         '_shutdown' => 0, # see unload()
         '_static' => 0, # set to 1 to prevent module being unloaded
@@ -1432,7 +1435,7 @@ sub unload {
 # configStructure - return the hash needed for Configuration module
 sub configStructure {
     my $self = shift;
-    return $self->{'_config'}; 
+    return $self->{'_config'};
 }
 
 # do - called to do anything (duh) (no, do, not duh) (oh, ok, sorry)
@@ -1520,7 +1523,7 @@ sub saveConfig {
 
 # registerVariables - Registers a variable with the config system and the var setting system
 # parameters: (
-#     [ 'name', persistent ? 1:0, editable ? 1:0, $value ], 
+#     [ 'name', persistent ? 1:0, editable ? 1:0, $value ],
 #               use undef instead of 0 or 1 to leave as is
 #               use undef (or don't mention) the $value to not set the value
 # )
@@ -1531,7 +1534,7 @@ sub registerVariables {
         $self->{$$_[0]} = $$_[3] if defined($$_[3]);
         if (defined($$_[1])) {
             if ($$_[1]) {
-                $self->{'_config'}->{$self->{'_name'}.'::'.$$_[0]} = \$self->{$$_[0]}; 
+                $self->{'_config'}->{$self->{'_name'}.'::'.$$_[0]} = \$self->{$$_[0]};
             } else {
                 delete($self->{'_config'}->{$self->{'_name'}.'::'.$$_[0]});
             }
@@ -1552,7 +1555,7 @@ sub doScheduled {
         $self->schedule($event, $time, --$times, @data);
     };
     if ($@) {
-        # $@ contains the error 
+        # $@ contains the error
         &::debug("ERROR!!!", $@);
     }
 }
@@ -1561,7 +1564,7 @@ sub doScheduled {
 # for events that should be setup at startup, call this from Schedule().
 sub schedule {
     my $self = shift;
-    my ($event, $time, $times, @data) = @_; 
+    my ($event, $time, $times, @data) = @_;
     return if ($times == 0 or $self->{'_shutdown'}); # see unload()
     $times = -1 if ($times < 0); # pass a negative number to have a recurring timer
     my $delay = $time;
@@ -1588,7 +1591,7 @@ sub spawnChild {
     # secure, predictable, no dependencies on external code
     # uses fork explicitly (and once implicitly)
     my $pipe = IO::SecurePipe->new();
-    if (defined($pipe)) { 
+    if (defined($pipe)) {
         my $child = fork();
         if (defined($child)) {
             if ($child) {
@@ -1862,7 +1865,7 @@ sub setAway {
 }
 
 # setNick - Set the bot's nick.
-# Note: Best not to use this too much, especially not based on user input, 
+# Note: Best not to use this too much, especially not based on user input,
 # as it is not throttled. XXX
 sub setNick {
     my $self = shift;
@@ -1893,7 +1896,7 @@ sub invite {
     $event->{'bot'}->invite($who, $channel);
 }
 
-# pretty printer for turning lists of varying length strings into 
+# pretty printer for turning lists of varying length strings into
 # lists of roughly equal length strings without losing any data
 sub prettyPrint {
     my $self = shift;
@@ -1926,7 +1929,7 @@ sub prettyPrint {
     return @output;
 }
 
-# wordWrap routines which takes a list and wraps it. A less pretty version 
+# wordWrap routines which takes a list and wraps it. A less pretty version
 # of prettyPrinter, but it keeps the order.
 sub wordWrap {
     my $self = shift;
@@ -1969,7 +1972,7 @@ sub sanitizeRegexp {
     if (defined($regexp)) {
         eval {
             '' =~ /$regexp/;
-        }; 
+        };
         $self->debug("regexp |$regexp| returned error |$@|, quoting...") if $@;
         return $@ ? quotemeta($regexp) : $regexp;
     } else {
@@ -1984,7 +1987,7 @@ sub sanitizeRegexp {
 # Initialise - Called when the module is loaded
 sub Initialise {
     my $self = shift;
-} 
+}
 
 # Schedule - Called after bot is set up, to set up any scheduled tasks
 # use $self->schedule($event, $delay, $times, $data)
@@ -1992,21 +1995,21 @@ sub Initialise {
 # and a +ve number for an event that occurs that many times.
 sub Schedule {
     my $self = shift;
-    my ($event) = @_; 
-} 
+    my ($event) = @_;
+}
 
 # JoinedIRC - Called before joining any channels (but after module is setup)
 # this does not get called for dynamically loaded modules
 sub JoinedIRC {
     my $self = shift;
-    my ($event) = @_; 
-} 
+    my ($event) = @_;
+}
 
 sub JoinedChannel {
     my $self = shift;
-    my ($event, $channel) = @_; 
+    my ($event, $channel) = @_;
     if ($self->{'autojoin'}) {
-        push(@{$self->{'channels'}}, $channel) unless ((scalar(grep $_ eq $channel, @{$self->{'channels'}})) or 
+        push(@{$self->{'channels'}}, $channel) unless ((scalar(grep $_ eq $channel, @{$self->{'channels'}})) or
                                                        (scalar(grep $_ eq $channel, @{$self->{'channelsBlocked'}})));
         $self->saveConfig();
     }
@@ -2014,7 +2017,7 @@ sub JoinedChannel {
 
 sub PartedChannel {
     my $self = shift;
-    my ($event, $channel) = @_; 
+    my ($event, $channel) = @_;
     if ($self->{'autojoin'}) {
         my %channels = map { $_ => 1 } @{$self->{'channels'}};
         if ($channels{$channel}) {
@@ -2028,7 +2031,7 @@ sub PartedChannel {
 sub InChannel {
     my $self = shift;
     my ($event) = @_;
-    return scalar(grep $_ eq $event->{'channel'}, @{$self->{'channels'}}); 
+    return scalar(grep $_ eq $event->{'channel'}, @{$self->{'channels'}});
     # XXX could be optimised - cache the list into a hash.
 }
 
@@ -2157,7 +2160,7 @@ sub SpottedTopicChange {
     return 1;
 }
 
-# SpottedJoin - Called when someone joins a channel 
+# SpottedJoin - Called when someone joins a channel
 sub SpottedJoin {
     my $self = shift;
     my ($event, $channel, $who) = @_;
@@ -2240,7 +2243,7 @@ sub ChildCompleted {
     if ($type eq 'URI') {
         my $uri = shift(@data);
         $self->GotURI($event, $uri, $output, @data);
-    } 
+    }
 }
 
 # GotURI - Called when a requested URI has been downloaded
@@ -2260,7 +2263,7 @@ sub Help {
 # RegisterConfig - Called when initialised, should call registerVariables
 sub RegisterConfig {
     my $self = shift;
-    $self->registerVariables( 
+    $self->registerVariables(
       # [ name, save?, settable?, value ]
         ['channels',        1, 1, []],
         ['channelsBlocked', 1, 1, []], # the channels in which this module will not autojoin regardless
@@ -2270,7 +2273,7 @@ sub RegisterConfig {
     );
 }
 
-# Set - called to set a variable to a particular value. 
+# Set - called to set a variable to a particular value.
 sub Set {
     my $self = shift;
     my ($event, $variable, $value) = @_;
@@ -2345,13 +2348,13 @@ sub Initialise {
     my $self = shift;
     $self->{'_fileModifiedTimes'} = {};
     $self->{'_static'} = 1;
-} 
+}
 
 # RegisterConfig - Called when initialised, should call registerVariables
 sub RegisterConfig {
     my $self = shift;
     $self->SUPER::RegisterConfig(@_);
-    $self->registerVariables( 
+    $self->registerVariables(
       # [ name, save?, settable?, value ]
         ['allowInviting', 1, 1, 1], # by default, anyone can invite a bot into their channel
         ['allowChannelAdmin', 1, 1, 0], # by default, one cannot admin from a channel
@@ -2374,7 +2377,7 @@ sub saveConfig {
     &Configuration::Save($cfgfile, &::configStructure());
 }
 
-# Set - called to set a variable to a particular value. 
+# Set - called to set a variable to a particular value.
 sub Set {
     my $self = shift;
     my ($event, $variable, $value) = @_;
@@ -2414,10 +2417,10 @@ sub Get {
 # and a +ve number for an event that occurs that many times.
 sub Schedule {
     my $self = shift;
-    my ($event) = @_; 
+    my ($event) = @_;
     $self->schedule($event, \$self->{'sourceCodeCheckDelay'}, -1, {'action'=>'source'});
     $self->SUPER::Schedule($event);
-} 
+}
 
 sub InChannel {
     my $self = shift;
@@ -2475,7 +2478,7 @@ sub Told {
         }
     } elsif ($message =~ /^\s*password\s+($variablepattern)\s+($variablepattern)\s+($variablepattern)\s*$/osi) {
         if (not $event->{'channel'}) {
-            if ($authenticatedUsers{$event->{'user'}}) { 
+            if ($authenticatedUsers{$event->{'user'}}) {
                 if ($2 ne $3) {
                     $self->say($event, 'New passwords did not match. Try again.');
                 } elsif (&::checkPassword($1, $users{$authenticatedUsers{$event->{'user'}}})) {
@@ -2528,7 +2531,7 @@ sub Told {
                     # deleting an admin. Count how many are left.
                     $count = 0;
                     foreach my $user (keys %users) {
-                        ++$count if ($user ne $doomedUser and 
+                        ++$count if ($user ne $doomedUser and
                                      ($userFlags{$user} & 1) == 1);
                     }
                 } else {
@@ -2605,7 +2608,7 @@ sub Told {
             $self->Vars($event, $1, $2, $3, $4);
         } else {
             return $self->SUPER::Told(@_);
-        } 
+        }
     } else {
         return $self->SUPER::Told(@_);
     }
@@ -2674,7 +2677,7 @@ sub CheckSource {
             my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks)
                 = stat($module->{'_filename'});
             $module->{'_fileModificationTime'} = $mtime;
-            if (defined($lastModifiedTime) and ($mtime > $lastModifiedTime)) {       
+            if (defined($lastModifiedTime) and ($mtime > $lastModifiedTime)) {
                 push(@updatedModules, $module->{'_name'});
             }
         }
@@ -2728,7 +2731,7 @@ sub Restart {
 }
 
 # handles the 'vars' command
-sub Vars { 
+sub Vars {
     my $self = shift;
     my ($event, $modulename, $variable, $value, $nonsense) = @_;
     if (defined($modulename)) {
@@ -2760,7 +2763,7 @@ sub Vars {
                     }
                 } else { # else give variable's current value
                     $value = $module->Get($event, $variable);
-                    if (defined($value)) { 
+                    if (defined($value)) {
                         my $type = ref($value);
                         if ($type eq 'SCALAR') {
                             $self->say($event, "Variable '$variable' in module '$modulename' is set to: '$$value'");
@@ -2815,7 +2818,7 @@ sub Vars {
         $self->say($event, 'To list the variables in a module: vars <module>');
         $self->say($event, 'To get the value of a variable: vars <module> <variable>');
         $self->say($event, 'To set the value of a variable: vars <module> <variable> \'<value>\'');
-        $self->say($event, 'Note the quotes around the value. They are required. If the value contains quotes itself, that is fine.'); 
+        $self->say($event, 'Note the quotes around the value. They are required. If the value contains quotes itself, that is fine.');
     }
 }
 
@@ -2837,7 +2840,7 @@ sub Invited {
             } else {
                 $event->{'bot'}->join($channel);
             }
-        } else { 
+        } else {
             $self->debug($event->{'from'}." asked me to join $channel, but I refused.");
             $self->directSay($event, "Please contact one of my administrators if you want me to join $channel.");
             $self->tellAdmin($event, "Excuse me, but ".$event->{'from'}." asked me to join $channel. I thought you should know.");
@@ -2872,7 +2875,7 @@ sub LoadModule {
     my $self = shift;
     my ($event, $name, $requested) = @_;
     my $newmodule = &::LoadModule($name);
-    if (ref($newmodule)) { 
+    if (ref($newmodule)) {
         # configure module
         $newmodule->{'channels'} = [@channels];
         &Configuration::Get($cfgfile, $newmodule->configStructure());
@@ -2906,7 +2909,7 @@ sub UnloadModule {
         } else {
             $self->debug($result);
         }
-    } else { 
+    } else {
         if ($requested) {
             $self->say($event, "Unloaded module '$name'.");
         } else {
@@ -2947,7 +2950,7 @@ sub deleteUser {
 package main;
 
 # -- #mozilla was here --
-#       <zero> is the bug with zilla hanging on startup on every 
+#       <zero> is the bug with zilla hanging on startup on every
 #              platform fixed in today's nightlies?
 #       <leaf> no
 #      <alecf> heh
@@ -2965,9 +2968,9 @@ END { &debug('perl is shutting down...'); }
 $irc->start();
 
 # -- #mozilla was here --
-#      <alecf> Maybe I'll file a bug about netcenter and that will 
+#      <alecf> Maybe I'll file a bug about netcenter and that will
 #              get some attention
-#      <alecf> "Browser won't render home.netscape.com.. because it 
+#      <alecf> "Browser won't render home.netscape.com.. because it
 #              won't start up"
 #    <andreww> alecf how about "cant view banner ads - wont start up"
 #      <alecf> even better
