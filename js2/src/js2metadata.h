@@ -145,9 +145,7 @@ public:
 
     virtual CompoundAttribute *toCompoundAttribute()    { ASSERT(false); return NULL; }
 
-
     AttributeKind attrKind;
-
 };
 
 // A Namespace (is also an attribute)
@@ -179,12 +177,10 @@ typedef std::vector<Namespace *> NamespaceList;
 typedef NamespaceList::iterator NamespaceListIterator;
 class Multiname : public JS2Object {
 public:    
+    Multiname(const StringAtom &name) : JS2Object(MultinameKind), name(name) { }
+    Multiname(const StringAtom &name, Namespace *ns) : JS2Object(MultinameKind), name(name) { addNamespace(ns); }
 
-    Multiname(const StringAtom &name) : JS2Object(MultinameKind), name(name), qualified(false) { }
-    Multiname(const StringAtom &name, bool qualified) : JS2Object(MultinameKind), name(name), qualified(qualified) { }
-    
-
-    void emitBytecode(BytecodeContainer *bCon)      { bCon->emitOp(qualified ? eQMultiname : eMultiname); bCon->addMultiname(this); }
+    void emitBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eMultiname, pos); bCon->addMultiname(this); }
 
     void addNamespace(Namespace *ns)                { nsList.push_back(ns); }
     void addNamespace(NamespaceList *ns);
@@ -195,7 +191,6 @@ public:
 
     NamespaceList nsList;
     const StringAtom &name;
-    bool qualified;                     // true for q::a, otherwise false
 
 };
 
@@ -446,10 +441,10 @@ public:
 // References are generated during the eval stage (bytecode generation)
 class Reference {
 public:
-    virtual void emitReadBytecode(BytecodeContainer *bCon)              { ASSERT(false); }
-    virtual void emitWriteBytecode(BytecodeContainer *bCon)             { ASSERT(false); }
-    virtual void emitDeleteBytecode(BytecodeContainer *bCon)            { ASSERT(false); };
-    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon)     { ASSERT(false); }
+    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)              { ASSERT(false); }
+    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)             { ASSERT(false); }
+    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)            { ASSERT(false); };
+    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { ASSERT(false); }
 };
 
 class LexicalReference : public Reference {
@@ -458,7 +453,7 @@ class LexicalReference : public Reference {
 // q::a.
 public:
     LexicalReference(const StringAtom &name, bool strict) : variableMultiname(new Multiname(name)), env(NULL), strict(strict) { }
-    LexicalReference(const StringAtom &name, bool strict, bool qualified) : variableMultiname(new Multiname(name, qualified)), env(NULL), strict(strict) { }
+    LexicalReference(const StringAtom &name, Namespace *nameSpace, bool strict) : variableMultiname(new Multiname(name, nameSpace)), env(NULL), strict(strict) { }
 
     
     Multiname *variableMultiname;   // A nonempty set of qualified names to which this reference can refer
@@ -466,9 +461,9 @@ public:
     bool strict;                    // The strict setting from the context in effect at the point where the reference was created
     
 
-    void emitBindBytecode(BytecodeContainer *bCon)              { variableMultiname->emitBytecode(bCon);  }
-    virtual void emitReadBytecode(BytecodeContainer *bCon)      { bCon->emitOp(eLexicalRead); }
-    virtual void emitWriteBytecode(BytecodeContainer *bCon)     { bCon->emitOp(eLexicalWrite); }
+    void emitBindBytecode(BytecodeContainer *bCon, size_t pos)              { variableMultiname->emitBytecode(bCon, pos);  }
+    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eLexicalRead, pos); }
+    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalWrite, pos); }
 };
 
 class DotReference : public Reference {
@@ -687,7 +682,6 @@ public:
     JS2Class *namespaceClass;
 
     Parser *mParser;                // used for error reporting
-    size_t errorPos;
 
     BytecodeContainer *bCon;        // the current output container
 

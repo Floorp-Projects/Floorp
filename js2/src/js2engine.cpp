@@ -240,7 +240,6 @@ int JS2Engine::getStackEffect(JS2Op op)
         return 0;
 
     case eMultiname:
-    case eQMultiname:
         return 1;       // push the multiname object
 
     case eUse:
@@ -250,6 +249,11 @@ int JS2Engine::getStackEffect(JS2Op op)
         ASSERT(false);
     }
     return 0;
+}
+
+size_t JS2Engine::errorPos()
+{
+    return bCon->getPosition(pc - bCon->getCodeStart()); 
 }
 
 }

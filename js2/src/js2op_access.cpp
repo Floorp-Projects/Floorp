@@ -40,7 +40,7 @@
             push(OBJECT_TO_JS2VAL(mn));
         }
         break;
-
+#if 0
         // Get a multiname literal and pop a namespace value to add to it
         // Push the resulting multiname object
         case eQMultiname: {
@@ -56,7 +56,7 @@
             push(OBJECT_TO_JS2VAL(mn));
         }
         break;
-
+#endif
         // Pop a multiname object and read it's value from the environment on to the stack.
         case eLexicalRead: {
             js2val mnVal = pop();
@@ -85,10 +85,10 @@
         case eUse: {
             js2val nsVal = pop();
             if (!JS2VAL_IS_OBJECT(nsVal))
-                meta->reportError(Exception::badValueError, "Expected a namespace", meta->errorPos);
+                meta->reportError(Exception::badValueError, "Expected a namespace", meta->engine->errorPos());
             JS2Object *obj = JS2VAL_TO_OBJECT(nsVal);
             if ((obj->kind != AttributeObjectKind) || ((checked_cast<Attribute *>(obj))->attrKind != Attribute::NamespaceAttr))
-                meta->reportError(Exception::badValueError, "Expected a namespace", meta->errorPos);            
+                meta->reportError(Exception::badValueError, "Expected a namespace", meta->engine->errorPos());            
 
         }
         break;

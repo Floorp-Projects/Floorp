@@ -52,45 +52,50 @@ class Multiname;
 
 class BytecodeContainer {
 public:
-    BytecodeContainer() : mBuffer(new CodeBuffer), mStackTop(0), mStackMax(0) { }
+    BytecodeContainer() : mStackTop(0), mStackMax(0) { }
     BytecodeContainer::~BytecodeContainer() ;
 
     
-    uint8 *getCodeStart()                   { return mBuffer->begin(); }
+    uint8 *getCodeStart()                   { return mBuffer.begin(); }
 
+    typedef std::pair<uint16, size_t> MapEntry;
+    std::vector<MapEntry> pcMap;
 
-    void emitOp(JS2Op op)                   { adjustStack(op); addByte((uint8)op); }
-    void emitOp(JS2Op op, int32 effect)     { adjustStack(op, effect); addByte((uint8)op); }
+    size_t getPosition(uint16 pc);
+
+    void emitOp(JS2Op op, size_t pos)       { adjustStack(op); addByte((uint8)op); pcMap.push_back(MapEntry(mBuffer.size(), pos)); }
+    void emitOp(JS2Op op, size_t pos, int32 effect)     
+                                            { adjustStack(op, effect); addByte((uint8)op); pcMap.push_back(std::pair<uint16, size_t>(mBuffer.size(), pos)); }
 
     void adjustStack(JS2Op op)              { adjustStack(op, JS2Engine::getStackEffect(op)); }
     void adjustStack(JS2Op op, int32 effect){ mStackTop += effect; if (mStackTop > mStackMax) mStackMax = mStackTop; ASSERT(mStackTop >= 0); }
 
-    void addByte(uint8 v)                   { mBuffer->push_back(v); }
+    void addByte(uint8 v)                   { mBuffer.push_back(v); }
     
     void addPointer(const void *v)          { ASSERT(sizeof(void *) == sizeof(uint32)); addLong((uint32)(v)); }
     static void *getPointer(void *pc)       { return (void *)getLong(pc); }
     
-    void addFloat64(float64 v)              { mBuffer->insert(mBuffer->end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(float64)); }
+    void addFloat64(float64 v)              { mBuffer.insert(mBuffer.end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(float64)); }
     static float64 getFloat64(void *pc)     { return *((float64 *)pc); }
    
-    void addLong(const uint32 v)            { mBuffer->insert(mBuffer->end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(uint32)); }
+    void addLong(const uint32 v)            { mBuffer.insert(mBuffer.end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(uint32)); }
     static uint32 getLong(void *pc)         { return *((uint32 *)pc); }
 
-    void addShort(uint16 v)                 { mBuffer->insert(mBuffer->end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(uint16)); }
+    void addShort(uint16 v)                 { mBuffer.insert(mBuffer.end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(uint16)); }
     static uint16 getShort(void *pc)        { return *((uint16 *)pc); }
 
     void addMultiname(Multiname *mn)        { mMultinameList.push_back(mn); addShort(mMultinameList.size() - 1); }
     static Multiname *getMultiname(void *pc){ return (Multiname *)getLong(pc); }
 
-    void addString(const StringAtom &x)     { emitOp(eString); addPointer(&x); }
-    void addString(String &x)               { emitOp(eString); addPointer(&x); }
-    void addString(String *x)               { emitOp(eString); addPointer(x); }
+    void addString(const StringAtom &x, size_t pos)     { emitOp(eString, pos); addPointer(&x); }
+    void addString(String &x, size_t pos)               { emitOp(eString, pos); addPointer(&x); }
+    void addString(String *x, size_t pos)               { emitOp(eString, pos); addPointer(x); }
     static String *getString(void *pc)      { return (String *)getPointer(pc); }
     // XXX We lose StringAtom here - is there anyway of stashing these in a bytecodecontainer?
     
     typedef std::vector<uint8> CodeBuffer;
 
-    CodeBuffer *mBuffer;
+    CodeBuffer mBuffer;
     std::vector<Multiname *> mMultinameList;      // gc tracking 
 
     int32 mStackTop;                // keep these as signed so as to

@@ -61,7 +61,6 @@ enum JS2Op {
     eReturnVoid,
     eNewObject,         // <argCount:16>
     eMultiname,         // <multiname index>
-    eQMultiname,        // <multiname index>
     eUse,
 };
 
@@ -80,6 +79,8 @@ public:
 
     void *gc_alloc_8();
     float64 *newDoubleValue(float64 x);
+
+    size_t errorPos();
 
     void pushNumber(float64 x);
 

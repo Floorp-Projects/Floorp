@@ -191,11 +191,13 @@ namespace MetaData {
     {
         BytecodeContainer *saveBacon = bCon;
         bCon = new BytecodeContainer();
+        size_t lastPos = p->pos;
         while (p) {
             EvalStmt(&env, phase, p);
+            lastPos = p->pos;
             p = p->next;
         }
-        bCon->emitOp(eReturnVoid);
+        bCon->emitOp(eReturnVoid, lastPos);
         js2val retval = engine->interpret(this, phase, bCon);
         bCon = saveBacon;
         return retval;
@@ -242,7 +244,7 @@ namespace MetaData {
             {
                 ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
                 Reference *r = EvalExprNode(env, phase, e->expr);
-                if (r) r->emitReadBytecode(bCon);
+                if (r) r->emitReadBytecode(bCon, p->pos);
             }
             break;
         case StmtNode::Namespace:
@@ -255,8 +257,8 @@ namespace MetaData {
                 ExprList *eList = u->namespaces;
                 while (eList) {
                     Reference *r = EvalExprNode(env, phase, eList->expr);
-                    if (r) r->emitReadBytecode(bCon);
-                    bCon->emitOp(eUse);
+                    if (r) r->emitReadBytecode(bCon, p->pos);
+                    bCon->emitOp(eUse, p->pos);
                     eList = eList->next;
                 }
             }
@@ -549,8 +551,8 @@ namespace MetaData {
         BytecodeContainer *saveBacon = bCon;
         bCon = new BytecodeContainer();
         Reference *r = EvalExprNode(env, phase, p);
-        if (r) r->emitReadBytecode(bCon);
-        bCon->emitOp(eReturn);
+        if (r) r->emitReadBytecode(bCon, p->pos);
+        bCon->emitOp(eReturn, p->pos);
         js2val retval = engine->interpret(this, phase, bCon);
         bCon = saveBacon;
         return retval;
@@ -572,8 +574,8 @@ namespace MetaData {
                 Reference *lVal = EvalExprNode(env, phase, b->op1);
                 if (lVal) {
                     Reference *rVal = EvalExprNode(env, phase, b->op2);
-                    if (rVal) rVal->emitReadBytecode(bCon);
-                    lVal->emitWriteBytecode(bCon);
+                    if (rVal) rVal->emitReadBytecode(bCon, p->pos);
+                    lVal->emitWriteBytecode(bCon, p->pos);
                 }
                 else
                     reportError(Exception::semanticError, "Assignment needs an lValue", p->pos);
@@ -584,9 +586,9 @@ namespace MetaData {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
                 Reference *lVal = EvalExprNode(env, phase, b->op1);
                 Reference *rVal = EvalExprNode(env, phase, b->op2);
-                if (lVal) lVal->emitReadBytecode(bCon);
-                if (rVal) rVal->emitReadBytecode(bCon);
-                bCon->emitOp(ePlus);
+                if (lVal) lVal->emitReadBytecode(bCon, p->pos);
+                if (rVal) rVal->emitReadBytecode(bCon, p->pos);
+                bCon->emitOp(ePlus, p->pos);
             }
             break;
 
@@ -601,7 +603,7 @@ namespace MetaData {
 
         case ExprNode::number:
             {
-                bCon->emitOp(eNumber);
+                bCon->emitOp(eNumber, p->pos);
                 bCon->addFloat64(checked_cast<NumberExprNode *>(p)->value);
             }
             break;
@@ -609,24 +611,31 @@ namespace MetaData {
             {
                 QualifyExprNode *qe = checked_cast<QualifyExprNode *>(p);
                 const StringAtom &name = checked_cast<IdentifierExprNode *>(p)->name;
-                Reference *rVal = EvalExprNode(env, phase, qe->qualifier);
-                if (rVal) rVal->emitReadBytecode(bCon);
-                returnRef = new LexicalReference(name, cxt.strict, true);
-                ((LexicalReference *)returnRef)->emitBindBytecode(bCon);
+
+                js2val av = EvalExpression(env, CompilePhase, qe->qualifier);
+                if (JS2VAL_IS_NULL(av) || !JS2VAL_IS_OBJECT(av))
+                    reportError(Exception::badValueError, "Namespace expected in qualifier", p->pos);
+                JS2Object *obj = JS2VAL_TO_OBJECT(av);
+                if ((obj->kind != AttributeObjectKind) || (checked_cast<Attribute *>(obj)->attrKind != Attribute::NamespaceAttr))
+                    reportError(Exception::badValueError, "Namespace expected in qualifier", p->pos);
+                Namespace *ns = checked_cast<Namespace *>(obj);
+                
+                returnRef = new LexicalReference(name, ns, cxt.strict);
+                ((LexicalReference *)returnRef)->emitBindBytecode(bCon, p->pos);
             }
             break;
         case ExprNode::identifier:
             {
                 IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
                 returnRef = new LexicalReference(i->name, cxt.strict);
-                ((LexicalReference *)returnRef)->emitBindBytecode(bCon);
+                ((LexicalReference *)returnRef)->emitBindBytecode(bCon, p->pos);
             }
             break;
         case ExprNode::boolean:
             if (checked_cast<BooleanExprNode *>(p)->value) 
-                bCon->emitOp(eTrue);
+                bCon->emitOp(eTrue, p->pos);
             else 
-                bCon->emitOp(eFalse);
+                bCon->emitOp(eFalse, p->pos);
             break;
         case ExprNode::objectLiteral:
             {
@@ -636,16 +645,16 @@ namespace MetaData {
                 while (e) {
                     ASSERT(e->field && e->value);
                     Reference *rVal = EvalExprNode(env, phase, e->value);
-                    if (rVal) rVal->emitReadBytecode(bCon);
+                    if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                     switch (e->field->getKind()) {
                     case ExprNode::identifier:
-                        bCon->addString(checked_cast<IdentifierExprNode *>(e->field)->name);
+                        bCon->addString(checked_cast<IdentifierExprNode *>(e->field)->name, p->pos);
                         break;
                     case ExprNode::string:
-                        bCon->addString(checked_cast<StringExprNode *>(e->field)->str);
+                        bCon->addString(checked_cast<StringExprNode *>(e->field)->str, p->pos);
                         break;
                     case ExprNode::number:
-                        bCon->addString(numberToString(&(checked_cast<NumberExprNode *>(e->field))->value));
+                        bCon->addString(numberToString(&(checked_cast<NumberExprNode *>(e->field))->value), p->pos);
                         break;
                     default:
                         NOT_REACHED("bad field name");
@@ -742,14 +751,12 @@ namespace MetaData {
         Frame *pf = firstFrame;
         while (pf) {
             js2val rval;
-            // have to wrap the frame in a Monkey object in order
-            // to have readProperty handle it...
             if (meta->readProperty(pf, multiname, &lookup, phase, &rval))
                 return rval;
 
             pf = pf->nextFrame;
         }
-        meta->reportError(Exception::referenceError, "{0} is undefined", meta->errorPos, multiname->name);
+        meta->reportError(Exception::referenceError, "{0} is undefined", meta->engine->errorPos(), multiname->name);
         return JS2VAL_VOID;
     }
 
@@ -758,8 +765,6 @@ namespace MetaData {
         LookupKind lookup(true, findThis(false));
         Frame *pf = firstFrame;
         while (pf) {
-            // have to wrap the frame in a Monkey object in order
-            // to have readProperty handle it...
             if (meta->writeProperty(pf, multiname, &lookup, false, newValue, phase))
                 return;
             pf = pf->nextFrame;
@@ -771,7 +776,7 @@ namespace MetaData {
                     return;
             }
         }
-        meta->reportError(Exception::referenceError, "{0} is undefined", meta->errorPos, multiname->name);
+        meta->reportError(Exception::referenceError, "{0} is undefined", meta->engine->errorPos(), multiname->name);
     }
 
 
@@ -842,9 +847,8 @@ namespace MetaData {
             publicNamespaceList.push_back(publicNamespace);
             namespaces = &publicNamespaceList;
         }
-        Multiname *mn = new Multiname(id, true);
+        Multiname *mn = new Multiname(id);
         mn->addNamespace(namespaces);
-
 
         for (StaticBindingIterator b = localFrame->staticReadBindings.lower_bound(id),
                 end = localFrame->staticReadBindings.upper_bound(id); (b != end); b++) {
@@ -1003,7 +1007,8 @@ namespace MetaData {
         if (!multiname->onList(publicNamespace))
             return false;
         const StringAtom &name = multiname->name;
-        if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", errorPos);
+        if (phase == CompilePhase) 
+            reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
         DynamicPropertyMap *dMap = NULL;
         bool isPrototypeInstance = false;
         if (container->kind == DynamicInstanceKind)
@@ -1093,7 +1098,7 @@ namespace MetaData {
             return false;   // 'None'
         switch (m->kind) {
         case StaticMember::Forbidden:
-            reportError(Exception::propertyAccessError, "Forbidden access", errorPos);
+            reportError(Exception::propertyAccessError, "Forbidden access", engine->errorPos());
             break;
         case StaticMember::Variable:
             *rval = (checked_cast<Variable *>(m))->value;
@@ -1117,7 +1122,7 @@ namespace MetaData {
         switch (m->kind) {
         case StaticMember::Forbidden:
         case StaticMember::ConstructorMethod:
-            reportError(Exception::propertyAccessError, "Forbidden access", errorPos);
+            reportError(Exception::propertyAccessError, "Forbidden access", engine->errorPos());
             break;
         case StaticMember::Variable:
             (checked_cast<Variable *>(m))->value = newValue;
@@ -1187,7 +1192,7 @@ namespace MetaData {
             }
             if (multiname->matches(b->second->qname)) {
                 if (found && (b->second->content != found))
-                    reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", errorPos, multiname->name);
+                    reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
                 else
                     found = b->second->content;
             }
@@ -1229,7 +1234,7 @@ namespace MetaData {
             }
             if (multiname->matches(b->second->qname)) {
                 if (result && (b->second->content != result->content))
-                    reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", errorPos, multiname->name);
+                    reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
                 else
                     result = b->second;
             }

@@ -64,11 +64,17 @@ namespace MetaData {
 
     BytecodeContainer::~BytecodeContainer() 
     { 
-	delete mBuffer;
 	for (std::vector<Multiname *>::iterator i = mMultinameList.begin(), end = mMultinameList.end(); (i != end); i++)
 	    delete *i;
     }
 
+    size_t BytecodeContainer::getPosition(uint16 pc)
+    {
+        for (std::vector<MapEntry>::iterator i = pcMap.begin(), end = pcMap.end(); (i != end); i++)
+            if (i->first >= pc)
+                return i->second;
+        return 0;
+    }
 
 }
 }
