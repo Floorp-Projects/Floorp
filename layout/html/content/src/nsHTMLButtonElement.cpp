@@ -59,7 +59,62 @@ public:
   NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+//  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_IMETHOD GetTagName(nsString& aTagName) {
+    return mInner.GetTagName(aTagName);
+  }
+  NS_IMETHOD GetAttribute(const nsString& aName, nsString& aReturn);
+  NS_IMETHOD SetAttribute(const nsString& aName, const nsString& aValue);
+  NS_IMETHOD RemoveAttribute(const nsString& aName) {
+    return mInner.RemoveAttribute(aName);
+  }
+  NS_IMETHOD GetAttributeNode(const nsString& aName,
+                              nsIDOMAttr** aReturn) {
+    return mInner.GetAttributeNode(aName, aReturn);
+  }
+  NS_IMETHOD SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) {
+    return mInner.SetAttributeNode(aNewAttr, aReturn);
+  }
+  NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn) {
+    return mInner.RemoveAttributeNode(aOldAttr, aReturn);
+  }
+  NS_IMETHOD GetElementsByTagName(const nsString& aTagname,
+                                  nsIDOMNodeList** aReturn) {
+    return mInner.GetElementsByTagName(aTagname, aReturn);
+  }
+  NS_IMETHOD GetAttributeNS(const nsString& aNamespaceURI,
+                            const nsString& aLocalName, nsString& aReturn) {
+    return mInner.GetAttributeNS(aNamespaceURI, aLocalName, aReturn);
+  }
+  NS_IMETHOD SetAttributeNS(const nsString& aNamespaceURI,
+                            const nsString& aQualifiedName,
+                            const nsString& aValue) {
+    return mInner.SetAttributeNS(aNamespaceURI, aQualifiedName, aValue);
+  }
+  NS_IMETHOD RemoveAttributeNS(const nsString& aNamespaceURI,
+                               const nsString& aLocalName) {
+    return mInner.RemoveAttributeNS(aNamespaceURI, aLocalName);
+  }
+  NS_IMETHOD GetAttributeNodeNS(const nsString& aNamespaceURI,
+                                const nsString& aLocalName,
+                                nsIDOMAttr** aReturn) {
+    return mInner.GetAttributeNodeNS(aNamespaceURI, aLocalName, aReturn);
+  }
+  NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) {
+    return mInner.SetAttributeNodeNS(aNewAttr, aReturn);
+  }
+  NS_IMETHOD GetElementsByTagNameNS(const nsString& aNamespaceURI,
+                                    const nsString& aLocalName,
+                                    nsIDOMNodeList** aReturn) {
+    return mInner.GetElementsByTagNameNS(aNamespaceURI, aLocalName, aReturn);
+  }
+  NS_IMETHOD HasAttribute(const nsString& aName, PRBool* aReturn) {
+    return mInner.HasAttribute(aName, aReturn);
+  }
+  NS_IMETHOD HasAttributeNS(const nsString& aNamespaceURI,
+                            const nsString& aLocalName, PRBool* aReturn) {
+    return mInner.HasAttributeNS(aNamespaceURI, aLocalName, aReturn);
+  }
 
   // nsIDOMHTMLElement
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
@@ -178,6 +233,33 @@ nsHTMLButtonElement::Release()
   }
 }
 
+NS_IMETHODIMP
+nsHTMLButtonElement::GetAttribute(const nsString& aName, nsString& aReturn)
+{
+  if (aName.EqualsWithConversion("disabled", PR_TRUE)) {
+    nsresult rv = GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, aReturn);
+    if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+      aReturn.AssignWithConversion("false");
+    } else {
+      aReturn.AssignWithConversion("true");
+    }
+
+    return NS_OK;
+  }
+
+  return mInner.GetAttribute(aName, aReturn);
+}
+
+NS_IMETHODIMP
+nsHTMLButtonElement::SetAttribute(const nsString& aName, const nsString& aValue)
+{
+  if (aName.EqualsWithConversion("disabled", PR_TRUE) &&
+      aValue.EqualsWithConversion("false", PR_TRUE)) {
+    return mInner.RemoveAttribute(aName);
+  }
+
+  return mInner.SetAttribute(aName, aValue);
+}
 
 // nsIDOMHTMLButtonElement
 
