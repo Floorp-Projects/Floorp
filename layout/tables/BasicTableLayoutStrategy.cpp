@@ -162,7 +162,8 @@ PRBool BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext* aPresContex
   // Step 2 - determine how much space is really available
   PRInt32 availWidth = aMaxWidth - aTotalFixedWidth;
   nscoord tableWidth = 0;
-  if (PR_FALSE==nsTableFrame::TableIsAutoWidth(mTableFrame, aTableStyle, aReflowState, tableWidth))
+  PRBool tableIsAutoWidth = nsTableFrame::TableIsAutoWidth(mTableFrame, aTableStyle, aReflowState, tableWidth);
+  if (PR_FALSE==tableIsAutoWidth)
     availWidth = tableWidth - aTotalFixedWidth;
   
   // Step 3 - assign the width of all proportional-width columns in the remaining space
@@ -170,7 +171,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext* aPresContex
   result = BalanceProportionalColumns(aPresContext, aReflowState,
                                       availWidth, aMaxWidth,
                                       aMinTableWidth, aMaxTableWidth,
-                                      tableWidth);
+                                      tableWidth, tableIsAutoWidth);
   return result;
 }
 
@@ -455,7 +456,8 @@ PRBool BasicTableLayoutStrategy::BalanceProportionalColumns(nsIPresContext* aPre
                                                             nscoord aMaxWidth,
                                                             nscoord aMinTableWidth, 
                                                             nscoord aMaxTableWidth,
-                                                            nscoord aTableFixedWidth)
+                                                            nscoord aTableFixedWidth,
+                                                            PRBool  aTableIsAutoWidth)
 {
   PRBool result = PR_TRUE;
 
@@ -464,7 +466,8 @@ PRBool BasicTableLayoutStrategy::BalanceProportionalColumns(nsIPresContext* aPre
     if (NS_UNCONSTRAINEDSIZE==aMaxWidth  ||  NS_UNCONSTRAINEDSIZE==aMinTableWidth)
     { // the max width of the table fits comfortably in the available space
       if (gsDebug) printf ("  * table laying out in NS_UNCONSTRAINEDSIZE, calling BalanceColumnsTableFits\n");
-      result = BalanceColumnsTableFits(aPresContext, aReflowState, aAvailWidth, aMaxWidth, aTableFixedWidth);
+      result = BalanceColumnsTableFits(aPresContext, aReflowState, aAvailWidth, 
+                                       aMaxWidth, aTableFixedWidth, aTableIsAutoWidth);
     }
     else if (aMinTableWidth > aMaxWidth)
     { // the table doesn't fit in the available space
@@ -474,7 +477,8 @@ PRBool BasicTableLayoutStrategy::BalanceProportionalColumns(nsIPresContext* aPre
     else if (aMaxTableWidth <= aMaxWidth)
     { // the max width of the table fits comfortably in the available space
       if (gsDebug) printf ("  * table desired size fits, calling BalanceColumnsTableFits\n");
-      result = BalanceColumnsTableFits(aPresContext, aReflowState, aAvailWidth, aMaxWidth, aTableFixedWidth);
+      result = BalanceColumnsTableFits(aPresContext, aReflowState, aAvailWidth, 
+                                       aMaxWidth, aTableFixedWidth, aTableIsAutoWidth);
     }
     else
     { // the table fits somewhere between its min and desired size
@@ -488,7 +492,8 @@ PRBool BasicTableLayoutStrategy::BalanceProportionalColumns(nsIPresContext* aPre
     if (NS_UNCONSTRAINEDSIZE==aMinTableWidth)
     { // the table has empty content, and needs to be streched to the specified width
       if (gsDebug) printf ("  * specified width table > maxTableWidth, calling BalanceColumnsTableFits\n");
-      result = BalanceColumnsTableFits(aPresContext, aReflowState, aAvailWidth, aMaxWidth, aTableFixedWidth);
+      result = BalanceColumnsTableFits(aPresContext, aReflowState, aAvailWidth, 
+                                       aMaxWidth, aTableFixedWidth, aTableIsAutoWidth);
     }
     else if ((aTableFixedWidth<aMinTableWidth) /*|| (aAvailWidth<aMinTableWidth)*/)
     { // the table's specified width doesn't fit in the available space
@@ -505,7 +510,8 @@ PRBool BasicTableLayoutStrategy::BalanceProportionalColumns(nsIPresContext* aPre
     else
     { // the table's specified width is >= its max width, so give each column its max requested size
       if (gsDebug) printf ("  * specified width table > maxTableWidth, calling BalanceColumnsTableFits\n");
-      result = BalanceColumnsTableFits(aPresContext, aReflowState, aAvailWidth, aMaxWidth, aTableFixedWidth);
+      result = BalanceColumnsTableFits(aPresContext, aReflowState, aAvailWidth, 
+                                       aMaxWidth, aTableFixedWidth, aTableIsAutoWidth);
     }
   }
   return result;
@@ -607,7 +613,8 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
                                                          const nsReflowState& aReflowState,
                                                          nscoord aAvailWidth,
                                                          nscoord aMaxWidth,
-                                                         nscoord aTableFixedWidth)
+                                                         nscoord aTableFixedWidth,
+                                                         PRBool  aTableIsAutoWidth)
 {
 #ifdef DEBUG
   nsIFrame *tablePIF=nsnull;
@@ -931,7 +938,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
   // next, if the specified width of the table is greater than the table's computed width, expand the
   // table's computed width to match the specified width, giving the extra space to proportionately-sized
   // columns if possible.
-  if (aAvailWidth > tableWidth)
+  if ((PR_FALSE==aTableIsAutoWidth) && (aAvailWidth > tableWidth))
   {
     DistributeExcessSpace(aAvailWidth, tableWidth, effectiveColumnWidths);
   }
@@ -1319,7 +1326,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( nsIPresContext* aPre
   /* --- post-process if necessary --- */
   if (PR_TRUE==atLeastOneAutoWidthColumn)
   { // proportionately distribute the remaining space to autowidth columns
-    DistributeRemainingSpace(aMaxWidth, tableWidth, effectiveMinColumnWidths, effectiveMaxColumnWidths);
+    DistributeRemainingSpace(aAvailWidth, tableWidth, effectiveMinColumnWidths, effectiveMaxColumnWidths);
   }
   // second, assign a width to proportional-width columns
   if (nsnull!=proportionalColumnsList)

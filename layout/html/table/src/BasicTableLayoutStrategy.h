@@ -109,7 +109,8 @@ public:
                                             nscoord aMaxWidth,
                                             nscoord aMinTableWidth, 
                                             nscoord aMaxTableWidth,
-                                            nscoord aTableFixedWidth);
+                                            nscoord aTableFixedWidth,
+                                            PRBool  aTableIsAutoWidth);
 
   /** assign the minimum allowed width for each column that has proportional width.
     * Typically called when the min table width doesn't fit in the available space.
@@ -135,9 +136,10 @@ public:
     */
   virtual PRBool BalanceColumnsTableFits(nsIPresContext*  aPresContext, 
                                          const nsReflowState& aReflowState,
-                                         nscoord          aAvailWidth,
-                                         nscoord          aMaxWidth,
-                                         nscoord          aTableFixedWidth);
+                                         nscoord aAvailWidth,
+                                         nscoord aMaxWidth,
+                                         nscoord aTableFixedWidth,
+                                         PRBool  aTableIsAutoWidth);
 
   /** assign widths for each column that has proportional width inside a table that 
     * has auto width (width set by the content and available space) according to the
