@@ -21,6 +21,7 @@
 #include "mktrace.h"
 #include "structs.h"
 #include "ctxtfunc.h"
+#include "xp_list.h"
 
 #include "nsIStreamListener.h"
 #include "nsNetStream.h"
@@ -202,6 +203,8 @@ PRIVATE void stub_GraphProgressDestroy(MWContext  *context,
 /* Just reuse the same set of context functions: */
 ContextFuncs stub_context_funcs;
 
+XP_List *stub_context_list = NULL;
+
 MWContext *new_stub_context()
 {
     static int funcsInitialized = 0;
@@ -213,12 +216,20 @@ MWContext *new_stub_context()
 #include "mk_cx_fn.h"
 
         funcsInitialized = 1;
+
+        stub_context_list = XP_ListNew();
     }
 
     context = (MWContext *)calloc(sizeof(struct MWContext_), 1);
 
-    context->funcs = &stub_context_funcs;
-    context->type  = MWContextBrowser;
+    if (nsnull != context) {
+        context->funcs = &stub_context_funcs;
+        context->type  = MWContextBrowser;
+
+        if (nsnull != stub_context_list) {
+            XP_ListAddObjectToEnd(stub_context_list, context);
+        }
+    }
 
     return context;
 }
@@ -226,8 +237,43 @@ MWContext *new_stub_context()
 void free_stub_context(MWContext *window_id)
 {
     TRACEMSG(("Freeing stub context...\n"));
+
+    if (stub_context_list) {
+        PRBool result;
+
+        result = XP_ListRemoveObject(stub_context_list, window_id);
+        PR_ASSERT(PR_TRUE == result);
+    }
     free(window_id);
 }
+
+
+extern "C" MWContext * XP_FindContextOfType (MWContext * context, 
+                                             MWContextType type)
+{
+    MWContext *window_id;
+
+    /*
+     * Return the context that was passed in if it is the correct type
+     */
+    if (nsnull != context) {
+        if (context->type == type) {
+            window_id = context;
+        }
+    }
+    /*
+     * Otherwise, the type MUST be a MWBrowserContext, since that is the
+     * only type of context that is created...
+     * 
+     * Return the first stub context, since it is as good as any... :-)
+     */
+    else if (MWContextBrowser == type) {
+        window_id = (MWContext *)XP_ListTopObject(stub_context_list);
+    }
+
+    return window_id;
+}
+
 
 /****************************************************************************/
 /* End of MWContext Evil!!!                                                 */
@@ -307,7 +353,7 @@ int stub_put_block(NET_StreamClass *stream, const char *buffer, int32 length)
 
     /*
      * XXX:  Sometimes put_block(...) will be called without having 
-     *       called is_write_ready(...) first.  Once case is when a stream
+     *       called is_write_ready(...) first.  One case is when a stream
      *       is interrupted...  In this case, Netlib will call put_block(...)
      *       with the string "Transfer Interrupted!"
      */
@@ -358,7 +404,6 @@ NET_StreamBuilder  (FO_Present_Types format_out,
                     URL_Struct  *URL_s,
                     MWContext   *context)
 {
-//  MOZ_FUNCTION_STUB;
     NET_StreamClass *stream = NULL;
     PRBool bSuccess = PR_TRUE;
 
