@@ -101,14 +101,14 @@ sub DESTROY {
 
 # dataSource.configuration.client
 sub settings {
-    return qw(host from);
+    return qw(host address);
 }
 
 # setup.configure
 sub setupConfigure {
     my $self = shift;
     my($app) = @_;
-    $self->dump(9, 'about to protocol.smtp...');
+    $self->dump(9, 'about to configure protocol.smtp...');
     $app->output->setupProgress('protocol.smtp');
     $self->close();
 
@@ -118,27 +118,35 @@ sub setupConfigure {
     if (not defined($value)) {
         $value = 'localhost';
     }
-    $value = $app->input->getArgument("protocol.smtp.host", $value);
+    $value = $app->input->getArgument('protocol.smtp.host', $value);
     if (not defined($value)) {
         return 'protocol.smtp.host';
     }
     $self->host($value);
 
-    $value = $self->from;
+    $value = $self->address;
     if (defined($value)) {
-        # default to original value
-        $value = $app->input->getArgument("protocol.smtp.from", $value);
+        # default to existing value
+        $value = $app->input->getArgument('protocol.smtp.address', $value);
     } else {
-        # no default for 'from' (don't use $USER@`hostname` because it's rarely correct)
-        $value = $app->input->getArgument("protocol.smtp.from");
+        # don't default to anything as our guess is most likely going
+        # to be wrong: "$USER@`hostname`" is rarely correct.
+        $value = $app->input->getArgument('protocol.smtp.address');
     }
     if (not defined($value)) {
-        return 'protocol.smtp.from';
+        return 'protocol.smtp.address';
     }
-    $self->from($value);
+    $self->address($value);
 
     $self->open();
     $app->getService('dataSource.configuration')->setSettings($app, $self, 'protocol.smtp');
     $self->dump(9, 'done configuring protocol.smtp');
     return;
+}
+
+sub hash {
+    my $self = shift;
+    return {
+            'address' => $self->address;
+           };
 }

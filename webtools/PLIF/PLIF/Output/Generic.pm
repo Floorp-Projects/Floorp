@@ -153,4 +153,5 @@ sub fillData {
         $data->{'session'} = $self->actualSession->hash;
     }
     $data->{'input'} = $self->app->input->hash;
+    $data->{'output'} = $self->outputter->hash;
 }

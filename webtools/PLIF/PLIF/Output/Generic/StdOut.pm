@@ -47,3 +47,7 @@ sub output {
     $| = 1; # flush output even if no newline
     print $string;
 }
+
+sub hash {
+    return {};
+}
