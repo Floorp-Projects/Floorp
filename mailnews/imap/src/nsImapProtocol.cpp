@@ -6563,7 +6563,7 @@ NS_IMETHODIMP nsImapMockChannel::AsyncRead(PRUint32 startPosition, PRInt32 readC
   if (cacheEntry && contentLength > 0 && !partialFlag)
   {
     nsCOMPtr<nsIChannel> cacheChannel;
-    rv = cacheEntry->NewChannel(m_loadGroup, this, getter_AddRefs(cacheChannel));
+    rv = cacheEntry->NewChannel(m_loadGroup, getter_AddRefs(cacheChannel));
     if (NS_SUCCEEDED(rv))
     {
       // turn around and make our ref on m_url an owning ref...and force the url to remove
