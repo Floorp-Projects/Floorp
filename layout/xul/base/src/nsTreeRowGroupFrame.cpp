@@ -847,7 +847,7 @@ nsTreeRowGroupFrame::SetScrollbarFrame(nsIPresContext* aPresContext, nsIFrame* a
   aFrame->GetContent(getter_AddRefs(scrollbarContent));
   
   nsAutoString scrollFactor;
-  scrollFactor.AppendWithConversion(SCROLL_FACTOR);
+  scrollFactor.AppendInt(SCROLL_FACTOR);
 
   scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, NS_ConvertASCIItoUCS2("0"), PR_FALSE);
   scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::increment, scrollFactor, PR_FALSE);
