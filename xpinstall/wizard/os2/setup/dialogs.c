@@ -1093,7 +1093,7 @@ MRESULT EXPENTRY DlgProcSelectComponents(HWND hDlg, ULONG msg, MPARAM mp1, MPARA
       /* update the disk space available info in the dialog.  GetDiskSpaceAvailable()
          returns value in kbytes */
       ulDSBuf = GetDiskSpaceAvailable(sgProduct.szPath);
-      itoa(ulDSBuf, tchBuffer, 10);
+      _itoa(ulDSBuf, tchBuffer, 10);
       ParsePath(sgProduct.szPath, szBuf, sizeof(szBuf), FALSE, PP_ROOT_ONLY);
       RemoveBackSlash(szBuf);
       strcat(szBuf, "   ");
@@ -1129,7 +1129,7 @@ MRESULT EXPENTRY DlgProcSelectComponents(HWND hDlg, ULONG msg, MPARAM mp1, MPARA
       /* update the disk space required info in the dialog.  It is already
          in Kilobytes */
       ulDSBuf = GetDiskSpaceRequired(DSR_DOWNLOAD_SIZE);
-      itoa(ulDSBuf, tchBuffer, 10);
+      _itoa(ulDSBuf, tchBuffer, 10);
       strcpy(szBuf, tchBuffer);
       strcat(szBuf, " KB");
       

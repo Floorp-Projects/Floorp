@@ -44,8 +44,6 @@ typedef int PRInt32;
 #include <os2.h>
 #include "nsINIParser.h"
 
-typedef long HRESULT;
-
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>

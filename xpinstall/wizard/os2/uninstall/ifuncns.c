@@ -22,8 +22,9 @@
  *     Sean Su <ssu@netscape.com>
  */
 
-#include "ifuncns.h"
+#include "uninstall.h"
 #include "extra.h"
+#include "ifuncns.h"
 
 BOOL SearchForUninstallKeys(char *szStringToMatch)
 {
