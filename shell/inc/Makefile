@@ -1,4 +1,4 @@
-#!nmake
+#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -15,19 +15,15 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..
+DEPTH = ../..
 
-IGNORE_MANIFEST=1
-
-MODULE=shell 
+MODULE = shell
 
 EXPORTS =			\
-	nsIApplicationShell.h		\
-	nsIShellInstance.h	\
-    nsIMenuBar.h \
-    nsIMenuItem.h \
-	nsshell.h			\
+    nsMenuBar.h \
+    nsMenuItem.h \
 	$(NULL)
 
-include <$(DEPTH)\config\rules.mak>
+include $(DEPTH)/config/config.mk
 
+include $(DEPTH)/config/rules.mk

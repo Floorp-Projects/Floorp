@@ -30,11 +30,15 @@ EXPORTS = \
 CPPSRCS=				\
  nsApplicationManager.cpp			\
  nsShellInstance.cpp			\
+ nsMenuBar.cpp			\
+ nsMenuItem.cpp			\
  $(NULL)
 
 CPP_OBJS=				\
  .\$(OBJDIR)\nsApplicationManager.obj		\
  .\$(OBJDIR)\nsShellInstance.obj		\
+ .\$(OBJDIR)\nsMenuBar.obj		\
+ .\$(OBJDIR)\nsMenuItem.obj		\
  $(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \

@@ -22,11 +22,8 @@ IGNORE_MANIFEST=1
 MODULE=shell 
 
 EXPORTS =			\
-	nsIApplicationShell.h		\
-	nsIShellInstance.h	\
-    nsIMenuBar.h \
-    nsIMenuItem.h \
-	nsshell.h			\
+    nsMenuBar.h \
+    nsMenuItem.h \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

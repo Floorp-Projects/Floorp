@@ -60,11 +60,15 @@ EXPORTS =				\
 CPPSRCS=				\
  nsApplicationManager.cpp			\
  nsShellInstance.cpp			\
+ nsMenuItem.cpp \
+ nsMenuBar.cpp \
  $(NULL)
 
 CPP_OBJS=				\
  ./$(OBJDIR)/nsApplicationManager.o		\
  ./$(OBJDIR)/nsShellInstance.o		\
+ ./$(OBJDIR)/nsMenuItem.o		\
+ ./$(OBJDIR)/nsMenuBar.o		\
  $(NULL)
 
 
