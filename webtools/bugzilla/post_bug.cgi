@@ -237,6 +237,11 @@ foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
 
 $sql .= ") & $::usergroupset)\n";
 
+# Lock tables before inserting records for the new bug into the database
+# if we are using a shadow database to prevent shadow database corruption
+# when two bugs get created at the same time.
+SendSQL("LOCK TABLES bugs WRITE, longdescs WRITE, cc WRITE") if Param("shadowdb");
+
 # Add the bug report to the DB.
 SendSQL($sql);
 
@@ -265,6 +270,8 @@ if (defined $::FORM{'cc'}) {
         }
     }
 }
+
+SendSQL("UNLOCK TABLES") if Param("shadowdb");
 
 # Assemble the -force* strings so this counts as "Added to this capacity"
 my @ARGLIST = ();
