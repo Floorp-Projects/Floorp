@@ -3,12 +3,19 @@
 <?xml-stylesheet href="chrome://communicator/skin/help.css" type="text/css"?>
 <?xml-stylesheet href="chrome://navigator/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/viewZoomOverlay.xul"?>
+<?xul-overlay href="chrome://navigator/content/platformNavigationBindings.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
 <!ENTITY % helpDTD SYSTEM "chrome://help/locale/help.dtd" >
 %helpDTD;
+<!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd" >
+%navigatorDTD;
 ]>
 
 
@@ -23,6 +30,55 @@
         onload="init();" >
 
   <script type="application/x-javascript" src="chrome://help/content/help.js"/>
+  <script type="application/x-javascript" src="chrome://navigator/content/sessionHistoryUI.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
+
+  <popupset id="aTooltipSet">
+    <popup id="backMenu" oncreate="createBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
+    <popup id="forwardMenu" oncreate="createForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
+  </popupset>
+  <popupset id="contentAreaContextSet"/>
+  <broadcasterset id="helpBroadcasters">
+    <broadcaster id="canGoBack"    disabled="true"/>
+    <broadcaster id="canGoForward" disabled="true"/>
+  </broadcasterset>
+  <commandset id="globalEditMenuItems"/>
+  <commandset id="selectEditMenuItems">
+    <command id="cmd_undo"/>
+    <command id="cmd_redo"/>
+    <command id="cmd_cut"/>
+    <command id="cmd_copy"/>
+    <command id="cmd_paste"/>
+    <command id="cmd_delete"/>
+    <command id="cmd_selectAll"/>
+    <command id="cmd_close" oncommand="close();"/>
+    <command id="Browser:Home"    oncommand="goHome();"/>
+    <command id="Browser:Back"    oncommand="goBack();"    observes="canGoBack"/>
+    <command id="Browser:Forward" oncommand="goForward();" observes="canGoForward"/>
+    <command id="cmd_copyLink"/>
+    <command id="cmd_copyImageLocation"/>
+    <command id="cmd_copyImageContents"/>
+  </commandset>
+  <commandset id="clipboardEditMenuItems"/>
+  <commandset id="viewZoomCommands"/>
+  <keyset id="keys">
+    <key id="key_close"/>
+    <key id="printKb" key="&printCmd.commandkey;" oncommand="print();" modifiers="accel"/>
+    <keyset id="viewZoomKeys"/>
+    <keyset id="navigationKeys"/>
+    <key id="key_find"              key="&findOnCmd.commandkey;" oncommand="find(false);" modifiers="accel"/>
+    <key id="key_findAgain"         key="&findAgainCmd.commandkey;" oncommand="find(true);" modifiers="accel"/>
+    <key id="key_viewSource" key="&pageSourceCmd.commandkey;" oncommand="BrowserViewSource();" modifiers="accel"/>
+    <key id="key_viewInfo"   key="&pageInfoCmd.commandkey;"   oncommand="BrowserPageInfo();"   modifiers="accel"/>
+  </keyset>
+  <stringbundle id="bundle_viewZoom"/>
+  <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
 
   <vbox flex="1">
 
@@ -35,18 +91,16 @@
         tbalign="stretch" 
 	persist="collapsed">
 
-        <button id="helpBackButton"
-                class="button-toolbar-1 top"
-                label="&backBtn.label;"
-                tooltiptext="&backBtn.tooltip;"
-                tooltip="aTooltip"
-                oncommand="goBack();"/>
-        <button id="helpForwardButton"
-                class="button-toolbar-1 top"
-                label="&fwdBtn.label;"
-                tooltiptext="&fwdBtn.tooltip;"
-                tooltip="aTooltip"
-                oncommand="goForward();"/>
+        <menubutton id="helpBackButton" label="&backBtn.label;" tooltiptext="&backButton.tooltip;"
+                    oncommand="gotoHistoryIndex(event);" buttonaction="goBack();" context="backMenu"
+                    class="menubutton-dual top" crop="right" tooltip="aTooltip" observes="canGoBack">
+          <menupopup context="" oncreate="createBackMenu(event);"/>
+        </menubutton>
+        <menubutton id="helpForwardButton" label="&fwdBtn.label;" tooltiptext="&forwardButton.tooltip;"
+                    oncommand="gotoHistoryIndex(event);" buttonaction="goForward();" context="forwardMenu"
+                    class="menubutton-dual top" crop="right" tooltip="aTooltip" observes="canGoForward">
+          <menupopup context="" oncreate="createForwardMenu(event);"/>
+        </menubutton>
         <button id="helpHomeButton"
                 class="button-toolbar-1 top"
                 label="&homeBtn.label;"
@@ -56,25 +110,18 @@
 
         <spring flex="1"/>
 
-        <button class="button-toolbar-1" id="print" onclick="print()"/>
-
+        <button id="print" class="button-toolbar-1 top" label="&printButton.label;"
+                tooltip="aTooltip" tooltiptext="&printButton.tooltip;" oncommand="print();"/>
+ 
       </toolbar>
     </toolbox>
 
-    <separator class="groovy-thin"/>
 
     <!-- the two help panes (sidebar & content) -->
     <hbox flex="1">
 
       <vbox id="helpsidebar-box">
-
-        <vbox id="help-subset">
-          <!-- these we will want to clean up or style better -->
-	  <text value="&t1.label;"/>
-          <text value="&t2.label;"/>
-          <text value="&t3.label;"/>
-        </vbox>
-
+       <separator class="thin"/>
         <tabbox orient="vertical" flex="1">
           <tabs orient="horizontal">
             <tab label="&tab1.label;"/>
@@ -84,7 +131,8 @@
             <hbox id="help-toc">
               <tree id="help-toc-tree" ref="urn:root" flex="1*"
                     datasources="chrome://help/locale/help-toc.rdf"
-                    containment="http://home.netscape.com/NC-rdf#subheadings">
+                    containment="http://home.netscape.com/NC-rdf#subheadings"
+                    onselect="loadURI(this.selectedItems[0].firstChild.firstChild.getAttribute('helplink'));">>
                 <template>
                   <rule>
                     <conditions>
@@ -110,8 +158,7 @@
                           <treerow>
                             <treecell class="treecell-indent"
                                       label="?name"
-                                      helplink="?link"
-                                      onclick="loadURI(this.getAttribute('helplink'));"/>
+                                      helplink="?link"/>
                           </treerow>
                         </treeitem>
                       </treechildren>
@@ -154,8 +201,10 @@
         <hbox id="browser" flex="1">
           <!-- type attribute is used by frame construction to locate iframes
                intended to hold (html) content -->
-          <browser context="context" type="content-primary" id="help-content"
-                   src="about:blank" flex="1"/>
+          <browser context="contentAreaContextMenu" type="content-primary" id="help-content"
+                   src="about:blank" flex="1"
+                   ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"
+                   onclick="return contentAreaClick(event);"/>
         </hbox>
       </vbox>
     </hbox>

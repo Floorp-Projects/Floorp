@@ -47,8 +47,7 @@ var key = {
  "?advanced_pref_installation": "chrome://help/locale/cs_nav_prefs_advanced.html#Software_Installation",
  "?advanced_pref_mouse_wheel": "chrome://help/locale/cs_nav_prefs_advanced.html#Mouse_Wheel",
  "?advanced_pref_system":  "chrome://help/locale/cs_nav_prefs_advanced.html#system",
- "?advanced_pref_proxies": "chrome://help/locale/cs_nav_prefs_advanced.html#nav_proxies",
-
+"?advanced_pref_proxies": "chrome://help/locale/cs_nav_prefs_advanced.html#Proxies",
  "?nover_noencrypt":  "chrome://help/locale/ssl_page_info_help.html#Not_Verified_Not Encrypted",
  "?ver_encrypt":  "chrome://help/locale/ssl_page_info_help.html#Verified_Encrypted",
  "?conver_encrypt":  "chrome://help/locale/ssl_page_info_help.html#Conditionally_Verified_Encrypted",
@@ -147,10 +146,15 @@ function init()
   if (key[window.location.search]) {
       dump("loading help content: " + key[window.location.search] + "\n");
       loadURI(key[window.location.search]);
-      setContext();
    } else {
       goHome();
   }
+  window.XULBrowserWindow = new nsHelpStatusHandler();
+  // hook up UI through progress listener
+  var browser = document.getElementById("help-content");
+  var interfaceRequestor = browser.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+  var webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
+  webProgress.addProgressListener(window.XULBrowserWindow);
 }
 
 // select the item in the tree called "Dialog Help" if the window was loaded from a dialog
@@ -194,7 +198,6 @@ function loadURI(aURI)
 {
   const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
   getWebNavigation().loadURI(aURI, nsIWebNavigation.LOAD_FLAGS_NONE);
-  dump("help document: " + uRI);
 }
 
 function goBack()
@@ -224,3 +227,167 @@ function print()
   }
 }
 
+function createBackMenu(event)
+{
+  FillHistoryMenu(event.target, "back");
+}
+
+function createForwardMenu(event)
+{
+  FillHistoryMenu(event.target, "forward");
+}
+
+function gotoHistoryIndex(aEvent)
+{
+  var index = aEvent.target.getAttribute("index");
+  if (!index)
+    return false;
+  try {
+    getWebNavigation().gotoIndex(index);
+  }
+  catch(ex) {
+    return false;
+  }
+  return true;
+}
+
+function BrowserBack()
+{
+  try {
+    getWebNavigation().goBack();
+  }
+  catch(ex) {
+  }
+  UpdateBackForwardButtons();
+}
+
+function BrowserForward()
+{
+  try {
+    getWebNavigation().goForward();
+  }
+  catch(ex) {
+  }
+  UpdateBackForwardButtons();
+}
+
+function nsHelpStatusHandler()
+{
+}
+
+nsHelpStatusHandler.prototype =
+{
+  onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus) {},
+  onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress,
+                              aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {},
+  onSecurityChange : function(aWebProgress, aRequest, state) {},
+  onLocationChange : function(aWebProgress, aRequest, aLocation)
+  {
+    UpdateBackForwardButtons();
+  },
+  QueryInterface : function(aIID)
+  {
+    if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
+      aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
+      aIID.equals(Components.interfaces.nsIXULBrowserWindow) ||
+      aIID.equals(Components.interfaces.nsISupports))
+      return this;
+    throw Components.results.NS_NOINTERFACE;
+  },
+  setJSStatus : function(status) {},
+  setJSDefaultStatus : function(status) {},
+  setOverLink : function(link) {}
+}
+
+function UpdateBackForwardButtons()
+{
+  var backBroadcaster = document.getElementById("canGoBack");
+  var forwardBroadcaster = document.getElementById("canGoForward");
+  var webNavigation = getWebNavigation();
+
+  // Avoid setting attributes on broadcasters if the value hasn't changed!
+  // Remember, guys, setting attributes on elements is expensive!  They
+  // get inherited into anonymous content, broadcast to other widgets, etc.!
+  // Don't do it if the value hasn't changed! - dwh
+
+  var backDisabled = (backBroadcaster.getAttribute("disabled") == "true");
+  var forwardDisabled = (forwardBroadcaster.getAttribute("disabled") == "true");
+
+  if (backDisabled == webNavigation.canGoBack)
+    backBroadcaster.setAttribute("disabled", !backDisabled);
+  
+  if (forwardDisabled == webNavigation.canGoForward)
+    forwardBroadcaster.setAttribute("disabled", !forwardDisabled);
+}
+
+function find(again)
+{
+  var focusedWindow = document.commandDispatcher.focusedWindow;
+  var browser = document.getElementById("help-content");
+  if (!focusedWindow || focusedWindow == window)
+    focusedWindow = window._content;
+  if (again)
+    findAgainInPage(browser, window._content, focusedWindow);
+  else
+    findInPage(browser, window._content, focusedWindow)
+}
+
+function getMarkupDocumentViewer()
+{
+  return document.getElementById("help-content").markupDocumentViewer;
+}
+
+function BrowserReload()
+{
+  const reloadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
+  return BrowserReloadWithFlags(reloadFlags);
+}
+
+function BrowserReloadWithFlags(reloadFlags)
+{
+   try {
+     /* Need to get SessionHistory from docshell so that
+      * reload on framed pages will work right. This 
+      * method should not be used for the context menu item "Reload frame".
+      * "Reload frame" should directly call into docshell as it does right now
+      */
+     var sh = getWebNavigation().sessionHistory;
+     var webNav = sh.QueryInterface(Components.interfaces.nsIWebNavigation);      
+     webNav.reload(reloadFlags);
+   }
+   catch(ex) {
+   }
+ }
+ 
+ function BrowserPageInfo(doc)
+ {
+   window.openDialog("chrome://navigator/content/pageInfo.xul",
+                     "_blank",
+                     "chrome,dialog=no",
+                     doc);
+}
+
+function BrowserViewSource()
+{
+  var focusedWindow = document.commandDispatcher.focusedWindow;
+  if (focusedWindow == window)
+    focusedWindow = _content;
+
+  if (focusedWindow)
+    var docCharset = "charset=" + focusedWindow.document.characterSet;
+
+  BrowserViewSourceOfURL(_content.location, docCharset);
+}
+
+function BrowserViewSourceOfURL(url, charset)
+{
+  // try to open a view-source window while inheriting the charset (if any)
+  openDialog("chrome://navigator/content/viewSource.xul",
+             "_blank",
+             "scrollbars,resizable,chrome,dialog=no",
+             url, charset);
+}
+
+function getBrowser() {
+  return document.getElementById("help-content");
+}

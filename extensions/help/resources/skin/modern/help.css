@@ -36,6 +36,9 @@
   margin: 0px;
 }
 
+.menubutton-dual {
+  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#menubutton-dual-1");
+}
 .toolbar-primary-mid-top {
   background-image: url("chrome://navigator/skin/toolbar/navbar-mid-top.gif");
 }
@@ -115,3 +118,7 @@
   list-style-image: url("chrome://communicator/skin/btn1/print-act.gif");
 }
 
+#help-content
+{
+  border: 1px inset ThreeDHighlight !important;
+}

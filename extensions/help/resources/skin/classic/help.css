@@ -24,6 +24,60 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+#helpBackButton 
+  {
+    list-style-image      : url("chrome://navigator/skin/back.gif");
+  }
+
+#helpBackButton[disabled="true"],
+#helpBackButton[disabled="true"]:hover,
+#helpBackButton[disabled="true"]:hover:active,
+#helpBackButton[disabled="true"] > .menubutton-dual-ex-button:hover,
+#helpBackButton[disabled="true"] > .menubutton-dual-ex-button:hover:active
+  {
+    list-style-image      : url("chrome://navigator/skin/back-disabled.gif");
+  }
+
+#helpBackButton:hover,
+#helpBackButton > .menubutton-dual-ex-button:hover,
+#helpBackButton[open="true"] > .menubutton-dual-ex-button
+  {
+    list-style-image      : url("chrome://navigator/skin/back-hover.gif");
+  }
+
+#helpBackButton:hover:active,
+#helpBackButton > .menubutton-dual-ex-button:hover:active
+  {
+    list-style-image      : url("chrome://navigator/skin/back-hover-active.gif");
+  }
+
+#helpForwardButton 
+  {
+    list-style-image      : url("chrome://navigator/skin/forward.gif");
+  }
+
+#helpForwardButton[disabled="true"],
+#helpForwardButton[disabled="true"]:hover,
+#helpForwardButton[disabled="true"]:hover:active,
+#helpForwardButton[disabled="true"] > .menubutton-dual-ex-button:hover,
+#helpForwardButton[disabled="true"] > .menubutton-dual-ex-button:hover:active
+  {
+    list-style-image      : url("chrome://navigator/skin/forward-disabled.gif");
+  }
+
+#helpForwardButton:hover,
+#helpForwardButton > .menubutton-dual-ex-button:hover,
+#helpForwardButton[open="true"] > .menubutton-dual-ex-button
+  {
+    list-style-image      : url("chrome://navigator/skin/forward-hover.gif");
+  }
+
+#helpForwardButton:hover:active,
+#helpForwardButton > .menubutton-dual-ex-button:hover:active
+  {
+    list-style-image      : url("chrome://navigator/skin/forward-hover-active.gif");
+  }
+
 /* ::::: primary toolbar buttons ::::: */
 
 #print {
@@ -44,3 +98,22 @@
   list-style-image: url("chrome://global/skin/print-hover-active.gif");
 }
 
+#helpHomeButton
+{
+      list-style-image    : url("chrome://communicator/skin/bookmarks/home.gif");
+}
+    
+#helpHomeButton:hover
+{
+      list-style-image    : url("chrome://communicator/skin/bookmarks/home-hover.gif");
+}
+    
+#helpHomeButton:hover:active
+{
+      list-style-image    : url("chrome://communicator/skin/bookmarks/home-active.gif");
+}
+
+#help-content
+{
+  border: 1px inset ThreeDHighlight !important;
+}
