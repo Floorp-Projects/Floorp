@@ -94,6 +94,8 @@ protected:
         nsIURI *aURI, nsISupports *aCacheKey, nsIURI *aReferrer,
         nsIInputStream *aPostData, const char *aExtraHeaders, nsIURI *aFile,
         PRBool aCalcFileExt);
+    nsresult SaveChannelInternal(
+        nsIChannel *aChannel, nsIURI *aFile, PRBool aCalcFileExt);
     nsresult SaveDocumentInternal(
         nsIDOMDocument *aDocument, nsIURI *aFile, nsIURI *aDataPath);
     nsresult SaveDocuments();

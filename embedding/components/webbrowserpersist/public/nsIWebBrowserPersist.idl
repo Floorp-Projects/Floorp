@@ -44,6 +44,7 @@ interface nsIInputStream;
 interface nsIDOMDocument;
 interface nsIWebProgressListener;
 interface nsILocalFile;
+interface nsIChannel;
 
 /**
  * @status UNDER_REVIEW
@@ -52,7 +53,7 @@ interface nsILocalFile;
 /**
  * Interface for persisting DOM documents and URIs to local or remote storage.
  */
-[scriptable, uuid(814ba433-a816-4785-9f95-ad3ba0a43dab)]
+[scriptable, uuid(1c2a6fac-c100-4c67-95d3-281736038700)]
 interface nsIWebBrowserPersist : nsISupports
 {
   /** No special persistence behaviour. */
@@ -159,6 +160,12 @@ interface nsIWebBrowserPersist : nsISupports
   void saveURI(in nsIURI aURI, in nsISupports aCacheKey,
       in nsIURI aReferrer, in nsIInputStream aPostData,
       in string aExtraHeaders, in nsISupports aFile);
+
+  /**
+   * Save a channel to a file. It must not be opened yet.
+   * @see saveURI
+   */
+  void saveChannel(in nsIChannel aChannel, in nsISupports aFile);
 
   /** Output only the current selection as opposed to the whole document. */
   const unsigned long ENCODE_FLAGS_SELECTION_ONLY = 1;
