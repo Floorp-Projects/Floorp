@@ -42,6 +42,10 @@
 
 <!ENTITY ldb.MainWindow.title "Layout Debugger">
 
+<!ENTITY ldb.Open.label "Open File...">
+<!ENTITY ldb.Open.accesskey "o">
+<!ENTITY ldb.Open.commandkey "o">
+
 <!ENTITY ldb.BackButton.label "Back">
 <!ENTITY ldb.ForwardButton.label "Forward">
 <!ENTITY ldb.ReloadButton.label "Reload">
