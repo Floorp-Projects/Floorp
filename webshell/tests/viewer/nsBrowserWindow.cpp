@@ -655,7 +655,7 @@ NS_IMETHODIMP nsBrowserWindow::FindNext(const nsString &aSearchStr, PRBool aMatc
 	if (nsnull != shell) {
 	  nsCOMPtr<nsIDocument> doc;
     shell->GetDocument(getter_AddRefs(doc));
-	  if (nsnull != doc) {
+	  if (doc) {
 		  //PRBool foundIt = PR_FALSE;
 		  doc->FindNext(aSearchStr, aMatchCase, aSearchDown, aIsFound);
 		  if (!aIsFound) {
@@ -675,7 +675,7 @@ NS_IMETHODIMP nsBrowserWindow::ForceRefresh()
   if (nsnull != shell) {
     nsCOMPtr<nsIViewManager> vm;
     shell->GetViewManager(getter_AddRefs(vm));
-    if (nsnull != vm) {
+    if (vm) {
       nsIView* root;
       vm->GetRootView(root);
       if (nsnull != root) {
@@ -738,7 +738,7 @@ nsEventStatus nsBrowserWindow::ProcessDialogEvent(nsGUIEvent *aEvent)
 	    if (nsnull != shell) {
 	      nsCOMPtr<nsIDocument> doc;
         shell->GetDocument(getter_AddRefs(doc));
-	      if (nsnull != doc) {
+	      if (doc) {
           PRBool foundIt = PR_FALSE;
           doc->FindNext(searchStr, matchCase, findDwn, foundIt);
           if (!foundIt) {
@@ -1103,7 +1103,7 @@ nsBrowserWindow::DoSelectAll()
   if (nsnull != shell) {
     nsCOMPtr<nsIDocument> doc;
     shell->GetDocument(getter_AddRefs(doc));
-    if (nsnull != doc) {
+    if (doc) {
       doc->SelectAll();
       ForceRefresh();
     }
@@ -2154,7 +2154,7 @@ nsBrowserWindow::DoCopy()
   if (nsnull != shell) {
     nsCOMPtr<nsIDocument> doc;
     shell->GetDocument(getter_AddRefs(doc));
-    if (nsnull != doc) {
+    if (doc) {
       nsString buffer;
     
       nsIDOMSelection* sel = nsnull;
@@ -2594,7 +2594,7 @@ DumpContentRecurse(nsIWebShell* aWebShell, FILE* out)
     if (nsnull != shell) {
       nsCOMPtr<nsIDocument> doc;
       shell->GetDocument(getter_AddRefs(doc));
-      if (nsnull != doc) {
+      if (doc) {
         nsIContent* root = doc->GetRootContent();
         if (nsnull != root) {
 	        root->List(out);
@@ -2672,7 +2672,7 @@ DumpViewsRecurse(nsIWebShell* aWebShell, FILE* out)
     if (nsnull != shell) {
       nsCOMPtr<nsIViewManager> vm;
       shell->GetViewManager(getter_AddRefs(vm));
-      if (nsnull != vm) {
+      if (vm) {
 	      nsIView* root;
 	      vm->GetRootView(root);
 	      if (nsnull != root) {
@@ -2711,7 +2711,7 @@ nsBrowserWindow::DumpStyleSheets(FILE* out)
   if (nsnull != shell) {
     nsCOMPtr<nsIStyleSet> styleSet;
     shell->GetStyleSet(getter_AddRefs(styleSet));
-    if (nsnull == styleSet) {
+    if (!styleSet) {
       fputs("null style set\n", out);
     } else {
       styleSet->List(out);
@@ -2730,7 +2730,7 @@ nsBrowserWindow::DumpStyleContexts(FILE* out)
   if (nsnull != shell) {
     nsCOMPtr<nsIStyleSet> styleSet;
     shell->GetStyleSet(getter_AddRefs(styleSet));
-    if (nsnull == styleSet) {
+    if (!styleSet) {
       fputs("null style set\n", out);
     } else {
       nsIFrame* root;
@@ -2850,7 +2850,7 @@ nsBrowserWindow::DoDebugSave()
   if (nsnull != shell) {
     nsCOMPtr<nsIDocument> doc;
     shell->GetDocument(getter_AddRefs(doc));
-    if (nsnull != doc) {
+    if (doc) {
       nsString buffer;
 
       doc->CreateXIF(buffer);
@@ -2911,7 +2911,7 @@ nsBrowserWindow::DoToggleSelection()
   if (nsnull != shell) {
     nsCOMPtr<nsIDocument> doc;
     shell->GetDocument(getter_AddRefs(doc));
-    if (nsnull != doc) {
+    if (doc) {
       PRBool  current = doc->GetDisplaySelection();
       doc->SetDisplaySelection(!current);
       ForceRefresh();
@@ -3046,7 +3046,7 @@ nsBrowserWindow::DispatchStyleMenu(PRInt32 aID)
         nsAutoString  defaultStyle;
         nsCOMPtr<nsIDocument> doc;
         shell->GetDocument(getter_AddRefs(doc));
-        if (nsnull != doc) {
+        if (doc) {
           nsIAtom* defStyleAtom = NS_NewAtom("default-style");
           doc->GetHeaderData(defStyleAtom, defaultStyle);
           NS_RELEASE(defStyleAtom);
@@ -3084,7 +3084,7 @@ nsBrowserWindow::DispatchStyleMenu(PRInt32 aID)
       if (nsnull != shell) {
         nsCOMPtr<nsIDocument> doc;
         shell->GetDocument(getter_AddRefs(doc));
-        if (nsnull != doc) {
+        if (doc) {
           nsAutoString  defaultStyle;
           nsIAtom* defStyleAtom = NS_NewAtom("default-style");
           doc->GetHeaderData(defStyleAtom, defaultStyle);

@@ -230,7 +230,7 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
     nsCOMPtr<nsIPresShell> shell(mDocument->GetShellAt(i));
-    if (nsnull != shell) {
+    if (shell) {
       nsCOMPtr<nsIViewManager> vm;
       shell->GetViewManager(getter_AddRefs(vm));
       if(vm) {
@@ -1323,7 +1323,7 @@ nsXMLContentSink::StartLayout()
       // Now trigger a refresh
       nsCOMPtr<nsIViewManager> vm;
       shell->GetViewManager(getter_AddRefs(vm));
-      if (nsnull != vm) {
+      if (vm) {
         vm->EnableRefresh();
       }
 
@@ -1356,7 +1356,7 @@ nsXMLContentSink::StartLayout()
       if (nsnull != shell) {
         nsCOMPtr<nsIViewManager>vm;
         shell->GetViewManager(getter_AddRefs(vm));
-        if (nsnull != vm) {
+        if (vm) {
           nsIView* rootView = nsnull;
           vm->GetRootView(rootView);
           if (nsnull != rootView) {

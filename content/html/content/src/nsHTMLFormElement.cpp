@@ -284,7 +284,7 @@ nsHTMLFormElement::Submit()
         if ((NS_OK == result) && formMan) {
           nsCOMPtr<nsIPresContext> context;
           shell->GetPresContext(getter_AddRefs(context));
-          if (nsnull != context) {
+          if (context) {
             // XXX We're currently passing in null for the frame.
             // It works for now, but might not always
             // be correct. In the future, we might not need the 

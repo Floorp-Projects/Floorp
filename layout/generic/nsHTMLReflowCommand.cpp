@@ -145,7 +145,7 @@ NS_IMETHODIMP nsHTMLReflowCommand::Dispatch(nsIPresContext&      aPresContext,
 #ifdef NS_DEBUG
   nsCOMPtr<nsIPresShell> shell;
   aPresContext.GetShell(getter_AddRefs(shell));
-  if (nsnull != shell) {
+  if (shell) {
     nsIFrame* rootFrame;
     shell->GetRootFrame(&rootFrame);
     NS_ASSERTION(rootFrame == root, "bad root frame");

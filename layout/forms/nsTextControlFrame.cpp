@@ -273,7 +273,7 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
     aPresContext->GetPixelsToTwips(&p2t);
     nsCOMPtr<nsIDeviceContext> dx;
     aPresContext->GetDeviceContext(getter_AddRefs(dx));
-    if (nsnull != dx) { 
+    if (dx) { 
       float sbWidth;
       float sbHeight;
       dx->GetCanonicalPixelScale(scale);

@@ -226,7 +226,7 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
   PRBool requiresWidget = PR_TRUE;
  
     // Checkto see if the device context supports widgets at all
-  if (nsnull != dx) { 
+  if (dx) { 
     dx->SupportsNativeWidgets(requiresWidget);
   }
 

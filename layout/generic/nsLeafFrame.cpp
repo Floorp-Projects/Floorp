@@ -115,7 +115,7 @@ nsLeafFrame::ContentChanged(nsIPresContext* aPresContext,
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIPresShell> shell;
     rv = aPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_SUCCEEDED(rv) && (nsnull != shell)) {
+    if (NS_SUCCEEDED(rv) && shell) {
       shell->AppendReflowCommand(cmd);
     }
     NS_RELEASE(cmd);

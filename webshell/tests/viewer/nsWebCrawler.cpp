@@ -263,7 +263,7 @@ nsWebCrawler:: EndLoadURL(nsIWebShell* aShell,
   if (nsnull != shell) {
     nsCOMPtr<nsIViewManager> vm;
     shell->GetViewManager(getter_AddRefs(vm));
-    if (nsnull != vm) {
+    if (vm) {
       nsIView* rootView;
       vm->GetRootView(rootView);
       vm->UpdateView(rootView, nsnull, NS_VMREFRESH_IMMEDIATE);

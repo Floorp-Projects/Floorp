@@ -753,7 +753,7 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
           nsCOMPtr<nsIContent>oldContent;
           if (NS_SUCCEEDED(frame->GetContent(getter_AddRefs(oldContent))) && oldContent){
             nsCOMPtr<nsIDOMNode> oldDomNode(oldContent);
-            if ((nsnull != oldDomNode) && (oldDomNode == GetFocusNode())) {
+            if (oldDomNode && (oldDomNode == GetFocusNode())) {
               nsCOMPtr<nsIContent> anchorContent;
               if (NS_SUCCEEDED(anchor->GetContent(getter_AddRefs(anchorContent))) && anchorContent){
                 nsCOMPtr<nsIDOMNode>anchorDomNode(anchorContent);

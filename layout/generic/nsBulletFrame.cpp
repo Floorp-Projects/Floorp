@@ -315,7 +315,7 @@ UpdateBulletCB(nsIPresContext& aPresContext, nsIFrame* aFrame, PRIntn aStatus)
     // frame.
     nsCOMPtr<nsIPresShell> shell;
     rv = aPresContext.GetShell(getter_AddRefs(shell));
-    if (NS_SUCCEEDED(rv) && (nsnull != shell)) {
+    if (NS_SUCCEEDED(rv) && shell) {
       nsIReflowCommand* cmd;
       rv = NS_NewHTMLReflowCommand(&cmd, aFrame,
                                    nsIReflowCommand::ContentChanged);

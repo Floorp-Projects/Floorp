@@ -525,7 +525,7 @@ nsHTMLDocument::InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool
       nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
       nsCOMPtr<nsIStyleSet> set;
       shell->GetStyleSet(getter_AddRefs(set));
-      if (nsnull != set) {
+      if (set) {
         set->AddDocStyleSheet(aSheet, this);
       }
     }
