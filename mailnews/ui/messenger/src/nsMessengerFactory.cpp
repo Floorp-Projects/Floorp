@@ -130,7 +130,7 @@ NSGetFactory(const nsCID &aClass,
              nsISupports *serviceMgr,
              nsIFactory **aFactory)
 {
-#ifdef DEBUG_alecf
+#ifdef DEBUG
     printf("messenger: NSGetFactory()\n");
 #endif
 	if (nsnull == aFactory)
@@ -149,7 +149,7 @@ NSGetFactory(const nsCID &aClass,
 PRBool
 NSCanUnload()
 {
-#ifdef DEBUG_alecf
+#ifdef DEBUG
     printf("messenger: NSCanUnload()\n");
 #endif
     return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
@@ -158,7 +158,7 @@ NSCanUnload()
 nsresult
 NSRegisterSelf(const char *fullpath)
 {
-#ifdef DEBUG_alecf
+#ifdef DEBUG
     printf("messenger: NSRegisterSelf()\n");
 #endif
     return nsRepository::RegisterFactory(kCMsgAppCoreCID, fullpath,
@@ -168,7 +168,7 @@ NSRegisterSelf(const char *fullpath)
 nsresult
 NSUnregisterSelf(const char *fullpath)
 {
-#ifdef DEBUG_alecf
+#ifdef DEBUG
     printf("messenger: NSUnregisterSelf()\n");
 #endif
     return nsRepository::UnregisterFactory(kCMsgAppCoreCID, fullpath);
