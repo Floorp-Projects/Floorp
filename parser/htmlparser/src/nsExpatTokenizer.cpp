@@ -133,6 +133,7 @@ void nsExpatTokenizer::SetupExpatCallbacks(void) {
 nsExpatTokenizer::nsExpatTokenizer() : nsHTMLTokenizer() {
   NS_INIT_REFCNT();
   mBytesParsed = 0;
+  mSeenError = PR_FALSE;
   mExpatParser = XML_ParserCreate(NULL);
   gTokenRecycler=(CTokenRecycler*)GetTokenRecycler();
   if (mExpatParser) {
@@ -148,8 +149,10 @@ nsExpatTokenizer::nsExpatTokenizer() : nsHTMLTokenizer() {
  *  @return  
  */
 nsExpatTokenizer::~nsExpatTokenizer(){
-  if (mExpatParser)
-    XML_ParserFree(mExpatParser);  
+  if (mExpatParser) {
+    XML_ParserFree(mExpatParser);
+    mExpatParser = nsnull;
+  }
 }
 
 
@@ -232,10 +235,13 @@ nsresult nsExpatTokenizer::ParseXMLBuffer(const char *aBuffer, PRUint32 aLength)
   nsresult result=NS_OK;
   if (mExpatParser) {
     PR_ASSERT(aLength == strlen(aBuffer));
-    if (!XML_Parse(mExpatParser, aBuffer, aLength, PR_FALSE)) {
-      PushXMLErrorToken(aBuffer, aLength);      
-    }    
-	  mBytesParsed += aLength;    
+    if (!mSeenError) {
+      if (!XML_Parse(mExpatParser, aBuffer, aLength, PR_FALSE)) {
+        PushXMLErrorToken(aBuffer, aLength);
+        mSeenError = PR_TRUE;
+      }
+	    mBytesParsed += aLength;
+    }
   }
   else {
     result = NS_ERROR_FAILURE;

@@ -330,18 +330,18 @@ nsITokenRecycler* CWellFormedDTD::GetTokenRecycler(void){
  */
 nsITokenizer* CWellFormedDTD::GetTokenizer(void) {
   if(!mTokenizer) {
-    PRBool  theExpatState=PR_FALSE;
+    PRBool  theExpatState=PR_TRUE;
 #ifndef XP_MAC
-    char* theEnvString = PR_GetEnv("EXPAT");
+    char* theEnvString = PR_GetEnv("NOEXPAT");
     if(theEnvString){
       if(('1'==theEnvString[0]) || ('Y'==theEnvString[0]) || ('y'==theEnvString[0])) {
-        theExpatState=PR_TRUE;  //this indicates that the EXPAT flag was found in the environment.
+        theExpatState=PR_FALSE;  //this indicates that the EXPAT flag was found in the environment.
       }
     }
 #else
 	// Check for the existence of a file called EXPAT in the current directory
 	nsSpecialSystemDirectory expatFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-	expatFile += "EXPAT";
+	expatFile += "NOEXPAT";
 	theExpatState = expatFile.Exists();
 #endif
     if(theExpatState) {
