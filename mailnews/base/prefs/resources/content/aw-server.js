@@ -72,14 +72,24 @@ function validate()
 }
 
 function onInit() {
-  var serverTypeRadioGroup = document.getElementById("servertype");
-  if (serverTypeRadioGroup) {
-    /* Ideally, I shouldn't be doing the following as querying for value 
-     * on radiogroup should return me the value of the radio item selected 
-     * by default (i.e., whose checked attribute is set to true). 
-     * See bugzilla bug 80399.
+  // Server type selection (pop3 or imap) is for mail accounts only
+  var isMailAccount = parent.GetPageData().accounttype.mailaccount;
+  if (isMailAccount && isMailAccount.value) {
+    var serverTypeRadioGroup = document.getElementById("servertype");
+    /* 
+     * Check to see if the radiogroup has any value. If there is no
+     * value, this must be the first time user visting this page in the
+     * account setup process. So, the default is set to pop3. If there 
+     * is a value (it's used automatically), user has already visited 
+     * page and server type selection is done. Once user visits the page, 
+     * the server type value from then on will persist (whether the selection 
+     * came from the default or the user action).
      */
-    serverTypeRadioGroup.value = serverTypeRadioGroup.selectedItem.getAttribute("value");
+    if (!serverTypeRadioGroup.value) {
+      // Set pop3 server type as default selection
+      var pop3RadioItem = document.getElementById("pop3");
+      serverTypeRadioGroup.selectedItem = pop3RadioItem;
+    }
   }
 
   gPrefsBundle = document.getElementById("bundle_prefs");

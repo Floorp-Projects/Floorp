@@ -46,9 +46,10 @@ Rights Reserved.
       <html>&incomingServerTypeDesc.label;</html>
       <separator class="thin"/>
       <box autostretch="never">
+        <!-- The initial value for the servertype radiogroup is set in onInit() -->
         <radiogroup id="servertype" wsm_persist="true">
-            <radio group="servertype" value="pop3" label="&popType.label;" checked="true"/>
-            <radio group="servertype" value="imap" label="&imapType.label;"/>
+            <radio group="servertype" value="pop3" id="pop3" label="&popType.label;" wsm_persist="true"/>
+            <radio group="servertype" value="imap" id="imap" label="&imapType.label;" wsm_persist="true"/>
         </radiogroup>
       </box>
       <separator/>
