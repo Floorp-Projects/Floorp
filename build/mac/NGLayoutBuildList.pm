@@ -204,8 +204,9 @@ sub Checkout()
 	#//
 	if ($main::pull{moz})
 	{
-		$session->checkout("mozilla/nsprpub",	$nsprpub_tag)		|| print "checkout of nsprpub failed";
-		$session->checkout("SeaMonkeyAll")							|| print "checkout of SeaMonkeyAll failed";
+		$session->checkout("mozilla/nsprpub",	$nsprpub_tag)				|| print "checkout of nsprpub failed";		
+		$session->checkout("mozilla/security",	"SeaMonkey_M14_BRANCH")		|| print "checkout of security failed";		
+		$session->checkout("SeaMonkeyAll")									|| print "checkout of SeaMonkeyAll failed";
 	}
 	elsif ($main::pull{runtime})
 	{
@@ -386,16 +387,21 @@ sub MakeResourceAliases()
 
 	# NOTE: this will change as we move the toolbar/appshell chrome files to a real place
 	 my($navigator_chrome_dir) = "$chrome_dir" . "Navigator";
+	 my($global_chrome_dir) = "$chrome_dir" . "Global";
+
 	_InstallResources(":mozilla:xpfe:browser:resources:content:MANIFEST",				"$navigator_chrome_dir:content:default");
 	_InstallResources(":mozilla:xpfe:browser:resources:skin:MANIFEST",					"$navigator_chrome_dir:skin:default");
 	_InstallResources(":mozilla:xpfe:browser:resources:locale:en-US:MANIFEST",			"$navigator_chrome_dir:locale:en-US:", 0);
-	_InstallResources(":mozilla:netwerk:security:browser:MANIFEST_CONTENT",				"$navigator_chrome_dir:content:default");
-	_InstallResources(":mozilla:netwerk:security:browser:MANIFEST_SKIN",				"$navigator_chrome_dir:skin:default");
+
+	#SECURITY
+	_InstallResources(":mozilla:extensions:psm-glue:res:content:MANIFEST_GLOBAL",		"$global_chrome_dir:content:default");
+	_InstallResources(":mozilla:extensions:psm-glue:res:content:MANIFEST_NAV",			"$navigator_chrome_dir:content:default");
+	_InstallResources(":mozilla:extensions:psm-glue:res:locale:en-US:MANIFEST",			"$global_chrome_dir:locale:en-US:");
+	_InstallResources(":mozilla:extensions:psm-glue:res:skin:MANIFEST",					"$navigator_chrome_dir:skin:default");
 
 	 my($netwerk_chrome_dir) = "$chrome_dir" . "Netwerk";
 	_InstallResources(":mozilla:netwerk:protocol:http:res:MANIFEST",					"$netwerk_chrome_dir:content:default:https");
 
-	 my($global_chrome_dir) = "$chrome_dir" . "Global";
 	_InstallResources(":mozilla:xpfe:global:resources:content:MANIFEST",				"$global_chrome_dir:content:default");
 	_InstallResources(":mozilla:xpfe:global:resources:content:mac:MANIFEST",			"$global_chrome_dir:content:default");
 	_InstallResources(":mozilla:xpfe:global:resources:skin:MANIFEST",					"$global_chrome_dir:skin:default");
@@ -810,6 +816,12 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:netwerk:cache:public:MANIFEST",					"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:netwerk:mime:public:MANIFEST",					"$distdirectory:netwerk:");
 
+	#SECURITY
+	_InstallFromManifest(":mozilla:extensions:psm-glue:public:MANIFEST",			"$distdirectory:idl:");
+
+	_InstallFromManifest(":mozilla:security:psm:lib:client:MANIFEST",				"$distdirectory:security:");
+	_InstallFromManifest(":mozilla:security:psm:lib:protocol:MANIFEST",				"$distdirectory:security:");
+	
 	#EXTENSIONS
 	_InstallFromManifest(":mozilla:extensions:cookie:MANIFEST",						"$distdirectory:cookie:");
 	_InstallFromManifest(":mozilla:extensions:wallet:public:MANIFEST",				"$distdirectory:wallet:");
@@ -1151,6 +1163,9 @@ sub BuildIDLProjects()
 	
 	BuildIDLProject(":mozilla:uriloader:macbuild:uriLoaderIDL.mcp",					"uriloader");
 
+	# psm glue
+#	BuildIDLProject(":mozilla:extensions:psm-glue:macbuild:psmglueIDL.mcp",			"psmglue");	
+	
 	BuildIDLProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp",				"libpref");
 	BuildIDLProject(":mozilla:modules:libutil:macbuild:libutilIDL.mcp",				"libutil");
 	BuildIDLProject(":mozilla:modules:libjar:macbuild:libjarIDL.mcp",				"libjar");
@@ -1449,6 +1464,12 @@ sub BuildNeckoProjects()
 	BuildOneProject(":mozilla:netwerk:streamconv:macbuild:streamconv.mcp",		"streamconv$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:netwerk:streamconv:macbuild:multiMixedConv.mcp",	"multiMixedConv$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
+	# security stuff
+#	BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMClient.mcp",			"PSMClient$D.o", "", 0, 0, 0);
+#	BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMProtocol.mcp",		"PSMProtocol$D.o", "", 0, 0, 0);	
+
+#	BuildOneProject(":mozilla:extensions:psm-glue:macbuild:PSMGlue.mcp",		"PSMGlue$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);	
+	
 	print("--- Necko projects complete ----\n");
 } # necko
 
