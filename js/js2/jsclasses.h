@@ -73,7 +73,8 @@ namespace JSClasses {
 
 
     typedef std::pair<String, JSFunction*> MethodEntry;
-    typedef std::vector<MethodEntry> JSMethods;
+    typedef std::vector<MethodEntry, gc_allocator<MethodEntry> > JSMethods;
+    typedef std::vector<JSFunction*, gc_allocator<JSFunction*> > JSFunctions;
 
     /**
      * Represents a class in the JavaScript 2 (ECMA 4) language.
@@ -92,8 +93,8 @@ namespace JSClasses {
         JSMethods mMethods;
         bool mHasGetters;           // tracks whether any getters/setters get assigned
         bool mHasSetters;
-        JSFunction **mGetters;       // allocated at 'complete()' time
-        JSFunction **mSetters;
+        JSFunctions mGetters;       // allocated at 'complete()' time
+        JSFunctions mSetters;
     public:
         JSClass(JSScope* scope, const String& name, JSClass* superClass = 0)
             :   JSType(name, superClass),
@@ -180,12 +181,12 @@ namespace JSClasses {
         
         bool hasGetter(uint32 index)
         {
-            return (mGetters && mGetters[index]);
+            return (index < mGetters.size() && mGetters[index]);
         }
         
         bool hasSetter(uint32 index)
         {
-            return (mSetters && mSetters[index]);
+            return (index < mSetters.size() && mSetters[index]);
         }
         
         JSFunction* getter(uint32 index)
@@ -270,8 +271,8 @@ namespace JSClasses {
         bool complete()
         {
             if (mHasGetters || mHasSetters) {
-                if (mHasGetters) mGetters = new JSFunction*[mSlotCount];
-                if (mHasSetters) mSetters = new JSFunction*[mSlotCount];
+                if (mHasGetters) mGetters.resize(mSlotCount);
+                if (mHasSetters) mSetters.resize(mSlotCount);
                 JSSlots::iterator end = mSlots.end();
                 for (JSSlots::iterator i = mSlots.begin(); i != end; i++) {
                     if (mHasGetters) mGetters[i->second.mIndex] = i->second.mGetter;
