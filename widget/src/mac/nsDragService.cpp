@@ -55,6 +55,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsCRT.h"
 #include "nsPrimitiveHelpers.h"
 #ifndef XP_MACOSX
 #include "nsILocalFileMac.h"
