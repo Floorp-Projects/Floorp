@@ -67,16 +67,30 @@
 // have been chosen to extend nsCookieAccess for convenience.
 static const nsCookieAccess ACCESS_SESSION = 8;
 
+// values for mCookiesLifetimePolicy
+// 0 == accept normally
+// 1 == ask before accepting
+// 2 == downgrade to session
+// 3 == limit lifetime to N days
+static const PRUint32 ACCEPT_NORMALLY = 0;
+static const PRUint32 ASK_BEFORE_ACCEPT = 1;
+static const PRUint32 ACCEPT_SESSION = 2;
+static const PRUint32 ACCEPT_FOR_N_DAYS = 3;
+
 static const PRBool kDefaultPolicy = PR_TRUE;
-static const char kCookiesAskPermission[] = "network.cookie.warnAboutCookies";
-#ifdef MOZ_PHOENIX
-static const char kCookiesLifetimeEnabled[] = "network.cookie.enableForCurrentSessionOnly";
-#else
-static const char kCookiesLifetimeEnabled[] = "network.cookie.lifetime.enabled";
-static const char kCookiesLifetimeCurrentSession[] = "network.cookie.lifetime.behavior";
+static const char kCookiesLifetimePolicy[] = "network.cookie.lifetimePolicy";
 static const char kCookiesLifetimeDays[] = "network.cookie.lifetime.days";
+static const char kCookiesAlwaysAcceptSession[] = "network.cookie.alwaysAcceptSessionCookies";
+#ifdef MOZ_MAIL_NEWS
 static const char kCookiesDisabledForMailNews[] = "network.cookie.disableCookieForMailNews";
 #endif
+
+static const char kCookiesPrefsMigrated[] = "network.cookie.prefsMigrated";
+// obsolete pref names for migration
+static const char kCookiesLifetimeEnabled[] = "network.cookie.lifetime.enabled";
+static const char kCookiesLifetimeBehavior[] = "network.cookie.lifetime.behavior";
+static const char kCookiesAskPermission[] = "network.cookie.warnAboutCookies";
+
 static const char kPermissionType[] = "cookie";
 
 // XXX these casts and constructs are horrible, but our nsInt64/nsTime
@@ -84,7 +98,7 @@ static const char kPermissionType[] = "cookie";
 #define USEC_PER_SEC   (nsInt64(1000000))
 #define NOW_IN_SECONDS (nsInt64(PR_Now()) / USEC_PER_SEC)
 
-#ifndef MOZ_PHOENIX
+#ifdef MOZ_MAIL_NEWS
 // returns PR_TRUE if URI appears to be the URI of a mailnews protocol
 static PRBool
 IsFromMailNews(nsIURI *aURI)
@@ -140,14 +154,40 @@ nsCookiePermission::Init()
   nsCOMPtr<nsIPrefBranchInternal> prefBranch =
       do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefBranch) {
-    prefBranch->AddObserver(kCookiesAskPermission, this, PR_FALSE);
-    prefBranch->AddObserver(kCookiesLifetimeEnabled, this, PR_FALSE);
-#ifndef MOZ_PHOENIX
-    prefBranch->AddObserver(kCookiesLifetimeCurrentSession, this, PR_FALSE);
+    prefBranch->AddObserver(kCookiesLifetimePolicy, this, PR_FALSE);
     prefBranch->AddObserver(kCookiesLifetimeDays, this, PR_FALSE);
+    prefBranch->AddObserver(kCookiesAlwaysAcceptSession, this, PR_FALSE);
+#ifdef MOZ_MAIL_NEWS
     prefBranch->AddObserver(kCookiesDisabledForMailNews, this, PR_FALSE);
 #endif
     PrefChanged(prefBranch, nsnull);
+
+    // migration code for original cookie prefs
+    PRBool migrated;
+    rv = prefBranch->GetBoolPref(kCookiesPrefsMigrated, &migrated);
+    if (NS_FAILED(rv) || !migrated) {
+      PRBool warnAboutCookies = PR_FALSE;
+      prefBranch->GetBoolPref(kCookiesAskPermission, &warnAboutCookies);
+
+      // if the user is using ask before accepting, we'll use that
+      if (warnAboutCookies)
+        prefBranch->SetIntPref(kCookiesLifetimePolicy, ASK_BEFORE_ACCEPT);
+        
+      PRBool lifetimeEnabled = PR_FALSE;
+      prefBranch->GetBoolPref(kCookiesLifetimeEnabled, &lifetimeEnabled);
+      
+      // if they're limiting lifetime and not using the prompts, use the 
+      // appropriate limited lifetime pref
+      if (lifetimeEnabled && !warnAboutCookies) {
+        PRInt32 lifetimeBehavior;
+        prefBranch->GetIntPref(kCookiesLifetimeBehavior, &lifetimeBehavior);
+        if (lifetimeBehavior)
+          prefBranch->SetIntPref(kCookiesLifetimePolicy, ACCEPT_FOR_N_DAYS);
+        else
+          prefBranch->SetIntPref(kCookiesLifetimePolicy, ACCEPT_SESSION);
+      }
+      prefBranch->SetBoolPref(kCookiesPrefsMigrated, PR_TRUE);
+    }
   }
 
   return NS_OK;
@@ -161,24 +201,20 @@ nsCookiePermission::PrefChanged(nsIPrefBranch *aPrefBranch,
 
 #define PREF_CHANGED(_P) (!aPref || !strcmp(aPref, _P))
 
-  if (PREF_CHANGED(kCookiesAskPermission) &&
-      NS_SUCCEEDED(aPrefBranch->GetBoolPref(kCookiesAskPermission, &val)))
-    mCookiesAskPermission = val;
-
-  if (PREF_CHANGED(kCookiesLifetimeEnabled) &&
-      NS_SUCCEEDED(aPrefBranch->GetBoolPref(kCookiesLifetimeEnabled, &val)))
-    mCookiesLifetimeEnabled = val;
-
-#ifndef MOZ_PHOENIX
-  if (PREF_CHANGED(kCookiesLifetimeCurrentSession) &&
-      NS_SUCCEEDED(aPrefBranch->GetIntPref(kCookiesLifetimeCurrentSession, &val)))
-    mCookiesLifetimeCurrentSession = (val == 0);
+  if (PREF_CHANGED(kCookiesLifetimePolicy) &&
+      NS_SUCCEEDED(aPrefBranch->GetIntPref(kCookiesLifetimePolicy, &val)))
+    mCookiesLifetimePolicy = val;
 
   if (PREF_CHANGED(kCookiesLifetimeDays) &&
       NS_SUCCEEDED(aPrefBranch->GetIntPref(kCookiesLifetimeDays, &val)))
     // save cookie lifetime in seconds instead of days
     mCookiesLifetimeSec = val * 24 * 60 * 60;
 
+  if (PREF_CHANGED(kCookiesAlwaysAcceptSession) &&
+      NS_SUCCEEDED(aPrefBranch->GetBoolPref(kCookiesAlwaysAcceptSession, &val)))
+    mCookiesAlwaysAcceptSession = val;
+
+#ifdef MOZ_MAIL_NEWS
   if (PREF_CHANGED(kCookiesDisabledForMailNews) &&
       NS_SUCCEEDED(aPrefBranch->GetBoolPref(kCookiesDisabledForMailNews, &val)))
     mCookiesDisabledForMailNews = val;
@@ -203,7 +239,7 @@ nsCookiePermission::CanAccess(nsIURI         *aURI,
                               nsIChannel     *aChannel,
                               nsCookieAccess *aResult)
 {
-#ifndef MOZ_PHOENIX
+#ifdef MOZ_MAIL_NEWS
   // disable cookies in mailnews if user's prefs say so
   if (mCookiesDisabledForMailNews) {
     //
@@ -242,7 +278,7 @@ nsCookiePermission::CanAccess(nsIURI         *aURI,
       return NS_OK;
     }
   }
-#endif // MOZ_PHOENIX
+#endif // MOZ_MAIL_NEWS
   
   // finally, check with permission manager...
   nsresult rv = mPermMgr->TestPermission(aURI, kPermissionType, (PRUint32 *) aResult);
@@ -282,7 +318,6 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
 
   *aResult = kDefaultPolicy;
 
-  nsresult rv;
   PRUint32 perm;
   mPermMgr->TestPermission(aURI, kPermissionType, &perm);
   switch (perm) {
@@ -301,33 +336,27 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
     // the permission manager has nothing to say about this cookie -
     // so, we apply the default prefs to it.
     NS_ASSERTION(perm == nsIPermissionManager::UNKNOWN_ACTION, "unknown permission");
-
-    // check cookie lifetime pref, and limit lifetime if required.
-    // we only want to do this if the cookie isn't going to be expired anyway.
-    nsInt64 delta;
-    if (!*aIsSession) {
-      nsInt64 currentTime = NOW_IN_SECONDS;
-      delta = nsInt64(*aExpiry) - currentTime;
-
-      if (mCookiesLifetimeEnabled && delta > nsInt64(0)) {
-#ifdef MOZ_PHOENIX
-        // limit lifetime to session
-        *aIsSession = PR_TRUE;
-#else
-        if (mCookiesLifetimeCurrentSession) {
-          // limit lifetime to session
-          *aIsSession = PR_TRUE;
-        } else if (delta > mCookiesLifetimeSec) {
-          // limit lifetime to specified time
-          delta = mCookiesLifetimeSec;
-          *aExpiry = currentTime + mCookiesLifetimeSec;
-        }
-#endif
-      }
+    
+    // now we need to figure out what type of accept policy we're dealing with
+    // if we accept cookies normally, just bail and return
+    if (mCookiesLifetimePolicy == ACCEPT_NORMALLY) {
+      *aResult = PR_TRUE;
+      return NS_OK;
     }
-
+    
+    // declare this here since it'll be used in all of the remaining cases
+    nsInt64 currentTime = NOW_IN_SECONDS;
+    nsInt64 delta = nsInt64(*aExpiry) - currentTime;
+    
     // check whether the user wants to be prompted
-    if (mCookiesAskPermission) {
+    if (mCookiesLifetimePolicy == ASK_BEFORE_ACCEPT) {
+      // if it's a session cookie and the user wants to accept these 
+      // without asking, just accept the cookie and return
+      if (*aIsSession && mCookiesAlwaysAcceptSession) {
+        *aResult = PR_TRUE;
+        return NS_OK;
+      }
+      
       // default to rejecting, in case the prompting process fails
       *aResult = PR_FALSE;
 
@@ -352,6 +381,7 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
 
       // we don't cache the cookiePromptService - it's not used often, so not
       // worth the memory.
+      nsresult rv;
       nsCOMPtr<nsICookiePromptService> cookiePromptService =
           do_GetService(NS_COOKIEPROMPTSERVICE_CONTRACTID, &rv);
       if (NS_FAILED(rv)) return rv;
@@ -403,6 +433,18 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
             break;
           default:
             break;
+        }
+      }
+    } else {
+      // we're not prompting, so we must be limiting the lifetime somehow
+      // if it's a session cookie, we do nothing
+      if (!*aIsSession && delta > nsInt64(0)) {
+        if (mCookiesLifetimePolicy == ACCEPT_SESSION) {
+          // limit lifetime to session
+          *aIsSession = PR_TRUE;
+        } else if (delta > mCookiesLifetimeSec) {
+          // limit lifetime to specified time
+          *aExpiry = currentTime + mCookiesLifetimeSec;
         }
       }
     }

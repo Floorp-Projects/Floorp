@@ -35,8 +35,8 @@
   <script type="application/x-javascript">
   <![CDATA[
   var panel = "chrome://cookie/content/pref-cookies.xul";
-  var _elementIDs = ["networkCookieBehaviour", "networkWarnAboutCookies",
-                     "lifetimeEnabled", "lifetimeBehavior", "lifetimeDays"];
+  var _elementIDs = ["networkCookieBehavior", "networkCookieLifetime", 
+                     "alwaysAcceptSession", "lifetimeDays"];
 
   function init()
   {
@@ -48,52 +48,44 @@
       var p3pRadioButton = document.getElementById("p3pRadioButton");
       p3pRadioButton.removeAttribute("hidden");
     }
-
   }
 
   const cookies_disabled = "2";
   const cookies_no_third_party = "1";
   const cookies_p3p = "3";
   const cookies_enabled = "0";
+  
+  const accept_normally = "0";
+  const accept_session = "2";
+  const accept_for_n_days = "3";
+  const ask_before_accepting = "1";
 
   function setDisables(setFocus)
   {
-    var cookieBehavior = document.getElementById("networkCookieBehaviour");
+    var cookieBehavior = document.getElementById("networkCookieBehavior");
 
     var p3pButton = document.getElementById("p3pDialog");
     p3pButton.disabled = (cookieBehavior.value != cookies_p3p);
     if (parent.hPrefWindow.getPrefIsLocked(p3pButton.getAttribute("prefstring")) )
       p3pButton.disabled = true;
 
-    // if mailnews is installed then we will have networkCookieBehaviorForMailNews checkbox
-    if (document.getElementById('networkDisableCookieForMailNews'))
-    {
-      var networkDisableCookieForMailNews = document.getElementById("networkDisableCookieForMailNews");
-      networkDisableCookieForMailNews.disabled = cookieBehavior.value == cookies_disabled; 
+    var cookieLifetime = document.getElementById("networkCookieLifetime");
+    var lifetimeDays = document.getElementById("lifetimeDays");
+    var alwaysAcceptSession = document.getElementById("alwaysAcceptSession");
+    if (cookieLifetime.value == ask_before_accepting) {
+      lifetimeDays.disabled = true;
+      alwaysAcceptSession.disabled = false;
+    } else if (cookieLifetime.value == accept_for_n_days) {
+      lifetimeDays.disabled = false;
+      alwaysAcceptSession.disabled = true;      
+    } else {
+      lifetimeDays.disabled = true;
+      alwaysAcceptSession.disabled = true;
     }
 
-    var warnCheckbox = document.getElementById("networkWarnAboutCookies");
-    warnCheckbox.disabled = (cookieBehavior.value == cookies_disabled);
-    if (parent.hPrefWindow.getPrefIsLocked(warnCheckbox.getAttribute("prefstring")) )
-      warnCheckbox.disabled = true;
-
-    var lifetimeCheckbox  = document.getElementById("lifetimeEnabled");
-    lifetimeCheckbox.disabled = (cookieBehavior.value == cookies_disabled);
-    if (parent.hPrefWindow.getPrefIsLocked(lifetimeCheckbox.getAttribute("prefstring")) )
-      lifetimeCheckbox.disabled = true;
-
-    var lifetimeEnabled = document.getElementById("lifetimeEnabled");
-    var lifetimeBehavior = document.getElementById("lifetimeBehavior");
-    var lifetimeDays = document.getElementById("lifetimeDays");
-
-    lifetimeBehavior.disabled = (cookieBehavior.value == cookies_disabled) ||
-                                !lifetimeEnabled.checked;
-    if (parent.hPrefWindow.getPrefIsLocked(lifetimeBehavior.getAttribute("prefstring")) )
-      lifetimeBehavior.disabled = true;
-
-    lifetimeDays.disabled = (cookieBehavior.value == cookies_disabled) ||
-                            !lifetimeEnabled.checked ||
-                            (lifetimeBehavior.value != 1);
+    if (parent.hPrefWindow.getPrefIsLocked(alwaysAcceptSession.getAttribute("prefstring")) )
+      alwaysAcceptSession.disabled = true;
+      
     if (parent.hPrefWindow.getPrefIsLocked(lifetimeDays.getAttribute("prefstring")) )
       lifetimeDays.disabled = true;
     
@@ -103,8 +95,9 @@
   ]]>
   </script>
 
-    <description>&cookieDetails;</description>
-    <radiogroup id="networkCookieBehaviour"
+  <groupbox id="networkCookieAcceptPolicy">
+    <caption label="&cookiePolicy.label;"/>
+    <radiogroup id="networkCookieBehavior"
                 prefstring="network.cookie.cookieBehavior">
       <radio value="2" label="&disableCookies.label;"
              accesskey="&disableCookies.accesskey;" oncommand="setDisables(false);"/>
@@ -120,32 +113,36 @@
       <radio value="0" label="&accAllCookiesRadio.label;"
              accesskey="&accAllCookiesRadio.accesskey;" oncommand="setDisables(false);"/>
     </radiogroup>
-    <separator id="networkCookieBehaviorSeparator"/>
-    <vbox align="start">
-      <checkbox id="networkWarnAboutCookies" label="&warnAboutCookies.label;" accesskey="&warnAboutCookies.accesskey;"
-                prefstring="network.cookie.warnAboutCookies"/>
-      <checkbox id="lifetimeEnabled" label="&limitLifetime.label;" accesskey="&limitLifetime.accesskey;"
-                prefstring="network.cookie.lifetime.enabled"
-                oncommand="setDisables(false);"/>
-      <hbox class="indent">
-        <radiogroup id="lifetimeBehavior" prefstring="network.cookie.lifetime.behavior">
-          <radio value="0" label="&current.label;" 
-                 accesskey="&current.accesskey;"
-                 oncommand="setDisables(false);"/>
-          <hbox>
-            <radio value="1" accesskey="&days.accesskey;"
-                    oncommand="setDisables(true);"/>
-            <textbox id="lifetimeDays" pref="true" size="4"
-                     preftype="int" prefstring="network.cookie.lifetime.days"/>
-            <description>&days.label;</description>
-            </hbox>
-         </radiogroup>
+  </groupbox>
+  <groupbox id="networkCookieLifetimePolicy">
+    <caption label="&cookieLifetimePolicy.label;"/>
+    <radiogroup id="networkCookieLifetime"
+                prefstring="network.cookie.lifetimePolicy">
+      <radio value="0" label="&acceptNormally.label;" accesskey="&acceptNormally.accesskey;" oncommand="setDisables(false);"/>
+      <radio value="2" label="&acceptForSession.label;" accesskey="&acceptForSession.accesskey;" oncommand="setDisables(false);"/>
+      <hbox align="center">
+        <radio value="3" accesskey="&acceptforNDays.accesskey;" label="&acceptforNDays.label;"
+               oncommand="setDisables(true);"/>
+        <textbox id="lifetimeDays" pref="true" size="4"
+                 preftype="int" prefstring="network.cookie.lifetime.days"/>
+        <label value="&days.label;" for="lifetimeDays"/>
       </hbox>
-   </vbox>
-   <separator/>
-   <hbox pack="end">
-     <button label="&viewCookies.label;" accesskey="&viewCookies.accesskey;" oncommand="viewCookies();"
+      <hbox>
+        <radio value="1" label="&warnAboutCookies.label;" 
+               accesskey="&warnAboutCookies.accesskey;" oncommand="setDisables(false);"/>
+        <checkbox id="alwaysAcceptSession" label="&forCurrentSession.label;" 
+                  accesskey="&forCurrentSession.accesskey;"
+                  prefstring="network.cookie.alwaysAcceptSessionCookies"/>
+      </hbox>
+    </radiogroup>
+  </groupbox>
+  <groupbox id="manageCookiesAndSites">
+    <caption label="&manageCookies.label;"/>
+    <description>&manageCookiesDescription.label;</description>
+    <hbox pack="end">
+      <button label="&viewCookies.label;" accesskey="&viewCookies.accesskey;" oncommand="viewCookies();"
 		     id="viewCookieButton"
 		     prefstring="pref.advanced.cookies.disable_button.view_cookies"/>
-   </hbox>
+    </hbox>
+  </groupbox>
 </page>
