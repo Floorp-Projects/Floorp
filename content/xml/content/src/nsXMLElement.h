@@ -51,7 +51,7 @@ class nsIEventListenerManager;
 class nsIURI;
 class nsIDocShell;
 
-class nsXMLElement : public nsGenericContainerElement,
+class nsXMLElement : public nsGenericElement,
                      public nsIDOMElement
 {
 public:
@@ -62,10 +62,10 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericElement::)
 
   // nsIXMLContent
   NS_IMETHOD MaybeTriggerAutoLink(nsIDocShell *aShell);

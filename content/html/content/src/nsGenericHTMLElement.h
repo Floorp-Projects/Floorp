@@ -73,7 +73,7 @@ struct nsSize;
 /**
  * A common superclass for HTML elements
  */
-class nsGenericHTMLElement : public nsGenericContainerElement
+class nsGenericHTMLElement : public nsGenericElement
 {
 public:
 #ifdef GATHER_ELEMENT_USEAGE_STATISTICS
@@ -97,8 +97,8 @@ public:
   nsresult DOMQueryInterface(nsIDOMHTMLElement *aElement, REFNSIID aIID,
                              void **aInstancePtr);
 
-  // From nsGenericContainerElement
-  nsresult CopyInnerTo(nsGenericContainerElement* aDest, PRBool aDeep);
+  // From nsGenericElement
+  nsresult CopyInnerTo(nsGenericElement* aDest, PRBool aDeep);
 
   // Implementation for nsIDOMNode
   NS_METHOD GetNodeName(nsAString& aNodeName);

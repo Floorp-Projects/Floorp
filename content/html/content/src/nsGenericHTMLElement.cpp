@@ -186,7 +186,7 @@ nsGenericHTMLElement::Init(nsINodeInfo *aNodeInfo)
 {
   GEUS_ElementCreated(aNodeInfo);
 
-  return nsGenericContainerElement::Init(aNodeInfo);
+  return nsGenericElement::Init(aNodeInfo);
 }
 
 #endif
@@ -230,7 +230,7 @@ static NS_DEFINE_CID(kCSSOMFactoryCID, NS_CSSOMFACTORY_CID);
 
 NS_INTERFACE_MAP_BEGIN(nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIHTMLContent)
-NS_INTERFACE_MAP_END_INHERITING(nsGenericContainerElement)
+NS_INTERFACE_MAP_END_INHERITING(nsGenericElement)
  
 
 nsresult
@@ -271,8 +271,7 @@ nsGenericHTMLElement::Shutdown()
 }
 
 nsresult
-nsGenericHTMLElement::CopyInnerTo(nsGenericContainerElement* aDst,
-                                  PRBool aDeep)
+nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst, PRBool aDeep)
 {
   nsresult rv = NS_OK;
   PRInt32 i, count = GetAttrCount();
@@ -418,7 +417,7 @@ nsGenericHTMLElement::GetElementsByTagName(const nsAString& aTagname,
   if (mNodeInfo && mNodeInfo->NamespaceEquals(kNameSpaceID_None))
     ToLowerCase(tagName);
 
-  return nsGenericContainerElement::GetElementsByTagName(tagName, aReturn);
+  return nsGenericElement::GetElementsByTagName(tagName, aReturn);
 }
 
 // Implementation for nsIDOMHTMLElement
@@ -1275,8 +1274,7 @@ nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 {
   PRBool doNothing = aDocument == mDocument; // short circuit useless work
 
-  nsGenericContainerElement::SetDocument(aDocument, aDeep,
-                                         aCompileEventHandlers);
+  nsGenericElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
 
   ReparseStyleAttribute();
   if (!doNothing && mDocument) {
@@ -1742,8 +1740,7 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
     }
   }
 
-  return nsGenericContainerElement::UnsetAttr(aNameSpaceID, aAttribute,
-                                              aNotify);
+  return nsGenericElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
 }
 
 nsresult
@@ -1983,7 +1980,7 @@ nsGenericHTMLElement::GetBaseURI() const
     return nsnull;
   }
 
-  return nsGenericContainerElement::GetBaseURI();
+  return nsGenericElement::GetBaseURI();
 }
 
 void
