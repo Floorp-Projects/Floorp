@@ -41,7 +41,7 @@ CopyListener::CopyListener(void)
 
 CopyListener::~CopyListener(void) 
 {
-  this;
+  //this;
 }
 
 nsresult
