@@ -13,6 +13,7 @@ nsIDOMCSSStyleRule.idl
 nsIDOMCSSStyleSheet.idl
 nsIDOMCSSUnknownRule.idl
 nsIDOMCSSValue.idl
+nsIDOMCSSValueList.idl
 nsIDOMDocumentCSS.idl
 nsIDOMElementCSSInlineStyle.idl
 nsIDOMRect.idl

@@ -1007,6 +1007,32 @@ public:
 };
 
 
+// CSSValueList helper
+
+class nsCSSValueListSH : public nsArraySH
+{
+protected:
+  nsCSSValueListSH(nsDOMClassInfoData* aData) : nsArraySH(aData)
+  {
+  }
+
+  virtual ~nsCSSValueListSH()
+  {
+  }
+
+  // Override nsArraySH::GetItemAt() since our list isn't a
+  // nsIDOMNodeList
+  virtual nsresult GetItemAt(nsISupports *aNative, PRUint32 aIndex,
+                             nsISupports **aResult);
+
+public:
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsCSSValueListSH(aData);
+  }
+};
+
+
 // CSSStyleDeclaration helper
 
 class nsCSSStyleDeclSH : public nsStringArraySH

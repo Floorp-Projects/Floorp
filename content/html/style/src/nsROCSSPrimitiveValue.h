@@ -62,7 +62,7 @@ public:
   NS_DECL_NSIDOMCSSVALUE
 
   // nsROCSSPrimitiveValue
-  nsROCSSPrimitiveValue(nsISupports *aOwner, float aP2T);
+  nsROCSSPrimitiveValue(float aP2T);
   virtual ~nsROCSSPrimitiveValue();
 
   void SetNumber(float aValue)
@@ -237,8 +237,6 @@ private:
     PRUnichar*      mString;
   } mValue;
   
-  nsISupports *mOwner;
-
   float mT2P;
 };
 

@@ -254,6 +254,8 @@ enum nsDOMClassInfoID {
 
   eDOMClassInfo_RangeException_id,
 
+  eDOMClassInfo_CSSValueList_id,
+
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };

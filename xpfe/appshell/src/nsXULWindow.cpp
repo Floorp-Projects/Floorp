@@ -1120,6 +1120,15 @@ NS_IMETHODIMP nsXULWindow::LoadIconFromXUL()
     GetWindowDOMElement(getter_AddRefs(windowElement));
     NS_ENSURE_TRUE(windowElement, NS_ERROR_FAILURE);
 
+    // XXX The following code is being #if 0'd out since it
+    // basically does nothing until bug 70974 is fixed.
+    // After bug 70974 is fixed, we will also need to implement
+    // computed style for that property before this will
+    // be of any use.  And even then, it will *still* 
+    // do nothing on platforms which don't implement 
+    // nsWindow::SetIcon(). See bug 76211 for that.
+    // Also see bug 57576 and its dependency tree.
+#if 0
     // Get document in which this <window> is contained.
     nsCOMPtr<nsIDOMDocument> document;
     windowElement->GetOwnerDocument(getter_AddRefs(document));
@@ -1147,29 +1156,23 @@ NS_IMETHODIMP nsXULWindow::LoadIconFromXUL()
     // Whew.  Now get "list-style-image" property value.
     nsAutoString windowIcon;
     windowIcon.Assign(NS_LITERAL_STRING("-moz-window-icon"));
-    nsAutoString value;
-    cssDecl->GetPropertyValue(windowIcon, value);
+    nsAutoString icon;
+    cssDecl->GetPropertyValue(windowIcon, icon);
+#endif
 
-    // If no icon specified via -moz-window-icon, then use id= attr.
-    if ( value.IsEmpty() )
-    {
-        value.Assign(NS_LITERAL_STRING("resource:///chrome/icons/default/"));
-        nsAutoString attr;
-        attr.Assign(NS_LITERAL_STRING("id"));
-        nsAutoString id;
-        windowElement->GetAttribute(attr,id);
-        if(!id.IsEmpty())
-        {
-            value.Append(id);
-        }
-        else
-        {
-            value.Append(NS_LITERAL_STRING("default"));
-        }
+    nsAutoString icon;
+    icon.Assign(NS_LITERAL_STRING("resource:///chrome/icons/default/"));
+
+    nsAutoString id;
+    windowElement->GetAttribute(NS_LITERAL_STRING("id"), id);
+
+    if (id.IsEmpty()) {
+        id.Assign(NS_LITERAL_STRING("default"));
     }
-    
-    // Finally, set the icon using that attribute value.
-    mWindow->SetIcon(value);
+
+    icon.Append(id);
+
+    mWindow->SetIcon(icon);
     return NS_OK;
 }
 

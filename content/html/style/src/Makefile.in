@@ -68,6 +68,7 @@ CPPSRCS		= \
 		nsHTMLCSSStyleSheet.cpp \
 		nsInspectorCSSUtils.cpp \
 		nsROCSSPrimitiveValue.cpp \
+		nsDOMCSSValueList.cpp \
 		nsDOMCSSRect.cpp \
 		nsDOMCSSRGBColor.cpp \
 		$(NULL)

@@ -78,6 +78,7 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsHTMLCSSStyleSheet.obj 	\
 	.\$(OBJDIR)\nsDOMCSSAttrDeclaration.obj	\
 	.\$(OBJDIR)\nsDOMCSSDeclaration.obj 	\
+	.\$(OBJDIR)\nsDOMCSSValueList.obj 		\
 	.\$(OBJDIR)\nsComputedDOMStyle.obj 	\
 	.\$(OBJDIR)\nsInspectorCSSUtils.obj 	\
 	.\$(OBJDIR)\nsROCSSPrimitiveValue.obj 	\
