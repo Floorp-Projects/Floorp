@@ -91,26 +91,7 @@ EXPORT_RESOURCE_SAMPLES_1 = \
 	moreCols.gif \
 	moreCols_dis.gif \
 	moreCols_mo.gif \
-	n-box-navbar.gif \
-	n-box.gif \
-	navbar-bg-begincap.gif \
-	navbar-bg.gif \
-	navbar-endcap.gif \
-	opentwisty-selected.gif \
-	opentwisty.gif \
-	otherbutton28-bg-active.gif \
-	otherbutton28-bg-hover.gif \
-	print-clicked.gif \
-	print-disabled.gif \
-	print-hover.gif \
-	print.gif \
-	progressmeter-busy.gif \
-	question-icon.gif \
-	radio.css \
-	return-disabled.gif \
-	return.gif
-	taskbar-addressbook-clicked.gif \
-	taskbar-navigator-clicked.gif \
+	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_2 = \
 	arrow-down.gif \
@@ -177,6 +158,29 @@ EXPORT_RESOURCE_SAMPLES_2 = \
 	taskbar-tab-minimized.gif \
 	taskbar-tab-trans.gif \
 	taskbar-tab.gif \
+	$(NULL)
+
+EXPORT_RESOURCE_SAMPLES_3 = \
+	n-box-navbar.gif \
+	n-box.gif \
+	navbar-bg-begincap.gif \
+	navbar-bg.gif \
+	navbar-endcap.gif \
+	opentwisty-selected.gif \
+	opentwisty.gif \
+	otherbutton28-bg-active.gif \
+	otherbutton28-bg-hover.gif \
+	print-clicked.gif \
+	print-disabled.gif \
+	print-hover.gif \
+	print.gif \
+	progressmeter-busy.gif \
+	question-icon.gif \
+	radio.css \
+	return-disabled.gif \
+	return.gif \
+	taskbar-addressbook-clicked.gif \
+	taskbar-navigator-clicked.gif \
 	tb-grippy-down-clicked.png \
 	tb-grippy-down.png \
 	tb-grippy-up-clicked.png \
@@ -199,7 +203,9 @@ include $(topsrcdir)/config/rules.mk
 install::
 	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES_1)) $(SAMPLES_DIR)
 	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES_2)) $(SAMPLES_DIR)
+	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES_3)) $(SAMPLES_DIR)
 
 distclean clean clobber realclean clobber_all::
 	rm -f $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES_1))
 	rm -f $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES_2))
+	rm -f $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES_3))
