@@ -621,7 +621,7 @@ nsDocShell::LoadURI(nsIURI * aURI,
                         if (parentBusy & BUSY_FLAGS_BUSY) {
                             // The parent is still busy. We most likely got here
                             // through onLoadHandler. 
-                            loadType = LOAD_BYPASS_HISTORY;
+                            loadType = LOAD_NORMAL_REPLACE;
                             shEntry = nsnull;
                         }
                     }   
@@ -654,7 +654,7 @@ nsDocShell::LoadURI(nsIURI * aURI,
                     if (((parentBusy & BUSY_FLAGS_BUSY) || (selfBusy & BUSY_FLAGS_BUSY)) && shEntry) {
                         // we don't want this additional load to get into history, since this
                         // load will automatially happen everytime, no matter how the page is loaded.
-                        loadType = LOAD_BYPASS_HISTORY;
+                        loadType = LOAD_NORMAL_REPLACE;
                         shEntry = nsnull; 
                     }
                 }
