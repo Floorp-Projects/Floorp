@@ -88,6 +88,8 @@ pref("browser.download.manager.showWhenStarting", true);
 pref("browser.download.manager.useWindow", true);
 pref("browser.download.manager.closeWhenDone", true);
 pref("browser.download.manager.openDelay", 500);
+pref("browser.download.manager.focusWhenStarting", false);
+pref("browser.download.manager.flashCount", 2);
 
 // pointer to the default engine name
 pref("browser.search.defaultenginename", "chrome://browser-region/locale/region.properties");
