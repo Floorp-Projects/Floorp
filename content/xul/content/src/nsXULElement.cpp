@@ -4732,34 +4732,40 @@ nsresult nsXULElement::MakeHeavyweight()
     nsXULPrototypeElement* proto = mPrototype;
     mPrototype = nsnull;
 
-    if (proto->mNumAttributes == 0)
-        return NS_OK;
+    if (proto->mNumAttributes > 0) {
+      nsXULAttributes *attrs = mSlots->mAttributes;
+      for (PRInt32 i = 0; i < proto->mNumAttributes; ++i) {
+          nsXULPrototypeAttribute* protoattr = &(proto->mAttributes[i]);
 
-    nsXULAttributes *attrs = mSlots->mAttributes;
-    for (PRInt32 i = 0; i < proto->mNumAttributes; ++i) {
-        nsXULPrototypeAttribute* protoattr = &(proto->mAttributes[i]);
+          // We might have a local value for this attribute, in which case
+          // we don't want to copy the prototype's value.
+          // XXXshaver Snapshot the local attrs, so we don't search the ones we
+          // XXXshaver just appended from the prototype!
+          if (hadAttributes && FindLocalAttribute(protoattr->mNodeInfo))
+              continue;
 
-        // We might have a local value for this attribute, in which case
-        // we don't want to copy the prototype's value.
-        // XXXshaver Snapshot the local attrs, so we don't search the ones we
-        // XXXshaver just appended from the prototype!
-        if (hadAttributes && FindLocalAttribute(protoattr->mNodeInfo))
-            continue;
+          nsAutoString valueStr;
+          protoattr->mValue.GetValue(valueStr);
 
-        nsAutoString valueStr;
-        protoattr->mValue.GetValue(valueStr);
+          nsXULAttribute* attr;
+          rv = nsXULAttribute::Create(NS_STATIC_CAST(nsIStyledContent*, this),
+                                      protoattr->mNodeInfo,
+                                      valueStr,
+                                      &attr);
 
-        nsXULAttribute* attr;
-        rv = nsXULAttribute::Create(NS_STATIC_CAST(nsIStyledContent*, this),
-                                    protoattr->mNodeInfo,
-                                    valueStr,
-                                    &attr);
+          if (NS_FAILED(rv)) return rv;
 
-        if (NS_FAILED(rv)) return rv;
-
-        // transfer ownership of the nsXULAttribute object
-        attrs->AppendElement(attr);
+          // transfer ownership of the nsXULAttribute object
+          attrs->AppendElement(attr);
+      }
     }
+
+    if (proto->mType == nsXULPrototypeNode::eType_RefCounted_Element) {
+      proto->mRefCnt--;
+      if (proto->mRefCnt == 0)
+        delete proto;
+    }
+    
 
     return NS_OK;
 }
