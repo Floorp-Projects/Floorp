@@ -44,26 +44,23 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "prprf.h"
-#include <iostream.h>
-#include <iomanip.h>   // needed for libstdc++-v3
 #include "nsWeakReference.h"
 
 static nsIObserverService *anObserverService = NULL;
 
 static void testResult( nsresult rv ) {
     if ( NS_SUCCEEDED( rv ) ) {
-        cout << "...ok" << endl;
+        printf("...ok\n");
     } else {
-        cout << "...failed, rv=0x" << hex << (int)rv << endl;
+        printf("...failed, rv=0x%x\n", (int)rv);
     }
     return;
 }
 
-extern ostream &operator<<( ostream &s, nsString &str ) {
+void printString(nsString &str) {
     const char *cstr = ToNewCString(str);
-    s << cstr;
+    printf("%s", cstr);
     delete [] (char*)cstr;
-    return s;
 }
 
 class TestObserver : public nsIObserver, public nsSupportsWeakReference {
@@ -92,10 +89,14 @@ TestObserver::Observe( nsISupports     *aSubject,
     		The annoying double-cast below is to work around an annoying bug in
     		the compiler currently used on wensleydale.  This is a test.
     	*/
-    cout << mName << " has observed something: subject@" << (void*)aSubject
-         << " name=" << NS_REINTERPRET_CAST(TestObserver*, NS_REINTERPRET_CAST(void*, aSubject))->mName
-         << " aTopic=" << topic.get()
-         << " someData=" << data << endl;
+    printString(mName);
+    printf(" has observed something: subject@%p", (void*)aSubject);
+    printf(" name=");
+    printString(NS_REINTERPRET_CAST(TestObserver*, NS_REINTERPRET_CAST(void*, aSubject))->mName);
+    printf(" aTopic=%s", topic.get());
+    printf(" someData=");
+    printString(data);
+    printf("\n");
     return NS_OK;
 }
 
@@ -117,62 +118,64 @@ int main(int argc, char *argv[])
         nsIObserver *bObserver = new TestObserver(NS_LITERAL_STRING("Observer-B"));
         bObserver->AddRef();
             
-        cout << "Adding Observer-A as observer of topic-A..." << endl;
+        printf("Adding Observer-A as observer of topic-A...\n");
         rv = anObserverService->AddObserver(aObserver, topicA.get(), PR_FALSE);
         testResult(rv);
  
-        cout << "Adding Observer-B as observer of topic-A..." << endl;
+        printf("Adding Observer-B as observer of topic-A...\n");
         rv = anObserverService->AddObserver(bObserver, topicA.get(), PR_FALSE);
         testResult(rv);
  
-        cout << "Adding Observer-B as observer of topic-B..." << endl;
+        printf("Adding Observer-B as observer of topic-B...\n");
         rv = anObserverService->AddObserver(bObserver, topicB.get(), PR_FALSE);
         testResult(rv);
 
-        cout << "Testing Notify(observer-A, topic-A)..." << endl;
+        printf("Testing Notify(observer-A, topic-A)...\n");
         rv = anObserverService->NotifyObservers( aObserver,
                                    topicA.get(),
                                    NS_LITERAL_STRING("Testing Notify(observer-A, topic-A)").get() );
         testResult(rv);
 
-        cout << "Testing Notify(observer-B, topic-B)..." << endl;
+        printf("Testing Notify(observer-B, topic-B)...\n");
         rv = anObserverService->NotifyObservers( bObserver,
                                    topicB.get(),
                                    NS_LITERAL_STRING("Testing Notify(observer-B, topic-B)").get() );
         testResult(rv);
  
-        cout << "Testing EnumerateObserverList (for topic-A)..." << endl;
+        printf("Testing EnumerateObserverList (for topic-A)...\n");
         nsCOMPtr<nsISimpleEnumerator> e;
         rv = anObserverService->EnumerateObservers(topicA.get(), getter_AddRefs(e));
 
         testResult(rv);
 
-        cout << "Enumerating observers of topic-A..." << endl;
+        printf("Enumerating observers of topic-A...\n");
         if ( e ) {
           nsCOMPtr<nsIObserver> observer;
           PRBool loop = PR_TRUE;
           while( NS_SUCCEEDED(e->HasMoreElements(&loop)) && loop) 
           {
               e->GetNext(getter_AddRefs(observer));
-              cout << "Calling observe on enumerated observer "
-                   << NS_REINTERPRET_CAST(TestObserver*, NS_REINTERPRET_CAST(void*, observer.get()))->mName << "..." << endl;
+              printf("Calling observe on enumerated observer ");
+              printString(NS_REINTERPRET_CAST(TestObserver*,
+                                              NS_REINTERPRET_CAST(void*, observer.get()))->mName);
+              printf("...\n");
               rv = observer->Observe( observer, 
                                       topicA.get(), 
                                       NS_LITERAL_STRING("during enumeration").get() );
               testResult(rv);
           }
         }
-        cout << "...done enumerating observers of topic-A" << endl;
+        printf("...done enumerating observers of topic-A\n");
 
-        cout << "Removing Observer-A..." << endl;
+        printf("Removing Observer-A...\n");
         rv = anObserverService->RemoveObserver(aObserver, topicA.get());
         testResult(rv);
 
 
-        cout << "Removing Observer-B (topic-A)..." << endl;
+        printf("Removing Observer-B (topic-A)...\n");
         rv = anObserverService->RemoveObserver(bObserver, topicB.get());
         testResult(rv);
-        cout << "Removing Observer-B (topic-B)..." << endl;
+        printf("Removing Observer-B (topic-B)...\n");
         rv = anObserverService->RemoveObserver(bObserver, topicA.get());
         testResult(rv);
        

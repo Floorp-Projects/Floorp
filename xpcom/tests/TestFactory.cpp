@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <iostream.h>
 #include "TestFactory.h"
 #include "nsISupports.h"
 #include "nsIComponentManager.h"
@@ -63,7 +62,7 @@ public:
 NS_IMPL_ISUPPORTS1(TestClassImpl, ITestClass)
 
 void TestClassImpl::Test() {
-  cout << "hello, world!\n";
+  printf("hello, world!\n");
 }
 
 /**
@@ -135,7 +134,7 @@ int main(int argc, char **argv) {
       t->Test();
       t->Release();
     } else {
-      cout << "CreateInstance failed\n";
+      printf("CreateInstance failed\n");
     }
 
     t = NULL;
@@ -149,7 +148,7 @@ int main(int argc, char **argv) {
       t->Test();
       t->Release();
     } else {
-      cout << "Dynamic CreateInstance failed\n";
+      printf("Dynamic CreateInstance failed\n");
     }
   } // this scopes the nsCOMPtrs
   // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM

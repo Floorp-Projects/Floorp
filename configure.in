@@ -325,8 +325,8 @@ case "$target" in
             AC_MSG_ERROR([\$(CC) test failed.  You must have MS VC++ in your path to build.]) )
 
         AC_LANG_CPLUSPLUS
-        AC_TRY_COMPILE([#include <iostream.h>],
-            [ cout << "Hello World" << endl; ],,
+        AC_TRY_COMPILE([#include <new.h>],
+            [ unsigned *test = new unsigned(42); ],,
             AC_MSG_ERROR([\$(CXX) test failed.  You must have MS VC++ in your path to build.]) )
         AC_LANG_RESTORE
 

@@ -62,7 +62,6 @@ MODULE_NAME	= TransformiixModule
 CPPSRCS = XSLTProcessorModule.cpp
 LOBJS = ../source/base/Double.$(OBJ_SUFFIX) \
   ../source/base/List.$(OBJ_SUFFIX) \
-  ../source/base/SimpleErrorObserver.$(OBJ_SUFFIX) \
   ../source/base/txAtoms.$(OBJ_SUFFIX) \
   ../source/base/txExpandedNameMap.$(OBJ_SUFFIX) \
   ../source/base/txNamespaceMap.$(OBJ_SUFFIX) \

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <iostream.h>
 #include "nsTHashtable.h"
 #include "nsBaseHashtable.h"
 #include "nsDataHashtable.h"
@@ -52,13 +51,13 @@ class TestUniChar // for nsClassHashtable
 public:
   TestUniChar(PRUint32 aWord)
   {
-    cout << "    TestUniChar::TestUniChar() " << aWord << endl;
+    printf("    TestUniChar::TestUniChar() %u\n", aWord);
     mWord = aWord;
   }
 
   ~TestUniChar()
   {
-    cout << "    TestUniChar::~TestUniChar() " << mWord << endl;
+    printf("    TestUniChar::~TestUniChar() %u\n", mWord);
   }
 
   PRUint32 GetChar() const { return mWord; }
@@ -114,103 +113,103 @@ public:
 
 PLDHashOperator
 nsTEnumGo(EntityToUnicodeEntry* aEntry, void* userArg) {
-  cout << "  enumerated \"" << aEntry->mNode->mStr << "\" = " <<
-    aEntry->mNode->mUnicode << endl;
+  printf("  enumerated \"%s\" = %u\n", 
+         aEntry->mNode->mStr, aEntry->mNode->mUnicode);
 
   return PL_DHASH_NEXT;
 }
 
 PLDHashOperator
 nsTEnumStop(EntityToUnicodeEntry* aEntry, void* userArg) {
-  cout << "  enumerated \"" << aEntry->mNode->mStr << "\" = " <<
-    aEntry->mNode->mUnicode << endl;
+  printf("  enumerated \"%s\" = %u\n",
+         aEntry->mNode->mStr, aEntry->mNode->mUnicode);
 
   return PL_DHASH_REMOVE;
 }
 
 void
 testTHashtable(nsTHashtable<EntityToUnicodeEntry>& hash, PRUint32 numEntries) {
-  cout << "Filling hash with " << numEntries << " entries." << endl;
+  printf("Filling hash with %d entries.\n", numEntries);
 
   PRUint32 i;
   for (i = 0; i < numEntries; ++i) {
-    cout << "  Putting entry \"" << gEntities[i].mStr << "\"...";
+    printf("  Putting entry \"%s\"...", gEntities[i].mStr);
     EntityToUnicodeEntry* entry =
       hash.PutEntry(gEntities[i].mStr);
 
     if (!entry) {
-      cout << "FAILED" << endl;
+      printf("FAILED\n");
       exit (2);
     }
-    cout << "OK...";
+    printf("OK...");
 
     if (entry->mNode) {
-      cout << "entry already exists!" << endl;
+      printf("entry already exists!\n");
       exit (3);
     }
-    cout << endl;
+    printf("\n");
 
     entry->mNode = &gEntities[i];
   }
 
-  cout << "Testing Get:" << endl;
+  printf("Testing Get:\n");
 
   for (i = 0; i < numEntries; ++i) {
-    cout << "  Getting entry \"" << gEntities[i].mStr << "\"...";
+    printf("  Getting entry \"%s\"...", gEntities[i].mStr);
     EntityToUnicodeEntry* entry =
       hash.GetEntry(gEntities[i].mStr);
 
     if (!entry) {
-      cout << "FAILED" << endl;
+      printf("FAILED\n");
       exit (4);
     }
 
-    cout << "Found " << entry->mNode->mUnicode << endl;
+    printf("Found %u\n", entry->mNode->mUnicode);
   }
 
-  cout << "Testing non-existent entries...";
+  printf("Testing non-existent entries...");
 
   EntityToUnicodeEntry* entry =
     hash.GetEntry("xxxy");
 
   if (entry) {
-    cout << "FOUND! BAD!" << endl;
+    printf("FOUND! BAD!\n");
     exit (5);
   }
 
-  cout << "not found; good." << endl;
+  printf("not found; good.\n");
 
-  cout << "Enumerating:" << endl;
+  printf("Enumerating:\n");
   PRUint32 count = hash.EnumerateEntries(nsTEnumGo, nsnull);
   if (count != numEntries) {
-    cout << "  Bad count!" << endl;
+    printf("  Bad count!\n");
     exit (6);
   }
 }
 
 PLDHashOperator
 nsDEnumRead(const PRUint32& aKey, const char* aData, void* userArg) {
-  cout << "  enumerated " << aKey << " = \"" << aData << "\"" << endl;
+  printf("  enumerated %u = \"%s\"\n", aKey, aData);
   return PL_DHASH_NEXT;
 }
 
 PLDHashOperator
 nsDEnum(const PRUint32& aKey, const char*& aData, void* userArg) {
-  cout << "  enumerated " << aKey << " = \"" << aData << "\"" << endl;
+  printf("  enumerated %u = \"%s\"\n", aKey, aData);
   return PL_DHASH_NEXT;
 }
 
 PLDHashOperator
 nsCEnumRead(const nsACString& aKey, TestUniChar* aData, void* userArg) {
-  cout << "  enumerated \"" << PromiseFlatCString(aKey).get() << "\" = " <<
-    aData->GetChar() << endl;
+  printf("  enumerated \"%s\" = %c\n",
+         PromiseFlatCString(aKey).get(), aData->GetChar());
   return PL_DHASH_NEXT;
 }
 
 PLDHashOperator
 nsCEnum(const nsACString& aKey, nsAutoPtr<TestUniChar>& aData, void* userArg) {
-  cout << "  enumerated \"" << PromiseFlatCString(aKey).get() << "\" = " <<
-    aData->GetChar() << endl;
+    printf("  enumerated \"%s\" = %c\n", 
+           PromiseFlatCString(aKey).get(), aData->GetChar());
   return PL_DHASH_NEXT;
 }
 
@@ -255,27 +254,31 @@ unsigned int IFoo::total_destructions_;
 void
 IFoo::print_totals()
   {
-    cout << "total constructions/destructions --> " << total_constructions_ << "/" << total_destructions_ << endl;
+    printf("total constructions/destructions --> %d/%d\n",
+           total_constructions_, total_destructions_);
   }
 
 IFoo::IFoo()
     : refcount_(0)
   {
     ++total_constructions_;
-    cout << "  new IFoo@" << NS_STATIC_CAST(void*, this) << " [#" << total_constructions_ << "]" << endl;
+    printf("  new IFoo@%p [#%d]\n",
+           NS_STATIC_CAST(void*, this), total_constructions_);
   }
 
 IFoo::~IFoo()
   {
     ++total_destructions_;
-    cout << "IFoo@" << NS_STATIC_CAST(void*, this) << "::~IFoo()" << " [#" << total_destructions_ << "]" << endl;
+    printf("IFoo@%p::~IFoo() [#%d]\n",
+           NS_STATIC_CAST(void*, this), total_destructions_);
   }
 
 nsrefcnt
 IFoo::AddRef()
   {
     ++refcount_;
-    cout << "IFoo@" << NS_STATIC_CAST(void*, this) << "::AddRef(), refcount --> " << refcount_ << endl;
+    printf("IFoo@%p::AddRef(), refcount --> %d\n", 
+           NS_STATIC_CAST(void*, this), refcount_);
     return refcount_;
   }
 
@@ -284,19 +287,20 @@ IFoo::Release()
   {
     int wrap_message = (refcount_ == 1);
     if ( wrap_message )
-      cout << ">>";
+      printf(">>");
       
     --refcount_;
-    cout << "IFoo@" << NS_STATIC_CAST(void*, this) << "::Release(), refcount --> " << refcount_ << endl;
+    printf("IFoo@%p::Release(), refcount --> %d\n",
+           NS_STATIC_CAST(void*, this), refcount_);
 
     if ( !refcount_ )
       {
-        cout << "  delete IFoo@" << NS_STATIC_CAST(void*, this) << endl;
+        printf("  delete IFoo@%p\n", NS_STATIC_CAST(void*, this));
         delete this;
       }
 
     if ( wrap_message )
-      cout << "<<IFoo@" << NS_STATIC_CAST(void*, this) << "::Release()" << endl;
+      printf("  delete IFoo@%p\n", NS_STATIC_CAST(void*, this));
 
     return refcount_;
   }
@@ -304,7 +308,7 @@ IFoo::Release()
 nsresult
 IFoo::QueryInterface( const nsIID& aIID, void** aResult )
 	{
-    cout << "IFoo@" << NS_STATIC_CAST(void*, this) << "::QueryInterface()" << endl;
+    printf("IFoo@%p::QueryInterface()\n", NS_STATIC_CAST(void*, this));
 		nsISupports* rawPtr = 0;
 		nsresult status = NS_OK;
 
@@ -343,14 +347,14 @@ nsresult
 CreateIFoo( IFoo** result )
     // a typical factory function (that calls AddRef)
   {
-    cout << "    >>CreateIFoo() --> ";
+    printf("    >>CreateIFoo() --> ");
     IFoo* foop = new IFoo();
-    cout << "IFoo@" << NS_STATIC_CAST(void*, foop) << endl;
+    printf("IFoo@%p\n", NS_STATIC_CAST(void*, foop));
 
     foop->AddRef();
     *result = foop;
 
-    cout << "<<CreateIFoo()" << endl;
+    printf("<<CreateIFoo()\n");
     return 0;
   }
 
@@ -359,7 +363,7 @@ nsIEnumRead(const PRUint32& aKey, IFoo* aFoo, void* userArg) {
   nsCAutoString str;
   aFoo->GetString(str);
 
-  cout << "  enumerated " << aKey << " = \"" << str.get() << "\"" << endl;
+  printf("  enumerated %u = \"%s\"\n", aKey, str.get());
   return PL_DHASH_NEXT;
 }
 
@@ -368,7 +372,7 @@ nsIEnum(const PRUint32& aKey, nsCOMPtr<IFoo>& aData, void* userArg) {
   nsCAutoString str;
   aData->GetString(str);
 
-  cout << "  enumerated " << aKey << " = \"" << str.get() << "\"" << endl;
+  printf("  enumerated %u = \"%s\"\n", aKey, str.get());
   return PL_DHASH_NEXT;
 }
 
@@ -379,7 +383,7 @@ nsIEnum2Read(nsISupports* aKey, PRUint32 aData, void* userArg) {
   foo->GetString(str);
 
 
-  cout << "  enumerated \"" << str.get() << "\" = " << aData << endl;
+  printf("  enumerated \"%s\" = %u\n", str.get(), aData);
   return PL_DHASH_NEXT;
 }
 
@@ -389,7 +393,7 @@ nsIEnum2(nsISupports* aKey, PRUint32& aData, void* userArg) {
   nsCOMPtr<IFoo> foo = do_QueryInterface(aKey);
   foo->GetString(str);
 
-  cout << "  enumerated \"" << str.get() << "\" = " << aData << endl;
+  printf("  enumerated \"%s\" = %u\n", str.get(), aData);
   return PL_DHASH_NEXT;
 }
 
@@ -398,46 +402,46 @@ main(void) {
   // check an nsTHashtable
   nsTHashtable<EntityToUnicodeEntry> EntityToUnicode;
 
-  cout << "Initializing nsTHashtable...";
+  printf("Initializing nsTHashtable...");
   if (!EntityToUnicode.Init(ENTITY_COUNT)) {
-    cout << "FAILED" << endl;
+    printf("FAILED\n");
     exit (1);
   }
-  cout << "OK" << endl;
+  printf("OK\n");
 
-  cout << "Partially filling nsTHashtable:" << endl;
+  printf("Partially filling nsTHashtable:\n");
   testTHashtable(EntityToUnicode, 5);
 
-  cout << "Enumerate-removing..." << endl;
+  printf("Enumerate-removing...\n");
   PRUint32 count = EntityToUnicode.EnumerateEntries(nsTEnumStop, nsnull);
   if (count != 5) {
-    cout << "wrong count" << endl;
+    printf("wrong count\n");
     exit (7);
   }
-  cout << "OK" << endl;
+  printf("OK\n");
 
-  cout << "Check enumeration...";
+  printf("Check enumeration...");
   count = EntityToUnicode.EnumerateEntries(nsTEnumGo, nsnull);
   if (count) {
-    cout << "entries remain in table!" << endl;
+    printf("entries remain in table!\n");
     exit (8);
   }
-  cout << "OK" << endl;
+  printf("OK\n");
 
-  cout << "Filling nsTHashtable:" << endl;
+  printf("Filling nsTHashtable:\n");
   testTHashtable(EntityToUnicode, ENTITY_COUNT);
 
-  cout << "Clearing...";
+  printf("Clearing...");
   EntityToUnicode.Clear();
-  cout << "OK" << endl;
+  printf("OK\n");
 
-  cout << "Check enumeration...";
+  printf("Check enumeration...");
   count = EntityToUnicode.EnumerateEntries(nsTEnumGo, nsnull);
   if (count) {
-    cout << "entries remain in table!" << endl;
+    printf("entries remain in table!\n");
     exit (9);
   }
-  cout << "OK" << endl;
+  printf("OK\n");
 
   //
   // now check a data-hashtable
@@ -445,66 +449,66 @@ main(void) {
 
   nsDataHashtable<nsUint32HashKey,const char*> UniToEntity;
 
-  cout << "Initializing nsDataHashtable...";
+  printf("Initializing nsDataHashtable...");
   if (!UniToEntity.Init(ENTITY_COUNT)) {
-    cout << "FAILED" << endl;
+    printf("FAILED\n");
     exit (10);
   }
-  cout << "OK" << endl;
+  printf("OK\n");
 
-  cout << "Filling hash with " << ENTITY_COUNT << " entries." << endl;
+  printf("Filling hash with %d entries.\n", ENTITY_COUNT);
 
   PRUint32 i;
   for (i = 0; i < ENTITY_COUNT; ++i) {
-    cout << "  Putting entry " << gEntities[i].mUnicode << "...";
+    printf("  Putting entry %u...", gEntities[i].mUnicode);
     if (!UniToEntity.Put(gEntities[i].mUnicode, gEntities[i].mStr)) {
-      cout << "FAILED" << endl;
+      printf("FAILED\n");
       exit (11);
     }
-    cout << "OK..." << endl;
+    printf("OK...\n");
   }
 
-  cout << "Testing Get:" << endl;
+  printf("Testing Get:\n");
   const char* str;
 
   for (i = 0; i < ENTITY_COUNT; ++i) {
-    cout << "  Getting entry " << gEntities[i].mUnicode << "...";
+    printf("  Getting entry %u...", gEntities[i].mUnicode);
     if (!UniToEntity.Get(gEntities[i].mUnicode, &str)) {
-      cout << "FAILED" << endl;
+      printf("FAILED\n");
       exit (12);
     }
 
-    cout << "Found " << str << endl;
+    printf("Found %s\n", str);
   }
 
-  cout << "Testing non-existent entries...";
+  printf("Testing non-existent entries...");
   if (UniToEntity.Get(99446, &str)) {
-    cout << "FOUND! BAD!" << endl;
+    printf("FOUND! BAD!\n");
     exit (13);
   }
       
-  cout << "not found; good." << endl;
+  printf("not found; good.\n");
       
-  cout << "Enumerating:" << endl;
+  printf("Enumerating:\n");
   
   count = UniToEntity.EnumerateRead(nsDEnumRead, nsnull);
   if (count != ENTITY_COUNT) {
-    cout << "  Bad count!" << endl;
+    printf("  Bad count!\n");
     exit (14);
   }
   
-  cout << "Clearing...";
+  printf("Clearing...");
   UniToEntity.Clear();
-  cout << "OK" << endl;
+  printf("OK\n");
 
-  cout << "Checking count...";
+  printf("Checking count...");
   count = UniToEntity.Enumerate(nsDEnum, nsnull);
   if (count) {
-    cout << "  Clear did not remove all entries." << endl;
+    printf("  Clear did not remove all entries.\n");
     exit (15);
   }
 
-  cout << "OK" << endl;
+  printf("OK\n");
 
   //
   // now check a thread-safe data-hashtable
@@ -512,64 +516,64 @@ main(void) {
 
   nsDataHashtableMT<nsUint32HashKey,const char*> UniToEntityL;
 
-  cout << "Initializing nsDataHashtableMT...";
+  printf("Initializing nsDataHashtableMT...");
   if (!UniToEntityL.Init(ENTITY_COUNT)) {
-    cout << "FAILED" << endl;
+    printf("FAILED\n");
     exit (10);
   }
-  cout << "OK" << endl;
+  printf("OK\n");
 
-  cout << "Filling hash with " << ENTITY_COUNT << " entries." << endl;
+  printf("Filling hash with %d entries.\n", ENTITY_COUNT);
 
   for (i = 0; i < ENTITY_COUNT; ++i) {
-    cout << "  Putting entry " << gEntities[i].mUnicode << "...";
+    printf("  Putting entry %u...", gEntities[i].mUnicode);
     if (!UniToEntityL.Put(gEntities[i].mUnicode, gEntities[i].mStr)) {
-      cout << "FAILED" << endl;
+      printf("FAILED\n");
       exit (11);
     }
-    cout << "OK..." << endl;
+    printf("OK...\n");
   }
 
-  cout << "Testing Get:" << endl;
+  printf("Testing Get:\n");
 
   for (i = 0; i < ENTITY_COUNT; ++i) {
-    cout << "  Getting entry " << gEntities[i].mUnicode << "...";
+    printf("  Getting entry %u...", gEntities[i].mUnicode);
     if (!UniToEntityL.Get(gEntities[i].mUnicode, &str)) {
-      cout << "FAILED" << endl;
+      printf("FAILED\n");
       exit (12);
     }
 
-    cout << "Found " << str << endl;
+    printf("Found %s\n", str);
   }
 
-  cout << "Testing non-existent entries...";
+  printf("Testing non-existent entries...");
   if (UniToEntityL.Get(99446, &str)) {
-    cout << "FOUND! BAD!" << endl;
+    printf("FOUND! BAD!\n");
     exit (13);
   }
       
-  cout << "not found; good." << endl;
+  printf("not found; good.\n");
       
-  cout << "Enumerating:" << endl;
+  printf("Enumerating:\n");
   
   count = UniToEntityL.EnumerateRead(nsDEnumRead, nsnull);
   if (count != ENTITY_COUNT) {
-    cout << "  Bad count!" << endl;
+    printf("  Bad count!\n");
     exit (14);
   }
   
-  cout << "Clearing...";
+  printf("Clearing...");
   UniToEntityL.Clear();
-  cout << "OK" << endl;
+  printf("OK\n");
 
-  cout << "Checking count...";
+  printf("Checking count...");
   count = UniToEntityL.Enumerate(nsDEnum, nsnull);
   if (count) {
-    cout << "  Clear did not remove all entries." << endl;
+    printf("  Clear did not remove all entries.\n");
     exit (15);
   }
 
-  cout << "OK" << endl;
+  printf("OK\n");
 
   //
   // now check a class-hashtable
@@ -577,68 +581,68 @@ main(void) {
 
   nsClassHashtable<nsCStringHashKey,TestUniChar> EntToUniClass;
 
-  cout << "Initializing nsClassHashtable...";
+  printf("Initializing nsClassHashtable...");
   if (!EntToUniClass.Init(ENTITY_COUNT)) {
-    cout << "FAILED" << endl;
+    printf("FAILED\n");
     exit (16);
   }
-  cout << "OK" << endl;
+  printf("OK\n");
 
-  cout << "Filling hash with " << ENTITY_COUNT << " entries." << endl;
+  printf("Filling hash with %d entries.\n", ENTITY_COUNT);
 
   for (i = 0; i < ENTITY_COUNT; ++i) {
-    cout << "  Putting entry " << gEntities[i].mUnicode << "...";
+    printf("  Putting entry %u...", gEntities[i].mUnicode);
     TestUniChar* temp = new TestUniChar(gEntities[i].mUnicode);
 
     if (!EntToUniClass.Put(nsDependentCString(gEntities[i].mStr), temp)) {
-      cout << "FAILED" << endl;
+      printf("FAILED\n");
       delete temp;
       exit (17);
     }
-    cout << "OK..." << endl;
+    printf("OK...\n");
   }
 
-  cout << "Testing Get:" << endl;
+  printf("Testing Get:\n");
   TestUniChar* myChar;
 
   for (i = 0; i < ENTITY_COUNT; ++i) {
-    cout << "  Getting entry " << gEntities[i].mStr << "...";
+    printf("  Getting entry %s...", gEntities[i].mStr);
     if (!EntToUniClass.Get(nsDependentCString(gEntities[i].mStr), &myChar)) {
-      cout << "FAILED" << endl;
+      printf("FAILED\n");
       exit (18);
     }
 
-    cout << "Found " << myChar->GetChar() << endl;
+    printf("Found %c\n", myChar->GetChar());
   }
 
-  cout << "Testing non-existent entries...";
+  printf("Testing non-existent entries...");
   if (EntToUniClass.Get(NS_LITERAL_CSTRING("xxxx"), &myChar)) {
-    cout << "FOUND! BAD!" << endl;
+    printf("FOUND! BAD!\n");
     exit (19);
   }
       
-  cout << "not found; good." << endl;
+  printf("not found; good.\n");
       
-  cout << "Enumerating:" << endl;
+  printf("Enumerating:\n");
   
   count = EntToUniClass.EnumerateRead(nsCEnumRead, nsnull);
   if (count != ENTITY_COUNT) {
-    cout << "  Bad count!" << endl;
+    printf("  Bad count!\n");
     exit (20);
   }
   
-  cout << "Clearing..." << endl;
+  printf("Clearing...\n");
   EntToUniClass.Clear();
-  cout << "  Clearing OK" << endl;
+  printf("  Clearing OK\n");
 
-  cout << "Checking count...";
+  printf("Checking count...");
   count = EntToUniClass.Enumerate(nsCEnum, nsnull);
   if (count) {
-    cout << "  Clear did not remove all entries." << endl;
+    printf("  Clear did not remove all entries.\n");
     exit (21);
   }
 
-  cout << "OK" << endl;
+  printf("OK\n");
 
   //
   // now check a thread-safe class-hashtable
@@ -646,67 +650,67 @@ main(void) {
 
   nsClassHashtableMT<nsCStringHashKey,TestUniChar> EntToUniClassL;
 
-  cout << "Initializing nsClassHashtableMT...";
+  printf("Initializing nsClassHashtableMT...");
   if (!EntToUniClassL.Init(ENTITY_COUNT)) {
-    cout << "FAILED" << endl;
+    printf("FAILED\n");
     exit (16);
   }
-  cout << "OK" << endl;
+  printf("OK\n");
 
-  cout << "Filling hash with " << ENTITY_COUNT << " entries." << endl;
+  printf("Filling hash with %d entries.\n", ENTITY_COUNT);
 
   for (i = 0; i < ENTITY_COUNT; ++i) {
-    cout << "  Putting entry " << gEntities[i].mUnicode << "...";
+    printf("  Putting entry %u...", gEntities[i].mUnicode);
     TestUniChar* temp = new TestUniChar(gEntities[i].mUnicode);
 
     if (!EntToUniClassL.Put(nsDependentCString(gEntities[i].mStr), temp)) {
-      cout << "FAILED" << endl;
+      printf("FAILED\n");
       delete temp;
       exit (17);
     }
-    cout << "OK..." << endl;
+    printf("OK...\n");
   }
 
-  cout << "Testing Get:" << endl;
+  printf("Testing Get:\n");
 
   for (i = 0; i < ENTITY_COUNT; ++i) {
-    cout << "  Getting entry " << gEntities[i].mStr << "...";
+    printf("  Getting entry %s...", gEntities[i].mStr);
     if (!EntToUniClassL.Get(nsDependentCString(gEntities[i].mStr), &myChar)) {
-      cout << "FAILED" << endl;
+      printf("FAILED\n");
       exit (18);
     }
 
-    cout << "Found " << myChar->GetChar() << endl;
+    printf("Found %c\n", myChar->GetChar());
   }
 
-  cout << "Testing non-existent entries...";
+  printf("Testing non-existent entries...");
   if (EntToUniClassL.Get(NS_LITERAL_CSTRING("xxxx"), &myChar)) {
-    cout << "FOUND! BAD!" << endl;
+    printf("FOUND! BAD!\n");
     exit (19);
   }
       
-  cout << "not found; good." << endl;
+  printf("not found; good.\n");
       
-  cout << "Enumerating:" << endl;
+  printf("Enumerating:\n");
   
   count = EntToUniClassL.EnumerateRead(nsCEnumRead, nsnull);
   if (count != ENTITY_COUNT) {
-    cout << "  Bad count!" << endl;
+    printf("  Bad count!\n");
     exit (20);
   }
   
-  cout << "Clearing..." << endl;
+  printf("Clearing...\n");
   EntToUniClassL.Clear();
-  cout << "  Clearing OK" << endl;
+  printf("  Clearing OK\n");
 
-  cout << "Checking count...";
+  printf("Checking count...");
   count = EntToUniClassL.Enumerate(nsCEnum, nsnull);
   if (count) {
-    cout << "  Clear did not remove all entries." << endl;
+    printf("  Clear did not remove all entries.\n");
     exit (21);
   }
 
-  cout << "OK" << endl;
+  printf("OK\n");
 
   //
   // now check a data-hashtable with an interface key
@@ -714,19 +718,19 @@ main(void) {
 
   nsDataHashtable<nsISupportsHashKey,PRUint32> EntToUniClass2;
 
-  cout << "Initializing nsDataHashtable with interface key...";
+  printf("Initializing nsDataHashtable with interface key...");
   if (!EntToUniClass2.Init(ENTITY_COUNT)) {
-    cout << "FAILED" << endl;
+    printf("FAILED\n");
     exit (22);
   }
-  cout << "OK" << endl;
+  printf("OK\n");
 
-  cout << "Filling hash with " << ENTITY_COUNT << " entries." << endl;
+  printf("Filling hash with %d entries.\n", ENTITY_COUNT);
 
   nsCOMArray<IFoo> fooArray;
 
   for (i = 0; i < ENTITY_COUNT; ++i) {
-    cout << "  Putting entry " << gEntities[i].mUnicode << "...";
+    printf("  Putting entry %u...", gEntities[i].mUnicode);
     nsCOMPtr<IFoo> foo;
     CreateIFoo(getter_AddRefs(foo));
     foo->SetString(nsDependentCString(gEntities[i].mStr));
@@ -735,54 +739,54 @@ main(void) {
     fooArray.InsertObjectAt(foo, i);
 
     if (!EntToUniClass2.Put(foo, gEntities[i].mUnicode)) {
-      cout << "FAILED" << endl;
+      printf("FAILED\n");
       exit (23);
     }
-    cout << "OK..." << endl;
+    printf("OK...\n");
   }
 
-  cout << "Testing Get:" << endl;
+  printf("Testing Get:\n");
   PRUint32 myChar2;
 
   for (i = 0; i < ENTITY_COUNT; ++i) {
-    cout << "  Getting entry " << gEntities[i].mStr << "...";
+    printf("  Getting entry %s...", gEntities[i].mStr);
     
     if (!EntToUniClass2.Get(fooArray[i], &myChar2)) {
-      cout << "FAILED" << endl;
+      printf("FAILED\n");
       exit (24);
     }
 
-    cout << "Found " << myChar2 << endl;
+    printf("Found %c\n", myChar2);
   }
 
-  cout << "Testing non-existent entries...";
+  printf("Testing non-existent entries...");
   if (EntToUniClass2.Get((nsISupports*) 0x55443316, &myChar2)) {
-    cout << "FOUND! BAD!" << endl;
+    printf("FOUND! BAD!\n");
     exit (25);
   }
       
-  cout << "not found; good." << endl;
+  printf("not found; good.\n");
       
-  cout << "Enumerating:" << endl;
+  printf("Enumerating:\n");
   
   count = EntToUniClass2.EnumerateRead(nsIEnum2Read, nsnull);
   if (count != ENTITY_COUNT) {
-    cout << "  Bad count!" << endl;
+    printf("  Bad count!\n");
     exit (26);
   }
   
-  cout << "Clearing..." << endl;
+  printf("Clearing...\n");
   EntToUniClass2.Clear();
-  cout << "  Clearing OK" << endl;
+  printf("  Clearing OK\n");
 
-  cout << "Checking count...";
+  printf("Checking count...");
   count = EntToUniClass2.Enumerate(nsIEnum2, nsnull);
   if (count) {
-    cout << "  Clear did not remove all entries." << endl;
+    printf("  Clear did not remove all entries.\n");
     exit (27);
   }
 
-  cout << "OK" << endl;
+  printf("OK\n");
 
   //
   // now check an interface-hashtable with an PRUint32 key
@@ -790,73 +794,73 @@ main(void) {
 
   nsInterfaceHashtable<nsUint32HashKey,IFoo> UniToEntClass2;
 
-  cout << "Initializing nsInterfaceHashtable...";
+  printf("Initializing nsInterfaceHashtable...");
   if (!UniToEntClass2.Init(ENTITY_COUNT)) {
-    cout << "FAILED" << endl;
+    printf("FAILED\n");
     exit (28);
   }
-  cout << "OK" << endl;
+  printf("OK\n");
 
-  cout << "Filling hash with " << ENTITY_COUNT << " entries." << endl;
+  printf("Filling hash with %d entries.\n", ENTITY_COUNT);
 
   for (i = 0; i < ENTITY_COUNT; ++i) {
-    cout << "  Putting entry " << gEntities[i].mUnicode << "...";
+    printf("  Putting entry %u...", gEntities[i].mUnicode);
     nsCOMPtr<IFoo> foo;
     CreateIFoo(getter_AddRefs(foo));
     foo->SetString(nsDependentCString(gEntities[i].mStr));
     
     if (!UniToEntClass2.Put(gEntities[i].mUnicode, foo)) {
-      cout << "FAILED" << endl;
+      printf("FAILED\n");
       exit (29);
     }
-    cout << "OK..." << endl;
+    printf("OK...\n");
   }
 
-  cout << "Testing Get:" << endl;
+  printf("Testing Get:\n");
 
   for (i = 0; i < ENTITY_COUNT; ++i) {
-    cout << "  Getting entry " << gEntities[i].mStr << "...";
+    printf("  Getting entry %s...", gEntities[i].mStr);
     
     nsCOMPtr<IFoo> myEnt;
     if (!UniToEntClass2.Get(gEntities[i].mUnicode, getter_AddRefs(myEnt))) {
-      cout << "FAILED" << endl;
+      printf("FAILED\n");
       exit (30);
     }
     
     nsCAutoString str;
     myEnt->GetString(str);
-    cout << "Found " << str.get() << endl;
+    printf("Found %s\n", str.get());
   }
 
-  cout << "Testing non-existent entries...";
+  printf("Testing non-existent entries...");
   nsCOMPtr<IFoo> myEnt;
   if (UniToEntClass2.Get(9462, getter_AddRefs(myEnt))) {
-    cout << "FOUND! BAD!" << endl;
+    printf("FOUND! BAD!\n");
     exit (31);
   }
       
-  cout << "not found; good." << endl;
+  printf("not found; good.\n");
       
-  cout << "Enumerating:" << endl;
+  printf("Enumerating:\n");
   
   count = UniToEntClass2.EnumerateRead(nsIEnumRead, nsnull);
   if (count != ENTITY_COUNT) {
-    cout << "  Bad count!" << endl;
+    printf("  Bad count!\n");
     exit (32);
   }
   
-  cout << "Clearing..." << endl;
+  printf("Clearing...\n");
   UniToEntClass2.Clear();
-  cout << "  Clearing OK" << endl;
+  printf("  Clearing OK\n");
 
-  cout << "Checking count...";
+  printf("Checking count...");
   count = UniToEntClass2.Enumerate(nsIEnum, nsnull);
   if (count) {
-    cout << "  Clear did not remove all entries." << endl;
+    printf("  Clear did not remove all entries.\n");
     exit (33);
   }
 
-  cout << "OK" << endl;
+  printf("OK\n");
 
   //
   // now check a thread-safe interface hashtable
@@ -864,72 +868,72 @@ main(void) {
 
   nsInterfaceHashtableMT<nsUint32HashKey,IFoo> UniToEntClass2L;
 
-  cout << "Initializing nsInterfaceHashtableMT...";
+  printf("Initializing nsInterfaceHashtableMT...");
   if (!UniToEntClass2L.Init(ENTITY_COUNT)) {
-    cout << "FAILED" << endl;
+    printf("FAILED\n");
     exit (28);
   }
-  cout << "OK" << endl;
+  printf("OK\n");
 
-  cout << "Filling hash with " << ENTITY_COUNT << " entries." << endl;
+  printf("Filling hash with %d entries.\n", ENTITY_COUNT);
 
   for (i = 0; i < ENTITY_COUNT; ++i) {
-    cout << "  Putting entry " << gEntities[i].mUnicode << "...";
+    printf("  Putting entry %u...", gEntities[i].mUnicode);
     nsCOMPtr<IFoo> foo;
     CreateIFoo(getter_AddRefs(foo));
     foo->SetString(nsDependentCString(gEntities[i].mStr));
     
     if (!UniToEntClass2L.Put(gEntities[i].mUnicode, foo)) {
-      cout << "FAILED" << endl;
+      printf("FAILED\n");
       exit (29);
     }
-    cout << "OK..." << endl;
+    printf("OK...\n");
   }
 
-  cout << "Testing Get:" << endl;
+  printf("Testing Get:\n");
 
   for (i = 0; i < ENTITY_COUNT; ++i) {
-    cout << "  Getting entry " << gEntities[i].mStr << "...";
+    printf("  Getting entry %s...", gEntities[i].mStr);
     
     nsCOMPtr<IFoo> myEnt;
     if (!UniToEntClass2L.Get(gEntities[i].mUnicode, getter_AddRefs(myEnt))) {
-      cout << "FAILED" << endl;
+      printf("FAILED\n");
       exit (30);
     }
     
     nsCAutoString str;
     myEnt->GetString(str);
-    cout << "Found " << str.get() << endl;
+    printf("Found %s\n", str.get());
   }
 
-  cout << "Testing non-existent entries...";
+  printf("Testing non-existent entries...");
   if (UniToEntClass2L.Get(9462, getter_AddRefs(myEnt))) {
-    cout << "FOUND! BAD!" << endl;
+    printf("FOUND! BAD!\n");
     exit (31);
   }
       
-  cout << "not found; good." << endl;
+  printf("not found; good.\n");
       
-  cout << "Enumerating:" << endl;
+  printf("Enumerating:\n");
   
   count = UniToEntClass2L.EnumerateRead(nsIEnumRead, nsnull);
   if (count != ENTITY_COUNT) {
-    cout << "  Bad count!" << endl;
+    printf("  Bad count!\n");
     exit (32);
   }
   
-  cout << "Clearing..." << endl;
+  printf("Clearing...\n");
   UniToEntClass2L.Clear();
-  cout << "  Clearing OK" << endl;
+  printf("  Clearing OK\n");
 
-  cout << "Checking count...";
+  printf("Checking count...");
   count = UniToEntClass2L.Enumerate(nsIEnum, nsnull);
   if (count) {
-    cout << "  Clear did not remove all entries." << endl;
+    printf("  Clear did not remove all entries.\n");
     exit (33);
   }
 
-  cout << "OK" << endl;
+  printf("OK\n");
 
   return 0;
 }

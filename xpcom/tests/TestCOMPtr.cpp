@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <iostream.h>
 #include <assert.h>
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
@@ -101,13 +100,13 @@ class test_message
     public:
       test_message()
         {
-          cout << "BEGIN unit tests for |nsCOMPtr|, compiled " __DATE__ << endl;
+          printf("BEGIN unit tests for |nsCOMPtr|, compiled " __DATE__ "\n");
         }
 
      ~test_message()
         {
           IFoo::print_totals();
-          cout << "END unit tests for |nsCOMPtr|." << endl;
+          printf("END unit tests for |nsCOMPtr|.\n");
         }
   };
 
@@ -121,27 +120,31 @@ test_message gTestMessage;
 void
 IFoo::print_totals()
   {
-    cout << "total constructions/destructions --> " << total_constructions_ << "/" << total_destructions_ << endl;
+    printf("total constructions/destructions --> %d/%d\n", 
+           total_constructions_, total_destructions_);
   }
 
 IFoo::IFoo()
     : refcount_(0)
   {
     ++total_constructions_;
-    cout << "  new IFoo@" << STATIC_CAST(void*, this) << " [#" << total_constructions_ << "]" << endl;
+    printf("  new IFoo@%p [#%d]\n",
+           STATIC_CAST(void*, this), total_constructions_);
   }
 
 IFoo::~IFoo()
   {
     ++total_destructions_;
-    cout << "IFoo@" << STATIC_CAST(void*, this) << "::~IFoo()" << " [#" << total_destructions_ << "]" << endl;
+    printf("IFoo@%p::~IFoo() [#%d]\n",
+           STATIC_CAST(void*, this), total_destructions_);
   }
 
 nsrefcnt
 IFoo::AddRef()
   {
     ++refcount_;
-    cout << "IFoo@" << STATIC_CAST(void*, this) << "::AddRef(), refcount --> " << refcount_ << endl;
+    printf("IFoo@%p::AddRef(), refcount --> %d\n", 
+           STATIC_CAST(void*, this), refcount_);
     return refcount_;
   }
 
@@ -150,19 +153,20 @@ IFoo::Release()
   {
     int wrap_message = (refcount_ == 1);
     if ( wrap_message )
-      cout << ">>";
+      printf(">>");
       
     --refcount_;
-    cout << "IFoo@" << STATIC_CAST(void*, this) << "::Release(), refcount --> " << refcount_ << endl;
+    printf("IFoo@%p::Release(), refcount --> %d\n",
+           STATIC_CAST(void*, this), refcount_);
 
     if ( !refcount_ )
       {
-        cout << "  delete IFoo@" << STATIC_CAST(void*, this) << endl;
+        printf("  delete IFoo@%p\n", STATIC_CAST(void*, this));
         delete this;
       }
 
     if ( wrap_message )
-      cout << "<<IFoo@" << STATIC_CAST(void*, this) << "::Release()" << endl;
+      printf("<<IFoo@%p::Release()\n", STATIC_CAST(void*, this));
 
     return refcount_;
   }
@@ -170,7 +174,7 @@ IFoo::Release()
 nsresult
 IFoo::QueryInterface( const nsIID& aIID, void** aResult )
 	{
-    cout << "IFoo@" << STATIC_CAST(void*, this) << "::QueryInterface()" << endl;
+    printf("IFoo@%p::QueryInterface()\n", STATIC_CAST(void*, this));
 		nsISupports* rawPtr = 0;
 		nsresult status = NS_OK;
 
@@ -195,34 +199,34 @@ nsresult
 CreateIFoo( void** result )
     // a typical factory function (that calls AddRef)
   {
-    cout << ">>CreateIFoo() --> ";
+    printf(">>CreateIFoo() --> ");
     IFoo* foop = new IFoo;
-    cout << "IFoo@" << STATIC_CAST(void*, foop) << endl;
+    printf("IFoo@%p\n", STATIC_CAST(void*, foop));
 
     foop->AddRef();
     *result = foop;
 
-    cout << "<<CreateIFoo()" << endl;
+    printf("<<CreateIFoo()\n");
     return 0;
   }
 
 void
 set_a_IFoo( nsCOMPtr<IFoo>* result )
   {
-    cout << ">>set_a_IFoo()" << endl;
+    printf(">>set_a_IFoo()\n");
     assert(result);
 
     nsCOMPtr<IFoo> foop( do_QueryInterface(new IFoo) );
     *result = foop;
-    cout << "<<set_a_IFoo()" << endl;
+    printf("<<set_a_IFoo()\n");
   }
 
 nsCOMPtr<IFoo>
 return_a_IFoo()
   {
-    cout << ">>return_a_IFoo()" << endl;
+    printf(">>return_a_IFoo()\n");
     nsCOMPtr<IFoo> foop( do_QueryInterface(new IFoo) );
-    cout << "<<return_a_IFoo()" << endl;
+    printf("<<return_a_IFoo()\n");
     return foop;
   }
 
@@ -247,18 +251,18 @@ class IBar : public IFoo
 
 IBar::IBar()
   {
-    cout << "  new IBar@" << STATIC_CAST(void*, this) << endl;
+    printf("  new IBar@%p\n", STATIC_CAST(void*, this));
   }
 
 IBar::~IBar()
   {
-    cout << "IBar@" << STATIC_CAST(void*, this) << "::~IBar()" << endl;
+    printf("IBar@%p::~IBar()\n", STATIC_CAST(void*, this));
   }
 
 nsresult
 IBar::QueryInterface( const nsID& aIID, void** aResult )
 	{
-    cout << "IBar@" << STATIC_CAST(void*, this) << "::QueryInterface()" << endl;
+    printf("IBar@%p::QueryInterface()\n", STATIC_CAST(void*, this));
 		nsISupports* rawPtr = 0;
 		nsresult status = NS_OK;
 
@@ -287,14 +291,14 @@ nsresult
 CreateIBar( void** result )
     // a typical factory function (that calls AddRef)
   {
-    cout << ">>CreateIBar() --> ";
+    printf(">>CreateIBar() --> ");
     IBar* barp = new IBar;
-    cout << "IBar@" << STATIC_CAST(void*, barp) << endl;
+    printf("IBar@%p\n", STATIC_CAST(void*, barp));
 
     barp->AddRef();
     *result = barp;
 
-    cout << "<<CreateIBar()" << endl;
+    printf("<<CreateIBar()\n");
     return 0;
   }
 
@@ -411,9 +415,9 @@ nsCOMPtr<IFoo> gFoop;
 int
 main()
   {
-    cout << ">>main()" << endl;
+    printf(">>main()\n");
 
-		cout << "sizeof(nsCOMPtr<IFoo>) --> " << sizeof(nsCOMPtr<IFoo>) << endl;
+		printf("sizeof(nsCOMPtr<IFoo>) --> %d\n", sizeof(nsCOMPtr<IFoo>));
 
 #ifdef TEST_EXCEPTIONS
 		TestBloat_Raw();
@@ -423,10 +427,10 @@ main()
 
 
     {
-      cout << endl << "### Test  1: will a |nsCOMPtr| call |AddRef| on a pointer assigned into it?" << endl;
+      printf("\n### Test  1: will a |nsCOMPtr| call |AddRef| on a pointer assigned into it?\n");
       nsCOMPtr<IFoo> foop( do_QueryInterface(new IFoo) );
 
-      cout << endl << "### Test  2: will a |nsCOMPtr| |Release| its old pointer when a new one is assigned in?" << endl;
+      printf("\n### Test  2: will a |nsCOMPtr| |Release| its old pointer when a new one is assigned in?\n");
       foop = do_QueryInterface(new IFoo);
 
         // [Shouldn't compile] Is it a compile time error to try to |AddRef| by hand?
@@ -438,22 +442,22 @@ main()
 				// [Shouldn't compile] Is it a compile time error to try to |delete| an |nsCOMPtr|?
 			//delete foop;
 
-      cout << endl << "### Test  3: can you |AddRef| if you must?" << endl;
+      printf("\n### Test  3: can you |AddRef| if you must?\n");
       STATIC_CAST(IFoo*, foop)->AddRef();
 
-      cout << endl << "### Test  4: can you |Release| if you must?" << endl;
+      printf("\n### Test  4: can you |Release| if you must?\n");
       STATIC_CAST(IFoo*, foop)->Release();
 
-      cout << endl << "### Test  5: will a |nsCOMPtr| |Release| when it goes out of scope?" << endl;
+      printf("\n### Test  5: will a |nsCOMPtr| |Release| when it goes out of scope?\n");
     }
 
     {
-      cout << endl << "### Test  6: will a |nsCOMPtr| call the correct destructor?" << endl;
+      printf("\n### Test  6: will a |nsCOMPtr| call the correct destructor?\n");
       nsCOMPtr<IFoo> foop( do_QueryInterface(new IBar) );
     }
 
     {
-      cout << endl << "### Test  7: can you compare one |nsCOMPtr| with another [!=]?" << endl;
+      printf("\n### Test  7: can you compare one |nsCOMPtr| with another [!=]?\n");
 
       nsCOMPtr<IFoo> foo1p( do_QueryInterface(new IFoo) );
 
@@ -466,86 +470,86 @@ main()
       nsCOMPtr<IFoo> foo2p( do_QueryInterface(new IFoo) );
 
       if ( foo1p != foo2p )
-        cout << "foo1p != foo2p" << endl;
+        printf("foo1p != foo2p\n");
       else
-        cout << "foo1p == foo2p" << endl;
+        printf("foo1p == foo2p\n");
 
-      cout << endl << "### Test  7.5: can you compare a |nsCOMPtr| with NULL, 0, nsnull [!=]?" << endl;
+      printf("\n### Test  7.5: can you compare a |nsCOMPtr| with NULL, 0, nsnull [!=]?\n");
       if ( foo1p != 0 )
-      	cout << "foo1p != 0" << endl;
+      	printf("foo1p != 0\n");
       if ( 0 != foo1p )
-      	cout << "0 != foo1p" << endl;
+      	printf("0 != foo1p\n");
       if ( foo1p == 0 )
-      	cout << "foo1p == 0" << endl;
+      	printf("foo1p == 0\n");
       if ( 0 == foo1p )
-      	cout << "0 == foo1p" << endl;
+      	printf("0 == foo1p\n");
 			
 
       IFoo* raw_foo2p = foo2p.get();
 
-      cout << endl << "### Test  8: can you compare a |nsCOMPtr| with a raw interface pointer [!=]?" << endl;
+      printf("\n### Test  8: can you compare a |nsCOMPtr| with a raw interface pointer [!=]?\n");
       if ( foo1p.get() != raw_foo2p )
-        cout << "foo1p != raw_foo2p" << endl;
+        printf("foo1p != raw_foo2p\n");
       else
-        cout << "foo1p == raw_foo2p" << endl;
+        printf("foo1p == raw_foo2p\n");
 
 
-      cout << endl << "### Test  9: can you assign one |nsCOMPtr| into another?" << endl;
+      printf("\n### Test  9: can you assign one |nsCOMPtr| into another?\n");
       foo1p = foo2p;
 
-      cout << endl << "### Test 10: can you compare one |nsCOMPtr| with another [==]?" << endl;
+      printf("\n### Test 10: can you compare one |nsCOMPtr| with another [==]?\n");
       if ( foo1p == foo2p )
-        cout << "foo1p == foo2p" << endl;
+        printf("foo1p == foo2p\n");
       else
-        cout << "foo1p != foo2p" << endl;
+        printf("foo1p != foo2p\n");
 
-      cout << endl << "### Test 11: can you compare a |nsCOMPtr| with a raw interface pointer [==]?" << endl;
+      printf("\n### Test 11: can you compare a |nsCOMPtr| with a raw interface pointer [==]?\n");
       if ( raw_foo2p == foo2p.get() )
-        cout << "raw_foo2p == foo2p" << endl;
+        printf("raw_foo2p == foo2p\n");
       else
-        cout << "raw_foo2p != foo2p" << endl;
+        printf("raw_foo2p != foo2p\n");
 
 #if 1
-      cout << endl << "### Test 11.5: can you compare a |nsCOMPtr| with a raw interface pointer [==]?" << endl;
+      printf("\n### Test 11.5: can you compare a |nsCOMPtr| with a raw interface pointer [==]?\n");
       if ( nsCOMPtr<IFoo>( raw_foo2p ) == foo2p )
-        cout << "raw_foo2p == foo2p" << endl;
+        printf("raw_foo2p == foo2p\n");
       else
-        cout << "raw_foo2p != foo2p" << endl;
+        printf("raw_foo2p != foo2p\n");
 #endif
 
-      cout << endl << "### Test 12: bare pointer test?" << endl;
+      printf("\n### Test 12: bare pointer test?\n");
       if ( foo1p )
-        cout << "foo1p is not NULL" << endl;
+        printf("foo1p is not NULL\n");
       else
-        cout << "foo1p is NULL" << endl;
+        printf("foo1p is NULL\n");
 
-      cout << endl << "### Test 13: numeric pointer test?" << endl;
+      printf("\n### Test 13: numeric pointer test?\n");
       if ( foo1p == 0 )
-        cout << "foo1p is NULL" << endl;
+        printf("foo1p is NULL\n");
       else
-        cout << "foo1p is not NULL" << endl;
+        printf("foo1p is not NULL\n");
 
 #if 0
 			if ( foo1p == 1 )
-				cout << "foo1p allowed compare with in" << endl;
+				printf("foo1p allowed compare with in\n");
 #endif
 
-      cout << endl << "### Test 14: how about when two |nsCOMPtr|s referring to the same object go out of scope?" << endl;
+      printf("\n### Test 14: how about when two |nsCOMPtr|s referring to the same object go out of scope?\n");
     }
 
     {
-      cout << endl << "### Test 15,16 ...setup..." << endl;
+      printf("\n### Test 15,16 ...setup...\n");
       IFoo* raw_foo1p = new IFoo;
       raw_foo1p->AddRef();
 
       IFoo* raw_foo2p = new IFoo;
       raw_foo2p->AddRef();
 
-      cout << endl << "### Test 15: what if I don't want to |AddRef| when I construct?" << endl;
+      printf("\n### Test 15: what if I don't want to |AddRef| when I construct?\n");
       nsCOMPtr<IFoo> foo1p( dont_AddRef(raw_foo1p) );
       //nsCOMPtr<IFoo> foo1p = dont_AddRef(raw_foo1p);
 
-      cout << endl << "### Test 16: what if I don't want to |AddRef| when I assign in?" << endl;
+      printf("\n### Test 16: what if I don't want to |AddRef| when I assign in?\n");
       nsCOMPtr<IFoo> foo2p;
       foo2p = dont_AddRef(raw_foo2p);
     }
@@ -557,66 +561,66 @@ main()
 
 
     {
-    	cout << endl << "### setup for Test 17" << endl;
+    	printf("\n### setup for Test 17\n");
       nsCOMPtr<IFoo> foop;
-      cout << "### Test 17: basic parameter behavior?" << endl;
+      printf("### Test 17: basic parameter behavior?\n");
       CreateIFoo( nsGetterAddRefs<IFoo>(foop) );
     }
-    cout << "### End Test 17" << endl;
+    printf("### End Test 17\n");
 
 
     {
-    	cout << endl << "### setup for Test 18" << endl;
+    	printf("\n### setup for Test 18\n");
       nsCOMPtr<IFoo> foop;
-      cout << "### Test 18: basic parameter behavior, using the short form?" << endl;
+      printf("### Test 18: basic parameter behavior, using the short form?\n");
       CreateIFoo( getter_AddRefs(foop) );
     }
-    cout << "### End Test 18" << endl;
+    printf("### End Test 18\n");
 
 
     {
-    	cout << endl << "### setup for Test 19, 20" << endl;
+    	printf("\n### setup for Test 19, 20\n");
       nsCOMPtr<IFoo> foop;
-      cout << "### Test 19: reference parameter behavior?" << endl;
+      printf("### Test 19: reference parameter behavior?\n");
       set_a_IFoo(address_of(foop));
 
-      cout << "### Test 20: return value behavior?" << endl;
+      printf("### Test 20: return value behavior?\n");
       foop = return_a_IFoo();
     }
-    cout << "### End Test 19, 20" << endl;
+    printf("### End Test 19, 20\n");
 
 		{
-    	cout << endl << "### setup for Test 21" << endl;
+    	printf("\n### setup for Test 21\n");
 			nsCOMPtr<IFoo> fooP;
 
-			cout << "### Test 21: is |QueryInterface| called on assigning in a raw pointer?" << endl;
+			printf("### Test 21: is |QueryInterface| called on assigning in a raw pointer?\n");
 			fooP = do_QueryInterface(new IFoo);
 		}
-    cout << "### End Test 21" << endl;
+    printf("### End Test 21\n");
 
 		{
-    	cout << endl << "### setup for Test 22" << endl;
+    	printf("\n### setup for Test 22\n");
 			nsCOMPtr<IFoo> fooP;
 			fooP = do_QueryInterface(new IFoo);
 
 			nsCOMPtr<IFoo> foo2P;
 
-			cout << "### Test 22: is |QueryInterface| _not_ called when assigning in a smart-pointer of the same type?" << endl;
+			printf("### Test 22: is |QueryInterface| _not_ called when assigning in a smart-pointer of the same type?\n");
 			foo2P = fooP;
 		}
-    cout << "### End Test 22" << endl;
+    printf("### End Test 22\n");
 
 		{
-    	cout << endl << "### setup for Test 23" << endl;
+    	printf("\n### setup for Test 23\n");
 			nsCOMPtr<IBar> barP( do_QueryInterface(new IBar) );
 
-			cout << "### Test 23: is |QueryInterface| called when assigning in a smart-pointer of a different type?" << endl;
+			printf("### Test 23: is |QueryInterface| called when assigning in a smart-pointer of a different type?\n");
 
 			nsCOMPtr<IFoo> fooP( do_QueryInterface(barP) );
 			if ( fooP )
-				cout << "an IBar* is an IFoo*" << endl;
+				printf("an IBar* is an IFoo*\n");
 		}
-    cout << "### End Test 23" << endl;
+    printf("### End Test 23\n");
 
 
 		{
@@ -636,10 +640,10 @@ main()
 		}
 
 
-    cout << endl << "### Test 24: will a static |nsCOMPtr| |Release| before program termination?" << endl;
+    printf("\n### Test 24: will a static |nsCOMPtr| |Release| before program termination?\n");
     gFoop = do_QueryInterface(new IFoo);
     
-    cout << "<<main()" << endl;
+    printf("<<main()\n");
     return 0;
   }
 
