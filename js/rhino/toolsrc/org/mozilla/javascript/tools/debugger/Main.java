@@ -38,13 +38,15 @@
 
 package org.mozilla.javascript.tools.debugger;
 
-
 import org.mozilla.javascript.*;
 import org.mozilla.javascript.debug.*;
 import java.io.*;
 
-public class Main
+
+public class Main implements ContextListener
 {
+	// The class implements ContextListener only for compatibility!
+
     Dim dim;
     DebugGui debugGui;
 
@@ -191,8 +193,51 @@ public class Main
         dim.attachTo(factory);
     }
 
+    /**
+     * @deprecated
+     * The method does nothing and is only present for compatibility.
+     */
+    public void setOptimizationLevel(int level)
+    {
+    }
+
+    /**
+     * @deprecated
+     * The method is only present for compatibility and should not be called.
+     */
+    public void contextEntered(Context cx)
+    {
+        throw new IllegalStateException();
+    }
+
+    /**
+     * @deprecated
+     * The method is only present for compatibility and should not be called.
+     */
+    public void contextExited(Context cx)
+    {
+        throw new IllegalStateException();
+    }
+
+    /**
+     * @deprecated
+     * The method is only present for compatibility and should not be called.
+     */
+    public void contextCreated(Context cx)
+    {
+        throw new IllegalStateException();
+    }
+
+    /**
+     * @deprecated
+     * The method is only present for compatibility and should not be called.
+     */
+    public void contextReleased(Context cx)
+    {
+        throw new IllegalStateException();
+    }
+
     public static void main(String[] args)
-        throws Exception
     {
         Main main = new Main("Rhino JavaScript Debugger");
         main.doBreak();

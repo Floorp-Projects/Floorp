@@ -574,6 +574,25 @@ public class Context
      */
     public static void addContextListener(ContextListener listener)
     {
+        // Special workaround for the debugger
+        String DBG = "org.mozilla.javascript.tools.debugger.Main";
+        if (DBG.equals(listener.getClass().getName())) {
+            Class cl = listener.getClass();
+            Class factoryClass = Kit.classOrNull(
+                "org.mozilla.javascript.ContextFactory");
+            Class[] sig = { factoryClass };
+            Object[] args = { ContextFactory.getGlobal() };
+            try {
+                Method m = cl.getMethod("attachTo", sig);
+                m.invoke(listener, args);
+            } catch (Exception ex) {
+                RuntimeException rex = new RuntimeException();
+                Kit.initCause(rex, ex);
+                throw rex;
+            }
+            return;
+        }
+
         ContextFactory.getGlobal().addListener(listener);
     }
 
