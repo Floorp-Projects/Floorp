@@ -36,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: secvfy.c,v 1.9 2003/10/17 13:45:33 ian.mcgreer%sun.com Exp $
+ * $Id: secvfy.c,v 1.10 2003/12/23 21:24:01 wchang0222%aol.com Exp $
  */
 
 #include <stdio.h>
@@ -360,7 +360,6 @@ VFY_EndWithSignature(VFYContext *cx, SECItem *sig)
     unsigned part;
     SECItem hash,dsasig; /* dsasig is also used for ECDSA */
     SECStatus rv;
-    int rawSigLen;
 
     if ((cx->hasSignature == PR_FALSE) && (sig == NULL)) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
