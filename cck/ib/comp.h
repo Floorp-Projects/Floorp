@@ -7,6 +7,9 @@ typedef struct s_component {
 	BOOL	invisible;
 	BOOL	launchapp;
 	BOOL	additional;
+	BOOL	disabled;
+	BOOL	forceupgrade;
+
 	} COMPONENT;
 
 extern "C" __declspec(dllexport) 
