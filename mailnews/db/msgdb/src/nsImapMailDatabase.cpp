@@ -43,11 +43,6 @@ NS_IMETHODIMP nsImapMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, 
 
 	nsLocalFolderSummarySpec	summarySpec(folderName);
 
-#ifdef DEBUG_bienvenu
-    printf("nsImapMailDatabase::Open(%s, %s, %p, %s) -> %s\n",
-           (const char*)folderName, create ? "TRUE":"FALSE",
-           pMessageDB, upgrading ? "TRUE":"FALSE", (const char*)folderName);
-#endif
 	nsIDBFolderInfo	*folderInfo = NULL;
 
 	*pMessageDB = NULL;
@@ -61,6 +56,11 @@ NS_IMETHODIMP nsImapMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, 
 		return(NS_OK);
 	}
 
+#ifdef DEBUG_bienvenu
+    printf("really opening db in nsImapMailDatabase::Open(%s, %s, %p, %s) -> %s\n",
+           (const char*)folderName, create ? "TRUE":"FALSE",
+           pMessageDB, upgrading ? "TRUE":"FALSE", (const char*)folderName);
+#endif
 	// if the old summary doesn't exist, we're creating a new one.
 	if (!summarySpec.Exists() && create)
 		newFile = PR_TRUE;
