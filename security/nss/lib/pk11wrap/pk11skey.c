@@ -5370,9 +5370,12 @@ PK11_UnwrapPrivKey(PK11SlotInfo *slot, PK11SymKey *wrappingKey,
 
     if (newKey) {
 	if (perm) {
+	    /* Get RW Session will either lock the monitor if necessary, 
+	     *  or return a thread safe session handle. */ 
 	    rwsession = PK11_GetRWSession(slot);
 	} else {
 	    rwsession = slot->session;
+	    PK11_EnterSlotMonitor(slot);
 	}
 	crv = PK11_GETTAB(slot)->C_UnwrapKey(rwsession, &mechanism, 
 					 newKey->objectID,
@@ -5380,7 +5383,11 @@ PK11_UnwrapPrivKey(PK11SlotInfo *slot, PK11SymKey *wrappingKey,
 					 wrappedKey->len, keyTemplate, 
 					 templateCount, &privKeyID);
 
-	if (perm) PK11_RestoreROSession(slot, rwsession);
+	if (perm) {
+	    PK11_RestoreROSession(slot, rwsession);
+	} else {
+	    PK11_ExitSlotMonitor(slot);
+	}
 	PK11_FreeSymKey(newKey);
     } else {
 	crv = CKR_FUNCTION_NOT_SUPPORTED;
