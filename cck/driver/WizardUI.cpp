@@ -38,7 +38,7 @@
 #include "PropSheet.h"
 #include "WizardUI.h"
 #include "Interpret.h"
-#include "PrefEditView.h"
+//SCM #include "PrefEditView.h"
 
 #include <direct.h>
 #include <sys/types.h>
@@ -836,12 +836,8 @@ void CWizardUI::CreateControls()
       else
         prefsFile = rootPath + curWidget->attrib;
 
-			curWidget->control = new CPrefEditView(prefsFile);
-      
-      // Configure the PrefsTree with any existing globals
-      //((CPrefEditView*)curWidget->control)->SetPrefValues(curWidget->value);
-
-			rv = ((CPrefEditView*)curWidget->control)->Create(NULL, NULL, WS_BORDER, tmpRect, this, ID);
+			//SCM curWidget->control = new CPrefEditView(prefsFile);
+			//SCM rv = ((CPrefEditView*)curWidget->control)->Create(NULL, NULL, WS_BORDER, tmpRect, this, ID);
 
       
 		}
@@ -1147,7 +1143,6 @@ CString CWizardUI::GetScreenValue(WIDGET *curWidget)
 
   else if (widgetType == "PrefsTree")
   {
-    //rv = ((CPrefEditView*)curWidget->control)->GetModifiedPrefs();
   }
 
 	else
@@ -1178,7 +1173,7 @@ void CWizardUI::UpdateGlobals()
 			CString configName	= GetGlobal("CustomizationList");
 			CString localPrefsFile = rootPath + "Configs\\" + configName + "\\" + curWidget->attrib;
 
-      ((CPrefEditView*)curWidget->control)->DoSavePrefsTree(localPrefsFile);
+      //SCM ((CPrefEditView*)curWidget->control)->DoSavePrefsTree(localPrefsFile);
     }
 	}
 	IsNewValue = TRUE;

@@ -56,8 +56,8 @@ OBJS = \
 	.\$(OBJDIR)\NavText.obj \
 	.\$(OBJDIR)\NewConfigDialog.obj \
 	.\$(OBJDIR)\NewDialog.obj \
-  .\$(OBJDIR)\PrefEditView.obj \
-	.\$(OBJDIR)\PrefElement.obj \
+#  .\$(OBJDIR)\PrefEditView.obj \
+#  .\$(OBJDIR)\PrefElement.obj \
 	.\$(OBJDIR)\ProgDlgThread.obj \
 	.\$(OBJDIR)\ProgressDialog.obj \
 	.\$(OBJDIR)\PropSheet.obj \
@@ -68,10 +68,10 @@ OBJS = \
 	.\$(OBJDIR)\WizardUI.obj \
 	.\$(OBJDIR)\WizHelp.obj \
 	.\$(OBJDIR)\wizshell.obj \
-  .\$(OBJDIR)\XMLDOMHelper.obj \
+#  .\$(OBJDIR)\XMLDOMHelper.obj \
   .\$(OBJDIR)\DlgFind.obj \
   .\$(OBJDIR)\DlgAdd.obj \
-  .\$(OBJDIR)\PrefGroup.obj \
+#  .\$(OBJDIR)\PrefGroup.obj \
 	$(NULL)
 
 LLIBS = $(LLIBS) \

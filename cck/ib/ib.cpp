@@ -18,8 +18,8 @@
 #define BUF_SIZE 4096
 
 // for the xml parser used for PrefsTree
-#import "msxml.dll"
-using namespace MSXML;
+//SCM #import "msxml.dll"
+//SCM using namespace MSXML;
 
 // Required disk space for Win build
 #define WDISK_SPACE 27577549
@@ -697,6 +697,7 @@ int ModifyHashedPref(CString HashedPrefsFile, CString PrefName, CString NewPrefV
 }
 
 // XML DOM helper. Returns the value of a specified child element.
+/* //SCM
 CString GetElementValue(IXMLDOMElementPtr element, CString strTag)
 {
   _variant_t value;
@@ -725,6 +726,7 @@ CString GetAttribute(IXMLDOMElementPtr element, CString strAttributeName)
   else
     return (char*)_bstr_t(attribValue);
 }
+*/
 
 // This processes a prefs tree XML file, adding preferences to install files
 // as specified in the prefs tree XML file. See PrefsTree.html for file
@@ -735,6 +737,7 @@ CString GetAttribute(IXMLDOMElementPtr element, CString strAttributeName)
 BOOL ProcessPrefsTree(CString strPrefsTreeFile)
 {
 
+  /* //SCM
   // Create XML DOM instance.
   IXMLDOMDocumentPtr prefXMLTree;
   HRESULT hr = prefXMLTree.CreateInstance(__uuidof(DOMDocument));
@@ -810,6 +813,8 @@ BOOL ProcessPrefsTree(CString strPrefsTreeFile)
 
     }
   }
+
+  */
   return TRUE;
 }
 
