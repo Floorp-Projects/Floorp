@@ -2069,10 +2069,12 @@ Insert numbered list
 ! end Format/List Submenu
 
 *menuBar*indent.labelString:                Increase Indent
+*menuBar*indent.acceleratorText:            Alt+=
 *menuBar*indent.mnemonic:                   I
 *indent.documentationString:		Increase the indent one level
 
 *menuBar*outdent.labelString:               Decrease Indent
+*menuBar*indent.acceleratorText:            Alt+-
 *menuBar*outdent.mnemonic:                  D
 *outdent.documentationString:		Decrease the indent one level
 
