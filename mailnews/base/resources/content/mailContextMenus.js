@@ -185,6 +185,7 @@ function fillFolderPaneContextMenu()
   SetupRemoveMenuItem(folderResource, numSelected, isServer, serverType, specialFolder);
   SetupCompactMenuItem(folderResource, numSelected);
 
+  ShowMenuItem("folderPaneContext-copy-location", !isServer);
   ShowMenuItem("folderPaneContext-emptyTrash", (numSelected <= 1) && (specialFolder == 'Trash'));
   EnableMenuItem("folderPaneContext-emptyTrash", true);
 
@@ -201,7 +202,7 @@ function fillFolderPaneContextMenu()
   ShowMenuItem("folderPaneContext-subscribe", (numSelected <= 1) && canSubscribeToFolder);
   EnableMenuItem("folderPaneContext-subscribe", true);
 
-  ShowMenuItem("folderPaneContext-sep1", (numSelected <= 1));
+  ShowMenuItem("folderPaneContext-sep1", (numSelected <= 1) && !isServer);
 // News folder context menu =============================================
 
   ShowMenuItem("folderPaneContext-newsUnsubscribe", (numSelected <= 1) && canSubscribeToFolder && isNewsgroup);
