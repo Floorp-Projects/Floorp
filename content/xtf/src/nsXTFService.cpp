@@ -120,7 +120,7 @@ nsXTFService::CreateElement(nsIContent** aResult, nsINodeInfo* aNodeInfo)
     nsAutoString uri;
     aNodeInfo->GetNamespaceURI(uri);
     AppendUTF16toUTF8(uri, xtf_contract_id);
-#ifdef DEBUG
+#ifdef DEBUG_xtf_verbose
     printf("Testing for XTF factory at %s\n", xtf_contract_id.get());
 #endif
     factory = do_GetService(xtf_contract_id.get());
