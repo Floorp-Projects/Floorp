@@ -18,30 +18,9 @@
 
 #define NS_IMPL_IDS
 
-#include "nsIProperties.h"
-#include "nsHashtable.h"
+#include "nsProperties.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-
-class nsProperties : public nsIProperties, public nsHashtable {
-public:
-
-    NS_DECL_ISUPPORTS
-
-    // nsIProperties methods:
-    NS_IMETHOD DefineProperty(const char* prop, nsISupports* initialValue);
-    NS_IMETHOD UndefineProperty(const char* prop);
-    NS_IMETHOD GetProperty(const char* prop, nsISupports* *result);
-    NS_IMETHOD SetProperty(const char* prop, nsISupports* value);
-    NS_IMETHOD HasProperty(const char* prop, nsISupports* value); 
-
-    // nsProperties methods:
-    nsProperties();
-    virtual ~nsProperties();
-
-    static PRBool ReleaseValues(nsHashKey* key, void* data, void* closure);
-
-};
 
 NS_IMPL_ISUPPORTS(nsProperties, nsIProperties::GetIID());
 
@@ -142,51 +121,13 @@ NS_NewIProperties(nsIProperties* *result)
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "nsID.h"
-
 #include "nsBaseDLL.h"
 #include "nsCRT.h"
 #include "nsIInputStream.h"
 #include "nsIProperties.h"
 #include "nsIUnicharInputStream.h"
 #include "nsProperties.h"
-#include "plhash.h"
 #include "pratom.h"
-
-class nsPersistentProperties : public nsIPersistentProperties
-{
-public:
-  nsPersistentProperties();
-  virtual ~nsPersistentProperties();
-
-  NS_DECL_ISUPPORTS
-
-  // nsIProperties methods:
-  NS_IMETHOD DefineProperty(const char* prop, nsISupports* initialValue);
-  NS_IMETHOD UndefineProperty(const char* prop);
-  NS_IMETHOD GetProperty(const char* prop, nsISupports* *result);
-  NS_IMETHOD SetProperty(const char* prop, nsISupports* value);
-  NS_IMETHOD HasProperty(const char* prop, nsISupports* value); 
-
-  // nsIPersistentProperties methods:
-  NS_IMETHOD Load(nsIInputStream* aIn);
-  NS_IMETHOD Save(nsIOutputStream* aOut, const nsString& aHeader);
-  NS_IMETHOD Subclass(nsIPersistentProperties* aSubclass);
-
-  // XXX these 2 methods will be subsumed by the ones from 
-  // nsIProperties once we figure this all out
-  NS_IMETHOD GetProperty(const nsString& aKey, nsString& aValue);
-  NS_IMETHOD SetProperty(const nsString& aKey, nsString& aNewValue,
-                         nsString& aOldValue);
-
-  // nsPersistentProperties methods:
-  PRInt32 Read();
-  PRInt32 SkipLine(PRInt32 c);
-  PRInt32 SkipWhiteSpace(PRInt32 c);
-
-  nsIUnicharInputStream* mIn;
-  nsIPersistentProperties* mSubclass;
-  struct PLHashTable*    mTable;
-};
 
 nsPersistentProperties::nsPersistentProperties()
 {
@@ -215,9 +156,22 @@ nsPersistentProperties::~nsPersistentProperties()
   }
 }
 
-NS_DEFINE_IID(kIPropertiesIID, NS_IPROPERTIES_IID);
+NS_IMPL_ADDREF(nsPersistentProperties)
+NS_IMPL_RELEASE(nsPersistentProperties)
 
-NS_IMPL_ISUPPORTS(nsPersistentProperties, nsIPersistentProperties::GetIID())
+NS_IMETHODIMP
+nsPersistentProperties::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+    NS_ASSERTION(aInstancePtr != nsnull, "null ptr");
+    if (aIID.Equals(nsIPersistentProperties::GetIID()) ||
+        aIID.Equals(nsIProperties::GetIID()) ||
+        aIID.Equals(nsISupports::GetIID())) {
+        *aInstancePtr = NS_STATIC_CAST(nsIPersistentProperties*, this);
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    return NS_NOINTERFACE;
+}
 
 NS_IMETHODIMP
 nsPersistentProperties::Load(nsIInputStream *aIn)
@@ -432,55 +386,4 @@ nsPersistentProperties::HasProperty(const char* prop, nsISupports* value)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
  
-////////////////////////////////////////////////////////////////////////////////
-
-nsPersistentPropertiesFactory::nsPersistentPropertiesFactory()
-{
-  NS_INIT_REFCNT();
-}
-
-nsPersistentPropertiesFactory::~nsPersistentPropertiesFactory()
-{
-}
-
-NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-
-NS_IMPL_ISUPPORTS(nsPersistentPropertiesFactory, kIFactoryIID);
-
-NS_IMETHODIMP
-nsPersistentPropertiesFactory::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
-  void** aResult)
-{
-  if (aOuter) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = nsnull;
-  nsPersistentProperties* props = new nsPersistentProperties();
-  if (!props) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult ret = props->QueryInterface(aIID, aResult);
-  if (NS_FAILED(ret)) {
-    delete props;
-  }
-
-  return ret;
-}
-
-NS_IMETHODIMP
-nsPersistentPropertiesFactory::LockFactory(PRBool aLock)
-{
-  if (aLock) {
-    PR_AtomicIncrement(&gLockCount);
-  }
-  else {
-    PR_AtomicDecrement(&gLockCount);
-  }
-
-  return NS_OK;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
