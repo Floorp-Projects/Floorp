@@ -414,7 +414,7 @@ sub confirm_login {
             use Token;
             my $token = Token::HasPasswordToken($userid);
             while ( $token ) {
-                Token::Cancel($token, "user logged in");
+                Token::Cancel($token, 'user_logged_in');
                 $token = Token::HasPasswordToken($userid);
             }
         }

@@ -21,11 +21,12 @@
   #%]
 From: bugzilla-admin-daemon
 To: [% emailaddress %]
-Subject: [% tokentype %] token cancelled
+Subject: [% PROCESS subject %]
 
-A token was cancelled from [% remoteaddress %].  
+A request was cancelled from [% remoteaddress %].
+
 If you did not request this, it could be either an honest 
-mistake or the result of a malicious hack attempt.  
+mistake or someone attempting to break into your Bugzilla account.
 
 Take a look at the information below and forward this email 
 to [% maintainer %] if you suspect foul play.
@@ -37,6 +38,16 @@ to [% maintainer %] if you suspect foul play.
        Event Data: [% eventdata %]
 Cancelled Because:
 [% PROCESS cancelactionmessage %]
+
+[% BLOCK subject %]
+  [% IF tokentype == 'password' %]
+    Password change request cancelled
+  [% ELSIF tokentype == 'emailnew' OR tokentype == 'emailold' %]
+    Email change request cancelled
+  [% ELSE %]
+    [% tokentype %] token cancelled
+  [% END %]
+[% END %]
 
 [% BLOCK cancelactionmessage %]
   [% IF    cancelaction == 'account_exists' %]
@@ -57,16 +68,19 @@ Cancelled Because:
     to [% new_email %] has been cancelled.
 
   [% ELSIF cancelaction == 'password_change_canceled' %]
-    The user requested cancellation.
+    You have requested cancellation.
+
+  [% ELSIF cancelaction == 'user_logged_in' %]
+    You have logged in.
 
   [% ELSIF cancelaction == 'wrong_token_for_changing_passwd' %]
-    The user tried to use the token to change the password.
+    You have tried to use the token to change the password.
 
   [% ELSIF cancelaction == 'wrong_token_for_cancelling_email_change' %]
-    The user tried to use the token to cancel the email address change.
+    You have tried to use the token to cancel the email address change.
 
   [% ELSIF cancelaction == 'wrong_token_for_confirming_email_change' %]
-    The user tried to use the token to confirm the email address change.
+    You have tried to use the token to confirm the email address change.
 
   [% ELSE %]
     [%# Give sensible error if the cancel-token function is used incorrectly.
