@@ -267,7 +267,7 @@ nsMenuBarFrame::FindMenuWithShortcut(PRUint32 aLetter)
       if (!shortcutKey.IsEmpty()) {
         // We've got something.
         PRUnichar letter = PRUnichar(aLetter); // throw away the high-zero-fill
-        if ( Compare(shortcutKey, nsDependentString(&letter, 1), nsCaseInsensitiveStringComparator())==0 )  {
+        if ( Compare(shortcutKey, Substring(&letter, &letter+1), nsCaseInsensitiveStringComparator())==0 )  {
           // We match!
           nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(currFrame);
           if (menuFrame)
