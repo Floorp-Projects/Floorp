@@ -101,6 +101,7 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {
     int i, j, k, n;
     char *prefix = NULL, *tmp;
+    const char *ctmp;
 
     if (!report) {
         fprintf(gErrFile, "%s\n", message);
@@ -121,11 +122,11 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     }
 
     /* embedded newlines -- argh! */
-    while ((tmp = strchr(message, '\n')) != 0) {
-        tmp++;
+    while ((ctmp = strchr(message, '\n')) != 0) {
+        ctmp++;
         if (prefix) fputs(prefix, gErrFile);
-        fwrite(message, 1, tmp - message, gErrFile);
-        message = tmp;
+        fwrite(message, 1, ctmp - message, gErrFile);
+        message = ctmp;
     }
     /* If there were no filename or lineno, the prefix might be empty */
     if (prefix)
