@@ -114,10 +114,7 @@
   <statusbar id="status-bar">
     <statusbarpanel class="statusbarpanel-iconic" id="privacy-button"
                     hidden="true" insertbefore="security-button"
-                    oncommand="viewP3PDialog()" tooltiptext="&cookieIcon.label;">
-      <toolbarbutton class="taskbutton" id="mini-cookie"
-                     image="chrome://communicator/skin/cookie/taskbar-cookie.gif"/>
-    </statusbarpanel>
+                    oncommand="viewP3PDialog()" tooltiptext="&cookieIcon.label;"/>
   </statusbar>
 
 </overlay>
