@@ -232,6 +232,7 @@ class NS_EXPORT nsGetServiceByCID : public nsCOMPtr_helper
         }
 
   	  virtual nsresult operator()( const nsIID&, void** ) const;
+	virtual ~nsGetServiceByCID() {};
 
     private:
       const nsCID&                mCID;
@@ -265,6 +266,8 @@ class NS_EXPORT nsGetServiceByProgID : public nsCOMPtr_helper
         }
 
   	  virtual nsresult operator()( const nsIID&, void** ) const;
+
+	virtual ~nsGetServiceByProgID() {};
 
     private:
       const char*                 mProgID;
