@@ -473,8 +473,7 @@ nsDOMAttribute::SetPrefix(const nsString& aPrefix)
 NS_IMETHODIMP 
 nsDOMAttribute::GetLocalName(nsString& aLocalName)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return GetName(aLocalName);
 }
 
 NS_IMETHODIMP 

@@ -123,6 +123,10 @@ public:
                           nsString &aResult) const {
     return mInner.GetAttribute(aNameSpaceID, aAttribute, aResult);
   }
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
+                          nsIAtom*& aPrefix, nsString &aResult) const {
+    return mInner.GetAttribute(aNameSpaceID, aAttribute, aPrefix, aResult);
+  }
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                           const nsString& aValue, PRBool aNotify) {
     return mInner.SetAttribute(aNameSpaceID, aAttribute, aValue, aNotify);
@@ -137,8 +141,9 @@ public:
   }
   NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
                                 PRInt32& aNameSpaceID,
-                                nsIAtom*& aName) const {
-    return mInner.GetAttributeNameAt(aIndex, aNameSpaceID, aName);
+                                nsIAtom*& aName,
+                                nsIAtom*& aPrefix) const {
+    return mInner.GetAttributeNameAt(aIndex, aNameSpaceID, aName, aPrefix);
   }
   NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {
     return mInner.GetAttributeCount(aResult);

@@ -337,11 +337,14 @@ public:
                         PRBool aNotify);
   nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
                         nsString& aResult) const;
+  nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
+                        nsIAtom*& aPrefix, nsString& aResult) const;
   nsresult UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
                           PRBool aNotify);
   nsresult GetAttributeNameAt(PRInt32 aIndex,
                               PRInt32& aNameSpaceID, 
-                              nsIAtom*& aName) const;
+                              nsIAtom*& aName,
+                              nsIAtom*& aPrefix) const;
   nsresult GetAttributeCount(PRInt32& aResult) const;
   nsresult List(FILE* out, PRInt32 aIndent) const;
   nsresult CanContainChildren(PRBool& aResult) const;
@@ -622,14 +625,19 @@ public:
                           nsString& aResult) const {                       \
     return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
   }                                                                        \
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
+                          nsIAtom*& aPrefix, nsString& aResult) const {    \
+    return _g.GetAttribute(aNameSpaceID, aName, aPrefix, aResult);         \
+  }                                                                        \
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,     \
                             PRBool aNotify) {                              \
     return _g.UnsetAttribute(aNameSpaceID, aAttribute, aNotify);           \
   }                                                                        \
   NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,                            \
                                 PRInt32& aNameSpaceID,                     \
-                                nsIAtom*& aName) const {                   \
-    return _g.GetAttributeNameAt(aIndex, aNameSpaceID, aName);             \
+                                nsIAtom*& aName,                           \
+                                nsIAtom*& aPrefix) const {                 \
+    return _g.GetAttributeNameAt(aIndex, aNameSpaceID, aName, aPrefix);    \
   }                                                                        \
   NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {                   \
     return _g.GetAttributeCount(aResult);                                  \
@@ -744,14 +752,19 @@ public:
                           nsString& aResult) const {                       \
     return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
   }                                                                        \
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
+                          nsIAtom*& aPrefix, nsString& aResult) const {    \
+    return _g.GetAttribute(aNameSpaceID, aName, aPrefix, aResult);         \
+  }                                                                        \
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,     \
                             PRBool aNotify) {                              \
     return _g.UnsetAttribute(aNameSpaceID, aAttribute, aNotify);           \
   }                                                                        \
   NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,                            \
                                 PRInt32& aNameSpaceID,                     \
-                                nsIAtom*& aName) const {                   \
-    return _g.GetAttributeNameAt(aIndex, aNameSpaceID, aName);             \
+                                nsIAtom*& aName,                           \
+                                nsIAtom*& aPrefix) const {                 \
+    return _g.GetAttributeNameAt(aIndex, aNameSpaceID, aName, aPrefix);    \
   }                                                                        \
   NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {                   \
     return _g.GetAttributeCount(aResult);                                  \
@@ -866,14 +879,19 @@ public:
                           nsString& aResult) const {                       \
     return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
   }                                                                        \
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
+                          nsIAtom*& aPrefix, nsString& aResult) const {    \
+    return _g.GetAttribute(aNameSpaceID, aName, aPrefix, aResult);         \
+  }                                                                        \
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,     \
                             PRBool aNotify) {                              \
     return _g.UnsetAttribute(aNameSpaceID, aAttribute, aNotify);           \
   }                                                                        \
   NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,                            \
                                 PRInt32& aNameSpaceID,                     \
-                                nsIAtom*& aName) const {                   \
-    return _g.GetAttributeNameAt(aIndex, aNameSpaceID, aName);             \
+                                nsIAtom*& aName,                           \
+                                nsIAtom*& aPrefix) const {                 \
+    return _g.GetAttributeNameAt(aIndex, aNameSpaceID, aName, aPrefix);    \
   }                                                                        \
   NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {                   \
     return _g.GetAttributeCount(aResult);                                  \
@@ -986,14 +1004,19 @@ public:
                           nsString& aResult) const {                       \
     return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
   }                                                                        \
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
+                          nsIAtom*& aPrefix, nsString& aResult) const {    \
+    return _g.GetAttribute(aNameSpaceID, aName, aPrefix, aResult);         \
+  }                                                                        \
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,     \
                             PRBool aNotify) {                              \
     return _g.UnsetAttribute(aNameSpaceID, aAttribute, aNotify);           \
   }                                                                        \
   NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,                            \
                                 PRInt32& aNameSpaceID,                     \
-                                nsIAtom*& aName) const {                   \
-    return _g.GetAttributeNameAt(aIndex, aNameSpaceID, aName);             \
+                                nsIAtom*& aName,                           \
+                                nsIAtom*& aPrefix) const {                 \
+    return _g.GetAttributeNameAt(aIndex, aNameSpaceID, aName, aPrefix);    \
   }                                                                        \
   NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {                   \
     return _g.GetAttributeCount(aResult);                                  \
@@ -1110,14 +1133,19 @@ public:
                           nsString& aResult) const {                       \
     return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
   }                                                                        \
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
+                          nsIAtom*& aPrefix, nsString& aResult) const {    \
+    return _g.GetAttribute(aNameSpaceID, aName, aPrefix, aResult);         \
+  }                                                                        \
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,     \
                             PRBool aNotify) {                              \
     return _g.UnsetAttribute(aNameSpaceID, aAttribute, aNotify);           \
   }                                                                        \
   NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,                            \
                                 PRInt32& aNameSpaceID,                     \
-                                nsIAtom*& aName) const {                   \
-    return _g.GetAttributeNameAt(aIndex, aNameSpaceID, aName);             \
+                                nsIAtom*& aName,                           \
+                                nsIAtom*& aPrefix) const {                 \
+    return _g.GetAttributeNameAt(aIndex, aNameSpaceID, aName, aPrefix);    \
   }                                                                        \
   NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {                   \
     return _g.GetAttributeCount(aResult);                                  \
@@ -1226,14 +1254,19 @@ public:
                           nsString& aResult) const {                       \
     return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
   }                                                                        \
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
+                          nsIAtom*& aPrefix, nsString& aResult) const {    \
+    return _g.GetAttribute(aNameSpaceID, aName, aPrefix, aResult);         \
+  }                                                                        \
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,     \
                             PRBool aNotify) {                              \
     return _g.UnsetAttribute(aNameSpaceID, aAttribute, aNotify);           \
   }                                                                        \
   NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,                            \
                                 PRInt32& aNameSpaceID,                     \
-                                nsIAtom*& aName) const {                   \
-    return _g.GetAttributeNameAt(aIndex, aNameSpaceID, aName);             \
+                                nsIAtom*& aName,                           \
+                                nsIAtom*& aPrefix) const {                 \
+    return _g.GetAttributeNameAt(aIndex, aNameSpaceID, aName, aPrefix);    \
   }                                                                        \
   NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {                   \
     return _g.GetAttributeCount(aResult);                                  \

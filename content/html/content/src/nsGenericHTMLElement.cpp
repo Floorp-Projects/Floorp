@@ -1487,6 +1487,15 @@ nsGenericHTMLElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
 
 nsresult
 nsGenericHTMLElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
+                                   nsIAtom*& aPrefix, nsString &aResult) const
+{
+  aPrefix = nsnull;
+
+  return GetAttribute(aNameSpaceID, aAttribute, aResult);
+}
+
+nsresult
+nsGenericHTMLElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
                                    nsString &aResult) const
 {
 #if 0
@@ -1582,9 +1591,11 @@ nsGenericHTMLElement::GetHTMLAttribute(nsIAtom* aAttribute,
 nsresult 
 nsGenericHTMLElement::GetAttributeNameAt(PRInt32 aIndex,
                                          PRInt32& aNameSpaceID, 
-                                         nsIAtom*& aName) const
+                                         nsIAtom*& aName,
+                                         nsIAtom*& aPrefix) const
 {
   aNameSpaceID = kNameSpaceID_None;
+  aPrefix = nsnull;
   if (nsnull != mAttributes) {
     return mAttributes->GetAttributeNameAt(aIndex, aName);
   }
@@ -1745,8 +1756,11 @@ nsGenericHTMLElement::ListAttributes(FILE* out) const
   for (index = 0; index < count; index++) {
     // name
     nsIAtom* attr = nsnull;
+    nsIAtom* prefix = nsnull;
     PRInt32 nameSpaceID;
-    GetAttributeNameAt(index, nameSpaceID, attr);
+    GetAttributeNameAt(index, nameSpaceID, attr, prefix);
+    NS_IF_RELEASE(prefix);
+
     nsAutoString buffer;
     attr->ToString(buffer);
 

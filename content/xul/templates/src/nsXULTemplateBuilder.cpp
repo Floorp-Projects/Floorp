@@ -5078,9 +5078,9 @@ nsXULTemplateBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
 
             for (PRInt32 attr = 0; attr < numAttribs; attr++) {
                 PRInt32 attribNameSpaceID;
-                nsCOMPtr<nsIAtom> attribName;
+                nsCOMPtr<nsIAtom> attribName, prefix;
 
-                rv = tmplKid->GetAttributeNameAt(attr, attribNameSpaceID, *getter_AddRefs(attribName));
+                rv = tmplKid->GetAttributeNameAt(attr, attribNameSpaceID, *getter_AddRefs(attribName), *getter_AddRefs(prefix));
                 if (NS_FAILED(rv)) return rv;
 
                 if (! IsIgnoreableAttribute(attribNameSpaceID, attribName)) {
@@ -5399,10 +5399,11 @@ nsXULTemplateBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
         for (PRInt32 aLoop=0; aLoop<numAttribs; aLoop++) {
             PRInt32    attribNameSpaceID;
-            nsCOMPtr<nsIAtom> attribName;
+            nsCOMPtr<nsIAtom> attribName, prefix;
             rv = aTemplateNode->GetAttributeNameAt(aLoop,
                                                    attribNameSpaceID,
-                                                   *getter_AddRefs(attribName));
+                                                   *getter_AddRefs(attribName),
+                                                   *getter_AddRefs(prefix));
             if (NS_FAILED(rv)) return rv;
 
             // See if it's one of the attributes that we unilaterally
@@ -6642,8 +6643,10 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
     // Add constraints for the LHS
     for (PRInt32 i = 0; i < count; ++i) {
         PRInt32 attrNameSpaceID;
-        nsCOMPtr<nsIAtom> attr;
-        rv = aRuleElement->GetAttributeNameAt(i, attrNameSpaceID, *getter_AddRefs(attr));
+        nsCOMPtr<nsIAtom> attr, prefix;
+        rv = aRuleElement->GetAttributeNameAt(i, attrNameSpaceID,
+                                              *getter_AddRefs(attr),
+                                              *getter_AddRefs(prefix));
         if (NS_FAILED(rv)) return rv;
 
         // Note: some attributes must be skipped on XUL template rule subtree
@@ -6812,9 +6815,10 @@ nsXULTemplateBuilder::AddSimpleRuleBindings(Rule* aRule, nsIContent* aElement)
 
         for (i = 0; i < count; ++i) {
             PRInt32 nameSpaceID;
-            nsCOMPtr<nsIAtom> attr;
+            nsCOMPtr<nsIAtom> attr, prefix;
 
-            element->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attr));
+            element->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attr),
+                                        *getter_AddRefs(prefix));
 
             nsAutoString value;
             element->GetAttribute(nameSpaceID, attr, value);

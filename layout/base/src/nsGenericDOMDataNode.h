@@ -184,9 +184,15 @@ struct nsGenericDOMDataNode {
   nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsString &aResult) const {
     return NS_CONTENT_ATTR_NOT_THERE;
   }
+  nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsIAtom*& aPrefix, nsString &aResult) const {
+    aPrefix = nsnull;
+    return NS_CONTENT_ATTR_NOT_THERE;
+  }
   nsresult GetAttributeNameAt(PRInt32 aIndex, PRInt32& aNameSpaceID, 
-                              nsIAtom*& aName) const {
+                              nsIAtom*& aName, nsIAtom*& aPrefix) const {
+    aNameSpaceID = kNameSpaceID_None;
     aName = nsnull;
+    aPrefix = nsnull;
     return NS_ERROR_ILLEGAL_VALUE;
   }
   nsresult GetAttributeCount(PRInt32& aResult) const {
@@ -492,6 +498,10 @@ struct nsGenericDOMDataNode {
                           nsString &aResult) const {                       \
     return _g.GetAttribute(aNameSpaceID, aAttribute, aResult);             \
   }                                                                        \
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,       \
+                          nsIAtom*& aPrefix, nsString &aResult) const {    \
+    return _g.GetAttribute(aNameSpaceID, aAttribute, aPrefix, aResult);    \
+  }                                                                        \
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,       \
                           const nsString& aValue, PRBool aNotify) {        \
     return _g.SetAttribute(aNameSpaceID, aAttribute, aValue, aNotify);     \
@@ -506,8 +516,9 @@ struct nsGenericDOMDataNode {
   }                                                                        \
   NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,                            \
                                 PRInt32& aNameSpaceID,                     \
-                                nsIAtom*& aName) const {                   \
-    return _g.GetAttributeNameAt(aIndex, aNameSpaceID, aName);             \
+                                nsIAtom*& aName,                           \
+                                nsIAtom*& aPrefix) const {                 \
+    return _g.GetAttributeNameAt(aIndex, aNameSpaceID, aName, aPrefix);    \
   }                                                                        \
   NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {                   \
     return _g.GetAttributeCount(aResult);                                  \
