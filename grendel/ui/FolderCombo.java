@@ -64,8 +64,12 @@ public class FolderCombo extends JComboBox {
     ViewedStore stores[] = StoreFactory.Instance().getStores();
     fInclude = aInclude;
     fExclude = aExclude;
-
-    removeAllItems();
+    
+    // this hack is getting old. why do i need it in the first place?
+    // this sucks!
+    if (getItemCount() > 0) {
+      removeAllItems();
+    }
 
     try {
       for (int i = 0; i < stores.length; i++) {
