@@ -176,6 +176,22 @@ void _PR_InitNet(void)
 #endif
 }
 
+void _PR_CleanupNet(void)
+{
+#if !defined(_PR_NO_DNS_LOCK)
+    if (_pr_dnsLock) {
+        PR_DestroyLock(_pr_dnsLock);
+        _pr_dnsLock = NULL;
+    }
+#endif
+#if !defined(_PR_HAVE_GETPROTO_R)
+    if (_getproto_lock) {
+        PR_DestroyLock(_getproto_lock);
+        _getproto_lock = NULL;
+    }
+#endif
+}
+
 /*
 ** Allocate space from the buffer, aligning it to "align" before doing
 ** the allocation. "align" must be a power of 2.

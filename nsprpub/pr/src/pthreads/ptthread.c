@@ -921,6 +921,7 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
         PR_Unlock(pt_book.ml);
 
         _PR_LogCleanup();
+        _PR_CleanupNet();
         /* Close all the fd's before calling _PR_CleanupIO */
         _PR_CleanupIO();
 
