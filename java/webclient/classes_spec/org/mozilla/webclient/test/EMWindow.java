@@ -21,6 +21,9 @@
  *               Ian Wilkinson <iw@ennoble.com>
  *               Mark Goddard
  *               Ed Burns <edburns@acm.org>
+ *               Ashutosh Kulkarni <ashuk@eng.sun.com>
+ *               Louis-Philippe Gagnon <louis-philippe@macadamian.com>
+ *               Jason Mawdsley <jason@macadamian.com>
  */
 
 package org.mozilla.webclient.test;
@@ -51,7 +54,7 @@ import org.w3c.dom.Document;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.18 2000/09/12 16:44:32 ashuk%eng.sun.com Exp $
+ * @version $Id: EMWindow.java,v 1.19 2000/09/15 00:15:01 ashuk%eng.sun.com Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -217,7 +220,7 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 		    }
 		});
 	 
-		pack();
+        //		pack();
 		show();
 		toFront();
 
