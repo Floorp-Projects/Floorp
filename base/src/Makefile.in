@@ -47,6 +47,7 @@ CPPSRCS =                       \
     nsUnicharBuffer.cpp         \
     nsUnicharInputStream.cpp    \
     nsVoidArray.cpp             \
+    nsSpecialSystemDirectory.cpp\
     $(NULL)
 
 EXPORTS =                       \
