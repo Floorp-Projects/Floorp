@@ -2302,7 +2302,11 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     PRBool applyMinLH = !(psd->mZeroEffectiveSpanBox); // (1) above
     PRBool isFirstLine = !mLineNumber; // if the line number is 0
     PRBool isLastLine = (!mLineBox->IsLineWrapped() && !GetFlag(LL_LINEENDSINBR));
-    //PRBool isLastLine = mBlockRS->mCurLine->IsLineWrapped();
+    PRBool foundLI = PR_FALSE;  // hack to fix bug 50480.
+    //XXX: rather than remembering if we've found an LI, we really should be checking
+    //     for the existence of a bullet frame.  Likewise, the code below should not
+    //     be checking for any particular content tag type, but rather should
+    //     be checking for the existence of a bullet frame to determine if it's a list element or not.
     if (!applyMinLH && (isFirstLine || isLastLine)) {
       nsCOMPtr<nsIContent> blockContent;
       nsresult result = mRootSpan->mFrame->mFrame->GetContent(getter_AddRefs(blockContent));
@@ -2313,9 +2317,10 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
           // (2) above, if the first line of LI
           if (isFirstLine && blockTagAtom.get() == nsHTMLAtoms::li) {
             applyMinLH = PR_TRUE;
+            foundLI = PR_TRUE;
           }
           // (3) above, if the last line of LI, DT, or DD
-          if (!applyMinLH && isLastLine &&
+          else if (!applyMinLH && isLastLine &&
                 ((blockTagAtom.get() == nsHTMLAtoms::li) ||
                  (blockTagAtom.get() == nsHTMLAtoms::dt) ||
                  (blockTagAtom.get() == nsHTMLAtoms::dd))) {
@@ -2325,7 +2330,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       }
     }
     if (applyMinLH) {
-      if ((psd->mX != psd->mLeftEdge) || preMode) {
+      if ((psd->mX != psd->mLeftEdge) || preMode || foundLI) {
 #ifdef NOISY_VERTICAL_ALIGN
         printf("  [span]==> adjusting min/maxY: currentValues: %d,%d", minY, maxY);
 #endif
