@@ -528,7 +528,7 @@ CWebBrowserChrome::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const PRUni
   CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(aTipText), printable);
 
 #ifdef DEBUG
-  printf("--------- SHOW TOOLTIP AT %ld %ld, |%s|\n", aXCoords, aYCoords, (const char *)printable );
+  printf("--------- SHOW TOOLTIP AT %ld %ld, |%s|\n", aXCoords, aYCoords, printable.get() );
 #endif
 
 #if USE_BALLOONS_FOR_TOOL_TIPS  
