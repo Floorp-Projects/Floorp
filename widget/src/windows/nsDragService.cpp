@@ -29,10 +29,7 @@
 #include "OLEIDL.H"
 
 
-static NS_DEFINE_IID(kIDragServiceIID,   NS_IDRAGSERVICE_IID);
-//static NS_DEFINE_IID(kIClipboardIID,     NS_ICLIPBOARD_IID);
-
-//static NS_DEFINE_CID(kCClipboardCID,     NS_CLIPBOARD_CID);
+static NS_DEFINE_IID(kIDragServiceIID, NS_IDRAGSERVICE_IID);
 
 NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
 NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
@@ -75,7 +72,10 @@ nsresult nsDragService::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsresult rv = NS_NOINTERFACE;
+  nsresult rv = nsBaseDragService::QueryInterface(aIID, aInstancePtr);
+  if (NS_OK == rv) {
+    return NS_OK;
+  }
 
   if (aIID.Equals(kIDragServiceIID)) {
     *aInstancePtr = (void*) ((nsIDragService*)this);
@@ -92,23 +92,22 @@ NS_IMETHODIMP nsDragService::StartDragSession (nsITransferable * aTransferable, 
 {
 
   // To do the drag we need to create an object that 
-  // mplements the IDataObject interface (for OLE)
-  //
-  // We start by getting the clipboard object,
-  // casting it our known class and using utility
-
+  // implements the IDataObject interface (for OLE)
   NS_IF_RELEASE(mNativeDragSrc);
   mNativeDragSrc = (IDropSource *)new nsNativeDragSource();
   if (nsnull != mNativeDragSrc) {
     mNativeDragSrc->AddRef();
   }
 
-  mTransferable = dont_QueryInterface(aTransferable);
+  // 
+  //mTransferable = dont_QueryInterface(aTransferable);
 
+  // The clipboard class contains some static utility methods
+  // that we can use to create an IDataObject from the transferable
   IDataObject * dataObj;
-  nsClipboard::CreateNativeDataObject(mTransferable, &dataObj);
+  nsClipboard::CreateNativeDataObject(aTransferable, &dataObj);
 
-  nsresult result = NS_ERROR_FAILURE;
+  // Now figure out what the native drag effect should be
   DWORD dropRes;
   DWORD effects = DROPEFFECT_SCROLL;
   if (aActionType & DRAGDROP_ACTION_COPY) {
@@ -121,6 +120,9 @@ NS_IMETHODIMP nsDragService::StartDragSession (nsITransferable * aTransferable, 
     effects |= DROPEFFECT_LINK;
   }
 
+  mDragAction = aActionType;
+
+  // Call the native D&D method
   HRESULT res = ::DoDragDrop(dataObj, mNativeDragSrc, effects, &dropRes);
 
   return (DRAGDROP_S_DROP == res?NS_OK:NS_ERROR_FAILURE);
@@ -129,6 +131,9 @@ NS_IMETHODIMP nsDragService::StartDragSession (nsITransferable * aTransferable, 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable)
 {
+  // This typcially happens on a drop, the target would be asking
+  // for it's transferable to be filled in
+  // Use a static clipboard utiloity method for this
   if (nsnull != mDataObject) {
     return nsClipboard::GetDataFromDataObject(mDataObject, nsnull, aTransferable);
   }
@@ -138,8 +143,11 @@ NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable)
 //---------------------------------------------------------
 NS_IMETHODIMP nsDragService::SetIDataObject (IDataObject * aDataObj)
 {
+  // When the native drag starts the DragService gets the IDataObject
+  // that is being dragged
   NS_IF_RELEASE(mDataObject);
   mDataObject = aDataObj;
   NS_ADDREF(mDataObject);
+
   return NS_OK;
 }
