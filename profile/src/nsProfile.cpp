@@ -388,7 +388,6 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs)
     if (mIsLangSpecified == PR_FALSE) return NS_OK;
 
     nsCOMPtr<nsIFile> profileDir;
-    PRBool alreadyset;
 
     rv = GetCurrentProfileDir(getter_AddRefs(profileDir));
     if (NS_FAILED(rv)) return rv;
