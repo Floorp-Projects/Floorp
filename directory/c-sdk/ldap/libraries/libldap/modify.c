@@ -95,7 +95,12 @@ ldap_modify_ext( LDAP *ld, const char *dn, LDAPMod **mods,
 	if ( !NSLDAPI_VALID_LDAP_POINTER( ld )) {
 		return( LDAP_PARAM_ERROR );
 	}
-
+	if ( !NSLDAPI_VALID_LDAPMESSAGE_POINTER( msgidp )) 
+        {
+		LDAP_SET_LDERRNO( ld, LDAP_PARAM_ERROR, NULL, NULL );
+		return( LDAP_PARAM_ERROR );
+	}
+        
 	if ( !NSLDAPI_VALID_NONEMPTY_LDAPMOD_ARRAY( mods )) {
 		lderr = LDAP_PARAM_ERROR;
 		LDAP_SET_LDERRNO( ld, lderr, NULL, NULL );

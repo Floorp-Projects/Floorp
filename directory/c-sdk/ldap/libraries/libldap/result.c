@@ -48,6 +48,7 @@ static int cldap_select1( LDAP *ld, struct timeval *timeout );
 static void link_pend( LDAP *ld, LDAPPend *lp );
 static void unlink_pend( LDAP *ld, LDAPPend *lp );
 static int unlink_msg( LDAP *ld, int msgid, int all );
+static int nsldapi_mutex_trylock( LDAP *ld, LDAPLock lockno );
 
 /*
  * ldap_result - wait for an ldap result response to a message from the
@@ -82,11 +83,10 @@ ldap_result(
 	}
 
 	while( 1 ) {
-		if( (ret = LDAP_MUTEX_TRYLOCK( ld, LDAP_RESULT_LOCK )) == 0 )
+		if( (ret = nsldapi_mutex_trylock( ld, LDAP_RESULT_LOCK )) == 0 )
 		{
 			LDAP_MUTEX_BC_LOCK( ld, LDAP_RESULT_LOCK );
 			rc= nsldapi_result_nolock( ld, msgid, all, 1, timeout, result );
-			LDAP_MUTEX_BC_UNLOCK( ld, LDAP_RESULT_LOCK );
 			break;
 		}
 		else {
@@ -107,6 +107,9 @@ nsldapi_result_nolock( LDAP *ld, int msgid, int all, int unlock_permitted,
     struct timeval *timeout, LDAPMessage **result )
 {
 	LDAPMessage	*lm, *lastlm, *nextlm;
+
+	LDAPRequest	*lr;
+
 	int		rc;
 
 	LDAPDebug( LDAP_DEBUG_TRACE, "nsldapi_result_nolock\n", 0, 0, 0 );
@@ -168,7 +171,21 @@ nsldapi_result_nolock( LDAP *ld, int msgid, int all, int unlock_permitted,
 		}
 		lastlm = lm;
 	}
-	if ( lm == NULL ) {
+
+	/*
+	 * if we did not find a message OR if the one we found is a result for
+	 * a request that is still pending, call into wait4msg() to await a
+	 * result.
+	 */
+
+	if ( lm == NULL 
+             || (  ld->ld_options & LDAP_BITOPT_ASYNC 
+                   && lm->lm_msgtype != LDAP_RES_SEARCH_REFERENCE &&
+                   lm->lm_msgtype != LDAP_RES_SEARCH_ENTRY &&
+                   ( lr = nsldapi_find_request_by_msgid( ld, lm->lm_msgid ))  != NULL
+                   && lr->lr_outrefcnt > 0 )) 
+
+    {
 		LDAP_MUTEX_UNLOCK( ld, LDAP_RESP_LOCK );
 		rc = wait4msg( ld, msgid, all, unlock_permitted, timeout,
 		    result );
@@ -357,6 +374,27 @@ wait4msg( LDAP *ld, int msgid, int all, int unlock_permitted,
 					    lc->lconn_sb )) {
 						rc = read1msg( ld, msgid, all,
 						    lc->lconn_sb, lc, result );
+					}
+					else if (ld->ld_options & LDAP_BITOPT_ASYNC) {
+                        if(   lr
+                              && lc->lconn_status == LDAP_CONNST_CONNECTING
+                              && nsldapi_is_write_ready( ld, lc->lconn_sb ) ) {
+                            rc = nsldapi_ber_flush( ld, lc->lconn_sb, lr->lr_ber, 0, 1 );
+                            if ( rc == 0 ) {
+                                rc = LDAP_RES_BIND;
+                                lc->lconn_status = LDAP_CONNST_CONNECTED;
+                                
+                                lr->lr_ber->ber_end = lr->lr_ber->ber_ptr;
+                                lr->lr_ber->ber_ptr = lr->lr_ber->ber_buf;
+                                nsldapi_mark_select_read( ld, lc->lconn_sb );
+                            }
+                            else if ( rc == -1 ) {
+                                LDAP_SET_LDERRNO( ld, LDAP_SERVER_DOWN, NULL, NULL );
+                                nsldapi_free_request( ld, lr, 0 );
+                                nsldapi_free_connection( ld, lc, 0, 0 );
+                            }
+                        }
+                        
 					}
 				}
 				LDAP_MUTEX_UNLOCK( ld, LDAP_REQ_LOCK );
@@ -597,17 +635,20 @@ lr->lr_res_matched ? lr->lr_res_matched : "" );
 		}
 
 		if ( msgid == LDAP_RES_ANY || id == msgid ) {
-			if ( all == 0
-			    || (new->lm_msgtype != LDAP_RES_SEARCH_RESULT
-			    && new->lm_msgtype != LDAP_RES_SEARCH_REFERENCE
+			if ( new->lm_msgtype == LDAP_RES_SEARCH_RESULT ) {
+				/*
+				 * return the first response we have for this
+				 * search request later (possibly an entire
+				 * chain of messages).
+				 */
+				foundit = 1;
+			} else if ( all == 0
+			    || (new->lm_msgtype != LDAP_RES_SEARCH_REFERENCE
 			    && new->lm_msgtype != LDAP_RES_SEARCH_ENTRY) ) {
 				*result = new;
 				LDAP_SET_LDERRNO( ld, LDAP_SUCCESS, NULL,
 				    NULL );
 				return( tag );
-			} else if ( new->lm_msgtype ==
-			    LDAP_RES_SEARCH_RESULT ) {
-				foundit = 1;	/* return the chain later */
 			}
 		}
 	}
@@ -654,12 +695,32 @@ lr->lr_res_matched ? lr->lr_res_matched : "" );
 		;	/* NULL */
 	tmp->lm_chain = new;
 
-	/* return the whole chain if that's what we were looking for */
+	/*
+	 * return the first response or the whole chain if that's what
+	 * we were looking for....
+	 */
 	if ( foundit ) {
-		if ( prev == NULL )
-			ld->ld_responses = l->lm_next;
-		else
-			prev->lm_next = l->lm_next;
+		if ( all == 0 && l->lm_chain != NULL ) {
+			/*
+			 * only return the first response in the chain
+			 */
+			if ( prev == NULL ) {
+				ld->ld_responses = l->lm_chain;
+			} else {
+				prev->lm_next = l->lm_chain;
+			}
+			l->lm_chain = NULL;
+			tag = l->lm_msgtype;
+		} else {
+			/*
+			 * return all of the responses (may be a chain)
+			 */
+			if ( prev == NULL ) {
+				ld->ld_responses = l->lm_next;
+			} else {
+				prev->lm_next = l->lm_next;
+			}
+		}
 		*result = l;
 		LDAP_MUTEX_UNLOCK( ld, LDAP_RESP_LOCK );
 		LDAP_SET_LDERRNO( ld, LDAP_SUCCESS, NULL, NULL );
@@ -1272,4 +1333,41 @@ unlink_msg( LDAP *ld, int msgid, int all )
 	}
 	LDAP_MUTEX_UNLOCK( ld, LDAP_RESP_LOCK );
 	return ( rc );
+}
+
+static int nsldapi_mutex_trylock( LDAP *ld, LDAPLock i )
+{
+ 
+        if( (ld)->ld_mutex_trylock_fn == NULL ) {
+                return (0) ;
+        }
+        else {
+                int ret;
+
+                if( (ld)->ld_threadid_fn != NULL ) {
+                        (ld)->ld_mutex_lock_fn ( (ld)->ld_mutex[LDAP_THREADID_LOCK] );
+                        if( (ld)->ld_mutex_threadid[i] == (ld)->ld_threadid_fn() ) {
+                                (ld)->ld_mutex_refcnt[i]++ ;
+                        	(ld)->ld_mutex_unlock_fn ( (ld)->ld_mutex[LDAP_THREADID_LOCK] );
+                        }
+                        else if( (ld)->ld_mutex_threadid[i] == (void *) -1 ) {
+                                ret = (ld)->ld_mutex_trylock_fn( (ld)->ld_mutex[i] );
+				if( ret == 0 ) {
+                                	(ld)->ld_mutex_threadid[i] =
+						(ld)->ld_threadid_fn() ;
+                                	(ld)->ld_mutex_refcnt[i]++ ;
+                        		(ld)->ld_mutex_unlock_fn (
+					   (ld)->ld_mutex[LDAP_THREADID_LOCK] );
+				}
+                        }
+			else {
+				ret = -1;
+                        	(ld)->ld_mutex_unlock_fn ( (ld)->ld_mutex[LDAP_THREADID_LOCK] );
+			}
+                }
+                else {
+                        ret = (ld)->ld_mutex_trylock_fn( (ld)->ld_mutex[i] ) ;
+                }
+                return (ret);
+        }
 }

@@ -281,19 +281,6 @@ ldap_controls_free( LDAPControl **ctrls )
 }
 
 
-int
-LDAP_CALL
-ldap_controls_count( LDAPControl **ctrls )
-{
-	int nctrls = 0;
-	if ( NULL != ctrls ) {
-		while( NULL != ctrls[nctrls] ) {
-			nctrls++;
-		}
-	}
-	return nctrls;
-}
-
 
 #if 0
 LDAPControl **

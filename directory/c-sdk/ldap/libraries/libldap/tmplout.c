@@ -27,8 +27,26 @@
 #include <time.h> /* for struct tm and ctime */
 #endif
 
+
+/* HCL 1.56 caused some wierdness, because ttypdefaults.h on SSF defines CTIME 0
+ * This little bit fixes that 
+ */
+#if  defined(OSF1)
+#if  defined(CTIME)
+#undef CTIME
+#define CTIME( c, b, l )		ctime( c )
+#endif
+#endif
+
+#if defined(LINUX2_0) || defined(LINUX2_1)
+#if defined(CTIME)
+#undef CTIME
+#define CTIME( c, b, l )                ctime( c )
+#endif
+#endif
+
 /* This is totally lame, since it should be coming from time.h, but isn't. */
-#if defined(SOLARIS)
+#if defined(SOLARIS) 
 char *ctime_r(const time_t *, char *, int);
 #endif
 
@@ -920,8 +938,15 @@ time2text( char *ldtimestr, int dateonly )
     p = ldtimestr;
     t.tm_year = GET2BYTENUM( p ); p += 2;
     if ( len == 15 ) {
-	t.tm_year = 100 * ( t.tm_year - 19 );
+	t.tm_year = 100 * (t.tm_year - 19);
 	t.tm_year += GET2BYTENUM( p ); p += 2;
+    }
+    else {
+	/* 2 digit years...assumed to be in the range (19)70 through
+	   (20)69 ...less than 70 (for now, 38) means 20xx */
+	if(t.tm_year < 70) {
+	    t.tm_year += 100;
+	}
     }
     t.tm_mon = GET2BYTENUM( p ) - 1; p += 2;
     t.tm_mday = GET2BYTENUM( p ); p += 2;
@@ -963,7 +988,10 @@ static int	dmsize[] = {
 #define	dysize(y)	\
 	(((y) % 4) ? 365 : (((y) % 100) ? 366 : (((y) % 400) ? 365 : 366)))
 
+/*
 #define	YEAR(y)		((y) >= 100 ? (y) : (y) + 1900)
+*/
+#define YEAR(y)		(((y) < 1900) ? ((y) + 1900) : (y)) 
 
 /*  */
 

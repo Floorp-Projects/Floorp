@@ -146,6 +146,12 @@ ldap_sort_strcasecmp(
     const char	**b
 )
 {
+    /* XXXceb
+     * I am not 100% sure this is the way this should be handled.  
+     * For now we will return a NULL on invalid.
+     */    
+    if (NULL == a || NULL == b)
+        return (NULL);
 	return( strcasecmp( (char *)*a, (char *)*b ) );
 }
 
@@ -294,6 +300,11 @@ ldap_sort_values(
 		return( LDAP_PARAM_ERROR );
 	}
 
+    if ( NULL == vals) 
+    {
+		LDAP_SET_LDERRNO( ld, LDAP_PARAM_ERROR, NULL, NULL );
+		return( LDAP_PARAM_ERROR );
+	}
 	for ( nel = 0; vals[nel] != NULL; nel++ )
 		;	/* NULL */
 

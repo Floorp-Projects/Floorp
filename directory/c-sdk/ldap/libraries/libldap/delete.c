@@ -74,6 +74,11 @@ ldap_delete_ext( LDAP *ld, const char *dn, LDAPControl **serverctrls,
 		return( LDAP_PARAM_ERROR );
 	}
 
+	if ( !NSLDAPI_VALID_LDAPMESSAGE_POINTER( msgidp )) 
+        {
+		LDAP_SET_LDERRNO( ld, LDAP_PARAM_ERROR, NULL, NULL );
+		return( LDAP_PARAM_ERROR );
+	}
 	if ( dn == NULL ) {
 		dn = "";
 	}

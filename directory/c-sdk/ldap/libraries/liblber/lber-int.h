@@ -225,6 +225,11 @@ void nslberi_free( void *ptr );
 #define NSLBERI_REALLOC( ptr, size )	nslberi_realloc( ptr, size )
 #define NSLBERI_FREE( ptr )		nslberi_free( ptr )
 
+/* allow the library to access the debug variable */
+
+extern int lber_debug;
+
+
 #ifdef __cplusplus
 }
 #endif

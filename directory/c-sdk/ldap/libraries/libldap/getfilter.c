@@ -393,7 +393,13 @@ ldap_create_filter( char *filtbuf, unsigned long buflen, char *pattern,
 	char	*p, *f, *flimit;
 	int	i, wordcount, wordnum, endwordnum, escape_all;
 
-	if ( filtbuf == NULL || buflen == 0 || pattern == NULL ) {
+    /* 
+     * there is some confusion on what to create for a filter if 
+     * attr or value are null pointers.  For now we just leave them
+     * as TO BE DEALT with
+     */
+
+	if ( filtbuf == NULL || buflen == 0 || pattern == NULL ){
 		return( LDAP_PARAM_ERROR );
 	}
 	

@@ -17,6 +17,7 @@
  */
 /* uft8.c - misc. utf8 "string" functions. */
 #include "ldap.h"
+#include "ldap-int.h"
 
 static char UTF8len[64]
 = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,

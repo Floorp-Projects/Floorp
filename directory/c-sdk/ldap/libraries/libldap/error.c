@@ -59,8 +59,10 @@ static struct ldaperror ldap_errlist[] = {
 	{ LDAP_UNAVAILABLE, 			"DSA is unavailable" },
 	{ LDAP_UNWILLING_TO_PERFORM, 		"DSA is unwilling to perform" },
 	{ LDAP_LOOP_DETECT, 			"Loop detected" },
-
-	{ LDAP_NAMING_VIOLATION, 		"Naming violation" },
+    { LDAP_SORT_CONTROL_MISSING,    "Sort Control is missing"  },
+    { LDAP_INDEX_RANGE_ERROR,              "Search results exceed the range specified by the offsets" }, 
+    
+    { LDAP_NAMING_VIOLATION, 		"Naming violation" },
 	{ LDAP_OBJECT_CLASS_VIOLATION, 		"Object class violation" },
 	{ LDAP_NOT_ALLOWED_ON_NONLEAF, 		"Operation not allowed on nonleaf" },
 	{ LDAP_NOT_ALLOWED_ON_RDN, 		"Operation not allowed on RDN" },

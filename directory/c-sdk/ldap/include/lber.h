@@ -67,6 +67,7 @@ extern "C" {
 #define LBER_OPT_TRANSLATE_STRINGS	0x08
 #define LBER_OPT_BYTES_TO_WRITE		0x10
 #define LBER_OPT_MEMALLOC_FN_PTRS	0x20
+#define LBER_OPT_DEBUG_LEVEL		0x40
 
 /* Sockbuf set/get options */
 #define LBER_SOCKBUF_OPT_TO_FILE		0x001
@@ -81,7 +82,6 @@ extern "C" {
 #define LBER_OPT_ON	((void *) 1)
 #define LBER_OPT_OFF	((void *) 0)
 
-extern int lber_debug;
 
 struct berval {
 	unsigned long	bv_len;

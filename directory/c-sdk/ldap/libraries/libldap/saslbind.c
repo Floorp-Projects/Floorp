@@ -106,13 +106,27 @@ ldap_sasl_bind(
 
 	/* fill it in */
 	if ( simple ) {		/* simple bind; works in LDAPv2 or v3 */
+		struct berval	tmpcred;
+
+		if ( cred == NULL ) {
+			tmpcred.bv_val = "";
+			tmpcred.bv_len = 0;
+			cred = &tmpcred;
+		}
 		rc = ber_printf( ber, "{it{isto}", msgid, LDAP_REQ_BIND,
 		    ldapversion, dn, LDAP_AUTH_SIMPLE, cred->bv_val,
 		    cred->bv_len );
+
 	} else {		/* SASL bind; requires LDAPv3 or better */
-		rc = ber_printf( ber, "{it{ist{so}}", msgid, LDAP_REQ_BIND,
-		    ldapversion, dn, LDAP_AUTH_SASL, mechanism, cred->bv_val,
-		    cred->bv_len );
+		if ( cred == NULL ) {
+			rc = ber_printf( ber, "{it{ist{s}}", msgid,
+			    LDAP_REQ_BIND, ldapversion, dn, LDAP_AUTH_SASL,
+			    mechanism );
+		} else {
+			rc = ber_printf( ber, "{it{ist{so}}", msgid,
+			    LDAP_REQ_BIND, ldapversion, dn, LDAP_AUTH_SASL,
+			    mechanism, cred->bv_val, cred->bv_len );
+		}
 	}
 
 	if ( rc == -1 ) {

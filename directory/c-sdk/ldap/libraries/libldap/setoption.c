@@ -16,7 +16,7 @@
  * Reserved.
  */
 /*
- * `setoption.c - ldap_set_option implementation 
+ * setoption.c - ldap_set_option implementation 
  */
 
 #include "ldap-int.h"
@@ -65,12 +65,26 @@ ldap_set_option( LDAP *ld, int option, void *optdata )
 
 		return( 0 );
 	}
+	/* 
+     * LDAP_OPT_DEBUG_LEVEL is global 
+     */
+    if (LDAP_OPT_DEBUG_LEVEL == option) 
+    {
+#ifdef LDAP_DEBUG	  
+        ldap_debug = *((int *) optdata);
+#endif
+        return 0;
+    }
 
 	/*
 	 * if ld is NULL, arrange to modify our default settings
 	 */
 	if ( ld == NULL ) {
 		ld = &nsldapi_ld_defaults;
+#ifdef LDAP_DEBUG
+		ldap_debug = 0;
+#endif
+
 	}
 
 	/*
@@ -108,9 +122,12 @@ ldap_set_option( LDAP *ld, int option, void *optdata )
 	case LDAP_OPT_RECONNECT:
 		LDAP_SETCLR_BITOPT( ld, LDAP_BITOPT_RECONNECT, optdata );
 		break;
+
+#ifdef LDAP_ASYNC_IO
 	case LDAP_OPT_ASYNC_CONNECT:
  		LDAP_SETCLR_BITOPT(ld, LDAP_BITOPT_ASYNC, optdata );
 	 	break;
+#endif /* LDAP_ASYNC_IO */
 
 	/* fields in the LDAP structure */
 	case LDAP_OPT_DEREF:
@@ -171,11 +188,16 @@ ldap_set_option( LDAP *ld, int option, void *optdata )
 			for( i=0; i<LDAP_MAX_LOCK; i++ )
 				ld->ld_mutex[i] = (ld->ld_mutex_alloc_fn)();
 		}
-		break;
+		return (rc);
 
 	/* extra thread function pointers */
 	case LDAP_OPT_EXTRA_THREAD_FN_PTRS:
 		ld->ld_thread2 = *((struct ldap_extra_thread_fns *) optdata);
+		memset( ld->ld_mutex_threadid, 0xFF,
+			LDAP_MAX_LOCK * sizeof( void * ) );
+		memset( ld->ld_mutex_refcnt, 0,
+			LDAP_MAX_LOCK * sizeof( unsigned long ) );
+		ld->ld_mutex_refcnt[LDAP_OPTION_LOCK] = 1;
 		break;
 
 	/* DNS function pointers */

@@ -573,10 +573,12 @@ ber_bvecfree( struct berval **bv )
 {
 	int	i;
 
-	for ( i = 0; bv[i] != NULL; i++ ) {
-		ber_bvfree( bv[i] );
+	if ( bv != NULL ) {
+		for ( i = 0; bv[i] != NULL; i++ ) {
+			ber_bvfree( bv[i] );
+		}
+		NSLBERI_FREE( (char *) bv );
 	}
-	NSLBERI_FREE( (char *) bv );
 }
 
 struct berval *

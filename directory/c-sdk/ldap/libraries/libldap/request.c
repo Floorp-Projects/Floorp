@@ -31,6 +31,23 @@ static char copyright[] = "@(#) Copyright (c) 1995 Regents of the University of 
 
 #include "ldap-int.h"
 
+/* HCL 1.56 caused some wierdness, because ttypdefaults.h on SSF defines CTIME 0
+ * This little bit fixes that 
+ */
+#if defined(LDAP_DEBUG) && defined(OSF1)
+#if defined(CTIME)
+#undef CTIME
+#define CTIME( c, b, l )		ctime( c )
+#endif
+#endif
+
+#if defined(LINUX2_0) || defined(LINUX2_1)
+#if defined(CTIME)
+#undef CTIME
+#define CTIME( c, b, l )		ctime( c )
+#endif
+#endif
+
 static LDAPConn *find_connection( LDAP *ld, LDAPServer *srv, int any );
 static void use_connection( LDAP *ld, LDAPConn *lc );
 static void free_servers( LDAPServer *srvlist );
@@ -190,7 +207,24 @@ nsldapi_send_server_request(
 		}
 	}
 
-	if ( lc == NULL || lc->lconn_status != LDAP_CONNST_CONNECTED ) {
+
+    /*
+     * the logic here is:
+     * if 
+     * 1. no connections exists, 
+     * or 
+     * 2. if the connection is either not in the connected 
+     *     or connecting state in an async io model
+     * or 
+     * 3. the connection is notin a connected state with normal (non async io)
+     */
+	if (   lc == NULL
+		|| (  (ld->ld_options & LDAP_BITOPT_ASYNC 
+               && lc->lconn_status != LDAP_CONNST_CONNECTING
+		    && lc->lconn_status != LDAP_CONNST_CONNECTED)
+              || (!(ld->ld_options & LDAP_BITOPT_ASYNC )
+		    && lc->lconn_status != LDAP_CONNST_CONNECTED) ) ) {
+
 		ber_free( ber, 1 );
 		if ( lc != NULL ) {
 			LDAP_SET_LDERRNO( ld, LDAP_SERVER_DOWN, NULL, NULL );
@@ -249,21 +283,21 @@ nsldapi_send_server_request(
 	lr->lr_prev = NULL;
 
 	if (( err = nsldapi_ber_flush( ld, lc->lconn_sb, ber, 0, 1 )) != 0 ) {
-#ifdef LDAP_ASYNC_IO
-		if ( err == -2 ) {	/* need to continue write later */
+
+		/* need to continue write later */
+		if (ld->ld_options & LDAP_BITOPT_ASYNC && err == -2 ) {	
 			lr->lr_status = LDAP_REQST_WRITING;
 			nsldapi_mark_select_write( ld, lc->lconn_sb );
 		} else {
-#endif
+
 			LDAP_SET_LDERRNO( ld, LDAP_SERVER_DOWN, NULL, NULL );
 			nsldapi_free_request( ld, lr, 0 );
 			nsldapi_free_connection( ld, lc, 0, 0 );
-			LDAP_MUTEX_UNLOCK( ld, LDAP_CONN_LOCK );
 			LDAP_MUTEX_UNLOCK( ld, LDAP_REQ_LOCK );
+			LDAP_MUTEX_UNLOCK( ld, LDAP_CONN_LOCK );
 			return( -1 );
-#ifdef LDAP_ASYNC_IO
 		}
-#endif
+
 	} else {
 		if ( parentreq == NULL ) {
 			ber->ber_end = ber->ber_ptr;
@@ -271,10 +305,15 @@ nsldapi_send_server_request(
 		}
 
 		/* sent -- waiting for a response */
+        if (ld->ld_options & LDAP_BITOPT_ASYNC)
+        {
+            lc->lconn_status = LDAP_CONNST_CONNECTED;
+        }
+
 		nsldapi_mark_select_read( ld, lc->lconn_sb );
 	}
-	LDAP_MUTEX_UNLOCK( ld, LDAP_CONN_LOCK );
 	LDAP_MUTEX_UNLOCK( ld, LDAP_REQ_LOCK );
+	LDAP_MUTEX_UNLOCK( ld, LDAP_CONN_LOCK );
 
 	LDAP_SET_LDERRNO( ld, LDAP_SUCCESS, NULL, NULL );
 	return( msgid );
@@ -303,7 +342,15 @@ nsldapi_ber_flush( LDAP *ld, Sockbuf *sb, BerElement *ber, int freeit,
 		}
 
 		terrno = LDAP_GET_ERRNO( ld );
-		if ( !NSLDAPI_ERRNO_IO_INPROGRESS( terrno )) {
+
+        if (ld->ld_options & LDAP_BITOPT_ASYNC) {
+            if ( terrno != 0 && !NSLDAPI_ERRNO_IO_INPROGRESS( terrno )) {
+                nsldapi_connection_lost_nolock( ld, sb );
+                return( -1 );	/* fatal error */
+            }
+        }
+        else if ( !NSLDAPI_ERRNO_IO_INPROGRESS( terrno )) {
+
 			nsldapi_connection_lost_nolock( ld, sb );
 			return( -1 );	/* fatal error */
 		}
@@ -318,6 +365,8 @@ LDAPConn *
 nsldapi_new_connection( LDAP *ld, LDAPServer **srvlistp, int use_ldsb,
 	int connect, int bind )
 {
+    int	rc;
+    
 	LDAPConn	*lc;
 	LDAPServer	*prevsrv, *srv;
 	Sockbuf		*sb = NULL;
@@ -362,13 +411,14 @@ nsldapi_new_connection( LDAP *ld, LDAPServer **srvlistp, int use_ldsb,
 
 	if ( connect ) {
 		prevsrv = NULL;
-
+        /* 
+         * save the return code for later
+         */ 
 		for ( srv = *srvlistp; srv != NULL; srv = srv->lsrv_next ) {
-			if ( nsldapi_open_ldap_connection( ld, lc->lconn_sb,
-			    srv->lsrv_host, srv->lsrv_port,
-			    &lc->lconn_krbinstance, 1,
-			    ( srv->lsrv_options & LDAP_SRV_OPT_SECURE ) != 0 )
-			    != -1 ) {
+			rc = nsldapi_open_ldap_connection( ld, lc->lconn_sb,
+				   srv->lsrv_host, srv->lsrv_port, &lc->lconn_krbinstance, 1,
+			       (  srv->lsrv_options & LDAP_SRV_OPT_SECURE ) != 0 );
+			if (rc != -1) {
 				break;
 			}
 			prevsrv = srv;
@@ -391,7 +441,14 @@ nsldapi_new_connection( LDAP *ld, LDAPServer **srvlistp, int use_ldsb,
 		lc->lconn_server = srv;
 	}
 
-	lc->lconn_status = LDAP_CONNST_CONNECTED;
+	if (ld->ld_options & LDAP_BITOPT_ASYNC && rc == -2)
+    {
+        lc->lconn_status = LDAP_CONNST_CONNECTING;
+    }
+    else {
+        lc->lconn_status = LDAP_CONNST_CONNECTED;
+    }
+    
 	lc->lconn_next = ld->ld_conns;
 	ld->ld_conns = lc;
 
@@ -431,10 +488,13 @@ nsldapi_new_connection( LDAP *ld, LDAPServer **srvlistp, int use_ldsb,
 			 * if we get back "protocol error" from bind attempts
 			 */
 			for ( ;; ) {
+				/* LDAP_MUTEX_UNLOCK(ld, LDAP_CONN_LOCK); */
 				if (( lderr = ldap_bind_s( ld, binddn, passwd,
 				    authmethod )) == LDAP_SUCCESS ) {
+					/* LDAP_MUTEX_LOCK(ld, LDAP_CONN_LOCK); */
 					break;
 				}
+				/* LDAP_MUTEX_LOCK(ld, LDAP_CONN_LOCK); */
 				if ( lc->lconn_version <= LDAP_VERSION2
 				    || lderr != LDAP_PROTOCOL_ERROR ) {
 					err = -1;
@@ -482,7 +542,6 @@ find_connection( LDAP *ld, LDAPServer *srv, int any )
 			    && ls->lsrv_port == lc->lconn_server->lsrv_port
 			    && ls->lsrv_options ==
 			    lc->lconn_server->lsrv_options ) {
-				LDAP_MUTEX_UNLOCK( ld, LDAP_CONN_LOCK );
 				return( lc );
 			}
 			if ( !any ) {
@@ -928,17 +987,21 @@ chase_one_referral( LDAP *ld, LDAPRequest *lr, LDAPRequest *origreq,
 		goto cleanup_and_return;
 	}
 
-	if ( ludp->lud_host == NULL ) {
-		srv->lsrv_host = nsldapi_strdup( ld->ld_defhost );
+	if ( ludp->lud_host == NULL && ld->ld_defhost == NULL ) {
+		srv->lsrv_host = NULL;
 	} else {
-		srv->lsrv_host = nsldapi_strdup( ludp->lud_host );
-	}
+		if ( ludp->lud_host == NULL ) {
+			srv->lsrv_host = nsldapi_strdup( ld->ld_defhost );
+		} else {
+			srv->lsrv_host = nsldapi_strdup( ludp->lud_host );
+		}
 
-	if ( srv->lsrv_host == NULL ) {
-		NSLDAPI_FREE( (char *)srv );
-		ber_free( ber, 1 );
-		rc = LDAP_NO_MEMORY;
-		goto cleanup_and_return;
+		if ( srv->lsrv_host == NULL ) {
+			NSLDAPI_FREE( (char *)srv );
+			ber_free( ber, 1 );
+			rc = LDAP_NO_MEMORY;
+			goto cleanup_and_return;
+		}
 	}
 
 	if ( ludp->lud_port == 0 ) {

@@ -84,7 +84,8 @@ extern "C" {
 #define LDAP_OPT_ON     ((void *)1)
 #define LDAP_OPT_OFF    ((void *)0)
 
-extern int ldap_debug;
+/* XXXceb - dumping ldap_debug from the SDK -- use set_option() */
+/* extern int ldap_debug; */
 /* On UNIX, there's only one copy of ldap_debug */
 /* On NT, each dll keeps its own module_ldap_debug, which */
 /* points to the process' ldap_debug and needs initializing after load */
@@ -92,6 +93,7 @@ extern int ldap_debug;
 extern int		*module_ldap_debug;
 typedef void (*set_debug_level_fn_t)(int*);
 #endif
+
 
 typedef struct ldap     LDAP;           /* opaque connection handle */
 typedef struct ldapmsg  LDAPMessage;    /* opaque result/entry handle */
@@ -356,6 +358,7 @@ typedef struct _LDAPVersion {
 #define LDAP_LOOP_DETECT                0x36	/* 54 */
 
 #define LDAP_SORT_CONTROL_MISSING       0x3C	/* 60 */
+#define LDAP_INDEX_RANGE_ERROR          0x3D    /* 61 */ 
 
 #define LDAP_NAMING_VIOLATION           0x40	/* 64 */
 #define LDAP_OBJECT_CLASS_VIOLATION     0x41	/* 65 */
@@ -491,7 +494,6 @@ LDAP_API(int) LDAP_CALL ldap_create_sort_control( LDAP *ld,
 	LDAPControl **ctrlp );
 LDAP_API(int) LDAP_CALL ldap_parse_sort_control( LDAP *ld,
 	LDAPControl **ctrls, unsigned long *result, char **attribute );
-LDAP_API(int) LDAP_CALL ldap_controls_count( LDAPControl **ctrls );
 
 /*
  * parse/deal with results and errors returned
@@ -771,6 +773,7 @@ typedef void *(LDAP_C LDAP_CALLBACK LDAP_TF_SEMA_ALLOC_CALLBACK)( void );
 typedef void (LDAP_C LDAP_CALLBACK LDAP_TF_SEMA_FREE_CALLBACK)( void * );
 typedef int (LDAP_C LDAP_CALLBACK LDAP_TF_SEMA_WAIT_CALLBACK)( void * );
 typedef int (LDAP_C LDAP_CALLBACK LDAP_TF_SEMA_POST_CALLBACK)( void * );
+typedef void *(LDAP_C LDAP_CALLBACK LDAP_TF_THREADID_CALLBACK)(void);
 
 struct ldap_extra_thread_fns {
         LDAP_TF_MUTEX_TRYLOCK_CALLBACK *ltf_mutex_trylock;
@@ -778,14 +781,18 @@ struct ldap_extra_thread_fns {
         LDAP_TF_SEMA_FREE_CALLBACK *ltf_sema_free;
         LDAP_TF_SEMA_WAIT_CALLBACK *ltf_sema_wait;
         LDAP_TF_SEMA_POST_CALLBACK *ltf_sema_post;
+	LDAP_TF_THREADID_CALLBACK *ltf_threadid_fn;
 };
 
 
+/*
+ * this option enables completely asynchronous IO.  It works by using 
+ * ioctl() on the fd, (or tlook()) 
+ */
 
 #define LDAP_OPT_ASYNC_CONNECT          99      /* Netscape extension */
+
 #define LDAP_OPT_ASYNC_RECONNECT_FN_PTR 100     /* Netscape extension */
-
-
 /* 
  * this function sets the connect status of the ld so that a client 
  * can do dns and connect, and then tell the sdk to ignore the connect phase 
@@ -806,6 +813,9 @@ struct ldap_async_connect_fns
 { 
     LDAP_ASYNC_RECONNECT *lac_reconnect; 
 }; 
+
+
+#define LDAP_OPT_DEBUG_LEVEL		110     /* Netscape extension */
 
  
 /************************ end of experimental section ************************/

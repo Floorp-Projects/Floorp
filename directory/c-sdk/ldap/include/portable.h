@@ -118,11 +118,20 @@
 #endif
 #endif
 
+
+/*
+ * Async IO.  Use a non blocking implementation of connect() and 
+ * dns functions
+ */
+#if !defined(LDAP_ASYNC_IO)
+#define LDAP_ASYNC_IO
+#endif
+
 /*
  * for select()
  */
 #if !defined(WINSOCK) && !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2)
-#if defined(hpux) || defined(LINUX2_0)
+#if defined(hpux) || defined(LINUX) || defined(SUNOS4)
 #include <sys/time.h>
 #else
 #include <sys/select.h>
@@ -144,7 +153,7 @@
  */
 #if !defined(LDAP_CONNECT_MUST_NOT_BE_INTERRUPTED) && \
 	( defined(AIX) || defined(IRIX) || defined(HPUX) || defined(SUNOS4) \
-	|| defined(SOLARIS))
+	|| defined(SOLARIS) || defined(OSF1))
 #define LDAP_CONNECT_MUST_NOT_BE_INTERRUPTED
 #endif
 
@@ -228,7 +237,7 @@ int strncasecmp(const char *, const char *, size_t);
     defined(UNIXWARE) || defined(SUNOS4) || defined(SNI) || defined(BSDI) || \
     defined(NCR) || defined(OSF1) || defined(NEC) || \
     ( defined(HPUX10) && !defined(_REENTRANT)) || defined(HPUX11) || \
-    defined(UnixWare) || defined(LINUX2_0)
+    defined(UnixWare) || defined(LINUX) || (defined(AIX) && !defined(USE_REENTRANT_LIBC))
 #define GETHOSTBYNAME( n, r, b, l, e )  gethostbyname( n )
 #elif defined(AIX)
 /* Maybe this is for another version of AIX?
@@ -249,9 +258,10 @@ typedef char GETHOSTBYNAME_buf_t [BUFSIZ /* XXX might be too small */];
 #define GETHOSTBYNAME_BUF_T GETHOSTBYNAME_buf_t
 #define GETHOSTBYNAME( n, r, b, l, e )  gethostbyname_r( n, r, b, l, e )
 #endif
-#if defined(HPUX9) || defined(LINUX1_2) || defined(SUNOS4) || defined(SNI) || \
+#if defined(HPUX9) || defined(LINUX1_2) || defined(LINUX2_0) || \
+    defined(LINUX2_1) || defined(SUNOS4) || defined(SNI) || \
     defined(SCOOS) || defined(BSDI) || defined(NCR) || \
-    defined(NEC) || ( defined(HPUX10) && !defined(_REENTRANT)) 
+    defined(NEC) || ( defined(HPUX10) && !defined(_REENTRANT)) || (defined(AIX) && !defined(USE_REENTRANT_LIBC))
 #define CTIME( c, b, l )		ctime( c )
 #elif defined(HPUX10) && defined(_REENTRANT)
 #define CTIME( c, b, l )		nsldapi_compat_ctime_r( c, b, l )
@@ -265,7 +275,7 @@ typedef char GETHOSTBYNAME_buf_t [BUFSIZ /* XXX might be too small */];
 #endif
 #if defined(hpux9) || defined(LINUX1_2) || defined(SUNOS4) || defined(SNI) || \
     defined(SCOOS) || defined(BSDI) || defined(NCR) || \
-    defined(NEC) || defined(LINUX2_0)
+    defined(NEC) || defined(LINUX) || (defined(AIX) && !defined(USE_REENTRANT_LIBC))
 #define STRTOK( s1, s2, l )		strtok( s1, s2 )
 #else
 #define HAVE_STRTOK_R
@@ -302,7 +312,7 @@ time_t time(time_t *);
 void perror(char *);
 int fputc(char, FILE *);
 int fputs(char *, FILE *);
-int LDAP_CALL re_exec(char *);
+int re_exec(char *);
 int socket(int, int, int);
 void bzero(char *, int);
 unsigned long inet_addr(char *);
@@ -346,7 +356,9 @@ int select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
 #define MAXPATHLEN _MAX_PATH
 #endif
 
-#define DS_MAX_NT_SOCKET_CONNECTIONS 2000
+/* We'd like this number to be prime for the hash
+ * into the Connection table */
+#define DS_MAX_NT_SOCKET_CONNECTIONS 2003
 
 #elif defined(XP_OS2)
 
@@ -357,6 +369,7 @@ int select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
 #include <string.h> /*for strcmpi()*/
 #include <time.h>   /*for ctime()*/
 
-#endif
+#endif /* XP_OS2 */
+
 
 #endif /* _PORTABLE_H */

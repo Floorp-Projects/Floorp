@@ -105,7 +105,7 @@ do_abandon( LDAP *ld, int origid, int msgid, LDAPControl **serverctrls,
 	BerElement	*ber;
 	int		i, bererr, lderr, sendabandon;
 	Sockbuf		*sb;
-	LDAPRequest	*lr;
+	LDAPRequest	*lr = NULL;
 
 	/*
 	 * An abandon request looks like this:
@@ -114,33 +114,72 @@ do_abandon( LDAP *ld, int origid, int msgid, LDAPControl **serverctrls,
 	LDAPDebug( LDAP_DEBUG_TRACE, "do_abandon origid %d, msgid %d\n",
 		origid, msgid, 0 );
 
-	lderr = LDAP_SUCCESS;	/* optimistic */
-	sendabandon = 1;
+	/* optimistic */
+	lderr = LDAP_SUCCESS;	
 
-	/* find the request that we are abandoning */
-	for ( lr = ld->ld_requests; lr != NULL; lr = lr->lr_next ) {
-		if ( lr->lr_msgid == msgid ) {	/* this message */
-			break;
-		}
-		if ( lr->lr_origid == msgid ) {	/* child:  abandon it */
-			(void)do_abandon( ld, msgid, lr->lr_msgid,
-			    serverctrls, clientctrls );
-			/* we ignore errors from child abandons... */
-		}
-	}
+/* 
+ * this is not the best implementation...  
+ * the code special cases the when async io is enabled.
+ * The logic is clear this way, at the cost of code bloat.
+ * This logic should be cleaned up post nova 4.5 rtm
+ */
+    if (ld->ld_options & LDAP_BITOPT_ASYNC)
+    {
+        /* Don't send an abandon message unless there is something to abandon. */
+        sendabandon = 0;
 
-	if ( lr != NULL ) {
-		if ( origid == msgid && lr->lr_parent != NULL ) {
-			/* don't let caller abandon child requests! */
-			lderr = LDAP_PARAM_ERROR;
-			goto set_errorcode_and_return;
-		}
-		if ( lr->lr_status != LDAP_REQST_INPROGRESS ) {
-			/* no need to send abandon message */
-			sendabandon = 0;
-		}
-	}
-
+        /* Find the request that we are abandoning. */
+        if (ld->ld_requests != NULL) {
+            for ( lr = ld->ld_requests; lr != NULL; lr = lr->lr_next ) {
+                if ( lr->lr_msgid == msgid ) {	/* this message */
+                    if ( origid == msgid && lr->lr_parent != NULL ) {
+                        /* don't let caller abandon child requests! */
+                        lderr = LDAP_PARAM_ERROR;
+                        goto set_errorcode_and_return;
+                    }
+                    if ( lr->lr_status == LDAP_REQST_INPROGRESS ) {
+                        /* We only need to send an abandon message if the request
+                         * is in progress.
+                         */
+                        sendabandon = 1;
+                    }
+                    break;
+                }
+                if ( lr->lr_origid == msgid ) {	/* child:  abandon it */
+                    (void)do_abandon( ld, msgid, lr->lr_msgid,
+                                      serverctrls, clientctrls );
+                    /* we ignore errors from child abandons... */
+                }
+            }
+        }
+    }
+    else
+    {
+        sendabandon = 1;
+        /* find the request that we are abandoning */
+        for ( lr = ld->ld_requests; lr != NULL; lr = lr->lr_next ) {
+            if ( lr->lr_msgid == msgid ) {	/* this message */
+                break;
+            }
+            if ( lr->lr_origid == msgid ) {	/* child:  abandon it */
+                (void)do_abandon( ld, msgid, lr->lr_msgid,
+                                  serverctrls, clientctrls );
+                /* we ignore errors from child abandons... */
+            }
+        }
+        
+        if ( lr != NULL ) {
+            if ( origid == msgid && lr->lr_parent != NULL ) {
+                /* don't let caller abandon child requests! */
+                lderr = LDAP_PARAM_ERROR;
+                goto set_errorcode_and_return;
+            }
+            if ( lr->lr_status != LDAP_REQST_INPROGRESS ) {
+                /* no need to send abandon message */
+                sendabandon = 0;
+            }
+        }
+    }
 	if ( ldap_msgdelete( ld, msgid ) == 0 ) {
 		/* we had all the results and deleted them */
 		goto set_errorcode_and_return;

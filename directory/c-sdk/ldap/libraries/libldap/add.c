@@ -96,6 +96,11 @@ ldap_add_ext( LDAP *ld, const char *dn, LDAPMod **attrs,
 		return( LDAP_PARAM_ERROR );
 	}
 
+	if ( !NSLDAPI_VALID_LDAPMESSAGE_POINTER( msgidp )) 
+        {
+		LDAP_SET_LDERRNO( ld, LDAP_PARAM_ERROR, NULL, NULL );
+		return( LDAP_PARAM_ERROR );
+	}
 	if ( !NSLDAPI_VALID_NONEMPTY_LDAPMOD_ARRAY( attrs )
 	    || msgidp == NULL ) {
 		lderr = LDAP_PARAM_ERROR;

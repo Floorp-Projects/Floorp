@@ -30,6 +30,13 @@ ldap_get_option( LDAP *ld, int option, void *optdata )
 		nsldapi_initialize_defaults();
 	}
 
+    /*
+     * opt date MUST be a valid pointer...
+     */
+    if (NULL == optdata)
+    {
+        return(LDAP_PARAM_ERROR);
+    }
 	/*
 	 * process global options (not associated with an LDAP session handle)
 	 */
@@ -38,6 +45,16 @@ ldap_get_option( LDAP *ld, int option, void *optdata )
 		*((struct ldap_memalloc_fns *)optdata) = nsldapi_memalloc_fns;
 		return( 0 );
 	}
+    /* 
+     * LDAP_OPT_DEBUG_LEVEL is global 
+     */
+    if (LDAP_OPT_DEBUG_LEVEL == option) 
+    {
+#ifdef LDAP_DEBUG	  
+        *((int *) optdata) = ldap_debug;
+#endif /* LDAP_DEBUG */
+        return ( 0 );
+    }
 
 	/*
 	 * if ld is NULL, arrange to return options from our default settings
@@ -49,6 +66,7 @@ ldap_get_option( LDAP *ld, int option, void *optdata )
 	if ( !NSLDAPI_VALID_LDAP_POINTER( ld )) {
 		return( -1 );	/* punt */
 	}
+
 
 	LDAP_MUTEX_LOCK( ld, LDAP_OPTION_LOCK );
 	LDAP_SET_LDERRNO( ld, LDAP_SUCCESS, NULL, NULL );
@@ -78,10 +96,12 @@ ldap_get_option( LDAP *ld, int option, void *optdata )
 		    LDAP_GET_BITOPT( ld, LDAP_BITOPT_RECONNECT );
 		break;
 
+#ifdef LDAP_ASYNC_IO
 	case LDAP_OPT_ASYNC_CONNECT:
 		*((int *) optdata) =
 		    LDAP_GET_BITOPT( ld, LDAP_BITOPT_ASYNC );
 		break;
+#endif /* LDAP_ASYNC_IO */
 
 	/* stuff in the sockbuf */
 	case LDAP_OPT_DESC:
@@ -168,7 +188,6 @@ ldap_get_option( LDAP *ld, int option, void *optdata )
 			*((char **) optdata) = NULL;
 		}
 		break;
-
 	default:
 		LDAP_SET_LDERRNO( ld, LDAP_PARAM_ERROR, NULL, NULL );
 		LDAP_MUTEX_UNLOCK( ld, LDAP_OPTION_LOCK );

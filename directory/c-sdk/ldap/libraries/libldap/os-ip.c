@@ -63,6 +63,7 @@ static int find_in_pollfds( int fd, struct selectinfo *sip, short revents );
 #endif
 
 #ifdef irix
+#ifndef _PR_THREADS
 /*
  * XXXmcs: on IRIX NSPR's poll() and select() wrappers will crash if NSPR
  * has not been initialized.  We work around the problem by bypassing
@@ -73,6 +74,10 @@ static int find_in_pollfds( int fd, struct selectinfo *sip, short revents );
 extern int _poll(struct pollfd *fds, unsigned long nfds, int timeout);
 extern int _select(int nfds, fd_set *readfds, fd_set *writefds,
         fd_set *exceptfds, struct timeval *timeout);
+#else
+#define NSLDAPI_POLL		poll
+#define NSLDAPI_SELECT		select
+#endif
 #else
 #define NSLDAPI_POLL		poll
 #define NSLDAPI_SELECT		select
@@ -91,6 +96,11 @@ nsldapi_connect_to_host( LDAP *ld, Sockbuf *sb, char *host,
  */
 {
 	int			rc, i, s, connected, use_hp;
+#if defined(OSF1)
+	unsigned int		tmpaddr;
+#else
+	unsigned long		tmpaddr;
+#endif
 	struct sockaddr_in	sin;
 	char			**addrlist, *ldhpbuf, *ldhpbuf_allocd;
 	LDAPHostEnt		ldhent, *ldhp;
@@ -100,9 +110,15 @@ nsldapi_connect_to_host( LDAP *ld, Sockbuf *sb, char *host,
 	struct hostent		hent;
 #endif
 	int			err;
+
 #ifdef LDAP_ASYNC_IO
+#ifdef _WINDOWS
+	u_long		status;	/* for ioctl call */
+#else
 	int			status;	/* for ioctl call */
 #endif
+#endif
+
 
 	LDAPDebug( LDAP_DEBUG_TRACE, "nsldapi_connect_to_host: %s:%d\n",
 	    ( host == NULL ) ? "(by address)" : host,
@@ -119,8 +135,13 @@ nsldapi_connect_to_host( LDAP *ld, Sockbuf *sb, char *host,
 	s = 0;
 	connected = use_hp = 0;
 	addrlist = NULL;
+#if defined(OSF1)
+	tmpaddr = (unsigned int) address;
+#else
+	tmpaddr = address;
+#endif
 
-	if ( host != NULL && ( address = inet_addr( host )) == -1 ) {
+	if ( host != NULL && ( tmpaddr = inet_addr( host )) == -1 ) {
 		if ( ld->ld_dns_gethostbyname_fn == NULL ) {
 			if (( hp = GETHOSTBYNAME( host, &hent, hbuf,
 			    sizeof(hbuf), &err )) != NULL ) {
@@ -206,21 +227,26 @@ nsldapi_connect_to_host( LDAP *ld, Sockbuf *sb, char *host,
 			return( -1 );
 		}
 
-#ifdef LDAP_ASYNC_IO
-		status = 1;
-		if ( async ) {
+		if ( async && ld->ld_options & LDAP_BITOPT_ASYNC ) {
+            status = 1;
 			if ( ld->ld_ioctl_fn == NULL ) {
+#ifdef _WINDOWS
+				err = ioctlsocket( s, FIONBIO, &status );
+#else
 				err = ioctl( s, FIONBIO, (caddr_t)&status );
+#endif /* _WINDOWS */
 			} else {
-				err = ld->ld_ioctl_fn( s, FIONBIO,
-				    (caddr_t)&status );
+#ifdef _WINDOWS
+				err = ld->ld_ioctl_fn( s, FIONBIO, &status );
+#else
+				err = ld->ld_ioctl_fn( s, FIONBIO, (caddr_t)&status );
+#endif /* _WINDOWS */
 			}
 			if ( err == -1 ) {
 				LDAPDebug( LDAP_DEBUG_ANY,
 				    "FIONBIO ioctl failed on %d\n", s, 0, 0 );
 			}
 		}
-#endif /* LDAP_ASYNC_IO */
 
 		(void)memset( (char *)&sin, 0, sizeof( struct sockaddr_in ));
 		sin.sin_family = AF_INET;
@@ -241,7 +267,7 @@ nsldapi_connect_to_host( LDAP *ld, Sockbuf *sb, char *host,
 
 		SAFEMEMCPY( (char *) &sin.sin_addr.s_addr,
 		    ( use_hp ? (char *) addrlist[ i ] :
-		    (char *) &address ), sizeof( sin.sin_addr.s_addr) );
+		    (char *) &tmpaddr ), sizeof( sin.sin_addr.s_addr) );
 
 		if ( ld->ld_connect_fn == NULL ) {
 #ifdef LDAP_CONNECT_MUST_NOT_BE_INTERRUPTED
@@ -284,16 +310,21 @@ nsldapi_connect_to_host( LDAP *ld, Sockbuf *sb, char *host,
 			connected = 1;
 			rc = 0;
 			break;
-		} else {
-#ifdef LDAP_ASYNC_IO
-			err = LDAP_GET_ERRNO( ld );
-			if ( NSLDAPI_ERRNO_IO_INPROGRESS( err )) {
-				LDAPDebug( LDAP_DEBUG_TRACE,
-					"connect would block...\n", 0, 0, 0 );
-				rc = -2;
-				break;
+		} else 
+        {
+			if ( async &&  ld->ld_options & LDAP_BITOPT_ASYNC) {
+#ifdef _WINDOWS
+				if (err == -1 && WSAGetLastError() == WSAEWOULDBLOCK)
+					LDAP_SET_ERRNO( ld, EWOULDBLOCK );
+#endif /* _WINDOWS */
+				err = LDAP_GET_ERRNO( ld );
+				if ( NSLDAPI_ERRNO_IO_INPROGRESS( err )) {
+					LDAPDebug( LDAP_DEBUG_TRACE, "connect would block...\n",
+					           0, 0, 0 );
+					rc = -2;
+					break;
+				}
 			}
-#endif /* LDAP_ASYNC_IO */
 
 #ifdef LDAP_DEBUG
 			if ( ldap_debug & LDAP_DEBUG_TRACE ) {

@@ -78,9 +78,18 @@ ldap_rename(
 
 	LDAPDebug( LDAP_DEBUG_TRACE, "ldap_rename\n", 0, 0, 0 );
 
+	if ( !NSLDAPI_VALID_LDAP_POINTER( ld )) {
+		return( LDAP_PARAM_ERROR );
+	}
+	if ( NULL == newrdn) {
+		LDAP_SET_LDERRNO( ld, LDAP_PARAM_ERROR, NULL, NULL );
+		return( LDAP_PARAM_ERROR );
+	}
+
 	/* only ldapv3 or higher can do a proper rename
 	 * (i.e. with non-NULL newparent and/or controls)
 	 */
+
 	if (( NSLDAPI_LDAP_VERSION( ld ) < LDAP_VERSION3 )
 	    && ((newparent != NULL) || (serverctrls != NULL)
 	    || (clientctrls != NULL))) {

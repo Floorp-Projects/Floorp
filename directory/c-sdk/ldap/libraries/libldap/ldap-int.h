@@ -43,12 +43,12 @@
 # include <sys/socket.h>
 # include <netinet/in.h>
 # include <netdb.h>
-#if !defined(hpux) && !defined(SUNOS4) && !defined(LINUX1_2) && !defined(LINUX2_0)
+#if !defined(hpux) && !defined(SUNOS4) && !defined(LINUX)
 # include <sys/select.h>
 #endif /* !defined(hpux) and others */
 #endif /* _WINDOWS */
 
-#if defined(BSDI) || defined(LINUX1_2) || defined(SNI) || defined(IRIX)
+#if defined(BSDI) || defined(LINUX) || defined(SNI) || defined(IRIX)
 #include <arpa/inet.h>
 #endif /* BSDI */
 
@@ -71,7 +71,9 @@
 #ifdef NEED_FILIO
 #include <sys/filio.h>		/* to get FIONBIO for ioctl() call */
 #else /* NEED_FILIO */
+#ifndef _WINDOWS
 #include <sys/ioctl.h>		/* to get FIONBIO for ioctl() call */
+#endif /* _WINDOWS */
 #endif /* NEED_FILIO */
 #endif /* LDAP_ASYNC_IO */
 
@@ -79,7 +81,7 @@
 #  include <unistd.h>
 #endif /* USE_SYSCONF */
 
-#if !defined(_WINDOWS) && !defined(macintosh) && !defined(LINUX2_0)
+#if !defined(_WINDOWS) && !defined(macintosh) && !defined(LINUX) && !defined(BSDI)
 #define NSLDAPI_HAVE_POLL	1
 #endif
 
@@ -89,6 +91,7 @@
 #else
 #  define SSL_VERSION 0
 #endif
+
 
 #define LDAP_URL_URLCOLON	"URL:"
 #define LDAP_URL_URLCOLON_LEN	4
@@ -108,7 +111,7 @@
 typedef enum { LDAP_CACHE_LOCK, LDAP_MEMCACHE_LOCK, LDAP_MSGID_LOCK,
 LDAP_REQ_LOCK, LDAP_RESP_LOCK, LDAP_ABANDON_LOCK, LDAP_CTRL_LOCK,
 LDAP_OPTION_LOCK, LDAP_ERR_LOCK, LDAP_CONN_LOCK, LDAP_SELECT_LOCK,
-LDAP_RESULT_LOCK, LDAP_PEND_LOCK, LDAP_MAX_LOCK } LDAPLock;
+LDAP_RESULT_LOCK, LDAP_PEND_LOCK, LDAP_THREADID_LOCK, LDAP_MAX_LOCK } LDAPLock;
 
 /*
  * This structure represents both ldap messages and ldap responses.
@@ -226,6 +229,7 @@ struct ldap {
 	int		ld_cldaptimeout;/* time between retries */
 	int		ld_refhoplimit;	/* limit on referral nesting */
 	unsigned long	ld_options;	/* boolean options */
+
 #define LDAP_BITOPT_REFERRALS	0x80000000
 #define LDAP_BITOPT_SSL		0x40000000
 #define LDAP_BITOPT_DNS		0x20000000
@@ -318,6 +322,11 @@ struct ldap {
 #define ld_sema_free_fn			ld_thread2.ltf_sema_free
 #define ld_sema_wait_fn			ld_thread2.ltf_sema_wait
 #define ld_sema_post_fn			ld_thread2.ltf_sema_post
+#define ld_threadid_fn			ld_thread2.ltf_threadid_fn
+
+	/* extra data for mutex handling in referrals */
+	void 			*ld_mutex_threadid[LDAP_MAX_LOCK];
+	unsigned long		ld_mutex_refcnt[LDAP_MAX_LOCK];
 };
 
 /* allocate/free mutex */
@@ -331,30 +340,59 @@ struct ldap {
 	}
 
 /* enter/exit critical sections */
-#define LDAP_MUTEX_TRYLOCK( ld, i ) \
-	( (ld)->ld_mutex_trylock_fn == NULL ) ? 0 : \
-		(ld)->ld_mutex_trylock_fn( (ld)->ld_mutex[i] )
 #define LDAP_MUTEX_LOCK( ld, i ) \
 	if ( (ld)->ld_mutex_lock_fn != NULL ) { \
-		(ld)->ld_mutex_lock_fn( (ld)->ld_mutex[i] ); \
+		if( (ld)->ld_threadid_fn != NULL ) { \
+			while (1) { \
+			(ld)->ld_mutex_lock_fn ( (ld)->ld_mutex[LDAP_THREADID_LOCK] ); \
+			if( (ld)->ld_mutex_threadid[i] == (void *) -1 ) { \
+				(ld)->ld_mutex_lock_fn( (ld)->ld_mutex[i] ); \
+				(ld)->ld_mutex_threadid[i] = (ld)->ld_threadid_fn() ; \
+				(ld)->ld_mutex_refcnt[i]++ ; \
+				(ld)->ld_mutex_unlock_fn ( (ld)->ld_mutex[LDAP_THREADID_LOCK] ); \
+				break; \
+			} \
+			else if( (ld)->ld_mutex_threadid[i] == (ld)->ld_threadid_fn() ) { \
+				(ld)->ld_mutex_refcnt[i]++ ; \
+				(ld)->ld_mutex_unlock_fn ( (ld)->ld_mutex[LDAP_THREADID_LOCK] ); \
+				break; \
+			} \
+			else { \
+				(ld)->ld_mutex_unlock_fn ( (ld)->ld_mutex[LDAP_THREADID_LOCK] ); \
+				(ld)->ld_mutex_lock_fn( (ld)->ld_mutex[i] ); \
+				(ld)->ld_mutex_unlock_fn( (ld)->ld_mutex[i] ); \
+			} \
+			} \
+		} \
+		else { \
+			(ld)->ld_mutex_lock_fn( (ld)->ld_mutex[i] ); \
+		} \
 	}
+
 #define LDAP_MUTEX_UNLOCK( ld, i ) \
 	if ( (ld)->ld_mutex_unlock_fn != NULL ) { \
-		(ld)->ld_mutex_unlock_fn( (ld)->ld_mutex[i] ); \
+		if( (ld)->ld_threadid_fn != NULL ) { \
+			(ld)->ld_mutex_lock_fn ( (ld)->ld_mutex[LDAP_THREADID_LOCK] ); \
+			(ld)->ld_mutex_refcnt[i]-- ; \
+			if( (ld)->ld_mutex_refcnt[i] == 0 ) { \
+				(ld)->ld_mutex_threadid[i] = (void *) -1; \
+				(ld)->ld_mutex_unlock_fn( (ld)->ld_mutex[i] ); \
+			} \
+			(ld)->ld_mutex_unlock_fn ( (ld)->ld_mutex[LDAP_THREADID_LOCK] ); \
+		} \
+		else { \
+			(ld)->ld_mutex_unlock_fn( (ld)->ld_mutex[i] ); \
+		} \
 	}
 
 /* Backword compatibility locks */
 #define LDAP_MUTEX_BC_LOCK( ld, i ) \
 	if( (ld)->ld_mutex_trylock_fn == NULL ) { \
-		if ( (ld)->ld_mutex_lock_fn != NULL ) { \
-			(ld)->ld_mutex_lock_fn( (ld)->ld_mutex[i] ); \
-		} \
+		LDAP_MUTEX_LOCK( ld, i ) ; \
 	}
 #define LDAP_MUTEX_BC_UNLOCK( ld, i ) \
 	if( (ld)->ld_mutex_trylock_fn == NULL ) { \
-		if ( (ld)->ld_mutex_unlock_fn != NULL ) { \
-			(ld)->ld_mutex_unlock_fn( (ld)->ld_mutex[i] ); \
-		} \
+		LDAP_MUTEX_UNLOCK( ld, i ) ; \
 	}
 
 /* allocate/free semaphore */
