@@ -3563,69 +3563,65 @@ NS_IMETHODIMP
 GlobalWindowImpl::Unescape(const nsAString& aStr,
                            nsAString& aReturn)
 {
-  nsresult result = NS_OK;
-  nsCOMPtr<nsIUnicodeDecoder> decoder;
-  nsAutoString charset;
-
+  // To gracefully deal with encoding issues, we have to do the following:
+  // 1)  Convert aStr into the document encoding.
+  // 2)  Unescape the byte buffer
+  // 3)  Convert the byte buffer back into Unicode.
+  
   aReturn.Truncate();
+
+  // encode
+  nsXPIDLCString encodedString;
+  nsresult rv = ConvertCharset(aStr, getter_Copies(encodedString));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsICharsetConverterManager>
     ccm(do_GetService(kCharsetConverterManagerCID));
-  NS_ENSURE_TRUE(ccm, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(ccm, NS_ERROR_NOT_AVAILABLE);
 
-  // Get the document character set
-  charset.Assign(NS_LITERAL_STRING("UTF-8"));        // default to utf-8
+  // Get the document character set; default to utf-8 if all else fails
+  nsAutoString charset(NS_LITERAL_STRING("UTF-8"));
+
   if (mDocument) {
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
 
-    if (doc)
-      result = doc->GetDocumentCharacterSet(charset);
+    if (doc) {
+      rv = doc->GetDocumentCharacterSet(charset);
+    }
   }
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // Get an decoder for the character set
-  result = ccm->GetUnicodeDecoderRaw(NS_LossyConvertUCS2toASCII(charset).get(),
-                                     getter_AddRefs(decoder));
-  if (NS_FAILED(result))
-    return result;
+  // Get a decoder for the character set
+  nsCOMPtr<nsIUnicodeDecoder> decoder;
+  rv = ccm->GetUnicodeDecoderRaw(NS_LossyConvertUCS2toASCII(charset).get(),
+                                 getter_AddRefs(decoder));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  result = decoder->Reset();
-  if (NS_FAILED(result))
-    return result;
+  // Unescape
+  // We cast away the const here; after this point, do not attempt to
+  // access encodedString directly -- it exists only to properly
+  // release the data buffer!
+  char *encodedData = NS_CONST_CAST(char*, encodedString.get());
+  PRInt32 unescapedByteCount = nsUnescapeCount(encodedData);
 
-  // Need to copy to do the two-byte to one-byte deflation
-  char *inBuf = ToNewCString(aStr);
-  if (!inBuf)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  // Unescape the string
-  char *src = nsUnescape(inBuf);
-
-  PRInt32 maxLength, srcLen;
-  srcLen = strlen(src);
+  // Allocate buffer to decode into
+  PRInt32 maxLength;
 
   // Get the expected length of the result string
-  result = decoder->GetMaxLength(src, srcLen, &maxLength);
-  if (NS_FAILED(result) || !maxLength) {
-    nsMemory::Free(src);
-    return result;
-  }
-
+  rv = decoder->GetMaxLength(encodedData, unescapedByteCount, &maxLength);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   // Allocate a buffer of the maximum length
   PRUnichar *dest = (PRUnichar*)nsMemory::Alloc(sizeof(PRUnichar) * maxLength);
+  NS_ENSURE_TRUE(dest, NS_ERROR_OUT_OF_MEMORY);
+  
   PRInt32 destLen = maxLength;
-  if (!dest) {
-    nsMemory::Free(src);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   // Convert from character set to unicode
-  result = decoder->Convert(src, &srcLen, dest, &destLen);
-  nsMemory::Free(src);
-  if (NS_FAILED(result)) {
+  rv = decoder->Convert(encodedData, &unescapedByteCount, dest, &destLen);
+  if (NS_FAILED(rv)) {
     nsMemory::Free(dest);
-    return result;
+    return rv;
   }
 
   aReturn.Assign(dest, destLen);
