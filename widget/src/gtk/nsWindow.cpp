@@ -52,6 +52,7 @@
 #include "nsGtkUtils.h" // for nsGtkUtils::gdk_window_flash()
 
 #include "nsSpecialSystemDirectory.h"
+#include "nsGtkMozRemoteHelper.h"
 
 #include <unistd.h>
 
@@ -90,6 +91,11 @@ gint handle_mozarea_focus_out (
     GtkWidget *      aWidget, 
     GdkEventFocus *  aGdkFocusEvent, 
     gpointer         aData);
+
+gboolean handle_toplevel_property_change (
+    GtkWidget *widget,
+    GdkEventProperty *event,
+    gpointer aData);
 
 // are we grabbing?
 PRBool      nsWindow::mIsGrabbing = PR_FALSE;
@@ -1693,6 +1699,7 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
   // set up all the focus handling
 
   if (mShell) {
+    GdkEventMask shellMask;
     // Track focus in event for the shell.  We only need the focus in
     // event so that we can dispatch it to the mMozArea
     gtk_signal_connect(GTK_OBJECT(mShell),
@@ -1703,6 +1710,15 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
                        "focus_out_event",
                        GTK_SIGNAL_FUNC(handle_toplevel_focus_out),
                        this);
+    gtk_signal_connect(GTK_OBJECT(mShell),
+                       "property_notify_event",
+                       GTK_SIGNAL_FUNC(handle_toplevel_property_change),
+                       this);
+    shellMask = gdk_window_get_events(mShell->window);
+    shellMask = (GdkEventMask)(shellMask | GDK_PROPERTY_CHANGE_MASK);
+    gdk_window_set_events(mShell->window, shellMask);
+    // set up the version information
+    nsGtkMozRemoteHelper::SetupVersion(mShell->window);
   }
 
   if (mMozArea) {
@@ -1728,6 +1744,7 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
                         GDK_KEY_PRESS_MASK |
                         GDK_KEY_RELEASE_MASK |
                         GDK_POINTER_MOTION_MASK);
+
 
   NS_ASSERTION(mSuperWin,"no super window!");
   if (!mSuperWin) return NS_ERROR_FAILURE;
@@ -2696,6 +2713,15 @@ gint handle_mozarea_focus_out(GtkWidget *      aWidget,
   NS_RELEASE(widget);
   
   return PR_TRUE;
+}
+
+
+gboolean handle_toplevel_property_change (
+    GtkWidget *widget,
+    GdkEventProperty *event,
+    gpointer aData)
+{
+  return nsGtkMozRemoteHelper::HandlePropertyChange(widget, event);
 }
 
 void
