@@ -2330,12 +2330,14 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (!ok)
                 return JS_FALSE;
 
-            if (switchop != JSOP_CONDSWITCH) {
-                if (switchop == JSOP_TABLESWITCH) {
-                    tablen = (uint32)(high - low + 1);
-                    if (tablen >= JS_BIT(16) || tablen > 2 * ncases)
-                        switchop = JSOP_LOOKUPSWITCH;
-                }
+            /*
+             * Compute table length and select lookup instead if overlarge or
+             * more than half-sparse.
+             */
+            if (switchop == JSOP_TABLESWITCH) {
+                tablen = (uint32)(high - low + 1);
+                if (tablen >= JS_BIT(16) || tablen > 2 * ncases)
+                    switchop = JSOP_LOOKUPSWITCH;
             }
         }
 
@@ -2436,10 +2438,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         /* Emit code for each case's statements, copying pn_offset up to pn3. */
         for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
-            if (switchop == JSOP_CONDSWITCH && pn3->pn_type != TOK_DEFAULT) {
-                pn3->pn_val = INT_TO_JSVAL(pn3->pn_offset - top);
+            if (switchop == JSOP_CONDSWITCH && pn3->pn_type != TOK_DEFAULT)
                 CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, pn3->pn_offset);
-            }
             pn4 = pn3->pn_right;
             if (!js_EmitTree(cx, cg, pn4))
                 return JS_FALSE;
@@ -2485,10 +2485,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 /* Avoid bloat for a compilation unit with many switches. */
                 tablesize = (size_t)tablen * sizeof *table;
                 table = (JSParseNode **) JS_malloc(cx, tablesize);
-                if (!table) {
-                    JS_ReportOutOfMemory(cx);
+                if (!table)
                     return JS_FALSE;
-                }
                 memset(table, 0, tablesize);
                 for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
                     if (pn3->pn_type == TOK_DEFAULT)
