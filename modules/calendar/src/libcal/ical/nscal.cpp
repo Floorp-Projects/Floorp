@@ -735,18 +735,6 @@ NSCalendar::parse(ICalReader * brFile,
 
 //---------------------------------------------------------------------
 
-//---------------------------------------------------------------------
-
-//---------------------------------------------------------------------
-                           
-//---------------------------------------------------------------------
-
-//---------------------------------------------------------------------
-
-//---------------------------------------------------------------------
-
-//---------------------------------------------------------------------
-
 t_bool NSCalendar::storeData(UnicodeString & strLine, UnicodeString & propName,
                              UnicodeString & propVal, JulianPtrArray * parameters)
 {
@@ -1165,6 +1153,39 @@ JulianPtrArray * NSCalendar::changeEventsOwnership()
     return out;
 }
 //---------------------------------------------------------------------
+void NSCalendar::updateEventsRange(VEvent * v)
+{
+    DateTime start, end;
+    PR_ASSERT(v->isValid());
+    start = v->getDTStart();
+    end = v->getDTEnd();
+    if (start.isValid())
+    {
+         if (!m_EventsSpanStart.isValid()) 
+             m_EventsSpanStart = start;
+         else
+         {
+             if (m_EventsSpanStart.afterDateTime(start))
+                 m_EventsSpanStart = start;
+         }
+         // set m_EventsSpanEnd to start if end not valid and m_EventsSpanNotSet
+         if (!m_EventsSpanEnd.isValid() && (!end.isValid()))
+         {
+             m_EventsSpanEnd = start;
+         }
+    }
+    if (end.isValid())
+    {
+         if (!m_EventsSpanEnd.isValid())
+             m_EventsSpanEnd = end;
+         else
+         {
+             if (m_EventsSpanEnd.beforeDateTime(end))
+                  m_EventsSpanEnd = end;
+         }
+    }
+}
+//---------------------------------------------------------------------
 void NSCalendar::addEvent(ICalComponent * v)
 {
     if (m_VEventVctr == 0)
@@ -1172,6 +1193,8 @@ void NSCalendar::addEvent(ICalComponent * v)
     PR_ASSERT(m_VEventVctr != 0);
     if (m_VEventVctr != 0)
     {
+        PR_ASSERT(ICalComponent::ICAL_COMPONENT_VEVENT == v->GetType());
+        updateEventsRange((VEvent *) v);
         m_VEventVctr->Add(v);
         //m_VEventVctr->InsertBinary(v, TimeBasedEvent::CompareTimeBasedEventsByDTStart);
     }
@@ -1292,29 +1315,6 @@ t_bool NSCalendar::addComponentWithType(ICalComponent * ic,
         }
     }
 
-#if 0
-    // old code
-    if (type == ICalComponent::ICAL_COMPONENT_VEVENT)
-    {
-        addEvent(ic);
-    }
-    else if (type == ICalComponent::ICAL_COMPONENT_VTODO)
-    {
-        addTodo(ic);
-    }
-    else if (type == ICalComponent::ICAL_COMPONENT_VJOURNAL)
-    {
-        addJournal(ic);
-    }
-    else if (type == ICalComponent::ICAL_COMPONENT_VFREEBUSY)
-    {
-        addVFreebusy(ic);
-    }
-    else if (type == ICalComponent::ICAL_COMPONENT_VTIMEZONE)
-    {
-        addTimeZone(ic);
-    }
-#endif
     return bUpdatedAnyComponents;
 }
 
