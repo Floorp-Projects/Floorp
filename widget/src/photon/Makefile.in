@@ -30,35 +30,37 @@ LIBRARY_NAME	= widget_photon
 
 REQUIRES	= util img xpcom raptor netlib
 
-CPPSRCS		= \
-		PtRawDrawContainer.cpp \
-		nsAppShell.cpp \
+OLD_WIDGETS = \
 		nsButton.cpp \
 		nsCheckButton.cpp \
-		nsClipboard.cpp \
 		nsComboBox.cpp \
-		nsDragService.cpp \
-		nsFileWidget.cpp \
-		nsFontRetrieverService.cpp \
-		nsFontSizeIterator.cpp \
 		nsLabel.cpp \
 		nsListBox.cpp \
-		nsLookAndFeel.cpp \
 		nsMenu.cpp \
 		nsMenuBar.cpp \
 		nsMenuItem.cpp \
 		nsPopUpMenu.cpp \
 		nsRadioButton.cpp \
-		nsScrollbar.cpp \
-		nsSound.cpp \
 		nsTextAreaWidget.cpp \
 		nsTextHelper.cpp \
-		nsTextWidget.cpp \
+		nsTextWidget.cpp
+
+						
+CPPSRCS		= \
+		PtRawDrawContainer.cpp \
+		nsAppShell.cpp \
+		nsClipboard.cpp \
+		nsDragService.cpp \
+		nsFileWidget.cpp \
+		nsFontRetrieverService.cpp \
+		nsFontSizeIterator.cpp \
+		nsLookAndFeel.cpp \
+		nsScrollbar.cpp \
+		nsSound.cpp \
 		nsToolkit.cpp \
 		nsWidget.cpp \
 		nsWidgetFactory.cpp \
 		nsWindow.cpp \
-		clip.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libraptorbasewidget_s.a
@@ -73,7 +75,7 @@ EXTRA_DSO_LDOPTS = \
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -D_IMPL_NS_WIDGET -I$(srcdir)/../xpwidgets -I$(srcdir) -DDEBUG
+DEFINES		+= -D_IMPL_NS_WIDGET -I$(srcdir)/../xpwidgets -I$(srcdir) -DDEBUG -DPHOTON2_ONLY
 
 CXXFLAGS	+= $(TK_CFLAGS)
 
