@@ -40,7 +40,7 @@ BEGIN
 "else\r\n",
 "	document.writeln(""<b><font size=+2>No plug-ins are installed.</font></b><br>"");\r\n",
 "\r\n",
-"document.writeln(""For more information on Netscape plug-ins, <A HREF=http://home.netscape.com/comprod/products/navigator/version_2.0/plugins/index.html>click here</A>.<p><hr>"");\r\n",
+"document.writeln(""For more information on Netscape plug-ins, <A HREF=http://home.netscape.com/plugins/>click here</A>.<p><hr>"");\r\n",
 "\r\n",
 "for (i = 0; i < numPlugins; i++)\r\n",
 "{\r\n",
