@@ -38,6 +38,7 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsconfig.h"
+#include "jsexn.h"
 #include "jsnum.h"
 #include "jsopcode.h"
 #include "jsregexp.h"
@@ -580,7 +581,25 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
 	report.uclinebuf = ts->linebuf.base;
 	report.uctokenptr = ts->token.ptr;
         report.flags = flags;
+
+        /*
+         * If there's a runtime exception type associated with this error
+         * number, set that as the pending exception.  For errors occuring at
+         * compile time, this is very likely to be a JSEXN_SYNTAXERR.  If an
+         * exception is thrown, then the JSREPORT_EXCEPTION flag will be set in
+         * report.flags.  Proper behavior for error reporters is probably to
+         * ignore this for all but toplevel compilation errors.
+
+         * XXXmccabe it's still at issue if there's a public API to distinguish
+         * between the two.
+
+         * XXX it'd probably be best if there was only one call to this
+         * function, but there seem to be two error reporter call points.
+         */
+        (void)js_ErrorToException(cx, &report);
+
 	(*onError)(cx, message, &report);
+
 #if !defined XP_PC || !defined _MSC_VER || _MSC_VER > 800
     } else {
 	if (!(ts->flags & TSF_INTERACTIVE))

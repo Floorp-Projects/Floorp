@@ -154,6 +154,12 @@ Process(JSContext *cx, JSObject *obj, char *filename)
 	    }
 	} while (ok && !(ts->flags & TSF_EOF) && CG_OFFSET(&cg) == 0);
 	if (ok) {
+            /*
+             * Clear any pending exception, either from previous failed
+             * compiles, or from the last round of execution.
+             */
+            JS_ClearPendingException(cx);
+
 	    script = js_NewScriptFromCG(cx, &cg, NULL);
 	    if (script) {
 		if (JS_ExecuteScript(cx, obj, script, &result) &&
@@ -186,7 +192,6 @@ Process(JSContext *cx, JSObject *obj, char *filename)
                     } else {
                         fprintf(stderr, "Uncaught javascript exception\n");
                     }
-                    JS_ClearPendingException(cx);
                 }
 		JS_DestroyScript(cx, script);
 	    }
@@ -1160,10 +1165,11 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 
     /*
      * Conditionally ignore reported warnings, and ignore error reports for
-     * which a JavaScript exception has been thrown.
+     * which a JavaScript exception has been thrown, except when we're in
+     * a toplevel compile.
      */
     if ((JSREPORT_IS_WARNING(report->flags) && !reportWarnings) ||
-        JSREPORT_IS_EXCEPTION(report->flags)) {
+        (JSREPORT_IS_EXCEPTION(report->flags) && cx->interpLevel > 0)) {
         return;
     }
 
