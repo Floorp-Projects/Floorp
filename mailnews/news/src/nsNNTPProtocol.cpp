@@ -24,6 +24,13 @@
 #include "nsIOutputStream.h"
 #include "nsIInputStream.h"
 
+// mscott: this is a short term hack for the demo...we should be able to remove this webshell
+// dependency at a later date....
+#include "nsIWebShell.h"
+
+#include "nsINetService.h"
+#include "nsNntpUrl.h"
+
 #include "nntpCore.h"
 #include "nsCRT.h"
 #include "xp.h"     // XXX remove!
@@ -299,12 +306,13 @@ void nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
 	// to NULL. 
 	
 	// query the URL for a nsINNTPUrl
-	m_runningURL = NULL; // initialize to NULL
-    m_newsgroupList = NULL;
-	m_articleList = NULL;
-	m_newsHost	  = NULL;
-	m_newsgroup	  = NULL;
-	m_offlineNewsState = NULL; 
+	m_runningURL = nsnull; // initialize to NULL
+    m_newsgroupList = nsnull;
+	m_articleList = nsnull;
+	m_newsHost	  = nsnull;
+	m_newsgroup	  = nsnull;
+	m_offlineNewsState = nsnull; 
+	m_displayConsumer = nsnull;
 
 	if (aURL)
 	{
@@ -368,7 +376,7 @@ void nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
 	m_urlInProgress = PR_FALSE;
 }
 
-PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL)
+PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
 {
   PRInt32 status = 0;
   PRBool bVal = FALSE;
@@ -389,6 +397,9 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL)
   // Query the url for its nsINntpUrl interface...assert and fail to load if they passed us a non news url...
 
   nsINntpUrl * nntpUrl = NULL;
+  if (aConsumer) // did the caller pass in a display stream?
+	  aConsumer->QueryInterface(nsIWebShell::IID(), (void **) m_displayConsumer);
+
   if (aURL)
   {
 	  rv = aURL->QueryInterface(nsINntpUrl::IID(), (void **) &nntpUrl);
@@ -435,7 +446,8 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL)
   // if we don't have a news host already, go get one...
   if (m_newsHost == nsnull)
   {
-	  rv = NS_NewNNTPHost(&m_newsHost, hostAndPort, port ? port : NEWS_PORT);
+	  // THIS IS TEMPORARY!!!!!!!!!!!!!!!!!! hack alert...
+//	  rv = NS_NewNNTPHost(&m_newsHost, hostAndPort, port ? port : NEWS_PORT);
 	  // save it on our url for future use....
 	  m_runningURL->SetNntpHost(m_newsHost);
   }
@@ -662,6 +674,8 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL)
 	  m_transport->IsTransportOpen(&transportOpen);
 	  if (transportOpen == PR_FALSE)
 	  {
+		  m_nextStateAfterResponse = m_nextState;
+		  m_nextState = NNTP_RESPONSE; 
 		  m_transport->Open(m_runningURL);  // opening the url will cause to get notified when the connection is established
 	  }
 	  else  // the connection is already open so we should begin processing our new url...
@@ -2012,6 +2026,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 {
 	char *line;
 	PRInt32 status = 0;
+	nsresult rv = NS_OK;
 	char outputBuffer[OUTPUT_BUFFER_SIZE];
 	status = ReadLine(inputStream, length, &line);
 	if(status == 0)
@@ -2050,6 +2065,25 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 		// and close the article file if it was open....
 		if (m_tempArticleFile)
 			PR_Close(m_tempArticleFile);
+
+		// mscott: hack alert...now that the file is done...turn around and fire a file url 
+		// to display the message....
+		char * fileUrl = PR_smprintf("file://%s", ARTICLE_PATH);
+		if (m_displayConsumer)
+		{
+			nsIURL * url = nsnull;
+			rv = NS_NewURL(&url, fileUrl, nsnull, nsnull, nsnull);	
+			if (url)
+			{
+				//  to load the webshell!
+				//  mWebShell->LoadURL(nsAutoString("http://www.netscape.com"), 
+				//                      nsnull, PR_TRUE, nsURLReload, 0);
+				m_displayConsumer->LoadURL(nsAutoString(fileUrl), nsnull, PR_TRUE, nsURLReload, 0);
+			}
+
+			// mscott: we may need to release our reference on the url....
+		}
+
 		ClearFlag(NNTP_PAUSE_FOR_READ);
 	}
 	else
@@ -4515,4 +4549,70 @@ PRInt32 nsNNTPProtocol::CloseConnection()
 	PR_FREEIF (m_cancelNewsgroups); 
 	PR_FREEIF (m_cancelDistribution);  
 	return(-1); /* all done */
+}
+
+nsresult NS_MailNewsLoadUrl(const nsString& urlString, nsISupports * aConsumer)
+{
+	// mscott: this function is pretty clumsy right now...eventually all of the dispatching
+	// and transport creation code will live in netlib..this whole function is just a hack
+	// for our mail news demo....
+
+	// for now, assume the url is a news url and load it....
+	nsINntpUrl		*nntpUrl = nsnull;
+	nsINetService	*pNetService = nsnull;
+	nsITransport	*transport = nsnull;
+	nsNNTPProtocol	*nntpProtocol = nsnull;
+	nsresult rv = NS_OK;
+
+	// make sure we have a netlib service around...
+	rv = NS_NewINetService(&pNetService, nsnull); 
+
+	if (NS_SUCCEEDED(rv) && pNetService)
+	{
+		rv = NS_NewNntpUrl(&nntpUrl, urlString);
+
+		if (NS_SUCCEEDED(rv) && nntpUrl)
+		{
+			const char * host;
+			PRUint32 port = NEWS_PORT;
+			
+			nntpUrl->GetHostPort(&port);
+			nntpUrl->GetHost(&host);
+			// okay now create a transport to run the url in...
+			pNetService->CreateSocketTransport(&transport, port, host);
+			if (NS_SUCCEEDED(rv) && transport)
+			{
+				// almost there...now create a nntp protocol instance to run the url in...
+				nntpProtocol = new nsNNTPProtocol(nntpUrl, transport);
+				if (nntpProtocol)
+					nntpProtocol->LoadURL(nntpUrl, aConsumer);
+
+			}
+
+			NS_RELEASE(nntpUrl);
+		} // if nntpUrl
+
+		NS_RELEASE(pNetService);
+	} // if pNetService
+	
+	return rv;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+// This function is used to load and prepare an nntp url which can be run by
+// a transport instance. For different protocols, you'll have different url
+// functions like this one in the test harness...
+/////////////////////////////////////////////////////////////////////////////////
+nsresult NS_NewNntpUrl(nsINntpUrl ** aResult, const nsString urlSpec)
+{
+	nsresult rv = NS_OK;
+
+	 nsNntpUrl * nntpUrl = new nsNntpUrl(nsnull, nsnull);
+	 if (nntpUrl)
+	 {
+		nntpUrl->ParseURL(urlSpec);  // load the spec we were given...
+		rv = nntpUrl->QueryInterface(nsINntpUrl::IID(), (void **) aResult);
+	 }
+
+	 return rv;
 }
