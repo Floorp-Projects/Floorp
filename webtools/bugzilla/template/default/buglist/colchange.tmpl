@@ -26,7 +26,7 @@ Check which columns you wish to appear on the list, and then click
 on submit.  (Cookies are required.)
 <p>
 <form action="colchange.cgi">
-<input type="hidden" name="rememberedquery" value="[% buffer FILTER uri %]">
+<input type="hidden" name="rememberedquery" value="[% buffer %]">
 [% FOREACH column = masterlist %]
   <input type="checkbox" id="[% column %]" name="column_[% column %]" [% "CHECKED" IF lsearch(collist, column) != -1 %]>
   <label for="[% column %]">[% desc.${column} %]</label><br>
@@ -40,7 +40,7 @@ on submit.  (Cookies are required.)
 <input type="submit" value="Submit">
 </form>
 <form action="colchange.cgi">
-<input type="hidden" name="rememberedquery" value="[% buffer FILTER uri %]">
+<input type="hidden" name="rememberedquery" value="[% buffer %]">
 <input type="hidden" name="resetit" value="1">
 <input type="submit" value="Reset to Bugzilla default">
 </form>
