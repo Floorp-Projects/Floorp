@@ -189,6 +189,7 @@ nsresult nsNetlibThread::Start(void)
      */
     PR_CWait(this, PR_INTERVAL_NO_TIMEOUT);
     PR_CExitMonitor(this);
+    NET_ReadCookies("");
 #else
     /*
      * Initialize Netlib...
