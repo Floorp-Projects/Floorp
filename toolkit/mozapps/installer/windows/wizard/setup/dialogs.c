@@ -1650,43 +1650,12 @@ BOOL InstallFiles(HWND hDlg)
     err = WIZ_OK;
 
   //XXXben TODO: shift this until after the FINISH step in DlgProcInstallSuccess
-  if (err == WIZ_OK || err == 999){
-    if (sgProduct.bInstallFiles)
-      UpdateJSProxyInfo();
-
-    /* POST_SMARTUPDATE process file manipulation functions */
-    ProcessFileOpsForAll(T_POST_SMARTUPDATE);
-
-    if (sgProduct.bInstallFiles) {
-      /* PRE_LAUNCHAPP process file manipulation functions */
-      ProcessFileOpsForAll(T_PRE_LAUNCHAPP);
-
-      LaunchApps();
-
-      // Refresh system icons if necessary
-      if (gSystemInfo.bRefreshIcons)
-        RefreshIcons();
-
-      UnsetSetupState(); // clear setup state
-      ClearWinRegUninstallFileDeletion();
-      if (!gbIgnoreProgramFolderX)
-        ProcessProgramFolderShowCmd();
-
-      CleanupArgsRegistry();
-      CleanupPreviousVersionRegKeys();
-
-      /* POST_LAUNCHAPP process file manipulation functions */
-      ProcessFileOpsForAll(T_POST_LAUNCHAPP);
-      /* DEPEND_REBOOT process file manipulation functions */
-      ProcessFileOpsForAll(T_DEPEND_REBOOT);
-    }
-  }
   
   CleanupXpcomFile();
 
   gbProcessingXpnstallFiles = FALSE;
 
-  return TRUE;
+  return err == WIZ_OK || err == 999;
 }
 
 #if WINTEGRATION_PAGE
@@ -1829,13 +1798,45 @@ LRESULT CALLBACK DlgProcInstallSuccessful(HWND hDlg, UINT msg, WPARAM wParam, LO
     case PSN_WIZBACK:
       // Store the checkbox state in case the user goes back to the Wintegration
       // page. 
-      launchAppChecked = IsDlgButtonChecked(hDlg, IDC_START_APP);
+      launchAppChecked = IsDlgButtonChecked(hDlg, IDC_START_APP) == BST_CHECKED;
       
       break;
 
     case PSN_WIZFINISH:
+      // Store state from the "Run App Now" checkbox. ProcessFileOpsForAll
+      // uses this variable to decide whether or not to launch the browser.
+      gbIgnoreRunAppX = IsDlgButtonChecked(hDlg, IDC_START_APP) != BST_CHECKED;
+
       // Apply settings and close. 
-      break;
+      if (sgProduct.bInstallFiles)
+        UpdateJSProxyInfo();
+
+      /* POST_SMARTUPDATE process file manipulation functions */
+      ProcessFileOpsForAll(T_POST_SMARTUPDATE);
+
+      if (sgProduct.bInstallFiles) {
+        /* PRE_LAUNCHAPP process file manipulation functions */
+        ProcessFileOpsForAll(T_PRE_LAUNCHAPP);
+
+        LaunchApps();
+
+        // Refresh system icons if necessary
+        if (gSystemInfo.bRefreshIcons)
+          RefreshIcons();
+
+        UnsetSetupState(); // clear setup state
+        ClearWinRegUninstallFileDeletion();
+        if (!gbIgnoreProgramFolderX)
+          ProcessProgramFolderShowCmd();
+
+        CleanupArgsRegistry();
+        CleanupPreviousVersionRegKeys();
+
+        /* POST_LAUNCHAPP process file manipulation functions */
+        ProcessFileOpsForAll(T_POST_LAUNCHAPP);
+        /* DEPEND_REBOOT process file manipulation functions */
+        ProcessFileOpsForAll(T_DEPEND_REBOOT);
+      }
     }
       
     break;
