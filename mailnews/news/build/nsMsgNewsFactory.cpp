@@ -45,6 +45,8 @@
 #include "nsNNTPNewsgroupList.h"
 #include "nsNNTPArticleList.h"
 #include "nsNNTPHost.h"
+#include "nsIContentHandler.h"
+#include "nsCURILoader.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNntpUrl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNntpService)
@@ -92,6 +94,10 @@ static nsModuleComponentInfo components[] =
   { "Secure News Protocol Handler",
     NS_NNTPSERVICE_CID,
     NS_SNEWSPROTOCOLHANDLER_PROGID,
+    nsNntpServiceConstructor },
+  { "newsgroup content handler",
+    NS_NNTPSERVICE_CID,
+    NS_CONTENT_HANDLER_PROGID_PREFIX"x-application-newsgroup",
     nsNntpServiceConstructor },
   { "News Folder Resource",
     NS_NEWSFOLDERRESOURCE_CID,

@@ -161,6 +161,7 @@ public:
 	char * m_ProxyServer;		/* proxy server hostname */
 
 	NS_IMETHOD Cancel(nsresult status);  // handle stop button
+	NS_IMETHOD GetContentType(char * *aContentType);
 
   nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer);
 

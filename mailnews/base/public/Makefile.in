@@ -72,6 +72,7 @@ XPIDLSRCS	= \
 		nsIIncomingServerListener.idl \
 		nsIMsgHdr.idl \
 		nsIMessengerMigrator.idl	\
+		nsIMessengerWindowService.idl	\
 		nsIMsgStringService.idl		\
 		nsIMsgViewNavigationService.idl \
 		nsIMsgPrintEngine.idl \

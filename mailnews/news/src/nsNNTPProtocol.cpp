@@ -1062,20 +1062,18 @@ nsresult nsNNTPProtocol::ParseURL(nsIURI * aURL, PRBool * bValP, char ** aGroup,
 								  char ** aCommandSpecificData)
 {
 	PRInt32 status = 0;
-	char *fullPath = 0;
+	nsXPIDLCString fullPath;
 	char *group = 0;
     char *message_id = 0;
     char *command_specific_data = 0;
 	char * s = 0;
 
 	// get the file path part and store it as the group...
-	aURL->GetPath(&fullPath);
-	if (fullPath && *fullPath == '/')
-		group = PL_strdup(fullPath+1); 
+	aURL->GetPath(getter_Copies(fullPath));
+	if ((const char *)fullPath && ((*(const char *)fullPath) == '/'))
+		group = PL_strdup((const char *)fullPath+1); 
 	else
-		group = PL_strdup(fullPath);
-
-	nsAllocator::Free(fullPath);
+		group = PL_strdup((const char *)fullPath);
 
 	// more to do here, but for now, this works.
 	// only escape if we are doing a search
@@ -5048,4 +5046,15 @@ nsNNTPProtocol::SetProgressStatus(char *message)
                 }
         }
         PR_FREEIF(progressMsg);
+}
+
+NS_IMETHODIMP nsNNTPProtocol::GetContentType(char * *aContentType)
+{	
+	if ((const char *)m_currentGroup && nsCRT::strlen((const char *)m_currentGroup)) {
+		*aContentType = nsCRT::strdup("x-application-newsgroup");
+	}
+	else {
+		*aContentType = nsCRT::strdup("message/rfc822");
+	}
+	return NS_OK;
 }

@@ -35,6 +35,7 @@
 #include "nsINntpUrl.h"
 #include "nsICmdLineHandler.h"
 #include "nsCOMPtr.h"
+#include "nsIContentHandler.h"
 
 class nsIURI;
 class nsIUrlListener;
@@ -43,7 +44,8 @@ class nsNntpService : public nsINntpService,
                       public nsIMsgMessageService,
                       public nsIProtocolHandler,
                       public nsIMsgProtocolInfo,
-                      public nsICmdLineHandler
+                      public nsICmdLineHandler,
+					  public nsIContentHandler
 {
 public:
 
@@ -53,6 +55,7 @@ public:
   NS_DECL_NSIPROTOCOLHANDLER
   NS_DECL_NSIMSGPROTOCOLINFO
   NS_DECL_NSICMDLINEHANDLER
+  NS_DECL_NSICONTENTHANDLER
   
   // nsNntpService
   nsNntpService();

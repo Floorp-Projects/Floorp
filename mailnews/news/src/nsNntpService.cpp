@@ -53,6 +53,7 @@
 #include "nsICmdLineHandler.h"
 #include "nsICategoryManager.h"
 #include "nsIDocShell.h"
+#include "nsIMessengerWindowService.h"
 
 #undef GetPort  // XXX Windows!
 #undef SetPort  // XXX Windows!
@@ -84,12 +85,13 @@ nsNntpService::~nsNntpService()
 NS_IMPL_THREADSAFE_ADDREF(nsNntpService);
 NS_IMPL_THREADSAFE_RELEASE(nsNntpService);
 
-NS_IMPL_QUERY_INTERFACE5(nsNntpService,
+NS_IMPL_QUERY_INTERFACE6(nsNntpService,
                          nsINntpService,
                          nsIMsgMessageService,
                          nsIProtocolHandler,
                          nsIMsgProtocolInfo,
-                         nsICmdLineHandler)
+                         nsICmdLineHandler,
+						 nsIContentHandler)
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // nsIMsgMessageService support
@@ -1349,3 +1351,27 @@ NS_IMETHODIMP nsNntpService::GetChromeUrlForTask(char **aChromeUrlForTask)
     return NS_OK; 
 }
 
+
+
+NS_IMETHODIMP 
+nsNntpService::HandleContent(const char * aContentType, const char * aCommand, const char * aWindowTarget, nsISupports * aWindowContext, nsIChannel * aChannel)
+{
+  nsresult rv = NS_OK;
+  if (!aChannel) return NS_ERROR_NULL_POINTER;
+
+  if (nsCRT::strcasecmp(aContentType, "x-application-newsgroup") == 0) {
+      nsCOMPtr<nsIURI> uri;
+      rv = aChannel->GetURI(getter_AddRefs(uri));
+	  if (NS_FAILED(rv)) return rv;
+
+      if (uri) { 	
+		nsCOMPtr <nsIMessengerWindowService> messengerWindowService = do_GetService(NS_MESSENGERWINDOWSERVICE_PROGID,&rv);
+		if (NS_FAILED(rv)) return rv;
+
+		rv = messengerWindowService->OpenMessengerWindowWithUri(uri);
+		if (NS_FAILED(rv)) return rv;
+	  }
+  }
+
+  return rv;
+}

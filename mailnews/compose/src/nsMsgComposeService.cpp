@@ -353,19 +353,15 @@ NS_IMETHODIMP nsMsgComposeService::HandleContent(const char * aContentType, cons
                                                 const char * aWindowTarget, nsISupports * aWindowContext, nsIChannel * aChannel)
 {
   nsresult rv = NS_OK;
-  if (aChannel)
-  {
-    // First of all, get the content type and make sure it is a content type we know how to handle!
-    if (nsCRT::strcasecmp(aContentType, "x-application-mailto") == 0)
-    {
+  if (!aChannel) return NS_ERROR_NULL_POINTER;
+
+  // First of all, get the content type and make sure it is a content type we know how to handle!
+  if (nsCRT::strcasecmp(aContentType, "x-application-mailto") == 0) {
       nsCOMPtr<nsIURI> aUri;
       rv = aChannel->GetURI(getter_AddRefs(aUri));
       if (aUri)
          rv = OpenComposeWindowWithURI(nsnull, aUri);
-    }
   }
-  else
-    rv = NS_ERROR_NULL_POINTER;
 
   return rv;
 }

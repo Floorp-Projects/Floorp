@@ -39,6 +39,7 @@ CPP_OBJS=									\
 
 LLIBS=										\
 			$(DIST)\lib\xpcom.lib			\
+			$(DIST)\lib\js32$(VERSION_NUMBER).lib \
 			$(DIST)\lib\msgbsutl.lib		\
 			$(DIST)\lib\msgbase_s.lib		\
 			$(DIST)\lib\msgsearch_s.lib		\

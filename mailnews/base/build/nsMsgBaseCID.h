@@ -240,6 +240,11 @@
   "component://netscape/appshell/component/messenger"
 #define NS_MAILSTARTUPHANDLER_PROGID \
   "component://netscape/commandlinehandler/general-startup-mail"
+#define NS_MESSENGERWINDOWSERVICE_PROGID \
+  "component://netscape/messenger/windowservice"
+#define NS_MESSENGERWINDOWSERVICE_CID \
+{ 0xa01b6724, 0x1dd1, 0x11b2, \
+  {0xaa, 0xb9, 0x82,0xf2, 0x4c,0x59, 0x5f, 0x41} }
 
 //
 // nsMessenger
