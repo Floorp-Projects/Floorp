@@ -41,6 +41,8 @@ MODULE = svrcore
 
 IMPORTS = nspr20/v4.4.1 nss/NSS_3_9_3_RTM
 
+RELEASE = svrcore
+
 LIBRARY_NAME = svrcore
 
 EXPORTS = svrcore.h
