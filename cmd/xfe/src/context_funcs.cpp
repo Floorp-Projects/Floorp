@@ -501,19 +501,6 @@ XFE_EnableClicking(MWContext *context)
 						  XFE_Frame::frameBusyCallback:
 						  XFE_Frame::frameNotBusyCallback);
     }
-  else
-    {
-      if (CONTEXT_DATA (top)->show_toolbar_p && CONTEXT_DATA (top)->toolbar) {
-	if (CONTEXT_DATA (top)->abort_button)
-	  XtVaSetValues (CONTEXT_DATA (top)->abort_button,
-			 XmNsensitive, fe_IsContextStoppable(top), 0);
-      }
-      if (CONTEXT_DATA (top)->show_menubar_p && CONTEXT_DATA (top)->menubar) {
-	if (CONTEXT_DATA (top)->abort_menuitem)
-	  XtVaSetValues (CONTEXT_DATA (top)->abort_menuitem,
-			 XmNsensitive, fe_IsContextStoppable(top), 0);
-      }
-    }
 
   if (! running_p)
     fe_StopProgressGraph (context);
@@ -559,21 +546,6 @@ D( printf("FE_UpdateStopState(context = 0x%x)\n", context); )
 	  f->notifyInterested(XP_IsContextBusy(context)?
 						  XFE_Frame::frameBusyCallback:
 						  XFE_Frame::frameNotBusyCallback);
-    }
-  else
-    {
-      if (context->type == MWContextPostScript) return;
-      
-      if (CONTEXT_DATA (top)->show_toolbar_p && CONTEXT_DATA (top)->toolbar) {
-	if (CONTEXT_DATA (top)->abort_button)
-	  XtVaSetValues (CONTEXT_DATA (top)->abort_button,
-			 XmNsensitive, fe_IsContextStoppable(top), 0);
-      }
-      if (CONTEXT_DATA (top)->show_menubar_p && CONTEXT_DATA (top)->menubar) {
-	if (CONTEXT_DATA (top)->abort_menuitem)
-	  XtVaSetValues (CONTEXT_DATA (top)->abort_menuitem,
-			 XmNsensitive, fe_IsContextStoppable(top), 0);
-      }
     }
 }
 
