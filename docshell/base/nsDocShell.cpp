@@ -3383,7 +3383,7 @@ NS_IMETHODIMP nsDocShell::AddHeadersToChannel(nsIInputStream *aHeadersData,
     nsCAutoString headerValue;
     PRInt32 crlf = 0;
     PRInt32 colon = 0;
-    nsIAtom *headerAtom;
+    nsCOMPtr<nsIAtom> headerAtom;
 
     //
     // Suck all the data out of the nsIInputStream into a char * buffer.
@@ -3430,7 +3430,7 @@ NS_IMETHODIMP nsDocShell::AddHeadersToChannel(nsIInputStream *aHeadersData,
         oneHeader.Left(headerName, colon);
         colon++;
         oneHeader.Mid(headerValue, colon, oneHeader.Length() - colon);
-        headerAtom = NS_NewAtom((const char *) headerName);
+        headerAtom = dont_AddRef(NS_NewAtom(headerName.get()));
         if (!headerAtom) {
             rv = NS_ERROR_NULL_POINTER;
             goto AHTC_CLEANUP;
@@ -3440,7 +3440,7 @@ NS_IMETHODIMP nsDocShell::AddHeadersToChannel(nsIInputStream *aHeadersData,
         // FINALLY: we can set the header!
         // 
 
-        rv =aChannel->SetRequestHeader(headerAtom, (const char *) headerValue);
+        rv =aChannel->SetRequestHeader(headerAtom, headerValue.get());
         if (NS_FAILED(rv)) {
             rv = NS_ERROR_NULL_POINTER;
             goto AHTC_CLEANUP;
