@@ -177,8 +177,7 @@ public:
   nsresult   SetPortTextState();
   nsresult   Init(nsIDeviceContext* aContext, CGrafPtr aPort);
 
-    // useful for determining if we're running on MacOSX
-  static PRBool OnMacOSX();
+  // for determining if we're running on at least Mac OS X 10.2
   static PRBool OnJaguar();
 
 protected:
