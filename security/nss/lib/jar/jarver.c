@@ -1407,8 +1407,11 @@ char *JAR_cert_html
   if (cert == NULL || *result < 0)
     return NULL;
 
-  *result = 0;
+  *result = -1;
 
+   return NULL;
+
+#ifdef notdef
   html = CERT_HTMLCertInfo (cert, /* show images */ PR_TRUE,
 		/*show issuer*/PR_TRUE);
 
@@ -1416,6 +1419,7 @@ char *JAR_cert_html
     *result = -1;
 
   return html;
+#endif
   }
 
 /*
