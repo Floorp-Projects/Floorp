@@ -381,7 +381,7 @@ const nsStyleStruct* nsStyleContext::GetStyleData(nsStyleStructID aSID)
   return mRuleNode->GetStyleData(aSID, this, PR_TRUE); // Our rule node will take care of it for us.
 }
 
-const nsStyleStruct* nsStyleContext::PeekStyleData(nsStyleStructID aSID)
+inline const nsStyleStruct* nsStyleContext::PeekStyleData(nsStyleStructID aSID)
 {
   const nsStyleStruct* cachedData = mCachedStyleData.GetStyleData(aSID); 
   if (cachedData)
