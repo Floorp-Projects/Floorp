@@ -724,7 +724,7 @@ param {
   display: block;
 }
 
-:moz-comment {
+:-moz-comment {
   display: none;
 }
 
@@ -753,6 +753,6 @@ param {
   border: 1px dotted white;
 }
 
-:moz-anonymous-block {
+:-moz-anonymous-block {
   display: block;
 }
