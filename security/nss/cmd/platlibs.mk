@@ -201,7 +201,7 @@ endif
 ifeq ($(OS_ARCH), SunOS) 
 ifeq ($(BUILD_SUN_PKG), 1)
 ifeq ($(USE_64), 1)
-EXTRA_SHARED_LIBS += -R '$$ORIGIN/../lib:/usr/lib/mps/secv1/sparcv9:/usr/lib/mps/sparcv9'
+EXTRA_SHARED_LIBS += -R '$$ORIGIN/../lib:/usr/lib/mps/secv1/64:/usr/lib/mps/64'
 else
 EXTRA_SHARED_LIBS += -R '$$ORIGIN/../lib:/usr/lib/mps/secv1:/usr/lib/mps'
 endif
