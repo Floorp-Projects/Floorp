@@ -763,6 +763,10 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList,
   g_print("    returning %i\n  }\n", *outResult);
 #endif
 
+  nsAllocator::Free(mSelectionData.data);
+  mSelectionData.data = nsnull;
+  mSelectionData.length = 0;
+
   return NS_OK;
 
 }
