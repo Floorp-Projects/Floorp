@@ -51,6 +51,7 @@ NS_IMPL_RELEASE(nsEditorController)
 
 NS_INTERFACE_MAP_BEGIN(nsEditorController)
 	NS_INTERFACE_MAP_ENTRY(nsIController)
+	NS_INTERFACE_MAP_ENTRY(nsICommandController)
 	NS_INTERFACE_MAP_ENTRY(nsIEditorController)
 	NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIEditorController)
@@ -103,7 +104,7 @@ NS_IMETHODIMP nsEditorController::GetInterface(const nsIID & aIID, void * *resul
     _cmdClass* theCmd;                                                                    \
     NS_NEWXPCOM(theCmd, _cmdClass);                                                       \
     if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                                           \
-    rv = inCommandManager->RegisterCommand(NS_LITERAL_STRING(_cmdName),                   \
+    rv = inCommandManager->RegisterCommand(_cmdName,                   \
                                    NS_STATIC_CAST(nsIControllerCommand *, theCmd));       \
   }
 
@@ -112,15 +113,15 @@ NS_IMETHODIMP nsEditorController::GetInterface(const nsIID & aIID, void * *resul
     _cmdClass* theCmd;                                                                    \
     NS_NEWXPCOM(theCmd, _cmdClass);                                                       \
     if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                                           \
-    rv = inCommandManager->RegisterCommand(NS_LITERAL_STRING(_cmdName),                   \
+    rv = inCommandManager->RegisterCommand(_cmdName,                   \
                                    NS_STATIC_CAST(nsIControllerCommand *, theCmd));
 
 #define NS_REGISTER_NEXT_COMMAND(_cmdClass, _cmdName)                                     \
-    rv = inCommandManager->RegisterCommand(NS_LITERAL_STRING(_cmdName),                   \
+    rv = inCommandManager->RegisterCommand(_cmdName,                   \
                                    NS_STATIC_CAST(nsIControllerCommand *, theCmd));
 
 #define NS_REGISTER_LAST_COMMAND(_cmdClass, _cmdName)                                     \
-    rv = inCommandManager->RegisterCommand(NS_LITERAL_STRING(_cmdName),                   \
+    rv = inCommandManager->RegisterCommand(_cmdName,                   \
                                    NS_STATIC_CAST(nsIControllerCommand *, theCmd));       \
   }
 
@@ -190,24 +191,34 @@ nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandManager 
  * nsIController
  * ======================================================================= */
 
-NS_IMETHODIMP nsEditorController::IsCommandEnabled(const nsAString & aCommand, PRBool *aResult)
+NS_IMETHODIMP nsEditorController::IsCommandEnabled(const char *aCommand, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   return mCommandManager->IsCommandEnabled(aCommand, mCommandRefCon, aResult);
 }
 
-NS_IMETHODIMP nsEditorController::SupportsCommand(const nsAString & aCommand, PRBool *aResult)
+NS_IMETHODIMP nsEditorController::SupportsCommand(const char *aCommand, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   return mCommandManager->SupportsCommand(aCommand, mCommandRefCon, aResult);
 }
 
-NS_IMETHODIMP nsEditorController::DoCommand(const nsAString & aCommand)
+NS_IMETHODIMP nsEditorController::DoCommand(const char *aCommand)
 {
   return mCommandManager->DoCommand(aCommand, mCommandRefCon);
 }
 
-NS_IMETHODIMP nsEditorController::OnEvent(const nsAString & aEventName)
+NS_IMETHODIMP nsEditorController::DoCommand(const char *aCommand, nsICommandParams *aParams)
+{
+  return mCommandManager->DoCommandParams(aCommand, aParams, mCommandRefCon);
+}
+
+NS_IMETHODIMP nsEditorController::GetCommandState(const char *aCommand, nsICommandParams *aParams)
+{
+  return mCommandManager->GetCommandState(aCommand, aParams, mCommandRefCon);
+}
+
+NS_IMETHODIMP nsEditorController::OnEvent(const char * aEventName)
 {
   return NS_OK;
 }

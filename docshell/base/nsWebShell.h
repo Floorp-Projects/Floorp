@@ -101,9 +101,9 @@ protected:
     void InitFrameData();
 
     // helpers for executing commands
-    virtual nsresult GetControllerForCommand ( const nsAString & inCommand, nsIController** outController );
-    virtual nsresult IsCommandEnabled ( const nsAString & inCommand, PRBool* outEnabled );
-    virtual nsresult DoCommand ( const nsAString & inCommand );
+    virtual nsresult GetControllerForCommand ( const char *inCommand, nsIController** outController );
+    virtual nsresult IsCommandEnabled ( const char * inCommand, PRBool* outEnabled );
+    virtual nsresult DoCommand ( const char * inCommand );
     nsresult EnsureCommandHandler();
 
     //

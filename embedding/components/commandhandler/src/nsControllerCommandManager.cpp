@@ -64,9 +64,9 @@ NS_IMPL_ISUPPORTS2(nsControllerCommandManager, nsIControllerCommandManager, nsIS
 
 
 NS_IMETHODIMP
-nsControllerCommandManager::RegisterCommand(const nsAString & aCommandName, nsIControllerCommand *aCommand)
+nsControllerCommandManager::RegisterCommand(const char * aCommandName, nsIControllerCommand *aCommand)
 {
-  nsStringKey commandKey(aCommandName);
+  nsCStringKey commandKey(aCommandName);
   
   if (mCommandsTable.Put (&commandKey, aCommand))
   {
@@ -79,9 +79,9 @@ nsControllerCommandManager::RegisterCommand(const nsAString & aCommandName, nsIC
 
 
 NS_IMETHODIMP
-nsControllerCommandManager::UnregisterCommand(const nsAString & aCommandName, nsIControllerCommand *aCommand)
+nsControllerCommandManager::UnregisterCommand(const char * aCommandName, nsIControllerCommand *aCommand)
 {
-  nsStringKey commandKey(aCommandName);
+  nsCStringKey commandKey(aCommandName);
 
   PRBool wasRemoved = mCommandsTable.Remove (&commandKey);
   return wasRemoved ? NS_OK : NS_ERROR_FAILURE;
@@ -89,13 +89,13 @@ nsControllerCommandManager::UnregisterCommand(const nsAString & aCommandName, ns
 
 
 NS_IMETHODIMP
-nsControllerCommandManager::FindCommandHandler(const nsAString & aCommandName, nsIControllerCommand **outCommand)
+nsControllerCommandManager::FindCommandHandler(const char * aCommandName, nsIControllerCommand **outCommand)
 {
   NS_ENSURE_ARG_POINTER(outCommand);
   
   *outCommand = NULL;
   
-  nsStringKey commandKey(aCommandName);
+  nsCStringKey commandKey(aCommandName);
   nsISupports* foundCommand = mCommandsTable.Get(&commandKey);   // this does the addref
   if (!foundCommand) return NS_ERROR_FAILURE;
   
@@ -107,7 +107,7 @@ nsControllerCommandManager::FindCommandHandler(const nsAString & aCommandName, n
 
 /* boolean isCommandEnabled (in wstring command); */
 NS_IMETHODIMP
-nsControllerCommandManager::IsCommandEnabled(const nsAString & aCommandName, nsISupports *aCommandRefCon, PRBool *aResult)
+nsControllerCommandManager::IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
@@ -129,7 +129,7 @@ nsControllerCommandManager::IsCommandEnabled(const nsAString & aCommandName, nsI
 
 
 NS_IMETHODIMP
-nsControllerCommandManager::UpdateCommandState(const nsAString & aCommandName, nsISupports *aCommandRefCon)
+nsControllerCommandManager::UpdateCommandState(const char * aCommandName, nsISupports *aCommandRefCon)
 {
   // find the command  
   nsCOMPtr<nsIControllerCommand> commandHandler;
@@ -155,7 +155,7 @@ nsControllerCommandManager::UpdateCommandState(const nsAString & aCommandName, n
 }
 
 NS_IMETHODIMP
-nsControllerCommandManager::SupportsCommand(const nsAString & aCommandName, nsISupports *aCommandRefCon, PRBool *aResult)
+nsControllerCommandManager::SupportsCommand(const char * aCommandName, nsISupports *aCommandRefCon, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
@@ -173,11 +173,11 @@ nsControllerCommandManager::SupportsCommand(const nsAString & aCommandName, nsIS
 
 /* void doCommand (in wstring command); */
 NS_IMETHODIMP
-nsControllerCommandManager::DoCommand(const nsAString & aCommandName, nsISupports *aCommandRefCon)
+nsControllerCommandManager::DoCommand(const char * aCommandName, nsISupports *aCommandRefCon)
 {
   // find the command  
   nsCOMPtr<nsIControllerCommand> commandHandler;
- FindCommandHandler(aCommandName, getter_AddRefs(commandHandler));
+  FindCommandHandler(aCommandName, getter_AddRefs(commandHandler));
   if (!commandHandler)
   {
 #if DEBUG
@@ -189,51 +189,39 @@ nsControllerCommandManager::DoCommand(const nsAString & aCommandName, nsISupport
   return commandHandler->DoCommand(aCommandName, aCommandRefCon);
 }
 
-#define COMMAND_NAME NS_ConvertASCIItoUCS2("cmd_name")
-
 NS_IMETHODIMP
-nsControllerCommandManager::DoCommandParams(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+nsControllerCommandManager::DoCommandParams(const char *aCommandName, nsICommandParams *aParams, nsISupports *aCommandRefCon)
 {
   // find the command  
   nsCOMPtr<nsIControllerCommand> commandHandler;
-  nsAutoString tValue;
   nsresult rv;
-  if (NS_SUCCEEDED(rv = aParams->GetStringValue(COMMAND_NAME,tValue)))
+  rv = FindCommandHandler(aCommandName, getter_AddRefs(commandHandler));
+  if (!commandHandler)
   {
-    FindCommandHandler(tValue, getter_AddRefs(commandHandler));
-    if (!commandHandler)
-    {
-  #if DEBUG
-      NS_WARNING("Controller command manager asked to do a command that it does not handle -- ");
-  #endif
-      return NS_OK;    // we don't handle this command
-    }
-    return commandHandler->DoCommandParams(aParams, aCommandRefCon);
-  }  
-  return rv;
+#if DEBUG
+    NS_WARNING("Controller command manager asked to do a command that it does not handle -- ");
+#endif
+    return NS_OK;    // we don't handle this command
+  }
+  return commandHandler->DoCommandParams(aCommandName, aParams, aCommandRefCon);
 }
 
 
 NS_IMETHODIMP
-nsControllerCommandManager::GetCommandState(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+nsControllerCommandManager::GetCommandState(const char *aCommandName, nsICommandParams *aParams, nsISupports *aCommandRefCon)
 {
   // find the command  
   nsCOMPtr<nsIControllerCommand> commandHandler;
-  nsAutoString tValue;
   nsresult rv;
-  if (NS_SUCCEEDED(rv = aParams->GetStringValue(COMMAND_NAME,tValue)))
+  rv = FindCommandHandler(aCommandName, getter_AddRefs(commandHandler));
+  if (!commandHandler)
   {
-    FindCommandHandler(tValue, getter_AddRefs(commandHandler));
-    if (!commandHandler)
-    {
-  #if DEBUG
-      NS_WARNING("Controller command manager asked to do a command that it does not handle -- ");
-  #endif
-      return NS_OK;    // we don't handle this command
-    }
-    return commandHandler->GetCommandState(aParams, aCommandRefCon);
-  }  
-  return rv;
+#if DEBUG
+    NS_WARNING("Controller command manager asked to do a command that it does not handle -- ");
+#endif
+    return NS_OK;    // we don't handle this command
+  }
+  return commandHandler->GetCommandState(aCommandName, aParams, aCommandRefCon);
 }
 
 

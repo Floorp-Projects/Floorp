@@ -45,6 +45,7 @@
 
 #include "nsCommandGroup.h"
 #include "nsIControllerCommand.h"
+#include "nsCRT.h"
 
 
 class nsGroupsEnumerator : public nsISimpleEnumerator
@@ -66,7 +67,7 @@ protected:
 
 	nsHashtable&	mHashTable;
 	PRInt32				mIndex;
-	PRUnichar**		mGroupNames;				// array of pointers to PRUnichar* in the hash table
+	char **       mGroupNames;				// array of pointers to PRUnichar* in the hash table
 	PRBool				mInitted;
 	
 };
@@ -123,9 +124,9 @@ nsGroupsEnumerator::GetNext(nsISupports **_retval)
 	if (mIndex >= mHashTable.Count())
 		return NS_ERROR_FAILURE;
 
-	PRUnichar		*thisGroupName = mGroupNames[mIndex];
+	char *thisGroupName = mGroupNames[mIndex];
 	
-	nsCOMPtr<nsISupportsWString> supportsString = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, &rv);
+	nsCOMPtr<nsISupportsString> supportsString = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
 	if (NS_FAILED(rv)) return rv;
 
 	supportsString->SetData(thisGroupName);
@@ -138,9 +139,9 @@ PRBool
 nsGroupsEnumerator::HashEnum(nsHashKey *aKey, void *aData, void* aClosure)
 {
 	nsGroupsEnumerator*		groupsEnum = NS_REINTERPRET_CAST(nsGroupsEnumerator *, aClosure);
-	nsStringKey*					stringKey = NS_STATIC_CAST(nsStringKey*, aKey);
+	nsCStringKey*					stringKey = NS_STATIC_CAST(nsCStringKey*, aKey);
 	
-	groupsEnum->mGroupNames[groupsEnum->mIndex] = (PRUnichar*)stringKey->GetString();
+	groupsEnum->mGroupNames[groupsEnum->mIndex] = (char*)stringKey->GetString();
 	groupsEnum->mIndex ++;
 	return PR_TRUE;
 }
@@ -150,7 +151,7 @@ nsGroupsEnumerator::Initialize()
 {
 	if (mInitted) return NS_OK;
 	
-	mGroupNames = new PRUnichar*[mHashTable.Count()];
+	mGroupNames = new char*[mHashTable.Count()];
 	if (!mGroupNames) return NS_ERROR_OUT_OF_MEMORY;
 	
 	mIndex = 0;	
@@ -258,9 +259,9 @@ nsControllerCommandGroup::ClearGroupsHash()
 
 /* void addCommandToGroup (in DOMString aCommand, in DOMString aGroup); */
 NS_IMETHODIMP
-nsControllerCommandGroup::AddCommandToGroup(const nsAString & aCommand, const nsAString & aGroup)
+nsControllerCommandGroup::AddCommandToGroup(const char * aCommand, const char *aGroup)
 {
-  nsStringKey   groupKey(aGroup);  
+  nsCStringKey   groupKey(aGroup);  
   nsVoidArray*  commandList;  
   if ((commandList = (nsVoidArray *)mGroupsHash.Get(&groupKey)) == nsnull)
   {
@@ -269,7 +270,7 @@ nsControllerCommandGroup::AddCommandToGroup(const nsAString & aCommand, const ns
     mGroupsHash.Put(&groupKey, (void *)commandList);
   }
   // add the command to the list. Note that we're not checking for duplicates here
-  PRUnichar*  commandString = ToNewUnicode(aCommand);     // we store allocated PRUnichar* in the array
+  char*  commandString = nsCRT::strdup(aCommand);     // we store allocated PRUnichar* in the array
   if (!commandString) return NS_ERROR_OUT_OF_MEMORY;
   
   PRBool      appended = commandList->AppendElement((void *)commandString);
@@ -280,17 +281,17 @@ nsControllerCommandGroup::AddCommandToGroup(const nsAString & aCommand, const ns
 
 /* void removeCommandFromGroup (in DOMString aCommand, in DOMString aGroup); */
 NS_IMETHODIMP
-nsControllerCommandGroup::RemoveCommandFromGroup(const nsAString & aCommand, const nsAString & aGroup)
+nsControllerCommandGroup::RemoveCommandFromGroup(const char * aCommand, const char * aGroup)
 {
-  nsStringKey   groupKey(aGroup);
+  nsCStringKey   groupKey(aGroup);
   nsVoidArray*  commandList = (nsVoidArray *)mGroupsHash.Get(&groupKey);
   if (!commandList) return NS_OK;     // no group
 
   PRInt32   numEntries = commandList->Count();
   for (PRInt32 i = 0; i < numEntries; i ++)
   {
-    PRUnichar*  commandString = (PRUnichar*)commandList->ElementAt(i);
-    if (aCommand.Equals(commandString))
+    char*  commandString = (char*)commandList->ElementAt(i);
+    if (!nsCRT::strcmp(aCommand,commandString))
     {
       commandList->RemoveElementAt(i);
       nsMemory::Free(commandString);
@@ -303,20 +304,20 @@ nsControllerCommandGroup::RemoveCommandFromGroup(const nsAString & aCommand, con
 
 /* boolean isCommandInGroup (in DOMString aCommand, in DOMString aGroup); */
 NS_IMETHODIMP
-nsControllerCommandGroup::IsCommandInGroup(const nsAString & aCommand, const nsAString & aGroup, PRBool *_retval)
+nsControllerCommandGroup::IsCommandInGroup(const char * aCommand, const char * aGroup, PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
   
-  nsStringKey   groupKey(aGroup);
+  nsCStringKey   groupKey(aGroup);
   nsVoidArray*  commandList = (nsVoidArray *)mGroupsHash.Get(&groupKey);
   if (!commandList) return NS_OK;     // no group
   
   PRInt32   numEntries = commandList->Count();
   for (PRInt32 i = 0; i < numEntries; i ++)
   {
-    PRUnichar*  commandString = (PRUnichar*)commandList->ElementAt(i);
-    if (aCommand.Equals(commandString))
+    char*  commandString = (char*)commandList->ElementAt(i);
+    if (!nsCRT::strcmp(aCommand,commandString))
     {
       *_retval = PR_TRUE;
       break;
@@ -337,9 +338,9 @@ nsControllerCommandGroup::GetGroupsEnumerator(nsISimpleEnumerator **_retval)
 
 /* nsISimpleEnumerator getEnumeratorForGroup (in DOMString aGroup); */
 NS_IMETHODIMP
-nsControllerCommandGroup::GetEnumeratorForGroup(const nsAString & aGroup, nsISimpleEnumerator **_retval)
+nsControllerCommandGroup::GetEnumeratorForGroup(const char * aGroup, nsISimpleEnumerator **_retval)
 {
-  nsStringKey   groupKey(aGroup);  
+  nsCStringKey   groupKey(aGroup);  
   nsVoidArray*  commandList = (nsVoidArray *)mGroupsHash.Get(&groupKey);		// may be null
 
 	nsNamedGroupEnumerator*		theGroupEnum = new nsNamedGroupEnumerator(commandList);
@@ -360,7 +361,7 @@ PRBool nsControllerCommandGroup::ClearEnumerator(nsHashKey *aKey, void *aData, v
     PRInt32   numEntries = commandList->Count();
     for (PRInt32 i = 0; i < numEntries; i ++)
     {
-      PRUnichar*  commandString = (PRUnichar*)commandList->ElementAt(i);
+      char*  commandString = (char*)commandList->ElementAt(i);
       nsMemory::Free(commandString);
     }
     

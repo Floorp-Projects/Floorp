@@ -84,11 +84,10 @@ nsCommandManager::Init(nsIDOMWindow *aWindow)
 
 /* void commandStatusChanged (in DOMString aCommandName, in long aChangeFlags); */
 NS_IMETHODIMP
-nsCommandManager::CommandStatusChanged(const nsAString & aCommandName)
+nsCommandManager::CommandStatusChanged(const char * aCommandName)
 {
-	nsStringKey hashKey(aCommandName);
+	nsCStringKey hashKey(aCommandName);
 
-  nsPromiseFlatString flatCommand = PromiseFlatString(aCommandName);
   
   nsresult rv = NS_OK;
 	nsCOMPtr<nsISupports>       commandSupports  = getter_AddRefs(mCommandObserversTable.Get(&hashKey));
@@ -108,7 +107,7 @@ nsCommandManager::CommandStatusChanged(const nsAString & aCommandName)
       if (itemObserver)
       {
       	// should we get the command state to pass here? This might be expensive.
-        itemObserver->Observe((nsICommandManager *)this, "command_status_changed", flatCommand.get());
+        itemObserver->Observe((nsICommandManager *)this, aCommandName,NS_LITERAL_STRING("command_status_changed").get());
       }
 	  }
 	}
@@ -122,7 +121,7 @@ nsCommandManager::CommandStatusChanged(const nsAString & aCommandName)
 
 /* void addCommandObserver (in nsIObserver aCommandObserver, in wstring aCommandToObserve); */
 NS_IMETHODIMP
-nsCommandManager::AddCommandObserver(nsIObserver *aCommandObserver, const nsAString & aCommandToObserve)
+nsCommandManager::AddCommandObserver(nsIObserver *aCommandObserver, const char *aCommandToObserve)
 {
 	NS_ENSURE_ARG(aCommandObserver);
 	
@@ -131,7 +130,7 @@ nsCommandManager::AddCommandObserver(nsIObserver *aCommandObserver, const nsAStr
 	// XXX todo: handle special cases of aCommandToObserve being null, or empty
 	
 	// for each command in the table, we make a list of observers for that command
-	nsStringKey hashKey(aCommandToObserve);
+  nsCStringKey hashKey(aCommandToObserve);
 	
 	nsCOMPtr<nsISupports>       commandSupports  = getter_AddRefs(mCommandObserversTable.Get(&hashKey));
 	nsCOMPtr<nsISupportsArray>  commandObservers = do_QueryInterface(commandSupports);
@@ -158,12 +157,12 @@ nsCommandManager::AddCommandObserver(nsIObserver *aCommandObserver, const nsAStr
 
 /* void removeCommandObserver (in nsIObserver aCommandObserver, in wstring aCommandObserved); */
 NS_IMETHODIMP
-nsCommandManager::RemoveCommandObserver(nsIObserver *aCommandObserver, const nsAString & aCommandObserved)
+nsCommandManager::RemoveCommandObserver(nsIObserver *aCommandObserver, const char *aCommandObserved)
 {
 	NS_ENSURE_ARG(aCommandObserver);
 
 	// XXX todo: handle special cases of aCommandToObserve being null, or empty
-	nsStringKey hashKey(aCommandObserved);
+	nsCStringKey hashKey(aCommandObserved);
 
 	nsCOMPtr<nsISupports>       commandSupports  = getter_AddRefs(mCommandObserversTable.Get(&hashKey));
 	nsCOMPtr<nsISupportsArray>  commandObservers = do_QueryInterface(commandSupports);
@@ -176,7 +175,7 @@ nsCommandManager::RemoveCommandObserver(nsIObserver *aCommandObserver, const nsA
 
 /* boolean isCommandSupported (in wstring aCommandName); */
 NS_IMETHODIMP
-nsCommandManager::IsCommandSupported(const nsAString & aCommandName, PRBool *outCommandSupported)
+nsCommandManager::IsCommandSupported(const char *aCommandName, PRBool *outCommandSupported)
 {
   NS_ENSURE_ARG_POINTER(outCommandSupported);
 
@@ -188,7 +187,7 @@ nsCommandManager::IsCommandSupported(const nsAString & aCommandName, PRBool *out
 
 /* boolean isCommandEnabled (in wstring aCommandName); */
 NS_IMETHODIMP
-nsCommandManager::IsCommandEnabled(const nsAString & aCommandName, PRBool *outCommandEnabled)
+nsCommandManager::IsCommandEnabled(const char *aCommandName, PRBool *outCommandEnabled)
 {
   NS_ENSURE_ARG_POINTER(outCommandEnabled);
   
@@ -204,51 +203,40 @@ nsCommandManager::IsCommandEnabled(const nsAString & aCommandName, PRBool *outCo
   return NS_OK;
 }
 
-#define COMMAND_NAME NS_ConvertASCIItoUCS2("cmd_name")
 
 /* void getCommandState (in DOMString aCommandName, inout nsICommandParams aCommandParams); */
 NS_IMETHODIMP
-nsCommandManager::GetCommandState(nsICommandParams *aCommandParams)
+nsCommandManager::GetCommandState(const char *aCommandName, nsICommandParams *aCommandParams)
 {
   nsCOMPtr<nsIController> controller;
   nsAutoString tValue;
-  nsresult rv;
-  if (NS_SUCCEEDED(rv = aCommandParams->GetStringValue(COMMAND_NAME,tValue)))
-  {
-    nsresult rv = GetControllerForCommand(tValue, getter_AddRefs(controller)); 
-    if (!controller)
-      return NS_ERROR_FAILURE;
-  
-    nsCOMPtr<nsICommandController>  commandController = do_QueryInterface(controller);
-    if (commandController)
-      rv = commandController->GetCommandState(aCommandParams);
-    else
-      rv = NS_ERROR_NOT_IMPLEMENTED;
-  }    
+  nsresult rv = GetControllerForCommand(aCommandName, getter_AddRefs(controller)); 
+  if (!controller)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsICommandController>  commandController = do_QueryInterface(controller);
+  if (commandController)
+    rv = commandController->GetCommandState(aCommandName,aCommandParams);
+  else
+    rv = NS_ERROR_NOT_IMPLEMENTED;
   return rv;
 }
 
 /* void doCommand (nsICommandParams aCommandParams); */
-#define COMMAND_NAME NS_ConvertASCIItoUCS2("cmd_name")
 
 NS_IMETHODIMP
-nsCommandManager::DoCommand(nsICommandParams *aCommandParams)
+nsCommandManager::DoCommand(const char *aCommandName, nsICommandParams *aCommandParams)
 {
   nsCOMPtr<nsIController> controller;
-  nsAutoString tValue;
-  nsresult rv;
-  if (NS_SUCCEEDED(rv = aCommandParams->GetStringValue(COMMAND_NAME,tValue)))
-  {
-    nsresult rv = GetControllerForCommand(tValue, getter_AddRefs(controller)); 
-    if (!controller)
-      return NS_ERROR_FAILURE;
+  nsresult rv = GetControllerForCommand(aCommandName, getter_AddRefs(controller)); 
+  if (!controller)
+	  return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsICommandController>  commandController = do_QueryInterface(controller);
-    if (commandController)
-      rv = commandController->DoCommand(aCommandParams);
-    else
-      rv = controller->DoCommand(tValue);
-  }    
+  nsCOMPtr<nsICommandController>  commandController = do_QueryInterface(controller);
+  if (commandController)
+	  rv = commandController->DoCommand(aCommandName,aCommandParams);
+  else
+	  rv = controller->DoCommand(aCommandName);
   return rv;
 }
 
@@ -257,7 +245,7 @@ nsCommandManager::DoCommand(nsICommandParams *aCommandParams)
 #endif
 
 nsresult
-nsCommandManager::GetControllerForCommand(const nsAString& aCommand, nsIController** outController)
+nsCommandManager::GetControllerForCommand(const char *aCommand, nsIController** outController)
 {
   nsresult rv = NS_ERROR_FAILURE;
   

@@ -55,8 +55,8 @@ public:
     
   NS_DECL_ISUPPORTS
     
-  NS_IMETHOD  IsCommandEnabled(const nsAString & aCommandName, nsISupports *aCommandRefCon, PRBool *_retval) = 0;
-  NS_IMETHOD  DoCommand(const nsAString & aCommandName, nsISupports *aCommandRefCon) = 0;
+  NS_IMETHOD  IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, PRBool *_retval) = 0;
+  NS_IMETHOD  DoCommand(const char *aCommandName, nsISupports *aCommandRefCon) = 0;
   
 };
 
@@ -65,10 +65,10 @@ public:
 class _cmd : public nsBaseEditorCommand                 \
 {                                                       \
 public:                                                 \
-  NS_IMETHOD IsCommandEnabled(const nsAString & aCommandName, nsISupports *aCommandRefCon, PRBool *_retval); \
-  NS_IMETHOD DoCommand(const nsAString & aCommandName, nsISupports *aCommandRefCon); \
-  NS_IMETHOD DoCommandParams(nsICommandParams *aParams, nsISupports *aCommandRefCon); \
-  NS_IMETHOD GetCommandState(nsICommandParams *aParams, nsISupports *aCommandRefCon); \
+  NS_IMETHOD IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, PRBool *_retval); \
+  NS_IMETHOD DoCommand(const char *aCommandName, nsISupports *aCommandRefCon); \
+  NS_IMETHOD DoCommandParams(const char *aCommandName,nsICommandParams *aParams, nsISupports *aCommandRefCon); \
+  NS_IMETHOD GetCommandState(const char *aCommandName,nsICommandParams *aParams, nsISupports *aCommandRefCon); \
 };
 
 
@@ -92,14 +92,14 @@ NS_DECL_EDITOR_COMMAND(nsSelectionMoveCommands)
 #if 0
 // template for new command
 NS_IMETHODIMP
-nsFooCommand::IsCommandEnabled(const nsAString & aCommandName, nsISupports *aCommandRefCon, PRBool *_retval)
+nsFooCommand::IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, PRBool *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
 NS_IMETHODIMP
-nsFooCommand::DoCommand(const nsAString & aCommandName, const nsAString & aCommandParams, nsISupports *aCommandRefCon)
+nsFooCommand::DoCommand(const char *aCommandName, const nsAString & aCommandParams, nsISupports *aCommandRefCon)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

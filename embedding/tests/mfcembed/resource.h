@@ -132,6 +132,9 @@
 #define ID_ALIGNCENTER                  32809
 #define ID_ALIGNRIGHT                   32810
 #define ID_INSERTLINK                   32811
+#define ID_EDITOR_UNDO                  32813
+#define ID_EDITOR_REDO                  32814
+
 
 // Next default values for new objects
 // 
@@ -139,7 +142,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        160
-#define _APS_NEXT_COMMAND_VALUE         32813
+#define _APS_NEXT_COMMAND_VALUE         32815
 #define _APS_NEXT_CONTROL_VALUE         1058
 #define _APS_NEXT_SYMED_VALUE           102
 #endif

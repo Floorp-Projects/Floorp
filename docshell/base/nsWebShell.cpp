@@ -989,7 +989,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
 #endif
 
 nsresult
-nsWebShell::GetControllerForCommand ( const nsAString & inCommand, nsIController** outController )
+nsWebShell::GetControllerForCommand ( const char * inCommand, nsIController** outController )
 {
   NS_ENSURE_ARG_POINTER(outController);
   *outController = nsnull;
@@ -1010,7 +1010,7 @@ nsWebShell::GetControllerForCommand ( const nsAString & inCommand, nsIController
 
 
 nsresult
-nsWebShell::IsCommandEnabled ( const nsAString & inCommand, PRBool* outEnabled )
+nsWebShell::IsCommandEnabled ( const char * inCommand, PRBool* outEnabled )
 {
   NS_ENSURE_ARG_POINTER(outEnabled);
   *outEnabled = PR_FALSE;
@@ -1027,7 +1027,7 @@ nsWebShell::IsCommandEnabled ( const nsAString & inCommand, PRBool* outEnabled )
 
 
 nsresult
-nsWebShell::DoCommand ( const nsAString & inCommand )
+nsWebShell::DoCommand ( const char * inCommand )
 {
   nsresult rv = NS_ERROR_FAILURE;
   
@@ -1043,81 +1043,81 @@ nsWebShell::DoCommand ( const nsAString & inCommand )
 NS_IMETHODIMP
 nsWebShell::CanCutSelection(PRBool* aResult)
 {
-  return IsCommandEnabled ( NS_LITERAL_STRING("cmd_cut"), aResult );
+  return IsCommandEnabled ( "cmd_cut", aResult );
 }
 
 NS_IMETHODIMP
 nsWebShell::CanCopySelection(PRBool* aResult)
 {
-  return IsCommandEnabled ( NS_LITERAL_STRING("cmd_copy"), aResult );
+  return IsCommandEnabled ( "cmd_copy", aResult );
 }
 
 NS_IMETHODIMP
 nsWebShell::CanCopyLinkLocation(PRBool* aResult)
 {
-  return IsCommandEnabled ( NS_LITERAL_STRING("cmd_copyLink"), aResult );
+  return IsCommandEnabled ( "cmd_copyLink", aResult );
 }
 
 NS_IMETHODIMP
 nsWebShell::CanCopyImageLocation(PRBool* aResult)
 {
-  return IsCommandEnabled ( NS_LITERAL_STRING("cmd_copyImageLocation"),
+  return IsCommandEnabled ( "cmd_copyImageLocation",
                             aResult );
 }
 
 NS_IMETHODIMP
 nsWebShell::CanCopyImageContents(PRBool* aResult)
 {
-  return IsCommandEnabled ( NS_LITERAL_STRING("cmd_copyImageContents"),
+  return IsCommandEnabled ( "cmd_copyImageContents",
                             aResult );
 }
 
 NS_IMETHODIMP
 nsWebShell::CanPaste(PRBool* aResult)
 {
-  return IsCommandEnabled ( NS_LITERAL_STRING("cmd_paste"), aResult );
+  return IsCommandEnabled ( "cmd_paste", aResult );
 }
 
 NS_IMETHODIMP
 nsWebShell::CutSelection(void)
 {
-  return DoCommand ( NS_LITERAL_STRING("cmd_cut") );
+  return DoCommand ( "cmd_cut" );
 }
 
 NS_IMETHODIMP
 nsWebShell::CopySelection(void)
 {
-  return DoCommand ( NS_LITERAL_STRING("cmd_copy") );
+  return DoCommand ( "cmd_copy" );
 }
 
 NS_IMETHODIMP
 nsWebShell::CopyLinkLocation(void)
 {
-  return DoCommand ( NS_LITERAL_STRING("cmd_copyLink") );
+  return DoCommand ( "cmd_copyLink" );
 }
 
 NS_IMETHODIMP
 nsWebShell::CopyImageLocation(void)
 {
-  return DoCommand ( NS_LITERAL_STRING("cmd_copyImageLocation") );
+  return DoCommand ( "cmd_copyImageLocation" );
 }
 
 NS_IMETHODIMP
 nsWebShell::CopyImageContents(void)
 {
-  return DoCommand ( NS_LITERAL_STRING("cmd_copyImageContents") );
+  return DoCommand ( "cmd_copyImageContents" );
 }
 
 NS_IMETHODIMP
 nsWebShell::Paste(void)
 {
-  return DoCommand ( NS_LITERAL_STRING("cmd_paste") );
+  return DoCommand ( "cmd_paste" );
 }
 
 NS_IMETHODIMP
 nsWebShell::SelectAll(void)
 {
-  return DoCommand ( NS_LITERAL_STRING("cmd_selectAll") );
+  return DoCommand ( "cmd_selectAll" );
 }
 
 
@@ -1130,7 +1130,7 @@ nsWebShell::SelectAll(void)
 NS_IMETHODIMP
 nsWebShell::SelectNone(void)
 {
-  return DoCommand ( NS_LITERAL_STRING("cmd_selectNone") );
+  return DoCommand ( "cmd_selectNone" );
 }
 
 

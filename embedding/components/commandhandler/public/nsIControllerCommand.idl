@@ -46,9 +46,9 @@ interface nsIControllerCommand : nsISupports
    *                  allowing the command to get some context information.
    *                  The contents of this cookie are implementation-defined.
    */
-  boolean isCommandEnabled(in DOMString aCommandName, in nsISupports aCommandRefCon);
+  boolean isCommandEnabled(in string aCommandName, in nsISupports aCommandRefCon);
 
-  void getCommandState(in nsICommandParams aParams, in nsISupports aCommandRefCon);
+  void getCommandState(in string aCommandName, in nsICommandParams aParams, in nsISupports aCommandRefCon);
   
   /**
    * Execute the name command.
@@ -59,9 +59,9 @@ interface nsIControllerCommand : nsISupports
    *                  allowing the command to get some context information.
    *                  The contents of this cookie are implementation-defined.
    */
-  void    doCommand(in DOMString aCommandName, in nsISupports aCommandRefCon);
+  void    doCommand(in string aCommandName, in nsISupports aCommandRefCon);
 
-  void    doCommandParams(in nsICommandParams aParams, in nsISupports aCommandRefCon);
+  void    doCommandParams(in string aCommandName, in nsICommandParams aParams, in nsISupports aCommandRefCon);
   
 };
 
@@ -89,7 +89,7 @@ interface nsIStateUpdatingControllerCommand : nsISupports
    *                  allowing the command to get some context information.
    *                  The contents of this cookie are implementation-defined.
    */
-  void    updateCommandState(in DOMString aCommandName, in nsISupports aCommandRefCon);
+  void    updateCommandState(in string aCommandName, in nsISupports aCommandRefCon);
 
   /**
    * Gets the command states based on the input parameters

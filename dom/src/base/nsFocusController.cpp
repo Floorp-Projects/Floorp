@@ -357,7 +357,7 @@ nsFocusController::GetParentWindowFromDocument(nsIDOMDocument* aDocument, nsIDOM
 }
 
 NS_IMETHODIMP
-nsFocusController::GetControllerForCommand(const nsAString& aCommand, nsIController** _retval)
+nsFocusController::GetControllerForCommand(const char * aCommand, nsIController** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);	
   *_retval = nsnull;

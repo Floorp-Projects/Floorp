@@ -68,7 +68,7 @@ protected:
 
   struct HashEntry : public PLDHashEntryHdr
   {
-    nsString      mEntryName;
+    nsCString      mEntryName;
 
     PRUint8       mEntryType;
     union {
@@ -80,11 +80,13 @@ protected:
 
     // put these outside the union to avoid clobbering other fields
     nsString*               mString;
+    nsCString*              mCString;
+
     nsCOMPtr<nsISupports>   mISupports;    
     
-    HashEntry(PRUint8 inType, const nsAString& inEntryName)
-    : mEntryName(inEntryName)
-    , mEntryType(inType)
+    HashEntry(PRUint8 inType, const char * inEntryName)
+    : mEntryType(inType)
+    , mEntryName(inEntryName)
     , mString(nsnull)
     {
       mData.mDouble = 0.0;
@@ -104,6 +106,10 @@ protected:
           NS_ASSERTION(inRHS.mString, "Source entry has no string");
           mString = new nsString(*inRHS.mString);
           break;      
+        case eStringType:
+          NS_ASSERTION(inRHS.mCString, "Source entry has no string");
+          mCString = new nsCString(*inRHS.mCString);
+          break;      
         case eISupportsType:
           mISupports = inRHS.mISupports.get();    // additional addref
           break;
@@ -116,6 +122,8 @@ protected:
     {
       if (mEntryType == eWStringType)
         delete mString;
+      else if (mEntryType == eStringType)
+        delete mCString;
     }
     
     void Reset(PRUint8 inNewType)
@@ -128,6 +136,7 @@ protected:
         case eDoubleType:       mData.mDouble = 0.0;        break;
         case eWStringType:      delete mString; mString = nsnull;     break;
         case eISupportsType:    mISupports = nsnull;        break;    // clear the nsCOMPtr
+        case eStringType:       delete mCString; mCString = nsnull;   break;
         default:
           NS_ASSERTION(0, "Unknown type");
       }
@@ -138,11 +147,11 @@ protected:
   };
 
 
-  HashEntry*          GetNamedEntry(const nsAString& name);
+  HashEntry*          GetNamedEntry(const char * name);
   HashEntry*          GetIndexedEntry(PRInt32 index);
   PRUint32            GetNumEntries();
   
-  nsresult            GetOrMakeEntry(const nsAString& name, PRUint8 entryType, HashEntry*& outEntry);
+  nsresult            GetOrMakeEntry(const char * name, PRUint8 entryType, HashEntry*& outEntry);
   
 protected:
 

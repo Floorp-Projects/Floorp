@@ -152,7 +152,7 @@ class nsEditorShell :   public nsIEditorShell,
     nsresult        RemoveOneProperty(const nsString& aProp, const nsString& aAttr);
     nsresult        DoFind(PRBool aFindNext);
     // To allow executing JavaScript commands from C++ via nsIEditorController interface
-    nsresult        DoControllerCommand(const nsAString& aCommand);
+    nsresult        DoControllerCommand(const char* aCommand);
 
     void            Alert(const nsString& aTitle, const nsString& aMsg);
     // Bring up a Yes/No dialog WE REALLY NEED A Yes/No/Cancel dialog and would like to set our own caption as well!

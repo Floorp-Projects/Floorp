@@ -128,7 +128,7 @@ nsComposerController::GetInterface(const nsIID & aIID, void * *result)
     _cmdClass* theCmd;                                                  \
     NS_NEWXPCOM(theCmd, _cmdClass);                                     \
     if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                         \
-    rv = inCommandManager->RegisterCommand(NS_LITERAL_STRING(_cmdName), \
+    rv = inCommandManager->RegisterCommand(_cmdName, \
                        NS_STATIC_CAST(nsIControllerCommand *, theCmd)); \
   }
 
@@ -137,15 +137,15 @@ nsComposerController::GetInterface(const nsIID & aIID, void * *result)
     _cmdClass* theCmd;                                                  \
     NS_NEWXPCOM(theCmd, _cmdClass);                                     \
     if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                         \
-    rv = inCommandManager->RegisterCommand(NS_LITERAL_STRING(_cmdName), \
+    rv = inCommandManager->RegisterCommand(_cmdName, \
                        NS_STATIC_CAST(nsIControllerCommand *, theCmd));
 
 #define NS_REGISTER_NEXT_COMMAND(_cmdClass, _cmdName)                   \
-    rv = inCommandManager->RegisterCommand(NS_LITERAL_STRING(_cmdName), \
+    rv = inCommandManager->RegisterCommand(_cmdName, \
                         NS_STATIC_CAST(nsIControllerCommand *, theCmd));
 
 #define NS_REGISTER_LAST_COMMAND(_cmdClass, _cmdName)                   \
-    rv = inCommandManager->RegisterCommand(NS_LITERAL_STRING(_cmdName), \
+    rv = inCommandManager->RegisterCommand(_cmdName, \
                        NS_STATIC_CAST(nsIControllerCommand *, theCmd)); \
   }
 
@@ -153,7 +153,7 @@ nsComposerController::GetInterface(const nsIID & aIID, void * *result)
   {                                                                     \
     _cmdClass* theCmd = new _cmdClass(_styleTag);                       \
     if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                         \
-    rv = inCommandManager->RegisterCommand(NS_LITERAL_STRING(_cmdName), \
+    rv = inCommandManager->RegisterCommand(_cmdName, \
                        NS_STATIC_CAST(nsIControllerCommand *, theCmd)); \
   }
   
@@ -210,6 +210,7 @@ nsresult nsComposerController::RegisterComposerCommands(nsIControllerCommandMana
   NS_REGISTER_ONE_COMMAND(nsIncreaseFontSizeCommand, "cmd_increaseFont");
   NS_REGISTER_ONE_COMMAND(nsDecreaseFontSizeCommand, "cmd_decreaseFont");
 
+
   return NS_OK;
 }
 
@@ -218,7 +219,7 @@ nsresult nsComposerController::RegisterComposerCommands(nsIControllerCommandMana
  * ======================================================================= */
 
 NS_IMETHODIMP
-nsComposerController::IsCommandEnabled(const nsAString & aCommand,
+nsComposerController::IsCommandEnabled(const char * aCommand,
                                        PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
@@ -226,7 +227,7 @@ nsComposerController::IsCommandEnabled(const nsAString & aCommand,
 }
 
 NS_IMETHODIMP
-nsComposerController::SupportsCommand(const nsAString & aCommand,
+nsComposerController::SupportsCommand(const char * aCommand,
                                       PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
@@ -234,13 +235,13 @@ nsComposerController::SupportsCommand(const nsAString & aCommand,
 }
 
 NS_IMETHODIMP
-nsComposerController::DoCommand(const nsAString & aCommand)
+nsComposerController::DoCommand(const char *aCommand)
 {
   return mCommandManager->DoCommand(aCommand, mCommandRefCon);
 }
 
 NS_IMETHODIMP
-nsComposerController::OnEvent(const nsAString & aEventName)
+nsComposerController::OnEvent(const char * aEventName)
 {
   return NS_OK;
 }
@@ -282,17 +283,17 @@ state_all   : true,false
 state_mixed : true,false
 */
 /* void getCommandState (in DOMString aCommandName, inout nsICommandParams aCommandParams); */
-NS_IMETHODIMP nsComposerController::GetCommandState(nsICommandParams *aCommandParams)
+NS_IMETHODIMP nsComposerController::GetCommandState(const char *aCommand, nsICommandParams *aCommandParams)
 {
   if (!mCommandRefCon || !mCommandManager)
     return NS_ERROR_NOT_INITIALIZED;
-  return mCommandManager->GetCommandState(aCommandParams,mCommandRefCon);
+  return mCommandManager->GetCommandState(aCommand,aCommandParams,mCommandRefCon);
 }
 
 /* void doCommand (in DOMString aCommandName, in nsICommandParams aCommandParams); */
-NS_IMETHODIMP nsComposerController::DoCommand(nsICommandParams *aCommandParams)
+NS_IMETHODIMP nsComposerController::DoCommand(const char *aCommand, nsICommandParams *aCommandParams)
 {
   if (!mCommandRefCon || !mCommandManager)
     return NS_ERROR_NOT_INITIALIZED;
-  return mCommandManager->DoCommandParams(aCommandParams,mCommandRefCon);
+  return mCommandManager->DoCommandParams(aCommand, aCommandParams,mCommandRefCon);
 }

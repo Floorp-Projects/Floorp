@@ -62,7 +62,8 @@ class nsIEditor;
 
 class nsEditorController :  public nsIController,
                             public nsIEditorController,
-                            public nsIInterfaceRequestor
+                            public nsIInterfaceRequestor,
+                            public nsICommandController
 {
 public:
 
@@ -74,6 +75,9 @@ public:
     
   // nsIController
   NS_DECL_NSICONTROLLER
+
+  // nsICommandController
+  NS_DECL_NSICOMMANDCONTROLLER
 
   /** init the controller */
   NS_IMETHOD Init(nsISupports *aCommandRefCon);

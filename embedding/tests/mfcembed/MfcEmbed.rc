@@ -274,8 +274,8 @@ BEGIN
     END
     POPUP "&Edit"
     BEGIN
-        MENUITEM "Undo\tCtrl+Z",                ID_EDIT_UNDO
-        MENUITEM "Redo\tCtrl+Shift+Z",          ID_EDIT_REDO
+        MENUITEM "Undo\tCtrl+Z",                ID_EDITOR_UNDO
+        MENUITEM "Redo\tCtrl+Shift+Z",          ID_EDITOR_REDO
         MENUITEM SEPARATOR
         MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
         MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
@@ -324,7 +324,10 @@ BEGIN
     VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
     "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
     "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+    "Z",            ID_EDITOR_UNDO,         VIRTKEY, CONTROL, NOINVERT
     "Z",            ID_EDIT_REDO,           VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "Z",            ID_EDITOR_REDO,         VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
 END
 

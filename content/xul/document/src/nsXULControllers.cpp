@@ -130,7 +130,7 @@ nsXULControllers::SetCommandDispatcher(nsIDOMXULCommandDispatcher* aCommandDispa
 }
 
 NS_IMETHODIMP
-nsXULControllers::GetControllerForCommand(const nsAString& aCommand, nsIController** _retval)
+nsXULControllers::GetControllerForCommand(const char *aCommand, nsIController** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsnull;

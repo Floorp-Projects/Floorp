@@ -47,15 +47,15 @@ interface nsIControllerCommandManager : nsISupports
    *
    * @param aCommand      the handler for this command.
    */
-  void    registerCommand(in DOMString aCommandName, in nsIControllerCommand aCommand);
-  void    unregisterCommand(in DOMString aCommandName, in nsIControllerCommand aCommand);
+  void    registerCommand(in string aCommandName, in nsIControllerCommand aCommand);
+  void    unregisterCommand(in string aCommandName, in nsIControllerCommand aCommand);
   
   /**
    * Find the command handler which has been registered to handle the named command.
    *
    * @param aCommandName  the name of the command to find the handler for.
    */
-  nsIControllerCommand findCommandHandler(in DOMString aCommandName);
+  nsIControllerCommand findCommandHandler(in string aCommandName);
 
   /**
    * Get whether the named command is enabled.
@@ -63,7 +63,7 @@ interface nsIControllerCommandManager : nsISupports
    * @param aCommandName    the name of the command to test
    * @param aCommandRefCon  the command context data
    */
-	boolean isCommandEnabled(in DOMString aCommandName, in nsISupports aCommandRefCon);
+	boolean isCommandEnabled(in string aCommandName, in nsISupports aCommandRefCon);
 
   /**
    * Tell the command to udpate its state (if it is a state updating command)
@@ -71,7 +71,7 @@ interface nsIControllerCommandManager : nsISupports
    * @param aCommandName    the name of the command to update
    * @param aCommandRefCon  the command context data
    */
-	void  updateCommandState(in DOMString aCommandName, in nsISupports aCommandRefCon);
+	void  updateCommandState(in string aCommandName, in nsISupports aCommandRefCon);
 
   /**
    * Get whether the named command is supported.
@@ -79,7 +79,7 @@ interface nsIControllerCommandManager : nsISupports
    * @param aCommandName    the name of the command to test
    * @param aCommandRefCon  the command context data
    */
-	boolean supportsCommand(in DOMString aCommandName, in nsISupports aCommandRefCon);
+	boolean supportsCommand(in string aCommandName, in nsISupports aCommandRefCon);
 
   /**
    * Execute the named command.
@@ -87,11 +87,11 @@ interface nsIControllerCommandManager : nsISupports
    * @param aCommandName    the name of the command to execute
    * @param aCommandRefCon  the command context data
    */
-	void    doCommand(in DOMString aCommandName, in nsISupports aCommandRefCon);
+	void    doCommand(in string aCommandName, in nsISupports aCommandRefCon);
 
-	void    doCommandParams(in nsICommandParams aParam, in nsISupports aCommandRefCon);
+	void    doCommandParams(in string aCommandName, in nsICommandParams aParam, in nsISupports aCommandRefCon);
 
-	void    getCommandState(in nsICommandParams aParam, in nsISupports aCommandRefCon);
+	void    getCommandState(in string aCommandName, in nsICommandParams aParam, in nsISupports aCommandRefCon);
 };
 
 

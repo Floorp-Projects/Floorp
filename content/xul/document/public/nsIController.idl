@@ -40,12 +40,12 @@
 
 [scriptable, uuid(D5B61B82-1DA4-11d3-BF87-00105A1B0627)]
 interface nsIController : nsISupports {
-	boolean isCommandEnabled(in DOMString command);
-	boolean supportsCommand(in DOMString command);
+	boolean isCommandEnabled(in string command);
+	boolean supportsCommand(in string command);
 
-	void doCommand(in DOMString command);
+	void doCommand(in string command);
 
-	void onEvent(in DOMString eventName);
+	void onEvent(in string eventName);
 };
 
 
@@ -62,9 +62,9 @@ interface nsICommandParams;
 interface nsICommandController : nsISupports
 {
   
-  void        getCommandState( in nsICommandParams aCommandParams);
+  void        getCommandState( in string command, in nsICommandParams aCommandParams);
     
-  void        doCommand(in nsICommandParams aCommandParams);
+  void        doCommand(in string command, in nsICommandParams aCommandParams);
 
 };
 
@@ -79,17 +79,17 @@ interface nsISimpleEnumerator;
 interface nsIControllerCommandGroup : nsISupports
 {
 
-  void  addCommandToGroup(in DOMString aCommand, in DOMString aGroup);
-  void  removeCommandFromGroup(in DOMString aCommand, in DOMString aGroup);
+  void  addCommandToGroup(in string aCommand, in string aGroup);
+  void  removeCommandFromGroup(in string aCommand, in string aGroup);
   
-  boolean isCommandInGroup(in DOMString aCommand, in DOMString aGroup);
+  boolean isCommandInGroup(in string aCommand, in string aGroup);
 
   /*
     We should expose some methods that allow for enumeration.
   */
   nsISimpleEnumerator getGroupsEnumerator();
   
-  nsISimpleEnumerator getEnumeratorForGroup(in DOMString aGroup);
+  nsISimpleEnumerator getEnumeratorForGroup(in string aGroup);
 
 };
 

@@ -290,10 +290,10 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
       privateWindow->GetRootFocusController(getter_AddRefs(focusController));
     }
 
-    nsDependentString command(mHandlerText);
-
+    nsCAutoString command;
+    command.AssignWithConversion(mHandlerText);
     if (focusController)
-      focusController->GetControllerForCommand(command, getter_AddRefs(controller));
+      focusController->GetControllerForCommand(command.get(), getter_AddRefs(controller));
     else GetController(aReceiver, getter_AddRefs(controller)); // We're attached to the receiver possibly.
 
     nsAutoString type;
@@ -323,7 +323,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
     aEvent->PreventDefault();
     
     if (controller)
-      controller->DoCommand(command);
+      controller->DoCommand(command.get());
 
     return NS_OK;
   }

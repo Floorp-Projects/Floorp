@@ -1429,7 +1429,7 @@ nsEditorShell::FinishHTMLSource(void)
   if (mHTMLSourceMode)
   {
     // Call the JS command to convert and switch to previous edit mode
-    return DoControllerCommand(NS_LITERAL_STRING("cmd_FinishHTMLSource"));
+    return DoControllerCommand("cmd_FinishHTMLSource");
   }
   return NS_OK;
 }
@@ -1721,7 +1721,7 @@ nsEditorShell::UpdateWindowTitleAndRecentMenu(PRBool aSaveToPrefs)
   // For now, don't update the menu at all if aSaveToPrefs is false
   if (aSaveToPrefs)
   {
-    res = DoControllerCommand(NS_LITERAL_STRING("cmd_buildRecentPagesMenu"));
+    res = DoControllerCommand("cmd_buildRecentPagesMenu");
   }
    
   return res;
@@ -4680,7 +4680,7 @@ nsEditorShell::CheckPrefAndNormalizeTable()
 
 
 nsresult
-nsEditorShell::DoControllerCommand(const nsAString& aCommand)
+nsEditorShell::DoControllerCommand(const char *aCommand)
 {
   // Get the list of controllers...
   nsCOMPtr<nsIControllers> controllers;      

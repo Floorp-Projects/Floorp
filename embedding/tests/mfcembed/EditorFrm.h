@@ -51,9 +51,9 @@ protected:
 public:
     BOOL InitEditor();
     NS_METHOD MakeEditable();
-    NS_METHOD DoCommand(nsICommandParams *aCommandParams);
-    NS_METHOD IsCommandEnabled(const nsAString &aCommand, PRBool *retval);
-    NS_METHOD GetCommandState(nsICommandParams *aCommandParams);
+    NS_METHOD DoCommand(const char *aCommand, nsICommandParams *aCommandParams);
+    NS_METHOD IsCommandEnabled(const char *aCommand, PRBool *retval);
+    NS_METHOD GetCommandState(const char *aCommand, nsICommandParams *aCommandParams);
 
 // Generated message map functions
 protected:
@@ -97,13 +97,13 @@ protected:
     DECLARE_MESSAGE_MAP()
 
 private:
-    NS_METHOD ExecuteStyleCommand(const nsAString &aCommand);
-    NS_METHOD ExecuteNoParam(const nsAString &aCommand);
-    NS_METHOD MakeCommandParams(const nsAString &aCommand,nsICommandParams **aParams);
-    NS_METHOD ExecuteAttribParam(const nsAString &aCommand, const nsAString &aAttribute);
-    NS_METHOD GetAttributeParamValue(const nsAString &aCommand, nsString &aValue);
+    NS_METHOD ExecuteStyleCommand(const char *aCommand);
+    NS_METHOD ExecuteNoParam(const char *aCommand);
+    NS_METHOD MakeCommandParams(const char *aCommand,nsICommandParams **aParams);
+    NS_METHOD ExecuteAttribParam(const char *aCommand, const char *aAttribute);
+    NS_METHOD GetAttributeParamValue(const char *aCommand, nsCString &aValue);
 
-    void UpdateStyleToolBarBtn(const nsAString &aCommand, CCmdUI* pCmdUI);
+    void UpdateStyleToolBarBtn(const char *aCommand, CCmdUI* pCmdUI);
 
 private:
     nsCOMPtr<nsICommandManager> mCommandManager;

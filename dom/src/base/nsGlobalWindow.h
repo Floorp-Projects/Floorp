@@ -460,8 +460,8 @@ private:
 	nsresult GetEditInterface( nsIContentViewerEdit** aEditInterface);
   nsresult GetSelectionController(nsISelectionController ** aSelCon);
 
-  nsresult DoCommandWithEditInterface(const nsCString& aCommandName);
-  nsresult DoCommandWithSelectionController(const nsCString& aCommandName);
+  nsresult DoCommandWithEditInterface(const char * aCommandName);
+  nsresult DoCommandWithSelectionController(const char * aCommandName);
 
 	nsIDOMWindowInternal *mWindow;
   PRBool mBrowseWithCaret;
