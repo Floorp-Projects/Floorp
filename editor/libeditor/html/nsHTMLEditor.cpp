@@ -664,31 +664,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
 
 NS_IMETHODIMP nsHTMLEditor::OutputTextToString(nsString& aOutputString)
 {
-  nsCOMPtr<nsITextEncoder> encoder;
-  nsresult rv = nsComponentManager::CreateInstance(kTextEncoderCID,
-                                                   nsnull,
-                                                   nsIDocumentEncoder::GetIID(),
-                                                   getter_AddRefs(encoder));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  rv = GetDocument(getter_AddRefs(domdoc));
-  if (NS_FAILED(rv))
-    return rv;
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-  nsString mimetype ("text/plain");
-
-  nsCOMPtr<nsIPresShell> shell;
-
- 	rv = GetPresShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv)) {
-    rv = encoder->Init(shell,doc, mimetype);
-    if (NS_FAILED(rv))
-      return rv;
-  }
-
-  return encoder->EncodeToString(aOutputString);
+  return nsTextEditor::OutputTextToString(aOutputString);
 }
 
 NS_IMETHODIMP nsHTMLEditor::OutputHTMLToString(nsString& aOutputString)
@@ -711,95 +687,17 @@ NS_IMETHODIMP nsHTMLEditor::OutputHTMLToString(nsString& aOutputString)
   }
 #endif
 
-  nsCOMPtr<nsIHTMLEncoder> encoder;
-  nsresult rv = nsComponentManager::CreateInstance(kHTMLEncoderCID,
-                                                   nsnull,
-                                                   nsIDocumentEncoder::GetIID(),
-                                                   getter_AddRefs(encoder));
-  if (NS_FAILED(rv))
-    return rv;
- 
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  rv = GetDocument(getter_AddRefs(domdoc));
-  if (NS_FAILED(rv))
-    return rv;
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-  nsString mimetype ("text/html");
-
-  nsCOMPtr<nsIPresShell> shell;
-
- 	rv = GetPresShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv)) {
-    rv = encoder->Init(shell,doc, mimetype);
-    if (NS_FAILED(rv))
-      return rv;
-  }
-
-  return encoder->EncodeToString(aOutputString);
+  return nsTextEditor::OutputHTMLToString(aOutputString);
 }
 
 NS_IMETHODIMP nsHTMLEditor::OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharset)
 {
-  nsCOMPtr<nsITextEncoder> encoder;
-  nsresult rv = nsComponentManager::CreateInstance(kTextEncoderCID,
-                                                   nsnull,
-                                                   nsIDocumentEncoder::GetIID(),
-                                                   getter_AddRefs(encoder));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  rv = GetDocument(getter_AddRefs(domdoc));
-  if (NS_FAILED(rv))
-    return rv;
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-  nsString mimetype ("text/plain");
-
-  if (aCharset && aCharset->Length() != 0 && aCharset->Equals("null")==PR_FALSE)
-    encoder->SetCharset(*aCharset);
-
-  nsCOMPtr<nsIPresShell> shell;
-
- 	rv = GetPresShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv)) {
-    rv = encoder->Init(shell,doc, mimetype);
-    if (NS_FAILED(rv))
-      return rv;
-  }
-
-  return encoder->EncodeToStream(aOutputStream);
+  return nsTextEditor::OutputTextToStream(aOutputStream, aCharset);
 }
 
 NS_IMETHODIMP nsHTMLEditor::OutputHTMLToStream(nsIOutputStream* aOutputStream,nsString* aCharset)
 {
-  nsCOMPtr<nsIHTMLEncoder> encoder;
-  nsresult rv = nsComponentManager::CreateInstance(kHTMLEncoderCID,
-                                                   nsnull,
-                                                   nsIDocumentEncoder::GetIID(),
-                                                   getter_AddRefs(encoder));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  rv = GetDocument(getter_AddRefs(domdoc));
-  if (NS_FAILED(rv))
-    return rv;
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-  nsString mimetype ("text/html");
-
-  nsCOMPtr<nsIPresShell> shell;
-
-  if (aCharset && aCharset->Length() != 0 && aCharset->Equals("null")==PR_FALSE)
-    encoder->SetCharset(*aCharset);
-
- 	rv = GetPresShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv)) {
-    rv = encoder->Init(shell,doc, mimetype);
-    if (NS_FAILED(rv))
-      return rv;
-  }
-
-  return encoder->EncodeToStream(aOutputStream);
+  return nsTextEditor::OutputHTMLToStream(aOutputStream, aCharset);
 }
 
 
