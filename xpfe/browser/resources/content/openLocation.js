@@ -111,19 +111,14 @@ function createInstance( progid, iidName )
     return Components.classes[ progid ].createInstance( iid );
   }
 
+const nsIFilePicker = Components.interfaces.nsIFilePicker;
 function onChooseFile() 
-  {
-    // Get filespecwithui component.            
-    var fileSpec = createInstance( "component://netscape/filespecwithui", "nsIFileSpecWithUI" );
-    try 
-      {
-        fileSpec.parentWindow = window;
-        var url = fileSpec.chooseFile( bundle.GetStringFromName("chooseFileDialogTitle") );
-        fileSpec.parentWindow = null;
-        dialog.input.value = fileSpec.URLString;
-      }
-    catch( exception ) 
-      {
-        // Just a cancel, probably.
-      }
-  }
+{
+  try {
+    var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
+    fp.init(window, bundle.GetStringFromName("chooseFileDialogTitle"), nsIFilePicker.modeOpen);
+    fp.setFilters(nsIFilePicker.filterAll);
+    fp.show();
+    dialog.input.value = fp.file.path;
+  } catch(ex) { }
+}
