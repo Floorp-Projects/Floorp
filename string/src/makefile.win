@@ -31,11 +31,9 @@ REQUIRES	= xpcom \
 LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
 
 CPP_OBJS =                                        \
-        .\$(OBJDIR)\nsAFlatString.obj             \
         .\$(OBJDIR)\nsASingleFragmentString.obj   \
         .\$(OBJDIR)\nsAString.obj                 \
         .\$(OBJDIR)\nsDependentConcatenation.obj  \
-        .\$(OBJDIR)\nsDependentString.obj         \
         .\$(OBJDIR)\nsDependentSubstring.obj      \
         .\$(OBJDIR)\nsFragmentedString.obj        \
         .\$(OBJDIR)\nsPrintfCString.obj           \

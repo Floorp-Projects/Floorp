@@ -94,26 +94,6 @@ nsPrintfCString::Length() const
     return mLength;
   }
 
-#if 0
-PRBool
-nsPrintfCString::GetReadableFragment( const_fragment_type& aFragment, nsFragmentRequest aRequest ) const
-  {
-    switch ( aRequest )
-      {
-        case kFirstFragment:
-        case kLastFragment:
-          aFragment.mFragmentIdentifier = this;
-          // fall through
-        case kThisFragment:
-          aFragment.mStart = mStart;
-          aFragment.mEnd = mStart + mLength;
-          return PR_TRUE;
-
-        default:
-          return PR_FALSE;
-      }
-  }
-#else
 const nsPrintfCString::char_type*
 nsPrintfCString::GetReadableFragment( const_fragment_type& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const
   {
@@ -131,5 +111,4 @@ nsPrintfCString::GetReadableFragment( const_fragment_type& aFragment, nsFragment
           return 0;
       }
   }
-#endif
 
