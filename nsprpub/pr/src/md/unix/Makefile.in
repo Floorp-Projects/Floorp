@@ -113,6 +113,11 @@ ifneq ($(NSDISTMODE),copy)
 	$(INSTALL) -m 444 $@ ../../cpu/sparcv8plus
 endif
 
+ifneq ($(NSDISTMODE),copy)
+clobber realclean clobber_all distclean::
+	rm -rf ../../cpu
+endif
+
 $(ULTRASPARC_ASOBJS): $(ULTRASPARC_ASFILES)
 	/usr/ccs/bin/as -o $@ -K PIC -P -D_ASM -D__STDC__=0 -xarch=v8plus $<
 

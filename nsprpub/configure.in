@@ -1634,12 +1634,14 @@ mips-sony-newsos*)
     fi
     PR_MD_CSRCS=solaris.c
     LD=/usr/ccs/bin/ld
-    DSO_LDOPTS='-G -h $(notdir $@) -z combreloc'
+    MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
     RESOLVE_LINK_SYMBOLS=1
     if test -n "$GNU_CC"; then
         DSO_CFLAGS=-fPIC
+        DSO_LDOPTS='-B/usr/ccs/bin/ -shared -Wl,-h,$(notdir $@),-z,combreloc,-z,defs' 
     else
         DSO_CFLAGS=-KPIC
+        DSO_LDOPTS='-G -h $(notdir $@) -z combreloc -z defs'
     fi
     if test -z "$GNU_AS"; then
         ASFLAGS="$ASFLAGS -Wa,-P"
@@ -1652,8 +1654,8 @@ mips-sony-newsos*)
             CXXFLAGS="$CXXFLAGS -MDupdate \$(DEPENDENCIES)"
         fi
     else
-        CC="$CC -xstrconst"
-        CXX="$CXX -Qoption cg -xstrconst"
+        CFLAGS="$CFLAGS -xstrconst"
+        CXXFLAGS="$CXXFLAGS -Qoption cg -xstrconst"
         if test -z "$MOZ_OPTIMIZE"; then
             CFLAGS="$CFLAGS -xs"
             CXXFLAGS="$CXXFLAGS -xs"
