@@ -21,6 +21,6 @@
 
 #include "prtypes.h"
 
-extern "C" PRInt32 gLockCount;
+extern PRInt32 gLockCount;
 
 #endif /* nsBaseDLL_h___ */
