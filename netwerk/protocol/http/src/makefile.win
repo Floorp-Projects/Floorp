@@ -43,10 +43,6 @@ LLIBS= $(LLIBS) \
 	$(DIST)\lib\xpcom.lib	\
 	$(NULL)
 
-EXPORTS= 	\
-	nsHTTPCID.h	\
-	$(NULL)
-
 CPP_OBJS=		\
 	.\$(OBJDIR)\nsHTTPHandler.obj		\
 	.\$(OBJDIR)\nsHTTPHandlerModule.obj	\
