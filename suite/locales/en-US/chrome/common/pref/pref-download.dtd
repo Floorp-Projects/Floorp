@@ -2,7 +2,7 @@
 
 <!ENTITY  title.label "Download">
 <!ENTITY  lHeader "Download">
-<!ENTITY  rHeader "Choose settings for seading messages offline">
+<!ENTITY  rHeader "Choose settings for sending messages offline">
 <!ENTITY  downOnlyCheck "Download only unread messages">
 <!ENTITY  downDateCheck "Download by date">
 <!ENTITY  newmes "Newsgroup Messages">
