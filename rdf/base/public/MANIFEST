@@ -10,3 +10,4 @@ nsIRDFService.h
 nsIRDFXMLDataSource.h
 nsIRDFXMLSource.h
 nsRDFResource.h
+rdf_qsort.h
