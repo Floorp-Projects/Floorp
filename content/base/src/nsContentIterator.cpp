@@ -294,45 +294,53 @@ void nsContentIterator::MakeEmpty()
 
 nsCOMPtr<nsIContent> nsContentIterator::GetDeepFirstChild(nsCOMPtr<nsIContent> aRoot)
 {
-  if (!aRoot) 
-    return aRoot;
-    
-  nsCOMPtr<nsIContent> cN = aRoot;
-  nsCOMPtr<nsIContent> cChild;
-  cN->ChildAt(0,*getter_AddRefs(cChild));
-  while ( cChild )
-  {
-    cN = cChild;
+  nsCOMPtr<nsIContent> deepFirstChild;
+  
+  if (aRoot) 
+  {  
+    nsCOMPtr<nsIContent> cN = aRoot;
+    nsCOMPtr<nsIContent> cChild;
     cN->ChildAt(0,*getter_AddRefs(cChild));
+    while ( cChild )
+    {
+      cN = cChild;
+      cN->ChildAt(0,*getter_AddRefs(cChild));
+    }
+    deepFirstChild = cN;
   }
-  return cN;
+  
+  return deepFirstChild;
 }
 
 nsCOMPtr<nsIContent> nsContentIterator::GetDeepLastChild(nsCOMPtr<nsIContent> aRoot)
 {
-  if (!aRoot) 
-    return aRoot;
-    
-  nsCOMPtr<nsIContent> cN = aRoot;
-  nsCOMPtr<nsIContent> cChild;
-  PRInt32 numChildren;
+  nsCOMPtr<nsIContent> deepFirstChild;
   
-  cN->ChildCount(numChildren);
+  if (aRoot) 
+  {  
+    nsCOMPtr<nsIContent> cN = aRoot;
+    nsCOMPtr<nsIContent> cChild;
+    PRInt32 numChildren;
+  
+    cN->ChildCount(numChildren);
 
-  while ( numChildren )
-  {
-    cN->ChildAt(--numChildren,*getter_AddRefs(cChild));
-    if (cChild)
+    while ( numChildren )
     {
-      cChild->ChildCount(numChildren);
-      cN = cChild;
+      cN->ChildAt(--numChildren,*getter_AddRefs(cChild));
+      if (cChild)
+      {
+        cChild->ChildCount(numChildren);
+        cN = cChild;
+      }
+      else
+      {
+        break;
+      }
     }
-    else
-    {
-      break;
-    }
+    deepFirstChild = cN;
   }
-  return cN;
+  
+  return deepFirstChild;
 }
 
 // Get the next sibling, or parents next sibling, or grandpa's next sibling...
