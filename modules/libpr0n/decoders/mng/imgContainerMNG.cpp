@@ -407,6 +407,10 @@ il_mng_refresh(mng_handle handle,
                           container->mByteWidthAlpha,
                           abpr*y);
   }
+#ifdef XP_MAC
+  nsMemory::Free(buf);
+#endif
+
   nsRect r(left, top, width, height);
 
   nsCOMPtr<imgIDecoderObserver>
