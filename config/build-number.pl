@@ -23,9 +23,7 @@ my $contents;
 
 # this script needs to be run in config
 my $numberfile = "build_number";
-my $fcsutil = "$ENV{MOZ_TOOLS}\\bin\\fcsutil.pl";
 
-$fcsutil =~ s/\\/\\\\/g;
 # This is the preferences file that gets read and written.
 
 open(NUMBER, "<$numberfile") || die "no build_number file\n";
@@ -36,11 +34,4 @@ while ( <NUMBER> ) {
 close (NUMBER);
 
 chop($build_number);
-
-print "$fcsutil\n";
-open(OUTPUT, ">master.pl");
-
-print OUTPUT "system(\"perl $fcsutil -newbuild -deployment Netscape/Communicator5.0/Win32/1 -output  master.ini $build_number -server cyclone.mcom.com\")";
-
-close(OUTPUT);
 
