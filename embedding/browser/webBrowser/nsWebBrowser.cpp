@@ -58,6 +58,7 @@ static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 static NS_DEFINE_CID(kWebShellCID,         NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kChildCID,               NS_CHILD_CID);
 static NS_DEFINE_IID(kDeviceContextCID,       NS_DEVICE_CONTEXT_CID);
+static NS_DEFINE_IID(kRenderingContextCID,    NS_RENDERING_CONTEXT_CID);
 
 //*****************************************************************************
 //***    nsWebBrowser: Object Management
@@ -66,7 +67,8 @@ static NS_DEFINE_IID(kDeviceContextCID,       NS_DEVICE_CONTEXT_CID);
 nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nsnull), 
    mInitInfo(nsnull), mContentType(typeContentWrapper),
    mParentNativeWindow(nsnull), mParentWidget(nsnull), mParent(nsnull),
-   mProgressListener(nsnull), mListenerArray(nsnull), mFindImpl(nsnull)
+   mProgressListener(nsnull), mListenerArray(nsnull), mFindImpl(nsnull),
+   mBackgroundColor(0)
 {
     NS_INIT_REFCNT();
     mInitInfo = new nsWebBrowserInitInfo();
@@ -891,6 +893,22 @@ NS_IMETHODIMP nsWebBrowser::Create()
          deviceContext, nsnull, nsnull, &widgetInit);  
       }
 
+   // create a rendering context and device context for this widget
+   mDC = do_CreateInstance(kDeviceContextCID);
+   mDC->Init(mInternalWidget->GetNativeData(NS_NATIVE_WINDOW));
+
+   mRC = do_CreateInstance(kRenderingContextCID);
+   mRC->Init(mDC, mInternalWidget);
+
+   // get the default background color for painting later
+   SystemAttrStruct info;
+   info.mColor = &mBackgroundColor;
+   mDC->GetSystemAttribute(eSystemAttr_Color_WindowBackground, &info);
+
+   // set the foreground color of our rendering context so we don't
+   // have to do it later.
+   mRC->SetColor(mBackgroundColor);
+
    nsCOMPtr<nsIDocShell> docShell(do_CreateInstance(kWebShellCID));
    NS_ENSURE_SUCCESS(SetDocShell(docShell), NS_ERROR_FAILURE);
 
@@ -1413,6 +1431,12 @@ NS_IMETHODIMP nsWebBrowser::EnsureFindImpl()
    return mFindImpl->Init();
 }
 
+NS_IMETHODIMP nsWebBrowser::FillBackground(const nsRect &aRect)
+{
+    mRC->FillRect(aRect);
+    return NS_OK;
+}
+
 /* static */
 nsEventStatus PR_CALLBACK nsWebBrowser::HandleEvent(nsGUIEvent *aEvent)
 {
@@ -1472,6 +1496,12 @@ nsEventStatus PR_CALLBACK nsWebBrowser::HandleEvent(nsGUIEvent *aEvent)
     else if (domWindow)
       domWindow->Focus();
     break;
+  }
+
+  case NS_PAINT: {
+      nsRect *rect = NS_STATIC_CAST(nsPaintEvent *, aEvent)->rect;
+      browser->FillBackground(*rect);
+      break;
   }
 
   default:
