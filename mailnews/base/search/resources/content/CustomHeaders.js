@@ -28,6 +28,7 @@ var gArrayHdrs;
 var gHdrsList;
 var gContainer;
 var gFilterBundle=null;
+var gCustomBundle=null;
 
 function onLoad()
 {
@@ -125,7 +126,7 @@ function customHeaderOverflow()
     if (!gFilterBundle)
       gFilterBundle = document.getElementById("bundle_filter");
 
-    alertText = gFilterBundle.getString("customHeaderOverflow");
+    var alertText = gFilterBundle.getString("customHeaderOverflow");
     window.alert(alertText);
     return true;
   }
@@ -135,6 +136,17 @@ function customHeaderOverflow()
 function onAddHeader()
 {
   var newHdr = TrimString(gHeaderInputElement.value);
+
+  if (!isRFC2822Header(newHdr))  // if user entered an invalid rfc822 header field name, bail out.
+  {
+    if (!gCustomBundle)
+      gCustomBundle = document.getElementById("bundle_custom");
+
+    var alertText = gCustomBundle.getString("colonInHeaderName");
+    window.alert(alertText);
+    return;
+  }
+
   gHeaderInputElement.value = "";
   if (!newHdr || customHeaderOverflow())
     return;
@@ -147,6 +159,20 @@ function onAddHeader()
     updateAddButton(true);
     gHeaderInputElement.focus(); // refocus the input field for the next custom header
   }
+}
+
+function isRFC2822Header(hdr)
+{
+  var charCode;
+  for (var i=0; i< hdr.length; i++)
+  {
+    charCode = hdr.charCodeAt(i);
+    //58 is for colon and 33 and 126 are us-ascii bounds that should be used for header field name, as per rfc2822
+
+    if (charCode < 33 || charCode == 58 || charCode > 126) 
+      return false;
+  }
+  return true;
 }
 
 function duplicateHdrExists(hdr)

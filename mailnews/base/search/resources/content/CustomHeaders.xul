@@ -36,6 +36,7 @@ Original Contributor(s): Navin Gupta <naving@netscape.com>
 
   <stringbundleset id="stringbundleset">
   <stringbundle id="bundle_filter" src="chrome://messenger/locale/filter.properties"/>
+  <stringbundle id="bundle_custom" src="chrome://messenger/locale/custom.properties"/>
   </stringbundleset>
 
   <script type="application/x-javascript" src="chrome://messenger/content/CustomHeaders.js"/>
