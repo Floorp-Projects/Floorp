@@ -56,7 +56,6 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIProxyObjectManager.h"
-#include "nsIProxy.h"
 #include "nsIStreamConverterService.h"
 #include "nsICacheSession.h"
 #include "nsIEventQueueService.h"

@@ -54,7 +54,6 @@
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsIPrompt.h"
-#include "nsIProxy.h"
 #include "nsIStreamListener.h"
 #include "nsISocketTransport.h"
 #include "nsIProgressEventSink.h"
