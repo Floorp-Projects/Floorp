@@ -39,6 +39,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIFormControl.h"
 #include "nsIDocShell.h"
+#include "nsIDOMWindow.h"
 
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 
@@ -62,9 +63,8 @@ nsWalletlibService::~nsWalletlibService()
   NS_IF_RELEASE(gKeyedStreamGenerator);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS6(nsWalletlibService,
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsWalletlibService,
                               nsIWalletService,
-                              nsIObserver,
                               nsIFormSubmitObserver,
                               nsIDocumentLoaderObserver,
                               nsIPasswordSink,
@@ -176,7 +176,7 @@ NS_IMETHODIMP nsWalletlibService::Observe(nsISupports*, const PRUnichar*, const 
 }
 
 #define CRLF "\015\012"   
-NS_IMETHODIMP nsWalletlibService::Notify(nsIContent* formNode) 
+NS_IMETHODIMP nsWalletlibService::Notify(nsIContent* formNode, nsIDOMWindow* window, nsIURI* actionURL)
 {
   if (!formNode) {
     return NS_ERROR_FAILURE;

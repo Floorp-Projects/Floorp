@@ -29,9 +29,10 @@
 #include "nsIDocumentLoaderObserver.h"
 #include "nsWeakReference.h"
 #include "nsIPasswordSink.h"
+#include "nsIDOMWindow.h"
+#include "nsIURI.h"
 
 class nsWalletlibService : public nsIWalletService,
-                           public nsIObserver,
                            public nsIFormSubmitObserver,
                            public nsIDocumentLoaderObserver,
                            public nsIPasswordSink,
@@ -75,7 +76,7 @@ public:
 
   // nsIObserver
   NS_DECL_NSIOBSERVER
-  NS_IMETHOD Notify(nsIContent* formNode);
+  NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindow* window, nsIURI* actionURL);
 
   // nsIDocumentLoaderObserver
   NS_DECL_NSIDOCUMENTLOADEROBSERVER

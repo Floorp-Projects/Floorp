@@ -109,6 +109,8 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 // Security
 #include "nsIScriptSecurityManager.h"
 
+#include "nsIDOMWindow.h"
+
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
@@ -691,29 +693,6 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     aFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
   }
 
-  // Notify observers that the form is being submitted.
-  result = NS_OK;
-  NS_WITH_SERVICE(nsIObserverService, service, NS_OBSERVERSERVICE_PROGID, &result);
-  if (NS_FAILED(result)) return result;
-
-  nsString  theTopic; theTopic.AssignWithConversion(NS_FORMSUBMIT_SUBJECT);
-  nsIEnumerator* theEnum;
-  result = service->EnumerateObserverList(theTopic.GetUnicode(), &theEnum);
-  if (NS_SUCCEEDED(result) && theEnum){
-    nsCOMPtr<nsISupports> inst;
-      
-    for (theEnum->First(); theEnum->IsDone() != NS_OK; theEnum->Next()) {
-      result = theEnum->CurrentItem(getter_AddRefs(inst));
-      if (NS_SUCCEEDED(result) && inst) {
-        nsCOMPtr<nsIFormSubmitObserver> formSubmitObserver = do_QueryInterface(inst, &result);
-        if (NS_SUCCEEDED(result) && formSubmitObserver) {
-          formSubmitObserver->Notify(mContent);
-        }
-      }
-    }
-    NS_RELEASE(theEnum);
-  }
-
   nsIFileSpec* multipartDataFile = nsnull;
   if (isURLEncoded) {
     result = ProcessAsURLEncoded(formProcessor, isPost, data, fcFrame);
@@ -734,13 +713,16 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     nsAutoString href;
     GetAction(&href);
 
+    // Get the document.
+    // We'll need it now to form the URL we're submitting to.
+    // We'll also need it later to get the DOM window when notifying form submit observers (bug 33203)
+    nsCOMPtr<nsIDocument> document;
+    mContent->GetDocument(*getter_AddRefs(document));
+    if (!document) return NS_OK; // No doc means don't submit, see Bug 28988
+
     // Resolve url to an absolute url
     nsCOMPtr<nsIURI> docURL;
-    nsCOMPtr<nsIDocument> doc;
-    mContent->GetDocument(*getter_AddRefs(doc));
-    if (!doc) return NS_OK; // No doc means don't submit, see Bug 28988
-
-    doc->GetBaseURL(*getter_AddRefs(docURL));
+    document->GetBaseURL(*getter_AddRefs(docURL));
     NS_ASSERTION(docURL, "No Base URL found in Form Submit!\n");
 
       // If an action is not specified and we are inside 
@@ -752,7 +734,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
 
     if (href.IsEmpty()) {
       nsCOMPtr<nsIHTMLDocument> htmlDoc;
-      if (PR_FALSE == NS_SUCCEEDED(doc->QueryInterface(kIHTMLDocumentIID,
+      if (PR_FALSE == NS_SUCCEEDED(document->QueryInterface(kIHTMLDocumentIID,
                                              getter_AddRefs(htmlDoc)))) {   
         // Must be a XML, XUL or other non-HTML document type
         // so do nothing.
@@ -761,12 +743,11 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
 
       // Necko's MakeAbsoluteURI doesn't reuse the baseURL's rel path if it is
       // passed a zero length rel path.
-      char* relPath = nsnull;
-      docURL->GetSpec(&relPath);
+      nsXPIDLCString relPath;
+      docURL->GetSpec(getter_Copies(relPath));
       NS_ASSERTION(relPath, "Rel path couldn't be formed in form submit!\n");
       if (relPath) {
         href.AppendWithConversion(relPath);
-        nsCRT::free(relPath);
 
         // If re-using the same URL, chop off old query string (bug 25330)
         PRInt32 queryStart = href.FindChar('?');
@@ -833,6 +814,40 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     nsAutoString absURLSpec;
     result = NS_MakeAbsoluteURI(absURLSpec, href, docURL);
     if (NS_FAILED(result)) return result;
+
+    // Notify observers that the form is being submitted.
+    result = NS_OK;
+    NS_WITH_SERVICE(nsIObserverService, service, NS_OBSERVERSERVICE_PROGID, &result);
+    if (NS_FAILED(result)) return result;
+
+    nsString  theTopic; theTopic.AssignWithConversion(NS_FORMSUBMIT_SUBJECT);
+    nsIEnumerator* theEnum;
+    result = service->EnumerateObserverList(theTopic.GetUnicode(), &theEnum);
+    if (NS_SUCCEEDED(result) && theEnum){
+      nsCOMPtr<nsISupports> inst;
+      nsresult submitStatus = NS_OK;
+
+      nsCOMPtr<nsIScriptGlobalObject> globalObject;
+      document->GetScriptGlobalObject(getter_AddRefs(globalObject));  
+      nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(globalObject);
+
+      for (theEnum->First(); theEnum->IsDone() != NS_OK; theEnum->Next()) {
+        result = theEnum->CurrentItem(getter_AddRefs(inst));
+        if (NS_SUCCEEDED(result) && inst) {
+          nsCOMPtr<nsIFormSubmitObserver> formSubmitObserver = do_QueryInterface(inst, &result);
+          if (NS_SUCCEEDED(result) && formSubmitObserver) {
+            nsresult notifyStatus = formSubmitObserver->Notify(mContent, window, actionURL);
+            if (NS_FAILED(notifyStatus)) {
+              submitStatus = notifyStatus;
+            }
+          }
+        }
+      }
+      NS_RELEASE(theEnum);
+      if (NS_FAILED(submitStatus)) {
+        return submitStatus;
+      }
+    }
 
     // Now pass on absolute url to the click handler
     nsIInputStream* postDataStream = nsnull;

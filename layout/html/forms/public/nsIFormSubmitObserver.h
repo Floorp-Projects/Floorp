@@ -30,8 +30,10 @@
 #ifndef nsIFormSubmitObserver_h__
 #define nsIFormSubmitObserver_h__
 
-#include "nsISupports.h"
+#include "nsIObserver.h"
 #include "prtypes.h"
+#include "nsIDOMWindow.h"
+#include "nsIURI.h"
 
 class nsString;
 
@@ -41,15 +43,19 @@ class nsString;
 
 #define NS_FORMSUBMIT_SUBJECT "formsubmit"
 
-class nsIFormSubmitObserver : public nsISupports {
+class nsIFormSubmitObserver : public nsIObserver {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFORMSUBMITOBSERVER_IID)
 
   /*
    *   Subject calls the observer when the form is submitted
    *   @param formNode- the dom node corresonding to this form.
+   *   @param window- the window that the form submit occured in.
+   *                  NOTE: This is not necessarily the same window the form submit result
+   *                        will be loaded in (form could have target attribute set)
+   *   @param actionURL- URL to which the form will be submitted.
    */
-  NS_IMETHOD Notify(nsIContent* formNode) = 0;
+  NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindow* window, nsIURI* actionURL) = 0;
 
 
 };
