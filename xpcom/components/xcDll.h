@@ -47,7 +47,7 @@ typedef enum nsDllStatus
 class nsDll
 {
 private:
-    char *m_dllName;			// Mac only. Stores the dllName to load.
+    char *m_dllName;			// Stores the dllName to load.
 
     nsIFileSpec *m_dllSpec;	// Filespec representing the component
 	PRUint32 m_modDate;		// last modified time at creation of this object

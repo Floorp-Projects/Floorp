@@ -31,6 +31,10 @@
 #include "nsIFileSpec.h"
 #include "nsCOMPtr.h"
 
+#ifdef XP_MAC
+#include "prlink_mac.h"
+#endif
+
 nsDll::nsDll(const char *codeDllName, int type)
   : m_dllName(NULL), m_dllSpec(NULL), m_modDate(0), m_size(0),
     m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
@@ -268,33 +272,22 @@ PRBool nsDll::Load(void)
     }
     else
     {
+#ifndef XP_MAC
         char *nsprPath = NULL;
         nsresult rv = m_dllSpec->GetNSPRPath(&nsprPath);
         if (NS_FAILED(rv)) return PR_FALSE;
 
-#ifdef	XP_MAC
-        // NSPR path is / separated. This works for all NSPR functions
-        // except Load Library. Translate to something NSPR can accepts.
-        if (nsprPath[0] == '/')
-        {
-            // convert '/' to ':'
-            int c;
-            char* str = nsprPath;
-            while ((c = *str++) != 0)
-            {
-                if (c == '/')
-                  str[-1] = ':';
-            }
-            m_instance = PR_LoadLibrary(&nsprPath[1]);		// skip over initial slash
-        }
-        else
-        {
-            m_instance = PR_LoadLibrary(nsprPath);
-        }
-#else
         m_instance = PR_LoadLibrary(nsprPath);
-#endif /* XP_MAC */
+
         nsCRT::free(nsprPath);
+#else
+				
+				nsFileSpec		fileSpec;
+				m_dllSpec->GetFileSpec(&fileSpec);
+				FSSpec		libSpec = fileSpec.GetFSSpec();
+				m_instance = PR_LoadIndexedFragment(&libSpec, 0);
+				
+#endif /* XP_MAC */
     }
     return ((m_instance == NULL) ? PR_FALSE : PR_TRUE);
 }
