@@ -59,8 +59,9 @@
 #include "nsReadableUtils.h"
 #include "nsAString.h"
 #include "nsXPIDLString.h"
-#include "nsFT2FontCatalog.h"
-#include "nsFreeType.h"
+#include "nsFontDebug.h"
+#include "nsFT2FontNode.h"
+#include "nsFontFreeType.h"
 #include "nsXFontNormal.h"
 #include "nsX11AlphaBlend.h"
 #include "nsXFontAAScaledBitmap.h"
@@ -96,10 +97,6 @@ static PRLogModuleInfo * FontMetricsGTKLM = PR_NewLogModule("FontMetricsGTK");
 
 #undef NOISY_FONTS
 #undef REALLY_NOISY_FONTS
-
-// the font catalog is so expensive to generate
-// always tell the user what is happening
-PRUint32 gFontDebug = 0 | NS_FONT_DEBUG_FONT_SCAN;
 
 struct nsFontCharSetMap;
 struct nsFontFamilyName;
@@ -200,16 +197,6 @@ static double  gAABitmapUndersize = 0.9;
 static PRInt32 gBitmapScaleMinimum = 10;
 static double  gBitmapOversize = 1.2;
 static double  gBitmapUndersize = 0.8;
-
-PRInt32 gAntiAliasMinimum = 8;
-PRInt32 gEmbeddedBitmapMaximumHeight = 1000000;
-
-PRBool  gEnableFreeType2 = PR_TRUE;
-PRBool  gFreeType2Autohinted = PR_FALSE;
-PRBool  gFreeType2Unhinted = PR_TRUE;
-char*   gFreeType2SharedLibraryName = nsnull;
-PRUint8 gAATTDarkTextMinValue = 64;
-double  gAATTDarkTextGain = 0.8;
 
 #ifdef ENABLE_X_FONT_BANNING
 static regex_t *gFontRejectRegEx = nsnull,
@@ -740,11 +727,7 @@ FreeGlobals(void)
 
   gInitialized = 0;
 
-  nsFreeTypeFreeGlobals();
-  if (gFreeType2SharedLibraryName) {
-    free(gFreeType2SharedLibraryName);
-    gFreeType2SharedLibraryName = nsnull;
-  }
+  nsFT2FontNode::FreeGlobals();
 
 #ifdef ENABLE_X_FONT_BANNING
   if (gFontRejectRegEx) {
@@ -964,64 +947,7 @@ InitGlobals(nsIDeviceContext *aDevice)
   if (NS_SUCCEEDED(rv)) {
     gForceOutlineScaledFonts = force_outline_scaled_fonts;
   }
-
-  PRBool enable_freetype2 = PR_TRUE;
-  rv = gPref->GetBoolPref("font.FreeType2.enable", &enable_freetype2);
-  if (NS_SUCCEEDED(rv)) {
-    gEnableFreeType2 = enable_freetype2;
-    FREETYPE_FONT_PRINTF(("gEnableFreeType2 = %d", gEnableFreeType2));
-  }
-
-  rv = gPref->GetCharPref("font.freetype2.shared-library", 
-                          &gFreeType2SharedLibraryName);
-  if (NS_FAILED(rv)) {
-    enable_freetype2 = PR_FALSE;
-    FREETYPE_FONT_PRINTF((
-                   "gFreeType2SharedLibraryName missing, FreeType2 disabled"));
-    gFreeType2SharedLibraryName = nsnull;
-  }
-
-  PRBool freetype2_autohinted = PR_FALSE;
-  rv = gPref->GetBoolPref("font.FreeType2.autohinted", &freetype2_autohinted);
-  if (NS_SUCCEEDED(rv)) {
-    gFreeType2Autohinted = freetype2_autohinted;
-    FREETYPE_FONT_PRINTF(("gFreeType2Autohinted = %d", gFreeType2Autohinted));
-  }
-
-  PRBool freetype2_unhinted = PR_TRUE;
-  rv = gPref->GetBoolPref("font.FreeType2.unhinted", &freetype2_unhinted);
-  if (NS_SUCCEEDED(rv)) {
-    gFreeType2Unhinted = freetype2_unhinted;
-    FREETYPE_FONT_PRINTF(("gFreeType2Unhinted = %d", gFreeType2Unhinted));
-  }
-
-  PRInt32 antialias_minimum = 8;
-  rv = gPref->GetIntPref("font.antialias.min", &antialias_minimum);
-  if (NS_SUCCEEDED(rv)) {
-    gAntiAliasMinimum = antialias_minimum;
-    FREETYPE_FONT_PRINTF(("gAntiAliasMinimum = %d", gAntiAliasMinimum));
-  }
-
-  PRInt32 embedded_bitmaps_maximum = 1000000;
-  rv = gPref->GetIntPref("font.embedded_bitmaps.max",&embedded_bitmaps_maximum);
-  if (NS_SUCCEEDED(rv)) {
-    gEmbeddedBitmapMaximumHeight = embedded_bitmaps_maximum;
-    FREETYPE_FONT_PRINTF(("gEmbeddedBitmapMaximumHeight = %d",
-                             gEmbeddedBitmapMaximumHeight));
-  }
-  int_val = 0;
-  rv = gPref->GetIntPref("font.scale.tt_bitmap.dark_text.min", &int_val);
-  if (NS_SUCCEEDED(rv)) {
-    gAATTDarkTextMinValue = int_val;
-    SIZE_FONT_PRINTF(("gAATTDarkTextMinValue = %d", gAATTDarkTextMinValue));
-  }
-  rv = gPref->GetCharPref("font.scale.tt_bitmap.dark_text.gain",
-                           getter_Copies(str));
-  if (NS_SUCCEEDED(rv)) {
-    gAATTDarkTextGain = atof(str.get());
-    SIZE_FONT_PRINTF(("gAATTDarkTextGain = %g", gAATTDarkTextGain));
-  }
-
+  
   PRBool scale_bitmap_fonts_with_devscale = gScaleBitmapFontsWithDevScale;
 
   rv = gPref->GetBoolPref("font.x11.scale_bitmap_fonts_with_devscale", &scale_bitmap_fonts_with_devscale);
@@ -1185,7 +1111,7 @@ InitGlobals(nsIDeviceContext *aDevice)
   }
 #endif /* ENABLE_X_FONT_BANNING */
 
-  rv = nsFreeTypeInitGlobals();
+  rv = nsFT2FontNode::InitGlobals();
   if (NS_FAILED(rv)) {
     FreeGlobals();
     return NS_ERROR_OUT_OF_MEMORY;
@@ -3881,7 +3807,7 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, PRBool aOnlyOutlineScaled
 #endif
 
   // get FreeType fonts
-  nsFT2FontCatalog::GetFontNames(aPattern, aNodes);
+  nsFT2FontNode::GetFontNames(aPattern, aNodes);
 
   nsCAutoString previousNodeName;
   nsHashtable* node_hash;

@@ -27,14 +27,7 @@
 void     nsFreeTypeFreeGlobals(void);
 nsresult nsFreeTypeInitGlobals(void);
 
-#if (!defined(MOZ_ENABLE_FREETYPE2))
-// nsFreeType stubs for development systems without a FreeType dev env
-class nsFreeTypeFace;
-class nsFreeTypeFont : public nsFontGTK {
-public:
-  static nsFreeTypeFont *NewFont(nsFreeTypeFace *, PRUint16, const char *);
-};
-#else 
+#if (defined(MOZ_ENABLE_FREETYPE2))
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -44,13 +37,10 @@ public:
 #include "nsFT2FontCatalog.h"
 
 typedef struct FT_FaceRec_*  FT_Face;
-typedef void (*blitGlyph) (XImage *, FT_BitmapGlyph, nscolor, int, int);
-typedef void (*blendPixel)(XImage *, int, int, nscolor, int);
 
 class nsFreeTypeFace;
 
 nsFreeTypeFace * nsFreeTypeGetFaceID(nsFontCatalogEntry *aFce);
-void     nsFreeTypeGetFontNames(const char* aPattern, nsFontNodeArray* aNodes);
 
 //
 // the FreeType2 function type declarations
@@ -75,10 +65,15 @@ typedef FT_Error (*FTC_Manager_New_t)(FT_Library, FT_UInt, FT_UInt, FT_ULong,
                        FTC_Face_Requester, FT_Pointer, FTC_Manager*);
 typedef FT_Error (*FTC_Image_Cache_New_t)(FTC_Manager, FTC_Image_Cache*);
 
-
-class nsFreeTypeFont : public nsFontGTK
-{
+// class nsFreeType class definition
+class nsFreeType {
 public:
+  inline PRBool FreeTypeAvailable() { return sAvailable; };
+  inline static FTC_Manager GetFTCacheManager() { return sFTCacheManager; };
+  inline static FT_Library GetLibrary() { return sFreeTypeLibrary; };
+  inline static FTC_Image_Cache GetImageCache() { return sImageCache; };
+  static void FreeGlobals();
+  static nsresult InitGlobals();
 
   // run time loaded (function pointers)
   static FT_Done_Face_t            nsFT_Done_Face;
@@ -97,59 +92,52 @@ public:
   static FTC_Manager_Done_t        nsFTC_Manager_Done;
   static FTC_Manager_New_t         nsFTC_Manager_New;
   static FTC_Image_Cache_New_t     nsFTC_Image_Cache_New;
-
-  nsFreeTypeFont();
-  nsFreeTypeFont(nsFreeTypeFace *, PRUint16, const char *);
-  virtual ~nsFreeTypeFont(void);
-  static nsFreeTypeFont *NewFont(nsFreeTypeFace *, PRUint16, const char *);
-
-  void LoadFont(void);
-
-  virtual GdkFont* GetGDKFont(void);
-  virtual PRBool   GetGDKFontIs10646(void);
-  virtual PRBool   IsFreeTypeFont(void);
-
-  virtual gint GetWidth(const PRUnichar* aString, PRUint32 aLength);
-  virtual gint DrawString(nsRenderingContextGTK* aContext,
-                          nsDrawingSurfaceGTK* aSurface, nscoord aX,
-                          nscoord aY, const PRUnichar* aString,
-                          PRUint32 aLength);
-#ifdef MOZ_MATHML
-  virtual nsresult GetBoundingMetrics(const PRUnichar*   aString,
-                                      PRUint32           aLength,
-                                      nsBoundingMetrics& aBoundingMetrics);
-#endif
-  virtual nsresult doGetBoundingMetrics(const PRUnichar*   aString,
-                                        PRUint32 aLength,
-                                        PRInt32* aLeftBearing,
-                                        PRInt32* aRightBearing,
-                                        PRInt32* aAscent,
-                                        PRInt32* aDescent,
-                                        PRInt32* aWidth);
-
-  virtual PRUint32 Convert(const PRUnichar* aSrc, PRUint32 aSrcLen,
-                           PRUnichar* aDest, PRUint32 aDestLen);
-
-  FT_Face getFTFace();
-  int     ascent();
-  int     descent();
-  PRBool  getXHeight(unsigned long &val);
-  int     max_ascent();
-  int     max_descent();
-  int     max_width();
-  PRBool  superscript_y(long &val);
-  PRBool  subscript_y(long &val);
-  PRBool  underlinePosition(long &val);
-  PRBool  underline_thickness(unsigned long &val);
-
-  FT_Error FaceRequester(FT_Face* aface);
-  static void FreeGlobals();
+  
+  static PRBool gEnableFreeType2;
+  static char* gFreeType2SharedLibraryName;
+  static PRBool  gFreeType2Autohinted;
+  static PRBool  gFreeType2Unhinted;
+  static PRUint8 gAATTDarkTextMinValue;
+  static double  gAATTDarkTextGain;
+  static PRInt32 gAntiAliasMinimum;
+  static PRInt32 gEmbeddedBitmapMaximumHeight;
 
 protected:
-  XImage *GetXImage(PRUint32 width, PRUint32 height);
-  nsFreeTypeFace *mFaceID;
-  PRUint16        mPixelSize;
-  FTC_Image_Desc  mImageDesc;
+  static void ClearGlobals();
+  static void ClearFunctions();
+  static PRBool InitLibrary();
+  static PRBool LoadSharedLib();
+  static void UnloadSharedLib();
+
+  static PRLibrary      *sSharedLib;
+  static PRBool          sInited;
+  static PRBool          sAvailable;
+  static FT_Error        sInitError;
+  static FT_Library      sFreeTypeLibrary;
+  static FTC_Manager     sFTCacheManager;
+  static FTC_Image_Cache sImageCache;
+};
+
+// class nsFreeTypeFace definition
+/* this simple record is used to model a given `installed' face */
+class nsFreeTypeFace {
+public:
+  nsFreeTypeFace(nsFontCatalogEntry *aFce);
+  ~nsFreeTypeFace();
+  static PRBool FreeFace(nsHashKey* aKey, void* aData, void* aClosure);
+  const char *GetFilename() { return nsFT2FontCatalog::GetFileName(mFce); }
+  int *GetEmbeddedBitmapHeights() {
+                  return nsFT2FontCatalog::GetEmbeddedBitmapHeights(mFce); } ;
+  int GetFaceIndex() { return nsFT2FontCatalog::GetFaceIndex(mFce); }
+  int GetNumEmbeddedBitmaps() {
+                  return nsFT2FontCatalog::GetNumEmbeddedBitmaps(mFce); } ;
+  PRUint16 *GetCCMap();
+  nsFontCatalogEntry* GetFce() { return mFce; };
+
+protected:
+  nsFontCatalogEntry *mFce;
+  PRUint16           *mCCMap;
+
 };
 
 #endif /* MOZ_ENABLE_FREETYPE2 */
