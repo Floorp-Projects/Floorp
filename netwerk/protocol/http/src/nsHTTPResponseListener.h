@@ -89,7 +89,7 @@ class nsHTTPServerListener : public nsHTTPResponseListener
 
 public:
 
-    nsHTTPServerListener (nsHTTPChannel* aConnection, nsHTTPHandler *handler, nsHTTPPipelinedRequest * request);
+    nsHTTPServerListener (nsHTTPChannel* aConnection, nsHTTPHandler *handler, nsHTTPPipelinedRequest * request, PRBool aDoingProxySSLConnect);
     virtual ~nsHTTPServerListener();
 
     NS_DECL_NSISTREAMOBSERVER
@@ -130,6 +130,7 @@ protected:
     nsHTTPPipelinedRequest*     mPipelinedRequest;
 
     nsHTTPChunkConvContext      mChunkHeaderCtx;
+    PRBool                      mDoingProxySSLConnect;
 };
 
 

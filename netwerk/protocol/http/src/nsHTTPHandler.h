@@ -127,6 +127,8 @@ public:
         BAD_SERVERS_MATCH_EXACT,    BAD_SERVERS_MATCH_ALL
     };
 
+    nsresult    GetProxySSLConnectAllowed (PRBool *a_Allowed);
+
 protected:
     virtual ~nsHTTPHandler();
     nsresult InitUserAgentComponents();
@@ -181,6 +183,7 @@ private:
 
     PRUint32 getCapabilities (const char *host, PRInt32 port, PRUint32 cap);
     void     setCapabilities (nsIChannel* i_pTrans, PRUint32 aCapabilities);
+    PRBool  mProxySSLConnectAllowed;
 };
 
 #endif /* _nsHTTPHandler_h_ */

@@ -234,7 +234,7 @@ static NS_DEFINE_IID(kSupportsVoidIID, NS_ISUPPORTSVOID_IID);
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-nsHTTPServerListener::nsHTTPServerListener(nsHTTPChannel* aChannel, nsHTTPHandler *handler, nsHTTPPipelinedRequest * request)
+nsHTTPServerListener::nsHTTPServerListener(nsHTTPChannel* aChannel, nsHTTPHandler *handler, nsHTTPPipelinedRequest * request, PRBool aDoingProxySSLConnect)
                     : nsHTTPResponseListener (aChannel, handler),
                       mResponse(nsnull),
                       mFirstLineParsed(PR_FALSE),
@@ -245,7 +245,8 @@ nsHTTPServerListener::nsHTTPServerListener(nsHTTPChannel* aChannel, nsHTTPHandle
                       mCompressHeaderChecked (PR_FALSE),
                       mChunkHeaderChecked (PR_FALSE),
                       mDataReceived (PR_FALSE),
-                      mPipelinedRequest (request)
+                      mPipelinedRequest (request),
+                      mDoingProxySSLConnect (aDoingProxySSLConnect)
 {
     mChannel -> mHTTPServerListener = this;
 
@@ -399,6 +400,27 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
 
                 PR_LOG (gHTTPLog, PR_LOG_DEBUG, 
                     ("\tOnDataAvailable [this=%x]. (100) Continue\n", this));
+            }
+            else
+            if (statusCode == 200 && mDoingProxySSLConnect)
+            {
+                mDoingProxySSLConnect = PR_FALSE;
+
+                mHeadersDone     = PR_FALSE;
+                mFirstLineParsed = PR_FALSE;
+                mHeaderBuffer.Truncate ();
+
+                mChannel -> SetResponse (nsnull);
+                NS_RELEASE (mResponse);
+
+                mResponse = nsnull;
+                mBytesReceived = 0;
+                mPipelinedRequest -> RestartRequest (REQUEST_RESTART_SSL);
+
+                return NS_OK;
+
+                PR_LOG (gHTTPLog, PR_LOG_DEBUG, 
+                    ("\tOnDataAvailable [this=%x]. (200) SSL CONNECT\n", this));
             }
             else
             {
@@ -672,7 +694,7 @@ nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContex
 
         if (mPipelinedRequest)
         {
-            rv = mPipelinedRequest -> RestartRequest ();
+            rv = mPipelinedRequest -> RestartRequest (REQUEST_RESTART_NORMAL);
             if (NS_SUCCEEDED (rv))
             {
 //                NS_IF_RELEASE (mChannel);

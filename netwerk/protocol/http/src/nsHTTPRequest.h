@@ -131,6 +131,7 @@ public:
     nsHTTPPipelinedRequest*     mPipelinedRequest;
     nsHTTPChannel*              mConnection;
     nsCOMPtr<nsIURL>            mURI;
+    PRBool                      mDoingProxySSLConnect;
 
 protected:
     virtual ~nsHTTPRequest();
@@ -167,7 +168,16 @@ protected:
     nsHTTPHandler*              mHandler;
     nsresult                    mAbortStatus;
     PRBool                      mHeadersFormed;
+
+    nsXPIDLCString              mHost;
+    nsXPIDLCString              mSpec;
+    PRInt32                     mPort;
+    
+    PRBool                      mProxySSLConnectAllowed;
 };
+
+#define REQUEST_RESTART_NORMAL  0
+#define REQUEST_RESTART_SSL     1
 
 class nsHTTPPipelinedRequest : public nsIStreamObserver
 {
@@ -194,7 +204,7 @@ public:
 
     nsresult    GetCurrentRequest (nsHTTPRequest ** o_Req);
     nsresult    AdvanceToNextRequest ();
-    nsresult    RestartRequest ();
+    nsresult    RestartRequest (PRUint32 flags);
 
     nsresult    IsPending (PRBool *result);
     nsresult    Cancel  (nsresult status );
