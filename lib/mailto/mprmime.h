@@ -1,6 +1,8 @@
 #ifndef _MPRMIME_H
 #define _MPRMIME_H
 
+XP_BEGIN_PROTOS
+
 typedef struct _AttachmentFields
 {
     char *m_pFilename;
@@ -9,14 +11,14 @@ typedef struct _AttachmentFields
     char *m_pContentId;
 }AttachmentFields;
 
-AttachmentFields * AttachmentFields_Init(char *p_pFilename, char *p_pDispositionName, char *p_pContentType, char *p_pContentId);
+AttachmentFields * AttachmentFields_Init(char *p_pFilename, char *p_pDispositionName, 
+                                         char *p_pContentType, char *p_pContentId);
 
 XP_Bool AttachmentFields_Destroy(AttachmentFields *p_fields);
 
 
 typedef struct _GenericMimeRelatedData
 {
-    XP_Bool m_bRemoveFiles; /*remove files from disk when complete with compilation*/
     char *m_pBoundarySpecifier; /*string that is used as the boundary marker in multipart related mime*/
     char **m_pTextFiles;    /* text files that will be added as attachments*/
     int16 *m_pCsids;        /* charset ids for each text file */
@@ -47,6 +49,13 @@ return number of base64 files after add.
 you are relinquishing ownership of attachment fields struct
 */
 int GenericMime_AddBase64File(GenericMimeRelatedData *p_gendata, AttachmentFields *p_fields);
+
+
+/*
+typedef
+*/
+typedef  int (*MPR_MIME_OUTPUTFUNC) (const char *, int32, void *);
+XP_END_PROTOS
 
 #endif //_MPRMIME_H
 

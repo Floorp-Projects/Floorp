@@ -26,9 +26,13 @@ class MSG_SendMimeDeliveryState;
 
 typedef int (*MSG_SendPartWriteFunc)(const char* line, int32 size,
 									 XP_Bool isheader, void* closure);
+ 
 
-
+#ifndef MOZ_ENDER_MIME
 class MSG_SendPart : public MSG_ZapIt {
+#else
+class MSG_SendPart {
+#endif //MOZ_ENDER_MIME
 public:
     MSG_SendPart(MSG_SendMimeDeliveryState* state, int16 part_csid = 0);
     virtual ~MSG_SendPart();	// Note that the destructor also destroys

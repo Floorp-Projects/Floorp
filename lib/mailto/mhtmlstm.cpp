@@ -36,6 +36,17 @@
 #include "mimeenc.h"
 #include "libi18n.h"
 
+#ifdef MOZ_ENDER_MIME
+#include "secrng.h"	/* for RNG_GenerateGlobalRandomBytes() */
+extern "C" {
+#include "xp_file.h"
+}
+
+#include "mprmime.h"
+
+
+#endif /*MOZ_ENDER_MIME*/
+
 extern "C" {
 	extern int MK_UNABLE_TO_OPEN_FILE;
 }
@@ -241,7 +252,7 @@ MSG_MimeRelatedSubpart::MSG_MimeRelatedSubpart(MSG_MimeRelatedSaver *parent,
 											   char *pMime, int16 part_csid, char *pFilename)
 	: MSG_SendPart(NULL, part_csid), m_pOriginalURL(NULL), 
 	  m_pLocalURL(NULL), m_pParentFS(parent),
-	  m_pContentID(NULL), m_pContentName(NULL), m_rootPart(FALSE)
+	  m_pContentID(NULL), m_pContentName(NULL), m_rootPart(FALSE) , m_pStreamOut(NULL), m_pEncoding(NULL)
 {
 	m_filetype = xpFileToPost;
 	
@@ -269,7 +280,11 @@ MSG_MimeRelatedSubpart::MSG_MimeRelatedSubpart(MSG_MimeRelatedSaver *parent,
 	else
 	{
 		// Generate a temp name for a file to which to write.
-		char *tmp = WH_TempName(xpFileToPost, "nsmail");
+#ifdef MOZ_ENDER_MIME
+    char *tmp = WH_TempName(xpFileToPost, "nswebm");
+#else
+    char *tmp = WH_TempName(xpFileToPost, "nsmail");
+#endif
 		if (tmp)
 		{
 			CopyString(&m_filename, tmp);
@@ -320,8 +335,10 @@ MSG_MimeRelatedSubpart::WriteEncodedMessageBody(const char *buf, int32 size,
 	int returnVal = 0;
 
 	XP_ASSERT(subpart->m_state != NULL);
-	if (subpart->m_state)
+#ifndef MOZ_ENDER_MIME
+  if (subpart->m_state)
 		returnVal = mime_write_message_body(subpart->m_state, (char *) buf, size);
+#endif
 
 	return returnVal;
 }
@@ -415,7 +432,8 @@ MSG_MimeRelatedSubpart::Write(void)
 	// that isn't text.
 	if (m_type && (!m_rootPart))
 	{
-		// Uuencode only if we have to, otherwise use base64
+#ifndef MOZ_ENDER_MIME
+    // Uuencode only if we have to, otherwise use base64
 		if (m_pParentFS->m_pPane->
 			GetCompBoolHeader(MSG_UUENCODE_BINARY_BOOL_HEADER_MASK))
 		{
@@ -437,6 +455,7 @@ MSG_MimeRelatedSubpart::Write(void)
 								 WriteEncodedMessageBody,
 								 this));
 		}
+#endif /*MOZ_ENDER_MAIL*/
 	}
 
 	// Horrible hack: if we got a local filename then we're the root lump,
@@ -495,6 +514,7 @@ MSG_MimeRelatedParentPart::~MSG_MimeRelatedParentPart(void)
 {
 }
 
+#ifdef MOZ_ENDER_MIME
 /*
 ----------------------------------------------------------------------
 MSG_MimeRelatedStreamSaver
@@ -513,10 +533,30 @@ MSG_MimeRelatedStreamSaver::MSG_MimeRelatedStreamSaver(MSG_CompositionPane *pane
 										   DeliveryDoneCallback cb,
 										   char **ppOriginalRootURL)
 	: MSG_MimeRelatedSaver(pane,context,fields,digest_p,deliver_mode,
-        body,body_length,attachedFiles,cb,ppOriginalRootURL)
+        body,body_length,attachedFiles,cb,ppOriginalRootURL),m_pFilename(NULL)
 
 {
+  
 }
+
+
+
+MSG_MimeRelatedStreamSaver::~MSG_MimeRelatedStreamSaver()
+{
+  XP_FREEIF(m_pFilename);
+}
+
+
+
+extern "C" char *mime_make_separator(const char *prefix);
+
+extern "C" int mimer_output_func(const char *p_buffer,int32 p_size,void *closure)
+{
+  XP_File t_file;
+  t_file = (XP_File)closure;
+  return XP_FileWrite(p_buffer,p_size,t_file);
+}
+
 
 void
 MSG_MimeRelatedStreamSaver::Complete( Bool bSuccess, EDT_ITapeFileSystemComplete *pfComplete, void *pArg )
@@ -526,43 +566,61 @@ MSG_MimeRelatedStreamSaver::Complete( Bool bSuccess, EDT_ITapeFileSystemComplete
 
 	// Call StartMessageDelivery (and should) if we
 	// were told to at creation time.
-	if (bSuccess)
+	if (bSuccess && m_pPart)
 	{
-		// If we only generated a single HTML part, treat that as 
-		// the root part.
-		if (m_pPart->GetNumChildren() == 1)
-		{
-			MSG_SendPart *tempPart = m_pPart->DetachChild(0);
-			delete m_pPart;
-			m_pPart = tempPart;
-		}
+    //make new message!
+    XP_File t_file;
+    m_pFilename = WH_TempName (xpFileToPost, "nswebm");
+    if (m_pFilename)
+    {
+      t_file = XP_FileOpen(m_pFilename,xpTemporary,XP_FILE_WRITE);
+      GenericMimeRelatedData *t_data = GenericMime_Init(mime_make_separator(""),mimer_output_func,t_file);
+      for (int32 i=0;i< m_pPart->GetNumChildren();i++)
+      {
+        MSG_MimeRelatedSubpart *t_part;
+        t_part = (MSG_MimeRelatedSubpart *)m_pPart->GetChild(i);
+        if (t_part->GetType() && !XP_STRCMP(t_part->GetType(),"text/html"))
+        {
+          GenericMime_AddTextFile(t_data,XP_STRDUP(t_part->GetFilename()),t_part->GetCSID());
+        }
+        else /*base64*/
+        {
+          AttachmentFields *t_fields = AttachmentFields_Init(XP_STRDUP(t_part->GetFilename()),XP_STRDUP(t_part->m_pOriginalURL),
+            XP_STRDUP(t_part->GetType()),XP_STRDUP(t_part->m_pContentID));
+          if (t_fields)
+            GenericMime_AddBase64File(t_data,t_fields);
+        }
+      }
+      GenericMime_Begin(t_data);
+      GenericMime_Destroy(t_data);
+      XP_FileClose(t_file);
 
-        // Call our UrlExit routine to perform cleanup.
-        MSG_MimeRelatedSaver::UrlExit(m_pContext, this, 0, NULL);
-#if 0
-        msg_StartMessageDeliveryWithAttachments(m_pPane, this,
-												m_pFields,
-												m_digest, FALSE, 
-												m_deliverMode,
-												TEXT_HTML,
-												m_pBody, m_bodyLength,
-												m_pAttachedFiles,
-												m_pPart,
-#ifdef XP_OS2
-												(void (_Optlink*) (MWContext*,void*,int,const char*))
-#endif
-												MSG_MimeRelatedSaver::UrlExit);
-#endif
+      for (i=0;i< m_pPart->GetNumChildren();i++)
+      {
+        MSG_MimeRelatedSubpart *t_part;
+        t_part = (MSG_MimeRelatedSubpart *)m_pPart->GetChild(i);
+        if (t_part->GetType() && XP_STRCMP(t_part->GetType(),"text/html")) /*not text*/
+        {
+          XP_FileRemove(t_part->GetFilename(), xpFileToPost);
+        }
+      }
+    }
+    // Call our UrlExit routine to perform cleanup.
+    MSG_MimeRelatedSaver::UrlExit(m_pContext, this, 0, NULL);
 	}
 	else
 	{
 		// delete the contained part since we failed
 		delete m_pPart;
 		m_pPart = NULL;
-        // Call our UrlExit routine to perform cleanup.
-        MSG_MimeRelatedSaver::UrlExit(m_pContext, this, MK_INTERRUPTED, NULL);
-    }
+    // Call our UrlExit routine to perform cleanup.
+    MSG_MimeRelatedSaver::UrlExit(m_pContext, this, MK_INTERRUPTED, NULL);
+  }
 }
+#endif //MOZ_ENDER_MIME
+
+
+
 /*
 ----------------------------------------------------------------------
 MSG_MimeRelatedSaver
@@ -570,7 +628,42 @@ MSG_MimeRelatedSaver
 */
 
 extern char * msg_generate_message_id(void);
+#ifdef MOZ_ENDER_MIME
+char *
+msg_generate_message_id (void)
+{
+  time_t now = XP_TIME();
+  uint32 salt = 0;
+  const char *host = 0;
+  const char *from = FE_UsersMailAddress ();
 
+  RNG_GenerateGlobalRandomBytes((void *) &salt, sizeof(salt));
+
+  if (from)
+	{
+	  host = XP_STRCHR (from, '@');
+	  if (host)
+	    {
+	      const char *s;
+	      for (s = ++host; *s; s++)
+		    if (!XP_IS_ALPHA(*s) && !XP_IS_DIGIT(*s) &&
+			    *s != '-' && *s != '_' && *s != '.')
+		      {
+			    host = 0;
+			    break;
+		      }
+	    }
+	}
+
+  if (! host)
+	/* If we couldn't find a valid host name to use, we can't generate a
+	   valid message ID, so bail, and let NNTP and SMTP generate them. */
+	return 0;
+
+  return PR_smprintf("<%lX.%lX@%s>",
+					 (unsigned long) now, (unsigned long) salt, host);
+}
+#endif //MOZ_ENDER_MIME
 // Constructor
 MSG_MimeRelatedSaver::MSG_MimeRelatedSaver(MSG_CompositionPane *pane, 
 										   MWContext *context, 
@@ -588,7 +681,7 @@ MSG_MimeRelatedSaver::MSG_MimeRelatedSaver(MSG_CompositionPane *pane,
 	  m_pAttachedFiles(attachedFiles), m_cbDeliveryDone(cb), m_pSourceBaseURL(NULL)
 
 {
-	// Generate the message ID.
+  // Generate the message ID.
 	m_pMessageID = msg_generate_message_id();
 	if (m_pMessageID)
 	{
@@ -603,7 +696,6 @@ MSG_MimeRelatedSaver::MSG_MimeRelatedSaver(MSG_CompositionPane *pane,
 		}
 	}
 	XP_ASSERT(m_pMessageID);
-
 	// Create the part object that we represent.
 	m_pPart = new MSG_MimeRelatedParentPart(INTL_DefaultWinCharSetID(context));
 	XP_ASSERT(m_pPart);
@@ -621,7 +713,11 @@ MSG_MimeRelatedSaver::MSG_MimeRelatedSaver(MSG_CompositionPane *pane,
 		//            back an improvised source URL if we were not given one.
 		//
 		// Autogenerate the title and pass it back.
+#ifdef MOZ_ENDER_MIME
+		m_rootFilename = WH_TempName(xpFileToPost,"nswebm");
+#else
 		m_rootFilename = WH_TempName(xpFileToPost,"nsmail");
+#endif
 		XP_ASSERT(m_rootFilename);
 		char * temp = WH_FileName(m_rootFilename, xpFileToPost);
 		*ppOriginalRootURL = XP_PlatformFileToURL(temp);
@@ -866,6 +962,7 @@ void
 MSG_MimeRelatedSaver::Complete(Bool bSuccess, 
                                                        EDT_ITapeFileSystemComplete *pfComplete, void *pArg )
 {
+#ifndef MOZ_ENDER_MIME
  	m_pEditorCompletionFunc = pfComplete;
 	m_pEditorCompletionArg = pArg;
 
@@ -904,6 +1001,7 @@ MSG_MimeRelatedSaver::Complete(Bool bSuccess,
     // Call our UrlExit routine to perform cleanup.
     UrlExit(m_pPane->GetContext(), this, MK_INTERRUPTED, NULL);
 	}
+#endif //#ifndef MOZ_ENDER_MIME
 }
 
 void

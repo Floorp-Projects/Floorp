@@ -23,6 +23,9 @@
 #include "msgsendp.h"
 #include "libi18n.h"
 
+#ifdef MOZ_ENDER_MIME
+#include "secrng.h"	/* for RNG_GenerateGlobalRandomBytes() */
+#endif /*MOZ_ENDER_MIME*/
 extern "C"
 {
 	extern int MK_OUT_OF_MEMORY;
@@ -34,7 +37,25 @@ int32 MSG_SendPart::M_counter = 0;
 
 MSG_SendPart::MSG_SendPart(MSG_SendMimeDeliveryState* state, int16 part_csid)
 {
-	m_csid = part_csid;
+  m_type=NULL;
+	m_parent = NULL;
+  m_filename = NULL;
+	m_buffer = NULL;
+  m_other = NULL;
+	m_strip_sensitive_headers = FALSE;
+	m_encoder_data = FALSE;
+
+	m_children = NULL;
+	m_numchildren = 0;
+
+  m_firstBlock = FALSE;
+  m_needIntlConversion = FALSE;
+
+	m_mainpart = FALSE;
+
+	m_just_hit_CR = FALSE;
+
+  m_csid = part_csid;
 	SetMimeDeliveryState(state);
 }
 
@@ -208,7 +229,8 @@ MSG_SendPart* MSG_SendPart::GetChild(int32 which)
 
 int MSG_SendPart::PushBody(char* buffer, int32 length)
 {
-	int status = 0;
+#ifndef MOZ_ENDER_MIME
+  int status = 0;
 	char* encoded_data = buffer;
 
 	/* if this is the first block, create the conversion object
@@ -322,6 +344,9 @@ int MSG_SendPart::PushBody(char* buffer, int32 length)
 	}
 
 	return status;
+#else
+  return 0;
+#endif //MOZ_ENDER_MIME
 }
 
 
@@ -461,10 +486,29 @@ static int divide_content_headers(const char *headers,
 extern "C" {
 extern char *mime_make_separator(const char *prefix);
 }
+#ifdef MOZ_ENDER_MIME
+//moved this here
+extern "C" char *
+mime_make_separator(const char *prefix)
+{
+  unsigned char rand_buf[13]; 
+  RNG_GenerateGlobalRandomBytes((void *) rand_buf, 12);
+  return PR_smprintf("------------%s"
+					 "%02X%02X%02X%02X"
+					 "%02X%02X%02X%02X"
+					 "%02X%02X%02X%02X",
+					 prefix,
+					 rand_buf[0], rand_buf[1], rand_buf[2], rand_buf[3],
+					 rand_buf[4], rand_buf[5], rand_buf[6], rand_buf[7],
+					 rand_buf[8], rand_buf[9], rand_buf[10], rand_buf[11]);
+}
+#endif
+
 
 int MSG_SendPart::Write()
 {
-    int status = 0;
+#ifndef MOZ_ENDER_MIME
+  int status = 0;
     char *separator = 0;
     XP_File file = NULL;
 
@@ -758,5 +802,7 @@ FAIL:
 		m_intlDocToMailConverter = NULL;
 	}
     return status;
-
+#else
+    return 0;
+#endif //MOZ_ENDER_MIME
 }

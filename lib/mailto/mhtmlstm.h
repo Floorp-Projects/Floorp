@@ -223,6 +223,7 @@ public:
 //#endif
 
 
+#ifdef MOZ_ENDER_MIME
 //used to stop lame mimerelated saver from sending a message!
 class MSG_MimeRelatedStreamSaver : public MSG_MimeRelatedSaver
 {
@@ -234,12 +235,16 @@ public:
 						 MSG_AttachedFile *attachedFiles,
 						 DeliveryDoneCallback cb,
 						 char **ppOriginalRootURL);
-    virtual ~MSG_MimeRelatedStreamSaver(){}
+    virtual ~MSG_MimeRelatedStreamSaver();
+
     //
     // Called on completion, TRUE if completed successfully, FALSE if it failed.  
     // we dont want the message to be sent, so we stop mimerelated saver from completing
     //  
     virtual void Complete( Bool bSuccess, EDT_ITapeFileSystemComplete *pfComplete, void *pArg );
+private:
+  char *m_pFilename;
 };
+#endif //MOZ_ENDER_MIME
 
 #endif

@@ -28,66 +28,21 @@ LIB = .\$(OBJDIR)\$(LIBRARY_NAME).lib
 LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
 !endif
 
+
 REQUIRES=security nspr htmldlgs img util layer pref security js java net progress network
 
 
 
 OBJS	= \
-    .\$(OBJDIR)\addrutil.obj \
-	.\$(OBJDIR)\ad_strm.obj \
-	.\$(OBJDIR)\ap_decod.obj \
-	.\$(OBJDIR)\ap_encod.obj \
-	.\$(OBJDIR)\appledbl.obj \
-	.\$(OBJDIR)\bh_strm.obj \
-	.\$(OBJDIR)\m_binhex.obj \
-	.\$(OBJDIR)\msgutils.obj \
-	.\$(OBJDIR)\bytearr.obj \
-	.\$(OBJDIR)\dwordarr.obj \
-	.\$(OBJDIR)\mhtmlstm.obj \
-	.\$(OBJDIR)\msgbg.obj \
-	.\$(OBJDIR)\msgcflds.obj \
-	.\$(OBJDIR)\msgcpane.obj \
-	.\$(OBJDIR)\msgglue.obj \
-	.\$(OBJDIR)\msgmast.obj \
-	.\$(OBJDIR)\msgmdn.obj \
-	.\$(OBJDIR)\msgpane.obj \
-	.\$(OBJDIR)\msgppane.obj \
-	.\$(OBJDIR)\msgprefs.obj \
-	.\$(OBJDIR)\msgsend.obj \
-	.\$(OBJDIR)\msgsendp.obj \
-	.\$(OBJDIR)\msgurlq.obj \
-	.\$(OBJDIR)\msgzap.obj \
-	.\$(OBJDIR)\ptrarray.obj \
 	.\$(OBJDIR)\mprmime.obj \
+	.\$(OBJDIR)\mhtmlstm.obj \
+	.\$(OBJDIR)\msgsendp.obj \
 	$(NULL)
 # We'd like to include msgdlqml.cpp eventually (deliver queued mail)
 
 
 EXPORTS = \
-	ad_codes.h \
-	appledbl.h \
-	bytearr.h \
-	dwordarr.h \
-	errcode.h \
-	error.h \
-	m_binhex.h \
 	mhtmlstm.h \
-	msg.h \
-	msgcflds.h \
-	msgcpane.h \
-	msghdr.h \
-	msgmast.h \
-	msgmdn.h \
-	msgpane.h \
-	msgppane.h \
-	msgprefs.h \
-	msgprnot.h \
-	msgsend.h \
-	msgsendp.h \
-	msgutils.h \
-	msgzap.h \
-	ptrarray.h \
-	mprmime.h \
 	$(NULL)
 
 MODULE=mailto
@@ -100,6 +55,10 @@ LINCS=-I$(XPDIST)\public\security -I$(XPDIST)\public\nspr \
     -I$(XPDIST)\public\js -I$(XPDIST)\public\java \
     -I$(XPDIST)\public\net -I$(XPDIST)\public\progress \
     -I$(XPDIST)\public\util -I$(XPDIST)\public\network 
+
+!ifdef MOZ_ENDER_MIME 
+LCFLAGS=$(LCFLAGS) -DMOZ_ENDER_MIME
+!endif
 
 include <$(DEPTH)\config\rules.mak>
 

@@ -16,15 +16,19 @@
 #define READ_BUFFER_LEN                 255
 
 
+
 /*
 prototypes
-XP_Bool output_text_file(GenericMimeRelatedData *p_genmime, int16 p_index);
-XP_Bool output_base64_file(GenericMimeRelatedData *p_genmime, int16 p_index);
 */
+XP_Bool output_text_file(GenericMimeRelatedData *p_genmime, int16 p_index);
+XP_Bool output_text_body(GenericMimeRelatedData *p_genmime, int16 p_index);
+XP_Bool output_base64_file(GenericMimeRelatedData *p_genmime, int16 p_index);
+
 
 
 AttachmentFields *
-AttachmentFields_Init(char *p_pFilename, char *p_pDispositionName, char *p_pContentType, char *p_pContentId)
+AttachmentFields_Init(char *p_pFilename, char *p_pDispositionName, 
+                      char *p_pContentType, char *p_pContentId)
 {
   AttachmentFields *data = XP_NEW(AttachmentFields);
   if (!data || !p_pFilename || !p_pContentType || !p_pContentId) return 0;
@@ -97,7 +101,7 @@ genericmime_validate(GenericMimeRelatedData *p_genmime)
     int i;/*counter*/
     if (!p_genmime)
         return FALSE;
-    if (!p_genmime->m_iNumTextFiles + p_genmime->m_iNumBase64Files)
+    if (!(p_genmime->m_iNumTextFiles + p_genmime->m_iNumBase64Files))
         return FALSE; /*no files*/
     for( i=0; i<p_genmime->m_iNumTextFiles; i++)
     {
@@ -139,12 +143,39 @@ GenericMime_Destroy(GenericMimeRelatedData *p_gendata)
 
 
 static XP_Bool
-output_text_file(GenericMimeRelatedData *p_genmime, int16 p_index)
+output_text_body(GenericMimeRelatedData *p_genmime, int16 p_index)
 {
     char readbuffer[READ_BUFFER_LEN];           /*buffer to store incomming data*/
     int16 numread;                              /*number of bytes read in each pass*/
-    char *charSet;                              /*used by text attachments when retrieving the charset str identifier*/
     XP_File t_inputfile;                       /*file pointer for input file*/
+
+    (*p_genmime->write_buffer)("\n",1,p_genmime->closure);
+    if( (t_inputfile = XP_FileOpen(p_genmime->m_pTextFiles[p_index],xpFileToPost,XP_FILE_READ)) != NULL )
+    {
+        /* Attempt to read in READBUFLEN characters */
+        while (!feof( t_inputfile ))
+        {
+            numread = fread( readbuffer, sizeof( char ), READ_BUFFER_LEN, t_inputfile );
+            if (ferror(t_inputfile))
+            {
+                XP_ASSERT(FALSE);
+                break;
+            }
+            (*p_genmime->write_buffer)(readbuffer,numread,p_genmime->closure);
+        }
+        fclose( t_inputfile );
+        (*p_genmime->write_buffer)("\n",1,p_genmime->closure);
+        (*p_genmime->write_buffer)("\n",1,p_genmime->closure);
+    }
+    return TRUE;
+}
+
+
+
+static XP_Bool
+output_text_file(GenericMimeRelatedData *p_genmime, int16 p_index)
+{
+    char *charSet;                              /*used by text attachments when retrieving the charset str identifier*/
 
     if (p_genmime->m_pBoundarySpecifier) 
     {
@@ -161,24 +192,7 @@ output_text_file(GenericMimeRelatedData *p_genmime, int16 p_index)
     (*p_genmime->write_buffer)(BIT7_MIMEREL,strlen(BIT7_MIMEREL),p_genmime->closure);
     (*p_genmime->write_buffer)("\n",1,p_genmime->closure);
     (*p_genmime->write_buffer)("\n",1,p_genmime->closure);
-    if( (t_inputfile = fopen( p_genmime->m_pTextFiles[p_index], "r+t" )) != NULL )
-    {
-        /* Attempt to read in READBUFLEN characters */
-        while (!!feof( t_inputfile ))
-        {
-            numread = fread( readbuffer, sizeof( char ), READ_BUFFER_LEN, t_inputfile );
-            if (ferror(t_inputfile))
-            {
-                XP_ASSERT(FALSE);
-                break;
-            }
-            (*p_genmime->write_buffer)(readbuffer,numread,p_genmime->closure);
-        }
-        fclose( t_inputfile );
-        (*p_genmime->write_buffer)("\n",1,p_genmime->closure);
-        (*p_genmime->write_buffer)("\n",1,p_genmime->closure);
-    }
-    return TRUE;
+    return output_text_body(p_genmime,p_index);
 }
 
 
@@ -209,7 +223,9 @@ output_base64_file(GenericMimeRelatedData *p_genmime, int16 p_index)
     (*p_genmime->write_buffer)("\n",1,p_genmime->closure);
 
     (*p_genmime->write_buffer)(CONTENT_ID_MIMEREL,strlen(CONTENT_ID_MIMEREL),p_genmime->closure);
+    (*p_genmime->write_buffer)("<",1,p_genmime->closure);
     (*p_genmime->write_buffer)(t_tempattach->m_pContentId ,strlen(t_tempattach->m_pContentId),p_genmime->closure);
+    (*p_genmime->write_buffer)(">",1,p_genmime->closure);
     (*p_genmime->write_buffer)("\n",1,p_genmime->closure);
 
     (*p_genmime->write_buffer)(CONTENT_TRANS_MIMEREL,strlen(CONTENT_TRANS_MIMEREL),p_genmime->closure);
@@ -225,13 +241,13 @@ output_base64_file(GenericMimeRelatedData *p_genmime, int16 p_index)
     (*p_genmime->write_buffer)("\n",1,p_genmime->closure);
 
     
-    if( (t_inputfile = fopen( t_tempattach->m_pFilename, "r+b" )) != NULL )
+    if( (t_inputfile = XP_FileOpen( t_tempattach->m_pFilename, xpFileToPost,XP_FILE_READ_BIN )) != NULL )
     {
         /* Attempt to read in READBUFLEN characters */
         t_base64data = MimeB64EncoderInit(p_genmime->write_buffer,p_genmime->closure);
         if (!t_base64data)
             return FALSE; /* bad?*/
-        while (!!feof( t_inputfile ))
+        while (!feof( t_inputfile ))
         {
             numread = fread( readbuffer, sizeof( char ), READ_BUFFER_LEN, t_inputfile );
             if (ferror(t_inputfile))
@@ -260,6 +276,10 @@ GenericMime_Begin(GenericMimeRelatedData *p_genmime)
         XP_ASSERT(FALSE);
         return FALSE;
     }
+    if (p_genmime->m_iNumTextFiles == 1 && p_genmime->m_iNumBase64Files == 0)
+    {
+      return output_text_body(p_genmime,0); /*output only the body part*/
+    }
     (*p_genmime->write_buffer)(CONTENT_TYPE_MPR_MIMEREL,strlen(CONTENT_TYPE_MPR_MIMEREL),p_genmime->closure);
     (*p_genmime->write_buffer)(BOUNDARYSTR_MIMEREL,strlen(BOUNDARYSTR_MIMEREL),p_genmime->closure);
     (*p_genmime->write_buffer)("\"",1,p_genmime->closure); /*begin quote*/
@@ -283,6 +303,13 @@ GenericMime_Begin(GenericMimeRelatedData *p_genmime)
         if (!output_base64_file(p_genmime,i))
             return FALSE;
     }
+    if (p_genmime->m_pBoundarySpecifier)
+    {
+        (*p_genmime->write_buffer)(p_genmime->m_pBoundarySpecifier,strlen(p_genmime->m_pBoundarySpecifier),p_genmime->closure);
+      (*p_genmime->write_buffer)("--",2,p_genmime->closure);
+    }
+    (*p_genmime->write_buffer)("\n",1,p_genmime->closure);
+
     return TRUE;
 }
 
