@@ -28,8 +28,19 @@
 #define _XfeComboBox_h_
 
 #include <Xfe/Manager.h>
+#include <Xfe/ComboBoxStringDefs.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeComboBox reasonable defaults for some resources					*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XfeDEFAULT_COMBO_BOX_LIST_MARGIN_HEIGHT			2
+#define XfeDEFAULT_COMBO_BOX_LIST_MARGIN_WIDTH			2
+#define XfeDEFAULT_COMBO_BOX_LIST_SPACING				2
+#define XfeDEFAULT_COMBO_BOX_LIST_VISIBLE_ITEM_COUNT	10
 
 /*----------------------------------------------------------------------*/
 /*																		*/

@@ -58,16 +58,10 @@ ifdef XFE_WIDGETS_BUILD_UNUSED
 XFE_EXTRA_DEFINES += -DXFE_WIDGETS_BUILD_UNUSED
 
 UNUSED_CSRCS	= \
-				ComboBox.c \
-				FancyBox.c \
 				FontChooser.c \
 				$(NULL)
 
 UNUSED_EXPORTS	= \
-				ComboBox.h \
-				ComboBoxP.h \
-				FancyBox.h \
-				FancyBoxP.h \
 				FontChooser.h \
 				FontChooserP.h \
 				$(NULL)

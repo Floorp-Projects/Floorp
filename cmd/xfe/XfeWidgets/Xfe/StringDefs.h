@@ -96,7 +96,6 @@
 #define XmNarmed						"armed"
 #define XmNarmedPixmap					"armedPixmap"
 #define XmNarmedPixmapMask				"armedPixmapMask"
-#define XmNarrow						"arrow"
 #define XmNarrowDisplayPolicy			"arrowDisplayPolicy"
 #define XmNarrowHeight					"arrowHeight"
 #define XmNarrowPlacement				"arrowPlacement"
@@ -202,7 +201,6 @@
 #define XmNleftRaisedPixmap				"leftRaisedPixmap"
 #define XmNleftView						"leftView"
 #define XmNlinkNode						"linkNode"
-#define XmNlistFontList					"listFontList"
 #define XmNlogo							"logo"
 #define XmNmanagedItemCount				"managedItemCount"
 #define XmNmatchSubMenuWidth			"matchSubMenuWidth"
@@ -260,8 +258,6 @@
 #define XmNselectionColor				"selectionColor"
 #define XmNselectionModifiers			"selectionModifiers"
 #define XmNseparatorThickness			"separatorThickness"
-#define XmNshareShell					"shareShell"
-#define XmNshell						"shell"
 #define XmNshowActionButton				"showActionButton"
 #define XmNshowDockedTaskBar			"showDockedTaskBar"
 #define XmNshowLogo						"showLogo"
@@ -275,9 +271,6 @@
 #define XmNtabOffset					"TabOffset"
 #define XmNtaskBar						"taskBar"
 #define XmNtaskBarDocked				"taskBarDocked"
-#define XmNtitleFontList				"titleFontList"
-#define XmNtitleShadowThickness			"titleShadowThickness"
-#define XmNtitleShadowType				"titleShadowType"
 #define XmNtoggleBehavior				"toggleBehavior"
 #define XmNtoolBar						"toolBar"
 #define XmNtoolBarPosition				"toolBarPosition"
@@ -407,7 +400,6 @@
 #define XmCLeftPixmap					"LeftPixmap"
 #define XmCLeftRaisedPixmap				"LeftRaisedPixmap"
 #define XmCLinkNode						"LinkNode"
-#define XmCListFontList					"ListFontList"
 #define XmCMatchSubMenuWidth			"MatchSubMenuWidth"
 #define XmCMaxNumColumns				"MaxNumColumns"
 #define XmCMaxNumRows					"MaxNumRows"
@@ -449,7 +441,6 @@
 #define XmCSelectionColor				"SelectionColor"
 #define XmCSelectionModifiers			"SelectionModifiers"
 #define XmCSeparatorThickness			"SeparatorThickness"
-#define XmCShareShell					"ShareShell"
 #define XmCShowActionButton				"ShowActionButton"
 #define XmCShowDockedTaskBar			"ShowDockedTaskBar"
 #define XmCShowLogo						"ShowLogo"
@@ -459,7 +450,6 @@
 #define XmCSubMenuLocation				"SubMenuLocation"
 #define XmCSwapThreshold				"SwapThreshold"
 #define XmCTaskBarDocked				"TaskBarDocked"
-#define XmCTitleFontList				"TitleFontList"
 #define XmCToggleBehavior				"ToggleBehavior"
 #define XmCToolBarPosition				"ToolBarPosition"
 #define XmCToolBarSelectionPolicy		"ToolBarSelectionPolicy"
@@ -517,18 +507,6 @@
 /*----------------------------------------------------------------------*/
 #if XmVersion < 2000
 #define XmNdragStartCallback			"dragStartCallback"
-#define XmNcomboBoxType					"comboBoxType"
-#define XmCComboBoxType					"ComboBoxType"
-#define XmRComboBoxType					"ComboBoxType"
-#endif
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* Things that conflict elsewhere										*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-#ifndef XmNlist
-#define XmNlist							"list"
 #endif
 
 #endif											/* end StringDefs.h		*/

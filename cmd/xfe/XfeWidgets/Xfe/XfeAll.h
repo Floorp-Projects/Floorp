@@ -51,8 +51,6 @@
 
 #if defined(XFE_WIDGETS_BUILD_UNUSED)
 #include <Xfe/BypassShell.h>
-#include <Xfe/ComboBox.h>
-#include <Xfe/FancyBox.h>
 #include <Xfe/FontChooser.h>
 #endif /* XFE_WIDGETS_BUILD_UNUSED */
 

@@ -186,6 +186,57 @@ else
 endif
 
 ##
+## XfeCaption Library
+##
+XFE_STATIC_CAPTION_LIB		= $(DIST)/lib/libXfeCaption.a
+XFE_SHARED_CAPTION_LIB		= $(DIST)/bin/libXfeCaption.$(DLL_SUFFIX)
+XFE_CAPTION_REQUIRES		= XfeCaption
+
+##
+## XfeCaption required ?
+##
+ifeq ($(filter $(REQUIRES),$(XFE_CAPTION_REQUIRES)),$(XFE_CAPTION_REQUIRES))
+
+XFE_SHARED_LIBS			+= $(XFE_SHARED_CAPTION_LIB)
+XFE_STATIC_LIBS			+= $(XFE_STATIC_CAPTION_LIB)
+
+endif
+
+##
+## XfeComboBox Library
+##
+XFE_STATIC_COMBO_BOX_LIB		= $(DIST)/lib/libXfeComboBox.a
+XFE_SHARED_COMBO_BOX_LIB		= $(DIST)/bin/libXfeComboBox.$(DLL_SUFFIX)
+XFE_COMBO_BOX_REQUIRES		= XfeComboBox
+
+##
+## XfeComboBox required ?
+##
+ifeq ($(filter $(REQUIRES),$(XFE_COMBO_BOX_REQUIRES)),$(XFE_COMBO_BOX_REQUIRES))
+
+XFE_SHARED_LIBS			+= $(XFE_SHARED_COMBO_BOX_LIB)
+XFE_STATIC_LIBS			+= $(XFE_STATIC_COMBO_BOX_LIB)
+
+endif
+
+##
+## Xfe Pref Library
+##
+XFE_STATIC_PREF_LIB		= $(DIST)/lib/libXfePref.a
+XFE_SHARED_PREF_LIB		= $(DIST)/bin/libXfePref.$(DLL_SUFFIX)
+XFE_PREF_REQUIRES		= XfePref
+
+##
+## XfePref required ?
+##
+ifeq ($(filter $(REQUIRES),$(XFE_PREF_REQUIRES)),$(XFE_PREF_REQUIRES))
+
+XFE_SHARED_LIBS			+= $(XFE_SHARED_PREF_LIB)
+XFE_STATIC_LIBS			+= $(XFE_STATIC_PREF_LIB)
+
+endif
+
+##
 ## XfeTest required ?
 ##
 ifeq ($(filter $(REQUIRES),$(XFE_TEST_REQUIRES)),$(XFE_TEST_REQUIRES))

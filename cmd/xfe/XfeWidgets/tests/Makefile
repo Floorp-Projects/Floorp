@@ -26,9 +26,16 @@
 
 DEPTH			= ../../../..
 
+ifdef eXFE_WIDGETS_BUILD_UNUSED
+UNUSED_DIRS		= \
+				XfeComboBox \
+				$(NULL)
+endif
+
 DIRS			= \
 				Xfe \
 				XfeBm \
-				XmL
+				XmL \
+				$(UNUSED_DIRS)
 
 include $(DEPTH)/config/rules.mk

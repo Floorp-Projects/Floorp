@@ -68,6 +68,7 @@
 /* Core class methods													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
+static void		ClassInitialize		(void);
 static void		ClassPartInit		(WidgetClass);
 static void 	Initialize			(Widget,Widget,ArgList,Cardinal *);
 static void 	Destroy				(Widget);
@@ -118,6 +119,12 @@ static Widget		TitleLabelCreate	(Widget);
 
 static Widget		ArrowCreate			(Widget);
 
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void			RegisterComboBoxType	(void);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -476,6 +483,37 @@ static XmSyntheticResource synthetic_resources[] =
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeComboBox translations.											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+/* extern */ char _XfeComboBoxTextEditableTranslations[] ="\
+~c s ~m ~a <Btn1Down>:			extend-start()\n\
+c ~s ~m ~a <Btn1Down>:			move-destination()\n\
+~c ~s ~m ~a <Btn1Down>:			grab-focus()\n\
+~c ~m ~a <Btn1Motion>:			extend-adjust()\n\
+~c ~m ~a <Btn1Up>:				extend-end()";
+
+/* extern */ char _XfeComboBoxTextReadOnlyTranslations[] ="\
+~c ~s ~m ~a <Btn1Down>:			grab-focus() Popup()\n\
+~c ~m ~a <Btn1Motion>:			\n\
+~c ~m ~a <Btn1Up>:				Popdown()";
+
+#if 0
+/* extern */ char _XfeComboBoxArrowTranslations[] ="\
+~c ~s ~m ~a <Btn1Down>:			Highlight() Arm() Popup()\n\
+~c ~m ~a <Btn1Up>:				Activate() Disarm() Popdown()";
+#else
+/* extern */ char _XfeComboBoxArrowTranslations[] ="\
+~c ~s ~m ~a <Btn1Down>:			Highlight() Arm()  Popup()\n\
+~c ~m ~a <Btn1Up>:				Activate() Disarm() Popdown()";
+#endif
+
+/* extern */ char _XfeComboBoxExtraTranslations[] ="\
+~c ~s ~m ~a <Btn1Down>:			Highlight() Popup()\n\
+~c ~m ~a <Btn1Up>:				Popdown()";
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeComboBox actions													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -497,7 +535,7 @@ _XFE_WIDGET_CLASS_RECORD(combobox,ComboBox) =
 		(WidgetClass) &xfeManagerClassRec,		/* superclass			*/
 		"XfeComboBox",							/* class_name			*/
 		sizeof(XfeComboBoxRec),					/* widget_size			*/
-		NULL,									/* class_initialize		*/
+		ClassInitialize,						/* class_initialize		*/
 		ClassPartInit,							/* class_part_initialize*/
 		FALSE,									/* class_inited			*/
 		Initialize,								/* initialize			*/
@@ -642,6 +680,13 @@ SyntheticGetListItemCount(Widget w,int offset, XtArgVal * value)
 /*																		*/
 /* Core Class methods													*/
 /*																		*/
+/*----------------------------------------------------------------------*/
+static void
+ClassInitialize()
+{
+	/* Register XfeComboBox Representation Types */
+    RegisterComboBoxType();
+}
 /*----------------------------------------------------------------------*/
 static void
 ClassPartInit(WidgetClass wc)
@@ -1165,6 +1210,24 @@ LayoutTitle(Widget w)
 						
 						CB_RECT_HEIGHT(w,cp) - 
 						2 * cp->title_shadow_thickness);
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void
+RegisterComboBoxType(void)
+{
+    static String names[] = 
+    { 
+		"combo_box_editable",
+		"combo_box_read_only"
+    };
+
+    XmRepTypeRegister(XmRComboBoxType,names,NULL,XtNumber(names));
 }
 /*----------------------------------------------------------------------*/
 

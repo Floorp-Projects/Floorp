@@ -27,7 +27,7 @@
 #ifndef _XfeRepType_h_							/* start RepType.h		*/
 #define _XfeRepType_h_
 
-#include <Xm/Xm.h>								/* Motif public defs	*/
+#include <Xfe/BasicDefines.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
 

@@ -18,62 +18,62 @@
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Name:		<Xfe/PrepareP.h>										*/
-/* Description:	Widget component preparation codes.						*/
+/* Name:		<Xfe/ComboBoxStringDefs.h>								*/
+/* Description:	XfeComboBox string definitions.							*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-#ifndef _XfePrepareP_h_							/* start PrepareP.h		*/
-#define _XfePrepareP_h_
+#ifndef _XfeComboBoxStringDefs_h_			/* start ComboBoxStringDefs.h*/
+#define _XfeComboBoxStringDefs_h_
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeLabel - superclass = XfePrimitive									*/
+/* Callback Names														*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define _XFE_PREPARE_LABEL_STRING					XfePrepare1
+								   
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Resource Names														*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNarrow						"arrow"
+#define XmNlistFontList					"listFontList"
+#define XmNshareShell					"shareShell"
+#define XmNshell						"shell"
+#define XmNtitleShadowThickness			"titleShadowThickness"
+#define XmNtitleShadowType				"titleShadowType"
+#define XmNtitleFontList				"titleFontList"
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeButton - superclass = XfeLabel									*/
+/* Class Names															*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define _XFE_PREPARE_BUTTON_PIXMAP					XfePrepare2
-#define _XFE_PREPARE_BUTTON_ARMED_PIXMAP			XfePrepare3
-#define _XFE_PREPARE_BUTTON_RAISED_PIXMAP			XfePrepare4
-#define _XFE_PREPARE_BUTTON_INSENSITIVE_PIXMAP		XfePrepare5
+#define XmCListFontList					"ListFontList"
+#define XmCTitleFontList				"TitleFontList"
+#define XmCShareShell					"ShareShell"
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeLogo - superclass = XfeButton										*/
+/* Things that conflict with Motif 2.x									*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define _XFE_PREPARE_LOGO_ANIMATION					XfePrepare6
+#if XmVersion < 2000
+#define XmNcomboBoxType					"comboBoxType"
+#define XmCComboBoxType					"ComboBoxType"
+#define XmRComboBoxType					"ComboBoxType"
+#endif
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeTab - superclass = XfeButton										*/
+/* Things that conflict elsewhere										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define _XFE_PREPARE_TAB_BOTTOM_PIXMAP				XfePrepare6
-#define _XFE_PREPARE_TAB_HORIZONTAL_PIXMAP			XfePrepare7
-#define _XFE_PREPARE_TAB_LEFT_PIXMAP				XfePrepare8
-#define _XFE_PREPARE_TAB_RIGHT_PIXMAP				XfePrepare9
-#define _XFE_PREPARE_TAB_TOP_PIXMAP					XfePrepare10
-#define _XFE_PREPARE_TAB_VERTICAL_PIXMAP			XfePrepare11
-#define _XFE_PREPARE_TAB_BOTTOM_RAISED_PIXMAP		XfePrepare12
-#define _XFE_PREPARE_TAB_HORIZONTAL_RAISED_PIXMAP	XfePrepare13
-#define _XFE_PREPARE_TAB_LEFT_RAISED_PIXMAP			XfePrepare14
-#define _XFE_PREPARE_TAB_RIGHT_RAISED_PIXMAP		XfePrepare15
-#define _XFE_PREPARE_TAB_TOP_RAISED_PIXMAP			XfePrepare16
-#define _XFE_PREPARE_TAB_VERTICAL_RAISED_PIXMAP		XfePrepare17
+#ifndef XmNlist
+#define XmNlist							"list"
+#endif
 
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* XfeToolBar - superclass = XfeOriented								*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-#define _XFE_PREPARE_MAX_CHILD_DIMENSIONS			XfePrepare1
 
-#endif											/* end PrepareP.h		*/
+#endif										/* end ComboBoxStringDefs.h	*/

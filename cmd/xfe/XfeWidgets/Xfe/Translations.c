@@ -118,37 +118,6 @@ c<Btn1Down>:				Focus()\n\
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeComboBox translations.											*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-/* extern */ char _XfeComboBoxTextEditableTranslations[] ="\
-~c s ~m ~a <Btn1Down>:			extend-start()\n\
-c ~s ~m ~a <Btn1Down>:			move-destination()\n\
-~c ~s ~m ~a <Btn1Down>:			grab-focus()\n\
-~c ~m ~a <Btn1Motion>:			extend-adjust()\n\
-~c ~m ~a <Btn1Up>:				extend-end()";
-
-/* extern */ char _XfeComboBoxTextReadOnlyTranslations[] ="\
-~c ~s ~m ~a <Btn1Down>:			grab-focus() Popup()\n\
-~c ~m ~a <Btn1Motion>:			\n\
-~c ~m ~a <Btn1Up>:				Popdown()";
-
-#if 0
-/* extern */ char _XfeComboBoxArrowTranslations[] ="\
-~c ~s ~m ~a <Btn1Down>:			Highlight() Arm() Popup()\n\
-~c ~m ~a <Btn1Up>:				Activate() Disarm() Popdown()";
-#else
-/* extern */ char _XfeComboBoxArrowTranslations[] ="\
-~c ~s ~m ~a <Btn1Down>:			Highlight() Arm()  Popup()\n\
-~c ~m ~a <Btn1Up>:				Activate() Disarm() Popdown()";
-#endif
-
-/* extern */ char _XfeComboBoxExtraTranslations[] ="\
-~c ~s ~m ~a <Btn1Down>:			Highlight() Popup()\n\
-~c ~m ~a <Btn1Up>:				Popdown()";
-
-/*----------------------------------------------------------------------*/
-/*																		*/
 /* Translation / Action functions										*/
 /*																		*/
 /*----------------------------------------------------------------------*/

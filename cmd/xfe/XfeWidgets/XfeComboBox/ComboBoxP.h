@@ -158,6 +158,15 @@ _XfeComboBoxDrawTitleShadow		(Widget			w,
 								 XRectangle *	clip_rect);
 /*----------------------------------------------------------------------*/
 
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeComboBox - superclass = XfeManager								*/
+/*																		*/
+/* Component preparation macros.										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define _XFE_PREPARE_ARROW							XfePrepare1
+
 XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end ComboBoxP.h		*/

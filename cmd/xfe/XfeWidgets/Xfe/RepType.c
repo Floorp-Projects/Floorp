@@ -167,18 +167,6 @@ RegisterLocationType(void)
 }
 /*----------------------------------------------------------------------*/
 static void
-RegisterComboBoxType(void)
-{
-    static String names[] = 
-    { 
-		"combo_box_editable",
-		"combo_box_read_only"
-    };
-
-    XmRepTypeRegister(XmRComboBoxType,names,NULL,XtNumber(names));
-}
-/*----------------------------------------------------------------------*/
-static void
 RegisterToolScrollArrowPlacement(void)
 {
     static String names[] = 
@@ -318,7 +306,6 @@ XfeRegisterRepresentationTypes(void)
 	RegisterButtonTrigger();
 	RegisterButtonType();
 	RegisterChromeChildType();
-	RegisterComboBoxType();
 	RegisterLocationType();
 	RegisterPaneChildAttachment();
 	RegisterPaneChildType();
