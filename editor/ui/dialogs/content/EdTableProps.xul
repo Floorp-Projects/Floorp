@@ -44,7 +44,7 @@
 
   <spring id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
 
   <tabcontrol align="vertical" orient="vertical">
     <tabbox flex="1">

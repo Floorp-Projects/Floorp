@@ -69,11 +69,11 @@ function addTreeItem(num, modName, url)
     newrow.setAttribute("rowName", modName);
 
     var elem = document.createElement('treecell');
-    elem.setAttribute("value", modName);
+    elem.setAttribute("label", modName);
     newrow.appendChild(elem);
 
     elem = document.createElement('treecell');
-    elem.setAttribute("value", url);
+    elem.setAttribute("label", url);
     newrow.appendChild(elem);
 
     newitem.appendChild(newrow);

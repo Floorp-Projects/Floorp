@@ -42,6 +42,6 @@
     <box id="okCancelButtons"/>
   </box>
 
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
 
 </window>

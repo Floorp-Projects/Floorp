@@ -27,7 +27,6 @@ Contributor(s): ______________________________________. -->
 
 <?xul-overlay href="chrome://navigator/content/navigatorOverlay.xul"?>
 <?xul-overlay href="chrome://navigator/content/navExtraOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/securityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
@@ -50,14 +49,12 @@ Contributor(s): ______________________________________. -->
         title="&mainWindow.title;" 
         titlemodifier="&mainWindow.titlemodifier;" 
         titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
-        viewsourcetitlepreface="&viewsourcetitle.preface;"
         windowtype="navigator:browser" orient="vertical"
         width="640" height="480"
         screenX="10" screenY="10"
         persist="screenX screenY width height sizemode"> 
 
 <script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
-<script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsUserSettings.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsClipboard.js"/>
@@ -73,53 +70,48 @@ Contributor(s): ______________________________________. -->
 <script type="application/x-javascript" src="chrome://navigator/content/sessionHistoryUI.js"/>
 
   <!-- hook for stringbundle overlays -->
-  <stringbundleset id="stringbundleset">
+  <stringbundleset id="navStringBundles">
     <stringbundle id="bundle_navigator" src="chrome://navigator/locale/navigator.properties"/>
     <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
     <stringbundle id="bundle_navigator_region" src="chrome://navigator-region/locale/region.properties"/>
     <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
   </stringbundleset>
-  
-  <commands id="commands">
+
+  <commandset id="navCommands">    
     <commandset id="globalEditMenuItems"/>
     <commandset id="selectEditMenuItems"/>
     <commandset id="undoEditMenuItems"/>
-    <commandset id="clipboardEditMenuItems"/>
-  </commands>
-  
+    <commandset id="clipboardEditMenuItems"/>  
+    <!-- <command id="cmd_pageSetup"/> -->
+    <command id="toggleSidebar"/>
+  </commandset>
+    
   <!-- broadcasters are appended from the overlay -->
-  <broadcasterset id="broadcasterset">
-    <broadcaster id="canPrint"/>
-    <broadcaster id="args" value=""/>
-    <broadcaster id="cmd_pageSetup"/>
-  </broadcasterset>
-
+  <broadcasterset id="navBroadcasters"/>
+   
   <!-- keys are appended from the overlay -->
-  <keyset id="keyset"/>
-
-  <!-- tooltips -->
-  <popupset id="aTooltipSet"/>
-
+  <keyset id="navKeys">
+    <key id="showHideSidebar"/>
+  </keyset>
+  
   <!-- XXX-TEMP this needs to move into an XBL binding for browser!!! -->
+  
   <popupset id="aHTMLTooltipSet">
     <popup id="aHTMLTooltip" class="tooltip" oncreate="return FillInHTMLTooltip(document.tooltipNode);" > 
       <box id="HTML_TOOLTIP_tooltipBox" orient="vertical"/>
     </popup>
-  </popupset>
-  
-  <popupset>
     <popup id="backMenu" oncreate="BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
     <popup id="forwardMenu" oncreate="BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
-  </popupset>
-  
-  <popupset>
     <popup id="contextual" oncreate="return fillContextMenu('contextual', 'innermostBox');" >
       <menu />
     </popup>
+ 
+    <!-- context menu -->
+    <popupset id="contentAreaContextSet"/>
+    
+    <!-- tooltips -->
+    <popupset id="aTooltipSet"/>
   </popupset>
-  
-  <!-- context menu -->
-  <popupset id="contentAreaContextSet"/>
   
   <script type="application/x-javascript">
     var gBookmarkPopup = null;
@@ -135,12 +127,12 @@ Contributor(s): ______________________________________. -->
       <hbox id="nav-bar-buttons">
         <menubutton id="back-button" label="&backButton.label;" tooltiptext="&backButton.tooltip;"
                     oncommand="gotoHistoryIndex(event);" buttonaction="BrowserBack();" context="backMenu"
-                    class="menubutton-dual toolbar top" crop="right" tooltip="aTooltip" observes="canGoBack">  
+                    class="menubutton-dual top" crop="right" tooltip="aTooltip" observes="canGoBack">  
           <menupopup context="" oncreate="BrowserBackMenu(event);"/>
         </menubutton>
         <menubutton id="forward-button" label="&forwardButton.label;" tooltiptext="&forwardButton.tooltip;"
                     oncommand="gotoHistoryIndex(event);" buttonaction="BrowserForward();" context="forwardMenu"
-                    class="menubutton-dual toolbar top" crop="right" tooltip="aTooltip" observes="canGoForward">
+                    class="menubutton-dual top" crop="right" tooltip="aTooltip" observes="canGoForward">
           <menupopup context="" oncreate="BrowserForwardMenu(event);"/>
         </menubutton>
 
@@ -155,10 +147,10 @@ Contributor(s): ______________________________________. -->
           <hbox autostretch="never" valign="middle" flex="1" id="urlbar-container">
     	      <image id="page-proxy-button" ondraggesture="nsDragAndDrop.startDrag(event, proxyIconDNDObserver);"/> 
 	          <textbox autocomplete="true" timeout="300" class="plain" 
-	                     searchSessionType="urlbar" id="urlbar" tooltip="aTooltip" tooltiptext="&locationBar.tooltip;"
-                         onclick="if (event.button == 0) URLBarLeftClickHandler(event);"
-                         onblur="URLBarBlurHandler(event);"
-             onkeypress="if( event.keyCode == 13 ) { addToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>  
+	                   searchSessionType="urlbar" id="urlbar" tooltip="aTooltip" tooltiptext="&locationBar.tooltip;"
+                     onclick="if (event.button == 0) URLBarLeftClickHandler(event);"
+                     onblur="URLBarBlurHandler(event);"
+                     onkeypress="if( event.keyCode == 13 ) { addToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>  
           </hbox>
           <menubutton class="menubutton-icon" id="ubhist">
             <menupopup id="ubhist-popup" popupalign="topright" popupanchor="bottomright"
@@ -177,14 +169,14 @@ Contributor(s): ______________________________________. -->
                 tooltip="aTooltip" tooltiptext="&searchButton.tooltip;"/> 
       </hbox>
 
-      <menubutton class="menubutton-dual toolbar top" id="print-button" persist="hidden" label="&printButton.label;" 
+      <menubutton class="menubutton-dual top" id="print-button" persist="hidden" label="&printButton.label;" 
                   crop="right" buttonaction="BrowserPrint()" tooltip="aTooltip" tooltiptext="&printButton.tooltip;">  
         <menupopup id="printMenu" popupalign="topright" popupanchor="bottomright">
           <menuitem label="&printCmd.label;" accesskey="&printCmd.accesskey;" oncommand="BrowserPrint()" default="true"/>
         </menupopup>
       </menubutton>
 
-      <hbox id="throbber-box" autostretch="never">
+      <hbox autostretch="never">
         <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;"/>
       </hbox>
     </toolbar>
@@ -225,10 +217,10 @@ Contributor(s): ______________________________________. -->
            </rule>
         </template>
         <menupopup>
-          <menuitem accesskey="&addCurPageCmd.accesskey;"
-                    key="addBookmarkKb" observes="Browser:AddBookmark"/>
-          <menuitem accesskey="&manBookmarksCmd.accesskey;"
-                    key="manBookmarkKb" observes="Browser:ManageBookmark"/>
+          <menuitem label="&addCurPageCmd.label;" accesskey="&addCurPageCmd.accesskey;"
+                    key="addBookmarkKb" command="Browser:AddBookmark"/>
+          <menuitem label="&manBookmarksCmd.label;" accesskey="&manBookmarksCmd.accesskey;"
+                    key="manBookmarkKb" command="Browser:ManageBookmark"/>
           <menuseparator/>
         </menupopup>
       </menubutton>
@@ -248,7 +240,7 @@ Contributor(s): ______________________________________. -->
           </rule>
 
           <rule parent="hbox" rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-            <toolbarseparator/>
+            <toolbarseparator uri="rdf:*"/>
           </rule>
 
           <rule parent="hbox">

@@ -51,7 +51,7 @@
                 src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
 
   
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
   
   <separator class="thin"/>
   

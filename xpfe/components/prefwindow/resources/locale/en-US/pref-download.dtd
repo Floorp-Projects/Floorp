@@ -1,7 +1,6 @@
 <!-- extracted from content/pref-download.xul -->
 
 <!--LOCALIZATION NOTE : FILE 'Download' prefs dialog. Handles options for reading mail/news offline -->
-<!ENTITY  title.label "Download">
 <!ENTITY  lHeader "Download">
 <!ENTITY  rHeader "Choose settings for sending messages offline">
 <!ENTITY  downOnlyCheck "Download only unread messages">

@@ -46,7 +46,7 @@
   <script type="application/x-javascript" src="chrome://vixen/content/vixen.js"/>
   <script type="application/x-javascript" src="chrome://vixen/content/vxUtils.js"/>
 
-  <keyset id="keyset"/>
+  <keyset id="vxKeys"/>
   
   <toolbox id="xuledit-toolbox" flex="1">
     <menubar id="xuledit-menubar">

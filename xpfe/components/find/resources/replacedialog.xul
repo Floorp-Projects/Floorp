@@ -71,6 +71,6 @@ Contributor(s): Kin Blas <kin@netscape.com>
   <separator/>
 
   <!-- Places to overlay common dialog buttons and keyset -->
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
 
 </window>

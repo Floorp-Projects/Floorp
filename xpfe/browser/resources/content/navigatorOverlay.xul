@@ -25,6 +25,7 @@
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/viewZoomOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 <?xul-overlay href="chrome://navigator/content/platformNavigationBindings.xul"?>
 
@@ -42,19 +43,22 @@
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<!-- stringbundles, yay! -->
-<stringbundleset id="stringbundleset"/>
+<stringbundleset id="navStringBundles">
+  <stringbundle id="bundle_viewZoom"/>
+</stringbundleset>
 
 <!-- Keysets -->
-<keyset id="keyset">
+<keyset id="navKeys">
   <!-- File Menu -->
   <key id="key_newNavigator"/>
   <key id="key_newBlankPage"/>
-  <key id="openBrowserKb"      key="&openCmd.commandkey;" observes="Browser:Open"  modifiers="accel"/>
-  <key id="openFileKb"         key="&openFileCmd.commandkey;" observes="Browser:OpenFile"  modifiers="accel"/>
-  <key id="key_savePage"       key="&savePageCmd.commandkey;" observes="Browser:SavePage" modifiers="accel"/>
-  <key id="key_editPage"       key="&editPageCmd.commandkey;" observes="Browser:EditPage" modifiers="accel"/>
-  <key id="printKb"            key="&printCmd.commandkey;" observes="Browser:Print"  modifiers="accel"/>
+  <key id="focusURLBar"      key="&openCmd.commandkey;" oncommand="ShowAndSelectContentsOfURLBar();"
+       modifiers="accel"/>
+  <key id="openLocationKb"   key="&openCmd.commandkey;" command="Browser:Open" modifiers="accel,shift"/>
+  <key id="openFileKb"         key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
+  <key id="key_savePage"       key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>
+  <key id="key_editPage"       key="&editPageCmd.commandkey;" command="Browser:EditPage" modifiers="accel"/>
+  <key id="printKb"            key="&printCmd.commandkey;" command="Browser:Print"  modifiers="accel"/>
   <key id="key_close"/>
   <key id="key_quit"/>
 
@@ -69,107 +73,110 @@
   
         <!-- View Menu -->
   <key id="key_reload"  key="&reloadCmd.commandkey;" oncommand="BrowserReload();" modifiers="accel"/>
-  <key id="key_reallyReload" key="&reloadCmd.commandkey;" oncommand="BrowserReloadSkipCache();" modifiers="accel,shift"/>
-  <key id="key_viewSource" key="&pageSourceCmd.commandkey;" observes="View:PageSource" modifiers="accel"/>
-  <key id="key_viewInfo"   key="&pageInfoCmd.commandkey;"   observes="View:PageInfo"   modifiers="accel"/>
+  <key key="&reloadCmd.commandkey;" oncommand="BrowserReloadSkipCache();" modifiers="accel,shift"/>
+  <key id="key_viewSource" key="&pageSourceCmd.commandkey;" command="View:PageSource" modifiers="accel"/>
+  <key id="key_viewInfo"   key="&pageInfoCmd.commandkey;"   command="View:PageInfo"   modifiers="accel"/>
 
   <!-- Search Menu -->  
-  <key id="key_find"              key="&findOnCmd.commandkey;" observes="Browser:Find" modifiers="accel"/>
-  <key id="key_findAgain"         key="&findAgainCmd.commandkey;" observes="Browser:FindAgain" modifiers="accel"/>
+  <key id="key_find"              key="&findOnCmd.commandkey;" command="Browser:Find" modifiers="accel"/>
+  <key id="key_findAgain"         key="&findAgainCmd.commandkey;" command="Browser:FindAgain" modifiers="accel"/>
 
   <!-- Go Menu -->
 
   <!-- Bookmarks Menu -->
-  <key id="addBookmarkKb"        key="&addCurPageCmd.commandkey;" observes="Browser:AddBookmark"  modifiers="accel"/>
-  <key id="manBookmarkKb"        key="&manBookmarksCmd.commandkey;" observes="Browser:ManageBookmark"  modifiers="accel"/>
-
-  <!-- how to handle return, enter, tab, function keys, arrow keys, others? saari working on solution -->
+  <key id="addBookmarkKb"        key="&addCurPageCmd.commandkey;" command="Browser:AddBookmark"  modifiers="accel"/>
+  <key id="manBookmarkKb"        key="&manBookmarksCmd.commandkey;" command="Browser:ManageBookmark"  modifiers="accel"/>
 
   <!-- Misc -->
   <key id="key_stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
         <!-- the amazing fishcam dept. -->
-  <key id="key_fishcam" key="f" modifiers="control,alt" oncommand="window._content.location.href='http://home.netscape.com/fishcam/fishcam.html'"/>
-  
+  <key key="f" modifiers="control,alt" oncommand="window._content.location.href='http://home.netscape.com/fishcam/fishcam.html'"/>
+  <keyset id="viewZoomKeys"/>
+  <keyset id="navigationKeys"/>  
+  <keyset id="tasksKeys"/>
 </keyset>
 
-<!-- Broadcasters -->
-<broadcasterset id="broadcasterset">
-  <!-- File Menu -->
-  <broadcaster id="cmd_newNavigator"/>
-  <broadcaster id="cmd_newEditor"/>
-  <broadcaster id="cmd_newEditorTemplate"/>
-  <broadcaster id="cmd_newEditorDraft"/>
-  <broadcaster id="Browser:Open"  label="&openCmd.label;"         oncommand="BrowserOpenWindow();"/>
-  <broadcaster id="Browser:OpenFile"  label="&openFileCmd.label;" oncommand="BrowserOpenFileWindow();"/>
-  <broadcaster id="cmd_close" oncommand="BrowserClose()"/>
-  <broadcaster id="Browser:SavePage" label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" oncommand="savePage();"/>
-  <broadcaster id="Browser:EditPage" label="&editPageCmd.label;" oncommand="editPage(window._content.location.href,window, false);"/>
-  <broadcaster id="Browser:PrintSetup"  label="&printSetupCmd.label;"     disabled ="true" oncommand="BrowserReload();"/>
-  <broadcaster id="Browser:PrintPreview"  label="&printPreviewCmd.label;" disabled="true"  oncommand="BrowserReload();"/>
-  <broadcaster id="Browser:Print"  label="&printCmd.label;"                    oncommand="BrowserPrint();"/>
-  <broadcaster id="cmd_quit"/>
-
+<commandset id="navCommands">
+  <command id="cmd_newNavigator"/>
+  <command id="cmd_newEditor"/>
+  <!-- NOT IMPLEMENTED
+  <command id="cmd_newEditorTemplate"/>
+  <command id="cmd_newEditorDraft"/>
+  <command id="Browser:PrintSetup"  disabled ="true" oncommand=""/>
+  <command id="Browser:PrintPreview" disabled="true"  oncommand=""/> -->
+  <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
+  <command id="Browser:SavePage" oncommand="savePage();"/>
+  <command id="Browser:EditPage" oncommand="editPage(window._content.location.href,window, false);"/>
+  <command id="Browser:Open" oncommand="BrowserOpenWindow();"/>
+  <command id="Browser:Print" oncommand="BrowserPrint();"/>
+  <command id="cmd_quit"/>
+  <command id="cmd_close" oncommand="BrowserClose()"/>
+  
   <!-- Edit Menu -->
-  <broadcaster id="cmd_undo"/>
-  <broadcaster id="cmd_redo"/>
-  <broadcaster id="cmd_cut"/>
-  <broadcaster id="cmd_copy"/>
-  <broadcaster id="cmd_paste"/>
-  <broadcaster id="cmd_delete"/>
-  <broadcaster id="cmd_selectAll"/>
-  <broadcaster id="cmd_preferences"/>
+  <command id="cmd_undo"/>
+  <command id="cmd_redo"/>
+  <command id="cmd_cut"/>
+  <command id="cmd_copy"/>
+  <command id="cmd_paste"/>
+  <command id="cmd_delete"/>
+  <command id="cmd_selectAll"/>
   
   <!-- View Menu -->
-  <broadcaster id="cmd_viewnavbar" label="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" oncommand="goToggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
-  <broadcaster id="cmd_viewpersonaltoolbar" label="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
-  <broadcaster id="cmd_viewtaskbar" label="&taskbarCmd.label;" accesskey="&taskbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
-
-  <broadcaster id="View:PageSource" oncommand="BrowserViewSource();"/>
-  <broadcaster id="View:PageInfo"   oncommand="BrowserPageInfo();"/>
-
-  <!-- Search Menu -->
-  <broadcaster id="Browser:Find"      label="&findOnCmd.label;"            oncommand="BrowserFind();" />
-  <broadcaster id="Browser:FindAgain" label="&findAgainCmd.label;"         oncommand="BrowserFindAgain();" /> 
+  <command id="View:PageSource" oncommand="BrowserViewSource();"/>
+  <command id="View:PageInfo"   oncommand="BrowserPageInfo();"/>
   
-  <!-- Go Menu -->
-  <broadcaster id="canGoBack"       disabled="true"/>
-  <broadcaster id="canGoForward"    disabled="true"/>
-  <broadcaster id="Browser:Back"    oncommand="BrowserBack();"    observes="canGoBack"/>
-  <broadcaster id="Browser:Forward" oncommand="BrowserForward();" observes="canGoForward"/>
-  <broadcaster id="Browser:Home"    oncommand="BrowserHome();"/>
-
+  <!-- Search Menu -->
+  <command id="Browser:Find" oncommand="BrowserFind();" />
+  <command id="Browser:FindAgain" oncommand="BrowserFindAgain();" /> 
+  
   <!-- Bookmarks Menu -->
-  <broadcaster id="Browser:AddBookmark" label="&addCurPageCmd.label;"
+  <command id="Browser:AddBookmark" 
                oncommand="BookmarksUtils.addBookmarkForBrowser(document.getElementById('content').webNavigation);"/>
-  <broadcaster id="Browser:ManageBookmark" label="&manBookmarksCmd.label;" oncommand="BrowserEditBookmarks();" />
+  <command id="Browser:ManageBookmark" oncommand="BrowserEditBookmarks();" />
+  
+  <!-- Go Menu -->  
+  <command id="Browser:Home" oncommand="BrowserHome();"/>
+  <command id="Browser:Back"    oncommand="BrowserBack();"/>
+  <command id="Browser:Forward" oncommand="BrowserForward();"/>
+  <commandset id="viewZoomCommands"/>
+  <commandset id="tasksCommands"/>
+</commandset>
+
+<broadcasterset id="navBroadcasters">
+  <broadcaster id="canGoBack" disabled="true" command="Browser:Back"/>
+  <broadcaster id="canGoForward" disabled="true" command="Browser:Forward"/>
+  <broadcaster id="Communicator:WorkMode"/>
+  <broadcaster id="cmd_viewnavbar" oncommand="goToggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
+  <broadcaster id="cmd_viewpersonaltoolbar" oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
+  <broadcaster id="cmd_viewtaskbar" oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
 
 </broadcasterset>
-
 
 <!-- Menu -->
 <menubar id="main-menubar" class="chromeclass-menubar">
   <menu id="menu_File">
     <menupopup id="menu_FilePopup">
-      <menuitem label="&browserCmd.label;" accesskey="&browserCmd.accesskey;" key="key_newNavigator" observes="cmd_newNavigator"/>
+      <menuitem label="&browserCmd.label;" accesskey="&browserCmd.accesskey;" key="key_newNavigator" command="cmd_newNavigator"/>
       <menu id="menu_New">
         <menupopup id="menu_NewPopup">
           <!-- From globalOverlay.xul -->
-          <menuitem id="menu_newNavigator" observes="cmd_newNavigator"/>
-          <menuitem id="menu_newEditor"    observes="cmd_newEditor"/>
+          <menuitem id="menu_newNavigator" command="cmd_newNavigator"/>
+          <menuitem id="menu_newEditor"    command="cmd_newEditor"/>
         </menupopup>
       </menu>
-        <menuitem accesskey="&openCmd.accesskey;" key="openBrowserKb" observes="Browser:Open"/>
-        <menuitem accesskey="&openFileCmd.accesskey;" key="openFileKb" observes="Browser:OpenFile"/>
+        <menuitem label="&openCmd.label;" accesskey="&openCmd.accesskey;" key="openLocationKb" command="Browser:Open"/>
+        <menuitem label="&openFileCmd.label;" accesskey="&openFileCmd.accesskey;" key="openFileKb" command="Browser:OpenFile"/>
         <menuseparator/>
         <menuitem id="menu_close"/>
-        <menuitem id="menu_savepage" key="key_savePage" observes="Browser:SavePage"/>
+        <menuitem label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" key="key_savePage" command="Browser:SavePage"/>
         <menuitem id="savepage" label="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="savePage(gFocusedURL);" hidden="true"/>
-        <menuseparator id="file_moduleSeparator"/>
-        <menuitem accesskey="&editPageCmd.accesskey;" key="key_editPage" observes="Browser:EditPage" />
         <menuseparator/>
-        <menuitem accesskey="&printSetupCmd.accesskey;" observes="Browser:PrintSetup"/>
-<!--        <menuitem accesskey="&printPreviewCmd.accesskey;" observes="Browser:PrintPreview"/> -->
-        <menuitem id="printMenuItem" accesskey="&printCmd.accesskey;" key="printKb" observes="Browser:Print"/>
+        <menuitem label="&editPageCmd.label;" accesskey="&editPageCmd.accesskey;" key="key_editPage" command="Browser:EditPage" />
+        <menuseparator/>
+        <!-- NOT IMPLEMENTED
+        <menuitem label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="Browser:PrintSetup"/>
+        <menuitem label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" command="Browser:PrintPreview"/> -->
+        <menuitem label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="printKb" command="Browser:Print"/>
         <menuseparator />
         <menuitem id="offlineGoOfflineCmd"/>
         <menuseparator />
@@ -196,9 +203,9 @@
     <menupopup id="menu_View_Popup">
        <menu label="&toolbarsCmd.label;" accesskey="&toolbarsCmd.accesskey;" id="view_toolbars">
         <menupopup id="view_toolbars_popup"> 
-          <menuitem observes="cmd_viewnavbar"  />
-          <menuitem observes="cmd_viewpersonaltoolbar" />
-          <menuitem observes="cmd_viewtaskbar" />
+          <menuitem label="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewnavbar"  />
+          <menuitem label="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewpersonaltoolbar" />
+          <menuitem label="&taskbarCmd.label;" accesskey="&taskbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewtaskbar" />
         </menupopup>
   </menu>   
       <menuseparator />
@@ -212,12 +219,12 @@
         </menupopup>
       </menu>
       <menuseparator />
-      <menuitem id="menuitem-reload" accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" oncommand="BrowserReload();"/>
+      <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" oncommand="BrowserReload();"/>
       <menuitem label="&showImagesCmd.label;" accesskey="&showImagesCmd.accesskey;" disabled="true" oncommand="BrowserReload();"/>
       <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" id="menuitem-stop" oncommand="BrowserStop();" key="key_stop"/>
       <menuseparator />
-      <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" observes="View:PageSource"/>
-      <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   observes="View:PageInfo"/>
+      <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
+      <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>
       <menuseparator />
       <menuitem accesskey="&translateMenu.accesskey;" label="&translateMenu.label;" oncommand="Translate();"/>
       <menu label="&webContentMenu.label;" 
@@ -248,26 +255,26 @@
 
       <menu id = "charsetMenu" />
       <menuseparator/>
-      <menu id="menu_Themes" label="&applyTheme.label;"
+      <menu label="&applyTheme.label;"
                          accesskey="&applyTheme.accesskey;">
-                            <menupopup id="applyThemePopup" datasources="rdf:chrome" ref="urn:mozilla:skin:root" oncommand="applyTheme(event.target)">                                
- <menuitem id="themePrefs"
-oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/pref-themes.xul')" label="&themePreferencesCmd.label;" accesskey="&themePreferencesCmd.accesskey;"/>
-<menuitem id="getNewThemes" oncommand="getNewThemes();" label="&getNewThemesCmd.label;" accesskey="&getNewThemesCmd.accesskey;"/>
-<menuseparator/>
-<template>
-<menuitem uri="..." label="rdf:http://www.mozilla.org/rdf/chrome#displayName" name="rdf:http://www.mozilla.org/rdf/chrome#name"/>
-</template>
-                           </menupopup>
-              </menu>
-   </menupopup>
+        <menupopup datasources="rdf:chrome" ref="urn:mozilla:skin:root" oncommand="applyTheme(event.target)">
+          <menuitem label="&themePreferencesCmd.label;" accesskey="&themePreferencesCmd.accesskey;"
+                    oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/pref-themes.xul')"/>
+          <menuitem label="&getNewThemesCmd.label;" accesskey="&getNewThemesCmd.accesskey;" oncommand="getNewThemes();"/>
+          <menuseparator/>
+          <template>
+            <menuitem uri="..." label="rdf:http://www.mozilla.org/rdf/chrome#displayName" name="rdf:http://www.mozilla.org/rdf/chrome#name"/>
+          </template>
+        </menupopup>
+      </menu>
+    </menupopup>
   </menu>
   
   <menu accesskey="&searchMenu.accesskey;" label="&searchMenu.label;">
-    <menupopup id="searchMenu">
-       <menuitem accesskey="&findOnCmd.accesskey;"    key="key_find" observes="Browser:Find"/>
-       <menuitem accesskey="&findAgainCmd.accesskey;" key="key_findAgain" observes="Browser:FindAgain"/>
-       <menuseparator />
+    <menupopup>
+      <menuitem label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;"    key="key_find" command="Browser:Find"/>
+      <menuitem label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="Browser:FindAgain"/>
+      <menuseparator />
       <menuitem label="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="loadXURL('urn:clienturl:srchmenu:srchinternet');"/>        
       <menuitem label="&searchBookmarksHistoryCmd.label;" accesskey="&searchBookmarksHistoryCmd.accesskey;" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'dialog=no,close,chrome,resizable', 'bookmarks');"/>
       <menuseparator />
@@ -280,11 +287,11 @@ oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/p
      </menupopup>
    </menu>
   
-  <menu accesskey="&goMenu.accesskey;" id="gomenu" label="&goMenu.label;" oncommand="gotoHistoryIndex(event);">
+  <menu accesskey="&goMenu.accesskey;" label="&goMenu.label;" oncommand="gotoHistoryIndex(event);">
     <menupopup oncreate="updateGoMenu(event);">
-      <menuitem id="menuitem-back"    label="&goBackCmd.label;"    accesskey="&goBackCmd.accesskey;"    observes="Browser:Back"    key="goBackKb"/>
-      <menuitem id="menuitem-forward" label="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;" observes="Browser:Forward" key="goForwardKb"/>
-      <menuitem id="menuitem-home"    label="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    observes="Browser:Home" key="goHome"/>
+      <menuitem label="&goBackCmd.label;"    accesskey="&goBackCmd.accesskey;"    observes="canGoBack"    key="goBackKb"/>
+      <menuitem label="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;" observes="canGoForward" key="goForwardKb"/>
+      <menuitem label="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    command="Browser:Home" key="goHome"/>
       <menuseparator hidden="true"/>
     </menupopup>
   </menu>       
@@ -311,8 +318,8 @@ oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/p
       </rule>
     </template>
     <menupopup>
-      <menuitem accesskey="&addCurPageCmd.accesskey;" key="addBookmarkKb" observes="Browser:AddBookmark"/>
-      <menuitem accesskey="&manBookmarksCmd.accesskey;" key="manBookmarkKb" observes="Browser:ManageBookmark"/>
+      <menuitem label="&addCurPageCmd.label;" accesskey="&addCurPageCmd.accesskey;" key="addBookmarkKb" command="Browser:AddBookmark"/>
+      <menuitem label="&manBookmarksCmd.label;" accesskey="&manBookmarksCmd.accesskey;" key="manBookmarkKb" command="Browser:ManageBookmark"/>
       <menuseparator/>
     </menupopup>
     </menu>

@@ -31,7 +31,7 @@
 		    class="dialog" align="vertical"
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-proxy-manual' ); else parent.queuedTag = 'pref-proxy-manual';">
 
-<keyset id="keyset"/>
+<keyset id="dialogKeys"/>
 
 <html:div flex="100%">
 <box align="vertical">

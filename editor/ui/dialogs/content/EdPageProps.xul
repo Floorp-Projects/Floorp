@@ -43,7 +43,7 @@
 
   <spring id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
   <grid>
     <columns><column flex="1"/><column flex="2"/></columns>
     <rows>

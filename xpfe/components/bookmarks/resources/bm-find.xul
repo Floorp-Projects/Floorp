@@ -52,28 +52,26 @@
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
 
-  <commands id="commands">
+  <commandset id="tasksCommands">
     <commandset id="selectEditMenuItems"/>
     <commandset id="globalEditMenuItems"/>
-  </commands>
 
-  <broadcasterset id="broadcasterset">
     <!-- File Menu -->
-    <broadcaster id="cmd_newNavigator"/>
-    <broadcaster id="cmd_newEditor"/>
-    <broadcaster id="cmd_close" oncommand="window.close()"/>
-    <broadcaster id="cmd_quit"/>
+    <command id="cmd_newNavigator"/>
+    <command id="cmd_newEditor"/>
+    <command id="cmd_close" oncommand="window.close()"/>
+    <command id="cmd_quit"/>
     <!-- Edit Menu -->
-    <broadcaster id="cmd_undo"/>
-    <broadcaster id="cmd_redo"/>
-    <broadcaster id="cmd_cut"/>
-    <broadcaster id="cmd_copy"/>
-    <broadcaster id="cmd_paste"/>
-    <broadcaster id="cmd_delete"/>
-    <broadcaster id="cmd_selectAll"/>
-    <broadcaster id="cmd_preferences"/>
-  </broadcasterset>
-  <keyset id="keyset">
+    <command id="cmd_undo"/>
+    <command id="cmd_redo"/>
+    <command id="cmd_cut"/>
+    <command id="cmd_copy"/>
+    <command id="cmd_paste"/>
+    <command id="cmd_delete"/>
+    <command id="cmd_selectAll"/>
+  </commandset>
+
+  <keyset id="tasksKeys">
     <!-- File Menu -->
     <key id="key_newNavigator"/>
     <key id="key_newEditor"/>
@@ -95,8 +93,8 @@
         <menupopup id="menu_FilePopup">     
           <menu id="menu_New">
             <menupopup id="menu_NewPopup">
-              <menuitem id="menu_newNavigator" observes="cmd_newNavigator"/>
-              <menuitem id="menu_newEditor"    observes="cmd_newEditor"/>
+              <menuitem id="menu_newNavigator" command="cmd_newNavigator"/>
+              <menuitem id="menu_newEditor"    command="cmd_newEditor"/>
             </menupopup>
           </menu>
           <menuseparator/>

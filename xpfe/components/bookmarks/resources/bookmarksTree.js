@@ -54,7 +54,7 @@ BookmarksTree.prototype = {
   {
     const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     var xulElement = document.createElementNS(kXULNS, "menuitem");
-    xulElement.setAttribute("command", aCommandName);
+    xulElement.setAttribute("cmd", aCommandName);
     xulElement.setAttribute("observes", "cmd_" + aCommandName.substring(NC_NS_CMD.length));
     var node = xulElement.getAttribute('observes');
 
@@ -71,7 +71,7 @@ BookmarksTree.prototype = {
     case NC_NS_CMD + "renamebookmark":
       if (!document.popupNode.hasAttribute("type")) {
         xulElement.setAttribute("label", this.getLocaleString("cmd_renamebookmark2"));
-        xulElement.setAttribute("command", (NC_NS_CMD + "editurl"));
+        xulElement.setAttribute("cmd", (NC_NS_CMD + "editurl"));
       }
       else
         xulElement.setAttribute("label", aDisplayName);

@@ -37,8 +37,7 @@ enum nsLinkState {
   eLinkState_Unknown    = 0,
   eLinkState_Unvisited  = 1,
   eLinkState_Visited    = 2, 
-  eLinkState_OutOfDate  = 3,   // visited, but the cache is stale
-  eLinkState_NotLink    = 4
+  eLinkState_NotLink    = 3
 };
 
 // XXX Verb to use for link actuation. These are the verbs specified

@@ -25,7 +25,7 @@
   <!-- selection manager -->
   <script src="chrome://vixen/content/vfd/vxVFDSelectionManager.js"></script>
   
-  <keyset id="keyset"/>
+  <keyset id="vxKeys"/>
   
   <iframe id="vfdDocument" name="vfdDocument" src="about:blank" style="width:0px;" flex="1"/>
 

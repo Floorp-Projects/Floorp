@@ -856,8 +856,6 @@ nsWebShell::GetLinkState(const char* aLinkURI, nsLinkState& aState)
                           NS_ERROR_FAILURE);
         if (isVisited)
           aState = eLinkState_Visited;
-
-      // XXX how to tell if eLinkState_OutOfDate?
       }
 
    return NS_OK;

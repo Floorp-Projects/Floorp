@@ -27,20 +27,20 @@ var nsJSSupportsUtils = {
 
   createSupportsArray: function ()
     {
-      return nsJSComponentManager.createInstance("@mozilla.org/supports-array;1",
-                                                 "nsISupportsArray");
+      return Components.classes["@mozilla.org/supports-array;1"]
+                       .createInstance(Components.interfaces.nsISupportsArray);
     },
 
   createSupportsWString: function ()
     {  
-      return nsJSComponentManager.createInstance("@mozilla.org/supports-wstring;1",
-                                                 "nsISupportsWString");
+      return Components.classes["@mozilla.org/supports-wstring;1"]
+                       .createInstance(Components.interfaces.nsISupportsWString);
     },
     
   createSupportsString: function ()
     {
-      return nsJSComponentManager.createInstance("@mozilla.org/supports-string;1",
-                                                 "nsISupportsString");
+      return Components.classes["@mozilla.org/supports-string;1"]
+                       .createInstance(Components.interfaces.nsISupportsString);
     }                                                 
 
 };

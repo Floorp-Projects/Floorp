@@ -1,7 +1,6 @@
 <!-- extracted from content/pref-offline.xul -->
 
 <!--LOCALIZATION NOTE : FILE The 'Offline' preferences dialog -->
-<!ENTITY title.label "Offline">
 <!ENTITY lHeader "Offline">
 <!ENTITY rHeader "Startup State">
 <!ENTITY descipt1 "Mozilla can start in either online or offline modes. When online you have full 

@@ -69,8 +69,6 @@ CSS_ATOM(menuPseudo, ":menu")
 
 CSS_ATOM(notPseudo, ":not")
 
-CSS_ATOM(outOfDatePseudo, ":out-of-date")
-
 CSS_ATOM(rootPseudo, ":root")
 
 CSS_ATOM(xblBoundElementPseudo, ":-moz-bound-element")

@@ -42,7 +42,7 @@
   <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
 
   <spring id="location" offsetY="50" persist="offsetX offsetY"/>
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet" />
   
   <text class="label" value ="&conflictWarning.label;"/>

@@ -22,8 +22,9 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/prefpanels.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
@@ -38,7 +39,6 @@
   <stringbundle id="bundle_prefutilities"
                 src="chrome://communicator/locale/pref/prefutilities.properties"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-themes.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
         
   <box class="box-smallheader" title="&lHeader;"/>
 

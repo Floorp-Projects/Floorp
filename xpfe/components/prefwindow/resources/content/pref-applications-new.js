@@ -64,8 +64,8 @@ function onOK()
     var titleMsg = gPrefApplicationsBundle.getString("handlerExistsTitle");
     var dialogMsg = gPrefApplicationsBundle.getString("handlerExists");
     dialogMsg = dialogMsg.replace(/%mime%/g, gMIMEField.value);
-    var commonDialogService = nsJSComponentManager.getService("@mozilla.org/appshell/commonDialogs;1",
-                                                              "nsICommonDialogs");
+    var commonDialogService = Components.classes["@mozilla.org/appshell/commonDialogs;1"]
+                                        .getService(Components.interfaces.nsICommonDialogs);
     var replace = commonDialogService.Confirm(window, titleMsg, dialogMsg);
     if (!replace)
       window.close();

@@ -46,7 +46,7 @@
   </box>
 
   
-  <keyset id="keyset">
+  <keyset id="dialogKeys">
     <key keycode="VK_ENTER" oncommand="if (!document.getElementById('ok').disabled) doOKButton();"/>
     <key keycode="VK_RETURN" oncommand="if (!document.getElementById('ok').disabled) doOKButton();"/>
     <key keycode="VK_ESCAPE" oncommand="doCancelButton();"/>

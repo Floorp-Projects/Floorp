@@ -24,7 +24,7 @@
        -Added a syntax example for the "no proxy" field.
   -->
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-proxies.dtd" >
 <window xmlns:html="http://www.w3.org/1999/xhtml"

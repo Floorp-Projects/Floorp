@@ -143,6 +143,6 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
 
   <!-- Places to overlay common dialog buttons and keyset -->
   <box id="okCancelButtons"/>
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
 
 </window>

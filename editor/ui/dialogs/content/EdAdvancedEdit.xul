@@ -40,7 +40,7 @@
     onload="Startup()"
     orient="vertical">
 
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet" />
     
   <!-- Methods common to all editor dialogs -->

@@ -43,7 +43,7 @@
   <broadcaster id="args" value=""/>
   <spring id="location" offsetY="50" persist="offsetX offsetY"/>
 
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
   <box id="TableOrCellGroup" valign="middle" autostretch="never" collapsed="true">
     <text value="&background.label;"/>
     <radiogroup id="1" orient="horizontal">

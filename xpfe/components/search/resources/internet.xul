@@ -5,89 +5,87 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/search/internet.dtd">
 
-<window class="dialog" align="vertical"
-	xmlns:html="http://www.w3.org/1999/xhtml"
-	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="loadPage()" onunload="unloadPage()">
+<window class="dialog" orient="vertical"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="loadPage()" onunload="unloadPage()">
 
-	<script type="application/x-javascript" src="chrome://communicator/content/search/internet.js" />
-	<script type="application/x-javascript" src="chrome://communicator/content/search/shared.js" />
+  <script type="application/x-javascript" src="chrome://communicator/content/search/internet.js" />
+  <script type="application/x-javascript" src="chrome://communicator/content/search/shared.js" />
 
-	<box align="horizontal" style="width: 100%;" >
-		<spring align="horizontal" flex="100%" />
+  <box>
+    <spring flex="100%" />
 
-	<html:div>&search.label;</html:div>
+    <html>&search.label;</html>
 
-	<template id="categoryTemplate">
-		<rule iscontainer="true">
-			<html:optgroup uri="..." label="rdf:http://home.netscape.com/NC-rdf#title" />
-		</rule>
-	
-		<rule>
-			<html:option uri="..." value="rdf:http://home.netscape.com/NC-rdf#category" >
-				<textnode value="rdf:http://home.netscape.com/NC-rdf#title" />
-			</html:option>
-		</rule>
-	</template>
+    <template id="categoryTemplate">
+      <rule iscontainer="true">
+        <menulist uri="..." label="rdf:http://home.netscape.com/NC-rdf#title" />
+      </rule>
+  
+      <rule>
+        <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#category"
+                  label="rdf:http://home.netscape.com/NC-rdf#title" />
+      </rule>
+    </template>
 
-	<html:select id="categoryList" template="categoryTemplate" ref="NC:SearchCategoryRoot" datasources="rdf:null"
-		sortResource="http://home.netscape.com/NC-rdf#title" sortDirection="ascending"
-		onchange="return chooseCategory(this)" >
+    <menulist id="categoryList" template="categoryTemplate" ref="NC:SearchCategoryRoot" datasources="rdf:null"
+              sortResource="http://home.netscape.com/NC-rdf#title" sortDirection="ascending"
+              onchange="return chooseCategory(this)" >
 
-		<html:option value="NC:SearchEngineRoot" >&allengines.label;</html:option>
+      <menuitem value="NC:SearchEngineRoot" label="&allengines.label;"/>
 
-	</html:select>
+    </menulist>
 
-		<html:div>&for.label;</html:div>
-		<html:input id="searchtext" size="20" onkeypress="if (event.keyCode == 13) { doSearch(); }" />
-		<html:button id="searchbutton" onclick="return doSearch();">&search.button.label;</html:button>
-		<html:button id="stopbutton" onclick="return doStop();" style="display: none;" >&stop.button.label;</html:button>
-		<spring align="horizontal" flex="100%" />
-	</box>
+    <html>&for.label;</html>
+    <textfield id="searchtext" size="20" onkeypress="if (event.keyCode == 13) { doSearch(); }" />
+    <button id="searchbutton" oncommand="return doSearch();" label="&search.button.label;"/>
+    <button id="stopbutton" oncommand="return doStop();" style="display: none;" label="&stop.button.label;"/>
+    <spring flex="100%"/>
+  </box>
 
-	<box align="horizontal" style="height: 85%; width: 100%;" flex="1" >
-		<spring align="horizontal" flex="50%" />
-		<tree align="horizontal" id="searchengines" border="1" flex="1" datasources="rdf:internetsearch" ref="NC:SearchEngineRoot">
-                        <treecolgroup>
-			  <treecol id="CheckboxColumn" flex="1"/>
-			  <treecol id="NameColumn" resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" flex="1"/>
-			  <treecol id="DescColumn" resource="http://home.netscape.com/NC-rdf#Description" resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
-                        </treecolgroup>
+  <box style="height: 85%; width: 100%;" flex="1" >
+    <spring flex="50%" />
+    <tree orient="horizontal" id="searchengines" border="1" flex="1" datasources="rdf:internetsearch" ref="NC:SearchEngineRoot">
+      <treecolgroup>
+        <treecol id="CheckboxColumn" flex="1"/>
+        <treecol id="NameColumn" resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" flex="1"/>
+        <treecol id="DescColumn" resource="http://home.netscape.com/NC-rdf#Description" resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+      </treecolgroup>
 
-			<template>
-                                <treechildren flex="1">
-				<treeitem uri="..." loading="rdf:http://home.netscape.com/NC-rdf#loading" >
-					<treerow>
-						<treecell allowevents="true">
-							<html:input type="checkbox" onclick="doCheck(this)" />
-						</treecell>
-						<treecell allowevents="true">
-              <button class="iconic" flex="1" crop="right" align="left" src="rdf:http://home.netscape.com/NC-rdf#Icon" label="rdf:http://home.netscape.com/NC-rdf#Name" />
-						</treecell>
-						<treecell allowevents="true">
-              <button flex="1" crop="right" align="left" label="rdf:http://home.netscape.com/NC-rdf#Description" />
-						</treecell>
-					</treerow>
-				</treeitem>
-                                </treechildren>
-			</template>
+      <template>
+        <treechildren flex="1">
+          <treeitem uri="..." loading="rdf:http://home.netscape.com/NC-rdf#loading" >
+            <treerow>
+              <treecell allowevents="true">
+                <checkbox oncommand="doCheck(this)" />
+              </treecell>
+              <treecell allowevents="true">
+                <button class="iconic" flex="1" crop="right" src="rdf:http://home.netscape.com/NC-rdf#Icon" label="rdf:http://home.netscape.com/NC-rdf#Name" />
+              </treecell>
+              <treecell allowevents="true">
+                <button flex="1" crop="right" label="rdf:http://home.netscape.com/NC-rdf#Description" />
+              </treecell>
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </template>
 
-			<treehead>
-				<treerow>
+      <treehead>
+        <treerow>
           <treecell label="&checkbox.column.label;"/>
           <treecell observes="NameColumn" label="&engine.column.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');" sortActive="true" sortDirection="ascending"/>
           <treecell observes="DescColumn" label="&description.column.label;" resource="http://home.netscape.com/NC-rdf#Description" resource2="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('DescColumn');" />
-				</treerow>
-			</treehead>
-		</tree>
-		<spring align="horizontal" flex="50%" />
-	</box>
+        </treerow>
+      </treehead>
+    </tree>
+    <spring flex="50%" />
+  </box>
 
-	<box align="horizontal" style="width: 100%;" >
-		<spring align="horizontal" flex="100%" />
-		<html:button onclick="return doCheckAll(true);">&checkall.button.label;</html:button>
-		<html:button onclick="return doCheckAll(false);">&uncheckall.button.label;</html:button>
-		<html:button id="SaveSearch" disabled="true" onclick="return saveSearch();">&savesearch.button.label;</html:button>
-		<spring align="horizontal" flex="100%" />
-	</box>
+  <box style="width: 100%;" >
+    <spring flex="100%" />
+    <button oncommand="doCheckAll(true);" label="&checkall.button.label;"/>
+    <button oncommand="doCheckAll(false);" label="&uncheckall.button.label;"/> 
+    <button id="SaveSearch" disabled="true" oncommand="saveSearch();" label="&savesearch.button.label;"/>
+    <spring flex="100%"/>
+  </box>
 </window>

@@ -14,17 +14,17 @@
 
   </script>
 
-  <broadcasterset id="broadcasterset">
-    <broadcaster id="Tasks:Inspector" label="&inspectorTaskCmd.label;" oncommand="launchInspector();"/>
-  </broadcasterset>
+  <commandset id="tasksCommands">
+    <command id="Tasks:Inspector" oncommand="launchInspector();"/>
+  </commandset>
 
 <!--
-  <keyset id="keyset">
-    <key id="kInspectorTask" key="&inspectorTaskCmd.commandkey;" observes="Tasks:Inspector" modifiers="accel"/>
+  <keyset id="tasksKeys">
+    <key id="kInspectorTask" key="&inspectorTaskCmd.commandkey;" command="Tasks:Inspector" modifiers="accel"/>
   </keyset>
 -->
   <menupopup id="toolsPopup">
-    <menuitem accesskey="&inspectorTaskCmd.accesskey;" observes="Tasks:Inspector"/>
+    <menuitem label="&inspectorTaskCmd.label;" accesskey="&inspectorTaskCmd.accesskey;" command="Tasks:Inspector"/>
   </menupopup>
 
 </overlay>
