@@ -350,7 +350,7 @@ void CBrowserWindow::FindCommandStatus(
 				inCommand == cmd_Home ||
 				inCommand == cmd_Close ||
 				inCommand == cmd_ToggleToolbar ||
-				inCommand == cmd_ToggleURLField ||
+				inCommand == cmd_ToggleLocationBar ||
 				inCommand == cmd_Reload ||
 				inCommand == cmd_LoadImages ||
 				inCommand == cmd_Stop
@@ -454,7 +454,7 @@ void CBrowserWindow::FindCommandStatus(
 			::GetIndString(outName, BROWSER_MENU_TOGGLE_STRINGS_ID, (mToolbarShown[eNavigationBar] ? HIDE_NAVIGATION_TOOLBAR_STRING : SHOW_NAVIGATION_TOOLBAR_STRING));
 			break;
 		
-		case cmd_ToggleURLField:
+		case cmd_ToggleLocationBar:
 			outEnabled = (mContext) ? !(mIsRootDocInfo || mIsViewSource || mIsHTMLHelp || PREF_PrefIsLocked(Pref_ShowLocationBar)) : true;
 			::GetIndString(outName, BROWSER_MENU_TOGGLE_STRINGS_ID, (mToolbarShown[eLocationBar] ? HIDE_LOCATION_TOOLBAR_STRING : SHOW_LOCATION_TOOLBAR_STRING));
 			break;
@@ -622,7 +622,7 @@ Boolean	CBrowserWindow::ObeyCommand(
 				cmdHandled = true;
 				break;
 			
-			case cmd_ToggleURLField:
+			case cmd_ToggleLocationBar:
 				ToggleDragBar(Location_Bar_PaneID, eLocationBar, Pref_ShowLocationBar);
 				cmdHandled = true;
 				break;
