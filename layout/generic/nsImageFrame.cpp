@@ -173,14 +173,13 @@ nsImageFrame::UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus)
   ListTag(stdout);
   printf(": UpdateImage: status=%x\n", aStatus);
 #endif
-  nsIPresShell* presShell;
-  aPresContext->GetShell(&presShell);
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
 
   if (NS_IMAGE_LOAD_STATUS_ERROR & aStatus) {
     // We failed to load the image. Notify the pres shell
     if (presShell) {
-      presShell->CantRenderReplacedElement(aPresContext, this);
-      NS_RELEASE(presShell);
+      presShell->CantRenderReplacedElement(aPresContext, this);      
     }
   }
   else if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
@@ -192,6 +191,7 @@ nsImageFrame::UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus)
       NS_ASSERTION(0, "No parent to pass the reflow request up to.");
     }
   }
+
   return NS_OK;
 }
 
