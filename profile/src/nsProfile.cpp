@@ -97,10 +97,12 @@
 #define REGISTRY_DIRECTORY_STRING           "directory"
 #define REGISTRY_NEED_MIGRATION_STRING      "NeedMigration"
 
-#define PROFILE_PREG_URL "resource:/res/profile/cpwPreg.xul"
-#define PROFILE_MANAGER_URL "resource:/res/profile/pm.xul"
+// this used to be cpwPreg.xul, that no longer exists.  we need to fix this.
+#define PROFILE_PREG_URL "chrome://profile/content/createProfileWizard.xul"
+
+#define PROFILE_MANAGER_URL "chrome://profile/content/profileManager.xul"
 #define PROFILE_MANAGER_CMD_LINE_ARG "-ProfileManager"
-#define PROFILE_WIZARD_URL "resource:/res/profile/cpw.xul"
+#define PROFILE_WIZARD_URL "chrome://profile/content/createProfileWizard.xul"
 #define PROFILE_WIZARD_CMD_LINE_ARG "-ProfileWizard"
 #define INSTALLER_CMD_LINE_ARG "-installer"
 #define CREATE_PROFILE_CMD_LINE_ARG "-CreateProfile"
@@ -159,6 +161,7 @@ private:
                        nsCString & profileURLStr);
   nsresult LoadDefaultProfileDir(nsCString & profileURLStr);
   nsresult OpenRegistry();
+  nsresult CloseRegistry();
 
   char mNewProfileData[_MAX_NUM_PROFILES][_MAX_LENGTH];
   char mProfiles[_MAX_NUM_PROFILES][_MAX_LENGTH];
@@ -245,6 +248,14 @@ NS_IMETHODIMP nsProfile::Startup(const char *filename)
 }
 
 nsresult
+nsProfile::CloseRegistry()
+{
+	nsresult rv;
+	rv = m_reg->Close();
+	return rv;
+}
+
+nsresult
 nsProfile::OpenRegistry()
 {
     nsresult rv;
@@ -295,13 +306,13 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs)
     rv = LoadDefaultProfileDir(profileURLStr);
   
   // Closing the registry that was opened in Startup()
-  m_reg->Close();
+  rv = CloseRegistry();
 
 #ifdef DEBUG_profile
   printf("Profile Manager : Profile Wizard and Manager activites : End\n");
 #endif
 
-  return NS_OK;
+  return rv;
 }
 
 
@@ -1701,7 +1712,9 @@ NS_IMETHODIMP nsProfile::StartCommunicator(const char* profileName)
 	NS_WITH_SERVICE(nsIBookmarksService, bookmarks, kBookmarksCID, &rv);
 	if (NS_FAILED(rv)) return rv;
 	rv = bookmarks->ReadBookmarks();
+	if (NS_FAILED(rv)) return rv;
 
+    rv = CloseRegistry();
     return rv;
 }
 

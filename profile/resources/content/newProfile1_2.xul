@@ -31,6 +31,7 @@ xmlns:html="http://www.w3.org/TR/REC-html40"
 <html:script>
 function foo()
 {
+	// what the hell is this?
 }
 
 function InitializeValues()

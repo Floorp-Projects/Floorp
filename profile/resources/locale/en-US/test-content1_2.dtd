@@ -1,6 +1,0 @@
-<!-- extracted from test-content1_2.xul -->
-
-<!ENTITY intro "If you create several profiles you can tell them apart by the profile names. You may use the name provided here or use one of your own."> 
-<!ENTITY profile.name "Enter New Profile name.">
-<!ENTITY profile.dir "Your user settings, preferences, bookmarks and stored messages will be stored in the directory below. We recommend that you use the default directory (by leaving the box blank).">
-<!ENTITY para "Click Finish to create this new profile.">

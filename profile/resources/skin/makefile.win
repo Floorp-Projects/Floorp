@@ -21,7 +21,7 @@ MODULE=profile
 include <$(DEPTH)\config\rules.mak>
 
 FILES=\
-	common.css				\
+	profile.css				\
 	createProfileWizard.css	\
 	profileManager.css		\
 	$(NULL)
