@@ -63,6 +63,7 @@ LIBRARY=.\$(OBJDIR)\$(LIBNAME).lib
 #//
 #//------------------------------------------------------------------------
 LINCS=$(LINCS)  -I. \
+		-I$(PUBLIC)\privacy \
                 -I$(PUBLIC)\security 
 
 

@@ -53,7 +53,7 @@ CSRCS +=          \
 		  allxpstr.c \
 		  $(NULL)
 
-REQUIRES	= js nspr dbm security img util jtools layer java lay style pref rdf
+REQUIRES	= js nspr dbm security img util jtools layer java lay style pref rdf privacy
 
 ifeq ($(STAND_ALONE_JAVA),1)
 CSRCS		= xp_qsort.c
