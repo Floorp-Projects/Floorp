@@ -3258,9 +3258,6 @@ fi
 
 AC_SUBST(MOZ_DEFINES)
 
-dnl Manually make the directories to get around deficiency in AC_OUTPUT
-mkdir -p lib modules modules/security build build/package
-
 dnl Load the list of Makefiles to generate.
 dnl   To add new Makefiles, edit allmakefiles.sh.
 dnl   allmakefiles.sh sets the variable, MAKEFILES.
@@ -3277,7 +3274,7 @@ dnl
 dnl OpenVMS gets a line overflow on the long eval command, so use a temp file.
 dnl
 echo $MAKEFILES | $PERL $srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
-eval `cat conftest.sh`
+. conftest.sh
 rm conftest.sh
 
 AC_OUTPUT($MAKEFILES)
