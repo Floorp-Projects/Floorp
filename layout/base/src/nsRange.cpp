@@ -71,12 +71,14 @@ PRInt32 ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
 {
   if (aParent1 == aParent2 && aOffset1 == aOffset2)
     return 0;
-  nsRange* range = new nsRange;
+  nsIDOMRange* range;
+  if (NS_FAILED(NS_NewRange(&range)))
+    return 0;
   nsresult res = range->SetStart(aParent1, aOffset1);
   if (NS_FAILED(res))
     return 0;
   res = range->SetEnd(aParent2, aOffset2);
-  delete range;
+  NS_RELEASE(range);
   if (NS_SUCCEEDED(res))
     return -1;
   else
@@ -1551,9 +1553,9 @@ nsresult nsRange::OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset)
   if (NS_FAILED(res))  return res;
   if (!domNode) return NS_ERROR_UNEXPECTED;
 
-  PRInt32		loop = 0;
-  nsRange*	theRange; 
-  while ((theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)))) != nsnull)
+  PRInt32  loop = 0;
+  nsRange* theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))); 
+  while (theRange)
   {
     // sanity check - do range and content agree over ownership?
     res = theRange->ContentOwnsUs(domNode);
@@ -1573,6 +1575,7 @@ nsresult nsRange::OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset)
       NS_PRECONDITION(NS_SUCCEEDED(res), "error updating range list");
     }
     loop++;
+    theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)));
   }
   return NS_OK;
 }
@@ -1598,8 +1601,8 @@ nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, ns
   if (!domNode) return NS_ERROR_UNEXPECTED;
 
   PRInt32		loop = 0;
-  nsRange*	theRange; 
-  while ((theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)))) != nsnull)
+  nsRange* theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))); 
+  while (theRange)
   {
     // sanity check - do range and content agree over ownership?
     res = theRange->ContentOwnsUs(domNode);
@@ -1621,6 +1624,7 @@ nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, ns
       }
     }
     loop++;
+    theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)));
   }
   
   // any ranges in the content subtree rooted by aRemovedNode need to
@@ -1673,8 +1677,8 @@ nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged,
   if (!domNode) return NS_ERROR_UNEXPECTED;
 
   PRInt32		loop = 0;
-  nsRange*	theRange; 
-  while ((theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)))) != nsnull)
+  nsRange* theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))); 
+  while (theRange)
   {
     // sanity check - do range and content agree over ownership?
     res = theRange->ContentOwnsUs(domNode);
@@ -1711,6 +1715,7 @@ nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged,
       }
     }
     loop++;
+    theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)));
   }
   
   return NS_OK;
@@ -1762,7 +1767,7 @@ nsRange::CreateContextualFragment(const nsString& aFragment,
               parent->GetNodeName(tagName);
               // XXX Wish we didn't have to allocate here
               name = tagName.ToNewUnicode();
-              if (nsnull != name) {
+              if (name) {
                 tagStack->Push(name);
                 temp = parent;
                 result = temp->GetParentNode(getter_AddRefs(parent));
@@ -1799,7 +1804,7 @@ nsRange::CreateContextualFragment(const nsString& aFragment,
       // XXX Ick! Delete strings we allocated above.
       PRUnichar* str = nsnull;
       str = tagStack->Pop();
-      while (nsnull != str) {
+      while (str) {
         delete[] str;
         str = tagStack->Pop();
       }
@@ -1855,7 +1860,7 @@ nsRange::IsValidFragment(const nsString& aFragment, PRBool* aReturn)
               parent->GetNodeName(tagName);
               // XXX Wish we didn't have to allocate here
               name = tagName.ToNewUnicode();
-              if (nsnull != name) {
+              if (name) {
                 tagStack->Push(name);
                 temp = parent;
                 result = temp->GetParentNode(getter_AddRefs(parent));
@@ -1880,7 +1885,7 @@ nsRange::IsValidFragment(const nsString& aFragment, PRBool* aReturn)
       // XXX Ick! Delete strings we allocated above.
       PRUnichar* str = nsnull;
       str = tagStack->Pop();
-      while (nsnull != str) {
+      while (str) {
         delete[] str;
         str = tagStack->Pop();
       }
@@ -1900,7 +1905,7 @@ nsRange::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
   nsresult res = NS_OK;
   nsIScriptGlobalObject *globalObj = aContext->GetGlobalObject();
 
-  if (nsnull == mScriptObject) {
+  if (!mScriptObject) {
     res = NS_NewScriptRange(aContext, (nsISupports *)(nsIDOMRange *)this, globalObj, (void**)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
