@@ -838,7 +838,7 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const PRUnichar *profileName, nsIFile **p
                 // none we need to populate this folder provided the folder is not in the trash.
                 if (!inTrash)
                 {
-                    rv = PopulateIfEmptyDir(aProfileDir);
+                    rv = PopulateIfEmptyDir(profileName, aProfileDir);
                     NS_ENSURE_SUCCESS(rv, rv);
                 }
             }
@@ -1041,7 +1041,7 @@ nsProfile::AddLevelOfIndirection(nsIFile *aDir)
         nsXPIDLCString leafName;
         rv = dirEntry->GetLeafName(getter_Copies(leafName));
 	 	if (NS_SUCCEEDED(rv) && (const char *)leafName) {
-		  PRInt32 length = nsCRT::strlen((const char *)leafName);
+		  PRUint32 length = nsCRT::strlen((const char *)leafName);
 		  // check if the filename is the right length, len("xxxxxxxx.slt")
 		  if (length == (SALT_SIZE + nsCRT::strlen(SALT_EXTENSION))) {
 			// check that the filename ends with ".slt"
@@ -1073,7 +1073,7 @@ nsProfile::AddLevelOfIndirection(nsIFile *aDir)
   }
   saltStr.Append(SALT_EXTENSION);
 #ifdef DEBUG_profile_verbose
-  printf("directory name: %s\n",(const char *)saltStr);
+  PRINTF("directory name: %s\n",(const char *)saltStr);
 #endif
 
   rv = aDir->Append((const char *)saltStr);
@@ -1293,7 +1293,7 @@ nsresult nsProfile::CreateUserDirectories(nsILocalFile *profileDir)
         "Cache"
     };
     
-    for (int i = 0; i < sizeof(subDirNames) / sizeof(char *); i++)
+    for (PRUint32 i = 0; i < sizeof(subDirNames) / sizeof(char *); i++)
     {
       PRBool exists;
       
@@ -1512,7 +1512,7 @@ NS_IMETHODIMP nsProfile::StartApprunner(const PRUnichar* profileName)
 
     // flush the stringbundle cache first
 #if defined(DEBUG_tao)
-    printf("\n--> nsProfile::StartApprunner: FlushBundles() \n");
+    PRINTF("\n--> nsProfile::StartApprunner: FlushBundles() \n");
 #endif
     nsCOMPtr<nsIStringBundleService> bundleService =
         do_GetService(kStringBundleServiceCID, &rv);
@@ -2277,7 +2277,7 @@ nsresult nsProfile::CloneProfileDirectorySpec(nsILocalFile **aLocalFile)
 }
 
 // If the profile folder is empty, dump all default profile files.
-nsresult nsProfile::PopulateIfEmptyDir(nsILocalFile *aProfileDir)
+nsresult nsProfile::PopulateIfEmptyDir(const PRUnichar *profileName, nsILocalFile *aProfileDir)
 {
     nsresult rv;
     PRBool hasContents = PR_FALSE;
@@ -2299,10 +2299,21 @@ nsresult nsProfile::PopulateIfEmptyDir(nsILocalFile *aProfileDir)
         rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_50_DIR, getter_AddRefs(profDefaultsDir));
         if (NS_FAILED(rv)) return rv;
         
+	    // Add the indirection
+        rv = AddLevelOfIndirection(aProfileDir);
+        if (NS_FAILED(rv)) return rv;
+
+        // since we might be changing the location of
+        // profile dir, reset it in the registry.
+        // see bug #56002 for details
+        rv = SetProfileDir(profileName, aProfileDir);
+        if (NS_FAILED(rv)) return rv;
+
         // Copy contents from defaults folder.
         rv = profDefaultsDir->Exists(&exists);
-        if (NS_SUCCEEDED(rv) && exists)
-        rv = RecursiveCopy(profDefaultsDir, aProfileDir);
+        if (NS_SUCCEEDED(rv) && exists) {
+          rv = RecursiveCopy(profDefaultsDir, aProfileDir);
+        }
     }
     return rv;
 }

@@ -100,6 +100,6 @@ public:
 
     nsresult CreateDefaultProfile(void);
     nsresult ShowProfileWizard(void);
-    nsresult PopulateIfEmptyDir(nsILocalFile *profieDir);
+    nsresult PopulateIfEmptyDir(const PRUnichar *profileName, nsILocalFile *profieDir);
 };
 
