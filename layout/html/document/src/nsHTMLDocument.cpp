@@ -1842,9 +1842,9 @@ nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc)
 #define NS_GENERATE_PARSER_KEY() (void*)((mIsWriting << 31) | (mWriteLevel & 0x7fffffff))
 
 NS_IMETHODIMP    
-nsHTMLDocument::Clear()
+nsHTMLDocument::Clear(JSContext* cx, jsval* argv, PRUint32 argc)
 {
-  return Open();
+  return Open(cx, argv, argc);
 }
 
 NS_IMETHODIMP    

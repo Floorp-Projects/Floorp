@@ -1190,7 +1190,7 @@ NSHTMLDocumentClear(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
 
 
-    result = nativeThis->Clear();
+    result = nativeThis->Clear(cx, argv+0, argc-0);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
