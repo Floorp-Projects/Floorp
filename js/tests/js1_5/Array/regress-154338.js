@@ -56,7 +56,7 @@ var expectedvalues = [];
  *
  * Yet for some reason, using |x| or |y| as the separator
  * in arr.join() was causing out-of-memory errors, whereas
- * using the literals 'H', 'ome' did not -
+ * using the literals 'H', 'ome' was not -
  *
  */
 var x = 'Home'[0];
