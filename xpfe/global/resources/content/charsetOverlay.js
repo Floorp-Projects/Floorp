@@ -207,10 +207,12 @@ function mailCharsetLoadListener (event)
         menu = menu.getService();
         menu = menu.QueryInterface(Components.interfaces.nsICurrentCharsetListener);
         
-        var charset = msgWindow.mailCharacterSet;
-        if (charset.length > 0) {
-            menu.SetCurrentMailCharset(charset);
-            dump("mailCharsetLoadListener: " + charset + " \n");
+        if (msgWindow) {
+            var charset = msgWindow.mailCharacterSet;
+            if (charset.length > 0) {
+                menu.SetCurrentMailCharset(charset);
+                dump("mailCharsetLoadListener: " + charset + " \n");
+            }
         }
     }
 }
