@@ -249,7 +249,6 @@ CNavDTD::CNavDTD() : nsIDTD(), mMisplacedContent(0), mSkippedContent(0), mShared
   mTokenizer=0;
   mComputedCRC32=0;
   mExpectedCRC32=0;
-  mSaveBadTokens = PR_FALSE;
   mDTDState=NS_OK;
 
   if(!gHTMLElements) {
@@ -1112,6 +1111,8 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
 nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags aParent,nsIParserNode& aNode) {
+  NS_PRECONDITION(mBodyContext != nsnull,"need a context to work with");
+
   nsresult  result=NS_OK;
 
   //The trick here is to see if the parent can contain the child, but prefers not to.
@@ -1119,60 +1120,69 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
   //of another section. If it is, the cache it for later.
   //  1. Get the root node for the child. See if the ultimate node is the BODY, FRAMESET, HEAD or HTML
   PRInt32   theTagCount = mBodyContext->GetCount();
-  PRInt32   attrCount   = aToken->GetAttributeCount();
+  CToken*   theToken    = &*aToken;
 
-  if(gHTMLElements[aParent].HasSpecialProperty(kBadContentWatch)) {
-    eHTMLTags theTag;
-    PRInt32   theBCIndex;
-    PRBool    isNotWhiteSpace = PR_FALSE;
+  if(aToken) {
+    PRInt32   attrCount   = aToken->GetAttributeCount();
+    if(gHTMLElements[aParent].HasSpecialProperty(kBadContentWatch)) {
+      eHTMLTags theTag=eHTMLTag_unknown;
+      PRInt32   theIndex=kNotFound;
     
-    while(theTagCount > 0) {
-      theTag = mBodyContext->TagAt(--theTagCount);
-      if(!gHTMLElements[theTag].HasSpecialProperty(kBadContentWatch)) {
-        if(!gHTMLElements[theTag].CanContain(aChildTag))
-          return result;
-        theBCIndex = theTagCount;
-        break;
+      while(theTagCount > 0) {
+        theTag = mBodyContext->TagAt(--theTagCount);
+        if(!gHTMLElements[theTag].HasSpecialProperty(kBadContentWatch)) {
+          if(!gHTMLElements[theTag].CanContain(aChildTag)) break;
+          theIndex = theTagCount;
+          break;
+        }
+      }
+      PRBool done=PR_FALSE;
+      if(theIndex>kNotFound) {
+        while(!done){
+          theToken->mRecycle=PR_FALSE;
+          mBodyContext->SaveToken(theToken,theIndex);
+          // If the token is attributed then save those attributes too.
+          // NOTE: This might happen only on the first entry into the loop.
+          if(attrCount > 0) {
+            nsCParserNode* theAttrNode = (nsCParserNode*)&aNode;
+            while(attrCount > 0){ 
+               CToken* theAttrToken=theAttrNode->PopAttributeToken();
+               if(theAttrToken) {
+                 mBodyContext->SaveToken(theAttrToken,theIndex);
+                 theAttrToken->mRecycle=PR_FALSE;
+               }
+               attrCount--;
+            }
+          }
+          theToken=mTokenizer->PeekToken();
+          if(theToken) {
+            theTag=(eHTMLTags)theToken->GetTypeID();
+            if((gHTMLElements[theTag].HasSpecialProperty(kBadContentWatch)) ||
+               (!CanOmit(aParent,theTag))) done=PR_TRUE;
+            else if((!gHTMLElements[mBodyContext->TagAt(theIndex)].CanContain(theTag)) &&
+                    (theTag !=eHTMLTag_unknown)) done=PR_TRUE;
+            else theToken=mTokenizer->PopToken();
+          }
+          else done=PR_TRUE;
+        }
       }
     }
-    if(!FindTagInSet(aChildTag,gWhitespaceTags,sizeof(gWhitespaceTags)/sizeof(aChildTag))) {
-      isNotWhiteSpace = mSaveBadTokens  = PR_TRUE;
-    }
-    if(mSaveBadTokens) {
+
+    if((aChildTag!=aParent) && (gHTMLElements[aParent].HasSpecialProperty(kSaveMisplaced))) {
+      mMisplacedContent.Push(aToken);
       aToken->mRecycle=PR_FALSE;
-      mBodyContext->SaveToken(aToken,theBCIndex);
+
       // If the token is attributed then save those attributes too.
       if(attrCount > 0) {
         nsCParserNode* theAttrNode = (nsCParserNode*)&aNode;
         while(attrCount > 0){ 
-           CToken* theAttrToken=theAttrNode->PopAttributeToken();
-           if(theAttrToken) {
-             mBodyContext->SaveToken(theAttrToken,theBCIndex);
-             theAttrToken->mRecycle=PR_FALSE;
-           }
-           attrCount--;
+          CToken* theToken=theAttrNode->PopAttributeToken();
+          if(theToken){
+            mMisplacedContent.Push(theToken);
+            theToken->mRecycle=PR_FALSE;
+          }
+          attrCount--;
         }
-      }
-      if(!IsContainer(aChildTag) && isNotWhiteSpace) {
-        mSaveBadTokens = PR_FALSE;
-      }
-    }
-  }
-
-  if((aChildTag!=aParent) && (gHTMLElements[aParent].HasSpecialProperty(kSaveMisplaced))) {
-    mMisplacedContent.Push(aToken);
-    aToken->mRecycle=PR_FALSE;
-
-    // If the token is attributed then save those attributes too.
-    if(attrCount > 0) {
-      nsCParserNode* theAttrNode = (nsCParserNode*)&aNode;
-      while(attrCount > 0){ 
-        CToken* theToken=theAttrNode->PopAttributeToken();
-        if(theToken){
-          mMisplacedContent.Push(theToken);
-          theToken->mRecycle=PR_FALSE;
-        }
-        attrCount--;
       }
     }
   }
@@ -1281,8 +1291,11 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
     }
   } //if
 
-  if(eHTMLTag_newline==theChildTag)
-    mLineNumber++;
+  if(eHTMLTag_newline==theChildTag) {
+     // Don't count the newline if the token has not been used.
+    if(aToken->mRecycle)
+      mLineNumber++;
+  }
 
   RecycleNode(theNode);
   return result;
@@ -1407,6 +1420,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
 
   nsresult    result=NS_OK;
   eHTMLTags   theChildTag=(eHTMLTags)aToken->GetTypeID();
+
   nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber);
 
   #ifdef  RICKG_DEBUG

@@ -524,7 +524,6 @@ protected:
     nsDeque             mMisplacedContent;
     nsDeque             mSkippedContent;
     PRBool              mHasOpenScript;
-    PRBool              mSaveBadTokens;
     eHTMLTags           mSkipTarget;
     nsDeque             mSharedNodes;
     nsresult            mDTDState;
