@@ -125,7 +125,7 @@ NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIMsgWindow* aMsgWindow,
 		// characters like / % or @
         char * urlSpec = PR_smprintf("pop3://%s@%s:%d/?check", (const char *)escapedUsername, (const char *)popHost, popPort);
         rv = BuildPop3Url(urlSpec, inbox, popServer, aUrlListener, getter_AddRefs(url), aMsgWindow);
-        PR_FREEIF(urlSpec);
+        PR_Free(urlSpec);
     }
 
     
@@ -187,7 +187,7 @@ nsresult nsPop3Service::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener * aU
 			rv = BuildPop3Url(urlSpec, aInbox, popServer, aUrlListener, getter_AddRefs(url), aMsgWindow);
 		}
 
-        PR_FREEIF(urlSpec);
+        PR_Free(urlSpec);
 	}
     
 	if (NS_SUCCEEDED(rv) && url) 

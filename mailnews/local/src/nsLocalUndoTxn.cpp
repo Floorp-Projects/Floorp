@@ -96,22 +96,21 @@ nsresult
 nsLocalMoveCopyMsgTxn::Init(nsIMsgFolder* srcFolder, nsIMsgFolder* dstFolder,
 							PRBool isMove)
 {
-	nsresult rv;
-	rv = SetSrcFolder(srcFolder);
-	rv = SetDstFolder(dstFolder);
-	m_isMove = isMove;
+    nsresult rv;
+    rv = SetSrcFolder(srcFolder);
+    rv = SetDstFolder(dstFolder);
+    m_isMove = isMove;
 
-    char *uri = nsnull;
+    nsXPIDLCString uri;
     if (!srcFolder) return rv;
-    rv = srcFolder->GetURI(&uri);
+    rv = srcFolder->GetURI(getter_Copies(uri));
     nsCString protocolType(uri);
-    PR_FREEIF(uri);
     protocolType.SetLength(protocolType.FindChar(':'));
     if (protocolType.EqualsIgnoreCase("imap"))
     {
         m_srcIsImap4 = PR_TRUE;
     }
-	return NS_OK;
+    return NS_OK;
 }
 nsresult 
 nsLocalMoveCopyMsgTxn::GetSrcIsImap(PRBool *isImap)

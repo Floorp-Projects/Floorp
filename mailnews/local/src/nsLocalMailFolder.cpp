@@ -240,7 +240,7 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 
     char *leafName = currentFolderPath.GetLeafName();
     nsMsgGetNativePathString(leafName, currentFolderNameStr);
-    PR_FREEIF(leafName);
+    PR_Free(leafName);
 
 		if (nsShouldIgnoreFile(currentFolderNameStr))
 			continue;
@@ -3023,7 +3023,7 @@ nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *messages, PRBool de
       }
     }
   }
-  PR_FREEIF(header);
+  PR_Free(header);
   if (popData)
   {
     if (changed)

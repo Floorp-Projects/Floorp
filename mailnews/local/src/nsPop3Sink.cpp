@@ -76,11 +76,11 @@ nsPop3Sink::nsPop3Sink()
 
 nsPop3Sink::~nsPop3Sink()
 {
-    PR_FREEIF(m_accountUrl);
-    PR_FREEIF(m_outputBuffer);
+    PR_Free(m_accountUrl);
+    PR_Free(m_outputBuffer);
     NS_IF_RELEASE(m_popServer);
     ReleaseFolderLock();
-	NS_IF_RELEASE(m_folder);
+    NS_IF_RELEASE(m_folder);
     NS_IF_RELEASE(m_newMailParser);
 }
 
@@ -113,7 +113,7 @@ nsPop3Sink::SetMailAccountURL(const char* urlString)
 {
   if (urlString)
   {
-    PR_FREEIF(m_accountUrl);
+    PR_Free(m_accountUrl);
     m_accountUrl = PL_strdup(urlString);
   }
 

@@ -272,9 +272,6 @@ void nsMsgMailboxParser::Init()
 	m_obuffer_size = 0;
 	m_graph_progress_total = 0;
 	m_graph_progress_received = 0;
-	m_updateAsWeGo = PR_TRUE;
-	m_ignoreNonMailFolder = PR_FALSE;
-	m_isRealMailFolder = PR_TRUE;
 }
 
 void nsMsgMailboxParser::UpdateStatusText (PRUint32 stringID)
@@ -405,7 +402,7 @@ PRInt32 nsMsgMailboxParser::PublishMsgHeader(nsIMsgWindow *msgWindow)
 		}
 		else if (m_mailDB)
 		{
-			m_mailDB->AddNewHdrToDB(m_newMsgHdr, m_updateAsWeGo);
+			m_mailDB->AddNewHdrToDB(m_newMsgHdr, PR_TRUE);
 			m_newMsgHdr = nsnull;
 		}
 		else
@@ -446,9 +443,6 @@ PRInt32 nsMsgMailboxParser::HandleLine(char *line, PRUint32 lineLength)
 //			PR_snprintf (buf, sizeof(buf),
 //						 XP_GetString(MK_MSG_NON_MAIL_FILE_READ_QUESTION),
 //						 folder_name);
-			m_isRealMailFolder = PR_FALSE;
-			if (m_ignoreNonMailFolder)
-				return 0;
 //			else if (!FE_Confirm (m_context, buf))
 //				return NS_MSG_NOT_A_MAIL_FOLDER; /* #### NOT_A_MAIL_FILE */
 		}
@@ -1454,7 +1448,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 }
 
 nsParseNewMailState::nsParseNewMailState()
-    : m_tmpdbName(nsnull), m_usingTempDB(PR_FALSE), m_disableFilters(PR_FALSE)
+    : m_disableFilters(PR_FALSE)
 {
 	m_inboxFileStream = nsnull;
 	m_ibuffer = nsnull;
@@ -1497,8 +1491,6 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsIMsgFolder *downloadFolder, n
 	if (m_filterList)
       rv = server->ConfigureTemporaryReturnReceiptsFilter(m_filterList);
 
-	m_usingTempDB = PR_FALSE;
-	m_tmpdbName = nsnull;
 	m_disableFilters = PR_FALSE;
 
     return NS_OK; 
@@ -1506,15 +1498,10 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsIMsgFolder *downloadFolder, n
 
 nsParseNewMailState::~nsParseNewMailState()
 {
-	if (m_mailDB)
-		m_mailDB->Close(PR_TRUE);
-//	if (m_usingTempDB)
-//	{
-//		XP_FileRemove(m_tmpdbName, xpMailFolderSummary);
-//	}
-	PR_FREEIF(m_tmpdbName);
+  if (m_mailDB)
+    m_mailDB->Close(PR_TRUE);
 #ifdef DOING_JSFILTERS
-	JSFilter_cleanup();
+  JSFilter_cleanup();
 #endif
 }
 
@@ -1534,11 +1521,6 @@ void nsParseNewMailState::DoneParsingFolder(nsresult status)
 	if (!moved && m_mailDB)	// finished parsing, so flush db folder info 
 		UpdateDBFolderInfo();
 
-#ifdef HAVE_FOLDERINFO
-	if (m_folder != nsnull)
-		m_folder->SummaryChanged();
-#endif
-
 	/* We're done reading the folder - we don't need these things
 	 any more. */
 	PR_FREEIF (m_ibuffer);
@@ -1549,43 +1531,34 @@ void nsParseNewMailState::DoneParsingFolder(nsresult status)
 
 PRInt32 nsParseNewMailState::PublishMsgHeader(nsIMsgWindow *msgWindow)
 {
-	PRBool		moved = PR_FALSE;
-
-	FinishHeader();
-	
-	if (m_newMsgHdr)
-	{
-		FolderTypeSpecificTweakMsgHeader(m_newMsgHdr);
-		if (!m_disableFilters)
-		{
-			// flush the inbox because filters will read from disk
-			m_inboxFileStream->flush();
-			ApplyFilters(&moved, msgWindow);
-		}
-		if (!moved)
-		{
-			if (m_mailDB)
-			{
-				PRUint32 newFlags;
-				m_newMsgHdr->OrFlags(MSG_FLAG_NEW, &newFlags);
-
-				m_mailDB->AddNewHdrToDB (m_newMsgHdr, m_updateAsWeGo);
-			}
-#ifdef HAVE_FOLDERINFO
-			if (m_folder)
-				m_folder->SetFlag(MSG_FOLDER_FLAG_GOT_NEW);
-#endif
-
-		}		// if it was moved by imap filter, m_parseMsgState->m_newMsgHdr == nsnull
-		m_newMsgHdr = nsnull;
-	}
-	return 0;
-}
-
-void	nsParseNewMailState::SetUsingTempDB(PRBool usingTempDB, char *tmpDBName)
-{
-	m_usingTempDB = usingTempDB;
-	m_tmpdbName = tmpDBName;
+  PRBool		moved = PR_FALSE;
+  
+  FinishHeader();
+  
+  if (m_newMsgHdr)
+  {
+    FolderTypeSpecificTweakMsgHeader(m_newMsgHdr);
+    if (!m_disableFilters)
+    {
+      // flush the inbox because filters will read from disk
+      m_inboxFileStream->flush();
+      ApplyFilters(&moved, msgWindow);
+    }
+    if (!moved)
+    {
+      if (m_mailDB)
+      {
+        PRUint32 newFlags, oldFlags;
+        m_newMsgHdr->GetFlags(&oldFlags);
+        if (!(oldFlags & MSG_FLAG_READ)) // don't mark read messages as new.
+          m_newMsgHdr->OrFlags(MSG_FLAG_NEW, &newFlags);
+        
+        m_mailDB->AddNewHdrToDB (m_newMsgHdr, PR_TRUE);
+      }
+    }		// if it was moved by imap filter, m_parseMsgState->m_newMsgHdr == nsnull
+    m_newMsgHdr = nsnull;
+  }
+  return 0;
 }
 
 nsresult nsParseNewMailState::GetTrashFolder(nsIMsgFolder **pTrashFolder)
@@ -1959,362 +1932,3 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
   return err;
 }
 
-#ifdef IMAP_NEW_MAIL_HANDLED
-
-ParseIMAPMailboxState::ParseIMAPMailboxState(MSG_IMAPHost *host, nsIMsgFolderMail *folder,
-											 MSG_UrlQueue *urlQueue, TImapFlagAndUidState *flagStateAdopted)
-											: nsParseNewMailState(master, folder), fUrlQueue(urlQueue)
-{
- 	MSG_FolderInfoContainer *imapContainer =  m_mailMaster->GetImapMailFolderTreeForHost(host->GetHostName());
- 	nsIMsgFolder *filteredFolder = imapContainer->FindMailPathname(folder->GetPathname());
- 	fParsingInbox = 0 != (filteredFolder->GetFlags() & MSG_FOLDER_FLAG_INBOX);
- 	fFlagState = flagStateAdopted;
- 	fB2HaveWarnedUserOfOfflineFiltertarget = PR_FALSE;
- 	
- 	// we ignore X-mozilla status for imap messages
- 	GetMsgState()->m_IgnoreXMozillaStatus = PR_TRUE;
-	fNextSequenceNum = -1;
-	m_host = host;
-	m_imapContainer = imapContainer;
-}
-
-ParseIMAPMailboxState::~ParseIMAPMailboxState()
-{
-}
-
-void ParseIMAPMailboxState::SetPublishUID(PRInt32 uid)
-{
-	fNextMessagePublishUID = uid;
-}
-
-void ParseIMAPMailboxState::SetPublishByteLength(PRUint32 byteLength)
-{
-	fNextMessageByteLength = byteLength;
-}
-
-void ParseIMAPMailboxState::DoneParsingFolder(nsresult status)
-{
-	nsMsgMailboxParser::DoneParsingFolder(status);
-	if (m_mailDB)
-	{
-		// make sure the highwater mark is correct
-		if (m_mailDB->m_dbFolderInfo->GetNumVisibleMessages())
-		{
-			ListContext *listContext;
-			nsIMsgDBHdr *currentHdr;
-			if ((m_mailDB->ListLast(&listContext, &currentHdr) == NS_OK) &&
-				currentHdr)
-			{
-				m_mailDB->m_dbFolderInfo->m_LastMessageUID = currentHdr->GetMessageKey();
-				currentHdr->Release();
-				m_mailDB->ListDone(listContext);
-			}
-			else
-				m_mailDB->m_dbFolderInfo->m_LastMessageUID = 0;
-		}
-		else
-			m_mailDB->m_dbFolderInfo->m_LastMessageUID = 0;
-			
-		m_mailDB->Close();
-		m_mailDB = nsnull;
-	}
-}
-
-int ParseIMAPMailboxState::MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr)
-{
-	msgHdr->OrFlags(MSG_FLAG_READ);
-	nsMsgKeyArray	keysToFlag;
-
-	keysToFlag.Add(msgHdr->GetMessageKey());
-	MSG_IMAPFolderInfoMail *imapFolder = m_folder->GetIMAPFolderInfoMail();
-	if (imapFolder)
-		imapFolder->StoreImapFlags(m_pane, kImapMsgSeenFlag, PR_TRUE, keysToFlag, GetFilterUrlQueue());
-
-	return 0;
-}
-
-
-nsresult ParseIMAPMailboxState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
-											   nsIMsgDatabase *sourceDB, 
-											   char *destFolder,
-											   nsIMsgFilter *filter)
-{
-	nsresult err = NS_OK;
-	
-	if (fUrlQueue && fUrlQueue->GetPane())
-	{
-	 	// look for matching imap folders, then pop folders
-	 	MSG_FolderInfoContainer *imapContainer =  m_imapContainer;
-		nsIMsgFolder *sourceFolder = imapContainer->FindMailPathname(m_mailboxName);
-	 	nsIMsgFolder *destinationFolder = imapContainer->FindMailPathname(destFolder);
-	 	if (!destinationFolder)
-	 		destinationFolder = m_mailMaster->FindMailFolder(destFolder, PR_FALSE);
-
-	 	if (destinationFolder)
-	 	{
-			nsCOMPtr<nsIMsgFolder> inbox;
-			imapContainer->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, getter_AddRefs(inbox), 1);
-			if (inbox)
-			{
-				MSG_FolderInfoMail *destMailFolder = destinationFolder->GetMailFolderInfo();
-				// put the header into the source db, since it needs to be there when we copy it
-				// and we need a valid header to pass to StartAsyncCopyMessagesInto
-				nsMsgKey keyToFilter = mailHdr->GetMessageKey();
-
-				if (sourceDB && destMailFolder)
-				{
-					PRBool imapDeleteIsMoveToTrash = m_host->GetDeleteIsMoveToTrash();
-					
-					nsMsgKeyArray *idsToMoveFromInbox = destMailFolder->GetImapIdsToMoveFromInbox();
-					idsToMoveFromInbox->Add(keyToFilter);
-
-          // this is our last best chance to log this
-          PRBool loggingEnabled = PR_FALSE;
-          if (m_filterList)
-            m_filterList->GetLoggingEnabled(&loggingEnabled);
-          if (loggingEnabled)
-            filter->LogRuleHit(mailHdr);
-
-					if (imapDeleteIsMoveToTrash)
-					{
-						if (m_parseMsgState->m_newMsgHdr)
-						{
-							m_parseMsgState->m_newMsgHdr->Release();
-							m_parseMsgState->m_newMsgHdr = nsnull;
-						}
-					}
-					
-					destinationFolder->SetFlag(MSG_FOLDER_FLAG_GOT_NEW);
-					
-					if (imapDeleteIsMoveToTrash)	
-						err = 0;
-				}
-			}
-	 	}
-	}
-	
-	
-	// we have to return an error because we do not actually move the message
-	// it is done async and that can fail
-	return err;
-}
-
-MSG_FolderInfoMail *ParseIMAPMailboxState::GetTrashFolder()
-{
-	MSG_IMAPFolderInfoContainer *imapContainerInfo = m_imapContainer->GetIMAPFolderInfoContainer();
-	if (!imapContainerInfo)
-		return nsnull;
-
-	nsIMsgFolder *foundTrash = MSG_GetTrashFolderForHost(imapContainerInfo->GetIMAPHost());
-	return foundTrash ? foundTrash->GetMailFolderInfo() : (MSG_FolderInfoMail *)nsnull;
-}
-
-
-// only apply filters for new unread messages in the imap inbox
-void ParseIMAPMailboxState::ApplyFilters(PRBool *pMoved, nsIMsgWindow *msgWindow)
-{
- 	if (fParsingInbox && !(GetCurrentMsg()->GetFlags() & MSG_FLAG_READ) )
- 		nsParseNewMailState::ApplyFilters(pMoved, msgWindow);
- 	else
- 		*pMoved = PR_FALSE;
- 	
- 	if (!*pMoved && m_parseMsgState->m_newMsgHdr)
- 		fFetchBodyKeys.Add(m_parseMsgState->m_newMsgHdr->GetMessageKey());
-}
-
-
-PRInt32	ParseIMAPMailboxState::PublishMsgHeader(nsIMsgWindow *msgWindow)
-{
-	PRBool		moved = PR_FALSE;
-
-	m_parseMsgState->FinishHeader();
-	
-	if (m_parseMsgState->m_newMsgHdr)
-	{
-		FolderTypeSpecificTweakMsgHeader(m_parseMsgState->m_newMsgHdr);
-		if (!m_disableFilters) {
-			ApplyFilters(&moved, msgWindow);
-		}
-		if (!moved)
-		{
-			PRBool thisMessageUnRead = !(m_parseMsgState->m_newMsgHdr->GetFlags() & MSG_FLAG_READ);
-			if (m_mailDB)
-			{
-				if (thisMessageUnRead)
-					m_parseMsgState->m_newMsgHdr->OrFlags(kNew);
-				m_mailDB->AddHdrToDB (m_parseMsgState->m_newMsgHdr, nsnull,
-					(fNextSequenceNum == -1) ? m_updateAsWeGo : PR_FALSE);
-				// following is for cacheless imap - match sequence number
-				// to location to insert in view.
-			}
-			if (m_folder && thisMessageUnRead)
-				m_folder->SetFlag(MSG_FOLDER_FLAG_GOT_NEW);
-
-
-		}		// if it was moved by imap filter, m_parseMsgState->m_newMsgHdr == nsnull
-		else if (m_parseMsgState->m_newMsgHdr)
-		{
-			// make sure global db is set correctly for delete of strings from hash tbl.
-			m_parseMsgState->m_newMsgHdr->unrefer();
-		}
-		m_parseMsgState->m_newMsgHdr = nsnull;
-	}
-	return 0;
-}
-
-void ParseIMAPMailboxState::SetNextSequenceNum(PRInt32 seqNum)
-{
-	fNextSequenceNum = seqNum;
-}
-
-ParseOutgoingMessage::ParseOutgoingMessage()
-{
-	m_bytes_written = 0;
-	m_out_file = 0;
-	m_wroteXMozillaStatus = PR_FALSE;
-	m_writeToOutFile = PR_TRUE;
-	m_lastBodyLineEmpty = PR_FALSE;
-	m_outputBuffer = 0;
-	m_ouputBufferSize = 0;
-	m_outputBufferIndex = 0;
-	m_writeMozillaStatus = PR_TRUE;
-}
-
-ParseOutgoingMessage::~ParseOutgoingMessage()
-{
-	FREEIF (m_outputBuffer);
-}
-
-void ParseOutgoingMessage::Clear()
-{
-	nsParseMailMessageState::Clear();
-	m_wroteXMozillaStatus = PR_FALSE;
-	m_bytes_written = 0;
-}
-
-// We've found the start of the next message, so finish this one off.
-void ParseOutgoingMessage::FinishHeader()
-{
-	PRInt32 origPosition = m_position, len = 0;
-	if (m_out_file && m_writeToOutFile)
-	{
-		if (origPosition > 0 && !m_lastBodyLineEmpty)
-		{
-			len = XP_FileWrite (MSG_LINEBREAK, MSG_LINEBREAK_LEN, m_out_file);
-			m_bytes_written += MSG_LINEBREAK_LEN;
-			m_position += MSG_LINEBREAK_LEN;
-		}
-	}
-	nsParseMailMessageState::FinishHeader();
-}
-
-int		ParseOutgoingMessage::StartNewEnvelope(const char *line, PRUint32 lineLength)
-{
-	int status = nsParseMailMessageState::StartNewEnvelope(line, lineLength);
-
-	if ((status >= 0) && m_out_file && m_writeToOutFile)
-	{
-		status = XP_FileWrite(line, lineLength, m_out_file);
-		if (status > 0)
-			m_bytes_written += lineLength;
-	}
-	return status;
-}
-
-PRInt32	ParseOutgoingMessage::ParseFolderLine(const char *line, PRUint32 lineLength)
-{
-	PRInt32 res = nsParseMailMessageState::ParseFolderLine(line, lineLength);
-	int len = 0;
-
-	if (res < 0)
-		return res;
-	if (m_out_file && m_writeToOutFile)
-	{
-		if (!nsCRT::strncmp(line, X_MOZILLA_STATUS, X_MOZILLA_STATUS_LEN)) 
-			m_wroteXMozillaStatus = PR_TRUE;
-
-		m_lastBodyLineEmpty = (m_state == nsIMsgParseMailMsgState::ParseBodyState && (EMPTY_MESSAGE_LINE(line)));
-
-		// make sure we mangle naked From lines
-		if (line[0] == 'F' && !strncmp(line, "From ", 5))
-		{
-			res = XP_FileWrite (">", 1, m_out_file);
-			if (res < 1)
-				return res;
-			m_position += 1;
-		}
-		if (!m_wroteXMozillaStatus && m_writeMozillaStatus && m_state == nsIMsgParseMailMsgState::ParseBodyState)
-		{
-			char buf[50];
-			PRUint32 dbFlags = m_newMsgHdr ? m_newMsgHdr->GetFlags() : 0;
-
-			if (m_newMsgHdr)
-				m_newMsgHdr->SetStatusOffset(m_bytes_written);
-			PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS_FORMAT MSG_LINEBREAK, (m_newMsgHdr) ? m_newMsgHdr->GetFlags() & ~MSG_FLAG_RUNTIME_ONLY : 0);
-			len = strlen(buf);
-			res = XP_FileWrite(buf, len, m_out_file);
-			if (res < len)
-				return res;
-			m_bytes_written += len;
-			m_position += len;
-			m_wroteXMozillaStatus = PR_TRUE;
-
-			MessageDB::ConvertDBFlagsToPublicFlags(&dbFlags);
-			dbFlags &= (MSG_FLAG_MDN_REPORT_NEEDED | MSG_FLAG_MDN_REPORT_SENT | MSG_FLAG_TEMPLATE);
-			PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS2_FORMAT MSG_LINEBREAK, dbFlags);
-			len = strlen(buf);
-			res = XP_FileWrite(buf, len, m_out_file);
-			if (res < len)
-				return res;
-			m_bytes_written += len;
-			m_position += len;
-		}
-		res = XP_FileWrite(line, lineLength, m_out_file);
-		if (res == lineLength)
-			m_bytes_written += lineLength;
-	}
-	return res;
-}
-
-/* static */
-PRInt32 ParseOutgoingMessage::LineBufferCallback(char *line, PRUint32 lineLength,
-									  void *closure)
-{
-	ParseOutgoingMessage *parseState = (ParseOutgoingMessage *) closure;
-
-	return parseState->ParseFolderLine(line, lineLength);
-}
-
-PRInt32 ParseOutgoingMessage::ParseBlock(const char *block, PRUint32 length)
-{
-	m_ouputBufferSize = 10240;
-	while (m_outputBuffer == 0)
-	{
-		
-		m_outputBuffer = (char *) PR_Malloc(m_ouputBufferSize);
-		if (m_outputBuffer == nsnull)
-			m_ouputBufferSize /= 2;
-	}
-	PR_ASSERT(m_outputBuffer != nsnull);
-
-	return msg_LineBuffer (block, length, &m_outputBuffer, &m_ouputBufferSize,  &m_outputBufferIndex, PR_FALSE,
-					   LineBufferCallback, this);
-}
-
-void ParseOutgoingMessage::AdvanceOutPosition(PRUint32 amountToAdvance)
-{
-	m_position += amountToAdvance;
-	m_bytes_written += amountToAdvance;
-}
-
-void ParseOutgoingMessage::FlushOutputBuffer()
-{
-/* End of file.  Flush out any partial line remaining in the buffer. */
-	if (m_outputBufferIndex > 0) 
-	{
-		ParseFolderLine(m_outputBuffer, m_outputBufferIndex);
-		m_outputBufferIndex = 0;
-	}
-}
-
-#endif /* IMAP_NEW_MAIL_HANDLED */
