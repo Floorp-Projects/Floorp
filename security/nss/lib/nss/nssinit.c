@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.37 2002/01/24 02:46:07 relyea%netscape.com Exp $
+ # $Id: nssinit.c,v 1.38 2002/01/29 22:27:15 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -315,6 +315,8 @@ nss_FindExternalRoot(const char *dbpath)
  * 			be opened.
  */
 
+static PRBool nss_IsInitted = PR_FALSE;
+
 static SECStatus
 nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
 		 const char *secmodName, PRBool readOnly, PRBool noCertDB, 
@@ -327,6 +329,10 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
     char *lcertPrefix = NULL;
     char *lkeyPrefix = NULL;
     char *lsecmodName = NULL;
+
+    if (nss_IsInitted) {
+	return SECSuccess;
+    }
 
     flags = nss_makeFlags(readOnly,noCertDB,noModDB,forceOpen,
 						pk11_password_required);
@@ -387,6 +393,7 @@ loser:
 	    }
 	}
 #endif
+	nss_IsInitted = PR_TRUE;
     }
     return rv;
 }
@@ -452,6 +459,7 @@ NSS_Shutdown(void)
     SECOID_Shutdown();
     SECMOD_Shutdown();
     STAN_Shutdown();
+    nss_IsInitted = PR_FALSE;
 }
 
 
