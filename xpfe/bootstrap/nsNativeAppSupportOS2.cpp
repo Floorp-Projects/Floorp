@@ -1560,7 +1560,7 @@ nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow ) {
       printf( "Launching browser on url [%s]...\n", (const char*)arg );
 #endif
       if (NS_SUCCEEDED(nativeApp->EnsureProfile(args)))
-        (void)OpenBrowserWindow( arg );
+        (void)OpenBrowserWindow( arg, newWindow );
       return;
     }
 
