@@ -52,8 +52,8 @@
 <!ENTITY min-text-wrap-ver "2001.0131">
 <!ENTITY min-file-spec-ver "0.82">
 <!ENTITY min-data-dumper-ver "any">
-<!ENTITY min-dbd-mysql-ver "1.2209">
-<!ENTITY min-dbi-ver "1.13">
+<!ENTITY min-dbd-mysql-ver "2.1010">
+<!ENTITY min-dbi-ver "1.32">
 <!ENTITY min-date-parse-ver "any">
 <!ENTITY min-cgi-ver "2.88">
 <!-- Optional modules -->
