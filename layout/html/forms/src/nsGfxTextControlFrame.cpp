@@ -613,7 +613,7 @@ void nsGfxTextControlFrame::GetTextControlFrameState(nsString& aValue)
     PRUint32 flags = 0;
 
     if (PR_TRUE==IsPlainTextControl()) {
-      flags |= nsIDocumentEncoder::OutputNoDoctype;
+      flags |= nsIDocumentEncoder::OutputBodyOnly;   // OutputNoDoctype if head info needed
     }
 
     nsString wrap;
@@ -1090,6 +1090,33 @@ PRBool nsGfxTextControlFrame::IsInitialized() const
   return (PRBool)(nsnull!=mEditor.get() && nsnull!=mKeyListener.get());
 }
 
+PRInt32 
+nsGfxTextControlFrame::GetWidthInCharacters() const
+{
+  // see if there's a COL attribute, if so it wins
+  nsCOMPtr<nsIHTMLContent> content;
+  nsresult result = mContent->QueryInterface(nsIHTMLContent::GetIID(), getter_AddRefs(content));
+  if (NS_SUCCEEDED(result) && content)
+  {
+    nsHTMLValue resultValue;
+    result = content->GetHTMLAttribute(nsHTMLAtoms::cols, resultValue);
+    if (NS_CONTENT_ATTR_NOT_THERE != result) 
+    {
+      if (resultValue.GetUnit() == eHTMLUnit_Integer) 
+      {
+        return (resultValue.GetIntValue());
+      }
+    }
+  }
+
+  // otherwise, see if CSS has a width specified.  If so, work backwards to get the 
+  // number of characters this width represents.
+ 
+  
+  // otherwise, the default is just returned.
+  return GetDefaultColumnWidth();
+}
+
 NS_IMETHODIMP
 nsGfxTextControlFrame::InstallEditor()
 {
@@ -1302,10 +1329,16 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
             result = mailEditor->SetBodyWrapWidth(-1);
             wrapToContainerWidth = PR_FALSE;
           }
+          if (kTextControl_Wrap_Hard.EqualsIgnoreCase(wrap))
+          {
+            PRInt32 widthInCharacters = GetWidthInCharacters();
+            result = mailEditor->SetBodyWrapWidth(widthInCharacters);
+            wrapToContainerWidth = PR_FALSE;
+          }
         }
       }
       if (PR_TRUE==wrapToContainerWidth)
-      { // if we didn't turn wrapping off, turn on default wrapping here
+      { // if we didn't set wrapping explicitly, turn on default wrapping here
         result = mailEditor->SetBodyWrapWidth(0);
       }
       NS_ASSERTION((NS_SUCCEEDED(result)), "error setting body wrap width");
