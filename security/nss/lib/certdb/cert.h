@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.32 2002/12/19 00:26:23 wtc%netscape.com Exp $
+ * $Id: cert.h,v 1.33 2002/12/24 02:25:33 wtc%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -478,6 +478,10 @@ CERT_FindCertByKeyID (CERTCertDBHandle *handle, SECItem *name, SECItem *keyID);
 extern CERTCertificate *
 CERT_FindCertByIssuerAndSN (CERTCertDBHandle *handle, CERTIssuerAndSN *issuerAndSN);
 
+/*
+** Find a certificate in the database by a subject key ID
+**	"subjKeyID" is the subject Key ID to look for
+*/
 extern CERTCertificate *
 CERT_FindCertBySubjectKeyID (CERTCertDBHandle *handle, SECItem *subjKeyID);
 
