@@ -43,6 +43,45 @@ install::
 	$(MAKE_INSTALL) readmail.gif		$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) unreadmail.gif		$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) next.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) Folder.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderDraft.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderDraftO.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderDraftShare.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderDraftShareO.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderFiled.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderFiledO.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderInbox.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderInboxNew.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderInboxO.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderInboxShare.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderInboxShareO.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderMailServer.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderNew.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderNewO.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderNewsServer.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderNewsServerNew.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderNewsServerSecure.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderNewsgroup.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderNewsgroupNew.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderO.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderOutbox.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderOutboxO.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderSent.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderSentO.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderSentShare.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderSentShareO.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderServer.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderServerO.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderShare.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderShareO.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderTemplate.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderTemplateO.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderTemplateShare.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderTemplateShareO.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderTrash.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderTrashO.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderTrashShare.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) FolderTrashShareO.gif			$(DIST)\bin\chrome\messenger\skin\default
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\skin\default\messenger.css

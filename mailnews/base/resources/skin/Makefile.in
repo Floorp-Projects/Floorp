@@ -52,6 +52,45 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/unreadmail.gif	\
 	$(srcdir)/replyall.gif	\
 	$(srcdir)/next.gif	\
+	$(srcdir)/Folder.gif
+	$(srcdir)/FolderDraft.gif
+	$(srcdir)/FolderDraftO.gif
+	$(srcdir)/FolderDraftShare.gif
+	$(srcdir)/FolderDraftShareO.gif
+	$(srcdir)/FolderFiled.gif
+	$(srcdir)/FolderFiledO.gif
+	$(srcdir)/FolderInbox.gif
+	$(srcdir)/FolderInboxNew.gif
+	$(srcdir)/FolderInboxO.gif
+	$(srcdir)/FolderInboxShare.gif
+	$(srcdir)/FolderInboxShareO.gif
+	$(srcdir)/FolderMailServer.gif
+	$(srcdir)/FolderNew.gif
+	$(srcdir)/FolderNewO.gif
+	$(srcdir)/FolderNewsServer.gif
+	$(srcdir)/FolderNewsServerNew.gif
+	$(srcdir)/FolderNewsServerSecure.gif
+	$(srcdir)/FolderNewsgroup.gif
+	$(srcdir)/FolderNewsgroupNew.gif
+	$(srcdir)/FolderO.gif
+	$(srcdir)/FolderOutbox.gif
+	$(srcdir)/FolderOutboxO.gif
+	$(srcdir)/FolderSent.gif
+	$(srcdir)/FolderSentO.gif
+	$(srcdir)/FolderSentShare.gif
+	$(srcdir)/FolderSentShareO.gif
+	$(srcdir)/FolderServer.gif
+	$(srcdir)/FolderServerO.gif
+	$(srcdir)/FolderShare.gif
+	$(srcdir)/FolderShareO.gif
+	$(srcdir)/FolderTemplate.gif
+	$(srcdir)/FolderTemplateO.gif
+	$(srcdir)/FolderTemplateShare.gif
+	$(srcdir)/FolderTemplateShareO.gif
+	$(srcdir)/FolderTrash.gif
+	$(srcdir)/FolderTrashO.gif
+	$(srcdir)/FolderTrashShare.gif
+	$(srcdir)/FolderTrashShareO.gif
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
