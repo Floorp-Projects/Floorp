@@ -590,7 +590,10 @@ $table{attachments} =
     index(bug_id),
     index(creation_ts)';
 
-
+#
+# Apostrophe's are not supportied in the enum types.
+# See http://bugzilla.mozilla.org/show_bug.cgi?id=27309
+#
 $table{bugs} =
    'bug_id mediumint not null auto_increment primary key,
     groupset bigint not null,
