@@ -35,7 +35,7 @@ CPPSRCS		= nsBookmarksService.cpp
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_TIMER_LIBS) \
 		-L$(DIST)/bin \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		-lmozjs \
 		$(NSPR_LIBS) \
 		$(NULL)

@@ -32,7 +32,7 @@ CPPSRCS		= rdfcat.cpp
 LIBS		= \
 		$(MOZ_TIMER_LIBS) \
 		-lmozjs \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \
 		$(NULL)

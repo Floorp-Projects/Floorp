@@ -30,7 +30,7 @@ PROGRAM		= TestTXMgr
 
 CPPSRCS		= TestTXMgr.cpp
 
-LIBS		= -lxpcom $(NSPR_LIBS)
+LIBS		= $(XPCOM_LIBS) $(NSPR_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 

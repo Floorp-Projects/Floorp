@@ -40,7 +40,7 @@ EXTRA_DSO_LDOPTS = \
 		$(SHARED_LIBRARY_LIBS) \
 		$(MKSHLIB_UNFORCE_ALL) \
 		-L$(DIST)/bin \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		-lmsgbaseutil \
 		-L$(DIST)/lib \
 		-lrdfutil_s \

@@ -305,6 +305,29 @@ PUBLIC		= $(DIST)/include
 
 DEPENDENCIES	= .md
 
+# ========================================================
+# MOZ_COMPONENTS_LIBS
+#
+# 'extra' link flags iff this is a component
+# See the IS_COMPONENT rule in rules.mk
+# ========================================================
+
+MOZ_COMPONENT_NSPR_LIBS	=-L$(DIST)/bin $(NSPR_LIBS)
+MOZ_COMPONENT_XPCOM_LIBS=-L$(DIST)/bin -lxpcom
+MOZ_COMPONENT_LIBS=$(MOZ_COMPONENT_NSPR_LIBS) $(MOZ_COMPONENT_XPCOM_LIBS)
+XPCOM_LIBS=-L$(DIST)/bin -lxpcom
+
+ifdef GC_LEAK_DETECTOR
+MOZ_COMPONENT_XPCOM_LIBS += -lboehm
+XPCOM_LIBS += -lboehm
+endif
+
+MOZ_TOOLKIT_REGISTRY_CFLAGS = \
+	-DWIDGET_DLL=\"libwidget_$(MOZ_WIDGET_TOOLKIT)$(DLL_SUFFIX)\" \
+	-DGFXWIN_DLL=\"libgfx_$(MOZ_GFX_TOOLKIT)$(DLL_SUFFIX)\" \
+	$(TK_CFLAGS)
+
+
 ifneq ($(OS_ARCH),WINNT)
 
 ifdef MOZ_NATIVE_MAKEDEPEND

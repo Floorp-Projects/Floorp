@@ -49,7 +49,7 @@ LIBS		= \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
 		-lmozjs \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

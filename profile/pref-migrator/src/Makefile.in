@@ -42,7 +42,7 @@ EXPORTS		= \
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		$(NSPR_LIBS) \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

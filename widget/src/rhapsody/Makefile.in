@@ -33,7 +33,7 @@ REQUIRES	= util img xpcom raptor netlib
 
 CPPSRCS		= nsObject.cpp
 
-EXTRA_DSO_LDOPTS = -L$(DIST)/bin -lxpcom $(NSPR_LIBS)
+EXTRA_DSO_LDOPTS = -L$(DIST)/bin $(XPCOM_LIBS) $(NSPR_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 

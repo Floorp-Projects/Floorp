@@ -31,7 +31,7 @@ PROGRAM		= smtpTest
 CPPSRCS		= smtpTest.cpp
 
 LIBS		= \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		$(MOZ_TIMER_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \

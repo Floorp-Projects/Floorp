@@ -47,7 +47,7 @@ CHROME_L10N	= locale/en-US/directory.dtd
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		-lmozjs \
 		$(NULL)

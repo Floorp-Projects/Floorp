@@ -47,7 +47,7 @@ LIBS		= \
 		$(MOZ_TIMER_LIBS) \
 		$(NETLIB_LIBS) \
 		-lmozjs \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		$(JSJ_LIB) \
 		$(NSPR_LIBS) \
 		$(MOZ_QT_LDFLAGS) -lxlibrgb \

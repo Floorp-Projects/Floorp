@@ -34,7 +34,7 @@ CPPSRCS		= \
 		$(NULL)
 
 LIBS		= \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		-lmozjs \
 		$(NSPR_LIBS) \
 		$(NULL)

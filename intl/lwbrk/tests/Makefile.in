@@ -30,7 +30,7 @@ PROGRAM		= TestLineBreak
 
 CPPSRCS		= TestLineBreak.cpp
 
-LIBS		= -lxpcom $(NSPR_LIBS)
+LIBS		= $(XPCOM_LIBS) $(NSPR_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 

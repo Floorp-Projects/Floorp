@@ -34,7 +34,7 @@ CPPSRCS		= RobotMain.cpp
 
 LIBS		= \
 		-lDebugRobot \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		$(LOST_SYM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)

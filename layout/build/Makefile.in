@@ -88,7 +88,7 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_TIMER_LIBS) \
 		-L$(DIST)/bin \
 		$(NSPR_LIBS) \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		-lraptorgfx \
 		-ljsdom \
 		-lmozjs \

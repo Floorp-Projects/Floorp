@@ -33,7 +33,7 @@ CPPSRCS		= imapProtocolTest.cpp
 
 LIBS =	\
 		-L$(DIST)/bin \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		-lmsgbaseutil \
 		$(MOZ_TIMER_LIBS) \
 		$(NSPR_LIBS) \

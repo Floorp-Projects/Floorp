@@ -52,7 +52,7 @@ CPPSRCS		= \
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

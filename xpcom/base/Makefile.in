@@ -74,7 +74,7 @@ XPIDLSRCS	= \
 		$(NULL)
 
 ifdef GC_LEAK_DETECTOR
-XPIDLSRCS       = nsILeakDetector.idl
+XPIDLSRCS       += nsILeakDetector.idl
 endif
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

@@ -44,7 +44,7 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/lib \
 		$(DIST)/lib/librdfutil_s.a \
 		-L$(DIST)/bin \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		-lmsgbaseutil \
 		$(NSPR_LIBS) \
 		$(NULL)

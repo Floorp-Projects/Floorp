@@ -63,7 +63,7 @@ EXPORTS		= \
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		-lmsgbaseutil \
 		$(NSPR_LIBS) \
 		$(NULL)

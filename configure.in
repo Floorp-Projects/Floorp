@@ -457,18 +457,6 @@ case "$host" in
 esac
 
 dnl ========================================================
-dnl MOZ_COMPONENTS_LIBS
-dnl
-dnl 'extra' link flags iff this is a component
-dnl See the IS_COMPONENT rule in rules.mk
-dnl ========================================================
-
-MOZ_COMPONENT_NSPR_LIBS='-L$(DIST)/bin $(NSPR_LIBS)'
-MOZ_COMPONENT_XPCOM_LIBS='-L$(DIST)/bin -lxpcom'
-MOZ_COMPONENT_LIBS='$(MOZ_COMPONENT_NSPR_LIBS) $(MOZ_COMPONENT_XPCOM_LIBS)'
-
-
-dnl ========================================================
 dnl Check which style vtables we're using on Solaris
 dnl Options current are:
 dnl   * gcc style - used by gcc (duh) and SUNWspro4.2 (and
@@ -2795,7 +2783,8 @@ MOZ_ARG_ENABLE_BOOL(profile,
 MOZ_ARG_ENABLE_BOOL(boehm,
 [  --enable-boehm          Enable the Boehm Garbage Collector],
   AC_DEFINE(GC_LEAK_DETECTOR)
-  GC_LEAK_DETECTOR=1)
+  GC_LEAK_DETECTOR=1
+)
 
 dnl This will enable logging of addref, release, ctor, dtor.
 MOZ_ARG_ENABLE_BOOL(logrefcnt,
@@ -3064,10 +3053,6 @@ AC_SUBST(FULL_STATIC_BUILD)
 AC_SUBST(BUILD_IDLC)
 
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
-
-AC_SUBST(MOZ_COMPONENT_NSPR_LIBS)
-AC_SUBST(MOZ_COMPONENT_XPCOM_LIBS)
-AC_SUBST(MOZ_COMPONENT_LIBS)
 
 AC_SUBST(MOZ_GLE)
 

@@ -76,7 +76,7 @@ IS_COMPONENT	= 1
 ifneq ($(OS_ARCH),BeOS)
 LIBS		+= \
 		-lmozjs \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 endif

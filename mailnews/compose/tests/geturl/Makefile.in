@@ -35,7 +35,7 @@ CPPSRCS		= \
 
 LIBS = \
 		$(MOZ_TIMER_LIBS) \
-		-lxpcom	\
+		$(XPCOM_LIBS) \
 		-lmozjs \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \
