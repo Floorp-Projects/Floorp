@@ -299,6 +299,7 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 	  nsString keyEquivalent = " ";
 	  aMenuItem->GetShortcutChar(keyEquivalent);
 	  if(keyEquivalent != " ") {
+	    keyEquivalent.ToUpperCase();
 	    char* foo = keyEquivalent.ToNewCString();
 	    short inKey = foo[0];
 	    ::SetItemCmd(mMacMenuHandle, mMenuItemVoidArray.Count(), inKey);
