@@ -155,7 +155,6 @@
 
     <command id="cmd_find"          oncommand="goDoCommand('cmd_find')"/>
     <command id="cmd_findNext"      oncommand="goDoCommand('cmd_findNext')"   label="&findAgainCmd.label;"/>
-    <command id="cmd_replace"       oncommand="goDoCommand('cmd_replace')" />
     <command id="cmd_spelling"      oncommand="goDoCommand('cmd_spelling')"/>
     <command id="cmd_pasteQuote"    oncommand="goDoCommand('cmd_pasteQuote')" label="&pasteAsQuotationCmd.label;"/>
 
@@ -318,6 +317,8 @@
       <menuitem id="menu_cut"/>
       <menuitem id="menu_copy"/>
       <menuitem id="menu_paste"/>
+
+<!-- PasteAs not implemented yet
       <menu id="menu_pasteAs" label="&pasteAs.label;" accesskey="&pasteAs.accesskey;">
         <menupopup oncreate="InitPasteAsMenu();">
           <menuitem id="menu_pasteText"    label="&pasteTextCmd.label;"     accesskey="&pasteText.accesskey;"/>
@@ -325,17 +326,16 @@
           <menuseparator/>
           <menuitem id="menu_pasteRows"    label="&pasteRowsCmd.label;"     accesskey="&pasteRows.accesskey;"/>
           <menuitem id="menu_pasteColumns" label="&pasteColumnsCmd.label;"  accesskey="&pasteColumns.accesskey;"/>
-          <!-- label set in InitPasteAsMenu depending on context -->
           <menuitem id="menu_pasteTable"                                    accesskey="&pasteTable.accesskey;"/>
         </menupopup>
       </menu>
+-->
       <menuitem id="menu_delete"/>
       <menuseparator id="edEditMenuSep2" />
       <menuitem id="menu_selectAll"/>
       <menuseparator id="sep_find" class="hide-in-IM"/>
       <menuitem id="menu_find"       accesskey="&editfind.accesskey;"            key="findkb"         observes="cmd_find" label="&findCmd.label;"/>
       <menuitem id="menu_findnext"   accesskey="&editfindnext.accesskey;"        key="findnextkb"     observes="cmd_findNext"/>
-      <menuitem id="menu_replace"   observes="cmd_replace" label="&replaceCmd.label;"/>
       <menuseparator id="sep_checkspelling" class="hide-in-IM" />
       <menuitem id="menu_checkspelling" accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="cmd_spelling" label="&checkSpellingCmd.label;"/>
       <menuseparator/>
@@ -601,7 +601,7 @@
    </menubutton>
 
 
-  <!-- this is only used in mailnews -->
+  <!-- this is only used in messengercompose.xul -->
   <menubutton id="AlignPopupButton" class="button-toolbar" observes="cmd_align"
               tooltip="aTooltip" tooltiptext="&AlignPopupButton.tooltip;">
     <menupopup id="AlignPopup">
@@ -617,7 +617,8 @@
   </menubutton>
 
   <!-- InsertPopupButton is used by messengercompose.xul -->
-  <menubutton id="InsertPopupButton" class="button-toolbar" observes="cmd_insert">
+  <menubutton id="InsertPopupButton" class="button-toolbar" observes="cmd_insert"
+              tooltip="aTooltip" tooltiptext="&InsertPopupButton.tooltip;">
     <menupopup id="InsertPopup">
       <menuitem id="InsertLinkItem" class="menuitem-iconic" observes="cmd_link"
                 oncommand="goDoCommand('cmd_link')" label="&linkToolbarCmd.label;"/>
