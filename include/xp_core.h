@@ -238,6 +238,7 @@ typedef int (*FARPROC)();
 #endif /* TRACEMSG */
 
 /* removed #ifdef for hpux defined in /usr/include/model.h */
+#ifndef XP_MAC
 #ifndef _INT16
 #define _INT16
 #endif
@@ -246,6 +247,7 @@ typedef int (*FARPROC)();
 #endif
 #define _UINT16
 #define _UINT32
+#endif
 
 /* function classifications */
 
