@@ -434,7 +434,7 @@ var nsOpenRemoteCommand =
 	     Use 0 and the default checkbox will be to load into an editor
 	     and loading into existing browser option is removed
 	   */
-	  window.openDialog( "chrome://navigator/content/openLocation.xul", "_blank", "chrome,modal", 0);
+	  window.openDialog( "chrome://navigator/content/openLocation.xul", "_blank", "chrome,modal,titlebar", 0);
     window._content.focus();
   }
 };
