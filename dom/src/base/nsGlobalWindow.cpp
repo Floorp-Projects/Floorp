@@ -1123,11 +1123,7 @@ NS_IMETHODIMP GlobalWindowImpl::Alert(JSContext* cx, jsval* argv, PRUint32 argc)
    else
       str.AssignWithConversion("undefined");
 
-   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-   GetTreeOwner(getter_AddRefs(treeOwner));
-   NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
-   nsCOMPtr<nsIPrompt> prompter(do_GetInterface(treeOwner));
-
+   nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
    NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
 
    return prompter->Alert(str.GetUnicode());
@@ -1146,11 +1142,7 @@ NS_IMETHODIMP GlobalWindowImpl::Confirm(JSContext* cx, jsval* argv,
    else
       str.AssignWithConversion("undefined");
 
-   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-   GetTreeOwner(getter_AddRefs(treeOwner));
-   NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
-   nsCOMPtr<nsIPrompt> prompter(do_GetInterface(treeOwner));
-
+   nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
    NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
 
    return prompter->Confirm(str.GetUnicode(), aReturn);
@@ -1175,10 +1167,7 @@ NS_IMETHODIMP GlobalWindowImpl::Prompt(JSContext* cx, jsval* argv,
          initial.AssignWithConversion("undefined");
       }
 
-   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-   GetTreeOwner(getter_AddRefs(treeOwner));
-   NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
-   nsCOMPtr<nsIPrompt> prompter(do_GetInterface(treeOwner));
+   nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
 
    NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
 
