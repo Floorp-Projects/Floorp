@@ -90,9 +90,10 @@ public:
 
     NS_IMETHOD CreateInstance(nsIURL* aURL,
                               const char* aContentType, 
-                              const char *aCommand,
+                              const char* aCommand,
+                              nsIViewerContainer* aContainer,
                               nsIStreamListener** aDocListener,
-                              nsIDocumentWidget** aDocViewer);
+                              nsIContentViewer** aDocViewer);
 };
 
 
@@ -113,12 +114,13 @@ NS_IMETHODIMP
 nsDocFactoryImpl::CreateInstance(nsIURL* aURL, 
                                  const char* aContentType, 
                                  const char *aCommand,
+                                 nsIViewerContainer* aContainer,
                                  nsIStreamListener** aDocListener,
-                                 nsIDocumentWidget** aDocViewer)
+                                 nsIContentViewer** aDocViewer)
 {
     nsresult rv;
     nsIDocument* doc = nsnull;
-    nsIWebWidget* ww = nsnull;
+    nsIWebWidgetViewer* ww = nsnull;
 
     int typeIndex=0;
     while(gValidTypes[typeIndex]) {
@@ -140,7 +142,7 @@ nextstep:
     /*
      * Create the HTML Content Viewer...
      */
-    rv = NS_NewWebWidget(&ww);
+    rv = NS_NewContentViewer(&ww);
     if (NS_OK != rv) {
         goto done;
     }
@@ -151,7 +153,7 @@ nextstep:
      * An nsIStreamListener connected to the parser is returned in
      * aDocListener.
      */
-    rv = doc->StartDocumentLoad(aURL, ww, aDocListener);
+    rv = doc->StartDocumentLoad(aURL, aContainer, aDocListener);
     if (NS_OK != rv) {
         goto done;
     }
@@ -403,7 +405,7 @@ NS_METHOD nsDocumentBindInfo::OnProgress(nsIURL* aURL, PRInt32 aProgress,
 NS_METHOD nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
     nsresult rv = NS_OK;
-    nsIDocumentWidget* viewer = nsnull;
+    nsIContentViewer* viewer = nsnull;
 
     /*
      * Now that the content type is available, create a document (and viewer)
@@ -413,6 +415,7 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentT
         rv = m_DocLoader->m_DocFactory->CreateInstance(m_Url,
                                                        aContentType, 
                                                        m_Command, 
+                                                       m_Container,
                                                        &m_NextStream, 
                                                        &viewer);
     } else {
@@ -426,6 +429,8 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentT
     /*
      * Give the document container the new viewer...
      */
+    viewer->SetContainer(m_Container);
+
     rv = m_Container->Embed(viewer, m_Command, m_ExtraInfo);
     if (NS_OK != rv) {
         goto done;

@@ -29,7 +29,7 @@
 #include "nsISupportsArray.h"
 #include "nsDocument.h"
 #include "nsIURL.h"
-#include "nsIWebWidget.h"
+#include "nsIDocumentWidget.h"
 
 void testAttributes(nsIHTMLContent* content) {
   nsIAtom* sBORDER = NS_NewAtom("BORDER");
@@ -169,7 +169,7 @@ class MyDocument : public nsDocument {
 public:
   MyDocument();
   NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
-                               nsIWebWidget* aWebWidget,
+                               nsIViewerContainer* aContainer,
                                nsIStreamListener **aDocListener)
   {
     return NS_OK;

@@ -32,12 +32,14 @@ DEFINES = -D_IMPL_NS_WEB
 
 CPPSRCS=				\
  nsDocLoader.cpp			\
+ nsContentViewer.cpp			\
  nsWebWidget.cpp			\
  nsLinkHandler.cpp			\
  $(NULL)
 
 CPP_OBJS=				\
  ./$(OBJDIR)/nsDocLoader.o		\
+ ./$(OBJDIR)/nsContentViewer.o		\
  ./$(OBJDIR)/nsWebWidget.o		\
  ./$(OBJDIR)/nsLinkHandler.o		\
  $(NULL)

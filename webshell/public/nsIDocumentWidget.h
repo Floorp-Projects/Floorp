@@ -18,14 +18,19 @@
 #ifndef nsIDocumentWidget_h___
 #define nsIDocumentWidget_h___
 
-#include "nsIWidget.h"
+#include "nsweb.h"
 #include "nsRect.h"
+#include "nsIWidget.h"
 #include "nsIScrollableView.h"
 
 // Forward declarations... 
-class nsIPostData;
-class nsIStreamObserver;
+class nsIDeviceContext;
 class nsString;
+
+class nsIDocument;
+class nsIPresContext;
+class nsIStyleSheet;
+class nsIViewerContainer;
 
 // IID for the nsIDocumentWidget interface
 // a7d1b8b0-0b1c-11d2-beba-00805f8a66dc
@@ -35,17 +40,18 @@ class nsString;
 
 // Interface to the web widget. The web widget is a container for web
 // content.
-class nsIDocumentWidget : public nsISupports {
+class nsIContentViewer : public nsISupports {
 public:
   // Create a native window for this web widget; may be called once
   NS_IMETHOD Init(nsNativeWidget aNativeParent,
+                  nsIDeviceContext* aDeviceContext,
                   const nsRect& aBounds,
                   nsScrollPreference aScrolling = nsScrollPreference_kAuto) = 0;
 
-  NS_IMETHOD BindToDocument(nsISupports *aDoc, const char *aCommand) = 0;
+  NS_IMETHOD BindToDocument(nsISupports* aDoc, const char* aCommand) = 0;
+  NS_IMETHOD SetContainer(nsIViewerContainer* aContainer) = 0;
 
   virtual nsRect GetBounds() = 0;
-
   virtual void SetBounds(const nsRect& aBounds) = 0;
 
   virtual void Move(PRInt32 aX, PRInt32 aY) = 0;
@@ -53,12 +59,36 @@ public:
   virtual void Show() = 0;
 
   virtual void Hide() = 0;
-
-  NS_IMETHOD LoadURL(const nsString& aURLSpec,
-                     nsIStreamObserver* aListener,
-                     nsIPostData* aPostData = 0) = 0;
-
-  virtual nsIWidget* GetWWWindow() = 0;
 };
+
+
+
+
+/* 30d26b00-176d-11d2-bec0-00805f8a66dc */
+#define NS_IWEBWIDGETVIEWER_IID      \
+ { 0x30d26b00, 0x176d, 0x11d2, \
+   {0xbe, 0xc0, 0x00, 0x80, 0x5f, 0x8a, 0x66, 0xdc} }
+
+
+class nsIWebWidgetViewer : public nsIContentViewer {
+public:
+  NS_IMETHOD Init(nsNativeWidget aNativeParent,
+                  nsIDeviceContext* aDeviceContext,
+                  const nsRect& aBounds,
+                  nsScrollPreference aScrolling = nsScrollPreference_kAuto) = 0;
+
+  NS_IMETHOD Init(nsNativeWidget aParent,
+                  const nsRect& aBounds,
+                  nsIDocument* aDocument,
+                  nsIPresContext* aPresContext,
+                  nsScrollPreference aScrolling = nsScrollPreference_kAuto) = 0;
+
+  NS_IMETHOD SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet) = 0;
+  
+  virtual nsIPresContext* GetPresContext() = 0;
+};
+
+extern "C" NS_WEB nsresult NS_NewContentViewer(nsIWebWidgetViewer** aViewer);
+
 
 #endif /* nsIDocumentWidget_h___ */

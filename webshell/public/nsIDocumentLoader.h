@@ -29,7 +29,8 @@ class nsString;
 class nsIURL;
 class nsIFactory;
 class nsIPostData;
-class nsIDocumentWidget;
+class nsIContentViewer;
+class nsIViewerContainer;
 class nsIStreamListener;
 class nsIStreamObserver;
 
@@ -49,8 +50,9 @@ public:
     NS_IMETHOD CreateInstance(nsIURL* aURL,
                               const char* aContentType, 
                               const char *aCommand,
+                              nsIViewerContainer* aContainer,
                               nsIStreamListener** aDocListener,
-                              nsIDocumentWidget** aDocViewer) = 0;
+                              nsIContentViewer** aDocViewer) = 0;
 };
 
 
@@ -68,7 +70,9 @@ class nsIViewerContainer : public nsISupports
 {
 public:
 
-    NS_IMETHOD Embed(nsIDocumentWidget* aDocViewer, 
+    NS_IMETHOD QueryCapability(const nsIID &aIID, void** aResult) = 0;
+
+    NS_IMETHOD Embed(nsIContentViewer* aDocViewer, 
                      const char* aCommand,
                      nsISupports* aExtraInfo) = 0;
 };

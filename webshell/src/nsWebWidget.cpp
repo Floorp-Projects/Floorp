@@ -52,12 +52,15 @@
 
 // XXX: a copy exists in nsPresShell.cpp!!!
 #define UA_CSS_URL "resource:/res/ua.css"
+#include "nsIDocumentWidget.h"
 
 #define GET_OUTER() \
   ((nsWebWidget*) ((char*)this - nsWebWidget::GetOuterOffset()))
 
 // Machine independent implementation portion of the web widget
-class WebWidgetImpl : public nsIWebWidget {
+class WebWidgetImpl : public nsIWebWidget, 
+                      public nsIViewerContainer
+{
 public:
   WebWidgetImpl();
   ~WebWidgetImpl();
@@ -70,9 +73,18 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Init(nsNativeWidget aParent,
-                        const nsRect& aBounds,
-                        nsScrollPreference aScrolling = nsScrollPreference_kAuto);
+  NS_IMETHOD QueryCapability(const nsIID &aIID, void** aResult);
+
+  NS_IMETHOD Embed(nsIContentViewer* aDocViewer, 
+                   const char* aCommand, 
+                   nsISupports* aExtraInfo);
+
+  NS_IMETHOD SetContainer(nsIViewerContainer* aContainer);
+
+  NS_IMETHOD Init(nsNativeWidget aNativeParent,
+                  const nsRect& aBounds,
+                  nsScrollPreference aScrolling);
+
   NS_IMETHOD Init(nsNativeWidget aParent,
                         const nsRect& aBounds,
                         nsIDocument* aDocument,
@@ -105,10 +117,7 @@ public:
   NS_IMETHOD GetLinkHandler(nsILinkHandler** aResult);
 
   NS_IMETHOD LoadURL(const nsString& aURLSpec, nsIStreamObserver* aObserver,
-                     nsIPostData* aPostData) {
-    NS_NOTREACHED("invalid call to WebWidget LoadURL");
-    return NS_ERROR_NULL_POINTER;
-  }
+                     nsIPostData* aPostData);
 
   virtual nsIDocument* GetDocument();
 
@@ -124,24 +133,31 @@ public:
 
   NS_IMETHOD BindToDocument(nsISupports *aDoc, const char *aCommand);
 
+  nsIStyleSheet* GetUAStyleSheet();
+  NS_IMETHOD SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet);
+
 private:
   nsresult ProvideDefaultHandlers();
   void ForceRefresh();
-  nsresult MakeWindow(nsNativeWidget aParent, const nsRect& aBounds,
-                      nsScrollPreference aScrolling);
   nsresult InitUAStyleSheet(void);
   nsresult CreateStyleSet(nsIDocument* aDocument, nsIStyleSet** aStyleSet);
   void ReleaseChildren();
 
+  static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
+
+
+  nsIWebWidgetViewer* mContentViewer;
+
   nsIWidget* mWindow;
   nsIView *mView;
-  nsIViewManager *mViewManager;
   nsIPresContext* mPresContext;
   nsIPresShell* mPresShell;
   nsIStyleSheet* mUAStyleSheet;
   nsILinkHandler* mLinkHandler;
   nsISupports* mContainer;
   nsIDocument* mDocument;
+
+  nsIDocumentLoader* mDocLoader;
 
   nsVoidArray mChildren;
   //static nsIWebWidget* gRootWebWidget;
@@ -150,7 +166,6 @@ private:
 };
 
 //----------------------------------------------------------------------
-
 #ifdef NS_DEBUG
 /**
  * Note: the log module is created during initialization which
@@ -175,9 +190,18 @@ static PRLogModuleInfo* gLogModule = PR_NewLogModule("webwidget");
 #endif
 
 //----------------------------------------------------------------------
+static NS_DEFINE_IID(kChildCID, NS_CHILD_CID);
+static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
+static NS_DEFINE_IID(kCDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
 
+static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIWebWidgetIID, NS_IWEBWIDGET_IID);
+static NS_DEFINE_IID(kIWebWidgetViewerIID, NS_IWEBWIDGETVIEWER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
+static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
+static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
+
 
 NS_WEB nsresult
 NS_NewWebWidget(nsIWebWidget** aInstancePtrResult)
@@ -196,9 +220,11 @@ NS_NewWebWidget(nsIWebWidget** aInstancePtrResult)
 // Note: operator new zeros our memory
 WebWidgetImpl::WebWidgetImpl()
 {
+  NS_INIT_REFCNT();
+
+  NSRepository::CreateInstance(kCDocumentLoaderCID, nsnull, kIDocumentLoaderIID, (void**)&mDocLoader);
   WEB_TRACE(WEB_TRACE_CALLS,
             ("WebWidgetImpl::WebWidgetImpl: this=%p"));
-  NS_INIT_REFCNT();
 }
 
 nsresult WebWidgetImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -206,14 +232,8 @@ nsresult WebWidgetImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  static NS_DEFINE_IID(kIDocumentWidgetIID, NS_IDOCUMENTWIDGET_IID);
   if (aIID.Equals(kIWebWidgetIID)) {
     *aInstancePtr = (void*)(nsIWebWidget*)this;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIDocumentWidgetIID)) {
-    *aInstancePtr = (void*)(nsIDocumentWidget*)this;
     AddRef();
     return NS_OK;
   }
@@ -236,14 +256,6 @@ WebWidgetImpl::~WebWidgetImpl()
   ReleaseChildren();
   mContainer = nsnull;
 
-  // Release windows and views
-  if (nsnull != mViewManager)
-  {
-    mViewManager->SetRootView(nsnull);
-    mViewManager->SetRootWindow(nsnull);
-    NS_RELEASE(mViewManager);
-  }
-
   NS_IF_RELEASE(mWindow);
   NS_IF_RELEASE(mView);
 
@@ -265,7 +277,51 @@ WebWidgetImpl::~WebWidgetImpl()
   NS_IF_RELEASE(mUAStyleSheet);
 
   NS_IF_RELEASE(mDeviceContext);
+
+  NS_IF_RELEASE(mContentViewer);
 }
+
+
+NS_IMETHODIMP
+WebWidgetImpl::QueryCapability(const nsIID &aIID, void** aInstancePtr)
+{
+  if (nsnull == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  if (aIID.Equals(kILinkHandlerIID)) {
+    if (nsnull != mLinkHandler) {
+      *aInstancePtr = mLinkHandler;
+      mLinkHandler->AddRef();
+      return NS_OK;
+    }
+  }
+  return NS_NOINTERFACE;
+}
+
+NS_IMETHODIMP
+WebWidgetImpl::SetContainer(nsIViewerContainer* aContainer)
+{
+    NS_ASSERTION(0, "Not implemented...");
+
+    return NS_ERROR_FAILURE;
+}
+
+
+
+void Check(WebWidgetImpl* ww) 
+{
+  PRInt32 foo = ww->GetNumChildren();
+  for (int i = 0; i < foo; i++) {
+    nsIWebWidget* child;
+    ww->GetChildAt(i, &child);
+    if (child == 0) {
+      printf("hello");
+    }
+  }
+}
+
+
 
 void
 WebWidgetImpl::ReleaseChildren()
@@ -376,104 +432,44 @@ nsIWebWidget* WebWidgetImpl::GetTarget(const nsString& aName)
 }
 
 
-nsresult WebWidgetImpl::MakeWindow(nsNativeWidget aNativeParent,
-                                   const nsRect& aBounds,
-                                   nsScrollPreference aScrolling)
-{
-  nsresult rv;
-  static NS_DEFINE_IID(kViewManagerCID, NS_VIEW_MANAGER_CID);
-  static NS_DEFINE_IID(kIViewManagerIID, NS_IVIEWMANAGER_IID);
-
-  rv = NSRepository::CreateInstance(kViewManagerCID, 
-                                     nsnull, 
-                                     kIViewManagerIID, 
-                                     (void **)&mViewManager);
-
-  if ((NS_OK != rv) || (NS_OK != mViewManager->Init(mPresContext))) {
-    return rv;
-  }
-
-  nsRect tbounds = aBounds;
-  tbounds *= mPresContext->GetPixelsToTwips();
-
-  // Create a child window of the parent that is our "root view/window"
-  // Create a view
-  static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);
-  static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
-
-  rv = NSRepository::CreateInstance(kScrollingViewCID, 
-                                     nsnull, 
-                                     kIViewIID, 
-                                     (void **)&mView);
-  static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
-  if ((NS_OK != rv) || (NS_OK != mView->Init(mViewManager, 
-                                                tbounds, 
-                                                nsnull,
-                                                &kWidgetCID,
-                                                nsnull,
-                                                aNativeParent))) {
-    return rv;
-  }
-
-  static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
-  nsIScrollableView* scrollView;
-  rv = mView->QueryInterface(kScrollViewIID, (void**)&scrollView);
-  if (NS_OK == rv) {
-    scrollView->SetScrollPreference(aScrolling);
-    NS_RELEASE(scrollView);
-  }
-  else {
-    NS_ASSERTION(0, "invalid scrolling view");
-    return rv;
-  }
-
-  // Setup hierarchical relationship in view manager
-  mViewManager->SetRootView(mView);
-  mWindow = mView->GetWidget();
-  if (mWindow) {
-    mViewManager->SetRootWindow(mWindow);
-  }
-
-  //set frame rate to 25 fps
-  mViewManager->SetFrameRate(25);
-
-  return rv;
-}
-
 NS_IMETHODIMP
 WebWidgetImpl::Init(nsNativeWidget aNativeParent,
                     const nsRect& aBounds,
                     nsScrollPreference aScrolling)
 {
-  if (nsnull == mDocument) {
-      return NS_ERROR_NULL_POINTER;
+  nsresult rv = NS_OK;
+
+  NS_PRECONDITION(nsnull != aNativeParent, "null Parent Window");
+  if (nsnull == aNativeParent) {
+    rv = NS_ERROR_NULL_POINTER;
+    goto done;
   }
 
-  // Create presentation context
-
-  static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-  static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
-
-  nsresult rv = NSRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&mDeviceContext);
-
-  if (NS_OK == rv) {
-    mDeviceContext->Init(aNativeParent);
-    mDeviceContext->SetDevUnitsToAppUnits(mDeviceContext->GetDevUnitsToTwips());
-    mDeviceContext->SetAppUnitsToDevUnits(mDeviceContext->GetTwipsToDevUnits());
-    mDeviceContext->SetGamma(1.7f);
-
-    NS_ADDREF(mDeviceContext);
-  }
-
-  rv = NS_NewGalleyContext(&mPresContext);
+  // Create device context
+  rv = NSRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&mDeviceContext);
   if (NS_OK != rv) {
-    return rv;
+    goto done;
   }
+  mDeviceContext->Init(aNativeParent);
+  mDeviceContext->SetDevUnitsToAppUnits(mDeviceContext->GetDevUnitsToTwips());
+  mDeviceContext->SetAppUnitsToDevUnits(mDeviceContext->GetTwipsToDevUnits());
+  mDeviceContext->SetGamma(1.7f);
+  
 
-  mPresContext->Init(mDeviceContext);
-  rv = Init(aNativeParent, aBounds, mDocument, mPresContext, aScrolling);
+  // Create a Native window for the WebWidget container...
+  rv = NSRepository::CreateInstance(kChildCID, nsnull, kIWidgetIID, (void**)&mWindow);
+  if (NS_OK != rv) {
+    goto done;
+  }
+  mWindow->Create(aNativeParent, aBounds, WebWidgetImpl::HandleEvent, mDeviceContext, nsnull);
+
+  // Create a Style Sheet...
+  rv = InitUAStyleSheet();
+
+done:
   return rv;
 }
+
 
 nsresult WebWidgetImpl::InitUAStyleSheet(void)
 {
@@ -523,46 +519,21 @@ WebWidgetImpl::Init(nsNativeWidget aNativeParent,
                     nsIPresContext* aPresContext,
                     nsScrollPreference aScrolling)
 {
-  NS_PRECONDITION(nsnull != aPresContext, "null ptr");
-  NS_PRECONDITION(nsnull != aDocument, "null ptr");
-  if ((nsnull == aPresContext) || (nsnull == aDocument)) {
-    return NS_ERROR_NULL_POINTER;
+  nsresult rv;
+
+  NS_PRECONDITION(nsnull != aNativeParent, "null Parent Window");
+  if (nsnull == aNativeParent) {
+    rv = NS_ERROR_NULL_POINTER;
+  } else {
   }
 
-  mPresContext = aPresContext;
-  NS_ADDREF(aPresContext);
+  rv = InitUAStyleSheet();
+///  if (nsnull != mContentViewer) {
+///    rv = mContentViewer->Init(aNativeParent, aBounds, aDocument, aPresContext, aScrolling);
+///  } else {
+///    rv = NS_ERROR_NULL_POINTER;
+///  }
 
-  nsresult rv = MakeWindow(aNativeParent, aBounds, aScrolling);
-  if (NS_OK != rv) {
-    return rv;
-  }
-
-  nsIStyleSet* styleSet;
-  rv = CreateStyleSet(aDocument, &styleSet);
-  if (NS_OK != rv) {
-    return rv;
-  }
-
-  // Now make the shell for the document
-  rv = aDocument->CreateShell(mPresContext, mViewManager, styleSet,
-                              &mPresShell);
-  NS_RELEASE(styleSet);
-  if (NS_OK != rv) {
-    return rv;
-  }
-
-  // Now that we have a presentation shell trigger a reflow so we
-  // create a frame model
-  nsRect bounds;
-  mWindow->GetBounds(bounds);
-  if (nsnull != mPresShell) {
-    nscoord width = bounds.width;
-    nscoord height = bounds.height;
-    width = NS_TO_INT_ROUND(width * mPresContext->GetPixelsToTwips());
-    height = NS_TO_INT_ROUND(height * mPresContext->GetPixelsToTwips());
-    mViewManager->SetWindowDimensions(width, height);
-  }
-  ForceRefresh();
   return rv;
 }
 
@@ -578,8 +549,13 @@ nsRect WebWidgetImpl::GetBounds()
 
 nsIPresContext* WebWidgetImpl::GetPresContext()
 {
-  NS_IF_ADDREF(mPresContext);
-  return mPresContext;
+  nsIPresContext* presContext = nsnull;
+
+  if (nsnull != mContentViewer) {
+    presContext = mContentViewer->GetPresContext();
+  }
+
+  return presContext;
 }
 
 void WebWidgetImpl::SetBounds(const nsRect& aBounds)
@@ -589,6 +565,11 @@ void WebWidgetImpl::SetBounds(const nsRect& aBounds)
     // Don't have the widget repaint. Layout will generate repaint requests
     // during reflow
     mWindow->Resize(aBounds.x, aBounds.y, aBounds.width, aBounds.height, PR_FALSE);
+  }
+
+  if (nsnull != mContentViewer) {
+    nsRect rr(0, 0, aBounds.width, aBounds.height);
+    mContentViewer->SetBounds(rr);
   }
 }
 
@@ -606,6 +587,10 @@ void WebWidgetImpl::Show()
   if (nsnull != mWindow) {
     mWindow->Show(PR_TRUE);
   }
+
+  if (nsnull != mContentViewer) {
+    mContentViewer->Show();
+  }
 }
 
 void WebWidgetImpl::Hide()
@@ -613,6 +598,10 @@ void WebWidgetImpl::Hide()
   NS_PRECONDITION(nsnull != mWindow, "null window");
   if (nsnull != mWindow) {
     mWindow->Show(PR_FALSE);
+  }
+
+  if (nsnull != mContentViewer) {
+    mContentViewer->Hide();
   }
 }
 
@@ -635,19 +624,83 @@ nsresult WebWidgetImpl::ProvideDefaultHandlers()
   return NS_OK;
 }
 
-static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
 NS_IMETHODIMP
 WebWidgetImpl::BindToDocument(nsISupports* aDoc, const char* aCommand)
 {
+  nsresult rv = NS_ERROR_FAILURE;
+
   WEB_TRACE(WEB_TRACE_CALLS,
             ("WebWidgetImpl::BindToDocument: this=%p aDoc=%p aCommand=%s",
              this, aDoc, aCommand ? aCommand : ""));
 
-  nsresult rv;
-  rv = aDoc->QueryInterface(kIDocumentIID, (void**)&mDocument);
+  NS_PRECONDITION(nsnull != mContentViewer, "null Content Viewer");
+  if (nsnull != mContentViewer) {
+    rv = mContentViewer->BindToDocument(aDoc, aCommand);
+  }
+
   return rv;
 }
+
+NS_IMETHODIMP
+WebWidgetImpl::Embed(nsIContentViewer* aDocViewer, 
+                     const char* aCommand, 
+                     nsISupports* aExtraInfo)
+{
+  nsresult rv;
+  nsRect bounds;
+
+  WEB_TRACE(WEB_TRACE_CALLS,
+            ("WebWidgetImpl::Embed: this=%p aDocViewer=%p aCommand=%s aExtraInfo=%p",
+             this, aDocViewer, aCommand ? aCommand : "", aExtraInfo));
+
+  NS_IF_RELEASE(mContentViewer);
+
+
+  rv = aDocViewer->QueryInterface(kIWebWidgetViewerIID, (void**)&mContentViewer);
+
+  if (NS_OK == rv) {
+    mContentViewer->SetUAStyleSheet(mUAStyleSheet);
+
+    mWindow->GetBounds(bounds);
+    bounds.y = bounds.y = 0;
+    rv = mContentViewer->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
+                              mDeviceContext, 
+                              bounds);
+  }
+
+
+///  nsIURL* aURL = aDoc->GetDocumentURL();
+///  if (aURL) {
+///    mURL = aURL->GetSpec();
+///  }
+///  NS_IF_RELEASE(aURL);
+
+  if (NS_OK == rv) {
+    mContentViewer->Show();
+  }
+
+  return rv;
+}
+
+
+NS_IMETHODIMP
+WebWidgetImpl::LoadURL(const nsString& aURLSpec,
+                       nsIStreamObserver* anObserver,
+                       nsIPostData* aPostData)
+{
+    nsresult rv;
+
+    rv = mDocLoader->LoadURL(aURLSpec,       // URL string
+                             nsnull,         // Command
+                             this,           // Container
+                             aPostData,      // Post Data
+                             nsnull,         // Extra Info...
+                             anObserver);    // Observer
+
+    return rv;
+}
+
 
 nsIDocument* WebWidgetImpl::GetDocument()
 {
@@ -774,6 +827,13 @@ nsIWebWidget* WebWidgetImpl::GetRootWebWidget()
   NS_ADDREF(this);
   return this;
 }
+
+
+nsEventStatus PR_CALLBACK WebWidgetImpl::HandleEvent(nsGUIEvent *aEvent)
+{ 
+  return nsEventStatus_eIgnore;
+}
+
 
 //----------------------------------------------------------------------
 // Debugging methods
@@ -946,6 +1006,22 @@ nsresult WebWidgetImpl::GetDOMDocument(nsIDOMDocument** aDocument)
 
   return res;
 }
+
+nsIStyleSheet* WebWidgetImpl::GetUAStyleSheet()
+{
+    return mUAStyleSheet;
+}
+
+NS_IMETHODIMP
+WebWidgetImpl::SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet)
+{
+    NS_IF_RELEASE(mUAStyleSheet);
+    mUAStyleSheet = aUAStyleSheet;
+    NS_IF_ADDREF(mUAStyleSheet);
+
+    return NS_OK;
+}
+
 
 /*******************************************
  *  nsWebWidgetFactory

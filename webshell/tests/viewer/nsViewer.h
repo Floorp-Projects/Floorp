@@ -56,7 +56,6 @@ class nsIScriptGlobalObject;
 class DocObserver : public nsIDocumentObserver,
                     public nsIStreamObserver,
                     public nsILinkHandler,
-                    public nsIViewerContainer,
                     public nsIScriptContextOwner
 {
 public:
@@ -113,11 +112,6 @@ public:
   NS_IMETHOD GetScriptContext(nsIScriptContext **aContext);
   NS_IMETHOD ReleaseScriptContext(nsIScriptContext *aContext);
 
-  // nsIViewerContainer
-  NS_IMETHOD Embed(nsIDocumentWidget* aDocViewer, 
-                   const char* aCommand, 
-                   nsISupports* aExtraInfo);
-
   // DocObserver
   void HandleLinkClickEvent(const nsString& aURLSpec,
                             const nsString& aTargetSpec,
@@ -147,13 +141,13 @@ protected:
 };
 
 struct WindowData {
-///  nsIWebWidget* ww;
+  nsIWebWidget* ww;
   DocObserver* observer;
   nsIWidget* windowWidget;
   nsViewer* mViewer;
 
   WindowData() {
-///    ww = nsnull;
+    ww = nsnull;
   }
 
   void ShowContentSize();
@@ -210,6 +204,7 @@ class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
     virtual nsresult ShowPrintPreview(nsIWebWidget* web, PRIntn aColumns);
     virtual WindowData* CreateTopLevel(const char* title, int aWidth, int aHeight);
     virtual void AddTestDocs(nsDocLoader* aDocLoader);
+
     virtual void AddTestDocsFromFile(nsDocLoader* aDocLoader, char *aFileName);
     virtual void DestroyAllWindows();
     virtual struct WindowData* FindWindowData(nsIWidget* aWidget);
@@ -229,13 +224,13 @@ class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
 
   nsresult GoTo(const nsString& aURLSpec, 
                 const char* aCommand,
-                nsIViewerContainer* aContainer,
+                nsIWebWidget* aContainer,
                 nsIPostData* aPostData = nsnull,
                 nsISupports* aExtraInfo = nsnull,
                 nsIStreamObserver* anObserver = nsnull);
 
   nsresult GoTo(const nsString& aURLSpec) {
-    return GoTo(aURLSpec, nsnull, mWD->observer,
+    return GoTo(aURLSpec, nsnull, mWD->ww,
                 nsnull, nsnull, mWD->observer);
   }
 

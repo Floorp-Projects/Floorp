@@ -38,7 +38,7 @@ class nsIURL;
 class nsIViewManager;
 class nsString;
 class nsIScriptContextOwner;
-class nsIWebWidget;
+class nsIViewerContainer;
 class nsIDOMEvent;
 class nsIDeviceContext;
 class nsIParser;
@@ -72,7 +72,7 @@ public:
   virtual nsIArena* GetArena() = 0;
 
   NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
-                               nsIWebWidget* aWebWidget,
+                               nsIViewerContainer* aContainer,
                                nsIStreamListener **aDocListener) = 0;
 
   /**
