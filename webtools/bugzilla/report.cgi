@@ -156,6 +156,13 @@ my %names;
 
 # Read the bug data and count the bugs for each possible value of row, column
 # and table.
+#
+# We detect a numerical field, and sort appropriately, if all the values are
+# numeric.
+my $col_isnumeric = 1;
+my $row_isnumeric = 1;
+my $tbl_isnumeric = 1;
+
 while (MoreSQLData()) {
     my ($row, $col, $tbl) = FetchSQLData();
     $row = "" if ($row eq $columns{''});
@@ -166,11 +173,35 @@ while (MoreSQLData()) {
     $names{"col"}{$col}++;
     $names{"row"}{$row}++;
     $names{"tbl"}{$tbl}++;
+    
+    $col_isnumeric &&= ($col =~ /^-?\d+(\.\d+)?$/o);
+    $row_isnumeric &&= ($row =~ /^-?\d+(\.\d+)?$/o);
+    $tbl_isnumeric &&= ($tbl =~ /^-?\d+(\.\d+)?$/o);
 }
 
-my @col_names = sort(keys(%{$names{"col"}}));
-my @row_names = sort(keys(%{$names{"row"}}));
-my @tbl_names = sort(keys(%{$names{"tbl"}}));
+my @col_names;
+my @row_names;
+my @tbl_names;
+sub numerically { $a <=> $b }
+
+# Use the appropriate sort for each dimension
+if ($col_isnumeric) {
+    @col_names = sort numerically keys(%{$names{"col"}});
+} else {
+    @col_names = sort(keys(%{$names{"col"}}));
+}
+
+if ($row_isnumeric) {
+    @row_names = sort numerically keys(%{$names{"row"}});
+} else {
+    @row_names = sort(keys(%{$names{"row"}}));
+}
+
+if ($tbl_isnumeric) {
+    @tbl_names = sort numerically keys(%{$names{"tbl"}});
+} else {
+    @tbl_names = sort(keys(%{$names{"tbl"}}));
+}
 
 # The GD::Graph package requires a particular format of data, so once we've
 # gathered everything into the hashes and made sure we know the size of the
