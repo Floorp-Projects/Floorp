@@ -60,6 +60,8 @@
 
 #include "nsMsgFolderCache.h"
 
+#include "nsMsgStatusFeedback.h"
+
 #ifdef DOING_FILTERS
 #include "nsMsgFilterService.h"
 #endif
@@ -106,6 +108,10 @@ static NS_DEFINE_CID(kMsgCopyServiceCID, NS_MSGCOPYSERVICE_CID);
 
 // Msg Folder Cache stuff
 static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
+
+//Feedback stuff
+static NS_DEFINE_CID(kMsgStatusFeedbackCID, NS_MSGSTATUSFEEDBACK_CID);
+
 ////////////////////////////////////////////////////////////
 //
 ////////////////////////////////////////////////////////////
@@ -299,6 +305,9 @@ nsMsgFactory::CreateInstance(nsISupports * /* aOuter */,
 		  if (NS_FAILED(rv))
 			delete folderCache;
 		}
+  }
+  else if (mClassID.Equals(kMsgStatusFeedbackCID)) {
+      rv = NS_NewMsgStatusFeedback(aIID, aResult);
   }
 
   return rv;
@@ -511,6 +520,11 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
+	rv = compMgr->RegisterComponent(kMsgStatusFeedbackCID,
+                                  "Mail/News Status Feedback",
+                                  NS_MSGSTATUSFEEDBACK_PROGID,
+                                  path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) finalResult = rv;
   return finalResult;
 }
 
@@ -570,6 +584,8 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
   rv = compMgr->UnregisterComponent(kMsgFolderCacheCID, path);
   if (NS_FAILED(rv)) finalResult = rv;
 
+  rv = compMgr->UnregisterComponent(kMsgStatusFeedbackCID, path);
+  if (NS_FAILED(rv)) finalResult = rv;
   return finalResult;
 }
 

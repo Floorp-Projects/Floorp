@@ -211,5 +211,16 @@
 #define NS_MESSENGER_PROGID	\
   "component://netscape/messenger"
 
+//
+// nsMsgStatusFeedback
+//
+#define NS_MSGSTATUSFEEDBACK_PROGID \
+  "component://netscape/messenger/statusfeedback"
+
+/* B1AA0820-D04B-11d2-8069-006008128C4E */
+#define NS_MSGSTATUSFEEDBACK_CID \
+{ 0xbd85a417, 0x5433, 0x11d3, \
+  {0x8a, 0xc5, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0xd2} }
+
 
 #endif // nsMessageBaseCID_h__
