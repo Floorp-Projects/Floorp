@@ -34,7 +34,7 @@
 #include "prmem.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsPluginsDirBeOSLog, 0)
+NS_IMPL_LOG(nsPluginsDirBeOSLog)
 #define PRINTF NS_LOG_PRINTF(nsPluginsDirBeOSLog)
 #define FLUSH  NS_LOG_FLUSH(nsPluginsDirBeOSLog)
 

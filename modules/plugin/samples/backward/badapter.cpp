@@ -42,7 +42,7 @@
 #include "nsDebug.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(badapterLog, 0)
+NS_IMPL_LOG(badapterLog)
 #define PRINTF NS_LOG_PRINTF(badapterLog)
 #define FLUSH  NS_LOG_FLUSH(badapterLog)
 

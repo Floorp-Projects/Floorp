@@ -42,7 +42,7 @@
 #include "npupp.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(npunixLog, 0)
+NS_IMPL_LOG(npunixLog)
 #define PRINTF NS_LOG_PRINTF(npunixLog)
 #define FLUSH  NS_LOG_FLUSH(npunixLog)
 

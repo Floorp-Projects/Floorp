@@ -36,7 +36,7 @@
 #include <stdio.h>
 #include "nslog.h"
 
-NS_IMPL_LOG(QMozillaContainerLog, 0)
+NS_IMPL_LOG(QMozillaContainerLog)
 #define PRINTF NS_LOG_PRINTF(QMozillaContainerLog)
 #define FLUSH  NS_LOG_FLUSH(QMozillaContainerLog)
 

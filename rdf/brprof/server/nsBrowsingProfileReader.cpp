@@ -48,7 +48,7 @@
 #include "rdf.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsBrowsingProfileReaderLog, 0)
+NS_IMPL_LOG(nsBrowsingProfileReaderLog)
 #define PRINTF NS_LOG_PRINTF(nsBrowsingProfileReaderLog)
 #define FLUSH  NS_LOG_FLUSH(nsBrowsingProfileReaderLog)
 

@@ -39,7 +39,7 @@ extern "C" {
 #include "xlibrgb.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsEmbedXlibIntoGtkLog, 0)
+NS_IMPL_LOG(nsEmbedXlibIntoGtkLog)
 #define PRINTF NS_LOG_PRINTF(nsEmbedXlibIntoGtkLog)
 #define FLUSH  NS_LOG_FLUSH(nsEmbedXlibIntoGtkLog)
 

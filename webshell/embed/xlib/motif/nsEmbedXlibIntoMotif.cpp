@@ -15,7 +15,7 @@
 #include "xlibrgb.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsEmbedXlibIntoMotifLog, 0)
+NS_IMPL_LOG(nsEmbedXlibIntoMotifLog)
 #define PRINTF NS_LOG_PRINTF(nsEmbedXlibIntoMotifLog)
 #define FLUSH  NS_LOG_FLUSH(nsEmbedXlibIntoMotifLog)
 

@@ -46,7 +46,7 @@
 
 #include "nslog.h"
 
-NS_IMPL_LOG(nsPluginInstancePeerLog, 0)
+NS_IMPL_LOG(nsPluginInstancePeerLog)
 #define PRINTF NS_LOG_PRINTF(nsPluginInstancePeerLog)
 #define FLUSH  NS_LOG_FLUSH(nsPluginInstancePeerLog)
 

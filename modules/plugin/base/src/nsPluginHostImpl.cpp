@@ -52,7 +52,7 @@
 #include "nsIDocument.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsPluginHostImplLog, 0)
+NS_IMPL_LOG(nsPluginHostImplLog)
 #define PRINTF NS_LOG_PRINTF(nsPluginHostImplLog)
 #define FLUSH  NS_LOG_FLUSH(nsPluginHostImplLog)
 

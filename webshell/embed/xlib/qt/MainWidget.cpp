@@ -25,7 +25,7 @@
 #include "MainWidget.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(MainWidgetLog, 0)
+NS_IMPL_LOG(MainWidgetLog)
 #define PRINTF NS_LOG_PRINTF(MainWidgetLog)
 #define FLUSH  NS_LOG_FLUSH(MainWidgetLog)
 

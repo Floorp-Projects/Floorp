@@ -45,7 +45,7 @@
 #include "nsPluginViewer.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsPluginViewerLog, 0)
+NS_IMPL_LOG(nsPluginViewerLog)
 #define PRINTF NS_LOG_PRINTF(nsPluginViewerLog)
 #define FLUSH  NS_LOG_FLUSH(nsPluginViewerLog)
 

@@ -39,7 +39,7 @@
 #include "nsRDFCID.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsDlgDefaultKeysLog, 0)
+NS_IMPL_LOG(nsDlgDefaultKeysLog)
 #define PRINTF NS_LOG_PRINTF(nsDlgDefaultKeysLog)
 #define FLUSH  NS_LOG_FLUSH(nsDlgDefaultKeysLog)
 

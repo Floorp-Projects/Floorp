@@ -43,7 +43,7 @@
 #include "nsIStringBundle.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsDocLoaderLog, 0)
+NS_IMPL_LOG(nsDocLoaderLog)
 #define PRINTF NS_LOG_PRINTF(nsDocLoaderLog)
 #define FLUSH  NS_LOG_FLUSH(nsDocLoaderLog)
 
