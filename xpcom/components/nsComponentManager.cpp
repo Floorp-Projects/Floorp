@@ -1719,7 +1719,10 @@ FreeServiceContractIDEntryEnumerate(PLDHashTable *aTable,
 nsresult 
 nsComponentManagerImpl::FreeServices()
 {
-    nsAutoMonitor mon(mMon);
+    NS_ASSERTION(gXPCOMShuttingDown, "Must be shutting down in order to free all services");
+
+    if (!gXPCOMShuttingDown)
+        return NS_ERROR_FAILURE;
 
     if (mFactories.ops) {
         PL_DHashTableEnumerate(&mFactories, FreeServiceFactoryEntryEnumerate, nsnull);
