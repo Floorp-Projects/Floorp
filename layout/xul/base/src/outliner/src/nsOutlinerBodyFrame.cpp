@@ -2319,7 +2319,9 @@ nsOutlinerBodyFrame::EnsureColumns()
     nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(parent));
 
     nsCOMPtr<nsIDOMNodeList> cols;
-    elt->GetElementsByTagName(NS_LITERAL_STRING("outlinercol"), getter_AddRefs(cols));
+    elt->GetElementsByTagNameNS(NS_LITERAL_STRING("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"),
+                                NS_LITERAL_STRING("outlinercol"),
+                                getter_AddRefs(cols));
 
     nsCOMPtr<nsIPresShell> shell; 
     mPresContext->GetShell(getter_AddRefs(shell));
