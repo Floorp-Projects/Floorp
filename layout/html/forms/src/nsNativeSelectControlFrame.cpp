@@ -638,7 +638,7 @@ nsNativeSelectControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
   Reset();  // initializes selections
 }
 
-NS_IMETHODIMP
+nsresult
 nsNativeSelectControlFrame::GetOptionText(nsIDOMHTMLCollection*& aOptions,
                                           PRUint32 aIndex,
                                           nsString& aText)
@@ -1427,7 +1427,7 @@ nsNativeSelectControlFrame::SetOptionSelected(PRInt32 aIndex, PRBool aValue)
   return UpdateWidgetToCache(!aValue); // Don't deselect all if adding selection
 }
 
-NS_IMETHODIMP
+nsresult
 nsNativeSelectControlFrame::UpdateWidgetToCache(PRBool aDeselectFirst)
 {
   // Grab the list widget
