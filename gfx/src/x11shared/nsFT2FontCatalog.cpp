@@ -826,7 +826,7 @@ nsFT2FontCatalog::doGetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
 
   for (i=0; i<mFontCatalog->numFonts; i++) {
     nsFontCatalogEntry *fce = mFontCatalog->fonts[i];
-    if (!fce->mFlags&FCE_FLAGS_ISVALID)
+    if (!(fce->mFlags&FCE_FLAGS_ISVALID))
       continue;
     if (foundry && !STRMATCH(foundry,fce->mFoundryName))
       continue;
