@@ -293,7 +293,7 @@ nsNativeTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
         char* nameString = name.ToNewCString();
         res = service->SI_RestoreSignonData(URLName, nameString, &valueString);
         delete[] nameString;
-        NS_RELEASE(service);
+        nsServiceManager::ReleaseService(kWalletServiceCID, service);
         PR_FREEIF(URLName);
         if (valueString && *valueString) {
           value = valueString;
