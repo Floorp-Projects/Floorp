@@ -62,10 +62,7 @@
                   loading="rdf:http://home.netscape.com/NC-rdf#loading"
                   type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
             <treerow>
-              <treecell>
-                <treeindentation />
-                <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
-              </treecell>
+              <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
             </treerow>
           </treeitem>
         </treechildren>
