@@ -1494,7 +1494,7 @@ nsWindow::OnContainerFocusOutEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
 
     while (tmpWindow && tmpnsWindow) {
         // found it!
-        if (tmpnsWindow == gFocusWindow)
+        if (tmpnsWindow == this)
             goto foundit;
 
         tmpWindow = gdk_window_get_parent(tmpWindow);
