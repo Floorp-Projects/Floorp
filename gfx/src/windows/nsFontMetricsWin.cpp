@@ -228,7 +228,7 @@ NS_IMPL_ISUPPORTS1(nsFontCleanupObserver, nsIObserver);
 
 NS_IMETHODIMP nsFontCleanupObserver::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
 {
-  nsLiteralString aTopicString(aTopic);
+  nsDependentString aTopicString(aTopic);
   if (aTopicString.Equals(NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID))) {
     FreeGlobals();
   }

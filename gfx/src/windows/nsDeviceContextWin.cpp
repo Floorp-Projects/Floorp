@@ -834,7 +834,7 @@ NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(PRUnichar * aTitle)
     
     char *title = nsnull;
     if( nsnull != aTitle) {
-      title = ToNewCString(nsLiteralString(aTitle));
+      title = ToNewCString(nsDependentString(aTitle));
     }
 
     docinfo.cbSize = sizeof(docinfo);
