@@ -25,7 +25,7 @@
 #include "nsIContent.h"
 
 #ifdef NS_DEBUG
-static PRBool gNoisy = PR_FALSE;
+static PRBool gNoisy = PR_TRUE;
 #else
 static const PRBool gNoisy = PR_FALSE;
 #endif
@@ -105,6 +105,9 @@ NS_IMETHODIMP InsertElementTxn::Do(void)
   result = mParent->InsertBefore(mNode, refNode, getter_AddRefs(resultNode));
   if (NS_FAILED(result)) return result;
   if (!resultNode) return NS_ERROR_NULL_POINTER;
+
+  // Try to insert formatting whitespace for the new node:
+  mEditor->InsertFormattingForNode(resultNode);
 
   // only set selection to insertion point if editor gives permission
   PRBool bAdjustSelection;
