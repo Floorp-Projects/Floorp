@@ -57,19 +57,23 @@ public:
     eEditorReadonlyBit,                   // editing events are disabled.  Editor may still accept focus.
     eEditorDisabledBit,                   // all events are disabled (like scrolling).  Editor will not accept focus.
     eEditorFilterInputBit,                // text input is limited to certain character types, use mFilter
-    eEditorMailBit                        // use mail-compose editting rules
+    eEditorMailBit,                       // use mail-compose editting rules
+    eEditorDisableForcedUpdatesBit,       // prevent immediate view refreshes
+    eEditorDisableForcedReflowsBit        // prevent immediate reflows
     
     // max 32 bits
   };
   
   enum {
-    eEditorPlaintextMask      = (1 << eEditorPlaintextBit),
-    eEditorSingleLineMask     = (1 << eEditorSingleLineBit),
-    eEditorPasswordMask       = (1 << eEditorPasswordBit),
-    eEditorReadonlyMask       = (1 << eEditorReadonlyBit),
-    eEditorDisabledMask       = (1 << eEditorDisabledBit),
-    eEditorFilterInputMask    = (1 << eEditorFilterInputBit),
-    eEditorMailMask           = (1 << eEditorMailBit)
+    eEditorPlaintextMask            = (1 << eEditorPlaintextBit),
+    eEditorSingleLineMask           = (1 << eEditorSingleLineBit),
+    eEditorPasswordMask             = (1 << eEditorPasswordBit),
+    eEditorReadonlyMask             = (1 << eEditorReadonlyBit),
+    eEditorDisabledMask             = (1 << eEditorDisabledBit),
+    eEditorFilterInputMask          = (1 << eEditorFilterInputBit),
+    eEditorMailMask                 = (1 << eEditorMailBit),
+    eEditorDisableForcedUpdatesMask = (1 << eEditorDisableForcedUpdatesBit),
+    eEditorDisableForcedReflowsMask = (1 << eEditorDisableForcedReflowsBit)
   };
   
   // below used by TypedText()
