@@ -47,7 +47,7 @@ FreeCCMap(PRUint16* &aMap)
 {
   if (!aMap)
     return;
-  PR_Free(aMap);
+  PR_Free(aMap - CCMAP_EXTRA);
   aMap = nsnull;
 }
 
@@ -58,8 +58,17 @@ MapToCCMap(PRUint32* aMap)
   nsCompressedCharMap ccmapObj;
   ccmapObj.SetChars(aMap);
 
-  // make a copy of the map
-  PRUint16* ccmap = ccmapObj.NewCCMap();
+  PRUint16 *ccmap = (PRUint16*)PR_Malloc((CCMAP_EXTRA + ccmapObj.GetSize()) * sizeof(PRUint16));
+  NS_ASSERTION(ccmap, "failed to alloc new CCMap");
+
+  if (!ccmap)
+    return nsnull;
+
+  ccmap += CCMAP_EXTRA;
+  CCMAP_SIZE(ccmap) = ccmapObj.GetSize();
+  CCMAP_FLAG(ccmap) = CCMAP_NONE_FLAG;
+
+  ccmapObj.FillCCMap(ccmap);
 
 #ifdef DEBUG
   for (int i=0; i<NUM_UNICODE_CHARS; i++) {
@@ -75,8 +84,17 @@ MapToCCMap(PRUint32* aMap)
 
 PRUint16* CreateEmptyCCMap()
 {
-  nsCompressedCharMap ccmapObj;
-  return ccmapObj.NewCCMap();
+  PRUint16 *ccmap = (PRUint16*)PR_Malloc((CCMAP_EXTRA + 16) * sizeof(PRUint16));
+  NS_ASSERTION(ccmap, "failed to alloc new CCMap");
+
+  if (!ccmap)
+    return nsnull;
+
+  memset(ccmap, '\0', CCMAP_EMPTY_SIZE_PER_INT16 * sizeof(PRUint16)+ CCMAP_EXTRA);
+  ccmap += CCMAP_EXTRA;
+  CCMAP_SIZE(ccmap) = CCMAP_EMPTY_SIZE_PER_INT16;
+  CCMAP_FLAG(ccmap) = CCMAP_NONE_FLAG;
+  return ccmap;
 }
 
 PRUint16*
@@ -104,53 +122,41 @@ MapperToCCMap(nsICharRepresentable *aMapper)
  ***********************************************************************************/
 PRBool IsSameCCMap(PRUint16* ccmap1, PRUint16* ccmap2)
 {
-  PRUint16 i, tmp;
-  PRUint16 maxMidOffset = CCMAP_EMPTY_MID;
-  PRUint16 maxOffset = 0;
-
-  //find out the midOffset which itself has the largest offset among all midOffset
-  for (i = 0; i < CCMAP_NUM_UPPER_POINTERS; i++) {
-    tmp = CCMAP_MID_OFFSET(ccmap1, i);
-    if ( tmp > maxMidOffset)
-      maxMidOffset = tmp;
-  }
-
-  //find out the larget page offset among maxMidOffset
-  for (i = 0; i < CCMAP_NUM_MID_POINTERS; i++) {
-    tmp = CCMAP_PAGE_OFFSET_FROM_MIDOFFSET(ccmap1, maxMidOffset, i);
-    if (tmp > maxOffset)
-      maxOffset = tmp;
-  }
-
-  //if the page offset is allocated later than maxMidOffset, add page size
-  if (maxOffset)
-    maxOffset += CCMAP_NUM_PRUINT16S_PER_PAGE;
-  else
-    maxOffset = maxMidOffset;
-
-  //now maxOffset is the size of ccmap1, though ccmap2 might be smaller than 
-  //ccmap1, the following comparison is still safe. That is because it will 
-  //return false before the limit of ccmap2 is reached.
-  for (i = 0; i < maxOffset; i++)
-    if (ccmap1[i] != ccmap2[i])
-      return PR_FALSE;
+  PRUint16 len1 = CCMAP_SIZE(ccmap1);
+  PRUint16 len2 = CCMAP_SIZE(ccmap2);
   
+  if (len1 != len2)
+    return PR_FALSE;
+
+  if (memcmp(ccmap1, ccmap2, sizeof(PRUint16)*len1))
+    return PR_FALSE;
   return PR_TRUE;
 }
 
 PRUint16*
 nsCompressedCharMap::NewCCMap()
 {
-  PRUint16 *newMap = (PRUint16*)PR_Malloc(mUsedLen * sizeof(PRUint16));
+  PRUint16 *newMap = (PRUint16*)PR_Malloc((CCMAP_EXTRA + mUsedLen) * sizeof(PRUint16));
   NS_ASSERTION(newMap, "failed to alloc new CCMap");
   if (!newMap)
     return nsnull;
+  
+  newMap += CCMAP_EXTRA;
+  CCMAP_SIZE(newMap) = GetSize();
+  CCMAP_FLAG(newMap) = CCMAP_NONE_FLAG;
 
+  FillCCMap(newMap);
+  return newMap;
+}
+
+PRUint16*
+nsCompressedCharMap::FillCCMap(PRUint16* aCCMap)
+{
   // transfer the data
   for (int i=0; i<mUsedLen; i++)
-    newMap[i] = u.mCCMap[i];
+    aCCMap[i] = u.mCCMap[i];
 
-  return newMap;
+  return aCCMap;
 }
 
 nsCompressedCharMap::nsCompressedCharMap()
@@ -349,3 +355,118 @@ nsCompressedCharMap::SetChars(PRUint32* aMap)
   }
 }
 
+#define EXTENDED_UNICODE_PLANES    16
+
+// Non-BMP unicode support extension, create ccmap for both BMP and extended planes 
+PRUint16*
+MapToCCMapExt(PRUint32* aBmpPlaneMap, PRUint32** aOtherPlaneMaps, PRUint32 aOtherPlaneNum)
+{
+  nsCompressedCharMap* otherPlaneObj[EXTENDED_UNICODE_PLANES];
+  PRUint32 totalSize;
+  PRUint16 i;
+  PRUint32 *planeCCMapOffsets;
+  PRUint32 currOffset;
+
+  NS_ASSERTION(aOtherPlaneNum <= EXTENDED_UNICODE_PLANES, "illegal argument value");
+  if (aOtherPlaneNum > EXTENDED_UNICODE_PLANES)
+    return nsnull;
+
+  // Put the data into a temp map
+  nsCompressedCharMap bmpCcmapObj;
+  bmpCcmapObj.SetChars(aBmpPlaneMap);
+
+  // Add bmp size
+  totalSize = bmpCcmapObj.GetSize();
+
+  // Add bmp length field
+  totalSize += CCMAP_EXTRA;
+  
+  // Add Plane array 
+  totalSize += EXTENDED_UNICODE_PLANES * sizeof(PRUint32)/sizeof(PRUint16);
+
+  // Add an empty plane ccmap
+  // A totally empty plane ccmap can be represented by 16 *(PRUint16)0. 
+  totalSize += CCMAP_EMPTY_SIZE_PER_INT16;
+
+  // Create ccmap for other planes
+  for (i = 0; i < aOtherPlaneNum; i++) {
+    if (aOtherPlaneMaps[i]) {
+      otherPlaneObj[i] = new nsCompressedCharMap();
+      NS_ASSERTION(otherPlaneObj, "unable to create new nsCompressedCharMap");
+      if(otherPlaneObj) {
+        otherPlaneObj[i]->SetChars(aOtherPlaneMaps[i]);
+        totalSize += otherPlaneObj[i]->GetSize();
+      }
+    }
+  }
+
+  PRUint16 *ccmap = (PRUint16*)PR_Malloc(totalSize * sizeof(PRUint16));
+  NS_ASSERTION(ccmap, "failed to alloc new CCMap");
+
+  if (!ccmap)
+    return nsnull;
+
+  // Assign BMP ccmap size
+  ccmap += CCMAP_EXTRA;
+  CCMAP_SIZE(ccmap) = bmpCcmapObj.GetSize();
+  CCMAP_FLAG(ccmap) = CCMAP_SURROGATE_FLAG;
+
+  // Fill bmp plane ccmap 
+  bmpCcmapObj.FillCCMap(ccmap);
+
+  // Get pointer for plane ccmap offset array
+  currOffset = bmpCcmapObj.GetSize();
+  planeCCMapOffsets = (PRUint32*)(ccmap+currOffset);
+  currOffset += sizeof(PRUint32)/sizeof(PRUint16)*EXTENDED_UNICODE_PLANES;
+
+  // Put a empty ccmap there 
+  memset(ccmap+currOffset, '\0', sizeof(PRUint16)*16);
+  PRUint32 emptyCCMapOffset = currOffset;
+  currOffset += CCMAP_EMPTY_SIZE_PER_INT16;
+
+  // Now fill all rest of the planes' ccmap and put off in array
+  for (i = 0; i <aOtherPlaneNum; i++) {
+    if (aOtherPlaneMaps[i] && otherPlaneObj[i]) {
+      *(planeCCMapOffsets+i) = currOffset;
+      otherPlaneObj[i]->FillCCMap(ccmap+currOffset);
+      currOffset += otherPlaneObj[i]->GetSize();
+    }
+    else 
+      *(planeCCMapOffsets+i) = emptyCCMapOffset;
+  }
+  for (; i < EXTENDED_UNICODE_PLANES; i++) {
+    *(planeCCMapOffsets+i) = emptyCCMapOffset;
+  }
+
+  // remove all nsCompressedCharMap objects allocated 
+  for (i = 0; i < aOtherPlaneNum; i++) {
+    if (otherPlaneObj[i]) 
+      delete otherPlaneObj[i];
+  }
+
+#ifdef DEBUG
+  PRUint32 k, h, l, plane, offset;
+  PRBool oldb;
+  PRBool newb;
+
+  // testing for BMP plane
+  for (k=0; k<NUM_UNICODE_CHARS; k++) {
+    oldb = IS_REPRESENTABLE(aBmpPlaneMap, k);
+    newb = CCMAP_HAS_CHAR(ccmap, k);
+    NS_ASSERTION(oldb==newb,"failed to generate map correctly");
+  }
+
+  // testing for non-BMP plane
+    for (h = 0; h < 0x400; h++) {
+      for (l = 0; l < 0x400; l++) {
+        plane = h >> 6;
+        offset = (h*0x400 + l) & 0xffff;
+        oldb = IS_REPRESENTABLE(aOtherPlaneMaps[plane], offset);
+        newb = CCMAP_HAS_CHAR_EXT(ccmap, h+0xd800, l+0xdc00);
+        NS_ASSERTION(oldb==newb, "failed to generate extension map correctly");
+      }
+    }
+#endif
+
+  return ccmap;
+}

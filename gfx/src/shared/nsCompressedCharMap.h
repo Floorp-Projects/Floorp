@@ -69,6 +69,10 @@ extern PRUint16* MapperToCCMap(nsICharRepresentable *aMapper);
 extern void FreeCCMap(PRUint16* &aMap);
 extern PRBool IsSameCCMap(PRUint16* ccmap1, PRUint16* ccmap2);
 
+// surrogate support extension
+extern PRUint16*
+MapToCCMapExt(PRUint32* aBmpPlaneMap, PRUint32** aOtherPlaneMaps, PRUint32 aOtherPlaneNum);
+
 // 
 // nsCompressedCharMap
 // 
@@ -97,7 +101,8 @@ public:
   nsCompressedCharMap();
 
   PRUint16* NewCCMap();
-  void      FreeCCMap(PRUint16*);
+  PRUint16* FillCCMap(PRUint16* aCCMap);
+  PRUint16  GetSize() {return mUsedLen;};
   void      SetChar(PRUint16);
   void      SetChars(PRUint16*);
   void      SetChars(PRUint16, ALU_TYPE*);
@@ -172,6 +177,7 @@ protected:
 // One minor note: for a completely empty map it is actually 
 // possible to fold the upper, empty mid, and empty page
 // on top of each other and make a map of only 32 bytes.
+#define CCMAP_EMPTY_SIZE_PER_INT16    16
 
 // offsets to the empty mid and empty page
 #define CCMAP_EMPTY_MID  CCMAP_NUM_UPPER_POINTERS
@@ -183,9 +189,50 @@ protected:
 // the actual needed size and simply copy over the data.
 //
 
-
-
 //
+// Compressed Char map surrogate extension 
+//
+// The design goal of surrogate support extension is to keep efficiency 
+// and compatibility of existing compressed charmap operations. Most of 
+// existing operation are untouched. For BMP support, very little memory 
+// overhead (4 bytes) is added. Runtime efficiency of BMP support is 
+// unchanged. 
+//
+// structure of extended charmap:
+//    ccmap flag      1 PRUint16 , indication if this is extended one or not
+//    bmp ccmap size  1 PRUint16 , the size of BMP ccmap, 
+//    BMP ccmap       size varies, 
+//    plane index     16 PRUint32, use to index ccmap for non-BMP plane
+//    empty ccmap     16 PRUint16, a total empty ccmap
+//    non-BMP ccmaps  size varies, other non-empty, non-BMP ccmap
+//   
+// Changes to basic ccmap 
+//  2 PRUint16 are added in the very beginning. One is used to  descript the size 
+// of the ccmap, the other is used as a flag. But these 2 fields are indexed 
+// negatively so that all other operation remain unchanged to keep efficiency. 
+// ccmap memory allocation is moved from nsCompressedCharMap::NewCCMap to 
+// MapToCCMap.
+//
+// Extended ccmap 
+//  A 16*PRUint32 array was put at the end of basic ccmap, each PRUint32 either 
+// pointed to the empty ccmap or a independent plane ccmap. Directly after this 
+// array is a empty ccmap. All planes that has no character will share this ccmap. 
+// All non-empty plane will have a ccmap. 
+//  "MapToCCMapExt" is added to created an extended ccmap, each plane ccmap is 
+// created the same as basic one, but without 2 additional fields.
+//  "HasGlyphExt" is used to access extended ccmap, it first need to locate the 
+// plane ccmap, and then operated the same way as "HasGlyph". 
+//
+// Compatibility between old and new one
+// Because extended ccmap include an exactly identical basic ccmap in its head, 
+// basic ccmap operation (HasGlyph) can be applied on extended ccmap without 
+// problem. 
+// Because basic ccmap is now have a flag to indicate if it is a extended one, 
+// Extended ccmap operation (HasGlyphExt) can check the flag before it does 
+// extended ccmap specific operation. So HasGlyphExt can be applied to basic ccmap 
+// too.  
+//
+
 // Page bits
 //
 #define CCMAP_BITS_PER_PAGE_LOG2    8
@@ -263,5 +310,24 @@ protected:
 
 // unset the bit
 #define CCMAP_UNSET_CHAR(m,c) (CCMAP_TO_ALU(m,c) &= ~(CCMAP_POW2(CCMAP_BIT_INDEX(c))))
+
+#define CCMAP_SIZE(m) (*((m)-1))
+#define CCMAP_FLAG(m) (*((m)-2))
+#define CCMAP_EXTRA    (sizeof(ALU_TYPE)/sizeof(PRUint16)>2? sizeof(ALU_TYPE)/sizeof(PRUint16): 2)
+#define CCMAP_SURROGATE_FLAG         0X0001  
+#define CCMAP_NONE_FLAG              0x0000
+
+// non-bmp unicode support extension
+// get plane number from ccmap, bmp excluded, so plane 1's number is 0.
+#define CCMAP_PLANE(h)  (((PRUint16)(h) - (PRUint16)0xd800) >> 6)
+
+// scalar value inside the plane
+#define CCMAP_INPLANE_OFFSET(h, l) (((((PRUint16)(h) - (PRUint16)0xd800) & 0x3f) << 10) + ((PRUint16)(l) - (PRUint16)0xdc00))
+
+// get ccmap for that plane
+#define CCMAP_FOR_PLANE_EXT(m, i)  ((m) + ((PRUint32*)((m) + CCMAP_SIZE(m)))[i])
+
+// test the bit for surrogate pair
+#define CCMAP_HAS_CHAR_EXT(m, h, l)  (CCMAP_FLAG(m)&CCMAP_SURROGATE_FLAG && CCMAP_HAS_CHAR(CCMAP_FOR_PLANE_EXT((m), CCMAP_PLANE(h)), CCMAP_INPLANE_OFFSET(h, l)))
 
 #endif // NSCOMPRESSEDCHARMAP_H 
