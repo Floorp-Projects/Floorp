@@ -20,16 +20,9 @@ function Exit()
 function CharacterSet(){}
 function SetDocumentCharacterSet(aCharset)
 {
-  var appCore = XPAppCoresManager.Find("MsgAppCore");  
-  if (appCore == null) {
-    dump("StartUp: Creating AppCore\n");
-    appCore = new MsgAppCore();
-  }
+  var appCore = FindMsgAppCore(); 
   if (appCore != null) {
     dump(aCharset);dump("\n");
-    appCore.Init("MsgAppCore");
-    appCore.SetWindow(window);
-    appCore.SetDocumentCharset(aCharset);
   } else {
     dump("MsgAppCore has not been created!\n");
   }
