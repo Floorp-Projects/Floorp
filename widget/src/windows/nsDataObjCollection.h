@@ -40,7 +40,11 @@
 
 #define INITGUID // needed for initializing the IID_IDataObjCollection GUID
 
-#include "OLEIDL.H"
+#include <unknwn.h>
+#include <basetyps.h>
+#include <objidl.h>
+// The above are required for __MINGW32__
+#include <oleidl.h>
 
 #include "nsString.h"
 #include "nsVoidArray.h"
