@@ -361,13 +361,24 @@ private:
 };
 
 /***************************************************************************/
-// utility functions
+// nsID JavaScript class functions
 
 JSBool
 xpc_InitIDClass(XPCContext* xpcc);
 
 JSObject*
 xpc_NewIDObject(JSContext *cx, const nsID& aID);
+
+/***************************************************************************/
+// data convertion
+
+JSBool
+xpc_ConvertNativeData2JS(jsval* d, const void* s, 
+                         const nsXPCType& type);
+
+JSBool
+xpc_ConvertJSData2Native(JSContext* cx, void* d, const jsval* s,
+                         const nsXPCType& type);
 
 /***************************************************************************/
 

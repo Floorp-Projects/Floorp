@@ -31,6 +31,7 @@ REQUIRES=xpcom js
 DEFINES=-DWIN32_LEAN_AND_MEAN -DEXPORT_XPC_API
 
 OBJS=					\
+	.\$(OBJDIR)\xpcconvert.obj	\
 	.\$(OBJDIR)\xpcnsid.obj	\
 	.\$(OBJDIR)\xpcstubs.obj	\
 	.\$(OBJDIR)\xpcmaps.obj	\
