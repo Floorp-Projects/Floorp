@@ -239,11 +239,13 @@ NS_IMETHODIMP DeviceContextImpl::GetMetricsFor(const nsFont& aFont,
       aMetrics = nsnull;
       return rv;
     }
+    // XXX temporary fix for performance problem -- erik
+    mWestern = getter_AddRefs(NS_NewAtom("x-western"));
   }
 
   // XXX figure out why aLangGroup is NULL sometimes
   if (!aLangGroup) {
-    aLangGroup = NS_NewAtom("x-western");
+    aLangGroup = mWestern;
   }
 
   return mFontCache->GetMetricsFor(aFont, aLangGroup, aMetrics);
@@ -257,8 +259,10 @@ NS_IMETHODIMP DeviceContextImpl::GetMetricsFor(const nsFont& aFont, nsIFontMetri
       aMetrics = nsnull;
       return rv;
     }
+    // XXX temporary fix for performance problem -- erik
+    mWestern = getter_AddRefs(NS_NewAtom("x-western"));
   }
-  return mFontCache->GetMetricsFor(aFont, nsnull, aMetrics);
+  return mFontCache->GetMetricsFor(aFont, mWestern, aMetrics);
 }
 
 NS_IMETHODIMP DeviceContextImpl :: SetZoom(float aZoom)
