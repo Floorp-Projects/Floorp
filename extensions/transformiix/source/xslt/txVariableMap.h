@@ -46,17 +46,16 @@
 
 class txVariableMap {
 public:
-    txVariableMap(txVariableMap* aParentMap);
+    txVariableMap();
     
     nsresult bindVariable(const txExpandedName& aName,
                           ExprResult* aValue, MBool aOwned);
 
     ExprResult* getVariable(const txExpandedName& aName);
+    
+    void removeVariable(const txExpandedName& aName);
 
 private:
-    // Parent map of variables
-    txVariableMap* mParentMap;
-
     // Map with owned variables
     txExpandedNameMap mOwnedVariables;
 
@@ -65,9 +64,8 @@ private:
 };
 
 
-inline txVariableMap::txVariableMap(txVariableMap* aParentMap)
-    : mParentMap(aParentMap),
-      mOwnedVariables(MB_TRUE),
+inline txVariableMap::txVariableMap()
+    : mOwnedVariables(MB_TRUE),
       mNonOwnedVariables(MB_FALSE)
 {
 }
@@ -75,21 +73,14 @@ inline txVariableMap::txVariableMap(txVariableMap* aParentMap)
 inline nsresult txVariableMap::bindVariable(const txExpandedName& aName,
                                             ExprResult* aValue, MBool aOwned)
 {
-    TxObject* var = 0;
-    txVariableMap* map = this;
-    while (!var && map) {
-        var = map->mOwnedVariables.get(aName);
-        if (!var) {
-            var = map->mNonOwnedVariables.get(aName);
-        }
-        map = map->mParentMap;
-    }
     nsresult rv = NS_ERROR_FAILURE;
-    if (!var) {
-        if (aOwned) {
+    if (aOwned) {
+        if (!mNonOwnedVariables.get(aName)) {
             rv = mOwnedVariables.add(aName, aValue);
         }
-        else {
+    }
+    else {
+        if (!mOwnedVariables.get(aName)) {
             rv = mNonOwnedVariables.add(aName, aValue);
         }
     }
@@ -98,17 +89,17 @@ inline nsresult txVariableMap::bindVariable(const txExpandedName& aName,
 
 inline ExprResult* txVariableMap::getVariable(const txExpandedName& aName)
 {
-    ExprResult* var = 0;
-    txVariableMap* map = this;
-    while (!var && map) {
-        var = (ExprResult*)map->mOwnedVariables.get(aName);
-        if (!var) {
-            var = (ExprResult*)map->mNonOwnedVariables.get(aName);
-        }
-        map = map->mParentMap;
+    ExprResult* var = (ExprResult*)mOwnedVariables.get(aName);
+    if (!var) {
+        var = (ExprResult*)mNonOwnedVariables.get(aName);
     }
     return var;
 }
 
+inline void txVariableMap::removeVariable(const txExpandedName& aName)
+{
+    mOwnedVariables.remove(aName);
+    mNonOwnedVariables.remove(aName);
+}
 
 #endif //TRANSFRMX_VARIABLEMAP_H

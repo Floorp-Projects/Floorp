@@ -65,7 +65,7 @@ nsresult txExpandedNameMap::add(const txExpandedName& aKey, TxObject* aValue)
     for (i = 0; i < mItemCount; ++i) {
         if (mItems[i].mLocalName == aKey.mLocalName &&
             mItems[i].mNamespaceID == aKey.mNamespaceID) {
-            return NS_ERROR_FAILURE;
+            return NS_ERROR_XSLT_ALREADY_SET;
         }
     }
     
@@ -142,7 +142,7 @@ nsresult txExpandedNameMap::set(const txExpandedName& aKey, TxObject* aValue)
  * @param  aKey  key for item to get
  * @return item with specified key, or null if no such item exists
  */
-TxObject* txExpandedNameMap::get(const txExpandedName& aKey)
+TxObject* txExpandedNameMap::get(const txExpandedName& aKey) const
 {
     int i;
     for (i = 0; i < mItemCount; ++i) {

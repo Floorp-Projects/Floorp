@@ -46,22 +46,18 @@ class txPatternParser : public ExprParser
 {
 public:
     static txPattern* createPattern(const nsAFlatString& aPattern,
-                                    txIParseContext* aContext,
-                                    ProcessorState* aPs);
+                                    txIParseContext* aContext);
 protected:
     static nsresult createUnionPattern(ExprLexer& aLexer,
                                        txIParseContext* aContext,
-                                       ProcessorState* aPs,
                                        txPattern*& aPattern);
     static nsresult createLocPathPattern(ExprLexer& aLexer,
                                          txIParseContext* aContext,
-                                         ProcessorState* aPs,
                                          txPattern*& aPattern);
     static nsresult createIdPattern(ExprLexer& aLexer,
                                     txPattern*& aPattern);
     static nsresult createKeyPattern(ExprLexer& aLexer,
                                      txIParseContext* aContext,
-                                     ProcessorState* aPs,
                                      txPattern*& aPattern);
     static nsresult createStepPattern(ExprLexer& aLexer,
                                       txIParseContext* aContext,

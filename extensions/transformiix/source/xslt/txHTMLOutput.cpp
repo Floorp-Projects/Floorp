@@ -215,17 +215,17 @@ void txHTMLOutput::attribute(const nsAString& aName,
         if (shortHand &&
             localPart.Equals(aValue, txCaseInsensitiveStringComparator())) {
             txListIterator iter(&mAttributes);
-            txAttribute* setAtt = 0;
+            txOutAttr* setAtt = 0;
             nsCOMPtr<nsIAtom> localName = do_GetAtom(localPart);
             txExpandedName att(aNsID, localName);
-            while ((setAtt = (txAttribute*)iter.next())) {
+            while ((setAtt = (txOutAttr*)iter.next())) {
                  if (setAtt->mName == att) {
                      setAtt->mShorthand = MB_TRUE;
                      break;
                  }
             }
             if (!setAtt) {
-                setAtt = new txAttribute(aNsID, localName, nsString());
+                setAtt = new txOutAttr(aNsID, localName, nsString());
                 setAtt->mShorthand = MB_TRUE;
                 mAttributes.add(setAtt);
             }

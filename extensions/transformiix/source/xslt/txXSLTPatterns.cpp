@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsReadableUtils.h"
-#include "ProcessorState.h"
+#include "txExecutionState.h"
 #include "txXSLTPatterns.h"
 #include "txNodeSetContext.h"
 #include "txForwardContext.h"
@@ -412,15 +412,15 @@ txKeyPattern::~txKeyPattern()
 
 MBool txKeyPattern::matches(Node* aNode, txIMatchContext* aContext)
 {
+    txExecutionState* es = (txExecutionState*)aContext->getPrivateContext();
     Document* contextDoc;
     if (aNode->getNodeType() == Node::DOCUMENT_NODE)
         contextDoc = (Document*)aNode;
     else
         contextDoc = aNode->getOwnerDocument();
     const NodeSet* nodes = 0;
-    nsresult rv = mProcessorState->getKeyNodes(mName, contextDoc, mValue,
-                                               PR_TRUE, &nodes);
-    if (NS_FAILED(rv) || !nodes || nodes->isEmpty())
+    nsresult rv = es->getKeyNodes(mName, contextDoc, mValue, PR_TRUE, &nodes);
+    if (NS_FAILED(rv) || !nodes)
         return MB_FALSE;
     MBool isTrue = nodes->contains(aNode);
     return isTrue;

@@ -43,13 +43,11 @@
 #include "nsIViewManager.h"
 #include "nsIScrollableView.h"
 #include "nsWeakReference.h"
-#include "nsITransformMediator.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIStreamLoader.h"
 #include "nsISupportsArray.h"
 #include "nsINodeInfo.h"
 #include "nsIDOMHTMLTextAreaElement.h"
-class nsICSSStyleSheet;
 #include "nsICSSLoaderObserver.h"
 #include "nsIHTMLContent.h"
 #include "nsIDOMHTMLScriptElement.h"
@@ -59,6 +57,7 @@ class nsICSSStyleSheet;
 #include "nsIExpatSink.h"
 #include "nsIDocumentTransformer.h"
 
+class nsICSSStyleSheet;
 class nsIDocument;
 class nsIURI;
 class nsIWebShell;
@@ -204,7 +203,7 @@ protected:
 
   nsCOMPtr<nsISupportsArray>          mContentStack;
   nsCOMPtr<nsINodeInfoManager>        mNodeInfoManager;
-  nsCOMPtr<nsITransformMediator>      mXSLTransformMediator;
+  nsCOMPtr<nsIDocumentTransformer>    mXSLTProcessor;
 };
 
 #endif // nsXMLContentSink_h__

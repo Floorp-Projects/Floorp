@@ -47,6 +47,7 @@ REQUIRES	= xpcom \
 		  webshell \
 		  docshell \
 		  layout \
+		  uconv \
 		  $(NULL)
 IS_COMPONENT	= 1
 MODULE_NAME	= TransformiixModule
@@ -55,10 +56,10 @@ MODULE_NAME	= TransformiixModule
 CPPSRCS = XSLTProcessorModule.cpp
 LOBJS = ../source/base/Double.$(OBJ_SUFFIX) \
   ../source/base/List.$(OBJ_SUFFIX) \
-  ../source/base/Map.$(OBJ_SUFFIX) \
   ../source/base/SimpleErrorObserver.$(OBJ_SUFFIX) \
   ../source/base/txAtoms.$(OBJ_SUFFIX) \
   ../source/base/txExpandedNameMap.$(OBJ_SUFFIX) \
+  ../source/base/txNamespaceMap.$(OBJ_SUFFIX) \
   ../source/base/txURIUtils.$(OBJ_SUFFIX) \
   ../source/xml/dom/mozImpl/MozillaAttr.$(OBJ_SUFFIX) \
   ../source/xml/dom/mozImpl/MozillaDocument.$(OBJ_SUFFIX) \
@@ -107,18 +108,24 @@ LOBJS = ../source/base/Double.$(OBJ_SUFFIX) \
   ../source/xml/parser/txXMLParser.$(OBJ_SUFFIX) \
   ../source/xslt/txBufferingHandler.$(OBJ_SUFFIX) \
   ../source/xslt/txOutputFormat.$(OBJ_SUFFIX) \
-  ../source/xslt/ProcessorState.$(OBJ_SUFFIX) \
+  ../source/xslt/txExecutionState.$(OBJ_SUFFIX) \
+  ../source/xslt/txInstructions.$(OBJ_SUFFIX) \
+  ../source/xslt/txMozillaStylesheetCompiler.$(OBJ_SUFFIX) \
   ../source/xslt/txMozillaTextOutput.$(OBJ_SUFFIX) \
   ../source/xslt/txMozillaXSLTProcessor.$(OBJ_SUFFIX) \
   ../source/xslt/txMozillaXMLOutput.$(OBJ_SUFFIX) \
   ../source/xslt/txRtfHandler.$(OBJ_SUFFIX) \
+  ../source/xslt/txStylesheet.$(OBJ_SUFFIX) \
+  ../source/xslt/txStylesheetCompileHandlers.$(OBJ_SUFFIX) \
+  ../source/xslt/txStylesheetCompiler.$(OBJ_SUFFIX) \
   ../source/xslt/txTextHandler.$(OBJ_SUFFIX) \
+  ../source/xslt/txToplevelItems.$(OBJ_SUFFIX) \
   ../source/xslt/txUnknownHandler.$(OBJ_SUFFIX) \
   ../source/xslt/txXSLTNumber.$(OBJ_SUFFIX) \
   ../source/xslt/txXSLTNumberCounters.$(OBJ_SUFFIX) \
   ../source/xslt/txXSLTPatterns.$(OBJ_SUFFIX) \
+  ../source/xslt/txXSLTProcessor.$(OBJ_SUFFIX) \
   ../source/xslt/txPatternParser.$(OBJ_SUFFIX) \
-  ../source/xslt/XSLTProcessor.$(OBJ_SUFFIX) \
   ../source/xslt/functions/CurrentFunctionCall.$(OBJ_SUFFIX) \
   ../source/xslt/functions/DocumentFunctionCall.$(OBJ_SUFFIX) \
   ../source/xslt/functions/ElementAvailableFnCall.$(OBJ_SUFFIX) \

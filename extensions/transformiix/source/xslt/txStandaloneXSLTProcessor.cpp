@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txStandaloneXSLTProcessor.h"
+#include "txStandaloneStylesheetCompiler.h"
 #include "nsCRT.h"
 #include "nsReadableUtils.h"
 #include "txHTMLOutput.h"
@@ -48,15 +49,17 @@
 #include "txURIUtils.h"
 #include "txXMLParser.h"
 
+TX_IMPL_DOM_STATICS;
+
 /**
  * Output Handler Factory
  */
 class txStandaloneHandlerFactory : public txAOutputHandlerFactory
 {
 public:
-    txStandaloneHandlerFactory(ProcessorState* aPs,
+    txStandaloneHandlerFactory(txExecutionState* aEs,
                                ostream* aStream)
-        : mPs(aPs), mStream(aStream)
+        : mEs(aEs), mStream(aStream)
     {
     }
 
@@ -67,7 +70,7 @@ public:
     TX_DECL_TXAOUTPUTHANDLERFACTORY;
 
 private:
-    ProcessorState* mPs;
+    txExecutionState* mEs;
     ostream* mStream;
 };
 
@@ -90,7 +93,7 @@ txStandaloneHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
             break;
 
         case eMethodNotSet:
-            *aHandler = new txUnknownHandler(mPs);
+            *aHandler = new txUnknownHandler(mEs);
             break;
     }
     NS_ENSURE_TRUE(*aHandler, NS_ERROR_OUT_OF_MEMORY);
@@ -150,16 +153,17 @@ txStandaloneXSLTProcessor::transform(nsACString& aXMLPath,
     if (!xmlDoc) {
         return NS_ERROR_FAILURE;
     }
-    Document* xslDoc = parsePath(aXSLPath, aErr);
-    if (!xslDoc) {
+    nsRefPtr<txStylesheet> style;
+    nsresult rv = TX_CompileStylesheetPath(NS_ConvertASCIItoUCS2(aXSLPath),
+                                           getter_AddRefs(style));
+    if (NS_FAILED(rv)) {
         delete xmlDoc;
-        return NS_ERROR_FAILURE;
+        return rv;
     }
     // transform
-    nsresult rv = transform(xmlDoc, xslDoc, aOut, aErr);
+    rv = transform(xmlDoc, style, aOut, aErr);
 
     delete xmlDoc;
-    delete xslDoc;
 
     return rv;
 }
@@ -181,15 +185,12 @@ txStandaloneXSLTProcessor::transform(Document* aXMLDoc, ostream& aOut,
     nsAutoString stylePath;
     getHrefFromStylesheetPI(*aXMLDoc, stylePath);
 
-    Document* xslDoc = parsePath(NS_LossyConvertUCS2toASCII(stylePath), aErr);
-    if (!xslDoc) {
-        return NS_ERROR_FAILURE;
-    }
+    nsRefPtr<txStylesheet> style;
+    nsresult rv = TX_CompileStylesheetPath(stylePath, getter_AddRefs(style));
 
     // transform
-    nsresult rv = transform(aXMLDoc, xslDoc, aOut, aErr);
+    rv = transform(aXMLDoc, style, aOut, aErr);
 
-    delete xslDoc;
     return rv;
 }
 
@@ -198,46 +199,28 @@ txStandaloneXSLTProcessor::transform(Document* aXMLDoc, ostream& aOut,
  * and prints the results to the given ostream argument
  */
 nsresult
-txStandaloneXSLTProcessor::transform(Document* aSource, Node* aStylesheet,
+txStandaloneXSLTProcessor::transform(Document* aSource,
+                                     txStylesheet* aStylesheet,
                                      ostream& aOut, ErrorObserver& aErr)
 {
-    // Create a new ProcessorState
-    Document* stylesheetDoc = 0;
-    Element* stylesheetElem = 0;
-    if (aStylesheet->getNodeType() == Node::DOCUMENT_NODE) {
-        stylesheetDoc = (Document*)aStylesheet;
-    }
-    else {
-        stylesheetElem = (Element*)aStylesheet;
-        stylesheetDoc = aStylesheet->getOwnerDocument();
-    }
-    ProcessorState ps(aSource, stylesheetDoc);
+    // Create a new txEvalState
+    txExecutionState es(aStylesheet);
 
-    ps.addErrorObserver(aErr);
+    // XXX todo es.addErrorObserver(aErr);
 
-    txSingleNodeContext evalContext(aSource, &ps);
-    ps.setEvalContext(&evalContext);
-
-    // Index templates and process top level xsl elements
-    nsresult rv = NS_OK;
-    if (stylesheetElem) {
-        rv = processTopLevel(stylesheetElem, 0, &ps);
-    }
-    else {
-        rv = processStylesheet(stylesheetDoc, 0, &ps);
-    }
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
-
-    txStandaloneHandlerFactory handlerFactory(&ps, &aOut);
-    ps.mOutputHandlerFactory = &handlerFactory;
+    txStandaloneHandlerFactory handlerFactory(&es, &aOut);
 
 #ifndef XP_WIN
     bool sync = aOut.sync_with_stdio(false);
 #endif
+    es.mOutputHandlerFactory = &handlerFactory;
+
+    es.init(aSource, nsnull);
+
     // Process root of XML source document
-    txXSLTProcessor::transform(&ps);
+    txXSLTProcessor::execute(es);
+    es.end();
+
 #ifndef XP_WIN
     aOut.sync_with_stdio(sync);
 #endif

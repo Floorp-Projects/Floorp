@@ -36,6 +36,8 @@
 #include "nsIAtom.h"
 #include "txError.h"
 
+class txNamespaceMap;
+
 class txExpandedName {
 public:
     txExpandedName() : mNamespaceID(kNameSpaceID_None)
@@ -58,7 +60,19 @@ public:
     {
     }
     
-    nsresult init(const nsAString& aQName, Node* aResolver, MBool aUseDefault);
+    nsresult init(const nsAString& aQName, txNamespaceMap* aResolver,
+                  MBool aUseDefault);
+
+    void reset()
+    {
+        mNamespaceID = kNameSpaceID_None;
+        mLocalName = nsnull;
+    }
+
+    PRBool isNull()
+    {
+        return mNamespaceID == kNameSpaceID_None && !mLocalName;
+    }
 
     txExpandedName& operator = (const txExpandedName& rhs)
     {
@@ -86,7 +100,8 @@ public:
 class XMLUtils {
 
 public:
-
+    static nsresult splitXMLName(const nsAString& aName, nsIAtom** aPrefix,
+                                 nsIAtom** aLocalName);
     static void getPrefix(const nsAString& src, nsIAtom** dest);
     static const nsDependentSubstring getLocalPart(const nsAString& src);
     static void getLocalPart(const nsAString& src, nsIAtom** dest);

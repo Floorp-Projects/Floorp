@@ -42,6 +42,7 @@
 #include "nsCRT.h"
 #include "nsIScriptSecurityManager.h"
 #include "txURIUtils.h"
+#include "txXSLTProcessor.h"
 #include "nsXPath1Scheme.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPath1SchemeProcessor)
@@ -202,7 +203,7 @@ Initialize(nsIModule* aSelf)
         xs->RegisterExceptionProvider(gXPathExceptionProvider,
                                       NS_ERROR_MODULE_DOM_XPATH);
 
-    if (!txXSLTProcessor::txInit()) {
+    if (!txXSLTProcessor::init()) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -218,8 +219,6 @@ Initialize(nsIModule* aSelf)
         gTxNameSpaceManager = nsnull;
         return rv;
     }
-
-    TX_LG_CREATE;
 
     return NS_OK;
 }
@@ -249,12 +248,10 @@ Shutdown(nsIModule* aSelf)
     NS_IF_RELEASE(NS_CLASSINFO_NAME(XPathNSResolver));
     NS_IF_RELEASE(NS_CLASSINFO_NAME(XPathResult));
 
-    txXSLTProcessor::txShutdown();
+    txXSLTProcessor::shutdown();
 
     NS_IF_RELEASE(gTxSecurityManager);
     NS_IF_RELEASE(gTxNameSpaceManager);
-
-    TX_LG_DELETE;
 }
 
 // Component Table

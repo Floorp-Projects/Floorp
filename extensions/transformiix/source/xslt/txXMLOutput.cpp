@@ -40,7 +40,7 @@
 
 const int txXMLOutput::DEFAULT_INDENT = 2;
 
-txAttribute::txAttribute(PRInt32 aNsID, nsIAtom* aLocalName,
+txOutAttr::txOutAttr(PRInt32 aNsID, nsIAtom* aLocalName,
                          const nsAString& aValue) :
     mName(aNsID, aLocalName),
     mValue(aValue),
@@ -78,15 +78,15 @@ void txXMLOutput::attribute(const nsAString& aName,
     XMLUtils::getLocalPart(aName, getter_AddRefs(localName));
     txExpandedName att(aNsID, localName);
 
-    txAttribute* setAtt = 0;
-    while ((setAtt = (txAttribute*)iter.next())) {
+    txOutAttr* setAtt = 0;
+    while ((setAtt = (txOutAttr*)iter.next())) {
          if (setAtt->mName == att) {
              setAtt->mValue = aValue;
              break;
          }
     }
     if (!setAtt) {
-        setAtt = new txAttribute(aNsID, localName, aValue);
+        setAtt = new txOutAttr(aNsID, localName, aValue);
         mAttributes.add(setAtt);
     }
 }
@@ -261,8 +261,8 @@ void txXMLOutput::closeStartTag(MBool aUseEmptyElementShorthand)
     mAfterEndTag = aUseEmptyElementShorthand;
     if (mStartTagOpen) {
         txListIterator iter(&mAttributes);
-        txAttribute* att;
-        while ((att = (txAttribute*)iter.next())) {
+        txOutAttr* att;
+        while ((att = (txOutAttr*)iter.next())) {
             *mOut << SPACE;
             const PRUnichar* attrVal;
             att->mName.mLocalName->GetUnicode(&attrVal);
@@ -273,7 +273,7 @@ void txXMLOutput::closeStartTag(MBool aUseEmptyElementShorthand)
                 printWithXMLEntities(att->mValue, MB_TRUE);
                 *mOut << DOUBLE_QUOTE;
             }
-            delete (txAttribute*)iter.remove();
+            delete (txOutAttr*)iter.remove();
         }
 
         if (aUseEmptyElementShorthand)
