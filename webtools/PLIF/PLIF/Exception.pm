@@ -190,7 +190,7 @@ sub report {
     my($exception, @data) = @_;
     syntaxError "Syntax error in \"report\": \"$exception\" is not a PLIF::Exception class", 1 unless UNIVERSAL::isa($exception, __PACKAGE__);
     $exception = $exception->init(@data);
-    local $SIG{__WARN__} = undef; # don't want this warning going through our processor
+    local $SIG{__WARN__} = 'DEFAULT'; # don't want this warning going through our processor
     warn $exception;
     return $exception;
 }
