@@ -16,7 +16,7 @@
             attribute  DOMString            hspace;
             attribute  boolean              isMap;
             attribute  DOMString            longDesc;
-            attribute  DOMString            src;
+            noscript   attribute  DOMString src;
             attribute  DOMString            useMap;
             attribute  DOMString            vspace;
             attribute  DOMString            width;
