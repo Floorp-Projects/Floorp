@@ -516,8 +516,10 @@ function UpdateOfflineState()
 
 function DoCommandClose()
 {
-  if (ComposeCanClose())
-    CloseWindow()
+  var retVal;
+  if ((retVal = ComposeCanClose()))
+	MsgComposeCloseWindow();
+  return retVal;
 }
 
 function DoCommandPrint()
@@ -866,13 +868,10 @@ function ComposeLoad()
     msgComposeService.TimeStamp("Done with the initialization (ComposeLoad). Waiting on editor to load about::blank", false);
 }
 
-function ComposeUnload(calledFromExit)
+function ComposeUnload()
 {
 	dump("\nComposeUnload from XUL\n");
-
 	msgCompose.UnregisterStateListener(stateListener);
-	if (msgCompose && msgComposeService)
-		msgComposeService.DisposeCompose(msgCompose, false);
 }
 
 function SetDocumentCharacterSet(aCharset)
@@ -1450,7 +1449,7 @@ function ComposeCanClose()
 	return true;
 }
 
-function CloseWindow()
+function MsgComposeCloseWindow()
 {
 	if (msgCompose)
 		msgCompose.CloseWindow();

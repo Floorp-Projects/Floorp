@@ -339,12 +339,6 @@ nsresult nsMsgComposeService::InitCompose(nsIDOMWindowInternal *aWindow,
 	return rv;
 }
 
-
-nsresult nsMsgComposeService::DisposeCompose(nsIMsgCompose *compose)
-{
-	return NS_OK;
-}
-
 NS_IMETHODIMP nsMsgComposeService::TimeStamp(const char * label, PRBool resetTime)
 {
 #ifdef MSGCOMP_TRACE_PERFORMANCE

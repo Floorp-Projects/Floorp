@@ -564,7 +564,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
       // set this object for use on completion...
       sendListener->SetComposeObj(this);
       sendListener->SetDeliverMode(deliverMode);
-      PRUint32 listeners;
+      PRUint32 listeners = 0;
       nsIMsgSendListener **tArray = sendListener->CreateListenerArray(&listeners);
       if (!tArray)
       {
