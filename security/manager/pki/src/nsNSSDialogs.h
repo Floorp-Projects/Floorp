@@ -32,7 +32,7 @@
 #include "nsICertPickDialogs.h"
 #include "nsITokenDialogs.h"
 #include "nsIDOMCryptoDialogs.h"
-#include "nsIGeneratingKeypairInfoDialogs.h"
+#include "nsIGenKeypairInfoDlg.h"
 
 #include "nsCOMPtr.h"
 #include "nsIStringBundle.h"

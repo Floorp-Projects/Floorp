@@ -50,7 +50,7 @@
 #include "nsScriptSecurityManager.h"
 #include "nsIPrincipal.h"
 #include "nsXPIDLString.h"
-#include "nsIGeneratingKeypairInfoDialogs.h"
+#include "nsIGenKeypairInfoDlg.h"
 #include "nsIDOMCryptoDialogs.h"
 #include "jsapi.h"
 #include "jsdbgapi.h"
