@@ -57,6 +57,7 @@ PRUint32 gFontDebug = 0 | NS_FONT_DEBUG_FONT_SCAN;
 #include "nsLocalFile.h"
 #include "nsIEnumerator.h"
 #include "nsITimelineService.h"
+#include "nsArray.h"
 
 //
 // Short overview:
@@ -165,7 +166,7 @@ nsFT2FontCatalog::GetFontCatalogEntries(const nsACString & aFamilyName,
                                         PRUint16 aWidth,
                                         PRUint16 aSlant,
                                         PRUint16 aSpacing,
-                                        nsISupportsArray **_retval)
+                                        nsIArray **_retval)
 {
 #if (!defined(MOZ_ENABLE_FREETYPE2))
   *_retval = nsnull;
@@ -183,8 +184,8 @@ nsFT2FontCatalog::GetFontCatalogEntries(const nsACString & aFamilyName,
   GetFontNames(aFamilyName, aLanguage, aWeight, aWidth, aSlant, aSpacing, fc);
   nsCOMPtr<nsITrueTypeFontCatalogEntry> aFce;
   nsCOMPtr<nsISupports> genericFce;
-  nsCOMPtr<nsISupportsArray> entries;
-  NS_NewISupportsArray(getter_AddRefs(entries));
+  nsCOMPtr<nsIMutableArray> entries;
+  NS_NewArray(getter_AddRefs(entries));
   if (!entries)
     return NS_ERROR_OUT_OF_MEMORY;
   
@@ -192,7 +193,7 @@ nsFT2FontCatalog::GetFontCatalogEntries(const nsACString & aFamilyName,
   for (i = 0; i < fc->numFonts; i++) {
     aFce = nsFreeTypeGetFaceID(fc->fonts[i]);
     genericFce = do_QueryInterface(aFce);
-    entries->InsertElementAt(genericFce, 0);
+    entries->InsertElementAt(genericFce, 0, PR_FALSE);
   }
  
   free(fc->fonts);

@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsISupportsArray.idl"
+#include "nsIArray.idl"
 
 [noscript, uuid(70406f93-5b53-49a0-b5a7-ebf533bfe59b)]
 interface nsIFontCatalogEntry : nsISupports
@@ -78,12 +78,12 @@ interface nsITrueTypeFontCatalogEntry : nsIFontCatalogEntry
 [noscript, uuid(a3057187-c40f-4ffa-9160-2b16482053b1)]
 interface nsIFontCatalogService : nsISupports
 {
-  nsISupportsArray getFontCatalogEntries(in ACString familyName,
-                                         in ACString language,
-                                         in unsigned short weight,
-                                         in unsigned short width,
-                                         in unsigned short slant,
-                                         in unsigned short spacing);
+  nsIArray getFontCatalogEntries(in ACString familyName,
+                                 in ACString language,
+                                 in unsigned short weight,
+                                 in unsigned short width,
+                                 in unsigned short slant,
+                                 in unsigned short spacing);
 
   // Definition for weight
   const unsigned short kFCWeightAny      =   0;
