@@ -20,6 +20,7 @@
  *
  * Contributor(s): Mostafa Hosseini <mostafah@oeone.com>
  *                 Chris Charabaruk <ccharabaruk@meldstar.com>
+ *                 ArentJan Banck <ajbanck@planet.nl>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -53,6 +54,9 @@ interface nsISimpleEnumerator;
  *
  */
 
+typedef long eventMethodProperty;
+typedef long eventStatusProperty;
+
 [scriptable, uuid(db180127-cc56-40c6-a8ef-7e329e1c4142)]
 interface oeIDateTime : nsISupports
 {
@@ -70,8 +74,23 @@ interface oeIDateTime : nsISupports
 [scriptable, uuid(89c5cd5a-af2d-45e6-83c7-2f2420a13626)]
 interface oeIICalEvent : nsISupports
 {
+    const eventMethodProperty ICAL_METHOD_X = 10011;
+    const eventMethodProperty ICAL_METHOD_PUBLISH = 10012;
+    const eventMethodProperty ICAL_METHOD_REQUEST = 10013;
+    const eventStatusProperty ICAL_STATUS_X = 10028;
+    const eventStatusProperty ICAL_STATUS_TENTATIVE = 10029;
+    const eventStatusProperty ICAL_STATUS_CONFIRMED = 10030;
+    const eventStatusProperty ICAL_STATUS_COMPLETED = 10031;
+    const eventStatusProperty ICAL_STATUS_NEEDSACTION = 10032;
+    const eventStatusProperty ICAL_STATUS_CANCELLED = 10033;
+    const eventStatusProperty ICAL_STATUS_INPROCESS = 10034;
+    const eventStatusProperty ICAL_STATUS_DRAFT = 10035;
+    const eventStatusProperty ICAL_STATUS_FINAL = 10036;
+    const eventStatusProperty ICAL_STATUS_NONE = 10037;
+
     readonly attribute oeIDateTime start;
     readonly attribute oeIDateTime end;
+    readonly attribute oeIDateTime stamp;
     attribute string id;
     attribute string title;
     attribute string description;
@@ -94,6 +113,9 @@ interface oeIICalEvent : nsISupports
     attribute short recurWeekNumber;
     attribute PRTime lastAlarmAck;
     attribute string url;
+    attribute short priority;
+    attribute eventMethodProperty method;
+    attribute eventStatusProperty status;
     boolean getNextRecurrence( in PRTime begin, out PRTime result);
     boolean getPreviousOccurrence( in PRTime beforethis, out PRTime result);
     string getIcalString();

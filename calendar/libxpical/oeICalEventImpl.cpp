@@ -20,6 +20,7 @@
  *
  * Contributor(s): Mostafa Hosseini <mostafah@oeone.com>
  *                 Gary Frederick <gary.frederick@jsoft.com>
+ *                 ArentJan Banck <ajbanck@planet.nl>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -53,6 +54,8 @@
 #define RECUR_MONTHLY_MDAY 3
 #define RECUR_MONTHLY_WDAY 4
 #define RECUR_YEARLY 5
+
+#define XPROP_LASTALARMACK "X-MOZILLA-LASTALARMACK"
 
 char *EmptyReturn() {
     return (char*) nsMemory::Clone( "", 1 );
@@ -148,6 +151,9 @@ oeICalEventImpl::oeICalEventImpl()
 	if( NS_FAILED( rv = NS_NewDateTime((oeIDateTime**) &m_end ))) {
         m_end = nsnull;
 	}
+	if( NS_FAILED( rv = NS_NewDateTime((oeIDateTime**) &m_stamp ))) {
+        m_stamp = nsnull;
+	}
 	if( NS_FAILED( rv = NS_NewDateTime((oeIDateTime**) &m_recurend ))) {
         m_recurend = nsnull;
 	}
@@ -157,6 +163,9 @@ oeICalEventImpl::oeICalEventImpl()
     m_location = nsnull;
     m_category = nsnull;
     m_url = nsnull;
+    m_priority = 0;
+    m_method = 0;
+    m_status = 0;
     m_isprivate = true;
     m_syncid = nsnull;
     m_allday = false;
@@ -211,6 +220,8 @@ oeICalEventImpl::~oeICalEventImpl()
       m_start->Release();
   if( m_end )
       m_end->Release();
+  if( m_stamp )
+      m_stamp->Release();
   if( m_recurend )
     m_recurend->Release();
 }
@@ -487,6 +498,66 @@ NS_IMETHODIMP oeICalEventImpl::SetSyncId(const char * aNewVal)
         m_syncid= (char*) nsMemory::Clone( aNewVal, strlen(aNewVal)+1);
     else
         m_syncid = nsnull;
+    return NS_OK;
+}
+
+/* attribute string Method; */
+NS_IMETHODIMP oeICalEventImpl::GetMethod(eventMethodProperty *aRetVal)
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "GetMethod() = " );
+#endif
+   *aRetVal= m_method;
+   return NS_OK;
+}
+
+NS_IMETHODIMP oeICalEventImpl::SetMethod(eventMethodProperty aNewVal)
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "SetMethod( %s )\n", aNewVal );
+#endif
+    m_method= aNewVal;
+    return NS_OK;
+}
+
+/* attribute string Status; */
+NS_IMETHODIMP oeICalEventImpl::GetStatus(eventStatusProperty *aRetVal)
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "GetStatus() = " );
+#endif
+   *aRetVal= m_status;
+   return NS_OK;
+}
+
+NS_IMETHODIMP oeICalEventImpl::SetStatus(eventStatusProperty aNewVal)
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "SetStatus( %s )\n", aNewVal );
+#endif
+    m_status= aNewVal;
+    return NS_OK;
+}
+
+/* attribute short Priority; */
+NS_IMETHODIMP oeICalEventImpl::GetPriority(PRInt16 *aRetVal)
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "GetPriority() = \n" );
+#endif
+    *aRetVal = m_priority;
+#ifdef ICAL_DEBUG_ALL
+    printf( "%d\n", *aRetVal );
+#endif
+    return NS_OK;
+}
+
+NS_IMETHODIMP oeICalEventImpl::SetPriority(PRInt16 aNewVal)
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "SetPriority( %d )\n", aNewVal );
+#endif
+    m_priority = aNewVal;
     return NS_OK;
 }
 
@@ -970,6 +1041,13 @@ NS_IMETHODIMP oeICalEventImpl::GetEnd(oeIDateTime * *end)
     return NS_OK;
 }
 
+NS_IMETHODIMP oeICalEventImpl::GetStamp(oeIDateTime * *stamp)
+{
+    *stamp = m_stamp;
+    NS_ADDREF(*stamp);
+    return NS_OK;
+}
+
 NS_IMETHODIMP oeICalEventImpl::GetRecurEnd(oeIDateTime * *recurend)
 {
     *recurend = m_recurend;
@@ -1315,6 +1393,28 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         return false;
     }
 
+//method
+    if( kind == ICAL_VCALENDAR_COMPONENT ) {
+       prop = icalcomponent_get_first_property( comp, ICAL_METHOD_PROPERTY );
+       if ( prop != 0) {
+	   eventMethodProperty tmpMethodProp;
+           tmpMethodProp = icalproperty_get_method( prop );
+           SetMethod( tmpMethodProp );
+       } else  if ( m_method ) {
+	   m_method = 0;
+       }	    
+    }
+
+//status
+   prop = icalcomponent_get_first_property( vevent, ICAL_STATUS_PROPERTY );
+   if ( prop != 0) {
+       eventStatusProperty tmpStatusProp;
+       tmpStatusProp = icalproperty_get_status( prop );
+       SetStatus( tmpStatusProp );
+   } else  if ( m_status ) {
+       m_status = 0;
+   }	    
+
 //title
     prop = icalcomponent_get_first_property( vevent, ICAL_SUMMARY_PROPERTY );
     if ( prop != 0) {
@@ -1364,6 +1464,14 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         nsMemory::Free( m_url );
         m_url= nsnull;
     }
+
+//priority
+    prop = icalcomponent_get_first_property( vevent, ICAL_PRIORITY_PROPERTY );
+    if ( prop != 0) {
+        m_priority = icalproperty_get_priority( prop );
+    } else {
+        m_priority = 0;
+    }                             
 
 //isprivate
     prop = icalcomponent_get_first_property( vevent, ICAL_CLASS_PROPERTY );
@@ -1479,9 +1587,20 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     }
 
     //lastalarmack
-    prop = icalcomponent_get_first_property( vevent, ICAL_DTSTAMP_PROPERTY );
+
+    prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
+    while ( prop ) {
+        const char *x_name = icalproperty_get_x_name ( prop );
+        if ( strcmp( x_name, XPROP_LASTALARMACK ) == 0) {
+            break;
+        }
+        prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ); 
+    }
+
     if ( prop != 0) {
-        m_lastalarmack = icalproperty_get_dtstart( prop );
+        tmpstr = icalproperty_get_value_as_string( prop );
+        m_lastalarmack = icaltime_from_string( tmpstr );
+
     } else {
         m_lastalarmack = icaltime_null_time();
     }
@@ -1541,6 +1660,13 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         m_end->m_datetime = m_start->m_datetime;
     } else {
         m_end->m_datetime = icaltime_null_time();
+    }
+//stampdate
+    prop = icalcomponent_get_first_property( vevent, ICAL_DTSTAMP_PROPERTY );
+    if ( prop != 0) {
+        m_stamp->m_datetime = icalproperty_get_dtstamp( prop );
+    } else {
+        m_stamp->m_datetime = icaltime_null_time();
     }
 //recurend & recurforever & recur & recurweekday & recurweeknumber
     m_recur = false;
@@ -1636,7 +1762,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
 }
 
 #define ICALEVENT_VERSION "2.0"
-#define ICALEVENT_PRODID "PRODID:-//Mozilla.org/NONSGML Mozilla Calendar V1.0//EN"
+#define ICALEVENT_PRODID "-//Mozilla.org/NONSGML Mozilla Calendar V1.0//EN"
 
 icalcomponent* oeICalEventImpl::AsIcalComponent()
 {
@@ -1660,6 +1786,12 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     //prodid
     prop = icalproperty_new_prodid( ICALEVENT_PRODID );
     icalcomponent_add_property( newcalendar, prop );
+
+    //method
+    if( m_method != 0 ){
+        prop = icalproperty_new_method( (icalproperty_method) m_method );
+        icalcomponent_add_property( newcalendar, prop );
+    }
 
     icalcomponent *vevent = icalcomponent_new_vevent();
 
@@ -1693,6 +1825,18 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     //url
     if( m_url && strlen( m_url ) != 0 ){
         prop = icalproperty_new_url( m_url );
+        icalcomponent_add_property( vevent, prop );
+    }
+
+    //priority
+    if( m_priority != 0) {
+        prop = icalproperty_new_priority( m_priority );
+                    icalcomponent_add_property( vevent, prop );
+    }
+
+    //status
+    if( m_status != 0 ){
+        prop = icalproperty_new_status( (icalproperty_status) m_status );
         icalcomponent_add_property( vevent, prop );
     }
 
@@ -1771,11 +1915,10 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
         icalproperty_add_parameter( prop, tmppar );
         icalcomponent_add_property( vevent, prop );
     }
-
     //lastalarmack
     if( !icaltime_is_null_time( m_lastalarmack ) ) {
-        prop = icalproperty_new_dtstamp( m_lastalarmack );
-        icalcomponent_add_property( vevent, prop );
+        prop = icalproperty_new_x( icaltime_as_ical_string(m_lastalarmack ));
+        icalproperty_set_x_name( prop, XPROP_LASTALARMACK);
     }
 
     //inviteemail
@@ -1937,6 +2080,12 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
             m_end->SetMinute( 59 );
         }
         prop = icalproperty_new_dtend( m_end->m_datetime );
+        icalcomponent_add_property( vevent, prop );
+    }
+
+    if( m_stamp && !icaltime_is_null_time( m_stamp->m_datetime ) ) {
+        //stampdate
+        prop = icalproperty_new_dtstamp( m_stamp->m_datetime );
         icalcomponent_add_property( vevent, prop );
     }
 

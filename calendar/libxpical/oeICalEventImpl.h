@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Mostafa Hosseini <mostafah@oeone.com>
+ *                 ArentJan Banck <ajbanck@planet.nl>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -96,6 +97,9 @@ private:
     char *m_location;
     char *m_category;
     char *m_url;
+    short m_priority;
+    eventMethodProperty m_method;
+    eventStatusProperty m_status;
     bool m_isprivate;
     bool m_allday;
     bool m_hasalarm;
@@ -112,6 +116,7 @@ private:
     short m_recurweeknumber;
     oeDateTimeImpl *m_start;
     oeDateTimeImpl *m_end;
+    oeDateTimeImpl *m_stamp;
     oeDateTimeImpl *m_recurend;
     icaltimetype m_lastalarmack;
     std::vector<PRTime> m_exceptiondates;

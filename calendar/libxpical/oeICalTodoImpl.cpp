@@ -286,7 +286,7 @@ icalcomponent* oeICalTodoImpl::AsIcalComponent()
     }
 
     //percent
-    if( m_percent ) {
+    if( m_percent != 0) {
         prop = icalproperty_new_percentcomplete( m_percent );
         icalcomponent_add_property( vtodo, prop );
     }

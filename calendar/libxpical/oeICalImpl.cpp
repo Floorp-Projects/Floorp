@@ -2266,6 +2266,36 @@ NS_IMETHODIMP oeICalFilter::SetPrivateEvent(PRBool aNewVal)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP oeICalFilter::GetMethod(eventMethodProperty *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetMethod(eventMethodProperty aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetStatus(eventStatusProperty *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetStatus(eventStatusProperty aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetPriority(PRInt16 *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetPriority(PRInt16 aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP oeICalFilter::GetSyncId(char * *aRetVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -2397,6 +2427,11 @@ NS_IMETHODIMP oeICalFilter::GetStart(oeIDateTime * *start)
 }
 
 NS_IMETHODIMP oeICalFilter::GetEnd(oeIDateTime * *end)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetStamp(oeIDateTime * *stamp)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
