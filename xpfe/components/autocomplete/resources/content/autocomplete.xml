@@ -40,7 +40,8 @@
 
       <constructor><![CDATA[
         // XXX bug 90337 band-aid until we figure out what's going on here
-        this.mInputElt.value = this.value;
+        if (this.value != this.mInputElt.value)
+          this.mInputElt.value = this.value;
         delete this.value;
 
         // set default property values
