@@ -32,23 +32,24 @@ class nsCheckButton : public nsWidget,
 {
 
 public:
-                            nsCheckButton();
-    virtual                 ~nsCheckButton();
+  nsCheckButton();
+  virtual                 ~nsCheckButton();
 
-    // nsISupports
-    NS_IMETHOD_(nsrefcnt) AddRef();
-    NS_IMETHOD_(nsrefcnt) Release();
-    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  // nsISupports
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-    // nsICheckButton part
-    NS_IMETHOD SetLabel(const nsString &aText);
-    NS_IMETHOD GetLabel(nsString &aBuffer);
-    NS_IMETHOD SetState(const PRBool aState);
-    NS_IMETHOD GetState(PRBool& aState);
+  // nsICheckButton part
+  NS_IMETHOD SetLabel(const nsString &aText);
+  NS_IMETHOD GetLabel(nsString &aBuffer);
+  NS_IMETHOD SetState(const PRBool aState);
+  NS_IMETHOD GetState(PRBool& aState);
 
-  virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
-  virtual PRBool OnPaint(nsPaintEvent &aEvent);
-  virtual PRBool OnResize(nsSizeEvent &aEvent);
+  virtual PRBool OnMove(PRInt32 aX, PRInt32 aY) { return PR_FALSE; }
+  virtual PRBool OnPaint(nsPaintEvent & aEvent) { return PR_FALSE; }
+  virtual PRBool OnResize(nsRect &aRect) { return PR_FALSE; }
+
 
 protected:
   NS_IMETHOD CreateNative(GtkWidget *parentWindow);

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -32,43 +32,43 @@ class nsComboBox : public nsWidget,
 {
 
 public:
-    nsComboBox();
-    ~nsComboBox();
+  nsComboBox();
+  ~nsComboBox();
 
-    NS_IMETHOD_(nsrefcnt) AddRef();
-    NS_IMETHOD_(nsrefcnt) Release();
-    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-    // nsIComboBox interface
-    NS_IMETHOD      AddItemAt(nsString &aItem, PRInt32 aPosition);
-    virtual PRInt32 FindItem(nsString &aItem, PRInt32 aStartPos);
-    virtual PRInt32 GetItemCount();
-    virtual PRBool  RemoveItemAt(PRInt32 aPosition);
-    virtual PRBool  GetItemAt(nsString& anItem, PRInt32 aPosition);
-    NS_IMETHOD      GetSelectedItem(nsString& aItem);
-    virtual PRInt32 GetSelectedIndex();
-    NS_IMETHOD      SelectItem(PRInt32 aPosition);
-    NS_IMETHOD      Deselect() ;
+  // nsIComboBox interface
+  NS_IMETHOD      AddItemAt(nsString &aItem, PRInt32 aPosition);
+  virtual PRInt32 FindItem(nsString &aItem, PRInt32 aStartPos);
+  virtual PRInt32 GetItemCount();
+  virtual PRBool  RemoveItemAt(PRInt32 aPosition);
+  virtual PRBool  GetItemAt(nsString& anItem, PRInt32 aPosition);
+  NS_IMETHOD      GetSelectedItem(nsString& aItem);
+  virtual PRInt32 GetSelectedIndex();
+  NS_IMETHOD      SelectItem(PRInt32 aPosition);
+  NS_IMETHOD      Deselect() ;
 
-    virtual PRBool  OnMove(PRInt32 aX, PRInt32 aY);
-    virtual PRBool  OnPaint(nsPaintEvent & aEvent);
-    virtual PRBool  OnResize(nsSizeEvent &aEvent);
-
-    // nsIComboBox interface
-    NS_IMETHOD      SetMultipleSelection(PRBool aMultipleSelections);
-    PRInt32         GetSelectedCount();
-    NS_IMETHOD      GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
+  virtual PRBool  OnMove(PRInt32 aX, PRInt32 aY) { return PR_FALSE; }
+  virtual PRBool  OnPaint(nsPaintEvent & aEvent) { return PR_FALSE; }
+  virtual PRBool  OnResize(nsRect &aRect) { return PR_FALSE; }
+  
+  // nsIComboBox interface
+  NS_IMETHOD      SetMultipleSelection(PRBool aMultipleSelections);
+  PRInt32         GetSelectedCount();
+  NS_IMETHOD      GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
 
 protected:
-    NS_IMETHOD  CreateNative(GtkWidget *parentWindow);
-    virtual void InitCallbacks(char * aName = nsnull);
-    virtual void OnDestroySignal(GtkWidget* aGtkWidget);
+  NS_IMETHOD  CreateNative(GtkWidget *parentWindow);
+  virtual void InitCallbacks(char * aName = nsnull);
+  virtual void OnDestroySignal(GtkWidget* aGtkWidget);
 
-    GtkWidget  *mAlign;  /* workaround for gtkcombo bug */
-    GtkWidget  *mCombo;  /* workaround for gtkcombo bug */
-    GList *mItems;
-    PRBool  mMultiSelect;
-    int     mNumItems;
+  GtkWidget  *mAlign;  /* workaround for gtkcombo bug */
+  GtkWidget  *mCombo;  /* workaround for gtkcombo bug */
+  GList *mItems;
+  PRBool  mMultiSelect;
+  int     mNumItems;
 };
 
 #endif // nsComboBox_h__

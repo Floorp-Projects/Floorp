@@ -96,19 +96,3 @@ nsresult nsTextAreaWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr
   return nsWidget::QueryInterface(aIID, aInstancePtr);
 }
 
-//-------------------------------------------------------------------------
-//
-// paint, resizes message - ignore
-//
-//-------------------------------------------------------------------------
-PRBool nsTextAreaWidget::OnPaint(nsPaintEvent & aEvent)
-{
-  return PR_FALSE;
-}
-
-
-//--------------------------------------------------------------
-PRBool nsTextAreaWidget::OnResize(nsSizeEvent &aEvent)
-{
-  return PR_FALSE;
-}

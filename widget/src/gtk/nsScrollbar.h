@@ -30,30 +30,31 @@ class nsScrollbar : public nsWidget,
 {
 
 public:
-                            nsScrollbar(PRBool aIsVertical);
-    virtual                 ~nsScrollbar();
+  nsScrollbar(PRBool aIsVertical);
+  virtual                 ~nsScrollbar();
 
-    // nsISupports
-    NS_IMETHOD_(nsrefcnt) AddRef();
-    NS_IMETHOD_(nsrefcnt) Release();
-    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  // nsISupports
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-    // nsIScrollBar implementation
-    NS_IMETHOD SetMaxRange(PRUint32 aEndRange);
-    NS_IMETHOD GetMaxRange(PRUint32& aMaxRange);
-    NS_IMETHOD SetPosition(PRUint32 aPos);
-    NS_IMETHOD GetPosition(PRUint32& aPos);
-    NS_IMETHOD SetThumbSize(PRUint32 aSize);
-    NS_IMETHOD GetThumbSize(PRUint32& aSize);
-    NS_IMETHOD SetLineIncrement(PRUint32 aSize);
-    NS_IMETHOD GetLineIncrement(PRUint32& aSize);
-    NS_IMETHOD SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
-                               PRUint32 aPosition, PRUint32 aLineIncrement);
+  // nsIScrollBar implementation
+  NS_IMETHOD SetMaxRange(PRUint32 aEndRange);
+  NS_IMETHOD GetMaxRange(PRUint32& aMaxRange);
+  NS_IMETHOD SetPosition(PRUint32 aPos);
+  NS_IMETHOD GetPosition(PRUint32& aPos);
+  NS_IMETHOD SetThumbSize(PRUint32 aSize);
+  NS_IMETHOD GetThumbSize(PRUint32& aSize);
+  NS_IMETHOD SetLineIncrement(PRUint32 aSize);
+  NS_IMETHOD GetLineIncrement(PRUint32& aSize);
+  NS_IMETHOD SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
+                           PRUint32 aPosition, PRUint32 aLineIncrement);
+  virtual PRBool OnScroll (nsScrollbarEvent & aEvent, PRUint32 cPos);
 
 
-    virtual PRBool    OnPaint(nsPaintEvent & aEvent);
-    virtual PRBool    OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
-    virtual PRBool    OnResize(nsSizeEvent &aEvent);
+  virtual PRBool OnMove(PRInt32 aX, PRInt32 aY) { return PR_FALSE; }
+  virtual PRBool OnPaint(nsPaintEvent & aEvent) { return PR_FALSE; }
+  virtual PRBool OnResize(nsRect &aRect) { return PR_FALSE; }
 
 protected:
   NS_IMETHOD CreateNative(GtkWidget *parentWindow);

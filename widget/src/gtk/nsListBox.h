@@ -31,43 +31,41 @@ class nsListBox :   public nsWidget,
 {
 
 public:
-    nsListBox();
-    virtual ~nsListBox();
+  nsListBox();
+  virtual ~nsListBox();
 
-    // nsISupports
-    NS_IMETHOD_(nsrefcnt) AddRef();
-    NS_IMETHOD_(nsrefcnt) Release();
-    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  // nsISupports
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
+  virtual PRBool OnMove(PRInt32 aX, PRInt32 aY) { return PR_FALSE; }
+  virtual PRBool OnPaint(nsPaintEvent & aEvent) { return PR_FALSE; }
+  virtual PRBool OnResize(nsRect &aRect) { return PR_FALSE; }
 
-    virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
-    virtual PRBool OnPaint(nsPaintEvent & aEvent);
-    virtual PRBool OnResize(nsSizeEvent &aEvent);
-
-
-    // nsIListBox interface
-    NS_IMETHOD PreCreateWidget(nsWidgetInitData *aInitData);
-    NS_IMETHOD SetMultipleSelection(PRBool aMultipleSelections);
-    NS_IMETHOD AddItemAt(nsString &aItem, PRInt32 aPosition);
-    PRInt32    FindItem(nsString &aItem, PRInt32 aStartPos);
-    PRInt32    GetItemCount();
-    PRBool     RemoveItemAt(PRInt32 aPosition);
-    PRBool     GetItemAt(nsString& anItem, PRInt32 aPosition);
-    NS_IMETHOD GetSelectedItem(nsString& aItem);
-    PRInt32    GetSelectedIndex();
-    PRInt32    GetSelectedCount();
-    NS_IMETHOD GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
-    NS_IMETHOD SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
-    NS_IMETHOD SelectItem(PRInt32 aPosition);
-    NS_IMETHOD Deselect() ;
+  // nsIListBox interface
+  NS_IMETHOD PreCreateWidget(nsWidgetInitData *aInitData);
+  NS_IMETHOD SetMultipleSelection(PRBool aMultipleSelections);
+  NS_IMETHOD AddItemAt(nsString &aItem, PRInt32 aPosition);
+  PRInt32    FindItem(nsString &aItem, PRInt32 aStartPos);
+  PRInt32    GetItemCount();
+  PRBool     RemoveItemAt(PRInt32 aPosition);
+  PRBool     GetItemAt(nsString& anItem, PRInt32 aPosition);
+  NS_IMETHOD GetSelectedItem(nsString& aItem);
+  PRInt32    GetSelectedIndex();
+  PRInt32    GetSelectedCount();
+  NS_IMETHOD GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
+  NS_IMETHOD SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
+  NS_IMETHOD SelectItem(PRInt32 aPosition);
+  NS_IMETHOD Deselect() ;
 
 protected:
-    NS_IMETHOD CreateNative(GtkWidget *parentWindow);
-    virtual void InitCallbacks(char * aName = nsnull);
-    virtual void OnDestroySignal(GtkWidget* aGtkWidget);
+  NS_IMETHOD CreateNative(GtkWidget *parentWindow);
+  virtual void InitCallbacks(char * aName = nsnull);
+  virtual void OnDestroySignal(GtkWidget* aGtkWidget);
 
-    GtkWidget *mCList;
-    PRBool  mMultiSelect;
+  GtkWidget *mCList;
+  PRBool  mMultiSelect;
 };
 
 #endif // nsListBox_h__

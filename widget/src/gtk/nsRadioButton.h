@@ -30,7 +30,7 @@ class nsRadioButton : public nsWidget,
 {
 
 public:
-                          nsRadioButton();
+  nsRadioButton();
   virtual                 ~nsRadioButton();
 
   // nsISupports
@@ -45,11 +45,9 @@ public:
   NS_IMETHOD              GetState(PRBool& aState);
 
 
-  // nsIRadioButton part
-  virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
-  virtual PRBool          OnPaint(nsPaintEvent &aEvent);
-  virtual PRBool          OnResize(nsSizeEvent &aEvent);
-
+  virtual PRBool OnMove(PRInt32 aX, PRInt32 aY) { return PR_FALSE; }
+  virtual PRBool OnPaint(nsPaintEvent & aEvent) { return PR_FALSE; }
+  virtual PRBool OnResize(nsRect &aRect) { return PR_FALSE; }
 
   // These are needed to Override the auto check behavior
   void Armed();

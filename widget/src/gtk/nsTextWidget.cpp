@@ -64,8 +64,8 @@ NS_METHOD nsTextWidget::CreateNative(GtkWidget *parentWindow)
 
   gtk_widget_set_name(mWidget, "nsTextWidget");
   gtk_signal_connect(GTK_OBJECT(mWidget),
-                     "key_release_event",
-                     GTK_SIGNAL_FUNC(handle_key_release_event),
+                     "key_press_event",
+                     GTK_SIGNAL_FUNC(handle_key_press_event),
                      this);
   SetPassword(mIsPassword);
   SetReadOnly(mIsReadOnly, oldIsReadOnly);
@@ -103,21 +103,4 @@ nsresult nsTextWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     }
 
     return result;
-}
-
-//-------------------------------------------------------------------------
-//
-// paint, resizes message - ignore
-//
-//-------------------------------------------------------------------------
-PRBool nsTextWidget::OnPaint(nsPaintEvent & aEvent)
-{
-  return PR_FALSE;
-}
-
-
-//--------------------------------------------------------------
-PRBool nsTextWidget::OnResize(nsSizeEvent &aEvent)
-{
-  return PR_FALSE;
 }
