@@ -39,6 +39,33 @@
 
 #include "nsXULTreeAccessibleWrap.h"
 #include "nsTextFormatter.h"
+#include "nsIFrame.h"
+
+// --------------------------------------------------------
+// nsXULTreeAccessibleWrap
+// --------------------------------------------------------
+
+nsXULTreeAccessibleWrap::nsXULTreeAccessibleWrap(nsIDOMNode *aDOMNode, nsIWeakReference *aShell):
+nsXULTreeAccessible(aDOMNode, aShell)
+{
+}
+
+NS_IMETHODIMP nsXULTreeAccessibleWrap::GetRole(PRUint32 *aRole)
+{
+  NS_ASSERTION(mTree, "No tree view");
+
+  nsCOMPtr<nsITreeColumns> cols;
+  mTree->GetColumns(getter_AddRefs(cols));
+  nsCOMPtr<nsITreeColumn> primaryCol;
+  if (cols) {
+    cols->GetPrimaryColumn(getter_AddRefs(primaryCol));
+  }
+  // No primary column means we're in a list
+  // In fact, history and mail turn off the primary flag when switching to a flat view
+  *aRole = primaryCol ? ROLE_OUTLINE : ROLE_LIST;
+
+  return NS_OK;
+}
 
 // --------------------------------------------------------
 // nsXULTreeitemAccessibleWrap Accessible
@@ -53,9 +80,52 @@ nsXULTreeitemAccessible(aParent, aDOMNode, aShell, aRow, aColumn)
 {
 }
 
-NS_IMETHODIMP nsXULTreeitemAccessibleWrap::GetRole(PRUint32 *_retval)
+NS_IMETHODIMP nsXULTreeitemAccessibleWrap::GetRole(PRUint32 *aRole)
 {
-  *_retval = ROLE_OUTLINEITEM;
+  // No primary column means we're in a list
+  // In fact, history and mail turn off the primary flag when switching to a flat view
+  NS_ASSERTION(mColumn, "mColumn is null");
+  PRBool isPrimary = PR_FALSE;
+  mColumn->GetPrimary(&isPrimary);
+  *aRole = isPrimary ? ROLE_OUTLINEITEM : ROLE_LISTITEM;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeitemAccessibleWrap::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
+{
+  nsresult rv = nsXULTreeitemAccessible::GetBounds(x, y, width, height);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  nsIFrame *frame = GetFrame();
+  if (frame) {
+    // Will subtract first cell's start x from total width
+    PRInt32 cellStartX, cellStartY;
+    mTree->GetCoordsForCellItem(mRow, mColumn, EmptyCString(), &cellStartX, &cellStartY, width, height);
+    // Use entire row width, not just key column's width
+    float t2p = GetPresContext()->TwipsToPixels();
+    *width = NSTwipsToIntPixels(frame->GetRect().width, t2p) - cellStartX;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeitemAccessibleWrap::GetName(nsAString& aName)
+{
+  nsCOMPtr<nsITreeColumns> cols;
+  mTree->GetColumns(getter_AddRefs(cols));
+  if (!cols) {
+    return NS_OK;
+  }
+  nsCOMPtr<nsITreeColumn> column;
+  cols->GetFirstColumn(getter_AddRefs(column));
+  while (column) {
+    nsAutoString colText;
+    mTreeView->GetCellText(mRow, column, colText);
+    aName += colText + NS_LITERAL_STRING("  ");
+    nsCOMPtr<nsITreeColumn> nextColumn;
+    column->GetNext(getter_AddRefs(nextColumn));
+    column = nextColumn;
+  }
   return NS_OK;
 }
 
@@ -67,8 +137,10 @@ NS_IMETHODIMP nsXULTreeitemAccessibleWrap::GetDescription(nsAString& aDescriptio
 
   aDescription.Truncate();
 
-  PRInt32 level = 0;
-  mTreeView->GetLevel(mRow, &level);
+  PRInt32 level;
+  if (NS_FAILED(mTreeView->GetLevel(mRow, &level))) {
+    return NS_OK;
+  }
 
   PRInt32 testRow = -1;
   if (level > 0) {
@@ -81,7 +153,7 @@ NS_IMETHODIMP nsXULTreeitemAccessibleWrap::GetDescription(nsAString& aDescriptio
   PRInt32 indexInParent = 0, numSiblings = 0;
 
   while (++ testRow < numRows) {
-    PRInt32 testLevel;
+    PRInt32 testLevel = 0;
     mTreeView->GetLevel(testRow, &testLevel);
     if (testLevel == level) {
       if (testRow <= mRow) {
@@ -98,3 +170,4 @@ NS_IMETHODIMP nsXULTreeitemAccessibleWrap::GetDescription(nsAString& aDescriptio
 
   return NS_OK;
 }
+

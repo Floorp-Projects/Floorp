@@ -14,13 +14,12 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * The Initial Developer of the Original Code is IBM Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Original Author: Aaron Leventhal (aaronl@netscape.com)
+ *   Author: Aaron Leventhal (aleventh@us.ibm.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,29 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* For documentation of the accessibility architecture, 
- * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
- */
+#ifndef __nsXULTreeAccessibleWrap_h__
+#define __nsXULTreeAccessibleWrap_h__
 
-#ifndef _nsAccessibleWrap_H_
-#define _nsAccessibleWrap_H_
-
-#include "nsCOMPtr.h"
-#include "nsAccessible.h"
-
-class nsAccessibleWrap : public nsAccessible
-{
-  public: // construction, destruction
-    nsAccessibleWrap(nsIDOMNode*, nsIWeakReference *aShell);
-    virtual ~nsAccessibleWrap();
-};
-
-// Define unsupported wrap classes here
-typedef class nsHTMLTextFieldAccessible    nsHTMLTextFieldAccessibleWrap;
-typedef class nsHTMLLinkAccessible         nsHTMLLinkAccessibleWrap;
-typedef class nsHTMLTableCellAccessible    nsHTMLTableCellAccessibleWrap;
-typedef class nsHTMLTableAccessible        nsHTMLTableAccessibleWrap;
-typedef class nsXULProgressMeterAccessible nsXULProgressMeterAccessibleWrap;
-typedef class nsXULTextFieldAccessible     nsXULTextFieldAccessibleWrap;
+#include "nsXULTreeitemAccessible.h"
+typedef class nsXULTreeAccessible           nsXULTreeAccessibleWrap;
+typedef class nsXULTreeitemAccessible       nsXULTreeitemAccessibleWrap;
+typedef class nsXULTreeColumnsAccessible   nsXULTreeColumnsAccessibleWrap;
 
 #endif

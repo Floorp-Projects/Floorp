@@ -83,7 +83,7 @@
 #include "nsXULSelectAccessible.h"
 #include "nsXULTabAccessibleWrap.h"
 #include "nsXULTextAccessible.h"
-#include "nsXULTreeAccessible.h"
+#include "nsXULTreeAccessibleWrap.h"
 #endif
 
 // For native window support for object/embed/applet tags
@@ -97,7 +97,6 @@
 #include "nsHTMLFormControlAccessibleWrap.h"
 #include "nsHTMLTableAccessibleWrap.h"
 #include "nsXULFormControlAccessibleWrap.h"
-#include "nsXULTreeAccessibleWrap.h"
 #endif
 
 nsAccessibilityService *nsAccessibilityService::gAccessibilityService = nsnull;
