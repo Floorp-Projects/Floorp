@@ -704,6 +704,11 @@ nsObjectFrame::Destroy(nsIPresContext* aPresContext)
       nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(kCPluginManagerCID);
       if(pluginHost)
         pluginHost->StopPluginInstance(inst);
+
+      // the frame is going away along with its widget
+      // so tell the window to forget its widget too
+      if (window)
+        window->SetPluginWidget(nsnull);
     }
   }
   return nsObjectFrameSuper::Destroy(aPresContext);
@@ -4113,6 +4118,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 
           // start the idle timer.
           StartTimer();
+
+          // tell the plugin window about the widget
+          mPluginWindow->SetPluginWidget(mWidget);
         }
       }
     }

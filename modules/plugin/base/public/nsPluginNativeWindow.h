@@ -45,6 +45,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPluginInstance.h"
 #include "nsplugindefs.h"
+#include "nsIWidget.h"
 
 /**
  * base class for native plugin window implementations
@@ -76,6 +77,15 @@ public:
     return NS_OK;
   }
 
+  nsresult GetPluginWidget(nsIWidget **aWidget) {
+    NS_IF_ADDREF(*aWidget = mWidget);
+    return NS_OK;
+  }
+  nsresult SetPluginWidget(nsIWidget *aWidget) { 
+    mWidget = aWidget;
+    return NS_OK;
+  }
+
 public:
   virtual nsresult CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPluginInstance) {
     // null aPluginInstance means that we want to call SetWindow(null)
@@ -90,6 +100,7 @@ public:
 
 protected:
   nsCOMPtr<nsIPluginInstance> mPluginInstance;
+  nsCOMPtr<nsIWidget>         mWidget;
 };
 
 nsresult PLUG_NewPluginNativeWindow(nsPluginNativeWindow ** aPluginNativeWindow);
