@@ -48,6 +48,7 @@ CPPSRCS =               \
 	nsWellFormedDTD.cpp \
 	nsViewSourceHTML.cpp\
 	nsParserModule.cpp  \
+	nsParserMsgUtils.cpp  \
 !if !defined(MOZ_DISABLE_DTD_DEBUG)
 	nsLoggingSink.cpp   \
 	nsHTMLNullSink.cpp  \
@@ -72,6 +73,7 @@ CPP_OBJS =                          \
 	.\$(OBJDIR)\nsWellFormedDTD.obj \
 	.\$(OBJDIR)\nsViewSourceHTML.obj\
 	.\$(OBJDIR)\nsParserModule.obj  \
+	.\$(OBJDIR)\nsParserMsgUtils.obj  \
 !if !defined(MOZ_DISABLE_DTD_DEBUG)
 	.\$(OBJDIR)\nsLoggingSink.obj   \
 	.\$(OBJDIR)\nsHTMLNullSink.obj  \
