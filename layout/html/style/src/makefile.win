@@ -39,12 +39,10 @@ REQUIRES	= xpcom \
 		  gfx2 \
 		  gfx \
 		  content \
-                  raptor \
 		  layout_xul \
 !ifdef MOZ_SVG
-              raptor \
+          raptor \
 !endif
-		  webBrowser_core \
 		  $(NULL)
 
 

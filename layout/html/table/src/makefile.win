@@ -34,7 +34,6 @@ REQUIRES	= xpcom \
 		  gfx \
 		  content \
 		  necko \
-		  webBrowser_core \
 		  $(NULL)
 
 

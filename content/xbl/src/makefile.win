@@ -46,7 +46,6 @@ REQUIRES	= xpcom \
       rdf \
       content_xul \
       unicharutil \
-	webBrowser_core \
       $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN

@@ -35,7 +35,6 @@ REQUIRES	= xpcom \
 		  intl \
 		  webshell \
 		  docshell \
-		  cookie \
 		  caps \
 		  util \
 		  uconv \
@@ -52,7 +51,6 @@ REQUIRES	= xpcom \
 		  layout \
 		  gfx \
 		  bookmarks \
-		  webBrowser_core\
 		  $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN 
