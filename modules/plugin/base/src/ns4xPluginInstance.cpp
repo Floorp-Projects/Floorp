@@ -796,36 +796,45 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
 ////////////////////////////////////////////////////////////////////////
 nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
 {
+  NS_ENSURE_ARG_POINTER(peer);
+  mPeer = peer;
+ 
+  nsCOMPtr<nsIPluginTagInfo2> taginfo = do_QueryInterface(mPeer);
+  NS_ENSURE_TRUE(taginfo, NS_ERROR_NO_INTERFACE);
+
+  nsPluginTagType tagtype;
+  nsresult rv = taginfo->GetTagType(&tagtype);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   PRUint16 count = 0;
   const char* const* names = nsnull;
   const char* const* values = nsnull;
-  nsresult rv;
-  NPError error;
-
+  rv = taginfo->GetAttributes(count, names, values);
+  NS_ENSURE_SUCCESS(rv, rv);
   
-  NS_ASSERTION(peer != NULL, "null peer");
-
-  mPeer = peer;
-
-  nsCOMPtr<nsIPluginTagInfo2> taginfo = do_QueryInterface(mPeer, &rv);
-
-  if (NS_SUCCEEDED(rv))
-  {
-    nsPluginTagType tagtype;
-    taginfo->GetTagType(&tagtype);
-    if (tagtype == nsPluginTagType_Embed)
-      taginfo->GetAttributes(count, names, values);
-    else  // nsPluginTagType_Object
-      taginfo->GetParameters(count, names, values);
+  // nsPluginTagType_Object or Applet may also have PARAM tags
+  // Note: The arrays handed back by GetParameters() are
+  // crafted specially to be directly behind the arrays from GetAtributes()
+  // with a null entry as a seperator. This is for 4.x backwards compatibility!
+  // see bug 111008 for details
+  if (tagtype != nsPluginTagType_Embed) {
+    PRUint16 pcount = 0;
+    const char* const* pnames = nsnull;
+    const char* const* pvalues = nsnull;    
+    if (NS_SUCCEEDED(taginfo->GetParameters(pcount, pnames, pvalues))) {
+      NS_ASSERTION(nsnull == values[count+1], "attribute/parameter array not setup correctly for 4.x plugins");
+      count += ++pcount; //if it's all setup correctly, then all we need is to change the count
+    }
   }
-  if (fCallbacks->newp == nsnull)
-    return NS_ERROR_FAILURE; // XXX right error?
+
+  NS_ENSURE_TRUE(fCallbacks->newp, NS_ERROR_FAILURE);
   
   // XXX Note that the NPPluginType_* enums were crafted to be
   // backward compatible...
   
   nsPluginMode  mode;
   nsMIMEType    mimetype;
+  NPError       error;
 
   mPeer->GetMode(&mode);
   mPeer->GetMIMEType(&mimetype);
