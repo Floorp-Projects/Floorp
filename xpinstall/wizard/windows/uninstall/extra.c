@@ -1614,7 +1614,7 @@ DWORD CleanupAppList()
   char      szBuf[MAX_BUF];
   char      szDefaultApp[MAX_BUF_TINY];
   BOOL      bFoundDefaultApp;
-  HKEY      hkHandle;
+  HKEY      hkResult;
   DWORD     dwIndex;
   DWORD     dwBufSize;
   DWORD     dwTotalSubKeys;
@@ -1623,11 +1623,8 @@ DWORD CleanupAppList()
   FILETIME  ftLastWriteFileTime;
 
   GetPrivateProfileString("General", "Default AppID", "", szDefaultApp, MAX_BUF_TINY, szFileIniUninstall);
-
-  hkHandle = ugUninstall.hWrMainRoot;
   wsprintf(szKey, "%s\\%s\\AppList", ugUninstall.szWrMainKey, ugUninstall.szUserAgent);
-
-  if(RegOpenKeyEx(hkHandle, szKey, 0, KEY_READ, &hkHandle) != ERROR_SUCCESS)
+  if(RegOpenKeyEx(ugUninstall.hWrMainRoot, szKey, 0, KEY_READ, &hkResult) != ERROR_SUCCESS)
   {
     return(0);
   }
@@ -1636,12 +1633,12 @@ DWORD CleanupAppList()
   dwAppCount = 0;
   dwTotalSubKeys = 0;
   dwTotalValues  = 0;
-  RegQueryInfoKey(hkHandle, NULL, NULL, NULL, &dwTotalSubKeys, NULL, NULL, &dwTotalValues, NULL, NULL, NULL, NULL);
+  RegQueryInfoKey(hkResult, NULL, NULL, NULL, &dwTotalSubKeys, NULL, NULL, &dwTotalValues, NULL, NULL, NULL, NULL);
 
   for(dwIndex = 0; dwIndex < dwTotalSubKeys; dwIndex++)
   {
     dwBufSize = sizeof(szBuf);
-    if(RegEnumKeyEx(hkHandle, dwIndex, szBuf, &dwBufSize, NULL, NULL, NULL, &ftLastWriteFileTime) == ERROR_SUCCESS)
+    if(RegEnumKeyEx(hkResult, dwIndex, szBuf, &dwBufSize, NULL, NULL, NULL, &ftLastWriteFileTime) == ERROR_SUCCESS)
     {
       if((siALTmp = NS_GlobalAlloc(sizeof(struct siAppListStruct))) == NULL)
         exit(1);
@@ -1656,6 +1653,7 @@ DWORD CleanupAppList()
       siALPrev = siALTmp;
     }
   }
+  RegCloseKey(hkResult);
 
   siALTmp = siALHead;
   while(siALTmp != NULL)
@@ -1691,7 +1689,6 @@ DWORD CleanupAppList()
 // Returns the # of installations of the app item found in the AppList.
 DWORD ProcessAppItem(HKEY hkRootKey, LPSTR szKeyAppList, LPSTR szAppID)
 {
-  DWORD dwCount = 0;
   DWORD dwIndex = 1;
   const DWORD dwUpperLimit = 100;
   BOOL  bDefaultApp;
@@ -1706,10 +1703,9 @@ DWORD ProcessAppItem(HKEY hkRootKey, LPSTR szKeyAppList, LPSTR szAppID)
   wsprintf(szKey, "%s\\%s", szKeyAppList, szAppID);
 
   if(lstrcmpi(szAppID, ugUninstall.szClientAppID) == 0) // This is the app that the user said 
-  {                                                    //    on the command-line to uninstall.
-
-    if((ugUninstall.szClientAppPath[0] == '\0') || (bDefaultApp)) //If we didn't get an /app_path or this
-    {                                                             //   is the default app, just remove it.
+  {                                                     // on the command-line to uninstall.
+    if((ugUninstall.szClientAppPath[0] == '\0') || (bDefaultApp)) // If we didn't get an /app_path or this
+    {                                                             // is the default app, just remove it.
       RegDeleteKey(hkRootKey, szKey);
       if(bDefaultApp)
       {
@@ -1721,22 +1717,24 @@ DWORD ProcessAppItem(HKEY hkRootKey, LPSTR szKeyAppList, LPSTR szAppID)
     }
 
     wsprintf(szName, "PathToExe%02d", dwIndex);
-    while( (WinRegNameExists(hkRootKey, szKey, szName)) // Since we got an /app_path we need to cycle
-        && (dwIndex < dwUpperLimit) )                   //   through the list looking for that instance.
+    while(WinRegNameExists(hkRootKey, szKey, szName) && // Since we got an /app_path we need to cycle
+         (dwIndex < dwUpperLimit))                      // through the list looking for that instance.
     {
-      GetWinReg(hkRootKey, szKey, szName, szBuf, MAX_BUF);
-      if( (lstrcmpi(szBuf, ugUninstall.szClientAppPath) == 0) || (!FileExists(szBuf)) )
+      GetWinReg(hkRootKey, szKey, szName, szBuf, sizeof(szBuf));
+      if((lstrcmpi(szBuf, ugUninstall.szClientAppPath) == 0) || (!FileExists(szBuf)))
+      {
+        // RemovePathToExeXX() will delete the dwIndex Name and reorder
+        // PathToExeXX so there are no gaps.
         RemovePathToExeXX(hkRootKey, szKey, dwIndex, dwUpperLimit);
+      }
       else
-        dwCount++;
-
-      wsprintf(szName, "PathToExe%02d", ++dwIndex);
+        wsprintf(szName, "PathToExe%02d", ++dwIndex);
     }
 
-    if(dwCount == 0)
+    if(--dwIndex == 0)
       RegDeleteKey(hkRootKey, szKey);
 
-    return dwCount;
+    return dwIndex;
   }
 
   if(bDefaultApp) // The Default App does not have an installed file registered.  However, an entry in 
@@ -1749,24 +1747,26 @@ DWORD ProcessAppItem(HKEY hkRootKey, LPSTR szKeyAppList, LPSTR szAppID)
       return 1;
   }
 
+  dwIndex = 1;
   wsprintf(szName, "PathToExe%02d", dwIndex);
-  while(WinRegNameExists(hkRootKey, szKey, szName)) // Count the entries which can be verified by the
-  {                                                 //   existence of the file pointed to by PathToExeXX
-    GetWinReg(hkRootKey, szKey, szName, szBuf, MAX_BUF);
-    if(FileExists(szBuf))    
+  while(WinRegNameExists(hkRootKey, szKey, szName) && // Count the entries which can be verified by the
+       (dwIndex < dwUpperLimit))                      // existence of the file pointed to by PathToExeXX
+  {
+    GetWinReg(hkRootKey, szKey, szName, szBuf, sizeof(szBuf));
+    if(!FileExists(szBuf))    
     {
-      dwCount++;
+      // RemovePathToExeXX() will delete the dwIndex Name and reorder
+      // PathToExeXX so there are no gaps.
+      RemovePathToExeXX(hkRootKey, szKey, dwIndex, dwUpperLimit);
     }
-    else                                       // This is an orphaned entry.  Remove it from the list.
-      RemovePathToExeXX(hkRootKey, szKey, dwIndex, dwUpperLimit);  // When we remove a PathToExeXX registry setting we must 
-                                               // reenumerate the list so there are no gaps in the count.
-    wsprintf(szName, "PathToExe%02d", ++dwIndex);
+    else
+      wsprintf(szName, "PathToExe%02d", ++dwIndex);
   }
 
-  if(dwCount == 0)
+  if(--dwIndex == 0)
     RegDeleteKey(hkRootKey, szKey);
 
-  return dwCount;
+  return dwIndex;
 }
 
 void RemovePathToExeXX(HKEY hkRootKey, LPSTR szKey, DWORD dwIndex, const DWORD dwUpperLimit)
@@ -1779,7 +1779,7 @@ void RemovePathToExeXX(HKEY hkRootKey, LPSTR szKey, DWORD dwIndex, const DWORD d
   wsprintf(szNextName, "PathToExe%02d", dwIndex);
   while(WinRegNameExists(hkRootKey, szKey, szNextName) && (dwIndex < dwUpperLimit))
   {
-    GetWinReg(hkRootKey, szKey, szNextName, szBuf, MAX_BUF);
+    GetWinReg(hkRootKey, szKey, szNextName, szBuf, sizeof(szBuf));
     SetWinReg(hkRootKey, szKey, szName, REG_SZ, szBuf, lstrlen(szBuf));
     lstrcpy(szName, szNextName);
     wsprintf(szNextName, "PathToExe%02d", ++dwIndex);
