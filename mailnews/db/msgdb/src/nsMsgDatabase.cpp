@@ -916,7 +916,8 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 				}
 				while (NS_SUCCEEDED(ret) && !outBroken && !outDone);
 //				m_mdbEnv->ClearErrors(); // ### temporary...
-				if (NS_SUCCEEDED(ret) && outDone)
+        // only 0 is a non-error return.
+				if (ret == 0 && outDone)
 				{
 					ret = myMDBFactory->ThumbToOpenStore(m_mdbEnv, thumb, &m_mdbStore);
 					if (ret == NS_OK && m_mdbStore)

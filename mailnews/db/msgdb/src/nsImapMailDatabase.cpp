@@ -93,7 +93,7 @@ NS_IMETHODIMP nsImapMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, 
 	
 	err = mailDB->OpenMDB((const char *) summarySpec, create);
 
-	if (NS_SUCCEEDED(err))
+	if (err == NS_OK)
 	{
 		mailDB->GetDBFolderInfo(&folderInfo);
 		if (folderInfo == NULL)
@@ -131,7 +131,9 @@ NS_IMETHODIMP nsImapMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, 
 		else if (err != NS_OK)
 		{
 			*pMessageDB = NULL;
+      mailDB->Close(PR_FALSE);
 			delete mailDB;
+      summarySpec.Delete(PR_FALSE);  // blow away the db if it's corrupt.
 			mailDB = NULL;
 		}
 	}
