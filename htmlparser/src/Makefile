@@ -49,6 +49,10 @@ EXPORTS =     \
   COtherDTD.h \
   $(NULL)
 
+EXTRA_EXPORTS =					\
+	nsHTMLTags.h				\
+	$(NULL)
+
 MODULE = raptor
 
 REQUIRES = xpcom netlib raptor
@@ -56,3 +60,16 @@ REQUIRES = xpcom netlib raptor
 include $(DEPTH)/config/config.mk
 
 include $(DEPTH)/config/rules.mk
+
+export:: generate
+	$(INSTALL) $(EXTRA_EXPORTS) $(PUBLIC)/$(MODULE)
+
+generate: nsHTMLTags.h
+
+$(OBJDIR)/nsHTMLTags.o: nsHTMLTags.h
+
+GENTAGS = $(DEPTH)/htmlparser/tools/gentags.pl
+
+nsHTMLTags.h: $(GENTAGS)
+	rm -f nsHTMLTags.h nsHTMLTags.cpp
+	$(PERL) $(GENTAGS) nsHTMLTags
