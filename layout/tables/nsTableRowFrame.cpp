@@ -502,7 +502,6 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
 
   PRBool isPass2Reflow = (aReflowState.reflowState.availableWidth == NS_UNCONSTRAINEDSIZE)
                        ? PR_FALSE : PR_TRUE;
-  nsTableIterator iter(*this, isPass2Reflow);
 
   nsresult rv=NS_OK;
   nsSize  kidMaxElementSize;
@@ -515,8 +514,19 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
   if (PR_TRUE==gsDebug) printf("Row %p: Resize Reflow\n", this);
   
   PRInt32 prevColIndex; // remember the col index of the previous cell to handle rowspans into this row
-  PRBool firstTime = PR_TRUE;
 
+  nsTableIterator iter(*this, isPass2Reflow);
+  if (iter.IsLeftToRight()) {
+    prevColIndex = -1;
+  }
+  else {
+    nsTableFrame* tableFrame = nsnull;
+    rv = nsTableFrame::GetTableFrame(this, tableFrame);
+    if (NS_FAILED(rv) || (nsnull == tableFrame)) {
+      return rv;
+    }
+    prevColIndex = tableFrame->GetColCount();
+  }
   // Reflow each of our existing cell frames
   nsIFrame* kidFrame = iter.First();
   while (nsnull != kidFrame) {
@@ -527,11 +537,6 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
       ((nsTableCellFrame *)kidFrame)->GetColIndex(cellColIndex);
       cellColSpan = aReflowState.tableFrame->GetEffectiveColSpan(cellColIndex,
                                                                  ((nsTableCellFrame *)kidFrame));
-      if (firstTime) { // set the prevColIndex 
-        prevColIndex = (iter.IsLeftToRight()) ? -1 : cellColIndex + cellColSpan;
-        firstTime = PR_FALSE;
-      }
-
       nsMargin kidMargin;
       aReflowState.tableFrame->GetCellMarginData((nsTableCellFrame *)kidFrame,kidMargin);
       if (kidMargin.top > maxCellTopMargin)
