@@ -551,6 +551,10 @@ namespace JavaScript {
 	// through singly-linked lists of objects threaded through fields named 'next'.  The type
 	// parameter E must be a class that has a member named 'next' whose type is E* or const E*.
 	
+#if 0
+    /* (rginda) std::iterator is not defined in gcc, and no one is using
+     * this yet. If you decide to use this, you'll have to work around the
+     * gcc lossage */
 	template <class E>
 	class ListIterator: public std::iterator<std::forward_iterator_tag, E> {
 		E *element;
@@ -589,6 +593,8 @@ namespace JavaScript {
 		friend bool operator!=(const ConstListIterator &i, const ConstListIterator &j) {return i.element != j.element;}
 	};
 
+//#if 0
+#endif
 
 //
 // Bit Sets
