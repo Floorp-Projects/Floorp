@@ -49,7 +49,7 @@ NS_DEFINE_CID(kPosixLocaleFactoryCID,NS_POSIXLOCALEFACTORY_CID);
 NS_DEFINE_IID(kIPosixLocaleIID, NS_IPOSIXLOCALE_IID);
 #endif
 
-NS_IMPL_ISUPPORTS(nsLocaleFactory,kILocaleFactoryIID)
+NS_IMPL_ISUPPORTS2(nsLocaleFactory,nsIFactory, nsILocaleFactory)
 
 #define LOCALE_CATEGORY_LISTLEN 6
 char* localeCategoryList[LOCALE_CATEGORY_LISTLEN] = 
