@@ -26,7 +26,7 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsXIFConverter.h"
 #include "nsRange.h"
-
+#include "nsTextContentChangeData.h"
 #include "nsIDOMSelection.h"
 #include "nsIEnumerator.h"
 
@@ -303,10 +303,53 @@ nsGenericDOMDataNode::SubstringData(PRUint32 aStart,
   return NS_OK;
 }
 
+//----------------------------------------------------------------------
+
 nsresult    
 nsGenericDOMDataNode::AppendData(const nsString& aData)
 {
+#if 1
+  // Allocate new buffer
+  PRInt32 dataLength = aData.Length();
+  PRInt32 textLength = mText.GetLength();
+  PRInt32 newSize = textLength + dataLength;
+  PRUnichar* to = new PRUnichar[newSize];
+  if (nsnull == to) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // XXX This is slow...
+
+  // Fill new buffer with old data and new data
+  if (textLength) {
+    mText.CopyTo(to, 0, textLength);
+  }
+  nsCRT::memcpy(to + textLength, aData.GetUnicode(),
+                sizeof(PRUnichar) * dataLength);
+
+  // Switch to new buffer
+  mText.SetTo(to, newSize);
+
+  delete [] to;
+
+  // Trigger a reflow
+  if (nsnull != mDocument) {
+    nsTextContentChangeData* tccd = nsnull;
+    nsresult rv = NS_NewTextContentChangeData(&tccd);
+    if (NS_SUCCEEDED(rv)) {
+      tccd->SetData(nsITextContentChangeData::Append, textLength, dataLength);
+      mDocument->ContentChanged(mContent, tccd);
+      NS_RELEASE(tccd);
+    }
+    else {
+      mDocument->ContentChanged(mContent, nsnull);
+    }
+  }
+
+  return NS_OK;
+#else
   return ReplaceData(mText.GetLength(), 0, aData);
+#endif
 }
 
 nsresult    
