@@ -510,6 +510,8 @@ xpfe/components/related/resources/Makefile
 xpfe/components/search/Makefile
 xpfe/components/search/datasets/Makefile
 xpfe/components/search/resources/Makefile
+xpfe/components/search/public/Makefile
+xpfe/components/search/src/Makefile
 xpfe/components/sidebar/Makefile
 xpfe/components/sidebar/resources/Makefile
 xpfe/components/xfer/Makefile
