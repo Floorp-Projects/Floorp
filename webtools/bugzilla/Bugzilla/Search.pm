@@ -255,35 +255,44 @@ sub init {
             push(@wherepart, "bugs.delta_ts >= $sql_chfrom") if ($sql_chfrom);
             push(@wherepart, "bugs.delta_ts <= $sql_chto") if ($sql_chto);
         } else {
-            my $sql_bugschanged = '';
+            my $bug_creation_clause;
             my @list;
             foreach my $f (@chfield) {
                 if ($f eq "[Bug creation]") {
+                    # Treat [Bug creation] differently because we need to look
+                    # at bugs.creation_ts rather than the bugs_activity table.
                     my @l;
                     push(@l, "creation_ts >= $sql_chfrom") if($sql_chfrom);
                     push(@l, "creation_ts <= $sql_chto") if($sql_chto);
-                    $sql_bugschanged = "(" . join(' AND ', @l) . ")";
+                    $bug_creation_clause = "(" . join(' AND ', @l) . ")";
                 } else {
                     push(@list, "\nactcheck.fieldid = " . &::GetFieldID($f));
                 }
             }
+
+            # @list won't have any elements if the only field being searched
+            # is [Bug creation] (in which case we don't need bugs_activity).
             if(@list) {
                 push(@supptables, "bugs_activity actcheck");
-                $sql_bugschanged .= ' OR ' if($sql_bugschanged ne '');
-                $sql_bugschanged .= "(actcheck.bug_id = bugs.bug_id AND " .
-                                       "(" . join(' OR ', @list) . ")";
+                push(@wherepart, "actcheck.bug_id = bugs.bug_id");
                 if($sql_chfrom) {
-                    $sql_bugschanged .= " AND actcheck.bug_when >= $sql_chfrom";
+                    push(@wherepart, "actcheck.bug_when >= $sql_chfrom");
                 }
                 if($sql_chto) {
-                    $sql_bugschanged .= " AND actcheck.bug_when <= $sql_chto";
+                    push(@wherepart, "actcheck.bug_when <= $sql_chto");
                 }
                 if($sql_chvalue) {
-                    $sql_bugschanged .= " AND actcheck.added = $sql_chvalue";
+                    push(@wherepart, "actcheck.added = $sql_chvalue");
                 }
-                $sql_bugschanged .= ')';
             }
-            push(@wherepart, "($sql_bugschanged)");
+
+            # Now that we're done using @list to determine if there are any
+            # regular fields to search (and thus we need bugs_activity),
+            # add the [Bug creation] criterion to the list so we can OR it
+            # together with the others.
+            push(@list, $bug_creation_clause) if $bug_creation_clause;
+
+            push(@wherepart, "(" . join(" OR ", @list) . ")");
         }
     }
 
