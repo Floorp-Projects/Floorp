@@ -1,11 +1,24 @@
 #!/usr/bin/perl
 # -*- Mode: perl; indent-tabs-mode: nil -*-
+
+#
+# Basic graph cgi, wrapper for gnuplot that generates a png file.
+#
+# OSX 10.3 (possibly 10.4) needs to install libpng, gnuplot from sourceforge.
+# 
+
+#
+# These are the perl modules we went with at the time, there are probably
+# more-standard packages now.
+#
 use CGI::Carp qw(fatalsToBrowser);
 use CGI::Request; # http://stein.cshl.org/WWW/software/CGI::modules/
 use Date::Calc qw(Add_Delta_Days);  # http://www.engelschall.com/u/sb/download/Date-Calc/
 
+
 my $req = new CGI::Request;
 
+# Pull out cgi arguments from URL.
 my $TESTNAME  = lc($req->param('testname'));
 my $UNITS     = lc($req->param('units'));
 my $TBOX      = lc($req->param('tbox'));
@@ -19,6 +32,7 @@ my $AVG       = lc($req->param('avg'));
 
 my $DATAFILE  = "db/$TESTNAME/$TBOX";
 my $DATAFILE_AVG = $DATAFILE . "_avg";
+
 
 sub make_filenames_list {
   my ($dir) = @_;
@@ -37,7 +51,7 @@ sub make_filenames_list {
   return @result;
 }
 
-# Print out a list of testnames in db directory
+# Print out a list of testnames in db directory if machine arg is blank.
 sub print_testnames {
   my ($testname) = @_;
 
@@ -61,7 +75,7 @@ sub print_testnames {
 }
 
 
-# Print out a list of machines in db/<testname> directory, with links.
+# Print out a list of machines in db/<testname> directory if testname is blank.
 sub print_machines {
   my ($testname) = @_;
 
