@@ -128,19 +128,7 @@ get_applocale(void)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 nsresult NS_AutoregisterComponents()
 {
-  nsIFileSpec* spec = NS_LocateFileOrDirectory(
-  							nsSpecialFileSpec::App_ComponentsDirectory);
-  if (!spec)
-  	return NS_ERROR_FAILURE;
-
-  char *componentsDirPath;
-  nsresult rv = spec->GetNSPRPath(&componentsDirPath);
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (componentsDirPath)
-    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, componentsDirPath);
-  NS_RELEASE(spec);
+  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL /* default */);
   return rv;
 }
 
