@@ -8,7 +8,6 @@ comm.jar:
     content/communicator/utilityOverlay.js               (resources/content/utilityOverlay.js) 
     content/communicator/openLocation.js                 (resources/content/openLocation.js)
     content/communicator/openLocation.xul                (resources/content/openLocation.xul)
-    content/communicator/taskbarOverlay.xul              (resources/content/taskbarOverlay.xul) 
     content/communicator/tasksOverlay.js                 (resources/content/tasksOverlay.js) 
     content/communicator/tasksOverlay.xul                (resources/content/tasksOverlay.xul) 
     content/communicator/browserBindings.xul             (resources/content/browserBindings.xul) 
@@ -40,9 +39,7 @@ en-US.jar:
     locale/en-US/communicator/utilityOverlay.properties         (resources/locale/en-US/utilityOverlay.properties) 
     locale/en-US/communicator/openLocation.dtd                  (resources/locale/en-US/openLocation.dtd)
     locale/en-US/communicator/openLocation.properties           (resources/locale/en-US/openLocation.properties)
-    locale/en-US/communicator/taskbar.rdf                       (resources/locale/en-US/taskbar.rdf) 
     locale/en-US/communicator/tasksOverlay.dtd                  (resources/locale/en-US/tasksOverlay.dtd) 
-    locale/en-US/communicator/taskbarOverlay.dtd                (resources/locale/en-US/taskbarOverlay.dtd) 
     locale/en-US/communicator/contentAreaCommands.dtd           (resources/locale/en-US/contentAreaCommands.dtd) 
     locale/en-US/communicator/contentAreaCommands.properties    (resources/locale/en-US/contentAreaCommands.properties)
     locale/en-US/communicator/askViewZoom.dtd                   (resources/locale/en-US/askViewZoom.dtd)
@@ -59,7 +56,6 @@ US.jar:
     locale/US/communicator-region/contents.rdf   	      (resources/locale/en-US/contents-region.rdf)
     locale/US/communicator-region/region.dtd          	(resources/locale/en-US/region.dtd)
     locale/US/communicator-region/region.properties     (resources/locale/en-US/region.properties)
-    locale/US/communicator-region/taskbar.rdf           (resources/locale/en-US/taskbar.rdf) 
 
 en-win.jar:
     locale/en-US/communicator-platform/contents.rdf		(resources/locale/en-US/win/contents-platform.rdf)
