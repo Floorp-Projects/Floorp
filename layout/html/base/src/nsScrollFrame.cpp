@@ -286,7 +286,6 @@ nsScrollFrame::CreateScrollingView(nsIPresContext& aPresContext)
     nsIAtom* frameType = nsnull;
     parent->GetFrameType(&frameType);
     if (nsLayoutAtoms::viewportFrame == frameType) {
-      NS_RELEASE(frameType);
       nsCOMPtr<nsISupports> container;
       rv = aPresContext.GetContainer(getter_AddRefs(container));
       if (NS_SUCCEEDED(rv) && container) {
@@ -305,6 +304,7 @@ nsScrollFrame::CreateScrollingView(nsIPresContext& aPresContext)
         }
       }
     }
+    NS_IF_RELEASE(frameType);
     scrollingView->SetScrollPreference(scrollPref);
 
     // Set the scrolling view's insets to whatever our border is
