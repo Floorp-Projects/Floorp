@@ -39,6 +39,63 @@ PRUnichar kCommonEmptyBuffer[100];   //shared by all strings; NEVER WRITE HERE!!
 PRBool nsString::mSelfTested = PR_FALSE;   
 
 
+
+#define NOT_USED 0xfffd
+
+static PRUint16 PA_HackTable[] = {
+	NOT_USED,
+	NOT_USED,
+	0x201a,  /* SINGLE LOW-9 QUOTATION MARK */
+	0x0192,  /* LATIN SMALL LETTER F WITH HOOK */
+	0x201e,  /* DOUBLE LOW-9 QUOTATION MARK */
+	0x2026,  /* HORIZONTAL ELLIPSIS */
+	0x2020,  /* DAGGER */
+	0x2021,  /* DOUBLE DAGGER */
+	0x02c6,  /* MODIFIER LETTER CIRCUMFLEX ACCENT */
+	0x2030,  /* PER MILLE SIGN */
+	0x0160,  /* LATIN CAPITAL LETTER S WITH CARON */
+	0x2039,  /* SINGLE LEFT-POINTING ANGLE QUOTATION MARK */
+	0x0152,  /* LATIN CAPITAL LIGATURE OE */
+	NOT_USED,
+	NOT_USED,
+	NOT_USED,
+
+	NOT_USED,
+	0x2018,  /* LEFT SINGLE QUOTATION MARK */
+	0x2019,  /* RIGHT SINGLE QUOTATION MARK */
+	0x201c,  /* LEFT DOUBLE QUOTATION MARK */
+	0x201d,  /* RIGHT DOUBLE QUOTATION MARK */
+	0x2022,  /* BULLET */
+	0x2013,  /* EN DASH */
+	0x2014,  /* EM DASH */
+	0x02dc,  /* SMALL TILDE */
+	0x2122,  /* TRADE MARK SIGN */
+	0x0161,  /* LATIN SMALL LETTER S WITH CARON */
+	0x203a,  /* SINGLE RIGHT-POINTING ANGLE QUOTATION MARK */
+	0x0153,  /* LATIN SMALL LIGATURE OE */
+	NOT_USED,
+	NOT_USED,
+	0x0178   /* LATIN CAPITAL LETTER Y WITH DIAERESIS */
+};
+
+static PRUnichar gToUCS2[256];
+
+class CTableConstructor {
+public:
+  CTableConstructor(){
+    PRUnichar* cp = gToUCS2;
+    PRInt32 i;
+    for (i = 0; i < 256; i++) {
+      *cp++ = PRUnichar(i);
+    }
+    cp = gToUCS2;
+    for (i = 0; i < 32; i++) {
+      cp[0x80 + i] = PA_HackTable[i];
+    }
+  }
+};
+static CTableConstructor gTableConstructor;
+
 /***********************************************************************
   IMPLEMENTATION NOTES:
 
@@ -401,6 +458,23 @@ void nsString::ToUpperCase()
     cp++;
   }
 }
+
+/**
+ * Converts all chars in given string to UCS2
+ */
+void nsString::ToUCS2(PRInt32 aStartOffset){
+  if(aStartOffset<mLength){
+    chartype* cp = &mStr[aStartOffset];
+    chartype* end = cp + mLength;
+    while (cp < end) {
+      unsigned char ch = (unsigned char)*cp;
+      *cp=gToUCS2[ch];
+      cp++;
+    }
+  }
+}
+
+
 
 /**
  * Converts chars in this to lowercase, and

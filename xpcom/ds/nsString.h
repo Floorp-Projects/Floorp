@@ -226,6 +226,12 @@ void ToLowerCase(nsString& aString) const;
 void ToUpperCase();
 
 /**
+ * Converts all chars in given string to UCS2
+ * which ensure that the lower 256 chars are correct.
+ */
+void ToUCS2(PRInt32 aStartOffset);
+
+/**
  * Converts all chars in internal string to upper
  */
 void ToUpperCase(nsString& aString) const;

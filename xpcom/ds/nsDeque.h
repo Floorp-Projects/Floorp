@@ -93,6 +93,15 @@ friend class nsDequeIterator;
    * @return  *this
    */
   nsDeque& Push(void* anItem);
+
+  /**
+   * Pushes new member onto the front of the deque
+   *
+   * @update	gess4/18/98
+   * @param   ptr to object to store
+   * @return  *this
+   */
+  nsDeque& PushFront(void* anItem);
   
   /**
    * Remove and return the first item in the container.
@@ -103,6 +112,16 @@ friend class nsDequeIterator;
    */
   void* Pop(void);
 
+ /**
+   * Remove and return the first item in the container.
+   * 
+   * @update	gess4/18/98
+   * @param   none
+   * @return  ptr to first item in container
+   */
+  void* PopFront(void);
+
+ 
   /**
    * Return topmost item without removing it.
    * 
@@ -112,15 +131,7 @@ friend class nsDequeIterator;
    */
   void* Peek(void);
   
-  /**
-   * Remove and return the last item in the container.
-   * 
-   * @update	gess4/18/98
-   * @param   none
-   * @return  ptr to first item in container
-   */
-  void* PopBack(void);
-    
+  
   /**
    * Remove all items from container without destroying them
    * 
