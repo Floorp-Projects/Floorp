@@ -65,7 +65,47 @@ public class SetupPlugin extends Plugin
 			}
 		}
 	}
-	
+
+	final public String GetFileContents( String filePath )
+	{
+		if ( privilegeCheck() == false )
+			return new String( "" );
+		
+		String		contents = "";
+		
+		try
+		{
+			File				file = new File( filePath );
+			
+			if ( file.exists() && file.isFile() && file.canRead() )
+			{
+				FileInputStream		is = new FileInputStream( file );
+				
+				long				length;
+				long				bytesRead;
+				byte[]				buffer = null;
+				
+				length = file.length();
+				if ( length > 0 )
+				{
+					buffer = new byte[ (int)length ];
+					bytesRead = is.read( buffer );
+					if ( bytesRead != length )
+						buffer = null;
+				}
+				
+				if ( buffer != null )
+					contents = new String( buffer );
+			}
+		}
+		catch ( Throwable e )
+		{
+			contents = "";
+		}
+		
+		return contents;
+	}
+					
     final public String GetNameValuePair( String filePath, String sectionName, String valueName )
     {
     /*  if ( privilegeCheck() == true )
