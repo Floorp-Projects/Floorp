@@ -494,7 +494,7 @@ sub confirm_login {
 
     if ($loginok != 1) {
         print "Content-type: text/html\n\n";
-        PutHeader("Login");
+        PutHeader("Login", undef, undef, undef, 1);
         print "I need a legitimate e-mail address and password to continue.\n";
         if (!defined $nexturl || $nexturl eq "") {
 	    # Sets nexturl to be argv0, stripping everything up to and
@@ -548,7 +548,7 @@ name=PleaseMailAPassword>
 
 
 sub PutHeader {
-    my ($title, $h1, $h2, $extra) = (@_);
+    my ($title, $h1, $h2, $extra, $ignoreshutdown) = (@_);
 
     if (!defined $h1) {
 	$h1 = $title;
@@ -583,6 +583,13 @@ sub PutHeader {
     print Param("blurbhtml");
 
     print "</TD></TR></TABLE>\n";
+
+    if (Param("shutdownhtml")) {
+        if (!$ignoreshutdown) {
+            print Param("shutdownhtml");
+            exit;
+        }
+    }
 }
 
 

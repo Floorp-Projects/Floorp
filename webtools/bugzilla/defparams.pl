@@ -176,6 +176,12 @@ information about what Bugzilla is and what it can do, see
 
 
     
+DefParam("shutdownhtml",
+         "If this field is non-empty, then Bugzilla will be completely disabled and this text will be displayed instead of all the Bugzilla pages.",
+         "l",
+         "");
+
+
 DefParam("warnbannerhtml",
          "HTML to prepend to warning messages.",
          "l",
