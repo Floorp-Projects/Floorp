@@ -513,7 +513,6 @@ nsIParserNode* nsDTDContext::PopStyle(void){
 nsIParserNode* nsDTDContext::PopStyle(eHTMLTags aTag){
 
   PRInt32 theLevel=0;
-  PRInt32 sindex=0;
 
   for(theLevel=mStack.mCount-1;theLevel>0;theLevel--) {
     nsEntryStack *theStack=mStack.mEntries[theLevel].mStyles;

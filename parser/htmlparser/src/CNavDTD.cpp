@@ -464,6 +464,11 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,
   mHasOpenScript=PR_FALSE;
   mParseMode=aParseMode;
 
+
+  nsString theString;
+  theString.Append("hello there rick",10);
+
+
   if((aNotifySink) && (aSink)) {
 
     STOP_TIMER();
@@ -2853,10 +2858,8 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
 
   if((anIndex<mBodyContext->GetCount()) && (anIndex>=0)) {
     while(mBodyContext->GetCount()>anIndex) {
-      PRBool theNodeNeedsRecyling=PR_FALSE;
 
-      eHTMLTags theTag=mBodyContext->Last();
-      PRBool    theTagIsStyle=nsHTMLElement::IsStyleTag(theTag);
+      theTag=mBodyContext->Last();
 
       nsEntryStack *theStyles=0;
       nsCParserNode* theNode=(nsCParserNode*)mBodyContext->Pop(theStyles);
@@ -2865,6 +2868,7 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
       if(theNode) {
         
 #ifdef  ENABLE_RESIDUALSTYLE
+        PRBool theTagIsStyle=nsHTMLElement::IsStyleTag(theTag);
         if(theTagIsStyle && aClosedByStartTag) {
           if(theStyles) {
             theStyles->PushFront(theNode);
