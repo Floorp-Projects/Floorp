@@ -117,7 +117,7 @@ NS_MakeAbsoluteURI(const nsString& spec, nsIURI* baseURI, nsString& result)
         return NS_ERROR_OUT_OF_MEMORY;
     }
     nsresult rv = NS_MakeAbsoluteURI(specStr, baseURI, &resultStr);
-    delete [] specStr;
+    nsAllocator::Free(specStr);
     if (NS_FAILED(rv)) return rv;
 
     result = resultStr;
