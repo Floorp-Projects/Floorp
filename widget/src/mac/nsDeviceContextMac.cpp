@@ -26,6 +26,7 @@
 #include <StringCompare.h>
 #include <Fonts.h>
 #include <Resources.h>
+#include <LowMem.h>
 #include "il_util.h"
 #include <FixMath.h>
 #include "nsIPref.h"
@@ -321,10 +322,12 @@ NS_IMETHODIMP nsDeviceContextMac :: CheckFontExistence(const nsString& aFontName
 
 NS_IMETHODIMP nsDeviceContextMac::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
-  aWidth = 1;
-  aHeight = 1;
-
-  return NS_ERROR_FAILURE;
+	// FIXME:  could just union all of the GDevice rectangles together.
+	RgnHandle grayRgn = LMGetGrayRgn();
+	Rect bounds = (**grayRgn).rgnBBox;
+	aWidth = bounds.right - bounds.left;
+	aHeight = bounds.bottom - bounds.top;
+	return NS_OK;
 }
 
 
