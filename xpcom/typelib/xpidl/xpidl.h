@@ -125,12 +125,30 @@ xpidl_process_node(TreeState *state);
 void
 xpidl_write_comment(TreeState *state, int indent);
 
+
+
+/*
+ * Functions for parsing and printing UUIDs.
+ */
 #include "xpt_struct.h"
+
+/*
+ * How large should the buffer supplied to xpidl_sprint_IID be?
+ */
+#define UUID_LENGTH 37
+
+/*
+ * Print an iid to into a supplied buffer; the buffer should be at least
+ * UUID_LENGTH bytes.
+ */
+gboolean
+xpidl_sprint_iid(struct nsID *iid, char iidbuf[]);
+
 /*
  * Parse a uuid string into an nsID struct.  We cannot link against libxpcom,
  * so we re-implement nsID::Parse here.
  */
 gboolean
-xpidl_parse_iid(nsID *id, char *str);
+xpidl_parse_iid(nsID *id, const char *str);
 
 #endif /* __xpidl_h */
