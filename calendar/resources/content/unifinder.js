@@ -400,7 +400,7 @@ function unifinderDeleteCommand( DoNotConfirm )
       
       if( !DoNotConfirm )
       {
-         if( confirm( "Are you sure you want to delete everything?" ) )
+         if( confirm( "Are you sure you want to delete all selected events?" ) )
          {
             gCalendarWindow.clearSelectedEvent( calendarEvent );
             
