@@ -932,6 +932,7 @@ handle_xlib_bin_event(GdkSuperWin *superwin, XEvent *event, gpointer p)
     window->HandleXlibButtonEvent((XButtonEvent *)event);
     break;
   case MotionNotify:
+    while (XCheckMaskEvent(GDK_DISPLAY(), ButtonMotionMask, event));
     window->HandleXlibMotionNotifyEvent((XMotionEvent *) event);
     break;
   case EnterNotify:
