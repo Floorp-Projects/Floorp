@@ -31,6 +31,7 @@ Mainly demonstrates the use of the following interfaces:
 	nsIWebProgressListener
 	nsIContextMenuListener
 	nsIPrompt
+	nsIWebBrowserFind
 	
 General Overview:
 -----------------
@@ -106,6 +107,8 @@ BrowserImpl*.cpp
 Dialogs.cpp
 	- Contains dialog box code for displaying Prompts, getting
 	passwords, getting username/passwords etc
+	- Contains the CFindDialog class - used for searching text
+	in a web page
 
 winEmbedFileLocProvider.cpp, ProfilesDlg.cpp, ProfileMgr.cpp
 	- Profile management related code (by Conrad Carlen)
@@ -126,6 +129,8 @@ makefile.win
 	- We define "_AFXDLL" and for the compiler and specify
 	"-SUBSYSTEM:windows" for the linker using LCFLAGS and 
 	LLFLAGS, respectively
+	- We also define "USE_SINGLE_SIGN_ON" to enable the
+	single sign-on support
 
 mfcembed.dsp and mfcembed.dsw
 	- These VisualStudio workspace/project files can be used

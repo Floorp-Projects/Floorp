@@ -39,6 +39,7 @@
 
 class CBrowserFrame;
 class CBrowserImpl;
+class CFindDialog;
 
 class CBrowserView : public CWnd
 {
@@ -91,6 +92,9 @@ public:
 	void SetCtxMenuImageSrc(nsAutoString& strImgSrc);
 	nsAutoString mCtxMenuImgSrc;
 
+	inline void ClearFindDialog() { m_pFindDlg = NULL; }
+	CFindDialog* m_pFindDlg;
+
 	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CBrowserView)
@@ -131,6 +135,8 @@ protected:
 	afx_msg void OnViewImageInNewWindow();
 	afx_msg void OnSaveLinkAs();
 	afx_msg void OnSaveImageAs();
+	afx_msg void OnShowFindDlg();
+	afx_msg LRESULT OnFindMsg(WPARAM wParam, LPARAM lParam);
 
 	// Handlers to keep the toolbar/menu items up to date
 	//

@@ -61,7 +61,6 @@ struct IBrowserFrameGlue {
 	virtual void SetFocus() = 0;
 	virtual void FocusAvailable(PRBool *aFocusAvail) = 0;
 	virtual void GetBrowserFrameVisibility(PRBool *aVisible) = 0;
-	virtual nsresult FindNamedBrowserItem(const PRUnichar *aName, nsIWebBrowserChrome *aWebBrowserChrome, nsIDocShellTreeItem ** aBrowserItem) = 0;
 
 	// ContextMenu Related Methods
 	virtual void ShowContextMenu(PRUint32 aContextFlags, nsIDOMNode *aNode) = 0;
@@ -103,7 +102,6 @@ struct IBrowserFrameGlue {
 		virtual void SetFocus();										\
 		virtual void FocusAvailable(PRBool *aFocusAvail);				\
 		virtual void GetBrowserFrameVisibility(PRBool *aVisible);		\
-		virtual nsresult FindNamedBrowserItem(const PRUnichar *aName, nsIWebBrowserChrome *aWebBrowserChrome, nsIDocShellTreeItem ** aBrowserItem);	\
 		virtual void ShowContextMenu(PRUint32 aContextFlags, nsIDOMNode *aNode);	\
 		virtual void Alert(const PRUnichar *dialogTitle, const PRUnichar *text);	\
 		virtual void Confirm(const PRUnichar *dialogTitle, const PRUnichar *text, PRBool *_retval);	\

@@ -15,6 +15,7 @@
 #define	IDD_PROFILES					137
 #define	IDD_PROFILE_NEW					138
 #define	IDD_PROFILE_RENAME				139
+#define	IDD_FINDDLG						140
 #define ID_URL_BAR                      1001
 #define ID_PROG_BAR                     1002
 #define IDC_PROMPT_ANSWER               1003
@@ -33,6 +34,15 @@
 #define IDC_NEW_PROF_NAME				1016
 #define IDC_LOCALE_COMBO				1017
 #define IDC_NEW_NAME					1018
+// BEGIN - Do not change these IDs
+// These IDs are needed for the MFC FindReplaceDialog
+// to work properly
+#define IDC_MATCH_WHOLE_WORD            1040
+#define IDC_MATCH_CASE                  1041
+#define IDC_WRAP_AROUND                 1042
+#define IDC_SEARCH_BACKWARDS            1043
+#define IDC_FIND_EDIT                   1152
+// END - Do not change these IDs
 #define ID_NAV_BACK                     32773
 #define ID_NAV_FORWARD                  32774
 #define ID_NAV_HOME                     32775
@@ -53,8 +63,8 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_3D_CONTROLS					1
-#define _APS_NEXT_RESOURCE_VALUE        140
+#define _APS_3D_CONTROLS				1
+#define _APS_NEXT_RESOURCE_VALUE        141
 #define _APS_NEXT_COMMAND_VALUE         32788
 #define _APS_NEXT_CONTROL_VALUE         1019
 #define _APS_NEXT_SYMED_VALUE           101
