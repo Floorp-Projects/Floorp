@@ -121,11 +121,12 @@ function BuildHTMLAttributeTable()
           TrimString( nodeMap[i].nodeName.toLowerCase() ) == "style" ) {
         continue;   // repeated or non-HTML attribute, ignore this one and go to next
       }
-      var name  = nodeMap[i].nodeName.toLowerCase();
-      var value = gElement.getAttribute ( nodeMap[i].nodeName );
+      var name  = nodeMap[i].name.toLowerCase();
       if ( name.indexOf("_moz") != 0 &&
-           AddTreeItem(name, value, "HTMLAList", HTMLAttrs) )
+           AddTreeItem(name, nodeMap[i].value, "HTMLAList", HTMLAttrs) )
+      {
         added = true;
+      }
     }
 
     if (added)

@@ -124,9 +124,6 @@ function Startup()
           gDialog.SiteList.selectedIndex = siteIndex;
           var docDir = dirObj.value;
 
-          // Be sure directory found is part of that site's dir list
-          AppendDirToSelectedSite(docDir);
-
           // Use the directory within site in the editable menulist
           gPublishSiteData[siteIndex].docDir = docDir;
 
@@ -175,10 +172,6 @@ function Startup()
     SetTextboxFocus(gDialog.PageTitleInput);
   }
 
-  //XXX TODO: How do we decide whether or not to save associated files?
-  //          And whether to save in same location as page if yes?
-  gDialog.OtherDirCheckbox.checked = true;
-
   if (gDialog.SiteList.selectedIndex == -1)
   {
     // No selected site -- assume same directory
@@ -212,13 +205,11 @@ function FillSiteList()
   for (i = 0; i < count; i++)
   {
     var name = gPublishSiteData[i].siteName;
-    var menuitem = AppendLabelAndValueToMenulist(gDialog.SiteList, name);
-
     // XXX Bug 131481: Using "max-width" style and "crop" attribute 
     //     don't constrain grid width properly, resulting in cut-off buttons
-    //     One workaround is to truncate label strings to prevent this problem
-    // ...TruncateStringAtWordEnd(name, 20, true), name);
-
+    //     We'll truncate label strings to prevent this problem
+    var menuitem = AppendLabelAndValueToMenulist(gDialog.SiteList, 
+                        TruncateStringAtWordEnd(name, 30, true), name);
     // Highlight the default site
     if (name == gDefaultSiteName)
     {
@@ -253,6 +244,7 @@ function SelectSiteList()
   var username = "";
   var password = "";
   var savePassword = false;
+  var publishOtherFiles = true;
 
   ClearMenulist(gDialog.DocDirList);
   ClearMenulist(gDialog.OtherDirList);
@@ -281,6 +273,8 @@ function SelectSiteList()
 
     gDialog.DocDirList.value = FormatDirForPublishing(gPublishSiteData[selectedSiteIndex].docDir);
     gDialog.OtherDirList.value = FormatDirForPublishing(gPublishSiteData[selectedSiteIndex].otherDir);
+    publishOtherFiles = gPublishSiteData[selectedSiteIndex].publishOtherFiles;
+
   }
   else
   {
@@ -294,6 +288,9 @@ function SelectSiteList()
   gDialog.UsernameInput.value    = username;
   gDialog.PasswordInput.value    = password;
   gDialog.SavePassword.checked   = savePassword;
+  gDialog.OtherDirCheckbox.checked = publishOtherFiles;
+
+  doEnabling();
 }
 
 function AddNewSite()
@@ -349,9 +346,10 @@ function SwitchPanel(panel)
       gDialog.SettingsTab.selected = null;
     }
     gCurrentPanel = panel;
-    // This is done to show/compensate for bug 131481
-    //  Dialog is resized to incorrect size, but at least buttons aren't cut off!
-//    window.sizeToContent();
+
+    // XXX Another hack to workaround bug 131481
+    // Resize dialog to be sure buttons are not cut off the right
+    window.sizeToContent();
   }
 }
 
@@ -392,29 +390,6 @@ function ChooseDir(menulist)
   //  and build a tree to let user select dir
 }
 
-function AppendDirToSelectedSite(dir)
-{
-  var selectedSiteIndex = gDialog.SiteList.selectedIndex;
-  if (selectedSiteIndex == -1)
-    return;
-
-  var i;
-  var dirFound = false;
-  for (i = 0; i < gPublishSiteData[selectedSiteIndex].dirList.length; i++)
-  {
-    dirFound = (dir == gPublishSiteData[selectedSiteIndex].dirList[i]);
-    if (dirFound)
-      break;
-  }
-  if (!dirFound)
-  {
-    // Append dir to end and sort
-    gPublishSiteData[selectedSiteIndex].dirList[i] = dir;
-    if (gPublishSiteData[selectedSiteIndex].dirList.length > 1)
-      gPublishSiteData[selectedSiteIndex].dirList.sort();
-  }
-}
-
 function ValidateSettings()
 {
   var siteName = TrimString(gDialog.SiteNameInput.value);
@@ -451,6 +426,7 @@ function ValidateSettings()
   var username = TrimString(gDialog.UsernameInput.value);
   var savePassword = gDialog.SavePassword.checked;
   var password = gDialog.PasswordInput.value;
+  var publishOtherFiles = gDialog.OtherDirCheckbox.checked;
   
   //XXX If there was a username and/or password in the publishUrl 
   //    AND in the input field, which do we use?
@@ -481,6 +457,7 @@ function ValidateSettings()
     }
     else
     {
+      // First time: start entire site array
       gPublishSiteData = new Array(1);
       siteIndex = 0;
       gDefaultSiteIndex = 0;
@@ -490,6 +467,7 @@ function ValidateSettings()
     gPublishSiteData[siteIndex].docDir = "";
     gPublishSiteData[siteIndex].otherDir = "";
     gPublishSiteData[siteIndex].dirList = [""];
+    gPublishSiteData[siteIndex].publishOtherFiles = true;
     newSite = true;
   }
   gPublishSiteData[siteIndex].siteName = siteName;
@@ -499,6 +477,11 @@ function ValidateSettings()
   // Don't save password in data that will be saved in prefs
   gPublishSiteData[siteIndex].password = savePassword ? password : "";
   gPublishSiteData[siteIndex].savePassword = savePassword;
+
+  if (publishOtherFiles != gPublishSiteData[siteIndex].publishOtherFiles)
+    gSettingsChanged = true;
+
+  gPublishSiteData[siteIndex].publishOtherFiles = publishOtherFiles;
 
   gDialog.SiteList.selectedIndex = siteIndex;
   if (siteIndex == gDefaultSiteIndex)
@@ -521,26 +504,21 @@ function ValidateSettings()
   {
     // Update selected item if sitename changed 
     var selectedItem = gDialog.SiteList.selectedItem;
-    if (selectedItem && selectedItem.getAttribute("value") != siteName)
+    if (selectedItem && selectedItem.getAttribute("label") != siteName)
     {
+      // XXX More hacks to workaround bug 131481
       // The real sitename
       selectedItem.setAttribute("value", siteName);
 
       // Truncate string to show in the menulist
-      //var truncatedName = TruncateStringAtWordEnd(siteName, 20, true);
-      selectedItem.setAttribute("label", siteName);
-      gDialog.SiteList.setAttribute("label", siteName);
+      var truncatedName = TruncateStringAtWordEnd(siteName, 30, true);
+      selectedItem.setAttribute("label", truncatedName);
+      gDialog.SiteList.setAttribute("label", truncatedName);
     }
   }
   
   // Get the directory name in site to publish to
   var docDir = GetDocDirInput();
-
-  // Because of the autoselect behavior in editable menulists,
-  //   selectedIndex = -1 means value in input field is not already in the list, 
-  //   so add it to the list of site directories
-  if (gDialog.DocDirList.selectedIndex == -1)
-    AppendDirToSelectedSite(docDir);
 
   gPublishSiteData[siteIndex].docDir = docDir;
 
@@ -550,9 +528,6 @@ function ValidateSettings()
     otherDir = docDir;
   else
     otherDir = GetOtherDirInput();
-    
-  if (gDialog.OtherDirList.selectedIndex == -1)
-    AppendDirToSelectedSite(otherDir);
 
   gPublishSiteData[siteIndex].otherDir = otherDir;
 
@@ -566,10 +541,8 @@ function ValidateSettings()
   gReturnData.password = password;
   gReturnData.savePassword = savePassword;
   gReturnData.docDir = gPublishSiteData[siteIndex].docDir;
-
-  // If "Other dir" is not checked, return empty string to indicate "don't save associated files"
-  gReturnData.otherDir = gDialog.OtherDirCheckbox.checked ? gPublishSiteData[siteIndex].otherDir : "";
-
+  gReturnData.otherDir = gPublishSiteData[siteIndex].otherDir;
+  gReturnData.publishOtherFiles = publishOtherFiles;
   gReturnData.dirList = gPublishSiteData[siteIndex].dirList;
   return true;
 }
@@ -605,18 +578,25 @@ function ShowErrorInPanel(panelId, errorMsgId, widgetWithError)
 function doHelpButton()
 {
   if (gCurrentPanel == gPublishPanel)
-    openHelp("publish_tab");
+    openHelp("comp-doc-publish-publishtab");
   else
-    openHelp("settings_tab");
+    openHelp("comp-doc-publish-settingstab");
 }
 
 function onAccept()
 {
   if (ValidateData())
   {
+    //  DON'T save the docDir and otherDir before trying to publish
+    gReturnData.saveDirs = false;
+
     // We save new site data to prefs only if we are attempting to publish
     if (gSettingsChanged)
-      SavePublishSiteDataToPrefs(gPublishSiteData, gDefaultSiteName);
+      SavePublishDataToPrefs(gReturnData);
+
+    // Set flag to resave data after publishing
+    // so we save docDir and otherDir if we published successfully
+    gReturnData.savePublishData = true;
 
     var title = TrimString(gDialog.PageTitleInput.value);
     if (title != gPreviousTitle)

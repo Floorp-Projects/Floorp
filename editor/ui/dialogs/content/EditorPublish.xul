@@ -64,8 +64,9 @@
             <row align="center">
               <label value="&siteList.label;"/>
               <!-- Contents filled in at runtime -->
+              <!-- XXX Hack: max-width set to workaroung bug 131481 -->
               <menulist id="SiteList" 
-                style="min-width:15em; max-width:20em;" crop="right"
+                style="min-width:15em; max-width:30em;" crop="right"
                 oncommand="SelectSiteList();"/>
               <hbox>
                 <button label="&newSiteButton.label;" oncommand="AddNewSite();"/>
