@@ -109,7 +109,7 @@ InputTestConsumer::OnDataAvailable(nsISupports* context,
   do {
     nsresult rv = aIStream->Read(buf, 1024, &amt);
     buf[amt] = '\0';
-    printf(buf);
+    puts(buf);
   } while (amt != 0);
 
   return NS_OK;

@@ -190,7 +190,7 @@ InputConsumer::OnDataAvailable(nsISupports* context,
     nsresult rv = aIStream->Read(buf, 1024, &amt);
     mBytesRead += amt;
     buf[amt] = '\0';
-    printf(buf);
+    puts(buf);
   } while (amt != 0);
 
   if (mConnection->GetBufferLength() == mBytesRead) {

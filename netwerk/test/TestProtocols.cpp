@@ -133,7 +133,7 @@ InputTestConsumer::OnDataAvailable(nsISupports* context,
   do {
     nsresult rv = aIStream->Read(buf, 1024, &amt);
     buf[amt] = '\0';
-    printf(buf);
+    puts(buf);
   } while (amt != 0);
 
   return NS_OK;
@@ -298,6 +298,11 @@ main(int argc, char* argv[])
                     
                         // But calling the open is required!
 //                        pConnection->Open();
+                        pConnection->AsyncRead(0,           // staring position
+                                               -1,          // number of bytes to read
+                                               nsnull,      // ISupports context
+                                               gEventQ,     // nsIEventQ for marshalling
+                                               nsnull);     // IStreamListener consumer
                     }
                 } else {
                     printf("NewChannelFromURI failed!\n");
