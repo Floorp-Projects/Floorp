@@ -82,6 +82,7 @@
 #include "nsIXBLBinding.h"
 #include "nsIElementFactory.h"
 #include "nsContentCID.h"
+#include "nsFormControlHelper.h"
 
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
@@ -107,7 +108,6 @@ static NS_DEFINE_CID(kAttributeContentCID, NS_ATTRIBUTECONTENT_CID);
 #include "nsInlineFrame.h"
 #include "nsBlockFrame.h"
 
-#include "nsGfxTextControlFrame.h"
 #include "nsIScrollableFrame.h"
 
 #include "nsIServiceManager.h"
@@ -4104,12 +4104,6 @@ nsCSSFrameConstructor::ConstructTextControlFrame(nsIPresShell*        aPresShell
     rv = NS_NewGfxTextControlFrame(aPresShell, &aNewFrame);
     if (NS_FAILED(rv)) {
       aNewFrame = nsnull;
-    }
-    if (aNewFrame)
-    {
-#ifndef ENDER_LITE
-      ((nsGfxTextControlFrame*)aNewFrame)->SetFrameConstructor(this);
-#endif
     }
   }
   if (!aNewFrame)
