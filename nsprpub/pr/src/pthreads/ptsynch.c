@@ -248,7 +248,7 @@ static PRIntn pt_TimedWait(
 
 
 /*
- * Notifies just get posted to the to the protecting mutex. The
+ * Notifies just get posted to the protecting mutex. The
  * actual notification is done when the lock is released so that
  * MP systems don't contend for a lock that they can't have.
  */
@@ -649,6 +649,14 @@ PR_IMPLEMENT(PRSemaphore*) PR_NewSem(PRUintn value)
     return NULL;
 }
 
+/*
+ * Define the interprocess named semaphore functions.
+ * There are three implementations:
+ * 1. POSIX semaphore based;
+ * 2. System V semaphore based;
+ * 3. unsupported (fails with PR_NOT_IMPLEMENTED_ERROR).
+ */
+
 #ifdef _PR_HAVE_POSIX_SEMAPHORES
 #include <fcntl.h>
 
@@ -750,9 +758,7 @@ PR_IMPLEMENT(PRStatus) PR_DeleteSemaphore(const char *name)
     return PR_SUCCESS;
 }
     
-#endif /* _PR_HAVE_POSIX_SEMAPHORES */
-
-#ifdef _PR_HAVE_SYSV_SEMAPHORES
+#elif defined(_PR_HAVE_SYSV_SEMAPHORES)
 
 #include <fcntl.h>
 #include <sys/sem.h>
@@ -961,7 +967,43 @@ PR_IMPLEMENT(PRStatus) PR_DeleteSemaphore(const char *name)
     return PR_SUCCESS;
 }
 
-#endif /* _PR_HAVE_SYSV_SEMAPHORES */
+#else /* neither POSIX nor System V semaphores are available */
+
+PR_IMPLEMENT(PRSem *) PR_OpenSemaphore(
+    const char *name,
+    PRIntn flags,
+    PRIntn mode,
+    PRUintn value)
+{
+    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+    return NULL;
+}
+
+PR_IMPLEMENT(PRStatus) PR_WaitSemaphore(PRSem *sem)
+{
+    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+    return PR_FAILURE;
+}
+
+PR_IMPLEMENT(PRStatus) PR_PostSemaphore(PRSem *sem)
+{
+    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+    return PR_FAILURE;
+}
+
+PR_IMPLEMENT(PRStatus) PR_CloseSemaphore(PRSem *sem)
+{
+    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+    return PR_FAILURE;
+}
+
+PR_IMPLEMENT(PRStatus) PR_DeleteSemaphore(const char *name)
+{
+    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+    return PR_FAILURE;
+}
+
+#endif /* end of interprocess named semaphore functions */
 
 /**************************************************************/
 /**************************************************************/
