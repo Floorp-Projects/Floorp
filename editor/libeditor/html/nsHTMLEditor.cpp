@@ -468,8 +468,8 @@ nsHTMLEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
             if (NS_FAILED(metaElement->GetAttribute("content", currentValue))) continue; 
 
             PRInt32 offset = currentValue.Find(content.GetUnicode(), PR_TRUE); 
-            if (kNotFound != offset) { 
-              newMetaString.Assign(currentValue, offset); // copy current value before "charset=" (e.g. text/html) 
+            if (kNotFound != offset) {
+              currentValue.Left(newMetaString, offset); // copy current value before "charset=" (e.g. text/html) 
               newMetaString.Append(content); 
               newMetaString.Append(characterSet); 
               result = nsEditor::SetAttribute(metaElement, "content", newMetaString); 
@@ -1407,7 +1407,7 @@ PRBool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode,
     if (attrString.EqualsIgnoreCase(*aAttribute)) continue;
     // if it's a special _moz... attribute, keep looking
     attrString.Left(tmp,4);
-    if (tmp=="_moz") continue;
+    if (tmp.Equals("_moz")) continue;
     // otherwise, it's another attribute, so return false
     return PR_FALSE;
   }
@@ -1439,7 +1439,7 @@ nsHTMLEditor::HasMatchingAttributes(nsIDOMNode *aNode1,
     attrName->ToString(attrString);
     // if it's a special _moz... attribute, keep going
     attrString.Left(tmp,4);
-    if (tmp=="_moz") continue;
+    if (tmp.Equals("_moz")) continue;
     // otherwise, it's another attribute, so count it
     realCount1++;
     // and compare it to element2's attributes
@@ -1457,7 +1457,7 @@ nsHTMLEditor::HasMatchingAttributes(nsIDOMNode *aNode1,
     attrName->ToString(attrString);
     // if it's a special _moz... attribute, keep going
     attrString.Left(tmp,4);
-    if (tmp=="_moz") continue;
+    if (tmp.Equals("_moz")) continue;
     // otherwise, it's another attribute, so count it
     realCount2++;
   }
@@ -2850,7 +2850,7 @@ nsHTMLEditor::MakeOrChangeList(const nsString& aListType)
   if (!selection) return NS_ERROR_NULL_POINTER;
 
   nsTextRulesInfo ruleInfo(nsHTMLEditRules::kMakeList);
-  if (aListType == "ol") ruleInfo.bOrdered = PR_TRUE;
+  if (aListType.Equals("ol")) ruleInfo.bOrdered = PR_TRUE;
   else  ruleInfo.bOrdered = PR_FALSE;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || (NS_FAILED(res))) return res;
@@ -2940,7 +2940,7 @@ nsHTMLEditor::RemoveList(const nsString& aListType)
   if (!selection) return NS_ERROR_NULL_POINTER;
 
   nsTextRulesInfo ruleInfo(nsHTMLEditRules::kRemoveList);
-  if (aListType == "ol") ruleInfo.bOrdered = PR_TRUE;
+  if (aListType.Equals("ol")) ruleInfo.bOrdered = PR_TRUE;
   else  ruleInfo.bOrdered = PR_FALSE;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || (NS_FAILED(res))) return res;
@@ -3033,7 +3033,7 @@ nsHTMLEditor::Indent(const nsString& aIndent)
   PRBool cancel, handled;
   PRInt32 theAction = nsHTMLEditRules::kIndent;
   PRInt32 opID = kOpIndent;
-  if (aIndent == "outdent")
+  if (aIndent.Equals("outdent"))
   {
     theAction = nsHTMLEditRules::kOutdent;
     opID = kOpOutdent;
@@ -3271,7 +3271,7 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
   nsAutoString TagName = aTagName;
   TagName.ToLowerCase();
   // Empty string indicates we should match any element tag
-  PRBool anyTag = (TagName == "");
+  PRBool anyTag = (TagName.IsEmpty());
   
   //Note that this doesn't need to go through the transaction system
 
@@ -3468,7 +3468,7 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
   if (aReturn)
     *aReturn = nsnull;
 
-  if (aTagName == "" || !aReturn)
+  if (aTagName.IsEmpty() || !aReturn)
     return NS_ERROR_NULL_POINTER;
     
   nsAutoString TagName = aTagName;
@@ -4131,9 +4131,9 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
         tagName.ToLowerCase();
 
         // See if it's an image or an embed
-        if (tagName == "img" || tagName == "embed")
+        if (tagName.Equals("img") || tagName.Equals("embed"))
           (*aNodeList)->AppendElement(node);
-        else if (tagName == "a")
+        else if (tagName.Equals("a"))
         {
           // XXX Only include links if they're links to file: URLs
           nsCOMPtr<nsIDOMHTMLAnchorElement> anchor (do_QueryInterface(content));
@@ -4727,7 +4727,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
     
     // special-case for empty document when requesting plain text,
     // to account for the bogus text node
-    if (aFormatType == "text/plain")
+    if (aFormatType.Equals("text/plain"))
     {
       PRBool docEmpty;
       rv = GetDocumentIsEmpty(&docEmpty);
@@ -4813,7 +4813,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToStream(nsIOutputStream* aOutputStream,
 
   // special-case for empty document when requesting plain text,
   // to account for the bogus text node
-  if (aFormatType == "text/plain")
+  if (aFormatType.Equals("text/plain"))
   {
     PRBool docEmpty;
     rv = GetDocumentIsEmpty(&docEmpty);
@@ -5063,7 +5063,7 @@ nsHTMLEditor::CanContainTag(nsIDOMNode* aParent, const nsString &aTag)
 {
   // CNavDTD gives some unwanted results.  We override them here.
   // if parent is a list and tag is text, say "no". 
-  if (IsListNode(aParent) && (aTag == "__moz_text"))
+  if (IsListNode(aParent) && (aTag.Equals("__moz_text")))
     return PR_FALSE;
   // else fall thru
   return nsEditor::CanContainTag(aParent, aTag);
@@ -6239,7 +6239,7 @@ nsHTMLEditor::IsTable(nsIDOMNode *node)
   NS_PRECONDITION(node, "null node passed to nsHTMLEditor::IsTable");
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
-  if (tag == "table")
+  if (tag.Equals("table"))
   {
     return PR_TRUE;
   }
@@ -6256,7 +6256,7 @@ nsHTMLEditor::IsTableCell(nsIDOMNode *node)
   NS_PRECONDITION(node, "null node passed to nsHTMLEditor::IsTableCell");
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
-  if (tag == "td" || tag == "th")
+  if (tag.Equals("td") || tag.Equals("th"))
   {
     return PR_TRUE;
   }
@@ -6273,10 +6273,10 @@ nsHTMLEditor::IsTableElement(nsIDOMNode *node)
   NS_PRECONDITION(node, "null node passed to nsHTMLEditor::IsTableElement");
   nsAutoString tagName;
   nsEditor::GetTagString(node,tagName);
-  if (tagName == "table" || tagName == "tr" || 
-      tagName == "td"    || tagName == "th" ||
-      tagName == "thead" || tagName == "tfoot" ||
-      tagName == "tbody" || tagName == "caption")
+  if (tagName.Equals("table") || tagName.Equals("tr") || 
+      tagName.Equals("td")    || tagName.Equals("th") ||
+      tagName.Equals("thead") || tagName.Equals("tfoot") ||
+      tagName.Equals("tbody") || tagName.Equals("caption"))
   {
     return PR_TRUE;
   }

@@ -574,7 +574,7 @@ nsEditorShell::SetEditorType(const PRUnichar *editorType)
     
   nsAutoString  theType = editorType;
   theType.ToLowerCase();
-  if (theType == "text" || theType == "html" || theType == "" || theType == "htmlmail")
+  if (theType.Equals("text") || theType.Equals("html") || theType.IsEmpty() || theType.Equals("htmlmail"))
   {
     mEditorTypeString = theType;
     return NS_OK;
@@ -606,17 +606,17 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     
   if (NS_SUCCEEDED(err))
   {
-    if (mEditorTypeString == "text")
+    if (mEditorTypeString.Equals("text"))
     {
       err = editor->Init(aDoc, aPresShell, nsIHTMLEditor::eEditorPlaintextMask);
       mEditorType = ePlainTextEditorType;
     }
-    else if (mEditorTypeString == "html" || mEditorTypeString == "")  // empty string default to HTML editor
+    else if (mEditorTypeString.Equals("html") || mEditorTypeString.IsEmpty())  // empty string default to HTML editor
     {
       err = editor->Init(aDoc, aPresShell, 0);
       mEditorType = eHTMLTextEditorType;
     }
-    else if (mEditorTypeString == "htmlmail")  //  HTML editor with special mail rules
+    else if (mEditorTypeString.Equals("htmlmail"))  //  HTML editor with special mail rules
     {
       err = editor->Init(aDoc, aPresShell, nsIHTMLEditor::eEditorMailMask);
       mEditorType = eHTMLTextEditorType;
@@ -876,7 +876,7 @@ nsEditorShell::RemoveTextProperty(const PRUnichar *prop, const PRUnichar *attr)
   nsAutoString  aAttr(attr);
   
   allStr.ToLowerCase();
-  PRBool    doingAll = (allStr == "all");
+  PRBool    doingAll = (allStr.Equals("all"));
   nsresult  err = NS_OK;
 
   if (doingAll)
@@ -1439,7 +1439,7 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
                 {
                   // remove cruft before file name including '/'
                   // if the url ends with a '/' then the whole string will be cut
-                  urlstring = urlstring.Cut(0, index + 1);
+                  urlstring.Cut(0, index + 1);
                   if (urlstring.Length() > 0)
                     fileName = urlstring;
                 }
@@ -1462,7 +1462,8 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
                 title = title.ReplaceChar(fslash, underscore);
                 title = title.ReplaceChar(at, underscore);
                 title = title.ReplaceChar(colon, underscore);
-                fileName = title + nsString(".html");
+                fileName = title;
+                fileName.Append(".html");
               }
             } 
             else
@@ -2727,7 +2728,7 @@ nsEditorShell::MakeOrChangeList(const PRUnichar *listType)
   switch (mEditorType)
   {
     case eHTMLTextEditorType:
-      if (aListType == "")
+      if (aListType.IsEmpty())
       {
         err = mEditor->RemoveList("ol");
         if(NS_SUCCEEDED(err))
@@ -2759,7 +2760,7 @@ nsEditorShell::RemoveList(const PRUnichar *listType)
   switch (mEditorType)
   {
     case eHTMLTextEditorType:
-      if (aListType == "")
+      if (aListType.IsEmpty())
       {
         err = mEditor->RemoveList("ol");
         if(NS_SUCCEEDED(err))

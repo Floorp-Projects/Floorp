@@ -2503,7 +2503,7 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
         {
           nsAutoString sourceAttrValue;
           if (NS_SUCCEEDED(sourceAttribute->GetValue(sourceAttrValue)) &&
-              sourceAttrValue != "")
+              !sourceAttrValue.IsEmpty())
           {
             destElement->SetAttribute(sourceAttrName, sourceAttrValue);
           } else {

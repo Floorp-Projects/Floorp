@@ -162,9 +162,9 @@ nsPasteCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
   
   nsresult rv = NS_OK;
   nsAutoString cmdString(aCommand);
-  if (cmdString == "cmd_paste")
+  if (cmdString.Equals("cmd_paste"))
     rv = aEditor->Paste();
-  else if (cmdString == "cmd_pasteQuote")
+  else if (cmdString.Equals("cmd_pasteQuote"))
   {
     nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(aEditor, &rv);
     if (mailEditor)
@@ -187,19 +187,19 @@ nsDeleteCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * refCo
   
   nsAutoString cmdString(aCommand);
 
-  if (cmdString == "cmd_delete")
+  if (cmdString.Equals("cmd_delete"))
     rv = aEditor->CanCut(*outCmdEnabled);
-  else if (cmdString == "cmd_deleteCharBackward")
+  else if (cmdString.Equals("cmd_deleteCharBackward"))
     *outCmdEnabled = PR_TRUE;
-  else if (cmdString == "cmd_deleteCharForward")
+  else if (cmdString.Equals("cmd_deleteCharForward"))
     *outCmdEnabled = PR_TRUE;
-  else if (cmdString == "cmd_deleteWordBackward")
+  else if (cmdString.Equals("cmd_deleteWordBackward"))
     *outCmdEnabled = PR_TRUE;
-  else if (cmdString == "cmd_deleteWordForward")
+  else if (cmdString.Equals("cmd_deleteWordForward"))
     *outCmdEnabled = PR_TRUE;
-  else if (cmdString == "cmd_deleteToBeginningOfLine")
+  else if (cmdString.Equals("cmd_deleteToBeginningOfLine"))
     *outCmdEnabled = PR_TRUE;
-  else if (cmdString == "cmd_deleteToEndOfLine")
+  else if (cmdString.Equals("cmd_deleteToEndOfLine"))
     *outCmdEnabled = PR_TRUE;  
 
   return rv;
@@ -217,19 +217,19 @@ nsDeleteCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
 
   nsIEditor::EDirection deleteDir = nsIEditor::eNone;
   
-  if (cmdString == "cmd_delete")
+  if (cmdString.Equals("cmd_delete"))
     deleteDir = nsIEditor::ePrevious;
-  else if (cmdString == "cmd_deleteCharBackward")
+  else if (cmdString.Equals("cmd_deleteCharBackward"))
     deleteDir = nsIEditor::ePrevious;
-  else if (cmdString == "cmd_deleteCharForward")
+  else if (cmdString.Equals("cmd_deleteCharForward"))
     deleteDir = nsIEditor::eNext;
-  else if (cmdString == "cmd_deleteWordBackward")
+  else if (cmdString.Equals("cmd_deleteWordBackward"))
     deleteDir = nsIEditor::ePreviousWord;
-  else if (cmdString == "cmd_deleteWordForward")
+  else if (cmdString.Equals("cmd_deleteWordForward"))
     deleteDir = nsIEditor::eNextWord;
-  else if (cmdString == "cmd_deleteToBeginningOfLine")
+  else if (cmdString.Equals("cmd_deleteToBeginningOfLine"))
     deleteDir = nsIEditor::eToBeginningOfLine;
-  else if (cmdString == "cmd_deleteToEndOfLine")
+  else if (cmdString.Equals("cmd_deleteToEndOfLine"))
     deleteDir = nsIEditor::eToEndOfLine;
 
   return aEditor->DeleteSelection(deleteDir);
@@ -291,81 +291,81 @@ nsSelectionMoveCommands::DoCommand(const PRUnichar *aCommand, nsISupports * refC
   nsAutoString cmdString(aCommand);
   
   // complete scroll commands
-  if (cmdString == "cmd_scrollTop")
+  if (cmdString.Equals("cmd_scrollTop"))
     return selCont->CompleteScroll(PR_FALSE);
-  else if (cmdString == "cmd_scrollBottom")
+  else if (cmdString.Equals("cmd_scrollBottom"))
     return selCont->CompleteScroll(PR_TRUE);
 
   // complete move commands
-  else if (cmdString == "cmd_moveTop")
+  else if (cmdString.Equals("cmd_moveTop"))
     return selCont->CompleteMove(PR_FALSE, PR_FALSE);
-  else if (cmdString == "cmd_moveBottom")
+  else if (cmdString.Equals("cmd_moveBottom"))
     return selCont->CompleteMove(PR_TRUE, PR_FALSE);
-  else if (cmdString == "cmd_selectTop")
+  else if (cmdString.Equals("cmd_selectTop"))
     return selCont->CompleteMove(PR_FALSE, PR_TRUE);
-  else if (cmdString == "cmd_selectBottom")
+  else if (cmdString.Equals("cmd_selectBottom"))
     return selCont->CompleteMove(PR_TRUE, PR_TRUE);
 
   // line move commands
-  else if (cmdString == "cmd_lineNext")
+  else if (cmdString.Equals("cmd_lineNext"))
     return selCont->LineMove(PR_TRUE, PR_FALSE);
-  else if (cmdString == "cmd_linePrevious")
+  else if (cmdString.Equals("cmd_linePrevious"))
     return selCont->LineMove(PR_FALSE, PR_FALSE);
-  else if (cmdString == "cmd_selectLineNext")
+  else if (cmdString.Equals("cmd_selectLineNext"))
     return selCont->LineMove(PR_TRUE, PR_TRUE);
-  else if (cmdString == "cmd_selectLinePrevious")
+  else if (cmdString.Equals("cmd_selectLinePrevious"))
     return selCont->LineMove(PR_FALSE, PR_TRUE);
 
   // character move commands
-  else if (cmdString == "cmd_charPrevious")
+  else if (cmdString.Equals("cmd_charPrevious"))
     return selCont->CharacterMove(PR_FALSE, PR_FALSE);
-  else if (cmdString == "cmd_charNext")
+  else if (cmdString.Equals("cmd_charNext"))
     return selCont->CharacterMove(PR_TRUE, PR_FALSE);
-  else if (cmdString == "cmd_selectCharPrevious")
+  else if (cmdString.Equals("cmd_selectCharPrevious"))
     return selCont->CharacterMove(PR_FALSE, PR_TRUE);
-  else if (cmdString == "cmd_selectCharNext")
+  else if (cmdString.Equals("cmd_selectCharNext"))
     return selCont->CharacterMove(PR_TRUE, PR_TRUE);
 
   // intra line move commands
-  else if (cmdString == "cmd_beginLine")
+  else if (cmdString.Equals("cmd_beginLine"))
     return selCont->IntraLineMove(PR_FALSE, PR_FALSE);
-  else if (cmdString == "cmd_endLine")
+  else if (cmdString.Equals("cmd_endLine"))
     return selCont->IntraLineMove(PR_TRUE, PR_FALSE);
-  else if (cmdString == "cmd_selectBeginLine")
+  else if (cmdString.Equals("cmd_selectBeginLine"))
     return selCont->IntraLineMove(PR_FALSE, PR_TRUE);
-  else if (cmdString == "cmd_selectEndLine")
+  else if (cmdString.Equals("cmd_selectEndLine"))
     return selCont->IntraLineMove(PR_TRUE, PR_TRUE);
   
   // word move commands
-  else if (cmdString == "cmd_wordPrevious")
+  else if (cmdString.Equals("cmd_wordPrevious"))
     return selCont->WordMove(PR_FALSE, PR_FALSE);
-  else if (cmdString == "cmd_wordNext")
+  else if (cmdString.Equals("cmd_wordNext"))
     return selCont->WordMove(PR_TRUE, PR_FALSE);
-  else if (cmdString == "cmd_selectWordPrevious")
+  else if (cmdString.Equals("cmd_selectWordPrevious"))
     return selCont->WordMove(PR_FALSE, PR_TRUE);
-  else if (cmdString == "cmd_selectWordNext")
+  else if (cmdString.Equals("cmd_selectWordNext"))
     return selCont->WordMove(PR_TRUE, PR_TRUE);
   
   // scroll page commands
-  else if (cmdString == "cmd_scrollPageUp")
+  else if (cmdString.Equals("cmd_scrollPageUp"))
     return selCont->ScrollPage(PR_FALSE);
-  else if (cmdString == "cmd_scrollPageDown")
+  else if (cmdString.Equals("cmd_scrollPageDown"))
     return selCont->ScrollPage(PR_TRUE);
   
   // scroll line commands
-  else if (cmdString == "cmd_scrollLineUp")
+  else if (cmdString.Equals("cmd_scrollLineUp"))
     return selCont->ScrollLine(PR_FALSE);
-  else if (cmdString == "cmd_scrollLineDown")
+  else if (cmdString.Equals("cmd_scrollLineDown"))
     return selCont->ScrollLine(PR_TRUE);
   
   // page move commands
-  else if (cmdString == "cmd_scrollPageUp")
+  else if (cmdString.Equals("cmd_scrollPageUp"))
     return selCont->PageMove(PR_FALSE, PR_FALSE);
-  else if (cmdString == "cmd_scrollPageDown")
+  else if (cmdString.Equals("cmd_scrollPageDown"))
     return selCont->PageMove(PR_TRUE, PR_FALSE);
-  else if (cmdString == "cmd_selectPageUp")
+  else if (cmdString.Equals("cmd_selectPageUp"))
     return selCont->PageMove(PR_FALSE, PR_TRUE);
-  else if (cmdString == "cmd_selectPageDown")
+  else if (cmdString.Equals("cmd_selectPageDown"))
     return selCont->PageMove(PR_TRUE, PR_TRUE);
     
   return NS_ERROR_FAILURE;
