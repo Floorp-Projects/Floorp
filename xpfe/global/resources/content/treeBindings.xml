@@ -310,12 +310,12 @@
            click, so that drags work correctly. -->
       <handler event="mousedown">
       <![CDATA[
-         if (event.target.localName == 'treecell' && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
+         if (event.originalTarget.localName == 'treecell' && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
            var isSelected = event.target.parentNode.parentNode.getAttribute("selected");
            if (!isSelected) {
-             parentNode.selectItem(event.target.parentNode.parentNode);
+             parentNode.selectItem(event.originalTarget.parentNode.parentNode);
            }
-           parentNode.currentItem = event.target.parentNode.parentNode;
+           parentNode.currentItem = event.originalTarget.parentNode.parentNode;
          }
       ]]>
       </handler>
@@ -324,21 +324,22 @@
            except this item. -->
       <handler event="click">
       <![CDATA[
-         if (event.target.localName == 'treecell') {
+         var t = event.originalTarget;
+         if (t.localName == 'treecell') {
            if (event.ctrlKey || event.metaKey) {
-             parentNode.toggleItemSelection(event.target.parentNode.parentNode);
-             parentNode.currentItem = event.target.parentNode.parentNode;
+             parentNode.toggleItemSelection(t.parentNode.parentNode);
+             parentNode.currentItem = t.parentNode.parentNode;
            }
            else if (event.shiftKey) {
-             parentNode.selectItemRange(null, event.target.parentNode.parentNode);
-             parentNode.currentItem = event.target.parentNode.parentNode;
+             parentNode.selectItemRange(null, t.parentNode.parentNode);
+             parentNode.currentItem = t.parentNode.parentNode;
            }
            else {
              parentNode.suppressOnSelect = true;
              var selectedItems = parentNode.selectedItems;
              var i = 0;
              while (i < selectedItems.length) {
-               if (selectedItems[i] != event.target.parentNode.parentNode)
+               if (selectedItems[i] != t.parentNode.parentNode)
                  parentNode.removeItemFromSelection(selectedItems[i]);
                else
                  i++;
@@ -352,7 +353,7 @@
       <!-- double-click -->
       <handler event="click" clickcount="2">
       <![CDATA[
-         if (event.target.localName == 'treecell') {
+         if (event.originalTarget.localName == 'treecell') {
            var n = event.target.parentNode.parentNode;
            n.toggleOpenState();
          }
@@ -362,8 +363,8 @@
       <!-- normal, single click -->
       <handler event="click">
       <![CDATA[
-         if (event.target.getAttribute('twisty') == 'true') {
-           var n = event.target.parentNode.parentNode.parentNode;
+         if (event.originalTarget.getAttribute('twisty') == 'true') {
+           var n = event.originalTarget.parentNode.parentNode.parentNode;
            n.toggleOpenState();
          }
       ]]>
