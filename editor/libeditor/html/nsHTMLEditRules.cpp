@@ -3547,6 +3547,10 @@ nsHTMLEditRules::WillCSSIndent(nsISelection *aSelection, PRBool *aCancel, PRBool
   {
     // here's where we actually figure out what to do
     nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[i];
+
+    // Ignore all non-editable nodes.  Leave them be.
+    if (!mHTMLEditor->IsEditable(curNode)) continue;
+
     PRInt32 offset;
     res = nsEditor::GetNodeLocation(curNode, address_of(curParent), &offset);
     if (NS_FAILED(res)) return res;
