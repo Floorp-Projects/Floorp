@@ -542,12 +542,17 @@ nsDownloadManager::CancelDownload(const char* aPath)
   if (!mCurrDownloads.Exists(&key))
     return NS_ERROR_FAILURE;
   
-  nsCOMPtr<nsIDownload> download;
   nsDownload* internalDownload = NS_STATIC_CAST(nsDownload*, mCurrDownloads.Get(&key));
-  internalDownload->QueryInterface(NS_GET_IID(nsIDownload), (void**) getter_AddRefs(download));
+  nsCOMPtr<nsIDownload> download;
+  CallQueryInterface(internalDownload, NS_STATIC_CAST(nsIDownload**,
+                                                      getter_AddRefs(download)));
   if (!download)
     return NS_ERROR_FAILURE;
-    
+
+  // Don't cancel if download is already finished
+  if (internalDownload->mDownloadState == FINISHED)
+    return NS_OK;
+  
   internalDownload->SetDownloadState(CANCELED);
 
   // if a persist was provided, we can do the cancel ourselves.
@@ -1148,9 +1153,9 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
       internalListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus, this);
   }
 
-  if (mDialogListener)
-    mDialogListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
-
+  // We need to update mDownloadState before updating the dialog, because
+  // that will close and call CancelDownload if it was the last open window.
+  nsresult rv = NS_OK;
   if (aStateFlags & STATE_STOP) {
     if (mDownloadState == DOWNLOADING || mDownloadState == NOTSTARTED) {
       mDownloadState = FINISHED;
@@ -1161,10 +1166,11 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
       mPercentComplete = 100;
 
       nsAutoString path;
-      nsresult rv = mTarget->GetPath(path);
-      if (NS_FAILED(rv)) return rv;
-
-      mDownloadManager->DownloadEnded(NS_ConvertUCS2toUTF8(path).get(), nsnull);
+      rv = mTarget->GetPath(path);
+      // can't do an early return; have to break reference cycle below
+      if (NS_SUCCEEDED(rv)) {
+        mDownloadManager->DownloadEnded(NS_ConvertUCS2toUTF8(path).get(), nsnull);
+      }
     }
 
     // break the cycle we created in AddDownload
@@ -1172,7 +1178,10 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
       mPersist->SetProgressListener(nsnull);
   }
 
-  return NS_OK;
+  if (mDialogListener)
+    mDialogListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
+
+  return rv;
 }
 
 NS_IMETHODIMP
