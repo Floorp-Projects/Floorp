@@ -53,6 +53,12 @@ interface  nsIDBFolderInfo : nsISupports {
 	attribute long ImapTotalPendingMessages;
 	attribute long ImapUnreadPendingMessages;
 	attribute wchar IMAPHierarchySeparator;
+
+  attribute nsMsgViewTypeValue viewType;
+  attribute nsMsgViewFlagsTypeValue viewFlags;
+  attribute nsMsgViewSortTypeValue sortType;
+  attribute nsMsgViewSortOrderValue sortOrder;
+
     void ChangeExpungedBytes(in long delta);
 
 	void GetCharPtrProperty(in string propertyName, out string resultProperty);

@@ -107,11 +107,24 @@ function ChangeFolderByDOMNode(folderNode)
   dump(uri + "\n");
   if (!uri) return;
 
-  var sortType = folderNode.getAttribute('sortType');
-  var sortOrder = folderNode.getAttribute('sortOrder');
-  var viewFlags = folderNode.getAttribute('viewFlags');
-  var viewType = folderNode.getAttribute('viewType');
-
+  var sortType = 0;
+  var sortOrder = 0;
+  var viewFlags = 0;
+  var viewType = 0;
+  var resource = RDF.GetResource(uri);
+  var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
+  if (msgfolder)
+  {
+    var msgdb = msgfolder.getMsgDatabase(msgWindow);
+    if (msgdb)
+    {
+      var dbFolderInfo = msgdb.dBFolderInfo;
+      sortType = dbFolderInfo.sortType;
+      sortOrder = dbFolderInfo.sortOrder;
+      viewFlags = dbFolderInfo.viewFlags;
+      viewType = dbFolderInfo.viewType;
+    }
+  }
   ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder);
 }
 
@@ -600,7 +613,6 @@ function CreateDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
   gDBView.supressMsgDisplay = IsThreadAndMessagePaneSplitterCollapsed();
 
   UpdateSortIndicators(gCurSortType, sortOrder);
-  PersistViewAttributesOnFolder();
 }
 
 function SetViewFlags(viewFlags)

@@ -139,6 +139,7 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
   {
     if (sortType == nsMsgViewSortType::byThread)
     {
+      SaveSortInfo(sortType, sortOrder);
       m_sortType = sortType;
       m_viewFlags |= nsMsgViewFlagsType::kThreadedDisplay;
       if ( m_havePrevView)
@@ -150,7 +151,6 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
         m_flags.InsertAt(0, &m_prevFlags);
         m_levels.RemoveAll();
         m_levels.InsertAt(0, &m_prevLevels);
-        //				m_messageDB->SetSortInfo(sortType, sortOrder);
         m_sortValid = PR_TRUE;
         
         // the sort may have changed the number of rows

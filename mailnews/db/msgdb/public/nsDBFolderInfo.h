@@ -44,7 +44,7 @@ class nsMsgDatabase;
 class nsDBFolderInfo : public nsIDBFolderInfo
 {
 public:
-//	friend class nsMsgDatabase;
+	friend class nsMsgDatabase;
 
 	nsDBFolderInfo(nsMsgDatabase *mdb);
 	virtual ~nsDBFolderInfo();
@@ -61,11 +61,6 @@ public:
 	nsMsgKey			GetLateredAt(PRInt32 laterIndex, PRTime pUntil);
 	void				RemoveLateredAt(PRInt32 laterIndex);
 
-	void				SetViewType(PRInt32 viewType);
-	PRInt32				GetViewType();
-	// we would like to just store the property name we're sorted by
-	void				SetSortInfo(nsMsgSortType, nsMsgSortOrder);
-	void				GetSortInfo(nsMsgSortType *, nsMsgSortOrder *);
 	PRBool				TestFlag(PRInt32 flags);
 	PRInt16				GetIMAPHierarchySeparator() ;
 	void				SetIMAPHierarchySeparator(PRInt16 hierarchySeparator) ;
@@ -103,10 +98,9 @@ protected:
 	nsMsgKey	m_lastMessageLoaded; // set by the FE's to remember the last loaded message
 
 	PRUint16	m_version;			// for upgrading...
-	PRInt32		m_sortType;			// the last sort type open on this db.
 	PRInt16		m_csid;				// default csid for these messages
 	PRInt16		m_IMAPHierarchySeparator;	// imap path separator
-	PRInt8		m_sortOrder;		// the last sort order (up or down
+
 	// mail only (for now)
 	
 	// IMAP only
@@ -116,7 +110,6 @@ protected:
 
 	// news only (for now)
 	nsMsgKey	m_expiredMark;		// Highest invalid article number in group - for expiring
-	PRInt32		m_viewType;			// for news, the last view type open on this db.	
 // the db folder info will have to know what db and row it belongs to, since it is really
 // just a wrapper around the singleton folder info row in the mdb. 
 	nsMsgDatabase		*m_mdb;

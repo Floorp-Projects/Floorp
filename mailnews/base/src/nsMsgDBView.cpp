@@ -1062,6 +1062,7 @@ NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sor
   m_viewFlags = viewFlags;
   m_sortOrder = sortOrder;
   m_sortType = sortType;
+  nsMsgViewTypeValue viewType;
 
   if (folder) // search view will have a null folder
   {
@@ -1070,6 +1071,12 @@ NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sor
     NS_ENSURE_SUCCESS(rv,rv);
 	  m_db->AddListener(this);
     m_folder = folder;
+    // save off sort type and order, view type and flags
+    folderInfo->SetSortType(sortType);
+    folderInfo->SetSortOrder(sortOrder);
+    folderInfo->SetViewFlags(viewFlags);
+    GetViewType(&viewType);
+    folderInfo->SetViewType(viewType);
 
     // determine if we are in a news folder or not.
     // if yes, we'll show lines instead of size, and special icons in the thread pane
@@ -2124,16 +2131,36 @@ nsMsgDBView::GetLocationCollationKey(nsIMsgHdr *msgHdr, PRUint8 **result, PRUint
     return NS_OK;
 }
 
+nsresult nsMsgDBView::SaveSortInfo(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder)
+{
+  if (m_folder)
+  {
+    nsCOMPtr <nsIDBFolderInfo> folderInfo;
+    nsresult rv = m_folder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(m_db));
+    if (NS_SUCCEEDED(rv) && folderInfo)
+    {
+      // save off sort type and order, view type and flags
+      folderInfo->SetSortType(sortType);
+      folderInfo->SetSortOrder(sortOrder);
+    }
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder)
 {
     nsresult rv;
 
-    if (m_sortType == sortType && m_sortValid) {
-        if (m_sortOrder == sortOrder) {
+  if (m_sortType == sortType && m_sortValid) 
+  {
+    if (m_sortOrder == sortOrder) 
+    {
             // same as it ever was.  do nothing
             return NS_OK;
         }   
-        else {
+    else 
+    {
+      SaveSortInfo(sortType, sortOrder);
             if (m_sortType != nsMsgViewSortType::byThread) {
                 rv = ReverseSort();
                 NS_ENSURE_SUCCESS(rv,rv);

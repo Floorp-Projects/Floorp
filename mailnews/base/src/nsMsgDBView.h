@@ -168,6 +168,7 @@ protected:
   nsresult ExpansionDelta(nsMsgViewIndex index, PRInt32 *expansionDelta);
   nsresult ReverseSort();
   nsresult ReverseThreads();
+  nsresult SaveSortInfo(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder);
 
 	nsMsgKey		GetAt(nsMsgViewIndex index) ;
 	nsMsgViewIndex	FindViewIndex(nsMsgKey  key) 

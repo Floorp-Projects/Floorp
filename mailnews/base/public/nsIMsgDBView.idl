@@ -29,13 +29,9 @@ interface nsIMessenger;
 interface nsIMsgDBHdr;
 interface nsIMsgDBViewCommandUpdater;
 
-typedef long nsMsgViewSortOrderValue;
-typedef long nsMsgViewSortTypeValue;
-typedef long nsMsgViewTypeValue;
 typedef long nsMsgViewNotificationCodeValue;
 typedef long nsMsgViewCommandCheckStateValue;
 typedef long nsMsgViewCommandTypeValue;
-typedef long nsMsgViewFlagsTypeValue;
 typedef long nsMsgNavigationTypeValue;
 
 [scriptable, uuid(682a18be-fd18-11d4-a5be-0060b0fc04b7)]

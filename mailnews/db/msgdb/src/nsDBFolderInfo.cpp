@@ -28,6 +28,8 @@
 #include "nsIPref.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+#include "nsIMsgDBView.h"
+
 static const char *kDBFolderInfoScope = "ns:msg:db:row:scope:dbfolderinfo:all";
 static const char *kDBFolderInfoTableKind = "ns:msg:db:table:kind:dbfolderinfo";
 
@@ -138,7 +140,6 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
     :     m_flags(0),
           m_lastMessageLoaded(0),
           m_expiredMark(0),
-          m_viewType(0),
           m_numVisibleMessagesColumnToken(0),
           m_expiredMarkColumnToken(0)
 {
@@ -146,10 +147,8 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
 	m_mdbTable = NULL;
 	m_mdbRow = NULL;
 	m_version = 1;			// for upgrading...
-	m_sortType = 0;			// the last sort type open on this db.
 	m_csid = 0;				// default csid for these messages
 	m_IMAPHierarchySeparator = 0;	// imap path separator
-	m_sortOrder = 0;		// the last sort order (up or down
 	// mail only (for now)
 	m_folderSize = 0;
 	m_folderDate = 0;
@@ -340,7 +339,6 @@ nsresult nsDBFolderInfo::InitMDBInfo()
 		store->StringToToken(env,  kUnreadPendingMessagesColumnName, &m_unreadPendingMessagesColumnToken);
 		store->StringToToken(env,  kExpiredMarkColumnName, &m_expiredMarkColumnToken);
 		store->StringToToken(env,  kVersionColumnName, &m_versionColumnToken);
-		store->StringToToken(env,  kNumVisibleMessagesColumnName, &m_numVisibleMessagesColumnToken);
 		m_mdbTokensInitialized  = PR_TRUE;
 	}
 	return ret;
@@ -482,24 +480,6 @@ NS_IMETHODIMP nsDBFolderInfo::SetMailboxName(nsString *newBoxName)
 NS_IMETHODIMP nsDBFolderInfo::GetMailboxName(nsString *boxName)
 {
 	return GetPropertyWithToken(m_mailboxNameColumnToken, boxName);
-}
-
-void nsDBFolderInfo::SetViewType(PRInt32 viewType)
-{
-  m_viewType = viewType;
-}
-
-PRInt32	nsDBFolderInfo::GetViewType() 
-{
-	return m_viewType;
-}
-
-void nsDBFolderInfo::SetSortInfo(nsMsgSortType type, nsMsgSortOrder order)
-{
-}
-
-void nsDBFolderInfo::GetSortInfo(nsMsgSortType *type, nsMsgSortOrder *orde)
-{
 }
 
 NS_IMETHODIMP nsDBFolderInfo::ChangeNumNewMessages(PRInt32 delta)
@@ -772,6 +752,59 @@ void nsDBFolderInfo::ChangeImapUnreadPendingMessages(PRInt32 delta)
 {
 	m_unreadPendingMessages+=delta;
 	SetInt32PropertyWithToken(m_unreadPendingMessagesColumnToken, m_unreadPendingMessages);
+}
+
+/* attribute nsMsgViewTypeValue viewType; */
+NS_IMETHODIMP nsDBFolderInfo::GetViewType(nsMsgViewTypeValue *aViewType)
+{
+  PRUint32 viewTypeValue;
+  nsresult rv = GetUint32Property("viewType", &viewTypeValue, nsMsgViewType::eShowAllThreads);
+  *aViewType = viewTypeValue;
+  return rv;
+}
+NS_IMETHODIMP nsDBFolderInfo::SetViewType(nsMsgViewTypeValue aViewType)
+{
+  return SetUint32Property("viewType", aViewType);
+}
+
+/* attribute nsMsgViewFlagsTypeValue viewFlags; */
+NS_IMETHODIMP nsDBFolderInfo::GetViewFlags(nsMsgViewFlagsTypeValue *aViewFlags)
+{
+  PRUint32 viewFlagsValue;
+  nsresult rv = GetUint32Property("viewFlags", &viewFlagsValue, nsMsgViewFlagsType::kNone);
+  *aViewFlags = viewFlagsValue;
+  return rv;
+}
+NS_IMETHODIMP nsDBFolderInfo::SetViewFlags(nsMsgViewFlagsTypeValue aViewFlags)
+{
+  return SetUint32Property("viewFlags", aViewFlags);
+}
+
+/* attribute nsMsgViewSortTypeValue sortType; */
+NS_IMETHODIMP nsDBFolderInfo::GetSortType(nsMsgViewSortTypeValue *aSortType)
+{
+  PRUint32 sortTypeValue;
+  nsresult rv = GetUint32Property("sortType",  &sortTypeValue, nsMsgViewSortType::byDate);
+  *aSortType = sortTypeValue;
+  return rv;
+}
+NS_IMETHODIMP nsDBFolderInfo::SetSortType(nsMsgViewSortTypeValue aSortType)
+{
+  return SetUint32Property("sortType", aSortType);
+}
+
+/* attribute nsMsgViewSortOrderValue sortOrder; */
+NS_IMETHODIMP nsDBFolderInfo::GetSortOrder(nsMsgViewSortOrderValue *aSortOrder)
+{
+  PRUint32 sortOrderValue;
+  nsresult rv = GetUint32Property("sortOrder",  &sortOrderValue, nsMsgViewSortOrder::none);
+  *aSortOrder = sortOrderValue;
+  return rv;
+}
+
+NS_IMETHODIMP nsDBFolderInfo::SetSortOrder(nsMsgViewSortOrderValue aSortOrder)
+{
+  return SetUint32Property("sortOrder", aSortOrder);
 }
 
 

@@ -65,8 +65,7 @@ Contributors:
                   SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                   IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
                   ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
-                  Synchronize="rdf:http://home.netscape.com/NC-rdf#Synchronize"			
-                  persist="viewType viewFlags sortOrder sortType">
+                  Synchronize="rdf:http://home.netscape.com/NC-rdf#Synchronize">
 
             <treerow class="tree-folder-row" 
                      IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer">

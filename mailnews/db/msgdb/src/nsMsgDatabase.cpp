@@ -965,7 +965,9 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 	NotifyAnnouncerGoingAway();
 	// OK, remove from cache first and close the store.
 //	RemoveFromCache(this);
-
+        // clear out db ptr in folder info; it's about to be invalid
+        if (m_dbFolderInfo)
+          m_dbFolderInfo->m_mdb = nsnull;
 	NS_IF_RELEASE(m_dbFolderInfo);
 	m_dbFolderInfo = nsnull;
 
@@ -982,6 +984,7 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 	if (m_mdbStore)
 	{
 		m_mdbStore->CloseMdbObject(m_mdbEnv);
+                m_mdbEnv = nsnull;
 		m_mdbStore = nsnull;
 	}
 	Release();
@@ -991,11 +994,11 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 // caller must Release result.
 NS_IMETHODIMP nsMsgDatabase::GetDBFolderInfo(nsIDBFolderInfo	**result)
 {
-	*result = m_dbFolderInfo;
-	if (m_dbFolderInfo)
+  *result = m_dbFolderInfo;
+  if (m_dbFolderInfo)
   {
-		m_dbFolderInfo->AddRef();
-	  return NS_OK;
+    m_dbFolderInfo->AddRef();
+    return NS_OK;
   }
   else
   {

@@ -100,7 +100,7 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   // In 4.x, it was mainly used to remove corrupted databases.
   void ForceClosed();
 
-  readonly attribute nsIDBFolderInfo  DBFolderInfo;
+  readonly attribute nsIDBFolderInfo  dBFolderInfo;
 
   // get a message header for the given key. Caller must release()!
 

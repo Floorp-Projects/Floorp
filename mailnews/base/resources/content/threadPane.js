@@ -102,18 +102,6 @@ function HandleColumnClick(columnID)
   }
 }
 
-function PersistViewAttributesOnFolder()
-{
-  var folder = GetSelectedFolder();
-
-  if (folder) {
-    folder.setAttribute("viewType", gDBView.viewType);
-    folder.setAttribute("viewFlags", gDBView.viewFlags);
-    folder.setAttribute("sortType", gDBView.sortType);
-    folder.setAttribute("sortOrder", gDBView.sortOrder);
-  }
-}
-
 function MsgComposeDraftMessage()
 {
     var loadedFolder = GetLoadedMsgFolder();
@@ -215,7 +203,6 @@ function MsgSortThreadPane(sortType)
     var dbview = GetDBView();
     dbview.sort(sortType, nsMsgViewSortOrder.ascending);
     UpdateSortIndicators(sortType, nsMsgViewSortOrder.ascending);
-    PersistViewAttributesOnFolder();
 }
 
 function MsgReverseSortThreadPane()
@@ -234,7 +221,6 @@ function MsgSortAscending()
   var dbview = GetDBView();
   dbview.sort(dbview.sortType, nsMsgViewSortOrder.ascending);
   UpdateSortIndicators(dbview.sortType, nsMsgViewSortOrder.ascending);
-  PersistViewAttributesOnFolder();
 }
 
 function MsgSortDescending()
@@ -242,7 +228,6 @@ function MsgSortDescending()
   var dbview = GetDBView();
   dbview.sort(dbview.sortType, nsMsgViewSortOrder.descending);
   UpdateSortIndicators(dbview.sortType, nsMsgViewSortOrder.descending);
-  PersistViewAttributesOnFolder();
 }
 
 function UpdateSortIndicators(sortType, sortOrder)
