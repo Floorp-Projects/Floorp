@@ -723,12 +723,19 @@ nsHTMLImageElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, 
         }
       }
     }
+    else {
+      result = mInner.SetProperty(aContext, aObj, aID, aVp);
+    }
   }
   else {
     result = mInner.SetProperty(aContext, aObj, aID, aVp);
   }
   
-  return (result == NS_OK);
+  if (NS_FAILED(result)) {
+    return PR_FALSE;
+  }
+
+  return PR_TRUE;
 }
 
 PRBool    

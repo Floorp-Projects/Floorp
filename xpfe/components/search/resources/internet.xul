@@ -39,7 +39,7 @@
 	</html:select>
 
 		<html:div>&for.label;</html:div>
-		<html:input id="searchtext" size="20" onkeypress="if (event.which == 13) { doSearch(); }" />
+		<html:input id="searchtext" size="20" onkeypress="if (event.keyCode == 13) { doSearch(); }" />
 		<html:button id="searchbutton" onclick="return doSearch();">&search.button.label;</html:button>
 		<html:button id="stopbutton" onclick="return doStop();" style="display: none;" >&stop.button.label;</html:button>
 		<spring align="horizontal" flex="100%" />

@@ -425,7 +425,7 @@ nsRange::IntersectsNode(nsIDOMNode* aNode, PRBool* aReturn)
 
 // HOW does the node intersect the range?
 NS_IMETHODIMP
-nsRange::CompareNode(nsIDOMNode* aNode, PRInt16* aReturn)
+nsRange::CompareNode(nsIDOMNode* aNode, PRUint16* aReturn)
 {
   if (!aReturn)
     return NS_ERROR_NULL_POINTER;

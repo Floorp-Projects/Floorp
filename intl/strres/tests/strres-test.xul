@@ -32,7 +32,7 @@
 			</html:div>
            
         	<box align="horizontal">
-        		<html:input id="dialog.input" flex="100%" onkeyup="onTyping(event.which)"/>
+        		<html:input id="dialog.input" flex="100%" onkeyup="onTyping(event.keyCode)"/>
         		<titledbutton onclick="choose()" value="Choose File..." align="left"/>
        		 </box>
                               

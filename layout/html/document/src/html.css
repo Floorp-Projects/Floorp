@@ -419,6 +419,7 @@ img[usemap], object[usemap] {
 }
 img[usemap], object[usemap] {
   color: blue;
+  user-focus: normal;
 }
 img:-moz-text {
   /* font-family: sans-serif; */

@@ -1755,6 +1755,7 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *
                                   NS_VIEW_FLAG_CHECK_PARENT |
                                   NS_VIEW_FLAG_CHECK_SIBLINGS,
                           aStatus,
+                          PR_TRUE,
                           handled);
 
         aEvent->point.x -= offset.x;

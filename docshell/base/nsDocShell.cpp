@@ -1833,8 +1833,18 @@ NS_IMETHODIMP nsDocShell::FocusAvailable(nsIBaseWindow* aCurrentFocus,
    if(aCurrentFocus == NS_STATIC_CAST(nsIBaseWindow*, this))
       {
       if(nextCallWin)
-         return nextCallWin->FocusAvailable(aCurrentFocus, aTookFocus);
-      return NS_OK;
+        { 
+        nsresult ret = nextCallWin->FocusAvailable(aCurrentFocus, aTookFocus);
+        if (NS_SUCCEEDED(ret) && *aTookFocus)
+          return NS_OK;
+        }
+
+        if (!mChildren.Count())
+           {
+           //If we don't have children and our parent didn't want 
+           //the focus then we should just stop now.
+           return NS_OK;
+           }
       }
 
    //Otherwise, check the chilren and offer it to the next sibling.
@@ -1844,7 +1854,22 @@ NS_IMETHODIMP nsDocShell::FocusAvailable(nsIBaseWindow* aCurrentFocus,
       {
       nsCOMPtr<nsIBaseWindow> 
          child(do_QueryInterface((nsISupports*)mChildren.ElementAt(i)));
-      if(child.get() == aCurrentFocus)
+      //If we have focus we offer it to our first child.
+      if(aCurrentFocus == NS_STATIC_CAST(nsIBaseWindow*, this))
+        {
+        if(NS_SUCCEEDED(child->SetFocus()))
+           {
+           *aTookFocus = PR_TRUE;
+           return NS_OK;
+           }
+        else 
+           {
+           return NS_ERROR_FAILURE;
+           } 
+        }
+      //If we don't have focus, find the child that does then
+      //offer focus to the next one.
+      if (child.get() == aCurrentFocus)
          {
          while(++i < n)
             {
@@ -1854,12 +1879,18 @@ NS_IMETHODIMP nsDocShell::FocusAvailable(nsIBaseWindow* aCurrentFocus,
                *aTookFocus = PR_TRUE;
                return NS_OK;
                }
+            else 
+               {
+               return NS_ERROR_FAILURE;
+               } 
             }
          }
       }
-   if(nextCallWin)
-      return nextCallWin->FocusAvailable(aCurrentFocus, aTookFocus);
-   return NS_OK;
+
+   //Reached the end of our child list.  Call again to offer focus
+   //upwards and to start at the beginning of our child list if
+   //no one above us wants focus.
+   return FocusAvailable(this, aTookFocus);
 }
 
 NS_IMETHODIMP nsDocShell::GetTitle(PRUnichar** aTitle)

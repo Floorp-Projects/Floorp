@@ -47,7 +47,7 @@ public:
   ScrollBarView(nsScrollingView *aScrollingView);
   ~ScrollBarView();
 
-  NS_IMETHOD  HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags, nsEventStatus* aStatus, PRBool& handled);
+  NS_IMETHOD  HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags, nsEventStatus* aStatus, PRBool aForceHandle, PRBool& handled);
 
   // Do not set the visibility of the ScrollbarView using SetVisibility. Instead it 
   // must be marked as visible or hidden using SetEnabled. 
@@ -83,7 +83,7 @@ ScrollBarView::~ScrollBarView()
 }
 
 NS_IMETHODIMP ScrollBarView::HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags,
-                                           nsEventStatus* aStatus, PRBool& aHandled)
+                                           nsEventStatus* aStatus, PRBool aForceHandle, PRBool& aHandled)
 {
   NS_ENSURE_ARG_POINTER(aStatus);
   *aStatus = nsEventStatus_eIgnore;
@@ -785,7 +785,7 @@ NS_IMETHODIMP_(void) nsScrollingView::Notify(nsITimer * aTimer)
   if (NS_OK == mViewManager->GetViewObserver(obs))
   {
     PRBool handled;
-    obs->HandleEvent((nsIView *)this, &event, &retval, handled);
+    obs->HandleEvent((nsIView *)this, &event, &retval, PR_TRUE, handled);
     NS_RELEASE(obs);
   }
 

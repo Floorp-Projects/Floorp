@@ -263,15 +263,17 @@ nsHTMLAreaElement::SetFocus(nsIPresContext* aPresContext)
     esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
     NS_RELEASE(esm);
   }
-
-  // XXX write me
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLAreaElement::RemoveFocus(nsIPresContext* aPresContext)
 {
-  // XXX write me
+  nsIEventStateManager* esm;
+  if (NS_OK == aPresContext->GetEventStateManager(&esm)) {
+    esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+    NS_RELEASE(esm);
+  }
   return NS_OK;
 }
 

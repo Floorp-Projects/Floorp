@@ -756,18 +756,6 @@ nsFrame::HandleEvent(nsIPresContext* aPresContext,
                      nsGUIEvent*     aEvent,
                      nsEventStatus*  aEventStatus)
 {
-  NS_ENSURE_ARG_POINTER(aEventStatus);
-  if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
-    return NS_OK;
-  }
-
-/*i have no idea why this is here keeping incase..
-  if (DisplaySelection(aPresContext) == PR_FALSE) {
-    if (aEvent->message != NS_MOUSE_LEFT_BUTTON_DOWN) {
-      return NS_OK;
-    }
-  }
-*/
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
   switch (aEvent->message)
@@ -951,6 +939,11 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
                      nsGUIEvent*     aEvent,
                      nsEventStatus*  aEventStatus)
 {
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+  if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
+    return NS_OK;
+  }
+
   // check whether style allows selection
   // if not dont tell selection the mouse event even occured.
   
@@ -1102,6 +1095,11 @@ nsFrame::HandleMultiplePress(nsIPresContext* aPresContext,
                              nsGUIEvent*     aEvent,
                              nsEventStatus*  aEventStatus)
 {
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+  if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
+    return NS_OK;
+  }
+
   nsresult rv;
   if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF) {
     return NS_OK;
@@ -1328,58 +1326,61 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext* aPresContext,
   if (!frameselection)
     return NS_ERROR_FAILURE;
 
-  PRBool supportsDelay = PR_FALSE;
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+  if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
+    PRBool supportsDelay = PR_FALSE;
 
-  frameselection->GetDelayCaretOverExistingSelection(&supportsDelay);
+    frameselection->GetDelayCaretOverExistingSelection(&supportsDelay);
 
-  if (supportsDelay)
-  {
-    // Check if the frameselection recorded the mouse going down.
-    // If not, the user must have clicked in a part of the selection.
-    // Place the caret before continuing!
-
-    PRBool mouseDown = PR_FALSE;
-
-    result = frameselection->GetMouseDownState(&mouseDown);
-
-    if (NS_FAILED(result))
-      return result;
-
-    nsMouseEvent *me = 0;
-
-    result = frameselection->GetDelayedCaretData(&me);
-
-    if (NS_SUCCEEDED(result) && !mouseDown && me && me->clickCount < 2)
+    if (supportsDelay)
     {
-      // We are doing this to simulate what we would have done on HandlePress
-      result = frameselection->SetMouseDownState( PR_TRUE );
+      // Check if the frameselection recorded the mouse going down.
+      // If not, the user must have clicked in a part of the selection.
+      // Place the caret before continuing!
 
-      nsCOMPtr<nsIContent> content;
-      PRInt32 startOffset = 0, endOffset = 0;
-      PRBool  beginFrameContent = PR_FALSE;
+      PRBool mouseDown = PR_FALSE;
 
-      result = GetContentAndOffsetsFromPoint(aPresContext, me->point, getter_AddRefs(content), startOffset, endOffset, beginFrameContent);
-      if (NS_FAILED(result)) return result;
+      result = frameselection->GetMouseDownState(&mouseDown);
 
-      result = frameselection->HandleClick(content, startOffset , endOffset, me->isShift, PR_FALSE, beginFrameContent);
-      if (NS_FAILED(result)) return result;
-    }
-    else
-    {
-      me = (nsMouseEvent *)aEvent;
-      nsCOMPtr<nsIContent>parentContent;
-      PRInt32  contentOffset;
-      PRUint32 target;
-      result = GetDataForTableSelection(frameselection, me, getter_AddRefs(parentContent), &contentOffset, &target);
+      if (NS_FAILED(result))
+        return result;
 
-      if (NS_SUCCEEDED(result) && parentContent)
+      nsMouseEvent *me = 0;
+
+      result = frameselection->GetDelayedCaretData(&me);
+
+      if (NS_SUCCEEDED(result) && !mouseDown && me && me->clickCount < 2)
       {
-        frameselection->SetMouseDownState( PR_FALSE );
-        result = frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
+        // We are doing this to simulate what we would have done on HandlePress
+        result = frameselection->SetMouseDownState( PR_TRUE );
+
+        nsCOMPtr<nsIContent> content;
+        PRInt32 startOffset = 0, endOffset = 0;
+        PRBool  beginFrameContent = PR_FALSE;
+
+        result = GetContentAndOffsetsFromPoint(aPresContext, me->point, getter_AddRefs(content), startOffset, endOffset, beginFrameContent);
+        if (NS_FAILED(result)) return result;
+
+        result = frameselection->HandleClick(content, startOffset , endOffset, me->isShift, PR_FALSE, beginFrameContent);
         if (NS_FAILED(result)) return result;
       }
+      else
+      {
+        me = (nsMouseEvent *)aEvent;
+        nsCOMPtr<nsIContent>parentContent;
+        PRInt32  contentOffset;
+        PRUint32 target;
+        result = GetDataForTableSelection(frameselection, me, getter_AddRefs(parentContent), &contentOffset, &target);
+
+        if (NS_SUCCEEDED(result) && parentContent)
+        {
+          frameselection->SetMouseDownState( PR_FALSE );
+          result = frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
+          if (NS_FAILED(result)) return result;
+        }
+      }
+      result = frameselection->SetDelayedCaretData(0);
     }
-    result = frameselection->SetDelayedCaretData(0);
   }
 
   // Now handle the normal HandleRelase business.

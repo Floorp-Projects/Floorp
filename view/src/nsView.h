@@ -57,7 +57,11 @@ public:
                     PRUint32 aPaintFlags, PRBool &aResult);
   NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsIRegion& region,
                     PRUint32 aPaintFlags, PRBool &aResult);
-  NS_IMETHOD  HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags, nsEventStatus* aStatus, PRBool& aHandled);
+  NS_IMETHOD  HandleEvent(nsGUIEvent *event, 
+                          PRUint32 aEventFlags,
+                          nsEventStatus* aStatus,
+                          PRBool aForceHandle,
+                          PRBool& aHandled);
   NS_IMETHOD  SetPosition(nscoord x, nscoord y);
   NS_IMETHOD  GetPosition(nscoord *x, nscoord *y) const;
   NS_IMETHOD  SetDimensions(nscoord width, nscoord height, PRBool aPaint = PR_TRUE);

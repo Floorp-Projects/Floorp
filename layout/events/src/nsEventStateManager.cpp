@@ -40,6 +40,9 @@
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLButtonElement.h"
 #include "nsIDOMHTMLObjectElement.h"
+#include "nsIDOMHTMLImageElement.h"
+#include "nsIDOMHTMLMapElement.h"
+#include "nsIHTMLDocument.h"
 #include "nsINameSpaceManager.h"  // for kNameSpaceID_HTML
 #include "nsIWebShell.h"
 #include "nsIBaseWindow.h"
@@ -590,7 +593,10 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         //Alt key is down, we may need to do an accesskey
         if (mAccessKeys) {
           //Someone registered an accesskey.  Find and activate it.
-          nsVoidKey key((void*)keyEvent->charCode);
+          nsAutoString accKey((char)keyEvent->charCode);
+          accKey.ToLowerCase();
+
+          nsVoidKey key((void*)accKey.First());
           if (mAccessKeys->Exists(&key)) {
             nsCOMPtr<nsIContent> content = getter_AddRefs(NS_STATIC_CAST(nsIContent*, mAccessKeys->Get(&key)));
 
@@ -1467,9 +1473,8 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIE
             targetContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
           }
         
-          if (nsEventStatus_eConsumeNoDefault != status) {
+          if ( status != nsEventStatus_eConsumeNoDefault )
             SetContentState(targetContent, NS_EVENT_STATE_HOVER);
-          }
 
           //Now dispatch to the frame
           if (mCurrentTarget) {
@@ -1519,9 +1524,8 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIE
           if (mLastMouseOverContent) {
             mLastMouseOverContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
 
-            if (nsEventStatus_eConsumeNoDefault != status) {
-              SetContentState(nsnull, NS_EVENT_STATE_HOVER);
-            }
+          if ( status != nsEventStatus_eConsumeNoDefault )
+            SetContentState(nsnull, NS_EVENT_STATE_HOVER);
           }
 
 
@@ -1872,20 +1876,28 @@ nsEventStateManager::ShiftFocus(PRBool forward)
   if (mPresContext) {
     nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
     if (NS_SUCCEEDED(rv) && shell){
-      shell->GetPrimaryFrameFor(mCurrentFocus, &primaryFrame);
+      if (topOfDoc) {
+          primaryFrame = nsnull;
+      }
+      else {
+        shell->GetPrimaryFrameFor(mCurrentFocus, &primaryFrame);
+      }
     }
   }
 
   nsCOMPtr<nsIContent> rootContent = getter_AddRefs(mDocument->GetRootContent());
 
   nsCOMPtr<nsIContent> next;
+  //Get the next tab item.  This takes tabIndex into account
   GetNextTabbableContent(rootContent, primaryFrame, forward, getter_AddRefs(next));
 
+  //Either no tabbable items or the end of the document
   if (!next) {
     PRBool focusTaken = PR_FALSE;
 
     SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
 
+    //Offer focus upwards to allow shifting focus to UI controls
     nsCOMPtr<nsISupports> container;
     mPresContext->GetContainer(getter_AddRefs(container));
     nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(container));
@@ -1893,9 +1905,12 @@ nsEventStateManager::ShiftFocus(PRBool forward)
       docShellAsWin->FocusAvailable(docShellAsWin, &focusTaken);
     }
       
+    //No one took focus and we're not already at the top of the doc
+    //so calling ShiftFocus will start at the top of the doc again.
     if (!focusTaken && !topOfDoc) {
       ShiftFocus(forward);
     }
+
     return;
   }
 
@@ -1913,26 +1928,66 @@ nsEventStateManager::ShiftFocus(PRBool forward)
   NS_IF_ADDREF(mCurrentFocus);
 }
 
-/*
- * At some point this will need to be linked into HTML 4.0 tabindex
- */
-
 NS_IMETHODIMP
 nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* aFrame, PRBool forward,
                                             nsIContent** aResult)
 {
   *aResult = nsnull;
+  PRBool keepFirstFrame = PR_FALSE;
 
   nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
+
+  if (!aFrame) {
+    //No frame means we need to start with the root content again.
+    nsCOMPtr<nsIPresShell> presShell;
+    if (mPresContext) {
+      nsIFrame* result = nsnull;
+      if (NS_SUCCEEDED(mPresContext->GetShell(getter_AddRefs(presShell))) && presShell) {
+        presShell->GetPrimaryFrameFor(aRootContent, &result);
+      }
+      if (result) {
+        while(NS_SUCCEEDED(result->FirstChild(mPresContext, nsnull, &result)) && result) {
+          aFrame = result;
+        }
+      }
+    }
+    if (!aFrame) {
+      return NS_ERROR_FAILURE;
+    }
+    keepFirstFrame = PR_TRUE;
+  }
+
+  //Need to do special check in case we're in an imagemap which has multiple content per frame
+  if (mCurrentFocus) {
+    nsCOMPtr<nsIAtom> tag;
+    mCurrentFocus->GetTag(*getter_AddRefs(tag));
+    if(nsHTMLAtoms::area==tag.get()) {
+      //Focus is in an imagemap area
+      nsCOMPtr<nsIPresShell> presShell;
+      if (mPresContext) {
+        nsIFrame* result = nsnull;
+        if (NS_SUCCEEDED(mPresContext->GetShell(getter_AddRefs(presShell))) && presShell) {
+          presShell->GetPrimaryFrameFor(mCurrentFocus, &result);
+        }
+        if (result == aFrame) {
+          //The current focus map area is in the current frame, don't skip over it.
+          keepFirstFrame = PR_TRUE;
+        }
+      }
+    }
+  }
+
   nsresult result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), EXTENSIVE,
                                          mPresContext, aFrame);
 
   if (NS_FAILED(result))
     return NS_OK;
 
-  if (forward)
-    frameTraversal->Next();
-  else frameTraversal->Prev();
+  if (!keepFirstFrame) {
+    if (forward)
+      frameTraversal->Next();
+    else frameTraversal->Prev();
+  }
 
   nsISupports* currentItem;
   frameTraversal->CurrentItem(&currentItem);
@@ -2009,11 +2064,69 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
             nextButton->GetDisabled(&disabled);
           }
         }
-        else if(nsHTMLAtoms::area==tag.get()) {
-          nsCOMPtr<nsIDOMHTMLAreaElement> nextArea(do_QueryInterface(child));
-          if (nextArea)
-            nextArea->GetTabIndex(&tabIndex);
-          disabled = PR_FALSE;
+        else if(nsHTMLAtoms::img==tag.get()) {
+          nsCOMPtr<nsIDOMHTMLImageElement> nextImage(do_QueryInterface(child));
+          nsAutoString usemap;
+          if (nextImage) {
+            nextImage->GetAttribute(NS_ConvertASCIItoUCS2("usemap"), usemap);
+            if (usemap.Length()) {
+              //Image is an imagemap.  We need to get its maps and walk its children.
+              usemap.StripWhitespace();
+
+              nsCOMPtr<nsIDocument> doc;
+              if (NS_SUCCEEDED(child->GetDocument(*getter_AddRefs(doc))) && doc) {
+                if (usemap.First() == '#') {
+                  usemap.Cut(0, 1);
+                }
+
+                nsCOMPtr<nsIHTMLDocument> hdoc(do_QueryInterface(doc));
+                if (hdoc) {
+                  nsCOMPtr<nsIDOMHTMLMapElement> hmap;
+                  if (NS_SUCCEEDED(hdoc->GetImageMap(usemap, getter_AddRefs(hmap))) && hmap) {
+                    nsCOMPtr<nsIContent> map(do_QueryInterface(hmap));
+                    if (map) {
+                      nsCOMPtr<nsIContent> childArea;
+                      PRInt32 count, index;
+                      map->ChildCount(count);
+                      //First see if mCurrentFocus is in this map
+                      for (index = 0; index < count; index++) {
+                        map->ChildAt(index, *getter_AddRefs(childArea));
+                        if (childArea.get() == mCurrentFocus) {
+                          nsAutoString tabIndexStr;
+                          childArea->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
+                          PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
+                          if (NS_OK == ec && mCurrentTabIndex == val) {
+                            //mCurrentFocus is in this map so we must start iterating past it.
+                            //We skip the case where mCurrentFocus has the same tab index
+                            //as mCurrentTabIndex since the next tab ordered element might
+                            //be before it (or after for backwards) in the child list.
+                            break;
+                          }
+                        }
+                      }
+                      PRInt32 increment = forward ? 1 : - 1;
+                      PRInt32 start = index < count ? index + increment : (forward ? 0 : count - 1);
+                      for (index = start; index < count && index >= 0; index += increment) {
+                        //Iterate over the children.
+                        map->ChildAt(index, *getter_AddRefs(childArea));
+
+                        //Got the map area, check its tabindex.
+                        nsAutoString tabIndexStr;
+                        childArea->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
+                        PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
+                        if (NS_OK == ec && mCurrentTabIndex == val) {
+                          //tabindex == the current one, use it.
+                          *aResult = childArea;
+                          NS_IF_ADDREF(*aResult);
+                          return NS_OK;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
         else if(nsHTMLAtoms::object==tag.get()) {
           nsCOMPtr<nsIDOMHTMLObjectElement> nextObject(do_QueryInterface(child));
@@ -2061,7 +2174,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
   }
   //else continue looking for next highest priority tab
   mCurrentTabIndex = GetNextTabIndex(aRootContent, forward);
-  return GetNextTabbableContent(aRootContent, aFrame, forward, aResult);
+  return GetNextTabbableContent(aRootContent, nsnull, forward, aResult);
 }
 
 PRInt32
@@ -2566,7 +2679,10 @@ nsEventStateManager::RegisterAccessKey(nsIFrame * aFrame, nsIContent* aContent, 
   }
 
   if (content) {
-    nsVoidKey key((void*)aKey);
+    nsAutoString accKey((char)aKey);
+    accKey.ToLowerCase();
+
+    nsVoidKey key((void*)accKey.First());
 
     mAccessKeys->Put(&key, content);
   }
@@ -2589,7 +2705,10 @@ nsEventStateManager::UnregisterAccessKey(nsIFrame * aFrame, nsIContent* aContent
     content = aContent;
   }
   if (content) {
-    nsVoidKey key((void*)aKey);
+    nsAutoString accKey((char)aKey);
+    accKey.ToLowerCase();
+
+    nsVoidKey key((void*)accKey.First());
 
     nsCOMPtr<nsIContent> oldContent = getter_AddRefs(NS_STATIC_CAST(nsIContent*, mAccessKeys->Get(&key)));
     if (oldContent != content) {

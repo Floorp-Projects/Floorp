@@ -27,6 +27,8 @@
 #include "nsCoord.h"
 #include "nsVoidArray.h"
 #include "nsIDocumentObserver.h"
+#include "nsIDOMFocusListener.h"
+#include "nsIFrame.h"
 
 class nsIContent;
 class nsIDOMHTMLAreaElement;
@@ -35,8 +37,9 @@ class nsIPresContext;
 class nsIRenderingContext;
 class nsIURI;
 class nsString;
+class nsIDOMEvent;
 
-class nsImageMap : public nsIDocumentObserver
+class nsImageMap : public nsIDocumentObserver, public nsIDOMFocusListener
 {
 public:
   nsImageMap();
@@ -126,6 +129,11 @@ public:
                               nsIStyleRule* aStyleRule);
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
 
+  //nsIDOMFocusListener
+  virtual nsresult Focus(nsIDOMEvent* aEvent);
+  virtual nsresult Blur(nsIDOMEvent* aEvent);
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
+
 protected:
   virtual ~nsImageMap();
 
@@ -138,6 +146,9 @@ protected:
                              nsIContent* aAncestorContent);
 
   nsresult AddArea(nsIContent* aArea);
+ 
+  nsresult ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus);
+  nsresult Invalidate(nsIPresContext* aPresContext, nsIFrame* aFrame, nsRect& aRect);
 
   nsIDocument* mDocument;
   nsIDOMHTMLMapElement* mDomMap;

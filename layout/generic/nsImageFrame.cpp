@@ -59,7 +59,10 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIStyleSet.h"
 #include "nsLayoutAtoms.h"
 #include "nsISizeOfHandler.h"
+
+#include "nsIFrameManager.h"
 #include "nsIScriptSecurityManager.h"
+
 
 #ifdef DEBUG
 #undef NOISY_IMAGE_LOADING
@@ -174,6 +177,46 @@ if (NS_CONTENT_ATTR_HAS_VALUE == lowSrcResult && lowSrc.Length() > 0) {
   }
   mImageLoader.Init(this, UpdateImageFrame, (void*)&mImageLoader, baseURL, src);
   NS_IF_RELEASE(baseURL);
+
+  nsAutoString usemap;
+  mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::usemap, usemap);    
+  if (usemap.Length()) {
+    //Image is an imagemap.  We need to get its maps and set the primary
+    //frame for its children to us.
+    usemap.StripWhitespace();
+
+    nsCOMPtr<nsIDocument> doc;
+    if (NS_SUCCEEDED(mContent->GetDocument(*getter_AddRefs(doc))) && doc) {
+      if (usemap.First() == '#') {
+        usemap.Cut(0, 1);
+      }
+
+      nsCOMPtr<nsIHTMLDocument> hdoc(do_QueryInterface(doc));
+      if (hdoc) {
+        nsCOMPtr<nsIDOMHTMLMapElement> hmap;
+        if (NS_SUCCEEDED(hdoc->GetImageMap(usemap, getter_AddRefs(hmap))) && hmap) {
+          nsCOMPtr<nsIContent> map(do_QueryInterface(hmap));
+          if (map) {
+            nsCOMPtr<nsIPresShell> presShell;
+            if (NS_SUCCEEDED(aPresContext->GetShell(getter_AddRefs(presShell))) &&
+                presShell) {
+              nsCOMPtr<nsIFrameManager> frameManager;
+              if (NS_SUCCEEDED(presShell->GetFrameManager(getter_AddRefs(frameManager))) &&
+                  frameManager) {
+                nsCOMPtr<nsIContent> childArea;
+                PRInt32 count, index;
+                map->ChildCount(count);
+                for (index = 0; index < count; index++) {
+                  map->ChildAt(index, *getter_AddRefs(childArea));
+                  frameManager->SetPrimaryFrameFor(childArea, this);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 
   mInitialLoadCompleted = PR_FALSE;
   return rv;
@@ -622,6 +665,19 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
           //inner.height = imgSrcLinesLoaded;
           aRenderingContext.DrawImage(image, inner);
         }
+      }
+
+      nsImageMap* map = GetImageMap();
+      if (nsnull != map) {
+        nsRect inner;
+        GetInnerArea(aPresContext, inner);
+        PRBool clipState;
+        aRenderingContext.SetColor(NS_RGB(0, 0, 0));
+        aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
+        aRenderingContext.PushState();
+        aRenderingContext.Translate(inner.x, inner.y);
+        map->Draw(aPresContext, aRenderingContext);
+        aRenderingContext.PopState(clipState);
       }
 
 #ifdef DEBUG

@@ -131,7 +131,7 @@
 
   function treeHandleEvent( aEvent )
   {
-    if( aEvent.which == 46 )
+    if( aEvent.keyCode == 46 )
       removeDomain();
   }
 
