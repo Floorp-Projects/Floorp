@@ -563,8 +563,7 @@ nsTreeRowGroupFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
 NS_IMETHODIMP
 nsTreeRowGroupFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
 {
-  nsCOMPtr<nsIAtom> scrollList = dont_AddRef(NS_NewAtom("scrollbarlist"));
-  if (scrollList.get() == aListName) {
+  if (nsXULAtoms::scrollbarlist == aListName) {
     *aFirstChild = mScrollbarList.FirstChild();
     return NS_OK;
   }
@@ -580,7 +579,8 @@ nsTreeRowGroupFrame::GetAdditionalChildListName(PRInt32   aIndex,
   *aListName = nsnull;
 
   if (aIndex == 0) {
-    *aListName = NS_NewAtom("scrollbarlist"); // AddRefs
+    *aListName = nsXULAtoms::scrollbarlist;
+    NS_IF_ADDREF(*aListName);
   }
 
   return NS_OK;
