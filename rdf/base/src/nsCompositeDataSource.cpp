@@ -657,18 +657,24 @@ CompositeDataSourceImpl::Release()
         return 0;
     }
     else if (PRInt32(count) == mDataSources.Count()) {
-        // We must add count+1 here because otherwise the nested releases
+        // We must add 1 here because otherwise the nested releases
         // on this object will enter this same code path.
-        PR_AtomicAdd(NS_REINTERPRET_CAST(PRInt32 *, &mRefCnt), count+1);
-        for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
+        PR_AtomicIncrement(NS_REINTERPRET_CAST(PRInt32 *, &mRefCnt));
+        
+        PRInt32 dsCount;
+        while (0 != (dsCount = mDataSources.Count())) {
             nsIRDFDataSource* ds =
-              NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
+              NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[dsCount-1]);
+            mDataSources.RemoveElementAt(dsCount-1);
             ds->RemoveObserver(this);
             NS_RELEASE(ds);
         }
-        NS_LOG_RELEASE(this, 0, "CompositeDataSourceImpl");
-        NS_DELETEXPCOM(this);
-        return 0;
+        // Nest into Release to deal with the one last reference we added above.
+        // We don't want to assume that we can 'delete this' because an
+        // extra reference might have been added by other code while we were 
+        // calling out.
+        NS_ASSERTION(mRefCnt >= 1, "bad mRefCnt");
+        return Release();
     }
     else {
         NS_LOG_RELEASE(this, count, "CompositeDataSourceImpl");
