@@ -15,7 +15,7 @@
    
    The Initial Developer of the Original Code is Netscape
    Communications Corporation. Portions created by Netscape are
-   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Copyright (C) 1998-2000 Netscape Communications Corporation. All
    Rights Reserved.
    
    Contributor(s): 
@@ -46,66 +46,12 @@
 			<html:input name="author" type="text" id="editorAuthor"
                   pref="true" preftype="string" prefstring="editor.author"/>
 		</html:div>
-<!-- Take out Auto-Save; not supported at this time
-		<html:div>
-			<html:input name="autosave" type="checkbox" id="pref:0:int:editor.auto_save" />
-			<html:label for="pref:0:int:editor.auto_save" accesskey="a" tabindex="0">
-				&AutoSaveCheck.label;
-			</html:label>		
-			<html:input name="time" type="text" size="3" value="5" id="pref:5:int:editor.auto_save_delay" />
-			<html:label for="pref:5:int:editor.auto_save_delay">
-	  		&minText;	
-			</html:label>		
-		</html:div>
-  -->
 	</html:fieldset>
-
-<!-- External Editors are not supported at this time
-		<html:fieldset>
-					<html:legend align="left"> 
-			<html:div>&exterLegend.label;</html:div> 
-					</html:legend> 
-		<html:input name="htmlSourceEditorCheckbox" type="checkbox" id="pref:0:int:editor.use_html_editor" />
-	 	<html:div>
-			&htmlSource;
-		</html:div>
-		<html:div>
-			<html:input name="&chooseButton.label;" type="text" id="pref:string:editor.html_editor" />
-			<titledbutton class="dialog push" name=""  value="&chooseButton.label;" />
-		</html:div>
-		<html:input name="htmlImageEditorCheckbox" type="checkbox" id="pref:0:int:editor.use_image_editor" />
-	<html:div>
-			&img;
-		</html:div>
-		<html:div>
-			<html:input name="chooseButton.label" type="text" id="pref:string:editor.image_editor" />
-			<titledbutton class="dialog push" name=""  value="&chooseButton.label;" />
-		</html:div> 
-
-	</html:fieldset>
-  -->
-
 
     <html:fieldset>
   		<html:legend align="left">&pageColorHeader;</html:legend> 
-    	<html:div class="hspace-both">
-		    <html:input name="color" type="radio" id="editorUseCustomColors0"
-                    pref="true" preftype="int" prefindex="0" prefstring="editor.use_custom_colors"/>
-    		<html:label for="editorUseCustomColors" tabindex="0">
-		      &UseNavigatorColor.label;			
-    		</html:label>
-    	</html:div>
-    	<html:div class="hspace-both">
-		    <html:input name="color" type="radio" id="editorUseCustomColors1"
-                    pref="true" preftype="int" prefindex="1" prefstring="editor.use_custom_colors"/>
-    		<html:label for="editorUseCustomColors1" tabindex="0">
-		      &UseCustomColors.label;			
-    		</html:label>
-    	</html:div>
-      <spring style="height: 7px;"/>
-    	<box class="hspace-both" align="horizontal" style="width: 93%; height: 100%">
+    	<box class="hspace-both" align="horizontal">
       <!-- need to do something BETTER here to accomodate indentation -->
-      <spring style="width: 21px"/>
     	<box align="vertical" flex="100%">
     		<box flex="100%">
           <html:label>
@@ -191,11 +137,22 @@
       <spring style="width: 7px;"/>
     	<box align="vertical" flex="100%" id="colorpreview" basestyle="min-height:50px; width: 100%; border: 1px inset #CCCCCC; padding: 5px; " style="min-height:50px; width: 100%; border: 1px inset #CCCCCC; padding: 5px; ">
       	<html:div id="normaltext">  &NormalText.label;  </html:div>
+        <spring style="height: 7px;"/>
       	<html:div id="linktext">  &LinkText.label;  </html:div>
+        <spring style="height: 7px;"/>
       	<html:div id="activelinktext">  &ActiveLinkText.label;  </html:div>
+        <spring style="height: 7px;"/>
     	  <html:div id="followedlinktext">  &FollowedLinkText.label;  </html:div>
     	</box>
   	</box>
+
+    <spring style="height: 7px;"/>
+
+  	<html:div class="hspace-both">
+		  <!-- clicking this button should reset the colors below to be same as navigator colors -->
+		  <titledbutton class="dialog push" name=""  value="&UseNavigatorColor.label;" />
+  	</html:div>
+
     <spring style="height: 10px;"/>
  	</html:fieldset>
 </window>
