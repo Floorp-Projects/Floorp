@@ -36,10 +36,13 @@
 #include "nsIStyleContext.h"
 #include "nsStyleUtil.h"
 #include "nsFormFrame.h"
+#include "nsIDOMHTMLInputElement.h"
 
 static NS_DEFINE_IID(kIRadioIID, NS_IRADIOBUTTON_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
+static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
+#define NS_DESIRED_RADIOBOX_SIZE  12
 
 
 nsresult
@@ -73,8 +76,8 @@ nsRadioControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
 {
   float p2t;
   aPresContext->GetScaledPixelsToTwips(p2t);
-  aDesiredWidgetSize.width  = NSIntPixelsToTwips(12, p2t);
-  aDesiredWidgetSize.height = NSIntPixelsToTwips(12, p2t);
+  aDesiredWidgetSize.width  = NSIntPixelsToTwips(NS_DESIRED_RADIOBOX_SIZE, p2t);
+  aDesiredWidgetSize.height = NSIntPixelsToTwips(NS_DESIRED_RADIOBOX_SIZE, p2t);
   aDesiredLayoutSize.width  = aDesiredWidgetSize.width;
   aDesiredLayoutSize.height = aDesiredWidgetSize.height;
   aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
@@ -292,4 +295,153 @@ NS_IMETHODIMP
 nsRadioControlFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("RadioControl", aResult);
+}
+
+//
+// XXX: The following paint code is TEMPORARY. It is being used to get printing working
+// under windows. Later it may be used to GFX-render the controls to the display. 
+// Expect this code to repackaged and moved to a new location in the future.
+//
+
+void nsRadioControlFrame::GetCurrentRadioState(PRBool *aState)
+{
+  nsIDOMHTMLInputElement* inputElement;
+  if (NS_OK == mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement)) {
+    inputElement->GetChecked(aState);
+    NS_RELEASE(inputElement);
+  }
+}
+
+void
+nsRadioControlFrame::PaintRadioButton(nsIPresContext& aPresContext,
+                            nsIRenderingContext& aRenderingContext,
+                            const nsRect& aDirtyRect)
+{
+#ifdef XP_PC
+  aRenderingContext.PushState();
+
+  float p2t;
+  aPresContext.GetScaledPixelsToTwips(p2t);
+ 
+    //XXX:??? Offset for rendering, Not sure why we need this??? When rendering the 
+    //radiobox to the screen this is not needed. But it is needed when Printing. Looks
+    // Like it offsets from the middle of the control during Printing, but not when rendered
+    // to the screen?
+  const int printOffsetX = (NS_DESIRED_RADIOBOX_SIZE / 2);
+  const int printOffsetY = (NS_DESIRED_RADIOBOX_SIZE / 2);
+  aRenderingContext.Translate(NSIntPixelsToTwips(printOffsetX, p2t), 
+                              NSIntPixelsToTwips(printOffsetY, p2t));
+
+  nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+
+  const nsStyleSpacing* spacing = (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+  nsMargin border;
+  spacing->CalcBorderFor(this, border);
+
+  nscoord onePixel     = NSIntPixelsToTwips(1, p2t);
+  nscoord twelvePixels = NSIntPixelsToTwips(12, p2t);
+
+  nsRect outside(0, 0, mRect.width, mRect.height);
+
+  aRenderingContext.SetColor(NS_RGB(192,192,192));
+  aRenderingContext.FillRect(outside);
+
+  PRBool standardSize = PR_FALSE;
+  if (standardSize) {
+    outside.SetRect(0, 0, twelvePixels, twelvePixels);
+    aRenderingContext.SetColor(NS_RGB(255,255,255));
+    aRenderingContext.FillArc(outside, 0, 180);
+    aRenderingContext.FillArc(outside, 180, 360);
+
+    if (mLastMouseState == eMouseDown) {
+      outside.Deflate(onePixel, onePixel);
+      outside.Deflate(onePixel, onePixel);
+      aRenderingContext.SetColor(NS_RGB(192,192,192));
+      aRenderingContext.FillArc(outside, 0, 180);
+      aRenderingContext.FillArc(outside, 180, 360);
+      outside.SetRect(0, 0, twelvePixels, twelvePixels);
+    }
+
+    // DrakGray
+    aRenderingContext.SetColor(NS_RGB(128,128,128));
+    DrawLine(aRenderingContext, 4, 0, 7, 0, PR_TRUE, 1, onePixel);
+    DrawLine(aRenderingContext, 2, 1, 3, 1, PR_TRUE, 1, onePixel);
+    DrawLine(aRenderingContext, 8, 1, 9, 1, PR_TRUE, 1, onePixel);
+
+    DrawLine(aRenderingContext, 1, 2, 1, 3, PR_FALSE, 1, onePixel);
+    DrawLine(aRenderingContext, 0, 4, 0, 7, PR_FALSE, 1, onePixel);
+    DrawLine(aRenderingContext, 1, 8, 1, 9, PR_FALSE, 1, onePixel);
+
+    // Black
+    aRenderingContext.SetColor(NS_RGB(0,0,0));
+    DrawLine(aRenderingContext, 4, 1, 7, 1, PR_TRUE, 1, onePixel);
+    DrawLine(aRenderingContext, 2, 2, 3, 2, PR_TRUE, 1, onePixel);
+    DrawLine(aRenderingContext, 8, 2, 9, 2, PR_TRUE, 1, onePixel);
+
+    DrawLine(aRenderingContext, 2, 2, 2, 3, PR_FALSE, 1, onePixel);
+    DrawLine(aRenderingContext, 1, 4, 1, 7, PR_FALSE, 1, onePixel);
+    DrawLine(aRenderingContext, 2, 8, 2, 8, PR_FALSE, 1, onePixel);
+
+    // Gray
+    aRenderingContext.SetColor(NS_RGB(192, 192, 192));
+    DrawLine(aRenderingContext, 2, 9, 3, 9, PR_TRUE, 1, onePixel);
+    DrawLine(aRenderingContext, 8, 9, 9, 9, PR_TRUE, 1, onePixel);
+    DrawLine(aRenderingContext, 4, 10, 7, 10, PR_TRUE, 1, onePixel);
+
+    DrawLine(aRenderingContext, 9, 3, 9, 3, PR_FALSE, 1, onePixel);
+    DrawLine(aRenderingContext, 10, 4, 10, 7, PR_FALSE, 1, onePixel);
+    DrawLine(aRenderingContext, 9, 8, 9, 9, PR_FALSE, 1, onePixel);
+
+    outside.Deflate(onePixel, onePixel);
+    outside.Deflate(onePixel, onePixel);
+    outside.Deflate(onePixel, onePixel);
+    outside.Deflate(onePixel, onePixel);
+  } else {
+    outside.SetRect(0, 0, twelvePixels, twelvePixels);
+
+    aRenderingContext.SetColor(NS_RGB(128,128,128));
+    aRenderingContext.FillArc(outside, 46, 225);
+    aRenderingContext.SetColor(NS_RGB(255,255,255));
+    aRenderingContext.FillArc(outside, 225, 360);
+    aRenderingContext.FillArc(outside, 0, 44);
+
+    outside.Deflate(onePixel, onePixel);
+    aRenderingContext.SetColor(NS_RGB(0,0,0));
+    aRenderingContext.FillArc(outside, 46, 225);
+    aRenderingContext.SetColor(NS_RGB(192,192,192));
+    aRenderingContext.FillArc(outside, 225, 360);
+    aRenderingContext.FillArc(outside, 0, 44);
+
+    outside.Deflate(onePixel, onePixel);
+    aRenderingContext.SetColor(NS_RGB(255,255,255));
+    aRenderingContext.FillArc(outside, 0, 180);
+    aRenderingContext.FillArc(outside, 180, 360);
+    outside.Deflate(onePixel, onePixel);
+    outside.Deflate(onePixel, onePixel);
+  }
+
+  PRBool checked = PR_TRUE;
+  GetCurrentRadioState(&checked); // Get check state from the content model
+  if (PR_TRUE == checked) {
+	  // Have to do 180 degress at a time because FillArc will not correctly
+	  // go from 0-360
+    aRenderingContext.SetColor(NS_RGB(0,0,0));
+    aRenderingContext.FillArc(outside, 0, 180);
+    aRenderingContext.FillArc(outside, 180, 360);
+  }
+
+  PRBool clip;
+  aRenderingContext.PopState(clip);
+#endif
+}
+
+NS_METHOD 
+nsRadioControlFrame::Paint(nsIPresContext& aPresContext,
+                            nsIRenderingContext& aRenderingContext,
+                            const nsRect& aDirtyRect)
+{
+#ifdef XP_PC
+  PaintRadioButton(aPresContext, aRenderingContext, aDirtyRect);
+#endif
+  return NS_OK;
 }
