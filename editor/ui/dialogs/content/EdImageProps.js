@@ -403,16 +403,16 @@ function constrainProportions( srcID, destID )
 
 function editImageMap()
 {
-  if (editorShell){
-    var tagName = "img";
-    image = editorShell.GetSelectedElement(tagName);
+//  if (editorShell){
+//    var tagName = "img";
+//    image = editorShell.GetSelectedElement(tagName);
 
     //Test selected element to see if it's an image
-    if (image){
+//    if (image){
       //If it is, launch image map dialog
       window.openDialog("chrome://editor/content/EdImageMap.xul", "_blank", "chrome,close", "");
-    }
-  }
+//    }
+//  }
 }
 
 function removeImageMap()
