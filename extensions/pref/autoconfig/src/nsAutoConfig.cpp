@@ -536,9 +536,13 @@ nsresult nsAutoConfig::getEmailAddr(nsACString & emailAddr)
         emailAddr = nsDependentCString(prefValue, len);
     }
     else {
-        if (!mCurrProfile.IsEmpty()) {
+        // look for 4.x pref in case we just migrated.
+        rv = mPrefBranch->GetCharPref("mail.identity.useremail", 
+                                  getter_Copies(prefValue));
+        if (NS_SUCCEEDED(rv))
+          emailAddr = prefValue;
+        else  if (!mCurrProfile.IsEmpty())
             emailAddr = mCurrProfile;
-        }
     }
     
     return NS_OK;
