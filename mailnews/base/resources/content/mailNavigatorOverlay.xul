@@ -121,7 +121,7 @@
     <command id="cmd_sendPage" oncommand="sendPage();"/>
     <command id="Browser:SendLink"
              oncommand="sendLink(Components.lookupMethod(window._content, 'location').call(window._content).href,
-                                 Components.lookupMethod(window._content.document, 'title').call(window._content.document);"/>
+                                 Components.lookupMethod(window._content.document, 'title').call(window._content.document));"/>
   </commandset>
          
   <!-- navigator specific UI items -->
