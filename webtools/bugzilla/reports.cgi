@@ -521,7 +521,6 @@ FIN
 sub chart_image_type {
     # what chart type should we be generating?
     my $testimg = Chart::Lines->new(2,2);
-	eval '$testimg->gif()';
     my $type = $testimg->can('gif') ? "gif" : "png";
 
     undef $testimg;
