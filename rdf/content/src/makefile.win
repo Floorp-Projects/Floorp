@@ -38,6 +38,7 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsRDFElement.obj              \
 		.\$(OBJDIR)\nsRDFGenericBuilder.obj       \
 		.\$(OBJDIR)\nsRDFMenuBuilder.obj          \
+		.\$(OBJDIR)\nsRDFToolbarBuilder.obj		  \
         .\$(OBJDIR)\nsRDFTreeBuilder.obj          \
         .\$(OBJDIR)\nsRDFXULBuilder.obj           \
         .\$(OBJDIR)\nsXULDocument.obj             \

@@ -38,6 +38,7 @@ CPPSRCS =				\
 	nsRDFGenericBuilder.cpp \
 	nsRDFHTMLBuilder.cpp		\
 	nsRDFMenuBuilder.cpp \
+	nsRDFToolbarBuilder.cpp \
 	nsRDFTreeBuilder.cpp		\
 	nsRDFXULBuilder.cpp		\
 	nsXULDocument.cpp               \
