@@ -58,6 +58,13 @@ interface nsIFile : nsISupports
 	void Create([const] in string type, [const] in string attributes);
 	
 	/**
+	 *  Append() will create concatenate a relative path to this nsIFile.  It
+	 *  is used for constructing the nsIFile of a descendant.  If this object is 
+	 *  already Created, it must be either a directory or symlink to a directory. 
+	 */
+	void Append([const] in string node);
+
+	/**
 	 *	 Accessor to the file name (the leaf name not the full file path) of the file itself.   
 	 */
 	readonly attribute string FileName;
@@ -110,6 +117,11 @@ interface nsIFile : nsISupports
 	 *  must be PR_TRUE to delete directories which are not empty.
 	 */
 	void Delete(in boolean recursive);
+
+	/**
+	 *  This will resolve the terminal node of the nsIFile.
+	 */
+	void ResolveSymlink(void);
 
 	/**
 	 *  Attributes of nsIFile.
