@@ -189,6 +189,9 @@
 #define NS_THEME_WINDOW                                    200
 #define NS_THEME_DIALOG                                    201
 
-// Menu and Menu Bar backgrounds
-#define NS_THEME_MENU                                      210
-#define NS_THEME_MENUBAR                                   211
+// Menu Bar background
+#define NS_THEME_MENUBAR                                   210
+// Menu Popup background
+#define NS_THEME_MENUPOPUP                                 211
+// <menu> and <menuitem> appearances
+#define NS_THEME_MENUITEM                                  212

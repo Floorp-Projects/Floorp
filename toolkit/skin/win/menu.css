@@ -30,6 +30,10 @@
 
 /* ::::: menu/menuitem ::::: */
 
+menu, menuitem {
+  -moz-appearance: menuitem !important;
+}
+
 menu,
 menuitem {
   -moz-box-align: center;
@@ -93,13 +97,20 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
   -moz-image-region: auto;
 }
 
-/* ::::: menu/menuitems in menubar ::::: */
+/* ::::: menubar ::::: */
 
+#ifdef MOZ_WIDGET_GTK2
+menubar > menu {
+  padding: 0px 6px 0px 4px;
+}
+#else
 menubar > menu {
   border: 1px solid transparent;
   padding: 2px 5px 2px 7px;
   margin: 1px 0px 1px 0px;
 }
+#endif
+
 menubar > menu[_moz-menuactive="true"] {
   border-top: 1px solid ThreeDHighlight;
   border-right: 1px solid ThreeDShadow;
@@ -131,10 +142,13 @@ menupopup > menu,
 popup > menu,
 menupopup > menuitem,
 popup > menuitem {
+#ifndef MOZ_WIDGET_GTK2
   padding: 2px;
+#endif
   max-width: 42em;
 }
 
+menubar > menu[_moz-menuactive="true"],
 menupopup > menu[_moz-menuactive="true"],
 menupopup > menuitem[_moz-menuactive="true"],
 popup > menu[_moz-menuactive="true"],

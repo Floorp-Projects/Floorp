@@ -34,7 +34,20 @@ toolbox {
   background-color: -moz-Dialog;
 }
 
-/* ::::: toolbar & menubar ::::: */
+/* ::::: menubar & toolbar ::::: */
+
+menubar,
+toolbar[type="menubar"] {
+  -moz-appearance: menubar !important;
+}
+toolbar {
+  -moz-appearance: toolbar !important;
+}
+
+/* in browser.xul, the menubar is inside a toolbar... */
+toolbar > toolbaritem > menubar {
+  -moz-appearance: none !important;
+}
 
 toolbar {
   min-width: 1px;

@@ -147,9 +147,9 @@ resizer[dir="bottomright"] {
 /* XXXBlake yeah, shoot me -- these don't belong here.  I'll move them later. */
 
 sidebarheader {
+  -moz-appearance: toolbar;
   height: 25px;
   background-color: -moz-Dialog;
-  -moz-appearance: toolbox;
   border-bottom: 1px solid ThreeDShadow;
   border-top: 1px solid ThreeDHighlight;
 }

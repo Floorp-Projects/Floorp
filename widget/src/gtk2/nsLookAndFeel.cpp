@@ -149,9 +149,8 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
         break;
     case eColor_graytext:
-        // disabled text
+        // disabled text in windows, menus, etc.
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_INSENSITIVE]);
-        // or maybe mStyle->text?
         break;
     case eColor_highlight:
         // background of selected item
