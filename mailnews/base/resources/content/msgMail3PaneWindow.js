@@ -1406,7 +1406,7 @@ function EnsureFolderIndex(builder, msgFolder)
   var index = builder.getIndexOfResource(msgFolder);
   if (index == -1) {
     // if we couldn't find the folder, open the parent
-    builder.toggleOpenState(EnsureFolderindex(builder, msgFolder.parent));
+    builder.toggleOpenState(EnsureFolderIndex(builder, msgFolder.parent));
     index = builder.getIndexOfResource(msgFolder);
   }
   return index;
