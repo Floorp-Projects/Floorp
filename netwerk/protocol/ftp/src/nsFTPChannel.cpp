@@ -42,7 +42,7 @@ static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 
 nsFTPChannel::nsFTPChannel()
     : mUrl(nsnull), mConnected(PR_FALSE), mListener(nsnull),
-      mLoadAttributes(LOAD_NORMAL)
+      mLoadAttributes(LOAD_NORMAL), mLoadGroup(nsnull)
 {
 
     nsresult rv;
@@ -61,6 +61,7 @@ nsFTPChannel::~nsFTPChannel() {
     NS_IF_RELEASE(mUrl);
     NS_IF_RELEASE(mListener);
     NS_IF_RELEASE(mEventQueue);
+    NS_IF_RELEASE(mLoadGroup);
 }
 
 NS_IMPL_ADDREF(nsFTPChannel);
@@ -229,7 +230,9 @@ nsFTPChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 NS_IMETHODIMP
 nsFTPChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
 {
-    mLoadGroup = aLoadGroup;    // releases and addrefs
+    NS_IF_RELEASE(mLoadGroup);
+    mLoadGroup = aLoadGroup;
+    NS_IF_ADDREF(mLoadGroup);
     return NS_OK;
 }
 

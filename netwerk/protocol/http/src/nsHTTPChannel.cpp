@@ -57,7 +57,8 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     m_pResponse(nsnull),
     m_pResponseDataListener(nsnull),
     mLoadAttributes(LOAD_NORMAL),
-    mResponseContext(nsnull)
+    mResponseContext(nsnull),
+    mLoadGroup(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -77,6 +78,7 @@ nsHTTPChannel::~nsHTTPChannel()
     NS_IF_RELEASE(m_pResponse);
 
     NS_IF_RELEASE(m_pResponseDataListener);
+    NS_IF_RELEASE(mLoadGroup);
 }
 
 NS_IMETHODIMP
@@ -293,7 +295,9 @@ nsHTTPChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 NS_IMETHODIMP
 nsHTTPChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
 {
-    mLoadGroup = aLoadGroup;    // releases and addrefs
+    NS_IF_RELEASE(mLoadGroup);
+    mLoadGroup = aLoadGroup;
+    NS_IF_ADDREF(mLoadGroup);
     return NS_OK;
 }
 

@@ -98,7 +98,7 @@ protected:
     PRBool                  mConnected;
     nsIStreamListener*      mListener;
     PRUint32                mLoadAttributes;
-    nsCOMPtr<nsILoadGroup>  mLoadGroup;
+    nsILoadGroup*           mLoadGroup;
 };
 
 #endif /* nsFTPChannel_h___ */
