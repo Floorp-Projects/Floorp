@@ -1065,7 +1065,8 @@ sub do_vxml {
 }
 
 sub do_wml {
-  print "Content-type: text/vnd.wap.wml\n\n";
+  print "Content-type: text/vnd.wap.wml\n";
+  print "Pragma: No-Cache\n\n";
 
   print '<!DOCTYPE wml PUBLIC "-//WAPFORUM//DTD WML 1.1//EN" "http://www.wapforum.org/DTD/wml_1.1.xml">';
 
