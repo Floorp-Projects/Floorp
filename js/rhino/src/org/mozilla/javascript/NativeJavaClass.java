@@ -172,9 +172,8 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
         if (! (Modifier.isInterface(modifiers) ||
                Modifier.isAbstract(modifiers)))
         {
-            Constructor[] ctors = members.ctors;
-            Class[][] ctorTypes = members.ctorTypes;
-            int index = NativeJavaMethod.findFunction(ctors, ctorTypes, args);
+            MemberBox[] ctors = members.ctors;
+            int index = NativeJavaMethod.findFunction(ctors, args);
             if (index < 0) {
                 String sig = NativeJavaMethod.scriptSignature(args);
                 throw Context.reportRuntimeError2(
@@ -182,8 +181,7 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
             }
 
             // Found the constructor, so try invoking it.
-            return constructSpecific(cx, scope, this, args,
-                                     ctors[index], ctorTypes[index]);
+            return constructSpecific(cx, scope, this, args, ctors[index]);
         } else {
             Scriptable topLevel = ScriptableObject.getTopLevelScope(this);
             String msg = "";
@@ -209,19 +207,25 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
         }
     }
 
-    public static Scriptable constructSpecific(Context cx,
-                                               Scriptable scope,
-                                               Scriptable thisObj,
-                                               Object[] args,
-                                               Constructor ctor,
-                                               Class[] paramTypes)
+    static Scriptable constructSpecific(Context cx, Scriptable scope,
+                                        Scriptable thisObj, Object[] args,
+                                        MemberBox ctor)
         throws JavaScriptException
     {
         Scriptable topLevel = ScriptableObject.getTopLevelScope(thisObj);
         Class classObject = ctor.getDeclaringClass();
+        Class[] argTypes = ctor.argTypes;
 
+        Object[] origArgs = args;
         for (int i = 0; i < args.length; i++) {
-            args[i] = NativeJavaObject.coerceType(paramTypes[i], args[i], true);
+            Object arg = args[i];
+            Object x = NativeJavaObject.coerceType(argTypes[i], arg, true);
+            if (x != arg) {
+                if (args == origArgs) {
+                    args = (Object[])origArgs.clone();
+                }
+                args[i] = x;
+            }
         }
         Object instance;
         try {
@@ -232,7 +236,7 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
                 instEx.getMessage(), classObject.getName());
         } catch (IllegalArgumentException argEx) {
             String signature = NativeJavaMethod.scriptSignature(args);
-            String ctorString = ctor.toString();
+            String ctorString = ctor.ctor().toString();
             throw Context.reportRuntimeError3(
                 "msg.bad.ctor.sig", argEx.getMessage(), ctorString, signature);
         } catch (IllegalAccessException accessEx) {

@@ -865,7 +865,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
         }
         throw Context.reportRuntimeError2
             ("msg.conversion.not.allowed",
-             value.toString(), NativeJavaMethod.javaSignature(type));
+             value.toString(), JavaMembers.javaSignature(type));
     }
 
     public void writeExternal(ObjectOutput out)

@@ -56,11 +56,10 @@ import java.io.*;
 
 public class NativeJavaConstructor extends BaseFunction
 {
-    public NativeJavaConstructor(Constructor ctor)
+    public NativeJavaConstructor(MemberBox ctor)
     {
-        this.constructor = ctor;
-        this.constructorType = ctor.getParameterTypes();
-        String sig = NativeJavaMethod.memberSignature(ctor, constructorType);
+        this.ctor = ctor;
+        String sig = JavaMembers.liveConnectSignature(ctor.argTypes);
         this.functionName = "<init>".concat(sig);
     }
 
@@ -68,37 +67,14 @@ public class NativeJavaConstructor extends BaseFunction
                        Object[] args)
         throws JavaScriptException
     {
-        // Find a method that matches the types given.
-        if (constructor == null) {
-            throw new RuntimeException("No constructor defined for call");
-        }
-
-        return NativeJavaClass.constructSpecific(cx, scope, this, args,
-                                                 constructor, constructorType);
+        return NativeJavaClass.constructSpecific(cx, scope, this, args, ctor);
     }
 
     public String toString()
     {
-        return "[JavaConstructor " + constructor.getName() + "]";
+        return "[JavaConstructor " + ctor.getName() + "]";
     }
 
-    private void readObject(ObjectInputStream in)
-        throws IOException, ClassNotFoundException
-    {
-        in.defaultReadObject();
-        constructor = (Constructor)FunctionObject.readMember(in);
-        constructorType = constructor.getParameterTypes();
-    }
-
-    private void writeObject(ObjectOutputStream out)
-        throws IOException
-    {
-        out.defaultWriteObject();
-        FunctionObject.writeMember(out, constructor);
-    }
-
-    transient Constructor constructor;
-    private transient Class[] constructorType;
-
+    MemberBox ctor;
 }
 
