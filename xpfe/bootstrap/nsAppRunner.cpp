@@ -307,6 +307,8 @@ int main1(int argc, char* argv[])
   if (nsnull == urlstr){
 
 #if defined(NS_USING_PROFILES)
+
+	printf("Profile Manager : Command Line Options : Begin\n");
 	// check for command line arguments for profile manager
   //	
 	// -P command line option works this way:
@@ -425,6 +427,8 @@ int main1(int argc, char* argv[])
 #endif
 		}
     }
+
+    printf("Profile Manager : Command Line Options : End\n");
 
 #endif // defined(NS_USING_PROFILES)
     
@@ -599,6 +603,10 @@ int main1(int argc, char* argv[])
   }
 
 #if defined (NS_USING_PROFILES)
+
+
+    	printf("Profile Manager : Profile Wizard and Manager activites : Begin\n");
+
 	/* 
 	 * If default profile is current, launch CreateProfile Wizard. 
 	 */ 
@@ -682,6 +690,7 @@ int main1(int argc, char* argv[])
 		if (pregPref && PL_strcmp(isPregInfoSet, "true") != 0)
 			profileService->ProcessPRegCookie();
 	}
+    	printf("Profile Manager : Profile Wizard and Manager activites : End\n");
 #endif
 
   // Now we have the right profile, read the user-specific prefs.
