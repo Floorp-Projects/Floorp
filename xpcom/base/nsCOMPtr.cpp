@@ -46,7 +46,7 @@ nsQueryInterface::operator()( const nsIID& aIID, void** answer ) const
 nsCOMPtr_base::~nsCOMPtr_base()
 	{
 		if ( mRawPtr )
-			NSCAP_RELEASE(mRawPtr);
+			NSCAP_RELEASE(this, mRawPtr);
 	}
 #endif
 
@@ -54,7 +54,7 @@ void
 nsCOMPtr_base::assign_with_AddRef( nsISupports* rawPtr )
 	{
     if ( rawPtr )
-    	NSCAP_ADDREF(rawPtr);
+    	NSCAP_ADDREF(this, rawPtr);
     assign_assuming_AddRef(rawPtr);
 	}
 

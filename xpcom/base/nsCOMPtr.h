@@ -116,12 +116,38 @@
   typedef PRBool NSCAP_BOOL;
 #endif
 
-#ifdef NSCAP_FEATURE_DEBUG_MACROS
-  #define NSCAP_ADDREF(ptr)    NS_ADDREF(ptr)
-  #define NSCAP_RELEASE(ptr)   NS_RELEASE(ptr)
+
+
+
+  /*
+    The following three macros (|NSCAP_ADDREF|, |NSCAP_RELEASE|, and |NSCAP_LOG_ASSIGNMENT|)
+      allow external clients the ability to add logging or other interesting debug facilities.
+  */
+
+#ifndef NSCAP_ADDREF
+  #ifdef NSCAP_FEATURE_DEBUG_MACROS
+    #define NSCAP_ADDREF(this, ptr)         NS_ADDREF(ptr)
+  #else
+    #define NSCAP_ADDREF(this, ptr)         (ptr)->AddRef()
+  #endif
+#endif
+
+#ifndef NSCAP_RELEASE
+  #ifdef NSCAP_FEATURE_DEBUG_MACROS
+    #define NSCAP_RELEASE(this, ptr)        NS_RELEASE(ptr)
+  #else
+    #define NSCAP_RELEASE(this, ptr)        (ptr)->Release()
+  #endif
+#endif
+
+  // Clients can define |NSCAP_LOG_ASSIGNMENT| to perform logging.
+#ifdef NSCAP_LOG_ASSIGNMENT
+    // Remember that |NSCAP_LOG_ASSIGNMENT| was defined by some client so that we know
+    //  to instantiate |~nsGetterAddRefs| in turn to note the external assignment into
+    //  the |nsCOMPtr|.
+  #define NSCAP_LOG_EXTERNAL_ASSIGNMENT
 #else
-  #define NSCAP_ADDREF(ptr)    (ptr)->AddRef()
-  #define NSCAP_RELEASE(ptr)   (ptr)->Release()
+  #define NSCAP_LOG_ASSIGNMENT(this, ptr);
 #endif
 
   /*
@@ -408,8 +434,9 @@ class nsCOMPtr_base
             */
           nsISupports* oldPtr = mRawPtr;
           mRawPtr = newPtr;
+          NSCAP_LOG_ASSIGNMENT(this, newPtr);
           if ( oldPtr )
-            NSCAP_RELEASE(oldPtr);
+            NSCAP_RELEASE(this, oldPtr);
         }
   };
 
@@ -444,8 +471,9 @@ class nsCOMPtr
         {
           T* oldPtr = mRawPtr;
           mRawPtr = newPtr;
+          NSCAP_LOG_ASSIGNMENT(this, newPtr);
           if ( oldPtr )
-            NSCAP_RELEASE(oldPtr);
+            NSCAP_RELEASE(this, oldPtr);
         }
 
     private:
@@ -463,7 +491,7 @@ class nsCOMPtr
      ~nsCOMPtr()
         {
           if ( mRawPtr )
-            NSCAP_RELEASE(mRawPtr);
+            NSCAP_RELEASE(this, mRawPtr);
         }
 #endif
 
@@ -477,7 +505,7 @@ class nsCOMPtr
               nsresult status = CallQueryInterface(mRawPtr, &query_result);
               NS_ASSERTION(query_result == mRawPtr, "QueryInterface needed");
               if ( NS_SUCCEEDED(status) )
-                NSCAP_RELEASE(query_result);
+                NSCAP_RELEASE(this, query_result);
             }
         }
 
@@ -493,23 +521,25 @@ class nsCOMPtr
             : NSCAP_CTOR_BASE(0)
           // default constructor
         {
-          // nothing else to do here
+          NSCAP_LOG_ASSIGNMENT(this, 0);
         }
 
       nsCOMPtr( const nsCOMPtr<T>& aSmartPtr )
             : NSCAP_CTOR_BASE(aSmartPtr.mRawPtr)
           // copy-constructor
         {
+          NSCAP_LOG_ASSIGNMENT(this, aSmartPtr.mRawPtr);
           if ( mRawPtr )
-            NSCAP_ADDREF(mRawPtr);
+            NSCAP_ADDREF(this, mRawPtr);
         }
 
       nsCOMPtr( T* aRawPtr )
             : NSCAP_CTOR_BASE(aRawPtr)
           // construct from a raw pointer (of the right type)
         {
+          NSCAP_LOG_ASSIGNMENT(this, aRawPtr);
           if ( mRawPtr )
-            NSCAP_ADDREF(mRawPtr);
+            NSCAP_ADDREF(this, mRawPtr);
 
           NSCAP_ASSERT_NO_QUERY_NEEDED();
         }
@@ -518,6 +548,7 @@ class nsCOMPtr
             : NSCAP_CTOR_BASE(aSmartPtr.mRawPtr)
           // construct from |dont_AddRef(expr)|
         {
+          NSCAP_LOG_ASSIGNMENT(this, aSmartPtr.mRawPtr);
           NSCAP_ASSERT_NO_QUERY_NEEDED();
         }
 
@@ -526,6 +557,7 @@ class nsCOMPtr
           // ...and finally, anything else we might need to construct from
           //  can exploit the |nsCOMPtr_helper| facility
         {
+          NSCAP_LOG_ASSIGNMENT(this, 0);
           assign_from_helper(helper, NS_GET_IID(T));
           NSCAP_ASSERT_NO_QUERY_NEEDED();
         }
@@ -536,6 +568,7 @@ class nsCOMPtr
       nsCOMPtr( const nsQueryInterface& helper )
             : NSCAP_CTOR_BASE(0)
         {
+          NSCAP_LOG_ASSIGNMENT(this, 0);
           assign_from_helper(helper, NS_GET_IID(T));
         }
 #endif
@@ -670,7 +703,7 @@ class nsCOMPtr<nsISupports>
      ~nsCOMPtr()
          {
            if ( mRawPtr )
-             NSCAP_RELEASE(mRawPtr);
+             NSCAP_RELEASE(this, mRawPtr);
          }
 #endif
 
@@ -689,7 +722,7 @@ class nsCOMPtr<nsISupports>
           // copy constructor
         {
           if ( mRawPtr )
-            NSCAP_ADDREF(mRawPtr);
+            NSCAP_ADDREF(this, mRawPtr);
         }
 
       nsCOMPtr( nsISupports* aRawPtr )
@@ -697,7 +730,7 @@ class nsCOMPtr<nsISupports>
           // construct from a raw pointer (of the right type)
         {
           if ( mRawPtr )
-            NSCAP_ADDREF(mRawPtr);
+            NSCAP_ADDREF(this, mRawPtr);
         }
 
       nsCOMPtr( const already_AddRefed<nsISupports>& aSmartPtr )
@@ -815,7 +848,7 @@ void
 nsCOMPtr<T>::assign_with_AddRef( nsISupports* rawPtr )
   {
     if ( rawPtr )
-      NSCAP_ADDREF(rawPtr);
+      NSCAP_ADDREF(this, rawPtr);
     assign_assuming_AddRef(NS_REINTERPRET_CAST(T*, rawPtr));
   }
 
@@ -867,11 +900,17 @@ class nsGetterAddRefs
           // nothing else to do
         }
 
-#ifdef NSCAP_FEATURE_TEST_DONTQUERY_CASES
+#if defined(NSCAP_FEATURE_TEST_DONTQUERY_CASES) || defined(NSCAP_LOG_EXTERNAL_ASSIGNMENT)
      ~nsGetterAddRefs()
-         {
-           mTargetSmartPtr.Assert_NoQueryNeeded();
-         }
+        {
+#ifdef NSCAP_LOG_EXTERNAL_ASSIGNMENT
+          NSCAP_LOG_ASSIGNMENT(this, mRawPtr);
+#endif
+
+#ifdef NSCAP_FEATURE_TEST_DONTQUERY_CASES
+          mTargetSmartPtr.Assert_NoQueryNeeded();
+#endif
+        }
 #endif
 
       operator void**()
@@ -910,6 +949,13 @@ class nsGetterAddRefs<nsISupports>
         {
           // nothing else to do
         }
+
+#ifdef NSCAP_LOG_EXTERNAL_ASSIGNMENT
+     ~nsGetterAddRefs()
+        {
+          NSCAP_LOG_ASSIGNMENT(this, mRawPtr);
+        }
+#endif
 
       operator void**()
         {
