@@ -118,7 +118,7 @@ nsMessengerBootstrap::Initialize()
 
 
 nsresult
-NS_NewMessengerBootstrap(nsIAppShellService **msgboot,
+NS_NewMessengerBootstrap(const nsIID &aIID, void ** msgboot,
                          nsIServiceManager *serviceManager)
 {
   if (!msgboot) return NS_ERROR_NULL_POINTER;
@@ -130,9 +130,7 @@ NS_NewMessengerBootstrap(nsIAppShellService **msgboot,
   if (!bootstrap) return NS_ERROR_OUT_OF_MEMORY;
 
   
-  return bootstrap->QueryInterface(nsIAppShellService::GetIID(),
-                                   (void **)msgboot);
-
+  return bootstrap->QueryInterface(aIID, msgboot);
 }
 
 // nsMessenger implementation
@@ -147,13 +145,12 @@ NS_IMPL_ISUPPORTS(nsMessenger, nsIMessenger::GetIID())
 
 
 nsresult
-NS_NewMessenger(nsIMessenger **msg)
+NS_NewMessenger(const nsIID &aIID, void **msg)
 {
   if (!msg) return NS_ERROR_NULL_POINTER;
   nsMessenger *messenger = 
-    new nsMessenger();
+  new nsMessenger();
   if (!messenger) return NS_ERROR_OUT_OF_MEMORY;
-  return messenger->QueryInterface(nsIMessenger::GetIID(),
-                                   (void**)&msg);
+  return messenger->QueryInterface(aIID, msg);
 }
 
