@@ -669,25 +669,33 @@ nsNetlibService::NET_CookieCount(char* URLName, PRInt32* count){
 
 NS_IMETHODIMP
 nsNetlibService::NET_AnonymizeCookies(){
+#ifdef CookieManagement
     ::NET_AnonymizeCookies();
+#endif
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNetlibService::NET_UnanonymizeCookies(){
+#ifdef CookieManagement
     ::NET_UnanonymizeCookies();
+#endif
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNetlibService::SI_AnonymizeSignons(){
+#ifdef SingleSignon
     ::SI_AnonymizeSignons();
+#endif
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNetlibService::SI_UnanonymizeSignons(){
+#ifdef SingleSignon
     ::SI_UnanonymizeSignons();
+#endif
     return NS_OK;
 }
 
