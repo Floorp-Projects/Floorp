@@ -235,7 +235,7 @@ nsHelperAppDialog.prototype = {
         },
 
         onSecurityChange: function( aWebProgress, aRequest, state ) {
-        },
+        }
     },
 
     // initDialog:  Fill various dialog fields with initial content.
