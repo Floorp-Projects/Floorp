@@ -41,6 +41,7 @@
 
 #include "nsIRenderingContext.h"
 #include "nsPoint.h"
+#include "nsSize.h"
 
 
 typedef struct {	
@@ -115,6 +116,10 @@ public:
    */
   NS_IMETHOD FillStdPolygon(const nsPoint aPoints[], PRInt32 aNumPoints) { return NS_OK; }
 
+  NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsDrawingSurface &aBackbuffer); 
+  NS_IMETHOD ReleaseBackbuffer(void);
+  NS_IMETHOD DestroyCachedBackbuffer(void);
+
 #ifdef IBMBIDI
   /**
    * Let the device context know whether we want text reordered with
@@ -157,10 +162,67 @@ protected:
   void cdelete(int i);
   void cinsert(int i,int y,const nsPoint aPointArray[],PRInt32 aNumPts);
 
+  /**
+   * Determine if a rect's width and height will fit within a specified width and height
+   * @param aRect rectangle to test
+   * @param aWidth width to determine if the rectangle's width will fit within
+   * @param aHeight height to determine if the rectangles height will fit within
+   * @returns PR_TRUE if the rect width and height fits with aWidth, aHeight, PR_FALSE
+   * otherwise.
+   */
+
+  PRBool RectFitsInside(const nsRect& aRect, PRInt32 aWidth, PRInt32 aHeight) const;
+
+  /**
+   * Determine if two rectangles width and height will fit within a specified width and height
+   * @param aRect1 first rectangle to test
+   * @param aRect1 second rectangle to test
+   * @param aWidth width to determine if both rectangle's width will fit within
+   * @param aHeight height to determine if both rectangles height will fit within
+   * @returns PR_TRUE if the rect1's and rect2's width and height fits with aWidth,
+   * aHeight, PR_FALSE otherwise.
+   */
+  PRBool BothRectsFitInside(const nsRect& aRect1, const nsRect& aRect2, PRInt32 aWidth, PRInt32 aHeight, nsRect& aNewSize) const;
+
+  /**
+   * Return an offscreen surface size from a set of discrete surface sizes.
+   * The smallest discrete surface size that can enclose both the Maximum widget 
+   * size (@see GetMaxWidgetBounds) and the requested size is returned.
+   *
+   * @param aMaxBackbufferSize Maximum size that may be requested for the backbuffer
+   * @param aRequestedSize Requested size for the offscreen.
+   * @param aSurfaceSize contains the surface size 
+   */
+  void CalculateDiscreteSurfaceSize(const nsRect& aMaxBackbufferSize, const nsRect& aRequestedSize, nsRect& aSize);
+
+  /**
+   * Get the size of the offscreen drawing surface..
+   *
+   * @param aMaxBackbufferSize Maximum size that may be requested for the backbuffer
+   * @param aRequestedSize Desired size for the offscreen.
+   * @param aSurfaceSize   Offscreen adjusted to a discrete size which encloses aRequestedSize.
+   */
+  void GetDrawingSurfaceSize(const nsRect& aMaxBackbufferSize, const nsRect& aRequestedSize, nsRect& aSurfaceSize);
+
+  /**
+   * Utility method used to implement NS_IMETHOD GetBackbuffer
+   *
+   * @param aRequestedSize size of the backbuffer area requested
+   * @param aMaxSize maximum size that may be requested for the backbuffer
+   * @param aBackbuffer drawing surface used as the backbuffer
+   * @param aCacheBackbuffer PR_TRUE then the backbuffer will be cached, if PR_FALSE it is created each time
+   */
+  nsresult AllocateBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsDrawingSurface &aBackbuffer, PRBool aCacheBackbuffer);
+
 public:
 
 protected:
   nsPenMode   mPenMode;
+private:
+  static nsDrawingSurface  gBackbuffer;         //singleton backbuffer 
+  static nsRect            gBackbufferBounds;   //backbuffer bounds
+    // Largest requested offscreen size if larger than a full screen.
+  static nsSize            gLargestRequestedSize;
 
 };
 

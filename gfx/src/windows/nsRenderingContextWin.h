@@ -192,6 +192,10 @@ public:
   // nsIRenderingContextWin
   NS_IMETHOD CreateDrawingSurface(HDC aDC, nsDrawingSurface &aSurface);
 
+  NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsDrawingSurface &aBackbuffer);
+ 
+  NS_IMETHOD ReleaseBackbuffer(void);
+
 #ifdef MOZ_MATHML
   NS_IMETHOD
   GetBoundingMetrics(const char*        aString,

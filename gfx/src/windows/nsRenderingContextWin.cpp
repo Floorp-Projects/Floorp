@@ -2988,6 +2988,22 @@ nsRenderingContextWin::ConditionRect(nsRect& aSrcRect, RECT& aDestRect)
                       : (aSrcRect.x+aSrcRect.width);
 }
 
+
+NS_IMETHODIMP 
+nsRenderingContextWin::GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsDrawingSurface &aBackbuffer)
+{
+  // Do not cache the backbuffer. On WIN32 it is faster to get allocate
+  // the backbuffer as needed. @see bug 95952
+  return AllocateBackbuffer(aRequestedSize, aMaxSize, aBackbuffer, PR_FALSE);
+}
+ 
+NS_IMETHODIMP 
+nsRenderingContextWin::ReleaseBackbuffer(void) {
+  // Destroy the backbuffer. Do not cache it. On WIN32 it is faster to get allocate
+  // the backbuffer as needed. @see bug 95952
+  return DestroyCachedBackbuffer();
+}
+
 #ifdef IBMBIDI
 /**
  * Let the device context know whether we want text reordered with
