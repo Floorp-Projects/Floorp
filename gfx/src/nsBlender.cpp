@@ -207,7 +207,7 @@ PRInt32   sspan,dspan,mspan;
 void
 nsBlender::Do24Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,nscolor aSrcBackColor, nscolor aSecondSrcBackColor, nsPixelFormat &aPixFormat)
 {
-PRUint8   *d1,*d2,*s1,*s2,*ss1,*ss2;
+PRUint8   *d1,*d2,*s1,*s2,*ss1;
 PRUint32  val1,val2;
 PRInt32   x,y,temp1,numlines,xinc,yinc;
 PRUint16  srccolor,secsrccolor;
