@@ -26,7 +26,7 @@
 
 #include "xp_core.h"
 
-#if 0
+#if XP_MAC
 /*
 	netlib
 */
@@ -59,7 +59,7 @@ typedef enum NET_ReloadMethod
      SERVER_ONLY       /* server only, force_reload */
 } NET_ReloadMethod;
 
-#if 0
+#if XP_MAC
 /*
    plugins
 */
@@ -213,7 +213,7 @@ typedef enum
 
 struct LJAppletData;
 
-#endif /* 0 */
+#endif /* XP_MAC */
 
 #endif /* _NetscapeTypes_ */
 
