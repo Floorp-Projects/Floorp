@@ -1645,6 +1645,8 @@ nsresult nsExternalHelperAppService::AddMimeInfoToCache(nsIMIMEInfo * aMIMEInfo)
     nsCStringKey key(mimeType);
     oldInfo = (nsIMIMEInfo*)mMimeInfoCache->Put(&key, aMIMEInfo);
 
+    // release the old info to prevent a leak
+    NS_IF_RELEASE(oldInfo);
     // add a reference for the hash table entry....
     NS_ADDREF(aMIMEInfo); 
   }
@@ -1659,6 +1661,7 @@ nsresult nsExternalHelperAppService::AddMimeInfoToCache(nsIMIMEInfo * aMIMEInfo)
   {
      nsCStringKey key(extensions[i]);
      oldInfo = (nsIMIMEInfo*) mMimeInfoCache->Put(&key, aMIMEInfo);
+     NS_IF_RELEASE(oldInfo); // release the old info to prevent a leak
      NS_ADDREF(aMIMEInfo); // addref this new entry in the table
      nsMemory::Free( extensions[i] );
   }
