@@ -71,7 +71,11 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
   static final String accel_attr = "accel";
   static final String type_attr = "type";
 
-  Hashtable button_group;
+  /**
+   * The button group indexed by its name.
+   */
+  protected Hashtable button_group;
+
   Hashtable actions;
   JMenuBar component;
 
@@ -179,6 +183,12 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
   public void associateClass(Class c, Object o) {
   }
 
+  /**
+   * Process the node. This method will call <code>buildComponent</code>.
+   * @param node the node to process
+   * @param parent the parent component to add the information from
+   * this node to
+   */
   protected void processNode(Node node, JComponent parent) {
     JComponent container = null;
     JComponent item = null;
@@ -195,6 +205,11 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
     }
   }
 
+  /**
+   * Build the component at the current XML element and add to the parent
+   * @param current the current element
+   * @param parent the parent to add to
+   */
   protected JComponent buildComponent(Element current, JComponent parent) {
     String tag = current.getTagName();
     JComponent comp = null;
@@ -232,35 +247,21 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
       } else if (type.equals(radio_attr)) { // radio
 	comp = buildRadioMenuItem(current);
       }
-
-      // do label magic for things that are not separators
-      if (!type.equals(separator_attr)) {
-        label = getReferencedLabel(current, label_attr);
-        if (label != null) {
-          ((JMenuItem)comp).setText(label);
-        }
-
-        label = current.getAttribute("action");
-        if (label != null 
-            && (action = (UIAction)actions.get(label)) != null) {
-          ((JMenuItem)comp).addActionListener(action);
-        }
-
-        // set the accelerator
-        label = getReferencedLabel(current, accel_attr);
-        if (label != null) {
-          ((JMenuItem)comp).setMnemonic(label.charAt(0));
-        }
-      }
     }
 
     return comp;
   }
-
+  
+  /**
+   * Build a JRadioMenuItem
+   * @param current the element that describes the JRadioMenuItem
+   * @return the built component
+   */
   protected JRadioButtonMenuItem buildRadioMenuItem(Element current) {
     String group = current.getAttribute(group_attr);
     ButtonGroup bg;
     JRadioButtonMenuItem comp = new JRadioButtonMenuItem();
+    finishComponent(comp, current);
     
     // do we add to a button group?
     if (group != null) {
@@ -276,16 +277,55 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
     return comp;
   }
 
+  /**
+   * Build a JCheckBoxMenuItem.
+   * @param current the element that describes the JCheckBoxMenuItem
+   * @return the built component
+   */
   protected JCheckBoxMenuItem buildCheckBoxMenuItem(Element current) {
-    return new JCheckBoxMenuItem();
+    JCheckBoxMenuItem item = new JCheckBoxMenuItem();
+    finishComponent(item, current);
+    return item;
   }
 
+  /**
+   * Build a JSeparator.
+   * @param current the element that describes the JSeparator
+   * @return the built component
+   */
   protected JSeparator buildSeparator(Element current) {
     return new JSeparator();
   }
 
+  /**
+   * Build a JMenuItem.
+   * @param current the element that describes the JMenuItem
+   * @return the built component
+   */
   protected JMenuItem buildMenuItem(Element current) {
-    return new JMenuItem();
+    JMenuItem item = new JMenuItem();
+    finishComponent(item, current);
+    return item;
+  }
+
+  private void finishComponent(JMenuItem item, Element current) {
+    String label = getReferencedLabel(current, label_attr);
+    UIAction action = null;
+
+    if (label != null) {
+      item.setText(label);
+    }
+
+    label = current.getAttribute("action");
+    if (label != null 
+        && (action = (UIAction)actions.get(label)) != null) {
+      item.addActionListener(action);
+    }
+    
+    label = getReferencedLabel(current, accel_attr);
+    if (label != null) {
+      item.setMnemonic(label.charAt(0));
+    }
   }
 
   public static void main(String[] args) throws Exception {
