@@ -216,7 +216,7 @@ nsViewerApp::Exit()
 static void
 PrintHelpInfo(char **argv)
 {
-  fprintf(stderr, "Usage: %s [-p][-q][-md #][-f filename][-d #][-np] [starting url]\n", argv[0]);
+  fprintf(stderr, "Usage: %s [-p][-q][-md #][-f filename][-d #][-np][-v] [starting url]\n", argv[0]);
   fprintf(stderr, "\t-p[#]   -- run purify, optionally with a # that says which sample to stop at.  For example, -p2 says to run samples 0, 1, and 2.\n");
   fprintf(stderr, "\t-q   -- run quantify\n");
   fprintf(stderr, "\t-md # -- set the crt debug flags to #\n");
@@ -233,6 +233,7 @@ PrintHelpInfo(char **argv)
   fprintf(stderr, "\t-A domain -- add a domain/host that should be avoided (e.g. microsoft.com)\n");
   fprintf(stderr, "\t-N pages -- set the max # of pages to crawl\n");
   fprintf(stderr, "\t-np -- no plugins\n");
+  fprintf(stderr, "\t-v -- verbose (debug noise)\n");
 }
 
 static void
@@ -436,6 +437,9 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
       }
       else if (PL_strcmp(argv[i], "-np") == 0) {
         mAllowPlugins = PR_FALSE;
+      }
+      else if (PL_strcmp(argv[i], "-v") == 0) {
+        mCrawler->SetVerbose(PR_TRUE);
       }
       else {
         PrintHelpInfo(argv);
