@@ -120,6 +120,12 @@ typedef int PRInt32;
 #define WS_DO_NOT_WAIT                  FALSE
 #define WS_WAIT                         TRUE
 
+#define MAX_KILL_PROCESS_RETRIES        10
+
+/* CI: Check Instance */
+#define CI_FORCE_QUIT_PROCESS           TRUE
+#define CI_CLOSE_PROCESS                FALSE
+
 #define BAR_MARGIN                      1
 #define BAR_SPACING                     0
 #define BAR_WIDTH                       6

@@ -397,10 +397,14 @@ Show Dialog=AUTO
 [Check Instance0]
 Class Name=MozillaMessageWindow
 Window Name=
+Process Name=$MainExeFile$
+Pretty Name=$ProductNameInternal$
 ;*** LOCALIZE ME BABY ***
 Message=Download of $ProductName$ was successful. $ProductNameInternal$ must be closed to proceed with installation. Click OK to exit $ProductNameInternal$ automatically and to begin installation.
 ;*** LOCALIZE ME BABY ***
 Message Full Installer=$ProductNameInternal$ must be closed to proceed with installation. Click OK to exit $ProductNameInternal$ automatically and to begin installation.
+;*** LOCALIZE ME BABY ***
+Message wait=Shutting down $ProductNameInternal$.  Please wait...
 
 ; This key indicates whether or not to close all the windows associated with
 ; the process id of this app instance window found.
@@ -416,10 +420,14 @@ Extra Cmd0 Parameter=-kill
 [Check Instance1]
 Class Name=Netscape6MessageWindow
 Window Name=
+Process Name=Netscp.exe
+Pretty Name=Netscape
 ;*** LOCALIZE ME BABY ***
 Message=Download of $ProductName$ was successful. However, Netscape must be closed to proceed with this installation. Click OK to exit Netscape automatically and to begin installation.
 ;*** LOCALIZE ME BABY ***
 Message Full Installer=Netscape must be closed to proceed with this installation. Click OK to exit Netscape automatically and to begin installation.
+;*** LOCALIZE ME BABY ***
+Message wait=Shutting down Netscape.  Please wait...
 
 ; This key indicates whether or not to close all the windows associated with
 ; the process id of this app instance window found.
@@ -434,7 +442,7 @@ Extra Cmd0 Reg Name=
 Extra Cmd0 Parameter=-kill
 
 Extra Cmd1 Reg Key Root=HKEY_LOCAL_MACHINE
-Extra Cmd1 Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\Netscape.exe
+Extra Cmd1 Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\Netscp.exe
 Extra Cmd1 Reg Name=
 Extra Cmd1 Parameter=-kill
 
@@ -555,7 +563,7 @@ $InstallSizeSystem$
 $InstallSizeArchive$:gre-win32-installer.zip
 Attributes=SELECTED|UNCOMPRESS|SUPERSEDE|LAUNCHAPP|INVISIBLE
 ;*** LOCALIZE ME BABY ***
-Parameter=-mmi -ma -app "$ProductNameInternal$ $UserAgent$" -app_path "[SETUP PATH]\$MainExeFile$"
+Parameter=-mmi -app "$ProductNameInternal$ $UserAgent$" -app_path "[SETUP PATH]\$MainExeFile$"
 SupersedeType=GRE
 SupersedeWinReg0=HKEY_LOCAL_MACHINE\Software\mozilla.org\GRE
 SupersedeVersion0=$GreFileVersion$

@@ -51,6 +51,7 @@ CSRCS		= \
 		logging.c \
 		supersede.c \
 		version.c \
+		process.c \
 
 CPPSRCS		= \
 		shortcut.cpp \
