@@ -37,7 +37,7 @@
                 <label class="enabled"> Alternative Text </label>
               </td>
               <td>
-                <input type="text" size="30" id="image.altTextInput" onkeypress="doOverallEnabling()"/>
+                <input type="text" size="30" id="image.altTextInput" onchange="doValueChanged()"/>
               </td>
             </tr>
           </table>
@@ -57,7 +57,8 @@
           <table cellspacing="0" cellpadding="0">
             <tr>
               <td>
-                <input type="radio" name="image.dimensionType" id="originalsizeRadio" onclick="doDimensionEnabling()" checked="true" />
+                    <!-- THIS NEEDS TO BE onchange RATHER THAN onclick -->
+                <input type="radio" name="image.dimensionType" id="originalsizeRadio" onclick="doValueChanged()" checked="true" />
               </td>
               <td colspan="3">
                 <label class="disabled" for="originalsizeRadio" id="originalsizeLabel" > Original Size </label>
@@ -65,10 +66,11 @@
             </tr>
             <tr>
               <td>
-                <input type="radio" name="image.dimensionType" id="customsizeRadio" />
+                    <!-- THIS NEEDS TO BE onchange RATHER THAN onclick -->
+                <input type="radio" name="image.dimensionType" id="customsizeRadio" onclick="doValueChanged()" />
               </td>
               <td colspan="3">
-                <label class="disabled" for="customsizeRadio" id="customsizeLabel" onclick="doDimensionEnabling()" > Custom Size </label>
+                <label class="disabled" for="customsizeRadio" id="customsizeLabel" > Custom Size </label>
               </td>
             </tr>
           
@@ -79,13 +81,11 @@
 	              <label class="disabled" for="imagewidthInput" id="imagewidthLabel"> Width </label>
 	            </td>
 	            <td>
-			          <input type="text" size="4" length="4" id="imagewidthInput" />
+			          <input type="text" size="4" length="4" id="imagewidthInput" onchange="doValueChanged()" />
 			        </td>
 			        <td>
-			          <select id="widthunitSelect" size="1"  onchange="SelectWidthUnits()">
-			            <option>pixels</option>
-			            <option>percent</option>
-			          </select>
+                <xul:titledbutton class="popup PixelOrPercent" id="widthunitSelect" value="pixels" 
+                     align="left" popup="PixelOrPercentMenu1" onchange="doValueChanged()" />
 	            </td>
 	          </tr>
                     
@@ -96,13 +96,11 @@
 	              <label class="disabled" for="imageheightInput" id="imageheightLabel"> Height </label>
 	            </td>
 	            <td>
-	              <input type="text" size="4" length="4" id="imageheightInput" />
+	              <input type="text" size="4" length="4" id="imageheightInput" onchange="doValueChanged()" />
 			        </td>
 			        <td>
-	              <select id="heightunitSelect" size="1"  onchange="SelectWidthUnits()">
-			            <option>pixels</option>
-			            <option>percent</option>
-			          </select>
+                <xul:titledbutton class="popup PixelOrPercent" id="heightunitSelect" value="pixels" 
+                     align="left" popup="PixelOrPercentMenu2" onchange="doValueChanged()" />
 	            </td>
 	          </tr>
 
@@ -121,15 +119,8 @@
       <td>
 							<!-- IMAGE ALIGNMENT -->
         <label class="disabled" for="image.alignType" id="imagealignmentLabel"> Align Text to Image </label>
-        <select size="1" id="image.alignType">
-          <optgroup label="alignment">
-            <option label="top alignment"> at the top </option>
-            <option label="center alignment"> in the center </option>
-            <option label="bottom alignment"> at the bottom </option>
-            <option label="text wrap around left-aligned image"> wrap around right side </option>
-            <option label="text wrap around right-aligned image"> wrap around left side </option>
-          </optgroup>
-        </select>
+        <xul:titledbutton class="popup PixelOrPercent" id="image.alignType" value="at the bottom" align="left" 
+             popup="ImageTextAlignment" onchange="doValueChanged()"/>
 
         <br/>
         <p/>
@@ -140,7 +131,7 @@
                 <label class="disabled" for="imageleftrightInput" id="leftrightLabel"> Left and Right </label>
               </td>
               <td>
-                <input type="text" size="4" length="4" maxlength="4" id="imageleftrightInput" />
+                <input type="text" size="4" length="4" maxlength="4" id="imageleftrightInput" onchange="doValueChanged()"/>
               </td>
               <td valign="middle">
                 <label class="disabled" for="imageleftrightInput" id="leftrighttypeLabel"> pixels </label>
@@ -152,7 +143,7 @@
                 <label class="disabled" for="imagetopbottomInput" id="topbottomLabel"> Top and Bottom </label>
               </td>
               <td>
-                <input type="text" size="4" length="4" maxlength="4" id="imagetopbottomInput" />
+                <input type="text" size="4" length="4" maxlength="4" id="imagetopbottomInput" onchange="doValueChanged()"/>
               </td>
               <td valign="middle">
                 <label class="disabled" for="imagetopbottomInput" id="topbottomtypeLabel"> pixels </label>
@@ -164,7 +155,7 @@
                 <label class="disabled" for="imageborderInput" id="borderLabel"> Solid Border </label>
               </td>
               <td>
-                <input type="text" size="4" length="4" maxlength="4" id="imageborderInput" />
+                <input type="text" size="4" length="4" maxlength="4" id="imageborderInput" onchange="doValueChanged()" />
               </td>
               <td valign="middle">
                 <label class="disabled" for="imageborderInput" id="bordertypeLabel"> pixels </label>
@@ -182,6 +173,31 @@
     <td/>
   </tr>
 </table>
+
+<xul:popup id="PixelOrPercentMenu1">
+  <xul:menu>
+    <xul:menuitem name="pixels" onclick="SetPixelOrPercentByID('widthunitSelect', '')"/>
+    <xul:menuitem name="percent" onclick="SetPixelOrPercentByID('widthunitSelect', '%')"/>
+  </xul:menu>
+</xul:popup>
+
+<xul:popup id="PixelOrPercentMenu2">
+  <xul:menu>
+    <xul:menuitem name="pixels" onclick="SetPixelOrPercentByID('heightunitSelect', '')"/>
+    <xul:menuitem name="percent" onclick="SetPixelOrPercentByID('heightunitSelect', '%')"/>
+  </xul:menu>
+</xul:popup>
+
+<xul:popup id="ImageTextAlignment">
+  <xul:menu>
+    <xul:menuitem name="at the top" onclick="SetImageAlignment('^')"/>
+    <xul:menuitem name="in the center" onclick="SetImageAlignment('.')"/>
+    <xul:menuitem name="at the bottom" onclick="SetImageAlignment('v')"/>
+    <xul:menuitem name="wrap around right side" onclick="SetImageAlignment(']')"/>
+    <xul:menuitem name="wrap around left side" onclick="SetImageAlignment('[')"/>
+  </xul:menu>
+</xul:popup>
+
 </xul:window>
 
 <!-- The old stuff:
