@@ -276,7 +276,7 @@ protected:
                           nsReflowStatus&          aStatus);
 
   nsresult CalculateSizeStandard(nsPresContext*       aPresContext,
-                                 nsIRenderingContext*  aRendContext,
+                                 const nsHTMLReflowState& aReflowState,
                                  nsSize&               aDesiredSize,
                                  nsSize&               aMinSize);
 
