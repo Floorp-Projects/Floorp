@@ -7,15 +7,16 @@ Copyright:   MPL
 Source0:     mozilla-source-DATE.tar.gz
 Source1:     mozilla.sh
 Source2:     mozilla-icon.png
-Source3:     migrate-icon.gif
 Source4:     mozilla.desktop
-Source5:     mozilla-profile.desktop
-Source6:     mozilla-ns-upgrade.desktop
 Source7:     mozilla-make-package.pl
 Source8:     mozilla-copy-package-files.sh
 Source9:     mozicon16.xpm
 Source10:    mozicon50.xpm
 Source11:    rebuild-databases.sh
+Source12:    mozilla-mail.desktop
+Source13:    mozilla-mail-icon.gif
+Source14:    mozilla-compose.desktop
+Source15:    mozilla-compose-icon.gif
 Patch0:      mozilla-navigator-overlay-menu.patch
 Patch1:      mozilla-editor-overlay-menu.patch
 Patch6:      mozilla-prefs-debug.patch
@@ -287,11 +288,11 @@ install -c -m 755 %{SOURCE11} $RPM_BUILD_ROOT/%{prefix}/lib/mozilla/
 /bin/mkdir -p $RPM_BUILD_ROOT/%{prefix}/share/pixmaps/
 /bin/mkdir -p $RPM_BUILD_ROOT/etc/X11/applnk/Internet
 
-/bin/cp %{SOURCE2} $RPM_BUILD_ROOT/%{prefix}/share/pixmaps/
-/bin/cp %{SOURCE3} $RPM_BUILD_ROOT/%{prefix}/share/pixmaps/
-/bin/cp %{SOURCE4} $RPM_BUILD_ROOT/etc/X11/applnk/Internet
-/bin/cp %{SOURCE5} $RPM_BUILD_ROOT/etc/X11/applnk/Internet
-/bin/cp %{SOURCE6} $RPM_BUILD_ROOT/etc/X11/applnk/Internet
+/bin/cp %{SOURCE2} %{SOURCE13} %{SOURCE15} \
+  $RPM_BUILD_ROOT/%{prefix}/share/pixmaps/
+
+/bin/cp %{SOURCE4} %{SOURCE12} %{SOURCE14} \
+  $RPM_BUILD_ROOT/etc/X11/applnk/Internet
 
 # our icons are better!
 /bin/cp %{SOURCE9}  $RPM_BUILD_ROOT/usr/lib/mozilla/icons/
@@ -368,7 +369,8 @@ fi
 %{prefix}/bin/mozilla
 %{prefix}/lib/mozilla/rebuild-databases.sh
 %{prefix}/share/pixmaps/mozilla-icon.png
-%{prefix}/share/pixmaps/migrate-icon.gif
+%{prefix}/share/pixmaps/mozilla-mail-icon.gif
+%{prefix}/share/pixmaps/mozilla-compose-icon.gif
 
 %verify (not md5 mtime size) %{prefix}/lib/mozilla/component.reg
 %verify (not md5 mtime size) %{prefix}/lib/mozilla/components/xptitemp.dat
@@ -393,11 +395,11 @@ fi
 %dir %{prefix}/lib/mozilla/res/entityTables
 
 /etc/X11/applnk/Internet/mozilla.desktop
-/etc/X11/applnk/Internet/mozilla-profile.desktop
-/etc/X11/applnk/Internet/mozilla-ns-upgrade.desktop
 
 %files mail -f /tmp/mozilla-mail.package
 %defattr(-,root,root)
+/etc/X11/applnk/Internet/mozilla-mail.desktop
+/etc/X11/applnk/Internet/mozilla-compose.desktop
 
 %files psm -f /tmp/mozilla-psm.package
 %defattr(-,root,root)
@@ -416,6 +418,10 @@ fi
 
 
 %changelog
+* Sun Sep 16 2001 Christopher Blizzard <blizzard@redhat.com>
+- Add mail and compose .desktop entries.
+- Fix launcher script to handle all of the much improved xremote code.
+
 * Sun Aug 05 2001 Christopher Blizzard <blizzard@redhat.com>
 - Remove alpha compiler patch.
 

@@ -31,29 +31,6 @@
 ## The script will setup all the environment voodoo needed to make
 ## mozilla work.
 
-##
-## Standard shell script disclaimer blurb thing:
-##
-## This script is a hcak.  Its brute force.  Its horrible.  
-## It doesnt use Artificial Intelligence.  It doesnt use Virtual Reality.
-## Its not perl.  Its not python.  It probably wont work unchanged on
-## the "other" thousands of unices.  But it worksforme.
-##
-## If you have an improvement, patch, idea, whatever, on how to make this
-## script better, post it here:
-##
-## news://news.mozilla.org/netscape.public.mozilla.patches
-## news://news.mozilla.org/netscape.public.mozilla.unix
-##
-## 
-
-##
-## Potential improvements:
-##
-## + Run ldd on the program and report missing dlls
-## + All the "other" unices/packages
-##
-
 cmdname=`basename $0`
 
 ## don't leave any core files around
@@ -86,7 +63,7 @@ export LD_LIBRARY_PATH
 
 # Figure out if we need to ser LD_ASSUME_KERNEL for older versions of the JVM.
 
-set_jvm_vars() {
+function set_jvm_vars() {
 
     if [ ! -L /usr/lib/mozilla/plugins/libjavaplugin_oji.so ]; then
 	return;
@@ -139,23 +116,54 @@ set_jvm_vars() {
     esac
 }
 
+function check_running() {
+    $MOZ_PROGRAM -remote 'ping()' 2>/dev/null >/dev/null
+    RETURN_VAL=$?
+    if [ "$RETURN_VAL" -eq "2" ]; then
+      echo 0
+      return 0
+    else
+      echo 1
+      return 1
+    fi
+}
+
+function open_mail() {
+    if [ "${ALREADY_RUNNING}" -eq "1" ]; then
+      exec $MOZ_PROGRAM -remote 'xfeDoCommand(openInbox)' \
+        2>/dev/null >/dev/null
+    else
+      exec $MOZ_PROGRAM $*
+    fi
+}
+
+function open_compose() {
+    if [ "${ALREADY_RUNNING}" -eq "1" ]; then
+      exec $MOZ_PROGRAM -remote 'xfeDoCommand(composeMessage)' \
+        2>/dev/null >/dev/null
+    else
+      exec $MOZ_PROGRAM $*
+    fi
+}
+
+# OK, here's where all the real work gets done
+
+# set our JVM vars
 set_jvm_vars
+
+# check to see if there's an already running instance or not
+ALREADY_RUNNING=`check_running`
 
 # If there is no command line argument at all then try to open a new
 # window in an already running instance.
+if [ "${ALREADY_RUNNING}" == "1" ] && [ -z "$1" ]; then
+  exec $MOZ_PROGRAM -remote "xfeDoCommand(openBrowser)" 2>/dev/null >/dev/null
+fi
 
+# if there's no command line argument and there's not a running
+# instance then just fire up a new copy of the browser
 if [ -z "$1" ]; then
-  $MOZ_PROGRAM -remote "openurl(about:blank,new-window)" 2>/dev/null >/dev/null
-  # no window found?
-  RETURN_VAL=$?
-  if [ "$RETURN_VAL" -eq "2" ]; then
-    exec $MOZ_PROGRAM ${1+"$@"}
-  fi
-  if [ "$RETURN_VAL" -eq "0" ]; then
-    exit 0;
-  fi
-  echo "Error sending command."
-  exit $RETURN_VAL
+  exec $MOZ_PROGRAM 2>/dev/null >/dev/null
 fi
 
 unset RETURN_VAL
@@ -166,37 +174,31 @@ unset RETURN_VAL
 USE_EXIST=0
 opt="$1"
 case "$opt" in
+  -mail)
+      open_mail ${1+"$@"}
+      ;;
+  -compose)
+      open_compose ${1+"$@"}
+      ;;
   -*) ;;
   *) USE_EXIST=1 ;;
 esac
 
-if [ "$USE_EXIST" -eq "1" ]; then
+if [ "${USE_EXIST}" -eq "1" ] && [ "${ALREADY_RUNNING}" -eq "1" ]; then
   # check to make sure that the command contains at least a :/ in it.
   echo $opt | grep -e ':/' 2>/dev/null > /dev/null
   RETURN_VAL=$?
   if [ "$RETURN_VAL" -eq "1" ]; then
-    # does it begin with a / ?
+    # if it doesn't begin with a '/' and it exists when the pwd is
+    # prepended to it then append the full path
     echo $opt | grep -e '^/' 2>/dev/null > /dev/null
-    RETURN_VAL=$?
-    if [ "$RETURN_VAL" -eq "0" ]; then
-      opt="file:$opt"
-    elif [ -e `pwd`/$opt ]; then
-      opt="file://`pwd`/$opt"
-    else
-      opt="http://$opt"
+    if [ "${RETURN_VAL}" -ne "0" ] && [ -e `pwd`/$opt ]; then
+      opt="`pwd`/$opt"
     fi
+    exec $MOZ_PROGRAM -remote "openurl($opt)" 2>/dev/null >/dev/null
   fi
-  # ok, send it
-  $MOZ_PROGRAM -remote "openurl($opt)" 2>/dev/null > /dev/null
-  RETURN_VAL=$?
-  if [ "$RETURN_VAL" -eq "2" ]; then
-    exec $MOZ_PROGRAM ${1+"$@"}
-  fi
-  if [ "$RETURN_VAL" -eq "0" ]; then
-    exit 0;
-  fi
-  echo "Error sending command."
-  exit $RETURN_VAL
+  # just pass it off if it looks like a url
+  exec $MOZ_PROGRAM -remote "openurl($opt,new-window)" 2>/dev/null >/dev/null
 fi
 
 exec $MOZ_PROGRAM ${1+"$@"}

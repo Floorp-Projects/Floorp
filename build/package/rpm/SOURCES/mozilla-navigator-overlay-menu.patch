@@ -1,6 +1,6 @@
---- mozilla/xpfe/browser/resources/content/navigatorOverlay.xul.debug	Tue Aug 14 10:21:49 2001
-+++ mozilla/xpfe/browser/resources/content/navigatorOverlay.xul	Tue Aug 14 10:23:00 2001
-@@ -338,119 +338,7 @@
+--- mozilla/xpfe/browser/resources/content/navigatorOverlay.xul.debug	Sat Sep  8 11:36:22 2001
++++ mozilla/xpfe/browser/resources/content/navigatorOverlay.xul	Sat Sep  8 11:37:14 2001
+@@ -338,120 +338,7 @@
    <menu id="tasksMenu"/>
    
    <menu accesskey="&helpMenuCmd.accesskey;" id="menu_Help"/>
@@ -73,9 +73,10 @@
 -
 -      <menu label="XUL Test Suite">
 -       <menupopup>
--         <menuitem label="#1 Popups" oncommand="window._content.location.href='http://www.mozilla.org/projects/xul/tests/popups.xul'"/>
--         <menuitem label="#2 Descriptions and Labels" oncommand="window._content.location.href='http://www.mozilla.org/projects/xul/tests/label.xul'"/>
--         <menuitem label="#3 Dialog Buttons" oncommand="window._content.location.href='http://www.mozilla.org/projects/xul/tests/buttons.xul'"/>
+-         <menuitem label="#1 Stacks" oncommand="window._content.location.href='http://www.mozilla.org/projects/xul/tests/stacks.xul'"/>
+-         <menuitem label="#2 Popups" oncommand="window._content.location.href='http://www.mozilla.org/projects/xul/tests/popups.xul'"/>
+-         <menuitem label="#3 Descriptions and Labels" oncommand="window._content.location.href='http://www.mozilla.org/projects/xul/tests/label.xul'"/>
+-         <menuitem label="#4 Dialog Buttons" oncommand="window._content.location.href='http://www.mozilla.org/projects/xul/tests/buttons.xul'"/>
 -        </menupopup>
 -      </menu>
 -

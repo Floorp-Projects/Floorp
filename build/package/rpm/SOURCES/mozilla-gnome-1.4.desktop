@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Mozilla
+Comment=Mozilla
+Exec=/usr/bin/mozilla %u
+Icon=mozilla-icon.png
+Terminal=0
+Type=Application
