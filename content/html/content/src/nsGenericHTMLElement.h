@@ -71,6 +71,9 @@ class nsILayoutHistoryState;
 struct nsRect;
 
 
+/**
+ * A common superclass for HTML elements
+ */
 class nsGenericHTMLElement : public nsGenericElement
 {
 public:
@@ -81,13 +84,24 @@ public:
   nsresult Init(nsINodeInfo *aNodeInfo);
 #endif
 
+  /** Call on shutdown to release globals */
   static void Shutdown();
 
+  // nsISupports
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
+  /**
+   * Handle QI for the standard DOM interfaces (DOMNode, DOMElement,
+   * DOMHTMLElement) and handles tearoffs for other standard interfaces.
+   * @param aElement the element as nsIDOMHTMLElement*
+   * @param aIID the IID to QI to
+   * @param aInstancePtr the QI'd method [OUT]
+   * @see nsGenericHTMLElementTearoff
+   */
   nsresult DOMQueryInterface(nsIDOMHTMLElement *aElement, REFNSIID aIID,
                              void **aInstancePtr);
 
+  // From nsGenericElement
   NS_METHOD CopyInnerTo(nsIContent* aSrcContent,
                         nsGenericHTMLElement* aDest,
                         PRBool aDeep);
@@ -140,6 +154,12 @@ public:
   nsresult GetClientWidth(PRInt32* aClientWidth);
   nsresult ScrollIntoView(PRBool aTop);
 
+  /**
+   * Get the frame's offset information for offsetTop/Left/Width/Height.
+   * @param aRect the offset information [OUT]
+   * @param aOffsetParent the parent the offset is relative to (offsetParent)
+   *        [OUT]
+   */
   nsresult GetOffsetRect(nsRect& aRect,
                          nsIContent** aOffsetParent);
   nsresult GetScrollInfo(nsIScrollableView **aScrollableView, float *aP2T,
@@ -175,6 +195,10 @@ public:
 #endif
   NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
 
+  /**
+   * Standard anchor HandleDOMEvent, used by A, AREA and LINK (parameters
+   * are the same as HandleDOMEvent)
+   */
   nsresult HandleDOMEventForAnchors(nsIContent* aOuter,
                                     nsIPresContext* aPresContext,
                                     nsEvent* aEvent,
@@ -213,7 +237,7 @@ public:
    * GetFormControlFrameFor)
    *
    * @param aFlushContent whether to flush the content sink
-   * @return the primary form control frame
+   * @return the primary form control frame (or null)
    */
   nsIFormControlFrame* GetFormControlFrame(PRBool aFlushContent)
   {
@@ -243,136 +267,462 @@ public:
 
   // Attribute parsing utilities
 
+  /**
+   * Structure for a mapping from int (enum) values to strings.  When you use
+   * it you generally create an array of them.
+   * Instantiate like this:
+   * EnumTable myTable[] = {
+   *   { "string1", 1 },
+   *   { "string2", 2 },
+   *   { 0 }
+   * }
+   */
   struct EnumTable {
+    /** The string the value maps to */
     const char* tag;
+    /** The enum value that maps to this string */
     PRInt32 value;
   };
 
+  /**
+   * Map a string to its enum value and return result as HTMLValue
+   * (case-insensitive matching)
+   *
+   * @param aValue the string to find the value for
+   * @param aTable the enumeration to map with
+   * @param aResult the enum mapping [OUT]
+   * @return whether the enum value was found or not
+   */
   static PRBool ParseEnumValue(const nsAString& aValue,
                                EnumTable* aTable,
                                nsHTMLValue& aResult);
 
+  /**
+   * Map a string to its enum value and return result as HTMLValue
+   *
+   * @param aValue the string to find the value for
+   * @param aTable the enumeration to map with
+   * @param aResult the enum mapping [OUT]
+   * @return whether the enum value was found or not
+   */
   static PRBool ParseCaseSensitiveEnumValue(const nsAString& aValue,
                                             EnumTable* aTable,
                                             nsHTMLValue& aResult);
 
+  /**
+   * Map an enum HTMLValue to its string
+   *
+   * @param aValue the HTMLValue with the int in it
+   * @param aTable the enumeration to map with
+   * @param aResult the string the value maps to [OUT]
+   * @return whether the enum value was found or not
+   */
   static PRBool EnumValueToString(const nsHTMLValue& aValue,
                                   EnumTable* aTable,
                                   nsAString& aResult);
 
+  /**
+   * Parse a string into an integer or a percentage (n or n%)
+   *
+   * @param aString the string to convert
+   * @param aResult the resulting HTMLValue [OUT]
+   * @param aValueUnit the unit to use if it is not a percentage
+   *        (eHTMLUnit_Pixel or an integer type)
+   */
   static PRBool ParseValueOrPercent(const nsAString& aString,
                                     nsHTMLValue& aResult,
                                     nsHTMLUnit aValueUnit);
 
+  /**
+   * Parse a string into an integer, proportional or a percentage (n, n* or n%)
+   *
+   * @param aString the string to convert
+   * @param aResult the resulting HTMLValue [OUT]
+   * @param aValueUnit the unit to use if it is not a percentage / proportional
+   *        (eHTMLUnit_Pixel or an integer type)
+   */
   static PRBool ParseValueOrPercentOrProportional(const nsAString& aString,
                                                   nsHTMLValue& aResult, 
                                                   nsHTMLUnit aValueUnit);
 
+  /**
+   * Convert an integer, pixel or percent to string (n, n or n%)
+   * @param aValue the value to convert
+   * @param aResult the resulting string [OUT]
+   * @return whether it was able to be converted (if it was the proper type)
+   * XXX It is absolutely pointless to have this when we have
+   * ValueOrPercentOrProportionalToString.
+   */
   static PRBool ValueOrPercentToString(const nsHTMLValue& aValue,
                                        nsAString& aResult);
 
+  /**
+   * Convert an integer, pixel percent or proportional to string
+   * (n, n, n% or n*)
+   * @param aValue the value to convert
+   * @param aResult the resulting string [OUT]
+   * @return whether it was able to be converted (if it was the proper type)
+   */
   static PRBool ValueOrPercentOrProportionalToString(const nsHTMLValue& aValue,
                                                      nsAString& aResult);
 
+  /**
+   * Parse a string value into an int or pixel HTMLValue with minimum value
+   *
+   * @param aString the string to parse
+   * @param aMin the minimum value (if value is less it will be bumped up)
+   * @param aResult the resulting HTMLValue [OUT]
+   * @param aValueUnit the unit to use (eHTMLUnit_Pixel or Integer)
+   * @return whether the value could be parsed
+   */
   static PRBool ParseValue(const nsAString& aString, PRInt32 aMin,
                            nsHTMLValue& aResult, nsHTMLUnit aValueUnit);
 
+  /**
+   * Parse a string value into an int or pixel HTMLValue with minimum value
+   *
+   * @param aString the string to parse
+   * @param aMin the minimum value (if value is less it will be bumped up)
+   * @param aMin the maximum value (if value is greater it will be chopped down)
+   * @param aResult the resulting HTMLValue [OUT]
+   * @param aValueUnit the unit to use (eHTMLUnit_Pixel or Integer)
+   * @return whether the value could be parsed
+   */
   static PRBool ParseValue(const nsAString& aString, PRInt32 aMin,
                            PRInt32 aMax, nsHTMLValue& aResult,
                            nsHTMLUnit aValueUnit);
 
+  /**
+   * Parse a string into a color HTMLValue (with hexes or color names)
+   *
+   * @param aString the string to parse
+   * @param aDocument the document (to find out whether we're in quirks mode)
+   * @param aResult the resulting HTMLValue [OUT]
+   * @return whether the value could be parsed
+   */
   static PRBool ParseColor(const nsAString& aString,
                            nsIDocument* aDocument, nsHTMLValue& aResult);
 
+  /**
+   * Parse a color into a string value (hex or color name)
+   *
+   * @param aValue the HTMLValue to parse
+   * @param aResult the resulting string
+   * @return whether the value could be converted
+   */
   static PRBool ColorToString(const nsHTMLValue& aValue,
                               nsAString& aResult);
 
+  /**
+   * Parse common attributes (currently dir and lang, may be more)
+   *
+   * @param aAttribute the attr to parse
+   * @param aValue the value to parse
+   * @param aResult the resulting HTMLValue
+   * @return whether the value was parsed
+   */
   static PRBool ParseCommonAttribute(nsIAtom* aAttribute, 
                                      const nsAString& aValue, 
                                      nsHTMLValue& aResult);
+  /**
+   * Parse an alignment attribute (top/middle/bottom/baseline)
+   *
+   * @param aString the string to parse
+   * @param aResult the resulting HTMLValue
+   * @return whether the value was parsed
+   */
   static PRBool ParseAlignValue(const nsAString& aString,
                                 nsHTMLValue& aResult);
 
+  /**
+   * Parse a div align string to value (left/right/center/middle/justify)
+   *
+   * @param aString the string to parse
+   * @param aResult the resulting HTMLValue
+   * @return whether the value was parsed
+   */
   PRBool ParseDivAlignValue(const nsAString& aString,
                             nsHTMLValue& aResult) const;
+  /**
+   * Convert a div align value to string
+   *
+   * @param aValue the value to convert
+   * @param aResult the resulting string
+   * @return whether the value was converted
+   */
   PRBool DivAlignValueToString(const nsHTMLValue& aValue,
                                nsAString& aResult) const;
 
+  /**
+   * Convert a table halign string to value (left/right/center/char/justify)
+   *
+   * @param aString the string to parse
+   * @param aResult the resulting HTMLValue
+   * @return whether the value was parsed
+   */
   PRBool ParseTableHAlignValue(const nsAString& aString,
                                nsHTMLValue& aResult) const;
+  /**
+   * Convert a table halign value to string
+   *
+   * @param aValue the value to convert
+   * @param aResult the resulting string
+   * @return whether the value was converted
+   */
   PRBool TableHAlignValueToString(const nsHTMLValue& aValue,
                                   nsAString& aResult) const;
 
+  /**
+   * Convert a table cell halign string to value
+   *
+   * @param aString the string to parse
+   * @param aResult the resulting HTMLValue
+   * @return whether the value was parsed
+   */
   PRBool ParseTableCellHAlignValue(const nsAString& aString,
                                    nsHTMLValue& aResult) const;
+  /**
+   * Convert a table cell halign value to string
+   *
+   * @param aValue the value to convert
+   * @param aResult the resulting string
+   * @return whether the value was converted
+   */
   PRBool TableCellHAlignValueToString(const nsHTMLValue& aValue,
                                       nsAString& aResult) const;
 
+  /**
+   * Convert a table valign string to value (left/right/center/char/justify/
+   * abscenter/absmiddle/middle)
+   *
+   * @param aString the string to parse
+   * @param aResult the resulting HTMLValue
+   * @return whether the value was parsed
+   */
   static PRBool ParseTableVAlignValue(const nsAString& aString,
                                       nsHTMLValue& aResult);
-
+  /**
+   * Convert a table valign value to string
+   *
+   * @param aValue the value to convert
+   * @param aResult the resulting string
+   * @return whether the value was converted
+   */
   static PRBool TableVAlignValueToString(const nsHTMLValue& aValue,
                                          nsAString& aResult);
 
+  /**
+   * Convert an align value to string (left/right/texttop/baseline/center/
+   * bottom/top/middle/absbottom/abscenter/absmiddle)
+   *
+   * @param aValue the value to convert
+   * @param aResult the resulting string
+   * @return whether the value was converted
+   */
   static PRBool AlignValueToString(const nsHTMLValue& aValue,
                                    nsAString& aResult);
 
+  /**
+   * Convert a valign value to string
+   *
+   * @param aValue the value to convert
+   * @param aResult the resulting string
+   * @return whether the value was converted
+   */
   static PRBool VAlignValueToString(const nsHTMLValue& aValue,
                                     nsAString& aResult);
 
+  /**
+   * Convert an image attribute to value (width, height, hspace, vspace, border)
+   *
+   * @param aAttribute the attribute to parse
+   * @param aString the string to parse
+   * @param aResult the resulting HTMLValue
+   * @return whether the value was parsed
+   */
   static PRBool ParseImageAttribute(nsIAtom* aAttribute,
                                     const nsAString& aString,
                                     nsHTMLValue& aResult);
-
+  /**
+   * Convert an image attribute to string
+   *
+   * @param aAttribute the attribute to parse
+   * @param aValue the value to convert
+   * @param aResult the resulting string
+   * @return whether the value was converted
+   */
   static PRBool ImageAttributeToString(nsIAtom* aAttribute,
                                        const nsHTMLValue& aValue,
                                        nsAString& aResult);
 
+  /**
+   * Convert a frameborder string to value (yes/no/1/0)
+   *
+   * @param aString the string to parse
+   * @param aResult the resulting HTMLValue
+   * @return whether the value was parsed
+   */
   static PRBool ParseFrameborderValue(const nsAString& aString,
                                       nsHTMLValue& aResult);
-
+  /**
+   * Convert a frameborder value to string
+   *
+   * @param aValue the value to convert
+   * @param aResult the resulting string
+   * @return whether the value was converted
+   */
   static PRBool FrameborderValueToString(const nsHTMLValue& aValue,
                                          nsAString& aResult);
 
+  /**
+   * Convert a scrolling string to value (yes/no/on/off/scroll/noscroll/auto)
+   *
+   * @param aString the string to parse
+   * @param aResult the resulting HTMLValue
+   * @return whether the value was parsed
+   */
   static PRBool ParseScrollingValue(const nsAString& aString,
                                     nsHTMLValue& aResult);
-
+  /**
+   * Convert a scrolling value to string
+   *
+   * @param aValue the value to convert
+   * @param aResult the resulting string
+   * @return whether the value was converted
+   */
   static PRBool ScrollingValueToString(const nsHTMLValue& aValue,
                                        nsAString& aResult);
 
+  /**
+   * Create the style struct from the style attr.  Used when an element is first
+   * put into a document.  Only has an effect if the old value is a string.
+   */
   nsresult  ReparseStyleAttribute(void);
+  /**
+   * Parse a style attr value into a CSS rulestruct (or, if there is no
+   * document, leave it as a string) and return as HTMLValue.
+   *
+   * @param aValue the value to parse
+   * @param aResult the resulting HTMLValue [OUT]
+   */
   nsresult  ParseStyleAttribute(const nsAString& aValue,
                                 nsHTMLValue& aResult);
 
-  /** Attribute Mapping Helpers
+  /*
+   * Attribute Mapping Helpers
    *
    * All attributes that are mapped into style contexts must have a 
    * matched set of mapping function and impact getter
    */
 
+  /**
+   * A style attribute mapping function for the most common attributes, to be
+   * called by subclasses' attribute mapping functions.  Currently handles
+   * dir and lang, could handle others.
+   *
+   * @param aAttributes the list of attributes to map
+   * @param aData the returned rule data [INOUT]
+   * @see GetAttributeMappingFunction
+   */
   static void MapCommonAttributesInto(const nsIHTMLMappedAttributes* aAttributes, 
                                       nsRuleData* aRuleData);
+  /**
+   * Get the style impact of common attributes (dir, lang and _baseHref
+   * currently).  To be called from GetMappedAttributeImpact().
+   *
+   * @param aAttribute the attribute to test for impact
+   * @param aHint the impact (NS_STYLE_HINT_*)
+   * @return whether the impact was set
+   */
   static PRBool GetCommonMappedAttributesImpact(const nsIAtom* aAttribute,
                                                 PRInt32& aHint);
 
+  /**
+   * Get the style impact of image attributes (width, height, hspace and vspace
+   * currently).  To be called from GetMappedAttributeImpact().
+   *
+   * @param aAttribute the attribute to test for impact
+   * @param aHint the impact (NS_STYLE_HINT_*)
+   * @return whether the impact was set
+   */
   static PRBool GetImageMappedAttributesImpact(const nsIAtom* aAttribute,
                                                PRInt32& aHint);
+  /**
+   * Get the style impact of image align attributes (align currently).  To be
+   * called from GetMappedAttributeImpact().
+   *
+   * @param aAttribute the attribute to test for impact
+   * @param aHint the impact (NS_STYLE_HINT_*)
+   * @return whether the impact was set
+   */
   static PRBool GetImageAlignAttributeImpact(const nsIAtom* aAttribute,
                                              PRInt32& aHint);
 
+  /**
+   * Helper to map the align attribute into a style struct.
+   *
+   * @param aAttributes the list of attributes to map
+   * @param aData the returned rule data [INOUT]
+   * @see GetAttributeMappingFunction
+   */
   static void MapAlignAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
                                     nsRuleData* aData);
+  /**
+   * Helper to map the image border attribute into a style struct.
+   *
+   * @param aAttributes the list of attributes to map
+   * @param aData the returned rule data [INOUT]
+   * @see GetAttributeMappingFunction
+   */
   static void MapImageBorderAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
                                           nsRuleData* aData);
+  /**
+   * Helper to map the image margin attribute into a style struct.
+   *
+   * @param aAttributes the list of attributes to map
+   * @param aData the returned rule data [INOUT]
+   * @see GetAttributeMappingFunction
+   */
   static void MapImageMarginAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
                                           nsRuleData* aData);
+  /**
+   * Helper to map the image position attribute into a style struct.
+   *
+   * @param aAttributes the list of attributes to map
+   * @param aData the returned rule data [INOUT]
+   * @see GetAttributeMappingFunction
+   */
   static void MapImagePositionAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
                                             nsRuleData* aData);
+  /**
+   * Get the style impact of image border attributes (border currently).  To be
+   * called from GetMappedAttributeImpact().
+   *
+   * @param aAttribute the attribute to test for impact
+   * @param aHint the impact (NS_STYLE_HINT_*)
+   * @return whether the impact was set
+   */
   static PRBool GetImageBorderAttributeImpact(const nsIAtom* aAttribute,
                                               PRInt32& aHint);
 
+  /**
+   * Helper to map the background attributes (currently background and bgcolor)
+   * into a style struct.
+   *
+   * @param aAttributes the list of attributes to map
+   * @param aData the returned rule data [INOUT]
+   * @see GetAttributeMappingFunction
+   */
   static void MapBackgroundAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                                           nsRuleData* aData);
+  /**
+   * Get the style impact of background attributes (background and bgcolor
+   * currently).  To be called from GetMappedAttributeImpact().
+   *
+   * @param aAttribute the attribute to test for impact
+   * @param aHint the impact (NS_STYLE_HINT_*)
+   * @return whether the impact was set
+   */
   static PRBool GetBackgroundAttributesImpact(const nsIAtom* aAttribute,
                                               PRInt32& aHint);
 
@@ -434,27 +784,63 @@ public:
   static PRBool RestoreFormControlState(nsIHTMLContent* aContent,
                                         nsIFormControl* aControl);
 
+  /**
+   * Get the presentation context for a content node.
+   * @param aContent the content node
+   * @param aPresContext the presentation context [OUT]
+   */
   static nsresult GetPresContext(nsIHTMLContent* aContent,
                                  nsIPresContext** aPresContext);
 
+  /**
+   * Resolve the base URL from a _baseHref attribute (could be empty) and
+   * from the document.
+   *
+   * @param aBaseHref the _baseHref attribute
+   * @param aDocument the document
+   * @param aResult the base URL
+   */
   static nsresult GetBaseURL(const nsHTMLValue& aBaseHref,
                              nsIDocument* aDocument,
                              nsIURI** aResult);
 
   // Form Helper Routines
+  /**
+   * Find an ancestor of this content node which is a form (could be null)
+   * @param aForm the form ancestore [OUT]
+   */
   nsresult FindForm(nsIDOMHTMLFormElement **aForm);
 
+  /**
+   * Find the form for this element and set aFormControl's form to it
+   * (aFormControl is passed in to avoid QI)
+   *
+   * @param aFormControl the form control to set the form for
+   */
   nsresult FindAndSetForm(nsIFormControl *aFormControl);
 
-  // See if the content object is in a document that has nav-quirks
-  // mode enabled.
+  /**
+   * See if the document being tested has nav-quirks mode enabled.
+   * @param doc the document
+   */
   static PRBool InNavQuirksMode(nsIDocument* aDoc);
 
+  /**
+   * Helper for the form subclasses of nsGenericHTMLElement to take care
+   * of fixing up form.elements when name, id and type change
+   *
+   * @param aForm the form the control is in
+   * @param aNameSpaceID the namespace of the attr
+   * @param aName the name of the attr
+   * @param aValue the value of the attr
+   * @param aNotify whether to notify the document of the attribute change
+   */
   nsresult SetFormControlAttribute(nsIForm* aForm, PRInt32 aNameSpaceID,
                                    nsIAtom* aName,
                                    const nsAString& aValue,
                                    PRBool aNotify);
 
+  /** The list of attributes */
   nsHTMLAttributes* mAttributes;
 
   // Helper functions for <a> and <area>
@@ -508,15 +894,34 @@ public:
   static nsresult GetHashFromHrefString(const nsAString &aHref,
                                         nsAString& aHash);
 protected:
+  /**
+   * Focus or blur the element.  This is what you should call if you want to
+   * *cause* a focus or blur on your element.  SetFocus / SetBlur are the
+   * methods where you want to catch what occurs on your element.
+   * @param aDoFocus true to focus, false to blur
+   */
   nsresult SetElementFocus(PRBool aDoFocus);
+  /**
+   * Register or unregister an access key to this element based on the
+   * accesskey attribute.
+   * @param aDoReg true to register, false to unregister
+   */
   nsresult RegUnRegAccessKey(PRBool aDoReg);
 
+  /**
+   * Determine whether an attribute is an event (onclick, etc.)
+   * @param aName the attribute
+   * @return whether the name is an event handler name
+   */
   PRBool IsEventName(nsIAtom* aName);
 };
 
 
 //----------------------------------------------------------------------
 
+/**
+ * A helper class to subclass for leaf elements.
+ */
 class nsGenericHTMLLeafElement : public nsGenericHTMLElement {
 public:
   nsGenericHTMLLeafElement();
@@ -594,6 +999,9 @@ public:
 
 //----------------------------------------------------------------------
 
+/**
+ * A helper class to subclass for elements that can contain children
+ */
 class nsGenericHTMLContainerElement : public nsGenericHTMLElement
 {
 public:
@@ -643,12 +1051,16 @@ public:
                            PRBool aDeepSetDocument);
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
 
+  /** The list of children */
   nsSmallVoidArray mChildren;
 protected:
   /**
    * ReplaceContentsWithText will take the aText string and make sure
    * that the only child of |this| is a textnode which corresponds to
    * that string.
+   *
+   * @param aText the text to put in
+   * @param aNotify whether to notify the document of child adds/removes
    */
   nsresult ReplaceContentsWithText(const nsAString& aText, PRBool aNotify);
   /**
@@ -657,12 +1069,17 @@ protected:
    * completely ignores any non-text-node children of |this|; in
    * particular it does not descend into any children of |this| that
    * happen to be container elements.
+   *
+   * @param aText the resulting text [OUT]
    */
   nsresult GetContentsAsText(nsAString& aText);
 };
 
 //----------------------------------------------------------------------
 
+/**
+ * A helper class for form elements that can contain children
+ */
 class nsGenericHTMLContainerFormElement : public nsGenericHTMLContainerElement,
                                           public nsIFormControl
 {
@@ -701,11 +1118,15 @@ public:
   }
 
 protected:
+  /** The form that contains this control */
   nsIForm* mForm;
 };
 
 //----------------------------------------------------------------------
 
+/**
+ * A helper class for form elements that can contain children
+ */
 class nsGenericHTMLLeafFormElement : public nsGenericHTMLLeafElement,
                                      public nsIFormControl
 {
@@ -744,6 +1165,7 @@ public:
   }
 
 protected:
+  /** The form that contains this control */
   nsIForm* mForm;
 };
 
