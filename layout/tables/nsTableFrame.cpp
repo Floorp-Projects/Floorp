@@ -1060,11 +1060,8 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
   if (disp->mVisible) {
     const nsStyleSpacing* spacing =
       (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-
-    // Use our parent's color style structure, because we're a pseudo frame
-    // and that the style system marks us as having a transparent background
-    const nsStyleColor* color;
-    mGeometricParent->GetStyleData(eStyleStruct_Color, (nsStyleStruct*&)color);
+    const nsStyleColor* color =
+      (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
 
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                     aDirtyRect, mRect, *color);
@@ -2705,7 +2702,6 @@ void nsTableFrame::MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBo
   aSpacingStyle.mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_OUTSET; 
   aSpacingStyle.mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_OUTSET; 
   aSpacingStyle.mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_OUTSET; 
-  
 
   nsIStyleContext* styleContext = mStyleContext; 
   const nsStyleColor* colorData = (const nsStyleColor*)
@@ -2817,7 +2813,13 @@ NS_METHOD nsTableFrame::DidSetStyleContext(nsIPresContext* aPresContext)
 #ifdef NOISY_STYLE
   printf("nsTableFrame::DidSetStyleContext \n");
 #endif
+  // XXX This may have been needed before we had a style system, but it's not
+  // needed now. It's forcing the table to always have a border (which is bad),
+  // and it's duplicating the border-syle and border-color information that's
+  // in the ua.css
+#if 0
   MapBorderMarginPadding(aPresContext);
+#endif
   return NS_OK;
 }
 
