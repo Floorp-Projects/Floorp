@@ -87,7 +87,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   }
   else {
     PL_strcpy(fileBuffer, converted);
-    delete [] converted;
+    nsMemory::Free( converted );
   }
 
   char *title = ConvertToFileSystemCharset(mTitle.GetUnicode());
@@ -121,7 +121,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
           pathStr.AssignWithConversion(fileBuffer);
         else {
           pathStr.Assign(unichar);
-          delete [] unichar;
+          nsMemory::Free( unichar );
         }
           
         if (result == PR_TRUE) {
@@ -168,14 +168,14 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     mSelectedType = (PRInt16)ofn.nFilterIndex;
 
     // Store the current directory in mDisplayDirectory
-    char* newCurrentDirectory = new char[MAX_PATH+1];
+    char* newCurrentDirectory = NS_STATIC_CAST( char*, nsMemory::Alloc( MAX_PATH+1 ) );
     VERIFY(::GetCurrentDirectory(MAX_PATH, newCurrentDirectory) > 0);
     mDisplayDirectory->InitWithPath(newCurrentDirectory);
-    delete[] newCurrentDirectory;
+    nsMemory::Free( newCurrentDirectory );
 
     // Clean up filter buffers
     if (filterBuffer)
-      delete[] filterBuffer;
+      nsMemory::Free( filterBuffer );
 
     // Set user-selected location of file or directory
     if (result == PR_TRUE) {
@@ -187,7 +187,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   }
 
   if (title)
-    delete[] title;
+    nsMemory::Free( title );
 
   if (result)
       *retval = returnOK;
@@ -397,7 +397,7 @@ char * nsFilePicker::ConvertToFileSystemCharset(const PRUnichar *inString)
     PRInt32 outLength;
     rv = mUnicodeEncoder->GetMaxLength(inString, inLength, &outLength);
     if (NS_SUCCEEDED(rv)) {
-      outString = new char[outLength+1];
+      outString = NS_STATIC_CAST( char*, nsMemory::Alloc( outLength+1 ) );
       if (nsnull == outString) {
         return nsnull;
       }
@@ -434,7 +434,7 @@ PRUnichar * nsFilePicker::ConvertFromFileSystemCharset(const char *inString)
     PRInt32 outLength;
     rv = mUnicodeDecoder->GetMaxLength(inString, inLength, &outLength);
     if (NS_SUCCEEDED(rv)) {
-      outString = new PRUnichar[outLength+1];
+      outString = NS_STATIC_CAST( PRUnichar*, nsMemory::Alloc( outLength+1 * sizeof( PRUnichar ) ) );
       if (nsnull == outString) {
         return nsnull;
       }
