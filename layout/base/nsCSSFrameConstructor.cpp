@@ -4399,16 +4399,61 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*            aPresShel
 }
 
 nsresult
-nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell, 
-                                           nsIPresContext*          aPresContext,
-                                           nsFrameConstructorState& aState,
-                                           nsIContent*              aContent,
-                                           nsIFrame*                aParentFrame,
-                                           nsIAtom*                 aTag,
-                                           PRInt32                  aNameSpaceID,
-                                           nsIStyleContext*         aStyleContext,
-                                           nsFrameItems&            aFrameItems)
+nsCSSFrameConstructor::ConstructTextFrame(nsIPresShell*            aPresShell, 
+                                          nsIPresContext*          aPresContext,
+                                          nsFrameConstructorState& aState,
+                                          nsIContent*              aContent,
+                                          nsIFrame*                aParentFrame,
+                                          nsIStyleContext*         aStyleContext,
+                                          nsFrameItems&            aFrameItems)
 {
+  // process pending pseudo frames. whitespace doesn't have an effect.
+  if (!aState.mPseudoFrames.IsEmpty() && !IsOnlyWhiteSpace(aContent))
+    ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems);
+
+  nsIFrame* newFrame = nsnull;
+  nsresult rv = NS_NewTextFrame(aPresShell, &newFrame);
+  if (NS_FAILED(rv) || !newFrame)
+    return rv;
+
+  // Set the frame state bit for text frames to mark them as replaced.
+  // XXX kipp: temporary
+  nsFrameState state;
+  newFrame->GetFrameState(&state);
+  newFrame->SetFrameState(state | NS_FRAME_REPLACED_ELEMENT);
+
+  InitAndRestoreFrame(aPresContext, aState, aContent, aParentFrame,
+                      aStyleContext, nsnull, newFrame);
+
+  // We never need to create a view for a text frame.
+
+  // Set the frame's initial child list to null.
+  newFrame->SetInitialChildList(aPresContext, nsnull, nsnull);
+
+  // Add the newly constructed frame to the flow
+  aFrameItems.AddChild(newFrame);
+
+  // Text frames don't go in the content->frame hash table, because
+  // they're anonymous. This keeps the hash table smaller
+
+  return rv;
+}
+
+nsresult
+nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell, 
+                                          nsIPresContext*          aPresContext,
+                                          nsFrameConstructorState& aState,
+                                          nsIContent*              aContent,
+                                          nsIFrame*                aParentFrame,
+                                          nsIAtom*                 aTag,
+                                          PRInt32                  aNameSpaceID,
+                                          nsIStyleContext*         aStyleContext,
+                                          nsFrameItems&            aFrameItems)
+{
+  // Ignore the tag if it's not HTML content
+  if (aNameSpaceID != kNameSpaceID_HTML)
+    return NS_OK;
+
   PRBool    processChildren = PR_FALSE;  // whether we should process child content
   PRBool    isAbsolutelyPositioned = PR_FALSE;
   PRBool    isFixedPositioned = PR_FALSE;
@@ -4423,414 +4468,396 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
   PRBool    isPositionedContainingBlock = PR_FALSE;
   nsresult  rv = NS_OK;
 
-  if (nsLayoutAtoms::textTagName == aTag) {
-    PRBool isWhitespace = IsOnlyWhiteSpace(aContent);
-    // process pending pseudo frames. whitespace doesn't have an effect.
-    if (!aState.mPseudoFrames.IsEmpty() && !isWhitespace) { 
-      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems);
-    }
-    rv = NS_NewTextFrame(aPresShell, &newFrame);
-    // Text frames don't go in the content->frame hash table, because
-    // they're anonymous. This keeps the hash table smaller
-    addToHashTable = PR_FALSE;
-    isReplaced = PR_TRUE;   // XXX kipp: temporary
+  // See if the element is absolute or fixed positioned
+  const nsStyleDisplay* display = (const nsStyleDisplay*)
+    aStyleContext->GetStyleData(eStyleStruct_Display);
+  if (NS_STYLE_POSITION_ABSOLUTE == display->mPosition) {
+    isAbsolutelyPositioned = PR_TRUE;
+  }
+  else if (NS_STYLE_POSITION_FIXED == display->mPosition) {
+    isFixedPositioned = PR_TRUE;
   }
   else {
-    // Ignore the tag if it's not HTML content
-    if (aNameSpaceID == kNameSpaceID_HTML) {
-      // See if the element is absolute or fixed positioned
-      const nsStyleDisplay* display = (const nsStyleDisplay*)
-        aStyleContext->GetStyleData(eStyleStruct_Display);
-      if (NS_STYLE_POSITION_ABSOLUTE == display->mPosition) {
-        isAbsolutelyPositioned = PR_TRUE;
-      }
-      else if (NS_STYLE_POSITION_FIXED == display->mPosition) {
-        isFixedPositioned = PR_TRUE;
-      }
-      else {
-        if (NS_STYLE_FLOAT_NONE != display->mFloats) {
-          isFloating = PR_TRUE;
-        }
-        if (NS_STYLE_POSITION_RELATIVE == display->mPosition) {
-          isRelativePositioned = PR_TRUE;
-        }
-      }
-
-      // Create a frame based on the tag
-      if (nsHTMLAtoms::img == aTag) {
-        isReplaced = PR_TRUE;
-        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-        }
-        // XXX If image display is turned off, then use ConstructAlternateFrame()
-        // instead...
-        rv = NS_NewImageFrame(aPresShell, &newFrame);
-      }
-      else if (nsHTMLAtoms::hr == aTag) {
-        isReplaced = PR_TRUE;
-        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-        }
-        rv = NS_NewHRFrame(aPresShell, &newFrame);
-      }
-      else if (nsHTMLAtoms::br == aTag) {
-        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-        }
-        rv = NS_NewBRFrame(aPresShell, &newFrame);
-        isReplaced = PR_TRUE;
-        // BR frames don't go in the content->frame hash table: typically
-        // there are many BR content objects and this would increase the size
-        // of the hash table, and it's doubtful we need the mapping anyway
-        addToHashTable = PR_FALSE;
-      }
-      else if (nsHTMLAtoms::wbr == aTag) {
-        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-        }
-        rv = NS_NewWBRFrame(aPresShell, &newFrame);
-      }
-      else if (nsHTMLAtoms::input == aTag) {
-        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-        }
-        isReplaced = PR_TRUE;
-        rv = CreateInputFrame(aPresShell, aPresContext,
-                              aContent, newFrame, aStyleContext);
-      }
-      else if (nsHTMLAtoms::textarea == aTag) {
-        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-        }
-        isReplaced = PR_TRUE;
-        rv = ConstructTextControlFrame(aPresShell, aPresContext, newFrame, aContent);
-      }
-      else if (nsHTMLAtoms::select == aTag) {
-        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-        }
-        isReplaced = PR_TRUE;
-        rv = ConstructSelectFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                                  aTag, aStyleContext, newFrame,  processChildren,
-                                  isAbsolutelyPositioned, frameHasBeenInitialized,
-                                  isFixedPositioned, aFrameItems);
-      }
-      else if (nsHTMLAtoms::object == aTag) {
-        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-        }
-        isReplaced = PR_TRUE;
-        rv = NS_NewObjectFrame(aPresShell, &newFrame);
-        processChildren = PR_FALSE;
-      }
-      else if (nsHTMLAtoms::applet == aTag) {
-        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-        }
-        isReplaced = PR_TRUE;
-        rv = NS_NewObjectFrame(aPresShell, &newFrame);
-      }
-      else if (nsHTMLAtoms::embed == aTag) {
-        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-        }
-        isReplaced = PR_TRUE;
-        rv = NS_NewObjectFrame(aPresShell, &newFrame);
-      }
-      else if (nsHTMLAtoms::fieldset == aTag) {
-        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-        }
-#define DO_NEWFIELDSET
-#ifdef DO_NEWFIELDSET
-        rv = ConstructFieldSetFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                                    aTag, aStyleContext, newFrame,  processChildren,
-                                    isAbsolutelyPositioned, frameHasBeenInitialized,
-                                    isFixedPositioned);
-        processChildren = PR_FALSE;
-#else
-        rv = NS_NewFieldSetFrame(aPresShell, &newFrame, isAbsolutelyPositioned ? NS_BLOCK_SPACE_MGR : 0);
-        processChildren = PR_TRUE;
-#endif
-      }
-      else if (nsHTMLAtoms::legend == aTag) {
-        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-        }
-        rv = NS_NewLegendFrame(aPresShell, &newFrame);
-        processChildren = PR_TRUE;
-        canBePositioned = PR_FALSE;
-      }
-      else if (nsHTMLAtoms::form == aTag) {
-        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-        }
-        PRBool  isOutOfFlow = isFloating || isAbsolutelyPositioned || isFixedPositioned;
-
-        rv = NS_NewFormFrame(aPresShell, &newFrame,
-                             isOutOfFlow ? NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT : 0);
-        processChildren = PR_TRUE;
-
-        // A form frame is a block frame therefore it can contain floaters
-        isFloaterContainer = PR_TRUE;
-
-        // See if it's a containing block for absolutely positioned elements
-        isPositionedContainingBlock = isAbsolutelyPositioned || isFixedPositioned || isRelativePositioned;
-      }
-      else if (nsHTMLAtoms::frameset == aTag) {
-        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-        }
-        
-        canBePositioned = PR_FALSE;
-        
-        PRBool allowSubframes = PR_TRUE;
-        if (aPresContext) {
-          nsCOMPtr<nsISupports> container;
-          aPresContext->GetContainer(getter_AddRefs(container));
-          nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-          if (docShell) {
-            docShell->GetAllowSubframes(&allowSubframes);
-          }
-        }
-        if (allowSubframes) {
-          rv = NS_NewHTMLFramesetFrame(aPresShell, &newFrame);
-        }
-      }
-      else if (nsHTMLAtoms::iframe == aTag) {
-        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-        }
-        
-        isReplaced = PR_TRUE;
-        PRBool allowSubframes = PR_TRUE;
-        if (aPresContext) {
-          nsCOMPtr<nsISupports> container;
-          aPresContext->GetContainer(getter_AddRefs(container));
-          nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-          if (docShell) {
-            docShell->GetAllowSubframes(&allowSubframes);
-          }
-        }
-        if (allowSubframes) {
-          rv = NS_NewHTMLFrameOuterFrame(aPresShell, &newFrame);
-        }
-      }
-      else if (nsHTMLAtoms::noframes == aTag) {
-        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-        }
-        isReplaced = PR_TRUE;
-
-        PRBool allowSubframes = PR_TRUE;
-        if (aPresContext) {
-          nsCOMPtr<nsISupports> container;
-          aPresContext->GetContainer(getter_AddRefs(container));
-          nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-          if (docShell) {
-            docShell->GetAllowSubframes(&allowSubframes);
-          }
-        }
-        if (allowSubframes) {
-          // make <noframes> be display:none if frames are enabled
-          nsStyleDisplay* mutdisplay = (nsStyleDisplay*)aStyleContext->GetUniqueStyleData(aPresContext, eStyleStruct_Display);
-          mutdisplay->mDisplay = NS_STYLE_DISPLAY_NONE;
-          aState.mFrameManager->SetUndisplayedContent(aContent, aStyleContext);
-        } 
-        else {
-          processChildren = PR_TRUE;
-          rv = NS_NewBlockFrame(aPresShell, &newFrame);
-        }
-      }
-      else if (nsHTMLAtoms::spacer == aTag) {
-        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-        }
-        rv = NS_NewSpacerFrame(aPresShell, &newFrame);
-        canBePositioned = PR_FALSE;
-      }
-      else if (nsHTMLAtoms::button == aTag) {
-        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-        }
-        rv = NS_NewHTMLButtonControlFrame(aPresShell, &newFrame);
-        // the html4 button needs to act just like a 
-        // regular button except contain html content
-        // so it must be replaced or html outside it will
-        // draw into its borders. -EDV
-        isReplaced = PR_TRUE;
-        processChildren = PR_TRUE;
-      }
-      else if (nsHTMLAtoms::label == aTag) {
-        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-        }
-        rv = NS_NewLabelFrame(aPresShell, &newFrame, isAbsolutelyPositioned ? NS_BLOCK_SPACE_MGR : 0);
-        processChildren = PR_TRUE;
-      }
-      else if (nsHTMLAtoms::isindex == aTag) {
-        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems);
-        }
-        isReplaced = PR_TRUE;
-        rv = NS_NewIsIndexFrame(aPresShell, &newFrame);
-      }
+    if (NS_STYLE_FLOAT_NONE != display->mFloats) {
+      isFloating = PR_TRUE;
+    }
+    if (NS_STYLE_POSITION_RELATIVE == display->mPosition) {
+      isRelativePositioned = PR_TRUE;
     }
   }
+
+  // Create a frame based on the tag
+  if (nsHTMLAtoms::img == aTag) {
+    isReplaced = PR_TRUE;
+    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+    }
+    // XXX If image display is turned off, then use ConstructAlternateFrame()
+    // instead...
+    rv = NS_NewImageFrame(aPresShell, &newFrame);
+  }
+  else if (nsHTMLAtoms::hr == aTag) {
+    isReplaced = PR_TRUE;
+    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+    }
+    rv = NS_NewHRFrame(aPresShell, &newFrame);
+  }
+  else if (nsHTMLAtoms::br == aTag) {
+    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+    }
+    rv = NS_NewBRFrame(aPresShell, &newFrame);
+    isReplaced = PR_TRUE;
+    // BR frames don't go in the content->frame hash table: typically
+    // there are many BR content objects and this would increase the size
+    // of the hash table, and it's doubtful we need the mapping anyway
+    addToHashTable = PR_FALSE;
+  }
+  else if (nsHTMLAtoms::wbr == aTag) {
+    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+    }
+    rv = NS_NewWBRFrame(aPresShell, &newFrame);
+  }
+  else if (nsHTMLAtoms::input == aTag) {
+    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+    }
+    isReplaced = PR_TRUE;
+    rv = CreateInputFrame(aPresShell, aPresContext,
+                          aContent, newFrame, aStyleContext);
+  }
+  else if (nsHTMLAtoms::textarea == aTag) {
+    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+    }
+    isReplaced = PR_TRUE;
+    rv = ConstructTextControlFrame(aPresShell, aPresContext, newFrame, aContent);
+  }
+  else if (nsHTMLAtoms::select == aTag) {
+    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+    }
+    isReplaced = PR_TRUE;
+    rv = ConstructSelectFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
+                              aTag, aStyleContext, newFrame,  processChildren,
+                              isAbsolutelyPositioned, frameHasBeenInitialized,
+                              isFixedPositioned, aFrameItems);
+  }
+  else if (nsHTMLAtoms::object == aTag) {
+    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+    }
+    isReplaced = PR_TRUE;
+    rv = NS_NewObjectFrame(aPresShell, &newFrame);
+    processChildren = PR_FALSE;
+  }
+  else if (nsHTMLAtoms::applet == aTag) {
+    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+    }
+    isReplaced = PR_TRUE;
+    rv = NS_NewObjectFrame(aPresShell, &newFrame);
+  }
+  else if (nsHTMLAtoms::embed == aTag) {
+    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+    }
+    isReplaced = PR_TRUE;
+    rv = NS_NewObjectFrame(aPresShell, &newFrame);
+  }
+  else if (nsHTMLAtoms::fieldset == aTag) {
+    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+    }
+#define DO_NEWFIELDSET
+#ifdef DO_NEWFIELDSET
+    rv = ConstructFieldSetFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
+                                aTag, aStyleContext, newFrame,  processChildren,
+                                isAbsolutelyPositioned, frameHasBeenInitialized,
+                                isFixedPositioned);
+    processChildren = PR_FALSE;
+#else
+    rv = NS_NewFieldSetFrame(aPresShell, &newFrame, isAbsolutelyPositioned ? NS_BLOCK_SPACE_MGR : 0);
+    processChildren = PR_TRUE;
+#endif
+  }
+  else if (nsHTMLAtoms::legend == aTag) {
+    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+    }
+    rv = NS_NewLegendFrame(aPresShell, &newFrame);
+    processChildren = PR_TRUE;
+    canBePositioned = PR_FALSE;
+  }
+  else if (nsHTMLAtoms::form == aTag) {
+    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+    }
+    PRBool  isOutOfFlow = isFloating || isAbsolutelyPositioned || isFixedPositioned;
+
+    rv = NS_NewFormFrame(aPresShell, &newFrame,
+                         isOutOfFlow ? NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT : 0);
+    processChildren = PR_TRUE;
+
+    // A form frame is a block frame therefore it can contain floaters
+    isFloaterContainer = PR_TRUE;
+
+    // See if it's a containing block for absolutely positioned elements
+    isPositionedContainingBlock = isAbsolutelyPositioned || isFixedPositioned || isRelativePositioned;
+  }
+  else if (nsHTMLAtoms::frameset == aTag) {
+    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+    }
+    
+    canBePositioned = PR_FALSE;
+    
+    PRBool allowSubframes = PR_TRUE;
+    if (aPresContext) {
+      nsCOMPtr<nsISupports> container;
+      aPresContext->GetContainer(getter_AddRefs(container));
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+      if (docShell) {
+        docShell->GetAllowSubframes(&allowSubframes);
+      }
+    }
+    if (allowSubframes) {
+      rv = NS_NewHTMLFramesetFrame(aPresShell, &newFrame);
+    }
+  }
+  else if (nsHTMLAtoms::iframe == aTag) {
+    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+    }
+    
+    isReplaced = PR_TRUE;
+    PRBool allowSubframes = PR_TRUE;
+    if (aPresContext) {
+      nsCOMPtr<nsISupports> container;
+      aPresContext->GetContainer(getter_AddRefs(container));
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+      if (docShell) {
+        docShell->GetAllowSubframes(&allowSubframes);
+      }
+    }
+    if (allowSubframes) {
+      rv = NS_NewHTMLFrameOuterFrame(aPresShell, &newFrame);
+    }
+  }
+  else if (nsHTMLAtoms::noframes == aTag) {
+    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+    }
+    isReplaced = PR_TRUE;
+
+    PRBool allowSubframes = PR_TRUE;
+    if (aPresContext) {
+      nsCOMPtr<nsISupports> container;
+      aPresContext->GetContainer(getter_AddRefs(container));
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+      if (docShell) {
+        docShell->GetAllowSubframes(&allowSubframes);
+      }
+    }
+    if (allowSubframes) {
+      // make <noframes> be display:none if frames are enabled
+      nsStyleDisplay* mutdisplay = (nsStyleDisplay*)aStyleContext->GetUniqueStyleData(aPresContext, eStyleStruct_Display);
+      mutdisplay->mDisplay = NS_STYLE_DISPLAY_NONE;
+      aState.mFrameManager->SetUndisplayedContent(aContent, aStyleContext);
+    } 
+    else {
+      processChildren = PR_TRUE;
+      rv = NS_NewBlockFrame(aPresShell, &newFrame);
+    }
+  }
+  else if (nsHTMLAtoms::spacer == aTag) {
+    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+    }
+    rv = NS_NewSpacerFrame(aPresShell, &newFrame);
+    canBePositioned = PR_FALSE;
+  }
+  else if (nsHTMLAtoms::button == aTag) {
+    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+    }
+    rv = NS_NewHTMLButtonControlFrame(aPresShell, &newFrame);
+    // the html4 button needs to act just like a 
+    // regular button except contain html content
+    // so it must be replaced or html outside it will
+    // draw into its borders. -EDV
+    isReplaced = PR_TRUE;
+    processChildren = PR_TRUE;
+  }
+  else if (nsHTMLAtoms::label == aTag) {
+    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+    }
+    rv = NS_NewLabelFrame(aPresShell, &newFrame, isAbsolutelyPositioned ? NS_BLOCK_SPACE_MGR : 0);
+    processChildren = PR_TRUE;
+  }
+  else if (nsHTMLAtoms::isindex == aTag) {
+    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems);
+    }
+    isReplaced = PR_TRUE;
+    rv = NS_NewIsIndexFrame(aPresShell, &newFrame);
+  }
+
+  if (NS_FAILED(rv) || !newFrame)
+    return rv;
 
   // If we succeeded in creating a frame then initialize it, process its
   // children (if requested), and set the initial child list
-  if (NS_SUCCEEDED(rv) && (nsnull != newFrame)) {
-    // first, create it's "before" generated content
-    if (nsLayoutAtoms::textTagName != aTag) { // see bug 53974.  text nodes never match
-      nsIFrame* generatedFrame;
-      if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aParentFrame, aContent,
-                                      aStyleContext, nsCSSAtoms::beforePseudo,
-                                      PR_FALSE, &generatedFrame)) {
-        // Add the generated frame to the child list
-        aFrameItems.AddChild(generatedFrame);
-      }
-    }
 
-    // If the frame is a replaced element, then set the frame state bit
-    if (isReplaced) {
-      nsFrameState  state;
-      newFrame->GetFrameState(&state);
-      newFrame->SetFrameState(state | NS_FRAME_REPLACED_ELEMENT);
-    }
+  // first, create it's "before" generated content
+  nsIFrame* beforeFrame;
+  if (CreateGeneratedContentFrame(aPresShell, aPresContext,
+                                  aState, aParentFrame, aContent,
+                                  aStyleContext, nsCSSAtoms::beforePseudo,
+                                  PR_FALSE, &beforeFrame)) {
+    // Add the generated frame to the child list
+    aFrameItems.AddChild(beforeFrame);
+  }
 
-    if (!frameHasBeenInitialized) {
-      nsIFrame* geometricParent = aParentFrame;
-       
-      // Makes sure we use the correct parent frame pointer when initializing
-      // the frame
-      if (isFloating) {
-        geometricParent = aState.mFloatedItems.containingBlock;
+  // If the frame is a replaced element, then set the frame state bit
+  if (isReplaced) {
+    nsFrameState  state;
+    newFrame->GetFrameState(&state);
+    newFrame->SetFrameState(state | NS_FRAME_REPLACED_ELEMENT);
+  }
 
-      } else if (canBePositioned) {
-        if (isAbsolutelyPositioned) {
-          geometricParent = aState.mAbsoluteItems.containingBlock;
-        } else if (isFixedPositioned) {
-          geometricParent = aState.mFixedItems.containingBlock;
-        }
-      }
-      
-      InitAndRestoreFrame(aPresContext, aState, aContent, 
-                          geometricParent, aStyleContext, nsnull, newFrame);
+  if (!frameHasBeenInitialized) {
+    nsIFrame* geometricParent = aParentFrame;
+     
+    // Makes sure we use the correct parent frame pointer when initializing
+    // the frame
+    if (isFloating) {
+      geometricParent = aState.mFloatedItems.containingBlock;
 
-      // See if we need to create a view, e.g. the frame is absolutely
-      // positioned
-      nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                               aStyleContext, aParentFrame, PR_FALSE);
-
-      // Process the child content if requested
-      nsFrameItems childItems;
-      if (processChildren) {
-        if (isPositionedContainingBlock) {
-          // The area frame becomes a container for child frames that are
-          // absolutely positioned
-          nsFrameConstructorSaveState absoluteSaveState;
-          aState.PushAbsoluteContainingBlock(newFrame, absoluteSaveState);
-          
-          // Process the child frames
-          rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame,
-                               PR_TRUE, childItems, PR_FALSE);
-          
-          // Set the frame's absolute list if there were any absolutely positioned children
-          if (aState.mAbsoluteItems.childList) {
-            newFrame->SetInitialChildList(aPresContext,
-                                          nsLayoutAtoms::absoluteList,
-                                          aState.mAbsoluteItems.childList);
-          }
-        }
-        else if (isFloaterContainer) {
-          // If the frame can contain floaters, then push a floater
-          // containing block
-          PRBool haveFirstLetterStyle, haveFirstLineStyle;
-          HaveSpecialBlockStyle(aPresContext, aContent, aStyleContext,
-                                &haveFirstLetterStyle, &haveFirstLineStyle);
-          nsFrameConstructorSaveState floaterSaveState;
-          aState.PushFloaterContainingBlock(newFrame, floaterSaveState,
-                                            PR_FALSE, PR_FALSE);
-          
-          // Process the child frames
-          rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame,
-                               PR_TRUE, childItems, PR_FALSE);
-          
-          // Set the frame's floater list if there were any floated children
-          if (aState.mFloatedItems.childList) {
-            newFrame->SetInitialChildList(aPresContext,
-                                          nsLayoutAtoms::floaterList,
-                                          aState.mFloatedItems.childList);
-          }
-
-        } else {
-          rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame,
-                               PR_TRUE, childItems, PR_FALSE);
-        }
-      }
-
-      // if there are any anonymous children create frames for them
-      CreateAnonymousFrames(aPresShell, aPresContext, aTag, aState, aContent, newFrame,
-                            childItems);
-
-
-      // Set the frame's initial child list
-      newFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
-    }
-
-    // If the frame is positioned, then create a placeholder frame
-    if (canBePositioned && (isAbsolutelyPositioned || isFixedPositioned)) {
-      nsIFrame* placeholderFrame;
-
-      CreatePlaceholderFrameFor(aPresShell, aPresContext, aState.mFrameManager, aContent,
-                                newFrame, aStyleContext, aParentFrame, &placeholderFrame);
-
-      // Add the positioned frame to its containing block's list of
-      // child frames
+    } else if (canBePositioned) {
       if (isAbsolutelyPositioned) {
-        aState.mAbsoluteItems.AddChild(newFrame);
+        geometricParent = aState.mAbsoluteItems.containingBlock;
+      } else if (isFixedPositioned) {
+        geometricParent = aState.mFixedItems.containingBlock;
+      }
+    }
+    
+    InitAndRestoreFrame(aPresContext, aState, aContent, 
+                        geometricParent, aStyleContext, nsnull, newFrame);
+
+    // See if we need to create a view, e.g. the frame is absolutely
+    // positioned
+    nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
+                                             aStyleContext, aParentFrame, PR_FALSE);
+
+    // Process the child content if requested
+    nsFrameItems childItems;
+    if (processChildren) {
+      if (isPositionedContainingBlock) {
+        // The area frame becomes a container for child frames that are
+        // absolutely positioned
+        nsFrameConstructorSaveState absoluteSaveState;
+        aState.PushAbsoluteContainingBlock(newFrame, absoluteSaveState);
+        
+        // Process the child frames
+        rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame,
+                             PR_TRUE, childItems, PR_FALSE);
+        
+        // Set the frame's absolute list if there were any absolutely positioned children
+        if (aState.mAbsoluteItems.childList) {
+          newFrame->SetInitialChildList(aPresContext,
+                                        nsLayoutAtoms::absoluteList,
+                                        aState.mAbsoluteItems.childList);
+        }
+      }
+      else if (isFloaterContainer) {
+        // If the frame can contain floaters, then push a floater
+        // containing block
+        PRBool haveFirstLetterStyle, haveFirstLineStyle;
+        HaveSpecialBlockStyle(aPresContext, aContent, aStyleContext,
+                              &haveFirstLetterStyle, &haveFirstLineStyle);
+        nsFrameConstructorSaveState floaterSaveState;
+        aState.PushFloaterContainingBlock(newFrame, floaterSaveState,
+                                          PR_FALSE, PR_FALSE);
+        
+        // Process the child frames
+        rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame,
+                             PR_TRUE, childItems, PR_FALSE);
+        
+        // Set the frame's floater list if there were any floated children
+        if (aState.mFloatedItems.childList) {
+          newFrame->SetInitialChildList(aPresContext,
+                                        nsLayoutAtoms::floaterList,
+                                        aState.mFloatedItems.childList);
+        }
+
       } else {
-        aState.mFixedItems.AddChild(newFrame);
+        rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame,
+                             PR_TRUE, childItems, PR_FALSE);
       }
+    }
 
-      // Add the placeholder frame to the flow
-      aFrameItems.AddChild(placeholderFrame);
+    // if there are any anonymous children create frames for them
+    CreateAnonymousFrames(aPresShell, aPresContext, aTag, aState, aContent, newFrame,
+                          childItems);
 
-    } else if (isFloating) {
-      nsIFrame* placeholderFrame;
-      CreatePlaceholderFrameFor(aPresShell, aPresContext, aState.mFrameManager, aContent, newFrame,
-                                aStyleContext, aParentFrame, &placeholderFrame);
 
-      // Add the floating frame to its containing block's list of child frames
-      aState.mFloatedItems.AddChild(newFrame);
+    // Set the frame's initial child list
+    newFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
+  }
 
-      // Add the placeholder frame to the flow
-      aFrameItems.AddChild(placeholderFrame);
+  // If the frame is positioned, then create a placeholder frame
+  if (canBePositioned && (isAbsolutelyPositioned || isFixedPositioned)) {
+    nsIFrame* placeholderFrame;
 
+    CreatePlaceholderFrameFor(aPresShell, aPresContext, aState.mFrameManager, aContent,
+                              newFrame, aStyleContext, aParentFrame, &placeholderFrame);
+
+    // Add the positioned frame to its containing block's list of
+    // child frames
+    if (isAbsolutelyPositioned) {
+      aState.mAbsoluteItems.AddChild(newFrame);
     } else {
-      // Add the newly constructed frame to the flow
-      aFrameItems.AddChild(newFrame);
+      aState.mFixedItems.AddChild(newFrame);
     }
 
-    if (addToHashTable) {
-      // Add a mapping from content object to primary frame. Note that for
-      // floated and positioned frames this is the out-of-flow frame and not
-      // the placeholder frame
-      aState.mFrameManager->SetPrimaryFrameFor(aContent, newFrame);
-    }
+    // Add the placeholder frame to the flow
+    aFrameItems.AddChild(placeholderFrame);
 
-    // finally, create it's "after" generated content
-    if (nsLayoutAtoms::textTagName != aTag) { // see bug 53974.  text nodes never match
-      nsIFrame* generatedFrame;
-      if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aParentFrame, aContent,
-                                      aStyleContext, nsCSSAtoms::afterPseudo,
-                                      PR_FALSE, &generatedFrame)) {
-        // Add the generated frame to the child list
-        aFrameItems.AddChild(generatedFrame);
-      }
-    }
+  } else if (isFloating) {
+    nsIFrame* placeholderFrame;
+    CreatePlaceholderFrameFor(aPresShell, aPresContext, aState.mFrameManager, aContent, newFrame,
+                              aStyleContext, aParentFrame, &placeholderFrame);
 
+    // Add the floating frame to its containing block's list of child frames
+    aState.mFloatedItems.AddChild(newFrame);
+
+    // Add the placeholder frame to the flow
+    aFrameItems.AddChild(placeholderFrame);
+
+  } else {
+    // Add the newly constructed frame to the flow
+    aFrameItems.AddChild(newFrame);
+  }
+
+  if (addToHashTable) {
+    // Add a mapping from content object to primary frame. Note that for
+    // floated and positioned frames this is the out-of-flow frame and not
+    // the placeholder frame
+    aState.mFrameManager->SetPrimaryFrameFor(aContent, newFrame);
+  }
+
+  // finally, create it's "after" generated content
+  nsIFrame* afterFrame;
+  if (CreateGeneratedContentFrame(aPresShell, aPresContext,
+                                  aState, aParentFrame, aContent,
+                                  aStyleContext, nsCSSAtoms::afterPseudo,
+                                  PR_FALSE, &afterFrame)) {
+    // Add the generated frame to the child list
+    aFrameItems.AddChild(afterFrame);
   }
 
   return rv;
@@ -7022,11 +7049,17 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
     return NS_OK;
   }
 
+  if (aTag == nsLayoutAtoms::textTagName)
+    return ConstructTextFrame(aPresShell, aPresContext, aState,
+                              aContent, aParentFrame, styleContext,
+                              aFrameItems);
+
   nsIFrame* lastChild = aFrameItems.lastChild;
 
   // Handle specific frame types
-  nsresult rv = ConstructFrameByTag(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                                    aTag, aNameSpaceID, styleContext, aFrameItems);
+  nsresult rv = ConstructHTMLFrame(aPresShell, aPresContext, aState,
+                                   aContent, aParentFrame, aTag,
+                                   aNameSpaceID, styleContext, aFrameItems);
 
 #ifdef INCLUDE_XUL
   // Failing to find a matching HTML frame, try creating a specialized
