@@ -24,6 +24,9 @@
 #include <cassert>
 #include "htrdf.h"
 #include "CPaneEnabler.h"
+#include "CRDFToolbarContainer.h"			// so we can tell it we have changed size
+#include "UGraphicGizmos.h"
+#include "CNavCenterContextMenuAtt.h"
 
 #include "vocab.h"							// provides tokens needed in lookup functions
 	// ...and because vocab.h mistakenly does not declare these, we must
@@ -174,6 +177,11 @@ CRDFToolbar::CRDFToolbar( HT_View ht_view, LView* pp_superview )
 		// correct settings in EnableSelf() below, which is called when the toolbar is
 		// added to the container.
 		Deactivate();
+
+		CToolbarContextMenuAttachment* tip = new CToolbarContextMenuAttachment;
+		Assert_(tip != NULL);
+		if ( tip )
+			AddAttachment(tip);
 	}
 
 CRDFToolbar::~CRDFToolbar()
@@ -276,8 +284,14 @@ CRDFToolbar::LayoutButtons()
 
 					// The final row comprises all remaining accumulated items.  Lay it out.
 				layout_row(row.begin(), row.end(), TOOLBAR_INITIAL_VERTICAL_OFFSET, row_bottom+=(TOOLBAR_VERTICAL_PADDING+row_height), width_available / number_of_stretchy_items);
-				if ( toolbar_size.height != (row_bottom += TOOLBAR_VERTICAL_PADDING) )
+				if ( toolbar_size.height != (row_bottom += TOOLBAR_VERTICAL_PADDING) ) {
 					ResizeFrameTo(toolbar_size.width, row_bottom, false);
+					
+					// let the container know that this toolbar has just resized so it can adjust itself
+					CRDFToolbarContainer* container = dynamic_cast<CRDFToolbarContainer*>(GetSuperView());
+					if ( container )
+						container->ToolbarChanged(); 	
+				}
 
 				HT_DeleteCursor(cursor);
 			}
@@ -339,9 +353,9 @@ CRDFToolbar::DrawSelf()
 			{
 				Point top_left = { frame.top, frame.left };
 				DrawImage(top_left, kTransformNone, frame.right-frame.left, frame.bottom-frame.top);
+
+				UGraphicGizmos::BevelTintRect ( frame, 1, 0x6000, 0x6000 );
 			}
-		else
-			EraseBackground();
 		// Note: I don't want |CDragBar::DrawSelf()|s behavior, and |LView| doesn't implement
 		//	|DrawSelf|, so, nothing else to do here.
 	}
@@ -414,3 +428,36 @@ CRDFToolbar::ResizeFrameBy ( SInt16 inH, SInt16 inW, Boolean inRefresh )
 	LayoutButtons();
 
 }
+
+
+//
+// AdjustCursorSelf
+//
+// Handle changing cursor to contextual menu cursor if cmd key is down
+//
+void
+CRDFToolbar::AdjustCursorSelf( Point /*inPoint*/, const EventRecord& inEvent )
+{
+	ExecuteAttachments(CContextMenuAttachment::msg_ContextMenuCursor, 
+								static_cast<void*>(const_cast<EventRecord*>(&inEvent)));
+
+}
+
+
+//
+// ClickSelf
+//
+// Try context menu if control key is down
+//
+void
+CRDFToolbar :: ClickSelf( const SMouseDownEvent &inMouseDown )
+{
+	if (inMouseDown.macEvent.modifiers & controlKey) {
+		CContextMenuAttachment::SExecuteParams params;
+		params.inMouseDown = &inMouseDown;
+		ExecuteAttachments( CContextMenuAttachment::msg_ContextMenu, &params );
+	}
+	else
+		CDragBar::ClickSelf(inMouseDown);
+		
+} // ClickSelf

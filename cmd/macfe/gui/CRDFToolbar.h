@@ -22,6 +22,7 @@
 #include "CImageIconMixin.h"					// ...is a base class
 #include "CRDFNotificationHandler.h"	// ...is a base class
 
+class CToolbarContextMenuAttachment;
 
 
 class CRDFToolbar
@@ -40,6 +41,8 @@ class CRDFToolbar
 			CRDFToolbar( HT_View, LView* );
 			virtual ~CRDFToolbar();
 
+			friend class CToolbarContextMenuAttachment;
+			
 		private: // Pass-by-value is not allowed.  A single |CRDFToolbar| corresponds to a single on-screen object; copying doesn't make sense.
 			CRDFToolbar( const CRDFToolbar& );						// DON'T IMPLEMENT
 			CRDFToolbar& operator=( const CRDFToolbar& );	// DON'T IMPLEMENT
@@ -61,6 +64,8 @@ class CRDFToolbar
 			virtual void EraseBackground ( ) const;
 			virtual void ShowSelf ( ) ;
 			virtual void ResizeFrameBy ( SInt16 inWidth, SInt16 inHeight, Boolean inRefresh );
+			virtual void AdjustCursorSelf( Point /*inPoint*/, const EventRecord& inEvent ) ;
+			virtual void ClickSelf( const SMouseDownEvent &inMouseDown ) ;
 			
 			virtual void FillInToolbar ( ) ;
 			virtual void LayoutButtons ( ) ;
