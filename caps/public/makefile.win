@@ -1,4 +1,5 @@
-#!gmake
+#!nmake
+#
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -14,17 +15,26 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-MODULE = caps
 
-DEPTH = ../..
+IGNORE_MANIFEST=1
 
-EXPORTS	= nsZip.h nsZig.h nsLoadZig.h nsPrincipal.h nsPrivilege.h nsPrivilegeManager.h nsPrivilegeTable.h nsSystemPrivilegeTable.h nsTarget.h nsUserTarget.h jpermission.h nsUserDialogHelper.h admin.h nsCaps.h nsCapsEnums.h \
- nsCCapsManager.h       \
- nsCCertPrincipal.h     \
- nsCCodebasePrincipal.h \
- nsCCapsManagerFactory.h
+#//------------------------------------------------------------------------
+#//
+#// Makefile to install CAPS/INCLUDE header files into the distribution
+#// directory.
+#//
+#//------------------------------------------------------------------------
 
 
+MODULE=caps 
+DEPTH=..\..
+EXPORTS= \
+ nsIPrincipal.h           \
+ nsICodebasePrincipal.h   \
+ nsICertPrincipal.h       \
+ nsICapsManager.h         \
+ nsICodeSourcePrincipal.h
 
-include $(DEPTH)/config/rules.mk
+
+include <$(DEPTH)/config/rules.mak>
 

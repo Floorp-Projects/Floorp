@@ -64,6 +64,11 @@ OBJS=                                       \
     .\$(OBJDIR)\nsUserTarget.obj            \
     .\$(OBJDIR)\admin.obj                   \
     .\$(OBJDIR)\nsCaps.obj                  \
+    .\$(OBJDIR)\nsCCapsManager.obj           \
+    .\$(OBJDIR)\nsCCertPrincipal.obj        \
+    .\$(OBJDIR)\nsCCodebasePrincipal.obj    \
+    .\$(OBJDIR)\nsCCapsManagerFactory.obj    \
+    .\$(OBJDIR)\nsCCodeSourcePrincipal.obj   \
     $(NULL)
 
 
@@ -101,6 +106,7 @@ LINCS= $(LINCS) \
 		-I$(DEPTH)\lib\libstyle \
 		-I$(PUBLIC)\rdf \
 		-I$(PUBLIC)\caps \
+		-I$(PUBLIC)\public \
 		$(NULL)
 
 #//------------------------------------------------------------------------
