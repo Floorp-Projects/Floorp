@@ -193,6 +193,7 @@ nsGfxTextControlFrame::nsGfxTextControlFrame()
 : mWebShell(0), mCreatingViewer(PR_FALSE),
   mTempObserver(0), mDocObserver(0), 
   mDummyFrame(0), mNeedsStyleInit(PR_TRUE),
+  mIsProcessing(PR_FALSE),
   mDummyInitialized(PR_FALSE) // DUMMY
 {
 }
@@ -695,14 +696,19 @@ void nsGfxTextControlFrame::SetTextControlFrameState(const nsString& aValue)
 
 NS_IMETHODIMP nsGfxTextControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
 {
-  if (nsHTMLAtoms::value == aName) 
+  if (PR_FALSE==mIsProcessing)
   {
-    mEditor->EnableUndo(PR_FALSE);      // wipe out undo info
-    SetTextControlFrameState(aValue);   // set new text value
-    mEditor->EnableUndo(PR_TRUE);       // fire up a new txn stack
-  }
-  else {
-    return Inherited::SetProperty(aName, aValue);
+    mIsProcessing = PR_TRUE;
+    if (nsHTMLAtoms::value == aName) 
+    {
+      mEditor->EnableUndo(PR_FALSE);      // wipe out undo info
+      SetTextControlFrameState(aValue);   // set new text value
+      mEditor->EnableUndo(PR_TRUE);       // fire up a new txn stack
+    }
+    else {
+      return Inherited::SetProperty(aName, aValue);
+    }
+    mIsProcessing = PR_FALSE;
   }
   return NS_OK;
 }      

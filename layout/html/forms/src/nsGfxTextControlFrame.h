@@ -504,6 +504,7 @@ protected:
 
   nsCOMPtr<nsIEditor>       mEditor;  // ref counted
   nsCOMPtr<nsIDOMDocument>  mDoc;     // ref counted
+  PRBool mIsProcessing;
   nsNativeTextControlFrame *mDummyFrame; //DUMMY
 
   PRBool mNeedsStyleInit;
