@@ -1,7 +1,7 @@
 
 #include "CUrlField.h"
 #include <LString.h>
-
+#include <PP_KeyCodes.h>
 
 // CUrlField:
 // A text edit field that broadcasts its PaneID on Return or Enter.
