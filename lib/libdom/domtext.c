@@ -70,6 +70,38 @@ cdata_getter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 static JSBool
 cdata_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
+    intN slot;
+    DOM_CharacterData *cdata;
+    JSString *str;
+    
+    if (!JSVAL_IS_INT(id))
+        return JS_TRUE;
+    
+    slot = JSVAL_TO_INT(id);
+    /* Look, ma!  Inheritance! */
+    if (slot <= DOM_NODE_NODENAME &&
+        slot >= DOM_NODE_HASCHILDNODES) {
+        return dom_node_setter(cx, obj, id, vp);
+    }
+    
+    cdata = (DOM_CharacterData *)JS_GetPrivate(cx, obj);
+    if (!cdata)
+        return JS_TRUE;
+
+    switch (slot) {
+      case DOM_CDATA_DATA:
+        str = JS_ValueToString(cx, *vp);
+        if (!str)
+            return JS_FALSE;
+
+        XP_FREE(cdata->data);
+        cdata->data = XP_STRDUP(JS_GetStringBytes(str));
+        cdata->len = JS_GetStringLength(str);
+        cdata->notify(cx, cdata, CDATA_REPLACE);
+        break;
+      default:;
+    }
+
     return JS_TRUE;
 }
 
@@ -257,8 +289,7 @@ static JSClass DOM_CDataClass = {
 };
 
 static JSPropertySpec cdata_props[] = {
-    {"data",	DOM_CDATA_DATA,		JSPROP_ENUMERATE | JSPROP_READONLY, 
-     0, 0},
+    {"data",	DOM_CDATA_DATA,		JSPROP_ENUMERATE, 0, 0},
     {"length",	DOM_CDATA_LENGTH,	JSPROP_ENUMERATE | JSPROP_READONLY,
      0, 0},
     {0}
@@ -354,7 +385,7 @@ dom_TextInit(JSContext *cx, JSObject *scope, JSObject *cdata_proto)
     JSObject *proto;
     proto = JS_InitClass(cx, scope, cdata_proto, &DOM_TextClass,
 			 Text, 0,
-			 NULL, text_methods,
+			 cdata_props, text_methods,
 			 NULL, NULL);
     return proto;
 }
