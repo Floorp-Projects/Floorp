@@ -779,45 +779,50 @@ NS_IMETHODIMP nsRenderingContextGTK::DestroyDrawingSurface(nsDrawingSurface aDS)
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
+nscoord diffX,diffY;
+
   g_return_val_if_fail(mTranMatrix != NULL, NS_ERROR_FAILURE);
   g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
 
   mTranMatrix->TransformCoord(&aX0,&aY0);
   mTranMatrix->TransformCoord(&aX1,&aY1);
 
-  if (aY0 != aY1) {
-    aY1--;
+  diffX = aX1-aX0;
+  diffY = aY1-aY0;
+
+  if (0!=diffX) {
+    diffX = (diffX>0?1:-1);
   }
-  if (aX0 != aX1) {
-    aX1--;
+  if (0!=diffY) {
+    diffY = (diffY>0?1:-1);
   }
 
   UpdateGC();
 
   ::gdk_draw_line(mSurface->GetDrawable(),
                   mGC,
-                  aX0, aY0, aX1, aY1);
+                  aX0, aY0, aX1-diffX, aY1-diffY);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
+nscoord diffX,diffY;
+
   g_return_val_if_fail(mTranMatrix != NULL, NS_ERROR_FAILURE);
   g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
 
-  if (aY0 != aY1) {
-    aY1--;
+  if (0!=diffX) {
+    diffX = (diffX>0?1:-1);
   }
-  if (aX0 != aX1) {
-    aX1--;
+  if (0!=diffY) {
+    diffY = (diffY>0?1:-1);
   }
 
   UpdateGC();
 
-  ::gdk_draw_line(mSurface->GetDrawable(),
-                  mGC,
-                  aX0, aY0, aX1, aY1);
+  ::gdk_draw_line(mSurface->GetDrawable(),mGC,aX0, aY0, aX1-diffX, aY1-diffY);
 
   return NS_OK;
 }
