@@ -27,6 +27,12 @@
 #include "nsXIFConverter.h"
 #include "nsSelectionRange.h"
 #include "nsRange.h"
+
+#include "nsISelection.h"
+#include "nsICollection.h"
+#include "nsIEnumerator.h"
+
+
 #include "nsCRT.h"
 #include "nsIEventStateManager.h"
 #include "nsIPrivateDOMEvent.h"
@@ -35,12 +41,14 @@
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIScriptContextOwner.h"
 #include "prprf.h"
+#include "nsCOMPtr.h"
 
 // XXX share all id's in this dir
 
 NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
 
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
+static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 
 //----------------------------------------------------------------------
@@ -471,49 +479,52 @@ nsresult
 nsGenericDOMDataNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
 {
   const nsIContent* content = mContent;
+  nsISelection* sel = aConverter.GetSelection();
 
-#if 0
-//DEBUG MJUDGE
-  if (aConverter.GetUseSelection() == PR_TRUE && mDocument->IsInSelection(content))
+  if (sel != nsnull && mDocument->IsInSelection(sel,content))
   {
-    nsISelection* sel;
-    mDocument->GetSelection(sel);
-    if (sel != nsnull)
-    {
-      nsSelectionRange* range = sel->GetRange();
-      if (range != nsnull)
-      {
-        nsSelectionPoint* startPoint = range->GetStartPoint();
-        nsSelectionPoint* endPoint = range->GetEndPoint();
+    nsIEnumerator *enumerator;
+    if (NS_SUCCEEDED(sel->QueryInterface(kIEnumeratorIID, (void **)&enumerator))) {
+      for (enumerator->First();NS_OK != enumerator->IsDone(); enumerator->Next()) {
+        nsIDOMRange* range = nsnull;
+        if (NS_SUCCEEDED(enumerator->CurrentItem((nsISupports**)&range))) {
+      
+          nsCOMPtr<nsIDOMNode> startNode;
+          nsCOMPtr<nsIDOMNode> endNode;
+          PRInt32 startOffset = 0;
+          PRInt32 endOffset = 0;
 
-        nsIContent* startContent = startPoint->GetContent();
-        nsIContent* endContent   = endPoint->GetContent();
+          range->GetStartParent(getter_AddRefs(startNode));
+          range->GetEndParent(getter_AddRefs(endNode));
 
-        PRInt32 startOffset = startPoint->GetOffset();
-        PRInt32 endOffset = endPoint->GetOffset();
+          range->GetStartOffset(&startOffset);
+          range->GetEndOffset(&endOffset);
 
-        nsString  buffer;
-        mText.AppendTo(buffer);
-        if (startContent == content || endContent == content)
-        { 
-          // NOTE: ORDER MATTERS!
-          // This must go before the Cut
-          if (endContent == content)
-            buffer.Truncate(endOffset);            
-          
-          // This must go after the Trunctate
-          if (startContent == content)
-           buffer.Cut(0,startOffset); 
+          nsCOMPtr<nsIContent> startContent;
+          nsCOMPtr<nsIContent> endContent;
+          startContent = startNode;
+          endContent = endNode;
+
+
+          nsString  buffer;
+          mText.AppendTo(buffer);
+          if (startContent == content || endContent == content)
+          { 
+            // NOTE: ORDER MATTERS!
+            // This must go before the Cut
+            if (endContent == content)
+              buffer.Truncate(endOffset);            
+      
+            // This must go after the Trunctate
+            if (startContent == content)
+             buffer.Cut(0,startOffset); 
+          }
+          aConverter.AddContent(buffer);
         }
-        aConverter.AddContent(buffer);
-        NS_IF_RELEASE(startContent);
-        NS_IF_RELEASE(endContent);
       }
     }
-    NS_RELEASE(sel);
   }
   else  
-#endif //0
   {
     nsString  buffer;
     mText.AppendTo(buffer);

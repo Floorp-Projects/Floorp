@@ -49,7 +49,7 @@ public:
     * NOTE: we may way to place the result in a stream,
     * but we will use a string for now -- gpk
   */
-  virtual void CreateXIF(nsString & aBuffer, PRBool aUseSelection);
+  virtual void CreateXIF(nsString & aBuffer, nsISelection* aSelection);
   virtual void ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
   virtual void FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
   

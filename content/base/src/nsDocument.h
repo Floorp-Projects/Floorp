@@ -214,7 +214,7 @@ public:
     * document to XIF (XML Interchange Format)
     * and places the result in aBuffer.
     */
-  virtual void CreateXIF(nsString & aBuffer, PRBool aUseSelection);
+  virtual void CreateXIF(nsString & aBuffer, nsISelection* aSelection);
   virtual void ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
   virtual void BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
   virtual void ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
@@ -280,7 +280,7 @@ public:
 
 
   virtual PRBool IsInRange(const nsIContent *aStartContent, const nsIContent* aEndContent, const nsIContent* aContent) const;
-  virtual PRBool IsInSelection(const nsIContent *aContent) const;
+  virtual PRBool IsInSelection(nsISelection* aSelection, const nsIContent *aContent) const;
   virtual PRBool IsBefore(const nsIContent *aNewContent, const nsIContent* aCurrentContent) const;
   virtual nsIContent* GetPrevContent(const nsIContent *aContent) const;
   virtual nsIContent* GetNextContent(const nsIContent *aContent) const;

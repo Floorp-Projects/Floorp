@@ -20,6 +20,8 @@
 
 #include "nsString.h"
 
+class nsISelection;
+
 class nsXIFConverter
 {
 
@@ -52,7 +54,7 @@ private:
   nsString mEndComment;
   nsString mQuote;
   nsString mEqual;
-  PRBool   mSetUseSelection;
+  nsISelection*  mSelection;
 
 public:
 
@@ -112,11 +114,11 @@ public:
   // Output routines
   void Write();
 
-  void    SetUseSelection(PRBool aUseSelection) {
-    mSetUseSelection = aUseSelection;
+  void    SetSelection(nsISelection* aSelection) {
+    mSelection = aSelection;
   }
-  PRBool  GetUseSelection() {
-    return mSetUseSelection;
+  nsISelection*  GetSelection() {
+    return mSelection;
   }
    
 };

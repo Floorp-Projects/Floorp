@@ -56,7 +56,7 @@ nsXIFConverter::nsXIFConverter(nsString& aBuffer) :
   mQuote =(char)'\"';
   mEqual =(char)'=';
 
-  mSetUseSelection = PR_FALSE;
+  mSelection = nsnull;
 }
 
 nsXIFConverter::~nsXIFConverter()
