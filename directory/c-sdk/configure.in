@@ -427,9 +427,6 @@ if test "$target" != "$host"; then
     if test -z "$STRIP"; then
 	    AC_CHECK_PROGS(STRIP, "${target_alias}-strip" "${target}-strip", echo)
     fi
-    if test -z "$DLLTOOL"; then
-	    AC_CHECK_PROGS(DLLTOOL, "${target_alias}-dlltool" "${target}-dlltool", echo)
-    fi
     if test -z "$WINDRES"; then
 	    AC_CHECK_PROGS(WINDRES, "${target_alias}-windres" "${target}-windres", echo)
     fi
@@ -447,7 +444,6 @@ else
     AC_PATH_PROGS(AR, ar, echo not_ar)
     AC_PATH_PROGS(LD, ld link, echo not_ld)
     AC_PATH_PROGS(STRIP, strip, echo not_strip)
-    AC_PATH_PROGS(DLLTOOL, dlltool, echo not_dlltool)
     AC_PATH_PROGS(WINDRES, windres, echo not_windres)
     if test -z "$HOST_CC"; then
 	    HOST_CC="$CC"
@@ -1195,10 +1191,15 @@ case "$target" in
     AC_DEFINE(_WINDOWS)
     PR_MD_ARCH_DIR=windows
     RESOLVE_LINK_SYMBOLS=1
+    PROG_SUFFIX=.exe
+    NSINSTALL=nsinstall
 
     if test -n "$GNU_CC"; then
-        AC_DEFINE(NONAMELESSUNION)
-        MKSHLIB='$(DLLTOOL) --as=$(AS) -k --dllname $*.dll --output-lib $@'
+        CC="$CC -mno-cygwin"
+        CXX="$CXX -mno-cygwin"
+        DLL_SUFFIX=dll
+        MKSHLIB='$(CC) -shared -Wl,--export-all-symbols -Wl,--out-implib -Wl,$(IMPORT_LIBRARY) -o $@'
+        RC="$WINDRES -O coff"
     else
         CC=cl
         CXX=cl
@@ -1207,14 +1208,12 @@ case "$target" in
         AR_FLAGS=
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
-        NSINSTALL=nsinstall
         RC=rc.exe
         GARBAGE='$(OBJDIR)/vc20.pdb $(OBJDIR)/vc40.pdb'
 	    OBJ_SUFFIX=obj
 	    LIB_SUFFIX=lib
 	    LIB_PREFIX=
 	    DLL_SUFFIX=dll
-        PROG_SUFFIX=.exe
         
         CFLAGS="$CFLAGS -W3 -nologo -GF -Gy"
 
@@ -1269,6 +1268,8 @@ case "$target" in
         AC_DEFINE(WINNT)
     else
         AC_DEFINE(WIN95)
+        # undefine WINNT as some versions of mingw gcc define it by default
+        DEFINES="$DEFINES -UWINNT"
         AC_DEFINE(_PR_GLOBAL_THREADS_ONLY)
     fi
 
@@ -1719,7 +1720,6 @@ mips-sony-newsos*)
     LIB_PREFIX=
     DLL_SUFFIX=dll
     ASM_SUFFIX=asm
-    DLLTOOL=''
     RC=rc.exe
     PR_MD_ARCH_DIR=os2
     PROG_SUFFIX=.exe
@@ -2287,7 +2287,6 @@ AC_SUBST(AR_FLAGS)
 AC_SUBST(AS)
 AC_SUBST(ASFLAGS)
 AC_SUBST(LD)
-AC_SUBST(DLLTOOL)
 AC_SUBST(WINDRES)
 AC_SUBST(RANLIB)
 AC_SUBST(PERL)

@@ -286,7 +286,7 @@ $(NFSPWD):
 
 $(PROGRAM): $(OBJS)
 	@$(MAKE_OBJDIR)
-ifeq ($(OS_ARCH),WINNT)
+ifeq ($(OS_ARCH)_$(NS_USE_GCC),WINNT_)
 	$(CC) $(OBJS) -Fe$@ -link $(LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS)
 else
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
@@ -390,14 +390,18 @@ ifeq ($(OS_TARGET),OS2)
 	$(RC) -DOS2 -r $(RESNAME) $(RES)
 else
 # The resource compiler does not understand the -U option.
+ifdef NS_USE_GCC
+	$(RC) $(filter-out -U%,$(DEFINES)) $(INCLUDES:-I%=--include-dir %) -o $@ $<
+else
 	$(RC) $(filter-out -U%,$(DEFINES)) $(INCLUDES) -Fo$(RES) $(RESNAME)
+endif
 endif
 	@echo $(RES) finished
 endif
 
 $(OBJDIR)/%.$(OBJ_SUFFIX): %.cpp
 	@$(MAKE_OBJDIR)
-ifeq ($(OS_ARCH), WINNT)
+ifeq ($(OS_ARCH)_$(NS_USE_GCC), WINNT_)
 	$(CCC) -Fo$@ -c $(CCCFLAGS) $<
 else
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
@@ -412,7 +416,7 @@ WCCFLAGS2 = $(subst -I,-i=,$(WCCFLAGS1))
 WCCFLAGS3 = $(subst -D,-d,$(WCCFLAGS2))
 $(OBJDIR)/%.$(OBJ_SUFFIX): %.c
 	@$(MAKE_OBJDIR)
-ifeq ($(OS_ARCH), WINNT)
+ifeq ($(OS_ARCH)_$(NS_USE_GCC), WINNT_)
 ifeq ($(OS_TARGET), WIN16)
 #	$(MOD_DEPTH)/config/w16opt $(WCCFLAGS3)
 	echo $(WCCFLAGS3) >w16wccf
