@@ -61,11 +61,11 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
   
   PL_strncpy(platformLocale, "en_US", kPlatformLocaleLength+1);
   if (locale != nsnull) {
-    const PRUnichar *aLocaleUnichar;
+    PRUnichar *aLocaleUnichar;
     nsString aLocale;
     nsString aCategory("NSILOCALE_TIME");
 
-    res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+    res = locale->GetCategory(aCategory.ToNewUnicode(), &aLocaleUnichar);
     if (NS_FAILED(res)) {
       return res;
     }
