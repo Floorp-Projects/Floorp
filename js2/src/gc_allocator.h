@@ -43,7 +43,7 @@ namespace JavaScript {
     // for platforms where GC doesn't exist yet.
     inline void* GC_malloc(size_t bytes) { return ::operator new(bytes); }
     inline void* GC_malloc_atomic(size_t bytes) { return ::operator new(bytes); }
-    inline void GC_free(void* ptr) { return ::operator delete(ptr); }
+    inline void GC_free(void* ptr) { operator delete(ptr); }
     inline void GC_gcollect() {}
     inline void GC_register_finalizer(void* obj, GC_finalization_proc proc, void* client_data,
                                       GC_finalization_proc *old_proc, void* *old_client_data) {}
