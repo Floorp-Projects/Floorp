@@ -14,7 +14,7 @@ NS_DECL_ISUPPORTS
 
 nsPrincipalArray(void);
 nsPrincipalArray(PRUint32 count);
-~nsPrincipalArray();
+virtual ~nsPrincipalArray();
 
 NS_IMETHOD
 ComparePrincipalArray(nsIPrincipalArray * other, PRInt16 * comparisonType);

@@ -43,7 +43,7 @@ class nsStreamXferOp : public nsIStreamTransferOperation,
 public:
     // ctor/dtor
     nsStreamXferOp( const nsString &source, const nsString &target );
-    ~nsStreamXferOp();
+    virtual ~nsStreamXferOp();
 
     // Implementation.
     NS_IMETHOD OpenDialog( nsIDOMWindow *parent );

@@ -14,7 +14,7 @@ class nsSupportsWeakReference : public nsISupportsWeakReference
 					// nothing else to do here
 				}
 
-			inline ~nsSupportsWeakReference();
+			inline virtual ~nsSupportsWeakReference();
 
 			NS_IMETHOD GetWeakReference( nsIWeakReference** );
 
@@ -54,7 +54,7 @@ class nsWeakReference : public nsIWeakReference
 					// nothing else to do here
 				}
 
-		 ~nsWeakReference()
+		virtual ~nsWeakReference()
 		 			// ...I will only be destroyed by calling |delete| myself.
 				{
 					if ( mReferent )
