@@ -17,8 +17,6 @@
   Reserved.
 
 -->
-<?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://sidebar/skin/customize.css" type="text/css"?>
 <?xml-stylesheet href="chrome://sidebar/skin/preview.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://sidebar/locale/preview.dtd" >
@@ -28,6 +26,7 @@
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="Init();"
+  class="dialog"
   align="vertical">
 
 <html:script src="chrome://sidebar/content/preview.js" />
@@ -40,13 +39,10 @@
     <html:hr />
   </html:div>
 
-  <box align="horizontal" class="panelbar">
-    <html:img src="chrome://sidebar/skin/corner.gif" />
-    <titledbutton id="paneltitle" class="plain paneltitle" />
-    <spring flex="100%" />
-  </box>
+  <titledbutton id="paneltitle" class="plain paneltitle" align="left"/>
 
-  <html:iframe id="previewframe" type="content" src="about:blank" flex="100%"/>
+  <html:iframe id="previewframe" type="content" src="about:blank" 
+    style="height:200px; width:162px" />
 
   <box align="horizontal">
     <spring flex="50%"/>

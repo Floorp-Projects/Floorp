@@ -27,6 +27,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="Init();" 
   id="main-box"
+  class="dialog"
   align="vertical">
 
   <!-- Dialog title -->
@@ -81,6 +82,9 @@
           disabled="true"/>
       </box>
     </box> 
+    
+    <!-- Spacing between the left and right halves of the dialog -->
+    <spring style="width:2em"/>
 
     <!-- The panels that the user currently has chosen -->
     <box align="vertical" flex="1*">
@@ -116,6 +120,9 @@
             <treechildren id="selected-panels-root"/> 
           </tree>
         </html:div>
+
+       <!-- Spacing between the right selector and "Reorder" -->
+       <spring style="width:5px"/>
 
         <!-- The 'reorder' buttons -->
         <box align="vertical">

@@ -43,7 +43,7 @@ splitter#sidebar-splitter grippy:active {
 
 box#sidebar-box {
   margin-top: 2px;
-  width: 200px;
+  width: 162px;
   min-height: 0px;
   min-width: 10px;
   max-width: 400px;
@@ -89,6 +89,7 @@ splitter.sidebar-main-header titledbutton:hover {
 
 titledbutton.panel-bar {
   padding: 0px;
+  margin: 0px;
   border-top: 1px solid white;
   background-color: #CCCCCC;
   padding: 0px;
