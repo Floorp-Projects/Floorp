@@ -76,6 +76,8 @@ public :
     PRBool UnRegisterSession(PRUint32 aSessionID);
     PRUnichar *GetPassword(PRUint32 aSessionID);
     char *GetIdKey(PRUint32 aSessionID);
+    void *GetMapiListContext(PRUint32 aSessionID);
+    void SetMapiListContext(PRUint32 aSessionID, void *mapiListContext);
     ~nsMAPIConfiguration();
 
     // a util func
@@ -95,6 +97,8 @@ class nsMAPISession
         char     *m_pIdKey;
         nsString m_pProfileName;
         nsString m_pPassword;
+        PRInt32 m_messageIndex;
+        void   *m_listContext; // used by findNext
 
     public :
 
@@ -107,6 +111,9 @@ class nsMAPISession
         PRUnichar *nsMAPISession::GetPassword();
         char *nsMAPISession::GetIdKey();
         ~nsMAPISession();
+        // For enumerating Messages...
+        void SetMapiListContext( void *listContext) { m_listContext = listContext; } 
+        void *GetMapiListContext( ) { return m_listContext; }
 };
 
 #endif    // MSG_MAPI_MAIN_H_

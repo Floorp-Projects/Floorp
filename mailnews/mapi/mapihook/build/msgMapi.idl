@@ -21,6 +21,7 @@
  * Contributor(s):
  *          Krishna Mohan Khandrika (kkhandrika@netscape.com)
  *          Rajiv Dayal (rdayal@netscape.com)
+ *          David Bienvenu (bienvenu@nventure.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 // This idl will be compiled by MIDL.  MS-COM is used 
-// as brdige between MAPI clients and the Mozilla.
+// as bridge between MAPI clients and the Mozilla.
 
 import "unknwn.idl";
 
@@ -75,9 +76,9 @@ typedef struct
     unsigned long    flFlags; /* unread,return receipt */
     lpnsMapiRecipDesc  lpOriginator;  /* Originator descriptor  */
     unsigned long      nRecipCount;   /* Number of recipients   */
-    lpnsMapiRecipDesc  lpRecips;      /* Recipient descriptors  */
+		[size_is (nRecipCount)]	lpnsMapiRecipDesc lpRecips;/* Recipient descriptors  */
     unsigned long      nFileCount;    /* # of file attachments  */
-    lpnsMapiFileDesc   lpFiles;       /* Attachment descriptors */
+    [size_is (nFileCount)]	lpnsMapiFileDesc   lpFiles;       /* Attachment descriptors */
 } nsMapiMessage, * lpnsMapiMessage;
 
 
@@ -106,6 +107,19 @@ interface nsIMapi : IUnknown
     HRESULT SendDocuments( [in] unsigned long aSession, 
                   [in] LPTSTR aDelimChar, [in] LPTSTR aFilePaths,
                   [in] LPTSTR aFileNames, [in] ULONG aFlags ) ;
+
+    HRESULT FindNext(  [in] unsigned long aSession, [in] ULONG ulUIParam, [in] LPTSTR lpszMessageType,
+                              [in] LPTSTR lpszSeedMessageID, [in] ULONG flFlags, [in] ULONG ulReserved,
+                              [in] [out] LPTSTR lpszMessageID ) ;
+
+    HRESULT ReadMail( [in] unsigned long lhSession, [in] ULONG ulUIParam, [in] LPTSTR lpszMessageID,
+                              [in] ULONG flFlags, [in] ULONG ulReserved, [out] lpnsMapiMessage *lppMessage);
+
+    HRESULT DeleteMail( [in] unsigned long lhSession, [in] ULONG ulUIParam, [in] LPTSTR lpszMessageID,
+                              [in] ULONG flFlags, [in] ULONG ulReserved);
+
+    HRESULT SaveMail( [in] unsigned long lhSession, [in] ULONG ulUIParam, [in] lpnsMapiMessage lppMessage,
+                      [in] ULONG flFlags, [in] ULONG ulReserved, [in] LPTSTR lpszMessageID);
 
     HRESULT Logoff (unsigned long aSession);
     HRESULT CleanUp();

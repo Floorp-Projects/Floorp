@@ -175,7 +175,7 @@ void nsMapiHook::CleanUp()
     // to cleanup mapi related stuff inside mozilla code.
 }
 
-PRBool nsMapiHook::DisplayLoginDialog(PRBool aLogin, PRUnichar **aUsername, \
+PRBool nsMapiHook::DisplayLoginDialog(PRBool aLogin, PRUnichar **aUsername, 
                       PRUnichar **aPassword)
 {
     nsresult rv;
