@@ -70,6 +70,10 @@ checkout:
 build:
 	PWD=`pwd`
 	(cd mozilla; $(AUTOCONF))
+	mkdir mozilla/$(OBJDIR)
+	(cd mozilla/$(OBJDIR); ../configure --with-nspr=$(WITH_NSPR))
+	(cd mozilla/$(OBJDIR); gmake depend)
+	(cd mozilla/$(OBJDIR); gmake)
 
 # Do an autoconf build, this isn't working yet. -mcafee
 #
