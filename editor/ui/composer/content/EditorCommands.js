@@ -62,7 +62,6 @@ function EditorOnLoad()
     if ( window.arguments && window.arguments[0] ) {
         // Opened via window.openDialog with URL as argument.    
         // Put argument where EditorStartup expects it.
-dump("EditorOnLoad: url to load="+window.arguments[0]+"\n");
         document.getElementById( "args" ).setAttribute( "value", window.arguments[0] );
     }
     
@@ -148,7 +147,6 @@ function EditorStartup(editorType, editorElement)
   // Get url for editor content and load it.
   // the editor gets instantiated by the editor shell when the URL has finished loading.
   var url = document.getElementById("args").getAttribute("value");
-dump("EditorStartup: url="+url+"\n");
   editorShell.LoadUrl(url);
 }
 
@@ -312,7 +310,6 @@ function EditorOpenRemote()
 // used by openLocation. see openLocation.js for additional notes.
 function delayedOpenWindow(chrome, flags, url)
 {
-dump("delayedOpenWindow: URL="+url+"\n");
   if (PageIsEmptyAndUntouched())
     editorShell.LoadUrl(url);
   else
@@ -377,46 +374,37 @@ function EditorCanClose()
 
 function EditorUndo()
 {
-  dump("Undoing\n");
-  editorShell.Undo();
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 function EditorRedo()
 {
-  dump("Redoing\n");
-  editorShell.Redo();
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 function EditorCut()
 {
-  editorShell.Cut();
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 function EditorCopy()
 {
-  editorShell.Copy();
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 function EditorPaste()
 {
-  editorShell.Paste();
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 function EditorPasteAsQuotation()
 {
-  editorShell.PasteAsQuotation();
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 function EditorSelectAll()
 {
-  editorShell.SelectAll();
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 function EditorFind()
@@ -427,11 +415,6 @@ function EditorFind()
 function EditorFindNext()
 {
   return _EditorObsolete();
-}
-
-function EditorShowClipboard()
-{
-  dump("EditorShowClipboard not implemented\n");
 }
 
 // --------------------------- View menu ---------------------------
@@ -483,7 +466,7 @@ function onParagraphFormatChange(commandID)
 {
   var commandNode = document.getElementById(commmandID);
   var state = commandNode.getAttribute("state");
-dump(" ==== onParagraphFormatChange was called. state="+state+"|\n");
+// dump(" ==== onParagraphFormatChange was called. state="+state+"|\n");
 
   return; //TODO: REWRITE THIS
   var menulist = document.getElementById("ParagraphSelect");
@@ -494,7 +477,7 @@ dump(" ==== onParagraphFormatChange was called. state="+state+"|\n");
   	var format = select.getAttribute("format");
     if ( format == "mixed")
     {
-//dump("Mixed paragraph format *******\n");
+// dump("Mixed paragraph format *******\n");
       // No single type selected
       newIndex = -1;
     }
