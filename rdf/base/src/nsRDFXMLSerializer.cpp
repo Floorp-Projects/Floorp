@@ -501,8 +501,11 @@ static const char kRDFDescriptionClose[]     = "  </RDF:Description>\n";
     // Emit an open tag and the subject
     if (isTypedNode) {
         rdf_BlockingWrite(aStream, NS_LITERAL_STRING("  <"));
-        rdf_BlockingWrite(aStream, nameSpacePrefix);
-        rdf_BlockingWrite(aStream, NS_LITERAL_STRING(":"));
+        // Watch out for the default namespace!
+        if (!nameSpacePrefix.IsEmpty()) {
+            rdf_BlockingWrite(aStream, nameSpacePrefix);
+            rdf_BlockingWrite(aStream, NS_LITERAL_STRING(":"));
+        }
         rdf_BlockingWrite(aStream, nodeName);
     }
     else 
@@ -609,8 +612,11 @@ static const char kRDFDescriptionClose[]     = "  </RDF:Description>\n";
         // Emit a proper close-tag.
         if (isTypedNode) {
             rdf_BlockingWrite(aStream,  NS_LITERAL_STRING("  </"));
-            rdf_BlockingWrite(aStream, nameSpacePrefix);
-            rdf_BlockingWrite(aStream, NS_LITERAL_STRING(":"));
+            // Watch out for the default namespace!
+            if (!nameSpacePrefix.IsEmpty()) {
+                rdf_BlockingWrite(aStream, nameSpacePrefix);
+                rdf_BlockingWrite(aStream, NS_LITERAL_STRING(":"));
+            }
             rdf_BlockingWrite(aStream, nodeName);
             rdf_BlockingWrite(aStream,  NS_LITERAL_STRING(">\n"));
         }
