@@ -7919,6 +7919,9 @@ ResDef(MK_LDAP_AUTHDN_LOOKUP_FAILED, XP_MSG_BASE + 1469, "Mail id invalid or not
 
 
 /* Cookies & Signons XP Strings */
+ResDef(MK_ACCESS_SITE_COOKIES_ACCEPTED, (XP_MSG_BASE + 1477),
+"Cookies that current site stored on your system")
+
 ResDef(MK_SIGNON_VIEW_SIGNONS, (XP_MSG_BASE + 1478),
 "View saved sign-ons")
 
