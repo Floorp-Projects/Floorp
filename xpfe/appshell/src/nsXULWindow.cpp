@@ -37,6 +37,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
+#include "nsIDOMBarProp.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindowInternal.h"
@@ -1774,14 +1775,30 @@ PRBool nsXULWindow::ConstrainToZLevel(
 void nsXULWindow::SetContentScrollbarVisibility(PRBool aVisible) {
 
   nsCOMPtr<nsIDocShellTreeItem> content;
-  if (NS_SUCCEEDED(GetPrimaryContentShell(getter_AddRefs(content))) && content) {
-    nsCOMPtr<nsIScrollable> shell(do_QueryInterface(content));
-    if (shell) {
-      long prefValue = aVisible ? NS_STYLE_OVERFLOW_AUTO : NS_STYLE_OVERFLOW_HIDDEN;
-      shell->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y, prefValue);
-      shell->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X, prefValue);
-    }
+  GetPrimaryContentShell(getter_AddRefs(content));
+  nsCOMPtr<nsIDOMWindow> contentWin(do_GetInterface(content));
+  if (contentWin) {
+    nsCOMPtr<nsIDOMBarProp> scrollbars;
+    contentWin->GetScrollbars(getter_AddRefs(scrollbars));
+    if (scrollbars)
+      scrollbars->SetVisible(aVisible);
   }
+}
+
+PRBool nsXULWindow::GetContentScrollbarVisibility() {
+
+  PRBool visible = PR_TRUE;
+
+  nsCOMPtr<nsIDocShellTreeItem> content;
+  GetPrimaryContentShell(getter_AddRefs(content));
+  nsCOMPtr<nsIDOMWindow> contentWin(do_GetInterface(content));
+  if (contentWin) {
+    nsCOMPtr<nsIDOMBarProp> scrollbars;
+    contentWin->GetScrollbars(getter_AddRefs(scrollbars));
+    if (scrollbars)
+      scrollbars->GetVisible(&visible);
+  }
+  return visible;
 }
 
 //*****************************************************************************

@@ -102,6 +102,7 @@ protected:
    PRBool ConstrainToZLevel(PRBool aImmediate, nsWindowZ *aPlacement,
             nsIWidget *aReqBelow, nsIWidget **aActualBelow);
    void                    SetContentScrollbarVisibility(PRBool aVisible);
+   PRBool                  GetContentScrollbarVisibility();
 
    nsChromeTreeOwner*      mChromeTreeOwner;
    nsContentTreeOwner*     mContentTreeOwner;
