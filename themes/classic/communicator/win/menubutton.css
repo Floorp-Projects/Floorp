@@ -17,7 +17,7 @@
   }  
   
 .menubutton-dual.toolbar:hover > .menubutton-internal-box > .menubutton-dual-button,
-.menubutton-dual-button:hover
+.menubutton-dual.toolbar > .menubutton-internal-box > .menubutton-dual-button:hover
   {
     border-left           : 1px solid threedhighlight;
     border-top            : 1px solid threedhighlight;
@@ -26,7 +26,7 @@
     color                 : #0000FF;
   }  
   
-.menubutton-dual-button:hover:active
+.menubutton-dual.toolbar > .menubutton-internal-box > .menubutton-dual-button:hover:active
   {
     border-left           : 1px solid threedshadow;
     border-top            : 1px solid threedshadow;
@@ -61,10 +61,10 @@
     border-top            : 1px solid threedshadow;
     border-bottom         : 1px solid threedhighlight;
     border-right          : 1px solid threedhighlight;
-    padding               : 1px 0px 0px 2px;
+    padding               : 1px 1px 0px 3px;
   }  
 
-.menubutton-dual-button:hover + .menubutton-dual-dropmarker-box
+.menubutton-dual.toolbar > .menubutton-internal-box > .menubutton-dual-button:hover + .menubutton-dual-dropmarker-box
   {
     border-left           : 1px solid threedhighlight;
     border-top            : 1px solid threedhighlight;
@@ -78,13 +78,13 @@
     border-top            : 1px solid threedshadow;
     border-bottom         : 1px solid threedhighlight;
     border-right          : 1px solid threedhighlight;
-    padding               : 1px 0px 0px 2px;
+    padding               : 1px 1px 0px 3px;
   }
 
 .menubutton-dual-dropmarker-box
   {
     border                : 1px solid transparent;
-    padding               : 0px 1px 0px 1px;
+    padding               : 0px 2px 0px 2px;
   }
   
 .menubutton-dropmarker
