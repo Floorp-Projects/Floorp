@@ -37,13 +37,15 @@
 
 #include "nsIDeviceContextSpecXPrint.h"
 
+class nsDeviceContextXp;
+
 class nsXPrintContext
 {
 public:
   nsXPrintContext();
   virtual ~nsXPrintContext();
   
-  NS_IMETHOD Init(nsIDeviceContextSpecXp *aSpec);
+  NS_IMETHOD Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec);
   NS_IMETHOD BeginPage();
   NS_IMETHOD EndPage();
   NS_IMETHOD BeginDocument(PRUnichar *aTitle);
@@ -98,6 +100,7 @@ private:
   char         *mPrintFile;   /* file to "print" to */
   void         *mXpuPrintToFileHandle; /* handle for XpuPrintToFile/XpuWaitForPrintFileChild when printing to file */
   long          mPrintResolution;
+  nsDeviceContextXp *mContext; /* DeviceContext which created this object */
 
   NS_IMETHOD SetupWindow(int x, int y, int width, int height);
   NS_IMETHOD SetupPrintContext(nsIDeviceContextSpecXp *aSpec);

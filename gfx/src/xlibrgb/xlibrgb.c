@@ -45,7 +45,8 @@
  * Christopher Blizzard <blizzard@redhat.com>
  * Owen Taylor          <otaylor@redhat.com>
  * Shawn T. Amundson    <amundson@gtk.org>
-*/
+ * Roland Mainz         <roland.mainz@informatik.med.uni-giessen.de>
+ */
 
 #include <math.h>
 
@@ -130,7 +131,6 @@ struct _XlibRgbInfo
   int               screen_num;
   XVisualInfo      *x_visual_info;
   Colormap          cmap;
-  XColor           *cmap_colors;
   Visual           *default_visualid;
   Colormap          default_colormap;
 
@@ -665,13 +665,22 @@ xlib_rgb_choose_visual_for_xprint (int aDepth)
   Visual      *root_visual;
 
   ret_stat = XGetWindowAttributes(image_info->display, 
-			RootWindow(image_info->display, image_info->screen_num),
+			XRootWindow(image_info->display, image_info->screen_num),
 			&win_att);
   root_visual = win_att.visual;
   template.screen = image_info->screen_num;
-  visuals = XGetVisualInfo(image_info->display, VisualScreenMask,
+  template.depth  = aDepth;
+  visuals = XGetVisualInfo(image_info->display, 
+                           VisualScreenMask | ((aDepth!=-1)?(VisualDepthMask):(0)),
 			   &template, &num_visuals);
  
+  /* depth not found ? try again - without it... */
+  if (!visuals && aDepth!=-1)
+  {
+    xlib_rgb_choose_visual_for_xprint(-1);
+    return;
+  }
+  
   best_visual = visuals;
   if (best_visual->visual != root_visual) {
      for (i = cur_visual; i < num_visuals; i++) {
@@ -744,6 +753,41 @@ xlib_rgb_set_gray_cmap (Colormap cmap)
     }
 }
 
+static Bool xlib_rgb_initialized  = FALSE;
+static Bool disallow_image_tiling = FALSE;
+
+void
+xlib_rgb_detach (void)
+{
+  if (xlib_rgb_initialized)
+  {
+    int i;
+
+    for( i = 0 ; i < N_IMAGES ; i++ )
+    {
+      XDestroyImage(static_image[i]);
+      static_image[i] = NULL;
+    }
+    
+    if( image_info->cmap_alloced )
+    {
+      XFreeColormap(image_info->display, image_info->cmap);
+    }
+  
+    if( image_info->own_gc )
+      XFreeGC(image_info->display, image_info->own_gc);
+  
+    free(image_info);
+    image_info = NULL;
+    
+    /* reset to default... */
+    disallow_image_tiling = FALSE;
+  
+    /* done... */
+    xlib_rgb_initialized = FALSE;
+  }  
+}
+
 void
 xlib_rgb_init (Display *display, Screen *screen)
 {
@@ -757,25 +801,23 @@ xlib_rgb_init_with_depth (Display *display, Screen *screen, int prefDepth)
   int i;
   static const int byte_order[1] = { 1 };
 
-  static int initialized = 0;
-
-  if (initialized)
+  if (xlib_rgb_initialized)
   {
     return;
   }
 
-  initialized = 1;
+  xlib_rgb_initialized = TRUE;
 
   /* check endian sanity */
 #if G_BYTE_ORDER == G_BIG_ENDIAN
   if (((char *)byte_order)[0] == 1) {
     printf ("xlib_rgb_init: compiled for big endian, but this is a little endian machine.\n\n");
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 #else
   if (((char *)byte_order)[0] != 1) {
     printf ("xlib_rgb_init: compiled for little endian, but this is a big endian machine.\n\n");
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 #endif
 
@@ -3232,77 +3274,268 @@ xlib_rgb_alloc_scratch (int width, int height, int *ax, int *ay)
   return image;
 }
 
+
+static int 
+xlib_get_bits_per_pixel (int depth)
+{
+  if (depth <= 4)
+      return 4;
+  if (depth <= 8)
+      return 8;
+  if (depth <= 16)
+      return 16;
+  return 32;
+}
+
+/* allow or disallow "image tiling" in xlib_draw_rgb_image_core()... */
+void xlib_disallow_image_tiling (Bool disallow_it)
+{
+  disallow_image_tiling = disallow_it;
+}
+
+/* Use optimized code... */   
+#define XLIB_USE_FAST_BUT_UGLY_CODE 1
+
+/* size of static buffer to store images in non-tiling mode
+ * (see xlib_disallow_image_tiling()). If this buffer is too small to store
+ * the whole image into it a new buffer is allocated for that image 
+ */
+#define XLIB_STATIC_IMAGE_BUFFER_SIZE (256 * 128 * (32/4))   
+
 static void
 xlib_draw_rgb_image_core (Drawable drawable,
-			  GC gc,
-			  int x,
-			  int y,
-			  int width,
-			  int height,
-			  unsigned char *buf,
-			  int pixstride,
-			  int rowstride,
-			  XlibRgbConvFunc conv,
-			  XlibRgbCmap *cmap,
-			  int xdith,
-			  int ydith)
+                          GC gc,
+                          int x,
+                          int y,
+                          int width,
+                          int height,
+                          unsigned char *buf,
+                          int pixstride,
+                          int rowstride,
+                          XlibRgbConvFunc conv,
+                          XlibRgbCmap *cmap,
+                          int xdith,
+                          int ydith)
 {
-  int ay, ax;
-  int xs0, ys0;
-  XImage *image;
-  int width1, height1;
-  unsigned char *buf_ptr;
-
   if (image_info->bitmap)
+  {
+    if (image_info->own_gc == None)
     {
-      if (image_info->own_gc == 0)
-	{
-	  XColor color;
+      XColor color;
 
-	  image_info->own_gc = XCreateGC(image_info->display,
-					 drawable,
-					 0, NULL);
-	  color.pixel = WhitePixel(image_info->display,
-				   image_info->screen_num);
-	  XSetForeground(image_info->display, image_info->own_gc, color.pixel);
-	  color.pixel = BlackPixel(image_info->display,
-				   image_info->screen_num);
-	  XSetBackground(image_info->display, image_info->own_gc, color.pixel);
-	}
-      gc = image_info->own_gc;
+      image_info->own_gc = XCreateGC(image_info->display,
+                               drawable,
+                               0, NULL);
+      color.pixel = XWhitePixel(image_info->display,
+                                image_info->screen_num);
+      XSetForeground(image_info->display, image_info->own_gc, color.pixel);
+      color.pixel = XBlackPixel(image_info->display,
+                                image_info->screen_num);
+      XSetBackground(image_info->display, image_info->own_gc, color.pixel);
     }
-  for (ay = 0; ay < height; ay += IMAGE_HEIGHT)
+    gc = image_info->own_gc;
+  }
+
+  /* guess what's more worse - six malloc()s or one XFlush() ?
+   * The idea of cutting images into "tiles" which fit info the preallocated 
+   * XImage buffers looks nice, but breaks a lot of stuff (dxcp/lbx image cache, 
+   * Xprint image scaling etc.) - and results in a dramatic performance loss 
+   * due excessive use of XFlush() (after each N_IMAGES'th tiles 
+   * (N_IMAGES==6) - which becomes a real problem for big images or when the 
+   * application renders a lot of images (Mozilla chrome during window 
+   * opening)).
+   * I prefer malloc()'ing the image buffers here because it's faster (than 
+   * the preallocated_buffer+XFlush() solution) and doesn't break anything
+   * - and malloc() is usually highly optimized - why should we work around 
+   * some code which is already fast enought ?
+   *
+   * Using preallocated buffers may be usefull for MIT-SHM (because 
+   * allocating shared memory _may_ be slower than plain malloc()) - but 
+   * not for plain XPutImage() which does not need shared memory...
+   * And even in this case it should listen to XShmCompletionEvent events 
+   * instead of killing performance with tons of XFlush()...
+   *
+   * That's why this "tiling" stuff can be turned-off here (see 
+   * xlib_disallow_image_tiling() above)...
+   */
+  if(!disallow_image_tiling)
+  {
+    int ay, ax;
+    int xs0, ys0;
+    int width1, height1;
+    unsigned char *buf_ptr;
+    XImage *image;
+    
+    for (ay = 0; ay < height; ay += IMAGE_HEIGHT)
     {
       height1 = MIN (height - ay, IMAGE_HEIGHT);
       for (ax = 0; ax < width; ax += IMAGE_WIDTH)
-	{
-	  width1 = MIN (width - ax, IMAGE_WIDTH);
-	  buf_ptr = buf + ay * rowstride + ax * pixstride;
+      {
+        width1 = MIN (width - ax, IMAGE_WIDTH);
+        buf_ptr = buf + ay * rowstride + ax * pixstride;
 
-	  image = xlib_rgb_alloc_scratch (width1, height1, &xs0, &ys0);
+        image = xlib_rgb_alloc_scratch (width1, height1, &xs0, &ys0);
 
-	  conv (image, xs0, ys0, width1, height1, buf_ptr, rowstride,
-		x + ax + xdith, y + ay + ydith, cmap);
+        conv (image, xs0, ys0, width1, height1, buf_ptr, rowstride,
+              x + ax + xdith, y + ay + ydith, cmap);
 
 #ifndef DONT_ACTUALLY_DRAW
-	  XPutImage(image_info->display, drawable, gc, image,
-		    xs0, ys0, x + ax, y + ay, (unsigned int)width1, (unsigned int)height1);
+        XPutImage(image_info->display, drawable, gc, image,
+                  xs0, ys0, x + ax, y + ay, (unsigned int)width1, (unsigned int)height1);
 #endif
-	}
+      }
     }
+  }
+  else
+#ifdef XLIB_USE_FAST_BUT_UGLY_CODE
+  /* This is a heavily optimized version of the implementation used when  
+   * XLIB_USE_FAST_BUT_UGLY_CODE is not set. It tries to avoid malloc()/XCreateImage() 
+   * by using a static buffer if possible - but uses malloc() when the image data are 
+   * too large to fit info that buffer...
+   */
+  {
+    static char   *static_buffer       = NULL;
+    
+    XImage ximage;
+    int    format;
+    int    depth;
+    int    xpad;
+    long   image_data_size;
+    
+    /* allocate static buffer if we do not have one yet... */      
+    if( static_buffer == NULL )
+    {
+      static_buffer = malloc(XLIB_STATIC_IMAGE_BUFFER_SIZE);
+      if(!static_buffer)
+        return; /* error - no memory */
+    }
+    
+    /* fill the XImage structure... */
+    memset(&ximage, 0, sizeof(ximage));
+    
+    if (image_info->bitmap) 
+    {
+      format = XYBitmap;
+      depth  = 1;
+      xpad   = 8;
+    }
+    else 
+    {
+      format = ZPixmap;
+      depth  = image_info->x_visual_info->depth;
+      xpad   = 32;
+    }
+
+    ximage.width            = width;
+    ximage.height           = height;
+    ximage.format           = format;
+    ximage.byte_order       = XImageByteOrder(image_info->display);
+    ximage.bitmap_unit      = XBitmapUnit(image_info->display);
+    ximage.bitmap_bit_order = XBitmapBitOrder(image_info->display);
+    ximage.red_mask         = image_info->x_visual_info->visual->red_mask;
+    ximage.green_mask       = image_info->x_visual_info->visual->green_mask;
+    ximage.blue_mask        = image_info->x_visual_info->visual->blue_mask;
+    if (format == ZPixmap) 
+      ximage.bits_per_pixel = xlib_get_bits_per_pixel(depth);
+    ximage.xoffset          = 0;
+    ximage.bitmap_pad       = xpad;
+    ximage.depth            = depth;
+    ximage.data             = NULL;
+    ximage.bytes_per_line   = 0; /* let XInitImage() calculate that... */
+    ximage.obdata           = NULL;
+    ximage.bitmap_bit_order = MSBFirst;
+    ximage.byte_order       = MSBFirst;
+
+    if(!XInitImage(&ximage))
+    {
+#ifdef USE_MOZILLA_TYPES
+      NS_ERROR("xlib_draw_rgb_image_core: XInitImage() failure - should not happen...\n");
+#endif /* USE_MOZILLA_TYPES */    
+      return; /* error - should not happen... */
+    }
+    
+    image_data_size = height*ximage.bytes_per_line;     
+
+    if (image_data_size > XLIB_STATIC_IMAGE_BUFFER_SIZE)
+    {
+#ifdef VERBOSE
+      printf("xlib_draw_rgb_image_core: Allocating extra large buffer(%ld > %ld)...\n",
+             (long)image_data_size, (long)XLIB_STATIC_IMAGE_BUFFER_SIZE);
+#endif /* VERBOSE */
+      ximage.data = malloc(image_data_size);
+      if (!ximage.data)
+        return; /* error - no memory */
+    }
+    else
+    {
+      ximage.data = static_buffer; 
+    }
+
+    conv(&ximage, 0, 0, width, height, buf, rowstride,
+         0, 0, cmap);
+
+#ifndef DONT_ACTUALLY_DRAW
+    XPutImage(image_info->display, drawable, gc, &ximage,
+    0, 0, x, y, (unsigned int)width, (unsigned int)height);
+#endif
+
+    /* free any extra memory we may have allocated above */
+    if (ximage.data != static_buffer)
+      free(ximage.data);
+  }
+#else
+  /* this is the clean&pretty version of the code above... */
+  {
+    XImage *image;
+    
+    if (image_info->bitmap) 
+    {
+      image = XCreateImage(image_info->display,
+                           image_info->x_visual_info->visual,
+                           1,
+                           XYBitmap,
+                           0, 0, width, height,
+                           8, 0);
+    }
+    else 
+    {
+      image = XCreateImage(image_info->display,
+                           image_info->x_visual_info->visual,
+                           (unsigned int)image_info->x_visual_info->depth,
+                           ZPixmap,
+                           0, 0, width, height,
+                           32, 0);
+    }
+
+    /* Use malloc() instead of g_malloc since X will free() this mem */
+    image->data = malloc(height*image->bytes_per_line);
+    image->bitmap_bit_order = MSBFirst;
+    image->byte_order       = MSBFirst;      
+
+    conv(image, 0, 0, width, height, buf, rowstride,
+         0, 0, cmap);
+
+#ifndef DONT_ACTUALLY_DRAW
+    XPutImage(image_info->display, drawable, gc, image,
+    0, 0, x, y, (unsigned int)width, (unsigned int)height);
+#endif
+
+    XDestroyImage(image);
+  }
+#endif /* XLIB_USE_FAST_BUT_UGLY_CODE */  
 }
 
 
 void
 xlib_draw_rgb_image (Drawable drawable,
-		     GC gc,
-		     int x,
-		     int y,
-		     int width,
-		     int height,
-		     XlibRgbDither dith,
-		     unsigned char *rgb_buf,
-		     int rowstride)
+                     GC gc,
+                     int x,
+                     int y,
+                     int width,
+                     int height,
+                     XlibRgbDither dith,
+                     unsigned char *rgb_buf,
+                     int rowstride)
 {
   if (dith == XLIB_RGB_DITHER_NONE || (dith == XLIB_RGB_DITHER_NORMAL &&
 				      !image_info->dith_default))
