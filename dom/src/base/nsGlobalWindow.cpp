@@ -2063,6 +2063,12 @@ GlobalWindowImpl::Focus()
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   if (treeOwnerAsWin) {
+    PRBool isEnabled = PR_TRUE;
+    if (NS_SUCCEEDED(treeOwnerAsWin->GetEnabled(&isEnabled)) && !isEnabled) {
+      NS_WARNING( "Should not try to set the focus on a disabled window" );
+      return NS_ERROR_FAILURE;
+    }
+
     treeOwnerAsWin->SetVisibility(PR_TRUE);
     nsCOMPtr<nsIEmbeddingSiteWindow> embeddingWin(do_GetInterface(treeOwnerAsWin));
     if (embeddingWin)
@@ -3413,8 +3419,15 @@ GlobalWindowImpl::Activate()
  */
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
-  if (treeOwnerAsWin)
+  if (treeOwnerAsWin) {
+    PRBool isEnabled = PR_TRUE;
+    if (NS_SUCCEEDED(treeOwnerAsWin->GetEnabled(&isEnabled)) && !isEnabled) {
+      NS_WARNING( "Should not try to activate a disabled window" );
+      return NS_ERROR_FAILURE;
+    }
+
     treeOwnerAsWin->SetVisibility(PR_TRUE);
+  }
 
   nsCOMPtr<nsIPresShell> presShell;
   mDocShell->GetPresShell(getter_AddRefs(presShell));

@@ -718,10 +718,10 @@ NS_IMETHODIMP nsXULWindow::GetEnabled(PRBool *aEnabled)
 {
   NS_ENSURE_ARG_POINTER(aEnabled);
   if (mWindow)
-    mWindow->IsEnabled(aEnabled);
-  else
-    *aEnabled = PR_FALSE; // better guess than most
-  return NS_OK;
+    return mWindow->IsEnabled(aEnabled);
+
+  *aEnabled = PR_TRUE; // better guess than most
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsXULWindow::SetEnabled(PRBool aEnable)

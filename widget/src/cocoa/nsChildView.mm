@@ -566,6 +566,8 @@ NS_IMETHODIMP nsChildView::Enable(PRBool aState)
 NS_IMETHODIMP nsChildView::IsEnabled(PRBool *aState)
 {
   // unimplemented.
+  if (*aState)
+   *aState = PR_TRUE;
   return NS_OK;
 }
 
