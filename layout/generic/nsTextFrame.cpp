@@ -2285,7 +2285,9 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       else
       {
         aPos->mAmount = eSelectDir;//go to "next" or previous frame based on direction not THIS frame
-        return nsFrame::PeekOffset(aPresContext, aPos);//no matter what this is not a valid frame to end up on
+        result = GetFrameFromDirection(aPos);
+        if (NS_SUCCEEDED(result) && aPos->mResultFrame && aPos->mResultFrame!= this)
+          return aPos->mResultFrame->PeekOffset(aPresContext, aPos);
       }
     }
     break;
