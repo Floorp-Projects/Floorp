@@ -386,7 +386,7 @@ static nsDefaultMimeTypeEntry nonDecodableExtensions [] = {
   { APPLICATION_COMPRESS, "Z" }
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS6(
+NS_IMPL_ISUPPORTS6(
   nsExternalHelperAppService,
   nsIExternalHelperAppService,
   nsPIExternalAppLauncher,

@@ -288,13 +288,13 @@ public:
   NS_DECL_NSIOBSERVER
 
   nsExternalAppHandler();
-  virtual ~nsExternalAppHandler();
+  ~nsExternalAppHandler();
 
-  virtual nsresult Init(nsIMIMEInfo * aMIMEInfo, const char * aFileExtension,
-                        nsISupports * aWindowContext,
-                        const nsAString& aFilename,
-                        PRBool aIsAttachment,
-                        nsExternalHelperAppService *aHelperAppService);
+  nsresult Init(nsIMIMEInfo * aMIMEInfo, const char * aFileExtension,
+                nsISupports * aWindowContext,
+                const nsAString& aFilename,
+                PRBool aIsAttachment,
+                nsExternalHelperAppService *aHelperAppService);
 
 protected:
   nsCOMPtr<nsIFile> mTempFile;
@@ -394,10 +394,10 @@ protected:
   
   /**
    * Helper routine to ensure mSuggestedFileName is "correct";
-   * the base class implementation ensures that mSuggestedFileName has
-   * mTempFileExtension as extension;
+   * this ensures that mTempFileExtension only contains an extension when it
+   * is different from mSuggestedFileName's extension.
    */
-  virtual void EnsureSuggestedFileName();
+  void EnsureSuggestedFileName();
 
   typedef enum { kReadError, kWriteError, kLaunchError } ErrorType;
   /**
