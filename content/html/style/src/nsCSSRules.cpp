@@ -67,8 +67,6 @@
 #include "nsStyleConsts.h"
 #include "nsDOMError.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
 #define DECL_STYLE_RULE_INHERIT  \
 NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const; \
 NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet); \
