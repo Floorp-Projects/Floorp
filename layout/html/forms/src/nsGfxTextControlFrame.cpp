@@ -357,7 +357,12 @@ nsGfxTextControlFrame::GetText(nsString* aText, PRBool aInitialValue)
         mEditor->OutputToString(*aText, format, 0);
       }
       else {
-        result = nsFormControlHelper::GetInputElementValue(mContent, aText, aInitialValue);
+        if (mCachedState) {
+          *aText = *mCachedState;
+	  result = NS_OK;
+	} else {
+          result = nsFormControlHelper::GetInputElementValue(mContent, aText, aInitialValue);
+	}
       }
     }
     RemoveNewlines(*aText);
@@ -664,6 +669,11 @@ void nsGfxTextControlFrame::GetTextControlFrameState(nsString& aValue)
     }
 
     mEditor->OutputToString(aValue, format, flags);
+  }
+  else {
+    if (mCachedState) {
+      aValue = *mCachedState;
+    }
   }
 }     
 
