@@ -2209,7 +2209,9 @@ void COutliner::SetCSID(int csid)
     memset(&lf,0,sizeof(LOGFONT));
     lf.lfPitchAndFamily = FF_SWISS;
 	lf.lfCharSet = IntlGetLfCharset(csid);
-	if (csid == CS_LATIN1 || csid == CS_UTF8)
+	if ((csid == CS_LATIN1) 
+		|| (csid == CS_UTF8)
+	)
  		_tcscpy(lf.lfFaceName, "MS Sans Serif");
 	else
  		_tcscpy(lf.lfFaceName, IntlGetUIPropFaceName(csid));
