@@ -336,6 +336,14 @@ nsActivePlugin::~nsActivePlugin()
 
   if(mInstance != nsnull)
   {
+    if(mPeer)
+    {
+      nsresult rv = NS_OK;
+      nsPluginInstancePeerImpl * peer = (nsPluginInstancePeerImpl *)mPeer;
+      nsCOMPtr<nsIPluginInstanceOwner> owner;
+      rv = peer->GetOwner(*getter_AddRefs(owner));
+      owner->SetInstance(nsnull);
+    }
     mInstance->Destroy();
     NS_RELEASE(mInstance);
     NS_RELEASE(mPeer);
