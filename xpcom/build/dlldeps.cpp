@@ -44,6 +44,7 @@
 #include "nsIGenericFactory.h"
 #include "nsAVLTree.h"
 #include "nsHashtableEnumerator.h"
+#include "nsPipe2.h"
 
 class dummyComparitor: public nsAVLNodeComparitor {
 public:
@@ -53,6 +54,11 @@ public:
   }
 }; 
 
+#ifdef DEBUG
+extern NS_COM void
+TestSegmentedBuffer();
+#endif
+
 void XXXNeverCalled()
 {
     dummyComparitor dummy;
@@ -61,6 +67,7 @@ void XXXNeverCalled()
     NS_GetNumberOfAtoms();
     nsFileURL(NULL);
     NS_NewPipe(NULL, NULL, 0, 0, 0, NULL);
+    NS_NewPipe(NULL, NULL, NULL, 0, 0);
     nsFileSpec s;
     NS_NewIOFileStream(NULL, s, 0, 0);
     nsInputFileStream(s, 0, 0);
@@ -92,4 +99,7 @@ void XXXNeverCalled()
     XPTI_GetInterfaceInfoManager();
     NS_NewGenericFactory(NULL, NULL, NULL);
     NS_NewHashtableEnumerator(NULL, NULL, NULL, NULL);
+#ifdef DEBUG
+    TestSegmentedBuffer();
+#endif
 }
