@@ -31,7 +31,7 @@ function runThreads() {
     var i;
 
     for(i = 0; i < THREAD_COUNT; i++) {
-        var runable = {Run : threadProc, id : i};
+        var runable = {run : threadProc, id : i};
         threads[i] = new Thread(runable, 0, 
                                 nsIThread.PRIORITY_NORMAL,
                                 nsIThread.SCOPE_GLOBAL,
