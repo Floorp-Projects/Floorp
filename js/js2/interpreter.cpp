@@ -567,19 +567,18 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
 
             case RETURN_VOID:
                 {
-                    JSValue result;
                     Linkage *linkage = mLinkage;
                     if (!linkage)
                     {
                         // let the garbage collector free activations.
                         mActivation = 0;
-                        return result;
+                        return kUndefinedValue;
                     }
                     mLinkage = linkage->mNext;
                     mActivation = linkage->mActivation;
                     registers = &mActivation->mRegisters;
                     if (linkage->mResult.first != NotARegister)
-                        (*registers)[linkage->mResult.first] = result;
+                        (*registers)[linkage->mResult.first] = kUndefinedValue;
                     mPC = linkage->mReturnPC;
                     endPC = mActivation->mICode->its_iCode->end();
                 }
@@ -640,36 +639,29 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                         if (thisClass) {
                             JSInstance* thisInstance = new(thisClass) JSInstance(thisClass);
                             (*registers)[dst(nc).first] = thisInstance;
-                            // call the constructor, if any.
-                            ICodeModule* ctor = thisClass->getConstructor();
-                            if (ctor) {
-                                TypedRegister voidRegister(NotARegister, &None_Type);
-                                mLinkage = new Linkage(mLinkage, ++mPC,
-                                                       mActivation, voidRegister);
-                                JSValues args(1);
-                                args[0] = thisInstance;
-                                mActivation = new Activation(ctor, args);
-                                registers = &mActivation->mRegisters;
-                                mPC = ctor->its_iCode->begin();
-                                endPC = ctor->its_iCode->end();
-
-                                // see if there are superclasses to initialize before.
-                                thisClass = thisClass->getSuperClass();
-                                while (thisClass) {
-                                    ctor = thisClass->getConstructor();
-                                    if (ctor) {
-                                        mLinkage = new Linkage(mLinkage, mPC,
-                                                               mActivation, voidRegister);
-                                        mActivation = new Activation(ctor, args);
-                                        registers = &mActivation->mRegisters;
-                                        mPC = ctor->its_iCode->begin();
-                                        endPC = ctor->its_iCode->end();
-                                    }
-                                    thisClass = thisClass->getSuperClass();
+                            JSValues args(1);
+                            args[0] = thisInstance;
+                            TypedRegister voidRegister(NotARegister, &None_Type);
+                            InstructionIterator nextPC = ++mPC;
+                            do {
+                                // call the constructor(s), if any.
+                                ICodeModule* ctor = thisClass->getConstructor();
+                                if (ctor) {
+                                    mLinkage = new Linkage(mLinkage, nextPC,
+                                                           mActivation, voidRegister);
+                                    mActivation = new Activation(ctor, args);
+                                    registers = &mActivation->mRegisters;
+                                    nextPC = ctor->its_iCode->begin();
+                                    endPC = ctor->its_iCode->end();
                                 }
-                                continue;
-                            }
+                                thisClass = thisClass->getSuperClass();
+                            } while (thisClass);
+                            
+                            mPC = nextPC;
+                            continue;
                         }
+                    } else {
+                        // XXX Runtime error.
                     }
                 }
                 break;
