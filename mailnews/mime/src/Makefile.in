@@ -17,8 +17,8 @@
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -34,41 +34,41 @@ CPPSRCS		= \
 		nsMimeObjectClassAccess.cpp \
 		nsMimeConverter.cpp \
 		nsMimeAddress.cpp \
-		mimecont.cpp	\
-		mimeebod.cpp	\
-		mimeenc.cpp		\
-		mimeeobj.cpp	\
-		mimehdrs.cpp	\
-		mimei.cpp		\
-		mimeiimg.cpp	\
-		mimeleaf.cpp	\
-		mimemalt.cpp	\
-		mimemapl.cpp	\
-		mimemdig.cpp	\
-		mimemmix.cpp	\
-		mimempar.cpp	\
-		mimemrel.cpp	\
-		mimemsg.cpp		\
-		mimemsig.cpp	\
-		mimemult.cpp	\
-		mimeobj.cpp		\
-		mimepbuf.cpp	\
-		mimesun.cpp		\
-		mimetenr.cpp	\
-		mimetext.cpp	\
-		mimethtm.cpp	\
-		mimetpla.cpp	\
-		mimetric.cpp	\
-		mimeunty.cpp	\
-		mimecth.cpp		\
-		mimebuf.cpp		\
-		mimecom.cpp		\
-		mimemoz2.cpp	\
-		comi18n.cpp		\
+		mimecont.cpp \
+		mimeebod.cpp \
+		mimeenc.cpp \
+		mimeeobj.cpp \
+		mimehdrs.cpp \
+		mimei.cpp \
+		mimeiimg.cpp \
+		mimeleaf.cpp \
+		mimemalt.cpp \
+		mimemapl.cpp \
+		mimemdig.cpp \
+		mimemmix.cpp \
+		mimempar.cpp \
+		mimemrel.cpp \
+		mimemsg.cpp \
+		mimemsig.cpp \
+		mimemult.cpp \
+		mimeobj.cpp \
+		mimepbuf.cpp \
+		mimesun.cpp \
+		mimetenr.cpp \
+		mimetext.cpp \
+		mimethtm.cpp \
+		mimetpla.cpp \
+		mimetric.cpp \
+		mimeunty.cpp \
+		mimecth.cpp \
+		mimebuf.cpp \
+		mimecom.cpp \
+		mimemoz2.cpp \
+		comi18n.cpp \
 		nsMimeTransition.cpp \
 		nsMsgHeaderParser.cpp \
 		nsStreamConverter.cpp \
-		mimedrft.cpp	\
+		mimedrft.cpp \
 		nsMimeHeaders.cpp \
 		$(NULL)
 
@@ -105,5 +105,6 @@ EXTRA_DSO_LDOPTS = \
 include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH), Linux)
-DEFINES         += -D_BSD_SOURCE
+DEFINES		+= -D_BSD_SOURCE
 endif
+

@@ -17,21 +17,17 @@
 
 DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= abstat
 LIBRARY_NAME	= abstat_s
 
-EXPORTS		= \
-		nsMimeMiscStatus.h \
-		$(NULL)
+CPPSRCS		= nsMimeMiscStatus.cpp
 
-CPPSRCS		= \
-		nsMimeMiscStatus.cpp \
-		$(NULL)
+EXPORTS		= nsMimeMiscStatus.h
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
@@ -39,10 +35,9 @@ EXTRA_DSO_LDOPTS = \
 		-lxpcom \
 		$(NULL)
 
-include $(topsrcdir)/config/config.mk
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
+

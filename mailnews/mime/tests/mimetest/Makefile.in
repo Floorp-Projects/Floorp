@@ -25,16 +25,8 @@ include $(DEPTH)/config/autoconf.mk
 PROGRAM		= mimetest
 CPPSRCS		= mimetest.cpp
 
-BASE_LIBS	= \
-		-lmozjs \
-		-lxpcom \
-		$(NULL)
-
-GECKO_LIBS	= \
+LIBS		= \
 		-lraptorplugin \
-		$(NULL)
-
-NETLIB_LIBS	= \
 		-labouturl \
 		-lfileurl \
 		-lftpurl \
@@ -48,13 +40,9 @@ NETLIB_LIBS	= \
 		-lnetlib \
 		-lnetwork \
 		-lpwcac \
-		$(NULL)
-
-LIBS		= \
-		$(GECKO_LIBS) \
-		$(NETLIB_LIBS) \
 		$(MOZ_TIMER_LIBS) \
-		$(BASE_LIBS) \
+		-lmozjs \
+		-lxpcom \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \
 		$(NULL)
