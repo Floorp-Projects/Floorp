@@ -283,41 +283,10 @@ nsMathMLmtableOuterFrame::Init(nsIPresContext*  aPresContext,
 {
   nsresult  rv = nsTableOuterFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  // now, if our parent implements the nsIMathMLFrame interface, we inherit
-  // its scriptlevel and displaystyle. If the parent later wishes to increment
-  // with other values, it will do so in its SetInitialChildList() method.
-
   // XXX the REC says that by default, displaystyle=false in <mtable>
 
-  nsIFrame* parent = aParent;
-  while (parent) {
-    nsIMathMLFrame* mathMLFrame;
-    parent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-    if (mathMLFrame) {
-    	nsPresentationData parentData;
-      mathMLFrame->GetPresentationData(parentData);
-      mPresentationData.mstyle = parentData.mstyle;
-      mPresentationData.scriptLevel = parentData.scriptLevel;
-      if (NS_MATHML_IS_DISPLAYSTYLE(parentData.flags)) {
-        mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
-      }
-      break;
-    }
-    // stop if we reach the root <math> tag
-    nsCOMPtr<nsIAtom> parentTag;
-    nsCOMPtr<nsIContent> parentContent;
-    parent->GetContent(getter_AddRefs(parentContent));
-    parentContent->GetTag(*getter_AddRefs(parentTag));
-    if (parentTag.get() == nsMathMLAtoms::math) {
-      const nsStyleDisplay* display;
-      parent->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
-      if (display->mDisplay == NS_STYLE_DISPLAY_BLOCK) {
-        mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
-      }
-      break;
-    }
-    parent->GetParent(&parent);
-  }
+  // now, inherit the scriptlevel and displaystyle from our parent
+  nsMathMLContainerFrame::GetPresentationDataFrom(aParent, mPresentationData);
 
   // see if the displaystyle attribute is there and let it override what we inherited
   nsAutoString value;
@@ -474,38 +443,8 @@ nsMathMLmtdInnerFrame::Init(nsIPresContext*  aPresContext,
   // record that children that are ignorable whitespace should be excluded
   mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
 
-  // now, get our outermost parent that implements the nsIMathMLFrame interface,
-  // we will inherit its scriptlevel and displaystyle. If that parent later wishes
-  // to increment with other values, it will do so in its SetInitialChildList() method.
-  nsIFrame* parent = aParent;
-  while (parent) {
-    nsIMathMLFrame* mathMLFrame;
-    parent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-    if (mathMLFrame) {
-    	nsPresentationData parentData;
-      mathMLFrame->GetPresentationData(parentData);
-      mPresentationData.mstyle = parentData.mstyle;
-      mPresentationData.scriptLevel = parentData.scriptLevel;
-      if (NS_MATHML_IS_DISPLAYSTYLE(parentData.flags)) {
-        mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
-      }
-      break;
-    }
-    // stop if we reach the root <math> tag
-    nsCOMPtr<nsIAtom> parentTag;
-    nsCOMPtr<nsIContent> parentContent;
-    parent->GetContent(getter_AddRefs(parentContent));
-    parentContent->GetTag(*getter_AddRefs(parentTag));
-    if (parentTag.get() == nsMathMLAtoms::math) {
-      const nsStyleDisplay* display;
-      parent->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
-      if (display->mDisplay == NS_STYLE_DISPLAY_BLOCK) {
-        mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
-      }
-      break;
-    }
-    parent->GetParent(&parent);
-  }
+  // now, inherit the scriptlevel and displaystyle from our parent
+  nsMathMLContainerFrame::GetPresentationDataFrom(aParent, mPresentationData);
 
   return rv;
 }

@@ -272,32 +272,11 @@ nsMathMLmstyleFrame::AttributeChanged(nsIPresContext* aPresContext,
       // use the base method here because we really want to reflect any updates
       nsMathMLContainerFrame::UpdatePresentationDataFromChildAt(aPresContext, 0, -1, 
         mPresentationData.scriptLevel - oldData.scriptLevel, newValues, whichFlags);
-      // now walk up to our immediate ancestor that implements the
-      // nsIMathMLFrame interface and grab its scriptlevel
-      PRInt32 parentScriptLevel = 0;
-      nsIFrame* parent = mParent;
-      while (parent) {
-        // if this frame is MathML frame, we are done
-        nsIMathMLFrame* mathMLFrame;
-        parent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-        if (mathMLFrame) {
-          nsPresentationData parentData;
-          mathMLFrame->GetPresentationData(parentData);
-          parentScriptLevel = parentData.scriptLevel;
-          break;
-        }
-        // stop if we reach the root <math> tag
-        nsCOMPtr<nsIAtom> parentTag;
-        nsCOMPtr<nsIContent> parentContent;
-        parent->GetContent(getter_AddRefs(parentContent));
-        parentContent->GetTag(*getter_AddRefs(parentTag));
-        if (parentTag.get() == nsMathMLAtoms::math) {
-          break;
-        }
-        parent->GetParent(&parent);
-      }
+      // now grab the scriptlevel of our parent
+      nsPresentationData parentData;
+      GetPresentationDataFrom(mParent, parentData);
       // re-resolve style data in our subtree to sync any change of script sizes
-      PropagateScriptStyleFor(aPresContext, this, parentScriptLevel);
+      PropagateScriptStyleFor(aPresContext, this, parentData.scriptLevel);
     }
   }
 
