@@ -1032,17 +1032,6 @@ DocumentViewerImpl::Close()
     }
 #endif
 
-    // Before we clear the script global object, clear the undisplayed
-    // content map, since XBL content can be destroyed by the
-    // |SetDocument(null, ...)| triggered by calling
-    // |SetScriptGlobalObject(null)|.
-    if (mPresShell) {
-      nsCOMPtr<nsIFrameManager> frameManager;
-      mPresShell->GetFrameManager(getter_AddRefs(frameManager));
-      if (frameManager)
-        frameManager->ClearUndisplayedContentMap();
-    }
-
     // Break global object circular reference on the document created
     // in the DocViewer Init
     nsCOMPtr<nsIScriptGlobalObject> globalObject;

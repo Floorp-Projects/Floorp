@@ -200,25 +200,22 @@ MOZ_DECL_CTOR_COUNTER(UndisplayedNode)
 class UndisplayedNode {
 public:
   UndisplayedNode(nsIContent* aContent, nsIStyleContext* aStyle)
+    : mContent(aContent),
+      mStyle(aStyle),
+      mNext(nsnull)
   {
     MOZ_COUNT_CTOR(UndisplayedNode);
-    mContent = aContent;
-    mStyle = aStyle;
-    NS_ADDREF(mStyle);
-    mNext = nsnull;
-  }
-  ~UndisplayedNode(void)
-  {
-    MOZ_COUNT_DTOR(UndisplayedNode);
-    NS_RELEASE(mStyle);
-    if (mNext) {
-      delete mNext;
-    }
   }
 
-  nsIContent*       mContent;
-  nsIStyleContext*  mStyle;
-  UndisplayedNode*  mNext;
+  ~UndisplayedNode()
+  {
+    MOZ_COUNT_DTOR(UndisplayedNode);
+    delete mNext;
+  }
+
+  nsCOMPtr<nsIContent>      mContent;
+  nsCOMPtr<nsIStyleContext> mStyle;
+  UndisplayedNode*          mNext;
 };
 
 class UndisplayedMap {
@@ -255,6 +252,9 @@ class FrameManager;
 struct CantRenderReplacedElementEvent : public PLEvent {
   CantRenderReplacedElementEvent(FrameManager* aFrameManager, nsIFrame* aFrame, nsIPresShell* aPresShell);
   ~CantRenderReplacedElementEvent();
+  // XXXldb Should the pres shell maintain a reference count on a single
+  // dummy layout request instead of doing creation of a separate one
+  // here (and per-event!)?
   nsresult AddLoadGroupRequest(nsIPresShell* aPresShell);
   nsresult RemoveLoadGroupRequest();
 
@@ -1870,43 +1870,43 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
 
     // now look for undisplayed child content and pseudos
     if (localContent && mUndisplayedMap) {
-      UndisplayedNode* undisplayed = mUndisplayedMap->GetFirstNode(localContent);
-      while (undisplayed) {
-        nsIStyleContext* undisplayedContext = nsnull;
+      for (UndisplayedNode* undisplayed =
+                                   mUndisplayedMap->GetFirstNode(localContent);
+           undisplayed; undisplayed = undisplayed->mNext) {
+        nsCOMPtr<nsIStyleContext> undisplayedContext;
         undisplayed->mStyle->GetPseudoType(pseudoTag);
         if (pseudoTag == nsnull) {  // child content
           aPresContext->ResolveStyleContextFor(undisplayed->mContent,
-                                               newContext, 
-                                               &undisplayedContext);
+                               newContext, getter_AddRefs(undisplayedContext));
         }
         else if (pseudoTag == nsCSSAnonBoxes::mozNonElement) {
           aPresContext->ResolveStyleContextForNonElement(newContext, 
-                                                         &undisplayedContext);
+                                           getter_AddRefs(undisplayedContext));
         }
         else {  // pseudo element
           NS_NOTREACHED("no pseudo elements in undisplayed map");
           NS_ASSERTION(pseudoTag, "pseudo element without tag");
           aPresContext->ResolvePseudoStyleContextFor(localContent, pseudoTag,
-                                                     newContext,
-                                                     &undisplayedContext);
+                               newContext, getter_AddRefs(undisplayedContext));
         }
         NS_IF_RELEASE(pseudoTag);
         if (undisplayedContext) {
-          const nsStyleDisplay* display = 
-                (const nsStyleDisplay*)undisplayedContext->GetStyleData(eStyleStruct_Display);
+          const nsStyleDisplay* display;
+          ::GetStyleData(undisplayedContext.get(), &display);
           if (display->mDisplay != NS_STYLE_DISPLAY_NONE) {
-            aChangeList.AppendChange(nsnull, ((undisplayed->mContent) ? undisplayed->mContent : localContent), 
+            aChangeList.AppendChange(nsnull,
+                                     undisplayed->mContent
+                                       ? NS_STATIC_CAST(nsIContent*,
+                                                        undisplayed->mContent)
+                                       : localContent, 
                                      NS_STYLE_HINT_FRAMECHANGE);
             // The node should be removed from the undisplayed map when
             // we reframe it.
-            NS_RELEASE(undisplayedContext);
           } else {
             // update the undisplayed node with the new context
-            NS_RELEASE(undisplayed->mStyle);
             undisplayed->mStyle = undisplayedContext;
           }
         }
-        undisplayed = undisplayed->mNext;
       }
     }
 
