@@ -31,13 +31,13 @@ CHROME_CONTENT	= \
 		bm-panel.xul \
 		bm-props.xul \
 		bm-props.js \
-		bookmark-popup.js \
 		bookmarks.html \
 		bookmarks.js \
 		bookmarks.xul \
 		$(NULL)
 
 CHROME_SKIN	= \
+		bm-panel.css \
 		bookmark-folder-closed.gif \
 		bookmark-folder-open.gif \
 		bookmark-item.gif \
