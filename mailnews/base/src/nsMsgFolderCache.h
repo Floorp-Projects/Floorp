@@ -30,6 +30,8 @@ class nsMsgFolderCache : public nsIMsgFolderCache
 {
 
 public:
+	friend class nsMsgFolderCacheElement;
+
 	nsMsgFolderCache();
 	virtual ~nsMsgFolderCache();
 
@@ -46,7 +48,9 @@ protected:
 	static PRBool FindCacheElementByURI(nsISupports *aElement, void *data);
 	static nsIMdbFactory *GetMDBFactory();
 
-	nsresult AddCacheElement(const char *uri, nsIMsgFolderCacheElement **result);
+	nsresult AddCacheElement(const char *uri, nsIMdbRow *row, nsIMsgFolderCacheElement **result);
+
+	nsresult RowCellColumnToCharPtr(nsIMdbRow *hdrRow, mdb_token columnToken, char **resultPtr);
 	nsresult InitMDBInfo();
 	nsresult InitNewDB();
 	nsresult InitExistingDB();

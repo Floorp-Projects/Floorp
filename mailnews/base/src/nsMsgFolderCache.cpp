@@ -125,6 +125,7 @@ nsresult nsMsgFolderCache::InitExistingDB()
 					if (NS_FAILED(rv) || !hdrRow)
 						break;
 
+					rv = AddCacheElement(nsnull, hdrRow, nsnull);
 //					rv = mDB->CreateMsgHdr(hdrRow, key, &mResultHdr);
 					if (NS_FAILED(rv))
 						return rv;
@@ -257,7 +258,14 @@ NS_IMETHODIMP nsMsgFolderCache::Init(nsIFileSpec *dbFileSpec)
 
 		if (NS_SUCCEEDED(rv))
 		{
-//			if (!m_dbFileSpec->Exists())
+			if (!m_dbFileSpec.Exists())
+			{
+				InitNewDB();
+			}
+			else
+			{
+				InitExistingDB();
+			}
 
 		}
 	}
@@ -298,7 +306,7 @@ NS_IMETHODIMP nsMsgFolderCache::GetCacheElement(char *uri, PRBool createIfMissin
 			if (NS_SUCCEEDED(err) && hdrRow)
 			{
 				m_mdbAllFoldersTable->AddRow(GetEnv(), hdrRow);
-				nsresult ret = AddCacheElement(uri, result);
+				nsresult ret = AddCacheElement(uri, hdrRow, result);
 				if (*result)
 					(*result)->SetStringProperty("uri", uri);
 				return ret;
@@ -338,13 +346,23 @@ nsMsgFolderCache::FindCacheElementByURI(nsISupports *aElement, void *data)
 	return PR_TRUE;
 }
 
-nsresult nsMsgFolderCache::AddCacheElement(const char *uri, nsIMsgFolderCacheElement **result)
+nsresult nsMsgFolderCache::AddCacheElement(const char *uri, nsIMdbRow *row, nsIMsgFolderCacheElement **result)
 {
 	nsMsgFolderCacheElement *cacheElement = new nsMsgFolderCacheElement;
 
 	if (cacheElement)
 	{
-		cacheElement->SetURI((char *) uri);
+		cacheElement->SetMDBRow(row);
+		// if caller didn't pass in URI, try to get it from row.
+		if (!uri)
+		{
+			char *existingURI = nsnull;
+			cacheElement->GetStringProperty("uri", &existingURI);	
+			cacheElement->SetURI(existingURI);
+			PR_Free(existingURI);
+		}
+		else
+			cacheElement->SetURI((char *) uri);
 		nsCOMPtr<nsISupports> supports(do_QueryInterface(cacheElement));
 		if(supports)
 			m_cacheElements->AppendElement(supports);
@@ -354,4 +372,32 @@ nsresult nsMsgFolderCache::AddCacheElement(const char *uri, nsIMsgFolderCacheEle
 	}
 	else
 		return NS_ERROR_OUT_OF_MEMORY;
+}
+
+nsresult nsMsgFolderCache::RowCellColumnToCharPtr(nsIMdbRow *hdrRow, mdb_token columnToken, char **resultPtr)
+{
+	nsresult	err = NS_OK;
+	nsIMdbCell	*hdrCell;
+
+	if (hdrRow)	// ### probably should be an error if hdrRow is NULL...
+	{
+		err = hdrRow->GetCell(GetEnv(), columnToken, &hdrCell);
+		if (err == NS_OK && hdrCell)
+		{
+			struct mdbYarn yarn;
+			hdrCell->AliasYarn(GetEnv(), &yarn);
+			char *result = (char *) PR_Malloc(yarn.mYarn_Fill + 1);
+			if (result)
+			{
+				nsCRT::memcpy(result, yarn.mYarn_Buf, yarn.mYarn_Fill);
+				result[yarn.mYarn_Fill] = '\0';
+			}
+			else
+				err = NS_ERROR_OUT_OF_MEMORY;
+
+			*resultPtr = result;
+			hdrCell->CutStrongRef(GetEnv()); // always release ref
+		}
+	}
+	return err;
 }

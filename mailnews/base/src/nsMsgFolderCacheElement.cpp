@@ -41,10 +41,17 @@ NS_IMPL_SETTER_STR(nsMsgFolderCacheElement::SetURI, m_folderURI)
 
 NS_IMETHODIMP 	 nsMsgFolderCacheElement::GetStringProperty(const char *propertyName, char **result)
 {
-	if (!propertyName || !result || !m_mdbRow)
+	if (!propertyName || !result || !m_mdbRow || !m_owningCache)
 		return NS_ERROR_NULL_POINTER;
 
-	return NS_ERROR_NOT_IMPLEMENTED;
+	mdb_token	property_token;
+
+	nsresult ret = m_owningCache->GetStore()->StringToToken(m_owningCache->GetEnv(),  propertyName, &property_token);
+	if (ret == NS_OK)
+	{
+		ret = m_owningCache->RowCellColumnToCharPtr(m_mdbRow, property_token, result);
+	}
+	return ret;
 }
 
 NS_IMETHODIMP nsMsgFolderCacheElement::GetInt32Property(const char *propertyName, PRInt32 *result)
@@ -68,3 +75,11 @@ NS_IMETHODIMP nsMsgFolderCacheElement::SetInt32Property(const char *propertyName
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+void nsMsgFolderCacheElement::SetMDBRow(nsIMdbRow	*row) 
+{
+	if (m_mdbRow)
+		NS_RELEASE(m_mdbRow);
+	m_mdbRow = row;
+	if (row)
+		NS_ADDREF(row);
+}
