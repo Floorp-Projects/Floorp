@@ -1088,7 +1088,8 @@ XULDocumentImpl::~XULDocumentImpl()
     if (mCSSLoader) {
       mCSSLoader->DropDocumentReference();
     }
-    
+
+#if 0
     PRInt32 i;
     for (i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(i);
@@ -1097,6 +1098,7 @@ XULDocumentImpl::~XULDocumentImpl()
           i--;
         }
     }
+#endif
 
     if (--gRefCnt == 0) {
         NS_IF_RELEASE(kCommandUpdaterAtom);
