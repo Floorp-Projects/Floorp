@@ -56,7 +56,6 @@ REQUIRES = \
 	webbrwsr \
 	windowwatcher \
 	exthandler \
-	helperAppDlg \
 	uriloader \
 	necko \
 	mimetype \

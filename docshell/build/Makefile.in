@@ -76,7 +76,6 @@ REQUIRES	= xpcom \
 		  history \
 		  uriloader \
 		  exthandler \
-		  helperAppDlg \
 		  mimetype \
 		  rdf \
 		  prefetch \

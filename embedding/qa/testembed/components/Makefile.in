@@ -52,7 +52,6 @@ REQUIRES = \
 	webBrowser_core \
 	windowwatcher \
 	exthandler \
-	helperAppDlg \
 	uriloader \
 	necko \
 	mimetype \
