@@ -135,7 +135,7 @@ public:
     // these all return an AddRef'd object (or nsnull on failure)
     static nsXPConnect* GetXPConnect();
     static nsIInterfaceInfoManager* GetInterfaceInfoManager(nsXPConnect* xpc = nsnull);
-    static nsIJSContextStack* GetContextStack(nsXPConnect* xpc = nsnull);
+    static nsIThreadJSContextStack* GetContextStack(nsXPConnect* xpc = nsnull);
     static XPCJSThrower* GetJSThrower(nsXPConnect* xpc = nsnull);
     static XPCJSRuntime* GetRuntime(nsXPConnect* xpc = nsnull);
     static XPCContext*  GetContext(JSContext* cx, nsXPConnect* xpc = nsnull);
@@ -167,7 +167,7 @@ private:
     nsIXPCScriptable* mArbitraryScriptable;
     nsIInterfaceInfoManager* mInterfaceInfoManager;
     XPCJSThrower* mThrower;
-    nsIJSContextStack* mContextStack;
+    nsIThreadJSContextStack* mContextStack;
     nsIXPCSecurityManager* mDefaultSecurityManager;
     PRUint16 mDefaultSecurityManagerFlags;
 #ifdef XPC_TOOLS_SUPPORT
@@ -424,7 +424,7 @@ private:
     AutoPushJSContext();    // no implementation
 
 private:
-    nsIJSContextStack* mContextStack;
+    nsIThreadJSContextStack* mContextStack;
 #ifdef DEBUG
     JSContext* mDebugCX;
 #endif
@@ -459,7 +459,7 @@ private:
     AutoPushCompatibleJSContext();    // no implementation
 
 private:
-    nsIJSContextStack* mContextStack;
+    nsIThreadJSContextStack* mContextStack;
     JSContext* mCX;
 };
 
@@ -1339,21 +1339,54 @@ private:
 
 /***************************************************************************/
 
+// All of our thread local storage.
+
+class xpcPerThreadData
+{
+public:
+    // Get the instance of this object for the current thread
+    static xpcPerThreadData* GetData();
+
+    xpcPerThreadData();
+    ~xpcPerThreadData();
+
+    nsIXPCException* GetException();
+    void             SetException(nsIXPCException* aException);
+
+    JSContext*       GetSafeJSContext();
+    nsDeque*         GetJSContextStack();
+
+    PRBool IsValid() const;
+
+private:
+    nsIXPCException* mException;
+    nsDeque*         mJSContextStack;
+    JSContext*       mSafeJSContext;
+};
+
+/**************************************************************/
+
 #define NS_XPC_THREAD_JSCONTEXT_STACK_CID  \
 { 0xff8c4d10, 0x3194, 0x11d3, \
     { 0x98, 0x85, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
 
-class nsXPCThreadJSContextStackImpl : public nsIJSContextStack
+class nsXPCThreadJSContextStackImpl : public nsIThreadJSContextStack
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIJSCONTEXTSTACK
+    NS_DECL_NSITHREADJSCONTEXTSTACK
 
     static nsXPCThreadJSContextStackImpl* GetSingleton();
     static void FreeSingleton();
 
     nsXPCThreadJSContextStackImpl();
     virtual ~nsXPCThreadJSContextStackImpl();
+
+private:
+    nsDeque* GetStackForCurrentThread()
+        {xpcPerThreadData* data = xpcPerThreadData::GetData();
+         return data ? data->GetJSContextStack() : nsnull;}
 };
 
 /***************************************************************************/

@@ -46,135 +46,11 @@ nsXPConnect* nsXPConnect::gSelf = nsnull;
 
 /***************************************************************************/
 
-class xpcPerThreadData
-{
-public:
-    xpcPerThreadData();
-    ~xpcPerThreadData();
-
-    nsIXPCException* GetException();
-    void             SetException(nsIXPCException* aException);
-
-    JSContext*       GetJSContext();
-
-private:
-    nsIXPCException* mException;
-    JSContext* mCX;
-};
-
-xpcPerThreadData::xpcPerThreadData()
-    :   mException(nsnull),
-        mCX(nsnull)
-{
-    // empty...
-}
-
-xpcPerThreadData::~xpcPerThreadData()
-{
-    NS_IF_RELEASE(mException);
-    if(mCX)
-        JS_DestroyContext(mCX);
-}
-
-nsIXPCException*
-xpcPerThreadData::GetException()
-{
-    NS_IF_ADDREF(mException);
-    return mException;
-}
-
-void
-xpcPerThreadData::SetException(nsIXPCException* aException)
-{
-    NS_IF_ADDREF(aException);
-    NS_IF_RELEASE(mException);
-    mException = aException;
-}
-
-static JSClass global_class = {
-    "globalForDefaultXPConnectJSContext", 0,
-    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
-};
-
-JSContext*
-xpcPerThreadData::GetJSContext()
-{
-    if(!mCX)
-    {
-        JSRuntime *rt;
-        nsresult rv;
-        NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &rv);
-        if(NS_SUCCEEDED(rv) && NS_SUCCEEDED(rtsvc->GetRuntime(&rt)))
-        {
-            NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
-            if(NS_SUCCEEDED(rv))
-            {
-                mCX = JS_NewContext(rt, 8192);
-                if(mCX)
-                {
-                    JSObject *glob;
-                    glob = JS_NewObject(mCX, &global_class, NULL, NULL);
-                    if(!glob || 
-                       !JS_InitStandardClasses(mCX, glob) ||
-                       NS_FAILED(xpc->InitClasses(mCX, glob)))
-                    {
-                        JS_DestroyContext(mCX);
-                        mCX = nsnull;
-                    }
-                }
-            }
-        }
-    }
-    return mCX;
-}        
-
-/*************************************************/
-
-JS_STATIC_DLL_CALLBACK(void)
-xpc_ThreadDataDtorCB(void* ptr)
-{
-    xpcPerThreadData* data = (xpcPerThreadData*) ptr;
-    if(data)
-        delete data;
-}
-
-static xpcPerThreadData*
-GetPerThreadData()
-{
-#define BAD_TLS_INDEX ((PRUintn) -1)
-    xpcPerThreadData* data;
-    static PRUintn index = BAD_TLS_INDEX;
-    if(index == BAD_TLS_INDEX)
-    {
-        if(PR_FAILURE == PR_NewThreadPrivateIndex(&index, xpc_ThreadDataDtorCB))
-        {
-            NS_ASSERTION(0, "PR_NewThreadPrivateIndex failed!");
-            return nsnull;
-        }
-    }
-
-    data = (xpcPerThreadData*) PR_GetThreadPrivate(index);
-    if(!data)
-    {
-        if(nsnull != (data = new xpcPerThreadData()))
-        {
-            if(PR_FAILURE == PR_SetThreadPrivate(index, data))
-            {
-                NS_ASSERTION(0, "PR_SetThreadPrivate failed!");
-                delete data;
-                data = nsnull;
-            }
-        }
-        else
-        {
-            NS_ASSERTION(0, "new xpcPerThreadData failed!");
-        }
-    }
-    return data;
-}
-
-/***************************************************************************/
+// XXX In the worst case this makes 3 trips to get TLS (Thread Locl Storage).
+// Since nsXPCThreadJSContextStackImpl is in our module and uses our
+// xpcPerThreadData we could add static methods to nsXPCThreadJSContextStackImpl
+// which take xpcPerThreadData as a param and do the below with only one trip
+// to TLS.
 
 AutoPushCompatibleJSContext::AutoPushCompatibleJSContext(JSRuntime* rt, nsXPConnect* xpc /*= nsnull*/)
     : mCX(nsnull)
@@ -183,34 +59,30 @@ AutoPushCompatibleJSContext::AutoPushCompatibleJSContext(JSRuntime* rt, nsXPConn
     mContextStack = nsXPConnect::GetContextStack(xpc);
     if(mContextStack)
     {
-        JSContext* current;
+        JSContext* cx;
+        JSContext* safeCX;
 
-        if(NS_SUCCEEDED(mContextStack->Peek(&current)))
+        if(NS_SUCCEEDED(mContextStack->Peek(&cx)))
         {
             // Is the current runtime compatible?
-            if(current && JS_GetRuntime(current) == rt)
+            if(cx && JS_GetRuntime(cx) == rt)
             {
-                mCX = current;                            
+                mCX = cx;                            
             }
             else
             {
                 // The stack is either empty or the context is of the wrong 
                 // runtime. Either way we need to *get* a compatible runtime
-                // and push it on the stack. xpconnect's per thread data will
-                // give us a JSContext.
+                // and push it on the stack.
     
-                xpcPerThreadData* data = GetPerThreadData();
-                if(data)
+                if(NS_SUCCEEDED(mContextStack->GetSafeJSContext(&safeCX)) && 
+                   safeCX && JS_GetRuntime(safeCX) == rt && 
+                   NS_SUCCEEDED(mContextStack->Push(safeCX)))
                 {
-                    JSContext* ourCX = data->GetJSContext();
-                    if(ourCX && JS_GetRuntime(ourCX) == rt && 
-                       NS_SUCCEEDED(mContextStack->Push(ourCX)))
-                    {
-                        mCX = ourCX;
-                        // Leave the reference to the mContextStack to
-                        // indicate that we need to pop it in our dtor.
-                        return;                                                
-                    }
+                    mCX = safeCX;
+                    // Leave the reference to the mContextStack to
+                    // indicate that we need to pop it in our dtor.
+                    return;                                                
                 }
             }
         }
@@ -268,7 +140,7 @@ nsXPConnect::nsXPConnect()
     mThrower = new XPCJSThrower(JS_TRUE);
 
     nsServiceManager::GetService("nsThreadJSContextStack",
-                                 NS_GET_IID(nsIJSContextStack),
+                                 NS_GET_IID(nsIThreadJSContextStack),
                                  (nsISupports **)&mContextStack);
 
 #ifdef XPC_TOOLS_SUPPORT
@@ -378,11 +250,11 @@ nsXPConnect::ReleaseXPConnectSingleton()
         if(GetRuntime() && GetRuntime()->GetJSRuntime())
         {
             AutoPushCompatibleJSContext a(GetRuntime()->GetJSRuntime());
-            if(a.GetJSContext())
+            if(a.GetSafeJSContext())
             {
                 FILE* oldFileHandle = js_DumpGCHeap;
                 js_DumpGCHeap = stdout;
-                js_ForceGC(a.GetJSContext());
+                js_ForceGC(a.GetSafeJSContext());
                 js_DumpGCHeap = oldFileHandle;
             }
         }
@@ -419,10 +291,10 @@ nsXPConnect::GetInterfaceInfoManager(nsXPConnect* xpc /*= nsnull*/)
 }
 
 // static
-nsIJSContextStack*
+nsIThreadJSContextStack*
 nsXPConnect::GetContextStack(nsXPConnect* xpc /*= nsnull*/)
 {
-    nsIJSContextStack* cs;
+    nsIThreadJSContextStack* cs;
     nsXPConnect* xpcl = xpc;
 
     if(!xpcl && !(xpcl = GetXPConnect()))
@@ -764,7 +636,7 @@ nsXPConnect::GetPendingException(nsIXPCException * *aPendingException)
 {
     NS_ENSURE_ARG_POINTER(aPendingException);    
 
-    xpcPerThreadData* data = GetPerThreadData();
+    xpcPerThreadData* data = xpcPerThreadData::GetData();
     if(!data)
     {
         *aPendingException = nsnull;
@@ -778,7 +650,7 @@ nsXPConnect::GetPendingException(nsIXPCException * *aPendingException)
 NS_IMETHODIMP
 nsXPConnect::SetPendingException(nsIXPCException * aPendingException)
 {
-    xpcPerThreadData* data = GetPerThreadData();
+    xpcPerThreadData* data = xpcPerThreadData::GetData();
     if(!data)
         return NS_ERROR_FAILURE;
 
@@ -884,13 +756,13 @@ nsXPConnect::DebugDumpJSStack(PRBool showArgs, PRBool showLocals, PRBool showThi
 #ifdef DEBUG
     JSContext* cx;
     nsresult rv;
-    NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
+    NS_WITH_SERVICE(nsIThreadJSContextStack, stack, "nsThreadJSContextStack", &rv);
     if(NS_FAILED(rv))
-        printf("failed to get nsIJSContextStack service!\n");
+        printf("failed to get nsIThreadJSContextStack service!\n");
     else if(NS_FAILED(stack->Peek(&cx)))
-        printf("failed to peek into nsIJSContextStack service!\n");
+        printf("failed to peek into nsIThreadJSContextStack service!\n");
     else if(!cx)
-        printf("there is no JSContext on the nsIJSContextStack!\n");
+        printf("there is no JSContext on the nsIThreadJSContextStack!\n");
     else
         xpc_DumpJSStack(cx, showArgs, showLocals, showThisProps);
 #endif
@@ -904,13 +776,13 @@ nsXPConnect::DebugDumpEvalInJSStackFrame(PRUint32 aFrameNumber, const char *aSou
 #ifdef DEBUG
     JSContext* cx;
     nsresult rv;
-    NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
+    NS_WITH_SERVICE(nsIThreadJSContextStack, stack, "nsThreadJSContextStack", &rv);
     if(NS_FAILED(rv))
-        printf("failed to get nsIJSContextStack service!\n");
+        printf("failed to get nsIThreadJSContextStack service!\n");
     else if(NS_FAILED(stack->Peek(&cx)))
-        printf("failed to peek into nsIJSContextStack service!\n");
+        printf("failed to peek into nsIThreadJSContextStack service!\n");
     else if(!cx)
-        printf("there is no JSContext on the nsIJSContextStack!\n");
+        printf("there is no JSContext on the nsIThreadJSContextStack!\n");
     else
         xpc_DumpEvalInJSStackFrame(cx, aFrameNumber, aSourceText);
 #endif
