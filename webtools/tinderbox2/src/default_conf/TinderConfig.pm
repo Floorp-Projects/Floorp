@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.19 $ 
-# $Date: 2002/04/25 23:05:24 $ 
+# $Revision: 1.20 $ 
+# $Date: 2002/04/25 23:33:14 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -92,7 +92,7 @@ $TINDERBOX_HTML_DIR = "/opt/apache/htdocs/tinderbox2";
 
 #$TINDERBOX_DATA_DIR = "/home/httpd/html/tinderbox";
 #$TINDERBOX_DATA_DIR = "/var/spool/tinderbox";
-$TINDERBOX_DATA_DIR = "/opt/tbox2-data";
+$TINDERBOX_DATA_DIR = "/export2/tbox2-data";
 
 # The top level tinderbox index file. Change this if you wish to
 # provide your own index file for tinderboxs web pages.
