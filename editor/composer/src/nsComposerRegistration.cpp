@@ -69,4 +69,4 @@ static nsModuleComponentInfo components[] = {
 // Implement the NSGetModule() exported function for your module
 // and the entire implementation of the module object.
 //
-NS_IMPL_NSGETMODULE("nsComposerModule", components)
+NS_IMPL_NSGETMODULE(nsComposerModule, components)
