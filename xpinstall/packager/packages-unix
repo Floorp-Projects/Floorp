@@ -203,9 +203,6 @@ bin/chrome/skins/*
 -bin/chrome/packages/core/editor/content/sb-file-panel.js
 -bin/chrome/packages/core/editor/content/sb-file-panel.xul
 -bin/chrome/packages/core/editor/content/sb-FileWidgetFileHandler.js
--bin/chrome/packages/core/editor/content/viewsource.js
--bin/chrome/packages/core/editor/content/viewsource.xul
--bin/chrome/packages/core/communicator/content/domviewer
 
 ; all the pref files must be part of base
 ; to prevent migration bugs
