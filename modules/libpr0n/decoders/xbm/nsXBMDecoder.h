@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Aaron Kaluszka <ask@swva.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -82,6 +83,7 @@ private:
 
     PRInt32 mWidth;
     PRInt32 mHeight;
+    PRBool mIsX10; // X10 flavor XBM?
 
     PRUint8* mRow; // Hold the decoded row
     PRUint8* mAlphaRow; // alpha data for the row

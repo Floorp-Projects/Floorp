@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Aaron Kaluszka <ask@swva.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -158,6 +159,16 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
         if (sscanf(mPos, "#define %*s %d #define %*s %d", &mWidth, &mHeight) != 2)
             return NS_OK;
 
+        // Check for X11 flavor
+        if (strstr(mBuf, " char "))
+            mIsX10 = PR_FALSE;
+        // Check for X10 flavor
+        else if (strstr(mBuf, " short "))
+            mIsX10 = PR_TRUE;
+        else
+            // Neither identifier found.  Return for now, waiting for more data.
+            return NS_OK;
+
         mImage->Init(mWidth, mHeight, mObserver);
         mObserver->OnStartContainer(nsnull, mImage);
 
@@ -197,6 +208,7 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
         mFrame->GetImageBytesPerRow(&bpr);
         PRUint32 abpr;
         mFrame->GetAlphaBytesPerRow(&abpr);
+        PRBool hiByte = PR_TRUE;
 
         do {
             PRUint32 pixel = strtoul(mPos, &endPtr, 0);
@@ -212,7 +224,14 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
                 *endPtr = '\0';
                 mState = RECV_DONE;  // strange character (or ending '}')
             }
-            mPos = endPtr;
+            if (!mIsX10 || !hiByte)
+                mPos = endPtr; // go to next value only when done with this one
+            if (mIsX10) {
+                // handle X10 flavor short values
+                if (hiByte) 
+                    pixel >>= 8;
+                hiByte = !hiByte;
+            }
 
             mAlphaRow[mCurCol/8] = 0;
             for (int i = 0; i < 8; i++) {
