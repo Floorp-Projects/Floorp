@@ -107,7 +107,7 @@ public:
   char                *LocalizeHeaderName(const char *aHeaderName, const char *aDefaultName);
 
   // For header processing...
-  char                *GetHeaderValue(const char  *aHeaderName, nsVoidArray *aArray);
+  const char          *GetHeaderValue(const char  *aHeaderName);
 
   // To write out a stored header array as HTML
   virtual nsresult            WriteHeaderFieldHTMLPrefix();
@@ -147,7 +147,7 @@ protected:
   PRUint32            mTotalRead;
 
   // Output control and info...
-  nsIPref             *mPrefs;            // Connnection to prefs service manager
+  nsCOMPtr<nsIPref>   mPrefs;             // Connnection to prefs service manager
   PRBool              mDocHeader;         // For header determination...
   nsIURI              *mURL;              // the url for the data being processed...
   PRInt32             mHeaderDisplayType; // The setting for header output...

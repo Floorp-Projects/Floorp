@@ -320,7 +320,7 @@ nsMimeHtmlDisplayEmitter::EndHeader()
     UtilityWriteCRLF("<html>");
     UtilityWriteCRLF("<head>");
 
-    char * val = GetHeaderValue(HEADER_SUBJECT, mHeaderArray); // do not free this value
+    const char * val = GetHeaderValue(HEADER_SUBJECT); // do not free this value
     if (val)
     {
       char * subject = nsEscapeHTML(val);
