@@ -108,6 +108,8 @@ NS_IMETHODIMP CreateElementTxn::Do(void)
     if (NS_FAILED(result)) return result;
     if (!newElement) return NS_ERROR_NULL_POINTER;
     mNewNode = do_QueryInterface(newElement);
+    // Try to insert formatting whitespace for the new node:
+    mEditor->MarkNodeDirty(mNewNode);
   }
   NS_ASSERTION(((NS_SUCCEEDED(result)) && (mNewNode)), "could not create element.");
   if (!mNewNode) return NS_ERROR_NULL_POINTER;
@@ -134,9 +136,6 @@ NS_IMETHODIMP CreateElementTxn::Do(void)
 
       result = mParent->InsertBefore(mNewNode, mRefNode, getter_AddRefs(resultNode));
       if (NS_FAILED(result)) return result; 
-
-      // Try to insert formatting whitespace for the new node:
-      mEditor->InsertFormattingForNode(mNewNode);
 
       // only set selection to insertion point if editor gives permission
       PRBool bAdjustSelection;

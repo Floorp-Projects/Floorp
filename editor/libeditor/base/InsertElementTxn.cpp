@@ -23,6 +23,7 @@
 #include "InsertElementTxn.h"
 #include "nsIDOMSelection.h"
 #include "nsIContent.h"
+#include "nsIDOMNodeList.h"
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
@@ -78,36 +79,26 @@ NS_IMETHODIMP InsertElementTxn::Do(void)
 
   if (!mNode || !mParent) return NS_ERROR_NOT_INITIALIZED;
 
-  nsresult result;
+  nsCOMPtr<nsIDOMNodeList> childNodes;
   nsCOMPtr<nsIDOMNode>refNode;
-  //if (0!=mOffset)
-  { // get a ref node
-    PRInt32 i=0;
-    result = mParent->GetFirstChild(getter_AddRefs(refNode));
-    if (NS_SUCCEEDED(result) && refNode)
-    {
-      for (; i<mOffset; i++)
-      {
-        nsCOMPtr<nsIDOMNode>nextSib;
-        result = refNode->GetNextSibling(getter_AddRefs(nextSib));  
-        if (NS_FAILED(result)) {
-          break;  // couldn't get a next sibling, so make aNode the first child
-        }
-        refNode = do_QueryInterface(nextSib);
-        if (!refNode) {
-          break;  // couldn't get a next sibling, so make aNode the first child
-        }
-      }
-    }
+  nsresult result = mParent->GetChildNodes(getter_AddRefs(childNodes));
+  if (NS_FAILED(result)) return result;
+  if (childNodes)
+  {
+    PRUint32 count;
+    childNodes->GetLength(&count);
+    if (mOffset>count) mOffset = count;
+    result = childNodes->Item(mOffset, getter_AddRefs(refNode));
+    if (NS_FAILED(result)) return result; 
+    // note, it's ok for mRefNode to be null.  that means append
   }
+
+  mEditor->MarkNodeDirty(mNode);
 
   nsCOMPtr<nsIDOMNode> resultNode;
   result = mParent->InsertBefore(mNode, refNode, getter_AddRefs(resultNode));
   if (NS_FAILED(result)) return result;
   if (!resultNode) return NS_ERROR_NULL_POINTER;
-
-  // Try to insert formatting whitespace for the new node:
-  mEditor->InsertFormattingForNode(resultNode);
 
   // only set selection to insertion point if editor gives permission
   PRBool bAdjustSelection;
