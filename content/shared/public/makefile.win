@@ -21,6 +21,7 @@
 
 DEPTH=..\..\..
 MODULE=content
+include <$(DEPTH)\config\config.mak>
 EXPORTS =				\
   nsCSSAtomList.h \
   nsCSSAtoms.h \
@@ -49,7 +50,9 @@ EXPORTS =				\
 !endif
   nsXBLAtomList.h \
   nsXBLAtoms.h \
+!ifdef IBMBIDI
   nsBidiUtils.h \
+!endif
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
