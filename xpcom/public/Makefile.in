@@ -37,6 +37,7 @@ EXPORTS		= \
 		  nsIPtr.h \
 		  nsIServiceManager.h \
 		  nsISupportsArray.h \
+		  nsProxyEvent.h \
 		  nsRepository.h \
 		  nsIEnumerator.h \
 		  nsTraceRefcnt.h \

@@ -34,6 +34,7 @@ CPPSRCS		= nsDebug.cpp \
 		  nsSupportsArray.cpp \
 		  nsRepository.cpp \
 		  nsTraceRefcnt.cpp \
+		  nsProxyEvent.cpp \
 		  nsXPComFactory.cpp \
 		  nsEventQueueService.cpp \
 		  $(NULL)
