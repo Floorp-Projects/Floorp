@@ -3312,7 +3312,8 @@ pk11_key_collect(DBT *key, DBT *data, void *arg)
 		 * correctly compute the hash of an old key, it is necessary
 		 * to fallback and detect the leading zero.
 		 */
-		SHA1_HashBuf( hashKey, key->data + 1, key->size - 1);
+		SHA1_HashBuf(hashKey, 
+		             (unsigned char *)key->data + 1, key->size - 1);
 		haveMatch = SECITEM_ItemsAreEqual(keyData->id,&result);
 	    }
 	}
