@@ -49,6 +49,9 @@
 #include "nsICaseConversion.h"
 #include "prenv.h"
 #include "nsIPref.h"
+#ifdef IBMBIDI
+#include "nsLayoutAtoms.h"
+#endif
 
 
 PRPackedBool nsTextTransformer::sWordSelectPrefInited = PR_FALSE;
@@ -176,6 +179,9 @@ nsTextTransformer::nsTextTransformer(nsILineBreaker* aLineBreaker,
   aPresContext->
     GetLanguageSpecificTransformType(&mLanguageSpecificTransformType);
 
+#ifdef IBMBIDI
+  mPresContext = aPresContext;
+#endif
   if (aLineBreaker == nsnull && aWordBreaker == nsnull )
     NS_ASSERTION(0, "invalid creation of nsTextTransformer");
   
@@ -199,6 +205,22 @@ nsTextTransformer::Init(nsIFrame* aFrame,
                         PRInt32 aStartingOffset,
                         PRBool aLeaveAsAscii)
 {
+#ifdef IBMBIDI
+  PRBool bidiEnabled;
+
+  mPresContext->GetBidiEnabled(&bidiEnabled);
+  if (bidiEnabled) {
+    PRBool isBidiSystem;
+    aFrame->GetBidiProperty(mPresContext, nsLayoutAtoms::charType,
+                            (void**)&mCharType, sizeof(mCharType));
+    mPresContext->GetIsBidiSystem(isBidiSystem);
+    if (mCharType == eCharType_RightToLeftArabic && !isBidiSystem) {
+      SetNeedsArabicShaping(PR_TRUE);
+    }
+    SetNeedsNumericShaping(PR_TRUE);
+  }
+#endif
+
   // Get the contents text content
   nsresult rv;
   nsCOMPtr<nsITextContent> tc = do_QueryInterface(aContent, &rv);
@@ -987,6 +1009,14 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
             eLanguageSpecificTransformType_None) {
           LanguageSpecificTransform(result, wordLen, aWasTransformed);
         }
+#ifdef IBMBIDI
+        if (NeedsArabicShaping()) {
+          DoArabicShaping(result, wordLen, aWasTransformed);
+        }
+        if (NeedsNumericShaping()) {
+          DoNumericShaping(result, wordLen, aWasTransformed);
+        }
+#endif
       }
     }
 
@@ -1359,8 +1389,94 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
   return result;
 }
 
-//----------------------------------------------------------------------
+#ifdef IBMBIDI
+void
+nsTextTransformer::DoArabicShaping(PRUnichar* aText, 
+                                   PRInt32& aTextLength, 
+                                   PRBool* aWasTransformed)
+{
+  if (aTextLength <= 0)
+    return;
+  
+  PRInt32 newLen;
+  PRBool isVisual;
+  mPresContext->IsVisualMode(isVisual);
 
+  nsAutoString buf;
+  buf.SetLength(aTextLength);
+  PRUnichar* buffer = (PRUnichar*)buf.get();
+  
+  ArabicShaping(aText, buf.Length(), buffer, (PRUint32 *)&newLen, !isVisual, !isVisual);
+
+  PRUnichar *source = buffer;
+  PRUnichar *target = aText;
+  for (PRInt32 i = 0; i < newLen; i++) {
+    if (*source == CH_ZWNJ || *source == CH_ZWJ) {
+      source++;
+    }
+    else {
+      *target++ = *source++;
+    }
+  }
+
+  aTextLength = target - aText;
+  *aWasTransformed = PR_TRUE;
+}
+
+void
+nsTextTransformer::DoNumericShaping(PRUnichar* aText, 
+                                    PRInt32& aTextLength, 
+                                    PRBool* aWasTransformed)
+{
+  if (aTextLength <= 0)
+    return;
+
+  PRUint32 bidiOptions;
+  mPresContext->GetBidi(&bidiOptions);
+
+  switch (GET_BIDI_OPTION_NUMERAL(bidiOptions)) {
+
+    case IBMBIDI_NUMERAL_HINDI:
+      HandleNumbers(aText, aTextLength, IBMBIDI_NUMERAL_HINDI);
+      break;
+
+    case IBMBIDI_NUMERAL_ARABIC:
+      HandleNumbers(aText, aTextLength, IBMBIDI_NUMERAL_ARABIC);
+      break;
+
+    case IBMBIDI_NUMERAL_REGULAR:
+
+      switch (mCharType) {
+
+        case eCharType_EuropeanNumber:
+          HandleNumbers(aText, aTextLength, IBMBIDI_NUMERAL_ARABIC);
+          break;
+
+        case eCharType_ArabicNumber:
+          HandleNumbers(aText, aTextLength, IBMBIDI_NUMERAL_HINDI);
+          break;
+
+        default:
+          break;
+      }
+      break;
+
+    case IBMBIDI_NUMERAL_HINDICONTEXT:
+      if (((GET_BIDI_OPTION_DIRECTION(bidiOptions)==IBMBIDI_TEXTDIRECTION_RTL) &&
+           (IS_ARABIC_DIGIT (aText[0]))) ||
+          (eCharType_ArabicNumber == mCharType))
+        HandleNumbers(aText, aTextLength, IBMBIDI_NUMERAL_HINDI);
+      else if (eCharType_EuropeanNumber == mCharType)
+        HandleNumbers(aText, aTextLength, IBMBIDI_NUMERAL_ARABIC);
+      break;
+
+    default:
+      break;
+  }
+}
+#endif
+
+//----------------------------------------------------------------------
 // Self test logic for this class. This will (hopefully) make sure
 // that the forward and backward word iterator methods continue to
 // function as people change things...

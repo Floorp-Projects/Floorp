@@ -870,6 +870,7 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
                                    PRBool           aIsOddLevel,
                                    PRBool           aIsBidiSystem)
 {
+  NS_ASSERTION(aIsOddLevel == 0 || aIsOddLevel == 1, "aIsOddLevel should be 0 or 1");
   nsresult rv = NS_OK;
   // ahmed 
   //adjusted for correct numeral shaping  
@@ -933,7 +934,7 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
     if (mBuffer.Length() < aTextLength) {
       mBuffer.SetLength(aTextLength);
     }
-    PRUnichar* buffer = (PRUnichar*)mBuffer.get();
+    PRUnichar* buffer = NS_CONST_CAST(PRUnichar*, mBuffer.get());
 
     if (doReverse) {
       rv = mBidiEngine->WriteReverse(aText, aTextLength, buffer,
@@ -1162,4 +1163,44 @@ nsresult nsBidiPresUtils::RenderText(PRUnichar*           aText,
   return NS_OK;
 }
   
+nsresult
+nsBidiPresUtils::ReorderUnicodeText(PRUnichar*       aText,
+                                    PRInt32&         aTextLength,
+                                    nsCharType       aCharType,
+                                    PRBool           aIsOddLevel,
+                                    PRBool           aIsBidiSystem)
+{
+  NS_ASSERTION(aIsOddLevel == 0 || aIsOddLevel == 1, "aIsOddLevel should be 0 or 1");
+  nsresult rv = NS_OK;
+  PRBool doReverse = PR_FALSE;
+
+  if (aIsBidiSystem) {
+    if ( (CHARTYPE_IS_RTL(aCharType)) ^ (aIsOddLevel) )
+      doReverse = PR_TRUE;
+  }
+  else {
+    if (aIsOddLevel)
+      doReverse = PR_TRUE;
+  }
+
+  if (doReverse) {
+    PRInt32    newLen;
+
+    if (mBuffer.Length() < aTextLength) {
+      mBuffer.SetLength(aTextLength);
+    }
+    PRUnichar* buffer = NS_CONST_CAST(PRUnichar*, mBuffer.get());
+
+    if (doReverse) {
+      rv = mBidiEngine->WriteReverse(aText, aTextLength, buffer,
+                                     NSBIDI_DO_MIRRORING, &newLen);
+      if (NS_SUCCEEDED(rv) ) {
+        aTextLength = newLen;
+        memcpy(aText, buffer, aTextLength * sizeof(PRUnichar) );
+      }
+    }
+  }
+  return rv;
+}
+
 #endif // IBMBIDI
