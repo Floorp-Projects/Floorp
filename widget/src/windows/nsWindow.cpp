@@ -2555,7 +2555,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             }
             // fall thru...
 
-        case WM_QUERYNEWPALETTE:
+        case WM_QUERYNEWPALETTE:      // this window is about to become active
             mContext->GetPaletteInfo(palInfo);
             if (palInfo.isPaletteDevice && palInfo.palette) {
                 HDC hDC = ::GetDC(mWnd);
@@ -2564,11 +2564,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                 // Realize the drawing palette
                 int i = ::RealizePalette(hDC);
 
-                // Did any of our colors change?
-                if (i > 0) {
-                  // Yes, so repaint
-                  ::InvalidateRect(mWnd, (LPRECT)NULL, TRUE);
-                }
+                //printf("number of colors that changed=%d\n",i);
+
+                // we should always invalidate.. because the lookup may have changed
+                ::InvalidateRect(mWnd, (LPRECT)NULL, TRUE);
+
                 ::ReleaseDC(mWnd, hDC);
                 *aRetValue = TRUE;
             }
