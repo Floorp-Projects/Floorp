@@ -55,7 +55,7 @@ NS_DEFINE_CID(kMacLocaleFactoryCID, NS_MACLOCALEFACTORY_CID);
 NS_DEFINE_IID(kIMacLocaleIID, NS_IMACLOCALE_IID);
 #endif
 
-char* localeCatagoryList[6] = { "NSILOCALE_TIME",
+char* localeCategoryList[6] = { "NSILOCALE_TIME",
 								"NSILOCALE_COLLATE",
 								"NSILOCALE_CTYPE",
 								"NSILOCALE_MONETARY",
@@ -150,9 +150,9 @@ factory_new_locale(void)
 	nsresult			result;
 	nsILocaleFactory*	localeFactory;
 	nsILocale*			locale;
-	nsString*			localeName, *catagory, *value;
+	nsString*			localeName, *category, *value;
 	int	i;
-	nsString**			catagoryList, **valueList;
+	nsString**			categoryList, **valueList;
 
 	result = nsComponentManager::FindFactory(kLocaleFactoryCID,
 										(nsIFactory**)&localeFactory);
@@ -170,36 +170,36 @@ factory_new_locale(void)
 
 	for(i=0;i<6;i++)
 	{
-		catagory = new nsString(localeCatagoryList[i]);
+		category = new nsString(localeCategoryList[i]);
 		value = new nsString();
 
-		result = locale->GetCatagory(catagory,value);
+		result = locale->GetCategory(category,value);
 		NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_new_interface failed");
 		NS_ASSERTION(value->Equals(*localeName)==PR_TRUE,"nsLocaleTest: factory_new_interface failed");
 	
-		delete catagory;
+		delete category;
 		delete value;
 	}
 	delete localeName;
 	locale->Release();
 
-	catagoryList = new nsString*[6];
+	categoryList = new nsString*[6];
 	valueList = new nsString*[6];
 
 	for(i=0;i<6;i++)
 	{
-		catagoryList[i] = new nsString(localeCatagoryList[i]);
+		categoryList[i] = new nsString(localeCategoryList[i]);
 		valueList[i] = new nsString("x-netscape");
 	}
 
-	result = localeFactory->NewLocale(catagoryList,valueList,6,&locale);
+	result = localeFactory->NewLocale(categoryList,valueList,6,&locale);
 	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_new_interface failed");
 	NS_ASSERTION(locale!=NULL,"nsLocaleTest: factory_new_interface failed");
 
 	for(i=0;i<6;i++)
 	{
 		value = new nsString();
-		result = locale->GetCatagory(catagoryList[i],value);
+		result = locale->GetCategory(categoryList[i],value);
 		NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_new_interface failed");
 		NS_ASSERTION(value->Equals(*(valueList[i]))==PR_TRUE,"nsLocaleTest: factory_new_interface failed");
 
@@ -208,11 +208,11 @@ factory_new_locale(void)
 
 	for(i=0;i<6;i++)
 	{
-		delete catagoryList[i];
+		delete categoryList[i];
 		delete valueList[i];
 	}
 
-	delete [] catagoryList;
+	delete [] categoryList;
 	delete [] valueList;
 
 	locale->Release();
@@ -227,7 +227,7 @@ factory_get_locale(void)
 	nsresult			result;
 	nsILocaleFactory*	localeFactory;
 	nsILocale*			locale;
-	nsString*			catagory;
+	nsString*			category;
 	nsString*			value;
 	const char*			acceptLangString = "ja;q=0.9,en;q=1.0,*";
 
@@ -248,17 +248,17 @@ factory_get_locale(void)
 	//
 	locale->AddRef();
 
-	catagory = new nsString("NSILOCALE_CTYPE");
+	category = new nsString("NSILOCALE_CTYPE");
 	value = new nsString();
 
-	result = locale->GetCatagory(catagory,value);
+	result = locale->GetCategory(category,value);
 	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_get_locale failed");
 	NS_ASSERTION(value->Length()>0,"nsLocaleTest: factory_get_locale failed");
 
 	locale->Release();
 	locale->Release();
 
-	delete catagory;
+	delete category;
 	delete value;
 
 	//
@@ -273,17 +273,17 @@ factory_get_locale(void)
 	//
 	locale->AddRef();
 
-	catagory = new nsString("NSILOCALE_CTYPE");
+	category = new nsString("NSILOCALE_CTYPE");
 	value = new nsString();
 
-	result = locale->GetCatagory(catagory,value);
+	result = locale->GetCategory(category,value);
 	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_get_locale failed");
 	NS_ASSERTION(value->Length()>0,"nsLocaleTest: factory_get_locale failed");
 
 	locale->Release();
 	locale->Release();
 
-	delete catagory;
+	delete category;
 	delete value;
 
 	//
@@ -298,17 +298,17 @@ factory_get_locale(void)
 	//
 	locale->AddRef();
 
-	catagory = new nsString("NSILOCALE_CTYPE");
+	category = new nsString("NSILOCALE_CTYPE");
 	value = new nsString();
 
-	result = locale->GetCatagory(catagory,value);
+	result = locale->GetCategory(category,value);
 	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_get_locale failed");
 	NS_ASSERTION(value->Length()>0,"nsLocaleTest: factory_get_locale failed");
 
 	locale->Release();
 	locale->Release();
 
-	delete catagory;
+	delete category;
 	delete value;
 
 	localeFactory->Release();
@@ -594,7 +594,7 @@ win32_test_special_locales(void)
 	nsIWin32Locale*		win32Locale;
 	nsILocale*			xp_locale;
 	nsILocaleFactory*	xp_locale_factory;
-	nsString*			locale, *result_locale, *catagory;
+	nsString*			locale, *result_locale, *category;
 	LCID				sys_lcid, user_lcid;
 
 	result = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID,
@@ -609,7 +609,7 @@ win32_test_special_locales(void)
 	NS_ASSERTION(xp_locale_factory!=NULL,"nsLocaleTest: factory_create_interface failed.");
 	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
 
-	catagory = new nsString(localeCatagoryList[0]);
+	category = new nsString(localeCategoryList[0]);
 
 	//
 	// derive a system locale
@@ -624,7 +624,7 @@ win32_test_special_locales(void)
 
 	result = win32Locale->GetXPLocale(sys_lcid,locale);
 	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
-	result = xp_locale->GetCatagory(catagory,result_locale);
+	result = xp_locale->GetCategory(category,result_locale);
 	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
 
 	NS_ASSERTION(*locale==*result_locale,"nsLocaleTest: system locale test failed.");
@@ -645,7 +645,7 @@ win32_test_special_locales(void)
 
 	result = win32Locale->GetXPLocale(user_lcid,locale);
 	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
-	result = xp_locale->GetCatagory(catagory,result_locale);
+	result = xp_locale->GetCategory(category,result_locale);
 	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
 
 	NS_ASSERTION(*locale==*result_locale,"nsLocaleTest: system locale test failed.");
@@ -653,7 +653,7 @@ win32_test_special_locales(void)
 	delete result_locale;
 	xp_locale->Release();
 
-	delete catagory;
+	delete category;
 	xp_locale_factory->Release();
 	win32Locale->Release();
 
@@ -941,7 +941,7 @@ posixlocale_test_special(void)
   NS_ASSERTION(xp_locale!=NULL,"nsLocaleTest: GetSystemLocale failed.\n");
   NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetSystemLocale failed.\n");
   
-  result = xp_locale->GetCatagory(lc_message,result_locale);
+  result = xp_locale->GetCategory(lc_message,result_locale);
   NS_ASSERTION(*result_locale==*locale,"nsLocaleTest: GetSystemLocale failed.\n");
   NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetSystemLocale failed.\n");
   
@@ -952,7 +952,7 @@ posixlocale_test_special(void)
   NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetApplicationLocale failed.\n");
   
   
-  result = xp_locale->GetCatagory(lc_message,result_locale);
+  result = xp_locale->GetCategory(lc_message,result_locale);
   NS_ASSERTION(*result_locale==*locale,"nsLocaleTest: GetSystemLocale failed.\n");
   NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetSystemLocale failed.\n");
   xp_locale->Release();

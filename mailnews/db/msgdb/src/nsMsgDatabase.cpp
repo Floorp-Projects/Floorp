@@ -2037,7 +2037,7 @@ nsresult nsMsgDatabase::RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token co
 			// and locale name can be taken as below, category should be one of the following 
 			// probably NSILOCALE_COLLATE is appropriate 
 			nsString catagory = "NSILOCALE_COLLATE"; 
-			err = locale->GetCatagory(&catagory, &localeName); 
+			err = locale->GetCategory(&catagory, &localeName); 
 
 			nsICollationFactory *f;
 

@@ -37,7 +37,7 @@ class nsILocaleFactory : public nsIFactory
 
 public:
 
-   NS_IMETHOD NewLocale(nsString** catagoryList,nsString**  
+   NS_IMETHOD NewLocale(nsString** categoryList,nsString**  
       valueList, PRUint8 count, nsILocale** locale) = 0;
 
    NS_IMETHOD NewLocale(const nsString* localeName, nsILocale** locale) = 0;

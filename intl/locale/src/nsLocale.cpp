@@ -34,9 +34,9 @@ NS_DEFINE_IID(kLocaleCID, NS_LOCALE_CID);
 NS_IMPL_ISUPPORTS(nsLocale,kILocaleIID)
 
 
-nsLocale::nsLocale(nsString** catagoryList,nsString** valueList, PRUint32 count)
+nsLocale::nsLocale(nsString** categoryList,nsString** valueList, PRUint32 count)
 :	fHashtable(NULL),
-	fCatagoryCount(0)
+	fCategoryCount(0)
 {
 
 	PRUint32	i;
@@ -52,7 +52,7 @@ nsLocale::nsLocale(nsString** catagoryList,nsString** valueList, PRUint32 count)
 	{
 		for(i=0;i<count;i++) 
 		{
-			key = new nsString(*catagoryList[i]);
+			key = new nsString(*categoryList[i]);
 			NS_ASSERTION(key!=NULL,"nsLocale: failed to allocate internal hash key");
 			value = new nsString(*valueList[i]);
 			NS_ASSERTION(value!=NULL,"nsLocale: failed to allocate internal hash value");
@@ -74,12 +74,12 @@ nsLocale::~nsLocale(void)
 }
 
 NS_IMETHODIMP
-nsLocale::GetCatagory(const nsString* catagory,nsString* result)
+nsLocale::GetCategory(const nsString* category,nsString* result)
 {
 
 	const nsString*	value;
 
-	value = (const nsString*)PL_HashTableLookup(fHashtable,catagory);
+	value = (const nsString*)PL_HashTableLookup(fHashtable,category);
 	if (value!=NULL)
 	{
 		(*result)=(*value);

@@ -60,7 +60,7 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
     nsString aLocale;
     nsString aCategory("NSILOCALE_TIME");
 
-    res = locale->GetCatagory(&aCategory, &aLocale);
+    res = locale->GetCategory(&aCategory, &aLocale);
     if (NS_FAILED(res)) {
       return res;
     }
