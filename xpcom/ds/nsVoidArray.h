@@ -41,7 +41,7 @@ public:
   void  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 
   PRInt32 Count() const {
-    return mCount;
+    return mImpl ? mImpl->mCount : 0;
   }
 
   void* ElementAt(PRInt32 aIndex) const;
@@ -54,7 +54,7 @@ public:
   PRBool ReplaceElementAt(void* aElement, PRInt32 aIndex);
 
   PRBool AppendElement(void* aElement) {
-    return InsertElementAt(aElement, mCount);
+    return InsertElementAt(aElement, Count());
   }
 
   PRBool RemoveElement(void* aElement);
@@ -67,16 +67,32 @@ public:
   PRBool EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData);
 
 protected:
-  void** mArray;
+  struct Impl {
+    /**
+     * Packed bits. The highest 31 bits are the array's size, which must
+     * always be 0 mod 2. The lowest bit is a flag that indicates
+     * whether or not we "own" mArray, and must free() it when
+     * destroyed.
+     */
+    PRUint32 mBits;
 
-  // Packed bits. The highest 31 bits are the array's size, which must
-  // always be 0 mod 2. The lowest bit is a flag that indicates
-  // whether or not we "own" mArray, and must free() it when
-  // destroyed.
-  PRInt32 mInfo;
+    /**
+     * The number of elements in the array
+     */
+    PRInt32 mCount;
 
-  static const PRInt32 kArrayOwnerMask; // 1 << 31
-  static const PRInt32 kArraySizeMask;  // ~kArrayOwnerMask
+    /**
+     * Array data, padded out to the actual size of the array.
+     */
+    void*   mArray[1];
+  };
+
+  Impl* mImpl;
+
+  enum {
+    kArrayOwnerMask = 1 << 31,
+    kArraySizeMask = ~kArrayOwnerMask
+  };
 
 
   // bit twiddlers
@@ -84,9 +100,6 @@ protected:
   void SetArraySize(PRInt32 aSize);
   PRBool IsArrayOwner() const;
   void SetArrayOwner(PRBool aOwner);
-
-  // the number of elements currently in the array.
-  PRInt32 mCount;
 
 private:
   /// Copy constructors are not allowed
@@ -102,7 +115,8 @@ public:
 protected:
   // The internal storage. Note that this value must be divisible by
   // two because we use the LSB of mInfo to indicate array ownership.
-  void* mElements[8];
+  enum { kAutoBufSize = 8 };
+  char mAutoBuf[sizeof(Impl) + (kAutoBufSize - 1) * sizeof(void*)];
 };
 
 
@@ -121,7 +135,7 @@ public:
   void  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 
   PRInt32 Count(void) const {
-    return mCount;
+    return nsVoidArray::Count();
   }
 
   void StringAt(PRInt32 aIndex, nsString& aString) const;
@@ -136,7 +150,7 @@ public:
   PRBool ReplaceStringAt(const nsString& aString, PRInt32 aIndex);
 
   PRBool AppendString(const nsString& aString) {
-    return InsertStringAt(aString, mCount);
+    return InsertStringAt(aString, Count());
   }
 
   PRBool RemoveString(const nsString& aString);
@@ -172,7 +186,7 @@ public:
   void  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 
   PRInt32 Count(void) const {
-    return mCount;
+    return nsVoidArray::Count();
   }
 
   void CStringAt(PRInt32 aIndex, nsCString& aCString) const;
@@ -187,7 +201,7 @@ public:
   PRBool ReplaceCStringAt(const nsCString& aCString, PRInt32 aIndex);
 
   PRBool AppendCString(const nsCString& aCString) {
-    return InsertCStringAt(aCString, mCount);
+    return InsertCStringAt(aCString, Count());
   }
 
   PRBool RemoveCString(const nsCString& aCString);
