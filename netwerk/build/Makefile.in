@@ -86,7 +86,3 @@ EXTRA_DSO_LDOPTS = \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-ifdef MOZ_NEW_CACHE
-CXXFLAGS += -DMOZ_NEW_CACHE
-endif

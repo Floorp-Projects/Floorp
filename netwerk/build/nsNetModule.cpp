@@ -94,10 +94,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSimpleStreamProvider)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef MOZ_NEW_CACHE
 #include "nsStreamListenerTee.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamListenerTee)
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -565,12 +563,10 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_ASYNCSTREAMLISTENER_CID,
       NS_ASYNCSTREAMLISTENER_CONTRACTID,
       nsAsyncStreamListener::Create },
-#ifdef MOZ_NEW_CACHE
     { NS_STREAMLISTENERTEE_CLASSNAME,
       NS_STREAMLISTENERTEE_CID,
       NS_STREAMLISTENERTEE_CONTRACTID,
       nsStreamListenerTeeConstructor },
-#endif
     { NS_STORAGETRANSPORT_CLASSNAME,
       NS_STORAGETRANSPORT_CID,
       NS_STORAGETRANSPORT_CONTRACTID,
