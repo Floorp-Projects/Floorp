@@ -106,7 +106,7 @@ protected:
 
   static nscoord        mDpi;
 
-  int mIsPrinting;
+  PRBool mIsPrinting, mIsPrintingStart;
 
 private:
 	nsCOMPtr<nsIScreenManager> mScreenManager;

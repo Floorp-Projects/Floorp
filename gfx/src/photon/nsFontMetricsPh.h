@@ -33,16 +33,14 @@
 #include "nsIDeviceContext.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
-#include "nsRenderingContextPh.h"
-#include "nsDeviceContextPh.h"
 
 class nsFontMetricsPh : public nsIFontMetrics
 {
 public:
   nsFontMetricsPh();
-  ~nsFontMetricsPh();
+  virtual ~nsFontMetricsPh();
 
-  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   NS_DECL_ISUPPORTS
 
@@ -75,7 +73,7 @@ public:
 protected:
   void RealizeFont();
 
-  nsDeviceContextPh   *mDeviceContext;
+  nsIDeviceContext    *mDeviceContext;
   nsFont              *mFont;
   char                *mFontHandle;		/* Photon Fonts are just a string */
   nscoord             mHeight;

@@ -59,6 +59,7 @@ nsImagePh :: nsImagePh()
 	mIsOptimized = PR_FALSE;
 	memset(&mPhImage, 0, sizeof(PhImage_t));
 	mPhImageCache=NULL;
+	mPhImageZoom = NULL;
 }
 
 // ----------------------------------------------------------------
@@ -87,6 +88,12 @@ nsImagePh :: ~nsImagePh()
     delete [] mAlphaBits;
     mAlphaBits = nsnull;
   }
+
+	if( mPhImageZoom ) {
+		PgShmemDestroy( mPhImageZoom->image );
+		free( mPhImageZoom );
+		mPhImageZoom = NULL;
+		}
 
   memset(&mPhImage, 0, sizeof(PhImage_t));
 }
@@ -310,6 +317,43 @@ void nsImagePh :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRec
   	mFlags = aFlags; // this should be 0'd out by Draw()
 }
 
+
+
+
+/* set the mask_bm and mask_bpl to 0, replacing the transparency mask_bm based with the Ph_USE_TRANSPARENCY mechanism */
+static void convert_mask_bm_to_transparency( PhImage_t *image ) {
+	if( !image->mask_bpl || !image->mask_bm ) return;
+
+	int one = 0, x, y, b;
+	uchar_t bit;
+	char *ptr;
+	PgColor_t transparent = PgRGB( 255, 255, 0 ); /* Shawn's idea */
+
+  for( ptr = image->mask_bm,y = 0; y<image->size.h; y++ ) {
+    for( b=0; b<image->mask_bpl; b++ ) {
+
+			x = b * 8;
+			for( bit=0x1; bit; bit<<=1 ) {
+				if( !( (*ptr) & bit ) ) {
+					if( x<image->size.w ) PiSetPixel( image, x, y, transparent );
+					one++;
+					}
+				x++;
+				}
+
+      ptr++;
+    	}
+  	}
+
+	if( one ) {
+		image->flags |= Ph_USE_TRANSPARENCY;
+		image->transparent = transparent;
+//		free( image->mask_bm );
+		image->mask_bm = NULL;
+		image->mask_bpl = 0;
+		}
+	}
+
 /** ----------------------------------------------------------------
   * Draw the bitmap, this method has a source and destination coordinates
   * @update dc - 11/20/98
@@ -331,9 +375,12 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 {
 	PhRect_t clip = { {aDX, aDY}, {aDX + aDWidth, aDY + aDHeight} };
 	PhPoint_t pos = { aDX - aSX, aDY - aSY};
-  	PRBool 	aOffScreen;
+	PRBool 	aOffScreen;
 
-  	nsDrawingSurfacePh* drawing = (nsDrawingSurfacePh*) aSurface;
+	nsDrawingSurfacePh* drawing = (nsDrawingSurfacePh*) aSurface;
+
+	if( !aSWidth || !aSHeight || !aDWidth || !aDHeight ) return NS_OK;
+
 
 #ifdef ALLOW_PHIMAGE_CACHEING
 	drawing->IsOffscreen(&aOffScreen);
@@ -354,9 +401,19 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 	else
 #endif
 	{
+		PhImage_t *pimage = &mPhImage;
+
+		if( aSWidth != aDWidth || aSHeight != aDHeight ) {
+			if( !mPhImageZoom )  {
+				convert_mask_bm_to_transparency( &mPhImage );
+				mPhImageZoom = PiResizeImage( &mPhImage, NULL, aDWidth, aDHeight, Pi_USE_COLORS|Pi_SHMEM );
+				}
+			pimage = mPhImageZoom;
+			}
+
 		PgSetMultiClip( 1, &clip );
 		if ((mAlphaDepth == 1) || (mAlphaDepth == 0))
-			PgDrawPhImagemx(&pos, &mPhImage, 0);
+			PgDrawPhImagemx( &pos, pimage, 0 );
 		else
 			printf("DRAW IMAGE: with 8 bit alpha!!\n");
 		PgSetMultiClip( 0, NULL );

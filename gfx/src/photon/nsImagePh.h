@@ -123,6 +123,7 @@ private:
   PRInt8              mImageCache;        // place to save off the old image for fast animation
   PRInt16             mAlphaLevel;        // an alpha level every pixel uses
   PhImage_t           mPhImage;
+  PhImage_t           *mPhImageZoom;			// the zoomed version of mPhImage
   PdOffscreenContext_t *mPhImageCache;	  // Cache for the image offscreen
 
   PRUint8             mFlags;             // flags set by ImageUpdated

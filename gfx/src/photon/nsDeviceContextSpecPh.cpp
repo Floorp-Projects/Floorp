@@ -26,22 +26,25 @@
 #include "plstr.h"
 #include "nsPhGfxLog.h"
 
+#include "nsGfxCIID.h"
+#include "nsIServiceManager.h"
+#include "nsIPrintOptions.h"
+
+static NS_DEFINE_IID( kDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID );
+static NS_DEFINE_CID( kPrintOptionsCID, NS_PRINTOPTIONS_CID );
+
 nsDeviceContextSpecPh :: nsDeviceContextSpecPh()
 {
 	NS_INIT_REFCNT();
 	mPC = nsnull;
-	mIsQuite = PR_FALSE;
 }
 
 nsDeviceContextSpecPh :: ~nsDeviceContextSpecPh()
 {
-	if(!mIsQuite)
-		if (mPC)
-			PpPrintReleasePC(mPC);
+	if (mPC)
+		PpPrintReleasePC(mPC);
 
 }
-
-static NS_DEFINE_IID(kDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
 
 NS_IMPL_QUERY_INTERFACE(nsDeviceContextSpecPh, kDeviceContextSpecIID)
 NS_IMPL_ADDREF(nsDeviceContextSpecPh)
@@ -51,36 +54,29 @@ NS_IMETHODIMP nsDeviceContextSpecPh :: Init(PRBool aQuiet)
 {
 	int action;
 	nsresult rv = NS_OK;
-
-	if (aQuiet)
-	{
-		// no dialogs
-		if(mPC)
-			PpPrintReleasePC(mPC);
-		mIsQuite = PR_TRUE;
-		mPC = nsnull;
-		printf("Print: quiet\n");
+	
+	if( aQuiet ) {
+	    // no dialogs
+	    NS_WITH_SERVICE( nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+	    PRInt32 value;
+	    printService->GetEndPageRange( &value ); /* use SetEndPageRange/GetEndPageRange to convey the print context */
+	    mPC = ( PpPrintContext_t * ) value;
 	}
-	else
-	{
-		if(!mPC)
-			mPC = PpCreatePC();
-
+	else {
+		if( !mPC ) mPC = PpCreatePC();
 		PtSetParentWidget(NULL);
 		action = PtPrintSelection(NULL, NULL, NULL, mPC, (Pt_PRINTSEL_DFLT_LOOK));
-		switch (action)
-		{
+		switch( action ) {
 			case Pt_PRINTSEL_PRINT:
 			case Pt_PRINTSEL_PREVIEW:
-				rv = NS_OK;
-				break;
+			rv = NS_OK;
+			break;
 			case Pt_PRINTSEL_CANCEL:
-				rv = NS_ERROR_FAILURE;
-				break;
+			rv = NS_ERROR_FAILURE;
+			break;
 		}
 	}
-
-  	return rv;
+	return rv;
 }
 
 //NS_IMETHODIMP nsDeviceContextSpecPh :: GetPrintContext(PpPrintContext_t *&aPrintContext) const

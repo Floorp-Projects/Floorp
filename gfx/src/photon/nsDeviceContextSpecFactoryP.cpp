@@ -71,6 +71,10 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: CreateDeviceContextSpec(nsIWidget 
 
 	if (devSpec != nsnull)
 	{
+		PtWidget_t *widget = (PtWidget_t*) aWidget->GetNativeData( NS_NATIVE_WIDGET );
+		PtWidget_t *disjoint = PtFindDisjoint( widget );
+		if( !PtWidgetIsClass( disjoint, PtWindow ) ) aQuiet = 1; /* for the embedding stuff, the PrintSelection dialog is displayed by the client */
+
 		if (NS_OK == ((nsDeviceContextSpecPh *)devSpec)->Init(aQuiet))
 		{
 			aNewSpec = devSpec;

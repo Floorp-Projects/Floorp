@@ -43,7 +43,6 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 nscoord nsDeviceContextPh::mDpi = 96;
 
 static nsHashtable* mFontLoadCache = nsnull;
-static int globals_initialized = 0;
 
 nsDeviceContextPh :: nsDeviceContextPh( ) {
   NS_INIT_REFCNT();
@@ -111,8 +110,6 @@ NS_IMETHODIMP nsDeviceContextPh :: Init( nsNativeWidget aWidget ) {
 
 /* Called for Printing */
 nsresult nsDeviceContextPh :: Init( nsNativeDeviceContext aContext, nsIDeviceContext *aOrigContext ) {
-  nsDeviceContextSpecPh  * PrintSpec = nsnull;
-  PpPrintContext_t       *PrinterContext = nsnull;
   float                  origscale, newscale, t2d, a2d;
     
   mDC = aContext;
@@ -131,7 +128,6 @@ nsresult nsDeviceContextPh :: Init( nsNativeDeviceContext aContext, nsIDeviceCon
   mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;
 
 	// for printers
-	int width, height;
 	const PhDim_t *psize;
 	PhDim_t dim;
 	PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();
@@ -148,10 +144,9 @@ nsresult nsDeviceContextPh :: Init( nsNativeDeviceContext aContext, nsIDeviceCon
 void nsDeviceContextPh :: GetPrinterRect( int *width, int *height ) {
 	PhDim_t dim;
 	const PhDim_t *psize;
-	const PhRect_t 	*mrect, *non_print;
+	const PhRect_t 	*non_print;
 	PhRect_t	rect, margins;
-	const char *orientation = 0, *name = NULL;
-	char		*ptr;
+	const char *orientation = 0;
 	int			tmp;
 	PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();
 	
@@ -205,7 +200,7 @@ void nsDeviceContextPh :: CommonInit( nsNativeDeviceContext aDC ) {
       	}
 
       prefs->RegisterCallback( "browser.display.screen_resolution", prefChanged, (void *)this );
-      mDpi = prefVal;
+      if( prefVal >0 ) mDpi = prefVal;
     	}
   	}
 
@@ -237,8 +232,8 @@ void nsDeviceContextPh :: CommonInit( nsNativeDeviceContext aDC ) {
   
 
   /* Revisit: the scroll bar sizes is a gross guess based on Phab */
-  mScrollbarHeight = 17.0f;
-  mScrollbarWidth  = 17.0f;
+  mScrollbarHeight = 17;
+  mScrollbarWidth  = 17;
   
   /* Call Base Class */
   DeviceContextImpl::CommonInit( );
@@ -270,6 +265,7 @@ NS_IMETHODIMP nsDeviceContextPh :: CreateRenderingContext( nsIRenderingContext *
 	if( NS_OK != rv ) NS_IF_RELEASE( pContext );
 
 	aContext = pContext;
+	NS_ADDREF( pContext ); // otherwise it's crashing after printing
 	return rv;
 	}
 
@@ -351,20 +347,44 @@ NS_IMETHODIMP nsDeviceContextPh :: GetSystemAttribute( nsSystemAttrID anID, Syst
     case eSystemAttr_Size_Widget3DBorder:
         aInfo->mSize = 4;
         break;
-    //---------
-    // Fonts
-    //---------
-    case eSystemAttr_Font_Caption:
-    case eSystemAttr_Font_Icon:
-    case eSystemAttr_Font_Menu:
-    case eSystemAttr_Font_MessageBox:
-    case eSystemAttr_Font_SmallCaption:
-    case eSystemAttr_Font_StatusBar:
-    case eSystemAttr_Font_Tooltips:
-    case eSystemAttr_Font_Widget:
-      status = NS_ERROR_FAILURE;
-      break;
-  	} // switch
+	  //---------
+	  // Fonts
+	  //---------
+    case eSystemAttr_Font_Caption:      // css2
+	case eSystemAttr_Font_Icon:
+	case eSystemAttr_Font_Menu:
+	case eSystemAttr_Font_MessageBox:
+	case eSystemAttr_Font_SmallCaption:
+	case eSystemAttr_Font_StatusBar:
+	case eSystemAttr_Font_Window:       // css3
+	case eSystemAttr_Font_Document:
+	case eSystemAttr_Font_Workspace:
+	case eSystemAttr_Font_Desktop:
+	case eSystemAttr_Font_Info:
+	case eSystemAttr_Font_Dialog:
+	case eSystemAttr_Font_Button:
+	case eSystemAttr_Font_PullDownMenu:
+	case eSystemAttr_Font_List:
+	case eSystemAttr_Font_Field:
+	case eSystemAttr_Font_Tooltips:     // moz
+	case eSystemAttr_Font_Widget:
+	  aInfo->mFont->style       = NS_FONT_STYLE_NORMAL;
+	  aInfo->mFont->weight      = NS_FONT_WEIGHT_NORMAL;
+	  aInfo->mFont->decorations = NS_FONT_DECORATION_NONE;
+	  aInfo->mFont->name.AssignWithConversion("TextFont");
+	  switch(anID) {
+		  case eSystemAttr_Font_MessageBox:
+		     aInfo->mFont->name.AssignWithConversion("MessageFont");
+			 break;
+		  case eSystemAttr_Font_Tooltips:
+		     aInfo->mFont->name.AssignWithConversion("BalloonFont");
+		     break;
+		  case eSystemAttr_Font_Menu:
+		     aInfo->mFont->name.AssignWithConversion("MenuFont");
+		     break;
+	  }
+	  break;
+  } // switch
 
   return NS_OK;
 }
@@ -395,7 +415,7 @@ NS_IMETHODIMP nsDeviceContextPh :: CheckFontExistence( const nsString& aFontName
   if( fontName ) {
 		FontID *id = NULL;
 
-		if( id = PfFindFont( (uchar_t *)fontName, 0, 0 ) ) {
+		if( ( id = PfFindFont( (uchar_t *)fontName, 0, 0 ) ) ) {
 			if( !mFontLoadCache ) mFontLoadCache = new nsHashtable();
 
 			nsCStringKey key((char *)(id->pucStem));
@@ -471,22 +491,13 @@ NS_IMETHODIMP nsDeviceContextPh :: GetDeviceContextFor( nsIDeviceContextSpec *aD
 	//then QI for the real object rather than casting... MMP
 
 	aContext = new nsDeviceContextPh();
-
+	if(nsnull != aContext){
+		NS_ADDREF(aContext);
+	} else {
+		return NS_ERROR_OUT_OF_MEMORY;
+	}
 	((nsDeviceContextPh *)aContext)->mSpec = aDevice;
-	PpPrintContext_t *pc = ((nsDeviceContextSpecPh*)(((nsDeviceContextPh *)aContext)->mSpec))->GetPrintContext();
 	NS_ADDREF(aDevice);
-
-	//((nsDeviceContextSpecWin *)aDevice)->GetDeviceName(devicename);
-	//((nsDeviceContextSpecWin *)aDevice)->GetDriverName(drivername);
-	//((nsDeviceContextSpecWin *)aDevice)->GetDEVMODE(hdevmode);
-
-	//devmode = (DEVMODE *)::GlobalLock(hdevmode);
-	//HDC dc = ::CreateDC(drivername, devicename, NULL, devmode);
-
-	//  ::SetAbortProc(dc, (ABORTPROC)abortproc);
-
-	//::GlobalUnlock(hdevmode);
-
 	return ((nsDeviceContextPh *)aContext)->Init(NULL, this);
 	}
 
@@ -517,40 +528,33 @@ int nsDeviceContextPh::prefChanged( const char *aPref, void *aClosure ) {
 	}
 
 NS_IMETHODIMP nsDeviceContextPh :: BeginDocument( PRUnichar *t ) {
-  nsresult    ret_code = NS_ERROR_FAILURE;
-  int         err;
   PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();
-
-	PhDrawContext_t *dc = PhDCSetCurrent(NULL);
-	PhDCSetCurrent(dc);
-
   PpStartJob(pc);
-  PpContinueJob(pc);
-
-	dc = PhDCSetCurrent(NULL);
-	PhDCSetCurrent(dc);
-
-	mIsPrinting = 1;
-
+    mIsPrinting = 1;
+    mIsPrintingStart = 1;
   return NS_OK;
-	}
+    }
 
 NS_IMETHODIMP nsDeviceContextPh :: EndDocument( void ) {
   PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();
-  PpSuspendJob(pc);
   PpEndJob(pc);
 	mIsPrinting = 0;
   return NS_OK;
 	}
 
 NS_IMETHODIMP nsDeviceContextPh :: BeginPage( void ) {
+	PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();
+	if( !mIsPrintingStart ) PpPrintNewPage( pc );
+	PpContinueJob( pc );
+	mIsPrintingStart = 0;
 	return NS_OK;
-	}
+    }
 
 NS_IMETHODIMP nsDeviceContextPh :: EndPage( void ) {
-  PpPrintNewPage(((nsDeviceContextSpecPh *)mSpec)->GetPrintContext());
+	PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();
+	PpSuspendJob(pc);
 	return NS_OK;
-	}
+    }
 
 int nsDeviceContextPh :: IsPrinting( void ) { return mIsPrinting ? 1 : 0; }
 
@@ -564,7 +568,6 @@ nsresult nsDeviceContextPh :: GetDisplayInfo( PRInt32 &aWidth, PRInt32 &aHeight,
   char              *p = NULL;
   int               inp_grp;
   PhRid_t           rid;
-  PhRegion_t        region;
 
   /* Initialize variables */
   aWidth  = 0;
