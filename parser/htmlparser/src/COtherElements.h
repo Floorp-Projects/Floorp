@@ -1917,6 +1917,12 @@ static eHTMLTags kFramesetKids[]={eHTMLTag_noframes,eHTMLTag_unknown};
 static eHTMLTags kObjectKids[]={eHTMLTag_param,eHTMLTag_unknown};
 static eHTMLTags kTBodyKids[]={eHTMLTag_tr,eHTMLTag_unknown};
 
+
+inline CElement* CElement::GetElement(eHTMLTags aTag) {
+  return gElementTable->mElements[aTag];
+}
+
+
 /***********************************************************************************
   This method is pretty interesting, because it's where the elements all get 
   initialized for this elementtable.
@@ -2550,11 +2556,6 @@ inline CElement* CElement::GetDelegate(void) {
   }
   return 0;
 }
-
-inline CElement* CElement::GetElement(eHTMLTags aTag) {
-  return gElementTable->mElements[aTag];
-}
-
 
 inline CElement* CElement::GetDefaultContainerFor(CElement* anElement) {
   CElement* result=0;
