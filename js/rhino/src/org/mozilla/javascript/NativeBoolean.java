@@ -66,7 +66,7 @@ final class NativeBoolean extends IdScriptableObject
         // This is actually non-ECMA, but will be proposed
         // as a change in round 2.
         if (typeHint == ScriptRuntime.BooleanClass)
-            return wrap_boolean(booleanValue);
+            return ScriptRuntime.wrapBoolean(booleanValue);
         return super.getDefaultValue(typeHint);
     }
 
@@ -91,37 +91,35 @@ final class NativeBoolean extends IdScriptableObject
             return super.execIdCall(f, cx, scope, thisObj, args);
         }
         int id = f.methodId();
-        switch (id) {
-          case Id_constructor: {
+
+        if (id == Id_constructor) {
             boolean b = ScriptRuntime.toBoolean(args, 0);
             if (thisObj == null) {
                 // new Boolean(val) creates a new boolean object.
                 return new NativeBoolean(b);
             }
             // Boolean(val) converts val to a boolean.
-            return wrap_boolean(b);
-          }
-
-          case Id_toString:
-            return realThisBoolean(thisObj, f) ? "true" : "false";
-
-          case Id_toSource:
-            if (realThisBoolean(thisObj, f))
-                return "(new Boolean(true))";
-            else
-                return "(new Boolean(false))";
-
-          case Id_valueOf:
-            return wrap_boolean(realThisBoolean(thisObj, f));
+            return ScriptRuntime.wrapBoolean(b);
         }
-        throw new IllegalArgumentException(String.valueOf(id));
-    }
 
-    private static boolean realThisBoolean(Scriptable thisObj, IdFunctionObject f)
-    {
+        // The rest of Boolean.prototype methods require thisObj to be Boolean
+
         if (!(thisObj instanceof NativeBoolean))
             throw incompatibleCallError(f);
-        return ((NativeBoolean)thisObj).booleanValue;
+        boolean value = ((NativeBoolean)thisObj).booleanValue;
+
+        switch (id) {
+
+          case Id_toString:
+            return value ? "true" : "false";
+
+          case Id_toSource:
+            return value ? "(new Boolean(true))" : "(new Boolean(false))";
+
+          case Id_valueOf:
+            return ScriptRuntime.wrapBoolean(value);
+        }
+        throw new IllegalArgumentException(String.valueOf(id));
     }
 
 // #string_id_map#

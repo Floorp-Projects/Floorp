@@ -74,11 +74,17 @@ final class NativeNumber extends IdScriptableObject
 
         ctor.defineProperty("NaN", ScriptRuntime.NaNobj, attr);
         ctor.defineProperty("POSITIVE_INFINITY",
-                            wrap_double(Double.POSITIVE_INFINITY), attr);
+                            ScriptRuntime.wrapNumber(Double.POSITIVE_INFINITY),
+                            attr);
         ctor.defineProperty("NEGATIVE_INFINITY",
-                            wrap_double(Double.NEGATIVE_INFINITY), attr);
-        ctor.defineProperty("MAX_VALUE", wrap_double(Double.MAX_VALUE), attr);
-        ctor.defineProperty("MIN_VALUE", wrap_double(Double.MIN_VALUE), attr);
+                            ScriptRuntime.wrapNumber(Double.NEGATIVE_INFINITY),
+                            attr);
+        ctor.defineProperty("MAX_VALUE",
+                            ScriptRuntime.wrapNumber(Double.MAX_VALUE),
+                            attr);
+        ctor.defineProperty("MIN_VALUE",
+                            ScriptRuntime.wrapNumber(Double.MIN_VALUE),
+                            attr);
 
         super.fillConstructorProperties(ctor);
     }
@@ -108,8 +114,7 @@ final class NativeNumber extends IdScriptableObject
             return super.execIdCall(f, cx, scope, thisObj, args);
         }
         int id = f.methodId();
-        switch (id) {
-          case Id_constructor: {
+        if (id == Id_constructor) {
             double val = (args.length >= 1)
                 ? ScriptRuntime.toNumber(args[0]) : 0.0;
             if (thisObj == null) {
@@ -117,59 +122,57 @@ final class NativeNumber extends IdScriptableObject
                 return new NativeNumber(val);
             }
             // Number(val) converts val to a number value.
-            return wrap_double(val);
-          }
+            return ScriptRuntime.wrapNumber(val);
+        }
+
+        // The rest of Number.prototype methods require thisObj to be Number
+
+        if (!(thisObj instanceof NativeNumber))
+            throw incompatibleCallError(f);
+        double value = ((NativeNumber)thisObj).doubleValue;
+
+        switch (id) {
 
           case Id_toString:
-          case Id_toLocaleString: {
-            // toLocaleString is just an alias for toString for now
-            double val = realThisValue(thisObj, f);
-            int base = (args.length == 0)
-                ? 10 : ScriptRuntime.toInt32(args[0]);
-            return ScriptRuntime.numberToString(val, base);
-          }
+          case Id_toLocaleString:
+            {
+                // toLocaleString is just an alias for toString for now
+                int base = (args.length == 0)
+                    ? 10 : ScriptRuntime.toInt32(args[0]);
+                return ScriptRuntime.numberToString(value, base);
+            }
 
-          case Id_toSource: {
-            double val = realThisValue(thisObj, f);
-            return "(new Number("+ScriptRuntime.toString(val)+"))";
-          }
+          case Id_toSource:
+            return "(new Number("+ScriptRuntime.toString(value)+"))";
 
           case Id_valueOf:
-            return wrap_double(realThisValue(thisObj, f));
+            return ScriptRuntime.wrapNumber(value);
 
           case Id_toFixed:
-            return num_to(f, thisObj, args, DToA.DTOSTR_FIXED,
+            return num_to(value, args, DToA.DTOSTR_FIXED,
                           DToA.DTOSTR_FIXED, -20, 0);
 
           case Id_toExponential:
-            return num_to(f, thisObj, args, DToA.DTOSTR_STANDARD_EXPONENTIAL,
+            return num_to(value, args, DToA.DTOSTR_STANDARD_EXPONENTIAL,
                           DToA.DTOSTR_EXPONENTIAL, 0, 1);
 
           case Id_toPrecision:
-            return num_to(f, thisObj, args, DToA.DTOSTR_STANDARD,
+            return num_to(value, args, DToA.DTOSTR_STANDARD,
                           DToA.DTOSTR_PRECISION, 1, 0);
 
           default: throw new IllegalArgumentException(String.valueOf(id));
         }
     }
 
-    private static double realThisValue(Scriptable thisObj, IdFunctionObject f)
-    {
-        if (!(thisObj instanceof NativeNumber))
-            throw incompatibleCallError(f);
-        return ((NativeNumber)thisObj).doubleValue;
-    }
-
     public String toString() {
         return ScriptRuntime.numberToString(doubleValue, 10);
     }
 
-    private static String num_to(IdFunctionObject f, Scriptable thisObj,
+    private static String num_to(double val,
                                  Object[] args,
                                  int zeroArgMode, int oneArgMode,
                                  int precisionMin, int precisionOffset)
     {
-        double val = realThisValue(thisObj, f);
         int precision;
         if (args.length == 0) {
             precision = 0;

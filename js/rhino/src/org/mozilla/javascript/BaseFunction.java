@@ -169,8 +169,8 @@ public class BaseFunction extends IdScriptableObject implements Function
     protected Object getInstanceIdValue(int id)
     {
         switch (id) {
-          case Id_length:    return wrap_int(getLength());
-          case Id_arity:     return wrap_int(getArity());
+          case Id_length:    return ScriptRuntime.wrapInt(getLength());
+          case Id_arity:     return ScriptRuntime.wrapInt(getArity());
           case Id_name:      return getFunctionName();
           case Id_prototype: return getPrototypeProperty();
           case Id_arguments: return getArguments();

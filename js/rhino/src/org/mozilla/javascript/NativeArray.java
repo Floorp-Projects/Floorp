@@ -128,7 +128,7 @@ public class NativeArray extends IdScriptableObject
     protected Object getInstanceIdValue(int id)
     {
         if (id == Id_length) {
-            return wrap_double(length);
+            return ScriptRuntime.wrapNumber(length);
         }
         return super.getInstanceIdValue(id);
     }

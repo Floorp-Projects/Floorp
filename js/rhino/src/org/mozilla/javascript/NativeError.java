@@ -57,8 +57,8 @@ final class NativeError extends IdScriptableObject
         obj.exportAsJSClass(MAX_PROTOTYPE_ID, scope, sealed);
     }
 
-    static NativeError make(Context cx, Scriptable scope, IdFunctionObject ctorObj,
-                            Object[] args)
+    static NativeError make(Context cx, Scriptable scope,
+                            IdFunctionObject ctorObj, Object[] args)
     {
         Scriptable proto = (Scriptable)(ctorObj.get("prototype", ctorObj));
 

@@ -179,7 +179,7 @@ public class Global extends ImporterTopLevel {
     public static void defineClass(Context cx, Scriptable thisObj,
                                    Object[] args, Function funObj)
         throws IllegalAccessException, InstantiationException,
-               InvocationTargetException, ClassDefinitionException
+               InvocationTargetException
     {
         Class clazz = getClass(args);
         ScriptableObject.defineClass(thisObj, clazz);

@@ -229,7 +229,7 @@ public class NativeRegExpCtor extends NativeFunction {
             switch (shifted) {
                 case Id_multiline:
                 case Id_STAR:
-                    return wrap_boolean(impl.multiline);
+                    return ScriptRuntime.wrapBoolean(impl.multiline);
 
                 case Id_input:
                 case Id_UNDERSCORE:

@@ -493,16 +493,22 @@ abstract class XMLObjectImpl extends XMLObject
             return super.execIdCall(f, cx, scope, thisObj, args);
         }
         int id = f.methodId();
-        switch (id) {
-          case Id_constructor: {
+        if (id == Id_constructor) {
             return jsConstructor(cx, thisObj == null, args);
-          }
+        }
+
+        // All (XML|XMLList).prototype methods require thisObj to be XML
+        if (!(thisObj instanceof XMLObjectImpl))
+            throw incompatibleCallError(f);
+        XMLObjectImpl realThis = (XMLObjectImpl)thisObj;
+
+        switch (id) {
           case Id_addNamespace: {
             Namespace ns = lib.castToNamespace(cx, arg(args, 0));
-            return realThis(thisObj, f).addNamespace(ns);
+            return realThis.addNamespace(ns);
           }
           case Id_appendChild:
-            return realThis(thisObj, f).appendChild(arg(args, 0));
+            return realThis.appendChild(arg(args, 0));
           case Id_attribute: {
             Object arg0 = arg(args, 0);
             if (arg0 == null || arg0 == Undefined.instance) {
@@ -512,103 +518,104 @@ abstract class XMLObjectImpl extends XMLObject
                 arg0 = ScriptRuntime.toString(arg0);
             }
             XMLName xmlName = lib.toAttributeNameImpl(cx, arg0);
-            return realThis(thisObj, f).attribute(xmlName);
+            return realThis.attribute(xmlName);
           }
           case Id_attributes:
-            return realThis(thisObj, f).attributes();
+            return realThis.attributes();
           case Id_child: {
-            XMLName xmlName = getXmlNameOrIndex(cx, args, 0);
+            XMLName xmlName = lib.toXMLNameOrIndex(cx, arg(args, 0));
             if (xmlName == null) {
                 long index = ScriptRuntime.lastUint32Result(cx);
-                return realThis(thisObj, f).child(index);
+                return realThis.child(index);
             } else {
-                return realThis(thisObj, f).child(xmlName);
+                return realThis.child(xmlName);
             }
           }
           case Id_childIndex:
-            return new Integer(realThis(thisObj, f).childIndex());
+            return ScriptRuntime.wrapInt(realThis.childIndex());
           case Id_children:
-            return realThis(thisObj, f).children();
+            return realThis.children();
           case Id_comments:
-            return realThis(thisObj, f).comments();
+            return realThis.comments();
           case Id_contains:
-            return wrap_boolean(realThis(thisObj, f).contains(arg(args, 0)));
+            return ScriptRuntime.wrapBoolean(
+                       realThis.contains(arg(args, 0)));
           case Id_copy:
-            return realThis(thisObj, f).copy();
+            return realThis.copy();
           case Id_descendants: {
             XMLName xmlName = (args.length == 0)
                               ? XMLName.formStar()
                               : lib.toXMLName(cx, args[0]);
-            return realThis(thisObj, f).descendants(xmlName);
+            return realThis.descendants(xmlName);
           }
           case Id_inScopeNamespaces: {
-            Object[] array = realThis(thisObj, f).inScopeNamespaces();
+            Object[] array = realThis.inScopeNamespaces();
             return cx.newArray(scope, array);
           }
           case Id_insertChildAfter:
-            return realThis(thisObj, f).insertChildAfter(arg(args, 0), arg(args, 1));
+            return realThis.insertChildAfter(arg(args, 0), arg(args, 1));
           case Id_insertChildBefore:
-            return realThis(thisObj, f).insertChildBefore(arg(args, 0), arg(args, 1));
+            return realThis.insertChildBefore(arg(args, 0), arg(args, 1));
           case Id_hasOwnProperty: {
             XMLName xmlName = lib.toXMLName(cx, arg(args, 0));
-            return wrap_boolean(
-                realThis(thisObj, f).hasOwnProperty(xmlName));
+            return ScriptRuntime.wrapBoolean(
+                       realThis.hasOwnProperty(xmlName));
           }
           case Id_hasComplexContent:
-            return wrap_boolean(realThis(thisObj, f).hasComplexContent());
+            return ScriptRuntime.wrapBoolean(realThis.hasComplexContent());
           case Id_hasSimpleContent:
-            return wrap_boolean(realThis(thisObj, f).hasSimpleContent());
+            return ScriptRuntime.wrapBoolean(realThis.hasSimpleContent());
           case Id_length:
-            return new Integer(realThis(thisObj, f).length());
+            return ScriptRuntime.wrapInt(realThis.length());
           case Id_localName:
-            return realThis(thisObj, f).localName();
+            return realThis.localName();
           case Id_name:
-            return realThis(thisObj, f).name();
+            return realThis.name();
           case Id_namespace: {
             String prefix = (args.length > 0)
                             ? ScriptRuntime.toString(args[0]) : null;
-            return realThis(thisObj, f).namespace(prefix);
+            return realThis.namespace(prefix);
           }
           case Id_namespaceDeclarations: {
-            Object[] array = realThis(thisObj, f).namespaceDeclarations();
+            Object[] array = realThis.namespaceDeclarations();
             return cx.newArray(scope, array);
           }
           case Id_nodeKind:
-            return realThis(thisObj, f).nodeKind();
+            return realThis.nodeKind();
           case Id_normalize:
-            realThis(thisObj, f).normalize();
+            realThis.normalize();
             return Undefined.instance;
           case Id_parent:
-            return realThis(thisObj, f).parent();
+            return realThis.parent();
           case Id_prependChild:
-            return realThis(thisObj, f).prependChild(arg(args, 0));
+            return realThis.prependChild(arg(args, 0));
           case Id_processingInstructions: {
             XMLName xmlName = (args.length > 0)
                               ? lib.toXMLName(cx, args[0])
                               : XMLName.formStar();
-            return realThis(thisObj, f).processingInstructions(xmlName);
+            return realThis.processingInstructions(xmlName);
           }
           case Id_propertyIsEnumerable: {
             XMLName xmlName = lib.toXMLName(cx, arg(args, 0));
-            return wrap_boolean(
-                realThis(thisObj, f).propertyIsEnumerable(xmlName));
+            return ScriptRuntime.wrapBoolean(
+                       realThis.propertyIsEnumerable(xmlName));
           }
           case Id_removeNamespace: {
             Namespace ns = lib.castToNamespace(cx, arg(args, 0));
-            return realThis(thisObj, f).removeNamespace(ns);
+            return realThis.removeNamespace(ns);
           }
           case Id_replace: {
-            XMLName xmlName = getXmlNameOrIndex(cx, args, 0);
+            XMLName xmlName = lib.toXMLNameOrIndex(cx, arg(args, 0));
             Object arg1 = arg(args, 1);
             if (xmlName == null) {
                 long index = ScriptRuntime.lastUint32Result(cx);
-                return realThis(thisObj, f).replace(index, arg1);
+                return realThis.replace(index, arg1);
             } else {
-                return realThis(thisObj, f).replace(xmlName, arg1);
+                return realThis.replace(xmlName, arg1);
             }
           }
           case Id_setChildren:
-            return realThis(thisObj, f).setChildren(arg(args, 0));
+            return realThis.setChildren(arg(args, 0));
           case Id_setLocalName: {
             String localName;
             Object arg = arg(args, 0);
@@ -617,7 +624,7 @@ abstract class XMLObjectImpl extends XMLObject
             } else {
                 localName = ScriptRuntime.toString(arg);
             }
-            realThis(thisObj, f).setLocalName(localName);
+            realThis.setLocalName(localName);
             return Undefined.instance;
           }
           case Id_setName: {
@@ -634,53 +641,35 @@ abstract class XMLObjectImpl extends XMLObject
             } else {
                 qname = lib.constructQName(cx, arg);
             }
-            realThis(thisObj, f).setName(qname);
+            realThis.setName(qname);
             return Undefined.instance;
           }
           case Id_setNamespace: {
             Namespace ns = lib.castToNamespace(cx, arg(args, 0));
-            realThis(thisObj, f).setNamespace(ns);
+            realThis.setNamespace(ns);
             return Undefined.instance;
           }
           case Id_text:
-            return realThis(thisObj, f).text();
+            return realThis.text();
           case Id_toString:
-            return realThis(thisObj, f).toString();
+            return realThis.toString();
           case Id_toSource: {
             int indent = ScriptRuntime.toInt32(args, 0);
-            return realThis(thisObj, f).toSource(indent);
+            return realThis.toSource(indent);
           }
           case Id_toXMLString: {
             int indent = ScriptRuntime.toInt32(args, 0);
-            return realThis(thisObj, f).toXMLString(indent);
+            return realThis.toXMLString(indent);
           }
           case Id_valueOf:
-            return realThis(thisObj, f).valueOf();
+            return realThis.valueOf();
         }
         throw new IllegalArgumentException(String.valueOf(id));
-    }
-
-    /**
-     *
-     * @param thisObj
-     * @param f
-     * @return
-     */
-    private XMLObjectImpl realThis(Scriptable thisObj, IdFunctionObject f)
-    {
-        if(!(thisObj instanceof XMLObjectImpl))
-            throw incompatibleCallError(f);
-        return (XMLObjectImpl)thisObj;
     }
 
     private static Object arg(Object[] args, int i)
     {
         return (i < args.length) ? args[i] : Undefined.instance;
-    }
-
-    private XMLName getXmlNameOrIndex(Context cx, Object[] args, int i)
-    {
-        return lib.toXMLNameOrIndex(cx, arg(args, i));
     }
 
 }

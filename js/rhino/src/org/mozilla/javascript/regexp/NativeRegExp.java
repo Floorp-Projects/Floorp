@@ -2647,16 +2647,16 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
     protected Object getInstanceIdValue(int id)
     {
         switch (id) {
-            case Id_lastIndex:
-                return wrap_double(lastIndex);
-            case Id_source:
-                return new String(re.source);
-            case Id_global:
-                return wrap_boolean((re.flags & JSREG_GLOB) != 0);
-            case Id_ignoreCase:
-                return wrap_boolean((re.flags & JSREG_FOLD) != 0);
-            case Id_multiline:
-                return wrap_boolean((re.flags & JSREG_MULTILINE) != 0);
+          case Id_lastIndex:
+            return ScriptRuntime.wrapNumber(lastIndex);
+          case Id_source:
+            return new String(re.source);
+          case Id_global:
+            return ScriptRuntime.wrapBoolean((re.flags & JSREG_GLOB) != 0);
+          case Id_ignoreCase:
+            return ScriptRuntime.wrapBoolean((re.flags & JSREG_FOLD) != 0);
+          case Id_multiline:
+            return ScriptRuntime.wrapBoolean((re.flags & JSREG_MULTILINE) != 0);
         }
         return super.getInstanceIdValue(id);
     }

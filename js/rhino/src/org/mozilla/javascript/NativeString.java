@@ -93,7 +93,7 @@ final class NativeString extends IdScriptableObject
     protected Object getInstanceIdValue(int id)
     {
         if (id == Id_length) {
-            return wrap_int(string.length());
+            return ScriptRuntime.wrapInt(string.length());
         }
         return super.getInstanceIdValue(id);
     }
@@ -199,15 +199,15 @@ final class NativeString extends IdScriptableObject
             }
             char c = target.charAt((int)pos);
             if (id == Id_charAt) return String.valueOf(c);
-            else return wrap_int(c);
+            else return ScriptRuntime.wrapInt(c);
           }
 
           case Id_indexOf:
-            return wrap_int(js_indexOf(
+            return ScriptRuntime.wrapInt(js_indexOf(
                 ScriptRuntime.toString(thisObj), args));
 
           case Id_lastIndexOf:
-            return wrap_int(js_lastIndexOf(
+            return ScriptRuntime.wrapInt(js_lastIndexOf(
                 ScriptRuntime.toString(thisObj), args));
 
           case Id_split:
@@ -276,8 +276,8 @@ final class NativeString extends IdScriptableObject
           case Id_equalsIgnoreCase: {
             String s1 = ScriptRuntime.toString(thisObj);
             String s2 = ScriptRuntime.toString(args, 0);
-            return wrap_boolean(id == Id_equals
-                ? s1.equals(s2) : s1.equalsIgnoreCase(s2));
+            return ScriptRuntime.wrapBoolean(
+                (id == Id_equals) ? s1.equals(s2) : s1.equalsIgnoreCase(s2));
           }
 
           case Id_match:

@@ -725,28 +725,6 @@ public abstract class IdScriptableObject extends ScriptableObject
         return f;
     }
 
-    protected final Object wrap_double(double x)
-    {
-        return (x == x) ? new Double(x) : ScriptRuntime.NaNobj;
-    }
-
-    protected final Object wrap_int(int x)
-    {
-        return ScriptRuntime.wrapInt(x);
-    }
-
-    protected final Object wrap_long(long x)
-    {
-        int i = (int)x;
-        if (i == x) { return wrap_int(i); }
-        return new Long(x);
-    }
-
-    protected final Object wrap_boolean(boolean x)
-    {
-        return x ? Boolean.TRUE : Boolean.FALSE;
-    }
-
     private void readObject(ObjectInputStream stream)
         throws IOException, ClassNotFoundException
     {

@@ -105,7 +105,7 @@ final class NativeMath extends IdScriptableObject
               case Id_SQRT2:   x = 1.4142135623730951; name = "SQRT2";   break;
               default: throw new IllegalStateException(String.valueOf(id));
             }
-            initPrototypeValue(id, name, wrap_double(x),
+            initPrototypeValue(id, name, ScriptRuntime.wrapNumber(x),
                                DONTENUM | READONLY | PERMANENT);
         }
     }
@@ -245,7 +245,7 @@ final class NativeMath extends IdScriptableObject
 
             default: throw new IllegalStateException(String.valueOf(methodId));
         }
-        return wrap_double(x);
+        return ScriptRuntime.wrapNumber(x);
     }
 
     // See Ecma 15.8.2.13
