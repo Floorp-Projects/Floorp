@@ -380,8 +380,9 @@ pref("mail.server.default.max_articles", 500);
 pref("mail.server.default.notify.on", true);
 pref("mail.server.default.mark_old_read", false);
 
-pref("mail.convert_emoticons",true);
-pref("mail.convert_structs",true);
+pref("mail.display_glyph",true);   // see <http://www.bucksch.org/1/projects/mozilla/16507/>
+pref("mail.display_struct",true);  // dito
+pref("mail.send_struct",true);     // dito
 
 pref("mail.forward_message_mode", 0); // 0=default as attachment 2=forward as inline with attachments, (obsolete)1=forward as quoted
 
