@@ -1014,6 +1014,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
         //stream in the object source if there is one...
         if (NS_CONTENT_ATTR_HAS_VALUE ==
             mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::src, src)) {
+          src.Trim("\b\t\r\n ", PR_TRUE, PR_TRUE, PR_FALSE);  // trim leading and trailing whitespace
           // Create an absolute URL
           rv = NS_NewURI(getter_AddRefs(fullURL), src, baseURL);
           if (NS_FAILED(rv)) {
@@ -1025,6 +1026,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
         }
         else if (NS_CONTENT_ATTR_HAS_VALUE ==
                  mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::data, src)) {
+          src.Trim("\b\t\r\n ", PR_TRUE, PR_TRUE, PR_FALSE);  // trim leading and trailing whitespace
           // Create an absolute URL
           rv = NS_NewURI(getter_AddRefs(fullURL), src, baseURL);
           if (NS_FAILED(rv)) {
