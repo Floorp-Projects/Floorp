@@ -1,0 +1,19 @@
+@import url(chrome://global/skin/global.css);
+
+treecell.directory {
+  list-style-image: url("chrome://global/skin/dir-closed.gif");
+}
+
+treecell.file {
+  list-style-image: url("chrome://global/skin/blank.gif");
+}
+
+/*
+treeitem.hidden > treerow > treecell > .tree-button {
+  color: #CCCCCC;
+}
+
+treeitem.hidden > treerow > treecell > .tree-icon {
+  list-style-image: url("chrome://global/skin/blank.gif");
+}
+*/

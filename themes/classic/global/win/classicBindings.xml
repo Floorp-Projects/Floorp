@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<bindings id="buttonBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="textdisabled" extends="xul:text">
+    <content excludes="observes,template">
+      <xul:stack>
+        <xul:text class="text-bottom" inherits="value,accesskey,crop"/>
+        <xul:text class="text-top" inherits="value,accesskey,crop"/>
+      </xul:stack>
+    </content>
+  </binding>
+
+</bindings>

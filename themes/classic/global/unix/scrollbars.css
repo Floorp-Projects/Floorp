@@ -1,0 +1,131 @@
+@namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul); /* set default namespace to XUL */
+
+/********* XP Scrollbar *********/
+
+scrollbar {
+   behavior: url("resource:/chrome/xulBindings.xml#scrollbar");
+}
+
+slider {
+   user-focus: ignore;
+   user-select: none;
+}
+
+scrollbarbutton {
+  display: inline;
+  user-focus: ignore;
+  user-select: none;
+}
+
+scrollbar[value="hidden"] {
+   visibility: hidden;
+   user-focus: ignore;
+   user-select: none;
+}
+
+/********* XP Scrollbar *********/
+
+thumb {
+  behavior: url(resource:/chrome/xulBindings.xml#thumb);
+  user-focus: ignore;
+  user-select: none;
+  background-color: #CCCCCC;
+  border: 1px outset #CCCCCC;
+  list-style-image: url("chrome://global/skin/scroll-thumb-horiz.gif")
+}
+
+thumb[disabled="true"] {
+   user-focus: ignore;
+   user-select: none;
+   list-style-image: url("chrome://global/skin/scroll-thumb-horiz-disabled.gif");
+}
+
+thumb[align="vertical"] {
+   list-style-image: url("chrome://global/skin/scroll-thumb-vert.gif")
+}
+
+scrollbarbutton {
+  user-focus: ignore;
+  user-select: none;
+  vertical-align: bottom;
+  cursor: default;
+
+  border: 1px outset white;
+  background-color: #CCCCCC;
+  color:black; 
+
+  padding: 1px;
+}
+
+scrollbarbutton:active {
+  user-focus: ignore;
+  user-select: none;
+  border-style: inset;
+
+  padding-left: 2px;
+  padding-right: 0px;
+  padding-top: 2px;
+  padding-bottom: 0px;
+}
+
+scrollbarbutton[type="decrement"] {
+   user-focus: ignore;
+   user-select: none;
+   list-style-image: url("chrome://global/skin/scroll-left.gif")
+}
+
+scrollbarbutton[type="decrement"][disabled="true"] {
+   user-focus: ignore;
+   user-select: none;
+   list-style-image: url("chrome://global/skin/scroll-left-disabled.gif") 
+}
+
+scrollbarbutton[type="increment"] {
+   user-focus: ignore;
+   user-select: none;
+   list-style-image: url("chrome://global/skin/scroll-right.gif")
+}
+
+
+scrollbarbutton[type="increment"][disabled="true"] {
+   user-focus: ignore;
+   user-select: none;
+   list-style-image: url("chrome://global/skin/scroll-right-disabled.gif") 
+}
+
+
+scrollbar[align="vertical"] scrollbarbutton[type="decrement"] {
+   user-focus: ignore;
+   user-select: none;
+   list-style-image: url("chrome://global/skin/scroll-up.gif")
+}
+
+scrollbar[align="vertical"] scrollbarbutton[type="decrement"][disabled="true"] {
+   user-focus: ignore;
+   user-select: none;
+   list-style-image: url("chrome://global/skin/scroll-up-disabled.gif") 
+}
+
+scrollbar[align="vertical"] scrollbarbutton[type="increment"] {
+   user-focus: ignore;
+   user-select: none;
+   list-style-image: url("chrome://global/skin/scroll-down.gif")
+}
+
+scrollbar[align="vertical"] scrollbarbutton[type="increment"][disabled="true"] {
+   user-focus: ignore;
+   user-select: none;
+   list-style-image: url("chrome://global/skin/scroll-down-disabled.gif") 
+}
+
+slider[align="vertical"] thumb:active {
+   user-focus: ignore;
+   user-select: none;
+   background-color: #CCCCCC;
+}
+
+slider {
+   user-focus: ignore;
+   user-select: none;
+   background-color: #999999;
+}

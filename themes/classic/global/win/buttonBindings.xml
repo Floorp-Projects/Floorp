@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+
+<bindings id="buttonBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="buttonleft" extends="resource:/chrome/xulBindings.xml#basetext">
+    <content excludes="observes,template">
+      <xul:box class="button-box-1" autostretch="never" flex="1">
+        <xul:box class="button-box-2" autostretch="never" flex="1">
+          <xul:image class="button-icon" inherits="src"/>
+          <xul:box class="button-box-text" flex="1" autostretch="never">
+            <xul:text class="button-text" inherits="disabled,value,accesskey,crop"/>
+          </xul:box>
+        </xul:box>
+      </xul:box>
+    </content>
+  </binding>
+
+  <binding id="buttonright" extends="resource:/chrome/xulBindings.xml#basetext">
+    <content excludes="observes,template">
+      <xul:box class="button-box-1" autostretch="never" flex="1">
+        <xul:box class="button-box-2" autostretch="never" flex="1">
+          <xul:box class="button-box-text" flex="1" autostretch="never">
+            <xul:text class="button-text" inherits="disabled,value,accesskey,crop"/>
+          </xul:box>
+          <xul:image class="button-icon" inherits="src"/>
+        </xul:box>
+      </xul:box>
+    </content>
+  </binding>
+  
+  <binding id="buttontop" extends="resource:/chrome/xulBindings.xml#basetext">
+    <content excludes="observes,template">
+      <xul:box class="button-box-1" autostretch="never" flex="1">
+        <xul:box class="button-box-2" autostretch="never" flex="1" orient="vertical">
+          <xul:image class="button-icon" inherits="src"/>
+          <xul:box class="button-box-text" flex="1" autostretch="never">
+            <xul:text class="button-text" inherits="disabled,value,accesskey,crop"/>
+          </xul:box>
+        </xul:box>
+      </xul:box>
+    </content>
+  </binding>
+
+  <binding id="buttonbottom" extends="resource:/chrome/xulBindings.xml#basetext">
+    <content excludes="observes,template">
+      <xul:box class="button-box-1" autostretch="never" flex="1">
+        <xul:box class="button-box-2" autostretch="never" flex="1" orient="vertical">
+          <xul:box class="button-box-text" flex="1" autostretch="never">
+            <xul:text class="button-text" inherits="disabled,value,accesskey,crop"/>
+          </xul:box>
+          <xul:image class="button-icon" inherits="src"/>
+        </xul:box>
+      </xul:box>
+    </content>
+  </binding>
+
+</bindings>
