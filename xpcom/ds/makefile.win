@@ -59,6 +59,7 @@ EXPORTS =                          \
         nsVoidArray.h              \
         nsXPIDLString.h            \
         plvector.h                 \
+        nsIPersistentProperties.h \
         $(NULL)			
 
 XPIDL_MODULE = xpcom_ds
