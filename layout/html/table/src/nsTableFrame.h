@@ -703,9 +703,10 @@ protected:
   // calcs the width of the table according to the computed widths of each column.
   virtual PRInt32 CalcDesiredWidth(const nsHTMLReflowState& aReflowState);
 
-  // return the desired height of this table accounting for the current
-  // reflow state, and for the table attributes and parent 
-  nscoord CalcDesiredHeight(const nsHTMLReflowState& aReflowState);
+  // update the  desired height of this table taking into account the current
+  // reflow state, the table attributes and the content driven rowgroup heights
+  // this function can change the overflow area
+  void CalcDesiredHeight(const nsHTMLReflowState& aReflowState, nsHTMLReflowMetrics& aDesiredSize);
 
   // The following is a helper for CalcDesiredHeight 
  
