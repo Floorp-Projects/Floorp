@@ -2369,6 +2369,14 @@ NS_IMETHODIMP nsWidget::ResetInputState()
   return NS_OK;
 }
 
+NS_IMETHODIMP nsWidget::SetIMEOpenState(PRBool aState) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsWidget::GetIMEOpenState(PRBool* aState) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* virtual */
 GtkWindow *nsWidget::GetTopLevelWindow(void)
 {

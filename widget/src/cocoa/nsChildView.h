@@ -245,6 +245,8 @@ public:
 public:
   // nsIKBStateControl interface
   NS_IMETHOD ResetInputState();
+  NS_IMETHOD SetIMEOpenState(PRBool aState);
+  NS_IMETHOD GetIMEOpenState(PRBool* aState);
 
 protected:
 

@@ -2655,6 +2655,14 @@ NS_IMETHODIMP nsWindow::ResetInputState()
 	return NS_ERROR_ABORT;
 }
 
+NS_IMETHODIMP nsWindow::SetIMEOpenState(PRBool aState) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsWindow::GetIMEOpenState(PRBool* aState) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 #if !TARGET_CARBON
 
