@@ -21,8 +21,6 @@
 
 DEPTH=..\..\..
 
-#tests no tests yet
-
 DIRS=public src
 
 include <$(DEPTH)\config\rules.mak>
