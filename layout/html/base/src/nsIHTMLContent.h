@@ -26,7 +26,7 @@ class nsIStyleRule;
 class nsIStyleContext;
 class nsIPresContext;
 class nsXIFConverter;
-class nsIHTMLAttributes;
+class nsIHTMLMappedAttributes;
 class nsIURI;
 
 // IID for the nsIHTMLContent class
@@ -34,7 +34,7 @@ class nsIURI;
 { 0xb9e110b0, 0x94d6, 0x11d1, \
   {0x89, 0x5c, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81} }
 
-typedef void (*nsMapAttributesFunc)(nsIHTMLAttributes* aAttributes, 
+typedef void (*nsMapAttributesFunc)(const nsIHTMLMappedAttributes* aAttributes, 
                                     nsIStyleContext* aContext, 
                                     nsIPresContext* aPresContext);
 
