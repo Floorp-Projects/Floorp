@@ -201,7 +201,7 @@
                  onfocus="URLBarFocusHandler(event, this);"
                  onmousedown="URLBarMouseDownHandler(event, this);"
                  onclick="URLBarClickHandler(event, this);"
-                 oninfoclick="displaySecurityInfo()">
+                 oninfoclick="displaySecurityInfo();">
           <deck id="page-proxy-deck">
             <image id="page-proxy-button"
                     ondraggesture="PageProxyDragGesture(event);"
@@ -427,7 +427,8 @@
   </hbox>
   <statusbar class="chromeclass-status" id="status-bar"
              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
-    <statusbarpanel id="security-button" class="statusbarpanel-iconic" ondblclick="displaySecurityInfo();"/>
+    <statusbarpanel id="security-button" class="statusbarpanel-iconic"
+                    ondblclick="if (event.button == 0) displaySecurityInfo();"/>
     <statusbarpanel id="page-report-button" class="statusbarpanel-iconic" tooltiptext="&pageReportIcon.tooltip;"
                     ondblclick="displayPageReport();"/>
     <statusbarpanel id="page-theme-button" type="menu" class="statusbarpanel-menu-iconic" tooltiptext="&pageThemeIcon.tooltip;">
