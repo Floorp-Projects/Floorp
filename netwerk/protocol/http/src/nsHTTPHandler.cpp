@@ -678,11 +678,11 @@ nsHTTPHandler::InitUserAgentComponents()
         mAppSecurity = "N";
 
     // Gather locale.
-    rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "locale", 
-        getter_Copies(UAPrefVal));
+    nsXPIDLString uval;
+    rv = mPrefs->GetLocalizedUnicharPref(UA_PREF_PREFIX "locale", 
+        getter_Copies(uval));
     if (NS_SUCCEEDED(rv))
-        mAppLanguage = (const char*)UAPrefVal;
-
+        mAppLanguage = (const char*) NS_ConvertUCS2toUTF8(uval);
     // Gather platform.
 #if defined(XP_OS2)
     mAppPlatform = "OS/2";
@@ -1423,11 +1423,11 @@ nsHTTPHandler::PrefsChanged(const char* pref)
 
     if ( (bChangedAll)|| !PL_strcmp(pref, INTL_ACCEPT_LANGUAGES) ) // intl.accept_languages
     {
-        nsXPIDLCString acceptLanguages;
-        rv = mPrefs->CopyCharPref(INTL_ACCEPT_LANGUAGES, 
+        nsXPIDLString acceptLanguages;
+        rv = mPrefs->GetLocalizedUnicharPref(INTL_ACCEPT_LANGUAGES, 
                 getter_Copies(acceptLanguages));
         if (NS_SUCCEEDED(rv))
-            SetAcceptLanguages(acceptLanguages);
+            SetAcceptLanguages(NS_ConvertUCS2toUTF8(acceptLanguages));
     }
 
     nsXPIDLCString acceptEncodings;
