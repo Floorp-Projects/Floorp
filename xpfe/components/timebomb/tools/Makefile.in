@@ -9,7 +9,7 @@ MODULE          = timebombgen
 SIMPLE_PROGRAMS = timebombgen 
 
 CPPSRCS         = \
-                $(srcdir)/timebombgen.cpp \
+                timebombgen.cpp \
                 $(NULL)
 
 LIBS            = \
@@ -22,4 +22,8 @@ EXTRA_DSO_LDOPTS += \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+# Hack to remove object files placed in the srcdir
+export::
+	$(RM) -f $(addprefix $(srcdir)/, $(CPPSRCS:.cpp=.$(OBJ_SUFFIX)))
 
