@@ -31,6 +31,7 @@
 #include "nsHTMLAtoms.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -113,16 +114,15 @@ int nsTableCell::GetColSpan ()
 
 nsTableRow * nsTableCell::GetRow ()
 {
-  if (nsnull!=mRow)
-  {
-    NS_ADDREF(mRow);
-  }
+  NS_IF_ADDREF(mRow);
   return mRow;
 }
 
 void nsTableCell::SetRow (nsTableRow * aRow)
 {
+  NS_IF_RELEASE(mRow);
   mRow = aRow;
+  NS_IF_ADDREF(aRow);
 }
 
 int nsTableCell::GetColIndex ()
@@ -150,6 +150,11 @@ nsIFrame* nsTableCell::CreateFrame(nsIPresContext* aPresContext,
 void nsTableCell::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
 {
   nsHTMLValue val;
+  if ((aAttribute == nsHTMLAtoms::align) &&
+      ParseDivAlignParam(aValue, val)) {
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return;
+  }
   if (aAttribute == nsHTMLAtoms::background) {
     nsAutoString href(aValue);
     href.StripWhitespace();
@@ -179,6 +184,29 @@ void nsTableCell::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
 void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
                                     nsIPresContext* aPresContext)
 {
+  nsHTMLValue value;
+
+  // align: enum
+  GetAttribute(nsHTMLAtoms::align, value);
+  if (value.GetUnit() == eHTMLUnit_Enumerated) {
+    nsStyleText* text = (nsStyleText*)aContext->GetData(kStyleTextSID);
+    text->mTextAlign = value.GetIntValue();
+  }
+
+  // border; inherit from table if specified otherwise it's zero
+  nsIContent* table = mParent;
+  while (nsnull != table) {
+    nsIAtom* tag = table->GetTag();
+    if (nsHTMLAtoms::table == tag) {
+      break;
+    }
+    table = table->GetParent();
+  }
+  if (nsnull != table) {
+    nsTablePart::GetTableBorder((nsIHTMLContent*)table, aContext,
+                                aPresContext, PR_TRUE);
+  }
+
   MapBackgroundAttributesInto(aContext, aPresContext);
 }
 
