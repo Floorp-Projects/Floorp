@@ -253,7 +253,7 @@ NS_IMETHODIMP
 nsInlineFrame::GetFrameType(nsIAtom** aType) const
 {
   NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsHTMLAtoms::inlineFrame;
+  *aType = nsLayoutAtoms::inlineFrame;
   NS_ADDREF(*aType);
   return NS_OK;
 }

@@ -1010,7 +1010,7 @@ NS_IMETHODIMP
 nsBlockFrame::GetFrameType(nsIAtom** aType) const
 {
   NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsHTMLAtoms::blockFrame; 
+  *aType = nsLayoutAtoms::blockFrame; 
   NS_ADDREF(*aType);
   return NS_OK;
 }
