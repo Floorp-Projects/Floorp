@@ -23,6 +23,10 @@
 #include <gtk/gtk.h>
 #include <string.h>
 
+// mozilla specific headers
+#include "nsIDOMKeyEvent.h"
+#include "nsIDOMMouseEvent.h"
+
 typedef struct _TestGtkBrowser {
   GtkWidget  *topLevelWindow;
   GtkWidget  *topLevelVBox;
@@ -118,6 +122,25 @@ static gint open_uri_cb          (GtkMozEmbed *embed, const char *uri,
 				  TestGtkBrowser *browser);
 static void size_to_cb           (GtkMozEmbed *embed, gint width,
 				  gint height, TestGtkBrowser *browser);
+static gint dom_key_down_cb      (GtkMozEmbed *embed, nsIDOMKeyEvent *event,
+				  TestGtkBrowser *browser);
+static gint dom_key_press_cb     (GtkMozEmbed *embed, nsIDOMKeyEvent *event,
+				  TestGtkBrowser *browser);
+static gint dom_key_up_cb        (GtkMozEmbed *embed, nsIDOMKeyEvent *event,
+				  TestGtkBrowser *browser);
+static gint dom_mouse_down_cb    (GtkMozEmbed *embed, nsIDOMMouseEvent *event,
+				  TestGtkBrowser *browser);
+static gint dom_mouse_up_cb      (GtkMozEmbed *embed, nsIDOMMouseEvent *event,
+				  TestGtkBrowser *browser);
+static gint dom_mouse_click_cb   (GtkMozEmbed *embed, nsIDOMMouseEvent *event,
+				  TestGtkBrowser *browser);
+static gint dom_mouse_dbl_click_cb (GtkMozEmbed *embed, 
+				  nsIDOMMouseEvent *event,
+				  TestGtkBrowser *browser);
+static gint dom_mouse_over_cb    (GtkMozEmbed *embed, nsIDOMMouseEvent *event,
+				  TestGtkBrowser *browser);
+static gint dom_mouse_out_cb     (GtkMozEmbed *embed, nsIDOMMouseEvent *event,
+				  TestGtkBrowser *browser);
 
 // some utility functions
 static void update_status_bar_text  (TestGtkBrowser *browser);
@@ -397,6 +420,25 @@ new_gtk_browser(guint32 chromeMask)
   // and height args for a window.open in javascript
   gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "size_to",
 		     GTK_SIGNAL_FUNC(size_to_cb), browser);
+  // key event signals
+  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_key_down",
+		     GTK_SIGNAL_FUNC(dom_key_down_cb), browser);
+  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_key_press",
+		     GTK_SIGNAL_FUNC(dom_key_press_cb), browser);
+  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_key_up",
+		     GTK_SIGNAL_FUNC(dom_key_up_cb), browser);
+  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_mouse_down",
+		     GTK_SIGNAL_FUNC(dom_mouse_down_cb), browser);
+  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_mouse_up",
+		     GTK_SIGNAL_FUNC(dom_mouse_up_cb), browser);
+  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_mouse_click",
+		     GTK_SIGNAL_FUNC(dom_mouse_click_cb), browser);
+  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_mouse_dbl_click",
+		     GTK_SIGNAL_FUNC(dom_mouse_dbl_click_cb), browser);
+  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_mouse_over",
+		     GTK_SIGNAL_FUNC(dom_mouse_over_cb), browser);
+  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_mouse_out",
+		     GTK_SIGNAL_FUNC(dom_mouse_out_cb), browser);
   // hookup to when the window is destroyed
   gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "destroy",
 		     GTK_SIGNAL_FUNC(destroy_cb), browser);
@@ -774,13 +816,88 @@ size_to_cb (GtkMozEmbed *embed, gint width, gint height,
   gtk_widget_set_usize(browser->mozEmbed, width, height);
 }
 
+gint dom_key_down_cb      (GtkMozEmbed *embed, nsIDOMKeyEvent *event,
+			   TestGtkBrowser *browser)
+{
+  PRUint32 keyCode = 0;
+  //  g_print("dom_key_down_cb\n");
+  event->GetKeyCode(&keyCode);
+  // g_print("key code is %d\n", keyCode);
+  return NS_OK;
+}
+
+gint dom_key_press_cb     (GtkMozEmbed *embed, nsIDOMKeyEvent *event,
+			   TestGtkBrowser *browser)
+{
+  PRUint32 keyCode = 0;
+  // g_print("dom_key_press_cb\n");
+  event->GetCharCode(&keyCode);
+  // g_print("char code is %d\n", keyCode);
+  return NS_OK;
+}
+
+gint dom_key_up_cb        (GtkMozEmbed *embed, nsIDOMKeyEvent *event,
+			   TestGtkBrowser *browser)
+{
+  PRUint32 keyCode = 0;
+  // g_print("dom_key_up_cb\n");
+  event->GetKeyCode(&keyCode);
+  // g_print("key code is %d\n", keyCode);
+  return NS_OK;
+}
+
+gint dom_mouse_down_cb    (GtkMozEmbed *embed, nsIDOMMouseEvent *event,
+			   TestGtkBrowser *browser)
+{
+  //  g_print("dom_mouse_down_cb\n");
+  return NS_OK;
+ }
+
+gint dom_mouse_up_cb      (GtkMozEmbed *embed, nsIDOMMouseEvent *event,
+			   TestGtkBrowser *browser)
+{
+  //  g_print("dom_mouse_up_cb\n");
+  return NS_OK;
+}
+
+gint dom_mouse_click_cb   (GtkMozEmbed *embed, nsIDOMMouseEvent *event,
+			   TestGtkBrowser *browser)
+{
+  //  g_print("dom_mouse_click_cb\n");
+  PRUint16 button;
+  event->GetButton(&button);
+  printf("button was %d\n", button);
+  return NS_OK;
+}
+
+gint dom_mouse_dbl_click_cb (GtkMozEmbed *embed, nsIDOMMouseEvent *event,
+			     TestGtkBrowser *browser)
+{
+  //  g_print("dom_mouse_dbl_click_cb\n");
+  return NS_OK;
+}
+
+gint dom_mouse_over_cb    (GtkMozEmbed *embed, nsIDOMMouseEvent *event,
+			   TestGtkBrowser *browser)
+{
+  //g_print("dom_mouse_over_cb\n");
+  return NS_OK;
+}
+
+gint dom_mouse_out_cb     (GtkMozEmbed *embed, nsIDOMMouseEvent *event,
+			   TestGtkBrowser *browser)
+{
+  //g_print("dom_mouse_out_cb\n");
+  return NS_OK;
+}
+
 // utility functions
 
 void
 update_status_bar_text(TestGtkBrowser *browser)
 {
   gchar message[256];
-
+  
   gtk_statusbar_pop(GTK_STATUSBAR(browser->statusBar), 1);
   if (browser->tempMessage)
     gtk_statusbar_push(GTK_STATUSBAR(browser->statusBar), 1, browser->tempMessage);
@@ -835,5 +952,5 @@ update_nav_buttons      (TestGtkBrowser *browser)
     gtk_widget_set_sensitive(browser->forwardButton, TRUE);
   else
     gtk_widget_set_sensitive(browser->forwardButton, FALSE);
-}
+ }
 

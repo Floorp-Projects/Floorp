@@ -47,7 +47,6 @@
 #include "nsWidgetsCID.h"
 #include "nsIAppShell.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMNSUIEvent.h"
 
 // freakin X headers
 #ifdef Success
@@ -61,6 +60,8 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMKeyListener.h"
+#include "nsIDOMMouseListener.h"
+#include "nsIDOMMouseEvent.h"
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
@@ -126,11 +127,12 @@ private:
   GtkMozEmbedPrivate *mEmbedPrivate;
 };
 
-class GtkMozEmbedChromeKeyListener : public nsIDOMKeyListener
+class GtkMozEmbedChromeEventListener : public nsIDOMKeyListener,
+				       public nsIDOMMouseListener
 {
 public:
-  GtkMozEmbedChromeKeyListener();
-  virtual ~GtkMozEmbedChromeKeyListener();
+  GtkMozEmbedChromeEventListener();
+  virtual ~GtkMozEmbedChromeEventListener();
 
   void Init (GtkMozEmbed *aEmbed);
   
@@ -142,9 +144,18 @@ public:
 
   // nsIDOMKeyListener
   
-  NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
-  NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
-  NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD KeyDown(nsIDOMEvent* aDOMEvent);
+  NS_IMETHOD KeyUp(nsIDOMEvent* aDOMEvent);
+  NS_IMETHOD KeyPress(nsIDOMEvent* aDOMEvent);
+
+  // nsIDOMMouseListener
+
+  NS_IMETHOD MouseDown(nsIDOMEvent* aDOMEvent);
+  NS_IMETHOD MouseUp(nsIDOMEvent* aDOMEvent);
+  NS_IMETHOD MouseClick(nsIDOMEvent* aDOMEvent);
+  NS_IMETHOD MouseDblClick(nsIDOMEvent* aDOMEvent);
+  NS_IMETHOD MouseOver(nsIDOMEvent* aDOMEvent);
+  NS_IMETHOD MouseOut(nsIDOMEvent* aDOMEvent);
 
 private:
   GtkMozEmbed *mEmbed;
@@ -169,6 +180,8 @@ public:
 				   PRUint32 aStatus);
   void        Destroy             (void);
   static void RequestToURIString  (nsIRequest *aRequest, char **aString);
+  nsresult AddEventListener(void);
+  nsresult RemoveEventListener(void);
 
   nsCOMPtr<nsIWebBrowser>           mWebBrowser;
   nsCOMPtr<nsIGtkEmbed>             mEmbed;
@@ -227,7 +240,9 @@ GtkMozEmbedPrivate::Init(GtkMozEmbed *aEmbed)
   GtkMozEmbedChrome *chrome = new GtkMozEmbedChrome();
   NS_ENSURE_TRUE(chrome, NS_ERROR_FAILURE);
 
-  mEmbed = do_QueryInterface((nsISupports *)(nsIGtkEmbed *) chrome);
+  mEmbed = do_QueryInterface(NS_STATIC_CAST(nsISupports *,
+					    NS_STATIC_CAST(nsIGtkEmbed *,
+							   chrome)));
   NS_ENSURE_TRUE(mEmbed, NS_ERROR_FAILURE);
 
   // hide it
@@ -251,15 +266,17 @@ GtkMozEmbedPrivate::Init(GtkMozEmbed *aEmbed)
   NS_RELEASE(newContentProgress);
 
   // create our key listener handler
-  GtkMozEmbedChromeKeyListener *newKeyListener = 
-    new GtkMozEmbedChromeKeyListener();
+  GtkMozEmbedChromeEventListener *newListener = 
+    new GtkMozEmbedChromeEventListener();
 
   // we own it...
-  NS_ADDREF(newKeyListener);
-  newKeyListener->Init(aEmbed);
-  mEventListener = do_QueryInterface(newKeyListener);
+  NS_ADDREF(newListener);
+  newListener->Init(aEmbed);
+  mEventListener = do_QueryInterface(NS_STATIC_CAST(nsISupports *,
+				     NS_STATIC_CAST(nsIDOMKeyListener *,
+						    newListener)));
   // the ref in the private struct is the owning ref
-  NS_RELEASE(newKeyListener);
+  NS_RELEASE(newListener);
 
   // get our hands on the browser chrome
   nsCOMPtr<nsIWebBrowserChrome> browserChrome = do_QueryInterface(mEmbed);
@@ -511,38 +528,9 @@ GtkMozEmbedPrivate::OnChromeStateChange(nsIWebProgress *aWebProgress,
       mContentNav->SetSessionHistory(mSessionHistory);
       // now that the content is loaded, attach our key listener to
       // the chrome document
-      // XXX
 
-      // we won't do any of this stuff until after we figure out how
-      // to do key events properly.
-#if 0
-      nsCOMPtr <nsIDOMDocument> domDoc;
-      mChromeNav->GetDocument(getter_AddRefs(domDoc));
-      if (!domDoc)
-      {
-	NS_ASSERTION(0, "Failed to get docuement from mChromeNav\n");
-	return NS_OK;
-      }
-      nsCOMPtr<nsIDOMEventReceiver> eventReceiver;
-      // get the nsIDOMEventReceiver
-      eventReceiver = do_QueryInterface(domDoc);
-      if (!eventReceiver)
-      {
-	NS_ASSERTION(0, "failed to get event receiver\n");
-	return NS_OK;
-      }
-      // add ourselves as a key listener
-      nsresult rv = NS_OK;
-      rv = eventReceiver->AddEventListenerByIID(mEventListener,
-						NS_GET_IID(nsIDOMKeyListener));
-      if (NS_FAILED(rv))
-      {
-	NS_ASSERTION(0, "failed to add event receiver\n");
-	return NS_OK;
-      }
-      // XXX we need to release this, I think.
-      mEventListenerAttached = PR_TRUE;
-#endif /* 0 */
+      AddEventListener();
+
       // check to see whether or not we should load a new uri.
       if (mCurrentURI.Length() > 0)
       {
@@ -566,6 +554,9 @@ GtkMozEmbedPrivate::Destroy(void)
   nsCOMPtr <nsIWebProgress> webProgress;
   webProgress = do_GetInterface(docShell);
   webProgress->RemoveProgressListener(mChromeProgress);
+
+  // remove our key press listener
+  RemoveEventListener();
 
   // get the content item
   // get the browser as an item
@@ -628,6 +619,91 @@ GtkMozEmbedPrivate::RequestToURIString  (nsIRequest *aRequest, char **aString)
   *aString = nsCRT::strdup((const char *)uriString);
 }
 
+nsresult
+GtkMozEmbedPrivate::AddEventListener(void)
+{
+  // get the DOM document
+  nsCOMPtr <nsIDOMDocument> domDoc;
+  mChromeNav->GetDocument(getter_AddRefs(domDoc));
+  if (!domDoc)
+  {
+    NS_ASSERTION(0, "Failed to get docuement from mChromeNav\n");
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIDOMEventReceiver> eventReceiver;
+  // get the nsIDOMEventReceiver
+  eventReceiver = do_QueryInterface(domDoc);
+  if (!eventReceiver)
+  {
+    NS_ASSERTION(0, "failed to get event receiver\n");
+    return NS_ERROR_FAILURE;
+  }
+  // add ourselves as a key listener
+  nsresult rv = NS_OK;
+  rv = eventReceiver->AddEventListenerByIID(mEventListener,
+					    NS_GET_IID(nsIDOMKeyListener));
+  if (NS_FAILED(rv))
+  {
+    NS_ASSERTION(0, "failed to add event receiver\n");
+    return NS_ERROR_FAILURE;
+  }
+  rv = eventReceiver->AddEventListenerByIID(mEventListener,
+					    NS_GET_IID(nsIDOMMouseListener));
+  if (NS_FAILED(rv))
+  {
+    NS_ASSERTION(0, "failed to add event receiver\n");
+    return NS_ERROR_FAILURE;
+  }
+  // set our flag
+  mEventListenerAttached = PR_TRUE;
+  return NS_OK;
+}
+
+nsresult
+GtkMozEmbedPrivate::RemoveEventListener(void)
+{
+  // check to see if it's attached
+  if (!mEventListenerAttached)
+    return NS_OK;
+
+  // get the DOM document
+  nsCOMPtr <nsIDOMDocument> domDoc;
+  mChromeNav->GetDocument(getter_AddRefs(domDoc));
+  if (!domDoc)
+  {
+    NS_ASSERTION(0, "Failed to get docuement from mChromeNav\n");
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIDOMEventReceiver> eventReceiver;
+  // get the nsIDOMEventReceiver
+  eventReceiver = do_QueryInterface(domDoc);
+  if (!eventReceiver)
+  {
+    NS_ASSERTION(0, "failed to get event receiver\n");
+    return NS_ERROR_FAILURE;
+  }
+  // add ourselves as a key listener
+  nsresult rv = NS_OK;
+  rv = eventReceiver->RemoveEventListenerByIID(mEventListener,
+					       NS_GET_IID(nsIDOMKeyListener));
+  if (NS_FAILED(rv))
+  {
+    NS_ASSERTION(0, "failed to remove event receiver\n");
+    return NS_ERROR_FAILURE;
+  }
+  rv = eventReceiver->RemoveEventListenerByIID(mEventListener,
+					       NS_GET_IID(nsIDOMMouseListener));
+  if (NS_FAILED(rv))
+  {
+    NS_ASSERTION(0, "failed to remove event receiver\n");
+    return NS_ERROR_FAILURE;
+  }
+  // set our flag
+  mEventListenerAttached = PR_FALSE;
+  return NS_OK;
+}
+
+
 /* signals */
 
 enum {
@@ -646,6 +722,15 @@ enum {
   DESTROY_BROWSER,
   OPEN_URI,
   SIZE_TO,
+  DOM_KEY_DOWN,
+  DOM_KEY_PRESS,
+  DOM_KEY_UP,
+  DOM_MOUSE_DOWN,
+  DOM_MOUSE_UP,
+  DOM_MOUSE_CLICK,
+  DOM_MOUSE_DBL_CLICK,
+  DOM_MOUSE_OVER,
+  DOM_MOUSE_OUT,
   LAST_SIGNAL
 };
 
@@ -857,6 +942,69 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
 		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, size_to),
 		   gtk_marshal_NONE__INT_INT,
 		   GTK_TYPE_NONE, 2, GTK_TYPE_INT, GTK_TYPE_INT);
+  moz_embed_signals[DOM_KEY_DOWN] =
+    gtk_signal_new("dom_key_down",
+		   GTK_RUN_LAST,
+		   object_class->type,
+		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, dom_key_down),
+		   gtk_marshal_BOOL__POINTER,
+		   GTK_TYPE_BOOL, 1, GTK_TYPE_POINTER);
+  moz_embed_signals[DOM_KEY_PRESS] =
+    gtk_signal_new("dom_key_press",
+		   GTK_RUN_LAST,
+		   object_class->type,
+		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, dom_key_press),
+		   gtk_marshal_BOOL__POINTER,
+		   GTK_TYPE_BOOL, 1, GTK_TYPE_POINTER);
+  moz_embed_signals[DOM_KEY_UP] =
+    gtk_signal_new("dom_key_up",
+		   GTK_RUN_LAST,
+		   object_class->type,
+		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, dom_key_up),
+		   gtk_marshal_BOOL__POINTER,
+		   GTK_TYPE_BOOL, 1, GTK_TYPE_POINTER);
+  moz_embed_signals[DOM_MOUSE_DOWN] =
+    gtk_signal_new("dom_mouse_down",
+		   GTK_RUN_LAST,
+		   object_class->type,
+		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, dom_mouse_down),
+		   gtk_marshal_BOOL__POINTER,
+		   GTK_TYPE_BOOL, 1, GTK_TYPE_POINTER);
+  moz_embed_signals[DOM_MOUSE_UP] =
+    gtk_signal_new("dom_mouse_up",
+		   GTK_RUN_LAST,
+		   object_class->type,
+		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, dom_mouse_up),
+		   gtk_marshal_BOOL__POINTER,
+		   GTK_TYPE_BOOL, 1, GTK_TYPE_POINTER);
+  moz_embed_signals[DOM_MOUSE_CLICK] =
+    gtk_signal_new("dom_mouse_click",
+		   GTK_RUN_LAST,
+		   object_class->type,
+		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, dom_mouse_click),
+		   gtk_marshal_BOOL__POINTER,
+		   GTK_TYPE_BOOL, 1, GTK_TYPE_POINTER);
+  moz_embed_signals[DOM_MOUSE_DBL_CLICK] =
+    gtk_signal_new("dom_mouse_dbl_click",
+		   GTK_RUN_LAST,
+		   object_class->type,
+		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, dom_mouse_dbl_click),
+		   gtk_marshal_BOOL__POINTER,
+		   GTK_TYPE_BOOL, 1, GTK_TYPE_POINTER);
+  moz_embed_signals[DOM_MOUSE_OVER] =
+    gtk_signal_new("dom_mouse_over",
+		   GTK_RUN_LAST,
+		   object_class->type,
+		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, dom_mouse_over),
+		   gtk_marshal_BOOL__POINTER,
+		   GTK_TYPE_BOOL, 1, GTK_TYPE_POINTER);
+  moz_embed_signals[DOM_MOUSE_OUT] =
+    gtk_signal_new("dom_mouse_out",
+		   GTK_RUN_LAST,
+		   object_class->type,
+		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, dom_mouse_out),
+		   gtk_marshal_BOOL__POINTER,
+		   GTK_TYPE_BOOL, 1, GTK_TYPE_POINTER);
 
   gtk_object_class_add_signals(object_class, moz_embed_signals, LAST_SIGNAL);
 
@@ -1724,27 +1872,28 @@ GtkMozEmbedChromeProgress::OnStatusChange(nsIWebProgress *aWebProgress,
   return NS_OK;
 }
 
-GtkMozEmbedChromeKeyListener::GtkMozEmbedChromeKeyListener(void)
+GtkMozEmbedChromeEventListener::GtkMozEmbedChromeEventListener(void)
 {
   NS_INIT_REFCNT();
   mEmbed = nsnull;
   mEmbedPrivate = nsnull;
 }
 
-GtkMozEmbedChromeKeyListener::~GtkMozEmbedChromeKeyListener(void)
+GtkMozEmbedChromeEventListener::~GtkMozEmbedChromeEventListener(void)
 {
 }
 
-NS_IMPL_ADDREF(GtkMozEmbedChromeKeyListener)
-NS_IMPL_RELEASE(GtkMozEmbedChromeKeyListener)
-NS_INTERFACE_MAP_BEGIN(GtkMozEmbedChromeKeyListener)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+NS_IMPL_ADDREF(GtkMozEmbedChromeEventListener)
+NS_IMPL_RELEASE(GtkMozEmbedChromeEventListener)
+NS_INTERFACE_MAP_BEGIN(GtkMozEmbedChromeEventListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMKeyListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMKeyListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMKeyListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
 NS_INTERFACE_MAP_END
 
 void
-GtkMozEmbedChromeKeyListener::Init(GtkMozEmbed *aEmbed)
+GtkMozEmbedChromeEventListener::Init(GtkMozEmbed *aEmbed)
 {
   mEmbed = aEmbed;
   mEmbedPrivate = (GtkMozEmbedPrivate *)aEmbed->data;
@@ -1754,42 +1903,144 @@ GtkMozEmbedChromeKeyListener::Init(GtkMozEmbed *aEmbed)
 // event should not be consumed in the default case.
 
 NS_IMETHODIMP
-GtkMozEmbedChromeKeyListener::HandleEvent(nsIDOMEvent* aEvent)
+GtkMozEmbedChromeEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
-  printf("GtkMozEmbedChromeKeyListener::HandleEvent\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GtkMozEmbedChromeKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
+GtkMozEmbedChromeEventListener::KeyDown(nsIDOMEvent* aDOMEvent)
 {
-  printf("GtkMozEmbedChromeKeyListener::KeyDown\n");
-  return NS_OK;
+  nsCOMPtr <nsIDOMKeyEvent> keyEvent;
+  keyEvent = do_QueryInterface(aDOMEvent);
+  if (!keyEvent)
+    return NS_OK;
+  // return NS_OK to this function to mark this event as not
+  // consumed...
+  gint return_val = NS_OK;
+  gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[DOM_KEY_DOWN],
+		  (void *)keyEvent, &return_val);
+  return return_val;
 }
 
 NS_IMETHODIMP
-GtkMozEmbedChromeKeyListener::KeyUp(nsIDOMEvent* aKeyEvent)
+GtkMozEmbedChromeEventListener::KeyUp(nsIDOMEvent* aDOMEvent)
 {
-  printf("GtkMozEmbedChromeKeyListener::KeyUp\n");
-  return NS_OK;
+  nsCOMPtr <nsIDOMKeyEvent> keyEvent;
+  keyEvent = do_QueryInterface(aDOMEvent);
+  if (!keyEvent)
+    return NS_OK;
+  // return NS_OK to this function to mark this event as not
+  // consumed...
+  gint return_val = NS_OK;
+  gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[DOM_KEY_UP],
+		  (void *)keyEvent, &return_val);
+  return return_val;
 }
 
 NS_IMETHODIMP
-GtkMozEmbedChromeKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
+GtkMozEmbedChromeEventListener::KeyPress(nsIDOMEvent* aDOMEvent)
 {
-  printf("GtkMozEmbedChromeKeyListener::KeyPress\n");
-  nsCOMPtr<nsIDOMNSUIEvent> evt = do_QueryInterface(aKeyEvent);
-  PRBool tmp;
-  evt->GetPreventDefault(&tmp);
-  printf("prevent is %d\n", tmp);
-  aKeyEvent->GetBubbles(&tmp);
-  printf("bubbles is %d\n", tmp);
-  aKeyEvent->GetCancelable(&tmp);
-  printf("get cancelable %d\n", tmp);
-  PRUint16 phase;
-  aKeyEvent->GetEventPhase(&phase);
-  printf("phase is %d\n", phase);
-  return NS_OK;
+  nsCOMPtr <nsIDOMKeyEvent> keyEvent;
+  keyEvent = do_QueryInterface(aDOMEvent);
+  if (!keyEvent)
+    return NS_OK;
+  // return NS_OK to this function to mark this event as not
+  // consumed...
+  gint return_val = NS_OK;
+  gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[DOM_KEY_PRESS],
+		  (void *)keyEvent, &return_val);
+  return return_val;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChromeEventListener::MouseDown(nsIDOMEvent* aDOMEvent)
+{
+  nsCOMPtr <nsIDOMMouseEvent> mouseEvent;
+  mouseEvent = do_QueryInterface(aDOMEvent);
+  if (!mouseEvent)
+    return NS_OK;
+  // return NS_OK to this function to mark this event as not
+  // consumed...
+  gint return_val = NS_OK;
+  gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[DOM_MOUSE_DOWN],
+		  (void *)mouseEvent, &return_val);
+  return return_val;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChromeEventListener::MouseUp(nsIDOMEvent* aDOMEvent)
+{
+  nsCOMPtr <nsIDOMMouseEvent> mouseEvent;
+  mouseEvent = do_QueryInterface(aDOMEvent);
+  if (!mouseEvent)
+    return NS_OK;
+  // return NS_OK to this function to mark this event as not
+  // consumed...
+  gint return_val = NS_OK;
+  gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[DOM_MOUSE_UP],
+		  (void *)mouseEvent, &return_val);
+  return return_val;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChromeEventListener::MouseClick(nsIDOMEvent* aDOMEvent)
+{
+  nsCOMPtr <nsIDOMMouseEvent> mouseEvent;
+  mouseEvent = do_QueryInterface(aDOMEvent);
+  if (!mouseEvent)
+    return NS_OK;
+  // return NS_OK to this function to mark this event as not
+  // consumed...
+  gint return_val = NS_OK;
+  gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[DOM_MOUSE_CLICK],
+		  (void *)mouseEvent, &return_val);
+  return return_val;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChromeEventListener::MouseDblClick(nsIDOMEvent* aDOMEvent)
+{
+  nsCOMPtr <nsIDOMMouseEvent> mouseEvent;
+  mouseEvent = do_QueryInterface(aDOMEvent);
+  if (!mouseEvent)
+    return NS_OK;
+  // return NS_OK to this function to mark this event as not
+  // consumed...
+  gint return_val = NS_OK;
+  gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[DOM_MOUSE_DBL_CLICK],
+		  (void *)mouseEvent, &return_val);
+  return return_val;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChromeEventListener::MouseOver(nsIDOMEvent* aDOMEvent)
+{
+  nsCOMPtr <nsIDOMMouseEvent> mouseEvent;
+  mouseEvent = do_QueryInterface(aDOMEvent);
+  if (!mouseEvent)
+    return NS_OK;
+  // return NS_OK to this function to mark this event as not
+  // consumed...
+  gint return_val = NS_OK;
+  gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[DOM_MOUSE_OVER],
+		  (void *)mouseEvent, &return_val);
+  return return_val;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChromeEventListener::MouseOut(nsIDOMEvent* aDOMEvent)
+{
+  nsCOMPtr <nsIDOMMouseEvent> mouseEvent;
+  mouseEvent = do_QueryInterface(aDOMEvent);
+  if (!mouseEvent)
+    return NS_OK;
+  // return NS_OK to this function to mark this event as not
+  // consumed...
+  gint return_val = NS_OK;
+  gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[DOM_MOUSE_OUT],
+		  (void *)mouseEvent, &return_val);
+  return return_val;
 }
 
 //*****************************************************************************
