@@ -128,7 +128,7 @@ nsDownloadManager::Init()
   gRDFService->GetResource(NC_NAMESPACE_URI "StatusText", &gNC_StatusText);
 
   nsCAutoString downloadsDB;
-  rv = GetProfileDownloadsFileURL(getter_Copies(downloadsDB));
+  rv = GetProfileDownloadsFileURL(downloadsDB);
   if (NS_FAILED(rv)) return rv;
 
   rv = gRDFService->GetDataSourceBlocking(downloadsDB.get(), getter_AddRefs(mDataSource));
