@@ -124,7 +124,7 @@ resource 'UTO ' ( CS_MAC_TURKISH, "macturki.ut- CS_MAC_TURKISH", purgeable) {{
 resource 'UTO ' ( CS_LATIN1, "8859-1.ut- CS_LATIN1", purgeable) {{ 
 #include "8859-1.ut"
 }};
-resource 'UTO ' ( CS_TIS620, "macthai.ut- CS_LATIN1", purgeable) {{ 
+resource 'UTO ' ( CS_TIS620, "macthai.ut- CS_TIS620", purgeable) {{ 
 #include "macthai.ut"
 }};
 
