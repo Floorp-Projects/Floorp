@@ -1003,7 +1003,7 @@ done:
 
 #define INVALID_USAGE() { \
     if (returnedUsages) { \
-        *returnedUsages &= !i; \
+        *returnedUsages &= (~i); \
     } \
     if (PR_TRUE == requiredUsage) { \
         valid = SECFailure; \
