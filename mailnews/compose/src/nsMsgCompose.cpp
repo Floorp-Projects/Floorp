@@ -72,7 +72,7 @@ nsMsgCompose::nsMsgCompose()
 nsMsgCompose::~nsMsgCompose()
 {
   NS_IF_RELEASE(mOutStream);
-  NS_RELEASE(m_editor);
+  NS_IF_RELEASE(m_editor);
 }
 
 
@@ -677,7 +677,21 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
   //
   // For now, you need to set a pref to do the old quoting
   //
-  PRBool oldQuoting = PR_FALSE; 
+  PRBool  oldQuoting = PR_FALSE;
+
+  nsString    tmpURI(originalMsgURI);
+  char        *compString = tmpURI.ToNewCString();
+
+  if (compString)
+  {
+    if (PL_strncasecmp(compString, "mailbox_message:", 16) != 0)
+    {
+      oldQuoting = PR_TRUE;
+    }
+  }
+
+  PR_FREEIF(compString);
+
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
   if (NS_SUCCEEDED(rv) && prefs) 
   {
