@@ -813,7 +813,6 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
 
   if(RequiresAutomaticClosure(theParentTag,aChildTag)){
     result=CloseContainersTo(aChildTag,PR_TRUE);
-    theParentTag=mBodyContext->mElements.Last();
   }
 
   PRBool theCanContainResult=CanContain(theParentTag,aChildTag);
@@ -1812,7 +1811,7 @@ PRBool CNavDTD::CanContainIndirect(eHTMLTags aParent,eHTMLTags aChild) const {
  *  @return  PR_TRUE if autoclosure should occur
  */
 PRBool CNavDTD::RequiresAutomaticClosure(eHTMLTags aParentTag,eHTMLTags aChildTag) const {
-  static eHTMLTags gAutoCloseTags[]={eHTMLTag_li,eHTMLTag_td,eHTMLTag_tr,eHTMLTag_dt,eHTMLTag_table};
+  static eHTMLTags gAutoCloseTags[]={eHTMLTag_li,eHTMLTag_td,eHTMLTag_tr,eHTMLTag_dt};
 
   PRBool    result=PR_FALSE;
   PRInt32   theParentIndex=kNotFound;
