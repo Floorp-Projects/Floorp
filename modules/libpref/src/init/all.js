@@ -1164,7 +1164,6 @@ pref("font.name.cursive.zh-HK", "XXX.cursive");
 pref("font.name.fantasy.zh-HK", "XXX.fantasy");
 
 pref("font.default", "serif");
-pref("font.default", "serif");
 pref("font.size.variable.ar", 15);
 pref("font.size.fixed.ar", 13);
 
