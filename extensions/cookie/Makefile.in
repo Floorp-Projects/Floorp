@@ -55,12 +55,10 @@ CPPSRCS		= \
 		nsModuleFactory.cpp \
 		nsCookie.cpp \
 		nsPermission.cpp \
-		nsCookieManager.cpp \
 		nsCookieService.cpp \
 		nsImgManager.cpp \
 		nsPermissionManager.cpp \
 		nsPopupWindowManager.cpp \
-		nsCookies.cpp \
 		nsCookieHTTPNotify.cpp \
 		nsCookiePromptService.cpp \
 		nsCookiePermission.cpp \
@@ -72,6 +70,7 @@ SDK_XPIDLSRCS   = \
 		$(NULL)
 
 XPIDLSRCS	= \
+		nsICookie2.idl \
 		nsICookieConsent.idl \
 		nsIImgManager.idl \
 		nsIPermissionManager.idl \
@@ -93,4 +92,3 @@ EXTRA_DSO_LDOPTS = \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-

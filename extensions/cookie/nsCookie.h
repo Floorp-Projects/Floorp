@@ -15,12 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is 
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Daniel Witte.
+ * Portions created by the Initial Developer are Copyright (C) 2003
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *
+ *   Daniel Witte (dwitte@stanford.edu)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,47 +40,100 @@
 #define nsCookie_h__
 
 #include "nsICookie.h"
-#include "nsWeakReference.h"
+#include "nsICookie2.h"
 #include "nsString.h"
+#include "nsMemory.h"
+#include "nsInt64.h"
 
-////////////////////////////////////////////////////////////////////////////////
+/** 
+ * The nsCookie class is the main cookie storage medium for use within cookie
+ * code. It implements nsICookie2, which extends nsICookie, a frozen interface
+ * for xpcom access of cookie objects.
+ */
 
-class nsCookie : public nsICookie,
-                        public nsSupportsWeakReference {
-public:
+/******************************************************************************
+ * nsCookie:
+ * implementation
+ ******************************************************************************/
 
-  // nsISupports
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICOOKIE
+class nsCookie : public nsICookie2
+{
+  // this is required because we use a bitfield refcount member.
+  public:
+    NS_DECL_ISUPPORTS_INHERITED
+  protected:
+    NS_DECL_OWNINGTHREAD
 
-  nsCookie
-    (const nsACString &name,
-     const nsACString &value,
-     PRBool isDomain,
-     const nsACString &host,
-     const nsACString &path,
-     PRBool isSecure,
-     PRUint64 expires,
-     nsCookieStatus status,
-     nsCookiePolicy policy
-     );
-  nsCookie();
-  virtual ~nsCookie(void);
-  
-protected:
-  nsCString cookieName;
-  nsCString cookieValue;
-  PRBool cookieIsDomain;
-  nsCString cookieHost;
-  nsCString cookiePath;
-  PRBool cookieIsSecure;
-  PRUint64 cookieExpires;
-  nsCookieStatus cookieStatus;
-  nsCookiePolicy cookiePolicy;
+  public:
+    // nsISupports
+    NS_DECL_NSICOOKIE
+    NS_DECL_NSICOOKIE2
 
+    // XXX the default ctor is required by nsModuleFactory.cpp,
+    // because it registers nsCookie as a module with a constructor.
+    // this probably shouldn't be happening. same for nsPermission.
+    nsCookie()
+     : mName(nsnull)
+     , mRefCnt(0)
+    {
+    }
+
+    nsCookie(const nsACString &aName,
+             const nsACString &aValue,
+             const nsACString &aHost,
+             const nsACString &aPath,
+             nsInt64          aExpiry,
+             nsInt64          aLastAccessed,
+             PRBool           aIsSession,
+             PRBool           aIsDomain,
+             PRBool           aIsSecure,
+             nsCookieStatus   aStatus,
+             nsCookiePolicy   aPolicy);
+
+    virtual ~nsCookie();
+
+    // fast (inline, non-xpcom) getters
+    inline const nsDependentCString Name()  const { return nsDependentCString(mName, mValue - 1); }
+    inline const nsDependentCString Value() const { return nsDependentCString(mValue, mHost - 1); }
+    inline const nsDependentCString Host()  const { return nsDependentCString(mHost, mPath - 1); }
+    inline const nsDependentCString Path()  const { return nsDependentCString(mPath, mEnd); }
+    inline nsInt64 Expiry()                 const { NS_ASSERTION(!IsSession(), "can't get expiry time for a session cookie"); return mExpiry; }
+    inline nsInt64 LastAccessed()           const { return mLastAccessed; }
+    inline PRBool IsSession()               const { return mIsSession; }
+    inline PRBool IsDomain()                const { return mIsDomain; }
+    inline PRBool IsSecure()                const { return mIsSecure; }
+    inline nsCookieStatus Status()          const { return mStatus; }
+    inline nsCookiePolicy Policy()          const { return mPolicy; }
+
+    // setters on nsCookie only exist for SetLastAccessed().
+    // except for this method, an nsCookie is immutable
+    // and must be deleted & recreated if it needs to be changed.
+    inline void SetLastAccessed(nsInt64 aLastAccessed) { mLastAccessed = aLastAccessed; }
+
+  protected:
+    // member variables
+    // we use char* ptrs to store the strings in a contiguous block,
+    // so we save on the overhead of using nsCStrings. However, we
+    // store a terminating null for each string, so we can hand them
+    // out as nsAFlatCStrings.
+
+    // sizeof(nsCookie) = 44 bytes + Length(strings)
+    char     *mName;
+    char     *mValue;
+    char     *mHost;
+    char     *mPath;
+    char     *mEnd;
+    nsInt64  mExpiry;
+    nsInt64  mLastAccessed;
+    PRUint32 mRefCnt    : 16;
+    PRUint32 mIsSession : 1;
+    PRUint32 mIsDomain  : 1;
+    PRUint32 mIsSecure  : 1;
+    PRUint32 mStatus    : 3;
+    PRUint32 mPolicy    : 3;
 };
 
-// {E9FCB9A4-D376-458f-B720-E65E7DF593BC}
-#define NS_COOKIE_CID { 0xe9fcb9a4,0xd376,0x458f,{0xb7,0x20,0xe6,0x5e,0x7d,0xf5,0x93,0xbc}}
+#define NS_COOKIE_CID  {0xe9fcb9a4,0xd376,0x458f,{0xb7,0x20,0xe6,0x5e,0x7d,0xf5,0x93,0xbc}}
+#define NS_COOKIE2_CID {0xd3493503,0x7854,0x46ed,{0x82,0x84,0x8a,0xf5,0x4a,0x84,0x7e,0xfb}}
 
-#endif /* nsCookie_h__ */
+#endif // nsCookie_h__

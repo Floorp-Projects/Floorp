@@ -288,7 +288,7 @@ nsImgManager::Observe(nsISupports *aSubject,
   
   if (!nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) {
     // which pref changed?
-    NS_ConvertUCS2toUTF8 pref(aData);
+    NS_LossyConvertUCS2toASCII pref(aData);
 
     if (pref.Equals(kImageBehaviorPrefName)) {
       rv = mPrefBranch->GetIntPref(kImageBehaviorPrefName, &mBehaviorPref);
