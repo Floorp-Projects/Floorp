@@ -28,7 +28,6 @@ CPPSRCS		= identity.cpp
 LIBS		= \
 		-L$(DIST)/bin \
 		-lxpcom \
-		-lmozjs \
 		$(MOZ_TIMER_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
