@@ -1037,6 +1037,10 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
    nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
    NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
 
+   nsCOMPtr<nsIXULWindow> parent;
+   if(aChromeFlags & nsIWebBrowserChrome::CHROME_DEPENDENT)
+      parent = this;
+
    // We need to create a new top level window and then enter a nested
    // loop. Eventually the new window will be told that it has loaded,
    // at which time we know it is safe to spin out of the nested loop
@@ -1073,7 +1077,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
    NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
    nsCOMPtr<nsIXULWindow> newWindow;
-   appShell->CreateTopLevelWindow(nsnull, uri, PR_FALSE, PR_FALSE,
+   appShell->CreateTopLevelWindow(parent, uri, PR_FALSE, PR_FALSE,
                                  aChromeFlags, 615, 480,
                                  getter_AddRefs(newWindow));
 
