@@ -364,6 +364,7 @@ calItemBase.prototype = {
             rec.appendRecurrenceItem(ritem);
         }
         this.mRecurrenceInfo = rec;
+
     },
 
     importUnpromotedProperties: function (icalcomp, promoted) {
@@ -387,19 +388,23 @@ calItemBase.prototype = {
         suppressDCE = this.stampTime;
         this.mapPropsToICS(icalcomp, this.icsBasePropMap);
         icalcomp.icalClass = this.mPrivacy;
+
         for (var i = 0; i < this.mAttendees.length; i++)
             icalcomp.addProperty(this.mAttendees[i].icalProperty);
+
         if (this.mGeneration != 0) {
             var genprop = icalProp("X-MOZILLA-GENERATION");
             genprop.stringValue = String(this.mGeneration);
             icalcomp.addProperty(genprop);
         }
+
         if (this.mRecurrenceInfo) {
             var ritems = this.mRecurrenceInfo.getRecurrenceItems({});
             for (i in ritems) {
                 icalcomp.addProperty(ritems[i].icalProperty);
             }
         }
+
     },
     
 };

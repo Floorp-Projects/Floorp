@@ -218,9 +218,9 @@ function loadCalendarEventDialog()
 
     // GENERAL -----------------------------------------------------------
     setFieldValue("title-field",       event.title  );
-    setFieldValue("description-field", event.getProperty("description"));
-    setFieldValue("location-field",    event.getProperty("location"));
-    setFieldValue("uri-field",         event.getProperty("url"));
+    setFieldValue("description-field", event.getProperty("DESCRIPTION"));
+    setFieldValue("location-field",    event.getProperty("LOCATION"));
+    setFieldValue("uri-field",         event.getProperty("URL"));
     // only enable "Go" button if there's a url
     processTextboxWithButton( "uri-field", "load-url-button" );
 
@@ -424,7 +424,7 @@ function loadCalendarEventDialog()
     var categoriesList = categoriesString.split( "," );
 
     // insert the category already in the task so it doesn't get lost
-    var categories = event.getProperty("categories");
+    var categories = event.getProperty("CATEGORIES");
     if (categories) {
         if (categoriesString.indexOf(categories) == -1)
             categoriesList[categoriesList.length] = categories;
@@ -513,7 +513,9 @@ function onOKCommand()
         event.endDate.jsDate   = gEndDate;
         event.endDate.timezone = tzid;
         event.isAllDay = getFieldValue("all-day-event-checkbox", "checked");
-        event.status   = getFieldValue("event-status-field");
+        var status = getFieldValue("event-status-field");
+        if (status)
+            event.status = status;
     } else if (isToDo(event)) {
         componentType = "todo";
         if (!event.isMutable) // I will cut vlad for making me do this QI
@@ -544,10 +546,21 @@ function onOKCommand()
     event.priority = getFieldValue("priority-levels");
 
     // other properties
-    event.setProperty("categories",   getFieldValue("categories-field"));
-    event.setProperty("description",  getFieldValue("description-field"));
-    event.setProperty("location",     getFieldValue("location-field"));
-    event.setProperty("url",          getFieldValue("uri-field"));
+    var cats = getFieldValue("categories-field");
+    if (cats)
+        event.setProperty("CATEGORIES", cats);
+
+    var desc = getFieldValue("description-field");
+    if (desc)
+        event.setProperty("DESCRIPTION", desc);
+
+    var location = getFieldValue("location-field");
+    if (location)
+        event.setProperty("LOCATION", location);
+
+    var url = getFieldValue("uri-field") ;
+    if (url)
+        event.setProperty("URL", url);
 
 
     // PRIVACY -----------------------------------------------------------
