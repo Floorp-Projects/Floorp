@@ -706,7 +706,8 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
   }
   else if (NS_SUCCEEDED(rv))  // tell the front end that the folder is loaded if we're not going to 
   {                           // actually run a url.
-    NotifyFolderEvent(mFolderLoadedAtom);
+    if (!m_urlRunning)        // if we're already running a url, we'll let that one send the folder loaded
+      NotifyFolderEvent(mFolderLoadedAtom);
     if (msgWindow) // don't do this w/o a msgWindow, since it asserts annoyingly
       rv = AutoCompact(msgWindow);  
     NS_ENSURE_SUCCESS(rv,rv);
