@@ -41,18 +41,18 @@
 #ifndef NS_FT2_FONT_CATALOG_H
 #define NS_FT2_FONT_CATALOG_H
 
+#include "nspr.h"
+#include "nsHashtable.h"
+#include "nsIServiceManager.h"
+#include "nsCompressedCharMap.h"
+#include "nsICharRepresentable.h"
+
 #include "nsString.h"
 #include "nsIPref.h"
 #include "nsNameValuePairDB.h"
+#include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
-
-#if (!defined(MOZ_ENABLE_FREETYPE2))
-class nsFT2FontCatalog {
-public:
-  static void GetFontNames(const char* aPattern, nsFontNodeArray* aNodes);
-};
-#else
-
+#if (defined(MOZ_ENABLE_FREETYPE2))
 //
 // To limit the potential for namespace collision we limit the 
 // number of Moz files that include FreeType's include (and hence 
@@ -61,8 +61,6 @@ public:
 struct FT_LibraryRec_;
 typedef signed long FT_Long;
 typedef unsigned short FT_UShort;
-
-class  nsFontNodeArray;
 
 #define PUBLIC_FONT_SUMMARY_NAME  NS_LITERAL_CSTRING(".mozilla_font_summary.ndb")
 #define FONT_SUMMARIES_SUBDIR     NS_LITERAL_CSTRING("catalog")
@@ -152,11 +150,12 @@ typedef struct {
 } nsulCodePageRangeCharSetName;
 
 class nsFT2FontCatalog {
+friend class nsFT2FontNode;
 public:
   static void        FreeGlobals();
   static PRBool      InitGlobals(FT_LibraryRec_ *);
-  static void        GetFontNames(const char* aPattern, 
-                                  nsFontNodeArray* aNodes);
+  static void        GetFontNames(const char* aPattern, nsFontCatalog* aFC);
+
   static PRUint16*   GetCCMap(nsFontCatalogEntry *aFce);
   static nsTTFontFamilyEncoderInfo* GetCustomEncoderInfo(const char *);
   static nsTTFontFamilyEncoderInfo* GetCustomEncoderInfo(nsFontCatalogEntry *);
@@ -185,7 +184,7 @@ protected:
   static void GetDirsPrefEnumCallback(const char* aName, void* aClosure);
   void   doGetDirsPrefEnumCallback(const char* aName, void* aClosure);
   int    GetFontCatalog(FT_LibraryRec_*, nsFontCatalog *, nsDirCatalog *);
-  void   doGetFontNames(const char* aPattern, nsFontNodeArray* aNodes);
+  void   doGetFontNames(const char* aPattern, nsFontCatalog* aFC);
   PRBool GetFontSummaryName(const nsACString &, const nsACString &,
                                    nsACString &, nsACString &);
   const char* GetFoundry(nsFontCatalogEntry *aFce);
@@ -196,8 +195,6 @@ protected:
   void   HandleFontFile(FT_LibraryRec_ *, nsFontCatalog *, const char*);
   PRBool doInitGlobals(FT_LibraryRec_ *);
   PRBool IsSpace(FT_Long);
-  nsFontNode*  LoadNode(nsFontCatalogEntry*, const char*,nsFontNodeArray*);
-  PRBool LoadNodeTable(nsFontCatalog *);
   nsDirCatalog *NewDirCatalog();
   nsFontCatalogEntry* NewFceFromFontFile(FT_LibraryRec_*, const char*,int,int*);
   nsFontCatalogEntry* NewFceFromSummary(nsNameValuePairDB *aDB);
@@ -213,7 +210,6 @@ protected:
 
   nsCOMPtr<nsIPref> mPref;
   nsFontCatalog *mFontCatalog;
-  nsHashtable   *mFreeTypeNodes;
   nsHashtable   *mFontFamilies;
   PRPackedBool   mIsNewCatalog;
   nsHashtable   *mVendorNames;
@@ -221,8 +217,10 @@ protected:
   nsHashtable   *mRange2CharSetNames;
   static nsICharsetConverterManager2* sCharSetManager;
 };
-#endif
 
+extern nsFT2FontCatalog* gFT2FontCatalog;
+
+#endif
 
 #endif /* NS_FT2_FONT_CATALOG_H */
 

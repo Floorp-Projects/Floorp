@@ -59,11 +59,13 @@ CSRCS		= nsPrintdGTK.c
 # Code shared between GTK+, Xlib and Xprint gfx modules
 X11SHARED_LCPPSRCS = \
 		nsAntiAliasedGlyph.cpp \
+		nsFontFreeType.cpp \
 		nsFreeType.cpp \
+		nsFT2FontNode.cpp \
 		nsFT2FontCatalog.cpp \
-                nsX11AlphaBlend.cpp \
-                nsXFontAAScaledBitmap.cpp \
-                nsXFontNormal.cpp \
+		nsX11AlphaBlend.cpp \
+		nsXFontAAScaledBitmap.cpp \
+		nsXFontNormal.cpp \
 		$(NULL)
                 
 CPPSRCS		= \
